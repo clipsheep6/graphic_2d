@@ -18,6 +18,7 @@
 
 #include <inttypes.h>
 #include <string>
+#include <unordered_map>
 
 #include "screen_manager/screen_types.h"
 #include "animation/rs_frame_rate_range.h"
@@ -80,6 +81,10 @@ enum RefreshRateMode {
 enum class SpeedTransType {
     TRANS_PIXEL_TO_MM,
     TRANS_MM_TO_PIXEL,
+};
+
+enum class SceneType {
+    SCREEN_RECORD,
 };
 
 class ParsedConfigData {

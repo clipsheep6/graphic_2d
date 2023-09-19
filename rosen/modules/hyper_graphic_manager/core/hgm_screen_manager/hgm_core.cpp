@@ -192,6 +192,9 @@ int32_t HgmCore::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate
         HGM_LOGW("HgmCore failed to get screen of : " PUBU64 "", id);
         return HGM_ERROR;
     }
+    if (screenSceneSetMap_[id].find(SceneType::SCREEN_RECORD) != screenSceneSetMap_[id].end()) {
+        rate = GetScenePreferred(SceneType::SCREEN_RECORD);
+    }
 
     if (rate <= 0) {
         HGM_LOGW("HgmCore refuse an illegal framerate: %{public}d", rate);
@@ -424,10 +427,30 @@ void HgmCore::InsertAndStartScreenTimer(ScreenId screenId, int32_t interval,
         newTimer->Start();
     }
 }
+
 void HgmCore::ResetScreenTimer(ScreenId screenId) const
 {
     if (auto timer = GetScreenTimer(screenId); timer != nullptr) {
         timer->Reset();
+    }
+}
+
+void HgmCore::StartScreenScene(ScreenId screenId, SceneType sceceType)
+{
+    screenSceneSetMap_[screenId].insert(sceceType);
+}
+
+void HgmCore::StopScreenScene(ScreenId screenId, SceneType sceceType)
+{
+    screenSceneSetMap_[screenId].erase(sceceType);
+}
+
+int32_t HgmCore::GetScenePreferred(SceneType sceceType) {
+    switch(sceceType) {
+        case SceneType::SCREEN_RECORD:
+            return 60;
+        default:
+            return 0;
     }
 }
 } // namespace OHOS::Rosen

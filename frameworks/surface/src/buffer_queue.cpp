@@ -249,6 +249,12 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
     return ret;
 }
 
+GSError BufferQueue::SetProducerCacheCleanFlag(bool flag)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return SetProducerCacheCleanFlagLocked(flag);
+}
+
 GSError BufferQueue::SetProducerCacheCleanFlagLocked(bool flag)
 {
     producerCacheClean_ = flag;
@@ -472,14 +478,7 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
         }
     }
 
-    if (config.timestamp == 0) {
-        struct timeval tv = {};
-        gettimeofday(&tv, nullptr);
-        constexpr int32_t secToUsec = 1000000;
-        bufferQueueCache_[sequence].timestamp = (int64_t)tv.tv_usec + (int64_t)tv.tv_sec * secToUsec;
-    } else {
-        bufferQueueCache_[sequence].timestamp = config.timestamp;
-    }
+    bufferQueueCache_[sequence].timestamp = config.timestamp;
 
     if (isLocalRender_) {
         static SyncFenceTracker acquireFenceThread("Acquire Fence");

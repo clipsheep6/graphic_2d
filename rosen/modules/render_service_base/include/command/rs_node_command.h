@@ -19,8 +19,17 @@
 #include "animation/rs_frame_rate_range.h"
 #include "command/rs_command_templates.h"
 #include "common/rs_macros.h"
+#include "common/rs_matrix3.h"
+#include "common/rs_vector4.h"
+#include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_render_node.h"
-#include "property/rs_properties.h"
+#include "property/rs_properties_def.h"
+#include "render/rs_filter.h"
+#include "render/rs_gradient_blur_para.h"
+#include "render/rs_image.h"
+#include "render/rs_mask.h"
+#include "render/rs_path.h"
+#include "render/rs_shader.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -74,9 +74,9 @@ HWTEST_F(RSRenderNodeTest, UpdateRenderStatus001, TestSize.Level1)
 HWTEST_F(RSRenderNodeTest, UpdateParentChildrenRectTest, TestSize.Level1)
 {
     RSRenderNode node(id, context);
-    std::shared_ptr<RSBaseRenderNode> parentNode;
+    std::shared_ptr<RSRenderNode> parentNode;
     node.UpdateParentChildrenRect(parentNode);
-    RSBaseRenderNode rsBaseRenderNode(id, context);
+    RSRenderNode rsBaseRenderNode(id, context);
     ASSERT_FALSE(rsBaseRenderNode.HasChildrenOutOfRect());
 }
 

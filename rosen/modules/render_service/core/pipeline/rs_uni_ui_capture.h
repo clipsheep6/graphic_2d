@@ -16,25 +16,24 @@
 #ifndef RS_UNI_UI_CAPTURE
 #define RS_UNI_UI_CAPTURE
 
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkCanvas.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkSurface.h"
-#endif
 #include "pixel_map.h"
 #include "rs_base_render_engine.h"
 
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_effect_render_node.h"
+#include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "visitor/rs_node_visitor.h"
+
 #ifndef USE_ROSEN_DRAWING
+#include "include/core/SkMatrix.h"
+#include "include/core/SkSurface.h"
+
 #include "pipeline/rs_recording_canvas.h"
 #else
 #include "recording/recording_canvas.h"
 #endif
-#include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {

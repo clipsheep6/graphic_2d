@@ -15,28 +15,27 @@
 
 #define EGL_EGLEXT_PROTOTYPES
 #include "rs_parallel_sub_thread.h"
+
 #include <cstddef>
 #include <memory>
 #include <mutex>
 #include <string>
-#include <sys/resource.h>
 #include <sys/ioctl.h>
-#include "GLES3/gl3.h"
+#include <sys/resource.h>
+
+#include "EGL/egl.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkRect.h"
-#include "EGL/egl.h"
-#include "rs_trace.h"
-#include "pipeline/rs_canvas_render_node.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
 #include "rs_node_cost_manager.h"
 #include "rs_parallel_render_manager.h"
+#include "rs_trace.h"
+
 #include "common/rs_obj_abs_geometry.h"
-#include "pipeline/rs_uni_render_visitor.h"
-#include "rs_parallel_render_ext.h"
+#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_engine.h"
+#include "pipeline/rs_uni_render_visitor.h"
 
 namespace OHOS {
 namespace Rosen {

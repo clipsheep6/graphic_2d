@@ -19,6 +19,7 @@
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
+
 namespace OHOS {
 namespace Rosen {
 

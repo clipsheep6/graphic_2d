@@ -18,8 +18,6 @@
 #include <mutex>
 #include <vector>
 
-#include "include/core/SkImage.h"
-
 #include "common/rs_common_def.h"
 #include "common/rs_rect.h"
 #include "memory/rs_dfx_string.h"

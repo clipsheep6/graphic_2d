@@ -17,17 +17,19 @@
 #define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_H
 
 #include <cstdint>
+
 #include "EGL/egl.h"
-#include "EGL/eglext.h"
+#include "event_handler.h"
 #include "include/core/SkSurface.h"
+
+#include "pipeline/parallel_render/rs_render_task.h"
+#include "render_context/render_context.h"
+
 #if defined(NEW_SKIA)
 #include "include/gpu/GrDirectContext.h"
 #else
 #include "include/gpu/GrContext.h"
 #endif
-#include "pipeline/parallel_render/rs_render_task.h"
-#include "render_context/render_context.h"
-#include "event_handler.h"
 
 namespace OHOS::Rosen {
 class RSSubThread {

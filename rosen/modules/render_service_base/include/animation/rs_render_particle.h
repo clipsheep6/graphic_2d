@@ -23,7 +23,6 @@
 #include "animation/rs_interpolator.h"
 #include "common/rs_color.h"
 #include "common/rs_color_palette.h"
-#include "common/rs_common_def.h"
 #include "common/rs_macros.h"
 #include "common/rs_vector2.h"
 #include "render/rs_image.h"

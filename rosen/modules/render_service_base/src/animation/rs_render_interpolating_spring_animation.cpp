@@ -16,7 +16,6 @@
 #include "animation/rs_render_interpolating_spring_animation.h"
 
 #include "animation/rs_value_estimator.h"
-#include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {

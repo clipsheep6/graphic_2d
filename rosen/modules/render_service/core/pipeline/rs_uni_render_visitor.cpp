@@ -15,23 +15,17 @@
 
 #include "pipeline/rs_uni_render_visitor.h"
 
-#ifdef RS_ENABLE_VK
-#include <vulkan_window.h>
-#endif
-
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkRegion.h"
-#include "include/core/SkTextBlob.h"
-#else
-#include "recording/recording_canvas.h"
-#endif
+#include "hgm_core.h"
+#include "scene_board_judgement.h"
+#include "system/rs_system_parameters.h"
 
 #include "common/rs_background_thread.h"
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_optional_trace.h"
 #include "memory/rs_tag_tracker.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/parallel_render/rs_parallel_render_manager.h"
+#include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_display_render_node.h"
@@ -42,24 +36,29 @@
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_proxy_render_node.h"
 #include "pipeline/rs_recording_canvas.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_listener.h"
-#include "pipeline/rs_uni_render_virtual_processor.h"
 #include "pipeline/rs_uni_render_util.h"
+#include "pipeline/rs_uni_render_virtual_processor.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_properties_painter.h"
-#include "render/rs_skia_filter.h"
-#include "pipeline/parallel_render/rs_parallel_render_manager.h"
-#include "pipeline/parallel_render/rs_sub_thread_manager.h"
-#include "system/rs_system_parameters.h"
-#include "scene_board_judgement.h"
-#include "hgm_core.h"
+
 #ifdef RS_ENABLE_RECORDING
 #include "benchmarks/rs_recording_thread.h"
 #endif
-#include "scene_board_judgement.h"
+#ifdef RS_ENABLE_VK
+#include <vulkan_window.h>
+#endif
+
+#ifndef USE_ROSEN_DRAWING
+#include "include/core/SkRegion.h"
+#include "include/core/SkTextBlob.h"
+#else
+#include "recording/recording_canvas.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -76,7 +75,7 @@ static std::mutex cacheRenderNodeMapMutex;
 static std::unordered_map<NodeId, std::pair<RSUniRenderVisitor::RenderParam,
     std::unordered_map<NodeId, RSUniRenderVisitor::RenderParam>>> groupedTransitionNodes = {};
 
-bool CheckRootNodeReadyToDraw(const std::shared_ptr<RSBaseRenderNode>& child)
+bool CheckRootNodeReadyToDraw(const std::shared_ptr<RSRenderNode>& child)
 {
     if (child != nullptr && child->IsInstanceOf<RSRootRenderNode>()) {
         auto rootNode = child->ReinterpretCastTo<RSRootRenderNode>();
@@ -380,7 +379,7 @@ void RSUniRenderVisitor::HandleColorGamuts(RSDisplayRenderNode& node, const sptr
 {
     screenManager->GetScreenSupportedColorGamuts(node.GetScreenId(), colorGamutModes_);
     for (auto& child : node.GetCurAllSurfaces()) {
-        auto surfaceNodePtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+        auto surfaceNodePtr = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (!surfaceNodePtr) {
             RS_LOGD("RSUniRenderVisitor::PrepareDisplayRenderNode ReinterpretCastTo fail");
             continue;
@@ -615,7 +614,7 @@ void RSUniRenderVisitor::MarkSubHardwareEnableNodeState(RSSurfaceRenderNode& sur
         hardwareEnabledNodes = surfaceNode.GetChildHardwareEnabledNodes();
     } else {
         for (auto& child : surfaceNode.GetChildren()) {
-            auto appNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            auto appNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
             if (appNode && appNode->IsAppWindow()) {
                 hardwareEnabledNodes = appNode->GetChildHardwareEnabledNodes();
                 break;
@@ -697,7 +696,7 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRen
             && (properties.NeedFilter() || !node.GetChildrenNeedFilterRects().empty());
         bool hasHardwareNode = !node.GetChildHardwareEnabledNodes().empty();
         bool hasAbilityComponent = !node.GetAbilityNodeIds().empty();
-        auto rsParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.GetParent().lock());
+        auto rsParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.GetParent().lock());
         if (rsParent && rsParent->IsLeashWindow()) {
             rsParent->SetHasFilter(hasFilter);
             rsParent->SetHasHardwareNode(hasHardwareNode);
@@ -778,7 +777,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // update geoptr with ContextMatrix
     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
     auto& property = node.GetMutableRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     if (geoPtr == nullptr) {
         return;
     }
@@ -802,7 +801,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // Update node properties, including position (dstrect), OldDirty()
     auto parentNode = node.GetParent().lock();
     auto rsParent = (parentNode);
-    auto rsSurfaceParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentNode);
+    auto rsSurfaceParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentNode);
     if (node.IsAppWindow() && rsSurfaceParent && rsSurfaceParent->IsLeashWindow()
         && rsSurfaceParent->GetDstRect().IsEmpty()) {
             prepareClipRect_ = RectI {0, 0, 0, 0};
@@ -1357,7 +1356,7 @@ void RSUniRenderVisitor::DrawAllSurfaceDirtyRegionForDFX(RSDisplayRenderNode& no
 void RSUniRenderVisitor::DrawAllSurfaceOpaqueRegionForDFX(RSDisplayRenderNode& node)
 {
     for (auto& it : node.GetCurAllSurfaces()) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(it);
         if (surfaceNode->IsMainWindowType()) {
             DrawSurfaceOpaqueRegionForDFX(*surfaceNode);
         }
@@ -1367,7 +1366,7 @@ void RSUniRenderVisitor::DrawAllSurfaceOpaqueRegionForDFX(RSDisplayRenderNode& n
 void RSUniRenderVisitor::DrawTargetSurfaceDirtyRegionForDFX(RSDisplayRenderNode& node)
 {
     for (auto it = node.GetCurAllSurfaces().rbegin(); it != node.GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr || !surfaceNode->IsAppWindow()) {
             continue;
         }
@@ -1530,7 +1529,7 @@ void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& n
         RS_LOGE("RSUniRenderVisitor::ProcessParallelDisplayRenderNode: processor init failed!");
         return;
     }
-    std::shared_ptr<RSBaseRenderNode> nodePtr = node.shared_from_this();
+    std::shared_ptr<RSRenderNode> nodePtr = node.shared_from_this();
     auto displayNodePtr = nodePtr->ReinterpretCastTo<RSDisplayRenderNode>();
     if (!displayNodePtr) {
         RS_LOGE("RSUniRenderVisitor::ProcessParallelDisplayRenderNode ReinterpretCastTo fail");
@@ -1631,7 +1630,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: processor init failed!");
         return;
     }
-    std::shared_ptr<RSBaseRenderNode> nodePtr = node.shared_from_this();
+    std::shared_ptr<RSRenderNode> nodePtr = node.shared_from_this();
     auto displayNodePtr = nodePtr->ReinterpretCastTo<RSDisplayRenderNode>();
     if (!displayNodePtr) {
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ReinterpretCastTo fail");
@@ -2276,7 +2275,7 @@ void RSUniRenderVisitor::CalcDirtyDisplayRegion(std::shared_ptr<RSDisplayRenderN
     RS_OPTIONAL_TRACE_FUNC();
     auto displayDirtyManager = node->GetDirtyManager();
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr) {
             continue;
         }
@@ -2470,7 +2469,7 @@ void RSUniRenderVisitor::CalcDirtyRegionForFilterNode(const RectI& filterRect,
         // We should check whether window below currentSurfaceNode has dirtyRect intersect with filterRect.
         for (auto belowSurface = displayNode->GetCurAllSurfaces().begin();
             belowSurface != displayNode->GetCurAllSurfaces().end(); ++belowSurface) {
-            auto belowSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*belowSurface);
+            auto belowSurfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*belowSurface);
             if (belowSurfaceNode == currentSurfaceNode) {
                 break;
             }
@@ -2503,7 +2502,7 @@ void RSUniRenderVisitor::CalcDirtyFilterRegion(std::shared_ptr<RSDisplayRenderNo
     auto displayDirtyManager = displayNode->GetDirtyManager();
     std::vector<SurfaceDirtyMgrPair> prevHwcEnabledNodes;
     for (auto it = displayNode->GetCurAllSurfaces().begin(); it != displayNode->GetCurAllSurfaces().end(); ++it) {
-        auto currentSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto currentSurfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (currentSurfaceNode == nullptr) {
             continue;
         }
@@ -2537,7 +2536,7 @@ void RSUniRenderVisitor::AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDispla
     RS_OPTIONAL_TRACE_FUNC();
     auto displayDirtyManager = node->GetDirtyManager();
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr) {
             continue;
         }
@@ -2589,7 +2588,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
 {
     RS_OPTIONAL_TRACE_FUNC();
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr || !surfaceNode->IsMainWindowType()) {
             continue;
         }
@@ -2599,7 +2598,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRe
     }
     Occlusion::Region curVisibleDirtyRegion;
     for (auto& it : node->GetCurAllSurfaces()) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(it);
         if (surfaceNode == nullptr || !surfaceNode->IsMainWindowType()) {
             continue;
         }
@@ -2624,7 +2623,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDi
     Occlusion::Region globalRegion{globalRect};
     dirtyRegion.SubSelf(globalRegion);
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr || !surfaceNode->IsMainWindowType()) {
             continue;
         }
@@ -2641,7 +2640,7 @@ void RSUniRenderVisitor::SetSurfaceGlobalAlignedDirtyRegion(std::shared_ptr<RSDi
     }
     Occlusion::Region curVisibleDirtyRegion;
     for (auto& it : node->GetCurAllSurfaces()) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(it);
         if (surfaceNode == nullptr || !surfaceNode->IsMainWindowType()) {
             continue;
         }
@@ -2655,7 +2654,7 @@ void RSUniRenderVisitor::AlignGlobalAndSurfaceDirtyRegions(std::shared_ptr<RSDis
 {
     node->GetDirtyManager()->UpdateDirtyByAligned();
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
-        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surfaceNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr || !surfaceNode->IsMainWindowType()) {
             continue;
         }
@@ -2945,9 +2944,9 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode
 void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (isUIFirst_ && isSubThread_) {
-        if (auto parentNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node.GetParent().lock()) ||
+        if (auto parentNode = RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(node.GetParent().lock()) ||
             (SceneBoardJudgement::IsSceneBoardEnabled() && (node.IsLeashWindow() || (node.IsAppWindow() &&
-            !RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.GetParent().lock()))))) {
+            !RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.GetParent().lock()))))) {
             UpdateCacheSurface(node);
             return;
         }
@@ -3685,7 +3684,7 @@ void RSUniRenderVisitor::SetHardwareEnabledNodes(
     hardwareEnabledNodes_ = hardwareEnabledNodes;
 }
 
-bool RSUniRenderVisitor::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode)
+bool RSUniRenderVisitor::DoDirectComposition(std::shared_ptr<RSRenderNode> rootNode)
 {
     if (!IsHardwareComposerEnabled() || rootNode->GetSortedChildren().empty()) {
         RS_LOGD("RSUniRenderVisitor::DoDirectComposition HardwareComposer disabled");
@@ -3771,7 +3770,7 @@ void RSUniRenderVisitor::SetAppWindowNum(uint32_t num)
     appWindowNum_ = num;
 }
 
-bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode)
+bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSRenderNode> rootNode)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
     auto parallelRenderManager = RSParallelRenderManager::Instance();
@@ -3791,7 +3790,7 @@ bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSBaseRenderN
 #endif
 }
 
-void RSUniRenderVisitor::PrepareSharedTransitionNode(RSBaseRenderNode& node)
+void RSUniRenderVisitor::PrepareSharedTransitionNode(RSRenderNode& node)
 {
     // Sanity check done by caller, transitionParam should always has value.
     auto& transitionParam = node.GetSharedTransitionParam();
@@ -3816,7 +3815,7 @@ void RSUniRenderVisitor::PrepareSharedTransitionNode(RSBaseRenderNode& node)
     prepareClipRect_.SetAll(0, 0, INT_MAX, INT_MAX);
 }
 
-bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSBaseRenderNode& node)
+bool RSUniRenderVisitor::ProcessSharedTransitionNode(RSRenderNode& node)
 {
     // Sanity check done by caller, transitionParam should always has value.
     auto& transitionParam = node.GetSharedTransitionParam();

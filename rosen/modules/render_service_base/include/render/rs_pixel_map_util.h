@@ -18,8 +18,9 @@
 
 #include <memory>
 
-#include "common/rs_common_def.h"
 #include "pixel_map.h"
+
+#include "common/rs_macros.h"
 
 #ifndef USE_ROSEN_DRAWING
 template <typename T>

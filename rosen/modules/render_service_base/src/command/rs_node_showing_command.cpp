@@ -15,8 +15,9 @@
 
 #include "command/rs_node_showing_command.h"
 
+#include "modifier/rs_render_modifier.h"
+#include "modifier/rs_render_property.h"
 #include "pipeline/rs_render_node.h"
-#include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {

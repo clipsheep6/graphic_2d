@@ -19,16 +19,16 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <surface.h>
 #include <unordered_map>
 
-#include <surface.h>
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include "GLES/gl.h"
-#include "GLES/glext.h"
 #include "GLES3/gl32.h"
 #include "sync_fence.h"
-#include "pipeline/rs_context.h"
+
+#include "common/rs_common_def.h"
 
 namespace OHOS {
 namespace Rosen {

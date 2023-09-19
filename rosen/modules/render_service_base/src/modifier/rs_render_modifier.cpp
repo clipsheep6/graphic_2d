@@ -14,25 +14,26 @@
  */
 
 #include "modifier/rs_render_modifier.h"
-#ifndef USE_ROSEN_DRAWING
-#else
-#include "draw/color.h"
-#include "image/bitmap.h"
-#endif
+
 #include <memory>
 #include <unordered_map>
 
-#include "include/effects/SkColorMatrix.h"
 #include "pixel_map.h"
 
 #include "common/rs_obj_abs_geometry.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "platform/common/rs_log.h"
 #include "property/rs_properties.h"
 #include "property/rs_properties_def.h"
 #include "property/rs_properties_painter.h"
-#include "platform/common/rs_log.h"
+
+#ifndef USE_ROSEN_DRAWING
+#else
+#include "draw/color.h"
+#include "image/bitmap.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

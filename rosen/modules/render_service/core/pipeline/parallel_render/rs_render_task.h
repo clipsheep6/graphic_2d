@@ -19,16 +19,16 @@
 #include <cstdint>
 #include <memory>
 #include <queue>
-#include "pipeline/rs_base_render_node.h"
+
 #include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSRenderTaskBase {
 public:
-    explicit RSRenderTaskBase(std::shared_ptr<RSBaseRenderNode> node) : node_(node), loadId_(node->GetId()) {}
+    explicit RSRenderTaskBase(std::shared_ptr<RSRenderNode> node) : node_(node), loadId_(node->GetId()) {}
     virtual ~RSRenderTaskBase() = default;
     void SetIdx(uint64_t idx)
     {
@@ -38,13 +38,13 @@ public:
     {
         return loadId_;
     }
-    std::shared_ptr<RSBaseRenderNode> GetNode() const
+    std::shared_ptr<RSRenderNode> GetNode() const
     {
         return node_;
     }
 
 private:
-    std::shared_ptr<RSBaseRenderNode> node_;
+    std::shared_ptr<RSRenderNode> node_;
     uint64_t loadId_;
 };
 
@@ -71,7 +71,7 @@ class RSSuperRenderTask : public RSRenderTaskBase {
 public:
     explicit RSSuperRenderTask(RSDisplayRenderNode &node)
         : RSRenderTaskBase(node.shared_from_this()) {}
-    explicit RSSuperRenderTask(std::shared_ptr<RSBaseRenderNode> node, uint64_t frameCount = 0)
+    explicit RSSuperRenderTask(std::shared_ptr<RSRenderNode> node, uint64_t frameCount = 0)
         : RSRenderTaskBase(node), frameCount_(frameCount) {}
     ~RSSuperRenderTask() override;
 
@@ -87,7 +87,7 @@ public:
         return frameCount_;
     }
 
-    std::shared_ptr<RSBaseRenderNode> GetSurfaceNode();
+    std::shared_ptr<RSRenderNode> GetSurfaceNode();
     std::unique_ptr<RSRenderTask> GetNextRenderTask();
 
 private:

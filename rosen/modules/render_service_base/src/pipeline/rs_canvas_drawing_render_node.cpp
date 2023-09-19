@@ -16,17 +16,16 @@
 #include "pipeline/rs_canvas_drawing_render_node.h"
 
 #include "include/core/SkCanvas.h"
-#ifdef NEW_SKIA
-#include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrDirectContext.h"
-#endif
 
 #include "common/rs_common_def.h"
-#include "common/rs_obj_abs_geometry.h"
+#include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
-#include "visitor/rs_node_visitor.h"
+
+#ifdef NEW_SKIA
+#include "include/gpu/GrBackendSurface.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

@@ -24,6 +24,7 @@
 #include "hisysevent.h"
 #include "rs_trace.h"
 
+#include "animation/rs_animation_common.h"
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
 

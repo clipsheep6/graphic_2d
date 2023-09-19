@@ -336,8 +336,8 @@ HWTEST_F(RSSurfaceRenderNodeTest, ShouldPrepareSubnodesTest, TestSize.Level1)
 HWTEST_F(RSSurfaceRenderNodeTest, CollectSurfaceTest001, TestSize.Level1)
 {
     auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
-    std::shared_ptr<RSBaseRenderNode> rsBaseRenderNode;
-    std::vector<RSBaseRenderNode::SharedPtr> vec;
+    std::shared_ptr<RSRenderNode> rsBaseRenderNode;
+    std::vector<RSRenderNode::SharedPtr> vec;
     bool isUniRender = true;
     node->IsStartingWindow();
     node->CollectSurface(rsBaseRenderNode, vec, isUniRender, false);
@@ -353,8 +353,8 @@ HWTEST_F(RSSurfaceRenderNodeTest, CollectSurfaceTest001, TestSize.Level1)
 HWTEST_F(RSSurfaceRenderNodeTest, CollectSurfaceTest002, TestSize.Level1)
 {
     auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
-    std::shared_ptr<RSBaseRenderNode> rsBaseRenderNode;
-    std::vector<RSBaseRenderNode::SharedPtr> vec;
+    std::shared_ptr<RSRenderNode> rsBaseRenderNode;
+    std::vector<RSRenderNode::SharedPtr> vec;
     bool isUniRender = true;
     node->IsLeashWindow();
     node->CollectSurface(rsBaseRenderNode, vec, isUniRender, false);

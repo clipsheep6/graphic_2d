@@ -84,7 +84,7 @@ private:
     void UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSSurfaceFrame>& surfaceFrame);
 #endif
     // Reset and update children node's info like outOfParent and isRemoveChild
-    void ResetAndPrepareChildrenNode(RSRenderNode& node, std::shared_ptr<RSBaseRenderNode> nodeParent);
+    void ResetAndPrepareChildrenNode(RSRenderNode& node, std::shared_ptr<RSRenderNode> nodeParent);
 
     bool UpdateAnimatePropertyCacheSurface(RSRenderNode& node);
 

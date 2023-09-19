@@ -14,9 +14,9 @@
  */
 #ifndef DFXSTRING_H
 #define DFXSTRING_H
-#include <stdarg.h>
-#include <string>
+#include <cstdarg>
 #include <securec.h>
+#include <string>
 
 namespace OHOS::Rosen {
 constexpr int STRING_BUF_SIZE = 4096;

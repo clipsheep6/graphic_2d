@@ -18,11 +18,11 @@
 
 #include <memory>
 
-#include "hdi_layer_info.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
 #include "rs_base_render_util.h"
+
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_surface_render_node.h"
 
 #ifdef NEW_RENDER_CONTEXT
 #include "render_backend/rs_render_surface_frame.h"

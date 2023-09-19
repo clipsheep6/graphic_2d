@@ -23,6 +23,7 @@
 #include "animation/rs_frame_rate_range.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
+#include "modifier/rs_property_modifier.h"
 
 namespace OHOS {
 namespace Rosen {

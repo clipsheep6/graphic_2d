@@ -21,9 +21,6 @@
 #include "animation/rs_render_animation.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
-#include "pipeline/rs_dirty_region_manager.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {

@@ -16,12 +16,15 @@
 
 #include <unordered_map>
 
+#include "include/core/SkColor.h"
+#include "include/effects/SkColorMatrix.h"
+#include "include/effects/SkImageFilters.h"
 #include "src/core/SkOpts.h"
 
-#include "common/rs_common_def.h"
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "property/rs_properties_painter.h"
 #include "platform/common/rs_system_properties.h"
+#include "property/rs_properties_painter.h"
+#include "render/rs_kawase_blur.h"
 
 #if defined(NEW_SKIA)
 #include "include/effects/SkImageFilters.h"

@@ -16,16 +16,6 @@
 #include "pipeline/rs_render_thread_visitor.h"
 
 #include <cmath>
-#ifndef USE_ROSEN_DRAWING
-#include <include/core/SkColor.h>
-#include <include/core/SkFont.h>
-#include <include/core/SkMatrix.h>
-#include <include/core/SkPaint.h>
-#include <include/core/SkRect.h>
-#else
-#include "draw/color.h"
-#include "drawing/engine_adapter/impl_interface/matrix_impl.h"
-#endif
 
 #include "rs_trace.h"
 
@@ -41,14 +31,16 @@
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_properties_painter.h"
+#include "transaction/rs_transaction_proxy.h"
+#include "ui/rs_surface_extractor.h"
+#include "ui/rs_surface_node.h"
+
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
 #else
 #include "platform/drawing/rs_surface.h"
 #endif
-#include "transaction/rs_transaction_proxy.h"
-#include "ui/rs_surface_extractor.h"
-#include "ui/rs_surface_node.h"
 
 #ifdef ROSEN_OHOS
 #include <frame_collector.h>
@@ -56,6 +48,17 @@
 #include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
+#endif
+
+#ifndef USE_ROSEN_DRAWING
+#include <include/core/SkColor.h>
+#include <include/core/SkFont.h>
+#include <include/core/SkMatrix.h>
+#include <include/core/SkPaint.h>
+#include <include/core/SkRect.h>
+#else
+#include "draw/color.h"
+#include "drawing/engine_adapter/impl_interface/matrix_impl.h"
 #endif
 
 namespace OHOS {
@@ -129,7 +132,7 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 }
 
 void RSRenderThreadVisitor::ResetAndPrepareChildrenNode(RSRenderNode& node,
-    std::shared_ptr<RSBaseRenderNode> nodeParent)
+    std::shared_ptr<RSRenderNode> nodeParent)
 {
     // merge last childRect as dirty if any child has been removed
     if (curDirtyManager_ && node.HasRemovedChild()) {

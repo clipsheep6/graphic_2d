@@ -15,12 +15,12 @@
 
 #include "animation/rs_animation_fraction.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 
-#include "common/rs_common_def.h"
-#include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 
 namespace OHOS {

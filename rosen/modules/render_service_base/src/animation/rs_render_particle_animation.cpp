@@ -17,8 +17,7 @@
 
 #include <memory>
 
-#include "animation/rs_value_estimator.h"
-#include "command/rs_animation_command.h"
+#include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
 

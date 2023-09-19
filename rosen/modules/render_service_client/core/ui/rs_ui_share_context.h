@@ -15,12 +15,13 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_UI_SHARE_CONTEXT_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_UI_SHARE_CONTEXT_H
 
+#include "common/rs_macros.h"
+
 #ifdef ROSEN_IOS
 #include "render_context/render_context_egl_defines.h"
 #else
 #include "EGL/egl.h"
 #endif
-#include "common/rs_common_def.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -19,10 +19,11 @@
 #include <cstdint>
 #include <functional>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -31,8 +32,6 @@
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
 #include "common/rs_rect.h"
-#include "modifier/rs_render_modifier.h"
-#include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties.h"
 
@@ -54,6 +53,8 @@ class DrawCmdList;
 class RSContext;
 class RSNodeVisitor;
 class RSCommand;
+class RSRenderModifier;
+class RSDirtyRegionManager;
 
 class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode>  {
 public:

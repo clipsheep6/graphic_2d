@@ -20,7 +20,9 @@
 #include "gtest/gtest.h"
 #include "limit_number.h"
 #include "rs_irender_service.h"
+
 #include "pipeline/rs_render_service.h"
+#include "platform/ohos/rs_irender_service_ipc_interface_code.h"
 #include "transaction/rs_render_service_stub.h"
 
 using namespace testing;

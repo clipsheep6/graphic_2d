@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXECTOR_H
-#define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXECTOR_H
+#ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXTRACTOR_H
+#define RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXTRACTOR_H
 
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
@@ -36,4 +36,4 @@ public:
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXECTOR_H
+#endif // RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_EXTRACTOR_H

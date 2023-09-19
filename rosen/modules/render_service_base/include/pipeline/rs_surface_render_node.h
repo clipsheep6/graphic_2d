@@ -21,8 +21,6 @@
 #include <memory>
 #include <tuple>
 
-#include "memory/rs_memory_track.h"
-
 #include "common/rs_macros.h"
 #include "common/rs_occlusion_region.h"
 #include "common/rs_vector4.h"
@@ -33,7 +31,6 @@
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "platform/common/rs_system_properties.h"
-#include "property/rs_properties_painter.h"
 #include "screen_manager/screen_types.h"
 #include "transaction/rs_occlusion_data.h"
 
@@ -259,7 +256,7 @@ public:
         offsetY_ = offsetY;
     }
 
-    void CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec,
+    void CollectSurface(const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec,
         bool isUniRender, bool onlyFirstLevel) override;
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;

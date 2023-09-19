@@ -17,7 +17,6 @@
 
 #include "animation/rs_value_estimator.h"
 #include "platform/common/rs_log.h"
-#include "transaction/rs_marshalling_helper.h"
 
 namespace OHOS {
 namespace Rosen {

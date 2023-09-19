@@ -15,14 +15,8 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
 
-#include "include/core/SkColorFilter.h"
-#ifdef NEW_SKIA
-#include "include/effects/SkRuntimeEffect.h"
-#endif
-
 #include "common/rs_macros.h"
 #include "render/rs_skia_filter.h"
-#include "render/rs_kawase_blur.h"
 
 namespace OHOS {
 namespace Rosen {

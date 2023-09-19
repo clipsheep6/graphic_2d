@@ -19,8 +19,8 @@
 #include <functional>
 #include <memory>
 
-#include "common/rs_common_def.h"
 #include "delegate/rs_delegate.h"
+
 #include "common/rs_macros.h"
 
 namespace OHOS::Rosen {

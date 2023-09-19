@@ -26,7 +26,7 @@ class RSB_EXPORT RSSpringInterpolator : public RSSpringModel<float>, public RSIn
 public:
     RSSpringInterpolator(float response, float dampingRatio, float initialVelocity);
 
-    ~RSSpringInterpolator() override {};
+    ~RSSpringInterpolator() override = default;
 
     float Interpolate(float fraction) const override;
     bool Marshalling(Parcel& parcel) const override;

@@ -19,7 +19,7 @@
 #include "animation/rs_value_estimator.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
-#include "modifier/rs_animatable_arithmetic.h"
+#include "common/rs_vector2.h"
 #include "modifier/rs_modifier_type.h"
 #include "transaction/rs_marshalling_helper.h"
 

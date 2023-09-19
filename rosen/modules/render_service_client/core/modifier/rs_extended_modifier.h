@@ -21,6 +21,7 @@
 #include "common/rs_macros.h"
 #include "modifier/rs_modifier.h"
 #include "pipeline/rs_draw_cmd_list.h"
+#include "pipeline/rs_node_map.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_canvas_node.h"
 

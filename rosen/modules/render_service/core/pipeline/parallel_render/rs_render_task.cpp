@@ -14,7 +14,8 @@
  */
 
 #include "rs_render_task.h"
-#include "pipeline/rs_base_render_node.h"
+
+#include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
@@ -35,7 +36,7 @@ void RSSuperRenderTask::AddTask(std::unique_ptr<RSRenderTask> &&task)
     tasks_.push(std::move(task));
 }
 
-std::shared_ptr<RSBaseRenderNode> RSSuperRenderTask::GetSurfaceNode()
+std::shared_ptr<RSRenderNode> RSSuperRenderTask::GetSurfaceNode()
 {
     if (GetTaskSize() == 0) {
         return nullptr;

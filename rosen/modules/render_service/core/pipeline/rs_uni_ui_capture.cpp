@@ -18,7 +18,6 @@
 #include <functional>
 
 #include "include/core/SkRect.h"
-#include "rs_trace.h"
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
@@ -29,7 +28,7 @@
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
-#include "render/rs_skia_filter.h"
+#include "property/rs_properties_painter.h"
 
 namespace OHOS {
 namespace Rosen {

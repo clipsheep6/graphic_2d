@@ -26,7 +26,7 @@ using TransactionFinishedCallback = std::function<void()>;
 class RSC_EXPORT RSProcessTransactionController : public RSSyncTransactionControllerStub {
 public:
     RSProcessTransactionController() = default;
-    virtual ~RSProcessTransactionController() = default;
+    ~RSProcessTransactionController() override = default;
 
     void CreateTransactionFinished() override;
 

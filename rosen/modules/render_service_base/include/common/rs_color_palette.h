@@ -17,7 +17,6 @@
 #define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_COLOR_PALETTE_H
 
 #include "common/rs_color.h"
-#include "common/rs_macros.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -17,9 +17,7 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_memory_track.h"
-#include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
-#include "render/rs_skia_filter.h"
 #include "visitor/rs_node_visitor.h"
 
 namespace OHOS {

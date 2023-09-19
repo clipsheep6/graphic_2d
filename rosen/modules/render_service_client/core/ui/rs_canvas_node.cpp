@@ -18,13 +18,10 @@
 #include <algorithm>
 #include <string>
 
-#include "common/rs_obj_abs_geometry.h"
 #include "command/rs_canvas_node_command.h"
 #include "command/rs_node_command.h"
-#include "platform/common/rs_log.h"
-#include "common/rs_obj_geometry.h"
-#include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_node_map.h"
+#include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
 
 namespace OHOS {

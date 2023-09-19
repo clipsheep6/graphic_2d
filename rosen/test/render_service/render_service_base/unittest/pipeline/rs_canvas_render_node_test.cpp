@@ -16,7 +16,8 @@
 #include "gtest/gtest.h"
 
 #include "pipeline/rs_canvas_render_node.h"
-#include "platform/common/rs_log.h"
+#include "pipeline/rs_draw_cmd_list.h"
+
 using namespace testing;
 using namespace testing::ext;
 

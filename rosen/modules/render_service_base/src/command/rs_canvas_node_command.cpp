@@ -16,6 +16,7 @@
 #include "command/rs_canvas_node_command.h"
 
 #include "pipeline/rs_canvas_render_node.h"
+#include "pipeline/rs_draw_cmd_list.h"
 
 namespace OHOS {
 namespace Rosen {

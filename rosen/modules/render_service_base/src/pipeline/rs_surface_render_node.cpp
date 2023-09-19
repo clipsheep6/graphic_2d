@@ -15,6 +15,21 @@
 
 #include "pipeline/rs_surface_render_node.h"
 
+#include "command/rs_surface_node_command.h"
+#include "common/rs_common_def.h"
+#include "common/rs_obj_abs_geometry.h"
+#include "common/rs_rect.h"
+#include "common/rs_vector4.h"
+#include "ipc_callbacks/rs_rt_refresh_callback.h"
+#include "memory/rs_memory_track.h"
+#include "pipeline/rs_dirty_region_manager.h"
+#include "pipeline/rs_render_node.h"
+#include "platform/common/rs_log.h"
+#include "platform/ohos/rs_jank_stats.h"
+#include "property/rs_properties_painter.h"
+#include "transaction/rs_render_service_client.h"
+#include "visitor/rs_node_visitor.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
@@ -25,22 +40,6 @@
 #include "include/gpu/GrContext.h"
 #endif
 #endif
-
-#include "command/rs_surface_node_command.h"
-#include "common/rs_common_def.h"
-#include "common/rs_obj_abs_geometry.h"
-#include "common/rs_rect.h"
-#include "common/rs_vector2.h"
-#include "common/rs_vector4.h"
-#include "ipc_callbacks/rs_rt_refresh_callback.h"
-#include "pipeline/rs_render_node.h"
-#include "pipeline/rs_root_render_node.h"
-#include "platform/common/rs_log.h"
-#include "platform/ohos/rs_jank_stats.h"
-#include "property/rs_properties_painter.h"
-#include "render/rs_skia_filter.h"
-#include "transaction/rs_render_service_client.h"
-#include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -185,7 +184,7 @@ void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas
 }
 
 void RSSurfaceRenderNode::CollectSurface(
-    const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender,
+    const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec, bool isUniRender,
     bool onlyFirstLevel)
 {
     if (IsStartingWindow()) {
@@ -471,7 +470,7 @@ void RSSurfaceRenderNode::SetContextClipRegion(const std::optional<Drawing::Rect
 void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
 {
     isSecurityLayer_ = isSecurityLayer;
-    auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
+    auto parent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
     if (parent != nullptr && parent ->IsLeashWindow()) {
         parent->SetSecurityLayer(isSecurityLayer);
     }
@@ -564,7 +563,7 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
     if (renderServiceClient != nullptr) {
         renderServiceClient->RegisterBufferAvailableListener(
             GetId(), [weakThis = weak_from_this()]() {
-                auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
+                auto node = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
                 if (node == nullptr) {
                     return;
                 }
@@ -572,7 +571,7 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
             }, true);
         renderServiceClient->RegisterBufferClearListener(
             GetId(), [weakThis = weak_from_this()]() {
-                auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
+                auto node = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(weakThis.lock());
                 if (node == nullptr) {
                     return;
                 }
@@ -705,7 +704,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
 
     SetOcclusionVisible(vis);
     for (auto& child : GetChildren()) {
-        if (auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
+        if (auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
             surface->SetVisibleRegionRecursive(region, visibleVec, pidVisMap);
         }
     }
@@ -887,7 +886,7 @@ Vector4f RSSurfaceRenderNode::GetWindowCornerRadius()
     if (!GetRenderProperties().GetCornerRadius().IsZero()) {
         return GetRenderProperties().GetCornerRadius();
     }
-    auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
+    auto parent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
     if (parent != nullptr && parent->IsLeashWindow()) {
         return parent->GetRenderProperties().GetCornerRadius();
     }
@@ -1268,7 +1267,7 @@ bool RSSurfaceRenderNode::LeashWindowRelatedAppWindowOccluded(std::shared_ptr<RS
         return false;
     }
     for (auto& childNode : GetChildren()) {
-        const auto& childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+        const auto& childNodeSurface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
         if (childNodeSurface && childNodeSurface->GetVisibleRegion().IsEmpty()) {
             appNode = childNodeSurface;
             return true;
@@ -1285,7 +1284,7 @@ std::vector<std::shared_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetLeashW
     }
     for (auto& childNode : GetChildren()) {
         if (childNode) {
-            auto childNodeSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
+            auto childNodeSurface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(childNode);
             if (childNodeSurface) {
                 res.emplace_back(childNodeSurface);
             }
@@ -1353,13 +1352,13 @@ void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, N
         firstLevelNodeId = GetId();
     } else if (IsAppWindow()) {
         firstLevelNodeId = GetId();
-        auto parentNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
+        auto parentNode = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
         if (parentNode && parentNode->IsLeashWindow()) {
             firstLevelNodeId = parentNode->GetId();
         }
     }
     isNewOnTree_ = flag && !isOnTheTree_;
-    RSBaseRenderNode::SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId);
+    RSRenderNode::SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId);
     if (flag == isReportFirstFrame_ || !IsAppWindow()) {
         return;
     }

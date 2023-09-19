@@ -15,9 +15,9 @@
 
 #include "rs_sync_transaction_controller.h"
 
-#include "platform/common/rs_log.h"
-#include "rs_process_transaction_controller.h"
 #include "rs_transaction.h"
+
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

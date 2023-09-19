@@ -420,11 +420,11 @@ ScreenId RSScreenManager::GetMirrorScreenId(ScreenId id)
     }
 
     const auto& nodeMap = mainThread->GetContext().GetNodeMap();
-    nodeMap.TraversalNodes([&id, &mirroredId](const std::shared_ptr<RSBaseRenderNode>& node) {
+    nodeMap.TraversalNodes([&id, &mirroredId](const std::shared_ptr<RSRenderNode>& node) {
         if (node == nullptr || !node->IsInstanceOf<RSDisplayRenderNode>()) {
             return;
         }
-        RSDisplayRenderNode& displayNode = *(RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node));
+        RSDisplayRenderNode& displayNode = *(RSRenderNode::ReinterpretCast<RSDisplayRenderNode>(node));
         if (displayNode.GetScreenId() != id) {
             return;
         }

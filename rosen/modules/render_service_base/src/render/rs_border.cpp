@@ -23,7 +23,6 @@
 #else
 #include "draw/path.h"
 #endif
-#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

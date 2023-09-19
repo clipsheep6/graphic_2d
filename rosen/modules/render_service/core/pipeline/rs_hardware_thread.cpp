@@ -15,16 +15,18 @@
 
 #include "pipeline/rs_hardware_thread.h"
 
+#include "GLES/glext.h"
+#include "hdi_backend.h"
 #include "hgm_core.h"
+#include "rs_trace.h"
+
 #include "pipeline/rs_base_render_util.h"
-#include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_engine.h"
+#include "pipeline/rs_uni_render_util.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "screen_manager/rs_screen_manager.h"
-#include "rs_trace.h"
-#include "hdi_backend.h"
 
 #ifdef RS_ENABLE_EGLIMAGE
 #include "rs_egl_image_manager.h"

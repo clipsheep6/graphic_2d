@@ -16,7 +16,6 @@
 #include "rs_physical_screen_processor.h"
 
 #include "rs_trace.h"
-#include "string_utils.h"
 
 #include "platform/common/rs_log.h"
 
@@ -27,9 +26,7 @@ RSPhysicalScreenProcessor::RSPhysicalScreenProcessor()
 {
 }
 
-RSPhysicalScreenProcessor::~RSPhysicalScreenProcessor() noexcept
-{
-}
+RSPhysicalScreenProcessor::~RSPhysicalScreenProcessor() noexcept = default;
 
 bool RSPhysicalScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
                                      std::shared_ptr<RSBaseRenderEngine> renderEngine)

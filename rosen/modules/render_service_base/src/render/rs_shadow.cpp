@@ -19,9 +19,9 @@
 
 namespace OHOS {
 namespace Rosen {
-RSShadow::RSShadow() {}
+RSShadow::RSShadow() = default;
 
-RSShadow::~RSShadow() {}
+RSShadow::~RSShadow() = default;
 
 void RSShadow::SetColor(Color color)
 {

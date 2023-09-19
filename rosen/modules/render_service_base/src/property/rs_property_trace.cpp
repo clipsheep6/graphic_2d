@@ -21,9 +21,11 @@
 #include <regex>
 #include <securec.h>
 #include <sys/time.h>
-#include "directory_ex.h"
 
+#include "directory_ex.h"
 #include "rs_trace.h"
+
+#include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {

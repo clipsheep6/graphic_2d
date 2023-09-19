@@ -16,8 +16,6 @@
 #include "ui/rs_effect_node.h"
 
 #include "command/rs_effect_node_command.h"
-#include "command/rs_node_command.h"
-#include "platform/common/rs_log.h"
 #include "pipeline/rs_node_map.h"
 #include "transaction/rs_transaction_proxy.h"
 

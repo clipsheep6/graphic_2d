@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "animation/rs_spring_model.h"
+#include "common/rs_matrix3.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_render_property.h"

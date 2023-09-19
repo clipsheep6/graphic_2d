@@ -20,14 +20,12 @@
 #include <mutex>
 #include <set>
 #include <unordered_map>
-#include "surface.h"
-#include "sync_fence.h"
+
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node_map.h"
-#include "common/rs_obj_abs_geometry.h"
+#include "pipeline/rs_surface_render_node.h"
 
 #ifdef USE_ROSEN_DRAWING
 #include "utils/matrix.h"
@@ -68,7 +66,7 @@ public:
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes, uint64_t focusNodeId = 0,
         DeviceType deviceType = DeviceType::PHONE);
     static void ClearSurfaceIfNeed(const RSRenderNodeMap& map, const std::shared_ptr<RSDisplayRenderNode>& displayNode,
-        std::set<std::shared_ptr<RSBaseRenderNode>>& oldChildren, DeviceType deviceType = DeviceType::PHONE);
+        std::set<std::shared_ptr<RSRenderNode>>& oldChildren, DeviceType deviceType = DeviceType::PHONE);
     static void ClearCacheSurface(RSRenderNode& node, uint32_t threadIndex, bool isClearCompletedCacheSurface = true);
 #ifndef USE_ROSEN_DRAWING
     static void ClearNodeCacheSurface(sk_sp<SkSurface>&& cacheSurface, sk_sp<SkSurface>&& cacheCompletedSurface,

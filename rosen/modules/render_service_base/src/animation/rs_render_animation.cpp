@@ -16,7 +16,6 @@
 #include "animation/rs_render_animation.h"
 
 #include "command/rs_animation_command.h"
-#include "pipeline/rs_canvas_render_node.h"
 #include "command/rs_message_processor.h"
 #include "platform/common/rs_log.h"
 

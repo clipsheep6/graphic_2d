@@ -14,12 +14,14 @@
  */
 
 #include "rs_parallel_task_manager.h"
+
 #include <memory>
-#include "rs_parallel_render_manager.h"
+
 #include "rs_parallel_render_ext.h"
+#include "rs_parallel_render_manager.h"
 #include "rs_trace.h"
+
 #include "platform/common/rs_log.h"
-#include "rs_node_cost_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -77,7 +79,7 @@ void RSParallelTaskManager::PushCompositionTask(std::unique_ptr<RSCompositionTas
     compositionTaskList_.push_back(std::move(compositionTask));
 }
 
-void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRenderNode> displayNode)
+void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSRenderNode> displayNode)
 {
     if (renderTaskList_.size() == 0) {
         taskNum_ = 0;
@@ -100,7 +102,7 @@ void RSParallelTaskManager::LBCalcAndSubmitSuperTask(std::shared_ptr<RSBaseRende
     }
 }
 
-void RSParallelTaskManager::LBCalcAndSubmitCompositionTask(std::shared_ptr<RSBaseRenderNode> baseNode)
+void RSParallelTaskManager::LBCalcAndSubmitCompositionTask(std::shared_ptr<RSRenderNode> baseNode)
 {
     taskNum_ = 0;
     for (decltype(compositionTaskList_.size()) i = 0; i < compositionTaskList_.size(); i++) {
@@ -176,7 +178,7 @@ void RSParallelTaskManager::UpdateNodeCost(RSDisplayRenderNode& node, std::vecto
     auto surfaceNodes = node.GetSortedChildren();
     std::map<uint64_t, int32_t> costs;
     for (auto it = surfaceNodes.begin(); it != surfaceNodes.end(); ++it) {
-        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        auto surface = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         costs.insert(std::pair<uint64_t, int32_t>(surface->GetId(), surface->GetNodeCost()));
     }
     auto updateNodeCost = reinterpret_cast<void(*)(int*, std::map<uint64_t, int32_t> &, std::vector<uint32_t> &)>(

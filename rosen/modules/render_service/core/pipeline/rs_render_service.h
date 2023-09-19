@@ -18,10 +18,11 @@
 #include <map>
 #include <unordered_set>
 
-#include "screen_manager/rs_screen_manager.h"
-#include "transaction/rs_render_service_stub.h"
 #include "vsync_controller.h"
 #include "vsync_distributor.h"
+
+#include "screen_manager/rs_screen_manager.h"
+#include "transaction/rs_render_service_stub.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,7 +32,7 @@ class RSRenderServiceConnection;
 class RSRenderService : public RSRenderServiceStub {
 public:
     RSRenderService();
-    ~RSRenderService() noexcept;
+    ~RSRenderService() noexcept override;
 
     RSRenderService(const RSRenderService&) = delete;
     RSRenderService& operator=(const RSRenderService&) = delete;

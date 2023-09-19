@@ -23,7 +23,6 @@
 #include "lib.rs.h"
 #endif
 
-#include "animation/rs_value_estimator.h"
 namespace OHOS {
 namespace Rosen {
 RSRenderParticleEffector::RSRenderParticleEffector(const std::shared_ptr<ParticleRenderParams> particleParams)

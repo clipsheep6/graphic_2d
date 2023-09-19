@@ -14,21 +14,23 @@
  */
 #include "rsrenderserviceconnectionstub_fuzzer.h"
 
+#include <climits>
 #include <cstddef>
 #include <cstdint>
-#include <unistd.h>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <fcntl.h>
+#include <unistd.h>
 
-#include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_render_service_connection.h"
-#include "platform/ohos/rs_irender_service.h"
-#include "transaction/rs_render_service_connection_stub.h"
-#include "transaction/rs_transaction_proxy.h"
 #include "message_parcel.h"
 #include "securec.h"
+
+#include "modifier/rs_render_property.h"
+#include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_render_service_connection.h"
+#include "transaction/rs_render_service_client.h"
+#include "transaction/rs_render_service_connection_stub.h"
+#include "transaction/rs_transaction_proxy.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -20,8 +20,8 @@
 #include <refbase.h>
 #include <memory>
 #include <cinttypes>
+#include <utility>
 
-#include "animation/rs_animation_common.h"
 #include "animation/rs_value_estimator.h"
 #include "common/rs_macros.h"
 #include "modifier/rs_render_property.h"
@@ -31,7 +31,7 @@ namespace Rosen {
 class RSB_EXPORT RSRenderTransitionEffect : public Parcelable {
 public:
     RSRenderTransitionEffect() = default;
-    virtual ~RSRenderTransitionEffect() = default;
+    ~RSRenderTransitionEffect() override = default;
     const std::shared_ptr<RSRenderModifier>& GetModifier();
     virtual void UpdateFraction(float fraction) const = 0;
 
@@ -117,7 +117,7 @@ class RSTransitionCustom : public RSRenderTransitionEffect {
 public:
     RSTransitionCustom(std::shared_ptr<RSRenderPropertyBase> property, std::shared_ptr<RSRenderPropertyBase> startValue,
         std::shared_ptr<RSRenderPropertyBase> endValue)
-        : property_(property), startValue_(startValue), endValue_(endValue)
+        : property_(std::move(property)), startValue_(std::move(startValue)), endValue_(std::move(endValue))
     {
         InitValueEstimator();
     }

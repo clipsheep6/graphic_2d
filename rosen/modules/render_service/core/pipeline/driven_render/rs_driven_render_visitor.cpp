@@ -15,17 +15,15 @@
 
 #include "rs_driven_render_visitor.h"
 
-#include "common/rs_common_def.h"
-#include "common/rs_obj_abs_geometry.h"
-#include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_base_render_util.h"
-#include "pipeline/rs_canvas_render_node.h"
-#include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "platform/common/rs_log.h"
-#include "property/rs_properties_painter.h"
 #include "rs_driven_render_listener.h"
 #include "rs_trace.h"
+
+#include "common/rs_obj_abs_geometry.h"
+#include "pipeline/rs_canvas_render_node.h"
+#include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -60,7 +58,7 @@ void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRender
         return;
     }
     currDrivenSurfaceNode_ = std::static_pointer_cast<RSDrivenSurfaceRenderNode>(node.shared_from_this());
-    auto canvasNode = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
+    auto canvasNode = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
     if (canvasNode == nullptr) {
         RS_LOGE("RSDrivenRenderVisitor:: Driven canvasNode is null!");
         return;
@@ -190,7 +188,7 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
         return;
     }
 
-    auto canvasNode = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
+    auto canvasNode = RSRenderNode::ReinterpretCast<RSCanvasRenderNode>(node.GetDrivenCanvasNode());
     if (canvasNode == nullptr) {
         RS_LOGE("RSDrivenRenderVisitor canvasNode is null!");
         return;
@@ -272,7 +270,7 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
 
     if (node.IsBackgroundSurface()) {
         RS_LOGD("RSDrivenRenderVisitor process BACKGROUND");
-        auto rsDrivenParent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(canvasNode->GetParent().lock());
+        auto rsDrivenParent = RSRenderNode::ReinterpretCast<RSSurfaceRenderNode>(canvasNode->GetParent().lock());
         if (rsDrivenParent == nullptr) {
             return;
         }

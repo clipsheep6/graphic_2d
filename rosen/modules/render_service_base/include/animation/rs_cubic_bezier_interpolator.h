@@ -26,7 +26,7 @@ public:
     explicit RSCubicBezierInterpolator(float ctrx1, float ctry1, float ctrx2, float ctry2)
         : controllx1_(ctrx1), controlly1_(ctry1), controllx2_(ctrx2), controlly2_(ctry2)
     {}
-    ~RSCubicBezierInterpolator() = default;
+    ~RSCubicBezierInterpolator() override = default;
 
     float Interpolate(float input) const override
     {

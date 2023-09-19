@@ -16,12 +16,23 @@
 #include "memory/rs_memory_manager.h"
 
 #include <malloc.h>
+
 #include "include/core/SkGraphics.h"
+#include "rs_skia_memory_tracer.h"
 #include "rs_trace.h"
 
+#include "common/rs_obj_abs_geometry.h"
 #include "memory/rs_dfx_string.h"
-#include "rs_skia_memory_tracer.h"
 #include "memory/rs_memory_graphic.h"
+#include "memory/rs_tag_tracker.h"
+#include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_surface_render_node.h"
+#include "platform/common/rs_log.h"
+
+#ifdef NEW_RENDER_CONTEXT
+#include "render_context/memory_handler.h"
+#endif
+
 #ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrDirectContextPriv.h"
@@ -29,15 +40,6 @@
 #include "include/gpu/GrContext.h"
 #include "src/gpu/GrContextPriv.h"
 #endif
-
-#include "common/rs_obj_abs_geometry.h"
-#include "memory/rs_tag_tracker.h"
-#ifdef NEW_RENDER_CONTEXT
-#include "render_context/memory_handler.h"
-#endif
-#include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "platform/common/rs_log.h"
 
 namespace OHOS::Rosen {
 namespace {

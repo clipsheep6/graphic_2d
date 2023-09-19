@@ -19,6 +19,8 @@
 #include <memory>
 #include <unistd.h>
 
+#include "iconsumer_surface.h"
+
 #include "transaction/rs_interfaces.h"
 
 using namespace testing::ext;

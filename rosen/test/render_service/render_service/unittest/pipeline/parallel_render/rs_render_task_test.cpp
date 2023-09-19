@@ -15,12 +15,12 @@
 
 #include "gtest/gtest.h"
 #include "limit_number.h"
+
 #include "pipeline/parallel_render/rs_render_task.h"
-#include "pipeline/rs_render_node.h"
-#include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
 
 using namespace testing;
 using namespace testing::ext;

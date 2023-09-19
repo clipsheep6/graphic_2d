@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "pipeline/rs_canvas_render_node.h"
+#include "pipeline/rs_draw_cmd_list.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,7 +38,7 @@ public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::CANVAS_DRAWING_NODE;
 
     explicit RSCanvasDrawingRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
-    virtual ~RSCanvasDrawingRenderNode();
+    ~RSCanvasDrawingRenderNode() override;
 
     void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
 

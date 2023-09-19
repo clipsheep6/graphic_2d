@@ -14,18 +14,19 @@
  */
 
 #include "rs_render_service_connection_stub.h"
+
 #include "ivsync_connection.h"
+#include "rs_trace.h"
 #include "securec.h"
 #include "sys_binder.h"
 
 #include "command/rs_command_factory.h"
 #include "pipeline/rs_base_render_util.h"
-#include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_unmarshal_thread.h"
 #include "platform/common/rs_log.h"
+#include "platform/ohos/rs_irender_service_connection_ipc_interface_code_access_verifier.h"
 #include "transaction/rs_ashmem_helper.h"
-#include "rs_trace.h"
 
 #if defined (ENABLE_DDGR_OPTIMIZE)
 #include "ddgr_renderer.h"

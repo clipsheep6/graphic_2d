@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <cmath>
 #include <vector>
+
 namespace OHOS {
 namespace Rosen {
 RSRenderParticleEmitter::RSRenderParticleEmitter(std::shared_ptr<ParticleRenderParams> particleParams)

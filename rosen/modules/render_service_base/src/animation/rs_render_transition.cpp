@@ -15,6 +15,7 @@
 
 #include "animation/rs_render_transition.h"
 
+#include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"

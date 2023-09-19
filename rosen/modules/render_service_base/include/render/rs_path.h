@@ -20,9 +20,8 @@
 #include <string>
 
 #include "common/rs_macros.h"
-#include "common/rs_matrix3.h"
-#include "common/rs_rect.h"
 #include "common/rs_vector2.h"
+#include "common/rs_vector4.h"
 
 #ifndef USE_ROSEN_DRAWING
 class SkPath;

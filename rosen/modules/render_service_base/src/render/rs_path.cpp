@@ -15,9 +15,10 @@
 
 #include "render/rs_path.h"
 
+#include "platform/common/rs_log.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkPath.h"
-#include "include/core/SkMatrix.h"
 #include "include/core/SkPathMeasure.h"
 #include "include/utils/SkParsePath.h"
 #else
@@ -26,8 +27,6 @@
 #include "utils/matrix.h"
 #include "utils/scalar.h"
 #endif
-
-#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

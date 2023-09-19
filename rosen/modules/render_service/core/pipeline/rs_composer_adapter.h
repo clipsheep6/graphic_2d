@@ -79,13 +79,13 @@ private:
         const LayerInfoPtr& layer,
         const ComposeInfo& info,
         const sptr<IConsumerSurface>& surface,
-        RSBaseRenderNode* node) const;
+        RSRenderNode* node) const;
     void SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,
                                 const sptr<IConsumerSurface>& surface) const;
     void DealWithNodeGravity(const RSSurfaceRenderNode& node, ComposeInfo& info) const;
     void DumpLayersToFile(const std::vector<LayerInfoPtr>& layers);
 
-    void LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const;
+    void LayerRotate(const LayerInfoPtr& layer, RSRenderNode& node) const;
     void LayerCrop(const LayerInfoPtr& layer) const;
     static void LayerScaleDown(const LayerInfoPtr& layer);
     static void LayerPresentTimestamp(const LayerInfoPtr& layer, const sptr<IConsumerSurface>& surface);

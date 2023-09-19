@@ -14,10 +14,10 @@
  */
 #include "rs_transaction.h"
 
-#include "ipc_callbacks/rs_sync_transaction_controller_proxy.h"
-#include "platform/common/rs_log.h"
 #include "rs_process_transaction_controller.h"
 #include "sandbox_utils.h"
+
+#include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_proxy.h"
 
 namespace OHOS {

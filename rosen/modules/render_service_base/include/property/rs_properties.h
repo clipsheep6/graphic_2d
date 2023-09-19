@@ -20,8 +20,6 @@
 #include <tuple>
 #include <vector>
 
-#include "include/effects/SkColorMatrix.h"
-
 #include "common/rs_macros.h"
 #include "common/rs_matrix3.h"
 #include "animation/rs_render_particle.h"

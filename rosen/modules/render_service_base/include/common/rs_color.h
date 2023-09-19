@@ -17,7 +17,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_COLOR_H
 
 #include <sys/types.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include "common/rs_macros.h"
 

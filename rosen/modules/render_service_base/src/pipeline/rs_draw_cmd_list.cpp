@@ -18,9 +18,6 @@
 
 #include <fstream>
 #include <string>
-#ifdef ROSEN_OHOS
-#include <sys/mman.h>
-#endif
 #include <unordered_map>
 
 #include "rs_trace.h"
@@ -31,6 +28,9 @@
 #include "transaction/rs_ashmem_helper.h"
 #include "transaction/rs_marshalling_helper.h"
 
+#ifdef ROSEN_OHOS
+#include <sys/mman.h>
+#endif
 #ifdef ROSEN_OHOS
 namespace {
 constexpr size_t ASHMEMALLOCATOR_SIZE = 10 * 1024 * 1024; // 10M

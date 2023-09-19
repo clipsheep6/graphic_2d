@@ -15,18 +15,17 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_SKIA_RS_SKIA_FILTER_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_SKIA_RS_SKIA_FILTER_H
 
+#include "render/rs_filter.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImageFilter.h"
 #include "include/core/SkPaint.h"
-#include "include/effects/SkImageFilters.h"
 #else
 #include "draw/brush.h"
 #include "draw/canvas.h"
 #include "effect/image_filter.h"
 #endif
-
-#include "render/rs_filter.h"
 
 namespace OHOS {
 namespace Rosen {

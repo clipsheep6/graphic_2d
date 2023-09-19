@@ -17,7 +17,14 @@
 #define RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_MODIFIER_EXTRACTOR_H
 
 #include "common/rs_common_def.h"
-#include "property/rs_properties.h"
+#include "common/rs_macros.h"
+#include "common/rs_vector2.h"
+#include "common/rs_vector4.h"
+#include "property/rs_properties_def.h"
+#include "render/rs_filter.h"
+#include "render/rs_image.h"
+#include "render/rs_mask.h"
+#include "render/rs_path.h"
 
 namespace OHOS {
 namespace Rosen {

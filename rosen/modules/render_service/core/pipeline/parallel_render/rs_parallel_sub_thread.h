@@ -20,26 +20,27 @@
 #include <cstdint>
 #include <memory>
 #include <thread>
+
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkSurface.h"
+
+#include "pipeline/parallel_render/rs_render_task.h"
+#include "pipeline/rs_base_render_engine.h"
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_paint_filter_canvas.h"
 #if defined(NEW_SKIA)
 #include "include/gpu/GrDirectContext.h"
 #else
 #include "include/gpu/GrContext.h"
 #endif
-#include "pipeline/parallel_render/rs_render_task.h"
-#include "pipeline/rs_base_render_engine.h"
-#include "pipeline/rs_display_render_node.h"
-#include "pipeline/rs_paint_filter_canvas.h"
 #ifdef NEW_RENDER_CONTEXT
 #include "render_context_base.h"
 #include "include/gpu/gl/GrGLInterface.h"
 #else
 #include "render_context/render_context.h"
 #endif
-#include "pipeline/rs_base_render_engine.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -17,6 +17,8 @@
 
 #include <iremote_proxy.h>
 
+#include "platform/ohos/rs_irender_service_ipc_interface_code_access_verifier.h"
+
 namespace OHOS {
 namespace Rosen {
 class RSConnectionTokenProxy : public IRemoteProxy<RSIConnectionToken> {

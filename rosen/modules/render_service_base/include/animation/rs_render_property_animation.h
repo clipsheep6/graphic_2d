@@ -27,7 +27,7 @@ class RSAnimationLog;
 
 class RSB_EXPORT RSRenderPropertyAnimation : public RSRenderAnimation {
 public:
-    virtual ~RSRenderPropertyAnimation() = default;
+    ~RSRenderPropertyAnimation() override = default;
 
     PropertyId GetPropertyId() const override;
 

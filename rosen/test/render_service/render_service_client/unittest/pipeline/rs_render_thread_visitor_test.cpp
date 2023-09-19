@@ -19,7 +19,7 @@
 #include "limit_number.h"
 
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
-#include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_node_map.h"

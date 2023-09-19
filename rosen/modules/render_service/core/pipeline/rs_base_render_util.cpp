@@ -15,18 +15,19 @@
 
 #include "rs_base_render_util.h"
 
+#include <parameters.h>
 #include <sys/time.h>
 #include <unordered_set>
-#include <parameters.h>
 
-#include "common/rs_matrix3.h"
-#include "common/rs_obj_abs_geometry.h"
-#include "common/rs_vector2.h"
-#include "common/rs_vector3.h"
 #include "include/utils/SkCamera.h"
-#include "platform/common/rs_log.h"
 #include "png.h"
 #include "rs_trace.h"
+
+#include "common/rs_matrix3.h"
+#include "common/rs_vector2.h"
+#include "common/rs_vector3.h"
+#include "platform/common/rs_log.h"
+#include "property/rs_properties_painter.h"
 #include "transaction/rs_transaction_data.h"
 
 #ifdef USE_ROSEN_DRAWING

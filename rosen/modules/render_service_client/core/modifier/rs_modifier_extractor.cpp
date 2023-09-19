@@ -17,8 +17,9 @@
 
 #include <securec.h>
 
-#include "modifier/rs_property_modifier.h"
+#include "modifier/rs_modifier.h"
 #include "modifier/rs_modifier_type.h"
+#include "modifier/rs_property.h"
 #include "pipeline/rs_node_map.h"
 #include "ui/rs_node.h"
 
@@ -26,26 +27,26 @@ namespace OHOS {
 namespace Rosen {
 RSModifierExtractor::RSModifierExtractor(NodeId id) : id_(id) {}
 
-#define GET_PROPERTY_FROM_MODIFIERS(T, propertyType, defaultValue, operator)                                        \
-    do {                                                                                                            \
-        auto node = RSNodeMap::Instance().GetNode<RSNode>(id_);                                                     \
-        if (!node) {                                                                                                \
-            return defaultValue;                                                                                    \
-        }                                                                                                           \
-        auto iter = node->propertyModifiers_.find(RSModifierType::propertyType);                                    \
-        if (iter != node->propertyModifiers_.end()) {                                                               \
-            if (!iter->second || !iter->second->GetProperty()) {                                                    \
-                return defaultValue;                                                                                \
-            }                                                                                                       \
-            return std::static_pointer_cast<RSProperty<T>>(iter->second->GetProperty())->Get();                     \
-        }                                                                                                           \
-        T value = defaultValue;                                                                                     \
-        for (auto& [_, modifier] : node->modifiers_) {                                                              \
-            if (modifier->GetModifierType() == RSModifierType::propertyType) {                                      \
-                value operator std::static_pointer_cast<RSProperty<T>>(modifier->GetProperty())->Get();             \
-            }                                                                                                       \
-        }                                                                                                           \
-        return value;                                                                                               \
+#define GET_PROPERTY_FROM_MODIFIERS(T, propertyType, defaultValue, operator)                            \
+    do {                                                                                                \
+        auto node = RSNodeMap::Instance().GetNode<RSNode>(id_);                                         \
+        if (!node) {                                                                                    \
+            return defaultValue;                                                                        \
+        }                                                                                               \
+        auto iter = node->propertyModifiers_.find(RSModifierType::propertyType);                        \
+        if (iter != node->propertyModifiers_.end()) {                                                   \
+            if (!iter->second || !iter->second->GetProperty()) {                                        \
+                return defaultValue;                                                                    \
+            }                                                                                           \
+            return std::static_pointer_cast<RSProperty<T>>(iter->second->GetProperty())->Get();         \
+        }                                                                                               \
+        T value = defaultValue;                                                                         \
+        for (auto& [_, modifier] : node->modifiers_) {                                                  \
+            if (modifier->GetModifierType() == RSModifierType::propertyType) {                          \
+                value operator std::static_pointer_cast<RSProperty<T>>(modifier->GetProperty())->Get(); \
+            }                                                                                           \
+        }                                                                                               \
+        return value;                                                                                   \
     } while (0)
 
 Vector4f RSModifierExtractor::GetBounds() const

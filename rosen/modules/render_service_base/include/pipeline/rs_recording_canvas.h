@@ -18,8 +18,6 @@
 
 #ifndef USE_ROSEN_DRAWING
 
-#include "common/rs_macros.h"
-#include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkCanvasVirtualEnforcer.h"
 #include "include/core/SkDrawable.h"
@@ -27,8 +25,9 @@
 #include "include/core/SkPath.h"
 #include "include/core/SkRect.h"
 #include "include/utils/SkNoDrawCanvas.h"
+
+#include "common/rs_macros.h"
 #include "pipeline/rs_draw_cmd_list.h"
-#include "property/rs_properties_def.h"
 #include "render/rs_image.h"
 #ifdef NEW_SKIA
 #include "src/core/SkVerticesPriv.h"

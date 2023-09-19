@@ -14,12 +14,15 @@
  */
 
 #include "rs_sub_thread_manager.h"
+
 #include <chrono>
 
 #include "common/rs_optional_trace.h"
-#include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_task_dispatcher.h"
 #include "memory/rs_memory_manager.h"
+#include "pipeline/parallel_render/rs_render_task.h"
+#include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_render_node.h"
+#include "pipeline/rs_task_dispatcher.h"
 
 namespace OHOS::Rosen {
 static constexpr uint32_t SUB_THREAD_NUM = 3;

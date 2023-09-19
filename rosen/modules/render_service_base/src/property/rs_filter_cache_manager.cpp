@@ -16,7 +16,6 @@
 #include "property/rs_filter_cache_manager.h"
 
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
-#include "include/gpu/GrBackendSurface.h"
 #include "src/image/SkImage_Base.h"
 
 #include "common/rs_optional_trace.h"

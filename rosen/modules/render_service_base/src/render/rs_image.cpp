@@ -15,6 +15,14 @@
 
 #include "render/rs_image.h"
 
+#include "rs_trace.h"
+#include "sandbox_utils.h"
+
+#include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
+#include "property/rs_properties_painter.h"
+#include "render/rs_image_cache.h"
+
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
 #include <include/gpu/GrDirectContext.h>
@@ -24,13 +32,6 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkRRect.h"
 #endif
-#include "platform/common/rs_log.h"
-#include "platform/common/rs_system_properties.h"
-#include "property/rs_properties_painter.h"
-#include "render/rs_image_cache.h"
-#include "render/rs_pixel_map_util.h"
-#include "rs_trace.h"
-#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {

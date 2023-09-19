@@ -19,7 +19,6 @@
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
 #include "include/core/SkRect.h"
 
-#include "common/rs_macros.h"
 #include "common/rs_rect.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "render/rs_filter.h"

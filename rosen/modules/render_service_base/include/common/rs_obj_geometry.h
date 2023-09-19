@@ -19,6 +19,7 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_vector4.h"
+
 namespace OHOS {
 namespace Rosen {
 class Transform {

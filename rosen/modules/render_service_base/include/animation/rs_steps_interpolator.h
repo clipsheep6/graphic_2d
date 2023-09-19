@@ -30,7 +30,7 @@ class RSB_EXPORT RSStepsInterpolator : public RSInterpolator {
 public:
     explicit RSStepsInterpolator(int32_t steps, StepsCurvePosition position = StepsCurvePosition::START);
 
-    ~RSStepsInterpolator() override {};
+    ~RSStepsInterpolator() override = default;
 
     float Interpolate(float fraction) const override;
     bool Marshalling(Parcel& parcel) const override;

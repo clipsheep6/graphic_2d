@@ -21,7 +21,6 @@
 #include <message_parcel.h>
 
 #include "platform/ohos/rs_irender_service_connection.h"
-#include "platform/ohos/rs_irender_service_connection_ipc_interface_code_access_verifier.h"
 #include "ipc_security/rs_ipc_interface_code_security_manager.h"
 
 namespace OHOS {
@@ -29,7 +28,7 @@ namespace Rosen {
 class RSRenderServiceConnectionStub : public IRemoteStub<RSIRenderServiceConnection> {
 public:
     RSRenderServiceConnectionStub() = default;
-    ~RSRenderServiceConnectionStub() noexcept = default;
+    ~RSRenderServiceConnectionStub() noexcept override = default;
 
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
 

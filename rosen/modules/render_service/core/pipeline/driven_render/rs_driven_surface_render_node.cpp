@@ -15,12 +15,10 @@
 
 #include "rs_driven_surface_render_node.h"
 
-#include "common/rs_obj_abs_geometry.h"
-#include "platform/common/rs_log.h"
 #include "rs_driven_render_ext.h"
-#include "screen_manager/screen_types.h"
+
+#include "platform/common/rs_log.h"
 #include "transaction/rs_render_service_client.h"
-#include "visitor/rs_node_visitor.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -29,7 +27,7 @@ RSDrivenSurfaceRenderNode::RSDrivenSurfaceRenderNode(
     : RSRenderNode(id, context), RSSurfaceHandler(id)
 {
     drivenExtInfo_.surfaceType_ = type;
-   MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
+    MemoryInfo info = { sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE };
     MemoryTrack::Instance().AddNodeRecord(id, info);
 }
 
@@ -38,12 +36,12 @@ RSDrivenSurfaceRenderNode::~RSDrivenSurfaceRenderNode()
     MemoryTrack::Instance().RemoveNodeRecord(GetId());
 }
 
-void RSDrivenSurfaceRenderNode::SetDrivenCanvasNode(RSBaseRenderNode::SharedPtr node)
+void RSDrivenSurfaceRenderNode::SetDrivenCanvasNode(RSRenderNode::SharedPtr node)
 {
     drivenCanvasNode_ = node;
 }
 
-RSBaseRenderNode::SharedPtr RSDrivenSurfaceRenderNode::GetDrivenCanvasNode() const
+RSRenderNode::SharedPtr RSDrivenSurfaceRenderNode::GetDrivenCanvasNode() const
 {
     return drivenCanvasNode_;
 }

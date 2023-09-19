@@ -16,6 +16,16 @@
 #ifndef USE_ROSEN_DRAWING
 
 #include "pipeline/rs_draw_cmd.h"
+
+#include "message_parcel.h"
+#include "rs_trace.h"
+#include "securec.h"
+
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_task_dispatcher.h"
+#include "platform/common/rs_log.h"
+#include "render/rs_pixel_map_util.h"
+
 #ifdef ROSEN_OHOS
 #include "buffer_utils.h"
 #endif
@@ -24,16 +34,6 @@
 #else
 #include "include/gpu/GrContext.h"
 #endif
-#include "message_parcel.h"
-#include "rs_trace.h"
-#include "securec.h"
-
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_root_render_node.h"
-#include "pipeline/rs_task_dispatcher.h"
-#include "platform/common/rs_log.h"
-#include "platform/common/rs_system_properties.h"
-#include "render/rs_pixel_map_util.h"
 
 namespace OHOS {
 namespace Rosen {

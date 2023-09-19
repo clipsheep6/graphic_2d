@@ -16,15 +16,14 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_DEF_H
 #define RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_DEF_H
 
+#include "common/rs_color_palette.h"
+#include "common/rs_rect.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkMatrix.h"
 #else
 #include "utils/matrix.h"
 #endif
-
-#include "common/rs_color_palette.h"
-#include "common/rs_rect.h"
-#include "common/rs_vector4.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -16,7 +16,6 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_ROOT_RENDER_NODE_H
 
 #include "common/rs_macros.h"
-#include "memory/rs_memory_track.h"
 #include "pipeline/rs_canvas_render_node.h"
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
@@ -37,8 +36,8 @@ public:
     explicit RSRootRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
     ~RSRootRenderNode() override;
 
-    virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
-    virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+    void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
+    void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
     void AttachRSSurfaceNode(NodeId SurfaceNodeId);
 

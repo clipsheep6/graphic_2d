@@ -22,7 +22,7 @@
 #include "render_context_factory.h"
 #include "rs_surface_factory.h"
 #endif
-#include <display_manager.h>
+#include "parameter.h"
 
 using namespace OHOS;
 
@@ -100,6 +100,9 @@ void BootAnimation::Init(Rosen::ScreenId defaultId, int32_t width, int32_t heigh
     LOGI("Init enter, width: %{public}d, height: %{public}d", width, height);
 
     InitPicCoordinates();
+#ifdef SUPPORT_DISPLAY_NODE
+    InitRsDisplayNode();
+#endif
     InitRsSurfaceNode();
     if (animationConfig_.IsBootVideoEnabled()) {
         LOGI("Init end");
@@ -116,7 +119,9 @@ void BootAnimation::Init(Rosen::ScreenId defaultId, int32_t width, int32_t heigh
         PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner_));
         return;
     }
+#ifndef SUPPORT_DISPLAY_NODE
     InitRsSurface();
+#endif
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "BootAnimation::preload");
     if (animationConfig_.ReadPicZipFile(imageVector_, freq_)) {
         imgVecSize_ = imageVector_.size();
@@ -301,3 +306,28 @@ void BootAnimation::CloseVideoPlayer()
     }
     LOGI("Check Exit Animation end.");
 }
+
+#ifdef SUPPORT_DISPLAY_NODE
+void BootAnimation::InitRsDisplayNode()
+{
+    OHOS::Rosen::RSDisplayNodeConfig config = {defaultId_, false, 0};
+    if (rsDisplayNode_ == nullptr) {
+        std::shared_ptr<OHOS::Rosen::RSDisplayNode> rsDisplayNode = OHOS::Rosen::RSDisplayNode::Create(config);
+        if (rsDisplayNode == nullptr) {
+            LOGE("Failed to init display node!");
+            return;
+        }
+        rsDisplayNode_ = rsDisplayNode;
+    }
+
+    rsDisplayNode_->SetDisplayOffset(0, 0);
+    rsDisplayNode_->SetFrame(0, 0, windowWidth_, windowHeight_);
+    rsDisplayNode_->SetBounds(0, 0, windowWidth_, windowHeight_);
+    // flush transaction
+    auto transactionProxy = OHOS::Rosen::RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
+    }
+    LOGI("InitRsDisplayNode success");
+}
+#endif

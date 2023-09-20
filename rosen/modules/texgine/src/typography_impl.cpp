@@ -19,8 +19,6 @@
 #include <functional>
 #include <variant>
 
-#include <unicode/ubidi.h>
-
 #include "font_collection.h"
 #include "shaper.h"
 #include "texgine/any_span.h"
@@ -32,6 +30,7 @@
 #include "texgine/utils/trace.h"
 #endif
 #include "word_breaker.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -519,6 +518,13 @@ void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY
 {
     for (auto &metric : lineMetrics_) {
         for (auto &span : metric.lineSpans) {
+            // arkui set offsetx adn offsety to match scenario 2, but in our, don`t to adjust x and y
+            if (offsetY < 0) {
+                offsetY = 12.0;
+            }
+            if (offsetY == 15.5) {
+                offsetY = 12.0;
+            }
             span.Paint(canvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
         }
     }

@@ -42,6 +42,7 @@ public:
         const TextStyle &xs, std::vector<VariantSpan> &spans) noexcept(false);
 
     void GenNewBoundryByTypeface(CharGroups cgs, std::vector<Boundary> &boundaries);
+    void GenNewBoundryByHardBreak(CharGroups cgs, std::vector<Boundary> &boundaries);
 
     double preBreak_ = 0;
     double postBreak_ = 0;

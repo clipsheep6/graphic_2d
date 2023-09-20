@@ -67,11 +67,7 @@ private:
         void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
         void ProcessEffectRenderNode(RSEffectRenderNode& node) override;
 
-#ifndef USE_ROSEN_DRAWING
-        void SetCanvas(std::shared_ptr<RSRecordingCanvas> canvas);
-#else
-        void SetCanvas(std::shared_ptr<Drawing::RecordingCanvas> canvas);
-#endif
+        void SetSurface(SkSurface* surface);
 
     private:
         std::shared_ptr<RSPaintFilterCanvas> canvas_ = nullptr;
@@ -81,12 +77,13 @@ private:
         float scaleY_ = 1.0f;
     };
 #ifndef USE_ROSEN_DRAWING
+    bool CopyDataToPixelMap(sk_sp<SkImage> img, const std::shared_ptr<Media::PixelMap>& pixelmap);
     sk_sp<SkSurface> CreateSurface(const std::shared_ptr<Media::PixelMap>& pixelmap) const;
-    void PostTaskToRTRecord(std::shared_ptr<RSRecordingCanvas> canvas, std::shared_ptr<RSRenderNode> node,
+    void Record(std::shared_ptr<RSRecordingCanvas> canvas, std::shared_ptr<RSRenderNode> node,
         std::shared_ptr<RSDividedUICaptureVisitor> visitor);
 #else
     std::shared_ptr<Drawing::Surface> CreateSurface(const std::shared_ptr<Media::PixelMap>& pixelmap) const;
-    void PostTaskToRTRecord(std::shared_ptr<Drawing::RecordingCanvas> canvas, std::shared_ptr<RSRenderNode> node,
+    void Record(std::shared_ptr<Drawing::RecordingCanvas> canvas, std::shared_ptr<RSRenderNode> node,
         std::shared_ptr<RSDividedUICaptureVisitor> visitor);
 #endif
     std::shared_ptr<Media::PixelMap> CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node) const;

@@ -49,7 +49,7 @@ public:
     static void ReleaseAllGpuResource(GrDirectContext* grContext, pid_t pid);
     static void ReleaseAllGpuResource(GrDirectContext* grContext, GrGpuResourceTag& tag);
     static void ReleaseUnlockGpuResource(GrDirectContext* grContext, bool scratchResourcesOnly = true);
-    static void ReleaseUnlockAndSafeCacheGpuResource(GrDirectContext* grContext);
+    static void ReleaseUnlockAndSafeCacheGpuResource(GrDirectContext* grContext, bool scratchResourcesOnly = false);
     static float GetAppGpuMemoryInMB(GrDirectContext* grContext);
 #else
     static void DumpMemoryUsage(DfxString& log, const GrContext* grContext, std::string& type);
@@ -64,7 +64,7 @@ public:
     static void ReleaseAllGpuResource(GrContext* grContext, GrGpuResourceTag& tag);
     static void ReleaseAllGpuResource(GrContext* grContext, pid_t pid);
     static void ReleaseUnlockGpuResource(GrContext* grContext, bool scratchResourcesOnly = true);
-    static void ReleaseUnlockAndSafeCacheGpuResource(GrContext* grContext);
+    static void ReleaseUnlockAndSafeCacheGpuResource(GrContext* grContext, bool scratchResourcesOnly = false);
     static float GetAppGpuMemoryInMB(GrContext* grContext);
 #endif
 #else
@@ -81,7 +81,7 @@ public:
     static void ReleaseAllGpuResource(Drawing::GPUContext* gpuContext, pid_t pid);
     static void ReleaseAllGpuResource(Drawing::GPUContext* gpuContext, Drawing::GPUResourceTag& tag);
     static void ReleaseUnlockGpuResource(Drawing::GPUContext* grContext, bool scratchResourcesOnly = true);
-    static void ReleaseUnlockAndSafeCacheGpuResource(Drawing::GPUContext* grContext);
+    static void ReleaseUnlockAndSafeCacheGpuResource(Drawing::GPUContext* grContext, bool scratchResourcesOnly = false);
 #endif
 
 private:

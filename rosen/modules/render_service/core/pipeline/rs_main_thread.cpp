@@ -483,20 +483,12 @@ void RSMainThread::ProcessCommand()
         auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
 #endif
         if (grContext) {
-            if (context_->purgeType_ == RSContext::PurgeType::PURGE_UNLOCK) {
-                MemoryManager::ReleaseUnlockGpuResource(grContext);
-            } else {
-                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
-            }
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
         }
 #else
         auto gpuContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
         if (gpuContext) {
-            if (context_->purgeType_ == RSContext::PurgeType::PURGE_UNLOCK) {
-                MemoryManager::ReleaseUnlockGpuResource(gpuContext);
-            } else {
-                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(gpuContext);
-            }
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(gpuContext);
         }
 #endif
     }
@@ -1716,15 +1708,20 @@ void RSMainThread::ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>&
 
 void RSMainThread::PostTask(RSTaskMessage::RSTask task)
 {
+    PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+}
+
+void RSMainThread::PostTask(RSTaskMessage::RSTask task, AppExecFwk::EventQueue::Priority priority)
+{
     if (handler_) {
-        handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        handler_->PostTask(task, priority);
     }
 }
 
 void RSMainThread::PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime)
 {
     if (handler_) {
-        handler_->PostTask(task, name, delayTime);
+        handler_->PostTask(task, name, delayTime, AppExecFwk::EventQueue::Priority::LOW);
     }
 }
 
@@ -1971,7 +1968,7 @@ void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource(Drawing::GPUContext* gpu
         case ReleaseGpuResourceType::WINDOW_HIDDEN:
         case ReleaseGpuResourceType::WINDOW_HIDDEN_AND_LAUCHER:
 #ifndef USE_ROSEN_DRAWING
-            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext, false);
 #else
             MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(gpuContext);
 #endif

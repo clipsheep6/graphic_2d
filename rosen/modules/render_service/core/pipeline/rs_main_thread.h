@@ -82,6 +82,7 @@ public:
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
+    void PostTask(RSTaskMessage::RSTask task, AppExecFwk::EventQueue::Priority priority);
     void PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime);
     void RemoveTask(const std::string& name);
     void PostSyncTask(RSTaskMessage::RSTask task);

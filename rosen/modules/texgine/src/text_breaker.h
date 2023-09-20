@@ -43,6 +43,7 @@ public:
 
     void GenNewBoundryByTypeface(CharGroups cgs, std::vector<Boundary> &boundaries);
     void GenNewBoundryByQuote(CharGroups cgs, std::vector<Boundary> &boundaries);
+    void GenNewBoundryByHardBreak(CharGroups cgs, std::vector<Boundary> &boundaries);
 
     double preBreak_ = 0;
     double postBreak_ = 0;

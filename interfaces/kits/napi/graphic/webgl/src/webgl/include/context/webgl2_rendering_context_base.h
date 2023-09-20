@@ -16,7 +16,6 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL2_RENDERING_CONTEXT_BASE
 #define ROSENRENDER_ROSEN_WEBGL2_RENDERING_CONTEXT_BASE
 
-#include "webgl_rendering_context_basic_base.h"
 #include "securec.h"
 #include <GLES3/gl3.h>
 #include <map>
@@ -28,7 +27,7 @@ extern "C" {
 
 namespace OHOS {
 namespace Rosen {
-class WebGL2RenderingContextBase : public WebGLRenderingContextBasicBase {
+class WebGL2RenderingContextBase {
 public:
     static const GLenum READ_BUFFER = 0x0C02;
     static const GLenum UNPACK_ROW_LENGTH = 0x0CF2;
@@ -470,9 +469,6 @@ public:
     static napi_value GetUniformIndices(napi_env env, napi_callback_info info);
 
     static napi_value GetActiveUniforms(napi_env env, napi_callback_info info);
-
-public:
-    std::map<GLenum, GLuint> queryMaps;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -14,6 +14,7 @@
  */
 
 #include "../include/webgl/webgl_buffer.h"  // for WebGLBuffer, WebGLBuffer:...
+#include "../include/context/webgl_rendering_context_base.h"
 
 #include "__config"                         // for std
 #include "iosfwd"                           // for string
@@ -25,9 +26,10 @@
 #include "type_traits"                      // for move
 #include "vector"                           // for vector
 
-#include "../../common/napi/n_class.h"      // for NClass
-#include "../../common/napi/n_func_arg.h"   // for NFuncArg, NARG_CNT, ZERO
+#include "common/napi/n_class.h"      // for NClass
+#include "common/napi/n_func_arg.h"   // for NFuncArg, NARG_CNT, ZERO
 #include "common/napi/n_val.h"              // for NVal
+#include "../include/util/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -69,6 +71,14 @@ bool WebGLBuffer::Export(napi_env env, napi_value exports)
 string WebGLBuffer::GetClassName()
 {
     return WebGLBuffer::className;
+}
+
+WebGLBuffer::~WebGLBuffer()
+{
+    LOGE("Free WebGLBuffer %{public}p", this);
+    if (m_bufferData) {
+        delete m_bufferData;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

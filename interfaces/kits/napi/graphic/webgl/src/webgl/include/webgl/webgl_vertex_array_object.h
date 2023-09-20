@@ -17,18 +17,25 @@
 #define ROSENRENDER_ROSEN_WEBGL_VERTEX_ARRAY_OBJECT
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLVertexArrayObject final : public NExporter {
+class WebGLVertexArrayObject final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLVertexArrayObject";
+    inline static const int objectType = WEBGL_OBJECT_VERTEX_ARRAY;
+    inline static const int DEFAULT_VERTEX_ARRAY_OBJECT = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLVertexArrayObject **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLVertexArrayObject>(env, instance);
+    }
 
     void SetVertexArrays(unsigned int vertexArrays)
     {

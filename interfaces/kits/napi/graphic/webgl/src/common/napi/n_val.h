@@ -19,6 +19,9 @@
 
 #include <memory>
 #include <vector>
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include "uni_header.h"
 
 namespace OHOS {
@@ -41,6 +44,12 @@ public:
 
     bool TypeIs(napi_valuetype expType) const;
 
+    bool IsNull() const;
+
+    bool IsUndefined() const;
+
+    bool IsBufferArray() const;
+
     /* SHOULD ONLY BE USED FOR EXPECTED TYPE */
     std::tuple<bool, std::unique_ptr<char[]>, size_t> ToUTF8String() const;
 
@@ -52,11 +61,21 @@ public:
 
     std::tuple<bool, double> ToDouble() const;
 
+    std::tuple<bool, GLfloat> ToFloat() const;
+
     std::tuple<bool, int32_t> ToInt32() const;
+
+    std::tuple<bool, uint32_t> ToUint32() const;
 
     std::tuple<bool, int64_t> ToInt64() const;
 
+    std::tuple<bool, GLenum> ToGLenum() const;
+
+    std::tuple<bool, GLsizei> ToGLsizei() const;
+
     std::tuple<bool, void *, size_t> ToArraybuffer() const;
+
+    std::tuple<bool, float *, size_t> ToFloatBuffer() const;
 
     std::tuple<bool, napi_typedarray_type, void *, size_t> ToTypedArray() const;
 
@@ -65,6 +84,8 @@ public:
     std::tuple<bool, void *, size_t> ToDataview() const;
 
     std::tuple<bool, bool> IsArray() const;
+
+    bool IsDataView() const;
 
     std::tuple<bool, void *, size_t, size_t, napi_typedarray_type> ToTypedArrayInfo() const;
 

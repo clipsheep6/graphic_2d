@@ -17,18 +17,22 @@
 #define ROSENRENDER_ROSEN_WEBGL_FRAMEBUFFER
 
 #include "../../../common/napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLFramebuffer final : public NExporter {
+class WebGLFramebuffer final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLFramebuffer";
+    inline static const int objectType = WEBGL_OBJECT_FRAME_BUFFER;
+    inline static const int DEFAULT_FRAME_BUFFER = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLFramebuffer **instance);
 
     void SetFramebuffer(unsigned int framebuffer)
     {
@@ -45,7 +49,16 @@ public:
     WebGLFramebuffer(napi_env env, napi_value exports) : NExporter(env, exports), m_framebuffer(0) {};
 
     ~WebGLFramebuffer() {};
+
+    static WebGLFramebuffer *GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLFramebuffer>(env, obj);
+    }
+
+    GLenum GetTarget() const { return m_target; }
+    void SetTarget(GLenum target) { m_target = target; }
 private:
+    GLenum m_target;
     unsigned int m_framebuffer;
 };
 } // namespace Rosen

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "../include/context/webgl2_rendering_context_base.h"
+#include "../include/context/webgl2_rendering_context.h"
 #include "../../common/napi/n_func_arg.h"
 #include "../../common/napi/n_class.h"
 #include "../include/webgl/webgl_active_info.h"
@@ -28,6 +29,7 @@
 #include "../include/webgl/webgl_transform_feedback.h"
 #include "../include/webgl/webgl_uniform_location.h"
 #include "../include/webgl/webgl_vertex_array_object.h"
+#include "../include/webgl/webgl_arg.h"
 #include "../include/util/log.h"
 #include "../include/util/util.h"
 
@@ -479,13 +481,11 @@ napi_value WebGL2RenderingContextBase::BeginQuery(napi_env env, napi_callback_in
     }
     unsigned int query = webGlQuery->GetQuery();
 
-    WebGL2RenderingContextBase *obj = reinterpret_cast<WebGL2RenderingContextBase *>(Util::GetContextObject(env,
-        funcArg.GetThisVar(), "webgl2"));
+    WebGLRenderingContextBasicBase *obj = Util::GetContextObject(env, funcArg.GetThisVar());
     if (obj == nullptr) {
         return nullptr;
     }
-
-    obj->queryMaps.insert({ static_cast<GLenum>(target), static_cast<GLuint>(query) });
+    obj->queryMaps.insert({ target, query });
 
     glBeginQuery(static_cast<GLenum>(target), static_cast<GLuint>(query));
     LOGI("WebGL2 beginQuery end");
@@ -508,12 +508,11 @@ napi_value WebGL2RenderingContextBase::EndQuery(napi_env env, napi_callback_info
     }
     LOGI("WebGL2 WebGL2RenderingContextBase::endQuery target = %{public}u", target);
 
-    WebGL2RenderingContextBase *obj = reinterpret_cast<WebGL2RenderingContextBase *>(Util::GetContextObject(env,
-        funcArg.GetThisVar(), "webgl2"));
+    WebGLRenderingContextBasicBase *obj = Util::GetContextObject(env, funcArg.GetThisVar());
     if (obj == nullptr) {
         return nullptr;
     }
-    obj->queryMaps.erase(static_cast<GLenum>(target));
+    obj->queryMaps.erase(target);
 
     glEndQuery(static_cast<GLenum>(target));
     LOGI("WebGL2 endQuery end");
@@ -543,8 +542,7 @@ napi_value WebGL2RenderingContextBase::GetQuery(napi_env env, napi_callback_info
     }
     LOGI("WebGL2 WebGL2RenderingContextBase::getQuery pName = %{public}u", pName);
 
-    WebGL2RenderingContextBase *obj = reinterpret_cast<WebGL2RenderingContextBase *>(Util::GetContextObject(env,
-        funcArg.GetThisVar(), "webgl2"));
+    WebGLRenderingContextBasicBase *obj = Util::GetContextObject(env, funcArg.GetThisVar());
     if (obj == nullptr) {
         return nullptr;
     }
@@ -2697,7 +2695,7 @@ napi_value WebGL2RenderingContextBase::BindBufferBase(napi_env env, napi_callbac
     if (bufferStatus != napi_ok) {
         return nullptr;
     }
-    unsigned int buffer = webGlBuffer->GetBuffer();
+    unsigned int buffer = webGlBuffer->GetBufferId();
     LOGI("WebGL WebGLRenderContext::WebGL2RenderingContextBase bindBufferBase buffer= %{public}u", buffer);
     glBindBufferBase(static_cast<GLenum>(target), static_cast<GLuint>(index), static_cast<GLuint>(buffer));
     LOGI("WebGL bindBufferBase end");
@@ -2732,7 +2730,7 @@ napi_value WebGL2RenderingContextBase::BindBufferRange(napi_env env, napi_callba
     if (bufferStatus != napi_ok) {
         return nullptr;
     }
-    unsigned int buffer = webGlBuffer->GetBuffer();
+    unsigned int buffer = webGlBuffer->GetBufferId();
     LOGI("WebGL WebGLRenderContext::WebGL2RenderingContextBase bindBufferRange buffer= %{public}u", buffer);
     int64_t offset;
     tie(succ, offset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
@@ -2782,7 +2780,7 @@ napi_value WebGL2RenderingContextBase::GetIndexedParameter(napi_env env, napi_ca
         if (!webGlBuffer) {
             return nullptr;
         }
-        webGlBuffer->SetBuffer(index);
+        webGlBuffer->SetBufferId(index);
         LOGI("WebGL getIndexedParameter end");
         return objBuffer;
     } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER_SIZE || target == GL_UNIFORM_BUFFER_SIZE) {

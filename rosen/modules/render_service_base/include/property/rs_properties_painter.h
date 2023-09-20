@@ -80,6 +80,16 @@ public:
     static void DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas);
+#ifdef NEW_SKIA
+    static sk_sp<SkShader> MakeLightUpEffectShader(float lightUpDeg, sk_sp<SkShader> imageShader);
+    static void DrawVerticalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
+        float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding);
+    static void DrawHorizontalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
+        float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding);
+    static uint8_t CalcDirectionBias(const SkMatrix& mat);
+    static sk_sp<SkShader> MakeAlphaGradientShader(const SkRect& clipBounds,
+                                const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias);
+#endif
 private:
     static void ApplyBackgroundEffectFallback(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     inline static int g_blurCnt = 0;
@@ -89,20 +99,12 @@ private:
     static bool GetGradientDirectionPoints(SkPoint (&pts)[2],
                                 const SkRect& clipBounds, GradientDirection direction);
     static void TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias);
-    static sk_sp<SkShader> MakeAlphaGradientShader(const SkRect& clipBounds,
-                                const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias);
     static sk_sp<SkShader> MakeHorizontalMeanBlurShader(float radiusIn,
                                             sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader);
     static sk_sp<SkShader> MakeVerticalMeanBlurShader(float radiusIn,
                                             sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader);
-    static sk_sp<SkShader> MakeLightUpEffectShader(float lightUpDeg, sk_sp<SkShader> imageShader);
     static sk_sp<SkShader> MakeDynamicLightUpShader(
         float dynamicLightUpRate, float dynamicLightUpDeg, sk_sp<SkShader> imageShader);
-    static void DrawHorizontalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
-        float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding);
-    static void DrawVerticalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
-        float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding);
-    static uint8_t CalcDirectionBias(const SkMatrix& mat);
 #endif
 #else
     static void Clip(Drawing::Canvas& canvas, RectF rect, bool isAntiAlias = true);

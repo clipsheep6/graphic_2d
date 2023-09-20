@@ -100,6 +100,7 @@ void RSTransactionData::Process(RSContext& context)
 
 void RSTransactionData::Clear()
 {
+    std::unique_lock<std::mutex> lock(commandMutex_);
     payload_.clear();
     timestamp_ = 0;
 }

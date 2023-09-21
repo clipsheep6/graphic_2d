@@ -84,7 +84,6 @@ HWTEST_F(HgmXmlParserTest, Parse, Function | SmallTest | Level1)
             STEP_ASSERT_EQ(parsedData->isDynamicFrameRateEnable_, "1");
             STEP_ASSERT_NE(parsedData->customerSettingConfig_.size(), 0);
             STEP_ASSERT_NE(parsedData->detailedStrategies_.size(), 0);
-            STEP_ASSERT_NE(parsedData->animationDynamicStrats_.size(), 0);
             STEP_ASSERT_NE(translateDynamicSetting.size(), 0);
             STEP_ASSERT_NE(scaleDynamicSetting.size(), 0);
             STEP_ASSERT_NE(rotationDynamicSetting.size(), 0);

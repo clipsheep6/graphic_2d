@@ -180,8 +180,6 @@ int32_t XMLParser::ParseParams(xmlNode &node)
         setResult = ParseSetting(node, mParsedData_->bundle_black_list_);
     } else if (paraName == "bundle_name_white_list") {
         setResult = ParseSetting(node, mParsedData_->bundle_white_list_);
-    } else if (paraName == "animation_dynamic_settings") {
-        setResult = ParseSetting(node, mParsedData_->animationDynamicStrats_);
     } else if (paraName == "property_animation_dynamic_settings") {
         setResult = ParserAnimationDynamicSetting(node);
     } else if (paraName == "refresh_rate_4settings") {

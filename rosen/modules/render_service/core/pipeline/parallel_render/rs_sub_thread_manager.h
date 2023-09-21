@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_MANAGER_H
 
 #include "rs_sub_thread.h"
+#include "rs_sub_thread_filter.h"
 
 #include <condition_variable>
 #include <cstdint>
@@ -32,6 +33,9 @@ class RSSubThreadManager {
 public:
     static RSSubThreadManager *Instance();
     void Start(RenderContext *context);
+    void StartFilterThread(RenderContext* context);
+    void FilterCallback(
+        std::function<void()> ThreadProcess, RSFilterCacheManager& cacheManager, float width, float height);
     void PostTask(const std::function<void()>& task, uint32_t threadIndex);
     void WaitNodeTask(uint64_t nodeId);
     void NodeTaskNotify(uint64_t nodeId);
@@ -62,6 +66,7 @@ private:
     std::map<uint64_t, uint8_t> nodeTaskState_;
     std::vector<std::shared_ptr<RSSubThread>> threadList_;
     std::unordered_map<pid_t, uint32_t> threadIndexMap_;
+    std::shared_ptr<RSSubThreadFilter> threadFilter = nullptr;
     bool needResetContext_ = false;
     bool needCancelTask_ = false;
 };

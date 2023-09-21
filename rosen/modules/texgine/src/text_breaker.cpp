@@ -31,6 +31,11 @@
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
+void TextBreaker::SetWidthLimit(const double widthLimit)
+{
+    widthLimit_ = widthLimit;
+}
+
 int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyle &ys,
     const std::shared_ptr<FontProviders> &fontProviders)
 {
@@ -154,8 +159,18 @@ void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys
     const TextStyle &xs, std::vector<VariantSpan> &spans)
 {
     size_t rangeOffset = 0;
+    double width = 0.0;
     for (size_t i = 0; i < wordcgs.GetNumberOfCharGroup(); i++) {
         const auto &cg = wordcgs.Get(i);
+        width += cg.GetWidth();
+        if (width > widthLimit_) {
+            auto currentCgs = wordcgs.GetSub(rangeOffset, i);
+            GenerateSpan(currentCgs, ys, xs, spans);
+            rangeOffset = i;
+            i--;
+            width = 0;
+        }
+
         postBreak_ += cg.GetWidth();
         if (u_isWhitespace(cg.chars[0]) == 0) {
             // not white space

@@ -163,8 +163,8 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     ApplyDrawCmdModifier(context, RSModifierType::OVERLAY_STYLE);
 
     Rosen::Drawing::Matrix mat;
-    if (RSPropertiesPainter::GetGravityMatrix(
-        GetRenderProperties().GetFrameGravity(), GetRenderProperties().GetFrameRect(), width, height, mat)) {
+    if (RSPropertiesPainter::GetGravityMatrix(GetRenderProperties().GetFrameGravity(), GetRenderProperties().GetGravityWeight(),
+        GetRenderProperties().GetFrameRect(), width, height, mat)) {
         canvas.ConcatMatrix(mat);
     }
     auto image = surface_->GetImageSnapshot();

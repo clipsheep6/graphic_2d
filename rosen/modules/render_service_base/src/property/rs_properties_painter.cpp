@@ -241,7 +241,7 @@ bool RSPropertiesPainter::GetGravityMatrix(Gravity gravity, Vector4f weight, Rec
     }
 }
 #else
-bool RSPropertiesPainter::GetGravityMatrix(Gravity gravity, RectF rect, float w, float h, Drawing::Matrix& mat)
+bool RSPropertiesPainter::GetGravityMatrix(Gravity gravity, Vector4f weight, RectF rect, float w, float h, Drawing::Matrix& mat)
 {
     if (w == rect.width_ && h == rect.height_) {
         return false;

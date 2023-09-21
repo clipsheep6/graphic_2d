@@ -109,6 +109,7 @@ bool TextStyle::operator ==(const TextStyle& rhs) const
            fontSize_ == rhs.fontSize_ &&
            letterSpacing_ == rhs.letterSpacing_ &&
            wordSpacing_ == rhs.wordSpacing_ &&
+           halfLeading_ == rhs.halfLeading_ &&
            heightScale_ == rhs.heightScale_ &&
            heightOnly_ == rhs.heightOnly_ &&
            locale_ == rhs.locale_ &&
@@ -129,6 +130,7 @@ bool TextStyle::operator ==(const TextStyle& rhs) const
         fontSize == rhs.fontSize &&
         letterSpacing == rhs.letterSpacing &&
         wordSpacing == rhs.wordSpacing &&
+        halfLeading == rhs.halfLeading &&
         heightScale == rhs.heightScale &&
         heightOnly == rhs.heightOnly &&
         locale == rhs.locale &&

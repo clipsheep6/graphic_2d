@@ -32,6 +32,7 @@ struct TypographyStyle {
     FontStyle fontStyle_ = FontStyle::NORMAL;
     std::string fontFamily_ = "";
     double fontSize_ = 14.0; // default is libtxt text style fonst size
+    bool halfLeading_ = false;
     double heightScale_ = 1.0;
     bool heightOnly_ = false;
     bool useLineStyle_ = false;
@@ -40,6 +41,7 @@ struct TypographyStyle {
     FontStyle lineStyleFontStyle_ = FontStyle::NORMAL;
     std::vector<std::string> lineStyleFontFamilies_;
     double lineStyleFontSize_ = 14.0; // default is libtxt text style font size
+    bool lineStyleHalfLeading_ = false;
     double lineStyleHeightScale_ = 1.0;
     bool lineStyleHeightOnly_ = false;
     double lineStyleSpacingScale_ = -1.0;
@@ -58,6 +60,7 @@ struct TypographyStyle {
     FontStyle fontStyle = FontStyle::NORMAL;
     std::string fontFamily = "";
     double fontSize = 14.0; // default is libtxt text style fonst size
+    bool halfLeading = false;
     double heightScale = 1.0;
     bool heightOnly = false;
     bool useLineStyle = false;
@@ -66,6 +69,7 @@ struct TypographyStyle {
     FontStyle lineStyleFontStyle = FontStyle::NORMAL;
     std::vector<std::string> lineStyleFontFamilies;
     double lineStyleFontSize = 14.0; // default is libtxt text style font size
+    bool lineStyleHalfLeading = false;
     double lineStyleHeightScale = 1.0;
     bool lineStyleHeightOnly = false;
     double lineStyleSpacingScale = -1.0;

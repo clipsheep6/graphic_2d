@@ -17,7 +17,13 @@
 #define RENDER_SERVICE_BASE_PROPERTY_RS_FILTER_CACHE_MANAGER_H
 
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#include <mutex>
+
+#include "include/core/SKImageInfo.h"
+#include "include/core/SKRefCnt.h"
+#include "include/core/SKSurface.h"
 #include "include/core/SkRect.h"
+#include "include/gpu/GRBackendSurface.h"
 
 #include "common/rs_macros.h"
 #include "common/rs_rect.h"
@@ -31,7 +37,7 @@ class RSSkiaFilter;
 // this. This means if both background and foreground need to apply filter, the caller should create two
 // RSFilterCacheManager, pass the correct dirty region, and call the DrawFilter() in correct order.
 // Warn: Using filter cache in multi-thread environment may cause GPU memory leak or invalid textures.
-class RSFilterCacheManager final {
+class RSB_EXPORT RSFilterCacheManager final {
 public:
     RSFilterCacheManager() = default;
     ~RSFilterCacheManager() = default;
@@ -72,8 +78,20 @@ public:
 
     inline bool IsCacheValid() const
     {
-        return cachedSnapshot_ != nullptr || cachedFilteredSnapshot_ != nullptr;
+        return (cachedSnapshot_ != nullptr || cachedFilteredSnapshot_ != nullptr) && changeInvalidMk;
     }
+
+    void InitSurface(GrRecordingContext* grContext, float width, float height);
+    sk_sp<SKSurface> GetCacheSurface();
+    void UpdateBackendTexture();
+    CacheProcessStatus GetCacheSurfaceProcessedStatus() const;
+    void SetCacheSurfaceProcessedStatus(CacheProcessStatus cacheProcessStatus);
+    void waitThreadFinish();
+    void filterThreadPorcess(const std::shared_ptr<RSSkiaFilter>& filter);
+    std::function<void(std::function<void()>, RSFilterCacheManager&, float, float)> threadCb;
+    sk_sp<SKImage> threadImage = nullptr;
+    std::mutex filterThreadMutex_;
+    bool changeInvalidMk = false;
 
 private:
     void TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& srcRect);
@@ -88,7 +106,13 @@ private:
     inline void CompactCache(bool shouldClearFilteredCache);
     // Validate the input srcRect and dstRect, and return the validated rects.
     std::tuple<SkIRect, SkIRect> ValidateParams(RSPaintFilterCanvas& canvas,
-        const std::optional<SkIRect>& srcRect, const std::optional<SkIRect>& dstRect);
+     const std::optional<SkIRect>& srcRect, const std::optional<SkIRect>& dstRect);
+    sk_sp<SKSurface> cacheSurface_ = nullptr;
+    GrBackendTexture cacheBackendTexture_;
+    std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
+    float surfaceWidth_;
+    float surfaceHeight_;
+    std::shared_ptr<RSSkiaFilter> filterThr_ = nullptr;
 
     // We keep both the snapshot and filtered snapshot in the cache, and clear unneeded one in next frame.
     // Note: rect in cachedSnapshot_ and cachedFilteredSnapshot_ is in device coordinate.

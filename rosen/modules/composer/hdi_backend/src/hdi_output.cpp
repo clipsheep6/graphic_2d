@@ -46,21 +46,39 @@ RosenError HdiOutput::Init()
         return ROSEN_ERROR_OK;
     }
 
-    fbSurface_ = HdiFramebufferSurface::CreateFramebufferSurface();
+    if (device_ == nullptr) {
+        device_ = HdiDevice::GetInstance();
+        CHECK_DEVICE_NULL(device_);
+    }
+
+    std::vector<GraphicDisplayModeInfo> supportedModes = {};
+    int32_t ret = device_->GetScreenSupportedModes(screenId_, supportedModes);
+    if (ret != GRAPHIC_DISPLAY_SUCCESS) {
+        HLOGE("Get supported screen modes failed, ret is %{public}d", ret);
+        return ROSEN_ERROR_INVALID_OPERATING;
+    }
+    uint32_t modeId = 0;
+    ret = device_->GetScreenMode(screenId_, modeId);
+    if (ret != GRAPHIC_DISPLAY_SUCCESS) {
+        HLOGE("Get current screen modeId failed, ret is %{public}d", ret);
+        return ROSEN_ERROR_INVALID_OPERATING;
+    }
+
+    auto iter = std::find_if(supportedModes.cbegin(), supportedModes.cend(),
+        [modeId](const auto &mode) { return static_cast<uint32_t>(mode.id) == modeId; });
+    if (iter == supportedModes.cend()) {
+        HLOGE("Get current screen mode failed");
+        return ROSEN_ERROR_INVALID_OPERATING;
+    }
+
+    fbSurface_ = HdiFramebufferSurface::CreateFramebufferSurface(iter->width, iter->height);
     if (fbSurface_ == nullptr) {
         HLOGE("Create framebuffer surface failed");
         return ROSEN_ERROR_NOT_INIT;
     }
 
-    if (device_ != nullptr) {
-        return ROSEN_ERROR_OK;
-    }
-
-    device_ = HdiDevice::GetInstance();
-    CHECK_DEVICE_NULL(device_);
-
     bufferCacheCountMax_ = fbSurface_->GetBufferQueueSize();
-    int32_t ret = device_->SetScreenClientBufferCacheCount(screenId_, bufferCacheCountMax_);
+    ret = device_->SetScreenClientBufferCacheCount(screenId_, bufferCacheCountMax_);
     if (ret != GRAPHIC_DISPLAY_SUCCESS) {
         HLOGE("Set screen client buffer cache count failed, ret is %{public}d", ret);
         return ROSEN_ERROR_INVALID_OPERATING;
@@ -435,7 +453,8 @@ int32_t HdiOutput::ReleaseFramebuffer(const sptr<SyncFence>& releaseFence)
         }
     }
 
-    lastFrameBuffer_ = currFrameBuffer_;
+    lastFrameBuffer_ = lastFrameBufferNew_;
+    lastFrameBufferNew_ = currFrameBuffer_;
     currFrameBuffer_ = nullptr;
     return ret;
 }

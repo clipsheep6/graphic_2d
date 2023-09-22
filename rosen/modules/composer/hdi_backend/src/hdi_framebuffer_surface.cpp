@@ -23,7 +23,7 @@ using namespace OHOS;
 namespace OHOS {
 namespace Rosen {
 
-HdiFramebufferSurface::HdiFramebufferSurface()
+HdiFramebufferSurface::HdiFramebufferSurface(int32_t width, int32_t height) : screenWidth_(width), screenHeight_(height)
 {
 }
 
@@ -31,9 +31,9 @@ HdiFramebufferSurface::~HdiFramebufferSurface() noexcept
 {
 }
 
-sptr<HdiFramebufferSurface> HdiFramebufferSurface::CreateFramebufferSurface()
+sptr<HdiFramebufferSurface> HdiFramebufferSurface::CreateFramebufferSurface(int32_t width, int32_t height)
 {
-    sptr<HdiFramebufferSurface> fbSurface = new HdiFramebufferSurface();
+    sptr<HdiFramebufferSurface> fbSurface = new HdiFramebufferSurface(width, height);
 
     SurfaceError ret = fbSurface->CreateSurface(fbSurface);
     if (ret != SURFACE_ERROR_OK) {
@@ -46,7 +46,6 @@ sptr<HdiFramebufferSurface> HdiFramebufferSurface::CreateFramebufferSurface()
         HLOGE("FramebufferSurface SetBufferQueueSize failed, ret is %{public}d", ret);
         return nullptr;
     }
-
     return fbSurface;
 }
 
@@ -109,12 +108,51 @@ sptr<OHOS::Surface> HdiFramebufferSurface::GetSurface()
     return producerSurface_;
 }
 
+void HdiFramebufferSurface::InitAllFrameBuffers()
+{
+    BufferRequestConfig config {};
+    config.width = screenWidth_;
+    config.height = screenHeight_;
+    config.strideAlignment = 0x8;
+    config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
+    config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_MEM_FB;
+    config.timeout = 3000; // 3000 is config timeout
+
+    std::vector<sptr<SurfaceBuffer> > frameBuffers = {};
+    for (uint32_t i = 0; i < MAX_BUFFER_SIZE; i++) {
+        sptr<SurfaceBuffer> buffer;
+        int32_t fenceFd = -1;
+        GSError retCode = producerSurface_->RequestBuffer(buffer, fenceFd, config);
+        if (retCode != GSERROR_OK) {
+            HLOGE("Request frame buffer failed, retCode is %{public}d", retCode);
+        } else {
+            HLOGD("Request frame buffer succeed, sequenceid %{public}d", buffer->GetSeqNum());
+            frameBuffers.push_back(buffer);
+        }
+    }
+
+    for (auto iter = frameBuffers.begin(); iter != frameBuffers.end(); iter++) {
+        sptr<SurfaceBuffer> buffer = *iter;
+        GSError retCode = producerSurface_->CancelBuffer(buffer);
+        if (retCode != GSERROR_OK) {
+            HLOGE("Cancel frame buffer[seqNum=%{public}d] failed, retCode is %{public}d",
+                  buffer->GetSeqNum(), retCode);
+        }
+    }
+}
+
 std::unique_ptr<FrameBufferEntry> HdiFramebufferSurface::GetFramebuffer()
 {
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(mutex_);
+
+    if (!frameBuffersInited_) {
+        InitAllFrameBuffers();
+        frameBuffersInited_ = true;
+    }
+
     if (availableBuffers_.empty()) {
-        bufferCond_.wait_for(lock, 1000ms, [this]() { return !availableBuffers_.empty(); });
+        bufferCond_.wait_for(lock, 10ms, [this]() { return !availableBuffers_.empty(); });
     }
     if (availableBuffers_.empty()) {
         return nullptr;

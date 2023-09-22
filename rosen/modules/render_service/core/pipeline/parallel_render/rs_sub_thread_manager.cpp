@@ -59,7 +59,7 @@ void RSSubThreadManager::StartFilterThread(RenderContext* context)
     renderContext_ = context;
     if (context) {
         auto curThread = std::make_shared<RSSubThreadFilter>(context);
-        auto tid = curThread->Start();
+        curThread->Start();
         std::function<void(std::function<void()>, RSFilterCacheManager&, float, float)> cb =
             std::bind(&RSSubThreadManager::FilterCallback, this, std::placeholders::_1, std::placeholders::_2,
                 std::placeholders::_3, std::placeholders::_4);

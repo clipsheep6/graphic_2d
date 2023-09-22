@@ -19,11 +19,11 @@
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
 #include <mutex>
 
-#include "include/core/SKImageInfo.h"
-#include "include/core/SKRefCnt.h"
-#include "include/core/SKSurface.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurface.h"
 #include "include/core/SkRect.h"
-#include "include/gpu/GRBackendSurface.h"
+#include "include/gpu/GrBackendSurface.h"
 
 #include "common/rs_macros.h"
 #include "common/rs_rect.h"
@@ -82,14 +82,14 @@ public:
     }
 
     void InitSurface(GrRecordingContext* grContext, float width, float height);
-    sk_sp<SKSurface> GetCacheSurface();
+    sk_sp<SkSurface> GetCacheSurface();
     void UpdateBackendTexture();
     CacheProcessStatus GetCacheSurfaceProcessedStatus() const;
     void SetCacheSurfaceProcessedStatus(CacheProcessStatus cacheProcessStatus);
     void waitThreadFinish();
-    void filterThreadPorcess(const std::shared_ptr<RSSkiaFilter>& filter);
+    void filterThreadProcess(const std::shared_ptr<RSSkiaFilter>& filter);
     std::function<void(std::function<void()>, RSFilterCacheManager&, float, float)> threadCb;
-    sk_sp<SKImage> threadImage = nullptr;
+    sk_sp<SkImage> threadImage = nullptr;
     std::mutex filterThreadMutex_;
     bool changeInvalidMk = false;
 
@@ -107,7 +107,7 @@ private:
     // Validate the input srcRect and dstRect, and return the validated rects.
     std::tuple<SkIRect, SkIRect> ValidateParams(RSPaintFilterCanvas& canvas,
      const std::optional<SkIRect>& srcRect, const std::optional<SkIRect>& dstRect);
-    sk_sp<SKSurface> cacheSurface_ = nullptr;
+    sk_sp<SkSurface> cacheSurface_ = nullptr;
     GrBackendTexture cacheBackendTexture_;
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
     float surfaceWidth_;

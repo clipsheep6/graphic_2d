@@ -37,7 +37,7 @@ public:
     RSSubThreadFilter(RenderContext* context) : renderContext_(context) {}
     ~RSSubThreadFilter();
 
-    pid_t Start();
+    void Start();
     void PostTask(const std::function<void()>& task);
     void PostSyncTask(const std::function<void()>& task);
     void RemoveTask(const std::string& name);

@@ -46,7 +46,7 @@ void RSFilterCacheManager::UpdateCacheStateWithFilterHash(const std::shared_ptr<
     auto filterHash = filter->Hash();
     if (cachedSnapshot_ != nullptr && cachedFilterHash_ != filterHash && cachedSnapshot_->cachedImage_ != nullptr) {
         auto skiaFilter = std::static_pointer_cast<RSSkiaFilter>(filter);
-        filterThreadPorcess(skiaFilter);
+        filterThreadProcess(skiaFilter);
     }
     if (cachedFilteredSnapshot_ == nullptr || cachedFilterHash_ == filterHash) {
         return;
@@ -97,11 +97,11 @@ void RSFilterCacheManager::InitSurface(GrRecordingContext* grContext, float widt
     if (cacheSurface_ != nullptr) {
         return;
     }
-    SKImageInfo info = SKImageInfo::MakeN32Premul(width, height);
+    SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
     cacheSurface_ = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kYes, info);
 }
 
-sk_sp<SKSurface> RSFilterCacheManager::GetCacheSurface()
+sk_sp<SkSurface> RSFilterCacheManager::GetCacheSurface()
 {
     RS_TRACE_NAME("GetCacheSurface");
     return cacheSurface_;
@@ -134,7 +134,7 @@ void RSFilterCacheManager::waitThreadFinish()
     std::unique_lock<std::mutex> lock(filterThreadMutex_);
 }
 
-void RSFilterCacheManager::filterThreadPorcess(const std::shared_ptr<RSSkiaFilter>& filter)
+void RSFilterCacheManager::filterThreadProcess(const std::shared_ptr<RSSkiaFilter>& filter)
 {
     // Prepare a backup of common resources for threads
     if (threadCb != nullptr && cacheProcessStatus_.load() == CacheProcessStatus::WAITING) {
@@ -144,7 +144,7 @@ void RSFilterCacheManager::filterThreadPorcess(const std::shared_ptr<RSSkiaFilte
         surfaceWidth_ = dstCopy.width();
         surfaceHeight_ = dstCopy.height();
         filterThr_ = filter;
-        SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING)
+        SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
             // The following expression runs on a child thread
             auto ThreadProcess = [this, dstCopy]() {
                 auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(cacheSurface_.get());
@@ -152,13 +152,14 @@ void RSFilterCacheManager::filterThreadPorcess(const std::shared_ptr<RSSkiaFilte
                     ROSEN_LOGD("RSFilterCacheManager::filterThreadPorcess: cacheCanvas is null");
                     return;
                 }
-                threadImage = SkImage::MakeFromTexture(cacheCanvas.recordingContext(), cacheBackendTexture_,
+                threadImage = SkImage::MakeFromTexture(cacheCanvas->recordingContext(), cacheBackendTexture_,
                     kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
-                auto src = SKRect::MakeSize(SKSize::Make(dstCopy.size()));
-                auto dst = SKRect::MakeSize(SKSize::Make(dstCopy.size()));
+                auto src = SkRect::MakeSize(SkSize::Make(dstCopy.size()));
+                auto dst = SkRect::MakeSize(SkSize::Make(dstCopy.size()));
                 filterThr_->DrawImageRect(*cacheCanvas, threadImage, src, dst);
                 filterThr_->PostProcess(*cacheCanvas);
-            } threadCb(ThreadProcess, *this, surfaceWidth_, surfaceHeight_);
+            };
+            threadCb(ThreadProcess, *this, surfaceWidth_, surfaceHeight_);
     } else {
         ROSEN_LOGD("RSFilterCacheManager::filterThreadPorcess: threadCb is null");
     }
@@ -179,7 +180,8 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
     }
     CheckCachedImages(canvas);
     if (!IsCacheValid()) {
-        SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING) changeInvalidMk = true;
+        SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING);
+        changeInvalidMk = true;
         TakeSnapshot(canvas, filter, src);
     } else {
         --cacheUpdateInterval_;
@@ -201,9 +203,10 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
             cachedFilteredSnapshot_ =
                 std::make_shared<RSPaintFilterCanvas::CachedEffectData>(std::move(filteredSnapshot), filteredRect);
             cachedFilterHash_ = filter->Hash();
-            SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING)
+            SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING);
         } else {
-            SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING) GenerateFilteredSnapshot(canvas, filter, dst);
+            SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING);
+            GenerateFilteredSnapshot(canvas, filter, dst);
         }
         // If 1. the filter hash matches, 2. the filter region is whole snapshot region, we can safely clear original
         // snapshot, else we need to clear the filtered snapshot.

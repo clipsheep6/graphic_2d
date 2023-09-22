@@ -47,14 +47,12 @@ RSSubThreadFilter::~RSSubThreadFilter()
     PostTask([this]() { DestroyShareEglContext(); });
 }
 
-pid_t RSSubThreadFilter::Start()
+void RSSubThreadFilter::Start()
 {
     RS_LOGI("RSSubThreadFilter::Start():%{public}d", threadIndex_);
     std::string name = "RSSubThreadFilter" + std::to_string(threadIndex_);
     runner_ = AppExecFwk::EventRunner::Create(name);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-    pid_t tid;
-    PostSyncTask([&tid]() { tid = gettid(); });
     PostTask([this]() {
 #ifdef RES_SCHED_ENABLE
         std::string strBundleName = RS_BUNDLE_NAME;
@@ -71,13 +69,12 @@ pid_t RSSubThreadFilter::Start()
 #endif
         grContext_ = CreateShareGrContext();
     });
-    return tid;
 }
 
 void RSSubThreadFilter::PostTask(const std::function<void()>& task)
 {
     if (handler_) {
-        handler_->PostImmediateTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
 
@@ -147,6 +144,7 @@ void RSSubThreadFilter::RenderCache(
     std::function<void()> ThreadProcess, RSFilterCacheManager& cacheManager, float width, float height)
 {
     RS_TRACE_NAME("RenderCache");
+    std::unique_lock<std::mutex> lock(cacheManager.filterThreadMutex_);
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
         if (grContext_ == nullptr) {
@@ -154,23 +152,23 @@ void RSSubThreadFilter::RenderCache(
             return;
         }
     }
-    if (cacheManager.GetCacheSurfaceProcessedStatus == CacheProcessStatus::WAITING) {
+    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
         return;
     }
     cacheManager.InitSurface(grContext_.get(), width, height);
-    if (cacheManager.GetCacheSurfaceProcessedStatus == CacheProcessStatus::WAITING) {
+    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
         return;
     }
     ThreadProcess();
-    if (cacheManager.GetCacheSurfaceProcessedStatus == CacheProcessStatus::WAITING) {
+    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
         return;
     }
     cacheManager.GetCacheSurface()->flush();
-    if (cacheManager.GetCacheSurfaceProcessedStatus == CacheProcessStatus::WAITING) {
+    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
         return;
     }
     cacheManager.UpdateBackendTexture();
-    if (cacheManager.GetCacheSurfaceProcessedStatus == CacheProcessStatus::WAITING) {
+    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
         return;
     }
     cacheManager.SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);

@@ -965,7 +965,7 @@ bool RSRenderNode::ApplyModifiers()
     {
         // Generate drawable
         RSPropertyDrawableGenerateContext drawableContext(*this);
-        RSPropertyDrawable::UpdateDrawableMap(drawableContext, propertyDrawablesMap_, dirtyTypes_);
+        RSPropertyDrawable::UpdateDrawableMap(drawableContext, propertyDrawablesMap_, drawableMapStatus_, dirtyTypes_);
     }
 
     // update state

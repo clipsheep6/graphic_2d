@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_program.h"  // for WebGLProgram, WebGLProgr...
+#include "webgl/webgl_program.h"  // for WebGLProgram, WebGLProgr...
 
 #include "__config"                          // for std
 #include "iosfwd"                            // for string
@@ -25,9 +25,10 @@
 #include "type_traits"                       // for move
 #include "vector"                            // for vector
 
-#include "../../common/napi/n_class.h"       // for NClass
-#include "../../common/napi/n_func_arg.h"    // for NFuncArg, NARG_CNT, ZERO
-#include "common/napi/n_val.h"               // for NVal
+#include "napi/n_class.h"       // for NClass
+#include "napi/n_func_arg.h"    // for NFuncArg, NARG_CNT, ZERO
+#include "napi/n_val.h"               // for NVal
+#include "util/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -50,7 +51,7 @@ napi_value WebGLProgram::Constructor(napi_env env, napi_callback_info info)
 bool WebGLProgram::Export(napi_env env, napi_value exports)
 {
     vector<napi_property_descriptor> props = {};
-
+    LOGE("WebGLProgram::Export %{public}p", this);
     string className = GetClassName();
     bool succ = false;
     napi_value clas = nullptr;
@@ -69,6 +70,16 @@ bool WebGLProgram::Export(napi_env env, napi_value exports)
 string WebGLProgram::GetClassName()
 {
     return WebGLProgram::className;
+}
+
+WebGLProgram::WebGLProgram(napi_env env, napi_value exports) : NExporter(env, exports), m_programId(0)
+{
+    LOGE("WebGLProgram::WebGLProgram %{public}p", this);
+};
+
+WebGLProgram::~WebGLProgram()
+{
+    LOGE("~WebGLProgram::WebGLProgram %{public}p %{public}u", this, m_programId);
 }
 } // namespace Rosen
 } // namespace OHOS

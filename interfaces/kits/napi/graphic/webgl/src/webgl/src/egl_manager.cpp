@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "../include/util/egl_manager.h"  // for EglManager
+#include "util/egl_manager.h"  // for EglManager
 
 #include <cstddef>                       // for NULL
 
@@ -21,7 +21,7 @@
 #include "EGL/eglplatform.h"              // for EGLint, NativeWindow
 #include "__config"                       // for std
 
-#include "../include/util/log.h"          // for LOGE, LOGI
+#include "util/log.h"          // for LOGE, LOGI
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,6 +82,9 @@ EGLSurface EglManager::CreateSurface(NativeWindow* window)
             EGL_NONE
         };
         eglSurface = eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, surfaceAttributes);
+    }
+    if (eglSurface == NULL) {
+        LOGE("EglManager CreateSurface eglSurface = null error %{public}d", eglGetError());
     }
     return eglSurface;
 }

@@ -20,7 +20,7 @@
 #include <GLES3/gl31.h>
 #include <GLES2/gl2ext.h>
 #include "securec.h"
-#include "common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
 #include "webgl_rendering_context_basic_base.h"
 
 #ifdef __cplusplus
@@ -29,7 +29,7 @@ extern "C" {
 
 namespace OHOS {
 namespace Rosen {
-class WebGLRenderingContextBase : public WebGLRenderingContextBasicBase {
+class WebGLRenderingContextBase  {
 public:
     static const GLenum DEPTH_BUFFER_BIT = 0x00000100;
     static const GLenum STENCIL_BUFFER_BIT = 0x00000400;
@@ -328,9 +328,6 @@ public:
     static const GLenum UNPACK_COLORSPACE_CONVERSION_WEBGL = 0x9243;
     static const GLenum BROWSER_DEFAULT_WEBGL = 0x9244;
     static const uint32_t INPUTFLOAT_LENGTH = 128;
-    // readonly canvas: HTMLCanvasElement | OffscreenCanvas;
-    int drawingBufferWidth() const;
-    int drawingBufferHeight() const;
 
     static napi_value GetContextAttributes(napi_env env, napi_callback_info info);
 
@@ -567,9 +564,22 @@ public:
     static napi_value VertexAttrib4fv(napi_env env, napi_callback_info info);
 
     static napi_value GetVertexAttrib(napi_env env, napi_callback_info info);
+
+    static napi_value GetDrawingBufferWidth(napi_env env, napi_callback_info info);
+    static napi_value GetDrawingBufferHeight(napi_env env, napi_callback_info info);
+
+    static napi_value GetFramebufferAttachmentObjName(
+        napi_env env, napi_value thisVar, GLenum target, GLenum attachment, GLenum pname);
+
+    static void GetRenderingContextBasePropertyDesc(std::vector<napi_property_descriptor> &props);
+
+    static void SetError(napi_env env, napi_value thisVar, GLenum error, std::string func, int line);
 };
 } // namespace Rosen
 } // namespace OHOS
+
+#define SET_CONTENT_ERROR(env, thisVar, error) \
+    OHOS::Rosen::WebGLRenderingContextBase::SetError(env, thisVar, error, __func__, __LINE__)
 
 #ifdef __cplusplus
 }

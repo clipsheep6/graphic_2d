@@ -20,8 +20,8 @@
 
 #include <functional>
 #include <map>
-#include "n_val.h"
-#include "uni_header.h"
+#include "napi/n_val.h"
+#include "napi/uni_header.h"
 
 namespace OHOS {
 namespace Rosen {

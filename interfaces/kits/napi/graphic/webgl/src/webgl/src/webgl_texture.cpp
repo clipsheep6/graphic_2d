@@ -13,9 +13,14 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_texture.h"
-#include "../../common/napi/n_class.h"
-#include "../../common/napi/n_func_arg.h"
+#include "webgl/webgl_texture.h"
+
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "util/util.h"
+#include "context/webgl_rendering_context_base.h"
+#include "context/webgl_rendering_context_basic_base.h"
+#include "context/webgl2_rendering_context_base.h"
 
 namespace OHOS {
 namespace Rosen {

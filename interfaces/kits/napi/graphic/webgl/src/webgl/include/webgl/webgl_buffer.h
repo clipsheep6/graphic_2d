@@ -16,13 +16,17 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_BUFFER
 #define ROSENRENDER_ROSEN_WEBGL_BUFFER
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
+#include "webgl_arg.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLBuffer final : public NExporter {
+class WebGLBuffer final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLBuffer";
+    inline static const int objectType = WEBGL_OBJECT_BUFFER;
+    inline static const int DEFAULT_BUFFER = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
@@ -30,32 +34,43 @@ public:
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
 
-    void SetBuffer(unsigned int buffer)
+    void SetBufferId(uint32_t bufferId)
     {
-        m_buffer = buffer;
-    }
-    void SetParams(float params)
-    {
-        m_params = params;
+        m_bufferId = bufferId;
     }
 
-    unsigned int GetBuffer() const
+    uint32_t GetBufferId() const
     {
-        return m_buffer;
-    }
-    float GetParams() const
-    {
-        return m_params;
+        return m_bufferId;
     }
 
-    explicit WebGLBuffer() : m_buffer(0), m_params(0.0) {};
+    explicit WebGLBuffer() : m_bufferId(0) {};
 
-    WebGLBuffer(napi_env env, napi_value exports) : NExporter(env, exports), m_buffer(0), m_params(0.0) {};
+    WebGLBuffer(napi_env env, napi_value exports) : NExporter(env, exports), m_bufferId(0) {};
 
-    ~WebGLBuffer() {};
+    ~WebGLBuffer();
+
+    void SaveBuffer(WebGLReadBufferArg *buffer) { m_bufferData = buffer; };
+    WebGLReadBufferArg *GetBufferData() { return m_bufferData; }
+
+    GLenum GetTarget() const { return m_target; }
+    void SetTarget(GLenum target) { m_target = target; }
+
+    static napi_value GetWebGLBufferObj(napi_env env, napi_value thisVar, uint32_t bufferId);
+
+    static NVal CreateObjectInstance(napi_env env, WebGLBuffer **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLBuffer>(env, instance);
+    }
+    static WebGLBuffer *GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLBuffer>(env, obj);
+    }
 private:
-    unsigned int m_buffer;
-    float m_params;
+    WebGLReadBufferArg *m_bufferData { nullptr };
+    uint32_t m_bufferId { 0 };
+    GLenum m_target { 0 };
+    // float m_params;
 };
 } // namespace Rosen
 } // namespace OHOS

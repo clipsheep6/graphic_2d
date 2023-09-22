@@ -13,17 +13,21 @@
  * limitations under the License.
  */
 
-#include "../include/context/webgl_rendering_context_overloads.h"
-#include "../../common/napi/n_func_arg.h"
-#include "../include/webgl/webgl_buffer.h"
-#include "../include/webgl/webgl_framebuffer.h"
-#include "../include/webgl/webgl_program.h"
-#include "../include/webgl/webgl_renderbuffer.h"
-#include "../include/webgl/webgl_shader.h"
-#include "../include/webgl/webgl_texture.h"
-#include "../include/util/log.h"
-#include "../include/util/util.h"
-#include "../include/webgl/webgl_uniform_location.h"
+#include "context/webgl_rendering_context_overloads.h"
+
+#include "context/webgl_rendering_context_base.h"
+#include "context/webgl_rendering_context_base_impl.h"
+#include "napi/n_func_arg.h"
+#include "webgl/webgl_buffer.h"
+#include "webgl/webgl_framebuffer.h"
+#include "webgl/webgl_program.h"
+#include "webgl/webgl_renderbuffer.h"
+#include "webgl/webgl_shader.h"
+#include "webgl/webgl_texture.h"
+#include "webgl/webgl_arg.h"
+#include "webgl/webgl_uniform_location.h"
+#include "util/log.h"
+#include "util/util.h"
 
 #include<string>
 #include<vector>
@@ -35,68 +39,54 @@ extern "C" {
 namespace OHOS {
 namespace Rosen {
 using namespace std;
-
 napi_value WebGLRenderingContextOverloads::BufferData(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::THREE)) {
         return nullptr;
     }
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
     bool succ = false;
-    LOGI("WebGL bufferData start");
-    int64_t target;
-    tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
+    GLenum target;
+    tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToGLenum();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::bufferData target = %{public}u", target);
-    bool usagesucc = NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_number);
-    LOGI("WebGL WebGLRenderContext::bufferData usagesucc = %{public}u", usagesucc);
-    size_t size;
-    void *data = nullptr;
-    if (usagesucc) {
-        tie(succ, size) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt32();
+    GLenum usage;
+    tie(succ, usage) = NVal(env, funcArg[NARG_POS::THIRD]).ToGLenum();
+    if (!succ) {
+        return nullptr;
+    }
+
+    bool usageSucc = NVal(env, funcArg[NARG_POS::SECOND]).TypeIs(napi_number);
+    if (usageSucc) {
+        int64_t size;
+        tie(succ, size) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
         if (!succ) {
             return nullptr;
         }
-    } else {
-        if (funcArg[NARG_POS::SECOND] == nullptr) {
+        return context->GetWebGLRenderingContextImpl().BufferData(env, target, static_cast<GLsizeiptr>(size), usage);
+    }
+
+    int64_t srcOffset = 0;
+    if (funcArg[NARG_POS::FOURTH] != nullptr) {
+        tie(succ, srcOffset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
+        if (!succ) {
             return nullptr;
         }
-        bool isdataview = false;
-        napi_is_dataview(env, funcArg[NARG_POS::SECOND], &isdataview);
-        LOGI("WebGL WebGLRenderContext::bufferData isdataview = %{public}u", isdataview);
-        if (isdataview) {
-            tie(succ, data, size) = NVal(env, funcArg[NARG_POS::SECOND]).ToDataview();
-            if (!succ) {
-                return nullptr;
-            }
-        } else {
-            bool isarraybuffer = false;
-            napi_is_arraybuffer(env, funcArg[NARG_POS::SECOND], &isarraybuffer);
-            LOGI("WebGL WebGLRenderContext::bufferData isarraybuffer = %{public}u", isarraybuffer);
-            if (isarraybuffer) {
-                tie(succ, data, size) = NVal(env, funcArg[NARG_POS::SECOND]).ToArraybuffer();
-                if (!succ) {
-                    return nullptr;
-                }
-            } else {
-                return nullptr;
-            }
+    }
+    int64_t length = 0;
+    if (funcArg[NARG_POS::FIFTH] != nullptr) {
+        tie(succ, length) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
+        if (!succ) {
+            return nullptr;
         }
     }
-    LOGI("WebGL WebGLRenderContext::bufferData size = %{public}u", size);
-    LOGI("WebGL WebGLRenderContext::bufferData data = %{public}u", data);
-    int32_t usage;
-    tie(succ, usage) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::bufferData usage = %{public}u", usage);
-    glBufferData(static_cast<GLenum>(target), static_cast<GLsizeiptr>(size),
-        static_cast<void*>(data), static_cast<GLenum>(usage));
-    LOGI("WebGL bufferData end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().BufferData(env, target,
+        funcArg[NARG_POS::SECOND], usage, srcOffset, length);
 }
 
 napi_value WebGLRenderingContextOverloads::BufferSubData(napi_env env, napi_callback_info info)
@@ -105,50 +95,24 @@ napi_value WebGLRenderingContextOverloads::BufferSubData(napi_env env, napi_call
     if (!funcArg.InitArgs(NARG_CNT::THREE)) {
         return nullptr;
     }
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
     bool succ = false;
-    LOGI("WebGL bufferSubData start");
-    int64_t target;
-    tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
-    LOGI("WebGL WebGLRenderContext::bufferSubData succ = %{public}u", succ);
+    GLenum target;
+    tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToGLenum();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::bufferSubData target = %{public}u", target);
     int64_t offset;
     tie(succ, offset) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::bufferSubData offset = %{public}u", offset);
-    size_t size;
-    void *data = nullptr;
-    bool isdataview = false;
-    napi_is_dataview(env, funcArg[NARG_POS::THIRD], &isdataview);
-    LOGI("WebGL WebGLRenderContext::bufferSubData isdataview = %{public}u", isdataview);
-    if (isdataview) {
-        tie(succ, data, size) = NVal(env, funcArg[NARG_POS::THIRD]).ToDataview();
-        if (!succ) {
-            return nullptr;
-        }
-    } else {
-        bool isarraybuffer = false;
-        napi_is_arraybuffer(env, funcArg[NARG_POS::THIRD], &isarraybuffer);
-        LOGI("WebGL WebGLRenderContext::bufferSubData isarraybuffer = %{public}u", isarraybuffer);
-        if (isarraybuffer) {
-            tie(succ, data, size) = NVal(env, funcArg[NARG_POS::THIRD]).ToArraybuffer();
-            if (!succ) {
-                return nullptr;
-            }
-        } else {
-            return nullptr;
-        }
-    }
-    LOGI("WebGL WebGLRenderContext::bufferSubData size = %{public}u", size);
-    LOGI("WebGL WebGLRenderContext::bufferSubData data = %{public}u", data);
-    glBufferSubData(static_cast<GLenum>(target), static_cast<GLintptr>(offset),
-        static_cast<GLsizeiptr>(size), static_cast<void*>(data));
-    LOGI("WebGL bufferSubData end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().BufferSubData(env, target,
+        static_cast<GLintptr>(offset), funcArg[NARG_POS::THIRD], 0, 0);
 }
 
 napi_value WebGLRenderingContextOverloads::CompressedTexImage2D(napi_env env, napi_callback_info info)
@@ -157,65 +121,77 @@ napi_value WebGLRenderingContextOverloads::CompressedTexImage2D(napi_env env, na
     if (!funcArg.InitArgs(NARG_CNT::SEVEN)) {
         return nullptr;
     }
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+
+    Impl::Image2DArg imgArg = { 0 };
+    imgArg.func = Impl::IMAGE_2D_FUNC_COMPRESSED_TEX_IMAGE_2D;
     bool succ = false;
-    LOGI("WebGL compressedTexImage2D start");
-    int64_t target;
-    tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
+    tie(succ, imgArg.target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
+    tie(succ, imgArg.level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt32();
+    tie(succ, imgArg.internalFormat) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+    tie(succ, imgArg.width) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
+    tie(succ, imgArg.height) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
+    tie(succ, imgArg.border) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt32();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D target = %{public}u", target);
-    int64_t level;
-    tie(succ, level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
+    bool usageNumber = NVal(env, funcArg[NARG_POS::SEVENTH]).TypeIs(napi_number);
+    if (context->GetWebGLRenderingContextImpl().IsHighWebGL() && usageNumber) {
+        int64_t imageSize = 0;
+        tie(succ, imageSize) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToInt64();
+        int64_t offset = 0;
+        tie(succ, offset) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToInt64();
+        return context->GetWebGLRenderingContextImpl().CompressedTexImage2D(env,
+            &imgArg, static_cast<GLsizei>(imageSize), static_cast<GLintptr>(offset));
+    }
+
+    GLuint srcOffset = 0;
+    if (funcArg[NARG_POS::EIGHTH] != nullptr) {
+        tie(succ, srcOffset) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToUint32();
+    }
+    GLuint srcLengthOverride = 0;
+    if (funcArg[NARG_POS::NINTH] != nullptr) {
+        tie(succ, srcLengthOverride) = NVal(env, funcArg[NARG_POS::NINTH]).ToUint32();
+    }
+    return context->GetWebGLRenderingContextImpl().CompressedTexImage2D(env,
+        &imgArg, funcArg[NARG_POS::SEVENTH], srcOffset, srcLengthOverride);
+}
+
+static bool CheckTieResult(Impl::Image2DArg &imgArg, napi_env env, NFuncArg &funcArg)
+{
+    bool succ = false;
+    tie(succ, imgArg.target) = NVal(env, funcArg[NARG_POS::FIRST]).ToGLenum();
     if (!succ) {
-        return nullptr;
+        imgArg.target = 0;
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D index = %{public}u", level);
-    int64_t internalformat;
-    tie(succ, internalformat) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
+    tie(succ, imgArg.level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt32();
     if (!succ) {
-        return nullptr;
+        return false;
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D level = %{public}u", internalformat);
-    int64_t width;
-    tie(succ, width) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
+    tie(succ, imgArg.xoffset) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
     if (!succ) {
-        return nullptr;
+        return false;
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D width = %{public}u", width);
-    int64_t height;
-    tie(succ, height) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
+    tie(succ, imgArg.yoffset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt32();
     if (!succ) {
-        return nullptr;
+        return false;
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D height = %{public}u", height);
-    int64_t border;
-    tie(succ, border) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt64();
+    tie(succ, imgArg.width) = NVal(env, funcArg[NARG_POS::FIFTH]).ToGLsizei();
     if (!succ) {
-        return nullptr;
+        return false;
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D border = %{public}u", border);
-    size_t imageSize;
-    void *data = nullptr;
-    bool isdataview = false;
-    napi_is_dataview(env, funcArg[NARG_POS::SEVENTH], &isdataview);
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D isdataview = %{public}u", isdataview);
-    if (isdataview) {
-        tie(succ, data, imageSize) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToDataview();
-        if (!succ) {
-            return nullptr;
-        }
-    } else {
-        return nullptr;
+    tie(succ, imgArg.height) = NVal(env, funcArg[NARG_POS::SIXTH]).ToGLsizei();
+    if (!succ) {
+        return false;
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D imageSize = %{public}u", imageSize);
-    LOGI("WebGL WebGLRenderContext::compressedTexImage2D data = %{public}u", data);
-    glCompressedTexImage2D(static_cast<GLenum>(target), static_cast<GLint>(level),
-        static_cast<GLenum>(internalformat), static_cast<GLsizei>(width),
-        static_cast<GLsizei>(height), static_cast<GLint>(border),
-        static_cast<GLsizei>(imageSize), static_cast<void*>(data));
-    LOGI("WebGL compressedTexImage2D end");
-    return nullptr;
+    tie(succ, imgArg.format) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToGLenum();
+    if (!succ) {
+        return false;
+    }
+    return true;
 }
 
 napi_value WebGLRenderingContextOverloads::CompressedTexSubImage2D(napi_env env, napi_callback_info info)
@@ -224,71 +200,50 @@ napi_value WebGLRenderingContextOverloads::CompressedTexSubImage2D(napi_env env,
     if (!funcArg.InitArgs(NARG_CNT::EIGHT)) {
         return nullptr;
     }
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+
+    Impl::Image2DArg imgArg = { 0 };
+    imgArg.func = Impl::IMAGE_2D_FUNC_COMPRESSED_TEX_SUB_IMAGE_2D;
+    if (!CheckTieResult(imgArg, env, funcArg)) {
+        return nullptr;
+    }
+
+    bool usageNumber = NVal(env, funcArg[NARG_POS::EIGHTH]).TypeIs(napi_number);
     bool succ = false;
-    LOGI("WebGL compressedTexSubImage2D start");
-    int64_t target;
-    tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D target = %{public}u", target);
-    int32_t level;
-    tie(succ, level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D level = %{public}u", level);
-    int64_t xoffset;
-    tie(succ, xoffset) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D xoffset = %{public}u", xoffset);
-    int64_t yoffset;
-    tie(succ, yoffset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D yoffset = %{public}u", yoffset);
-    int32_t width;
-    tie(succ, width) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D width = %{public}u", width);
-    int64_t height;
-    tie(succ, height) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt64();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D height = %{public}u", height);
-    int64_t format;
-    tie(succ, format) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToInt64();
-    if (!succ) {
-        return nullptr;
-    }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D format = %{public}u", format);
-    size_t imageSize;
-    void *data = nullptr;
-    bool isdataview = false;
-    napi_is_dataview(env, funcArg[NARG_POS::EIGHTH], &isdataview);
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D isdataview = %{public}u", isdataview);
-    if (isdataview) {
-        tie(succ, data, imageSize) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToDataview();
+    if (context->GetWebGLRenderingContextImpl().IsHighWebGL() && usageNumber) {
+        int64_t imageSize = 0;
+        tie(succ, imageSize) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToInt64();
         if (!succ) {
             return nullptr;
         }
-    } else {
-        return nullptr;
+        int64_t offset = 0;
+        tie(succ, offset) = NVal(env, funcArg[NARG_POS::NINTH]).ToInt64();
+        if (!succ) {
+            return nullptr;
+        }
+        return context->GetWebGLRenderingContextImpl().CompressedTexSubImage2D(env,
+            &imgArg, static_cast<GLsizei>(imageSize), static_cast<GLintptr>(offset));
     }
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D imageSize = %{public}u", imageSize);
-    LOGI("WebGL WebGLRenderContext::compressedTexSubImage2D data = %{public}u", data);
-    glCompressedTexSubImage2D(static_cast<GLenum>(target), static_cast<GLint>(level), static_cast<GLint>(xoffset),
-        static_cast<GLint>(yoffset), static_cast<GLsizei>(width), static_cast<GLsizei>(height),
-        static_cast<GLenum>(format), static_cast<GLsizei>(imageSize),
-        static_cast<void*>(data));
-    LOGI("WebGL compressedTexSubImage2D end");
-    return nullptr;
+
+    GLuint srcOffset = 0;
+    if (funcArg[NARG_POS::NINTH] != nullptr) {
+        tie(succ, srcOffset) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToUint32();
+        if (!succ) {
+            return nullptr;
+        }
+    }
+    GLuint srcLengthOverride = 0;
+    if (funcArg[NARG_POS::TENTH] != nullptr) {
+        tie(succ, srcLengthOverride) = NVal(env, funcArg[NARG_POS::NINTH]).ToUint32();
+        if (!succ) {
+            return nullptr;
+        }
+    }
+    return context->GetWebGLRenderingContextImpl().CompressedTexImage2D(env,
+        &imgArg, funcArg[NARG_POS::EIGHTH], srcOffset, srcLengthOverride);
 }
 
 napi_value WebGLRenderingContextOverloads::ReadPixels(napi_env env, napi_callback_info info)
@@ -297,60 +252,58 @@ napi_value WebGLRenderingContextOverloads::ReadPixels(napi_env env, napi_callbac
     if (!funcArg.InitArgs(NARG_CNT::SEVEN)) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL readPixels start");
-    int64_t x;
-    tie(succ, x) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+
+    bool succ;
+    Impl::PixelsArg arg = {0};
+    tie(succ, arg.x) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt32();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::readPixels  = %{public}u", x);
-    int64_t y;
-    tie(succ, y) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
+    tie(succ, arg.y) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt32();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::readPixels y = %{public}u", y);
-    int64_t width;
-    tie(succ, width) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
+    int64_t data = 0;
+    tie(succ, data) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::readPixels width = %{public}u", width);
-    int64_t height;
-    tie(succ, height) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
+    arg.width = static_cast<GLsizei>(data);
+    tie(succ, data) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderContext::readPixels height = %{public}u", height);
-    int64_t format;
-    tie(succ, format) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
+    arg.height = static_cast<GLsizei>(data);
+    tie(succ, arg.format) = NVal(env, funcArg[NARG_POS::FIFTH]).ToGLenum();
     if (!succ) {
-        return nullptr;
+        arg.format = 0;
     }
-    LOGI("WebGL WebGLRenderContext::readPixels format = %{public}u", format);
-    int64_t type;
-    tie(succ, type) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt64();
+    tie(succ, arg.type) = NVal(env, funcArg[NARG_POS::SIXTH]).ToGLenum();
     if (!succ) {
-        return nullptr;
+        arg.type = 0;
     }
-    LOGI("WebGL WebGLRenderContext::readPixels type = %{public}u", type);
-    if (funcArg[NARG_POS::SEVENTH] == nullptr) {
-        return nullptr;
+    GLintptr offset = 0;
+    if (NVal(env, funcArg[NARG_POS::SEVENTH]).TypeIs(napi_number)) {
+        tie(succ, data) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToInt64();
+        if (!succ) {
+            return nullptr;
+        }
+        offset = static_cast<GLintptr>(data);
+        return context->GetWebGLRenderingContextImpl().ReadPixels(env, &arg, offset);
     }
-    LOGI("WebGL WebGLRenderContext::readPixels imageSize start");
-    size_t imageSize;
-    void *pixels = nullptr;
-    tie(succ, pixels, imageSize) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToDataview();
-    if (!succ) {
-        return nullptr;
+    GLuint dstOffset = 0;
+    if (!NVal(env, funcArg[NARG_POS::EIGHTH]).IsNull()) {
+        tie(succ, dstOffset) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToUint32();
+        if (!succ) {
+            return nullptr;
+        }
     }
-    LOGI("WebGL WebGLRenderContext::readPixels pixels = %{public}u", pixels);
-    glReadPixels(static_cast<GLint>(x), static_cast<GLint>(y), static_cast<GLsizei>(width),
-        static_cast<GLsizei>(height), static_cast<GLenum>(format),
-        static_cast<GLenum>(type), static_cast<void*>(pixels));
-    LOGI("WebGL readPixels end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().ReadPixels(env, &arg, funcArg[NARG_POS::SEVENTH], dstOffset);
 }
 
 napi_value WebGLRenderingContextOverloads::TexImage2D(napi_env env, napi_callback_info info)
@@ -360,197 +313,72 @@ napi_value WebGLRenderingContextOverloads::TexImage2D(napi_env env, napi_callbac
         return nullptr;
     }
 
-    bool usagesucc = NVal(env, funcArg[NARG_POS::SIXTH]).TypeIs(napi_number);
-    LOGI("WebGLRenderingContextOverloads::TexImage2D usagesucc: %{public}d", usagesucc);
-    if (usagesucc) {
-        bool succ = false;
-        int64_t target;
-        tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse target failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::TexImage2D target = %{public}lld", target);
-        int64_t level;
-        tie(succ, level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse level failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::TexImage2D level = %{public}lld", level);
-        int64_t internalFormat;
-        tie(succ, internalFormat) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse internalFormat failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::TexImage2D internalFormat = %{public}lld", internalFormat);
-        int32_t width;
-        tie(succ, width) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse width failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D width = %{public}d", width);
-        int64_t height;
-        tie(succ, height) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse height failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D height = %{public}lld", height);
-        int64_t border;
-        tie(succ, border) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse border failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D border = %{public}lld", border);
-        int32_t format;
-        tie(succ, format) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToInt32();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse format failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D format = %{public}d", format);
-        int64_t type;
-        tie(succ, type) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse type failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D type = %{public}lld", type);
-        if (funcArg[NARG_POS::NINTH] == nullptr) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D last param is null");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D imageSize start");
-        size_t imageSize;
-        void *pixels = nullptr;
-        tie(succ, pixels, imageSize) = NVal(env, funcArg[NARG_POS::NINTH]).ToDataview();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse pixels failed");
-            return nullptr;
-        }
-        glTexImage2D(static_cast<GLenum>(target), static_cast<GLint>(level), static_cast<GLint>(internalFormat),
-            static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLint>(border),
-            static_cast<GLenum>(format), static_cast<GLenum>(type), static_cast<void*>(pixels));
-        LOGI("WebGLRenderingContextOverloads::TexImage2D end");
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
-    } else {
-        bool succ = false;
-        int64_t target;
-        tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse target failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D target = %{public}lld", target);
-        int64_t level;
-        tie(succ, level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse level failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D level = %{public}lld", level);
-        int64_t internalFormat;
-        tie(succ, internalFormat) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse internalFormat failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D internalFormat = %{public}lld", internalFormat);
-        int32_t format;
-        tie(succ, format) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt32();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse format failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D format = %{public}d", format);
-        int64_t type;
-        tie(succ, type) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D parse type failed");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D type = %{public}lld", type);
-        napi_value texImageSource = funcArg[NARG_POS::SIXTH];
-        napi_value resultObject = nullptr;
-        napi_status statusObject = napi_coerce_to_object(env, texImageSource, &resultObject);
-        if (statusObject != napi_ok) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D failed to get imageSource");
-            return nullptr;
-        }
-        napi_value resultWidth = nullptr;
-        napi_status widthStatus = napi_get_named_property(env, resultObject, "width", &resultWidth);
-        if (widthStatus != napi_ok) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D failed to parse width");
-            return nullptr;
-        }
-        int64_t width;
-        tie(succ, width) = NVal(env, resultWidth).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D failed to get width");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D width = %{public}lld", width);
-        napi_value resultHeight = nullptr;
-        napi_status heightStatus = napi_get_named_property(env, resultObject, "height", &resultHeight);
-        if (heightStatus != napi_ok) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D failed to parse height");
-            return nullptr;
-        }
-        int64_t height;
-        tie(succ, height) = NVal(env, resultHeight).ToInt64();
-        if (!succ) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D failed to get height");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::texImage2D height = %{public}lld", height);
-        napi_value resultData = nullptr;
-        napi_status dataRes = napi_get_named_property(env, resultObject, "data", &resultData);
-        if (dataRes != napi_ok) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D failed to get data");
-            return nullptr;
-        }
-        napi_value resultStr;
-        napi_status rsuStatus = napi_coerce_to_string(env, resultData, &resultStr);
-        if (rsuStatus != napi_ok) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D resultStr is not ok");
-            return nullptr;
-        }
-        unique_ptr<char[]> name;
-        tie(succ, name, ignore) = NVal(env, resultStr).ToUTF8String();
-        if (!succ) {
-            LOGI("WebGLRenderingContextOverloads::TexImage2D ToUTF8String is not ok");
-            return nullptr;
-        }
-        std::string imageStr(name.get());
-        std::vector<std::string> imageData;
-        Util::SplitString(imageStr, imageData, ",");
-        if (imageData.size() == 0) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D image data is empty");
-            return nullptr;
-        }
-        LOGI("WebGLRenderingContextOverloads::TexImage2D iamgeData: size: %{public}d", imageData.size());
-        char* buffer = new (std::nothrow) char[imageData.size()];
-        if (buffer == nullptr) {
-            LOGE("WebGLRenderingContextOverloads::TexImage2D image create buffer failed");
-            return nullptr;
-        }
-        // parse with RGBA
-        for (size_t i = 0; i < imageData.size(); i++) {
-            buffer[i] =  Util::StringToInt(imageData[i]);
-        }
-        int64_t border = 0;
-        glTexImage2D(static_cast<GLenum>(target), static_cast<GLint>(level), static_cast<GLint>(internalFormat),
-            static_cast<GLsizei>(width), static_cast<GLsizei>(height), static_cast<GLint>(border),
-            static_cast<GLenum>(format), static_cast<GLenum>(type), static_cast<void*>(buffer));
-        delete[] buffer;
-        buffer = nullptr;
-        LOGI("WebGLRenderingContextOverloads::texImage2D end");
     }
-    return nullptr;
+    Impl::Image2DArg imgArg = { 0 };
+    imgArg.func = Impl::IMAGE_2D_FUNC_TEXT_IMAGE_2D;
+    bool succ = false;
+    tie(succ, imgArg.target) = NVal(env, funcArg[NARG_POS::FIRST]).ToGLenum();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt32();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.internalFormat) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+    if (!succ) {
+        return nullptr;
+    }
+    bool usageNumber = NVal(env, funcArg[NARG_POS::SIXTH]).TypeIs(napi_number);
+    LOGI("WebGl TexImage2D usageNumber: %{public}d", usageNumber);
+    if (!usageNumber) { // for source: TexImageSource
+        tie(succ, imgArg.format) = NVal(env, funcArg[NARG_POS::FOURTH]).ToGLenum();
+        if (!succ) {
+            return nullptr;
+        }
+        tie(succ, imgArg.type) = NVal(env, funcArg[NARG_POS::FIFTH]).ToGLenum();
+        if (!succ) {
+            return nullptr;
+        }
+        return context->GetWebGLRenderingContextImpl().TexImage2D(env, &imgArg, funcArg[NARG_POS::SIXTH]);
+    }
+    tie(succ, imgArg.width) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.height) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.border) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt32();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.format) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToGLenum();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.type) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToGLenum();
+    if (!succ) {
+        return nullptr;
+    }
+    usageNumber = NVal(env, funcArg[NARG_POS::NINTH]).TypeIs(napi_number);
+    LOGI("WebGl TexImage2D usageNumber: %{public}d", usageNumber);
+    if (context->GetWebGLRenderingContextImpl().IsHighWebGL() && usageNumber) { //support pboOffset
+        int64_t pboOffset = 0;
+        tie(succ, pboOffset) = NVal(env, funcArg[NARG_POS::NINTH]).ToInt64();
+        if (!succ) {
+            return nullptr;
+        }
+        return context->GetWebGLRenderingContextImpl().TexImage2D(env, &imgArg, static_cast<GLintptr>(pboOffset));
+    } else if (NVal(env, funcArg[NARG_POS::NINTH]).IsBufferArray()) {
+        return context->GetWebGLRenderingContextImpl().TexImage2D(env, &imgArg, funcArg[NARG_POS::NINTH], 0);
+    } else {
+        return context->GetWebGLRenderingContextImpl().TexImage2D(env, &imgArg, funcArg[NARG_POS::NINTH]);
+    }
 }
 
 napi_value WebGLRenderingContextOverloads::TexSubImage2D(napi_env env, napi_callback_info info)
@@ -559,162 +387,92 @@ napi_value WebGLRenderingContextOverloads::TexSubImage2D(napi_env env, napi_call
     if (!(funcArg.InitArgs(NARG_CNT::NINE) || funcArg.InitArgs(NARG_CNT::SEVEN))) {
         return nullptr;
     }
-    bool usagesucc = NVal(env, funcArg[NARG_POS::SEVENTH]).TypeIs(napi_number);
-    if (usagesucc) {
-        bool succ = false;
-        LOGI("WebGL texSubImage2D start");
-        int64_t target;
-        tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D target = %{public}u", target);
-        int64_t level;
-        tie(succ, level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D level = %{public}u", level);
-        int64_t xoffset;
-        tie(succ, xoffset) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D xoffset = %{public}u", xoffset);
-        int64_t yoffset;
-        tie(succ, yoffset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D yoffset = %{public}u", yoffset);
-        int64_t width;
-        tie(succ, width) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D width = %{public}u", width);
-        int64_t height;
-        tie(succ, height) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D height = %{public}u", height);
-        int64_t format;
-        tie(succ, format) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D format = %{public}u", format);
-        int64_t type;
-        tie(succ, type) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D type = %{public}u", type);
-        if (funcArg[NARG_POS::NINTH] == nullptr) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D texSubImage2D start");
-        void  *pixels = nullptr;
-        size_t imageSize;
-        tie(succ, pixels, imageSize) = NVal(env, funcArg[NARG_POS::NINTH]).ToDataview();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D texSubImage2D = %{public}u", pixels);
-        glTexSubImage2D(static_cast<GLenum>(target), static_cast<GLint>(level), static_cast<GLint>(xoffset),
-            static_cast<GLint>(yoffset), static_cast<GLsizei>(width), static_cast<GLsizei>(height),
-            static_cast<GLenum>(format), static_cast<GLenum>(type), static_cast<void*>(pixels));
-        LOGI("WebGL texSubImage2D end");
-    } else {
-        bool succ = false;
-        LOGI("WebGL texSubImage2D start");
-        int64_t target;
-        tie(succ, target) = NVal(env, funcArg[NARG_POS::FIRST]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D target = %{public}u", target);
-        int64_t level;
-        tie(succ, level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D level = %{public}u", level);
-        int64_t xoffset;
-        tie(succ, xoffset) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D xoffset = %{public}u", xoffset);
-        int64_t yoffset;
-        tie(succ, yoffset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D yoffset = %{public}u", yoffset);
-        int64_t format;
-        tie(succ, format) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D format = %{public}u", format);
-        int64_t type;
-        tie(succ, type) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D type = %{public}u", type);
-        napi_value teximagesource = funcArg[NARG_POS::SEVENTH];
-        napi_value resultobject = nullptr;
-        napi_status statusobject = napi_coerce_to_object(env, teximagesource, &resultobject);
-        if (statusobject != napi_ok) {
-            return nullptr;
-        }
-        napi_value resultwidth = nullptr;
-        napi_status widthstatus = napi_get_named_property(env, resultobject, "width", &resultwidth);
-        if (widthstatus != napi_ok) {
-            return nullptr;
-        }
-        int64_t width;
-        tie(succ, width) = NVal(env, resultwidth).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D width = %{public}u", width);
-        napi_value resultheight = nullptr;
-        napi_status heightstatus = napi_get_named_property(env, resultobject, "height", &resultheight);
-        if (heightstatus != napi_ok) {
-            return nullptr;
-        }
-        int64_t height;
-        tie(succ, height) = NVal(env, resultheight).ToInt64();
-        if (!succ) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderContext::texSubImage2D height = %{public}u", height);
-        napi_value resultdata = nullptr;
-        napi_status datares = napi_get_named_property(env, resultobject, "data", &resultdata);
-        if (datares != napi_ok) {
-            return nullptr;
-        }
-        napi_value resultstr;
-        napi_status rsuStatus = napi_coerce_to_string(env, resultdata, &resultstr);
-        LOGI("WebGL WebGLRenderContext::texSubImage2D rsuStatus = %{public}u", rsuStatus);
-        if (rsuStatus != napi_ok) {
-            return nullptr;
-        }
-        unique_ptr<char[]> name;
-        tie(succ, name, ignore) = NVal(env, resultstr).ToUTF8String();
-        if (!succ) {
-            return nullptr;
-        }
-        glTexSubImage2D(static_cast<GLenum>(target), static_cast<GLint>(level), static_cast<GLint>(xoffset),
-            static_cast<GLint>(yoffset), static_cast<GLsizei>(width), static_cast<GLsizei>(height),
-            static_cast<GLenum>(format), static_cast<GLenum>(type), static_cast<void*>(name.get()));
-        LOGI("WebGL texSubImage2D end");
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
     }
-    return nullptr;
+
+    Impl::Image2DArg imgArg = { 0 };
+    imgArg.func = Impl::IMAGE_2D_FUNC_SUB_IMAGE_2D;
+    bool succ = false;
+    tie(succ, imgArg.target) = NVal(env, funcArg[NARG_POS::FIRST]).ToGLenum();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.level) = NVal(env, funcArg[NARG_POS::SECOND]).ToInt32();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.xoffset) = NVal(env, funcArg[NARG_POS::THIRD]).ToInt32();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.yoffset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToInt32();
+    if (!succ) {
+        return nullptr;
+    }
+    bool usageNumber = NVal(env, funcArg[NARG_POS::SEVENTH]).TypeIs(napi_number);
+    if (!usageNumber) {
+        tie(succ, imgArg.format) = NVal(env, funcArg[NARG_POS::FIFTH]).ToInt64();
+        if (!succ) {
+            return nullptr;
+        }
+        tie(succ, imgArg.type) = NVal(env, funcArg[NARG_POS::SIXTH]).ToInt64();
+        if (!succ) {
+            return nullptr;
+        }
+        return context->GetWebGLRenderingContextImpl().TexSubImage2D(env, &imgArg, funcArg[NARG_POS::SEVENTH]);
+    }
+
+    tie(succ, imgArg.width) = NVal(env, funcArg[NARG_POS::FIFTH]).ToGLsizei();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.height) = NVal(env, funcArg[NARG_POS::SIXTH]).ToGLsizei();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.format) = NVal(env, funcArg[NARG_POS::SEVENTH]).ToGLenum();
+    if (!succ) {
+        return nullptr;
+    }
+    tie(succ, imgArg.type) = NVal(env, funcArg[NARG_POS::EIGHTH]).ToGLenum();
+    if (!succ) {
+        return nullptr;
+    }
+    usageNumber = NVal(env, funcArg[NARG_POS::NINTH]).TypeIs(napi_number);
+    if (context->GetWebGLRenderingContextImpl().IsHighWebGL() && usageNumber) { //support pboOffset
+        int64_t pboOffset = 0;
+        tie(succ, pboOffset) = NVal(env, funcArg[NARG_POS::NINTH]).ToInt64();
+        if (!succ) {
+            return nullptr;
+        }
+        return context->GetWebGLRenderingContextImpl().TexSubImage2D(env, &imgArg, static_cast<GLintptr>(pboOffset));
+    } else if (NVal(env, funcArg[NARG_POS::NINTH]).IsBufferArray()) {
+        return context->GetWebGLRenderingContextImpl().TexSubImage2D(env, &imgArg, funcArg[NARG_POS::NINTH], 0);
+    } else {
+        return context->GetWebGLRenderingContextImpl().TexSubImage2D(env, &imgArg, funcArg[NARG_POS::NINTH]);
+    }
+}
+
+static bool GetUniformExtInfo(napi_env env, const NFuncArg &funcArg, Impl::UniformExtInfo *info)
+{
+    bool succ;
+    if (funcArg[NARG_POS::FOURTH] != nullptr) {
+        tie(succ, info->srcOffset) = NVal(env, funcArg[NARG_POS::FOURTH]).ToUint32();
+        if (!succ) {
+            return false;
+        }
+        LOGI("WebGL UniformMatrixInfo srcOffset = %{public}u", info->srcOffset);
+    }
+    if (funcArg[NARG_POS::FIFTH] != nullptr) {
+        tie(succ, info->srcLength) = NVal(env, funcArg[NARG_POS::FIFTH]).ToUint32();
+        if (!succ) {
+            return false;
+        }
+        LOGI("WebGL UniformMatrixInfo srcLength = %{public}u", info->srcLength);
+    }
+    return true;
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform1fv(napi_env env, napi_callback_info info)
@@ -723,78 +481,19 @@ napi_value WebGLRenderingContextOverloads::Uniform1fv(napi_env env, napi_callbac
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
-        return nullptr;
-    }
-    bool succ = false;
-    LOGI("WebGL uniform1fv start");
-    WebGLUniformLocation *webGLUniformlocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformlocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformlocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv location = %{public}u", location);
 
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        LOGI("WebGL uniform1fv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv count = %{public}u", count);
-        float uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv element = %{public}u", element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            double ele;
-            napi_status doubleStatus = napi_get_value_double(env, element, &ele);
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv ele = %{public}f", (float)ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            uniformfv[i] = static_cast<float>(ele);
-        }
-        glUniform1fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLfloat *>(uniformfv));
-        LOGI("WebGL uniform1fv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = 1;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv count = %{public}u", count);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv type = %{public}u", type);
-    if (type == napi_float32_array) {
-        float *inputFloat32 = static_cast<float *>(static_cast<float *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform1fv input_float32_array = %{public}u", inputFloat32);
-        glUniform1fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLfloat*>(inputFloat32));
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
     }
-    LOGI("WebGL uniform1fv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformfv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform2fv(napi_env env, napi_callback_info info)
@@ -803,230 +502,61 @@ napi_value WebGLRenderingContextOverloads::Uniform2fv(napi_env env, napi_callbac
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
-        return nullptr;
-    }
-    bool succ = false;
-    LOGI("WebGL uniform2fv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv location = %{public}u", location);
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        LOGI("WebGL uniform2fv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv count = %{public}u", count);
-        float uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            double ele;
-            napi_status doubleStatus = napi_get_value_double(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<float>(ele);
-        }
-        glUniform2fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLfloat *>(uniformfv));
-        LOGI("WebGL uniform2fv uniformarray end");
-        return nullptr;
-    }
 
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
     }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::UNIFORM_2V_REQUIRE_MIN_SIZE;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv count = %{public}u", count);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv type = %{public}u", type);
-    if (type == napi_float32_array) {
-        float *inputFloat32 = static_cast<float *>(static_cast<float *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform2fv input_float32_array = %{public}u", inputFloat32);
-        glUniform2fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLfloat*>(inputFloat32));
-    }
-    LOGI("WebGL uniform2fv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformfv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform3fv(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL uniform3fv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3fv location = %{public}u", location);
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        LOGI("WebGL uniform3fv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform3fv count = %{public}u", count);
-        float uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            double ele;
-            napi_status doubleStatus = napi_get_value_double(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform3fv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<float>(ele);
-        }
-        glUniform3fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLfloat *>(uniformfv));
-        LOGI("WebGL uniform3fv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3fv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::UNIFORM_3V_REQUIRE_MIN_SIZE;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3fv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3fv count = %{public}u", count);
-    if (type == napi_float32_array) {
-        float *inputFloat32 = static_cast<float *>(static_cast<float *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform3fv input_float32_array = %{public}u", inputFloat32);
-        glUniform3fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLfloat*>(inputFloat32));
-    }
-    LOGI("WebGL uniform3fv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformfv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform4fv(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
-            return nullptr;
-    }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL uniform4fv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
     }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4fv location = %{public}u", location);
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        LOGI("WebGL uniform4fv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform4fv count = %{public}u", count);
-        float uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            double ele;
-            napi_status doubleStatus = napi_get_value_double(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform4fv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<float>(ele);
-        }
-        glUniform4fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLfloat *>(uniformfv));
-        LOGI("WebGL uniform4fv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4fv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::UNIFORM_4V_REQUIRE_MIN_SIZE;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4fv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4fv count = %{public}u", count);
-    if (type == napi_float32_array) {
-        float *inputFloat32 = static_cast<float *>(static_cast<float *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform4fv input_float32_array = %{public}u", inputFloat32);
-        glUniform4fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLfloat*>(inputFloat32));
-    }
-    LOGI("WebGL uniform4fv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformfv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform1iv(napi_env env, napi_callback_info info)
@@ -1035,76 +565,19 @@ napi_value WebGLRenderingContextOverloads::Uniform1iv(napi_env env, napi_callbac
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL uniform1iv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1iv location = %{public}u", location);
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        int* a = nullptr;
-        LOGI("WebGL uniform1iv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform1iv count = %{public}u", count);
-        int uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            int64_t ele;
-            napi_status doubleStatus = napi_get_value_int64(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform1iv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<int>(ele);
-        }
-        a = uniformfv;
-        glUniform1iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLint *>(a));
-        LOGI("WebGL uniform1iv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1iv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = 1;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1iv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform1iv count = %{public}u", count);
-    if (type == napi_int32_array) {
-        int *intInt32 = static_cast<int *>(static_cast<int *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform1iv int_int32_array = %{public}u", intInt32);
-        glUniform1iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLint*>(intInt32));
-    }
-    LOGI("WebGL uniform1iv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformiv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform2iv(napi_env env, napi_callback_info info)
@@ -1113,76 +586,19 @@ napi_value WebGLRenderingContextOverloads::Uniform2iv(napi_env env, napi_callbac
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL uniform2iv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2iv location = %{public}u", location);
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        LOGI("WebGL uniform2iv is isUniformArray");
-        int* a = nullptr;
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform2iv count = %{public}u", count);
-        int uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            int64_t ele;
-            napi_status doubleStatus = napi_get_value_int64(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform2iv ele = %{public}d", ele);
-            uniformfv[i] = static_cast<int>(ele);
-        }
-        a = uniformfv;
-        glUniform2iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLint *>(a));
-        LOGI("WebGL uniform2iv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2iv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::UNIFORM_2V_REQUIRE_MIN_SIZE;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2iv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform2iv count = %{public}u", count);
-    if (type == napi_int32_array) {
-        int *intInt32 = static_cast<int *>(static_cast<int *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform2iv int_int32_array = %{public}u", intInt32);
-        glUniform2iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLint*>(intInt32));
-    }
-    LOGI("WebGL uniform2iv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformiv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform3iv(napi_env env, napi_callback_info info)
@@ -1191,76 +607,19 @@ napi_value WebGLRenderingContextOverloads::Uniform3iv(napi_env env, napi_callbac
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL uniform3iv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3iv location = %{public}u", location);
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        int* a = nullptr;
-        LOGI("WebGL uniform3iv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform3iv count = %{public}u", count);
-        int uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            int64_t ele;
-            napi_status doubleStatus = napi_get_value_int64(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform3iv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<int>(ele);
-        }
-        a = uniformfv;
-        glUniform3iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLint *>(a));
-        LOGI("WebGL uniform3iv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3iv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::UNIFORM_3V_REQUIRE_MIN_SIZE;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3iv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform3iv count = %{public}u", count);
-    if (type == napi_int32_array) {
-        int *intInt32 = static_cast<int *>(static_cast<int *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform3iv int_int32_array = %{public}u", intInt32);
-        glUniform3iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLint*>(intInt32));
-    }
-    LOGI("WebGL uniform3iv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformiv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::Uniform4iv(napi_env env, napi_callback_info info)
@@ -1269,240 +628,73 @@ napi_value WebGLRenderingContextOverloads::Uniform4iv(napi_env env, napi_callbac
     if (!funcArg.InitArgs(NARG_CNT::TWO)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
+
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL uniform4iv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4iv location = %{public}u", location);
-    napi_value uniformarray = funcArg[NARG_POS::SECOND];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        int* a = nullptr;
-        LOGI("WebGL uniform4iv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform4iv count = %{public}u", count);
-        int uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            int64_t ele;
-            napi_status doubleStatus = napi_get_value_int64(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniform4iv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<int>(ele);
-        }
-        a = uniformfv;
-        glUniform4iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            reinterpret_cast<GLint *>(a));
-        LOGI("WebGL uniform4iv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4iv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::SECOND]).ToTypedArrayInfo();
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::UNIFORM_4V_REQUIRE_MIN_SIZE;
+    bool succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4iv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniform4iv count = %{public}u", count);
-    if (type == napi_int32_array) {
-        int *intInt32 = static_cast<int *>(static_cast<int *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniform4iv int_int32_array = %{public}u", intInt32);
-        glUniform4iv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLint*>(intInt32));
-    }
-    LOGI("WebGL uniform4iv end");
-    return nullptr;
+    return context->GetWebGLRenderingContextImpl().Uniformiv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::UniformMatrix2fv(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
     if (!funcArg.InitArgs(NARG_CNT::THREE)) {
-    return nullptr;
-    }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
         return nullptr;
     }
-    bool succ = false;
-    LOGI("WebGL uniformMatrix2fv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv location = %{public}d", location);
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::MATRIX_2X2_REQUIRE_MIN_SIZE;
+    bool succ;
     bool transpose = false;
-    tie(succ, transpose) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv succ = %{public}u", succ);
+    tie(succ, transpose)  = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv transpose = %{public}u", transpose);
-    napi_value uniformarray = funcArg[NARG_POS::THIRD];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        float* a = nullptr;
-        LOGI("WebGL uniformMatrix2fv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv count = %{public}u", count);
-        float uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            double ele;
-            napi_status doubleStatus = napi_get_value_double(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<float>(ele);
-        }
-        a = uniformfv;
-        glUniformMatrix2fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLboolean>(transpose), static_cast<GLfloat*>(a));
-        LOGI("WebGL uniformMatrix2fv uniformarray end");
-        return nullptr;
-    }
-    bool isTypedarray = false;
-    tie(succ, isTypedarray) = NVal(env, uniformarray).IsTypeArray();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv isTypedarray = %{public}u", isTypedarray);
-    if (!isTypedarray || !succ) {
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::THIRD]).ToTypedArrayInfo();
+    succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv count = %{public}u", count);
-    if (type == napi_float32_array) {
-        float *inputFloat32 = static_cast<float *>(static_cast<float *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix2fv aint32 = %{public}u", inputFloat32);
-        glUniformMatrix2fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLboolean>(transpose), static_cast<GLfloat*>(inputFloat32));
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
     }
-    LOGI("WebGL uniformMatrix2fv end");
-    return nullptr;
+
+    return context->GetWebGLRenderingContextImpl().UniformMatrixfv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::THIRD], transpose, &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::UniformMatrix3fv(napi_env env, napi_callback_info info)
 {
     NFuncArg funcArg(env, info);
-
     if (!funcArg.InitArgs(NARG_CNT::THREE)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
-        return nullptr;
-    }
-    bool succ = false;
-    LOGI("WebGL uniformMatrix3fv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix3fv location = %{public}d", location);
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::MATRIX_3X3_REQUIRE_MIN_SIZE;
+    bool succ;
     bool transpose = false;
-    tie(succ, transpose) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
+    tie(succ, transpose)  = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix3fv transpose = %{public}u", transpose);
-    napi_value uniformarray = funcArg[NARG_POS::THIRD];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        float* a = nullptr;
-        LOGI("WebGL uniformMatrix3fv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix3fv count = %{public}u", count);
-        float uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            double ele;
-            napi_status doubleStatus = napi_get_value_double(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix3fv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<float>(ele);
-        }
-        a = uniformfv;
-        glUniformMatrix3fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLboolean>(transpose),  static_cast<GLfloat*>(a));
-        LOGI("WebGL uniformMatrix3fv uniformarray end");
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::THIRD]).ToTypedArrayInfo();
+    succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix3fv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix3fv count = %{public}u", count);
-    if (type == napi_float32_array) {
-        float *inputFloat32 = static_cast<float *>(static_cast<float *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix3fv aint32 = %{public}u", inputFloat32);
-        glUniformMatrix3fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLboolean>(transpose), static_cast<GLfloat*>(inputFloat32));
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
     }
-    LOGI("WebGL uniformMatrix3fv end");
-    return nullptr;
+
+    return context->GetWebGLRenderingContextImpl().UniformMatrixfv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::THIRD], transpose, &extInfo);
 }
 
 napi_value WebGLRenderingContextOverloads::UniformMatrix4fv(napi_env env, napi_callback_info info)
@@ -1511,76 +703,26 @@ napi_value WebGLRenderingContextOverloads::UniformMatrix4fv(napi_env env, napi_c
     if (!funcArg.InitArgs(NARG_CNT::THREE)) {
         return nullptr;
     }
-    if (funcArg[NARG_POS::FIRST] == nullptr) {
-        return nullptr;
-    }
-    bool succ = false;
-    LOGI("WebGL uniformMatrix4fv start");
-    WebGLUniformLocation *webGLUniformLocation = nullptr;
-    napi_status uniformlocationStatus = napi_unwrap(env, funcArg[NARG_POS::FIRST], (void **)&webGLUniformLocation);
-    if (uniformlocationStatus != napi_ok) {
-        return nullptr;
-    }
-    int location = webGLUniformLocation->GetUniformLocationId();
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix4fv location = %{public}u", location);
+
+    Impl::UniformExtInfo extInfo = {};
+    extInfo.dimension = WebGLArg::MATRIX_4X4_REQUIRE_MIN_SIZE;
+    bool succ;
     bool transpose = false;
-    tie(succ, transpose) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
+    tie(succ, transpose)  = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix4fv transpose = %{public}u", transpose);
-    napi_value uniformarray = funcArg[NARG_POS::THIRD];
-    bool isUniformArray = false;
-    tie(succ, isUniformArray) = NVal(env, uniformarray).IsArray();
-    if (isUniformArray) {
-        float* a = nullptr;
-        LOGI("WebGL glUniformMatrix4fv is isUniformArray");
-        uint32_t count;
-        napi_status countStatus = napi_get_array_length(env, uniformarray, &count);
-        if (countStatus != napi_ok) {
-            return nullptr;
-        }
-        LOGI("WebGL WebGLRenderingContextOverloads::glUniformMatrix4fv count = %{public}u", count);
-        float uniformfv[count];
-        uint32_t i;
-        for (i = 0; i < count; i++) {
-            napi_value element;
-            napi_status eleStatus = napi_get_element(env, uniformarray, i, &element);
-            if (eleStatus != napi_ok) {
-                return nullptr;
-            }
-            double ele;
-            napi_status doubleStatus = napi_get_value_double(env, element, &ele);
-            if (doubleStatus != napi_ok) {
-                return nullptr;
-            }
-            LOGI("WebGL WebGLRenderingContextOverloads::glUniformMatrix4fv ele = %{public}f", (float)ele);
-            uniformfv[i] = static_cast<float>(ele);
-        }
-        a = uniformfv;
-        glUniformMatrix4fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLboolean>(transpose), static_cast<GLfloat*>(a));
-        LOGI("WebGL glUniformMatrix4fv uniformarray end");
-        return nullptr;
-    }
-    void *value = nullptr;
-    size_t count;
-    size_t byteOffset;
-    napi_typedarray_type type;
-    tie(succ, value, count, byteOffset, type)  = NVal(env, funcArg[NARG_POS::THIRD]).ToTypedArrayInfo();
+    succ = GetUniformExtInfo(env, funcArg, &extInfo);
     if (!succ) {
         return nullptr;
     }
-    LOGI("WebGL WebGLRenderingContextOverloads::glUniformMatrix4fv value = %{public}u", value);
-    LOGI("WebGL WebGLRenderingContextOverloads::glUniformMatrix4fv count = %{public}u", count);
-    if (type == napi_float32_array) {
-        float *inputFloat32 = static_cast<float *>(static_cast<float *>(value) - byteOffset);
-        LOGI("WebGL WebGLRenderingContextOverloads::uniformMatrix4fv aint32 = %{public}u", inputFloat32);
-        glUniformMatrix4fv(static_cast<GLint>(location), static_cast<GLsizei>(count),
-            static_cast<GLboolean>(transpose), static_cast<GLfloat*>(inputFloat32));
+    WebGLRenderingContextBasicBase *context = Util::GetContextObject(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
     }
-    LOGI("WebGL uniformMatrix4fv end");
-    return nullptr;
+
+    return context->GetWebGLRenderingContextImpl().UniformMatrixfv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::THIRD], transpose, &extInfo);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "n_func_arg.h"
+#include "napi/n_func_arg.h"
 
 namespace OHOS {
 namespace Rosen {

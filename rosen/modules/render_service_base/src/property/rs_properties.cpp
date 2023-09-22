@@ -83,36 +83,35 @@ const std::vector<ResetPropertyFunc> g_propertyResetterLUT = {
     [](RSProperties* prop) { prop->SetDynamicLightUpRate({}); },         // DYNAMIC_LIGHT_UP_RATE,    33
     [](RSProperties* prop) { prop->SetDynamicLightUpDegree({}); },       // DYNAMIC_LIGHT_UP_DEGREE,  34
     [](RSProperties* prop) { prop->SetFrameGravity(Gravity::DEFAULT); }, // FRAME_GRAVITY,            35
-    [](RSProperties* prop) { prop->SetGravityWeight(Vector4f(1.0f)); },  // GRAVITY_WEIGHT,           36
-    [](RSProperties* prop) { prop->SetClipRRect({}); },                  // CLIP_RRECT,               37
-    [](RSProperties* prop) { prop->SetClipBounds({}); },                 // CLIP_BOUNDS,              38
-    [](RSProperties* prop) { prop->SetClipToBounds(false); },            // CLIP_TO_BOUNDS,           39
-    [](RSProperties* prop) { prop->SetClipToFrame(false); },             // CLIP_TO_FRAME,            40
-    [](RSProperties* prop) { prop->SetVisible(true); },                  // VISIBLE,                  41
-    [](RSProperties* prop) { prop->SetShadowColor({}); },                // SHADOW_COLOR,             42
-    [](RSProperties* prop) { prop->SetShadowOffsetX(0.f); },             // SHADOW_OFFSET_X,          43
-    [](RSProperties* prop) { prop->SetShadowOffsetY(0.f); },             // SHADOW_OFFSET_Y,          44
-    [](RSProperties* prop) { prop->SetShadowAlpha(0.f); },               // SHADOW_ALPHA,             45
-    [](RSProperties* prop) { prop->SetShadowElevation(0.f); },           // SHADOW_ELEVATION,         46
-    [](RSProperties* prop) { prop->SetShadowRadius(0.f); },              // SHADOW_RADIUS,            47
-    [](RSProperties* prop) { prop->SetShadowPath({}); },                 // SHADOW_PATH,              48
-    [](RSProperties* prop) { prop->SetShadowMask(false); },              // SHADOW_MASK,              49
-    [](RSProperties* prop) { prop->SetMask({}); },                       // MASK,                     50
-    [](RSProperties* prop) { prop->SetSpherize(0.f); },                  // SPHERIZE,                 51
-    [](RSProperties* prop) { prop->SetLightUpEffect(1.f); },             // LIGHT_UP_EFFECT,          52
-    [](RSProperties* prop) { prop->SetPixelStretch({}); },               // PIXEL_STRETCH,            53
-    [](RSProperties* prop) { prop->SetPixelStretchPercent({}); },        // PIXEL_STRETCH_PERCENT,    54
-    [](RSProperties* prop) { prop->SetUseEffect(false); },               // USE_EFFECT,               55
-    [](RSProperties* prop) { prop->ResetSandBox(); },                    // SANDBOX,                  56
-    [](RSProperties* prop) { prop->SetGrayScale({}); },                  // GRAY_SCALE,               57
-    [](RSProperties* prop) { prop->SetBrightness({}); },                 // BRIGHTNESS,               58
-    [](RSProperties* prop) { prop->SetContrast({}); },                   // CONTRAST,                 59
-    [](RSProperties* prop) { prop->SetSaturate({}); },                   // SATURATE,                 60
-    [](RSProperties* prop) { prop->SetSepia({}); },                      // SEPIA,                    61
-    [](RSProperties* prop) { prop->SetInvert({}); },                     // INVERT,                   62
-    [](RSProperties* prop) { prop->SetHueRotate({}); },                  // HUE_ROTATE,               63
-    [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND,              64
-    [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE,                 65
+    [](RSProperties* prop) { prop->SetClipRRect({}); },                  // CLIP_RRECT,               36
+    [](RSProperties* prop) { prop->SetClipBounds({}); },                 // CLIP_BOUNDS,              37
+    [](RSProperties* prop) { prop->SetClipToBounds(false); },            // CLIP_TO_BOUNDS,           38
+    [](RSProperties* prop) { prop->SetClipToFrame(false); },             // CLIP_TO_FRAME,            39
+    [](RSProperties* prop) { prop->SetVisible(true); },                  // VISIBLE,                  40
+    [](RSProperties* prop) { prop->SetShadowColor({}); },                // SHADOW_COLOR,             41
+    [](RSProperties* prop) { prop->SetShadowOffsetX(0.f); },             // SHADOW_OFFSET_X,          42
+    [](RSProperties* prop) { prop->SetShadowOffsetY(0.f); },             // SHADOW_OFFSET_Y,          43
+    [](RSProperties* prop) { prop->SetShadowAlpha(0.f); },               // SHADOW_ALPHA,             44
+    [](RSProperties* prop) { prop->SetShadowElevation(0.f); },           // SHADOW_ELEVATION,         45
+    [](RSProperties* prop) { prop->SetShadowRadius(0.f); },              // SHADOW_RADIUS,            46
+    [](RSProperties* prop) { prop->SetShadowPath({}); },                 // SHADOW_PATH,              47
+    [](RSProperties* prop) { prop->SetShadowMask(false); },              // SHADOW_MASK,              48
+    [](RSProperties* prop) { prop->SetMask({}); },                       // MASK,                     49
+    [](RSProperties* prop) { prop->SetSpherize(0.f); },                  // SPHERIZE,                 50
+    [](RSProperties* prop) { prop->SetLightUpEffect(1.f); },             // LIGHT_UP_EFFECT,          51
+    [](RSProperties* prop) { prop->SetPixelStretch({}); },               // PIXEL_STRETCH,            52
+    [](RSProperties* prop) { prop->SetPixelStretchPercent({}); },        // PIXEL_STRETCH_PERCENT,    53
+    [](RSProperties* prop) { prop->SetUseEffect(false); },               // USE_EFFECT,               54
+    [](RSProperties* prop) { prop->ResetSandBox(); },                    // SANDBOX,                  55
+    [](RSProperties* prop) { prop->SetGrayScale({}); },                  // GRAY_SCALE,               56
+    [](RSProperties* prop) { prop->SetBrightness({}); },                 // BRIGHTNESS,               57
+    [](RSProperties* prop) { prop->SetContrast({}); },                   // CONTRAST,                 58
+    [](RSProperties* prop) { prop->SetSaturate({}); },                   // SATURATE,                 59
+    [](RSProperties* prop) { prop->SetSepia({}); },                      // SEPIA,                    60
+    [](RSProperties* prop) { prop->SetInvert({}); },                     // INVERT,                   61
+    [](RSProperties* prop) { prop->SetHueRotate({}); },                  // HUE_ROTATE,               62
+    [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND,              63
+    [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE,                 64
     nullptr,
 };
 } // namespace

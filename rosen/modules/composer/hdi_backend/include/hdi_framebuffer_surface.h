@@ -41,7 +41,7 @@ struct FrameBufferEntry {
 
 class HdiFramebufferSurface : public IBufferConsumerListener {
 public:
-    static sptr<HdiFramebufferSurface> CreateFramebufferSurface();
+    static sptr<HdiFramebufferSurface> CreateFramebufferSurface(int32_t width, int32_t height);
     sptr<OHOS::Surface> GetSurface();
     std::unique_ptr<FrameBufferEntry> GetFramebuffer();
     uint32_t GetBufferQueueSize();
@@ -56,15 +56,19 @@ private:
     sptr<OHOS::IConsumerSurface> consumerSurface_ = nullptr;
     sptr<OHOS::Surface> producerSurface_ = nullptr;
     std::queue<std::unique_ptr<FrameBufferEntry>> availableBuffers_;
+    int32_t screenWidth_ = 0;
+    int32_t screenHeight_ = 0;
+    bool frameBuffersInited_ = false;
 
     static constexpr uint32_t MAX_BUFFER_SIZE = 3;
 
-    HdiFramebufferSurface();
+    HdiFramebufferSurface(int32_t width, int32_t height);
     virtual ~HdiFramebufferSurface() noexcept;
 
     void OnBufferAvailable() override;
     OHOS::SurfaceError SetBufferQueueSize(uint32_t bufferSize);
     OHOS::SurfaceError CreateSurface(sptr<HdiFramebufferSurface> &fbSurface);
+    void InitAllFrameBuffers();
 };
 } // namespace Rosen
 } // namespace OHOS

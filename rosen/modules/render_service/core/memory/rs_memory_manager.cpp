@@ -247,9 +247,9 @@ void MemoryManager::ReleaseUnlockGpuResource(Drawing::GPUContext* gpuContext, bo
 
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
-void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GrDirectContext* grContext)
+void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GrDirectContext* grContext, bool scratchResourcesOnly)
 #else
-void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GrContext* grContext)
+void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GrContext* grContext, bool scratchResourcesOnly)
 #endif
 {
 #ifdef RS_ENABLE_GL
@@ -257,11 +257,18 @@ void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(GrContext* grContext)
         RS_LOGE("ReleaseUnlockAndSafeCacheGpuResource fail, grContext is nullptr");
     }
     RS_TRACE_NAME_FMT("ReleaseUnlockAndSafeCacheGpuResource");
-    grContext->purgeUnlockAndSafeCacheGpuResources();
+    bool purgeFinished = grContext->purgeUnlockAndSafeCacheGpuResources(scratchResourcesOnly);
+    if (!purgeFinished) {
+        RS_TRACE_NAME_FMT("PostIdleTask");
+        RSMainThread::Instance()->PostTask([]() {
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(
+                RSMainThread::Instance()->GetRenderEngine()->GetRenderContext()->GetGrContext(), true);
+        }, AppExecFwk::EventQueue::Priority::IDLE);
+    }
 #endif
 }
 #else
-void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(Drawing::GPUContext* gpuContext)
+void MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(Drawing::GPUContext* gpuContext, bool scratchResourcesOnly)
 {
 #ifdef RS_ENABLE_GL
     if (!gpuContext) {

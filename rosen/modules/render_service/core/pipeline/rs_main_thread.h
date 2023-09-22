@@ -82,6 +82,7 @@ public:
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
+    void PostTask(RSTaskMessage::RSTask task, AppExecFwk::EventQueue::Priority priority);
     void PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime);
     void RemoveTask(const std::string& name);
     void PostSyncTask(RSTaskMessage::RSTask task);
@@ -224,16 +225,7 @@ private:
     void SetRSEventDetectorLoopFinishTag();
     void UpdateUIFirstSwitch();
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
-#ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
-    void ReleaseExitSurfaceNodeAllGpuResource(GrDirectContext* grContext);
-#else
-    void ReleaseExitSurfaceNodeAllGpuResource(GrContext* grContext);
-#endif
-#else
-    void ReleaseExitSurfaceNodeAllGpuResource(Drawing::GPUContext* grContext);
-#endif
-
+    void ReleaseExitSurfaceNodeAllGpuResource();
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
 
     void ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
@@ -272,6 +264,8 @@ private:
     void ProcessHgmFrameRate(std::shared_ptr<FrameRateRangeData> data, uint64_t timestamp);
     void CollectFrameRateRange(std::shared_ptr<RSRenderNode> node);
     int32_t GetNodePreferred(const std::vector<HgmModifierProfile>& hgmModifierProfileList) const;
+
+    void PostIdelTaskToPurge(bool isSetPurgeType);
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

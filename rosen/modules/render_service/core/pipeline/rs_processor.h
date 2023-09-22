@@ -45,6 +45,7 @@ public:
     virtual void ProcessDisplaySurface(RSDisplayRenderNode& node) = 0;
     virtual void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) = 0;
     virtual void PostProcess() = 0;
+    void SetSecurityDisplay(bool isSecurityDisplay);
 
 #ifndef USE_ROSEN_DRAWING
     const SkMatrix& GetScreenTransformMatrix() const
@@ -79,6 +80,7 @@ protected:
     Drawing::Matrix screenTransformMatrix_;
 #endif
     BufferRequestConfig renderFrameConfig_ {};
+    bool isSecurityDisplay_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

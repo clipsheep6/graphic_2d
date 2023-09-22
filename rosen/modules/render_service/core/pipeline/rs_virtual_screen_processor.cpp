@@ -18,6 +18,7 @@
 
 #include <ctime>
 
+#include "draw/color.h"
 #include "platform/common/rs_log.h"
 #ifndef NEW_RENDER_CONTEXT
 #include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
@@ -113,6 +114,10 @@ void RSVirtualScreenProcessor::ProcessSurface(RSSurfaceRenderNode& node)
     const float adaptiveDstWidth = params.dstRect.width() * mirrorAdaptiveCoefficient_;
     const float adaptiveDstHeight = params.dstRect.height() * mirrorAdaptiveCoefficient_;
     params.dstRect.setWH(adaptiveDstWidth, adaptiveDstHeight);
+    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+        params.backgroundColor = SK_ColorWHITE;
+        params.buffer = nullptr;
+    }
 #else
     const float adaptiveDstWidth = params.dstRect.GetWidth() * mirrorAdaptiveCoefficient_;
     const float adaptiveDstHeight = params.dstRect.GetHeight() * mirrorAdaptiveCoefficient_;
@@ -120,7 +125,12 @@ void RSVirtualScreenProcessor::ProcessSurface(RSSurfaceRenderNode& node)
     params.dstRect.SetTop(0);
     params.dstRect.SetRight(adaptiveDstWidth);
     params.dstRect.SetBottom(adaptiveDstHeight);
+    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
+        params.backgroundColor = Drawing::Color::COLOR_WHITE;
+        params.buffer = nullptr;
+    }
 #endif
+
     renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
 }
 

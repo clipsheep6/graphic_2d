@@ -26,6 +26,10 @@
 #include "text_merger.h"
 #include "text_span.h"
 
+#ifdef ENABLE_HYPHEN
+#include "text_converter.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -46,6 +50,11 @@ std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector
     double offset = 0;
     double preBreak = 0.0;
     double postBreak = 0.0;
+#ifdef ENABLE_HYPHEN    
+    double penalty = SCORE_DESPERATE;
+    double linePenalty = 0.0;
+    HyphenationType hyph;
+#endif
     CharGroups lastcgs;
     for (const auto &span : spans) {
         if (span == nullptr) {
@@ -60,6 +69,11 @@ std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector
             }
             preBreak = ts->GetPreBreak();
             postBreak = ts->GetPostBreak();
+#ifdef ENABLE_HYPHEN  
+            penalty = ts->GetPenalty();
+            linePenalty = ts->GetLinePenalty();
+            hyph = ts->GetHyphenationType();
+#endif
         }
 
         if (auto as = span.TryToAnySpan(); as != nullptr) {
@@ -80,6 +94,11 @@ std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector
             .postBreak = offset + postBreak,
             .score = 0,
             .prev = 0,
+#ifdef ENABLE_HYPHEN  
+            .penalty = penalty,
+            .linePenalty = linePenalty,
+            .hyph = hyph,
+#endif
         });
     }
     scoredSpans.erase(scoredSpans.begin());
@@ -103,7 +122,9 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
         }
 
         if (tstyle.breakStrategy == BreakStrategy::GREEDY) {
+#ifndef ENABLE_HYPHEN
             continue;
+#endif
         }
 
         LOGSCOPED(sl1, LOGEX_FUNC_LINE_DEBUG(), "algo");
@@ -126,7 +147,11 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
                 << " + dd(" << jdelta * jdelta << ")" << " (jdelta: " << jdelta << ")";
 
             if (jscore < is.score) {
+#ifdef ENABLE_HYPHEN
+                is.score = jscore + is.penalty + is.linePenalty;
+#else
                 is.score = jscore;
+#endif
                 is.prev = static_cast<int>(j);
             }
         }

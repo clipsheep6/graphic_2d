@@ -29,6 +29,7 @@ declare_args() {
   graphic_2d_feature_drivers_interface_display_enable = true
   graphic_2d_feature_tp_switch_enbale = false
 
+  graphic_2d_feature_enable_hyphen = false
   if (defined(build_cross_platform_version) && build_cross_platform_version) {
     use_new_render_context = false
     is_cross_platform = true

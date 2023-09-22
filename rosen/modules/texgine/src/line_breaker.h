@@ -30,6 +30,11 @@ struct ScoredSpan {
     double postBreak;
     double score;
     int32_t prev;
+#ifdef ENABLE_HYPHEN
+    double penalty;
+    double linePenalty;
+    HyphenationType hyph;
+#endif
 };
 
 class LineBreaker {

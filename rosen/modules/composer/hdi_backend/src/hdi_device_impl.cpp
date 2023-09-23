@@ -214,7 +214,7 @@ int32_t HdiDeviceImpl::GetScreenCompChange(uint32_t screenId, std::vector<uint32
 }
 
 int32_t HdiDeviceImpl::SetScreenClientBuffer(uint32_t screenId, const BufferHandle *buffer, uint32_t cacheIndex,
-                                             const sptr<SyncFence> &fence)
+                                             const sptr<SyncFence> &fence, const std::vector<uint32_t> &deletingList)
 {
     CHECK_FUNC(g_composer);
     if ((buffer == nullptr && cacheIndex == INVALID_BUFFER_CACHE_INDEX) || fence == nullptr) {
@@ -222,7 +222,7 @@ int32_t HdiDeviceImpl::SetScreenClientBuffer(uint32_t screenId, const BufferHand
     }
 
     int32_t fenceFd = fence->Get();
-    return g_composer->SetDisplayClientBuffer(screenId, buffer, cacheIndex, fenceFd);
+    return g_composer->SetDisplayClientBuffer(screenId, buffer, cacheIndex, fenceFd, deletingList);
 }
 
 int32_t HdiDeviceImpl::SetScreenClientBufferCacheCount(uint32_t screen, uint32_t count)

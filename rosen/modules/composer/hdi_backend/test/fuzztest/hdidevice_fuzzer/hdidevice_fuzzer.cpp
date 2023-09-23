@@ -25,13 +25,13 @@ using namespace OHOS::Rosen;
 namespace OHOS {
     namespace {
         constexpr int DEFAULT_FENCE = 100;
-        const uint8_t* data_ = nullptr;
-        size_t size_ = 0;
-        size_t pos;
+        const uint8_t* g_data = nullptr;
+        size_t g_size = 0;
+        size_t g_pos;
     }
 
     /*
-    * describe: get data from outside untrusted data(data_) which size is according to sizeof(T)
+    * describe: get data from outside untrusted data(g_data) which size is according to sizeof(T)
     * tips: only support basic type
     */
     template<class T>
@@ -39,14 +39,14 @@ namespace OHOS {
     {
         T object {};
         size_t objectSize = sizeof(object);
-        if (data_ == nullptr || objectSize > size_ - pos) {
+        if (g_data == nullptr || objectSize > g_size - g_pos) {
             return object;
         }
-        errno_t ret = memcpy_s(&object, objectSize, data_ + pos, objectSize);
+        errno_t ret = memcpy_s(&object, objectSize, g_data + g_pos, objectSize);
         if (ret != EOK) {
             return {};
         }
-        pos += objectSize;
+        g_pos += objectSize;
         return object;
     }
 
@@ -103,6 +103,7 @@ namespace OHOS {
 
         // test
         HdiDevice *device = HdiDevice::GetInstance();
+        device->Commit(screenId, fence);
         device->GetScreenColorGamut(screenId, gamut);
         device->SetLayerAlpha(screenId, layerId, alpha);
         device->SetLayerSize(screenId, layerId, layerRect);
@@ -130,9 +131,9 @@ namespace OHOS {
         }
 
         // initialize
-        data_ = data;
-        size_ = size;
-        pos = 0;
+        g_data = data;
+        g_size = size;
+        g_pos = 0;
 
         // get data
         uint32_t screenId = GetData<uint32_t>();
@@ -144,6 +145,7 @@ namespace OHOS {
         }
         sptr<SyncFence> fence = new SyncFence(fenceFd);
         uint32_t cacheIndex = GetData<uint32_t>();
+        std::vector<uint32_t> deletingList;
         GraphicIRect damageRect = GetData<GraphicIRect>();
         std::vector<GraphicIRect> damageRects = { damageRect };
         GraphicGamutMap gamutMap = GetData<GraphicGamutMap>();
@@ -160,7 +162,7 @@ namespace OHOS {
         std::vector<uint32_t> layersId;
         std::vector<int32_t> types;
         device->GetScreenCompChange(screenId, layersId, types);
-        device->SetScreenClientBuffer(screenId, nullptr, cacheIndex, fence);
+        device->SetScreenClientBuffer(screenId, nullptr, cacheIndex, fence, deletingList);
         device->SetScreenClientDamage(screenId, damageRects);
         std::vector<uint32_t> layers;
         std::vector<sptr<SyncFence>> fences;
@@ -178,7 +180,6 @@ namespace OHOS {
         device->GetHDRCapabilityInfos(screenId, info);
         std::vector<GraphicHDRMetadataKey> keys;
         device->GetSupportedMetaDataKey(screenId, keys);
-        device->Commit(screenId, fence);
 
         HdiDeviceFuzzTest2();
 

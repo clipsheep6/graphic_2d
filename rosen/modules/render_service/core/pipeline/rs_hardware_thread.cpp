@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <fstream>
+
 #include "pipeline/rs_hardware_thread.h"
 
 #include "hgm_core.h"
@@ -141,6 +143,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGE("RSHardwareThread::CommitAndReleaseLayers handler is nullptr");
         return;
     }
+    DumpLayersToFile(layers);
     RSTaskMessage::RSTask task = [this, output = output, layers = layers]() {
         RS_TRACE_NAME("RSHardwareThread::CommitAndReleaseLayers");
         PerformSetActiveMode();
@@ -150,6 +153,40 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         ReleaseLayers(output, layerMap);
     };
     PostTask(task);
+}
+
+void RSHardwareThread::DumpLayersToFile(const std::vector<LayerInfoPtr>& layers)
+{
+    if (!RSSystemProperties::GetDumpLayersEnabled()) {
+        return;
+    }
+
+    for (auto &layerInfo : layers) {
+        if (layerInfo == nullptr || layerInfo->GetSurface() == nullptr) {
+            continue;
+        }
+        auto buffer = layerInfo->GetBuffer();
+        if (buffer == nullptr) {
+            RS_LOGW("RSHardwareThread::DumpLayersToFile: Buffer is null");
+            continue;
+        }
+        struct timeval now;
+        gettimeofday(&now, nullptr);
+        constexpr int secToUsec = 1000 * 1000;
+        int64_t nowVal = static_cast<int64_t>(now.tv_sec) * secToUsec + static_cast<int64_t>(now.tv_usec);
+
+        std::stringstream ss;
+        ss << "/data/layer_" << layerInfo->GetSurface()->GetName()  << "_" << nowVal << "_" << buffer->GetWidth()
+            << "x" << buffer->GetHeight() << ".raw";
+
+        std::ofstream rawDataFile(ss.str(), std::ofstream::binary);
+        if (!rawDataFile.good()) {
+            RS_LOGW("RSHardwareThread::DumpLayersToFile: Open failed!");
+            continue;
+        }
+        rawDataFile.write(static_cast<const char *>(buffer->GetVirAddr()), buffer->GetSize());
+        rawDataFile.close();
+    }
 }
 
 void RSHardwareThread::PerformSetActiveMode()

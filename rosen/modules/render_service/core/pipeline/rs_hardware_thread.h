@@ -34,6 +34,7 @@ public:
     void Start();
     void PostTask(const std::function<void()>& task);
     void CommitAndReleaseLayers(OutputPtr output, const std::vector<LayerInfoPtr>& layers);
+    void DumpLayersToFile(const std::vector<LayerInfoPtr>& layers);
     void ReleaseBuffer(sptr<SurfaceBuffer> buffer, sptr<SyncFence> releaseFence, sptr<IConsumerSurface> cSurface);
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)

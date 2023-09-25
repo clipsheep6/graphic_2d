@@ -13,8 +13,10 @@
 
 import("//build/test.gni")
 import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("$graphic_2d_root/rosen/modules/2d_engine/rosen_text/config.gni")
 
 module_output_path = "graphic_2d/rosen/modules/2d_graphics/ndk/"
+drawing_src_dir = "$rosen_root/modules/2d_graphics/src/drawing"
 
 ohos_unittest("2d_graphics_ndk_test") {
   module_out_path = module_output_path
@@ -33,6 +35,7 @@ ohos_unittest("2d_graphics_ndk_test") {
   include_dirs = [
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
     "$graphic_2d_root/rosen/modules/2d_graphics/src",
+    "$drawing_src_dir/engine_adapter",
     "//third_party/googletest/googletest/include",
   ]
   if (enable_text_gine) {
@@ -47,7 +50,7 @@ ohos_unittest("2d_graphics_ndk_test") {
   }
 
   deps = [
-    "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
+    "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_drawing",
     "//third_party/googletest:gtest_main",
   ]
 

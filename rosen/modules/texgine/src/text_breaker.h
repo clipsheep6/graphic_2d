@@ -44,8 +44,11 @@ public:
     void GenNewBoundryByTypeface(CharGroups cgs, std::vector<Boundary> &boundaries);
     void GenNewBoundryByQuote(CharGroups cgs, std::vector<Boundary> &boundaries);
 
+    void SetWidthLimit(const double widthLimit);
+
     double preBreak_ = 0;
     double postBreak_ = 0;
+    double widthLimit_ = 0;
 
 private:
     bool IsQuote(const uint16_t c);

@@ -368,6 +368,14 @@ ohos_shared_library("librender_service_base") {
       "-Wl,-mllvm",
       "-Wl,-wholeprogramdevirt-check=fallback",
     ]
+    if (enable_pgo) {
+      cflags = [
+        "-fprofile-use=/path/to/profdata",
+        "-Wno-error=backend-plugin",
+        "-Wno-profile-instr-out-of-date",
+        "-Wno-profile-instr-unprofiled",
+      ]
+    }
   }
 
   innerapi_tags = [ "platformsdk_indirect" ]

@@ -20,11 +20,13 @@
 
 #include <functional>
 #include <map>
-#include "n_val.h"
-#include "uni_header.h"
+#include "napi/n_val.h"
+#include "napi/uni_header.h"
 
 namespace OHOS {
 namespace Rosen {
+class WebGLRenderingContextBasicBase;
+
 enum NARG_CNT {
     ZERO = 0,
     ONE = 1,
@@ -74,6 +76,12 @@ public:
 
     napi_value GetArg(size_t argPos) const;
 
+    template<class T>
+    T *GetWebGLRenderingContext()
+    {
+        return static_cast<T *>(context_);
+    }
+
 private:
     napi_env env_ = nullptr;
     napi_callback_info info_ = nullptr;
@@ -87,6 +95,8 @@ private:
     void SetArgc(size_t argc);
 
     void SetThisVar(napi_value thisVar);
+
+    WebGLRenderingContextBasicBase *context_ { nullptr };
 };
 } // namespace Rosen
 } // namespace OHOS

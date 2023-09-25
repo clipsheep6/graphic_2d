@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_vertex_array_object.h"
-#include "../../common/napi/n_class.h"
-#include "../../common/napi/n_func_arg.h"
+#include "webgl/webgl_vertex_array_object.h"
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -42,8 +42,8 @@ bool WebGLVertexArrayObject::Export(napi_env env, napi_value exports)
     string className = GetClassName();
     bool succ = false;
     napi_value clas = nullptr;
-    tie(succ, clas) = NClass::DefineClass(exports_.env_, className, WebGLVertexArrayObject::Constructor,
-        std::move(props));
+    tie(succ, clas) =
+        NClass::DefineClass(exports_.env_, className, WebGLVertexArrayObject::Constructor, std::move(props));
     if (!succ) {
         return false;
     }

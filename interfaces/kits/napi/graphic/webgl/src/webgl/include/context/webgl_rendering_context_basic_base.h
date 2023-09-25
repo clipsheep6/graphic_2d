@@ -19,8 +19,11 @@
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include "../canvas_render_context_base.h"
-#include "webgl_context_attributes.h"
+#include <map>
+
+#include "napi/n_exporter.h"
+#include "canvas_render_context_base.h"
+#include "context/webgl_context_attributes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,15 +31,20 @@ extern "C" {
 
 namespace OHOS {
 namespace Rosen {
+namespace Impl {
+class WebGLRenderingContextBaseImpl;
+}
+
 class WebGLRenderingContextBasicBase : public OHOS::Ace::CanvasRenderContextBase {
 public:
-    static WebGLRenderingContextBasicBase *instance;
-
     WebGLRenderingContextBasicBase() {};
 
-    virtual ~WebGLRenderingContextBasicBase() {};
-
-    static WebGLRenderingContextBasicBase *GetContext(std::string id);
+    virtual ~WebGLRenderingContextBasicBase()
+    {
+        if (webGlContextAttributes != nullptr) {
+            delete webGlContextAttributes;
+        }
+    };
 
     void SetEglWindow(void *window);
 
@@ -58,17 +66,14 @@ public:
 
     void SetUpdateCallback(std::function<void()>) override;
 
+    napi_value GetContextInstance(napi_env env, std::string className,
+        napi_callback constructor, napi_finalize finalize_cb);
+
+    virtual Impl::WebGLRenderingContextBaseImpl &GetWebGLRenderingContextImpl() = 0;
 public:
-    GLuint frameBufferId = 0;
-    GLuint textureId = 0;
-    GLuint imgId = 0;
     void drawImg();
     GLuint compileShader(GLenum type, const char *sources);
     int useProgram();
-    GLuint program = 0;
-    GLuint vertShader = 0;
-    GLuint fragShader = 0;
-    GLint uniformSampler = 0;
     EGLSurface mEGLSurface = nullptr;
     NativeWindow *mEglWindow = nullptr;
     WebGLContextAttributes *webGlContextAttributes = nullptr;
@@ -76,11 +81,10 @@ public:
     int mBitMapWidth = 0;
     int mBitMapHeight = 0;
     std::function<void()> mUpdateCallback;
+    napi_ref mContextRef = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS
-
-OHOS::Rosen::WebGLRenderingContextBasicBase *GetWebGLInstance(std::string id);
 
 #ifdef __cplusplus
 }

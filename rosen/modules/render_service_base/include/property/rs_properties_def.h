@@ -80,6 +80,77 @@ public:
     std::optional<Drawing::Matrix> matrix_;
 #endif
 };
+
+class RSGravityWeight {
+public:
+    RSGravityWeight() = default;
+    RSGravityWeight(Vector2f translate, Vector4f scale) :
+        translate_(translate), scale_(scale)
+    {}
+
+    const Vector2f& GetTranslate() const { return translate_; }
+    const Vector4f& GetScale() const { return scale_; }
+
+    static RSGravityWeight FromFrameGravity(Gravity gravity)
+    {
+        static const Vector4f IDENTITY_SCALE{1, 0, 0, 0};
+        static const Vector4f NORMAL_SCALE{0, 1, 0, 0};
+        static const Vector4f MIN_SCALE{0, 0, 1, 0};
+        static const Vector4f MAX_SCALE{0, 0, 0, 1};
+
+        switch (gravity)
+        {
+            case Gravity::CENTER: return RSGravityWeight({0.5, 0.5}, IDENTITY_SCALE);
+            case Gravity::TOP: return RSGravityWeight({0.5, 0}, IDENTITY_SCALE);
+            case Gravity::BOTTOM: return RSGravityWeight({0.5, 1}, IDENTITY_SCALE);
+            case Gravity::LEFT: return RSGravityWeight({0, 0.5}, IDENTITY_SCALE);
+            case Gravity::RIGHT: return RSGravityWeight({1, 0.5}, IDENTITY_SCALE);
+            case Gravity::TOP_LEFT: return RSGravityWeight({0, 0}, IDENTITY_SCALE);
+            case Gravity::TOP_RIGHT: return RSGravityWeight({1, 0}, IDENTITY_SCALE);
+            case Gravity::BOTTOM_LEFT: return RSGravityWeight({0, 1}, IDENTITY_SCALE);
+            case Gravity::BOTTOM_RIGHT: return RSGravityWeight({1, 1}, IDENTITY_SCALE);
+            case Gravity::RESIZE: return RSGravityWeight({0, 0}, NORMAL_SCALE);
+            case Gravity::RESIZE_ASPECT: return RSGravityWeight({0.5, 0.5}, MIN_SCALE);
+            case Gravity::RESIZE_ASPECT_TOP_LEFT: return RSGravityWeight({0, 0}, MIN_SCALE);
+            case Gravity::RESIZE_ASPECT_BOTTOM_RIGHT: return RSGravityWeight({1, 1}, MIN_SCALE);
+            case Gravity::RESIZE_ASPECT_FILL: return RSGravityWeight({1, 1}, MAX_SCALE);
+            case Gravity::RESIZE_ASPECT_FILL_TOP_LEFT: return RSGravityWeight({0, 0}, MAX_SCALE);
+            case Gravity::RESIZE_ASPECT_FILL_BOTTOM_RIGHT: return RSGravityWeight({1, 1}, MAX_SCALE);
+            default: return RSGravityWeight();
+        }
+    }
+
+    RSGravityWeight operator+(const RSGravityWeight &b) const
+    {
+        return RSGravityWeight(translate_ + b.translate_, scale_ + b.scale_);
+    }
+    
+    RSGravityWeight operator-(const RSGravityWeight &b) const
+    {
+        return RSGravityWeight(translate_ - b.translate_, scale_ - b.scale_);
+    }
+
+    RSGravityWeight operator*(const RSGravityWeight &b) const
+    {
+        return RSGravityWeight(translate_ * b.translate_, scale_ * b.scale_);
+    }
+
+    RSGravityWeight operator*(float b) const
+    {
+        return RSGravityWeight(translate_ * b, scale_ * b);
+    }
+
+    bool operator==(const RSGravityWeight &b) const
+    {
+        return translate_ == b.translate_ && scale_ == b.scale_;
+    }
+
+private:
+    Vector2f translate_{0, 0};
+    Vector4f scale_{1, 0, 0, 0};
+
+    friend class RSMarshallingHelper;
+};
 } // namespace Rosen
 } // namespace OHOS
 

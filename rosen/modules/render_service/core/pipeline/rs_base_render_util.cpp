@@ -1259,12 +1259,13 @@ Drawing::Matrix RSBaseRenderUtil::GetSurfaceTransformMatrix(GraphicTransformType
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-SkMatrix RSBaseRenderUtil::GetGravityMatrix(Gravity gravity, Vector4f gravityWeight, const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
+SkMatrix RSBaseRenderUtil::GetGravityMatrix(
+    Gravity gravity, RSGravityWeight gravityWeight, const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
 {
     SkMatrix gravityMatrix;
 #else
 Drawing::Matrix RSBaseRenderUtil::GetGravityMatrix(
-    Gravity gravity, Vector4f gravityWeight,  const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
+    Gravity gravity, RSGravityWeight gravityWeight,  const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
 {
     Drawing::Matrix gravityMatrix;
 #endif
@@ -1289,7 +1290,7 @@ Drawing::Matrix RSBaseRenderUtil::GetGravityMatrix(
 }
 
 void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(GraphicTransformType transform, Gravity gravity,
-    Vector4f gravityWeight, RectF& localBounds, BufferDrawParam& params)
+    RSGravityWeight gravityWeight, RectF& localBounds, BufferDrawParam& params)
 {
     // the surface can rotate itself.
     auto rotationTransform = GetRotateTransform(transform);

@@ -993,11 +993,8 @@ void RSNode::SetFrameGravity(Gravity gravity)
 {
     ROSEN_LOGI("RSNode::SetFrameGravity, gravity = %{public}d", gravity);
     SetProperty<RSFrameGravityModifier, RSProperty<Gravity>>(RSModifierType::FRAME_GRAVITY, gravity);
-}
-
-void RSNode::SetGravityWeight(const Vector4f& weight)
-{
-    SetProperty<RSGravityWeightModifier, RSAnimatableProperty<Vector4f>>(RSModifierType::GRAVITY_WEIGHT, weight);
+    SetProperty<RSGravityWeightModifier, RSAnimatableProperty<RSGravityWeight>>(
+        RSModifierType::GRAVITY_WEIGHT, RSGravityWeight::FromFrameGravity(gravity));
 }
 
 void RSNode::SetClipRRect(const Vector4f& clipRect, const Vector4f& clipRadius)

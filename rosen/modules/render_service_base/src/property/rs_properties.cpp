@@ -1147,14 +1147,14 @@ Gravity RSProperties::GetFrameGravity() const
     return frameGravity_;
 }
 
-void RSProperties::SetGravityWeight(Vector4f weight)
+void RSProperties::SetGravityWeight(RSGravityWeight weight)
 {
     gravityWeight_ = weight;
     SetDirty();
     contentDirty_ = true;
 }
 
-Vector4f RSProperties::GetGravityWeight() const
+RSGravityWeight RSProperties::GetGravityWeight() const
 {
     return gravityWeight_;
 }
@@ -2097,17 +2097,6 @@ std::string RSProperties::Dump() const
     }
     if (!ROSEN_EQ(GetFrameGravity(), Gravity::DEFAULT) &&
         sprintf_s(buffer, UINT8_MAX, ", FrameGravity[%d]", GetFrameGravity()) != -1) {
-        dumpInfo.append(buffer);
-    }
-
-    // GravityWeight
-    ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
-    if (ret != EOK) {
-        return "Failed to memset_s for GravityWeight, ret=" + std::to_string(ret);
-    }
-    if (!ROSEN_EQ(GetFrameGravity(), Gravity::DEFAULT) &&
-        sprintf_s(buffer, UINT8_MAX, ", GravityWeight[%f, %f, %f, %f]",
-            GetGravityWeight().x_, GetGravityWeight().y_, GetGravityWeight().z_, GetGravityWeight().w_) != -1) {
         dumpInfo.append(buffer);
     }
 

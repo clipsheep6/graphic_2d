@@ -199,7 +199,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     const int boundsWidth = static_cast<int>(property.GetBoundsWidth());
     const int boundsHeight = static_cast<int>(property.GetBoundsHeight());
     const Gravity frameGravity = property.GetFrameGravity();
-    const Vector4f gravityWeight = property.GetGravityWeight();
+    const RSGravityWeight gravityWeight = property.GetGravityWeight();
     // we do not need to do additional works for Gravity::RESIZE and if frameSize == boundsSize.
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
         return;
@@ -260,7 +260,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     const int boundsWidth = static_cast<int>(property.GetBoundsWidth());
     const int boundsHeight = static_cast<int>(property.GetBoundsHeight());
     const Gravity frameGravity = property.GetFrameGravity();
-    const Vector4f gravityWeight = property.GetGravityWeight();
+    const RSGravityWeight gravityWeight = property.GetGravityWeight();
     // we do not need to do additional works for Gravity::RESIZE and if frameSize == boundsSize.
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
         return;

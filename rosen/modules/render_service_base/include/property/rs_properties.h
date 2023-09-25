@@ -217,8 +217,8 @@ public:
     void SetFrameGravity(Gravity gravity);
     Gravity GetFrameGravity() const;
 
-    void SetGravityWeight(Vector4f weight);
-    Vector4f GetGravityWeight() const;
+    void SetGravityWeight(RSGravityWeight weight);
+    RSGravityWeight GetGravityWeight() const;
 
     void SetDrawRegion(const std::shared_ptr<RectF>& rect);
     std::shared_ptr<RectF> GetDrawRegion() const;
@@ -335,7 +335,7 @@ private:
     bool useEffect_ = false;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
-    Vector4f gravityWeight_ = Vector4f(1.0f);
+    RSGravityWeight gravityWeight_;
 
     std::shared_ptr<RectF> drawRegion_ = nullptr;
 

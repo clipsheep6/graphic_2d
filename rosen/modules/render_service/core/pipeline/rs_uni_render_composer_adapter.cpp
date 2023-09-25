@@ -284,7 +284,7 @@ void RSUniRenderComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& 
     const float boundsWidth = property.GetBoundsWidth();
     const float boundsHeight = property.GetBoundsHeight();
     const Gravity frameGravity = property.GetFrameGravity();
-    const Vector4f gravityWeight = property.GetGravityWeight();
+    const RSGravityWeight gravityWeight = property.GetGravityWeight();
     info.gravity = static_cast<int32_t>(frameGravity);
     // we do not need to do additional works for Gravity::RESIZE and if frameSize == boundsSize.
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {

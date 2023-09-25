@@ -304,7 +304,7 @@ bool RSPropertiesPainterFuzzTest(const uint8_t* data, size_t size)
     float skBottom = GetData<float>();
     SkRect maskBounds { skLeft, skTop, skRight, skBottom };
     Gravity gravity = GetData<Gravity>();
-    Vector4f gravityWeight = GetData<Vector4f>();
+    RSGravityWeight gravityWeight = GetData<RSGravityWeight>();
     float fW = GetData<float>();
     float fH = GetData<float>();
     SkMatrix mat;

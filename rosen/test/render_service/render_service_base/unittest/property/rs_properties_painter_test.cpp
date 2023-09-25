@@ -49,7 +49,7 @@ HWTEST_F(RSPropertiesPainterTest, GetGravityMatrix001, TestSize.Level1)
     float w = 0.1;
     float h = 0.1;
     SkMatrix mat;
-    Vector4f weight(1.0f);
+    RSGravityWeight weight;
     EXPECT_TRUE(RSPropertiesPainter::GetGravityMatrix(Gravity::CENTER, weight, rect, w, h, mat));
     RSPropertiesPainter::GetGravityMatrix(Gravity::TOP, weight, rect, w, h, mat);
     RSPropertiesPainter::GetGravityMatrix(Gravity::BOTTOM, weight, rect, w, h, mat);

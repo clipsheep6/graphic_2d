@@ -250,6 +250,12 @@ void RSProperty<RRect>::UpdateToRender(const RRect& value, bool isDelta) const
 }
 
 template<>
+void RSProperty<RSGravityWeight>::UpdateToRender(const RSGravityWeight& value, bool isDelta) const
+{
+    UPDATE_TO_RENDER(RSUpdatePropertyGravityWeight, value, isDelta);
+}
+
+template<>
 bool RSProperty<float>::IsValid(const float& value)
 {
     return !isinf(value);
@@ -309,6 +315,11 @@ template<>
 RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const
 {
     return RSRenderPropertyType::PROPERTY_RRECT;
+}
+template<>
+RSRenderPropertyType RSAnimatableProperty<RSGravityWeight>::GetPropertyType() const
+{
+    return RSRenderPropertyType::PROPERTY_GRAVITY_WEIGHT;
 }
 } // namespace Rosen
 } // namespace OHOS

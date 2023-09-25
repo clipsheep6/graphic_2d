@@ -330,7 +330,7 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
 
     RectF localBounds = { 0.0f, 0.0f, static_cast<float>(boundRect.w), static_cast<float>(boundRect.h) };
     RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, static_cast<Gravity>(layer->GetGravity()),
-        Vector4f(1.0f), localBounds, params);
+        RSGravityWeight(), localBounds, params);
     RSBaseRenderUtil::FlipMatrix(transform, params);
     return params;
 }

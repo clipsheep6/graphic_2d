@@ -112,6 +112,7 @@ enum class RSRenderPropertyType : int16_t {
     PROPERTY_VECTOR4_COLOR,
     PROPERTY_SKMATRIX,
     PROPERTY_RRECT,
+    PROPERTY_GRAVITY_WEIGHT,
 };
 } // namespace Rosen
 } // namespace OHOS

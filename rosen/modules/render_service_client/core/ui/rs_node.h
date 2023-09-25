@@ -258,7 +258,6 @@ public:
     void SetShadowMask(bool shadowMask);
 
     void SetFrameGravity(Gravity gravity);
-    void SetGravityWeight(const Vector4f& weight);
 
     void SetClipRRect(const Vector4f& clipRect, const Vector4f& clipRadius);
     void SetClipBounds(const std::shared_ptr<RSPath>& clipToBounds);

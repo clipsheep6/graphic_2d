@@ -251,7 +251,6 @@ void TextBreaker::GenerateSpan(const CharGroups &currentCgs, const TypographySty
     }
     newSpan->width_ = spanWidth;
 
-
     VariantSpan vs(newSpan);
     vs.SetTextStyle(xs);
     spans.push_back(vs);

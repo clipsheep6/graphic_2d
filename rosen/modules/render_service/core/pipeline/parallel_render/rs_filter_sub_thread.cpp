@@ -14,7 +14,7 @@
  */
 
 #define EGL_EGLEXT_PROTOTYPES
-#include "rs_sub_thread_filter.h"
+#include "rs_filter_sub_thread.h"
 
 #include <string>
 
@@ -41,16 +41,17 @@ const uint32_t RS_SUB_QOS_LEVEL = 7;
 constexpr const char* RS_BUNDLE_NAME = "render_service";
 #endif
 } // namespace
-RSSubThreadFilter::~RSSubThreadFilter()
+RSFilterSubThread::~RSFilterSubThread()
 {
     RS_LOGI("~RSSubThread():%{public}d", threadIndex_);
+    RSFilter::postTask = nullptr;
     PostTask([this]() { DestroyShareEglContext(); });
 }
 
-void RSSubThreadFilter::Start()
+void RSFilterSubThread::Start()
 {
-    RS_LOGI("RSSubThreadFilter::Start():%{public}d", threadIndex_);
-    std::string name = "RSSubThreadFilter" + std::to_string(threadIndex_);
+    RS_LOGI("RSFilterSubThread::Start():%{public}d", threadIndex_);
+    std::string name = "RSFilterSubThread" + std::to_string(threadIndex_);
     runner_ = AppExecFwk::EventRunner::Create(name);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     PostTask([this]() {
@@ -69,35 +70,40 @@ void RSSubThreadFilter::Start()
 #endif
         grContext_ = CreateShareGrContext();
     });
+    RSFilter::postTask = [this](std::weak_ptr<RSFilter::RSFilterTask> task) {
+        PostTask([this,task](){
+            RenderCache(task);
+        });
+    };
 }
 
-void RSSubThreadFilter::PostTask(const std::function<void()>& task)
+void RSFilterSubThread::PostTask(const std::function<void()>& task)
 {
     if (handler_) {
         handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
 
-void RSSubThreadFilter::PostSyncTask(const std::function<void()>& task)
+void RSFilterSubThread::PostSyncTask(const std::function<void()>& task)
 {
     if (handler_) {
         handler_->PostSyncTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
 
-void RSSubThreadFilter::RemoveTask(const std::string& name)
+void RSFilterSubThread::RemoveTask(const std::string& name)
 {
     if (handler_) {
         handler_->RemoveTask(name);
     }
 }
 
-void RSSubThreadFilter::DumpMem(DfxString& log)
+void RSFilterSubThread::DumpMem(DfxString& log)
 {
     PostSyncTask([&log, this]() { MemoryManager::DumpDrawingGpuMemory(log, grContext_.get()); });
 }
 
-float RSSubThreadFilter::GetAppGpuMemoryInMB()
+float RSFilterSubThread::GetAppGpuMemoryInMB()
 {
     float total = 0.f;
     PostSyncTask([&total, this]() {
@@ -110,7 +116,7 @@ float RSSubThreadFilter::GetAppGpuMemoryInMB()
     return total;
 }
 
-void RSSubThreadFilter::CreateShareEglContext()
+void RSFilterSubThread::CreateShareEglContext()
 {
 #ifdef RS_ENABLE_GL
     if (renderContext_ == nullptr) {
@@ -129,7 +135,7 @@ void RSSubThreadFilter::CreateShareEglContext()
 #endif
 }
 
-void RSSubThreadFilter::DestroyShareEglContext()
+void RSFilterSubThread::DestroyShareEglContext()
 {
 #ifdef RS_ENABLE_GL
     if (renderContext_ != nullptr) {
@@ -140,45 +146,36 @@ void RSSubThreadFilter::DestroyShareEglContext()
 #endif
 }
 
-void RSSubThreadFilter::RenderCache(
-    std::function<void()> ThreadProcess, RSFilterCacheManager& cacheManager, float width, float height)
+void RSFilterSubThread::RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filterTask)
 {
+    auto task = filterTask.lock();
+    if(!task) {
+        RS_LOGE("task is null");
+        return;
+    }
     RS_TRACE_NAME("RenderCache");
-    std::unique_lock<std::mutex> lock(cacheManager.filterThreadMutex_);
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
-        if (grContext_ == nullptr) {
-            RS_LOGI("grContext is null");
-            return;
-        }
     }
-    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
+    if (grContext_ == nullptr) {
+        RS_LOGE("grContext is null");
         return;
     }
-    cacheManager.InitSurface(grContext_.get(), width, height);
-    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
+    if(!task->InitSurface(grContext_.get())) {
+        RS_LOGE("InitSurface failed");
         return;
     }
-    ThreadProcess();
-    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
-        return;
+    if(!task->Run()) {
+        RS_LOGE("InitSurface failed");
     }
-    cacheManager.GetCacheSurface()->flush();
-    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
-        return;
-    }
-    cacheManager.UpdateBackendTexture();
-    if (cacheManager.GetCacheSurfaceProcessedStatus() == CacheProcessStatus::WAITING) {
-        return;
-    }
-    cacheManager.SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);
+
 }
 
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
-sk_sp<GrDirectContext> RSSubThreadFilter::CreateShareGrContext()
+sk_sp<GrDirectContext> RSFilterSubThread::CreateShareGrContext()
 #else
-sk_sp<GrContext> RSSubThreadFilter::CreateShareGrContext()
+sk_sp<GrContext> RSFilterSubThread::CreateShareGrContext()
 #endif
 {
     RS_TRACE_NAME("CreateShareGrContext");
@@ -213,7 +210,7 @@ sk_sp<GrContext> RSSubThreadFilter::CreateShareGrContext()
     return grContext;
 }
 #else
-std::shared_ptr<Drawing::GPUContext> RSSubThreadFilter::CreateShareGrContext()
+std::shared_ptr<Drawing::GPUContext> RSFilterSubThread::CreateShareGrContext()
 {
     RS_TRACE_NAME("CreateShareGrContext");
     CreateShareEglContext();
@@ -233,7 +230,7 @@ std::shared_ptr<Drawing::GPUContext> RSSubThreadFilter::CreateShareGrContext()
 }
 #endif
 
-void RSSubThreadFilter::ResetGrContext()
+void RSFilterSubThread::ResetGrContext()
 {
     RS_TRACE_NAME("ResetGrContext release resource");
     if (grContext_ == nullptr) {
@@ -244,7 +241,7 @@ void RSSubThreadFilter::ResetGrContext()
 #endif
 }
 
-void RSSubThreadFilter::ReleaseSurface()
+void RSFilterSubThread::ReleaseSurface()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     while (tmpSurfaces_.size() > 0) {

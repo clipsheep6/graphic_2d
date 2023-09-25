@@ -2185,7 +2185,6 @@ std::string RSProperties::Dump() const
 }
 
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
-std::function<void(std::function<void()>, RSFilterCacheManager&, float, float)> RSProperties::threadCb = nullptr;
 void RSProperties::CreateFilterCacheManagerIfNeed()
 {
     if (!FilterCacheEnabled) {
@@ -2196,7 +2195,6 @@ void RSProperties::CreateFilterCacheManagerIfNeed()
         if (cacheManager == nullptr) {
             cacheManager = std::make_unique<RSFilterCacheManager>();
         }
-        cacheManager->threadCb = threadCb;
         cacheManager->UpdateCacheStateWithFilterHash(filter);
     } else {
         backgroundFilterCacheManager_.reset();
@@ -2206,7 +2204,6 @@ void RSProperties::CreateFilterCacheManagerIfNeed()
         if (cacheManager == nullptr) {
             cacheManager = std::make_unique<RSFilterCacheManager>();
         }
-        cacheManager->threadCb = threadCb;
         cacheManager->UpdateCacheStateWithFilterHash(filter);
     } else {
         foregroundFilterCacheManager_.reset();

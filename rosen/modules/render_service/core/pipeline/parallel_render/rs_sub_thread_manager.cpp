@@ -53,28 +53,14 @@ void RSSubThreadManager::Start(RenderContext *context)
 }
 void RSSubThreadManager::StartFilterThread(RenderContext* context)
 {
-    if (threadFilter != nullptr) {
+    if (filterThread != nullptr) {
         return;
     }
     renderContext_ = context;
     if (context) {
-        auto curThread = std::make_shared<RSSubThreadFilter>(context);
-        curThread->Start();
-        std::function<void(std::function<void()>, RSFilterCacheManager&, float, float)> cb =
-            std::bind(&RSSubThreadManager::FilterCallback, this, std::placeholders::_1, std::placeholders::_2,
-                std::placeholders::_3, std::placeholders::_4);
-        RSProperties::threadCb = cb;
-        threadFilter = curThread;
+        filterThread = std::make_shared<RSFilterSubThread>(context);
+        filterThread->Start();
     }
-}
-
-void RSSubThreadManager::FilterCallback(
-    std::function<void()> ThreadProcess, RSFilterCacheManager& cacheManager, float width, float height)
-{
-    RS_TRACE_NAME("FilterCallback");
-    threadFilter->PostTask([this, ThreadProcess, &cacheManager, width, height]() {
-        threadFilter->RenderCache(ThreadProcess, cacheManager, width, height);
-    });
 }
 
 void RSSubThreadManager::PostTask(const std::function<void()>& task, uint32_t threadIndex)

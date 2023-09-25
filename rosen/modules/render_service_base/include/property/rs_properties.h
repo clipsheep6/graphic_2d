@@ -93,7 +93,6 @@ public:
 #ifndef USE_ROSEN_DRAWING
     void UpdateSandBoxMatrix(const std::optional<SkMatrix>& rootMatrix);
     std::optional<SkMatrix> GetSandBoxMatrix() const;
-    static std::function<void(std::function<void()>, RSFilterCacheManager&, float, float)> threadCb;
 #else
     void UpdateSandBoxMatrix(const std::optional<Drawing::Matrix>& rootMatrix);
     std::optional<Drawing::Matrix> GetSandBoxMatrix() const;

@@ -37,7 +37,7 @@ class RSSkiaFilter;
 // this. This means if both background and foreground need to apply filter, the caller should create two
 // RSFilterCacheManager, pass the correct dirty region, and call the DrawFilter() in correct order.
 // Warn: Using filter cache in multi-thread environment may cause GPU memory leak or invalid textures.
-class RSB_EXPORT RSFilterCacheManager final {
+class RSFilterCacheManager final {
 public:
     RSFilterCacheManager() = default;
     ~RSFilterCacheManager() = default;
@@ -81,19 +81,48 @@ public:
         return (cachedSnapshot_ != nullptr || cachedFilteredSnapshot_ != nullptr) && changeInvalidMk;
     }
 
-    void InitSurface(GrRecordingContext* grContext, float width, float height);
-    sk_sp<SkSurface> GetCacheSurface();
-    void UpdateBackendTexture();
-    CacheProcessStatus GetCacheSurfaceProcessedStatus() const;
-    void SetCacheSurfaceProcessedStatus(CacheProcessStatus cacheProcessStatus);
     void waitThreadFinish();
     void filterThreadProcess(const std::shared_ptr<RSSkiaFilter>& filter);
-    std::function<void(std::function<void()>, RSFilterCacheManager&, float, float)> threadCb;
-    sk_sp<SkImage> threadImage = nullptr;
     std::mutex filterThreadMutex_;
     bool changeInvalidMk = false;
 
 private:
+    class RSFilterCacheTask : public RSFilter::RSFilterTask {
+    public:
+        RSFilterCacheTask() = default;
+        virtual ~RSFilterCacheTask() = default;
+#ifdef NEW_SKIA
+        bool InitSurface(GrRecordingContext* grContext) override;
+#else
+        bool InitSurface(GrContext* grContext) override;
+#endif
+        bool Run() override;
+        CacheProcessStatus GetStatus() const
+        {
+            return cacheProcessStatus_.load();
+        }
+        void SetStatus(CacheProcessStatus cacheProcessStatus)
+        {
+            cacheProcessStatus_.store(cacheProcessStatus);
+        }
+        void InitTask(std::shared_ptr<RSSkiaFilter> filter, GrBackendTexture& texture, SkISize size)
+        {
+            filter_ = filter;
+            cacheBackendTexture_ = texture;
+            surfaceSize_ = size;
+        }
+        GrBackendTexture GetresultTexture() const
+        {
+            return resultBackendTexture_;
+        }
+    private:
+        sk_sp<SkSurface> cacheSurface_ = nullptr;
+        std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
+        GrBackendTexture cacheBackendTexture_;
+        GrBackendTexture resultBackendTexture_;
+        SkISize surfaceSize_;
+        std::shared_ptr<RSSkiaFilter> filter_ = nullptr;
+    };
     void TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& srcRect);
     void GenerateFilteredSnapshot(
         RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& dstRect);
@@ -107,13 +136,7 @@ private:
     // Validate the input srcRect and dstRect, and return the validated rects.
     std::tuple<SkIRect, SkIRect> ValidateParams(RSPaintFilterCanvas& canvas,
      const std::optional<SkIRect>& srcRect, const std::optional<SkIRect>& dstRect);
-    sk_sp<SkSurface> cacheSurface_ = nullptr;
-    GrBackendTexture cacheBackendTexture_;
-    std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
-    float surfaceWidth_;
-    float surfaceHeight_;
-    std::shared_ptr<RSSkiaFilter> filterThr_ = nullptr;
-
+    
     // We keep both the snapshot and filtered snapshot in the cache, and clear unneeded one in next frame.
     // Note: rect in cachedSnapshot_ and cachedFilteredSnapshot_ is in device coordinate.
     std::unique_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot_ = nullptr;
@@ -125,6 +148,8 @@ private:
     int cacheUpdateInterval_ = 0;
     // Region of the cached image, used to determine if we need to invalidate the cache.
     RectI snapshotRegion_; // Note: in device coordinate.
+
+    std::shared_ptr<RSFilterCacheTask> task_ = std::make_shared<RSFilterCacheTask>();
 };
 } // namespace Rosen
 } // namespace OHOS

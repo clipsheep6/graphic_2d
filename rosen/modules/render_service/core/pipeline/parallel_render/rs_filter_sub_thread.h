@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_FILTER_H
-#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_FILTER_H
+#ifndef RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_FILTER_SUB_THREAD_H
+#define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_FILTER_SUB_THREAD_H
 
 #include <cstdint>
 
@@ -32,17 +32,16 @@
 #include "render_context/render_context.h"
 
 namespace OHOS::Rosen {
-class RSSubThreadFilter {
+class RSFilterSubThread {
 public:
-    RSSubThreadFilter(RenderContext* context) : renderContext_(context) {}
-    ~RSSubThreadFilter();
+    RSFilterSubThread(RenderContext* context) : renderContext_(context) {}
+    ~RSFilterSubThread();
 
     void Start();
     void PostTask(const std::function<void()>& task);
     void PostSyncTask(const std::function<void()>& task);
     void RemoveTask(const std::string& name);
-    void RenderCache(
-        std::function<void()> ThreadProcess, RSFilterCacheManager& cacheManager, float width, float height);
+    void RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filterTask);
     void ReleaseSurface();
 
     void ResetGrContext();
@@ -84,4 +83,4 @@ private:
 #endif
 };
 } // namespace OHOS::Rosen
-#endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_FILTER_H
+#endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_FILTER_SUB_THREAD_H

@@ -962,7 +962,7 @@ bool RSRenderNode::ApplyModifiers()
         manager->UpdateCacheStateWithDirtyRegion();
     }
 
-    {
+    if (RSSystemProperties::GetPropertyDrawableEnable()) {
         // Generate drawable
         RSPropertyDrawableGenerateContext drawableContext(*this);
         RSPropertyDrawable::UpdateDrawableMap(drawableContext, propertyDrawablesMap_, drawableMapStatus_, dirtyTypes_);

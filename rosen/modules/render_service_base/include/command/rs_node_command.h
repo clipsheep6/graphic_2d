@@ -34,6 +34,7 @@ enum RSNodeCommandType : uint16_t {
     UPDATE_MODIFIER_INT,
     UPDATE_MODIFIER_COLOR,
     UPDATE_MODIFIER_GRAVITY,
+    UPDATE_MODIFIER_SHADOW_TYPE,
     UPDATE_MODIFIER_MATRIX3F,
     UPDATE_MODIFIER_QUATERNION,
     UPDATE_MODIFIER_FILTER_PTR,
@@ -122,6 +123,9 @@ ADD_COMMAND(RSUpdatePropertyColor,
 ADD_COMMAND(RSUpdatePropertyGravity,
     ARG(RS_NODE, UPDATE_MODIFIER_GRAVITY, RSNodeCommandHelper::UpdateModifier<Gravity>,
         NodeId, Gravity, PropertyId, bool))
+ADD_COMMAND(RSUpdatePropertyShadowType,
+    ARG(RS_NODE, UPDATE_MODIFIER_SHADOW_TYPE, RSNodeCommandHelper::UpdateModifier<ShadowType>,
+        NodeId, ShadowType, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyMatrix3f,
     ARG(RS_NODE, UPDATE_MODIFIER_MATRIX3F, RSNodeCommandHelper::UpdateModifier<Matrix3f>,
         NodeId, Matrix3f, PropertyId, bool))

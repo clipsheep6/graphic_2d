@@ -534,17 +534,25 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties,
     SkPath skPath;
     if (properties.GetShadowPath() && !properties.GetShadowPath()->GetSkiaPath().isEmpty()) {
         skPath = properties.GetShadowPath()->GetSkiaPath();
-        canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        if (properties.GetShadowType() != ShadowType::TEXT_SHADOW && properties.GetShadowType() != ShadowType::TEXT_SHADOW_BIG) {
+            canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        }
     } else if (properties.GetClipBounds()) {
         skPath = properties.GetClipBounds()->GetSkiaPath();
-        canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        if (properties.GetShadowType() != ShadowType::TEXT_SHADOW && properties.GetShadowType() != ShadowType::TEXT_SHADOW_BIG) {
+            canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        }
     } else {
         if (rrect != nullptr) {
             skPath.addRRect(RRect2SkRRect(*rrect));
-            canvas.clipRRect(RRect2SkRRect(*rrect), SkClipOp::kDifference, true);
+            if (properties.GetShadowType() != ShadowType::TEXT_SHADOW && properties.GetShadowType() != ShadowType::TEXT_SHADOW_BIG) {
+                canvas.clipRRect(RRect2SkRRect(*rrect), SkClipOp::kDifference, true);
+            }
         } else {
             skPath.addRRect(RRect2SkRRect(properties.GetRRect()));
-            canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
+            if (properties.GetShadowType() != ShadowType::TEXT_SHADOW && properties.GetShadowType() != ShadowType::TEXT_SHADOW_BIG) {
+                canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
+            }
         }
     }
     if (properties.GetShadowMask()) {

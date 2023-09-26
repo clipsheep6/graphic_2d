@@ -1899,6 +1899,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, int)                                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, Color)                                          \
     EXPLICIT_INSTANTIATION(TEMPLATE, Gravity)                                        \
+    EXPLICIT_INSTANTIATION(TEMPLATE, ShadowType)                                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, GradientDirection)                              \
     EXPLICIT_INSTANTIATION(TEMPLATE, ForegroundColorStrategyType)                    \
     EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)                                       \
@@ -1929,6 +1930,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, int)                                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, Color)                                          \
     EXPLICIT_INSTANTIATION(TEMPLATE, Gravity)                                        \
+    EXPLICIT_INSTANTIATION(TEMPLATE, ShadowType)                                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, GradientDirection)                              \
     EXPLICIT_INSTANTIATION(TEMPLATE, ForegroundColorStrategyType)                    \
     EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)                                       \
@@ -1960,6 +1962,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, int)                                          \
     EXPLICIT_INSTANTIATION(TEMPLATE, Color)                                        \
     EXPLICIT_INSTANTIATION(TEMPLATE, Gravity)                                      \
+    EXPLICIT_INSTANTIATION(TEMPLATE, ShadowType)                                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, GradientDirection)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, ForegroundColorStrategyType)                  \
     EXPLICIT_INSTANTIATION(TEMPLATE, Matrix3f)                                     \

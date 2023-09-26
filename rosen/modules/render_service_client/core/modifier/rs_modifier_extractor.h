@@ -73,6 +73,7 @@ public:
     float GetShadowRadius() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
     bool GetShadowMask() const;
+    ShadowType GetShadowType() const;
 
     Gravity GetFrameGravity() const;
 

@@ -569,6 +569,8 @@ RSC_EXPORT void RSProperty<Color>::UpdateToRender(const Color& value, bool isDel
 template<>
 RSC_EXPORT void RSProperty<Gravity>::UpdateToRender(const Gravity& value, bool isDelta) const;
 template<>
+RSC_EXPORT void RSProperty<ShadowType>::UpdateToRender(const ShadowType& value, bool isDelta) const;
+template<>
 RSC_EXPORT void RSProperty<Matrix3f>::UpdateToRender(const Matrix3f& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<Quaternion>::UpdateToRender(const Quaternion& value, bool isDelta) const;

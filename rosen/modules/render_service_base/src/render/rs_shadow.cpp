@@ -65,6 +65,11 @@ void RSShadow::SetMask(bool mask)
     imageMask_ = mask;
 }
 
+void RSShadow::SetType(ShadowType type)
+{
+    type_ = type;
+}
+
 Color RSShadow::GetColor() const
 {
     return color_;
@@ -105,8 +110,15 @@ bool RSShadow::GetMask() const
     return imageMask_;
 }
 
+ShadowType RSShadow::GetType() const
+{
+    return type_;
+}
+
 bool RSShadow::IsValid() const
 {
+    // TODO: check shadow type?
+
     if (isHardwareAcceleration_) {
         return GetAlpha() > 0.f;
     } else {

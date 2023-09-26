@@ -112,6 +112,7 @@ const std::vector<ResetPropertyFunc> g_propertyResetterLUT = {
     [](RSProperties* prop) { prop->SetHueRotate({}); },                  // HUE_ROTATE,               62
     [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND,              63
     [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE,                 64
+    [](RSProperties* prop) { prop->SetShadowType(ShadowType::NONE); },   // SHADOW_TYPE,              65
     nullptr,
 };
 } // namespace
@@ -1083,6 +1084,18 @@ void RSProperties::SetShadowMask(bool shadowMask)
     contentDirty_ = true;
 }
 
+void RSProperties::SetShadowType(ShadowType shadowType)
+{
+    if (!shadow_.has_value()) {
+        shadow_ = std::make_optional<RSShadow>();
+    }
+    shadow_->SetType(shadowType);
+    SetDirty();
+    // [planning] if shadow stores as texture and out of node
+    // node content would not be affected
+    contentDirty_ = true;
+}
+
 Color RSProperties::GetShadowColor() const
 {
     return shadow_ ? shadow_->GetColor() : Color::FromArgbInt(DEFAULT_SPOT_COLOR);
@@ -1121,6 +1134,11 @@ std::shared_ptr<RSPath> RSProperties::GetShadowPath() const
 bool RSProperties::GetShadowMask() const
 {
     return shadow_ ? shadow_->GetMask() : false;
+}
+
+ShadowType RSProperties::GetShadowType() const
+{
+    return shadow_ ? shadow_->GetType() : ShadowType::NONE;
 }
 
 const std::optional<RSShadow>& RSProperties::GetShadow() const
@@ -2075,6 +2093,16 @@ std::string RSProperties::Dump() const
     }
     if (!ROSEN_EQ(GetShadowRadius(), 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", ShadowRadius[%.1f]", GetShadowRadius()) != -1) {
+        dumpInfo.append(buffer);
+    }
+
+    // ShadowType
+    ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    if (ret != EOK) {
+        return "Failed to memset_s for ShadowType, ret=" + std::to_string(ret);
+    }
+    if (!ROSEN_EQ(GetShadowType(), ShadowType::NONE) &&
+        sprintf_s(buffer, UINT8_MAX, ", ShadowType[%d]", GetShadowType()) != -1) {
         dumpInfo.append(buffer);
     }
 

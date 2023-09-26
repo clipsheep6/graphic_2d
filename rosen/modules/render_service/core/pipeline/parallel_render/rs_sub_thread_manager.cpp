@@ -53,6 +53,11 @@ void RSSubThreadManager::Start(RenderContext *context)
 }
 void RSSubThreadManager::StartFilterThread(RenderContext* context)
 {
+#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+    if (!RSSystemProperties::GetFilterPartialRenderEnabled() || !RSUniRenderJudgement::IsUniRender()) {
+        RS_LOGI("Filter thread not run");
+        return;
+    }
     if (filterThread != nullptr) {
         return;
     }
@@ -61,6 +66,7 @@ void RSSubThreadManager::StartFilterThread(RenderContext* context)
         filterThread = std::make_shared<RSFilterSubThread>(context);
         filterThread->Start();
     }
+#endif
 }
 
 void RSSubThreadManager::PostTask(const std::function<void()>& task, uint32_t threadIndex)
@@ -83,6 +89,9 @@ void RSSubThreadManager::DumpMem(DfxString& log)
         }
         subThread->DumpMem(log);
     }
+    if (filterThread) {
+        filterThread->DumpMem(log);
+    }
 }
 
 float RSSubThreadManager::GetAppGpuMemoryInMB()
@@ -96,6 +105,9 @@ float RSSubThreadManager::GetAppGpuMemoryInMB()
             continue;
         }
         total += subThread->GetAppGpuMemoryInMB();
+    }
+    if (filterThread) {
+        total += filterThread->GetAppGpuMemoryInMB();
     }
     return total;
 }

@@ -40,9 +40,7 @@ public:
     void Start();
     void PostTask(const std::function<void()>& task);
     void PostSyncTask(const std::function<void()>& task);
-    void RemoveTask(const std::string& name);
     void RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filterTask);
-    void ReleaseSurface();
 
     void ResetGrContext();
     void DumpMem(DfxString& log);
@@ -74,12 +72,6 @@ private:
 #endif
 #else
     std::shared_ptr<Drawing::GPUContext> grContext_ = nullptr;
-#endif
-    std::mutex mutex_;
-#ifndef USE_ROSEN_DRAWING
-    std::queue<sk_sp<SkSurface>> tmpSurfaces_;
-#else
-    std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
 #endif
 };
 } // namespace OHOS::Rosen

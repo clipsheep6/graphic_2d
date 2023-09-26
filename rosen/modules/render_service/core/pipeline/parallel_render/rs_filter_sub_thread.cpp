@@ -71,9 +71,7 @@ void RSFilterSubThread::Start()
         grContext_ = CreateShareGrContext();
     });
     RSFilter::postTask = [this](std::weak_ptr<RSFilter::RSFilterTask> task) {
-        PostTask([this,task](){
-            RenderCache(task);
-        });
+        PostTask([this, task]() { RenderCache(task); });
     };
 }
 
@@ -88,13 +86,6 @@ void RSFilterSubThread::PostSyncTask(const std::function<void()>& task)
 {
     if (handler_) {
         handler_->PostSyncTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
-    }
-}
-
-void RSFilterSubThread::RemoveTask(const std::string& name)
-{
-    if (handler_) {
-        handler_->RemoveTask(name);
     }
 }
 
@@ -148,12 +139,12 @@ void RSFilterSubThread::DestroyShareEglContext()
 
 void RSFilterSubThread::RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filterTask)
 {
+    RS_TRACE_NAME("RenderCache");
     auto task = filterTask.lock();
-    if(!task) {
+    if (!task) {
         RS_LOGE("task is null");
         return;
     }
-    RS_TRACE_NAME("RenderCache");
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
     }
@@ -161,14 +152,13 @@ void RSFilterSubThread::RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filter
         RS_LOGE("grContext is null");
         return;
     }
-    if(!task->InitSurface(grContext_.get())) {
+    if (!task->InitSurface(grContext_.get())) {
         RS_LOGE("InitSurface failed");
         return;
     }
-    if(!task->Run()) {
+    if (!task->Render()) {
         RS_LOGE("InitSurface failed");
     }
-
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -239,16 +229,6 @@ void RSFilterSubThread::ResetGrContext()
 #ifndef USE_ROSEN_DRAWING
     grContext_->freeGpuResources();
 #endif
-}
-
-void RSFilterSubThread::ReleaseSurface()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    while (tmpSurfaces_.size() > 0) {
-        auto tmp = tmpSurfaces_.front();
-        tmpSurfaces_.pop();
-        tmp = nullptr;
-    }
 }
 
 } // namespace OHOS::Rosen

@@ -43,7 +43,7 @@ public:
 #else
         virtual bool InitSurface(GrContext* grContext);
 #endif
-        virtual bool Run();
+        virtual bool Render();
     };
     static std::function<void(std::weak_ptr<RSFilter::RSFilterTask>)> postTask;
     virtual ~RSFilter();

@@ -82,7 +82,7 @@ bool RSSystemProperties::GetUniRenderEnabled()
     }
 
     isUniRenderEnabled_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
-        ->GetUniRenderEnabled();
+                              ->GetUniRenderEnabled();
     inited = true;
     ROSEN_LOGI("RSSystemProperties::GetUniRenderEnabled:%{public}d", isUniRenderEnabled_);
     return isUniRenderEnabled_;
@@ -300,6 +300,13 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
     return filterCacheSizeThreshold;
 }
 
+bool RSSystemProperties::GetFilterPartialRenderEnabled()
+{
+    static bool enabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "0")).c_str()) != 0;
+    return enabled;
+}
+
 bool RSSystemProperties::GetKawaseEnabled()
 {
     static bool kawaseBlurEnabled =
@@ -441,8 +448,8 @@ bool RSSystemProperties::GetDDGRIntegrateEnable()
 bool RSSystemProperties::GetSnapshotWithDMAEnabled()
 {
     static bool isSupportDma = system::GetParameter("const.product.devicetype", "pc") == "phone" ||
-        system::GetParameter("const.product.devicetype", "pc") == "tablet" ||
-        system::GetParameter("const.product.devicetype", "pc") == "pc";
+                               system::GetParameter("const.product.devicetype", "pc") == "tablet" ||
+                               system::GetParameter("const.product.devicetype", "pc") == "pc";
     return isSupportDma && system::GetBoolParameter("rosen.snapshotDma.enabled", true);
 }
 

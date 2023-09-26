@@ -51,6 +51,23 @@ void RSSubThreadManager::Start(RenderContext *context)
         }
     }
 }
+void RSSubThreadManager::StartFilterThread(RenderContext* context)
+{
+#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+    if (!RSSystemProperties::GetFilterPartialRenderEnabled() || !RSUniRenderJudgement::IsUniRender()) {
+        RS_LOGI("Filter thread not run");
+        return;
+    }
+    if (filterThread != nullptr) {
+        return;
+    }
+    renderContext_ = context;
+    if (context) {
+        filterThread = std::make_shared<RSFilterSubThread>(context);
+        filterThread->Start();
+    }
+#endif
+}
 
 void RSSubThreadManager::PostTask(const std::function<void()>& task, uint32_t threadIndex)
 {
@@ -72,6 +89,9 @@ void RSSubThreadManager::DumpMem(DfxString& log)
         }
         subThread->DumpMem(log);
     }
+    if (filterThread) {
+        filterThread->DumpMem(log);
+    }
 }
 
 float RSSubThreadManager::GetAppGpuMemoryInMB()
@@ -85,6 +105,9 @@ float RSSubThreadManager::GetAppGpuMemoryInMB()
             continue;
         }
         total += subThread->GetAppGpuMemoryInMB();
+    }
+    if (filterThread) {
+        total += filterThread->GetAppGpuMemoryInMB();
     }
     return total;
 }
@@ -148,7 +171,7 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
         auto threadIndex = surfaceNode->GetSubmittedSubThreadIndex();
         if (threadIndex != INT_MAX && superRenderTaskList[threadIndex]) {
             RS_OPTIONAL_TRACE_NAME("node:[ " + surfaceNode->GetName() + ", " + std::to_string(surfaceNode->GetId()) +
-                ", " + std::to_string(threadIndex) + " ]; ");
+                                   ", " + std::to_string(threadIndex) + " ]; ");
             superRenderTaskList[threadIndex]->AddTask(std::move(renderTask));
         } else {
             if (superRenderTaskList[minLoadThreadIndex_]) {

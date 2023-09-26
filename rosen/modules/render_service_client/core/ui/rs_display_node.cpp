@@ -75,7 +75,8 @@ void RSDisplayNode::SetSecurityDisplay(bool isSecurityDisplay)
         transactionProxy->AddCommand(command, true);
     }
     ROSEN_LOGD("RSDisplayNode::SetSecurityDisplay, displayNodeId:[%{public}" PRIu64 "]"
-        " isSecurityDisplay:[%{public}s]", GetId(), isSecurityDisplay ? "true" : "false");
+               " isSecurityDisplay:[%{public}s]",
+        GetId(), isSecurityDisplay ? "true" : "false");
 }
 
 bool RSDisplayNode::GetSecurityDisplay() const
@@ -92,7 +93,37 @@ void RSDisplayNode::SetDisplayNodeMirrorConfig(const RSDisplayNodeConfig& displa
         transactionProxy->AddCommand(command, true);
     }
     ROSEN_LOGD("RSDisplayNode::SetDisplayNodeMirrorConfig, displayNodeId:[%{public}" PRIu64 "]"
-        " isMirrored:[%{public}s]", GetId(), displayNodeConfig.isMirrored ? "true" : "false");
+               " isMirrored:[%{public}s]",
+        GetId(), displayNodeConfig.isMirrored ? "true" : "false");
+}
+
+void RSDisplayNode::SetScreenRotation(const uint32_t& rotation)
+{
+    ScreenRotation screenRotation = ScreenRotation::ROTATION_0;
+    switch (rotation) {
+        case 0:
+            screenRotation = ScreenRotation::ROTATION_0;
+            break;
+        case 1:
+            screenRotation = ScreenRotation::ROTATION_90;
+            break;
+        case 2:
+            screenRotation = ScreenRotation::ROTATION_180;
+            break;
+        case 3:
+            screenRotation = ScreenRotation::ROTATION_270;
+            break;
+        default:
+            screenRotation = ScreenRotation::INVALID_SCREEN_ROTATION;
+            break;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSDisplayNodeSetScreenRotation>(GetId(), screenRotation);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
+    ROSEN_LOGD("RSDisplayNode::SetScreenRotation, displayNodeId:[%{public}" PRIu64 "]"
+               " screenRotation:[%{public}d]", GetId(), rotation);
 }
 
 bool RSDisplayNode::IsMirrorDisplay() const

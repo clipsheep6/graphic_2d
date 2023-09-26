@@ -59,27 +59,20 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
         return false;
     }
     auto mirrorNode = node.GetMirrorSource().lock();
+    auto rotation = mirrorNode->GetScreenRotation();
     if (mirrorNode && node.IsFirstTimeToProcessor()) {
-        auto boundsGeoPtr = (
-            mirrorNode->GetRenderProperties().GetBoundsGeometry());
-        if (boundsGeoPtr != nullptr) {
-            boundsGeoPtr->UpdateByMatrixFromSelf();
-            node.SetInitMatrix(boundsGeoPtr->GetMatrix());
-        }
+        node.setFirstTimeScreenRotation(rotation);
+        RS_LOGD("RSUniRenderVirtualProcessor::Init, Screen(id %{public}" PRIu64 "), Rotation: %d",
+            node.GetScreenId(), static_cast<uint32_t>(rotate));
     }
-#ifndef USE_ROSEN_DRAWING
-    SkMatrix invertMatrix;
-    if (node.GetInitMatrix().invert(&invertMatrix)) {
-        screenTransformMatrix_.postConcat(invertMatrix);
+    if (node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_90) {
+        canvas_->rotate(90, renderFrameConfig_.height / 2, renderFrameConfig_.height / 2);
+        canvas_->translate(0, renderFrameConfig_.height - renderFrameConfig_.width);
+    } else if (node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_180) {
+        canvas_->rotate(180, renderFrameConfig_.width / 2, renderFrameConfig_.height / 2);
+    } else if (node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_270) {
+        canvas_->rotate(270, renderFrameConfig_.height / 2, renderFrameConfig_.height / 2);
     }
-    canvas_->concat(screenTransformMatrix_);
-#else
-    Drawing::Matrix invertMatrix;
-    if (node.GetInitMatrix().Invert(invertMatrix)) {
-        screenTransformMatrix_ = screenTransformMatrix_ * invertMatrix;
-    }
-    canvas_->ConcatMatrix(screenTransformMatrix_);
-#endif
     return true;
 }
 

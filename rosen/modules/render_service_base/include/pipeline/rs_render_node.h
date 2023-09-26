@@ -75,6 +75,11 @@ public:
     virtual ~RSRenderNode();
 
     void AddChild(SharedPtr child, int index = -1);
+    void SetContainBootAnimationDisplay(bool isContainBootAnimationDisplay);
+    bool GetContainBootAnimationDisplay() const;
+    virtual void SetBootAnimationDisplay(bool isBootAnimationDisplay);
+    virtual bool GetBootAnimationDisplay() const;
+
     void MoveChild(SharedPtr child, int index);
     void RemoveChild(SharedPtr child, bool skipTransition = false);
     void ClearChildren();
@@ -494,6 +499,8 @@ private:
     bool shouldPaint_ = true;
 
     bool isDirtyRegionUpdated_ = false;
+    bool isBootAnimationDisplay_ = false;
+    bool isContainBootAnimationDisplay_ = false;
     bool isLastVisible_ = false;
     bool fallbackAnimationOnDestroy_ = true;
     uint32_t disappearingTransitionCount_ = 0;

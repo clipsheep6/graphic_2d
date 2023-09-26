@@ -80,7 +80,6 @@ private:
     NodeId entryViewNodeId_ = 0;
     NodeId wallpaperViewNodeId_ = 0;
     NodeId screenLockWindowNodeId_ = 0;
-
     friend class RSContext;
     friend class RSMainThread;
 };

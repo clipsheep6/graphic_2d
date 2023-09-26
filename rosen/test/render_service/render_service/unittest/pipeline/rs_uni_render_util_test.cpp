@@ -187,28 +187,6 @@ HWTEST_F(RSUniRenderUtilTest, ClearCacheSurface, Function | SmallTest | Level2)
     RSUniRenderUtil::ClearCacheSurface(node, threadIndex);
 }
 
-/*
- * @tc.name: ClearNodeCacheSurface
- * @tc.desc:
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RSUniRenderUtilTest, ClearNodeCacheSurface, Function | SmallTest | Level2)
-{
-    uint32_t threadIndex = 1;
-    RSUniRenderUtil::ClearNodeCacheSurface(nullptr, nullptr, threadIndex, 0);
-    NodeId id = 0;
-    RSDisplayNodeConfig config;
-    auto node = std::make_shared<RSDisplayRenderNode>(id, config);
-    threadIndex = UNI_MAIN_THREAD_INDEX;
-    auto cacheSurface = node->GetCacheSurface(threadIndex, false);
-    auto completedSurface= node->GetCompletedCacheSurface(0, true);
-    RSUniRenderUtil::ClearNodeCacheSurface(std::move(cacheSurface), std::move(completedSurface), threadIndex, 0);
-    threadIndex = 1;
-    auto cacheSurface1 = node->GetCacheSurface(threadIndex, false);
-    auto completedSurface1= node->GetCompletedCacheSurface(0, true);
-    RSUniRenderUtil::ClearNodeCacheSurface(std::move(cacheSurface1), std::move(completedSurface1), threadIndex, 0);
-}
 
 /*
  * @tc.name: HandleCaptureNode

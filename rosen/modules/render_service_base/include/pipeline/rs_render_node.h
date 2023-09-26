@@ -236,20 +236,13 @@ public:
     }
 
 #ifndef USE_ROSEN_DRAWING
-    using ClearCacheSurfaceFunc = std::function<void(sk_sp<SkSurface>&&, sk_sp<SkSurface>&&, uint32_t, uint32_t)>;
 #ifdef NEW_SKIA
-    void InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func = nullptr,
-        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
+    void InitCacheSurface(GrRecordingContext* grContext, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #else
-    void InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func = nullptr,
-        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
+    void InitCacheSurface(GrContext* grContext, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
 #else
-    using ClearCacheSurfaceFunc =
-        std::function<void(std::shared_ptr<Drawing::Surface>&&,
-        std::shared_ptr<Drawing::Surface>&&, uint32_t, uint32_t)>;
-    void InitCacheSurface(Drawing::GPUContext* grContext, ClearCacheSurfaceFunc func = nullptr,
-        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
+    void InitCacheSurface(Drawing::GPUContext* grContext, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
 
     Vector2f GetOptionalBufferSize() const;
@@ -536,7 +529,7 @@ private:
     std::unordered_set<NodeId> visitedCacheRoots_ = {};
 
     mutable std::recursive_mutex surfaceMutex_;
-    ClearCacheSurfaceFunc clearCacheSurfaceFunc_ = nullptr;
+
     uint32_t cacheSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     uint32_t completedSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     bool isMainThreadNode_ = true;

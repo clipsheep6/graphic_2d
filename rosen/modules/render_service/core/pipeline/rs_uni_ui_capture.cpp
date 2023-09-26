@@ -268,18 +268,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
     if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
         auto canvasDrawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>();
         if (!canvasDrawingNode->IsOnTheTree()) {
-#ifndef USE_ROSEN_DRAWING
-            auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](sk_sp<SkSurface> surface) {
-                // The second param is null, 0 is an invalid value.
-                RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, id, 0);
-            };
-#else
-            auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](std::shared_ptr<Drawing::Surface> surface) {
-                // The second param is null, 0 is an invalid value.
-                RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, id, 0);
-            };
-#endif
-            canvasDrawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, clearFunc });
+            canvasDrawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, nullptr });
             canvasDrawingNode->ProcessRenderContents(*canvas_);
         } else {
 #ifndef USE_ROSEN_DRAWING

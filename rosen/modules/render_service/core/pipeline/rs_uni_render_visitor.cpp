@@ -55,6 +55,7 @@
 #include "system/rs_system_parameters.h"
 #include "scene_board_judgement.h"
 #include "hgm_core.h"
+#include "hgm_frame_rate_manager.h"
 #include "benchmarks/rs_recording_thread.h"
 #include "scene_board_judgement.h"
 
@@ -473,8 +474,8 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     displayHasSecSurface_.emplace(currentVisitDisplay_, 0);
     dirtySurfaceNodeMap_.clear();
 
-    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
-    hgmCore.SetActiveScreenId(currentVisitDisplay_);
+    auto frameRateMgr = HgmFrameRateManager::GetInstance();
+    frameRateMgr->SetActiveScreenId(currentVisitDisplay_);
 
     RS_TRACE_NAME("RSUniRender:PrepareDisplay " + std::to_string(currentVisitDisplay_));
     curDisplayDirtyManager_ = node.GetDirtyManager();

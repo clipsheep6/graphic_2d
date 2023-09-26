@@ -34,7 +34,7 @@
 namespace OHOS::Rosen {
 class RSFilterSubThread {
 public:
-    RSFilterSubThread(RenderContext* context) : renderContext_(context) {}
+    explicit RSFilterSubThread(RenderContext* context) : renderContext_(context) {}
     ~RSFilterSubThread();
 
     void Start();

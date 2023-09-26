@@ -18,6 +18,7 @@
 
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
 #include <mutex>
+#include <condition_variable>
 
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkRect.h"

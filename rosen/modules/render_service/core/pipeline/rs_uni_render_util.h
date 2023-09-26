@@ -70,14 +70,6 @@ public:
     static void ClearSurfaceIfNeed(const RSRenderNodeMap& map, const std::shared_ptr<RSDisplayRenderNode>& displayNode,
         std::set<std::shared_ptr<RSBaseRenderNode>>& oldChildren, DeviceType deviceType = DeviceType::PHONE);
     static void ClearCacheSurface(RSRenderNode& node, uint32_t threadIndex, bool isClearCompletedCacheSurface = true);
-#ifndef USE_ROSEN_DRAWING
-    static void ClearNodeCacheSurface(sk_sp<SkSurface>&& cacheSurface, sk_sp<SkSurface>&& cacheCompletedSurface,
-        uint32_t cacheSurfaceThreadIndex, uint32_t completedSurfaceThreadIndex);
-#else
-    static void ClearNodeCacheSurface(std::shared_ptr<Drawing::Surface>&& cacheSurface,
-        std::shared_ptr<Drawing::Surface>&& cacheCompletedSurface,
-        uint32_t cacheSurfaceThreadIndex, uint32_t completedSurfaceThreadIndex);
-#endif
     static void CacheSubThreadNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>>& oldSubThreadNodes,
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     // use floor value of translateX and translateY in matrix of canvas to avoid jittering

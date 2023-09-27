@@ -53,6 +53,14 @@ enum class Gravity {
     DEFAULT = TOP_LEFT
 };
 
+enum class ShadowType {
+    NONE = 0,
+    BORDER_COLOR,
+    BORDER_BLUR,
+    TEXT_SHADOW,
+    TEXT_SHADOW_BIG,
+};
+
 enum class ForegroundColorStrategyType {
     INVALID = 0,
     INVERT_BACKGROUNDCOLOR,

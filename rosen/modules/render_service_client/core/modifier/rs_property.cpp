@@ -175,6 +175,11 @@ void RSProperty<Gravity>::UpdateToRender(const Gravity& value, bool isDelta) con
     UPDATE_TO_RENDER(RSUpdatePropertyGravity, value, isDelta);
 }
 template<>
+void RSProperty<ShadowType>::UpdateToRender(const ShadowType& value, bool isDelta) const
+{
+    UPDATE_TO_RENDER(RSUpdatePropertyShadowType, value, isDelta);
+}
+template<>
 void RSProperty<Matrix3f>::UpdateToRender(const Matrix3f& value, bool isDelta) const
 {
     UPDATE_TO_RENDER(RSUpdatePropertyMatrix3f, value, isDelta);

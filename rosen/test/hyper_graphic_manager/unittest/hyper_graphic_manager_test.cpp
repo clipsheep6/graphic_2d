@@ -17,6 +17,7 @@
 #include <test_header.h>
 
 #include "hgm_core.h"
+#include "hgm_frame_rate_manager.h"
 
 #include "screen_manager/screen_types.h"
 
@@ -504,7 +505,7 @@ HWTEST_F(HyperGraphicManagerTest, HgmCoreTests, Function | MediumTest | Level2)
  */
 HWTEST_F(HyperGraphicManagerTest, HgmFrameRateToolTest, Function | SmallTest | Level2)
 {
-    auto &hgm_core = HgmCore::Instance();
+    auto hgmFrameRateManager = HgmFrameRateManager::GetInstance();
     ScreenId id = 1;
     int32_t phyWidth = 685; // 685 means dayu200 phyWidth
     int32_t phyHeight = 1218; // 1218 means dayu200 phyHeight
@@ -513,36 +514,36 @@ HWTEST_F(HyperGraphicManagerTest, HgmFrameRateToolTest, Function | SmallTest | L
 
     PART("CaseDescription") {
         STEP("1. call GetInstance twice") {
-            auto instance1 = HgmFrameRateTool::GetInstance();
-            auto instance2 = HgmFrameRateTool::GetInstance();
+            auto instance1 = HgmFrameRateManager::GetInstance();
+            auto instance2 = HgmFrameRateManager::GetInstance();
             STEP_ASSERT_EQ(instance1, instance2);
         }
 
         STEP("2. add screenProfile ") {
-            auto res = hgm_core.AddScreenProfile(id, width, height, phyWidth, phyHeight);
+            auto res = hgmFrameRateManager->AddScreenProfile(id, width, height, phyWidth, phyHeight);
             STEP_ASSERT_EQ(res, 0);
         }
 
         STEP("3. set activeScreenProfile") {
-            hgm_core.SetActiveScreenId(id);
-            STEP_ASSERT_EQ(hgm_core.GetActiveScreenId(), id);
+            hgmFrameRateManager->SetActiveScreenId(id);
+            STEP_ASSERT_EQ(hgmFrameRateManager->GetActiveScreenId(), id);
         }
 
         STEP("4. cal translate modifier preferred") {
             HgmModifierProfile hgmModifierProfile = {0, 0, HgmModifierType::TRANSLATE};
-            auto preferred = hgm_core.CalModifierPreferred(hgmModifierProfile);
+            auto preferred = hgmFrameRateManager->CalModifierPreferred(hgmModifierProfile);
             STEP_ASSERT_GT(preferred, 0);
         }
 
         STEP("5. cal scale modifier preferred") {
             HgmModifierProfile hgmModifierProfile = {0, 0, HgmModifierType::SCALE};
-            auto preferred = hgm_core.CalModifierPreferred(hgmModifierProfile);
+            auto preferred = hgmFrameRateManager->CalModifierPreferred(hgmModifierProfile);
             STEP_ASSERT_GT(preferred, 0);
         }
 
         STEP("6. cal rotation modifier preferred") {
             HgmModifierProfile hgmModifierProfile = {0, 0, HgmModifierType::TRANSLATE};
-            auto preferred = hgm_core.CalModifierPreferred(hgmModifierProfile);
+            auto preferred = hgmFrameRateManager->CalModifierPreferred(hgmModifierProfile);
             STEP_ASSERT_GT(preferred, 0);
         }
     }
@@ -581,19 +582,19 @@ HWTEST_F(HyperGraphicManagerTest, RefreshBundleName, Function | SmallTest | Leve
  */
 HWTEST_F(HyperGraphicManagerTest, HgmOneShotTimerTest, Function | SmallTest | Level2)
 {
-    auto &hgm_core = HgmCore::Instance();
+    auto hgmFrameRateManager = HgmFrameRateManager::GetInstance();
     ScreenId id = 1;
     int32_t interval = 200; // 200ms means waiting time
 
     PART("CaseDescription") {
         STEP("1. insert and start screenTimer") {
-            hgm_core.InsertAndStartScreenTimer(id, interval, nullptr, nullptr);
-            auto timer = hgm_core.GetScreenTimer(id);
+            hgmFrameRateManager->InsertAndStartScreenTimer(id, interval, nullptr, nullptr);
+            auto timer = hgmFrameRateManager->GetScreenTimer(id);
             STEP_ASSERT_NE(timer, nullptr);
         }
         STEP("2. reset screenTimer") {
-            hgm_core.ResetScreenTimer(id);
-            auto timer = hgm_core.GetScreenTimer(id);
+            hgmFrameRateManager->ResetScreenTimer(id);
+            auto timer = hgmFrameRateManager->GetScreenTimer(id);
             STEP_ASSERT_NE(timer, nullptr);
         }
     }

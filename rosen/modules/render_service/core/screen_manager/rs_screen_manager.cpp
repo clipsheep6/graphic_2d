@@ -20,6 +20,8 @@
 #include "pipeline/rs_hardware_thread.h"
 #include "platform/common/rs_log.h"
 #include "vsync_sampler.h"
+#include "hgm_core.h"
+#include "hgm_frame_rate_manager.h"
 
 namespace OHOS {
 namespace Rosen {

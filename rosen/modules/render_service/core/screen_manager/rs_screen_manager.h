@@ -35,8 +35,6 @@
 #include <surface.h>
 
 #include "rs_screen.h"
-#include "hgm_core.h"
-#include "hgm_frame_rate_manager.h"
 
 namespace OHOS {
 namespace Rosen {

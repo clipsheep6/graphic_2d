@@ -46,7 +46,7 @@ void HgmFrameRateMgrTest::TearDown() {}
  */
 HWTEST_F(HgmFrameRateMgrTest, UniProcessData, Function | SmallTest | Level1)
 {
-    std::unique_ptr<HgmFrameRateManager> mgr = std::make_unique<HgmFrameRateManager>();
+    auto mgr = HgmFrameRateManager::GetInstance();
     auto &instance = HgmCore::Instance();
     ScreenId screenId2 = 8;
     sptr<HgmScreen> screen = nullptr;

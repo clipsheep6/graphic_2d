@@ -1069,5 +1069,35 @@ HWTEST_F(RSInterfacesTest, RegisterHgmConfigChangeCallback_Test, Function | Smal
     int32_t ret = rsInterfaces->RegisterHgmConfigChangeCallback(cb);
     ASSERT_EQ(ret, 0);
 }
+
+/*
+ * @tc.name: RegisterSurfaceOcclusionChangeCallback_Test
+ * @tc.desc: RegisterOcclusionChangeCallback interface test.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, RegisterSurfaceOcclusionChangeCallback_Test, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    NodeId id = 0;
+    SurfaceOcclusionChangeCallback cb = [](float){};
+    std::vector<float> partitionPoints;
+    int32_t ret = rsInterfaces->RegisterSurfaceOcclusionChangeCallback(id, cb, partitionPoints);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: UnRegisterSurfaceOcclusionChangeCallback_Test
+ * @tc.desc: UnRegisterSurfaceOcclusionChangeCallback interface test.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, UnRegisterSurfaceOcclusionChangeCallback_Test, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    NodeId id = 0;
+    int32_t ret = rsInterfaces->UnRegisterSurfaceOcclusionChangeCallback(id);
+    ASSERT_EQ(ret, 0);
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -314,6 +314,8 @@ void RSSubThread::ResetGrContext()
     }
 #ifndef USE_ROSEN_DRAWING
     grContext_->freeGpuResources();
+#else
+    grContext_->FreeGpuResources();
 #endif
 }
 

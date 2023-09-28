@@ -297,6 +297,12 @@ float MemoryManager::GetAppGpuMemoryInMB(GrContext* grContext)
     return total - rsMemSize;
 #endif
 }
+#else
+float MemoryManager::GetAppGpuMemoryInMB(Drawing::GPUContext* gpuContext)
+{
+    RS_LOGE("Drawing Unsupport GetAppGpuMemoryInMB");
+    return 0.f;
+}
 #endif
 
 #ifndef USE_ROSEN_DRAWING

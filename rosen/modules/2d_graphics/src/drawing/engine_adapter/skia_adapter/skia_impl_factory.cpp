@@ -74,6 +74,11 @@ std::unique_ptr<GPUContextImpl> SkiaImplFactory::CreateGPUContext()
 }
 #endif
 
+std::unique_ptr<TraceMemoryDumpImpl> SkiaImplFactory::CreateTraceMemoryDump(const char* categoryKey, bool itemizeType)
+{
+    return std::make_unique<SkiaTraceMemoryDump>(categoryKey, itemizeType);
+}
+
 std::unique_ptr<BitmapImpl> SkiaImplFactory::CreateBitmap()
 {
     return std::make_unique<SkiaBitmap>();

@@ -413,7 +413,15 @@ int TypographyImpl::ComputeStrut()
     font.GetMetrics(&strutMetrics);
 
     double strutLeading = typographyStyle_.lineStyle.spacingScale.value_or(0) * typographyStyle_.lineStyle.fontSize;
-    auto leading = strutLeading;
+    double leading;
+    double metricsFontHeight = *strutMetrics.fDescent_ - *strutMetrics.fAscent_;
+    double blobHeight = metricsFontHeight + *strutMetrics.fLeading_;
+    double fontHeight = !typographyStyle_.lineStyle.halfLeading ? typographyStyle_.lineStyle.fontSize : metricsFontHeight;
+    if (typographyStyle_.lineStyle.halfLeading) {
+        leading = blobHeight - fontHeight;
+    } else {
+        leading = strutLeading;
+    }
     if (typographyStyle_.lineStyle.heightOnly) {
         double metricsHeight = -*strutMetrics.fAscent_ + *strutMetrics.fDescent_;
         if (fabs(metricsHeight) < DBL_EPSILON) {

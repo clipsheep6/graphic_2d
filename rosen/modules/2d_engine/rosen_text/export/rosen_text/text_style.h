@@ -80,6 +80,7 @@ struct TextStyle {
     double fontSize_ = 14.0; // default is libtxt text style font size
     double letterSpacing_ = 0.0;
     double wordSpacing_ = 0.0;
+    bool halfLeading_ = false;
     double heightScale_ = 1.0;
     bool heightOnly_ = false;
     std::u16string ellipsis_;
@@ -99,6 +100,7 @@ struct TextStyle {
     double fontSize = 14.0; // default is libtxt text style font size
     double letterSpacing = 0.0;
     double wordSpacing = 0.0;
+    bool halfLeading = false;
     double heightScale = 1.0;
     bool heightOnly = false;
     std::u16string ellipsis;

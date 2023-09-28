@@ -95,6 +95,7 @@ struct TextStyle {
     TextBaseline baseline = TextBaseline::ALPHABETIC;
     std::string locale = "";
     bool heightOnly = false; // true means text height is heightScale_ * fontSize_
+    bool halfLeading = false;
     double heightScale = 1.0;
     double letterSpacing = 0.0;
     double wordSpacing = 0.0;

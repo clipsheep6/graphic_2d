@@ -97,10 +97,21 @@ void GPUContext::ReleaseByTag(const GPUResourceTag tag)
     impl_->ReleaseByTag(tag);
 }
 
+void GPUContext::DumpMemoryStatisticsByTag(TraceMemoryDump* traceMemoryDump, GPUResourceTag tag)
+{
+    impl_->DumpMemoryStatisticsByTag(traceMemoryDump, tag);
+}
+
+void GPUContext::DumpMemoryStatistics(TraceMemoryDump* traceMemoryDump)
+{
+    impl_->DumpMemoryStatistics(traceMemoryDump);
+}
+
 GPUContextOptions::PersistentCache* GPUContextOptions::GetPersistentCache() const
 {
     return persistentCache_;
 }
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

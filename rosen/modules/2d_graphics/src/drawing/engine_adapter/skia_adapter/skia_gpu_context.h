@@ -76,6 +76,10 @@ public:
 
     void ReleaseByTag(const GPUResourceTag tag) override;
 
+    void DumpMemoryStatisticsByTag(TraceMemoryDump* traceMemoryDump, GPUResourceTag tag) override;
+
+    void DumpMemoryStatistics(TraceMemoryDump* traceMemoryDump) override;
+
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> GetGrContext() const;
     void SetGrContext(const sk_sp<GrDirectContext>& grContext);

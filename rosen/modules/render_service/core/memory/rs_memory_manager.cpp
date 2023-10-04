@@ -513,6 +513,27 @@ void MemoryManager::DumpGpuCache(DfxString& log, const GrContext* grContext, GrG
 #endif
 }
 #else
+void MemoryManager::DumpGpuCache(
+    DfxString& log, const Drawing::GPUContext* gpuContext, GPUResourceTag* tag, std::string& name)
+{
+    if (!gpuContext) {
+        log.AppendFormat("gpuContext is nullptr.\n");
+        return;
+    }
+    /////////////////////////////GPU/////////////////////////
+#ifdef RS_ENABLE_GL
+    log.AppendFormat("\n---------------\nSkia GPU Caches:%s\n", name.c_str());
+    Drawing::TraceMemoryDump gpuTracer("category", true);
+    if (tag) {
+        gpuContext->DumpMemoryStatisticsByTag(&gpuTracer, *tag);
+    } else {
+        gpuContext->DumpMemoryStatistics(&gpuTracer);
+    }
+    gpuTracer.LogOutput(log);
+    log.AppendFormat("Total GPU memory usage:\n");
+    gpuTracer.LogTotals(log);
+#endif
+}
 #endif
 
 #ifndef USE_ROSEN_DRAWING
@@ -545,6 +566,9 @@ void MemoryManager::DumpAllGpuInfo(DfxString& log, const Drawing::GPUContext* gp
 #ifdef RS_ENABLE_GL
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     nodeMap.TraverseSurfaceNodes([&log, &gpuContext](const std::shared_ptr<RSSurfaceRenderNode> node) {
+        GPUResourceTag tag(ExtractPid(node->GetId()), 0, node->GetId(), 0);
+        std::string name = node->GetName() + " " + std::to_string(node->GetId());
+        DumpGpuCache(log, gpuContext, &tag, name);
     });
 #endif
 }
@@ -599,6 +623,44 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grCont
 #else
 void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const Drawing::GPUContext* gpuContext)
 {
+    if (!gpuContext) {
+        log.AppendFormat("No valid gpu cache instance.\n");
+        return;
+    }
+    /////////////////////////////GPU/////////////////////////
+#ifdef RS_ENABLE_GL
+    std::string gpuInfo;
+    // total
+    DumpGpuCache(log, gpuContext, nullptr, gpuInfo);
+    // Get memory of window by tag
+    DumpAllGpuInfo(log, gpuContext);
+    for (uint32_t tagtype = RSTagTracker::TAG_SAVELAYER_DRAW_NODE; tagtype <= RSTagTracker::TAG_CAPTURE; tagtype++) {
+        GPUResourceTag tag(0, 0, 0, tagtype);
+        std::string tagType = RSTagTracker::TagType2String(static_cast<RSTagTracker::TAGTYPE>(tagtype));
+        DumpGpuCache(log, gpuContext, &tag, tagType);
+    }
+    // cache limit
+    size_t cacheLimit = 0;
+    size_t cacheUsed = 0;
+    gpuContext->GetResourceCacheLimits(nullptr, &cacheLimit);
+    gpuContext->GetResourceCacheUsage(nullptr, &cacheUsed);
+    log.AppendFormat("\ngpu limit = %zu ( used = %zu ):\n", cacheLimit, cacheUsed);
+
+    //////////////////////////ShaderCache///////////////////
+    log.AppendFormat("\n---------------\nShader Caches:\n");
+#ifdef NEW_RENDER_CONTEXT
+    log.AppendFormat(MemoryHandler::QuerryShader().c_str());
+#else
+    std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
+    log.AppendFormat(rendercontext->GetShaderCacheSize().c_str());
+#endif
+    // gpu stat
+    log.AppendFormat("\n---------------\ndumpGpuStats:\n");
+    std::String stat;
+    gpuContext->DumpGpuStats(&stat);
+
+    log.AppendFormat("%s\n", stat.c_str());
+#endif
 }
 #endif
 

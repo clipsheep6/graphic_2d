@@ -57,10 +57,10 @@ public:
     void FlushAndSubmit(bool syncCpu) override;
     void PerformDeferredCleanup(std::chrono::milliseconds msNotUsed) override;
 
-    void GetResourceCacheLimits(int& maxResource, size_t& maxResourceBytes) const override;
+    void GetResourceCacheLimits(int* maxResource, size_t* maxResourceBytes) const override;
     void SetResourceCacheLimits(int maxResource, size_t maxResourceBytes) override;
 
-    void GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const override;
+    void GetResourceCacheUsage(int* resourceCount, size_t* resourceBytes) const override;
 
     void FreeGpuResources() override;
 

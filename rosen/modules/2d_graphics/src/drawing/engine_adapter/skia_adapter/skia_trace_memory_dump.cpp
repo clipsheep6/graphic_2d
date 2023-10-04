@@ -14,13 +14,15 @@
  */
 
 #include "skia_trace_memory_dump.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 SkiaTraceMemoryDump::SkiaTraceMemoryDump(const char* categoryKey, bool itemizeType)
+    : TraceMemoryDumpImpl(categoryKey, itemizeType)
 {
-    skiaMemoryTrace_ = std::make_shared<SkiaMemoryTrace>(categoryKey, itemizeType);
+    skiaMemoryTrace_ = std::make_shared<SkiaMemoryTracer>(categoryKey, itemizeType);
 }
 
 void SkiaTraceMemoryDump::DumpNumericValue(const char* dumpName,
@@ -44,7 +46,7 @@ void SkiaTraceMemoryDump::DumpStringValue(const char* dumpName, const char* valu
     skiaMemoryTrace_->dumpStringValue(dumpName, valueName, value);
 }
 
-void SkiaTraceMemoryDump::LogOutput(DfxString& log)
+void SkiaTraceMemoryDump::LogOutput(OHOS::Rosen::DfxString& log)
 {
     if (skiaMemoryTrace_) {
         LOGE("SkiaTraceMemoryDump::LogOutput, skiaMemoryTrace_ is nullptr");
@@ -54,7 +56,7 @@ void SkiaTraceMemoryDump::LogOutput(DfxString& log)
     skiaMemoryTrace_->LogOutput(log);
 }
 
-void SkiaTraceMemoryDump::LogTotals(DfxString& log)
+void SkiaTraceMemoryDump::LogTotals(OHOS::Rosen::DfxString& log)
 {
     if (skiaMemoryTrace_) {
         LOGE("SkiaTraceMemoryDump::LogTotals, skiaMemoryTrace_ is nullptr");
@@ -74,7 +76,7 @@ float SkiaTraceMemoryDump::GetGLMemorySize()
     return skiaMemoryTrace_->GetGLMemorySize();
 }
 
-std::shared_ptr<SkiaMemoryTrace> SkiaTraceMemoryDump::GetTraceMemoryDump() const
+std::shared_ptr<SkiaMemoryTracer> SkiaTraceMemoryDump::GetTraceMemoryDump() const
 {
     return skiaMemoryTrace_;
 }

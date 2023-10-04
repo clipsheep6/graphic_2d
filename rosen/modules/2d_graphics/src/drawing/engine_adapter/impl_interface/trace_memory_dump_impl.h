@@ -19,6 +19,7 @@
 #include <chrono>
 
 #include "base_impl.h"
+#include "memory/rs_dfx_string.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -32,11 +33,12 @@ public:
 
     virtual void DumpStringValue(const char* dumpName, const char* valueName, const char* value) = 0;
 
-    virtual void LogOutput(DfxString& log) = 0;
+    virtual void LogOutput(OHOS::Rosen::DfxString& log) = 0;
 
-    virtual void LogTotals(DfxString& log) = 0;
+    virtual void LogTotals(OHOS::Rosen::DfxString& log) = 0;
 
     virtual float GetGLMemorySize() = 0;
+};
 }
 }
 }

@@ -20,7 +20,7 @@
 #include "rs_trace.h"
 
 #include "memory/rs_dfx_string.h"
-#include "rs_skia_memory_tracer.h"
+#include "src/drawing/engine_adapter/skia_adapter/rs_skia_memory_tracer.h"
 #include "memory/rs_memory_graphic.h"
 #ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
@@ -140,6 +140,10 @@ void MemoryManager::ReleaseAllGpuResource(GrContext* grContext, pid_t pid)
 #else
 void MemoryManager::ReleaseAllGpuResource(Drawing::GPUContext* gpuContext, pid_t pid)
 {
+#ifdef RS_ENABLE_GL
+    Drawing::GPUResourceTag tag(pid, 0, 0, 0);
+    ReleaseAllGpuResource(gpuContext, tag);
+#endif
 }
 #endif
 
@@ -300,8 +304,22 @@ float MemoryManager::GetAppGpuMemoryInMB(GrContext* grContext)
 #else
 float MemoryManager::GetAppGpuMemoryInMB(Drawing::GPUContext* gpuContext)
 {
-    RS_LOGE("Drawing Unsupport GetAppGpuMemoryInMB");
-    return 0.f;
+#ifdef RS_ENABLE_GL
+    if (!gpuContext) {
+        return 0.f;
+    }
+    Drawing::TraceMemoryDump trace("category", true);
+    gpuContext->DumpMemoryStatistics(&trace);
+    auto total = trace.GetGpuMemorySizeInMB();
+    float rsMemSize = 0.f;
+    for (uint32_t tagtype = RSTagTracker::TAG_SAVELAYER_DRAW_NODE; tagtype <= RSTagTracker::TAG_CAPTURE; tagtype++) {
+        Drawing::GPUResourceTag resourceTag(0, 0, 0, tagtype);
+        Drawing::TraceMemoryDump gpuTrace("category", true);
+        gpuContext->DumpMemoryStatisticsByTag(&gpuTrace, resourceTag);
+        rsMemSize += gpuTrace.GetGpuMemorySizeInMB();
+    }
+    return total - rsMemSize;
+#endif
 }
 #endif
 
@@ -393,6 +411,13 @@ MemoryGraphic MemoryManager::CountPidMemory(int pid, const Drawing::GPUContext* 
 
 #ifdef RS_ENABLE_GL
     // Count mem of Skia GPU
+    if (gpuContext) {
+        Drawing::TraceMemoryDump gpuTracer("category", true);
+        Drawing::GPUResourceTag tag(pid, 0, 0, 0);
+        gpuContext->DumpMemoryStatisticsByTag(&gpuTracer, tag);
+        float gpuMem = gpuTracer.GetGLMemorySize();
+        totalMemGraphic.IncreaseGpuMemory(gpuMem);
+    }
 #endif
 
     return totalMemGraphic;
@@ -459,6 +484,7 @@ void MemoryManager::DumpRenderServiceMemory(DfxString& log)
 
 void MemoryManager::DumpDrawingCpuMemory(DfxString& log)
 {
+#ifndef USE_ROSEN_DRAWING
     // CPU
     log.AppendFormat("\n----------\nSkia CPU caches:\n");
     log.AppendFormat("Font Cache (CPU):\n");
@@ -484,6 +510,8 @@ void MemoryManager::DumpDrawingCpuMemory(DfxString& log)
     size_t cacheLimit = SkGraphics::GetResourceCacheTotalByteLimit();
     size_t fontCacheLimit = SkGraphics::GetFontCacheLimit();
     log.AppendFormat("\ncpu cache limit = %zu ( fontcache = %zu ):\n", cacheLimit, fontCacheLimit);
+#else
+#endif
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -514,7 +542,7 @@ void MemoryManager::DumpGpuCache(DfxString& log, const GrContext* grContext, GrG
 }
 #else
 void MemoryManager::DumpGpuCache(
-    DfxString& log, const Drawing::GPUContext* gpuContext, GPUResourceTag* tag, std::string& name)
+    DfxString& log, const Drawing::GPUContext* gpuContext, Drawing::GPUResourceTag* tag, std::string& name)
 {
     if (!gpuContext) {
         log.AppendFormat("gpuContext is nullptr.\n");
@@ -566,7 +594,7 @@ void MemoryManager::DumpAllGpuInfo(DfxString& log, const Drawing::GPUContext* gp
 #ifdef RS_ENABLE_GL
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     nodeMap.TraverseSurfaceNodes([&log, &gpuContext](const std::shared_ptr<RSSurfaceRenderNode> node) {
-        GPUResourceTag tag(ExtractPid(node->GetId()), 0, node->GetId(), 0);
+        Drawing::GPUResourceTag tag(ExtractPid(node->GetId()), 0, node->GetId(), 0);
         std::string name = node->GetName() + " " + std::to_string(node->GetId());
         DumpGpuCache(log, gpuContext, &tag, name);
     });
@@ -635,7 +663,7 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const Drawing::GPUConte
     // Get memory of window by tag
     DumpAllGpuInfo(log, gpuContext);
     for (uint32_t tagtype = RSTagTracker::TAG_SAVELAYER_DRAW_NODE; tagtype <= RSTagTracker::TAG_CAPTURE; tagtype++) {
-        GPUResourceTag tag(0, 0, 0, tagtype);
+        Drawing::GPUResourceTag tag(0, 0, 0, tagtype);
         std::string tagType = RSTagTracker::TagType2String(static_cast<RSTagTracker::TAGTYPE>(tagtype));
         DumpGpuCache(log, gpuContext, &tag, tagType);
     }
@@ -656,8 +684,8 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const Drawing::GPUConte
 #endif
     // gpu stat
     log.AppendFormat("\n---------------\ndumpGpuStats:\n");
-    std::String stat;
-    gpuContext->DumpGpuStats(&stat);
+    std::string stat;
+    gpuContext->DumpGpuStats(stat);
 
     log.AppendFormat("%s\n", stat.c_str());
 #endif

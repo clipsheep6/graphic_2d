@@ -121,7 +121,7 @@ public:
      * @param maxResourceBytes  If non-null, returns maximum number of bytes of video memory
                                 that can be held in the cache.
      */
-    void GetResourceCacheLimits(int& maxResource, size_t& maxResourceBytes) const;
+    void GetResourceCacheLimits(int* maxResource, size_t* maxResourceBytes) const;
 
     /*
      * @brief                   Specify the GPU resource cache limits.
@@ -135,7 +135,7 @@ public:
      * @param resourceCount     If non-null, returns the number of resources that are held in the cache.
      * @param resourceBytes     If non-null, returns the total number of bytes of video memory held in the cache.
      */
-    void GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const;
+    void GetResourceCacheUsage(int* resourceCount, size_t* resourceBytes) const;
 
     /*
      * @brief                   Free GPU created by the contetx.

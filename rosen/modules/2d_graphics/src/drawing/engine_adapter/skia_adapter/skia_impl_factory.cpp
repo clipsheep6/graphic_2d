@@ -42,6 +42,7 @@
 #include "skia_adapter/skia_surface.h"
 #include "skia_adapter/skia_text_blob_builder.h"
 #include "skia_adapter/skia_typeface_font_style_set.h"
+#include "skia_adapter/skia_trace_memory_dump.h"
 
 namespace OHOS {
 namespace Rosen {

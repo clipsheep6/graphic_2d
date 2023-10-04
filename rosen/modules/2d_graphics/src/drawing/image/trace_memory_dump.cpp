@@ -33,12 +33,12 @@ void TraceMemoryDump::DumpStringValue(const char* dumpName, const char* valueNam
     impl_->DumpStringValue(dumpName, valueName, value);
 }
 
-void TraceMemoryDump::LogOutput(DfxString& log)
+void TraceMemoryDump::LogOutput(OHOS::Rosen::DfxString& log)
 {
     impl_->LogOutput(log);
 }
 
-void TraceMemoryDump::LogTotals(DfxString& log)
+void TraceMemoryDump::LogTotals(OHOS::Rosen::DfxString& log)
 {
     impl_->LogTotals(log);
 }

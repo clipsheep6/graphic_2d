@@ -22,6 +22,7 @@
 #include "skia_data.h"
 #include "utils/data.h"
 #include "utils/log.h"
+#include "skia_trace_memory_dump.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -117,13 +118,13 @@ void SkiaGPUContext::PerformDeferredCleanup(std::chrono::milliseconds msNotUsed)
     grContext_->performDeferredCleanup(msNotUsed);
 }
 
-void SkiaGPUContext::GetResourceCacheLimits(int& maxResource, size_t& maxResourceBytes) const
+void SkiaGPUContext::GetResourceCacheLimits(int* maxResource, size_t* maxResourceBytes) const
 {
     if (!grContext_) {
         LOGE("SkiaGPUContext::GetResourceCacheLimits, grContext_ is nullptr");
         return;
     }
-    grContext_->getResourceCacheLimits(&maxResource, &maxResourceBytes);
+    grContext_->getResourceCacheLimits(maxResource, maxResourceBytes);
 }
 
 void SkiaGPUContext::SetResourceCacheLimits(int maxResource, size_t maxResourceBytes)
@@ -135,13 +136,13 @@ void SkiaGPUContext::SetResourceCacheLimits(int maxResource, size_t maxResourceB
     grContext_->setResourceCacheLimits(maxResource, maxResourceBytes);
 }
 
-void SkiaGPUContext::GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const
+void SkiaGPUContext::GetResourceCacheUsage(int* resourceCount, size_t* resourceBytes) const
 {
     if (!grContext_) {
         LOGE("SkiaGPUContext::GetResourceCacheUsage, grContext_ is nullptr");
         return;
     }
-    grContext_->getResourceCacheUsage(&resourceCount, &resourceBytes);
+    grContext_->getResourceCacheUsage(resourceCount, resourceBytes);
 }
 
 void SkiaGPUContext::FreeGpuResources()
@@ -220,7 +221,7 @@ void SkiaGPUContext::DumpMemoryStatisticsByTag(TraceMemoryDump* traceMemoryDump,
         return;
     }
 
-    SkTraceMemoryDump* skTraceMemoryDump = traceMemoryDump->GetImpl()->GetTraceMemoryDump().get();
+    SkTraceMemoryDump* skTraceMemoryDump = traceMemoryDump->GetImpl<SkiaTraceMemoryDump>()->GetTraceMemoryDump().get();
     GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
     grContext_->dumpMemoryStatisticsByTag(skTraceMemoryDump, grTag);
 }
@@ -232,7 +233,7 @@ void SkiaGPUContext::DumpMemoryStatistics(TraceMemoryDump* traceMemoryDump)
         return;
     }
 
-    SkTraceMemoryDump* skTraceMemoryDump = traceMemoryDump->GetImpl()->GetTraceMemoryDump().get();
+    SkTraceMemoryDump* skTraceMemoryDump = traceMemoryDump->GetImpl<SkiaTraceMemoryDump>()->GetTraceMemoryDump().get();
     grContext_->dumpMemoryStatistics(skTraceMemoryDump);
 }
 

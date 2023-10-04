@@ -19,27 +19,33 @@
 #include "impl_interface/trace_memory_dump_impl.h"
 #include "image/trace_memory_dump.h"
 #include "include/core/SkTraceMemoryDump.h"
-#include "memory/rs_skia_memory_trace.h"
+#include "rs_skia_memory_tracer.h"
 
+namespace OHOS {
+namespace Rosen {
+namespace Drawing {
 class SkiaTraceMemoryDump : public TraceMemoryDumpImpl {
 public:
     SkiaTraceMemoryDump(const char* categoryKey, bool itemizeType);
-    virtual ~SkiaTraceMemoryDump = default;
+    virtual ~SkiaTraceMemoryDump() = default;
 
     void DumpNumericValue(const char* dumpName, const char* valueName, const char* units, uint64_t value) override;
 
     void DumpStringValue(const char* dumpName, const char* valueName, const char* value) override;
 
-    void LogOutput(DfxString& log) override;
+    void LogOutput(OHOS::Rosen::DfxString& log) override;
 
-    void LogTotals(DfxString& log) override;
+    void LogTotals(OHOS::Rosen::DfxString& log) override;
 
     float GetGLMemorySize() override;
 
-    std::shared_ptr<SkiaMemoryTrace> GetTraceMemoryDump() const;
+    std::shared_ptr<SkiaMemoryTracer> GetTraceMemoryDump() const;
 
 protected:
-    std::shared_ptr<SkiaMemoryTrace> skiaMemoryTrace_;
+    std::shared_ptr<SkiaMemoryTracer> skiaMemoryTrace_;
+};
+}
+}
 }
 
 #endif // SKIA_TRACE_MEMORY_DUMP_H

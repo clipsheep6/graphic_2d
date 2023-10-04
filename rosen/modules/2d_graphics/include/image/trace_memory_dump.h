@@ -17,11 +17,12 @@
 #define TRACE_MEMORY_DUMP_H
 
 #include "impl_interface/trace_memory_dump_impl.h"
+#include "memory/rs_dfx_string.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class DRAWING_API TraceMemoryDump {
+class TraceMemoryDump {
 public:
     TraceMemoryDump(const char* categoryKey, bool itemizeType);
     ~TraceMemoryDump() {}
@@ -30,9 +31,9 @@ public:
 
     void DumpStringValue(const char* dumpName, const char* valueName, const char* value);
 
-    void LogOutput(DfxString& log);
+    void LogOutput(OHOS::Rosen::DfxString& log);
 
-    void LogTotals(DfxString& log);
+    void LogTotals(OHOS::Rosen::DfxString& log);
 
     float GetGLMemorySize();
 
@@ -43,7 +44,7 @@ public:
     }
 private:
     std::shared_ptr<TraceMemoryDumpImpl> impl_;
-}
+};
 }
 }
 }

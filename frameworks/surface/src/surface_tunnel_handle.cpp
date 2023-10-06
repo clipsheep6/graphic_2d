@@ -110,7 +110,7 @@ bool SurfaceTunnelHandle::Different(const sptr<SurfaceTunnelHandle> &handle)
 
     bool diffHandle = tunnelHandle_->fd != handle->GetHandle()->fd ||
                       tunnelHandle_->reserveInts != handle->GetHandle()->reserveInts;
-    for (uint32_t index = 0; index < handle->GetHandle()->reserveInts; index++) {
+    for (uint32_t index = 0; index < handle->GetHandle()->reserveInts && diffHandle; index++) {
         diffHandle = diffHandle || tunnelHandle_->reserve[index] != handle->GetHandle()->reserve[index];
     }
     return diffHandle;

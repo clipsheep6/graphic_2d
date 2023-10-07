@@ -332,7 +332,9 @@ HWTEST_F(HdiOutputTest, FlushScreen, Function | MediumTest | Level1)
 {
     GTEST_LOG_(INFO) << "HdiOutputTest  FlushScreen start";
     std::vector<LayerPtr> compClientLayers;
-    sptr<HdiFramebufferSurface> fbSurface_ = HdiFramebufferSurface::CreateFramebufferSurface();
+    int width = 10; // 10 is the widht of screen
+    int height = 10; // 10 is the height of screen
+    sptr<HdiFramebufferSurface> fbSurface_ = HdiFramebufferSurface::CreateFramebufferSurface(width, height);
     auto fbEntry = HdiOutputTest::hdiOutput_->GetFramebuffer();
     sptr<SurfaceBuffer> currFrameBuffer_ = nullptr;
     ASSERT_EQ(currFrameBuffer_, nullptr);

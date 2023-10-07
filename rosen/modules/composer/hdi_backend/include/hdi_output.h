@@ -85,6 +85,7 @@ private:
     sptr<SyncFence> lastPresentFence_ = SyncFence::INVALID_FENCE;
     sptr<SurfaceBuffer> currFrameBuffer_ = nullptr;
     sptr<SurfaceBuffer> lastFrameBuffer_ = nullptr;
+    sptr<SurfaceBuffer> lastFrameBufferNew_ = nullptr;
 
     std::array<int64_t, COMPOSITION_RECORDS_NUM> compositionTimeRecords_ = {};
     uint32_t compTimeRcdIndex_ = 0;

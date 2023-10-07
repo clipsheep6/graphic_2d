@@ -16,12 +16,14 @@
 #ifndef CMD_LIST_HELPER_H
 #define CMD_LIST_HELPER_H
 
+#include "image/image.h"
+#include "utils/vertices.h"
+#include "recording/cmd_list.h"
+#include "text/text_blob.h"
+#include "utils/log.h"
+
 #include <utility>
 #include <memory>
-
-#include "image/image.h"
-#include "recording/cmd_list.h"
-#include "utils/log.h"
 
 namespace OHOS {
 namespace Media {
@@ -37,6 +39,9 @@ public:
     static ImageHandle AddImageToCmdList(CmdList& cmdList, const Image& image);
     static ImageHandle AddImageToCmdList(CmdList& cmdList, const std::shared_ptr<Image>& image);
     static std::shared_ptr<Image> GetImageFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
+    static VerticesHandle AddVerticesToCmdList(CmdList& cmdList, const Vertices& vertices);
+    static std::shared_ptr<Vertices> GetVerticesFromCmdList(const CmdList& cmdList,
+        const VerticesHandle& verticesHandle);
     static ImageHandle AddBitmapToCmdList(CmdList& cmdList, const Bitmap& bitmap);
     static std::shared_ptr<Bitmap> GetBitmapFromCmdList(const CmdList& cmdList, const ImageHandle& bitmapHandle);
     static ImageHandle AddPixelMapToCmdList(CmdList& cmdList, const std::shared_ptr<Media::PixelMap>& pixelMap);
@@ -174,6 +179,12 @@ public:
 
         return childCmdList;
     }
+
+    static ImageHandle AddTextBlobToCmdList(CmdList& cmdList, const TextBlob* textBlob);
+    static std::shared_ptr<TextBlob> GetTextBlobFromCmdList(const CmdList& cmdList, const ImageHandle& textBlobHandle);
+
+    static ImageHandle AddDataToCmdList(CmdList& cmdList, const Data* data);
+    static std::shared_ptr<Data> GetDataFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
 };
 } // namespace Drawing
 } // namespace Rosen

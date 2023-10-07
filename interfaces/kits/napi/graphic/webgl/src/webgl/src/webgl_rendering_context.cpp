@@ -15,11 +15,11 @@
 
 #include "context/webgl_rendering_context.h"
 
-#include "util/object_manager.h"
-#include "util/log.h"
-#include "util/egl_manager.h"
 #include "napi/n_class.h"
 #include "napi/n_func_arg.h"
+#include "util/egl_manager.h"
+#include "util/log.h"
+#include "util/object_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,16 +30,16 @@ namespace Rosen {
 using namespace std;
 bool WebGLRenderingContext::Export(napi_env env, napi_value exports)
 {
-    LOGI("WebGL WebGLRenderingContext::Export env %{public}p mContextRef %{public}p", env, contextRef_);
+    LOGD("WebGL WebGLRenderingContext::Export env %{public}p mContextRef %{public}p", env, contextRef_);
     napi_value instanceValue = GetContextInstance(env,
         GetClassName(), [](napi_env env, napi_callback_info info) -> napi_value {
             napi_value thisVar = nullptr;
             napi_get_cb_info(env, info, nullptr, nullptr, &thisVar, nullptr);
-            LOGI("WebGL WebGLRenderingContext::create");
+            LOGD("WebGL WebGLRenderingContext::create");
             return thisVar;
         }, [](napi_env env, void* data, void* hint) {
             auto entity = static_cast<WebGLRenderingContext *>(data);
-            LOGI("WebGL WebGLRenderingContext::delete");
+            LOGD("WebGL WebGLRenderingContext::delete");
             if (entity->contextRef_) {
                 napi_delete_reference(env, entity->contextRef_);
             }
@@ -71,6 +71,9 @@ bool WebGLRenderingContext::Export(napi_env env, napi_value exports)
         NVal::DeclareNapiFunction("uniformMatrix3fv", WebGLRenderingContextOverloads::UniformMatrix3fv),
         NVal::DeclareNapiFunction("uniformMatrix4fv", WebGLRenderingContextOverloads::UniformMatrix4fv),
 
+        NVal::DeclareNapiFunction("bindBuffer", WebGLRenderingContextBase::BindBuffer),
+        NVal::DeclareNapiFunction("deleteBuffer", WebGLRenderingContextBase::DeleteBuffer),
+        NVal::DeclareNapiFunction("renderbufferStorage", WebGLRenderingContextBase::RenderbufferStorage),
         NVal::DeclareNapiFunction("getParameter", WebGLRenderingContextBase::GetParameter),
         NVal::DeclareNapiFunction("getTexParameter", WebGLRenderingContextBase::GetTexParameter),
         NVal::DeclareNapiFunction("getFramebufferAttachmentParameter",
@@ -80,7 +83,7 @@ bool WebGLRenderingContext::Export(napi_env env, napi_value exports)
     std::vector<napi_property_descriptor> properties = {};
     WebGLRenderingContextBase::GetRenderingContextBasePropertyDesc(properties);
     properties.insert(properties.end(), props.begin(), props.end());
-    LOGI("WebGLRenderingContext properties %{public}d", properties.size());
+    LOGD("WebGLRenderingContext properties %{public}d", properties.size());
     napi_status status = napi_define_properties(env, exports, properties.size(), properties.data());
     if (status != napi_ok) {
         return false;
@@ -95,14 +98,14 @@ string WebGLRenderingContext::GetClassName()
 
 WebGLRenderingContext::~WebGLRenderingContext()
 {
-    LOGI("WebGLRenderingContext::~WebGLRenderingContext id %{public}p", this);
+    LOGD("WebGLRenderingContext::~WebGLRenderingContext id %{public}p", this);
     ObjectManager::GetInstance().DeleteWebGLObject(false, this);
 }
 
 WebGLRenderingContext::WebGLRenderingContext(napi_env env, napi_value exports)
     : WebGLRenderingContextBasicBase(), NExporter(env, exports), contextImpl_(0, this)
 {
-    LOGI("WebGLRenderingContext::WebGLRenderingContext id %{public}p", this);
+    LOGD("WebGLRenderingContext::WebGLRenderingContext id %{public}p", this);
 }
 } // namespace Rosen
 } // namespace OHOS

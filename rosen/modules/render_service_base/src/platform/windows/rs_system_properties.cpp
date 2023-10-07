@@ -125,6 +125,15 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
     return {};
 }
 
+void RSSystemProperties::SetCacheEnabledForRotation(bool flag)
+{
+}
+
+bool RSSystemProperties::GetCacheEnabledForRotation()
+{
+    return {};
+}
+
 ParallelRenderingType RSSystemProperties::GetPrepareParallelRenderingEnabled()
 {
     return {};
@@ -146,11 +155,6 @@ void RSSystemProperties::SetHgmRefreshRateModesEnabled(std::string param)
 }
 
 HgmRefreshRateModes RSSystemProperties::GetHgmRefreshRateModesEnabled()
-{
-    return {};
-}
-
-bool RSSystemProperties::GetColdStartThreadEnabled()
 {
     return {};
 }
@@ -185,6 +189,21 @@ int RSSystemProperties::GetFilterCacheUpdateInterval()
     return 0;
 }
 
+bool RSSystemProperties::GetFilterPartialRenderEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetDebugTraceEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::FindNodeInTargetList(std::string node)
+{
+    return false;
+}
+
 int RSSystemProperties::GetFilterCacheSizeThreshold()
 {
     return 0;
@@ -193,6 +212,26 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
 bool RSSystemProperties::GetKawaseEnabled()
 {
     return false;
+}
+
+float RSSystemProperties::GetKawaseRandomColorFactor()
+{
+    return 0.f;
+}
+
+bool RSSystemProperties::GetRandomColorEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetKawaseOriginalEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetBlurEnabled()
+{
+    return true;
 }
 
 bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultValue)
@@ -218,6 +257,16 @@ bool RSSystemProperties::GetASTCEnabled()
 bool RSSystemProperties::GetImageGpuResourceCacheEnable(int width, int height)
 {
     return false;
+}
+
+bool RSSystemProperties::GetSyncTransactionEnabled()
+{
+    return false;
+}
+
+int RSSystemProperties::GetSyncTransactionWaitDelay()
+{
+    return 0;
 }
 } // namespace Rosen
 } // namespace OHOS

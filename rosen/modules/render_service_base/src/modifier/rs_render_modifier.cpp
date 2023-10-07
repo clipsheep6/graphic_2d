@@ -32,6 +32,7 @@
 #include "property/rs_properties.h"
 #include "property/rs_properties_def.h"
 #include "property/rs_properties_painter.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -126,7 +127,7 @@ static std::unordered_map<RSModifierType, ModifierUnmarshallingFunc> funcLUT = {
 void RSDrawCmdListRenderModifier::Apply(RSModifierContext& context) const
 {
     if (context.canvas_) {
-        auto cmds = property_->Get();
+        auto& cmds = property_->GetRef();
         RSPropertiesPainter::DrawFrame(context.property_, *context.canvas_, cmds);
     }
 }
@@ -170,6 +171,24 @@ void RSDrawCmdListRenderModifier::ApplyForDrivenContent(RSModifierContext& conte
 #endif
 }
 
+void RSParticleRenderModifier::Apply(RSModifierContext& context) const
+{
+    auto renderProperty = std::static_pointer_cast<RSRenderProperty<RSRenderParticleVector>>(property_);
+    context.property_.SetParticles(renderProperty->Get());
+}
+
+void RSParticleRenderModifier::Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta)
+{
+    if (auto property = std::static_pointer_cast<RSRenderProperty<RSRenderParticleVector>>(prop)) {
+        property_->Set(property->Get());
+    }
+}
+
+bool RSParticleRenderModifier::Marshalling(Parcel& parcel)
+{
+    return true;
+}
+
 bool RSEnvForegroundColorRenderModifier::Marshalling(Parcel& parcel)
 {
     auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<Color>>(property_);
@@ -199,7 +218,7 @@ bool RSEnvForegroundColorStrategyRenderModifier::Marshalling(Parcel& parcel)
 }
 
 
-void RSEnvForegroundColorStrategyRenderModifier ::Apply(RSModifierContext& context) const
+void RSEnvForegroundColorStrategyRenderModifier::Apply(RSModifierContext& context) const
 {
     auto renderProperty = std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType>>(property_);
     switch (renderProperty->Get()) {
@@ -344,7 +363,7 @@ RSRenderModifier* RSRenderModifier::Unmarshalling(Parcel& parcel)
     }
     auto it = funcLUT.find(static_cast<RSModifierType>(type));
     if (it == funcLUT.end()) {
-        ROSEN_LOGE("RSRenderModifier Unmarshalling cannot find func in lut %d", type);
+        ROSEN_LOGE("RSRenderModifier Unmarshalling cannot find func in lut %{public}d", type);
         return nullptr;
     }
     return it->second(parcel);
@@ -352,34 +371,34 @@ RSRenderModifier* RSRenderModifier::Unmarshalling(Parcel& parcel)
 
 namespace {
 template<typename T>
-T Add(T a, T b)
+T Add(const T& a, const T&& b)
 {
     return a + b;
 }
 template<typename T>
-T Add(const std::optional<T>& a, T b)
+T Add(const std::optional<T>& a, const T&& b)
 {
     return a.has_value() ? *a + b : b;
 }
 
 template<typename T>
-T Multiply(T a, T b)
+T Multiply(const T& a, const T&& b)
 {
     return a * b;
 }
 template<typename T>
-T Multiply(const std::optional<T>& a, T b)
+T Multiply(const std::optional<T>& a, const T&& b)
 {
     return a.has_value() ? *a * b : b;
 }
 
 template<typename T>
-T Replace(T a, T b)
+const T& Replace(const T& a, const T&& b)
 {
     return b;
 }
 template<typename T>
-T Replace(const std::optional<T>& a, T b)
+const T& Replace(const std::optional<T>& a, T&& b)
 {
     return b;
 }

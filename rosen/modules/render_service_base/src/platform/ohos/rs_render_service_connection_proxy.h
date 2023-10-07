@@ -16,11 +16,10 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_RENDER_SERVICE_CONNECTION_PROXY_H
 #define ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_RENDER_SERVICE_CONNECTION_PROXY_H
 
-#include <iremote_proxy.h>
-
 #include "command/rs_node_showing_command.h"
-#include "ipc_security/rs_ipc_interface_code_security_manager_registry.h"
-#include "platform/ohos/rs_irender_service_connection.h"
+#include <iremote_proxy.h>
+#include <platform/ohos/rs_irender_service_connection.h>
+#include <platform/ohos/rs_irender_service_connection_ipc_interface_code.h>
 #include "sandbox_utils.h"
 
 namespace OHOS {
@@ -35,6 +34,8 @@ public:
 
     MemoryGraphic GetMemoryGraphic(int pid) override;
     std::vector<MemoryGraphic> GetMemoryGraphics() override;
+    bool GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize) override;
+
     bool GetUniRenderEnabled() override;
 
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
@@ -74,7 +75,9 @@ public:
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
 
-    std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id) override;
+    int32_t GetCurrentRefreshRateMode() override;
+
+    std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id) override;
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) override;
 
@@ -82,7 +85,8 @@ public:
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) override;
 
-    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) override;
+    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        SurfaceCaptureType surfaceCaptureType) override;
 
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id) override;
 
@@ -124,6 +128,7 @@ public:
 
 #ifndef USE_ROSEN_DRAWING
     bool GetBitmap(NodeId id, SkBitmap& bitmap) override;
+    bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect) override;
 #else
     bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) override;
 #endif
@@ -131,6 +136,13 @@ public:
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) override;
 
     int32_t RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) override;
+
+    int32_t RegisterSurfaceOcclusionChangeCallback(
+        NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback) override;
+
+    int32_t UnRegisterSurfaceOcclusionChangeCallback(NodeId id) override;
+
+    int32_t RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
 
     void SetAppWindowNum(uint32_t num) override;
 
@@ -145,15 +157,17 @@ public:
     void ReportEventJankFrame(DataBaseRs info) override;
 
     void SetHardwareEnabled(NodeId id, bool isEnabled) override;
+
+    void SetCacheEnabledForRotation(bool isEnabled) override;
+
+#ifdef TP_FEATURE_ENABLE
+    void SetTpFeatureConfig(int32_t feature, const char* config) override;
+#endif
 private:
     bool FillParcelWithTransactionData(
         std::unique_ptr<RSTransactionData>& transactionData, std::shared_ptr<MessageParcel>& data);
 
     void ReportDataBaseRs(MessageParcel& data, MessageParcel& reply, MessageOption& option, DataBaseRs info);
-
-    static inline const std::string callerPrefix_{"RSRenderServiceConnectionProxy::"};
-
-    static const RSInterfaceCodeSecurityManager<RSIRenderServiceConnectionInterfaceCode> securityManager_;
 
     static inline BrokerDelegator<RSRenderServiceConnectionProxy> delegator_;
 

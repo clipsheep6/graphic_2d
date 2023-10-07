@@ -35,20 +35,20 @@ using AnimationId = uint64_t;
 using NodeId = uint64_t;
 using PropertyId = uint64_t;
 constexpr uint32_t UNI_MAIN_THREAD_INDEX = UINT32_MAX;
-constexpr uint64_t INVALID_NODEID = UINT64_MAX;
+constexpr uint64_t INVALID_NODEID = 0;
 
 // types in the same layer should be 0/1/2/4/8
 // types for UINode
 enum class RSUINodeType : uint32_t {
-    BASE_NODE    = 0x000010u,
-    RS_NODE      = 0x000110u,   // formerly RSPropertyNode
-    DISPLAY_NODE = 0x001110u,
-    SURFACE_NODE = 0x002110u,
-    PROXY_NODE   = 0x004110u,
-    CANVAS_NODE  = 0x008110u,   // formerly RSNode
-    EFFECT_NODE  = 0x010110u,
-    ROOT_NODE    = 0x108110u,
-    CANVAS_DRAWING_NODE = 0x208110u,
+    UNKNOW              = 0x0000u,
+    RS_NODE             = 0x0001u,
+    DISPLAY_NODE        = 0x0011u,
+    SURFACE_NODE        = 0x0021u,
+    PROXY_NODE          = 0x0041u,
+    CANVAS_NODE         = 0x0081u,
+    EFFECT_NODE         = 0x0101u,
+    ROOT_NODE           = 0x1081u,
+    CANVAS_DRAWING_NODE = 0x2081u,
 };
 
 enum class FollowType : uint8_t {
@@ -57,8 +57,11 @@ enum class FollowType : uint8_t {
     FOLLOW_TO_SELF,
 };
 
+#define LIKELY(exp) (__builtin_expect((exp) != 0, true))
+#define UNLIKELY(exp) (__builtin_expect((exp) != 0, false))
+
 static inline const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
-    {RSUINodeType::BASE_NODE,           "BaseNode"},
+    {RSUINodeType::UNKNOW,              "UNKNOW"},
     {RSUINodeType::DISPLAY_NODE,        "DisplayNode"},
     {RSUINodeType::RS_NODE,             "RsNode"},
     {RSUINodeType::SURFACE_NODE,        "SurfaceNode"},
@@ -71,15 +74,15 @@ static inline const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeSt
 
 // types for RenderNode
 enum class RSRenderNodeType : uint32_t {
-    BASE_NODE    = 0x000011u,
-    RS_NODE      = 0x000111u,   // formerly RSPropertyRenderNode
-    DISPLAY_NODE = 0x001111u,
-    SURFACE_NODE = 0x002111u,
-    PROXY_NODE   = 0x004111u,
-    CANVAS_NODE  = 0x008111u,   // formerly RSRenderNode
-    EFFECT_NODE  = 0x010111u,
-    ROOT_NODE    = 0x108111u,
-    CANVAS_DRAWING_NODE = 0x208111u,
+    UNKNOW              = 0x0000u,
+    RS_NODE             = 0x0001u,
+    DISPLAY_NODE        = 0x0011u,
+    SURFACE_NODE        = 0x0021u,
+    PROXY_NODE          = 0x0041u,
+    CANVAS_NODE         = 0x0081u,
+    EFFECT_NODE         = 0x0101u,
+    ROOT_NODE           = 0x1081u,
+    CANVAS_DRAWING_NODE = 0x2081u,
 };
 
 enum class CacheType : uint8_t {
@@ -97,7 +100,8 @@ enum RSDrawingCacheType : uint8_t {
 // priority for node, higher number means lower priority
 enum class NodePriorityType : uint8_t {
     MAIN_PRIORITY = 0, // node must render in main thread
-    SUB_HIGH_PRIORITY, // node render in sub thread with high priority
+    SUB_FOCUSNODE_PRIORITY, // node render in sub thread with the highest priority
+    SUB_HIGH_PRIORITY, // node render in sub thread with the second priority
     SUB_LOW_PRIORITY, // node render in sub thread with low priority
 };
 
@@ -106,6 +110,12 @@ enum class CacheProcessStatus : uint8_t {
     WAITING = 0, // waiting for process
     DOING, // processing
     DONE, // processed
+};
+
+// the type of surfaceCapture
+enum class SurfaceCaptureType : uint8_t {
+    DEFAULT_CAPTURE = 0, // displayNode capture or window capture
+    UICAPTURE,
 };
 
 enum class DeviceType : uint8_t {
@@ -140,7 +150,8 @@ struct RSDisplayNodeConfig {
     NodeId mirrorNodeId = 0;
 };
 
-constexpr int32_t NS_TO_S = 1000000000;
+constexpr int64_t NS_TO_S = 1000000000;
+constexpr int64_t NS_PER_MS = 1000000;
 
 #if defined(M_PI)
 constexpr float PI = M_PI;

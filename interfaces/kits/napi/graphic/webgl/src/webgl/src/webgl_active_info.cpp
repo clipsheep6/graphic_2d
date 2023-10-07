@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "webgl/webgl_active_info.h"  // for WebGLActiveInfo, Web...
+#include "webgl/webgl_active_info.h"
 
-#include "napi/n_class.h"           // for NClass
-#include "napi/n_func_arg.h"        // for NFuncArg, NARG_CNT
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
 #include "util/log.h"
-#include "napi/n_val.h"                   // for NVal
+#include "napi/n_val.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -50,7 +50,7 @@ napi_value WebGLActiveInfo::GetActiveName(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::string name = webGLActiveInfo->GetActiveName();
-    LOGI("WebGLActiveInfo::GetActiveName %s ", name.c_str());
+    LOGD("WebGLActiveInfo::GetActiveName %s ", name.c_str());
     return NVal::CreateUTF8String(env, name).val_;
 }
 
@@ -61,7 +61,7 @@ napi_value WebGLActiveInfo::GetActiveSize(napi_env env, napi_callback_info info)
         return nullptr;
     }
     int size = webGLActiveInfo->GetActiveSize();
-    LOGI("WebGLActiveInfo::GetActiveSize %{public}d ", size);
+    LOGD("WebGLActiveInfo::GetActiveSize %{public}d ", size);
     napi_value result;
     return (napi_create_int32(env, size, &result) != napi_ok) ? nullptr : result;
 }
@@ -73,7 +73,7 @@ napi_value WebGLActiveInfo::GetActiveType(napi_env env, napi_callback_info info)
         return nullptr;
     }
     int type = webGLActiveInfo->GetActiveType();
-    LOGI("WebGLActiveInfo::GetActiveType %{public}d", type);
+    LOGD("WebGLActiveInfo::GetActiveType %{public}d", type);
     return NVal::CreateInt64(env, type).val_;
 }
 

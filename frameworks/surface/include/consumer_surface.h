@@ -82,6 +82,7 @@ public:
     GSError RegisterConsumerListener(sptr<IBufferConsumerListener>& listener) override;
     GSError RegisterConsumerListener(IBufferConsumerListenerClazz *listener) override;
     GSError RegisterReleaseListener(OnReleaseFunc func) override;
+    GSError UnRegisterReleaseListener() override;
     GSError RegisterDeleteBufferListener(OnDeleteBufferFunc func, bool isForUniRedraw = false) override;
     GSError UnregisterConsumerListener() override;
 
@@ -116,6 +117,7 @@ public:
     GSError SetDefaultColorGamut(int32_t colorGamut) override;
 
     sptr<NativeSurface> GetNativeSurface() override;
+    GSError SetWptrNativeWindowToPSurface(void* nativeWindow) override;
 
 private:
     std::map<std::string, std::string> userData_;

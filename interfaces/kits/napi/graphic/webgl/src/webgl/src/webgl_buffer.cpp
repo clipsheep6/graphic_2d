@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "webgl/webgl_buffer.h"  // for WebGLBuffer, WebGLBuffer:...
+#include "webgl/webgl_buffer.h"
 #include "context/webgl_rendering_context_base.h"
 
-#include "napi/n_class.h"      // for NClass
-#include "napi/n_func_arg.h"   // for NFuncArg, NARG_CNT, ZERO
-#include "napi/n_val.h"              // for NVal
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "napi/n_val.h"
 #include "util/log.h"
 
 namespace OHOS {
@@ -65,10 +65,6 @@ string WebGLBuffer::GetClassName()
 
 WebGLBuffer::~WebGLBuffer()
 {
-    LOGE("Free WebGLBuffer %{public}p", this);
-    if (bufferData_) {
-        delete bufferData_;
-    }
 }
 } // namespace Rosen
 } // namespace OHOS

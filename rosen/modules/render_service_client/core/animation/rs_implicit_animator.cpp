@@ -89,7 +89,7 @@ int RSImplicitAnimator::OpenImplicitAnimation(
 std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnimation()
 {
     if (globalImplicitParams_.empty() || implicitAnimations_.empty() || keyframeAnimations_.empty()) {
-        ROSEN_LOGE("Failed to close implicit animation, need to open implicit animation firstly!");
+        ROSEN_LOGD("Failed to close implicit animation, need to open implicit animation firstly!");
         return {};
     }
 
@@ -130,7 +130,7 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
     for (const auto& [animationInfo, keyframeAnimation] : currentKeyframeAnimations) {
         auto target = RSNodeMap::Instance().GetNode<RSNode>(animationInfo.first);
         if (target == nullptr) {
-            ROSEN_LOGE("Failed to start implicit keyframe animation[%" PRIu64 "], target is null!",
+            ROSEN_LOGE("Failed to start implicit keyframe animation[%{public}" PRIu64 "], target is null!",
                 keyframeAnimation->GetId());
             continue;
         }

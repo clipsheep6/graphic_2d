@@ -37,13 +37,13 @@ namespace Impl {
 using namespace std;
 #define SET_ERROR(error) \
     do {                      \
-        LOGE("WebGL2 error code %{public}u", error);    \
+        LOGE("WebGL2 set error code %{public}u", error);    \
         SetError(error);      \
     } while (0)
 
 #define SET_ERROR_WITH_LOG(error, info, ...) \
     do {                      \
-        LOGE("WebGL2 error code %{public}u" info, error, ##__VA_ARGS__);    \
+        LOGE("WebGL2 set error code %{public}u" info, error, ##__VA_ARGS__);    \
         SetError(error);      \
     } while (0)
 
@@ -59,13 +59,12 @@ void WebGL2RenderingContextImpl::Init()
     samplerUnits_.resize(max);
 
     glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS, &max);
-    boundIndexedTransformFeedbackBuffers_.clear();
-    boundIndexedTransformFeedbackBuffers_.resize(max);
-
+    maxBoundTransformFeedbackBufferIndex_ = max;
     glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &max);
-    boundIndexedUniformBuffers_.clear();
-    boundIndexedUniformBuffers_.resize(max);
-    maxBoundUniformBufferIndex_ = 0;
+    maxBoundUniformBufferIndex_ = max;
+    LOGD("WebGL2 Init maxBoundTransformFeedbackBufferIndex_ %{public}d", maxBoundTransformFeedbackBufferIndex_);
+    LOGD("WebGL2 Init maxBoundUniformBufferIndex_ %{public}d", maxBoundUniformBufferIndex_);
+    LOGD("WebGL2 Init maxSamplerUnit_ %{public}d", max);
 }
 
 napi_value WebGL2RenderingContextImpl::CreateQuery(napi_env env)
@@ -80,7 +79,7 @@ napi_value WebGL2RenderingContextImpl::CreateQuery(napi_env env)
     glGenQueries(1, &queryId);
     webGlQuery->SetQuery(queryId);
     AddObject<WebGLQuery>(env, queryId, objQuery);
-    LOGI("WebGL2 createQuery queryId = %{public}u", queryId);
+    LOGD("WebGL2 createQuery queryId = %{public}u", queryId);
     return objQuery;
 }
 
@@ -95,15 +94,15 @@ napi_value WebGL2RenderingContextImpl::DeleteQuery(napi_env env, napi_value obje
     glDeleteQueries(1, &queryId);
     DeleteObject<WebGLQuery>(env, queryId);
     uint32_t index = 0;
-    LOGI("WebGL2 deleteQuery target %{public}u", webGlQuery->GetTarget());
+    LOGD("WebGL2 deleteQuery target %{public}u", webGlQuery->GetTarget());
     if (CheckQueryTarget(env, webGlQuery->GetTarget(), index)) {
-        LOGI("WebGL2 deleteQuery currentQuery_ %{public}u", currentQuery_[index]);
+        LOGD("WebGL2 deleteQuery currentQuery_ %{public}u", currentQuery_[index]);
         if (currentQuery_[index] == queryId) {
             currentQuery_[index] = 0;
             glEndQuery(webGlQuery->GetTarget());
         }
     }
-    LOGI("WebGL2 deleteQuery queryId = %{public}u", queryId);
+    LOGD("WebGL2 deleteQuery queryId = %{public}u", queryId);
     return nullptr;
 }
 
@@ -118,13 +117,13 @@ napi_value WebGL2RenderingContextImpl::IsQuery(napi_env env, napi_value object)
 
     GLboolean returnValue = glIsQuery(queryId);
     bool res = static_cast<bool>(returnValue);
-    LOGI("WebGL2 isQuery query %{public}u result %{public}d ", queryId, res);
+    LOGD("WebGL2 isQuery query %{public}u result %{public}d ", queryId, res);
     return NVal::CreateBool(env, res).val_;
 }
 
 napi_value WebGL2RenderingContextImpl::GetQuery(napi_env env, GLenum target, GLenum pName)
 {
-    LOGI("WebGL2 getQuery target %{public}u %{public}u", target, pName);
+    LOGD("WebGL2 getQuery target %{public}u %{public}u", target, pName);
     if (pName != WebGL2RenderingContextBase::CURRENT_QUERY) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
@@ -137,13 +136,13 @@ napi_value WebGL2RenderingContextImpl::GetQuery(napi_env env, GLenum target, GLe
 
     GLint params;
     glGetQueryiv(target, pName, &params);
-    LOGI("WebGL2 getQuery params = %{public}u %{public}u", params, currentQuery_[index]);
+    LOGD("WebGL2 getQuery params = %{public}u %{public}u", params, currentQuery_[index]);
     return GetObject<WebGLQuery>(env, params);
 }
 
 napi_value WebGL2RenderingContextImpl::BeginQuery(napi_env env, GLenum target, napi_value object)
 {
-    LOGI("WebGL2 beginQuery target %{public}u", target);
+    LOGD("WebGL2 beginQuery target %{public}u", target);
     GLuint queryId = 0;
     WebGLQuery* webGlQuery = WebGLObject::GetObjectInstance<WebGLQuery>(env, object);
     if (webGlQuery == nullptr) {
@@ -170,19 +169,19 @@ napi_value WebGL2RenderingContextImpl::BeginQuery(napi_env env, GLenum target, n
     webGlQuery->SetTarget(target);
 
     glBeginQuery(target, queryId);
-    LOGI("WebGL2 beginQuery target %{public}u queryId %{public}u result %{public}u", target, queryId, GetError_());
+    LOGD("WebGL2 beginQuery target %{public}u queryId %{public}u result %{public}u", target, queryId, GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::EndQuery(napi_env env, GLenum target)
 {
-    LOGI("WebGL2 endQuery target %{public}u", target);
+    LOGD("WebGL2 endQuery target %{public}u", target);
     uint32_t index = 0;
     if (!CheckQueryTarget(env, target, index)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
-    if (currentQuery_[index]) {
+    if (!currentQuery_[index]) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
@@ -205,12 +204,12 @@ napi_value WebGL2RenderingContextImpl::GetQueryParameter(napi_env env, napi_valu
     if (pName == GL_QUERY_RESULT) {
         glGetQueryObjectuiv(queryId, pName, &params);
         int64_t res = static_cast<int64_t>(params);
-        LOGI("WebGL2 getQueryParameter params %{public}u", params);
+        LOGD("WebGL2 getQueryParameter params %{public}u", params);
         return NVal::CreateInt64(env, res).val_;
     } else if (pName == GL_QUERY_RESULT_AVAILABLE) {
         glGetQueryObjectuiv(queryId, pName, &params);
         bool res = (params == GL_FALSE) ? false : true;
-        LOGI("WebGL2 getQueryParameter params %{public}u", params);
+        LOGD("WebGL2 getQueryParameter params %{public}u", params);
         return NVal::CreateBool(env, res).val_;
     } else {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
@@ -228,7 +227,7 @@ napi_value WebGL2RenderingContextImpl::CreateSampler(napi_env env)
     GLuint samplerId;
     glGenSamplers(1, &samplerId);
     webGlSampler->SetSampler(samplerId);
-    LOGI("WebGL2 createSampler samplerId = %{public}u", samplerId);
+    LOGD("WebGL2 createSampler samplerId = %{public}u", samplerId);
     AddObject<WebGLSampler>(env, samplerId, objSampler);
     return objSampler;
 }
@@ -237,11 +236,10 @@ napi_value WebGL2RenderingContextImpl::DeleteSampler(napi_env env, napi_value sa
 {
     WebGLSampler* sampler = WebGLObject::GetObjectInstance<WebGLSampler>(env, samplerObj);
     if (sampler == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
     GLuint samplerId = sampler->GetSampler();
-    LOGI("WebGL2 deleteSampler samplerId = %{public}u", samplerId);
+    LOGD("WebGL2 deleteSampler samplerId = %{public}u", samplerId);
     // delete
     glBindSampler(sampler->GetSampleUnit(), 0);
 
@@ -256,14 +254,13 @@ napi_value WebGL2RenderingContextImpl::IsSampler(napi_env env, napi_value sample
 {
     WebGLSampler* sampler = WebGLObject::GetObjectInstance<WebGLSampler>(env, samplerObj);
     if (sampler == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return NVal::CreateBool(env, false).val_;
     }
     GLuint samplerId = sampler->GetSampler();
 
     GLboolean returnValue = glIsSampler(samplerId);
     bool res = static_cast<bool>(returnValue);
-    LOGI("WebGL2 IsSampler samplerId = %{public}u res %{public}u", samplerId, res);
+    LOGD("WebGL2 IsSampler samplerId = %{public}u res %{public}u", samplerId, res);
     return NVal::CreateBool(env, res).val_;
 }
 
@@ -282,14 +279,14 @@ napi_value WebGL2RenderingContextImpl::BindSampler(napi_env env, GLuint unit, na
     sampler->SetSampleUnit(unit);
     glBindSampler(unit, samplerId);
     samplerUnits_[unit] = samplerId;
-    LOGI("WebGL2 bindSampler unit = %{public}u samplerId = %{public}u", unit, samplerId);
+    LOGD("WebGL2 bindSampler unit = %{public}u samplerId = %{public}u", unit, samplerId);
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::SamplerParameter(
     napi_env env, napi_value samplerObj, GLenum pName, bool isFloat, void* param)
 {
-    LOGI("WebGL2 samplerParameteri pname %{public}u param %{public}u", pName, param);
+    LOGD("WebGL2 samplerParameteri pname %{public}u param %{public}u", pName, param);
     WebGLSampler* sampler = WebGLObject::GetObjectInstance<WebGLSampler>(env, samplerObj);
     if (sampler == nullptr) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
@@ -329,7 +326,7 @@ napi_value WebGL2RenderingContextImpl::GetSamplerParameter(napi_env env, napi_va
         return NVal::CreateNull(env).val_;
     }
     GLuint samplerId = sampler->GetSampler();
-    LOGI("WebGL2 getSamplerParameter samplerId %{public}u params %{public}u", samplerId, pName);
+    LOGD("WebGL2 getSamplerParameter samplerId %{public}u params %{public}u", samplerId, pName);
 
     switch (pName) {
         case GL_TEXTURE_COMPARE_FUNC:
@@ -342,7 +339,7 @@ napi_value WebGL2RenderingContextImpl::GetSamplerParameter(napi_env env, napi_va
             GLint params;
             glGetSamplerParameteriv(static_cast<GLuint>(samplerId), static_cast<GLenum>(pName), &params);
             int64_t res = static_cast<int64_t>(params);
-            LOGI("WebGL2 getSamplerParameter samplerId %{public}u params %{public}u", samplerId, params);
+            LOGD("WebGL2 getSamplerParameter samplerId %{public}u params %{public}u", samplerId, params);
             return NVal::CreateInt64(env, res).val_;
         }
         case GL_TEXTURE_MAX_LOD:
@@ -350,7 +347,7 @@ napi_value WebGL2RenderingContextImpl::GetSamplerParameter(napi_env env, napi_va
             GLfloat params;
             glGetSamplerParameterfv(static_cast<GLuint>(samplerId), static_cast<GLenum>(pName), &params);
             float res = static_cast<float>(params);
-            LOGI("WebGL2 getSamplerParameter samplerId %{public}u params %{public}f", samplerId, params);
+            LOGD("WebGL2 getSamplerParameter samplerId %{public}u params %{public}f", samplerId, params);
             return NVal::CreateDouble(env, (double)res).val_;
         }
         default:
@@ -370,7 +367,7 @@ napi_value WebGL2RenderingContextImpl::CreateVertexArray(napi_env env)
     glGenVertexArrays(1, &vertexArraysId);
 
     webGLVertexArrayObject->SetVertexArrays(vertexArraysId);
-    LOGI("WebGL2 createVertexArray vertexArraysId = %{public}u", vertexArraysId);
+    LOGD("WebGL2 createVertexArray vertexArraysId = %{public}u", vertexArraysId);
     AddObject<WebGLVertexArrayObject>(env, vertexArraysId, objVertexArrayObject);
     return objVertexArrayObject;
 }
@@ -388,7 +385,7 @@ napi_value WebGL2RenderingContextImpl::DeleteVertexArray(napi_env env, napi_valu
         boundVertexArrayId_ = 0;
     }
     glDeleteVertexArrays(1, &vertexArrays);
-    LOGI("WebGL2 deleteVertexArrays vertexArrays %{public}u", vertexArrays);
+    LOGD("WebGL2 deleteVertexArrays vertexArrays %{public}u", vertexArrays);
     DeleteObject<WebGLVertexArrayObject>(env, vertexArrays);
     return nullptr;
 }
@@ -403,7 +400,7 @@ napi_value WebGL2RenderingContextImpl::IsVertexArray(napi_env env, napi_value ob
     }
     vertexArrayId = webGLVertexArrayObject->GetVertexArrays();
     GLboolean returnValue = glIsVertexArray(vertexArrayId);
-    LOGI("WebGL2 isVertexArray %{public}u %{public}u", vertexArrayId, returnValue);
+    LOGD("WebGL2 isVertexArray %{public}u %{public}u", vertexArrayId, returnValue);
     return NVal::CreateBool(env, returnValue).val_;
 }
 
@@ -418,13 +415,13 @@ napi_value WebGL2RenderingContextImpl::BindVertexArray(napi_env env, napi_value 
     vertexArrayId = webGLVertexArrayObject->GetVertexArrays();
     glBindVertexArray(vertexArrayId);
     boundVertexArrayId_ = vertexArrayId;
-    LOGI("WebGL2 bindVertexArray %{public}u ", vertexArrayId);
+    LOGD("WebGL2 bindVertexArray %{public}u ", vertexArrayId);
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::FenceSync(napi_env env, GLenum condition, GLbitfield flags)
 {
-    LOGI("WebGL2 fenceSync condition  %{public}u flags %{public}u", condition, flags);
+    LOGD("WebGL2 fenceSync condition  %{public}u flags %{public}u", condition, flags);
     WebGLSync* webGlSync = nullptr;
     napi_value objSync = WebGLSync::CreateObjectInstance(env, &webGlSync).val_;
     if (!objSync) {
@@ -432,7 +429,7 @@ napi_value WebGL2RenderingContextImpl::FenceSync(napi_env env, GLenum condition,
     }
     GLsync returnValue = glFenceSync(condition, flags);
     webGlSync->SetSync(reinterpret_cast<int64_t>(returnValue));
-    LOGI("WebGL2 fenceSync syncId %{public}u", returnValue);
+    LOGD("WebGL2 fenceSync syncId %{public}u result %{public}u", returnValue, GetError_());
     return objSync;
 }
 
@@ -444,7 +441,7 @@ napi_value WebGL2RenderingContextImpl::IsSync(napi_env env, napi_value syncObj)
     }
     int64_t syncId = webGlSync->GetSync();
     GLboolean returnValue = glIsSync(reinterpret_cast<GLsync>(syncId));
-    LOGI("WebGL2 isSync syncId = %{public}ld result %{public}u", syncId, returnValue);
+    LOGD("WebGL2 isSync syncId = %{public}ld result %{public}u", syncId, returnValue);
     return NVal::CreateBool(env, static_cast<bool>(returnValue)).val_;
 }
 
@@ -457,7 +454,7 @@ napi_value WebGL2RenderingContextImpl::DeleteSync(napi_env env, napi_value syncO
     int64_t syncId = webGlSync->GetSync();
 
     glDeleteSync(reinterpret_cast<GLsync>(syncId));
-    LOGI("WebGL2 deleteSync syncId %{public}ld ", syncId);
+    LOGD("WebGL2 deleteSync syncId %{public}ld ", syncId);
     return nullptr;
 }
 
@@ -474,17 +471,9 @@ napi_value WebGL2RenderingContextImpl::ClientWaitSync(
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return NVal::CreateInt64(env, WebGL2RenderingContextBase::WAIT_FAILED).val_;
     }
-
-    GLuint64 timeout64 = static_cast<GLuint64>(timeout);
-    GLint maxTimeout = 0;
-    glGetIntegerv(WebGL2RenderingContextBase::MAX_CLIENT_WAIT_TIMEOUT_WEBGL, &maxTimeout);
-    LOGI("WebGL2 clientWaitSync maxTimeout %{public}u ", maxTimeout);
-    if (timeout64 > static_cast<GLuint64>(maxTimeout)) {
-        timeout64 = maxTimeout;
-    }
-
+    GLuint64 timeout64 = (timeout == -1) ? GL_TIMEOUT_IGNORED : static_cast<GLuint64>(timeout);
     GLenum returnValue = glClientWaitSync(reinterpret_cast<GLsync>(syncId), flags, timeout64);
-    LOGI("WebGL2 clientWaitSync syncId = %{public}u result %{public}u", syncId, returnValue);
+    LOGD("WebGL2 clientWaitSync syncId = %{public}u %{public}u result %{public}u", syncId, returnValue, GetError_());
     return NVal::CreateInt64(env, static_cast<int64_t>(returnValue)).val_;
 }
 
@@ -500,16 +489,10 @@ napi_value WebGL2RenderingContextImpl::WaitSync(napi_env env, napi_value syncObj
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    GLuint64 timeout64 = static_cast<GLuint64>(timeout);
-    GLint maxTimeout = 0;
-    glGetIntegerv(WebGL2RenderingContextBase::MAX_CLIENT_WAIT_TIMEOUT_WEBGL, &maxTimeout);
-    LOGI("WebGL2 clientWaitSync maxTimeout %{public}u ", maxTimeout);
-    if (timeout64 > static_cast<GLuint64>(maxTimeout)) {
-        timeout64 = maxTimeout;
-    }
+    GLuint64 timeout64 = (timeout == -1) ? GL_TIMEOUT_IGNORED : static_cast<GLuint64>(timeout);
 
     glWaitSync(reinterpret_cast<GLsync>(syncId), flags, timeout64);
-    LOGI("WebGL2 waitSync syncId %{public}u", syncId);
+    LOGD("WebGL2 waitSync GL_TIMEOUT_IGNORED %{public}u", GL_TIMEOUT_IGNORED);
     return nullptr;
 }
 
@@ -521,12 +504,12 @@ napi_value WebGL2RenderingContextImpl::GetSyncParameter(napi_env env, napi_value
         return NVal::CreateNull(env).val_;
     }
     int64_t syncId = webGlSync->GetSync();
-    LOGI("WebGL2 getSyncParameter syncId %{public}u pname %{public}u ", syncId, pname);
-    if (CheckInList(env, pname, { GL_OBJECT_TYPE, GL_SYNC_STATUS, GL_SYNC_CONDITION, GL_SYNC_FLAGS })) {
+    LOGD("WebGL2 getSyncParameter syncId %{public}u pname %{public}u ", syncId, pname);
+    if (CheckInList(pname, { GL_OBJECT_TYPE, GL_SYNC_STATUS, GL_SYNC_CONDITION, GL_SYNC_FLAGS })) {
         GLint value = 0;
         GLsizei length = -1;
         glGetSynciv(reinterpret_cast<GLsync>(syncId), pname, 1, &length, &value);
-        LOGI("WebGL2 getSyncParameter syncId = %{public}u value %{public}d ", syncId, value);
+        LOGD("WebGL2 getSyncParameter syncId = %{public}u value %{public}d ", syncId, value);
         return NVal::CreateInt64(env, value).val_;
     } else {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
@@ -544,7 +527,7 @@ napi_value WebGL2RenderingContextImpl::CreateTransformFeedback(napi_env env)
     GLuint transformFeedbackId;
     glGenTransformFeedbacks(1, &transformFeedbackId);
     webGlTransformFeedback->SetTransformFeedback(transformFeedbackId);
-    LOGI("WebGL2 createTransformFeedback transformFeedbackId %{public}u", transformFeedbackId);
+    LOGD("WebGL2 createTransformFeedback transformFeedbackId %{public}u", transformFeedbackId);
     AddObject<WebGLTransformFeedback>(env, transformFeedbackId, objTransformFeedback);
     return objTransformFeedback;
 }
@@ -554,13 +537,12 @@ napi_value WebGL2RenderingContextImpl::DeleteTransformFeedback(napi_env env, nap
     uint32_t transformFeedbackId = WebGLTransformFeedback::DEFAULT_TRANSFORM_FEEDBACK;
     WebGLTransformFeedback* webGlTransformFeedback = WebGLObject::GetObjectInstance<WebGLTransformFeedback>(env, obj);
     if (webGlTransformFeedback == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
     transformFeedbackId = webGlTransformFeedback->GetTransformFeedback();
     DeleteObject<WebGLTransformFeedback>(env, transformFeedbackId);
     glDeleteTransformFeedbacks(1, &transformFeedbackId);
-    LOGI("WebGL2 deleteTransformFeedback transformFeedbackId %{public}u", transformFeedbackId);
+    LOGD("WebGL2 deleteTransformFeedback transformFeedbackId %{public}u", transformFeedbackId);
     if (boundTransformFeedback_ != transformFeedbackId) {
         LOGE("WebGL2 bindTransformFeedback bound %{public}u", boundTransformFeedback_);
     }
@@ -576,7 +558,7 @@ napi_value WebGL2RenderingContextImpl::IsTransformFeedback(napi_env env, napi_va
         return NVal::CreateBool(env, false).val_;
     }
     transformFeedbackId = webGlTransformFeedback->GetTransformFeedback();
-    LOGI("WebGL2 isTransformFeedback transformFeedbackId %{public}u bound %{public}u",
+    LOGD("WebGL2 isTransformFeedback transformFeedbackId %{public}u bound %{public}u",
         transformFeedbackId, boundTransformFeedback_);
     if (GetObjectInstance<WebGLTransformFeedback>(env, transformFeedbackId) != nullptr &&
         boundTransformFeedback_ == transformFeedbackId) {
@@ -589,42 +571,58 @@ napi_value WebGL2RenderingContextImpl::BindTransformFeedback(napi_env env, napi_
 {
     GLuint transformFeedbackId = WebGLTransformFeedback::DEFAULT_TRANSFORM_FEEDBACK;
     WebGLTransformFeedback* webGlTransformFeedback = WebGLObject::GetObjectInstance<WebGLTransformFeedback>(env, obj);
-    if (webGlTransformFeedback == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
-        return nullptr;
+    if (webGlTransformFeedback != nullptr) {
+        transformFeedbackId = webGlTransformFeedback->GetTransformFeedback();
     }
-    transformFeedbackId = webGlTransformFeedback->GetTransformFeedback();
-    LOGE("WebGL2 bindTransformFeedback target %{public}u transformFeedbackId %{public}u", target, transformFeedbackId);
+    LOGD("WebGL2 bindTransformFeedback target %{public}u id %{public}u", target, transformFeedbackId);
     if (target != GL_TRANSFORM_FEEDBACK) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
     if (boundTransformFeedback_ && boundTransformFeedback_ != transformFeedbackId) {
         LOGE("WebGL2 bindTransformFeedback has been bound %{public}u", boundTransformFeedback_);
-
     }
     boundTransformFeedback_ = transformFeedbackId;
     glBindTransformFeedback(target, transformFeedbackId);
-    LOGI("WebGL2 bindTransformFeedback transformFeedbackId %{public}u target %{public}u", transformFeedbackId, target);
+    LOGD("WebGL2 bindTransformFeedback id %{public}u result %{public}u", transformFeedbackId, GetError_());
+    if (webGlTransformFeedback) {
+        webGlTransformFeedback->SetTarget(target);
+    }
     return nullptr;
+}
+
+static GLint GetTransformFeedbackVaryingType(GLuint programId, GLint index)
+{
+    GLint params = 0;
+    glGetProgramiv(programId, WebGL2RenderingContextBase::TRANSFORM_FEEDBACK_VARYINGS, &params);
+    LOGD("WebGL2 GetTransformFeedbackVaryingType programId %{public}u params %{public}d", programId, params);
+    return params;
 }
 
 napi_value WebGL2RenderingContextImpl::BeginTransformFeedback(napi_env env, GLenum primitiveMode)
 {
-    LOGI("WebGL2 beginTransformFeedback primitiveMode %{public}u", primitiveMode);
-    if (!CheckInList(env, primitiveMode,
-            { WebGLRenderingContextBase::POINTS, WebGLRenderingContextBase::LINES,
-                WebGLRenderingContextBase::TRIANGLES })) {
+    LOGD("WebGL2 beginTransformFeedback primitiveMode %{public}u", primitiveMode);
+    if (!CheckInList(primitiveMode, { WebGLRenderingContextBase::POINTS, WebGLRenderingContextBase::LINES,
+                                        WebGLRenderingContextBase::TRIANGLES })) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
+    if (GetTransformFeedbackVaryingType(currentProgramId_, boundTransformFeedback_) <= 0) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+        return nullptr;
+    }
     glBeginTransformFeedback(primitiveMode);
+    LOGD("WebGL2 beginTransformFeedback result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::EndTransformFeedback(napi_env env)
 {
-    LOGI("WebGL2 endTransformFeedback");
+    LOGD("WebGL2 endTransformFeedback");
+    if (GetTransformFeedbackVaryingType(currentProgramId_, boundTransformFeedback_) <= 0) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+        return nullptr;
+    }
     glEndTransformFeedback();
     return nullptr;
 }
@@ -645,14 +643,17 @@ napi_value WebGL2RenderingContextImpl::GetTransformFeedbackVarying(napi_env env,
     }
 
     GLsizei bufSize = WEBGL_ACTIVE_INFO_NAME_MAX_LENGTH;
-    GLsizei length;
-    GLsizei size;
+    GLsizei length = 0;
+    GLsizei size = 0;
     GLenum type;
     GLchar name[WEBGL_ACTIVE_INFO_NAME_MAX_LENGTH] = { 0 };
-    LOGI("WebGL2 getTransformFeedbackVarying index = %{public}u", index);
+    LOGD("WebGL2 getTransformFeedbackVarying index = %{public}u", index);
     glGetTransformFeedbackVarying(programId, index, bufSize, &length, &size, &type, name);
-    if (length > WEBGL_ACTIVE_INFO_NAME_MAX_LENGTH) {
-        LOGE("WebGL: GetTransformFeedbackVarying: [error] bufSize exceed!");
+    LOGD("WebGL2 getTransformFeedbackVarying: name '%{public}s' %{public}u length %{public}d %{public}d",
+        name, type, length, size);
+    if (type == 0) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        return NVal::CreateNull(env).val_;
     }
     webGLActiveInfo->SetActiveName(name);
     webGLActiveInfo->SetActiveSize(size);
@@ -662,19 +663,19 @@ napi_value WebGL2RenderingContextImpl::GetTransformFeedbackVarying(napi_env env,
 
 napi_value WebGL2RenderingContextImpl::TexStorage2D(napi_env env, const TexStorageArg& arg)
 {
-    LOGI("WebGL2 texStorage2D target %{public}u", arg.target);
+    arg.Dump("WebGL2 texStorage2D");
     if (arg.target != GL_TEXTURE_2D && arg.target != GL_TEXTURE_CUBE_MAP) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        return nullptr;
+    }
+    WebGLTexture* texture = GetBoundTexture(env, arg.target, false);
+    if (texture == nullptr) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     GLenum result = CheckTexStorage(env, arg);
     if (result != WebGLRenderingContextBase::NO_ERROR) {
         SET_ERROR(result);
-        return nullptr;
-    }
-    WebGLTexture* texture = GetBoundTexture(env, arg.target, false);
-    if (texture == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
     glTexStorage2D(arg.target, arg.levels, arg.internalFormat, arg.width, arg.height);
@@ -684,6 +685,7 @@ napi_value WebGL2RenderingContextImpl::TexStorage2D(napi_env env, const TexStora
 
 napi_value WebGL2RenderingContextImpl::TexStorage3D(napi_env env, const TexStorageArg& arg)
 {
+    arg.Dump("WebGL texStorage3D");
     if (arg.target != GL_TEXTURE_3D && arg.target != GL_TEXTURE_2D_ARRAY) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
@@ -700,6 +702,7 @@ napi_value WebGL2RenderingContextImpl::TexStorage3D(napi_env env, const TexStora
     }
     glTexStorage3D(arg.target, arg.levels, arg.internalFormat, arg.width, arg.height, arg.depth);
     texture->SetTexStorageInfo(&arg);
+    LOGD("WebGL texStorage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -712,12 +715,13 @@ GLenum WebGL2RenderingContextImpl::CheckTexImage3D(napi_env env, const TexImageA
         default:
             return WebGLRenderingContextBase::INVALID_ENUM;
     }
-    if (!CheckTextureLevel(imgArg.target, imgArg.level)) {
-        return WebGLRenderingContextBase::INVALID_ENUM;
+    GLenum result = CheckTextureLevel(imgArg.target, imgArg.level);
+    if (result) {
+        return result;
     }
-    if (!WebGLTexture::CheckTextureFormatAndType(
-            imgArg.internalFormat, imgArg.format, imgArg.type, imgArg.level, true)) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
+    result = CheckTextureFormatAndType(env, imgArg.internalFormat, imgArg.format, imgArg.type, imgArg.level);
+    if (result) {
+        return result;
     }
     return WebGLRenderingContextBase::NO_ERROR;
 }
@@ -726,26 +730,36 @@ napi_value WebGL2RenderingContextImpl::TexImage3D(napi_env env, const TexImageAr
 {
     TexImageArg imgArg(arg);
     imgArg.Dump("WebGL2 texImage3D");
+    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
+    if (texture == nullptr) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        return nullptr;
+    }
+
     GLenum result = CheckTexImage3D(env, imgArg);
     if (result) {
         SET_ERROR(result);
         return nullptr;
     }
     GLvoid* data = nullptr;
-    WebGLImageSource imageSource(env, version_);
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
     if (!NVal(env, source).IsNull()) {
-        result = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, source);
+        result = imageSource.GenImageSource(
+            { imgArg.format, imgArg.type, imgArg.width, imgArg.height, imgArg.depth }, source);
         if (result) {
             SET_ERROR(result);
             return nullptr;
         }
-        data = imageSource.GetImageSourceData(unpackFlipY_, unpackPremultiplyAlpha_);
+        data = imageSource.GetImageSourceData();
         imgArg.width = imageSource.GetWidth();
         imgArg.height = imageSource.GetHeight();
     }
 
     glTexImage3D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, imgArg.depth,
         imgArg.border, imgArg.format, imgArg.type, data);
+    texture->SetTextureLevel({ imgArg.target, imgArg.level,
+        imgArg.internalFormat, imgArg.width, imgArg.height, imgArg.depth, imgArg.type });
+    LOGD("WebGL2 texImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -759,25 +773,33 @@ napi_value WebGL2RenderingContextImpl::TexImage3D(
         return nullptr;
     }
 
-    WebGLReadBufferArg bufferData(env);
     GLvoid* data = nullptr;
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
     if (!NVal(env, dataObj).IsNull()) {
-        napi_status status = bufferData.GenBufferData(dataObj);
-        if (status != napi_ok) {
-            SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        result = imageSource.GenImageSource(
+            { imgArg.format, imgArg.type, imgArg.width, imgArg.height, imgArg.depth }, dataObj, srcOffset);
+        if (result) {
+            SET_ERROR(result);
             return nullptr;
         }
-        data = reinterpret_cast<void*>(bufferData.GetBuffer());
+        data = imageSource.GetImageSourceData();
     }
     if (data != nullptr) {
-        GLenum result = CheckTextureDataBuffer(imgArg, &bufferData);
+        GLenum result = CheckTextureDataBuffer(imgArg, imageSource.GetWebGLReadBuffer());
         if (result) {
             SET_ERROR(result);
             return nullptr;
         }
     }
+    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
+    if (texture == nullptr) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        return nullptr;
+    }
     glTexImage3D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, imgArg.depth,
         imgArg.border, imgArg.format, imgArg.type, data);
+    texture->SetTextureLevel(imgArg);
+    LOGD("WebGL2 texImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -791,6 +813,7 @@ napi_value WebGL2RenderingContextImpl::TexImage3D(napi_env env, const TexImageAr
     }
     glTexImage3D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, imgArg.depth,
         imgArg.border, imgArg.format, imgArg.type, reinterpret_cast<void*>(pboOffset));
+    LOGD("WebGL2 texImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -803,14 +826,13 @@ GLenum WebGL2RenderingContextImpl::CheckTexSubImage3D(napi_env env, const TexSub
         default:
             return WebGLRenderingContextBase::INVALID_ENUM;
     }
-
+    GLenum result = CheckTextureLevel(arg.target, arg.level);
+    if (result) {
+        return result;
+    }
     WebGLTexture* texture = GetBoundTexture(env, arg.target, false);
     if (texture == nullptr) {
         return WebGLRenderingContextBase::INVALID_VALUE;
-    }
-
-    if (!CheckTextureLevel(arg.target, arg.level)) {
-        return WebGLRenderingContextBase::INVALID_ENUM;
     }
 
     if (!texture->CheckValid(arg.target, arg.level)) {
@@ -823,8 +845,9 @@ GLenum WebGL2RenderingContextImpl::CheckTexSubImage3D(napi_env env, const TexSub
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
     GLenum internalFormat = texture->GetInternalFormat(arg.target, arg.level);
-    if (!WebGLTexture::CheckTextureFormatAndType(internalFormat, arg.format, arg.type, arg.level, true)) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
+    result = CheckTextureFormatAndType(env, internalFormat, arg.format, arg.type, arg.level);
+    if (result) {
+        return result;
     }
     return WebGLRenderingContextBase::NO_ERROR;
 }
@@ -832,17 +855,17 @@ GLenum WebGL2RenderingContextImpl::CheckTexSubImage3D(napi_env env, const TexSub
 napi_value WebGL2RenderingContextImpl::TexSubImage3D(napi_env env, const TexSubImage3DArg& arg, napi_value source)
 {
     TexSubImage3DArg imgArg(arg);
-    imgArg.Dump("WebGL2 texSubImage3D");
-
+    imgArg.Dump("WebGL2 texSubImage3D source");
     GLvoid* data = nullptr;
-    WebGLImageSource imageSource(env, version_);
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
     if (!NVal(env, source).IsNull()) {
-        GLenum result = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, source);
+        GLenum result = imageSource.GenImageSource(
+            { imgArg.format, imgArg.type, imgArg.width, imgArg.height, imgArg.depth }, source);
         if (result) {
             SET_ERROR(result);
             return nullptr;
         }
-        data = imageSource.GetImageSourceData(unpackFlipY_, unpackPremultiplyAlpha_);
+        data = imageSource.GetImageSourceData();
         imgArg.width = imageSource.GetWidth();
         imgArg.height = imageSource.GetHeight();
     } else {
@@ -854,25 +877,29 @@ napi_value WebGL2RenderingContextImpl::TexSubImage3D(napi_env env, const TexSubI
         SET_ERROR(result);
         return nullptr;
     }
-
     glTexSubImage3D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.zOffset, imgArg.width,
         imgArg.height, imgArg.depth, imgArg.format, imgArg.type, data);
+    LOGD("WebGL2 texSubImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::TexSubImage3D(
     napi_env env, const TexSubImage3DArg& imgArg, napi_value dataObj, GLuint srcOffset)
 {
-    imgArg.Dump("WebGL2 texSubImage3D");
-    WebGLImageSource imageSource(env, version_);
+    imgArg.Dump("WebGL2 texSubImage3D data buffer");
+
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
     GLvoid* data = nullptr;
+    bool changeUnpackAlignment = false;
     if (!NVal(env, dataObj).IsNull()) {
-        GLenum result = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, dataObj, srcOffset);
+        GLenum result = imageSource.GenImageSource(
+            { imgArg.format, imgArg.type, imgArg.width, imgArg.height, imgArg.depth }, dataObj, srcOffset);
         if (result) {
             SET_ERROR(result);
             return nullptr;
         }
-        data = imageSource.GetImageSourceData(unpackFlipY_, unpackPremultiplyAlpha_);
+        data = imageSource.GetImageSourceData();
+        changeUnpackAlignment = unpackFlipY_ || unpackPremultiplyAlpha_;
     } else {
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
@@ -884,23 +911,29 @@ napi_value WebGL2RenderingContextImpl::TexSubImage3D(
         return nullptr;
     }
 
+    if (changeUnpackAlignment) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
     glTexSubImage3D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.zOffset, imgArg.width,
         imgArg.height, imgArg.depth, imgArg.format, imgArg.type, data);
+    if (changeUnpackAlignment) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignment_);
+    }
+    LOGD("WebGL2 texSubImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::TexSubImage3D(napi_env env, const TexSubImage3DArg& imgArg, GLintptr pboOffset)
 {
-    // TODO
-    imgArg.Dump("WebGL2 texSubImage3D");
+    imgArg.Dump("WebGL2 texSubImage3D pboOffset");
     GLenum result = CheckTexSubImage3D(env, imgArg);
     if (result) {
         SET_ERROR(result);
         return nullptr;
     }
-
     glTexSubImage3D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.zOffset, imgArg.width,
         imgArg.height, imgArg.depth, imgArg.format, imgArg.type, reinterpret_cast<void*>(pboOffset));
+    LOGD("WebGL2 texSubImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -913,16 +946,14 @@ napi_value WebGL2RenderingContextImpl::CopyTexSubImage3D(napi_env env, const Cop
         return nullptr;
     }
     GLuint frameBufferId = 0;
-    if (!CheckReadBufferAndGetInfo(env, frameBufferId, nullptr, nullptr)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+    result = CheckReadBufferAndGetInfo(env, &frameBufferId, nullptr, nullptr);
+    if (result) {
+        SET_ERROR(result);
         return nullptr;
     }
-
-    // TODO clearIfComposited();
-    // ScopedDrawingBufferBinder binder(drawingBuffer(), readFramebufferBinding);
-
     glCopyTexSubImage3D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.zOffset, imgArg.x, imgArg.y,
         imgArg.width, imgArg.height);
+    LOGD("WebGL2 copyTexSubImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -932,7 +963,7 @@ napi_value WebGL2RenderingContextImpl::CompressedTexImage3D(
     imgArg.Dump("WebGL2 compressedTexImage3D");
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (texture == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     if (texture->CheckImmutable()) {
@@ -942,6 +973,7 @@ napi_value WebGL2RenderingContextImpl::CompressedTexImage3D(
 
     glCompressedTexImage3D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height,
         imgArg.depth, imgArg.border, imageSize, reinterpret_cast<void*>(offset));
+    LOGD("WebGL2 copyTexSubImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -949,10 +981,9 @@ napi_value WebGL2RenderingContextImpl::CompressedTexImage3D(
     napi_env env, const TexImageArg& imgArg, napi_value dataObj, GLuint srcOffset, GLuint srcLengthOverride)
 {
     imgArg.Dump("WebGL2 compressedTexImage3D");
-
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (texture == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     if (texture->CheckImmutable()) {
@@ -976,6 +1007,7 @@ napi_value WebGL2RenderingContextImpl::CompressedTexImage3D(
         imgArg.depth, imgArg.border, length, data);
     texture->SetTextureLevel({ imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height,
         imgArg.depth, GL_UNSIGNED_BYTE });
+    LOGD("WebGL2 compressedTexImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -985,7 +1017,7 @@ napi_value WebGL2RenderingContextImpl::CompressedTexSubImage3D(
     imgArg.Dump("WebGL2 compressedTexSubImage3D");
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (texture == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     if (imgArg.format != texture->GetInternalFormat(imgArg.target, imgArg.level)) {
@@ -994,6 +1026,7 @@ napi_value WebGL2RenderingContextImpl::CompressedTexSubImage3D(
     }
     glCompressedTexSubImage3D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.zOffset, imgArg.width,
         imgArg.height, imgArg.depth, imgArg.format, imageSize, reinterpret_cast<void*>(offset));
+    LOGD("WebGL2 compressedTexSubImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -1003,7 +1036,7 @@ napi_value WebGL2RenderingContextImpl::CompressedTexSubImage3D(
     imgArg.Dump("WebGL2 compressedTexSubImage3D");
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (texture == nullptr) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     if (imgArg.format != texture->GetInternalFormat(imgArg.target, imgArg.level)) {
@@ -1027,13 +1060,14 @@ napi_value WebGL2RenderingContextImpl::CompressedTexSubImage3D(
 
     glCompressedTexSubImage3D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.zOffset, imgArg.width,
         imgArg.height, imgArg.depth, imgArg.format, length, data);
+    LOGD("WebGL2 compressedTexSubImage3D result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::ClearBufferV(
     napi_env env, GLenum buffer, GLint drawBuffer, napi_value value, int64_t srcOffset, BufferDataType type)
 {
-    LOGI("WebGL2 clearBuffer buffer %{public}u %{public}d srcOffset %{public}u", buffer, drawBuffer, srcOffset);
+    LOGD("WebGL2 clearBuffer buffer %{public}u %{public}d srcOffset %{public}u", buffer, drawBuffer, srcOffset);
     WebGLReadBufferArg bufferData(env);
     napi_status status = bufferData.GenBufferData(value, type);
     if (status != 0) {
@@ -1068,39 +1102,49 @@ napi_value WebGL2RenderingContextImpl::ClearBufferV(
         default:
             break;
     }
+    LOGD("WebGL2 clearBuffer buffer %{public}u result %{public}u", buffer, GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::ClearBufferfi(
     napi_env env, GLenum buffer, GLint drawBuffer, GLfloat depth, GLint stencil)
 {
-    LOGE("WebGL2 clearBuffer buffer %{public}u %{public}d depth %{public}f %{public}d", buffer, drawBuffer, depth,
-        stencil);
+    LOGD("WebGL2 clearBufferfi buffer %{public}u %{public}d depth %{public}f %{public}d",
+        buffer, drawBuffer, depth, stencil);
     if (buffer != WebGLRenderingContextBase::DEPTH_STENCIL) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
     glClearBufferfi(buffer, drawBuffer, depth, stencil);
+    LOGD("WebGL2 clearBufferfi buffer %{public}u result %{public}u", buffer, GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::GetIndexedParameter(napi_env env, GLenum target, GLuint index)
 {
-    LOGI("WebGL2 getIndexedParameter index = %{public}u", index);
-    if (target == GL_TRANSFORM_FEEDBACK_BUFFER_BINDING || target == GL_UNIFORM_BUFFER_BINDING) {
-        return GetObject<WebGLBuffer>(env, index);
+    LOGD("WebGL2 getIndexedParameter index = %{public}u", index);
+    if (target == GL_TRANSFORM_FEEDBACK_BUFFER_BINDING) {
+        if (index >= maxBoundTransformFeedbackBufferIndex_) {
+            return NVal::CreateNull(env).val_;
+        }
+        return GetObject<WebGLBuffer>(env, boundIndexedTransformFeedbackBuffers_[index]);
+    } else if (target == GL_UNIFORM_BUFFER_BINDING) {
+        if (index >= maxBoundUniformBufferIndex_) {
+            return NVal::CreateNull(env).val_;
+        }
+        return GetObject<WebGLBuffer>(env, boundIndexedUniformBuffers_[index]);
     } else if (target == GL_TRANSFORM_FEEDBACK_BUFFER_SIZE || target == GL_UNIFORM_BUFFER_SIZE) {
         int64_t data;
         glGetInteger64i_v(target, index, &data);
-        LOGI("WebGL getIndexedParameter end");
+        LOGD("WebGL getIndexedParameter end");
         return NVal::CreateInt64(env, data).val_;
     } else if (target == GL_UNIFORM_BUFFER_SIZE || target == GL_UNIFORM_BUFFER_START) {
         int64_t data;
         glGetInteger64i_v(target, index, &data);
-        LOGI("WebGL getIndexedParameter end");
+        LOGD("WebGL getIndexedParameter end");
         return NVal::CreateInt64(env, data).val_;
     } else {
-        LOGI("WebGL getIndexedParameter end");
+        LOGD("WebGL getIndexedParameter end");
         return nullptr;
     }
 }
@@ -1111,13 +1155,12 @@ napi_value WebGL2RenderingContextImpl::GetFragDataLocation(napi_env env, napi_va
     WebGLProgram* webGLProgram = WebGLProgram::GetObjectInstance(env, programObj);
     if (webGLProgram == nullptr) {
         return NVal::CreateInt64(env, -1).val_;
-        ;
     }
     program = webGLProgram->GetProgramId();
 
-    LOGI("WebGL2 getFragDataLocation name %{public}s", name.c_str());
+    LOGD("WebGL2 getFragDataLocation name %{public}s", name.c_str());
     GLint res = glGetFragDataLocation(program, const_cast<char*>(name.c_str()));
-    LOGI("WebGL2 getFragDataLocation result %{public}d", res);
+    LOGD("WebGL2 getFragDataLocation result %{public}d", res);
     return NVal::CreateInt64(env, res).val_;
 }
 
@@ -1128,11 +1171,11 @@ napi_value WebGL2RenderingContextImpl::VertexAttribI4i(napi_env env, GLuint inde
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    LOGI("WebGL2 vertexAttribI4i index %{public}u [%{public}d %{public}d %{public}d %{public}d]",
+    LOGD("WebGL2 vertexAttribI4i index %{public}u [%{public}d %{public}d %{public}d %{public}d]",
         index, data[0], data[1], data[2], data[3]); // 2, 3 index for data
     glVertexAttribI4i(index, data[0], data[1], data[2], data[3]); // 2, 3 index for data
     info->type = BUFFER_DATA_INT_32;
-    LOGI("WebGL2 vertexAttribI4i result %{public}u", GetError_());
+    LOGD("WebGL2 vertexAttribI4i result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -1143,11 +1186,11 @@ napi_value WebGL2RenderingContextImpl::VertexAttribI4ui(napi_env env, GLuint ind
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    LOGI("WebGL2 vertexAttribI4ui index %{public}u [%{public}u %{public}u %{public}u %{public}u]",
+    LOGD("WebGL2 vertexAttribI4ui index %{public}u [%{public}u %{public}u %{public}u %{public}u]",
         index, data[0], data[1], data[2], data[3]); // 2, 3 index for data
     glVertexAttribI4ui(index, data[0], data[1], data[2], data[3]); // 2, 3 index for data
     info->type = BUFFER_DATA_UINT_32;
-    LOGI("WebGL2 vertexAttribI4ui result %{public}u", GetError_());
+    LOGD("WebGL2 vertexAttribI4ui result %{public}u", GetError_());
     return nullptr;
 }
 
@@ -1198,14 +1241,12 @@ napi_value WebGL2RenderingContextImpl::VertexAttribI4uiv(napi_env env, GLuint in
     return nullptr;
 }
 
-napi_value WebGL2RenderingContextImpl::VertexAttribIPointer(napi_env env, const VertexAttribArg* vertexInfo)
+napi_value WebGL2RenderingContextImpl::VertexAttribIPointer(napi_env env, const VertexAttribArg& vertexInfo)
 {
-    LOGI("WebGL vertexAttribPointer index %{public}u size %{public}u type %{public}u", vertexInfo->index,
-        vertexInfo->size, vertexInfo->type);
-
-    if (!CheckGLenum(env, vertexInfo->type,
+    vertexInfo.Dump("WebGL2 vertexAttribPointer");
+    if (!CheckGLenum(vertexInfo.type,
             { GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT, GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT }, {})) {
-        LOGE("WebGL vertexAttribPointer invalid type %{public}d", vertexInfo->type);
+        LOGE("WebGL vertexAttribPointer invalid type %{public}d", vertexInfo.type);
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
     }
 
@@ -1215,14 +1256,15 @@ napi_value WebGL2RenderingContextImpl::VertexAttribIPointer(napi_env env, const 
         return nullptr;
     }
 
-    glVertexAttribIPointer(vertexInfo->index, vertexInfo->size, vertexInfo->type, vertexInfo->stride,
-        reinterpret_cast<GLvoid*>(vertexInfo->offset));
-    LOGI("WebGL vertexAttribPointer index %{public}u offset %{public}u", vertexInfo->index, vertexInfo->offset);
+    glVertexAttribIPointer(vertexInfo.index, vertexInfo.size, vertexInfo.type, vertexInfo.stride,
+        reinterpret_cast<GLvoid*>(vertexInfo.offset));
+    LOGD("WebGL vertexAttribPointer index %{public}u offset %{public}u", vertexInfo.index, vertexInfo.offset);
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::VertexAttribDivisor(napi_env env, GLuint index, GLuint divisor)
 {
+    LOGD("WebGL2 vertexAttribDivisor index %{public}d divisor %{public}u", index, divisor);
     if (index >= GetMaxVertexAttribs()) {
         LOGE("WebGL2 vertexAttribDivisor invalid index %{public}d", index);
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
@@ -1254,7 +1296,8 @@ napi_value WebGL2RenderingContextImpl::DrawBuffers(napi_env env, napi_value data
 napi_value WebGL2RenderingContextImpl::DrawArraysInstanced(
     napi_env env, GLenum mode, GLint first, GLsizei count, GLsizei instanceCount)
 {
-    LOGI("WebGL drawArraysInstanced mode %{public}u %{public}u %{public}u", mode, first, count);
+    LOGD("WebGL drawArraysInstanced mode %{public}u %{public}u %{public}u %{public}u",
+        mode, first, count, instanceCount);
     GLenum result = CheckDrawArrays(env, mode, first, count);
     if (result != WebGLRenderingContextBase::NO_ERROR) {
         SET_ERROR(result);
@@ -1264,7 +1307,6 @@ napi_value WebGL2RenderingContextImpl::DrawArraysInstanced(
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    // TODO
     glDrawArraysInstanced(mode, first, count, instanceCount);
     return nullptr;
 }
@@ -1272,8 +1314,8 @@ napi_value WebGL2RenderingContextImpl::DrawArraysInstanced(
 napi_value WebGL2RenderingContextImpl::DrawElementsInstanced(
     napi_env env, const DrawElementArg& arg, GLsizei instanceCount)
 {
-    LOGI("WebGL2 drawElementsInstanced mode %{public}u %{public}u %{public}u", arg.mode, arg.count, arg.type);
-    GLenum result = CheckDrawElements(env, arg.mode, arg.count, arg.type, static_cast<int64_t>(arg.offset));
+    LOGD("WebGL2 drawElementsInstanced mode %{public}u %{public}u %{public}u", arg.mode, arg.count, arg.type);
+    GLenum result = CheckDrawElements(env, arg.mode, arg.count, arg.type, arg.offset);
     if (result != WebGLRenderingContextBase::NO_ERROR) {
         SET_ERROR(result);
         return nullptr;
@@ -1289,8 +1331,9 @@ napi_value WebGL2RenderingContextImpl::DrawElementsInstanced(
 napi_value WebGL2RenderingContextImpl::DrawRangeElements(
     napi_env env, const DrawElementArg& arg, GLuint start, GLuint end)
 {
-    LOGI("WebGL2 drawRangeElements mode %{public}u %{public}u %{public}u", arg.mode, arg.count, arg.type);
-    GLenum result = CheckDrawElements(env, arg.mode, arg.count, arg.type, static_cast<int64_t>(arg.offset));
+    LOGD("WebGL2 drawRangeElements mode %{public}u %{public}u %{public}u start [%{public}u %{public}u] %{public}d",
+        arg.mode, arg.count, arg.type, start, end, static_cast<int>(arg.offset));
+    GLenum result = CheckDrawElements(env, arg.mode, arg.count, arg.type, arg.offset);
     if (result != WebGLRenderingContextBase::NO_ERROR) {
         SET_ERROR(result);
         return nullptr;
@@ -1302,19 +1345,22 @@ napi_value WebGL2RenderingContextImpl::DrawRangeElements(
 napi_value WebGL2RenderingContextImpl::CopyBufferSubData(
     napi_env env, GLenum targets[2], int64_t readOffset, int64_t writeOffset, int64_t size)
 {
+    LOGD("WebGL2 copyBufferSubData targets [%{public}u %{public}u] offset [%{public}u %{public}u] %{public}u",
+        targets[0], targets[1], static_cast<uint32_t>(readOffset),
+        static_cast<uint32_t>(writeOffset), static_cast<uint32_t>(size));
     if (!WebGLArg::CheckNoneNegInt<GLint>(readOffset) || !WebGLArg::CheckNoneNegInt<GLint>(writeOffset) ||
         !WebGLArg::CheckNoneNegInt<GLint>(size)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    WebGLBuffer* readBuffer = GetBoundBuffer(env, targets[1]);
+    WebGLBuffer* readBuffer = GetBoundBuffer(env, targets[0]); // read
     if (readBuffer == nullptr || readBuffer->GetBufferSize() == 0) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
-    WebGLBuffer* writeBuffer = GetBoundBuffer(env, targets[0]);
+    WebGLBuffer* writeBuffer = GetBoundBuffer(env, targets[1]); // write
     if (writeBuffer == nullptr || writeBuffer->GetBufferSize() == 0) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     if (readOffset + size > readBuffer->GetBufferSize() ||
@@ -1332,16 +1378,17 @@ napi_value WebGL2RenderingContextImpl::CopyBufferSubData(
     }
     glCopyBufferSubData(targets[0], targets[1], static_cast<GLintptr>(readOffset), static_cast<GLintptr>(writeOffset),
         static_cast<GLsizeiptr>(size));
+    LOGD("WebGL2 copyBufferSubData result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::GetBufferSubData(
     napi_env env, GLenum target, int64_t offset, napi_value data, const BufferExt& ext)
 {
-    LOGI("WebGL2 getBufferSubData target %{public}u %{public}d ", target, static_cast<GLint>(offset));
+    LOGD("WebGL2 getBufferSubData target %{public}u %{public}d ", target, static_cast<GLint>(offset));
     WebGLReadBufferArg bufferData(env);
     napi_status status = bufferData.GenBufferData(data);
-    if (status != 0) {
+    if (status != 0 || bufferData.GetBufferType() == BUFFER_ARRAY) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
@@ -1351,29 +1398,33 @@ napi_value WebGL2RenderingContextImpl::GetBufferSubData(
     }
     WebGLBuffer* writeBuffer = GetBoundBuffer(env, target);
     if (writeBuffer == nullptr || writeBuffer->GetBufferSize() == 0) {
-        SET_ERROR_WITH_LOG(WebGLRenderingContextBase::INVALID_VALUE, "writeBuffer %{public}p", writeBuffer);
+        SET_ERROR_WITH_LOG(WebGLRenderingContextBase::INVALID_OPERATION, "no buffer");
         return nullptr;
     }
     if (offset + bufferData.GetBufferLength() > writeBuffer->GetBufferSize()) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     GLsizeiptr dstSize = (ext.length == 0) ? static_cast<GLsizeiptr>(bufferData.GetBufferLength())
                                            : static_cast<GLsizeiptr>(ext.length * bufferData.GetBufferDataSize());
-    GLuint dstOffset = static_cast<GLuint>(ext.dstOffset * bufferData.GetBufferDataSize());
-    LOGI("WebGL2 getBufferSubData target %{public}u %{public}d dstSize %{public}u dstOffset %{public}u",
-        target, static_cast<GLintptr>(offset), dstSize, dstOffset);
-    glBufferSubData(target,
-        static_cast<GLintptr>(offset), dstSize, reinterpret_cast<void*>(bufferData.GetBuffer() + dstOffset));
-    LOGI("WebGL2 getBufferSubData target %{public}u result %{public}u ", target, GetError_());
+    GLuint dstOffset = static_cast<GLuint>(ext.offset * bufferData.GetBufferDataSize());
+    LOGD("WebGL2 getBufferSubData dstSize %{public}u dstOffset %{public}p", dstSize, writeBuffer->bufferData_);
+
+    void *mapBuffer = glMapBufferRange(target, static_cast<GLintptr>(offset), dstSize, GL_MAP_READ_BIT);
+    if (mapBuffer == nullptr ||
+        memcpy_s(bufferData.GetBuffer() + dstOffset, bufferData.GetBufferLength(), mapBuffer, dstSize) != 0) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+    }
+    glUnmapBuffer(target);
+    LOGD("WebGL2 getBufferSubData target %{public}u result %{public}u ", target, GetError_());
     return nullptr;
 }
 
-// 8 GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1
 napi_value WebGL2RenderingContextImpl::BlitFrameBuffer(napi_env env, GLint data[8], GLbitfield mask, GLenum filter)
 {
     // 0,1,2,3,4,5,6,7 srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1
     glBlitFramebuffer(data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], mask, filter);
+    LOGD("WebGL2 blitFrameBuffer filter %{public}u result %{public}u ", filter, GetError_());
     return nullptr;
 }
 
@@ -1387,29 +1438,35 @@ napi_value WebGL2RenderingContextImpl::FrameBufferTextureLayer(
         return nullptr;
     }
     textureId = webGlTexture->GetTexture();
-    LOGI("WebGL frameBufferTextureLayer texture %{public}u", textureId);
+    LOGD("WebGL frameBufferTextureLayer texture %{public}u", textureId);
     glFramebufferTextureLayer(target, attachment, textureId, layer.level, layer.layer);
+    LOGD("WebGL frameBufferTextureLayer texture %{public}u result %{public}u", textureId, GetError_());
+
+    WebGLFramebuffer* frameBuffer = GetBoundFrameBuffer(env, target);
+    if (frameBuffer == nullptr) {
+        SET_ERROR_WITH_LOG(WebGLRenderingContextBase::INVALID_ENUM, "can not find bind frame buffer");
+        return nullptr;
+    }
+    frameBuffer->AddAttachment(
+        target, attachment, static_cast<GLuint>(textureId), webGlTexture->GetTarget(), layer.level);
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::ReadBuffer(napi_env env, GLenum mode)
 {
-    LOGI("WebGL2 readBuffer mode %{public}u", mode);
+    LOGD("WebGL2 readBuffer mode %{public}u", mode);
     if (!CheckReadBufferMode(mode)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
 
     WebGLFramebuffer* readFrameBuffer = GetBoundFrameBuffer(env, WebGL2RenderingContextBase::READ_FRAMEBUFFER);
-    if (!readFrameBuffer) {
+    if (readFrameBuffer == nullptr) {
         if (mode != WebGLRenderingContextBase::BACK && mode != WebGLRenderingContextBase::NONE) {
             SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
             return nullptr;
         }
-        // TODO
-        // m_readBufferOfDefaultFramebuffer = mode;
-        // translate GL_BACK to GL_COLOR_ATTACHMENT0, because the default
-        // framebuffer for WebGL is not fb 0, it is an internal fbo.
+        defaultReadBufferMode_ = mode;
         if (mode == WebGLRenderingContextBase::BACK)
             mode = WebGLRenderingContextBase::COLOR_ATTACHMENT0;
     } else {
@@ -1417,6 +1474,7 @@ napi_value WebGL2RenderingContextImpl::ReadBuffer(napi_env env, GLenum mode)
             SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
             return nullptr;
         }
+        readFrameBuffer->SetReadBufferMode(mode);
     }
     glReadBuffer(mode);
     return nullptr;
@@ -1426,6 +1484,8 @@ napi_value WebGL2RenderingContextImpl::RenderBufferStorageMultiSample(
     napi_env env, const TexStorageArg& arg, GLsizei samples)
 {
     arg.Dump("WebGL2 renderbufferStorageMultisample");
+    LOGD("WebGL2 renderbufferStorageMultisample samples %{public}d", samples);
+
     WebGLRenderbuffer* renderBuffer = CheckRenderBufferStorage(env, arg);
     if (renderBuffer == nullptr) {
         return nullptr;
@@ -1441,12 +1501,12 @@ napi_value WebGL2RenderingContextImpl::RenderBufferStorageMultiSample(
         }
         glRenderbufferStorage(arg.target, GL_DEPTH24_STENCIL8, arg.width, arg.height);
     } else {
-        if (CheckInList(env, arg.internalFormat, WebGLTexture::GetSupportInternalFormatGroup1())) {
+        if (CheckInList(arg.internalFormat, WebGLTexture::GetSupportInternalFormatGroup1())) {
             if (samples > 0) {
                 SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
                 return nullptr;
             }
-        } else if (!CheckInList(env, arg.internalFormat, WebGLTexture::GetSupportInternalFormatGroup2())) {
+        } else if (!CheckInList(arg.internalFormat, WebGLTexture::GetSupportInternalFormatGroup2())) {
             SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
             return nullptr;
         }
@@ -1458,13 +1518,46 @@ napi_value WebGL2RenderingContextImpl::RenderBufferStorageMultiSample(
     }
     renderBuffer->SetInternalFormat(arg.internalFormat);
     renderBuffer->SetSize(arg.width, arg.height);
+    LOGD("WebGL2 renderbufferStorageMultisample result %{public}u", GetError_());
+    return nullptr;
+}
+
+napi_value WebGL2RenderingContextImpl::BindBuffer(napi_env env, GLenum target, napi_value object)
+{
+    LOGD("WebGL2 bindBuffer target %{public}u ", target);
+    // support default value
+    uint32_t bufferId = WebGLBuffer::DEFAULT_BUFFER;
+    WebGLBuffer* webGlBuffer = GetValidBuffer(env, object);
+    if (webGlBuffer != nullptr) {
+        bufferId = webGlBuffer->GetBufferId();
+    }
+    LOGD("WebGL2 bindBuffer target %{public}u bufferId %{public}u", target, bufferId);
+    uint32_t index = BoundBufferType::ARRAY_BUFFER;
+    if (!CheckBufferTarget(env, target, index)) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        return nullptr;
+    }
+    if (webGlBuffer != nullptr && !CheckBufferTargetCompatibility(env, target, webGlBuffer)) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+        return nullptr;
+    }
+    if (boundBufferIds_[index] && boundBufferIds_[index] != bufferId) {
+        LOGD("WebGL2 bindBuffer has been bound bufferId %{public}u", boundBufferIds_[index]);
+    }
+    boundBufferIds_[index] = bufferId;
+
+    glBindBuffer(target, static_cast<GLuint>(bufferId));
+    if (webGlBuffer) {
+        webGlBuffer->SetTarget(target);
+    }
+    LOGD("WebGL2 bindBuffer bufferId %{public}u result %{public}u", bufferId, GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::BindBufferBase(napi_env env, const BufferBaseArg& arg, napi_value bufferObj)
 {
     GLuint bufferId = WebGLBuffer::DEFAULT_BUFFER;
-    WebGLBuffer* webGlBuffer = WebGLBuffer::GetObjectInstance(env, bufferObj);
+    WebGLBuffer* webGlBuffer = GetValidBuffer(env, bufferObj);
     if (webGlBuffer != nullptr) {
         bufferId = webGlBuffer->GetBufferId();
     }
@@ -1472,12 +1565,20 @@ napi_value WebGL2RenderingContextImpl::BindBufferBase(napi_env env, const Buffer
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
-    if (!UpdateBaseTargetBoundBuffer(env, arg.target, arg.index, webGlBuffer)) {
+    if (webGlBuffer != nullptr && !CheckBufferTargetCompatibility(env, arg.target, webGlBuffer)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
-    LOGI("WebGL2 bindBufferBase target %{public}u %{public}u %{public}u", arg.target, arg.index, bufferId);
+    if (!UpdateBaseTargetBoundBuffer(env, arg.target, arg.index, bufferId)) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+        return nullptr;
+    }
+    if (webGlBuffer != nullptr && !webGlBuffer->GetTarget()) {
+        webGlBuffer->SetTarget(arg.target);
+    }
+    LOGD("WebGL2 bindBufferBase target %{public}u %{public}u %{public}u", arg.target, arg.index, bufferId);
     glBindBufferBase(arg.target, arg.index, bufferId);
+    LOGD("WebGL2 bindBufferBase target %{public}u result %{public}u ", arg.target, GetError_());
     return nullptr;
 }
 
@@ -1485,7 +1586,7 @@ napi_value WebGL2RenderingContextImpl::BindBufferRange(
     napi_env env, const BufferBaseArg& arg, napi_value bufferObj, GLintptr offset, GLsizeiptr size)
 {
     GLuint bufferId = WebGLBuffer::DEFAULT_BUFFER;
-    WebGLBuffer* webGlBuffer = WebGLBuffer::GetObjectInstance(env, bufferObj);
+    WebGLBuffer* webGlBuffer = GetValidBuffer(env, bufferObj);
     if (webGlBuffer != nullptr) {
         bufferId = webGlBuffer->GetBufferId();
     }
@@ -1493,13 +1594,25 @@ napi_value WebGL2RenderingContextImpl::BindBufferRange(
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
-    if (!UpdateBaseTargetBoundBuffer(env, arg.target, arg.index, webGlBuffer)) {
+    if (webGlBuffer != nullptr && !CheckBufferTargetCompatibility(env, arg.target, webGlBuffer)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
-    LOGI("WebGL2 bindBufferRange target %{public}u %{public}u %{public}u", arg.target, arg.index, bufferId);
+    if (!UpdateBaseTargetBoundBuffer(env, arg.target, arg.index, bufferId)) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+        return nullptr;
+    }
+    if (webGlBuffer != nullptr && !webGlBuffer->GetTarget()) {
+        webGlBuffer->SetTarget(arg.target);
+    }
+    LOGD("WebGL2 bindBufferRange target %{public}u %{public}u %{public}u", arg.target, arg.index, bufferId);
     glBindBufferRange(arg.target, arg.index, bufferId, offset, size);
     return nullptr;
+}
+
+napi_value WebGL2RenderingContextImpl::DeleteBuffer(napi_env env, napi_value object)
+{
+    return WebGLRenderingContextBaseImpl::DeleteBuffer(env, object);
 }
 
 napi_value WebGL2RenderingContextImpl::GetUniformBlockIndex(
@@ -1512,12 +1625,13 @@ napi_value WebGL2RenderingContextImpl::GetUniformBlockIndex(
         return NVal::CreateInt64(env, -1).val_;
     }
     programId = webGLProgram->GetProgramId();
-    if (!CheckString(uniformBlockName)) {
+    if (!WebGLArg::CheckString(uniformBlockName)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return NVal::CreateInt64(env, -1).val_;
     }
-    LOGI("WebGL2 getUniformBlockIndex programId %{public}u", programId);
+    LOGD("WebGL2 getUniformBlockIndex programId %{public}u", programId);
     GLuint returnValue = glGetUniformBlockIndex(programId, uniformBlockName.c_str());
+    LOGD("WebGL2 getUniformBlockIndex name %{public}s %{public}u", uniformBlockName.c_str(), returnValue);
     return NVal::CreateInt64(env, returnValue).val_;
 }
 
@@ -1531,15 +1645,16 @@ napi_value WebGL2RenderingContextImpl::UniformBlockBinding(
         return nullptr;
     }
     programId = webGLProgram->GetProgramId();
-    LOGI("WebGL2 uniformBlockBinding programId %{public}u %{public}u %{public}u",
+    LOGD("WebGL2 uniformBlockBinding programId %{public}u %{public}u %{public}u",
         programId, uniformBlockIndex, uniformBlockBinding);
     glUniformBlockBinding(programId, uniformBlockIndex, uniformBlockBinding);
+    LOGD("WebGL2 uniformBlockBinding programId %{public}u result %{public}u", programId, GetError_());
     return nullptr;
 }
 
 napi_value WebGL2RenderingContextImpl::InvalidateFrameBuffer(napi_env env, GLenum target, napi_value data)
 {
-    LOGE("WebGL2 invalidateFramebuffer target %{public}u", target);
+    LOGD("WebGL2 invalidate Framebuffer target %{public}u", target);
     WebGLReadBufferArg bufferData(env);
     napi_status status = bufferData.GenBufferData(data, BUFFER_DATA_GLENUM);
     if (status != 0) {
@@ -1594,27 +1709,31 @@ napi_value WebGL2RenderingContextImpl::GetInternalFormatParameter(
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return NVal::CreateNull(env).val_;
     }
-    LOGI("WebGL2 getInternalformatParameter target %{public}u %{public}u %{public}u", target, internalFormat, pname);
+    LOGD("WebGL2 getInternalformatParameter target %{public}u %{public}u %{public}u", target, internalFormat, pname);
     WebGLWriteBufferArg writeBuffer(env);
-    GLint length = -1;
-    if (CheckInList(env, internalFormat, WebGLTexture::GetSupportInternalFormatGroup1())) {
-        length = 1;
-    } else if (!CheckInList(env, internalFormat, WebGLTexture::GetSupportInternalFormatGroup2())) {
+    if (CheckInList(internalFormat, WebGLTexture::GetSupportInternalFormatGroup1())) {
+        return writeBuffer.ToExternalArray(BUFFER_DATA_INT_32);
+    } else if (!CheckInList(internalFormat, WebGLTexture::GetSupportInternalFormatGroup2())) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return NVal::CreateNull(env).val_;
     }
+
+    GLint length = -1;
     if (pname == GL_SAMPLES) {
         glGetInternalformativ(target, internalFormat, GL_NUM_SAMPLE_COUNTS, 1, &length);
-        LOGI("WebGL2 getInternalformatParameter length %{public}u", length);
-    }
-    if (length <= 0) {
+        LOGD("WebGL2 getInternalformatParameter length %{public}u", length);
+    } else {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return NVal::CreateNull(env).val_;
     }
-    GLint* params = reinterpret_cast<GLint*>(writeBuffer.AllocBuffer(length * sizeof(GLint)));
-    if (params == nullptr) {
-        return NVal::CreateNull(env).val_;
+    if (length > 0) {
+        GLint* params = reinterpret_cast<GLint*>(writeBuffer.AllocBuffer(length * sizeof(GLint)));
+        if (params == nullptr) {
+            return NVal::CreateNull(env).val_;
+        }
+        glGetInternalformativ(target, internalFormat, pname, length, params);
+        writeBuffer.DumpBuffer(BUFFER_DATA_INT_32);
     }
-    glGetInternalformativ(target, internalFormat, pname, length, params);
     return writeBuffer.ToExternalArray(BUFFER_DATA_INT_32);
 }
 
@@ -1627,7 +1746,10 @@ napi_value WebGL2RenderingContextImpl::TransformFeedbackVaryings(
         return nullptr;
     }
     programId = webGLProgram->GetProgramId();
-
+    if (bufferMode != GL_INTERLEAVED_ATTRIBS && bufferMode != GL_SEPARATE_ATTRIBS) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        return nullptr;
+    }
     std::vector<char*> list = {};
     bool succ = WebGLArg::GetStringList(env, data, list);
     if (!succ) {
@@ -1655,7 +1777,7 @@ napi_value WebGL2RenderingContextImpl::GetUniformIndices(napi_env env, napi_valu
         WebGLArg::FreeStringList(list);
         return NVal::CreateNull(env).val_;
     }
-    LOGI("WebGL2 getUniformIndices uniformCount %{public}u", list.size());
+    LOGD("WebGL2 getUniformIndices uniformCount %{public}u", list.size());
 
     WebGLWriteBufferArg writeBuffer(env);
     napi_value result = NVal::CreateNull(env).val_;
@@ -1663,6 +1785,7 @@ napi_value WebGL2RenderingContextImpl::GetUniformIndices(napi_env env, napi_valu
     if (uniformIndices != nullptr) {
         glGetUniformIndices(programId, static_cast<GLsizei>(list.size()), const_cast<const GLchar**>(list.data()),
             static_cast<GLuint*>(uniformIndices));
+        writeBuffer.DumpBuffer(BUFFER_DATA_UINT_32);
         result = writeBuffer.ToNormalArray(BUFFER_DATA_UINT_32, BUFFER_DATA_UINT_32);
     }
     WebGLArg::FreeStringList(list);
@@ -1684,7 +1807,7 @@ napi_value WebGL2RenderingContextImpl::GetActiveUniforms(
     }
 
     programId = webGLProgram->GetProgramId();
-    LOGI("WebGL2 getActiveUniforms programId %{public}u pname %{public}u", programId, pname);
+    LOGD("WebGL2 getActiveUniforms programId %{public}u pname %{public}u", programId, pname);
     WebGLReadBufferArg bufferData(env);
     napi_status status = bufferData.GenBufferData(data, BUFFER_DATA_UINT_32);
     if (status != 0) {
@@ -1724,8 +1847,8 @@ napi_value WebGL2RenderingContextImpl::GetActiveUniformBlockParameter(
         return NVal::CreateInt64(env, -1).val_;
     }
     programId = webGLProgram->GetProgramId();
-    LOGI("WebGL2 getActiveUniformBlockParameter programId %{public}u %{public}u %{public}u", programId,
-        uniformBlockIndex, pname);
+    LOGD("WebGL2 getActiveUniformBlockParameter programId %{public}u %{public}u %{public}u",
+        programId, uniformBlockIndex, pname);
     switch (pname) {
         case GL_UNIFORM_BLOCK_BINDING:
         case GL_UNIFORM_BLOCK_DATA_SIZE:
@@ -1744,7 +1867,7 @@ napi_value WebGL2RenderingContextImpl::GetActiveUniformBlockParameter(
             WebGLWriteBufferArg writeBuffer(env);
             GLint uniformCount = 1;
             glGetActiveUniformBlockiv(programId, uniformBlockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &uniformCount);
-            LOGI("WebGL2 getActiveUniformBlockParameter uniformCount %{public}d", uniformCount);
+            LOGD("WebGL2 getActiveUniformBlockParameter uniformCount %{public}d", uniformCount);
             GLint* params = reinterpret_cast<GLint*>(writeBuffer.AllocBuffer(uniformCount * sizeof(GLint)));
             if (params == nullptr) {
                 return nullptr;
@@ -1779,11 +1902,12 @@ napi_value WebGL2RenderingContextImpl::GetActiveUniformBlockName(
     }
     std::unique_ptr<char[]> buf = std::make_unique<char[]>(length + 1);
     if (buf == nullptr) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
     glGetActiveUniformBlockName(programId, uniformBlockIndex, length, &size, buf.get());
-    LOGI("WebGL2 getActiveUniformBlockName programId %{public}u name %{public}s size %{public}d", programId, buf.get(),
-        size);
+    LOGD("WebGL2 getActiveUniformBlockName programId %{public}u uniformBlockIndex  %{public}u name %{public}s",
+        programId, uniformBlockIndex, buf.get());
     string str(buf.get(), size);
     return NVal::CreateUTF8String(env, str).val_;
 }
@@ -1793,12 +1917,10 @@ GLenum WebGL2RenderingContextImpl::CheckClearBuffer(napi_env env, GLenum buffer,
     size_t size = bufferData.GetBufferLength() / bufferData.GetBufferDataSize();
     switch (buffer) {
         case WebGL2RenderingContextBase::COLOR:
-            /*
-            case WebGLRenderingContextBase::FRONT:
-            case WebGLRenderingContextBase::BACK:
-            case WebGLRenderingContextBase::FRONT_AND_BACK:
-            */
-            if (size < 4) {
+        case WebGLRenderingContextBase::FRONT:
+        case WebGLRenderingContextBase::BACK:
+        case WebGLRenderingContextBase::FRONT_AND_BACK:
+            if (size < 4) { // 4 max element
                 return WebGLRenderingContextBase::INVALID_VALUE;
             }
             break;
@@ -1835,28 +1957,34 @@ GLenum WebGL2RenderingContextImpl::CheckTexStorage(napi_env env, const TexStorag
 {
     WebGLTexture* texture = GetBoundTexture(env, arg.target, false);
     if (!texture) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
+        LOGE("CheckTexStorage %{public}u", arg.target);
+        return WebGLRenderingContextBase::INVALID_OPERATION;
     }
 
-    // internalFormat check
-    if (!CheckStorageInternalFormat(arg.internalFormat)) {
+    if (!CheckStorageInternalFormat(env, arg.internalFormat)) {
         return WebGLRenderingContextBase::INVALID_ENUM;
     }
 
     if (arg.width <= 0 || arg.height <= 0 || arg.depth <= 0) {
+        LOGE("CheckTexStorage invalid width %{public}d, height %{public}d, depth %{public}d",
+            arg.width, arg.height, arg.depth);
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
 
     if (arg.levels <= 0) {
+        LOGE("CheckTexStorage invalid levels %{public}d", arg.levels);
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
 
     if (arg.target == GL_TEXTURE_3D) {
         if (arg.levels > log2(std::max(std::max(arg.width, arg.height), arg.depth)) + 1) {
+            LOGE("CheckTexStorage invalid levels %{public}u", arg.levels);
             return WebGLRenderingContextBase::INVALID_OPERATION;
         }
     } else {
         if (arg.levels > log2(std::max(arg.width, arg.height)) + 1) {
+            LOGE("CheckTexStorage invalid %{public}u %{public}u",
+                arg.levels, log2(std::max(arg.width, arg.height)) + 1);
             return WebGLRenderingContextBase::INVALID_OPERATION;
         }
     }
@@ -1871,8 +1999,42 @@ bool WebGL2RenderingContextImpl::CheckBufferBindTarget(GLenum target)
     return false;
 }
 
+bool WebGL2RenderingContextImpl::CheckTransformFeedbackBuffer(GLenum target, WebGLBuffer* buffer)
+{
+    if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
+        for (size_t i = 0; i < sizeof(boundBufferIds_) / boundBufferIds_[0]; i++) {
+            if (i == BoundBufferType::TRANSFORM_FEEDBACK_BUFFER) {
+                continue;
+            }
+            if (boundBufferIds_[i] == buffer->GetBufferId()) {
+                LOGD("boundBufferIds_ %{public}u %{public}zu", boundBufferIds_[i], i);
+                return false;
+            }
+        }
+        LOGD("boundIndexedUniformBuffers_ %{public}u", boundIndexedUniformBuffers_.size());
+        for (size_t i = 0; i < boundIndexedUniformBuffers_.size(); ++i) {
+            if (boundIndexedUniformBuffers_[i] == buffer->GetBufferId()) {
+                return false;
+            }
+        }
+    } else {
+        LOGD("Get TRANSFORM_FEEDBACK_BUFFER id %{public}u ",
+            boundBufferIds_[BoundBufferType::TRANSFORM_FEEDBACK_BUFFER]);
+        if (boundBufferIds_[BoundBufferType::TRANSFORM_FEEDBACK_BUFFER] == buffer->GetBufferId()) {
+            return false;
+        }
+        for (size_t i = 0; i < boundIndexedTransformFeedbackBuffers_.size(); ++i) {
+            if (boundIndexedTransformFeedbackBuffers_[i] == buffer->GetBufferId()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool WebGL2RenderingContextImpl::CheckBufferTargetCompatibility(napi_env env, GLenum target, WebGLBuffer* buffer)
 {
+    LOGD("buffer target %{public}u %{public}u id %{public}u", buffer->GetTarget(), target, buffer->GetBufferId());
     switch (buffer->GetTarget()) {
         case GL_ELEMENT_ARRAY_BUFFER:
             switch (target) {
@@ -1900,76 +2062,107 @@ bool WebGL2RenderingContextImpl::CheckBufferTargetCompatibility(napi_env env, GL
         default:
             break;
     }
-
-    if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
-        for (size_t i = 0; i < sizeof(boundBufferIds_) / boundBufferIds_[0]; i++) {
-            if (i == BoundBufferType::TRANSFORM_FEEDBACK_BUFFER) {
-                continue;
-            }
-            if (boundBufferIds_[i] == buffer->GetBufferId()) {
-                return false;
-            }
-        }
-        for (size_t i = 0; i <= maxBoundUniformBufferIndex_; ++i) {
-            if (boundIndexedUniformBuffers_[i] == buffer->GetBufferId()) {
-                return false;
-            }
-        }
-    } else {
-        // has bound
-        if (GetBoundBuffer(env, WebGL2RenderingContextBase::TRANSFORM_FEEDBACK_BUFFER) != nullptr) {
-            return false;
-        }
-        for (size_t i = 0; i < boundIndexedTransformFeedbackBuffers_.size(); ++i) {
-            if (boundIndexedTransformFeedbackBuffers_[i] == buffer->GetBufferId()) {
-                return false;
-            }
-        }
-    }
-    return true;
+    return CheckTransformFeedbackBuffer(target, buffer);
 }
 
-// validateAndUpdateBufferBindBaseTarget
 bool WebGL2RenderingContextImpl::UpdateBaseTargetBoundBuffer(
-    napi_env env, GLenum target, GLuint index, WebGLBuffer* buffer)
+    napi_env env, GLenum target, GLuint index, GLuint bufferId)
 {
-    if (!CheckBufferTargetCompatibility(env, target, buffer)) {
-        return false;
-    }
-    switch (target) {
-        case GL_TRANSFORM_FEEDBACK_BUFFER:
-            if (index >= boundIndexedTransformFeedbackBuffers_.size()) {
-                LOGE("Out of bound indexed transform feedback buffer %{public}u", index);
-                return false;
-            }
-            boundIndexedTransformFeedbackBuffers_[index] = buffer->GetBufferId();
-            boundBufferIds_[BoundBufferType::TRANSFORM_FEEDBACK_BUFFER] = buffer->GetBufferId();
-            break;
-        case GL_UNIFORM_BUFFER:
-            if (index >= boundIndexedUniformBuffers_.size()) {
-                LOGE("Out of bound indexed uniform buffer %{public}u", index);
-                return false;
-            }
-            boundIndexedUniformBuffers_[index] = buffer->GetBufferId();
-            boundBufferIds_[BoundBufferType::UNIFORM_BUFFER] = buffer->GetBufferId();
-            maxBoundUniformBufferIndex_ = index > maxBoundUniformBufferIndex_ ? index : maxBoundUniformBufferIndex_;
-            break;
-        default:
+    if (target == GL_TRANSFORM_FEEDBACK_BUFFER) {
+        if (index >= maxBoundTransformFeedbackBufferIndex_) {
+            LOGE("Out of bound indexed transform feedback buffer %{public}u", index);
             return false;
+        }
+        boundIndexedTransformFeedbackBuffers_[index] = bufferId;
+        boundBufferIds_[BoundBufferType::TRANSFORM_FEEDBACK_BUFFER] = bufferId;
+        if (!bufferId) { // for delete
+            boundIndexedTransformFeedbackBuffers_.erase(index);
+        }
+        return true;
     }
-
-    if (!buffer->GetTarget()) {
-        buffer->SetTarget(target);
+    if (target == GL_UNIFORM_BUFFER) {
+        if (index >= maxBoundUniformBufferIndex_) {
+            LOGE("Out of bound indexed uniform buffer %{public}u", index);
+            return false;
+        }
+        boundIndexedUniformBuffers_[index] = bufferId;
+        boundBufferIds_[BoundBufferType::UNIFORM_BUFFER] = bufferId;
+        if (!bufferId) { // for delete
+            boundIndexedUniformBuffers_.erase(index);
+        }
+        return true;
     }
-    return true;
+    return false;
 }
 
-bool WebGL2RenderingContextImpl::CheckStorageInternalFormat(GLenum internalFormat)
+bool WebGL2RenderingContextImpl::CheckStorageInternalFormat(napi_env env, GLenum internalFormat)
 {
-    // if (m_supportedInternalFormatsStorage.find(internalformat) == m_supportedInternalFormatsStorage.end()) {
-    //     return false;
-    // }
-    return true;
+    return CheckInList(internalFormat, {
+        GL_R8,
+        GL_R8_SNORM,
+        GL_R16F,
+        GL_R32F,
+        GL_R8UI,
+        GL_R8I,
+        GL_R16UI,
+        GL_R16I,
+        GL_R32UI,
+        GL_R32I,
+        GL_RG8,
+        GL_RG8_SNORM,
+        GL_RG16F,
+        GL_RG32F,
+        GL_RG8UI,
+        GL_RG8I,
+        GL_RG16UI,
+        GL_RG16I,
+        GL_RG32UI,
+        GL_RG32I,
+        GL_RGB8,
+        GL_SRGB8,
+        GL_RGB565,
+        GL_RGB8_SNORM,
+        GL_R11F_G11F_B10F,
+        GL_RGB9_E5,
+        GL_RGB16F,
+        GL_RGB32F,
+        GL_RGB8UI,
+        GL_RGB8I,
+        GL_RGB16UI,
+        GL_RGB16I,
+        GL_RGB32UI,
+        GL_RGB32I,
+        GL_RGBA8,
+        GL_SRGB8_ALPHA8,
+        GL_RGBA8_SNORM,
+        GL_RGB5_A1,
+        GL_RGBA4,
+        GL_RGB10_A2,
+        GL_RGBA16F,
+        GL_RGBA32F,
+        GL_RGBA8UI,
+        GL_RGBA8I,
+        GL_RGB10_A2UI,
+        GL_RGBA16UI,
+        GL_RGBA16I,
+        GL_RGBA32UI,
+        GL_RGBA32I,
+        GL_DEPTH_COMPONENT16,
+        GL_DEPTH_COMPONENT24,
+        GL_DEPTH_COMPONENT32F,
+        GL_DEPTH24_STENCIL8,
+        GL_DEPTH32F_STENCIL8,
+        GL_COMPRESSED_R11_EAC,
+        GL_COMPRESSED_SIGNED_R11_EAC,
+        GL_COMPRESSED_RG11_EAC,
+        GL_COMPRESSED_SIGNED_RG11_EAC,
+        GL_COMPRESSED_RGB8_ETC2,
+        GL_COMPRESSED_SRGB8_ETC2,
+        GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+        GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+        GL_COMPRESSED_RGBA8_ETC2_EAC,
+        GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+    });
 }
 
 } // namespace Impl

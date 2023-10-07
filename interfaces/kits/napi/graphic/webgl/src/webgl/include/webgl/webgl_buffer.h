@@ -63,22 +63,19 @@ public:
     {
         return WebGLObject::CreateObjectInstance<WebGLBuffer>(env, instance);
     }
-    static WebGLBuffer* GetObjectInstance(napi_env env, napi_value obj)
-    {
-        return WebGLObject::GetObjectInstance<WebGLBuffer>(env, obj);
-    }
 
-    void SetBufferSize(size_t bufferSize)
+    void SetBufferSize(size_t bufferSize, const uint8_t* data)
     {
         bufferSize_ = bufferSize;
+        bufferData_ = data;
     }
 
     size_t GetBufferSize()
     {
         return bufferSize_;
     }
+    const uint8_t* bufferData_ { nullptr };
 private:
-    WebGLReadBufferArg* bufferData_ { nullptr };
     uint32_t bufferId_ { 0 };
     GLenum target_ { 0 };
     size_t bufferSize_ { 0 };

@@ -93,7 +93,7 @@ BorderStyle RSBorder::GetStyle(int idx) const
     }
 }
 
-void RSBorder::SetColorFour(Vector4<Color> color)
+void RSBorder::SetColorFour(const Vector4<Color>& color)
 {
     if (color.x_ == color.y_ && color.x_ == color.z_ && color.x_ == color.w_) {
         return SetColor(color.x_);
@@ -101,7 +101,7 @@ void RSBorder::SetColorFour(Vector4<Color> color)
     colors_ = { color.x_, color.y_, color.z_, color.w_ };
 }
 
-void RSBorder::SetWidthFour(Vector4f width)
+void RSBorder::SetWidthFour(const Vector4f& width)
 {
     if (width.x_ == width.y_ && width.x_ == width.z_ && width.x_ == width.w_) {
         return SetWidth(width.x_);
@@ -109,7 +109,7 @@ void RSBorder::SetWidthFour(Vector4f width)
     widths_ = { width.x_, width.y_, width.z_, width.w_ };
 }
 
-void RSBorder::SetStyleFour(Vector4<uint32_t> style)
+void RSBorder::SetStyleFour(const Vector4<uint32_t>& style)
 {
     if (style.x_ == style.y_ && style.x_ == style.z_ && style.x_ == style.w_) {
         return SetStyle(static_cast<BorderStyle>(style.x_));
@@ -210,6 +210,11 @@ bool RSBorder::ApplyFillStyle(Drawing::Brush& brush) const
     if (styles_.size() != 1 || GetStyle() != BorderStyle::SOLID) {
         return false;
     }
+    for (const float& width : widths_) {
+        if (ROSEN_LE(width, 0.f)) {
+            return false;
+        }
+    }
 #ifndef USE_ROSEN_DRAWING
     paint.setStyle(SkPaint::Style::kFill_Style);
     paint.setColor(GetColor().AsArgbInt());
@@ -266,10 +271,11 @@ bool RSBorder::ApplyLineStyle(Drawing::Pen& pen, int borderIdx, float length) co
         return false;
     }
     float borderWidth = GetWidth(borderIdx);
-    float addLen = (GetStyle(borderIdx) != BorderStyle::DOTTED) ? 0.0f : 0.5f;
+    BorderStyle borderStyle = GetStyle(borderIdx);
+    float addLen = (borderStyle != BorderStyle::DOTTED) ? 0.0f : 0.5f;
     auto borderLength = length - borderWidth * addLen * PARAM_DOUBLE;
     int32_t rawNumber = borderLength / (PARAM_DOUBLE * borderWidth);
-    if (rawNumber == 0) {
+    if (borderStyle == BorderStyle::DOTTED && rawNumber == 0) {
         return false;
     }
 

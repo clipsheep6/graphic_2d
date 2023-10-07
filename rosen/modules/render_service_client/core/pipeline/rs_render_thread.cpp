@@ -42,6 +42,11 @@
 #include "res_sched_client.h"
 #include "res_type.h"
 #endif
+
+#ifdef ROSEN_PREVIEW
+#include "glfw_render_context.h"
+#endif
+
 #ifdef ROSEN_OHOS
 #include <unistd.h>
 #include "frame_collector.h"
@@ -98,10 +103,12 @@ RSRenderThread::RSRenderThread()
 #endif
         prevTimestamp_ = timestamp_;
         ProcessCommands();
-        ROSEN_LOGD("RSRenderThread DrawFrame(%" PRIu64 ") in %s", prevTimestamp_, renderContext_ ? "GPU" : "CPU");
+        ROSEN_LOGD("RSRenderThread DrawFrame(%{public}" PRIu64 ") in %{public}s",
+            prevTimestamp_, renderContext_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
         Render();
         SendCommands();
+        context_->activeNodesInRoot_.clear();
 #ifdef ROSEN_OHOS
         FRAME_TRACE::RenderFrameTrace::GetInstance().RenderEndFrameTrace(RT_INTERVAL_NAME);
 #endif
@@ -140,6 +147,7 @@ void RSRenderThread::Start()
 {
     ROSEN_LOGD("RSRenderThread start.");
     running_.store(true);
+    std::unique_lock<std::mutex> cmdLock(rtMutex_);
     if (thread_ == nullptr) {
         thread_ = std::make_unique<std::thread>(&RSRenderThread::RenderLoop, this);
     }
@@ -265,6 +273,14 @@ void RSRenderThread::RenderLoop()
         hasSkipVsync_ = false;
         RSRenderThread::Instance().RequestNextVSync();
     }
+#ifdef ROSEN_PREVIEW
+    static auto onSizeChange = [&](int width, int height) {
+        if (isRunning_) {
+            RSRenderThread::Instance().RequestNextVSync();
+        }
+    };
+    GlfwRenderContext::GetGlobal()->OnSizeChanged(onSizeChange);
+#endif
 
 #ifdef ROSEN_OHOS
     FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
@@ -282,6 +298,9 @@ void RSRenderThread::RenderLoop()
 void RSRenderThread::OnVsync(uint64_t timestamp)
 {
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderThread::OnVsync");
+#ifdef ROSEN_PREVIEW
+    isRunning_ = true;
+#endif
     SendFrameEvent(false);
     mValue = (mValue + 1) % 2; // 1 and 2 is Calculated parameters
     RS_TRACE_INT("Vsync-client", mValue);
@@ -289,6 +308,9 @@ void RSRenderThread::OnVsync(uint64_t timestamp)
     if (activeWindowCnt_.load() > 0) {
         mainFunc_(); // start render-loop now
     }
+#ifdef ROSEN_PREVIEW
+    isRunning_ = false;
+#endif
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
@@ -299,7 +321,8 @@ void RSRenderThread::UpdateWindowStatus(bool active)
     } else {
         activeWindowCnt_--;
     }
-    ROSEN_LOGD("RSRenderThread UpdateWindowStatus %d, cur activeWindowCnt_ %d", active, activeWindowCnt_.load());
+    ROSEN_LOGD("RSRenderThread UpdateWindowStatus %{public}d, cur activeWindowCnt_ %{public}d",
+        active, activeWindowCnt_.load());
 }
 
 void RSRenderThread::ProcessCommands()
@@ -338,7 +361,7 @@ void RSRenderThread::ProcessCommands()
         uiTimestamp_ = prevTimestamp_ - 1;
     }
 
-    ROSEN_LOGD("RSRenderThread ProcessCommands size: %lu\n", cmds_.size());
+    ROSEN_LOGD("RSRenderThread ProcessCommands size: %{public}lu\n", (unsigned long)cmds_.size());
     std::vector<std::unique_ptr<RSTransactionData>> cmds;
     std::swap(cmds, cmds_);
     cmdLock.unlock();
@@ -354,18 +377,6 @@ void RSRenderThread::ProcessCommands()
     uint64_t uiEndTimeStamp = jankDetector_->GetSysTimeNs();
     for (auto& cmdData : cmds) {
         std::string str = "ProcessCommands ptr:" + std::to_string(reinterpret_cast<uintptr_t>(cmdData.get()));
-#if defined (ROSEN_CROSS_PLATFORM)  && !defined(ROSEN_PREVIEW)
-        if (cmdData->GetTimestamp() >= timestamp_) {
-            str += " SKIP!!!";
-            ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
-            std::unique_lock<std::mutex> cmdLock(cmdMutex_);
-            cmds_.emplace_back(std::move(cmdData));
-            cmdLock.unlock();
-            RequestNextVSync();
-            ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
-            continue;
-        }
-#endif
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, str.c_str());
         // only set transactionTimestamp_ in UniRender mode
         context_->transactionTimestamp_ = RSSystemProperties::GetUniRenderEnabled() ? cmdData->GetTimestamp() : 0;
@@ -390,21 +401,27 @@ void RSRenderThread::Animate(uint64_t timestamp)
     }
 
     bool needRequestNextVsync = false;
+    // isCalculateAnimationValue is embedded modify for stat animate frame drop
+    bool isCalculateAnimationValue = false;
     // iterate and animate all animating nodes, remove if animation finished
     EraseIf(context_->animatingNodeList_,
-        [timestamp, &needRequestNextVsync](const auto& iter) -> bool {
+        [timestamp, &needRequestNextVsync, &isCalculateAnimationValue](const auto& iter) -> bool {
         auto node = iter.second.lock();
         if (node == nullptr) {
             ROSEN_LOGD("RSRenderThread::Animate removing expired animating node");
             return true;
         }
-        auto result = node->Animate(timestamp);
-        if (!result.first) {
-            ROSEN_LOGD("RSRenderThread::Animate removing finished animating node %" PRIu64, node->GetId());
+        auto [hasRunningAnimation, nodeNeedRequestNextVsync, nodeCalculateAnimationValue] = node->Animate(timestamp);
+        if (!hasRunningAnimation) {
+            ROSEN_LOGD("RSRenderThread::Animate removing finished animating node %{public}" PRIu64, node->GetId());
         }
-        needRequestNextVsync = needRequestNextVsync || result.second;
-        return !result.first;
+        needRequestNextVsync = needRequestNextVsync || nodeNeedRequestNextVsync;
+        isCalculateAnimationValue = isCalculateAnimationValue || nodeCalculateAnimationValue;
+        return !hasRunningAnimation;
     });
+    if (!isCalculateAnimationValue && needRequestNextVsync) {
+        RS_TRACE_NAME("Animation running empty");
+    }
 
     if (needRequestNextVsync) {
         RSRenderThread::Instance().RequestNextVSync();

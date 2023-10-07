@@ -32,13 +32,14 @@
 #include "skia_matrix.h"
 #include "skia_paint.h"
 #include "skia_picture.h"
+#include "include/gpu/GrBackendSurface.h"
 
 #include "impl_interface/image_impl.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class SkiaImage : public ImageImpl {
+class DRAWING_API SkiaImage : public ImageImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     SkiaImage() noexcept;
@@ -57,14 +58,23 @@ public:
         CompressedType type) override;
     bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace) override;
+    BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) override;
+    void SetGrBackendTexture(const GrBackendTexture& grBackendTexture);
+    bool IsValid(GPUContext* context) const override;
 #endif
     int GetWidth() const override;
     int GetHeight() const override;
     ColorType GetColorType() const override;
     AlphaType GetAlphaType() const override;
     uint32_t GetUniqueID() const override;
+    ImageInfo GetImageInfo() override;
     bool ReadPixels(Bitmap& bitmap, int x, int y) override;
     bool IsTextureBacked() const override;
+
+    bool ScalePixels(const Bitmap& bitmap, const SamplingOptions& sampling,
+        bool allowCachingHint = true) const override;
+    std::shared_ptr<Data> EncodeToData(EncodedImageFormat& encodedImageFormat, int quality) const override;
+    bool IsLazyGenerated() const override;
 
     const sk_sp<SkImage> GetImage() const;
 
@@ -96,6 +106,7 @@ private:
 #endif
     sk_sp<SkImage> skiaImage_;
     SkiaPaint skiaPaint_;
+    GrBackendTexture grBackendTexture_;
 };
 } // namespace Drawing
 } // namespace Rosen

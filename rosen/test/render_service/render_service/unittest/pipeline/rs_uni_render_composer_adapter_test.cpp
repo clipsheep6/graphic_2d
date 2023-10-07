@@ -944,4 +944,232 @@ HWTEST_F(RSUniRenderComposerAdapterTest, SetLayerSize001, TestSize.Level1)
     composerAdapter_->screenInfo_.rotation = ScreenRotation::ROTATION_0;
     composerAdapter_->LayerRotate(layer, *surfaceNode);
 }
+
+/**
+ * @tc.name: GetComposerInfoNeedClient001
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.GetComposerInfoNeedClient while
+ *           color gamut of screen and buffer are different
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, GetComposerInfoNeedClient001, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    ComposeInfo info = composerAdapter_->BuildComposeInfo(*surfaceNode);
+    ASSERT_NE(info.buffer, nullptr);
+    
+    info.buffer->SetSurfaceBufferColorGamut(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB);
+    composerAdapter_->screenInfo_.colorGamut = ScreenColorGamut::COLOR_GAMUT_DISPLAY_BT2020;
+    ASSERT_TRUE(composerAdapter_->GetComposerInfoNeedClient(info, *surfaceNode));
+}
+
+/**
+ * @tc.name: SrcRectRotateTransform005
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.SrcRectRotateTransform for GRAPHIC_ROTATE_90
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, SrcRectRotateTransform005, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    //let the left value of node's rect not equal to zero and the result of the founction isn't empty
+    RectI rect{DEFAULT_CANVAS_WIDTH * 0.5, DEFAULT_CANVAS_HEIGHT * 0.5, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    surfaceNode->SetSrcRect(rect);
+    surfaceNode->SetDstRect(rect);
+    surfaceNode->renderProperties_.SetBoundsWidth(DEFAULT_CANVAS_WIDTH * 1.5);
+    surfaceNode->renderProperties_.SetBoundsHeight(DEFAULT_CANVAS_HEIGHT * 1.5);
+    surfaceNode->GetConsumer()->SetTransform(GraphicTransformType::GRAPHIC_FLIP_H_ROT90);
+    auto srcRect = composerAdapter_->SrcRectRotateTransform(*surfaceNode);
+    ASSERT_EQ(srcRect.top_, DEFAULT_CANVAS_WIDTH * 0.5);
+}
+
+/**
+ * @tc.name: LayerCrop003
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.LayerCrop while
+ *           screen size is smaller than layer size
+ * @tc.type: FUNC
+ * @tc.require: issueI7O6WO
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, LayerCrop003, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    RectI rect{0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    surfaceNode->SetSrcRect(rect);
+    surfaceNode->SetDstRect(rect);
+    LayerInfoPtr layer = composerAdapter_->CreateLayer(*surfaceNode);
+    ASSERT_NE(layer, nullptr);
+
+    layer->layerRect_ = {0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    layer->cropRect_ = {0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    composerAdapter_->screenInfo_.width = DEFAULT_CANVAS_WIDTH * 0.5;
+    composerAdapter_->screenInfo_.height = DEFAULT_CANVAS_HEIGHT * 0.5;
+    
+    composerAdapter_->LayerCrop(layer);
+    ASSERT_EQ(layer->layerRect_.w, DEFAULT_CANVAS_WIDTH * 0.5);
+}
+
+/**
+ * @tc.name: GetComposerInfoSrcRect005
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.GetComposerInfoSrcRect while
+ *           the scaling mode of buffer is ScalingMode::SCALING_MODE_SCALE_TO_WINDOW
+ * @tc.type: FUNC
+ * @tc.require: issuesI7T9RE
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, GetComposerInfoSrcRect005, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    ComposeInfo info = composerAdapter_->BuildComposeInfo(*surfaceNode);
+    ASSERT_NE(info.buffer, nullptr);
+
+    //let the the width of the buffer not equal to the width of bounds
+    surfaceNode->renderProperties_.SetBoundsWidth(DEFAULT_CANVAS_WIDTH * 0.5);
+    surfaceNode->renderProperties_.SetBoundsHeight(DEFAULT_CANVAS_HEIGHT * 0.5);
+    info.buffer->SetSurfaceBufferWidth(DEFAULT_CANVAS_WIDTH);
+    info.buffer->SetSurfaceBufferHeight(DEFAULT_CANVAS_WIDTH);
+    //let th width of the srcRect equal to the width of bounds
+    info.srcRect = {0, 0, DEFAULT_CANVAS_WIDTH * 0.5, DEFAULT_CANVAS_HEIGHT * 0.5};
+    
+    ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_TO_WINDOW;
+    surfaceNode->GetConsumer()->AttachBuffer(info.buffer);
+    surfaceNode->GetConsumer()->SetScalingMode(info.buffer->GetSeqNum(), scalingMode);
+    composerAdapter_->GetComposerInfoSrcRect(info, *surfaceNode);
+    ASSERT_EQ(info.srcRect.w, DEFAULT_CANVAS_WIDTH);
+}
+
+/**
+ * @tc.name: SrcRectRotateTransform006
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.SrcRectRotateTransform while
+ *           surface's consumer is nullptr
+ * @tc.type: FUNC
+ * @tc.require: issuesI7T9RE
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, SrcRectRotateTransform006, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    RectI rect{0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    surfaceNode->SetSrcRect(rect);
+    surfaceNode->consumer_ = nullptr;
+    ASSERT_EQ(composerAdapter_->SrcRectRotateTransform(*surfaceNode), rect);
+}
+
+/**
+ * @tc.name: CheckStatusBeforeCreateLayer008
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.CheckStatusBeforeCreateLayer while
+ *           bounds geometry is nullptr
+ * @tc.type: FUNC
+ * @tc.require: issuesI7T9RE
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, CheckStatusBeforeCreateLayer008, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    surfaceNode->GetMutableRenderProperties().boundsGeo_ = nullptr;
+    RectI dstRect{0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    surfaceNode->SetSrcRect(dstRect);
+    surfaceNode->SetDstRect(dstRect);
+    ASSERT_FALSE(composerAdapter_->CheckStatusBeforeCreateLayer(*surfaceNode));
+}
+
+/**
+ * @tc.name: LayerScaleDown004
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.LayerScaleDown while
+ *           scaling mode is SCALING_MODE_SCALE_CROP
+ * @tc.type: FUNC
+ * @tc.require: issuesI7T9RE
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, LayerScaleDown004, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    RectI rect{0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    surfaceNode->SetSrcRect(rect);
+    surfaceNode->SetDstRect(rect);
+
+    LayerInfoPtr layer = composerAdapter_->CreateLayer(*surfaceNode);
+    ASSERT_NE(layer, nullptr);
+    GraphicIRect gRect = {0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    layer->SetCropRect(gRect);
+    layer->SetLayerSize(gRect);
+    std::vector<GraphicIRect> dirtyRegions;
+    dirtyRegions.emplace_back(gRect);
+    layer->SetDirtyRegions(dirtyRegions);
+
+    ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_CROP;
+    surfaceNode->GetConsumer()->AttachBuffer(layer->sbuffer_);
+    surfaceNode->GetConsumer()->SetScalingMode(layer->GetBuffer()->GetSeqNum(), scalingMode);
+    
+    composerAdapter_->LayerScaleDown(layer, *surfaceNode);
+    ASSERT_TRUE(layer->GetDirtyRegions()[0].w == DEFAULT_CANVAS_WIDTH);
+}
+
+/**
+ * @tc.name: LayerScaleDown005
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.LayerScaleDown while
+ *           surface rotate angle is not a multiple of FLAT_ANGLE
+ * @tc.type: FUNC
+ * @tc.require: issuesI7T9RE
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, LayerScaleDown005, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    RectI rect{0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    surfaceNode->SetSrcRect(rect);
+    surfaceNode->SetDstRect(rect);
+
+    LayerInfoPtr layer = composerAdapter_->CreateLayer(*surfaceNode);
+    ASSERT_NE(layer, nullptr);
+    GraphicIRect gRect = {0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    layer->SetCropRect(gRect);
+    layer->SetLayerSize(gRect);
+    std::vector<GraphicIRect> dirtyRegions;
+    dirtyRegions.emplace_back(gRect);
+    layer->SetDirtyRegions(dirtyRegions);
+
+    ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_CROP;
+    surfaceNode->GetConsumer()->AttachBuffer(layer->sbuffer_);
+    surfaceNode->GetConsumer()->SetScalingMode(layer->GetBuffer()->GetSeqNum(), scalingMode);
+
+    surfaceNode->GetConsumer()->SetTransform(GraphicTransformType::GRAPHIC_ROTATE_90);
+    composerAdapter_->LayerScaleDown(layer, *surfaceNode);
+    ASSERT_FALSE(layer->GetDirtyRegions()[0].w == DEFAULT_CANVAS_WIDTH);
+}
+
+/**
+ * @tc.name: LayerScaleDown006
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.LayerScaleDown while
+ *           surface's width is smaller than surface's heigth
+ * @tc.type: FUNC
+ * @tc.require: issuesI7T9RE
+ */
+HWTEST_F(RSUniRenderComposerAdapterTest, LayerScaleDown006, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+    ASSERT_NE(surfaceNode, nullptr);
+    RectI rect{0, 0, DEFAULT_CANVAS_HEIGHT, DEFAULT_CANVAS_WIDTH};
+    surfaceNode->SetSrcRect(rect);
+    surfaceNode->SetDstRect(rect);
+    
+    LayerInfoPtr layer = composerAdapter_->CreateLayer(*surfaceNode);
+    ASSERT_NE(layer, nullptr);
+    GraphicIRect gRect = {0, 0, DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT};
+    layer->SetCropRect(gRect);
+    layer->SetLayerSize(gRect);
+    std::vector<GraphicIRect> dirtyRegions;
+    dirtyRegions.emplace_back(gRect);
+    layer->SetDirtyRegions(dirtyRegions);
+
+    ScalingMode scalingMode = ScalingMode::SCALING_MODE_SCALE_CROP;
+    surfaceNode->GetConsumer()->AttachBuffer(layer->sbuffer_);
+    surfaceNode->GetConsumer()->SetScalingMode(layer->GetBuffer()->GetSeqNum(), scalingMode);
+
+    surfaceNode->GetConsumer()->SetTransform(GraphicTransformType::GRAPHIC_ROTATE_90);
+    composerAdapter_->LayerScaleDown(layer, *surfaceNode);
+    ASSERT_FALSE(layer->GetDirtyRegions()[0].h == DEFAULT_CANVAS_WIDTH);
+}
 } // namespace

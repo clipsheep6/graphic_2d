@@ -111,10 +111,12 @@ void RSRenderInterpolatingSpringAnimation::OnSetFraction(float fraction)
 void RSRenderInterpolatingSpringAnimation::OnAnimate(float fraction)
 {
     if (valueEstimator_ == nullptr) {
-        ROSEN_LOGE("RSRenderInterpolatingSpringAnimation::OnAnimate, valueEstimator_ is nullptr.");
+        ROSEN_LOGD("RSRenderInterpolatingSpringAnimation::OnAnimate, valueEstimator_ is nullptr.");
         return;
     }
     if (GetPropertyId() == 0) {
+        // calculateAnimationValue_ is embedded modify for stat animate frame drop
+        calculateAnimationValue_ = false;
         return;
     } else if (ROSEN_EQ(fraction, 1.0f)) {
         valueEstimator_->UpdateAnimationValue(1.0f, GetAdditive());

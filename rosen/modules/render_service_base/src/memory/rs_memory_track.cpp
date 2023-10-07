@@ -58,7 +58,7 @@ bool MemoryTrack::RemoveNodeFromMap(const NodeId id, pid_t& pid, size_t& size)
 {
     auto itr = memNodeMap_.find(id);
     if (itr == memNodeMap_.end()) {
-        RS_LOGD("MemoryTrack::RemoveNodeFromMap no this nodeId = %" PRIu64, id);
+        RS_LOGD("MemoryTrack::RemoveNodeFromMap no this nodeId = %{public}" PRIu64, id);
         return false;
     }
     pid = memNodeMap_[id].pid;
@@ -70,7 +70,7 @@ bool MemoryTrack::RemoveNodeFromMap(const NodeId id, pid_t& pid, size_t& size)
 void MemoryTrack::RemoveNodeOfPidFromMap(const pid_t pid, const size_t size, const NodeId id)
 {
     if (memNodeOfPidMap_.find(pid) == memNodeOfPidMap_.end()) {
-        RS_LOGW("MemoryTrack::RemoveNodeOfPidFromMap no this nodeId = %" PRIu64, id);
+        RS_LOGW("MemoryTrack::RemoveNodeOfPidFromMap no this nodeId = %{public}" PRIu64, id);
         return;
     }
     MemoryNodeOfPid nodeInfoOfPid = {size, id};
@@ -94,6 +94,7 @@ void MemoryTrack::RemoveNodeRecord(const NodeId id)
 
 MemoryGraphic MemoryTrack::CountRSMemory(const pid_t pid)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     MemoryGraphic memoryGraphic;
     auto itr = memNodeOfPidMap_.find(pid);
     if (itr == memNodeOfPidMap_.end()) {
@@ -118,6 +119,15 @@ MemoryGraphic MemoryTrack::CountRSMemory(const pid_t pid)
         memoryGraphic.SetCpuMemorySize(totalMemSize);
     }
     return memoryGraphic;
+}
+
+float MemoryTrack::GetAppMemorySizeInMB()
+{
+    float total = 0.f;
+    for (auto& [_, memInfo] : memPicRecord_) {
+        total += static_cast<float>(memInfo.size);
+    }
+    return total / BYTE_CONVERT / BYTE_CONVERT / 2; // app mem account for 50%
 }
 
 void MemoryTrack::DumpMemoryStatistics(DfxString& log,

@@ -89,7 +89,7 @@ void VSyncGenerator::ThreadLoop()
 
     int64_t occurTimestamp = 0;
     int64_t nextTimeStamp = 0;
-    int64_t occurRefrenceTime = 0;
+    int64_t occurRefrenceTime;
     while (vsyncThreadRunning_ == true) {
         std::vector<Listener> listeners;
         {
@@ -130,8 +130,8 @@ void VSyncGenerator::ThreadLoop()
             }
             listeners = GetListenerTimeouted(occurTimestamp, occurRefrenceTime);
         }
-        ScopedBytrace func(
-            "GenerateVsyncCount:" + std::to_string(listeners.size()) + ", period:" + std::to_string(period_));
+        ScopedDebugTrace func(
+                "GenerateVsyncCount:" + std::to_string(listeners.size()));
         for (uint32_t i = 0; i < listeners.size(); i++) {
             listeners[i].callback_->OnVSyncEvent(listeners[i].lastTime_, period_);
         }

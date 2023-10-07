@@ -14,6 +14,8 @@
  */
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_BLUR_FILTER_H
+
+#include "include/core/SkColorFilter.h"
 #ifdef NEW_SKIA
 #include "include/effects/SkRuntimeEffect.h"
 #endif
@@ -63,7 +65,6 @@ private:
     float blurRadiusY_;
 #ifndef USE_ROSEN_DRAWING
     bool useKawase_ = false;
-    static std::shared_ptr<KawaseBlurFilter> kawaseFunc_;
 #endif
 };
 } // namespace Rosen

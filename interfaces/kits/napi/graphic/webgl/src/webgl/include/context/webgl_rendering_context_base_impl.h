@@ -90,133 +90,6 @@ enum BoundShaderType : uint32_t {
     SHADER_MAX
 };
 
-struct TexSubImage2DArg : public TexImageArg {
-    GLint xOffset;
-    GLint yOffset;
-    TexSubImage2DArg() : TexImageArg(), xOffset(0), yOffset{0} {}
-    TexSubImage2DArg(const TexSubImage2DArg &arg) : TexImageArg(arg)
-    {
-        xOffset = arg.xOffset;
-        yOffset = arg.yOffset;
-    }
-};
-
-struct TexSubImage3DArg : public TexSubImage2DArg {
-    GLint zOffset;
-    TexSubImage3DArg() : TexSubImage2DArg(), zOffset(0) {}
-    TexSubImage3DArg(const TexSubImage3DArg &arg) : TexSubImage2DArg(arg)
-    {
-        zOffset = arg.zOffset;
-    }
-};
-
-struct CopyTexImage2DArg : public TexImageArg {
-    GLint x;
-    GLint y;
-    CopyTexImage2DArg() : TexImageArg(), x(0), y{0} {}
-};
-
-struct CopyTexSubImageArg : public TexImageArg {
-    GLint xOffset;
-    GLint yOffset;
-    GLint x;
-    GLint y;
-    CopyTexSubImageArg() : TexImageArg(), xOffset(0), yOffset{0}, x(0), y(0) {}
-};
-
-struct CopyTexSubImage3DArg : public CopyTexSubImageArg {
-    GLint zOffset;
-    CopyTexSubImage3DArg() : CopyTexSubImageArg(), zOffset(0) {}
-};
-
-struct TextureLayerArg {
-    GLint level;
-    GLint layer;
-};
-
-struct BufferBaseArg {
-    GLenum target;
-    GLuint index;
-};
-
-struct VertexAttribArg {
-    GLuint index;
-    GLint size;
-    GLenum type;
-    GLboolean normalized;
-    GLsizei stride;
-    GLintptr offset;
-};
-
-struct PixelsArg {
-    GLint x;
-    GLint y;
-    GLsizei width;
-    GLsizei height;
-    GLenum format;
-    GLenum type;
-};
-
-struct UniformExtInfo {
-    GLsizei dimension;
-    GLuint srcOffset;
-    GLuint srcLength;
-};
-
-struct UniformTypeMap {
-    GLenum type;
-    GLenum baseType;
-    GLsizei length;
-    BufferDataType srcType;
-    BufferDataType dstType;
-};
-
-// getVertexAttrib
-struct VertexAttribDesc {
-    bool enabled;
-    bool normalized;
-    // VERTEX_ATTRIB_ARRAY_BUFFER_BINDING
-    GLuint boundBufferId;
-    // VERTEX_ATTRIB_ARRAY_NORMALIZED
-    GLsizei bytesPerElement;
-    // VERTEX_ATTRIB_ARRAY_SIZE
-    GLint size;
-    // VERTEX_ATTRIB_ARRAY_TYPE
-    GLenum type;
-    // VERTEX_ATTRIB_ARRAY_STRIDE
-    GLsizei stride;
-    GLsizei originalStride;
-    GLintptr offset;
-    // by this func VertexAttribDivisor
-    GLuint divisor;
-};
-
-struct VertexAttribInfo {
-    BufferDataType type;
-};
-
-struct BufferPosition {
-    GLint x;
-    GLint y;
-};
-
-struct BufferSize {
-    GLsizei width;
-    GLsizei height;
-};
-
-struct BufferExt {
-    GLuint dstOffset;
-    GLuint length;
-};
-
-struct DrawElementArg {
-    GLenum mode;
-    GLsizei count;
-    GLenum type;
-    GLintptr offset;
-};
-
 class WebGLRenderingContextBaseImpl {
 public:
     inline static const int MAX_COUNT_ATTACHED_SHADER = 128;
@@ -227,7 +100,7 @@ public:
     static const int PARAMETERS_NUM_4 = 4;
 
     explicit WebGLRenderingContextBaseImpl(int32_t version, WebGLRenderingContextBasicBase *base)
-    : version_(version), webGLRenderingContext_(base) {}
+        : version_(version), webGLRenderingContext_(base) {}
     virtual ~WebGLRenderingContextBaseImpl();
 
     virtual void Init();
@@ -270,14 +143,14 @@ public:
     napi_value CopyTexImage2D(napi_env env, const CopyTexImage2DArg& imgArg);
     napi_value CopyTexSubImage2D(napi_env env, const CopyTexSubImageArg& imgArg);
 
-    napi_value ReadPixels(napi_env env, const PixelsArg* arg, GLintptr offset);
-    napi_value ReadPixels(napi_env env, const PixelsArg* arg, napi_value buffer, GLuint dstOffset);
+    napi_value ReadPixels(napi_env env, const PixelsArg& arg, GLintptr offset);
+    napi_value ReadPixels(napi_env env, const PixelsArg& arg, napi_value buffer, GLuint dstOffset);
 
     // for buffer
     napi_value CreateBuffer(napi_env env);
-    napi_value BindBuffer(napi_env env, GLenum target, napi_value object);
+    virtual napi_value BindBuffer(napi_env env, GLenum target, napi_value object);
     napi_value IsBuffer(napi_env env, napi_value object);
-    napi_value DeleteBuffer(napi_env env, napi_value object);
+    virtual napi_value DeleteBuffer(napi_env env, napi_value object);
 
     napi_value CreateFrameBuffer(napi_env env);
     napi_value IsFrameBuffer(napi_env env, napi_value object);
@@ -324,16 +197,14 @@ public:
     // webgl 1
     napi_value BufferData(napi_env env, GLenum target, int64_t size, GLenum usage);
     // webgl 2
-    napi_value BufferData(
-        napi_env env, GLenum target, napi_value buffer, GLenum usage, GLuint srcOffset, GLuint length);
+    napi_value BufferData(napi_env env, GLenum target, napi_value buffer, GLenum usage, const BufferExt& ext);
 
-    napi_value BufferSubData(
-        napi_env env, GLenum target, GLintptr offset, napi_value buffer, GLuint srcOffset, GLuint length);
+    napi_value BufferSubData(napi_env env, GLenum target, GLintptr offset, napi_value buffer, const BufferExt& ext);
 
     napi_value PixelStorei(napi_env env, GLenum pname, GLint param);
 
     // Vertex Attrib
-    napi_value VertexAttribPointer(napi_env env, const VertexAttribArg* vertexInfo);
+    napi_value VertexAttribPointer(napi_env env, const VertexAttribArg& vertexInfo);
     napi_value EnableVertexAttribArray(napi_env env, int64_t index);
     napi_value DisableVertexAttribArray(napi_env env, int64_t index);
     napi_value GetVertexAttribOffset(napi_env env, GLuint index, GLenum pname);
@@ -373,18 +244,10 @@ public:
     napi_value ClearStencil(napi_env env, GLint s);
     napi_value GetError(napi_env env);
 
-    // static
-    static bool CheckString(const std::string& str);
-    static bool CheckReservedPrefix(const std::string& name);
-    static bool GetUniformExtInfo(napi_env env, const NFuncArg& funcArg, Impl::UniformExtInfo* info, int start);
-
     GLuint GetMaxVertexAttribs()
     {
         return maxVertexAttribs_;
     }
-    bool CheckGLenum(
-        napi_env env, GLenum type, const std::vector<GLenum>& glSupport, const std::vector<GLenum>& g2Support);
-    GLenum CheckReadPixelsArg(const PixelsArg* arg, uint64_t bufferSize);
 
     GLint GetMaxColorAttachments();
 
@@ -392,7 +255,8 @@ public:
     virtual napi_value GetTexParameter(napi_env env, GLenum target, GLenum pname);
     virtual napi_value GetFrameBufferAttachmentParameter(napi_env env, GLenum target, GLenum attachment, GLenum pname);
     virtual napi_value GetParameter(napi_env env, GLenum pname);
-protected:
+    virtual void DoObjectDelete(int type, WebGLObject *obj) {}
+
     // object mananger
     template<class T>
     bool AddObject(napi_env env, uint64_t key, napi_value obj);
@@ -404,31 +268,25 @@ protected:
     void DeleteObject(napi_env env, uint64_t key);
     template<class T>
     T* GetObjectInstance(napi_env env, uint64_t id);
-
+    WebGLBuffer* GetValidBuffer(napi_env env, napi_value object);
+    WebGLFramebuffer* GetValidFrameBuffer(napi_env env, napi_value object);
+    WebGLRenderbuffer* GetValidRenderBuffer(napi_env env, napi_value object);
+    bool CheckGLenum(GLenum type, const std::vector<GLenum>& glSupport, const std::vector<GLenum>& g2Support);
+protected:
     VertexAttribInfo* GetVertexAttribInfo(GLint index);
-
     // private interface
     WebGLTexture* GetBoundTexture(napi_env env, GLenum target, bool cubeMapExt);
     WebGLFramebuffer* GetBoundFrameBuffer(napi_env env, GLenum target);
     WebGLRenderbuffer* GetBoundRenderBuffer(napi_env env, GLenum target);
     WebGLBuffer* GetBoundBuffer(napi_env env, GLenum target);
-    GLenum GetError_();
-    bool CheckInList(napi_env env, GLenum type, const std::vector<GLenum>& glSupport);
     WebGLRenderbuffer* CheckRenderBufferStorage(napi_env env, const TexStorageArg& arg);
 
-    void TexImage2D_(const TexImageArg& imgArg, WebGLTexture *texture, const void* pixels, bool changeUnpackAlignment);
-    void TexSubImage2D_(const TexSubImage2DArg& imgArg,
-        WebGLTexture *texture, const void* pixels, bool changeUnpackAlignment);
+    void TexImage2D_(const TexImageArg& imgArg, WebGLTexture* texture, const void* pixels, bool);
+    void TexSubImage2D_(const TexSubImage2DArg& imgArg, WebGLTexture* texture, const void* pixels, bool);
+    napi_value BufferData_(napi_env env, GLenum target, GLsizeiptr size, GLenum usage, const uint8_t* bufferData);
 
-    // TODO 需要补充逻辑
-    bool CheckFrameBufferBoundComplete(napi_env env);
-
-    WebGLRenderingContextBaseImpl(const WebGLRenderingContextBaseImpl&) = delete;
-    WebGLRenderingContextBaseImpl& operator=(const WebGLRenderingContextBaseImpl&) = delete;
-
-    napi_value BufferData_(napi_env env, GLenum target, GLsizeiptr size, GLenum usage, WebGLReadBufferArg* bufferData);
-    WebGLBuffer* CheckAndGetBoundBuffer(napi_env env, GLenum target);
     // check
+    bool CheckInList(GLenum type, const std::vector<GLenum>& glSupport);
     bool CheckBufferTarget(napi_env env, GLenum target, uint32_t& index);
     bool CheckFrameBufferTarget(napi_env env, GLenum target, uint32_t& index);
     bool CheckRenderBufferTarget(napi_env env, GLenum target, uint32_t& index);
@@ -442,41 +300,51 @@ protected:
     bool CheckCap(napi_env env, GLenum cap);
     bool CheckPixelsFormat(napi_env env, GLenum format);
     bool CheckPixelsType(napi_env env, GLenum type);
-    bool CheckTextureLevel(GLenum target, GLint level);
     bool CheckReadBufferMode(GLenum mode);
-
-    GLenum CheckTexImage(napi_env env, const TexImageArg& imgArg, WebGLTexture* texture);
-    GLenum CheckTexSubImage2D(napi_env env, const TexSubImage2DArg& textureInfo, WebGLTexture* texture);
-    GLenum GetValidInternalFormat(GLenum internalFormat, GLenum type);
-    bool CheckCompressedTexSubImage2D(
-        napi_env env, const TexSubImage2DArg& imgArg, size_t imageSize);
-
     bool CheckCompressedTexSubDimensions(const TexSubImage2DArg& imgArg, WebGLTexture* texture);
-    GLenum CheckTexFuncDimensions(const TexImageArg& textureInfo);
-    GLenum CheckCompressedTexDimensions(const TexImageArg& textureInfo);
-    GLenum CheckCompressedTexData(const TexImageArg& imgArg, size_t dataLen);
-    bool CheckTexImageInternalFormat(int func, GLenum internalFormat);
-    bool CheckSettableTexFormat(GLenum format);
-    std::tuple<bool, WebGLTexture *> CheckCompressedTexImage2D(
-        napi_env env, const TexImageArg& textureInfo, size_t imageSize);
-
+    bool CheckTexImageInternalFormat(napi_env env, int func, GLenum internalFormat);
     bool CheckTexInternalFormatColorBufferCombination(GLenum texInternalFormat, GLenum colorBufferFormat);
     bool CheckStencil(napi_env env);
     bool CheckLocationName(const std::string& name);
+    bool CheckProgramLinkStatus(WebGLProgram* program);
+    bool CheckCompressedTexSubImage2D(napi_env env, const TexSubImage2DArg& imgArg, size_t imageSize);
 
+    GLenum GetError_();
+    GLenum CheckTextureFormatAndType(napi_env env, GLenum internalFormat, GLenum format, GLenum type, GLint level);
+    GLenum CheckFrameBufferBoundComplete(napi_env env);
+    GLenum CheckTextureLevel(GLenum target, GLint level);
+    GLenum CheckTexImage(napi_env env, const TexImageArg& imgArg, WebGLTexture* texture);
+    GLenum CheckTexSubImage2D(napi_env env, const TexSubImage2DArg& textureInfo, WebGLTexture* texture);
+    GLenum CheckCompressedTexImage2D(napi_env env, const TexImageArg& textureInfo, size_t imageSize);
+    GLenum CheckTexFuncDimensions(const TexImageArg& textureInfo);
+    GLenum CheckCompressedTexDimensions(const TexImageArg& textureInfo);
+    GLenum CheckCompressedTexData(const TexImageArg& imgArg, size_t dataLen);
     GLenum CheckDrawElements(napi_env env, GLenum mode, GLsizei count, GLenum type, int64_t offset);
     GLenum CheckDrawArrays(napi_env env, GLenum mode, GLint first, GLsizei count);
-    GLenum CheckVertexAttribPointer(napi_env env, const VertexAttribArg* vertexInfo);
+    GLenum CheckVertexAttribPointer(napi_env env, const VertexAttribArg& vertexInfo);
     GLenum CheckCopyTexSubImage(napi_env env, const CopyTexSubImageArg& imgArg);
     GLenum CheckTextureDataBuffer(const TexImageArg& info, const WebGLReadBufferArg *bufferData);
     GLenum GetBoundFrameBufferColorFormat(napi_env env);
-    bool CheckReadBufferAndGetInfo(napi_env env, GLuint &frameBufferId, GLenum* format, GLenum* type);
+    GLenum CheckReadBufferAndGetInfo(napi_env env, GLuint* frameBufferId, GLenum* format, GLenum* type);
+    GLenum CheckReadPixelsArg(napi_env env, const PixelsArg& arg, uint64_t bufferSize);
 
     template<class T>
     GLenum CheckTexParameter(napi_env env, GLenum target, GLenum pname, T param, bool isFloat);
-    bool CheckProgramLinkStatus(WebGLProgram* program);
+
+    bool GetReadBufferFormatAndType(napi_env env, const WebGLFramebuffer* frameBuffer, GLenum* format, GLenum* type);
     const UniformTypeMap* GetUniformTypeMap(GLenum type);
-    bool GetUniformType(napi_env env, GLuint programId, GLint locationId, GLenum& type);
+    GLenum GetUniformType(napi_env env, GLuint programId, GLint locationId);
+
+    template <class T>
+    napi_value GetObjectParameter(napi_env env, GLenum pname);
+    template <class T>
+    napi_value GetIntegerVectorParameter(napi_env env, GLenum pname, GLuint count, BufferDataType dstDataType);
+    napi_value GetFloatVectorParameter(napi_env env, GLenum pname, GLuint count, BufferDataType dstDataType);
+    napi_value GetBoolVectorParameter(napi_env env, GLenum pname, GLuint count, BufferDataType dstDataType);
+    const std::vector<GLenum> &GetTexImageInternalFormat();
+    const std::vector<GLenum>& GetExtentionAstcTexImageInternal();
+    const std::vector<GLenum>& GetIntegerParaName();
+    const std::vector<GLenum>& GetBoolParaName();
 
     int version_ = WEBGL_1_X;
     // error process
@@ -489,7 +357,6 @@ protected:
     GLint maxCubeMapTextureSize_ = 0;
     GLint maxRenderBufferSize_ = 0;
     uint32_t activeTextureIndex_ = 0;
-
     std::vector<uint32_t> boundTexture_[BoundTextureType::TEXTURE_MAX] = {};
 
     // for buffer 0: ARRAY_BUFFER 1:ELEMENT_ARRAY_BUFFER
@@ -498,7 +365,6 @@ protected:
     GLuint boundRenderBufferIds_[BoundRenderBufferType::RENDERBUFFER_MAX] = { 0 };
 
     GLuint currentProgramId_ { 0 };
-
     GLuint maxVertexAttribs_ { 0 };
     std::vector<VertexAttribInfo> arrayVertexAttribs_ {};
 
@@ -507,6 +373,7 @@ protected:
     GLenum unpackColorspaceConversion_ { 0 };
     GLint packAlignment_ { 4 };
     GLint unpackAlignment_ { 4 };
+    GLenum defaultReadBufferMode_ { GL_BACK };
 
     bool stencilEnabled_ { false };
     bool scissorEnabled_ { false };
@@ -524,6 +391,13 @@ protected:
 
     std::map<uint64_t, napi_ref> objects_[WebGLObject::WEBGL_OBJECT_MAX] {};
     WebGLRenderingContextBasicBase *webGLRenderingContext_ { nullptr };
+private:
+    WebGLRenderingContextBaseImpl(const WebGLRenderingContextBaseImpl&) = delete;
+    WebGLRenderingContextBaseImpl& operator=(const WebGLRenderingContextBaseImpl&) = delete;
+    napi_value HandleUniformMatrixInfo(
+        GLboolean transpose, const UniformExtInfo* info, GLint location, GLsizei count, GLfloat* srcData);
+    napi_value HandleFrameBufferAttachmentPname(
+        napi_env env, GLenum target, GLenum attachment, GLenum pname, GLint type);
 };
 
 template<class T>
@@ -542,7 +416,7 @@ bool WebGLRenderingContextBaseImpl::AddObject(napi_env env, uint64_t key, napi_v
         LOGE("AddObject %{public}u status %{public}u", static_cast<uint32_t>(key), status);
         return false;
     }
-    LOGI("AddObject %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
+    LOGD("AddObject %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
     objects_[T::objectType].insert({ key, ref });
     return true;
 }
@@ -555,12 +429,12 @@ napi_value WebGLRenderingContextBaseImpl::GetNapiValue(napi_env env, uint64_t ke
     }
     auto it = objects_[T::objectType].find(key);
     if (it == objects_[T::objectType].end()) {
-        LOGI("GetObject %{public}u %{public}u", T::objectType, static_cast<uint32_t>(key));
+        LOGD("GetObject %{public}u %{public}u", T::objectType, static_cast<uint32_t>(key));
         return nullptr;
     }
     napi_value obj;
     napi_status status = napi_get_reference_value(env, it->second, &obj);
-    LOGI("GetNapiValue %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
+    LOGD("GetNapiValue %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
     if (status != napi_ok) {
         return nullptr;
     }
@@ -592,15 +466,9 @@ void WebGLRenderingContextBaseImpl::DeleteObject(napi_env env, uint64_t key)
     }
     napi_value obj;
     napi_status status = napi_get_reference_value(env, it->second, &obj);
-    if (status == napi_ok) {
-        T *object = NClass::GetEntityOf<T>(env, obj);
-        if (object != nullptr) {
-            object->DoDelete();
-        }
-    }
     objects_[T::objectType].erase(it);
     napi_delete_reference(env, it->second);
-    LOGI("DeleteObject %{public}u %{public}u ", T::objectType, static_cast<uint32_t>(key));
+    LOGD("DeleteObject %{public}u %{public}u status %{public}u", T::objectType, static_cast<uint32_t>(key), status);
 }
 
 template<class T>

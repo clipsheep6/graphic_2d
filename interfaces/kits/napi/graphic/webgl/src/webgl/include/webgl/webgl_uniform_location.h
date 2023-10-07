@@ -62,6 +62,7 @@ public:
     {
         return name_;
     }
+
     void SetUniformLocationName(const std::string &name)
     {
         name_ = std::move(name);

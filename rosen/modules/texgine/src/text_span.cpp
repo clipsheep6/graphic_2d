@@ -30,7 +30,9 @@
 #include "texgine_path.h"
 #include "texgine_path_1d_path_effect.h"
 #include "texgine/utils/exlog.h"
+#ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
+#endif
 #include "text_converter.h"
 #include "word_breaker.h"
 
@@ -159,9 +161,12 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
 {
     TexginePaint paint;
     paint.SetAntiAlias(true);
+#ifndef USE_GRAPHIC_TEXT_GINE
     paint.SetARGB(MAXRGB, MAXRGB, 0, 0);
+#else
+    paint.SetAlpha(255);
+#endif
     paint.SetColor(xs.color);
-    paint.SetStyle(TexginePaint::FILL);
     if (xs.background.has_value()) {
         auto rect = TexgineRect::MakeXYWH(offsetX, offsetY + *tmetrics_.fAscent_, width_,
             *tmetrics_.fDescent_ - *tmetrics_.fAscent_);
@@ -171,6 +176,8 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
     if (xs.foreground.has_value()) {
         paint = xs.foreground.value();
     }
+
+    PaintShadow(canvas, offsetX, offsetY, xs.shadows);
     canvas.DrawTextBlob(textBlob_, offsetX, offsetY, paint);
     PaintDecoration(canvas, offsetX, offsetY, xs);
 }
@@ -254,14 +261,16 @@ void TextSpan::PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY
     const std::vector<TextShadow> &shadows)
 {
     for (const auto &shadow : shadows) {
+        if (!shadow.HasShadow()) {
+            continue;
+        }
         auto x = offsetX + shadow.offsetX;
         auto y = offsetY + shadow.offsetY;
-        auto blurRadius = std::min(shadow.blurLeave, MAX_BLURRADIUS);
-
         TexginePaint paint;
         paint.SetAntiAlias(true);
         paint.SetColor(shadow.color);
-        paint.SetMaskFilter(TexgineMaskFilter::MakeBlur(TexgineMaskFilter::K_NORMAL_SK_BLUR_STYLE, blurRadius));
+        paint.SetMaskFilter(TexgineMaskFilter::MakeBlur(TexgineMaskFilter::K_NORMAL_SK_BLUR_STYLE,
+            shadow.blurLeave, false));
 
         canvas.DrawTextBlob(textBlob_, x, y, paint);
     }

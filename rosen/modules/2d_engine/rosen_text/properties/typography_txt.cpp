@@ -85,10 +85,14 @@ void TypographyTxt::Layout(double width)
 
 void TypographyTxt::Paint(Canvas* drawCanvas, double x, double y)
 {
+#ifndef USE_ROSEN_DRAWING
     std::shared_ptr<CoreCanvasImpl> coreCanvas = drawCanvas->GetCanvasData();
     const SkiaCanvas* skiacavas = static_cast<const SkiaCanvas*>(coreCanvas.get());
     SkCanvas *canvas = skiacavas->ExportSkCanvas();
     paragraphTxt_->Paint(canvas, x, y);
+#else
+    paragraphTxt_->Paint(drawCanvas, x, y);
+#endif
 }
 
 std::vector<TypographyProperties::TextBox> TypographyTxt::GetRectsForRange(
@@ -140,5 +144,10 @@ TypographyProperties::Range<size_t> TypographyTxt::GetWordBoundary(size_t offset
 {
     txt::Paragraph::Range<size_t> range = paragraphTxt_->GetWordBoundary(offset);
     return TxtConvertRange(range);
+}
+
+size_t TypographyTxt::GetLineCount()
+{
+    return paragraphTxt_->GetLineCount();
 }
 } // namespace rosen

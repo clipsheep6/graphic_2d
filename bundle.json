@@ -28,11 +28,13 @@
         "graphic_2d_feature_ace_enable_gpu",
         "graphic_2d_feature_rs_enable_eglimage",
         "graphic_2d_feature_color_gamut_enable",
+        "graphic_2d_feature_use_texgine",
         "graphic_2d_feature_rs_enable_uni_render",
         "graphic_2d_feature_wuji_enable",
         "graphic_2d_feature_enable_afbc",
         "graphic_2d_feature_freemem_enable",
-        "graphic_2d_feature_parallel_render_enable"
+        "graphic_2d_feature_parallel_render_enable",
+        "graphic_2d_feature_tp_switch_enbale"
       ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -41,12 +43,11 @@
       ],
       "deps": {
         "components": [
-          "common",
+          "build_framework",
           "window_manager",
           "resource_management",
           "napi",
           "samgr",
-          "zlib",
           "hilog",
           "hisysevent",
           "hitrace",
@@ -59,9 +60,7 @@
           "config_policy",
           "init",
           "hicollie",
-          "bounds_checking_function",
           "image_framework",
-          "cjson",
           "ipc",
           "player_framework",
           "resource_schedule_service",
@@ -73,16 +72,18 @@
           "flutter",
           "libuv",
           "openssl",
-          "skia",
           "libxml2",
           "bounds_checking_function",
           "icu",
           "libpng",
           "zlib",
           "skia",
-          "cjson",
+          "cJSON",
+          "jsoncpp",
           "egl",
-          "opengles"
+          "opengles",
+          "vulkan-headers",
+          "vulkan-loader"
         ]
       },
       "build": {
@@ -93,12 +94,14 @@
             "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
             "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",
             "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+            "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics_new",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain:libeffectchain",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/skia_effectChain:skeffectchain",
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
             "//foundation/graphic/graphic_2d/frameworks/surfaceimage:libnative_image",
+            "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
             "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
             "//third_party/vulkan-loader/openharmony:vulkan_loader",
@@ -149,6 +152,18 @@
                 "vsync_receiver.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/interfaces/inner_api/composer"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d:libgl",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": [
+                  "//third_party/openGLES:libGLES",
+                  "//third_party/EGL:libEGL"
+              ]
             }
           },
           {
@@ -259,6 +274,18 @@
           },
           {
             "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics_new",
+            "header": {
+              "header_files": [
+                "draw/canvas.h",
+                "draw/pen.h",
+                "image/bitmap.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
             "header": {
               "header_files": [
@@ -311,10 +338,36 @@
               ],
               "header_base": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager/color_space_object_convertor"
             }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text",
+            "header": {
+              "header_files": [
+                "font_collection.h",
+                "typography_create.h",
+                "typography_style.h",
+                "text_style.h",
+                "typography.h",
+                "typography_types.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text/export/rosen_text"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/utils/buffer_handle:buffer_handle",
+            "header": {
+              "header_files": [
+                "buffer_handle_parcel.h",
+                "buffer_handle_utils.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/utils/buffer_handle/export"
+            }
           }
         ],
         "test": [
-          "//foundation/graphic/graphic_2d:graphic_2d_test",
+          "//foundation/graphic/graphic_2d:graphic_common_test",
           "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:test",
           "//foundation/graphic/graphic_2d/rosen/test/2d_graphics:test",
           "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation/test:test",

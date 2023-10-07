@@ -19,7 +19,9 @@
 #include <memory>
 #include <vector>
 
+#include "common/rs_macros.h"
 #include "drawing/engine_adapter/impl_interface/path_impl.h"
+#include "utils/drawing_macros.h"
 #include "utils/matrix.h"
 #include "utils/point.h"
 #include "utils/rect.h"
@@ -58,7 +60,11 @@ enum class PathOp {
     REVERSE_DIFFERENCE,
 };
 
-class Path {
+#ifndef USE_ROSEN_DRAWING
+class RS_EXPORT Path {
+#else
+class DRAWING_API Path {
+#endif
 public:
     Path() noexcept;
     Path(const Path& p) noexcept;
@@ -90,6 +96,12 @@ public:
     virtual void CubicTo(const Point& ctrlPt1, const Point& ctrlPt2, const Point& endPt);
     virtual void QuadTo(scalar ctrlPtX, scalar ctrlPtY, scalar endPtX, scalar endPtY);
     virtual void QuadTo(const Point& ctrlPt, const Point endPt);
+
+    virtual void RMoveTo(scalar dx, scalar dy);
+    virtual void RLineTo(scalar dx, scalar dy);
+    virtual void RArcTo(scalar rx, scalar ry, scalar angle, PathDirection direction, scalar dx, scalar dy);
+    virtual void RCubicTo(scalar dx1, scalar dy1, scalar dx2, scalar dy2, scalar dx3, scalar dy3);
+    virtual void RQuadTo(scalar dx1, scalar dy1, scalar dx2, scalar dy2);
 
     virtual void AddRect(const Rect& rect, PathDirection dir = PathDirection::CW_DIRECTION);
     virtual void AddRect(

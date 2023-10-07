@@ -169,6 +169,7 @@ void RSUniUICapture::PostTaskToRSRecord(std::shared_ptr<Drawing::RecordingCanvas
     std::function<void()> recordingDrawCall = [canvas, node, visitor]() -> void {
         visitor->SetCanvas(canvas);
         if (!node->IsOnTheTree()) {
+            node->ApplyModifiers();
             node->Prepare(visitor);
         }
         node->Process(visitor);
@@ -185,6 +186,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<RSRecordin
     }
     canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
     canvas_->scale(scaleX_, scaleY_);
+    canvas_->SetDisableFilterCache(true);
 }
 #else
 void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<Drawing::RecordingCanvas> canvas)
@@ -265,25 +267,33 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
     node.ProcessRenderBeforeChildren(*canvas_);
     if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
         auto canvasDrawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>();
-        if (!node.IsOnTheTree()) {
-            canvasDrawingNode->ProcessRenderContents(*canvas_);
-        }
+        if (!canvasDrawingNode->IsOnTheTree()) {
 #ifndef USE_ROSEN_DRAWING
-        SkBitmap bitmap;
-        canvasDrawingNode->GetBitmap(bitmap);
+            auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](sk_sp<SkSurface> surface) {
+                // The second param is null, 0 is an invalid value.
+                RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, id, 0);
+            };
+#else
+            auto clearFunc = [id = UNI_MAIN_THREAD_INDEX](std::shared_ptr<Drawing::Surface> surface) {
+                // The second param is null, 0 is an invalid value.
+                RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, id, 0);
+            };
+#endif
+            canvasDrawingNode->SetSurfaceClearFunc({ UNI_MAIN_THREAD_INDEX, clearFunc });
+            canvasDrawingNode->ProcessRenderContents(*canvas_);
+        } else {
+#ifndef USE_ROSEN_DRAWING
+            SkBitmap bitmap = canvasDrawingNode->GetBitmap();
 #ifndef NEW_SKIA
-        canvas_->drawBitmap(
-            bitmap, node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY());
+            canvas_->drawBitmap(bitmap, 0, 0);
 #else
-        canvas_->drawImage(bitmap.asImage(), node.GetRenderProperties().GetBoundsPositionX(),
-            node.GetRenderProperties().GetBoundsPositionY());
+            canvas_->drawImage(bitmap.asImage(), 0, 0);
 #endif
 #else
-        Drawing::Bitmap bitmap;
-        canvasDrawingNode->GetBitmap(bitmap);
-        canvas_->DrawBitmap(bitmap, node.GetRenderProperties().GetBoundsPositionX(),
-            node.GetRenderProperties().GetBoundsPositionY());
+            Drawing::Bitmap bitmap = canvasDrawingNode->GetBitmap();
+            canvas_->DrawBitmap(bitmap, 0, 0);
 #endif
+        }
     } else {
         node.ProcessRenderContents(*canvas_);
     }
@@ -314,7 +324,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceRenderNode(RSSurfaceRe
     }
 
     if (!node.ShouldPaint()) {
-        RS_LOGD("RSUniUICaptureVisitor::ProcessSurfaceRenderNode node: %" PRIu64 " invisible", node.GetId());
+        RS_LOGD("RSUniUICaptureVisitor::ProcessSurfaceRenderNode node: %{public}" PRIu64 " invisible", node.GetId());
         return;
     }
     if (isUniRender_) {
@@ -329,7 +339,8 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSu
     auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         RS_LOGI(
-            "RSUniUICaptureVisitor::ProcessSurfaceRenderNode node:%" PRIu64 ", get geoPtr failed", node.GetId());
+            "RSUniUICaptureVisitor::ProcessSurfaceRenderNode node:%{public}" PRIu64 ", get geoPtr failed",
+                node.GetId());
         return;
     }
 #ifndef USE_ROSEN_DRAWING
@@ -352,7 +363,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     const auto& property = node.GetRenderProperties();
     auto geoPtr = (property.GetBoundsGeometry());
     if (!geoPtr) {
-        RS_LOGE("RSUniUICaptureVisitor::ProcessSurfaceViewWithUni node:%" PRIu64 ", get geoPtr failed",
+        RS_LOGE("RSUniUICaptureVisitor::ProcessSurfaceViewWithUni node:%{public}" PRIu64 ", get geoPtr failed",
             node.GetId());
         return;
     }
@@ -402,7 +413,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
 #else
         auto backgroundColor = static_cast<Drawing::ColorQuad>(property.GetBackgroundColor().AsArgbInt());
         if (Drawing::Color::ColorQuadGetA(backgroundColor) != Drawing::Color::COLOR_TRANSPARENT) {
-            canvas_->Clear(backgroundColor);
+            canvas_->DrawColor(backgroundColor);
         }
     }
     canvas_->Restore();
@@ -447,7 +458,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         canvas_->restoreToCount(saveCnt);
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
-            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
     } else {
@@ -457,7 +468,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         }
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
-            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
         canvas_->restore();
@@ -505,7 +516,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
 
 void RSUniUICapture::RSUniUICaptureVisitor::PrepareChildren(RSRenderNode& node)
 {
-    node.ApplyChildrenModifiers();
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }

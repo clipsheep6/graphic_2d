@@ -33,7 +33,7 @@ void Util::SplitString(const string& str, vector<string>& vec, const string& pat
     }
 }
 
-bool Util::GetContextInfo(napi_env env, napi_value thisVar, std::string &contextId, std::vector<std::string> &info)
+bool Util::GetContextInfo(napi_env env, napi_value thisVar, std::string& contextId, std::vector<std::string>& info)
 {
     napi_status status;
     bool succ = false;
@@ -59,6 +59,7 @@ bool Util::GetContextInfo(napi_env env, napi_value thisVar, std::string &context
     if (!succ) {
         return false;
     }
+
     string str = strRev.get();
     Util::SplitString(str, info, ",");
     if (info.size() == 0) {

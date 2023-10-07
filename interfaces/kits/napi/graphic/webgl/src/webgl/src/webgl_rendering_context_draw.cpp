@@ -26,15 +26,15 @@ namespace Rosen {
 namespace Impl {
 using namespace std;
 #define SET_ERROR(error) \
-    do {                      \
-        LOGE("WebGL error code %{public}u", error);    \
-        SetError(error);      \
+    do { \
+        LOGE("WebGL set error code %{public}u", error); \
+        SetError(error); \
     } while (0)
 
 #define SET_ERROR_WITH_LOG(error, info, ...) \
     do {                      \
-        LOGE("WebGL error code %{public}u" info, error, ##__VA_ARGS__);    \
-        SetError(error);      \
+        LOGE("WebGL error code %{public}u " info, error, ##__VA_ARGS__); \
+        SetError(error); \
     } while (0)
 
 void WebGLRenderingContextBaseImpl::TexImage2D_(
@@ -43,30 +43,29 @@ void WebGLRenderingContextBaseImpl::TexImage2D_(
     if (changeUnpackAlignment) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     }
-
-    GLenum internalFormat = GetValidInternalFormat(imgArg.internalFormat, imgArg.type);
-    glTexImage2D(imgArg.target, imgArg.level, internalFormat, imgArg.width, imgArg.height, imgArg.border, imgArg.format,
-        imgArg.type, pixels);
+    LOGD("WebGL TexImage2D_ target %{public}u result %{public}u", imgArg.target, GetError_());
+    glTexImage2D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, imgArg.border,
+        imgArg.format, imgArg.type, pixels);
     texture->SetTextureLevel(imgArg);
 
     if (changeUnpackAlignment) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignment_);
     }
+    LOGD("WebGL TexImage2D_ target %{public}u result %{public}u", imgArg.target, GetError_());
 }
 
 napi_value WebGLRenderingContextBaseImpl::TexImage2D(
     napi_env env, const TexImageArg& imgArg, napi_value pixels, GLuint srcOffset)
 {
     imgArg.Dump("WebGL texImage2D");
+    LOGD("WebGL texImage2D srcOffset %{public}u", srcOffset);
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (!texture) {
-        LOGE("Can not find texture ");
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     GLenum error = CheckTexImage(env, imgArg, texture);
     if (error != WebGLRenderingContextBase::NO_ERROR) {
-        LOGE("WebGL texImage2D error %{public}u", error);
         SET_ERROR(error);
         return nullptr;
     }
@@ -80,30 +79,39 @@ napi_value WebGLRenderingContextBaseImpl::TexImage2D(
     }
 
     GLvoid* data = nullptr;
-    WebGLImageSource imageSource(env, version_);
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
     bool changeUnpackAlignment = false;
     if (!NVal(env, pixels).IsNull()) {
-        error = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, pixels, srcOffset);
+        error =imageSource.GenImageSource(
+            { imgArg.format, imgArg.type, imgArg.width, imgArg.height }, pixels, srcOffset);
         if (error) {
             SET_ERROR_WITH_LOG(error, "texSubImage2D invalid pixels");
             return nullptr;
         }
         changeUnpackAlignment = unpackFlipY_ || unpackPremultiplyAlpha_;
-        data = imageSource.GetImageSourceData(unpackFlipY_, unpackPremultiplyAlpha_);
+        data = imageSource.GetImageSourceData();
     }
     TexImage2D_(imgArg, texture, data, changeUnpackAlignment);
-    LOGE("WebGL texImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
+    LOGD("WebGL texImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::TexImage2D(napi_env env, const TexImageArg& info, napi_value source)
 {
     TexImageArg imgArg(info);
-    imgArg.Dump("WebGL texImage2D");
-    if (NVal(env, source).IsNull()) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
-        return nullptr;
+    GLvoid* data = nullptr;
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
+    if (!NVal(env, source).IsNull()) {
+        GLenum error = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, source);
+        if (error) {
+            SET_ERROR_WITH_LOG(error, "texImage2D Image source invalid");
+            return nullptr;
+        }
+        data = imageSource.GetImageSourceData();
+        imgArg.width = imageSource.GetWidth();
+        imgArg.height = imageSource.GetHeight();
     }
+    imgArg.Dump("WebGL texImage2D");
 
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (!texture) {
@@ -115,6 +123,7 @@ napi_value WebGLRenderingContextBaseImpl::TexImage2D(napi_env env, const TexImag
     if (error != WebGLRenderingContextBase::NO_ERROR) {
         LOGE("WebGL texImage2D error %{public}u", error);
         SET_ERROR(error);
+        return nullptr;
     }
     if (texture->CheckImmutable()) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
@@ -124,26 +133,13 @@ napi_value WebGLRenderingContextBaseImpl::TexImage2D(napi_env env, const TexImag
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    if (!CheckSettableTexFormat(imgArg.format)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
-        return nullptr;
-    }
     if (imgArg.type == GL_UNSIGNED_INT_10F_11F_11F_REV) {
         // The UNSIGNED_INT_10F_11F_11F_REV type pack/unpack isn't implemented.
         imgArg.type = GL_FLOAT;
     }
-    WebGLImageSource imageSource(env, version_);
-    error = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, source);
-    if (error) {
-        SET_ERROR_WITH_LOG(error, "texImage2D Image source invalid");
-        return nullptr;
-    }
 
-    GLvoid* data = imageSource.GetImageSourceData(unpackFlipY_, unpackPremultiplyAlpha_);
-    imgArg.width = imageSource.GetWidth();
-    imgArg.height = imageSource.GetHeight();
     TexImage2D_(imgArg, texture, data, unpackAlignment_ != 1);
-    LOGE("WebGL texImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
+    LOGD("WebGL texImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
     return nullptr;
 }
 
@@ -160,6 +156,7 @@ napi_value WebGLRenderingContextBaseImpl::TexImage2D(napi_env env, const TexImag
     if (error != WebGLRenderingContextBase::NO_ERROR) {
         LOGE("WebGL texImage2D error %{public}u", error);
         SET_ERROR(error);
+        return nullptr;
     }
     if (texture->CheckImmutable()) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
@@ -169,13 +166,9 @@ napi_value WebGLRenderingContextBaseImpl::TexImage2D(napi_env env, const TexImag
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    if (!CheckSettableTexFormat(imgArg.format)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
-        return nullptr;
-    }
     glTexImage2D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, imgArg.border,
         imgArg.format, imgArg.type, reinterpret_cast<GLvoid*>(pbOffset));
-    LOGE("WebGL texImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
+    LOGD("WebGL texImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
     return nullptr;
 }
 
@@ -185,11 +178,8 @@ void WebGLRenderingContextBaseImpl::TexSubImage2D_(
     if (changeUnpackAlignment) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     }
-
     glTexSubImage2D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.width, imgArg.height,
         imgArg.format, imgArg.type, pixels);
-    texture->SetTextureLevel(imgArg);
-
     if (changeUnpackAlignment) {
         glPixelStorei(GL_UNPACK_ALIGNMENT, unpackAlignment_);
     }
@@ -197,20 +187,20 @@ void WebGLRenderingContextBaseImpl::TexSubImage2D_(
 
 napi_value WebGLRenderingContextBaseImpl::TexSubImage2D(napi_env env, const TexSubImage2DArg& imgArg, GLintptr pbOffset)
 {
-    // TODO for WebGL 2
     imgArg.Dump("WebGL texSubImage2D");
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (!texture) {
-        LOGE("Can not find texture ");
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     GLenum error = CheckTexImage(env, imgArg, texture);
     if (error != WebGLRenderingContextBase::NO_ERROR) {
-        LOGE("WebGL texSubImage2D error %{public}u", error);
         SET_ERROR(error);
+        return nullptr;
     }
-    LOGE("WebGL texSubImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
+    glTexSubImage2D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.width, imgArg.height,
+        imgArg.format, imgArg.type, reinterpret_cast<void *>(pbOffset));
+    LOGD("WebGL texSubImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
     return nullptr;
 }
 
@@ -221,32 +211,33 @@ napi_value WebGLRenderingContextBaseImpl::TexSubImage2D(
     imgArg.Dump("WebGL texSubImage2D");
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (!texture) {
-        LOGE("Can not find texture ");
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     GLenum error = CheckTexImage(env, imgArg, texture);
     if (error != WebGLRenderingContextBase::NO_ERROR) {
         LOGE("WebGL texSubImage2D error %{public}u", error);
         SET_ERROR(error);
+        return nullptr;
     }
 
     if (!texture->CheckValid(imgArg.target, imgArg.level)) {
-        SET_ERROR_WITH_LOG(WebGLRenderingContextBase::INVALID_OPERATION, "texSubImage2D invalid texture level");
+        SET_ERROR_WITH_LOG(WebGLRenderingContextBase::INVALID_OPERATION, " invalid texture level");
         return nullptr;
     }
 
     GLvoid* data = nullptr;
-    WebGLImageSource imageSource(env, version_);
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
     bool changeUnpackAlignment = false;
     if (!NVal(env, pixels).IsNull()) {
-        error = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, pixels, srcOffset);
+        error = imageSource.GenImageSource(
+            { imgArg.format, imgArg.type, imgArg.width, imgArg.height }, pixels, srcOffset);
         if (error) {
             SET_ERROR_WITH_LOG(error, "texSubImage2D invalid pixels");
             return nullptr;
         }
         changeUnpackAlignment = unpackFlipY_ || unpackPremultiplyAlpha_;
-        data = imageSource.GetImageSourceData(unpackFlipY_, unpackPremultiplyAlpha_);
+        data = imageSource.GetImageSourceData();
         imgArg.width = imageSource.GetWidth();
         imgArg.height = imageSource.GetHeight();
     }
@@ -263,7 +254,7 @@ napi_value WebGLRenderingContextBaseImpl::TexSubImage2D(
         imgArg.type = GL_FLOAT;
     }
     TexSubImage2D_(imgArg, texture, data, changeUnpackAlignment);
-    LOGE("WebGL texSubImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
+    LOGD("WebGL texSubImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
     return nullptr;
 }
 
@@ -271,14 +262,27 @@ napi_value WebGLRenderingContextBaseImpl::TexSubImage2D(
     napi_env env, const TexSubImage2DArg& info, napi_value imageData)
 {
     TexSubImage2DArg imgArg(info);
-    imgArg.Dump("WebGL texSubImage2D");
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
     if (!texture) {
         LOGE("Can not find texture ");
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
-    GLenum error = CheckTexImage(env, imgArg, texture);
+    GLvoid* data = nullptr;
+    GLenum error = 0;
+    WebGLImageSource imageSource(env, version_, unpackFlipY_, unpackPremultiplyAlpha_);
+    if (!NVal(env, imageData).IsNull()) {
+        error = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, imageData);
+        if (error) {
+            SET_ERROR_WITH_LOG(error, "texSubImage2D Image source invalid");
+            return nullptr;
+        }
+        data = imageSource.GetImageSourceData();
+        imgArg.width = imageSource.GetWidth();
+        imgArg.height = imageSource.GetHeight();
+    }
+    imgArg.Dump("WebGL texSubImage2D");
+    error = CheckTexImage(env, imgArg, texture);
     if (error != WebGLRenderingContextBase::NO_ERROR) {
         LOGE("WebGL texSubImage2D error %{public}u", error);
         SET_ERROR(error);
@@ -290,28 +294,15 @@ napi_value WebGLRenderingContextBaseImpl::TexSubImage2D(
         SET_ERROR(error);
         return nullptr;
     }
-
-    GLvoid* data = nullptr;
-    WebGLImageSource imageSource(env, version_);
-    if (!NVal(env, imageData).IsNull()) {
-        error = imageSource.GenImageSource({ imgArg.format, imgArg.type, imgArg.width, imgArg.height }, imageData);
-        if (error) {
-            SET_ERROR_WITH_LOG(error, "texSubImage2D Image source invalid");
-            return nullptr;
-        }
-        data = imageSource.GetImageSourceData(unpackFlipY_, unpackPremultiplyAlpha_);
-        imgArg.width = imageSource.GetWidth();
-        imgArg.height = imageSource.GetHeight();
-    }
     TexSubImage2D_(imgArg, texture, data, unpackAlignment_);
-    LOGE("WebGL texSubImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
+    LOGD("WebGL texSubImage2D target %{public}u result %{public}u", imgArg.target, GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::DrawElements(
     napi_env env, GLenum mode, GLsizei count, GLenum type, GLintptr offset)
 {
-    LOGI("WebGL drawElements mode %{public}u %{public}u %{public}u %{public}u", mode, count, type, offset);
+    LOGD("WebGL drawElements mode %{public}u %{public}u %{public}u %{public}u", mode, count, type, offset);
     GLenum result = CheckDrawElements(env, mode, count, type, static_cast<int64_t>(offset));
     if (result != WebGLRenderingContextBase::NO_ERROR) {
         LOGE("WebGL drawElements error %{public}u", result);
@@ -324,19 +315,20 @@ napi_value WebGLRenderingContextBaseImpl::DrawElements(
 
 napi_value WebGLRenderingContextBaseImpl::DrawArrays(napi_env env, GLenum mode, GLint first, GLsizei count)
 {
-    LOGI("WebGL drawArrays mode %{public}u %{public}u %{public}u", mode, first, count);
+    LOGD("WebGL drawArrays mode %{public}u %{public}u %{public}u error %{public}u", mode, first, count, GetError_());
     GLenum result = CheckDrawArrays(env, mode, first, count);
     if (result != WebGLRenderingContextBase::NO_ERROR) {
         SET_ERROR(result);
         return nullptr;
     }
     glDrawArrays(mode, first, count);
-    LOGI("WebGL drawArrays %{public}u", GetError_());
+    LOGD("WebGL drawArrays result %{public}u", GetError_());
     return nullptr;
 }
 
-napi_value WebGLRenderingContextBaseImpl::ReadPixels(napi_env env, const PixelsArg* arg, GLintptr offset)
+napi_value WebGLRenderingContextBaseImpl::ReadPixels(napi_env env, const PixelsArg& arg, GLintptr offset)
 {
+    arg.Dump("WebGL readPixels");
     if (!IsHighWebGL()) {
         return nullptr;
     }
@@ -353,74 +345,68 @@ napi_value WebGLRenderingContextBaseImpl::ReadPixels(napi_env env, const PixelsA
     }
     size = size - offset;
 
-    GLenum result = CheckReadPixelsArg(arg, size);
+    GLenum result = CheckReadPixelsArg(env, arg, size);
     if (!result) {
         SET_ERROR(result);
         return nullptr;
     }
-    glReadPixels(arg->x, arg->y, arg->width, arg->height, arg->format, arg->type, reinterpret_cast<void*>(offset));
+    glReadPixels(arg.x, arg.y, arg.width, arg.height, arg.format, arg.type, reinterpret_cast<void*>(offset));
+    LOGD("WebGL readPixels result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::ReadPixels(
-    napi_env env, const PixelsArg* arg, napi_value buffer, GLuint dstOffset)
+    napi_env env, const PixelsArg& arg, napi_value buffer, GLuint dstOffset)
 {
-    LOGI("WebGL readPixels pixels [%{public}d %{public}d %{public}d %{public}d %{public}u %{public}u]", arg->x, arg->y,
-        arg->width, arg->height, arg->format, arg->type);
-
+    arg.Dump("WebGL readPixels");
     WebGLReadBufferArg bufferData(env);
     napi_status status = bufferData.GenBufferData(buffer);
     if (status != 0) {
-        LOGE("WebGL readPixels failed to getbuffer data");
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    if (!CheckPixelsFormat(env, arg->format)) {
-        LOGE("WebGL readPixels invalid format %{public}u", arg->format);
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
-        return nullptr;
-    }
-    if (!CheckPixelsType(env, arg->type)) {
-        LOGE("WebGL readPixels invalid type %{public}u", arg->type);
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
-        return nullptr;
-    }
-    GLenum result = CheckReadPixelsArg(arg, static_cast<int64_t>(bufferData.GetBufferLength()));
+
+    GLenum result = CheckReadPixelsArg(env, arg, static_cast<int64_t>(bufferData.GetBufferLength()));
     if (result != WebGLRenderingContextBase::NO_ERROR) {
-        LOGE("WebGL readPixels result %{public}u", result);
         SET_ERROR(result);
         return nullptr;
     }
 
-    LOGI("WebGL readPixels pixels %{public}p", bufferData.GetBuffer());
-    glReadPixels(arg->x, arg->y, arg->width, arg->height, arg->format, arg->type,
+    LOGD("WebGL readPixels pixels %{public}u", dstOffset);
+    glReadPixels(arg.x, arg.y, arg.width, arg.height, arg.format, arg.type,
         static_cast<void*>(bufferData.GetBuffer() + dstOffset));
+    bufferData.DumpBuffer(bufferData.GetBufferDataType());
+    LOGD("WebGL readPixels result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::BufferData_(
-    napi_env env, GLenum target, GLsizeiptr size, GLenum usage, WebGLReadBufferArg* bufferData)
+    napi_env env, GLenum target, GLsizeiptr size, GLenum usage, const uint8_t* bufferData)
 {
-    LOGI("WebGL bufferData target %{public}u, usage %{public}u size %{public}u", target, usage, size);
-    WebGLBuffer* webGLBuffer = CheckAndGetBoundBuffer(env, target);
+    LOGD("WebGL bufferData target %{public}u, usage %{public}u size %{public}u", target, usage, size);
+    uint32_t index = 0;
+    if (!CheckBufferTarget(env, target, index)) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
+        return nullptr;
+    }
+    WebGLBuffer* webGLBuffer = GetObjectInstance<WebGLBuffer>(env, boundBufferIds_[index]);
     if (webGLBuffer == nullptr) {
-        LOGE("WebGL bufferData can not get bound buffer");
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
     if (!CheckBufferDataUsage(env, usage)) {
-        LOGE("WebGL bufferData invalid usage %{public}u", usage);
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return nullptr;
     }
 
     if (webGLBuffer->GetTarget() != target) {
-        LOGE("WebGL bufferData Invalid buffer target %{public}u %{public}u", webGLBuffer->GetTarget(), target);
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
-    webGLBuffer->SetBufferSize(size);
+    webGLBuffer->SetBufferSize(size, nullptr);
     if (bufferData != nullptr) {
-        glBufferData(target, size, bufferData->GetBuffer(), usage);
+        webGLBuffer->SetBufferSize(size, bufferData);
+        glBufferData(target, size, bufferData, usage);
     } else {
         glBufferData(target, size, nullptr, usage);
     }
@@ -430,39 +416,42 @@ napi_value WebGLRenderingContextBaseImpl::BufferData_(
 
 napi_value WebGLRenderingContextBaseImpl::BufferData(napi_env env, GLenum target, int64_t size, GLenum usage)
 {
-    LOGI("WebGL bufferData target %{public}u, usage %{public}u size %{public}u", target, usage, size);
+    LOGD("WebGL bufferData target %{public}u, usage %{public}u size %{public}u", target, usage, size);
     BufferData_(env, target, static_cast<GLsizeiptr>(size), usage, nullptr);
+    LOGD("WebGL bufferData target %{public}u, result %{public}u ", target, GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::BufferData(
-    napi_env env, GLenum target, napi_value data, GLenum usage, GLuint srcOffset, GLuint length)
+    napi_env env, GLenum target, napi_value data, GLenum usage, const BufferExt& ext)
 {
-    LOGI("WebGL bufferData target %{public}u, usage %{public}u ", target, usage);
+    LOGD("WebGL bufferData target %{public}u, usage %{public}u ext: %{public}u %{public}u",
+        target, usage, ext.offset, ext.length);
     WebGLReadBufferArg bufferData(env);
     if (NVal(env, data).IsNull()) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
     bool succ = bufferData.GenBufferData(data, BUFFER_DATA_FLOAT_32) == napi_ok;
-    if (!succ) {
+    if (!succ || bufferData.GetBufferType() == BUFFER_ARRAY) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-    LOGI("WebGL bufferData buffer size %{public}zu", bufferData.GetBufferLength());
+    LOGD("WebGL bufferData buffer size %{public}zu", bufferData.GetBufferLength());
     // change
-    srcOffset = static_cast<GLuint>(srcOffset * bufferData.GetBufferDataSize());
-    length = (length == 0) ? static_cast<GLuint>(bufferData.GetBufferLength())
-                        : static_cast<GLuint>(length * bufferData.GetBufferDataSize());
-    BufferData_(env, target, length, usage, &bufferData);
+    GLuint srcOffset = static_cast<GLuint>(ext.offset * bufferData.GetBufferDataSize());
+    GLsizeiptr length = (ext.length == 0) ? static_cast<GLsizeiptr>(bufferData.GetBufferLength())
+                        : static_cast<GLsizeiptr>(ext.length * bufferData.GetBufferDataSize());
+    BufferData_(env, target, length, usage, bufferData.GetBuffer() + srcOffset);
+    LOGD("WebGL bufferData target %{public}u, result %{public}u ", target, GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::BufferSubData(
-    napi_env env, GLenum target, GLintptr offset, napi_value buffer, GLuint srcOffset, GLuint length)
+    napi_env env, GLenum target, GLintptr offset, napi_value buffer, const BufferExt& ext)
 {
-    LOGI("WebGL bufferSubData target %{public}u offset %{public}u %{public}u %{public}u", target, offset, srcOffset,
-        length);
+    LOGD("WebGL bufferSubData target %{public}u offset %{public}u %{public}u %{public}u last %{public}u",
+        target, offset, ext.offset, ext.length,  GetError_());
 
     WebGLBuffer* webGLBuffer = GetObjectInstance<WebGLBuffer>(env, boundBufferIds_[BoundBufferType::ARRAY_BUFFER]);
     if (webGLBuffer == nullptr || webGLBuffer->GetBufferSize() == 0) {
@@ -486,16 +475,17 @@ napi_value WebGLRenderingContextBaseImpl::BufferSubData(
     }
 
     bufferData.DumpBuffer(bufferData.GetBufferDataType());
-    LOGI("WebGL bufferSubData size %{public}zu", bufferData.GetBufferLength());
+    LOGD("WebGL bufferSubData size %{public}zu", bufferData.GetBufferLength());
 
     glBufferSubData(target, offset, static_cast<GLsizeiptr>(bufferData.GetBufferLength()),
         static_cast<uint8_t*>(bufferData.GetBuffer()));
+    LOGD("WebGL bufferSubData target %{public}u, result %{public}u ", target, GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::PixelStorei(napi_env env, GLenum pname, GLint param)
 {
-    LOGI("WebGL pixelStorei pname %{public}u param %{public}u", pname, param);
+    LOGD("WebGL pixelStorei pname %{public}u param %{public}u", pname, param);
     switch (pname) {
         case WebGLRenderingContextBase::UNPACK_FLIP_Y_WEBGL:
             unpackFlipY_ = (param == 1);
@@ -508,6 +498,7 @@ napi_value WebGLRenderingContextBaseImpl::PixelStorei(napi_env env, GLenum pname
             if (param == 1 || param == 2 || param == 4 || param == 8) { // 2,4,8 ALIGNMENT
                 if (pname == WebGLRenderingContextBase::PACK_ALIGNMENT) {
                     packAlignment_ = param;
+                    webGLRenderingContext_->SetPackAlignment(param);
                 } else {
                     unpackAlignment_ = param;
                 }
@@ -531,71 +522,69 @@ napi_value WebGLRenderingContextBaseImpl::PixelStorei(napi_env env, GLenum pname
             return nullptr;
     }
     glPixelStorei(pname, param);
+    LOGD("WebGL pixelStorei pname %{public}u, result %{public}u ", pname, GetError_());
     return nullptr;
 }
 
-std::tuple<bool, WebGLTexture*> WebGLRenderingContextBaseImpl::CheckCompressedTexImage2D(
+GLenum WebGLRenderingContextBaseImpl::CheckCompressedTexImage2D(
     napi_env env, const TexImageArg& imgArg, size_t imageSize)
 {
-    if (!CheckTextureLevel(imgArg.target, imgArg.level)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
-        return std::make_tuple(false, nullptr);
+    GLenum result = CheckTextureLevel(imgArg.target, imgArg.level);
+    if (result) {
+        LOGE("Invalid target or level target %{public}u %{public}d", imgArg.target, imgArg.level);
+        return result;
     }
-
-    if (!CheckTexImageInternalFormat(IMAGE_COMPRESSED_TEX_IMAGE_2D, imgArg.internalFormat)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
-        return std::make_tuple(false, nullptr);
+    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
+    if (texture == nullptr) {
+        LOGE("Invalid texture target %{public}u ", imgArg.target);
+        return WebGLRenderingContextBase::INVALID_OPERATION;
+    }
+    if (!CheckTexImageInternalFormat(env, imgArg.func, imgArg.internalFormat)) {
+        LOGE("Invalid internalFormat target %{public}u %{public}u", imgArg.target, imgArg.internalFormat);
+        return WebGLRenderingContextBase::INVALID_ENUM;
     }
     if (imgArg.border) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
-        return std::make_tuple(false, nullptr);
+        return WebGLRenderingContextBase::INVALID_VALUE;
     }
 
-    GLenum result = CheckCompressedTexDimensions(imgArg);
+    result = CheckCompressedTexDimensions(imgArg);
     if (result) {
-        SET_ERROR(result);
-        return std::make_tuple(false, nullptr);
+        LOGE("Invalid internalFormat %{public}u ", imgArg.internalFormat);
+        return result;
+    }
+    if (texture->CheckImmutable()) {
+        return WebGLRenderingContextBase::INVALID_OPERATION;
     }
     result = CheckCompressedTexData(imgArg, imageSize);
     if (result) {
-        SET_ERROR(result);
-        return std::make_tuple(false, nullptr);
+        LOGE("Invalid tex data %{public}u ", result);
+        return result;
     }
 
-    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
-    if (!texture) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
-        return std::make_tuple(false, nullptr);
-    }
-
-    if (texture->CheckImmutable()) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
-        return std::make_tuple(false, nullptr);
-    }
     if (!IsHighWebGL() && imgArg.level && WebGLTexture::CheckNPOT(imgArg.width, imgArg.height)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
-        return std::make_tuple(false, nullptr);
+        return WebGLRenderingContextBase::INVALID_VALUE;
     }
-    return std::make_tuple(true, texture);
+    return WebGLRenderingContextBase::NO_ERROR;
 }
 
 napi_value WebGLRenderingContextBaseImpl::CompressedTexImage2D(
     napi_env env, const TexImageArg& imgArg, GLsizei imageSize, GLintptr offset)
 {
-    // TODO
     imgArg.Dump("WebGL compressedTexImage2D");
-    bool succ;
-    WebGLTexture* texture = nullptr;
-    tie(succ, texture) = CheckCompressedTexImage2D(env, imgArg, static_cast<size_t>(imageSize));
-    if (!succ) {
+    GLenum result = CheckCompressedTexImage2D(env, imgArg, static_cast<size_t>(imageSize));
+    if (result) {
+        SET_ERROR(result);
         return nullptr;
     }
 
     glCompressedTexImage2D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height,
         imgArg.border, imageSize, reinterpret_cast<void*>(offset));
-
-    texture->SetTextureLevel(
-        { imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, 1, GL_UNSIGNED_BYTE });
+    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
+    if (texture != nullptr) {
+        texture->SetTextureLevel(
+            { imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, 1, GL_UNSIGNED_BYTE });
+    }
+    LOGD("WebGL compressedTexImage2D %{public}u", GetError_());
     return nullptr;
 }
 
@@ -622,28 +611,38 @@ napi_value WebGLRenderingContextBaseImpl::CompressedTexImage2D(
         length = srcLengthOverride;
     }
 
-    WebGLTexture* texture = nullptr;
-    tie(succ, texture) = CheckCompressedTexImage2D(env, imgArg, length);
-    if (!succ) {
+    GLenum result = CheckCompressedTexImage2D(env, imgArg, length);
+    if (result) {
+        SET_ERROR(result);
         return nullptr;
     }
     glCompressedTexImage2D(imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height,
         imgArg.border, static_cast<GLsizei>(length), data);
 
-    texture->SetTextureLevel(
-        { imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, 1, GL_UNSIGNED_BYTE });
+    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
+    if (texture != nullptr) {
+        texture->SetTextureLevel(
+            { imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, 1, GL_UNSIGNED_BYTE });
+    }
+    LOGD("WebGL compressedTexImage2D %{public}u", GetError_());
     return nullptr;
 }
 
 bool WebGLRenderingContextBaseImpl::CheckCompressedTexSubImage2D(
     napi_env env, const TexSubImage2DArg& imgArg, size_t imageSize)
 {
-    if (!CheckTextureLevel(imgArg.target, imgArg.level)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+    GLenum result = CheckTextureLevel(imgArg.target, imgArg.level);
+    if (result) {
+        SET_ERROR(result);
+        return result;
+    }
+    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
+    if (!texture) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return false;
     }
 
-    if (!CheckTexImageInternalFormat(IMAGE_COMPRESSED_TEX_SUB_IMAGE_2D, imgArg.format)) {
+    if (!CheckTexImageInternalFormat(env, imgArg.func, imgArg.format)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
         return false;
     }
@@ -651,19 +650,11 @@ bool WebGLRenderingContextBaseImpl::CheckCompressedTexSubImage2D(
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return false;
     }
-
-    GLenum result = CheckCompressedTexData(imgArg, imageSize);
+    result = CheckCompressedTexData(imgArg, imageSize);
     if (result) {
         SET_ERROR(result);
         return false;
     }
-
-    WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
-    if (!texture) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
-        return false;
-    }
-
     if (texture->CheckImmutable()) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return false;
@@ -684,12 +675,10 @@ napi_value WebGLRenderingContextBaseImpl::CompressedTexSubImage2D(
     napi_env env, const TexSubImage2DArg& imgArg, napi_value srcData, GLuint srcOffset, GLuint srcLengthOverride)
 {
     imgArg.Dump("WebGL compressedTexSubImage2D");
-
     WebGLReadBufferArg bufferData(env);
     GLvoid* data = nullptr;
     GLsizei length = 0;
-    if (NVal(env, srcData).IsNull()) {
-        // support ArrayBufferView
+    if (!NVal(env, srcData).IsNull()) {
         bool succ = bufferData.GenBufferData(srcData, BUFFER_DATA_FLOAT_32) == napi_ok;
         if (!succ) {
             return nullptr;
@@ -698,15 +687,13 @@ napi_value WebGLRenderingContextBaseImpl::CompressedTexSubImage2D(
         data = reinterpret_cast<void*>(bufferData.GetBuffer() + srcOffset * bufferData.GetBufferDataSize());
         length = srcLengthOverride == 0 ? static_cast<GLsizei>(bufferData.GetBufferLength()) : srcLengthOverride;
     }
-
     bool succ = CheckCompressedTexSubImage2D(env, imgArg, length);
     if (!succ) {
         return nullptr;
     }
-
     glCompressedTexSubImage2D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.width, imgArg.height,
         imgArg.format, length, data);
-    LOGE("WebGL compressedTexSubImage2D error %{public}u", GetError_());
+    LOGD("WebGL compressedTexSubImage2D result: %{public}u", GetError_());
     return nullptr;
 }
 
@@ -718,68 +705,48 @@ napi_value WebGLRenderingContextBaseImpl::CompressedTexSubImage2D(
     if (!succ) {
         return nullptr;
     }
-
     glCompressedTexSubImage2D(imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.width, imgArg.height,
         imgArg.format, imageSize, reinterpret_cast<void*>(offset));
-    LOGE("WebGL compressedTexSubImage2D error %{public}u", GetError_());
+    LOGD("WebGL compressedTexSubImage2D result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::CopyTexImage2D(napi_env env, const CopyTexImage2DArg& imgArg)
 {
     imgArg.Dump("WebGL copyTexImage2D");
-
-    if (!CheckTextureLevel(imgArg.target, imgArg.level)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
-        return nullptr;
-    }
-
-    if (!WebGLTexture::CheckTextureFormatAndType(
-            imgArg.internalFormat, imgArg.format, imgArg.type, imgArg.level, IsHighWebGL())) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
-        return nullptr;
-    }
-
-    if (imgArg.border) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
-        return nullptr;
-    }
-
-    GLenum result = CheckTexFuncDimensions(imgArg);
+    GLenum result = CheckTextureLevel(imgArg.target, imgArg.level);
     if (result) {
         SET_ERROR(result);
         return nullptr;
     }
-
-    if (!CheckSettableTexFormat(imgArg.format)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
-        return nullptr;
-    }
-
     WebGLTexture* texture = GetBoundTexture(env, imgArg.target, true);
-    if (!texture) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_ENUM);
-        return nullptr;
-    }
-
-    if (texture->CheckImmutable()) {
+    if (!texture || texture->CheckImmutable()) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
         return nullptr;
     }
-
-    if (!CheckTexInternalFormatColorBufferCombination(imgArg.internalFormat, GetBoundFrameBufferColorFormat(env))) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+    result = CheckTextureFormatAndType(env,
+        imgArg.internalFormat, imgArg.internalFormat, GL_UNSIGNED_BYTE, imgArg.level);
+    if (result) {
+        SET_ERROR(result);
         return nullptr;
     }
-
+    if (imgArg.border) {
+        SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
+        return nullptr;
+    }
+    result = CheckTexFuncDimensions(imgArg);
+    if (result) {
+        SET_ERROR(result);
+        return nullptr;
+    }
     if (!IsHighWebGL() && imgArg.level && WebGLTexture::CheckNPOT(imgArg.width, imgArg.height)) {
         SET_ERROR(WebGLRenderingContextBase::INVALID_VALUE);
         return nullptr;
     }
-
     GLuint frameBufferId = 0;
-    if (!CheckReadBufferAndGetInfo(env, frameBufferId, nullptr, nullptr)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+    result = CheckReadBufferAndGetInfo(env, &frameBufferId, nullptr, nullptr);
+    if (result) {
+        SET_ERROR(result);
         return nullptr;
     }
 
@@ -787,13 +754,13 @@ napi_value WebGLRenderingContextBaseImpl::CopyTexImage2D(napi_env env, const Cop
         imgArg.height, imgArg.border);
 
     texture->SetTextureLevel({ imgArg.target, imgArg.level, imgArg.internalFormat, imgArg.width, imgArg.height, 1, 1 });
-    LOGE("WebGL copyTexImage2D error %{public}u", GetError_());
+    LOGD("WebGL copyTexImage2D result %{public}u", GetError_());
     return nullptr;
 }
 
 napi_value WebGLRenderingContextBaseImpl::CopyTexSubImage2D(napi_env env, const CopyTexSubImageArg& imgArg)
 {
-    imgArg.Dump("WebGL copyTexImage2D");
+    imgArg.Dump("WebGL copyTexSubImage2D");
     GLenum result = CheckCopyTexSubImage(env, imgArg);
     if (result) {
         SET_ERROR(result);
@@ -801,48 +768,51 @@ napi_value WebGLRenderingContextBaseImpl::CopyTexSubImage2D(napi_env env, const 
     }
 
     GLuint frameBufferId = 0;
-    if (!CheckReadBufferAndGetInfo(env, frameBufferId, nullptr, nullptr)) {
-        SET_ERROR(WebGLRenderingContextBase::INVALID_OPERATION);
+    result = CheckReadBufferAndGetInfo(env, &frameBufferId, nullptr, nullptr);
+    if (result) {
+        SET_ERROR(result);
         return nullptr;
     }
-
-    // TODO clearIfComposited();
-    // ScopedDrawingBufferBinder binder(drawingBuffer(), readFramebufferBinding);
     glCopyTexSubImage2D(
         imgArg.target, imgArg.level, imgArg.xOffset, imgArg.yOffset, imgArg.x, imgArg.y, imgArg.width, imgArg.height);
-    LOGE("WebGL copyTexSubImage2D error %{public}u", GetError_());
+    LOGD("WebGL copyTexSubImage2D result %{public}u", GetError_());
     return nullptr;
 }
 
-bool WebGLRenderingContextBaseImpl::CheckTextureLevel(GLenum target, GLint level)
+GLenum WebGLRenderingContextBaseImpl::CheckTextureLevel(GLenum target, GLint level)
 {
-    if ((level < 0) || level > WebGLTexture::GetMaxTextureLevelForTarget(target, IsHighWebGL())) {
-        return false;
+    GLint max = WebGLTexture::GetMaxTextureLevelForTarget(target, IsHighWebGL());
+    if (max <= 0) {
+        return WebGLRenderingContextBase::INVALID_ENUM;
     }
-    return true;
+    if ((level < 0) || level > max) {
+        return WebGLRenderingContextBase::INVALID_VALUE;
+    }
+    return WebGLRenderingContextBase::NO_ERROR;
 }
 
 GLenum WebGLRenderingContextBaseImpl::CheckTexImage(napi_env env, const TexImageArg& imgArg, WebGLTexture* texture)
 {
-    if (!CheckTextureLevel(imgArg.target, imgArg.level)) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
+    GLenum result = CheckTextureLevel(imgArg.target, imgArg.level);
+    if (result) {
+        return result;
     }
-
     if (imgArg.border) {
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
-
-    GLenum internalFormat = 0;
+    GLenum internalFormat = imgArg.internalFormat;
     if (imgArg.internalFormat == 0) {
         internalFormat = texture->GetInternalFormat(imgArg.target, imgArg.level);
     }
-
-    if (!WebGLTexture::CheckTextureFormatAndType(
-            imgArg.internalFormat, imgArg.format, imgArg.type, imgArg.level, IsHighWebGL())) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
+    if (internalFormat == 0) {
+        LOGE("Invalid internalFormat %{public}u", internalFormat);
+        return WebGLRenderingContextBase::INVALID_OPERATION;
     }
-
-    GLenum result = CheckTexFuncDimensions(imgArg);
+    result = CheckTextureFormatAndType(env, internalFormat, imgArg.format, imgArg.type, imgArg.level);
+    if (result) {
+        return result;
+    }
+    result = CheckTexFuncDimensions(imgArg);
     if (result) {
         LOGE("Invalid texture dimension or type %{public}u", result);
         return result;
@@ -850,29 +820,11 @@ GLenum WebGLRenderingContextBaseImpl::CheckTexImage(napi_env env, const TexImage
     return WebGLRenderingContextBase::NO_ERROR;
 }
 
-bool WebGLRenderingContextBaseImpl::CheckSettableTexFormat(GLenum format)
-{
-    if (IsHighWebGL()) {
-        return true;
-    }
-
-    /*
-    if (WebGLImageConversion::getChannelBitsByFormat(format) & WebGLImageConversion::ChannelDepthStencil) {
-        synthesizeGLError(GL_INVALID_OPERATION, functionName, "format can not be set, only rendered to");
-        return false;
-    }
-    */
-    return true;
-}
-
 GLenum WebGLRenderingContextBaseImpl::CheckTexSubImage2D(
     napi_env env, const TexSubImage2DArg& imgArg, WebGLTexture* texture)
 {
-    if (!CheckSettableTexFormat(imgArg.format)) {
-        return WebGLRenderingContextBase::INVALID_OPERATION;
-    }
-
     if (imgArg.xOffset < 0 || imgArg.yOffset < 0) {
+        LOGE("WebGL CheckTexSubImage2D invalid xOffset %{public}d", imgArg.xOffset);
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
 
@@ -880,41 +832,22 @@ GLenum WebGLRenderingContextBaseImpl::CheckTexSubImage2D(
     if (imgArg.xOffset + imgArg.width < 0 || imgArg.yOffset + imgArg.height < 0) {
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
-    if (imgArg.xOffset + imgArg.width > texture->GetWidth(imgArg.target, imgArg.level) ||
-        imgArg.yOffset + imgArg.height > texture->GetHeight(imgArg.target, imgArg.level)) {
+    if ((imgArg.xOffset + imgArg.width) > texture->GetWidth(imgArg.target, imgArg.level) ||
+        (imgArg.yOffset + imgArg.height) > texture->GetHeight(imgArg.target, imgArg.level)) {
+        LOGE("WebGL invalid CheckTexSubImage2D GetWidth %{public}d", texture->GetWidth(imgArg.target, imgArg.level));
+        LOGE("WebGL invalid CheckTexSubImage2D GetHeight %{public}d", texture->GetHeight(imgArg.target, imgArg.level));
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
     if (!IsHighWebGL() && texture->GetType(imgArg.target, imgArg.level) != imgArg.type) {
+        LOGE("WebGL invalid CheckTexSubImage2D type %{public}d", imgArg.type);
         return WebGLRenderingContextBase::INVALID_OPERATION;
     }
     return WebGLRenderingContextBase::NO_ERROR;
 }
 
-bool WebGLRenderingContextBaseImpl::CheckTexImageInternalFormat(int func, GLenum internalFormat)
+bool WebGLRenderingContextBaseImpl::CheckTexImageInternalFormat(napi_env env, int func, GLenum internalFormat)
 {
-    switch (func) {
-        case IMAGE_COMPRESSED_TEX_IMAGE_2D:
-            // m_compressedTextureFormats.contains(format);
-            break;
-
-        default:
-            break;
-    }
-    return true;
-}
-
-GLenum WebGLRenderingContextBaseImpl::GetValidInternalFormat(GLenum internalFormat, GLenum type)
-{
-    // Convert to sized internal formats that are renderable with GL_CHROMIUM_color_buffer_float_rgb(a).
-#if 0
-    if (type == GL_FLOAT && internalformat == GL_RGBA
-        && extensionsUtil()->isExtensionEnabled("GL_CHROMIUM_color_buffer_float_rgba"))
-        return GL_RGBA32F_EXT;
-    if (type == GL_FLOAT && internalformat == GL_RGB
-        && extensionsUtil()->isExtensionEnabled("GL_CHROMIUM_color_buffer_float_rgb"))
-        return GL_RGB32F_EXT;
-#endif
-    return internalFormat;
+    return CheckInList(internalFormat, WebGLRenderingContextBaseImpl::GetTexImageInternalFormat());
 }
 
 GLenum WebGLRenderingContextBaseImpl::CheckTexFuncDimensions(const TexImageArg& imgArg)
@@ -938,7 +871,7 @@ GLenum WebGLRenderingContextBaseImpl::CheckTexFuncDimensions(const TexImageArg& 
             if (imgArg.func != IMAGE_TEX_SUB_IMAGE_2D && imgArg.width != imgArg.height) {
                 return WebGLRenderingContextBase::INVALID_VALUE;
             }
-            if (imgArg.width > (maxTextureSize_ >> imgArg.level)) {
+            if (imgArg.width > (maxCubeMapTextureSize_ >> imgArg.level)) {
                 return WebGLRenderingContextBase::INVALID_VALUE;
             }
             break;
@@ -950,42 +883,18 @@ GLenum WebGLRenderingContextBaseImpl::CheckTexFuncDimensions(const TexImageArg& 
 
 GLenum WebGLRenderingContextBaseImpl::CheckCompressedTexDimensions(const TexImageArg& imgArg)
 {
+    GLenum result = CheckTexFuncDimensions(imgArg);
+    if (result) {
+        LOGE("Invalid tex dimensions %{public}u %{public}d", imgArg.target, imgArg.level);
+        return result;
+    }
     bool widthValid = true;
     bool heightValid = true;
-    switch (imgArg.format) {
-#ifdef COMPRESSED_RGBA_ASTC
-        case GL_COMPRESSED_RGBA_ASTC_4x4_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_5x4_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_5x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_6x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_6x6_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_8x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_8x6_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_8x8_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x6_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x8_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x10_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_12x10_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_12x12_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR: {
-            widthValid = true;
-            heightValid = true;
-            break;
-        }
+    if (CheckInList(imgArg.internalFormat, GetExtentionAstcTexImageInternal())) {
+        return WebGLRenderingContextBase::NO_ERROR;
+    }
+    switch (imgArg.internalFormat) {
+#ifdef GC3D_COMPRESSED_ATC_RGB_AMD
         case GC3D_COMPRESSED_ATC_RGB_AMD:
         case GC3D_COMPRESSED_ATC_RGBA_EXPLICIT_ALPHA_AMD:
         case GC3D_COMPRESSED_ATC_RGBA_INTERPOLATED_ALPHA_AMD:
@@ -995,9 +904,9 @@ GLenum WebGLRenderingContextBaseImpl::CheckCompressedTexDimensions(const TexImag
         case GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
         case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT: {
             widthValid = (imgArg.level && imgArg.width == 1) || (imgArg.level && imgArg.width == 2) ||
-                         !(imgArg.width % 4); // 4 kBlockWidth
+                         !(imgArg.width % 4); // 1 2 4 ALIGNMENT
             heightValid = (imgArg.level && imgArg.height == 1) || (imgArg.level && imgArg.height == 2) ||
-                          !(imgArg.height % 4); // 4 kBlockWidth
+                          !(imgArg.height % 4); // 1 2 4 ALIGNMENT
             break;
         }
 
@@ -1010,7 +919,7 @@ GLenum WebGLRenderingContextBaseImpl::CheckCompressedTexDimensions(const TexImag
             break;
         }
         default:
-            return WebGLRenderingContextBase::INVALID_ENUM;
+            return WebGLRenderingContextBase::NO_ERROR;
     }
 
     if (!widthValid || !heightValid) {
@@ -1022,52 +931,7 @@ GLenum WebGLRenderingContextBaseImpl::CheckCompressedTexDimensions(const TexImag
 GLenum WebGLRenderingContextBaseImpl::CheckCompressedTexData(const TexImageArg& imgArg, size_t dataLen)
 {
     size_t bytesRequired = 0;
-
-    switch (imgArg.format) {
-#ifdef COMPRESSED_RGBA_ASTC
-        case GL_COMPRESSED_RGBA_ASTC_4x4_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_5x4_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_5x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_6x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_6x6_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_8x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_8x6_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_8x8_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x5_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x6_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x8_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_10x10_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_12x10_KHR:
-        case GL_COMPRESSED_RGBA_ASTC_12x12_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR:
-        case GL_COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR: {
-            const int index = (imgArg.format < GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR)
-                                  ? (int)imgArg.format - GL_COMPRESSED_RGBA_ASTC_4x4_KHR
-                                  : (int)imgArg.format - GL_COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR;
-
-            const int kBlockSize = 16;
-            const int kBlockWidth = WebGLCompressedTextureASTC::kBlockSizeCompressASTC[index].blockWidth;
-            const int kBlockHeight = WebGLCompressedTextureASTC::kBlockSizeCompressASTC[index].blockHeight;
-
-            int numBlocksAcross = (imgArg.width + kBlockWidth - 1) / kBlockWidth;
-            int numBlocksDown = (imgArg.height + kBlockHeight - 1) / kBlockHeight;
-            int numBlocks = numBlocksAcross * numBlocksDown;
-            bytesRequired = numBlocks * kBlockSize;
-            break;
-        }
-#endif
+    switch (imgArg.internalFormat) {
         case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT: {
             const int kBlockWidth = 4;
@@ -1090,33 +954,25 @@ GLenum WebGLRenderingContextBaseImpl::CheckCompressedTexData(const TexImageArg& 
             bytesRequired = numBlocks * kBlockSize;
             break;
         }
-        // case GC3D_COMPRESSED_ATC_RGB_AMD:
-        case GL_ETC1_RGB8_OES: {
+        case GL_ETC1_RGB8_OES: { // 3 kBlockWidth -1, 4 kBlockWidth, 8 kBlockSize
             bytesRequired = floor(static_cast<double>((imgArg.width + 3) / 4)) *
                             floor(static_cast<double>((imgArg.height + 3) / 4)) * 8;
             break;
         }
-        /*
-        case GC3D_COMPRESSED_ATC_RGBA_EXPLICIT_ALPHA_AMD:
-        case GC3D_COMPRESSED_ATC_RGBA_INTERPOLATED_ALPHA_AMD: {
-            bytesRequired = floor(static_cast<double>((imgArg.width + 3) / 4)) *
-                            floor(static_cast<double>((imgArg.height + 3) / 4)) * 16;
-            break;
-        }
-        */
         case GL_COMPRESSED_RGB_PVRTC_4BPPV1_IMG:
-        case GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG: {
+        case GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG: { // 4 4BPPV1, 7 kBlockWidth -1, 8 kBlockWidth, 8 kBlockSize
             bytesRequired = (max(imgArg.width, 8) * max(imgArg.height, 8) * 4 + 7) / 8;
             break;
         }
         case GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG:
-        case GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG: {
+        case GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG: { // 2 2BPPV1, 7 kBlockWidth - 1, 16 kBlockWidth, 8 kBlockSize
             bytesRequired = (max(imgArg.width, 16) * max(imgArg.height, 8) * 2 + 7) / 8;
             break;
         }
         default:
             return WebGLRenderingContextBase::INVALID_ENUM;
     }
+    LOGD("CheckCompressedTexData bytesRequired %{public}zu", bytesRequired);
     if (dataLen != bytesRequired) {
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
@@ -1164,11 +1020,6 @@ bool WebGLRenderingContextBaseImpl::CheckCompressedTexSubDimensions(
             }
             return CheckCompressedTexDimensions(imgArg);
         }
-        /*
-        case GC3D_COMPRESSED_ATC_RGB_AMD:
-        case GC3D_COMPRESSED_ATC_RGBA_EXPLICIT_ALPHA_AMD:
-        case GC3D_COMPRESSED_ATC_RGBA_INTERPOLATED_ALPHA_AMD:
-        */
         case GL_ETC1_RGB8_OES: {
             return WebGLRenderingContextBase::INVALID_OPERATION;
         }
@@ -1178,109 +1029,28 @@ bool WebGLRenderingContextBaseImpl::CheckCompressedTexSubDimensions(
     return WebGLRenderingContextBase::NO_ERROR;
 }
 
-bool WebGLRenderingContextBaseImpl::CheckTexInternalFormatColorBufferCombination(
-    GLenum texInternalFormat, GLenum colorBufferFormat)
-{
-    // unsigned need = WebGLImageConversion::getChannelBitsByFormat(texInternalFormat);
-    // unsigned have = WebGLImageConversion::getChannelBitsByFormat(colorBufferFormat);
-    //  return (need & have) == need;
-    return true;
-}
-
-// validateTexFuncData
 GLenum WebGLRenderingContextBaseImpl::CheckTextureDataBuffer(
     const TexImageArg& arg, const WebGLReadBufferArg* bufferData)
 {
     if (!bufferData) {
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
-
-    if (!CheckSettableTexFormat(arg.format)) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
+    if (WebGLTexture::ChangeToBufferDataType(arg.type) != bufferData->GetBufferDataType()) {
+        return WebGLRenderingContextBase::INVALID_OPERATION;
     }
-
-    switch (arg.type) {
-    case GL_BYTE:
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_INT_8) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    case GL_UNSIGNED_BYTE:
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_UINT_8) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    case GL_SHORT:
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_INT_16) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    case GL_UNSIGNED_SHORT:
-    case GL_UNSIGNED_SHORT_5_6_5:
-    case GL_UNSIGNED_SHORT_4_4_4_4:
-    case GL_UNSIGNED_SHORT_5_5_5_1:
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_UINT_16) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    case GL_INT:
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_INT_32) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    case GL_UNSIGNED_INT:
-    case GL_UNSIGNED_INT_2_10_10_10_REV:
-    case GL_UNSIGNED_INT_10F_11F_11F_REV:
-    case GL_UNSIGNED_INT_5_9_9_9_REV:
-    case GL_UNSIGNED_INT_24_8:
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_UINT_32) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    case GL_FLOAT: // OES_texture_float
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_FLOAT_32) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    case GL_HALF_FLOAT:
-    case GL_HALF_FLOAT_OES:
-        if (bufferData->GetBufferDataType() != BUFFER_DATA_UINT_16) {
-            return WebGLRenderingContextBase::INVALID_OPERATION;
-        }
-        break;
-    default:
-        break;
-    }
-
-    /*
-    unsigned totalBytesRequired;
-    GLenum error = WebGLImageConversion::computeImageSizeInBytes(format, type, width, height, m_unpackAlignment,
-    &totalBytesRequired, 0); if (error != GL_NO_ERROR) { synthesizeGLError(error, functionName, "invalid texture
-    dimensions"); return false;
-    }
-    if (pixels->byteLength() < totalBytesRequired) {
-        if (m_unpackAlignment != 1) {
-            error = WebGLImageConversion::computeImageSizeInBytes(format, type, width, height, 1, &totalBytesRequired,
-    0); if (pixels->byteLength() == totalBytesRequired) { synthesizeGLError(GL_INVALID_OPERATION, functionName,
-    "ArrayBufferView not big enough for request with UNPACK_ALIGNMENT > 1"); return false;
-            }
-        }
-        synthesizeGLError(GL_INVALID_OPERATION, functionName, "ArrayBufferView not big enough for request");
-        return false;
-    }
-    */
     return WebGLRenderingContextBase::NO_ERROR;
 }
 
 GLenum WebGLRenderingContextBaseImpl::CheckCopyTexSubImage(napi_env env, const CopyTexSubImageArg& arg)
 {
-    if (!CheckTextureLevel(arg.target, arg.level)) {
-        return WebGLRenderingContextBase::INVALID_ENUM;
+    GLenum result = CheckTextureLevel(arg.target, arg.level);
+    if (result) {
+        return result;
     }
 
     WebGLTexture* texture = GetBoundTexture(env, arg.target, false);
     if (texture == nullptr) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
+        return WebGLRenderingContextBase::INVALID_OPERATION;
     }
 
     if (!WebGLTexture::CheckTextureSize(arg.xOffset, arg.width, texture->GetWidth(arg.target, arg.level)) ||
@@ -1288,19 +1058,10 @@ GLenum WebGLRenderingContextBaseImpl::CheckCopyTexSubImage(napi_env env, const C
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
     if (arg.func == IMAGE_COPY_TEX_SUB_IMAGE_3D) {
-        const CopyTexSubImage3DArg *img3D = reinterpret_cast<const CopyTexSubImage3DArg *>(&arg);
+        const CopyTexSubImage3DArg* img3D = reinterpret_cast<const CopyTexSubImage3DArg*>(&arg);
         if (!WebGLTexture::CheckTextureSize(img3D->zOffset, img3D->depth, texture->GetDepth(arg.target, arg.level))) {
             return WebGLRenderingContextBase::INVALID_VALUE;
         }
-    }
-
-    GLenum internalFormat = texture->GetInternalFormat(arg.target, arg.level);
-    if (!CheckSettableTexFormat(internalFormat)) {
-        return WebGLRenderingContextBase::INVALID_VALUE;
-    }
-
-    if (!CheckTexInternalFormatColorBufferCombination(internalFormat, GetBoundFrameBufferColorFormat(env))) {
-        return WebGLRenderingContextBase::INVALID_OPERATION;
     }
     return WebGLRenderingContextBase::NO_ERROR;
 }
@@ -1322,13 +1083,12 @@ GLenum WebGLRenderingContextBaseImpl::CheckDrawArrays(napi_env env, GLenum mode,
         LOGE("WebGL drawArrays no valid shader program in use");
         return WebGLRenderingContextBase::INVALID_OPERATION;
     }
-    if (!CheckFrameBufferBoundComplete(env)) {
-        return WebGLRenderingContextBase::INVALID_FRAMEBUFFER_OPERATION;
-    }
-    return WebGLRenderingContextBase::NO_ERROR;
+
+    return CheckFrameBufferBoundComplete(env);
 }
 
-GLenum WebGLRenderingContextBaseImpl::CheckDrawElements(napi_env env, GLenum mode, GLsizei count, GLenum type, int64_t offset)
+GLenum WebGLRenderingContextBaseImpl::CheckDrawElements(
+    napi_env env, GLenum mode, GLsizei count, GLenum type, int64_t offset)
 {
     if (!CheckDrawMode(env, mode)) {
         return WebGLRenderingContextBase::INVALID_ENUM;
@@ -1359,8 +1119,6 @@ GLenum WebGLRenderingContextBaseImpl::CheckDrawElements(napi_env env, GLenum mod
     if ((offset % size) != 0) {
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
-    // TODO count == 0
-
     WebGLBuffer* webGLBuffer =
         GetObjectInstance<WebGLBuffer>(env, boundBufferIds_[BoundBufferType::ELEMENT_ARRAY_BUFFER]);
     if (webGLBuffer == nullptr || webGLBuffer->GetBufferSize() == 0) {
@@ -1381,10 +1139,98 @@ GLenum WebGLRenderingContextBaseImpl::CheckDrawElements(napi_env env, GLenum mod
         LOGE("WebGL drawArrays no valid shader program in use");
         return WebGLRenderingContextBase::INVALID_OPERATION;
     }
-    if (!CheckFrameBufferBoundComplete(env)) {
-        return WebGLRenderingContextBase::INVALID_FRAMEBUFFER_OPERATION;
+
+    return CheckFrameBufferBoundComplete(env);
+}
+
+GLenum WebGLRenderingContextBaseImpl::CheckReadBufferAndGetInfo(
+    napi_env env, GLuint* frameBufferId, GLenum* format, GLenum* type)
+{
+    GLenum target = IsHighWebGL() ? GL_READ_FRAMEBUFFER : GL_FRAMEBUFFER;
+    WebGLFramebuffer* frameBuffer = GetBoundFrameBuffer(env, target);
+    if (frameBuffer) {
+        LOGD("CheckReadBufferAndGetInfo frameBuffer %{public}u", frameBuffer->GetFramebuffer());
+        if (frameBuffer->CheckStatus(env, this) != WebGLRenderingContextBase::FRAMEBUFFER_COMPLETE) {
+            LOGE("CheckStatus not FRAMEBUFFER_COMPLETE");
+            return WebGLRenderingContextBase::INVALID_FRAMEBUFFER_OPERATION;
+        }
+        if (!GetReadBufferFormatAndType(env, frameBuffer, format, type)) {
+            return WebGLRenderingContextBase::INVALID_OPERATION;
+        }
+        *frameBufferId = frameBuffer->GetFramebuffer();
+    } else {
+        if (defaultReadBufferMode_ == GL_NONE) {
+            LOGE("defaultReadBufferMode_ %{public}u", defaultReadBufferMode_);
+            return WebGLRenderingContextBase::INVALID_OPERATION;
+        }
+        if (format) {
+            *format = GL_RGBA;
+        }
+        if (type) {
+            *type = GL_UNSIGNED_BYTE;
+        }
     }
     return WebGLRenderingContextBase::NO_ERROR;
+}
+
+bool WebGLRenderingContextBaseImpl::GetReadBufferFormatAndType(
+    napi_env env, const WebGLFramebuffer* frameBuffer, GLenum* format, GLenum* type)
+{
+    GLenum mode = frameBuffer->GetReadBufferMode();
+    LOGD("GetReadBufferFormatAndType mode %{public}u", mode);
+    if (mode == GL_NONE) {
+        return false;
+    }
+    WebGLAttachment* attachedObject = frameBuffer->GetAttachment(mode);
+    if (!attachedObject) {
+        LOGD("GetReadBufferFormatAndType no attachment %{public}u", mode);
+        return false;
+    }
+    WebGLAttachmentInfo info = {};
+    if (!frameBuffer->GetWebGLAttachmentInfo(env, this, attachedObject, info)) {
+        LOGD("GetReadBufferFormatAndType no attachment info %{public}u", mode);
+        return false;
+    }
+    if (format) {
+        *format = info.format;
+    }
+    if (type) {
+        *type = info.type;
+    }
+    return true;
+}
+
+GLenum WebGLRenderingContextBaseImpl::CheckTextureFormatAndType(
+    napi_env env, GLenum internalFormat, GLenum format, GLenum type, GLint level)
+{
+    LOGD("internalFormat %{public}u format %{public}u type %{public}u  %{public}d",
+        internalFormat, format, type, level);
+    if (!CheckInList(internalFormat, WebGLTexture::GetSupportedInternalFormats())) {
+        LOGE("Invalid internalFormat %{public}u ", internalFormat);
+        return GL_INVALID_ENUM;
+    }
+    if (!CheckInList(format, WebGLTexture::GetSupportedFormats())) {
+        LOGE("Invalid format %{public}u ", format);
+        return GL_INVALID_ENUM;
+    }
+    if (!CheckInList(type, WebGLTexture::GetSupportedTypes())) {
+        LOGE("Invalid type %{public}u ", type);
+        return GL_INVALID_ENUM;
+    }
+
+    TextureFormatTypeMap map = { internalFormat, format, type };
+    if (WebGLTexture::GetSupportedFormatTypeMaps().find(map) == WebGLTexture::GetSupportedFormatTypeMaps().end()) {
+        LOGE("Invalid format type ");
+        return GL_INVALID_OPERATION;
+    }
+
+    if (format == GL_DEPTH_COMPONENT && level > 0 && !IsHighWebGL()) {
+        return GL_INVALID_OPERATION;
+    }
+    if (format == GL_DEPTH_STENCIL_OES && level > 0 && !IsHighWebGL()) {
+        return GL_INVALID_OPERATION;
+    }
+    return 0;
 }
 } // namespace Impl
 } // namespace Rosen

@@ -22,6 +22,7 @@
 #include "draw/color.h"
 #include "recording/op_item.h"
 #include "recording/mem_allocator.h"
+#include "utils/drawing_macros.h"
 
 namespace OHOS {
 namespace Media {
@@ -38,6 +39,11 @@ struct ImageHandle {
     AlphaType alphaType;
 };
 
+struct VerticesHandle {
+    uint32_t offset;
+    size_t size;
+};
+
 struct CmdListHandle {
     uint32_t type;
     uint32_t offset;
@@ -48,7 +54,7 @@ struct CmdListHandle {
 
 using CmdListData = std::pair<const void*, size_t>;
 
-class CmdList {
+class DRAWING_API CmdList {
 public:
     enum Type : uint32_t {
         CMD_LIST = 0,

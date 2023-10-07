@@ -22,6 +22,8 @@
 #include <ostream>
 #include <vector>
 
+#include <unicode/uchar.h>
+
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -40,6 +42,7 @@ struct CharGroup {
     std::shared_ptr<Typeface> typeface;
     double visibleWidth = 0;
     double invisibleWidth = 0;
+    bool isWordEnd = false;
 
     double GetWidth() const
     {
@@ -67,6 +70,13 @@ struct CharGroup {
         }
         return true;
     };
+
+    bool IsHardBreak()
+    {
+        ULineBreak lineBreak = static_cast<ULineBreak>(
+            u_getIntPropertyValue(chars[0], UCHAR_LINE_BREAK));
+        return (lineBreak == U_LB_LINE_FEED || lineBreak == U_LB_MANDATORY_BREAK);
+    }
 };
 
 struct IndexRange {

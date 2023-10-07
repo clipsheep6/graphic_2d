@@ -32,13 +32,19 @@
 #include "skia_paint.h"
 #include "skia_picture.h"
 #include "skia_region.h"
+#include "skia_vertices.h"
 
+#include "common/rs_macros.h"
 #include "impl_interface/core_canvas_impl.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class SkiaCanvas : public CoreCanvasImpl {
+#ifndef USE_ROSEN_DRAWING
+class RS_EXPORT SkiaCanvas : public CoreCanvasImpl {
+#else
+class DRAWING_API SkiaCanvas : public CoreCanvasImpl {
+#endif
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     SkiaCanvas();
@@ -60,9 +66,13 @@ public:
 #endif
     int32_t GetWidth() const override;
     int32_t GetHeight() const override;
+    ImageInfo GetImageInfo() override;
+    bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
+        int srcX, int srcY) override;
 
     // shapes
     void DrawPoint(const Point& point) override;
+    void DrawPoints(PointMode mode, size_t count, const Point pts[]) override;
     void DrawLine(const Point& startPt, const Point& endPt) override;
     void DrawRect(const Rect& rect) override;
     void DrawRoundRect(const RoundRect& roundRect) override;
@@ -76,6 +86,20 @@ public:
     void DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos, scalar lightRadius,
         Color ambientColor, Color spotColor, ShadowFlags flag) override;
     void DrawRegion(const Region& region) override;
+    void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
+        const Point texCoords[4], BlendMode mode) override;
+    void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
+        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) override;
+    void DrawVertices(const Vertices& vertices, BlendMode mode) override;
+
+    void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
+        FilterMode filter, const Brush* brush = nullptr) override;
+    void DrawAnnotation(const Rect& rect, const char* key, const Data* data) override;
+    void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
+        FilterMode filter, const Brush* brush = nullptr) override;
+
+    // color
+    void DrawColor(ColorQuad color, BlendMode mode) override;
 
     // image
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) override;
@@ -88,10 +112,17 @@ public:
 
     void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom) override;
 
+    // text
+    void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y) override;
+
     // clip
     void ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias) override;
+    void ClipIRect(const RectI& rect, ClipOp op = ClipOp::INTERSECT) override;
     void ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAntiAlias) override;
     void ClipPath(const Path& path, ClipOp op, bool doAntiAlias) override;
+    void ClipRegion(const Region& region, ClipOp op = ClipOp::INTERSECT) override;
+    bool IsClipEmpty() override;
+    bool QuickReject(const Rect& rect) override;
 
     // transform
     void SetMatrix(const Matrix& matrix) override;
@@ -109,6 +140,7 @@ public:
     void SaveLayer(const SaveLayerOps& saveLayerOps) override;
     void Restore() override;
     uint32_t GetSaveCount() const override;
+    void Discard() override;
 
     // paint
     void AttachPen(const Pen& pen) override;

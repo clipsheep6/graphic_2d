@@ -28,7 +28,7 @@ namespace Drawing {
  * and is used to record the sequence of draw calls for the canvas.
  * Draw calls are kept in linear memory in DrawCmdList, Subsequent playback can be performed through DrawCmdList.
  */
-class RecordingCanvas : public Canvas {
+class DRAWING_API RecordingCanvas : public Canvas {
 public:
     RecordingCanvas(int width, int height);
     ~RecordingCanvas() override = default;
@@ -41,6 +41,7 @@ public:
     }
 
     void DrawPoint(const Point& point) override;
+    void DrawPoints(PointMode mode, size_t count, const Point pts[]) override;
     void DrawLine(const Point& startPt, const Point& endPt) override;
     void DrawRect(const Rect& rect) override;
     void DrawRoundRect(const RoundRect& roundRect) override;
@@ -53,6 +54,20 @@ public:
     void DrawBackground(const Brush& brush) override;
     void DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos, scalar lightRadius,
         Color ambientColor, Color spotColor, ShadowFlags flag) override;
+    void DrawRegion(const Region& region) override;
+    void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
+        const Point texCoords[4], BlendMode mode) override;
+    void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
+        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) override;
+    void DrawVertices(const Vertices& vertices, BlendMode mode) override;
+
+    void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
+        FilterMode filterMode, const Brush* brush = nullptr) override;
+    void DrawAnnotation(const Rect& rect, const char* key, const Data* data) override;
+    void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
+        FilterMode filterMode, const Brush* brush = nullptr) override;
+
+    void DrawColor(ColorQuad color, BlendMode mode = BlendMode::SRC_OVER) override;
 
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) override;
     void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling) override;
@@ -60,10 +75,13 @@ public:
         SrcRectConstraint constraint = SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT) override;
     void DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling) override;
     void DrawPicture(const Picture& picture) override;
+    void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y) override;
 
     void ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias) override;
+    void ClipIRect(const RectI& rect, ClipOp op = ClipOp::INTERSECT) override;
     void ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAntiAlias) override;
     void ClipPath(const Path& path, ClipOp op, bool doAntiAlias) override;
+    void ClipRegion(const Region& region, ClipOp op = ClipOp::INTERSECT) override;
 
     void SetMatrix(const Matrix& matrix) override;
     void ResetMatrix() override;
@@ -78,6 +96,8 @@ public:
     void Save() override;
     void SaveLayer(const SaveLayerOps& saveLayerOps) override;
     void Restore() override;
+    uint32_t GetSaveCount() const override;
+    void Discard() override;
 
     void ClipAdaptiveRoundRect(const std::vector<Point>& radius);
     void DrawImage(const std::shared_ptr<Image>& image, const std::shared_ptr<Data>& data,

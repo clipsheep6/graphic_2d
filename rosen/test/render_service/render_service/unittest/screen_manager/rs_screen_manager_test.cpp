@@ -554,6 +554,26 @@ HWTEST_F(RSScreenManagerTest, SetVirtualScreenSurface_002, TestSize.Level1)
 }
 
 /*
+ * @tc.name: SetVirtualScreenSurface_003
+ * @tc.desc: Test SetVirtualScreenSurface
+ * @tc.type: FUNC
+ * @tc.require: issueI7AABN
+ */
+HWTEST_F(RSScreenManagerTest, SetVirtualScreenSurface_003, TestSize.Level1)
+{
+    auto screenManager = CreateOrGetScreenManager();
+    ScreenId newId = 0;
+    ASSERT_NE(screenManager->SetVirtualScreenSurface(newId, nullptr), SUCCESS);
+    screenManager->Init();
+    auto rsScreen = std::make_unique<impl::RSScreen>(newId, false, HdiOutput::CreateHdiOutput(newId), nullptr);
+    screenManager->MockHdiScreenConnected(rsScreen);
+    auto csurface = IConsumerSurface::Create();
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(screenManager->SetVirtualScreenSurface(newId, psurface), SCREEN_NOT_FOUND);
+}
+
+/*
  * @tc.name: RemoveVirtualScreen_001
  * @tc.desc: Test RemoveVirtualScreen
  * @tc.type: FUNC
@@ -562,6 +582,33 @@ HWTEST_F(RSScreenManagerTest, SetVirtualScreenSurface_002, TestSize.Level1)
 HWTEST_F(RSScreenManagerTest, RemoveVirtualScreen_001, TestSize.Level1)
 {
     auto screenManager = CreateOrGetScreenManager();
+    ScreenId screenId = INVALID_SCREEN_ID;
+    screenManager->RemoveVirtualScreen(screenId);
+}
+
+/*
+ * @tc.name: RemoveVirtualScreen_002
+ * @tc.desc: Test RemoveVirtualScreen
+ * @tc.type: FUNC
+ * @tc.require: issueI7AABN
+ */
+HWTEST_F(RSScreenManagerTest, RemoveVirtualScreen_002, TestSize.Level1)
+{
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(nullptr, screenManager);
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+
+    auto id = screenManager->CreateVirtualScreen("virtualScreen001", 480, 320, psurface);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    auto id_ = screenManager->CreateVirtualScreen("virtualScreen002", 480, 320, psurface);
+    ASSERT_EQ(INVALID_SCREEN_ID, id_);
+
     ScreenId screenId = INVALID_SCREEN_ID;
     screenManager->RemoveVirtualScreen(screenId);
 }

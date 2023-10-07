@@ -54,12 +54,19 @@ void RSAnimationManager::RemoveAnimation(AnimationId keyId)
 
 void RSAnimationManager::CancelAnimationByPropertyId(PropertyId id)
 {
-    EraseIf(animations_, [id](const auto& pair) { return (pair.second && (pair.second->GetPropertyId() == id)); });
+    EraseIf(animations_, [id](const auto& pair) {
+        if (pair.second && (pair.second->GetPropertyId() == id)) {
+            pair.second->Detach();
+            return true;
+        }
+        return false;
+    });
 }
 
 void RSAnimationManager::FilterAnimationByPid(pid_t pid)
 {
-    ROSEN_LOGI("RSAnimationManager::FilterAnimationByPid removing all animations belong to pid %d", pid);
+    ROSEN_LOGI("RSAnimationManager::FilterAnimationByPid removing all animations belong to pid %{public}llu",
+        (unsigned long long)pid);
     // remove all animations belong to given pid (by matching higher 32 bits of animation id)
     EraseIf(animations_, [pid, this](const auto& pair) -> bool {
         if (ExtractPid(pair.first) != pid) {
@@ -71,16 +78,17 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
     });
 }
 
-std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnTheTree)
+std::tuple<bool, bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnTheTree)
 {
     // process animation
     bool hasRunningAnimation = false;
     bool needRequestNextVsync = false;
-
+    // isCalculateAnimationValue is embedded modify for stat animate frame drop
+    bool isCalculateAnimationValue = false;
     rsRange_.Reset();
     // iterate and execute all animations, remove finished animations
     EraseIf(animations_, [this, &hasRunningAnimation, time,
-        &needRequestNextVsync, nodeIsOnTheTree](auto& iter) -> bool {
+        &needRequestNextVsync, nodeIsOnTheTree, &isCalculateAnimationValue](auto& iter) -> bool {
         auto& animation = iter.second;
         if (!nodeIsOnTheTree && animation->GetRepeatCount() == -1) {
             hasRunningAnimation = animation->IsRunning() || hasRunningAnimation;
@@ -88,10 +96,12 @@ std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnThe
         }
         bool isFinished = animation->Animate(time);
         if (isFinished) {
+            isCalculateAnimationValue = true;
             OnAnimationFinished(animation);
         } else {
             hasRunningAnimation = animation->IsRunning() || hasRunningAnimation;
             needRequestNextVsync = animation->IsRunning() || needRequestNextVsync;
+            isCalculateAnimationValue = animation->IsCalculateAniamtionValue() || isCalculateAnimationValue;
 
             auto range = animation->GetFrameRateRange();
             if (range.IsValid()) {
@@ -100,11 +110,12 @@ std::pair<bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnThe
         }
         return isFinished;
     });
+    isCalculateAnimationValue = isCalculateAnimationValue && nodeIsOnTheTree;
 
-    return { hasRunningAnimation, needRequestNextVsync };
+    return { hasRunningAnimation, needRequestNextVsync, isCalculateAnimationValue };
 }
 
-FrameRateRange RSAnimationManager::GetFrameRateRangeFromRSAnimations()
+const FrameRateRange& RSAnimationManager::GetFrameRateRangeFromRSAnimations() const
 {
     return rsRange_;
 }
@@ -113,7 +124,7 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
 {
     auto animationItr = animations_.find(id);
     if (animationItr == animations_.end()) {
-        ROSEN_LOGE("RSAnimationManager::GetAnimation, animation [%" PRIu64 "] not found", id);
+        ROSEN_LOGE("RSAnimationManager::GetAnimation, animation [%{public}" PRIu64 "] not found", id);
         return nullptr;
     }
     return animationItr->second;
@@ -172,6 +183,24 @@ std::shared_ptr<RSRenderAnimation> RSAnimationManager::QueryPathAnimation(Proper
         return nullptr;
     }
     return GetAnimation(it->second);
+}
+
+void RSAnimationManager::RegisterParticleAnimation(PropertyId propertyId, AnimationId animId)
+{
+    particleAnimations_[propertyId] = animId;
+}
+
+void RSAnimationManager::UnregisterParticleAnimation(PropertyId propertyId, AnimationId animId)
+{
+    auto it = particleAnimations_.find(propertyId);
+    if (it != particleAnimations_.end() && it->second == animId) {
+        particleAnimations_.erase(it);
+    }
+}
+
+std::unordered_map<PropertyId, AnimationId> RSAnimationManager::GetParticleAnimations()
+{
+    return particleAnimations_;
 }
 } // namespace Rosen
 } // namespace OHOS

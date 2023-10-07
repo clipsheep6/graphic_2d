@@ -83,6 +83,8 @@ public:
 
     std::vector<MemoryGraphic> GetMemoryGraphics();
 
+    bool GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize);
+
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height);
 
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id);
@@ -97,7 +99,9 @@ public:
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id);
 
-    std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id);
+    int32_t GetCurrentRefreshRateMode();
+
+    std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id);
 
     std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId id);
 
@@ -138,6 +142,12 @@ public:
 
     int32_t RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 
+    int32_t RegisterSurfaceOcclusionChangeCallback(NodeId id, const SurfaceOcclusionChangeCallback& callback);
+
+    int32_t UnRegisterSurfaceOcclusionChangeCallback(NodeId id);
+
+    int32_t RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback);
+
     void SetAppWindowNum(uint32_t num);
 
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
@@ -149,6 +159,14 @@ public:
     void ReportEventComplete(DataBaseRs info);
 
     void ReportEventJankFrame(DataBaseRs info);
+
+    void EnableCacheForRotation();
+
+    void DisableCacheForRotation();
+
+#ifdef TP_FEATURE_ENABLE
+    void SetTpFeatureConfig(int32_t feature, const char* config);
+#endif
 private:
     RSInterfaces();
     ~RSInterfaces() noexcept;

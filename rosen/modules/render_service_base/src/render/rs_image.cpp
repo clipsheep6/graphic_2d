@@ -59,22 +59,30 @@ void RSImage::CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkSamp
 void RSImage::CanvasDrawImage(SkCanvas& canvas, const SkRect& rect, const SkPaint& paint, bool isBackground)
 #endif
 {
-    UpdateNodeIdToPicture(nodeId_);
-    SkAutoCanvasRestore acr(&canvas, HasRadius());
-    frameRect_.SetAll(rect.left(), rect.top(), rect.width(), rect.height());
+#ifdef NEW_SKIA
+    if (!isDrawn_ || rect != lastRect_) {
+#endif
+        UpdateNodeIdToPicture(nodeId_);
+        SkAutoCanvasRestore acr(&canvas, HasRadius());
+        frameRect_.SetAll(rect.left(), rect.top(), rect.width(), rect.height());
 #else
 void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect, bool isBackground)
 {
     canvas.Save();
     frameRect_.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
 #endif
-    if (!isBackground) {
-        ApplyImageFit();
-        ApplyCanvasClip(canvas);
-    }
+        if (!isBackground) {
+            ApplyImageFit();
+            ApplyCanvasClip(canvas);
+        }
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
-    DrawImageRepeatRect(samplingOptions, paint, canvas);
+        DrawImageRepeatRect(samplingOptions, paint, canvas);
+    } else {
+        SkAutoCanvasRestore acr(&canvas, HasRadius());
+        canvas.drawImageRect(image_, src_, dst_, samplingOptions, &paint, SkCanvas::kFast_SrcRectConstraint);
+    }
+    lastRect_ = rect;
 #else
     DrawImageRepeatRect(paint, canvas);
 #endif
@@ -84,51 +92,90 @@ void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect
 #endif
 }
 
+struct ImageParameter
+{
+    float ratio;
+    float srcW;
+    float srcH;
+    float frameW;
+    float frameH;
+    float dstW;
+    float dstH;
+};
+
+RectF ApplyImageFitSwitch(ImageParameter &imageParameter, ImageFit imageFit_, RectF tempRectF)
+{
+    switch (imageFit_) {
+        case ImageFit::TOP_LEFT:
+            tempRectF.SetAll(0.f, 0.f, imageParameter.srcW, imageParameter.srcH);
+            return tempRectF;
+        case ImageFit::FILL:
+            break;
+        case ImageFit::NONE:
+            imageParameter.dstW = imageParameter.srcW;
+            imageParameter.dstH = imageParameter.srcH;
+            break;
+        case ImageFit::COVER:
+            imageParameter.dstW = std::max(imageParameter.frameW, imageParameter.frameH * imageParameter.ratio);
+            imageParameter.dstH = std::max(imageParameter.frameH, imageParameter.frameW / imageParameter.ratio);
+            break;
+        case ImageFit::FIT_WIDTH:
+            imageParameter.dstH = imageParameter.frameW / imageParameter.ratio;
+            break;
+        case ImageFit::FIT_HEIGHT:
+            imageParameter.dstW = imageParameter.frameH * imageParameter.ratio;
+            break;
+        case ImageFit::SCALE_DOWN:
+            if (imageParameter.srcW < imageParameter.frameW && imageParameter.srcH < imageParameter.frameH) {
+                imageParameter.dstW = imageParameter.srcW;
+                imageParameter.dstH = imageParameter.srcH;
+            } else {
+                imageParameter.dstW = std::min(imageParameter.frameW, imageParameter.frameH * imageParameter.ratio);
+                imageParameter.dstH = std::min(imageParameter.frameH, imageParameter.frameW / imageParameter.ratio);
+            }
+            break;
+        case ImageFit::CONTAIN:
+        default:
+            imageParameter.dstW = std::min(imageParameter.frameW, imageParameter.frameH * imageParameter.ratio);
+            imageParameter.dstH = std::min(imageParameter.frameH, imageParameter.frameW / imageParameter.ratio);
+            break;
+    }
+    tempRectF.SetAll((imageParameter.frameW - imageParameter.dstW) / 2,
+        (imageParameter.frameH - imageParameter.dstH) / 2, imageParameter.dstW, imageParameter.dstH);
+    return tempRectF;
+}
+
 void RSImage::ApplyImageFit()
 {
+    if (scale_ == 0) {
+        RS_LOGE("RSImage::ApplyImageFit failed, scale_ is zero ");
+        return;
+    }
     const float srcW = srcRect_.width_ / scale_;
     const float srcH = srcRect_.height_ / scale_;
     const float frameW = frameRect_.width_;
     const float frameH = frameRect_.height_;
     float dstW = frameW;
     float dstH = frameH;
-    float ratio = srcW / srcH;
-    switch (imageFit_) {
-        case ImageFit::TOP_LEFT:
-            dstRect_.SetAll(0.f, 0.f, srcW, srcH);
-            return;
-        case ImageFit::FILL:
-            break;
-        case ImageFit::NONE:
-            dstW = srcW;
-            dstH = srcH;
-            break;
-        case ImageFit::COVER:
-            dstW = std::max(frameW, frameH * ratio);
-            dstH = std::max(frameH, frameW / ratio);
-            break;
-        case ImageFit::FIT_WIDTH:
-            dstH = frameW / ratio;
-            break;
-        case ImageFit::FIT_HEIGHT:
-            dstW = frameH * ratio;
-            break;
-        case ImageFit::SCALE_DOWN:
-            if (srcW < frameW && srcH < frameH) {
-                dstW = srcW;
-                dstH = srcH;
-            } else {
-                dstW = std::min(frameW, frameH * ratio);
-                dstH = std::min(frameH, frameW / ratio);
-            }
-            break;
-        case ImageFit::CONTAIN:
-        default:
-            dstW = std::min(frameW, frameH * ratio);
-            dstH = std::min(frameH, frameW / ratio);
-            break;
+    if (srcH == 0) {
+        RS_LOGE("RSImage::ApplyImageFit failed, srcH is zero ");
+        return;
     }
-    dstRect_.SetAll((frameW - dstW) / 2, (frameH - dstH) / 2, dstW, dstH);
+    float ratio = srcW / srcH;
+    if (ratio == 0) {
+        RS_LOGE("RSImage::ApplyImageFit failed, ratio is zero ");
+        return;
+    }
+    ImageParameter imageParameter;
+    imageParameter.ratio = ratio;
+    imageParameter.srcW = srcW;
+    imageParameter.srcH = srcH;
+    imageParameter.frameW = frameW;
+    imageParameter.frameH = frameH;
+    imageParameter.dstW = dstW;
+    imageParameter.dstH = dstH;
+    RectF tempRectF = dstRect_; 
+    dstRect_ = ApplyImageFitSwitch(imageParameter, imageFit_, tempRectF);
 }
 
 bool RSImage::HasRadius() const
@@ -191,8 +238,8 @@ void RSImage::UploadGpu(SkCanvas& canvas)
                 image_ = image;
                 RSImageCache::Instance().CacheSkiaImage(uniqueId_, image);
             } else {
-                RS_LOGE("make astc image %d (%d, %d) failed, size:%d", uniqueId_,
-                    (int)srcRect_.width_, (int)srcRect_.height_, compressData_->size());
+                RS_LOGE("make astc image %{public}" PRIu64 " (%{public}d, %{public}d) failed",
+                    uniqueId_, (int)srcRect_.width_, (int)srcRect_.height_);
             }
             compressData_ = nullptr;
         }
@@ -220,7 +267,8 @@ void RSImage::UploadGpu(Drawing::Canvas& canvas)
                 image_ = image;
                 RSImageCache::Instance().CacheDrawingImage(uniqueId_, image);
             } else {
-                RS_LOGE("make astc image %d (%d, %d) failed", uniqueId_, (int)srcRect_.width_, (int)srcRect_.height_);
+                RS_LOGE("make astc image %{public}d (%{public}d, %{public}d) failed",
+                    uniqueId_, (int)srcRect_.width_, (int)srcRect_.height_);
             }
             compressData_ = nullptr;
         }
@@ -279,7 +327,7 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
 #endif
     UploadGpu(canvas);
 #ifndef USE_ROSEN_DRAWING
-    auto src = RSPropertiesPainter::Rect2SkRect(srcRect_);
+    src_ = RSPropertiesPainter::Rect2SkRect(srcRect_);
 #else
     if (image_ == nullptr) {
         RS_LOGE("RSImage::DrawImageRepeatRect failed, image is nullptr");
@@ -290,10 +338,10 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
     for (int i = minX; i <= maxX; ++i) {
         for (int j = minY; j <= maxY; ++j) {
 #ifndef USE_ROSEN_DRAWING
-            auto dst = SkRect::MakeXYWH(dstRect_.left_ + i * dstRect_.width_, dstRect_.top_ + j * dstRect_.height_,
+            dst_ = SkRect::MakeXYWH(dstRect_.left_ + i * dstRect_.width_, dstRect_.top_ + j * dstRect_.height_,
                 dstRect_.width_, dstRect_.height_);
 #ifdef NEW_SKIA
-            canvas.drawImageRect(image_, src, dst, samplingOptions, &paint, SkCanvas::kFast_SrcRectConstraint);
+            canvas.drawImageRect(image_, src_, dst_, samplingOptions, &paint, SkCanvas::kFast_SrcRectConstraint);
 #else
             canvas.drawImageRect(image_, src, dst, &paint, SkCanvas::kFast_SrcRectConstraint);
 #endif
@@ -305,6 +353,9 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
                 Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
 #endif
         }
+    }
+    if (imageRepeat_ == ImageRepeat::NO_REPEAT) {
+        isDrawn_ = true;
     }
 }
 

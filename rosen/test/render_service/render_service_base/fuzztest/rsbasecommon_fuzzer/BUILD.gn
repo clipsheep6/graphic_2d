@@ -14,7 +14,7 @@
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
-module_output_path = "graphic_2d/render_service_base"
+module_output_path = "graphic_2d/graphic_2d"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("RSBaseCommonFuzzTest") {
@@ -41,6 +41,11 @@ ohos_fuzztest("RSBaseCommonFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "rsbasecommon_fuzzer.cpp" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ###############################################################################

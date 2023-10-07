@@ -32,7 +32,7 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-    static NVal CreateObjectInstance(napi_env env, WebGLTransformFeedback **instance)
+    static NVal CreateObjectInstance(napi_env env, WebGLTransformFeedback** instance)
     {
         return WebGLObject::CreateObjectInstance<WebGLTransformFeedback>(env, instance);
     }
@@ -47,6 +47,16 @@ public:
         return transformFeedback_;
     }
 
+    GLenum GetTarget()
+    {
+        return target_;
+    }
+
+    void SetTarget(GLenum target)
+    {
+        target_ = target;
+    }
+
     explicit WebGLTransformFeedback() : transformFeedback_(0) {};
 
     WebGLTransformFeedback(napi_env env, napi_value exports) : NExporter(env, exports), transformFeedback_(0) {};
@@ -54,6 +64,7 @@ public:
     ~WebGLTransformFeedback() {};
 private:
     uint32_t transformFeedback_;
+    GLenum target_ { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

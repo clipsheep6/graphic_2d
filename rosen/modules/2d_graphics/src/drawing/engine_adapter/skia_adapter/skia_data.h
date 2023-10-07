@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class SkiaData : public DataImpl {
+class DRAWING_API SkiaData : public DataImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     SkiaData() noexcept;
@@ -50,6 +50,8 @@ public:
      * @brief  Update the member variable to filter, adaptation layer calls.
      */
     void SetSkData(const sk_sp<SkData>& data);
+
+    std::shared_ptr<Data> Serialize() const override;
 private:
     sk_sp<SkData> skData_;
 };

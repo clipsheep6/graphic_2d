@@ -41,12 +41,25 @@ struct KawaseParameter {
 };
 class KawaseBlurFilter {
 public:
-    explicit KawaseBlurFilter();
-    ~KawaseBlurFilter();
     bool ApplyKawaseBlur(SkCanvas& canvas, const sk_sp<SkImage>& image, const KawaseParameter& param);
+    static KawaseBlurFilter* GetKawaseBlurFilter()
+    {
+        static thread_local KawaseBlurFilter* filter;
+        if (filter == nullptr) {
+            filter = new KawaseBlurFilter();
+        }
+        return filter;
+    }
 
 private:
+    KawaseBlurFilter();
+    ~KawaseBlurFilter();
+    KawaseBlurFilter(const KawaseBlurFilter& filter);
+    const KawaseBlurFilter &operator=(const KawaseBlurFilter& filter);
     static SkMatrix GetShaderTransform(const SkCanvas* canvas, const SkRect& blurRect, float scale = 1.0f);
+    void CheckInputImage(SkCanvas& canvas, const sk_sp<SkImage>& image, const KawaseParameter& param,
+        sk_sp<SkImage>& checkedImage);
+    void OutputOriginalImage(SkCanvas& canvas, const sk_sp<SkImage>& image, const KawaseParameter& param);
     bool ApplyBlur(SkCanvas& canvas, const sk_sp<SkImage>& image, const sk_sp<SkImage>& blurImage,
         const KawaseParameter& param) const;
     void ComputeRadiusAndScale(int radius);
@@ -62,10 +75,16 @@ private:
     static constexpr float kMaxCrossFadeRadius = 10.0f;
     static constexpr bool supportLargeRadius = true;
 
+#ifdef NEW_SKIA
     sk_sp<SkRuntimeEffect> blurEffect_;
     sk_sp<SkRuntimeEffect> mixEffect_;
+#endif
     float blurRadius_ = 0.f;
     float blurScale_ = 0.25f;
+
+    // Advanced Filter
+    void setupBlurEffectAdvancedFilter();
+    sk_sp<SkRuntimeEffect> blurEffectAF_;
 };
 #endif
 } // namespace Rosen

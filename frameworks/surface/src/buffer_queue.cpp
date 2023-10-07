@@ -26,9 +26,10 @@
 #include "buffer_log.h"
 #include "buffer_manager.h"
 #include "hitrace_meter.h"
+#include "sandbox_utils.h"
 #include "surface_buffer_impl.h"
 #include "sync_fence.h"
-#include "sandbox_utils.h"
+#include "sync_fence_tracker.h"
 
 namespace OHOS {
 namespace {
@@ -51,8 +52,13 @@ static uint64_t GetUniqueIdImpl()
     return id | counter++;
 }
 
+static bool IsLocalRender()
+{
+    return GetRealPid() == gettid();
+}
+
 BufferQueue::BufferQueue(const std::string &name, bool isShared)
-    : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared)
+    : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared), isLocalRender_(IsLocalRender())
 {
     BLOGNI("ctor, Queue id: %{public}" PRIu64 " isShared: %{public}d", uniqueId_, isShared);
     bufferManager_ = BufferManager::GetInstance();
@@ -243,6 +249,12 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
     return ret;
 }
 
+GSError BufferQueue::SetProducerCacheCleanFlag(bool flag)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return SetProducerCacheCleanFlagLocked(flag);
+}
+
 GSError BufferQueue::SetProducerCacheCleanFlagLocked(bool flag)
 {
     producerCacheClean_ = flag;
@@ -316,6 +328,10 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
     }
 
     ScopedBytrace bufferName(name_ + ":" + std::to_string(retval.sequence));
+    if (isLocalRender_) {
+        static SyncFenceTracker releaseFenceThread("Release Fence");
+        releaseFenceThread.TrackFence(retval.fence);
+    }
     return GSERROR_OK;
 }
 
@@ -384,7 +400,6 @@ GSError BufferQueue::FlushBuffer(uint32_t sequence, const sptr<BufferExtraData> 
         }
     }
 
-    ScopedBytrace bufferIPCSend("BufferIPCSend");
     sret = DoFlushBuffer(sequence, bedata, fence, config);
     if (sret != GSERROR_OK) {
         return sret;
@@ -393,10 +408,8 @@ GSError BufferQueue::FlushBuffer(uint32_t sequence, const sptr<BufferExtraData> 
     if (sret == GSERROR_OK) {
         std::lock_guard<std::mutex> lockGuard(listenerMutex_);
         if (listener_ != nullptr) {
-            ScopedBytrace bufferIPCSend("OnBufferAvailable");
             listener_->OnBufferAvailable();
         } else if (listenerClazz_ != nullptr) {
-            ScopedBytrace bufferIPCSend("OnBufferAvailable");
             listenerClazz_->OnBufferAvailable();
         }
     }
@@ -437,7 +450,6 @@ void BufferQueue::DumpToFile(uint32_t sequence)
 GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData> &bedata,
     const sptr<SyncFence>& fence, const BufferFlushConfigWithDamages &config)
 {
-    ScopedBytrace func(__func__);
     ScopedBytrace bufferName(name_ + ":" + std::to_string(sequence));
     std::lock_guard<std::mutex> lockGuard(mutex_);
     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
@@ -466,15 +478,12 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
         }
     }
 
-    if (config.timestamp == 0) {
-        struct timeval tv = {};
-        gettimeofday(&tv, nullptr);
-        constexpr int32_t secToUsec = 1000000;
-        bufferQueueCache_[sequence].timestamp = (int64_t)tv.tv_usec + (int64_t)tv.tv_sec * secToUsec;
-    } else {
-        bufferQueueCache_[sequence].timestamp = config.timestamp;
-    }
+    bufferQueueCache_[sequence].timestamp = config.timestamp;
 
+    if (isLocalRender_) {
+        static SyncFenceTracker acquireFenceThread("Acquire Fence");
+        acquireFenceThread.TrackFence(fence);
+    }
     // if you need dump SurfaceBuffer to file, you should call DumpToFile(sequence) here
     return GSERROR_OK;
 }
@@ -496,7 +505,6 @@ GSError BufferQueue::AcquireBuffer(sptr<SurfaceBuffer> &buffer,
         fence = bufferQueueCache_[sequence].fence;
         timestamp = bufferQueueCache_[sequence].timestamp;
         damages = bufferQueueCache_[sequence].damages;
-
         ScopedBytrace bufferName(name_ + ":" + std::to_string(sequence));
         BLOGND("Success Buffer seq id: %{public}d Queue id: %{public}" PRIu64 " AcquireFence:%{public}d",
             sequence, uniqueId_, fence->Get());
@@ -551,7 +559,7 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
         sptr<SurfaceBuffer> buf = buffer;
         auto sret = onBufferRelease(buf);
         if (sret == GSERROR_OK) {   // need to check why directly return?
-            return sret;
+            // We think that onBufferRelase is not used by anyone, so delete 'return sret' temporarily;
         }
     }
 
@@ -810,6 +818,13 @@ GSError BufferQueue::RegisterProducerReleaseListener(sptr<IProducerListener> lis
 {
     std::lock_guard<std::mutex> lockGuard(producerListenerMutex_);
     producerListener_ = listener;
+    return GSERROR_OK;
+}
+
+GSError BufferQueue::UnRegisterProducerReleaseListener()
+{
+    std::lock_guard<std::mutex> lockGuard(producerListenerMutex_);
+    producerListener_ = nullptr;
     return GSERROR_OK;
 }
 

@@ -23,10 +23,21 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace Impl {
+class WebGLRenderingContextBaseImpl;
+}
+
 enum AttachmentType : uint32_t {
     RENDER_BUFFER,
     TEXTURE,
     INVALID_TYPE,
+};
+
+struct WebGLAttachmentInfo {
+    GLsizei width = 0;
+    GLsizei height = 0;
+    GLenum format;
+    GLenum type;
 };
 
 struct WebGLAttachment {
@@ -36,11 +47,11 @@ struct WebGLAttachment {
         this->attachment = attachment;
         this->id = id;
     }
-    bool IsTexture()
+    bool IsTexture() const
     {
         return type == AttachmentType::TEXTURE;
     }
-    bool IsRenderBuffer()
+    bool IsRenderBuffer() const
     {
         return type == AttachmentType::RENDER_BUFFER;
     }
@@ -51,7 +62,7 @@ struct WebGLAttachment {
 
 struct AttachmentTexture : public WebGLAttachment {
     AttachmentTexture(AttachmentType type, GLenum attachment, GLuint id)
-    : WebGLAttachment(type, attachment, id) {}
+        : WebGLAttachment(type, attachment, id) {}
     GLenum target {};
     GLint level {};
 };
@@ -85,11 +96,6 @@ public:
 
     ~WebGLFramebuffer();
 
-    static WebGLFramebuffer *GetObjectInstance(napi_env env, napi_value obj)
-    {
-        return WebGLObject::GetObjectInstance<WebGLFramebuffer>(env, obj);
-    }
-
     GLenum GetTarget() const
     {
         return target_;
@@ -99,16 +105,34 @@ public:
     {
         target_ = target;
     }
-    bool AddAttachment(GLenum attachment, GLuint id);
-    bool AddAttachment(GLenum attachment, GLuint id, GLenum target, GLint level);
-    WebGLAttachment* GetAttachment(GLenum attachment);
-    void RemoveAttachment(GLenum attachment);
-    void RemoveAttachment(GLuint id, AttachmentType type);
+
+    void SetReadBufferMode(GLenum mode)
+    {
+        readBufferMode_ = mode;
+    }
+    GLenum GetReadBufferMode() const
+    {
+        return readBufferMode_;
+    }
+    bool AddAttachment(GLenum target, GLenum attachment, GLuint id);
+    bool AddAttachment(GLenum target, GLenum attachment, GLuint id, GLenum textureTarget, GLint level);
+    WebGLAttachment* GetAttachment(GLenum attachment) const;
+    void RemoveAttachment(GLenum target, GLuint id, AttachmentType type);
+    GLenum CheckStatus(napi_env env, Impl::WebGLRenderingContextBaseImpl* context) const;
+    bool GetWebGLAttachmentInfo(napi_env env, Impl::WebGLRenderingContextBaseImpl* context,
+        const WebGLAttachment* attachedObject, WebGLAttachmentInfo& info) const;
 private:
+    void DoDetachment(GLenum target, WebGLAttachment *attachment);
+    bool CheckAttachmentComplete(bool isHighWebGL, WebGLAttachment* attachedObject,
+        const WebGLAttachmentInfo& info, std::vector<WebGLAttachment*> &attachments) const;
+    bool IsStencilRenderAble(GLenum internalFormat, bool includesDepthStencil) const;
+    bool IsDepthRenderAble(GLenum internalFormat, bool includesDepthStencil) const;
+    bool IsColorRenderAble(GLenum internalFormat) const;
     void Clear();
-    std::map<GLenum, WebGLAttachment *> attachments_ {};
-    GLenum target_;
-    unsigned int framebuffer_;
+    std::map<GLenum, WebGLAttachment*> attachments_ {};
+    GLenum target_ { GL_NONE };
+    unsigned int framebuffer_  { 0 };
+    GLenum readBufferMode_ { GL_COLOR_ATTACHMENT0 };
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -49,12 +49,17 @@ public:
     void SetFraction(float fraction);
     void SetReversed(bool isReversed);
     bool Marshalling(Parcel& parcel) const override;
-    bool Animate(int64_t time);
+    virtual bool Animate(int64_t time);
 
     bool IsStarted() const;
     bool IsRunning() const;
     bool IsPaused() const;
     bool IsFinished() const;
+
+    void SetAnimationId(AnimationId id)
+    {
+        id_ = id;
+    }
 
     void SetDuration(int value)
     {
@@ -136,8 +141,13 @@ public:
         return animationFraction_.GetFrameRateRange();
     }
 
+    bool IsCalculateAniamtionValue() const
+    {
+        return calculateAnimationValue_;
+    }
+
     void Attach(RSRenderNode* renderNode);
-    void Detach();
+    void Detach(bool forceDetach = false);
     RSRenderNode* GetTarget() const;
 
     NodeId GetTargetId() const;
@@ -172,6 +182,9 @@ protected:
     void FinishOnCurrentPosition();
 
     RSAnimationFraction animationFraction_;
+
+    // calculateAnimationValue_ is embedded modify for stat animate frame drop
+    bool calculateAnimationValue_ { true };
 
 private:
     void ProcessFillModeOnStart(float startFraction);

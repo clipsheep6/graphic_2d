@@ -15,6 +15,13 @@
 
 #include "command/rs_animation_command.h"
 
+#include <memory>
+
+#include "animation/rs_render_particle.h"
+#include "common/rs_common_def.h"
+#include "modifier/rs_render_modifier.h"
+#include "modifier/rs_render_property.h"
+
 namespace OHOS {
 namespace Rosen {
 
@@ -22,8 +29,8 @@ namespace {
 static AnimationCommandHelper::AnimationCallbackProcessor animationCallbackProcessor = nullptr;
 }
 
-void AnimationCommandHelper::AnimationCallback(RSContext& context, NodeId targetId, AnimationId animId,
-    AnimationCallbackEvent event)
+void AnimationCommandHelper::AnimationCallback(
+    RSContext& context, NodeId targetId, AnimationId animId, AnimationCallbackEvent event)
 {
     if (animationCallbackProcessor != nullptr) {
         animationCallbackProcessor(targetId, animId, event);
@@ -52,6 +59,38 @@ void AnimationCommandHelper::CreateAnimation(
     animation->Attach(node.get());
     // register node as animating node
     context.RegisterAnimatingRenderNode(node);
+}
+
+void AnimationCommandHelper::CreateParticleAnimation(
+    RSContext& context, NodeId targetId, const std::shared_ptr<RSRenderParticleAnimation>& animation)
+{
+    auto node = context.GetNodeMap().GetRenderNode<RSRenderNode>(targetId);
+    if (node == nullptr) {
+        return;
+    }
+    auto propertyId = animation->GetPropertyId();
+    node->GetAnimationManager().AddAnimation(animation);
+    auto property = std::make_shared<RSRenderProperty<RSRenderParticleVector>>(
+        animation->GetRenderParticle(), propertyId);
+    auto modifier = std::make_shared<RSParticleRenderModifier>(property);
+    node->AddModifier(modifier);
+    animation->AttachRenderProperty(property);
+    auto currentTime = context.GetCurrentTimestamp();
+    animation->SetStartTime(currentTime);
+    animation->Attach(node.get());
+    // register node as animating node
+    context.RegisterAnimatingRenderNode(node);
+}
+
+void AnimationCommandHelper::CancelAnimation(RSContext& context, NodeId targetId, PropertyId propertyId)
+{
+    auto node = context.GetNodeMap().GetRenderNode<RSRenderNode>(targetId);
+    if (node == nullptr) {
+        return;
+    }
+
+    auto& animationManager = node->GetAnimationManager();
+    animationManager.CancelAnimationByPropertyId(propertyId);
 }
 } // namespace Rosen
 } // namespace OHOS

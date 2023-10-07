@@ -33,7 +33,7 @@ enum BoundQueryType : uint32_t {
 class WebGL2RenderingContextImpl : public WebGLRenderingContextBaseImpl {
 public:
     explicit WebGL2RenderingContextImpl(int32_t version, WebGLRenderingContextBasicBase *base)
-    : WebGLRenderingContextBaseImpl(version, base) {}
+        :WebGLRenderingContextBaseImpl(version, base) {}
     ~WebGL2RenderingContextImpl() override {}
 
     void Init() override;
@@ -103,7 +103,7 @@ public:
     napi_value VertexAttribI4ui(napi_env env, GLuint index, GLuint* data);
     napi_value VertexAttribI4iv(napi_env env, GLuint index, napi_value data);
     napi_value VertexAttribI4uiv(napi_env env, GLuint index, napi_value data);
-    napi_value VertexAttribIPointer(napi_env env, const VertexAttribArg* vertexInfo);
+    napi_value VertexAttribIPointer(napi_env env, const VertexAttribArg& vertexInfo);
     napi_value VertexAttribDivisor(napi_env env, GLuint index, GLuint divisor);
 
     napi_value DrawBuffers(napi_env env, napi_value dataObj);
@@ -112,7 +112,7 @@ public:
     napi_value DrawRangeElements(napi_env env, const DrawElementArg& arg, GLuint start, GLuint end);
 
     napi_value CopyBufferSubData(napi_env env,
-        GLenum targets[2], int64_t readOffset, int64_t writeOffset, int64_t size); // 2 write and read
+        GLenum targets[2], int64_t readOffset, int64_t writeOffset, int64_t size); // 2 read write
     napi_value GetBufferSubData(napi_env env, GLenum target, int64_t offset, napi_value data, const BufferExt& ext);
 
     napi_value BlitFrameBuffer(napi_env env, GLint data[8], GLbitfield mask, GLenum filter);
@@ -143,11 +143,12 @@ public:
         napi_env env, napi_value programObj, GLuint uniformBlockIndex, GLenum pname);
     napi_value GetActiveUniformBlockName(napi_env env, napi_value programObj, GLuint uniformBlockIndex);
 
+    napi_value BindBuffer(napi_env env, GLenum target, napi_value object) override;
+    napi_value DeleteBuffer(napi_env env, napi_value object) override;
     napi_value GetParameter(napi_env env, GLenum pname) override;
     napi_value GetTexParameter(napi_env env, GLenum target, GLenum pname) override;
     napi_value GetFrameBufferAttachmentParameter(napi_env env, GLenum target, GLenum attachment, GLenum pname) override;
-    //void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, DOMArrayBufferView* pixels) override;
-
+    void DoObjectDelete(int type, WebGLObject *obj) override;
 private:
     WebGL2RenderingContextImpl(const WebGL2RenderingContextImpl&) = delete;
     WebGL2RenderingContextImpl& operator=(const WebGL2RenderingContextImpl&) = delete;
@@ -161,28 +162,27 @@ private:
 
     bool CheckGetFrameBufferAttachmentParameter(
         napi_env env, GLenum target, GLenum attachment, const WebGLFramebuffer* frameBuffer);
-    bool UpdateBaseTargetBoundBuffer(napi_env env, GLenum target, GLuint index, WebGLBuffer* buffer);
+    bool UpdateBaseTargetBoundBuffer(napi_env env, GLenum target, GLuint index, GLuint bufferId);
     bool CheckBufferTargetCompatibility(napi_env env, GLenum target, WebGLBuffer* buffer);
     bool CheckBufferBindTarget(GLenum target);
     bool CheckQueryTarget(napi_env env, GLenum target, uint32_t& index);
-    bool CheckStorageInternalFormat(GLenum internalFormat);
+    bool CheckStorageInternalFormat(napi_env env, GLenum internalFormat);
+    bool CheckTransformFeedbackBuffer(GLenum target, WebGLBuffer* buffer);
+    napi_value HandleFrameBufferPname(
+        napi_env env, GLenum target, GLenum attachment, GLenum pname, WebGLAttachment* attachmentObject);
 
     GLuint currentQuery_[BoundQueryType::QUERY_MAX] { 0 };
-
     GLuint boundReadFrameBuffer_ { 0 };
     GLuint boundTransformFeedback_ { 0 };
-
     GLuint boundVertexArrayId_ { 0 };
 
-    std::set<GLenum> supportedInternalFormats_ {};
     // TRANSFORM_FEEDBACK_BUFFER
-    std::vector<GLuint> boundIndexedTransformFeedbackBuffers_ {};
+    std::map<GLint, GLuint> boundIndexedTransformFeedbackBuffers_ {};
+    GLint maxBoundTransformFeedbackBufferIndex_ { 0 };
     // UNIFORM_BUFFER
-    std::vector<GLuint> boundIndexedUniformBuffers_ {};
-    GLuint maxBoundUniformBufferIndex_ {};
+    std::map<GLint, GLuint> boundIndexedUniformBuffers_ {};
+    GLint maxBoundUniformBufferIndex_ { 0 };
 
-    //GLuint currentBooleanOcclusionQuery_ {};
-    //GLuint currentTransformFeedbackPrimitivesWrittenQuery_ {};
     std::vector<GLuint> samplerUnits_ {};
     GLuint maxSamplerUnit_ {};
 };

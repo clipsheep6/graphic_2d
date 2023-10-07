@@ -61,9 +61,6 @@ public:
     bool AttachShader(uint32_t index, uint32_t shaderId);
     bool DetachShader(uint32_t index, uint32_t shaderId);
 private:
-    // 获取删除状态
-    // WebGLRenderingContextBase::DELETE_STATUS / LINK_STATUS / VALIDATE_STATUS
-    // glGetProgramiv(static_cast<GLuint>(programId), pname, &params);
     GLuint attachedShader_[2] = { 0 };
     uint32_t programId_;
 };

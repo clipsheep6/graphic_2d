@@ -18,9 +18,37 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <sys/syscall.h>
 #include <unistd.h>
+
+#ifdef BUILD_NON_SDK_VER
+#include <sys/syscall.h>
 #define GET_TID() syscall(__NR_gettid)
+#else
+#ifdef _WIN32
+#include <windows.h>
+#define GET_TID GetCurrentThreadId
+#endif
+
+#ifdef BUILD_SDK_MAC
+#include <stdlib.h>
+#include <sys/syscall.h>
+#define GET_TID() syscall(SYS_thread_selfid)
+#else
+#ifdef __gnu_linux__
+#include <sys/types.h>
+#include <sys/syscall.h>
+#define GET_TID() syscall(SYS_gettid)
+#endif
+#endif
+
+#ifdef __APPLE__
+#define getpid getpid
+#endif
+
+#ifdef ERROR
+#undef ERROR
+#endif
+#endif
 
 #ifdef LOGGER_NO_COLOR
 #define IF_COLOR(x)

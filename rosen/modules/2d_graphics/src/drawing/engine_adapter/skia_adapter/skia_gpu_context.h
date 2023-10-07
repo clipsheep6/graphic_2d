@@ -54,10 +54,27 @@ public:
     bool BuildFromGL(const GPUContextOptions& options) override;
 
     void Flush() override;
+    void FlushAndSubmit(bool syncCpu) override;
     void PerformDeferredCleanup(std::chrono::milliseconds msNotUsed) override;
 
     void GetResourceCacheLimits(int& maxResource, size_t& maxResourceBytes) const override;
     void SetResourceCacheLimits(int maxResource, size_t maxResourceBytes) override;
+
+    void GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const override;
+
+    void FreeGpuResources() override;
+
+    void DumpGpuStats(std::string& out) override;
+
+    void ReleaseResourcesAndAbandonContext() override;
+
+    void PurgeUnlockedResources(bool scratchResourcesOnly) override;
+
+    void PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag) override;
+
+    void PurgeUnlockAndSafeCacheGpuResources() override;
+
+    void ReleaseByTag(const GPUResourceTag tag) override;
 
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> GetGrContext() const;

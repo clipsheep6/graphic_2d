@@ -43,6 +43,11 @@ std::vector<MemoryGraphic> RSRenderServiceClient::GetMemoryGraphics()
     return {};
 }
 
+bool RSRenderServiceClient::GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize)
+{
+    return {};
+}
+
 bool RSRenderServiceClient::GetUniRenderEnabled()
 {
     return {};
@@ -104,7 +109,7 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
 }
 
 bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,
-    float scaleX, float scaleY)
+    float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType)
 {
     return false;
 }
@@ -151,7 +156,12 @@ uint32_t RSRenderServiceClient::GetScreenCurrentRefreshRate(ScreenId id)
     return {};
 }
 
-std::vector<uint32_t> RSRenderServiceClient::GetScreenSupportedRefreshRates(ScreenId id)
+int32_t RSRenderServiceClient::GetCurrentRefreshRateMode()
+{
+    return {};
+}
+
+std::vector<int32_t> RSRenderServiceClient::GetScreenSupportedRefreshRates(ScreenId id)
 {
     return {};
 }
@@ -266,12 +276,33 @@ bool RSRenderServiceClient::GetBitmap(NodeId id, SkBitmap& bitmap)
     return {};
 }
 
+bool RSRenderServiceClient::GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect)
+{
+    return {};
+}
+
 int32_t RSRenderServiceClient::SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval)
 {
     return {};
 }
 
 int32_t RSRenderServiceClient::RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback)
+{
+    return {};
+}
+
+int32_t RSRenderServiceClient::RegisterSurfaceOcclusionChangeCallback(
+    NodeId id, const SurfaceOcclusionChangeCallback& callback)
+{
+    return {};
+}
+
+int32_t RSRenderServiceClient::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)
+{
+    return {};
+}
+
+int32_t RSRenderServiceClient::RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback)
 {
     return {};
 }
@@ -303,5 +334,15 @@ void RSRenderServiceClient::ReportEventJankFrame(DataBaseRs info)
 void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled)
 {
 }
+
+void RSRenderServiceClient::SetCacheEnabledForRotation(bool isEnabled)
+{
+}
+
+#ifdef TP_FEATURE_ENABLE
+void RSRenderServiceClient::SetTpFeatureConfig(int32_t feature, const char* config)
+{
+}
+#endif
 } // namespace Rosen
 } // namespace OHOS

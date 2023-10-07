@@ -17,22 +17,37 @@
 
 #include <cassert>
 
+#include <unicode/uchar.h>
+
 #include "measurer.h"
 #include "texgine/any_span.h"
 #include "texgine_exception.h"
 #include "text_span.h"
 #include "texgine/utils/exlog.h"
+#ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
+#endif
 #include "text_converter.h"
 #include "word_breaker.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
+#define CN_LEFT_QUOTE 0x201C
+#define CN_RIGHT_QUOTE 0x201D
+#define EN_QUOTE 0x22
+
+void TextBreaker::SetWidthLimit(const double widthLimit)
+{
+    widthLimit_ = widthLimit;
+}
+
 int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyle &ys,
     const std::shared_ptr<FontProviders> &fontProviders)
 {
+#ifdef LOGGER_ENABLE_SCOPE
     ScopedTrace scope("TextBreaker::WordBreak");
+#endif
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "WordBreak");
     std::vector<VariantSpan> visitingSpans;
     std::swap(visitingSpans, spans);
@@ -40,6 +55,10 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
         auto span = vspan.TryToTextSpan();
         if (span == nullptr) {
             spans.push_back(vspan);
+            currentWidth_ += vspan.GetWidth();
+            if (currentWidth_ >= widthLimit_) {
+                currentWidth_ = 0;
+            }
             continue;
         }
 
@@ -56,6 +75,11 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
         if (ret) {
             return 1;
         }
+
+        GenNewBoundryByWidth(cgs, boundaries);
+        GenNewBoundryByHardBreak(cgs, boundaries);
+        GenNewBoundryByTypeface(cgs, boundaries);
+        GenNewBoundryByQuote(cgs, boundaries);
 
         LOGSCOPED(sl2, LOGEX_FUNC_LINE_DEBUG(), "TextBreaker::doWordBreak algo");
         preBreak_ = 0;
@@ -119,14 +143,138 @@ int TextBreaker::Measure(const TextStyle &xs, const std::vector<uint16_t> &u16ve
     return 0;
 }
 
+void TextBreaker::GenNewBoundryByTypeface(CharGroups cgs, std::vector<Boundary> &boundaries)
+{
+    std::vector<Boundary> newBoundary;
+    for (auto &[start, end] : boundaries) {
+        size_t newStart = start;
+        size_t newEnd = start;
+        const auto &wordCgs = cgs.GetSubFromU16RangeAll(start, end);
+        auto typeface = wordCgs.Get(0).typeface;
+        for (auto cg = wordCgs.begin(); cg != wordCgs.end(); cg++) {
+            if (typeface == cg->typeface) {
+                newEnd++;
+                continue;
+            }
+
+            newBoundary.push_back({newStart, newEnd});
+            newStart = newEnd;
+            typeface = cg->typeface;
+        }
+
+        newBoundary.push_back({newStart, end});
+    }
+
+    boundaries = newBoundary;
+}
+
+bool TextBreaker::IsQuote(const uint16_t c)
+{
+    return ((c == EN_QUOTE) || (c == CN_LEFT_QUOTE) || (c == CN_RIGHT_QUOTE));
+}
+
+void TextBreaker::GenNewBoundryByQuote(CharGroups cgs, std::vector<Boundary> &boundaries)
+{
+    std::vector<Boundary> newBoundary = {{0, 0}};
+    auto boundary = boundaries.begin();
+    bool isEndQuote = false;
+    for (; boundary < boundaries.end() - 1; boundary++) {
+        const auto &prevWordCgs = cgs.GetSubFromU16RangeAll(boundary->leftIndex, boundary->rightIndex);
+        bool isQuote = IsQuote(prevWordCgs.GetBack().chars[0]);
+        if (isQuote && newBoundary.back().rightIndex == boundary->rightIndex) {
+            isEndQuote = false;
+        }
+
+        if (isQuote && !isEndQuote) {
+            newBoundary.push_back({boundary->leftIndex, boundary->rightIndex - 1});
+            newBoundary.push_back({boundary->rightIndex -1, (boundary + 1)->rightIndex});
+            isEndQuote = true;
+            boundary++;
+        }
+
+        if (isQuote && isEndQuote) {
+            if (newBoundary.back().rightIndex == boundary->rightIndex) {
+                isEndQuote = false;
+                continue;
+            }
+            newBoundary.back().rightIndex += boundary->rightIndex;
+            isEndQuote = false;
+            continue;
+        } else {
+            newBoundary.push_back({boundary->leftIndex, boundary->rightIndex});
+        }
+    }
+
+    if (boundary != boundaries.end()) {
+        newBoundary.push_back({boundary->leftIndex, boundary->rightIndex});
+    }
+    newBoundary.erase(newBoundary.begin());
+    boundaries = newBoundary;
+}
+
+void TextBreaker::GenNewBoundryByWidth(CharGroups cgs, std::vector<Boundary> &boundaries)
+{
+    std::vector<Boundary> newBoundary;
+    for (auto &[start, end] : boundaries) {
+        size_t newStart = start;
+        size_t newEnd = start;
+        const auto &wordCgs = cgs.GetSubFromU16RangeAll(start, end);
+        currentWidth_ = wordCgs.begin()->GetWidth();
+        for (auto cg = wordCgs.begin() + 1; cg != wordCgs.end(); cg++) {
+            if (currentWidth_ + cg->GetWidth() >= widthLimit_) {
+                newEnd++;
+                newBoundary.push_back({newStart, newEnd});
+                currentWidth_ = cg->GetWidth();
+                newStart = newEnd;
+            } else {
+                newEnd++;
+                currentWidth_ += cg->GetWidth();
+            }
+        }
+
+        if (newEnd != end) {
+            newBoundary.push_back({newStart, end});
+        }
+    }
+
+    boundaries = newBoundary;
+}
+
+void TextBreaker::GenNewBoundryByHardBreak(CharGroups cgs, std::vector<Boundary> &boundaries)
+{
+    std::vector<Boundary> newBoundary;
+    for (auto &[start, end] : boundaries) {
+        size_t newStart = start;
+        size_t newEnd = start;
+        const auto &wordCgs = cgs.GetSubFromU16RangeAll(start, end);
+        for (auto cg = wordCgs.begin(); cg != wordCgs.end(); cg++) {
+            if (cg->IsHardBreak()) {
+                if (newStart != newEnd) {
+                    newBoundary.push_back({newStart, newEnd});
+                }
+                newBoundary.push_back({newEnd, newEnd + 1});
+                newStart = newEnd + 1;
+            }
+
+            newEnd++;
+        }
+
+        if (newStart == start) {
+            newBoundary.push_back({newStart, end});
+        }
+    }
+
+    boundaries = newBoundary;
+}
+
 void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys,
     const TextStyle &xs, std::vector<VariantSpan> &spans)
 {
     size_t rangeOffset = 0;
     for (size_t i = 0; i < wordcgs.GetNumberOfCharGroup(); i++) {
-        const auto &cg = wordcgs.Get(i);
+        auto &cg = wordcgs.Get(i);
         postBreak_ += cg.GetWidth();
-        if (u_isWhitespace(cg.chars[0]) == 0) {
+        if (u_isWhitespace(cg.chars[0]) == 0 || cg.IsHardBreak()) {
             // not white space
             preBreak_ = postBreak_;
         }
@@ -165,10 +313,11 @@ void TextBreaker::GenerateSpan(const CharGroups &currentCgs, const TypographySty
     newSpan->postBreak_ = postBreak_;
     newSpan->preBreak_ = preBreak_;
     newSpan->typeface_ = currentCgs.Get(0).typeface;
-
-    for ([[maybe_unused]] const auto &cg : currentCgs) {
-        assert(cg.typeface == newSpan->typeface_);
+    double spanWidth = 0.0;
+    for (const auto &cg : currentCgs) {
+        spanWidth += cg.GetWidth();
     }
+    newSpan->width_ = spanWidth;
     VariantSpan vs(newSpan);
     vs.SetTextStyle(xs);
     spans.push_back(vs);

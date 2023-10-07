@@ -13,6 +13,7 @@
 
 import("//build/ohos.gni")
 import("//foundation/arkui/ace_engine/ace_config.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 config("thirdparty_lib_txt_rosen_config") {
   cflags_cc = [
@@ -36,6 +37,12 @@ template("thirdparty_lib_txt_rosen") {
     defines += invoker.defines
     cflags_cc += invoker.cflags_cc
     public_configs = [ "$ace_flutter_engine_root/icu:icu_config_$platform" ]
+
+    if (enable_text_gine) {
+      public_configs -= [ "$ace_flutter_engine_root/icu:icu_config_$platform" ]
+      defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+    }
+
     configs = [
       "$ace_flutter_engine_root:flutter_config",
       ":thirdparty_lib_txt_rosen_config",
@@ -86,10 +93,9 @@ template("thirdparty_lib_txt_rosen") {
       "$txt_root/src/utils/JenkinsHash.cpp",
     ]
 
-    deps = [
-      "$ace_flutter_engine_root:flutter_engine_fml_$platform",
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    ]
+    deps = [ "$ace_flutter_engine_root:flutter_engine_fml_$platform" ]
+
+    external_deps = [ "hilog:libhilog" ]
 
     if (defined(use_new_skia) && use_new_skia) {
       public_deps = [ "//third_party/skia:skia_$platform" ]
@@ -110,6 +116,9 @@ template("thirdparty_lib_txt_rosen") {
     } else if (platform == "android") {
       sources += [ "$txt_root/src/txt/platform_android.cc" ]
     }
+
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
   }
 }
 

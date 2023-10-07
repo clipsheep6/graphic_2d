@@ -51,9 +51,6 @@ void RSMessageProcessor::AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>& 
         return;
     }
     std::unique_lock<std::mutex> lock(transactionMapMutex_);
-#ifdef ROSEN_CROSS_PLATFORM
-    ROSEN_LOGD("RSMessageProcessor::AddUIMessage %lu %p", transactionMap_[pid].GetCommandCount(), command.get());
-#endif
     transactionMap_[pid].AddCommand(std::move(command), 0, FollowType::NONE);
 }
 
@@ -63,9 +60,6 @@ void RSMessageProcessor::AddUIMessage(uint32_t pid, std::unique_ptr<RSCommand>&&
         return;
     }
     std::unique_lock<std::mutex> lock(transactionMapMutex_);
-#ifdef ROSEN_CROSS_PLATFORM
-    ROSEN_LOGD("RSMessageProcessor::AddUIMessage %lu %p", transactionMap_[pid].GetCommandCount(), command.get());
-#endif
     transactionMap_[pid].AddCommand(std::move(command), 0, FollowType::NONE);
 }
 
@@ -88,14 +82,38 @@ bool RSMessageProcessor::HasTransaction(uint32_t pid) const
     return iter != transactionMap_.end() && !iter->second.IsEmpty();
 }
 
+void RSMessageProcessor::ReInitializeMovedMap()
+{
+    if (!g_instanceValid.load()) {
+        return;
+    }
+    std::unique_lock<std::mutex> lock(transactionMapMutex_);
+    transactionMap_ = decltype(transactionMap_)();
+}
+
+void RSMessageProcessor::RemovePidFromMap(uint32_t pid)
+{
+    if (!g_instanceValid.load()) {
+        return;
+    }
+    std::unique_lock<std::mutex> lock(transactionMapMutex_);
+    transactionMap_.erase(pid);
+}
+
 RSTransactionData&& RSMessageProcessor::GetTransaction(uint32_t pid)
 {
+    if (!g_instanceValid.load()) {
+        return {};
+    }
     std::unique_lock<std::mutex> lock(transactionMapMutex_);
     return std::move(transactionMap_[pid]);
 }
 
 std::unordered_map<uint32_t, RSTransactionData>&& RSMessageProcessor::GetAllTransactions()
 {
+    if (!g_instanceValid.load()) {
+        return {};
+    }
     std::unique_lock<std::mutex> lock(transactionMapMutex_);
     return std::move(transactionMap_);
 }

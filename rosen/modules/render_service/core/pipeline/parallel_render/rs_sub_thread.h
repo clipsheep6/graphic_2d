@@ -35,12 +35,21 @@ public:
     RSSubThread(RenderContext* context, uint32_t threadIndex) : threadIndex_(threadIndex), renderContext_(context) {}
     ~RSSubThread();
 
-    void Start();
-    void PostTask(const std::function<void()>& task);
+    pid_t Start();
+    void PostTask(const std::function<void()>& task, const std::string& name = std::string());
     void PostSyncTask(const std::function<void()>& task);
+    void RemoveTask(const std::string& name);
     void RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask);
+    void ReleaseSurface();
+#ifndef USE_ROSEN_DRAWING
+    void AddToReleaseQueue(sk_sp<SkSurface>&& surface);
+#else
+    void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
+#endif
     void ResetGrContext();
     void DumpMem(DfxString& log);
+    MemoryGraphic CountSubMem(int pid);
+    float GetAppGpuMemoryInMB();
 private:
     void CreateShareEglContext();
     void DestroyShareEglContext();
@@ -67,6 +76,12 @@ private:
 #endif
 #else
     std::shared_ptr<Drawing::GPUContext> grContext_ = nullptr;
+#endif
+    std::mutex mutex_;
+#ifndef USE_ROSEN_DRAWING
+    std::queue<sk_sp<SkSurface>> tmpSurfaces_;
+#else
+    std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
 #endif
 };
 }

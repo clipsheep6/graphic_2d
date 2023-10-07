@@ -27,6 +27,7 @@ std::shared_ptr<OHOS::Rosen::AdapterTextEngine::FontCollection> Convert(
 TextEngine::TypographyStyle Convert(const TypographyStyle &style)
 {
     TextEngine::TypographyStyle ys = {
+#ifndef USE_GRAPHIC_TEXT_GINE
         .fontWeight_ = Convert(style.fontWeight_),
         .fontStyle_ = Convert(style.fontStyle_),
         .fontFamilies_ = { style.fontFamily_ },
@@ -49,16 +50,47 @@ TextEngine::TypographyStyle Convert(const TypographyStyle &style)
             .heightOnly_ = style.lineStyleHeightOnly_,
             .fontSize_ = style.lineStyleFontSize_,
             .heightScale_ = style.lineStyleHeightScale_,
+#else
+        .fontWeight = Convert(style.fontWeight),
+        .fontStyle = Convert(style.fontStyle),
+        .fontFamilies = { style.fontFamily },
+        .fontSize = style.fontSize,
+        .heightScale = style.heightScale,
+        .heightOnly = style.heightOnly,
+        .locale = style.locale,
+        .maxLines = style.maxLines,
+        .ellipsis = style.ellipsis,
+        .breakStrategy = Convert(style.breakStrategy),
+        .wordBreakType = Convert(style.wordBreakType),
+        .align = Convert(style.textAlign),
+        .direction = Convert(style.textDirection),
+        .ellipsisModal = Convert(style.ellipsisModal),
+        .useLineStyle = style.useLineStyle,
+        .lineStyle = {
+            .only = style.lineStyleOnly,
+            .fontWeight = Convert(style.lineStyleFontWeight),
+            .fontStyle = Convert(style.lineStyleFontStyle),
+            .fontFamilies = style.lineStyleFontFamilies,
+            .heightOnly = style.lineStyleHeightOnly,
+            .fontSize = style.lineStyleFontSize,
+            .heightScale = style.lineStyleHeightScale,
+#endif
         },
     };
+#ifndef USE_GRAPHIC_TEXT_GINE
     if (style.lineStyleSpacingScale_ >= 0) {
         ys.lineStyle_.spacingScale_ = style.lineStyleSpacingScale_;
+#else
+    if (style.lineStyleSpacingScale >= 0) {
+        ys.lineStyle.spacingScale = style.lineStyleSpacingScale;
+#endif
     }
     return ys;
 }
 
 TextEngine::TextStyle Convert(const TextStyle &style)
 {
+#ifndef USE_GRAPHIC_TEXT_GINE
     auto color = SkColorSetARGB(style.color_.GetAlpha(),
                                 style.color_.GetRed(),
                                 style.color_.GetGreen(),
@@ -67,11 +99,38 @@ TextEngine::TextStyle Convert(const TextStyle &style)
                                           style.decorationColor_.GetRed(),
                                           style.decorationColor_.GetGreen(),
                                           style.decorationColor_.GetBlue());
-    auto foreground = std::make_shared<TextEngine::TexginePaint>();
-    foreground->SetPaint(*style.foreground_);
-    auto background = std::make_shared<TextEngine::TexginePaint>();
-    background->SetPaint(*style.background_);
+#else
+    auto color = SkColorSetARGB(
+        style.color.GetAlpha(), style.color.GetRed(), style.color.GetGreen(), style.color.GetBlue());
+    auto decorationColor = SkColorSetARGB(style.decorationColor.GetAlpha(),
+        style.decorationColor.GetRed(), style.decorationColor.GetGreen(), style.decorationColor.GetBlue());
+#endif
+    std::optional<TextEngine::TexginePaint> foreground = std::nullopt;
+#ifndef USE_GRAPHIC_TEXT_GINE
+    if (style.foreground.has_value()) {
+        foreground = TextEngine::TexginePaint();
+        foreground.value().SetPaint(style.foreground.value());
+    }
+#else
+    if (style.foreground.has_value()) {
+        foreground = TextEngine::TexginePaint();
+        foreground.value().SetPaint(style.foreground.value());
+    }
+#endif
+    std::optional<TextEngine::TexginePaint> background = std::nullopt;
+#ifndef USE_GRAPHIC_TEXT_GINE
+    if (style.background.has_value()) {
+        background = TextEngine::TexginePaint();
+        background.value().SetPaint(style.background_.value());
+    }
+#else
+    if (style.background.has_value()) {
+        background = TextEngine::TexginePaint();
+        background.value().SetPaint(style.background.value());
+    }
+#endif
     TextEngine::TextStyle xs = {
+#ifndef USE_GRAPHIC_TEXT_GINE
         .fontWeight_ = Convert(style.fontWeight_),
         .fontStyle_ = Convert(style.fontStyle_),
         .fontFamilies_ = style.fontFamilies_,
@@ -87,43 +146,95 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .heightScale_ = style.heightScale_,
         .letterSpacing_ = style.letterSpacing_,
         .wordSpacing_ = style.wordSpacing_,
-        .foreground_ = *foreground,
-        .background_ = *background,
+        .foreground_ = foreground,
+        .background_ = background,
+#else
+        .fontWeight = Convert(style.fontWeight),
+        .fontStyle = Convert(style.fontStyle),
+        .fontFamilies = style.fontFamilies,
+        .fontSize = style.fontSize,
+        .decoration = Convert(style.decoration),
+        .decorationColor = decorationColor,
+        .decorationStyle = Convert(style.decorationStyle),
+        .decorationThicknessScale = style.decorationThicknessScale,
+        .color = color,
+        .baseline = Convert(style.baseline),
+        .locale = style.locale,
+        .heightOnly = style.heightOnly,
+        .heightScale = style.heightScale,
+        .letterSpacing = style.letterSpacing,
+        .wordSpacing = style.wordSpacing,
+        .foreground = foreground,
+        .background = background,
+#endif
     };
 
+#ifndef USE_GRAPHIC_TEXT_GINE
     for (const auto &[tag, value] : style.fontFeatures_.GetFontFeatures()) {
         xs.fontFeature_.SetFeature(tag, value);
+#else
+    for (const auto &[tag, value] : style.fontFeatures.GetFontFeatures()) {
+        xs.fontFeature.SetFeature(tag, value);
+#endif
     }
 
+#ifndef USE_GRAPHIC_TEXT_GINE
     for (const auto &[color, offset, radius] : style.shadows_) {
+#else
+    for (const auto &[color, offset, radius] : style.shadows) {
+#endif
         // 24, 16, 8, 0: How many bits are moved to the right
         auto shadowColor = (color.GetAlpha() << 24) | (color.GetRed() << 16) |
             (color.GetGreen() << 8) | (color.GetBlue() << 0);
         TextEngine::TextShadow shadow = {
+#ifndef USE_GRAPHIC_TEXT_GINE
             .offsetX_ = offset.GetX(),
             .offsetY_ = offset.GetY(),
             .color_ = shadowColor,
             .blurLeave_ = radius,
+#else
+            .offsetX = offset.GetX(),
+            .offsetY = offset.GetY(),
+            .color = shadowColor,
+            .blurLeave = radius,
+#endif
         };
+#ifndef USE_GRAPHIC_TEXT_GINE
         xs.shadows_.emplace_back(shadow);
+#else
+        xs.shadows.emplace_back(shadow);
+#endif
     }
     return xs;
 }
 
 IndexAndAffinity Convert(const TextEngine::IndexAndAffinity &pos)
 {
+#ifndef USE_GRAPHIC_TEXT_GINE
     return { pos.index_, Convert(pos.affinity_) };
+#else
+    return { pos.index, Convert(pos.affinity) };
+#endif
 }
 
 Boundary Convert(const TextEngine::Boundary &range)
 {
+#ifndef USE_GRAPHIC_TEXT_GINE
     return { range.leftIndex_, range.rightIndex_ };
+#else
+    return { range.leftIndex, range.rightIndex };
+#endif
 }
 
 TextRect Convert(const TextEngine::TextRect &box)
 {
+#ifndef USE_GRAPHIC_TEXT_GINE
     Drawing::RectF rect(*box.rect_.fLeft_, *box.rect_.fTop_, *box.rect_.fRight_, *box.rect_.fBottom_);
     return { rect, Convert(box.direction_) };
+#else
+    Drawing::RectF rect(*box.rect.fLeft_, *box.rect.fTop_, *box.rect.fRight_, *box.rect.fBottom_);
+    return { rect, Convert(box.direction) };
+#endif
 }
 
 Affinity Convert(const TextEngine::Affinity &affinity)
@@ -330,6 +441,19 @@ TextEngine::AnySpanAlignment Convert(const PlaceholderVerticalAlignment &alignme
             return TextEngine::AnySpanAlignment::CENTER_OF_ROW_BOX;
     }
     return TextEngine::AnySpanAlignment::OFFSET_AT_BASELINE;
+}
+
+TextEngine::EllipsisModal Convert(const EllipsisModal &ellipsisModal)
+{
+    switch (ellipsisModal) {
+        case EllipsisModal::HEAD:
+            return TextEngine::EllipsisModal::HEAD;
+        case EllipsisModal::MIDDLE:
+            return TextEngine::EllipsisModal::MIDDLE;
+        case EllipsisModal::TAIL:
+        default:
+            return TextEngine::EllipsisModal::TAIL;
+    }
 }
 } // namespace AdapterTextEngine
 } // namespace Rosen

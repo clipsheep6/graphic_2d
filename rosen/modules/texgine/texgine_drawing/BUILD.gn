@@ -12,11 +12,18 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 is_ok = true
 
 config("texgine_drawing_public_config") {
   include_dirs = [ "./src" ]
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+    "-std=c++17",
+  ]
 }
 
 ohos_shared_library("libtexgine_drawing") {
@@ -60,6 +67,7 @@ ohos_shared_library("libtexgine_drawing") {
 
   deps = []
 
+  innerapi_tags = [ "platformsdk" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

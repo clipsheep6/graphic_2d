@@ -574,9 +574,6 @@ public:
 } // namespace Rosen
 } // namespace OHOS
 
-#define SET_CONTENT_ERROR(env, thisVar, error) \
-    OHOS::Rosen::WebGLRenderingContextBase::SetError(env, thisVar, error, __func__, __LINE__)
-
 #ifdef __cplusplus
 }
 #endif

@@ -203,10 +203,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
         return;
     }
-
-    auto traceInfo = node.GetName() + " DealWithNodeGravity " + std::to_string(static_cast<int>(frameGravity));
-    RS_TRACE_NAME(traceInfo.c_str());
-
+    RS_TRACE_NAME_FMT("%s DealWithNodeGravity %d", node.GetName().c_str(), static_cast<int>(frameGravity));
     // get current node's translate matrix and calculate gravity matrix.
 #ifdef NEW_SKIA
     auto translateMatrix = SkMatrix::Translate(
@@ -233,8 +230,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     canvas->clipRect(clipRect);
     canvas->concat(gravityMatrix);
     SkIRect newDstRect = canvas->getDeviceClipBounds();
-    // we make the newDstRect as the intersection of new and old dstRect,
-    // to deal with the situation that frameSize > boundsSize.
+    // we make the newDstRect as the intersection of new and old dstRect when frameSize > boundsSize.
     newDstRect.intersect(SkIRect::MakeXYWH(info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h));
     auto localRect = canvas->getLocalClipBounds();
     int left = std::clamp<int>(localRect.left(), 0, frameWidth);
@@ -243,10 +239,10 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     int height = std::clamp<int>(localRect.height(), 0, frameHeight - top);
     GraphicIRect newSrcRect = {left, top, width, height};
 
-    // log and apply new dstRect and srcRect
-    RS_LOGD("RsDebug DealWithNodeGravity: name[%s], gravity[%d], oldDstRect[%d %d %d %d], newDstRect[%d %d %d %d],"\
-        " oldSrcRect[%d %d %d %d], newSrcRect[%d %d %d %d].",
-        node.GetName().c_str(), static_cast<int>(frameGravity),
+    RS_LOGD("RsDebug DealWithNodeGravity: name[%{public}s], gravity[%{public}d], oldDstRect[%{public}d"
+        " %{public}d %{public}d %{public}d], newDstRect[%{public}d %{public}d %{public}d %{public}d],"\
+        " oldSrcRect[%{public}d %{public}d %{public}d %{public}d], newSrcRect[%{public}d %{public}d"
+        " %{public}d %{public}d].", node.GetName().c_str(), static_cast<int>(frameGravity),
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h,
         newDstRect.left(), newDstRect.top(), newDstRect.width(), newDstRect.height(),
         info.srcRect.x, info.srcRect.y, info.srcRect.w, info.srcRect.h,
@@ -267,10 +263,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
         return;
     }
-
-    auto traceInfo = node.GetName() + " DealWithNodeGravity " + std::to_string(static_cast<int>(frameGravity));
-    RS_TRACE_NAME(traceInfo.c_str());
-
+    RS_TRACE_NAME_FMT("%s DealWithNodeGravity %d", node.GetName().c_str(), static_cast<int>(frameGravity));
     // get current node's translate matrix and calculate gravity matrix.
     Drawing::Matrix translateMatrix;
     translateMatrix.Translate(
@@ -299,9 +292,7 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     canvas->ClipRect(clipRect, Drawing::ClipOp::INTERSECT, false);
     canvas->ConcatMatrix(gravityMatrix);
     Drawing::RectI newDstRect = canvas->GetDeviceClipBounds();
-    // we make the newDstRect as the intersection of new and old dstRect,
-    // to deal with the situation that frameSize > boundsSize.
-    // replace Intersect
+    // we make the newDstRect as the intersection of new and old dstRect when frameSize > boundsSize.
     newDstRect.Intersect(Drawing::RectI(info.dstRect.x, info.dstRect.y,
         info.dstRect.w + info.dstRect.x, info.dstRect.h + info.dstRect.y));
     auto localRect = canvas->GetLocalClipBounds();
@@ -311,10 +302,10 @@ void RSComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& node, Com
     int height = std::clamp<int>(localRect.GetHeight(), 0, frameHeight - top);
     GraphicIRect newSrcRect = {left, top, width, height};
 
-    // log and apply new dstRect and srcRect
-    RS_LOGD("RsDebug DealWithNodeGravity: name[%s], gravity[%d], oldDstRect[%d %d %d %d], newDstRect[%d %d %d %d],"\
-        " oldSrcRect[%d %d %d %d], newSrcRect[%d %d %d %d].",
-        node.GetName().c_str(), static_cast<int>(frameGravity),
+    RS_LOGD("RsDebug DealWithNodeGravity: name[%{public}s], gravity[%{public}d], oldDstRect[%{public}d"
+        " %{public}d %{public}d %{public}d], newDstRect[%{public}d %{public}d %{public}d %{public}d],"\
+        " oldSrcRect[%{public}d %{public}d %{public}d %{public}d], newSrcRect[%{public}d %{public}d"
+        " %{public}d %{public}d].", node.GetName().c_str(), static_cast<int>(frameGravity),
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h,
         newDstRect.GetLeft(), newDstRect.GetTop(), newDstRect.GetWidth(), newDstRect.GetHeight(),
         info.srcRect.x, info.srcRect.y, info.srcRect.w, info.srcRect.h,
@@ -337,8 +328,8 @@ void RSComposerAdapter::GetComposerInfoSrcRect(ComposeInfo &info, const RSSurfac
         double yScale = (ROSEN_EQ(boundsHeight, 0) ? 1.0 : 1.0 * bufferHeight / boundsHeight);
         info.srcRect.x = info.srcRect.x * xScale;
         info.srcRect.y = info.srcRect.y * yScale;
-        info.srcRect.w = info.srcRect.w * xScale;
-        info.srcRect.h = info.srcRect.h * yScale;
+        info.srcRect.w = std::min(static_cast<int32_t>(info.srcRect.w * xScale), bufferWidth);
+        info.srcRect.h = std::min(static_cast<int32_t>(info.srcRect.h * yScale), bufferHeight);
     }
 }
 
@@ -475,7 +466,6 @@ void RSComposerAdapter::SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const 
             break;
         }
         case HDRMetaDataType::HDR_NOT_USED: {
-            RS_LOGD("RSComposerAdapter::SetComposeInfoToLayer: HDR is not used");
             break;
         }
         default:  {
@@ -493,8 +483,8 @@ bool RSComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, 
 
     const auto& buffer = node.GetBuffer();
     if (isTunnelCheck == false && buffer == nullptr) {
-        RS_LOGD("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer:node(%" PRIu64 ") has no available buffer.",
-            node.GetId());
+        RS_LOGD("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer:node(%{public}" PRIu64 ") has"
+            " no available buffer.", node.GetId());
         return false;
     }
 
@@ -507,14 +497,14 @@ bool RSComposerAdapter::CheckStatusBeforeCreateLayer(RSSurfaceRenderNode& node, 
 
     auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
-        RS_LOGW("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer: node(%" PRIu64 ")'s geoPtr is nullptr!",
-            node.GetId());
+        RS_LOGW("RsDebug RSComposerAdapter::CheckStatusBeforeCreateLayer: node(%{public}" PRIu64 ")'s"
+            " geoPtr is nullptr!", node.GetId());
         return false;
     }
 
     if (!node.IsNotifyRTBufferAvailable()) {
         // Only ipc for one time.
-        RS_LOGD("RsDebug RSPhysicalScreenProcessor::ProcessSurface id = %" PRIu64 " Notify RT buffer available",
+        RS_LOGD("RsDebug RSPhysicalScreenProcessor::ProcessSurface id = %{public}" PRIu64 " Notify RT buffer available",
             node.GetId());
         node.NotifyRTBufferAvailable();
     }
@@ -528,7 +518,7 @@ LayerInfoPtr RSComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& node) con
     }
     ComposeInfo info = BuildComposeInfo(node);
     if (IsOutOfScreenRegion(info)) {
-        RS_LOGD("RsDebug RSComposerAdapter::CreateBufferLayer: node(%" PRIu64
+        RS_LOGD("RsDebug RSComposerAdapter::CreateBufferLayer: node(%{public}" PRIu64
                 ") out of screen region, no need to composite.",
             node.GetId());
         return nullptr;
@@ -538,8 +528,10 @@ LayerInfoPtr RSComposerAdapter::CreateBufferLayer(RSSurfaceRenderNode& node) con
         info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h);
     RS_TRACE_NAME(traceInfo.c_str());
     RS_LOGD(
-        "RsDebug RSComposerAdapter::CreateBufferLayer surfaceNode id:%" PRIu64 " name:[%s] dst [%d %d %d %d]"
-        "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d], z:%f, globalZOrder:%d, blendType = %d",
+        "RsDebug RSComposerAdapter::CreateBufferLayer surfaceNode id:%{public}" PRIu64 " name:[%{public}s]"
+        " dst [%{public}d %{public}d %{public}d %{public}d] SrcRect [%{public}d %{public}d] rawbuffer"
+        " [%{public}d %{public}d] surfaceBuffer [%{public}d %{public}d], z:%{public}f, globalZOrder:%{public}d,"
+        " blendType = %{public}d",
         node.GetId(), node.GetName().c_str(), info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h,
         info.srcRect.w, info.srcRect.h, info.buffer->GetWidth(), info.buffer->GetHeight(),
         info.buffer->GetSurfaceBufferWidth(), info.buffer->GetSurfaceBufferHeight(),
@@ -559,7 +551,7 @@ LayerInfoPtr RSComposerAdapter::CreateTunnelLayer(RSSurfaceRenderNode& node) con
     }
     ComposeInfo info = BuildComposeInfo(node, true);
     if (IsOutOfScreenRegion(info)) {
-        RS_LOGD("RsDebug RSComposerAdapter::CreateTunnelLayer: node(%" PRIu64
+        RS_LOGD("RsDebug RSComposerAdapter::CreateTunnelLayer: node(%{public}" PRIu64
                 ") out of screen region, no need to composite.",
             node.GetId());
         return nullptr;
@@ -571,8 +563,9 @@ LayerInfoPtr RSComposerAdapter::CreateTunnelLayer(RSSurfaceRenderNode& node) con
     LayerInfoPtr layer = HdiLayerInfo::CreateHdiLayerInfo();
     SetComposeInfoToLayer(layer, info, node.GetConsumer(), &node);
     LayerRotate(layer, node);
-    RS_LOGD("RsDebug RSComposerAdapter::CreateTunnelLayer surfaceNode id:%" PRIu64 " name:[%s] dst [%d %d %d %d]"
-            "SrcRect [%d %d], z:%f, globalZOrder:%d, blendType = %d",
+    RS_LOGD("RsDebug RSComposerAdapter::CreateTunnelLayer surfaceNode id:%{public}" PRIu64 " name:[%{public}s] dst"
+        " [%{public}d %{public}d %{public}d %{public}d]"
+        "SrcRect [%{public}d %{public}d], z:%{public}f, globalZOrder:%{public}d, blendType = %{public}d",
         node.GetId(), node.GetName().c_str(), info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h,
         info.srcRect.w, info.srcRect.h, node.GetGlobalZOrder(), info.zOrder, info.blendType);
     return layer;
@@ -599,9 +592,6 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node) const
         RS_LOGE("RSComposerAdapter::CreateLayer: output is nullptr");
         return nullptr;
     }
-
-    RS_LOGD("RSComposerAdapter::CreateLayer displayNode id:%" PRIu64 " available buffer:%d", node.GetId(),
-        node.GetAvailableBufferCount());
     if (!RSBaseRenderUtil::ConsumeAndUpdateBuffer(node)) {
         RS_LOGE("RSComposerAdapter::CreateLayer consume buffer failed.");
         return nullptr;
@@ -613,8 +603,9 @@ LayerInfoPtr RSComposerAdapter::CreateLayer(RSDisplayRenderNode& node) const
     }
 
     ComposeInfo info = BuildComposeInfo(node);
-    RS_LOGD("RSComposerAdapter::ProcessSurface displayNode id:%" PRIu64 " dst [%d %d %d %d]"
-            "SrcRect [%d %d] rawbuffer [%d %d] surfaceBuffer [%d %d], globalZOrder:%d, blendType = %d",
+    RS_LOGD("RSComposerAdapter::ProcessSurface displayNode id:%{public}" PRIu64 " dst [%{public}d"
+        " %{public}d %{public}d %{public}d] SrcRect [%{public}d %{public}d] rawbuffer [%{public}d %{public}d]"
+        " surfaceBuffer [%{public}d %{public}d], globalZOrder:%{public}d, blendType = %{public}d",
         node.GetId(), info.dstRect.x, info.dstRect.y, info.dstRect.w, info.dstRect.h, info.srcRect.w, info.srcRect.h,
         info.buffer->GetWidth(), info.buffer->GetHeight(), info.buffer->GetSurfaceBufferWidth(),
         info.buffer->GetSurfaceBufferHeight(), info.zOrder, info.blendType);
@@ -677,27 +668,27 @@ static void SetLayerSize(const LayerInfoPtr& layer, const ScreenInfo& screenInfo
     // screenRotation: anti-clockwise, surfaceTransform: anti-clockwise, layerTransform: clockwise
     switch (screenRotation) {
         case ScreenRotation::ROTATION_90: {
-            RS_LOGD("RsDebug ScreenRotation 90, Before Rotate layer size [%d %d %d %d]",
-                rect.x, rect.y, rect.w, rect.h);
+            RS_LOGD("RsDebug ScreenRotation 90, Before Rotate layer size [%{public}d %{public}d"
+                " %{public}d %{public}d]", rect.x, rect.y, rect.w, rect.h);
             layer->SetLayerSize(GraphicIRect {rect.y, screenHeight - rect.x - rect.w, rect.h, rect.w});
-            RS_LOGD("RsDebug ScreenRotation 90, After Rotate layer size [%d %d %d %d]",
+            RS_LOGD("RsDebug ScreenRotation 90, After Rotate layer size [%{public}d %{public}d %{public}d %{public}d]",
                 layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);
             break;
         }
         case ScreenRotation::ROTATION_180: {
-            RS_LOGD("RsDebug ScreenRotation 180, Before Rotate layer size [%d %d %d %d]",
-                rect.x, rect.y, rect.w, rect.h);
+            RS_LOGD("RsDebug ScreenRotation 180, Before Rotate layer size [%{public}d %{public}d %{public}d"
+                " %{public}d]", rect.x, rect.y, rect.w, rect.h);
             layer->SetLayerSize(
                 GraphicIRect {screenWidth - rect.x - rect.w, screenHeight - rect.y - rect.h, rect.w, rect.h});
-            RS_LOGD("RsDebug ScreenRotation 180, After Rotate layer size [%d %d %d %d]",
+            RS_LOGD("RsDebug ScreenRotation 180,After Rotate layer size [%{public}d %{public}d %{public}d %{public}d]",
                 layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);
             break;
         }
         case ScreenRotation::ROTATION_270: {
-            RS_LOGD("RsDebug ScreenRotation 270, Before Rotate layer size [%d %d %d %d]",
-                rect.x, rect.y, rect.w, rect.h);
+            RS_LOGD("RsDebug ScreenRotation 270, Before Rotate layer size [%{public}d %{public}d %{public}d"
+                " %{public}d]", rect.x, rect.y, rect.w, rect.h);
             layer->SetLayerSize(GraphicIRect {screenWidth - rect.y - rect.h, rect.x, rect.h, rect.w});
-            RS_LOGD("RsDebug ScreenRotation 270, After Rotate layer size [%d %d %d %d]",
+            RS_LOGD("RsDebug ScreenRotation 270,After Rotate layer size [%{public}d %{public}d %{public}d %{public}d]",
                 layer->GetLayerSize().x, layer->GetLayerSize().y, layer->GetLayerSize().w, layer->GetLayerSize().h);
             break;
         }
@@ -745,7 +736,8 @@ void RSComposerAdapter::LayerCrop(const LayerInfoPtr& layer) const
     dirtyRegions.emplace_back(srcRect);
     layer->SetDirtyRegions(dirtyRegions);
     layer->SetCropRect(srcRect);
-    RS_LOGD("RsDebug RSComposerAdapter::LayerCrop layer has been cropped dst[%d %d %d %d] src[%d %d %d %d]",
+    RS_LOGD("RsDebug RSComposerAdapter::LayerCrop layer has been cropped dst[%{public}d %{public}d %{public}d"
+        " %{public}d] src[%{public}d %{public}d %{public}d %{public}d]",
         dstRect.x, dstRect.y, dstRect.w, dstRect.h, srcRect.x, srcRect.y, srcRect.w, srcRect.h);
 }
 
@@ -769,9 +761,15 @@ void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer)
 
         if (newWidth * dstRect.h > newHeight * dstRect.w) {
             // too wide
+            if (dstRect.h == 0) {
+                return;
+            }
             newWidth = dstRect.w * newHeight / dstRect.h;
         } else if (newWidth * dstRect.h < newHeight * dstRect.w) {
             // too tall
+            if (dstRect.w == 0) {
+                return;
+            }
             newHeight = dstRect.h * newWidth / dstRect.w;
         } else {
             return;
@@ -797,9 +795,9 @@ void RSComposerAdapter::LayerScaleDown(const LayerInfoPtr& layer)
         dirtyRegions.emplace_back(srcRect);
         layer->SetDirtyRegions(dirtyRegions);
         layer->SetCropRect(srcRect);
-        RS_LOGD("RsDebug RSComposerAdapter::LayerScaleDown layer has been scaledown dst[%d %d %d %d]"\
-            "src[%d %d %d %d]", dstRect.x, dstRect.y, dstRect.w, dstRect.h,
-            srcRect.x, srcRect.y, srcRect.w, srcRect.h);
+        RS_LOGD("RsDebug RSComposerAdapter::LayerScaleDown layer has been scaledown dst[%{public}d %{public}d"
+            " %{public}d %{public}d] src[%{public}d %{public}d %{public}d %{public}d]",
+            dstRect.x, dstRect.y, dstRect.w, dstRect.h, srcRect.x, srcRect.y, srcRect.w, srcRect.h);
     }
 }
 
@@ -824,7 +822,6 @@ void RSComposerAdapter::OnPrepareComplete(sptr<Surface>& surface, const PrepareC
     (void)(data);
 
     if (!param.needFlushFramebuffer) {
-        RS_LOGD("RsDebug RSComposerAdapter::OnPrepareComplete: no need to flush frame buffer");
         return;
     }
 

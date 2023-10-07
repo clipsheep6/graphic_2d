@@ -16,11 +16,11 @@
 #include "context/webgl2_rendering_context.h"
 
 #include "context/webgl_rendering_context_overloads.h"
-#include "util/object_manager.h"
-#include "util/egl_manager.h"
-#include "util/log.h"
 #include "napi/n_class.h"
 #include "napi/n_func_arg.h"
+#include "util/egl_manager.h"
+#include "util/log.h"
+#include "util/object_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1347,17 +1347,17 @@ static napi_value GetMaxClientWaitTimeoutWebgl(napi_env env, napi_callback_info 
 
 bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
 {
-    LOGI("WebGL WebGL2RenderingContext::Export env %{public}p mContextRef %{public}p", env, contextRef_);
+    LOGD("WebGL WebGL2RenderingContext::Export env %{public}p mContextRef %{public}p", env, contextRef_);
     napi_value instanceValue = GetContextInstance(env, GetClassName(),
         [](napi_env env, napi_callback_info info) -> napi_value {
             napi_value thisVar = nullptr;
             napi_get_cb_info(env, info, nullptr, nullptr, &thisVar, nullptr);
-            LOGI("WebGL WebGL2RenderingContext::create");
+            LOGD("WebGL WebGL2RenderingContext::create");
             return thisVar;
         },
         [](napi_env env, void* data, void* hint) {
-            auto entity = static_cast<WebGL2RenderingContext *>(data);
-            LOGI("WebGL WebGL2RenderingContext::delete");
+            auto entity = static_cast<WebGL2RenderingContext*>(data);
+            LOGD("WebGL WebGL2RenderingContext::delete");
             if (entity->contextRef_) {
                 napi_delete_reference(env, entity->contextRef_);
             }
@@ -1368,7 +1368,7 @@ bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
         LOGE("Failed to create instance");
         return false;
     }
-    LOGI("WebGL WebGL2RenderingContext::Export instanceValue %{public}p", instanceValue);
+    LOGD("WebGL WebGL2RenderingContext::Export instanceValue %{public}p", instanceValue);
 
     std::vector<napi_property_descriptor> props = {
         NVal::DeclareNapiFunction("drawBuffers", WebGL2RenderingContextBase::DrawBuffers),
@@ -1751,6 +1751,9 @@ bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
         NVal::DeclareNapiGetter("TIMEOUT_IGNORED", GetTimeoutIgnored),
         NVal::DeclareNapiGetter("MAX_CLIENT_WAIT_TIMEOUT_WEBGL", GetMaxClientWaitTimeoutWebgl),
         // override
+        NVal::DeclareNapiFunction("bindBuffer", WebGL2RenderingContextBase::BindBuffer),
+        NVal::DeclareNapiFunction("deleteBuffer", WebGL2RenderingContextBase::DeleteBuffer),
+        NVal::DeclareNapiFunction("renderbufferStorage", WebGL2RenderingContextBase::RenderbufferStorage),
         NVal::DeclareNapiFunction("getParameter", WebGL2RenderingContextBase::GetParameter),
         NVal::DeclareNapiFunction("getTexParameter", WebGL2RenderingContextBase::GetTexParameter),
         NVal::DeclareNapiFunction("getFramebufferAttachmentParameter",
@@ -1760,7 +1763,7 @@ bool WebGL2RenderingContext::Export(napi_env env, napi_value exports)
     std::vector<napi_property_descriptor> properties = {};
     WebGLRenderingContextBase::GetRenderingContextBasePropertyDesc(properties);
     properties.insert(properties.end(), props.begin(), props.end());
-    LOGI("WebGLRenderingContext properties %{public}d", properties.size());
+    LOGD("WebGLRenderingContext properties %{public}d", properties.size());
     napi_status status = napi_define_properties(env, exports, properties.size(), properties.data());
     if (status != napi_ok) {
         return false;
@@ -1775,7 +1778,7 @@ string WebGL2RenderingContext::GetClassName()
 
 WebGL2RenderingContext::~WebGL2RenderingContext()
 {
-    LOGI("WebGL2RenderingContext::~WebGL2RenderingContext");
+    LOGD("WebGL2RenderingContext::~WebGL2RenderingContext");
     ObjectManager::GetInstance().DeleteWebGLObject(true, this);
 }
 } // namespace Rosen

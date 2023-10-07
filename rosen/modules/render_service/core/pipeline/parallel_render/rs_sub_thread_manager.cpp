@@ -14,13 +14,17 @@
  */
 
 #include "rs_sub_thread_manager.h"
+#include <chrono>
 
+#include "common/rs_optional_trace.h"
 #include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_task_dispatcher.h"
 #include "memory/rs_memory_manager.h"
-#include "rs_trace.h"
 
 namespace OHOS::Rosen {
 static constexpr uint32_t SUB_THREAD_NUM = 3;
+static constexpr uint32_t WAIT_NODE_TASK_TIMEOUT = 5 * 1000; // 5s
+constexpr const char* RELEASE_RESOURCE = "releaseResource";
 
 RSSubThreadManager* RSSubThreadManager::Instance()
 {
@@ -37,10 +41,32 @@ void RSSubThreadManager::Start(RenderContext *context)
     if (context) {
         for (uint32_t i = 0; i < SUB_THREAD_NUM; ++i) {
             auto curThread = std::make_shared<RSSubThread>(context, i);
-            curThread->Start();
+            auto tid = curThread->Start();
+            threadIndexMap_.emplace(tid, i);
             threadList_.push_back(curThread);
+            auto taskDispatchFunc = [tid, this](const RSTaskDispatcher::RSTask& task) {
+                RSSubThreadManager::Instance()->PostTask(task, threadIndexMap_[tid]);
+            };
+            RSTaskDispatcher::GetInstance().RegisterTaskDispatchFunc(tid, taskDispatchFunc);
         }
     }
+}
+void RSSubThreadManager::StartFilterThread(RenderContext* context)
+{
+#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+    if (!RSSystemProperties::GetFilterPartialRenderEnabled() || !RSUniRenderJudgement::IsUniRender()) {
+        RS_LOGI("Filter thread not run");
+        return;
+    }
+    if (filterThread != nullptr) {
+        return;
+    }
+    renderContext_ = context;
+    if (context) {
+        filterThread = std::make_shared<RSFilterSubThread>(context);
+        filterThread->Start();
+    }
+#endif
 }
 
 void RSSubThreadManager::PostTask(const std::function<void()>& task, uint32_t threadIndex)
@@ -63,33 +89,60 @@ void RSSubThreadManager::DumpMem(DfxString& log)
         }
         subThread->DumpMem(log);
     }
+    if (filterThread) {
+        filterThread->DumpMem(log);
+    }
+}
+
+float RSSubThreadManager::GetAppGpuMemoryInMB()
+{
+    if (threadList_.empty()) {
+        return 0.f;
+    }
+    float total = 0.f;
+    for (auto& subThread : threadList_) {
+        if (!subThread) {
+            continue;
+        }
+        total += subThread->GetAppGpuMemoryInMB();
+    }
+    if (filterThread) {
+        total += filterThread->GetAppGpuMemoryInMB();
+    }
+    return total;
 }
 
 void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
     const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
 {
     RS_TRACE_NAME("RSSubThreadManager::SubmitSubThreadTask");
+    bool ifNeedRequestNextVsync = false;
+
     if (node == nullptr) {
         ROSEN_LOGE("RSSubThreadManager::SubmitSubThreadTask display node is null");
         return;
     }
     if (subThreadNodes.empty()) {
-        ROSEN_LOGD("RSSubThreadManager::SubmitSubThreadTask subThread does not have any nodes");
-        if (needResetContext_) {
-            ResetSubThreadGrContext();
-        }
-        needResetContext_ = false;
         return;
     }
+    CancelReleaseResourceTask();
     std::vector<std::unique_ptr<RSRenderTask>> renderTaskList;
     auto cacheSkippedNodeMap = RSMainThread::Instance()->GetCacheCmdSkippedNodes();
     for (const auto& child : subThreadNodes) {
+        if (!child) {
+            continue;
+        }
         if (!child->ShouldPaint()) {
-            RS_TRACE_NAME_FMT("SubmitTask skip node: [%s, %llu]", child->GetName().c_str(), child->GetId());
+            RS_OPTIONAL_TRACE_NAME_FMT("SubmitTask skip node: [%s, %llu]", child->GetName().c_str(), child->GetId());
+            continue;
+        }
+        if (!child->GetNeedSubmitSubThread()) {
+            RS_OPTIONAL_TRACE_NAME_FMT("subThreadNodes : static skip %s", child->GetName().c_str());
             continue;
         }
         if (cacheSkippedNodeMap.count(child->GetId()) != 0 && child->HasCachedTexture()) {
-            RS_TRACE_NAME_FMT("SubmitTask cacheCmdSkippedNode: [%s, %llu]", child->GetName().c_str(), child->GetId());
+            RS_OPTIONAL_TRACE_NAME_FMT("SubmitTask cacheCmdSkippedNode: [%s, %llu]",
+                child->GetName().c_str(), child->GetId());
             continue;
         }
         nodeTaskState_[child->GetId()] = 1;
@@ -97,6 +150,9 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
             child->SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING);
         }
         renderTaskList.push_back(std::make_unique<RSRenderTask>(*child, RSRenderTask::RenderNodeStage::CACHE));
+    }
+    if (renderTaskList.size()) {
+        ifNeedRequestNextVsync = true;
     }
 
     std::vector<std::shared_ptr<RSSuperRenderTask>> superRenderTaskList;
@@ -114,12 +170,13 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
         }
         auto threadIndex = surfaceNode->GetSubmittedSubThreadIndex();
         if (threadIndex != INT_MAX && superRenderTaskList[threadIndex]) {
-            RS_TRACE_NAME("node:[ " + surfaceNode->GetName() + ", " + std::to_string(surfaceNode->GetId()) +
+            RS_OPTIONAL_TRACE_NAME("node:[ " + surfaceNode->GetName() + ", " + std::to_string(surfaceNode->GetId()) +
                 ", " + std::to_string(threadIndex) + " ]; ");
             superRenderTaskList[threadIndex]->AddTask(std::move(renderTask));
         } else {
             if (superRenderTaskList[minLoadThreadIndex_]) {
-                RS_TRACE_NAME("node:[ " + surfaceNode->GetName() + ", " + std::to_string(surfaceNode->GetId()) +
+                RS_OPTIONAL_TRACE_NAME("node:[ " + surfaceNode->GetName() +
+                    ", " + std::to_string(surfaceNode->GetId()) +
                     ", " + std::to_string(minLoadThreadIndex_) + " ]; ");
                 superRenderTaskList[minLoadThreadIndex_]->AddTask(std::move(renderTask));
                 surfaceNode->SetSubmittedSubThreadIndex(minLoadThreadIndex_);
@@ -144,12 +201,16 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
         });
     }
     needResetContext_ = true;
+    if (ifNeedRequestNextVsync) {
+        RSMainThread::Instance()->SetIsCachedSurfaceUpdated(true);
+        RSMainThread::Instance()->RequestNextVSync();
+    }
 }
 
 void RSSubThreadManager::WaitNodeTask(uint64_t nodeId)
 {
     std::unique_lock<std::mutex> lock(parallelRenderMutex_);
-    cvParallelRender_.wait(lock, [&]() {
+    cvParallelRender_.wait_for(lock, std::chrono::milliseconds(WAIT_NODE_TASK_TIMEOUT), [&]() {
         return !nodeTaskState_[nodeId];
     });
 }
@@ -168,11 +229,72 @@ void RSSubThreadManager::ResetSubThreadGrContext()
     if (threadList_.empty()) {
         return;
     }
+    if (!needResetContext_) {
+        return;
+    }
     for (uint32_t i = 0; i < SUB_THREAD_NUM; i++) {
         auto subThread = threadList_[i];
         subThread->PostTask([subThread]() {
             subThread->ResetGrContext();
-        });
+        }, RELEASE_RESOURCE);
     }
+    needResetContext_ = false;
+    needCancelTask_ = true;
+}
+
+void RSSubThreadManager::CancelReleaseResourceTask()
+{
+    if (!needCancelTask_) {
+        return;
+    }
+    if (threadList_.empty()) {
+        return;
+    }
+    for (uint32_t i = 0; i < SUB_THREAD_NUM; i++) {
+        auto subThread = threadList_[i];
+        subThread->RemoveTask(RELEASE_RESOURCE);
+    }
+    needCancelTask_ = false;
+}
+
+void RSSubThreadManager::ReleaseSurface(uint32_t threadIndex) const
+{
+    if (threadList_.size() <= threadIndex) {
+        return;
+    }
+    auto subThread = threadList_[threadIndex];
+    subThread->PostTask([subThread]() {
+        subThread->ReleaseSurface();
+    });
+}
+
+#ifndef USE_ROSEN_DRAWING
+void RSSubThreadManager::AddToReleaseQueue(sk_sp<SkSurface>&& surface, uint32_t threadIndex)
+#else
+void RSSubThreadManager::AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface, uint32_t threadIndex)
+#endif
+{
+    if (threadList_.size() <= threadIndex) {
+        return;
+    }
+    threadList_[threadIndex]->AddToReleaseQueue(std::move(surface));
+}
+
+std::vector<MemoryGraphic> RSSubThreadManager::CountSubMem(int pid)
+{
+    std::vector<MemoryGraphic> memsContainer;
+    if (threadList_.empty()) {
+        return memsContainer;
+    }
+
+    for (auto& subThread : threadList_) {
+        if (!subThread) {
+            MemoryGraphic memoryGraphic;
+            memsContainer.push_back(memoryGraphic);
+            continue;
+        }
+        memsContainer.push_back(subThread->CountSubMem(pid));
+    }
+    return memsContainer;
 }
 }

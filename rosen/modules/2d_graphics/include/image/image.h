@@ -17,6 +17,7 @@
 #define IMAGE_H
 
 #include "drawing/engine_adapter/impl_interface/image_impl.h"
+#include "utils/drawing_macros.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -36,7 +37,7 @@ enum class TextureOrigin {
     BOTTOM_LEFT,
 };
 
-class TextureInfo {
+class DRAWING_API TextureInfo {
 public:
     /*
      * @brief  Sets the width value of Texture.
@@ -149,7 +150,27 @@ private:
     unsigned int format_ = 0;
 };
 
-class Image {
+class BackendTexture {
+public:
+    BackendTexture(bool isValid) noexcept;
+    virtual ~BackendTexture() {};
+
+    bool IsValid() const;
+    void SetTextureInfo(const TextureInfo& textureInfo);
+    const TextureInfo GetTextureInfo() const;
+
+    template<typename T>
+    const std::shared_ptr<T> GetImpl() const
+    {
+        return imageImplPtr->DowncastingTo<T>();
+    }
+private:
+    bool isValid_;
+    std::shared_ptr<ImageImpl> imageImplPtr;
+    TextureInfo textureInfo_;
+};
+
+class DRAWING_API Image {
 public:
     Image() noexcept;
     // constructor adopt a raw image ptr, using for ArkUI, should remove after enable multi-media image decode.
@@ -192,6 +213,10 @@ public:
      */
     bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace);
+
+    BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) const;
+
+    bool IsValid(GPUContext* context) const;
 #endif
 
     /*
@@ -220,6 +245,11 @@ public:
     uint32_t GetUniqueID() const;
 
     /*
+     * @brief  Gets the ImageInfo of Image.
+     */
+    ImageInfo GetImageInfo();
+
+    /*
      * @brief         Copies a Rect of pixels from Image to Bitmap.
      * @param bitmap  Destination Bitmap.
      * @param x       Column index whose absolute value is less than Image width.
@@ -227,6 +257,13 @@ public:
      * @return        True of pixels are copied to Bitmap.
      */
     bool ReadPixels(Bitmap& bitmap, int x, int y);
+
+    bool ScalePixels(const Bitmap& bitmap, const SamplingOptions& sampling,
+        bool allowCachingHint = true) const;
+
+    std::shared_ptr<Data> EncodeToData(EncodedImageFormat& encodedImageFormat, int quality) const;
+
+    bool IsLazyGenerated() const;
 
     /*
      * @brief   Returns true the contents of Image was created on or uploaded to GPU memory,

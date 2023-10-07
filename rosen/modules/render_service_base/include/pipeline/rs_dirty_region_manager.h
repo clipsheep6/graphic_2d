@@ -41,6 +41,8 @@ enum DirtyRegionType {
     SHADOW_RECT,
     PREPARE_CLIP_RECT,
     REMOVE_CHILD_RECT,
+    RENDER_PROPERTIES_RECT,
+    CANVAS_NODE_SKIP_RECT,
     TYPE_AMOUNT
 };
 
@@ -51,12 +53,15 @@ const std::map<DirtyRegionType, std::string> DIRTY_REGION_TYPE_MAP {
     { DirtyRegionType::SHADOW_RECT, "SHADOW_RECT" },
     { DirtyRegionType::PREPARE_CLIP_RECT, "PREPARE_CLIP_RECT" },
     { DirtyRegionType::REMOVE_CHILD_RECT, "REMOVE_CHILD_RECT" },
+    { DirtyRegionType::RENDER_PROPERTIES_RECT, "RENDER_PROPERTIES_RECT" },
+    { DirtyRegionType::CANVAS_NODE_SKIP_RECT, "CANVAS_NODE_SKIP_RECT" },
 };
 
 class RSB_EXPORT RSDirtyRegionManager final {
 public:
     static constexpr int32_t ALIGNED_BITS = 32;
     RSDirtyRegionManager();
+    RSDirtyRegionManager(bool isDisplayDirtyManager);
     ~RSDirtyRegionManager() = default;
     // update/expand current frame dirtyregion
     void MergeDirtyRect(const RectI& rect);
@@ -72,8 +77,18 @@ public:
     // update current frame's visited dirtyregion
     void UpdateVisitedDirtyRects(const std::vector<RectI>& rects);
     RectI GetIntersectedVisitedDirtyRect(const RectI& absRect) const;
+    bool HasIntersectionWithVisitedDirtyRect(const RectI& absRect) const;
     void UpdateCacheableFilterRect(const RectI& rect);
     bool IfCacheableFilterRectFullyCover(const RectI& targetRect);
+    void ResetSubNodeFilterCacheValid()
+    {
+        isSubNodeFilterCacheValid_ = false;
+    }
+
+    bool GetSubNodeFilterCacheValid()
+    {
+        return isSubNodeFilterCacheValid_;
+    }
 
     // return current frame dirtyregion, can be changed in prepare and process (displaynode) stage
     const RectI& GetCurrentFrameDirtyRegion();
@@ -137,6 +152,11 @@ public:
     void SetOffset(int offsetX, int offsetY);
     RectI GetOffsetedDirtyRegion() const;
 
+    const std::vector<RectI>& GetMergedDirtyRegions() const
+    {
+        return mergedDirtyRegions_;
+    }
+
 private:
     RectI MergeHistory(unsigned int age, RectI rect) const;
     void PushHistory(RectI rect);
@@ -149,6 +169,7 @@ private:
     RectI currentFrameDirtyRegion_; // dirtyRegion in current frame
     std::vector<RectI> visitedDirtyRegions_ = {};  // visited app's dirtyRegion
     std::vector<RectI> cacheableFilterRects_ = {};  // node's region if filter cachable
+    std::vector<RectI> mergedDirtyRegions_ = {};
 
     // added for dfx
     std::vector<std::map<NodeId, RectI>> dirtyCanvasNodeInfo_;
@@ -162,6 +183,8 @@ private:
     // may add new set function for bufferAge
     unsigned int bufferAge_ = HISTORY_QUEUE_MAX_SIZE;
     bool isDirtyRegionAlignedEnable_ = false;
+    bool isSubNodeFilterCacheValid_ = true;
+    bool isDisplayDirtyManager_ = false;
 
     // Used for coordinate switch, i.e. dirtyRegion = dirtyRegion + offset.
     // For example when dirtymanager is used in cachesurface when surfacenode's

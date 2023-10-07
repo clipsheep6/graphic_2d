@@ -21,6 +21,7 @@
 #include "draw/canvas.h"
 #include "image/bitmap.h"
 #include "image/image.h"
+#include "utils/drawing_macros.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,7 +38,7 @@ struct FrameBuffer {
 };
 #endif
 
-class Surface {
+class DRAWING_API Surface {
 public:
     Surface();
     ~Surface() {}
@@ -81,6 +82,11 @@ public:
      *                If bounds == the surface, then this is the same as calling the no-parameter variant.
      */
     std::shared_ptr<Image> GetImageSnapshot(const RectI& bounds) const;
+
+    /*
+     * @brief   Gets ImageInfo of Surface
+     */
+    ImageInfo GetImageInfo();
 
 private:
     std::shared_ptr<SurfaceImpl> impl_;

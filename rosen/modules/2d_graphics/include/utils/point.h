@@ -16,6 +16,8 @@
 #ifndef POINT_H
 #define POINT_H
 
+#include <cfloat>
+#include "utils/drawing_macros.h"
 #include "utils/scalar.h"
 
 namespace OHOS {
@@ -25,7 +27,7 @@ class PointF;
 
 typedef PointF Point;
 
-class PointF {
+class DRAWING_API PointF {
 public:
     inline PointF() noexcept;
     inline PointF(const PointF& p) noexcept;
@@ -38,6 +40,8 @@ public:
 
     inline void SetX(scalar x);
     inline void SetY(scalar y);
+
+    inline bool IsZero() const;
 
     inline PointF& operator+=(const PointF& p);
     inline PointF& operator-=(const PointF& p);
@@ -85,6 +89,11 @@ inline void PointF::SetY(scalar y)
     y_ = y;
 }
 
+inline bool PointF::IsZero() const
+{
+    return (0 == x_) && (0 == y_);
+}
+
 inline PointF& PointF::operator+=(const PointF& p)
 {
     x_ += p.x_;
@@ -108,7 +117,7 @@ inline PointF& PointF::operator*=(scalar scale)
 
 inline PointF& PointF::operator/=(scalar divisor)
 {
-    if (divisor == 0) {
+    if (fabs(divisor) < FLT_EPSILON) {
         return *this;
     }
     x_ /= divisor;
@@ -118,7 +127,7 @@ inline PointF& PointF::operator/=(scalar divisor)
 
 inline const PointF operator+(const PointF& p1, const PointF& p2)
 {
-    return PointF(p1.x_ + p1.y_, p2.x_ + p2.y_);
+    return PointF(p1.x_ + p2.x_, p1.y_ + p2.y_);
 }
 
 inline const PointF operator-(const PointF& p1, const PointF& p2)
@@ -138,6 +147,9 @@ inline const PointF operator*(const PointF& p, scalar scale)
 
 inline const PointF operator/(const PointF& p, scalar divisor)
 {
+    if (fabs(divisor) < FLT_EPSILON) {
+        return PointF(p.x_, p.y_);
+    }
     return PointF(p.x_ / divisor, p.y_ / divisor);
 }
 
@@ -161,7 +173,7 @@ inline bool operator!=(const PointF& p1, const PointF& p2)
     return !IsScalarAlmostEqual(p1.x_, p2.x_) || !IsScalarAlmostEqual(p1.y_, p2.y_);
 }
 
-class PointI {
+class DRAWING_API PointI {
 public:
     inline PointI() noexcept;
     inline PointI(const PointI& p) noexcept;
@@ -254,7 +266,7 @@ inline PointI& PointI::operator/=(scalar divisor)
 
 inline const PointI operator+(const PointI& p1, const PointI& p2)
 {
-    return PointI(p1.x_ + p1.y_, p2.x_ + p2.y_);
+    return PointI(p1.x_ + p2.x_, p1.y_ + p2.y_);
 }
 
 inline const PointI operator-(const PointI& p1, const PointI& p2)

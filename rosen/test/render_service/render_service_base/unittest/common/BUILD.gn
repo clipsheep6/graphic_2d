@@ -22,11 +22,11 @@ ohos_unittest("RSRenderServiceBaseCommonTest") {
   module_out_path = module_output_path
 
   sources = [
+    "rs_background_thread_test.cpp",
     "rs_color_test.cpp",
     "rs_common_def_test.cpp",
     "rs_obj_abs_geometry_test.cpp",
     "rs_occlusion_region_test.cpp",
-    "rs_shared_context_test.cpp",
     "rs_thread_handler_generic_test.cpp",
     "rs_thread_looper_generic_test.cpp",
     "rs_thread_looper_impl_test.cpp",

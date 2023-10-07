@@ -20,6 +20,7 @@
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"
 #include "animation/rs_motion_path_option.h"
+#include "animation/rs_particle_params.h"
 #include "animation/rs_transition_effect.h"
 #include "command/rs_animation_command.h"
 #include "common/rs_vector2.h"
@@ -214,6 +215,9 @@ public:
 
     void SetEnvForegroundColor(uint32_t colorValue);
     void SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType);
+    void SetParticleParams(
+        std::vector<ParticleParams>& particleParams, const std::function<void()>& finishCallback = nullptr);
+    void SetParticleDrawRegion(std::vector<ParticleParams>& particleParams);
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);
     void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
@@ -311,12 +315,9 @@ public:
 
     void SetColorBlend(uint32_t colorValue);
 
-    void UpdateFrameRateRange(FrameRateRange range);
+    void AddFRCSceneInfo(const std::string& scene, float speed);
 
-    FrameRateRange GetFrameRateRange()
-    {
-        return nodeRange_;
-    }
+    void UpdateUIFrameRateRange(const FrameRateRange& range);
 
 protected:
     explicit RSNode(bool isRenderServiceNode);
@@ -384,6 +385,7 @@ private:
     std::shared_ptr<const RSTransitionEffect> transitionEffect_;
 
     FrameRateRange nodeRange_ = { 0, 0, 0 };
+    std::mutex animationMutex_;
 
     friend class RSAnimation;
     friend class RSCurveAnimation;

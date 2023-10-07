@@ -86,7 +86,7 @@ Rect AdaptiveImageHelper::GetDstRect(const AdaptiveImageInfo& rsImageInfo, const
 void AdaptiveImageHelper::ApplyCanvasClip(Canvas& canvas, const Rect& rect, const AdaptiveImageInfo& rsImageInfo,
     const float srcRectWidth, const float srcRectHeight)
 {
-    Rect drawRect = {};
+    Rect drawRect;
     if (rsImageInfo.repeatNum != static_cast<int32_t>(ImageRepeat::NO_REPEAT)) {
         drawRect = rect;
     } else {
@@ -188,7 +188,7 @@ void AdaptiveImageHelper::GetRectCropMultiple(
             ++maxY;
         }
     }
-    if (minX > 0 || maxX < 0 || minX > maxX || minY > 0 || maxY < 0 || minY > maxY) {
+    if (minX > 0 || maxX < 0 || minY > 0 || maxY < 0) {
         LOGE("AdaptiveImageHelper::GetRectCropMultiple, data is invalid.");
         boundaryRect.minX = 0;
         boundaryRect.minY = 0;
@@ -281,13 +281,6 @@ static ColorType PixelFormatToColorType(Media::PixelFormat pixelFormat)
             return ColorType::COLORTYPE_BGRA_8888;
         case Media::PixelFormat::ALPHA_8:
             return ColorType::COLORTYPE_ALPHA_8;
-        case Media::PixelFormat::RGBA_F16:
-        case Media::PixelFormat::UNKNOWN:
-        case Media::PixelFormat::ARGB_8888:
-        case Media::PixelFormat::RGB_888:
-        case Media::PixelFormat::NV21:
-        case Media::PixelFormat::NV12:
-        case Media::PixelFormat::CMYK:
         default:
             return ColorType::COLORTYPE_UNKNOWN;
     }
@@ -296,8 +289,6 @@ static ColorType PixelFormatToColorType(Media::PixelFormat pixelFormat)
 static AlphaType AlphaTypeToAlphaType(Media::AlphaType alphaType)
 {
     switch (alphaType) {
-        case Media::AlphaType::IMAGE_ALPHA_TYPE_UNKNOWN:
-            return AlphaType::ALPHATYPE_UNKNOWN;
         case Media::AlphaType::IMAGE_ALPHA_TYPE_OPAQUE:
             return AlphaType::ALPHATYPE_OPAQUE;
         case Media::AlphaType::IMAGE_ALPHA_TYPE_PREMUL:
@@ -336,21 +327,14 @@ void AdaptiveImageHelper::DrawPixelMapRepeatRect(Canvas& canvas, const Rect& rec
     int32_t maxY = boundaryRect.maxY;
 
     // convert pixelMap to drawing image
-    if (pixelMap == nullptr) {
-        LOGE("AdaptiveImageHelper::DrawPixelMapRepeatRect, pixelMap is nullptr.");
-        return;
-    }
     Media::ImageInfo imageInfo;
     pixelMap->GetImageInfo(imageInfo);
     BitmapFormat format = MakeBitmapFormat(imageInfo);
     Bitmap bitmap;
     bitmap.Build(imageInfo.size.width, imageInfo.size.height, format);
-    bitmap.SetPixels((void*)pixelMap->GetPixels());
+    bitmap.SetPixels(const_cast<void*>(static_cast<const void*>(pixelMap->GetPixels())));
     auto image = std::make_shared<Image>();
-    if (image->BuildFromBitmap(bitmap)) {
-        LOGE("AdaptiveImageHelper::DrawPixelMapRepeatRect, convert to image failed.");
-        return;
-    }
+    image->BuildFromBitmap(bitmap);
 
     auto src = Rect(0.0, 0.0, pixelMap->GetWidth(), pixelMap->GetHeight());
     for (int32_t i = minX; i <= maxX; ++i) {

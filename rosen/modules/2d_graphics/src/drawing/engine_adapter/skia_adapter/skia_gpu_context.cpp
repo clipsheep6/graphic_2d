@@ -16,6 +16,8 @@
 #include "skia_gpu_context.h"
 
 #include "include/gpu/gl/GrGLInterface.h"
+#include "src/gpu/GrDirectContextPriv.h"
+#include "include/core/SkTypes.h"
 
 #include "skia_data.h"
 #include "utils/data.h"
@@ -69,7 +71,13 @@ bool SkiaGPUContext::BuildFromGL(const GPUContextOptions& options)
     }
 
     GrContextOptions grOptions;
+#ifndef USE_GRAPHIC_TEXT_GINE
     grOptions.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+#else
+#if GR_TEST_UTILS
+    grOptions.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+#endif
+#endif
     grOptions.fPreferExternalImagesOverES3 = true;
     grOptions.fDisableDistanceFieldPaths = true;
     grOptions.fAllowPathMaskCaching = true;
@@ -89,6 +97,15 @@ void SkiaGPUContext::Flush()
         return;
     }
     grContext_->flush();
+}
+
+void SkiaGPUContext::FlushAndSubmit(bool syncCpu)
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::FlushAndSubmit, grContext_ is nullptr");
+        return;
+    }
+    grContext_->flushAndSubmit(syncCpu);
 }
 
 void SkiaGPUContext::PerformDeferredCleanup(std::chrono::milliseconds msNotUsed)
@@ -117,6 +134,85 @@ void SkiaGPUContext::SetResourceCacheLimits(int maxResource, size_t maxResourceB
     }
     grContext_->setResourceCacheLimits(maxResource, maxResourceBytes);
 }
+
+void SkiaGPUContext::GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::GetResourceCacheUsage, grContext_ is nullptr");
+        return;
+    }
+    grContext_->getResourceCacheUsage(&resourceCount, &resourceBytes);
+}
+
+void SkiaGPUContext::FreeGpuResources()
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::FreeGpuResources, grContext_ is nullptr");
+        return;
+    }
+    grContext_->freeGpuResources();
+}
+
+void SkiaGPUContext::DumpGpuStats(std::string& out)
+{
+#if GR_TEST_UTILS
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::DumpGpuStats, grContext_ is nullptr");
+        return;
+    }
+    SkString stat;
+    grContext_->priv().dumpGpuStats(&stat);
+    out = stat.c_str();
+#endif
+}
+
+void SkiaGPUContext::ReleaseResourcesAndAbandonContext()
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::ReleaseResourcesAndAbandonContext, grContext_ is nullptr");
+        return;
+    }
+    grContext_->releaseResourcesAndAbandonContext();
+}
+
+void SkiaGPUContext::PurgeUnlockedResources(bool scratchResourcesOnly)
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::PurgeUnlockedResources, grContext_ is nullptr");
+        return;
+    }
+    grContext_->purgeUnlockedResources(scratchResourcesOnly);
+}
+
+void SkiaGPUContext::PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, const GPUResourceTag tag)
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::PurgeUnlockedResourcesByTag, grContext_ is nullptr");
+        return;
+    }
+    GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
+    grContext_->purgeUnlockedResourcesByTag(scratchResourcesOnly, grTag);
+}
+
+void SkiaGPUContext::PurgeUnlockAndSafeCacheGpuResources()
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::PurgeUnlockAndSafeCacheGpuResources, grContext_ is nullptr");
+        return;
+    }
+    grContext_->purgeUnlockAndSafeCacheGpuResources();
+}
+
+void SkiaGPUContext::ReleaseByTag(const GPUResourceTag tag)
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::ReleaseByTag, grContext_ is nullptr");
+        return;
+    }
+    GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
+    grContext_->releaseByTag(grTag);
+}
+
 #ifdef NEW_SKIA
 sk_sp<GrDirectContext> SkiaGPUContext::GetGrContext() const
 #else

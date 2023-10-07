@@ -23,6 +23,7 @@
 #include "animation/rs_render_path_animation.h"
 #include "animation/rs_render_spring_animation.h"
 #include "animation/rs_render_transition.h"
+#include "animation/rs_render_particle_animation.h"
 #include "command/rs_command_templates.h"
 #include "common/rs_macros.h"
 #include "pipeline/rs_render_node.h"
@@ -32,6 +33,8 @@ namespace Rosen {
 enum RSAnimationCommandType : uint16_t {
     // curve animation
     ANIMATION_CREATE_CURVE,
+    // particle animation
+    ANIMATION_CREATE_PARTICLE,
     // keyframe animation
     ANIMATION_CREATE_KEYFRAME,
     // path animation
@@ -50,6 +53,7 @@ enum RSAnimationCommandType : uint16_t {
     ANIMATION_FINISH,
     ANIMATION_REVERSE,
     ANIMATION_SET_FRACTION,
+    ANIMATION_CANCEL,
 
     // UI operation
     ANIMATION_CALLBACK,
@@ -102,11 +106,14 @@ public:
     }
     static void CreateAnimation(
         RSContext& context, NodeId targetId, const std::shared_ptr<RSRenderAnimation>& animation);
+    static void CreateParticleAnimation(RSContext& context, NodeId targetId,
+        const std::shared_ptr<RSRenderParticleAnimation>& animation);
 
     using AnimationCallbackProcessor = void (*)(NodeId, AnimationId, AnimationCallbackEvent);
     static void AnimationCallback(RSContext& context,
                                   NodeId targetId, AnimationId animId, AnimationCallbackEvent event);
     static RSB_EXPORT void SetAnimationCallbackProcessor(AnimationCallbackProcessor processor);
+    static void CancelAnimation(RSContext& context, NodeId targetId, PropertyId propertyId);
 };
 
 // animation operation
@@ -124,6 +131,8 @@ ADD_COMMAND(RSAnimationReverse,
 ADD_COMMAND(RSAnimationSetFraction,
     ARG(ANIMATION, ANIMATION_SET_FRACTION, AnimationCommandHelper::AnimOp<float, &RSRenderAnimation::SetFraction>,
         NodeId, AnimationId, float))
+ADD_COMMAND(RSAnimationCancel,
+    ARG(ANIMATION, ANIMATION_CANCEL, AnimationCommandHelper::CancelAnimation, NodeId, PropertyId))
 
 ADD_COMMAND(RSAnimationCallback,
     ARG(ANIMATION, ANIMATION_CALLBACK,
@@ -132,6 +141,11 @@ ADD_COMMAND(RSAnimationCallback,
 // create curve animation
 ADD_COMMAND(RSAnimationCreateCurve, ARG(ANIMATION, ANIMATION_CREATE_CURVE, AnimationCommandHelper::CreateAnimation,
     NodeId, std::shared_ptr<RSRenderCurveAnimation>))
+
+// create particle animation
+ADD_COMMAND(RSAnimationCreateParticle,
+    ARG(ANIMATION, ANIMATION_CREATE_PARTICLE, AnimationCommandHelper::CreateParticleAnimation, NodeId,
+        std::shared_ptr<RSRenderParticleAnimation>))
 
 // create keyframe animation
 ADD_COMMAND(RSAnimationCreateKeyframe,ARG(ANIMATION, ANIMATION_CREATE_KEYFRAME,

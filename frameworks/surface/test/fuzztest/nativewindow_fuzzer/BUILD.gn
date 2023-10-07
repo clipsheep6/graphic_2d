@@ -14,7 +14,7 @@
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
-module_output_path = "graphic_2d/surface"
+module_output_path = "graphic_2d/graphic_2d"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("NativeWindowFuzzTest") {
@@ -33,6 +33,10 @@ ohos_fuzztest("NativeWindowFuzzTest") {
   ]
   sources = [ "nativewindow_fuzzer.cpp" ]
   deps = [ "//foundation/graphic/graphic_2d:libsurface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ###############################################################################

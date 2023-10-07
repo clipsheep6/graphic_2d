@@ -35,6 +35,7 @@
 #include "common/rs_thread_looper.h"
 #include "ipc_callbacks/iapplication_agent.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
+#include "ipc_callbacks/rs_isurface_occlusion_change_callback.h"
 #include "memory/rs_memory_graphic.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_uni_render_judgement.h"
@@ -46,6 +47,8 @@ namespace OHOS::Rosen {
 #if defined(ACCESSIBILITY_ENABLE)
 class AccessibilityObserver;
 #endif
+class HgmFrameRateManager;
+struct FrameRateRangeData;
 namespace Detail {
 template<typename Task>
 class ScheduledTask : public RefBase {
@@ -79,11 +82,16 @@ public:
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RequestNextVSync();
     void PostTask(RSTaskMessage::RSTask task);
+    void PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime);
+    void RemoveTask(const std::string& name);
     void PostSyncTask(RSTaskMessage::RSTask task);
+    bool IsIdle() const;
     void QosStateDump(std::string& dumpString);
     void RenderServiceTreeDump(std::string& dumpString);
     void RsEventParamDump(std::string& dumpString);
-    bool IsUIFirstOn();
+    bool IsUIFirstOn() const;
+    void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
+    void ClearGpuCache();
 
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)
@@ -111,30 +119,19 @@ public:
     /* Judge if rootnode has to be prepared based on it corresponding process is active
      * If its pid is in activeProcessPids_ set, return true
      */
-    bool CheckNodeHasToBePreparedByPid(NodeId nodeId, NodeId rootNodeId, bool isClassifyByRoot)
-    {
-        if (activeAppsInProcess_.empty()) {
-            return false;
-        }
-        pid_t pid = ExtractPid(nodeId);
-        if (activeAppsInProcess_.find(pid) == activeAppsInProcess_.end()) {
-            return false;
-        }
-        if (!isClassifyByRoot) {
-            return true;
-        }
-        auto& activeApps = activeAppsInProcess_[pid];
-        if (activeApps.find(INVALID_NODEID) != activeApps.end()) {
-            return true;
-        }
-        return (activeProcessNodeIds_.find(rootNodeId) != activeProcessNodeIds_.end());
-    }
+    bool CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyByRoot);
+    // check if active app has static drawing cache
+    bool IsDrawingGroupChanged(RSRenderNode& cacheRootNode) const;
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app);
     void UnRegisterApplicationAgent(sptr<IApplicationAgent> app);
 
     void RegisterOcclusionChangeCallback(pid_t pid, sptr<RSIOcclusionChangeCallback> callback);
     void UnRegisterOcclusionChangeCallback(pid_t pid);
+
+    void RegisterSurfaceOcclusionChangeCallback(NodeId id, pid_t pid, sptr<RSISurfaceOcclusionChangeCallback> callback);
+    void UnRegisterSurfaceOcclusionChangeCallback(NodeId id);
+    void ClearSurfaceOcclusionChangeCallback(pid_t pid);
 
     void WaitUtilUniRenderFinished();
     void NotifyUniRenderFinish();
@@ -155,6 +152,13 @@ public:
 
     sptr<VSyncDistributor> rsVSyncDistributor_;
 
+    void ReleaseSurface();
+#ifndef USE_ROSEN_DRAWING
+    void AddToReleaseQueue(sk_sp<SkSurface>&& surface);
+#else
+    void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
+#endif
+
     void SetDirtyFlag();
     void SetAccessibilityConfigChanged();
     void ForceRefreshForUni();
@@ -164,6 +168,11 @@ public:
     void CountMem(std::vector<MemoryGraphic>& mems);
     void SetAppWindowNum(uint32_t num);
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
+    void SetIsCachedSurfaceUpdated(bool isCachedSurfaceUpdated);
+    void SetForceUpdateUniRenderFlag(bool flag)
+    {
+        forceUpdateUniRenderFlag_ = flag;
+    }
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> GetWatermarkImg();
 #else
@@ -174,7 +183,11 @@ public:
     {
         return frameCount_;
     }
-    void AddActiveNodeId(pid_t pid, NodeId id);
+
+    DeviceType GetDeviceType() const;
+    bool IsSingleDisplay();
+    uint64_t GetFocusNodeId() const;
+    uint64_t GetFocusLeashWindowId() const;
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -186,10 +199,10 @@ private:
     RSMainThread& operator=(const RSMainThread&) = delete;
     RSMainThread& operator=(const RSMainThread&&) = delete;
 
-    bool IsSingleDisplay();
     void OnVsync(uint64_t timestamp, void* data);
     void ProcessCommand();
     void Animate(uint64_t timestamp);
+    void ApplyModifiers();
     void ConsumeAndUpdateAllNodes();
     void CollectInfoForHardwareComposer();
     void CollectInfoForDrivenRender();
@@ -204,10 +217,12 @@ private:
     void CallbackToQOS(std::map<uint32_t, bool>& pidVisMap);
     void CallbackToWMS(VisibleData& curVisVec);
     void SendCommands();
+    void SurfaceOcclusionCallback();
     void InitRSEventDetector();
     void RemoveRSEventDetector();
     void SetRSEventDetectorLoopStartTag();
     void SetRSEventDetectorLoopFinishTag();
+    void UpdateUIFirstSwitch();
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
@@ -230,28 +245,33 @@ private:
     void WaitUntilUnmarshallingTaskFinished();
     void MergeToEffectiveTransactionDataMap(TransactionDataMap& cachedTransactionDataMap);
 
-    void CheckColdStartMap();
     void ClearDisplayBuffer();
     void PerfAfterAnim(bool needRequestNextVsync);
     void PerfForBlurIfNeeded();
     void PerfMultiWindow();
     void RenderFrameStart();
     void ResetHardwareEnabledState();
+    void CheckIfHardwareForcedDisabled();
     void CheckAndUpdateTransactionIndex(
         std::shared_ptr<TransactionDataMap>& transactionDataEffective, std::string& transactionFlags);
 
     bool IsResidentProcess(pid_t pid);
-    bool IsNeedSkip(NodeId rootSurfaceNodeId, pid_t pid);
+    bool IsNeedSkip(NodeId instanceRootNodeId, pid_t pid);
 
     bool NeedReleaseGpuResource(const RSRenderNodeMap& nodeMap);
 
     // UIFirst
-    void CheckParallelSubThreadNodesStatus();
+    bool CheckParallelSubThreadNodesStatus();
     void CacheCommands();
 
     // used for informing hgm the bundle name of SurfaceRenderNodes
     void InformHgmNodeInfo();
     void CheckIfNodeIsBundle(std::shared_ptr<RSSurfaceRenderNode> node);
+
+    void SetFocusLeashWindowId();
+    void ProcessHgmFrameRate(std::shared_ptr<FrameRateRangeData> data, uint64_t timestamp);
+    void CollectFrameRateRange(std::shared_ptr<RSRenderNode> node);
+    int32_t GetNodePreferred(const std::vector<HgmModifierProfile>& hgmModifierProfileList) const;
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -263,9 +283,6 @@ private:
     std::unordered_map<NodeId, std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>>> cachedCommands_;
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> effectiveCommands_;
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> pendingEffectiveCommands_;
-    // Collect pids of surfaceview's update(ConsumeAndUpdateAllNodes), effective commands(processCommand) and Animate
-    std::unordered_map<pid_t, std::set<NodeId>> activeAppsInProcess_;
-    std::unordered_map<NodeId, std::set<NodeId>> activeProcessNodeIds_;
     std::unordered_map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> syncTransactionData_;
     int32_t syncTransactionCount_ { 0 };
 
@@ -315,14 +332,15 @@ private:
     bool qosPidCal_ = false;
     bool isDirty_ = false;
     std::atomic_bool doWindowAnimate_ = false;
-    uint32_t lastSurfaceCnt_ = 0;
+    std::vector<NodeId> lastSurfaceIds_;
     int32_t focusAppPid_ = -1;
     int32_t focusAppUid_ = -1;
-    int32_t lastFocusAppPid_ = -1;
     const uint8_t opacity_ = 255;
     std::string focusAppBundleName_ = "";
     std::string focusAppAbilityName_ = "";
     uint64_t focusNodeId_ = 0;
+    uint64_t focusLeashWindowId_ = 0;
+    uint64_t lastFocusNodeId_ = 0;
     uint32_t appWindowNum_ = 0;
     uint32_t requestNextVsyncNum_ = 0;
     bool lastFrameHasFilter_ = false;
@@ -354,6 +372,9 @@ private:
     bool hasDrivenNodeOnUniTree_ = false;
     bool hasDrivenNodeMarkRender_ = false;
 
+    std::shared_ptr<HgmFrameRateManager> frameRateMgr_ = nullptr;
+    std::shared_ptr<FrameRateRangeData> frameRateRangeData_ = nullptr;
+
     // UIFirst
     std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes_;
     std::unordered_map<NodeId, bool> cacheCmdSkippedNodes_;
@@ -361,10 +382,27 @@ private:
     std::atomic<uint64_t> frameCount_ = 0;
     std::set<std::shared_ptr<RSBaseRenderNode>> oldDisplayChildren_;
     DeviceType deviceType_ = DeviceType::PHONE;
+    bool isCachedSurfaceUpdated_ = false;
+    bool isUiFirstOn_ = false;
 
     // used for informing hgm the bundle name of SurfaceRenderNodes
     bool noBundle_ = false;
     std::string currentBundleName_ = "";
+    bool forceUpdateUniRenderFlag_ = false;
+    // for ui first
+    std::mutex mutex_;
+#ifndef USE_ROSEN_DRAWING
+    std::queue<sk_sp<SkSurface>> tmpSurfaces_;
+#else
+    std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
+#endif
+
+    // for surface occlusion change callback
+    std::mutex surfaceOcclusionMutex_;
+    std::unordered_map<NodeId,
+        std::tuple<pid_t, sptr<RSISurfaceOcclusionChangeCallback>, bool>> surfaceOcclusionListeners_;
+    std::unordered_map<NodeId,
+        std::pair<std::shared_ptr<RSSurfaceRenderNode>, std::shared_ptr<RSSurfaceRenderNode>>> savedAppWindowNode_;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

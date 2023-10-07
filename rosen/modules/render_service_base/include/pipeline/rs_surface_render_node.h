@@ -31,6 +31,8 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
+#include "pipeline/rs_uni_render_judgement.h"
+#include "platform/common/rs_system_properties.h"
 #include "property/rs_properties_painter.h"
 #include "screen_manager/screen_types.h"
 #include "transaction/rs_occlusion_data.h"
@@ -60,15 +62,16 @@ public:
         return Type;
     }
 
-    explicit RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context = {});
-    explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context = {});
+    explicit RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
+    explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, const std::weak_ptr<RSContext>& context = {});
     ~RSSurfaceRenderNode() override;
 
     void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
     void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
 #ifdef OHOS_PLATFORM
-    void SetIsOnTheTree(bool flag) override;
+    void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
+        NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID) override;
 #endif
     bool IsAppWindow() const
     {
@@ -90,15 +93,34 @@ public:
         return nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE;
     }
 
+    bool IsRosenWeb() const
+    {
+        return GetName().find("RosenWeb") != std::string::npos;
+    }
+
     // indicate if this node type can enable hardware composer
     bool IsHardwareEnabledType() const
     {
+        if (IsRosenWeb() && !RSSystemProperties::IsPhoneType()) {
+            return false;
+        }
         return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE && isHardwareEnabledNode_;
     }
 
     void SetHardwareEnabled(bool isEnabled)
     {
         isHardwareEnabledNode_ = isEnabled;
+    }
+
+    // used for hwc node
+    bool IsNewOnTree() const
+    {
+        return isNewOnTree_;
+    }
+
+    void ResetIsNewOnTree()
+    {
+        isNewOnTree_ = false;
     }
 
     bool IsLastFrameHardwareEnabled() const
@@ -159,6 +181,7 @@ public:
         // a mainWindowType surfacenode will not mounted under another mainWindowType surfacenode
         // including app main window, starting window, and selfdrawing window
         return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE ||
+               nodeType_ == RSSurfaceNodeType::DEFAULT ||
                nodeType_ == RSSurfaceNodeType::STARTING_WINDOW_NODE ||
                nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     }
@@ -175,6 +198,16 @@ public:
     bool IsCurrentFrameStatic();
     void UpdateCacheSurfaceDirtyManager(int bufferAge = 2);
 
+    bool GetNeedSubmitSubThread() const
+    {
+        return isNeedSubmitSubThread_;
+    }
+
+    void SetNeedSubmitSubThread(bool needSubmitSubThread)
+    {
+        isNeedSubmitSubThread_ = needSubmitSubThread;
+    }
+
     RSSurfaceNodeType GetSurfaceNodeType() const
     {
         return nodeType_;
@@ -190,12 +223,12 @@ public:
     void MarkUIHidden(bool isHidden);
     bool IsUIHidden() const;
 
-    std::string GetName() const
+    const std::string& GetName() const
     {
         return name_;
     }
 
-    std::string GetBundleName() const
+    const std::string& GetBundleName() const
     {
         return bundleName_;
     }
@@ -503,7 +536,7 @@ public:
     {
         const uint8_t opacity = 255;
         return !(GetAbilityBgAlpha() == opacity && ROSEN_EQ(GetGlobalAlpha(), 1.0f)) ||
-            (IsAppWindow() && GetChildrenCount() == 0);
+            (IsAppWindow() && GetChildrenCount() == 0 && RSUniRenderJudgement::IsUniRender());
     }
 
     inline bool IsCurrentNodeInTransparentRegion(const Occlusion::Rect& nodeRect) const
@@ -548,24 +581,28 @@ public:
         return opaqueRegionChanged_;
     }
 
+    void CleanOpaqueRegionChanged()
+    {
+        opaqueRegionChanged_ = false;
+    }
+
     // [planning] Remove this after skia is upgraded, the clipRegion is supported
     void ResetChildrenFilterRects();
     void UpdateChildrenFilterRects(const RectI& rect);
     const std::vector<RectI>& GetChildrenNeedFilterRects() const;
 
     // manage abilities' nodeid info
-    void ResetAbilityNodeIds();
-    void UpdateAbilityNodeIds(NodeId id);
-    const std::vector<NodeId>& GetAbilityNodeIds() const;
+    void UpdateAbilityNodeIds(NodeId id, bool isAdded);
+    const std::unordered_set<NodeId>& GetAbilityNodeIds() const;
 
     // manage appWindowNode's child hardware enabled nodes info
     void ResetChildHardwareEnabledNodes();
     void AddChildHardwareEnabledNode(WeakPtr childNode);
-    std::vector<WeakPtr> GetChildHardwareEnabledNodes() const;
+    const std::vector<WeakPtr>& GetChildHardwareEnabledNodes() const;
 
-    bool IsFocusedWindow(pid_t focusedWindowPid)
+    bool IsFocusedNode(uint64_t focusedNodeId)
     {
-        return ExtractPid(GetNodeId()) == focusedWindowPid;
+        return GetNodeId() == focusedNodeId;
     }
 
     void ResetSurfaceOpaqueRegion(
@@ -672,7 +709,6 @@ public:
 
     void SetCacheSurfaceProcessedStatus(CacheProcessStatus cacheProcessStatus);
     CacheProcessStatus GetCacheSurfaceProcessedStatus() const;
-    bool NodeIsUsedBySubThread() const override;
 
     bool GetFilterCacheFullyCovered() const
     {
@@ -684,19 +720,35 @@ public:
         isFilterCacheFullyCovered_ = val;
     }
 
+    bool GetFilterCacheValid() const
+    {
+        return isFilterCacheValid_;
+    }
+
+    void SetFilterCacheValid();
+
+    bool IsFilterCacheStatusChanged() const
+    {
+        return isFilterCacheStatusChanged_;
+    }
+
     void ResetFilterNodes()
     {
         filterNodes_.clear();
     }
     void UpdateFilterNodes(const std::shared_ptr<RSRenderNode>& nodePtr);
     // update static node's back&front-ground filter cache status
+    void UpdateFilterCacheStatusWithVisible(bool visible);
     void UpdateFilterCacheStatusIfNodeStatic(const RectI& clipRect);
+    void UpdateDrawingCacheNodes(const std::shared_ptr<RSRenderNode>& nodePtr);
+    // reset static node's drawing cache status as not changed and get filter rects
+    void ResetDrawingCacheStatusIfNodeStatic(std::unordered_map<NodeId, std::unordered_set<NodeId>>& allRects);
 
     void SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvailable);
 
 private:
     void OnResetParent() override;
-    void ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node);
+    void ClearChildrenCache();
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetLeashWindowNestedSurfaces();
@@ -785,17 +837,30 @@ private:
     bool opaqueRegionChanged_ = false;
     // [planning] Remove this after skia is upgraded, the clipRegion is supported
     std::vector<RectI> childrenFilterRects_;
-    std::vector<NodeId> abilityNodeIds_;
+    std::unordered_set<NodeId> abilityNodeIds_;
     // transparent region of the surface, floating window's container window is always treated as transparent
     Occlusion::Region transparentRegion_;
 
     Occlusion::Region containerRegion_;
     bool isFilterCacheFullyCovered_ = false;
+    bool isFilterCacheValid_ = false;
+    bool isFilterCacheStatusChanged_ = false;
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>
         filterNodes_; // valid filter nodes within, including itself
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> drawingCacheNodes_;
 
-    //<screenRect, absRect, screenRotation, isFocusWindow>
-    std::tuple<RectI, RectI, ScreenRotation, bool> OpaqueRegionBaseInfo_;
+    struct OpaqueRegionBaseInfo
+    {
+        RectI screenRect_;
+        RectI absRect_;
+        ScreenRotation screenRotation_;
+        bool isFocusWindow_;
+        bool isTransparent_;
+        bool hasContainerWindow_;
+    };
+    
+    //<screenRect, absRect, screenRotation, isFocusWindow, isTransparent, hasContainerWindow>
+    OpaqueRegionBaseInfo opaqueRegionBaseInfo_;
 
     /*
         ContainerWindow configs acquired from arkui, including container window state, screen density, container border
@@ -840,6 +905,7 @@ private:
     bool isHardwareEnabledNode_ = false;
     bool isCurrentFrameHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;
+    bool isNewOnTree_ = false;
     // mark if this self-drawing node is forced not to use hardware composer
     // in case where this node's parent window node is occluded or is appFreeze, this variable will be marked true
     bool isHardwareForcedDisabled_ = false;
@@ -852,10 +918,12 @@ private:
     bool animateState_ = false;
 
     bool needDrawAnimateProperty_ = false;
+    bool prevVisible_ = false;
 
     // UIFirst
     uint32_t submittedSubThreadIndex_ = INT_MAX;
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
+    std::atomic<bool> isNeedSubmitSubThread_ = true;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

@@ -3222,4 +3222,14 @@ HWTEST_F(RSNodeTest, AnimateWithCurrentCallbackTest, TestSize.Level1)
     EXPECT_EQ(vec, Callback);
 }
 
+/**
+ * @tc.name: AddFRCSceneInfo
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSNodeTest, AddFRCSceneInfoTest, TestSize.Level1)
+{
+    auto rootNode = RSCanvasNode::Create();
+    rootNode->AddFRCSceneInfo("translate", -1.0f);
+}
 } // namespace OHOS::Rosen

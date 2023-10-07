@@ -32,7 +32,7 @@ public:
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-    static NVal CreateObjectInstance(napi_env env, WebGLVertexArrayObject **instance)
+    static NVal CreateObjectInstance(napi_env env, WebGLVertexArrayObject** instance)
     {
         return WebGLObject::CreateObjectInstance<WebGLVertexArrayObject>(env, instance);
     }

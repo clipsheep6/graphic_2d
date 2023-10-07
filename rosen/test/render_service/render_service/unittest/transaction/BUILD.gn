@@ -36,6 +36,10 @@ ohos_unittest("RSRenderServiceConnectionStubTest") {
   module_out_path = module_output_path
   sources = [ "rs_render_service_connection_stub_test.cpp" ]
   deps = [ ":rs_test_common" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
   defines = []
   defines += gpu_defines
 }
@@ -45,6 +49,10 @@ ohos_unittest("RSRenderServiceStubTest") {
   module_out_path = module_output_path
   sources = [ "rs_render_service_stub_test.cpp" ]
   deps = [ ":rs_test_common" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
   defines = []
   defines += gpu_defines
 }
@@ -53,6 +61,7 @@ ohos_unittest("RSRenderServiceStubTest") {
 config("rs_test_common_public_config") {
   include_dirs = [
     "$graphic_2d_root/rosen/include",
+    "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/config",
     "$graphic_2d_root/rosen/modules/render_service/core",
     "$graphic_2d_root/rosen/modules/render_service_client/core",
     "$graphic_2d_root/rosen/modules/render_service_base/src",

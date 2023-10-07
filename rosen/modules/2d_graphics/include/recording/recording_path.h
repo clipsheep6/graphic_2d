@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class RecordingPath : public Path {
+class DRAWING_API RecordingPath : public Path {
 public:
     RecordingPath() noexcept;
     ~RecordingPath() override = default;
@@ -46,6 +46,12 @@ public:
     void CubicTo(const Point& ctrlPt1, const Point& ctrlPt2, const Point& endPt) override;
     void QuadTo(scalar ctrlPtX, scalar ctrlPtY, scalar endPtX, scalar endPtY) override;
     void QuadTo(const Point& ctrlPt, const Point endPt) override;
+
+    void RMoveTo(scalar dx, scalar dy) override;
+    void RLineTo(scalar dx, scalar dy) override;
+    void RArcTo(scalar rx, scalar ry, scalar angle, PathDirection direction, scalar dx, scalar dy) override;
+    void RCubicTo(scalar dx1, scalar dy1, scalar dx2, scalar dy2, scalar dx3, scalar dy3) override;
+    void RQuadTo(scalar dx1, scalar dy1, scalar dx2, scalar dy2) override;
 
     void AddRect(const Rect& rect, PathDirection dir = PathDirection::CW_DIRECTION) override;
     void AddRect(scalar left, scalar top, scalar right, scalar bottom,

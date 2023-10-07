@@ -46,6 +46,9 @@ config("surface_public_config") {
   if (graphic_2d_feature_freemem_enable) {
     defines += [ "SURFACE_ENABLE_FREEMEM" ]
   }
+  if (graphic_2d_feature_drivers_interface_display_enable) {
+    defines += [ "DRIVERS_INTERFACE_DISPLAY_ENABLE" ]
+  }
   defines += gpu_defines
 
   cflags = [ "-Wno-error=deprecated-declarations" ]
@@ -86,19 +89,21 @@ ohos_shared_library("surface") {
     "$graphic_2d_root/utils/buffer_handle:buffer_handle",
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
     "$graphic_2d_root/utils/scoped_bytrace:scoped_bytrace",
-    "//commonlibrary/c_utils/base:utils",
-    "//drivers/peripheral/display/hdi_service/gralloc/client:hdi_gralloc_client",
-    "//third_party/EGL:libEGL",
-    "//third_party/openGLES:libGLES",
   ]
 
   external_deps = [
-    "drivers_interface_display:display_buffer_idl_headers",
-    "drivers_interface_display:libdisplay_buffer_hdi_impl",
+    "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
   ]
+
+  if (graphic_2d_feature_drivers_interface_display_enable) {
+    external_deps += [
+      "drivers_interface_display:display_buffer_idl_headers",
+      "drivers_interface_display:libdisplay_buffer_hdi_impl",
+    ]
+  }
 
   symlink_target_name = [
     "libnative_buffer.so",

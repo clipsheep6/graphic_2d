@@ -30,10 +30,6 @@
 #include "include/effects/SkBlurImageFilter.h"
 #endif
 
-#ifdef RS_ENABLE_FILTER_CACHE
-#include "render/rs_filter_cache.h"
-#endif
-
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -58,10 +54,6 @@ std::unordered_map<MATERIAL_BLUR_STYLE, MaterialParam> materialParams_ {
     { STYLE_BACKGROUND_XLARGE_DARK,  { 130.0f, 1.3,  1.0,  RSColor(0x0D0D0D80) } },
 };
 } // namespace
-
-#ifndef USE_ROSEN_DRAWING
-std::shared_ptr<KawaseBlurFilter> RSMaterialFilter::kawaseFunc_ = std::make_shared<KawaseBlurFilter>();
-#endif
 
 RSMaterialFilter::RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio)
 #ifndef USE_ROSEN_DRAWING
@@ -264,11 +256,8 @@ std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction) cons
 
 bool RSMaterialFilter::IsValid() const
 {
-    constexpr float epsilon = 0.001f;
-    if (ROSEN_EQ(radius_, 0.f, epsilon)) {
-        return false;
-    }
-    return true;
+    constexpr float epsilon = 0.05f;
+    return radius_ > epsilon;
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)
@@ -283,12 +272,7 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>&
     materialParam.saturation = saturation_ + materialR->saturation_;
     materialParam.brightness = brightness_ + materialR->brightness_;
     materialParam.maskColor = maskColor_ + materialR->maskColor_;
-
-#ifdef RS_ENABLE_FILTER_CACHE
-    return RSFilterCache::Instance().GetMaterialFilterFromCache(materialParam, materialR->colorMode_);
-#else
     return std::make_shared<RSMaterialFilter>(materialParam, materialR->colorMode_);
-#endif
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Sub(const std::shared_ptr<RSFilter>& rhs)
@@ -302,11 +286,7 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Sub(const std::shared_ptr<RSFilter>&
     materialParam.saturation = saturation_ - materialR->saturation_;
     materialParam.brightness = brightness_ - materialR->brightness_;
     materialParam.maskColor = maskColor_ - materialR->maskColor_;
-#ifdef RS_ENABLE_FILTER_CACHE
-    return RSFilterCache::Instance().GetMaterialFilterFromCache(materialParam, materialR->colorMode_);
-#else
     return std::make_shared<RSMaterialFilter>(materialParam, materialR->colorMode_);
-#endif
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Multiply(float rhs)
@@ -316,11 +296,7 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Multiply(float rhs)
     materialParam.saturation = saturation_ * rhs;
     materialParam.brightness = brightness_ * rhs;
     materialParam.maskColor = maskColor_ * rhs;
-#ifdef RS_ENABLE_FILTER_CACHE
-    return RSFilterCache::Instance().GetMaterialFilterFromCache(materialParam, colorMode_);
-#else
     return std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
-#endif
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Negate()
@@ -330,11 +306,7 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Negate()
     materialParam.saturation = -saturation_;
     materialParam.brightness = -brightness_;
     materialParam.maskColor = RSColor(0x00000000) - maskColor_;
-#ifdef RS_ENABLE_FILTER_CACHE
-    return RSFilterCache::Instance().GetMaterialFilterFromCache(materialParam, colorMode_);
-#else
     return std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
-#endif
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -350,7 +322,7 @@ void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_
 #ifdef NEW_SKIA
     // if kawase blur failed, use gauss blur
     KawaseParameter param = KawaseParameter(src, dst, radius_, colorFilter_, paint.getAlphaf());
-    if (useKawase_ && kawaseFunc_->ApplyKawaseBlur(canvas, image, param)) {
+    if (useKawase_ && KawaseBlurFilter::GetKawaseBlurFilter()->ApplyKawaseBlur(canvas, image, param)) {
         return;
     }
     canvas.drawImageRect(image.get(), src, dst, SkSamplingOptions(), &paint, SkCanvas::kStrict_SrcRectConstraint);

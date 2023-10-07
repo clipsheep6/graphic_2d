@@ -21,7 +21,9 @@
 #include "platform/common/rs_system_properties.h"
 #include "pipeline/rs_divided_ui_capture.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
+#include "ui/rs_frame_rate_policy.h"
 #include "ui/rs_proxy_node.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -133,7 +135,12 @@ uint32_t RSInterfaces::GetScreenCurrentRefreshRate(ScreenId id)
     return renderServiceClient_->GetScreenCurrentRefreshRate(id);
 }
 
-std::vector<uint32_t> RSInterfaces::GetScreenSupportedRefreshRates(ScreenId id)
+int32_t RSInterfaces::GetCurrentRefreshRateMode()
+{
+    return renderServiceClient_->GetCurrentRefreshRateMode();
+}
+
+std::vector<int32_t> RSInterfaces::GetScreenSupportedRefreshRates(ScreenId id)
 {
     return renderServiceClient_->GetScreenSupportedRefreshRates(id);
 }
@@ -153,7 +160,8 @@ bool RSInterfaces::TakeSurfaceCaptureForUI(
         return false;
     }
     if (RSSystemProperties::GetUniRenderEnabled()) {
-        return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY);
+        return renderServiceClient_->TakeSurfaceCapture(node->GetId(), callback, scaleX, scaleY,
+            SurfaceCaptureType::UICAPTURE);
     } else {
         return TakeSurfaceCaptureForUIWithoutUni(node->GetId(), callback, scaleX, scaleY);
     }
@@ -179,7 +187,8 @@ bool RSInterfaces::TakeSurfaceCaptureForUIWithoutUni(NodeId id,
 {
     std::function<void()> offscreenRenderTask = [scaleX, scaleY, callback, id, this]() -> void {
         ROSEN_LOGD(
-            "RSInterfaces::TakeSurfaceCaptureForUIWithoutUni callback->OnOffscreenRender nodeId:[%" PRIu64 "]", id);
+            "RSInterfaces::TakeSurfaceCaptureForUIWithoutUni callback->OnOffscreenRender nodeId:"
+            "[%{public}" PRIu64 "]", id);
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderThread::TakeSurfaceCaptureForUIWithoutUni");
         std::shared_ptr<RSDividedUICapture> rsDividedUICapture =
             std::make_shared<RSDividedUICapture>(id, scaleX, scaleY);
@@ -295,6 +304,21 @@ int32_t RSInterfaces::RegisterOcclusionChangeCallback(const OcclusionChangeCallb
     return renderServiceClient_->RegisterOcclusionChangeCallback(callback);
 }
 
+int32_t RSInterfaces::RegisterSurfaceOcclusionChangeCallback(NodeId id, const SurfaceOcclusionChangeCallback& callback)
+{
+    return renderServiceClient_->RegisterSurfaceOcclusionChangeCallback(id, callback);
+}
+
+int32_t RSInterfaces::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)
+{
+    return renderServiceClient_->UnRegisterSurfaceOcclusionChangeCallback(id);
+}
+
+int32_t RSInterfaces::RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback)
+{
+    return renderServiceClient_->RegisterHgmConfigChangeCallback(callback);
+}
+
 void RSInterfaces::SetAppWindowNum(uint32_t num)
 {
     renderServiceClient_->SetAppWindowNum(num);
@@ -313,6 +337,11 @@ MemoryGraphic RSInterfaces::GetMemoryGraphic(int pid)
 std::vector<MemoryGraphic> RSInterfaces::GetMemoryGraphics()
 {
     return renderServiceClient_->GetMemoryGraphics();
+}
+
+bool RSInterfaces::GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize)
+{
+    return renderServiceClient_->GetTotalAppMemSize(cpuMemSize, gpuMemSize);
 }
 
 void RSInterfaces::ReportJankStats()
@@ -335,5 +364,21 @@ void RSInterfaces::ReportEventJankFrame(DataBaseRs info)
     renderServiceClient_->ReportEventJankFrame(info);
 }
 
+void RSInterfaces::EnableCacheForRotation()
+{
+    renderServiceClient_->SetCacheEnabledForRotation(true);
+}
+
+void RSInterfaces::DisableCacheForRotation()
+{
+    renderServiceClient_->SetCacheEnabledForRotation(false);
+}
+
+#ifdef TP_FEATURE_ENABLE
+void RSInterfaces::SetTpFeatureConfig(int32_t feature, const char* config)
+{
+    renderServiceClient_->SetTpFeatureConfig(feature, config);
+}
+#endif
 } // namespace Rosen
 } // namespace OHOS

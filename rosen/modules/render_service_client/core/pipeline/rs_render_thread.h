@@ -104,8 +104,23 @@ public:
     void SetRTRenderForced(bool isRenderForced)
     {
         if ((isRTRenderForced_ != isRenderForced)) {
-            ROSEN_LOGD("RSRenderThread::SetRenderForced %d -> %d", isRTRenderForced_, isRenderForced);
             isRTRenderForced_ = isRenderForced;
+        }
+    }
+
+    void AddSurfaceChangedCallBack(uint64_t id,
+        const std::function<void(float, float, float, float)>& callback)
+    {
+        if (visitor_ == nullptr) {
+            visitor_ = std::make_shared<RSRenderThreadVisitor>();
+        }
+        visitor_->AddSurfaceChangedCallBack(id, callback);
+    }
+
+    void RemoveSurfaceChangedCallBack(uint64_t id)
+    {
+        if (visitor_) {
+            visitor_->RemoveSurfaceChangedCallBack(id);
         }
     }
 
@@ -139,6 +154,7 @@ private:
 
     std::mutex mutex_;
     std::mutex cmdMutex_;
+    std::mutex rtMutex_;
     std::vector<std::unique_ptr<RSTransactionData>> cmds_;
     bool hasRunningAnimation_ = false;
     std::shared_ptr<RSRenderThreadVisitor> visitor_;
@@ -168,6 +184,9 @@ private:
 
     std::string cacheDir_;
     bool isRTRenderForced_ = false;
+#ifdef ROSEN_PREVIEW
+    std::atomic_bool isRunning_ = false;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

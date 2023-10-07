@@ -30,6 +30,7 @@
 
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_root_render_node.h"
+#include "pipeline/rs_task_dispatcher.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "render/rs_pixel_map_util.h"
@@ -67,7 +68,7 @@ void OpItemTasks::ProcessTask()
         std::lock_guard<std::mutex> lock(mutex_);
         std::swap(tasks, tasks_);
     }
-    for (auto& task : tasks) {
+    for (const auto& task : tasks) {
         task();
     }
 }
@@ -301,7 +302,7 @@ void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
         ROSEN_LOGD("TextBlobOpItem::Draw highContrastEnabled");
         uint32_t color = paint_.getColor();
         uint32_t channelSum = SkColorGetR(color) + SkColorGetG(color) + SkColorGetB(color);
-        bool flag = channelSum < 384; // 384 is empirical value
+        bool flag = channelSum < 594; // 594 is empirical value
 
         SkPaint outlinePaint(paint_);
         SimplifyPaint(flag ? SK_ColorWHITE : SK_ColorBLACK, &outlinePaint);
@@ -309,7 +310,7 @@ void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
         canvas.drawTextBlob(textBlob_, x_, y_, outlinePaint);
 
         SkPaint innerPaint(paint_);
-        SimplifyPaint(SK_ColorBLACK, &innerPaint);
+        SimplifyPaint(flag ? SK_ColorBLACK : SK_ColorWHITE, &innerPaint);
         innerPaint.setStyle(SkPaint::kFill_Style);
         canvas.drawTextBlob(textBlob_, x_, y_, innerPaint);
     } else {
@@ -698,20 +699,21 @@ ImageWithParmOpItem::~ImageWithParmOpItem()
 {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 #ifndef USE_ROSEN_DRAWING
-    if (texId_ != 0U) {
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDeleteTextures(1, &texId_);
-        texId_ = 0U;
-    }
-    if (nativeWindowBuffer_ != nullptr) {
-        DestroyNativeWindowBuffer(nativeWindowBuffer_);
-        nativeWindowBuffer_ = nullptr;
-    }
-    if (eglImage_ != EGL_NO_IMAGE_KHR) {
-        auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-        eglDestroyImageKHR(disp, eglImage_);
-        eglImage_ = EGL_NO_IMAGE_KHR;
-    }
+    RSTaskDispatcher::GetInstance().PostTask(tid_, [texId = texId_,
+                                                    nativeWindowBuffer = nativeWindowBuffer_,
+                                                    eglImage = eglImage_]() {
+        if (texId != 0U) {
+            glBindTexture(GL_TEXTURE_2D, 0);
+            glDeleteTextures(1, &texId);
+        }
+        if (nativeWindowBuffer != nullptr) {
+            DestroyNativeWindowBuffer(nativeWindowBuffer);
+        }
+        if (eglImage != EGL_NO_IMAGE_KHR) {
+            auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+            eglDestroyImageKHR(disp, eglImage);
+        }
+    });
 #endif
 #endif
 }
@@ -728,7 +730,7 @@ void ImageWithParmOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) 
     if (pixelmap != nullptr && pixelmap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC) {
         sk_sp<SkImage> dmaImage = GetSkImageFromSurfaceBuffer(canvas,
             reinterpret_cast<SurfaceBuffer*> (pixelmap->GetFd()));
-        rsImage_->SetImage(dmaImage);
+        rsImage_->SetDmaImage(dmaImage);
     }
 #endif
 #endif
@@ -766,9 +768,10 @@ sk_sp<SkImage> ImageWithParmOpItem::GetSkImageFromSurfaceBuffer(SkCanvas& canvas
     if (eglImage_ == EGL_NO_IMAGE_KHR) {
         eglImage_ = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, nativeWindowBuffer_, attrs);
         if (eglImage_ == EGL_NO_IMAGE_KHR) {
-            RS_LOGE("%s create egl image fail %d", __func__, eglGetError());
+            RS_LOGE("%{public}s create egl image fail %{public}d", __func__, eglGetError());
             return nullptr;
         }
+        tid_ = gettid();
     }
 
     // Create texture object
@@ -962,7 +965,16 @@ SurfaceBufferOpItem::SurfaceBufferOpItem(const RSSurfaceBufferInfo& surfaceBuffe
 
 SurfaceBufferOpItem::~SurfaceBufferOpItem()
 {
+    Clear();
+}
+
+void SurfaceBufferOpItem::Clear() const noexcept
+{
+    RS_TRACE_NAME("SurfaceBufferOpItem::Clear");
 #ifdef RS_ENABLE_GL
+    if (texId_ != 0U) {
+        glDeleteTextures(1, &texId_);
+    }
     if (eglImage_ != EGL_NO_IMAGE_KHR) {
         auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
         eglDestroyImageKHR(disp, eglImage_);
@@ -970,14 +982,12 @@ SurfaceBufferOpItem::~SurfaceBufferOpItem()
     if (nativeWindowBuffer_ != nullptr) {
         DestroyNativeWindowBuffer(nativeWindowBuffer_);
     }
-    if (texId_ != 0U) {
-        glDeleteTextures(1, &texId_);
-    }
 #endif
 }
 
 void SurfaceBufferOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+    Clear();
 #ifdef RS_ENABLE_GL
     if (surfaceBufferInfo_.surfaceBuffer_ == nullptr) {
         ROSEN_LOGE("SurfaceBufferOpItem::Draw surfaceBuffer_ is nullptr");
@@ -997,7 +1007,8 @@ void SurfaceBufferOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     eglImage_ = eglCreateImageKHR(disp, EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_OHOS, nativeWindowBuffer_, attrs);
     if (eglImage_ == EGL_NO_IMAGE_KHR) {
-        ROSEN_LOGE("%s create egl image fail %d", __func__, eglGetError());
+        DestroyNativeWindowBuffer(nativeWindowBuffer_);
+        ROSEN_LOGE("%{public}s create egl image fail %{public}d", __func__, eglGetError());
         return;
     }
 

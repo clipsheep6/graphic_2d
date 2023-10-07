@@ -60,9 +60,6 @@ public:
     bool CreateSurface();
     bool SetWebGLContextAttributes(const std::vector<std::string>& vec);
 
-    void drawImg();
-    GLuint compileShader(GLenum type, const char* sources);
-    int useProgram();
     std::function<void()> updateCallback_;
 
     int GetBufferWidth()
@@ -85,11 +82,17 @@ public:
     napi_value GetContextInstance(napi_env env, std::string className,
         napi_callback constructor, napi_finalize finalize_cb);
     napi_ref contextRef_ = nullptr;
+
+    void SetPackAlignment(GLint packAlignment)
+    {
+        packAlignment_ = packAlignment;
+    }
 private:
     std::string GetContextAttr(const std::string& str, const std::string& key, int keyLength, int value);
     char* bitMapPtr_ = nullptr;
     int bitMapWidth_ = 0;
     int bitMapHeight_ = 0;
+    GLint packAlignment_ = 4;
     EGLSurface eglSurface_ = nullptr;
     NativeWindow* eglWindow_ = nullptr;
     WebGLContextAttributes* webGlContextAttributes_ = nullptr;

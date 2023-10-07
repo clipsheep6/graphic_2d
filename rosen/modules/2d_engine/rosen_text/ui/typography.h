@@ -25,7 +25,7 @@
 
 namespace rosen {
 using namespace OHOS::Rosen::Drawing;
-class Typography {
+class DRAWING_API Typography {
 public:
     Typography();
     ~Typography() = default;
@@ -53,6 +53,7 @@ public:
     TypographyProperties::PositionAndAffinity GetGlyphPositionAtCoordinateWithCluster(double dx,
         double dy);
     TypographyProperties::Range<size_t> GetWordBoundary(size_t offset);
+    size_t GetLineCount();
 private:
     std::unique_ptr<TypographyBase> typography_;
 };

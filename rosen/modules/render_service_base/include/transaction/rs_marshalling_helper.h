@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <optional>
+#include <thread>
 #include "common/rs_macros.h"
 #ifdef USE_ROSEN_DRAWING
 #include "image/image.h"
@@ -50,6 +51,11 @@ struct SkSamplingOptions;
 #endif
 #endif
 
+#if defined (ENABLE_DDGR_OPTIMIZE)
+struct SkSerialProcs;
+struct SkDeserialProcs;
+#endif
+
 namespace OHOS {
 namespace Media {
 class PixelMap;
@@ -71,7 +77,14 @@ class RSImageBase;
 class RSMask;
 class RSPath;
 class RSLinearGradientBlurPara;
+template<typename T>
+class RenderParticleParaType;
+class EmitterConfig;
+class ParticleVelocity;
+class RenderParticleColorParaType;
+class ParticleRenderParams;
 class RSRenderCurveAnimation;
+class RSRenderParticleAnimation;
 class RSRenderInterpolatingSpringAnimation;
 class RSRenderKeyframeAnimation;
 class RSRenderPathAnimation;
@@ -190,6 +203,12 @@ public:
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSMask>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSImage>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSImageBase>)
+    DECLARE_FUNCTION_OVERLOAD(EmitterConfig)
+    DECLARE_FUNCTION_OVERLOAD(ParticleVelocity)
+    DECLARE_FUNCTION_OVERLOAD(RenderParticleParaType<float>)
+    DECLARE_FUNCTION_OVERLOAD(RenderParticleColorParaType)
+    DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<ParticleRenderParams>)
+    DECLARE_FUNCTION_OVERLOAD(std::vector<std::shared_ptr<ParticleRenderParams>>)
 #ifndef USE_ROSEN_DRAWING
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<DrawCmdList>)
 #else
@@ -218,6 +237,7 @@ public:
     static bool Unmarshalling(Parcel& parcel, std::shared_ptr<TEMPLATE>& val);
 
     DECLARE_ANIMATION_OVERLOAD(RSRenderCurveAnimation)
+    DECLARE_ANIMATION_OVERLOAD(RSRenderParticleAnimation)
     DECLARE_ANIMATION_OVERLOAD(RSRenderInterpolatingSpringAnimation)
     DECLARE_ANIMATION_OVERLOAD(RSRenderKeyframeAnimation)
     DECLARE_ANIMATION_OVERLOAD(RSRenderSpringAnimation)
@@ -319,6 +339,17 @@ public:
     static bool UnmarshallingWithCopy(Parcel& parcel, std::shared_ptr<Drawing::Data>& val);
 #endif
 
+#if defined (ENABLE_DDGR_OPTIMIZE)
+    static int IntegrateReadDescriptor(Parcel& pacel);
+    static bool IntegrateWriteDescriptor(Parcel& parcel, int fId);
+    static bool SerializeInternal(Parcel& parcel, const sk_sp<SkTextBlob>& val,
+        const SkSerialProcs& procs);
+    static bool DserializeInternal(Parcel& parcel, sk_sp<SkTextBlob>& val,
+        const SkDeserialProcs& procs, sk_sp<SkData>& data);
+#endif
+    static void BeginNoSharedMem(std::thread::id tid);
+    static void EndNoSharedMem();
+    static bool GetUseSharedMem();
 private:
     static bool WriteToParcel(Parcel& parcel, const void* data, size_t size);
     static const void* ReadFromParcel(Parcel& parcel, size_t size);

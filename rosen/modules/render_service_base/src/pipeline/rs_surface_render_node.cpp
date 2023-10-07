@@ -44,21 +44,18 @@
 
 namespace OHOS {
 namespace Rosen {
-RSSurfaceRenderNode::RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, std::weak_ptr<RSContext> context)
-    : RSRenderNode(config.id, context),
-      RSSurfaceHandler(config.id),
-      name_(config.name),
-      bundleName_(config.bundleName),
-      nodeType_(config.nodeType),
-      dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
+RSSurfaceRenderNode::RSSurfaceRenderNode(
+    const RSSurfaceRenderNodeConfig& config, const std::weak_ptr<RSContext>& context)
+    : RSRenderNode(config.id, context), RSSurfaceHandler(config.id), name_(config.name), bundleName_(config.bundleName),
+      nodeType_(config.nodeType), dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
       cacheSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(config.id), config.id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(config.id, info);
 }
 
-RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, std::weak_ptr<RSContext> context)
-    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig{id, "SurfaceNode"}, context)
+RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context)
+    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig { id, "SurfaceNode" }, context)
 {}
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode()
@@ -80,8 +77,8 @@ void RSSurfaceRenderNode::UpdateSrcRect(const RSPaintFilterCanvas& canvas, const
     const RSProperties& properties = GetRenderProperties();
     int left = std::clamp<int>(localClipRect.left(), 0, properties.GetBoundsWidth());
     int top = std::clamp<int>(localClipRect.top(), 0, properties.GetBoundsHeight());
-    int width = std::clamp<int>(localClipRect.width(), 0, properties.GetBoundsWidth() - left);
-    int height = std::clamp<int>(localClipRect.height(), 0, properties.GetBoundsHeight() - top);
+    int width = std::clamp<int>(std::ceil(localClipRect.width()), 0, std::ceil(properties.GetBoundsWidth() - left));
+    int height = std::clamp<int>(std::ceil(localClipRect.height()), 0, std::ceil(properties.GetBoundsHeight() - top));
     RectI srcRect = {left, top, width, height};
     SetSrcRect(srcRect);
 }
@@ -231,9 +228,9 @@ void RSSurfaceRenderNode::CollectSurface(
     }
 }
 
-void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderNode>& node)
+void RSSurfaceRenderNode::ClearChildrenCache()
 {
-    for (auto& child : node->GetChildren()) {
+    for (auto& child : GetChildren()) {
         auto surfaceNode = child->ReinterpretCastTo<RSSurfaceRenderNode>();
         if (surfaceNode == nullptr) {
             continue;
@@ -245,26 +242,40 @@ void RSSurfaceRenderNode::ClearChildrenCache(const std::shared_ptr<RSBaseRenderN
         }
 #endif
     }
+    // Temporary solution, GetChildren will generate fullChildrenList_, which will cause memory leak
+    OnTreeStateChanged();
 }
 
 void RSSurfaceRenderNode::OnTreeStateChanged()
 {
-#ifdef RS_ENABLE_GL
     RSRenderNode::OnTreeStateChanged();
-    if (grContext_ && !IsOnTheTree() && IsLeashWindow()) {
-#ifndef USE_ROSEN_DRAWING
-        RS_TRACE_NAME_FMT("purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
-            GetId(), GetName().c_str());
-        grContext_->purgeUnlockedResources(true);
-#endif
+#ifdef RS_ENABLE_GL
+    if (grContext_ && !IsOnTheTree()) {
+        if (auto context = GetContext().lock()) {
+            RS_TRACE_NAME_FMT("need purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
+                GetId(), GetName().c_str());
+            if (IsLeashWindow()) {
+                context->MarkNeedPurge(RSContext::PurgeType::PURGE_UNLOCK);
+            }
+            if (GetName().substr(0, 3) == "SCB") {
+                context->MarkNeedPurge(RSContext::PurgeType::PURGE_UNLOCK_SAFECACHE);
+            }
+        }
     }
 #endif
+    if (IsAbilityComponent()) {
+        if (auto instanceRootNode = GetInstanceRootNode()) {
+            if (auto surfaceNode = instanceRootNode->ReinterpretCastTo<RSSurfaceRenderNode>()) {
+                surfaceNode->UpdateAbilityNodeIds(GetId(), IsOnTheTree());
+            }
+        }
+    }
 }
 
 void RSSurfaceRenderNode::OnResetParent()
 {
     if (nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
-        ClearChildrenCache(shared_from_this());
+        ClearChildrenCache();
     } else {
 #ifndef ROSEN_CROSS_PLATFORM
         auto& consumer = GetConsumer();
@@ -460,6 +471,10 @@ void RSSurfaceRenderNode::SetContextClipRegion(const std::optional<Drawing::Rect
 void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
 {
     isSecurityLayer_ = isSecurityLayer;
+    auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
+    if (parent != nullptr && parent ->IsLeashWindow()) {
+        parent->SetSecurityLayer(isSecurityLayer);
+    }
 }
 
 bool RSSurfaceRenderNode::GetSecurityLayer() const
@@ -543,7 +558,7 @@ void RSSurfaceRenderNode::SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvaila
 
 void RSSurfaceRenderNode::ConnectToNodeInRenderService()
 {
-    ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %" PRIu64, GetId());
+    ROSEN_LOGI("RSSurfaceRenderNode::ConnectToNodeInRenderService nodeId = %{public}" PRIu64, GetId());
     auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     if (renderServiceClient != nullptr) {
@@ -578,14 +593,15 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable()
     isNotifyRTBufferAvailable_ = true;
 
     if (isRefresh_) {
-        ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %" PRIu64 " RenderThread", GetId());
+        ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %{public}" PRIu64 " RenderThread", GetId());
         RSRTRefreshCallback::Instance().ExcuteRefresh();
     }
 
     {
         std::lock_guard<std::mutex> lock(mutexRT_);
         if (callbackFromRT_) {
-            ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %" PRIu64 " RenderService", GetId());
+            ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %{public}" PRIu64 " RenderService",
+                GetId());
             callbackFromRT_->OnBufferAvailable();
         }
         if (!isRefresh_ && !callbackFromRT_) {
@@ -603,7 +619,7 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
     {
         std::lock_guard<std::mutex> lock(mutexUI_);
         if (callbackFromUI_) {
-            ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %" PRIu64, GetId());
+            ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %{public}" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
         }
     }
@@ -783,12 +799,61 @@ void RSSurfaceRenderNode::ResetSurfaceOpaqueRegion(const RectI& screeninfo, cons
     ResetSurfaceContainerRegion(screeninfo, absRect, screenRotation);
 }
 
+void RSSurfaceRenderNode::SetFilterCacheValid()
+{
+    if (!dirtyManager_) {
+        return;
+    }
+    isFilterCacheStatusChanged_ = false;
+    bool currentCacheValid = isFilterCacheFullyCovered_ && dirtyManager_->GetSubNodeFilterCacheValid();
+    if (isFilterCacheValid_ != currentCacheValid) {
+        isFilterCacheValid_ = currentCacheValid;
+        isFilterCacheStatusChanged_ = true;
+    }
+}
+
 void RSSurfaceRenderNode::UpdateFilterNodes(const std::shared_ptr<RSRenderNode>& nodePtr)
 {
     if (nodePtr == nullptr) {
         return;
     }
     filterNodes_.emplace(nodePtr->GetId(), nodePtr);
+}
+
+void RSSurfaceRenderNode::UpdateDrawingCacheNodes(const std::shared_ptr<RSRenderNode>& nodePtr)
+{
+    if (nodePtr == nullptr) {
+        return;
+    }
+    drawingCacheNodes_.emplace(nodePtr->GetId(), nodePtr);
+}
+
+void RSSurfaceRenderNode::ResetDrawingCacheStatusIfNodeStatic(
+    std::unordered_map<NodeId, std::unordered_set<NodeId>>& allRects)
+{
+    // traversal drawing cache nodes including app window
+    EraseIf(drawingCacheNodes_, [this, &allRects](const auto& pair) {
+        auto& node = pair.second;
+        if (node == nullptr || !node->IsOnTheTree()) {
+            return true;
+        }
+        node->SetDrawingCacheChanged(false);
+        node->GetFilterRectsInCache(allRects);
+        return false;
+    });
+}
+
+void RSSurfaceRenderNode::UpdateFilterCacheStatusWithVisible(bool visible)
+{
+    if (visible == prevVisible_) {
+        return;
+    }
+    prevVisible_ = visible;
+    if (!visible && !filterNodes_.empty()) {
+        for (auto& node : filterNodes_) {
+            node.second->GetMutableRenderProperties().ClearFilterCache();
+        }
+    }
 }
 
 void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipRect)
@@ -805,16 +870,15 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         }
         node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
         node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
-        // collect valid filter nodes for occlusion optimization
-        if (node->IsFilterCacheValid()) {
-            dirtyManager_->UpdateCacheableFilterRect(node->GetOldDirtyInSurface());
-        }
         return false;
     });
+    SetFilterCacheFullyCovered(false);
     if (IsTransparent() && dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {
         SetFilterCacheFullyCovered(true);
-        RS_LOGD("UpdateFilterCacheStatusIfNodeStatic surfacenode %" PRIu64 " [%s]", GetId(), GetName().c_str());
+        RS_LOGD("UpdateFilterCacheStatusIfNodeStatic surfacenode %{public}" PRIu64 " [%{public}s] rectsize %{public}s",
+            GetId(), GetName().c_str(), GetOldDirtyInSurface().ToString().c_str());
     }
+    SetFilterCacheValid();
 #endif
 }
 
@@ -1094,21 +1158,23 @@ void RSSurfaceRenderNode::ResetSurfaceContainerRegion(const RectI& screeninfo, c
 bool RSSurfaceRenderNode::CheckOpaqueRegionBaseInfo(
     const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow)
 {
-    // 0:screenRect, 1:absRect, 2:screenRotation, 3:isFocusWindow
-    return std::get<0>(OpaqueRegionBaseInfo_) == screeninfo &&
-        std::get<1>(OpaqueRegionBaseInfo_) == absRect &&
-        std::get<2>(OpaqueRegionBaseInfo_) == screenRotation &&
-        std::get<3>(OpaqueRegionBaseInfo_) == isFocusWindow;
+    return opaqueRegionBaseInfo_.screenRect_ == screeninfo &&
+        opaqueRegionBaseInfo_.absRect_ == absRect &&
+        opaqueRegionBaseInfo_.screenRotation_ == screenRotation &&
+        opaqueRegionBaseInfo_.isFocusWindow_ == isFocusWindow &&
+        opaqueRegionBaseInfo_.isTransparent_ == IsTransparent() &&
+        opaqueRegionBaseInfo_.hasContainerWindow_ == HasContainerWindow();
 }
 
 void RSSurfaceRenderNode::SetOpaqueRegionBaseInfo(
     const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow)
 {
-    // 0:screenRect, 1:absRect, 2:screenRotation, 3:isFocusWindow
-    std::get<0>(OpaqueRegionBaseInfo_) = screeninfo;
-    std::get<1>(OpaqueRegionBaseInfo_) = absRect;
-    std::get<2>(OpaqueRegionBaseInfo_) = screenRotation;
-    std::get<3>(OpaqueRegionBaseInfo_) = isFocusWindow;
+    opaqueRegionBaseInfo_.screenRect_ = screeninfo;
+    opaqueRegionBaseInfo_.absRect_ = absRect;
+    opaqueRegionBaseInfo_.screenRotation_ = screenRotation;
+    opaqueRegionBaseInfo_.isFocusWindow_ = isFocusWindow;
+    opaqueRegionBaseInfo_.isTransparent_ = IsTransparent();
+    opaqueRegionBaseInfo_.hasContainerWindow_ = HasContainerWindow();
 }
 
 // [planning] Remove this after skia is upgraded, the clipRegion is supported
@@ -1130,17 +1196,16 @@ const std::vector<RectI>& RSSurfaceRenderNode::GetChildrenNeedFilterRects() cons
 }
 
 // manage abilities' nodeid info
-void RSSurfaceRenderNode::ResetAbilityNodeIds()
+void RSSurfaceRenderNode::UpdateAbilityNodeIds(NodeId id, bool isAdded)
 {
-    abilityNodeIds_.clear();
+    if (isAdded) {
+        abilityNodeIds_.emplace(id);
+    } else {
+        abilityNodeIds_.erase(id);
+    }
 }
 
-void RSSurfaceRenderNode::UpdateAbilityNodeIds(NodeId id)
-{
-    abilityNodeIds_.emplace_back(id);
-}
-
-const std::vector<NodeId>& RSSurfaceRenderNode::GetAbilityNodeIds() const
+const std::unordered_set<NodeId>& RSSurfaceRenderNode::GetAbilityNodeIds() const
 {
     return abilityNodeIds_;
 }
@@ -1155,7 +1220,7 @@ void RSSurfaceRenderNode::AddChildHardwareEnabledNode(std::weak_ptr<RSSurfaceRen
     childHardwareEnabledNodes_.emplace_back(childNode);
 }
 
-std::vector<std::weak_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetChildHardwareEnabledNodes() const
+const std::vector<std::weak_ptr<RSSurfaceRenderNode>>& RSSurfaceRenderNode::GetChildHardwareEnabledNodes() const
 {
     return childHardwareEnabledNodes_;
 }
@@ -1180,6 +1245,9 @@ void RSSurfaceRenderNode::OnApplyModifiers()
 
     // Apply the context matrix into the bounds geometry
     geoPtr->SetContextMatrix(contextMatrix_);
+    if (!ShouldPaint()) {
+        UpdateFilterCacheStatusWithVisible(false);
+    }
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -1228,8 +1296,17 @@ std::vector<std::shared_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetLeashW
 
 bool RSSurfaceRenderNode::IsCurrentFrameStatic()
 {
-    if (dirtyManager_ == nullptr || !dirtyManager_->GetLatestDirtyRegion().IsEmpty()) {
+    if (dirtyManager_ == nullptr || !dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty()) {
         return false;
+    }
+    if (IsAppWindow()) {
+        auto hardwareEnabledNodes = GetChildHardwareEnabledNodes();
+        for (auto& hardwareEnabledNode : hardwareEnabledNodes) {
+            auto hardwareEnabledNodePtr = hardwareEnabledNode.lock();
+            if (hardwareEnabledNodePtr && hardwareEnabledNodePtr->IsCurrentFrameBufferConsumed()) {
+                return false;
+            }
+        }
     }
     if (IsMainWindowType()) {
         return true;
@@ -1269,9 +1346,27 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
 }
 
 #ifdef OHOS_PLATFORM
-void RSSurfaceRenderNode::SetIsOnTheTree(bool flag)
+void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId,
+    NodeId cacheNodeId)
 {
-    RSBaseRenderNode::SetIsOnTheTree(flag);
+    instanceRootNodeId = (IsMainWindowType() || IsLeashWindow()) ? GetId() : instanceRootNodeId;
+    if (IsLeashWindow()) {
+        firstLevelNodeId = GetId();
+    } else if (IsAppWindow()) {
+        firstLevelNodeId = GetId();
+        auto parentNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
+        if (parentNode && parentNode->IsLeashWindow()) {
+            firstLevelNodeId = parentNode->GetId();
+        }
+    }
+    isNewOnTree_ = flag && !isOnTheTree_;
+    if (IsSuggestedDrawInGroup()) {
+        cacheNodeId = GetId();
+    }
+    if (cacheNodeId != INVALID_NODEID) {
+        SetDrawingCacheRootId(cacheNodeId);
+    }
+    RSBaseRenderNode::SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId, cacheNodeId);
     if (flag == isReportFirstFrame_ || !IsAppWindow()) {
         return;
     }
@@ -1291,11 +1386,6 @@ CacheProcessStatus RSSurfaceRenderNode::GetCacheSurfaceProcessedStatus() const
 void RSSurfaceRenderNode::SetCacheSurfaceProcessedStatus(CacheProcessStatus cacheProcessStatus)
 {
     cacheProcessStatus_.store(cacheProcessStatus);
-}
-
-bool RSSurfaceRenderNode::NodeIsUsedBySubThread() const
-{
-    return GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING;
 }
 } // namespace Rosen
 } // namespace OHOS

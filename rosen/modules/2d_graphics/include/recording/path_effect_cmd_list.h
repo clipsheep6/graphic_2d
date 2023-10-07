@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class PathEffectCmdList : public CmdList {
+class DRAWING_API PathEffectCmdList : public CmdList {
 public:
     PathEffectCmdList() = default;
     ~PathEffectCmdList() override = default;
@@ -55,6 +55,7 @@ public:
         CREATE_DASH,
         CREATE_PATH_DASH,
         CREATE_CORNER,
+        CREATE_DISCRETE,
         CREATE_SUM,
         CREATE_COMPOSE,
     };
@@ -103,6 +104,21 @@ public:
     std::shared_ptr<PathEffect> Playback() const;
 private:
     scalar radius_;
+};
+
+class CreateDiscretePathEffectOpItem : public PathEffectOpItem {
+public:
+    explicit CreateDiscretePathEffectOpItem(scalar segLength, scalar dev, uint32_t seedAssist);
+    ~CreateDiscretePathEffectOpItem() = default;
+
+    /*
+     * @brief   Plays back the OpItem to create PathEffect.
+     */
+    std::shared_ptr<PathEffect> Playback() const;
+private:
+    scalar segLength_;
+    scalar dev_;
+    uint32_t seedAssist_;
 };
 
 class CreateSumPathEffectOpItem : public PathEffectOpItem {

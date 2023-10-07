@@ -365,6 +365,7 @@ private:
     mutable EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;
     mutable GLuint texId_ = 0;
     mutable OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
+    mutable pid_t tid_ = 0;
 #endif
 #endif
 #ifdef NEW_SKIA
@@ -1558,6 +1559,8 @@ public:
     static OpItem* Unmarshalling(Parcel& parcel);
 
 private:
+    void Clear() const noexcept;
+
     mutable RSSurfaceBufferInfo surfaceBufferInfo_;
 #ifdef RS_ENABLE_GL
     mutable EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;

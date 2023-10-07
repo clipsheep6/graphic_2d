@@ -43,6 +43,20 @@ namespace OHOS {
 namespace Rosen {
 using OHOS::HiviewDFX::HiLog;
 
+std::shared_ptr<Media::PixelMap> ColorPicker::CreateScaledPixelMap(const std::shared_ptr<Media::PixelMap>& pixmap)
+{
+    // Create scaled pixelmap
+    int desiredWidth = 100;
+    int desiredHeight = 100;
+    float xScale = static_cast<float>(desiredWidth) / pixmap->GetWidth();
+    float yScale = static_cast<float>(desiredHeight) / pixmap->GetHeight();
+    if (!pixmap->resize(xScale, yScale)) {
+        HiLog::Info(LABEL, "[ColorPicker]failed to resize pixmap.");
+        return pixmap;
+    }
+    return pixmap;
+}
+
 std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_ptr<Media::PixelMap>& pixmap,
     uint32_t &errorCode)
 {
@@ -51,7 +65,14 @@ std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_pt
         errorCode = ERR_EFFECT_INVALID_VALUE;
         return nullptr;
     }
-    ColorPicker *colorPicker = new (std::nothrow) ColorPicker(pixmap);
+    
+    std::shared_ptr<Media::PixelMap> scaledPixelMap = CreateScaledPixelMap(pixmap);
+    if (scaledPixelMap == nullptr) {
+        HiLog::Info(LABEL, "[ColorPicker]failed to scale pixelmap, scaledPixelMap is nullptr.");
+        errorCode = ERR_EFFECT_INVALID_VALUE;
+        return nullptr;
+    }
+    ColorPicker *colorPicker = new (std::nothrow) ColorPicker(scaledPixelMap);
     if (colorPicker == nullptr) {
         HiLog::Info(LABEL, "[ColorPicker]failed to create ColorPicker with pixmap.");
         errorCode = ERR_EFFECT_INVALID_VALUE;
@@ -70,7 +91,9 @@ std::shared_ptr<ColorPicker> ColorPicker::CreateColorPicker(const std::shared_pt
         errorCode = ERR_EFFECT_INVALID_VALUE;
         return nullptr;
     }
-    ColorPicker *colorPicker = new (std::nothrow) ColorPicker(pixmap, coordinates);
+
+    std::shared_ptr<Media::PixelMap> scaledPixelMap = CreateScaledPixelMap(pixmap);
+    ColorPicker *colorPicker = new (std::nothrow) ColorPicker(scaledPixelMap, coordinates);
     if (colorPicker == nullptr) {
         HiLog::Info(LABEL, "[ColorPicker]failed to create ColorPicker with pixmap.");
         errorCode = ERR_EFFECT_INVALID_VALUE;
@@ -160,6 +183,9 @@ uint32_t ColorPicker::GetAverageColor(ColorManager::Color &color) const
         greenSum += featureColors_[i].second * ((featureColors_[i].first >> ARGB_G_SHIFT) & ARGB_MASK);
         blueSum += featureColors_[i].second * ((featureColors_[i].first >> ARGB_B_SHIFT) & ARGB_MASK);
     }
+    if (totalPixelNum == 0) {
+        return ERR_EFFECT_INVALID_VALUE;
+    }
     uint32_t redMean = round(redSum / (float)totalPixelNum);
     uint32_t greenMean = round(greenSum / (float)totalPixelNum);
     uint32_t blueMean = round(blueSum / (float)totalPixelNum);
@@ -214,6 +240,9 @@ HSV ColorPicker::RGB2HSV(uint32_t rgb) const
     if (maxComponent == minComponent) {
         h = 0.0;
     } else {
+        if (delta == 0) {
+            return hsv;
+        }
         if (IsEquals(r, maxComponent) && g >= b) {
             h = 60 * (g - b) / delta + 0; // 60 is used to calculate color's hue, ranging between 0 and 360.
         } else if (IsEquals(r, maxComponent) && g < b) {

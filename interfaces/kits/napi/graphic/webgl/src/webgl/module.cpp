@@ -16,10 +16,13 @@
 #include <memory>
 #include <vector>
 
+#include "context/webgl2_rendering_context.h"
 #include "context/webgl_context_attributes.h"
 #include "context/webgl_rendering_context.h"
-#include "context/webgl2_rendering_context.h"
 #include "napi/n_val.h"
+#include "util/log.h"
+#include "util/object_manager.h"
+#include "util/util.h"
 #include "webgl/webgl_active_info.h"
 #include "webgl/webgl_buffer.h"
 #include "webgl/webgl_framebuffer.h"
@@ -27,16 +30,13 @@
 #include "webgl/webgl_query.h"
 #include "webgl/webgl_renderbuffer.h"
 #include "webgl/webgl_sampler.h"
-#include "webgl/webgl_sync.h"
 #include "webgl/webgl_shader.h"
+#include "webgl/webgl_shader_precision_format.h"
+#include "webgl/webgl_sync.h"
 #include "webgl/webgl_texture.h"
 #include "webgl/webgl_transform_feedback.h"
 #include "webgl/webgl_uniform_location.h"
 #include "webgl/webgl_vertex_array_object.h"
-#include "webgl/webgl_shader_precision_format.h"
-#include "util/log.h"
-#include "util/object_manager.h"
-#include "util/util.h"
 
 using namespace std;
 
@@ -54,8 +54,8 @@ static napi_value Export(napi_env env, napi_value exports)
     string webgl2Str = vec[0].substr(webglItem, 6); // length of webgl2
     string webgl1Str = vec[0].substr(webglItem, 5); // length of webgl
     if (webgl2Str == "webgl2") {
-        WebGL2RenderingContext *webGl2RenderingContext =
-            static_cast<WebGL2RenderingContext *>(ObjectManager::GetInstance().GetWebGLContext(true, idStr));
+        WebGL2RenderingContext* webGl2RenderingContext =
+            static_cast<WebGL2RenderingContext*>(ObjectManager::GetInstance().GetWebGLContext(true, idStr));
         if (webGl2RenderingContext == nullptr) {
             webGl2RenderingContext = new WebGL2RenderingContext(env, exports);
             if (webGl2RenderingContext == nullptr) {
@@ -70,8 +70,8 @@ static napi_value Export(napi_env env, napi_value exports)
             return nullptr;
         }
     } else if (webgl1Str == "webgl") {
-        WebGLRenderingContext *webGlRenderingContext =
-            static_cast<WebGLRenderingContext *>(ObjectManager::GetInstance().GetWebGLContext(false, idStr));
+        WebGLRenderingContext* webGlRenderingContext =
+            static_cast<WebGLRenderingContext*>(ObjectManager::GetInstance().GetWebGLContext(false, idStr));
         if (webGlRenderingContext == nullptr) {
             webGlRenderingContext = new WebGLRenderingContext(env, exports);
             if (webGlRenderingContext == nullptr) {
@@ -104,7 +104,7 @@ static napi_value Export(napi_env env, napi_value exports)
     products.emplace_back(make_unique<WebGLVertexArrayObject>(env, exports));
     products.emplace_back(make_unique<WebGLShaderPrecisionFormat>(env, exports));
 
-    for (auto &&product : products) {
+    for (auto&& product : products) {
         if (!product->Export(env, exports)) {
             return nullptr;
         }

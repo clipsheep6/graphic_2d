@@ -17,7 +17,9 @@
 
 #include "texgine_exception.h"
 #include "texgine/utils/exlog.h"
+#ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
+#endif
 #include "text_converter.h"
 
 namespace OHOS {
@@ -99,7 +101,9 @@ const std::vector<Boundary> &MeasurerImpl::GetWordBoundary() const
 
 int MeasurerImpl::Measure(CharGroups &cgs)
 {
+#ifdef LOGGER_ENABLE_SCOPE
     ScopedTrace scope("MeasurerImpl::Measure");
+#endif
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "MeasurerImpl::Measure");
     struct MeasurerCacheKey key = {
         .text = text_,
@@ -145,7 +149,9 @@ int MeasurerImpl::Measure(CharGroups &cgs)
 
 void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
 {
+#ifdef LOGGER_ENABLE_SCOPE
     ScopedTrace scope("MeasurerImpl::SeekTypeface");
+#endif
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "typeface");
     int index = 0;
     for (auto runsit = runs.begin(); runsit != runs.end(); runsit++) {
@@ -199,7 +205,9 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
 
 void MeasurerImpl::SeekScript(std::list<struct MeasuringRun> &runs)
 {
+#ifdef LOGGER_ENABLE_SCOPE
     ScopedTrace scope("MeasurerImpl::SeekScript");
+#endif
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "script");
     auto icuGetUnicodeFuncs = hb_unicode_funcs_create(hb_icu_get_unicode_funcs());
     if (icuGetUnicodeFuncs == nullptr) {
@@ -266,7 +274,9 @@ void MeasurerImpl::DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode
 
 int MeasurerImpl::Shape(CharGroups &cgs, std::list<struct MeasuringRun> &runs, std::vector<Boundary> boundaries)
 {
+#ifdef LOGGER_ENABLE_SCOPE
     ScopedTrace scope("MeasurerImpl::Shape");
+#endif
     cgs = CharGroups::CreateEmpty();
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "shape");
     size_t index = 0;
@@ -287,7 +297,12 @@ int MeasurerImpl::Shape(CharGroups &cgs, std::list<struct MeasuringRun> &runs, s
 
     for (auto &[start, end] : boundaries) {
         const auto &wordcgs = cgs.GetSubFromU16RangeAll(start, end);
-        wordcgs.Get(wordcgs.GetNumberOfCharGroup() - 1).invisibleWidth += wordSpacing_;
+        auto cg = wordcgs.Get(wordcgs.GetNumberOfCharGroup() - 1);
+        bool isWhitespace = (u_isWhitespace(cg.chars[0]) == 1);
+        if (isWhitespace) {
+            cg.invisibleWidth += wordSpacing_;
+        }
+        cg.isWordEnd = true;
     }
     return SUCCESSED;
 }
@@ -306,6 +321,10 @@ int MeasurerImpl::DoShape(CharGroups &cgs, MeasuringRun &run, size_t &index)
         return FAILED;
     }
 
+    if (text_.empty()) {
+        LOGEX_FUNC_LINE(ERROR) << "text is nullptr";
+        return FAILED;
+    }
     hb_buffer_add_utf16(hbuffer, reinterpret_cast<const uint16_t *>(text_.data()),
         INVALID_TEXT_LENGTH, run.start, run.end - run.start);
     hb_buffer_set_direction(hbuffer, rtl_ ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
@@ -413,6 +432,9 @@ void MeasurerImpl::DoCgsByCluster(std::map<uint32_t, TextEngine::CharGroup> &cgs
         }
 
         it->second.chars.insert(it->second.chars.end(), text_.begin() + start, text_.begin() + end);
+        if (it->second.IsHardBreak()) {
+            continue;
+        }
         it->second.visibleWidth = 0;
         for (const auto &glyph : it->second.glyphs) {
             it->second.visibleWidth += glyph.advanceX;

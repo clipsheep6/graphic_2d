@@ -17,12 +17,14 @@
 #include <cstdint>
 #include <unordered_set>
 
+#include "common/rs_optional_trace.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_base_render_util.h"
 #include "platform/common/rs_log.h"
 #include "render/rs_path.h"
 #include "rs_trace.h"
+#include "common/rs_optional_trace.h"
 #include "scene_board_judgement.h"
 #include <parameter.h>
 #include <parameters.h>
@@ -36,13 +38,6 @@ constexpr const char* SCREENLOCK_WINDOW = "ScreenLockWindow";
 constexpr const char* SYSUI_DROPDOWN = "SysUI_Dropdown";
 constexpr const char* SYSUI_STATUS_BAR = "SysUI_StatusBar";
 constexpr const char* PRIVACY_INDICATOR = "PrivacyIndicator";
-constexpr const char* SCB_DESK_TOP = "SCBDesktop2";
-constexpr const char* SCB_WALL_PAPER = "SCBWallpaper1";
-constexpr const char* SCB_SCREEN_LOCK = "SCBScreenLock10";
-constexpr const char* SCB_DROP_DOWN_PANEL = "SCBDropdownPanel7";
-constexpr const char* SCB_STATUS_BAR = "SCBStatusBar6";
-constexpr const char* SCB_NEGATIVE_SCREEN = "SCBNegativeScreen3";
-constexpr const char* SCB_GESTURE_BACK = "SCBGestureBack9";
 };
 void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge,
     bool useAlignedDirtyRegion)
@@ -55,7 +50,7 @@ void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& no
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         if (!surfaceDirtyManager->SetBufferAge(bufferAge)) {
-            ROSEN_LOGE("RSUniRenderUtil::MergeVisibleDirtyRegion with invalid buffer age %d", bufferAge);
+            ROSEN_LOGE("RSUniRenderUtil::MergeVisibleDirtyRegion with invalid buffer age %{public}d", bufferAge);
         }
         surfaceDirtyManager->IntersectDirtyRect(surfaceNode->GetOldDirtyInSurface());
         surfaceDirtyManager->UpdateDirty(useAlignedDirtyRegion);
@@ -124,9 +119,15 @@ void RSUniRenderUtil::SrcRectScaleDown(BufferDrawParam& params, const RSSurfaceR
 
         if (newWidth * boundsHeight > newHeight * boundsWidth) {
             // too wide
+            if (boundsHeight == 0) {
+                return;
+            }
             newWidth = boundsWidth * newHeight / boundsHeight;
         } else if (newWidth * boundsHeight < newHeight * boundsWidth) {
             // too tall
+            if (boundsWidth == 0) {
+                return;
+            }
             newHeight = boundsHeight * newWidth / boundsWidth;
         } else {
             return;
@@ -171,20 +172,24 @@ void RSUniRenderUtil::SrcRectScaleDown(BufferDrawParam& params, const RSSurfaceR
 #endif
         }
 #ifndef USE_ROSEN_DRAWING
-        RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleDown surfaceNode id:%" PRIu64 ", srcRect [%f %f %f %f]",
+        RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleDown surfaceNode id:%{public}" PRIu64 ","
+            " srcRect [%{public}f %{public}f %{public}f %{public}f]",
             node.GetId(), params.srcRect.left(), params.srcRect.top(),
             params.srcRect.width(), params.srcRect.height());
 #else
-        RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleDown surfaceNode id:%" PRIu64 ", srcRect [%f %f %f %f]",
+        RS_LOGD("RsDebug RSUniRenderUtil::SrcRectScaleDown surfaceNode id:%{public}" PRIu64 ","
+            " srcRect [%{public}f %{public}f %{public}f %{public}f]",
             node.GetId(), params.srcRect.GetLeft(), params.srcRect.GetTop(),
             params.srcRect.GetWidth(), params.srcRect.GetHeight());
 #endif
     }
 }
 
-BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode& node, bool forceCPU)
+BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode& node,
+    bool forceCPU, uint32_t threadIndex)
 {
     BufferDrawParam params;
+    params.threadIndex = threadIndex;
 #ifdef RS_ENABLE_EGLIMAGE
     params.useCPU = forceCPU;
 #else // RS_ENABLE_EGLIMAGE
@@ -208,7 +213,7 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     params.dstRect = Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
 #endif
 
-    const sptr<SurfaceBuffer>& buffer = node.GetBuffer();
+    const sptr<SurfaceBuffer> buffer = node.GetBuffer();
     if (buffer == nullptr) {
         return params;
     }
@@ -329,42 +334,20 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
     return params;
 }
 
-#ifndef USE_ROSEN_DRAWING
-void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas, sk_sp<SkImage> image)
+bool RSUniRenderUtil::IsNeedClient(RSSurfaceRenderNode& node, const ComposeInfo& info)
 {
-    if (image == nullptr) {
-        return;
+    if (RSBaseRenderUtil::IsForceClient()) {
+        RS_LOGD("RSUniRenderUtil::IsNeedClient: force client.");
+        return true;
     }
-    canvas.save();
-    canvas.scale(node.GetRenderProperties().GetBoundsWidth() / image->width(),
-        node.GetRenderProperties().GetBoundsHeight() / image->height());
-    SkPaint paint;
-#ifdef NEW_SKIA
-    canvas.drawImage(image.get(), 0.0, 0.0, SkSamplingOptions(), &paint);
-#else
-    canvas.drawImage(image.get(), 0.0, 0.0, &paint);
-#endif
-    canvas.restore();
-}
-#else
-void RSUniRenderUtil::DrawCachedImage(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas,
-    std::shared_ptr<Drawing::Image> image)
-{
-    if (image == nullptr) {
-        return;
+    const auto& property = node.GetRenderProperties();
+    if (property.GetRotation() != 0 || property.GetRotationX() != 0 || property.GetRotationY() != 0 ||
+        property.GetQuaternion() != Quaternion()) {
+        RS_LOGD("RSUniRenderUtil::IsNeedClient need client with RSSurfaceRenderNode rotation");
+        return true;
     }
-    canvas.Save();
-    canvas.Scale(node.GetRenderProperties().GetBoundsWidth() / image->GetWidth(),
-        node.GetRenderProperties().GetBoundsHeight() / image->GetHeight());
-    Drawing::Brush brush;
-    canvas.AttachBrush(brush);
-    Drawing::SamplingOptions sampling =
-        Drawing::SamplingOptions(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NEAREST);
-    canvas.DrawImage(*image.get(), 0.0, 0.0, sampling);
-    canvas.DetachBrush();
-    canvas.Restore();
+    return false;
 }
-#endif
 
 Occlusion::Region RSUniRenderUtil::AlignedDirtyRegion(const Occlusion::Region& dirtyRegion, int32_t alignedBits)
 {
@@ -396,7 +379,7 @@ bool RSUniRenderUtil::HandleSubThreadNode(RSRenderNode& node, RSPaintFilterCanva
         node.UpdateCompletedCacheSurface();
 #endif
     }
-    RS_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode %" PRIu64 "", node.GetId());
+    RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode %" PRIu64 "", node.GetId());
     node.DrawCacheSurface(canvas, UNI_MAIN_THREAD_INDEX, true);
     return true;
 }
@@ -474,6 +457,7 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
     uint32_t leashWindowCount = 0;
     bool isFocusNodeFound = false;
     uint64_t realFocusNodeId = 0;
+    std::string logInfo = "";
     std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
         std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
@@ -510,9 +494,13 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         }
     }
     // trace info for assign window nodes
-    std::string traceInfo = "{ isScale: " + std::to_string(isScale) + ", " +
-        "leashWindowCount: " + std::to_string(leashWindowCount) + ", " +
-        "isRotation: " + std::to_string(isRotation) + " }; ";
+    bool debugTraceEnable = Rosen::RSSystemProperties::GetDebugTraceEnabled();
+    if (debugTraceEnable) {
+        logInfo += "{ isScale: " + std::to_string(isScale) + ", " +
+            "leashWindowCount: " + std::to_string(leashWindowCount) + ", " +
+            "isRotation: " + std::to_string(isRotation) + " }; " +
+            "realFocusNodeId: " + std::to_string(realFocusNodeId) + " ]";
+    }
     for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
         auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
         if (node == nullptr) {
@@ -520,28 +508,26 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
             continue;
         }
         // trace info for assign window nodes
-        traceInfo += "node:[ " + node->GetName() + ", " + std::to_string(node->GetId()) + " ]" +
-            "( " + std::to_string(static_cast<uint32_t>(node->GetCacheSurfaceProcessedStatus())) + ", " +
-            std::to_string(node->HasFilter()) + ", " + std::to_string(node->HasAbilityComponent()) + " ); ";
+        if (debugTraceEnable) {
+            logInfo += "node:[ " + node->GetName() + ", " + std::to_string(node->GetId()) + " ]" +
+                "( " + std::to_string(static_cast<uint32_t>(node->GetCacheSurfaceProcessedStatus())) + ", " +
+                std::to_string(node->HasFilter()) + ", " + std::to_string(node->HasAbilityComponent()) + " ); ";
+        }
         std::string surfaceName = node->GetName();
         bool needFilter = surfaceName == ENTRY_VIEW || surfaceName == WALLPAPER_VIEW ||
             surfaceName == SYSUI_STATUS_BAR || surfaceName == SCREENLOCK_WINDOW ||
             surfaceName == SYSUI_DROPDOWN || surfaceName == PRIVACY_INDICATOR;
-        bool needFilterSCB = surfaceName == SCB_DESK_TOP || surfaceName == SCB_WALL_PAPER ||
-            surfaceName == SCB_SCREEN_LOCK || surfaceName == SCB_DROP_DOWN_PANEL || surfaceName == SCB_STATUS_BAR ||
-            surfaceName == SCB_NEGATIVE_SCREEN || surfaceName == SCB_GESTURE_BACK;
+        bool needFilterSCB = surfaceName.substr(0, 3) == "SCB";
         if (needFilter || needFilterSCB || node->IsSelfDrawingType()) {
             AssignMainThreadNode(mainThreadNodes, node);
             continue;
         }
         if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) { // node exceed one vsync
-            AssignSubThreadNode(subThreadNodes, node);
+            AssignSubThreadNode(subThreadNodes, node, deviceType, realFocusNodeId);
             continue;
         }
         if (deviceType == DeviceType::PHONE) {
-            if (leashWindowCount > 1) { // start app from another app
-                AssignMainThreadNode(mainThreadNodes, node);
-            } else if (isScale) { // app start or close scene
+            if (isScale) { // app start or close scene
                 if (!node->HasFilter() && !node->HasAbilityComponent() && !isRotation) {
                     AssignSubThreadNode(subThreadNodes, node);
                 } else {
@@ -551,16 +537,15 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
                 AssignMainThreadNode(mainThreadNodes, node);
             }
         } else { // PC or TABLET
-            if (!node->HasFilter() && !node->HasAbilityComponent() &&
-                !isRotation && realFocusNodeId != node->GetId()) {
-                AssignSubThreadNode(subThreadNodes, node);
+            if (node->QuerySubAssignable(isRotation)) {
+                AssignSubThreadNode(subThreadNodes, node, deviceType, realFocusNodeId);
             } else {
                 AssignMainThreadNode(mainThreadNodes, node);
             }
         }
     }
     SortSubThreadNodes(subThreadNodes);
-    RS_TRACE_NAME_FMT("AssignWindowNodes Infos: %s", traceInfo.c_str());
+    RS_OPTIONAL_TRACE_NAME("RSUniRenderUtil::AssignWindowNodes:" + logInfo);
 }
 
 void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
@@ -576,42 +561,57 @@ void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRe
     node->SetCacheType(CacheType::NONE);
     HandleHardwareNode(node);
     if (changeThread) {
-        RS_LOGD("RSUniRenderUtil::AssignMainThreadNode clear cache surface:[%s, %llu]",
+        RS_LOGD("RSUniRenderUtil::AssignMainThreadNode clear cache surface:[%{public}s, %{public}" PRIu64 "]",
             node->GetName().c_str(), node->GetId());
-        ClearCacheSurface(node, UNI_MAIN_THREAD_INDEX);
+        ClearCacheSurface(*node, UNI_MAIN_THREAD_INDEX);
+        node->SetIsMainThreadNode(true);
         node->SetTextureValidFlag(false);
     }
 }
 
 void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
-    const std::shared_ptr<RSSurfaceRenderNode>& node, DeviceType deviceType)
+    const std::shared_ptr<RSSurfaceRenderNode>& node, DeviceType deviceType, uint64_t focusNodeId)
 {
     if (node == nullptr) {
         ROSEN_LOGW("RSUniRenderUtil::AssignSubThreadNode node is nullptr");
         return;
     }
-    if (deviceType == DeviceType::PC || deviceType == DeviceType::TABLET) {
-        node->SetCacheType(CacheType::ANIMATE_PROPERTY);
-    } else {
-        node->SetCacheType(CacheType::CONTENT);
-    }
+    node->SetNeedSubmitSubThread(true);
+    node->SetCacheType(CacheType::CONTENT);
     node->SetIsMainThreadNode(false);
 
     // skip complete static window, DO NOT assign it to subthread.
     if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DONE &&
         node->IsCurrentFrameStatic() && node->HasCachedTexture()) {
-        RS_TRACE_NAME_FMT("subThreadNodes : static skip %s", node->GetName().c_str());
-        return;
+        node->SetNeedSubmitSubThread(false);
+        RS_OPTIONAL_TRACE_NAME_FMT("subThreadNodes : static skip %s", node->GetName().c_str());
+    } else {
+        node->UpdateCacheSurfaceDirtyManager(2); // 2 means buffer age
     }
-
     subThreadNodes.emplace_back(node);
-    node->UpdateCacheSurfaceDirtyManager(2); // 2 means buffer age
 #if defined(RS_ENABLE_GL)
     if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DONE &&
-        node->GetCacheSurface(UNI_MAIN_THREAD_INDEX, false)) {
+        node->GetCacheSurface(UNI_MAIN_THREAD_INDEX, false) && node->GetCacheSurfaceNeedUpdated()) {
         node->UpdateCompletedCacheSurface();
+        if (node->IsAppWindow() &&
+            !RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock())) {
+            node->GetDirtyManager()->MergeDirtyRect(node->GetOldDirty());
+        } else {
+            for (auto& child : node->GetSortedChildren()) {
+                auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+                if (surfaceNode && surfaceNode->IsAppWindow()) {
+                    surfaceNode->GetDirtyManager()->MergeDirtyRect(surfaceNode->GetOldDirty());
+                    break;
+                }
+            }
+        }
+        node->SetCacheSurfaceNeedUpdated(false);
     }
 #endif
+    if ((deviceType == DeviceType::PC || deviceType == DeviceType::TABLET) && node->GetId() == focusNodeId) {
+        node->SetPriority(NodePriorityType::SUB_FOCUSNODE_PRIORITY); // for resolving response latency
+        return;
+    }
     if (node->HasCachedTexture()) {
         node->SetPriority(NodePriorityType::SUB_LOW_PRIORITY);
     } else {
@@ -681,7 +681,8 @@ void RSUniRenderUtil::HandleHardwareNode(const std::shared_ptr<RSSurfaceRenderNo
 
 void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
     const std::shared_ptr<RSDisplayRenderNode>& displayNode,
-    std::set<std::shared_ptr<RSBaseRenderNode>>& oldChildren)
+    std::set<std::shared_ptr<RSBaseRenderNode>>& oldChildren,
+    DeviceType deviceType)
 {
     if (displayNode == nullptr) {
         return;
@@ -698,81 +699,81 @@ void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
     for (auto& child : oldChildren) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (tmpSet.count(surface) == 0) {
+            if (surface->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
+                tmpSet.emplace(surface);
+                continue;
+            }
             if (surface && map.GetRenderNode(surface->GetId()) != nullptr) {
-                RS_LOGD("RSUniRenderUtil::ClearSurfaceIfNeed clear cache surface:[%s, %llu]",
+                RS_LOGD("RSUniRenderUtil::ClearSurfaceIfNeed clear cache surface:[%{public}s, %{public}" PRIu64 "]",
                     surface->GetName().c_str(), surface->GetId());
-                ClearCacheSurface(surface, UNI_MAIN_THREAD_INDEX);
-                surface->SetTextureValidFlag(false);
+                if (deviceType == DeviceType::PHONE) {
+                    ClearCacheSurface(*surface, UNI_MAIN_THREAD_INDEX);
+                    surface->SetIsMainThreadNode(true);
+                    surface->SetTextureValidFlag(false);
+                } else {
+                    ClearCacheSurface(*surface, UNI_MAIN_THREAD_INDEX, false);
+                }
             }
         }
     }
     oldChildren.swap(tmpSet);
 }
 
-void RSUniRenderUtil::ClearCacheSurface(const std::shared_ptr<RSSurfaceRenderNode>& node, uint32_t threadIndex)
+void RSUniRenderUtil::ClearCacheSurface(RSRenderNode& node, uint32_t threadIndex, bool isClearCompletedCacheSurface)
 {
-    RS_LOGD("ClearCacheSurface node in correct thread: [%llu]", node->GetId());
-    uint32_t cacheSurfaceThreadIndex = node->GetCacheSurfaceThreadIndex();
-    if (cacheSurfaceThreadIndex == threadIndex) {
-        node->ClearCacheSurface();
-        node->SetIsMainThreadNode(true);
-        return;
-    }
-    if (cacheSurfaceThreadIndex == UNI_MAIN_THREAD_INDEX) {
-        RSMainThread::Instance()->PostTask([node]() {
-            RS_LOGD("clear node cache surface in main thread");
-            node->ClearCacheSurface();
-            node->SetIsMainThreadNode(true);
-        });
-    } else {
-#ifdef RS_ENABLE_GL
-        RSSubThreadManager::Instance()->PostTask([node]() {
-            RS_LOGD("clear node cache surface in sub thread");
-            node->ClearCacheSurface();
-            node->SetIsMainThreadNode(true);
-        }, cacheSurfaceThreadIndex);
-#endif
-    }
-}
-
-void RSUniRenderUtil::ClearCacheSurface(RSRenderNode& node, uint32_t threadIndex, bool isUIFirst)
-{
-    RS_LOGD("ClearCacheSurface node: [%llu]", node.GetId());
+    RS_LOGD("ClearCacheSurface node: [%{public}" PRIu64 "]", node.GetId());
     uint32_t cacheSurfaceThreadIndex = node.GetCacheSurfaceThreadIndex();
-    if (cacheSurfaceThreadIndex == threadIndex) {
-        node.ClearCacheSurface();
+    uint32_t completedSurfaceThreadIndex = node.GetCompletedSurfaceThreadIndex();
+    if (cacheSurfaceThreadIndex == threadIndex && completedSurfaceThreadIndex == threadIndex) {
+        node.ClearCacheSurface(isClearCompletedCacheSurface);
         return;
     }
-    auto cacheSurface = node.GetCacheSurface(threadIndex, true);
-    auto cacheCompletedSurface = node.GetCompletedCacheSurface(threadIndex, isUIFirst);
-    node.ClearCacheSurface();
-    ClearNodeCacheSurface(cacheSurface, cacheCompletedSurface, cacheSurfaceThreadIndex);
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkSurface> completedCacheSurface = isClearCompletedCacheSurface ?
+        node.GetCompletedCacheSurface(threadIndex, false, true) : nullptr;
+#else
+    std::shared_ptr<Drawing::Surface> completedCacheSurface = isClearCompletedCacheSurface ?
+        node.GetCompletedCacheSurface(threadIndex, false, true) : nullptr;
+#endif
+    ClearNodeCacheSurface(node.GetCacheSurface(threadIndex, false, true),
+        std::move(completedCacheSurface), cacheSurfaceThreadIndex, completedSurfaceThreadIndex);
+    node.ClearCacheSurface(isClearCompletedCacheSurface);
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSUniRenderUtil::ClearNodeCacheSurface(sk_sp<SkSurface> cacheSurface, sk_sp<SkSurface> cacheCompletedSurface,
-    uint32_t threadIndex)
+void RSUniRenderUtil::ClearNodeCacheSurface(sk_sp<SkSurface>&& cacheSurface, sk_sp<SkSurface>&& cacheCompletedSurface,
+    uint32_t cacheSurfaceThreadIndex, uint32_t completedSurfaceThreadIndex)
 #else
-void RSUniRenderUtil::ClearNodeCacheSurface(std::shared_ptr<Drawing::Surface> cacheSurface,
-    std::shared_ptr<Drawing::Surface> cacheCompletedSurface, uint32_t threadIndex)
+void RSUniRenderUtil::ClearNodeCacheSurface(std::shared_ptr<Drawing::Surface>&& cacheSurface,
+    std::shared_ptr<Drawing::Surface>&& cacheCompletedSurface,
+    uint32_t cacheSurfaceThreadIndex, uint32_t completedSurfaceThreadIndex)
 #endif
 {
-    if (cacheSurface == nullptr && cacheCompletedSurface == nullptr) {
+    PostReleaseSurfaceTask(std::move(cacheSurface), cacheSurfaceThreadIndex);
+    PostReleaseSurfaceTask(std::move(cacheCompletedSurface), completedSurfaceThreadIndex);
+}
+
+#ifndef USE_ROSEN_DRAWING
+void RSUniRenderUtil::PostReleaseSurfaceTask(sk_sp<SkSurface>&& surface, uint32_t threadIndex)
+#else
+void RSUniRenderUtil::PostReleaseSurfaceTask(std::shared_ptr<Drawing::Surface>&& surface, uint32_t threadIndex)
+#endif
+{
+    if (surface == nullptr) {
         return;
     }
+
     if (threadIndex == UNI_MAIN_THREAD_INDEX) {
-        RSMainThread::Instance()->PostTask([cacheSurface, cacheCompletedSurface]() mutable {
-            RS_LOGD("clear node cache surface in main thread");
-            cacheSurface = nullptr;
-            cacheCompletedSurface = nullptr;
+        auto instance = RSMainThread::Instance();
+        instance->AddToReleaseQueue(std::move(surface));
+        instance->PostTask([instance] () {
+            instance->ReleaseSurface();
         });
     } else {
 #ifdef RS_ENABLE_GL
-        RSSubThreadManager::Instance()->PostTask([cacheSurface, cacheCompletedSurface]() mutable {
-            RS_LOGD("clear node cache surface in sub thread");
-            cacheSurface = nullptr;
-            cacheCompletedSurface = nullptr;
-        }, threadIndex);
+        auto instance = RSSubThreadManager::Instance();
+        instance->AddToReleaseQueue(std::move(surface), threadIndex);
+        instance->ReleaseSurface(threadIndex);
 #endif
     }
 }

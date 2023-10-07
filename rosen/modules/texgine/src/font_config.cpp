@@ -22,7 +22,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef BUILD_NON_SDK_VER
 #include "securec.h"
+#endif
 #include "texgine/utils/exlog.h"
 
 namespace OHOS {
@@ -43,6 +45,13 @@ FontConfig::FontConfig(const char* fname)
 
 char* FontConfig::GetFileData(const char* fname, int& size)
 {
+#ifdef BUILD_NON_SDK_VER
+    char realPath[PATH_MAX] = {0};
+    if (fname == nullptr || realpath(fname, realPath) == NULL) {
+        LOGSO_FUNC_LINE(ERROR) << "path or realPath is NULL";
+        return nullptr;
+    }
+#endif
     std::ifstream file(fname);
     if (file.good()) {
         FILE* fp = fopen(fname, "r");
@@ -57,6 +66,7 @@ char* FontConfig::GetFileData(const char* fname, int& size)
             fclose(fp);
             return nullptr;
         }
+#ifdef BUILD_NON_SDK_VER
         if (memset_s(data, size, 0, size) != EOK) {
             LOGSO_FUNC_LINE(ERROR) << "memset failed";
             free(data);
@@ -64,6 +74,9 @@ char* FontConfig::GetFileData(const char* fname, int& size)
             fclose(fp);
             return nullptr;
         }
+#else
+            memset(data, 0, size);
+#endif
         (void)fread(data, size, 1, fp);
         fclose(fp);
         return data;

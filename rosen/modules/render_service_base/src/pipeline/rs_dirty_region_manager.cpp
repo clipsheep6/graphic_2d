@@ -23,6 +23,13 @@ RSDirtyRegionManager::RSDirtyRegionManager()
     debugRegionEnabled_.resize(DebugRegionType::TYPE_MAX);
 }
 
+RSDirtyRegionManager::RSDirtyRegionManager(bool isDisplayDirtyManager)
+{
+    dirtyHistory_.resize(HISTORY_QUEUE_MAX_SIZE);
+    debugRegionEnabled_.resize(DebugRegionType::TYPE_MAX);
+    isDisplayDirtyManager_ = isDisplayDirtyManager;
+}
+
 void RSDirtyRegionManager::MergeDirtyRect(const RectI& rect)
 {
     if (rect.IsEmpty()) {
@@ -32,6 +39,9 @@ void RSDirtyRegionManager::MergeDirtyRect(const RectI& rect)
         currentFrameDirtyRegion_ = rect;
     } else {
         currentFrameDirtyRegion_ = currentFrameDirtyRegion_.JoinRect(rect);
+    }
+    if (isDisplayDirtyManager_) {
+        mergedDirtyRegions_.emplace_back(rect);
     }
 }
 
@@ -58,17 +68,21 @@ void RSDirtyRegionManager::UpdateVisitedDirtyRects(const std::vector<RectI>& rec
 
 RectI RSDirtyRegionManager::GetIntersectedVisitedDirtyRect(const RectI& absRect) const
 {
-    if (RSSystemProperties::IsSceneBoardEnabled()) {
-        return surfaceRect_;
-    }
     RectI belowDirty = currentFrameDirtyRegion_;
-    for (auto subDirty : visitedDirtyRegions_) {
+    for (const auto& subDirty : visitedDirtyRegions_) {
         if (absRect.IsInsideOf(belowDirty)) {
             return belowDirty;
         }
         belowDirty = belowDirty.JoinRect(subDirty.IntersectRect(absRect));
     }
     return belowDirty;
+}
+
+bool RSDirtyRegionManager::HasIntersectionWithVisitedDirtyRect(const RectI& absRect) const
+{
+    return currentFrameDirtyRegion_.Intersect(absRect) ||
+           std::any_of(visitedDirtyRegions_.begin(), visitedDirtyRegions_.end(),
+               [&absRect](const RectI& rect) { return rect.Intersect(absRect); });
 }
 
 void RSDirtyRegionManager::UpdateCacheableFilterRect(const RectI& rect)
@@ -161,12 +175,14 @@ void RSDirtyRegionManager::Clear()
     dirtyRegion_.Clear();
     currentFrameDirtyRegion_.Clear();
     visitedDirtyRegions_.clear();
+    mergedDirtyRegions_.clear();
     cacheableFilterRects_.clear();
     dirtyCanvasNodeInfo_.clear();
     dirtyCanvasNodeInfo_.resize(DirtyRegionType::TYPE_AMOUNT);
     dirtySurfaceNodeInfo_.clear();
     dirtySurfaceNodeInfo_.resize(DirtyRegionType::TYPE_AMOUNT);
     isDfxTarget_ = false;
+    isSubNodeFilterCacheValid_ = true;
 }
 
 bool RSDirtyRegionManager::IsCurrentFrameDirty() const

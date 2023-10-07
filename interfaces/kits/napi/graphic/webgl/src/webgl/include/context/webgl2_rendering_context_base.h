@@ -473,6 +473,9 @@ public:
     static napi_value GetParameter(napi_env env, napi_callback_info info);
     static napi_value GetTexParameter(napi_env env, napi_callback_info info);
     static napi_value GetFramebufferAttachmentParameter(napi_env env, napi_callback_info info);
+    static napi_value RenderbufferStorage(napi_env env, napi_callback_info info);
+    static napi_value BindBuffer(napi_env env, napi_callback_info info);
+    static napi_value DeleteBuffer(napi_env env, napi_callback_info info);
 };
 } // namespace Rosen
 } // namespace OHOS

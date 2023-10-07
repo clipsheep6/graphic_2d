@@ -111,6 +111,17 @@ void RSHardwareThread::ReleaseLayers(OutputPtr output, const std::unordered_map<
     }
     const auto layersReleaseFence = output->GetLayersReleaseFence();
     if (layersReleaseFence.size() == 0) {
+        // When release fence's size is 0, the output may invalid, release all buffer
+        // This situation may happen when killing composer_host
+        for (const auto& [id, layer] : layerMap) {
+            if (layer == nullptr || layer->GetLayerInfo()->GetSurface() == nullptr) {
+                RS_LOGW("RSHardwareThread::ReleaseLayers: layer or layer's cSurface is nullptr");
+                continue;
+            }
+            auto preBuffer = layer->GetLayerInfo()->GetPreBuffer();
+            auto consumer = layer->GetLayerInfo()->GetSurface();
+            ReleaseBuffer(preBuffer, SyncFence::INVALID_FENCE, consumer);
+        }
         RS_LOGE("RSHardwareThread::ReleaseLayers: no layer needs to release");
     }
     for (const auto& [layer, fence] : layersReleaseFence) {
@@ -132,18 +143,16 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
     }
     RSTaskMessage::RSTask task = [this, output = output, layers = layers]() {
         RS_TRACE_NAME("RSHardwareThread::CommitAndReleaseLayers");
-        RS_LOGD("RSHardwareThread::CommitAndReleaseLayers start");
-        PerformSetActiveMode();
+        PerformSetActiveMode(output);
         output->SetLayerInfo(layers);
         hdiBackend_->Repaint(output);
         auto layerMap = output->GetLayers();
         ReleaseLayers(output, layerMap);
-        RS_LOGD("RSHardwareThread::CommitAndReleaseLayers end");
     };
     PostTask(task);
 }
 
-void RSHardwareThread::PerformSetActiveMode()
+void RSHardwareThread::PerformSetActiveMode(OutputPtr output)
 {
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     auto screenManager = CreateOrGetScreenManager();
@@ -153,19 +162,9 @@ void RSHardwareThread::PerformSetActiveMode()
     }
 
     HgmRefreshRates newRate = RSSystemProperties::GetHgmRefreshRatesEnabled();
-    HgmRefreshRateModes newRateMode = RSSystemProperties::GetHgmRefreshRateModesEnabled();
     if (hgmRefreshRates_ != newRate) {
         hgmRefreshRates_ = newRate;
         hgmCore.SetScreenRefreshRate(screenManager->GetDefaultScreenId(), 0, static_cast<int32_t>(hgmRefreshRates_));
-    }
-    if (hgmRefreshRateModes_ != newRateMode) {
-        hgmRefreshRateModes_ = newRateMode;
-        hgmCore.SetRefreshRateMode(static_cast<RefreshRateMode>(hgmRefreshRateModes_));
-    }
-
-    if (lockRefreshRateOnce_ == false) {
-        hgmCore.SetDefaultRefreshRateMode();
-        lockRefreshRateOnce_ = true;
     }
 
     std::unique_ptr<std::unordered_map<ScreenId, int32_t>> modeMap(hgmCore.GetModesToApply());
@@ -184,10 +183,11 @@ void RSHardwareThread::PerformSetActiveMode()
                 ", h: " + std::to_string(mode.GetScreenHeight()) +
                 ", rate: " + std::to_string(mode.GetScreenRefreshRate()) +
                 ", id: " + std::to_string(mode.GetScreenModeId());
-            RS_LOGD(temp.c_str());
+            RS_LOGD("%{public}s", temp.c_str());
         }
 
         screenManager->SetScreenActiveMode(id, modeId);
+        hdiBackend_->StartSample(output);
     }
 }
 
@@ -198,7 +198,6 @@ void RSHardwareThread::OnPrepareComplete(sptr<Surface>& surface,
     (void)(data);
 
     if (!param.needFlushFramebuffer) {
-        RS_LOGD("RsDebug RSHardwareThread::OnPrepareComplete: no need to flush frame buffer");
         return;
     }
 
@@ -271,7 +270,6 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         uniRenderEngine_->DrawBuffer(*canvas, params);
 #else
         if (!params.useCPU) {
-            RS_TRACE_NAME("RSHardwareThread::Redraw DrawImage(GPU)");
             if (!RSBaseRenderUtil::IsBufferValid(params.buffer)) {
                 RS_LOGE("RSHardwareThread::Redraw CreateEglImageFromBuffer invalid param!");
                 continue;
@@ -318,9 +316,11 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 return;
             }
 #ifdef NEW_SKIA
+            RS_TRACE_NAME_FMT("DrawImage(GPU) seqNum: %d", bufferId);
             canvas->drawImageRect(image, params.srcRect, params.dstRect, SkSamplingOptions(),
                 &(params.paint), SkCanvas::kStrict_SrcRectConstraint);
 #else
+            RS_TRACE_NAME_FMT("DrawImage(GPU) seqNum: %d", bufferId);
             canvas->drawImageRect(image, params.srcRect, params.dstRect, &(params.paint));
 #endif
 #else // USE_ROSEN_DRAWING
@@ -343,6 +343,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 return;
             }
             canvas->AttachBrush(params.paint);
+            RS_TRACE_NAME_FMT("DrawImage(GPU) seqNum: %d", bufferId);
             canvas->DrawImageRect(*image, params.srcRect, params.dstRect,
                 Drawing::SamplingOptions(), Drawing::SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
             canvas->DetachBrush();

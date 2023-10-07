@@ -19,10 +19,10 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <cinttypes>
 
 #include "common/rs_color_palette.h"
 #include "common/rs_vector4.h"
-#include "platform/common/rs_log.h"
 #include "property/rs_properties_def.h"
 
 #ifndef USE_ROSEN_DRAWING
@@ -65,9 +65,9 @@ public:
     float GetWidth(int idx = RSBorder::LEFT) const;
     BorderStyle GetStyle(int idx = RSBorder::LEFT) const;
 
-    void SetColorFour(Vector4<Color> color);
-    void SetWidthFour(Vector4f width);
-    void SetStyleFour(Vector4<uint32_t> style);
+    void SetColorFour(const Vector4<Color>& color);
+    void SetWidthFour(const Vector4f& width);
+    void SetStyleFour(const Vector4<uint32_t>& style);
     Vector4<Color> GetColorFour() const;
     Vector4f GetWidthFour() const;
     Vector4<uint32_t> GetStyleFour() const;
@@ -76,7 +76,6 @@ public:
 
     std::string ToString() const;
 
-protected:
 #ifndef USE_ROSEN_DRAWING
     bool ApplyFillStyle(SkPaint& paint) const;
     bool ApplyPathStyle(SkPaint& paint) const;
@@ -106,8 +105,6 @@ private:
     std::vector<Color> colors_;
     std::vector<float> widths_;
     std::vector<BorderStyle> styles_;
-
-    friend class RSPropertiesPainter;
 };
 } // namespace Rosen
 } // namespace OHOS

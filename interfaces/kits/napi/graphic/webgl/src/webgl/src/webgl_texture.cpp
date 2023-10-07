@@ -66,13 +66,12 @@ string WebGLTexture::GetClassName()
 
 int64_t WebGLTexture::ComputeTextureLevel(int64_t width, int64_t height, int64_t depth)
 {
-    // return 1 + log2Floor(std::max(width, height));
     int64_t max = std::max(std::max(width, height), depth);
     if (max <= 0)
         return 0;
 
     double result = log2(max);
-    return static_cast<int64_t>(result - 0.5) + 1;
+    return static_cast<int64_t>(ceil(result));
 }
 
 GLint WebGLTexture::GetMaxTextureLevelForTarget(GLenum target, bool highWebGL)
@@ -187,6 +186,7 @@ bool WebGLTexture::SetTextureLevel(const TexImageArg& arg)
         levelInfo->height = arg.height;
         levelInfo->depth = arg.depth;
         levelInfo->type = arg.type;
+        levelInfo->Dump("SetTextureLevel", arg.target, arg.level);
     }
     return true;
 }
@@ -205,10 +205,13 @@ bool WebGLTexture::SetTexStorageInfo(const TexStorageArg* arg)
         for (GLint level = 0; level < arg->levels; ++level) {
             TextureLevelInfo* levelInfo = const_cast<TextureLevelInfo*>(GetTextureLevel(arg->target, level));
             if (levelInfo != nullptr) {
+                levelInfo->internalFormat = arg->internalFormat;
                 levelInfo->width = levelWidth;
                 levelInfo->height = levelHeight;
                 levelInfo->depth = levelDepth;
                 levelInfo->type = type;
+                levelInfo->valid = true;
+                levelInfo->Dump("SetTexStorageInfo", arg->target, level);
             }
             levelWidth = std::max(1, levelWidth >> 1);
             levelHeight = std::max(1, levelHeight >> 1);
@@ -399,6 +402,7 @@ bool WebGLTexture::CheckValid(GLenum target, GLint level) const
 {
     const TextureLevelInfo* levelInfo = GetTextureLevel(target, level);
     if (levelInfo) {
+        levelInfo->Dump("CheckValid", target, level);
         return levelInfo->valid;
     }
     return 0;
@@ -410,20 +414,6 @@ void TextureLevelCtrl::Init(GLenum target)
     if (maxLevel > 0) {
         textureInfos_.resize(maxLevel);
     }
-}
-
-void TexImageArg::Dump(const std::string& info) const
-{
-    LOGI("%{public}s target %{public}u %{public}d internalFormat %{public}u format %{public}u %{public}u",
-        info.c_str(), target, level, internalFormat, format, type);
-    LOGI("width %{public}d height %{public}d border %{public}d depth %{public}d", width, height, border, depth);
-}
-
-void TexStorageArg::Dump(const std::string& info) const
-{
-    LOGI("%{public}s target %{public}u %{public}d internalFormat %{public}u ",
-        info.c_str(), target, levels, internalFormat);
-    LOGI("width %{public}d height %{public}d depth %{public}d", width, height, depth);
 }
 
 bool WebGLTexture::CheckTextureSize(GLsizei offset, GLsizei w, GLsizei real)
@@ -465,5 +455,230 @@ const std::vector<GLenum>& WebGLTexture::GetSupportInternalFormatGroup2()
         WebGLRenderingContextBase::STENCIL_INDEX8 };
     return support2;
 }
+
+void TextureLevelInfo::Dump(const std::string& info, GLenum target, GLint level) const
+{
+    LOGD("%{public}s [%{public}u %{public}u] %{public}u %{public}u [%{public}d %{public}d %{public}d]", info.c_str(),
+        target, level, internalFormat, type, width, height, depth);
+}
+
+const std::vector<GLenum>& WebGLTexture::GetSupportedInternalFormats()
+{
+    static std::vector<GLenum> supportedInternalFormats = {
+        GL_R8,
+        GL_R8_SNORM,
+        GL_R16F,
+        GL_R32F,
+        GL_R8UI,
+        GL_R8I,
+        GL_R16UI,
+        GL_R16I,
+        GL_R32UI,
+        GL_R32I,
+        GL_RG8,
+        GL_RG8_SNORM,
+        GL_RG16F,
+        GL_RG32F,
+        GL_RG8UI,
+        GL_RG8I,
+        GL_RG16UI,
+        GL_RG16I,
+        GL_RG32UI,
+        GL_RG32I,
+        GL_RGB8,
+        GL_SRGB8,
+        GL_RGB565,
+        GL_RGB8_SNORM,
+        GL_R11F_G11F_B10F,
+        GL_RGB9_E5,
+        GL_RGB16F,
+        GL_RGB32F,
+        GL_RGB8UI,
+        GL_RGB8I,
+        GL_RGB16UI,
+        GL_RGB16I,
+        GL_RGB32UI,
+        GL_RGB32I,
+        GL_RGBA8,
+        GL_SRGB8_ALPHA8,
+        GL_RGBA8_SNORM,
+        GL_RGB5_A1,
+        GL_RGBA4,
+        GL_RGB10_A2,
+        GL_RGBA16F,
+        GL_RGBA32F,
+        GL_RGBA8UI,
+        GL_RGBA8I,
+        GL_RGB10_A2UI,
+        GL_RGBA16UI,
+        GL_RGBA16I,
+        GL_RGBA32I,
+        GL_RGBA32UI,
+        GL_DEPTH_COMPONENT16,
+        GL_DEPTH_COMPONENT24,
+        GL_DEPTH_COMPONENT32F,
+        GL_DEPTH24_STENCIL8,
+    };
+    // for es2
+    supportedInternalFormats.emplace_back(GL_RGB);
+    supportedInternalFormats.emplace_back(GL_RGBA);
+    supportedInternalFormats.emplace_back(GL_LUMINANCE_ALPHA);
+    supportedInternalFormats.emplace_back(GL_LUMINANCE);
+    supportedInternalFormats.emplace_back(GL_ALPHA);
+    return supportedInternalFormats;
+}
+
+const std::vector<GLenum>& WebGLTexture::GetSupportedFormats()
+{
+    static std::vector<GLenum> supportedFormats = { GL_RED, GL_RED_INTEGER, GL_RG, GL_RG_INTEGER, GL_RGB,
+        GL_RGB_INTEGER, GL_RGBA, GL_RGBA_INTEGER, GL_DEPTH_COMPONENT, GL_DEPTH_STENCIL };
+    // for es2
+    supportedFormats.emplace_back(GL_LUMINANCE_ALPHA);
+    supportedFormats.emplace_back(GL_LUMINANCE);
+    supportedFormats.emplace_back(GL_ALPHA);
+    return supportedFormats;
+}
+
+const std::vector<GLenum>& WebGLTexture::GetSupportedTypes()
+{
+    static std::vector<GLenum> supportedTypes = {
+        GL_BYTE,
+        GL_UNSIGNED_SHORT,
+        GL_SHORT,
+        GL_UNSIGNED_INT,
+        GL_INT,
+        GL_HALF_FLOAT,
+        GL_HALF_FLOAT_OES,
+        GL_FLOAT,
+        GL_UNSIGNED_INT_2_10_10_10_REV,
+        GL_UNSIGNED_INT_10F_11F_11F_REV,
+        GL_UNSIGNED_INT_5_9_9_9_REV,
+        GL_UNSIGNED_INT_24_8,
+    };
+
+    // for es2
+    supportedTypes.emplace_back(GL_UNSIGNED_BYTE);
+    supportedTypes.emplace_back(GL_UNSIGNED_SHORT_5_6_5);
+    supportedTypes.emplace_back(GL_UNSIGNED_SHORT_4_4_4_4);
+    supportedTypes.emplace_back(GL_UNSIGNED_SHORT_5_5_5_1);
+    return supportedTypes;
+}
+
+BufferDataType WebGLTexture::ChangeToBufferDataType(GLenum type)
+{
+    switch (type) {
+        case GL_BYTE:
+            return BUFFER_DATA_INT_8;
+        case GL_UNSIGNED_BYTE:
+            return BUFFER_DATA_UINT_8;
+        case GL_SHORT:
+            return BUFFER_DATA_INT_16;
+        case GL_UNSIGNED_SHORT:
+        case GL_UNSIGNED_SHORT_5_6_5:
+        case GL_UNSIGNED_SHORT_4_4_4_4:
+        case GL_UNSIGNED_SHORT_5_5_5_1:
+            return BUFFER_DATA_UINT_16;
+        case GL_INT:
+            return BUFFER_DATA_INT_32;
+        case GL_UNSIGNED_INT:
+        case GL_UNSIGNED_INT_2_10_10_10_REV:
+        case GL_UNSIGNED_INT_10F_11F_11F_REV:
+        case GL_UNSIGNED_INT_5_9_9_9_REV:
+        case GL_UNSIGNED_INT_24_8:
+            return BUFFER_DATA_UINT_32;
+        case GL_FLOAT: // OES_texture_float
+            return BUFFER_DATA_FLOAT_32;
+        case GL_HALF_FLOAT:
+        case GL_HALF_FLOAT_OES:
+            return BUFFER_DATA_UINT_16;
+        default:
+            break;
+    }
+    return BUFFER_DATA_INVALID;
+}
+
+const std::set<TextureFormatTypeMap, TextureFormatTypeMapCompare>& WebGLTexture::GetSupportedFormatTypeMaps()
+{
+    static std::set<TextureFormatTypeMap, TextureFormatTypeMapCompare> supportedFormatTypeMaps = {
+        { GL_R8, GL_RED, GL_UNSIGNED_BYTE },
+        { GL_R8_SNORM, GL_RED, GL_BYTE },
+        { GL_R16F, GL_RED, GL_HALF_FLOAT },
+        { GL_R16F, GL_RED, GL_FLOAT },
+        { GL_R32F, GL_RED, GL_FLOAT },
+        { GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE },
+        { GL_R8I, GL_RED_INTEGER, GL_BYTE },
+        { GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT },
+        { GL_R16I, GL_RED_INTEGER, GL_SHORT },
+        { GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT },
+        { GL_R32I, GL_RED_INTEGER, GL_INT },
+        { GL_RG8, GL_RG, GL_UNSIGNED_BYTE },
+        { GL_RG8_SNORM, GL_RG, GL_BYTE },
+        { GL_RG16F, GL_RG, GL_HALF_FLOAT },
+        { GL_RG16F, GL_RG, GL_FLOAT },
+        { GL_RG32F, GL_RG, GL_FLOAT },
+        { GL_RG8UI, GL_RG_INTEGER, GL_UNSIGNED_BYTE },
+        { GL_RG8I, GL_RG_INTEGER, GL_BYTE },
+        { GL_RG16UI, GL_RG_INTEGER, GL_UNSIGNED_SHORT },
+        { GL_RG16I, GL_RG_INTEGER, GL_SHORT },
+        { GL_RG32UI, GL_RG_INTEGER, GL_UNSIGNED_INT },
+        { GL_RG32I, GL_RG_INTEGER, GL_INT },
+        { GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE },
+        { GL_SRGB8, GL_RGB, GL_UNSIGNED_BYTE },
+        { GL_RGB565, GL_RGB, GL_UNSIGNED_BYTE },
+        { GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5 },
+        { GL_RGB8_SNORM, GL_RGB, GL_BYTE },
+        { GL_R11F_G11F_B10F, GL_RGB, GL_UNSIGNED_INT_10F_11F_11F_REV },
+        { GL_R11F_G11F_B10F, GL_RGB, GL_HALF_FLOAT },
+        { GL_R11F_G11F_B10F, GL_RGB, GL_FLOAT },
+        { GL_RGB9_E5, GL_RGB, GL_UNSIGNED_INT_5_9_9_9_REV },
+        { GL_RGB9_E5, GL_RGB, GL_HALF_FLOAT },
+        { GL_RGB9_E5, GL_RGB, GL_FLOAT },
+        { GL_RGB16F, GL_RGB, GL_HALF_FLOAT },
+        { GL_RGB16F, GL_RGB, GL_FLOAT },
+        { GL_RGB32F, GL_RGB, GL_FLOAT },
+        { GL_RGB8UI, GL_RGB_INTEGER, GL_UNSIGNED_BYTE },
+        { GL_RGB8I, GL_RGB_INTEGER, GL_BYTE },
+        { GL_RGB16UI, GL_RGB_INTEGER, GL_UNSIGNED_SHORT },
+        { GL_RGB16I, GL_RGB_INTEGER, GL_SHORT },
+        { GL_RGB32UI, GL_RGB_INTEGER, GL_UNSIGNED_INT },
+        { GL_RGB32I, GL_RGB_INTEGER, GL_INT },
+        { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE },
+        { GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE },
+        { GL_RGBA8_SNORM, GL_RGBA, GL_BYTE },
+        { GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_BYTE },
+        { GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1 },
+        { GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV },
+        { GL_RGBA4, GL_RGBA, GL_UNSIGNED_BYTE },
+        { GL_RGBA4, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4 },
+        { GL_RGB10_A2, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV },
+        { GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT },
+        { GL_RGBA16F, GL_RGBA, GL_FLOAT },
+        { GL_RGBA32F, GL_RGBA, GL_FLOAT },
+        { GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE },
+        { GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE },
+        { GL_RGB10_A2UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT_2_10_10_10_REV },
+        { GL_RGBA16UI, GL_RGBA_INTEGER, GL_UNSIGNED_SHORT },
+        { GL_RGBA16I, GL_RGBA_INTEGER, GL_SHORT },
+        { GL_RGBA32I, GL_RGBA_INTEGER, GL_INT },
+        { GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT },
+        { GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT },
+        { GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT },
+        { GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT },
+        { GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT },
+        { GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8 },
+
+        // es2
+        { GL_RGB, GL_RGB, GL_UNSIGNED_BYTE },
+        { GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5 },
+        { GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE },
+        { GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4 },
+        { GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1 },
+        { GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE },
+        { GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE },
+        { GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE },
+    };
+    return supportedFormatTypeMaps;
+}
+
 } // namespace Rosen
 } // namespace OHOS

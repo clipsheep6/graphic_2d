@@ -19,6 +19,7 @@
 #include <mutex>
 #include <unordered_set>
 
+#include "hgm_config_callback_manager.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/buffer_clear_callback.h"
 #include "pipeline/rs_render_service.h"
@@ -57,6 +58,7 @@ private:
     void ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task) override;
     MemoryGraphic GetMemoryGraphic(int pid) override;
     std::vector<MemoryGraphic> GetMemoryGraphics() override;
+    bool GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize) override;
     bool GetUniRenderEnabled() override;
 
     bool CreateNode(const RSSurfaceRenderNodeConfig& config) override;
@@ -95,13 +97,16 @@ private:
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
 
-    std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id) override;
+    int32_t GetCurrentRefreshRateMode() override;
+
+    std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id) override;
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) override;
 
     void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) override;
 
-    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) override;
+    void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        SurfaceCaptureType surfaceCaptureType) override;
 
     void TakeSurfaceCaptureForUIWithUni(
         NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY);
@@ -150,6 +155,7 @@ private:
 
 #ifndef USE_ROSEN_DRAWING
     bool GetBitmap(NodeId id, SkBitmap& bitmap) override;
+    bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect) override;
 #else
     bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) override;
 #endif
@@ -157,6 +163,13 @@ private:
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) override;
 
     int32_t RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) override;
+
+    int32_t RegisterSurfaceOcclusionChangeCallback(
+        NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback) override;
+
+    int32_t UnRegisterSurfaceOcclusionChangeCallback(NodeId id) override;
+
+    int32_t RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
 
     void SetAppWindowNum(uint32_t num) override;
 
@@ -171,6 +184,12 @@ private:
     void ReportEventJankFrame(DataBaseRs info) override;
 
     void SetHardwareEnabled(NodeId id, bool isEnabled) override;
+
+    void SetCacheEnabledForRotation(bool isEnabled) override;
+
+#ifdef TP_FEATURE_ENABLE
+    void SetTpFeatureConfig(int32_t feature, const char* config) override;
+#endif
 
     pid_t remotePid_;
     wptr<RSRenderService> renderService_;
@@ -207,14 +226,10 @@ private:
     mutable std::mutex mutex_;
     bool cleanDone_ = false;
 
-    int offscreenRenderNum_ = 0;
-    std::mutex offscreenRenderMutex_;
-
     // save all virtual screenIds created by this connection.
     std::unordered_set<ScreenId> virtualScreenIds_;
     sptr<RSIScreenChangeCallback> screenChangeCallback_;
     sptr<VSyncDistributor> appVSyncDistributor_;
-    std::vector<sptr<VSyncConnection>> vsyncConnections_;
 };
 } // namespace Rosen
 } // namespace OHOS

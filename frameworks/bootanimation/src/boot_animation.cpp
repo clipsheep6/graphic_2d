@@ -161,7 +161,7 @@ void BootAnimation::InitRsSurfaceNode()
 {
     LOGI("Init RsSurfaceNode enter");
     struct Rosen::RSSurfaceNodeConfig rsSurfaceNodeConfig;
-    Rosen::RSSurfaceNodeType rsSurfaceNodeType = Rosen::RSSurfaceNodeType::SELF_DRAWING_NODE;
+    Rosen::RSSurfaceNodeType rsSurfaceNodeType = Rosen::RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     rsSurfaceNode_ = Rosen::RSSurfaceNode::Create(rsSurfaceNodeConfig, rsSurfaceNodeType);
     if (!rsSurfaceNode_) {
         LOGE("rsSurfaceNode_ is nullptr");
@@ -243,6 +243,7 @@ bool BootAnimation::CheckExitAnimation()
 {
     if (!isAnimationEnd_) {
         LOGI("Boot animation is end");
+        system::SetParameter("bootevent.bootanimation.finished", "true");
         isAnimationEnd_ = true;
     }
     std::string bootEventCompleted = system::GetParameter("bootevent.boot.completed", "false");
@@ -256,6 +257,7 @@ bool BootAnimation::CheckExitAnimation()
 
 void BootAnimation::PlaySound()
 {
+#ifdef PLAYER_FRAMEWORK_ENABLE
     LOGI("PlaySound start");
     bool bootSoundEnabled = system::GetBoolParameter("persist.graphic.bootsound.enabled", true);
     if (bootSoundEnabled == true) {
@@ -270,6 +272,9 @@ void BootAnimation::PlaySound()
         soundPlayer_->Play();
     }
     LOGI("PlaySound end");
+#else
+    LOGI("player_framework part is not enabled.");
+#endif
 }
 
 void BootAnimation::PlayVideo()

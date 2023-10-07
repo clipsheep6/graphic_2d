@@ -162,11 +162,14 @@ public:
 #ifdef NEW_RENDER_CONTEXT
     std::unique_ptr<RSRenderFrame> RequestFrame(const std::shared_ptr<RSRenderSurfaceOhos>& rsSurface,
         const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true);
+    void SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame,
+        std::shared_ptr<RSRenderSurfaceOhos> surfaceOhos);
 #else
     std::unique_ptr<RSRenderFrame> RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
         const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true);
+    void SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame,
+        std::shared_ptr<RSSurfaceOhos> surfaceOhos);
 #endif
-    void SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame, const uint64_t surfaceId);
 
     virtual void DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, RSSurfaceRenderNode& node,
         BufferDrawParam& params, PreProcessFunc preProcess = nullptr, PostProcessFunc postProcess = nullptr) = 0;
@@ -181,10 +184,7 @@ public:
 
     void ShrinkCachesIfNeeded(bool isForUniRedraw = false);
     static void SetColorFilterMode(ColorFilterMode mode);
-    static ColorFilterMode GetColorFilterMode()
-    {
-        return colorFilterMode_;
-    }
+    static ColorFilterMode GetColorFilterMode();
     static void SetHighContrast(bool enabled)
     {
         isHighContrastEnabled_  = enabled;
@@ -226,10 +226,12 @@ protected:
 private:
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> CreateEglImageFromBuffer(RSPaintFilterCanvas& canvas,
-        const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence);
+        const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence,
+        const uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #else
     std::shared_ptr<Drawing::Image> CreateEglImageFromBuffer(RSPaintFilterCanvas& canvas,
-        const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence);
+        const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence,
+        const uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
 
     static inline std::atomic_bool isHighContrastEnabled_ = false;
@@ -244,15 +246,7 @@ private:
 #ifdef RS_ENABLE_EGLIMAGE
     std::shared_ptr<RSEglImageManager> eglImageManager_ = nullptr;
 #endif // RS_ENABLE_EGLIMAGE
-
-    // RSSurfaces for framebuffer surfaces.
-    static constexpr size_t MAX_RS_SURFACE_SIZE = 32; // used for rsSurfaces_.
     using SurfaceId = uint64_t;
-#ifdef NEW_RENDER_CONTEXT
-    std::unordered_map<SurfaceId, std::shared_ptr<RSRenderSurfaceOhos>> rsSurfaces_;
-#else
-    std::unordered_map<SurfaceId, std::shared_ptr<RSSurfaceOhos>> rsSurfaces_;
-#endif
 };
 } // namespace Rosen
 } // namespace OHOS

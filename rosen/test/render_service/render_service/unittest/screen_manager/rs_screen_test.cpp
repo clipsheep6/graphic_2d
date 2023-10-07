@@ -240,4 +240,137 @@ HWTEST_F(RSScreenTest, SetScreenGamutMap_001, testing::ext::TestSize.Level1)
     const auto result2 = virtualScreen->GetScreenGamutMap(map2);
     ASSERT_EQ(result2, StatusCode::SUCCESS);
 }
+
+/*
+ * @tc.name: SetScreenGamutMap_002
+ * @tc.desc: SetScreenGamutMap Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, SetScreenGamutMap_002, testing::ext::TestSize.Level1)
+{
+    ScreenId id = 0;
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    ASSERT_NE(nullptr, rsScreen);
+    ScreenGamutMap map1 = ScreenGamutMap::GAMUT_MAP_CONSTANT;
+    auto result1 = rsScreen->SetScreenGamutMap(map1);
+    ASSERT_EQ(result1, StatusCode::HDI_ERROR);
+    const auto result2 = rsScreen->GetScreenGamutMap(map1);
+    ASSERT_EQ(result2, StatusCode::HDI_ERROR);
+}
+
+/*
+ * @tc.name: GetActiveModePosByModeIdTest
+ * @tc.desc: GetActiveModePosByModeId Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, GetActiveModePosByModeIdTest001, testing::ext::TestSize.Level1)
+{
+    VirtualScreenConfigs config;
+    int32_t modeId = 0;
+    auto virtualScreen = std::make_unique<impl::RSScreen>(config);
+    auto res = virtualScreen->GetActiveModePosByModeId(modeId);
+    ASSERT_EQ(res, -1);
+}
+
+/*
+ * @tc.name: GetScreenTypeTest
+ * @tc.desc: GetScreenType Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, GetScreenTypeTest, testing::ext::TestSize.Level1)
+{
+    VirtualScreenConfigs config;
+    config.id = static_cast<uint64_t>(1000);
+    auto virtualScreen = std::make_unique<impl::RSScreen>(config);
+    auto res = virtualScreen->GetScreenType();
+    auto type = RSScreenType::VIRTUAL_TYPE_SCREEN;
+    ASSERT_EQ(res, type);
+}
+
+/*
+ * @tc.name: SetScreenSkipFrameIntervalTest
+ * @tc.desc: SetScreenSkipFrameInterval Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, SetScreenSkipFrameIntervalTest, testing::ext::TestSize.Level1)
+{
+    VirtualScreenConfigs config;
+    config.id = static_cast<uint64_t>(1000);
+    auto virtualScreen = std::make_unique<impl::RSScreen>(config);
+    uint32_t skipFrameInterval = 0;
+    virtualScreen->SetScreenSkipFrameInterval(skipFrameInterval);
+    auto res = virtualScreen->GetScreenSkipFrameInterval();
+    ASSERT_EQ(res, 0);
+}
+
+/*
+ * @tc.name: SurfaceDumpTest
+ * @tc.desc: SurfaceDump Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, SurfaceDumpTest, testing::ext::TestSize.Level1)
+{
+    ScreenId id = 0;
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    ASSERT_NE(nullptr, rsScreen);
+    int32_t screenIndex = 0;
+    std::string dumpString = "SurfaceDumpTest";
+    rsScreen->SurfaceDump(screenIndex, dumpString);
+}
+
+/*
+ * @tc.name: FpsDumpTest
+ * @tc.desc: FpsDump Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, FpsDumpTest, testing::ext::TestSize.Level1)
+{
+    ScreenId id = 0;
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    ASSERT_NE(nullptr, rsScreen);
+    int32_t screenIndex = 0;
+    std::string dumpString = "FpsDumpTest";
+    std::string arg = "FpsDumpTest";
+    rsScreen->FpsDump(screenIndex, dumpString, arg);
+}
+
+/*
+ * @tc.name: ClearFpsDumpTest
+ * @tc.desc: ClearFpsDump Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, ClearFpsDumpTest_001, testing::ext::TestSize.Level1)
+{
+    ScreenId id = 0;
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, HdiOutput::CreateHdiOutput(id), nullptr);
+    ASSERT_NE(nullptr, rsScreen);
+    int32_t screenIndex = 0;
+    std::string dumpString = "ClearFpsDumpTest";
+    std::string arg = "ClearFpsDumpTest";
+    rsScreen->ClearFpsDump(screenIndex, dumpString, arg);
+}
+
+/*
+ * @tc.name: ClearFpsDumpTest
+ * @tc.desc: ClearFpsDump Test
+ * @tc.type: FUNC
+ * @tc.require: issueI78T3Z
+ */
+HWTEST_F(RSScreenTest, ClearFpsDumpTest_002, testing::ext::TestSize.Level1)
+{
+    ScreenId id = 0;
+    auto rsScreen = std::make_unique<impl::RSScreen>(id, false, nullptr, nullptr);
+    ASSERT_NE(nullptr, rsScreen);
+    int32_t screenIndex = 0;
+    std::string dumpString = "ClearFpsDumpTest";
+    std::string arg = "ClearFpsDumpTest";
+    rsScreen->ClearFpsDump(screenIndex, dumpString, arg);
+}
 } // namespace OHOS::Rosen

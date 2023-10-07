@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "parcel.h"
+#include "rs_modifier_type.h"
 
 #include "common/rs_color.h"
 #include "common/rs_macros.h"
@@ -33,7 +34,7 @@
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
-
+#include "animation/rs_render_particle.h"
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkMatrix.h"
 #include "pipeline/rs_draw_cmd_list.h"
@@ -148,6 +149,9 @@ public:
     void SetType(RSModifierType type)
     {
         drawStyle_ = type;
+        if (property_) {
+            property_->SetModifierType(type);
+        }
     }
 
     // functions that are dedicated to driven render [start]
@@ -161,6 +165,38 @@ protected:
 #else
     std::shared_ptr<RSRenderProperty<Drawing::DrawCmdListPtr>> property_;
 #endif
+};
+
+class RSB_EXPORT RSParticleRenderModifier : public RSRenderModifier {
+public:
+    RSParticleRenderModifier(
+        const std::shared_ptr<RSRenderProperty<RSRenderParticleVector>>& property)
+        : property_(property ? property
+                             : std::make_shared<RSRenderProperty<RSRenderParticleVector>>())
+    {
+        property_->SetModifierType(RSModifierType::PARTICLE);
+    }
+    virtual ~RSParticleRenderModifier() = default;
+    void Apply(RSModifierContext& context) const override;
+
+    virtual PropertyId GetPropertyId() override
+    {
+        return property_->GetId();
+    }
+
+    std::shared_ptr<RSRenderPropertyBase> GetProperty() override
+    {
+        return property_;
+    }
+
+    void Update(const std::shared_ptr<RSRenderPropertyBase>& prop, bool isDelta) override;
+    bool Marshalling(Parcel& parcel) override;
+
+    RSModifierType GetType() override
+    {
+        return RSModifierType::PARTICLE;
+    }
+    std::shared_ptr<RSRenderProperty<RSRenderParticleVector>> property_;
 };
 
 class RSAnimatableRenderModifier : public RSRenderModifier {

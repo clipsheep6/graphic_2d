@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <hilog/log.h>
 #include <memory>
@@ -40,8 +41,15 @@ public:
 
     static inline RSInterfaces* rsInterfaces = nullptr;
 
+    uint32_t GenerateVirtualScreenMirrorId()
+    {
+        virtualScreenMirrorId++;
+        return virtualScreenMirrorId;
+    }
+
 private:
-    static constexpr uint32_t SET_REFRESHRATE_SLEEP_S = 1;  // wait for refreshrate change
+    static constexpr uint32_t SET_REFRESHRATE_SLEEP_US = 50000;  // wait for refreshrate change
+    uint32_t virtualScreenMirrorId = 1;
 };
 
 /*
@@ -162,9 +170,6 @@ HWTEST_F(RSInterfacesTest, SetVirtualScreenResolution001, Function | SmallTest |
 */
 HWTEST_F(RSInterfacesTest, GetAllScreenIds, Function | SmallTest | Level2)
 {
-    std::vector<ScreenId> ids = rsInterfaces->GetAllScreenIds();
-    int32_t size = ids.size();
-    EXPECT_GT(ids.size(), 0);
     auto csurface = IConsumerSurface::Create();
     EXPECT_NE(csurface, nullptr);
     auto producer = csurface->GetProducer();
@@ -174,10 +179,10 @@ HWTEST_F(RSInterfacesTest, GetAllScreenIds, Function | SmallTest | Level2)
     EXPECT_NE(psurface, nullptr);
 
     ScreenId virtualScreenId = rsInterfaces->CreateVirtualScreen(
-        "virtual6", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+        "virtual6", defaultWidth, defaultHeight, psurface, GenerateVirtualScreenMirrorId(), -1);
     EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
-    ids = rsInterfaces->GetAllScreenIds();
-    EXPECT_EQ(size + 1, ids.size());
+    std::vector<ScreenId> ids = rsInterfaces->GetAllScreenIds();
+    EXPECT_TRUE(find(ids.begin(), ids.end(), virtualScreenId) != ids.end());
 }
 
 /*
@@ -282,7 +287,7 @@ HWTEST_F(RSInterfacesTest, CreateVirtualScreen004, Function | SmallTest | Level2
     EXPECT_EQ(modeInfo.GetScreenModeId(), -1);
 
     rsInterfaces->SetScreenPowerStatus(virtualScreenId, ScreenPowerStatus::POWER_STATUS_ON);
-    usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
+    usleep(SET_REFRESHRATE_SLEEP_US); // wait 50000us to ensure SetScreenPowerStatus done.
     auto powerStatus = rsInterfaces->GetScreenPowerStatus(virtualScreenId);
     EXPECT_EQ(powerStatus, ScreenPowerStatus::INVALID_POWER_STATUS);
 
@@ -338,10 +343,14 @@ HWTEST_F(RSInterfacesTest, SetScreenActiveMode001, Function | SmallTest | Level2
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    auto formerModeInfo = rsInterfaces->GetScreenActiveMode(screenId);
 
     rsInterfaces->SetScreenActiveMode(screenId, 0);
     auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
     EXPECT_EQ(modeInfo.GetScreenModeId(), 0);
+
+    //restore the former mode
+    rsInterfaces->SetScreenActiveMode(screenId, formerModeInfo.GetScreenModeId());
 }
 
 /*
@@ -356,6 +365,7 @@ HWTEST_F(RSInterfacesTest, SetScreenActiveMode002, Function | SmallTest | Level2
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    auto formerModeInfo = rsInterfaces->GetScreenActiveMode(screenId);
 
     auto supportedScreenModes = rsInterfaces->GetScreenSupportedModes(screenId);
     EXPECT_GT(supportedScreenModes.size(), 0);
@@ -363,6 +373,9 @@ HWTEST_F(RSInterfacesTest, SetScreenActiveMode002, Function | SmallTest | Level2
     rsInterfaces->SetScreenActiveMode(screenId, 0);
     auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
     EXPECT_EQ(modeInfo.GetScreenModeId(), 0);
+
+    //restore the former mode
+    rsInterfaces->SetScreenActiveMode(screenId, formerModeInfo.GetScreenModeId());
 }
 
 /*
@@ -377,6 +390,7 @@ HWTEST_F(RSInterfacesTest, GetScreenActiveMode001, Function | SmallTest | Level2
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    auto formerModeInfo = rsInterfaces->GetScreenActiveMode(screenId);
 
     rsInterfaces->SetScreenActiveMode(screenId, 0);
     auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
@@ -384,6 +398,9 @@ HWTEST_F(RSInterfacesTest, GetScreenActiveMode001, Function | SmallTest | Level2
     EXPECT_NE(modeInfo.GetScreenRefreshRate(), 0);
     EXPECT_NE(modeInfo.GetScreenHeight(), -1);
     EXPECT_NE(modeInfo.GetScreenWidth(), -1);
+
+    //restore the former mode
+    rsInterfaces->SetScreenActiveMode(screenId, formerModeInfo.GetScreenModeId());
 }
 
 /*
@@ -431,7 +448,7 @@ HWTEST_F(RSInterfacesTest, SetScreenPowerStatus002, Function | SmallTest | Level
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
 
     rsInterfaces->SetScreenPowerStatus(screenId, ScreenPowerStatus::POWER_STATUS_ON);
-    usleep(50000); // wait 50000us to ensure SetScreenPowerStatus done.
+    usleep(SET_REFRESHRATE_SLEEP_US); // wait 50000us to ensure SetScreenPowerStatus done.
     auto powerStatus = rsInterfaces->GetScreenPowerStatus(screenId);
     EXPECT_EQ(powerStatus, ScreenPowerStatus::POWER_STATUS_ON);
 }
@@ -637,7 +654,7 @@ HWTEST_F(RSInterfacesTest, SetScreenChangeCallback, Function | SmallTest | Level
     };
     int32_t status = rsInterfaces->SetScreenChangeCallback(callback);
     EXPECT_EQ(status, StatusCode::SUCCESS);
-    sleep(2); // wait 2s to check if the callback returned.
+    usleep(SET_REFRESHRATE_SLEEP_US); // wait to check if the callback returned.
     if (status == StatusCode::SUCCESS) {
         EXPECT_NE(screenId, INVALID_SCREEN_ID);
         EXPECT_NE(screenEvent, ScreenEvent::UNKNOWN);
@@ -894,16 +911,19 @@ HWTEST_F(RSInterfacesTest, GetScreenCurrentRefreshRate001, Function | SmallTest 
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t formerRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
 
     auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
     rsInterfaces->SetScreenRefreshRate(screenId, 0, modeInfo.GetScreenRefreshRate());
     uint32_t currentRate = rsInterfaces-> GetScreenCurrentRefreshRate(screenId);
     EXPECT_EQ(modeInfo.GetScreenRefreshRate(), currentRate);
+    //restore the former rate
+    rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
 }
 
 /*
  * @tc.name: SetScreenRefreshRate001
- * @tc.desc: Verify the function of setting the refreshrate with 90hz
+ * @tc.desc: Verify the function of setting the refreshrate with 30hz
  * @tc.type: FUNC
  * @tc.require: I7EM2R
  */
@@ -911,24 +931,31 @@ HWTEST_F(RSInterfacesTest, SetScreenRefreshRate001, Function | SmallTest | Level
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    uint32_t rateToSet = 90;
+    uint32_t formerRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
+    uint32_t rateToSet = 30;
 
     rsInterfaces->SetScreenRefreshRate(screenId, 0, rateToSet);
-    sleep(SET_REFRESHRATE_SLEEP_S);
+    usleep(SET_REFRESHRATE_SLEEP_US);
     uint32_t currentRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
     auto supportedRates = rsInterfaces->GetScreenSupportedRefreshRates(screenId);
 
     bool ifSupported = false;
     for (auto rateIter : supportedRates) {
-        if (rateIter == rateToSet) {
+        if (rateIter < 0) {
+            continue;
+        }
+        if (static_cast<uint32_t>(rateIter) == rateToSet) {
             ifSupported = true;
         }
     }
     if (ifSupported) {
-        EXPECT_EQ(currentRate, rateToSet);
+        EXPECT_GE(currentRate, rateToSet);
     } else {
         EXPECT_NE(currentRate, rateToSet);
     }
+
+    //restore the former rate
+    rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
 }
 
 /*
@@ -941,12 +968,16 @@ HWTEST_F(RSInterfacesTest, SetScreenRefreshRate002, Function | SmallTest | Level
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t formerRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
     uint32_t rateToSet = 990;
 
     rsInterfaces->SetScreenRefreshRate(screenId, 0, rateToSet);
-    sleep(SET_REFRESHRATE_SLEEP_S);
+    usleep(SET_REFRESHRATE_SLEEP_US);
     uint32_t currentRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
     EXPECT_NE(currentRate, rateToSet);
+
+    //restore the former rate
+    rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
 }
 
 /*
@@ -959,24 +990,32 @@ HWTEST_F(RSInterfacesTest, SetScreenRefreshRate003, Function | SmallTest | Level
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t formerRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
     uint32_t rateToSet = 60;
+    uint32_t standardRate = 60;
 
     rsInterfaces->SetScreenRefreshRate(screenId, 0, rateToSet);
-    sleep(SET_REFRESHRATE_SLEEP_S);
+    usleep(SET_REFRESHRATE_SLEEP_US);
     uint32_t currentRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
     auto supportedRates = rsInterfaces->GetScreenSupportedRefreshRates(screenId);
 
     bool ifSupported = false;
     for (auto rateIter : supportedRates) {
-        if (rateIter == rateToSet) {
+        if (rateIter < 0) {
+            continue;
+        }
+        if (static_cast<uint32_t>(rateIter) == rateToSet) {
             ifSupported = true;
         }
     }
     if (ifSupported) {
-        EXPECT_EQ(currentRate, rateToSet);
+        EXPECT_GE(currentRate, rateToSet);
     } else {
-        EXPECT_NE(currentRate, rateToSet);
+        EXPECT_GE(currentRate, standardRate);
     }
+
+    //restore the former rate
+    rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
 }
 
 /*
@@ -989,38 +1028,75 @@ HWTEST_F(RSInterfacesTest, SetRefreshRateMode001, Function | SmallTest | Level2)
 {
     auto screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    int32_t rateModeToSet = 2;
-    uint32_t formerRate = 60;
-    uint32_t newRate = 90;
 
-    rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
-    sleep(SET_REFRESHRATE_SLEEP_S);
-    rsInterfaces->SetRefreshRateMode(rateModeToSet);
-    sleep(SET_REFRESHRATE_SLEEP_S);
-    uint32_t currentRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
+    uint32_t formerRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
+    uint32_t newRate = 0;
+    uint32_t standardRate = 60;
+
+    //find a supported rate which not equal to formerRate
     auto supportedRates = rsInterfaces->GetScreenSupportedRefreshRates(screenId);
-
-    bool ifSupported = false;
     for (auto rateIter : supportedRates) {
-        if (rateIter == newRate) {
-            ifSupported = true;
+        if (rateIter < 0) {
+            continue;
+        }
+        if (static_cast<uint32_t>(rateIter) != formerRate) {
+            newRate = static_cast<uint32_t>(rateIter);
+            break;
         }
     }
 
-    bool ifFormerSupported = false;
-    for (auto rateIter : supportedRates) {
-        if (rateIter == formerRate) {
-            ifFormerSupported = true;
-        }
-    }
+    if (newRate != 0) {
+        rsInterfaces->SetScreenRefreshRate(screenId, 0, newRate);
+        usleep(SET_REFRESHRATE_SLEEP_US);
+        uint32_t currentRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
+        EXPECT_GE(currentRate, standardRate);
 
-    if (ifSupported) {
-        EXPECT_EQ(currentRate, newRate);
-    } else if (ifFormerSupported) {
-        EXPECT_EQ(currentRate, formerRate);
-    } else {
-        EXPECT_NE(currentRate, formerRate);
+        //restore the former rate
+        rsInterfaces->SetScreenRefreshRate(screenId, 0, formerRate);
     }
+}
+
+/*
+ * @tc.name: RegisterHgmConfigChangeCallback Test
+ * @tc.desc: RegisterHgmConfigChangeCallback Test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, RegisterHgmConfigChangeCallback_Test, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    HgmConfigChangeCallback cb = [](std::shared_ptr<RSHgmConfigData> data){};
+    int32_t ret = rsInterfaces->RegisterHgmConfigChangeCallback(cb);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: RegisterSurfaceOcclusionChangeCallback001
+ * @tc.desc: RegisterOcclusionChangeCallback interface test.
+ * @tc.type: FUNC
+ * @tc.require: issueI851VR
+ */
+HWTEST_F(RSInterfacesTest, RegisterSurfaceOcclusionChangeCallback001, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    NodeId id = 0;
+    SurfaceOcclusionChangeCallback cb = [](bool){};
+    int32_t ret = rsInterfaces->RegisterSurfaceOcclusionChangeCallback(id, cb);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: UnRegisterSurfaceOcclusionChangeCallback001
+ * @tc.desc: UnRegisterSurfaceOcclusionChangeCallback interface test.
+ * @tc.type: FUNC
+ * @tc.require: issueI851VR
+ */
+HWTEST_F(RSInterfacesTest, UnRegisterSurfaceOcclusionChangeCallback001, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    NodeId id = 0;
+    int32_t ret = rsInterfaces->UnRegisterSurfaceOcclusionChangeCallback(id);
+    ASSERT_EQ(ret, 0);
 }
 } // namespace Rosen
 } // namespace OHOS

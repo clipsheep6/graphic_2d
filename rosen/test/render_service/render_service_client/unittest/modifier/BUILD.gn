@@ -20,6 +20,8 @@ ohos_unittest("RSRenderServiceClientModifierTest") {
   module_out_path = module_output_path
 
   sources = [
+    "rs_extended_modifier_test.cpp",
+    "rs_modifier_manager_test.cpp",
     "rs_modifier_test.cpp",
     "rs_property_test.cpp",
   ]
@@ -31,13 +33,21 @@ ohos_unittest("RSRenderServiceClientModifierTest") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_config",
   ]
 
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
+
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:render_service_client_src",
     "//third_party/googletest:gtest_main",
   ]
 
   subsystem_name = "graphic"
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ###############################################################################

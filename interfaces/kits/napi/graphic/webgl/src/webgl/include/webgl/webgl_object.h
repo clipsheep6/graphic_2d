@@ -18,9 +18,9 @@
 
 #include <map>
 #include "napi/n_exporter.h"
-#include "napi/n_class.h"       // for NClass
-#include "napi/n_func_arg.h"    // for NFuncArg, NARG_CNT, ZERO
-#include "napi/n_val.h"         // for NVal
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "napi/n_val.h"
 #include "util/log.h"
 
 namespace OHOS {
@@ -30,20 +30,6 @@ public:
     WebGLObject() {};
     ~WebGLObject() {}
 
-    bool HasBound() { return hasBound_; }
-    void SetBound(bool hasBound) { hasBound_ = hasBound; }
-
-    bool HasDelete() { return hasDeleted_; }
-    void DoDelete()
-    {
-        hasDeleted_ = true;
-        hasBound_ = false;
-    }
-
-    virtual bool IsValid()
-    {
-        return !hasDeleted_;
-    }
     enum {
         WEBGL_OBJECT_PROGRAM = 0,
         WEBGL_OBJECT_SHADER,
@@ -93,9 +79,6 @@ public:
             webGLObj->GetClassName().c_str(), T::className.c_str());
         return nullptr;
     }
-private:
-    bool hasDeleted_ = false;
-    bool hasBound_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

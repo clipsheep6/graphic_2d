@@ -22,9 +22,10 @@
 #include "rosen_text/properties/font_collection_txt_base.h"
 #include "txt/asset_font_manager.h"
 #include "txt/font_collection.h"
+#include "utils/drawing_macros.h"
 
 namespace rosen {
-class FontCollectionTxt : public FontCollectionTxtBase {
+class DRAWING_API FontCollectionTxt : public FontCollectionTxtBase {
 public:
     explicit FontCollectionTxt(bool createWithICU = true);
 
@@ -32,7 +33,11 @@ public:
 
     std::shared_ptr<txt::FontCollection> GetFontCollection() const;
 
+#ifndef USE_ROSEN_DRAWING
     sk_sp<txt::DynamicFontManager> GetDynamicFontManager() const;
+#else
+    std::shared_ptr<RSFontMgr> GetDynamicFontManager() const;
+#endif
 
     void RegisterTestFonts() override;
 
@@ -42,7 +47,11 @@ public:
     void LoadSystemFont() override;
 private:
     std::shared_ptr<txt::FontCollection> txtCollection;
+#ifndef USE_ROSEN_DRAWING
     sk_sp<txt::DynamicFontManager> dynamicFontManager;
+#else
+    std::shared_ptr<RSFontMgr> dynamicFontManager;
+#endif
     FontCollectionTxt(const FontCollectionTxt&) = delete;
     FontCollectionTxt& operator=(const FontCollectionTxt&) = delete;
 };

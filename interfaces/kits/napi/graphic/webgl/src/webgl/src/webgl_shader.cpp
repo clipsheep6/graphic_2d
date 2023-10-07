@@ -14,6 +14,7 @@
  */
 
 #include "webgl/webgl_shader.h"
+
 #include "napi/n_class.h"
 #include "napi/n_func_arg.h"
 

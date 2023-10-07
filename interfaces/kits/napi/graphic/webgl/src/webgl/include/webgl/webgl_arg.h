@@ -76,7 +76,8 @@ struct WebGLArgInfo {
     WebGLArgType argType;
     uint32_t argIndex;
     const char* argName;
-    WebGLArgInfo(uint32_t index, WebGLArgType type, const char* name) : argType(type), argIndex(index), argName(name) {}
+    WebGLArgInfo(uint32_t index, WebGLArgType type, const char* name) :
+        argType(type), argIndex(index), argName(name) {}
     ~WebGLArgInfo() {}
 };
 
@@ -85,6 +86,7 @@ struct WebGLImageOption {
     GLenum type;
     GLsizei width;
     GLsizei height;
+    GLsizei depth;
 
     WebGLImageOption() : format(0), type(0), width(0), height(0) {}
     WebGLImageOption(GLenum format, GLenum type, GLsizei width, GLsizei height)
@@ -93,6 +95,15 @@ struct WebGLImageOption {
         this->type = type;
         this->width = width;
         this->height = height;
+        this->depth = 1;
+    }
+    WebGLImageOption(GLenum format, GLenum type, GLsizei width, GLsizei height, GLsizei depth)
+    {
+        this->format = format;
+        this->type = type;
+        this->width = width;
+        this->height = height;
+        this->depth = depth;
     }
     void Assign(const WebGLImageOption &opt)
     {
@@ -100,6 +111,7 @@ struct WebGLImageOption {
         this->type = opt.type;
         this->width = opt.width;
         this->height = opt.height;
+        this->depth = opt.depth;
     }
     void Dump();
 };
@@ -122,7 +134,8 @@ struct WebGLFormatMap {
     uint8_t bytesPrePixel;
     uint16_t decodeFunc;
     BufferDataType dataType;
-    WebGLFormatMap(GLenum format, GLenum type, uint8_t channels, uint8_t bytesPrePixel, BufferDataType dataType, uint16_t decodeFunc)
+    WebGLFormatMap(GLenum format, GLenum type, uint8_t channels, uint8_t bytesPrePixel, BufferDataType dataType,
+        uint16_t decodeFunc)
     {
         this->format = format;
         this->type = type;
@@ -207,6 +220,207 @@ union ColorParam_5_6_5 {
     uint16_t value;
 };
 
+struct TexImageArg {
+    int func;
+    GLenum target;
+    GLint level;
+    GLenum internalFormat;
+    GLenum format;
+    GLenum type;
+    GLsizei width;
+    GLsizei height;
+    GLsizei border;
+    GLsizei depth;
+    TexImageArg() :
+        func(0), target(0), level(0), internalFormat(0),
+        format(0), type(0), width(0), height(0), border(0), depth(0) {}
+    TexImageArg(const TexImageArg& arg)
+    {
+        func = arg.func;
+        target = arg.target;
+        level = arg.level;
+        internalFormat = arg.internalFormat;
+        format = arg.format;
+        type = arg.type;
+        width = arg.width;
+        height = arg.height;
+        border = arg.border;
+        depth = arg.depth;
+    }
+    TexImageArg(
+        GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLenum type)
+    {
+        this->target = target;
+        this->level = level;
+        this->internalFormat = internalFormat;
+        this->type = type;
+        this->width = width;
+        this->height = height;
+        this->depth = depth;
+    }
+    virtual void Dump(const std::string& info) const;
+};
+
+struct TexStorageArg {
+    int func;
+    GLenum target;
+    GLsizei levels;
+    GLenum internalFormat;
+    GLsizei width;
+    GLsizei height;
+    GLsizei depth;
+    TexStorageArg() : func(0), target(0), levels(0), internalFormat(0), width(0), height(0), depth(0) {}
+    TexStorageArg(const TexStorageArg& arg)
+    {
+        func = arg.func;
+        target = arg.target;
+        levels = arg.levels;
+        internalFormat = arg.internalFormat;
+        width = arg.width;
+        height = arg.height;
+        depth = arg.depth;
+    }
+    void Dump(const std::string& info) const;
+};
+
+struct TexSubImage2DArg : public TexImageArg {
+    GLint xOffset;
+    GLint yOffset;
+    TexSubImage2DArg() : TexImageArg(), xOffset(0), yOffset{0} {}
+    TexSubImage2DArg(const TexSubImage2DArg &arg) : TexImageArg(arg)
+    {
+        xOffset = arg.xOffset;
+        yOffset = arg.yOffset;
+    }
+    void Dump(const std::string& info) const override;
+};
+
+struct TexSubImage3DArg : public TexSubImage2DArg {
+    GLint zOffset;
+    TexSubImage3DArg() : TexSubImage2DArg(), zOffset(0) {}
+    TexSubImage3DArg(const TexSubImage3DArg &arg) : TexSubImage2DArg(arg)
+    {
+        zOffset = arg.zOffset;
+    }
+    void Dump(const std::string& info) const override;
+};
+
+struct CopyTexImage2DArg : public TexImageArg {
+    GLint x;
+    GLint y;
+    CopyTexImage2DArg() : TexImageArg(), x(0), y{0} {}
+};
+
+struct CopyTexSubImageArg : public TexImageArg {
+    GLint xOffset;
+    GLint yOffset;
+    GLint x;
+    GLint y;
+    CopyTexSubImageArg() : TexImageArg(), xOffset(0), yOffset{0}, x(0), y(0) {}
+};
+
+struct CopyTexSubImage3DArg : public CopyTexSubImageArg {
+    GLint zOffset;
+    CopyTexSubImage3DArg() : CopyTexSubImageArg(), zOffset(0) {}
+};
+
+struct TextureLayerArg {
+    GLint level;
+    GLint layer;
+};
+
+struct BufferBaseArg {
+    GLenum target;
+    GLuint index;
+};
+
+struct VertexAttribArg {
+    GLuint index;
+    GLint size;
+    GLenum type;
+    GLboolean normalized;
+    GLsizei stride;
+    GLintptr offset;
+    void Dump(const std::string &info) const;
+};
+
+struct PixelsArg {
+    GLint x;
+    GLint y;
+    GLsizei width;
+    GLsizei height;
+    GLenum format;
+    GLenum type;
+    void Dump(const std::string &info) const;
+};
+
+struct UniformExtInfo {
+    GLuint dimension;
+    GLuint elemCount;
+    GLuint srcOffset;
+    GLuint srcLength;
+    UniformExtInfo(GLuint dimension) : dimension(dimension), elemCount(dimension), srcOffset(0), srcLength(0) {}
+    UniformExtInfo(GLuint dimension, GLuint real) :
+        dimension(dimension), elemCount(real), srcOffset(0), srcLength(0) {}
+    bool GetUniformExtInfo(napi_env env, const NFuncArg& funcArg, int start);
+};
+
+struct UniformTypeMap {
+    GLenum type;
+    GLenum baseType;
+    GLsizei length;
+    BufferDataType srcType;
+    BufferDataType dstType;
+};
+
+// getVertexAttrib
+struct VertexAttribDesc {
+    bool enabled;
+    bool normalized;
+    // VERTEX_ATTRIB_ARRAY_BUFFER_BINDING
+    GLuint boundBufferId;
+    // VERTEX_ATTRIB_ARRAY_NORMALIZED
+    GLsizei bytesPerElement;
+    // VERTEX_ATTRIB_ARRAY_SIZE
+    GLint size;
+    // VERTEX_ATTRIB_ARRAY_TYPE
+    GLenum type;
+    // VERTEX_ATTRIB_ARRAY_STRIDE
+    GLsizei stride;
+    GLsizei originalStride;
+    GLintptr offset;
+    // by this func VertexAttribDivisor
+    GLuint divisor;
+};
+
+struct VertexAttribInfo {
+    BufferDataType type;
+};
+
+struct BufferPosition {
+    GLint x;
+    GLint y;
+};
+
+struct BufferSize {
+    GLsizei width;
+    GLsizei height;
+};
+
+struct DrawElementArg {
+    GLenum mode;
+    GLsizei count;
+    GLenum type;
+    int64_t offset;
+};
+
+struct BufferExt {
+    GLuint offset;
+    GLuint length;
+    BufferExt() : offset(0), length(0) {}
+    bool GetBufferExt(napi_env env, napi_value offsetArg, napi_value lenArg);
+};
+
 class WebGLArg {
 public:
     static const GLsizei MATRIX_2X2_REQUIRE_MIN_SIZE = 4;
@@ -233,47 +447,13 @@ public:
         values_.clear();
     }
 
-    // for normal arg
-    bool GetWebGLArgs(const NFuncArg& funcArg, uint32_t maxIndex, const std::vector<WebGLArgInfo>& funcs);
-    GLboolean ToGLboolean(uint32_t index)
-    {
-        return values_[index].gl_bool;
-    };
-    GLfloat ToGLfloat(uint32_t index)
-    {
-        return values_[index].gl_float;
-    };
-    GLuint ToGLuint(uint32_t index)
-    {
-        return values_[index].gl_uint;
-    };
-    GLint ToGLint(uint32_t index)
-    {
-        return values_[index].gl_int;
-    };
-    GLenum ToGLenum(uint32_t index)
-    {
-        return values_[index].gl_enum;
-    };
-    GLintptr ToGLintptr(uint32_t index)
-    {
-        return values_[index].gl_intptr;
-    };
-    GLsizei ToGLsizei(uint32_t index)
-    {
-        return values_[index].gl_sizei;
-    };
-    GLsizeiptr ToGLsizeptr(uint32_t index)
-    {
-        return values_[index].gl_sizeptr;
-    };
-
     static bool GetStringList(napi_env env, napi_value array, std::vector<char *> &list);
     static void FreeStringList(std::vector<char *> &list);
     static std::tuple<GLenum, GLintptr> ToGLintptr(napi_env env, napi_value data);
     static uint32_t GetWebGLDataSize(GLenum type);
     template<class T1, class T2>
-    static bool CheckOverflow(T1 arg1, T2 arg2) {
+    static bool CheckOverflow(T1 arg1, T2 arg2)
+    {
         int64_t t = static_cast<int64_t>(arg1) + static_cast<int64_t>(arg2);
         if (t >= std::numeric_limits<T1>::max()) {
             return true;
@@ -298,6 +478,8 @@ public:
     static napi_value GetInt64Parameter(napi_env env, GLenum pname);
     static napi_value GetFloatParameter(napi_env env, GLenum pname);
     static napi_value GetBoolParameter(napi_env env, GLenum pname);
+    static bool CheckString(const std::string& str);
+    static bool CheckReservedPrefix(const std::string& name);
 private:
     napi_env env_;
     bool GetWebGLArg(napi_value data, WebGLArgValue& args, const WebGLArgInfo& func);
@@ -411,7 +593,9 @@ private:
 
 class WebGLImageSource {
 public:
-    WebGLImageSource(napi_env env, int version) : webGLVersion_(version), env_(env) {}
+    WebGLImageSource(napi_env env, int version, bool unpackFlipY, bool unpackPremultiplyAlpha)
+        : webGLVersion_(version), env_(env), unpackFlipY_(unpackFlipY),
+        unpackPremultiplyAlpha_(unpackPremultiplyAlpha) {}
     ~WebGLImageSource() {};
 
     GLsizei GetWidth()
@@ -427,7 +611,8 @@ public:
         return imageOption_;
     }
 
-    GLvoid* GetImageSourceData(bool flipY, bool premultiplyAlpha);
+    WebGLReadBufferArg *GetWebGLReadBuffer();
+    GLvoid* GetImageSourceData();
     GLenum GenImageSource(const WebGLImageOption &opt, napi_value pixels, GLuint srcOffset);
     GLenum GenImageSource(const WebGLImageOption &opt, napi_value sourceImage);
 
@@ -460,7 +645,7 @@ private:
     void DecodeDataForRGBA_USHORT_4444(const WebGLFormatMap *formatMap, uint8_t *array);
     void DecodeDataForRGBA_USHORT_5551(const WebGLFormatMap *formatMap, uint8_t *array);
     void DecodeDataForRGB_USHORT_565(const WebGLFormatMap *formatMap, uint8_t *array);
-    bool DecodeImageData(const WebGLFormatMap *formatMap, const WebGLReadBufferArg &bufferDataArg, GLuint srcOffset);
+    bool DecodeImageData(const WebGLFormatMap *formatMap, const WebGLReadBufferArg *bufferDataArg, GLuint srcOffset);
 
     template<class T>
     std::tuple<bool, T> GetObjectIntField(napi_value resultObject, const std::string& name);
@@ -468,10 +653,14 @@ private:
 
     int webGLVersion_ { 0 };
     napi_env env_ { nullptr };
+    bool unpackFlipY_ { false };
+    bool unpackPremultiplyAlpha_ { false };
+    GLuint srcOffset_ { 0 };
     WebGLImageOption imageOption_ {};
     std::vector<uint32_t> imageData_ {};
     std::unique_ptr<OHOS::Media::ImageSource> imageSource_ { nullptr };
     std::unique_ptr<OHOS::Media::PixelMap> pixelMap_ { nullptr };
+    std::unique_ptr<WebGLReadBufferArg> readBuffer_ { nullptr };
 
     WebGLImageSource(const WebGLImageSource&) = delete;
     WebGLImageSource& operator=(const WebGLImageSource&) = delete;

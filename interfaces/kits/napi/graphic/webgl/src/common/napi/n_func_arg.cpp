@@ -14,7 +14,9 @@
  */
 
 #include "napi/n_func_arg.h"
+
 #include "context/webgl_rendering_context_basic_base.h"
+#include "util/log.h"
 #include "util/util.h"
 
 namespace OHOS {
@@ -64,12 +66,14 @@ bool NFuncArg::InitArgs(std::function<bool()> argcChecker)
     napi_value thisVar;
     napi_status status = napi_get_cb_info(env_, info_, &argc, nullptr, &thisVar, nullptr);
     if (status != napi_ok) {
+        LOGE("InitArgs: napi_get_cb_info error %{public}d", status);
         return false;
     }
     if (argc) {
         argv_ = make_unique<napi_value[]>(argc);
         status = napi_get_cb_info(env_, info_, &argc, argv_.get(), &thisVar, nullptr);
         if (status != napi_ok) {
+            LOGE("InitArgs: napi_get_cb_info error %{public}d", status);
             return false;
         }
     }
@@ -83,6 +87,7 @@ bool NFuncArg::InitArgs(size_t argc)
     return InitArgs([argc, this]() {
         size_t realArgc = GetArgc();
         if (argc != realArgc) {
+            LOGE("Init args error: realArgc %{public}d, argc %{public}d", realArgc, argc);
             return false;
         }
         return true;
@@ -94,6 +99,8 @@ bool NFuncArg::InitArgs(size_t minArgc, size_t maxArgc)
     return InitArgs([minArgc, maxArgc, this]() {
         size_t realArgc = GetArgc();
         if (minArgc > realArgc || maxArgc < realArgc) {
+            LOGE("Init args error: realArgc %{public}d, minArgc %{public}d, maxArgc %{public}d",
+                realArgc, minArgc, maxArgc);
             return false;
         }
         return true;

@@ -49,6 +49,7 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
     parcel.SetMaxCapacity(PARCEL_MAX_CPACITY);
     // to correct actual marshaled command size later, record its position in parcel
     size_t recordPosition = parcel.GetWritePosition();
+    std::unique_lock<std::mutex> lock(commandMutex_);
     success = success && parcel.WriteInt32(static_cast<int32_t>(payload_.size()));
     size_t marshaledSize = 0;
     static bool isUniRender = RSSystemProperties::GetUniRenderEnabled();
@@ -61,7 +62,7 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
         }
         success = success && command->Marshalling(parcel);
         if (!success) {
-            ROSEN_LOGE("failed RSTransactionData::Marshalling type:%s", command->PrintType().c_str());
+            ROSEN_LOGE("failed RSTransactionData::Marshalling type:%{public}s", command->PrintType().c_str());
             return false;
         }
         ++marshallingIndex_;
@@ -74,8 +75,8 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
         // correct command size recorded in Parcel
         *reinterpret_cast<int32_t*>(parcel.GetData() + recordPosition) = static_cast<int32_t>(marshaledSize);
         ROSEN_LOGW("RSTransactionData::Marshalling data split to several parcels"
-                   ", marshaledSize:%zu, marshallingIndex_:%zu, total count:%zu"
-                   ", parcel size:%zu, threshold:%zu",
+                   ", marshaledSize:%{public}zu, marshallingIndex_:%{public}zu, total count:%{public}zu"
+                   ", parcel size:%{public}zu, threshold:%{public}zu",
             marshaledSize, marshallingIndex_, payload_.size(), parcel.GetDataSize(), PARCEL_SPLIT_THRESHOLD);
     }
     success = success && parcel.WriteBool(needSync_);
@@ -90,6 +91,7 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
 
 void RSTransactionData::Process(RSContext& context)
 {
+    std::unique_lock<std::mutex> lock(commandMutex_);
     for (auto& [nodeId, followType, command] : payload_) {
         if (command != nullptr) {
             command->Process(context);
@@ -99,6 +101,7 @@ void RSTransactionData::Process(RSContext& context)
 
 void RSTransactionData::Clear()
 {
+    std::unique_lock<std::mutex> lock(commandMutex_);
     payload_.clear();
     timestamp_ = 0;
 }
@@ -132,8 +135,8 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
     size_t readableSize = parcel.GetReadableBytes();
     size_t len = static_cast<size_t>(commandSize);
     if (len > readableSize || len > payload_.max_size()) {
-        ROSEN_LOGE("RSTransactionData UnmarshallingCommand Failed read vector, size:%zu, readAbleSize:%zu",
-            len, readableSize);
+        ROSEN_LOGE("RSTransactionData UnmarshallingCommand Failed read vector, size:%{public}zu,"
+            " readAbleSize:%{public}zu", len, readableSize);
         return false;
     }
 
@@ -142,7 +145,7 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read isUniRender");
         return false;
     }
-
+    std::unique_lock<std::mutex> payloadLock(commandMutex_, std::defer_lock);
     for (size_t i = 0; i < len; i++) {
         if (!isUniRender) {
             if (!parcel.ReadUint64(nodeId)) {
@@ -164,11 +167,13 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         }
         auto command = (*func)(parcel);
         if (command == nullptr) {
-            ROSEN_LOGE("failed RSTransactionData::UnmarshallingCommand, type=%d subtype=%d", commandType,
-                commandSubType);
+            ROSEN_LOGE("failed RSTransactionData::UnmarshallingCommand, type=%{public}d subtype=%{public}d",
+                commandType, commandSubType);
             return false;
         }
+        payloadLock.lock();
         payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
+        payloadLock.unlock();
     }
     int32_t pid;
     return parcel.ReadBool(needSync_) && parcel.ReadBool(needCloseSync_) && parcel.ReadInt32(syncTransactionCount_) &&

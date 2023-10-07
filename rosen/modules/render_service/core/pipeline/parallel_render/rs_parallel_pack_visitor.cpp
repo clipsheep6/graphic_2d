@@ -20,6 +20,7 @@
 #include "pipeline/parallel_render/rs_parallel_render_manager.h"
 #include "pipeline/rs_uni_render_visitor.h"
 #include "rs_trace.h"
+#include "common/rs_optional_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -34,7 +35,6 @@ RSParallelPackVisitor::RSParallelPackVisitor(RSUniRenderVisitor &visitor)
 
 void RSParallelPackVisitor::PrepareChildren(RSRenderNode &node)
 {
-    node.ApplyChildrenModifiers();
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
@@ -79,8 +79,8 @@ void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
         return;
     }
     RS_TRACE_NAME("RSParallelPackVisitor::Process:[" + node.GetName() + "]" + node.GetDstRect().ToString());
-    RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode node: %" PRIu64 ", child size:%u %s", node.GetId(),
-        node.GetChildrenCount(), node.GetName().c_str());
+    RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode node: %{public}" PRIu64 ", child size:%{public}u"
+        " %{public}s", node.GetId(), node.GetChildrenCount(), node.GetName().c_str());
     node.UpdatePositionZ();
     if (IsSkipProcessing(node)) {
         return;
@@ -91,25 +91,25 @@ void RSParallelPackVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode &node)
 bool RSParallelPackVisitor::IsSkipProcessing(RSSurfaceRenderNode& node) const
 {
     if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        RS_TRACE_NAME("SecurityLayer Skip");
+        RS_OPTIONAL_TRACE_NAME("SecurityLayer Skip");
         return true;
     }
 
     if (!node.ShouldPaint()) {
-        RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode node: %" PRIu64 " invisible", node.GetId());
+        RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode node: %{public}" PRIu64 " invisible", node.GetId());
         return true;
     }
     if (!node.GetOcclusionVisible() && !doAnimate_
         && RSSystemProperties::GetOcclusionEnabled() && !isSecurityDisplay_) {
-        RS_TRACE_NAME("Occlusion Skip");
+        RS_OPTIONAL_TRACE_NAME("Occlusion Skip");
         return true;
     }
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     // skip clean surface node
     if (isOpDropped_ && node.IsAppWindow()) {
         if (!node.SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
-            RS_TRACE_NAME("QuickReject Skip");
-            RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode skip: %s", node.GetName().c_str());
+            RS_OPTIONAL_TRACE_NAME("QuickReject Skip");
+            RS_LOGD("RSParallelPackVisitor::ProcessSurfaceRenderNode skip: %{public}s", node.GetName().c_str());
             return true;
         }
     }

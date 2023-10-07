@@ -40,7 +40,7 @@ namespace {
 constexpr PropertyId ANONYMOUS_MODIFIER_ID = 0;
 }
 
-RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, std::weak_ptr<RSContext> context) : RSRenderNode(id, context)
+RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : RSRenderNode(id, context)
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(id, info);
@@ -88,6 +88,19 @@ void RSCanvasRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
     visitor->PrepareCanvasRenderNode(*this);
 }
 
+void RSCanvasRenderNode::OnTreeStateChanged()
+{
+    if (!IsOnTheTree()) {
+        // clear node groups cache when node is removed from tree
+        if (GetCacheType() == CacheType::CONTENT) {
+            SetCacheType(CacheType::NONE);
+            ClearCacheSurfaceInThread();
+            SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
+        }
+    }
+    RSRenderNode::OnTreeStateChanged();
+}
+
 void RSCanvasRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
 {
     std::unique_lock<std::mutex> lock(canvasNodeProcessMutex_);
@@ -116,17 +129,19 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas);
 #endif
 
-    if (GetRenderProperties().GetUseEffect()) {
-        RSPropertiesPainter::ApplyBackgroundEffect(GetRenderProperties(), canvas);
+    if (canvas.GetCacheType() != RSPaintFilterCanvas::CacheType::OFFSCREEN) {
+        if (GetRenderProperties().GetUseEffect()) {
+            RSPropertiesPainter::ApplyBackgroundEffect(GetRenderProperties(), canvas);
+        }
+        RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
     }
-    RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
 
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);
 
     if (GetRenderProperties().IsDynamicLightUpValid()) {
         RSPropertiesPainter::DrawDynamicLightUp(GetRenderProperties(), canvas);
     }
-    
+
 #ifndef USE_ROSEN_DRAWING
     canvasNodeSaveCount_ = canvas.Save();
 #else
@@ -178,6 +193,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     RSPropertiesPainter::DrawBorder(GetRenderProperties(), canvas);
     ApplyDrawCmdModifier(context, RSModifierType::OVERLAY_STYLE);
     RSPropertiesPainter::DrawForegroundColor(GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawParticle(GetRenderProperties(), canvas);
 }
 
 void RSCanvasRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
@@ -226,11 +242,6 @@ void RSCanvasRenderNode::InternalDrawContent(RSPaintFilterCanvas& canvas)
     }
 }
 
-void RSCanvasRenderNode::OnApplyModifiers()
-{
-    GetMutableRenderProperties().backref_ = ReinterpretCastTo<RSRenderNode>();
-}
-
 void RSCanvasRenderNode::ProcessDrivenBackgroundRender(RSPaintFilterCanvas& canvas)
 {
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
@@ -250,8 +261,13 @@ void RSCanvasRenderNode::ProcessDrivenBackgroundRender(RSPaintFilterCanvas& canv
 void RSCanvasRenderNode::ProcessDrivenContentRender(RSPaintFilterCanvas& canvas)
 {
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
     canvasNodeSaveCount_ = canvas.Save();
     canvas.translate(GetRenderProperties().GetFrameOffsetX(), GetRenderProperties().GetFrameOffsetY());
+#else
+    canvasNodeSaveCount_ = canvas.SaveAllStatus();
+    canvas.Translate(GetRenderProperties().GetFrameOffsetX(), GetRenderProperties().GetFrameOffsetY());
+#endif
     DrawDrivenContent(canvas);
 #endif
 }
@@ -263,7 +279,6 @@ void RSCanvasRenderNode::ProcessDrivenContentRenderAfterChildren(RSPaintFilterCa
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
 
-    GetMutableRenderProperties().ResetBounds();
     canvas.RestoreStatus(canvasNodeSaveCount_);
 #endif
 }

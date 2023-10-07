@@ -29,7 +29,7 @@ group("default") {
   }
 }
 
-group("graphic_2d_test") {
+group("graphic_common_test") {
   testonly = true
 
   public_deps = [
@@ -44,6 +44,7 @@ group("graphic_2d_test") {
     "rosen/test/render_frame_trace:test",
     "rosen/test/render_service:test",
     "rosen/test/texgine:test",
+    "utils/buffer_handle:test",
     "utils/color_manager:test",
     "utils/socketpair:test",
     "utils/sync_fence:test",

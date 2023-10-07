@@ -14,6 +14,7 @@
  */
 
 #include "hdi_backend.h"
+#include "hdi_log.h"
 
 #include <scoped_bytrace.h>
 #include "surface_buffer.h"
@@ -150,6 +151,15 @@ void HdiBackend::Repaint(const OutputPtr &output)
         return;
     }
     HLOGD("%{public}s: end", __func__);
+}
+
+void HdiBackend::StartSample(const OutputPtr &output)
+{
+    if (output == nullptr) {
+        HLOGE("output is nullptr.");
+        return;
+    }
+    output->StartVSyncSampler();
 }
 
 void HdiBackend::ResetDevice()

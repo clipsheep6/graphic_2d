@@ -23,9 +23,11 @@
 #include "sandbox_utils.h"
 
 #include "animation/rs_animation.h"
+#include "animation/rs_animation_group.h"
 #include "animation/rs_animation_callback.h"
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
+#include "animation/rs_render_particle_animation.h"
 #include "command/rs_base_node_command.h"
 #include "command/rs_node_command.h"
 #include "common/rs_color.h"
@@ -39,6 +41,7 @@
 #include "ui/rs_canvas_drawing_node.h"
 #include "ui/rs_canvas_node.h"
 #include "ui/rs_display_node.h"
+#include "ui/rs_frame_rate_policy.h"
 #include "ui/rs_node.h"
 #include "ui/rs_proxy_node.h"
 #include "ui/rs_root_node.h"
@@ -262,17 +265,20 @@ void RSNode::FallbackAnimationsToRoot()
         }
         target->AddAnimationInner(std::move(animation));
     }
+    std::unique_lock<std::mutex> lock(animationMutex_);
     animations_.clear();
 }
 
 void RSNode::AddAnimationInner(const std::shared_ptr<RSAnimation>& animation)
 {
+    std::unique_lock<std::mutex> lock(animationMutex_);
     animations_.emplace(animation->GetId(), animation);
     animatingPropertyNum_[animation->GetPropertyId()]++;
 }
 
 void RSNode::RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation)
 {
+    std::unique_lock<std::mutex> lock(animationMutex_);
     if (auto it = animatingPropertyNum_.find(animation->GetPropertyId()); it != animatingPropertyNum_.end()) {
         it->second--;
         if (it->second == 0) {
@@ -294,6 +300,7 @@ void RSNode::FinishAnimationByProperty(const PropertyId& id)
 
 void RSNode::CancelAnimationByProperty(const PropertyId& id)
 {
+    std::unique_lock<std::mutex> lock(animationMutex_);
     animatingPropertyNum_.erase(id);
     EraseIf(animations_, [id](const auto& pair) { return (pair.second && (pair.second->GetPropertyId() == id)); });
 }
@@ -316,9 +323,12 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
     }
 
     auto animationId = animation->GetId();
-    if (animations_.find(animationId) != animations_.end()) {
-        ROSEN_LOGE("Failed to add animation, animation already exists!");
-        return;
+    {
+        std::unique_lock<std::mutex> lock(animationMutex_);
+        if (animations_.find(animationId) != animations_.end()) {
+            ROSEN_LOGE("Failed to add animation, animation already exists!");
+            return;
+        }
     }
 
     if (animation->GetDuration() <= 0) {
@@ -326,7 +336,7 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
     }
 
     AddAnimationInner(animation);
-    animation->StartInner(std::static_pointer_cast<RSNode>(shared_from_this()));
+    animation->StartInner(shared_from_this());
 }
 
 void RSNode::RemoveAllAnimations()
@@ -364,6 +374,7 @@ const std::shared_ptr<RSMotionPathOption> RSNode::GetMotionPathOption() const
 
 bool RSNode::HasPropertyAnimation(const PropertyId& id)
 {
+    std::unique_lock<std::mutex> lock(animationMutex_);
     auto it = animatingPropertyNum_.find(id);
     return it != animatingPropertyNum_.end() && it->second > 0;
 }
@@ -712,6 +723,82 @@ void RSNode::SetEnvForegroundColorStrategy(ForegroundColorStrategyType strategyT
         RSProperty<ForegroundColorStrategyType>>(RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY, strategyType);
 }
 
+// Set ParticleParams
+void RSNode::SetParticleParams(std::vector<ParticleParams>& particleParams, const std::function<void()>& finishCallback)
+{
+    std::vector<std::shared_ptr<ParticleRenderParams>> particlesRenderParams;
+    for (size_t i = 0; i < particleParams.size(); i++) {
+        particlesRenderParams.push_back(particleParams[i].SetParamsToRenderParticle());
+    }
+    SetParticleDrawRegion(particleParams);
+    auto property = std::make_shared<RSPropertyBase>();
+    auto propertyId = property->GetId();
+    auto uiAnimation = std::make_shared<RSAnimationGroup>();
+    auto animationId = uiAnimation->GetId();
+    AddAnimation(uiAnimation);
+    if (finishCallback != nullptr) {
+        uiAnimation->SetFinishCallback(std::make_shared<AnimationFinishCallback>(finishCallback));
+    }
+    auto animation =
+        std::make_shared<RSRenderParticleAnimation>(animationId, propertyId, particlesRenderParams);
+
+    std::unique_ptr<RSCommand> command = std::make_unique<RSAnimationCreateParticle>(GetId(), animation);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
+        if (NeedForcedSendToRemote()) {
+            std::unique_ptr<RSCommand> cmdForRemote =
+                std::make_unique<RSAnimationCreateParticle>(GetId(), animation);
+            transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
+        }
+    }
+}
+
+void RSNode::SetParticleDrawRegion(std::vector<ParticleParams>& particleParams)
+{
+    Vector4f bounds = GetStagingProperties().GetBounds();
+    float left = bounds.x_;
+    float top = bounds.y_;
+    float right = bounds.z_;
+    float bottom = bounds.w_;
+    for (size_t i = 0; i < particleParams.size(); i++) {
+        auto particleType = particleParams[i].emitterConfig_.type_;
+        auto position = particleParams[i].emitterConfig_.position_;
+        auto emitSize = particleParams[i].emitterConfig_.emitSize_;
+        float scaleMax = particleParams[i].scale_.val_.end_;
+        if (particleType == ParticleType::POINTS) {
+            auto radius = particleParams[i].emitterConfig_.radius_;
+            auto radiusMax = radius * scaleMax;
+            left = std::min(0.f, position.x_ - radiusMax);
+            top = std::min(0.f, position.y_ - radiusMax);
+            right = std::max(right + radiusMax + radiusMax, position.x_ + emitSize.x_ + radiusMax + radiusMax);
+            bottom = std::max(bottom + radiusMax + radiusMax, position.y_ + emitSize.y_ + radiusMax + radiusMax);
+        } else {
+            float imageSizeWidth = 0.f;
+            float imageSizeHeight = 0.f;
+            auto image = particleParams[i].emitterConfig_.image_;
+            auto imageSize = particleParams[i].emitterConfig_.imageSize_;
+            if (image == nullptr)
+                continue;
+            auto pixelMap = image->GetPixelMap();
+            if (pixelMap != nullptr) {
+                imageSizeWidth = std::max(imageSize.x_, static_cast<float>(pixelMap->GetWidth()));
+                imageSizeHeight = std::max(imageSize.y_, static_cast<float>(pixelMap->GetHeight()));
+            }
+            float imageSizeWidthMax = imageSizeWidth * scaleMax;
+            float imageSizeHeightMax = imageSizeHeight * scaleMax;
+            left = std::min(0.f, position.x_ - imageSizeWidthMax);
+            top = std::min(0.f, position.y_ - imageSizeHeightMax);
+            right = std::max(right + imageSizeWidthMax + imageSizeWidthMax,
+                position.x_ + emitSize.x_ + imageSizeWidthMax + imageSizeWidthMax);
+            bottom = std::max(bottom + imageSizeHeightMax + imageSizeHeightMax,
+                position.y_ + emitSize.y_ + imageSizeHeightMax + imageSizeHeightMax);
+        }
+        std::shared_ptr<RectF> overlayRect = std::make_shared<RectF>(left, top, right, bottom);
+        SetDrawRegion(overlayRect);
+    }
+}
+
 // foreground
 void RSNode::SetForegroundColor(uint32_t colorValue)
 {
@@ -904,6 +991,7 @@ void RSNode::SetShadowMask(bool shadowMask)
 
 void RSNode::SetFrameGravity(Gravity gravity)
 {
+    ROSEN_LOGI("RSNode::SetFrameGravity, gravity = %{public}d", gravity);
     SetProperty<RSFrameGravityModifier, RSProperty<Gravity>>(RSModifierType::FRAME_GRAVITY, gravity);
 }
 
@@ -1024,15 +1112,19 @@ void RSNode::OnRemoveChildren()
 
 bool RSNode::AnimationCallback(AnimationId animationId, AnimationCallbackEvent event)
 {
-    auto animationItr = animations_.find(animationId);
-    if (animationItr == animations_.end()) {
-        ROSEN_LOGE("Failed to find animation[%" PRIu64 "]!", animationId);
-        return false;
+    std::shared_ptr<RSAnimation> animation = nullptr;
+    {
+        std::unique_lock<std::mutex> lock(animationMutex_);
+        auto animationItr = animations_.find(animationId);
+        if (animationItr == animations_.end()) {
+            ROSEN_LOGE("Failed to find animation[%{public}" PRIu64 "]!", animationId);
+            return false;
+        }
+        animation = animationItr->second;
     }
 
-    auto animation = animationItr->second;
     if (animation == nullptr) {
-        ROSEN_LOGE("Failed to callback animation[%" PRIu64 "], animation is null!", animationId);
+        ROSEN_LOGE("Failed to callback animation[%{public}" PRIu64 "], animation is null!", animationId);
         return false;
     }
     if (event == FINISHED) {
@@ -1043,7 +1135,7 @@ bool RSNode::AnimationCallback(AnimationId animationId, AnimationCallbackEvent e
         animation->CallRepeatCallback();
         return true;
     }
-    ROSEN_LOGE("Failed to callback animation event[%" PRIu64 "], event is null!", event);
+    ROSEN_LOGE("Failed to callback animation event[%{public}d], event is null!", event);
     return false;
 }
 
@@ -1311,14 +1403,19 @@ void RSNode::SetColorBlend(uint32_t colorValue)
     SetProperty<RSColorBlendModifier, RSAnimatableProperty<Color>>(RSModifierType::COLOR_BLEND, colorBlend);
 }
 
-void RSNode::UpdateFrameRateRange(FrameRateRange range)
+void RSNode::AddFRCSceneInfo(const std::string& scene, float speed)
 {
+    int preferredFps = RSFrameRatePolicy::GetInstance()->GetPreferredFps(scene, speed);
+    FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, preferredFps};
     if (!range.IsValid()) {
         return;
     }
-    nodeRange_ = range;
+    UpdateUIFrameRateRange(range);
+}
 
-    std::unique_ptr<RSCommand> command = std::make_unique<RSSetUIFrameRateRange>(GetId(), range);
+void RSNode::UpdateUIFrameRateRange(const FrameRateRange& range)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSUpdateUIFrameRateRange>(GetId(), range);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
@@ -1346,7 +1443,7 @@ void RSNode::InitUniRenderEnabled()
     if (!inited) {
         inited = true;
         g_isUniRenderEnabled = RSSystemProperties::GetUniRenderEnabled();
-        ROSEN_LOGD("RSNode::InitUniRenderEnabled:%d", g_isUniRenderEnabled);
+        ROSEN_LOGD("RSNode::InitUniRenderEnabled:%{public}d", g_isUniRenderEnabled);
     }
 }
 

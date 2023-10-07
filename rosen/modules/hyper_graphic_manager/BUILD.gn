@@ -22,31 +22,42 @@ config("libhyper_graphic_manager_config") {
     "core/frame_rate_manager",
     "core/hgm_screen_manager",
     "core/utils",
-    "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/rosen/modules/composer/hdi_backend/include",
+    "$graphic_2d_root/rosen/modules/platform/ipc_core",
     "$graphic_2d_root/rosen/modules/render_service/core",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
+    "$graphic_2d_root/utils/log",
     "//third_party/libxml2/include",
   ]
 
   cflags = [ "-g3" ]
+  if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
+    cflags += [ "-flto=thin" ]
+  }
 }
 
 ohos_shared_library("libhyper_graphic_manager") {
   public_configs = [ ":libhyper_graphic_manager_config" ]
 
   sources = [
+    "core/config/anim_dynamic_configs.cpp",
+    "core/config/hgm_config_callback_manager.cpp",
     "core/config/xml_parser.cpp",
     "core/frame_rate_manager/hgm_frame_rate_manager.cpp",
     "core/frame_rate_manager/hgm_frame_rate_tool.cpp",
     "core/hgm_screen_manager/hgm_core.cpp",
     "core/hgm_screen_manager/hgm_screen.cpp",
+    "core/utils/hgm_one_shot_timer.cpp",
   ]
 
-  deps = [ "//third_party/libxml2:xml2" ]
+  deps = [
+    "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
+    "//third_party/libxml2:xml2",
+  ]
 
   external_deps = [
     "c_utils:utils",
+    "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
     "hitrace:hitrace_meter",
     "init:libbeget_proxy",

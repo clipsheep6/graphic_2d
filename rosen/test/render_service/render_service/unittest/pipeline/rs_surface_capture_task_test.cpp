@@ -232,7 +232,7 @@ HWTEST_F(RSSurfaceCaptureTaskTest, Run001, Function | SmallTest | Level2)
     float scaleX = 0.f;
     float scaleY = 0.f;
     RSSurfaceCaptureTask task(id, scaleX, scaleY);
-    ASSERT_EQ(nullptr, task.Run());
+    ASSERT_EQ(false, task.Run(nullptr));
 }
 
 /*
@@ -247,7 +247,7 @@ HWTEST_F(RSSurfaceCaptureTaskTest, Run002, Function | SmallTest | Level2)
     float scaleX = DEFAULT_CANVAS_SCALE;
     float scaleY = 0.f;
     RSSurfaceCaptureTask task(id, scaleX, scaleY);
-    ASSERT_EQ(nullptr, task.Run());
+    ASSERT_EQ(false, task.Run(nullptr));
 }
 
 /*
@@ -262,7 +262,7 @@ HWTEST_F(RSSurfaceCaptureTaskTest, Run003, Function | SmallTest | Level2)
     float scaleX = 0.f;
     float scaleY = DEFAULT_BOUNDS_HEIGHT;
     RSSurfaceCaptureTask task(id, scaleX, scaleY);
-    ASSERT_EQ(nullptr, task.Run());
+    ASSERT_EQ(false, task.Run(nullptr));
 }
 
 /*
@@ -277,7 +277,7 @@ HWTEST_F(RSSurfaceCaptureTaskTest, Run004, Function | SmallTest | Level2)
     float scaleX = DEFAULT_CANVAS_SCALE;
     float scaleY = DEFAULT_CANVAS_SCALE;
     RSSurfaceCaptureTask task(id, scaleX, scaleY);
-    ASSERT_EQ(nullptr, task.Run());
+    ASSERT_EQ(false, task.Run(nullptr));
 }
 
 /*
@@ -292,7 +292,7 @@ HWTEST_F(RSSurfaceCaptureTaskTest, Run005, Function | SmallTest | Level2)
     float scaleX = -1.0f;
     float scaleY = DEFAULT_CANVAS_SCALE;
     RSSurfaceCaptureTask task(id, scaleX, scaleY);
-    ASSERT_EQ(nullptr, task.Run());
+    ASSERT_EQ(false, task.Run(nullptr));
 }
 
 /*
@@ -307,7 +307,7 @@ HWTEST_F(RSSurfaceCaptureTaskTest, Run007, Function | SmallTest | Level2)
     float scaleX = DEFAULT_CANVAS_SCALE;
     float scaleY = -1.0f;
     RSSurfaceCaptureTask task(id, scaleX, scaleY);
-    ASSERT_EQ(nullptr, task.Run());
+    ASSERT_EQ(false, task.Run(nullptr));
 }
 
 /*
@@ -418,6 +418,21 @@ HWTEST_F(RSSurfaceCaptureTaskTest, CreateSurface002, Function | SmallTest | Leve
     RSSurfaceCaptureTask task(id, scaleX, scaleY);
     std::unique_ptr<Media::PixelMap> pixelmap = nullptr;
     ASSERT_EQ(nullptr, task.CreateSurface(pixelmap));
+}
+
+/*
+ * @tc.name: FindSecurityLayer001
+ * @tc.desc: Test RSSurfaceCaptureTaskTest.CreateSurface002
+ * @tc.type: FUNC
+ * @tc.require: issueI794H6
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, FindSecurityLayer001, Function | SmallTest | Level2)
+{
+    NodeId id = 0;
+    float scaleX = 0.f;
+    float scaleY = 0.f;
+    RSSurfaceCaptureTask task(id, scaleX, scaleY);
+    EXPECT_EQ(false, task.FindSecurityLayer());
 }
 
 /*
@@ -682,6 +697,23 @@ HWTEST_F(RSSurfaceCaptureTaskTest, CaptureSurfaceInDisplayWithoutUni003, Functio
     surfaceNode->SetSecurityLayer(false);
     if (!isUnirender) {
         visitor_->CaptureSingleSurfaceNodeWithoutUni(*surfaceNode);
+    }
+}
+
+/*
+ * @tc.name: CaptureSurfaceInDisplayWithUni003
+ * @tc.desc: Test RSSurfaceCaptureTaskTest.CaptureSurfaceInDisplayWithUni
+ * @tc.type: FUNC
+ * @tc.require: issueI794H6
+*/
+HWTEST_F(RSSurfaceCaptureTaskTest, CaptureSurfaceInDisplayWithUni001, Function | SmallTest | Level2)
+{
+    bool isUnirender = RSUniRenderJudgement::IsUniRender();
+    ASSERT_NE(nullptr, visitor_);
+    auto surfaceNode = RSTestUtil::CreateSurfaceNode();    
+    surfaceNode->SetSecurityLayer(false);
+    if (!isUnirender) {
+        visitor_->CaptureSingleSurfaceNodeWithUni(*surfaceNode);
     }
 }
 

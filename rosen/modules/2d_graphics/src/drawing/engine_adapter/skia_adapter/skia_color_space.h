@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class SkiaColorSpace : public ColorSpaceImpl {
+class DRAWING_API SkiaColorSpace : public ColorSpaceImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     SkiaColorSpace() noexcept;
@@ -38,6 +38,7 @@ public:
     void InitWithImage(const Image& image) override;
     void InitWithRGB(const CMSTransferFuncType& func, const CMSMatrixType& matrix) override;
     sk_sp<SkColorSpace> GetColorSpace() const;
+    void SetColorSpace(sk_sp<SkColorSpace> skColorSpace);
 
 private:
     sk_sp<SkColorSpace> colorSpace_;

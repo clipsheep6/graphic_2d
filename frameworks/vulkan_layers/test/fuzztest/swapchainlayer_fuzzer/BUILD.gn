@@ -14,7 +14,7 @@
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
-module_output_path = "graphic_2d/vulkan_layers"
+module_output_path = "graphic_2d/graphic_2d"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("SwapchainLayerFuzzTest") {
@@ -30,8 +30,10 @@ ohos_fuzztest("SwapchainLayerFuzzTest") {
   ]
   public_deps = [ "//third_party/vulkan-headers:vulkan_headers" ]
   external_deps = [
+    "c_utils:utils",
     "graphic_2d:surface",
     "graphic_2d:sync_fence",
+    "hilog:libhilog",
     "ipc:ipc_single",
   ]
   sources = [ "swapchainlayer_fuzzer.cpp" ]

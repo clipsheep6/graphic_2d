@@ -63,7 +63,8 @@ bool RsFrameReport::LoadLibrary()
     if (!frameSchedSoLoaded_) {
         frameSchedHandle_ = dlopen(FRAME_AWARE_SO_PATH.c_str(), RTLD_LAZY);
         if (frameSchedHandle_ == nullptr) {
-            ROSEN_LOGE("RsFrameReport:[LoadLibrary]dlopen libframe_ui_intf.so failed! error = %s\n", dlerror());
+            ROSEN_LOGE("RsFrameReport:[LoadLibrary]dlopen libframe_ui_intf.so failed!"
+                " error = %{public}s\n", dlerror());
             return false;
         }
         frameSchedSoLoaded_ = true;
@@ -171,6 +172,19 @@ void RsFrameReport::SendCommandsStart()
         sendCommandsStartFunc_();
     } else {
         ROSEN_LOGE("RsFrameReport:[SendCommandsStart]load SendCommandsStart function failed!");
+    }
+}
+
+void RsFrameReport::SetFrameParam(int requestId, int load, int schedFrameNum, int value)
+{
+    if (setFrameParamFunc_ == nullptr) {
+        setFrameParamFunc_ = (SetFrameParamFunc)LoadSymbol("SetFrameParam");
+    }
+
+    if (setFrameParamFunc_ != nullptr) {
+        setFrameParamFunc_(requestId, load, schedFrameNum, value);
+    } else {
+        ROSEN_LOGE("RsFrameReport:[SetFrameParam]load SetFrameParam function failed");
     }
 }
 } // namespace Rosen

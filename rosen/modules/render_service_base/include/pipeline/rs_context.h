@@ -26,6 +26,16 @@ class RSB_EXPORT RSContext : public std::enable_shared_from_this<RSContext> {
 public:
     RSContext() = default;
     ~RSContext() = default;
+    RSContext(const RSContext&) = delete;
+    RSContext(const RSContext&&) = delete;
+    RSContext& operator=(const RSContext&) = delete;
+    RSContext& operator=(const RSContext&&) = delete;
+
+    enum PurgeType {
+        NONE,
+        PURGE_UNLOCK,
+        PURGE_UNLOCK_SAFECACHE
+    };
 
     RSRenderNodeMap& GetMutableNodeMap()
     {
@@ -43,6 +53,7 @@ public:
     }
 
     void RegisterAnimatingRenderNode(const std::shared_ptr<RSRenderNode>& nodePtr);
+    void UnregisterAnimatingRenderNode(NodeId id);
 
     uint64_t GetTransactionTimestamp() const
     {
@@ -53,19 +64,36 @@ public:
     {
         return currentTimestamp_;
     }
+    // add node info after cmd data process
+    void AddActiveNode(const std::shared_ptr<RSRenderNode>& node);
+
+    void MarkNeedPurge(PurgeType purgeType)
+    {
+        purgeType_ = purgeType;
+    }
+
+    void SetTaskRunner(const std::function<void(const std::function<void()>&)>& taskRunner)
+    {
+        taskRunner_ = taskRunner;
+    }
+    void PostTask(const std::function<void()>& task) const
+    {
+        if (taskRunner_) {
+            taskRunner_(task);
+        }
+    }
 
 private:
     RSRenderNodeMap nodeMap;
-    std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSBaseRenderNode>(0, true);
+    std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSRenderNode>(0, true);
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> animatingNodeList_;
+    PurgeType purgeType_ = PurgeType::NONE;
 
     uint64_t transactionTimestamp_ = 0;
     uint64_t currentTimestamp_ = 0;
-
-    RSContext(const RSContext&) = delete;
-    RSContext(const RSContext&&) = delete;
-    RSContext& operator=(const RSContext&) = delete;
-    RSContext& operator=(const RSContext&&) = delete;
+    std::function<void(const std::function<void()>&)> taskRunner_;
+    // Collect all active Nodes sorted by root node id in this frame.
+    std::unordered_map<NodeId, std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>> activeNodesInRoot_;
 
     friend class RSRenderThread;
     friend class RSMainThread;

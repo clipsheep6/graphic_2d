@@ -119,9 +119,11 @@ napi_value WebGL2RenderingContextImpl::GetParameter(napi_env env, GLenum pname)
             return WebGLArg::GetBoolParameter(env, pname);
         case WebGL2RenderingContextBase::MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
             return WebGLArg::GetInt32Parameter(env, WebGL2RenderingContextBase::MAX_CLIENT_WAIT_TIMEOUT_WEBGL);
-        case GL_READ_BUFFER:
-            // TODO
-            break;
+        case GL_READ_BUFFER:{
+            WebGLFramebuffer* readFrameBuffer = GetBoundFrameBuffer(env, GL_READ_FRAMEBUFFER);
+            GLenum value = readFrameBuffer != nullptr ? readFrameBuffer->GetReadBufferMode() : defaultReadBufferMode_;
+            return NVal::CreateInt64(env, value).val_;
+        }
         case GL_READ_FRAMEBUFFER_BINDING:
             return GetObject<WebGLFramebuffer>(env, boundBufferIds_[BoundFrameBufferType::READ_FRAMEBUFFER]);
         case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
@@ -240,26 +242,68 @@ napi_value WebGL2RenderingContextImpl::GetFrameBufferAttachmentParameterForDefau
         case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
         case GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
         case GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE: {
-            GLint value = attachment == GL_BACK ? 8 : 0;
+            GLint value = attachment == GL_BACK ? 8 : 0; // 8 GREEN size
             return NVal::CreateInt64(env, value).val_;
         }
         case GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE: {
-            GLint value = (attachment == GL_BACK && contextAttributes->alpha_) ? 8 : 0;
+            GLint value = (attachment == GL_BACK && contextAttributes->alpha_) ? 8 : 0; // 8 ALPHA size
             return NVal::CreateInt64(env, value).val_;
         }
         case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE: {
             // For ES3 capable backend, DEPTH24_STENCIL8 has to be supported.
-            GLint value = attachment == GL_DEPTH ? 24 : 0;
+            GLint value = attachment == GL_DEPTH ? 24 : 0; // 24 depth size
             return NVal::CreateInt64(env, value).val_;
         }
         case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE: {
-            GLint value = attachment == GL_STENCIL ? 8 : 0;
+            GLint value = attachment == GL_STENCIL ? 8 : 0; // 8 STENCIL size
             return NVal::CreateInt64(env, value).val_;
         }
         case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
             return NVal::CreateInt64(env, GL_UNSIGNED_NORMALIZED).val_;
         case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
             return NVal::CreateInt64(env, GL_LINEAR).val_;
+        default:
+            break;
+    }
+    SET_ERROR(GL_INVALID_ENUM);
+    return NVal::CreateNull(env).val_;
+}
+
+napi_value WebGL2RenderingContextImpl::HandleFrameBufferPname(
+    napi_env env, GLenum target, GLenum attachment, GLenum pname, WebGLAttachment* attachmentObject)
+{
+    switch (pname) {
+        case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+            return attachmentObject->IsTexture() ? NVal::CreateInt64(env, GL_TEXTURE).val_
+                                                 : NVal::CreateInt64(env, GL_RENDERBUFFER).val_;
+        case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+            return attachmentObject->IsTexture() ? GetObject<WebGLTexture>(env, attachmentObject->id)
+                                                 : GetObject<WebGLRenderbuffer>(env, attachmentObject->id);
+        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER:
+        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+            if (!attachmentObject->IsTexture())
+                break;
+        case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE: {
+            GLint value = 0;
+            glGetFramebufferAttachmentParameteriv(target, attachment, pname, &value);
+            return NVal::CreateInt64(env, value).val_;
+        }
+        case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
+            if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+                SET_ERROR(GL_INVALID_OPERATION);
+                return NVal::CreateNull(env).val_;
+            }
+        case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING: {
+            GLint value = 0;
+            glGetFramebufferAttachmentParameteriv(target, attachment, pname, &value);
+            return NVal::CreateInt64(env, value).val_;
+        }
         default:
             break;
     }
@@ -300,44 +344,28 @@ napi_value WebGL2RenderingContextImpl::GetFrameBufferAttachmentParameter(
         }
         return NVal::CreateNull(env).val_;
     }
+    return HandleFrameBufferPname(env, target, attachment, pname, attachmentObject);
+}
 
-    switch (pname) {
-        case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-            return attachmentObject->IsTexture() ? NVal::CreateInt64(env, GL_TEXTURE).val_
-                                                 : NVal::CreateInt64(env, GL_RENDERBUFFER).val_;
-        case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-            return attachmentObject->IsTexture() ? GetObject<WebGLTexture>(env, attachmentObject->id)
-                                                 : GetObject<WebGLRenderbuffer>(env, attachmentObject->id);
-        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER:
-        case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-            if (!attachmentObject->IsTexture())
+void WebGL2RenderingContextImpl::DoObjectDelete(int type, WebGLObject *obj)
+{
+    WebGLRenderingContextBaseImpl::DoObjectDelete(type, obj);
+    if (type == WebGLObject::WEBGL_OBJECT_BUFFER) {
+        WebGLBuffer *buffer = static_cast<WebGLBuffer *>(obj);
+        LOGD("DoObjectDelete %{public}d %{public}u", type, buffer->GetBufferId());
+        for (size_t i = 0; i < boundIndexedTransformFeedbackBuffers_.size(); ++i) {
+            if (boundIndexedTransformFeedbackBuffers_[i] == buffer->GetBufferId()) {
+                boundIndexedTransformFeedbackBuffers_.erase(i);
                 break;
-        case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
-        case GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
-        case GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
-        case GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
-        case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
-        case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE: {
-            GLint value = 0;
-            glGetFramebufferAttachmentParameteriv(target, attachment, pname, &value);
-            return NVal::CreateInt64(env, value).val_;
-        }
-        case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
-            if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
-                SET_ERROR(GL_INVALID_OPERATION);
-                return NVal::CreateNull(env).val_;
             }
-        case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING: {
-            GLint value = 0;
-            glGetFramebufferAttachmentParameteriv(target, attachment, pname, &value);
-            return NVal::CreateInt64(env, value).val_;
         }
-        default:
-            break;
+        for (auto it = boundIndexedUniformBuffers_.begin(); it != boundIndexedUniformBuffers_.end(); ++it) {
+            if (it->second == buffer->GetBufferId()) {
+                boundIndexedUniformBuffers_.erase(it);
+                break;
+            }
+        }
     }
-    SET_ERROR(GL_INVALID_ENUM);
-    return NVal::CreateNull(env).val_;
 }
 } // namespace Impl
 } // namespace Rosen

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "webgl/webgl_query.h"  // for WebGLQuery, WebGLQuery::cl...
+#include "webgl/webgl_query.h"
 
-#include "napi/n_class.h"     // for NClass
-#include "napi/n_func_arg.h"  // for NFuncArg, NARG_CNT, ZERO
-#include "napi/n_val.h"             // for NVal
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "napi/n_val.h"
 
 namespace OHOS {
 namespace Rosen {

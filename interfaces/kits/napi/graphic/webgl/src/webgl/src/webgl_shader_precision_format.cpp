@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "webgl/webgl_shader_precision_format.h"  // for WebGLShaderPrecisionFormat
+#include "webgl/webgl_shader_precision_format.h"
 
-#include "napi/n_class.h"                       // for NClass
-#include "napi/n_func_arg.h"                    // for NFuncArg
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "napi/n_val.h"
 #include "util/log.h"
-#include "napi/n_val.h"                               // for NVal
 
 namespace OHOS {
 namespace Rosen {
@@ -50,7 +50,7 @@ napi_value WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMin(napi_env
         return nullptr;
     }
     int size = obj->GetShaderPrecisionFormatRangeMin();
-    LOGI("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMin %d", size);
+    LOGD("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMin %d", size);
     return NVal::CreateInt64(env, size).val_;
 }
 
@@ -61,7 +61,7 @@ napi_value WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMax(napi_env
         return nullptr;
     }
     int size = obj->GetShaderPrecisionFormatRangeMax();
-    LOGI("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMax %d", size);
+    LOGD("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatRangeMax %d", size);
     return NVal::CreateInt64(env, size).val_;
 }
 
@@ -72,7 +72,7 @@ napi_value WebGLShaderPrecisionFormat::GetShaderPrecisionFormatPrecision(napi_en
         return nullptr;
     }
     int precision = obj->GetShaderPrecisionFormatPrecision();
-    LOGI("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatPrecision %d", precision);
+    LOGD("WebGLShaderPrecisionFormat::GetShaderPrecisionFormatPrecision %d", precision);
     return NVal::CreateInt64(env, precision).val_;
 }
 

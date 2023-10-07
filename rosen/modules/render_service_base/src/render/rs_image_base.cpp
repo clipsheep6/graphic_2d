@@ -23,6 +23,8 @@
 #include "common/rs_background_thread.h"
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
+#include "pipeline/rs_task_dispatcher.h"
+#include "pipeline/sk_resource_manager.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_image_cache.h"
 #include "render/rs_pixel_map_util.h"
@@ -100,8 +102,10 @@ void RSImageBase::SetImage(const sk_sp<SkImage> image)
 void RSImageBase::SetImage(const std::shared_ptr<Drawing::Image> image)
 #endif
 {
+    isDrawn_ = false;
     image_ = image;
     if (image_) {
+    SKResourceManager::Instance().HoldResource(image);
 #ifndef USE_ROSEN_DRAWING
         srcRect_.SetAll(0.0, 0.0, image_->width(), image_->height());
         GenUniqueId(image_->uniqueID());
@@ -111,6 +115,19 @@ void RSImageBase::SetImage(const std::shared_ptr<Drawing::Image> image)
 #endif
     }
 }
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#ifndef USE_ROSEN_DRAWING
+void RSImageBase::SetDmaImage(const sk_sp<SkImage> image)
+#else
+void RSImageBase::SetDmaImage(const std::shared_ptr<Drawing::Image> image)
+#endif
+{
+    isDrawn_ = false;
+    image_ = image;
+    SKResourceManager::Instance().HoldResource(image);
+}
+#endif
 
 void RSImageBase::SetPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap)
 {
@@ -129,6 +146,9 @@ void RSImageBase::SetSrcRect(const RectF& srcRect)
 
 void RSImageBase::SetDstRect(const RectF& dstRect)
 {
+    if (dstRect_ != dstRect) {
+        isDrawn_ = false;
+    }
     dstRect_ = dstRect;
 }
 

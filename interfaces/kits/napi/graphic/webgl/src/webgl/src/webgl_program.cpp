@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "webgl/webgl_program.h"  // for WebGLProgram, WebGLProgr...
+#include "webgl/webgl_program.h"
 
-#include "napi/n_class.h"       // for NClass
-#include "napi/n_func_arg.h"    // for NFuncArg, NARG_CNT, ZERO
-#include "napi/n_val.h"               // for NVal
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "napi/n_val.h"
 #include "util/log.h"
 #include "webgl/webgl_program.h"
 
@@ -42,7 +42,7 @@ napi_value WebGLProgram::Constructor(napi_env env, napi_callback_info info)
 bool WebGLProgram::Export(napi_env env, napi_value exports)
 {
     vector<napi_property_descriptor> props = {};
-    LOGE("WebGLProgram::Export %{public}p", this);
+    LOGD("WebGLProgram::Export %{public}p", this);
     string className = GetClassName();
     bool succ = false;
     napi_value clas = nullptr;
@@ -65,12 +65,10 @@ string WebGLProgram::GetClassName()
 
 WebGLProgram::WebGLProgram(napi_env env, napi_value exports) : NExporter(env, exports), programId_(0)
 {
-    LOGE("WebGLProgram::WebGLProgram %{public}p", this);
 };
 
 WebGLProgram::~WebGLProgram()
 {
-    LOGE("~WebGLProgram::WebGLProgram %{public}p %{public}u", this, programId_);
 }
 
 bool WebGLProgram::AttachShader(uint32_t index, uint32_t shaderId)

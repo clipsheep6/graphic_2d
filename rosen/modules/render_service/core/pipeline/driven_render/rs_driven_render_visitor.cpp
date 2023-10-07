@@ -37,7 +37,6 @@ RSDrivenRenderVisitor::RSDrivenRenderVisitor()
 
 void RSDrivenRenderVisitor::PrepareChildren(RSRenderNode& node)
 {
-    node.ApplyChildrenModifiers();
     for (auto& child : node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
@@ -95,7 +94,7 @@ void RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode(RSDrivenSurfaceRender
     }
     currDrivenSurfaceNode_->SetCurrFrameBounds(surfaceBounds, viewPort, contentAbsRect);
     currDrivenSurfaceNode_->UpdateActivateFrameState(dstRect, backgroundDirty_, contentDirty_, nonContentDirty_);
-    RS_LOGD("RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode DstRect = %s, SrcRect = %s",
+    RS_LOGD("RSDrivenRenderVisitor::PrepareDrivenSurfaceRenderNode DstRect = %{public}s, SrcRect = %{public}s",
         node.GetDstRect().ToString().c_str(), node.GetSrcRect().ToString().c_str());
 }
 
@@ -127,7 +126,6 @@ void RSDrivenRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     if (hasTraverseDrivenNode_ && currDrivenSurfaceNode_->IsBackgroundSurface()) {
         return;
     }
-    node.GetMutableRenderProperties().CheckEmptyBounds();
     node.ProcessRenderBeforeChildren(*canvas_);
     node.ProcessRenderContents(*canvas_);
     ProcessChildren(node);
@@ -149,7 +147,6 @@ void RSDrivenRenderVisitor::ProcessDrivenSurfaceRenderNode(RSDrivenSurfaceRender
 
 void RSDrivenRenderVisitor::ProcessDrivenCanvasRenderNode(RSCanvasRenderNode& node)
 {
-    node.GetMutableRenderProperties().CheckEmptyBounds();
     if (currDrivenSurfaceNode_->IsBackgroundSurface()) {
         node.ProcessDrivenBackgroundRender(*canvas_);
     } else {
@@ -249,16 +246,29 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
         RS_LOGE("RSDrivenRenderVisitor::RenderExpandedFrame: skSurface is null");
         return;
     }
+#ifndef USE_ROSEN_DRAWING
     if (skSurface->getCanvas() == nullptr) {
+#else
+    if (skSurface->GetCanvas() == nullptr) {
+#endif
         ROSEN_LOGE("RSDrivenRenderVisitor skSurface.getCanvas is null.");
         return;
     }
     canvas_ = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
+#ifndef USE_ROSEN_DRAWING
     canvas_->save();
     canvas_->translate(node.GetFrameOffsetX(), node.GetFrameOffsetY());
     canvas_->clipRect(SkRect::MakeLTRB(node.GetFrameClipRect().GetLeft(), node.GetFrameClipRect().GetTop(),
         node.GetFrameClipRect().GetRight(), node.GetFrameClipRect().GetBottom()));
     canvas_->clear(SK_ColorTRANSPARENT);
+#else
+    canvas_->Save();
+    canvas_->Translate(node.GetFrameOffsetX(), node.GetFrameOffsetY());
+    canvas_->ClipRect(Drawing::Rect(node.GetFrameClipRect().GetLeft(), node.GetFrameClipRect().GetTop(),
+        node.GetFrameClipRect().GetRight(), node.GetFrameClipRect().GetBottom()),
+        Drawing::ClipOp::INTERSECT, false);
+    canvas_->Clear(SK_ColorTRANSPARENT);
+#endif
 
     if (node.IsBackgroundSurface()) {
         RS_LOGD("RSDrivenRenderVisitor process BACKGROUND");
@@ -268,13 +278,21 @@ void RSDrivenRenderVisitor::RenderExpandedFrame(RSDrivenSurfaceRenderNode& node)
         }
         auto geoPtr = (
             rsDrivenParent->GetRenderProperties().GetBoundsGeometry());
+#ifndef USE_ROSEN_DRAWING
         canvas_->concat(geoPtr->GetAbsMatrix());
+#else
+        canvas_->ConcatMatrix(geoPtr->GetAbsMatrix());
+#endif
     } else {
         RS_LOGD("RSDrivenRenderVisitor process CONTENT");
     }
 
     ProcessCanvasRenderNode(*canvasNode);
+#ifndef USE_ROSEN_DRAWING
     canvas_->restore();
+#else
+    canvas_->Restore();
+#endif
     renderFrame->Flush();
     RS_TRACE_BEGIN("RSUniRender:WaitUtilDrivenRenderFinished");
     RSMainThread::Instance()->WaitUtilDrivenRenderFinished();

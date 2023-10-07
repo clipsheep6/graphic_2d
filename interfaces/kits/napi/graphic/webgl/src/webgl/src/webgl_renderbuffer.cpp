@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "webgl/webgl_renderbuffer.h"  // for WebGLRenderbuffer
+#include "webgl/webgl_renderbuffer.h"
 
-#include "napi/n_class.h"           // for NClass
-#include "napi/n_func_arg.h"        // for NFuncArg, NARG_CNT
-#include "napi/n_val.h"             // for NVal
-#include "util/util.h"
-#include "context/webgl_rendering_context_base.h"
 #include "context/webgl2_rendering_context_base.h"
+#include "context/webgl_rendering_context_base.h"
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "napi/n_val.h"
+#include "util/util.h"
 
 namespace OHOS {
 namespace Rosen {

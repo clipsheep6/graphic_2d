@@ -117,20 +117,20 @@ void RSRenderAnimation::Attach(RSRenderNode* renderNode)
     target_ = renderNode;
     if (target_ != nullptr) {
         targetId_ = target_->GetId();
-        if (!RSSystemProperties::IsSceneBoardEnabled()) {
-            target_->CheckGroupableAnimation(GetPropertyId(), true);
-        }
+        target_->CheckGroupableAnimation(GetPropertyId(), true);
     }
     OnAttach();
     Start();
     needUpdateStartTime_ = false;
 }
 
-void RSRenderAnimation::Detach()
+void RSRenderAnimation::Detach(bool forceDetach)
 {
-    OnDetach();
-    if (target_ != nullptr && (!RSSystemProperties::IsSceneBoardEnabled())) {
-        target_->CheckGroupableAnimation(GetPropertyId(), false);
+    if (!forceDetach) {
+        OnDetach();
+        if (target_ != nullptr) {
+            target_->CheckGroupableAnimation(GetPropertyId(), false);
+        }
     }
     target_ = nullptr;
 }
@@ -257,6 +257,9 @@ void RSRenderAnimation::ProcessOnRepeatFinish()
 
 bool RSRenderAnimation::Animate(int64_t time)
 {
+    // calculateAnimationValue_ is embedded modify for stat animate frame drop
+    calculateAnimationValue_ = true;
+
     if (!IsRunning()) {
         return state_ == AnimationState::FINISHED;
     }
@@ -280,6 +283,7 @@ bool RSRenderAnimation::Animate(int64_t time)
     // convert time to fraction
     auto [fraction, isInStartDelay, isFinished, isRepeatFinished] = animationFraction_.GetAnimationFraction(time);
     if (isInStartDelay) {
+        calculateAnimationValue_ = false;
         ProcessFillModeOnStart(fraction);
         ROSEN_LOGD("RSRenderAnimation::Animate, isInStartDelay is true");
         return false;

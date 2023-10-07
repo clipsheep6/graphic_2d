@@ -53,11 +53,6 @@ public:
 
     ~WebGLRenderbuffer() {};
 
-    static WebGLRenderbuffer *GetObjectInstance(napi_env env, napi_value obj)
-    {
-        return WebGLObject::GetObjectInstance<WebGLRenderbuffer>(env, obj);
-    }
-
     GLenum GetTarget() const { return target_; }
     void SetTarget(GLenum target) { target_ = target; }
 

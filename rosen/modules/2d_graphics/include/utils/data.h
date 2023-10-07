@@ -17,11 +17,12 @@
 #define DATA_H
 
 #include "impl_interface/data_impl.h"
+#include "utils/drawing_macros.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class Data {
+class DRAWING_API Data {
 public:
     Data() noexcept;
     virtual ~Data() {};
@@ -84,6 +85,8 @@ public:
     {
         return impl_->DowncastingTo<T>();
     }
+
+    std::shared_ptr<Data> Serialize() const;
 
 private:
     std::shared_ptr<DataImpl> impl_;

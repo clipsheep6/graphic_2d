@@ -15,11 +15,11 @@
 
 #include "context/webgl_rendering_context.h"
 
-#include "util/object_manager.h"
-#include "util/log.h"
-#include "util/egl_manager.h"
 #include "napi/n_class.h"
 #include "napi/n_func_arg.h"
+#include "util/egl_manager.h"
+#include "util/log.h"
+#include "util/object_manager.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1519,7 +1519,6 @@ void WebGLRenderingContextBase::GetRenderingContextBasePropertyDesc(std::vector<
         NVal::DeclareNapiFunction("activeTexture", WebGLRenderingContextBase::ActiveTexture),
         NVal::DeclareNapiFunction("attachShader", WebGLRenderingContextBase::AttachShader),
         NVal::DeclareNapiFunction("bindAttribLocation", WebGLRenderingContextBase::BindAttribLocation),
-        NVal::DeclareNapiFunction("bindBuffer", WebGLRenderingContextBase::BindBuffer),
         NVal::DeclareNapiFunction("bindFramebuffer", WebGLRenderingContextBase::BindFramebuffer),
         NVal::DeclareNapiFunction("bindRenderbuffer", WebGLRenderingContextBase::BindRenderbuffer),
         NVal::DeclareNapiFunction("bindTexture", WebGLRenderingContextBase::BindTexture),
@@ -1544,7 +1543,6 @@ void WebGLRenderingContextBase::GetRenderingContextBasePropertyDesc(std::vector<
         NVal::DeclareNapiFunction("createShader", WebGLRenderingContextBase::CreateShader),
         NVal::DeclareNapiFunction("createTexture", WebGLRenderingContextBase::CreateTexture),
         NVal::DeclareNapiFunction("cullFace", WebGLRenderingContextBase::CullFace),
-        NVal::DeclareNapiFunction("deleteBuffer", WebGLRenderingContextBase::DeleteBuffer),
         NVal::DeclareNapiFunction("deleteFramebuffer", WebGLRenderingContextBase::DeleteFramebuffer),
         NVal::DeclareNapiFunction("deleteProgram", WebGLRenderingContextBase::DeleteProgram),
         NVal::DeclareNapiFunction("deleteRenderbuffer", WebGLRenderingContextBase::DeleteRenderbuffer),
@@ -1570,7 +1568,6 @@ void WebGLRenderingContextBase::GetRenderingContextBasePropertyDesc(std::vector<
         NVal::DeclareNapiFunction("hint", WebGLRenderingContextBase::Hint),
         NVal::DeclareNapiFunction("isBuffer", WebGLRenderingContextBase::IsBuffer),
         NVal::DeclareNapiFunction("isEnabled", WebGLRenderingContextBase::IsEnabled),
-        NVal::DeclareNapiFunction("renderbufferStorage", WebGLRenderingContextBase::RenderbufferStorage),
         NVal::DeclareNapiFunction("sampleCoverage", WebGLRenderingContextBase::SampleCoverage),
         NVal::DeclareNapiFunction("scissor", WebGLRenderingContextBase::Scissor),
         NVal::DeclareNapiFunction("shaderSource", WebGLRenderingContextBase::ShaderSource),

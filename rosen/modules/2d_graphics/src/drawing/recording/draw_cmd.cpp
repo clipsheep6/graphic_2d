@@ -26,6 +26,7 @@
 #include "recording/mask_filter_cmd_list.h"
 #include "recording/path_effect_cmd_list.h"
 #include "recording/shader_effect_cmd_list.h"
+#include "recording/region_cmd_list.h"
 
 #include "draw/path.h"
 #include "draw/brush.h"
@@ -36,12 +37,14 @@
 #include "effect/path_effect.h"
 #include "effect/shader_effect.h"
 #include "utils/scalar.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybackFuncLUT_ = {
     { DrawOpItem::POINT_OPITEM,             DrawPointOpItem::Playback },
+    { DrawOpItem::POINTS_OPITEM,            DrawPointsOpItem::Playback },
     { DrawOpItem::LINE_OPITEM,              DrawLineOpItem::Playback },
     { DrawOpItem::RECT_OPITEM,              DrawRectOpItem::Playback },
     { DrawOpItem::ROUND_RECT_OPITEM,        DrawRoundRectOpItem::Playback },
@@ -53,13 +56,20 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::PATH_OPITEM,              DrawPathOpItem::Playback },
     { DrawOpItem::BACKGROUND_OPITEM,        DrawBackgroundOpItem::Playback },
     { DrawOpItem::SHADOW_OPITEM,            DrawShadowOpItem::Playback },
+    { DrawOpItem::COLOR_OPITEM,             DrawColorOpItem::Playback },
+    { DrawOpItem::IMAGE_NINE_OPITEM,        DrawImageNineOpItem::Playback },
+    { DrawOpItem::IMAGE_ANNOTATION_OPITEM,  DrawAnnotationOpItem::Playback },
+    { DrawOpItem::IMAGE_LATTICE_OPITEM,     DrawImageLatticeOpItem::Playback },
     { DrawOpItem::BITMAP_OPITEM,            DrawBitmapOpItem::Playback },
     { DrawOpItem::IMAGE_OPITEM,             DrawImageOpItem::Playback },
     { DrawOpItem::IMAGE_RECT_OPITEM,        DrawImageRectOpItem::Playback },
     { DrawOpItem::PICTURE_OPITEM,           DrawPictureOpItem::Playback },
+    { DrawOpItem::TEXT_BLOB_OPITEM,         DrawTextBlobOpItem::Playback },
     { DrawOpItem::CLIP_RECT_OPITEM,         ClipRectOpItem::Playback },
+    { DrawOpItem::CLIP_IRECT_OPITEM,        ClipIRectOpItem::Playback },
     { DrawOpItem::CLIP_ROUND_RECT_OPITEM,   ClipRoundRectOpItem::Playback },
     { DrawOpItem::CLIP_PATH_OPITEM,         ClipPathOpItem::Playback },
+    { DrawOpItem::CLIP_REGION_OPITEM,       ClipRegionOpItem::Playback },
     { DrawOpItem::SET_MATRIX_OPITEM,        SetMatrixOpItem::Playback },
     { DrawOpItem::RESET_MATRIX_OPITEM,      ResetMatrixOpItem::Playback },
     { DrawOpItem::CONCAT_MATRIX_OPITEM,     ConcatMatrixOpItem::Playback },
@@ -72,6 +82,7 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::SAVE_OPITEM,              SaveOpItem::Playback },
     { DrawOpItem::SAVE_LAYER_OPITEM,        SaveLayerOpItem::Playback },
     { DrawOpItem::RESTORE_OPITEM,           RestoreOpItem::Playback },
+    { DrawOpItem::DISCARD_OPITEM,           DiscardOpItem::Playback },
     { DrawOpItem::ATTACH_PEN_OPITEM,        AttachPenOpItem::Playback },
     { DrawOpItem::ATTACH_BRUSH_OPITEM,      AttachBrushOpItem::Playback },
     { DrawOpItem::DETACH_PEN_OPITEM,        DetachPenOpItem::Playback },
@@ -79,6 +90,10 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::CLIP_ADAPTIVE_ROUND_RECT_OPITEM, ClipAdaptiveRoundRectOpItem::Playback},
     { DrawOpItem::ADAPTIVE_IMAGE_OPITEM,    DrawAdaptiveImageOpItem::Playback},
     { DrawOpItem::ADAPTIVE_PIXELMAP_OPITEM, DrawAdaptivePixelMapOpItem::Playback},
+    { DrawOpItem::REGION_OPITEM,            DrawRegionOpItem::Playback },
+    { DrawOpItem::PATCH_OPITEM,             DrawPatchOpItem::Playback },
+    { DrawOpItem::EDGEAAQUAD_OPITEM, DrawEdgeAAQuadOpItem::Playback },
+    { DrawOpItem::VERTICES_OPITEM,          DrawVerticesOpItem::Playback },
 };
 
 CanvasPlayer::CanvasPlayer(Canvas& canvas, const CmdList& cmdList, const Rect& rect)
@@ -115,6 +130,23 @@ void DrawPointOpItem::Playback(CanvasPlayer& player, const void *opItem)
 void DrawPointOpItem::Playback(Canvas& canvas) const
 {
     canvas.DrawPoint(point_);
+}
+
+DrawPointsOpItem::DrawPointsOpItem(PointMode mode, const std::pair<uint32_t, size_t> pts)
+    : DrawOpItem(POINTS_OPITEM), mode_(mode), pts_(pts) {}
+
+void DrawPointsOpItem::Playback(CanvasPlayer& player, const void *opItem)
+{
+    if (opItem != nullptr) {
+        const auto *op = static_cast<const DrawPointsOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawPointsOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto pts = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, pts_);
+    canvas.DrawPoints(mode_, pts.size(), pts.data());
 }
 
 DrawLineOpItem::DrawLineOpItem(const Point& startPt, const Point& endPt) : DrawOpItem(LINE_OPITEM),
@@ -341,6 +373,232 @@ void DrawShadowOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     canvas.DrawShadow(*path, planeParams_, devLightPos_, lightRadius_, ambientColor_, spotColor_, flag_);
 }
 
+DrawRegionOpItem::DrawRegionOpItem(const CmdListHandle& region) : DrawOpItem(REGION_OPITEM), region_(region) {}
+
+void DrawRegionOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawRegionOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawRegionOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto region = CmdListHelper::GetFromCmdList<RegionCmdList, Region>(cmdList, region_);
+    if (region == nullptr) {
+        LOGE("region is nullptr!");
+        return;
+    }
+
+    canvas.DrawRegion(*region);
+}
+
+DrawPatchOpItem::DrawPatchOpItem(const std::pair<uint32_t, size_t> cubics, const std::pair<uint32_t, size_t> colors,
+    const std::pair<uint32_t, size_t> texCoords, BlendMode mode)
+    : DrawOpItem(PATCH_OPITEM), cubics_(cubics), colors_(colors), texCoords_(texCoords), mode_(mode) {}
+
+void DrawPatchOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawPatchOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawPatchOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto cubics = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, cubics_);
+    auto colors = CmdListHelper::GetVectorFromCmdList<ColorQuad>(cmdList, colors_);
+    auto texCoords = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, texCoords_);
+
+    canvas.DrawPatch(cubics.empty() ? nullptr : cubics.data(),
+        colors.empty() ? nullptr : colors.data(),
+        texCoords.empty() ? nullptr : texCoords.data(),
+        mode_);
+}
+
+DrawEdgeAAQuadOpItem::DrawEdgeAAQuadOpItem(const Rect& rect,
+    const std::pair<uint32_t, size_t> clipQuad, QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
+    : DrawOpItem(EDGEAAQUAD_OPITEM), rect_(rect), clipQuad_(clipQuad),
+    aaFlags_(aaFlags), color_(color), mode_(mode) {}
+
+void DrawEdgeAAQuadOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawEdgeAAQuadOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawEdgeAAQuadOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto clip = CmdListHelper::GetVectorFromCmdList<Point>(cmdList, clipQuad_);
+    canvas.DrawEdgeAAQuad(rect_, clip.empty() ? nullptr : clip.data(), aaFlags_, color_, mode_);
+}
+
+DrawVerticesOpItem::DrawVerticesOpItem(const VerticesHandle& vertices, BlendMode mode)
+    : DrawOpItem(VERTICES_OPITEM), vertices_(vertices), mode_(mode) {}
+
+void DrawVerticesOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawVerticesOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawVerticesOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto vertices = CmdListHelper::GetVerticesFromCmdList(cmdList, vertices_);
+    if (vertices == nullptr) {
+        return;
+    }
+
+    canvas.DrawVertices(*vertices, mode_);
+}
+
+DrawColorOpItem::DrawColorOpItem(ColorQuad color, BlendMode mode) : DrawOpItem(COLOR_OPITEM),
+    color_(color), mode_(mode) {}
+
+void DrawColorOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawColorOpItem*>(opItem);
+        op->Playback(player.canvas_);
+    }
+}
+
+void DrawColorOpItem::Playback(Canvas& canvas) const
+{
+    canvas.DrawColor(color_, mode_);
+}
+
+DrawImageNineOpItem::DrawImageNineOpItem(const ImageHandle& image, const RectI& center, const Rect& dst,
+    FilterMode filter, const BrushHandle& brushHandle, bool hasBrush) : DrawOpItem(IMAGE_NINE_OPITEM),
+    image_(std::move(image)), center_(center), dst_(dst), filter_(filter),
+    brushHandle_(brushHandle), hasBrush_(hasBrush) {}
+
+void DrawImageNineOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawImageNineOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawImageNineOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto image = CmdListHelper::GetImageFromCmdList(cmdList, image_);
+    if (image == nullptr) {
+        return;
+    }
+
+    std::shared_ptr<Brush> brush = nullptr;
+    if (hasBrush_) {
+        auto colorSpace = CmdListHelper::GetFromCmdList<ColorSpaceCmdList, ColorSpace>(
+            cmdList, brushHandle_.colorSpaceHandle);
+        auto shaderEffect = CmdListHelper::GetFromCmdList<ShaderEffectCmdList, ShaderEffect>(
+            cmdList, brushHandle_.shaderEffectHandle);
+        auto colorFilter = CmdListHelper::GetFromCmdList<ColorFilterCmdList, ColorFilter>(
+            cmdList, brushHandle_.colorFilterHandle);
+        auto imageFilter = CmdListHelper::GetFromCmdList<ImageFilterCmdList, ImageFilter>(
+            cmdList, brushHandle_.imageFilterHandle);
+        auto maskFilter = CmdListHelper::GetFromCmdList<MaskFilterCmdList, MaskFilter>(
+            cmdList, brushHandle_.maskFilterHandle);
+
+        Filter filter;
+        filter.SetColorFilter(colorFilter);
+        filter.SetImageFilter(imageFilter);
+        filter.SetMaskFilter(maskFilter);
+        filter.SetFilterQuality(brushHandle_.filterQuality);
+
+        const Color4f color4f = { brushHandle_.color.GetRedF(), brushHandle_.color.GetGreenF(),
+            brushHandle_.color.GetBlueF(), brushHandle_.color.GetAlphaF() };
+
+        brush = std::make_shared<Brush>();
+        brush->SetColor(color4f, colorSpace);
+        brush->SetShaderEffect(shaderEffect);
+        brush->SetBlendMode(brushHandle_.mode);
+        brush->SetAntiAlias(brushHandle_.isAntiAlias);
+        brush->SetFilter(filter);
+    }
+    canvas.DrawImageNine(image.get(), center_, dst_, filter_, brush.get());
+}
+
+DrawAnnotationOpItem::DrawAnnotationOpItem(const Rect& rect, const char* key, const ImageHandle& data)
+    : DrawOpItem(IMAGE_ANNOTATION_OPITEM),
+    rect_(rect), key_(key), data_(data) {}
+
+void DrawAnnotationOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawAnnotationOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawAnnotationOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto data = CmdListHelper::GetDataFromCmdList(cmdList, data_);
+    if (data == nullptr) {
+        return;
+    }
+    canvas.DrawAnnotation(rect_, key_, data.get());
+}
+
+DrawImageLatticeOpItem::DrawImageLatticeOpItem(const ImageHandle& image, const Lattice& lattice, const Rect& dst,
+    FilterMode filter, const BrushHandle& brushHandle, bool hasBrush) : DrawOpItem(IMAGE_LATTICE_OPITEM),
+    image_(std::move(image)), lattice_(lattice), dst_(dst), filter_(filter),
+    brushHandle_(brushHandle), hasBrush_(hasBrush) {}
+
+void DrawImageLatticeOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawImageLatticeOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawImageLatticeOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto image = CmdListHelper::GetImageFromCmdList(cmdList, image_);
+    if (image == nullptr) {
+        return;
+    }
+
+    std::shared_ptr<Brush> brush = nullptr;
+    if (hasBrush_) {
+        auto colorSpace = CmdListHelper::GetFromCmdList<ColorSpaceCmdList, ColorSpace>(
+            cmdList, brushHandle_.colorSpaceHandle);
+        auto shaderEffect = CmdListHelper::GetFromCmdList<ShaderEffectCmdList, ShaderEffect>(
+            cmdList, brushHandle_.shaderEffectHandle);
+        auto colorFilter = CmdListHelper::GetFromCmdList<ColorFilterCmdList, ColorFilter>(
+            cmdList, brushHandle_.colorFilterHandle);
+        auto imageFilter = CmdListHelper::GetFromCmdList<ImageFilterCmdList, ImageFilter>(
+            cmdList, brushHandle_.imageFilterHandle);
+        auto maskFilter = CmdListHelper::GetFromCmdList<MaskFilterCmdList, MaskFilter>(
+            cmdList, brushHandle_.maskFilterHandle);
+
+        Filter filter;
+        filter.SetColorFilter(colorFilter);
+        filter.SetImageFilter(imageFilter);
+        filter.SetMaskFilter(maskFilter);
+        filter.SetFilterQuality(brushHandle_.filterQuality);
+
+        const Color4f color4f = { brushHandle_.color.GetRedF(), brushHandle_.color.GetGreenF(),
+            brushHandle_.color.GetBlueF(), brushHandle_.color.GetAlphaF() };
+
+        brush = std::make_shared<Brush>();
+        brush->SetColor(color4f, colorSpace);
+        brush->SetShaderEffect(shaderEffect);
+        brush->SetBlendMode(brushHandle_.mode);
+        brush->SetAntiAlias(brushHandle_.isAntiAlias);
+        brush->SetFilter(filter);
+    }
+    canvas.DrawImageLattice(image.get(), lattice_, dst_, filter_, brush.get());
+}
+
 DrawBitmapOpItem::DrawBitmapOpItem(const ImageHandle& bitmap, scalar px, scalar py)
     : DrawOpItem(BITMAP_OPITEM), bitmap_(bitmap), px_(px), py_(py) {}
 
@@ -426,6 +684,27 @@ void DrawPictureOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     canvas.DrawPicture(*picture);
 }
 
+DrawTextBlobOpItem::DrawTextBlobOpItem(const ImageHandle& textBlob, const scalar x, const scalar y)
+    : DrawOpItem(TEXT_BLOB_OPITEM), textBlob_(textBlob), x_(x), y_(y) {}
+
+void DrawTextBlobOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (!opItem) {
+        const auto* op = static_cast<const DrawTextBlobOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawTextBlobOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    std::shared_ptr<TextBlob> textBlob = CmdListHelper::GetTextBlobFromCmdList(cmdList, textBlob_);
+    if (!textBlob) {
+        LOGE("textBlob nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        return;
+    }
+    canvas.DrawTextBlob(textBlob.get(), x_, y_);
+}
+
 ClipRectOpItem::ClipRectOpItem(const Rect& rect, ClipOp op, bool doAntiAlias)
     : DrawOpItem(CLIP_RECT_OPITEM), rect_(rect), clipOp_(op), doAntiAlias_(doAntiAlias) {}
 
@@ -440,6 +719,22 @@ void ClipRectOpItem::Playback(CanvasPlayer& player, const void* opItem)
 void ClipRectOpItem::Playback(Canvas& canvas) const
 {
     canvas.ClipRect(rect_, clipOp_, doAntiAlias_);
+}
+
+ClipIRectOpItem::ClipIRectOpItem(const RectI& rect, ClipOp op)
+    : DrawOpItem(CLIP_IRECT_OPITEM), rect_(rect), clipOp_(op) {}
+
+void ClipIRectOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const ClipIRectOpItem*>(opItem);
+        op->Playback(player.canvas_);
+    }
+}
+
+void ClipIRectOpItem::Playback(Canvas& canvas) const
+{
+    canvas.ClipIRect(rect_, clipOp_);
 }
 
 ClipRoundRectOpItem::ClipRoundRectOpItem(std::pair<uint32_t, size_t> radiusXYData, const Rect& rect, ClipOp op,
@@ -482,6 +777,28 @@ void ClipPathOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     }
 
     canvas.ClipPath(*path, clipOp_, doAntiAlias_);
+}
+
+ClipRegionOpItem::ClipRegionOpItem(const CmdListHandle& region, ClipOp clipOp)
+    : DrawOpItem(CLIP_REGION_OPITEM), region_(region), clipOp_(clipOp) {}
+
+void ClipRegionOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const ClipRegionOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void ClipRegionOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto region = CmdListHelper::GetFromCmdList<RegionCmdList, Region>(cmdList, region_);
+    if (region == nullptr) {
+        LOGE("region is nullptr!");
+        return;
+    }
+
+    canvas.ClipRegion(*region, clipOp_);
 }
 
 SetMatrixOpItem::SetMatrixOpItem(const Matrix& matrix) : DrawOpItem(SET_MATRIX_OPITEM)
@@ -719,6 +1036,21 @@ void RestoreOpItem::Playback(CanvasPlayer& player, const void* opItem)
 void RestoreOpItem::Playback(Canvas& canvas) const
 {
     canvas.Restore();
+}
+
+DiscardOpItem::DiscardOpItem() : DrawOpItem(DISCARD_OPITEM) {}
+
+void DiscardOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DiscardOpItem*>(opItem);
+        op->Playback(player.canvas_);
+    }
+}
+
+void DiscardOpItem::Playback(Canvas& canvas) const
+{
+    canvas.Discard();
 }
 
 AttachPenOpItem::AttachPenOpItem(const PenHandle& penHandle) : DrawOpItem(ATTACH_PEN_OPITEM), penHandle_(penHandle) {}

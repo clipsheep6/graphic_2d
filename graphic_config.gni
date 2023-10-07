@@ -16,6 +16,7 @@ declare_args() {
   graphic_2d_feature_ace_enable_gpu = true
   graphic_2d_feature_color_gamut_enable = false
   graphic_2d_feature_rs_enable_eglimage = false
+  graphic_2d_feature_use_texgine = false
   graphic_2d_feature_rs_enable_uni_render = false
   graphic_2d_feature_wuji_enable = false
   graphic_2d_feature_enable_afbc = false
@@ -23,15 +24,26 @@ declare_args() {
   graphic_2d_feature_parallel_render_enable = true
   graphic_2d_feature_enable_vulkan = false
   graphic_2d_feature_enable_filter_cache = true
+  enable_text_gine = true
+  use_texgine = false
+  player_framework_enable = true
+  graphic_2d_feature_drivers_interface_display_enable = true
+  graphic_2d_feature_tp_switch_enbale = false
+
   if (defined(build_cross_platform_version) && build_cross_platform_version) {
     use_new_render_context = false
+    is_cross_platform = true
   } else {
+    is_cross_platform = false
     use_new_render_context = false
   }
 }
 
 gpu_defines = []
 accessibility_defines = []
+if (enable_text_gine) {
+  gpu_defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+}
 if (graphic_2d_feature_ace_enable_gpu) {
   if (graphic_2d_feature_enable_vulkan) {
     gpu_defines += [
@@ -83,6 +95,8 @@ if ((graphic_2d_feature_rs_enable_eglimage &&
   rs_enable_eglimage = false
 }
 
+use_texgine = graphic_2d_feature_use_texgine
+
 if (graphic_2d_feature_rs_enable_uni_render) {
   rs_enable_driven_render = true
   gpu_defines += [
@@ -106,12 +120,11 @@ if (defined(use_new_render_context) && use_new_render_context) {
   gpu_defines -= [ "RS_ENABLE_PARALLEL_RENDER" ]
 }
 
-if (graphic_2d_feature_enable_filter_cache) {
-  rs_enable_filter_cache = true
-  gpu_defines += [ "RS_ENABLE_FILTER_CACHE" ]
-} else {
-  rs_enable_filter_cache = false
-  gpu_defines -= [ "RS_ENABLE_FILTER_CACHE" ]
+tp_defines = []
+tp_feature_enable = false
+if (graphic_2d_feature_tp_switch_enbale) {
+  tp_feature_enable = true
+  tp_defines = [ "TP_FEATURE_ENABLE" ]
 }
 
 graphic_2d_ext_configs = {
@@ -121,6 +134,10 @@ check_graphic_ext_file_args = [
   "--filename",
   rebase_path("//foundation/graphic/graphic_2d_ext/ohcore/build/config.gni"),
 ]
+check_ddgr_ext_file_args = [
+  "--filename",
+  rebase_path("//foundation/graphic/graphic_2d_ext/ddgr/ddgr_config.gni"),
+]
 if (exec_script(check_graphic_ext_file_script,
                 check_graphic_ext_file_args,
                 "string") == "True" && "${product_name}" == "ohcore") {
@@ -128,15 +145,35 @@ if (exec_script(check_graphic_ext_file_script,
     import("//foundation/graphic/graphic_2d_ext/ohcore/build/config.gni")
   }
 }
+if (exec_script(check_graphic_ext_file_script,
+                check_ddgr_ext_file_args,
+                "string") == "True") {
+  ddgr_ext_configs = {
+    import("//foundation/graphic/graphic_2d_ext/ddgr/ddgr_config.gni")
+  }
+}
 
+flutter_root = "//third_party/flutter"
+ace_flutter_engine_root = "$flutter_root/build"
 graphic_2d_root = "//foundation/graphic/graphic_2d"
 hilog_root = "//base/hiviewdfx/hilog"
 window_base_path = "//foundation/window/window_manager"
 safwk_base = "//foundation/systemabilitymgr/safwk"
+skia_root_new = "//third_party/skia"
 
 accessibility_enable = false
 if (defined(global_parts_info) &&
     defined(global_parts_info.barrierfree_accessibility)) {
   accessibility_enable = true
   accessibility_defines = [ "ACCESSIBILITY_ENABLE" ]
+}
+
+if (defined(global_parts_info) &&
+    !defined(global_parts_info.multimedia_player_framework)) {
+  player_framework_enable = false
+}
+
+if (defined(global_parts_info) &&
+    !defined(global_parts_info.hdf_drivers_interface_display)) {
+  graphic_2d_feature_drivers_interface_display_enable = false
 }

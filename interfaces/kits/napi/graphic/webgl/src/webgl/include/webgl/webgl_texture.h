@@ -30,6 +30,8 @@ struct TexImageArg;
 struct TexStorageArg;
 class TextureLevelCtrl;
 struct TextureLevelInfo;
+struct TextureFormatTypeMap;
+struct TextureFormatTypeMapCompare;
 
 class WebGLTexture final : public NExporter, public WebGLObject {
 public:
@@ -91,11 +93,6 @@ public:
     static int64_t ComputeTextureLevel(int64_t width, int64_t height, int64_t depth);
     static GLint GetMaxTextureLevelForTarget(GLenum target, bool highWebGL);
     static GLenum GetTypeFromInternalFormat(GLenum internalFormat);
-    // validateTexFuncFormatAndType
-    static bool CheckTextureFormatAndType(GLenum internalFormat, GLenum format, GLenum type, GLint level, bool isHigh)
-    {
-        return true;
-    }
     static bool CheckNPOT(GLsizei width, GLsizei height)
     {
         if (!width || !height)
@@ -107,6 +104,11 @@ public:
     static bool CheckTextureSize(GLsizei offset, GLsizei w, GLsizei real);
     static const std::vector<GLenum> &GetSupportInternalFormatGroup1();
     static const std::vector<GLenum> &GetSupportInternalFormatGroup2();
+    static const std::vector<GLenum>& GetSupportedInternalFormats();
+    static const std::vector<GLenum>& GetSupportedFormats();
+    static const std::vector<GLenum>& GetSupportedTypes();
+    static const std::set<TextureFormatTypeMap, TextureFormatTypeMapCompare>& GetSupportedFormatTypeMaps();
+    static BufferDataType ChangeToBufferDataType(GLenum type);
 private:
     const TextureLevelInfo* GetTextureLevel(GLenum target, GLint level) const;
     GLenum target_ { 0 };
@@ -143,68 +145,23 @@ struct TextureLevelInfo {
     GLsizei height { 0 };
     GLsizei depth { 0 };
     GLenum type { 0 };
+    void Dump(const std::string &info, GLenum target, GLint level) const;
 };
 
-struct TexImageArg {
-    int func;
-    GLenum target;
-    GLint level;
+struct TextureFormatTypeMap {
     GLenum internalFormat;
     GLenum format;
     GLenum type;
-    GLsizei width;
-    GLsizei height;
-    GLsizei border;
-    GLsizei depth;
-    TexImageArg()
-    : func(0), target(0), level(0), internalFormat(0), format(0), type(0), width(0), height(0), border(0), depth(0) {}
-    TexImageArg(const TexImageArg& arg)
-    {
-        func = arg.func;
-        target = arg.target;
-        level = arg.level;
-        internalFormat = arg.internalFormat;
-        format = arg.format;
-        type = arg.type;
-        width = arg.width;
-        height = arg.height;
-        border = arg.border;
-        depth = arg.depth;
-    }
-    TexImageArg(
-        GLenum target, GLint level, GLenum internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLenum type)
-    {
-        this->target = target;
-        this->level = level;
-        this->internalFormat = internalFormat;
-        this->type = type;
-        this->width = width;
-        this->height = height;
-        this->depth = depth;
-    }
-    void Dump(const std::string& info) const;
+    TextureFormatTypeMap(GLenum arg1, GLenum arg2, GLenum arg3) : internalFormat(arg1), format(arg2), type(arg3) {}
 };
 
-struct TexStorageArg {
-    int func;
-    GLenum target;
-    GLsizei levels;
-    GLenum internalFormat;
-    GLsizei width;
-    GLsizei height;
-    GLsizei depth;
-    TexStorageArg() : func(0), target(0), levels(0), internalFormat(0), width(0), height(0), depth(0) {}
-    TexStorageArg(const TexStorageArg& arg)
+struct TextureFormatTypeMapCompare {
+    bool operator() (const TextureFormatTypeMap& lhs, const TextureFormatTypeMap& rhs) const
     {
-        func = arg.func;
-        target = arg.target;
-        levels = arg.levels;
-        internalFormat = arg.internalFormat;
-        width = arg.width;
-        height = arg.height;
-        depth = arg.depth;
+        return (lhs.internalFormat < rhs.internalFormat
+            || ((lhs.internalFormat == rhs.internalFormat) && (lhs.format < rhs.format))
+            || ((lhs.internalFormat == rhs.internalFormat) && (lhs.format == rhs.format) && (lhs.type < rhs.type)));
     }
-    void Dump(const std::string& info) const;
 };
 } // namespace Rosen
 } // namespace OHOS

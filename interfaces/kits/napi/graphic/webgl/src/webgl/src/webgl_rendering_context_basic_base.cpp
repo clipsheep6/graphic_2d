@@ -34,6 +34,7 @@ WebGLRenderingContextBasicBase::~WebGLRenderingContextBasicBase()
 {
     if (webGlContextAttributes_ != nullptr) {
         delete webGlContextAttributes_;
+        webGlContextAttributes_ = nullptr;
     }
     if (eglSurface_ != nullptr) {
         eglDestroySurface(EglManager::GetInstance().GetEGLDisplay(), eglSurface_);
@@ -43,18 +44,18 @@ WebGLRenderingContextBasicBase::~WebGLRenderingContextBasicBase()
 
 void WebGLRenderingContextBasicBase::SetEglWindow(void* window)
 {
-    LOGI("WebGLRenderingContextBasicBase::SetEglWindow.\n");
+    LOGD("WebGLRenderingContextBasicBase::SetEglWindow.\n");
     eglWindow_ = reinterpret_cast<NativeWindow*>(window);
 }
 
 void WebGLRenderingContextBasicBase::Create(void* context)
 {
-    LOGI("WebGLRenderingContextBasicBase::Create.\n");
+    LOGD("WebGLRenderingContextBasicBase::Create.\n");
 }
 
 void WebGLRenderingContextBasicBase::Init()
 {
-    LOGI("WebGLRenderingContextBasicBase::Init. %{public}p", this);
+    LOGD("WebGLRenderingContextBasicBase::Init. %{public}p", this);
     EglManager::GetInstance().Init();
     if (eglSurface_ == nullptr) {
         eglSurface_ = EglManager::GetInstance().CreateSurface(eglWindow_);
@@ -63,8 +64,8 @@ void WebGLRenderingContextBasicBase::Init()
 
 void WebGLRenderingContextBasicBase::SetBitMapPtr(char* bitMapPtr, int bitMapWidth, int bitMapHeight)
 {
-    LOGI("WebGLRenderingContextBasicBase::SetBitMapPtr. %{public}p", this);
-    LOGI("WebGLRenderingContextBasicBase SetBitMapPtr [%{public}d %{public}d]", bitMapWidth, bitMapHeight);
+    LOGD("WebGLRenderingContextBasicBase::SetBitMapPtr. %{public}p", this);
+    LOGD("WebGLRenderingContextBasicBase SetBitMapPtr [%{public}d %{public}d]", bitMapWidth, bitMapHeight);
     bitMapPtr_ = bitMapPtr;
     bitMapWidth_ = bitMapWidth;
     bitMapHeight_ = bitMapHeight;
@@ -88,20 +89,21 @@ void WebGLRenderingContextBasicBase::Attach(uint64_t textureId) {}
 void WebGLRenderingContextBasicBase::Update()
 {
     if (eglWindow_) {
-        LOGI("WebGLRenderingContextBasicBase eglSwapBuffers");
+        LOGD("eglSwapBuffers");
         EGLDisplay eglDisplay = EglManager::GetInstance().GetEGLDisplay();
         eglSwapBuffers(eglDisplay, eglSurface_);
     } else {
-        LOGI("WebGLRenderingContextBasicBase glReadPixels");
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
+        LOGD("glReadPixels packAlignment %{public}d", packAlignment_);
+        glPixelStorei(GL_PACK_ALIGNMENT, 4); // 4 alignment
         glReadPixels(0, 0, bitMapWidth_, bitMapHeight_, GL_RGBA, GL_UNSIGNED_BYTE, bitMapPtr_);
-        LOGI("WebGLRenderingContextBasicBase glReadPixels %{public}u", glGetError());
+        glPixelStorei(GL_PACK_ALIGNMENT, packAlignment_);
+        LOGD("glReadPixels result %{public}u", glGetError());
     }
     if (updateCallback_) {
-        LOGI("WebGLRenderingContextBasicBase mUpdateCallback");
+        LOGD("mUpdateCallback");
         updateCallback_();
     } else {
-        LOGE("WebGLRenderingContextBasicBase mUpdateCallback null");
+        LOGE("mUpdateCallback is null");
     }
 }
 
@@ -137,49 +139,41 @@ bool WebGLRenderingContextBasicBase::SetWebGLContextAttributes(const std::vector
             return false;
         }
     }
-
-    size_t i;
-    for (i = 1; i < vec.size(); i++) {
-        string alpha = GetContextAttr(vec[i], "alpha", 7, 4);
-        if (alpha == "true") {
+    for (size_t i = 1; i < vec.size(); i++) {
+        if (GetContextAttr(vec[i], "alpha", 7, 4) == "true") { // 7 alpha length  4 true
             webGlContextAttributes_->alpha_ = true;
         }
-        string depth = GetContextAttr(vec[i], "depth", 7, 4);
-        if (depth == "true") {
+        if (GetContextAttr(vec[i], "depth", 7, 4) == "true") { // 7 depth length  4 true
             webGlContextAttributes_->depth_ = true;
         }
-        string stencil = GetContextAttr(vec[i], "stencil", 9, 4);
-        if (stencil == "true") {
+        if (GetContextAttr(vec[i], "stencil", 9, 4) == "true") { // 9 stencil length  4 true
             webGlContextAttributes_->stencil_ = true;
         }
-        string premultipliedAlpha = GetContextAttr(vec[i], "premultipliedAlpha", 23, 4);
-        if (premultipliedAlpha == "true") {
+        if (GetContextAttr(vec[i], "premultipliedAlpha", 23, 4) == "true") { // 23 premultipliedAlpha length  4 true
             webGlContextAttributes_->premultipliedAlpha_ = true;
         }
-        string preserveDrawingBuffer = GetContextAttr(vec[i], "preserveDrawingBuffer", 18, 4);
-        if (preserveDrawingBuffer == "true") {
+        // 18 preserveDrawingBuffer length 4 true
+        if (GetContextAttr(vec[i], "preserveDrawingBuffer", 18, 4) == "true") {
             webGlContextAttributes_->preserveDrawingBuffer_ = true;
         }
-        string failIfMajorPerformanceCaveat = GetContextAttr(vec[i], "failIfMajorPerformanceCaveat", 30, 4);
-        if (failIfMajorPerformanceCaveat == "true") {
+        // 30 failIfMajorPerformanceCaveat length  4 true
+        if (GetContextAttr(vec[i], "failIfMajorPerformanceCaveat", 30, 4) == "true") {
             webGlContextAttributes_->failIfMajorPerformanceCaveat_ = true;
         }
-        string desynchronized = GetContextAttr(vec[i], "desynchronized", 16, 4);
-        if (desynchronized == "true") {
+        if (GetContextAttr(vec[i], "desynchronized", 16, 4) == "true") { // 16 desynchronized length 4 true
             webGlContextAttributes_->desynchronized_ = true;
         }
-        string highPerformance = GetContextAttr(vec[i], "powerPreference", 18, 16);
+        string highPerformance = GetContextAttr(vec[i], "powerPreference", 18, 16); // 18 16 powerPreference length
         if (highPerformance == "high-performance") {
             webGlContextAttributes_->powerPreference_ = highPerformance;
+            return true;
+        }
+        string lowPower = GetContextAttr(vec[i], "powerPreference", 18, 9); // 18 9 powerPreference length
+        if (lowPower == "low-power") {
+            webGlContextAttributes_->powerPreference_ = lowPower;
         } else {
-            string lowPower = GetContextAttr(vec[i], "powerPreference", 18, 9);
-            if (lowPower == "low-power") {
-                webGlContextAttributes_->powerPreference_ = lowPower;
-            } else {
-                string defaultVar = GetContextAttr(vec[i], "powerPreference", 18, 7);
-                if (defaultVar == "default") {
-                    webGlContextAttributes_->powerPreference_ = defaultVar;
-                }
+            if (GetContextAttr(vec[i], "powerPreference", 18, 7) == "default") { // 18 7 powerPreference length
+                webGlContextAttributes_->powerPreference_ = "default";
             }
         }
     }

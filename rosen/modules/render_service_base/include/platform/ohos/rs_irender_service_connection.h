@@ -25,6 +25,7 @@
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/buffer_clear_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"
+#include "ipc_callbacks/rs_isurface_occlusion_change_callback.h"
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
 #include "memory/rs_memory_graphic.h"
@@ -37,6 +38,7 @@
 #include "transaction/rs_transaction_data.h"
 #include "transaction/rs_render_service_client.h"
 #include "ivsync_connection.h"
+#include "ipc_callbacks/rs_ihgm_config_change_callback.h"
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "vsync_iconnection_token.h"
 
@@ -92,14 +94,16 @@ public:
 
     virtual uint32_t GetScreenCurrentRefreshRate(ScreenId id) = 0;
 
-    virtual std::vector<uint32_t> GetScreenSupportedRefreshRates(ScreenId id) = 0;
+    virtual int32_t GetCurrentRefreshRateMode() = 0;
+
+    virtual std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id) = 0;
 
     virtual int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) = 0;
 
     virtual void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) = 0;
 
-    virtual void TakeSurfaceCapture(
-        NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY) = 0;
+    virtual void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
+        SurfaceCaptureType surfaceCaptureType) = 0;
 
     virtual void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) = 0;
 
@@ -116,6 +120,8 @@ public:
     virtual RSScreenData GetScreenData(ScreenId id) = 0;
 
     virtual MemoryGraphic GetMemoryGraphic(int pid) = 0;
+
+    virtual bool GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize) = 0;
 
     virtual std::vector<MemoryGraphic> GetMemoryGraphics() = 0;
 
@@ -147,6 +153,7 @@ public:
 
 #ifndef USE_ROSEN_DRAWING
     virtual bool GetBitmap(NodeId id, SkBitmap& bitmap) = 0;
+    virtual bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect) = 0;
 #else
     virtual bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) = 0;
 #endif
@@ -154,6 +161,13 @@ public:
     virtual int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) = 0;
 
     virtual int32_t RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) = 0;
+
+    virtual int32_t RegisterSurfaceOcclusionChangeCallback(
+        NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback) = 0;
+
+    virtual int32_t UnRegisterSurfaceOcclusionChangeCallback(NodeId id) = 0;
+
+    virtual int32_t RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) = 0;
 
     virtual void SetAppWindowNum(uint32_t num) = 0;
 
@@ -168,6 +182,12 @@ public:
     virtual void ReportEventJankFrame(DataBaseRs info) = 0;
 
     virtual void SetHardwareEnabled(NodeId id, bool isEnabled) = 0;
+
+    virtual void SetCacheEnabledForRotation(bool isEnabled) = 0;
+
+#ifdef TP_FEATURE_ENABLE
+    virtual void SetTpFeatureConfig(int32_t feature, const char* config) = 0;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

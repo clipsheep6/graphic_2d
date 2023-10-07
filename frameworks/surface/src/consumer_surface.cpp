@@ -261,6 +261,11 @@ GSError ConsumerSurface::RegisterReleaseListener(OnReleaseFunc func)
     return consumer_->RegisterReleaseListener(func);
 }
 
+GSError ConsumerSurface::UnRegisterReleaseListener()
+{
+    return GSERROR_OK;
+}
+
 GSError ConsumerSurface::RegisterDeleteBufferListener(OnDeleteBufferFunc func, bool isForUniRedraw)
 {
     return consumer_->RegisterDeleteBufferListener(func, isForUniRedraw);
@@ -416,5 +421,11 @@ sptr<NativeSurface> ConsumerSurface::GetNativeSurface()
 {
     BLOGND("ConsumerSurface::GetNativeSurface not support.");
     return nullptr;
+}
+
+GSError ConsumerSurface::SetWptrNativeWindowToPSurface(void* nativeWindow)
+{
+    BLOGND("ConsumerSurface::SetWptrNativeWindowToPSurface not support.");
+    return GSERROR_NOT_SUPPORT;
 }
 } // namespace OHOS

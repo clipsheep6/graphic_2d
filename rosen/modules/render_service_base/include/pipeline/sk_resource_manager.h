@@ -20,7 +20,7 @@
 #include <queue>
 #include <unistd.h>
 
-#include <include/core/SkImage.h>
+#include "third_party/skia/include/core/SkRefCnt.h"
 
 #include "common/rs_macros.h"
 
@@ -28,14 +28,21 @@ namespace OHOS::Rosen {
 class RSB_EXPORT SKResourceManager final {
 public:
     static SKResourceManager& Instance();
-    void HoldResource(sk_sp<SkImage> img);
+    void HoldResource(sk_sp<SkRefCntBase> res);
     void ReleaseResource();
 private:
     SKResourceManager() = default;
     ~SKResourceManager() = default;
 
-    std::recursive_mutex mutex_;
-    std::map<pid_t, std::queue<sk_sp<SkImage>>> skImages_;
+    SKResourceManager(const SKResourceManager&) = delete;
+    SKResourceManager(const SKResourceManager&&) = delete;
+    SKResourceManager& operator=(const SKResourceManager&) = delete;
+    SKResourceManager& operator=(const SKResourceManager&&) = delete;
+
+    std::recursive_mutex purgeablemutex_;
+    std::recursive_mutex noPureablemutex_;
+    std::map<pid_t, std::vector<sk_sp<SkRefCntBase>>> noPurgeableResource_;
+    std::map<pid_t, std::queue<sk_sp<SkRefCntBase>>> purgeableResource_;
 };
 } // OHOS::Rosen
 #endif // SK_RESOURCE_MANAGER_H

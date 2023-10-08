@@ -29,7 +29,6 @@ using ThreadInfo = std::pair<uint64_t, std::function<void(sk_sp<SkSurface>)>>;
 #else
 using ThreadInfo = std::pair<uint64_t, std::function<void(std::shared_ptr<Drawing::Surface>)>>;
 #endif
-
 class RSB_EXPORT RSCanvasDrawingRenderNode : public RSCanvasRenderNode {
 public:
     using WeakPtr = std::weak_ptr<RSCanvasDrawingRenderNode>;
@@ -37,7 +36,7 @@ public:
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::CANVAS_DRAWING_NODE;
 
     explicit RSCanvasDrawingRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
-    virtual ~RSCanvasDrawingRenderNode();
+    virtual ~RSCanvasDrawingRenderNode() = default;
 
     void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
 

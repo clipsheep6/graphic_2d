@@ -55,6 +55,8 @@ private:
     RSBackgroundThread& operator=(const RSBackgroundThread&);
     RSBackgroundThread& operator=(const RSBackgroundThread&&);
 
+    void PeriodReleaseResource();
+
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)

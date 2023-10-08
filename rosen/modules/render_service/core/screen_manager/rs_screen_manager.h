@@ -46,6 +46,8 @@ enum class ScreenState : uint8_t {
     UNKNOWN,
 };
 
+// using OutputPtr = std::shared_ptr<HdiOutput>;
+
 struct ScreenInfo {
     ScreenId id = INVALID_SCREEN_ID;
     uint32_t width = 0;
@@ -278,6 +280,8 @@ private:
     void OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected);
     static void OnHwcDead(void *data);
     void OnHwcDeadEvent();
+    static void OnSeamlessChange(std::shared_ptr<HdiOutput> &output, void *data);
+    static void OnModeChange(uint32_t devId, bool isSuccess, void *data);
     void Reinit();
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void AddScreenToHgm(std::shared_ptr<HdiOutput> &output);

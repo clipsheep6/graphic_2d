@@ -33,11 +33,13 @@ public:
     /* set & get device screen info begin */
     MOCK_METHOD2(RegHotPlugCallback, int32_t(HotPlugCallback, void*));
     MOCK_METHOD3(RegScreenVBlankCallback, int32_t(uint32_t, VBlankCallback, void*));
+    MOCK_METHOD2(RegSeamlessChangeCallback, int32_t(OnSeamlessChange, void *));
+    MOCK_METHOD2(GetScreenVblankPeriod, int32_t(uint32_t, uint64_t&));
     MOCK_METHOD2(RegHwcDeadCallback, bool(OnHwcDeadCallback, void*));
     MOCK_METHOD2(GetScreenCapability, int32_t(uint32_t, GraphicDisplayCapability&));
     MOCK_METHOD2(GetScreenSupportedModes, int32_t(uint32_t, std::vector<GraphicDisplayModeInfo>&));
     MOCK_METHOD2(GetScreenMode, int32_t(uint32_t, uint32_t&));
-    MOCK_METHOD2(SetScreenMode, int32_t(uint32_t, uint32_t));
+    MOCK_METHOD3(SetScreenMode, int32_t(uint32_t, uint32_t, DisplayModeCallback));
     MOCK_METHOD2(GetScreenPowerStatus, int32_t(uint32_t, GraphicDispPowerStatus&));
     MOCK_METHOD2(SetScreenPowerStatus, int32_t(uint32_t, GraphicDispPowerStatus));
     MOCK_METHOD2(GetScreenBacklight, int32_t(uint32_t, uint32_t&));

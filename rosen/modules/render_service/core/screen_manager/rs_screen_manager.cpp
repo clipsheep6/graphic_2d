@@ -64,6 +64,11 @@ bool RSScreenManager::Init() noexcept
         return false;
     }
 
+    if (composer_->RegSeamlessChange(&RSScreenManager::OnSeamlessChange, this) != 0) {
+        RS_LOGE("RSScreenManager %s: Failed to register OnSeamlessChange Func to composer.", __func__);
+        return false;
+    }
+
     // call ProcessScreenHotPlugEvents() for primary screen immediately in main thread.
     ProcessScreenHotPlugEvents();
     RS_LOGI("RSScreenManager Init succeed");
@@ -143,6 +148,18 @@ void RSScreenManager::OnHwcDeadEvent()
     isHwcDead_ = true;
     screens_.clear();
     defaultScreenId_ = INVALID_SCREEN_ID;
+}
+
+void RSScreenManager::OnSeamlessChange(std::shared_ptr<HdiOutput> &output, void *data)
+{
+    RS_LOGE("RSScreenManager::OnSeamlessChange");
+    return;
+}
+
+void RSScreenManager::OnModeChange(uint32_t devId, bool isSuccess, void *data)
+{
+    RS_LOGE("RSScreenManager::OnModeChange");
+    return;
 }
 
 void RSScreenManager::Reinit()
@@ -236,7 +253,7 @@ void RSScreenManager::AddScreenToHgm(std::shared_ptr<HdiOutput> &output)
     auto supportedModes = screens_[thisId]->GetSupportedModes();
     for (auto mode = supportedModes.begin(); mode != supportedModes.end(); ++mode) {
         if (!hgmCore.AddScreenInfo(thisId, (*mode).width, (*mode).height,
-            (*mode).freshRate, modeId)) {
+            (*mode).freshRate, modeId, (*mode).groupId)) {
             RS_LOGW("RSScreenManager failed to add a screen profile to the screen : %{public}" PRIu64 "", thisId);
         }
         modeId++;
@@ -454,7 +471,7 @@ void RSScreenManager::MirrorChangeDefaultScreenResolution(ScreenId id, uint32_t 
         for (uint32_t i = 0; i < mainMode.size(); i++) {
             if (static_cast<uint32_t>(mainMode[i].width) == width &&
                 static_cast<uint32_t>(mainMode[i].height) == height) {
-                screens_.at(mainId)->SetActiveMode(i);
+                screens_.at(mainId)->SetActiveMode(i, &RSScreenManager::OnModeChange);
                 resolutionSetSuccess = true;
                 break;
             }
@@ -493,6 +510,7 @@ void RSScreenManager::GetScreenActiveModeLocked(ScreenId id, RSScreenModeInfo& s
     screenModeInfo.SetScreenWidth(modeInfo->width);
     screenModeInfo.SetScreenHeight(modeInfo->height);
     screenModeInfo.SetScreenRefreshRate(modeInfo->freshRate);
+    screenModeInfo.SetScreenGroupId(modeInfo->groupId);
     screenModeInfo.SetScreenModeId(screens_.at(id)->GetActiveModePosByModeId(modeInfo->id));
 }
 
@@ -511,6 +529,7 @@ std::vector<RSScreenModeInfo> RSScreenManager::GetScreenSupportedModesLocked(Scr
         screenSupportedModes[idx].SetScreenHeight(displaySupportedModes[idx].height);
         screenSupportedModes[idx].SetScreenRefreshRate(displaySupportedModes[idx].freshRate);
         screenSupportedModes[idx].SetScreenModeId(displaySupportedModes[idx].id);
+        screenSupportedModes[idx].SetScreenGroupId(displaySupportedModes[idx].groupId);
     }
     return screenSupportedModes;
 }
@@ -679,7 +698,7 @@ void RSScreenManager::SetScreenActiveMode(ScreenId id, uint32_t modeId)
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return;
     }
-    screens_.at(id)->SetActiveMode(modeId);
+    screens_.at(id)->SetActiveMode(modeId, &RSScreenManager::OnModeChange);
 
     // The main screen resolution can be changed on the mirrored physical screen.
     auto supportedModes = screens_.at(id)->GetSupportedModes();

@@ -16,6 +16,7 @@
 #ifndef HDI_BACKEND_HDI_DEVICE_H
 #define HDI_BACKEND_HDI_DEVICE_H
 
+#include <cstdint>
 #include <vector>
 #include <refbase.h>
 #include <unordered_map>
@@ -33,10 +34,12 @@ public:
     virtual int32_t RegHotPlugCallback(HotPlugCallback callback, void *data) = 0;
     virtual int32_t RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data) = 0;
     virtual bool RegHwcDeadCallback(OnHwcDeadCallback callback, void *data) = 0;
+    virtual int32_t RegSeamlessChangeCallback(OnSeamlessChange callback, void *data) = 0;
+    virtual int32_t GetScreenVblankPeriod(uint32_t screenId, uint64_t &period) = 0;
     virtual int32_t GetScreenCapability(uint32_t screenId, GraphicDisplayCapability &info) = 0;
     virtual int32_t GetScreenSupportedModes(uint32_t screenId, std::vector<GraphicDisplayModeInfo> &modes) = 0;
     virtual int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId) = 0;
-    virtual int32_t SetScreenMode(uint32_t screenId, uint32_t modeId) = 0;
+    virtual int32_t SetScreenMode(uint32_t screenId, uint32_t modeId, DisplayModeCallback callback) = 0;
     virtual int32_t GetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus &status) = 0;
     virtual int32_t SetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus status) = 0;
     virtual int32_t GetScreenBacklight(uint32_t screenId, uint32_t &level) = 0;

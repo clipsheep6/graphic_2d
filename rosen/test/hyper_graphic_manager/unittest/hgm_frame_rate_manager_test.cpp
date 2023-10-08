@@ -58,10 +58,11 @@ HWTEST_F(HgmFrameRateMgrTest, UniProcessData, Function | SmallTest | Level1)
     int32_t mode = 1;
     int32_t mode2 = 2;
     int32_t mode3 = 3;
+    int32_t group = 0;
     instance.AddScreen(screenId2, 1);
-    instance.AddScreenInfo(screenId2, width, height, rate, mode);
-    instance.AddScreenInfo(screenId2, width, height, rate2, mode2);
-    instance.AddScreenInfo(screenId2, width, height, rate3, mode3);
+    instance.AddScreenInfo(screenId2, width, height, rate, mode, group);
+    instance.AddScreenInfo(screenId2, width, height, rate2, mode2, group);
+    instance.AddScreenInfo(screenId2, width, height, rate3, mode3, group);
     PART("CaseDescription") {
         STEP("1. get a HgmFrameRateManager") {
             STEP_ASSERT_NE(mgr, nullptr);

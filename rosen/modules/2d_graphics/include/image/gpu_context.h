@@ -19,6 +19,7 @@
 #include "impl_interface/gpu_context_impl.h"
 #include "utils/drawing_macros.h"
 #include "utils/data.h"
+#include "trace_memory_dump.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -120,7 +121,7 @@ public:
      * @param maxResourceBytes  If non-null, returns maximum number of bytes of video memory
                                 that can be held in the cache.
      */
-    void GetResourceCacheLimits(int& maxResource, size_t& maxResourceBytes) const;
+    void GetResourceCacheLimits(int* maxResource, size_t* maxResourceBytes) const;
 
     /*
      * @brief                   Specify the GPU resource cache limits.
@@ -134,7 +135,7 @@ public:
      * @param resourceCount     If non-null, returns the number of resources that are held in the cache.
      * @param resourceBytes     If non-null, returns the total number of bytes of video memory held in the cache.
      */
-    void GetResourceCacheUsage(int& resourceCount, size_t& resourceBytes) const;
+    void GetResourceCacheUsage(int* resourceCount, size_t* resourceBytes) const;
 
     /*
      * @brief                   Free GPU created by the contetx.
@@ -174,6 +175,16 @@ public:
      * @brief                   Releases GPUResource objects and removes them from the cache by tag.
      */
     void ReleaseByTag(const GPUResourceTag tag);
+
+    /*
+     * @brief                   Enumerates all cached GPU resources and dumps their memory to traceMemoryDump.
+     */
+    void DumpMemoryStatisticsByTag(TraceMemoryDump* traceMemoryDump, GPUResourceTag tag) const;
+
+    /*
+     * @brief                   Enumerates all cached GPU resources and dumps their memory to traceMemoryDump.
+     */
+    void DumpMemoryStatistics(TraceMemoryDump* traceMemoryDump) const;
 
     /*
      * @brief   Get the adaptation layer instance, called in the adaptation layer.

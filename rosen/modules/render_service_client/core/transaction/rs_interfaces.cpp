@@ -20,6 +20,7 @@
 
 #include "platform/common/rs_system_properties.h"
 #include "pipeline/rs_divided_ui_capture.h"
+#include "pipeline/rs_render_thread.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
 #include "ui/rs_frame_rate_policy.h"
 #include "ui/rs_proxy_node.h"
@@ -195,20 +196,8 @@ bool RSInterfaces::TakeSurfaceCaptureForUIWithoutUni(NodeId id,
         std::shared_ptr<Media::PixelMap> pixelmap = rsDividedUICapture->TakeLocalCapture();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         callback->OnSurfaceCapture(pixelmap);
-        std::lock_guard<std::mutex> lock(offscreenRenderMutex_);
-        offscreenRenderNum_--;
-        if (offscreenRenderNum_ == 0) {
-            RSOffscreenRenderThread::Instance().Stop();
-        }
     };
-    {
-        std::lock_guard<std::mutex> lock(offscreenRenderMutex_);
-        if (offscreenRenderNum_ == 0) {
-            RSOffscreenRenderThread::Instance().Start();
-        }
-        offscreenRenderNum_++;
-    }
-    RSOffscreenRenderThread::Instance().PostTask(offscreenRenderTask);
+    RSRenderThread::Instance().PostTask(offscreenRenderTask);
     return true;
 }
 

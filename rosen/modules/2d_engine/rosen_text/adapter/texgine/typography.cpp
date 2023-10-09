@@ -20,6 +20,7 @@
 
 #include "convert.h"
 
+#include "lxy.h"
 namespace OHOS {
 namespace Rosen {
 #ifndef USE_GRAPHIC_TEXT_GINE
@@ -134,6 +135,7 @@ void Typography::SetIndents(const std::vector<float>& indents)
 
 void Typography::Layout(double width)
 {
+    LXY_LOGI("width = %{public}.2f", width);
     return typography_->Layout(width);
 }
 

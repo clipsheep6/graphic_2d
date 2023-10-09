@@ -26,6 +26,7 @@
 #include "text_merger.h"
 #include "text_span.h"
 
+#include "lxy.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -34,6 +35,7 @@ namespace TextEngine {
 std::vector<LineMetrics> LineBreaker::BreakLines(std::vector<VariantSpan> &spans,
     const TypographyStyle &tstyle, const double widthLimit)
 {
+    LXY_LOGI("*** Start BreakLines");
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "BreakLines");
     auto ss = GenerateScoreSpans(spans);
     DoBreakLines(ss, widthLimit, tstyle);
@@ -76,6 +78,8 @@ std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector
             << ": offset: " << offset
             << ", preBreak: " << preBreak
             << ", postBreak: " << postBreak;
+        LXY_LOGI("[scoredSpans.size=%{public}d, offset=%{public}.2f, preBreak=%{public}.2f, postBreak=%{public}.2f]",
+            scoredSpans.size(), offset, preBreak, postBreak);
         scoredSpans.push_back({
             .span = span,
             .preBreak = offset + preBreak,
@@ -138,6 +142,8 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
         }
         LOGEX_FUNC_LINE_DEBUG() << "[" << i << "] Any{" << is.prev << "<-" << " b(" << is.preBreak << ", "
                       << is.postBreak << ")" << " s(" << is.score << ")}";
+        LXY_LOGI("[is.prev=%{public}d, preBreak=%{public}.2f, postBreak=%{public}.2f, score=%{public}.2f]", is.prev,
+            is.preBreak, is.postBreak, is.score);
     }
     scoredSpans.erase(scoredSpans.begin());
 }
@@ -180,6 +186,7 @@ std::vector<LineMetrics> LineBreaker::GenerateLineMetrics(std::vector<VariantSpa
     std::vector<int32_t> &breaks)
 {
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "GenerateLineMetrics");
+    LXY_LOGI("breaks.size() = %{public}d", breaks.size());
     LOGEX_FUNC_LINE_DEBUG() << "breaks.size(): " << breaks.size();
 
     std::vector<LineMetrics> lineMetrics;
@@ -206,6 +213,7 @@ std::vector<LineMetrics> LineBreaker::GenerateLineMetrics(std::vector<VariantSpa
             .lineSpans = vss,
         });
         prev = next;
+        LXY_LOGI("prev = %{public}d", prev);
     }
 
     return lineMetrics;

@@ -20,6 +20,8 @@
 #include "convert.h"
 #include "typography.h"
 
+#include "lxy.h"
+#include "string_ex.h"
 namespace OHOS {
 namespace Rosen {
 std::unique_ptr<TypographyCreate> TypographyCreate::Create(const TypographyStyle& style,
@@ -40,6 +42,11 @@ TypographyCreate::TypographyCreate(const TypographyStyle& style,
 void TypographyCreate::PushStyle(const TextStyle& style)
 {
     auto txtTextStyle = Convert(style);
+    LXY_LOGI("**************************");
+    LXY_LOGI("texgine");
+    LXY_LOGI("fontWeight = %{public}d", txtTextStyle.fontWeight);
+    LXY_LOGI("fontSize = %{public}.2f", txtTextStyle.fontSize);
+    LXY_LOGI("**************************");
     builder_->PushStyle(txtTextStyle);
 }
 
@@ -50,6 +57,7 @@ void TypographyCreate::PopStyle()
 
 void TypographyCreate::AppendText(const std::u16string& text)
 {
+    LXY_LOGI("text = %{public}s", Str16ToStr8(text).c_str());
     builder_->AppendSpan(text);
 }
 

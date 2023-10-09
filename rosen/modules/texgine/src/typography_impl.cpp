@@ -31,6 +31,7 @@
 #endif
 #include "word_breaker.h"
 
+#include "lxy.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -557,9 +558,11 @@ void TypographyImpl::UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span, doubl
 
 void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY)
 {
+    LXY_LOGI("Paint [%{public}.2f, %{public}.2f]", offsetX, offsetY);
     for (auto &metric : lineMetrics_) {
         for (auto &span : metric.lineSpans) {
             span.Paint(canvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
+            LXY_LOGI("GetOffsetX() = %{public}.2f, GetOffsetY = %{public}.2f", span.GetOffsetX(), span.GetOffsetY());
         }
     }
 }

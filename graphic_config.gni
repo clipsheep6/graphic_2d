@@ -95,7 +95,6 @@ if ((graphic_2d_feature_rs_enable_eglimage &&
   rs_enable_eglimage = false
 }
 
-use_texgine = graphic_2d_feature_use_texgine
 
 if (graphic_2d_feature_rs_enable_uni_render) {
   rs_enable_driven_render = true

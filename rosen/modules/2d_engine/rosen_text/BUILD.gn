@@ -79,6 +79,10 @@ if (enable_text_gine) {
 
     deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
 
+    external_deps = [
+      "hilog:libhilog",
+      "c_utils:utils",
+    ]
     part_name = "graphic_2d"
     subsystem_name = "graphic"
   }
@@ -120,6 +124,10 @@ if (enable_text_gine) {
 
     deps += [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
 
+    external_deps = [
+      "hilog:libhilog",
+      "c_utils:utils",
+    ]
     part_name = "graphic_2d"
     subsystem_name = "graphic"
   }

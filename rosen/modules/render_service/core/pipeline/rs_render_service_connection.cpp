@@ -445,6 +445,20 @@ void RSRenderServiceConnection::SetScreenBacklight(ScreenId id, uint32_t level)
     }).wait();
 }
 
+void RSRenderServiceConnection::RegisterBufferClearListener(NodeId id, sptr<RSIBufferClearCallback> callback)
+{
+    auto registerBufferClearListener = [id, callback, this]() -> bool {
+        if (auto node = this->mainThread_->GetContext().GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+            node->RegisterBufferClearListener(callback);
+            return true;
+        }
+        return false;
+    };
+    if (!registerBufferClearListener()) {
+        mainThread_->PostTask(registerBufferClearListener);
+    }
+}
+
 void RSRenderServiceConnection::RegisterBufferAvailableListener(
     NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {

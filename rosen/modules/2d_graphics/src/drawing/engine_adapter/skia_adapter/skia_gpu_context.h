@@ -44,7 +44,7 @@ class SkiaGPUContext : public GPUContextImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     SkiaGPUContext();
-    ~SkiaGPUContext() override = default;;
+    ~SkiaGPUContext() override = default;
 
     AdapterType GetType() const override
     {

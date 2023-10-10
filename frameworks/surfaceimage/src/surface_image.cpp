@@ -411,6 +411,17 @@ SurfaceError SurfaceImage::WaitOnFence()
     return SURFACE_ERROR_OK;
 }
 
+SurfaceError SurfaceImage::SetOnFrameAvailableListener(OnBufferAvailableListener listener)
+{
+    if (listener == nullptr) {
+        BLOGE("listener is nullptr");
+        return SURFACE_ERROR_ERROR;
+    }
+
+    listener_ = listener;
+    return SURFACE_ERROR_OK;
+}
+
 SurfaceImageListener::~SurfaceImageListener()
 {
     BLOGE("~SurfaceImageListener");
@@ -428,5 +439,8 @@ void SurfaceImageListener::OnBufferAvailable()
 
     // check here maybe a messagequeue, flag instead now
     surfaceImage->OnUpdateBufferAvailableState(true);
+    if (surfaceImage->listener_ != nullptr) {
+        surfaceImage->listener_();
+    }
 }
 } // namespace OHOS

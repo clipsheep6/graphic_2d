@@ -36,6 +36,7 @@ struct ImageCacheSeq {
 };
 
 static constexpr int64_t TRANSFORM_MATRIX_ELE_COUNT = 16;
+typedef void (*OnBufferAvailableListener)();
 
 class SurfaceImage : public ConsumerSurface {
 public:
@@ -69,6 +70,8 @@ public:
     SurfaceError DetachContext();
 
     SurfaceError GetTransformMatrix(float matrix[16]);
+    SurfaceError SetOnFrameAvailableListener(OnBufferAvailableListener listener);
+    OnBufferAvailableListener listener_;
 
 protected:
     SurfaceError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,

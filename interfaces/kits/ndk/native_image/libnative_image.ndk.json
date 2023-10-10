@@ -6,5 +6,7 @@
     { "name": "OH_NativeImage_UpdateSurfaceImage" },
     { "name": "OH_NativeImage_GetTimestamp" },
     { "name": "OH_NativeImage_GetTransformMatrix" },
+    { "name": "OH_NativeImage_GetSurfaceId" },
+    { "name": "OH_NativeImage_SetOnFrameAvailableListener" },
     { "name": "OH_NativeImage_Destroy" }
 ]

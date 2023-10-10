@@ -46,6 +46,7 @@ extern "C" {
 struct OH_NativeImage;
 typedef struct OH_NativeImage OH_NativeImage;
 typedef struct NativeWindow OHNativeWindow;
+typedef void (*OH_OnFirstFrameAvailable)();
 
 /**
  * @brief Create a <b>OH_NativeImage</b> related to an Opengl ES texture and target. \n
@@ -131,6 +132,30 @@ int64_t OH_NativeImage_GetTimestamp(OH_NativeImage* image);
  * @version 1.0
  */
 int32_t OH_NativeImage_GetTransformMatrix(OH_NativeImage* image, float matrix[16]);
+
+/**
+ * @brief Return the surface id the image call to OH_NativeImage_GetSurfaceId.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeImage
+ * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
+ * @param surfaceId Indicates the surface id.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 10
+ * @version 1.0
+ */
+int32_t OH_NativeImage_GetSurfaceId(OH_NativeImage* image, uint64_t* surfaceId);
+
+/**
+ * @brief Set the frame available callback by the most recent call to OH_NativeImage_SetOnFrameAvailableListener.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeImage
+ * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
+ * @param listener Indicates the callback function.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 10
+ * @version 1.0
+ */
+int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnFirstFrameAvailable listener);
 
 /**
  * @brief Destroy the <b>OH_NativeImage</b> created by OH_NativeImage_Create, and the pointer to \n

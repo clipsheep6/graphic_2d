@@ -264,6 +264,11 @@ void TypographyImpl::Layout(double maxWidth)
         LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "TypographyImpl::Layout");
         LOGEX_FUNC_LINE(INFO) << "Layout maxWidth: " << maxWidth << ", spans.size(): " << spans_.size();
         maxWidth_ = maxWidth;
+        if (spans_.empty()) {
+            std::vector<uint32_t> text = {0xfffc};
+            VariantSpan vs = TextSpan::MakeFromText(text);
+            vs.SetTextStyle(typographyStyle_.ConvertToTextStyle());
+        }
 
         Shaper shaper;
         lineMetrics_ = shaper.DoShape(spans_, typographyStyle_, fontProviders_, maxWidth);

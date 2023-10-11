@@ -17,6 +17,8 @@
 
 #include <cassert>
 
+#include <unicode/uchar.h>
+
 #include "measurer.h"
 #include "texgine/any_span.h"
 #include "texgine_exception.h"
@@ -35,6 +37,11 @@ namespace TextEngine {
 #define CN_RIGHT_QUOTE 0x201D
 #define EN_QUOTE 0x22
 
+void TextBreaker::SetWidthLimit(const double widthLimit)
+{
+    widthLimit_ = widthLimit;
+}
+
 int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyle &ys,
     const std::shared_ptr<FontProviders> &fontProviders)
 {
@@ -48,6 +55,10 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
         auto span = vspan.TryToTextSpan();
         if (span == nullptr) {
             spans.push_back(vspan);
+            currentWidth_ += vspan.GetWidth();
+            if (currentWidth_ >= widthLimit_) {
+                currentWidth_ = 0;
+            }
             continue;
         }
 
@@ -65,6 +76,8 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
             return 1;
         }
 
+        GenNewBoundryByWidth(cgs, boundaries);
+        GenNewBoundryByHardBreak(cgs, boundaries);
         GenNewBoundryByTypeface(cgs, boundaries);
         GenNewBoundryByQuote(cgs, boundaries);
 
@@ -199,14 +212,79 @@ void TextBreaker::GenNewBoundryByQuote(CharGroups cgs, std::vector<Boundary> &bo
     boundaries = newBoundary;
 }
 
+void TextBreaker::GenNewBoundryByWidth(CharGroups cgs, std::vector<Boundary> &boundaries)
+{
+    std::vector<Boundary> newBoundary;
+    for (auto &[start, end] : boundaries) {
+        size_t newStart = start;
+        size_t newEnd = start;
+        const auto &wordCgs = cgs.GetSubFromU16RangeAll(start, end);
+        double wordWith = 0;
+        for (auto &cg : wordCgs) {
+            wordWith += cg.GetWidth();
+        }
+
+        if (currentWidth_ + wordWith > widthLimit_) {
+            currentWidth_ = 0;
+        }
+
+        currentWidth_ += wordCgs.begin()->GetWidth();
+        for (auto cg = wordCgs.begin() + 1; cg != wordCgs.end(); cg++) {
+            if (currentWidth_ + cg->GetWidth() >= widthLimit_) {
+                newEnd++;
+                newBoundary.push_back({newStart, newEnd});
+                currentWidth_ = cg->GetWidth();
+                newStart = newEnd;
+            } else {
+                newEnd++;
+                currentWidth_ += cg->GetWidth();
+            }
+        }
+
+        if (newEnd != end) {
+            newBoundary.push_back({newStart, end});
+        }
+    }
+
+    boundaries = newBoundary;
+}
+
+void TextBreaker::GenNewBoundryByHardBreak(CharGroups cgs, std::vector<Boundary> &boundaries)
+{
+    std::vector<Boundary> newBoundary;
+    for (auto &[start, end] : boundaries) {
+        size_t newStart = start;
+        size_t newEnd = start;
+        const auto &wordCgs = cgs.GetSubFromU16RangeAll(start, end);
+        for (auto cg = wordCgs.begin(); cg != wordCgs.end(); cg++) {
+            if (cg->IsHardBreak() && newStart != newEnd) {
+                newBoundary.push_back({newStart, newEnd});
+            }
+
+            if (cg->IsHardBreak()) {
+                newBoundary.push_back({newEnd, newEnd + cg->chars.size()});
+                newStart = newEnd + cg->chars.size();
+            }
+
+            newEnd += cg->chars.size();
+        }
+
+        if (newStart == start) {
+            newBoundary.push_back({newStart, end});
+        }
+    }
+
+    boundaries = newBoundary;
+}
+
 void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys,
     const TextStyle &xs, std::vector<VariantSpan> &spans)
 {
     size_t rangeOffset = 0;
     for (size_t i = 0; i < wordcgs.GetNumberOfCharGroup(); i++) {
-        const auto &cg = wordcgs.Get(i);
+        auto &cg = wordcgs.Get(i);
         postBreak_ += cg.GetWidth();
-        if (u_isWhitespace(cg.chars[0]) == 0) {
+        if (u_isWhitespace(cg.chars[0]) == 0 || cg.IsHardBreak()) {
             // not white space
             preBreak_ = postBreak_;
         }
@@ -250,8 +328,6 @@ void TextBreaker::GenerateSpan(const CharGroups &currentCgs, const TypographySty
         spanWidth += cg.GetWidth();
     }
     newSpan->width_ = spanWidth;
-
-
     VariantSpan vs(newSpan);
     vs.SetTextStyle(xs);
     spans.push_back(vs);

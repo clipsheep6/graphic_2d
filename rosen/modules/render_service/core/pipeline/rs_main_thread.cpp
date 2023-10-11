@@ -90,10 +90,6 @@
 #include "pipeline/driven_render/rs_driven_render_manager.h"
 #endif
 
-#if defined(RS_ENABLE_RECORDING)
-#include "benchmarks/rs_recording_thread.h"
-#endif
-
 #include "scene_board_judgement.h"
 #include "vsync_iconnection_token.h"
 
@@ -110,7 +106,6 @@ namespace {
 constexpr uint32_t REQUEST_VSYNC_NUMBER_LIMIT = 10;
 constexpr uint64_t REFRESH_PERIOD = 16666667;
 constexpr int32_t PERF_MULTI_WINDOW_REQUESTED_CODE = 10026;
-constexpr int32_t FLUSH_SYNC_TRANSACTION_TIMEOUT = 100;
 constexpr uint64_t PERF_PERIOD = 250000000;
 constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t SKIP_COMMAND_FREQ_LIMIT = 30;
@@ -242,9 +237,6 @@ void RSMainThread::Init()
         rsEventManager_.UpdateParam();
         SKResourceManager::Instance().ReleaseResource();
     };
-#ifdef RS_ENABLE_RECORDING
-    RSRecordingThread::Instance().Start();
-#endif
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();
     auto taskDispatchFunc = [](const RSTaskDispatcher::RSTask& task) {
@@ -813,11 +805,16 @@ void RSMainThread::ProcessSyncRSTransactionData(std::unique_ptr<RSTransactionDat
     bool isNeedCloseSync = rsTransactionData->IsNeedCloseSync();
     if (syncTransactionData_.empty()) {
         if (handler_) {
-            auto task = [this]() {
+            auto task = [this, syncId = rsTransactionData->GetSyncId()]() {
+                if (!syncTransactionData_.empty() && syncTransactionData_.begin()->second.front() &&
+                        syncTransactionData_.begin()->second.front()->GetSyncId() != syncId) {
+                    return;
+                }
                 ROSEN_LOGD("RSMainThread ProcessAllSyncTransactionData timeout task");
                 ProcessAllSyncTransactionData();
             };
-            handler_->PostTask(task, "ProcessAllSyncTransactionsTimeoutTask", FLUSH_SYNC_TRANSACTION_TIMEOUT);
+            handler_->PostTask(task, "ProcessAllSyncTransactionsTimeoutTask",
+                RSSystemProperties::GetSyncTransactionWaitDelay());
         }
     }
     if (!syncTransactionData_.empty() && syncTransactionData_.begin()->second.front() &&
@@ -1640,9 +1637,11 @@ void RSMainThread::Animate(uint64_t timestamp)
     doDirectComposition_ = false;
     bool curWinAnim = false;
     bool needRequestNextVsync = false;
+    // isCalculateAnimationValue is embedded modify for stat animate frame drop
+    bool isCalculateAnimationValue = false;
     // iterate and animate all animating nodes, remove if animation finished
     EraseIf(context_->animatingNodeList_,
-        [this, timestamp, &curWinAnim, &needRequestNextVsync](const auto& iter) -> bool {
+        [this, timestamp, &curWinAnim, &needRequestNextVsync, &isCalculateAnimationValue](const auto& iter) -> bool {
         auto node = iter.second.lock();
         if (node == nullptr) {
             RS_LOGD("RSMainThread::Animate removing expired animating node");
@@ -1652,12 +1651,13 @@ void RSMainThread::Animate(uint64_t timestamp)
             RS_LOGD("RSMainThread::Animate skip the cached node");
             return false;
         }
-        auto [hasRunningAnimation, nodeNeedRequestNextVsync] = node->Animate(timestamp);
+        auto [hasRunningAnimation, nodeNeedRequestNextVsync, nodeCalculateAnimationValue] = node->Animate(timestamp);
         if (!hasRunningAnimation) {
             RS_LOGD("RSMainThread::Animate removing finished animating node %{public}" PRIu64, node->GetId());
         }
         // request vsync if: 1. node has running animation, or 2. transition animation just ended
         needRequestNextVsync = needRequestNextVsync || nodeNeedRequestNextVsync || (node.use_count() == 1);
+        isCalculateAnimationValue = isCalculateAnimationValue || nodeCalculateAnimationValue;
         if (node->template IsInstanceOf<RSSurfaceRenderNode>() && hasRunningAnimation) {
             if (isUniRender_) {
                 auto surfacenode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
@@ -1670,6 +1670,10 @@ void RSMainThread::Animate(uint64_t timestamp)
     if (!doWindowAnimate_ && curWinAnim && RSInnovation::UpdateQosVsyncEnabled()) {
         RSQosThread::ResetQosPid();
     }
+    if (!isCalculateAnimationValue && needRequestNextVsync) {
+        RS_TRACE_NAME("Animation running empty");
+    }
+
     doWindowAnimate_ = curWinAnim;
     RS_LOGD("RSMainThread::Animate end, animating nodes remains, has window animation: %{public}d", curWinAnim);
 
@@ -1817,8 +1821,9 @@ void RSMainThread::SendCommands()
     }
 
     // dispatch messages to corresponding application
-    auto transactionMapPtr = std::make_shared<std::unordered_map<uint32_t, RSTransactionData>>(
+    auto transactionMapPtr = std::make_shared<std::unordered_map<uint32_t, std::shared_ptr<RSTransactionData>>>(
         RSMessageProcessor::Instance().GetAllTransactions());
+    RSMessageProcessor::Instance().ReInitializeMovedMap();
     PostTask([this, transactionMapPtr]() {
         for (auto& transactionIter : *transactionMapPtr) {
             auto pid = transactionIter.first;
@@ -1829,7 +1834,7 @@ void RSMainThread::SendCommands()
                 continue;
             }
             auto& app = appIter->second;
-            auto transactionPtr = std::make_shared<RSTransactionData>(std::move(transactionIter.second));
+            auto transactionPtr = transactionIter.second;
             app->OnTransaction(transactionPtr);
         }
     });
@@ -2383,6 +2388,10 @@ void RSMainThread::CollectFrameRateRange(std::shared_ptr<RSRenderNode> node)
 
 void RSMainThread::ApplyModifiers()
 {
+    if (context_->activeNodesInRoot_.empty()) {
+        return;
+    }
+    RS_TRACE_FUNC();
     frameRateRangeData_ = std::make_shared<FrameRateRangeData>();
     //[Planning]: Support multi-display in the future.
     frameRateRangeData_->screenId = 0;

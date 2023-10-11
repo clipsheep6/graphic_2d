@@ -158,7 +158,6 @@ minikin::BreakStrategy RosenConverMinkinBreakStrategy(BreakStrategy breakStrateg
     return minkinBreakStrategy;
 }
 
-#if !defined(USE_CANVASKIT0310_SKIA) && !defined(NEW_SKIA)
 minikin::WordBreakType RosenConverMinkinWordBreakType(WordBreakType wordBreakType)
 {
     minikin::WordBreakType minkinWordBreakType;
@@ -178,7 +177,6 @@ minikin::WordBreakType RosenConverMinkinWordBreakType(WordBreakType wordBreakTyp
     }
     return minkinWordBreakType;
 }
-#endif
 
 txt::TextDirection RosenConvertTxtTextDirection(TextDirection textDirection)
 {
@@ -282,17 +280,17 @@ void RosenConvertTxtStyle(const TextStyle& textStyle, txt::TextStyle& txtStyle)
     txtStyle.height = textStyle.height_;
     txtStyle.has_height_override = textStyle.hasHeightOverride_;
     txtStyle.locale  = textStyle.locale_;
-    txtStyle.has_background = textStyle.hasBackground_;
-    OHOS::Rosen::Drawing::SkiaPaint skiaPaint;
-    skiaPaint.PenToSkPaint(textStyle.background_, txtStyle.background);
-    txtStyle.has_foreground = textStyle.hasForeground_;
-    skiaPaint.PenToSkPaint(textStyle.foreground_, txtStyle.foreground);
+    RosenConvertTxtPen(textStyle, txtStyle);
     auto textShadows = textStyle.textShadows_;
     if (!textShadows.empty()) {
         for (auto shadow : textShadows) {
             txt::TextShadow txtShadow;
             txtShadow.color = shadow.color_.CastToColorQuad();
+#ifndef USE_ROSEN_DRAWING
             txtShadow.offset  = SkPoint::Make(shadow.offset_.GetX(), shadow.offset_.GetY());
+#else
+            txtShadow.offset  = RSPoint{shadow.offset_.GetX(), shadow.offset_.GetY()};
+#endif
 #if defined(USE_CANVASKIT0310_SKIA) || defined(NEW_SKIA)
             // new flutter libtxt not have blur_radius, use blur_sigma
             txtShadow.blur_sigma = shadow.blurRadius_;
@@ -311,6 +309,22 @@ void RosenConvertTxtStyle(const TextStyle& textStyle, txt::TextStyle& txtStyle)
         }
         txtStyle.font_features = features;
     }
+}
+
+void RosenConvertTxtPen(const TextStyle& textStyle, txt::TextStyle& txtStyle)
+{
+#ifndef USE_ROSEN_DRAWING
+    txtStyle.has_background = textStyle.hasBackground_;
+    OHOS::Rosen::Drawing::SkiaPaint skiaPaint;
+    skiaPaint.PenToSkPaint(textStyle.background_, txtStyle.background);
+    txtStyle.has_foreground = textStyle.hasForeground_;
+    skiaPaint.PenToSkPaint(textStyle.foreground_, txtStyle.foreground);
+#else
+    txtStyle.has_background_pen = textStyle.hasBackground_;
+    txtStyle.background_pen = textStyle.background_;
+    txtStyle.has_foreground_pen = textStyle.hasForeground_;
+    txtStyle.foreground_pen = textStyle.foreground_;
+#endif
 }
 
 void RosenConvertTypographyStyle(const TypographyStyle& typographyStyle, txt::ParagraphStyle& txtParagraphStyle)
@@ -336,9 +350,7 @@ void RosenConvertTypographyStyle(const TypographyStyle& typographyStyle, txt::Pa
     txtParagraphStyle.ellipsis = typographyStyle.ellipsis_;
     txtParagraphStyle.locale = typographyStyle.locale_;
     txtParagraphStyle.break_strategy = RosenConverMinkinBreakStrategy(typographyStyle.breakStrategy_);
-#if !defined(USE_CANVASKIT0310_SKIA) && !defined(NEW_SKIA)
     txtParagraphStyle.word_break_type = RosenConverMinkinWordBreakType(typographyStyle.wordBreakType_);
-#endif
 }
 
 TextDirection TxtConvertRosenTextDirection(const txt::TextDirection& txtTextBox)

@@ -182,6 +182,17 @@ bool RSSystemProperties::GetOpaqueRegionDfxEnabled()
     return std::atoi((system::GetParameter("rosen.uni.opaqueregiondebug", "0")).c_str()) != 0;
 }
 
+bool RSSystemProperties::GetVisibleRegionDfxEnabled()
+{
+    return std::atoi((system::GetParameter("rosen.uni.visibleregiondebug", "0")).c_str()) != 0;
+}
+
+SurfaceRegionDebugType RSSystemProperties::GetSurfaceRegionDfxType()
+{
+    return static_cast<SurfaceRegionDebugType>(
+        std::atoi((system::GetParameter("rosen.uni.surfaceregiondebug", "0")).c_str()));
+}
+
 uint32_t RSSystemProperties::GetCorrectionMode()
 {
     // If the value of rosen.directClientComposition.enabled is not 0 then enable the direct CLIENT composition.
@@ -268,6 +279,13 @@ bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
     return skipGeoNotChangeEnabled;
 }
 
+bool RSSystemProperties::GetPropertyDrawableEnable()
+{
+    static bool propertyDrawableEnable =
+        std::atoi((system::GetParameter("persist.propertyDrawableGenerate.enabled", "0")).c_str()) != 0;
+    return propertyDrawableEnable;
+}
+
 float RSSystemProperties::GetAnimationScale()
 {
     return std::atof((system::GetParameter("persist.sys.graphic.animationscale", "1.0")).c_str());
@@ -298,6 +316,15 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
     static int filterCacheSizeThreshold =
         std::atoi((system::GetParameter("persist.sys.graphic.filterCacheSizeThreshold", "400")).c_str());
     return filterCacheSizeThreshold;
+}
+
+bool RSSystemProperties::GetFilterPartialRenderEnabled()
+{
+    // Determine whether the filter partial render should be enabled. The default value is 0,
+    // which means that it is unenabled.
+    static bool enabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "0")).c_str()) != 0;
+    return enabled;
 }
 
 bool RSSystemProperties::GetKawaseEnabled()
@@ -450,6 +477,20 @@ bool RSSystemProperties::IsPhoneType()
 {
     static bool isPhone = system::GetParameter("const.product.devicetype", "pc") == "phone";
     return isPhone;
+}
+
+bool RSSystemProperties::GetSyncTransactionEnabled()
+{
+    static bool syncTransactionEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.syncTransaction.enabled", "1")).c_str()) != 0;
+    return syncTransactionEnabled;
+}
+
+int RSSystemProperties::GetSyncTransactionWaitDelay()
+{
+    static int syncTransactionWaitDelay =
+        std::atoi((system::GetParameter("persist.sys.graphic.syncTransactionWaitDelay", "100")).c_str());
+    return syncTransactionWaitDelay;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,23 +13,31 @@
  * limitations under the License.
  */
 
-#include "rs_process_transaction_controller.h"
+#ifndef ROSENRENDER_ROSEN_EXPOTER
+#define ROSENRENDER_ROSEN_EXPOTER
 
-#include "platform/common/rs_log.h"
+#include <functional>
+#include <string>
+
+#include "napi/n_val.h"
 
 namespace OHOS {
 namespace Rosen {
-void RSProcessTransactionController::CreateTransactionFinished()
-{
-    ROSEN_LOGD("RS sync transaction controller CreateTransactionFinished!");
-    if (callback_) {
-        callback_();
-    }
-}
+class NExporter {
+public:
+    NExporter() : exports_(nullptr, nullptr) {};
 
-void RSProcessTransactionController::SetTransactionFinishedCallback(const TransactionFinishedCallback& callback)
-{
-    callback_ = callback;
-}
+    virtual ~NExporter() = default;
+
+    NExporter(napi_env env, napi_value exports) : exports_(env, exports) {};
+
+    virtual bool Export(napi_env env, napi_value exports) = 0;
+
+    virtual std::string GetClassName() = 0;
+
+protected:
+    NVal exports_;
+};
 } // namespace Rosen
 } // namespace OHOS
+#endif // ROSENRENDER_ROSEN_EXPOTER

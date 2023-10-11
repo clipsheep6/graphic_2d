@@ -21,36 +21,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "ashmem.h"
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkDrawable.h"
-#include "include/core/SkImage.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkPicture.h"
-#include "include/core/SkSerialProcs.h"
-#include "include/core/SkStream.h"
-#include "include/core/SkTextBlob.h"
-#include "include/core/SkTypeface.h"
-#include "include/core/SkVertices.h"
-#ifdef NEW_SKIA
-#include "include/core/SkSamplingOptions.h"
-#include "src/core/SkVerticesPriv.h"
-#endif
-#endif
 #include "memory/rs_memory_track.h"
 #include "pixel_map.h"
-#include "securec.h"
-#ifndef USE_ROSEN_DRAWING
-#include "src/core/SkAutoMalloc.h"
-#include "src/core/SkPaintPriv.h"
-#include "src/core/SkReadBuffer.h"
-#include "src/core/SkWriteBuffer.h"
-#include "src/image/SkImage_Base.h"
-#else
-#include "recording/recording_path.h"
-#include "recording/recording_shader_effect.h"
-#endif
 
 #include "animation/rs_render_curve_animation.h"
 #include "animation/rs_render_interpolating_spring_animation.h"
@@ -65,10 +37,6 @@
 #include "common/rs_matrix3.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_render_modifier.h"
-#ifndef USE_ROSEN_DRAWING
-#include "pipeline/rs_draw_cmd.h"
-#include "pipeline/rs_draw_cmd_list.h"
-#endif
 #include "platform/common/rs_log.h"
 #include "render/rs_blur_filter.h"
 #include "render/rs_filter.h"
@@ -76,10 +44,38 @@
 #include "render/rs_image.h"
 #include "render/rs_image_base.h"
 #include "render/rs_light_up_effect_filter.h"
+#include "render/rs_mask.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_path.h"
 #include "render/rs_shader.h"
 #include "transaction/rs_ashmem_helper.h"
+
+#ifndef USE_ROSEN_DRAWING
+#include "include/core/SkDrawable.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkSerialProcs.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkVertices.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/image/SkImage_Base.h"
+
+#include "pipeline/rs_draw_cmd.h"
+#include "pipeline/rs_draw_cmd_list.h"
+#ifdef NEW_SKIA
+#include "include/core/SkSamplingOptions.h"
+#include "src/core/SkVerticesPriv.h"
+#endif
+#else
+#include "recording/recording_path.h"
+#include "recording/recording_shader_effect.h"
+#endif
+
 #ifdef RS_ENABLE_RECORDING
 #include "benchmarks/rs_recording_thread.h"
 #endif
@@ -95,6 +91,12 @@
 namespace OHOS {
 namespace Rosen {
 
+namespace {
+    bool g_useSharedMem = true;
+    std::thread::id g_tid = std::thread::id();
+}
+
+ 
 #define MARSHALLING_AND_UNMARSHALLING(TYPE, TYPENAME)                      \
     bool RSMarshallingHelper::Marshalling(Parcel& parcel, const TYPE& val) \
     {                                                                      \
@@ -166,12 +168,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkData>& val)
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Unmarshalling SkData");
         return false;
     }
-#ifdef RS_ENABLE_RECORDING
-    if (static_cast<uint32_t>(size) < MIN_DATA_SIZE ||
-        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
-#else
-    if (static_cast<uint32_t>(size) < MIN_DATA_SIZE) {
-#endif
+    if (static_cast<uint32_t>(size) < MIN_DATA_SIZE || (!g_useSharedMem && g_tid == std::this_thread::get_id())) {
         val = SkData::MakeWithoutCopy(data, size);
     } else {
         val = SkData::MakeFromMalloc(data, size);
@@ -191,12 +188,7 @@ bool RSMarshallingHelper::UnmarshallingWithCopy(Parcel& parcel, sk_sp<SkData>& v
 {
     bool success = Unmarshalling(parcel, val);
     if (success) {
-#ifdef RS_ENABLE_RECORDING
-        if (val && (val->size() < MIN_DATA_SIZE ||
-                       parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)) {
-#else
-        if (val && val->size() < MIN_DATA_SIZE) {
-#endif
+        if (val && (val->size() < MIN_DATA_SIZE || (!g_useSharedMem && g_tid == std::this_thread::get_id()))) {
             val = SkData::MakeWithCopy(val->data(), val->size());
         }
     }
@@ -542,11 +534,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val, voi
             }
             colorSpace = SkColorSpace::Deserialize(data, size);
 
-#ifdef RS_ENABLE_RECORDING
-            if (size >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
-#else
-            if (size >= MIN_DATA_SIZE) {
-#endif
+            if (size >= MIN_DATA_SIZE && (g_useSharedMem || g_tid != std::this_thread::get_id())) {
                 free(const_cast<void*>(data));
             }
         }
@@ -554,21 +542,13 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkImage>& val, voi
         // if pixelmapSize >= MIN_DATA_SIZE(copyFromAshMem). record this memory size
         // use this proc to follow release step
         SkImageInfo imageInfo = SkImageInfo::Make(width, height, colorType, alphaType, colorSpace);
-#ifdef RS_ENABLE_RECORDING
         auto skData =
-            (pixmapSize < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY)
+            (pixmapSize < MIN_DATA_SIZE || (!g_useSharedMem && g_tid == std::this_thread::get_id()))
                 ? SkData::MakeWithCopy(addr, pixmapSize)
-#else
-        auto skData = pixmapSize < MIN_DATA_SIZE ? SkData::MakeWithCopy(addr, pixmapSize)
-#endif
                 : SkData::MakeWithProc(addr, pixmapSize, sk_free_releaseproc, nullptr);
         val = SkImage::MakeRasterData(imageInfo, skData, rb);
         // add to MemoryTrack for memoryManager
-#ifdef RS_ENABLE_RECORDING
-        if (pixmapSize >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
-#else
-        if (pixmapSize >= MIN_DATA_SIZE) {
-#endif
+        if (pixmapSize >= MIN_DATA_SIZE && (g_useSharedMem || g_tid != std::this_thread::get_id())) {
             MemoryInfo info = { pixmapSize, 0, 0, MEMORY_TYPE::MEM_SKIMAGE };
             MemoryTrack::Instance().AddPictureRecord(addr, info);
             imagepixelAddr = const_cast<void*>(addr);
@@ -841,11 +821,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkBitmap& val)
         }
         colorSpace = SkColorSpace::Deserialize(data, size);
 
-#ifdef RS_ENABLE_RECORDING
-        if (size >= MIN_DATA_SIZE && parcel.GetMaxCapacity() != RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
-#else
-        if (size >= MIN_DATA_SIZE) {
-#endif
+        if (size >= MIN_DATA_SIZE && (g_useSharedMem || g_tid != std::this_thread::get_id())) {
             free(const_cast<void*>(data));
         }
     }
@@ -2023,11 +1999,7 @@ bool RSMarshallingHelper::WriteToParcel(Parcel& parcel, const void* data, size_t
     if (!parcel.WriteUint32(size)) {
         return false;
     }
-#ifdef RS_ENABLE_RECORDING
-    if (size < MIN_DATA_SIZE || parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
-#else
-    if (size < MIN_DATA_SIZE) {
-#endif
+    if (size < MIN_DATA_SIZE || (!g_useSharedMem && g_tid == std::this_thread::get_id())) {
         return parcel.WriteUnpadBuffer(data, size);
     }
 
@@ -2056,12 +2028,8 @@ const void* RSMarshallingHelper::ReadFromParcel(Parcel& parcel, size_t size)
         ROSEN_LOGE("RSMarshallingHelper::ReadFromParcel size mismatch");
         return nullptr;
     }
-#ifdef RS_ENABLE_RECORDING
-    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE ||
-        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
-#else
-    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE) {
-#endif
+    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE  ||
+        (!g_useSharedMem && g_tid == std::this_thread::get_id())) {
         return parcel.ReadUnpadBuffer(size);
     }
     // read from ashmem
@@ -2081,12 +2049,8 @@ bool RSMarshallingHelper::SkipFromParcel(Parcel& parcel, size_t size)
         ROSEN_LOGE("RSMarshallingHelper::SkipFromParcel size mismatch");
         return false;
     }
-#ifdef RS_ENABLE_RECORDING
     if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE ||
-        parcel.GetMaxCapacity() == RSRecordingThread::RECORDING_PARCEL_MAX_CAPCITY) {
-#else
-    if (static_cast<unsigned int>(bufferSize) < MIN_DATA_SIZE) {
-#endif
+        (!g_useSharedMem && g_tid == std::this_thread::get_id())) {
         parcel.SkipBytes(size);
         return true;
     }
@@ -2125,5 +2089,21 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::unique_ptr<OpItem>&
     return true;
 }
 #endif
+
+void RSMarshallingHelper::BeginNoSharedMem(std::thread::id tid)
+{
+    g_useSharedMem = false;
+    g_tid = tid;
+}
+void RSMarshallingHelper::EndNoSharedMem()
+{
+    g_useSharedMem = true;
+    g_tid.__reset();
+}
+
+bool RSMarshallingHelper::GetUseSharedMem()
+{
+    return g_useSharedMem;
+}
 } // namespace Rosen
 } // namespace OHOS

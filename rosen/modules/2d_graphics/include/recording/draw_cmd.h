@@ -99,6 +99,7 @@ public:
         IMAGE_OPITEM,
         IMAGE_RECT_OPITEM,
         PICTURE_OPITEM,
+        TEXT_BLOB_OPITEM,
         CLIP_RECT_OPITEM,
         CLIP_IRECT_OPITEM,
         CLIP_ROUND_RECT_OPITEM,
@@ -127,6 +128,7 @@ public:
         REGION_OPITEM,
         PATCH_OPITEM,
         EDGEAAQUAD_OPITEM,
+        VERTICES_OPITEM,
     };
 };
 
@@ -370,16 +372,16 @@ private:
 
 class DrawAnnotationOpItem : public DrawOpItem {
 public:
-    explicit DrawAnnotationOpItem(const Rect& rect, const char* key, const Data& data);
+    explicit DrawAnnotationOpItem(const Rect& rect, const char* key, const ImageHandle& data);
     ~DrawAnnotationOpItem() = default;
 
     static void Playback(CanvasPlayer& player, const void* opItem);
-    void Playback(Canvas& canvas) const;
+    void Playback(Canvas& canvas, const CmdList& cmdList) const;
 
 private:
     Rect rect_;
     const char* key_;
-    const Data data_;
+    const ImageHandle data_;
 };
 
 class DrawImageLatticeOpItem : public DrawOpItem {
@@ -398,6 +400,19 @@ private:
     FilterMode filter_;
     BrushHandle brushHandle_;
     bool hasBrush_;
+};
+
+class DrawVerticesOpItem : public DrawOpItem {
+public:
+    DrawVerticesOpItem(const VerticesHandle& vertices, BlendMode mode);
+    ~DrawVerticesOpItem() = default;
+
+    static void Playback(CanvasPlayer& player, const void* opItem);
+    void Playback(Canvas& canvas, const CmdList& cmdList) const;
+
+private:
+    VerticesHandle vertices_;
+    BlendMode mode_;
 };
 
 class DrawBitmapOpItem : public DrawOpItem {
@@ -469,6 +484,20 @@ public:
 private:
     ColorQuad color_;
     BlendMode mode_;
+};
+
+class DrawTextBlobOpItem : public DrawOpItem {
+public:
+    explicit DrawTextBlobOpItem(const ImageHandle& textBlob, const scalar x, const scalar y);
+    ~DrawTextBlobOpItem() = default;
+
+    static void Playback(CanvasPlayer& player, const void* opItem);
+    void Playback(Canvas& canvas, const CmdList& cmdList) const;
+
+private:
+    ImageHandle textBlob_;
+    scalar x_;
+    scalar y_;
 };
 
 class ClipRectOpItem : public DrawOpItem {

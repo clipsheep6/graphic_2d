@@ -32,6 +32,7 @@
 #include "skia_paint.h"
 #include "skia_picture.h"
 #include "skia_region.h"
+#include "skia_vertices.h"
 
 #include "common/rs_macros.h"
 #include "impl_interface/core_canvas_impl.h"
@@ -89,10 +90,11 @@ public:
         const Point texCoords[4], BlendMode mode) override;
     void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
         QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) override;
+    void DrawVertices(const Vertices& vertices, BlendMode mode) override;
 
     void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) override;
-    void DrawAnnotation(const Rect& rect, const char* key, const Data& data) override;
+    void DrawAnnotation(const Rect& rect, const char* key, const Data* data) override;
     void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) override;
 
@@ -109,6 +111,9 @@ public:
     void DrawPicture(const Picture& picture) override;
 
     void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom) override;
+
+    // text
+    void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y) override;
 
     // clip
     void ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias) override;

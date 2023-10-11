@@ -169,6 +169,11 @@ bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetPropertyDrawableEnable()
+{
+    return {};
+}
+
 float RSSystemProperties::GetAnimationScale()
 {
     return 1.f;
@@ -187,6 +192,11 @@ bool RSSystemProperties::GetFilterCacheEnabled()
 int RSSystemProperties::GetFilterCacheUpdateInterval()
 {
     return 0;
+}
+
+bool RSSystemProperties::GetFilterPartialRenderEnabled()
+{
+    return false;
 }
 
 bool RSSystemProperties::GetDebugTraceEnabled()
@@ -252,6 +262,16 @@ bool RSSystemProperties::GetASTCEnabled()
 bool RSSystemProperties::GetImageGpuResourceCacheEnable(int width, int height)
 {
     return false;
+}
+
+bool RSSystemProperties::GetSyncTransactionEnabled()
+{
+    return false;
+}
+
+int RSSystemProperties::GetSyncTransactionWaitDelay()
+{
+    return 0;
 }
 } // namespace Rosen
 } // namespace OHOS

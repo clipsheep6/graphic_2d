@@ -28,10 +28,10 @@ ohos_shared_library("librender_service") {
   }
   defines += gpu_defines
   if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
-    cflags = [
-      "-flto=thin",
-      "-fwhole-program-vtables",
-    ]
+    cflags = [ "-flto=thin" ]
+    if (enhanced_opt) {
+      cflags += [ "-fwhole-program-vtables" ]
+    }
   }
 
   sources = [
@@ -88,6 +88,7 @@ ohos_shared_library("librender_service") {
 
   if (rs_enable_parallel_render && rs_enable_gpu) {
     sources += [
+      "core/pipeline/parallel_render/rs_filter_sub_thread.cpp",
       "core/pipeline/parallel_render/rs_node_cost_manager.cpp",
       "core/pipeline/parallel_render/rs_parallel_hardware_composer.cpp",
       "core/pipeline/parallel_render/rs_parallel_pack_visitor.cpp",
@@ -129,6 +130,7 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_frame_trace:render_frame_trace",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
+    "$graphic_2d_root/rosen/samples/2d_graphics:drawing_engine_sample",
   ]
 
   public_deps = [ "//third_party/libpng:libpng" ]
@@ -213,12 +215,12 @@ ohos_shared_library("librender_service") {
 
   ldflags = []
 
-  #Bisheng control is required in the future
-  if (is_ohos) {
+  if (is_ohos && enhanced_opt) {
     ldflags += [ "-Wl,-Bsymbolic" ]
   }
 
-  if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
+  if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64") &&
+      enhanced_opt) {
     ldflags += [
       "-Wl,-mllvm",
       "-Wl,-wholeprogramdevirt-check=fallback",

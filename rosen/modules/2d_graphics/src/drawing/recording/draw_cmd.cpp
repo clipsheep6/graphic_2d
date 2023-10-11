@@ -37,6 +37,7 @@
 #include "effect/path_effect.h"
 #include "effect/shader_effect.h"
 #include "utils/scalar.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -63,6 +64,7 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::IMAGE_OPITEM,             DrawImageOpItem::Playback },
     { DrawOpItem::IMAGE_RECT_OPITEM,        DrawImageRectOpItem::Playback },
     { DrawOpItem::PICTURE_OPITEM,           DrawPictureOpItem::Playback },
+    { DrawOpItem::TEXT_BLOB_OPITEM,         DrawTextBlobOpItem::Playback },
     { DrawOpItem::CLIP_RECT_OPITEM,         ClipRectOpItem::Playback },
     { DrawOpItem::CLIP_IRECT_OPITEM,        ClipIRectOpItem::Playback },
     { DrawOpItem::CLIP_ROUND_RECT_OPITEM,   ClipRoundRectOpItem::Playback },
@@ -91,6 +93,7 @@ std::unordered_map<uint32_t, CanvasPlayer::PlaybackFunc> CanvasPlayer::opPlaybac
     { DrawOpItem::REGION_OPITEM,            DrawRegionOpItem::Playback },
     { DrawOpItem::PATCH_OPITEM,             DrawPatchOpItem::Playback },
     { DrawOpItem::EDGEAAQUAD_OPITEM, DrawEdgeAAQuadOpItem::Playback },
+    { DrawOpItem::VERTICES_OPITEM,          DrawVerticesOpItem::Playback },
 };
 
 CanvasPlayer::CanvasPlayer(Canvas& canvas, const CmdList& cmdList, const Rect& rect)
@@ -434,6 +437,27 @@ void DrawEdgeAAQuadOpItem::Playback(Canvas& canvas, const CmdList& cmdList) cons
     canvas.DrawEdgeAAQuad(rect_, clip.empty() ? nullptr : clip.data(), aaFlags_, color_, mode_);
 }
 
+DrawVerticesOpItem::DrawVerticesOpItem(const VerticesHandle& vertices, BlendMode mode)
+    : DrawOpItem(VERTICES_OPITEM), vertices_(vertices), mode_(mode) {}
+
+void DrawVerticesOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (opItem != nullptr) {
+        const auto* op = static_cast<const DrawVerticesOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawVerticesOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    auto vertices = CmdListHelper::GetVerticesFromCmdList(cmdList, vertices_);
+    if (vertices == nullptr) {
+        return;
+    }
+
+    canvas.DrawVertices(*vertices, mode_);
+}
+
 DrawColorOpItem::DrawColorOpItem(ColorQuad color, BlendMode mode) : DrawOpItem(COLOR_OPITEM),
     color_(color), mode_(mode) {}
 
@@ -502,7 +526,7 @@ void DrawImageNineOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     canvas.DrawImageNine(image.get(), center_, dst_, filter_, brush.get());
 }
 
-DrawAnnotationOpItem::DrawAnnotationOpItem(const Rect& rect, const char* key, const Data& data)
+DrawAnnotationOpItem::DrawAnnotationOpItem(const Rect& rect, const char* key, const ImageHandle& data)
     : DrawOpItem(IMAGE_ANNOTATION_OPITEM),
     rect_(rect), key_(key), data_(data) {}
 
@@ -510,13 +534,17 @@ void DrawAnnotationOpItem::Playback(CanvasPlayer& player, const void* opItem)
 {
     if (opItem != nullptr) {
         const auto* op = static_cast<const DrawAnnotationOpItem*>(opItem);
-        op->Playback(player.canvas_);
+        op->Playback(player.canvas_, player.cmdList_);
     }
 }
 
-void DrawAnnotationOpItem::Playback(Canvas& canvas) const
+void DrawAnnotationOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
 {
-    canvas.DrawAnnotation(rect_, key_, data_);
+    auto data = CmdListHelper::GetDataFromCmdList(cmdList, data_);
+    if (data == nullptr) {
+        return;
+    }
+    canvas.DrawAnnotation(rect_, key_, data.get());
 }
 
 DrawImageLatticeOpItem::DrawImageLatticeOpItem(const ImageHandle& image, const Lattice& lattice, const Rect& dst,
@@ -654,6 +682,27 @@ void DrawPictureOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
     }
 
     canvas.DrawPicture(*picture);
+}
+
+DrawTextBlobOpItem::DrawTextBlobOpItem(const ImageHandle& textBlob, const scalar x, const scalar y)
+    : DrawOpItem(TEXT_BLOB_OPITEM), textBlob_(textBlob), x_(x), y_(y) {}
+
+void DrawTextBlobOpItem::Playback(CanvasPlayer& player, const void* opItem)
+{
+    if (!opItem) {
+        const auto* op = static_cast<const DrawTextBlobOpItem*>(opItem);
+        op->Playback(player.canvas_, player.cmdList_);
+    }
+}
+
+void DrawTextBlobOpItem::Playback(Canvas& canvas, const CmdList& cmdList) const
+{
+    std::shared_ptr<TextBlob> textBlob = CmdListHelper::GetTextBlobFromCmdList(cmdList, textBlob_);
+    if (!textBlob) {
+        LOGE("textBlob nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        return;
+    }
+    canvas.DrawTextBlob(textBlob.get(), x_, y_);
 }
 
 ClipRectOpItem::ClipRectOpItem(const Rect& rect, ClipOp op, bool doAntiAlias)

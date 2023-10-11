@@ -68,10 +68,11 @@ public:
         const Drawing::Point texCoords[4], Drawing::BlendMode mode) override;
     void DrawEdgeAAQuad(const Drawing::Rect& rect, const Drawing::Point clip[4],
         Drawing::QuadAAFlags aaFlags, Drawing::ColorQuad color, Drawing::BlendMode mode) override;
+    void DrawVertices(const Drawing::Vertices& vertices, Drawing::BlendMode mode) override;
 
     void DrawImageNine(const Drawing::Image* image, const Drawing::RectI& center, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override;
-    void DrawAnnotation(const Drawing::Rect& rect, const char* key, const Drawing::Data& data) override;
+    void DrawAnnotation(const Drawing::Rect& rect, const char* key, const Drawing::Data* data) override;
     void DrawImageLattice(const Drawing::Image* image, const Drawing::Lattice& lattice, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override;
 
@@ -84,6 +85,7 @@ public:
     void DrawImageRect(const Drawing::Image& image,
         const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling) override;
     void DrawPicture(const Drawing::Picture& picture) override;
+    void DrawTextBlob(const Drawing::TextBlob* blob, const Drawing::scalar x, const Drawing::scalar y) override;
 
     void ClipRect(const Drawing::Rect& rect, Drawing::ClipOp op, bool doAntiAlias) override;
     void ClipIRect(const Drawing::RectI& rect, Drawing::ClipOp op = Drawing::ClipOp::INTERSECT) override;
@@ -235,6 +237,8 @@ public:
     };
     CanvasStatus GetCanvasStatus() const;
     void SetCanvasStatus(const CanvasStatus& status);
+    bool GetRecordingState() const;
+    void SetRecordingState(bool flag);
 #endif
 
 protected:
@@ -276,6 +280,7 @@ private:
 
     bool isParallelCanvas_ = false;
     bool disableFilterCache_ = false;
+    bool recordingState_ = false;
 };
 
 // This class extends RSPaintFilterCanvas to also create a color filter for the paint.

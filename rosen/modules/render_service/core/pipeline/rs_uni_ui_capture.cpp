@@ -65,6 +65,7 @@ std::shared_ptr<Media::PixelMap> RSUniUICapture::TakeLocalCapture()
 #ifndef USE_ROSEN_DRAWING
     auto skSurface = CreateSurface(pixelmap);
     if (skSurface == nullptr) {
+        RS_LOGE("RSUniUICapture::TakeLocalCapture: skSurface == nullptr!");
         return nullptr;
     }
     auto canvas = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
@@ -184,9 +185,12 @@ void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<RSRecordin
         RS_LOGE("RSUniUICaptureVisitor::SetCanvas: canvas == nullptr");
         return;
     }
+    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+    canvas->SetGrRecordingContext(renderContext->GetGrContext());
     canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
     canvas_->scale(scaleX_, scaleY_);
     canvas_->SetDisableFilterCache(true);
+    canvas_->SetRecordingState(true);
 }
 #else
 void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<Drawing::RecordingCanvas> canvas)
@@ -458,7 +462,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         canvas_->restoreToCount(saveCnt);
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
-            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
     } else {
@@ -468,7 +472,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         }
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
-            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
         canvas_->restore();

@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_RENDER_SERVICE_BASE_RS_ISYNC_TRANSACTION_CONTROLLER_INTERFACE_CODE_H
-#define ROSEN_RENDER_SERVICE_BASE_RS_ISYNC_TRANSACTION_CONTROLLER_INTERFACE_CODE_H
-
-#include "ipc_security/rs_ipc_interface_code_underlying_type.h"
+#ifndef INTERFACES_INNERKITS_BOOTANIMATION_BOOTANIMATION_UTILS_H
+#define INTERFACES_INNERKITS_BOOTANIMATION_BOOTANIMATION_UTILS_H
 
 namespace OHOS {
-namespace Rosen {
-enum class RSISyncTransactionControllerInterfaceCode : CodeUnderlyingType {
-    CREATE_TRANSACTION_FINISHED,
+class BootAnimationUtils {
+public:
+    BootAnimationUtils() = default;
+    virtual ~BootAnimationUtils() = default;
+
+    static bool GetBootAnimationSoundEnabled();
+
+    static void SetBootAnimationSoundEnabled(bool isEnabled);
 };
-} // namespace Rosen
 } // namespace OHOS
 
-#endif // ROSEN_RENDER_SERVICE_BASE_RS_ISYNC_TRANSACTION_CONTROLLER_INTERFACE_CODE_H
+#endif // INTERFACES_INNERKITS_BOOTANIMATION_BOOTANIMATION_UTILS_H

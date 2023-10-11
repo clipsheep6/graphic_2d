@@ -21,8 +21,8 @@
 #include <list>
 #include <memory>
 #include <mutex>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -54,6 +54,8 @@ class DrawCmdList;
 class RSContext;
 class RSNodeVisitor;
 class RSCommand;
+enum class RSPropertyDrawableSlot : unsigned char;
+class RSPropertyDrawable;
 
 class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode>  {
 public:
@@ -132,7 +134,7 @@ public:
     template<typename T>
     bool IsInstanceOf() const
     {
-        constexpr uint32_t targetType = static_cast<uint32_t>(T::Type);
+        constexpr auto targetType = static_cast<uint32_t>(T::Type);
         return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
     }
     template<typename T>
@@ -158,7 +160,7 @@ public:
     void SetChildHasFilter(bool childHasFilter);
 
     NodeId GetInstanceRootNodeId() const;
-    const std::shared_ptr<RSRenderNode>& GetInstanceRootNode() const;
+    const std::shared_ptr<RSRenderNode> GetInstanceRootNode() const;
     NodeId GetFirstLevelNodeId() const;
 
     // accumulate all valid children's area
@@ -170,7 +172,7 @@ public:
         dirtyTypes_.emplace(type);
     }
 
-    std::pair<bool, bool> Animate(int64_t timestamp);
+    std::tuple<bool, bool, bool> Animate(int64_t timestamp);
 
     bool IsClipBound() const;
     // clipRect has value in UniRender when calling PrepareCanvasRenderNode, else it is nullopt
@@ -286,6 +288,7 @@ public:
     std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
         bool needCheckThread = true, bool releaseAfterGet = false);
 #endif
+    void ClearCacheSurfaceInThread();
     void ClearCacheSurface(bool isClearCompletedCacheSurface = true);
     bool IsCacheSurfaceValid() const;
 
@@ -369,6 +372,9 @@ public:
 
     bool IsAncestorDirty() const;
     void SetIsAncestorDirty(bool isAncestorDirty);
+
+    bool IsParentLeashWindow() const;
+    void SetParentLeashWindow();
 
     bool HasCachedTexture() const;
 
@@ -548,6 +554,7 @@ private:
     bool hasHardwareNode_ = false;
     bool hasAbilityComponent_ = false;
     bool isAncestorDirty_ = false;
+    bool isParentLeashWindow_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
 
     // driven render
@@ -582,10 +589,19 @@ private:
     std::unordered_map<PropertyId, std::variant<float, Vector2f>> propertyValueMap_;
     std::vector<HgmModifierProfile> hgmModifierProfileList_;
 
+    std::map<RSPropertyDrawableSlot, std::unique_ptr<RSPropertyDrawable>> propertyDrawablesMap_;
+    uint8_t drawableMapStatus_ = 0;
+    using DrawableIter = decltype(propertyDrawablesMap_)::iterator;
+    inline std::pair<DrawableIter, DrawableIter> GetDrawableRange(
+        RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
+    inline void IterateOnDrawableRange(RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end,
+        const std::function<void(std::unique_ptr<RSPropertyDrawable>&)>& func);
+
     friend class RSMainThread;
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
     friend class RSRenderTransition;
+    friend class RSPropertyDrawableRenderContext;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

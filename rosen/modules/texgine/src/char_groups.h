@@ -22,6 +22,8 @@
 #include <ostream>
 #include <vector>
 
+#include <unicode/uchar.h>
+
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -68,6 +70,28 @@ struct CharGroup {
         }
         return true;
     };
+
+    bool IsHardBreak()
+    {
+        ULineBreak lineBreak = static_cast<ULineBreak>(
+            u_getIntPropertyValue(chars[0], UCHAR_LINE_BREAK));
+        return (lineBreak == U_LB_LINE_FEED || lineBreak == U_LB_MANDATORY_BREAK);
+    }
+
+    bool IsEmoji() const
+    {
+        bool isEmoji = false;
+        for (auto i = 0; i < chars.size(); i++) {
+            isEmoji = (u_hasBinaryProperty(chars[i], UCHAR_EMOJI) ||
+                u_hasBinaryProperty(chars[i], UCHAR_EMOJI_PRESENTATION) ||
+                u_hasBinaryProperty(chars[i], UCHAR_EMOJI_MODIFIER) ||
+                u_hasBinaryProperty(chars[i], UCHAR_EMOJI_MODIFIER_BASE));
+            if (isEmoji) {
+                return isEmoji;
+            }
+        }
+        return isEmoji;
+    }
 };
 
 struct IndexRange {

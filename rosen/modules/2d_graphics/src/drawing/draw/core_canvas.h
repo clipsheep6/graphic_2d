@@ -217,10 +217,11 @@ public:
         const Point texCoords[4], BlendMode mode);
     virtual void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
         QuadAAFlags aaFlags, ColorQuad color, BlendMode mode);
+    virtual void DrawVertices(const Vertices& vertices, BlendMode mode);
 
     virtual void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
-    virtual void DrawAnnotation(const Rect& rect, const char* key, const Data& data);
+    virtual void DrawAnnotation(const Rect& rect, const char* key, const Data* data);
     virtual void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
 
@@ -235,6 +236,9 @@ public:
 
     // temporary interface. Support drawing of SkSVGDOM
     virtual void DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom);
+
+    // text
+    virtual void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y);
 
     // clip
     /*

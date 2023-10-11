@@ -31,6 +31,7 @@
 #include "skia_path.h"
 #include "skia_image_info.h"
 #include "skia_data.h"
+#include "skia_text_blob.h"
 
 #include "draw/core_canvas.h"
 #include "image/bitmap.h"
@@ -149,7 +150,7 @@ ImageInfo SkiaCanvas::GetImageInfo()
     if (skCanvas_ == nullptr) {
         return {};
     }
-    return ConvertToRSImageInfo(skCanvas_->imageInfo());
+    return SkiaImageInfo::ConvertToRSImageInfo(skCanvas_->imageInfo());
 }
 
 bool SkiaCanvas::ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
@@ -160,8 +161,9 @@ bool SkiaCanvas::ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t ds
         return false;
     }
     SkImageInfo info = SkImageInfo::Make(dstInfo.GetWidth(), dstInfo.GetHeight(),
-        ConvertToSkColorType(dstInfo.GetColorType()), ConvertToSkAlphaType(dstInfo.GetAlphaType()),
-        dstInfo.GetColorSpace()->GetImpl<SkiaColorSpace>()->GetColorSpace());
+                                         SkiaImageInfo::ConvertToSkColorType(dstInfo.GetColorType()),
+                                         SkiaImageInfo::ConvertToSkAlphaType(dstInfo.GetAlphaType()),
+                                         dstInfo.GetColorSpace()->GetImpl<SkiaColorSpace>()->GetColorSpace());
     return skCanvas_->readPixels(info, dstPixels, dstRowBytes, srcX, srcY);
 }
 
@@ -459,6 +461,26 @@ void SkiaCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
         static_cast<SkBlendMode>(mode));
 }
 
+void SkiaCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
+{
+    if (!skCanvas_) {
+        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return;
+    }
+
+    sk_sp<SkVertices> verts;
+    auto skVerticesImpl = vertices.GetImpl<SkiaVertices>();
+    if (skVerticesImpl != nullptr) {
+        verts = skVerticesImpl->GetVertices();
+    }
+
+    for (auto d : skiaPaint_.GetSortedPaints()) {
+        if (d != nullptr) {
+            skCanvas_->drawVertices(verts, static_cast<SkBlendMode>(mode), d->paint);
+        }
+    }
+}
+
 void SkiaCanvas::DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
     FilterMode filter, const Brush* brush)
 {
@@ -482,10 +504,14 @@ void SkiaCanvas::DrawImageNine(const Image* image, const RectI& center, const Re
     skCanvas_->drawImageNine(img.get(), skCenter, skDst, skFilterMode, paint.get());
 }
 
-void SkiaCanvas::DrawAnnotation(const Rect& rect, const char* key, const Data& data)
+void SkiaCanvas::DrawAnnotation(const Rect& rect, const char* key, const Data* data)
 {
     SkRect skRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
-    auto dataImp = data.GetImpl<SkiaData>();
+    if (data == nullptr) {
+        LOGE("drawAnnotation:dataImp is null");
+        return;
+    }
+    auto dataImp = data->GetImpl<SkiaData>();
     if (dataImp == nullptr) {
         LOGE("drawAnnotation:dataImp is null");
         return;
@@ -817,6 +843,33 @@ void SkiaCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
     LOGD("+++++++ DrawSVGDOM");
     svgDom->render(skCanvas_);
     LOGD("------- DrawSVGDOM");
+}
+
+void SkiaCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y)
+{
+    if (!skCanvas_) {
+        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return;
+    }
+    if (!blob) {
+        LOGE("blob is null, return on line %{public}d", __LINE__);
+        return;
+    }
+    std::shared_ptr<SkiaTextBlob> skiaTextBlob = blob->GetImpl<SkiaTextBlob>();
+    if (!skiaTextBlob) {
+        LOGE("skiaTextBlob is null, return on line %{public}d", __LINE__);
+        return;
+    }
+    SkTextBlob* skTextBlob = skiaTextBlob->GetTextBlob().get();
+    if (!skTextBlob) {
+        LOGE("skTextBlob is null, return on line %{public}d", __LINE__);
+        return;
+    }
+    for (auto d : skiaPaint_.GetSortedPaints()) {
+        if (d != nullptr) {
+            skCanvas_->drawTextBlob(skTextBlob, x, y, d->paint);
+        }
+    }
 }
 
 void SkiaCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)

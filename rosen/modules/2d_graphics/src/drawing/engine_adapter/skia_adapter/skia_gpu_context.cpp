@@ -17,6 +17,7 @@
 
 #include "include/gpu/gl/GrGLInterface.h"
 #include "src/gpu/GrDirectContextPriv.h"
+#include "include/core/SkTypes.h"
 
 #include "skia_data.h"
 #include "utils/data.h"
@@ -154,7 +155,6 @@ void SkiaGPUContext::FreeGpuResources()
 
 void SkiaGPUContext::DumpGpuStats(std::string& out)
 {
-#if GR_TEST_UTILS
     if (!grContext_) {
         LOGE("SkiaGPUContext::DumpGpuStats, grContext_ is nullptr");
         return;
@@ -162,7 +162,6 @@ void SkiaGPUContext::DumpGpuStats(std::string& out)
     SkString stat;
     grContext_->priv().dumpGpuStats(&stat);
     out = stat.c_str();
-#endif
 }
 
 void SkiaGPUContext::ReleaseResourcesAndAbandonContext()
@@ -210,6 +209,16 @@ void SkiaGPUContext::ReleaseByTag(const GPUResourceTag tag)
     }
     GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
     grContext_->releaseByTag(grTag);
+}
+
+void SkiaGPUContext::SetCurrentGpuResourceTag(const GPUResourceTag tag)
+{
+    if (!grContext_) {
+        LOGE("SkiaGPUContext::ReleaseByTag, grContext_ is nullptr");
+        return;
+    }
+    GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
+    grContext_->setCurrentGrResourceTag(grTag);
 }
 
 #ifdef NEW_SKIA

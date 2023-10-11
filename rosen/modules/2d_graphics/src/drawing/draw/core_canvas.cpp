@@ -161,6 +161,11 @@ void CoreCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
     impl_->DrawEdgeAAQuad(rect, clip, aaFlags, color, mode);
 }
 
+void CoreCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
+{
+    impl_->DrawVertices(vertices, mode);
+}
+
 void CoreCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
     impl_->DrawBitmap(bitmap, px, py);
@@ -172,7 +177,7 @@ void CoreCanvas::DrawImageNine(const Image* image, const RectI& center, const Re
     impl_->DrawImageNine(image, center, dst, filter, brush);
 }
 
-void CoreCanvas::DrawAnnotation(const Rect& rect, const char* key, const Data& data)
+void CoreCanvas::DrawAnnotation(const Rect& rect, const char* key, const Data* data)
 {
     impl_->DrawAnnotation(rect, key, data);
 }
@@ -212,6 +217,11 @@ void CoreCanvas::DrawPicture(const Picture& picture)
 void CoreCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
 {
     impl_->DrawSVGDOM(svgDom);
+}
+
+void CoreCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y)
+{
+    impl_->DrawTextBlob(blob, x, y);
 }
 
 void CoreCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)

@@ -167,6 +167,13 @@ void RSPaintFilterCanvasBase::DrawEdgeAAQuad(const Drawing::Rect& rect, const Dr
     }
 }
 
+void RSPaintFilterCanvasBase::DrawVertices(const Drawing::Vertices& vertices, Drawing::BlendMode mode)
+{
+    if (canvas_ != nullptr && OnFilter()) {
+        canvas_->DrawVertices(vertices, mode);
+    }
+}
+
 void RSPaintFilterCanvasBase::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
     if (canvas_ != nullptr && OnFilter()) {
@@ -182,7 +189,7 @@ void RSPaintFilterCanvasBase::DrawImageNine(const Drawing::Image* image, const D
     }
 }
 
-void RSPaintFilterCanvasBase::DrawAnnotation(const Drawing::Rect& rect, const char* key, const Drawing::Data& data)
+void RSPaintFilterCanvasBase::DrawAnnotation(const Drawing::Rect& rect, const char* key, const Drawing::Data* data)
 {
     if (canvas_ != nullptr && OnFilter()) {
         canvas_->DrawAnnotation(rect, key, data);
@@ -231,6 +238,14 @@ void RSPaintFilterCanvasBase::DrawPicture(const Picture& picture)
 {
     if (canvas_ != nullptr && OnFilter()) {
         canvas_->DrawPicture(picture);
+    }
+}
+
+void RSPaintFilterCanvasBase::DrawTextBlob(
+    const Drawing::TextBlob* blob, const Drawing::scalar x, const Drawing::scalar y)
+{
+    if (canvas_ != nullptr && OnFilter()) {
+        canvas_->DrawTextBlob(blob, x, y);
     }
 }
 
@@ -452,6 +467,17 @@ void RSPaintFilterCanvas::onDrawPicture(const SkPicture* picture, const SkMatrix
         this->SkCanvas::onDrawPicture(picture, matrix, &filteredPaint);
     }
 }
+
+bool RSPaintFilterCanvas::GetRecordingState() const
+{
+    return recordingState_;
+}
+
+void RSPaintFilterCanvas::SetRecordingState(bool flag)
+{
+    recordingState_ = flag;
+}
+
 #else
 RSPaintFilterCanvas::RSPaintFilterCanvas(Drawing::Canvas* canvas, float alpha)
     : RSPaintFilterCanvasBase(canvas), alphaStack_({ std::clamp(alpha, 0.f, 1.f) }), // construct stack with given alpha

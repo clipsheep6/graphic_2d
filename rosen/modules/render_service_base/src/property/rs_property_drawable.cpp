@@ -143,7 +143,7 @@ const std::vector<RSPropertyDrawable::DrawableGenerator> RSPropertyDrawable::Dra
     nullptr, // SAVE_ALL,
 
     // Bounds Geometry
-    RSBoundsGeometryDrawable::Generate,                          // BOUNDS_MATRIX,
+    nullptr,                                                     // BOUNDS_MATRIX,
     RSAlphaDrawable::Generate,                                   // ALPHA,
     RSMaskDrawable::Generate,                                    // MASK,
     CustomModifierAdapter<RSModifierType::TRANSITION>,           // TRANSITION,
@@ -204,6 +204,13 @@ void RSPropertyDrawable::UpdateDrawableMap(RSPropertyDrawableGenerateContext& co
         dirtySlots.emplace(PropertyToDrawableLut[static_cast<int>(type)]);
     }
 
+    // initialize
+    if (drawableMapStatus == 0) {
+        std::tie(drawableMap[RSPropertyDrawableSlot::SAVE_ALL], drawableMap[RSPropertyDrawableSlot::RESTORE_ALL]) =
+            GenerateSaveRestore(RSPaintFilterCanvas::kALL);
+        drawableMap[RSPropertyDrawableSlot::BOUNDS_MATRIX] = RSBoundsGeometryDrawable::Generate(context);
+    }
+
     // count all slots after INVALID
     if (dirtySlots.lower_bound(RSPropertyDrawableSlot::BOUNDS_MATRIX) == dirtySlots.end()) {
         return;
@@ -227,12 +234,6 @@ void RSPropertyDrawable::UpdateDrawableMap(RSPropertyDrawableGenerateContext& co
         drawableMap.clear();
         drawableMapStatus = 0;
         return;
-    }
-
-    // initialize
-    if (drawableMapStatus == 0) {
-        std::tie(drawableMap[RSPropertyDrawableSlot::SAVE_ALL], drawableMap[RSPropertyDrawableSlot::RESTORE_ALL]) =
-            GenerateSaveRestore();
     }
 
     // calculate changed bits
@@ -273,7 +274,7 @@ uint8_t RSPropertyDrawable::CalculateDrawableMapStatus(
         result |= DrawableMapStatus::BOUNDS_PROPERTY_AFTER;
     }
     if (HasPropertyDrawableInRange(
-        drawableMap, RSPropertyDrawableSlot::CONTENT_STYLE, RSPropertyDrawableSlot::COLOR_FILTER)) {
+        drawableMap, RSPropertyDrawableSlot::FRAME_OFFSET, RSPropertyDrawableSlot::COLOR_FILTER)) {
         result |= DrawableMapStatus::FRAME_PROPERTY;
     }
 

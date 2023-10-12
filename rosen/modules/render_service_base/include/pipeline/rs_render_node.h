@@ -154,6 +154,9 @@ public:
     bool ChildHasFilter() const;
     void SetChildHasFilter(bool childHasFilter);
 
+    // Is there a canvas node in subtree
+    bool HasCanvasNode() const;
+
     NodeId GetInstanceRootNodeId() const;
     const std::shared_ptr<RSRenderNode> GetInstanceRootNode() const;
     NodeId GetFirstLevelNodeId() const;

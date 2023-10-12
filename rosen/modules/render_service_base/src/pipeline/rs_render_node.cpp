@@ -1737,6 +1737,19 @@ void RSRenderNode::SetChildHasFilter(bool childHasFilter)
 {
     childHasFilter_ = childHasFilter;
 }
+bool RSRenderNode::HasCanvasNode() const
+{
+    for (const auto &weakChild : children_) {
+        const auto child = weakChild.lock();
+        if (!child) {
+            continue;
+        }
+        if (child->GetType() == RSRenderNodeType::CANVAS_NODE || child->HasCanvasNode()) {
+            return true;
+        }
+    }
+    return false;
+}
 NodeId RSRenderNode::GetInstanceRootNodeId() const
 {
     return instanceRootNodeId_;

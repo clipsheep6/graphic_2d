@@ -32,13 +32,13 @@ namespace TextEngine {
 #define FAILED 1
 
 std::vector<LineMetrics> LineBreaker::BreakLines(std::vector<VariantSpan> &spans,
-    const TypographyStyle &tstyle, const double widthLimit)
+    const TypographyStyle &tstyle, const double widthLimit, const std::vector<float> &indents)
 {
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "BreakLines");
     auto ss = GenerateScoreSpans(spans);
-    DoBreakLines(ss, widthLimit, tstyle);
+    DoBreakLines(ss, widthLimit, tstyle, indents);
     auto lineBreaks = GenerateBreaks(spans, ss);
-    return GenerateLineMetrics(spans, lineBreaks);
+    return GenerateLineMetrics(spans, lineBreaks, indents);
 }
 
 std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector<VariantSpan> &spans)
@@ -88,22 +88,38 @@ std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector
     return scoredSpans;
 }
 
+static double GetNewWidthLimit(const double widthLimit, const int lineNumber, const std::vector<float> &indents)
+{
+    double indent = 0.0;
+    if (indents.size() > 0 && lineNumber < indents.size()) {
+        indent = indents[lineNumber];
+    } else {
+        indent = indents.size() > 0 ? indents.back() : 0.0;
+    }
+
+    return widthLimit - indent;
+}
+
 void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, const double widthLimit,
-    const TypographyStyle &tstyle)
+    const TypographyStyle &tstyle, const std::vector<float> &indents)
 {
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "UpadateLineBreaksData");
     scoredSpans.emplace(scoredSpans.cbegin());
+    int lineNumber = 0;
     for (size_t i = 1; i < scoredSpans.size(); i++) {
         auto &is = scoredSpans[i];
         is.prev = scoredSpans[i - 1].prev;
+        double newWidthLimit = GetNewWidthLimit(widthLimit, lineNumber, indents);
         LOGEX_FUNC_LINE_DEBUG() << "[" << i << "]: is.preBreak: " << is.preBreak
             << ", prev.postBreak: " << scoredSpans[is.prev].postBreak;
         if (scoredSpans[i].span.IsHardBreak()) {
             is.prev = static_cast<int>(i - 1);
+            lineNumber++;
         }
 
-        if (FLOATING_GT(is.preBreak - scoredSpans[is.prev].postBreak, widthLimit)) {
+        if (FLOATING_GT(is.preBreak - scoredSpans[is.prev].postBreak, newWidthLimit)) {
             is.prev = static_cast<int>(i - 1);
+            lineNumber++;
             LOGEX_FUNC_LINE_DEBUG() << "  -> [" << is.prev
                 << "]: prev.postBreak: " << scoredSpans[is.prev].postBreak;
         }
@@ -113,7 +129,7 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
         }
 
         LOGSCOPED(sl1, LOGEX_FUNC_LINE_DEBUG(), "algo");
-        double delta = widthLimit - (is.preBreak - scoredSpans[is.prev].postBreak);
+        double delta = newWidthLimit - (is.preBreak - scoredSpans[is.prev].postBreak);
         is.score = delta * delta + scoredSpans[is.prev].score;
 
         std::stringstream ss;
@@ -121,7 +137,7 @@ void LineBreaker::DoBreakLines(std::vector<struct ScoredSpan> &scoredSpans, cons
         LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ss.str());
         for (size_t j = 0; j < i; j++) {
             const auto &js = scoredSpans[j];
-            double jdelta = widthLimit - (is.preBreak - js.postBreak);
+            double jdelta = newWidthLimit - (is.preBreak - js.postBreak);
             if (jdelta < 0) {
                 continue;
             }
@@ -177,7 +193,7 @@ std::vector<int32_t> LineBreaker::GenerateBreaks(std::vector<VariantSpan> &spans
 }
 
 std::vector<LineMetrics> LineBreaker::GenerateLineMetrics(std::vector<VariantSpan> &spans,
-    std::vector<int32_t> &breaks)
+    std::vector<int32_t> &breaks, const std::vector<float> &indents)
 {
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "GenerateLineMetrics");
     LOGEX_FUNC_LINE_DEBUG() << "breaks.size(): " << breaks.size();
@@ -192,6 +208,7 @@ std::vector<LineMetrics> LineBreaker::GenerateLineMetrics(std::vector<VariantSpa
     }
 
     int32_t prev = breaks[0];
+    int32_t lineNumber = 0;
     for (auto i = 1; i < breaks.size(); i++) {
         std::vector<VariantSpan> vss;
         int32_t next = breaks[i];
@@ -202,10 +219,18 @@ std::vector<LineMetrics> LineBreaker::GenerateLineMetrics(std::vector<VariantSpa
         for (; prev < next; prev++) {
             vss.push_back(spans[prev]);
         }
+        double indent = 0.0;
+        if (indents.size() > 0 && lineNumber < indents.size()) {
+            indent = indents[lineNumber];
+        } else {
+            indent = indents.size() > 0 ? indents.back() : 0.0;
+        }
         lineMetrics.push_back({
             .lineSpans = vss,
+            .indent = indent,
         });
         prev = next;
+        lineNumber++;
     }
 
     return lineMetrics;

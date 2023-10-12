@@ -29,6 +29,10 @@
 #endif
 #include "text_converter.h"
 #include "word_breaker.h"
+#ifdef ENABLE_HYPHEN
+#include "hyphenator.h"
+#include <algorithm> 
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -43,7 +47,11 @@ void TextBreaker::SetWidthLimit(const double widthLimit)
 }
 
 int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyle &ys,
-    const std::shared_ptr<FontProviders> &fontProviders)
+    const std::shared_ptr<FontProviders> &fontProviders
+#ifdef ENABLE_HYPHEN
+    , double widthLimit
+#endif
+    )
 {
 #ifdef LOGGER_ENABLE_SCOPE
     ScopedTrace scope("TextBreaker::WordBreak");
@@ -63,6 +71,9 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
         }
 
         auto xs = vspan.GetTextStyle();
+#ifdef ENABLE_HYPHEN
+        usLocale_ = icu::Locale::createFromName(xs.locale.c_str());
+#endif
         auto fontCollection = GenerateFontCollection(ys, xs, fontProviders);
         if (fontCollection == nullptr) {
             // WordBreak failed
@@ -89,7 +100,11 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
             std::stringstream ss;
             ss << "u16range: [" << start << ", " << end << "), range: " << wordcgs.GetRange();
             LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ss.str());
+#ifdef ENABLE_HYPHEN
+            BreakWord(wordcgs, ys, xs, spans, widthLimit, fontCollection);
+#else
             BreakWord(wordcgs, ys, xs, spans);
+#endif
         }
     }
     // WordBreak successed
@@ -167,6 +182,40 @@ void TextBreaker::GenNewBoundryByTypeface(CharGroups cgs, std::vector<Boundary> 
 
     boundaries = newBoundary;
 }
+
+#ifdef ENABLE_HYPHEN
+bool IsSymbol(uint16_t c)
+{
+    return (c < 'a' || c > 'z');
+}
+
+int32_t CountSymbol(uint16_t* cg, size_t size)
+{
+    int count = 0;
+    for (size_t i = 0; i < size; i++) {
+        if (IsSymbol(cg[i])) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int32_t TxtSize(uint16_t* txt, size_t size)
+{
+    ssize_t result = size - 1;
+    while (result > 0) {
+        UChar32 c;
+        ssize_t ix = result;
+        U16_PREV(txt, 0, ix, c);
+        const int32_t gc_mask = U_GET_GC_MASK(c);
+        if ((gc_mask & (U_GC_ZS_MASK | U_GC_P_MASK)) == 0) {
+            break;
+        }
+        result = ix;
+  }
+  return result;
+}
+#endif
 
 bool TextBreaker::IsQuote(const uint16_t c)
 {
@@ -280,8 +329,25 @@ void TextBreaker::GenNewBoundryByHardBreak(CharGroups cgs, std::vector<Boundary>
 }
 
 void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys,
-    const TextStyle &xs, std::vector<VariantSpan> &spans)
+    const TextStyle &xs, std::vector<VariantSpan> &spans
+#ifdef ENABLE_HYPHEN
+    , double widthLimit, const std::shared_ptr<FontCollection>& fontCollection
+#endif
+    )
 {
+#ifdef ENABLE_HYPHEN
+    double hyphenPenalty = 0.0;
+    hyphenPenalty = 0.5 * ys.fontSize * ys.heightScale * widthLimit;
+    if (mHyphenationFrequency == kHyphenationFrequency_Normal) {
+      hyphenPenalty *= 4.0;  
+    }
+    double linePenalty = 0;
+    if (ys.align == TextAlign::JUSTIFY) {
+      hyphenPenalty *= 0.25;
+    } else {
+      linePenalty = std::max(linePenalty, hyphenPenalty * LINE_PENALTY_MULTIPLIER);
+    }
+#endif
     size_t rangeOffset = 0;
     for (size_t i = 0; i < wordcgs.GetNumberOfCharGroup(); i++) {
         auto &cg = wordcgs.Get(i);
@@ -304,14 +370,45 @@ void TextBreaker::BreakWord(const CharGroups &wordcgs, const TypographyStyle &ys
             continue;
         }
 
-        auto currentCgs = wordcgs.GetSub(rangeOffset, i + 1);
-        GenerateSpan(currentCgs, ys, xs, spans);
-        rangeOffset = i + 1;
+        CharGroups currentCgs = wordcgs.GetSub(rangeOffset, i + 1);
+#ifdef ENABLE_HYPHEN
+        std::string str = TextConverter::ToStr(currentCgs.ToUTF16());
+        std::vector<HyphenationType> mHyphBuf;
+        int size = TxtSize(currentCgs.ToUTF16().data(), currentCgs.ToUTF16().size());
+        if((size > 0) ) {
+            hyphenator_->Hyphenate(&mHyphBuf, currentCgs.ToUTF16().data(), size , usLocale_);
+            int subStart = 0;
+            for (size_t j = 0; j < size; j++) {
+                if ( mHyphBuf[j] != HyphenationType::DONT_BREAK ) {
+                    auto  subCgs = currentCgs.GetSub(subStart, j);
+                    GenerateSpan(subCgs, ys, xs, spans, hyphenPenalty, mHyphBuf[j], linePenalty);
+                    subStart = j;
+                }
+            
+            }
+            auto  subCgs = currentCgs.GetSub(subStart, currentCgs.ToUTF16().size());
+            
+            GenerateSpan(subCgs, ys, xs, spans, hyphenPenalty, HyphenationType::DONT_BREAK, linePenalty);
+
+            rangeOffset = i + 1;
+        } else {
+            float penalty = hyphenPenalty * 0;
+            GenerateSpan(currentCgs, ys, xs, spans, penalty, HyphenationType::DONT_BREAK, linePenalty);
+            rangeOffset = i + 1;
+        }
+#else
+            GenerateSpan(currentCgs, ys, xs, spans);
+            rangeOffset = i + 1;
+#endif
     }
 }
 
 void TextBreaker::GenerateSpan(const CharGroups &currentCgs, const TypographyStyle &ys,
-    const TextStyle &xs, std::vector<VariantSpan> &spans)
+    const TextStyle &xs, std::vector<VariantSpan> &spans
+#ifdef ENABLE_HYPHEN
+    , double panetly, HyphenationType hyph, double linePenalty
+#endif
+    )
 {
     if (!currentCgs.IsValid() || currentCgs.GetSize() == 0) {
         throw TEXGINE_EXCEPTION(INVALID_ARGUMENT);
@@ -325,6 +422,11 @@ void TextBreaker::GenerateSpan(const CharGroups &currentCgs, const TypographySty
     newSpan->postBreak_ = postBreak_;
     newSpan->preBreak_ = preBreak_;
     newSpan->typeface_ = currentCgs.Get(0).typeface;
+#ifdef ENABLE_HYPHEN
+    newSpan->penalty_ = panetly;
+    newSpan->hyph_ = hyph;
+    newSpan->linePenalty_ = linePenalty;
+#endif
     double spanWidth = 0.0;
     for (const auto &cg : currentCgs) {
         spanWidth += cg.GetWidth();

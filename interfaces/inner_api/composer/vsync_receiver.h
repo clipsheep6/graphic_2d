@@ -29,6 +29,10 @@
 #include <string>
 
 namespace OHOS {
+namespace ANCO {
+    class VsyncBroker;
+}
+
 namespace Rosen {
 class VSyncCallBackListener : public OHOS::AppExecFwk::FileDescriptorListener {
 public:
@@ -62,6 +66,7 @@ private:
 
 #ifdef __OHOS__
 class VSyncReceiver : public RefBase {
+    friend class ANCO::VsyncBroker;
 public:
     // check
     using FrameCallback = VSyncCallBackListener::FrameCallback;
@@ -93,6 +98,7 @@ private:
 };
 #else
 class VSyncReceiver {
+    friend class ANCO::VsyncBroker;
 public:
     using FrameCallback = VSyncCallBackListener::FrameCallback;
 

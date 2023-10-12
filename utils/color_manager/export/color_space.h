@@ -110,6 +110,12 @@ inline Vector3 XYZ(const Vector3& xyY)
         ((1 - xyY[0] - xyY[1]) * xyY[2]) / xyY[1]};
 }
 
+inline std::array<float, DIMES_2> XYZToXY(const Vector3& XYZ)
+{
+    float sum = XYZ[0] + XYZ[1] + XYZ[2];
+    return {{XYZ[0] / sum, XYZ[1] / sum}};
+}
+
 inline bool FloatEqual(const float src, const float dst)
 {
     return fabs(src - dst) < COLOR_EPSILON;
@@ -129,6 +135,9 @@ inline Matrix3x3 SkToXYZToMatrix3(const skcms_Matrix3x3 &skToXYZ)
         {skToXYZ.vals[2][0], skToXYZ.vals[2][1], skToXYZ.vals[2][2]}}};
 }
 
+// Compute a toXYZ matrix from a given rgb and white point
+Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries);
+
 // Compute a toXYZD50 matrix from a given rgb and white point
 Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries& primaries);
 
@@ -139,13 +148,17 @@ class ColorSpace {
 public:
     ColorSpace(ColorSpaceName name);
 
-    ColorSpace(const ColorSpacePrimaries &primaries, const TransferFunc &transferFunc);
+    ColorSpace(const ColorSpacePrimaries &primaries, const TransferFunc &transferFunc,
+        ColorSpaceName name  = ColorSpaceName::CUSTOM);
 
-    ColorSpace(const ColorSpacePrimaries &primaries, float gamma);
+    ColorSpace(const ColorSpacePrimaries &primaries, float gamma,
+        ColorSpaceName name  = ColorSpaceName::CUSTOM);
 
-    ColorSpace(const Matrix3x3& toXYZ, const std::array<float, 2> &whitePoint, const TransferFunc& transferFunc);
+    ColorSpace(const Matrix3x3& toXYZori, const std::array<float, 2> &whitePoint, const TransferFunc& transferFunc,
+        ColorSpaceName name  = ColorSpaceName::CUSTOM);
 
-    ColorSpace(const Matrix3x3& toXYZ, const std::array<float, 2>& whitePoint, float gamma);
+    ColorSpace(const Matrix3x3& toXYZori, const std::array<float, 2>& whitePoint, float gamma,
+        ColorSpaceName name  = ColorSpaceName::CUSTOM);
 
     // convert SKColorSpace to OHOS ColorSpce
     ColorSpace(const sk_sp<SkColorSpace> src, ColorSpaceName name = ColorSpaceName::CUSTOM);
@@ -165,6 +178,17 @@ public:
     Matrix3x3 GetXYZToRGB() const
     {
         auto toRGB = Invert(toXYZ);
+        return toRGB;
+    }
+
+    Matrix3x3 GetRGBToXYZD50() const
+    {
+        return toXYZD50;
+    }
+
+    Matrix3x3 GetXYZD50ToRGB() const
+    {
+        auto toRGB = Invert(toXYZD50);
         return toRGB;
     }
 
@@ -188,10 +212,11 @@ public:
     float clampMax = 1.0f;
 
 private:
-    skcms_Matrix3x3 ToSkiaXYZ() const;
+    skcms_Matrix3x3 ToSkiaXYZ(const Matrix3x3& toXYZ) const;
 
     ColorSpaceName colorSpaceName = ColorSpaceName::SRGB;
     Matrix3x3 toXYZ;
+    Matrix3x3 toXYZD50;
     std::array<float, DIMES_2> whitePoint;
     TransferFunc transferFunc = {};
 };

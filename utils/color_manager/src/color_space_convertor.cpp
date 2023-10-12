@@ -21,7 +21,7 @@ ColorSpaceConvertor::ColorSpaceConvertor(const ColorSpace &src,
     const ColorSpace &dst, GamutMappingMode mappingMode)
     : srcColorSpace(src), dstColorSpace(dst), mappingMode(mappingMode)
 {
-    transferMatrix = dstColorSpace.GetXYZToRGB() * srcColorSpace.GetRGBToXYZ();
+    transferMatrix = dstColorSpace.GetXYZD50ToRGB() * srcColorSpace.GetRGBToXYZD50();
 }
 
 Vector3 ColorSpaceConvertor::Convert(const Vector3& v) const

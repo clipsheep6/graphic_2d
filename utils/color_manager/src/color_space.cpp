@@ -78,37 +78,39 @@ ColorSpace::ColorSpace(ColorSpaceName name)
     }
 }
 
-ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, const TransferFunc &transferFunc)
-    : colorSpaceName(ColorSpaceName::CUSTOM),
-      toXYZ(ComputeXYZD50(primaries)),
-      transferFunc(transferFunc)
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, const TransferFunc &transferFunc, ColorSpaceName name)
+    : colorSpaceName(name), transferFunc(transferFunc)
 {
     std::array<float, 2> whiteP = {primaries.wX, primaries.wY};
     whitePoint = whiteP;
+    toXYZ = ComputeXYZ(primaries);
+    toXYZD50 = DXToD50(toXYZ, whitePoint);
 }
 
-ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma)
-    : colorSpaceName(ColorSpaceName::CUSTOM),
-      toXYZ(ComputeXYZD50(primaries))
+ColorSpace::ColorSpace(const ColorSpacePrimaries &primaries, float gamma, ColorSpaceName name)
+    : colorSpaceName(name)
 {
     std::array<float, 2> whiteP = {primaries.wX, primaries.wY};
     whitePoint = whiteP;
+    toXYZ = ComputeXYZ(primaries);
+    toXYZD50 = DXToD50(toXYZ, whitePoint);
     transferFunc = {};
     transferFunc.g = gamma;
     transferFunc.a = 1.0f;
 }
 
-ColorSpace::ColorSpace(const Matrix3x3& toXYZ, const std::array<float, 2>& whitePoint, const TransferFunc &transferFunc)
-    : colorSpaceName(ColorSpaceName::CUSTOM),
-      toXYZ(DXToD50(toXYZ, whitePoint)),
-      whitePoint(whitePoint),
-      transferFunc(transferFunc)
+ColorSpace::ColorSpace(const Matrix3x3& toXYZori, const std::array<float, 2>& whitePoint,
+    const TransferFunc &transFunc, ColorSpaceName name)
+    : colorSpaceName(name), toXYZ(toXYZori), whitePoint(whitePoint), transferFunc(transFunc)
 {
+    toXYZD50 = DXToD50(toXYZori, whitePoint);
 }
 
-ColorSpace::ColorSpace(const Matrix3x3 &toXYZ, const std::array<float, 2>& whitePoint, float gamma)
-    : colorSpaceName(ColorSpaceName::CUSTOM), toXYZ(DXToD50(toXYZ, whitePoint)), whitePoint(whitePoint)
+ColorSpace::ColorSpace(const Matrix3x3 &toXYZori, const std::array<float, 2>& whitePoint, float gamma,
+    ColorSpaceName name)
+    : colorSpaceName(name), toXYZ(toXYZori), whitePoint(whitePoint)
 {
+    toXYZD50 = DXToD50(toXYZori, whitePoint);
     transferFunc = {};
     transferFunc.g = gamma;
     transferFunc.a = 1.0f;
@@ -121,10 +123,12 @@ ColorSpace::ColorSpace(const sk_sp<SkColorSpace> src, ColorSpaceName name)
         float func[7];
         src->transferFn(func);
         transferFunc = {func[0], func[1], func[2], func[3], func[4], func[5], func[6]};
-        skcms_Matrix3x3 toXYZD50;
-        src->toXYZD50(&toXYZD50);
-        toXYZ = SkToXYZToMatrix3(toXYZD50);
-        whitePoint = ComputeWhitePoint(toXYZ);
+        skcms_Matrix3x3 skXYZ;
+        src->toXYZD50(&skXYZ);
+        toXYZD50 = SkToXYZToMatrix3(skXYZ);
+        // do not support xyzd50 to xyz and wp
+        toXYZ.fill({0.0f, 0.0f, 0.0f});
+        whitePoint = {0.0f, 0.0f};
     }
 }
 
@@ -134,8 +138,10 @@ ColorSpace::ColorSpace(const skcms_ICCProfile& srcIcc, ColorSpaceName name)
     if (srcIcc.has_toXYZD50 && srcIcc.has_trc) {
         skcms_TransferFunction func = srcIcc.trc[0].parametric;
         transferFunc = {func.g, func.a, func.b, func.c, func.d, func.e, func.f};
-        toXYZ = SkToXYZToMatrix3(srcIcc.toXYZD50);
-        whitePoint = ComputeWhitePoint(toXYZ);
+        toXYZD50 = SkToXYZToMatrix3(srcIcc.toXYZD50);
+        // do not support xyzd50 to xyz and wp
+        toXYZ.fill({0.0f, 0.0f, 0.0f});
+        whitePoint = {0.0f, 0.0f};
     }
 }
 
@@ -183,7 +189,7 @@ Matrix3x3 operator/(const Vector3& a, const Vector3& b)
     return diag;
 }
 
-Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries& primaries)
+Matrix3x3 ComputeXYZ(const ColorSpacePrimaries& primaries)
 {
     float oneRxRy = (1 - primaries.rX) / primaries.rY;
     float oneGxGy = (1 - primaries.gX) / primaries.gY;
@@ -204,11 +210,16 @@ Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries& primaries)
     float GYGy = GY / primaries.gY;
     float BYBy = BY / primaries.bY;
 
-    Matrix3x3 toXYZ = {{{RYRy * primaries.rX, GYGy * primaries.gX, BYBy * primaries.bX},
+    return {{{RYRy * primaries.rX, GYGy * primaries.gX, BYBy * primaries.bX},
         {RY, GY, BY},
         {RYRy * (1 - primaries.rX - primaries.rY),
          GYGy * (1 - primaries.gX - primaries.gY),
          BYBy * (1 - primaries.bX - primaries.bY)}}};
+}
+
+Matrix3x3 ComputeXYZD50(const ColorSpacePrimaries& primaries)
+{
+    Matrix3x3 toXYZ = ComputeXYZ(primaries);
     std::array<float, DIMES_2> wp = {primaries.wX, primaries.wY};
 
     return DXToD50(toXYZ, wp);
@@ -315,7 +326,7 @@ Vector3 ColorSpace::ToNonLinear(Vector3 v) const
 
 sk_sp<SkColorSpace> ColorSpace::ToSkColorSpace() const
 {
-    skcms_Matrix3x3 toXYZ = ToSkiaXYZ();
+    skcms_Matrix3x3 toSkiaXYZD50 = ToSkiaXYZ(toXYZD50);
     skcms_TransferFunction skTransferFun = {
         transferFunc.g,
         transferFunc.a,
@@ -325,10 +336,10 @@ sk_sp<SkColorSpace> ColorSpace::ToSkColorSpace() const
         transferFunc.e,
         transferFunc.f,
     };
-    return SkColorSpace::MakeRGB(skTransferFun, toXYZ);
+    return SkColorSpace::MakeRGB(skTransferFun, toSkiaXYZD50);
 }
 
-skcms_Matrix3x3 ColorSpace::ToSkiaXYZ() const
+skcms_Matrix3x3 ColorSpace::ToSkiaXYZ(const Matrix3x3& toXYZ) const
 {
     skcms_Matrix3x3 skToXYZ;
     for (int i = 0; i < DIMES_3; ++i) {

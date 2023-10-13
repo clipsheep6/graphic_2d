@@ -919,6 +919,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
             boundsRect_ = Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
 #endif
             frameGravity_ = property.GetFrameGravity();
+            gravityWeight_ = property.GetGravityWeight();
         }
     }
 
@@ -1124,11 +1125,11 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         const float rootHeight = property.GetFrameHeight() * property.GetScaleY();
 #ifndef USE_ROSEN_DRAWING
         SkMatrix gravityMatrix;
-        (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_,
+        (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_, gravityWeight_,
             RectF { 0.0f, 0.0f, boundsRect_.width(), boundsRect_.height() }, rootWidth, rootHeight, gravityMatrix);
 #else
         Drawing::Matrix gravityMatrix;
-        (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_,
+        (void)RSPropertiesPainter::GetGravityMatrix(frameGravity_, gravityWeight_,
             RectF { 0.0f, 0.0f, boundsRect_.GetWidth(), boundsRect_.GetHeight() },
             rootWidth, rootHeight, gravityMatrix);
 #endif

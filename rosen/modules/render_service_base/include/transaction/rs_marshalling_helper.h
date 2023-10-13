@@ -101,6 +101,7 @@ template<typename T>
 class RectT;
 template<typename T>
 class RRectT;
+class RSGravityWeight;
 
 class RSB_EXPORT RSMarshallingHelper {
 public:
@@ -209,6 +210,7 @@ public:
     DECLARE_FUNCTION_OVERLOAD(RenderParticleColorParaType)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<ParticleRenderParams>)
     DECLARE_FUNCTION_OVERLOAD(std::vector<std::shared_ptr<ParticleRenderParams>>)
+    DECLARE_FUNCTION_OVERLOAD(RSGravityWeight)
 #ifndef USE_ROSEN_DRAWING
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<DrawCmdList>)
 #else

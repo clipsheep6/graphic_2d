@@ -1146,6 +1146,18 @@ Gravity RSProperties::GetFrameGravity() const
     return frameGravity_;
 }
 
+void RSProperties::SetGravityWeight(RSGravityWeight weight)
+{
+    gravityWeight_ = weight;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+RSGravityWeight RSProperties::GetGravityWeight() const
+{
+    return gravityWeight_;
+}
+
 void RSProperties::SetDrawRegion(const std::shared_ptr<RectF>& rect)
 {
     drawRegion_ = rect;

@@ -602,6 +602,8 @@ template<>
 RSC_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<RRect>::UpdateToRender(const RRect& value, bool isDelta) const;
+template<>
+RSC_EXPORT void RSProperty<RSGravityWeight>::UpdateToRender(const RSGravityWeight& value, bool isDelta) const;
 
 template<>
 RSC_EXPORT bool RSProperty<float>::IsValid(const float& value);
@@ -628,6 +630,8 @@ template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<Vector4<Color>>::GetPropertyType() const;
 template<>
 RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<RRect>::GetPropertyType() const;
+template<>
+RSC_EXPORT RSRenderPropertyType RSAnimatableProperty<RSGravityWeight>::GetPropertyType() const;
 } // namespace Rosen
 } // namespace OHOS
 

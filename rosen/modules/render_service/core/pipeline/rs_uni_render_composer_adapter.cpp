@@ -284,6 +284,7 @@ void RSUniRenderComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& 
     const float boundsWidth = property.GetBoundsWidth();
     const float boundsHeight = property.GetBoundsHeight();
     const Gravity frameGravity = property.GetFrameGravity();
+    const RSGravityWeight gravityWeight = property.GetGravityWeight();
     info.gravity = static_cast<int32_t>(frameGravity);
     // we do not need to do additional works for Gravity::RESIZE and if frameSize == boundsSize.
     if (frameGravity == Gravity::RESIZE || (frameWidth == boundsWidth && frameHeight == boundsHeight)) {
@@ -309,7 +310,7 @@ void RSUniRenderComposerAdapter::DealWithNodeGravity(const RSSurfaceRenderNode& 
         std::ceil(node.GetTotalMatrix().Get(Drawing::Matrix::Index::TRANS_Y)));
     Drawing::Matrix gravityMatrix;
 #endif
-    (void)RSPropertiesPainter::GetGravityMatrix(frameGravity,
+    (void)RSPropertiesPainter::GetGravityMatrix(frameGravity, gravityWeight,
         RectF {0.0f, 0.0f, boundsWidth, boundsHeight}, frameWidth, frameHeight, gravityMatrix);
     // create a canvas to calculate new dstRect and new srcRect
     int32_t screenWidth = screenInfo_.width;

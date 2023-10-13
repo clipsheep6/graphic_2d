@@ -49,25 +49,26 @@ HWTEST_F(RSPropertiesPainterTest, GetGravityMatrix001, TestSize.Level1)
     float w = 0.1;
     float h = 0.1;
     SkMatrix mat;
-    EXPECT_TRUE(RSPropertiesPainter::GetGravityMatrix(Gravity::CENTER, rect, w, h, mat));
-    RSPropertiesPainter::GetGravityMatrix(Gravity::TOP, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::BOTTOM, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::LEFT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RIGHT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::TOP_LEFT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::TOP_RIGHT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::BOTTOM_LEFT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::BOTTOM_RIGHT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_TOP_LEFT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_BOTTOM_RIGHT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_FILL, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_FILL_TOP_LEFT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_FILL_BOTTOM_RIGHT, rect, w, h, mat);
-    RSPropertiesPainter::GetGravityMatrix(Gravity::DEFAULT, rect, w, h, mat);
+    RSGravityWeight weight;
+    EXPECT_TRUE(RSPropertiesPainter::GetGravityMatrix(Gravity::CENTER, weight, rect, w, h, mat));
+    RSPropertiesPainter::GetGravityMatrix(Gravity::TOP, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::BOTTOM, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::LEFT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RIGHT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::TOP_LEFT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::TOP_RIGHT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::BOTTOM_LEFT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::BOTTOM_RIGHT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_TOP_LEFT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_BOTTOM_RIGHT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_FILL, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_FILL_TOP_LEFT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::RESIZE_ASPECT_FILL_BOTTOM_RIGHT, weight, rect, w, h, mat);
+    RSPropertiesPainter::GetGravityMatrix(Gravity::DEFAULT, weight, rect, w, h, mat);
     Gravity gravity = static_cast<Gravity>(100);
-    EXPECT_FALSE(RSPropertiesPainter::GetGravityMatrix(gravity, rect, w, h, mat));
+    EXPECT_FALSE(RSPropertiesPainter::GetGravityMatrix(gravity, weight, rect, w, h, mat));
 }
 
 /**

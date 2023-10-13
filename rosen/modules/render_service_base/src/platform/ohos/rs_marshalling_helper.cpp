@@ -1639,6 +1639,16 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RRectT<float>& val)
            Unmarshalling(parcel, val.radius_[3]);
 }
 
+// RSGravityWeight
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RSGravityWeight& val)
+{
+    return Marshalling(parcel, val.translate_) && Marshalling(parcel, val.scale_);
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RSGravityWeight& val)
+{
+    return Unmarshalling(parcel, val.translate_) && Unmarshalling(parcel, val.scale_);
+}
+
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
 // SkPaint
@@ -1897,7 +1907,8 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>)                   \
     EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)                                       \
-    EXPLICIT_INSTANTIATION(TEMPLATE, SkM44)
+    EXPLICIT_INSTANTIATION(TEMPLATE, SkM44)                                          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSGravityWeight)
 #else
 #define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, bool)                                           \
@@ -1927,7 +1938,8 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)                                  \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>)                   \
-    EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)
+    EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)                                       \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSGravityWeight)
 #endif
 #else
 #define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                                     \
@@ -1957,7 +1969,8 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)                               \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<Drawing::DrawCmdList>)        \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Drawing::Matrix)
+    EXPLICIT_INSTANTIATION(TEMPLATE, Drawing::Matrix)                              \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSGravityWeight)
 #endif
 
 BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)
@@ -1979,7 +1992,8 @@ BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                  \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)            \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                  \
-    EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)
+    EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)             \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSGravityWeight)
 
 BATCH_EXPLICIT_INSTANTIATION(RSRenderAnimatableProperty)
 

@@ -84,6 +84,8 @@ DECLARE_NOANIMATABLE_MODIFIER(LinearGradientBlurPara, std::shared_ptr<RSLinearGr
 
 DECLARE_NOANIMATABLE_MODIFIER(FrameGravity, Gravity, FRAME_GRAVITY, Appearance)
 
+DECLARE_ANIMATABLE_MODIFIER(GravityWeight, RSGravityWeight, GRAVITY_WEIGHT, Replace, Appearance)
+
 DECLARE_ANIMATABLE_MODIFIER(ClipRRect, RRect, CLIP_RRECT, Replace, Appearance)
 
 DECLARE_NOANIMATABLE_MODIFIER(ClipBounds, std::shared_ptr<RSPath>, CLIP_BOUNDS, Appearance)

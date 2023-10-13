@@ -503,7 +503,8 @@ HWTEST_F(RSBaseRenderUtilTest, DealWithSurfaceRotationAndGravity_001, TestSize.L
     sptr<IConsumerSurface> csurf = IConsumerSurface::Create(config.name);
     rsNode->SetConsumer(csurf);
     RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(csurf->GetTransform(),
-        rsNode->GetRenderProperties().GetFrameGravity(), localBounds, params);
+        rsNode->GetRenderProperties().GetFrameGravity(), rsNode->GetRenderProperties().GetGravityWeight(),
+        localBounds, params);
 }
 
 /*

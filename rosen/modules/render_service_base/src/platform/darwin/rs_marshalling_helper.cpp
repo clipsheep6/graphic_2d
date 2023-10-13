@@ -495,6 +495,16 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RRectT<float>& val)
     return {};
 }
 
+//RSGravityWeight
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RSGravityWeight& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RSGravityWeight& val)
+{
+    return {};
+}
+
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
 // SkPaint
@@ -621,7 +631,8 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>)        \
-    EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)
+    EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)                            \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSGravityWeight)
 #else
     #define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, bool)                                \
@@ -645,7 +656,8 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<Drawing::DrawCmdList>) \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Drawing::Matrix)
+    EXPLICIT_INSTANTIATION(TEMPLATE, Drawing::Matrix)                     \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSGravityWeight)
 #endif
 BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)
 
@@ -666,7 +678,8 @@ BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)                      \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                            \
-    EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)
+    EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)                       \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSGravityWeight)
 
 BATCH_EXPLICIT_INSTANTIATION(RSRenderAnimatableProperty)
 

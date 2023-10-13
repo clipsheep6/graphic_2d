@@ -1259,12 +1259,13 @@ Drawing::Matrix RSBaseRenderUtil::GetSurfaceTransformMatrix(GraphicTransformType
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-SkMatrix RSBaseRenderUtil::GetGravityMatrix(Gravity gravity, const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
+SkMatrix RSBaseRenderUtil::GetGravityMatrix(
+    Gravity gravity, RSGravityWeight gravityWeight, const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
 {
     SkMatrix gravityMatrix;
 #else
 Drawing::Matrix RSBaseRenderUtil::GetGravityMatrix(
-    Gravity gravity, const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
+    Gravity gravity, RSGravityWeight gravityWeight,  const sptr<SurfaceBuffer>& buffer, const RectF& bounds)
 {
     Drawing::Matrix gravityMatrix;
 #endif
@@ -1280,7 +1281,7 @@ Drawing::Matrix RSBaseRenderUtil::GetGravityMatrix(
         return gravityMatrix;
     }
 
-    if (!RSPropertiesPainter::GetGravityMatrix(gravity,
+    if (!RSPropertiesPainter::GetGravityMatrix(gravity, gravityWeight,
         RectF {0.0f, 0.0f, boundsWidth, boundsHeight}, frameWidth, frameHeight, gravityMatrix)) {
         RS_LOGD("RSBaseRenderUtil::DealWithNodeGravity did not obtain gravity matrix.");
     }
@@ -1289,7 +1290,7 @@ Drawing::Matrix RSBaseRenderUtil::GetGravityMatrix(
 }
 
 void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(GraphicTransformType transform, Gravity gravity,
-    RectF& localBounds, BufferDrawParam& params)
+    RSGravityWeight gravityWeight, RectF& localBounds, BufferDrawParam& params)
 {
     // the surface can rotate itself.
     auto rotationTransform = GetRotateTransform(transform);
@@ -1311,9 +1312,9 @@ void RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(GraphicTransformType tr
 
     // deal with buffer's gravity effect in node's inner space.
 #ifndef USE_ROSEN_DRAWING
-    params.matrix.preConcat(RSBaseRenderUtil::GetGravityMatrix(gravity, params.buffer, localBounds));
+    params.matrix.preConcat(RSBaseRenderUtil::GetGravityMatrix(gravity, gravityWeight, params.buffer, localBounds));
 #else
-    params.matrix.PreConcat(RSBaseRenderUtil::GetGravityMatrix(gravity, params.buffer, localBounds));
+    params.matrix.PreConcat(RSBaseRenderUtil::GetGravityMatrix(gravity, gravityWeight, params.buffer, localBounds));
 #endif
     // because we use the gravity matrix above(which will implicitly includes scale effect),
     // we must disable the scale effect that from srcRect to dstRect.

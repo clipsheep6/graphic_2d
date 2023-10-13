@@ -53,6 +53,7 @@ enum RSNodeCommandType : uint16_t {
 #else
     UPDATE_MODIFIER_DRAWING_MATRIX,
 #endif
+    UPDATE_MODIFIER_GRAVITY_WEIGHT,
 
     SET_FREEZE,
     MARK_DRIVEN_RENDER,
@@ -177,6 +178,9 @@ ADD_COMMAND(RSUpdatePropertyDrawingMatrix,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAWING_MATRIX, RSNodeCommandHelper::UpdateModifier<Drawing::Matrix>,
         NodeId, Drawing::Matrix, PropertyId, bool))
 #endif
+ADD_COMMAND(RSUpdatePropertyGravityWeight,
+    ARG(RS_NODE, UPDATE_MODIFIER_GRAVITY_WEIGHT, RSNodeCommandHelper::UpdateModifier<RSGravityWeight>,
+        NodeId, RSGravityWeight, PropertyId, bool))
 
 ADD_COMMAND(RSSetFreeze,
     ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))

@@ -97,6 +97,7 @@ enum class RSModifierType : int16_t {
     ENV_FOREGROUND_COLOR,          // 73
     ENV_FOREGROUND_COLOR_STRATEGY, // 74
     GEOMETRYTRANS,                 // 75
+    GRAVITY_WEIGHT,                // 76
 };
 
 enum class RSRenderPropertyType : int16_t {
@@ -111,6 +112,7 @@ enum class RSRenderPropertyType : int16_t {
     PROPERTY_VECTOR4_COLOR,
     PROPERTY_SKMATRIX,
     PROPERTY_RRECT,
+    PROPERTY_GRAVITY_WEIGHT,
 };
 } // namespace Rosen
 } // namespace OHOS

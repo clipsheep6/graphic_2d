@@ -106,7 +106,7 @@ BufferDrawParam RSDividedRenderUtil::CreateBufferDrawParam(
     params.srcRect = Drawing::Rect(0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight());
 #endif
     RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(surface->GetTransform(), property.GetFrameGravity(),
-        localBounds, params);
+        property.GetGravityWeight(), localBounds, params);
     RSBaseRenderUtil::FlipMatrix(surface->GetTransform(), params);
     return params;
 }

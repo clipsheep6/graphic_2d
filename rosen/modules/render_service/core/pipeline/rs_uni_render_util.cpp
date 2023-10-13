@@ -231,7 +231,8 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
     }
     auto transform = consumer->GetTransform();
     RectF localBounds = { 0.0f, 0.0f, property.GetBoundsWidth(), property.GetBoundsHeight() };
-    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, property.GetFrameGravity(), localBounds, params);
+    RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(
+        transform, property.GetFrameGravity(), property.GetGravityWeight(), localBounds, params);
     RSBaseRenderUtil::FlipMatrix(transform, params);
     SrcRectScaleDown(params, node);
     return params;
@@ -329,7 +330,7 @@ BufferDrawParam RSUniRenderUtil::CreateLayerBufferDrawParam(const LayerInfoPtr& 
 
     RectF localBounds = { 0.0f, 0.0f, static_cast<float>(boundRect.w), static_cast<float>(boundRect.h) };
     RSBaseRenderUtil::DealWithSurfaceRotationAndGravity(transform, static_cast<Gravity>(layer->GetGravity()),
-        localBounds, params);
+        RSGravityWeight(), localBounds, params);
     RSBaseRenderUtil::FlipMatrix(transform, params);
     return params;
 }

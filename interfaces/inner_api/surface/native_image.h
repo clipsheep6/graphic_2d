@@ -134,7 +134,7 @@ int64_t OH_NativeImage_GetTimestamp(OH_NativeImage* image);
 int32_t OH_NativeImage_GetTransformMatrix(OH_NativeImage* image, float matrix[16]);
 
 /**
- * @brief Return the surface id the image call to OH_NativeImage_GetSurfaceId.
+ * @brief Return the native image's surface id.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeImage
  * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
@@ -146,7 +146,7 @@ int32_t OH_NativeImage_GetTransformMatrix(OH_NativeImage* image, float matrix[16
 int32_t OH_NativeImage_GetSurfaceId(OH_NativeImage* image, uint64_t* surfaceId);
 
 /**
- * @brief Set the frame available callback by the most recent call to OH_NativeImage_SetOnFrameAvailableListener.
+ * @brief Set the frame available callback.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeImage
  * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
@@ -156,6 +156,17 @@ int32_t OH_NativeImage_GetSurfaceId(OH_NativeImage* image, uint64_t* surfaceId);
  * @version 1.0
  */
 int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnFirstFrameAvailable listener);
+
+/**
+ * @brief Unset the frame available callback.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeImage
+ * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 10
+ * @version 1.0
+ */
+int32_t OH_NativeImage_UnsetOnFrameAvailableListener(OH_NativeImage* image);
 
 /**
  * @brief Destroy the <b>OH_NativeImage</b> created by OH_NativeImage_Create, and the pointer to \n

@@ -8,5 +8,6 @@
     { "name": "OH_NativeImage_GetTransformMatrix" },
     { "name": "OH_NativeImage_GetSurfaceId" },
     { "name": "OH_NativeImage_SetOnFrameAvailableListener" },
+    { "name": "OH_NativeImage_UnsetOnFrameAvailableListener" },
     { "name": "OH_NativeImage_Destroy" }
 ]

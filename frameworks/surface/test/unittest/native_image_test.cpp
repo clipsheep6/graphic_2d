@@ -104,7 +104,7 @@ public:
 
 void NativeImageTest::OnFirstFrameAvailable()
 {
-    cout << "call OnFirstFrameAvailable" << endl;
+    cout << "OnFirstFrameAvailable is called" << endl;
 }
 
 void NativeImageTest::SetUpTestCase()
@@ -576,7 +576,7 @@ HWTEST_F(NativeImageTest, OHNativeImageUpdateSurfaceImage005, Function | MediumT
 * CaseDescription: 1. create image
 *                  2. GetSurfaceId
 *                  2. check ret
-* @tc.require: 
+* @tc.require: issueI86VH2
 */
 HWTEST_F(NativeImageTest, OHNativeImageGetSurfaceId001, Function | MediumTest | Level1)
 {
@@ -600,7 +600,7 @@ HWTEST_F(NativeImageTest, OHNativeImageGetSurfaceId001, Function | MediumTest | 
 *                  2. call OH_NativeImage_SetOnFrameAvailableListener
 *                  3. call OH_NativeWindow_NativeWindowFlushBuffer
 *                  4. check OnFirstFrameAvailable is called
-* @tc.require: 
+* @tc.require: issueI86VH2
 */
 HWTEST_F(NativeImageTest, OHNativeImageSetOnFrameAvailableListener001, Function | MediumTest | Level1)
 {
@@ -635,6 +635,21 @@ HWTEST_F(NativeImageTest, OHNativeImageSetOnFrameAvailableListener001, Function 
     delete region;
 
     ret = OH_NativeImage_UpdateSurfaceImage(image);
+    ASSERT_EQ(ret, SURFACE_ERROR_OK);
+}
+
+/*
+* Function: OH_NativeImage_UnsetOnFrameAvailableListener
+* Type: Function
+* Rank: Important(1)
+* EnvConditions: N/A
+* CaseDescription: 1. call OH_NativeImage_UnsetOnFrameAvailableListener
+*                  2. check ret
+* @tc.require: issueI86VH2
+*/
+HWTEST_F(NativeImageTest, OHNativeImageUnsetOnFrameAvailableListener001, Function | MediumTest | Level1)
+{
+    int32_t ret = OH_NativeImage_UnsetOnFrameAvailableListener(image);
     ASSERT_EQ(ret, SURFACE_ERROR_OK);
 }
 

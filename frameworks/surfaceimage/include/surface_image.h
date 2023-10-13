@@ -71,6 +71,7 @@ public:
 
     SurfaceError GetTransformMatrix(float matrix[16]);
     SurfaceError SetOnFrameAvailableListener(OnBufferAvailableListener listener);
+    SurfaceError UnsetOnFrameAvailableListener();
     OnBufferAvailableListener listener_ = nullptr;
 
 protected:

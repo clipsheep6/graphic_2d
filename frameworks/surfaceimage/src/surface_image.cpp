@@ -413,12 +413,20 @@ SurfaceError SurfaceImage::WaitOnFence()
 
 SurfaceError SurfaceImage::SetOnFrameAvailableListener(OnBufferAvailableListener listener)
 {
+    std::lock_guard<std::mutex> lockGuard(opMutex_);
     if (listener == nullptr) {
         BLOGE("listener is nullptr");
         return SURFACE_ERROR_ERROR;
     }
 
     listener_ = listener;
+    return SURFACE_ERROR_OK;
+}
+
+SurfaceError SurfaceImage::UnsetOnFrameAvailableListener()
+{
+    std::lock_guard<std::mutex> lockGuard(opMutex_);
+    listener_ = nullptr;
     return SURFACE_ERROR_OK;
 }
 

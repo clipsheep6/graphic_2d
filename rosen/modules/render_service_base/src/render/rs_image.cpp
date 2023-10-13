@@ -316,7 +316,7 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
     // draw repeat rect
 #ifndef USE_ROSEN_DRAWING
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-    if (pixelMap_ != nullptr && pixelMap_->GetAllocatorType() != Media::AllocatorType::DMA_ALLOC) {
+    if (pixelMap_ != nullptr && image_ == nullptr) {
         ConvertPixelMapToSkImage();
     }
 #else

@@ -389,13 +389,7 @@ public:
         return abilityBgAlpha_;
     }
 
-    void setQosCal(bool qosPidCal)
-    {
-        qosPidCal_ = qosPidCal;
-    }
-
-    void SetVisibleRegionRecursive(
-        const Occlusion::Region& region, VisibleData& visibleVec, std::map<uint32_t, bool>& pidVisMap);
+    void SetVisibleRegionRecursive(const Occlusion::Region& region, VisibleData& visibleVec);
 
     const Occlusion::Region& GetVisibleDirtyRegion() const
     {
@@ -798,7 +792,6 @@ private:
     int32_t offsetY_ = 0;
     float positionZ_ = 0.0f;
     bool zOrderChanged_ = false;
-    bool qosPidCal_ = false;
 
     std::string name_;
     std::string bundleName_;

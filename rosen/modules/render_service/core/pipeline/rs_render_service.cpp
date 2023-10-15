@@ -15,7 +15,6 @@
 
 #include "rs_render_service.h"
 #include "rs_main_thread.h"
-#include "rs_qos_thread.h"
 #include "rs_render_service_connection.h"
 #include "vsync_generator.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -80,9 +79,6 @@ bool RSRenderService::Init()
     }
     mainThread_->rsVSyncDistributor_ = rsVSyncDistributor_;
     mainThread_->Init();
- 
-    RSQosThread::GetInstance()->appVSyncDistributor_ = appVSyncDistributor_;
-    RSQosThread::ThreadStart();
 
     // Wait samgr ready for up to 5 second to ensure adding service to samgr.
     int status = WaitParameter("bootevent.samgr.ready", "true", 5);
@@ -289,8 +285,6 @@ void RSRenderService::DumpRSEvenParam(std::string& dumpString) const
     dumpString.append("\n");
     dumpString.append("-- EventParamListDump: \n");
     mainThread_->RsEventParamDump(dumpString);
-    dumpString.append("-- QosDump: \n");
-    mainThread_->QosStateDump(dumpString);
 }
 
 void RSRenderService::DumpRenderServiceTree(std::string& dumpString) const

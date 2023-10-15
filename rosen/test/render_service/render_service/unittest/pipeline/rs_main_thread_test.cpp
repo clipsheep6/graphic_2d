@@ -17,7 +17,6 @@
 #include "gtest/gtest.h"
 #include "limit_number.h"
 #include "pipeline/rs_main_thread.h"
-#include "pipeline/rs_qos_thread.h"
 #include "pipeline/rs_render_engine.h"
 #include "platform/common/rs_innovation.h"
 #include "platform/common/rs_system_properties.h"
@@ -233,52 +232,6 @@ HWTEST_F(RSMainThreadTest, CalcOcclusion, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckQosVisChanged001
- * @tc.desc: Test RSMainThreadTest.CheckQosVisChanged, pidVisMap is empty
- * @tc.type: FUNC
- * @tc.require: issueI60QXK
- */
-HWTEST_F(RSMainThreadTest, CheckQosVisChanged001, TestSize.Level1)
-{
-    auto mainThread = RSMainThread::Instance();
-    std::map<uint32_t, bool> pidVisMap;
-    auto isVisibleChanged = mainThread->CheckQosVisChanged(pidVisMap);
-    ASSERT_EQ(false, isVisibleChanged);
-}
-
-/**
- * @tc.name: CheckQosVisChanged002
- * @tc.desc: Test RSMainThreadTest.CheckQosVisChanged, pidVisMap is not empty
- * @tc.type: FUNC
- * @tc.require: issueI60QXK
- */
-HWTEST_F(RSMainThreadTest, CheckQosVisChanged002, TestSize.Level1)
-{
-    auto mainThread = RSMainThread::Instance();
-    std::map<uint32_t, bool> pidVisMap;
-    pidVisMap[0] = true;
-    mainThread->lastPidVisMap_[0] = false;
-    auto isVisibleChanged = mainThread->CheckQosVisChanged(pidVisMap);
-    ASSERT_EQ(true, isVisibleChanged);
-}
-
-/**
- * @tc.name: CheckQosVisChanged003
- * @tc.desc: Test RSMainThreadTest.CheckQosVisChanged, pidVisMap is not empty, lastPidVisMap_ equals to pidVisMap
- * @tc.type: FUNC
- * @tc.require: issueI60QXK
- */
-HWTEST_F(RSMainThreadTest, CheckQosVisChanged003, TestSize.Level1)
-{
-    auto mainThread = RSMainThread::Instance();
-    std::map<uint32_t, bool> pidVisMap;
-    pidVisMap[0] = true;
-    mainThread->lastPidVisMap_[0] = true;
-    auto isVisibleChanged = mainThread->CheckQosVisChanged(pidVisMap);
-    ASSERT_EQ(false, isVisibleChanged);
-}
-
-/**
  * @tc.name: Animate001
  * @tc.desc: Test RSMainThreadTest.Animate, doWindowAnimate_ is false
  * @tc.type: FUNC
@@ -314,36 +267,6 @@ HWTEST_F(RSMainThreadTest, UnRegisterOcclusionChangeCallback, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     mainThread->UnRegisterOcclusionChangeCallback(0);
-}
-
-/**
- * @tc.name: QosStateDump001
- * @tc.desc: When qosCal_ is false, QosStateDump's dump string is "QOS is disabled\n"
- * @tc.type: FUNC
- * @tc.require: issueI60QXK
- */
-HWTEST_F(RSMainThreadTest, QosStateDump001, TestSize.Level1)
-{
-    auto mainThread = RSMainThread::Instance();
-    RSQosThread::GetInstance()->SetQosCal(false);
-    std::string str = "";
-    mainThread->QosStateDump(str);
-    ASSERT_EQ(str, "QOS is disabled\n");
-}
-
-/**
- * @tc.name: QosStateDump002
- * @tc.desc: When qosCal_ is true, QosStateDump's dump string is "QOS is enabled\n"
- * @tc.type: FUNC
- * @tc.require: issueI60QXK
- */
-HWTEST_F(RSMainThreadTest, QosStateDump002, TestSize.Level1)
-{
-    auto mainThread = RSMainThread::Instance();
-    RSQosThread::GetInstance()->SetQosCal(true);
-    std::string str = "";
-    mainThread->QosStateDump(str);
-    ASSERT_EQ(str, "QOS is enabled\n");
 }
 
 /**

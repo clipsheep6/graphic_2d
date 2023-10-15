@@ -73,7 +73,6 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_transaction_proxy.h"
 
-#include "rs_qos_thread.h"
 #include "xcollie/watchdog.h"
 
 #include "render_frame_trace.h"
@@ -1338,7 +1337,6 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
     Occlusion::Region accumulatedRegion;
     VisibleData curVisVec;
     OcclusionRectISet occlusionSurfaces;
-    std::map<uint32_t, bool> pidVisMap;
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
         auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
@@ -1353,11 +1351,10 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
         }
         RS_LOGD("RSMainThread::CalcOcclusionImplementation name: %{public}s id: %{public}" PRIu64 " rect: %{public}s",
             curSurface->GetName().c_str(), curSurface->GetId(), occlusionRect.GetRectInfo().c_str());
-        curSurface->setQosCal(qosPidCal_);
         if (CheckSurfaceNeedProcess(occlusionSurfaces, curSurface)) {
             Occlusion::Region curRegion { occlusionRect };
             Occlusion::Region subResult = curRegion.Sub(accumulatedRegion);
-            curSurface->SetVisibleRegionRecursive(subResult, curVisVec, pidVisMap);
+            curSurface->SetVisibleRegionRecursive(subResult, curVisVec);
             // when surface is in starting window stage, do not occlude other window surfaces
             // fix grey block when directly open app (i.e. setting) from notification center
             auto parentPtr = curSurface->GetParent().lock();
@@ -1402,12 +1399,11 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
                 }
             }
         } else {
-            curSurface->SetVisibleRegionRecursive({}, curVisVec, pidVisMap);
+            curSurface->SetVisibleRegionRecursive({}, curVisVec);
         }
     }
-    // Callback to WMS and QOS
+    // Callback to WMS
     CallbackToWMS(curVisVec);
-    CallbackToQOS(pidVisMap);
     // Callback for registered self drawing surfacenode
     SurfaceOcclusionCallback();
 }
@@ -1476,45 +1472,6 @@ void RSMainThread::CalcOcclusion()
         return;
     }
     CalcOcclusionImplementation(curAllSurfaces);
-}
-
-bool RSMainThread::CheckQosVisChanged(std::map<uint32_t, bool>& pidVisMap)
-{
-    bool isVisibleChanged = pidVisMap.size() != lastPidVisMap_.size();
-    if (!isVisibleChanged) {
-        auto iterCur = pidVisMap.begin();
-        auto iterLast = lastPidVisMap_.begin();
-        for (; iterCur != pidVisMap.end(); iterCur++, iterLast++) {
-            if (iterCur->first != iterLast->first ||
-                iterCur->second != iterLast->second) {
-                isVisibleChanged = true;
-                break;
-            }
-        }
-    }
-
-    lastPidVisMap_.clear();
-    lastPidVisMap_.insert(pidVisMap.begin(), pidVisMap.end());
-    return isVisibleChanged;
-}
-
-void RSMainThread::CallbackToQOS(std::map<uint32_t, bool>& pidVisMap)
-{
-    if (!RSInnovation::UpdateQosVsyncEnabled()) {
-        if (qosPidCal_) {
-            qosPidCal_ = false;
-            RSQosThread::ResetQosPid();
-            RSQosThread::GetInstance()->SetQosCal(qosPidCal_);
-        }
-        return;
-    }
-    qosPidCal_ = true;
-    RSQosThread::GetInstance()->SetQosCal(qosPidCal_);
-    if (!CheckQosVisChanged(pidVisMap)) {
-        return;
-    }
-    RS_TRACE_NAME("RSQosThread::OnRSVisibilityChangeCB");
-    RSQosThread::GetInstance()->OnRSVisibilityChangeCB(pidVisMap);
 }
 
 void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
@@ -1627,10 +1584,6 @@ void RSMainThread::Animate(uint64_t timestamp)
     lastAnimateTimestamp_ = timestamp;
 
     if (context_->animatingNodeList_.empty()) {
-        if (doWindowAnimate_ && RSInnovation::UpdateQosVsyncEnabled()) {
-            // Preventing Occlusion Calculation from Being Completed in Advance
-            RSQosThread::GetInstance()->OnRSVisibilityChangeCB(lastPidVisMap_);
-        }
         doWindowAnimate_ = false;
         return;
     }
@@ -1667,9 +1620,6 @@ void RSMainThread::Animate(uint64_t timestamp)
         }
         return !hasRunningAnimation;
     });
-    if (!doWindowAnimate_ && curWinAnim && RSInnovation::UpdateQosVsyncEnabled()) {
-        RSQosThread::ResetQosPid();
-    }
     if (!isCalculateAnimationValue && needRequestNextVsync) {
         RS_TRACE_NAME("Animation running empty");
     }
@@ -1838,15 +1788,6 @@ void RSMainThread::SendCommands()
             app->OnTransaction(transactionPtr);
         }
     });
-}
-
-void RSMainThread::QosStateDump(std::string& dumpString)
-{
-    if (RSQosThread::GetInstance()->GetQosCal()) {
-        dumpString.append("QOS is enabled\n");
-    } else {
-        dumpString.append("QOS is disabled\n");
-    }
 }
 
 void RSMainThread::RenderServiceTreeDump(std::string& dumpString)

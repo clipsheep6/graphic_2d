@@ -30,7 +30,6 @@ group("unittest") {
     ":RSMainThreadTest",
     ":RSPhysicalScreenProcessorTest",
     ":RSProcessorFactoryTest",
-    ":RSQosThreadTest",
     ":RSRenderEngineTest",
     ":RSRenderServiceListenerTest",
     ":RSRenderServiceUnitTest",
@@ -293,20 +292,6 @@ ohos_unittest("RSUniUiCaptureTest") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
-  ]
-  defines = []
-  defines += gpu_defines
-}
-
-## Build RSQosThreadTest
-ohos_unittest("RSQosThreadTest") {
-  module_out_path = module_output_path
-  sources = [ "rs_qos_thread_test.cpp" ]
-  deps = [ ":rs_test_common" ]
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "init:libbegetutil",
   ]
   defines = []
   defines += gpu_defines

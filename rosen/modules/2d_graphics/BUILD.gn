@@ -177,9 +177,8 @@ template("graphics2d_source_set") {
       "//third_party/skia/include/private",
       "//third_party/skia/src/core",
       "//third_party/skia/src/ports",
+      "//third_party/jsoncpp/include",
     ]
-
-    configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
 
     defines += [ "USE_ACE_SKIA" ]
 
@@ -223,10 +222,7 @@ template("graphics2d_source_set") {
         "hilog:libhilog",
         "image_framework:image_native",
       ]
-      deps = [
-        "//third_party/bounds_checking_function:libsec_static",
-        "//third_party/skia:skia_$platform",
-      ]
+      deps = [ "//third_party/bounds_checking_function:libsec_static" ]
       if (enable_text_gine) {
         deps +=
             [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
@@ -236,6 +232,7 @@ template("graphics2d_source_set") {
               [ "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform" ]
           deps += [
             "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
+            "//third_party/skia:skia_$platform",
           ]
         }
       } else {
@@ -244,7 +241,7 @@ template("graphics2d_source_set") {
             "$drawing_src_dir/engine_adapter/skia_adapter/skia_dynamic_font_mgr.cpp",
             "$drawing_src_dir/engine_adapter/skia_adapter/skia_typeface_font_style_set.cpp",
           ]
-          include_dirs += [ "//third_party/flutter/txt/src" ]
+          include_dirs += [ "//third_party/flutter-txt/src" ]
           deps += [
             "$ace_flutter_engine_root/libtxt:thirdparty_lib_txt_$platform",
             "//third_party/skia:skia_$platform",
@@ -254,7 +251,6 @@ template("graphics2d_source_set") {
             "$ace_flutter_engine_root:flutter_engine_fml_$platform",
             "$graphic_2d_root/rosen/build/flutter/icu:rosen_libicu_$platform",
             "$graphic_2d_root/rosen/build/flutter/libtxt:thirdparty_lib_txt_rosen_$platform",
-            "//third_party/skia:skia_$platform",
           ]
         }
       }
@@ -274,7 +270,7 @@ template("graphics2d_source_set") {
       if (defined(use_new_skia) && use_new_skia) {
         remove_configs = [ "//build/config/compiler:default_include_dirs" ]
         include_dirs += [
-          "$flutter_root/txt/src",
+          "//third_party/flutter-txt/src",
           "//third_party/skia/third_party/externals/harfbuzz/src",
           "//",
           root_gen_dir,
@@ -303,14 +299,14 @@ template("graphics2d_source_set") {
       defines += [ "MODULE_DRAWING" ]
 
       if (enable_text_gine) {
-        configs += [ "$ace_flutter_engine_root/icu:icu_config_$platform" ]
+        configs = [ "$ace_flutter_engine_root/icu:icu_config_$platform" ]
         deps += [ "//third_party/skia:skia_$platform" ]
         defines += [ "USE_GRAPHIC_TEXT_GINE" ]
-        include_dirs += [ "$flutter_root/txt/src" ]
+        include_dirs += [ "$flutter_root/flutter-txt/src" ]
 
         if (use_texgine) {
           configs -= [ "$ace_flutter_engine_root/icu:icu_config_$platform" ]
-          include_dirs -= [ "$flutter_root/txt/src" ]
+          include_dirs -= [ "//third_party/flutter-txt/src" ]
         }
       } else {
         deps += [ "$ace_flutter_engine_root:flutter_engine_fml_$platform" ]
@@ -318,7 +314,7 @@ template("graphics2d_source_set") {
         if (defined(use_new_skia) && use_new_skia) {
           deps += [ "//third_party/skia:skia_$platform" ]
           include_dirs += [
-            "$flutter_root/txt/src",
+            "//third_party/flutter-txt/src",
             "//third_party/skia/third_party/externals/harfbuzz/src",
           ]
         } else {
@@ -517,7 +513,7 @@ if (enable_text_gine) {
     ]
 
     if (defined(use_new_skia) && use_new_skia) {
-      include_dirs += [ "$flutter_root/txt/src" ]
+      include_dirs += [ "//third_party/flutter-txt/src" ]
     } else {
       include_dirs += [ "$flutter_root/engine/flutter/third_party/txt/src" ]
     }

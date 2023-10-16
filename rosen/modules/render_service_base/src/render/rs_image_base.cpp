@@ -368,12 +368,12 @@ void RSImageBase::ConvertPixelMapToSkImage()
 {
     if (!image_ && pixelMap_) {
         if (!pixelMap_->IsEditable()) {
-            image_ = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_);
+            image_ = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
         }
         if (!image_) {
             image_ = RSPixelMapUtil::ExtractSkImage(pixelMap_);
             if (!pixelMap_->IsEditable()) {
-                RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image_);
+                RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, gettid(), image_);
             }
         }
     }
@@ -383,12 +383,12 @@ void RSImageBase::ConvertPixelMapToDrawingImage()
 {
     if (!image_ && pixelMap_) {
         if (!pixelMap_->IsEditable()) {
-            image_ = RSImageCache::Instance().GetRenderDrawingImageCacheByPixelMapId(uniqueId_);
+            image_ = RSImageCache::Instance().GetRenderDrawingImageCacheByPixelMapId(uniqueId_, gettid());
         }
         if (!image_) {
             image_ = RSPixelMapUtil::ExtractDrawingImage(pixelMap_);
             if (!pixelMap_->IsEditable()) {
-                RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, image_);
+                RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, gettid(), image_);
             }
         }
     }

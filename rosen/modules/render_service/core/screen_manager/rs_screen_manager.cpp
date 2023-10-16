@@ -15,12 +15,13 @@
 
 #include "rs_screen_manager.h"
 
-#include "hgm_core.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_hardware_thread.h"
 #include "platform/common/rs_log.h"
 #include "vsync_sampler.h"
+#include "hgm_core.h"
+#include "hgm_frame_rate_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -213,6 +214,8 @@ void RSScreenManager::AddScreenToHgm(std::shared_ptr<HdiOutput> &output)
     }
     RS_LOGI("RSScreenManager AddScreenToHgm");
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    auto frameRateMgr = HgmFrameRateManager::GetInstance();
+
     ScreenId thisId = ToScreenId(output->GetScreenId());
     if (screens_.find(thisId) == screens_.end()) {
         RS_LOGE("RSScreenManager invalid screen id, screen not found : %{public}" PRIu64 "", thisId);
@@ -243,7 +246,7 @@ void RSScreenManager::AddScreenToHgm(std::shared_ptr<HdiOutput> &output)
     }
     const auto &screen = screens_.at(thisId);
     const auto &capability = screens_.at(thisId)->GetCapability();
-    hgmCore.AddScreenProfile(thisId, screen->Width(), screen->Height(), capability.phyWidth, capability.phyHeight);
+    frameRateMgr->AddScreenProfile(thisId, screen->Width(), screen->Height(), capability.phyWidth, capability.phyHeight);
 }
 
 void RSScreenManager::RemoveScreenFromHgm(std::shared_ptr<HdiOutput> &output)
@@ -255,11 +258,12 @@ void RSScreenManager::RemoveScreenFromHgm(std::shared_ptr<HdiOutput> &output)
 
     RS_LOGI("RSScreenManager RemoveScreenFromHgm");
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
+    auto frameRateMgr = OHOS::Rosen::HgmFrameRateManager::GetInstance();
     ScreenId id = ToScreenId(output->GetScreenId());
     if (hgmCore.RemoveScreen(id)) {
         RS_LOGW("RSScreenManager failed to remove screen : %{public}" PRIu64 "", id);
     }
-    hgmCore.RemoveScreenProfile(id);
+    frameRateMgr->RemoveScreenProfile(id);
 }
 
 void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output)

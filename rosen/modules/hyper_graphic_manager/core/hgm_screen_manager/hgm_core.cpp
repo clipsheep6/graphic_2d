@@ -58,7 +58,6 @@ bool HgmCore::Init()
         HGM_LOGE("HgmCore falied to parse");
         return false;
     }
-    hgmFrameRateTool_ = HgmFrameRateTool::GetInstance();
 
     int newRateMode = static_cast<int32_t>(RSSystemProperties::GetHgmRefreshRateModesEnabled());
     if (newRateMode == 0) {
@@ -201,7 +200,6 @@ int32_t HgmCore::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate
         HGM_LOGW("HgmCore refuse an illegal framerate: %{public}d", rate);
         return HGM_ERROR;
     }
-    sceneId = screenSceneSet_.size();
     int32_t modeToSwitch = screen->SetActiveRefreshRate(sceneId, static_cast<uint32_t>(rate));
     if (modeToSwitch < 0) {
         return modeToSwitch;
@@ -385,72 +383,5 @@ std::unique_ptr<std::unordered_map<ScreenId, int32_t>> HgmCore::GetModesToApply(
 {
     std::lock_guard<std::mutex> lock(modeListMutex_);
     return std::move(modeListToApply_);
-}
-
-int32_t HgmCore::AddScreenProfile(ScreenId id, int32_t width, int32_t height, int32_t phyWidth, int32_t phyHeight)
-{
-    if (SetRefreshRateMode(customFrameRateMode_) != EXEC_SUCCESS) {
-        HGM_LOGE("HgmCore failed to apply default refreshrate mode to screen");
-    }
-    return hgmFrameRateTool_->AddScreenProfile(id, width, height, phyWidth, phyHeight);
-}
-
-int32_t HgmCore::RemoveScreenProfile(ScreenId id)
-{
-    return hgmFrameRateTool_->RemoveScreenProfile(id);
-}
-
-int32_t HgmCore::CalModifierPreferred(const HgmModifierProfile &hgmModifierProfile) const
-{
-    return hgmFrameRateTool_->CalModifierPreferred(activeScreenId_, hgmModifierProfile, mParsedConfigData_);
-}
-
-void HgmCore::SetActiveScreenId(ScreenId id)
-{
-    activeScreenId_ = id;
-}
-
-std::shared_ptr<HgmOneShotTimer> HgmCore::GetScreenTimer(ScreenId screenId) const
-{
-    if (auto timer = screenTimerMap_.find(screenId); timer != screenTimerMap_.end()) {
-        return timer->second;
-    }
-    return nullptr;
-}
-
-void HgmCore::InsertAndStartScreenTimer(ScreenId screenId, int32_t interval,
-    std::function<void()> resetCallback, std::function<void()> expiredCallback)
-{
-    if (auto oldtimer = GetScreenTimer(screenId); oldtimer == nullptr) {
-        auto newTimer = std::make_shared<HgmOneShotTimer>("idle_timer" + std::to_string(screenId),
-            std::chrono::milliseconds(interval), resetCallback, expiredCallback);
-        screenTimerMap_[screenId] = newTimer;
-        newTimer->Start();
-    }
-}
-
-void HgmCore::ResetScreenTimer(ScreenId screenId) const
-{
-    if (auto timer = GetScreenTimer(screenId); timer != nullptr) {
-        timer->Reset();
-    }
-}
-
-void HgmCore::StartScreenScene(SceneType sceceType)
-{
-    screenSceneSet_.insert(sceceType);
-}
-
-void HgmCore::StopScreenScene(SceneType sceceType)
-{
-    screenSceneSet_.erase(sceceType);
-}
-
-int32_t HgmCore::GetScenePreferred() const
-{
-    if (screenSceneSet_.find(SceneType::SCREEN_RECORD) != screenSceneSet_.end()) {
-        return 60; // 60 means screen record scene preferred
-    }
-    return 0;
 }
 } // namespace OHOS::Rosen

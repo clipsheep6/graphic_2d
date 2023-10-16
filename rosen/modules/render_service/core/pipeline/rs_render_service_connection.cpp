@@ -16,6 +16,7 @@
 #include "rs_render_service_connection.h"
 
 #include "common/rs_background_thread.h"
+#include "hgm_frame_rate_manager.h"
 #include "hgm_core.h"
 #include "hgm_command.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
@@ -309,8 +310,7 @@ ScreenId RSRenderServiceConnection::CreateVirtualScreen(
     std::lock_guard<std::mutex> lock(mutex_);
     auto newVirtualScreenId = screenManager_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
     virtualScreenIds_.insert(newVirtualScreenId);
-    auto& hgmCore = HgmCore::Instance();
-    hgmCore.StartScreenScene(SceneType::SCREEN_RECORD);
+    HgmFrameRateManager::GetInstance()->StartScreenScene(SceneType::SCREEN_RECORD);
     return newVirtualScreenId;
 }
 
@@ -325,8 +325,8 @@ void RSRenderServiceConnection::RemoveVirtualScreen(ScreenId id)
     std::lock_guard<std::mutex> lock(mutex_);
     screenManager_->RemoveVirtualScreen(id);
     virtualScreenIds_.erase(id);
+    HgmFrameRateManager::GetInstance()->StopScreenScene(SceneType::SCREEN_RECORD);
     auto& hgmCore = HgmCore::Instance();
-    hgmCore.StopScreenScene(SceneType::SCREEN_RECORD);
     hgmCore.SetModeBySettingConfig();
 }
 

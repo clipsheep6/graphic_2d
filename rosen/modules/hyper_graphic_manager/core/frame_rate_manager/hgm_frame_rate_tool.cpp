@@ -19,15 +19,15 @@ namespace OHOS::Rosen {
 namespace {
     constexpr float MARGIN = 0.00001;
 }
-std::once_flag g_createFlag;
-std::shared_ptr<HgmFrameRateTool> instance_ = nullptr;
+std::once_flag hgmFrameRateToolCreateFlag_;
+std::shared_ptr<HgmFrameRateTool> hgmFrameRateToolCreateInstance_ = nullptr;
 
 std::shared_ptr<HgmFrameRateTool> HgmFrameRateTool::GetInstance()
 {
-    std::call_once(g_createFlag, [&] {
-        instance_ = std::shared_ptr<HgmFrameRateTool>(new HgmFrameRateTool());
+    std::call_once(hgmFrameRateToolCreateFlag_, [&] {
+        hgmFrameRateToolCreateInstance_ = std::shared_ptr<HgmFrameRateTool>(new HgmFrameRateTool());
     });
-    return instance_;
+    return hgmFrameRateToolCreateInstance_;
 }
 
 HgmFrameRateTool::HgmFrameRateTool()

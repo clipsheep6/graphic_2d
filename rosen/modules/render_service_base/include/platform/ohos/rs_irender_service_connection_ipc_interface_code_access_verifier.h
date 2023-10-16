@@ -18,6 +18,7 @@
 
 #include "ipc_security/rs_ipc_interface_code_access_verifier_base.h"
 #include "platform/ohos/rs_irender_service_connection_ipc_interface_code.h"
+#include<unordered_map>
 
 namespace OHOS {
 namespace Rosen {
@@ -37,6 +38,9 @@ public:
 protected:
     /* specify exclusive verification rules here */
     bool IsExclusiveVerificationPassed(CodeUnderlyingType code) override;
+
+    bool AddRSIRenderServiceConnectionInterfaceCodePermission(CodeEnumType interfaceName, const std::string& newPermission);
+    std::vector<std::string> GetRSIRenderServiceConnectionInterfaceCodePermissions(CodeEnumType interfaceName) const;
 
 private:
     DISALLOW_COPY_AND_MOVE(RSIRenderServiceConnectionInterfaceCodeAccessVerifier);

@@ -67,6 +67,7 @@
           "resource_schedule_service",
           "soc_perf",
           "accessibility",
+          "faultloggerd",
           "frame_aware_sched"
         ],
         "third_party": [

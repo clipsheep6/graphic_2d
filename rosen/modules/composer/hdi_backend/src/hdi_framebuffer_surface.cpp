@@ -140,6 +140,15 @@ int32_t HdiFramebufferSurface::ReleaseFramebuffer(
     return ret;
 }
 
+void HdiFramebufferSurface::ClearFrameBuffer()
+{
+    HLOGE("hjj the size of availableBuffers_ is %{publid}zu", availableBuffers_.size());
+    while (!availableBuffers_.empty()) {
+        availableBuffers_.pop();
+    }
+    // HLOGE("hjj after the size of availableBuffers_ is %{publid}zu", availableBuffers_.size());
+}
+
 void HdiFramebufferSurface::Dump(std::string &result)
 {
     if (consumerSurface_ != nullptr) {

@@ -885,7 +885,9 @@ uint32_t BufferQueue::GetDefaultUsage()
 
 void BufferQueue::ClearLocked()
 {
-    for (auto &[id, _] : bufferQueueCache_) {
+    for (auto &[id, surfaceBuffer] : bufferQueueCache_) {
+        BLOGNE("hjj before clearLocked, the buffer seqNo=%{public}d, refCount=%{public}d, fd=%{public}d",
+               surfaceBuffer.buffer->GetSeqNum(), surfaceBuffer.buffer->GetSptrRefCount(), surfaceBuffer.buffer ? surfaceBuffer.buffer->GetFileDescriptor() : 9999);
         if (onBufferDeleteForRSMainThread_ != nullptr) {
             onBufferDeleteForRSMainThread_(id);
         }
@@ -897,6 +899,7 @@ void BufferQueue::ClearLocked()
     freeList_.clear();
     dirtyList_.clear();
     deletingList_.clear();
+    BLOGNE("hjj the size of bufferQueueCache_ is %{public}zu.", bufferQueueCache_.size());
 }
 
 GSError BufferQueue::GoBackground()

@@ -362,9 +362,12 @@ void ProducerSurface::CleanAllLocked()
 GSError ProducerSurface::CleanCache()
 {
     BLOGND("Queue Id:%{public}" PRIu64, queueId_);
+    // BLOGNE("hjj ProducerSurface::CleanCahce() queueId={public}" PRIu64, queueId_);
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
+        BLOGNE("hjj before ProducerSurface::CleanCache(), the size of bufferProducerCache_ is %{public}zu", bufferProducerCache_.size());
         CleanAllLocked();
+        BLOGNE("hjj after ProducerSurface::CleanCache(), the size of bufferProducerCache_ is %{public}zu", bufferProducerCache_.size());
     }
     return producer_->CleanCache();
 }

@@ -19,12 +19,16 @@
 
 #include <message_parcel.h>
 #include <securec.h>
+#include <string>
 #include <sys/mman.h>
+#include <unistd.h>
 #include "buffer_log.h"
 #include "buffer_manager.h"
 #include "buffer_extra_data_impl.h"
 #include "native_buffer.h"
 #include "v1_0/include/idisplay_buffer.h"
+#include "dfx_dump_catcher.h"
+#include <sstream>
 
 namespace OHOS {
 namespace {
@@ -119,9 +123,32 @@ SurfaceBufferImpl::SurfaceBufferImpl(uint32_t seqNum)
     BLOGD("ctor =[%{public}u]", sequenceNumber_);
 }
 
+void tokenize(std::string const &str, const char delim, std::vector<std::string> &out)
+{
+    // construct a stram from the string
+    std::stringstream ss(str);
+    std::string s;
+    while (std::getline(ss, s, delim)) {
+        out.push_back(s);
+    } 
+}
+
 SurfaceBufferImpl::~SurfaceBufferImpl()
 {
     BLOGD("dtor ~[%{public}u]", sequenceNumber_);
+    if (GetSize() > 16642045 && GetSize() < 16642050) {
+        BLOGE("hjj dor SurfaceBufferImpl::~SurfaceBufferImpl() ~[%{public}p]", this);
+        std::string msg = "";
+        OHOS::HiviewDFX::DfxDumpCatcher dumpLog;
+        bool ret = dumpLog.DumpCatch(getpid(), gettid(), msg);
+        if (ret) {
+            std::vector<std::string> out;
+            tokenize(msg, '\n', out);
+            for (auto const& line : out) {
+                BLOGE("hjj ~[%{public}p ~%{public}s]", this, line.c_str());
+            }
+        }
+    }
     FreeBufferHandleLocked();
 }
 

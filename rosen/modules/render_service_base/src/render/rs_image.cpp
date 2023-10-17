@@ -211,7 +211,7 @@ void RSImage::UploadGpu(SkCanvas& canvas)
     }
 #ifdef RS_ENABLE_GL
     if (compressData_) {
-        auto cache = RSImageCache::Instance().GetSkiaImageCache(uniqueId_);
+        auto cache = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
         std::lock_guard<std::mutex> lock(mutex_);
         if (cache) {
             image_ = cache;

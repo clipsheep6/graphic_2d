@@ -79,14 +79,14 @@ const std::vector<RSPropertyDrawableSlot> RSPropertyDrawable::PropertyToDrawable
     RSPropertyDrawableSlot::ALPHA,                         // ALPHA,                         // 16
     RSPropertyDrawableSlot::ALPHA,                         // ALPHA_OFFSCREEN,               // 17
     RSPropertyDrawableSlot::FOREGROUND_COLOR,              // FOREGROUND_COLOR,              // 18
-    RSPropertyDrawableSlot::BACKGROUND,                    // BACKGROUND_COLOR,              // 19
-    RSPropertyDrawableSlot::BACKGROUND,                    // BACKGROUND_SHADER,             // 20
-    RSPropertyDrawableSlot::BACKGROUND,                    // BG_IMAGE,                      // 21
-    RSPropertyDrawableSlot::BACKGROUND,                    // BG_IMAGE_WIDTH,                // 22
-    RSPropertyDrawableSlot::BACKGROUND,                    // BG_IMAGE_HEIGHT,               // 23
-    RSPropertyDrawableSlot::BACKGROUND,                    // BG_IMAGE_POSITION_X,           // 24
-    RSPropertyDrawableSlot::BACKGROUND,                    // BG_IMAGE_POSITION_Y,           // 25
-    RSPropertyDrawableSlot::BACKGROUND,                    // SURFACE_BG_COLOR,              // 26
+    RSPropertyDrawableSlot::BACKGROUND_COLOR,              // BACKGROUND_COLOR,              // 19
+    RSPropertyDrawableSlot::BACKGROUND_SHADER,             // BACKGROUND_SHADER,             // 20
+    RSPropertyDrawableSlot::BACKGROUND_IMAGE,              // BG_IMAGE,                      // 21
+    RSPropertyDrawableSlot::BACKGROUND_IMAGE,              // BG_IMAGE_WIDTH,                // 22
+    RSPropertyDrawableSlot::BACKGROUND_IMAGE,              // BG_IMAGE_HEIGHT,               // 23
+    RSPropertyDrawableSlot::BACKGROUND_IMAGE,              // BG_IMAGE_POSITION_X,           // 24
+    RSPropertyDrawableSlot::BACKGROUND_IMAGE,              // BG_IMAGE_POSITION_Y,           // 25
+    RSPropertyDrawableSlot::INVALID,                       // SURFACE_BG_COLOR,              // 26
     RSPropertyDrawableSlot::BORDER,                        // BORDER_COLOR,                  // 27
     RSPropertyDrawableSlot::BORDER,                        // BORDER_WIDTH,                  // 28
     RSPropertyDrawableSlot::BORDER,                        // BORDER_STYLE,                  // 29
@@ -128,7 +128,7 @@ const std::vector<RSPropertyDrawableSlot> RSPropertyDrawable::PropertyToDrawable
     RSPropertyDrawableSlot::INVALID,                       // CUSTOM,                        // 65
     RSPropertyDrawableSlot::INVALID,                       // EXTENDED,                      // 66
     RSPropertyDrawableSlot::TRANSITION,                    // TRANSITION,                    // 67
-    RSPropertyDrawableSlot::BACKGROUND,                    // BACKGROUND_STYLE,              // 68
+    RSPropertyDrawableSlot::BACKGROUND_STYLE,              // BACKGROUND_STYLE,              // 68
     RSPropertyDrawableSlot::CONTENT_STYLE,                 // CONTENT_STYLE,                 // 69
     RSPropertyDrawableSlot::FOREGROUND_STYLE,              // FOREGROUND_STYLE,              // 70
     RSPropertyDrawableSlot::OVERLAY,                       // OVERLAY_STYLE,                 // 71
@@ -143,7 +143,7 @@ const std::vector<RSPropertyDrawable::DrawableGenerator> RSPropertyDrawable::Dra
     nullptr, // SAVE_ALL,
 
     // Bounds Geometry
-    RSBoundsGeometryDrawable::Generate,                          // BOUNDS_MATRIX,
+    nullptr,                                                     // BOUNDS_MATRIX,
     RSAlphaDrawable::Generate,                                   // ALPHA,
     RSMaskDrawable::Generate,                                    // MASK,
     CustomModifierAdapter<RSModifierType::TRANSITION>,           // TRANSITION,
@@ -153,10 +153,12 @@ const std::vector<RSPropertyDrawable::DrawableGenerator> RSPropertyDrawable::Dra
     // In Bounds Clip
     nullptr,                                                              // SAVE_BOUNDS,
     nullptr,                                                              // CLIP_TO_BOUNDS,
-    nullptr,                                                              // BACKGROUND,
+    RSBackgroundColorDrawable::Generate,                                  // BACKGROUND_COLOR,
+    RSBackgroundShaderDrawable::Generate,                                 // BACKGROUND_SHADER
+    RSBackgroundImageDrawable::Generate,                                  // BACKGROUND_IMAGE
     RSBackgroundFilterDrawable::Generate,                                 // BACKGROUND_FILTER,
-    RSEffectDataApplyDrawable::Generate,                                 // USE_EFFECT
-    CustomModifierAdapter<RSModifierType::BACKGROUND_STYLE>,              // ENV_FOREGROUND_COLOR
+    RSEffectDataApplyDrawable::Generate,                                  // USE_EFFECT
+    CustomModifierAdapter<RSModifierType::BACKGROUND_STYLE>,              // BACKGROUND_STYLE
     RSDynamicLightUpDrawable::Generate,                                   // DYNAMIC_LIGHT_UP,
     CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY>, // ENV_FOREGROUND_COLOR_STRATEGY
     nullptr,                                                              // RESTORE_BOUNDS_BEFORE_FRAME,
@@ -202,6 +204,13 @@ void RSPropertyDrawable::UpdateDrawableMap(RSPropertyDrawableGenerateContext& co
         dirtySlots.emplace(PropertyToDrawableLut[static_cast<int>(type)]);
     }
 
+    // initialize
+    if (drawableMapStatus == 0) {
+        std::tie(drawableMap[RSPropertyDrawableSlot::SAVE_ALL], drawableMap[RSPropertyDrawableSlot::RESTORE_ALL]) =
+            GenerateSaveRestore(RSPaintFilterCanvas::kALL);
+        drawableMap[RSPropertyDrawableSlot::BOUNDS_MATRIX] = RSBoundsGeometryDrawable::Generate(context);
+    }
+
     // count all slots after INVALID
     if (dirtySlots.lower_bound(RSPropertyDrawableSlot::BOUNDS_MATRIX) == dirtySlots.end()) {
         return;
@@ -225,12 +234,6 @@ void RSPropertyDrawable::UpdateDrawableMap(RSPropertyDrawableGenerateContext& co
         drawableMap.clear();
         drawableMapStatus = 0;
         return;
-    }
-
-    // initialize
-    if (drawableMapStatus == 0) {
-        std::tie(drawableMap[RSPropertyDrawableSlot::SAVE_ALL], drawableMap[RSPropertyDrawableSlot::RESTORE_ALL]) =
-            GenerateSaveRestore();
     }
 
     // calculate changed bits
@@ -263,7 +266,7 @@ uint8_t RSPropertyDrawable::CalculateDrawableMapStatus(
     }
 
     if (HasPropertyDrawableInRange(
-        drawableMap, RSPropertyDrawableSlot::BACKGROUND, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR_STRATEGY)) {
+        drawableMap, RSPropertyDrawableSlot::BACKGROUND_COLOR, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR_STRATEGY)) {
         result |= DrawableMapStatus::BOUNDS_PROPERTY_BEFORE;
     }
     if (HasPropertyDrawableInRange(
@@ -271,7 +274,7 @@ uint8_t RSPropertyDrawable::CalculateDrawableMapStatus(
         result |= DrawableMapStatus::BOUNDS_PROPERTY_AFTER;
     }
     if (HasPropertyDrawableInRange(
-        drawableMap, RSPropertyDrawableSlot::CONTENT_STYLE, RSPropertyDrawableSlot::COLOR_FILTER)) {
+        drawableMap, RSPropertyDrawableSlot::FRAME_OFFSET, RSPropertyDrawableSlot::COLOR_FILTER)) {
         result |= DrawableMapStatus::FRAME_PROPERTY;
     }
 

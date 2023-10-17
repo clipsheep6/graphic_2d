@@ -323,7 +323,7 @@ private:
 #endif
 
     ScreenId currentVisitDisplay_ = INVALID_SCREEN_ID;
-    std::map<ScreenId, int> displayHasSecSurface_;
+    std::map<ScreenId, int> displayHasSecurityOrSkipSurface_;
     std::set<ScreenId> mirroredDisplays_;
     bool isSecurityDisplay_ = false;
 

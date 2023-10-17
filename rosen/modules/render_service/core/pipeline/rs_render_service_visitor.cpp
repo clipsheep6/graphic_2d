@@ -172,6 +172,7 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: RSProcessor is null!");
         return;
     }
+    processor_->SetSecurityDisplay(isSecurityDisplay_);
     auto mirrorNode = node.GetMirrorSource().lock();
 
     auto mainThread = RSMainThread::Instance();
@@ -183,7 +184,6 @@ void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSRenderServiceVisitor::ProcessDisplayRenderNode: processor init failed!");
         return;
     }
-
     if (node.IsMirrorDisplay()) {
         auto mirrorSource = node.GetMirrorSource();
         auto existingSource = mirrorSource.lock();
@@ -207,11 +207,9 @@ void RSRenderServiceVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         auto name = node.GetName();
         mForceSerial |= CheckForSerialForced(name);
     }
-
-    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        RS_LOGI("RSRenderServiceVisitor::PrepareSurfaceRenderNode node[%{public}" PRIu64 "] prepare paused because of \
-            security DisplayNode.",
-            node.GetId());
+    if (isSecurityDisplay_ && node.GetSkipLayer()) {
+        RS_LOGD("RSRenderServiceVisitor::PrepareSurfaceRenderNode node : [%{public}" PRIu64 "] prepare paused \
+            because of Skip SurfaceNode.", node.GetId());
         return;
     }
     if (!canvas_) {
@@ -236,10 +234,9 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         RS_LOGE("RSRenderServiceVisitor::ProcessSurfaceRenderNode processor is nullptr");
         return;
     }
-    if (isSecurityDisplay_ && node.GetSecurityLayer()) {
-        RS_LOGI("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%{public}" PRIu64 "] process paused because of \
-            security DisplayNode.",
-            node.GetId());
+    if (isSecurityDisplay_ && node.GetSkipLayer()) {
+        RS_LOGD("RSRenderServiceVisitor::ProcessSurfaceRenderNode node[%{public}" PRIu64 "] process paused \
+            because of security SurfaceNode.", node.GetId());
         return;
     }
     if (!node.ShouldPaint()) {
@@ -253,7 +250,9 @@ void RSRenderServiceVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (mParallelEnable) {
         node.ParallelVisitLock();
     }
-    ProcessChildren(node);
+    if (!isSecurityDisplay_ || !node.GetSkipLayer()) {
+        ProcessChildren(node);
+    }
     node.SetGlobalZOrder(globalZOrder_);
     globalZOrder_ = globalZOrder_ + 1;
     processor_->ProcessSurface(node);

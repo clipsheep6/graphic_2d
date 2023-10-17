@@ -211,7 +211,11 @@ void RSImage::UploadGpu(SkCanvas& canvas)
     }
 #ifdef RS_ENABLE_GL
     if (compressData_) {
-        auto cache = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+        auto cache = RSImageCache::Instance().GetRenderMultiSkiaImageCacheByPixelMapId(uniqueId_, gettid());
+#else
+        auto cache = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_);
+#endif
         std::lock_guard<std::mutex> lock(mutex_);
         if (cache) {
             image_ = cache;

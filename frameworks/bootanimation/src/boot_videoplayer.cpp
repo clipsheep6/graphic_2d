@@ -42,7 +42,7 @@ void BootVideoPlayer::SetPlayerSurface(const sptr<Surface>& surface)
 bool BootVideoPlayer::PlayVideo()
 {
 #ifdef PLAYER_FRAMEWORK_ENABLE
-    LOGD("PlayVideo begin");
+    LOGI("PlayVideo begin");
     if (mediaPlayer_ == nullptr) {
         mediaPlayer_ = Media::PlayerFactory::CreatePlayer();
     }

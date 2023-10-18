@@ -21,7 +21,9 @@
 #include <include/core/SkImageInfo.h>
 #include <include/core/SkImage.h>
 #include <include/codec/SkCodec.h>
+#ifdef PLAYER_FRAMEWORK_ENABLE
 #include <media_errors.h>
+#endif
 #include <ipc_skeleton.h>
 #include <iremote_broker.h>
 #include <iservice_registry.h>

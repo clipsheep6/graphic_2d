@@ -22,7 +22,7 @@ using namespace OHOS;
 
 int main(int argc, const char *argv[])
 {
-    LOGD("main enter");
+    LOGI("main enter");
     WaitRenderServiceInit();
 
     Rosen::RSInterfaces& interface = Rosen::RSInterfaces::GetInstance();
@@ -31,7 +31,6 @@ int main(int argc, const char *argv[])
         LOGE("invalid default screen id, return");
         return 0;
     }
-    LOGD("default screen id, %{public}" PRIu64 "", defaultId);
     Rosen::RSScreenModeInfo modeinfo = interface.GetScreenActiveMode(defaultId);
     int screenWidth = modeinfo.GetScreenWidth();
     int screenHeight = modeinfo.GetScreenHeight();
@@ -39,6 +38,6 @@ int main(int argc, const char *argv[])
     BootAnimation bootAnimation;
     bootAnimation.Run(defaultId, screenWidth, screenHeight);
 
-    LOGD("main exit");
+    LOGI("main exit");
     return 0;
 }

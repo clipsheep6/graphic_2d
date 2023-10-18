@@ -96,7 +96,7 @@ void BootAnimation::Init(Rosen::ScreenId defaultId, int32_t width, int32_t heigh
     defaultId_ = defaultId;
     windowWidth_ = width;
     windowHeight_ = height;
-    LOGD("Init enter, width: %{public}d, height: %{public}d", width, height);
+    LOGI("Init enter, width: %{public}d, height: %{public}d", width, height);
 
     InitPicCoordinates();
 #ifdef SUPPORT_DISPLAY_NODE
@@ -104,7 +104,7 @@ void BootAnimation::Init(Rosen::ScreenId defaultId, int32_t width, int32_t heigh
 #endif
     InitRsSurfaceNode();
     if (animationConfig_.IsBootVideoEnabled()) {
-        LOGD("Init end");
+        LOGI("Init end");
         return;
     }
 
@@ -183,7 +183,7 @@ void BootAnimation::InitRsSurfaceNode()
 
 void BootAnimation::InitRsSurface()
 {
-    LOGD("InitRsSurface");
+    LOGI("InitRsSurface");
 #if defined(NEW_RENDER_CONTEXT)
     renderContext_ = Rosen::RenderContextBaseFactory::CreateRenderContext();
     if (renderContext_ == nullptr) {

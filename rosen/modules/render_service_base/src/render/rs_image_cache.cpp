@@ -212,6 +212,7 @@ void RSImageCache::CacheRenderSkiaImageByPixelMapId(uint64_t uniqueId, sk_sp<SkI
         std::lock_guard<std::mutex> lock(mapMutex_);
         pixelMapIdRelatedSkiaImageCache_.emplace(std::make_pair(uniqueId, img));
     }
+}
 #endif
 #else
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)

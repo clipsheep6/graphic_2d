@@ -401,9 +401,9 @@ void RSImageBase::ConvertPixelMapToDrawingImage()
             image_ = RSPixelMapUtil::ExtractDrawingImage(pixelMap_);
             if (!pixelMap_->IsEditable()) {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-                RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, gettid(), image_);
+                RSImageCache::Instance().CacheRenderMultiDrawingImageByPixelMapId(uniqueId_, gettid(), image_);
 #else
-                RSImageCache::Instance().CacheRenderMultiDrawingImageByPixelMapId(uniqueId_, image_);
+                RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, image_);
 #endif
             }
         }

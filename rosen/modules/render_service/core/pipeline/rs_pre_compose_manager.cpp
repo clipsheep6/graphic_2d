@@ -31,6 +31,15 @@ static sptr<RSPreComposeManager> RSPreComposeManager::GetInstance()
     return instance_;
 }
 
+void RSPreComposeManager::UpdateLastAndCurrentVsync()
+{
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return;
+    }
+    rsPreComposeGroup_->UpdateLastAndCurrentVsync();
+}
+
 void RSPreComposeManager::Init(RenderContext *context, std::shared_ptr<RSPaintFilterCanvas> canvas,
     std::shared_ptr<RSDisplayRenderNode>& node)
 {
@@ -41,50 +50,86 @@ void RSPreComposeManager::Init(RenderContext *context, std::shared_ptr<RSPaintFi
     }
 }
 
-void RSPreComposeManager::SetCurrentVsyncParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
+void RSPreComposeManager::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
     std::shared_ptr<RSUniRenderVisitor> visitor)
 {
-    rsPreComposeGroup_->UpdateCurrentVsyncNodes(surfaceNodeList, visitor);
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return;
+    }
+    rsPreComposeGroup_->StartCurrentVsync(surfaceNodeList, visitor);
 }
 
 void RSPreComposeManager::UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return;
+    }
     rsPreComposeGroup_->UpdateNodesByLastVsync(curAllSurfaces);
 }
 
 void RSPreComposeManager::UpdateOcclusionByLastVsync(Occlusion::Region& accumulatedRegion,
     VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap)
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return;
+    }
     rsPreComposeGroup_->UpdateOcclusionByLastVsync(accumulatedRegion, curVisVec, pidVisMap);
 }
 
 bool RSPreComposeManager::LastVsyncIsDirty()
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return false;
+    }
     return rsPreComposeGroup_->LastVsyncIsDirty();
 }
 
 void RSPreComposeManager::GetLastHwcNodes(std::vector<SurfaceDirtyMgrPair>& prevHwcEnabledNodes)
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return;
+    }
     rsPreComposeGroup_->GetLastHwcNodes(prevHwcEnabledNodes);
 }
 
 Occlusion::Region RSPreComposeManager::GetLastDirtyRegion()
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return {};
+    }
     return rsPreComposeGroup_->GetLastDirtyRegion();
 }
 
 Occlusion::Region RSPreComposeManager::GetLastVisibleDirtyRegion()
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return {};
+    }
     return rsPreComposeGroup_->GetLastVisibleDirtyRegion();
 }
 
 void RSPreComposeManager::SetLastVsyncGlobalDirtyRegion(Occlusion::Region& globalRegion)
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return;
+    }
     rsPreComposeGroup_->SetLastVsyncGlobalDirtyRegion(globalRegion);
 }
 
 bool RSPreComposeManager::ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas)
 {
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        return false;
+    }
     rsPreComposeGroup_->ProcessLastVsyncNode(node, canvas);
 }
 

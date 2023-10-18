@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RS_PRE_COMPOSE_REGION_H
-#define RS_PRE_COMPOSE_REGION_H
+#ifndef RS_PRE_COMPOSE_REGION_MANAGER_H
+#define RS_PRE_COMPOSE_REGION_MANAGER_H
 
 #include <list>
 #include <memory>
@@ -26,11 +26,13 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSPreComposeManager : public RefBase {
+class RSPreComposeRegionManager {
 public:
-    static sptr<RSPreComposeManager> GetInstance();
-    void Init(RenderContext *context, std::shared_ptr<RSPaintFilterCanvas> canvas);
+    RSPreComposeRegionManager();
+    ~RSPreComposeRegionManager();
+private:
+    std::shared_ptr<RSDirtyRegionManager> dirtyManager_;
 };
 } // namespace Rosen
 } // namespace OHOS
- #endif // RS_PRE_COMPOSE_REGION_H
+ #endif // RS_PRE_COMPOSE_REGION_MANAGER_H

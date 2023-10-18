@@ -23,6 +23,7 @@ RSPreComposeElement::RSPreComposeElement(ScreenInfo& info, RenderContext* render
     : screenInfo_(info), renderContext_(renderContext), mainCanvas_(canvas), id_(id)
 {
     ROSEN_LOGD("RSPreComposeElement()");
+    regionManager_ = std::make_shared<RSPreComposeRegionManager>();
 }
 
 RSPreComposeElement::~RSPreComposeElement()
@@ -30,12 +31,9 @@ RSPreComposeElement::~RSPreComposeElement()
     ROSEN_LOGD("~RSPreComposeElement()");
 }
 
-void RSPreComposeElement::UpdateNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
-        std::shared_ptr<RSUniRenderVisitor> visitor);
+void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList)
 {
-    displayVisitor_ = visitor;
     surfaceNodeList_ = surfaceNodeList;
-
     std::vector<RSBaseRenderNode::SharedPtr> allSurfaceNodes;
     for (auto surfaceNode : surfaceNodeList_) {
         surfaceNode->CollectSurface(surfaceNode, allSurfaceNodes, true, false);
@@ -54,6 +52,37 @@ void RSPreComposeElement::UpdateNodes(std::list<std::shared_ptr<RSSurfaceRenderN
     swap(nodeIds_, nodeIds);
 }
 
+void RSPreComposeElement::SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
+        std::shared_ptr<RSUniRenderVisitor> visitor);
+{
+    displayVisitor_ = visitor;
+    SetNewNodeList(surfaceNodeList);
+}
+
+void RSPreComposeElement::UpdateDirtyRegion()
+{
+    regionManager_->UpdateDirtyRegion(allSurfaceNodes_);
+}
+
+void RSPreComposeElement::UpdateImage()
+{
+    bool isFirstFrame = isFirstFrame_;
+    if (cacheSurface_ == nullptr) {
+        ROSEN_LOGE("cacheSurface_ is nullptr");
+        return;
+    }
+    visitor_ = make_shared<RSUniRenderVisitor>();
+    visitor_->SetInfosForPreCompose(displayVisitor_, canvas_);
+    for (auto node : surfaceNodeList_) {
+        if (node == nullptr) {
+            ROSEN_LOGE("surfaceNode is nullptr");
+            continue;
+        }
+        node->Process(visitor_);
+    }
+    isDone_ = true;
+}
+
 void RSPreComposeElement::UpdateNodes(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
 {
     std::vector<RSBaseRenderNode::SharedPtr> newAllSurfaces;
@@ -63,6 +92,109 @@ void RSPreComposeElement::UpdateNodes(std::vector<RSBaseRenderNode::SharedPtr>& 
         }
     }
     swap(newAllSurfaces, curAllSurfaces);
+}
+
+void RSPreComposeElement::CreateShareEglContext()
+{
+#ifndef USE_ROSEN_DRAWING
+#ifdef RS_ENABLE_GL
+    if (renderContext_ == nullptr) {
+        ROSEN_LOGE("renderContext_ is nullptr");
+        return;
+    }
+    eglShareContext_ = renderContext_->CreateShareContext();
+    if (eglShareContext_ == EGL_NO_CONTEXT) {
+        ROSEN_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
+        return;
+    }
+    if (!eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, eglShareContext_)) {
+        ROSEN_LOGE("eglMakeCurrent failed");
+    }
+#endif
+#endif
+}
+
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_SKIA
+sk_sp<GrDirectContext> RSPreComposeElement::CreateShareGrContext()
+#endif
+{
+    ROSEN_LOGD("CreateShareGrContext start");
+    CreateShareEglContext();
+    const GrGLInterface *grGlInterface = GrGLCreateNativeInterface();
+    sk_sp<const GrGLInterface> glInterface(grGlInterface);
+    if (glInterface.get() == nullptr) {
+        ROSEN_LOGD("CreateShareGrContext failed");
+        return nullptr;
+    }
+
+    GrContextOptions options = {};
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    options.fPreferExternalImagesOverES3 = true;
+    options.fDisableDistanceFieldPaths = true;
+
+    auto handler = std::make_shared<MemoryHandler>();
+    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    auto size = glesVersion ? strlen(glesVersion) : 0;
+    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+
+#ifdef NEW_SKIA
+    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(move(glInterface), options);
+#endif
+    if (grContext == nullptr) {
+        ROSEN_LOGD("grContext is nullptr");
+        return nullptr;
+    }
+    return grContext;
+}
+#endif
+
+void RSPreComposeElement::CreateSkSurface()
+{
+#if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
+    SkImageInfo info = SkImageInfo::MakeN32Premul(width_, height_);
+    cacheSurface_ = SkSurface::MakeRenderTarget(grContext_.get(), SkBudgeted::kYes, info);
+#else
+    cacheSurface_ = SkSurface::MakeRasterN32Premul(width_, height_);
+#endif
+    return cacheSurface_;
+}
+
+void RSPreComposeElement::Init()
+{
+#ifndef USE_ROSEN_DRAWING
+    if (grContext_ == nullptr) {
+        grContext_ = CreateShareGrContext();
+        if (grContext_ == nullptr) {
+            ROSEN_LOGE("grContext is nullptr");
+            return;
+        }
+    }
+    if (cacheSurface_ == nullptr) {
+        cacheSurface_ = CreateSkSurface();
+    }
+    if (cacheSurface_ == nullptr) {
+        ROSEN_LOGE("cacheSurface_ is nullptr");
+        return;
+    }
+    if (canvas_ == nullptr) {
+        canvas_ = std::make_shared<RSPaintFilterCanvas>(cacheSurface_.get());
+    }
+    if (canvas_ == nullptr) {
+        ROSEN_LOGE("make canvas failed");
+    }
+#endif
+}
+
+void RSPreComposeElement::Deinit()
+{
+    cacheSurface_ = nullptr;
+    grContext_ = nullptr;
+}
+
+bool RSPreComposeElement::Reset()
+{
+    isDone_ = false;
 }
 
 void RSPreComposeElement::UpdateOcclusion(Occlusion::Region& accumulatedRegion,
@@ -98,7 +230,28 @@ void RSPreComposeElement::SetGlobalDirtyRegion(Occlusion::Region& globalRegion)
 
 bool RSPreComposeElement::ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas)
 {
-    // TODO
+    if (nodeIds_.count(node->GetId()) != 0) {
+        if (needDraw_) {
+            needDraw_ = false;
+#ifndef USE_ROSEN_DRAWING
+#ifdef RS_ENABLE_GL
+            if (!cacheTexture_.isValid()) {
+                ROSEN_LOGE("invalid grBackendTexture_");
+                return;
+            }
+            auto image = SkImage::MakeFromTexture(canvas->recordingContext(), cacheTexture_,
+                kBottomLeft_GrSurfaceOrigin, kRGRA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+            if (image == nullptr) {
+                return;
+            }
+            auto samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone);
+            canvas->drawImage(image, 0.f, 0.f, samplingOptions);
+#endif
+#endif
+        }
+        return true;
+    }
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

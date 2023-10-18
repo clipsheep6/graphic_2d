@@ -40,6 +40,17 @@ RSPreComposeGroup::~RSPreComposeGroup()
     runner_->Stop();
 }
 
+void RSPreComposeGroup::UpdateLastAndCurrentVsync()
+{
+    if (current_->isUpdateImageEnd()) {
+        swap(current_, last_);
+        canStartCurrentVsync_ = true;
+    } else {
+        canStartCurrentVsync_ = false;
+    }
+    last_->StartDraw();
+}
+
 void RSPreComposeGroup::Init(ScreenInfo& info)
 {
     string name = "RSPreComposerThread";
@@ -50,10 +61,24 @@ void RSPreComposeGroup::Init(ScreenInfo& info)
     last_ = std::make_shared<RSPreComposeElement>(info, renderContext_, mainCanvas_, elementCount_++);
 }
 
-void RSPreComposeGroup::SetCurrentVsyncParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
+void RSPreComposeGroup::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
     std::shared_ptr<RSUniRenderVisitor> visitor)
 {
+    if (!canStartCurrentVsync_) {
+        return;
+    }
     current_->SetParams(surfaceNodeList, visitor);
+    auto current = current_;
+    if (handle_) {
+        current->Reset();
+        auto task = [current]() {
+            ROSEN_LOGD("RSPreComposeThread Enqueue Task");
+            current->Init();
+            current->UpdateDirtyRegion();
+            current->UpdateImage();
+        }
+        handle_->PostTask(task);
+    }
 }
 
 void RSPreComposeGroup::UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)

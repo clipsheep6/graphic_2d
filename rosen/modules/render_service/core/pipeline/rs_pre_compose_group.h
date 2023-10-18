@@ -34,8 +34,9 @@ class RSPreComposeGroup {
 public:
     RSPreComposeGroup(RenderContext *context, std::shared_ptr<RSPaintFilterCanvas> canvas);
     ~RSPreComposeGroup();
+    void UpdateLastAndCurrentVsync();
     void Init(ScreenInfo& info);
-    void SetCurrentVsyncParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
+    void StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
         std::shared_ptr<RSUniRenderVisitor> visitor);
     void UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void UpdateOcclusionByLastVsync(Occlusion::Region& accumulatedRegion,
@@ -56,6 +57,7 @@ private:
     ScreenInfo screenInfo_;
     std::shared_ptr<RSPaintFilterCanvas> mainCanvas_;
     int32_t elementCount_ = 0;
+    bool canStartCurrentVsync_ = true;
 };
 } // namespace Rosen
 } // namespace OHOS

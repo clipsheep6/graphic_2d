@@ -29,8 +29,9 @@ namespace Rosen {
 class RSPreComposeManager : public RefBase {
 public:
     static sptr<RSPreComposeManager> GetInstance();
+    void UpdateLastAndCurrentVsync();
     void Init(RenderContext *context, std::shared_ptr<RSPaintFilterCanvas> canvas);
-    void SetCurrentVsyncParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
+    void StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
         std::shared_ptr<RSUniRenderVisitor> visitor);
     void UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void UpdateOcclusionByLastVsync(Occlusion::Region& accumulatedRegion,

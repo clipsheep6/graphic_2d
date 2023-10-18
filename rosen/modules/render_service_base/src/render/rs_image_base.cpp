@@ -368,17 +368,18 @@ void RSImageBase::ConvertPixelMapToSkImage()
 {
     if (!image_ && pixelMap_) {
         if (!pixelMap_->IsEditable()) {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-            image_ = RSImageCache::Instance().GetRenderMultiSkiaImageCacheByPixelMapId(uniqueId_, gettid());
+#if defined(ROSEN_OHOS)
+            image_ = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
 #else
             image_ = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_);
 #endif
         }
         if (!image_) {
             image_ = RSPixelMapUtil::ExtractSkImage(pixelMap_);
+            SKResourceManager::Instance().HoldResource(image_);
             if (!pixelMap_->IsEditable()) {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-                RSImageCache::Instance().CacheRenderMultiSkiaImageByPixelMapId(uniqueId_, gettid(), image_);
+#if defined(ROSEN_OHOS)
+                RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image_, gettid());
 #else
                 RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image_);
 #endif
@@ -391,8 +392,8 @@ void RSImageBase::ConvertPixelMapToDrawingImage()
 {
     if (!image_ && pixelMap_) {
         if (!pixelMap_->IsEditable()) {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-            image_ = RSImageCache::Instance().GetRenderMultiDrawingImageCacheByPixelMapId(uniqueId_, gettid());
+#if defined(ROSEN_OHOS)
+            image_ = RSImageCache::Instance().GetRenderDrawingImageCacheByPixelMapId(uniqueId_, gettid());
 #else
             image_ = RSImageCache::Instance().GetRenderDrawingImageCacheByPixelMapId(uniqueId_);
 #endif
@@ -400,8 +401,8 @@ void RSImageBase::ConvertPixelMapToDrawingImage()
         if (!image_) {
             image_ = RSPixelMapUtil::ExtractDrawingImage(pixelMap_);
             if (!pixelMap_->IsEditable()) {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-                RSImageCache::Instance().CacheRenderMultiDrawingImageByPixelMapId(uniqueId_, gettid(), image_);
+#if defined(ROSEN_OHOS)
+                RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, image_, gettid());
 #else
                 RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, image_);
 #endif

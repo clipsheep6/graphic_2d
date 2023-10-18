@@ -326,12 +326,7 @@ HWTEST_F(RSImageTest, RSImageCache001, TestSize.Level1)
 
     RSImageCache::Instance().CachePixelMap(1, nullptr);
     RSImageCache::Instance().CachePixelMap(0, pixelMap);
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-    RSImageCache::Instance().CacheRenderMultiSkiaImageByPixelMapId(1, gettid(), nullptr);
-    RSImageCache::Instance().CacheRenderMultiSkiaImageByPixelMapId(0, gettid(), nullptr);
-#else
     RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(1, nullptr);
     RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(0, nullptr);
-#endif
 }
 } // namespace OHOS::Rosen

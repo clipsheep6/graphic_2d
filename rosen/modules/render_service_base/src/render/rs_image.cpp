@@ -209,13 +209,9 @@ void RSImage::UploadGpu(SkCanvas& canvas)
     if (!RSSystemProperties::GetASTCEnabled()) {
         return;
     }
-#ifdef RS_ENABLE_GL
-    if (compressData_) {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-        auto cache = RSImageCache::Instance().GetRenderMultiSkiaImageCacheByPixelMapId(uniqueId_, gettid());
-#else
-        auto cache = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_);
-#endif
+    if (compressData_) {
+        auto cache = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
         std::lock_guard<std::mutex> lock(mutex_);
         if (cache) {
             image_ = cache;
@@ -240,7 +236,8 @@ void RSImage::UploadGpu(SkCanvas& canvas)
 #endif
             if (image) {
                 image_ = image;
-                RSImageCache::Instance().CacheSkiaImage(uniqueId_, image);
+                SKResourceManager::Instance().HoldResource(image);
+                RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image, gettid());
             } else {
                 RS_LOGE("make astc image %{public}" PRIu64 " (%{public}d, %{public}d) failed",
                     uniqueId_, (int)srcRect_.width_, (int)srcRect_.height_);
@@ -253,9 +250,9 @@ void RSImage::UploadGpu(SkCanvas& canvas)
 #else
 void RSImage::UploadGpu(Drawing::Canvas& canvas)
 {
-#ifdef RS_ENABLE_GL
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
     if (compressData_) {
-        auto cache = RSImageCache::Instance().GetDrawingImageCache(uniqueId_);
+        auto cache = RSImageCache::Instance().GetDrawingImageCache(uniqueId_, gettid());
         std::lock_guard<std::mutex> lock(mutex_);
         if (cache) {
             image_ = cache;
@@ -269,7 +266,7 @@ void RSImage::UploadGpu(Drawing::Canvas& canvas)
                 static_cast<int>(srcRect_.height_), Drawing::CompressedType::ASTC);
             if (image) {
                 image_ = image;
-                RSImageCache::Instance().CacheDrawingImage(uniqueId_, image);
+                RSImageCache::Instance().CacheDrawingImage(uniqueId_, image, gettid());
             } else {
                 RS_LOGE("make astc image %{public}d (%{public}d, %{public}d) failed",
                     uniqueId_, (int)srcRect_.width_, (int)srcRect_.height_);
@@ -320,7 +317,7 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
     // draw repeat rect
 #ifndef USE_ROSEN_DRAWING
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-    if (pixelMap_ != nullptr && pixelMap_->GetAllocatorType() != Media::AllocatorType::DMA_ALLOC) {
+    if (pixelMap_ != nullptr && image_ == nullptr) {
         ConvertPixelMapToSkImage();
     }
 #else

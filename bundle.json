@@ -84,7 +84,8 @@
           "egl",
           "opengles",
           "vulkan-headers",
-          "vulkan-loader"
+          "vulkan-loader",
+          "flutter-txt"
         ]
       },
       "build": {

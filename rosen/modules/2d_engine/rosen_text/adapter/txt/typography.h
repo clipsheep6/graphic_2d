@@ -20,7 +20,7 @@
 
 #ifndef USE_GRAPHIC_TEXT_GINE
 #ifdef NEW_SKIA
-#include "third_party/flutter/txt/src/txt/paragraph.h"
+#include "third_party/flutter-txt/src/txt/paragraph.h"
 #else
 #include "third_party/flutter/engine/flutter/third_party/txt/src/txt/paragraph.h"
 #endif

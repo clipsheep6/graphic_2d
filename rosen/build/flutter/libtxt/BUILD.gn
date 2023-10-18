@@ -25,7 +25,7 @@ config("thirdparty_lib_txt_rosen_config") {
 }
 
 if (defined(use_new_skia) && use_new_skia) {
-  txt_root = "$flutter_root/txt"
+  txt_root = "//third_party/flutter-txt"
 } else {
   txt_root = "$flutter_root/engine/flutter/third_party/txt"
 }

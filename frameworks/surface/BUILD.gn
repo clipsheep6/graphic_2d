@@ -94,6 +94,8 @@ ohos_shared_library("surface") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "faultloggerd:libdfx_dumpcatcher",
+    "faultloggerd:libfaultloggerd",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
   ]

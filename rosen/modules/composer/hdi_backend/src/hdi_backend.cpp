@@ -110,7 +110,10 @@ int32_t HdiBackend::PrepareCompleteIfNeed(const OutputPtr &output, bool needFlus
     OnPrepareComplete(needFlush, output, newLayerInfos);
     if (needFlush) {
         return output->FlushScreen(compClientLayers);
+    } else {
+        output->ClearFrameBuffer();
     }
+    HLOGE("hjj needFlush %{public}d", needFlush);
     return GRAPHIC_DISPLAY_SUCCESS;
 }
 
@@ -176,7 +179,7 @@ void HdiBackend::OnPrepareComplete(bool needFlush, const OutputPtr &output, std:
     if (needFlush) {
         ReorderLayerInfo(newLayerInfos);
     }
-
+    // HLOGE("hjj before OnPrepareComplete needFlush=%{public}d", needFlush);
     struct PrepareCompleteParam param = {
         .needFlushFramebuffer = needFlush,
         .layers = newLayerInfos,

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <scoped_bytrace.h>
 #include "hdi_output.h"
 
@@ -40,6 +41,31 @@ HdiOutput::~HdiOutput()
 {
 }
 
+void HdiOutput::ClearFrameBuffer()
+{
+    if (!CheckFbSurface()) {
+        return;
+    }
+    HLOGE("hjj the size of bufferCache_ is %{public}zu", bufferCache_.size());
+    currFrameBuffer_ = nullptr;
+    lastFrameBuffer_ = nullptr;
+    for (auto iter = bufferCache_.begin(); iter != bufferCache_.end(); iter++) {
+        sptr<SurfaceBuffer> surfaceBuffer = *iter;
+        if (surfaceBuffer != nullptr) {
+            HLOGE("hjj before the buffer seqNo=%{public}d, refCount=%{public}d, fd=%{public}d",
+                  surfaceBuffer->GetSeqNum(), surfaceBuffer->GetSptrRefCount(), surfaceBuffer->GetFileDescriptor());
+        } else {
+            HLOGE("hjj the buffer is nullptr");
+        }
+    }
+    bufferCache_.clear();
+    fbSurface_->ClearFrameBuffer();
+    sptr<Surface> pFrameSurface = GetFrameBufferSurface();
+    if (pFrameSurface != nullptr) {
+        pFrameSurface->CleanCache();
+    }
+}
+
 RosenError HdiOutput::Init()
 {
     if (fbSurface_ != nullptr) {
@@ -65,7 +91,7 @@ RosenError HdiOutput::Init()
         HLOGE("Set screen client buffer cache count failed, ret is %{public}d", ret);
         return ROSEN_ERROR_INVALID_OPERATING;
     }
-    bufferCache_.resize(bufferCacheCountMax_);
+    bufferCache_.clear();
 
     return ROSEN_ERROR_OK;
 }
@@ -312,20 +338,21 @@ int32_t HdiOutput::UpdateLayerCompType()
 
 bool HdiOutput::CheckAndUpdateClientBufferCahce(sptr<SurfaceBuffer> buffer, uint32_t& index)
 {
-    for (uint32_t i = 0; i < bufferCacheCountMax_; i++) {
+    uint32_t bufferCahceSize = (uint32_t)bufferCache_.size();
+    for (uint32_t i = 0; i < bufferCahceSize; i++) {
         if (bufferCache_[i] == buffer) {
             index = i;
             return true;
         }
     }
 
-    if (bufferCacheIndex_ >= bufferCacheCountMax_) {
+    if (bufferCahceSize >= bufferCacheCountMax_) {
         HLOGE("HdiOutput::FlushScreen: the length of buffer cache exceeds the limit!");
         return false;
     }
-    bufferCache_[bufferCacheIndex_] = buffer;
-    index = bufferCacheIndex_;
-    bufferCacheIndex_++;
+
+    index = (uint32_t)bufferCache_.size();
+    bufferCache_.push_back(buffer);
     return false;
 }
 
@@ -352,7 +379,6 @@ int32_t HdiOutput::FlushScreen(std::vector<LayerPtr> &compClientLayers)
     bool bufferCached = false;
     if (bufferCacheCountMax_ == 0) {
         bufferCache_.clear();
-        bufferCacheIndex_ = INVALID_BUFFER_CACHE_INDEX;
         HLOGE("The count of this client buffer cache is 0.");
     } else {
         bufferCached = CheckAndUpdateClientBufferCahce(currFrameBuffer_, index);

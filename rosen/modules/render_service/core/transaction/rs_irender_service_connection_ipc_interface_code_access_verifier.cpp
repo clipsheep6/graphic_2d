@@ -264,5 +264,18 @@ bool RSIRenderServiceConnectionInterfaceCodeAccessVerifier::IsExclusiveVerificat
     }
     return hasPermission;
 }
+
+bool RSIRenderServiceConnectionInterfaceCodeAccessVerifier::AddRSIRenderServiceConnectionInterfaceCodePermission(CodeEnumType interfaceName, const std::string& newPermission)
+{
+    auto code = static_cast<CodeUnderlyingType>(interfaceName);
+    return addPermission(code, newPermission);
+}
+std::vector<std::string> RSIRenderServiceConnectionInterfaceCodeAccessVerifier::GetRSIRenderServiceConnectionInterfaceCodePermissions(CodeEnumType interfaceName) const
+{
+    auto code = static_cast<CodeUnderlyingType>(interfaceName);
+    return getPermissions(code);
+}
+
+
 } // namespace Rosen
 } // namespace OHOS

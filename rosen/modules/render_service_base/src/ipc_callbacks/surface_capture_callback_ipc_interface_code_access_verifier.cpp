@@ -20,6 +20,7 @@ namespace Rosen {
 RSISurfaceCaptureCallbackInterfaceCodeAccessVerifier::RSISurfaceCaptureCallbackInterfaceCodeAccessVerifier()
 {
     CheckCodeUnderlyingTypeStandardized<CodeEnumType>(codeEnumTypeName_);
+    AddRSISurfaceCaptureCallbackInterfaceCodePermission();
 }
 
 bool RSISurfaceCaptureCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(CodeUnderlyingType code)
@@ -28,6 +29,7 @@ bool RSISurfaceCaptureCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificati
     switch (code) {
         case static_cast<CodeUnderlyingType>(CodeEnumType::ON_SURFACE_CAPTURE): {
             /* to implement access interception */
+            hasPermission = CheckInterfacePermission(codeEnumTypeName_ + "::ON_SURFACE_CAPTURE", code);
             break;
         }
         default: {
@@ -35,6 +37,25 @@ bool RSISurfaceCaptureCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificati
         }
     }
     return hasPermission;
+}
+void RSISurfaceCaptureCallbackInterfaceCodeAccessVerifier::AddRSISurfaceCaptureCallbackInterfaceCodePermission()
+{
+    for (auto& mapping : permissionRSISurfaceCaptureCallbackInterfaceMappings_) {
+        CodeEnumType interfaceName = mapping.first;
+        PermissionType permission = mapping.second;
+        std::string newPermission = PermissionEnumToString(permission);
+        if (newPermission == "unknown") {
+            continue;
+        }
+        CodeUnderlyingType code = static_cast<CodeUnderlyingType>(interfaceName);
+        AddPermission(code, newPermission);
+    }
+}
+bool RSISurfaceCaptureCallbackInterfaceCodeAccessVerifier::CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const
+{
+    auto permissionVec = GetPermissions(code);
+    CheckPermission(interfaceName, permissionVec);
+    return true;
 }
 } // namespace Rosen
 } // namespace OHOS

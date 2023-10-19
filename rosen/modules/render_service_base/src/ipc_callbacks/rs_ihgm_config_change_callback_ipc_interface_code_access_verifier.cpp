@@ -20,6 +20,7 @@ namespace Rosen {
 RSIHgmConfigChangeCallbackInterfaceCodeAccessVerifier::RSIHgmConfigChangeCallbackInterfaceCodeAccessVerifier()
 {
     CheckCodeUnderlyingTypeStandardized<CodeEnumType>(codeEnumTypeName_);
+    AddRSIHgmConfigChangeCallbackInterfaceCodePermission();
 }
 
 bool RSIHgmConfigChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(CodeUnderlyingType code)
@@ -28,6 +29,7 @@ bool RSIHgmConfigChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificat
     switch (code) {
         case static_cast<CodeUnderlyingType>(CodeEnumType::ON_HGM_CONFIG_CHANGED): {
             /* to implement access interception */
+            hasPermission = CheckInterfacePermission(codeEnumTypeName_ + "::ON_HGM_CONFIG_CHANGED", code);
             break;
         }
         default: {
@@ -36,5 +38,26 @@ bool RSIHgmConfigChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificat
     }
     return hasPermission;
 }
+void RSIHgmConfigChangeCallbackInterfaceCodeAccessVerifier::AddRSIHgmConfigChangeCallbackInterfaceCodePermission()
+{
+    for (auto& mapping : permissionRSIHgmConfigChangeCallbackInterfaceMappings_) {
+        CodeEnumType interfaceName = mapping.first;
+        PermissionType permission = mapping.second;
+        std::string newPermission = PermissionEnumToString(permission);
+        if (newPermission == "unknown") {
+            continue;
+        }
+        CodeUnderlyingType code = static_cast<CodeUnderlyingType>(interfaceName);
+        AddPermission(code, newPermission);
+    }
+}
+bool RSIHgmConfigChangeCallbackInterfaceCodeAccessVerifier::CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const
+{
+    auto permissionVec = GetPermissions(code);
+    CheckPermission(interfaceName, permissionVec);
+    return true;
+}
+
+
 } // namespace Rosen
 } // namespace OHOS

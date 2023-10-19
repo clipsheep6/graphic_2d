@@ -32,11 +32,13 @@ public:
     ~RSRenderServiceConnectionStub() noexcept = default;
 
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
-
+    int GetCodeAccessCounter(uint32_t code) const;
+    bool IncreaseAccessCounter(uint32_t code);
 private:
     static const RSInterfaceCodeSecurityManager securityManager_;
 
     void ReadDataBaseRs(DataBaseRs& info, MessageParcel& data);
+    std::unordered_map<uint32_t, int> accessCounter_;
 #if defined (ENABLE_DDGR_OPTIMIZE)
     int transDataIndex_ = 0;
 #endif

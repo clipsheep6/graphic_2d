@@ -31,11 +31,15 @@ private:
 
 int RSRenderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
+    if (!securityManager_.IsAccessTimesRestricted(code, GetCodeAccessCounter(code))) {
+        RS_LOGE("RSRenderServiceStub::OnRemoteRequest no permission to access codeID=%{public}u. AccessTimes: %{public}d by pid: %{public}d ", code, GetCodeAccessCounter(code), GetCallingPid());
+        return ERR_INVALID_STATE;
+    }
     if (!securityManager_.IsInterfaceCodeAccessible(code)) {
         RS_LOGE("RSRenderServiceStub::OnRemoteRequest no permission to access codeID=%{public}u.", code);
         return ERR_INVALID_STATE;
     }
-
+    IncreaseAccessCounter(code);
     int ret = ERR_NONE;
     switch (code) {
         case static_cast<uint32_t>(RSIRenderServiceInterfaceCode::CREATE_CONNECTION): {
@@ -67,6 +71,23 @@ int RSRenderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel& data, Mes
     }
 
     return ret;
+}
+
+int  RSRenderServiceStub::GetCodeAccessCounter(uint32_t code) const
+{
+    if (accessCounter_.count(code) == 0) {
+        return 0;
+    }
+    return accessCounter_.at(code);
+}
+bool RSRenderServiceStub::IncreaseAccessCounter(uint32_t code)
+{
+    if (accessCounter_.count(code) == 0) {
+        accessCounter_[code] = 1;
+    } else {
+        accessCounter_[code]++;
+    }
+    return true;
 }
 
 const RSInterfaceCodeSecurityManager RSRenderServiceStub::securityManager_ = \

@@ -21,6 +21,7 @@ RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier::
     RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier()
 {
     CheckCodeUnderlyingTypeStandardized<CodeEnumType>(codeEnumTypeName_);
+    AddRSISurfaceOcclusionChangeCallbackInterfaceCodePermission();
 }
 
 bool RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(
@@ -30,6 +31,7 @@ bool RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVe
     switch (code) {
         case static_cast<CodeUnderlyingType>(CodeEnumType::ON_SURFACE_OCCLUSION_VISIBLE_CHANGED): {
             /* to implement access interception */
+            hasPermission = CheckInterfacePermission(codeEnumTypeName_ + "::ON_SURFACE_OCCLUSION_VISIBLE_CHANGED", code);
             break;
         }
         default: {
@@ -38,5 +40,25 @@ bool RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVe
     }
     return hasPermission;
 }
+void RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier::AddRSISurfaceOcclusionChangeCallbackInterfaceCodePermission()
+{
+    for (auto& mapping : permissionRSISurfaceOcclusionChangeCallbackInterfaceMappings_) {
+        CodeEnumType interfaceName = mapping.first;
+        PermissionType permission = mapping.second;
+        std::string newPermission = PermissionEnumToString(permission);
+        if (newPermission == "unknown") {
+            continue;
+        }
+        CodeUnderlyingType code = static_cast<CodeUnderlyingType>(interfaceName);
+        AddPermission(code, newPermission);
+    }
+}
+bool RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier::CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const
+{
+    auto permissionVec = GetPermissions(code);
+    CheckPermission(interfaceName, permissionVec);
+    return true;
+}
+
 } // namespace Rosen
 } // namespace OHOS

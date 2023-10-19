@@ -20,6 +20,7 @@ namespace Rosen {
 IApplicationAgentInterfaceCodeAccessVerifier::IApplicationAgentInterfaceCodeAccessVerifier()
 {
     CheckCodeUnderlyingTypeStandardized<CodeEnumType>(codeEnumTypeName_);
+    AddIApplicationAgentInterfaceCodePermission();
 }
 
 bool IApplicationAgentInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(CodeUnderlyingType code)
@@ -28,6 +29,7 @@ bool IApplicationAgentInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed
     switch (code) {
         case static_cast<CodeUnderlyingType>(CodeEnumType::COMMIT_TRANSACTION): {
             /* to implement access interception */
+            hasPermission = CheckInterfacePermission(codeEnumTypeName_ + "::COMMIT_TRANSACTION", code);
             break;
         }
         default: {
@@ -36,5 +38,26 @@ bool IApplicationAgentInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed
     }
     return hasPermission;
 }
+void IApplicationAgentInterfaceCodeAccessVerifier::AddIApplicationAgentInterfaceCodePermission()
+{
+    for (auto& mapping : permissionIApplicationAgentInterfaceMappings_) {
+        CodeEnumType interfaceName = mapping.first;
+        PermissionType permission = mapping.second;
+        std::string newPermission = PermissionEnumToString(permission);
+        if (newPermission == "unknown") {
+            continue;
+        }
+        CodeUnderlyingType code = static_cast<CodeUnderlyingType>(interfaceName);
+        AddPermission(code, newPermission);
+    }
+}
+bool IApplicationAgentInterfaceCodeAccessVerifier::CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const
+{
+    auto permissionVec = GetPermissions(code);
+    CheckPermission(interfaceName, permissionVec);
+    return true;
+}
+
+
 } // namespace Rosen
 } // namespace OHOS

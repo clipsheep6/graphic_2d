@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <parameter.h>
 #include <parameters.h>
+#include "param/sys_param.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {

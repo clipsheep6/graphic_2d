@@ -18,29 +18,44 @@
 #include <cstdlib>
 #include <parameter.h>
 #include <parameters.h>
+#include "param/sys_param.h"
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
 bool RSSystemParameters::GetCalcCostEnabled()
 {
-    return std::atoi((system::GetParameter("rosen.calcCost.enabled", "0")).c_str()) != 0;
+    static CachedHandle g_Handle = CacheParameterCreate("rosen.calcCost.enabled", "0");
+    int changed = 0;
+    const char *enable = CacheParameterGetChanged(g_Handle, &changed);
+    // return std::atoi((system::GetParameter("rosen.calcCost.enabled", "0")).c_str()) != 0;
+    return std::atoi(enable) != 0;
 }
 
 bool RSSystemParameters::GetDrawingCacheEnabled()
 {
-    return std::atoi((system::GetParameter("rosen.drawingCache.enabled", "1")).c_str()) != 0;
+    static CachedHandle g_Handle = CacheParameterCreate("rosen.drawingCache.enabled", "1");
+    int changed = 0;
+    const char *enable = CacheParameterGetChanged(g_Handle, &changed);
+    // return std::atoi((system::GetParameter("rosen.drawingCache.enabled", "1")).c_str()) != 0;
+    return std::atoi(enable) != 0;
 }
 
 bool RSSystemParameters::GetDrawingCacheEnabledDfx()
 {
-    return std::atoi((system::GetParameter("rosen.drawingCache.enabledDfx", "0")).c_str()) != 0;
+    static CachedHandle g_Handle = CacheParameterCreate("rosen.drawingCache.enabledDfx", "0");
+    int changed = 0;
+    const char *enabledDfx = CacheParameterGetChanged(g_Handle, &changed);
+    // return std::atoi((system::GetParameter("rosen.drawingCache.enabledDfx", "0")).c_str()) != 0;
+    return std::atoi(enabledDfx) != 0;
 }
 
 QuickSkipPrepareType RSSystemParameters::GetQuickSkipPrepareType()
 {
-    return static_cast<QuickSkipPrepareType>(
-        std::atoi((system::GetParameter("rosen.quickskipprepare.enabled", "3")).c_str()));
+    static CachedHandle g_Handle = CacheParameterCreate("rosen.quickskipprepare.enabled", "3");
+    int changed = 0;
+    const char *type = CacheParameterGetChanged(g_Handle, &changed);
+    return static_cast<QuickSkipPrepareType>(std::atoi(type));
 }
 
 bool RSSystemParameters::GetFilterCacheOcculusionEnabled()

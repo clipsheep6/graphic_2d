@@ -17,7 +17,7 @@
 #define ROSENRENDER_ROSEN_WEBGL_OBJECT_MANAGER
 
 #include <map>
-#include "../context/webgl_rendering_context_basic_base.h"
+#include "context/webgl_rendering_context_basic_base.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -16,37 +16,55 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_TEXTRUE
 #define ROSENRENDER_ROSEN_WEBGL_TEXTRUE
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
+#include "webgl_arg.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLTexture final : public NExporter {
+class WebGLTexture final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLTexture";
+    inline static const int objectType = WEBGL_OBJECT_TEXTURE;
+    inline static const int DEFAULT_TEXTURE = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLTexture **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLTexture>(env, instance);
+    }
 
-    void SetTexture(unsigned int texture)
+    void SetTexture(uint32_t texture)
     {
         m_texture = texture;
     }
 
-    unsigned int GetTexture() const
+    uint32_t GetTexture() const
     {
         return m_texture;
     }
+
+    void SetTarget(GLenum target) { m_target = target; }
+    GLenum GetTarget() { return m_target; }
 
     explicit WebGLTexture() : m_texture(0) {};
 
     WebGLTexture(napi_env env, napi_value exports) : NExporter(env, exports), m_texture(0) {};
 
     ~WebGLTexture() {};
+
+    static WebGLTexture *GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLTexture>(env, obj);
+    }
+
 private:
-    unsigned int m_texture;
+    GLenum m_target;
+    uint32_t m_texture;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "n_class.h"
+#include "napi/n_class.h"
 
 namespace OHOS {
 namespace Rosen {

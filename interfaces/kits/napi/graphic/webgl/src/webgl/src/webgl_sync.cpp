@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_sync.h"   // for WebGLSync, WebGLSync::clas...
+#include "webgl/webgl_sync.h"   // for WebGLSync, WebGLSync::clas...
 
 #include "__config"                        // for std
 #include "iosfwd"                          // for string
@@ -25,9 +25,9 @@
 #include "type_traits"                     // for move
 #include "vector"                          // for vector
 
-#include "../../common/napi/n_class.h"     // for NClass
-#include "../../common/napi/n_func_arg.h"  // for NFuncArg, NARG_CNT, ZERO
-#include "common/napi/n_val.h"             // for NVal
+#include "napi/n_class.h"     // for NClass
+#include "napi/n_func_arg.h"  // for NFuncArg, NARG_CNT, ZERO
+#include "napi/n_val.h"             // for NVal
 
 namespace OHOS {
 namespace Rosen {

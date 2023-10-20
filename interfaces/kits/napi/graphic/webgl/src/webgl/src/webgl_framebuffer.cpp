@@ -13,21 +13,15 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_framebuffer.h"  // for WebGLFramebuffer
+#include "webgl/webgl_framebuffer.h"  // for WebGLFramebuffer
 
-#include "__config"                              // for std
-#include "iosfwd"                                // for string
-#include "js_native_api_types.h"                 // for napi_property_descri...
-#include "memory"                                // for make_unique, unique_ptr
-#include "new"                                   // for operator delete
-#include "string"                                // for basic_string
-#include "tuple"                                 // for tuple, tie
-#include "type_traits"                           // for move
 #include "vector"                                // for vector
-
-#include "../../common/napi/n_class.h"           // for NClass
-#include "../../common/napi/n_func_arg.h"        // for NFuncArg, NARG_CNT
-#include "common/napi/n_val.h"                   // for NVal
+#include "napi/n_class.h"           // for NClass
+#include "napi/n_func_arg.h"        // for NFuncArg, NARG_CNT
+#include "napi/n_val.h"             // for NVal
+#include "util/util.h"
+#include "context/webgl_rendering_context_base.h"
+#include "context/webgl2_rendering_context_base.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -69,6 +63,11 @@ bool WebGLFramebuffer::Export(napi_env env, napi_value exports)
 string WebGLFramebuffer::GetClassName()
 {
     return WebGLFramebuffer::className;
+}
+
+NVal WebGLFramebuffer::CreateObjectInstance(napi_env env, WebGLFramebuffer **instance)
+{
+    return WebGLObject::CreateObjectInstance<WebGLFramebuffer>(env, instance);
 }
 } // namespace Rosen
 } // namespace OHOS

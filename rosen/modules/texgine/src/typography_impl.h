@@ -22,7 +22,9 @@
 #include "line_metrics.h"
 #include "texgine/typography.h"
 #include "texgine/typography_types.h"
-
+#include "recording/recording_canvas.h"
+#include "text/text_blob.h"
+#include "effect/mask_filter.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -55,6 +57,7 @@ public:
     void SetIndents(const std::vector<float> &indents) override;
     void Layout(double maxWidth) override;
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY) override;
+    void Paint(Drawing::Canvas &recordingCanvas, double x, double y) override;
     std::vector<TextRect> GetTextRectsByBoundary(Boundary boundary,
                                                  TextRectHeightStyle heightStyle,
                                                  TextRectWidthStyle widthStyle) const override;

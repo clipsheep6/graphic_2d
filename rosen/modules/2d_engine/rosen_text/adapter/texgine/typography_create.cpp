@@ -88,6 +88,9 @@ public:
     {
     }
 
+    void Paint(Drawing::Canvas& canvas, double offsetX, double offsetY) override
+    {
+    }
 private:
     PlaceholderSpan span_;
 };

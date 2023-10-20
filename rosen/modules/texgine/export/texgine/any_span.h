@@ -15,7 +15,7 @@
 
 #ifndef ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_ANY_SPAN_H
 #define ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_ANY_SPAN_H
-
+#include "recording/recording_canvas.h"
 #include "texgine_canvas.h"
 #include "texgine/text_style.h"
 #include "texgine/typography_types.h"
@@ -80,6 +80,7 @@ public:
      */
     virtual void Paint(TexgineCanvas& canvas, double offsetx, double offsety) = 0;
 
+    virtual void Paint(Drawing::Canvas& canvas, double offsetX, double offsetY) = 0;
 private:
     friend void ReportMemoryUsage(const std::string& member, const AnySpan& that, const bool needThis);
     void ReportMemoryUsage(const std::string& member, const bool needThis) const override;

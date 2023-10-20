@@ -32,6 +32,7 @@ class SkiaTextBlob : public TextBlobImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     explicit SkiaTextBlob(sk_sp<SkTextBlob> skTextBlob);
+    SkiaTextBlob() noexcept {};
     ~SkiaTextBlob() override = default;
 
     AdapterType GetType() const override
@@ -44,6 +45,7 @@ public:
     std::shared_ptr<Data> Serialize(const SkSerialProcs& procs) const;
 
     static std::shared_ptr<TextBlob> Deserialize(const void* data, size_t size, const SkDeserialProcs& procs);
+    void SetSkTextBlob(sk_sp<SkTextBlob> textBlob);
 
 private:
     sk_sp<SkTextBlob> skTextBlob_;

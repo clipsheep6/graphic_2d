@@ -274,11 +274,31 @@ void VariantSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY) n
     }
 }
 
+void VariantSpan::Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY) noexcept(false)
+{
+    CheckPointer();
+    if (as_) {
+        as_->Paint(recordingCanvas, offsetX, offsetY);
+    }
+
+    if (ts_) {
+        ts_->Paint(recordingCanvas, offsetX, offsetY, xs_);
+    }
+}
+
 void VariantSpan::PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false)
 {
     CheckPointer();
     if (ts_) {
         ts_->PaintShadow(canvas, offsetX, offsetY, xs_.shadows);
+    }
+}
+
+void PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY) noexcept(false)
+{
+    CheckPointer();
+    if (ts_) {
+        ts_->PaintShadow(recordingCanvas, offsetX, offsetY, xs_.shadows);
     }
 }
 

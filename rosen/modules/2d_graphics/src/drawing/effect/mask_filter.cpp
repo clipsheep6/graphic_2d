@@ -22,10 +22,10 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-MaskFilter::MaskFilter(FilterType t, BlurType blurType, scalar sigma) noexcept : MaskFilter()
+MaskFilter::MaskFilter(FilterType t, BlurType blurType, scalar sigma, bool respectCTM) noexcept : MaskFilter()
 {
     type_ = t;
-    impl_->InitWithBlur(blurType, sigma);
+    impl_->InitWithBlur(blurType, sigma, respectCTM);
 }
 
 MaskFilter::MaskFilter() noexcept : type_(MaskFilter::FilterType::NO_TYPE), impl_(ImplFactory::CreateMaskFilterImpl())

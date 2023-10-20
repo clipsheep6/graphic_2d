@@ -272,10 +272,10 @@ void RSFilterCacheManager::TakeSnapshot(
     RS_OPTIONAL_TRACE_FUNC();
 
     // shrink the srcRect by 1px to avoid edge artifacts.
-    auto snapshotIBounds = srcRect.makeOutset(-1, -1);
+    auto snapshotIBounds = srcRect;
 
     // Take a screenshot.
-    auto snapshot = skSurface->makeImageSnapshot(snapshotIBounds);
+    auto snapshot = skSurface->makeImageSnapshot(snapshotIBounds.makeOutset(-1, -1));
     if (snapshot == nullptr) {
         ROSEN_LOGE("RSFilterCacheManager::TakeSnapshot failed to make an image snapshot.");
         return;

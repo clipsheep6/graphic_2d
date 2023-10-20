@@ -1082,8 +1082,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     }
 #endif
 
-    auto clipIBounds = canvas.getDeviceClipBounds();
-    auto imageSnapshot = skSurface->makeImageSnapshot(clipIBounds.makeOutset(-1, -1));
+    auto clipIBounds = canvas.getDeviceClipBounds().makeOutset(-1, -1);
+    auto imageSnapshot = skSurface->makeImageSnapshot(clipIBounds);
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawFilter image null");
         return;
@@ -1156,7 +1156,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     auto visibleRect = canvas.GetVisibleRect();
     auto visibleIRect = Drawing::RectI(visibleRect.GetLeft(), visibleRect.GetTop(),
         visibleRect.GetRight(), visibleRect.GetBottom());
-    if (visibleIRect.Intersect(clipIBounds)) {
+    if (visibleIRect.Intersect(clipIPadding)) {
         auto clipRect = Drawing::Rect(visibleIRect.GetLeft(), visibleIRect.GetTop(),
             visibleIRect.GetRight(), visibleIRect.GetBottom());
         canvas.ClipRect(clipRect, Drawing::ClipOp::INTERSECT, false);
@@ -1166,8 +1166,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         filter->DrawImageRect(canvas, imageSnapshot, srcRect, clipRect);
     } else {
         auto srcRect = Drawing::Rect(0, 0, clipIPadding.GetWidth(), clipIPadding.GetHeight());
-        auto dstRect = Drawing::Rect(clipIBounds.GetLeft(), clipIBounds.GetTop(),
-            clipIBounds.GetRight(), clipIBounds.GetBottom());
+        auto dstRect = Drawing::Rect(clipIPadding.GetLeft(), clipIPadding.GetTop(),
+            clipIPadding.GetRight(), clipIPadding.GetBottom());
         filter->DrawImageRect(canvas, imageSnapshot, srcRect, dstRect);
     }
     filter->PostProcess(canvas);

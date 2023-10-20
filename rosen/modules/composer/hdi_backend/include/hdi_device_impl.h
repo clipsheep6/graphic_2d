@@ -43,7 +43,7 @@ public:
     int32_t GetScreenCompChange(uint32_t screenId, std::vector<uint32_t> &layersId,
                                 std::vector<int32_t> &types) override;
     int32_t SetScreenClientBuffer(uint32_t screenId, const BufferHandle *buffer, uint32_t cacheIndex,
-                                  const sptr<SyncFence> &fence) override;
+                                  const sptr<SyncFence> &fence, const std::vector<uint32_t> &deletingList) override;
     int32_t SetScreenClientBufferCacheCount(uint32_t screen, uint32_t count) override;
     int32_t SetScreenClientDamage(uint32_t screenId, const std::vector<GraphicIRect> &damageRect) override;
     int32_t SetScreenVsyncEnabled(uint32_t screenId, bool enabled) override;

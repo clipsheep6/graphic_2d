@@ -65,7 +65,7 @@ RosenError HdiOutput::Init()
         HLOGE("Set screen client buffer cache count failed, ret is %{public}d", ret);
         return ROSEN_ERROR_INVALID_OPERATING;
     }
-    bufferCache_.resize(bufferCacheCountMax_);
+    bufferCache_.clear();
 
     return ROSEN_ERROR_OK;
 }
@@ -310,22 +310,26 @@ int32_t HdiOutput::UpdateLayerCompType()
     return ret;
 }
 
-bool HdiOutput::CheckAndUpdateClientBufferCahce(sptr<SurfaceBuffer> buffer, uint32_t& index)
+bool HdiOutput::CheckAndUpdateClientBufferCahce(sptr<SurfaceBuffer> buffer, uint32_t& index,
+                                                std::vector<uint32_t>& deletingList)
 {
-    for (uint32_t i = 0; i < bufferCacheCountMax_; i++) {
+    uint32_t bufferCacheSize = (uint32_t)bufferCache_.size();
+    for (uint32_t i = 0; i < bufferCacheSize; i++) {
         if (bufferCache_[i] == buffer) {
             index = i;
             return true;
         }
     }
 
-    if (bufferCacheIndex_ >= bufferCacheCountMax_) {
-        HLOGE("HdiOutput::FlushScreen: the length of buffer cache exceeds the limit!");
-        return false;
+    if (bufferCacheSize >= bufferCacheCountMax_) {
+        for (uint32_t i = 0; i < bufferCacheSize; i++) {
+            deletingList.push_back(i);
+        }
+        bufferCache_.clear();
     }
-    bufferCache_[bufferCacheIndex_] = buffer;
-    index = bufferCacheIndex_;
-    bufferCacheIndex_++;
+
+    index = (uint32_t)bufferCache_.size();
+    bufferCache_.push_back(buffer);
     return false;
 }
 
@@ -350,12 +354,12 @@ int32_t HdiOutput::FlushScreen(std::vector<LayerPtr> &compClientLayers)
 
     uint32_t index = INVALID_BUFFER_CACHE_INDEX;
     bool bufferCached = false;
+    std::vector<uint32_t> deletingList;
     if (bufferCacheCountMax_ == 0) {
         bufferCache_.clear();
-        bufferCacheIndex_ = INVALID_BUFFER_CACHE_INDEX;
         HLOGE("The count of this client buffer cache is 0.");
     } else {
-        bufferCached = CheckAndUpdateClientBufferCahce(currFrameBuffer_, index);
+        bufferCached = CheckAndUpdateClientBufferCahce(currFrameBuffer_, index, deletingList);
     }
 
     CHECK_DEVICE_NULL(device_);
@@ -367,9 +371,10 @@ int32_t HdiOutput::FlushScreen(std::vector<LayerPtr> &compClientLayers)
 
     CHECK_DEVICE_NULL(device_);
     if (bufferCached && index < bufferCacheCountMax_) {
-        ret = device_->SetScreenClientBuffer(screenId_, nullptr, index, fbAcquireFence);
+        ret = device_->SetScreenClientBuffer(screenId_, nullptr, index, fbAcquireFence, deletingList);
     } else {
-        ret = device_->SetScreenClientBuffer(screenId_, currFrameBuffer_->GetBufferHandle(), index, fbAcquireFence);
+        ret = device_->SetScreenClientBuffer(screenId_, currFrameBuffer_->GetBufferHandle(), index, fbAcquireFence,
+                                             deletingList);
     }
     if (ret != GRAPHIC_DISPLAY_SUCCESS) {
         HLOGE("Set screen client buffer failed, ret is %{public}d", ret);

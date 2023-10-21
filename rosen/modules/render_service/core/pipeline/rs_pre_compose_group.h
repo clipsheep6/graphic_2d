@@ -17,47 +17,44 @@
 #define RS_PRE_COMPOSE_GROUP_H
 
 #include <list>
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkSurface.h"
-#include "include/gpu/GrBackendSurface.h"
-#endif
 #include "pipeline/rs_surface_render_node.h"
 #include "event_handler.h"
 #include "render_context/render_context.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "pipeline/rs_uni_render_visitor.h"
+#include "pipeline/rs_pre_compose_element.h"
+#include "pipeline/rs_pre_compose_region_manager.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSPreComposeGroup {
 public:
-    RSPreComposeGroup(RenderContext *context, std::shared_ptr<RSPaintFilterCanvas> canvas);
+    RSPreComposeGroup();
     ~RSPreComposeGroup();
     void UpdateLastAndCurrentVsync();
     void Init(ScreenInfo& info);
     void StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
-        std::shared_ptr<RSUniRenderVisitor> visitor);
+        std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId, uint64_t leashFocusId);
     void UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
-    void UpdateOcclusionByLastVsync(Occlusion::Region& accumulatedRegion,
-        VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap);
+    void UpdateOcclusionByLastVsync(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
+        Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap);
     bool LastVsyncIsDirty();
-    void GetLastHwcNodes(std::vector<SurfaceDirtyMgrPair>& prevHwcEnabledNodes);
-    Occlusion::Region GetLastDirtyRegion();
+    void GetLastHwcNodes(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
+        std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair>& prevHwcEnabledNodes);
     Occlusion::Region GetLastVisibleDirtyRegion();
-    void SetLastVsyncGlobalDirtyRegion(Occlusion::Region& globalRegion);
-    bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas);
+    Occlusion::Region GetLastVisibleDirtyRegionWithGpuNodes();
+    bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
+        uint32_t threadIndex);
 
 private:
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     std::shared_ptr<RSPreComposeElement> current_ = nullptr;
     std::shared_ptr<RSPreComposeElement> last_ = nullptr;
-    RenderContext* renderContext_ = nullptr;
     ScreenInfo screenInfo_;
-    std::shared_ptr<RSPaintFilterCanvas> mainCanvas_;
     int32_t elementCount_ = 0;
     bool canStartCurrentVsync_ = true;
+    std::shared_ptr<RSPreComposeRegionManager> regionManager_;
 };
 } // namespace Rosen
 } // namespace OHOS

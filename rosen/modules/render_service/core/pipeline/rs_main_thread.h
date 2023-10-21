@@ -88,6 +88,7 @@ public:
     bool IsIdle() const;
     void QosStateDump(std::string& dumpString);
     void RenderServiceTreeDump(std::string& dumpString);
+    bool IsPreComposeOn() const;
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
@@ -223,6 +224,7 @@ private:
     void SetRSEventDetectorLoopStartTag();
     void SetRSEventDetectorLoopFinishTag();
     void UpdateUIFirstSwitch();
+    void UpdatePreComposeSwitch();
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
@@ -384,6 +386,8 @@ private:
     DeviceType deviceType_ = DeviceType::PHONE;
     bool isCachedSurfaceUpdated_ = false;
     bool isUiFirstOn_ = false;
+    bool isPreComposeOn_ = false;
+    uint32_t childrenCount_ = 0;
 
     // used for informing hgm the bundle name of SurfaceRenderNodes
     bool noBundle_ = false;

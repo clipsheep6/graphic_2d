@@ -148,6 +148,11 @@ public:
     static bool WriteCacheRenderNodeToPng(const RSRenderNode& node);
 
     static bool WritePixelMapToPng(Media::PixelMap& pixelMap);
+#ifndef USE_ROSEN_DRAWING
+    static bool WritePreComposeToPng(sk_sp<SkSurface> surface);
+#else
+    static bool WritePreComposeToPng(std::shared_ptr<Drawing::Surface> surface);
+#endif
     static void DealWithSurfaceRotationAndGravity(GraphicTransformType transform, Gravity gravity,
         RectF& localBounds, BufferDrawParam& params);
     static void FlipMatrix(GraphicTransformType transform, BufferDrawParam& params);

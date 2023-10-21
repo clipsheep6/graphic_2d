@@ -20,7 +20,7 @@
 #include <memory>
 #include <refbase.h>
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "rs_pre_compose_group.h"
+#include "pipeline/rs_pre_compose_group.h"
 #include "pipeline/rs_display_render_node.h"
 
 
@@ -30,26 +30,26 @@ class RSPreComposeManager : public RefBase {
 public:
     static sptr<RSPreComposeManager> GetInstance();
     void UpdateLastAndCurrentVsync();
-    void Init(RenderContext *context, std::shared_ptr<RSPaintFilterCanvas> canvas);
-    void StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
-        std::shared_ptr<RSUniRenderVisitor> visitor);
+    void StartCurrentVsync(std::shared_ptr<RSDisplayRenderNode>& node,
+        std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId);
     void UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
-    void UpdateOcclusionByLastVsync(Occlusion::Region& accumulatedRegion,
-        VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap);
+    void UpdateOcclusionByLastVsync(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
+        Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap);
     bool LastVsyncIsDirty();
-    void GetLastHwcNodes(std::vector<SurfaceDirtyMgrPair>& prevHwcEnabledNodes);
-    Occlusion::Region GetLastDirtyRegion();
+    void GetLastHwcNodes(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
+        std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair>& prevHwcEnabledNodes);
     Occlusion::Region GetLastVisibleDirtyRegion();
-    void SetLastVsyncGlobalDirtyRegion(Occlusion::Region& globalRegion);
-    bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas);
+    Occlusion::Region GetLastVisibleDirtyRegionWithGpuNodes();
+    bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
+        uint32_t threadIndex);
 
 private:
     RSPreComposeManager() = default;
     ~RSPreComposeManager() = default;
+    std::list<std::shared_ptr<RSSurfaceRenderNode>> GetSurfaceNodesFromDisplay(
+        std::shared_ptr<RSDisplayRenderNode>& displayNode, uint64_t focusNodeId, uint64_t& leashFocusId);
     static inline sptr<RSPreComposeManager> instance_ = nullptr;
-    RenderContext* context_ = nullptr;
     std::unordered_set<NodeId> nodeIds_;
-    std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::shared_ptr<RSPreComposeGroup> rsPreComposeGroup_;
     std::shared_ptr<RSPreComposeGroup> MakeGroup(std::shared_ptr<RSDisplayRenderNode>& node);
     // void GetAllSurfaceNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeList,

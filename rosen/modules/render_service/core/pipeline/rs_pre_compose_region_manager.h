@@ -18,20 +18,73 @@
 
 #include <list>
 #include <memory>
-#include <refbase.h>
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "rs_pre_compose_group.h"
-#include "pipeline/rs_display_render_node.h"
-
+#include "pipeline/rs_surface_render_node.h"
+#include "common/rs_occlusion_region.h"
+#include "transaction/rs_occlusion_data.h"
+#ifndef USE_ROSEN_DRAWING
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSurface.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/core/SkRegion.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
+struct NodeInfo {
+    uint64_t id;
+    uint8_t type;
+    Occlusion::Region region;
+};
 class RSPreComposeRegionManager {
 public:
     RSPreComposeRegionManager();
     ~RSPreComposeRegionManager();
+    void UpdateDirtyRegion(std::vector<RSBaseRenderNode::SharedPtr>& curAllNodes);
+    void GetOcclusion(Occlusion::Region& accumulatedRegion,
+        VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
+        std::vector<NodeInfo> visNodes);
+    bool IsDirty();
+    Occlusion::Region GetVisibleDirtyRegion();
+#ifndef USE_ROSEN_DRAWING
+    SkRegion& GetClipRegion() {
+        return region_;
+    }
+#else
+    Drawing::Region& GetClipRegion() {
+        return region_;
+    }
+#endif
 private:
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_;
+    std::vector<RSBaseRenderNode::SharedPtr> curAllNodes_;
+    std::vector<NodeId> lastSurfaceIds_;
+    std::vector<NodeId> curSurfaceIds_;
+    VisibleData curVisVec_;
+    std::map<uint32_t, bool> curVisMap_;
+    Occlusion::Region accumulatedRegion_;
+    std::vector<NodeInfo> visNodes_;
+    std::unordered_map<NodeId, Occlusion::Region> lastSurfaceVisiableRegion_;
+    std::unordered_map<NodeId, Occlusion::Region> curSurfaceVisiableRegion_;
+    Occlusion::Region allVisibleDirtyRegion_;
+    std::vector<RectI> dirtyRects_;
+    bool isDirty_ = false;
+#ifndef USE_ROSEN_DRAWING
+    SkRegion region_;
+#else
+    Drawing::Region region_;
+#endif
+    bool CheckNodeChange();
+    bool CheckSurfaceVisiable(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
+    void CalcOcclusion();
+    void CalcDirtyRegionByNodeChange();
+    void MergeDirtyHistory();
+    void MergeVisibleDirtyRegion();
+    void SetSurfaceGlobalDirtyRegion();
+    void SetSurfaceBelowDirtyRegion();
+    void CalcVisiableDirtyRegion();
+    void CalcDirtyRectsWithDirtyRegion();
+    void CalcClipRects();
 };
 } // namespace Rosen
 } // namespace OHOS

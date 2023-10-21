@@ -46,6 +46,7 @@
 #include "pipeline/rs_uni_render_listener.h"
 #include "pipeline/rs_uni_render_virtual_processor.h"
 #include "pipeline/rs_uni_render_util.h"
+#include "pipeline/rs_pre_compose_manager.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_properties_painter.h"
@@ -153,6 +154,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     subThreadManager->Start(renderEngine_->GetRenderContext().get());
 #endif
     isUIFirst_ = RSMainThread::Instance()->IsUIFirstOn();
+    isPreComposeOn_ = RSMainThread::Instance()->IsPreComposeOn();
     isPhone_ = RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE;
 }
 
@@ -222,6 +224,20 @@ void RSUniRenderVisitor::CopyPropertyForParallelVisitor(RSUniRenderVisitor *main
     isPartialRenderEnabled_ = mainVisitor->isPartialRenderEnabled_;
     isUIFirst_ = mainVisitor->isUIFirst_;
     isSubThread_ = true;
+}
+
+void RSUniRenderVisitor::SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisitor>& visitor,
+    std::shared_ptr<RSPaintFilterCanvas> canvas)
+{
+    screenInfo_ = visitor->screenInfo_;
+    curAlpha_ = visitor->curAlpha_;
+    dirtyFlag_ = visitor->dirtyFlag_;
+    prepareClipRect_ = visitor->prepareClipRect_;
+    isOpDropped_ = visitor->isOpDropped_;
+    isPartialRenderEnabled_ = visitor->isPartialRenderEnabled_;
+    isHardwareForcedDisabled_ = visitor->isHardwareForcedDisabled_;
+    isUIFirst_ = visitor->isUIFirst_;
+    canvas_ = canvas;
 }
 
 void RSUniRenderVisitor::UpdateStaticCacheSubTree(const std::shared_ptr<RSRenderNode>& cacheRootNode,
@@ -1602,6 +1618,11 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
     } else {
         for (auto& child : node.GetSortedChildren()) {
             if (ProcessSharedTransitionNode(*child)) {
+                if (isPreComposeOn_) {
+                    if (RSPreComposeManager::GetInstance()->ProcessLastVsyncNode(*child, canvas_, threadIndex_)) {
+                        continue;
+                    }
+                }
                 child->Process(shared_from_this());
                 child->SetDrawingCacheRootId(node.GetDrawingCacheRootId());
             }
@@ -1857,6 +1878,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             isOpDropped_ = false;
             isSurfaceRotationChanged_ = false;
         }
+
+        if (isPreComposeOn_) {
+            RSPreComposeManager::GetInstance()->UpdateNodesByLastVsync(node.GetCurAllSurfaces());
+        }
         if (isPartialRenderEnabled_) {
             CalcDirtyDisplayRegion(displayNodePtr);
             AddContainerDirtyToGlobalDirty(displayNodePtr);
@@ -1873,7 +1898,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             curDisplayDirtyManager_->MergeSurfaceRect();
             curDisplayDirtyManager_->UpdateDirty(isDirtyRegionAlignedEnable_);
         }
-        if (isOpDropped_ && dirtySurfaceNodeMap_.empty()
+        bool isPreComposeDirty = isPreComposeOn_ && RSPreComposeManager::GetInstance()->LastVsyncIsDirty();
+        if (isOpDropped_ && dirtySurfaceNodeMap_.empty() && !isPreComposeDirty
             && !curDisplayDirtyManager_->IsCurrentFrameDirty() && !forceUpdateFlag_) {
             RS_LOGD("DisplayNode skip");
             RS_TRACE_NAME("DisplayNode skip");
@@ -1994,6 +2020,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge, isDirtyRegionAlignedEnable_);
             Occlusion::Region dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(
                 displayNodePtr, isDirtyRegionAlignedEnable_);
+            if (isPreComposeOn_) {
+                auto region = RSPreComposeManager::GetInstance()->GetLastVisibleDirtyRegionWithGpuNodes();
+                dirtyRegion.OrSelf(region);
+            }
             dirtyRegionTest = dirtyRegion;
             if (isDirtyRegionAlignedEnable_) {
                 SetSurfaceGlobalAlignedDirtyRegion(displayNodePtr, dirtyRegion);
@@ -2561,6 +2591,14 @@ void RSUniRenderVisitor::CalcDirtyRegionForFilterNode(const RectI& filterRect,
             displayDirtyManager->MergeDirtyRect(filterRect);
             return;
         }
+        if (isPreComposeOn_) {
+            auto region = RSPreComposeManager::GetInstance()->GetLastVisibleDirtyRegion();
+            if (region.IsIntersectWith(filterRect)) {
+                displayDirtyManager->MergeDirtyRect(filterRect);
+                currentSurfaceDirtyManager->MergeDirtyRect(filterRect);
+                return;
+            }
+        }
         // If currentSurfaceNode is transparent and displayDirtyRect is not intersect with filterRect,
         // We should check whether window below currentSurfaceNode has dirtyRect intersect with filterRect.
         for (auto belowSurface = displayNode->GetCurAllSurfaces().begin();
@@ -2601,6 +2639,9 @@ void RSUniRenderVisitor::CalcDirtyFilterRegion(std::shared_ptr<RSDisplayRenderNo
         auto currentSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (currentSurfaceNode == nullptr) {
             continue;
+        }
+        if (isPreComposeOn_) {
+            RSPreComposeManager::GetInstance()->GetLastHwcNodes(currentSurfaceNode, prevHwcEnabledNodes);
         }
         auto currentSurfaceDirtyManager = currentSurfaceNode->GetDirtyManager();
         // [planning] Update hwc surface dirty status at the same time

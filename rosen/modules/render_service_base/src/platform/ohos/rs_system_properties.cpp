@@ -384,6 +384,16 @@ bool RSSystemProperties::GetDebugTraceEnabled()
     return openDebugTrace;
 }
 
+bool RSSystemProperties::GetPreComposeEnabled()
+{
+    return (std::atoi((system::GetParameter("rosen.pre.compose.enabled", "0")).c_str()) != 0);
+}
+
+bool RSSystemProperties::GetDumpPreComposeEnabled()
+{
+    return (std::atoi((system::GetParameter("rosen.dump.precompose.enabled", "0")).c_str()) != 0);
+}
+
 bool RSSystemProperties::FindNodeInTargetList(std::string node)
 {
     static std::string targetStr = system::GetParameter("persist.sys.graphic.traceTargetList", "");

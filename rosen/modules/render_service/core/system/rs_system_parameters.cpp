@@ -25,36 +25,33 @@ namespace OHOS {
 namespace Rosen {
 bool RSSystemParameters::GetCalcCostEnabled()
 {
-    static CachedHandle g_Handle = CacheParameterCreate("rosen.calcCost.enabled", "0");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.calcCost.enabled", "0");
     int changed = 0;
-    const char *enable = CacheParameterGetChanged(g_Handle, &changed);
-    // return std::atoi((system::GetParameter("rosen.calcCost.enabled", "0")).c_str()) != 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return std::atoi(enable) != 0;
 }
 
 bool RSSystemParameters::GetDrawingCacheEnabled()
 {
-    static CachedHandle g_Handle = CacheParameterCreate("rosen.drawingCache.enabled", "1");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.drawingCache.enabled", "1");
     int changed = 0;
-    const char *enable = CacheParameterGetChanged(g_Handle, &changed);
-    // return std::atoi((system::GetParameter("rosen.drawingCache.enabled", "1")).c_str()) != 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return std::atoi(enable) != 0;
 }
 
 bool RSSystemParameters::GetDrawingCacheEnabledDfx()
 {
-    static CachedHandle g_Handle = CacheParameterCreate("rosen.drawingCache.enabledDfx", "0");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.drawingCache.enabledDfx", "0");
     int changed = 0;
-    const char *enabledDfx = CacheParameterGetChanged(g_Handle, &changed);
-    // return std::atoi((system::GetParameter("rosen.drawingCache.enabledDfx", "0")).c_str()) != 0;
+    const char *enabledDfx = CachedParameterGetChanged(g_Handle, &changed);
     return std::atoi(enabledDfx) != 0;
 }
 
 QuickSkipPrepareType RSSystemParameters::GetQuickSkipPrepareType()
 {
-    static CachedHandle g_Handle = CacheParameterCreate("rosen.quickskipprepare.enabled", "3");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.quickskipprepare.enabled", "3");
     int changed = 0;
-    const char *type = CacheParameterGetChanged(g_Handle, &changed);
+    const char *type = CachedParameterGetChanged(g_Handle, &changed);
     return static_cast<QuickSkipPrepareType>(std::atoi(type));
 }
 

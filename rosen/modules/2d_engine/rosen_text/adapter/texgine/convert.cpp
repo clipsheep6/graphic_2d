@@ -111,27 +111,41 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         style.decorationColor.GetRed(), style.decorationColor.GetGreen(), style.decorationColor.GetBlue());
 #endif
     std::optional<TextEngine::TexginePaint> foreground = std::nullopt;
+    std::optional<Drawing::Pen> foregroundPen = std::nullopt;
 #ifndef USE_GRAPHIC_TEXT_GINE
     if (style.foreground.has_value()) {
         foreground = TextEngine::TexginePaint();
         foreground.value().SetPaint(style.foreground.value());
+    }
+    if (style.foregroundPen_.has_value()) {
+        foregroundPen = style.foregroundPen_.value();
     }
 #else
     if (style.foreground.has_value()) {
         foreground = TextEngine::TexginePaint();
         foreground.value().SetPaint(style.foreground.value());
     }
+    if (style.foregroundPen.has_value()) {
+        foregroundPen = style.foregroundPen.value();
+    }
 #endif
     std::optional<TextEngine::TexginePaint> background = std::nullopt;
+    std::optional<Drawing::Pen> backgroundPen = std::nullopt;
 #ifndef USE_GRAPHIC_TEXT_GINE
     if (style.background.has_value()) {
         background = TextEngine::TexginePaint();
         background.value().SetPaint(style.background_.value());
     }
+    if (style.backgroundPen_.has_value()) {
+        backgroundPen = style.backgroundPen_.value();
+    }
 #else
     if (style.background.has_value()) {
         background = TextEngine::TexginePaint();
         background.value().SetPaint(style.background.value());
+    }
+    if (style.backgroundPen.has_value()) {
+        backgroundPen = style.backgroundPen.value();
     }
 #endif
     TextEngine::TextStyle xs = {
@@ -154,6 +168,8 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .wordSpacing_ = style.wordSpacing_,
         .foreground_ = foreground,
         .background_ = background,
+        .backPen = backgroundPen,
+        .forePen = foregroundPen,
 #else
         .fontWeight = Convert(style.fontWeight),
         .fontStyle = Convert(style.fontStyle),
@@ -173,6 +189,8 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .wordSpacing = style.wordSpacing,
         .foreground = foreground,
         .background = background,
+        .backPen = backgroundPen,
+        .forePen = foregroundPen,
 #endif
     };
 

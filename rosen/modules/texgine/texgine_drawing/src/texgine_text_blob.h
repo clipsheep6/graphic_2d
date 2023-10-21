@@ -35,6 +35,8 @@ public:
      */
     void SetTextBlob(const sk_sp<SkTextBlob> textBlob);
 
+    bool DetectionEffectiveness();
+
 private:
     sk_sp<SkTextBlob> textBlob_ = nullptr;
 };

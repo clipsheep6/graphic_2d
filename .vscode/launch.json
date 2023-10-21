@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "cwd": "/ext/chang_leipeng/OHOS/commitCode/graphic_graphic_2d_6_1021/rosen/modules/2d_graphics/src/drawing/engine_adapter",
+      "program": "/ext/chang_leipeng/OHOS/commitCode/graphic_graphic_2d_6_1021/rosen/modules/2d_graphics/src/drawing/engine_adapter/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

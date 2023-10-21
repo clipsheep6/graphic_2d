@@ -262,6 +262,7 @@ void VariantSpan::AdjustOffsetY(double offset) noexcept(true)
     offsetY_ += offset;
 }
 
+#ifndef USE_ROSEN_DRAWING
 void VariantSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false)
 {
     CheckPointer();
@@ -281,6 +282,26 @@ void VariantSpan::PaintShadow(TexgineCanvas &canvas, double offsetX, double offs
         ts_->PaintShadow(canvas, offsetX, offsetY, xs_.shadows);
     }
 }
+#else
+void VariantSpan::Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY) noexcept(false)
+{
+    CheckPointer();
+    if (as_) {
+        as_->Paint(recordingCanvas, offsetX, offsetY);
+    }
+
+    if (ts_) {
+        ts_->Paint(recordingCanvas, offsetX, offsetY, xs_);
+    }
+}
+void PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY) noexcept(false)
+{
+    CheckPointer();
+    if (ts_) {
+        ts_->PaintShadow(recordingCanvas, offsetX, offsetY, xs_.shadows);
+    }    
+}
+#endif
 
 bool VariantSpan::IsRTL() const noexcept(false)
 {

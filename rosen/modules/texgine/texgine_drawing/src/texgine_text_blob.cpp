@@ -20,12 +20,24 @@ namespace Rosen {
 namespace TextEngine {
 sk_sp<SkTextBlob> TexgineTextBlob::GetTextBlob() const
 {
-    return textBlob_;
+#ifdef USE_ROSEN_DRAWING
+    return std::move(textBlob_);
+#else 
+     return textBlob_;
+#endif
 }
 
 void TexgineTextBlob::SetTextBlob(const sk_sp<SkTextBlob> textBlob)
 {
     textBlob_ = textBlob;
+}
+
+bool TexgineTextBlob::DetectionEffectiveness()
+{
+    if (!textBlob_) {
+        return false;
+    }
+    return true;
 }
 } // namespace TextEngine
 } // namespace Rosen

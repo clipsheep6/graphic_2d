@@ -18,6 +18,8 @@
 #include <cassert>
 #include <functional>
 #include <variant>
+#include "utils/log.h"
+#include <unicode/ubidi.h>
 
 #include "font_collection.h"
 #include "shaper.h"
@@ -567,6 +569,7 @@ void TypographyImpl::UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span, doubl
     coveredDescent = he - coveredAscent;
 }
 
+#ifndef USE_ROSEN_DRAWING
 void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY)
 {
     for (auto &metric : lineMetrics_) {
@@ -575,6 +578,16 @@ void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY
         }
     }
 }
+#else
+void TypographyImpl::Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY)//
+{
+    for (auto &metric : lineMetrics_) {
+        for (auto &span : metric.lineSpans) {
+            span.Paint(recordingCanvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
+        }
+    }
+}
+#endif
 
 std::vector<TextRect> TypographyImpl::GetTextRectsByBoundary(Boundary boundary, TextRectHeightStyle heightStyle,
     TextRectWidthStyle widthStyle) const

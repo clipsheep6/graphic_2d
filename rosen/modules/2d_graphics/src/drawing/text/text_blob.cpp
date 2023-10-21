@@ -21,6 +21,11 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 TextBlob::TextBlob(std::shared_ptr<TextBlobImpl> textBlobImpl) noexcept : textBlobImpl_(textBlobImpl) {}
+
+void TextBlob::InitTextBlobImpl(std::shared_ptr<TextBlobImpl> replaceTextBlobImpl)
+{
+    textBlobImpl_ = replaceTextBlobImpl;
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

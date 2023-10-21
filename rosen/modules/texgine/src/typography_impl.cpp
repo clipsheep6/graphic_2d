@@ -18,6 +18,8 @@
 #include <cassert>
 #include <functional>
 #include <variant>
+#include "utils/log.h"
+#include <unicode/ubidi.h>
 
 #include "font_collection.h"
 #include "shaper.h"
@@ -30,6 +32,8 @@
 #include "texgine/utils/trace.h"
 #endif
 #include "word_breaker.h"
+#include "recording/recording_canvas.h"
+#include "drawing/engine_adapter/skia_adapter/skia_canvas.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -572,6 +576,16 @@ void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY
     for (auto &metric : lineMetrics_) {
         for (auto &span : metric.lineSpans) {
             span.Paint(canvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
+
+        }
+    }
+}
+
+void TypographyImpl::Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY)//
+{
+    for (auto &metric : lineMetrics_) {
+        for (auto &span : metric.lineSpans) {
+            span.Paint(recordingCanvas, offsetX + span.GetOffsetX(), offsetY + span.GetOffsetY());
         }
     }
 }

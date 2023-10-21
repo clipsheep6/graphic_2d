@@ -146,10 +146,14 @@ void Typography::Paint(SkCanvas *canvas, double x, double y)
 
 void Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)
 {
+#ifndef USE_ROSEN_DRAWING
     std::shared_ptr<Drawing::CoreCanvasImpl> coreCanvas = drawCanvas->GetCanvasData();
     auto drawingCanvas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
     auto canvas = drawingCanvas->ExportSkCanvas();
     Paint(canvas, x, y);
+#else
+    typography_->Paint(*drawCanvas, x, y);
+#endif
 }
 
 std::vector<TextRect> Typography::GetTextRectsByBoundary(size_t left, size_t right,

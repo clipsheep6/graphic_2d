@@ -24,7 +24,11 @@
 #include "texgine_text_blob.h"
 #include "texgine/typography.h"
 #include "texgine/typography_style.h"
-
+#include "recording/recording_canvas.h"
+#include "text/text_blob.h"
+#include "drawing/engine_adapter/skia_adapter/skia_paint.h"
+#include "drawing/engine_adapter/skia_adapter/skia_text_blob.h"
+#include "drawing/engine_adapter/skia_adapter/skia_canvas.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -49,6 +53,9 @@ public:
     bool IsRTL() const;
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
     void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY, const std::vector<TextShadow> &shadows);
+    void Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY, const TextStyle &xs);
+    void PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY,
+        const std::vector<TextShadow> &shadows);
     std::shared_ptr<TextSpan> CloneWithCharGroups(CharGroups const &cgs);
 
     void operator+=(TextSpan const &textSpan)
@@ -63,7 +70,7 @@ public:
     std::vector<uint16_t> u16vect_;
     std::shared_ptr<TexgineTextBlob> textBlob_ = nullptr;
     std::vector<double> glyphWidths_;
-
+    Drawing::TextBlob skTextBlob_;
     CharGroups cgs_;
 
     double preBreak_ = 0.0;
@@ -84,6 +91,11 @@ private:
 
     void PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
     void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
+    void PaintDecoration(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY,
+        const TextStyle &xs);
+    void PaintDecorationStyle(Drawing::Canvas &recordingCanvas, double left, double right, double y,
+        const TextStyle &xs);
+    void CheckTextValidity();
 };
 } // namespace TextEngine
 } // namespace Rosen

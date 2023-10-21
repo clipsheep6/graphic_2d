@@ -23,7 +23,8 @@
 #include "texgine_font.h"
 #include "texgine_rect.h"
 #include "texgine/typography_types.h"
-
+#include "recording/recording_canvas.h"
+#include "draw/canvas.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -170,6 +171,7 @@ public:
      */
     virtual void Paint(TexgineCanvas& canvas, double offsetx, double offsety) = 0;
 
+    virtual void Paint(Drawing::Canvas &recordingCanvas, double x, double y) = 0;
     /*
      * @brief Returns a vector of bounding boxes that enclose all text
      *        between start and end glyph indexes. The bounding boxes

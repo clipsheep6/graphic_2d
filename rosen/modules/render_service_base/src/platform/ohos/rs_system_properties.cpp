@@ -139,7 +139,11 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
 #else
     static CachedHandle g_Handle = CacheParameterCreate("rosen.uni.partialrender.enabled", "4");
     int changed = 0;
+<<<<<<< Updated upstream
     const char *enable = CacheParameterGetChanged(g_Handle, &changed);
+=======
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+>>>>>>> Stashed changes
     return static_cast<PartialRenderType>(std::atoi(enable));
 #endif
 }

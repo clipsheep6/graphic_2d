@@ -14,7 +14,7 @@
  */
 #include "pipeline/sk_resource_manager.h"
 
-#include "rs_trace.h"
+#include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_task_dispatcher.h"
 
@@ -25,40 +25,57 @@ SKResourceManager& SKResourceManager::Instance()
     return instance;
 }
 
-void SKResourceManager::HoldResource(sk_sp<SkImage> img)
+void SKResourceManager::HoldResource(sk_sp<SkRefCntBase> res)
 {
 #ifdef ROSEN_OHOS
     auto tid = gettid();
     if (!RSTaskDispatcher::GetInstance().HasRegisteredTask(tid)) {
         return;
     }
-    std::scoped_lock<std::recursive_mutex> lock(mutex_);
-    skImages_[tid].push(img);
+    std::scoped_lock<std::recursive_mutex> lock(purgeablemutex_);
+    noPurgeableResource_[tid].emplace_back(res);
 #endif
 }
 
 void SKResourceManager::ReleaseResource()
 {
 #ifdef ROSEN_OHOS
-    std::scoped_lock<std::recursive_mutex> lock(mutex_);
-    for (auto& skImages : skImages_) {
-        if (skImages.second.size() > 0) {
-            RSTaskDispatcher::GetInstance().PostTask(skImages.first, [this]() {
-            auto tid = gettid();
-            std::scoped_lock<std::recursive_mutex> lock(mutex_);
-            size_t size = skImages_[tid].size();
-            while (size-- > 0) {
-                auto image = skImages_[tid].front();
-                skImages_[tid].pop();
-                if (image == nullptr) {
-                    continue;
-                }
-                if (image->unique()) {
-                    image = nullptr;
-                } else {
-                    skImages_[tid].push(image);
-                }
+    RS_OPTIONAL_TRACE_NAME("SKResourceManager::ReleaseResource");
+    std::scoped_lock<std::recursive_mutex> lock(purgeablemutex_);
+    for (auto& resources : noPurgeableResource_) {
+        if (resources.second.size() == 0) {
+            continue;
+        }
+        auto tid = resources.first;
+        std::vector<sk_sp<SkRefCntBase>>::iterator iter;
+        for (iter = resources.second.begin(); iter != resources.second.end();) {
+            if (*iter == nullptr) {
+                iter = resources.second.erase(iter);
+                continue;
             }
+            if ((*iter)->unique()) {
+                sk_sp<SkRefCntBase> it = *iter;
+                iter = resources.second.erase(iter);
+                {
+                    std::scoped_lock<std::recursive_mutex> lock(noPureablemutex_);
+                    purgeableResource_[tid].push(std::move(it));
+                }
+            } else {
+                iter++;
+            }
+        }
+        if (purgeableResource_[tid].size() > 0) {
+            RSTaskDispatcher::GetInstance().PostTask(resources.first, [this] () {
+                auto tid = gettid();
+                {
+                    RS_OPTIONAL_TRACE_NAME("SKResourceManager::purgeableResource");
+                    std::scoped_lock<std::recursive_mutex> lock(noPureablemutex_);
+                    while (purgeableResource_[tid].size() > 0) {
+                        auto res = purgeableResource_[tid].front();
+                        purgeableResource_[tid].pop();
+                        res = nullptr;
+                    }
+                }
             });
         }
     }

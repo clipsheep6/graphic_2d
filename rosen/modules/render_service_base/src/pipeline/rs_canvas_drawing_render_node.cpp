@@ -27,6 +27,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/sk_resource_manager.h"
 #include "platform/common/rs_log.h"
+#include "pipeline/sk_resource_manager.h"
 #include "property/rs_properties_painter.h"
 #include "visitor/rs_node_visitor.h"
 
@@ -35,19 +36,6 @@ namespace Rosen {
 RSCanvasDrawingRenderNode::RSCanvasDrawingRenderNode(NodeId id, const std::weak_ptr<RSContext>& context)
     : RSCanvasRenderNode(id, context)
 {}
-
-RSCanvasDrawingRenderNode::~RSCanvasDrawingRenderNode()
-{
-#ifndef USE_ROSEN_DRAWING
-    if (preThreadInfo_.second && skSurface_) {
-        preThreadInfo_.second(std::move(skSurface_));
-    }
-#else
-    if (preThreadInfo_.second && surface_) {
-        preThreadInfo_.second(std::move(surface_));
-    }
-#endif
-}
 
 #ifndef USE_ROSEN_DRAWING
 void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
@@ -59,9 +47,6 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     }
 
     if (IsNeedResetSurface(width, height)) {
-        if (preThreadInfo_.second && skSurface_) {
-            preThreadInfo_.second(std::move(skSurface_));
-        }
         if (!ResetSurface(width, height, canvas)) {
             return;
         }
@@ -95,9 +80,6 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
             canvas_->drawImage(image, 0.f, 0.f);
         }
 #endif
-        if (preThreadInfo_.second && preSurface) {
-            preThreadInfo_.second(std::move(preSurface));
-        }
         preThreadInfo_ = curThreadInfo_;
         canvas_->setMatrix(preMatrix);
     }
@@ -136,9 +118,6 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     }
 
     if (IsNeedResetSurface(width, height)) {
-        if (preThreadInfo_.second && surface_) {
-            preThreadInfo_.second(std::move(surface_));
-        }
         if (!ResetSurface(width, height, canvas)) {
             return;
         }
@@ -154,9 +133,6 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
             canvas_->DrawImage(*image, 0.f, 0.f, Drawing::SamplingOptions());
         }
 
-        if (preThreadInfo_.second && preSurface) {
-            preThreadInfo_.second(std::move(preSurface));
-        }
         preThreadInfo_ = curThreadInfo_;
         canvas_->SetMatrix(preMatrix);
     }
@@ -204,6 +180,7 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
         RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface SkSurface is nullptr");
         return false;
     }
+    SKResourceManager::Instance().HoldResource(skSurface_);
     canvas_ = std::make_unique<RSPaintFilterCanvas>(skSurface_.get());
     return skSurface_ != nullptr;
 }

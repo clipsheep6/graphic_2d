@@ -14,6 +14,8 @@
  */
 
 #include "common/rs_background_thread.h"
+
+#include "pipeline/sk_resource_manager.h"
 #include "platform/common/rs_log.h"
 #if defined(RS_ENABLE_UNI_RENDER) && defined(RS_ENABLE_GL)
 #include "render_context/render_context.h"
@@ -31,6 +33,18 @@ RSBackgroundThread::RSBackgroundThread()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSBackgroundThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    PeriodReleaseResource();
+}
+
+void RSBackgroundThread::PeriodReleaseResource()
+{
+    if (handler_ == nullptr) {
+        return;
+    }
+    handler_->PostTask([this] () {
+        SKResourceManager::Instance().ReleaseResource();
+        PeriodReleaseResource();
+    }, "ReleaseResource", 1000 * 10); // 1000 * 10 means 10s
 }
 
 void RSBackgroundThread::PostTask(const std::function<void()>& task)

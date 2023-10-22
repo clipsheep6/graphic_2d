@@ -235,7 +235,6 @@ void RSMainThread::Init()
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
-        SKResourceManager::Instance().ReleaseResource();
     };
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();

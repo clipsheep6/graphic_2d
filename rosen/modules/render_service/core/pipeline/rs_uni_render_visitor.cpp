@@ -2844,16 +2844,14 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
     }
 
     if (!node.GetCacheSurface(threadIndex_, true)) {
-        RSRenderNode::ClearCacheSurfaceFunc func = std::bind(&RSUniRenderUtil::ClearNodeCacheSurface,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
-        node.InitCacheSurface(canvas_ ? canvas_->recordingContext() : nullptr, func, threadIndex_);
+        node.InitCacheSurface(canvas_ ? canvas_->recordingContext() : nullptr, threadIndex_);
 #else
-        node.InitCacheSurface(canvas_ ? canvas_->getGrContext() : nullptr, func, threadIndex_);
+        node.InitCacheSurface(canvas_ ? canvas_->getGrContext() : nullptr, threadIndex_);
 #endif
 #else
-        node.InitCacheSurface(canvas_ ? canvas_->GetGPUContext().get() : nullptr, func, threadIndex_);
+        node.InitCacheSurface(canvas_ ? canvas_->GetGPUContext().get() : nullptr, threadIndex_);
 #endif
     }
     auto surface = node.GetCacheSurface(threadIndex_, true);
@@ -3672,18 +3670,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         return;
     }
     if (auto drawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>()) {
-#ifndef USE_ROSEN_DRAWING
-        auto clearFunc = [id = threadIndex_](sk_sp<SkSurface> surface) {
-            // The second param is null, 0 is an invalid value.
-            RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, id, 0);
-        };
-#else
-        auto clearFunc = [id = threadIndex_](std::shared_ptr<Drawing::Surface> surface) {
-            // The second param is null, 0 is an invalid value.
-            RSUniRenderUtil::ClearNodeCacheSurface(std::move(surface), nullptr, id, 0);
-        };
-#endif
-        drawingNode->SetSurfaceClearFunc({ threadIndex_, clearFunc });
+        drawingNode->SetSurfaceClearFunc({ threadIndex_, nullptr });
     }
     CheckAndSetNodeCacheType(node);
     DrawChildCanvasRenderNode(node);

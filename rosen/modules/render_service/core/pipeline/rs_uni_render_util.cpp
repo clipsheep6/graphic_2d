@@ -718,61 +718,7 @@ void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
 
 void RSUniRenderUtil::ClearCacheSurface(RSRenderNode& node, uint32_t threadIndex, bool isClearCompletedCacheSurface)
 {
-    RS_LOGD("ClearCacheSurface node: [%{public}" PRIu64 "]", node.GetId());
-    uint32_t cacheSurfaceThreadIndex = node.GetCacheSurfaceThreadIndex();
-    uint32_t completedSurfaceThreadIndex = node.GetCompletedSurfaceThreadIndex();
-    if (cacheSurfaceThreadIndex == threadIndex && completedSurfaceThreadIndex == threadIndex) {
-        node.ClearCacheSurface(isClearCompletedCacheSurface);
-        return;
-    }
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkSurface> completedCacheSurface = isClearCompletedCacheSurface ?
-        node.GetCompletedCacheSurface(threadIndex, false, true) : nullptr;
-#else
-    std::shared_ptr<Drawing::Surface> completedCacheSurface = isClearCompletedCacheSurface ?
-        node.GetCompletedCacheSurface(threadIndex, false, true) : nullptr;
-#endif
-    ClearNodeCacheSurface(node.GetCacheSurface(threadIndex, false, true),
-        std::move(completedCacheSurface), cacheSurfaceThreadIndex, completedSurfaceThreadIndex);
     node.ClearCacheSurface(isClearCompletedCacheSurface);
-}
-
-#ifndef USE_ROSEN_DRAWING
-void RSUniRenderUtil::ClearNodeCacheSurface(sk_sp<SkSurface>&& cacheSurface, sk_sp<SkSurface>&& cacheCompletedSurface,
-    uint32_t cacheSurfaceThreadIndex, uint32_t completedSurfaceThreadIndex)
-#else
-void RSUniRenderUtil::ClearNodeCacheSurface(std::shared_ptr<Drawing::Surface>&& cacheSurface,
-    std::shared_ptr<Drawing::Surface>&& cacheCompletedSurface,
-    uint32_t cacheSurfaceThreadIndex, uint32_t completedSurfaceThreadIndex)
-#endif
-{
-    PostReleaseSurfaceTask(std::move(cacheSurface), cacheSurfaceThreadIndex);
-    PostReleaseSurfaceTask(std::move(cacheCompletedSurface), completedSurfaceThreadIndex);
-}
-
-#ifndef USE_ROSEN_DRAWING
-void RSUniRenderUtil::PostReleaseSurfaceTask(sk_sp<SkSurface>&& surface, uint32_t threadIndex)
-#else
-void RSUniRenderUtil::PostReleaseSurfaceTask(std::shared_ptr<Drawing::Surface>&& surface, uint32_t threadIndex)
-#endif
-{
-    if (surface == nullptr) {
-        return;
-    }
-
-    if (threadIndex == UNI_MAIN_THREAD_INDEX) {
-        auto instance = RSMainThread::Instance();
-        instance->AddToReleaseQueue(std::move(surface));
-        instance->PostTask([instance] () {
-            instance->ReleaseSurface();
-        });
-    } else {
-#ifdef RS_ENABLE_GL
-        auto instance = RSSubThreadManager::Instance();
-        instance->AddToReleaseQueue(std::move(surface), threadIndex);
-        instance->ReleaseSurface(threadIndex);
-#endif
-    }
 }
 
 void RSUniRenderUtil::FloorTransXYInCanvasMatrix(RSPaintFilterCanvas& canvas)

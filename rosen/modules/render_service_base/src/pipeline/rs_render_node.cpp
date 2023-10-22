@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <mutex>
 #include <set>
+#include "pipeline/sk_resource_manager.h"
 
 #include "animation/rs_render_animation.h"
 #include "common/rs_obj_abs_geometry.h"
@@ -467,10 +468,6 @@ RSRenderNode::~RSRenderNode()
 {
     if (fallbackAnimationOnDestroy_) {
         FallbackAnimationsToRoot();
-    }
-    if (clearCacheSurfaceFunc_ && (cacheSurface_ || cacheCompletedSurface_)) {
-        clearCacheSurfaceFunc_(std::move(cacheSurface_), std::move(cacheCompletedSurface_), cacheSurfaceThreadIndex_,
-            completedSurfaceThreadIndex_);
     }
     ClearCacheSurface();
 }
@@ -1169,28 +1166,15 @@ bool RSRenderNode::NeedInitCacheSurface() const
 
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
-void RSRenderNode::InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
+void RSRenderNode::InitCacheSurface(GrRecordingContext* grContext, uint32_t threadIndex)
 #else
-void RSRenderNode::InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
+void RSRenderNode::InitCacheSurface(GrContext* grContext, uint32_t threadIndex)
 #endif
 #else
-void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheSurfaceFunc func, uint32_t threadIndex)
+void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, uint32_t threadIndex)
 #endif
 {
-    if (func) {
-        cacheSurfaceThreadIndex_ = threadIndex;
-        if (!clearCacheSurfaceFunc_) {
-            clearCacheSurfaceFunc_ = func;
-        }
-        if (cacheSurface_) {
-            func(std::move(cacheSurface_), nullptr,
-                cacheSurfaceThreadIndex_, completedSurfaceThreadIndex_);
-            std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
-            cacheSurface_ = nullptr;
-        }
-    } else {
-        cacheSurface_ = nullptr;
-    }
+    cacheSurfaceThreadIndex_ = threadIndex;
     auto cacheType = GetCacheType();
     float width = 0.0f, height = 0.0f;
     Vector2f size = GetOptionalBufferSize();
@@ -1213,11 +1197,7 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
 #ifndef USE_ROSEN_DRAWING
 #if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
     if (grContext == nullptr) {
-        if (func) {
-            func(std::move(cacheSurface_), std::move(cacheCompletedSurface_),
-                cacheSurfaceThreadIndex_, completedSurfaceThreadIndex_);
-            ClearCacheSurface();
-        }
+        ClearCacheSurface();
         return;
     }
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
@@ -1229,11 +1209,7 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
 #else // USE_ROSEN_DRAWING
 #if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
     if (gpuContext == nullptr) {
-        if (func) {
-            func(std::move(cacheSurface_), std::move(cacheCompletedSurface_),
-                cacheSurfaceThreadIndex_, completedSurfaceThreadIndex_);
-            ClearCacheSurface();
-        }
+        ClearCacheSurface();
         return;
     }
     auto info = Drawing::ImageInfo::Make(width, height);
@@ -1252,6 +1228,7 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
     std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     cacheSurface_ = surface;
 #endif // USE_ROSEN_DRAWING
+    SKResourceManager::Instance().HoldResource(cacheSurface_);
 }
 
 bool RSRenderNode::IsCacheSurfaceValid() const
@@ -1415,19 +1392,8 @@ std::shared_ptr<Drawing::Surface> RSRenderNode::GetCompletedCacheSurface(uint32_
             return cacheCompletedSurface_;
         }
     }
-
-    // freeze cache scene
-    ClearCacheSurfaceInThread();
-    return nullptr;
-}
-
-void RSRenderNode::ClearCacheSurfaceInThread()
-{
-    if (clearCacheSurfaceFunc_) {
-        clearCacheSurfaceFunc_(std::move(cacheSurface_), std::move(cacheCompletedSurface_), cacheSurfaceThreadIndex_,
-            completedSurfaceThreadIndex_);
-    }
     ClearCacheSurface();
+    return nullptr;
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -1447,8 +1413,7 @@ std::shared_ptr<Drawing::Surface> RSRenderNode::GetCacheSurface(uint32_t threadI
         }
     }
 
-    // freeze cache scene
-    ClearCacheSurfaceInThread();
+    ClearCacheSurface();
     return nullptr;
 }
 

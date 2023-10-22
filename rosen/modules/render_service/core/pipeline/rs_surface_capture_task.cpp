@@ -42,6 +42,7 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_render_util.h"
+#include "pipeline/sk_resource_manager.h"
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface.h"
 #include "render/rs_skia_filter.h"
@@ -109,6 +110,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
         RS_LOGE("RSSurfaceCaptureTask::Run: surface is nullptr!");
         return false;
     }
+    SKResourceManager::Instance().HoldResource(skSurface);
     visitor_->SetSurface(skSurface.get());
 #else
     auto surface = CreateSurface(pixelmap);
@@ -145,16 +147,14 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             if (!grBackendTexture.isValid()) {
                 RS_LOGE("RSSurfaceCaptureTask: SkiaSurface bind Image failed: BackendTexture is invalid");
                 callback->OnSurfaceCapture(id, nullptr);
-                RSUniRenderUtil::ClearNodeCacheSurface(
-                    std::move(std::get<0>(*wrapperSf )), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+                *wrapperSf = nullptr;
                 return;
             }
             auto pixelmap = std::move(std::get<0>(*wrapper));
             if (pixelmap == nullptr) {
                 RS_LOGE("RSSurfaceCaptureTask: pixelmap == nullptr");
                 callback->OnSurfaceCapture(id, nullptr);
-                RSUniRenderUtil::ClearNodeCacheSurface(
-                    std::move(std::get<0>(*wrapperSf )), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+                *wrapperSf = nullptr;
                 return;
             }
 
@@ -167,8 +167,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             if (skSurface == nullptr) {
                 RS_LOGE("RSSurfaceCaptureTask::Run MakeRenderTarget fail.");
                 callback->OnSurfaceCapture(id, nullptr);
-                RSUniRenderUtil::ClearNodeCacheSurface(
-                    std::move(std::get<0>(*wrapperSf )), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+                *wrapperSf = nullptr;
                 return;
             }
             auto canvas = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
@@ -179,8 +178,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             if (!CopyDataToPixelMap(tmpImg, pixelmap)) {
                 RS_LOGE("RSSurfaceCaptureTask::Run CopyDataToPixelMap failed");
                 callback->OnSurfaceCapture(id, nullptr);
-                RSUniRenderUtil::ClearNodeCacheSurface(
-                    std::move(std::get<0>(*wrapperSf )), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+                *wrapperSf = nullptr;
                 return;
             }
 
@@ -197,8 +195,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             callback->OnSurfaceCapture(id, pixelmap.get());
             dmaMem.ReleaseGLMemory();
             RSBackgroundThread::Instance().CleanGrResource();
-            RSUniRenderUtil::ClearNodeCacheSurface(
-                std::move(std::get<0>(*wrapperSf)), nullptr, UNI_MAIN_THREAD_INDEX, 0);
+            *wrapperSf = nullptr;
         };
         RSBackgroundThread::Instance().PostTask(copytask);
         return true;

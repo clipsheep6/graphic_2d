@@ -59,7 +59,7 @@ public:
         return impl_->DowncastingTo<T>();
     }
 
-    MaskFilter(FilterType t, BlurType blurType, scalar sigma) noexcept;
+    MaskFilter(FilterType t, BlurType blurType, scalar sigma, bool respectCTM = true) noexcept;
 
 protected:
     MaskFilter() noexcept;

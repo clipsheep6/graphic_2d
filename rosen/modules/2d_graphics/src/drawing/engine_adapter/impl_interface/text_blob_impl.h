@@ -17,23 +17,24 @@
 #define TEXT_BLOB_IMPL_H
 
 #include "impl_interface/base_impl.h"
-
+#include "utils/data.h"
+#include "texgine_text_blob.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 class TextBlobImpl : public BaseImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
+    TextBlobImpl() noexcept {};
     ~TextBlobImpl() override = default;
+    virtual void DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob) = 0;
 
     AdapterType GetType() const override
     {
         return AdapterType::BASE_INTERFACE;
     }
-
-protected:
-    TextBlobImpl() noexcept = default;
-};
+}
+;
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

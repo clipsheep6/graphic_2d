@@ -23,6 +23,8 @@
 #include "texgine/typography.h"
 #include "texgine/typography_types.h"
 
+#include "recording/recording_canvas.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -54,7 +56,13 @@ public:
     int GetLineCount() const override;
     void SetIndents(const std::vector<float> &indents) override;
     void Layout(double maxWidth) override;
+
+#ifndef USE_ROSEN_DRAWING
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY) override;
+#else
+    void Paint(Drawing::Canvas &recordingCanvas, double x, double y) override;
+#endif
+
     std::vector<TextRect> GetTextRectsByBoundary(Boundary boundary,
                                                  TextRectHeightStyle heightStyle,
                                                  TextRectWidthStyle widthStyle) const override;

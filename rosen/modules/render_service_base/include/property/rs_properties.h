@@ -156,7 +156,7 @@ public:
 
     // background properties
     void SetBackgroundColor(Color color);
-    Color GetBackgroundColor() const;
+    const Color& GetBackgroundColor() const;
     void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
     std::shared_ptr<RSShader> GetBackgroundShader() const;
     void SetBgImage(const std::shared_ptr<RSImage>& image);
@@ -199,7 +199,8 @@ public:
     void SetShadowRadius(float radius);
     void SetShadowPath(std::shared_ptr<RSPath> shadowPath);
     void SetShadowMask(bool shadowMask);
-    Color GetShadowColor() const;
+    void SetShadowIsFilled(bool shadowIsFilled);
+    const Color& GetShadowColor() const;
     float GetShadowOffsetX() const;
     float GetShadowOffsetY() const;
     float GetShadowAlpha() const;
@@ -209,6 +210,7 @@ public:
     const std::optional<float>& GetDynamicLightUpDegree() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
     bool GetShadowMask() const;
+    bool GetShadowIsFilled() const;
     const std::optional<RSShadow>& GetShadow() const;
     bool IsShadowValid() const;
 
@@ -311,7 +313,7 @@ private:
 
     bool NeedClip() const;
 
-    RectF GetBgImageRect() const;
+    const RectF& GetBgImageRect() const;
     void GenerateRRect();
     RectI GetDirtyRect() const;
     // added for update dirty region dfx
@@ -402,13 +404,13 @@ private:
 
     std::unique_ptr<Sandbox> sandbox_ = nullptr;
 
+    friend class RSBackgroundImageDrawable;
     friend class RSCanvasRenderNode;
     friend class RSColorfulShadowDrawable;
-    friend class RSPropertiesPainter;
-    friend class RSRenderNode;
-    friend class RSBackgroundDrawable;
     friend class RSEffectDataGenerateDrawable;
+    friend class RSPropertiesPainter;
     friend class RSPropertyDrawableRenderContext;
+    friend class RSRenderNode;
 };
 } // namespace Rosen
 } // namespace OHOS

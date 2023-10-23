@@ -41,6 +41,7 @@
 #include "render/rs_skia_filter.h"
 #include "transaction/rs_render_service_client.h"
 #include "visitor/rs_node_visitor.h"
+#include "property/rs_property_drawable.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -320,6 +321,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     if (GetCacheType() != CacheType::ANIMATE_PROPERTY && !needDrawAnimateProperty_) {
         return;
     }
+
     const auto& property = GetRenderProperties();
     const RectF absBounds = {0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()};
     RRect absClipRRect = RRect(absBounds, property.GetCornerRadius());
@@ -480,6 +482,20 @@ void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
 bool RSSurfaceRenderNode::GetSecurityLayer() const
 {
     return isSecurityLayer_;
+}
+
+void RSSurfaceRenderNode::SetSkipLayer(bool isSkipLayer)
+{
+    isSkipLayer_ = isSkipLayer;
+    auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
+    if (parent != nullptr && parent ->IsLeashWindow()) {
+        parent->SetSkipLayer(isSkipLayer);
+    }
+}
+
+bool RSSurfaceRenderNode::GetSkipLayer() const
+{
+    return isSkipLayer_;
 }
 
 void RSSurfaceRenderNode::SetFingerprint(bool hasFingerprint)
@@ -1387,5 +1403,20 @@ void RSSurfaceRenderNode::SetCacheSurfaceProcessedStatus(CacheProcessStatus cach
 {
     cacheProcessStatus_.store(cacheProcessStatus);
 }
+
+bool RSSurfaceRenderNode::HasOnlyOneRootNode() const
+{
+    if (GetChildrenCount() != 1) {
+        return false;
+    }
+
+    const auto child = GetChildren().front().lock();
+    if (!child || child->GetType() != RSRenderNodeType::ROOT_NODE || child->GetChildrenCount() > 0) {
+        return false;
+    }
+
+    return true;
+}
+
 } // namespace Rosen
 } // namespace OHOS

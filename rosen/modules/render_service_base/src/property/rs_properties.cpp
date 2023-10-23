@@ -41,6 +41,7 @@ constexpr int32_t INDEX_14 = 14;
 constexpr int32_t INDEX_18 = 18;
 
 const Vector4f Vector4fZero { 0.f, 0.f, 0.f, 0.f };
+const auto EMPTY_RECT = RectF();
 constexpr float SPHERIZE_VALID_EPSILON = 0.001f; // used to judge if spherize valid
 
 using ResetPropertyFunc = void (*)(RSProperties* prop);
@@ -111,6 +112,7 @@ const std::vector<ResetPropertyFunc> g_propertyResetterLUT = {
     [](RSProperties* prop) { prop->SetHueRotate({}); },                  // HUE_ROTATE,               62
     [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND,              63
     [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE,                 64
+    [](RSProperties* prop) { prop->SetShadowIsFilled(false); },          // SHADOW_IS_FILLED,         65
     nullptr,
 };
 } // namespace
@@ -733,7 +735,7 @@ void RSProperties::SetBackgroundColor(Color color)
     contentDirty_ = true;
 }
 
-Color RSProperties::GetBackgroundColor() const
+const Color& RSProperties::GetBackgroundColor() const
 {
     return decoration_ ? decoration_->backgroundColor_ : RgbPalette::Transparent();
 }
@@ -1082,9 +1084,22 @@ void RSProperties::SetShadowMask(bool shadowMask)
     contentDirty_ = true;
 }
 
-Color RSProperties::GetShadowColor() const
+void RSProperties::SetShadowIsFilled(bool shadowIsFilled)
 {
-    return shadow_ ? shadow_->GetColor() : Color::FromArgbInt(DEFAULT_SPOT_COLOR);
+    if (!shadow_.has_value()) {
+        shadow_ = std::make_optional<RSShadow>();
+    }
+    shadow_->SetIsFilled(shadowIsFilled);
+    SetDirty();
+    // [planning] if shadow stores as texture and out of node
+    // node content would not be affected
+    contentDirty_ = true;
+}
+
+const Color& RSProperties::GetShadowColor() const
+{
+    static const auto DEFAULT_SPOT_COLOR_VALUE = Color::FromArgbInt(DEFAULT_SPOT_COLOR);
+    return shadow_ ? shadow_->GetColor() : DEFAULT_SPOT_COLOR_VALUE;
 }
 
 float RSProperties::GetShadowOffsetX() const
@@ -1120,6 +1135,11 @@ std::shared_ptr<RSPath> RSProperties::GetShadowPath() const
 bool RSProperties::GetShadowMask() const
 {
     return shadow_ ? shadow_->GetMask() : false;
+}
+
+bool RSProperties::GetShadowIsFilled() const
+{
+    return shadow_ ? shadow_->GetIsFilled() : false;
 }
 
 const std::optional<RSShadow>& RSProperties::GetShadow() const
@@ -1243,9 +1263,9 @@ RectF RSProperties::GetFrameRect() const
     return {0, 0, GetFrameWidth(), GetFrameHeight()};
 }
 
-RectF RSProperties::GetBgImageRect() const
+const RectF& RSProperties::GetBgImageRect() const
 {
-    return decoration_ ? decoration_->bgImageRect_ : RectF();
+    return decoration_ ? decoration_->bgImageRect_ : EMPTY_RECT;
 }
 
 void RSProperties::SetVisible(bool visible)
@@ -2077,6 +2097,16 @@ std::string RSProperties::Dump() const
         dumpInfo.append(buffer);
     }
 
+    // ShadowIsFilled
+    ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    if (ret != EOK) {
+        return "Failed to memset_s for ShadowIsFilled, ret=" + std::to_string(ret);
+    }
+    if (!ROSEN_EQ(GetShadowIsFilled(), false) &&
+        sprintf_s(buffer, UINT8_MAX, ", ShadowIsFilled[%d]", GetShadowIsFilled()) != -1) {
+        dumpInfo.append(buffer);
+    }
+
     // FrameGravity
     ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
     if (ret != EOK) {
@@ -2100,6 +2130,28 @@ std::string RSProperties::Dump() const
     auto grayScale = GetGrayScale();
     if (grayScale.has_value() && !ROSEN_EQ(*grayScale, 0.f) &&
         sprintf_s(buffer, UINT8_MAX, ", GrayScale[%.1f]", *grayScale) != -1) {
+        dumpInfo.append(buffer);
+    }
+
+    // DynamicLightUpRate
+    ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    if (ret != EOK) {
+        return "Failed to memset_s for DynamicLightUpRate, ret=" + std::to_string(ret);
+    }
+    auto dynamicLightUpRate = GetDynamicLightUpRate();
+    if (dynamicLightUpRate.has_value() && !ROSEN_EQ(*dynamicLightUpRate, 0.f) &&
+        sprintf_s(buffer, UINT8_MAX, ", DynamicLightUpRate[%.1f]", *dynamicLightUpRate) != -1) {
+        dumpInfo.append(buffer);
+    }
+
+    // DynamicLightUpDegree
+    ret = memset_s(buffer, UINT8_MAX, 0, UINT8_MAX);
+    if (ret != EOK) {
+        return "Failed to memset_s for DynamicLightUpDegree, ret=" + std::to_string(ret);
+    }
+    auto dynamicLightUpDegree = GetDynamicLightUpDegree();
+    if (dynamicLightUpDegree.has_value() && !ROSEN_EQ(*dynamicLightUpDegree, 0.f) &&
+        sprintf_s(buffer, UINT8_MAX, ", DynamicLightUpDegree[%.1f]", *dynamicLightUpDegree) != -1) {
         dumpInfo.append(buffer);
     }
 

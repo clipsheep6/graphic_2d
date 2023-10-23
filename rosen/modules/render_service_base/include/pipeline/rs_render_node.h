@@ -56,6 +56,7 @@ class RSNodeVisitor;
 class RSCommand;
 enum class RSPropertyDrawableSlot : unsigned char;
 class RSPropertyDrawable;
+class RSPropertyDrawableRenderContext;
 
 class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode>  {
 public:
@@ -103,6 +104,11 @@ public:
     inline NodeId GetId() const
     {
         return id_;
+    }
+
+    inline const std::list<WeakPtr> &GetChildren() const noexcept
+    {
+        return children_;
     }
 
     // flag: isOnTheTree; instanceRootNodeId: displaynode or leash/appnode attached to
@@ -375,6 +381,9 @@ public:
 
     void SetDrawRegion(const std::shared_ptr<RectF>& rect);
     const std::shared_ptr<RectF>& GetDrawRegion() const;
+    
+    void SetOutOfParent(OutOfParentType outOfParent);
+    OutOfParentType GetOutOfParent() const;
 
 #ifndef USE_ROSEN_DRAWING
     void UpdateEffectRegion(std::optional<SkPath>& region);
@@ -457,6 +466,8 @@ protected:
     std::unordered_set<RSModifierType> dirtyTypes_;
     bool isFullChildrenListValid_ = false;
     RSProperties renderProperties_;
+    void IterateOnDrawableRange(RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end,
+        const std::function<void(std::unique_ptr<RSPropertyDrawable>&)>& func);
 
 private:
     NodeId id_;
@@ -556,6 +567,7 @@ private:
     bool isMarkDrivenRender_ = false;
     bool paintState_ = false;
     bool isContentChanged_ = false;
+    OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
     float globalAlpha_ = 1.0f;
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 
@@ -587,8 +599,6 @@ private:
     using DrawableIter = decltype(propertyDrawablesMap_)::iterator;
     inline std::pair<DrawableIter, DrawableIter> GetDrawableRange(
         RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
-    inline void IterateOnDrawableRange(RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end,
-        const std::function<void(std::unique_ptr<RSPropertyDrawable>&)>& func);
 
     friend class RSMainThread;
     friend class RSProxyRenderNode;

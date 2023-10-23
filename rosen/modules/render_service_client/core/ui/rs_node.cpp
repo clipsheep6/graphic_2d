@@ -161,6 +161,12 @@ void RSNode::AddKeyFrame(float fraction, const PropertyCallback& propertyCallbac
     implicitAnimator->EndImplicitKeyFrameAnimation();
 }
 
+bool RSNode::IsImplicitAnimationOpen()
+{
+    auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+    return implicitAnimator && implicitAnimator->NeedImplicitAnimation();
+}
+
 std::vector<std::shared_ptr<RSAnimation>> RSNode::Animate(const RSAnimationTimingProtocol& timingProtocol,
     const RSAnimationTimingCurve& timingCurve, const PropertyCallback& propertyCallback,
     const std::function<void()>& finishCallback, const std::function<void()>& repeatCallback)
@@ -989,6 +995,11 @@ void RSNode::SetShadowMask(bool shadowMask)
     SetProperty<RSShadowMaskModifier, RSProperty<bool>>(RSModifierType::SHADOW_MASK, shadowMask);
 }
 
+void RSNode::SetShadowIsFilled(bool shadowIsFilled)
+{
+    SetProperty<RSShadowIsFilledModifier, RSProperty<bool>>(RSModifierType::SHADOW_IS_FILLED, shadowIsFilled);
+}
+
 void RSNode::SetFrameGravity(Gravity gravity)
 {
     ROSEN_LOGI("RSNode::SetFrameGravity, gravity = %{public}d", gravity);
@@ -1419,6 +1430,19 @@ void RSNode::UpdateUIFrameRateRange(const FrameRateRange& range)
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
+void RSNode::SetOutOfParent(OutOfParentType outOfParent)
+{
+    if (outOfParent != outOfParent_) {
+        outOfParent_ = outOfParent;
+
+        std::unique_ptr<RSCommand> command = std::make_unique<RSSetOutOfParent>(GetId(), outOfParent);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, IsRenderServiceNode());
+        }
     }
 }
 

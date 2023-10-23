@@ -533,17 +533,25 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     SkPath skPath;
     if (properties.GetShadowPath() && !properties.GetShadowPath()->GetSkiaPath().isEmpty()) {
         skPath = properties.GetShadowPath()->GetSkiaPath();
-        canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        if (!properties.GetShadowIsFilled()) {
+            canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        }
     } else if (properties.GetClipBounds()) {
         skPath = properties.GetClipBounds()->GetSkiaPath();
-        canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        if (!properties.GetShadowIsFilled()) {
+            canvas.clipPath(skPath, SkClipOp::kDifference, true);
+        }
     } else {
         if (rrect != nullptr) {
             skPath.addRRect(RRect2SkRRect(*rrect));
-            canvas.clipRRect(RRect2SkRRect(*rrect), SkClipOp::kDifference, true);
+            if (!properties.GetShadowIsFilled()) {
+                canvas.clipRRect(RRect2SkRRect(*rrect), SkClipOp::kDifference, true);
+            }
         } else {
             skPath.addRRect(RRect2SkRRect(properties.GetRRect()));
-            canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
+            if (!properties.GetShadowIsFilled()) {
+                canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
+            }
         }
     }
     if (properties.GetShadowMask()) {
@@ -564,17 +572,25 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
     Drawing::Path path;
     if (properties.GetShadowPath() && !properties.GetShadowPath()->GetDrawingPath().IsValid()) {
         path = properties.GetShadowPath()->GetDrawingPath();
-        canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        if (!properties.GetShadowIsFilled()) {
+            canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        }
     } else if (properties.GetClipBounds()) {
         path = properties.GetClipBounds()->GetDrawingPath();
-        canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        if (!properties.GetShadowIsFilled()) {
+            canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+        }
     } else {
         if (rrect != nullptr) {
             path.AddRoundRect(RRect2DrawingRRect(*rrect));
-            canvas.ClipRoundRect(RRect2DrawingRRect(*rrect), Drawing::ClipOp::DIFFERENCE, true);
+            if (!properties.GetShadowIsFilled()) {
+                canvas.ClipRoundRect(RRect2DrawingRRect(*rrect), Drawing::ClipOp::DIFFERENCE, true);
+            }
         } else {
             path.AddRoundRect(RRect2DrawingRRect(properties.GetRRect()));
-            canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::DIFFERENCE, true);
+            if (!properties.GetShadowIsFilled()) {
+                canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::DIFFERENCE, true);
+            }
         }
     }
     if (properties.GetShadowMask()) {
@@ -1223,9 +1239,13 @@ void RSPropertiesPainter::DrawBackgroundEffect(
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::ApplyBackgroundEffectFallback(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+void RSPropertiesPainter::ApplyBackgroundEffectFallback(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, RSRenderNode* node)
 {
-    auto parentNode = properties.backref_.lock();
+    if (node == nullptr) {
+        return;
+    }
+    auto parentNode = node->GetParent().lock();
     while (parentNode && !parentNode->IsInstanceOf<RSEffectRenderNode>()) {
         parentNode = parentNode->GetParent().lock();
     }
@@ -1242,20 +1262,22 @@ void RSPropertiesPainter::ApplyBackgroundEffectFallback(const RSProperties& prop
     DrawFilter(properties, canvas, FilterType::BACKGROUND_FILTER, std::nullopt, filter);
 }
 #else
-void RSPropertiesPainter::ApplyBackgroundEffectFallback(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+void RSPropertiesPainter::ApplyBackgroundEffectFallback(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, RSRenderNode* node)
 {
     ROSEN_LOGE("Drawing Upsupport RSPropertiesPainter::ApplyBackgroundEffectFallback");
 }
 #endif
 
-void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+void RSPropertiesPainter::ApplyBackgroundEffect(
+    const RSProperties& properties, RSPaintFilterCanvas& canvas, RSRenderNode* node)
 {
 #ifndef USE_ROSEN_DRAWING
     const auto& effectData = canvas.GetEffectData();
     if (effectData == nullptr || effectData->cachedImage_ == nullptr) {
         // no effectData available, draw background filter in fallback method
         ROSEN_LOGD("RSPropertiesPainter::ApplyBackgroundEffect: effectData null, try fallback method.");
-        ApplyBackgroundEffectFallback(properties, canvas);
+        ApplyBackgroundEffectFallback(properties, canvas, node);
         return;
     }
     RS_TRACE_NAME("ApplyBackgroundEffect");

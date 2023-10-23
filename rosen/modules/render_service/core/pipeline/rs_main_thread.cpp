@@ -2353,10 +2353,9 @@ int32_t RSMainThread::GetNodePreferred(const std::vector<HgmModifierProfile>& hg
     if (hgmModifierProfileList.size() == 0) {
         return 0;
     }
-    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     int32_t nodePreferred = 0;
     for (auto &hgmModifierProfile : hgmModifierProfileList) {
-        auto modifierPreferred = hgmCore.CalModifierPreferred(hgmModifierProfile);
+        auto modifierPreferred = frameRateMgr_->CalModifierPreferred(hgmModifierProfile);
         nodePreferred = std::max(nodePreferred, modifierPreferred);
     }
     return nodePreferred;
@@ -2390,14 +2389,15 @@ void RSMainThread::CollectFrameRateRange(std::shared_ptr<RSRenderNode> node)
 
 void RSMainThread::ApplyModifiers()
 {
-    if (context_->activeNodesInRoot_.empty()) {
-        return;
-    }
-    RS_TRACE_FUNC();
     frameRateRangeData_ = std::make_shared<FrameRateRangeData>();
     //[Planning]: Support multi-display in the future.
     frameRateRangeData_->screenId = 0;
     frameRateRangeData_->forceUpdateFlag = forceUpdateUniRenderFlag_;
+    if (context_->activeNodesInRoot_.empty()) {
+        return;
+    }
+    RS_TRACE_NAME_FMT("ApplyModifiers (PropertyDrawableEnable %s)",
+        RSSystemProperties::GetPropertyDrawableEnable() ? "TRUE" : "FALSE");
     for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
         for (const auto& [id, nodePtr] : nodeSet) {
             bool isZOrderChanged = nodePtr->ApplyModifiers();

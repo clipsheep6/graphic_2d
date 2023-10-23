@@ -129,6 +129,12 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
+    if (GetRenderProperties().GetPositionZ() > 12.9f &&  GetRenderProperties().GetPositionZ() < 13.1f) {
+        ROSEN_LOGD("node[%{public}lu] background uses blend mode", GetId());
+        mIsSaveLayer = true;
+        canvas.saveLayer(nullptr, nullptr);
+    }
+
     // In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
 #ifdef NEW_SKIA
     RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas, false);
@@ -169,6 +175,11 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
         RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
 #endif
     }
+    if (mIsSaveLayer){
+        SkPaint blendPaint;
+        blendPaint.setBlendMode(SkBlendMode::kDstIn);
+        canvas.saveLayer(nullptr, &blendPaint);
+    }
 }
 
 void RSCanvasRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
@@ -200,10 +211,14 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
     RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
-
+    canvas.restore();
     canvas.RestoreStatus(canvasNodeSaveCount_);
     if (GetRenderProperties().IsLightUpEffectValid()) {
         RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);
+    }
+    if (mIsSaveLayer) {
+        canvas.restore();
+        mIsSaveLayer = false;
     }
     RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
     auto para = GetRenderProperties().GetLinearGradientBlurPara();

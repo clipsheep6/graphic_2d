@@ -97,6 +97,9 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
         postBreak_ = 0;
         for (auto &[start, end] : boundaries) {
             const auto &wordcgs = cgs.GetSubFromU16RangeAll(start, end);
+#ifdef ENABLE_HYPHEN
+            BreakWord(wordcgs, ys, xs, spans, widthLimit, fontCollection);
+#else
             BreakWord(wordcgs, ys, xs, spans);
 #endif
         }

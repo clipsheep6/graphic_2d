@@ -43,9 +43,10 @@ public:
     void UpdateDirtyRegion(std::vector<RSBaseRenderNode::SharedPtr>& curAllNodes);
     void GetOcclusion(Occlusion::Region& accumulatedRegion,
         VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
-        std::vector<NodeInfo> visNodes);
+        std::vector<NodeInfo>& visNodes);
     bool IsDirty();
     Occlusion::Region GetVisibleDirtyRegion();
+    RectI GetNodeChangeDirtyRect();
 #ifndef USE_ROSEN_DRAWING
     SkRegion& GetClipRegion() {
         return region_;
@@ -64,18 +65,19 @@ private:
     std::map<uint32_t, bool> curVisMap_;
     Occlusion::Region accumulatedRegion_;
     std::vector<NodeInfo> visNodes_;
-    std::unordered_map<NodeId, Occlusion::Region> lastSurfaceVisiableRegion_;
-    std::unordered_map<NodeId, Occlusion::Region> curSurfaceVisiableRegion_;
+    std::unordered_map<NodeId, RectI> lastSurfaceVisiableRegion_;
+    std::unordered_map<NodeId, RectI> curSurfaceVisiableRegion_;
     Occlusion::Region allVisibleDirtyRegion_;
     std::vector<RectI> dirtyRects_;
     bool isDirty_ = false;
+    bool isNodeChange_ = false;
 #ifndef USE_ROSEN_DRAWING
     SkRegion region_;
 #else
     Drawing::Region region_;
 #endif
     bool CheckNodeChange();
-    void GetChangedNodeVisRegion();
+    void GetChangedNodeRegion();
     bool CheckSurfaceVisiable(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusion();
     void CalcDirtyRegionByNodeChange();

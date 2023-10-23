@@ -49,12 +49,13 @@ RSPreComposeGroup::~RSPreComposeGroup()
 
 void RSPreComposeGroup::UpdateLastAndCurrentVsync()
 {
-    if (current_->isUpdateImageEnd()) {
+    if (current_->IsUpdateImageEnd()) {
         std::swap(current_, last_);
         canStartCurrentVsync_ = true;
     } else {
         canStartCurrentVsync_ = false;
     }
+    ROSEN_LOGD("RSPreComposeGroup canStartCurrentVsync_ %d", canStartCurrentVsync_);
     last_->StartCalculateAndDrawImage();
 }
 
@@ -96,7 +97,7 @@ void RSPreComposeGroup::UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::Sha
 void RSPreComposeGroup::UpdateOcclusionByLastVsync(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
     Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap)
 {
-    last_->UpdateOcclusion(surfaceNode, accumulatedRegion, curVisVec, pidVisMap);
+    last_->UpdateOcclusion(surfaceNode, accumulatedRegion, curVisVec, pidVisMap, current_);
 }
 
 bool RSPreComposeGroup::LastVsyncIsDirty()

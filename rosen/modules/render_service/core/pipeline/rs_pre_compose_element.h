@@ -39,16 +39,15 @@ public:
     void UpdateImage();
     void UpdateNodes(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void UpdateOcclusion(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
-        Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap);
+        Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
+        std::shared_ptr<RSPreComposeElement> next);
     bool IsDirty();
     void GetHwcNodes(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
         std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair>& prevHwcEnabledNodes);
     Occlusion::Region GetDirtyVisibleRegion();
     Occlusion::Region GetVisibleDirtyRegionWithGpuNodes();
     bool ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex);
-    bool isUpdateImageEnd() {
-        return isDone_;
-    }
+    bool IsUpdateImageEnd();
     void StartCalculateAndDrawImage();
 
 private:
@@ -58,6 +57,7 @@ private:
     void DrawGpuNodes(std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex);
     void UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas>& canvas,
         std::shared_ptr<RSSurfaceRenderNode> node, Occlusion::Region& surfaceDirtyRegion);
+    void CalVisDirtyRegion();
     ScreenInfo screenInfo_;
     RenderContext* renderContext_ = nullptr;
     std::shared_ptr<RSPaintFilterCanvas> mainCanvas_;
@@ -72,6 +72,7 @@ private:
     bool needDraw_ = false;
     bool isDirty_ = false;
     bool getHwcNodesDone_ = false;
+    bool isVisDirtyRegionUpdate_ = false;
     int32_t width_;
     int32_t height_;
     uint64_t focusNodeId_ = 0;
@@ -82,6 +83,7 @@ private:
     Occlusion::Region accumulatedRegion_;
     std::vector<NodeInfo> visNodes_;
     std::shared_ptr<RSPreComposeRegionManager> regionManager_;
+    RectI dirtyRect_;
     Occlusion::Region dirtyRegion_;
     Occlusion::Region visDirtyRegion_;
     Occlusion::Region visRegion_;

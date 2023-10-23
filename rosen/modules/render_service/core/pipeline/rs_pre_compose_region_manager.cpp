@@ -33,7 +33,7 @@ RSPreComposeRegionManager::~RSPreComposeRegionManager()
 
 bool RSPreComposeRegionManager::CheckNodeChange()
 {
-    bool isNodeChange = false;
+    isNodeChange_ = false;
     std::vector<NodeId> curSurfaceIds;
     curSurfaceIds.reserve(curAllNodes_.size());
     for (auto node = curAllNodes_.begin(); node != curAllNodes_.end(); ++node) {
@@ -41,23 +41,27 @@ bool RSPreComposeRegionManager::CheckNodeChange()
         if (surface == nullptr) {
             continue;
         }
+        ROSEN_LOGD("name %{public}s id %{public}" PRIu64
+            " olddirty %{public}s dstRegion %{public}s oldSurfacedirty %{public}s",
+            surface->GetName().c_str(), surface->GetId(), surface->GetOldDirty().ToString().c_str(),
+            surface->GetDstRect().ToString().c_str(), surface->GetOldDirtyInSurface().ToString().c_str());
         curSurfaceIds.emplace_back(surface->GetId());
     }
-    isNodeChange = lastSurfaceIds_ != curSurfaceIds;
-    isDirty_ |= isNodeChange;
+    isNodeChange_ = lastSurfaceIds_ != curSurfaceIds;
+    isDirty_ |= isNodeChange_;
     std::swap(curSurfaceIds, curSurfaceIds_);
-    return isNodeChange;
+    return isNodeChange_;
 }
 
-void RSPreComposeRegionManager::GetChangedNodeVisRegion()
+void RSPreComposeRegionManager::GetChangedNodeRegion()
 {
-    std::unordered_map<NodeId, Occlusion::Region> curSurfaceVisiableRegion;
+    std::unordered_map<NodeId, RectI> curSurfaceVisiableRegion;
     for (auto node = curAllNodes_.begin(); node != curAllNodes_.end(); ++node) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*node);
         if (surface == nullptr) {
             continue;
         }
-        curSurfaceVisiableRegion[surface->GetId()] = surface->GetVisibleRegion();
+        curSurfaceVisiableRegion[surface->GetId()] = surface->GetOldDirtyInSurface();
     }
     std::swap(curSurfaceVisiableRegion, curSurfaceVisiableRegion_);
 }
@@ -67,14 +71,14 @@ bool RSPreComposeRegionManager::CheckSurfaceVisiable(OcclusionRectISet& occlusio
 {
     size_t beforeSize = occlusionSurfaces.size();
     occlusionSurfaces.insert(curSurface->GetDstRect());
-    ROSEN_LOGD("visable %d", occlusionSurfaces.size() > beforeSize);
+    ROSEN_LOGD("RSPreComposeRegionManager visable %d", occlusionSurfaces.size() > beforeSize);
     return occlusionSurfaces.size() > beforeSize ? true : false;
 }
 
 void RSPreComposeRegionManager::CalcOcclusion()
 {
     if (!CheckNodeChange()) {
-        ROSEN_LOGD("xxb node not change");
+        ROSEN_LOGD("RSPreComposeRegionManager xxb node not change");
         return;
     }
     Occlusion::Region accumulatedRegion;
@@ -112,36 +116,33 @@ void RSPreComposeRegionManager::CalcOcclusion()
     std::swap(curVisMap, curVisMap_);
     std::swap(visNodes, visNodes_);
     std::swap(accumulatedRegion_, accumulatedRegion);
-    GetChangedNodeVisRegion();
+    GetChangedNodeRegion();
 }
 
 void RSPreComposeRegionManager::CalcDirtyRegionByNodeChange()
 {
-    std::vector<Occlusion::Region> regions;
+    std::vector<RectI> rects;
     int32_t curPos = 0;
     int32_t lastPos = 0;
     while (curPos < curSurfaceIds_.size() || lastPos < lastSurfaceIds_.size()) {
         if (curPos == curSurfaceIds_.size()) {
-            regions.emplace_back(lastSurfaceVisiableRegion_[lastSurfaceIds_[lastPos++]]);
+            rects.emplace_back(lastSurfaceVisiableRegion_[lastSurfaceIds_[lastPos++]]);
         } else if (lastPos == lastSurfaceIds_.size()) {
-            regions.emplace_back(curSurfaceVisiableRegion_[curSurfaceIds_[curPos++]]);
+            rects.emplace_back(curSurfaceVisiableRegion_[curSurfaceIds_[curPos++]]);
         } else if (curSurfaceIds_[curPos] != lastSurfaceIds_[lastPos]) {
-            regions.emplace_back(lastSurfaceVisiableRegion_[lastSurfaceIds_[lastPos++]]);
+            rects.emplace_back(lastSurfaceVisiableRegion_[lastSurfaceIds_[lastPos++]]);
         } else {
             lastPos++;
             curPos++;
         }
     }
-    for (auto& region : regions) {
-        ROSEN_LOGD("CalcGlobalDirtyRegion merge Surface closed %{public}s", region.GetRegionInfo().c_str());
-        for (auto changedRect : region.GetRegionRects()) {
-            if (!changedRect.IsEmpty()) {
-                dirtyManager_->MergeDirtyRect(RectI(changedRect.left_, changedRect.top_,
-                    changedRect.right_ - changedRect.left_, changedRect.bottom_ - changedRect.top_));
-            }
+    for (auto& rect : rects) {
+        ROSEN_LOGD("CalcGlobalDirtyRegion merge Surface closed %{public}s", rect.ToString().c_str());
+        if (!rect.IsEmpty()) {
+            dirtyManager_->MergeDirtyRect(rect);
         }
     }
-    ROSEN_LOGD("global dirty region %{public}s", dirtyManager_->GetDirtyRegion().ToString().c_str());
+    ROSEN_LOGD("RSPreComposeRegionManager global dirty region %{public}s", dirtyManager_->GetDirtyRegion().ToString().c_str());
 }
 
 void RSPreComposeRegionManager::MergeDirtyHistory()
@@ -155,7 +156,7 @@ void RSPreComposeRegionManager::MergeDirtyHistory()
         }
         auto surfaceDirtyManager = curSurface->GetDirtyManager();
         if (!surfaceDirtyManager->SetBufferAge(bufferAge)) {
-            ROSEN_LOGE("RSUniRenderUtil::MergeVisibleDirtyRegion with invalid buffer age %{public}d", bufferAge);
+            ROSEN_LOGE("RSPreComposeRegionManager with invalid buffer age %{public}d", bufferAge);
         }
         surfaceDirtyManager->IntersectDirtyRect(curSurface->GetOldDirtyInSurface());
         surfaceDirtyManager->UpdateDirty(useAligned);
@@ -259,7 +260,7 @@ void RSPreComposeRegionManager::CalcClipRects()
         Drawing::Region region;
 #endif
     for (auto& r : dirtyRects_) {
-        RS_LOGD("clip rect %{public}s", r.ToString().c_str());
+        RS_LOGD("RSPreComposeRegionManager clip rect %{public}s", r.ToString().c_str());
 #ifndef USE_ROSEN_DRAWING
         region.op(SkIRect::MakeXYWH(r.left_, r.top_, r.width_, r.height_),
             SkRegion::kUnion_Op);
@@ -289,12 +290,12 @@ void RSPreComposeRegionManager::UpdateDirtyRegion(std::vector<RSBaseRenderNode::
 
 void RSPreComposeRegionManager::GetOcclusion(Occlusion::Region& accumulatedRegion,
     VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
-    std::vector<NodeInfo> visNodes)
+    std::vector<NodeInfo>& visNodes)
 {
-    std::swap(accumulatedRegion, accumulatedRegion_);
-    std::swap(curVisVec, curVisVec_);
-    std::swap(pidVisMap, curVisMap_);
-    std::swap(visNodes, visNodes_);
+    accumulatedRegion = accumulatedRegion_;
+    curVisVec = curVisVec_;
+    pidVisMap = curVisMap_;
+    visNodes = visNodes_;
 }
 
 bool RSPreComposeRegionManager::IsDirty()
@@ -302,13 +303,14 @@ bool RSPreComposeRegionManager::IsDirty()
     return isDirty_;
 }
 
+RectI RSPreComposeRegionManager::GetNodeChangeDirtyRect()
+{
+    return dirtyManager_->GetDirtyRegion();
+}
+
 Occlusion::Region RSPreComposeRegionManager::GetVisibleDirtyRegion()
 {
-    auto surfaceDirtyRect = dirtyManager_->GetDirtyRegion();
-    Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,
-        surfaceDirtyRect.GetRight(), surfaceDirtyRect.GetBottom() };
-    Occlusion::Region surfaceDirtyRegion { dirtyRect };
-    return allVisibleDirtyRegion_.Or(surfaceDirtyRegion);
+    return allVisibleDirtyRegion_;
 }
 } // namespace Rosen
 } // namespace OHOS

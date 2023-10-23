@@ -45,20 +45,27 @@ void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRend
     std::swap(allSurfaceNodes_, allSurfaceNodes);
 
     std::unordered_set<NodeId> nodeIds;
-    for (auto node : allSurfaceNodes) {
+    for (auto node : allSurfaceNodes_) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
         if (surface == nullptr) {
             continue;
         }
-        ROSEN_LOGD("xxb node id %{public}" PRIu64 ", name %{public}s",
-            node->GetId(), surface->GetName().c_str());
+        ROSEN_LOGD("RSPreComposeElement %d xxb node id %{public}" PRIu64 ", name %{public}s",
+            id_, node->GetId(), surface->GetName().c_str());
         nodeIds.insert(node->GetId());
     }
     std::swap(nodeIds_, nodeIds);
 }
 
+bool RSPreComposeElement::IsUpdateImageEnd()
+{
+    ROSEN_LOGD("RSPreComposeElement %d", id_);
+    return isDone_;
+}
+
 void RSPreComposeElement::StartCalculateAndDrawImage()
 {
+    ROSEN_LOGD("RSPreComposeElement %d", id_);
     needDraw_ = true;
     lastOcclusionId_ = 0;
     getHwcNodesDone_ = false;
@@ -95,17 +102,31 @@ void RSPreComposeElement::ClipRect()
 #endif
 }
 
+void RSPreComposeElement::CalVisDirtyRegion()
+{
+    if (!isVisDirtyRegionUpdate_) {
+        visDirtyRegion_ = dirtyRegion_.Sub(aboveRegion_);
+        Occlusion::Rect dirtyRect { dirtyRect_.left_, dirtyRect_.top_,
+            dirtyRect_.GetRight(), dirtyRect_.GetBottom() };
+        Occlusion::Region surfaceDirtyRegion { dirtyRect };
+        visDirtyRegion_.OrSelf(surfaceDirtyRegion);
+        isVisDirtyRegionUpdate_ = true;
+    }
+}
+
 void RSPreComposeElement::UpdateDirtyRegion()
 {
     regionManager_->UpdateDirtyRegion(allSurfaceNodes_);
     isDirty_ = regionManager_->IsDirty();
     ClipRect();
     dirtyRegion_ = regionManager_->GetVisibleDirtyRegion();
+    dirtyRect_ = regionManager_->GetNodeChangeDirtyRect();
     regionManager_->GetOcclusion(accumulatedRegion_, curVisVec_, curVisMap_, visNodes_);
 }
 
 void RSPreComposeElement::UpdateImage()
 {
+    ROSEN_LOGD("RSPreComposeElement Update start id %d", id_);
     if (cacheSurface_ == nullptr) {
         ROSEN_LOGE("cacheSurface_ is nullptr");
         return;
@@ -119,11 +140,13 @@ void RSPreComposeElement::UpdateImage()
         }
         node->Process(visitor_);
     }
+    ROSEN_LOGD("RSPreComposeElement flush end id %d", id_);
     cacheSurface_->flushAndSubmit(true);
     cacheTexture_ = cacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
     UpdateHwcNodes();
     (void)RSBaseRenderUtil::WritePreComposeToPng(cacheSurface_);
     isDone_ = true;
+    ROSEN_LOGD("RSPreComposeElement Update end id %d", id_);
 }
 
 void RSPreComposeElement::UpdateNodes(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
@@ -244,7 +267,8 @@ void RSPreComposeElement::Reset()
 }
 
 void RSPreComposeElement::UpdateOcclusion(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
-    Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap)
+    Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
+    std::shared_ptr<RSPreComposeElement> next)
 {
     if (lastOcclusionId_ == focusNodeId_) {
         curVisVec.insert(curVisVec.end(), curVisVec_.begin(), curVisVec_.end());
@@ -268,10 +292,12 @@ void RSPreComposeElement::UpdateOcclusion(std::shared_ptr<RSSurfaceRenderNode> s
                 pidVisMap[tmpPid] = vis;
             }
         }
-        visDirtyRegion_ = dirtyRegion_.Sub(accumulatedRegion);
         visRegion_ = accumulatedRegion_.Sub(accumulatedRegion);
         aboveRegion_ = accumulatedRegion;
         accumulatedRegion.OrSelf(accumulatedRegion_);
+        next->aboveRegion_ = aboveRegion_;
+        next->visRegion_ = visRegion_;
+        ROSEN_LOGD("RSPreComposeElement vis Region %{public}s", visRegion_.GetRegionInfo().c_str());
     }
     lastOcclusionId_ = surfaceNode->GetId();
 }
@@ -313,11 +339,13 @@ void RSPreComposeElement::GetHwcNodes(std::shared_ptr<RSSurfaceRenderNode> surfa
 
 Occlusion::Region RSPreComposeElement::GetDirtyVisibleRegion()
 {
+    CalVisDirtyRegion();
     return visDirtyRegion_;
 }
 
 Occlusion::Region RSPreComposeElement::GetVisibleDirtyRegionWithGpuNodes()
 {
+    CalVisDirtyRegion();
     for (auto iter : hardwareNodes_) {
         if (iter.first->IsHardwareForcedDisabled() == true || iter.first->IsHardwareForcedDisabledByFilter() == true) {
             auto parent = iter.second;
@@ -336,6 +364,7 @@ Occlusion::Region RSPreComposeElement::GetVisibleDirtyRegionWithGpuNodes()
             gpuNodes_.push_back({ node, surfaceDirtyRegion });
         }
     }
+    ROSEN_LOGD("RSPreComposeElement dirtyRegion after gpu node %{public}s", visDirtyRegion_.GetRegionInfo().c_str());
     std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair> temp;
     std::swap(temp, hardwareNodes_);
     return visDirtyRegion_;
@@ -353,7 +382,7 @@ void RSPreComposeElement::UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas
         dirtyRects.emplace_back(RectI(rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_));
     }
     for (auto& r : dirtyRects) {
-        RS_LOGD("clip rect %{public}s", r.ToString().c_str());
+        ROSEN_LOGD("RSPreComposeElement clip rect %{public}s", r.ToString().c_str());
 #ifndef USE_ROSEN_DRAWING
         region.op(SkIRect::MakeXYWH(r.left_, r.top_, r.width_, r.height_),
             SkRegion::kUnion_Op);
@@ -396,6 +425,7 @@ bool RSPreComposeElement::ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RS
         if (needDraw_) {
             needDraw_ = false;
             if (visRegion_.IsEmpty()) {
+                ROSEN_LOGD("RSPreComposeElement visRegion is Empty");
                 return true;
             }
 #ifndef USE_ROSEN_DRAWING

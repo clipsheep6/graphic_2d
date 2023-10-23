@@ -45,8 +45,12 @@ public:
     Occlusion::Region GetLastVisibleDirtyRegionWithGpuNodes();
     bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
         uint32_t threadIndex);
+    void SetBufferAge(int32_t bufferAge);
 
 private:
+    void PushHistory(Occlusion::Region& region);
+    Occlusion::Region GetHistory(uint32_t index);
+    Occlusion::Region MergeHistory(uint32_t age, Occlusion::Region& dirtyRegion);
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     std::shared_ptr<RSPreComposeElement> current_ = nullptr;
@@ -55,6 +59,10 @@ private:
     int32_t elementCount_ = 0;
     bool canStartCurrentVsync_ = true;
     std::shared_ptr<RSPreComposeRegionManager> regionManager_;
+    std::vector<Occlusion::Region> dirtyHistory_;
+    Occlusion::Region visDirtyRegion_;
+    int32_t historyHead_ = -1;
+    uint32_t bufferAge_;
 };
 } // namespace Rosen
 } // namespace OHOS

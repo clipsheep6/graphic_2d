@@ -59,7 +59,7 @@ private:
     void UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas>& canvas,
         std::shared_ptr<RSSurfaceRenderNode> node, Occlusion::Region& surfaceDirtyRegion);
     ScreenInfo screenInfo_;
-    RenderContext* renderContext_;
+    RenderContext* renderContext_ = nullptr;
     std::shared_ptr<RSPaintFilterCanvas> mainCanvas_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::shared_ptr<RSUniRenderVisitor> displayVisitor_;

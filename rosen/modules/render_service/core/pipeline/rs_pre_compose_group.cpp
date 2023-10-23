@@ -18,9 +18,13 @@
 #include "rs_trace.h"
 #include "rs_base_render_util.h"
 
+namespace {
+    const unsigned HISTORY_QUEUE_MAX_SIZE = 4;
+}
+
 namespace OHOS {
 namespace Rosen {
-RSPreComposeGroup::RSPreComposeGroup()
+RSPreComposeGroup::RSPreComposeGroup() : bufferAge_(HISTORY_QUEUE_MAX_SIZE)
 {
     ROSEN_LOGD("RSPreComposeGroup()");
     regionManager_ = std::make_shared<RSPreComposeRegionManager>();
@@ -57,7 +61,7 @@ void RSPreComposeGroup::Init(ScreenInfo& info)
 {
     std::string name = "RSPreComposerThread";
     runner_ = AppExecFwk::EventRunner::Create(name);
-    handler_ = std::make_shared<AppExecFwk::EventHandler>();
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     runner_->Run();
     current_ = std::make_shared<RSPreComposeElement>(info, elementCount_++, regionManager_);
     last_ = std::make_shared<RSPreComposeElement>(info, elementCount_++, regionManager_);
@@ -112,13 +116,53 @@ Occlusion::Region RSPreComposeGroup::GetLastVisibleDirtyRegion()
 
 Occlusion::Region RSPreComposeGroup::GetLastVisibleDirtyRegionWithGpuNodes()
 {
-    return last_->GetVisibleDirtyRegionWithGpuNodes();
+    auto region = last_->GetVisibleDirtyRegionWithGpuNodes();
+    return MergeHistory(bufferAge_, region);
 }
 
 bool RSPreComposeGroup::ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
     uint32_t threadIndex)
 {
     return last_->ProcessNode(node, canvas, threadIndex);
+}
+
+void RSPreComposeGroup::SetBufferAge(int32_t bufferAge)
+{
+    if (bufferAge < 0) {
+        ROSEN_LOGD("change error bufferAge %d to 0", bufferAge);
+        bufferAge = 0;
+    }
+    bufferAge_ = bufferAge;
+}
+
+Occlusion::Region RSPreComposeGroup::MergeHistory(uint32_t age, Occlusion::Region& dirtyRegion)
+{
+    PushHistory(dirtyRegion);
+    if (age == 0 || age > HISTORY_QUEUE_MAX_SIZE) {
+        return dirtyRegion;
+    }
+    for (uint32_t i = HISTORY_QUEUE_MAX_SIZE; i > HISTORY_QUEUE_MAX_SIZE - age; --i) {
+        auto region = GetHistory((i - 1));
+        if (region.IsEmpty()) {
+            continue;
+        }
+        dirtyRegion.OrSelf(region);
+    }
+    return dirtyRegion;
+}
+
+void RSPreComposeGroup::PushHistory(Occlusion::Region& dirtyRegion)
+{
+    int32_t next = (historyHead_ + 1) % HISTORY_QUEUE_MAX_SIZE;
+    dirtyHistory_[next] = dirtyRegion;
+    historyHead_ = next;
+}
+
+Occlusion::Region RSPreComposeGroup::GetHistory(uint32_t i)
+{
+    i %= HISTORY_QUEUE_MAX_SIZE;
+    i = (i + historyHead_) % HISTORY_QUEUE_MAX_SIZE;
+    return dirtyHistory_[i];
 }
 } // namespace Rosen
 } // namespace OHOS

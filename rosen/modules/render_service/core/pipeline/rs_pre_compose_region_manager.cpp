@@ -35,7 +35,6 @@ bool RSPreComposeRegionManager::CheckNodeChange()
 {
     bool isNodeChange = false;
     std::vector<NodeId> curSurfaceIds;
-    std::unordered_map<NodeId, Occlusion::Region> curSurfaceVisiableRegion;
     curSurfaceIds.reserve(curAllNodes_.size());
     for (auto node = curAllNodes_.begin(); node != curAllNodes_.end(); ++node) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*node);
@@ -43,13 +42,24 @@ bool RSPreComposeRegionManager::CheckNodeChange()
             continue;
         }
         curSurfaceIds.emplace_back(surface->GetId());
-        curSurfaceVisiableRegion[surface->GetId()] = surface->GetVisibleRegion();
     }
     isNodeChange = lastSurfaceIds_ != curSurfaceIds;
     isDirty_ |= isNodeChange;
     std::swap(curSurfaceIds, curSurfaceIds_);
-    std::swap(curSurfaceVisiableRegion, curSurfaceVisiableRegion_);
     return isNodeChange;
+}
+
+void RSPreComposeRegionManager::GetChangedNodeVisRegion()
+{
+    std::unordered_map<NodeId, Occlusion::Region> curSurfaceVisiableRegion;
+    for (auto node = curAllNodes_.begin(); node != curAllNodes_.end(); ++node) {
+        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*node);
+        if (surface == nullptr) {
+            continue;
+        }
+        curSurfaceVisiableRegion[surface->GetId()] = surface->GetVisibleRegion();
+    }
+    std::swap(curSurfaceVisiableRegion, curSurfaceVisiableRegion_);
 }
 
 bool RSPreComposeRegionManager::CheckSurfaceVisiable(OcclusionRectISet& occlusionSurfaces,
@@ -57,6 +67,7 @@ bool RSPreComposeRegionManager::CheckSurfaceVisiable(OcclusionRectISet& occlusio
 {
     size_t beforeSize = occlusionSurfaces.size();
     occlusionSurfaces.insert(curSurface->GetDstRect());
+    ROSEN_LOGD("visable %d", occlusionSurfaces.size() > beforeSize);
     return occlusionSurfaces.size() > beforeSize ? true : false;
 }
 
@@ -101,6 +112,7 @@ void RSPreComposeRegionManager::CalcOcclusion()
     std::swap(curVisMap, curVisMap_);
     std::swap(visNodes, visNodes_);
     std::swap(accumulatedRegion_, accumulatedRegion);
+    GetChangedNodeVisRegion();
 }
 
 void RSPreComposeRegionManager::CalcDirtyRegionByNodeChange()
@@ -110,11 +122,11 @@ void RSPreComposeRegionManager::CalcDirtyRegionByNodeChange()
     int32_t lastPos = 0;
     while (curPos < curSurfaceIds_.size() || lastPos < lastSurfaceIds_.size()) {
         if (curPos == curSurfaceIds_.size()) {
-            regions.emplace_back(lastSurfaceVisiableRegion_[lastPos++]);
+            regions.emplace_back(lastSurfaceVisiableRegion_[lastSurfaceIds_[lastPos++]]);
         } else if (lastPos == lastSurfaceIds_.size()) {
-            regions.emplace_back(curSurfaceVisiableRegion_[curPos++]);
+            regions.emplace_back(curSurfaceVisiableRegion_[curSurfaceIds_[curPos++]]);
         } else if (curSurfaceIds_[curPos] != lastSurfaceIds_[lastPos]) {
-            regions.emplace_back(lastSurfaceVisiableRegion_[lastPos++]);
+            regions.emplace_back(lastSurfaceVisiableRegion_[lastSurfaceIds_[lastPos++]]);
         } else {
             lastPos++;
             curPos++;
@@ -124,10 +136,12 @@ void RSPreComposeRegionManager::CalcDirtyRegionByNodeChange()
         ROSEN_LOGD("CalcGlobalDirtyRegion merge Surface closed %{public}s", region.GetRegionInfo().c_str());
         for (auto changedRect : region.GetRegionRects()) {
             if (!changedRect.IsEmpty()) {
-                dirtyManager_->MergeDirtyRect(RectI());
+                dirtyManager_->MergeDirtyRect(RectI(changedRect.left_, changedRect.top_,
+                    changedRect.right_ - changedRect.left_, changedRect.bottom_ - changedRect.top_));
             }
         }
     }
+    ROSEN_LOGD("global dirty region %{public}s", dirtyManager_->GetDirtyRegion().ToString().c_str());
 }
 
 void RSPreComposeRegionManager::MergeDirtyHistory()
@@ -261,6 +275,7 @@ void RSPreComposeRegionManager::CalcClipRects()
 
 void RSPreComposeRegionManager::UpdateDirtyRegion(std::vector<RSBaseRenderNode::SharedPtr>& curAllNodes)
 {
+    dirtyManager_->Clear();
     curAllNodes_ = curAllNodes;
     CalcOcclusion();
     CalcDirtyRegionByNodeChange();

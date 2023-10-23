@@ -75,6 +75,10 @@ void RSPreComposeElement::SetParams(std::list<std::shared_ptr<RSSurfaceRenderNod
 
 void RSPreComposeElement::ClipRect()
 {
+    if (canvas_ == nullptr) {
+        ROSEN_LOGE("canvas is nullptr");
+        return;
+    }
 #ifndef USE_ROSEN_DRAWING
     SkRegion& region = regionManager_->GetClipRegion();
     if (region.isEmpty()) {

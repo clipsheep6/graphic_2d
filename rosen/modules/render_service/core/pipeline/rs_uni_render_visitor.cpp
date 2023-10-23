@@ -2018,6 +2018,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             int bufferAge = renderFrame_->GetBufferAge();
             RS_OPTIONAL_TRACE_END();
             RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge, isDirtyRegionAlignedEnable_);
+            if (isPreComposeOn_) {
+                RSPreComposeManager::GetInstance()->SetBufferAge(bufferAge);
+            }
             Occlusion::Region dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(
                 displayNodePtr, isDirtyRegionAlignedEnable_);
             if (isPreComposeOn_) {
@@ -2038,6 +2041,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             if (!isDirtyRegionAlignedEnable_) {
                 auto disH = screenInfo_.GetRotatedHeight();
                 for (auto& r : rects) {
+                    RS_LOGD("clip rect %{public}s", r.ToString().c_str());
 #ifndef USE_ROSEN_DRAWING
                     region.op(SkIRect::MakeXYWH(r.left_, disH - r.GetBottom(), r.width_, r.height_),
                         SkRegion::kUnion_Op);

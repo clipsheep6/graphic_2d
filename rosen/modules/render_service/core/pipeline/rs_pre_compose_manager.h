@@ -42,6 +42,7 @@ public:
     Occlusion::Region GetLastVisibleDirtyRegionWithGpuNodes();
     bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
         uint32_t threadIndex);
+    void SetBufferAge(int32_t bufferAge);
 
 private:
     RSPreComposeManager() = default;

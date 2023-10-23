@@ -35,7 +35,7 @@ sptr<RSPreComposeManager> RSPreComposeManager::GetInstance()
 void RSPreComposeManager::UpdateLastAndCurrentVsync()
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return;
     }
     rsPreComposeGroup_->UpdateLastAndCurrentVsync();
@@ -111,7 +111,7 @@ std::list<std::shared_ptr<RSSurfaceRenderNode>> RSPreComposeManager::GetSurfaceN
 void RSPreComposeManager::UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return;
     }
     rsPreComposeGroup_->UpdateNodesByLastVsync(curAllSurfaces);
@@ -121,7 +121,7 @@ void RSPreComposeManager::UpdateOcclusionByLastVsync(std::shared_ptr<RSSurfaceRe
     Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap)
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return;
     }
     rsPreComposeGroup_->UpdateOcclusionByLastVsync(surfaceNode, accumulatedRegion, curVisVec, pidVisMap);
@@ -130,7 +130,7 @@ void RSPreComposeManager::UpdateOcclusionByLastVsync(std::shared_ptr<RSSurfaceRe
 bool RSPreComposeManager::LastVsyncIsDirty()
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return false;
     }
     return rsPreComposeGroup_->LastVsyncIsDirty();
@@ -140,7 +140,7 @@ void RSPreComposeManager::GetLastHwcNodes(std::shared_ptr<RSSurfaceRenderNode> s
     std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair>& prevHwcEnabledNodes)
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return;
     }
     rsPreComposeGroup_->GetLastHwcNodes(surfaceNode, prevHwcEnabledNodes);
@@ -149,16 +149,25 @@ void RSPreComposeManager::GetLastHwcNodes(std::shared_ptr<RSSurfaceRenderNode> s
 Occlusion::Region RSPreComposeManager::GetLastVisibleDirtyRegion()
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return {};
     }
     return rsPreComposeGroup_->GetLastVisibleDirtyRegion();
 }
 
+void RSPreComposeManager::SetBufferAge(int32_t bufferAge)
+{
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
+        return;
+    }
+    rsPreComposeGroup_->SetBufferAge(bufferAge);
+}
+
 Occlusion::Region RSPreComposeManager::GetLastVisibleDirtyRegionWithGpuNodes()
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return {};
     }
     return rsPreComposeGroup_->GetLastVisibleDirtyRegionWithGpuNodes();
@@ -168,7 +177,7 @@ bool RSPreComposeManager::ProcessLastVsyncNode(RSBaseRenderNode& node, std::shar
     uint32_t threadIndex)
 {
     if (rsPreComposeGroup_ == nullptr) {
-        ROSEN_LOGD("rsPreComposeGroup_ is nullptr");
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
         return false;
     }
     return rsPreComposeGroup_->ProcessLastVsyncNode(node, canvas, threadIndex);

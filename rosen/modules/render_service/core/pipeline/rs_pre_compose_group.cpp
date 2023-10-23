@@ -28,6 +28,7 @@ RSPreComposeGroup::RSPreComposeGroup() : bufferAge_(HISTORY_QUEUE_MAX_SIZE)
 {
     ROSEN_LOGD("RSPreComposeGroup()");
     regionManager_ = std::make_shared<RSPreComposeRegionManager>();
+    dirtyHistory_.resize(HISTORY_QUEUE_MAX_SIZE);
 }
 
 RSPreComposeGroup::~RSPreComposeGroup()

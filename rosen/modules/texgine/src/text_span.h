@@ -64,6 +64,9 @@ public:
         const TextStyle &xs);
     void PaintDecoration(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY,
         const TextStyle &xs);
+    void ResetPointNature(double &left, double &LeftVerticalcoord, double &right, double &rightVerticalcoord);
+    void ResetPenPrimaryAttibute(Drawing::Pen &pen, const TextStyle &xs);
+    void SetPathNature(Drawing::Path &wavy, const TextStyle &xs);
 #endif
 
     std::shared_ptr<TextSpan> CloneWithCharGroups(CharGroups const &cgs);
@@ -81,6 +84,8 @@ public:
     std::shared_ptr<TexgineTextBlob> textBlob_ = nullptr;
     std::vector<double> glyphWidths_;
     Drawing::TextBlob skTextBlob_;
+    Drawing::Point pointL_;
+    Drawing::Point pointR_;
     CharGroups cgs_;
 
     double preBreak_ = 0.0;

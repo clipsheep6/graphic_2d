@@ -21,6 +21,7 @@
 #include "effect/filter.h"
 #include "effect/path_effect.h"
 #include "utils/rect.h"
+#include "utils/drawing_macros.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -87,9 +88,8 @@ public:
 
     void Reset();
 
-    friend bool operator==(const Pen& p1, const Pen& p2);
-    friend bool operator!=(const Pen& p1, const Pen& p2);
-
+    friend DRAWING_API bool operator==(const Pen& p1, const Pen& p2);
+    friend DRAWING_API bool operator!=(const Pen& p1, const Pen& p2);
 private:
     scalar width_;
     scalar miterLimit_;

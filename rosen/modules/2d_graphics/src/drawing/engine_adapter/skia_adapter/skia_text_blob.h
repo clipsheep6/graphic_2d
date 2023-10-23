@@ -45,7 +45,6 @@ public:
     std::shared_ptr<Data> Serialize(const SkSerialProcs& procs) const;
 
     static std::shared_ptr<TextBlob> Deserialize(const void* data, size_t size, const SkDeserialProcs& procs);
-    void SetSkTextBlob(const sk_sp<SkTextBlob> textBlob);
 
     void DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob) override;
 private:

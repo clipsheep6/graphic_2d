@@ -22,7 +22,7 @@ sk_sp<SkTextBlob> TexgineTextBlob::GetTextBlob() const
 {
 #ifdef USE_ROSEN_DRAWING
     return std::move(textBlob_);
-#else 
+#else
      return textBlob_;
 #endif
 }

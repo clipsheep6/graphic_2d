@@ -167,7 +167,7 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
 #ifndef USE_GRAPHIC_TEXT_GINE
     paint.SetARGB(MAXRGB, MAXRGB, 0, 0);
 #else
-    paint.SetAlpha(255);
+    paint.SetAlpha(MAXRGB);
 #endif
     paint.SetColor(xs.color);
     if (xs.background.has_value()) {
@@ -288,7 +288,7 @@ void TextSpan::Paint(Drawing::Canvas &recordingCanvas, double offsetX, double of
 #ifndef USE_GRAPHIC_TEXT_GINE
     brush.SetARGB(MAXRGB, MAXRGB, 0, 0);
 #else
-    brush.SetAlpha(255);
+    brush.SetAlpha(MAXRGB);
 #endif
     brush.SetColor(xs.color);
     if (xs.backPen.has_value()) {
@@ -336,72 +336,86 @@ void TextSpan::PaintDecoration(Drawing::Canvas &recordingCanvas, double offsetX,
     }
 }
 
-void TextSpan::PaintDecorationStyle(Drawing::Canvas &recordingCanvas, double left, double right, double y,
-        const TextStyle &xs)
+void TextSpan::ResetPointNature(double &left, double &LeftVerticalcoord, double &right, double &rightVerticalcoord)
 {
-    Pen pen;
+    pointL_.SetX(static_cast<float>(left));
+    pointL_.SetY(static_cast<float>(LeftVerticalcoord));
+    pointR_.SetX(static_cast<float>(right));
+    return pointR_.SetY(static_cast<float>(rightVerticalcoord));
+}
+
+void TextSpan::ResetPenPrimaryAttibute(Pen &pen, const TextStyle &xs)
+{
     pen.SetAntiAlias(true);
     pen.SetARGB(MAXRGB, MAXRGB, 0, 0);
     pen.SetColor(xs.decorationColor.value_or(xs.color));
-    pen.SetWidth(xs.decorationThicknessScale);
-    Point pointL(static_cast<float>(left), static_cast<float>(y));
-    Point pointR(static_cast<float>(right), static_cast<float>(y));
+    return pen.SetWidth(xs.decorationThicknessScale);
+}
+
+void TextSpan::SetPathNature(Drawing::Path &wavy, const TextStyle &xs)
+{
+    float thickness = xs.decorationThicknessScale;
+    wavy.MoveTo(POINTX0, (POINTY2 - thickness));
+    wavy.QuadTo(POINTX1, (POINTY0 - thickness), POINTX2, (POINTY2 - thickness));
+    wavy.LineTo(POINTX3, (POINTY4 - thickness));
+    wavy.QuadTo(POINTX4, (POINTY6 - thickness), POINTX5, (POINTY4 - thickness));
+    wavy.LineTo(POINTX6, (POINTY2 - thickness));
+    wavy.LineTo(POINTX6, (POINTY2 + thickness));
+    wavy.LineTo(POINTX5, (POINTY4 + thickness));
+    wavy.QuadTo(POINTX4, (POINTY6 + thickness), POINTX3, (POINTY4 + thickness));
+    wavy.LineTo(POINTX2, (POINTY2 + thickness));
+    wavy.QuadTo(POINTX1, (POINTY0 + thickness), POINTX0, (POINTY2 + thickness));
+    return wavy.LineTo(POINTX0, (POINTY2 - thickness));
+}
+
+void TextSpan::PaintDecorationStyle(Drawing::Canvas &recordingCanvas, double &left, double &right,
+    double &y, const TextStyle &xs)
+{
+    Pen pen;
+    ResetPenPrimaryAttibute(pen, xs);
+    ResetPointNature(left, y, right, y);
     switch (xs.decorationStyle) {
         case TextDecorationStyle::SOLID:
             break;
         case TextDecorationStyle::DOUBLE:
             recordingCanvas.AttachPen(pen);
-            recordingCanvas.DrawLine(pointL, pointR);
+            recordingCanvas.DrawLine(pointL_, pointR_);
             recordingCanvas.DetachPen();
             y += OFFSETY;
             break;
         case TextDecorationStyle::DOTTED: {
             Path pathCircle;
-            Drawing::Rect customRect(0, 0, WIDTH_SCALAR,HEIGHT_SCALAR);
+            Drawing::Rect customRect(0, 0, WIDTH_SCALAR, HEIGHT_SCALAR);
             pathCircle.AddOval(customRect);
-            std::shared_ptr<PathEffect> pathEffect = std::make_shared<PathEffect>(PathEffect::PathEffectType::PATH_DASH, 
-            pathCircle , DOTTED_ADVANCE, PHASE, PathDashStyle::ROTATE);
+            std::shared_ptr<PathEffect> pathEffect = std::make_shared<PathEffect>(
+                PathEffect::PathEffectType::PATH_DASH, pathCircle, DOTTED_ADVANCE, PHASE, PathDashStyle::ROTATE);
             pen.SetPathEffect(pathEffect);
             break;
         }
         case TextDecorationStyle::DASHED: {
             const float intervals[2] = {WIDTH_SCALAR, HEIGHT_SCALAR};
-            std::shared_ptr<PathEffect> pathEffect = std::make_shared<PathEffect>(PathEffect::PathEffectType::DASH, 
-            intervals, COUNT, PHASE);
+            std::shared_ptr<PathEffect> pathEffect = std::make_shared<PathEffect>(
+                PathEffect::PathEffectType::DASH, intervals, COUNT, PHASE);
             pen.SetPathEffect(pathEffect);
             recordingCanvas.AttachPen(pen);
             break;
         }
         case TextDecorationStyle::WAVY: {
             Path wavy;
-            float thickness = xs.decorationThicknessScale;
-            wavy.MoveTo(POINTX0, (POINTY2 - thickness));
-            wavy.QuadTo(POINTX1, (POINTY0 - thickness), POINTX2, (POINTY2 - thickness));
-            wavy.LineTo(POINTX3, (POINTY4 - thickness));
-            wavy.QuadTo(POINTX4, (POINTY6 - thickness), POINTX5, (POINTY4 - thickness));
-            wavy.LineTo(POINTX6, (POINTY2 - thickness));
-            wavy.LineTo(POINTX6, (POINTY2 + thickness));
-            wavy.LineTo(POINTX5, (POINTY4 + thickness));
-            wavy.QuadTo(POINTX4, (POINTY6 + thickness), POINTX3, (POINTY4 + thickness));
-            wavy.LineTo(POINTX2, (POINTY2 + thickness));
-            wavy.QuadTo(POINTX1, (POINTY0 + thickness), POINTX0, (POINTY2 + thickness));
-            wavy.LineTo(POINTX0, (POINTY2 - thickness));
-            std::shared_ptr<PathEffect> pathEffect = std::make_shared<PathEffect>(PathEffect::PathEffectType::PATH_DASH, 
-            wavy , WAVY_ADVANCE, PHASE, PathDashStyle::ROTATE);
+            SetPathNature(wavy, xs);
+            std::shared_ptr<PathEffect> pathEffect = std::make_shared<PathEffect>(
+                PathEffect::PathEffectType::PATH_DASH, wavy, WAVY_ADVANCE, PHASE, PathDashStyle::ROTATE);
             pen.SetPathEffect(pathEffect);
             recordingCanvas.AttachPen(pen);
             break;
         }
     }
-    pointL.SetX(static_cast<float>(left));
-    pointL.SetY(static_cast<float>(y));
-    pointR.SetX(static_cast<float>(right));
-    pointR.SetY(static_cast<float>(y));
-    recordingCanvas.DrawLine(pointL, pointR);
+    ResetPointNature(left, y, right, y);
+    recordingCanvas.DrawLine(pointL_, pointR_);
     recordingCanvas.DetachPen();
 }
 
-void TextSpan::PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY, 
+void TextSpan::PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY,
     const std::vector<TextShadow> &shadows)
 {
     for (const auto &shadow : shadows) {
@@ -414,8 +428,8 @@ void TextSpan::PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, dou
         Brush brush;
         brush.SetAntiAlias(true);
         brush.SetColor(shadow.color);
-        std::shared_ptr<MaskFilter> maskFilter = std::make_shared<MaskFilter>(MaskFilter::FilterType::BLUR, 
-        BlurType::NORMAL, shadow.blurLeave, false);
+        std::shared_ptr<MaskFilter> maskFilter = std::make_shared<MaskFilter>(MaskFilter::FilterType::BLUR,
+            BlurType::NORMAL, shadow.blurLeave, false);
         Filter filter;
         filter.SetMaskFilter(maskFilter);
         brush.SetFilter(filter);

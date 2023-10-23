@@ -83,9 +83,6 @@ public:
 #else
     virtual void Paint(Drawing::Canvas& canvas, double offsetX, double offsetY) = 0;
 #endif
-
-
-
 private:
     friend void ReportMemoryUsage(const std::string& member, const AnySpan& that, const bool needThis);
     void ReportMemoryUsage(const std::string& member, const bool needThis) const override;

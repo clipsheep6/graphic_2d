@@ -39,6 +39,7 @@ public:
 
     void SetIndents(const std::vector<float> &indents) override;
     void Layout(double width) override;
+
     void Paint(SkCanvas *canvas, double x, double y) override;
     void Paint(Drawing::Canvas *drawCanvas, double x, double y) override;
 

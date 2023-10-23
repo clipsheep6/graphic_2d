@@ -579,7 +579,7 @@ void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY
     }
 }
 #else
-void TypographyImpl::Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY)//
+void TypographyImpl::Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY)
 {
     for (auto &metric : lineMetrics_) {
         for (auto &span : metric.lineSpans) {

@@ -28,6 +28,7 @@ config("2d_graphics_config") {
     "$drawing_src_dir/engine_adapter",
     "$platform_dir/image_native",
     "$rosen_root/modules/render_service_base/include",
+    "$rosen_root/modules/texgine/texgine_drawing/src",
   ]
 }
 
@@ -376,13 +377,11 @@ if (!is_cross_platform_build) {
       }
       deps = [ ":2d_graphics_source_$platform" ]
       public_configs = [ ":export_config" ]
-
       if (platform == "ohos") {
         version_script = "2d_graphics.versionscript"
         symlink_target_name = [ "libnative_drawing.so" ]
         innerapi_tags = [ "platformsdk_indirect" ]
       }
-
       part_name = "graphic_2d"
       subsystem_name = "graphic"
     }
@@ -405,7 +404,10 @@ if (enable_text_gine) {
     if (platform == "mingw") {
       platform = "windows"
     }
-    deps = [ ":2d_graphics_source_$platform" ]
+    deps = [
+      ":2d_graphics_source_$platform",
+      "$rosen_root/modules/texgine/texgine_drawing:libtexgine_drawing",
+    ]
     public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     defines += [ "USE_GRAPHIC_TEXT_GINE" ]
     public_configs = [ ":2d_graphics_config" ]

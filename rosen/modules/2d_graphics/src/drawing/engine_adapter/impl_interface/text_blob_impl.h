@@ -33,8 +33,7 @@ public:
     {
         return AdapterType::BASE_INTERFACE;
     }
-}
-;
+};
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

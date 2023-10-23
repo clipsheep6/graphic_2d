@@ -56,11 +56,6 @@ std::shared_ptr<TextBlob> SkiaTextBlob::Deserialize(const void* data, size_t siz
     return std::make_shared<TextBlob>(textBlobImpl);
 }
 
-void SkiaTextBlob::SetSkTextBlob(const sk_sp<SkTextBlob> skTextBlob)
-{
-    skTextBlob_ = skTextBlob; 
-}
-
 void SkiaTextBlob::DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob)
 {
     if (texgineTextBlob.DetectionEffectiveness()) {

@@ -24,7 +24,7 @@
 #include "texgine/font_providers.h"
 #include "texgine/any_span.h"
 #include "text_span.h"
-#include "utils/point.h"
+
 
 namespace OHOS {
 namespace Rosen {

@@ -299,7 +299,7 @@ void PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offset
     CheckPointer();
     if (ts_) {
         ts_->PaintShadow(recordingCanvas, offsetX, offsetY, xs_.shadows);
-    }    
+    }
 }
 #endif
 

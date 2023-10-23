@@ -65,7 +65,7 @@ public:
 
     // This function is similar to DrawFilter(), but instead of drawing anything on the canvas, it simply returns the
     // cache data. This is used with effect component in RSPropertiesPainter::DrawBackgroundEffect.
-    const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> GeneratedCachedEffectData(RSPaintFilterCanvas& canvas,
+    const std::shared_ptr<RSCachedEffectData> GeneratedCachedEffectData(RSPaintFilterCanvas& canvas,
         const std::shared_ptr<RSSkiaFilter>& filter, const std::optional<SkIRect>& srcRect = std::nullopt,
         const std::optional<SkIRect>& dstRect = std::nullopt);
 
@@ -108,7 +108,7 @@ private:
         }
 
         void InitTask(std::shared_ptr<RSSkiaFilter> filter,
-            std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot, SkISize size)
+            std::shared_ptr<RSCachedEffectData> cachedSnapshot, SkISize size)
         {
             filter_ = filter;
             cachedSnapshot_ = cachedSnapshot;
@@ -153,7 +153,7 @@ private:
         sk_sp<SkSurface> cacheSurface_ = nullptr;
         std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
         GrBackendTexture cacheBackendTexture_;
-        std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot_ = nullptr;
+        std::shared_ptr<RSCachedEffectData> cachedSnapshot_ = nullptr;
         GrBackendTexture resultBackendTexture_;
         SkISize surfaceSize_;
         std::shared_ptr<RSSkiaFilter> filter_ = nullptr;
@@ -179,8 +179,8 @@ private:
 
     // We keep both the snapshot and filtered snapshot in the cache, and clear unneeded one in next frame.
     // Note: rect in cachedSnapshot_ and cachedFilteredSnapshot_ is in device coordinate.
-    std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot_ = nullptr;
-    std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedFilteredSnapshot_ = nullptr;
+    std::shared_ptr<RSCachedEffectData> cachedSnapshot_ = nullptr;
+    std::shared_ptr<RSCachedEffectData> cachedFilteredSnapshot_ = nullptr;
 
     // Hash of previous filter, used to determine if we need to invalidate cachedFilteredSnapshot_.
     uint32_t cachedFilterHash_ = 0;

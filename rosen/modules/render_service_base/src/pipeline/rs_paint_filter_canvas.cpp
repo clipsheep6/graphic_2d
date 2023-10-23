@@ -892,12 +892,12 @@ SkCanvas::SaveLayerStrategy RSPaintFilterCanvas::getSaveLayerStrategy(const Save
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSPaintFilterCanvas::SetEffectData(const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& effectData)
+void RSPaintFilterCanvas::SetEffectData(const std::shared_ptr<RSCachedEffectData>& effectData)
 {
     envStack_.top().effectData_ = effectData;
 }
 
-const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& RSPaintFilterCanvas::GetEffectData() const
+const std::shared_ptr<RSCachedEffectData>& RSPaintFilterCanvas::GetEffectData() const
 {
     return envStack_.top().effectData_;
 }
@@ -915,11 +915,11 @@ RSPaintFilterCanvas::CanvasStatus RSPaintFilterCanvas::GetCanvasStatus() const
 }
 #endif
 
-RSPaintFilterCanvas::CachedEffectData::CachedEffectData(sk_sp<SkImage>&& image, const SkIRect& rect)
+RSCachedEffectData::RSCachedEffectData(sk_sp<SkImage>&& image, const SkIRect& rect)
     : cachedImage_(image), cachedRect_(rect)
 {}
 
-RSPaintFilterCanvas::CachedEffectData::~CachedEffectData() = default;
+RSCachedEffectData::~RSCachedEffectData() = default;
 
 void RSPaintFilterCanvas::SetIsParallelCanvas(bool isParallel)
 {

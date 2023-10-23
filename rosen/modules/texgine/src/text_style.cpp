@@ -69,7 +69,9 @@ bool TextStyle::operator ==(TextStyle const &rhs) const
            fontStyle == rhs.fontStyle &&
            fontFeature == rhs.fontFeature &&
            letterSpacing == rhs.letterSpacing &&
-           wordSpacing == rhs.wordSpacing;
+           wordSpacing == rhs.wordSpacing &&
+           backPen == rhs.backPen &&
+           forePen == rhs.forePen;
 }
 } // namespace TextEngine
 } // namespace Rosen

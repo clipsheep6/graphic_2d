@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace Rosen {
 std::unique_ptr<TypographyCreate> TypographyCreate::Create(const TypographyStyle& style,
-    std::shared_ptr<FontCollection> collection)
+    std::shared_ptr<OHOS::Rosen::FontCollection> collection)
 {
     return std::make_unique<AdapterTextEngine::TypographyCreate>(style, collection);
 }
@@ -83,11 +83,15 @@ public:
     {
         return span_.baselineOffset;
     }
-
+#ifndef USE_ROSEN_DRAWING 
     void Paint(TextEngine::TexgineCanvas &canvas, double offsetX, double offsetY) override
     {
     }
-
+#else
+    void Paint(Drawing::Canvas& canvas, double offsetX, double offsetY) override
+    {
+    }
+#endif
 private:
     PlaceholderSpan span_;
 };

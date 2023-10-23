@@ -24,6 +24,7 @@
 #include "texgine/font_providers.h"
 #include "texgine/any_span.h"
 #include "text_span.h"
+#include "utils/point.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -67,8 +68,14 @@ public:
     void AdjustOffsetX(double offset) noexcept(true);
     void AdjustOffsetY(double offset) noexcept(true);
 
+#ifndef USE_ROSEN_DRAWING
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
     void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
+#else
+    void Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY) noexcept(false);
+    void PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY) noexcept(false);
+#endif
+
     bool IsRTL() const noexcept(false);
     bool IsHardBreak() const noexcept(false);
 

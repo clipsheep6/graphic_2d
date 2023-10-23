@@ -221,7 +221,7 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
                 as_IB(filteredSnapshot)->hintCacheGpuResource();
             }
             cachedFilteredSnapshot_ =
-                std::make_shared<RSPaintFilterCanvas::CachedEffectData>(std::move(filteredSnapshot), filteredRect);
+                std::make_shared<RSCachedEffectData>(std::move(filteredSnapshot), filteredRect);
             cachedFilterHash_ = filter->Hash();
             task_->SetStatus(CacheProcessStatus::WAITING);
         } else {
@@ -237,7 +237,7 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
     CompactCache(shouldClearFilteredCache);
 }
 
-const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> RSFilterCacheManager::GeneratedCachedEffectData(
+const std::shared_ptr<RSCachedEffectData> RSFilterCacheManager::GeneratedCachedEffectData(
     RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const std::optional<SkIRect>& srcRect,
     const std::optional<SkIRect>& dstRect)
 {
@@ -298,7 +298,7 @@ void RSFilterCacheManager::TakeSnapshot(
 
     // Update the cache state.
     snapshotRegion_ = RectI(srcRect.x(), srcRect.y(), srcRect.width(), srcRect.height());
-    cachedSnapshot_ = std::make_unique<RSPaintFilterCanvas::CachedEffectData>(std::move(snapshot), snapshotIBounds);
+    cachedSnapshot_ = std::make_unique<RSCachedEffectData>(std::move(snapshot), snapshotIBounds);
 
     // If the cached image is larger than threshold, we will increase the cache update interval, which is configurable
     // by `hdc shell param set persist.sys.graphic.filterCacheUpdateInterval <interval>`, the default value is 1.
@@ -342,7 +342,7 @@ void RSFilterCacheManager::GenerateFilteredSnapshot(
         as_IB(filteredSnapshot)->hintCacheGpuResource();
     }
     cachedFilteredSnapshot_ =
-        std::make_shared<RSPaintFilterCanvas::CachedEffectData>(std::move(filteredSnapshot), offscreenRect);
+        std::make_shared<RSCachedEffectData>(std::move(filteredSnapshot), offscreenRect);
     cachedFilterHash_ = filter->Hash();
 }
 
@@ -411,7 +411,7 @@ const RectI& RSFilterCacheManager::GetCachedImageRegion() const
     return IsCacheValid() ? snapshotRegion_ : emptyRect;
 }
 
-inline static bool IsCacheInvalid(const RSPaintFilterCanvas::CachedEffectData& cache, RSPaintFilterCanvas& canvas)
+inline static bool IsCacheInvalid(const RSCachedEffectData& cache, RSPaintFilterCanvas& canvas)
 {
     return cache.cachedImage_ == nullptr || !cache.cachedImage_->isValid(canvas.recordingContext());
 }

@@ -1228,7 +1228,7 @@ void RSPropertiesPainter::DrawBackgroundEffect(
         ROSEN_LOGE("RSPropertiesPainter::DrawBackgroundEffect imageCache snapshot null");
         return;
     }
-    auto data = std::make_shared<RSPaintFilterCanvas::CachedEffectData>(std::move(imageCache), std::move(imageRect));
+    auto data = std::make_shared<RSCachedEffectData>(std::move(imageCache), std::move(imageRect));
     canvas.SetEffectData(std::move(data));
 }
 #else

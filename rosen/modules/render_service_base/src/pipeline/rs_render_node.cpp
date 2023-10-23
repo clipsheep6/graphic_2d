@@ -582,13 +582,7 @@ bool RSRenderNode::Update(
             modifier->Apply(context);
         }
     }
-    if (dirty) {
-        for (auto& value : propertyDrawablesVec_) {
-            if (value) {
-                value->OnBoundsMatrixChange(renderProperties_);
-            }
-        }
-    }
+    // PLANNING: only update bounds matrix drawable
     isDirtyRegionUpdated_ = false;
     isLastVisible_ = ShouldPaint();
     renderProperties_.ResetDirty();
@@ -1001,9 +995,20 @@ bool RSRenderNode::ApplyModifiers()
     }
 
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
+        // Collect Dirty Slots
+        auto dirtySlots = RSPropertyDrawable::GenerateDirtySlots(dirtyTypes_);
+        // no dirty slots except INVALID
+        if (dirtySlots.lower_bound(RSPropertyDrawableSlot::BOUNDS_MATRIX) == dirtySlots.end()) {
+            return false;
+        }
         // Generate drawable
         RSPropertyDrawableGenerateContext drawableContext(*this);
-        RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, drawableVecStatus_, dirtyTypes_);
+        bool drawableChanged =
+            RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, dirtySlots);
+        if (drawableChanged) {
+            // if any drawables changed, update save/clip/restore
+            RSPropertyDrawable::UpdateSaveRestore(drawableContext, propertyDrawablesVec_, drawableVecStatus_);
+        }
     }
 
     // update state

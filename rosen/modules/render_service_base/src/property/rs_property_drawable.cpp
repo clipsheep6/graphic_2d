@@ -58,23 +58,23 @@ inline void EraseSlots(RSPropertyDrawable::DrawableVec& vec, const Container& sl
         vec[slot] = nullptr;
     }
 }
-} // namespace
 
-const std::vector<RSPropertyDrawableSlot> RSPropertyDrawable::PropertyToDrawableLut = {
+// index = RSModifierType, value = RSPropertyDrawableType
+static const std::vector<uint8_t> PropertyToDrawableLut = {
     RSPropertyDrawableSlot::INVALID,                       // INVALID = 0,                   // 0
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // BOUNDS,                        // 1
+    RSPropertyDrawableSlot::INVALID,                       // BOUNDS,                        // 1
     RSPropertyDrawableSlot::FRAME_OFFSET,                  // FRAME,                         // 2
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // POSITION_Z,                    // 3
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // PIVOT,                         // 4
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // PIVOT_Z,                       // 5
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // QUATERNION,                    // 6
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // ROTATION,                      // 7
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // ROTATION_X,                    // 8
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // ROTATION_Y,                    // 9
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // CAMERA_DISTANCE,               // 10
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // SCALE,                         // 11
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // TRANSLATE,                     // 12
-    RSPropertyDrawableSlot::BOUNDS_MATRIX,                 // TRANSLATE_Z,                   // 13
+    RSPropertyDrawableSlot::INVALID,                       // POSITION_Z,                    // 3
+    RSPropertyDrawableSlot::INVALID,                       // PIVOT,                         // 4
+    RSPropertyDrawableSlot::INVALID,                       // PIVOT_Z,                       // 5
+    RSPropertyDrawableSlot::INVALID,                       // QUATERNION,                    // 6
+    RSPropertyDrawableSlot::INVALID,                       // ROTATION,                      // 7
+    RSPropertyDrawableSlot::INVALID,                       // ROTATION_X,                    // 8
+    RSPropertyDrawableSlot::INVALID,                       // ROTATION_Y,                    // 9
+    RSPropertyDrawableSlot::INVALID,                       // CAMERA_DISTANCE,               // 10
+    RSPropertyDrawableSlot::INVALID,                       // SCALE,                         // 11
+    RSPropertyDrawableSlot::INVALID,                       // TRANSLATE,                     // 12
+    RSPropertyDrawableSlot::INVALID,                       // TRANSLATE_Z,                   // 13
     RSPropertyDrawableSlot::INVALID,                       // SUBLAYER_TRANSFORM,            // 14
     RSPropertyDrawableSlot::INVALID,                       // CORNER_RADIUS,                 // 15
     RSPropertyDrawableSlot::ALPHA,                         // ALPHA,                         // 16
@@ -140,7 +140,8 @@ const std::vector<RSPropertyDrawableSlot> RSPropertyDrawable::PropertyToDrawable
     RSPropertyDrawableSlot::INVALID,                       // GEOMETRYTRANS,                 // 76
 };
 
-const std::vector<RSPropertyDrawable::DrawableGenerator> RSPropertyDrawable::DrawableGeneratorLut = {
+// index = RSPropertyDrawableType, value = DrawableGenerator
+static const std::vector<RSPropertyDrawable::DrawableGenerator> DrawableGeneratorLut = {
     nullptr, // INVALID = 0,
     nullptr, // SAVE_ALL,
 
@@ -202,40 +203,65 @@ inline bool HasPropertyDrawableInRange(
     return false;
 }
 
-void RSPropertyDrawable::UpdateDrawableVec(RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec,
-    uint8_t& drawableVecStatus, const std::unordered_set<RSModifierType>& dirtyTypes)
+inline std::unique_ptr<RSPropertyDrawable> GenerateDrawable(uint8_t slot, RSPropertyDrawableGenerateContext& context)
 {
-    // collect dirty slots
-    std::set<RSPropertyDrawableSlot> dirtySlots;
+    if (auto& generator = DrawableGeneratorLut[slot]) {
+        return generator(context);
+    }
+    return nullptr;
+}
+} // namespace
+
+std::set<uint8_t> RSPropertyDrawable::GenerateDirtySlots(const std::unordered_set<RSModifierType>& dirtyTypes)
+{
+    // ====================================================================
+    // Step 1: collect dirty slots
+    std::set<uint8_t> dirtySlots;
     for (const auto& type : dirtyTypes) {
         dirtySlots.emplace(PropertyToDrawableLut[static_cast<int>(type)]);
     }
+    return dirtySlots;
+}
 
-    // no dirty slots (except INVALID), just return
+bool RSPropertyDrawable::UpdateDrawableVec(RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec,
+    std::set<uint8_t>& dirtySlots)
+{
+    // count all slots after INVALID
     if (dirtySlots.lower_bound(RSPropertyDrawableSlot::BOUNDS_MATRIX) == dirtySlots.end()) {
-        return;
+        return false;
     }
-    // re-generate drawables for all dirty slots
+
+    // ====================================================================
+    // Step 2: update or generate drawables for all dirty slots
+    auto drawableChanged = false;
+
     for (const auto& slot : dirtySlots) {
-        auto& generator = DrawableGeneratorLut[static_cast<int>(slot)];
-        if (!generator) {
+        auto& drawableSlot = drawableVec[slot];
+        // drawable already exists, attempt to update it
+        if (drawableSlot != nullptr && drawableSlot->Update(context)) {
             continue;
         }
-        auto drawable = generator(context);
-        if (!drawable) {
-            drawableVec[slot] = nullptr;
-        } else {
-            drawableVec[slot] = std::move(drawable);
-        }
-    }
-    if (dirtySlots.count(RSPropertyDrawableSlot::BOUNDS_MATRIX)) {
-        for (auto& drawable : drawableVec) {
-            if (drawable) {
-                drawable->OnBoundsChange(context.properties_);
+
+        // non-exist or cannot update, regenerate it
+        if (auto drawable = GenerateDrawable(slot, context)) {
+            // slot changed (null to non-null, or non-null to null)
+            if (!!drawableSlot != !!drawable) {
+                drawableChanged = true;
             }
+            drawableSlot = std::move(drawable);
         }
     }
 
+    return drawableChanged;
+}
+
+void RSPropertyDrawable::UpdateSaveRestore(
+    RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, uint8_t& drawableVecStatus)
+{
+    // ====================================================================
+    // Step 3: Universal save/clip/restore optimization
+
+    // calculate new drawable map status
     auto drawableVecStatusNew = CalculateDrawableVecStatus(context, drawableVec);
     // initialize if needed
     if (drawableVecStatus == 0) {

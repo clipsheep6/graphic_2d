@@ -29,13 +29,9 @@ public:
     explicit RSFrameGeometryDrawable() = default;
     ~RSFrameGeometryDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    void OnBoundsChange(const RSProperties& properties) override;
+    bool Update(RSPropertyDrawableGenerateContext& context) override { return true; }
 
     static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
-
-private:
-    float frameOffsetX_ { 0.0f };
-    float frameOffsetY_ { 0.0f };
 };
 
 // ============================================================================
@@ -45,6 +41,7 @@ public:
     explicit RSClipFrameDrawable(const SkRect& content) : content_(content) {}
     ~RSClipFrameDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    bool Update(RSPropertyDrawableGenerateContext& context) override { return true; }
 
     static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
 

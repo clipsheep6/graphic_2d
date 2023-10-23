@@ -110,20 +110,19 @@ public:
     using DrawablePtr = std::unique_ptr<RSPropertyDrawable>;
 
     virtual void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) = 0;
-    virtual void OnBoundsMatrixChange(const RSProperties& properties) {}
-    virtual void OnBoundsChange(const RSProperties& properties) {}
+    // return true if the drawable is updated, else we will destroy and regenerate it
+    virtual bool Update(RSPropertyDrawableGenerateContext& context) { return false; }
 
     // Generator
     using DrawableVec = std::vector<RSPropertyDrawable::DrawablePtr>;
-    static void UpdateDrawableVec(RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec,
-        uint8_t& drawableVecStatus, const std::unordered_set<RSModifierType>& dirtyTypes);
+    static std::set<uint8_t> GenerateDirtySlots(const std::unordered_set<RSModifierType>& dirtyTypes);
+    static bool UpdateDrawableVec(
+        RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, std::set<uint8_t>& dirtySlots);
+    static void UpdateSaveRestore(
+        RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, uint8_t& drawableVecStatus);
 
-private:
-    // index = RSModifierType value = RSPropertyDrawableType
-    static const std::vector<Slot::RSPropertyDrawableSlot> PropertyToDrawableLut;
-    // index = RSPropertyDrawableType value = DrawableGenerator
     using DrawableGenerator = std::function<RSPropertyDrawable::DrawablePtr(const RSPropertyDrawableGenerateContext&)>;
-    static const std::vector<DrawableGenerator> DrawableGeneratorLut;
+private:
 
     static inline uint8_t CalculateDrawableVecStatus(
         RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec);

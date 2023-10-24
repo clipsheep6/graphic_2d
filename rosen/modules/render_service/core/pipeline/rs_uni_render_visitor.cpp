@@ -309,6 +309,7 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
                 firstVisitedCache_ = INVALID_NODEID;
                 PrepareSharedTransitionNode(*child);
             }
+            dirtyCoverSubTree_ = node.GetDirtyCoverSubTree();
             curDirty_ = child->IsDirty();
             child->Prepare(shared_from_this());
         }
@@ -318,6 +319,9 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
         UpdateStaticCacheSubTree(node.ReinterpretCastTo<RSRenderNode>(), children);
     }
     
+    if (node.GetOutOfParent() == OutOfParentType::UNKNOWN) {
+        node.UpdateDirtyCoverSubTree();
+    }
     curAlpha_ = alpha;
     // restore environment variables
     logicParentNode_ = std::move(parentNode);
@@ -1196,6 +1200,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     curContentDirty_ = node.IsContentDirty();
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
+    const auto& property = node.GetRenderProperties();
 
     auto nodeParent = node.GetParent().lock();
     while (nodeParent && nodeParent->ReinterpretCastTo<RSSurfaceRenderNode>() &&
@@ -1223,7 +1228,9 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     }
     // if canvasNode is not sub node of surfaceNode, merge the dirtyRegion to curDisplayDirtyManager_
     auto dirtyManager = isSubNodeOfSurfaceInPrepare_ ? curSurfaceDirtyManager_ : curDisplayDirtyManager_;
-    dirtyFlag_ = node.Update(*dirtyManager, nodeParent, dirtyFlag_, prepareClipRect_);
+    if (curDirty_ || !dirtyCoverSubTree_ || property.NeedFilter()) {
+        dirtyFlag_ = node.Update(*dirtyManager, nodeParent, dirtyFlag_, prepareClipRect_);
+    }
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     // driven render
@@ -1268,28 +1275,29 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     }
 #endif
 
-    const auto& property = node.GetRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
     // Dirty Region use abstract coordinate, property of node use relative coordinate
     // BoundsRect(if exists) is mapped to absRect_ of RSObjAbsGeometry.
-    if (property.GetClipToBounds()) {
-        prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->GetAbsRect());
-    }
-    // FrameRect(if exists) is mapped to rect using abstract coordinate explicitly by calling MapAbsRect.
-    if (property.GetClipToFrame()) {
-        // MapAbsRect do not handle the translation of OffsetX and OffsetY
+    if (curDirty_ || !dirtyCoverSubTree_ || property.NeedFilter()) {
+        auto geoPtr = (property.GetBoundsGeometry());
+        if (property.GetClipToBounds()) {
+            prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->GetAbsRect());
+        }
+        // FrameRect(if exists) is mapped to rect using abstract coordinate explicitly by calling MapAbsRect.
+        if (property.GetClipToFrame()) {
+            // MapAbsRect do not handle the translation of OffsetX and OffsetY
 #ifndef USE_ROSEN_DRAWING
-        RectF frameRect{
-            property.GetFrameOffsetX() * geoPtr->GetAbsMatrix().getScaleX(),
-            property.GetFrameOffsetY() * geoPtr->GetAbsMatrix().getScaleY(),
-            property.GetFrameWidth(), property.GetFrameHeight()};
+            RectF frameRect{
+                property.GetFrameOffsetX() * geoPtr->GetAbsMatrix().getScaleX(),
+                property.GetFrameOffsetY() * geoPtr->GetAbsMatrix().getScaleY(),
+                property.GetFrameWidth(), property.GetFrameHeight()};
 #else
-        RectF frameRect{
-            property.GetFrameOffsetX() * geoPtr->GetAbsMatrix().Get(Drawing::Matrix::SCALE_X),
-            property.GetFrameOffsetY() * geoPtr->GetAbsMatrix().Get(Drawing::Matrix::SCALE_Y),
-            property.GetFrameWidth(), property.GetFrameHeight()};
+            RectF frameRect{
+                property.GetFrameOffsetX() * geoPtr->GetAbsMatrix().Get(Drawing::Matrix::SCALE_X),
+                property.GetFrameOffsetY() * geoPtr->GetAbsMatrix().Get(Drawing::Matrix::SCALE_Y),
+                property.GetFrameWidth(), property.GetFrameHeight()};
 #endif
-        prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->MapAbsRect(frameRect));
+            prepareClipRect_ = prepareClipRect_.IntersectRect(geoPtr->MapAbsRect(frameRect));
+        }
     }
 
     node.UpdateChildrenOutOfRectFlag(false);
@@ -1638,6 +1646,7 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
         node.SetIsUsedBySubThread(true);
         for (auto& child : node.GetSortedChildren(true)) {
             if (ProcessSharedTransitionNode(*child)) {
+                dirtyCoverSubTree_ = node.GetDirtyCoverSubTree();
                 child->Process(shared_from_this());
                 child->SetDrawingCacheRootId(node.GetDrawingCacheRootId());
             }
@@ -1648,6 +1657,7 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
     } else {
         for (auto& child : node.GetSortedChildren()) {
             if (ProcessSharedTransitionNode(*child)) {
+                dirtyCoverSubTree_ = node.GetDirtyCoverSubTree();
                 child->Process(shared_from_this());
                 child->SetDrawingCacheRootId(node.GetDrawingCacheRootId());
             }
@@ -3173,7 +3183,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         CollectAppNodeForHwc(curSurfaceNode_);
     }
     // skip clean surface node
-    if (isOpDropped_ && node.IsAppWindow() &&
+    if (isOpDropped_ && node.IsAppWindow() && !dirtyCoverSubTree_ &&
         !node.SubNodeNeedDraw(node.GetOldDirtyInSurface(), partialRenderType_)) {
         RS_PROCESS_TRACE(isPhone_, false, node.GetName() + " QuickReject Skip");
         RS_LOGD("RSUniRenderVisitor::ProcessSurfaceRenderNode skip: %{public}s", node.GetName().c_str());
@@ -3663,7 +3673,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
         // Otherwise, its childrenRect_ should be considered.
         RectI dirtyRect = node.HasChildrenOutOfRect() ?
             node.GetOldDirtyInSurface().JoinRect(node.GetChildrenRect()) : node.GetOldDirtyInSurface();
-        if (isSubNodeOfSurfaceInProcess_ && !dirtyRect.IsEmpty() && !node.IsAncestorDirty() &&
+        if (isSubNodeOfSurfaceInProcess_ && !dirtyRect.IsEmpty() && !node.IsAncestorDirty() && !dirtyCoverSubTree_ &&
             !curSurfaceNode_->SubNodeNeedDraw(dirtyRect, partialRenderType_) && !node.IsParentLeashWindow()) {
             if (isCanvasNodeSkipDfxEnabled_) {
                 curSurfaceNode_->GetDirtyManager()->UpdateDirtyRegionInfoForDfx(

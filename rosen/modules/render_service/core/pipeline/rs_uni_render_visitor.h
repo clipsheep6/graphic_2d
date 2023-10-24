@@ -437,6 +437,7 @@ private:
     bool curDirty_ = false;
     bool curContentDirty_ = false;
     bool isPhone_ = false;
+    bool dirtyCoverSubTree_ = false;
 
     NodeId firstVisitedCache_ = INVALID_NODEID;
     std::unordered_set<NodeId> visitedCacheNodeIds_ = {};

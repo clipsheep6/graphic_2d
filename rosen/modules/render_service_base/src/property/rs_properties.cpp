@@ -113,6 +113,7 @@ const std::vector<ResetPropertyFunc> g_propertyResetterLUT = {
     [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND,              63
     [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE,                 64
     [](RSProperties* prop) { prop->SetShadowIsFilled(false); },          // SHADOW_IS_FILLED,         65
+    [](RSProperties* prop) { prop->SetColorBlendMode(0); },              // COLOR_BLEND_MODE,         66
     nullptr,
 };
 } // namespace
@@ -1470,6 +1471,17 @@ void RSProperties::SetUseEffect(bool useEffect)
 bool RSProperties::GetUseEffect() const
 {
     return useEffect_;
+}
+
+void RSProperties::SetColorBlendMode(int blendMode)
+{
+    colorBlendMode_ = blendMode;
+    SetDirty();
+}
+
+int RSProperties::GetColorBlendMode() const
+{
+    return colorBlendMode_;
 }
 
 void RSProperties::SetPixelStretch(const std::optional<Vector4f>& stretchSize)

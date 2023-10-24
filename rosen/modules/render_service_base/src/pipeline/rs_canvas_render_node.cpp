@@ -129,6 +129,15 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
+
+    // Inter-UI component blur & blending effect
+    auto blendMode = GetRenderProperties().GetColorBlendMode();
+    if(blendMode != 0)
+    {
+        SkCanvas::SaveLayerRec colorOpLayerRec(nullptr, nullptr, nullptr, 0);
+        canvas.saveLayer(colorOpLayerRec);
+    }
+
     // In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
 #ifdef NEW_SKIA
     RSPropertiesPainter::DrawBackground(GetRenderProperties(), canvas, false);
@@ -141,12 +150,34 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
             RSPropertiesPainter::ApplyBackgroundEffect(GetRenderProperties(), canvas, this);
         }
         RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
+
+        // RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
     }
 
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);
 
     if (GetRenderProperties().IsDynamicLightUpValid()) {
         RSPropertiesPainter::DrawDynamicLightUp(GetRenderProperties(), canvas);
+    }
+
+    // Inter-UI component blur & blending effect
+    if(blendMode != 0)
+    {
+        SkBlendMode skBlendMode = SkBlendMode::kSrc;
+        RSColorBlendModeType rsBlendModeType = static_cast<RSColorBlendModeType>(blendMode);
+        if(rsBlendModeType == RSColorBlendModeType::DST_IN)
+        {
+            skBlendMode = SkBlendMode::kDstIn;
+        }
+        else if(rsBlendModeType == RSColorBlendModeType::SRC_IN)
+        {
+            skBlendMode = SkBlendMode::kSrcIn;
+        }
+        SkPaint maskPaint;
+        maskPaint.setBlendMode(maskPaint);
+        SkCanvas::SaveLayerRec maskLayerRec(nullptr, &maskPaint, nullptr, 0);
+        canvas.saveLayer(maskLayerRec);
+        canvas.clear(SK_ColorTRANSPARENT);
     }
 
 #ifndef USE_ROSEN_DRAWING

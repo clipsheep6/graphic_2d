@@ -131,7 +131,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
     if (GetRenderProperties().GetPositionZ() > 12.9f &&  GetRenderProperties().GetPositionZ() < 13.1f) {
         ROSEN_LOGD("node[%{public}lu] background uses blend mode", GetId());
-        mIsSaveLayer = true;
+        isSaveLayer_ = true;
         canvas.saveLayer(nullptr, nullptr);
     }
 
@@ -175,7 +175,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
         RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
 #endif
     }
-    if (mIsSaveLayer){
+    if (isSaveLayer_) {
         SkPaint blendPaint;
         blendPaint.setBlendMode(SkBlendMode::kDstIn);
         canvas.saveLayer(nullptr, &blendPaint);

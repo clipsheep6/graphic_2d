@@ -19,6 +19,9 @@
 #include "hgm_log.h"
 #include "parameters.h"
 #include "rs_trace.h"
+#include "sandbox_utils.h"
+#include "frame_rate_report.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -76,6 +79,13 @@ void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
             std::to_string(static_cast<int>(appRange.second.max_)) + ", " +
             std::to_string(static_cast<int>(appRange.second.preferred_)) + "), frameRate=" +
             std::to_string(static_cast<int>(multiAppFrameRate_[appRange.first])));
+    }
+    uint32_t lcdRefreshRate = HgmCore::Instance().GetScreenCurrentRefreshRate(screenId);
+    if (currRefreshRate_ != lcdRefreshRate) {
+        auto frameRateReport = FRAME_TRACE::FrameRateReport::GetInstance();
+        auto rates = data.multiAppRange;
+        rates[GetRealPid()] = currRefreshRate_;
+        frameRateReport.SendFrameRates(rates);
     }
     // [Temporary func]: Switch refresh rate immediately, func will be removed in the future.
     ExecuteSwitchRefreshRate(screenId);

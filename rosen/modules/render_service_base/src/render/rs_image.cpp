@@ -24,6 +24,7 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkRRect.h"
 #endif
+#include "pipeline/sk_resource_manager.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "property/rs_properties_painter.h"
@@ -203,15 +204,24 @@ void RSImage::ApplyCanvasClip(Drawing::Canvas& canvas)
 }
 #endif
 
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+static SkImage::CompressionType PixelFormatToCompressionType(Media::PixelFormat pixelFormat) {
+    switch (pixelFormat) {
+        case Media::PixelFormat::ASTC_4x4: return SkImage::CompressionType::kASTC_RGBA8_4x4;
+        case Media::PixelFormat::ASTC_6x6: return SkImage::CompressionType::kASTC_RGBA8_6x6;
+        case Media::PixelFormat::ASTC_8x8: return SkImage::CompressionType::kASTC_RGBA8_8x8;
+        case Media::PixelFormat::UNKNOWN:
+        default: return SkImage::CompressionType::kNone;
+    }
+}
+#endif
+
 #ifndef USE_ROSEN_DRAWING
 void RSImage::UploadGpu(SkCanvas& canvas)
 {
-    if (!RSSystemProperties::GetASTCEnabled()) {
-        return;
-    }
-#ifdef RS_ENABLE_GL
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
     if (compressData_) {
-        auto cache = RSImageCache::Instance().GetSkiaImageCache(uniqueId_);
+        auto cache = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
         std::lock_guard<std::mutex> lock(mutex_);
         if (cache) {
             image_ = cache;
@@ -227,16 +237,19 @@ void RSImage::UploadGpu(SkCanvas& canvas)
 #ifdef NEW_SKIA
             // [planning] new skia remove enum kASTC_CompressionType
             // Need to confirm if kBC1_RGBA8_UNORM and kASTC_CompressionType are the same
+            Media::ImageInfo imageInfo;
+            pixelMap_->GetImageInfo(imageInfo);
             auto image = SkImage::MakeTextureFromCompressed(GrAsDirectContext(canvas.recordingContext()), compressData_,
                 static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_),
-                SkImage::CompressionType::kASTC_RGBA8_UNORM);
+                PixelFormatToCompressionType(imageInfo.pixelFormat));
 #else
             auto image = SkImage::MakeFromCompressed(canvas.getGrContext(), compressData_,
                 static_cast<int>(srcRect_.width_), static_cast<int>(srcRect_.height_), SkImage::kASTC_CompressionType);
 #endif
             if (image) {
                 image_ = image;
-                RSImageCache::Instance().CacheSkiaImage(uniqueId_, image);
+                SKResourceManager::Instance().HoldResource(image);
+                RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image, gettid());
             } else {
                 RS_LOGE("make astc image %{public}" PRIu64 " (%{public}d, %{public}d) failed",
                     uniqueId_, (int)srcRect_.width_, (int)srcRect_.height_);
@@ -249,9 +262,9 @@ void RSImage::UploadGpu(SkCanvas& canvas)
 #else
 void RSImage::UploadGpu(Drawing::Canvas& canvas)
 {
-#ifdef RS_ENABLE_GL
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
     if (compressData_) {
-        auto cache = RSImageCache::Instance().GetDrawingImageCache(uniqueId_);
+        auto cache = RSImageCache::Instance().GetDrawingImageCache(uniqueId_, gettid());
         std::lock_guard<std::mutex> lock(mutex_);
         if (cache) {
             image_ = cache;
@@ -265,7 +278,7 @@ void RSImage::UploadGpu(Drawing::Canvas& canvas)
                 static_cast<int>(srcRect_.height_), Drawing::CompressedType::ASTC);
             if (image) {
                 image_ = image;
-                RSImageCache::Instance().CacheDrawingImage(uniqueId_, image);
+                RSImageCache::Instance().CacheDrawingImage(uniqueId_, image, gettid());
             } else {
                 RS_LOGE("make astc image %{public}d (%{public}d, %{public}d) failed",
                     uniqueId_, (int)srcRect_.width_, (int)srcRect_.height_);
@@ -316,7 +329,7 @@ void RSImage::DrawImageRepeatRect(Drawing::Canvas& canvas)
     // draw repeat rect
 #ifndef USE_ROSEN_DRAWING
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
-    if (pixelMap_ != nullptr && pixelMap_->GetAllocatorType() != Media::AllocatorType::DMA_ALLOC) {
+    if (pixelMap_ != nullptr && image_ == nullptr) {
         ConvertPixelMapToSkImage();
     }
 #else
@@ -379,6 +392,14 @@ void RSImage::SetCompressData(
     }
 #endif
 }
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+void RSImage::SetCompressData(const sk_sp<SkData> compressData)
+{
+    isDrawn_ = false;
+    compressData_ = compressData;
+}
+#endif
 
 void RSImage::SetImageFit(int fitNum)
 {

@@ -312,7 +312,8 @@ void RSMainThread::Init()
     size_t maxResourcesSize = 0;
     gpuContext->GetResourceCacheLimits(&maxResources, &maxResourcesSize);
     if (maxResourcesSize > 0) {
-        gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes * maxResourcesSize);
+        gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
+            std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
     } else {
         gpuContext->SetResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
     }
@@ -321,9 +322,7 @@ void RSMainThread::Init()
     RSInnovation::OpenInnovationSo();
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     RSDrivenRenderManager::InitInstance();
-#ifndef USE_ROSEN_DRAWING
     RSBackgroundThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
-#endif
 #endif
 
 #if defined(ACCESSIBILITY_ENABLE)
@@ -1585,6 +1584,21 @@ void RSMainThread::SurfaceOcclusionCallback()
     }
 }
 
+bool RSMainThread::WaitHardwareThreadTaskExcute()
+{
+    std::unique_lock<std::mutex> lock(hardwareThreadTaskMutex_);
+    return hardwareThreadTaskCond_.wait_until(lock, std::chrono::system_clock::now() +
+        std::chrono::milliseconds(WAIT_FOR_HARDWARE_THREAD_TASK_TIMEOUT),
+        []() { return RSHardwareThread::Instance().GetunExcuteTaskNum() <= HARDWARE_THREAD_TASK_NUM; });
+}
+
+void RSMainThread::NotifyHardwareThreadCanExcuteTask()
+{
+    RS_TRACE_NAME("RSMainThread::NotifyHardwareThreadCanExcuteTask");
+    std::lock_guard<std::mutex> lock(hardwareThreadTaskMutex_);
+    hardwareThreadTaskCond_.notify_one();
+}
+
 void RSMainThread::RequestNextVSync()
 {
     RS_OPTIONAL_TRACE_FUNC();
@@ -2395,15 +2409,15 @@ void RSMainThread::CollectFrameRateRange(std::shared_ptr<RSRenderNode> node)
 
 void RSMainThread::ApplyModifiers()
 {
+    frameRateRangeData_ = std::make_shared<FrameRateRangeData>();
+    //[Planning]: Support multi-display in the future.
+    frameRateRangeData_->screenId = 0;
+    frameRateRangeData_->forceUpdateFlag = forceUpdateUniRenderFlag_;
     if (context_->activeNodesInRoot_.empty()) {
         return;
     }
     RS_TRACE_NAME_FMT("ApplyModifiers (PropertyDrawableEnable %s)",
         RSSystemProperties::GetPropertyDrawableEnable() ? "TRUE" : "FALSE");
-    frameRateRangeData_ = std::make_shared<FrameRateRangeData>();
-    //[Planning]: Support multi-display in the future.
-    frameRateRangeData_->screenId = 0;
-    frameRateRangeData_->forceUpdateFlag = forceUpdateUniRenderFlag_;
     for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
         for (const auto& [id, nodePtr] : nodeSet) {
             bool isZOrderChanged = nodePtr->ApplyModifiers();

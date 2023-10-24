@@ -33,13 +33,20 @@ public:
     /* specify constructor and destructor here */
     RSIRenderServiceInterfaceCodeAccessVerifier();
     ~RSIRenderServiceInterfaceCodeAccessVerifier() noexcept override = default;
+    bool IsAccessTimesVerificationPassed(CodeUnderlyingType code, int times) const override;
 
 protected:
     /* specify exclusive verification rules here */
     bool IsExclusiveVerificationPassed(CodeUnderlyingType code) override;
-
+    void AddRSIRenderServiceInterfaceCodePermission();
+    bool CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const;
 private:
     DISALLOW_COPY_AND_MOVE(RSIRenderServiceInterfaceCodeAccessVerifier);
+    static inline const std::vector<std::pair<CodeEnumType, PermissionType>> permissionRSIRenderServiceInterfaceMappings_ {
+    };
+    static inline const std::unordered_map<CodeEnumType, int> 
+        accessRSIRenderServiceInterfaceTimesRestrictions_ {
+    };
 };
 } // namespace Rosen
 } // namespace OHOS

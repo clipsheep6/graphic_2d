@@ -20,6 +20,7 @@ namespace Rosen {
 RSIOcclusionChangeCallbackInterfaceCodeAccessVerifier::RSIOcclusionChangeCallbackInterfaceCodeAccessVerifier()
 {
     CheckCodeUnderlyingTypeStandardized<CodeEnumType>(codeEnumTypeName_);
+    AddRSIOcclusionChangeCallbackInterfaceCodePermission();
 }
 
 bool RSIOcclusionChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(CodeUnderlyingType code)
@@ -36,5 +37,26 @@ bool RSIOcclusionChangeCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificat
     }
     return hasPermission;
 }
+void RSIOcclusionChangeCallbackInterfaceCodeAccessVerifier::AddRSIOcclusionChangeCallbackInterfaceCodePermission()
+{
+    for (auto& mapping : permissionRSIOcclusionChangeCallbackInterfaceMappings_) {
+        CodeEnumType interfaceName = mapping.first;
+        PermissionType permission = mapping.second;
+        std::string newPermission = PermissionEnumToString(permission);
+        if (newPermission == "unknown") {
+            continue;
+        }
+        CodeUnderlyingType code = static_cast<CodeUnderlyingType>(interfaceName);
+        AddPermission(code, newPermission);
+    }
+}
+bool RSIOcclusionChangeCallbackInterfaceCodeAccessVerifier::CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const
+{
+    auto permissionVec = GetPermissions(code);
+    CheckPermission(interfaceName, permissionVec);
+    return true;
+}
+
+
 } // namespace Rosen
 } // namespace OHOS

@@ -17,6 +17,21 @@
 
 namespace OHOS {
 namespace Rosen {
+
+const std::unordered_map<PermissionType, std::string> PERMISSION_MAP {
+    {PermissionType::ACCESS_MCP_AUTHORIZATION, "ohos.permission.ACCESS_MCP_AUTHORIZATION"},
+    {PermissionType::PREPARE_APP_TERMINATE, "ohos.permission.PREPARE_APP_TERMINATE"},
+    {PermissionType::FILE_GUARD_MANAGER, "ohos.permission.FILE_GUARD_MANAGER"},
+    {PermissionType::SET_FILE_GUARD_POLICY, "ohos.permission.SET_FILE_GUARD_POLICY"},
+    {PermissionType::APP_TRACKING_CONSENT, "ohos.permission.APP_TRACKING_CONSENT"},
+    {PermissionType::CAPTURE_SCREEN, "ohos.permission.CAPTURE_SCREEN"},
+    {PermissionType::GET_RUNNING_INFO, "ohos.permission.GET_RUNNING_INFO"},
+    {PermissionType::RUNNING_STATE_OBSERVER, "ohos.permission.RUNNING_STATE_OBSERVER"},
+    {PermissionType::START_ABILITIES_FROM_BACKGROUND, "ohos.permission.START_ABILITIES_FROM_BACKGROUND"},
+    {PermissionType::CHANGE_ABILITY_ENABLED_STATE, "ohos.permission.CHANGE_ABILITY_ENABLED_STATE"},
+};
+
+
 bool RSInterfaceCodeAccessVerifierBase::IsInterfaceCodeAccessible(CodeUnderlyingType code)
 {
 #ifdef ENABLE_IPC_SECURITY
@@ -31,12 +46,72 @@ bool RSInterfaceCodeAccessVerifierBase::IsInterfaceCodeAccessible(CodeUnderlying
 #endif
     return true;
 }
-
 #ifdef ENABLE_IPC_SECURITY
 Security::AccessToken::ATokenTypeEnum RSInterfaceCodeAccessVerifierBase::GetTokenType() const
 {
     uint32_t tokenId = IPCSkeleton::GetCallingTokenID();
     return Security::AccessToken::AccessTokenKit::GetTokenType(tokenId);
+}
+Security::AccessToken::AccessTokenID RSInterfaceCodeAccessVerifierBase::GetTokenID() const
+{
+    return IPCSkeleton::GetCallingTokenID();
+}
+bool RSInterfaceCodeAccessVerifierBase::CheckNativePermission(const Security::AccessToken::AccessTokenID tokenID, const std::string& permission) const
+{
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenID, permission);
+    if (result != Security::AccessToken::PERMISSION_GRANTED) {
+        return false;
+    }
+    return true;
+}
+bool RSInterfaceCodeAccessVerifierBase::CheckHapPermission(const Security::AccessToken::AccessTokenID tokenID, const std::string& permission) const
+{
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenID, permission);
+    if (result != Security::AccessToken::PERMISSION_GRANTED) {
+        return false;
+    }
+    return true;
+}
+
+bool RSInterfaceCodeAccessVerifierBase::CheckPermission(const std::string& callingCode, std::vector<std::string> permissions) const
+{
+    auto tokenType = GetTokenType();
+    auto tokenID = GetTokenID();
+    switch (tokenType) {
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_HAP: {
+            for (auto& permission : permissions) {
+                if (!CheckHapPermission(tokenID, permission)) {
+                    RS_LOGE("%{public}s ipc interface code access denied: TOKEN_HAP HAS NO PERMISSION", callingCode.c_str());
+                    return false;
+                }
+            }
+            break;
+        }
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE: {
+            for (auto& permission : permissions) {
+                if (!CheckNativePermission(tokenID, permission)) {
+                    RS_LOGE("%{public}s ipc interface code access denied: TOKEN_NATIVE HAS NO PERMISSION", callingCode.c_str());
+                    return false;
+                }
+            }
+            break;
+        }
+        case Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL: {
+            for (auto& permission : permissions) {
+                if (!CheckNativePermission(tokenID, permission)) {
+                    RS_LOGE("%{public}s ipc interface code access denied: TOKEN_SHELL HAS NO PERMISSION", callingCode.c_str());
+                    return false;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    RS_LOGI("%{public}s ipc interface code access PASSED", callingCode.c_str());
+    return true;
 }
 
 bool RSInterfaceCodeAccessVerifierBase::IsSystemApp() const
@@ -66,13 +141,64 @@ bool RSInterfaceCodeAccessVerifierBase::IsSystemCalling(const std::string& /* ca
 {
     return true;
 }
+bool RSInterfaceCodeAccessVerifierBase::CheckPermission(const std::string& callingCode, std::vector<std::string> permissions) const
+{
+    return true;
+}
 #endif
+std::string RSInterfaceCodeAccessVerifierBase::PermissionEnumToString(PermissionType permission) const
+{
+    if (PERMISSION_MAP.count(permission) > 0) {
+        return PERMISSION_MAP.at(permission);
+    } else {
+        return "unknown";
+    }
+}
+bool RSInterfaceCodeAccessVerifierBase::AddPermission(CodeUnderlyingType interfaceName, const std::string& newPermission)
+{
+    if (interfacePermissions_.count(interfaceName)>0) {
+        auto& permissions = interfacePermissions_[interfaceName];
+        auto iter = std::find_if(permissions.cbegin(), permissions.cend(),
+        [newPermission](const auto& permission) { return newPermission==permission;});
+        if (iter == permissions.cend()) {
+            permissions.push_back(newPermission);
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        interfacePermissions_[interfaceName].push_back(newPermission);
+    }
+    return true;
+}
 
+std::vector<std::string> RSInterfaceCodeAccessVerifierBase::GetPermissions(CodeUnderlyingType interfaceName) const
+{
+    if (interfacePermissions_.count(interfaceName) == 0) {
+        return {};
+    } else {
+        return interfacePermissions_.at(interfaceName);
+    }
+}
+int RSInterfaceCodeAccessVerifierBase::GetInterfacePermissionSize() const
+{
+    int countSz = 0;
+    for (auto& [permissionKey, permissionVal] : interfacePermissions_) {
+        countSz += permissionVal.size();
+    }
+    return countSz;
+}
 bool RSInterfaceCodeAccessVerifierBase::IsCommonVerificationPassed(CodeUnderlyingType /* code */)
 {
     // Since no common verification rule is temporarily required, directly return true.
     // If any common rule is required in the future, overwrite this function.
     return true;
 }
+bool RSInterfaceCodeAccessVerifierBase::IsAccessTimesVerificationPassed(CodeUnderlyingType code, int times) const
+{
+    return true;
+}
+
 } // namespace Rosen
 } // namespace OHOS
+

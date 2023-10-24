@@ -20,6 +20,7 @@ namespace Rosen {
 RSIBufferAvailableCallbackInterfaceCodeAccessVerifier::RSIBufferAvailableCallbackInterfaceCodeAccessVerifier()
 {
     CheckCodeUnderlyingTypeStandardized<CodeEnumType>(codeEnumTypeName_);
+    AddRSIBufferAvailableCallbackInterfaceCodePermission();
 }
 
 bool RSIBufferAvailableCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(CodeUnderlyingType code)
@@ -28,6 +29,7 @@ bool RSIBufferAvailableCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificat
     switch (code) {
         case static_cast<CodeUnderlyingType>(CodeEnumType::ON_BUFFER_AVAILABLE): {
             /* to implement access interception */
+            hasPermission = CheckInterfacePermission(codeEnumTypeName_ + "ON_BUFFER_AVAILABLE", code);
             break;
         }
         default: {
@@ -35,6 +37,25 @@ bool RSIBufferAvailableCallbackInterfaceCodeAccessVerifier::IsExclusiveVerificat
         }
     }
     return hasPermission;
+}
+void RSIBufferAvailableCallbackInterfaceCodeAccessVerifier::AddRSIBufferAvailableCallbackInterfaceCodePermission()
+{
+    for (auto& mapping : permissionRSIBufferAvailableCallbackInterfaceMappings_) {
+        CodeEnumType interfaceName = mapping.first;
+        PermissionType permission = mapping.second;
+        std::string newPermission = PermissionEnumToString(permission);
+        if (newPermission == "unknown") {
+            continue;
+        }
+        CodeUnderlyingType code = static_cast<CodeUnderlyingType>(interfaceName);
+        AddPermission(code, newPermission);
+    }
+}
+bool RSIBufferAvailableCallbackInterfaceCodeAccessVerifier::CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const
+{
+    auto permissionVec = GetPermissions(code);
+    CheckPermission(interfaceName, permissionVec);
+    return true;
 }
 } // namespace Rosen
 } // namespace OHOS

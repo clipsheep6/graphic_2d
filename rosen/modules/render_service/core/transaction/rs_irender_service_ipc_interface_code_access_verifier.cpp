@@ -20,6 +20,7 @@ namespace Rosen {
 RSIRenderServiceInterfaceCodeAccessVerifier::RSIRenderServiceInterfaceCodeAccessVerifier()
 {
     CheckCodeUnderlyingTypeStandardized<CodeEnumType>(codeEnumTypeName_);
+    AddRSIRenderServiceInterfaceCodePermission();
 }
 
 bool RSIRenderServiceInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(CodeUnderlyingType code)
@@ -28,6 +29,7 @@ bool RSIRenderServiceInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(
     switch (code) {
         case static_cast<CodeUnderlyingType>(CodeEnumType::CREATE_CONNECTION): {
             /* to implement access interception */
+            hasPermission = CheckInterfacePermission(codeEnumTypeName_ + "::CREATE_CONNECTION", code);
             break;
         }
         default: {
@@ -36,5 +38,38 @@ bool RSIRenderServiceInterfaceCodeAccessVerifier::IsExclusiveVerificationPassed(
     }
     return hasPermission;
 }
+
+void RSIRenderServiceInterfaceCodeAccessVerifier::AddRSIRenderServiceInterfaceCodePermission()
+{
+    for (auto& mapping : permissionRSIRenderServiceInterfaceMappings_) {
+        CodeEnumType interfaceName = mapping.first;
+        PermissionType permission = mapping.second;
+        std::string newPermission = PermissionEnumToString(permission);
+        if (newPermission == "unknown") {
+            continue;
+        }
+        CodeUnderlyingType code = static_cast<CodeUnderlyingType>(interfaceName);
+        AddPermission(code, newPermission);
+    }
+}
+bool RSIRenderServiceInterfaceCodeAccessVerifier::CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const
+{
+    auto permissionVec = GetPermissions(code);
+    CheckPermission(interfaceName, permissionVec);
+    return true;
+}
+bool RSIRenderServiceInterfaceCodeAccessVerifier::IsAccessTimesVerificationPassed(CodeUnderlyingType code, int times) const
+{
+    auto interfaceName = static_cast<CodeEnumType>(code);
+    if (accessRSIRenderServiceInterfaceTimesRestrictions_.count(interfaceName) == 0) {
+        return true;
+    }
+    int restrictedTimes = accessRSIRenderServiceInterfaceTimesRestrictions_.at(interfaceName);
+    if (times > restrictedTimes) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace Rosen
 } // namespace OHOS

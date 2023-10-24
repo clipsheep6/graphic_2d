@@ -37,9 +37,14 @@ public:
 protected:
     /* specify exclusive verification rules here */
     bool IsExclusiveVerificationPassed(CodeUnderlyingType code) override;
-
+    void AddRSISurfaceOcclusionChangeCallbackInterfaceCodePermission();
+    bool CheckInterfacePermission(const std::string interfaceName, CodeUnderlyingType code) const;
+    
 private:
     DISALLOW_COPY_AND_MOVE(RSISurfaceOcclusionChangeCallbackInterfaceCodeAccessVerifier);
+    static inline const std::vector<std::pair<CodeEnumType, PermissionType>> 
+        permissionRSISurfaceOcclusionChangeCallbackInterfaceMappings_ {
+    };
 };
 } // namespace Rosen
 } // namespace OHOS

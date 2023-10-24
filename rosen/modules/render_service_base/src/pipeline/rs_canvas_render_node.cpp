@@ -42,6 +42,17 @@ namespace {
 constexpr PropertyId ANONYMOUS_MODIFIER_ID = 0;
 }
 
+static inline SkBlendMode ConvertToSkBlendMode(int blendMode)
+{
+    RSColorBlendModeType rsBlendModeType = static_cast<RSColorBlendModeType>(blendMode);
+    if (rsBlendModeType == RSColorBlendModeType::DST_IN) {
+        return SkBlendMode::kDstIn;
+    } else if (rsBlendModeType == RSColorBlendModeType::SRC_IN) {
+        return SkBlendMode::kSrcIn;
+    }
+    return SkBlendMode::kSrc;
+}
+
 RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : RSRenderNode(id, context)
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
@@ -132,8 +143,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
 
     // Inter-UI component blur & blending effect
     auto blendMode = GetRenderProperties().GetColorBlendMode();
-    if(blendMode != 0)
-    {
+    if (blendMode != 0) {
         SkCanvas::SaveLayerRec colorOpLayerRec(nullptr, nullptr, nullptr, 0);
         canvas.saveLayer(colorOpLayerRec);
     }
@@ -159,23 +169,12 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     }
 
     // Inter-UI component blur & blending effect
-    if(blendMode != 0)
-    {
-        SkBlendMode skBlendMode = SkBlendMode::kSrc;
-        RSColorBlendModeType rsBlendModeType = static_cast<RSColorBlendModeType>(blendMode);
-        if(rsBlendModeType == RSColorBlendModeType::DST_IN)
-        {
-            skBlendMode = SkBlendMode::kDstIn;
-        }
-        else if(rsBlendModeType == RSColorBlendModeType::SRC_IN)
-        {
-            skBlendMode = SkBlendMode::kSrcIn;
-        }
+    if (blendMode != 0) {
+        SkBlendMode skBlendMode = ConvertToSkBlendMode(blendMode);
         SkPaint maskPaint;
-        maskPaint.setBlendMode(maskPaint);
+        maskPaint.setBlendMode(skBlendMode);
         SkCanvas::SaveLayerRec maskLayerRec(nullptr, &maskPaint, nullptr, 0);
         canvas.saveLayer(maskLayerRec);
-        canvas.clear(SK_ColorTRANSPARENT);
     }
 
 #ifndef USE_ROSEN_DRAWING

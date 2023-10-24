@@ -297,7 +297,7 @@ public:
     void SetColorBlendMode(int blendMode);
     int GetColorBlendMode() const;
 
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     const std::unique_ptr<RSFilterCacheManager>& GetFilterCacheManager(bool isForeground) const;
     void ClearFilterCache();
 #endif
@@ -334,7 +334,7 @@ private:
     bool hasBounds_ = false;
     bool useEffect_ = false;
 
-    int  colorBlendMode_ = 0;
+    int colorBlendMode_ = 0;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 

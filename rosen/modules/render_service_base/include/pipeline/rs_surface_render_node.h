@@ -335,6 +335,9 @@ public:
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
 
+    void SetSkipLayer(bool isSkipLayer);
+    bool GetSkipLayer() const;
+
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
 
@@ -775,6 +778,24 @@ public:
     // whether the subtree has only one root node
     bool HasOnlyOneRootNode() const;
 
+    bool GetHasSecurityLayer()
+    {
+        return hasSecurityLayer_;
+    }
+
+    void SetHasSecurityLayer(bool hasSecurityLayer)
+    {
+        hasSecurityLayer_ = hasSecurityLayer;
+    }
+    bool GetHasSkipLayer()
+    {
+        return hasSkipLayer_;
+    }
+
+    void SetHasSkipLayer(bool hasSkipLayer)
+    {
+        hasSkipLayer_ = hasSkipLayer;
+    }
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -807,6 +828,7 @@ private:
 #endif
 
     bool isSecurityLayer_ = false;
+    bool isSkipLayer_ = false;
     bool hasFingerprint_ = false;
     bool isReportFirstFrame_ = false;
     RectI srcRect_;
@@ -949,6 +971,8 @@ private:
 
     bool needDrawAnimateProperty_ = false;
     bool prevVisible_ = false;
+    bool hasSecurityLayer_ = false;
+    bool hasSkipLayer_ = false;
 
     // UIFirst
     uint32_t submittedSubThreadIndex_ = INT_MAX;

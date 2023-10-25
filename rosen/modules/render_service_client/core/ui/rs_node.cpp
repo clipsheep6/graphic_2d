@@ -1446,6 +1446,12 @@ void RSNode::SetOutOfParent(OutOfParentType outOfParent)
     }
 }
 
+void RSNode::SetColorBlendMode(RSColorBlendModeType blendMode)
+{
+    auto rsBlendMode = static_cast<int>(blendMode);
+    SetProperty<RSColorBlendModeModifier, RSProperty<int>>(RSModifierType::COLOR_BLEND_MODE, rsBlendMode);
+}
+
 NodeId RSNode::GenerateId()
 {
     static pid_t pid_ = GetRealPid();

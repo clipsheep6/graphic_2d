@@ -37,7 +37,7 @@
 
 namespace OHOS {
 namespace Rosen {
-using namespace Slot;
+using Slot::RSPropertyDrawableSlot;
 namespace {
 const std::set<RSModifierType> GROUPABLE_ANIMATION_TYPE = {
     RSModifierType::ALPHA,
@@ -995,20 +995,7 @@ bool RSRenderNode::ApplyModifiers()
     }
 
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // Collect Dirty Slots
-        auto dirtySlots = RSPropertyDrawable::GenerateDirtySlots(dirtyTypes_);
-        // no dirty slots except INVALID
-        if (dirtySlots.lower_bound(RSPropertyDrawableSlot::BOUNDS_MATRIX) == dirtySlots.end()) {
-            return false;
-        }
-        // Generate drawable
-        RSPropertyDrawableGenerateContext drawableContext(*this);
-        bool drawableChanged =
-            RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, dirtySlots);
-        if (drawableChanged) {
-            // if any drawables changed, update save/clip/restore
-            RSPropertyDrawable::UpdateSaveRestore(drawableContext, propertyDrawablesVec_, drawableVecStatus_);
-        }
+        UpdateDrawableVec();
     }
 
     // update state
@@ -1018,6 +1005,24 @@ bool RSRenderNode::ApplyModifiers()
 
     // return true if positionZ changed
     return renderProperties_.GetPositionZ() != prevPositionZ;
+}
+
+void RSRenderNode::UpdateDrawableVec()
+{
+    // Collect dirty slots
+    auto dirtySlots = RSPropertyDrawable::GenerateDirtySlots(dirtyTypes_);
+    RSPropertyDrawableGenerateContext drawableContext(*this);
+    // initialize necessary save/clip/restore
+    if (drawableVecStatus_ == 0) {
+        RSPropertyDrawable::InitializeSaveRestore(drawableContext, propertyDrawablesVec_);
+    }
+    // Update or regenerate drawable
+    bool drawableChanged = RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, dirtySlots);
+    // if any drawables changed, update save/clip/restore
+    // temporary fix, if CLIP_TO_BOUNDS or similar property changed, we should re-arrange the save/clip/restore
+    if (drawableChanged || dirtySlots.count(RSPropertyDrawableSlot::INVALID)) {
+        RSPropertyDrawable::UpdateSaveRestore(drawableContext, propertyDrawablesVec_, drawableVecStatus_);
+    }
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -2119,12 +2124,14 @@ void RSRenderNode::SetIsUsedBySubThread(bool isUsedBySubThread)
     isUsedBySubThread_.store(isUsedBySubThread);
 }
 
-void RSRenderNode::IterateOnDrawableRange(
-    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSRenderNode::IterateOnDrawableRange(uint8_t begin, uint8_t end, RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    for (uint16_t index = begin; index <= end; index++) {
-        auto& drawablePtr = propertyDrawablesVec_[index];
-        if (drawablePtr) {
+    ++end;
+    if (begin >= end || end > propertyDrawablesVec_.size()) {
+        return;
+    }
+    for (uint16_t index = begin; index < end; index++) {
+        if (auto& drawablePtr = propertyDrawablesVec_[index]) {
             drawablePtr->Draw(node, canvas);
         }
     }

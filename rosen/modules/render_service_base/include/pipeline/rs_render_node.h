@@ -464,8 +464,7 @@ protected:
     std::unordered_set<RSModifierType> dirtyTypes_;
     bool isFullChildrenListValid_ = false;
     RSProperties renderProperties_;
-    void IterateOnDrawableRange(Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end,
-        RSRenderNode& node, RSPaintFilterCanvas& canvas);
+    void IterateOnDrawableRange(uint8_t begin, uint8_t end, RSRenderNode& node, RSPaintFilterCanvas& canvas);
 
 private:
     NodeId id_;
@@ -595,17 +594,17 @@ private:
     std::unordered_map<PropertyId, std::variant<float, Vector2f>> propertyValueMap_;
     std::vector<HgmModifierProfile> hgmModifierProfileList_;
 
-    std::vector<std::unique_ptr<RSPropertyDrawable>> propertyDrawablesVec_ =
-        std::vector<std::unique_ptr<RSPropertyDrawable>>(Slot::RSPropertyDrawableSlot::MAX);
+    using DrawableVec = RSPropertyDrawable::DrawableVec;
+    DrawableVec propertyDrawablesVec_ = DrawableVec(Slot::RSPropertyDrawableSlot::MAX);
     uint8_t drawableVecStatus_ = 0;
-    using DrawableIter = decltype(propertyDrawablesVec_)::iterator;
+    void UpdateDrawableVec();
 
+    friend class RSAliasDrawable;
     friend class RSMainThread;
+    friend class RSModifierDrawable;
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
     friend class RSRenderTransition;
-    friend class RSAliasDrawable;
-    friend class RSModifierDrawable;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

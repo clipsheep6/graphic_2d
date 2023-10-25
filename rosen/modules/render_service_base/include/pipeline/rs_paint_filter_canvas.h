@@ -125,8 +125,10 @@ protected:
 // effect cache data relate
 struct RSB_EXPORT RSCachedEffectData {
     RSCachedEffectData() = default;
-    RSCachedEffectData(sk_sp<SkImage>&& image, const SkIRect& rect);
-    ~RSCachedEffectData();
+    RSCachedEffectData(sk_sp<SkImage>&& image, const SkIRect& rect) : cachedImage_(std::move(image)), cachedRect_(rect)
+    {}
+    ~RSCachedEffectData() = default;
+
     sk_sp<SkImage> cachedImage_ = nullptr;
     SkIRect cachedRect_ = SkIRect::MakeEmpty();
 };

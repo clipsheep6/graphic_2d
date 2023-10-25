@@ -19,6 +19,7 @@
 #include <list>
 #include <utility>
 
+#include "include/core/SkPaint.h"
 #include "include/core/SkRect.h"
 
 #include "property/rs_property_drawable.h"

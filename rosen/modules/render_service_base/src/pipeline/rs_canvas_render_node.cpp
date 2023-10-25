@@ -37,7 +37,7 @@
 
 namespace OHOS {
 namespace Rosen {
-using namespace Slot;
+using Slot::RSPropertyDrawableSlot;
 namespace {
 constexpr PropertyId ANONYMOUS_MODIFIER_ID = 0;
 }

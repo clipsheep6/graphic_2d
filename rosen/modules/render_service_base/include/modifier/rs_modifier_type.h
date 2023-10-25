@@ -76,28 +76,29 @@ enum class RSModifierType : int16_t {
     PIXEL_STRETCH,                 // 52
     PIXEL_STRETCH_PERCENT,         // 53
     USE_EFFECT,                    // 54
-    SANDBOX,                       // 55
-    GRAY_SCALE,                    // 56
-    BRIGHTNESS,                    // 57
-    CONTRAST,                      // 58
-    SATURATE,                      // 59
-    SEPIA,                         // 60
-    INVERT,                        // 61
-    HUE_ROTATE,                    // 62
-    COLOR_BLEND,                   // 63
-    PARTICLE,                      // 64
-    SHADOW_IS_FILLED,              // 65
-    CUSTOM,                        // 66
-    EXTENDED,                      // 67
-    TRANSITION,                    // 68
-    BACKGROUND_STYLE,              // 69
-    CONTENT_STYLE,                 // 70
-    FOREGROUND_STYLE,              // 71
-    OVERLAY_STYLE,                 // 72
-    NODE_MODIFIER,                 // 73
-    ENV_FOREGROUND_COLOR,          // 74
-    ENV_FOREGROUND_COLOR_STRATEGY, // 75
-    GEOMETRYTRANS,                 // 76
+    COLOR_BLEND_MODE,              // 55
+    SANDBOX,                       // 56
+    GRAY_SCALE,                    // 57
+    BRIGHTNESS,                    // 58
+    CONTRAST,                      // 59
+    SATURATE,                      // 60
+    SEPIA,                         // 61
+    INVERT,                        // 62
+    HUE_ROTATE,                    // 63
+    COLOR_BLEND,                   // 64
+    PARTICLE,                      // 65
+    SHADOW_IS_FILLED,              // 66
+    CUSTOM,                        // 67
+    EXTENDED,                      // 68
+    TRANSITION,                    // 69
+    BACKGROUND_STYLE,              // 70
+    CONTENT_STYLE,                 // 71
+    FOREGROUND_STYLE,              // 72
+    OVERLAY_STYLE,                 // 73
+    NODE_MODIFIER,                 // 74
+    ENV_FOREGROUND_COLOR,          // 75
+    ENV_FOREGROUND_COLOR_STRATEGY, // 76
+    GEOMETRYTRANS,                 // 77
 };
 
 enum class RSRenderPropertyType : int16_t {
@@ -113,6 +114,12 @@ enum class RSRenderPropertyType : int16_t {
     PROPERTY_SKMATRIX,
     PROPERTY_RRECT,
 };
+
+enum class RSColorBlendModeType : int16_t {
+    NONE = 0,
+    DST_IN,
+    SRC_IN,
+}
 } // namespace Rosen
 } // namespace OHOS
 

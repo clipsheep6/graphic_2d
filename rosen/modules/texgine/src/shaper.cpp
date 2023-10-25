@@ -63,6 +63,11 @@ double Shaper::GetMaxIntrinsicWidth() const
     return maxIntrinsicWidth_;
 }
 
+void Shaper::SetIndents(const std::vector<float> &indents)
+{
+    indents_ = indents;
+}
+
 std::vector<LineMetrics> Shaper::CreateEllipsisSpan(const TypographyStyle &ys,
     const std::shared_ptr<FontProviders> &fontProviders)
 {
@@ -152,6 +157,7 @@ std::vector<LineMetrics> Shaper::DoShapeBeforeEllipsis(std::vector<VariantSpan> 
 {
     TextBreaker tb;
     tb.SetWidthLimit(widthLimit);
+    tb.SetIndents(indents_);
     auto ret = tb.WordBreak(spans, tstyle, fontProviders);
     if (ret) {
         LOGEX_FUNC_LINE(ERROR) << "word break failed";
@@ -166,7 +172,7 @@ std::vector<LineMetrics> Shaper::DoShapeBeforeEllipsis(std::vector<VariantSpan> 
     }
 
     LineBreaker lb;
-    return lb.BreakLines(newSpans, tstyle, widthLimit);
+    return lb.BreakLines(newSpans, tstyle, widthLimit, indents_);
 }
 
 std::vector<LineMetrics> Shaper::DoShape(std::vector<VariantSpan> spans, const TypographyStyle &tstyle,
@@ -209,9 +215,10 @@ void Shaper::ConsiderHeadEllipsis(const std::vector<VariantSpan> &ellipsisSpans,
     lineMetrics_.erase(lineMetrics_.begin(), lineMetrics_.begin() + ellipsisLine);
 
     auto &firstline = lineMetrics_.front();
+    double firstlineIndent = firstline.indent;
     double width = firstline.GetAllSpanWidth();
 
-    while (static_cast<int>(width) > static_cast<int>(widthLimit - ellipsisWidth) &&
+    while (static_cast<int>(width) > static_cast<int>(widthLimit - firstlineIndent - ellipsisWidth) &&
         (!firstline.lineSpans.empty())) {
         width -= firstline.lineSpans.front().GetWidth();
         firstline.lineSpans.erase(firstline.lineSpans.begin());
@@ -227,17 +234,20 @@ void Shaper::ConsiderOneMidEllipsis(const std::vector<VariantSpan> &ellipsisSpan
     auto lineSize = lineMetrics_.size();
     lineMetrics_.erase(lineMetrics_.begin() + 1, lineMetrics_.end() - 1);
     auto &firstline = lineMetrics_.front();
+    double firstlineIndent = firstline.indent;
     double firstlineWidth = firstline.GetAllSpanWidth();
     auto &lastline = lineMetrics_.back();
+    double lastlineIndent = lastline.indent;
     double lastlineWidth = lastline.GetAllSpanWidth();
-    while (static_cast<int>(firstlineWidth + lastlineWidth) > static_cast<int>(widthLimit - ellipsisWidth) &&
+    double newWidthLimit = widthLimit - firstlineIndent - lastlineIndent;
+    while (static_cast<int>(firstlineWidth + lastlineWidth) > static_cast<int>(newWidthLimit - ellipsisWidth) &&
         static_cast<int>(lastline.lineSpans.size()) > 1) {
         lastlineWidth -= lastline.lineSpans.front().GetWidth();
         lastline.lineSpans.erase(lastline.lineSpans.begin());
         isErase = true;
     }
     while ((!isErase) || (static_cast<int>(firstline.lineSpans.size()) > 1 &&
-        static_cast<int>(firstlineWidth + lastlineWidth) > static_cast<int>(widthLimit - ellipsisWidth))) {
+        static_cast<int>(firstlineWidth + lastlineWidth) > static_cast<int>(newWidthLimit - ellipsisWidth))) {
         firstlineWidth -= firstline.lineSpans.back().GetWidth();
         firstline.lineSpans.pop_back();
         isErase = true;
@@ -262,17 +272,19 @@ void Shaper::ConsiderMiddleEllipsis(const std::vector<VariantSpan> &ellipsisSpan
         size_t middleLineEnd = lineMetrics_.size() - (maxLines - (maxLines - 1) / 2 - 1);
         auto &middleLine = lineMetrics_.at(middleLineStart);
         double middleLineWidth = middleLine.GetAllSpanWidth();
+        double middleLineIndent = middleLine.indent;
+        double newWidthLimit = widthLimit - middleLineIndent;
 
         lineMetrics_.erase(lineMetrics_.begin() + middleLineStart + 1, lineMetrics_.begin() + middleLineEnd);
         if (middleLineStart) {
-            while (static_cast<int>(middleLineWidth) > static_cast<int>(widthLimit - ellipsisWidth) &&
+            while (static_cast<int>(middleLineWidth) > static_cast<int>(newWidthLimit - ellipsisWidth) &&
                 (!middleLine.lineSpans.empty())) {
                 middleLineWidth -= middleLine.lineSpans.back().GetWidth();
                 middleLine.lineSpans.pop_back();
                 isErase = true;
             }
         } else {
-            while (static_cast<int>(middleLineWidth) > static_cast<int>(widthLimit - ellipsisWidth) &&
+            while (static_cast<int>(middleLineWidth) > static_cast<int>(newWidthLimit - ellipsisWidth) &&
                 (static_cast<int>(middleLine.lineSpans.size()) > 1)) {
                 middleLineWidth -= middleLine.lineSpans.back().GetWidth();
                 middleLine.lineSpans.pop_back();
@@ -296,7 +308,9 @@ void Shaper::ConsiderTailEllipsis(const std::vector<VariantSpan> &ellipsisSpans,
     }
     double width = 0;
     auto &lastline = lineMetrics_[maxLines - 1];
-    if (!isErase && lastline.width <= widthLimit) {
+    double lastlineIndent = lastline.indent;
+    double newWidthLimit = widthLimit - lastlineIndent;
+    if (!isErase && lastline.width <= newWidthLimit) {
         return;
     }
 
@@ -305,7 +319,7 @@ void Shaper::ConsiderTailEllipsis(const std::vector<VariantSpan> &ellipsisSpans,
     }
 
     // protected the first span and ellipsis
-    while (static_cast<int>(width) > static_cast<int>(widthLimit - ellipsisWidth) &&
+    while (static_cast<int>(width) > static_cast<int>(newWidthLimit - ellipsisWidth) &&
         static_cast<int>(lastline.lineSpans.size()) > 1) {
         width -= lastline.lineSpans.back().GetWidth();
         lastline.lineSpans.pop_back();
@@ -318,14 +332,14 @@ void Shaper::ConsiderTailEllipsis(const std::vector<VariantSpan> &ellipsisSpans,
         return;
     }
 
-    bool hasEllipsis = ts && (static_cast<int>(ts->GetWidth()) > static_cast<int>(widthLimit - ellipsisWidth) ||
+    bool hasEllipsis = ts && (static_cast<int>(ts->GetWidth()) > static_cast<int>(newWidthLimit - ellipsisWidth) ||
         isErase);
     if (!hasEllipsis && ts != nullptr) {
         return;
     }
 
     if (hasEllipsis) {
-        ProcessEllipsis(static_cast<int>(widthLimit - ellipsisWidth), ts->cgs_, lastline);
+        ProcessEllipsis(static_cast<int>(newWidthLimit - ellipsisWidth), ts->cgs_, lastline);
         // Add ellipsisSpans
         lastline.lineSpans.insert(lastline.lineSpans.end(), ellipsisSpans.begin(), ellipsisSpans.end());
     }

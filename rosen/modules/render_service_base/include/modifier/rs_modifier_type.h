@@ -98,6 +98,7 @@ enum class RSModifierType : int16_t {
     ENV_FOREGROUND_COLOR,          // 74
     ENV_FOREGROUND_COLOR_STRATEGY, // 75
     GEOMETRYTRANS,                 // 76
+    COLOR_BLENDMODE,               // 77
 };
 
 enum class RSRenderPropertyType : int16_t {

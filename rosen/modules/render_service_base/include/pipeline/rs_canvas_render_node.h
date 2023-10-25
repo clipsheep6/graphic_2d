@@ -83,7 +83,8 @@ private:
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;
-    bool isSaveLayer_;
+    
+    bool isBlendMode_ = false;
 
     friend class RSColorfulShadowDrawable;
     friend class RSRenderTransition;

@@ -13,7 +13,9 @@
  * limitations under the License.
  */
 
-#include "n_func_arg.h"
+#include "napi/n_func_arg.h"
+#include "context/webgl_rendering_context_basic_base.h"
+#include "util/util.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -73,7 +75,6 @@ bool NFuncArg::InitArgs(std::function<bool()> argcChecker)
     }
     SetArgc(argc);
     SetThisVar(thisVar);
-
     return argcChecker();
 }
 

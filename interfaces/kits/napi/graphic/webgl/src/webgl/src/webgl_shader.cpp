@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_shader.h"
-#include "../../common/napi/n_class.h"
-#include "../../common/napi/n_func_arg.h"
+#include "webgl/webgl_shader.h"
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
 
 namespace OHOS {
 namespace Rosen {

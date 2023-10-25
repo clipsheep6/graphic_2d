@@ -18,7 +18,7 @@
 
 
 #include <map>
-#include "../context/webgl_rendering_context_basic_base.h"
+#include "context/webgl_rendering_context_basic_base.h"
 
 #ifdef __cplusplus
 extern "C" {

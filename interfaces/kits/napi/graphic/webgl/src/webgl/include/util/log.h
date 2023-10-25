@@ -16,28 +16,32 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_LOG
 #define ROSENRENDER_ROSEN_WEBGL_LOG
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstdint>
+#include <inttypes.h>
 #include <string>
 
 #include "hilog/log.h"
 
 template<typename ...Args>
-void PrintLogE(const std::string &func, const std::string &format, Args... args)
+void PrintLogE(const std::string &func, int line, const std::string &format, Args... args)
 {
-    std::string prefix = "[%{public}s]";
+    std::string prefix = "[%{public}s:%{public}d]";
     std::string formatFull = prefix + format;
-    OHOS::HiviewDFX::HiLogLabel label {LOG_CORE, 0xD001400, "WebGL"};
-    OHOS::HiviewDFX::HiLog::Error(label, formatFull.c_str(), func.c_str(), args...);
+    OHOS::HiviewDFX::HiLogLabel label {LOG_CORE, 0xD001400, "JSApp"};
+    OHOS::HiviewDFX::HiLog::Error(label, formatFull.c_str(), func.c_str(), line, args...);
 }
 
 template<typename ...Args>
-void PrintLogI(const std::string &func, const std::string &format, Args... args)
+void PrintLogI(const std::string &func, int line, const std::string &format, Args... args)
 {
-    std::string prefix = "[%{public}s]";
+    std::string prefix = "[%{public}s:%{public}d]";
     std::string formatFull = prefix + format;
-    OHOS::HiviewDFX::HiLogLabel label {LOG_CORE, 0xD001400, "WebGL"};
-    OHOS::HiviewDFX::HiLog::Info(label, formatFull.c_str(), func.c_str(), args...);
+    OHOS::HiviewDFX::HiLogLabel label {LOG_CORE, 0xD001400, "JSApp"};
+    OHOS::HiviewDFX::HiLog::Info(label, formatFull.c_str(), func.c_str(), line, args...);
 }
-#define LOGI(...) PrintLogI(__func__, ##__VA_ARGS__)
-#define LOGE(...) PrintLogE(__func__, ##__VA_ARGS__)
+#define LOGI(...) PrintLogI(__func__, __LINE__, ##__VA_ARGS__)
+#define LOGE(...) PrintLogE(__func__, __LINE__, ##__VA_ARGS__)
 
 #endif // ROSENRENDER_ROSEN_WEBGL_LOG

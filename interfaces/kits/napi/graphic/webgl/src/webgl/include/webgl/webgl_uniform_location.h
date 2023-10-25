@@ -16,19 +16,26 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_UNIFORM_LOCATION
 #define ROSENRENDER_ROSEN_WEBGL_UNIFORM_LOCATION
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLUniformLocation final : public NExporter {
+class WebGLUniformLocation final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLUniformLocation";
+    inline static const int objectType = WEBGL_OBJECT_UNIFORM_LOCATION;
+    inline static const int DEFAULT_ID = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLUniformLocation** instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLUniformLocation>(env, instance);
+    }
 
     void SetUniformLocationId(int location)
     {
@@ -45,7 +52,22 @@ public:
     WebGLUniformLocation(napi_env env, napi_value exports) : NExporter(env, exports), m_location(0) {};
 
     ~WebGLUniformLocation() {};
+
+    static WebGLUniformLocation* GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLUniformLocation>(env, obj);
+    }
+
+    const std::string &GetUniformLocationName() const
+    {
+        return m_name;
+    }
+    void SetUniformLocationName(const std::string &name)
+    {
+        m_name = std::move(name);
+    }
 private:
+    std::string m_name {};
     int m_location;
 };
 } // namespace Rosen

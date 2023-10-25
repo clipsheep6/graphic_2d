@@ -13,11 +13,7 @@
  * limitations under the License.
  */
 
-#include "../include/util/util.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "util/util.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,24 +33,53 @@ void Util::SplitString(const string& str, vector<string>& vec, const string& pat
     }
 }
 
-WebGLRenderingContextBasicBase *Util::GetContextObject(napi_env env, napi_value thisVar, const std::string& contextType)
+bool Util::GetContextInfo(napi_env env, napi_value thisVar, std::string &contextId, std::vector<std::string> &info)
 {
-    bool succ = false;
     napi_status status;
-    napi_value id;
+    bool succ = false;
+    napi_value id = nullptr;
     status = napi_get_named_property(env, thisVar, "id", &id);
     if (status != napi_ok) {
-        return nullptr;
+        return false;
     }
     unique_ptr<char[]> idRev;
     tie(succ, idRev, ignore) = NVal(env, id).ToUTF8String();
     if (!succ) {
+        return false;
+    }
+    contextId = idRev.get();
+
+    napi_value param = nullptr;
+    status = napi_get_named_property(env, thisVar, "param", &param);
+    if (status != napi_ok) {
+        return false;
+    }
+    unique_ptr<char[]> strRev;
+    tie(succ, strRev, ignore) = NVal(env, param).ToUTF8String();
+    if (!succ) {
+        return false;
+    }
+    string str = strRev.get();
+    Util::SplitString(str, info, ",");
+    if (info.size() == 0) {
+        return false;
+    }
+    return true;
+}
+
+WebGLRenderingContextBasicBase *Util::GetContextObject(napi_env env, napi_value thisVar)
+{
+    string contextId;
+    std::vector<std::string> info;
+    bool succ = GetContextInfo(env, thisVar, contextId, info);
+    if (!succ) {
         return nullptr;
     }
-    string idStr = idRev.get();
-    auto& objects = (contextType == "webgl") ? ObjectManager::GetInstance().GetWebgl1ObjectMap() :
-        ObjectManager::GetInstance().GetWebgl2ObjectMap();
-    auto it = objects.find(idStr);
+    size_t webglItem = info[0].find("webgl");
+    string webgl2Str = info[0].substr(webglItem, 6); // length of webgl2
+    auto& objects = (webgl2Str == "webgl2") ? ObjectManager::GetInstance().GetWebgl2ObjectMap() :
+        ObjectManager::GetInstance().GetWebgl1ObjectMap();
+    auto it = objects.find(contextId);
     if (it == objects.end()) {
         return nullptr;
     }
@@ -122,7 +147,3 @@ void Util::SetContextAttr(vector<string>& vec, WebGLContextAttributes *webGlCont
 }
 } // namespace Rosen
 } // namespace OHOS
-
-#ifdef __cplusplus
-}
-#endif

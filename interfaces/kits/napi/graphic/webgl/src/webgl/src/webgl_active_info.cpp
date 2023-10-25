@@ -13,25 +13,69 @@
  * limitations under the License.
  */
 
-#include "../include/webgl/webgl_active_info.h"  // for WebGLActiveInfo, Web...
+#include "webgl/webgl_active_info.h"  // for WebGLActiveInfo, Web...
 
-#include "__config"                              // for std
-#include "iosfwd"                                // for string
-#include "js_native_api_types.h"                 // for napi_property_descri...
-#include "memory"                                // for make_unique, unique_ptr
-#include "new"                                   // for operator delete
-#include "string"                                // for basic_string
-#include "tuple"                                 // for tuple, tie
-#include "type_traits"                           // for move
-#include "vector"                                // for vector
-
-#include "../../common/napi/n_class.h"           // for NClass
-#include "../../common/napi/n_func_arg.h"        // for NFuncArg, NARG_CNT
-#include "common/napi/n_val.h"                   // for NVal
+#include "napi/n_class.h"           // for NClass
+#include "napi/n_func_arg.h"        // for NFuncArg, NARG_CNT
+#include "util/log.h"
+#include "napi/n_val.h"                   // for NVal
 
 namespace OHOS {
 namespace Rosen {
 using namespace std;
+
+WebGLActiveInfo* WebGLActiveInfo::GetWebGLActiveInfo(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::ZERO)) {
+        LOGE("GetWebGLActiveInfo::GetActiveName invalid arg");
+        return nullptr;
+    }
+    if (funcArg.GetThisVar() == nullptr) {
+        LOGE("GetWebGLActiveInfo::GetActiveName invalid arg");
+        return nullptr;
+    }
+    WebGLActiveInfo* webGLActiveInfo = nullptr;
+    napi_status status = napi_unwrap(env, funcArg.GetThisVar(), (void**)&webGLActiveInfo);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    return webGLActiveInfo;
+}
+
+napi_value WebGLActiveInfo::GetActiveName(napi_env env, napi_callback_info info)
+{
+    WebGLActiveInfo* webGLActiveInfo = GetWebGLActiveInfo(env, info);
+    if (webGLActiveInfo == nullptr) {
+        return nullptr;
+    }
+    std::string name = webGLActiveInfo->GetActiveName();
+    LOGI("WebGLActiveInfo::GetActiveName %s ", name.c_str());
+    return NVal::CreateUTF8String(env, name).val_;
+}
+
+napi_value WebGLActiveInfo::GetActiveSize(napi_env env, napi_callback_info info)
+{
+    WebGLActiveInfo* webGLActiveInfo = GetWebGLActiveInfo(env, info);
+    if (webGLActiveInfo == nullptr) {
+        return nullptr;
+    }
+    int size = webGLActiveInfo->GetActiveSize();
+    LOGI("WebGLActiveInfo::GetActiveSize %d ", size);
+    napi_value result;
+    return (napi_create_int32(env, size, &result) != napi_ok) ? nullptr : result;
+}
+
+napi_value WebGLActiveInfo::GetActiveType(napi_env env, napi_callback_info info)
+{
+    WebGLActiveInfo* webGLActiveInfo = GetWebGLActiveInfo(env, info);
+    if (webGLActiveInfo == nullptr) {
+        return nullptr;
+    }
+    int type = webGLActiveInfo->GetActiveType();
+    LOGI("WebGLActiveInfo::GetActiveType %d", type);
+    return NVal::CreateInt64(env, type).val_;
+}
 
 napi_value WebGLActiveInfo::Constructor(napi_env env, napi_callback_info info)
 {
@@ -49,7 +93,11 @@ napi_value WebGLActiveInfo::Constructor(napi_env env, napi_callback_info info)
 
 bool WebGLActiveInfo::Export(napi_env env, napi_value exports)
 {
-    vector<napi_property_descriptor> props = {};
+    vector<napi_property_descriptor> props = {
+        NVal::DeclareNapiGetter("name", WebGLActiveInfo::GetActiveName),
+        NVal::DeclareNapiGetter("size", WebGLActiveInfo::GetActiveSize),
+        NVal::DeclareNapiGetter("type", WebGLActiveInfo::GetActiveType)
+    };
 
     string className = GetClassName();
     bool succ = false;

@@ -16,37 +16,70 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_SHADER
 #define ROSENRENDER_ROSEN_WEBGL_SHADER
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLShader final : public NExporter {
+class WebGLShader final : public NExporter, WebGLObject {
 public:
     inline static const std::string className = "WebGLShader";
+    inline static const int objectType = WEBGL_OBJECT_SHADER;
+    inline static const int DEFAULT_SHADER_ID = 0;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
+    static NVal CreateObjectInstance(napi_env env, WebGLShader** instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLShader>(env, instance);
+    }
 
-    void SetShaderId(int shaderId)
+    void SetShaderId(uint32_t shaderId)
     {
         m_shaderId = shaderId;
     }
 
-    int GetShaderId() const
+    uint32_t GetShaderId() const
     {
         return m_shaderId;
     }
 
-    explicit WebGLShader() : m_shaderId(0) {};
+    void SetShaderRes(const std::string& res)
+    {
+        m_res = std::move(res);
+    }
 
-    WebGLShader(napi_env env, napi_value exports) : NExporter(env, exports), m_shaderId(0) {};
+    const std::string& GetShaderRes() const
+    {
+        return m_res;
+    }
+
+    explicit WebGLShader() : m_shaderId(0), m_type(0) {};
+
+    WebGLShader(napi_env env, napi_value exports) : NExporter(env, exports), m_shaderId(0), m_type(0) {};
 
     ~WebGLShader() {};
+
+    static WebGLShader* GetObjectInstance(napi_env env, napi_value obj)
+    {
+        return WebGLObject::GetObjectInstance<WebGLShader>(env, obj);
+    }
+    void SetShaderType(GLenum type)
+    {
+        m_type = type;
+    }
+    GLenum GetShaderType()
+    {
+        return m_type;
+    }
+
 private:
-    int m_shaderId;
+    std::string m_res = {};
+    uint32_t m_shaderId { 0 };
+    GLenum m_type { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

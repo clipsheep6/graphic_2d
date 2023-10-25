@@ -113,6 +113,7 @@ const std::vector<ResetPropertyFunc> g_propertyResetterLUT = {
     [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND,              63
     [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE,                 64
     [](RSProperties* prop) { prop->SetShadowIsFilled(false); },          // SHADOW_IS_FILLED,         65
+    [](RSProperties* prop) { prop->SetColorBlendMode(false); },          // COLOR_BLENDMODE,          66
     nullptr,
 };
 } // namespace

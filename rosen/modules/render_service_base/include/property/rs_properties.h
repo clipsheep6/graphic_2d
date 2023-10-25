@@ -169,6 +169,8 @@ public:
     float GetBgImageHeight() const;
     float GetBgImagePositionX() const;
     float GetBgImagePositionY() const;
+    void SetColorBlendMode(bool blendmode);
+    bool GetColorBlendMode() const;
 
     // border properties
     void SetBorderColor(Vector4<Color> color);

@@ -150,8 +150,6 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
             RSPropertiesPainter::ApplyBackgroundEffect(GetRenderProperties(), canvas, this);
         }
         RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
-
-        // RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
     }
 
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);

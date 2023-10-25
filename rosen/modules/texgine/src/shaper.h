@@ -18,6 +18,7 @@
 
 #include "line_metrics.h"
 #include "texgine/typography_style.h"
+#include "text_shaper.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -55,6 +56,7 @@ private:
     void ConsiderTailEllipsis(const std::vector<VariantSpan> &ellipsisSpans, const double ellipsisWidth,
         const size_t maxLines, const double widthLimit);
     void ProcessEllipsis(int avalibleWidth, CharGroups &cgs, LineMetrics &lastLine);
+    void GenTextBlob(const TextShaper &textShaper, const TypographyStyle &tstyle, const double widthLimit);
 
     std::vector<LineMetrics> lineMetrics_;
     bool didExceedMaxLines_ = false;

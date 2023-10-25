@@ -30,7 +30,6 @@
 #include "text_breaker.h"
 #include "text_merger.h"
 #include "text_reverser.h"
-#include "text_shaper.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -198,8 +197,53 @@ std::vector<LineMetrics> Shaper::DoShape(std::vector<VariantSpan> spans, const T
             textShaper.Shape(span, tstyle, fontProviders);
         }
     }
+
+    GenTextBlob(textShaper, tstyle, widthLimit);
     DumpLineMetrics(lineMetrics_);
     return lineMetrics_;
+}
+
+void Shaper::GenTextBlob(const TextShaper &textShaper, const TypographyStyle &tstyle, const double widthLimit)
+{
+    for (int i = 0; i < static_cast<int>(lineMetrics_.size()); i++) {
+        auto &metric = lineMetrics_[i];
+        double spanGapWidth = 0.0;
+        double lineWidth = 0.0;
+        for (auto &span : metric.lineSpans) {
+            lineWidth += span.GetWidth();
+        }
+
+        auto ts = metric.lineSpans.back().TryToTextSpan();
+        // If the char is a whitespace, the return value of u_isWhitespace is 1.
+        if (ts && u_isWhitespace(ts->cgs_.GetBack().chars[0]) == 1) {
+            lineWidth -= ts->cgs_.GetBack().invisibleWidth;
+        }
+        // 1: The last line or if the line only one span shouldn`t apply justify
+        bool isJustify = tstyle.align == TextAlign::JUSTIFY && i != static_cast<int>(lineMetrics_.size()) - 1 &&
+            !metric.lineSpans.back().IsHardBreak() && metric.lineSpans.size() > 1;
+        if (isJustify) {
+            // 1: is to compute span gap width.
+            spanGapWidth = (widthLimit - lineWidth) / (static_cast<int>(metric.lineSpans.size()) - 1);
+        }
+
+        for (int i = 0; i < static_cast<int>(metric.lineSpans.size()); i++) {
+            auto xs = metric.lineSpans[i].GetTextStyle();
+            auto ts = metric.lineSpans[i].TryToTextSpan();
+            if (ts == nullptr) {
+                continue;
+            }
+            if (ts->cgs_.GetBack().IsHardBreak()) {
+                xs = tstyle.ConvertToTextStyle();
+            }
+
+            // 1: if the last line, shouldn`t apply justify.
+            if (i == static_cast<int>(metric.lineSpans.size()) - 1) {
+                spanGapWidth = 0;
+            }
+
+            textShaper.GenerateTextBlob(ts, tstyle, xs, spanGapWidth);
+        }
+    }
 }
 
 void Shaper::ConsiderHeadEllipsis(const std::vector<VariantSpan> &ellipsisSpans, const double ellipsisWidth,

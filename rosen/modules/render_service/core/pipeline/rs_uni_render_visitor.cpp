@@ -1940,6 +1940,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                     processor_->ProcessSurface(*surfaceNode);
                 }
             }
+            if (!RSMainThread::Instance()->WaitHardwareThreadTaskExcute()) {
+                RS_LOGW("RSUniRenderVisitor::ProcessDisplayRenderNode: hardwareThread task has too many to excute");
+            }
             if (needCreateDisplayNodeLayer) {
                 processor_->ProcessDisplaySurface(node);
                 processor_->PostProcess();
@@ -3792,6 +3795,20 @@ void RSUniRenderVisitor::PrepareOffscreenRender(RSRenderNode& node)
         RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, current surface is nullptr (software renderer?)");
         return;
     }
+    // create offscreen surface and canvas
+    offscreenSurface_ = canvas_->GetSurface()->MakeSurface(offscreenWidth, offscreenHeight);
+    if (offscreenSurface_ == nullptr) {
+        RS_LOGD("RSUniRenderVisitor::PrepareOffscreenRender, offscreenSurface is nullptr");
+        canvas_->ClipRect(Drawing::Rect(0, 0, offscreenWidth, offscreenHeight), Drawing::ClipOp::INTERSECT, false);
+        return;
+    }
+    auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface_.get());
+
+    // copy current canvas properties into offscreen canvas
+    offscreenCanvas->CopyConfiguration(*canvas_);
+
+    // backup current canvas and replace with offscreen canvas
+    canvasBackup_ = std::exchange(canvas_, offscreenCanvas);
 #endif
 }
 
@@ -3930,6 +3947,9 @@ bool RSUniRenderVisitor::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> r
         if (!node->IsHardwareForcedDisabled()) {
             processor_->ProcessSurface(*node);
         }
+    }
+    if (!RSMainThread::Instance()->WaitHardwareThreadTaskExcute()) {
+        RS_LOGW("RSUniRenderVisitor::DoDirectComposition: hardwareThread task has too many to excute");
     }
     processor_->PostProcess();
     RS_LOGD("RSUniRenderVisitor::DoDirectComposition end");

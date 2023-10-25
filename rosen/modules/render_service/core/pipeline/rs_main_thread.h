@@ -139,6 +139,9 @@ public:
     bool WaitUntilDisplayNodeBufferReleased(RSDisplayRenderNode& node);
     void NotifyDisplayNodeBufferReleased();
 
+    bool WaitHardwareThreadTaskExcute();
+    void NotifyHardwareThreadCanExcuteTask();
+
     // driven render
     void NotifyDrivenRenderFinish();
     void WaitUtilDrivenRenderFinished();
@@ -272,6 +275,7 @@ private:
     void ProcessHgmFrameRate(std::shared_ptr<FrameRateRangeData> data, uint64_t timestamp);
     void CollectFrameRateRange(std::shared_ptr<RSRenderNode> node);
     int32_t GetNodePreferred(const std::vector<HgmModifierProfile>& hgmModifierProfileList) const;
+    bool IsLastFrameUIFirstEnabled(NodeId appNodeId) const;
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -326,6 +330,10 @@ private:
 
     // Used to refresh the whole display when AccessibilityConfig is changed
     bool isAccessibilityConfigChanged_ = false;
+
+    // used for blocking mainThread when hardwareThread has 2 and more task to excute
+    mutable std::mutex hardwareThreadTaskMutex_;
+    std::condition_variable hardwareThreadTaskCond_;
 
     std::map<uint32_t, bool> lastPidVisMap_;
     VisibleData lastVisVec_;

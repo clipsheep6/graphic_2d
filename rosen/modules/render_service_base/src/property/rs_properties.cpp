@@ -2366,5 +2366,18 @@ void RSProperties::CalculateFrameOffset()
         isDrawn_ = true;
     }
 }
+
+// blend with background
+void RSProperties::SetColorBlendMode(bool blendMode)
+{
+    blendMode_ = blendMode;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+bool RSProperties::GetColorBlendMode() const
+{
+    return blendMode_;
+}
 } // namespace Rosen
 } // namespace OHOS

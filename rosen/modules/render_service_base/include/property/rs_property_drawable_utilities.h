@@ -16,7 +16,6 @@
 #ifndef RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_UTILITIES_H
 #define RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_UTILITIES_H
 
-#include <list>
 #include <utility>
 
 #include "pipeline/rs_paint_filter_canvas.h"
@@ -27,14 +26,14 @@ namespace OHOS::Rosen {
 // alias (reference or soft link) of another drawable
 class RSAliasDrawable : public RSPropertyDrawable {
 public:
-    explicit RSAliasDrawable(Slot::RSPropertyDrawableSlot slot);
+    explicit RSAliasDrawable(uint8_t slot);
     ~RSAliasDrawable() override = default;
 
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
     bool Update(RSPropertyDrawableGenerateContext& context) override { return true; }
 
 private:
-    Slot::RSPropertyDrawableSlot slot_;
+    uint8_t slot_;
 };
 
 // ============================================================================

@@ -18,14 +18,19 @@
 
 #include <utility>
 
+#include "include/core/SkPaint.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkRRect.h"
 
+#include "common/rs_color.h"
+#include "common/rs_vector4.h"
 #include "property/rs_property_drawable.h"
+#include "render/rs_mask.h"
 
 namespace OHOS::Rosen {
 class RSSkiaFilter;
 struct RSCachedEffectData;
+class RSRenderParticle;
 
 class RSBoundsGeometryDrawable : public RSPropertyDrawable {
 public:

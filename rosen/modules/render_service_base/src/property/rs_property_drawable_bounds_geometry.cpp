@@ -57,7 +57,7 @@ RSPropertyDrawable::DrawablePtr RSBoundsGeometryDrawable::Generate(const RSPrope
 void RSClipBoundsDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
     // Planning: Generate() should calculate the draw op and cache it
-    auto& properties = node.GetMutableRenderProperties();
+    auto& properties = node.GetRenderProperties();
     if (properties.GetClipBounds() != nullptr) {
         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
     } else if (properties.GetClipToRRect()) {

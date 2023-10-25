@@ -915,12 +915,6 @@ RSPaintFilterCanvas::CanvasStatus RSPaintFilterCanvas::GetCanvasStatus() const
 }
 #endif
 
-RSCachedEffectData::RSCachedEffectData(sk_sp<SkImage>&& image, const SkIRect& rect)
-    : cachedImage_(image), cachedRect_(rect)
-{}
-
-RSCachedEffectData::~RSCachedEffectData() = default;
-
 void RSPaintFilterCanvas::SetIsParallelCanvas(bool isParallel)
 {
     isParallelCanvas_ = isParallel;

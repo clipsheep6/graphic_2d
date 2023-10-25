@@ -16,28 +16,28 @@
 #include "pipeline/rs_canvas_render_node.h"
 
 #include <algorithm>
-#include "modifier/rs_modifier_type.h"
 
-#include "common/rs_obj_abs_geometry.h"
+#include "memory/rs_memory_track.h"
+#include "memory/rs_tag_tracker.h"
+
 #include "common/rs_common_def.h"
+#include "common/rs_obj_abs_geometry.h"
+#include "modifier/rs_modifier_type.h"
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "platform/common/rs_log.h"
+#include "property/rs_properties_painter.h"
+#include "property/rs_property_drawable.h"
+#include "visitor/rs_node_visitor.h"
+
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkCanvas.h"
 #else
 #include "recording/recording_canvas.h"
 #endif
-#include "memory/rs_memory_track.h"
-#include "memory/rs_tag_tracker.h"
-#include "pipeline/rs_paint_filter_canvas.h"
-#include "property/rs_properties_painter.h"
-#include "render/rs_blur_filter.h"
-#include "render/rs_light_up_effect_filter.h"
-#include "platform/common/rs_log.h"
-#include "visitor/rs_node_visitor.h"
-#include "property/rs_property_drawable.h"
 
 namespace OHOS {
 namespace Rosen {
-using namespace Slot;
+using Slot::RSPropertyDrawableSlot;
 namespace {
 constexpr PropertyId ANONYMOUS_MODIFIER_ID = 0;
 }

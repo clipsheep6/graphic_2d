@@ -64,6 +64,12 @@ enum class OutOfParentType {
     UNKNOWN
 };
 
+enum class RSColorBlendModeType {
+    SRC_IN, // use father widget's color
+    DST_IN, // use son widget's color
+    NONE,
+};
+
 class Decoration final {
 public:
     Decoration() {}

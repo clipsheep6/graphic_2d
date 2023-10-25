@@ -59,10 +59,7 @@ std::vector<VariantSpan> TextMerger::MergeSpans(const std::vector<VariantSpan> &
         CharGroups cgs;
         std::optional<bool> currentRTL = std::nullopt;
         for (; it != spans.end(); it++) {
-            LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "MergeSpan");
             auto result = MergeSpan(*it, currentRTL, cgs);
-            it->Dump(DumpType::DONT_RETURN);
-            LOGCEX_DEBUG() << result;
             if (result == MergeResult::BREAKED) {
                 it++;
                 break;
@@ -79,9 +76,6 @@ std::vector<VariantSpan> TextMerger::MergeSpans(const std::vector<VariantSpan> &
 
         auto &lastSpan = *(it - 1);
         if (auto ts = lastSpan.TryToTextSpan(); ts != nullptr) {
-            lastSpan.Dump(DumpType::DONT_RETURN);
-            LOGCEX_DEBUG() << "generated";
-
             auto mergedSpan = ts->CloneWithCharGroups(cgs);
             VariantSpan vs(mergedSpan);
             vs.SetTextStyle(lastSpan.GetTextStyle());

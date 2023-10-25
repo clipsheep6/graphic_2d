@@ -96,7 +96,6 @@ FontParser::FontDescriptor* FontManager::FindAccurateResult(ResultSet* fontSrc, 
             }
         }
         if (descResPtr != nullptr) {
-            LOGEX_FUNC_LINE_DEBUG() << "cache get accurate result";
             return descResPtr;
         }
     }
@@ -105,7 +104,6 @@ FontParser::FontDescriptor* FontManager::FindAccurateResult(ResultSet* fontSrc, 
             continue;
         } else {
             descResPtr = &(*it);
-            LOGEX_FUNC_LINE_DEBUG() << "os get accurate result";
             break;
         }
     }
@@ -128,7 +126,6 @@ FontParser::FontDescriptor* FontManager::FindFallbackResult(ResultSet* fontSrc, 
         for (ResultCache::iterator it = resultCache.begin(); it != resultCache.end(); it++) {
             if (ResFallbackMatch(*it, descFind)) {
                 fbkFonts.push_back(*it);
-                LOGEX_FUNC_LINE_DEBUG() << "cache get fallback result";
             }
         }
     }
@@ -136,7 +133,6 @@ FontParser::FontDescriptor* FontManager::FindFallbackResult(ResultSet* fontSrc, 
         for (ResultSet::iterator it = fontSrc->begin(); it != fontSrc->end(); it++) {
             if (ResFallbackMatch(*it, descFind)) {
                 fbkFonts.push_back(*it);
-                LOGEX_FUNC_LINE_DEBUG() << "os get fallback result";
             }
         }
     }

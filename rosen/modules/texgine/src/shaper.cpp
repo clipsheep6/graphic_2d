@@ -36,17 +36,6 @@ namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
 #define MAXWIDTH 1e9
-namespace {
-void DumpLineMetrics(const std::vector<LineMetrics> &lineMetrics)
-{
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "DumpLineMetrics");
-    for (const auto &metric : lineMetrics) {
-        for (const auto &span : metric.lineSpans) {
-            span.Dump();
-        }
-    }
-}
-} // namespace
 
 bool Shaper::DidExceedMaxLines() const
 {
@@ -198,7 +187,6 @@ std::vector<LineMetrics> Shaper::DoShape(std::vector<VariantSpan> spans, const T
             textShaper.Shape(span, tstyle, fontProviders);
         }
     }
-    DumpLineMetrics(lineMetrics_);
     return lineMetrics_;
 }
 

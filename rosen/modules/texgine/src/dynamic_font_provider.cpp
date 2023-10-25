@@ -61,7 +61,6 @@ int DynamicFontProvider::LoadFont(const std::string &familyName, const void *dat
     }
 
     auto typeface = std::make_unique<Typeface>(texgineTypeface);
-    LOGEX_FUNC_LINE_DEBUG() << "load font name:" << familyName;
     auto dfss = std::make_shared<DynamicFontStyleSet>(std::move(typeface));
     fontStyleSetMap_[familyName] = std::make_shared<VariantFontStyleSet>(dfss);
     return 0;

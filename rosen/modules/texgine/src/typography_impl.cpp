@@ -113,7 +113,7 @@ int TypographyImpl::GetLineCount() const
 
 void TypographyImpl::SetIndents(const std::vector<float> &indents)
 {
-    // to be done: set indents
+    indents_ = indents;
 }
 
 size_t TypographyImpl::FindGlyphTargetLine(double y) const
@@ -273,6 +273,7 @@ void TypographyImpl::Layout(double maxWidth)
         }
 
         Shaper shaper;
+        shaper.SetIndents(indents_);
         lineMetrics_ = shaper.DoShape(spans_, typographyStyle_, fontProviders_, maxWidth);
         if (lineMetrics_.size() == 0) {
             LOGEX_FUNC_LINE(ERROR) << "Shape failed";
@@ -746,19 +747,33 @@ std::vector<TextRect> TypographyImpl::GetTextRectsOfPlaceholders() const
 void TypographyImpl::ApplyAlignment()
 {
     TextAlign align_ = typographyStyle_.GetEquivalentAlign();
+    int LineNumber = 0;
     for (auto &line : lineMetrics_) {
+        double indent = 0.0;
         double typographyOffsetX = 0.0;
+        if (LineNumber < indents_.size()) {
+            indent = indents_[LineNumber];
+        } else {
+            indent = indents_.size() > 0 ? indents_.back() : 0.0;
+        }
+        typographyOffsetX = indent;
         if (TextAlign::RIGHT == align_ || (TextAlign::JUSTIFY == align_ &&
             TextDirection::RTL == typographyStyle_.direction)) {
-            typographyOffsetX = maxWidth_ - line.width;
+            typographyOffsetX = maxWidth_ - line.width - indent;
         } else if (TextAlign::CENTER == align_) {
             typographyOffsetX = HALF(maxWidth_ - line.width);
+            if (typographyStyle_.direction == TextDirection::LTR) {
+                typographyOffsetX += indent;
+            } else if (typographyStyle_.direction == TextDirection::RTL) {
+                typographyOffsetX -= indent;
+            }
         }
 
         for (auto &span : line.lineSpans) {
             span.AdjustOffsetX(typographyOffsetX);
         }
         line.indent = typographyOffsetX;
+        LineNumber++;
     }
 }
 } // namespace TextEngine

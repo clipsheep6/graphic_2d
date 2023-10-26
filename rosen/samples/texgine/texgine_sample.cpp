@@ -19,7 +19,9 @@
 #include <texgine/typography.h>
 #include <texgine/utils/exlog.h>
 #include <texgine/utils/memory_usage_scope.h>
+#ifdef LOGGER_ENABLE_SCOPE
 #include <texgine/utils/trace.h>
+#endif
 
 #include "feature_test/feature_test_framework.h"
 #include "texgine_canvas.h"
@@ -156,7 +158,9 @@ int main()
         }
 
         MemoryUsageScope scope(ptest->GetTestName());
+    #ifdef LOGGER_ENABLE_SCOPE
         ScopedTrace layoutScope(ptest->GetTestName());
+    #endif
         LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ptest->GetTestName());
         ptest->Layout();
         for (const auto &typography : ptest->GetTypographies()) {

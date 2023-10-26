@@ -284,9 +284,8 @@ public:
     const std::optional<float>& GetInvert() const;
     void SetHueRotate(const std::optional<float>& hueRotate);
     const std::optional<float>& GetHueRotate() const;
-    void SetColorBlend(const std::optional<Color>& colorBlend);
-    const std::optional<Color>& GetColorBlend() const;
-
+    void SetColorBlendMode(RSColorBlendModeType blendmode);
+    RSColorBlendModeType GetColorBlendMode() const;
 #ifndef USE_ROSEN_DRAWING
     const sk_sp<SkColorFilter>& GetColorFilter() const;
 #else
@@ -406,7 +405,7 @@ private:
 
     std::unique_ptr<Sandbox> sandbox_ = nullptr;
 
-    bool blendMode_ = false;
+    RSColorBlendModeType blendMode_ = RSColorBlendModeType::NONE;
 
     friend class RSBackgroundImageDrawable;
     friend class RSCanvasRenderNode;

@@ -250,6 +250,12 @@ void RSProperty<RRect>::UpdateToRender(const RRect& value, bool isDelta) const
 }
 
 template<>
+void RSProperty<RSColorBlendModeType>::UpdateToRender(const RSColorBlendModeType& value, bool isDelta) const
+{
+    UPDATE_TO_RENDER(RSUpdatePropertyBlendmode, value, isDelta);
+}
+
+template<>
 bool RSProperty<float>::IsValid(const float& value)
 {
     return !isinf(value);

@@ -867,11 +867,8 @@ void RSNode::SetBgImagePositionY(float positionY)
 
 void RSNode::SetColorBlendMode(const RSColorBlendModeType blendMode)
 {
-    if (blendMode == RSColorBlendModeType::SRC_IN) {
-        SetProperty<RSColorBlendModeModifier, RSProperty<bool>>(RSModifierType::COLOR_BLENDMODE, true);
-    } else {
-        SetProperty<RSColorBlendModeModifier, RSProperty<bool>>(RSModifierType::COLOR_BLENDMODE, false);
-    }
+    SetProperty<RSColorBlendModeModifier, RSProperty<RSColorBlendModeType>>(
+        RSModifierType::COLOR_BLENDMODE, blendMode);
 }
 
 // border

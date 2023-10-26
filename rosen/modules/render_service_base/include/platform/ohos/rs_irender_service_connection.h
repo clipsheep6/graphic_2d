@@ -105,6 +105,11 @@ public:
     virtual void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
         SurfaceCaptureType surfaceCaptureType) = 0;
 
+    virtual bool TextureConversion(sptr<RSISurfaceCaptureCallback> callback, std::shared_ptr<Media::PixelMap> pixelAstc)
+    {
+        return false;
+    }
+
     virtual void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) = 0;
 
     virtual RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id) = 0;

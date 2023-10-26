@@ -246,6 +246,32 @@ bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<Surfac
     return true;
 }
 
+class TextureConversionCallbackDirector : public RSSurfaceCaptureCallbackStub
+{
+public:
+    explicit TextureConversionCallbackDirector(std::shared_ptr<SurfaceCaptureCallback> callback) : callback_(callback) {}
+    ~TextureConversionCallbackDirector() override {};
+    void OnSurfaceCapture(NodeId id, Media::PixelMap* pixelmap) override
+    {
+        callback_->OnSurfaceCapture(std::shared_ptr<media::PixelMap>(pixelmap));
+    };
+
+private:
+    std::shared_ptr<SurfaceCaptureCallback> callback_;
+};
+
+bool RSRenderServiceClient::TextureConversion(std::shared_ptr<SurfaceCaptureCallback> callback, std::shared_ptr<Media::PixelMap> pixelAstc)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::TextureConversion renderService == nullptr!");
+        return false;
+    }
+    surfaceCaptureDirector_ = new TextureConversionCallbackDirector(callback);
+    renderService->TextureConversion(surfaceCaptureDirector_, pixelAstc);
+    return true;
+}
+
 int32_t RSRenderServiceClient::SetFocusAppInfo(
     int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName, uint64_t focusNodeId)
 {

@@ -108,6 +108,9 @@ private:
     void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
         SurfaceCaptureType surfaceCaptureType) override;
 
+    bool TextureConversion(sptr<RSISurfaceCaptureCallback> callback,
+        std::shared_ptr<Media::PixelMap> pixelAstc) override;
+
     void TakeSurfaceCaptureForUIWithUni(
         NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY);
 

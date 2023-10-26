@@ -156,6 +156,33 @@ private:
     float scaleY_;
 };
 
+class TextureConversionTask
+{
+public:
+    explicit TextureConversionTask(std::shared_ptr<Media::PixelMap> pixelAstc)
+        : pixelAstc_(pixelAstc), pixelMap_(nullptr) {}
+    TextureConversionTask() = delete;
+    ~TextureConversionTask() = default;
+    bool Run();
+    std::shared_ptr<Media::PixelMap> GetPixelMap()
+    {
+        return pixelMap_;
+    }
+
+private:
+    std::shared_ptr<Media::PixelMap> pixelAstc_;
+    std::shared_ptr<Media::PixelMap> pixelMap_;
+};
+
+TextureConversionTask::TextureConversionTask(/* args */)
+{
+}
+
+TextureConversionTask::~TextureConversionTask()
+{
+}
+
+
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 #ifndef USE_ROSEN_DRAWING
 class DmaMem {

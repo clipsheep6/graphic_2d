@@ -23,8 +23,8 @@
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 #else
-#include "draw/surface.h"
 #include "draw/color.h"
+#include "draw/surface.h"
 #endif
 #include "rs_trace.h"
 
@@ -270,6 +270,74 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
         }
     }
     callback->OnSurfaceCapture(nodeId_, pixelmap.get());
+    return true;
+}
+
+static SkImage::CompressionType PixelFormatToCompressionType(Media::PixelFormat pixelFormat)
+{
+    switch (pixelFormat) {
+        case Medai::PixelFormat::ASTC_4x4:
+            return SkImage::compressionType::kASTC_RGBAB_4x4;
+        case Medai::PixelFormat::ASTC_6x6:
+            return SkImage::compressionType::kASTC_RGBAB_6x6;
+        case Medai::PixelFormat::ASTC_8x8:
+            return SkImage::compressionType::kASTC_RGBAB_8x8;
+        case Media::PixelFormat::UNKNOWN:
+        default:
+            return SkImage::compressionType::kNone;
+    }
+}
+
+bool TextureConversionTask::Run()
+{
+    RS_LOGE("TextureConversionTask::Run in");
+    if (pixelAstc_ == nullptr || !pixelAstc_IsAstc()) {
+        RS_LOGE("TextureConversionTask::Run pixelAstc_ is nullptr");
+        return false;
+    }
+    sk_sp<SkData> compressData = SkData::MakeWithoutCopy(
+        reinterpret_cast<const void*>(pixelAstc_->GetWritablePixels()), pixelAstc_->GetCapacity());
+    
+    Media::ImageInfo imageInfo;
+    pixelAstc_->GetImageInfo(imageInfo);
+#if defined(NEW_RENDER_CONTEXT)
+    auto drawingContext = RSMainThread::Instance()->GetRenderEngine()->GetDrawingContext();
+#ifdef NEW_SKIA
+    GrDirectContext* grContext = drawingContext != nullptr ? drawingContext->GetDrawingContext() : nullptr;
+#else
+    GrContext* grContext = drawingContext != nullptr ? drawingContext->GetDrawingContext() : nullptr;
+#endif
+#else
+    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+#ifdef NEW_SKIA
+    GrDirectContext* grContext = renderContext != nullptr ? renderContext->GetGrContext() : nullptr;
+#else
+    GrContext* grContext = renderContext != nullptr ? renderContext->GetGrContext() : nullptr;
+#endif
+#endif
+    auto image = SkImage::MakeTextureFromCompressed(grContext, compressdata, static_cast<int>(imageInfo.size.width),
+        static_cast<int>(imageInfo.size.height), PixelFormatToCompressionType(imageInfo.pixelFormat));
+    if (!image) {
+        RS_LOGE("TextureConversionTask::Run in image == NULL failed");
+        return false;
+    }
+    SkImageInfo info = SkImageInfo::Make(pixelAstc_->GetWidth(), pixelAstc_->GetHeight(), kRGBA_8888_sKColorType, kPremul_SkAlphaType);
+    uint32_t bufferSize = pixelAstc_->GetWidth() * pixelAstc_->GetHeight() * 4;
+    int fd = 0;
+    Media::InitializationOptions opts;
+    opts.size.width = pixelAstc_->GetWidth();
+    opts.size.height = pixelAstc_->GetHeight();
+    auto pixelMap = Media::PixelMap::Create(opts);
+    void *data = Media::PixelMap::AllocSharedMemory(bufferSize, fd, pixelMap->GetUniqueId());
+    if (data == nullptr) {
+        RS_LOGE("allocate memory size %{public}u fail", bufferSize);
+        return false;
+    }
+    if (!image->readPixels(info, data, pixelAstc_->GetWidth() * 4, 0, 0)) {
+        RS_LOGE("TextureConversionTask::Run TextureConversionTask::CopyDataToPixelMap readPixels failed");
+    }
+    void *fdBuffer = new int32_t(fd);
+    pixelMap->SetPixelsAddr(data, fdBuffer, bufferSize, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
     return true;
 }
 

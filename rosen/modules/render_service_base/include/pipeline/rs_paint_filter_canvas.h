@@ -122,6 +122,17 @@ protected:
 // This class is used to filter the paint before drawing. currently, it is used to filter the alpha and foreground
 // color.
 #ifndef USE_ROSEN_DRAWING
+// effect cache data relate
+struct RSB_EXPORT RSCachedEffectData {
+    RSCachedEffectData() = default;
+    RSCachedEffectData(sk_sp<SkImage>&& image, const SkIRect& rect) : cachedImage_(std::move(image)), cachedRect_(rect)
+    {}
+    ~RSCachedEffectData() = default;
+
+    sk_sp<SkImage> cachedImage_ = nullptr;
+    SkIRect cachedRect_ = SkIRect::MakeEmpty();
+};
+
 class RSB_EXPORT RSPaintFilterCanvas : public SkPaintFilterCanvas {
 public:
     RSPaintFilterCanvas(SkCanvas* canvas, float alpha = 1.0f);
@@ -218,22 +229,15 @@ public:
     bool GetDisableFilterCache() const;
 
 #ifndef USE_ROSEN_DRAWING
-    // effect cache data relate
-    struct CachedEffectData {
-        CachedEffectData() = default;
-        CachedEffectData(sk_sp<SkImage>&& image, const SkIRect& rect);
-        ~CachedEffectData();
-        sk_sp<SkImage> cachedImage_ = nullptr;
-        SkIRect cachedRect_ = SkIRect::MakeEmpty();
-    };
-    void SetEffectData(const std::shared_ptr<CachedEffectData>& effectData);
-    const std::shared_ptr<CachedEffectData>& GetEffectData() const;
+
+    void SetEffectData(const std::shared_ptr<RSCachedEffectData>& effectData);
+    const std::shared_ptr<RSCachedEffectData>& GetEffectData() const;
 
     // canvas status relate
     struct CanvasStatus {
         float alpha_;
         SkMatrix matrix_;
-        std::shared_ptr<CachedEffectData> effectData_;
+        std::shared_ptr<RSCachedEffectData> effectData_;
     };
     CanvasStatus GetCanvasStatus() const;
     void SetCanvasStatus(const CanvasStatus& status);
@@ -265,7 +269,7 @@ private:
 #ifndef USE_ROSEN_DRAWING
     using Env = struct {
         Color envForegroundColor_;
-        std::shared_ptr<CachedEffectData> effectData_;
+        std::shared_ptr<RSCachedEffectData> effectData_;
     };
 #endif
     std::stack<Env> envStack_;

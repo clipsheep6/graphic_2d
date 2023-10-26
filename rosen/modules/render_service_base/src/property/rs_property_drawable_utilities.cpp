@@ -22,11 +22,10 @@
 namespace OHOS::Rosen {
 // ============================================================================
 // alias (reference or soft link) of another drawable
-RSAliasDrawable::RSAliasDrawable(Slot::RSPropertyDrawableSlot slot) : slot_(slot) {}
+RSAliasDrawable::RSAliasDrawable(uint8_t slot) : slot_(slot) {}
 void RSAliasDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    auto& it = node.propertyDrawablesVec_[slot_];
-    if (it) {
+    if (auto& it = node.propertyDrawablesVec_[slot_]) {
         it->Draw(node, canvas);
     }
 }
@@ -84,6 +83,11 @@ void RSAlphaDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
     canvas.MultiplyAlpha(alpha_);
 }
+bool RSAlphaDrawable::Update(RSPropertyDrawableGenerateContext& context)
+{
+    alpha_ = context.properties_.GetAlpha();
+    return alpha_ != 1.f || context.properties_.GetAlphaOffscreen();
+}
 RSPropertyDrawable::DrawablePtr RSAlphaDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
 {
     auto alpha = context.properties_.GetAlpha();
@@ -95,24 +99,17 @@ RSPropertyDrawable::DrawablePtr RSAlphaDrawable::Generate(const RSPropertyDrawab
 }
 
 RSAlphaOffscreenDrawable::RSAlphaOffscreenDrawable(float alpha) : RSAlphaDrawable(alpha) {}
-void RSAlphaOffscreenDrawable::OnBoundsChange(const RSProperties& properties)
-{
-#ifndef USE_ROSEN_DRAWING
-    rect_ = RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect());
-#else
-    rect_ = RSPropertiesPainter::Rect2DrawingRect(properties.GetBoundsRect());
-#endif
-}
 void RSAlphaOffscreenDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
-    canvas.saveLayerAlpha(&rect_, std::clamp(alpha_, 0.f, 1.f) * UINT8_MAX);
-#else
-    Drawing::Brush brush;
-    brush.SetAlphaF(std::clamp(alpha, 0.f, 1.f) * UINT8_MAX);
-    Drawing::SaveLayerOps slr(&rect, &brush);
-    canvas.SaveLayer(slr);
+    auto rect = RSPropertiesPainter::Rect2SkRect(node.GetRenderProperties().GetBoundsRect());
+    canvas.saveLayerAlpha(&rect, std::clamp(alpha_, 0.f, 1.f) * UINT8_MAX);
 #endif
+}
+bool RSAlphaOffscreenDrawable::Update(RSPropertyDrawableGenerateContext& context)
+{
+    alpha_ = context.properties_.GetAlpha();
+    return alpha_ != 1.f || !context.properties_.GetAlphaOffscreen();
 }
 
 } // namespace OHOS::Rosen

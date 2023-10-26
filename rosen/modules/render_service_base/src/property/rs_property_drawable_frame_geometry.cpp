@@ -15,6 +15,7 @@
 
 #include "property/rs_property_drawable_frame_geometry.h"
 
+#include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties.h"
 #include "property/rs_properties_painter.h"
@@ -22,13 +23,9 @@
 namespace OHOS::Rosen {
 void RSFrameGeometryDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    canvas.translate(frameOffsetX_, frameOffsetY_);
+    canvas.translate(node.GetRenderProperties().GetFrameOffsetX(), node.GetRenderProperties().GetFrameOffsetY());
 }
-void RSFrameGeometryDrawable::OnBoundsChange(const RSProperties& properties)
-{
-    frameOffsetX_ = properties.GetFrameOffsetX();
-    frameOffsetY_ = properties.GetFrameOffsetY();
-}
+
 RSPropertyDrawable::DrawablePtr RSFrameGeometryDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
 {
     return std::make_unique<RSFrameGeometryDrawable>();

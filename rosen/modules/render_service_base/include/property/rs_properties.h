@@ -169,8 +169,8 @@ public:
     float GetBgImageHeight() const;
     float GetBgImagePositionX() const;
     float GetBgImagePositionY() const;
-    void SetColorBlendMode(bool blendmode);
-    bool GetColorBlendMode() const;
+    void SetColorBlendMode(RSColorBlendModeType blendmode);
+    RSColorBlendModeType GetColorBlendMode() const;
 
     // border properties
     void SetBorderColor(Vector4<Color> color);
@@ -284,8 +284,9 @@ public:
     const std::optional<float>& GetInvert() const;
     void SetHueRotate(const std::optional<float>& hueRotate);
     const std::optional<float>& GetHueRotate() const;
-    void SetColorBlendMode(RSColorBlendModeType blendmode);
-    RSColorBlendModeType GetColorBlendMode() const;
+    void SetColorBlend(const std::optional<Color>& colorBlend);
+    const std::optional<Color>& GetColorBlend() const;
+
 #ifndef USE_ROSEN_DRAWING
     const sk_sp<SkColorFilter>& GetColorFilter() const;
 #else

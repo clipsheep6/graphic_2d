@@ -117,6 +117,22 @@ void RSCanvasRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& ca
     RSRenderNode::ProcessTransitionBeforeChildren(canvas);
 }
 
+void RSCanvasRenderNode::ExecuteBlendMode(RSPaintFilterCanvas& canvas)
+{
+    SkPaint blendPaint;
+    static const std::vector<SkBlendMode> blendModeList = {
+        SkBlendMode::kSrcIn, // RSColorBlendModeType::SRC_IN
+        SkBlendMode::kDstIn, // RSColorBlendModeType::DST_IN
+    };
+    int blendMode = GetRenderProperties().GetColorBlendMode();
+    if (blendMode >= blendModeList.size()) {
+        ROSEN_LOGE("color blendmode is set %d which is invalid.", blendMode);
+        return;
+    }
+    blendPaint.setBlendMode(blendModeList[blendMode]);
+    canvas.saveLayer(nullptr, &blendPaint);
+}
+
 void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
@@ -176,18 +192,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
 #endif
     }
     if (isBlendMode) {
-        SkPaint blendPaint;
-        static const std::vector<SkBlendMode> blendModeList = {
-            SkBlendMode::kSrcIn, // RSColorBlendModeType::SRC_IN
-            SkBlendMode::kDstIn, // RSColorBlendModeType::DST_IN
-        };
-        int blendMode = GetRenderProperties().GetColorBlendMode();
-        if (blendMode >= blendModeList.size()) {
-            ROSEN_LOGE("color blendmode is set %d which is invalid.", blendMode);
-            return;
-        }
-        blendPaint.setBlendMode(blendModeList[blendMode]);
-        canvas.saveLayer(nullptr, &blendPaint);
+        ExecuteBlendMode(canvas);
     }
 }
 

@@ -2368,14 +2368,14 @@ void RSProperties::CalculateFrameOffset()
 }
 
 // blend with background
-void RSProperties::SetColorBlendMode(bool blendMode)
+void RSProperties::SetColorBlendMode(RSColorBlendModeType blendMode)
 {
     blendMode_ = blendMode;
     SetDirty();
     contentDirty_ = true;
 }
 
-bool RSProperties::GetColorBlendMode() const
+RSColorBlendModeType RSProperties::GetColorBlendMode() const
 {
     return blendMode_;
 }

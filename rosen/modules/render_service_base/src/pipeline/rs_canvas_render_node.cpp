@@ -128,13 +128,11 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
-    ApplyDrawCmdModifier(context, RSModifierType::COLOR_BLENDMODE);
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
-    if (GetRenderProperties().GetColorBlendMode() != RSColorBlendModeType::NONE) {
+    bool isBlendMode = false;
+    if (GetRenderProperties().GetColorBlendMode() != static_cast<int>(RSColorBlendModeType::NONE)) {
         canvas.saveLayer(nullptr, nullptr);
-        isBlendMode_ = true;
-    } else {
-        isBlendMode_ = false;
+        isBlendMode = true;
     }
 
     // In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
@@ -177,18 +175,18 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
         RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
 #endif
     }
-    if (isBlendMode_) {
+    if (isBlendMode) {
         SkPaint blendPaint;
-        // use background as src, child nodes as dst 
-        if (GetRenderProperties().GetColorBlendMode() == RSColorBlendModeType::DST_IN) {
-            // r = d * sa, blend background color with child nodes' alpha
-            blendPaint.setBlendMode(SkBlendMode::kDstIn);
-        } else if (GetRenderProperties().GetColorBlendMode() == RSColorBlendModeType::SRC_IN) {
-            // r = s * da
-            blendPaint.setBlendMode(SkBlendMode::kSrcIn);
-        } else {
-            ROSEN_LOGE("color blendmode unknown");
+        static const std::vector<SkBlendMode> blendModeList = {
+            SkBlendMode::kSrcIn, // RSColorBlendModeType::SRC_IN
+            SkBlendMode::kDstIn, // RSColorBlendModeType::DST_IN
+        };
+        int blendMode = GetRenderProperties().GetColorBlendMode();
+        if (blendMode >= blendModeList.size()) {
+            ROSEN_LOGE("color blendmode is set %d which is invalid.", blendMode);
+            return;
         }
+        blendPaint.setBlendMode(blendModeList[blendMode]);
         canvas.saveLayer(nullptr, &blendPaint);
     }
 }
@@ -227,9 +225,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     if (GetRenderProperties().IsLightUpEffectValid()) {
         RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);
     }
-    if (isBlendMode_) {
-        canvas.restore();
-    }
+
     RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
     auto para = GetRenderProperties().GetLinearGradientBlurPara();
     RSPropertiesPainter::DrawLinearGradientBlurFilter(GetRenderProperties(), canvas);

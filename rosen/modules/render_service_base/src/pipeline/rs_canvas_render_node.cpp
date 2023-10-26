@@ -130,7 +130,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
     ApplyDrawCmdModifier(context, RSModifierType::COLOR_BLENDMODE);
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
-    if (GetRenderProperties().GetColorBlendMode()) {
+    if (GetRenderProperties().GetColorBlendMode() != RSColorBlendModeType::NONE) {
         ROSEN_LOGD("node[%{public}lu] background uses blend mode", GetId());
         canvas.saveLayer(nullptr, nullptr);
         isBlendMode_ = true;
@@ -180,7 +180,13 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     }
     if (isBlendMode_) {
         SkPaint blendPaint;
-        blendPaint.setBlendMode(SkBlendMode::kDstIn);
+        if (GetRenderProperties().GetColorBlendMode() == RSColorBlendModeType::SRC_IN) {
+            blendPaint.setBlendMode(SkBlendMode::kDstIn);
+        } else if (GetRenderProperties().GetColorBlendMode() == RSColorBlendModeType::DST_IN) {
+            blendPaint.setBlendMode(SkBlendMode::kSrcIn);
+        } else {
+            ROSEN_LOGE("color blendmode unknown");
+        }
         canvas.saveLayer(nullptr, &blendPaint);
     }
 }

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NDK_INCLUDE_NATIVE_HYPER_GRAPHIC_MANAGER_H_
-#define NDK_INCLUDE_NATIVE_HYPER_GRAPHIC_MANAGER_H_
+#ifndef NATIVE_HYPER_GRAPHIC_MANAGER_H_
+#define NATIVE_HYPER_GRAPHIC_MANAGER_H_
 
 /**
  * @addtogroup NativeHgm

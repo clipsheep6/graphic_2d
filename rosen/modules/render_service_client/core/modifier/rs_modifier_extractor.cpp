@@ -284,11 +284,6 @@ float RSModifierExtractor::GetLightUpEffectDegree() const
     GET_PROPERTY_FROM_MODIFIERS(float, LIGHT_UP_EFFECT, 0.f, =);
 }
 
-RSColorBlendModeType RSModifierExtractor::GetColorBlendMode() const
-{
-    GET_PROPERTY_FROM_MODIFIERS(RSColorBlendModeType, COLOR_BLENDMODE, RSColorBlendModeType::NONE, =);
-}
-
 std::string RSModifierExtractor::Dump() const
 {
     std::string dumpInfo;

@@ -86,8 +86,6 @@ public:
     float GetSpherizeDegree() const;
     float GetLightUpEffectDegree() const;
 
-    RSColorBlendModeType GetColorBlendMode() const;
-
     std::string Dump() const;
 private:
     NodeId id_;

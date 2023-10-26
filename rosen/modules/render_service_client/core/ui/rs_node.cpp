@@ -867,7 +867,7 @@ void RSNode::SetBgImagePositionY(float positionY)
 
 void RSNode::SetColorBlendMode(const RSColorBlendModeType blendMode)
 {
-    SetProperty<RSColorBlendModeModifier, RSProperty<RSColorBlendModeType>>(
+    SetProperty<RSColorBlendModeModifier, RSProperty<int>>(
         RSModifierType::COLOR_BLENDMODE, static_cast<int>(blendMode);
 }
 

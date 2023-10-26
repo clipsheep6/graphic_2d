@@ -1897,8 +1897,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>)                   \
     EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)                                       \
-    EXPLICIT_INSTANTIATION(TEMPLATE, SkM44)                                          \
-    EXPLICIT_INSTANTIATION(TEMPLATE, RSColorBlendModeType)
+    EXPLICIT_INSTANTIATION(TEMPLATE, SkM44)
 #else
 #define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, bool)                                           \
@@ -1928,8 +1927,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                                       \
     EXPLICIT_INSTANTIATION(TEMPLATE, RRectT<float>)                                  \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<DrawCmdList>)                   \
-    EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)                                       \
-    EXPLICIT_INSTANTIATION(TEMPLATE, RSColorBlendModeType)
+    EXPLICIT_INSTANTIATION(TEMPLATE, SkMatrix)
 #endif
 #else
 #define BATCH_EXPLICIT_INSTANTIATION(TEMPLATE)                                     \
@@ -1959,8 +1957,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)                               \
     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4f)                                     \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<Drawing::DrawCmdList>)        \
-    EXPLICIT_INSTANTIATION(TEMPLATE, Drawing::Matrix)                              \
-    EXPLICIT_INSTANTIATION(TEMPLATE, RSColorBlendModeType)
+    EXPLICIT_INSTANTIATION(TEMPLATE, Drawing::Matrix)
 #endif
 
 BATCH_EXPLICIT_INSTANTIATION(RSRenderProperty)

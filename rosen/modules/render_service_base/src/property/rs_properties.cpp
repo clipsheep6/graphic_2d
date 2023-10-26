@@ -113,7 +113,7 @@ const std::vector<ResetPropertyFunc> g_propertyResetterLUT = {
     [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND,              63
     [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE,                 64
     [](RSProperties* prop) { prop->SetShadowIsFilled(false); },          // SHADOW_IS_FILLED,         65
-    [](RSProperties* prop) { prop->SetColorBlendMode(RSColorBlendModeType::NONE); }, // COLOR_BLENDMODE, 66
+    [](RSProperties* prop) { prop->SetColorBlendMode(static_cast<int>(RSColorBlendModeType::NONE); }, // COLOR_BLENDMODE, 66
     nullptr,
 };
 } // namespace
@@ -2368,14 +2368,14 @@ void RSProperties::CalculateFrameOffset()
 }
 
 // blend with background
-void RSProperties::SetColorBlendMode(RSColorBlendModeType blendMode)
+void RSProperties::SetColorBlendMode(int blendMode)
 {
     blendMode_ = blendMode;
     SetDirty();
     contentDirty_ = true;
 }
 
-RSColorBlendModeType RSProperties::GetColorBlendMode() const
+int RSProperties::GetColorBlendMode() const
 {
     return blendMode_;
 }

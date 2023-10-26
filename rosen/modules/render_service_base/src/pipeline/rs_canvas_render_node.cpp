@@ -180,8 +180,10 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     }
     if (isBlendMode_) {
         SkPaint blendPaint;
+        // child nodes will use background color
         if (GetRenderProperties().GetColorBlendMode() == RSColorBlendModeType::SRC_IN) {
             blendPaint.setBlendMode(SkBlendMode::kDstIn);
+        // child nodes will use its own color
         } else if (GetRenderProperties().GetColorBlendMode() == RSColorBlendModeType::DST_IN) {
             blendPaint.setBlendMode(SkBlendMode::kSrcIn);
         } else {

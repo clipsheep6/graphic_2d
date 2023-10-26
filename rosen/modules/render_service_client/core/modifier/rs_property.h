@@ -602,9 +602,6 @@ template<>
 RSC_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<RRect>::UpdateToRender(const RRect& value, bool isDelta) const;
-template<>
-RSC_EXPORT void RSProperty<RSColorBlendModeType>::UpdateToRender(
-    const RSColorBlendModeType& value, bool isDelta) const;
 
 template<>
 RSC_EXPORT bool RSProperty<float>::IsValid(const float& value);

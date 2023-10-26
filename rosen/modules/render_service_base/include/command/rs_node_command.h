@@ -53,7 +53,6 @@ enum RSNodeCommandType : uint16_t {
 #else
     UPDATE_MODIFIER_DRAWING_MATRIX,
 #endif
-    UPDATE_MODIFIER_BLENDMODE,
     SET_FREEZE,
     MARK_DRIVEN_RENDER,
     MARK_DRIVEN_RENDER_ITEM_INDEX,
@@ -179,9 +178,6 @@ ADD_COMMAND(RSUpdatePropertyDrawingMatrix,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAWING_MATRIX, RSNodeCommandHelper::UpdateModifier<Drawing::Matrix>,
         NodeId, Drawing::Matrix, PropertyId, bool))
 #endif
-ADD_COMMAND(RSUpdatePropertyBlendmode,
-    ARG(RS_NODE, UPDATE_MODIFIER_BLENDMODE, RSNodeCommandHelper::UpdateModifier<RSColorBlendModeType >,
-        NodeId, RSColorBlendModeType , PropertyId, bool))
 
 ADD_COMMAND(RSSetFreeze,
     ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))

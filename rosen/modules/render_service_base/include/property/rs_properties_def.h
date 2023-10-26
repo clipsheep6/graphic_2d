@@ -65,8 +65,8 @@ enum class OutOfParentType {
 };
 
 enum class RSColorBlendModeType {
-    SRC_IN, // use father widget's color
-    DST_IN, // use son widget's color
+    SRC_IN, // use foreground color and background alpha
+    DST_IN, // use background color and foreground alpha
     NONE,
 };
 

@@ -80,7 +80,9 @@ private:
     void GetChangedNodeRegion();
     bool CheckSurfaceVisiable(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusion();
-    void CalcDirtyRegionByNodeChange();
+    void CalcGlobalDirtyRegion();
+    void CalcGlobalDirtyRegionByNodeChange();
+    void CalcGlobalDirtyRegionByContainer();
     void MergeDirtyHistory();
     void MergeVisibleDirtyRegion();
     void SetSurfaceGlobalDirtyRegion();

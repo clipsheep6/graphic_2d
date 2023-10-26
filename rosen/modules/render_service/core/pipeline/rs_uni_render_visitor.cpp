@@ -1891,6 +1891,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
             CalcDirtyFilterRegion(displayNodePtr);
             displayNodePtr->ClearCurrentSurfacePos();
+            if (isPreComposeOn_) {
+                RSPreComposeManager::GetInstance()->UpdateGlobalDirtyByLastVsync(node.GetDirtyManager());
+            }
         } else {
             // if isPartialRenderEnabled_ is disabled for some reason (i.e. screen rotation),
             // we should keep a fullscreen dirtyregion history to avoid dirtyregion losses.

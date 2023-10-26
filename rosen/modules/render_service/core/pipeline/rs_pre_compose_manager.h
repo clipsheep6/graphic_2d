@@ -43,6 +43,7 @@ public:
     bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
         uint32_t threadIndex);
     void SetBufferAge(int32_t bufferAge);
+    void UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager> dirtyManager);
 
 private:
     RSPreComposeManager() = default;

@@ -70,6 +70,8 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDis
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         auto surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
+        ROSEN_LOGD("Name %{public}s, dirtyRect %{public}s isDirty %{public}d", surfaceNode->GetName().c_str(),
+            surfaceDirtyRect.ToString().c_str(), surfaceDirtyManager->IsDirty());
         Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,
             surfaceDirtyRect.GetRight(), surfaceDirtyRect.GetBottom() };
         auto visibleRegion = surfaceNode->GetVisibleRegion();

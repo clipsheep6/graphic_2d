@@ -164,6 +164,15 @@ void RSPreComposeManager::SetBufferAge(int32_t bufferAge)
     rsPreComposeGroup_->SetBufferAge(bufferAge);
 }
 
+void RSPreComposeManager::UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager> dirtyManager)
+{
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
+        return;
+    }
+    rsPreComposeGroup_->UpdateGlobalDirtyByLastVsync(dirtyManager);
+}
+
 Occlusion::Region RSPreComposeManager::GetLastVisibleDirtyRegionWithGpuNodes()
 {
     if (rsPreComposeGroup_ == nullptr) {

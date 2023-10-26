@@ -1514,9 +1514,9 @@ bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffe
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-bool RSBaseRenderUtil::WritePreComposeToPng(sk_sp<SkSurface> surface)
+bool RSBaseRenderUtil::WritePreComposeToPng(int id, sk_sp<SkSurface> surface)
 #else
-bool RSBaseRenderUtil::WritePreComposeToPng(std::shared_ptr<Drawing::Surface> surface)
+bool RSBaseRenderUtil::WritePreComposeToPng(int id, std::shared_ptr<Drawing::Surface> surface)
 #endif
 {
     auto dumpEnable = RSSystemProperties::GetDumpPreComposeEnabled();
@@ -1532,6 +1532,7 @@ bool RSBaseRenderUtil::WritePreComposeToPng(std::shared_ptr<Drawing::Surface> su
     constexpr int secToUsec = 1000 * 1000;
     int64_t nowVal =  static_cast<int64_t>(now.tv_sec) * secToUsec + static_cast<int64_t>(now.tv_usec);
     std::string filename = "/data/PreCompose_" +
+        std::to_string(id) + "_" +
         std::to_string(nowVal) + ".png";
     WriteToPngParam param;
 

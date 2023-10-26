@@ -17,6 +17,7 @@
 #include "platform/common/rs_log.h"
 #include "rs_trace.h"
 #include "rs_base_render_util.h"
+#include "rs_main_thread.h"
 
 namespace {
     const unsigned HISTORY_QUEUE_MAX_SIZE = 4;
@@ -34,13 +35,13 @@ RSPreComposeGroup::RSPreComposeGroup() : bufferAge_(HISTORY_QUEUE_MAX_SIZE)
 RSPreComposeGroup::~RSPreComposeGroup()
 {
     ROSEN_LOGD("~RSPreComposeGroup()");
-    auto last = last_;
-    auto current = current_;
     if (handler_) {
-        auto task = [last, current]() {
+        auto task = [this]() {
             ROSEN_LOGD("RSPreComposeThread() Deinit Element");
-            last->Deinit();
-            current->Deinit();
+            last_->Deinit();
+            current_->Deinit();
+            grContext_ = nullptr;
+            eglShareContext_ = EGL_NO_CONTEXT;
         };
         handler_->PostSyncTask(task);
     }
@@ -52,6 +53,7 @@ void RSPreComposeGroup::UpdateLastAndCurrentVsync()
     if (current_->IsUpdateImageEnd()) {
         std::swap(current_, last_);
         canStartCurrentVsync_ = true;
+        current_->Reset();
     } else {
         canStartCurrentVsync_ = false;
     }
@@ -67,6 +69,19 @@ void RSPreComposeGroup::Init(ScreenInfo& info)
     runner_->Run();
     current_ = std::make_shared<RSPreComposeElement>(info, elementCount_++, regionManager_);
     last_ = std::make_shared<RSPreComposeElement>(info, elementCount_++, regionManager_);
+    if (handler_) {
+        auto current = current_;
+        auto last = last_;
+        auto task = [this, current, last] () {
+            ROSEN_LOGD("RSPreComposerThread Enqueue Start Task");
+            CreateShareGrContext();
+#if !(defined USE_ROSEN_DRAWING) && (defined NEW_SKIA)
+            current->Init(grContext_.get());
+            last->Init(grContext_.get());
+#endif
+        };
+        handler_->PostTask(task);
+    }
 }
 
 void RSPreComposeGroup::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
@@ -81,12 +96,61 @@ void RSPreComposeGroup::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRen
     if (handler_) {
         auto task = [current]() {
             ROSEN_LOGD("RSPreComposeThread Enqueue Task");
-            current->Init();
             current->UpdateDirtyRegion();
             current->UpdateImage();
         };
         handler_->PostTask(task);
     }
+}
+
+void RSPreComposeGroup::CreateShareEglContext()
+{
+#if !(defined USE_ROSEN_DRAWING) && (defined RS_ENABLE_GL)
+    if (renderContext_ == nullptr) {
+        auto renderEngine = RSMainThread::Instance()->GetRenderEngine();
+        renderContext_ = renderEngine->GetRenderContext().get();
+    }
+    eglShareContext_ = renderContext_->CreateShareContext();
+    if (eglShareContext_ == EGL_NO_CONTEXT) {
+        ROSEN_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
+        return;
+    }
+    if (!eglMakeCurrent(renderContext_->GetEGLDisplay(), EGL_NO_SURFACE, EGL_NO_SURFACE, eglShareContext_)) {
+        ROSEN_LOGE("eglMakeCurrent failed");
+    }
+#endif
+}
+
+
+void RSPreComposeGroup::CreateShareGrContext()
+{
+#if !(defined USE_ROSEN_DRAWING) && (defined NEW_SKIA)
+    ROSEN_LOGD("CreateShareGrContext start");
+    CreateShareEglContext();
+    const GrGLInterface *grGlInterface = GrGLCreateNativeInterface();
+    sk_sp<const GrGLInterface> glInterface(grGlInterface);
+    if (glInterface.get() == nullptr) {
+        ROSEN_LOGD("CreateShareGrContext failed");
+        return;
+    }
+
+    GrContextOptions options = {};
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    options.fPreferExternalImagesOverES3 = true;
+    options.fDisableDistanceFieldPaths = true;
+
+    auto handler = std::make_shared<MemoryHandler>();
+    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    auto size = glesVersion ? strlen(glesVersion) : 0;
+    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+
+    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(std::move(glInterface), options);
+    if (grContext == nullptr) {
+        ROSEN_LOGD("grContext is nullptr");
+        return;
+    }
+    grContext_ = grContext;
+#endif
 }
 
 void RSPreComposeGroup::UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
@@ -135,6 +199,11 @@ void RSPreComposeGroup::SetBufferAge(int32_t bufferAge)
         bufferAge = 0;
     }
     bufferAge_ = bufferAge;
+}
+
+void RSPreComposeGroup::UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager>& dirtyManager)
+{
+    last_->UpdateGlobalDirty(dirtyManager);
 }
 
 Occlusion::Region RSPreComposeGroup::MergeHistory(uint32_t age, Occlusion::Region& dirtyRegion)

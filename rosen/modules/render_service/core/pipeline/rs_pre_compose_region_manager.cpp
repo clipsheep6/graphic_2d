@@ -42,9 +42,14 @@ bool RSPreComposeRegionManager::CheckNodeChange()
             continue;
         }
         ROSEN_LOGD("name %{public}s id %{public}" PRIu64
-            " olddirty %{public}s dstRegion %{public}s oldSurfacedirty %{public}s",
+            " olddirty %{public}s dstRegion %{public}s oldSurfacedirty %{public}s"
+            "hasContainer %{public}d containerRegion %{public}s surfaceDirtyRect %{public}s"
+            "transparentRegion %{public}s",
             surface->GetName().c_str(), surface->GetId(), surface->GetOldDirty().ToString().c_str(),
-            surface->GetDstRect().ToString().c_str(), surface->GetOldDirtyInSurface().ToString().c_str());
+            surface->GetDstRect().ToString().c_str(), surface->GetOldDirtyInSurface().ToString().c_str(),
+            surface->HasContainerWindow(), surface->GetContainerRegion().GetRegionInfo().c_str(),
+            surface->GetDirtyManager()->GetCurrentFrameDirtyRegion().ToString().c_str(),
+            surface->GetTransparentRegion().GetRegionInfo().c_str());
         curSurfaceIds.emplace_back(surface->GetId());
     }
     isNodeChange_ = lastSurfaceIds_ != curSurfaceIds;
@@ -119,7 +124,13 @@ void RSPreComposeRegionManager::CalcOcclusion()
     GetChangedNodeRegion();
 }
 
-void RSPreComposeRegionManager::CalcDirtyRegionByNodeChange()
+void RSPreComposeRegionManager::CalcGlobalDirtyRegion()
+{
+    CalcGlobalDirtyRegionByNodeChange();
+    CalcGlobalDirtyRegionByContainer();
+}
+
+void RSPreComposeRegionManager::CalcGlobalDirtyRegionByNodeChange()
 {
     std::vector<RectI> rects;
     int32_t curPos = 0;
@@ -143,6 +154,42 @@ void RSPreComposeRegionManager::CalcDirtyRegionByNodeChange()
         }
     }
     ROSEN_LOGD("RSPreComposeRegionManager global dirty region %{public}s", dirtyManager_->GetDirtyRegion().ToString().c_str());
+}
+
+void RSPreComposeRegionManager::CalcGlobalDirtyRegionByContainer()
+{
+    for (auto node = curAllNodes_.rbegin(); node != curAllNodes_.rend(); ++node) {
+        auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*node);
+        if (curSurface == nullptr) {
+            continue;
+        }
+        auto surfaceDirtyManager = curSurface->GetDirtyManager();
+        if (surfaceDirtyManager == nullptr) {
+            continue;
+        }
+        RectI surfaceDirtyRect = surfaceDirtyManager->GetCurrentFrameDirtyRegion();
+
+        if (curSurface->HasContainerWindow()) {
+            auto containerRegion = curSurface->GetContainerRegion();
+            auto surfaceDirtyRegion = Occlusion::Rect{surfaceDirtyRect};
+            ROSEN_LOGD("containerRegion is intersect %d", containerRegion.IsIntersectWith(surfaceDirtyRegion));
+            if (containerRegion.IsIntersectWith(surfaceDirtyRegion)) {
+                const auto& rect = containerRegion.GetBoundRef();
+                dirtyManager_->MergeDirtyRect(
+                    RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+            }
+        } else {
+            auto transparentRegion = curSurface->GetTransparentRegion();
+            auto surfaceDirtyRegion = Occlusion::Rect{surfaceDirtyRect};
+            ROSEN_LOGD("transparentRegion is intersect %d", transparentRegion.IsIntersectWith(surfaceDirtyRegion));
+            if (transparentRegion.IsIntersectWith(surfaceDirtyRegion)) {
+                const auto& rect = transparentRegion.GetBoundRef();
+                dirtyManager_->MergeDirtyRect(
+                    RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+            }
+        }
+    }
+    ROSEN_LOGD("global rect %{public}s", dirtyManager_->GetCurrentFrameDirtyRegion().ToString().c_str());
 }
 
 void RSPreComposeRegionManager::MergeDirtyHistory()
@@ -176,8 +223,8 @@ void RSPreComposeRegionManager::MergeVisibleDirtyRegion()
         }
         auto surfaceDirtyManager = curSurface->GetDirtyManager();
         auto surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
-        ROSEN_LOGD("name %{public}s, dirtyRect %{public}s", curSurface->GetName().c_str(),
-            surfaceDirtyRect.ToString().c_str());
+        ROSEN_LOGD("name %{public}s, dirtyRect %{public}s isDirty %d", curSurface->GetName().c_str(),
+            surfaceDirtyRect.ToString().c_str(), surfaceDirtyManager->IsDirty());
         for (auto& child : curSurface->GetChildHardwareEnabledNodes()) {
             if (auto childNode = child.lock()) {
                 const auto& property = childNode->GetRenderProperties();
@@ -277,9 +324,10 @@ void RSPreComposeRegionManager::CalcClipRects()
 void RSPreComposeRegionManager::UpdateDirtyRegion(std::vector<RSBaseRenderNode::SharedPtr>& curAllNodes)
 {
     dirtyManager_->Clear();
+    isDirty_ = false;
     curAllNodes_ = curAllNodes;
     CalcOcclusion();
-    CalcDirtyRegionByNodeChange();
+    CalcGlobalDirtyRegion();
     MergeDirtyHistory();
     CalcVisiableDirtyRegion();
     CalcDirtyRectsWithDirtyRegion();

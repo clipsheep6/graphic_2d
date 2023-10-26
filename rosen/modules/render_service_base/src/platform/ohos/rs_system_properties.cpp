@@ -394,6 +394,16 @@ bool RSSystemProperties::GetDumpPreComposeEnabled()
     return (std::atoi((system::GetParameter("rosen.dump.precompose.enabled", "0")).c_str()) != 0);
 }
 
+bool RSSystemProperties::GetDebugSkipPreComposeEnabled()
+{
+    return (std::atoi((system::GetParameter("rosen.precompose.skip.enabled", "0")).c_str()) != 0);
+}
+
+int RSSystemProperties::GetDebugSkipPreComposeId()
+{
+    return std::atoi((system::GetParameter("rosen.precompose.skip.id", "2")).c_str());
+}
+
 bool RSSystemProperties::FindNodeInTargetList(std::string node)
 {
     static std::string targetStr = system::GetParameter("persist.sys.graphic.traceTargetList", "");

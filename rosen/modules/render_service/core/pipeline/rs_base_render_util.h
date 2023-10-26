@@ -149,9 +149,9 @@ public:
 
     static bool WritePixelMapToPng(Media::PixelMap& pixelMap);
 #ifndef USE_ROSEN_DRAWING
-    static bool WritePreComposeToPng(sk_sp<SkSurface> surface);
+    static bool WritePreComposeToPng(int id, sk_sp<SkSurface> surface);
 #else
-    static bool WritePreComposeToPng(std::shared_ptr<Drawing::Surface> surface);
+    static bool WritePreComposeToPng(int id, std::shared_ptr<Drawing::Surface> surface);
 #endif
     static void DealWithSurfaceRotationAndGravity(GraphicTransformType transform, Gravity gravity,
         RectF& localBounds, BufferDrawParam& params);

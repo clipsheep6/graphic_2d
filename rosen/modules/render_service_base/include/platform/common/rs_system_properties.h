@@ -159,6 +159,8 @@ public:
     static bool GetUIFirstEnabled();
     static bool GetPreComposeEnabled();
     static bool GetDumpPreComposeEnabled();
+    static bool GetDebugSkipPreComposeEnabled();
+    static int GetDebugSkipPreComposeId();
     static bool GetDebugTraceEnabled();
     static bool FindNodeInTargetList(std::string node);
     static bool GetCacheCmdEnabled();

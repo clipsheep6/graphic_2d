@@ -46,11 +46,25 @@ public:
     bool ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
         uint32_t threadIndex);
     void SetBufferAge(int32_t bufferAge);
+    void UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager>& dirtyManager);
 
 private:
     void PushHistory(Occlusion::Region& region);
     Occlusion::Region GetHistory(uint32_t index);
     Occlusion::Region MergeHistory(uint32_t age, Occlusion::Region& dirtyRegion);
+    void CreateShareEglContext();
+    void CreateShareGrContext();
+    RenderContext *renderContext_ = nullptr;
+    EGLContext eglShareContext_ = EGL_NO_CONTEXT;
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_SKIA
+    sk_sp<GrDirectContext> grContext_ = nullptr;
+#else
+    sk_sp<GrContext> grContext_ = nullptr;
+#endif
+#else
+    std::shared_ptr<Drawing::GPUContext> grContext_ = nullptr;
+#endif
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     std::shared_ptr<RSPreComposeElement> current_ = nullptr;

@@ -32,7 +32,9 @@ public:
     ~RSPreComposeElement();
     void SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
         std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId, uint64_t leashFocusId);
-    void Init();
+#if !(defined USE_ROSEN_DRAWING) && (defined NEW_SKIA)
+    void Init(GrDirectContext *grContext);
+#endif
     void Deinit();
     void Reset();
     void UpdateDirtyRegion();
@@ -49,6 +51,7 @@ public:
     bool ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex);
     bool IsUpdateImageEnd();
     void StartCalculateAndDrawImage();
+    void UpdateGlobalDirty(std::shared_ptr<RSDirtyRegionManager>& dirtyManager);
 
 private:
     void SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList);
@@ -58,8 +61,8 @@ private:
     void UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas>& canvas,
         std::shared_ptr<RSSurfaceRenderNode> node, Occlusion::Region& surfaceDirtyRegion);
     void CalVisDirtyRegion();
+    bool IsSkip();
     ScreenInfo screenInfo_;
-    RenderContext* renderContext_ = nullptr;
     std::shared_ptr<RSPaintFilterCanvas> mainCanvas_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
     std::shared_ptr<RSUniRenderVisitor> displayVisitor_;
@@ -91,14 +94,10 @@ private:
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> appWindowNodes_;
     std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair> hardwareNodes_;
     std::vector<std::pair<std::shared_ptr<RSSurfaceRenderNode>, Occlusion::Region>> gpuNodes_;
-    EGLContext eglShareContext_ = EGL_NO_CONTEXT;
-    void CreateShareEglContext();
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
-    sk_sp<GrDirectContext> CreateShareGrContext();
-    sk_sp<GrDirectContext> grContext_;
+    sk_sp<SkSurface> CreateSkSurface(GrDirectContext *grContext);
 #endif
-    sk_sp<SkSurface> CreateSkSurface();
     sk_sp<SkSurface> cacheSurface_ = nullptr;
 #ifdef RS_ENABLE_GL
     GrBackendTexture cacheTexture_;

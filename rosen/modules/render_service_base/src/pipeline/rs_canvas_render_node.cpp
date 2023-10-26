@@ -131,7 +131,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     ApplyDrawCmdModifier(context, RSModifierType::COLOR_BLENDMODE);
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
     if (GetRenderProperties().GetColorBlendMode() != RSColorBlendModeType::NONE) {
-        ROSEN_LOGD("node[%{public}lu] background uses blend mode", GetId());
+        ROSEN_LOGD("node[%{public}llu] background uses blend mode", GetId());
         canvas.saveLayer(nullptr, nullptr);
         isBlendMode_ = true;
     } else {

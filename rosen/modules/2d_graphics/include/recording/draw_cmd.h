@@ -125,6 +125,8 @@ public:
         CLIP_ADAPTIVE_ROUND_RECT_OPITEM,
         ADAPTIVE_IMAGE_OPITEM,
         ADAPTIVE_PIXELMAP_OPITEM,
+        EXTEND_PIXELMAP_OPITEM,
+        IMAGE_WITH_PARM_OPITEM;
         REGION_OPITEM,
         PATCH_OPITEM,
         EDGEAAQUAD_OPITEM,
@@ -803,6 +805,32 @@ private:
     ImageHandle pixelMap_;
     AdaptiveImageInfo imageInfo_;
     SamplingOptions smapling_;
+};
+
+class DrawExtendPixelMapOpItem : public DrawOpItem {
+public:
+    DrawExtendPixelMapOpItem(const ImageHandle& objectHandle, const SamplingOptions& sampling);
+    ~DrawExtendPixelMapOpItem() = default;
+
+    static void Playback(CanvasPlayer& player, const void* opItem);
+    void Playback(Canvas& canvas, const CmdList& cmdList, const Rect& rect) const;
+
+private:
+    ImageHandle objectHandle_;
+    SamplingOptions sampling_;
+};
+
+class DrawImageWithParmOpItem : public DrawOpItem {
+public:
+    DrawImageWithParmOpItem(const ImageHandle& objectHandle, const SamplingOptions& sampling);
+    ~DrawImageWithParmOpItem() = default;
+
+    static void Playback(CanvasPlayer& player, const void* opItem);
+    void Playback(Canvas& canvas, const CmdList& cmdList, const Rect& rect) const;
+
+private:
+    ImageHandle objectHandle_;
+    SamplingOptions sampling_;
 };
 } // namespace Drawing
 } // namespace Rosen

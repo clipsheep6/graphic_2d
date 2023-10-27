@@ -35,7 +35,9 @@
 #include "render/rs_shader.h"
 #include "render/rs_shadow.h"
 
+#ifndef USE_ROSEN_DRAWING
 #include "property/rs_filter_cache_manager.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -292,7 +294,7 @@ public:
     void SetUseEffect(bool useEffect);
     bool GetUseEffect() const;
 
-#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     const std::unique_ptr<RSFilterCacheManager>& GetFilterCacheManager(bool isForeground) const;
     void ClearFilterCache();
 #endif
@@ -393,7 +395,7 @@ private:
     std::shared_ptr<Drawing::ColorFilter> colorFilter_ = nullptr;
 #endif
 
-#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     void CreateFilterCacheManagerIfNeed();
     std::unique_ptr<RSFilterCacheManager> backgroundFilterCacheManager_;
     std::unique_ptr<RSFilterCacheManager> foregroundFilterCacheManager_;

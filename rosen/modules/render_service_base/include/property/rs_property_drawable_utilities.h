@@ -104,7 +104,7 @@ private:
 #ifndef USE_ROSEN_DRAWING
     SkRect rect_;
 #else
-    Drawing::Rect rect_;
+    Drawing::Brush brush_;
 #endif
 };
 

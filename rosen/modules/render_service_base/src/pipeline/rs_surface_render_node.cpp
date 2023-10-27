@@ -253,10 +253,8 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
 #ifdef RS_ENABLE_GL
     if (grContext_ && !IsOnTheTree()) {
         if (auto context = GetContext().lock()) {
-#ifndef USE_ROSEN_DRAWING
             RS_TRACE_NAME_FMT("need purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
                 GetId(), GetName().c_str());
-#endif
             if (IsLeashWindow()) {
                 context->MarkNeedPurge(RSContext::PurgeType::PURGE_UNLOCK);
             }
@@ -867,13 +865,11 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusWithVisible(bool visible)
         return;
     }
     prevVisible_ = visible;
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     if (!visible && !filterNodes_.empty()) {
         for (auto& node : filterNodes_) {
             node.second->GetMutableRenderProperties().ClearFilterCache();
         }
     }
-#endif
 }
 
 void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipRect)

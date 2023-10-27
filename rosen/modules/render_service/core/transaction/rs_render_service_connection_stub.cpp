@@ -775,13 +775,9 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             NodeId id = data.ReadUint64();
             std::shared_ptr<Media::PixelMap> pixelmap =
                 std::shared_ptr<Media::PixelMap>(data.ReadParcelable<Media::PixelMap>());
-#ifndef USE_ROSEN_DRAWING
-            SkRect rect;
-#else
-            Drawing::Rect rect;
-#endif
-            RSMarshallingHelper::Unmarshalling(data, rect);
-            bool result = GetPixelmap(id, pixelmap, &rect);
+            SkRect skRect;
+            RSMarshallingHelper::Unmarshalling(data, skRect);
+            bool result = GetPixelmap(id, pixelmap, &skRect);
             reply.WriteBool(result);
             break;
         }

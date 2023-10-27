@@ -1138,7 +1138,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     // for foreground filter, when do online opacity, rendering result already applied opacity,
     // so drawImage should not apply opacity again
     RSAutoCanvasRestore autoCanvasRestore(&canvas,
-        filterType == FilterType::FOREGROUND_FILTER ? RSAutoCanvasRestore::kAlpha : RSAutoCanvasRestore::kNone);
+        filterType == FilterType::FOREGROUND_FILTER ? RSPaintFilterCanvas::kAlpha : RSPaintFilterCanvas::kNone);
     if (filterType == FilterType::FOREGROUND_FILTER) {
         canvas.SetAlpha(1.0);
     }
@@ -1786,6 +1786,8 @@ void RSPropertiesPainter::DrawForegroundColor(const RSProperties& properties, Dr
         canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
     } else if (properties.GetClipToBounds()) {
         canvas.ClipRect(Rect2DrawingRect(properties.GetBoundsRect()), Drawing::ClipOp::INTERSECT, true);
+    } else if (properties.GetClipToRRect()) {
+        canvas.ClipRoundRect(RRect(RRect2DrawingRRect(properties.GetClipRRect()), Drawing::ClipOp::INTERSECT, true);
     }
 
     Drawing::Brush brush;
@@ -1946,6 +1948,7 @@ RectF RSPropertiesPainter::GetCmdsClipRect(DrawCmdListPtr& cmds)
 RectF RSPropertiesPainter::GetCmdsClipRect(Drawing::DrawCmdListPtr& cmds)
 {
     ROSEN_LOGE("Drawing Unsupport RSPropertiesPainter::GetCmdsClipRect");
+    return RectF { 0.0f, 0.0f, 0.0f, 0.0f };
 }
 #endif
 

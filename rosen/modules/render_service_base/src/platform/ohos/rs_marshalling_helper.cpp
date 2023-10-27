@@ -74,6 +74,7 @@
 #else
 #include "recording/recording_path.h"
 #include "recording/recording_shader_effect.h"
+#include "property/rs_properties_def.h"
 #endif
 
 #ifdef RS_ENABLE_RECORDING
@@ -1769,6 +1770,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
 
     uint32_t objectSize = parcel.ReadUint32();
     if (objectSize == 0) {
+        val->UnmarshallingOps();
         return true;
     }
     bool ret = true;
@@ -1783,6 +1785,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
         imageObjectVec.emplace_back(object);
     }
     val->SetupObject(imageObjectVec);
+    val->UnmarshallingOps();
     return ret;
 }
 

@@ -242,7 +242,7 @@ napi_value RSWindowAnimationManager::OnGetWindowAnimationTargets(napi_env env, n
     if (argc > 1) {
         napi_valuetype result1;
         napi_typeof(env, argv[1], &result1);
-        if(result1 == napi_function) {
+        if (result1 == napi_function) {
             lastParam = argv[1];
         }
     }

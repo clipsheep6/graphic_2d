@@ -16,12 +16,13 @@
 #ifndef RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_H
 #define RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_H
 
-#include <list>
-#include <map>
+#include <functional>
+#include <memory>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
-#include "modifier/rs_render_modifier.h"
+#include "modifier/rs_modifier_type.h"
 
 namespace OHOS::Rosen {
 class RSPaintFilterCanvas;
@@ -83,18 +84,8 @@ enum RSPropertyDrawableSlot : uint8_t {
     RESTORE_ALL,
     MAX,
 };
+}
 
-enum DrawableVecStatus : uint8_t {
-    CLIP_BOUNDS            = 1<<0,
-    BOUNDS_PROPERTY_BEFORE = 1<<1,
-    BOUNDS_PROPERTY_AFTER  = 1<<2,
-    CLIP_FRAME             = 1<<3,
-    FRAME_PROPERTY         = 1<<4,
-    HAS_CHILDREN           = 1<<5,
-    BOUNDS_MASK            = CLIP_BOUNDS | BOUNDS_PROPERTY_BEFORE | BOUNDS_PROPERTY_AFTER,
-    FRAME_MASK             = CLIP_FRAME | FRAME_PROPERTY | HAS_CHILDREN,
-};
-};
 // Pure virtual base class
 class RSPropertyDrawable {
 public:
@@ -110,20 +101,20 @@ public:
     using DrawablePtr = std::unique_ptr<RSPropertyDrawable>;
 
     virtual void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) = 0;
-    virtual void OnBoundsMatrixChange(const RSProperties& properties) {}
-    virtual void OnBoundsChange(const RSProperties& properties) {}
+    // return true if the drawable is updated, else we will destroy and regenerate it
+    virtual bool Update(RSPropertyDrawableGenerateContext& context) { return false; }
 
     // Generator
     using DrawableVec = std::vector<RSPropertyDrawable::DrawablePtr>;
-    static void UpdateDrawableVec(RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec,
-        uint8_t& drawableVecStatus, const std::unordered_set<RSModifierType>& dirtyTypes);
+    static std::unordered_set<uint8_t> GenerateDirtySlots(const std::unordered_set<RSModifierType>& dirtyTypes);
+    static bool UpdateDrawableVec(
+        RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, std::unordered_set<uint8_t>& dirtySlots);
+    static void InitializeSaveRestore(RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec);
+    static void UpdateSaveRestore(
+        RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, uint8_t& drawableVecStatus);
 
-private:
-    // index = RSModifierType value = RSPropertyDrawableType
-    static const std::vector<Slot::RSPropertyDrawableSlot> PropertyToDrawableLut;
-    // index = RSPropertyDrawableType value = DrawableGenerator
     using DrawableGenerator = std::function<RSPropertyDrawable::DrawablePtr(const RSPropertyDrawableGenerateContext&)>;
-    static const std::vector<DrawableGenerator> DrawableGeneratorLut;
+private:
 
     static inline uint8_t CalculateDrawableVecStatus(
         RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec);

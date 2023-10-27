@@ -37,7 +37,7 @@
 
 namespace OHOS {
 namespace Rosen {
-using namespace Slot;
+using Slot::RSPropertyDrawableSlot;
 namespace {
 const std::set<RSModifierType> GROUPABLE_ANIMATION_TYPE = {
     RSModifierType::ALPHA,
@@ -60,11 +60,19 @@ const std::unordered_set<RSModifierType> ANIMATION_MODIFIER_TYPE  = {
 RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context)
 {
     renderProperties_.backref_ = weak_from_this();
+
+    if (RSSystemProperties::GetPropertyDrawableEnable()) {
+        propertyDrawablesVec_.resize(RSPropertyDrawableSlot::MAX);
+    }
 }
 RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context)
     : isOnTheTree_(isOnTheTree), id_(id), context_(context)
 {
     renderProperties_.backref_ = weak_from_this();
+
+    if (RSSystemProperties::GetPropertyDrawableEnable()) {
+        propertyDrawablesVec_.resize(RSPropertyDrawableSlot::MAX);
+    }
 }
 
 void RSRenderNode::AddChild(SharedPtr child, int index)
@@ -582,13 +590,7 @@ bool RSRenderNode::Update(
             modifier->Apply(context);
         }
     }
-    if (dirty) {
-        for (auto& value : propertyDrawablesVec_) {
-            if (value) {
-                value->OnBoundsMatrixChange(renderProperties_);
-            }
-        }
-    }
+    // PLANNING: only update bounds matrix drawable
     isDirtyRegionUpdated_ = false;
     isLastVisible_ = ShouldPaint();
     renderProperties_.ResetDirty();
@@ -991,7 +993,6 @@ bool RSRenderNode::ApplyModifiers()
     renderProperties_.OnApplyModifiers();
     OnApplyModifiers();
 
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     if (auto& manager = renderProperties_.GetFilterCacheManager(false);
         manager != nullptr &&
         (dirtyTypes_.count(RSModifierType::BACKGROUND_COLOR) || dirtyTypes_.count(RSModifierType::BG_IMAGE))) {
@@ -1002,11 +1003,8 @@ bool RSRenderNode::ApplyModifiers()
     }
 
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // Generate drawable
-        RSPropertyDrawableGenerateContext drawableContext(*this);
-        RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, drawableVecStatus_, dirtyTypes_);
+        UpdateDrawableVec();
     }
-#endif
 
     // update state
     dirtyTypes_.clear();
@@ -1015,6 +1013,24 @@ bool RSRenderNode::ApplyModifiers()
 
     // return true if positionZ changed
     return renderProperties_.GetPositionZ() != prevPositionZ;
+}
+
+void RSRenderNode::UpdateDrawableVec()
+{
+    // Collect dirty slots
+    auto dirtySlots = RSPropertyDrawable::GenerateDirtySlots(dirtyTypes_);
+    RSPropertyDrawableGenerateContext drawableContext(*this);
+    // initialize necessary save/clip/restore
+    if (drawableVecStatus_ == 0) {
+        RSPropertyDrawable::InitializeSaveRestore(drawableContext, propertyDrawablesVec_);
+    }
+    // Update or regenerate drawable
+    bool drawableChanged = RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, dirtySlots);
+    // if any drawables changed, update save/clip/restore
+    // temporary fix, if CLIP_TO_BOUNDS or similar property changed, we should re-arrange the save/clip/restore
+    if (drawableChanged || dirtySlots.count(RSPropertyDrawableSlot::INVALID)) {
+        RSPropertyDrawable::UpdateSaveRestore(drawableContext, propertyDrawablesVec_, drawableVecStatus_);
+    }
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -1842,9 +1858,7 @@ void RSRenderNode::ClearCacheSurface(bool isClearCompletedCacheSurface)
     cacheSurface_ = nullptr;
     if (isClearCompletedCacheSurface) {
         cacheCompletedSurface_ = nullptr;
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
         isTextureValid_ = false;
-#endif
     }
 }
 void RSRenderNode::SetCacheType(CacheType cacheType)
@@ -2117,12 +2131,14 @@ void RSRenderNode::SetIsUsedBySubThread(bool isUsedBySubThread)
     isUsedBySubThread_.store(isUsedBySubThread);
 }
 
-void RSRenderNode::IterateOnDrawableRange(
-    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSRenderNode::IterateOnDrawableRange(uint8_t begin, uint8_t end, RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    for (uint16_t index = begin; index <= end; index++) {
-        auto& drawablePtr = propertyDrawablesVec_[index];
-        if (drawablePtr) {
+    ++end;
+    if (begin >= end || end > propertyDrawablesVec_.size()) {
+        return;
+    }
+    for (uint16_t index = begin; index < end; index++) {
+        if (auto& drawablePtr = propertyDrawablesVec_[index]) {
             drawablePtr->Draw(node, canvas);
         }
     }

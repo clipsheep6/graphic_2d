@@ -187,7 +187,7 @@ napi_value RSWindowAnimationManager::OnMinimizeWindowWithAnimation(napi_env env,
 
 napi_value RSWindowAnimationManager::OnGetWindowAnimationTargets(napi_env env, napi_callback_info info)
 {
-    WALOGE("tanyuhang RSWindowAnimationManager::OnGetWindowAnimationTargets");
+    WALOGE("RSWindowAnimationManager::OnGetWindowAnimationTargets");
     int32_t errCode = ERR_OK;
     size_t argc = ARGC_MAX;
     napi_value argv[ARGC_MAX] = { 0 };
@@ -223,7 +223,7 @@ napi_value RSWindowAnimationManager::OnGetWindowAnimationTargets(napi_env env, n
     }
     NapiAsyncTask::CompleteCallback complete =
         [missionIds, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
-            WALOGE("tanyuhang RSWindowAnimationManager::OnGetWindowAnimationTargets");
+            WALOGE("RSWindowAnimationManager::OnGetWindowAnimationTargets");
             if (errCode != ERR_OK) {
                 task.Reject(env, CreateJsError(env, errCode, "Invalid params."));
                 return;

@@ -315,11 +315,8 @@ void RSFilterCacheManager::TakeSnapshot(
     }
     RS_OPTIONAL_TRACE_FUNC();
 
-    // shrink the srcRect by 1px to avoid edge artifacts.
-    auto snapshotIBounds = srcRect.makeOutset(-1, -1);
-
     // Take a screenshot.
-    auto snapshot = skSurface->makeImageSnapshot(snapshotIBounds);
+    auto snapshot = skSurface->makeImageSnapshot(srcRect);
     if (snapshot == nullptr) {
         ROSEN_LOGE("RSFilterCacheManager::TakeSnapshot failed to make an image snapshot.");
         return;
@@ -333,7 +330,7 @@ void RSFilterCacheManager::TakeSnapshot(
 
     // Update the cache state.
     snapshotRegion_ = RectI(srcRect.x(), srcRect.y(), srcRect.width(), srcRect.height());
-    cachedSnapshot_ = std::make_unique<RSPaintFilterCanvas::CachedEffectData>(std::move(snapshot), snapshotIBounds);
+    cachedSnapshot_ = std::make_unique<RSPaintFilterCanvas::CachedEffectData>(std::move(snapshot), srcRect);
 
     // If the cached image is larger than threshold, we will increase the cache update interval, which is configurable
     // by `hdc shell param set persist.sys.graphic.filterCacheUpdateInterval <interval>`, the default value is 1.

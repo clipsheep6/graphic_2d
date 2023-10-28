@@ -139,7 +139,6 @@ bool VSyncSampler::AddSample(int64_t timeStamp)
     return !shouldDisableScreenVsync;
 }
 
-
 void VSyncSampler::UpdateModeLocked()
 {
     if (numSamples_ >= MIN_SAMPLES_FOR_UPDATE) {
@@ -246,6 +245,24 @@ int64_t VSyncSampler::GetRefrenceTime() const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return referenceTime_;
+}
+
+int64_t VSyncSampler::ComputeNextHardwareVSyncTime() const
+{
+    if (period_ == 0) {
+        return 0;
+    }
+    auto now = std::chrono::steady_clock::now().time_since_epoch();
+    int64_t currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+    int64_t diff = currentTime - referenceTime_;
+    int64_t periodNum = diff / period_;
+    if (diff < 0) {
+        periodNum -= 1;
+    }
+    if (diff < 0 || ((currentTime - referenceTime_) % period_) != 0) {
+        periodNum += 1;
+    }
+    return periodNum * period_ + referenceTime_;
 }
 
 VSyncSampler::~VSyncSampler()

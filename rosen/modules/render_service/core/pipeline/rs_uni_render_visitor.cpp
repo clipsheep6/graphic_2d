@@ -227,7 +227,7 @@ void RSUniRenderVisitor::CopyPropertyForParallelVisitor(RSUniRenderVisitor *main
 }
 
 void RSUniRenderVisitor::SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisitor>& visitor,
-    std::shared_ptr<RSPaintFilterCanvas> canvas)
+    std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t threadIndex)
 {
     screenInfo_ = visitor->screenInfo_;
     curAlpha_ = visitor->curAlpha_;
@@ -239,6 +239,7 @@ void RSUniRenderVisitor::SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisito
     isUIFirst_ = visitor->isUIFirst_;
     canvas_ = canvas;
     isPreComposeThread_ = true;
+    threadIndex_ = threadIndex;
 }
 
 void RSUniRenderVisitor::UpdateStaticCacheSubTree(const std::shared_ptr<RSRenderNode>& cacheRootNode,

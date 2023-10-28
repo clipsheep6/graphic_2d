@@ -19,6 +19,10 @@
 #include "rs_main_thread.h"
 #include "rs_uni_render_util.h"
 
+namespace {
+    const unsigned PRECOMPOSE_THREAD_INDEX = (1 << 8);
+}
+
 namespace OHOS {
 namespace Rosen {
 RSPreComposeElement::RSPreComposeElement(ScreenInfo& info, int32_t id,
@@ -139,7 +143,7 @@ void RSPreComposeElement::UpdateImage()
         return;
     }
     visitor_ = std::make_shared<RSUniRenderVisitor>();
-    visitor_->SetInfosForPreCompose(displayVisitor_, canvas_);
+    visitor_->SetInfosForPreCompose(displayVisitor_, canvas_, PRECOMPOSE_THREAD_INDEX);
     canvas_->clear(SK_ColorTRANSPARENT);
     for (auto node : surfaceNodeList_) {
         if (node == nullptr) {

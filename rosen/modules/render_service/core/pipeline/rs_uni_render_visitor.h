@@ -68,7 +68,7 @@ public:
     bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
     void ChangeCacheRenderNodeMap(RSRenderNode& node, const uint32_t count = 0);
     void SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisitor>& visitor,
-        std::shared_ptr<RSPaintFilterCanvas> canvas);
+        std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t threadIndex);
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetAppWindowNodes()
     {
         return appWindowNodesInZOrder_;

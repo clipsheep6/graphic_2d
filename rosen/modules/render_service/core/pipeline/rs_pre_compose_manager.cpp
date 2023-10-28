@@ -182,6 +182,16 @@ Occlusion::Region RSPreComposeManager::GetLastVisibleDirtyRegionWithGpuNodes()
     return rsPreComposeGroup_->GetLastVisibleDirtyRegionWithGpuNodes();
 }
 
+void RSPreComposeManager::UpdateAppWindowNodesByLastVsync(
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes)
+{
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
+        return;
+    }
+    return rsPreComposeGroup_->UpdateAppWindowNodesByLastVsync(appWindowNodes);
+}
+
 bool RSPreComposeManager::ProcessLastVsyncNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
     uint32_t threadIndex)
 {

@@ -44,6 +44,7 @@ public:
         uint32_t threadIndex);
     void SetBufferAge(int32_t bufferAge);
     void UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager> dirtyManager);
+    void UpdateAppWindowNodesByLastVsync(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes);
 
 private:
     RSPreComposeManager() = default;

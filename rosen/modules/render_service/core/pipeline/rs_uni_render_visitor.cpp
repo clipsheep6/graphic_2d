@@ -238,6 +238,7 @@ void RSUniRenderVisitor::SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisito
     isHardwareForcedDisabled_ = visitor->isHardwareForcedDisabled_;
     isUIFirst_ = visitor->isUIFirst_;
     canvas_ = canvas;
+    isPreComposeThread_ = true;
 }
 
 void RSUniRenderVisitor::UpdateStaticCacheSubTree(const std::shared_ptr<RSRenderNode>& cacheRootNode,
@@ -2028,6 +2029,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 displayNodePtr, isDirtyRegionAlignedEnable_);
             if (isPreComposeOn_) {
                 auto region = RSPreComposeManager::GetInstance()->GetLastVisibleDirtyRegionWithGpuNodes();
+                RSPreComposeManager::GetInstance()->UpdateAppWindowNodesByLastVsync(appWindowNodesInZOrder_);
                 dirtyRegion.OrSelf(region);
             }
             dirtyRegionTest = dirtyRegion;
@@ -3276,7 +3278,12 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                 node.SetHardwareDisabledByCache(isUpdateCachedSurface_);
             }
             // if this window is in freeze state, disable hardware composer for its child surfaceView
-            if (IsHardwareComposerEnabled() && !node.IsHardwareForcedDisabled() && node.IsHardwareEnabledType()) {
+            bool isHardwareBuffer = IsHardwareComposerEnabled() && !node.IsHardwareForcedDisabled() &&
+                node.IsHardwareEnabledType();
+            if (isPreComposeOn_) {
+                isHardwareBuffer = isHardwareBuffer || isPreComposeThread_;
+            }
+            if (isHardwareBuffer) {
 #ifndef USE_ROSEN_DRAWING
                 canvas_->clear(SK_ColorTRANSPARENT);
 #else

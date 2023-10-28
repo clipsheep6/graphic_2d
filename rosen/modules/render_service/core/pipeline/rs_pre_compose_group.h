@@ -47,6 +47,7 @@ public:
         uint32_t threadIndex);
     void SetBufferAge(int32_t bufferAge);
     void UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager>& dirtyManager);
+    void UpdateAppWindowNodesByLastVsync(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes);
 
 private:
     void PushHistory(Occlusion::Region& region);
@@ -71,7 +72,6 @@ private:
     std::shared_ptr<RSPreComposeElement> last_ = nullptr;
     ScreenInfo screenInfo_;
     int32_t elementCount_ = 0;
-    bool canStartCurrentVsync_ = true;
     std::shared_ptr<RSPreComposeRegionManager> regionManager_;
     std::vector<Occlusion::Region> dirtyHistory_;
     Occlusion::Region visDirtyRegion_;

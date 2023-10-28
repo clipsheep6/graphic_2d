@@ -443,6 +443,7 @@ private:
     void endCapture() const;
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
     bool isPreComposeOn_ = false;
+    bool isPreComposeThread_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

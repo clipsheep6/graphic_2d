@@ -50,14 +50,11 @@ RSPreComposeGroup::~RSPreComposeGroup()
 
 void RSPreComposeGroup::UpdateLastAndCurrentVsync()
 {
-    if (current_->IsUpdateImageEnd()) {
+    if (current_->GetState() == ElementState::ELEMENT_STATE_DONE) {
         std::swap(current_, last_);
-        canStartCurrentVsync_ = true;
         current_->Reset();
-    } else {
-        canStartCurrentVsync_ = false;
+        ROSEN_LOGD("RSPreComposeGroup swap element");
     }
-    ROSEN_LOGD("RSPreComposeGroup canStartCurrentVsync_ %d", canStartCurrentVsync_);
     last_->StartCalculateAndDrawImage();
 }
 
@@ -87,10 +84,10 @@ void RSPreComposeGroup::Init(ScreenInfo& info)
 void RSPreComposeGroup::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
     std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId, uint64_t leashFocusId)
 {
-    if (!canStartCurrentVsync_) {
+    if (current_->GetState() == ElementState::ELEMENT_STATE_DOING) {
+        ROSEN_LOGW("current_ vsync is update image not end");
         return;
     }
-    current_->Reset();
     current_->SetParams(surfaceNodeList, visitor, focusNodeId, leashFocusId);
     auto current = current_;
     if (handler_) {
@@ -101,6 +98,12 @@ void RSPreComposeGroup::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRen
         };
         handler_->PostTask(task);
     }
+}
+
+void RSPreComposeGroup::UpdateAppWindowNodesByLastVsync(
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes)
+{
+    last_->UpdateAppWindowNodes(appWindowNodes);
 }
 
 void RSPreComposeGroup::CreateShareEglContext()

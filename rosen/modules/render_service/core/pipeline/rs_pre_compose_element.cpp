@@ -38,11 +38,14 @@ RSPreComposeElement::~RSPreComposeElement()
 void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList)
 {
     surfaceNodeList_ = surfaceNodeList;
+    std::unordered_set<NodeId> surfaceIds;
     std::vector<RSBaseRenderNode::SharedPtr> allSurfaceNodes;
     for (auto surfaceNode : surfaceNodeList_) {
         surfaceNode->CollectSurface(surfaceNode, allSurfaceNodes, true, false);
+        surfaceIds.insert(surfaceNode->GetId());
     }
     std::swap(allSurfaceNodes_, allSurfaceNodes);
+    std::swap(surfaceIds, surfaceIds_);
 
     std::unordered_set<NodeId> nodeIds;
     for (auto node : allSurfaceNodes_) {
@@ -57,27 +60,27 @@ void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRend
     std::swap(nodeIds_, nodeIds);
 }
 
-bool RSPreComposeElement::IsUpdateImageEnd()
-{
-    ROSEN_LOGD("RSPreComposeElement %d isDone %d", id_, isDone_);
-    return isDone_;
-}
-
 void RSPreComposeElement::StartCalculateAndDrawImage()
 {
     ROSEN_LOGD("RSPreComposeElement %d", id_);
     needDraw_ = true;
     lastOcclusionId_ = 0;
     getHwcNodesDone_ = false;
+    std::vector<std::pair<std::shared_ptr<RSSurfaceRenderNode>, Occlusion::Region>> gpuNodes;
+    std::vector<std::pair<std::shared_ptr<RSSurfaceRenderNode>, RectI>> hwcNodes;
+    std::swap(gpuNodes_, gpuNodes);
+    std::swap(hwcNodes_, hwcNodes);
 }
 
 void RSPreComposeElement::SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
         std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId, uint64_t leashFocusId)
 {
+    ROSEN_LOGD("RSPreComposeElement %d", id_);
     displayVisitor_ = visitor;
     SetNewNodeList(surfaceNodeList);
     focusNodeId_ = focusNodeId;
     leashFocusId_ = leashFocusId;
+    state_ = ElementState::ELEMENT_STATE_DOING;
 }
 
 void RSPreComposeElement::ClipRect()
@@ -123,6 +126,11 @@ void RSPreComposeElement::UpdateDirtyRegion()
         isDirty_, dirtyRect_.ToString().c_str(),dirtyRegion_.GetRegionInfo().c_str());
 }
 
+ElementState RSPreComposeElement::GetState()
+{
+    return state_;
+}
+
 void RSPreComposeElement::UpdateImage()
 {
     ROSEN_LOGD("RSPreComposeElement Update start id %d", id_);
@@ -145,8 +153,14 @@ void RSPreComposeElement::UpdateImage()
     cacheTexture_ = cacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
     UpdateHwcNodes();
     (void)RSBaseRenderUtil::WritePreComposeToPng(id_, cacheSurface_);
-    isDone_ = true;
+    state_ = ElementState::ELEMENT_STATE_DONE;
     ROSEN_LOGD("RSPreComposeElement Update end id %d", id_);
+}
+
+void RSPreComposeElement::UpdateAppWindowNodes(
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes)
+{
+   appWindowNodes.insert(appWindowNodes.end(), appWindowNodes_.begin(), appWindowNodes_.end());
 }
 
 void RSPreComposeElement::UpdateNodes(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
@@ -206,7 +220,7 @@ void RSPreComposeElement::Deinit()
 
 void RSPreComposeElement::Reset()
 {
-    isDone_ = false;
+    state_ = ElementState::ELEMENT_STATE_IDLE;
     lastOcclusionId_ = 0;
 }
 
@@ -294,30 +308,29 @@ Occlusion::Region RSPreComposeElement::GetVisibleDirtyRegionWithGpuNodes()
 {
     CalVisDirtyRegion();
     for (auto iter : hardwareNodes_) {
-        if (iter.first->IsHardwareForcedDisabled() == true || iter.first->IsHardwareForcedDisabledByFilter() == true) {
-            auto parent = iter.second;
-            std::shared_ptr<RSSurfaceRenderNode> node = iter.first;
-            node->SetHardwareForcedDisabledState(true);
-            const auto& property = node->GetRenderProperties();
-            auto geoPtr = property.GetBoundsGeometry();
-            RectI hwcRect = geoPtr->GetAbsRect();
+        auto parent = iter.second;
+        auto child = iter.first;
+        if (child->IsHardwareForcedDisabledByFilter() == true) {
+            child->SetHardwareForcedDisabledState(true);
+            RectI hwcRect = child->GetDstRect();
             Occlusion::Rect dirtyRect { hwcRect.left_, hwcRect.top_,
                 hwcRect.GetRight(), hwcRect.GetBottom() };
             Occlusion::Region surfaceDirtyRegion { dirtyRect };
             auto visRegion = parent->GetVisibleRegion();
             surfaceDirtyRegion.AndSelf(visRegion);
             surfaceDirtyRegion.SubSelf(aboveRegion_);
-            visDirtyRegion_.Or(surfaceDirtyRegion);
-            gpuNodes_.push_back({ node, surfaceDirtyRegion });
+            visDirtyRegion_.OrSelf(surfaceDirtyRegion);
+            gpuNodes_.push_back({ child, surfaceDirtyRegion });
+        } else {
+            child->SetHardwareForcedDisabledState(false);
+            hwcNodes_.push_back({ child, child->GetDstRect() });
         }
     }
     ROSEN_LOGD("RSPreComposeElement dirtyRegion after gpu node %{public}s", visDirtyRegion_.GetRegionInfo().c_str());
-    std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair> temp;
-    std::swap(temp, hardwareNodes_);
     return visDirtyRegion_;
 }
 
-void RSPreComposeElement::UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas>& canvas,
+void RSPreComposeElement::UpdateGpuNodesCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas>& canvas,
     std::shared_ptr<RSSurfaceRenderNode> node, Occlusion::Region& surfaceDirtyRegion)
 {
 #ifndef USE_ROSEN_DRAWING
@@ -337,13 +350,14 @@ void RSPreComposeElement::UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas
     }
 #ifndef USE_ROSEN_DRAWING
     if (region.isEmpty()) {
-        canvas_->clipRect(SkRect::MakeEmpty());
+        canvas->clipRect(SkRect::MakeEmpty());
     } else if (region.isRect()) {
-        canvas_->clipRegion(region);
+        canvas->clipRegion(region);
     } else {
+        ROSEN_LOGD("isPath");
         SkPath dirtyPath;
         region.getBoundaryPath(&dirtyPath);
-        canvas_->clipPath(dirtyPath, true);
+        canvas->clipPath(dirtyPath, true);
     }
 #endif
     const auto& property = node->GetRenderProperties();
@@ -351,18 +365,57 @@ void RSPreComposeElement::UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas
     canvas->concat(geoPtr->GetAbsMatrix());
 }
 
+void RSPreComposeElement::UpdateHwcNodesCanvasRect(std::shared_ptr<RSPaintFilterCanvas>& canvas)
+{
+    if (hwcNodes_.empty()) {
+        return;
+    }
+#ifndef USE_ROSEN_DRAWING
+    SkRegion region;
+#endif
+    for (auto iter : hwcNodes_) {
+        auto rect = iter.second;
+        ROSEN_LOGD("rect %s", rect.ToString().c_str());
+#ifndef USE_ROSEN_DRAWING
+        region.op(SkIRect::MakeXYWH(rect.left_, rect.top_, rect.width_, rect.height_),
+            SkRegion::kUnion_Op);
+#endif
+    }
+    canvas->save();
+#ifndef USE_ROSEN_DRAWING
+    if (region.isEmpty()) {
+        canvas->clipRect(SkRect::MakeEmpty());
+    } else if (region.isRect()) {
+        canvas->clipRegion(region);
+    } else {
+        ROSEN_LOGD("isPath");
+        SkPath dirtyPath;
+        region.getBoundaryPath(&dirtyPath);
+        canvas->clipPath(dirtyPath, true);
+    }
+#endif
+    canvas->clear(SK_ColorTRANSPARENT);
+    canvas->restore();
+}
+
 void RSPreComposeElement::DrawGpuNodes(std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex)
 {
     auto renderEngine = RSMainThread::Instance()->GetRenderEngine();
     for (auto iter : gpuNodes_) {
         canvas->save();
-        UpdateCanvasMatrix(canvas, iter.first, iter.second);
+        UpdateGpuNodesCanvasMatrix(canvas, iter.first, iter.second);
         auto node = iter.first;
         node->SetGlobalAlpha(1.0f);
         auto params = RSUniRenderUtil::CreateBufferDrawParam(*node, false, threadIndex);
         renderEngine->DrawSurfaceNodeWithParams(*canvas, *node, params);
         canvas->restore();
     }
+}
+
+void RSPreComposeElement::DrawHardwareNodes(std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex)
+{
+    UpdateHwcNodesCanvasRect(canvas);
+    DrawGpuNodes(canvas, threadIndex);
 }
 
 bool RSPreComposeElement::IsSkip()
@@ -387,7 +440,8 @@ bool RSPreComposeElement::IsSkip()
 bool RSPreComposeElement::ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
     uint32_t threadIndex)
 {
-    if (nodeIds_.count(node.GetId()) != 0) {
+    if (surfaceIds_.count(node.GetId()) != 0) {
+        ROSEN_LOGD("RSPreComposeElement node skip %{public}" PRIu64 " ", node.GetId());
         if (needDraw_) {
             needDraw_ = false;
             if (IsSkip()) {
@@ -399,7 +453,7 @@ bool RSPreComposeElement::ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RS
                 ROSEN_LOGE("invalid grBackendTexture_");
                 return true;
             }
-            DrawGpuNodes(canvas, threadIndex);
+            DrawHardwareNodes(canvas, threadIndex);
             auto image = SkImage::MakeFromTexture(canvas->recordingContext(), cacheTexture_,
                 kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
             if (image == nullptr) {

@@ -26,10 +26,16 @@
 
 namespace OHOS {
 namespace Rosen {
+enum class ElementState : int32_t {
+    ELEMENT_STATE_IDLE,
+    ELEMENT_STATE_DOING,
+    ELEMENT_STATE_DONE,
+};
 class RSPreComposeElement {
 public:
     RSPreComposeElement(ScreenInfo& info, int32_t id, std::shared_ptr<RSPreComposeRegionManager> regionManager);
     ~RSPreComposeElement();
+    ElementState GetState();
     void SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
         std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId, uint64_t leashFocusId);
 #if !(defined USE_ROSEN_DRAWING) && (defined NEW_SKIA)
@@ -49,16 +55,18 @@ public:
     Occlusion::Region GetDirtyVisibleRegion();
     Occlusion::Region GetVisibleDirtyRegionWithGpuNodes();
     bool ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex);
-    bool IsUpdateImageEnd();
     void StartCalculateAndDrawImage();
     void UpdateGlobalDirty(std::shared_ptr<RSDirtyRegionManager>& dirtyManager);
+    void UpdateAppWindowNodes(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes);
 
 private:
     void SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList);
     void ClipRect();
     void UpdateHwcNodes();
+    void UpdateHwcNodesCanvasRect(std::shared_ptr<RSPaintFilterCanvas>& canvas);
+    void DrawHardwareNodes(std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex);
     void DrawGpuNodes(std::shared_ptr<RSPaintFilterCanvas>& canvas, uint32_t threadIndex);
-    void UpdateCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas>& canvas,
+    void UpdateGpuNodesCanvasMatrix(std::shared_ptr<RSPaintFilterCanvas>& canvas,
         std::shared_ptr<RSSurfaceRenderNode> node, Occlusion::Region& surfaceDirtyRegion);
     void CalVisDirtyRegion();
     bool IsSkip();
@@ -69,9 +77,10 @@ private:
     std::shared_ptr<RSUniRenderVisitor> visitor_;
     int32_t id_;
     std::unordered_set<NodeId> nodeIds_;
+    std::unordered_set<NodeId> surfaceIds_;
     std::list<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeList_;
     std::vector<RSBaseRenderNode::SharedPtr> allSurfaceNodes_;
-    bool isDone_ = true;
+    ElementState state_ = ElementState::ELEMENT_STATE_IDLE;
     bool needDraw_ = false;
     bool isDirty_ = false;
     bool getHwcNodesDone_ = false;
@@ -94,6 +103,7 @@ private:
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> appWindowNodes_;
     std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair> hardwareNodes_;
     std::vector<std::pair<std::shared_ptr<RSSurfaceRenderNode>, Occlusion::Region>> gpuNodes_;
+    std::vector<std::pair<std::shared_ptr<RSSurfaceRenderNode>, RectI>> hwcNodes_;
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     sk_sp<SkSurface> CreateSkSurface(GrDirectContext *grContext);

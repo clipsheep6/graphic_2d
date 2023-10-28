@@ -227,15 +227,9 @@ void RSPreComposeRegionManager::MergeVisibleDirtyRegion()
             surfaceDirtyRect.ToString().c_str(), surfaceDirtyManager->IsDirty());
         for (auto& child : curSurface->GetChildHardwareEnabledNodes()) {
             if (auto childNode = child.lock()) {
-                const auto& property = childNode->GetRenderProperties();
-                auto geoPtr = property.GetBoundsGeometry();
-                const RectI& rect = geoPtr->GetAbsRect();
+                const RectI& rect = childNode->GetDstRect();
                 ROSEN_LOGD("hwc child %{public}s, rect %{public}s", childNode->GetName().c_str(),
                     rect.ToString().c_str());
-                if (rect == surfaceDirtyRect) {
-                    ROSEN_LOGD("parent dirty rect == hwc child rect");
-                    return;
-                }
             }
         }
         Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,

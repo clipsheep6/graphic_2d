@@ -22,6 +22,7 @@ namespace Rosen {
 namespace Drawing {
 TextBlob::TextBlob(std::shared_ptr<TextBlobImpl> textBlobImpl) noexcept : textBlobImpl_(textBlobImpl) {}
 
+TextBlob::TextBlob() : textBlobImpl_(ImplFactory::CreateTextBlobImpl()) {}
 
 void TextBlob::DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob)
 {

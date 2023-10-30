@@ -32,7 +32,7 @@ class SkiaTextBlob : public TextBlobImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
     explicit SkiaTextBlob(sk_sp<SkTextBlob> skTextBlob);
-    SkiaTextBlob() noexcept {};
+    SkiaTextBlob() noexcept = default;
     ~SkiaTextBlob() override = default;
 
     AdapterType GetType() const override

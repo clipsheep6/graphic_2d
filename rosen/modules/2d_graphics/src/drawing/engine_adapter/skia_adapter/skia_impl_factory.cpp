@@ -43,6 +43,7 @@
 #include "skia_adapter/skia_text_blob_builder.h"
 #include "skia_adapter/skia_typeface_font_style_set.h"
 #include "skia_adapter/skia_trace_memory_dump.h"
+#include "skia_adapter/skia_text_blob.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -213,6 +214,11 @@ std::unique_ptr<FontStyleSetImpl> SkiaImplFactory::CreateFontStyleSetOhos(
     const std::shared_ptr<FontConfig_OHOS>& fontConfig, int index, bool isFallback)
 {
     return std::make_unique<SkiaFontStyleSetOhos>(fontConfig, index, isFallback);
+}
+
+std::unique_ptr<TextBlobImpl> SkiaImplFactory::CreateTextBlob()
+{
+    return std::make_unique<SkiaTextBlob>();
 }
 } // namespace Drawing
 } // namespace Rosen

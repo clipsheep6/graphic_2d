@@ -26,7 +26,8 @@ namespace Drawing {
 class TextBlob {
 public:
     explicit TextBlob(std::shared_ptr<TextBlobImpl> textBlobImpl) noexcept;
-    TextBlob() noexcept {};
+    TextBlob();
+
     virtual ~TextBlob() = default;
 
     template<typename T>

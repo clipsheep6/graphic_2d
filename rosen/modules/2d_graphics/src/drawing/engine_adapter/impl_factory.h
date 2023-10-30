@@ -42,6 +42,7 @@
 #include "impl_interface/surface_impl.h"
 #include "impl_interface/text_blob_builder_impl.h"
 #include "impl_interface/typeface_impl.h"
+#include "impl_interface/text_blob_impl.h"
 
 struct FontInfo;
 class FontConfig_OHOS;
@@ -85,6 +86,7 @@ public:
     static std::unique_ptr<FontStyleSetImpl> CreateTypefaceFontStyleSetImpl();
     static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSetOhosImpl(
         const std::shared_ptr<FontConfig_OHOS>& fontConfig, int index, bool isFallback);
+    static std::unique_ptr<TextBlobImpl> CreateTextBlobImpl();
 };
 } // namespace Drawing
 } // namespace Rosen

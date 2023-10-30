@@ -181,6 +181,11 @@ std::unique_ptr<FontStyleSetImpl> ImplFactory::CreateFontStyleSetOhosImpl(
 {
     return EngineImplFactory::CreateFontStyleSetOhos(fontConfig, index, isFallback);
 }
+
+std::unique_ptr<TextBlobImpl> ImplFactory::CreateTextBlobImpl()
+{
+    return EngineImplFactory::CreateTextBlob();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

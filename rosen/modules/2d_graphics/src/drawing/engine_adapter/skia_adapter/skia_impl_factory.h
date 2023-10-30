@@ -85,6 +85,7 @@ public:
     static std::unique_ptr<FontStyleSetImpl> CreateTypefaceFontStyleSet();
     static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSetOhos(
         const std::shared_ptr<FontConfig_OHOS>& fontConfig, int index, bool isFallback);
+    static std::unique_ptr<TextBlobImpl> CreateTextBlob();
 };
 } // namespace Drawing
 } // namespace Rosen

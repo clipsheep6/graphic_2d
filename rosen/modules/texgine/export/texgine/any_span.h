@@ -15,6 +15,7 @@
 
 #ifndef ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_ANY_SPAN_H
 #define ROSEN_MODULES_TEXGINE_EXPORT_TEXGINE_ANY_SPAN_H
+
 #include "recording/recording_canvas.h"
 #include "texgine_canvas.h"
 #include "texgine/text_style.h"

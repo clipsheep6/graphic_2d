@@ -82,10 +82,12 @@ void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
     }
     uint32_t lcdRefreshRate = HgmCore::Instance().GetScreenCurrentRefreshRate(screenId);
     if (currRefreshRate_ != lcdRefreshRate) {
-        auto frameRateReport = FRAME_TRACE::FrameRateReport::GetInstance();
-        auto rates = data.multiAppRange;
+        std::unordered_map<pid_t, uint32_t> rates;
+        for (auto& appRange : data.multiAppRange) {
+            rates[appRange.first] = appRange.second.preferred_;
+        }
         rates[GetRealPid()] = currRefreshRate_;
-        frameRateReport.SendFrameRates(rates);
+        FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
     }
     // [Temporary func]: Switch refresh rate immediately, func will be removed in the future.
     ExecuteSwitchRefreshRate(screenId);

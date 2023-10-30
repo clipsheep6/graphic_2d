@@ -718,7 +718,8 @@ void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parent
         return;
     }
     auto renderParent = (parentNode);
-    if (renderParent) {
+    // in case within, parentnode already updates itself in update
+    if (renderParent && outOfParent_ != OutOfParentType::WITHIN) {
         // accumulate current node's all children region(including itself)
         // apply oldDirty_ as node's real region(including overlay and shadow)
         RectI accumulatedRect = GetChildrenRect().JoinRect(oldDirty_);
@@ -1742,7 +1743,13 @@ bool RSRenderNode::HasChildrenOutOfRect() const
 }
 void RSRenderNode::UpdateChildrenOutOfRectFlag(bool flag)
 {
-    hasChildrenOutOfRect_ = flag;
+    if (outOfParent_ == OutOfParentType::OUTSIDE) {
+        hasChildrenOutOfRect_ = true;
+    } else if (outOfParent_ == OutOfParentType::WITHIN) {
+        hasChildrenOutOfRect_ = false;
+    } else {
+        hasChildrenOutOfRect_ = flag;
+    }
 }
 void RSRenderNode::ResetHasRemovedChild()
 {
@@ -1754,11 +1761,26 @@ bool RSRenderNode::HasRemovedChild() const
 }
 void RSRenderNode::ResetChildrenRect()
 {
-    childrenRect_ = RectI();
+    if (outOfParent_ == OutOfParentType::WITHIN) {
+        dirtyCoverSubTree_ = true;
+        hasChildrenOutOfRect_ = false;
+        childrenRect_ = oldDirty_;
+    } else {
+        dirtyCoverSubTree_ = false;
+        childrenRect_ = RectI();
+    }
 }
 RectI RSRenderNode::GetChildrenRect() const
 {
     return childrenRect_;
+}
+void RSRenderNode::UpdateDirtyCoverSubTree()
+{
+    dirtyCoverSubTree_ = !hasChildrenOutOfRect_;
+}
+bool RSRenderNode::GetDirtyCoverSubTree() const
+{
+    return dirtyCoverSubTree_;
 }
 bool RSRenderNode::ChildHasFilter() const
 {

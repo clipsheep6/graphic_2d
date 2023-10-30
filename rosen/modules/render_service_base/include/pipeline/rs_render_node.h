@@ -382,6 +382,8 @@ public:
     
     void SetOutOfParent(OutOfParentType outOfParent);
     OutOfParentType GetOutOfParent() const;
+    void UpdateDirtyCoverSubTree();
+    bool GetDirtyCoverSubTree() const;
 
 #ifndef USE_ROSEN_DRAWING
     void UpdateEffectRegion(std::optional<SkPath>& region);
@@ -569,6 +571,7 @@ private:
     bool paintState_ = false;
     bool isContentChanged_ = false;
     OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
+    bool dirtyCoverSubTree_ = false;
     float globalAlpha_ = 1.0f;
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 

@@ -93,8 +93,7 @@ void RSPreComposeGroup::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRen
     if (handler_) {
         auto task = [current]() {
             ROSEN_LOGD("RSPreComposeThread Enqueue Task");
-            current->UpdateDirtyRegion();
-            current->UpdateImage();
+            current->UpdateDirtyRegionAndImage();
         };
         handler_->PostTask(task);
     }

@@ -135,6 +135,14 @@ ElementState RSPreComposeElement::GetState()
     return state_;
 }
 
+void RSPreComposeElement::UpdateDirtyRegionAndImage()
+{
+    canvas_->save();
+    UpdateDirtyRegion();
+    UpdateImage();
+    canvas_->restore();
+}
+
 void RSPreComposeElement::UpdateImage()
 {
     ROSEN_LOGD("RSPreComposeElement Update start id %d", id_);

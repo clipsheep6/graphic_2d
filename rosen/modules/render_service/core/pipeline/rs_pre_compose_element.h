@@ -43,8 +43,7 @@ public:
 #endif
     void Deinit();
     void Reset();
-    void UpdateDirtyRegion();
-    void UpdateImage();
+    void UpdateDirtyRegionAndImage();
     void UpdateNodes(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void UpdateOcclusion(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
         Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
@@ -60,6 +59,8 @@ public:
     void UpdateAppWindowNodes(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes);
 
 private:
+    void UpdateDirtyRegion();
+    void UpdateImage();
     void SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList);
     void ClipRect();
     void UpdateHwcNodes();

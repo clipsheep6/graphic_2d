@@ -13,36 +13,26 @@
  * limitations under the License.
  */
 
-#include "anim_dynamic_configs.h"
-#include "hgm_log.h"
+#include "rs_app_state_listener.h"
+#include "pipeline/rs_main_thread.h"
 
 namespace OHOS::Rosen {
-AnimDynamicConfigs* AnimDynamicConfigs::GetInstance()
-{
-    static AnimDynamicConfigs instance;
-    return &instance;
-}
-
-AnimDynamicConfigs::AnimDynamicConfigs()
+RSAppStateListener::RSAppStateListener()
 {
 }
 
-AnimDynamicConfigs::~AnimDynamicConfigs()
+RSAppStateListener::~RSAppStateListener()
 {
 }
 
-std::vector<AnimDynamicAttribute> AnimDynamicConfigs::GetAnimDynamicConfigs() const
+void RSAppStateListener::OnTrim(Memory::SystemMemoryLevel level)
 {
-    return animDynamicCfgs_;
+    RSMainThread::Instance()->HandleOnTrim(level);
 }
 
-void AnimDynamicConfigs::AddAnimDynamicAttribute(AnimDynamicAttribute attr)
+void RSAppStateListener::ForceReclaim(int32_t pid, int32_t uid)
 {
-    animDynamicCfgs_.emplace_back(attr);
-}
-
-int AnimDynamicConfigs::GetAnimDynamicAttributesCount() const
-{
-    return animDynamicCfgs_.size();
+    Memory::SystemMemoryLevel level = Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL;
+    RSMainThread::Instance()->HandleOnTrim(level);
 }
 } // namespace OHOS::Rosen

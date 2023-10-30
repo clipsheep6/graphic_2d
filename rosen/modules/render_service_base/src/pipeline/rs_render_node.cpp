@@ -37,6 +37,7 @@
 
 namespace OHOS {
 namespace Rosen {
+using Slot::RSPropertyDrawableSlot;
 namespace {
 const std::set<RSModifierType> GROUPABLE_ANIMATION_TYPE = {
     RSModifierType::ALPHA,
@@ -58,12 +59,16 @@ const std::unordered_set<RSModifierType> ANIMATION_MODIFIER_TYPE  = {
 
 RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context)
 {
-    renderProperties_.backref_ = weak_from_this();
+    if (RSSystemProperties::GetPropertyDrawableEnable()) {
+        propertyDrawablesVec_.resize(RSPropertyDrawableSlot::MAX);
+    }
 }
 RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context)
     : isOnTheTree_(isOnTheTree), id_(id), context_(context)
 {
-    renderProperties_.backref_ = weak_from_this();
+    if (RSSystemProperties::GetPropertyDrawableEnable()) {
+        propertyDrawablesVec_.resize(RSPropertyDrawableSlot::MAX);
+    }
 }
 
 void RSRenderNode::AddChild(SharedPtr child, int index)
@@ -581,11 +586,6 @@ bool RSRenderNode::Update(
             modifier->Apply(context);
         }
     }
-    if (dirty) {
-        for (auto& [key, value]: propertyDrawablesMap_) {
-            value->OnBoundsMatrixChange(renderProperties_);
-        }
-    }
     isDirtyRegionUpdated_ = false;
     isLastVisible_ = ShouldPaint();
     renderProperties_.ResetDirty();
@@ -768,9 +768,7 @@ void RSRenderNode::RenderTraceDebug() const
 void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        RSPropertyDrawableRenderContext context(*this, &canvas);
-        IterateOnDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::BOUNDS_MATRIX,
-            [&](RSPropertyDrawable::DrawablePtr& drawablePtr) { drawablePtr->Draw(context); });
+        IterateOnDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::BOUNDS_MATRIX, *this, canvas);
         return;
     }
 #ifndef USE_ROSEN_DRAWING
@@ -791,9 +789,7 @@ void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        RSPropertyDrawableRenderContext context(*this, &canvas);
-        IterateOnDrawableRange(RSPropertyDrawableSlot::ALPHA, RSPropertyDrawableSlot::ALPHA,
-            [&](RSPropertyDrawable::DrawablePtr& drawablePtr) { drawablePtr->Draw(context); });
+        IterateOnDrawableRange(RSPropertyDrawableSlot::ALPHA, RSPropertyDrawableSlot::ALPHA, *this, canvas);
         return;
     }
     auto alpha = renderProperties_.GetAlpha();
@@ -818,9 +814,7 @@ void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        RSPropertyDrawableRenderContext context(*this, &canvas);
-        IterateOnDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::MASK,
-            [&](RSPropertyDrawable::DrawablePtr& drawablePtr) { drawablePtr->Draw(context); });
+        IterateOnDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::MASK, *this, canvas);
         return;
     }
     ApplyBoundsGeometry(canvas);
@@ -836,9 +830,7 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        RSPropertyDrawableRenderContext context(*this, &canvas);
-        IterateOnDrawableRange(RSPropertyDrawableSlot::RESTORE_ALL, RSPropertyDrawableSlot::RESTORE_ALL,
-            [&](RSPropertyDrawable::DrawablePtr& drawablePtr) { drawablePtr->Draw(context); });
+        IterateOnDrawableRange(RSPropertyDrawableSlot::RESTORE_ALL, RSPropertyDrawableSlot::RESTORE_ALL, *this, canvas);
         return;
     }
     canvas.RestoreStatus(renderNodeSaveCount_);
@@ -996,6 +988,7 @@ bool RSRenderNode::ApplyModifiers()
     renderProperties_.OnApplyModifiers();
     OnApplyModifiers();
 
+#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     if (auto& manager = renderProperties_.GetFilterCacheManager(false);
         manager != nullptr &&
         (dirtyTypes_.count(RSModifierType::BACKGROUND_COLOR) || dirtyTypes_.count(RSModifierType::BG_IMAGE))) {
@@ -1008,13 +1001,18 @@ bool RSRenderNode::ApplyModifiers()
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
         // Generate drawable
         RSPropertyDrawableGenerateContext drawableContext(*this);
-        RSPropertyDrawable::UpdateDrawableMap(drawableContext, propertyDrawablesMap_, drawableMapStatus_, dirtyTypes_);
+        RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, drawableVecStatus_, dirtyTypes_);
     }
+#endif
 
     // update state
     dirtyTypes_.clear();
     lastApplyTimestamp_ = lastTimestamp_;
     UpdateShouldPaint();
+    if (renderProperties_.backref_.expired()) {
+        // If the weak_ptr renderProperties_.backref_ is not assigned, assign it.
+        renderProperties_.backref_ = weak_from_this();
+    }
 
     // return true if positionZ changed
     return renderProperties_.GetPositionZ() != prevPositionZ;
@@ -1393,15 +1391,16 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
 #ifdef RS_ENABLE_GL
 void RSRenderNode::UpdateBackendTexture()
 {
-#ifndef USE_ROSEN_DRAWING
     std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     if (cacheSurface_ == nullptr) {
         return;
     }
+#ifndef USE_ROSEN_DRAWING
     cacheBackendTexture_
         = cacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
 #else
-    RS_LOGE("[%s:%d] Drawing is not supported", __func__, __LINE__);
+    auto image = cacheSurface_->GetImageSnapshot();
+    cacheBackendTexture_ = image->GetBackendTexture(false, nullptr);
 #endif
 }
 #endif
@@ -1827,14 +1826,14 @@ void RSRenderNode::UpdateCompletedCacheSurface()
     std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     std::swap(cacheSurface_, cacheCompletedSurface_);
     std::swap(cacheSurfaceThreadIndex_, completedSurfaceThreadIndex_);
-#if !defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_GL)
+#ifdef RS_ENABLE_GL
     std::swap(cacheBackendTexture_, cacheCompletedBackendTexture_);
     SetTextureValidFlag(true);
 #endif
 }
 void RSRenderNode::SetTextureValidFlag(bool isValid)
 {
-#if !defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_GL)
+#ifdef RS_ENABLE_GL
     std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     isTextureValid_ = isValid;
 #endif
@@ -1845,7 +1844,9 @@ void RSRenderNode::ClearCacheSurface(bool isClearCompletedCacheSurface)
     cacheSurface_ = nullptr;
     if (isClearCompletedCacheSurface) {
         cacheCompletedSurface_ = nullptr;
+#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
         isTextureValid_ = false;
+#endif
     }
 }
 void RSRenderNode::SetCacheType(CacheType cacheType)
@@ -2118,18 +2119,14 @@ void RSRenderNode::SetIsUsedBySubThread(bool isUsedBySubThread)
     isUsedBySubThread_.store(isUsedBySubThread);
 }
 
-inline std::pair<RSRenderNode::DrawableIter, RSRenderNode::DrawableIter> RSRenderNode::GetDrawableRange(
-    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end)
+void RSRenderNode::IterateOnDrawableRange(
+    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    return { propertyDrawablesMap_.lower_bound(begin), propertyDrawablesMap_.upper_bound(end) };
-}
-
-void RSRenderNode::IterateOnDrawableRange(RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end,
-    const std::function<void(RSPropertyDrawable::DrawablePtr&)>& func)
-{
-    auto [beginIter, endIter] = GetDrawableRange(begin, end);
-    for (auto it = beginIter; it != endIter; ++it) {
-        func(it->second);
+    for (uint16_t index = begin; index <= end; index++) {
+        auto& drawablePtr = propertyDrawablesVec_[index];
+        if (drawablePtr) {
+            drawablePtr->Draw(node, canvas);
+        }
     }
 }
 } // namespace Rosen

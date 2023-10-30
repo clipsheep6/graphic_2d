@@ -286,6 +286,8 @@ private:
     void ClosePartialRenderWhenAnimatingWindows(std::shared_ptr<RSDisplayRenderNode>& node);
     bool DrawBlurInCache(RSRenderNode& node);
     void UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node);
+    bool IsFirstVisitedCacheForced() const;
+    bool IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, int rotation) const;
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
@@ -428,7 +430,6 @@ private:
 #endif
     bool resetRotate_ = false;
     bool needCacheImg_ = false;
-    uint32_t captureWindowZorder_ = 0;
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkPath> effectRegion_ = std::nullopt;
 #else
@@ -443,9 +444,11 @@ private:
     std::unordered_map<NodeId, std::unordered_set<NodeId>> allCacheFilterRects_ = {};
     std::stack<std::unordered_set<NodeId>> curCacheFilterRects_ = {};
     bool forceUpdateFlag_ = false;
+#ifndef USE_ROSEN_DRAWING
     void tryCapture(float width, float height);
     void endCapture() const;
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

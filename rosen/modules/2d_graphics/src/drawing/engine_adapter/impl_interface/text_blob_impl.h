@@ -24,14 +24,9 @@ namespace Rosen {
 namespace Drawing {
 class TextBlobImpl : public BaseImpl {
 public:
-    static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
     ~TextBlobImpl() override = default;
     virtual void DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob) = 0;
 
-    AdapterType GetType() const override
-    {
-        return AdapterType::BASE_INTERFACE;
-    }
 protected:
     TextBlobImpl() noexcept = default;
 };

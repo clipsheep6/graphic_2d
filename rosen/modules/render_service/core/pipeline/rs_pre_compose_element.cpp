@@ -363,13 +363,8 @@ void RSPreComposeElement::UpdateGpuNodesCanvasMatrix(std::shared_ptr<RSPaintFilt
 #ifndef USE_ROSEN_DRAWING
     if (region.isEmpty()) {
         canvas->clipRect(SkRect::MakeEmpty());
-    } else if (region.isRect()) {
-        canvas->clipRegion(region);
     } else {
-        ROSEN_LOGD("isPath");
-        SkPath dirtyPath;
-        region.getBoundaryPath(&dirtyPath);
-        canvas->clipPath(dirtyPath, true);
+        canvas->clipRegion(region);
     }
 #endif
     const auto& property = node->GetRenderProperties();

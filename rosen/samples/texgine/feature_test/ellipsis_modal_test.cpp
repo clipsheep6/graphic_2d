@@ -19,8 +19,12 @@
 using namespace OHOS::Rosen::TextEngine;
 
 constexpr const char *TEXT = "hello world1 hello world2 hello world3 hello 123";
+constexpr const char *TEXT1 = "this is a test text from OpenHarmony operating system";
+constexpr const char *TEXT2 = "honorificabilitudinitatibus";
 
 namespace {
+// default ellipsis \u2026 corresponds to ...
+const std::u16string g_ellipsis = u"\u2026";
 struct EllipsisModalInfo {
     std::string span;
     TypographyStyle tpStyle;
@@ -35,140 +39,305 @@ struct EllipsisModalInfo {
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 1,
-            .ellipsis = u"\u2026",
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::HEAD,
         },
-        .title = "maxL:1,head",
+        .title = "default,H",
         .widthLimit = 100.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
             .maxLines = 2,
-            .ellipsis = u"\u2026",
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::HEAD,
         },
-        .title = "maxL:2,head",
+        .title = "L:2,H",
+        .widthLimit = 100.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::HEAD,
+        },
+        .title = "L:1,H",
+        .widthLimit = 100.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::HEAD,
+        },
+        .title = "L:1,H",
         .widthLimit = 150.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 3,
-            .ellipsis = u"\u2026",
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::HEAD,
         },
-        .title = "maxL:3, head",
+        .title = "L:1, H",
         .widthLimit = 70.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 4,
-            .ellipsis = u"\u2026",
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::HEAD,
         },
-        .title = "maxL:4, head",
+        .title = "L:1, H",
         .widthLimit = 60.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 7,
-            .ellipsis = u"\u2026",
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::HEAD,
         },
-        .title = "maxL:7, head",
-        .widthLimit = 30.0,
-    },
-    {
-        .span = TEXT,
-        .tpStyle = {
-            .maxLines = 10,
-            .ellipsis = u"\u2026",
-            .ellipsisModal = EllipsisModal::HEAD,
-        },
-        .title = "maxL:10, head",
+        .title = "L:1, H",
         .widthLimit = 30.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
             .maxLines = 1,
-            .ellipsis = u"\u2026",
-            .ellipsisModal = EllipsisModal::MIDDLE,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::HEAD,
         },
-        .title = "maxL:1,mid",
+        .title = "L:1, H",
+        .widthLimit = 25.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::HEAD,
+        },
+        .title = "L:1, H",
+        .widthLimit = 15.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
             .maxLines = 2,
-            .ellipsis = u"\u2026",
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::MIDDLE,
         },
-        .title = "maxL:2,mid",
+        .title = "L:2,M",
+        .widthLimit = 100.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::MIDDLE,
+        },
+        .title = "L:1,M",
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::MIDDLE,
+        },
+        .title = "L:1,M",
         .widthLimit = 150.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 3,
-            .ellipsis = u"\u2026",
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::MIDDLE,
         },
-        .title = "maxL:3,mid",
+        .title = "L:1,M",
         .widthLimit = 70.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 4,
-            .ellipsis = u"\u2026",
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::MIDDLE,
         },
-        .title = "maxL:4,mid",
+        .title = "L:1,M",
         .widthLimit = 60.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 7,
-            .ellipsis = u"\u2026",
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::MIDDLE,
         },
-        .title = "maxL:7,mid",
+        .title = "L:1,M",
         .widthLimit = 30.0,
     },
     {
         .span = TEXT,
         .tpStyle = {
-            .maxLines = 10,
-            .ellipsis = u"\u2026",
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
             .ellipsisModal = EllipsisModal::MIDDLE,
         },
-        .title = "maxL:10,mid",
+        .title = "L:1,M",
+        .widthLimit = 25.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::MIDDLE,
+        },
+        .title = "L:1,M",
+        .widthLimit = 15.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "default,T",
+        .widthLimit = 100.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:1,T",
+        .widthLimit = 100.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 2,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:2,T",
+        .widthLimit = 100.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:1, T",
+        .widthLimit = 70.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 2,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:2, T",
+        .widthLimit = 70.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:1, T",
+        .widthLimit = 60.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 2,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:2, T",
+        .widthLimit = 60.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:1, T",
         .widthLimit = 30.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 2,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:2, T",
+        .widthLimit = 30.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 1,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:1, T",
+        .widthLimit = 15.0,
+    },
+    {
+        .span = TEXT,
+        .tpStyle = {
+            .maxLines = 2,
+            .ellipsis = g_ellipsis,
+            .ellipsisModal = EllipsisModal::TAIL,
+        },
+        .title = "L:2, T",
+        .widthLimit = 15.0,
     },
 };
 
 class EllipsisModalTest : public TestFeature {
 public:
-    EllipsisModalTest() : TestFeature("EllipsisModalTest")
+    EllipsisModalTest() : TestFeature("EllipsisModalTest L means maxline, H means HEAD, M means MIDDLE, T means TAIL")
     {
     }
 
     void Layout()
     {
-        int loopNum = 2;
+        int loopNum = 3;
         for (int i = 0; i < loopNum; i++) {
             for (auto &info : g_infos) {
-                if (i) {
-                    info.tpStyle.wordBreakType = WordBreakType::BREAK_ALL;
-                }
                 auto builder = TypographyBuilder::Create(info.tpStyle);
                 builder->PushStyle(info.style);
+                switch (i) {
+                    case 1: // 1 means test TEXT1
+                        info.span = TEXT1;
+                        break;
+                    case 2: // 2 means test TEXT2
+                        info.span = TEXT2;
+                        break;
+                    default:
+                        break;
+                };
                 builder->AppendSpan(info.span);
                 auto typography = builder->Build();
                 typography->Layout(info.widthLimit);

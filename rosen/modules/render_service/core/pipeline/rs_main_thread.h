@@ -169,6 +169,7 @@ public:
     void ForceRefreshForUni();
     void TrimMem(std::unordered_set<std::u16string>& argSets, std::string& result);
     void DumpMem(std::unordered_set<std::u16string>& argSets, std::string& result, std::string& type, int pid = 0);
+    void DumpNode(std::string& result, uint64_t nodeId) const;
     void CountMem(int pid, MemoryGraphic& mem);
     void CountMem(std::vector<MemoryGraphic>& mems);
     void SetAppWindowNum(uint32_t num);
@@ -234,7 +235,16 @@ private:
     void SetRSEventDetectorLoopFinishTag();
     void UpdateUIFirstSwitch();
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
-    void ReleaseExitSurfaceNodeAllGpuResource();
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_SKIA
+    void ReleaseExitSurfaceNodeAllGpuResource(GrDirectContext* grContext);
+#else
+    void ReleaseExitSurfaceNodeAllGpuResource(GrContext* grContext);
+#endif
+#else
+    void ReleaseExitSurfaceNodeAllGpuResource(Drawing::GPUContext* grContext);
+#endif
+
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
 
     void ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
@@ -277,8 +287,6 @@ private:
     void CollectFrameRateRange(std::shared_ptr<RSRenderNode> node);
     int32_t GetNodePreferred(const std::vector<HgmModifierProfile>& hgmModifierProfileList) const;
     bool IsLastFrameUIFirstEnabled(NodeId appNodeId) const;
-
-    void PostIdelTaskToPurge(bool isSetPurgeType);
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

@@ -507,8 +507,34 @@ void RSMainThread::ProcessCommand()
         ProcessCommandForDividedRender();
     }
     if (context_->purgeType_ != RSContext::PurgeType::NONE) {
-        PostIdelTaskToPurge(true);
         context_->purgeType_ = RSContext::PurgeType::NONE;
+        if (handler_) {
+            handler_->PostTask([this]() {
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_RENDER_CONTEXT
+                auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
+#else
+                auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
+#endif
+                if (grContext) {
+                    if (context_->purgeType_ == RSContext::PurgeType::PURGE_UNLOCK) {
+                        MemoryManager::ReleaseUnlockGpuResource(grContext);
+                    } else {
+                        MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+                    }
+                }
+#else
+                auto gpuContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+                if (gpuContext) {
+                    if (context_->purgeType_ == RSContext::PurgeType::PURGE_UNLOCK) {
+                        MemoryManager::ReleaseUnlockGpuResource(gpuContext);
+                    } else {
+                        MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(gpuContext);
+                    }
+                }
+#endif
+            }, AppExecFwk::EventQueue::Priority::IDLE);
+        }
     }
     if (RsFrameReport::GetInstance().GetEnable()) {
         RsFrameReport::GetInstance().AnimateStart();
@@ -2042,7 +2068,7 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         grContext->flush();
         SkGraphics::PurgeAllCaches(); // clear cpu cache
         if (!IsResidentProcess(remotePid)) {
-            ReleaseExitSurfaceNodeAllGpuResource();
+            ReleaseExitSurfaceNodeAllGpuResource(grContext);
         } else {
             RS_LOGW("this pid:%{public}d is resident process, no need release gpu resource", remotePid);
         }
@@ -2059,7 +2085,7 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         gpuContext->Flush();
         SkGraphics::PurgeAllCaches(); // clear cpu cache
         if (!IsResidentProcess(remotePid)) {
-            ReleaseExitSurfaceNodeAllGpuResource();
+            ReleaseExitSurfaceNodeAllGpuResource(gpuContext);
         } else {
             RS_LOGW("this pid:%{public}d is resident process, no need release gpu resource", remotePid);
         }
@@ -2077,46 +2103,24 @@ bool RSMainThread::IsResidentProcess(pid_t pid)
         pid == ExtractPid(nodeMap.GetWallPaperViewNodeId());
 }
 
-void RSMainThread::PostIdelTaskToPurge(bool isSetPurgeType)
-{
-    PostTask([this, isSetPurgeType]() {
 #ifndef USE_ROSEN_DRAWING
-#ifdef NEW_RENDER_CONTEXT
-        auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
+#ifdef NEW_SKIA
+void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource(GrDirectContext* grContext)
 #else
-        auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
+void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource(GrContext* grContext)
 #endif
 #else
-        auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource(Drawing::GPUContext* gpuContext)
 #endif
-        if (grContext) {
-            RS_LOGE("PostIdelTaskToPurge error, grContext is nullptr");
-            return;
-        }
-        if (isSetPurgeType) {
-            if (GetContext().purgeType_ == RSContext::PurgeType::PURGE_UNLOCK) {
-                MemoryManager::ReleaseUnlockGpuResource(grContext);
-            } else {
-                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
-            }
-        } else {
-            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
-        }
-
-#ifndef USE_ROSEN_DRAWING
-        grContext->flushAndSubmit(true);
-#else
-        grContext->FlushAndSubmit(true);
-#endif   
-    }, AppExecFwk::EventQueue::Priority::IDLE);
-}
-
-void RSMainThread::ReleaseExitSurfaceNodeAllGpuResource()
 {
     switch (RSSystemProperties::GetReleaseGpuResourceEnabled()) {
         case ReleaseGpuResourceType::WINDOW_HIDDEN:
         case ReleaseGpuResourceType::WINDOW_HIDDEN_AND_LAUCHER:
-            PostIdelTaskToPurge(false);
+#ifndef USE_ROSEN_DRAWING
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+#else
+            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(gpuContext);
+#endif
             break;
         default:
             break;
@@ -2241,6 +2245,19 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
     dumpString.append("trimMem: " + type + "\n");
 #endif
 #endif
+}
+
+void RSMainThread::DumpNode(std::string& result, uint64_t nodeId) const
+{
+    const auto& nodeMap = context_->GetNodeMap();
+    auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
+    if (!node) {
+        result.append("have no this node");
+        return;
+    }
+    DfxString log;
+    node->DumpNodeInfo(log);
+    result.append(log.GetString());
 }
 
 void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::string& dumpString,

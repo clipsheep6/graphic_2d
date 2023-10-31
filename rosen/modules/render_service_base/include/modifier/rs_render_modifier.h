@@ -67,6 +67,16 @@ public:
 
     virtual bool Marshalling(Parcel& parcel) = 0;
     [[nodiscard]] static RSRenderModifier* Unmarshalling(Parcel& parcel);
+
+    virtual uint64_t GetDrawCmdListId()
+    {
+        return 0;
+    }
+    virtual void SetAdvanceAddModifier(bool value) {}
+    virtual bool GetAdvanceAddModifier()
+    {
+        return false;
+    }
 };
 
 class RSB_EXPORT RSGeometryTransRenderModifier : public RSRenderModifier {
@@ -149,6 +159,20 @@ public:
         }
     }
 
+    uint64_t GetDrawCmdListId() override
+    {
+        DrawCmdListPtr drawCmd = property_->Get();
+        return reinterpret_cast<uint64_t>(drawCmd.get());
+    }
+    void SetAdvanceAddModifier(bool value) override
+    {
+        isAdvanceAddModifier_ = value;
+    }
+    bool GetAdvanceAddModifier() override
+    {
+        return isAdvanceAddModifier_;
+    }
+
     // functions that are dedicated to driven render [start]
     RectF GetCmdsClipRect() const;
     void ApplyForDrivenContent(RSModifierContext& context) const;
@@ -160,6 +184,7 @@ protected:
 #else
     std::shared_ptr<RSRenderProperty<Drawing::DrawCmdListPtr>> property_;
 #endif
+    bool isAdvanceAddModifier_ = false;
 };
 
 class RSB_EXPORT RSParticleRenderModifier : public RSRenderModifier {

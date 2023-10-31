@@ -1378,6 +1378,17 @@ void RSNode::MarkNodeGroup(bool isNodeGroup, bool isForced)
     }
 }
 
+void RSNode::MarkNodeFasterDraw(bool isNodeFasterDraw)
+{
+    if (isNodeFasterDraw_ != isNodeFasterDraw) {
+        isNodeFasterDraw_ = isNodeFasterDraw;
+        std::unique_ptr<RSCommand> command = std::make_unique<RSMarkNodeFasterDraw>(GetId(), isNodeFasterDraw);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, IsRenderServiceNode());
+        }
+    }
+}
 
 void RSNode::SetGrayScale(float grayScale)
 {

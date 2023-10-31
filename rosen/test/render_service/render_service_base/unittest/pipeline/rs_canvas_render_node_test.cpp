@@ -53,7 +53,7 @@ void RSCanvasRenderNodeTest::TearDown() {}
 HWTEST_F(RSCanvasRenderNodeTest, UpdateRecording001, TestSize.Level1)
 {
     auto canvasRenderNode = std::make_shared<RSCanvasRenderNode>(id, context);
-    canvasRenderNode->UpdateRecording(nullptr, RSModifierType::INVALID);
+    canvasRenderNode->UpdateRecording(nullptr, RSModifierType::INVALID, false);
 }
 
 /**
@@ -68,7 +68,7 @@ HWTEST_F(RSCanvasRenderNodeTest, UpdateRecording002, TestSize.Level1)
     int h;
     auto canvasRenderNode = std::make_shared<RSCanvasRenderNode>(id + 1);
     auto drawCmds = std::make_shared<DrawCmdList>(w, h);
-    canvasRenderNode->UpdateRecording(drawCmds, RSModifierType::INVALID);
+    canvasRenderNode->UpdateRecording(drawCmds, RSModifierType::INVALID, false);
 }
 
 /**

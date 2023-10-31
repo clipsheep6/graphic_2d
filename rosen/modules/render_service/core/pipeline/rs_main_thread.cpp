@@ -1809,6 +1809,17 @@ void RSMainThread::Animate(uint64_t timestamp)
     PerfAfterAnim(needRequestNextVsync);
 }
 
+void RSMainThread::AdvanceProcessRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
+{
+    if (!rsTransactionData) {
+        return;
+    }
+    if (isUniRender_) {
+        context_->transactionTimestamp_ = rsTransactionData->GetTimestamp();
+        rsTransactionData->AdvanceProcess(*context_);
+    }
+}
+
 void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
     if (!rsTransactionData) {

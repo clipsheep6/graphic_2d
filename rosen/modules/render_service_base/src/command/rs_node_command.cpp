@@ -23,7 +23,7 @@ void RSNodeCommandHelper::AddModifier(RSContext& context, NodeId nodeId,
     auto& nodeMap = context.GetNodeMap();
     auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
     if (node) {
-        node->AddModifier(modifier);
+        node->AddModifier(modifier, false);
     }
 }
 
@@ -50,6 +50,14 @@ void RSNodeCommandHelper::MarkNodeGroup(RSContext& context, NodeId nodeId, bool 
     auto& nodeMap = context.GetNodeMap();
     if (auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId)) {
         node->MarkNodeGroup(isForced ? RSRenderNode::GROUPED_BY_USER : RSRenderNode::GROUPED_BY_UI, isNodeGroup);
+    }
+}
+
+void RSNodeCommandHelper::MarkNodeFasterDraw(RSContext& context, NodeId nodeId, bool isNodeFasterDraw)
+{
+    auto& nodeMap = context.GetNodeMap();
+    if (auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId)) {
+        node->MarkNodeFasterDraw(isNodeFasterDraw);
     }
 }
 

@@ -44,7 +44,7 @@ napi_value RSWindowAnimationManager::Init(napi_env env, napi_value exportObj)
     if (exportObj == nullptr) {
         WALOGE("exportObj is null");
         return nullptr;
-    }   
+    }
     auto windowAnimationManager = std::make_unique<RSWindowAnimationManager>();
     napi_wrap(env, exportObj, windowAnimationManager.release(), RSWindowAnimationManager::Finalizer, nullptr, nullptr);
     const char *moduleName = "RSWindowAnimationManager";
@@ -66,7 +66,7 @@ napi_value RSWindowAnimationManager::SetController(napi_env env, napi_callback_i
     WALOGD("SetController");
     if (!RSWindowAnimationUtils::IsSystemApp()) {
         WALOGE("SetController failed");
-         napi_throw(env,CreateJsError(env, ERR_NOT_SYSTEM_APP,
+        napi_throw(env, CreateJsError(env, ERR_NOT_SYSTEM_APP,
             "WindowAnimationManager setController failed, is not system app"));
         return nullptr;
     }
@@ -79,7 +79,7 @@ napi_value RSWindowAnimationManager::MinimizeWindowWithAnimation(napi_env env, n
     WALOGD("MinimizeWindowWithAnimation");
     if (!RSWindowAnimationUtils::IsSystemApp()) {
         WALOGE("MinimizeWindowWithAnimation failed");
-        napi_throw(env,CreateJsError(env, ERR_NOT_SYSTEM_APP,
+        napi_throw(env, CreateJsError(env, ERR_NOT_SYSTEM_APP,
             "WindowAnimationManager minimizeWindowWithAnimation failed, is not system app"));
         return nullptr;
     }
@@ -93,8 +93,8 @@ napi_value RSWindowAnimationManager::GetWindowAnimationTargets(napi_env env, nap
     WALOGD("GetWindowAnimationTargets");
     if (!RSWindowAnimationUtils::IsSystemApp()) {
         WALOGE("GetWindowAnimationTargets failed");
-        napi_throw(env,CreateJsError(env, ERR_NOT_SYSTEM_APP,
-            "WindowAnimationManager getWindowAnimationTargets failed, is not system app"));            
+        napi_throw(env, CreateJsError(env, ERR_NOT_SYSTEM_APP,
+            "WindowAnimationManager getWindowAnimationTargets failed, is not system app"));
         return nullptr;
     }
     auto me = CheckParamsAndGetThis<RSWindowAnimationManager>(env, info);
@@ -147,7 +147,7 @@ napi_value RSWindowAnimationManager::OnMinimizeWindowWithAnimation(napi_env env,
     }
     uint32_t windowId = 0;
     napi_value result = nullptr;
-    napi_get_named_property(env, targetObj,"windowId", &result);
+    napi_get_named_property(env, targetObj, "windowId", &result);
     if (errCode == ERR_OK && !ConvertFromJsValue(env, result, windowId)) {
         errCode = ERR_NOT_OK;
     }
@@ -174,7 +174,7 @@ napi_value RSWindowAnimationManager::OnMinimizeWindowWithAnimation(napi_env env,
 
     napi_value lastParam =  nullptr;
     if (argc > 1) {
-        napi_valuetype result1;;
+        napi_valuetype result1;
         napi_typeof(env, argv[1], &result1);
         if (result1 == napi_function) {
             lastParam = argv[1];
@@ -208,7 +208,7 @@ napi_value RSWindowAnimationManager::OnGetWindowAnimationTargets(napi_env env, n
         napi_get_array_length(env, arr, &len);
         for (uint32_t index = 0; index < len; index++) {
             napi_value result;
-            napi_get_element(env,arr,index,&result);
+            napi_get_element(env, arr, index, &result);
             napi_value value = nullptr;
             napi_coerce_to_object(env, result, &value);
             if (value == nullptr) {
@@ -216,7 +216,8 @@ napi_value RSWindowAnimationManager::OnGetWindowAnimationTargets(napi_env env, n
                 WALOGE("element is not number!");
                 break;
             }
-            uint32_t missionId = reinterpret_cast<uint32_t>(value);
+            uint32_t missionId = 0;
+            napi_get_value_uint32(env, value, &missionId);
             missionIds.push_back(missionId);
         }
     }
@@ -237,11 +238,11 @@ napi_value RSWindowAnimationManager::OnGetWindowAnimationTargets(napi_env env, n
                 RSWindowAnimationUtils::CreateJsWindowAnimationTargetArray(env, targets));
         };
 
-    napi_value lastParam = nullptr; 
-    if(argc>1){
-        napi_valuetype result1;;
+    napi_value lastParam = nullptr;
+    if (argc > 1) {
+        napi_valuetype result1;
         napi_typeof(env, argv[1], &result1);
-        if(result1 == napi_function){
+        if(result1 == napi_function) {
             lastParam = argv[1];
         }
     }

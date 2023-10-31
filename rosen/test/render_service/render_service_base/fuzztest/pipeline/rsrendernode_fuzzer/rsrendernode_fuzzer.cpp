@@ -151,7 +151,7 @@ bool RSCanvasRenderNodeFuzzTest(const uint8_t* data, size_t size)
     RSCanvasRenderNode node(id);
 
     // test
-    node.UpdateRecording(drawCmds, type);
+    node.UpdateRecording(drawCmds, type, false);
     node.ProcessRenderBeforeChildren(canvas);
     node.ProcessRenderContents(canvas);
     node.ProcessRenderAfterChildren(canvas);

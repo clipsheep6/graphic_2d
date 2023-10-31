@@ -172,6 +172,12 @@ int32_t RSInterfaces::SetVirtualScreenResolution(ScreenId id, uint32_t width, ui
     return renderServiceClient_->SetVirtualScreenResolution(id, width, height);
 }
 
+bool RSInterfaces::SetVirtualMirrorScreenBufferRotation(ScreenId id, bool bufferRotation)
+{
+    RS_LOGD("RSInterfaces::SetVirtualMirrorScreenBufferRotation is not supported.");
+    return true;
+}
+
 RSVirtualScreenResolution RSInterfaces::GetVirtualScreenResolution(ScreenId id)
 {
     return renderServiceClient_->GetVirtualScreenResolution(id);
@@ -195,19 +201,7 @@ bool RSInterfaces::TakeSurfaceCaptureForUIWithoutUni(NodeId id,
         std::shared_ptr<Media::PixelMap> pixelmap = rsDividedUICapture->TakeLocalCapture();
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         callback->OnSurfaceCapture(pixelmap);
-        std::lock_guard<std::mutex> lock(offscreenRenderMutex_);
-        offscreenRenderNum_--;
-        if (offscreenRenderNum_ == 0) {
-            RSOffscreenRenderThread::Instance().Stop();
-        }
     };
-    {
-        std::lock_guard<std::mutex> lock(offscreenRenderMutex_);
-        if (offscreenRenderNum_ == 0) {
-            RSOffscreenRenderThread::Instance().Start();
-        }
-        offscreenRenderNum_++;
-    }
     RSOffscreenRenderThread::Instance().PostTask(offscreenRenderTask);
     return true;
 }

@@ -105,7 +105,7 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
 
 void RSSurfaceNode::CreateNodeInRenderThread()
 {
-    if (IsUniRenderEnabled()||!IsRenderServiceNode()) {
+    if (!IsRenderServiceNode()) {
         ROSEN_LOGI("RsDebug RSSurfaceNode::CreateNodeInRenderThread id:%{public}" PRIu64 " already has RT Node",
             GetId());
         return;
@@ -214,6 +214,24 @@ void RSSurfaceNode::SetSecurityLayer(bool isSecurityLayer)
 bool RSSurfaceNode::GetSecurityLayer() const
 {
     return isSecurityLayer_;
+}
+
+void RSSurfaceNode::SetSkipLayer(bool isSkipLayer)
+{
+    isSkipLayer_ = isSkipLayer;
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSSurfaceNodeSetSkipLayer>(GetId(), isSkipLayer);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
+    ROSEN_LOGD("RSSurfaceNode::SetSkipLayer, surfaceNodeId:[%" PRIu64 "] isSkipLayer:%s", GetId(),
+        isSkipLayer ? "true" : "false");
+}
+
+bool RSSurfaceNode::GetSkipLayer() const
+{
+    return isSkipLayer_;
 }
 
 void RSSurfaceNode::SetFingerprint(bool hasFingerprint)

@@ -89,7 +89,8 @@ void Shaper::ConsiderEllipsis(const TypographyStyle &tstyle,
     auto maxLines = tstyle.maxLines;
     if (maxLines < 0) {
         maxLines = 1;
-     }
+    }
+
     if (lineMetrics_.size() <= maxLines) {
         return;
     }
@@ -287,22 +288,49 @@ void Shaper::ConsiderMiddleEllipsis(const std::vector<VariantSpan> &ellipsisSpan
 void Shaper::ConsiderTailEllipsis(const std::vector<VariantSpan> &ellipsisSpans, const double ellipsisWidth,
     const size_t maxLines, const double widthLimit)
 {
-    lineMetrics_.erase(lineMetrics_.begin() + maxLines, lineMetrics_.end());
+    bool isErase = false;
+    bool isEexceedWidthLimit = false;
+    if (maxLines < lineMetrics_.size()) {
+        lineMetrics_.erase(lineMetrics_.begin() + maxLines, lineMetrics_.end());
+        isErase = true;
+    }
     double width = 0;
-    auto &lastline = lineMetrics_[maxLines - 1];
-    for (const auto &span : lastline.lineSpans) {
+    auto &lastLine = lineMetrics_[maxLines - 1];
+    if (!isErase && lastLine.width <= widthLimit) {
+        return;
+    }
+
+    for (const auto &span : lastLine.lineSpans) {
         width += span.GetWidth();
     }
 
     // protected the first span and ellipsis
     while (static_cast<int>(width) > static_cast<int>(widthLimit - ellipsisWidth) &&
-        static_cast<int>(lastline.lineSpans.size()) > 1) {
-        width -= lastline.lineSpans.back().GetWidth();
-        lastline.lineSpans.pop_back();
+        static_cast<int>(lastLine.lineSpans.size()) > 1) {
+        width -= lastLine.lineSpans.back().GetWidth();
+        lastLine.lineSpans.pop_back();
+        isEexceedWidthLimit = true;
     }
 
-    // Add ellipsisSpans
-    lastline.lineSpans.insert(lastline.lineSpans.end(), ellipsisSpans.begin(), ellipsisSpans.end());
+    auto ts = lastLine.lineSpans.back().TryToTextSpan();
+    if (ts == nullptr && (isEexceedWidthLimit || isErase)) {
+        lastLine.lineSpans.insert(lastLine.lineSpans.end(), ellipsisSpans.begin(), ellipsisSpans.end());
+        return;
+    }
+
+    bool hasEllipsis = ts && (static_cast<int>(ts->GetWidth()) > static_cast<int>(widthLimit - ellipsisWidth) ||
+        isErase);
+    if (!hasEllipsis && ts != nullptr) {
+        return;
+    }
+
+    if (hasEllipsis) {
+        auto style = lastLine.lineSpans.back().GetTextStyle();
+        for (auto span : ellipsisSpans) {
+            span.SetTextStyle(style);
+            lastLine.lineSpans.push_back(span);
+        }
+    }
 }
 } // namespace TextEngine
 } // namespace Rosen

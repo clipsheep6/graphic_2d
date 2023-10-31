@@ -1026,6 +1026,62 @@ HWTEST_F(RSUniRenderVisitorTest, ProcessSurfaceRenderNode002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: ProcessSurfaceRenderNode003
+ * @tc.desc: Test RSUniRenderVisitorTest.ProcessSurfaceRenderNode with skipLayer
+ * @tc.type: FUNC
+ * @tc.require: issueI80HL4
+ */
+HWTEST_F(RSUniRenderVisitorTest, ProcessSurfaceRenderNode003, TestSize.Level1)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isUIFirst_ = true;
+    rsUniRenderVisitor->isSubThread_ = true;
+    rsUniRenderVisitor->renderEngine_ = std::make_shared<RSUniRenderEngine>();
+    rsUniRenderVisitor->renderEngine_->Init();
+    NodeId id = 0;
+    RSDisplayNodeConfig config;
+    auto node = std::make_shared<RSDisplayRenderNode>(id, config);
+    node->SetSecurityDisplay(true);
+    auto surfaceNode = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(surfaceNode, nullptr);
+    surfaceNode->SetSkipLayer(true);
+    auto skCanvas = std::make_shared<SkCanvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(skCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(skCanvas.get());
+    surfaceNode->SetParent(node);
+    rsUniRenderVisitor->ProcessSurfaceRenderNode(*surfaceNode);
+}
+
+/**
+ * @tc.name: ProcessSurfaceRenderNode004
+ * @tc.desc: Test RSUniRenderVisitorTest.ProcessSurfaceRenderNode with securityLayer
+ * @tc.type: FUNC
+ * @tc.require: issueI80HL4
+ */
+HWTEST_F(RSUniRenderVisitorTest, ProcessSurfaceRenderNode004, TestSize.Level1)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isUIFirst_ = true;
+    rsUniRenderVisitor->isSubThread_ = true;
+    rsUniRenderVisitor->renderEngine_ = std::make_shared<RSUniRenderEngine>();
+    rsUniRenderVisitor->renderEngine_->Init();
+    NodeId id = 0;
+    RSDisplayNodeConfig config;
+    auto node = std::make_shared<RSDisplayRenderNode>(id, config);
+    node->SetSecurityDisplay(true);
+    auto surfaceNode = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(surfaceNode, nullptr);
+    surfaceNode->SetSecurityLayer(true);
+    auto skCanvas = std::make_shared<SkCanvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(skCanvas, nullptr);
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(skCanvas.get());
+    surfaceNode->SetParent(node);
+    rsUniRenderVisitor->ProcessSurfaceRenderNode(*surfaceNode);
+}
+
+/**
  * @tc.name: GenerateNodeContentCache001
  * @tc.desc: Test RSUniRenderVisitorTest.GenerateNodeContentCache when surfaceNode is null
  * @tc.type: FUNC
@@ -1631,7 +1687,7 @@ HWTEST_F(RSUniRenderVisitorTest, AddContainerDirtyToGlobalDirty002, TestSize.Lev
 
 /**
  * @tc.name: CheckIfSurfaceRenderNodeNeedProcess001
- * @tc.desc: Test RSUniRenderVisitorTest.CheckIfSurfaceRenderNodeNeedProcess for security layer
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckIfSurfaceRenderNodeNeedProcess for skip layer
  * @tc.type: FUNC
  * @tc.require: issuesI7RNL4
  */
@@ -1639,7 +1695,7 @@ HWTEST_F(RSUniRenderVisitorTest, CheckIfSurfaceRenderNodeNeedProcess001, TestSiz
 {
     auto surfaceNode = RSTestUtil::CreateSurfaceNode();
     ASSERT_NE(surfaceNode, nullptr);
-    surfaceNode->SetSecurityLayer(true);
+    surfaceNode->SetSkipLayer(true);
     
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     ASSERT_NE(rsUniRenderVisitor, nullptr);
@@ -1999,8 +2055,10 @@ HWTEST_F(RSUniRenderVisitorTest, AssignGlobalZOrderAndCreateLayer001, TestSize.L
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->hardwareEnabledNodes_.push_back(hardwareEnabledNode);
 
-    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer();
-    ASSERT_EQ(rsUniRenderVisitor->globalZOrder_, 0.0f);
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> nodeList;
+    auto oldZOrder = rsUniRenderVisitor->globalZOrder_;
+    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer(nodeList);
+    ASSERT_EQ(rsUniRenderVisitor->globalZOrder_, oldZOrder);
 }
 
 /*
@@ -2021,10 +2079,12 @@ HWTEST_F(RSUniRenderVisitorTest, AssignGlobalZOrderAndCreateLayer002, TestSize.L
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->hardwareEnabledNodes_.push_back(hardwareEnabledNode);
-    rsUniRenderVisitor->appWindowNodesInZOrder_.push_back(appWindowNode);
 
-    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer();
-    ASSERT_EQ(rsUniRenderVisitor->localZOrder_, 0.0f);
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> nodeList;
+    nodeList.push_back(appWindowNode);
+    auto oldZOrder = rsUniRenderVisitor->globalZOrder_;
+    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer(nodeList);
+    ASSERT_EQ(rsUniRenderVisitor->globalZOrder_, oldZOrder);
 }
 
 /*
@@ -2048,10 +2108,12 @@ HWTEST_F(RSUniRenderVisitorTest, AssignGlobalZOrderAndCreateLayer003, TestSize.L
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->hardwareEnabledNodes_.push_back(hardwareEnabledNode);
-    rsUniRenderVisitor->appWindowNodesInZOrder_.push_back(appWindowNode);
 
-    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer();
-    ASSERT_EQ(rsUniRenderVisitor->localZOrder_, 0.0f);
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> nodeList;
+    nodeList.push_back(appWindowNode);
+    auto oldZOrder = rsUniRenderVisitor->globalZOrder_;
+    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer(nodeList);
+    ASSERT_EQ(rsUniRenderVisitor->globalZOrder_, oldZOrder);
 }
 
 /*
@@ -2079,10 +2141,12 @@ HWTEST_F(RSUniRenderVisitorTest, AssignGlobalZOrderAndCreateLayer004, TestSize.L
     rsUniRenderVisitor->processor_ = RSProcessorFactory::CreateProcessor(
         RSDisplayRenderNode::CompositeType::UNI_RENDER_COMPOSITE);
     rsUniRenderVisitor->hardwareEnabledNodes_.push_back(hardwareEnabledNode);
-    rsUniRenderVisitor->appWindowNodesInZOrder_.push_back(appWindowNode);
 
-    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer();
-    ASSERT_NE(rsUniRenderVisitor->globalZOrder_, 0.0f);
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> nodeList;
+    nodeList.push_back(appWindowNode);
+    auto oldZOrder = rsUniRenderVisitor->globalZOrder_;
+    rsUniRenderVisitor->AssignGlobalZOrderAndCreateLayer(nodeList);
+    ASSERT_NE(rsUniRenderVisitor->globalZOrder_, oldZOrder);
 }
 
 /*

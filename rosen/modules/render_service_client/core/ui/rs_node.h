@@ -141,6 +141,7 @@ public:
     static void OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const std::function<void()>& finishCallback = nullptr);
     static std::vector<std::shared_ptr<RSAnimation>> CloseImplicitAnimation();
+    static bool IsImplicitAnimationOpen();
 
     static void ExecuteWithoutAnimation(
         const PropertyCallback& callback, std::shared_ptr<RSImplicitAnimator> implicitAnimator = nullptr);
@@ -256,6 +257,7 @@ public:
     void SetShadowRadius(float radius);
     void SetShadowPath(const std::shared_ptr<RSPath>& shadowPath);
     void SetShadowMask(bool shadowMask);
+    void SetShadowIsFilled(bool shadowIsFilled);
 
     void SetFrameGravity(Gravity gravity);
 
@@ -297,7 +299,7 @@ public:
     void SetDrawRegion(std::shared_ptr<RectF> rect);
 
     // Mark preferentially draw node and childrens
-    void MarkNodeGroup(bool isNodeGroup);
+    void MarkNodeGroup(bool isNodeGroup, bool isForced = true);
 
     void SetGrayScale(float grayScale);
 
@@ -319,6 +321,9 @@ public:
 
     void UpdateUIFrameRateRange(const FrameRateRange& range);
 
+    void SetOutOfParent(OutOfParentType outOfParent);
+
+    void SetColorBlendMode(RSColorBlendModeType blendMode);
 protected:
     explicit RSNode(bool isRenderServiceNode);
     explicit RSNode(bool isRenderServiceNode, NodeId id);
@@ -377,6 +382,7 @@ private:
     std::unordered_map<PropertyId, std::shared_ptr<RSModifier>> modifiers_;
     std::unordered_map<RSModifierType, std::shared_ptr<RSModifier>> propertyModifiers_;
     std::shared_ptr<RectF> drawRegion_;
+    OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
 
     std::unordered_map<AnimationId, std::shared_ptr<RSAnimation>> animations_;
     std::unordered_map<PropertyId, uint32_t> animatingPropertyNum_;

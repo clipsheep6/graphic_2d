@@ -98,18 +98,39 @@ public:
         return GetName().find("RosenWeb") != std::string::npos;
     }
 
+    bool IsHardwareEnabledTopSurface() const
+    {
+        return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE && GetName() == "pointer window";
+    }
+
     // indicate if this node type can enable hardware composer
     bool IsHardwareEnabledType() const
     {
         if (IsRosenWeb() && !RSSystemProperties::IsPhoneType()) {
             return false;
         }
-        return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE && isHardwareEnabledNode_;
+        return (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE && isHardwareEnabledNode_) ||
+            IsHardwareEnabledTopSurface();
     }
 
     void SetHardwareEnabled(bool isEnabled)
     {
         isHardwareEnabledNode_ = isEnabled;
+    }
+
+    void SetSubNodeShouldPaint()
+    {
+        hasSubNodeShouldPaint_ = true;
+    }
+
+    void ResetSubNodeShouldPaint()
+    {
+        hasSubNodeShouldPaint_ = false;
+    }
+
+    bool HasSubNodeShouldPaint() const
+    {
+        return hasSubNodeShouldPaint_;
     }
 
     // used for hwc node
@@ -313,6 +334,9 @@ public:
 
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
+
+    void SetSkipLayer(bool isSkipLayer);
+    bool GetSkipLayer() const;
 
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
@@ -532,11 +556,16 @@ public:
         return visibleRegion_.IsIntersectWith(nodeRect);
     }
 
+    inline bool IsEmptyAppWindow() const
+    {
+        return IsAppWindow() && (GetChildrenCount() == 0 || HasOnlyOneRootNode());
+    }
+
     inline bool IsTransparent() const
     {
         const uint8_t opacity = 255;
         return !(GetAbilityBgAlpha() == opacity && ROSEN_EQ(GetGlobalAlpha(), 1.0f)) ||
-            (IsAppWindow() && GetChildrenCount() == 0 && RSUniRenderJudgement::IsUniRender());
+            (IsEmptyAppWindow() && RSUniRenderJudgement::IsUniRender());
     }
 
     inline bool IsCurrentNodeInTransparentRegion(const Occlusion::Rect& nodeRect) const
@@ -725,7 +754,7 @@ public:
         return isFilterCacheValid_;
     }
 
-    void SetFilterCacheValid();
+    void CalcFilterCacheValidForOcclusion();
 
     bool IsFilterCacheStatusChanged() const
     {
@@ -746,6 +775,27 @@ public:
 
     void SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvailable);
 
+    // whether the subtree has only one root node
+    bool HasOnlyOneRootNode() const;
+
+    bool GetHasSecurityLayer()
+    {
+        return hasSecurityLayer_;
+    }
+
+    void SetHasSecurityLayer(bool hasSecurityLayer)
+    {
+        hasSecurityLayer_ = hasSecurityLayer;
+    }
+    bool GetHasSkipLayer()
+    {
+        return hasSkipLayer_;
+    }
+
+    void SetHasSkipLayer(bool hasSkipLayer)
+    {
+        hasSkipLayer_ = hasSkipLayer;
+    }
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -778,6 +828,7 @@ private:
 #endif
 
     bool isSecurityLayer_ = false;
+    bool isSkipLayer_ = false;
     bool hasFingerprint_ = false;
     bool isReportFirstFrame_ = false;
     RectI srcRect_;
@@ -906,6 +957,7 @@ private:
     bool isCurrentFrameHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;
     bool isNewOnTree_ = false;
+    bool hasSubNodeShouldPaint_ = false;
     // mark if this self-drawing node is forced not to use hardware composer
     // in case where this node's parent window node is occluded or is appFreeze, this variable will be marked true
     bool isHardwareForcedDisabled_ = false;
@@ -919,6 +971,8 @@ private:
 
     bool needDrawAnimateProperty_ = false;
     bool prevVisible_ = false;
+    bool hasSecurityLayer_ = false;
+    bool hasSkipLayer_ = false;
 
     // UIFirst
     uint32_t submittedSubThreadIndex_ = INT_MAX;

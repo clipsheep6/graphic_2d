@@ -21,8 +21,8 @@
 #include <list>
 #include <memory>
 #include <mutex>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -35,6 +35,7 @@
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties.h"
+#include "property/rs_property_drawable.h"
 
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkRefCnt.h"
@@ -54,7 +55,7 @@ class DrawCmdList;
 class RSContext;
 class RSNodeVisitor;
 class RSCommand;
-
+class RSPropertyDrawable;
 class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode>  {
 public:
 
@@ -103,6 +104,11 @@ public:
         return id_;
     }
 
+    inline const std::list<WeakPtr> &GetChildren() const noexcept
+    {
+        return children_;
+    }
+
     // flag: isOnTheTree; instanceRootNodeId: displaynode or leash/appnode attached to
     // firstLevelNodeId: surfacenode for uiFirst to assign task; cacheNodeId: drawing cache rootnode attached to
     virtual void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
@@ -127,7 +133,7 @@ public:
     template<typename T>
     bool IsInstanceOf() const
     {
-        constexpr uint32_t targetType = static_cast<uint32_t>(T::Type);
+        constexpr auto targetType = static_cast<uint32_t>(T::Type);
         return (static_cast<uint32_t>(GetType()) & targetType) == targetType;
     }
     template<typename T>
@@ -373,6 +379,9 @@ public:
 
     void SetDrawRegion(const std::shared_ptr<RectF>& rect);
     const std::shared_ptr<RectF>& GetDrawRegion() const;
+    
+    void SetOutOfParent(OutOfParentType outOfParent);
+    OutOfParentType GetOutOfParent() const;
 
 #ifndef USE_ROSEN_DRAWING
     void UpdateEffectRegion(std::optional<SkPath>& region);
@@ -455,6 +464,8 @@ protected:
     std::unordered_set<RSModifierType> dirtyTypes_;
     bool isFullChildrenListValid_ = false;
     RSProperties renderProperties_;
+    void IterateOnDrawableRange(Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end,
+        RSRenderNode& node, RSPaintFilterCanvas& canvas);
 
 private:
     NodeId id_;
@@ -518,12 +529,15 @@ private:
     std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
     std::shared_ptr<Drawing::Surface> cacheCompletedSurface_ = nullptr;
 #endif
-#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_GL
+#ifndef USE_ROSEN_DRAWING
     GrBackendTexture cacheBackendTexture_;
     GrBackendTexture cacheCompletedBackendTexture_;
-    bool isTextureValid_ = false;
+#else
+    Drawing::BackendTexture cacheBackendTexture_;
+    Drawing::BackendTexture cacheCompletedBackendTexture_;
 #endif
+    bool isTextureValid_ = false;
 #endif
     std::atomic<bool> isCacheSurfaceNeedUpdate_ = false;
     std::atomic<bool> isStaticCached_ = false;
@@ -554,6 +568,7 @@ private:
     bool isMarkDrivenRender_ = false;
     bool paintState_ = false;
     bool isContentChanged_ = false;
+    OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
     float globalAlpha_ = 1.0f;
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 
@@ -580,10 +595,16 @@ private:
     std::unordered_map<PropertyId, std::variant<float, Vector2f>> propertyValueMap_;
     std::vector<HgmModifierProfile> hgmModifierProfileList_;
 
+    std::vector<std::unique_ptr<RSPropertyDrawable>> propertyDrawablesVec_;
+    uint8_t drawableVecStatus_ = 0;
+    using DrawableIter = decltype(propertyDrawablesVec_)::iterator;
+
     friend class RSMainThread;
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
     friend class RSRenderTransition;
+    friend class RSAliasDrawable;
+    friend class RSModifierDrawable;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

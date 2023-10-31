@@ -169,6 +169,16 @@ bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetAnimationCacheEnabled()
+{
+    return {};
+}
+
+bool RSSystemProperties::GetPropertyDrawableEnable()
+{
+    return {};
+}
+
 float RSSystemProperties::GetAnimationScale()
 {
     return 1.f;

@@ -646,6 +646,7 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
         if (result) {
             return false;
         }
+        curSurfaceNode_ = nullptr;
     }
     RS_OPTIONAL_TRACE_NAME("Skip static surface " + node.GetName() + " nodeid - pid: " +
         std::to_string(node.GetId()) + " - " + std::to_string(ExtractPid(node.GetId())));
@@ -657,6 +658,7 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
             curSurfaceDirtyManager_->UpdateVisitedDirtyRects(accumulatedDirtyRegions_);
         }
         node.UpdateFilterCacheStatusIfNodeStatic(prepareClipRect_);
+        curSurfaceDirtyManager_ = nullptr;
     }
     node.ResetDrawingCacheStatusIfNodeStatic(allCacheFilterRects_);
     // static surface keeps same position

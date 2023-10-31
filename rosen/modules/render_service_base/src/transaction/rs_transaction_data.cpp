@@ -91,7 +91,6 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
 
 void RSTransactionData::Process(RSContext& context)
 {
-    std::unique_lock<std::mutex> lock(commandMutex_);
     for (auto& [nodeId, followType, command] : payload_) {
         if (command != nullptr) {
             command->Process(context);
@@ -101,20 +100,17 @@ void RSTransactionData::Process(RSContext& context)
 
 void RSTransactionData::Clear()
 {
-    std::unique_lock<std::mutex> lock(commandMutex_);
     payload_.clear();
     timestamp_ = 0;
 }
 
 void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
 {
-    std::unique_lock<std::mutex> lock(commandMutex_);
     payload_.emplace_back(nodeId, followType, std::move(command));
 }
 
 void RSTransactionData::AddCommand(std::unique_ptr<RSCommand>&& command, NodeId nodeId, FollowType followType)
 {
-    std::unique_lock<std::mutex> lock(commandMutex_);
     payload_.emplace_back(nodeId, followType, std::move(command));
 }
 
@@ -145,7 +141,6 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
         ROSEN_LOGE("RSTransactionData::UnmarshallingCommand cannot read isUniRender");
         return false;
     }
-    std::unique_lock<std::mutex> payloadLock(commandMutex_, std::defer_lock);
     for (size_t i = 0; i < len; i++) {
         if (!isUniRender) {
             if (!parcel.ReadUint64(nodeId)) {
@@ -171,9 +166,7 @@ bool RSTransactionData::UnmarshallingCommand(Parcel& parcel)
                 commandType, commandSubType);
             return false;
         }
-        payloadLock.lock();
         payload_.emplace_back(nodeId, static_cast<FollowType>(followType), std::move(command));
-        payloadLock.unlock();
     }
     int32_t pid;
     return parcel.ReadBool(needSync_) && parcel.ReadBool(needCloseSync_) && parcel.ReadInt32(syncTransactionCount_) &&

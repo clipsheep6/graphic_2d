@@ -1813,6 +1813,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 DrawWatermarkIfNeed();
             } else {
                 int saveCount = canvas_->save();
+                float boundsWidth = node.GetRenderProperties().GetBoundsWidth();
+                float boundsHeight = node.GetRenderProperties().GetBoundsHeight();
+                ScaleMirrorIfNeed(boundsWidth, boundsHeight);
                 ProcessChildren(*mirrorNode);
                 DrawWatermarkIfNeed();
                 canvas_->restoreToCount(saveCount);
@@ -4111,6 +4114,30 @@ void RSUniRenderVisitor::endCapture() const
     RS_TRACE_NAME("RSUniRender:RecordingToFile curFrameNum = " +
                    std::to_string(RSRecordingThread::Instance().GetCurDumpFrame()));
     RSRecordingThread::Instance().RecordingToFile(drawCmdList);
+}
+
+void RSUniRenderVisitor::ScaleMirrorIfNeed(float boundsWidth, float boundsHeight)
+{
+    auto screenManager = CreateOrGetScreenManager();
+    auto mainScreenInfo = screenManager->QueryScreenInfo(screenManager->GetDefaultScreenId());
+    float mainWidth = static_cast<float>(mainScreenInfo.width);
+    float mainHeight = static_cast<float>(mainScreenInfo.height);
+    float startX = 0;
+    float startY = 0;
+    // If the width and height not match the main screen, calculate the dstRect.
+    if (mainWidth != boundsWidth || mainHeight != boundsHeight) {
+        canvas_->clear(SK_ColorBLACK);
+        float mirrorScale = 1;
+        if ((boundsHeight / boundsWidth) < (mainHeight / mainWidth)) {
+            mirrorScale = boundsHeight / mainHeight;
+            startX = (boundsWidth - (mirrorScale * mainWidth)) / 2; // 2 for calc X
+        } else if ((boundsHeight / boundsWidth) > (mainHeight / mainWidth)) {
+            mirrorScale = boundsWidth / mainWidth;
+            startY = (boundsHeight - (mirrorScale * mainHeight)) / 2; // 2 for calc Y
+        }
+        canvas_->translate(startX, startY);
+        canvas_->scale(mirrorScale, mirrorScale);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -166,6 +166,7 @@ public:
 #endif
 private:
     void DrawWatermarkIfNeed();
+    void ScaleMirrorIfNeed(float boundsWidth, float boundsHeight);
 #ifndef USE_ROSEN_DRAWING
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const SkColor color,
         const SkPaint::Style fillType, float alpha, int edgeWidth);

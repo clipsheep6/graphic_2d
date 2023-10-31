@@ -46,7 +46,13 @@ extern "C" {
 struct OH_NativeImage;
 typedef struct OH_NativeImage OH_NativeImage;
 typedef struct NativeWindow OHNativeWindow;
-typedef void (*OH_OnFirstFrameAvailable)();
+typedef void (*OH_OnFrameAvailable)(void *context);
+typedef struct OH_OnFrameAvailableListener
+{
+    void *context;
+    OH_OnFrameAvailable onFrameAvailable;
+} OH_OnFrameAvailableListener;
+
 
 /**
  * @brief Create a <b>OH_NativeImage</b> related to an Opengl ES texture and target. \n
@@ -155,7 +161,7 @@ int32_t OH_NativeImage_GetSurfaceId(OH_NativeImage* image, uint64_t* surfaceId);
  * @since 10
  * @version 1.0
  */
-int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnFirstFrameAvailable listener);
+int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnFrameAvailableListener listener);
 
 /**
  * @brief Unset the frame available callback.

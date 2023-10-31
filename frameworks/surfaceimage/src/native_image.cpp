@@ -104,13 +104,13 @@ int32_t OH_NativeImage_GetSurfaceId(OH_NativeImage* image, uint64_t* surfaceId)
     return SURFACE_ERROR_OK;
 }
 
-int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnFirstFrameAvailable listener)
+int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnFrameAvailableListener listener)
 {
-    if (image == nullptr || listener == nullptr || image->consumer == nullptr) {
+    if (image == nullptr || image->consumer == nullptr) {
         BLOGE("parameter error, please check input parameter");
         return SURFACE_ERROR_ERROR;
     }
-    return image->consumer->SetOnFrameAvailableListener(listener);
+    return image->consumer->SetOnBufferAvailableListener(listener.context, listener.onFrameAvailable);
 }
 
 int32_t OH_NativeImage_UnsetOnFrameAvailableListener(OH_NativeImage* image)
@@ -119,7 +119,7 @@ int32_t OH_NativeImage_UnsetOnFrameAvailableListener(OH_NativeImage* image)
         BLOGE("parameter error, please check input parameter");
         return SURFACE_ERROR_ERROR;
     }
-    return image->consumer->UnsetOnFrameAvailableListener();
+    return image->consumer->UnsetOnBufferAvailableListener();
 }
 
 void OH_NativeImage_Destroy(OH_NativeImage** image)
@@ -129,7 +129,7 @@ void OH_NativeImage_Destroy(OH_NativeImage** image)
         return;
     }
     if (*image != nullptr && (*image)->consumer != nullptr) {
-        (void)(*image)->consumer->UnsetOnFrameAvailableListener();
+        (void)(*image)->consumer->UnsetOnBufferAvailableListener();
     }
 
     delete *image;

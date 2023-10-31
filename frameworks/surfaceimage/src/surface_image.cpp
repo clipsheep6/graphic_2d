@@ -411,7 +411,7 @@ SurfaceError SurfaceImage::WaitOnFence()
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError SurfaceImage::SetOnFrameAvailableListener(OnBufferAvailableListener listener)
+SurfaceError SurfaceImage::SetOnBufferAvailableListener(void *context, OnBufferAvailableListener listener)
 {
     std::lock_guard<std::mutex> lockGuard(opMutex_);
     if (listener == nullptr) {
@@ -420,13 +420,15 @@ SurfaceError SurfaceImage::SetOnFrameAvailableListener(OnBufferAvailableListener
     }
 
     listener_ = listener;
+    context_ = context;
     return SURFACE_ERROR_OK;
 }
 
-SurfaceError SurfaceImage::UnsetOnFrameAvailableListener()
+SurfaceError SurfaceImage::UnsetOnBufferAvailableListener()
 {
     std::lock_guard<std::mutex> lockGuard(opMutex_);
     listener_ = nullptr;
+    context_ = nullptr;
     return SURFACE_ERROR_OK;
 }
 
@@ -448,7 +450,7 @@ void SurfaceImageListener::OnBufferAvailable()
     // check here maybe a messagequeue, flag instead now
     surfaceImage->OnUpdateBufferAvailableState(true);
     if (surfaceImage->listener_ != nullptr) {
-        surfaceImage->listener_();
+        surfaceImage->listener_(surfaceImage->context_);
     }
 }
 } // namespace OHOS

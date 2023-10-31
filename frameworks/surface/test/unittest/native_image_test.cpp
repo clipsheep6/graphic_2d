@@ -99,12 +99,13 @@ public:
     static inline EGLDisplay eglDisplay_ = EGL_NO_DISPLAY;
     static inline EGLContext eglContext_ = EGL_NO_CONTEXT;
     static inline EGLConfig config_;
-    static void OnFirstFrameAvailable();
+    static void OnFrameAvailable(void *context);
 };
 
-void NativeImageTest::OnFirstFrameAvailable()
+void NativeImageTest::OnFrameAvailable(void *context)
 {
-    cout << "OnFirstFrameAvailable is called" << endl;
+    (void) context;
+    cout << "OnFrameAvailable is called" << endl;
 }
 
 void NativeImageTest::SetUpTestCase()
@@ -599,7 +600,7 @@ HWTEST_F(NativeImageTest, OHNativeImageGetSurfaceId001, Function | MediumTest | 
 * CaseDescription: 1. check image and nativeWindow
 *                  2. call OH_NativeImage_SetOnFrameAvailableListener
 *                  3. call OH_NativeWindow_NativeWindowFlushBuffer
-*                  4. check OnFirstFrameAvailable is called
+*                  4. check OnFrameAvailable is called
 * @tc.require: issueI86VH2
 */
 HWTEST_F(NativeImageTest, OHNativeImageSetOnFrameAvailableListener001, Function | MediumTest | Level1)
@@ -614,7 +615,9 @@ HWTEST_F(NativeImageTest, OHNativeImageSetOnFrameAvailableListener001, Function 
         ASSERT_NE(nativeWindow, nullptr);
     }
 
-    OH_OnFirstFrameAvailable listener = NativeImageTest::OnFirstFrameAvailable;
+    OH_OnFrameAvailableListener listener;
+    listener.context = this;
+    listener.onFrameAvailable = NativeImageTest::OnFrameAvailable;
     int32_t ret = OH_NativeImage_SetOnFrameAvailableListener(image, listener);
     ASSERT_EQ(ret, GSERROR_OK);
 

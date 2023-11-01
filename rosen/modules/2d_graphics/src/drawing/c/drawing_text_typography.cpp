@@ -316,15 +316,15 @@ void OH_Drawing_SetTextStyleFontStyle(OH_Drawing_TextStyle* style, int fontStyle
     FontStyle rosenFontStyle;
     switch (fontStyle) {
         case FONT_STYLE_NORMAL: {
-            rosenFontStyle = FontStyle::NORMAL;
+            rosenFontStyle = rosen::FontStyle::NORMAL;
             break;
         }
         case FONT_STYLE_ITALIC: {
-            rosenFontStyle = FontStyle::ITALIC;
+            rosenFontStyle = rosen::FontStyle::ITALIC;
             break;
         }
         default: {
-            rosenFontStyle = FontStyle::NORMAL;
+            rosenFontStyle = rosen::FontStyle::NORMAL;
         }
     }
 #ifndef USE_GRAPHIC_TEXT_GINE

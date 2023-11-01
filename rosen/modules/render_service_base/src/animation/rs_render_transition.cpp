@@ -99,7 +99,7 @@ void RSRenderTransition::OnAttach()
             // custom effect may not have modifier
             continue;
         }
-        target->AddModifier(modifier);
+        target->AddModifier(modifier, false);
     }
     // update number of disappearing transition animation
     if (!isTransitionIn_) {

@@ -66,6 +66,7 @@ enum RSNodeCommandType : uint16_t {
     UNREGISTER_GEOMETRY_TRANSITION,
 
     MARK_NODE_GROUP,
+    MARK_NODE_FASTER_DRAW,
     UPDATE_UI_FRAME_RATE_RANGE,
 };
 
@@ -91,6 +92,7 @@ public:
 
     static void SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze);
     static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced);
+    static void MarkNodeFasterDraw(RSContext& context, NodeId nodeId, bool isNodeFasterDraw);
 
     static void MarkDrivenRender(RSContext& context, NodeId nodeId, bool flag);
     static void MarkDrivenRenderItemIndex(RSContext& context, NodeId nodeId, int32_t index);
@@ -184,6 +186,8 @@ ADD_COMMAND(RSSetFreeze,
     ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))
 ADD_COMMAND(RSMarkNodeGroup,
     ARG(RS_NODE, MARK_NODE_GROUP, RSNodeCommandHelper::MarkNodeGroup, NodeId, bool, bool))
+ADD_COMMAND(RSMarkNodeFasterDraw,
+    ARG(RS_NODE, MARK_NODE_FASTER_DRAW, RSNodeCommandHelper::MarkNodeFasterDraw, NodeId, bool))
 
 ADD_COMMAND(RSMarkDrivenRender,
     ARG(RS_NODE, MARK_DRIVEN_RENDER, RSNodeCommandHelper::MarkDrivenRender, NodeId, bool))

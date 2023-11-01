@@ -44,9 +44,9 @@ public:
     virtual ~RSCanvasRenderNode();
 
 #ifndef USE_ROSEN_DRAWING
-    void UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type);
+    void UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type, bool isAdvance);
 #else
-    void UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds, RSModifierType type);
+    void UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds, RSModifierType type, bool isAdvance);
 #endif
     void ClearRecording();
 
@@ -75,12 +75,17 @@ public:
 
     void OnTreeStateChanged() override;
 private:
-    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const;
+    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type);
     void InternalDrawContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [start]
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [end]
     void ExecuteBlendMode(RSPaintFilterCanvas& canvas, bool isBlendMode);
+    bool FindAdvanceAddModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
+    void EraseAdvanceAddModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
+    void AddAdvanceToDrawCmdModifier(std::list<std::shared_ptr<RSRenderModifier>>& advanceDrawCmdModifierList,
+        std::list<std::shared_ptr<RSRenderModifier>>& drawCmdModifierList);
+    bool AdvanceApplyDrawCmdModifier(RSModifierType type, std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;

@@ -34,6 +34,7 @@
 #include "platform/common/rs_log.h"
 #include "visitor/rs_node_visitor.h"
 #include "property/rs_property_drawable.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -54,7 +55,7 @@ RSCanvasRenderNode::~RSCanvasRenderNode()
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type)
+void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type, bool isAdvance)
 {
     if (!drawCmds || drawCmds->GetSize() == 0) {
         return;
@@ -62,10 +63,11 @@ void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, 
     auto renderProperty = std::make_shared<RSRenderProperty<DrawCmdListPtr>>(drawCmds, ANONYMOUS_MODIFIER_ID);
     auto renderModifier = std::make_shared<RSDrawCmdListRenderModifier>(renderProperty);
     renderModifier->SetType(type);
-    AddModifier(renderModifier);
+    AddModifier(renderModifier, isAdvance);
 }
 #else
-void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds, RSModifierType type)
+void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds,
+    RSModifierType type, bool isAdvance)
 {
     if (!drawCmds || drawCmds->IsEmpty()) {
         return;
@@ -73,7 +75,7 @@ void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> d
     auto renderProperty = std::make_shared<RSRenderProperty<Drawing::DrawCmdListPtr>>(drawCmds, ANONYMOUS_MODIFIER_ID);
     auto renderModifier = std::make_shared<RSDrawCmdListRenderModifier>(renderProperty);
     renderModifier->SetType(type);
-    AddModifier(renderModifier);
+    AddModifier(renderModifier, isAdvance);
 }
 #endif
 
@@ -261,14 +263,70 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
     canvas.RestoreEnv();
 }
 
-void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const
+bool RSCanvasRenderNode::FindAdvanceAddModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
+{
+    for (auto iter = modifierList.begin(); iter != modifierList.end(); ++iter) {
+        if ((*iter)->GetAdvanceAddModifier()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void RSCanvasRenderNode::EraseAdvanceAddModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
+{
+    for (auto iter = modifierList.begin(); iter != modifierList.end();) {
+        if ((*iter)->GetAdvanceAddModifier()) {
+            iter = modifierList.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
+void RSCanvasRenderNode::AddAdvanceToDrawCmdModifier(
+    std::list<std::shared_ptr<RSRenderModifier>>& advanceDrawCmdModifierList,
+    std::list<std::shared_ptr<RSRenderModifier>>& drawCmdModifierList)
+{
+    for (auto iter = advanceDrawCmdModifierList.begin(); iter != advanceDrawCmdModifierList.end(); ++iter) {
+        RS_TRACE_NAME("Add advance DrawCmdModifier ID " + std::to_string((*iter)->GetDrawCmdListId()));
+        drawCmdModifierList.emplace_back(*iter);
+    }
+}
+
+bool RSCanvasRenderNode::AdvanceApplyDrawCmdModifier(RSModifierType type,
+    std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
+{
+    bool needSkip = false;
+    if (GetNodeFasterDraw()) {
+        EraseAdvanceAddModifier(modifierList);
+        {
+            std::lock_guard<std::mutex> lock(advanceDrawMutex_);
+            auto advanceIter = advanceDrawCmdModifiers_.find(type);
+            if (advanceIter != advanceDrawCmdModifiers_.end() && !advanceIter->second.empty()) {
+                AddAdvanceToDrawCmdModifier(advanceIter->second, modifierList);
+                advanceDrawCmdModifiers_.erase(type);
+            }
+        }
+        if (modifierList.size() > 1 && FindAdvanceAddModifier(modifierList)) {
+            needSkip = true;
+        }
+    }
+    return needSkip;
+}
+
+void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
 {
     auto itr = drawCmdModifiers_.find(type);
     if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
         return;
     }
+
+    bool needSkip = AdvanceApplyDrawCmdModifier(type, itr->second);
     for (const auto& modifier : itr->second) {
-        modifier->Apply(context);
+        if (!(needSkip && !modifier->GetAdvanceAddModifier())) {
+            modifier->Apply(context);
+        }
     }
 }
 

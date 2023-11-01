@@ -16,6 +16,7 @@
 #ifndef ROSEN_RENDER_SERVICE_BASE_PIPELINE_RS_CONTEXT_H
 #define ROSEN_RENDER_SERVICE_BASE_PIPELINE_RS_CONTEXT_H
 
+#include <thread>
 #include "common/rs_macros.h"
 #include "pipeline/rs_render_node_map.h"
 
@@ -83,6 +84,15 @@ public:
         }
     }
 
+    void SetMainThreadId(const std::thread::id mainThreadId)
+    {
+        mainThreadId_ = mainThreadId;
+    }
+    std::thread::id GetMainThreadId()
+    {
+        return mainThreadId_;
+    }
+
 private:
     RSRenderNodeMap nodeMap;
     std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSRenderNode>(0, true);
@@ -94,6 +104,7 @@ private:
     std::function<void(const std::function<void()>&, bool)> taskRunner_;
     // Collect all active Nodes sorted by root node id in this frame.
     std::unordered_map<NodeId, std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>> activeNodesInRoot_;
+    std::thread::id mainThreadId_;
 
     friend class RSRenderThread;
     friend class RSMainThread;

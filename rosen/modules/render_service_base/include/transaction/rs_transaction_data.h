@@ -54,6 +54,7 @@ public:
     }
 
     void Process(RSContext& context);
+    void AdvanceProcess(RSContext& context);
 
     void Clear();
 

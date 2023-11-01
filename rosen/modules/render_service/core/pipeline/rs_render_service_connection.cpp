@@ -61,6 +61,8 @@ RSRenderServiceConnection::RSRenderServiceConnection(
     if (!token_->AddDeathRecipient(connDeathRecipient_)) {
         RS_LOGW("RSRenderServiceConnection: Failed to set death recipient.");
     }
+    auto& context = mainThread_->GetContext();
+    context.SetMainThreadId(mainThread_->Id());
 }
 
 RSRenderServiceConnection::~RSRenderServiceConnection() noexcept
@@ -194,6 +196,7 @@ void RSRenderServiceConnection::RSApplicationRenderThreadDeathRecipient::OnRemot
 
 void RSRenderServiceConnection::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
+    mainThread_->AdvanceProcessRSTransactionData(transactionData);
     mainThread_->RecvRSTransactionData(transactionData);
 }
 

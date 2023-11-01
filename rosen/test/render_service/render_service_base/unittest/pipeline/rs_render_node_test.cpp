@@ -102,7 +102,7 @@ HWTEST_F(RSRenderNodeTest, AddModifierTest, TestSize.Level1)
 {
     std::shared_ptr<RSRenderModifier> modifier = nullptr;
     RSRenderNode node(id, context);
-    node.AddModifier(modifier);
+    node.AddModifier(modifier, false);
 }
 
 /**

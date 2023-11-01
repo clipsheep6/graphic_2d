@@ -301,6 +301,8 @@ public:
     // Mark preferentially draw node and childrens
     void MarkNodeGroup(bool isNodeGroup, bool isForced = true);
 
+    void MarkNodeFasterDraw(bool isNodeFasterDraw);
+
     void SetGrayScale(float grayScale);
 
     void SetBrightness(float brightness);
@@ -376,6 +378,8 @@ private:
     bool drivenFlag_ = false;
 
     bool isNodeGroup_ = false;
+
+    bool isNodeFasterDraw_ = false;
 
     RSModifierExtractor stagingPropertiesExtractor_;
     RSShowingPropertiesFreezer showingPropertiesFreezer_;

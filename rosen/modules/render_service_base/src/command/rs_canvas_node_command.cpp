@@ -36,7 +36,15 @@ void RSCanvasNodeCommandHelper::UpdateRecording(
 {
     auto type = static_cast<RSModifierType>(modifierType);
     if (auto node = context.GetNodeMap().GetRenderNode<RSCanvasRenderNode>(id)) {
-        node->UpdateRecording(drawCmds, type);
+        // if (context.GetMainThreadId() != std::this_thread::get_id()) {
+        //     if (node->GetNodeFasterDraw()) {
+        //         node->UpdateRecording(drawCmds, type, true);
+        //     } else {
+        //         return;
+        //     }
+        // } else {
+            node->UpdateRecording(drawCmds, type, false);
+        // }
         if (!drawCmds) {
             return;
         }

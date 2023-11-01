@@ -36,7 +36,19 @@ void RSCanvasNodeCommandHelper::UpdateRecording(
 {
     auto type = static_cast<RSModifierType>(modifierType);
     if (auto node = context.GetNodeMap().GetRenderNode<RSCanvasRenderNode>(id)) {
-        node->UpdateRecording(drawCmds, type);
+        if (node->GetNodeIsSingleFrameComposer()) {
+            if (context.IsShouldSingleFrameComposer()) {
+                node->UpdateRecording(drawCmds, type, true);
+            } else {
+                node->UpdateRecording(drawCmds, type);
+            }
+        } else {
+            if (context.IsShouldSingleFrameComposer()) {
+                return;
+            } else {
+                node->UpdateRecording(drawCmds, type);
+            }
+        }
         if (!drawCmds) {
             return;
         }

@@ -34,6 +34,7 @@
 #include "property/rs_property_trace.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -841,9 +842,21 @@ void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
     RSRenderNode::ProcessTransitionAfterChildren(canvas);
 }
 
-void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier>& modifier)
+void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier>& modifier, bool isSingleFrameComposer)
 {
     if (!modifier) {
+        return;
+    }
+    if (GetNodeIsSingleFrameComposer() && isSingleFrameComposer) {
+        if (modifier->GetType() >= RSModifierType::CUSTOM) {
+            modifier->SetSingleFrameModifier(true);
+            RS_TRACE_NAME("Add modifier DrawCmdListId " + std::to_string(modifier->GetDrawCmdListId()));
+            {
+                std::lock_guard<std::mutex> lock(singleFrameDrawMutex_);
+                singleFrameDrawCmdModifiers_.clear();
+                singleFrameDrawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
+            }
+        }
         return;
     }
     if (modifier->GetType() == RSModifierType::BOUNDS || modifier->GetType() == RSModifierType::FRAME) {
@@ -851,6 +864,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier>& modifier
     } else if (modifier->GetType() < RSModifierType::CUSTOM) {
         modifiers_.emplace(modifier->GetPropertyId(), modifier);
     } else {
+        modifier->SetSingleFrameModifier(false);
         drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
     modifier->GetProperty()->Attach(shared_from_this());
@@ -1512,6 +1526,16 @@ void RSRenderNode::MarkNodeGroup(NodeGroupType type, bool isNodeGroup)
         nodeGroupType_ = isNodeGroup ? type : NodeGroupType::NONE;
         SetDirty();
     }
+}
+
+void RSRenderNode::MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer)
+{
+    isNodeSingleFrameComposer_ = isNodeSingleFrameComposer;
+}
+
+bool RSRenderNode::GetNodeIsSingleFrameComposer() const
+{
+    return isNodeSingleFrameComposer_;
 }
 
 void RSRenderNode::CheckDrawingCacheType()

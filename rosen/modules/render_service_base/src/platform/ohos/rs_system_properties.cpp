@@ -581,5 +581,10 @@ int RSSystemProperties::GetSyncTransactionWaitDelay()
         std::atoi((system::GetParameter("persist.sys.graphic.syncTransactionWaitDelay", "100")).c_str());
     return syncTransactionWaitDelay;
 }
+
+bool RSSystemProperties::GetSingleFrameComposerEnabled()
+{
+    return std::atoi((system::GetParameter("rosen.graphic.singleFrameComposer", "1")).c_str()) != 0;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -34,6 +34,7 @@
 #include "platform/common/rs_log.h"
 #include "visitor/rs_node_visitor.h"
 #include "property/rs_property_drawable.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -54,7 +55,8 @@ RSCanvasRenderNode::~RSCanvasRenderNode()
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type)
+void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds,
+    RSModifierType type, bool isSingleFrameComposer)
 {
     if (!drawCmds || drawCmds->GetSize() == 0) {
         return;
@@ -62,10 +64,11 @@ void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, 
     auto renderProperty = std::make_shared<RSRenderProperty<DrawCmdListPtr>>(drawCmds, ANONYMOUS_MODIFIER_ID);
     auto renderModifier = std::make_shared<RSDrawCmdListRenderModifier>(renderProperty);
     renderModifier->SetType(type);
-    AddModifier(renderModifier);
+    AddModifier(renderModifier, isSingleFrameComposer);
 }
 #else
-void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds, RSModifierType type)
+void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds,
+    RSModifierType type, bool isSingleFrameComposer)
 {
     if (!drawCmds || drawCmds->IsEmpty()) {
         return;
@@ -73,7 +76,7 @@ void RSCanvasRenderNode::UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> d
     auto renderProperty = std::make_shared<RSRenderProperty<Drawing::DrawCmdListPtr>>(drawCmds, ANONYMOUS_MODIFIER_ID);
     auto renderModifier = std::make_shared<RSDrawCmdListRenderModifier>(renderProperty);
     renderModifier->SetType(type);
-    AddModifier(renderModifier);
+    AddModifier(renderModifier, isSingleFrameComposer);
 }
 #endif
 
@@ -261,14 +264,70 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
     canvas.RestoreEnv();
 }
 
-void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const
+bool RSCanvasRenderNode::FindSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
+{
+    for (auto iter = modifierList.begin(); iter != modifierList.end(); ++iter) {
+        if ((*iter)->GetSingleFrameModifier()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void RSCanvasRenderNode::EraseSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
+{
+    for (auto iter = modifierList.begin(); iter != modifierList.end();) {
+        if ((*iter)->GetSingleFrameModifier()) {
+            iter = modifierList.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
+void RSCanvasRenderNode::SingleFrameModifierAdd(
+    std::list<std::shared_ptr<RSRenderModifier>>& singleFrameModifierList,
+    std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
+{
+    for (auto iter = singleFrameModifierList.begin(); iter != singleFrameModifierList.end(); ++iter) {
+        RS_TRACE_NAME("Add SingleFrame DrawCmdModifier ID " + std::to_string((*iter)->GetDrawCmdListId()));
+        modifierList.emplace_back(*iter);
+    }
+}
+
+bool RSCanvasRenderNode::SingleFrameModifierAddToList(RSModifierType type,
+    std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
+{
+    bool needSkip = false;
+    if (GetNodeIsSingleFrameComposer()) {
+        EraseSingleFrameModifier(modifierList);
+        {
+            std::lock_guard<std::mutex> lock(singleFrameDrawMutex_);
+            auto iter = singleFrameDrawCmdModifiers_.find(type);
+            if (iter != singleFrameDrawCmdModifiers_.end() && !iter->second.empty()) {
+                SingleFrameModifierAdd(iter->second, modifierList);
+                singleFrameDrawCmdModifiers_.erase(type);
+            }
+        }
+        if (modifierList.size() > 1 && FindSingleFrameModifier(modifierList)) {
+            needSkip = true;
+        }
+    }
+    return needSkip;
+}
+
+void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
 {
     auto itr = drawCmdModifiers_.find(type);
     if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
         return;
     }
+
+    bool needSkip = SingleFrameModifierAddToList(type, itr->second);
     for (const auto& modifier : itr->second) {
-        modifier->Apply(context);
+        if (!(needSkip && !modifier->GetSingleFrameModifier())) {
+            modifier->Apply(context);
+        }
     }
 }
 

@@ -44,9 +44,11 @@ public:
     virtual ~RSCanvasRenderNode();
 
 #ifndef USE_ROSEN_DRAWING
-    void UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type);
+    void UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds,
+        RSModifierType type, bool isSingleFrameComposer = false);
 #else
-    void UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds, RSModifierType type);
+    void UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds,
+        RSModifierType type, bool isSingleFrameComposer = false);
 #endif
     void ClearRecording();
 
@@ -75,12 +77,17 @@ public:
 
     void OnTreeStateChanged() override;
 private:
-    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type) const;
+    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type);
     void InternalDrawContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [start]
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [end]
     void ExecuteBlendMode(RSPaintFilterCanvas& canvas, bool isBlendMode);
+    bool FindSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
+    void EraseSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
+    void SingleFrameModifierAdd(std::list<std::shared_ptr<RSRenderModifier>>& singleFrameModifierList,
+        std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
+    bool SingleFrameModifierAddToList(RSModifierType type, std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;

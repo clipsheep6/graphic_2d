@@ -1330,11 +1330,10 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         rootNode->Prepare(uniVisitor);
         ProcessHgmFrameRate(frameRateRangeData_, timestamp_);
         CalcOcclusion();
-        bool doParallelComposition = RSInnovation::GetParallelCompositionEnabled(isUniRender_);
-        if (doParallelComposition && rootNode->GetChildrenCount() > 1) {
+        doParallelComposition_ = RSInnovation::GetParallelCompositionEnabled(isUniRender_) && !IsSingleDisplay();
+        if (doParallelComposition_) {
             RS_LOGD("RSMainThread::Render multi-threads parallel composition begin.");
-            doParallelComposition = uniVisitor->ParallelComposition(rootNode);
-            if (doParallelComposition) {
+            if (uniVisitor->ParallelComposition(rootNode)) {
                 RS_LOGD("RSMainThread::Render multi-threads parallel composition end.");
                 isDirty_ = false;
                 PerfForBlurIfNeeded();
@@ -2701,5 +2700,9 @@ void RSMainThread::HandleOnTrim(Memory::SystemMemoryLevel level)
     }
 }
 
+bool RSMainThread::GetDoParallelComposition() const
+{
+    return doParallelComposition_;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include <dlfcn.h>
 #include "touch_screen.h"
+
+#include <dlfcn.h>
 #include "platform/common/rs_log.h"
 
 namespace OHOS {
@@ -28,22 +29,23 @@ TouchScreen::~TouchScreen()
 {
     dlclose(touchScreenHandle_);
     touchScreenHandle_ = nullptr;
+    RS_LOGI("deatroy touch scree wrapper.");
 }
 
 void TouchScreen::InitTouchScreen()
 {
     touchScreenHandle_ = dlopen(TOUCHSCREEN_WRAPPER_PATH.c_str(), RTLD_NOW);
     if (touchScreenHandle_ == nullptr) {
-        RS_LOGE("libhw_touchscreen.default.so was not loaded, error: %{public}s", dlerror());
+        RS_LOGE("libhw_touchscreen.default.so was not loaded, error: %{public}s.", dlerror());
         return;
     }
 
     tsSetFeatureConfig_ = (TS_SET_FEATURE_CONFIG_)dlsym(touchScreenHandle_, "ts_set_feature_config");
     if (tsSetFeatureConfig_ == nullptr) {
-        RS_LOGE("touch screen get symbol failed, error: %{public}s", dlerror());
+        RS_LOGE("touch screen get symbol failed, error: %{public}s.", dlerror());
         return;
     }
-    RS_LOGI("touch scree wrapper init success");
+    RS_LOGI("touch screen wrapper init success.");
 }
 } // namespace MMI
 } // namespace OHOS

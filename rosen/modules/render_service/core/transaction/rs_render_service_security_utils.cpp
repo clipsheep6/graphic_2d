@@ -13,14 +13,20 @@
  * limitations under the License.
  */
 
-#include "skia_dynamic_font_mgr.h"
-
-#include "txt/asset_font_manager.h"
+#include "rs_render_service_security_utils.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-SkiaDynamicFontMgr::SkiaDynamicFontMgr() : SkiaFontMgr(std::make_shared<txt::DynamicFontManager>()) {}
-} // namespace Drawing
+
+uint32_t RSRenderServiceSecurityUtils::GetCodeAccessCounter(uint32_t code) const
+{
+    return accessCounter_.count(code) == 0 ? 0 : accessCounter_.at(code);
+}
+
+void RSRenderServiceSecurityUtils::IncreaseAccessCounter(uint32_t code)
+{
+    accessCounter_[code] = accessCounter_.count(code) == 0 ? 1 : accessCounter_[code] + 1;
+}
+
 } // namespace Rosen
 } // namespace OHOS

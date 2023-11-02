@@ -15,9 +15,6 @@
 
 #include "impl_factory.h"
 
-#include "src/ports/skia_ohos/FontInfo_ohos.h"
-#include "src/ports/skia_ohos/FontConfig_ohos.h"
-
 #include "skia_adapter/skia_impl_factory.h"
 
 namespace OHOS {

@@ -13,31 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef SKIA_TYPEFACE_FONT_STYLE_SET_H
-#define SKIA_TYPEFACE_FONT_STYLE_SET_H
+#ifndef ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_RENDER_SERVICE_SECURITY_UTILS_H
+#define ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_RENDER_SERVICE_SECURITY_UTILS_H
 
-#include <string>
+#include <unordered_map>
 
-#include "skia_adapter/skia_font_style_set.h"
-
+#include "ipc_security/rs_ipc_interface_code_underlying_type.h"
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-class SkiaTypefaceFontStyleSet : public SkiaFontStyleSet {
+class RSRenderServiceSecurityUtils {
 public:
-    static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
+    RSRenderServiceSecurityUtils() = default;
+    ~RSRenderServiceSecurityUtils() noexcept = default;
 
-    SkiaTypefaceFontStyleSet();
-    ~SkiaTypefaceFontStyleSet() override = default;
+    uint32_t GetCodeAccessCounter(uint32_t code) const;
+    void IncreaseAccessCounter(uint32_t code);
 
-    AdapterType GetType() const override
-    {
-        return AdapterType::SKIA_ADAPTER;
-    }
-
-    void RegisterTypeface(std::shared_ptr<Typeface> typeface) override;
+private:
+    std::unordered_map<uint32_t, uint32_t> accessCounter_;
 };
-} // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
-#endif
+
+#endif // ROSEN_RENDER_SERVICE_BASE_TRANSACTION_RS_RENDER_SERVICE_SECURITY_UTILS_H

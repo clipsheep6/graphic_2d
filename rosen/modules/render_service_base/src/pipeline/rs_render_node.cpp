@@ -732,7 +732,7 @@ void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parent
 
 void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) const
 {
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     if (!RSProperties::FilterCacheEnabled) {
         return;
     }
@@ -1166,6 +1166,26 @@ bool RSRenderNode::NeedInitCacheSurface() const
     return cacheSurface_->width() != width || cacheSurface_->height() !=height;
 #else
     auto cacheCanvas = cacheSurface_->GetCanvas();
+    if (cacheCanvas == nullptr) {
+        return true;
+    }
+    return cacheCanvas->GetWidth() != width || cacheCanvas->GetHeight() != height;
+#endif
+}
+
+bool RSRenderNode::NeedInitCacheCompletedSurface() const
+{
+    Vector2f size = GetOptionalBufferSize();
+    int width = static_cast<int>(size.x_);
+    int height = static_cast<int>(size.y_);
+    std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+    if (cacheCompletedSurface_ == nullptr) {
+        return true;
+    }
+#ifndef USE_ROSEN_DRAWING
+    return cacheCompletedSurface_->width() != width || cacheCompletedSurface_->height() !=height;
+#else
+    auto cacheCanvas = cacheCompletedSurface_->GetCanvas();
     if (cacheCanvas == nullptr) {
         return true;
     }
@@ -1844,7 +1864,7 @@ void RSRenderNode::ClearCacheSurface(bool isClearCompletedCacheSurface)
     cacheSurface_ = nullptr;
     if (isClearCompletedCacheSurface) {
         cacheCompletedSurface_ = nullptr;
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
         isTextureValid_ = false;
 #endif
     }
@@ -2029,15 +2049,11 @@ void RSRenderNode::SetParentLeashWindow()
 }
 bool RSRenderNode::HasCachedTexture() const
 {
-#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_GL
     std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     return isTextureValid_;
 #else
     return true;
-#endif
-#else
-    return false;
 #endif
 }
 void RSRenderNode::SetDrawRegion(const std::shared_ptr<RectF>& rect)

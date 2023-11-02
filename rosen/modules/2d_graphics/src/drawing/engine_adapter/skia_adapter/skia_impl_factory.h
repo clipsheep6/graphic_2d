@@ -16,9 +16,6 @@
 #ifndef SKIA_IMPLFACTORY_H
 #define SKIA_IMPLFACTORY_H
 
-#include "src/ports/skia_ohos/FontInfo_ohos.h"
-#include "src/ports/skia_ohos/FontConfig_ohos.h"
-
 #include "impl_interface/bitmap_impl.h"
 #include "impl_interface/camera_impl.h"
 #include "impl_interface/color_filter_impl.h"
@@ -42,7 +39,6 @@
 #include "impl_interface/shader_effect_impl.h"
 #include "impl_interface/surface_impl.h"
 #include "impl_interface/text_blob_builder_impl.h"
-#include "impl_interface/typeface_impl.h"
 #include "impl_interface/vertices_impl.h"
 #include "impl_interface/trace_memory_dump_impl.h"
 

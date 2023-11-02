@@ -15,15 +15,12 @@
 
 #include "skia_impl_factory.h"
 
-#include "skia_adapter/platform/skia_font_style_set_ohos.h"
-#include "skia_adapter/platform/skia_typeface_ohos.h"
 #include "skia_adapter/skia_bitmap.h"
 #include "skia_adapter/skia_camera.h"
 #include "skia_adapter/skia_canvas.h"
 #include "skia_adapter/skia_color_filter.h"
 #include "skia_adapter/skia_color_space.h"
 #include "skia_adapter/skia_data.h"
-#include "skia_adapter/skia_dynamic_font_mgr.h"
 #ifdef ACE_ENABLE_GPU
 #include "skia_adapter/skia_gpu_context.h"
 #endif
@@ -41,7 +38,6 @@
 #include "skia_adapter/skia_shader_effect.h"
 #include "skia_adapter/skia_surface.h"
 #include "skia_adapter/skia_text_blob_builder.h"
-#include "skia_adapter/skia_typeface_font_style_set.h"
 #include "skia_adapter/skia_trace_memory_dump.h"
 #include "skia_adapter/skia_text_blob.h"
 

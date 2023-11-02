@@ -152,6 +152,7 @@ private:
 
 class BackendTexture {
 public:
+    BackendTexture() noexcept;
     BackendTexture(bool isValid) noexcept;
     virtual ~BackendTexture() {};
 
@@ -188,6 +189,8 @@ public:
      * @return            True if Image is created successed.
      */
     bool BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap);
+
+    bool MakeFromEncoded(const std::shared_ptr<Data>& data);
 
     /*
      * @brief             Create a GPU-backed Image from compressed data.

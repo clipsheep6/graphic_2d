@@ -23,13 +23,7 @@ namespace Rosen {
 namespace Drawing {
 class TextBlobImpl : public BaseImpl {
 public:
-    static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
-    virtual ~TextBlobImpl() = default;
-
-    AdapterType GetType() const override
-    {
-        return AdapterType::BASE_INTERFACE;
-    }
+    ~TextBlobImpl() override = default;
 
 protected:
     TextBlobImpl() noexcept = default;

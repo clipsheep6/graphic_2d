@@ -25,6 +25,7 @@
 #include "pipeline/rs_render_service_listener.h"
 #include "pipeline/rs_surface_capture_task.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "pipeline/rs_task_dispatcher.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_ui_capture.h"
 #include "platform/common/rs_log.h"
@@ -380,11 +381,9 @@ void RSRenderServiceConnection::SetRefreshRateMode(int32_t refreshRateMode)
     ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::SetRefreshRateMode");
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     int32_t setResult = hgmCore.SetRefreshRateMode(static_cast<RefreshRateMode>(refreshRateMode));
+    RSSystemProperties::SetHgmRefreshRateModesEnabled(std::to_string(refreshRateMode));
     if (setResult != 0) {
         RS_LOGW("SetRefreshRateMode mode %{public}d is not supported", refreshRateMode);
-        return;
-    } else {
-        RSSystemProperties::SetHgmRefreshRateModesEnabled(std::to_string(refreshRateMode));
     }
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
@@ -468,9 +467,8 @@ void RSRenderServiceConnection::TakeSurfaceCaptureForUIWithUni(NodeId id, sptr<R
         std::shared_ptr<Media::PixelMap> pixelmap = rsUniUICapture->TakeLocalCapture();
         callback->OnSurfaceCapture(id, pixelmap.get());
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
-        RSOffscreenRenderThread::Instance().FinishOffscreenRenderTask();
     };
-    RSOffscreenRenderThread::Instance().DoOffscreenRenderTask(offscreenRenderTask);
+    RSOffscreenRenderThread::Instance().PostTask(offscreenRenderTask);
 }
 
 void RSRenderServiceConnection::RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app)
@@ -761,8 +759,13 @@ bool RSRenderServiceConnection::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
 #endif
 }
 
+#ifndef USE_ROSEN_DRAWING
 bool RSRenderServiceConnection::GetPixelmap(
     NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect)
+#else
+bool RSRenderServiceConnection::GetPixelmap(
+    NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect)
+#endif
 {
     auto node = mainThread_->GetContext().GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(id);
     if (node == nullptr) {
@@ -774,8 +777,18 @@ bool RSRenderServiceConnection::GetPixelmap(
         return false;
     }
     bool result = false;
+    auto tid = node->GetTid();
     auto getPixelmapTask = [&node, &pixelmap, rect, &result]() { result = node->GetPixelmap(pixelmap, rect); };
-    mainThread_->PostSyncTask(getPixelmapTask);
+    if (tid == UINT32_MAX) {
+        if (!mainThread_->IsIdle()) {
+            return false;
+        }
+        mainThread_->PostSyncTask(getPixelmapTask);
+    } else {
+        RSTaskDispatcher::GetInstance().PostTask(
+            RSSubThreadManager::Instance()->GetReThreadIndexMap()[tid], getPixelmapTask, true);
+    }
+
     return result;
 }
 

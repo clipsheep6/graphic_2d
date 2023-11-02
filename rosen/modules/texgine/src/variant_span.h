@@ -55,6 +55,7 @@ public:
     size_t GetNumberOfCharGroup() const noexcept(false);
     std::vector<double> GetGlyphWidths() const noexcept(false);
     double GetVisibleWidth() const noexcept(false);
+    size_t GetNumberOfChar() const noexcept(false);
     void Dump(const DumpType &dtype = DumpType::NORMAL) const noexcept(false);
 
     void SetTextStyle(const TextStyle &xs) noexcept(true);
@@ -71,6 +72,9 @@ public:
     bool IsRTL() const noexcept(false);
     bool IsHardBreak() const noexcept(false);
 
+    double GetJustifyGap() const noexcept(true);
+    void SetJustifyGap(double justifyGap) noexcept(true);
+
     operator bool() const noexcept(false);
     bool operator ==(std::nullptr_t) const noexcept(false);
     bool operator ==(const VariantSpan &rhs) const noexcept(false);
@@ -85,6 +89,7 @@ private:
 
     double offsetX_ = 0;
     double offsetY_ = 0;
+    double justifyGap_ = 0;
     TextStyle xs_;
 };
 } // namespace TextEngine

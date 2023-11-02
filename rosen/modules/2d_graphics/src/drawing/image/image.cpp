@@ -20,6 +20,9 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+BackendTexture::BackendTexture() noexcept
+    : isValid_(false), imageImplPtr(ImplFactory::CreateImageImpl()) {}
+
 BackendTexture::BackendTexture(bool isValid) noexcept
     : isValid_(isValid), imageImplPtr(ImplFactory::CreateImageImpl()) {}
 
@@ -58,6 +61,11 @@ Image* Image::BuildFromPicture(const Picture& picture, const SizeI& dimensions, 
 bool Image::BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap)
 {
     return imageImplPtr->BuildFromBitmap(gpuContext, bitmap);
+}
+
+bool Image::MakeFromEncoded(const std::shared_ptr<Data>& data)
+{
+    return imageImplPtr->MakeFromEncoded(data);
 }
 
 bool Image::BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Data>& data, int width, int height,

@@ -92,6 +92,16 @@ public:
         hasFingerprint_ = hasFingerprint;
     }
 
+    void SetScreenRotation(const ScreenRotation& screenRotation)
+    {
+        screenRotation_ = screenRotation;
+    }
+
+    ScreenRotation GetScreenRotation()
+    {
+        return screenRotation_;
+    }
+
     void CollectSurface(
         const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec,
         bool isUniRender, bool onlyFirstLevel) override;
@@ -221,6 +231,14 @@ public:
         return isFirstTimeToProcessor_;
     }
 
+    void setFirstTimeScreenRotation(const ScreenRotation& rotate) {
+        firstTimeScreenRotation_ = rotate;
+        isFirstTimeToProcessor_ = false;
+    }
+    ScreenRotation getFirstTimeScreenRotation() const {
+        return firstTimeScreenRotation_;
+    }
+
 #ifndef USE_ROSEN_DRAWING
     void SetInitMatrix(const SkMatrix& skMatrix) {
         initMatrix_ = skMatrix;
@@ -238,8 +256,35 @@ public:
 #endif
         return initMatrix_;
     }
+
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkImage> GetCacheImgForCapture() {
+        std::unique_lock<std::mutex> lock(mtx_);
+        return cacheImgForCapture_;
+    }
+    void SetCacheImgForCapture(sk_sp<SkImage> cacheImgForCapture) {
+        std::unique_lock<std::mutex> lock(mtx_);
+        cacheImgForCapture_ = cacheImgForCapture;
+    }
+#else
+    std::shared_ptr<Drawing::Image> GetCacheImgForCapture() {
+        return cacheImgForCapture_;
+    }
+    void SetCacheImgForCapture(std::shared_ptr<Drawing::Image> cacheImgForCapture) {
+        cacheImgForCapture_ = cacheImgForCapture;
+    }
+#endif
+    uint32_t GetCaptureWindowZOrder() {
+        return captureWindowZOrder_;
+    }
+    void SetCaptureWindowZOrder(uint32_t captureWindowZOrder) {
+        captureWindowZOrder_ = captureWindowZOrder;
+    }
+
 private:
     CompositeType compositeType_ { HARDWARE_COMPOSITE };
+    ScreenRotation screenRotation_;
+    ScreenRotation firstTimeScreenRotation_;
     uint64_t screenId_;
     int32_t offsetX_;
     int32_t offsetY_;
@@ -272,6 +317,14 @@ private:
 
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
     std::mutex mtx_;
+
+    // Use in screen recording optimization
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkImage> cacheImgForCapture_ = nullptr;
+#else
+    std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
+#endif
+    uint32_t captureWindowZOrder_ = -1;
 
     // Use in vulkan parallel rendering
     bool isParallelDisplayNode_ = false;

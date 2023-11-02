@@ -20,11 +20,9 @@
 #include <tuple>
 #include <vector>
 
-#include "include/effects/SkColorMatrix.h"
-
+#include "animation/rs_render_particle.h"
 #include "common/rs_macros.h"
 #include "common/rs_matrix3.h"
-#include "animation/rs_render_particle.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_modifier_type.h"
 #include "property/rs_properties_def.h"
@@ -37,9 +35,7 @@
 #include "render/rs_shader.h"
 #include "render/rs_shadow.h"
 
-#ifndef USE_ROSEN_DRAWING
 #include "property/rs_filter_cache_manager.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -158,7 +154,7 @@ public:
 
     // background properties
     void SetBackgroundColor(Color color);
-    Color GetBackgroundColor() const;
+    const Color& GetBackgroundColor() const;
     void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
     std::shared_ptr<RSShader> GetBackgroundShader() const;
     void SetBgImage(const std::shared_ptr<RSImage>& image);
@@ -171,6 +167,8 @@ public:
     float GetBgImageHeight() const;
     float GetBgImagePositionX() const;
     float GetBgImagePositionY() const;
+    void SetColorBlendMode(int blendmode);
+    int GetColorBlendMode() const;
 
     // border properties
     void SetBorderColor(Vector4<Color> color);
@@ -201,7 +199,8 @@ public:
     void SetShadowRadius(float radius);
     void SetShadowPath(std::shared_ptr<RSPath> shadowPath);
     void SetShadowMask(bool shadowMask);
-    Color GetShadowColor() const;
+    void SetShadowIsFilled(bool shadowIsFilled);
+    const Color& GetShadowColor() const;
     float GetShadowOffsetX() const;
     float GetShadowOffsetY() const;
     float GetShadowAlpha() const;
@@ -211,6 +210,7 @@ public:
     const std::optional<float>& GetDynamicLightUpDegree() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
     bool GetShadowMask() const;
+    bool GetShadowIsFilled() const;
     const std::optional<RSShadow>& GetShadow() const;
     bool IsShadowValid() const;
 
@@ -294,15 +294,16 @@ public:
     void SetUseEffect(bool useEffect);
     bool GetUseEffect() const;
 
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     const std::unique_ptr<RSFilterCacheManager>& GetFilterCacheManager(bool isForeground) const;
     void ClearFilterCache();
 #endif
 
-    void OnApplyModifiers();
-
     const RRect& GetRRect() const;
     RRect GetInnerRRect() const;
+    RectF GetFrameRect() const;
+
+    void OnApplyModifiers();
 
 private:
     void ResetProperty(const std::unordered_set<RSModifierType>& dirtyTypes);
@@ -312,8 +313,7 @@ private:
 
     bool NeedClip() const;
 
-    RectF GetFrameRect() const;
-    RectF GetBgImageRect() const;
+    const RectF& GetBgImageRect() const;
     void GenerateRRect();
     RectI GetDirtyRect() const;
     // added for update dirty region dfx
@@ -395,7 +395,7 @@ private:
     std::shared_ptr<Drawing::ColorFilter> colorFilter_ = nullptr;
 #endif
 
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     void CreateFilterCacheManagerIfNeed();
     std::unique_ptr<RSFilterCacheManager> backgroundFilterCacheManager_;
     std::unique_ptr<RSFilterCacheManager> foregroundFilterCacheManager_;
@@ -404,13 +404,14 @@ private:
 
     std::unique_ptr<Sandbox> sandbox_ = nullptr;
 
-    friend class RSCanvasDrawingRenderNode;
+    int blendMode_ = static_cast<int>(RSColorBlendModeType::NONE);
+
+    friend class RSBackgroundImageDrawable;
     friend class RSCanvasRenderNode;
     friend class RSColorfulShadowDrawable;
+    friend class RSEffectDataGenerateDrawable;
     friend class RSPropertiesPainter;
     friend class RSRenderNode;
-    friend class RSBackgroundDrawable;
-    friend class RSEffectDataGenerateDrawable;
 };
 } // namespace Rosen
 } // namespace OHOS

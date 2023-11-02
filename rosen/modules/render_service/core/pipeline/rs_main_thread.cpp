@@ -1854,8 +1854,13 @@ void RSMainThread::ClassifyRSTransactionData(std::unique_ptr<RSTransactionData>&
 
 void RSMainThread::PostTask(RSTaskMessage::RSTask task)
 {
+    PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+}
+
+void RSMainThread::PostTask(RSTaskMessage::RSTask task, AppExecFwk::EventQueue::Priority priority)
+{
     if (handler_) {
-        handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        handler_->PostTask(task, priority);
     }
 }
 
@@ -2240,6 +2245,19 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
     dumpString.append("trimMem: " + type + "\n");
 #endif
 #endif
+}
+
+void RSMainThread::DumpNode(std::string& result, uint64_t nodeId) const
+{
+    const auto& nodeMap = context_->GetNodeMap();
+    auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
+    if (!node) {
+        result.append("have no this node");
+        return;
+    }
+    DfxString log;
+    node->DumpNodeInfo(log);
+    result.append(log.GetString());
 }
 
 void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::string& dumpString,

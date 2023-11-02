@@ -30,7 +30,7 @@ namespace {
     constexpr int32_t IDLE_TIMER_EXPIRED = 200; // ms
 }
 
-void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
+void HgmFrameRateManager::UniProcessData(FrameRateRangeData& data)
 {
     auto screenId = data.screenId;
     if (screenId == INVALID_SCREEN_ID) {
@@ -67,6 +67,8 @@ void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
         std::to_string(static_cast<int>(finalRange.min_)) + ", " +
         std::to_string(static_cast<int>(finalRange.max_)) + ", " +
         std::to_string(static_cast<int>(finalRange.preferred_)) + ")");
+    
+    data.fps = static_cast<int>(currRefreshRate_);
 
     for (auto appRange : data.multiAppRange) {
         multiAppFrameRate_[appRange.first] = GetDrawingFrameRate(currRefreshRate_, finalRange);

@@ -1284,6 +1284,9 @@ void RSMainThread::ProcessHgmFrameRate(std::shared_ptr<FrameRateRangeData> data,
     // 2.Decision-making process for current frame.
     frameRateMgr_->UniProcessData(*data);
 
+    if (data->fps > 0) {
+        mfps = data->fps;
+    }
     // 3.[Planning]: Post app and rs switch software vsync rate task.
 }
 
@@ -1332,6 +1335,17 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
         rootNode->Prepare(uniVisitor);
         ProcessHgmFrameRate(frameRateRangeData_, timestamp_);
+        RS_LOGE("RSMainThread::UniRender fps %{private}d", mfps);
+        uniVisitor->SetFps(mfps);
+        if (mfps <= 0) {
+            RS_LOGE("RSMainThread::UniRender fps is error");
+        } else {
+            if (fpsCount.find(mfps) == fpsCount.end()) {
+                fpsCount[mfps] = 1;
+            } else {
+                fpsCount[mfps]++;
+            }
+        }
         CalcOcclusion();
         bool doParallelComposition = RSInnovation::GetParallelCompositionEnabled(isUniRender_);
         if (doParallelComposition && rootNode->GetChildrenCount() > 1) {
@@ -1991,6 +2005,30 @@ void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
         return;
     }
     rootNode->DumpTree(0, dumpString);
+}
+
+void RSMainThread::FpsCount(std::string& dumpString)
+{
+    if (fpsCount.empty()) {
+        RS_LOGE("RSMainThread::FpsCount fps count info is empty");
+        return;
+    }
+    std::map<int. int>::iterator iter;
+    for (iter = fpsCount.begin(); iter != fpsCount.end(); iter++) {
+        dumpString.append("Fps:" + std::to_string(iter->first) + ", Count:" + std::to_string(iter->second) + ";\n");
+    }
+    RS_LOGE("RSMainThread::FpsCount fps count info is displayed");
+}
+
+void RSMainThread::ClearFpsCount(std::string& dumpString)
+{
+    if (fpsCount.empty()) {
+        RS_LOGE("RSMainThread::ClearFpsCount fps count info is already empty");
+        return;
+    }
+    fpsCount.clear();
+    dumpString.append("The fps count info is cleared successfully!\n");
+    RS_LOGE("RSMainThread::ClearFpsCount fps count info is cleared");
 }
 
 bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode)

@@ -39,13 +39,61 @@ void TouchScreenTest::TearDown() {}
  * @tc.name: InitTouchScreen_001
  * @tc.desc: Test InitTouchScreen
  * @tc.type: FUNC
- * @tc.require: issueI8ATD6
+ * @tc.require: issueI5ZK2I
  */
 HWTEST_F(TouchScreenTest, InitTouchScreen_001, TestSize.Level1)
 {
     ASSERT_EQ(nullptr, TOUCH_SCREEN->tsSetFeatureConfig_);
     TOUCH_SCREEN->InitTouchScreen();
     ASSERT_NE(nullptr, TOUCH_SCREEN->tsSetFeatureConfig_);
+}
+
+/*
+ * @tc.name: SetFeatureConfig_001
+ * @tc.desc: Test SetFeatureConfig
+ * @tc.type: FUNC
+ * @tc.require: issueI5ZK2I
+ */
+HWTEST_F(TouchScreenTest, SetFeatureConfig_001, TestSize.Level1)
+{
+    TOUCH_SCREEN->InitTouchScreen();
+    ASSERT_NE(nullptr, TOUCH_SCREEN->tsSetFeatureConfig_);
+
+    int32_t feature = 12;
+    const char* config = "0";
+    ASSERT_GT(TOUCH_SCREEN->tsSetFeatureConfig_(), 0);
+}
+
+/*
+ * @tc.name: SetFeatureConfig_002
+ * @tc.desc: Test SetFeatureConfig
+ * @tc.type: FUNC
+ * @tc.require: issueI5ZK2I
+ */
+HWTEST_F(TouchScreenTest, SetFeatureConfig_002, TestSize.Level1)
+{
+    TOUCH_SCREEN->InitTouchScreen();
+    ASSERT_NE(nullptr, TOUCH_SCREEN->tsSetFeatureConfig_);
+
+    int32_t feature = 12;
+    const char* config = "1";
+    ASSERT_GT(TOUCH_SCREEN->tsSetFeatureConfig_(), 0);
+}
+
+/*
+ * @tc.name: SetFeatureConfig_003
+ * @tc.desc: Test SetFeatureConfig
+ * @tc.type: FUNC
+ * @tc.require: issueI5ZK2I
+ */
+HWTEST_F(TouchScreenTest, SetFeatureConfig_003, TestSize.Level1)
+{
+    TOUCH_SCREEN->InitTouchScreen();
+    ASSERT_NE(nullptr, TOUCH_SCREEN->tsSetFeatureConfig_);
+
+    int32_t feature = 12;
+    const char* config = "-1";
+    ASSERT_LE(TOUCH_SCREEN->tsSetFeatureConfig_(), 0);
 }
 
 }

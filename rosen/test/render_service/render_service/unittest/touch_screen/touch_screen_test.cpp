@@ -61,7 +61,7 @@ HWTEST_F(TouchScreenTest, SetFeatureConfig_001, TestSize.Level1)
 
     int32_t feature = 12;
     const char* config = "0";
-    ASSERT_GT(TOUCH_SCREEN->tsSetFeatureConfig_(), 0);
+    ASSERT_GT(TOUCH_SCREEN->tsSetFeatureConfig_(feature, config), 0);
 }
 
 /*
@@ -77,7 +77,7 @@ HWTEST_F(TouchScreenTest, SetFeatureConfig_002, TestSize.Level1)
 
     int32_t feature = 12;
     const char* config = "1";
-    ASSERT_GT(TOUCH_SCREEN->tsSetFeatureConfig_(), 0);
+    ASSERT_GT(TOUCH_SCREEN->tsSetFeatureConfig_(feature, config), 0);
 }
 
 /*
@@ -93,7 +93,7 @@ HWTEST_F(TouchScreenTest, SetFeatureConfig_003, TestSize.Level1)
 
     int32_t feature = 12;
     const char* config = "-1";
-    ASSERT_LE(TOUCH_SCREEN->tsSetFeatureConfig_(), 0);
+    ASSERT_LE(TOUCH_SCREEN->tsSetFeatureConfig_(feature, config), 0);
 }
 
 }

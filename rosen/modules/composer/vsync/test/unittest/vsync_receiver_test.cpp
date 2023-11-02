@@ -40,7 +40,8 @@ public:
     static inline int32_t onVsyncCount = 0;
 };
 
-void vsyncReceiverTest::OnVSync(int64_t now, void* data) {
+void vsyncReceiverTest::OnVSync(int64_t now, void* data)
+{
     onVsyncCount ++;
 }
 

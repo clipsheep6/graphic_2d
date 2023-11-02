@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #ifndef VSYNC_VSYNC_RECEIVER_H
 #define VSYNC_VSYNC_RECEIVER_H
 
@@ -54,7 +53,6 @@ public:
     int64_t timeStamp_;
     thread_local static inline int64_t periodShared_ = 0;
     thread_local static inline int64_t timeStampShared_ = 0;
-
 
 private:
     void OnReadable(int32_t fileDescriptor) override;

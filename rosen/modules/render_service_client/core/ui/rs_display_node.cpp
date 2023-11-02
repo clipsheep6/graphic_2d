@@ -26,7 +26,6 @@ RSDisplayNode::SharedPtr RSDisplayNode::Create(const RSDisplayNodeConfig& displa
 {
     SharedPtr node(new RSDisplayNode(displayNodeConfig));
     RSNodeMap::MutableInstance().RegisterNode(node);
-
     std::unique_ptr<RSCommand> command = std::make_unique<RSDisplayNodeCreate>(node->GetId(), displayNodeConfig);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {

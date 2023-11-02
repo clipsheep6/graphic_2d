@@ -700,6 +700,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
                                                     VisibleData& visibleVec,
                                                     std::map<uint32_t, bool>& pidVisMap)
 {
+    RS_LOGI("SetVisibleRegionRecursive %{public}" PRIu64 " [%{public}s] originRegion %{public}s newRegion %{public}s",
+        GetId(), GetName().c_str(), visibleRegion_.GetRegionInfo().c_str(), region.GetRegionInfo().c_str());
     if (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE || IsAbilityComponent()) {
         SetOcclusionVisible(true);
         visibleVec.emplace_back(GetId());

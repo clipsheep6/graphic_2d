@@ -148,6 +148,7 @@ struct RSDisplayNodeConfig {
     uint64_t screenId = 0;
     bool isMirrored = false;
     NodeId mirrorNodeId = 0;
+    bool isBootAimation = false;
 };
 
 constexpr int64_t NS_TO_S = 1000000000;

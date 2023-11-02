@@ -66,6 +66,7 @@ private:
     int32_t offsetX_;
     int32_t offsetY_;
     bool isSecurityDisplay_ = false;
+
     bool isMirroredDisplay_ = false;
 };
 } // namespace Rosen

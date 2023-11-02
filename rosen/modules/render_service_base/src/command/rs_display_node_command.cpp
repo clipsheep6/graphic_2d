@@ -22,12 +22,19 @@ namespace OHOS {
 namespace Rosen {
 
 void DisplayNodeCommandHelper::Create(RSContext& context, NodeId id, const RSDisplayNodeConfig& config)
-{
+{   
+    if (config.isBootAimation && context.GetGlobalRootRenderNode() &&
+        context.GetGlobalRootRenderNode()->GetContainBootAnimationDisplay()) {
+        ROSEN_LOGE("DisplayNodeCommandHelper::can only create one bootanimationDisplay node fail,"
+            "displayNodeId:[%{public}" PRIu64 "]", id);
+        return;
+    }
     std::shared_ptr<RSDisplayRenderNode> node =
         std::make_shared<RSDisplayRenderNode>(id, config, context.weak_from_this());
     auto& nodeMap = context.GetMutableNodeMap();
     nodeMap.RegisterDisplayRenderNode(node);
     context.GetGlobalRootRenderNode()->AddChild(node);
+    node->SetBootAnimationDisplay(config.isBootAimation);
     if (config.isMirrored) {
         auto mirrorSourceNode = nodeMap.GetRenderNode<RSDisplayRenderNode>(config.mirrorNodeId);
         if (mirrorSourceNode == nullptr) {

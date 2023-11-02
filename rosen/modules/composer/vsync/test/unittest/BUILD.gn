@@ -93,6 +93,8 @@ ohos_unittest("vsync_receiver_test") {
     ":vsync_test_common",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
     "//foundation/graphic/graphic_2d/utils:socketpair",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/graphic/graphic_2d/rosen/modules/platform:eventhandler",
   ]
   external_deps = [ "c_utils:utils" ]
 }

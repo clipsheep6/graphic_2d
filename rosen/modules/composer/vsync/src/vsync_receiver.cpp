@@ -162,8 +162,8 @@ VsyncError VSyncReceiver::GetVSyncPeriodAndLastTimeStamp(int64_t &period, int64_
     }
     if (isThreadShared == false) {
         if (listener_->period_ == 0 || listener_->timeStamp_ == 0) {
-        VLOGE("%{public}s Hardware vsync is not available. please try again later!", __func__);
-        return VSYNC_ERROR_API_FAILED;
+            VLOGE("%{public}s Hardware vsync is not available. please try again later!", __func__);
+            return VSYNC_ERROR_API_FAILED;
         }
         period = listener_->period_;
         timeStamp = listener_->timeStamp_;

@@ -61,4 +61,8 @@ group("test") {
     "render_service_client/unittest/transaction:unittest",
     "render_service_client/unittest/ui:unittest",
   ]
+
+  if (tp_feature_enable) {
+    deps += [ "render_service/unittest/touch_screen:unittest" ]
+  }
 }

@@ -1514,7 +1514,7 @@ void RSRenderServiceConnectionProxy::SetTpFeatureConfig(int32_t feature, const c
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_TP_FEATURE_CONFIG);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
-        return;
+        RS_LOGE("RSRenderServiceConnection::SetTpFeatureConfig: Send Request err.");
     }
 }
 #endif

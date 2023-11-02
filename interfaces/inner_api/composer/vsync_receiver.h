@@ -37,7 +37,7 @@ public:
         void *userData_;
         VSyncCallback callback_;
     };
-    VSyncCallBackListener() : period_(0), lastTimeStamp_(0), vsyncCallbacks_(nullptr), userData_(nullptr)
+    VSyncCallBackListener() : vsyncCallbacks_(nullptr), userData_(nullptr)
     {
     }
 
@@ -50,9 +50,8 @@ public:
         vsyncCallbacks_ = cb.callback_;
         userData_ = cb.userData_;
     }
-
-    int64_t period_;
-    int64_t lastTimeStamp_;
+    thread_local static inline int64_t period_ = 0;
+    thread_local static inline int64_t lastTimeStamp_ = 0;
 
 private:
     void OnReadable(int32_t fileDescriptor) override;

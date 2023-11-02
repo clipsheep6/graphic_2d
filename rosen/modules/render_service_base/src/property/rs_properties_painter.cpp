@@ -68,8 +68,11 @@ constexpr float MAX_SPOT_RATIO = 1.95f;
 constexpr float MAX_AMBIENT_RADIUS = 150.0f;
 const bool BLUR_ENABLED = RSSystemProperties::GetBlurEnabled();
 #ifndef USE_ROSEN_DRAWING
-// when the blur radius > SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD, the snapshot should call outset before blur to shrink by 1px
-constexpr static float SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD = 40.0f; 
+/*
+when the blur radius > SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD,
+the snapshot should call outset before blur to shrink by 1px
+*/
+constexpr static float SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD = 40.0f;
 constexpr static float FLOAT_ZERO_THRESHOLD = 0.001f;
 constexpr static uint8_t DIRECTION_NUM = 4;
 #endif
@@ -1031,6 +1034,21 @@ void RSPropertiesPainter::DrawLinearGradientBlurFilter(
 }
 #endif
 
+#ifndef USE_ROSEN_DRAWING
+bool RSPropertiesPainter::NeedSnapshotOutset(const std::shared_ptr<RSFilter>& rsFilter)
+{
+    if (rsFilter == nullptr) {
+        return true;
+    }
+
+    if (rsFilter->GetFilterType() == RSFilter::MATERIAL) {
+        auto material = std::static_pointer_cast<RSMaterialFilter>(rsFilter);
+        return material->GetRadius() >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD;
+    }
+
+    return true;
+}
+#endif
 
 #ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas, FilterType filterType,
@@ -1048,11 +1066,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     }
 
 #ifdef NEW_SKIA
-    bool needSnapshotOutset = true;
-    if (RSFilter->GetFilterType() == RSFilter::MATERIAL) {
-        auto material = std::static_pointer_cast<RSMaterialFilter>(RSFilter);
-        needSnapshotOutset = (material->GetRadius() >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD);
-    }
+    bool needSnapshotOutset = NeedSnapshotOutset(RSFilter);
     RS_OPTIONAL_TRACE_NAME("DrawFilter " + RSFilter->GetDescription());
     g_blurCnt++;
     SkAutoCanvasRestore acr(&canvas, true);

@@ -86,6 +86,7 @@ private:
     inline static int g_blurCnt = 0;
     static void DrawColorfulShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
     static void DrawShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
+    static bool NeedSnapshotOutset(const std::shared_ptr<RSFilter>& rsFilter);
 #ifdef NEW_SKIA
     static bool GetGradientDirectionPoints(SkPoint (&pts)[2],
                                 const SkRect& clipBounds, GradientDirection direction);

@@ -20,7 +20,7 @@ module_output_path = "graphic_2d/bootanimation"
 ##############################fuzztest##########################################
 ohos_fuzztest("BootAnimationFuzzTest") {
   fuzz_config_file = "../bootanimation_fuzzer"
-  module_out_path = module_output_path
+  module_out_path = fuzz_test_output_path
 
   include_dirs = []
   cflags = [

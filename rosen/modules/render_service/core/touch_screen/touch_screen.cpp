@@ -26,24 +26,26 @@ const std::string TOUCHSCREEN_WRAPPER_PATH = "../../vendor/lib64/libhw_touchscre
 TouchScreen::TouchScreen() {}
 TouchScreen::~TouchScreen()
 {
+    RS_LOGI("TouchScreen: destroy touch screen wrapper.");
     dlclose(touchScreenHandle_);
     touchScreenHandle_ = nullptr;
+    
 }
 
 void TouchScreen::InitTouchScreen()
 {
     touchScreenHandle_ = dlopen(TOUCHSCREEN_WRAPPER_PATH.c_str(), RTLD_NOW);
     if (touchScreenHandle_ == nullptr) {
-        RS_LOGE("libhw_touchscreen.default.so was not loaded, error: %{public}s", dlerror());
+        RS_LOGE("TouchScreen: libhw_touchscreen.default.so was not loaded, error: %{public}s", dlerror());
         return;
     }
 
     tsSetFeatureConfig_ = (TS_SET_FEATURE_CONFIG_)dlsym(touchScreenHandle_, "ts_set_feature_config");
     if (tsSetFeatureConfig_ == nullptr) {
-        RS_LOGE("touch screen get symbol failed, error: %{public}s", dlerror());
+        RS_LOGE("TouchScreen: touch screen get symbol failed, error: %{public}s", dlerror());
         return;
     }
-    RS_LOGI("touch scree wrapper init success");
+    RS_LOGI("TouchScreen: touch screen wrapper init success.");
 }
 } // namespace MMI
 } // namespace OHOS

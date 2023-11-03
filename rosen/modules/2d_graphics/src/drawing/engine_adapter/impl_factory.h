@@ -40,6 +40,11 @@
 #include "impl_interface/shader_effect_impl.h"
 #include "impl_interface/surface_impl.h"
 #include "impl_interface/text_blob_builder_impl.h"
+#include "impl_interface/typeface_impl.h"
+#include "impl_interface/text_blob_impl.h"
+
+struct FontInfo;
+class FontConfig_OHOS;
 
 namespace OHOS {
 namespace Rosen {
@@ -75,6 +80,12 @@ public:
     static std::unique_ptr<FontImpl> CreateFontImpl();
     static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilderImpl();
     static std::shared_ptr<FontMgrImpl> CreateDefaultFontMgrImpl();
+    static std::unique_ptr<FontMgrImpl> CreateDynamicFontMgrImpl();
+    static std::unique_ptr<TypefaceImpl> CreateTypefaceImpl(const std::string& specifiedName, FontInfo& info);
+    static std::unique_ptr<FontStyleSetImpl> CreateTypefaceFontStyleSetImpl();
+    static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSetOhosImpl(
+        const std::shared_ptr<FontConfig_OHOS>& fontConfig, int index, bool isFallback);
+    static std::unique_ptr<TextBlobImpl> CreateTextBlobImpl();
 };
 } // namespace Drawing
 } // namespace Rosen

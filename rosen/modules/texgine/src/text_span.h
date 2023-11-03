@@ -25,6 +25,8 @@
 #include "texgine/typography.h"
 #include "texgine/typography_style.h"
 
+#include "text/text_blob.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -47,8 +49,26 @@ public:
     double GetPostBreak() const;
     double GetPreBreak() const;
     bool IsRTL() const;
+    
+#ifndef USE_ROSEN_DRAWING
+    void PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
+    void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
     void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY, const std::vector<TextShadow> &shadows);
+
+#else
+    void Paint(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY, const TextStyle &xs);
+    void PaintShadow(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY,
+        const std::vector<TextShadow> &shadows);
+    void PaintDecorationStyle(Drawing::Canvas &recordingCanvas, double left, double right, double y,
+        const TextStyle &xs);
+    void PaintDecoration(Drawing::Canvas &recordingCanvas, double offsetX, double offsetY,
+        const TextStyle &xs);
+    void ResetPointNature(double &left, double &LeftVerticalcoord, double &right, double &rightVerticalcoord);
+    void ResetPenPrimaryAttibute(Drawing::Pen &pen, const TextStyle &xs);
+    void SetPathNature(Drawing::Path &wavy, const TextStyle &xs);
+#endif
+
     std::shared_ptr<TextSpan> CloneWithCharGroups(CharGroups const &cgs);
 
     void operator+=(TextSpan const &textSpan)
@@ -63,7 +83,9 @@ public:
     std::vector<uint16_t> u16vect_;
     std::shared_ptr<TexgineTextBlob> textBlob_ = nullptr;
     std::vector<double> glyphWidths_;
-
+    Drawing::TextBlob skTextBlob_;
+    Drawing::Point pointL_;
+    Drawing::Point pointR_;
     CharGroups cgs_;
 
     double preBreak_ = 0.0;
@@ -81,9 +103,6 @@ private:
     friend class TextShaper;
     friend class TextReverser;
     friend void ReportMemoryUsage(std::string const &member, TextSpan const &that, bool needThis);
-
-    void PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
-    void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
 };
 } // namespace TextEngine
 } // namespace Rosen

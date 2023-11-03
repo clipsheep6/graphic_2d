@@ -17,13 +17,15 @@
 #define TEXT_BLOB_IMPL_H
 
 #include "impl_interface/base_impl.h"
-
+#include "utils/data.h"
+#include "texgine_text_blob.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 class TextBlobImpl : public BaseImpl {
 public:
     ~TextBlobImpl() override = default;
+    virtual void DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob) = 0;
 
 protected:
     TextBlobImpl() noexcept = default;

@@ -75,7 +75,7 @@ void TexgineCanvas::Translate(float dx, float dy) const
 
 SkCanvas *TexgineCanvas::GetCanvas() const
 {
-    return canvas_;
+    return std::move(canvas_);
 }
 
 void TexgineCanvas::Restore() const

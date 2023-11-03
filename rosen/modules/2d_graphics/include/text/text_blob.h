@@ -19,13 +19,16 @@
 #include <memory>
 
 #include "impl_interface/text_blob_impl.h"
+#include "utils/drawing_macros.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class TextBlob {
+class DRAWING_API TextBlob {
 public:
     explicit TextBlob(std::shared_ptr<TextBlobImpl> textBlobImpl) noexcept;
+    TextBlob();
+
     virtual ~TextBlob() = default;
 
     template<typename T>
@@ -37,6 +40,7 @@ public:
         return nullptr;
     }
 
+    void DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob);
 private:
     std::shared_ptr<TextBlobImpl> textBlobImpl_;
 };

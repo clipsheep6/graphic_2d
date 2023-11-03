@@ -14,13 +14,20 @@
  */
 
 #include "text/text_blob.h"
-
+#include "impl_factory.h"
 #include "impl_interface/text_blob_impl.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 TextBlob::TextBlob(std::shared_ptr<TextBlobImpl> textBlobImpl) noexcept : textBlobImpl_(textBlobImpl) {}
+
+TextBlob::TextBlob() : textBlobImpl_(ImplFactory::CreateTextBlobImpl()) {}
+
+void TextBlob::DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob)
+{
+    return textBlobImpl_->DataTransform(texgineTextBlob);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

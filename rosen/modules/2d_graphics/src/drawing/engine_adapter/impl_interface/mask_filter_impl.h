@@ -31,7 +31,7 @@ public:
     MaskFilterImpl() noexcept {}
     ~MaskFilterImpl() override {}
 
-    virtual void InitWithBlur(BlurType t, scalar sigma) = 0;
+    virtual void InitWithBlur(BlurType t, scalar sigma, bool respectCTM = true) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

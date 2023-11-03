@@ -55,6 +55,13 @@ std::shared_ptr<TextBlob> SkiaTextBlob::Deserialize(const void* data, size_t siz
     std::shared_ptr<TextBlobImpl> textBlobImpl = std::make_shared<SkiaTextBlob>(skTextBlob);
     return std::make_shared<TextBlob>(textBlobImpl);
 }
+
+void SkiaTextBlob::DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob)
+{
+    if (texgineTextBlob.DetectionEffectiveness()) {
+        skTextBlob_ = texgineTextBlob.GetTextBlob();
+    }
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

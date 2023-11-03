@@ -33,6 +33,7 @@ public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
 
     explicit SkiaTextBlob(sk_sp<SkTextBlob> skTextBlob);
+    SkiaTextBlob() noexcept = default;
     ~SkiaTextBlob() override = default;
 
     AdapterType GetType() const override
@@ -46,6 +47,7 @@ public:
 
     static std::shared_ptr<TextBlob> Deserialize(const void* data, size_t size, const SkDeserialProcs& procs);
 
+    void DataTransform(TextEngine::TexgineTextBlob &texgineTextBlob) override;
 private:
     sk_sp<SkTextBlob> skTextBlob_;
 };

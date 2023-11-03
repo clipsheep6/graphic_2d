@@ -76,6 +76,12 @@ public:
     static std::unique_ptr<FontImpl> CreateFont();
     static std::unique_ptr<TextBlobBuilderImpl> CreateTextBlobBuilder();
     static std::shared_ptr<FontMgrImpl> CreateDefaultFontMgr();
+    static std::unique_ptr<FontMgrImpl> CreateDynamicFontMgr();
+    static std::unique_ptr<TypefaceImpl> CreateTypeface(const std::string& specifiedName, FontInfo& info);
+    static std::unique_ptr<FontStyleSetImpl> CreateTypefaceFontStyleSet();
+    static std::unique_ptr<FontStyleSetImpl> CreateFontStyleSetOhos(
+        const std::shared_ptr<FontConfig_OHOS>& fontConfig, int index, bool isFallback);
+    static std::unique_ptr<TextBlobImpl> CreateTextBlob();
 };
 } // namespace Drawing
 } // namespace Rosen

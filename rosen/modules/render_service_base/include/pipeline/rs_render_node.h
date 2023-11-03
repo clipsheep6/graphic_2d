@@ -433,6 +433,28 @@ public:
     void SetIsUsedBySubThread(bool isUsedBySubThread);
     bool GetIsUsedBySubThread() const;
 
+    bool IsParentContainer() const
+    {
+        return isParentContainer_;
+    }
+    void SetIsSkipEnable(bool value)
+    {
+        isSkipEnable_ = value;
+    }
+    bool IsSkipEnable() const
+    {
+        return isSkipEnable_;
+    }
+    void SetIsApplyEnable(bool value)
+    {
+        isApplyEnable_ = value;
+    }
+    bool IsApplyEnable() const
+    {
+        return isApplyEnable_;
+    }
+    void ApplyParentContainerBounds(RSPaintFilterCanvas& canvas);
+
 protected:
     virtual void OnApplyModifiers() {}
 
@@ -508,6 +530,13 @@ private:
 
     void UpdateShouldPaint(); // update node should paint state in apply modifier stage
     bool shouldPaint_ = true;
+
+    void UpdateTransformMatrixByParentContainer(const std::shared_ptr<RSRenderNode>& parent,
+        bool parentDirty, bool dirty);
+    bool isParentContainer_ = false;
+    bool isStatic_ = false; // this node could regard its absoluteMatrix_ as bounds geometry
+    bool isSkipEnable_ = false; // this node is pure container and could be skipped in process
+    bool isApplyEnable_ = false; // this node could be apply its parent bounds geometry
 
     bool isDirtyRegionUpdated_ = false;
     bool isLastVisible_ = false;

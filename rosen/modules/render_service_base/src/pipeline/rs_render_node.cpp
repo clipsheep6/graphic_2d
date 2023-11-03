@@ -597,7 +597,47 @@ bool RSRenderNode::Update(
     // 2. Filter must be valid when filter cache manager is valid, we make sure that in RSRenderNode::ApplyModifiers().
     UpdateFilterCacheWithDirty(dirtyManager, false);
     UpdateDirtyRegion(dirtyManager, dirty, clipRect);
+    UpdateTransformMatrixByParentContainer(parent, parentDirty, dirty);
     return dirty;
+}
+
+void RSRenderNode::UpdateTransformMatrixByParentContainer(const std::shared_ptr<RSRenderNode>& parent,
+    bool parentDirty, bool dirty)
+{
+    if (RSSystemProperties::GetSkipContainerEnabled()) {
+        isParentContainer_ = false;
+        if (parent) {
+            parent->SetIsSkipEnable(false);
+        }
+        return;
+    }
+    auto parentProperties = parent ? &parent->GetRenderProperties() : nullptr;
+    if (parent && parent->ReinterpretCastTo<RSCanvasRenderNode>() &&
+        parent->IsPureContainer() && !parent->IsStaticCached() &&
+        ROSEN_EQ(parentProperties->GetBoundsGeometry()->GetRotation(), 0.f) &&
+        ROSEN_EQ(parentProperties->GetBoundsGeometry()->GetScaleX(), 0.f) &&
+        ROSEN_EQ(parentProperties->GetBoundsGeometry()->GetScaleY(), 0.f) &&
+        ROSEN_EQ(parentProperties->GetBoundsGeometry()->GetTranslateX(), 0.f) &&
+        ROSEN_EQ(parentProperties->GetBoundsGeometry()->GetTranslateY(), 0.f) &&
+        this->ReinterpretCastTo<RSCanvasRenderNode>()) {
+        isParentContainer_ = true;
+        parent->SetIsSkipEnable(true);
+    } else {
+        isParentContainer_ = false;
+        if (parent) {
+            parent->SetIsSkipEnable(false);
+        }
+    }
+    if (isParentContainer_ && parentDirty && parentProperties) {
+        auto boundsMatrix = parentProperties->GetBoundsGeometry()->GetMatrix();
+        renderProperties_.SetCacheMatrix(boundsMatrix);
+        renderProperties_.ConcatCacheMatrix(parentProperties->GetCacheMatrix());
+        renderProperties_.SetAbsoluteMatrix(renderProperties_.GetBoundsGeometry()->GetMatrix());
+        isStatic_ = !dirty;
+        if (isStatic_) {
+            renderProperties_.ConcatAbsoluteMatrix(renderProperties_.GetCacheMatrix());
+        }
+    }
 }
 
 RSProperties& RSRenderNode::GetMutableRenderProperties()
@@ -765,6 +805,23 @@ void RSRenderNode::RenderTraceDebug() const
     }
 }
 
+void RSRenderNode::ApplyParentContainerBounds(RSPaintFilterCanvas& canvas)
+{
+    if (!isStatic_) {
+        auto parentBounds = GetRenderProperties().GetCacheMatrix();
+#ifndef USE_ROSEN_DRAWING
+        canvas.concat(parentBounds);
+#else
+        canvas.ConcatMatrix(parentBounds);
+#endif
+    }
+#ifndef USE_ROSEN_DRAWING
+        canvas.concat(GetRenderProperties().GetAbsoluteMatrix());
+#else
+        canvas.ConcatMatrix(GetRenderProperties().GetAbsoluteMatrix());
+#endif
+}
+
 void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
@@ -776,6 +833,10 @@ void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 #else
     renderNodeSaveCount_ = canvas.SaveAllStatus();
 #endif
+    if (IsParentContainer() && IsApplyEnable()) {
+        ApplyParentContainerBounds(canvas);
+        return;
+    }
     auto boundsGeo = (GetRenderProperties().GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
 #ifndef USE_ROSEN_DRAWING

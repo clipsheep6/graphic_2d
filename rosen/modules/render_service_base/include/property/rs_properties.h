@@ -255,6 +255,57 @@ public:
 #endif
     RectF GetBoundsRect() const;
 
+#ifndef USE_ROSEN_DRAWING
+    const SkMatrix& GetCacheMatrix() const
+#else
+    const Drawing::Matrix& GetCacheMatrix() const
+#endif
+    {
+        return cacheMatrix_;
+    }
+#ifndef USE_ROSEN_DRAWING
+    void SetCacheMatrix(const SkMatrix& matrix)
+#else
+    void SetCacheMatrix(const Drawing::Matrix& matrix)
+#endif
+    {
+        cacheMatrix_ = matrix;
+    }
+#ifndef USE_ROSEN_DRAWING
+    const SkMatrix& GetAbsoluteMatrix() const
+#else
+    const Drawing::Matrix& GetAbsoluteMatrix() const
+#endif
+    {
+        return absoluteMatrix_;
+    }
+#ifndef USE_ROSEN_DRAWING
+    void SetAbsoluteMatrix(const SkMatrix& matrix)
+#else
+    void SetAbsoluteMatrix(const Drawing::Matrix& matrix)
+#endif
+    {
+        absoluteMatrix_ = matrix;
+    }
+#ifndef USE_ROSEN_DRAWING
+    void ConcatCacheMatrix(const SkMatrix& matrix)
+    {
+        cacheMatrix_.preConcat(matrix);
+    }
+    void ConcatAbsoluteMatrix(const SkMatrix& matrix)
+    {
+        absoluteMatrix_.preConcat(matrix);
+    }
+#else
+    void ConcatCacheMatrix(const Drawing::Matrix& matrix)
+    {
+        cacheMatrix_ = cacheMatrix_ * matrix;
+    }
+    void ConcatAbsoluteMatrix(const Drawing::Matrix& matrix)
+    {
+        absoluteMatrix_ = absoluteMatrix_ * matrix;
+    }
+#endif
     bool IsGeoDirty() const;
     bool IsContentDirty() const;
 
@@ -340,6 +391,16 @@ private:
 
     std::shared_ptr<RSObjAbsGeometry> boundsGeo_;
     std::shared_ptr<RSObjGeometry> frameGeo_;
+    // cacheMatrix_ savas the cumulative result of all parent bounds matrix.
+    // absoluteMatrix_ saves its own bounds matrix if it is dirty and saves the
+    // result of multiplying bounds matrix and cacheMatrix_ if it is not dirty.
+#ifndef USE_ROSEN_DRAWING
+    SkMatrix cacheMatrix_;
+    SkMatrix absoluteMatrix_;
+#else
+    Drawing::Matrix cacheMatrix_;
+    Drawing::Matrix absoluteMatrix_;
+#endif
 
     std::shared_ptr<RSFilter> backgroundFilter_ = nullptr;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara_ = nullptr;

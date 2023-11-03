@@ -291,6 +291,13 @@ private:
     bool IsFirstVisitedCacheForced() const;
     bool IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, int rotation) const;
 
+    bool NodeContentCacheQuickCheck(RSCanvasRenderNode& node);
+    bool isSkipContainerEnabled_ = false;
+    bool hasSharedTransitionNode_ = false;
+    bool isCaching_ = false; // determing if is gernerating cache
+    bool isBlackList_ = false;
+    unsigned int skippedPureContainerNode_ = 0;
+
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
 #else

@@ -507,6 +507,168 @@ napi_value WebGLRenderingContextOverloads::Uniform4fv(napi_env env, napi_callbac
         funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
 }
 
+napi_value WebGLRenderingContextOverloads::Uniform1iv(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::TWO, NARG_CNT::FOUR)) {
+        return nullptr;
+    }
+
+    WebGLRenderingContext* context = GetWebGLRenderingContextBase(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+    UniformExtInfo extInfo(1);
+    extInfo.dimension = 1;
+    bool succ = extInfo.GetUniformExtInfo(env, funcArg, NARG_POS::THIRD);
+    if (!succ) {
+        return nullptr;
+    }
+    return context->GetWebGLRenderingContextImpl().Uniform_iv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
+}
+
+napi_value WebGLRenderingContextOverloads::Uniform2iv(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::TWO, NARG_CNT::FOUR)) {
+        return nullptr;
+    }
+
+    WebGLRenderingContext* context = GetWebGLRenderingContextBase(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+    UniformExtInfo extInfo(WebGLArg::UNIFORM_2V_REQUIRE_MIN_SIZE);
+    bool succ = extInfo.GetUniformExtInfo(env, funcArg, NARG_POS::THIRD);
+    if (!succ) {
+        return nullptr;
+    }
+    return context->GetWebGLRenderingContextImpl().Uniform_iv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
+}
+
+napi_value WebGLRenderingContextOverloads::Uniform3iv(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::TWO, NARG_CNT::FOUR)) {
+        return nullptr;
+    }
+
+    WebGLRenderingContext* context = GetWebGLRenderingContextBase(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+    UniformExtInfo extInfo(WebGLArg::UNIFORM_3V_REQUIRE_MIN_SIZE);
+    bool succ = extInfo.GetUniformExtInfo(env, funcArg, NARG_POS::THIRD);
+    if (!succ) {
+        return nullptr;
+    }
+    return context->GetWebGLRenderingContextImpl().Uniform_iv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
+}
+
+napi_value WebGLRenderingContextOverloads::Uniform4iv(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::TWO, NARG_CNT::FOUR)) {
+        return nullptr;
+    }
+
+    WebGLRenderingContext* context = GetWebGLRenderingContextBase(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+    UniformExtInfo extInfo(WebGLArg::UNIFORM_4V_REQUIRE_MIN_SIZE);
+    bool succ = extInfo.GetUniformExtInfo(env, funcArg, NARG_POS::THIRD);
+    if (!succ) {
+        return nullptr;
+    }
+    return context->GetWebGLRenderingContextImpl().Uniform_iv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::SECOND], &extInfo);
+}
+
+napi_value WebGLRenderingContextOverloads::UniformMatrix2fv(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::THREE, NARG_CNT::FIVE)) {
+        return nullptr;
+    }
+    UniformExtInfo extInfo(WebGLArg::MATRIX_2X2_REQUIRE_MIN_SIZE);
+    bool succ;
+    bool transpose = false;
+    tie(succ, transpose) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
+    if (!succ) {
+        return nullptr;
+    }
+    succ = extInfo.GetUniformExtInfo(env, funcArg, NARG_POS::FOURTH);
+    if (!succ) {
+        return nullptr;
+    }
+    WebGLRenderingContext* context = GetWebGLRenderingContextBase(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+
+    return context->GetWebGLRenderingContextImpl().UniformMatrix_fv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::THIRD], transpose, &extInfo);
+}
+
+napi_value WebGLRenderingContextOverloads::UniformMatrix3fv(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::THREE, NARG_CNT::FIVE)) {
+        return nullptr;
+    }
+    UniformExtInfo extInfo(WebGLArg::MATRIX_3X3_REQUIRE_MIN_SIZE);
+    bool succ;
+    bool transpose = false;
+    tie(succ, transpose) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
+    if (!succ) {
+        return nullptr;
+    }
+    succ = extInfo.GetUniformExtInfo(env, funcArg, NARG_POS::FOURTH);
+    if (!succ) {
+        return nullptr;
+    }
+    WebGLRenderingContext* context = GetWebGLRenderingContextBase(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+
+    return context->GetWebGLRenderingContextImpl().UniformMatrix_fv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::THIRD], transpose, &extInfo);
+}
+
+napi_value WebGLRenderingContextOverloads::UniformMatrix4fv(napi_env env, napi_callback_info info)
+{
+    NFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(NARG_CNT::THREE, NARG_CNT::FIVE)) {
+        return nullptr;
+    }
+
+    UniformExtInfo extInfo(WebGLArg::MATRIX_4X4_REQUIRE_MIN_SIZE);
+    bool succ;
+    bool transpose = false;
+    tie(succ, transpose) = NVal(env, funcArg[NARG_POS::SECOND]).ToBool();
+    if (!succ) {
+        return nullptr;
+    }
+    succ = extInfo.GetUniformExtInfo(env, funcArg, NARG_POS::FOURTH);
+    if (!succ) {
+        return nullptr;
+    }
+    WebGLRenderingContext* context = GetWebGLRenderingContextBase(env, funcArg.GetThisVar());
+    if (context == nullptr) {
+        return nullptr;
+    }
+
+    return context->GetWebGLRenderingContextImpl().UniformMatrix_fv(env,
+        funcArg[NARG_POS::FIRST], funcArg[NARG_POS::THIRD], transpose, &extInfo);
+}
+} // namespace Rosen
+} // namespace OHOS
+
 #ifdef __cplusplus
 }
 #endif

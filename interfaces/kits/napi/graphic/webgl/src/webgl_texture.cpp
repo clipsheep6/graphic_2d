@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,31 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef SKIA_TYPEFACE_FONT_STYLE_SET_H
-#define SKIA_TYPEFACE_FONT_STYLE_SET_H
+#include "webgl/webgl_texture.h"
 
-#include <string>
-
-#include "skia_adapter/skia_font_style_set.h"
+#include "context/webgl2_rendering_context_base.h"
+#include "context/webgl_rendering_context_base.h"
+#include "napi/n_class.h"
+#include "napi/n_func_arg.h"
+#include "util/util.h"
+#include "webgl/webgl_arg.h"
 
 namespace OHOS {
 namespace Rosen {
-namespace Drawing {
-class SkiaTypefaceFontStyleSet : public SkiaFontStyleSet {
-public:
-    static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
-
-    SkiaTypefaceFontStyleSet();
-    ~SkiaTypefaceFontStyleSet() override = default;
-
-    AdapterType GetType() const override
-    {
-        return AdapterType::SKIA_ADAPTER;
-    }
-
-    void RegisterTypeface(std::shared_ptr<Typeface> typeface) override;
-};
-} // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
-#endif

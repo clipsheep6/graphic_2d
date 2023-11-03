@@ -371,6 +371,7 @@ void RSInterfaces::DisableCacheForRotation()
 #ifdef TP_FEATURE_ENABLE
 void RSInterfaces::SetTpFeatureConfig(int32_t feature, const char* config)
 {
+    RS_LOGD("RSInterfaces::SetTpFeatureConfig feature: %{public}d, config: %{public}s.", feature, config);
     renderServiceClient_->SetTpFeatureConfig(feature, config);
 }
 #endif

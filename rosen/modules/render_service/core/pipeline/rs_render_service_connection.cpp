@@ -912,14 +912,20 @@ void RSRenderServiceConnection::SetCacheEnabledForRotation(bool isEnabled)
 #ifdef TP_FEATURE_ENABLE
 void RSRenderServiceConnection::SetTpFeatureConfig(int32_t feature, const char* config)
 {
-    if (TOUCH_SCREEN->tsSetFeatureConfig_ == nullptr) {
+    auto touchScreen = TOUCH_SCREEN;
+    if (touchScreen == nullptr) {
+        RS_LOGW("RSRenderServiceConnection::SetTpFeatureConfig: touch screen instance is nullptr.");
+        return;
+    }
+    if (touchScreen->tsSetFeatureConfig_ == nullptr) {
         RS_LOGW("RSRenderServiceConnection::SetTpFeatureConfig: touch screen function symbol is nullptr.");
         return;
     }
-    if (TOUCH_SCREEN->tsSetFeatureConfig_(feature, config) < 0) {
+    if (touchScreen->tsSetFeatureConfig_(feature, config) < 0) {
         RS_LOGW("RSRenderServiceConnection::SetTpFeatureConfig: tsSetFeatureConfig_ failed.");
-        return;
     }
+    RS_LOGD("RSRenderServiceConnection::SetTpFeatureConfig:
+        set feature: %{public}d, config: %{public}s success.", feature, config);
 }
 #endif
 } // namespace Rosen

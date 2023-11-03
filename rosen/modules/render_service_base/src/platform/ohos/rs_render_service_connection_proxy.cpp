@@ -41,6 +41,7 @@ RSRenderServiceConnectionProxy::RSRenderServiceConnectionProxy(const sptr<IRemot
 
 void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransactionData>& transactionData)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API CommitTransaction", pid_);
     if (!transactionData) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::CommitTransaction transactionData nullptr!");
         return;
@@ -81,6 +82,7 @@ void RSRenderServiceConnectionProxy::CommitTransaction(std::unique_ptr<RSTransac
 
 void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API ExecuteSynchronousTask", pid_);
     if (task == nullptr) {
         return;
     }
@@ -155,6 +157,7 @@ bool RSRenderServiceConnectionProxy::GetUniRenderEnabled()
 
 bool RSRenderServiceConnectionProxy::CreateNode(const RSSurfaceRenderNodeConfig& config)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API CreateNode", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -180,6 +183,7 @@ bool RSRenderServiceConnectionProxy::CreateNode(const RSSurfaceRenderNodeConfig&
 
 sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API CreateNodeAndSurface", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -211,6 +215,11 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
 sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(const std::string& name,
                                                                              const sptr<VSyncIConnectionToken>& token)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API CreateVSyncConnection", pid_);
+    if (token == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::CreateVSyncConnection: token is nullptr.");
+        return nullptr;
+    }
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -232,6 +241,7 @@ sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(con
 int32_t RSRenderServiceConnectionProxy::SetFocusAppInfo(
     int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName, uint64_t focusNodeId)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetFocusAppInfo", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -322,6 +332,7 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
     MessageParcel reply;
     MessageOption option;
 
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API CreateVirtualScreen", pid_);
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         return INVALID_SCREEN_ID;
     }
@@ -352,6 +363,7 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
 
 int32_t RSRenderServiceConnectionProxy::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetVirtualScreenSurface", pid_);
     if (surface == nullptr) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::SetVirtualScreenSurface: Send surface is nullptr!");
         return INVALID_ARGUMENTS;
@@ -384,7 +396,7 @@ void RSRenderServiceConnectionProxy::RemoveVirtualScreen(ScreenId id)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API RemoveVirtualScreen", pid_);
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         return;
     }
@@ -400,6 +412,7 @@ void RSRenderServiceConnectionProxy::RemoveVirtualScreen(ScreenId id)
 
 int32_t RSRenderServiceConnectionProxy::SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenChangeCallback", pid_);
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::SetScreenChangeCallback: callback is nullptr.");
         return INVALID_ARGUMENTS;
@@ -427,6 +440,7 @@ int32_t RSRenderServiceConnectionProxy::SetScreenChangeCallback(sptr<RSIScreenCh
 
 void RSRenderServiceConnectionProxy::SetScreenActiveMode(ScreenId id, uint32_t modeId)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenActiveMode", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -446,6 +460,7 @@ void RSRenderServiceConnectionProxy::SetScreenActiveMode(ScreenId id, uint32_t m
 
 void RSRenderServiceConnectionProxy::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenRefreshRate", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -467,6 +482,7 @@ void RSRenderServiceConnectionProxy::SetScreenRefreshRate(ScreenId id, int32_t s
 
 void RSRenderServiceConnectionProxy::SetRefreshRateMode(int32_t refreshRateMode)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetRefreshRateMode", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -562,6 +578,7 @@ std::vector<int32_t> RSRenderServiceConnectionProxy::GetScreenSupportedRefreshRa
 
 int32_t RSRenderServiceConnectionProxy::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetVirtualScreenResolution", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -586,6 +603,7 @@ int32_t RSRenderServiceConnectionProxy::SetVirtualScreenResolution(ScreenId id, 
 
 void RSRenderServiceConnectionProxy::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenPowerStatus", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -605,6 +623,7 @@ void RSRenderServiceConnectionProxy::SetScreenPowerStatus(ScreenId id, ScreenPow
 
 void RSRenderServiceConnectionProxy::RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API RegisterApplicationAgent", pid_);
     if (app == nullptr) {
         ROSEN_LOGE("RSRenderServiceProxy: callback == nullptr\n");
         return;
@@ -627,6 +646,7 @@ void RSRenderServiceConnectionProxy::RegisterApplicationAgent(uint32_t pid, sptr
 void RSRenderServiceConnectionProxy::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback,
     float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API TakeSurfaceCapture", pid_);
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceProxy: callback == nullptr\n");
         return;
@@ -651,6 +671,7 @@ void RSRenderServiceConnectionProxy::TakeSurfaceCapture(NodeId id, sptr<RSISurfa
 
 RSVirtualScreenResolution RSRenderServiceConnectionProxy::GetVirtualScreenResolution(ScreenId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetVirtualScreenResolution", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -677,6 +698,7 @@ RSVirtualScreenResolution RSRenderServiceConnectionProxy::GetVirtualScreenResolu
 
 RSScreenModeInfo RSRenderServiceConnectionProxy::GetScreenActiveMode(ScreenId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenActiveMode", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -703,6 +725,7 @@ RSScreenModeInfo RSRenderServiceConnectionProxy::GetScreenActiveMode(ScreenId id
 
 std::vector<RSScreenModeInfo> RSRenderServiceConnectionProxy::GetScreenSupportedModes(ScreenId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenSupportedModes", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -780,6 +803,7 @@ std::vector<MemoryGraphic> RSRenderServiceConnectionProxy::GetMemoryGraphics()
 
 bool RSRenderServiceConnectionProxy::GetTotalAppMemSize(float& cpuMemSize, float& gpuMemSize)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetTotalAppMemSize", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -827,6 +851,7 @@ MemoryGraphic RSRenderServiceConnectionProxy::GetMemoryGraphic(int pid)
 
 RSScreenCapability RSRenderServiceConnectionProxy::GetScreenCapability(ScreenId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenCapability", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -852,6 +877,7 @@ RSScreenCapability RSRenderServiceConnectionProxy::GetScreenCapability(ScreenId 
 
 ScreenPowerStatus RSRenderServiceConnectionProxy::GetScreenPowerStatus(ScreenId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenPowerStatus", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -870,6 +896,7 @@ ScreenPowerStatus RSRenderServiceConnectionProxy::GetScreenPowerStatus(ScreenId 
 
 RSScreenData RSRenderServiceConnectionProxy::GetScreenData(ScreenId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenData", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -894,6 +921,7 @@ RSScreenData RSRenderServiceConnectionProxy::GetScreenData(ScreenId id)
 
 int32_t RSRenderServiceConnectionProxy::GetScreenBacklight(ScreenId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenBacklight", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -913,6 +941,7 @@ int32_t RSRenderServiceConnectionProxy::GetScreenBacklight(ScreenId id)
 
 void RSRenderServiceConnectionProxy::SetScreenBacklight(ScreenId id, uint32_t level)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenBacklight", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -957,6 +986,7 @@ void RSRenderServiceConnectionProxy::RegisterBufferClearListener(
 void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
     NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API RegisterBufferAvailableListener", pid_);
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterBufferAvailableListener: callback is nullptr.");
         return;
@@ -983,6 +1013,7 @@ void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
 
 int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenSupportedColorGamuts", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1038,6 +1069,7 @@ int32_t RSRenderServiceConnectionProxy::GetScreenSupportedMetaDataKeys(
 
 int32_t RSRenderServiceConnectionProxy::GetScreenColorGamut(ScreenId id, ScreenColorGamut& mode)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API GetScreenColorGamut", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1060,6 +1092,7 @@ int32_t RSRenderServiceConnectionProxy::GetScreenColorGamut(ScreenId id, ScreenC
 
 int32_t RSRenderServiceConnectionProxy::SetScreenColorGamut(ScreenId id, int32_t modeIdx)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenColorGamut", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1080,6 +1113,7 @@ int32_t RSRenderServiceConnectionProxy::SetScreenColorGamut(ScreenId id, int32_t
 
 int32_t RSRenderServiceConnectionProxy::SetScreenGamutMap(ScreenId id, ScreenGamutMap mode)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenGamutMap", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1229,6 +1263,7 @@ bool RSRenderServiceConnectionProxy::GetPixelmap(
 
 int32_t RSRenderServiceConnectionProxy::SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetScreenSkipFrameInterval", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1249,6 +1284,11 @@ int32_t RSRenderServiceConnectionProxy::SetScreenSkipFrameInterval(ScreenId id, 
 
 int32_t RSRenderServiceConnectionProxy::RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API RegisterOcclusionChangeCallback", pid_);
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterOcclusionChangeCallback: callback is nullptr.");
+        return INVALID_ARGUMENTS;
+    }
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1269,6 +1309,7 @@ int32_t RSRenderServiceConnectionProxy::RegisterOcclusionChangeCallback(sptr<RSI
 int32_t RSRenderServiceConnectionProxy::RegisterSurfaceOcclusionChangeCallback(
     NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API RegisterSurfaceOcclusionChangeCallback", pid_);
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterSurfaceOcclusionChangeCallback: callback is nullptr.");
         return INVALID_ARGUMENTS;
@@ -1296,6 +1337,7 @@ int32_t RSRenderServiceConnectionProxy::RegisterSurfaceOcclusionChangeCallback(
 
 int32_t RSRenderServiceConnectionProxy::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API UnRegisterSurfaceOcclusionChangeCallback", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1337,6 +1379,7 @@ int32_t RSRenderServiceConnectionProxy::RegisterHgmConfigChangeCallback(sptr<RSI
 
 void RSRenderServiceConnectionProxy::SetAppWindowNum(uint32_t num)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetAppWindowNum", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1354,6 +1397,11 @@ void RSRenderServiceConnectionProxy::SetAppWindowNum(uint32_t num)
 
 void RSRenderServiceConnectionProxy::ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API ShowWatermark", pid_);
+    if (watermarkImg == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::ShowWatermark: watermarkImg is nullptr.");
+        return;
+    }
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1457,6 +1505,7 @@ void RSRenderServiceConnectionProxy::ReportDataBaseRs(
 
 void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnabled)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetHardwareEnabled", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1479,6 +1528,7 @@ void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnable
 
 void RSRenderServiceConnectionProxy::SetCacheEnabledForRotation(bool isEnabled)
 {
+    ROSEN_LOGD("pid = %{public}" PRId32 " is accessing API SetCacheEnabledForRotation", pid_);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

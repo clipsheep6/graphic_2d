@@ -33,10 +33,6 @@ namespace TextEngine {
 int TextShaper::Shape(const VariantSpan &span, const TypographyStyle &ys,
     const std::shared_ptr<FontProviders> &fontProviders) const
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("TextShaper::ShapeLineSpans");
-#endif
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "TextShaper::ShapeLineSpans");
     if (span == nullptr) {
         LOGEX_FUNC_LINE(ERROR) << "span is nullptr";
         throw TEXGINE_EXCEPTION(INVALID_ARGUMENT);

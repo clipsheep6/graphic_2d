@@ -27,10 +27,6 @@ namespace Rosen {
 namespace TextEngine {
 std::vector<VariantSpan> BidiProcesser::ProcessBidiText(const std::vector<VariantSpan> &spans, const TextDirection dir)
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("BidiProcesser::ProcessBidiText");
-#endif
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "ProcessBidiText");
     std::vector<VariantSpan> newSpans;
     for (auto const &span : spans) {
         auto ts = span.TryToTextSpan();
@@ -39,7 +35,6 @@ std::vector<VariantSpan> BidiProcesser::ProcessBidiText(const std::vector<Varian
             continue;
         }
 
-        span.Dump();
         auto nsis = DoBidiProcess(ts->cgs_, dir);
         for (auto const &nsi : nsis) {
             ts->rtl_ = nsi.rtl;
@@ -59,7 +54,6 @@ std::vector<VariantSpan> BidiProcesser::ProcessBidiText(const std::vector<Varian
 
 std::vector<NewSpanInfo> BidiProcesser::DoBidiProcess(const CharGroups &cgs, const TextDirection dir)
 {
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "BidiProcesser::doBidiProcess");
     if (!cgs.IsValid() || cgs.GetSize() == 0) {
         throw TEXGINE_EXCEPTION(INVALID_ARGUMENT);
     }
@@ -91,16 +85,11 @@ std::vector<NewSpanInfo> BidiProcesser::DoBidiProcess(const CharGroups &cgs, con
         }
 
         auto cc = cgs.GetSubFromU16RangeAll(start, start + length);
-        LOGEX_FUNC_LINE_DEBUG(Logger::SetToNoReturn) <<
-            "u16[" << start << ", " << start + length << ")" <<
-            " is " << (nsi.rtl ? "rtl" : "ltr") << " ";
         if (cgs.IsIntersect(cc) == false) {
-            LOGCEX_DEBUG() << "not intersect";
             continue;
         }
 
         auto ic = cgs.GetIntersect(cc);
-        LOGCEX_DEBUG() << "intersect at cgs" << ic.GetRange();
         nsi.cgs = ic;
         nsis.push_back(nsi);
     }

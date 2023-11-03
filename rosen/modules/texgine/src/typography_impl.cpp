@@ -162,10 +162,6 @@ size_t TypographyImpl::FindGlyphTargetIndex(size_t line,
 
 IndexAndAffinity TypographyImpl::GetGlyphIndexByCoordinate(double x, double y) const
 {
-    std::stringstream ss;
-    ss << "GetGlyphPositionAtCoordinate(" << x << "," << y << ")";
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ss.str());
-
     // process y < 0
     if (fabs(height_) < DBL_EPSILON) {
         return {0, Affinity::NEXT};
@@ -263,11 +259,6 @@ void TypographyImpl::Layout(double maxWidth)
 {
     boundariesCache_ = {};
     try {
-#ifdef LOGGER_ENABLE_SCOPE
-        ScopedTrace scope("TypographyImpl::Layout");
-#endif
-        LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "TypographyImpl::Layout");
-        LOGEX_FUNC_LINE(INFO) << "Layout maxWidth: " << maxWidth << ", spans.size(): " << spans_.size();
         maxWidth_ = maxWidth;
         if (spans_.empty()) {
             LOGEX_FUNC_LINE(ERROR) << "Empty spans";
@@ -338,7 +329,6 @@ void TypographyImpl::ProcessHardBreak()
 
 int TypographyImpl::UpdateMetrics()
 {
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "UpdateMetrics");
     baselines_ = {};
     lineMaxAscent_ = {};
     lineMaxCoveredAscent_ = {};
@@ -375,9 +365,6 @@ int TypographyImpl::UpdateMetrics()
         yOffset += ceil(lineMaxCoveredAscent_.back() + prevMaxDescent);
         yOffsets_.push_back(yOffset);
         prevMaxDescent = lineMaxCoveredDescent_.back();
-        LOGEX_FUNC_LINE_DEBUG() << "[" << i << "] ascent: " << lineMaxAscent_.back() <<
-            ", coveredAscent: " << lineMaxCoveredAscent_.back() <<
-            ", coveredDescent: " << lineMaxCoveredDescent_.back();
     }
 
     return SUCCESSED;
@@ -430,7 +417,6 @@ int TypographyImpl::ComputeStrut()
     FontStyles style(typographyStyle_.lineStyle.fontWeight, typographyStyle_.lineStyle.fontStyle);
     auto typeface = fontCollection->GetTypefaceForFontStyles(style, {}, {});
     if (typeface == nullptr) {
-        LOGEX_FUNC_LINE_DEBUG() << "seek typeface failed";
         return FAILED;
     }
 

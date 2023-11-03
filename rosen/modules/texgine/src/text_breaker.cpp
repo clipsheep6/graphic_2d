@@ -100,7 +100,6 @@ int TextBreaker::WordBreak(std::vector<VariantSpan> &spans, const TypographyStyl
 std::shared_ptr<FontCollection> TextBreaker::GenerateFontCollection(const TypographyStyle &ys,
     const TextStyle &xs, const std::shared_ptr<FontProviders> &fontProviders) noexcept(false)
 {
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "TextBreaker::GenerateFontCollection");
     auto families = xs.fontFamilies;
     if (families.empty()) {
         families = ys.fontFamilies;
@@ -117,7 +116,6 @@ std::shared_ptr<FontCollection> TextBreaker::GenerateFontCollection(const Typogr
 int TextBreaker::Measure(const TextStyle &xs, const std::vector<uint16_t> &u16vect,
     const FontCollection &fontCollection, CharGroups &cgs, std::vector<Boundary> &boundaries) noexcept(false)
 {
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "TextBreaker::doMeasure");
     auto measurer = Measurer::Create(u16vect, fontCollection);
     if (measurer == nullptr) {
         LOGEX_FUNC_LINE(ERROR) << "Measurer::Create return nullptr";
@@ -316,9 +314,6 @@ void TextBreaker::GenerateSpan(const CharGroups &currentCgs, const TypographySty
         throw TEXGINE_EXCEPTION(INVALID_ARGUMENT);
     }
 
-    LOGEX_FUNC_LINE_DEBUG(Logger::SetToNoReturn) << "AddWord " << spans.size()
-        << " " << currentCgs.GetRange() << ": \033[40m'";
-    LOGCEX_DEBUG() << TextConverter::ToStr(currentCgs.ToUTF16()) << "'\033[0m";
     auto newSpan = std::make_shared<TextSpan>();
     newSpan->cgs_ = currentCgs;
     newSpan->postBreak_ = postBreak_;

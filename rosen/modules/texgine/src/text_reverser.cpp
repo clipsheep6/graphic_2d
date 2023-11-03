@@ -25,10 +25,6 @@ namespace Rosen {
 namespace TextEngine {
 void TextReverser::ReverseRTLText(std::vector<VariantSpan> &lineSpans)
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("Shaper::ReverseRTLText");
-#endif
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "ReverseRTLText");
     const auto &endit = lineSpans.end();
     auto rtlSpansBeginIt = endit;
     auto rtlSpansEndIt = endit;
@@ -42,10 +38,7 @@ void TextReverser::ReverseRTLText(std::vector<VariantSpan> &lineSpans)
         if (rtl) {
             rtlSpansBeginIt = rtlSpansBeginIt == endit ? it : rtlSpansBeginIt;
             rtlSpansEndIt = it;
-            LOGCEX_DEBUG() << "is rtl";
             continue;
-        } else {
-            LOGCEX_DEBUG() << "no rtl";
         }
 
         if (rtlSpansBeginIt == endit) {
@@ -53,10 +46,6 @@ void TextReverser::ReverseRTLText(std::vector<VariantSpan> &lineSpans)
         }
 
         rtlSpansEndIt++;
-        LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "reverse");
-        for (auto i = rtlSpansBeginIt; i != rtlSpansEndIt; i++) {
-            i->Dump();
-        }
         std::reverse(rtlSpansBeginIt, rtlSpansEndIt);
         rtlSpansBeginIt = endit;
         rtlSpansEndIt = endit;
@@ -64,10 +53,6 @@ void TextReverser::ReverseRTLText(std::vector<VariantSpan> &lineSpans)
 
     if (rtlSpansBeginIt != endit) {
         rtlSpansEndIt++;
-        LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "reverse");
-        for (auto it = rtlSpansBeginIt; it != rtlSpansEndIt; it++) {
-            it->Dump();
-        }
         std::reverse(rtlSpansBeginIt, rtlSpansEndIt);
     }
 }
@@ -97,10 +82,6 @@ void TextReverser::ReverseConDirectionText(std::vector<VariantSpan> &lineSpans, 
 
 void TextReverser::ProcessTypoDirection(std::vector<VariantSpan> &lineSpans, const TextDirection dir)
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("ProcessTypoDirection");
-#endif
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "ProcessTypoDirection");
     if (dir == TextDirection::LTR) {
         return;
     }

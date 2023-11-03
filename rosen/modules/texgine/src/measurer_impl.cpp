@@ -32,27 +32,6 @@ constexpr static uint8_t FIRST_BYTE = 24;
 constexpr static uint8_t SECOND_BYTE = 16;
 constexpr static uint8_t THIRD_BYTE = 8;
 
-namespace {
-void DumpCharGroup(int32_t index, const CharGroup &cg, double glyphEm,
-    const hb_glyph_info_t &info, const hb_glyph_position_t &position)
-{
-    auto uTF8Str = TextConverter::ToUTF8(cg.chars);
-    // 0xffffff is the default char when the cg is null or invalid
-    auto ch = (cg.chars.size() > 0) ? cg.chars[0] : 0xffffff;
-    // the follow numbers is to align log
-    // 2 & 4 means output width，0 means fill with 0
-    LOGEX_FUNC_LINE_DEBUG() << std::setw(2) << std::setfill('0') << index <<
-        std::hex << std::uppercase <<
-        ": " << std::right << std::setw(4) << std::setfill(' ') << "\033[40m" << "'" <<
-        uTF8Str.data() << "'" << "\033[0m" <<
-        " (char: 0x" << std::setw(6) << std::setfill('0') << ch <<
-        ", codepoint: 0x" << std::setw(4) << std::setfill('0') << info.codepoint <<
-        ", cluster: " << std::setw(2) << std::setfill(' ') << std::dec << info.cluster << ")" <<
-        " {" << glyphEm * position.x_advance << ", " << glyphEm * position.y_advance <<
-        ", " << glyphEm * position.x_offset << ", " << glyphEm * position.y_offset << "}";
-}
-} // namespace
-
 hb_blob_t *HbFaceReferenceTableTypeface(hb_face_t *face, hb_tag_t tag, void *context)
 {
     if (context == nullptr) {
@@ -104,10 +83,6 @@ const std::vector<Boundary> &MeasurerImpl::GetWordBoundary() const
 
 int MeasurerImpl::Measure(CharGroups &cgs)
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("MeasurerImpl::Measure");
-#endif
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "MeasurerImpl::Measure");
     struct MeasurerCacheKey key = {
         .text = text_,
         .style = style_,
@@ -157,11 +132,6 @@ int MeasurerImpl::Measure(CharGroups &cgs)
 
 void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("MeasurerImpl::SeekTypeface");
-#endif
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "typeface");
-    int index = 0;
     for (auto runsit = runs.begin(); runsit != runs.end(); runsit++) {
         if (runsit->end > text_.size()) {
             LOGEX_FUNC_LINE(ERROR) << "runsit->end overflow of text_";
@@ -172,16 +142,10 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
         std::shared_ptr<Typeface> lastTypeface = nullptr;
         while (utf16Index < runsit->end) {
             U16_NEXT(text_.data(), utf16Index, runsit->end, cp);
-            // 2 & 6 means output width，0 means fill with 0
-            LOGEX_FUNC_LINE_DEBUG(Logger::SetToNoReturn) << "[" << std::setw(2) << std::setfill('0') << index++
-                << ": 0x" << std::setw(6) << std::setfill('0') << std::hex << std::uppercase << cp << "]";
             if (lastTypeface && lastTypeface->Has(cp)) {
-                LOGCEX_DEBUG() << " cached";
                 continue;
             }
             if (runsit->typeface) {
-                index--;
-                LOGCEX_DEBUG() << " new";
                 auto next = runsit;
                 runs.insert(++next, {
                     .start = utf16Index - U16_LENGTH(cp),
@@ -198,11 +162,9 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
                                  (char)((runsit->script) & 0xFF), '\0'};
             lastTypeface = fontCollection_.GetTypefaceForChar(cp, style_, runScript, locale_);
             if (lastTypeface == nullptr) {
-                LOGCEX_DEBUG() << " no typeface";
                 continue;
             }
 
-            LOGCEX_DEBUG() << " found at " << lastTypeface->GetName();
             runsit->typeface = lastTypeface;
         }
     }
@@ -210,10 +172,6 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
 
 void MeasurerImpl::SeekScript(std::list<struct MeasuringRun> &runs)
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("MeasurerImpl::SeekScript");
-#endif
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "script");
     auto icuGetUnicodeFuncs = hb_unicode_funcs_create(hb_icu_get_unicode_funcs());
     if (icuGetUnicodeFuncs == nullptr) {
         LOGEX_FUNC_LINE(ERROR) << "hb_unicode_funcs_create return nullptr";
@@ -227,12 +185,7 @@ void MeasurerImpl::SeekScript(std::list<struct MeasuringRun> &runs)
 
 void MeasurerImpl::DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode_funcs_t *icuGetUnicodeFuncs)
 {
-    int index = 0;
     for (auto it = runs.begin(); it != runs.end(); it++) {
-        std::stringstream ss;
-        ss << "[" << it->start << ", " << it->end << ")";
-        LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ss.str());
-
         size_t utf16Index = it->start;
         uint32_t cp = 0;
         auto &script = it->script;
@@ -244,9 +197,6 @@ void MeasurerImpl::DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode
 
             U16_NEXT(text_.data(), utf16Index, it->end, cp);
             auto s = hb_unicode_script(icuGetUnicodeFuncs, cp);
-            // 2 & 6 means output width，0 means fill with 0
-            LOGEX_FUNC_LINE_DEBUG() << "[" << std::setw(2) << std::setfill('0') << index++ << ": 0x"
-                << std::setw(6) << std::setfill('0') << std::hex << std::uppercase << cp << "]" << " " << s;
             if (script == static_cast<size_t>(HB_SCRIPT_INVALID)) {
                 script = s;
             }
@@ -260,7 +210,6 @@ void MeasurerImpl::DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode
             } else if (s == HB_SCRIPT_INHERITED || s == HB_SCRIPT_COMMON) {
                 continue;
             } else {
-                index--;
                 auto next = it;
                 runs.insert(++next, { .start = utf16Index - U16_LENGTH(cp), .end = it->end });
                 it->end = utf16Index - U16_LENGTH(cp);
@@ -279,21 +228,13 @@ void MeasurerImpl::DoSeekScript(std::list<struct MeasuringRun> &runs, hb_unicode
 
 int MeasurerImpl::Shape(CharGroups &cgs, std::list<struct MeasuringRun> &runs, std::vector<Boundary> boundaries)
 {
-#ifdef LOGGER_ENABLE_SCOPE
-    ScopedTrace scope("MeasurerImpl::Shape");
-#endif
     cgs = CharGroups::CreateEmpty();
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "shape");
     size_t index = 0;
     for (auto &run : runs) {
         if (run.end <= run.start) {
             LOGEX_FUNC_LINE(ERROR) << "run have error range";
             throw TEXGINE_EXCEPTION(ERROR_STATUS);
         }
-
-        std::stringstream ss;
-        ss << "[" << run.start << ", " << run.end << ")";
-        LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), ss.str());
 
         if (DoShape(cgs, run, index)) {
             return FAILED;
@@ -385,7 +326,6 @@ int MeasurerImpl::GetGlyphs(CharGroups &cgs, MeasuringRun &run, size_t &index, h
         return FAILED;
     }
 
-    LOGEX_FUNC_LINE_DEBUG() << "ng: " << ng;
     auto upe = typeface->Get()->GetUnitsPerEm();
     if (!upe) {
         LOGEX_FUNC_LINE(ERROR) << "upe is 0";
@@ -408,9 +348,6 @@ int MeasurerImpl::GetGlyphs(CharGroups &cgs, MeasuringRun &run, size_t &index, h
 
     DoCgsByCluster(cgsByCluster);
     cgsByCluster.erase(run.end);
-    for (uint32_t i = 0; i < ng; i++) {
-        DumpCharGroup(index++, cgsByCluster[hginfos[i].cluster], glyphEm, hginfos[i], hgpositions[i]);
-    }
 
     for (const auto &[cluster, cg] : cgsByCluster) {
         cgs.PushBack(cg);
@@ -455,7 +392,6 @@ void MeasurerImpl::DoCgsByCluster(std::map<uint32_t, TextEngine::CharGroup> &cgs
 
 void MeasurerImpl::GenerateHBFeatures(std::vector<hb_feature_t> &fontFeatures, const FontFeatures *ff)
 {
-    LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "GenerateHBFeatures");
     if (ff == nullptr) {
         return;
     }
@@ -471,8 +407,6 @@ void MeasurerImpl::GenerateHBFeatures(std::vector<hb_feature_t> &fontFeatures, c
             hf.value = static_cast<size_t>(fv);
             fontFeatures.push_back(hf);
         }
-
-        LOGEX_FUNC_LINE_DEBUG() << "feature tag:" << hf.tag << ", feature value:" << hf.value;
     }
 }
 } // namespace TextEngine

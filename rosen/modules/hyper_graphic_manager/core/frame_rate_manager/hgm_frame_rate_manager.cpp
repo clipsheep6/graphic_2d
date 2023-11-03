@@ -20,7 +20,9 @@
 #include "parameters.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
+#ifdef NOT_BUILD_OHOS_SDK 
 #include "frame_rate_report.h"
+#endif
 
 
 namespace OHOS {
@@ -64,24 +66,20 @@ void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
     }
     CalcRefreshRate(screenId, finalRange);
     rsFrameRate_ = GetDrawingFrameRate(currRefreshRate_, finalRange);
-    RS_OPTIONAL_TRACE_NAME("HgmFrameRateManager:UniProcessData refreshRate:" +
-        std::to_string(static_cast<int>(currRefreshRate_)) + ", rsFrameRate:" +
-        std::to_string(static_cast<int>(rsFrameRate_)) + ", finalRange=(" +
-        std::to_string(static_cast<int>(finalRange.min_)) + ", " +
-        std::to_string(static_cast<int>(finalRange.max_)) + ", " +
-        std::to_string(static_cast<int>(finalRange.preferred_)) + ")");
-
+    RS_TRACE_NAME("HgmFrameRateManager:UniProcessData refreshRate:" + std::to_string(currRefreshRate_) +
+        ", rsFrameRate:" + std::to_string(rsFrameRate_) + ", finalRange=(" + std::to_string(finalRange.min_) + ", " +
+        std::to_string(finalRange.max_) + ", " + std::to_string(finalRange.preferred_) + ")");
     for (auto appRange : data.multiAppRange) {
         multiAppFrameRate_[appRange.first] = GetDrawingFrameRate(currRefreshRate_, finalRange);
-        RS_OPTIONAL_TRACE_NAME("multiAppFrameRate:pid=" +
-            std::to_string(static_cast<int>(appRange.first)) + ", appRange=(" +
-            std::to_string(static_cast<int>(appRange.second.min_)) + ", " +
-            std::to_string(static_cast<int>(appRange.second.max_)) + ", " +
-            std::to_string(static_cast<int>(appRange.second.preferred_)) + "), frameRate=" +
-            std::to_string(static_cast<int>(multiAppFrameRate_[appRange.first])));
+        RS_TRACE_NAME("multiAppFrameRate:pid=" + std::to_string(appRange.first) + ", appRange=(" +
+            std::to_string(appRange.second.min_) + ", " + std::to_string(appRange.second.max_) + ", " +
+            std::to_string(appRange.second.preferred_) + "), frameRate=" +
+            std::to_string(multiAppFrameRate_[appRange.first]));
     }
-    uint32_t lcdRefreshRate = HgmCore::Instance().GetScreenCurrentRefreshRate(screenId);
-    if (currRefreshRate_ != lcdRefreshRate) {
+    // [Temporary func]: Switch refresh rate immediately, func will be removed in the future.
+    auto success = ExecuteSwitchRefreshRate(screenId);
+    #ifdef NOT_BUILD_OHOS_SDK 
+    if (success == EXEC_SUCCESS && currRefreshRate_ != hgmCore.GetScreenCurrentRefreshRate(screenId)) {
         std::unordered_map<pid_t, uint32_t> rates;
         for (auto& appRange : data.multiAppRange) {
             rates[appRange.first] = appRange.second.preferred_;
@@ -89,8 +87,7 @@ void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
         rates[GetRealPid()] = currRefreshRate_;
         FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
     }
-    // [Temporary func]: Switch refresh rate immediately, func will be removed in the future.
-    ExecuteSwitchRefreshRate(screenId);
+    #endif
 }
 
 void HgmFrameRateManager::CalcRefreshRate(const ScreenId id, const FrameRateRange& range)
@@ -188,12 +185,12 @@ uint32_t HgmFrameRateManager::GetDrawingFrameRate(const uint32_t refreshRate, co
     return static_cast<uint32_t>(std::round(drawingFps));
 }
 
-void HgmFrameRateManager::ExecuteSwitchRefreshRate(const ScreenId id)
+int32_t HgmFrameRateManager::ExecuteSwitchRefreshRate(const ScreenId id)
 {
     static bool refreshRateSwitch = system::GetBoolParameter("persist.hgm.refreshrate.enabled", true);
     if (!refreshRateSwitch) {
         HGM_LOGD("HgmFrameRateManager: refreshRateSwitch is off, currRefreshRate is %{public}d", currRefreshRate_);
-        return;
+        return HGM_ERROR;
     }
     uint32_t lcdRefreshRate = HgmCore::Instance().GetScreenCurrentRefreshRate(id);
     if (currRefreshRate_ != lcdRefreshRate) {
@@ -204,8 +201,10 @@ void HgmFrameRateManager::ExecuteSwitchRefreshRate(const ScreenId id)
             currRefreshRate_ = lcdRefreshRate;
             HGM_LOGE("HgmFrameRateManager: failed to set refreshRate %{public}d, screenId %{public}d",
                 static_cast<int>(currRefreshRate_), static_cast<int>(id));
+            return HGM_ERROR;
         }
     }
+    return EXEC_SUCCESS;
 }
 
 void HgmFrameRateManager::Reset()

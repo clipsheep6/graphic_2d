@@ -19,7 +19,8 @@
 namespace FRAME_TRACE {
 
 FrameRateReport* FrameRateReport::instance_ = nullptr;
-bool FrameRateReport::SendFrameRates(const std::unordered_map<pid_t, uint32_t>& rates) {
+bool FrameRateReport::SendFrameRates(const std::unordered_map<pid_t, uint32_t>& rates)
+{
     if (rates.empty()) {
         return true;
     }

@@ -23,6 +23,10 @@
 
 #include "hgm_log.h"
 #include "platform/common/rs_system_properties.h"
+#ifdef NOT_BUILD_OHOS_SDK 
+#include "frame_rate_report.h"
+#endif
+#include "sandbox_utils.h"
 
 namespace OHOS::Rosen {
 HgmCore& HgmCore::Instance()
@@ -154,7 +158,11 @@ int32_t HgmCore::SetModeBySettingConfig()
             return HGM_ERROR;
         }
     }
-
+    #ifdef NOT_BUILD_OHOS_SDK 
+    std::unordered_map<pid_t, uint32_t> rates;
+    rates[GetRealPid()] = rateToSwitch;
+    FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
+    #endif
     return EXEC_SUCCESS;
 }
 

@@ -108,7 +108,7 @@ public:
     // common interface
     bool IsHighWebGL()
     {
-        return version_ > WEBGL_1_X;
+        return version_ > WEBGL_1_0;
     }
 
     void SetError(GLenum error)
@@ -211,8 +211,8 @@ public:
     napi_value VertexAttribfv(napi_env env, GLuint index, int count, napi_value dataObj);
     napi_value VertexAttribf(napi_env env, GLuint index, int count, GLfloat* data);
     napi_value GetAttribLocation(napi_env env, napi_value object, const std::string& name);
+    napi_value GetVertexAttrib(napi_env env, GLenum pname, GLuint index, VertexAttribInfo* info);
     napi_value GetVertexAttrib(napi_env env, GLenum pname, GLuint index);
-
     napi_value IsEnabled(napi_env env, GLenum cap);
     napi_value Disable(napi_env env, GLenum cap);
     napi_value Enable(napi_env env, GLenum cap);
@@ -346,7 +346,7 @@ protected:
     const std::vector<GLenum>& GetIntegerParaName();
     const std::vector<GLenum>& GetBoolParaName();
 
-    int version_ = WEBGL_1_X;
+    int version_ = WEBGL_1_0;
     // error process
     GLenum lastError_ = 0;
 
@@ -416,7 +416,7 @@ bool WebGLRenderingContextBaseImpl::AddObject(napi_env env, uint64_t key, napi_v
         LOGE("AddObject %{public}u status %{public}u", static_cast<uint32_t>(key), status);
         return false;
     }
-    LOGI("AddObject %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
+    LOGD("AddObject %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
     objects_[T::objectType].insert({ key, ref });
     return true;
 }
@@ -429,12 +429,12 @@ napi_value WebGLRenderingContextBaseImpl::GetNapiValue(napi_env env, uint64_t ke
     }
     auto it = objects_[T::objectType].find(key);
     if (it == objects_[T::objectType].end()) {
-        LOGI("GetObject %{public}u %{public}u", T::objectType, static_cast<uint32_t>(key));
+        LOGD("GetObject %{public}u %{public}u", T::objectType, static_cast<uint32_t>(key));
         return nullptr;
     }
     napi_value obj;
     napi_status status = napi_get_reference_value(env, it->second, &obj);
-    LOGI("GetNapiValue %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
+    LOGD("GetNapiValue %{public}u %{public}p %{public}u ", T::objectType, obj, static_cast<uint32_t>(key));
     if (status != napi_ok) {
         return nullptr;
     }
@@ -468,7 +468,7 @@ void WebGLRenderingContextBaseImpl::DeleteObject(napi_env env, uint64_t key)
     napi_status status = napi_get_reference_value(env, it->second, &obj);
     objects_[T::objectType].erase(it);
     napi_delete_reference(env, it->second);
-    LOGI("DeleteObject %{public}u %{public}u status %{public}u", T::objectType, static_cast<uint32_t>(key), status);
+    LOGD("DeleteObject %{public}u %{public}u status %{public}u", T::objectType, static_cast<uint32_t>(key), status);
 }
 
 template<class T>

@@ -1811,11 +1811,11 @@ void RSMainThread::Animate(uint64_t timestamp)
 
 void RSMainThread::ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
-    if (!rsTransactionData || RSSystemProperties::GetSingleFrameComposerEnabled()) {
+    if (!rsTransactionData || !RSSystemProperties::GetSingleFrameComposerEnabled()) {
         return;
     }
 
-    GetContext().SetSingleFrameFlag(std::this_thread::get_id());
+    RSSingleFrameComposer::SetSingleFrameFlag(std::this_thread::get_id());
     if (isUniRender_) {
         context_->transactionTimestamp_ = rsTransactionData->GetTimestamp();
         rsTransactionData->ProcessBySingleFrameComposer(*context_);

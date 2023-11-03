@@ -584,7 +584,9 @@ int RSSystemProperties::GetSyncTransactionWaitDelay()
 
 bool RSSystemProperties::GetSingleFrameComposerEnabled()
 {
-    return std::atoi((system::GetParameter("rosen.graphic.singleFrameComposer", "1")).c_str()) != 0;
+    static bool singleFrameComposerEnabled =
+        (std::atoi((system::GetParameter("persist.sys.graphic.singleFrameComposer", "1")).c_str()) != 0);
+    return singleFrameComposerEnabled;
 }
 } // namespace Rosen
 } // namespace OHOS

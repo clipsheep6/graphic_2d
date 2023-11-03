@@ -27,6 +27,30 @@ void RSCanvasNodeCommandHelper::Create(RSContext& context, NodeId id)
 }
 
 #ifndef USE_ROSEN_DRAWING
+bool RSCanvasNodeCommandHelper::AddCmdToSingleFrameComposer(std::shared_ptr<RSCanvasRenderNode> node,
+    std::shared_ptr<DrawCmdList> drawCmds, RSModifierType type)
+#else
+bool RSCanvasNodeCommandHelper::AddCmdToSingleFrameComposer(std::shared_ptr<RSCanvasRenderNode> node,
+    std::shared_ptr<Drawing::DrawCmdList> drawCmds, RSModifierType type)
+#endif
+{
+    if (node->GetNodeIsSingleFrameComposer()) {
+        if (RSSingleFrameComposer::IsShouldSingleFrameComposer()) {
+            node->UpdateRecording(drawCmds, type, true);
+        } else {
+            node->UpdateRecording(drawCmds, type);
+        }
+    } else {
+        if (RSSingleFrameComposer::IsShouldSingleFrameComposer()) {
+            return true;
+        } else {
+            node->UpdateRecording(drawCmds, type);
+        }
+    }
+    return false;
+}
+
+#ifndef USE_ROSEN_DRAWING
 void RSCanvasNodeCommandHelper::UpdateRecording(
     RSContext& context, NodeId id, std::shared_ptr<DrawCmdList> drawCmds, uint16_t modifierType)
 #else
@@ -36,18 +60,12 @@ void RSCanvasNodeCommandHelper::UpdateRecording(
 {
     auto type = static_cast<RSModifierType>(modifierType);
     if (auto node = context.GetNodeMap().GetRenderNode<RSCanvasRenderNode>(id)) {
-        if (node->GetNodeIsSingleFrameComposer()) {
-            if (context.IsShouldSingleFrameComposer()) {
-                node->UpdateRecording(drawCmds, type, true);
-            } else {
-                node->UpdateRecording(drawCmds, type);
+        if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
+            if (AddCmdToSingleFrameComposer(node, drawCmds, type)) {
+                return;
             }
         } else {
-            if (context.IsShouldSingleFrameComposer()) {
-                return;
-            } else {
-                node->UpdateRecording(drawCmds, type);
-            }
+            node->UpdateRecording(drawCmds, type);
         }
         if (!drawCmds) {
             return;

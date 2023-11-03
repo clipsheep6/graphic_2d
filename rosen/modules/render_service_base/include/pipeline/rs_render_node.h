@@ -34,6 +34,7 @@
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_single_frame_composer.h"
 #include "property/rs_properties.h"
 #include "property/rs_property_drawable.h"
 
@@ -456,8 +457,7 @@ protected:
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier);
     RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
     std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
-    std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> singleFrameDrawCmdModifiers_;
-    mutable std::mutex singleFrameDrawMutex_;
+    std::shared_ptr<RSSingleFrameComposer> singleFrameComposer_ = nullptr;
     // if true, it means currently it's in partial render mode and this node is intersect with dirtyRegion
     bool isRenderUpdateIgnored_ = false;
     bool isShadowValidLastFrame_ = false;

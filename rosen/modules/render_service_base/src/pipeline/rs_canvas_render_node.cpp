@@ -264,58 +264,6 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
     canvas.RestoreEnv();
 }
 
-bool RSCanvasRenderNode::FindSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
-{
-    for (auto iter = modifierList.begin(); iter != modifierList.end(); ++iter) {
-        if ((*iter)->GetSingleFrameModifier()) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void RSCanvasRenderNode::EraseSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
-{
-    for (auto iter = modifierList.begin(); iter != modifierList.end();) {
-        if ((*iter)->GetSingleFrameModifier()) {
-            iter = modifierList.erase(iter);
-        } else {
-            ++iter;
-        }
-    }
-}
-
-void RSCanvasRenderNode::SingleFrameModifierAdd(
-    std::list<std::shared_ptr<RSRenderModifier>>& singleFrameModifierList,
-    std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
-{
-    for (auto iter = singleFrameModifierList.begin(); iter != singleFrameModifierList.end(); ++iter) {
-        RS_TRACE_NAME("Add SingleFrame DrawCmdModifier ID " + std::to_string((*iter)->GetDrawCmdListId()));
-        modifierList.emplace_back(*iter);
-    }
-}
-
-bool RSCanvasRenderNode::SingleFrameModifierAddToList(RSModifierType type,
-    std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
-{
-    bool needSkip = false;
-    if (GetNodeIsSingleFrameComposer()) {
-        EraseSingleFrameModifier(modifierList);
-        {
-            std::lock_guard<std::mutex> lock(singleFrameDrawMutex_);
-            auto iter = singleFrameDrawCmdModifiers_.find(type);
-            if (iter != singleFrameDrawCmdModifiers_.end() && !iter->second.empty()) {
-                SingleFrameModifierAdd(iter->second, modifierList);
-                singleFrameDrawCmdModifiers_.erase(type);
-            }
-        }
-        if (modifierList.size() > 1 && FindSingleFrameModifier(modifierList)) {
-            needSkip = true;
-        }
-    }
-    return needSkip;
-}
-
 void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
 {
     auto itr = drawCmdModifiers_.find(type);
@@ -323,9 +271,19 @@ void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModi
         return;
     }
 
-    bool needSkip = SingleFrameModifierAddToList(type, itr->second);
-    for (const auto& modifier : itr->second) {
-        if (!(needSkip && !modifier->GetSingleFrameModifier())) {
+    if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
+        bool needSkip = false;
+        if (GetNodeIsSingleFrameComposer() && singleFrameComposer_ != nullptr) {
+            needSkip = singleFrameComposer_->SingleFrameModifierAddToList(type, itr->second);
+        }
+        for (const auto& modifier : itr->second) {
+            if (singleFrameComposer_ != nullptr && singleFrameComposer_->SingleFrameIsNeedSkip(needSkip, modifier)) {
+                continue;
+            }
+            modifier->Apply(context);
+        }
+    } else {
+        for (const auto& modifier : itr->second) {
             modifier->Apply(context);
         }
     }

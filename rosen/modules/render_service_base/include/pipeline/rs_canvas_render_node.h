@@ -83,11 +83,6 @@ private:
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [end]
     void ExecuteBlendMode(RSPaintFilterCanvas& canvas, bool isBlendMode);
-    bool FindSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
-    void EraseSingleFrameModifier(std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
-    void SingleFrameModifierAdd(std::list<std::shared_ptr<RSRenderModifier>>& singleFrameModifierList,
-        std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
-    bool SingleFrameModifierAddToList(RSModifierType type, std::list<std::shared_ptr<RSRenderModifier>>& modifierList);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;

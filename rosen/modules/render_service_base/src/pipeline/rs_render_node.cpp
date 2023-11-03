@@ -847,16 +847,12 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier>& modifier
     if (!modifier) {
         return;
     }
-    if (GetNodeIsSingleFrameComposer() && isSingleFrameComposer) {
-        if (modifier->GetType() >= RSModifierType::CUSTOM) {
-            modifier->SetSingleFrameModifier(true);
-            RS_TRACE_NAME("Add modifier DrawCmdListId " + std::to_string(modifier->GetDrawCmdListId()));
-            {
-                std::lock_guard<std::mutex> lock(singleFrameDrawMutex_);
-                singleFrameDrawCmdModifiers_.clear();
-                singleFrameDrawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
-            }
+    if (RSSystemProperties::GetSingleFrameComposerEnabled() &&
+        GetNodeIsSingleFrameComposer() && isSingleFrameComposer) {
+        if (singleFrameComposer_ == nullptr) {
+            singleFrameComposer_ = std::make_shared<RSSingleFrameComposer>();
         }
+        singleFrameComposer_->SingleFrameAddModifier(modifier);
         return;
     }
     if (modifier->GetType() == RSModifierType::BOUNDS || modifier->GetType() == RSModifierType::FRAME) {

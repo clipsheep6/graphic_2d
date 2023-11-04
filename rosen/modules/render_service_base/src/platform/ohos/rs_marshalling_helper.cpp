@@ -1778,7 +1778,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
         }
         val->SetUpImageData(imageData, imageSize);
         if (isMal) {
-            free(imageData);
+            free(const_cast<void*>(imageData));
         }
     }
 

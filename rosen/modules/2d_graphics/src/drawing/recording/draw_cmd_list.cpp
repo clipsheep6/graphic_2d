@@ -94,7 +94,7 @@ void DrawCmdList::UnmarshallingOps()
         auto* curOpItemPtr = static_cast<OpItem*>(itemPtr);
         if (curOpItemPtr != nullptr) {
             uint32_t type = curOpItemPtr->GetType();
-            opItems_.emplace_back(std::make_pair(type, player.Unmarshalling(type, itemPtr)));
+            opItems_.emplace_back(player.Unmarshalling(type, itemPtr));
             offset = curOpItemPtr->GetNextOpItemOffset();
         } else {
             LOGE("DrawCmdList::UnmarshallingOps failed, opItem is nullptr");
@@ -119,8 +119,8 @@ void DrawCmdList::Playback(Canvas& canvas, const Rect* rect) const
     CanvasPlayer player = { canvas, *this, tmpRect};
 
     for (auto iter = opItems_.begin(); iter != opItems_.end(); ++iter) {
-        if ((*iter).second != nullptr) {
-            if (!player.Playback((*iter).first, (*iter).second)) {
+        if ((*iter) != nullptr) {
+            if (!player.Playback((*iter)->GetType(), (*iter))) {
                 LOGE("DrawCmdList::Playback failed!");
                 break;
             }

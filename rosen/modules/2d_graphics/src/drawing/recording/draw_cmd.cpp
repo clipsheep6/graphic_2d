@@ -50,7 +50,7 @@
 constexpr uint32_t ADDRSIZE = sizeof(uint32_t *);
 #define COPY_OPITEN_AND_RETURN_RET_LOG(T, dest, from, ret, fmt, ...)  \
     do {                                                              \
-        uint32_t size_ = sizeof(T) - ADDRSIZE;              \
+        uint32_t size_ = sizeof(T) - ADDRSIZE;                        \
         if (memcpy_s(static_cast<char*>(static_cast<void*>(dest)) + ADDRSIZE, size_, static_cast<char*>(from) + ADDRSIZE, size_) != EOK) {\
             LOGE(fmt, ##__VA_ARGS__);                                 \
             return ret;                                               \

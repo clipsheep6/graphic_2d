@@ -49,6 +49,11 @@ bool RSSystemProperties::GetUniRenderEnabled()
     return isUniRenderEnabled_;
 }
 
+bool RSSystemProperties::GetSkipContainerEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetRenderNodeTraceEnabled()
 {
     return {};

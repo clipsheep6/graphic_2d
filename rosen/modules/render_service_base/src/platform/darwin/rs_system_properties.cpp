@@ -59,6 +59,11 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetSkipContainerEnabled()
+{
+    return false;
+}
+
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
 {
     return {};

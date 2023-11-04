@@ -44,6 +44,10 @@ bool RSBackgroundDrawable::forceBgAntiAlias_ = true;
 // Bounds geometry
 void RSBoundsGeometryDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
+    if (node.IsParentContainer() && node.IsApplyEnable()) {
+        node.ApplyParentContainerBounds(canvas);
+        return;
+    }
 #ifndef USE_ROSEN_DRAWING
     canvas.concat(node.GetRenderProperties().GetBoundsGeometry()->GetMatrix());
 #else

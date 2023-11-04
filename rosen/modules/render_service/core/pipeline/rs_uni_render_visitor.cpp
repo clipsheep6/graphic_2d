@@ -68,6 +68,9 @@ constexpr int ROTATION_90 = 90;
 constexpr int ROTATION_270 = 270;
 static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
+static const std::string SCB_DESKTOP = "SCBDesktop";
+static const std::string SCB_SCREENLOCK = "SCBScreenLock";
+static const std::string SCB_VOLUMEPANEL = "SCBVolumePanel";
 static std::map<NodeId, uint32_t> cacheRenderNodeMap = {};
 static uint32_t cacheReuseTimes = 0;
 static std::mutex cacheRenderNodeMapMutex;
@@ -138,6 +141,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
         (partialRenderType_ != PartialRenderType::SET_DAMAGE) && !isRegionDebugEnabled_;
     isQuickSkipPreparationEnabled_ = (quickSkipPrepareType_ != QuickSkipPrepareType::DISABLED);
     isDrawingCacheEnabled_ = RSSystemParameters::GetDrawingCacheEnabled();
+    isSkipContainerEnabled_ = RSSystemProperties::GetSkipContainerEnabled();
     RSTagTracker::UpdateReleaseGpuResourceEnable(RSSystemProperties::GetReleaseGpuResourceEnabled());
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
     if (RSDrivenRenderManager::GetInstance().GetDrivenRenderEnabled()) {
@@ -310,6 +314,7 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
             if (UNLIKELY(child->GetSharedTransitionParam().has_value())) {
                 firstVisitedCache_ = INVALID_NODEID;
                 PrepareSharedTransitionNode(*child);
+                hasSharedTransitionNode_ = true;
             }
             curDirty_ = child->IsDirty();
             child->Prepare(shared_from_this());
@@ -506,6 +511,7 @@ void RSUniRenderVisitor::HandleColorGamuts(RSDisplayRenderNode& node, const sptr
 
 void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
 {
+    hasSharedTransitionNode_ = false;
     currentVisitDisplay_ = node.GetScreenId();
     displayHasSecSurface_.emplace(currentVisitDisplay_, false);
     displayHasSkipSurface_.emplace(currentVisitDisplay_, false);
@@ -1826,6 +1832,8 @@ sk_sp<SkImage> RSUniRenderVisitor::GetCacheImageFromMirrorNode(std::shared_ptr<R
 
 void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
+    bool isSkipContainerEnabled = isSkipContainerEnabled_;
+    isSkipContainerEnabled_ = isSkipContainerEnabled_ && !hasSharedTransitionNode_;
     if (mirroredDisplays_.size() == 0) {
         node.SetCacheImgForCapture(nullptr);
     }
@@ -2390,6 +2398,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         });
     }
     RSMainThread::Instance()->ClearGpuCache();
+    isSkipContainerEnabled_ = isSkipContainerEnabled;
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode end");
 }
 
@@ -3027,7 +3036,9 @@ void RSUniRenderVisitor::CheckAndSetNodeCacheType(RSRenderNode& node)
             node.UpdateCompletedCacheSurface();
         }
     } else if (isDrawingCacheEnabled_ && GenerateNodeContentCache(node)) {
+        isCaching_ = true;
         UpdateCacheRenderNodeMapWithBlur(node);
+        isCaching_ = false;
     } else {
         if (node.GetCacheType() != CacheType::NONE) {
             node.SetCacheType(CacheType::NONE);
@@ -3302,6 +3313,8 @@ bool RSUniRenderVisitor::IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, i
 
 void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
+    bool isSkipContainerEnabled = isSkipContainerEnabled_;
+    isBlackList_ = false;
     if (isUIFirst_ && isSubThread_) {
         if (auto parentNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node.GetParent().lock()) ||
             (SceneBoardJudgement::IsSceneBoardEnabled() && (node.IsLeashWindow() || (node.IsAppWindow() &&
@@ -3358,6 +3371,12 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     } else {
         node.UpdateFilterCacheStatusWithVisible(true);
     }
+    if ((node.GetName().find(SCB_DESKTOP) != std::string::npos) ||
+        (node.GetName().find(SCB_VOLUMEPANEL) != std::string::npos) ||
+        (node.GetName().find(SCB_SCREENLOCK) != std::string::npos)) {
+        isBlackList_ = true;
+    }
+    isSkipContainerEnabled_ = isSkipContainerEnabled_ && !isBlackList_;
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     if (node.IsMainWindowType()) {
         curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
@@ -3563,6 +3582,11 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         canvas_->SetVisibleRect(Drawing::Rect(0, 0, 0, 0));
 #endif
 
+        if (isSkipContainerEnabled_) {
+            RS_LOGD("surfaceNode:%{public}s, skipContainerNodes/ProcessedNodes:%{public}u/%{public}u",
+            node.GetName().c_str(), skippedPureContainerNode_, processedCanvasNodeInCurrentSurface_);
+            skippedPureContainerNode_ = 0;
+        }
         // count processed canvas node
         RS_OPTIONAL_TRACE_NAME_FMT("%s PureContainerNode/ProcessedNodes: %u/%u", node.GetName().c_str(),
             processedPureContainerNode_, processedCanvasNodeInCurrentSurface_);
@@ -3573,6 +3597,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         isSubNodeOfSurfaceInProcess_ = isSubNodeOfSurfaceInProcess;
         // release full children list used by sub thread
     }
+    isSkipContainerEnabled_ = isSkipContainerEnabled;
 }
 
 void RSUniRenderVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
@@ -3820,12 +3845,30 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
         " ,CacheRenderNodeMapCnt: " + std::to_string(cacheReuseTimes));
 }
 
+bool RSUniRenderVisitor::NodeContentCacheQuickCheck(RSCanvasRenderNode& node)
+{
+    if (node.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE ||
+        (node.GetCacheType() == CacheType::NONE && cacheRenderNodeMap.count(node.GetId()) > 0)) {
+        return false;
+    }
+    return true;
+}
+
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
     processedCanvasNodeInCurrentSurface_++;
     if (!node.ShouldPaint()) {
         return;
     }
+    if (isSkipContainerEnabled_ && !isCaching_ && node.IsSkipEnable()) {
+        bool isNodeHasCache = isDrawingCacheEnabled_ && NodeContentCacheQuickCheck(node);
+        if (!isNodeHasCache) {
+            ProcessChildren(node);
+            skippedPureContainerNode_++;
+            return;
+        }
+    }
+    node.SetIsApplyEnable(isSkipContainerEnabled_ && !isCaching_);
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     if ((isOpDropped_ && (curSurfaceNode_ != nullptr)) || isCanvasNodeSkipDfxEnabled_) {
         // If all the child nodes have drawing areas that do not exceed the current node, then current node

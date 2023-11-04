@@ -128,6 +128,7 @@ public:
     static bool GetHardwareComposerEnabled();
     static bool GetAFBCEnabled();
     static ReleaseGpuResourceType GetReleaseGpuResourceEnabled();
+    static bool GetSkipContainerEnabled();
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();

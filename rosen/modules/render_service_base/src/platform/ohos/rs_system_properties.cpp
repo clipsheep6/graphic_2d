@@ -173,6 +173,13 @@ bool RSSystemProperties::GetHardwareComposerEnabled()
     return hardwareComposerEnabled;
 }
 
+bool RSSystemProperties::GetSkipContainerEnabled()
+{
+    static bool value =
+        std::atoi((system::GetParameter("rosen.skipcontainer.enabled", "0")).c_str()) != 0;
+    return value;
+}
+
 bool RSSystemProperties::GetAFBCEnabled()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.afbc.enabled", "1");

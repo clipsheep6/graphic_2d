@@ -205,7 +205,7 @@ void RSRenderService::DumpHelpInfo(std::string& dumpString) const
 {
     dumpString.append("------Graphic2D--RenderSerice ------\n")
         .append("Usage:\n")
-        .append(" h                             ")
+        .append("h                              ")
         .append("|help text for the tool\n")
         .append("screen                         ")
         .append("|dump all screen infomation in the system\n")
@@ -215,9 +215,9 @@ void RSRenderService::DumpHelpInfo(std::string& dumpString) const
         .append("|dump the fps info of composer\n")
         .append("[surface name] fps             ")
         .append("|dump the fps info of surface\n")
-        .append("composer fpsClear                   ")
+        .append("composer fpsClear              ")
         .append("|clear the fps info of composer\n")
-        .append("[surface name] fpsClear             ")
+        .append("[surface name] fpsClear        ")
         .append("|clear the fps info of surface\n")
         .append("nodeNotOnTree                  ")
         .append("|dump nodeNotOnTree info\n")
@@ -234,7 +234,11 @@ void RSRenderService::DumpHelpInfo(std::string& dumpString) const
         .append("trimMem cpu/gpu/shader         ")
         .append("|release Cache\n")
         .append("surfacenode [id]               ")
-        .append("|dump node info\n");
+        .append("|dump node info\n")
+        .append("fpsCount                       ")
+        .append("|dump the fps count info\n")
+        .append("clearFpsCount                  ")
+        .append("|clear the fps count info\n")
 }
 
 void RSRenderService::FPSDUMPProcess(std::unordered_set<std::u16string>& argSets,
@@ -298,6 +302,20 @@ void RSRenderService::DumpRenderServiceTree(std::string& dumpString) const
     dumpString.append("\n");
     dumpString.append("-- RenderServiceTreeDump: \n");
     mainThread_->RenderServiceTreeDump(dumpString);
+}
+
+void RSRenderService::DumpFpsCount(std::string& dumpString) const
+{
+    dumpString.append("\n");
+    dumpString.append("-- FpsCount: \n");
+    mainThread_->FpsCount(dumpString);
+}
+
+void RSRenderService::DumpClearFpsCount(std::string& dumpString) const
+{
+    dumpString.append("\n");
+    dumpString.append("-- ClearFpsCount: \n");
+    mainThread_->ClearFpsCount(dumpString);
 }
 
 void RSRenderService::DumpSurfaceNode(std::string& dumpString, NodeId id) const
@@ -401,6 +419,8 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     std::u16string arg11(u"dumpMem");
     std::u16string arg12(u"surfacenode");
     std::u16string arg13(u"fpsClear");
+    std::u16string arg14(u"fpsCount");
+    std::u16string arg15(u"clearFpsCount");
     if (argSets.count(arg9) || argSets.count(arg1) != 0) {
         auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
         if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
@@ -427,7 +447,7 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpRenderServiceTree(dumpString); }).wait();
     }
-    if (argSets.count(arg9) ||argSets.count(arg7) != 0) {
+    if (argSets.count(arg9) || argSets.count(arg7) != 0) {
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpRSEvenParam(dumpString); }).wait();
     }
@@ -452,6 +472,14 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     if (argSets.size() == 0 || argSets.count(arg8) != 0 || dumpString.empty()) {
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpHelpInfo(dumpString); }).wait();
+    }
+    if (argSets.count(arg9) || argSets.count(arg14) != 0) {
+        mainThread_->ScheduleTask(
+            [this, &dumpString]() { DumpFpsCount(dumpString); }).wait();
+    }
+    if (argSets.count(arg15) != 0) {
+        mainThread_->ScheduleTask(
+            [this, &dumpString]() { DumpClearFpsCount(dumpString); }).wait();
     }
 }
 } // namespace Rosen

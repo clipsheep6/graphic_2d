@@ -271,6 +271,26 @@ int32_t RSInterfaces::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
     return renderServiceClient_->GetScreenGamutMap(id, mode);
 }
 
+int32_t RSInterfaces::GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat)
+{
+    return renderServiceClient_->GetPixelFormat(id, pixelFormat);
+}
+
+int32_t RSInterfaces::SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat)
+{
+    return renderServiceClient_->SetPixelFormat(id, pixelFormat);
+}
+
+int32_t RSInterfaces::GetIsHDRScreen(ScreenId id, bool& isHDRScreen)
+{
+    return renderServiceClient_->GetIsHDRScreen(id, isHDRScreen);
+}
+
+int32_t RSInterfaces::SetIsHDRScreen(ScreenId id, bool isHDRScreen)
+{
+    return renderServiceClient_->SetIsHDRScreen(id, isHDRScreen);
+}
+
 std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
     const std::string& name,
     const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)

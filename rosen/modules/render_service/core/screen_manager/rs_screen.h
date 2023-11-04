@@ -34,6 +34,8 @@ struct VirtualScreenConfigs {
     uint32_t height = 0;
     sptr<Surface> surface = nullptr;
     int32_t flags = 0; // reserve flag.
+    bool isHDRScreen = false;
+    GraphicPixelFormat pixelFormat = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
 };
 
 class RSScreen {
@@ -77,6 +79,10 @@ public:
     virtual void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) = 0;
     virtual uint32_t GetScreenSkipFrameInterval() const = 0;
     virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
+    virtual void SetIsHDRScreen(bool isHDRScreen) = 0;
+    virtual bool IsHDRScreen() const = 0;
+    virtual int32_t SetPixelFormat(GraphicPixelFormat pixelFormat) = 0;
+    virtual GraphicPixelFormat GetPixelFormat() const = 0;
 };
 
 namespace impl {
@@ -129,6 +135,10 @@ public:
     void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) override;
     uint32_t GetScreenSkipFrameInterval() const override;
     void SetScreenVsyncEnabled(bool enabled) const override;
+    void SetIsHDRScreen(bool isHDRScreen) override;
+    bool IsHDRScreen() const override;
+    int32_t SetPixelFormat(GraphicPixelFormat pixelFormat) override;
+    GraphicPixelFormat GetPixelFormat() const override;
 
 private:
     // create hdiScreen and get some information from drivers.
@@ -153,6 +163,7 @@ private:
     int32_t height_ = 0;
 
     bool isVirtual_ = true;
+    bool isHDRScreen_ = true;
     std::shared_ptr<HdiOutput> hdiOutput_; // has value if the screen is physical
     std::unique_ptr<HdiScreen> hdiScreen_; // has value if the screen is physical
     std::vector<GraphicDisplayModeInfo> supportedModes_;
@@ -160,6 +171,7 @@ private:
     GraphicHDRCapability hdrCapability_;
     sptr<Surface> producerSurface_;  // has value if the screen is virtual
     GraphicDispPowerStatus powerStatus_ = GraphicDispPowerStatus::GRAPHIC_POWER_STATUS_ON;
+    GraphicPixelFormat pixelFormat_;
 
     std::vector<ScreenColorGamut> supportedVirtualColorGamuts_ = {
         COLOR_GAMUT_SRGB,

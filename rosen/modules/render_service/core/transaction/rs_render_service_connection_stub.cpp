@@ -737,6 +737,62 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteParcelable(&screenHDRCapability);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_PIXEL_FORMAT): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            GraphicPixelFormat pixelFormat;
+            int32_t result = GetPixelFormat(id, pixelFormat);
+            reply.WriteInt32(result);
+            if (result != StatusCode::SUCCESS) {
+                break;
+            }
+            reply.WriteUint32(static_cast<uint32_t>(pixelFormat));
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_PIXEL_FORMAT): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            GraphicPixelFormat pixelFormat = static_cast<GraphicPixelFormat>(data.ReadInt32());
+            int32_t result = SetPixelFormat(id, pixelFormat);
+            reply.WriteInt32(result);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_IS_HDR_SCREEN): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            bool isHDRScreen;
+            int32_t result = GetIsHDRScreen(id, isHDRScreen);
+            reply.WriteInt32(result);
+            if (result != StatusCode::SUCCESS) {
+                break;
+            }
+            reply.WriteUint32(static_cast<uint32_t>(isHDRScreen));
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_IS_HDR_SCREEN): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            bool isHDRScreen = static_cast<bool>(data.ReadInt32());
+            int32_t result = SetIsHDRScreen(id, isHDRScreen);
+            reply.WriteInt32(result);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SCREEN_TYPE): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {

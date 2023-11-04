@@ -52,7 +52,9 @@ RSScreen::RSScreen(const VirtualScreenConfigs &configs)
       height_(configs.height),
       isVirtual_(true),
       producerSurface_(configs.surface),
-      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN)
+      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN),
+      pixelFormat_(configs.pixelFormat),
+      isHDRScreen_(configs.isHDRScreen)
 {
     hdrCapability_.formatCount = 0;
 }
@@ -662,6 +664,32 @@ void RSScreen::SetScreenVsyncEnabled(bool enabled) const
         hdiScreen_->SetScreenVsyncEnabled(enabled);
     }
 }
+
+void SetIsHDRScreen(bool isHDRScreen){
+    if (!IsVirtual()) {
+        HiLog::Warn(LOG_LABEL, "%{public}s: physical screen not support SetIsHDRScreen.\n", __func__);
+        return;
+    }
+    isHDRScreen_ = isHDRScreen;
+}
+
+bool IsHDRScreen() const{
+    return isHDRScreen_;
+}
+
+int32_t SetPixelFormat(GraphicPixelFormat pixelFormat){
+    if (!IsVirtual()) {
+        HiLog::Warn(LOG_LABEL, "%{public}s: physical screen not support SetPixelFormat.\n", __func__);
+        return;
+    }
+    pixelFormat_ = pixelFormat;
+    return StatusCode::SUCCESS;
+}
+
+GraphicPixelFormat GetPixelFormat() const{
+    return pixelFormat_;
+}
+
 } // namespace impl
 } // namespace Rosen
 } // namespace OHOS

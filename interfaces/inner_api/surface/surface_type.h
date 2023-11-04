@@ -358,6 +358,7 @@ using BufferRequestConfig = struct BufferRequestConfig {
     int32_t format; // GraphicPixelFormat
     uint64_t usage;
     int32_t timeout;
+    bool isHDRScreen;
     GraphicColorGamut colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
     GraphicTransformType transform = GraphicTransformType::GRAPHIC_ROTATE_NONE;
     bool operator ==(const struct BufferRequestConfig &config) const

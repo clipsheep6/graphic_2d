@@ -43,12 +43,10 @@ namespace {
 class VulkanCleanupHelper {
 public:
     VulkanCleanupHelper(RsVulkanContext& vkContext, VkImage image, VkDeviceMemory memory)
-        : fDevice(vkContext.GetDevice())
-        , fImage(image)
-        , fMemory(memory)
-        , fDestroyImage(vkContext.vkDestroyImage)
-        , fFreeMemory(vkContext.vkFreeMemory) {}
-    ~VulkanCleanupHelper() {
+        : fDevice(vkContext.GetDevice()), fImage(image), fMemory(memory), fDestroyImage(vkContext.vkDestroyImage),
+        fFreeMemory(vkContext.vkFreeMemory) {}
+    ~VulkanCleanupHelper()
+    {
         fDestroyImage(fDevice, fImage, nullptr);
         fFreeMemory(fDevice, fMemory, nullptr);
     }
@@ -219,7 +217,6 @@ bool MakeFromNativeWindowBuffer(sk_sp<GrDirectContext> skContext, NativeWindowBu
     image_info.fSampleCount = 1;
     image_info.fLevelCount = 1;
 
-    // TODO: Setup the stencil buffer and the sampleCnt.
     GrBackendRenderTarget backend_render_target(width, height, 0,
                                                 image_info);
     SkSurfaceProps props(0, SkPixelGeometry::kUnknown_SkPixelGeometry);

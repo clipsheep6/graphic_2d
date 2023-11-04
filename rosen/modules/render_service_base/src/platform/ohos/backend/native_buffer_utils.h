@@ -27,13 +27,10 @@ void delete_vk_image(void* context);
 class VulkanCleanupHelper {
 public:
     VulkanCleanupHelper(RsVulkanContext& vkContext, VkImage image, VkDeviceMemory memory)
-        : fDevice(vkContext.GetDevice())
-        , fImage(image)
-        , fMemory(memory)
-        , fDestroyImage(vkContext.vkDestroyImage)
-        , fFreeMemory(vkContext.vkFreeMemory)
-        , fRefCnt(1) {}
-    ~VulkanCleanupHelper() {
+        : fDevice(vkContext.GetDevice()), fImage(image), fMemory(memory), fDestroyImage(vkContext.vkDestroyImage),
+        fFreeMemory(vkContext.vkFreeMemory), fRefCnt(1) {}
+    ~VulkanCleanupHelper()
+    {
         fDestroyImage(fDevice, fImage, nullptr);
         fFreeMemory(fDevice, fMemory, nullptr);
     }
@@ -46,7 +43,7 @@ public:
 
     void UnRef()
     {
-        if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
+        if (fRefCnt.fetch_add(-1, std::memory_order_acq_rel) == 1) {
             delete this;
         }
     }

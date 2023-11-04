@@ -58,7 +58,6 @@ struct NativeSurfaceInfo {
         skSurface = nullptr;
         NativeWindowCancelBuffer(window, nativeWindowBuffer);
     }
-
 };
 #endif
 class RSSurfaceOhosVulkan : public RSSurfaceOhos {

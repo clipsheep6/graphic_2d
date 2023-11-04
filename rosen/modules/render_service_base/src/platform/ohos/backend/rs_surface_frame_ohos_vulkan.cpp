@@ -20,7 +20,7 @@ namespace OHOS {
 namespace Rosen {
 
 RSSurfaceFrameOhosVulkan::RSSurfaceFrameOhosVulkan(sk_sp<SkSurface> surface, int32_t width,
-     int32_t height, int32_t bufferAge)
+    int32_t height, int32_t bufferAge)
     : surface_(surface), width_(width), height_(height), bufferAge_(bufferAge)
 {
 }

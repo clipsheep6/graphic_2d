@@ -89,6 +89,48 @@ enum OH_NativeBuffer_Format {
 };
 
 /**
+ * @brief Indicates the color space of a native buffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 10
+ * @version 1.0
+ */
+enum OH_NativeBuffer_ColorSpace {
+    OH_COLORSPACE_NONE,
+    OH_COLORSPACE_BT601_EBU_FULL,
+    OH_COLORSPACE_BT601_SMPLE_C_FULL,
+    OH_COLORSPACE_BT709_FULL,
+    OH_COLORSPACE_BT2020_HLG_FULL,
+    OH_COLORSPACE_BT2020_PQ_FULL,
+    OH_COLORSPACE_BT601_EBU_LIMIT,
+    OH_COLORSPACE_BT601_SMPLE_C_LIMIT,
+    OH_COLORSPACE_BT709_LIMIT,
+    OH_COLORSPACE_BT2020_HLG_LIMIT,
+    OH_COLORSPACE_BT2020_PQ_LIMIT,
+    OH_COLORSPACE_SRGB_FULL,
+    OH_COLORSPACE_P3_FULL,
+    OH_COLORSPACE_P3_HLG_FULL,
+    OH_COLORSPACE_P3_PQ_FULL,
+    OH_COLORSPACE_ADOBERGB_FULL,
+    OH_COLORSPACE_SRGB_LIMITED,
+    OH_COLORSPACE_P3_LIMITED,
+    OH_COLORSPACE_P3_HLG_LIMITED,
+    OH_COLORSPACE_P3_PQ_LIMITED,
+    OH_COLORSPACE_ADOBERGB_LIMITED,
+    OH_COLORSPACE_LINEAR_SRGB,
+    OH_COLORSPACE_LINEAR_BT709,
+    OH_COLORSPACE_LINEAR_P3,
+    OH_COLORSPACE_LINEAR_BT2020,
+    OH_COLORSPACE_DISPLAY_SRGB,
+    OH_COLORSPACE_DISPLAY_P3_SRGB,
+    OH_COLORSPACE_DISPLAY_P3_HLG,
+    OH_COLORSPACE_DISPLAY_P3_PQ,
+    OH_COLORSPACE_DISPLAY_BT2020_SRGB,
+    OH_COLORSPACE_DISPLAY_BT2020_HLG,
+    OH_COLORSPACE_DISPLAY_BT2020_PQ,
+};
+
+/**
  * @brief <b>OH_NativeBuffer</b> config. \n
  * Used to allocating new <b>OH_NativeBuffer</b> andquery parameters if existing ones.
  *
@@ -187,6 +229,17 @@ int32_t OH_NativeBuffer_Unmap(OH_NativeBuffer *buffer);
  */
 uint32_t OH_NativeBuffer_GetSeqNum(OH_NativeBuffer *buffer);
 
+/**
+ * @brief Set the color space of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the color space of native buffer, see <b>OH_NativeBuffer_ColorSpace</b>.
+ * @return Returns the sequence number, which is unique for each OH_NativeBuffer.
+ * @since 10
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_SetColorSpace(OH_NativeBuffer *buffer, OH_NativeBuffer_ColorSpace colorSpace);
 #ifdef __cplusplus
 }
 #endif

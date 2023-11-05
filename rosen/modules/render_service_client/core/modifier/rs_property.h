@@ -16,6 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_PROPERTY_H
 #define RENDER_SERVICE_CLIENT_CORE_MODIFIER_RS_PROPERTY_H
 
+#include <optional>
 #include <type_traits>
 #include <unistd.h>
 
@@ -59,6 +60,27 @@
 
 namespace OHOS {
 namespace Rosen {
+// used to determine when the spring animation ends visually
+enum class ThresholdType {
+    LAYOUT, // 0.5f for layout property like position, as the difference in properties by 0.5 appears visually unchanged
+    COARSE, // 1.0f / 256.0f
+    MEDIUM, // 1.0f / 1000.0f
+    FINE,   // 1.0f / 3072.0f
+    COLOR,  // 0.0f
+    DEFAULT, // 1.0f / 256.0f
+    ZERO,    // 0.0f for nonanimatable property
+};
+
+namespace {
+constexpr float DEFAULT_NEAR_ZERO_THRESHOLD = 1.0f / 256.0f;
+constexpr float FLOAT_NEAR_ZERO_COARSE_THRESHOLD = 1.0f / 256.0f;
+constexpr float FLOAT_NEAR_ZERO_MEDIUM_THRESHOLD = 1.0f / 1000.0f;
+constexpr float FLOAT_NEAR_ZERO_FINE_THRESHOLD = 1.0f / 3072.0f;
+constexpr float COLOR_NEAR_ZERO_THRESHOLD = 0.0f;
+constexpr float LAYOUT_NEAR_ZERO_THRESHOLD = 0.5f;
+constexpr float ZERO = 0.0f;
+} // namespace
+
 template<class...>
 struct make_void { using type = void; };
 template<class... T>
@@ -91,6 +113,12 @@ public:
         return id_;
     }
 
+    virtual void SetThresholdType(ThresholdType thresholdType) {}
+    virtual float GetThreshold() const
+    {
+        return 0.0f;
+    }
+
 protected:
     virtual void SetIsCustom(bool isCustom) {}
 
@@ -112,6 +140,8 @@ protected:
     {
         return RSRenderPropertyType::INVALID;
     }
+
+    float GetThresholdByModifierType() const;
 
     virtual void UpdateOnAllAnimationFinish() {}
 
@@ -139,6 +169,8 @@ protected:
     {
         return false;
     }
+
+    float GetThresholdByThresholdType(ThresholdType thresholdType) const;
 
     PropertyId id_;
     RSModifierType type_ { RSModifierType::INVALID };
@@ -507,11 +539,22 @@ protected:
         }
     }
 
+    void SetThresholdType(ThresholdType thresholdType) override
+    {
+        thresholdType_ = thresholdType;
+    }
+
+    float GetThreshold() const override
+    {
+        return RSProperty<T>::GetThresholdByThresholdType(thresholdType_);
+    }
+
     T showingValue_ {};
     std::shared_ptr<RSRenderAnimatableProperty<T>> renderProperty_;
     int runningPathNum_ { 0 };
     std::shared_ptr<RSMotionPathOption> motionPathOption_ {};
     std::function<void(T)> propertyChangeListener_;
+    ThresholdType thresholdType_ {ThresholdType::DEFAULT};
 
 private:
     RSRenderPropertyType GetPropertyType() const override

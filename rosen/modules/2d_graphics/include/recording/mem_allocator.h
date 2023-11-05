@@ -103,9 +103,9 @@ public:
     MemAllocator(const MemAllocator&) = default;
     MemAllocator& operator=(MemAllocator&&) = delete;
     MemAllocator& operator=(const MemAllocator&) = default;
+    void Clear();
 private:
     bool Resize(size_t size);
-    void Clear();
 
     bool isReadOnly_;
     size_t capacity_;   // The size of the memory block

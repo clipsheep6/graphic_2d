@@ -40,6 +40,8 @@ public:
     virtual bool GetHardwareVSyncStatus() const = 0;
     virtual void RegSetScreenVsyncEnabledCallback(SetScreenVsyncEnabledCallback cb) = 0;
     virtual void SetScreenVsyncEnabledInRSMainThread(bool enabled) = 0;
+    virtual int64_t GetHardwarePeriod() const = 0;
+    virtual void SetPendingPeriod(int64_t period) = 0;
 protected:
     SetScreenVsyncEnabledCallback setScreenVsyncEnabledCallback_ = nullptr;
 };
@@ -65,6 +67,8 @@ public:
     virtual bool GetHardwareVSyncStatus() const override;
     virtual void RegSetScreenVsyncEnabledCallback(SetScreenVsyncEnabledCallback cb) override;
     virtual void SetScreenVsyncEnabledInRSMainThread(bool enabled) override;
+    virtual int64_t GetHardwarePeriod() const override;
+    virtual void SetPendingPeriod(int64_t period) override;
 
 private:
     friend class OHOS::Rosen::VSyncSampler;
@@ -97,6 +101,7 @@ private:
     static std::once_flag createFlag_;
     static sptr<OHOS::Rosen::VSyncSampler> instance_;
     bool hardwareVSyncStatus_ = true;
+    int64_t pendingPeriod_ = 0;
 };
 } // impl
 } // namespace Rosen

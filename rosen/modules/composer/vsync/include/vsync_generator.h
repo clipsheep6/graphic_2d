@@ -80,7 +80,7 @@ private:
 
     int64_t period_;
     int64_t phase_;
-    int64_t refrenceTime_;
+    int64_t referenceTime_;
     int64_t wakeupDelay_;
 
     std::vector<Listener> listeners_;

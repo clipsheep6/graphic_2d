@@ -63,7 +63,7 @@ void VSyncGenerator::DeleteInstance() noexcept
 }
 
 VSyncGenerator::VSyncGenerator()
-    : period_(0), phase_(0), refrenceTime_(0), wakeupDelay_(0)
+    : period_(0), phase_(0), referenceTime_(0), wakeupDelay_(0)
 {
     vsyncThreadRunning_ = true;
     thread_ = std::thread(std::bind(&VSyncGenerator::ThreadLoop, this));
@@ -94,7 +94,7 @@ void VSyncGenerator::ThreadLoop()
         std::vector<Listener> listeners;
         {
             std::unique_lock<std::mutex> locker(mutex_);
-            occurRefrenceTime = refrenceTime_;
+            occurRefrenceTime = referenceTime_;
             if (period_ == 0) {
                 if (vsyncThreadRunning_ == true) {
                     con_.wait(locker);
@@ -207,7 +207,7 @@ VsyncError VSyncGenerator::UpdateMode(int64_t period, int64_t phase, int64_t ref
     }
     period_ = period;
     phase_ = phase;
-    refrenceTime_ = refrenceTime;
+    referenceTime_ = refrenceTime;
     con_.notify_all();
     return VSYNC_ERROR_OK;
 }

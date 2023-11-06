@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #include "native_buffer_utils.h"
 
 namespace OHOS::Rosen {

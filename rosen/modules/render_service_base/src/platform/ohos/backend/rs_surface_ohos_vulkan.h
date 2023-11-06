@@ -18,7 +18,6 @@
 
 // default enable native buffer
 
-
 #ifndef ENABLE_NATIVEBUFFER
 #include <vulkan_window.h>
 #else // ENABLE_NATIVEBUFFER

@@ -46,13 +46,47 @@ extern "C" {
  * A new <b>NativeHgm</b> instance is created each time this function is called.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeHgm
- * @param name Indicates the hyper_graphic_manager connection name.
- * @param length Indicates the name's length.
+ * @param screen Indicates screenId.
+ * @since 10
+ * @version 1.0
+ */
+void OH_NativeHgm_SetRefreshRateMode(int32_t mode);
+
+/**
+ * @brief Creates a <b>NativeHgm</b> instance.\n
+ * A new <b>NativeHgm</b> instance is created each time this function is called.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeHgm
+ * @param screen Indicates screenId.
  * @return Returns int32_t, return value == 0, success, otherwise, failed.
  * @since 10
  * @version 1.0
  */
-int OH_NativeHgm_GetScreenCurrentRefreshRate(int32_t screen);
+int32_t OH_NativeHgm_GetScreenCurrentRefreshRate(int32_t screen);
+
+/**
+ * @brief Creates a <b>NativeHgm</b> instance.\n
+ * A new <b>NativeHgm</b> instance is created each time this function is called.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeHgm
+ * @return Returns int32_t, return value == 0, success, otherwise, failed.
+ * @since 10
+ * @version 1.0
+ */
+int32_t OH_NativeHgm_GetCurrentRefreshRateMode();
+
+/**
+ * @brief Creates a <b>NativeHgm</b> instance.\n
+ * A new <b>NativeHgm</b> instance is created each time this function is called.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeHgm
+ * @param screen Indicates the hyper_graphic_manager connection name.
+ * @return Returns int32_t*.
+ * @since 10
+ * @version 1.0
+ */
+int32_t* OH_NativeHgm_GetScreenSupportedRefreshRates(int32_t screen);
+
 #ifdef __cplusplus
 }
 #endif

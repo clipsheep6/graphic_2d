@@ -65,6 +65,14 @@ bool RSPhysicalScreenFuzzTest(const uint8_t* data, size_t size)
     uint32_t level = GetData<uint32_t>();
     int32_t modeIdx = GetData<uint32_t>();
     uint32_t skipFrameInterval = GetData<uint32_t>();
+    uint32_t rate = GetData<uint32_t>();
+    uint32_t defaultWidth = GetData<uint32_t>();
+    uint32_t defaultHeight = GetData<uint32_t>();
+    int32_t sceneId = GetData<uint32_t>();
+    auto consumerSurface = IConsumerSurface::Create();
+    auto producer = consumerSurface->GetProducer();
+    auto producerSurface = Surface::CreateSurfaceAsProducer(producer);
+    uint32_t windowNum = GetData<uint32_t>();
 
     // test
     auto& rsInterfaces = RSInterfaces::GetInstance();
@@ -96,6 +104,50 @@ bool RSPhysicalScreenFuzzTest(const uint8_t* data, size_t size)
     SurfaceOcclusionChangeCallback surfaceOcclusionCb = [](bool) {};
     rsInterfaces.RegisterSurfaceOcclusionChangeCallback(static_cast<NodeId>(id), surfaceOcclusionCb);
     rsInterfaces.UnRegisterSurfaceOcclusionChangeCallback(static_cast<NodeId>(id));
+
+    rsInterfaces.GetDefaultScreenId();
+    rsInterfaces.GetAllScreenIds();
+    rsInterfaces.SetVirtualScreenResolution(static_cast<ScreenId>(id), defaultWidth, defaultHeight);
+    rsInterfaces.SetVirtualScreenSurface(static_cast<ScreenId>(id), producerSurface);
+    rsInterfaces.RemoveVirtualScreen(static_cast<ScreenId>(id));
+    bool callbacked = false;
+    ScreenId screenId = INVALID_SCREEN_ID;
+    ScreenEvent screenEvent = ScreenEvent::UNKNOWN;
+    auto callback = [&screenId, &screenEvent, &callbacked](ScreenId id, ScreenEvent event) {
+        screenId = static_cast<ScreenId>(id);
+        screenEvent = event;
+        callbacked = true;
+    };
+    rsInterfaces.SetScreenChangeCallback(callback);
+    rsInterfaces.SetScreenRefreshRate(static_cast<ScreenId>(id), sceneId, rate);
+    rsInterfaces.SetRefreshRateMode(rate);
+    rsInterfaces.GetScreenCurrentRefreshRate(static_cast<ScreenId>(id));
+    rsInterfaces.GetCurrentRefreshRateMode();
+    rsInterfaces.GetScreenSupportedRefreshRates(static_cast<ScreenId>(id));
+    rsInterfaces.GetVirtualScreenResolution(static_cast<ScreenId>(id));
+    OcclusionChangeCallback occlusionChangeCallback = [](std::shared_ptr<RSOcclusionData> data) {};
+    rsInterfaces.RegisterOcclusionChangeCallback(occlusionChangeCallback);
+    rsInterfaces.SetAppWindowNum(windowNum);
+    std::shared_ptr<Media::PixelMap> watermarkImg;
+    bool isShow = GetData<bool>();
+    rsInterfaces.ShowWatermark(watermarkImg, isShow);
+    int pid = GetData<int>();
+    rsInterfaces.GetMemoryGraphic(pid);
+    rsInterfaces.GetMemoryGraphics();
+    float cpuMemSize = GetData<float>();
+    float gpuMemSize = GetData<float>();
+    rsInterfaces.GetTotalAppMemSize(cpuMemSize, gpuMemSize);
+    rsInterfaces.ReportJankStats();
+    DataBaseRs info;
+    rsInterfaces.ReportEventResponse(info);
+    rsInterfaces.ReportEventComplete(info);
+    rsInterfaces.ReportEventJankFrame(info);
+    HgmConfigChangeCallback HgmConfigChangeCallback = [](std::shared_ptr<RSHgmConfigData> data) {};
+    rsInterfaces.RegisterHgmConfigChangeCallback(HgmConfigChangeCallback);
+    rsInterfaces.EnableCacheForRotation();
+    rsInterfaces.DisableCacheForRotation();
+    FocusAppInfo focusAppInfo;
+    rsInterfaces.SetFocusAppInfo(focusAppInfo);
 
     sleep(1);
 

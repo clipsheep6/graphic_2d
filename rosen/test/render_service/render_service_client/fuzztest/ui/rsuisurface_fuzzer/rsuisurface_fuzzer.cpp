@@ -111,6 +111,34 @@ bool RSUIDirectorFuzzTest(const uint8_t* data, size_t size)
     return true;
 }
 
+bool RSSurfaceNodeFuzzTest(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    // get data
+    bool isEnable = GetData<bool>();
+
+    // test
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    if (!surfaceNode) {
+        return false;
+    }
+    surfaceNode->SetBufferAvailableCallback([]() {
+        std::cout << "SetBufferAvailableCallback" << std::endl;
+    });
+    surfaceNode->SetHardwareEnabled(isEnable);
+
+    return true;
+}
+
 } // namespace Rosen
 } // namespace OHOS
 
@@ -119,5 +147,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
     OHOS::Rosen::RSUIDirectorFuzzTest(data, size);
+    OHOS::Rosen::RSSurfaceNodeFuzzTest(data, size);
     return 0;
 }

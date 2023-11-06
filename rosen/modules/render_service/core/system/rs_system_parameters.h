@@ -38,6 +38,7 @@ public:
     static bool GetCalcCostEnabled();
     static bool GetDrawingCacheEnabled();
     static bool GetDrawingCacheEnabledDfx();
+    static bool GetDrawingCacheEnabledFps();
     static QuickSkipPrepareType GetQuickSkipPrepareType();
     static bool GetFilterCacheOcculusionEnabled();
 };

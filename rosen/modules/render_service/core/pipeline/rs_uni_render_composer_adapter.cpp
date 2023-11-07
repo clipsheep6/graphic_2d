@@ -175,7 +175,57 @@ void RSUniRenderComposerAdapter::SetComposeInfoToLayer(
     layer->SetCropRect(info.srcRect);
     layer->SetMatrix(info.matrix);
     layer->SetGravity(info.gravity);
+    SetLayerColorSpace(layer, node);
     SetMetaDataInfoToLayer(layer, info, surface);
+}
+
+void RSUniRenderComposerAdapter::SetLayerColorSpace(const LayerInfoPtr& layer, RSBaseRenderNode* node) const
+{
+    if (node == nullptr) {
+        return;
+    }
+
+    auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>();
+    if (displayNode == nullptr) {
+        RS_LOGD("RSUniRenderComposerAdapter::SetLayerColorSpace ReinterpretCastTo fail");
+        return;
+    }
+
+    auto rsSurface = displayNode->GetRSSurface();
+    if (rsSurface == nullptr) {
+        RS_LOGD("RSUniRenderComposerAdapter::SetLayerColorSpace RSSurface is null");
+        return;
+    }
+
+    GraphicColorGamut rsColorSpace = rsSurface->GetColorSpace();
+    CM_ColorSpaceType colorSpace = CM_SRGB_FULL;
+    switch (rsColorSpace)
+    {
+    case GRAPHIC_COLOR_GAMUT_SRGB:
+        colorSpace = CM_SRGB_FULL;
+        break;
+    case GRAPHIC_COLOR_GAMUT_STANDARD_BT709:
+        colorSpace = CM_BT709_LIMIT;
+        break;
+    case GRAPHIC_COLOR_GAMUT_STANDARD_BT601:
+        colorSpace = CM_BT601_EBU_LIMIT;
+        break;
+    case GRAPHIC_COLOR_GAMUT_BT2020:
+        colorSpace = CM_DISPLAY_BT2020_SRGB;
+        break;
+    case GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020:
+        colorSpace = CM_DISPLAY_BT2020_SRGB;
+        break;
+    case GRAPHIC_COLOR_GAMUT_BT2100_PQ:
+        colorSpace = CM_BT2020_PQ_FULL;
+        break;
+    case GRAPHIC_COLOR_GAMUT_BT2100_HLG:
+        colorSpace = CM_BT2020_HLG_FULL;
+        break;
+    // TODO
+    default:
+        break;
+    }
 }
 
 void RSUniRenderComposerAdapter::SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,

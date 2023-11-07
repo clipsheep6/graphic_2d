@@ -77,6 +77,9 @@ public:
     bool TakeSurfaceCaptureForUI(std::shared_ptr<RSNode> node,
         std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX = 1.f, float scaleY = 1.f);
 
+    bool TextureConversion(std::shared_ptr<SurfaceCaptureCallback> callback,
+        std::shared_ptr<Media::PixelMap> pixelAstc);
+
     void SetScreenActiveMode(ScreenId id, uint32_t modeId);
 
     MemoryGraphic GetMemoryGraphic(int pid);

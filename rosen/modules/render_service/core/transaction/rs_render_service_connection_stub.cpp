@@ -419,6 +419,32 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             TakeSurfaceCapture(id, cb, scaleX, scaleY, surfaceCaptureType);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::TEXTURE_CONVERSION): {
+            auto token = data.ReadInterfaceToken:
+            if (token != RSIRenderServiceConnectionInterfaceCode::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+
+            if (data.ReadUint8() != 1) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret == ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSISurfaceCaptureCallback> cb = iface_cast<RSISurfaceCaptureCallback>(remoteObject);
+            if (cb == nullptr) {
+                ret == ERR_NULL_OBJECT;
+                break;
+            }
+            std::shared_ptr<Media::PixelMap> pixelAstc =
+                std::shared_ptr<Media::PixelMap>(data.ReadParcelable<Media::PixelMap>());
+            TextureConversion(cb, pixelAstc);
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_APPLICATION_AGENT): {
             uint32_t pid = data.ReadUint32();
             auto remoteObject = data.ReadRemoteObject();

@@ -649,6 +649,36 @@ void RSRenderServiceConnectionProxy::TakeSurfaceCapture(NodeId id, sptr<RSISurfa
     }
 }
 
+bool RSRenderServiceConnectionProxy::TextureConversion(sptr<RSISurfaceCaptureCallback> callback,
+    std::shared_ptr<Media::PixelMap> pixelAstc)
+{
+    if (callback == nullptr || pixelAstc == nullptr) {
+        ROSEN_LOGE("RSRenderServiceProxy: callback == nullptr || pixelAstc == nullptr.\n");
+        return false;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return false;
+    }
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteUint8(1);
+    data.WriteRemoteObject(callback->AsObject());
+    data.WriteParcelable(pixelAstc.get());
+    uint32_t err = Remote()->SendRequest(code, data, replay, option);
+    if (err != NO_ERROR) {
+        return false;
+    }
+    bool result = replay.ReadBool();
+    if (!result) {
+        ROSEN_LOGE("RSRenderServiceProxy::GetPixelMap: GetPixelMap failed.\n");
+        return false;
+    }
+    return true;
+}
+
 RSVirtualScreenResolution RSRenderServiceConnectionProxy::GetVirtualScreenResolution(ScreenId id)
 {
     MessageParcel data;

@@ -456,6 +456,21 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
     }
 }
 
+bool RSRenderServiceConnection::TextureConversion(sptr<RSISurfaceCaptureCallback> callback, std::shared_ptr<Media::PixelMap> pixelAstc)
+{
+    std::function<void()> captureTask = [pixelAstc, callback]() -> void {
+        RS_LOGD("RSRenderService::TextureConversion callback->OnSurfaceCapture");
+        ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TextureConversion");
+        TextureConversionTask task(pixelAstc);
+        if (task.Run()) {
+            callback->OnSurfaceCapture(1, task.GetPixelMap().get());
+        }
+        ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+    };
+    mainThread_->PostTask(captureTask);
+    return true;
+}
+
 void RSRenderServiceConnection::TakeSurfaceCaptureForUIWithUni(NodeId id, sptr<RSISurfaceCaptureCallback> callback,
     float scaleX, float scaleY)
 {

@@ -88,6 +88,9 @@ public:
     void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
         SurfaceCaptureType surfaceCaptureType) override;
 
+    bool TextureConversion(sptr<RSISurfaceCaptureCallback> callback,
+    std::shared_ptr<Media::PixelMap> pixelAstc) override;
+
     RSVirtualScreenResolution GetVirtualScreenResolution(ScreenId id) override;
 
     RSScreenModeInfo GetScreenActiveMode(ScreenId id) override;

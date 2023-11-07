@@ -70,6 +70,9 @@ enum RSPropertyDrawableSlot : uint8_t {
     COLOR_FILTER,
     RESTORE_FRAME,
 
+    RESTORE_LAYER_CONTENT,
+    RESTORE_LAYER_BACKGROUND,
+
     // In Bounds clip (again)
     EXTRA_SAVE_BOUNDS,
     EXTRA_CLIP_TO_BOUNDS,
@@ -137,6 +140,8 @@ private:
         RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, uint8_t flags);
     static void OptimizeFrameSaveRestore(
         RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, uint8_t flags);
+
+    static void AddBlendModeDrawableToVec(RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec);
 };
 
 class RSPropertyDrawableGenerateContext {

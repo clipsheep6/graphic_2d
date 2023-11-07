@@ -168,7 +168,7 @@ public:
     float GetBgImagePositionX() const;
     float GetBgImagePositionY() const;
     void SetColorBlendMode(int blendmode);
-    int GetColorBlendMode() const;
+    std::optional<SkPaint> GetColorBlendPaint() const;
 
     // border properties
     void SetBorderColor(Vector4<Color> color);
@@ -404,7 +404,8 @@ private:
 
     std::unique_ptr<Sandbox> sandbox_ = nullptr;
 
-    int blendMode_ = static_cast<int>(RSColorBlendModeType::NONE);
+    // blendmode
+    std::optional<SkPaint> blendPaint_ = std::nullopt;
 
     friend class RSBackgroundImageDrawable;
     friend class RSCanvasRenderNode;

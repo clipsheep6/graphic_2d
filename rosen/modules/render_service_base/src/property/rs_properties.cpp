@@ -2368,17 +2368,24 @@ void RSProperties::CalculateFrameOffset()
 // blend with background
 void RSProperties::SetColorBlendMode(int blendMode)
 {
-    blendMode_ = blendMode;
-    if (blendMode != static_cast<int>(RSColorBlendModeType::NONE)) {
-        isDrawn_ = true;
-    }
     SetDirty();
+    static const std::vector<SkBlendMode> blendModeList = {
+        SkBlendMode::kSrcIn, // RSColorBlendModeType::SRC_IN
+        SkBlendMode::kDstIn, // RSColorBlendModeType::DST_IN
+    };
+    if (static_cast<unsigned int>(blendMode) < blendModeList.size() && blendMode >= 0) {
+        blendPaint_ = std::make_optional<SkPaint>();
+        blendPaint_->setBlendMode(blendModeList[blendMode]);
+    } else {
+        blendPaint_ = std::nullopt;
+    }
+    isDrawn_ = true;
     contentDirty_ = true;
 }
 
-int RSProperties::GetColorBlendMode() const
+std::optional<SkPaint> RSProperties::GetColorBlendPaint() const
 {
-    return blendMode_;
+    return blendPaint_;
 }
 } // namespace Rosen
 } // namespace OHOS

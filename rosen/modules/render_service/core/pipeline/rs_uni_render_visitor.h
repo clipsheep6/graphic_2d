@@ -266,6 +266,7 @@ private:
     // set node cacheable animation after checking whold child tree
     void SetNodeCacheChangeStatus(RSRenderNode& node);
     void DisableNodeCacheInSetting(RSRenderNode& node);
+    void UpdateCachableNodeInSetting(RSRenderNode& node);
     // update rendernode's cache status and collect valid cache rect
     void UpdateForegroundFilterCacheWithDirty(RSRenderNode& node, RSDirtyRegionManager& dirtyManager);
 
@@ -439,7 +440,7 @@ private:
     bool isPhone_ = false;
 
     NodeId firstVisitedCache_ = INVALID_NODEID;
-    std::unordered_set<NodeId> visitedCacheNodeIds_ = {};
+    std::stack<NodeId> prevVisitedCacheNodeIds_ = {};
     std::unordered_map<NodeId, std::unordered_set<NodeId>> allCacheFilterRects_ = {};
     std::stack<std::unordered_set<NodeId>> curCacheFilterRects_ = {};
     bool forceUpdateFlag_ = false;

@@ -34,6 +34,7 @@
 #include "property/rs_property_trace.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -1957,9 +1958,19 @@ void RSRenderNode::ResetDrawingCacheNeedUpdate()
 {
     drawingCacheNeedUpdate_ = false;
 }
-void RSRenderNode::SetVisitedCacheRootIds(const std::unordered_set<NodeId>& visitedNodes)
+void RSRenderNode::UpdateVisitedCacheRootIds(const std::unordered_set<NodeId>& visitedNodes)
 {
-    visitedCacheRoots_ = visitedNodes;
+    std::string newInfo = "new visited: [";
+    for (auto id : visitedNodes) {
+        newInfo += std::to_string(id) + ", ";
+    }
+    newInfo += "], ori visited: [";
+    for (auto id : visitedCacheRoots_) {
+        newInfo += std::to_string(id) + ", ";
+    }
+    newInfo += "]";
+    visitedCacheRoots_.insert(visitedNodes.begin(), visitedNodes.end());
+    RS_TRACE_NAME_FMT("UpdateVisitedCacheRootIds node %llu: %s", GetId(), newInfo.c_str());
 }
 const std::unordered_set<NodeId>& RSRenderNode::GetVisitedCacheRootIds() const
 {

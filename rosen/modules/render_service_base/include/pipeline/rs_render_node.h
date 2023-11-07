@@ -329,7 +329,7 @@ public:
     void SetDrawingCacheChanged(bool cacheChanged);
     bool GetDrawingCacheChanged() const;
     void ResetDrawingCacheNeedUpdate();
-    void SetVisitedCacheRootIds(const std::unordered_set<NodeId>& visitedNodes);
+    void UpdateVisitedCacheRootIds(const std::unordered_set<NodeId>& visitedNodes);
     const std::unordered_set<NodeId>& GetVisitedCacheRootIds() const;
     // manage cache root nodeid
     void SetDrawingCacheRootId(NodeId id);

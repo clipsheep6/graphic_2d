@@ -731,10 +731,10 @@ int32_t RSRenderServiceConnection::GetPixelFormat(ScreenId id, GraphicPixelForma
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         return RSHardwareThread::Instance().ScheduleTask(
-            [=]() { return screenManager_->GetPixelFormat(id, pixelFormat); }).get();
+            [=, &pixelFormat]() { return screenManager_->GetPixelFormat(id, pixelFormat); }).get();
     } else {
         return mainThread_->ScheduleTask(
-            [=]() { return screenManager_->GetPixelFormat(id, pixelFormat); }).get();
+            [=, &pixelFormat]() { return screenManager_->GetPixelFormat(id, pixelFormat); }).get();
     }
 }
 
@@ -755,10 +755,10 @@ int32_t RSRenderServiceConnection::GetIsHDRScreen(ScreenId id, bool& isHDRScreen
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         return RSHardwareThread::Instance().ScheduleTask(
-            [=]() { return screenManager_->GetIsHDRScreen(id, isHDRScreen); }).get();
+            [=, &isHDRScreen]() { return screenManager_->GetIsHDRScreen(id, isHDRScreen); }).get();
     } else {
         return mainThread_->ScheduleTask(
-            [=]() { return screenManager_->GetIsHDRScreen(id, isHDRScreen); }).get();
+            [=, &isHDRScreen]() { return screenManager_->GetIsHDRScreen(id, isHDRScreen); }).get();
     }
 }
 

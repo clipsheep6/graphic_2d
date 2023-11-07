@@ -79,7 +79,7 @@ public:
     virtual void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) = 0;
     virtual uint32_t GetScreenSkipFrameInterval() const = 0;
     virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
-    virtual void SetIsHDRScreen(bool isHDRScreen) = 0;
+    virtual int32_t SetIsHDRScreen(bool isHDRScreen) = 0;
     virtual bool IsHDRScreen() const = 0;
     virtual int32_t SetPixelFormat(GraphicPixelFormat pixelFormat) = 0;
     virtual GraphicPixelFormat GetPixelFormat() const = 0;

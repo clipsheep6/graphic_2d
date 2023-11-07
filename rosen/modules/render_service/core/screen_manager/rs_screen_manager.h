@@ -57,7 +57,7 @@ struct ScreenInfo {
 
     uint32_t skipFrameInterval = DEFAULT_SKIP_FRAME_INTERVAL;  // skip frame interval for change screen refresh rate
 
-    bool isHDRScreen = false;
+    bool isHDRScreen = true;
     GraphicPixelFormat pixelFormat = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
 
     uint32_t GetRotatedWidth() const

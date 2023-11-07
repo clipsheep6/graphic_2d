@@ -1097,7 +1097,7 @@ int32_t RSScreenManager::GetIsHDRScreenLocked(ScreenId id, bool& isHDRScreen) co
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return StatusCode::SCREEN_NOT_FOUND;
     }
-    screens_.at(id)->IsHDRScreen();
+    isHDRScreen = screens_.at(id)->IsHDRScreen();
     return StatusCode::SUCCESS;
 }
 
@@ -1107,8 +1107,7 @@ int32_t RSScreenManager::SetIsHDRScreenLocked(ScreenId id, bool isHDRScreen)
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return StatusCode::SCREEN_NOT_FOUND;
     }
-    screens_.at(id)->SetIsHDRScreen(isHDRScreen);
-    return StatusCode::SUCCESS;
+    return screens_.at(id)->SetIsHDRScreen(isHDRScreen);
 }
 
 int32_t RSScreenManager::GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) const

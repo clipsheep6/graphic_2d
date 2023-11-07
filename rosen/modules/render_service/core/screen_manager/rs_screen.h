@@ -135,7 +135,7 @@ public:
     void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) override;
     uint32_t GetScreenSkipFrameInterval() const override;
     void SetScreenVsyncEnabled(bool enabled) const override;
-    void SetIsHDRScreen(bool isHDRScreen) override;
+    int32_t SetIsHDRScreen(bool isHDRScreen) override;
     bool IsHDRScreen() const override;
     int32_t SetPixelFormat(GraphicPixelFormat pixelFormat) override;
     GraphicPixelFormat GetPixelFormat() const override;

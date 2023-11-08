@@ -222,7 +222,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
 
     canvas.RestoreStatus(canvasNodeSaveCount_);
     if (countForBlend_.has_value()) {
-        canvas.restoreToCount(*content_);
+        canvas.restoreToCount(*countForBlend_);
     }
     if (GetRenderProperties().IsLightUpEffectValid()) {
         RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);

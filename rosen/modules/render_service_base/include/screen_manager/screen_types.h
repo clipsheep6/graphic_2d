@@ -76,46 +76,6 @@ typedef enum : uint32_t {
 } ScreenPowerStatus;
 
 typedef enum : uint32_t {
-GRAPHIC_PIXEL_FMT_CLUT8 = 0,                 /**< CLUT8 format */
-    GRAPHIC_PIXEL_FMT_CLUT1,                     /**< CLUT1 format */
-    GRAPHIC_PIXEL_FMT_CLUT4,                     /**< CLUT4 format */
-    GRAPHIC_PIXEL_FMT_RGB_565,                   /**< RGB565 format */
-    GRAPHIC_PIXEL_FMT_RGBA_5658,                 /**< RGBA5658 format */
-    GRAPHIC_PIXEL_FMT_RGBX_4444,                 /**< RGBX4444 format */
-    GRAPHIC_PIXEL_FMT_RGBA_4444,                 /**< RGBA4444 format */
-    GRAPHIC_PIXEL_FMT_RGB_444,                   /**< RGB444 format */
-    GRAPHIC_PIXEL_FMT_RGBX_5551,                 /**< RGBX5551 format */
-    GRAPHIC_PIXEL_FMT_RGBA_5551,                 /**< RGBA5551 format */
-    GRAPHIC_PIXEL_FMT_RGB_555,                   /**< RGB555 format */
-    GRAPHIC_PIXEL_FMT_RGBX_8888,                 /**< RGBX8888 format */
-    GRAPHIC_PIXEL_FMT_RGBA_8888,                 /**< RGBA8888 format */
-    GRAPHIC_PIXEL_FMT_RGB_888,                   /**< RGB888 format */
-    GRAPHIC_PIXEL_FMT_BGR_565,                   /**< BGR565 format */
-    GRAPHIC_PIXEL_FMT_BGRX_4444,                 /**< BGRX4444 format */
-    GRAPHIC_PIXEL_FMT_BGRA_4444,                 /**< BGRA4444 format */
-    GRAPHIC_PIXEL_FMT_BGRX_5551,                 /**< BGRX5551 format */
-    GRAPHIC_PIXEL_FMT_BGRA_5551,                 /**< BGRA5551 format */
-    GRAPHIC_PIXEL_FMT_BGRX_8888,                 /**< BGRX8888 format */
-    GRAPHIC_PIXEL_FMT_BGRA_8888,                 /**< BGRA8888 format */
-    GRAPHIC_PIXEL_FMT_YUV_422_I,                 /**< YUV422 interleaved format */
-    GRAPHIC_PIXEL_FMT_YCBCR_422_SP,              /**< YCBCR422 semi-planar format */
-    GRAPHIC_PIXEL_FMT_YCRCB_422_SP,              /**< YCRCB422 semi-planar format */
-    GRAPHIC_PIXEL_FMT_YCBCR_420_SP,              /**< YCBCR420 semi-planar format */
-    GRAPHIC_PIXEL_FMT_YCRCB_420_SP,              /**< YCRCB420 semi-planar format */
-    GRAPHIC_PIXEL_FMT_YCBCR_422_P,               /**< YCBCR422 planar format */
-    GRAPHIC_PIXEL_FMT_YCRCB_422_P,               /**< YCRCB422 planar format */
-    GRAPHIC_PIXEL_FMT_YCBCR_420_P,               /**< YCBCR420 planar format */
-    GRAPHIC_PIXEL_FMT_YCRCB_420_P,               /**< YCRCB420 planar format */
-    GRAPHIC_PIXEL_FMT_YUYV_422_PKG,              /**< YUYV422 packed format */
-    GRAPHIC_PIXEL_FMT_UYVY_422_PKG,              /**< UYVY422 packed format */
-    GRAPHIC_PIXEL_FMT_YVYU_422_PKG,              /**< YVYU422 packed format */
-    GRAPHIC_PIXEL_FMT_VYUY_422_PKG,              /**< VYUY422 packed format */
-    GRAPHIC_PIXEL_FMT_RGBA_1010102,              /**< RGBA_1010102 packed format */
-    GRAPHIC_PIXEL_FMT_VENDER_MASK = 0X7FFF0000,  /**< vendor mask format */
-    GRAPHIC_PIXEL_FMT_BUTT = 0X7FFFFFFF          /**< Invalid pixel format */
-} GraphicPixelFormat;
-
-typedef enum : uint32_t {
     DISP_INTF_HDMI = 0,
     DISP_INTF_LCD,
     DISP_INTF_BT1120,

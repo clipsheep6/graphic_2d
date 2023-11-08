@@ -354,7 +354,27 @@ void RSParallelRenderManager::DrawImageMergeFunc(RSPaintFilterCanvas& canvas)
             canvas.drawImage(texture, 0, 0);
 #endif
 #else
-            canvas.DrawImage(*texture, 0, 0, Drawing::SamplingOptions());
+            Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
+            auto sharedBackendTexture = texture->GetBackendTexture(false, &origin);
+            if (!sharedBackendTexture.isValid()) {
+                RS_LOGE("Texture of subThread(%{public}d) does not has GPU backend", i);
+                continue;
+            }
+            auto newImage = std::make_shared<Drawing::Image>()
+            if (newImage == nullptr) {
+                RS_LOGE("Texture of subThread(%{public}d) create Drawing image fail", i);
+                continue;
+            }
+            if (canvas.GetGPUContext() == nullptr) {
+                continue;
+            }
+            Drawing::BitmapFormat fmt =  Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
+            bool ret = newImage->BuildFromTexture(*canvas.GetGPUContext(), sharedBackendTexture.GetTextureInfo(),
+                origin, fmt, nullptr);
+            if (!ret) {
+                continue;
+            }
+            canvas.DrawImage(*newImage, 0, 0, Drawing::SamplingOptions());
 #endif
             // For any one subMainThread' sksurface, we just clear transparent color of self drawing
             // surface drawed in larger skSurface, such as skSurface 0 should clear self drawing surface

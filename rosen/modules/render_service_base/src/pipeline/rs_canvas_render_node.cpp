@@ -126,7 +126,7 @@ void RSCanvasRenderNode::DealBlendModePorperty(RSPaintFilterCanvas& canvas)
         }
         *countForBlend_ = canvas.saveLayer(nullptr, nullptr);
     } else {
-        countForBlend_ = nullopt;
+        countForBlend_ = std::nullopt;
     }
 }
 

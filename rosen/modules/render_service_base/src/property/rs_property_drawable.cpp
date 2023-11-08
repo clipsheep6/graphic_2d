@@ -168,7 +168,7 @@ static const std::vector<RSPropertyDrawable::DrawableGenerator> g_drawableGenera
     RSDynamicLightUpDrawable::Generate,                                   // DYNAMIC_LIGHT_UP,
     CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY>, // ENV_FOREGROUND_COLOR_STRATEGY
     nullptr,                                                              // RESTORE_BOUNDS_BEFORE_FRAME,
-    RSSaveLayerContentDrawable::Generate,                                 // SAVE_LAYER_CONTENT
+    nullptr,                                                              // SAVE_LAYER_CONTENT
 
     // Frame Geometry
     nullptr,                                                 // SAVE_FRAME,
@@ -260,18 +260,10 @@ bool RSPropertyDrawable::UpdateDrawableVec(const RSPropertyDrawableGenerateConte
         }
         origDrawable = std::move(drawable);
     }
-    if (dirtySlots.count(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)) {
-        AddBlendModeDrawableToVec(context, drawableVec);
-    }
 
-    // Step 2.2: post-generate hooks (PLANNING: refactor this into a separate function)
+    // Step 2.2: post-generate hooks
     if (drawableSlotChanged && dirtySlots.count(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)) {
-        if (drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_CONTENT] != nullptr) {
-            drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND] =
-                RSSaveLayerBackgroundDrawable::Generate(context);
-        } else {
-            drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND] = nullptr;
-        }
+        AddBlendModeDrawableToVec(context, drawableVec);
     }
 
     return drawableSlotChanged;

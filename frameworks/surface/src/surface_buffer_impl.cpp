@@ -53,8 +53,9 @@ inline GSError GenerateError(GSError err, int32_t code)
 
 using namespace OHOS::HDI::Display::Buffer::V1_0;
 using IDisplayBufferSptr = std::shared_ptr<IDisplayBuffer>;
+using IDisplayBufferSptrV1_1 = std::shared_ptr<OHOS::HDI::Display::Buffer::V1_1::IDisplayBuffer>;
 static IDisplayBufferSptr g_displayBuffer;
-static OHOS::HDI::Display::Buffer::V1_1::IDisplayBufferSptr g_displayBufferV1_1;
+static IDisplayBufferSptrV1_1 g_displayBufferV1_1;
 static std::mutex g_DisplayBufferMutex;
 class DisplayBufferDiedRecipient : public OHOS::IRemoteObject::DeathRecipient {
 public:

@@ -164,7 +164,11 @@ std::vector<LineMetrics> Shaper::DoShapeBeforeEllipsis(std::vector<VariantSpan> 
 {
     TextBreaker tb;
     tb.SetWidthLimit(widthLimit);
+#ifdef ENABLE_HYPHEN
+    auto ret = tb.WordBreak(spans, tstyle, fontProviders, widthLimit);
+#else
     auto ret = tb.WordBreak(spans, tstyle, fontProviders);
+#endif
     if (ret) {
         LOGEX_FUNC_LINE(ERROR) << "word break failed";
         return {};

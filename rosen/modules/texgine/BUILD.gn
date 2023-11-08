@@ -90,6 +90,10 @@ ohos_source_set("libtexgine_source") {
       "src/word_breaker.cpp",
     ]
 
+    if (graphic_2d_feature_enable_hyphen) {
+      sources += [ "src/hyphenator.cpp" ]
+    }
+
     configs = [
       ":libtexgine_config",
       "//build/config/compiler:exceptions",
@@ -108,6 +112,11 @@ ohos_source_set("libtexgine_source") {
     ]
 
     defines = []
+
+    if (graphic_2d_feature_enable_hyphen) {
+      defines += [ "ENABLE_HYPHEN" ]
+    }
+
     if (enable_text_gine) {
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
     }

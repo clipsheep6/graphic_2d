@@ -32,6 +32,7 @@ declare_args() {
   player_framework_enable = true
   graphic_2d_feature_drivers_interface_display_enable = true
   graphic_2d_feature_tp_switch_enbale = false
+  graphic_2d_feature_enable_hyphen = false
 
   if (defined(is_arkui_x) && is_arkui_x) {
     use_new_render_context = false

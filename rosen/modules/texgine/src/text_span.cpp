@@ -153,6 +153,23 @@ double TextSpan::GetPostBreak() const
     return postBreak_;
 }
 
+#ifdef ENABLE_HYPHEN
+double TextSpan::GetPenalty() const
+{
+    return penalty_;
+}
+
+HyphenationType TextSpan::GetHyphenationType() const
+{
+    return hyph_;
+}
+
+double TextSpan::GetLinePenalty() const
+{
+    return linePenalty_;
+}
+#endif
+
 bool TextSpan::IsRTL() const
 {
     return rtl_;

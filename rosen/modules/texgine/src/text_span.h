@@ -19,6 +19,9 @@
 #include <any>
 
 #include "char_groups.h"
+#ifdef ENABLE_HYPHEN
+#include "hyphenator.h"
+#endif
 #include "texgine_canvas.h"
 #include "texgine_font_metrics.h"
 #include "texgine_text_blob.h"
@@ -28,6 +31,9 @@
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
+#ifdef ENABLE_HYPHEN
+const float SCORE_DESPERATE = 1e10f;
+#endif
 class TextSpan : public std::enable_shared_from_this<TextSpan> {
 public:
     static std::shared_ptr<TextSpan> MakeEmpty();
@@ -46,6 +52,11 @@ public:
     double GetHeight() const;
     double GetPostBreak() const;
     double GetPreBreak() const;
+#ifdef ENABLE_HYPHEN
+    double GetPenalty() const;
+    HyphenationType GetHyphenationType() const;
+    double GetLinePenalty() const;
+#endif
     bool IsRTL() const;
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
     void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY, const std::vector<TextShadow> &shadows);
@@ -69,6 +80,12 @@ public:
     double preBreak_ = 0.0;
     double postBreak_ = 0.0;
     double width_ = 0.0;
+
+#ifdef ENABLE_HYPHEN
+    double penalty_ = SCORE_DESPERATE;
+    HyphenationType hyph_;
+    double linePenalty_;
+#endif
 
 private:
     friend class TextBreaker;

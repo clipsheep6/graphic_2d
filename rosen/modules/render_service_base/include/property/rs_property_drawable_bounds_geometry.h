@@ -505,25 +505,28 @@ private:
     std::shared_ptr<RSFilter> filter_ = nullptr;
 };
 
-// ============================================================================
-// SaveLayerBackground
-class RSSaveLayerBackgroundDrawable : public RSPropertyDrawable {
+// SavelayerBackground
+class RSSavelayerBackgroundDrawable : public RSPropertyDrawable {
 public:
-    explicit RSSaveLayerBackgroundDrawable() = default;
-    ~RSSaveLayerBackgroundDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    explicit RSSavelayerBackgroundDrawable(std::shared_ptr<int> content): content_(std::move(content))
+    {}
+    ~RSSavelayerBackgroundDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+private:
+    std::shared_ptr<int> content_;
 };
 
 // SaveLayerContent
-class RSSaveLayerContentDrawable : public RSPropertyDrawable {
+class RSSavelayerContentDrawable : public RSPropertyDrawable {
 public:
-    explicit RSSaveLayerContentDrawable(SkPaint&& blendPaint) : blendPaint_(std::move(blendPaint)) {}
-    ~RSSaveLayerContentDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    RSSavelayerContentDrawable(std::shared_ptr<int> content, SkPaint&& blendPaint)
+        : content_(std::move(content)), blendPaint_(std::move(blendPaint))
+    {}
+    ~RSSavelayerContentDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
 private:
+    std::shared_ptr<int> content_;
     SkPaint blendPaint_;
 };
 } // namespace OHOS::Rosen

@@ -168,7 +168,7 @@ static const std::vector<RSPropertyDrawable::DrawableGenerator> g_drawableGenera
     RSDynamicLightUpDrawable::Generate,                                   // DYNAMIC_LIGHT_UP,
     CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY>, // ENV_FOREGROUND_COLOR_STRATEGY
     nullptr,                                                              // RESTORE_BOUNDS_BEFORE_FRAME,
-    RSSaveLayerContentDrawable::Generate,                                 // SAVE_LAYER_CONTENT
+    nullptr,                                                              // SAVE_LAYER_CONTENT
 
     // Frame Geometry
     nullptr,                                                 // SAVE_FRAME,
@@ -179,6 +179,9 @@ static const std::vector<RSPropertyDrawable::DrawableGenerator> g_drawableGenera
     CustomModifierAdapter<RSModifierType::FOREGROUND_STYLE>, // FOREGROUND_STYLE
     RSColorFilterDrawable::Generate,                         // COLOR_FILTER,
     nullptr,                                                 // RESTORE_FRAME,
+
+    nullptr,                                                              // RESTORE_LAYER_CONTENT,
+    nullptr,                                                              // RESTORE_LAYER_BACKGROUND,
 
     // In Bounds clip (again)
     nullptr,                                              // SAVE_BOUNDS_AFTER_CHILDREN,
@@ -258,14 +261,9 @@ bool RSPropertyDrawable::UpdateDrawableVec(const RSPropertyDrawableGenerateConte
         origDrawable = std::move(drawable);
     }
 
-    // Step 2.2: post-generate hooks (PLANNING: refactor this into a separate function)
+    // Step 2.2: post-generate hooks
     if (drawableSlotChanged && dirtySlots.count(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)) {
-        if (drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_CONTENT] != nullptr) {
-            drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND] =
-                RSSaveLayerBackgroundDrawable::Generate(context);
-        } else {
-            drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND] = nullptr;
-        }
+        AddBlendModeDrawableToVec(context, drawableVec);
     }
 
     return drawableSlotChanged;
@@ -293,6 +291,35 @@ void RSPropertyDrawable::UpdateSaveRestore(
     drawableVecStatus = drawableVecStatusNew;
 }
 
+void RSPropertyDrawable::AddBlendModeDrawableToVec(
+    RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec)
+{
+    auto& properties = context.properties_;
+    auto blendpaint = properties.GetColorBlendPaint();
+    bool shouldApplyBlend = false;
+    if (blendpaint.has_value()) {
+        shouldApplyBlend = true;
+    }
+
+    if (shouldApplyBlend) {
+        auto backgroundCount = std::make_shared<int>(-1);
+        drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND] =
+            std::make_unique<RSSavelayerBackgroundDrawable>(backgroundCount);
+        drawableVec[RSPropertyDrawableSlot::RESTORE_LAYER_BACKGROUND] =
+            std::make_unique<RSRestoreDrawable>(backgroundCount);
+
+        auto contentCount = std::make_shared<int>(-1);
+        drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_CONTENT] =
+            std::make_unique<RSSavelayerContentDrawable>(contentCount, std::move(blendpaint.value()));
+        drawableVec[RSPropertyDrawableSlot::RESTORE_LAYER_CONTENT] =
+            std::make_unique<RSRestoreDrawable>(contentCount);
+    } else {
+        drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND] = nullptr;
+        drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_CONTENT] = nullptr;
+        drawableVec[RSPropertyDrawableSlot::RESTORE_LAYER_CONTENT] = nullptr;
+        drawableVec[RSPropertyDrawableSlot::RESTORE_LAYER_BACKGROUND] = nullptr;
+    }
+}
 inline uint8_t RSPropertyDrawable::CalculateDrawableVecStatus(
     RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec)
 {

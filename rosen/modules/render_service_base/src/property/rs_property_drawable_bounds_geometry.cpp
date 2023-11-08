@@ -1277,48 +1277,16 @@ void RSEffectDataGenerateDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas&
     canvas.SetEffectData(std::move(data));
 }
 
-// ============================================================================
 // SavelayerBackground
-std::unique_ptr<RSPropertyDrawable> RSSaveLayerBackgroundDrawable::Generate(
-    const RSPropertyDrawableGenerateContext& context)
+void RSSavelayerBackgroundDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = context.properties_;
-    if (properties.GetColorBlendMode() == static_cast<int>(RSColorBlendModeType::NONE)) {
-        return nullptr;
-    }
-    return std::make_unique<RSSaveLayerBackgroundDrawable>();
+    *content_ = canvas.saveLayer(nullptr, nullptr);
 }
 
-void RSSaveLayerBackgroundDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
-{
-    canvas.saveLayer(nullptr, nullptr);
-}
-
-// ============================================================================
 // SavelayerContent
-std::unique_ptr<RSPropertyDrawable> RSSaveLayerContentDrawable::Generate(
-    const RSPropertyDrawableGenerateContext& context)
+void RSSavelayerContentDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = context.properties_;
-    int blendMode = properties.GetColorBlendMode();
-    if (blendMode == static_cast<int>(RSColorBlendModeType::NONE)) {
-        return nullptr;
-    }
-    static const std::vector<SkBlendMode> blendModeList = {
-        SkBlendMode::kSrcIn, // RSColorBlendModeType::SRC_IN
-        SkBlendMode::kDstIn, // RSColorBlendModeType::DST_IN
-    };
-    if (static_cast<unsigned long>(blendMode) >= blendModeList.size()) {
-        ROSEN_LOGE("color blendmode is set %d which is invalid.", blendMode);
-        return nullptr;
-    }
-    SkPaint blendPaint;
-    blendPaint.setBlendMode(blendModeList[blendMode]);
-    return std::make_unique<RSSaveLayerContentDrawable>(std::move(blendPaint));
+    *content_ = canvas.saveLayer(nullptr, &blendPaint_);
 }
 
-void RSSaveLayerContentDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
-{
-    canvas.saveLayer(nullptr, &blendPaint_);
-}
 } // namespace OHOS::Rosen

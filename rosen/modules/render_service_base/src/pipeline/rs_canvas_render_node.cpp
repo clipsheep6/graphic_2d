@@ -118,21 +118,23 @@ void RSCanvasRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& ca
     RSRenderNode::ProcessTransitionBeforeChildren(canvas);
 }
 
-void RSCanvasRenderNode::ExecuteBlendMode(RSPaintFilterCanvas& canvas, bool isBlendMode)
+void RSCanvasRenderNode::DealBlendModePorperty(RSPaintFilterCanvas& canvas)
 {
-    if (isBlendMode) {
-        SkPaint blendPaint;
-        static const std::vector<SkBlendMode> blendModeList = {
-            SkBlendMode::kSrcIn, // RSColorBlendModeType::SRC_IN
-            SkBlendMode::kDstIn, // RSColorBlendModeType::DST_IN
-        };
-        int blendMode = GetRenderProperties().GetColorBlendMode();
-        if (blendMode >= blendModeList.size()) {
-            ROSEN_LOGE("color blendmode is set %d which is invalid.", blendMode);
-            return;
+    if (GetRenderProperties().GetColorBlendPaint().has_value()) {
+        if (!countForBlend_.has_value()) {
+            countForBlend_ = std::make_optional<int>(-1);
         }
-        blendPaint.setBlendMode(blendModeList[blendMode]);
-        canvas.saveLayer(nullptr, &blendPaint);
+        *countForBlend_ = canvas.saveLayer(nullptr, nullptr);
+    } else {
+        countForBlend_ = std::nullopt;
+    }
+}
+
+void RSCanvasRenderNode::ExecuteBlendMode(RSPaintFilterCanvas& canvas)
+{
+    if (countForBlend_.has_value()) {
+        auto paint = std::move(GetRenderProperties().GetColorBlendPaint().value());
+        canvas.saveLayer(nullptr, &paint);
     }
 }
 
@@ -146,11 +148,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
-    bool isBlendMode = false;
-    if (GetRenderProperties().GetColorBlendMode() != static_cast<int>(RSColorBlendModeType::NONE)) {
-        canvas.saveLayer(nullptr, nullptr);
-        isBlendMode = true;
-    }
+    DealBlendModePorperty(canvas);
 
     // In NEW_SKIA version, L96 code will cause dump if the 3rd parameter is true.
 #ifdef NEW_SKIA
@@ -192,7 +190,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
         RSPropertiesPainter::Clip(canvas, GetRenderProperties().GetFrameRect());
 #endif
     }
-    ExecuteBlendMode(canvas, isBlendMode);
+    ExecuteBlendMode(canvas);
 }
 
 void RSCanvasRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
@@ -223,6 +221,9 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
 
     canvas.RestoreStatus(canvasNodeSaveCount_);
+    if (countForBlend_.has_value()) {
+        canvas.restoreToCount(*countForBlend_);
+    }
     if (GetRenderProperties().IsLightUpEffectValid()) {
         RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);
     }

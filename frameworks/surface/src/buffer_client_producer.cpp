@@ -18,6 +18,7 @@
 #include "buffer_log.h"
 #include "buffer_manager.h"
 #include "buffer_utils.h"
+#include "sync_fence_tracker.h"
 #include "sync_fence.h"
 
 #define DEFINE_MESSAGE_VARIABLES(arg, ret, opt, LOGE) \
@@ -89,6 +90,9 @@ GSError BufferClientProducer::RequestBuffer(const BufferRequestConfig &config, s
     retval.fence = SyncFence::ReadFromMessageParcel(reply);
     reply.ReadInt32Vector(&retval.deletingBuffers);
 
+    static SyncFenceTracker releaseFenceThread("Release Fence");
+    releaseFenceThread.TrackFence(retval.fence);
+
     return GSERROR_OK;
 }
 
@@ -117,6 +121,9 @@ GSError BufferClientProducer::FlushBuffer(uint32_t sequence, const sptr<BufferEx
 
     SEND_REQUEST_WITH_SEQ(BUFFER_PRODUCER_FLUSH_BUFFER, arguments, reply, option, sequence);
     CHECK_RETVAL_WITH_SEQ(reply, sequence);
+
+    static SyncFenceTracker acquireFenceThread("Acquire Fence");
+    acquireFenceThread.TrackFence(fence);
 
     return GSERROR_OK;
 }

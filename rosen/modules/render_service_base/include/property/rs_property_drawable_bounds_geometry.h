@@ -519,7 +519,7 @@ private:
 // SaveLayerContent
 class RSSaveLayerContentDrawable : public RSPropertyDrawable {
 public:
-    explicit RSSavelayerContentDrawable(std::shared_ptr<int> content, SkPaint&& blendPaint)
+    RSSavelayerContentDrawable(std::shared_ptr<int> content, SkPaint&& blendPaint)
         : content_(std::move(content)), blendPaint_(std::move(blendPaint))
     {}
     ~RSSavelayerContentDrawable() override = default;

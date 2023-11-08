@@ -88,8 +88,8 @@ private:
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;
 
-    // blendmode
-    bool useBlendMode_ = false;
+    // blendmode, value used to restore saveLayer
+    std::optional<int> countForBlend_ = std::nullopt;
 
     friend class RSColorfulShadowDrawable;
     friend class RSRenderTransition;

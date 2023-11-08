@@ -121,16 +121,18 @@ void RSCanvasRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& ca
 void RSCanvasRenderNode::DealBlendModePorperty(RSPaintFilterCanvas& canvas)
 {
     if (GetRenderProperties().GetColorBlendPaint().has_value()) {
-        useBlendMode_ = true;
-        canvas.saveLayer(nullptr, nullptr);
+        if (!countForBlend_.has_value()) {
+            countForBlend_ = std::make_optional<int>(-1);
+        }
+        *countForBlend_ = canvas.saveLayer(nullptr, nullptr);
     } else {
-        useBlendMode_ = false;
+        countForBlend_ = nullopt;
     }
 }
 
 void RSCanvasRenderNode::ExecuteBlendMode(RSPaintFilterCanvas& canvas)
 {
-    if (useBlendMode_) {
+    if (countForBlend_.has_value()) {
         auto paint = std::move(GetRenderProperties().GetColorBlendPaint().value());
         canvas.saveLayer(nullptr, &paint);
     }
@@ -219,8 +221,8 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
 
     canvas.RestoreStatus(canvasNodeSaveCount_);
-    if (useBlendMode_) {
-        canvas.restore();
+    if (countForBlend_.has_value()) {
+        canvas.restoreToCount(*content_);
     }
     if (GetRenderProperties().IsLightUpEffectValid()) {
         RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);

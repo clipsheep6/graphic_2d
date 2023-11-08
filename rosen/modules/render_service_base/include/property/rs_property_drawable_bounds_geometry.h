@@ -453,12 +453,18 @@ protected:
 
 class RSBackgroundColorDrawable : public RSBackgroundDrawable {
 public:
-    explicit RSBackgroundColorDrawable(bool hasRoundedCorners, SkColor color) : RSBackgroundDrawable(hasRoundedCorners)
+    explicit RSBackgroundColorDrawable(bool hasRoundedCorners, SkColor color, bool hasClipToBounds)
+        : RSBackgroundDrawable(hasRoundedCorners)
     {
         paint_.setColor(color);
+        hasClipToBounds_ = hasClipToBounds;
     }
     ~RSBackgroundColorDrawable() override = default;
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
     static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+
+private:
+    bool hasClipToBounds_ = false;
 };
 
 class RSBackgroundShaderDrawable : public RSBackgroundDrawable {

@@ -1174,8 +1174,22 @@ std::unique_ptr<RSPropertyDrawable> RSBackgroundColorDrawable::Generate(
     if (isTransparent) {
         return nullptr;
     }
+    bool hasClipToBounds = false;
     bool hasRoundedCorners = !properties.GetCornerRadius().IsZero();
-    return std::make_unique<RSBackgroundColorDrawable>(hasRoundedCorners, bgColor.AsArgbInt());
+    if (!properties.GetClipBounds() && properties.GetClipToBounds()) {
+        hasClipToBounds = false;
+    }
+    return std::make_unique<RSBackgroundColorDrawable>(hasRoundedCorners, bgColor.AsArgbInt(), hasClipToBounds);
+}
+
+void RSBackgroundColorDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+{
+    const RSProperties& properties = node.GetRenderProperties();
+    if (hasClipToBounds_) {
+        canvas.drawPaint(paint_);
+    } else {
+        canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetInnerRRect()), paint_);
+    }
 }
 
 std::unique_ptr<RSPropertyDrawable> RSBackgroundShaderDrawable::Generate(

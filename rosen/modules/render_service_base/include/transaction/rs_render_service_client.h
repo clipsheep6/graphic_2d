@@ -192,6 +192,14 @@ public:
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);
 
+    int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat);
+
+    int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat);
+
+    int32_t GetIsHDRScreen(ScreenId id, bool& isHDRScreen);
+
+    int32_t SetIsHDRScreen(ScreenId id, bool isHDRScreen);
+
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType);
 
 #ifndef USE_ROSEN_DRAWING

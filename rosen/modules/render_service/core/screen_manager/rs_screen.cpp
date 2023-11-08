@@ -51,10 +51,10 @@ RSScreen::RSScreen(const VirtualScreenConfigs &configs)
       width_(configs.width),
       height_(configs.height),
       isVirtual_(true),
+      isHDRScreen_(configs.isHDRScreen),
       producerSurface_(configs.surface),
-      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN),
       pixelFormat_(configs.pixelFormat),
-      isHDRScreen_(configs.isHDRScreen)
+      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN)
 {
     hdrCapability_.formatCount = 0;
 }
@@ -665,29 +665,33 @@ void RSScreen::SetScreenVsyncEnabled(bool enabled) const
     }
 }
 
-int32_t SetIsHDRScreen(bool isHDRScreen){
+int32_t RSScreen::SetIsHDRScreen(bool isHDRScreen)
+{
     if (!IsVirtual()) {
-        HiLog::Warn(LOG_LABEL, "%{public}s: physical screen not support SetIsHDRScreen.\n", __func__);
+        RS_LOGW("RSScreen %{public}s: physical screen not support SetIsHDRScreen.\n", __func__);
         return StatusCode::HDI_ERROR;
     }
     isHDRScreen_ = isHDRScreen;
     return StatusCode::SUCCESS;
 }
 
-bool IsHDRScreen() const{
+bool RSScreen::IsHDRScreen() const
+{
     return isHDRScreen_;
 }
 
-int32_t SetPixelFormat(GraphicPixelFormat pixelFormat){
+int32_t RSScreen::SetPixelFormat(GraphicPixelFormat pixelFormat)
+{
     if (!IsVirtual()) {
-        HiLog::Warn(LOG_LABEL, "%{public}s: physical screen not support SetPixelFormat.\n", __func__);
+        RS_LOGW("RSScreen %{public}s: physical screen not support SetPixelFormat.\n", __func__);
         return StatusCode::HDI_ERROR;
     }
     pixelFormat_ = pixelFormat;
     return StatusCode::SUCCESS;
 }
 
-GraphicPixelFormat GetPixelFormat() const{
+GraphicPixelFormat RSScreen::GetPixelFormat() const
+{
     return pixelFormat_;
 }
 

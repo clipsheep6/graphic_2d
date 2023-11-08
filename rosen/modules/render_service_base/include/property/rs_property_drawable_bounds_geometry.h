@@ -517,7 +517,7 @@ private:
 };
 
 // SaveLayerContent
-class RSSaveLayerContentDrawable : public RSPropertyDrawable {
+class RSSavelayerContentDrawable : public RSPropertyDrawable {
 public:
     RSSavelayerContentDrawable(std::shared_ptr<int> content, SkPaint&& blendPaint)
         : content_(std::move(content)), blendPaint_(std::move(blendPaint))

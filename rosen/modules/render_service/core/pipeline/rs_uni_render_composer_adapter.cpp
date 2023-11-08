@@ -23,6 +23,9 @@
 #include "rs_divided_render_util.h"
 #include "rs_trace.h"
 #include "string_utils.h"
+#include "v1_0/cm_color_space.h"
+#include "v1_0/buffer_handle_meta_key_type.h"
+#include "metadata_convertor.h"
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
 #include "pipeline/driven_render/rs_driven_surface_render_node.h"
@@ -197,35 +200,32 @@ void RSUniRenderComposerAdapter::SetLayerColorSpace(const LayerInfoPtr& layer, R
         return;
     }
 
+    using namespace HDI::Display::Graphic::Common::V1_0;
+    static const std::map<GraphicColorGamut, CM_ColorSpaceType> RS_TO_COMMON_COLOR_SPACE_TYPE_MAP {
+        {GRAPHIC_COLOR_GAMUT_SRGB, CM_SRGB_FULL},
+        {GRAPHIC_COLOR_GAMUT_STANDARD_BT709, CM_BT709_FULL},
+        {GRAPHIC_COLOR_GAMUT_STANDARD_BT601, CM_BT601_EBU_FULL},
+        {GRAPHIC_COLOR_GAMUT_BT2020, CM_DISPLAY_BT2020_SRGB},
+        {GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020, CM_DISPLAY_BT2020_SRGB},
+        {GRAPHIC_COLOR_GAMUT_BT2100_PQ, CM_BT2020_PQ_FULL},
+        {GRAPHIC_COLOR_GAMUT_BT2100_HLG, CM_BT2020_HLG_FULL},
+    };
+
     GraphicColorGamut rsColorSpace = rsSurface->GetColorSpace();
-    CM_ColorSpaceType colorSpace = CM_SRGB_FULL;
-    switch (rsColorSpace)
-    {
-    case GRAPHIC_COLOR_GAMUT_SRGB:
-        colorSpace = CM_SRGB_FULL;
-        break;
-    case GRAPHIC_COLOR_GAMUT_STANDARD_BT709:
-        colorSpace = CM_BT709_LIMIT;
-        break;
-    case GRAPHIC_COLOR_GAMUT_STANDARD_BT601:
-        colorSpace = CM_BT601_EBU_LIMIT;
-        break;
-    case GRAPHIC_COLOR_GAMUT_BT2020:
-        colorSpace = CM_DISPLAY_BT2020_SRGB;
-        break;
-    case GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020:
-        colorSpace = CM_DISPLAY_BT2020_SRGB;
-        break;
-    case GRAPHIC_COLOR_GAMUT_BT2100_PQ:
-        colorSpace = CM_BT2020_PQ_FULL;
-        break;
-    case GRAPHIC_COLOR_GAMUT_BT2100_HLG:
-        colorSpace = CM_BT2020_HLG_FULL;
-        break;
-    // TODO
-    default:
-        break;
+    CM_ColorSpaceType colorSpace;
+    if (RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.find(rsColorSpace) != RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.end()) {
+        colorSpace = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.at(rsColorSpace);
+    } else {
+        colorSpace = CM_COLORSPACE_NONE;
     }
+
+    std::vector<uint8_t> colorSpaceData;
+    if (MetadataManager::ConvertMetadataToVec(colorSpace, colorSpaceData) != GSERROR_OK) {
+        RS_LOGE("RSUniRenderComposerAdapter::SetLayerColorSpace ConvertMetadataToVec failed");
+        return;
+    }
+
+    layer->GetBuffer()->SetMetadata(ATTRKEY_COLORSPACE_TYPE, colorSpaceData);
 }
 
 void RSUniRenderComposerAdapter::SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,

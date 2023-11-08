@@ -76,8 +76,8 @@ IDisplayBufferSptr GetDisplayBuffer()
         return g_displayBuffer;
     }
 
-    g_displayBuffer.reset(IDisplayBuffer::Get());
-    g_displayBufferV1_1.reset(IDisplayBuffer::Get());
+    g_displayBuffer.reset(OHOS::HDI::Display::Buffer::V1_1::IDisplayBuffer::Get());
+    g_displayBufferV1_1.reset(OHOS::HDI::Display::Buffer::V1_1::IDisplayBuffer::Get());
     if (g_displayBuffer == nullptr) {
         BLOGE("IDisplayBuffer::Get return nullptr.");
         return nullptr;

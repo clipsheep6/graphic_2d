@@ -25,6 +25,7 @@
 #include "buffer_extra_data_impl.h"
 #include "native_buffer.h"
 #include "v1_0/include/idisplay_buffer.h"
+#include "v1_1/include/idisplay_buffer.h"
 
 namespace OHOS {
 namespace {
@@ -53,6 +54,7 @@ inline GSError GenerateError(GSError err, int32_t code)
 using namespace OHOS::HDI::Display::Buffer::V1_0;
 using IDisplayBufferSptr = std::shared_ptr<IDisplayBuffer>;
 static IDisplayBufferSptr g_displayBuffer;
+static OHOS::HDI::Display::Buffer::V1_1::IDisplayBufferSptr g_displayBufferV1_1;
 static std::mutex g_DisplayBufferMutex;
 class DisplayBufferDiedRecipient : public OHOS::IRemoteObject::DeathRecipient {
 public:

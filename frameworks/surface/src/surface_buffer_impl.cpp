@@ -65,6 +65,7 @@ public:
     {
         std::lock_guard<std::mutex> lock(g_DisplayBufferMutex);
         g_displayBuffer = nullptr;
+        g_displayBufferV1_1 = nullptr;
         BLOGD("IDisplayBuffer died and g_displayBuffer is nullptr");
     };
 };
@@ -76,12 +77,14 @@ IDisplayBufferSptr GetDisplayBuffer()
     }
 
     g_displayBuffer.reset(IDisplayBuffer::Get());
+    g_displayBufferV1_1.reset(IDisplayBuffer::Get());
     if (g_displayBuffer == nullptr) {
         BLOGE("IDisplayBuffer::Get return nullptr.");
         return nullptr;
     }
     sptr<IRemoteObject::DeathRecipient> recipient = new DisplayBufferDiedRecipient();
     g_displayBuffer->AddDeathRecipient(recipient);
+    g_displayBufferV1_1->AddDeathRecipient(recipient);
     return g_displayBuffer;
 }
 
@@ -97,6 +100,7 @@ void SurfaceBufferImpl::DisplayBufferDeathCallback(void* data)
 {
     std::lock_guard<std::mutex> lock(g_DisplayBufferMutex);
     g_displayBuffer = nullptr;
+    g_displayBufferV1_1 = nullptr;
     BLOGD("gralloc_host died and g_displayBuffer is nullptr.");
 }
 

@@ -20,9 +20,7 @@
 #include "parameters.h"
 #include "rs_trace.h"
 #include "sandbox_utils.h"
-#ifdef NOT_BUILD_OHOS_SDK 
-#include "frame_rate_report.h"
-#endif
+// #include "frame_rate_report.h"
 
 
 namespace OHOS {
@@ -78,16 +76,14 @@ void HgmFrameRateManager::UniProcessData(const FrameRateRangeData& data)
     }
     // [Temporary func]: Switch refresh rate immediately, func will be removed in the future.
     auto success = ExecuteSwitchRefreshRate(screenId);
-    #ifdef NOT_BUILD_OHOS_SDK 
     if (success == EXEC_SUCCESS && currRefreshRate_ != hgmCore.GetScreenCurrentRefreshRate(screenId)) {
         std::unordered_map<pid_t, uint32_t> rates;
         for (auto& appRange : data.multiAppRange) {
             rates[appRange.first] = appRange.second.preferred_;
         }
         rates[GetRealPid()] = currRefreshRate_;
-        FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
+        // FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
     }
-    #endif
 }
 
 void HgmFrameRateManager::CalcRefreshRate(const ScreenId id, const FrameRateRange& range)

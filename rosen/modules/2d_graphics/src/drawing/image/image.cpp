@@ -20,6 +20,9 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+BackendTexture::BackendTexture() noexcept
+    : isValid_(false), imageImplPtr(ImplFactory::CreateImageImpl()) {}
+
 BackendTexture::BackendTexture(bool isValid) noexcept
     : isValid_(isValid), imageImplPtr(ImplFactory::CreateImageImpl()) {}
 
@@ -60,6 +63,11 @@ bool Image::BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap)
     return imageImplPtr->BuildFromBitmap(gpuContext, bitmap);
 }
 
+bool Image::MakeFromEncoded(const std::shared_ptr<Data>& data)
+{
+    return imageImplPtr->MakeFromEncoded(data);
+}
+
 bool Image::BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Data>& data, int width, int height,
     CompressedType type)
 {
@@ -70,6 +78,11 @@ bool Image::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, Te
     BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace)
 {
     return imageImplPtr->BuildFromTexture(gpuContext, info, origin, bitmapFormat, colorSpace);
+}
+
+bool Image::BuildSubset(const std::shared_ptr<Image>& image, const RectI& rect, GPUContext& gpuContext)
+{
+    return imageImplPtr->BuildSubset(image, rect, gpuContext);
 }
 
 BackendTexture Image::GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) const
@@ -136,6 +149,11 @@ std::shared_ptr<Data> Image::EncodeToData(EncodedImageFormat& encodedImageFormat
 bool Image::IsLazyGenerated() const
 {
     return imageImplPtr->IsLazyGenerated();
+}
+
+bool Image::IsOpaque() const
+{
+    return imageImplPtr->IsOpaque();
 }
 
 std::shared_ptr<Data> Image::Serialize() const

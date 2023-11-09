@@ -42,18 +42,23 @@ namespace Drawing {
 class DRAWING_API SkiaImage : public ImageImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
+
     SkiaImage() noexcept;
     explicit SkiaImage(sk_sp<SkImage> skImg) noexcept;
     ~SkiaImage() override {}
+
     AdapterType GetType() const override
     {
         return AdapterType::SKIA_ADAPTER;
     }
+
     void* BuildFromBitmap(const Bitmap& bitmap) override;
     void* BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix, const Brush& brush,
         BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace) override;
 #ifdef ACE_ENABLE_GPU
     bool BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap) override;
+    bool MakeFromEncoded(const std::shared_ptr<Data>& data) override;
+    bool BuildSubset(const std::shared_ptr<Image> image, const RectI& rect, GPUContext& gpuContext) override;
     bool BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Data>& data, int width, int height,
         CompressedType type) override;
     bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
@@ -75,6 +80,7 @@ public:
         bool allowCachingHint = true) const override;
     std::shared_ptr<Data> EncodeToData(EncodedImageFormat& encodedImageFormat, int quality) const override;
     bool IsLazyGenerated() const override;
+    bool IsOpaque() const override;
 
     const sk_sp<SkImage> GetImage() const;
 

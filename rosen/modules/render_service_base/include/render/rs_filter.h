@@ -21,10 +21,10 @@
 
 #include "common/rs_color.h"
 #include "common/rs_macros.h"
-#if defined(NEW_SKIA)
+#ifndef USE_ROSEN_DRAWING
 #include "include/gpu/GrDirectContext.h"
 #else
-#include "include/gpu/GrContext.h"
+#include "image/gpu_context.h"
 #endif
 
 namespace OHOS {
@@ -39,7 +39,7 @@ class RSB_EXPORT RSFilter : public std::enable_shared_from_this<RSFilter> {
 public:
     class RSFilterTask {
     public:
-#ifdef NEW_SKIA
+#ifndef USE_ROSEN_DRAWING
         virtual bool InitSurface(GrRecordingContext* grContext);
 #else
         virtual bool InitSurface(GrContext* grContext);
@@ -79,6 +79,22 @@ public:
     uint32_t Hash() const
     {
         return hash_;
+    }
+
+    virtual bool IsPartialValid() const
+    {
+        return true;
+    }
+    
+    virtual bool IsNearEqual(
+        const std::shared_ptr<RSFilter>& other, float threshold = std::numeric_limits<float>::epsilon()) const
+    {
+        return true;
+    }
+
+    virtual bool IsNearZero(float threshold = std::numeric_limits<float>::epsilon()) const
+    {
+        return true;
     }
 
 protected:

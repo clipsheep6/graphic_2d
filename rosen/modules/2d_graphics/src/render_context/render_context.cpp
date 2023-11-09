@@ -216,6 +216,12 @@ void RenderContext::MakeCurrent(EGLSurface surface, EGLContext context)
     eglSurface_ = surface;
 }
 
+void RenderContext::SetAndMakeCurrentShareContex(EGLContext shareContext)
+{
+    eglMakeCurrent(eglDisplay_, eglSurface_, eglSurface_, shareContext);
+    eglContext_ = shareContext;
+}
+
 void RenderContext::ShareMakeCurrent(EGLContext shareContext)
 {
     eglMakeCurrent(eglDisplay_, eglSurface_, eglSurface_, shareContext);
@@ -467,6 +473,7 @@ void RenderContext::RenderFrame()
 #else
     if (surface_ != nullptr && surface_->GetCanvas() != nullptr) {
         LOGD("RenderFrame: Canvas");
+        RSTagTracker tagTracker(GetDrGPUContext(), RSTagTracker::TAGTYPE::TAG_RENDER_FRAME);
         surface_->GetCanvas()->Flush();
 #endif
     } else {

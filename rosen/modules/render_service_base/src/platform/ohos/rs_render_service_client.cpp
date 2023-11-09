@@ -558,6 +558,7 @@ bool RSRenderServiceClient::RegisterBufferAvailableListener(
     if (!isFromRenderThread && iter != bufferAvailableCbUIMap_.end()) {
         ROSEN_LOGW("RSRenderServiceClient::RegisterBufferAvailableListener "
                    "Node %{public}" PRIu64 " already, bufferAvailableCbUIMap_", iter->first);
+        bufferAvailableCbUIMap_.erase(iter);
     }
 
     sptr<RSIBufferAvailableCallback> bufferAvailableCb = new CustomBufferAvailableCallback(callback);
@@ -649,6 +650,15 @@ int32_t RSRenderServiceClient::SetScreenGamutMap(ScreenId id, ScreenGamutMap mod
     return renderService->SetScreenGamutMap(id, mode);
 }
 
+int32_t RSRenderServiceClient::SetScreenCorrection(ScreenId id, ScreenRotation screenRotation)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return RENDER_SERVICE_NULL;
+    }
+    return renderService->SetScreenCorrection(id, screenRotation);
+}
+
 int32_t RSRenderServiceClient::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
@@ -692,7 +702,12 @@ bool RSRenderServiceClient::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
     return renderService->GetBitmap(id, bitmap);
 }
 
+#ifndef USE_ROSEN_DRAWING
 bool RSRenderServiceClient::GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect)
+#else
+bool RSRenderServiceClient::GetPixelmap(
+    NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect)
+#endif
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -745,10 +760,10 @@ public:
     explicit CustomSurfaceOcclusionChangeCallback(const SurfaceOcclusionChangeCallback &callback) : cb_(callback) {}
     ~CustomSurfaceOcclusionChangeCallback() override {};
 
-    void OnSurfaceOcclusionVisibleChanged(bool visible) override
+    void OnSurfaceOcclusionVisibleChanged(float visibleAreaRatio) override
     {
         if (cb_ != nullptr) {
-            cb_(visible);
+            cb_(visibleAreaRatio);
         }
     }
 
@@ -757,7 +772,7 @@ private:
 };
 
 int32_t RSRenderServiceClient::RegisterSurfaceOcclusionChangeCallback(
-    NodeId id, const SurfaceOcclusionChangeCallback& callback)
+    NodeId id, const SurfaceOcclusionChangeCallback& callback, std::vector<float>& partitionPoints)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -765,7 +780,7 @@ int32_t RSRenderServiceClient::RegisterSurfaceOcclusionChangeCallback(
         return RENDER_SERVICE_NULL;
     }
     sptr<CustomSurfaceOcclusionChangeCallback> cb = new CustomSurfaceOcclusionChangeCallback(callback);
-    return renderService->RegisterSurfaceOcclusionChangeCallback(id, cb);
+    return renderService->RegisterSurfaceOcclusionChangeCallback(id, cb, partitionPoints);
 }
 
 int32_t RSRenderServiceClient::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)

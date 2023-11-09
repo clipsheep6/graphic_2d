@@ -18,45 +18,49 @@
 
 #include <list>
 #include <utility>
+
 #include "property/rs_property_drawable.h"
 
 namespace OHOS::Rosen {
 class RSFrameGeometryDrawable : public RSPropertyDrawable {
 public:
-    explicit RSFrameGeometryDrawable(float frameOffsetX, float frameOffsetY);
+    explicit RSFrameGeometryDrawable() = default;
     ~RSFrameGeometryDrawable() override = default;
-    void Draw(RSModifierContext& context) override;
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSProperties& properties);
-
-private:
-    float frameOffsetX_;
-    float frameOffsetY_;
+    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
 };
 
 // ============================================================================
 // ClipFrame
 class RSClipFrameDrawable : public RSPropertyDrawable {
 public:
-    explicit RSClipFrameDrawable(const SkRect& content) : content_(content) {}
+    explicit RSClipFrameDrawable() = default;
     ~RSClipFrameDrawable() override = default;
-    void Draw(RSModifierContext& context) override;
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
-private:
-    SkRect content_;
+    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
 };
 
 // ============================================================================
 //
 class RSColorFilterDrawable : public RSPropertyDrawable {
 public:
+#ifndef USE_ROSEN_DRAWING
     explicit RSColorFilterDrawable(SkPaint&& paint) : paint_(std::move(paint)) {}
+#else
+    explicit RSColorFilterDrawable(Drawing::Brush&& brush) : brush_(std::move(brush)) {}
+#endif
     ~RSColorFilterDrawable() override = default;
-    void Draw(RSModifierContext& context) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSProperties& properties);
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
 
 private:
+#ifndef USE_ROSEN_DRAWING
     SkPaint paint_;
+#else
+    Drawing::Brush brush_;
+#endif
 };
-};     // namespace OHOS::Rosen
+} // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_FRAME_GEOMETRY_H

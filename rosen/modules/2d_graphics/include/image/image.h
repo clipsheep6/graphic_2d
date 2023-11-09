@@ -152,6 +152,7 @@ private:
 
 class BackendTexture {
 public:
+    BackendTexture() noexcept;
     BackendTexture(bool isValid) noexcept;
     virtual ~BackendTexture() {};
 
@@ -189,6 +190,8 @@ public:
      */
     bool BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap);
 
+    bool MakeFromEncoded(const std::shared_ptr<Data>& data);
+
     /*
      * @brief             Create a GPU-backed Image from compressed data.
      * @param gpuContext  GPU context.
@@ -213,6 +216,8 @@ public:
      */
     bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace);
+
+    bool BuildSubset(const std::shared_ptr<Image>& image, const RectI& rect, GPUContext& gpuContext);
 
     BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) const;
 
@@ -271,6 +276,8 @@ public:
      * @return  True if Image is a GPU texture.
      */
     bool IsTextureBacked() const;
+
+    bool IsOpaque() const;
 
     template<typename T>
     const std::shared_ptr<T> GetImpl() const

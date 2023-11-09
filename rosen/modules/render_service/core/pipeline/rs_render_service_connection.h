@@ -147,6 +147,8 @@ private:
 
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) override;
 
+    int32_t SetScreenCorrection(ScreenId id, ScreenRotation screenRotation) override;
+
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) override;
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) override;
@@ -158,6 +160,7 @@ private:
     bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect) override;
 #else
     bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) override;
+    bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect) override;
 #endif
 
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) override;
@@ -165,7 +168,7 @@ private:
     int32_t RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) override;
 
     int32_t RegisterSurfaceOcclusionChangeCallback(
-        NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback) override;
+        NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback, std::vector<float>& partitionPoints) override;
 
     int32_t UnRegisterSurfaceOcclusionChangeCallback(NodeId id) override;
 

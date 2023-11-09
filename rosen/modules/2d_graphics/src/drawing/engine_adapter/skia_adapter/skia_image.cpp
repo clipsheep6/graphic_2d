@@ -84,6 +84,31 @@ bool SkiaImage::BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap)
     return (skiaImage_ != nullptr) ? true : false;
 }
 
+bool SkiaImage::MakeFromEncoded(const std::shared_ptr<Data>& data)
+{
+    if (data == nullptr) {
+        LOGE("SkiaImage::MakeFromEncoded failed, data is invalid");
+        return false;
+    }
+
+    auto skData = data->GetImpl<SkiaData>()->GetSkData();
+    skiaImage_ = SkImage::MakeFromEncoded(skData);
+    return (skiaImage_ != nullptr);
+}
+
+bool SkiaImage::BuildSubset(const std::shared_ptr<Image> image, const RectI& rect, GPUContext& gpuContext)
+{
+    if (image == nullptr) {
+        LOGE("SkiaImage::BuildSubset failed, origin Image is invaild");
+        return false;
+    }
+    auto skiaImage = image->GetImpl<SkiaImage>()->GetImage();
+    auto skiaRect = SkIRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
+    grContext_ = gpuContext.GetImpl<SkiaGPUContext>()->GetGrContext();
+    skiaImage_ = skiaImage->makeSubset(skiaRect, grContext_.get());
+    return (skiaImage_ != nullptr) ? true : false;
+}
+
 bool SkiaImage::BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Data>& data, int width, int height,
     CompressedType type)
 {
@@ -287,6 +312,11 @@ std::shared_ptr<Data> SkiaImage::EncodeToData(EncodedImageFormat& encodedImageFo
 bool SkiaImage::IsLazyGenerated() const
 {
     return (skiaImage_ == nullptr) ? false : skiaImage_->isLazyGenerated();
+}
+
+bool SkiaImage::IsOpaque() const
+{
+    return (skiaImage_ == nullptr) ? false : skiaImage_->isOpaque();
 }
 
 const sk_sp<SkImage> SkiaImage::GetImage() const

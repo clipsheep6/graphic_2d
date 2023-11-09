@@ -145,6 +145,8 @@ public:
 
     virtual int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) = 0;
 
+    virtual int32_t SetScreenCorrection(ScreenId id, ScreenRotation screenRotation) = 0;
+
     virtual int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) = 0;
 
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) = 0;
@@ -156,6 +158,8 @@ public:
     virtual bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect) = 0;
 #else
     virtual bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) = 0;
+    virtual bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap,
+        const Drawing::Rect* rect) = 0;
 #endif
 
     virtual int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) = 0;
@@ -163,7 +167,7 @@ public:
     virtual int32_t RegisterOcclusionChangeCallback(sptr<RSIOcclusionChangeCallback> callback) = 0;
 
     virtual int32_t RegisterSurfaceOcclusionChangeCallback(
-        NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback) = 0;
+        NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback, std::vector<float>& partitionPoints) = 0;
 
     virtual int32_t UnRegisterSurfaceOcclusionChangeCallback(NodeId id) = 0;
 

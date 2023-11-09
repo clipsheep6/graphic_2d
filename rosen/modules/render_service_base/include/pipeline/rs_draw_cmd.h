@@ -47,6 +47,7 @@
 #endif
 
 #include "common/rs_common_def.h"
+#include "memory/rs_dfx_string.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_recording_canvas.h"
 #include "property/rs_properties_def.h"
@@ -194,6 +195,11 @@ public:
     {
         // not cacheable by default
         return std::nullopt;
+    }
+
+    virtual void DumpPicture(DfxString& info) const
+    {
+        return;
     }
 
     bool Marshalling(Parcel& parcel) const override
@@ -349,6 +355,15 @@ public:
     {
         return true;
     }
+
+    void DumpPicture(DfxString& info) const override
+    {
+        if (!rsImage_) {
+            return;
+        }
+        rsImage_->DumpPicture(info);
+    }
+
     void SetNodeId(NodeId id) override;
 
     bool Marshalling(Parcel& parcel) const override;
@@ -409,10 +424,6 @@ public:
     OvalOpItem(SkRect rect, const SkPaint& paint);
     ~OvalOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
-    std::optional<SkRect> GetCacheBounds() const override
-    {
-        return rect_;
-    }
 
     std::string GetTypeWithDesc() const override
     {
@@ -1124,10 +1135,6 @@ public:
     PathOpItem(const SkPath& path, const SkPaint& paint);
     ~PathOpItem() override {}
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
-    std::optional<SkRect> GetCacheBounds() const override
-    {
-        return path_.getBounds();
-    }
 
     std::string GetTypeWithDesc() const override
     {
@@ -1572,5 +1579,30 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
+#else
+#include "render/rs_image.h"
+#include "recording/draw_cmd_list.h"
+#include "recording/adaptive_image_helper.h"
+#include "draw/canvas.h"
+#include "parcel.h"
+
+namespace OHOS {
+namespace Rosen {
+class RSB_EXPORT RSExtendImageObject : public Drawing::ExtendImageObject {
+public:
+    RSExtendImageObject() = default;
+    RSExtendImageObject(const std::shared_ptr<Drawing::Image>& image, const std::shared_ptr<Drawing::Data>& data,
+        const Drawing::AdaptiveImageInfo& imageInfo);
+    RSExtendImageObject(const std::shared_ptr<Media::PixelMap>& pixelMap, const Drawing::AdaptiveImageInfo& imageInfo);
+    ~RSExtendImageObject() override = default;
+    void Playback(Drawing::Canvas& canvas, const Drawing::Rect& rect,
+        const Drawing::SamplingOptions& sampling, bool isBackground = false) override;
+    bool Marshalling(Parcel &parcel) const;
+    static RSExtendImageObject *Unmarshalling(Parcel &parcel);
+protected:
+    std::shared_ptr<RSImage> rsImage_;
+};
+} // namespace Rosen
+} // namespace OHOS
 #endif // USE_ROSEN_DRAWING
 #endif // RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_DRAW_CMD_H

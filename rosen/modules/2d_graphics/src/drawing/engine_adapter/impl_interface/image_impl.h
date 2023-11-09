@@ -40,18 +40,16 @@ class BackendTexture;
 enum class BitDepth;
 class ImageImpl : public BaseImpl {
 public:
-    static inline constexpr AdapterType TYPE = AdapterType::BASE_INTERFACE;
     ImageImpl() noexcept {}
     ~ImageImpl() override {}
-    AdapterType GetType() const override
-    {
-        return AdapterType::BASE_INTERFACE;
-    }
+
     virtual void* BuildFromBitmap(const Bitmap& bitmap) = 0;
     virtual void* BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix,
         const Brush& brush, BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace) = 0;
 #ifdef ACE_ENABLE_GPU
     virtual bool BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap) = 0;
+    virtual bool MakeFromEncoded(const std::shared_ptr<Data>& data) = 0;
+    virtual bool BuildSubset(const std::shared_ptr<Image> image, const RectI& rect, GPUContext& gpuContext);
     virtual bool BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Data>& data, int width, int height,
         CompressedType type) = 0;
     virtual bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
@@ -71,6 +69,7 @@ public:
         bool allowCachingHint = true) const = 0;
     virtual std::shared_ptr<Data> EncodeToData(EncodedImageFormat& encodedImageFormat, int quality) const = 0;
     virtual bool IsLazyGenerated() const = 0;
+    virtual bool IsOpaque() const = 0;
 
 
     // using for recording, should to remove after using shared memory

@@ -1098,6 +1098,26 @@ int32_t RSRenderServiceConnectionProxy::SetScreenGamutMap(ScreenId id, ScreenGam
     return result;
 }
 
+int32_t RSRenderServiceConnectionProxy::SetScreenCorrection(ScreenId id, ScreenRotation screenRotation)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return RS_CONNECTION_ERROR;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    data.WriteUint32(static_cast<uint32_t>(screenRotation));
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_CORRECTION);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        return RS_CONNECTION_ERROR;
+    }
+    int32_t result = reply.ReadInt32();
+    return result;
+}
+
 int32_t RSRenderServiceConnectionProxy::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
 {
     MessageParcel data;
@@ -1196,8 +1216,13 @@ bool RSRenderServiceConnectionProxy::GetBitmap(NodeId id, Drawing::Bitmap& bitma
     return true;
 }
 
+#ifndef USE_ROSEN_DRAWING
 bool RSRenderServiceConnectionProxy::GetPixelmap(
     NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect)
+#else
+bool RSRenderServiceConnectionProxy::GetPixelmap(
+    NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect)
+#endif
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1262,7 +1287,7 @@ int32_t RSRenderServiceConnectionProxy::RegisterOcclusionChangeCallback(sptr<RSI
 }
 
 int32_t RSRenderServiceConnectionProxy::RegisterSurfaceOcclusionChangeCallback(
-    NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback)
+    NodeId id, sptr<RSISurfaceOcclusionChangeCallback> callback, std::vector<float>& partitionPoints)
 {
     if (callback == nullptr) {
         ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterSurfaceOcclusionChangeCallback: callback is nullptr.");
@@ -1278,6 +1303,7 @@ int32_t RSRenderServiceConnectionProxy::RegisterSurfaceOcclusionChangeCallback(
     option.SetFlags(MessageOption::TF_SYNC);
     data.WriteUint64(id);
     data.WriteRemoteObject(callback->AsObject());
+    data.WriteFloatVector(partitionPoints);
 
     uint32_t code = static_cast<uint32_t>(
         RSIRenderServiceConnectionInterfaceCode::REGISTER_SURFACE_OCCLUSION_CHANGE_CALLBACK);

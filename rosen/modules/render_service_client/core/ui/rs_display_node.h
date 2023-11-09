@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_DISPLAY_NODE_H
 
 #include "ui/rs_node.h"
+#include "screen_manager/screen_types.h"
 
 #ifndef USE_ROSEN_DRAWING
 class SkCanvas;
@@ -45,12 +46,16 @@ public:
 
     void SetSecurityDisplay(bool isSecurityDisplay);
 
+    void SetScreenRotation(const uint32_t& rotation);
+
     void SetDisplayNodeMirrorConfig(const RSDisplayNodeConfig& displayNodeConfig);
 
     bool GetSecurityDisplay() const;
 
     bool IsMirrorDisplay() const;
 
+    void SetBootAnimation(bool isBootAnimation);
+    bool GetBootAnimation() const;
 protected:
     explicit RSDisplayNode(const RSDisplayNodeConfig& config);
     RSDisplayNode(const RSDisplayNode&) = delete;
@@ -64,6 +69,7 @@ private:
     int32_t offsetY_;
     bool isSecurityDisplay_ = false;
     bool isMirroredDisplay_ = false;
+    bool isBootAnimation_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

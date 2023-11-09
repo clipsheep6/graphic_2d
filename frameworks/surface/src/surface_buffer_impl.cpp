@@ -188,6 +188,12 @@ GSError SurfaceBufferImpl::Map()
 #ifdef RS_ENABLE_AFBC
     handle->usage |= (BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA);
 #endif
+
+    if (handle->usage & BUFFER_USAGE_PROTECTED) {
+        BLOGD("handle usage is BUFFER_USAGE_PROTECTED, do not Map");
+        return GSERROR_OK;
+    }
+
     void *virAddr = g_displayBuffer->Mmap(*handle);
     if (virAddr == nullptr || virAddr == MAP_FAILED) {
         return GSERROR_API_FAILED;
@@ -444,6 +450,9 @@ const sptr<BufferExtraData>& SurfaceBufferImpl::GetExtraData() const
 void SurfaceBufferImpl::SetBufferHandle(BufferHandle *handle)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (handle_ != nullptr) {
+        FreeBufferHandleLocked();
+    }
     handle_ = handle;
 }
 

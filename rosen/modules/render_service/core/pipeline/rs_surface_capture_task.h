@@ -85,14 +85,14 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
             return isUniRender_;
         }
 
-        bool GetHasingSecurityLayer() const
+        bool GetHasingSecurityOrSkipLayer() const
         {
-            return hasSecurityLayer_;
+            return hasSecurityOrSkipLayer_;
         }
 
-        void SetHasingSecurityLayer(const bool &hasSecurityLayer)
+        void SetHasingSecurityOrSkipLayer(const bool &hasSecurityOrSkipLayer)
         {
-            hasSecurityLayer_ = hasSecurityLayer;
+            hasSecurityOrSkipLayer_ = hasSecurityOrSkipLayer;
         }
 
     private:
@@ -110,7 +110,7 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
         float scaleX_ = 1.0f;
         float scaleY_ = 1.0f;
         bool isUniRender_ = false;
-        bool hasSecurityLayer_ = false;
+        bool hasSecurityOrSkipLayer_ = false;
         bool isUIFirst_ = false;
 
 #ifndef USE_ROSEN_DRAWING
@@ -145,15 +145,20 @@ private:
         bool isUniRender = false);
 
     std::unique_ptr<Media::PixelMap> CreatePixelMapByDisplayNode(std::shared_ptr<RSDisplayRenderNode> node,
-        bool isUniRender = false, bool hasSecurityLayer = false);
+        bool isUniRender = false, bool hasSecurityOrSkipLayer = false);
 
-    bool FindSecurityLayer();
+    bool FindSecurityOrSkipLayer();
+
+    // It is currently only used on folding screen.
+    int32_t ScreenCorrection(ScreenRotation screenRotation);
 
     NodeId nodeId_;
 
     float scaleX_;
 
     float scaleY_;
+
+    ScreenRotation screenCorrection_ = ScreenRotation::ROTATION_0;
 };
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)

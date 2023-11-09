@@ -732,6 +732,54 @@ int32_t RSRenderServiceConnection::GetScreenHDRCapability(ScreenId id, RSScreenH
     return screenManager_->GetScreenHDRCapability(id, screenHdrCapability);
 }
 
+int32_t RSRenderServiceConnection::GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat)
+{
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        return RSHardwareThread::Instance().ScheduleTask(
+            [=, &pixelFormat]() { return screenManager_->GetPixelFormat(id, pixelFormat); }).get();
+    } else {
+        return mainThread_->ScheduleTask(
+            [=, &pixelFormat]() { return screenManager_->GetPixelFormat(id, pixelFormat); }).get();
+    }
+}
+
+int32_t RSRenderServiceConnection::SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat)
+{
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        return RSHardwareThread::Instance().ScheduleTask(
+            [=]() { return screenManager_->SetPixelFormat(id, pixelFormat); }).get();
+    } else {
+        return mainThread_->ScheduleTask(
+            [=]() { return screenManager_->SetPixelFormat(id, pixelFormat); }).get();
+    }
+}
+
+int32_t RSRenderServiceConnection::GetIsHDRScreen(ScreenId id, bool& isHDRScreen)
+{
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        return RSHardwareThread::Instance().ScheduleTask(
+            [=, &isHDRScreen]() { return screenManager_->GetIsHDRScreen(id, isHDRScreen); }).get();
+    } else {
+        return mainThread_->ScheduleTask(
+            [=, &isHDRScreen]() { return screenManager_->GetIsHDRScreen(id, isHDRScreen); }).get();
+    }
+}
+
+int32_t RSRenderServiceConnection::SetIsHDRScreen(ScreenId id, bool isHDRScreen)
+{
+    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+    if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        return RSHardwareThread::Instance().ScheduleTask(
+            [=]() { return screenManager_->SetIsHDRScreen(id, isHDRScreen); }).get();
+    } else {
+        return mainThread_->ScheduleTask(
+            [=]() { return screenManager_->SetIsHDRScreen(id, isHDRScreen); }).get();
+    }
+}
+
 int32_t RSRenderServiceConnection::GetScreenType(ScreenId id, RSScreenType& screenType)
 {
     std::lock_guard<std::mutex> lock(mutex_);

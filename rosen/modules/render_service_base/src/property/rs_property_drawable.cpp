@@ -181,7 +181,6 @@ static const std::vector<RSPropertyDrawable::DrawableGenerator> g_drawableGenera
     nullptr,                                                 // RESTORE_FRAME,
 
     nullptr,                                                              // RESTORE_LAYER_CONTENT,
-    nullptr,                                                              // RESTORE_LAYER_BACKGROUND,
 
     // In Bounds clip (again)
     nullptr,                                              // SAVE_BOUNDS_AFTER_CHILDREN,
@@ -194,6 +193,8 @@ static const std::vector<RSPropertyDrawable::DrawableGenerator> g_drawableGenera
     RSForegroundColorDrawable::Generate,                  // FOREGROUND_COLOR,
     RSParticleDrawable::Generate,                         // PARTICLE_EFFECT,
     nullptr,                                              // RESTORE_BOUNDS,
+
+    nullptr,                                                              // RESTORE_LAYER_BACKGROUND,
 
     RSPixelStretchDrawable::Generate,                     // PIXEL_STRETCH,
     nullptr, // RESTORE_ALL,

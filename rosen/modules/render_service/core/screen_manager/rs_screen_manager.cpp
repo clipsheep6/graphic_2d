@@ -768,6 +768,20 @@ void RSScreenManager::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status
     screenPowerStatus_[id] = status;
 }
 
+bool RSScreenManager::SetVirtualMirrorScreenBufferRotation(ScreenId id, bool bufferRotation)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return false;
+    }
+
+    RS_LOGD("RSScreenManager %{public}s: bufferRotation: %{public}d", __func__, bufferRotation);
+    
+    return screens_.at(id)->SetVirtualMirrorScreenBufferRotation(bufferRotation);
+}
+
 void RSScreenManager::GetVirtualScreenResolution(ScreenId id, RSVirtualScreenResolution& virtualScreenResolution) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -887,6 +901,18 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
     info.skipFrameInterval = screen->GetScreenSkipFrameInterval();
 
     return info;
+}
+
+bool RSScreenManager::GetBufferRotation(ScreenId id) const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    // assert screens_.count(id) == 1
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager::GetProducerSurface: There is no screen for id %{public}" PRIu64 ".", id);
+        return false;
+    }
+    return screens_.at(id)->GetBufferRotation();
 }
 
 sptr<Surface> RSScreenManager::GetProducerSurface(ScreenId id) const

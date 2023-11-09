@@ -25,6 +25,7 @@
 #include "buffer_extra_data_impl.h"
 #include "native_buffer.h"
 #include "v1_0/include/idisplay_buffer.h"
+#include "v1_1/include/idisplay_buffer.h"
 
 namespace OHOS {
 namespace {
@@ -52,7 +53,9 @@ inline GSError GenerateError(GSError err, int32_t code)
 
 using namespace OHOS::HDI::Display::Buffer::V1_0;
 using IDisplayBufferSptr = std::shared_ptr<IDisplayBuffer>;
+using IDisplayBufferSptrV1_1 = std::shared_ptr<OHOS::HDI::Display::Buffer::V1_1::IDisplayBuffer>;
 static IDisplayBufferSptr g_displayBuffer;
+static IDisplayBufferSptrV1_1 g_displayBufferV1_1;
 static std::mutex g_DisplayBufferMutex;
 class DisplayBufferDiedRecipient : public OHOS::IRemoteObject::DeathRecipient {
 public:
@@ -62,6 +65,7 @@ public:
     {
         std::lock_guard<std::mutex> lock(g_DisplayBufferMutex);
         g_displayBuffer = nullptr;
+        g_displayBufferV1_1 = nullptr;
         BLOGD("IDisplayBuffer died and g_displayBuffer is nullptr");
     };
 };
@@ -72,13 +76,15 @@ IDisplayBufferSptr GetDisplayBuffer()
         return g_displayBuffer;
     }
 
-    g_displayBuffer.reset(IDisplayBuffer::Get());
+    g_displayBuffer.reset(OHOS::HDI::Display::Buffer::V1_0::IDisplayBuffer::Get());
+    g_displayBufferV1_1.reset(OHOS::HDI::Display::Buffer::V1_1::IDisplayBuffer::Get());
     if (g_displayBuffer == nullptr) {
         BLOGE("IDisplayBuffer::Get return nullptr.");
         return nullptr;
     }
     sptr<IRemoteObject::DeathRecipient> recipient = new DisplayBufferDiedRecipient();
     g_displayBuffer->AddDeathRecipient(recipient);
+    g_displayBufferV1_1->AddDeathRecipient(recipient);
     return g_displayBuffer;
 }
 
@@ -94,6 +100,7 @@ void SurfaceBufferImpl::DisplayBufferDeathCallback(void* data)
 {
     std::lock_guard<std::mutex> lock(g_DisplayBufferMutex);
     g_displayBuffer = nullptr;
+    g_displayBufferV1_1 = nullptr;
     BLOGD("gralloc_host died and g_displayBuffer is nullptr.");
 }
 

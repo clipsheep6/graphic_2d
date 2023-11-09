@@ -36,6 +36,7 @@
 #include "platform/drawing/rs_surface.h"
 #endif
 #include "rs_irender_client.h"
+#include "surface_type.h"
 #include "screen_manager/rs_screen_capability.h"
 #include "screen_manager/rs_screen_data.h"
 #include "screen_manager/rs_screen_hdr_capability.h"

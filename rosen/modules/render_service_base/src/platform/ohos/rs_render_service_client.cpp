@@ -678,6 +678,46 @@ int32_t RSRenderServiceClient::GetScreenHDRCapability(ScreenId id, RSScreenHDRCa
     return renderService->GetScreenHDRCapability(id, screenHdrCapability);
 }
 
+int32_t RSRenderServiceClient::GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::GetPixelFormat renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+    return renderService->GetPixelFormat(id, pixelFormat);
+}
+
+int32_t RSRenderServiceClient::SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::SetPixelFormat renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+    return renderService->SetPixelFormat(id, pixelFormat);
+}
+
+int32_t RSRenderServiceClient::GetIsHDRScreen(ScreenId id, bool& isHDRScreen)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::GetIsHDRScreen renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+    return renderService->GetIsHDRScreen(id, isHDRScreen);
+}
+
+int32_t RSRenderServiceClient::SetIsHDRScreen(ScreenId id, bool isHDRScreen)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::SetIsHDRScreen renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+    return renderService->SetIsHDRScreen(id, isHDRScreen);
+}
+
 int32_t RSRenderServiceClient::GetScreenType(ScreenId id, RSScreenType& screenType)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();

@@ -39,6 +39,7 @@
 
 #include <stdint.h>
 #include "buffer_handle.h"
+#include "native_buffer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -300,6 +301,17 @@ void OH_NativeWindow_DestroyNativeWindow(OHNativeWindow* window);
 OHNativeWindowBuffer* OH_NativeWindow_CreateNativeWindowBufferFromSurfaceBuffer(void* pSurfaceBuffer);
 
 /**
+ * @brief Creates a <b>OHNativeWindowBuffer</b> instance. A new <b>OHNativeWindowBuffer</b> instance is created each time this function is called.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
+ * @param nativeBuffer Indicates the pointer to a native buffer. The type is <b>OH_NativeBuffer*</b>.
+ * @return Returns the pointer to the <b>OHNativeWindowBuffer</b> instance created.
+ * @since 10
+ * @version 1.0
+ */
+OHNativeWindowBuffer* OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(OH_NativeBuffer* nativeBuffer);
+
+/**
  * @brief Decreases the reference count of a <b>OHNativeWindowBuffer</b> instance by 1 and, when the reference count reaches 0, destroys the instance.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
@@ -337,6 +349,17 @@ int32_t OH_NativeWindow_NativeWindowRequestBuffer(OHNativeWindow *window,
  */
 int32_t OH_NativeWindow_NativeWindowFlushBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer,
     int fenceFd, Region region);
+
+/**
+ * @brief Flushes the <b>OHNativeWindowBuffer</b> filled with the content to the buffer queue through a <b>OHNativeWindow</b> instance for content consumption.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
+ * @param buffer Indicates the pointer to a <b>OHNativeWindowBuffer</b> instance.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 10
+ * @version 1.0
+ */
+int32_t OH_NativeWindow_GetLastFlushedBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer);
 
  /**
  * @brief Returns the <b>OHNativeWindowBuffer</b> to the buffer queue through a <b>OHNativeWindow</b> instance, without filling in any content. The <b>OHNativeWindowBuffer</b> can be used for another request.

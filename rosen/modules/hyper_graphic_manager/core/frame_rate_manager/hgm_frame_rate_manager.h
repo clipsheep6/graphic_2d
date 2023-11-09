@@ -54,7 +54,7 @@ public:
     }
 private:
     void CalcRefreshRate(const ScreenId id, const FrameRateRange& range);
-    void ExecuteSwitchRefreshRate(const ScreenId id);
+    int32_t ExecuteSwitchRefreshRate(const ScreenId id);
     uint32_t GetDrawingFrameRate(const uint32_t refreshRate, const FrameRateRange& range);
     std::pair<float, float> applyDimension(
         SpeedTransType speedTransType, float xSpeed, float ySpeed, sptr<HgmScreen> hgmScreen);

@@ -354,6 +354,7 @@ int32_t OH_NativeWindow_NativeWindowFlushBuffer(OHNativeWindow *window, OHNative
  * @brief Get the last flushed <b>OHNativeWindowBuffer</b> from a <b>OHNativeWindow</b> instance.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
+ * @param window Indicates the pointer to a <b>OHNativeWindow</b> instance.
  * @param buffer Indicates the pointer to a <b>OHNativeWindowBuffer</b> instance.
  * @return Returns an error code, 0 is success, otherwise, failed.
  * @since 10

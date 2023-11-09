@@ -351,7 +351,7 @@ int32_t OH_NativeWindow_NativeWindowFlushBuffer(OHNativeWindow *window, OHNative
     int fenceFd, Region region);
 
 /**
- * @brief Flushes the <b>OHNativeWindowBuffer</b> filled with the content to the buffer queue through a <b>OHNativeWindow</b> instance for content consumption.
+ * @brief Get the last flushed <b>OHNativeWindowBuffer</b> from a <b>OHNativeWindow</b> instance.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
  * @param buffer Indicates the pointer to a <b>OHNativeWindowBuffer</b> instance.

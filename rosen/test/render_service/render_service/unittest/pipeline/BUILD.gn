@@ -247,9 +247,11 @@ ohos_unittest("RSSurfaceCaptureTaskTest") {
 ohos_unittest("RSUniRenderComposerAdapterTest") {
   module_out_path = module_output_path
   sources = [ "rs_uni_render_composer_adapter_test.cpp" ]
+  public_deps = [ "$graphic_2d_root/utils:libgraphic_utils" ]
   deps = [ ":rs_test_common" ]
   external_deps = [
     "c_utils:utils",
+    "drivers_interface_display:display_commontype_idl_headers",
     "hilog:libhilog",
   ]
   defines = []

@@ -196,19 +196,21 @@ void RSUniRenderComposerAdapter::SetLayerColorSpace(const LayerInfoPtr& layer, R
 
     auto rsSurface = displayNode->GetRSSurface();
     if (rsSurface == nullptr) {
-        RS_LOGD("RSUniRenderComposerAdapter::SetLayerColorSpace RSSurface is null");
+        RS_LOGE("RSUniRenderComposerAdapter::SetLayerColorSpace RSSurface is null");
         return;
     }
 
     using namespace HDI::Display::Graphic::Common::V1_0;
     static const std::map<GraphicColorGamut, CM_ColorSpaceType> RS_TO_COMMON_COLOR_SPACE_TYPE_MAP {
-        {GRAPHIC_COLOR_GAMUT_SRGB, CM_SRGB_FULL},
-        {GRAPHIC_COLOR_GAMUT_STANDARD_BT709, CM_BT709_FULL},
         {GRAPHIC_COLOR_GAMUT_STANDARD_BT601, CM_BT601_EBU_FULL},
+        {GRAPHIC_COLOR_GAMUT_STANDARD_BT709, CM_BT709_FULL},
+        {GRAPHIC_COLOR_GAMUT_SRGB, CM_SRGB_FULL},
+        {GRAPHIC_COLOR_GAMUT_ADOBE_RGB, CM_ADOBERGB_FULL},
+        {GRAPHIC_COLOR_GAMUT_DISPLAY_P3, CM_P3_FULL},
         {GRAPHIC_COLOR_GAMUT_BT2020, CM_DISPLAY_BT2020_SRGB},
-        {GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020, CM_DISPLAY_BT2020_SRGB},
         {GRAPHIC_COLOR_GAMUT_BT2100_PQ, CM_BT2020_PQ_FULL},
         {GRAPHIC_COLOR_GAMUT_BT2100_HLG, CM_BT2020_HLG_FULL},
+        {GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020, CM_DISPLAY_BT2020_SRGB},
     };
 
     GraphicColorGamut rsColorSpace = rsSurface->GetColorSpace();

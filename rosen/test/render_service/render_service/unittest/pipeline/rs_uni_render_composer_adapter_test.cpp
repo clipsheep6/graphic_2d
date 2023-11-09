@@ -15,7 +15,12 @@
 
 #include "gtest/gtest.h"
 #include "pipeline/rs_uni_render_composer_adapter.h"
+#include "pipeline/rs_uni_render_listener.h"
+#include "surface_buffer_impl.h"
 #include "rs_test_util.h"
+#include "v1_0/cm_color_space.h"
+#include "v1_0/buffer_handle_meta_key_type.h"
+#include "metadata_convertor.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -1171,5 +1176,53 @@ HWTEST_F(RSUniRenderComposerAdapterTest, LayerScaleDown006, TestSize.Level2)
     surfaceNode->GetConsumer()->SetTransform(GraphicTransformType::GRAPHIC_ROTATE_90);
     composerAdapter_->LayerScaleDown(layer, *surfaceNode);
     ASSERT_FALSE(layer->GetDirtyRegions()[0].h == DEFAULT_CANVAS_WIDTH);
+}
+
+/**
+ * @tc.name: SetLayerColorSpace001
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.SetLayerColorSpace
+ * @tc.type: FUNC
+*/
+HWTEST_F(RSUniRenderComposerAdapterTest, SetLayerColorSpace001, TestSize.Level2)
+{
+    SetUp();
+
+    using namespace HDI::Display::Graphic::Common::V1_0;
+
+    RSDisplayNodeConfig config;
+    RSDisplayRenderNode::SharedPtr nodePtr = std::make_shared<RSDisplayRenderNode>(1, config);
+
+    sptr<IBufferConsumerListener> listener = new RSUniRenderListener(nodePtr);
+    nodePtr->CreateSurface(listener);
+
+    auto rsSurface = nodePtr->GetRSSurface();
+    rsSurface->SetColorSpace(GRAPHIC_COLOR_GAMUT_DISPLAY_P3);
+
+    auto buffer = new SurfaceBufferImpl();
+    BufferRequestConfig requestConfig = {
+        .width = 0x100,
+        .height = 0x100,
+        .strideAlignment = 0x8,
+        .format = GRAPHIC_PIXEL_FMT_RGBA_8888,
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+        .timeout = 0,
+        .colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DISPLAY_P3,
+    };
+    GSError ret = buffer->Alloc(requestConfig);
+    ASSERT_EQ(ret, GSERROR_OK);
+
+    auto layer = HdiLayerInfo::CreateHdiLayerInfo();
+    layer->SetBuffer(buffer, SyncFence::INVALID_FENCE);
+
+    composerAdapter_->SetLayerColorSpace(layer, nodePtr.get());
+
+    std::vector<uint8_t> colorSpaceData;
+    ret = layer->GetBuffer()->GetMetadata(ATTRKEY_COLORSPACE_TYPE, colorSpaceData);
+    ASSERT_TRUE(ret == GSERROR_OK || GSErrorStr(sret) == "<500 api call failed>with low error <Not supported>");
+    if (ret == GSERROR_OK) {
+        CM_ColorSpaceType colorSpace;
+        ASSERT_EQ(MetadataManager::ConvertVecToMetadata(colorSpaceData, colorSpace), GSERROR_OK);
+        ASSERT_EQ(colorSpace, CM_P3_FULL);
+    }
 }
 } // namespace

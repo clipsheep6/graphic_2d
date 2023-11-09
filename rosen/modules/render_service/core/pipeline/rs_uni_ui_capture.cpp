@@ -16,12 +16,15 @@
 #include "pipeline/rs_uni_ui_capture.h"
 
 #include <functional>
+#include <memory>
+#include <sys/mman.h>
 
 #include "include/core/SkRect.h"
 #include "rs_trace.h"
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "offscreen_render/rs_offscreen_render_thread.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_divided_render_util.h"
@@ -77,7 +80,68 @@ std::shared_ptr<Media::PixelMap> RSUniUICapture::TakeLocalCapture()
     auto canvas = std::make_shared<RSPaintFilterCanvas>(drSurface.get());
 #endif
     drawCallList->Playback(*canvas);
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+    sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
+    if (!img) {
+        RS_LOGE("RSUniUICapture::TakeLocalCapture: img is nullptr");
+        return nullptr;
+    }
+    if (!CopyDataToPixelMap(img, pixelmap)) {
+        RS_LOGE("RSUniUICapture::TakeLocalCapture: CopyDataToPixelMap failed");
+        return nullptr;
+    }
+#endif
     return pixelmap;
+}
+
+bool RSUniUICapture::CopyDataToPixelMap(sk_sp<SkImage> img, std::shared_ptr<Media::PixelMap> pixelmap)
+{
+    auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
+    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+#ifdef ROSEN_OHOS
+    int fd = AshmemCreate("RSUniUICapture Data", size);
+    if (fd < 0) {
+        RS_LOGE("RSUniUICapture::CopyDataToPixelMap AshmemCreate fd < 0");
+        return false;
+    }
+    int result = AshmemSetProt(fd, PROT_READ | PROT_WRITE);
+    if (result < 0) {
+        RS_LOGE("RSUniUICapture::CopyDataToPixelMap AshmemSetProt error");
+        ::close(fd);
+        return false;
+    }
+    void* ptr = ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    auto data = static_cast<uint8_t*>(ptr);
+    if (ptr == MAP_FAILED || ptr == nullptr) {
+        RS_LOGE("RSUniUICapture::CopyDataToPixelMap data is nullptr");
+        ::close(fd);
+        return false;
+    }
+
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSUniUICapture::CopyDataToPixelMap readPixels failed");
+        ::close(fd);
+        return false;
+    }
+    void* fdPtr = new int32_t();
+    *static_cast<int32_t*>(fdPtr) = fd;
+    pixelmap->SetPixelsAddr(data, fdPtr, size, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
+#else
+    auto data = (uint8_t *)malloc(size);
+    if (data == nullptr) {
+        RS_LOGE("RSUniUICapture::CopyDataToPixelMap data is nullptr");
+        return false;
+    }
+    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSUniUICapture::CopyDataToPixelMap readPixels failed");
+        free(data);
+        data = nullptr;
+        return false;
+    }
+    pixelmap->SetPixelsAddr(data, nullptr, size, Media::AllocatorType::HEAP_ALLOC, nullptr);
+#endif
+    return true;
 }
 
 std::shared_ptr<Media::PixelMap> RSUniUICapture::CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node) const
@@ -104,6 +168,23 @@ sk_sp<SkSurface> RSUniUICapture::CreateSurface(const std::shared_ptr<Media::Pixe
     }
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
         kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+#if defined(NEW_RENDER_CONTEXT)
+    auto drawingContext = RSOffscreenRenderThread::Instance().GetRenderContext();
+    if (drawingContext == nullptr) {
+        RS_LOGE("RSUniUICapture::CreateSurface: renderContext is nullptr");
+        return nullptr;
+    }
+    return SkSurface::MakeRenderTarget(drawingContext->GetDrawingContext(), SkBudgeted::kNo, info);
+#else
+    auto renderContext = RSOffscreenRenderThread::Instance().GetRenderContext();
+    if (renderContext == nullptr) {
+        RS_LOGE("RSUniUICapture::CreateSurface: renderContext is nullptr");
+        return nullptr;
+    }
+    return SkSurface::MakeRenderTarget(renderContext->GetGrContext(), SkBudgeted::kNo, info);
+#endif
+#endif
     return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
 #else
@@ -185,8 +266,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<RSRecordin
         RS_LOGE("RSUniUICaptureVisitor::SetCanvas: canvas == nullptr");
         return;
     }
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
-    canvas->SetGrRecordingContext(renderContext->GetGrContext());
     canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
     canvas_->scale(scaleX_, scaleY_);
     canvas_->SetDisableFilterCache(true);
@@ -423,8 +502,12 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithUni(RSSurfaceR
     canvas_->Restore();
 #endif
     if (node.GetBuffer() != nullptr) {
-        auto params = RSUniRenderUtil::CreateBufferDrawParam(node, true);
-        renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
+        auto params = RSUniRenderUtil::CreateBufferDrawParam(node, false);
+        auto buffer = node.GetBuffer();
+        RSSurfaceBufferInfo rsSurfaceBufferInfo(buffer, params.dstRect.left(), params.dstRect.top(),
+            params.dstRect.width(), params.dstRect.height());
+        auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas_->GetRecordingCanvas());
+        recordingCanvas->DrawSurfaceBuffer(rsSurfaceBufferInfo);
     }
     if (isSelfDrawingSurface) {
         RSPropertiesPainter::DrawFilter(property, *canvas_, FilterType::FOREGROUND_FILTER);

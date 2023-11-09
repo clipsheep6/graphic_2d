@@ -998,6 +998,10 @@ void SurfaceBufferOpItem::Clear() const noexcept
 
 void SurfaceBufferOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
+    if (auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas())) {
+        recordingCanvas->DrawSurfaceBuffer(surfaceBufferInfo_);
+        return;
+    }
     Clear();
 #ifdef RS_ENABLE_GL
     if (surfaceBufferInfo_.surfaceBuffer_ == nullptr) {

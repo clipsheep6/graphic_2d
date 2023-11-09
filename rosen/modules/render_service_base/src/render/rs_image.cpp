@@ -361,21 +361,11 @@ void RSImage::DrawImageRepeatRect(const Drawing::SamplingOptions& samplingOption
 #ifndef USE_ROSEN_DRAWING
             dst_ = SkRect::MakeXYWH(dstRect_.left_ + i * dstRect_.width_, dstRect_.top_ + j * dstRect_.height_,
                 dstRect_.width_, dstRect_.height_);
-            if (canvas.GetRecordingState() && image_->isTextureBacked()) {
-                auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
-                auto cpuImage = image_->makeRasterImage();
 #ifdef NEW_SKIA
-                recordingCanvas->drawImageRect(cpuImage, src_, dst_, samplingOptions,
-                    &paint, SkCanvas::kFast_SrcRectConstraint);
-            } else {
-                canvas.drawImageRect(image_, src_, dst_, samplingOptions, &paint, SkCanvas::kFast_SrcRectConstraint);
+            canvas.drawImageRect(image_, src_, dst_, samplingOptions, &paint, SkCanvas::kFast_SrcRectConstraint);
 #else
-                recordingCanvas->drawImageRect(cpuImage, src_, dst_,
-                    &paint, SkCanvas::kFast_SrcRectConstraint);
-            } else {
-                canvas.drawImageRect(image_, src, dst, &paint, SkCanvas::kFast_SrcRectConstraint);
+            canvas.drawImageRect(image_, src, dst, &paint, SkCanvas::kFast_SrcRectConstraint);
 #endif
-            }
 #else
             auto dst = Drawing::Rect(dstRect_.left_ + i * dstRect_.width_, dstRect_.top_ + j * dstRect_.height_,
                 dstRect_.left_ + (i + 1) * dstRect_.width_, dstRect_.top_ + (j + 1) * dstRect_.height_);

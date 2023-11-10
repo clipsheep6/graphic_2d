@@ -52,6 +52,14 @@ bool RSSystemParameters::GetDrawingCacheEnabledDfx()
     return ConvertToInt(enabledDfx, 0) != 0;
 }
 
+bool RSSystemParameters::GetDrawingCacheEnabledFps()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.drawingCache.enabledFps", "0");
+    int changed = 0;
+    const char *enabledFps = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enabledFps, 0) != 0;
+}
+
 QuickSkipPrepareType RSSystemParameters::GetQuickSkipPrepareType()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.quickskipprepare.enabled", "3");

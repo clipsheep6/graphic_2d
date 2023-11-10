@@ -34,13 +34,14 @@ struct FrameRateRangeData {
     FrameRateRange rsRange;
     std::unordered_map<pid_t, FrameRateRange> multiAppRange;
     bool forceUpdateFlag = false;
+    int fps{0};
 };
 
 class HgmFrameRateManager {
 public:
     HgmFrameRateManager() {}
 
-    void UniProcessData(const FrameRateRangeData& data);
+    void UniProcessData(FrameRateRangeData& data);
     int32_t CalModifierPreferred(const HgmModifierProfile &hgmModifierProfile);
     std::shared_ptr<HgmOneShotTimer> GetScreenTimer(ScreenId screenId) const;
     void ResetScreenTimer(ScreenId screenId) const;

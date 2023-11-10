@@ -89,6 +89,8 @@ public:
     bool IsIdle() const;
     void QosStateDump(std::string& dumpString);
     void RenderServiceTreeDump(std::string& dumpString);
+    void FpsCount(std::string& dumpString);
+    void ClearFpsCount(std::string& dumpString);
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
@@ -375,6 +377,9 @@ private:
     uint32_t appWindowNum_ = 0;
     uint32_t requestNextVsyncNum_ = 0;
     bool lastFrameHasFilter_ = false;
+
+    int mfps{0};
+    std::map<int, int> fpsCount;
 
     std::shared_ptr<RSBaseRenderEngine> renderEngine_;
     std::shared_ptr<RSBaseRenderEngine> uniRenderEngine_;

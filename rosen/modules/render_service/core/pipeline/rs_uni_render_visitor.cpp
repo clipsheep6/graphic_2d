@@ -2347,6 +2347,22 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         if (isDrawingCacheEnabled_ && RSSystemParameters::GetDrawingCacheEnabledDfx()) {
             DrawCacheRegionForDFX(cacheRenderNodeMapRects_);
         }
+
+        if (RSSystemParameters::GetDrawingCacheEnabledFps()) {
+            sk_sp<SkTypeface> tf = SkTypeface::MakeFromName("HarmonyOS Sans SC", SkFontStyle::Normal());
+            SkFont font;
+            font.setSize(100);
+            font.setTypeface(tf);
+            std::string info = std::to_string(mFps);
+            sk_sp<SkTextBlob> textBlob = SkTextBlob::MakeFromString(info.c_str(), font);
+
+            SkPaint paint;
+            paint.setColor(SK_ColorGREEN);
+            paint.setAntiAlias(true);
+            canvas_->drawTextBlob(textBlob, 100.f, 200.f, paint);
+            RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode canvas is nullptr");
+        }
+
 #ifndef USE_ROSEN_DRAWING
         endCapture();
 #endif

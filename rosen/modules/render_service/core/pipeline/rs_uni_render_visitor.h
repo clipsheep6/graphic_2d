@@ -161,6 +161,13 @@ public:
         forceUpdateFlag_ = flag;
     }
 
+    void SetFps(uint32_t fps)
+    {
+        mFps = fps;
+    }
+
+    uint32_t mFps{0};
+
 #ifndef USE_ROSEN_DRAWING
     using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, RSPaintFilterCanvas::CanvasStatus>;
 #else

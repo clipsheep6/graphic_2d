@@ -332,9 +332,9 @@ TextBlobOpItem::TextBlobOpItem(const sk_sp<SkTextBlob> textBlob, float x, float 
 void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     bool isHighContrastEnabled = canvas.isHighContrastEnabled();
-    if (isHighContrastEnabled) {
+    uint32_t color = paint_.getColor();
+    if (isHighContrastEnabled && SkColorGetA(color) != 0) {
         ROSEN_LOGD("TextBlobOpItem::Draw highContrastEnabled");
-        uint32_t color = paint_.getColor();
         uint32_t channelSum = SkColorGetR(color) + SkColorGetG(color) + SkColorGetB(color);
         bool flag = channelSum < 594; // 594 is empirical value
 

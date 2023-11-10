@@ -80,6 +80,11 @@ public:
     bool HasIntersectionWithVisitedDirtyRect(const RectI& absRect) const;
     void UpdateCacheableFilterRect(const RectI& rect);
     bool IfCacheableFilterRectFullyCover(const RectI& targetRect);
+    bool IsCacheableFilterRectEmpty() const
+    {
+        return cacheableFilterRects_.empty();
+    }
+
     void ResetSubNodeFilterCacheValid()
     {
         isSubNodeFilterCacheValid_ = false;

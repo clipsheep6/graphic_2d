@@ -69,10 +69,8 @@ public:
     void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
     void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
-#ifdef OHOS_PLATFORM
     void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
         NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID) override;
-#endif
     bool IsAppWindow() const
     {
         return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE;
@@ -853,7 +851,6 @@ private:
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
     bool hasFingerprint_ = false;
-    bool isReportFirstFrame_ = false;
     RectI srcRect_;
 #ifndef USE_ROSEN_DRAWING
     SkMatrix totalMatrix_;
@@ -884,7 +881,7 @@ private:
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;
     RectI clipRegionFromParent_;
-    /*  
+    /*
         visibleRegion: appwindow visible region after occlusion, used for rs opdrop and other optimization.
         visibleRegionForCallBack: appwindow visible region after occlusion (no filtercache occlusion), used in
     windowmanager, qos, and web surfacenode visibility callback.

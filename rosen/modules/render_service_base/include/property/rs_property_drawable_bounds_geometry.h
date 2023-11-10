@@ -18,12 +18,10 @@
 
 #include <utility>
 
-#include "include/core/SkMatrix.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkRRect.h"
 
 #include "property/rs_property_drawable.h"
-#include "render/rs_skia_filter.h"
 
 namespace OHOS::Rosen {
 class RSSkiaFilter;
@@ -54,7 +52,8 @@ public:
     explicit RSBorderDrawable(SkPaint&& paint) : RSPropertyDrawable(), paint_(std::move(paint)) {}
 #else
     explicit RSBorderDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen)
-        : RSPropertyDrawable(), brush_(std::move(brush), pen(std::move(pen))) {}
+        : RSPropertyDrawable(), brush_(std::move(brush), pen(std::move(pen)))
+    {}
 #endif
     ~RSBorderDrawable() override = default;
     static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
@@ -76,8 +75,9 @@ public:
     explicit RSBorderDRRectDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen, const RSProperties& properties);
 #endif
     ~RSBorderDRRectDrawable() override = default;
-    void OnBoundsChange(const RSProperties& properties) override;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    void OnBoundsChange(const RSProperties& properties);
 
 private:
 #ifndef USE_ROSEN_DRAWING
@@ -97,8 +97,9 @@ public:
     explicit RSBorderFourLineDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen, const RSProperties& properties);
 #endif
     ~RSBorderFourLineDrawable() override = default;
-    void OnBoundsChange(const RSProperties& properties) override;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    void OnBoundsChange(const RSProperties& properties);
 
 private:
     RectF rect_;
@@ -112,8 +113,9 @@ public:
     explicit RSBorderPathDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen, const RSProperties& properties);
 #endif
     ~RSBorderPathDrawable() override = default;
-    void OnBoundsChange(const RSProperties& properties) override;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    void OnBoundsChange(const RSProperties& properties);
 
 private:
 #ifndef USE_ROSEN_DRAWING
@@ -132,8 +134,9 @@ public:
         const RSProperties& properties);
 #endif
     ~RSBorderFourLineRoundCornerDrawable() override = default;
-    void OnBoundsChange(const RSProperties& properties) override;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    void OnBoundsChange(const RSProperties& properties);
 
 private:
 #ifndef USE_ROSEN_DRAWING
@@ -149,18 +152,16 @@ private:
 // Mask
 class RSMaskDrawable : public RSPropertyDrawable {
 public:
-    explicit RSMaskDrawable(std::shared_ptr<RSMask> mask, RectF bounds);
+    explicit RSMaskDrawable(std::shared_ptr<RSMask> mask);
     ~RSMaskDrawable() override = default;
     static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
 
 protected:
     std::shared_ptr<RSMask> mask_;
 #ifndef USE_ROSEN_DRAWING
-    SkRect maskBounds_;
     SkPaint maskFilter_;
     SkPaint maskPaint_;
 #else
-    Drawing::Rect maskBounds_;
     Drawing::Brush maskFilterBrush_;
     Drawing::Brush maskBrush_;
 #endif
@@ -168,28 +169,28 @@ protected:
 
 class RSSvgDomMaskDrawable : public RSMaskDrawable {
 public:
-    explicit RSSvgDomMaskDrawable(std::shared_ptr<RSMask> mask, RectF bounds);
+    explicit RSSvgDomMaskDrawable(std::shared_ptr<RSMask> mask);
     ~RSSvgDomMaskDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 };
 
 class RSSvgPictureMaskDrawable : public RSMaskDrawable {
 public:
-    explicit RSSvgPictureMaskDrawable(std::shared_ptr<RSMask> mask, RectF bounds);
+    explicit RSSvgPictureMaskDrawable(std::shared_ptr<RSMask> mask);
     ~RSSvgPictureMaskDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 };
 
 class RSGradientMaskDrawable : public RSMaskDrawable {
 public:
-    explicit RSGradientMaskDrawable(std::shared_ptr<RSMask> mask, RectF bounds);
+    explicit RSGradientMaskDrawable(std::shared_ptr<RSMask> mask);
     ~RSGradientMaskDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 };
 
 class RSPathMaskDrawable : public RSMaskDrawable {
 public:
-    explicit RSPathMaskDrawable(std::shared_ptr<RSMask> mask, RectF bounds);
+    explicit RSPathMaskDrawable(std::shared_ptr<RSMask> mask);
     ~RSPathMaskDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 };
@@ -372,12 +373,11 @@ private:
 class RSPointParticleDrawable : public RSPropertyDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSPointParticleDrawable(SkPaint&& paint, std::shared_ptr<RSRenderParticle> particles, SkRect bounds)
-        : paint_(std::move(paint)), bounds_(bounds), particles_(std::move(particles))
+    explicit RSPointParticleDrawable(SkPaint&& paint, std::shared_ptr<RSRenderParticle> particles)
+        : paint_(std::move(paint)), particles_(std::move(particles))
 #else
-    explicit RSPointParticleDrawable(Drawing::Brush&& brush,
-        std::shared_ptr<RSRenderParticle> particles, Drawing::Rect bounds)
-        : brush_(std::move(brush)), bounds_(bounds), particles_(std::move(particles))
+    explicit RSPointParticleDrawable(Drawing::Brush&& brush, std::shared_ptr<RSRenderParticle> particles)
+        : brush_(std::move(brush)), particles_(std::move(particles))
 #endif
     {}
     ~RSPointParticleDrawable() override = default;
@@ -386,10 +386,8 @@ public:
 private:
 #ifndef USE_ROSEN_DRAWING
     SkPaint paint_;
-    SkRect bounds_;
 #else
     Drawing::Brush brush_;
-    Drawing::Rect bounds_;
 #endif
     std::shared_ptr<RSRenderParticle> particles_;
 };
@@ -397,12 +395,11 @@ private:
 class RSImageParticleDrawable : public RSPropertyDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSImageParticleDrawable(SkPaint&& paint, std::shared_ptr<RSRenderParticle> particles, SkRect bounds)
-        : paint_(std::move(paint)), bounds_(bounds), particles_(std::move(particles))
+    explicit RSImageParticleDrawable(SkPaint&& paint, std::shared_ptr<RSRenderParticle> particles)
+        : paint_(std::move(paint)), particles_(std::move(particles))
 #else
-    explicit RSImageParticleDrawable(Drawing::Brush&& brush,
-        std::shared_ptr<RSRenderParticle> particles, Drawing::Rect bounds)
-        : brush_(std::move(brush)), bounds_(bounds), particles_(std::move(particles))
+    explicit RSImageParticleDrawable(Drawing::Brush&& brush, std::shared_ptr<RSRenderParticle> particles)
+        : brush_(std::move(brush)), particles_(std::move(particles))
 #endif
     {}
     ~RSImageParticleDrawable() override = default;
@@ -411,10 +408,8 @@ public:
 private:
 #ifndef USE_ROSEN_DRAWING
     SkPaint paint_;
-    SkRect bounds_;
 #else
     Drawing::Brush brush_;
-    Drawing::Rect bounds_;
 #endif
     std::shared_ptr<RSRenderParticle> particles_;
 };
@@ -423,25 +418,12 @@ private:
 // PixelStretch
 class RSPixelStretchDrawable : public RSPropertyDrawable {
 public:
-#ifndef USE_ROSEN_DRAWING
-    explicit RSPixelStretchDrawable(const Vector4f& pixelStretch, SkRect bounds)
-        : pixelStretch_(pixelStretch), bounds_(bounds)
-#else
-    explicit RSPixelStretchDrawable(const Vector4f& pixelStretch, Drawing::Rect bounds)
-        : pixelStretch_(pixelStretch), bounds_(bounds)
-#endif
-    {}
+    explicit RSPixelStretchDrawable() = default;
     ~RSPixelStretchDrawable() override = default;
+
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
     static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-
-private:
-    const Vector4f& pixelStretch_;
-#ifndef USE_ROSEN_DRAWING
-    SkRect bounds_;
-#else
-    Drawing::Rect bounds_;
-#endif
+    bool Update(const RSPropertyDrawableGenerateContext& context) override { return true; };
 };
 
 // ============================================================================
@@ -524,25 +506,25 @@ private:
 };
 
 // ============================================================================
-// SavelayerBackground
-class RSSavelayerBackgroundDrawable : public RSPropertyDrawable {
+// SaveLayerBackground
+class RSSaveLayerBackgroundDrawable : public RSPropertyDrawable {
 public:
-    explicit RSSavelayerBackgroundDrawable() = default;
-    ~RSSavelayerBackgroundDrawable() override = default;
+    explicit RSSaveLayerBackgroundDrawable() = default;
+    ~RSSaveLayerBackgroundDrawable() override = default;
     static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 };
 
-// SavelayerContent
-class RSSavelayerContentDrawable : public RSPropertyDrawable {
+// SaveLayerContent
+class RSSaveLayerContentDrawable : public RSPropertyDrawable {
 public:
-    explicit RSSavelayerContentDrawable(SkPaint&& blendPaint) : blendPaint_(std::move(blendPaint)) {}
-    ~RSSavelayerContentDrawable() override = default;
+    explicit RSSaveLayerContentDrawable(SkPaint&& blendPaint) : blendPaint_(std::move(blendPaint)) {}
+    ~RSSaveLayerContentDrawable() override = default;
     static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
 private:
     SkPaint blendPaint_;
 };
-};     // namespace OHOS::Rosen
+} // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_BOUNDS_GEOMETRY_H

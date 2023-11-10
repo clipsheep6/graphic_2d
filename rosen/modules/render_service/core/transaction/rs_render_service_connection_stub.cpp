@@ -681,6 +681,18 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(result);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_CORRECTION): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            ScreenRotation screenRotation = static_cast<ScreenRotation>(data.ReadInt32());
+            int32_t result = SetScreenCorrection(id, screenRotation);
+            reply.WriteInt32(result);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SCREEN_GAMUT_MAP): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -844,7 +856,12 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 ret = ERR_NULL_OBJECT;
                 break;
             }
-            int32_t status = RegisterSurfaceOcclusionChangeCallback(id, callback);
+            std::vector<float> partitionPoints;
+            if (!data.ReadFloatVector(&partitionPoints)) {
+                ret = ERR_TRANSACTION_FAILED;
+                break;
+            }
+            int32_t status = RegisterSurfaceOcclusionChangeCallback(id, callback, partitionPoints);
             reply.WriteInt32(status);
             break;
         }

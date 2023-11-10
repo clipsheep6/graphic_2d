@@ -127,6 +127,8 @@ public:
 
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode);
 
+    int32_t SetScreenCorrection(ScreenId id, ScreenRotation screenRotation);
+
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode);
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);
@@ -144,7 +146,8 @@ public:
 
     int32_t RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 
-    int32_t RegisterSurfaceOcclusionChangeCallback(NodeId id, const SurfaceOcclusionChangeCallback& callback);
+    int32_t RegisterSurfaceOcclusionChangeCallback(
+        NodeId id, const SurfaceOcclusionChangeCallback& callback, std::vector<float>& partitionPoints);
 
     int32_t UnRegisterSurfaceOcclusionChangeCallback(NodeId id);
 

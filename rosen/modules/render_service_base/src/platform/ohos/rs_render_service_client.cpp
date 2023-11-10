@@ -283,14 +283,15 @@ ScreenId RSRenderServiceClient::CreateVirtualScreen(
     uint32_t height,
     sptr<Surface> surface,
     ScreenId mirrorId,
-    int32_t flags)
+    int32_t flags,
+    std::list<NodeId> filteredAppList)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
         return INVALID_SCREEN_ID;
     }
 
-    return renderService->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
+    return renderService->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppList);
 }
 
 int32_t RSRenderServiceClient::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)

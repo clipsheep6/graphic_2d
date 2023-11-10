@@ -68,9 +68,10 @@ ScreenId RSInterfaces::CreateVirtualScreen(
     uint32_t height,
     sptr<Surface> surface,
     ScreenId mirrorId,
-    int flags)
+    int flags,
+    std::list<NodeId> filteredAppList)
 {
-    return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
+    return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppList);
 }
 
 int32_t RSInterfaces::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)

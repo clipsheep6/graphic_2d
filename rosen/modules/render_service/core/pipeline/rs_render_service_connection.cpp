@@ -305,10 +305,11 @@ ScreenId RSRenderServiceConnection::CreateVirtualScreen(
     uint32_t height,
     sptr<Surface> surface,
     ScreenId mirrorId,
-    int32_t flags)
+    int32_t flags,
+    std::list<NodeId> filteredAppList)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto newVirtualScreenId = screenManager_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
+    auto newVirtualScreenId = screenManager_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppList);
     virtualScreenIds_.insert(newVirtualScreenId);
     auto& hgmCore = HgmCore::Instance();
     hgmCore.StartScreenScene(SceneType::SCREEN_RECORD);

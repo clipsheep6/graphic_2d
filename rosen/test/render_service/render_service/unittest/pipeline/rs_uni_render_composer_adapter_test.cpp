@@ -1182,6 +1182,7 @@ HWTEST_F(RSUniRenderComposerAdapterTest, LayerScaleDown006, TestSize.Level2)
  * @tc.name: SetLayerColorSpace001
  * @tc.desc: Test RSUniRenderComposerAdapterTest.SetLayerColorSpace
  * @tc.type: FUNC
+ * @tc.require: issuesI8C4I9
 */
 HWTEST_F(RSUniRenderComposerAdapterTest, SetLayerColorSpace001, TestSize.Level2)
 {
@@ -1218,7 +1219,7 @@ HWTEST_F(RSUniRenderComposerAdapterTest, SetLayerColorSpace001, TestSize.Level2)
 
     std::vector<uint8_t> colorSpaceData;
     ret = layer->GetBuffer()->GetMetadata(ATTRKEY_COLORSPACE_TYPE, colorSpaceData);
-    ASSERT_TRUE(ret == GSERROR_OK || GSErrorStr(sret) == "<500 api call failed>with low error <Not supported>");
+    ASSERT_TRUE(ret == GSERROR_OK || GSErrorStr(ret) == "<500 api call failed>with low error <Not supported>");
     if (ret == GSERROR_OK) {
         CM_ColorSpaceType colorSpace;
         ASSERT_EQ(MetadataManager::ConvertVecToMetadata(colorSpaceData, colorSpace), GSERROR_OK);

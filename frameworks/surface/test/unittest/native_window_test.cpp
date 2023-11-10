@@ -317,7 +317,6 @@ HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer002, Function | MediumTest | 
 */
 HWTEST_F(NativeWindowTest, CreateNativeWindowBuffer003, Function | MediumTest | Level2)
 {
-    // NativeWindowBuffer*
     OH_NativeBuffer* nativeBuffer = reinterpret_cast<OH_NativeBuffer *>(sBuffer);
     nativeWindowBuffer = OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(nativeBuffer);
     ASSERT_NE(nativeWindowBuffer, nullptr);

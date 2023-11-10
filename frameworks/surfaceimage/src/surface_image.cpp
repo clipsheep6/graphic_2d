@@ -195,7 +195,7 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
         return ret;
     }
     
-    if (seqNum != currentSurfaceImage_) {
+    if (seqNum != currentSurfaceImage_ && currentSurfaceBuffer_ != nullptr) {
         ret = ReleaseBuffer(currentSurfaceBuffer_, -1);
         if (ret != SURFACE_ERROR_OK) {
             BLOGE("release currentSurfaceBuffer_ failed %{public}d", ret);

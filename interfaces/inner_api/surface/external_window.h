@@ -306,7 +306,7 @@ OHNativeWindowBuffer* OH_NativeWindow_CreateNativeWindowBufferFromSurfaceBuffer(
  * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
  * @param nativeBuffer Indicates the pointer to a native buffer. The type is <b>OH_NativeBuffer*</b>.
  * @return Returns the pointer to the <b>OHNativeWindowBuffer</b> instance created.
- * @since 10
+ * @since 11
  * @version 1.0
  */
 OHNativeWindowBuffer* OH_NativeWindow_CreateNativeWindowBufferFromNativeBuffer(OH_NativeBuffer* nativeBuffer);
@@ -357,7 +357,7 @@ int32_t OH_NativeWindow_NativeWindowFlushBuffer(OHNativeWindow *window, OHNative
  * @param window Indicates the pointer to a <b>OHNativeWindow</b> instance.
  * @param buffer Indicates the pointer to a <b>OHNativeWindowBuffer</b> instance.
  * @return Returns an error code, 0 is success, otherwise, failed.
- * @since 10
+ * @since 11
  * @version 1.0
  */
 int32_t OH_NativeWindow_GetLastFlushedBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer);

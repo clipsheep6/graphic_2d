@@ -166,7 +166,6 @@ int32_t NativeWindowFlushBuffer(OHNativeWindow *window, OHNativeWindowBuffer *bu
     for (auto &[seqNum, buf] : window->bufferCache_) {
         if (buf == buffer) {
             window->lastBufferSeqNum = seqNum;
-            BLOGE("ljw save seqNum = %{public}u", window->lastBufferSeqNum);
             break;
         }
     }
@@ -182,7 +181,6 @@ int32_t GetLastFlushedBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffe
     }
     if (window->bufferCache_.find(window->lastBufferSeqNum) != window->bufferCache_.end()) {
         buffer = window->bufferCache_[window->lastBufferSeqNum];
-        BLOGE("ljw find seqNum = %{public}u", window->lastBufferSeqNum);
     }
 
     return buffer == nullptr ? OHOS::GSERROR_NO_BUFFER : OHOS::GSERROR_OK;

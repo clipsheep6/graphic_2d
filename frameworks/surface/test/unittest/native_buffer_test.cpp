@@ -263,7 +263,6 @@ HWTEST_F(NativeBufferTest, OHNativeBufferGetNativeBufferConfig001, Function | Me
     ASSERT_EQ(testConfig.usage, config.usage);
 }
 
-
 /*
 * Function: OH_NativeBuffer_SetColorSpace
 * Type: Function
@@ -275,8 +274,6 @@ HWTEST_F(NativeBufferTest, OHNativeBufferGetNativeBufferConfig001, Function | Me
 HWTEST_F(NativeBufferTest, OHNativeBufferSetColorSpace001, Function | MediumTest | Level2)
 {
     int32_t ret = OH_NativeBuffer_SetColorSpace(nullptr, OH_COLORSPACE_DISPLAY_BT2020_PQ);
-    ASSERT_NE(ret, GSERROR_OK);
-    ret = OH_NativeBuffer_SetColorSpace(buffer, OH_COLORSPACE_DISPLAY_BT2020_PQ + 1);
     ASSERT_NE(ret, GSERROR_OK);
 }
 

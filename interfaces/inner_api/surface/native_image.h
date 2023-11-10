@@ -46,7 +46,24 @@ extern "C" {
 struct OH_NativeImage;
 typedef struct OH_NativeImage OH_NativeImage;
 typedef struct NativeWindow OHNativeWindow;
+
+/**
+ * @brief The callback function of frame available.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeImage
+ * @param context User defined context, returned to the user in the callback function
+ * @since 11
+ * @version 1.0
+ */
 typedef void (*OH_OnFrameAvailable)(void *context);
+
+/**
+ * @brief A listener for native image, use <b>OH_NativeImage_SetOnFrameAvailableListener</b> to register \n
+ * the listener object to <b>OH_NativeImage</b>, the callback will be triggered when there is available frame
+ *
+ * @since 11
+ * @version 1.0
+ */
 typedef struct OH_OnFrameAvailableListener
 {
     void *context;
@@ -146,7 +163,7 @@ int32_t OH_NativeImage_GetTransformMatrix(OH_NativeImage* image, float matrix[16
  * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
  * @param surfaceId Indicates the surface id.
  * @return Returns an error code, 0 is success, otherwise, failed.
- * @since 10
+ * @since 11
  * @version 1.0
  */
 int32_t OH_NativeImage_GetSurfaceId(OH_NativeImage* image, uint64_t* surfaceId);
@@ -158,7 +175,7 @@ int32_t OH_NativeImage_GetSurfaceId(OH_NativeImage* image, uint64_t* surfaceId);
  * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
  * @param listener Indicates the callback function.
  * @return Returns an error code, 0 is success, otherwise, failed.
- * @since 10
+ * @since 11
  * @version 1.0
  */
 int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnFrameAvailableListener listener);
@@ -169,7 +186,7 @@ int32_t OH_NativeImage_SetOnFrameAvailableListener(OH_NativeImage* image, OH_OnF
  * @syscap SystemCapability.Graphic.Graphic2D.NativeImage
  * @param image Indicates the pointer to a <b>OH_NativeImage</b> instance.
  * @return Returns an error code, 0 is success, otherwise, failed.
- * @since 10
+ * @since 11
  * @version 1.0
  */
 int32_t OH_NativeImage_UnsetOnFrameAvailableListener(OH_NativeImage* image);

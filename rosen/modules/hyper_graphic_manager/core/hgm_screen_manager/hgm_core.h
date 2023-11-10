@@ -59,9 +59,9 @@ public:
         return activeScreenId_;
     }
 
-    std::shared_ptr<ParsedConfigData> GetParsedConfigData() const
+    std::shared_ptr<PolicyConfigData> GetPolicyConfigData() const
     {
-        return mParsedConfigData_;
+        return mPolicyConfigData_;
     }
 
     // set refresh rates
@@ -103,7 +103,7 @@ private:
     bool isInit_ = false;
     static constexpr char CONFIG_FILE[] = "/system/etc/graphic/hgm_policy_config.xml";
     std::unique_ptr<XMLParser> mParser_;
-    std::shared_ptr<ParsedConfigData> mParsedConfigData_ = nullptr;
+    std::shared_ptr<PolicyConfigData> mPolicyConfigData_ = nullptr;
 
     RefreshRateMode customFrameRateMode_ = HGM_REFRESHRATE_MODE_AUTO;
     std::vector<ScreenId> screenIds_;

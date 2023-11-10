@@ -53,10 +53,14 @@ void HgmConfigCallbackManager::RegisterHgmConfigChangeCallback(
 
     auto& hgmCore = HgmCore::Instance();
     auto data = std::make_shared<RSHgmConfigData>();
-    for (auto& [animType, dynamicSettingMap] : hgmCore.GetParsedConfigData()->aceSceneDynamicSetting_) {
-        for (auto& [animName, dynamicSetting] : dynamicSettingMap) {
+    // 获取真实的screenType和screenSetting
+    auto screenType = "1";
+    auto screenSetting = "3";
+    auto dynamicSettingMap = hgmCore.GetPolicyConfigData()->GetAceSceneDynamicSettingMap(screenType, screenSetting);
+    for (auto& [animType, dynamicSetting] : dynamicSettingMap) {
+        for (auto& [animName, dynamicConfig] : dynamicSetting) {
             data->AddAnimDynamicItem({
-                animType, animName, dynamicSetting.min, dynamicSetting.max, dynamicSetting.preferred_fps});
+                animType, animName, dynamicConfig.min, dynamicConfig.max, dynamicConfig.preferred_fps});
         }
     }
     auto screen = hgmCore.GetActiveScreen();

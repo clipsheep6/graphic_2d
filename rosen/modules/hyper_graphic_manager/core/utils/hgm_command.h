@@ -86,46 +86,93 @@ enum class SceneType {
     SCREEN_RECORD,
 };
 
-struct AnimationDynamicSetting {
-    int32_t min;
-    int32_t max;
-    int32_t preferred_fps;
-};
-
-using DynamicSetting = std::unordered_map<std::string, std::unordered_map<std::string, AnimationDynamicSetting>>;
-
-class ParsedConfigData {
+class PolicyConfigData {
 public:
-    ParsedConfigData() = default;
-    ~ParsedConfigData() = default;
+    PolicyConfigData() = default;
+    ~PolicyConfigData() = default;
 
-    std::string isDynamicFrameRateEnable_ = "0";
-    std::string defaultRefreshRateMode_ = "-1";
-    struct detailedStrat {
-        std::string name;
-        std::string isDynamic;
-        std::string min;
-        std::string max;
+    struct StrategyConfig {
+        int32_t min;
+        int32_t max;
+        int32_t dynamicMode;
+        int32_t drawMin;
+        int32_t drawMax;
     };
-    std::unordered_map<std::string, std::string> refreshRateForSettings_;
-    std::unordered_map<std::string, std::string> customerSettingConfig_;
-    std::unordered_map<std::string, detailedStrat> detailedStrategies_;
-    std::unordered_map<std::string, std::string> animationDynamicStrats_;
-    std::unordered_map<std::string, std::string> bundle_black_list_;
-    DynamicSetting dynamicSetting_;
-    DynamicSetting aceSceneDynamicSetting_;
+    // <"1", StrategyConfig>
+    using StrategyConfigMap = std::unordered_map<std::string, StrategyConfig>;
 
-    std::unordered_map<std::string, AnimationDynamicSetting> GetAnimationDynamicSettingMap(
-        HgmModifierType hgmModifierType) const
-    {
-        switch (hgmModifierType) {
-            case HgmModifierType::TRANSLATE:
-                return dynamicSetting_.find("translate")->second;
-            case HgmModifierType::SCALE:
-                return dynamicSetting_.find("scale")->second;
-            case HgmModifierType::ROTATION:
-                return dynamicSetting_.find("rotation")->second;
+    struct SceneConfig {
+        std::string strategy;
+        std::string priority;
+    };
+    // <"SCENE_APP_START_ANIMATION", SceneConfig>
+    using SceneConfigMap = std::unordered_map<std::string, SceneConfig>;
+
+    struct DynamicConfig {
+        int32_t min;
+        int32_t max;
+        int32_t preferred_fps;
+    };
+    // <"1", DynamicConfig>
+    using DynamicSetting = std::unordered_map<std::string, DynamicConfig>;
+    // <"translate", DynamicSetting>
+    using DynamicSettingMap = std::unordered_map<std::string, DynamicSetting>;
+
+    struct ScreenSetting {
+        std::string strategy;
+        // <"switch", "1">
+        std::unordered_map<std::string, std::string> ltpoConfig;
+        // <"com.huawei.camera", "4">
+        std::unordered_map<std::string, std::string> appList;
+        SceneConfigMap sceneList;
+        DynamicSettingMap animationDynamicSettings;
+        DynamicSettingMap aceSceneDynamicSettings;
+
+        DynamicSetting GetAnimationDynamicSetting(HgmModifierType hgmModifierType)
+        {
+            if (!animationDynamicSettings.size()) {
+                return {};
+            }
+            switch (hgmModifierType) {
+                case HgmModifierType::TRANSLATE:
+                    return animationDynamicSettings.find("translate")->second;
+                case HgmModifierType::SCALE:
+                    return animationDynamicSettings.find("scale")->second;
+                case HgmModifierType::ROTATION:
+                    return animationDynamicSettings.find("rotation")->second;
+            }
         }
+    };
+    // <"-1", ScreenSetting>
+    using ScreenConfig = std::unordered_map<std::string, ScreenSetting>;
+    // <"1", ScreenConfig>
+    using ScreenConfigMap = std::unordered_map<std::string, ScreenConfig>;
+
+    std::string defaultRefreshRateMode_ = "-1";
+    // <"120", "1">
+    std::unordered_map<std::string, std::string> refreshRateForSettings_;
+    // <"VIRTUAL_AXX", "4">
+    std::unordered_map<std::string, std::string> virtualDisplayConfigs_;
+    // <"screen0_LTPS", "1">
+    std::unordered_map<std::string, std::string> screenStrategyConfigs_;
+    StrategyConfigMap strategyConfigs_;
+    ScreenConfigMap screenConfigs_;
+
+    DynamicSetting GetAnimationDynamicSetting(std::string screenType,
+                                              std::string screenSettingType, HgmModifierType hgmModifierType)
+    {
+        if (screenConfigs_.count(screenType) && screenConfigs_[screenType].count(screenSettingType)) {
+            return screenConfigs_[screenType][screenSettingType].GetAnimationDynamicSetting(hgmModifierType);
+        }
+        return {};
+    }
+
+    DynamicSettingMap GetAceSceneDynamicSettingMap(std::string screenType, std::string screenSettingType)
+    {
+        if (screenConfigs_.count(screenType) && screenConfigs_[screenType].count(screenSettingType)) {
+            return screenConfigs_[screenType][screenSettingType].aceSceneDynamicSettings;
+        }
+        return {};
     }
 };
 } // namespace OHOS

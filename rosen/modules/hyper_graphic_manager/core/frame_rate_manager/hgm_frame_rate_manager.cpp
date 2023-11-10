@@ -207,7 +207,7 @@ int32_t HgmFrameRateManager::CalModifierPreferred(const HgmModifierProfile &hgmM
 {
     auto& hgmCore = HgmCore::Instance();
     sptr<HgmScreen> hgmScreen = hgmCore.GetScreen(hgmCore.GetActiveScreenId());
-    auto parsedConfigData = hgmCore.GetParsedConfigData();
+    auto policyConfigData = hgmCore.GetPolicyConfigData();
     if (!hgmScreen) {
         return HGM_ERROR;
     }
@@ -215,8 +215,12 @@ int32_t HgmFrameRateManager::CalModifierPreferred(const HgmModifierProfile &hgmM
         SpeedTransType::TRANS_PIXEL_TO_MM, hgmModifierProfile.xSpeed, hgmModifierProfile.ySpeed, hgmScreen);
     auto mixSpeed = sqrt(xSpeed * xSpeed + ySpeed * ySpeed);
 
-    auto dynamicSettingMap = parsedConfigData->GetAnimationDynamicSettingMap(hgmModifierProfile.hgmModifierType);
-    for (const auto &iter: dynamicSettingMap) {
+    // 获取真实的screenType和screenSetting
+    auto screenType = "1";
+    auto screenSetting = "3";
+    auto dynamicSetting = policyConfigData->GetAnimationDynamicSetting(screenType, screenSetting,
+                                                                       hgmModifierProfile.hgmModifierType);
+    for (const auto &iter: dynamicSetting) {
         if (mixSpeed >= iter.second.min && (mixSpeed < iter.second.max || iter.second.max == -1)) {
             return iter.second.preferred_fps;
         }

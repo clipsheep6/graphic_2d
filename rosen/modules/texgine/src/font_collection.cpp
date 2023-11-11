@@ -175,8 +175,14 @@ std::shared_ptr<Typeface> FontCollection::FindFallBackTypeface(const uint32_t &c
     }
 
     auto tfs = style.ToTexgineFontStyle();
-    auto fallbackTypeface = fm->MatchFamilyStyleCharacter("", tfs,
-        bcp47.data(), bcp47.size(), ch);
+    std::shared_ptr<TexgineTypeface> fallbackTypeface = nullptr;
+    
+    if (!style.GetFontStyle()) {
+        fallbackTypeface = fm->MatchFamilyStyleCharacter("", tfs,
+            bcp47.data(), bcp47.size(), ch);
+    } else {
+        fallbackTypeface = fm->MatchFamilyStyle(nullptr, tfs);
+    }
 
     if (fallbackTypeface == nullptr || fallbackTypeface->GetTypeface() == nullptr) {
         return nullptr;

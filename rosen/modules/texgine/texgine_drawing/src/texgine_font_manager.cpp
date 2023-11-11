@@ -55,6 +55,17 @@ std::shared_ptr<TexgineTypeface> TexgineFontManager::MatchFamilyStyleCharacter(c
     return std::make_shared<TexgineTypeface>(tf);
 }
 
+std::shared_ptr<TexgineTypeface> TexgineFontManager::MatchFamilyStyle(const char familyName[],
+    const TexgineFontStyle &style)
+{
+    if (fontMgr_ == nullptr || style.GetFontStyle() == nullptr) {
+        return nullptr;
+    }
+
+    auto tf = fontMgr_->matchFamilyStyle(familyName, *style.GetFontStyle());
+    return std::make_shared<TexgineTypeface>(tf);
+}
+
 std::shared_ptr<TexgineFontStyleSet> TexgineFontManager::MatchFamily(const std::string &familyName)
 {
     if (fontMgr_ == nullptr) {

@@ -54,6 +54,7 @@ public:
     std::shared_ptr<TexgineTypeface> MatchFamilyStyleCharacter(const std::string &familyName,
         const TexgineFontStyle &style, const char* bcp47[], int bcp47Count, int32_t character);
 
+    std::shared_ptr<TexgineTypeface> MatchFamilyStyle(const char familyName[], const TexgineFontStyle &style);
     /*
      * @brief Get the font style set
      * @param familyName The family names of user setting

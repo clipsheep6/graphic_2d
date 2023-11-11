@@ -192,6 +192,8 @@ public:
 
     int32_t SetScreenCorrection(ScreenId id, ScreenRotation screenRotation);
 
+    bool SetVirtualMirrorScreenBufferRotation(ScreenId id, bool bufferRotation);
+
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode);
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);

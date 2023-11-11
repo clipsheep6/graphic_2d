@@ -271,6 +271,11 @@ int32_t RSRenderServiceClient::SetScreenCorrection(ScreenId id, ScreenRotation s
     return {};
 }
 
+bool RSRenderServiceClient::SetVirtualMirrorScreenBufferRotation(ScreenId id, bool bufferRotation)
+{
+    return {};
+}
+
 int32_t RSRenderServiceClient::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
 {
     return {};

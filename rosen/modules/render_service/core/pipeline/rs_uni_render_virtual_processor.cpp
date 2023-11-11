@@ -42,12 +42,14 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
         isExpand_ = false;
     }
 
-    boundsWidth_ = node.GetRenderProperties().GetBoundsWidth();
-    boundsHeight_ = node.GetRenderProperties().GetBoundsHeight();
+    auto screenManager = CreateOrGetScreenManager();
+    auto mirrorScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
+    bufferRotation_ = screenManager->GetBufferRotation(node.GetScreenId());
+    mirrorWidth_ = static_cast<float>(mirrorScreenInfo.width);
+    mirrorHeight_ = static_cast<float>(mirrorScreenInfo.height);
 
     renderFrameConfig_.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
 
-    auto screenManager = CreateOrGetScreenManager();
     producerSurface_ = screenManager->GetProducerSurface(node.GetScreenId());
     if (producerSurface_ == nullptr) {
         RS_LOGE("RSUniRenderVirtualProcessor::Init for Screen(id %{public}" PRIu64 "): ProducerSurface is null!",
@@ -65,9 +67,9 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
     auto mirrorNode = node.GetMirrorSource().lock();
     isPhone_ = RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE;
     if (mirrorNode && node.IsFirstTimeToProcessor()) {
-        auto rotation = mirrorNode->GetScreenRotation();
+        mainScreenRotation_ = mirrorNode->GetScreenRotation();
         if (isPhone_) {
-            node.setFirstTimeScreenRotation(rotation);
+            node.setFirstTimeScreenRotation(mainScreenRotation_);
         } else {
             auto boundsGeoPtr = (mirrorNode->GetRenderProperties().GetBoundsGeometry());
             if (boundsGeoPtr != nullptr) {
@@ -76,17 +78,10 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
             }
         }
         RS_LOGD("RSUniRenderVirtualProcessor::Init, Screen(id %{public}" PRIu64 "), Rotation: %d", node.GetScreenId(),
-            static_cast<uint32_t>(rotation));
+            static_cast<uint32_t>(mainScreenRotation_));
     }
     if (mirrorNode && isPhone_) {
-        if (node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_90) {
-            canvas_->rotate(90, renderFrameConfig_.height / 2.0f, renderFrameConfig_.height / 2.0f); // 90 degrees
-            canvas_->translate(0, renderFrameConfig_.height - renderFrameConfig_.width);
-        } else if (node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_180) {
-            canvas_->rotate(180, renderFrameConfig_.width / 2.0f, renderFrameConfig_.height / 2.0f); // 180 degrees
-        } else if (node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_270) {
-            canvas_->rotate(270, renderFrameConfig_.height / 2.0f, renderFrameConfig_.height / 2.0f); // 270 degrees
-        }
+        CanvasRotation(node.getFirstTimeScreenRotation(), renderFrameConfig_.width, renderFrameConfig_.height);
     } else {
 #ifndef USE_ROSEN_DRAWING
     SkMatrix invertMatrix;
@@ -103,6 +98,18 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
 #endif
     }
     return true;
+}
+
+void RSUniRenderVirtualProcessor::CanvasRotation(ScreenRotation screenRotation, float width, float height)
+{
+    if (screenRotation == ScreenRotation::ROTATION_90) {
+        canvas_->rotate(90, height / 2.0f, height / 2.0f); // 90 degrees
+        canvas_->translate(0, height - width);
+    } else if (screenRotation == ScreenRotation::ROTATION_180) {
+        canvas_->rotate(180, width / 2.0f, height / 2.0f); // 180 degrees
+    } else if (screenRotation == ScreenRotation::ROTATION_270) {
+        canvas_->rotate(270, height / 2.0f, height / 2.0f); // 270 degrees
+    }
 }
 
 void RSUniRenderVirtualProcessor::PostProcess(RSDisplayRenderNode* node)
@@ -148,21 +155,24 @@ void RSUniRenderVirtualProcessor::ProcessDisplaySurface(RSDisplayRenderNode& nod
         }
 #endif
         auto params = RSUniRenderUtil::CreateBufferDrawParam(node, forceCPU_);
+        if (bufferRotation_) {
+            CanvasRotation(mainScreenRotation_, mirrorWidth_, mirrorHeight_);
+        }
         auto screenManager = CreateOrGetScreenManager();
         auto mainScreenInfo = screenManager->QueryScreenInfo(screenManager->GetDefaultScreenId());
         float mainWidth = static_cast<float>(mainScreenInfo.width);
         float mainHeight = static_cast<float>(mainScreenInfo.height);
         // If the width and height not match the main screen, calculate the dstRect.
-        if (mainWidth != boundsWidth_ || mainHeight != boundsHeight_) {
+        if (mainWidth != mirrorWidth_ || mainHeight != mirrorHeight_) {
             SkRect mirrorDstRect;
-            if ((boundsHeight_ / boundsWidth_) < (mainHeight / mainWidth)) {
-                float mirrorScale = boundsHeight_ / mainHeight;
-                mirrorDstRect = SkRect::MakeXYWH((boundsWidth_ - (mirrorScale * mainWidth)) / 2, 0, // 2 for calc X
-                    mirrorScale * mainWidth, boundsHeight_);
-            } else if ((boundsHeight_ / boundsWidth_) > (mainHeight / mainWidth)) {
-                float mirrorScale = boundsWidth_ / mainWidth;
-                mirrorDstRect = SkRect::MakeXYWH(0, (boundsHeight_ - (mirrorScale * mainHeight)) / 2, // 2 for calc Y
-                    boundsWidth_, mirrorScale * mainHeight);
+            if ((mirrorHeight_ / mirrorWidth_) < (mainHeight / mainWidth)) {
+                float mirrorScale = mirrorHeight_ / mainHeight;
+                mirrorDstRect = SkRect::MakeXYWH((mirrorWidth_ - (mirrorScale * mainWidth)) / 2, 0, // 2 for calc X
+                    mirrorScale * mainWidth, mirrorHeight_);
+            } else if ((mirrorHeight_ / mirrorWidth_) > (mainHeight / mainWidth)) {
+                float mirrorScale = mirrorWidth_ / mainWidth;
+                mirrorDstRect = SkRect::MakeXYWH(0, (mirrorHeight_ - (mirrorScale * mainHeight)) / 2, // 2 for calc Y
+                    mirrorWidth_, mirrorScale * mainHeight);
             }
             params.dstRect = mirrorDstRect;
         }

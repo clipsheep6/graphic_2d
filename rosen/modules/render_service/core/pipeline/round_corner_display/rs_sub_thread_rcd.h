@@ -36,6 +36,10 @@ private:
 public:
     void Start(RenderContext *context);
     void PostTask(const std::function<void()>& task);
+<<<<<<< HEAD
+=======
+
+>>>>>>> bda4bffba2c8854d873b119d928cdef251806764
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -18,6 +18,7 @@
 
 #include "common/rs_macros.h"
 #include "property/rs_properties.h"
+#include "property/rs_color_picker_cache_task.h"
 #ifndef USE_ROSEN_DRAWING
 #include "pipeline/rs_draw_cmd_list.h"
 #else
@@ -41,6 +42,9 @@ public:
         const RRect* rrect = nullptr, bool isAbsCoordinate = true);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
     static int GetAndResetBlurCnt();
+    static bool PostPartialColorPickerTask(std::shared_ptr<RSColorPickerCacheTask> colorPickerTask,
+        sk_sp<SkImage> imageSnapshot);
+    static std::function<void(std::weak_ptr<RSColorPickerCacheTask>)> postColorPickerTask;
 
     static void DrawPixelStretch(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawForegroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);

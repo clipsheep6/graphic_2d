@@ -83,6 +83,9 @@ RSMaterialFilter::RSMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE 
     imageFilter_ = RSMaterialFilter::CreateMaterialFilter(
         materialParam.radius, materialParam.saturation, materialParam.brightness);
     type_ = FilterType::MATERIAL;
+    if (colorMode_ == DEFAULT) {
+        colorPickerTask_ = std::make_shared<RSColorPickerCacheTask>();
+    }
 
     hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
     hash_ = SkOpts::hash(&materialParam, sizeof(materialParam), hash_);
@@ -213,6 +216,13 @@ void RSMaterialFilter::PreProcess(sk_sp<SkImage> imageSnapshot)
         SkColor colorPicker = RSPropertiesPainter::CalcAverageColor(imageSnapshot);
         maskColor_ = RSColor(
             SkColorGetR(colorPicker), SkColorGetG(colorPicker), SkColorGetB(colorPicker), maskColor_.GetAlpha());
+    } else if (colorMode_ == DEFAULT) {
+        RSColor color;
+        if (RSPropertiesPainter::PostPartialColorPickerTask(colorPickerTask_, imageSnapshot)) {
+            if (colorPickerTask_->GetColor(color)) {
+                maskColor_ = RSColor(color.GetRed(), color.getGreen(), color.GetBlue(), maskColor_.getAlpha());
+            }
+        }
     }
 }
 #else

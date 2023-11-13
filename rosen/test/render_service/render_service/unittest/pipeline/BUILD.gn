@@ -21,7 +21,7 @@ group("unittest") {
   testonly = true
 
   deps = [
-    ":RSRoundCorenerDisplayTest",
+    ":RSRoundCornerDisplayTest",
     ":RSBaseRenderEngineUnitTest",
     ":RSBaseRenderUtilTest",
     ":RSComposerAdapterTest",
@@ -532,14 +532,14 @@ ohos_unittest("RSBaseRenderEngineUnitTest") {
   defines += gpu_defines
 }
 
-## Build RSRoundCorenerDisplayTest
-ohos_unittest("RSRoundCorenerDisplayTest") {
+## Build RSRoundCornerDisplayTest
+ohos_unittest("RSRoundCornerDisplayTest") {
   module_out_path = module_output_path
   sources = [ "rs_round_corner_display_test.cpp" ]
   if (defined(use_new_skia) && use_new_skia) {
-    include_dirs = ["//third_party/skia/src", "third_party/skia/include/core"]
+    include_dirs = ["//third_party/skia/src", "//third_party/skia/include/core"]
   } else {
-    include_dirs = ["//third_party/flutter/skia/src", "third_party/flutter/skia/include/core"]
+    include_dirs = ["//third_party/flutter/skia/src", "//third_party/flutter/skia/include/core"]
   }
 
   deps = [

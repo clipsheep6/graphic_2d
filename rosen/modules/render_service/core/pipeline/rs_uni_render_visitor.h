@@ -280,7 +280,7 @@ private:
 
     // offscreen render related
     void PrepareOffscreenRender(RSRenderNode& node);
-    void FinishOffscreenRender();
+    void FinishOffscreenRender(bool isMirror = false);
     void ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRenderNode& node);
     bool AdaptiveSubRenderThreadMode(bool doParallel);
     void ParallelRenderEnableHardwareComposer(RSSurfaceRenderNode& node);
@@ -449,7 +449,12 @@ private:
     void endCapture() const;
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
 #endif
+    // use for screen recording optimization
     sk_sp<SkImage> cacheImgForCapture_ = nullptr;
+    // attention: please synchronize the change of RSUniRenderVisitor::ProcessChildren to this func
+    void ProcessChildrenForScreenRecordingOptimization(RSDisplayRenderNode& node, NodeId rootIdOfCaptureWindow);
+    NodeId FindInstanceChildOfDisplay(std::shared_ptr<RSRenderNode> node);
+    bool CheckIfNeedResetRotate();
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -275,11 +275,11 @@ public:
         cacheImgForCapture_ = cacheImgForCapture;
     }
 #endif
-    uint32_t GetCaptureWindowZOrder() {
-        return captureWindowZOrder_;
+    NodeId GetRootIdForCpatureWindow() {
+        return rootIdForCpatureWindow_;
     }
-    void SetCaptureWindowZOrder(uint32_t captureWindowZOrder) {
-        captureWindowZOrder_ = captureWindowZOrder;
+    void SetRootIdForCpatureWindow(NodeId rootIdForCpatureWindow) {
+        rootIdForCpatureWindow_ = rootIdForCpatureWindow;
     }
 
 private:
@@ -325,7 +325,7 @@ private:
 #else
     std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
 #endif
-    uint32_t captureWindowZOrder_ = -1;
+    NodeId rootIdForCpatureWindow_ = INVALID_NODEID;
 
     // Use in vulkan parallel rendering
     bool isParallelDisplayNode_ = false;

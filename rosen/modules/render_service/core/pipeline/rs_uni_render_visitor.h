@@ -450,6 +450,7 @@ private:
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
 #endif
     sk_sp<SkImage> cacheImgForCapture_ = nullptr;
+    void ProcessChildrenAboveCpatureWindow(RSRenderNode& node, NodeId rootIdForCpatureWindow);
 };
 } // namespace Rosen
 } // namespace OHOS

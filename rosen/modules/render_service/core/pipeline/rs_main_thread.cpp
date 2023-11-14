@@ -933,6 +933,24 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
     RS_OPTIONAL_TRACE_END();
 }
 
+bool RSMainThread::IsRendingWithSubThread(NodeId appNodeId) 
+{
+    for (auto& node : subThreadNodes_) {
+        if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
+            if (node->GetId() == appNodeId) {
+                return true;
+            }
+        } else {
+            for (auto& child : node->GetSortedChildren()) {
+                auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+                if (surfaceNode && surfaceNode->GetId() == appNodeId) {
+                    return true;
+                }
+            }
+        }
+    }
+}
+
 void RSMainThread::CollectInfoForHardwareComposer()
 {
     if (!isUniRender_) {

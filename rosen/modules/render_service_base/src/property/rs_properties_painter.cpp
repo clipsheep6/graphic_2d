@@ -449,6 +449,8 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         brush.SetFilter(filter);
     }
 
+    
+
     auto geoPtr = (properties.GetBoundsGeometry());
     Drawing::Matrix matrix = geoPtr ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
     matrix.MapRect(shadowRect, shadowRect);

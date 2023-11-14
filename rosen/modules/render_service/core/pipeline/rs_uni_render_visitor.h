@@ -57,6 +57,7 @@ public:
     void PrepareEffectRenderNode(RSEffectRenderNode& node) override;
 
     void ProcessChildren(RSRenderNode& node) override;
+    void ProcessChildInner(RSRenderNode& node, const RSRenderNode::SharedPtr& child);
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
     void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override;
     void ProcessProxyRenderNode(RSProxyRenderNode& node) override;
@@ -124,6 +125,7 @@ public:
     void UpdateHardwareEnabledInfoBeforeCreateLayer();
     void SetHardwareEnabledNodes(const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& hardwareEnabledNodes);
     void AssignGlobalZOrderAndCreateLayer(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodesInZOrder);
+    void ScaleMirrorIfNeed(RSDisplayRenderNode& node);
 
     void CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisitor> visitor);
     // Some properties defined before ProcessSurfaceRenderNode() may be used in
@@ -159,11 +161,7 @@ public:
         forceUpdateFlag_ = flag;
     }
 
-#ifndef USE_ROSEN_DRAWING
     using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, RSPaintFilterCanvas::CanvasStatus>;
-#else
-    using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, float, std::optional<Drawing::Matrix>>;
-#endif
 private:
     void DrawWatermarkIfNeed();
 #ifndef USE_ROSEN_DRAWING
@@ -286,6 +284,11 @@ private:
     void ClosePartialRenderWhenAnimatingWindows(std::shared_ptr<RSDisplayRenderNode>& node);
     bool DrawBlurInCache(RSRenderNode& node);
     void UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node);
+    bool IsFirstVisitedCacheForced() const;
+    bool IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, int rotation) const;
+    sk_sp<SkImage> GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode);
+
+    void SwitchColorFilterDrawing(int currentSaveCount);
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
@@ -325,6 +328,7 @@ private:
     ScreenId currentVisitDisplay_ = INVALID_SCREEN_ID;
     std::map<ScreenId, bool> displayHasSecSurface_;
     std::map<ScreenId, bool> displayHasSkipSurface_;
+    std::map<ScreenId, bool> hasCaptureWindow_;
     std::set<ScreenId> mirroredDisplays_;
     bool isSecurityDisplay_ = false;
 
@@ -346,6 +350,7 @@ private:
     bool isCanvasNodeSkipDfxEnabled_ = false;
     bool isQuickSkipPreparationEnabled_ = false;
     bool isOcclusionEnabled_ = false;
+    bool isTextNeedCached_ = false;
     std::vector<std::string> dfxTargetSurfaceNames_;
     PartialRenderType partialRenderType_;
     QuickSkipPrepareType quickSkipPrepareType_;
@@ -411,7 +416,6 @@ private:
     uint32_t appWindowNum_ = 0;
 
     bool isParallel_ = false;
-    bool doParallelComposition_ = false;
     bool doParallelRender_ = false;
     // displayNodeMatrix only used in offScreen render case to ensure correct composer layer info when with rotation,
     // displayNodeMatrix indicates display node's matrix info
@@ -421,14 +425,7 @@ private:
     std::optional<Drawing::Matrix> displayNodeMatrix_;
 #endif
     mutable std::mutex copyVisitorInfosMutex_;
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImage> cacheImgForCapture_ = nullptr;
-#else
-    std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
-#endif
     bool resetRotate_ = false;
-    bool needCacheImg_ = false;
-    uint32_t captureWindowZorder_ = 0;
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkPath> effectRegion_ = std::nullopt;
 #else
@@ -443,9 +440,12 @@ private:
     std::unordered_map<NodeId, std::unordered_set<NodeId>> allCacheFilterRects_ = {};
     std::stack<std::unordered_set<NodeId>> curCacheFilterRects_ = {};
     bool forceUpdateFlag_ = false;
+#ifndef USE_ROSEN_DRAWING
     void tryCapture(float width, float height);
     void endCapture() const;
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
+#endif
+    sk_sp<SkImage> cacheImgForCapture_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

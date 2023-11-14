@@ -15,45 +15,46 @@
 
 #include "property/rs_property_drawable_frame_geometry.h"
 
+#include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties.h"
 #include "property/rs_properties_painter.h"
 
 namespace OHOS::Rosen {
-void RSFrameGeometryDrawable::Draw(RSPropertyDrawableRenderContext& context)
+void RSFrameGeometryDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    context.canvas_->translate(frameOffsetX_, frameOffsetY_);
-}
-void RSFrameGeometryDrawable::OnBoundsChange(const RSProperties& properties)
-{
-    frameOffsetX_ = properties.GetFrameOffsetX();
-    frameOffsetY_ = properties.GetFrameOffsetY();
+#ifndef USE_ROSEN_DRAWING
+    canvas.translate(node.GetRenderProperties().GetFrameOffsetX(), node.GetRenderProperties().GetFrameOffsetY());
+#else
+    canvas.Translate(node.GetRenderProperties().GetFrameOffsetX(), node.GetRenderProperties().GetFrameOffsetY());
+#endif
 }
 RSPropertyDrawable::DrawablePtr RSFrameGeometryDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
 {
     return std::make_unique<RSFrameGeometryDrawable>();
 }
 
-void RSColorFilterDrawable::Draw(RSPropertyDrawableRenderContext& context)
+void RSColorFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
     // if useEffect defined, use color filter from parent EffectView.
-    auto& canvas = context.canvas_;
 #ifndef USE_ROSEN_DRAWING
-    auto skSurface = canvas->GetSurface();
+    SkAutoCanvasRestore acr(&canvas, true);
+    canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(node.GetMutableRenderProperties().GetRRect()), true);
+    auto skSurface = canvas.GetSurface();
     if (skSurface == nullptr) {
         ROSEN_LOGE("RSColorFilterDrawable::Draw skSurface is null");
         return;
     }
-    auto clipBounds = canvas->getDeviceClipBounds();
+    auto clipBounds = canvas.getDeviceClipBounds();
     auto imageSnapshot = skSurface->makeImageSnapshot(clipBounds);
     if (imageSnapshot == nullptr) {
         ROSEN_LOGE("RSColorFilterDrawable::Draw image is null");
         return;
     }
-    SkAutoCanvasRestore acr(canvas, true);
-    canvas->resetMatrix();
+    canvas.resetMatrix();
     SkSamplingOptions options(SkFilterMode::kNearest, SkMipmapMode::kNone);
-    canvas->drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint_);
+    canvas.drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint_);
 #endif
 }
 
@@ -63,22 +64,30 @@ std::unique_ptr<RSPropertyDrawable> RSColorFilterDrawable::Generate(const RSProp
     if (colorFilter == nullptr) {
         return nullptr;
     }
+#ifndef USE_ROSEN_DRAWING
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setColorFilter(colorFilter);
     return std::make_unique<RSColorFilterDrawable>(std::move(paint));
+#else
+    // Drawing need to be adapted furture
+    return nullptr;
+#endif
 }
 
 RSPropertyDrawable::DrawablePtr RSClipFrameDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
 {
-    return context.properties_.GetClipToFrame()
-               ? std::make_unique<RSClipFrameDrawable>(
-                     RSPropertiesPainter::Rect2SkRect(context.properties_.GetFrameRect()))
-               : nullptr;
+    // PLANNING: cache frame rect, and update when frame rect changed
+    return context.properties_.GetClipToFrame() ? std::make_unique<RSClipFrameDrawable>() : nullptr;
 }
 
-void RSClipFrameDrawable::Draw(RSPropertyDrawableRenderContext& context)
+void RSClipFrameDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    context.canvas_->clipRect(content_);
+#ifndef USE_ROSEN_DRAWING
+    canvas.clipRect(RSPropertiesPainter::Rect2SkRect(node.GetRenderProperties().GetFrameRect()));
+#else
+    canvas.ClipRect(RSPropertiesPainter::Rect2DrawingRect(node.GetRenderProperties().GetFrameRect()),
+        Drawing::ClipOp::INTERSECT, false);
+#endif
 }
 } // namespace OHOS::Rosen

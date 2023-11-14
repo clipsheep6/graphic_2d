@@ -50,11 +50,17 @@ public:
     bool GetPixelmap(const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect);
 #else
     Drawing::Bitmap GetBitmap();
+    bool GetPixelmap(const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect);
 #endif
 
     void SetSurfaceClearFunc(ThreadInfo threadInfo)
     {
         curThreadInfo_ = threadInfo;
+    }
+
+    uint64_t GetTid() const
+    {
+        return curThreadInfo_.first;
     }
 
     void AddDirtyType(RSModifierType type) override;
@@ -69,8 +75,8 @@ private:
     sk_sp<SkSurface> skSurface_;
     sk_sp<SkImage> skImage_;
 #else
-    std::shared_ptr<Drawing::Bitmap> bitmap_;
     std::shared_ptr<Drawing::Surface> surface_;
+    std::shared_ptr<Drawing::Image> image_;
 #endif
     std::mutex mutex_;
     std::unique_ptr<RSPaintFilterCanvas> canvas_;

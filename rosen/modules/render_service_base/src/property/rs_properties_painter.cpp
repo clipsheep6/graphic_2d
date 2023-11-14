@@ -2631,5 +2631,38 @@ void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFi
         }
     }
 }
+
+static std::function<void(std::weak_ptr<RSColorPickerCacheTask>)> postColorPickerTask = nullptr;
+
+bool RSPropertiesPainter::PostPartialColorPickerTask(std::shared_ptr<RSColorPickerCacheTask> colorPickerTask,
+    sk_sp<SkImage> imageSnapshot)
+{
+    if (RSPropertiesPainter::postColorPickerTask == nullptr) {
+        ROSEN_LOGE("PostPartialColorPickerTask::postColorPickerTask is null\n");
+        return false;
+    }
+
+    if (colorPickerTask == nullptr) {
+        ROSEN_LOGE("PostPartialColorPickerTask::colorPickerTask is null\n");
+        return false;
+    }
+
+    if (colorPickerTask->GetStatus() == CacheProcessStatus::WAITING) {
+        if (colorPickerTask->InitTask(imageSnapshot)) {
+            RS_OPTIONAL_TRACE_NAME("PostPartialColorPickerTask, init task";
+            colorPickerTask->SetStatus(CacheProcessStatus::DOING);
+            RSPropertiesPainter::postColorPickerTask(colorPickerTask);
+        }
+        return false;
+    } else if (colorPickerTask->GetStatus() == CacheProcessStatus::DONE) {
+        RS_OPTIONAL_TRACE_NAME("PostPartialColorPickerTask, done";
+        colorPickerTask->Reset();
+        colorPickerTask->SetStatus(CacheProcessStatus::WAITING);
+        return true;
+    } else {
+        RS_OPTIONAL_TRACE_NAME("PostPartialColorPickerTask, doing";
+        return false;
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

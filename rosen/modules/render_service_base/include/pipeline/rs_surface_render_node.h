@@ -33,6 +33,7 @@
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "platform/common/rs_system_properties.h"
+#include "platform/common/rs_surface_ext.h"
 #include "property/rs_properties_painter.h"
 #include "screen_manager/screen_types.h"
 #include "transaction/rs_occlusion_data.h"
@@ -775,6 +776,10 @@ public:
     // whether the subtree has only one root node
     bool HasOnlyOneRootNode() const;
 
+#ifdef USE_SURFACE_TEXTURE
+    std::shared_ptr<RSSurfaceTexture> GetSurfaceTexture() const { return surfaceTexture_; };
+    void SetSurfaceTexture(const std::shared_ptr<RSSurfaceTexture> &texture) { surfaceTexture_ = texture; }
+#endif
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -887,7 +892,7 @@ private:
         bool isTransparent_;
         bool hasContainerWindow_;
     };
-    
+
     //<screenRect, absRect, screenRotation, isFocusWindow, isTransparent, hasContainerWindow>
     OpaqueRegionBaseInfo opaqueRegionBaseInfo_;
 
@@ -954,6 +959,9 @@ private:
     uint32_t submittedSubThreadIndex_ = INT_MAX;
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
     std::atomic<bool> isNeedSubmitSubThread_ = true;
+#ifdef USE_SURFACE_TEXTURE
+    std::shared_ptr<RSSurfaceTexture> surfaceTexture_ {};
+#endif
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

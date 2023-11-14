@@ -60,6 +60,10 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContex
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode()
 {
+#ifdef USE_SURFACE_TEXTURE
+    SetSurfaceTexture(nullptr);
+#endif
+    ROSEN_LOGD("RSSurfaceRenderNode::~RSSurfaceRenderNode %{public}" PRIu64, GetId());
     MemoryTrack::Instance().RemoveNodeRecord(GetId());
 }
 
@@ -288,6 +292,12 @@ void RSSurfaceRenderNode::OnResetParent()
 
 void RSSurfaceRenderNode::SetIsNotifyUIBufferAvailable(bool available)
 {
+#ifdef USE_SURFACE_TEXTURE
+    auto texture = GetSurfaceTexture();
+    if (texture) {
+        texture->MarkUiFrameAvailable(available);
+    }
+#endif
     isNotifyUIBufferAvailable_.store(available);
 }
 
@@ -510,6 +520,14 @@ void RSSurfaceRenderNode::UpdateSurfaceDefaultSize(float width, float height)
     if (consumer_ != nullptr) {
         consumer_->SetDefaultWidthAndHeight(width, height);
     }
+#else
+    ROSEN_LOGD("UpdateSurfaceDefaultSize nodeId %{public}" PRIu64 "%{public}f %{public}f", GetId(), width, height);
+#ifdef USE_SURFACE_TEXTURE
+    auto texture = GetSurfaceTexture();
+    if (texture) {
+        texture->UpdateSurfaceDefaultSize(width, height);
+    }
+#endif
 #endif
 }
 

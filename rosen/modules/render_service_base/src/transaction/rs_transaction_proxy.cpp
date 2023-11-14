@@ -80,8 +80,6 @@ void RSTransactionProxy::AddCommand(std::unique_ptr<RSCommand>& command, bool is
         AddCommonCommand(command);
         return;
     }
-    ROSEN_LOGE("RSTransactionProxy::AddCommand failed, isRenderServiceCommand:%{public}d %{public}s",
-        isRenderServiceCommand, command->PrintType().c_str());
 }
 
 void RSTransactionProxy::AddCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId, FollowType followType)
@@ -89,7 +87,6 @@ void RSTransactionProxy::AddCommandFromRT(std::unique_ptr<RSCommand>& command, N
     if (renderServiceClient_ == nullptr || command == nullptr) {
         return;
     }
-
     {
         std::unique_lock<std::mutex> cmdLock(mutexForRT_);
         implicitTransactionDataFromRT_->AddCommand(command, nodeId, followType);

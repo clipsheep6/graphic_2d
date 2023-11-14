@@ -292,6 +292,7 @@ private:
     FrameRateRange CalcRSFrameRateRange(std::shared_ptr<RSRenderNode> node);
     int32_t GetNodePreferred(const std::vector<HgmModifierProfile>& hgmModifierProfileList) const;
     bool IsLastFrameUIFirstEnabled(NodeId appNodeId) const;
+    bool IsRendingWithSubThread(NodeId appNodeId) const;
     RS_REGION_VISIBLE_LEVEL GetRegionVisibleLevel(const Occlusion::Region& curRegion,
         const Occlusion::Region& visibleRegion);
 

@@ -154,6 +154,7 @@ public:
     static bool GetSkipForAlphaZeroEnabled();
     static bool GetSkipGeometryNotChangeEnabled();
     static bool GetPropertyDrawableEnable();
+    static bool GetUseShadowBatchingEnabled();
 
     static bool GetAnimationCacheEnabled();
 

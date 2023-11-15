@@ -156,6 +156,14 @@ public:
 
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) = 0;
 
+    virtual int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat) = 0;
+
+    virtual int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat) = 0;
+
+    virtual int32_t GetIsHDRScreen(ScreenId id, bool& isHDRScreen) = 0;
+
+    virtual int32_t SetIsHDRScreen(ScreenId id, bool isHDRScreen) = 0;
+
     virtual int32_t GetScreenType(ScreenId id, RSScreenType& screenType) = 0;
 
 #ifndef USE_ROSEN_DRAWING

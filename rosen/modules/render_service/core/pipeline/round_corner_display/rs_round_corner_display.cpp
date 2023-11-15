@@ -182,11 +182,11 @@ void RoundCornerDisplay::UpdateNotchStatus(int status)
         RS_LOGE("[%{public}s] notchStatus won't be over 1 or below 0 \n", __func__);
         return;
     }
+    notchSetting_ = status;
     if (notchStatus_ == status) {
         RS_LOGD("[%{public}s] NotchStatus do not change \n", __func__);
         return;
     }
-    notchSetting_ = status;
     RS_LOGD("[%{public}s] notchStatus change from %{public}d to %{public}d \n", __func__, notchStatus_, status);
     notchStatus_ = status;
     updateFlag_["notch"] = true;

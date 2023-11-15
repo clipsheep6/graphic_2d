@@ -269,6 +269,9 @@ public:
     float GetSpherize() const;
     bool IsSpherizeValid() const;
 
+    bool GetUseShadowBatching() const;
+    void SetUseShadowBatching(bool useShadowBatching);
+
     void SetLightUpEffect(float lightUpEffectDegree);
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
@@ -340,6 +343,7 @@ private:
 
     bool hasBounds_ = false;
     bool useEffect_ = false;
+    bool useShadowBatching_ = false;
 
     int colorBlendMode_ = 0;
 

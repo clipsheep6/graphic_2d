@@ -33,13 +33,11 @@ ohos_fuzztest("HdiLayerFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "hdilayer_fuzzer.cpp" ]
-  deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
-    "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
-  ]
+  deps = [ "../../../../../composer:libcomposer" ]
 
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
   ]
 }

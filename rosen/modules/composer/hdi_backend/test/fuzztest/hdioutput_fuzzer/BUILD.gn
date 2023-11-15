@@ -35,13 +35,13 @@ ohos_fuzztest("HdiOutputFuzzTest") {
   sources = [ "hdioutput_fuzzer.cpp" ]
   deps = [
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core:ipc_core",
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
     "//foundation/graphic/graphic_2d/utils:socketpair",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
   ]
 }

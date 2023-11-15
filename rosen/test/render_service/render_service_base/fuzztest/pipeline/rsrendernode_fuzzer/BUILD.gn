@@ -27,7 +27,6 @@ ohos_fuzztest("RSRenderNodeFuzzTest") {
   ]
   deps = [
     "../../../../../../modules/render_service_base:render_service_base_src",
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service:librender_service",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
@@ -43,6 +42,7 @@ ohos_fuzztest("RSRenderNodeFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
   ]
 }

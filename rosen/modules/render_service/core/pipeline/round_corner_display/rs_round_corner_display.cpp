@@ -233,11 +233,12 @@ void RoundCornerDisplay::UpdateOrientationStatus(ScreenRotation orientation)
         default:
             break;
     }
-    if (notchSetting_ == WINDOW_NOTCH_HIDDEN) {
+    if (notchSetting_ == WINDOW_NOTCH_DEFAULT) {
         if (transitionFlag == ladsToPortrait) {
-            UpdateNotchStatus(WINDOW_NOTCH_HIDDEN);
+            notchStatus_ = WINDOW_NOTCH_DEFAULT;
         } else if (transitionFlag == portraitToLads) {
-            UpdateNotchStatus(WINDOW_NOTCH_HIDDEN);
+            notchStatus_ = WINDOW_NOTCH_HIDDEN;
+
         }
     }
 }

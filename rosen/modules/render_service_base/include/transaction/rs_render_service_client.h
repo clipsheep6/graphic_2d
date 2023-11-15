@@ -46,6 +46,7 @@
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "rs_hgm_config_data.h"
 #include "rs_occlusion_data.h"
+#include <surface_type.h>
 
 namespace OHOS {
 namespace Rosen {

@@ -143,9 +143,9 @@ void RSCanvasRenderNode::ProcessShadowBatching(RSPaintFilterCanvas& canvas)
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
         RSAutoCanvasRestore acr(&canvas);
         IterateOnDrawableRange(
-            RSPropertyDrawableSlot::BOUNDS_MATRIX, RSPropertyDrawableSlot::BOUNDS_MATRIX, *this, canvas);
+            RSPropertyDrawableSlot::BOUNDS_MATRIX, RSPropertyDrawableSlot::BOUNDS_MATRIX, canvas);
         IterateOnDrawableRange(
-            RSPropertyDrawableSlot::SHADOW, RSPropertyDrawableSlot::SHADOW, *this, canvas);
+            RSPropertyDrawableSlot::SHADOW, RSPropertyDrawableSlot::SHADOW, canvas);
         return;
     }
     RSAutoCanvasRestore acr(&canvas);
@@ -161,12 +161,12 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
         if (RSSystemProperties::GetUseShadowBatchingEnabled() &&
             parent && parent->GetRenderProperties().GetUseShadowBatching()) {
             IterateOnDrawableRange(
-                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, *this, canvas);
+                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, canvas);
             IterateOnDrawableRange(
-                RSPropertyDrawableSlot::SAVE_BOUNDS, RSPropertyDrawableSlot::CLIP_TO_FRAME, *this, canvas);
+                RSPropertyDrawableSlot::SAVE_BOUNDS, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
         } else {
             IterateOnDrawableRange(
-                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, *this, canvas);
+                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
         }
         return;
     }

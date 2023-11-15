@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cstdint>
 #include <scoped_bytrace.h>
 #include "hdi_output.h"
 
@@ -40,6 +41,23 @@ HdiOutput::~HdiOutput()
 {
 }
 
+GSError HdiOutput::ClearFrameBuffer()
+{
+    GSError ret = GSERROR_OK;
+    if (!CheckFbSurface()) {
+        return ret;
+    }
+    currFrameBuffer_ = nullptr;
+    lastFrameBuffer_ = nullptr;
+    bufferCache_.clear();
+    fbSurface_->ClearFrameBuffer();
+    sptr<Surface> pFrameSurface = GetFrameBufferSurface();
+    if (pFrameSurface != nullptr) {
+        ret = pFrameSurface->CleanCache();
+    }
+    return ret;
+}
+
 RosenError HdiOutput::Init()
 {
     if (fbSurface_ != nullptr) {
@@ -65,7 +83,8 @@ RosenError HdiOutput::Init()
         HLOGE("Set screen client buffer cache count failed, ret is %{public}d", ret);
         return ROSEN_ERROR_INVALID_OPERATING;
     }
-    bufferCache_.resize(bufferCacheCountMax_);
+    bufferCache_.clear();
+    bufferCache_.reserve(bufferCacheCountMax_);
 
     return ROSEN_ERROR_OK;
 }
@@ -312,20 +331,21 @@ int32_t HdiOutput::UpdateLayerCompType()
 
 bool HdiOutput::CheckAndUpdateClientBufferCahce(sptr<SurfaceBuffer> buffer, uint32_t& index)
 {
-    for (uint32_t i = 0; i < bufferCacheCountMax_; i++) {
+    uint32_t bufferCahceSize = (uint32_t)bufferCache_.size();
+    for (uint32_t i = 0; i < bufferCahceSize; i++) {
         if (bufferCache_[i] == buffer) {
             index = i;
             return true;
         }
     }
 
-    if (bufferCacheIndex_ >= bufferCacheCountMax_) {
-        HLOGE("HdiOutput::FlushScreen: the length of buffer cache exceeds the limit!");
-        return false;
+    if (bufferCahceSize >= bufferCacheCountMax_) {
+        HLOGI("the length of buffer cache exceeds the limit, and not find the aim buffer!");
+        bufferCache_.clear();
     }
-    bufferCache_[bufferCacheIndex_] = buffer;
-    index = bufferCacheIndex_;
-    bufferCacheIndex_++;
+
+    index = (uint32_t)bufferCache_.size();
+    bufferCache_.push_back(buffer);
     return false;
 }
 
@@ -352,7 +372,6 @@ int32_t HdiOutput::FlushScreen(std::vector<LayerPtr> &compClientLayers)
     bool bufferCached = false;
     if (bufferCacheCountMax_ == 0) {
         bufferCache_.clear();
-        bufferCacheIndex_ = INVALID_BUFFER_CACHE_INDEX;
         HLOGE("The count of this client buffer cache is 0.");
     } else {
         bufferCached = CheckAndUpdateClientBufferCahce(currFrameBuffer_, index);
@@ -473,13 +492,18 @@ int32_t HdiOutput::StartVSyncSampler()
         return GRAPHIC_DISPLAY_SUCCESS;
     }
     HLOGD("Enable Screen Vsync");
-    int32_t ret = device_->SetScreenVsyncEnabled(screenId_, true);
-    if (ret == GRAPHIC_DISPLAY_SUCCESS) {
-        sampler_->BeginSample();
-    } else {
-        HLOGE("Enable Screen Vsync failed");
+    sampler_->SetScreenVsyncEnabledInRSMainThread(true);
+    sampler_->BeginSample();
+    return GRAPHIC_DISPLAY_SUCCESS;
+}
+
+void HdiOutput::SetPendingPeriod(int64_t period)
+{
+    if (sampler_ == nullptr) {
+        sampler_ = CreateVSyncSampler();
     }
-    return ret;
+    sampler_->SetPendingPeriod(period);
+    StartVSyncSampler();
 }
 
 void HdiOutput::Dump(std::string &result) const

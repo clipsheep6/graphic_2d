@@ -169,6 +169,11 @@ bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetAnimationCacheEnabled()
+{
+    return {};
+}
+
 bool RSSystemProperties::GetPropertyDrawableEnable()
 {
     return {};
@@ -204,12 +209,22 @@ bool RSSystemProperties::GetFilterPartialRenderEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetMaskLinearBlurEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetDebugTraceEnabled()
 {
     return false;
 }
 
 bool RSSystemProperties::FindNodeInTargetList(std::string node)
+{
+    return false;
+}
+
+bool RSSystemProperties::IsFoldScreenFlag()
 {
     return false;
 }

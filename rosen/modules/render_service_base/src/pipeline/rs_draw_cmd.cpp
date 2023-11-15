@@ -136,6 +136,10 @@ std::unique_ptr<OpItem> OpItemWithPaint::GenerateCachedOpItem(
 
 void OpItemWithRSImage::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) const
 {
+    if (auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas())) {
+        recordingCanvas->DrawRsImage(rsImage_, samplingOptions_, paint_);
+        return;
+    }
     if (rsImage_) {
 #ifdef NEW_SKIA
         rsImage_->DrawImage(canvas, samplingOptions_, paint_);
@@ -731,6 +735,13 @@ void ImageWithParmOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) 
         sk_sp<SkImage> dmaImage = GetSkImageFromSurfaceBuffer(canvas,
             reinterpret_cast<SurfaceBuffer*> (pixelmap->GetFd()));
         rsImage_->SetDmaImage(dmaImage);
+    } else {
+        if (pixelmap && pixelmap->IsAstc()) {
+            const void* data = pixelmap->GetWritablePixels();
+            auto fileData = SkData::MakeWithoutCopy(data, pixelmap->GetCapacity());
+            auto imageData = SkData::MakeSubset(fileData.get(), 16, fileData->size() - 16);
+            rsImage_->SetCompressData(imageData);
+        }
     }
 #endif
 #endif
@@ -2162,4 +2173,62 @@ void ImageWithParmOpItem::SetNodeId(NodeId id)
 } // namespace Rosen
 } // namespace OHOS
 
+#else
+#include "pipeline/rs_draw_cmd.h"
+
+namespace OHOS {
+namespace Rosen {
+constexpr int32_t CORNER_SIZE = 4;
+
+RSExtendImageObject::RSExtendImageObject(const std::shared_ptr<Drawing::Image>& image,
+    const std::shared_ptr<Drawing::Data>& data, const Drawing::AdaptiveImageInfo& imageInfo)
+{
+    rsImage_ = std::make_shared<RSImage>();
+    rsImage_->SetImage(image);
+    rsImage_->SetCompressData(data, imageInfo.uniqueId, imageInfo.width, imageInfo.height);
+    rsImage_->SetImageFit(imageInfo.fitNum);
+    rsImage_->SetImageRepeat(imageInfo.repeatNum);
+    std::vector<Drawing::Point> radiusValue(imageInfo.radius, imageInfo.radius + CORNER_SIZE);
+    rsImage_->SetRadius(radiusValue);
+    rsImage_->SetScale(imageInfo.scale);
+}
+
+RSExtendImageObject::RSExtendImageObject(const std::shared_ptr<Media::PixelMap>& pixelMap,
+    const Drawing::AdaptiveImageInfo& imageInfo)
+{
+    if (pixelMap) {
+        rsImage_ = std::make_shared<RSImage>();
+        rsImage_->SetPixelMap(pixelMap);
+        rsImage_->SetImageFit(imageInfo.fitNum);
+        rsImage_->SetImageRepeat(imageInfo.repeatNum);
+        std::vector<Drawing::Point> radiusValue(imageInfo.radius, imageInfo.radius + CORNER_SIZE);
+        rsImage_->SetRadius(radiusValue);
+        rsImage_->SetScale(imageInfo.scale);
+    }
+}
+
+void RSExtendImageObject::Playback(Drawing::Canvas& canvas, const Drawing::Rect& rect,
+    const Drawing::SamplingOptions& sampling, bool isBackground)
+{
+    rsImage_->CanvasDrawImage(canvas, rect, sampling, isBackground);
+}
+
+
+bool RSExtendImageObject::Marshalling(Parcel &parcel) const
+{
+    bool ret = RSMarshallingHelper::Marshalling(parcel, rsImage_);
+    return ret;
+}
+
+RSExtendImageObject *RSExtendImageObject::Unmarshalling(Parcel &parcel)
+{
+    auto object = new RSExtendImageObject();
+    bool ret = RSMarshallingHelper::Unmarshalling(parcel, object->rsImage_);
+    if (!ret) {
+        return nullptr;
+    }
+    return object;
+}
+} // namespace Rosen
+} // namespace OHOS
 #endif // USE_ROSEN_DRAWING

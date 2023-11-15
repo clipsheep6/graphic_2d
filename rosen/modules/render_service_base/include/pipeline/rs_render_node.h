@@ -31,10 +31,12 @@
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
 #include "common/rs_rect.h"
+#include "memory/rs_dfx_string.h"
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties.h"
+#include "property/rs_property_drawable.h"
 
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkRefCnt.h"
@@ -54,10 +56,7 @@ class DrawCmdList;
 class RSContext;
 class RSNodeVisitor;
 class RSCommand;
-enum class RSPropertyDrawableSlot : unsigned char;
 class RSPropertyDrawable;
-class RSPropertyDrawableRenderContext;
-
 class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode>  {
 public:
 
@@ -78,6 +77,11 @@ public:
     virtual ~RSRenderNode();
 
     void AddChild(SharedPtr child, int index = -1);
+    void SetContainBootAnimation(bool isContainBootAnimation);
+    bool GetContainBootAnimation() const;
+    virtual void SetBootAnimation(bool isBootAnimation);
+    virtual bool GetBootAnimation() const;
+
     void MoveChild(SharedPtr child, int index);
     void RemoveChild(SharedPtr child, bool skipTransition = false);
     void ClearChildren();
@@ -125,6 +129,7 @@ public:
     void ClearFullChildrenListIfNeeded(bool inSubThread = false);
 
     void DumpTree(int32_t depth, std::string& ou) const;
+    void DumpNodeInfo(DfxString& log);
 
     virtual bool HasDisappearingTransition(bool recursive = true) const;
 
@@ -232,6 +237,7 @@ public:
     bool IsStaticCached() const;
 
     bool NeedInitCacheSurface() const;
+    bool NeedInitCacheCompletedSurface() const;
     inline bool IsPureContainer() const
     {
         return (drawCmdModifiers_.empty() && !renderProperties_.isDrawn_ && !renderProperties_.alphaNeedApply_);
@@ -381,7 +387,6 @@ public:
 
     void SetDrawRegion(const std::shared_ptr<RectF>& rect);
     const std::shared_ptr<RectF>& GetDrawRegion() const;
-    
     void SetOutOfParent(OutOfParentType outOfParent);
     OutOfParentType GetOutOfParent() const;
 
@@ -465,9 +470,10 @@ protected:
 
     std::unordered_set<RSModifierType> dirtyTypes_;
     bool isFullChildrenListValid_ = false;
+    bool isBootAnimation_ = false;
     RSProperties renderProperties_;
-    void IterateOnDrawableRange(RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end,
-        const std::function<void(std::unique_ptr<RSPropertyDrawable>&)>& func);
+    void IterateOnDrawableRange(
+        Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas);
 
 private:
     NodeId id_;
@@ -511,6 +517,7 @@ private:
     bool shouldPaint_ = true;
 
     bool isDirtyRegionUpdated_ = false;
+    bool isContainBootAnimation_ = false;
     bool isLastVisible_ = false;
     bool fallbackAnimationOnDestroy_ = true;
     uint32_t disappearingTransitionCount_ = 0;
@@ -531,12 +538,15 @@ private:
     std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
     std::shared_ptr<Drawing::Surface> cacheCompletedSurface_ = nullptr;
 #endif
-#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_GL
+#ifndef USE_ROSEN_DRAWING
     GrBackendTexture cacheBackendTexture_;
     GrBackendTexture cacheCompletedBackendTexture_;
-    bool isTextureValid_ = false;
+#else
+    Drawing::BackendTexture cacheBackendTexture_;
+    Drawing::BackendTexture cacheCompletedBackendTexture_;
 #endif
+    bool isTextureValid_ = false;
 #endif
     std::atomic<bool> isCacheSurfaceNeedUpdate_ = false;
     std::atomic<bool> isStaticCached_ = false;
@@ -549,6 +559,7 @@ private:
     std::unordered_set<NodeId> visitedCacheRoots_ = {};
 
     mutable std::recursive_mutex surfaceMutex_;
+    std::mutex mutex_;
     ClearCacheSurfaceFunc clearCacheSurfaceFunc_ = nullptr;
     uint32_t cacheSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     uint32_t completedSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
@@ -594,17 +605,16 @@ private:
     std::unordered_map<PropertyId, std::variant<float, Vector2f>> propertyValueMap_;
     std::vector<HgmModifierProfile> hgmModifierProfileList_;
 
-    std::map<RSPropertyDrawableSlot, std::unique_ptr<RSPropertyDrawable>> propertyDrawablesMap_;
-    uint8_t drawableMapStatus_ = 0;
-    using DrawableIter = decltype(propertyDrawablesMap_)::iterator;
-    inline std::pair<DrawableIter, DrawableIter> GetDrawableRange(
-        RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
+    std::vector<std::unique_ptr<RSPropertyDrawable>> propertyDrawablesVec_;
+    uint8_t drawableVecStatus_ = 0;
+    void UpdateDrawableVec();
 
+    friend class RSAliasDrawable;
     friend class RSMainThread;
+    friend class RSModifierDrawable;
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
     friend class RSRenderTransition;
-    friend class RSPropertyDrawableRenderContext;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

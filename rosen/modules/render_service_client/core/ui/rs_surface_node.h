@@ -75,6 +75,8 @@ public:
 
     void SetSecurityLayer(bool isSecurityLayer);
     bool GetSecurityLayer() const;
+    void SetSkipLayer(bool isSkipLayer);
+    bool GetSkipLayer() const;
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
     void SetAbilityBGAlpha(uint8_t alpha);
@@ -98,6 +100,8 @@ public:
     void AttachToDisplay(uint64_t screenId);
     void DetachToDisplay(uint64_t screenId);
     void SetHardwareEnabled(bool isEnabled);
+    void SetBootAnimation(bool isBootAnimation);
+    bool GetBootAnimation() const;
 
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<OHOS::Surface> GetSurface() const;
@@ -154,8 +158,10 @@ private:
     GraphicColorGamut colorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
 #endif
     bool isSecurityLayer_ = false;
+    bool isSkipLayer_ = false;
     bool hasFingerprint_ = false;
     bool isChildOperationDisallowed_ { false };
+    bool isBootAnimation_ = false;
 
     uint32_t windowId_ = 0;
 #ifndef ROSEN_CROSS_PLATFORM

@@ -19,6 +19,7 @@
 
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"
+#include "animation/rs_frame_rate_range.h"
 #include "animation/rs_motion_path_option.h"
 #include "animation/rs_particle_params.h"
 #include "animation/rs_transition_effect.h"
@@ -240,6 +241,10 @@ public:
     void SetBorderStyle(uint32_t styleValue);
     void SetBorderStyle(uint32_t left, uint32_t top, uint32_t right, uint32_t bottom);
     void SetBorderStyle(const Vector4<BorderStyle>& style);
+    void SetOuterBorderColor(const Vector4<Color>& color);
+    void SetOuterBorderWidth(const Vector4f& width);
+    void SetOuterBorderStyle(const Vector4<BorderStyle>& style);
+    void SetOuterBorderRadius(const Vector4f& radius);
 
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
     void SetFilter(const std::shared_ptr<RSFilter>& filter);
@@ -283,6 +288,8 @@ public:
 
     void SetUseEffect(bool useEffect);
 
+    void SetColorBlendMode(RSColorBlendModeType blendMode);
+
     // driven render
     void MarkDrivenRender(bool flag);
     void MarkDrivenRenderItemIndex(int index);
@@ -299,7 +306,7 @@ public:
     void SetDrawRegion(std::shared_ptr<RectF> rect);
 
     // Mark preferentially draw node and childrens
-    void MarkNodeGroup(bool isNodeGroup);
+    void MarkNodeGroup(bool isNodeGroup, bool isForced = true);
 
     void SetGrayScale(float grayScale);
 
@@ -321,8 +328,9 @@ public:
 
     void UpdateUIFrameRateRange(const FrameRateRange& range);
 
-    void SetOutOfParent(OutOfParentType outOfParent);
+    int32_t CalcExpectedFrameRate(const std::string& scene, float speed);
 
+    void SetOutOfParent(OutOfParentType outOfParent);
 protected:
     explicit RSNode(bool isRenderServiceNode);
     explicit RSNode(bool isRenderServiceNode, NodeId id);

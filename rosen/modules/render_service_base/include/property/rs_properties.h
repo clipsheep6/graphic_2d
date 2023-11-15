@@ -35,9 +35,7 @@
 #include "render/rs_shader.h"
 #include "render/rs_shadow.h"
 
-#ifndef USE_ROSEN_DRAWING
 #include "property/rs_filter_cache_manager.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -178,6 +176,15 @@ public:
     Vector4f GetBorderWidth() const;
     Vector4<uint32_t> GetBorderStyle() const;
     const std::shared_ptr<RSBorder>& GetBorder() const;
+    void SetOuterBorderColor(Vector4<Color> color);
+    void SetOuterBorderWidth(Vector4f width);
+    void SetOuterBorderStyle(Vector4<uint32_t> style);
+    void SetOuterBorderRadius(Vector4f radius);
+    Vector4<Color> GetOuterBorderColor() const;
+    Vector4f GetOuterBorderWidth() const;
+    Vector4<uint32_t> GetOuterBorderStyle() const;
+    Vector4f GetOuterBorderRadius() const;
+    const std::shared_ptr<RSBorder>& GetOuterBorder() const;
 
     // filter properties
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
@@ -294,7 +301,10 @@ public:
     void SetUseEffect(bool useEffect);
     bool GetUseEffect() const;
 
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+    void SetColorBlendMode(int colorBlendMode);
+    int GetColorBlendMode() const;
+
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     const std::unique_ptr<RSFilterCacheManager>& GetFilterCacheManager(bool isForeground) const;
     void ClearFilterCache();
 #endif
@@ -331,6 +341,8 @@ private:
     bool hasBounds_ = false;
     bool useEffect_ = false;
 
+    int colorBlendMode_ = 0;
+
     Gravity frameGravity_ = Gravity::DEFAULT;
 
     std::shared_ptr<RectF> drawRegion_ = nullptr;
@@ -344,6 +356,7 @@ private:
     std::shared_ptr<RSFilter> backgroundFilter_ = nullptr;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara_ = nullptr;
     std::shared_ptr<RSBorder> border_ = nullptr;
+    std::shared_ptr<RSBorder> outerBorder_ = nullptr;
     std::shared_ptr<RSPath> clipPath_ = nullptr;
     std::optional<Vector4f> cornerRadius_;
     std::optional<Decoration> decoration_;
@@ -395,7 +408,7 @@ private:
     std::shared_ptr<Drawing::ColorFilter> colorFilter_ = nullptr;
 #endif
 
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
     void CreateFilterCacheManagerIfNeed();
     std::unique_ptr<RSFilterCacheManager> backgroundFilterCacheManager_;
     std::unique_ptr<RSFilterCacheManager> foregroundFilterCacheManager_;
@@ -409,7 +422,6 @@ private:
     friend class RSColorfulShadowDrawable;
     friend class RSEffectDataGenerateDrawable;
     friend class RSPropertiesPainter;
-    friend class RSPropertyDrawableRenderContext;
     friend class RSRenderNode;
 };
 } // namespace Rosen

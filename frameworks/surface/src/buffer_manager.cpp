@@ -18,7 +18,11 @@
 #include <mutex>
 #include <sys/mman.h>
 #include "buffer_log.h"
+#ifdef DRIVERS_INTERFACE_DISPLAY_ENABLE
 #include "v1_0/include/idisplay_buffer.h"
+#else
+#include "display_buffer_interface.h"
+#endif
 
 #define CHECK_INIT() \
     do { \
@@ -60,9 +64,12 @@ inline GSError GenerateError(GSError err, int32_t code)
 {
     return GenerateError(err, static_cast<GraphicDispErrCode>(code));
 }
-
+#ifdef DRIVERS_INTERFACE_DISPLAY_ENABLE
 using namespace OHOS::HDI::Display::Buffer::V1_0;
 static std::unique_ptr<IDisplayBuffer> g_displayBuffer;
+#else
+static std::unique_ptr<DisplayBufferInterface> g_displayBuffer;
+#endif
 
 } // namespace
 
@@ -82,12 +89,19 @@ GSError BufferManager::Init()
         BLOGD("BufferManager has been initialized successfully.");
         return GSERROR_OK;
     }
-
+#ifdef DRIVERS_INTERFACE_DISPLAY_ENABLE
     g_displayBuffer.reset(IDisplayBuffer::Get());
     if (g_displayBuffer == nullptr) {
         BLOGE("IDisplayBuffer::Get return nullptr.");
         return GSERROR_INTERNAL;
     }
+#else
+    g_displayBuffer.reset(DisplayBufferInterface::Get());
+    if (g_displayBuffer == nullptr) {
+        BLOGE("DisplayBufferInterface::Get return nullptr.");
+        return GSERROR_INTERNAL;
+    }
+#endif
     return GSERROR_OK;
 }
 

@@ -134,16 +134,47 @@ void RSCanvasRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& ca
     RSRenderNode::ProcessTransitionBeforeChildren(canvas);
 }
 
+void RSCanvasRenderNode::ProcessShadowBatching(RSPaintFilterCanvas& canvas)
+{
+    if (RSSystemProperties::GetPropertyDrawableEnable()) {
+        RSAutoCanvasRestore acr(&canvas);
+        IterateOnDrawableRange(RSPropertyDrawableSlot::BOUNDS_MATRIX, RSPropertyDrawableSlot::BOUNDS_MATRIX, *this, canvas);
+        IterateOnDrawableRange(
+            RSPropertyDrawableSlot::SHADOW, RSPropertyDrawableSlot::SHADOW, *this, canvas);
+        return;
+    }
+    RSAutoCanvasRestore acr(&canvas);
+    RSModifierContext context = { GetMutableRenderProperties(), &canvas };
+    ApplyBoundsGeometry(canvas);
+    RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
+}
+
 void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        IterateOnDrawableRange(RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
+        auto parent = GetParent().lock();
+        if (RSSystemProperties::GetUseShadowBatchingEnabled() && parent && parent->GetRenderProperties().GetUseShadowBatching()) {
+            IterateOnDrawableRange(
+                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, *this, canvas);
+            IterateOnDrawableRange(
+                RSPropertyDrawableSlot::SAVE_BOUNDS, RSPropertyDrawableSlot::CLIP_TO_FRAME, *this, canvas);
+        } else {
+            IterateOnDrawableRange(
+                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, *this, canvas);
+        }
         return;
     }
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
-    RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
+    if (RSSystemProperties::GetUseShadowBatchingEnabled()) {
+        auto parent = GetParent().lock();
+        if (!(parent && parent->GetRenderProperties().GetUseShadowBatching())) {
+            RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
+        }
+    } else {
+        RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
+    }
     // Inter-UI component blur & blending effect -- An empty layer
     int blendMode = GetRenderProperties().GetColorBlendMode();
     if (blendMode != static_cast<int>(RSColorBlendModeType::NONE)) {

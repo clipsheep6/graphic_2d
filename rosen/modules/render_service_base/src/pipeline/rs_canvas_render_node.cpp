@@ -142,7 +142,8 @@ void RSCanvasRenderNode::ProcessShadowBatching(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
         RSAutoCanvasRestore acr(&canvas);
-        IterateOnDrawableRange(RSPropertyDrawableSlot::BOUNDS_MATRIX, RSPropertyDrawableSlot::BOUNDS_MATRIX, *this, canvas);
+        IterateOnDrawableRange(
+            RSPropertyDrawableSlot::BOUNDS_MATRIX, RSPropertyDrawableSlot::BOUNDS_MATRIX, *this, canvas);
         IterateOnDrawableRange(
             RSPropertyDrawableSlot::SHADOW, RSPropertyDrawableSlot::SHADOW, *this, canvas);
         return;
@@ -157,7 +158,8 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
         auto parent = GetParent().lock();
-        if (RSSystemProperties::GetUseShadowBatchingEnabled() && parent && parent->GetRenderProperties().GetUseShadowBatching()) {
+        if (RSSystemProperties::GetUseShadowBatchingEnabled() &&
+            parent && parent->GetRenderProperties().GetUseShadowBatching()) {
             IterateOnDrawableRange(
                 RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, *this, canvas);
             IterateOnDrawableRange(

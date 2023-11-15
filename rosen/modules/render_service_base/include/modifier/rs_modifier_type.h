@@ -79,7 +79,7 @@ enum class RSModifierType : int16_t {
     PIXEL_STRETCH,                 // 52
     PIXEL_STRETCH_PERCENT,         // 53
     USE_EFFECT,                    // 54
-    USE_SHADOW_BATCHING            // 55
+    USE_SHADOW_BATCHING,           // 55
     COLOR_BLEND_MODE,              // 56
     SANDBOX,                       // 57
     GRAY_SCALE,                    // 58

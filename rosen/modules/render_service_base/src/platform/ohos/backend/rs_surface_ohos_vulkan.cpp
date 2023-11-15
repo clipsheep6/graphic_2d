@@ -15,7 +15,6 @@
 
 #include "rs_surface_ohos_vulkan.h"
 
-
 #ifndef ENABLE_NATIVEBUFFER
 #include <vulkan_proc_table.h>
 #include <vulkan_native_surface_ohos.h>
@@ -153,7 +152,7 @@ bool AllocateDeviceMemory(const RsVulkanContext& vkContext, VkPhysicalDevice phy
 }
 
 
-bool BindImageMemory(VkPhysicalDevice device, const RsVulkanContext& vkContext, VkImage& image,VkDeviceMemory memory)
+bool BindImageMemory(VkPhysicalDevice device, const RsVulkanContext& vkContext, VkImage& image, VkDeviceMemory memory)
 {
     VkBindImageMemoryInfo bindImageInfo;
     bindImageInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
@@ -198,7 +197,7 @@ bool MakeFromNativeWindowBuffer(sk_sp<GrDirectContext> skContext, NativeWindowBu
     }
 
     VkDeviceMemory memory;
-    if (!AllocateDeviceMemory(physicalDevice ,&memory)) {
+    if (!AllocateDeviceMemory(physicalDevice, &memory)) {
         return false;
     }
 

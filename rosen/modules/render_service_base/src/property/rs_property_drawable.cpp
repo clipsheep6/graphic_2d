@@ -15,8 +15,6 @@
 
 #include "property/rs_property_drawable.h"
 
-#include <set>
-
 #include "pipeline/rs_render_node.h"
 #include "property/rs_properties.h"
 #include "property/rs_property_drawable_bounds_geometry.h"
@@ -207,12 +205,12 @@ inline bool HasPropertyDrawableInRange(
 }
 } // namespace
 
-std::set<RSPropertyDrawableSlot> RSPropertyDrawable::GenerateDirtySlots(
+std::unordered_set<RSPropertyDrawableSlot> RSPropertyDrawable::GenerateDirtySlots(
     const RSProperties& properties, const std::unordered_set<RSModifierType>& dirtyTypes)
 {
     // ====================================================================
     // Step 1.1: collect dirty slots
-    std::set<RSPropertyDrawableSlot> dirtySlots;
+    std::unordered_set<RSPropertyDrawableSlot> dirtySlots;
     for (const auto& type : dirtyTypes) {
         auto it = g_propertyToDrawableLut.find(type);
         if (it == g_propertyToDrawableLut.end() || it->second == RSPropertyDrawableSlot::INVALID) {
@@ -240,7 +238,7 @@ std::set<RSPropertyDrawableSlot> RSPropertyDrawable::GenerateDirtySlots(
 }
 
 bool RSPropertyDrawable::UpdateDrawableVec(const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec,
-    std::set<RSPropertyDrawableSlot>& dirtySlots)
+    std::unordered_set<RSPropertyDrawableSlot>& dirtySlots)
 {
     if (dirtySlots.empty()) {
         return false;

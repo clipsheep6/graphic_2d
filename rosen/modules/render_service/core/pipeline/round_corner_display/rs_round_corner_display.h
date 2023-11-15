@@ -91,6 +91,8 @@ private:
 
     // status of the notch
     int notchStatus_ = WINDOW_NOTCH_DEFAULT;
+    // setting of the notch
+    int notchSetting_ = WINDOW_NOTCH_DEFAULT;
 
     int showResourceType_ = TOP_PORTRAIT;
 

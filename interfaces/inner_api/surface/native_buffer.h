@@ -435,7 +435,7 @@ int32_t OH_NativeBuffer_GetHDRStaticMetadata(const OH_NativeBuffer* buffer,
  * @since 11
  * @version 1.0
  */
-int32_t OH_NativeBuffer_SetHDRVividDynMetadata(OH_NativeBuffer* buffer,
+int32_t OH_NativeBuffer_SetHDRVividDynMetadataV1(OH_NativeBuffer* buffer,
     const OH_NativeBuffer_HdrVividMetadataV1& hdrVividMetadata);
 
 /**
@@ -449,7 +449,7 @@ int32_t OH_NativeBuffer_SetHDRVividDynMetadata(OH_NativeBuffer* buffer,
  * @since 11
  * @version 1.0
  */
-int32_t OH_NativeBuffer_GetHDRVividDynMetadata(const OH_NativeBuffer* buffer,
+int32_t OH_NativeBuffer_GetHDRVividDynMetadataV1(const OH_NativeBuffer* buffer,
     OH_NativeBuffer_HdrVividMetadataV1& hdrVividMetadata);
 
 #ifdef __cplusplus

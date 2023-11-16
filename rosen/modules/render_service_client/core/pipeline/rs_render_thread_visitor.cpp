@@ -961,12 +961,12 @@ void RSRenderThreadVisitor::ProcessTextureSurfaceRenderNode(RSSurfaceRenderNode&
         clipRect->GetHeight() < std::numeric_limits<float>::epsilon()) {
 #endif
         // if clipRect is empty, this node will be removed from parent's children list.
-        node.SetContextClipRegion(std::nullopt);
+        // node.SetContextClipRegion(std::nullopt);
         texture->DrawTextureImage(*canvas_, false, *clipRect);
         return;
     }
 
-    node.SetContextClipRegion(clipRect);
+    // node.SetContextClipRegion(clipRect);
 
     // Calculation position in RenderService may appear floating point number, and it will be removed.
     // It caused missed line problem on surfaceview hap, so we subtract one pixel when cliphole to avoid this problem

@@ -132,10 +132,7 @@ ohos_unittest("RSRegionTest") {
 
 ## Build rs_client_test_common.a {{{
 config("rs_client_test_common_public_config") {
-  include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",
-  ]
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core" ]
 
   cflags = [
     "-Wall",

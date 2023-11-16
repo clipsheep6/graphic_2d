@@ -27,9 +27,6 @@ ohos_systemtest("opengl_wrapper_api_test") {
 
   sources = [ "opengl_wrapper_api_test.cpp" ]
 
-  include_dirs =
-      [ "//foundation/graphic/graphic_2d/frameworks/surface/include" ]
-
   cflags = [
     "-Wall",
     "-Werror",

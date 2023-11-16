@@ -21,10 +21,7 @@ ohos_fuzztest("RSInterfacesFuzzTest") {
   fuzz_config_file = "//foundation/graphic/graphic_2d/rosen/test/render_service/render_service_client/fuzztest/rsinterfaces_fuzzer"
   module_out_path = module_output_path
 
-  include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",
-  ]
+  include_dirs = [ "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core" ]
 
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",

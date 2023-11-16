@@ -21,7 +21,6 @@ ohos_fuzztest("SwapchainLayerFuzzTest") {
   fuzz_config_file = "../swapchainlayer_fuzzer"
   module_out_path = module_output_path
 
-  include_dirs = [ "../../../../surface/include" ]
   cflags = [
     "-g",
     "-O0",

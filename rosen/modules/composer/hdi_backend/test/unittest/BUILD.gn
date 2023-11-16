@@ -165,8 +165,6 @@ config("hdibackend_test_common_public_config") {
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/include",
     "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/test",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
-    "$graphic_2d_root/frameworks/surface/include",
   ]
 
   cflags = [

@@ -23,9 +23,7 @@
 #include "rs_divided_render_util.h"
 #include "rs_trace.h"
 #include "string_utils.h"
-#include "v1_0/cm_color_space.h"
-#include "v1_0/buffer_handle_meta_key_type.h"
-#include "metadata_convertor.h"
+#include "metadata_helper.h"
 
 #if defined(RS_ENABLE_DRIVEN_RENDER) && defined(RS_ENABLE_GL)
 #include "pipeline/driven_render/rs_driven_surface_render_node.h"
@@ -99,6 +97,7 @@ void RSUniRenderComposerAdapter::SetPreBufferInfo(RSSurfaceHandler& surfaceHandl
 // private func, for RSDisplayRenderNode
 ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSDisplayRenderNode& node) const
 {
+    SetBufferColorSpace(node);
     const auto& buffer = node.GetBuffer(); // we guarantee the buffer is valid.
     ComposeInfo info {};
     info.srcRect = GraphicIRect {0, 0, buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight()};
@@ -178,25 +177,20 @@ void RSUniRenderComposerAdapter::SetComposeInfoToLayer(
     layer->SetCropRect(info.srcRect);
     layer->SetMatrix(info.matrix);
     layer->SetGravity(info.gravity);
-    SetLayerColorSpace(layer, node);
     SetMetaDataInfoToLayer(layer, info, surface);
 }
 
-void RSUniRenderComposerAdapter::SetLayerColorSpace(const LayerInfoPtr& layer, RSBaseRenderNode* node) const
+void RSUniRenderComposerAdapter::SetBufferColorSpace(RSDisplayRenderNode& node) const
 {
-    if (node == nullptr) {
+    sptr<SurfaceBuffer> buffer = node.GetBuffer();
+    if (buffer == nullptr) {
+        RS_LOGE("RSUniRenderComposerAdapter::SetBufferColorSpace SurfaceBuffer is null");
         return;
     }
 
-    auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>();
-    if (displayNode == nullptr) {
-        RS_LOGD("RSUniRenderComposerAdapter::SetLayerColorSpace ReinterpretCastTo fail");
-        return;
-    }
-
-    auto rsSurface = displayNode->GetRSSurface();
+    auto rsSurface = node.GetRSSurface();
     if (rsSurface == nullptr) {
-        RS_LOGE("RSUniRenderComposerAdapter::SetLayerColorSpace RSSurface is null");
+        RS_LOGE("RSUniRenderComposerAdapter::SetBufferColorSpace RSSurface is null");
         return;
     }
 
@@ -218,16 +212,13 @@ void RSUniRenderComposerAdapter::SetLayerColorSpace(const LayerInfoPtr& layer, R
     if (RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.find(rsColorSpace) != RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.end()) {
         colorSpace = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.at(rsColorSpace);
     } else {
+        RS_LOGW("RSUniRenderComposerAdapter::SetBufferColorSpace unknown color space");
         colorSpace = CM_COLORSPACE_NONE;
     }
 
-    std::vector<uint8_t> colorSpaceData;
-    if (MetadataManager::ConvertMetadataToVec(colorSpace, colorSpaceData) != GSERROR_OK) {
-        RS_LOGE("RSUniRenderComposerAdapter::SetLayerColorSpace ConvertMetadataToVec failed");
-        return;
+    if (MetadataHelper::SetColorSpaceType(buffer, colorSpace) != GSERROR_OK) {
+        RS_LOGW("RSUniRenderComposerAdapter::SetBufferColorSpace set color space fail");
     }
-
-    layer->GetBuffer()->SetMetadata(ATTRKEY_COLORSPACE_TYPE, colorSpaceData);
 }
 
 void RSUniRenderComposerAdapter::SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,

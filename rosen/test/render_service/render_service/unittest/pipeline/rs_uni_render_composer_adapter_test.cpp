@@ -18,9 +18,7 @@
 #include "pipeline/rs_uni_render_listener.h"
 #include "surface_buffer_impl.h"
 #include "rs_test_util.h"
-#include "v1_0/cm_color_space.h"
-#include "v1_0/buffer_handle_meta_key_type.h"
-#include "metadata_convertor.h"
+#include "metadata_helper.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -1199,7 +1197,7 @@ HWTEST_F(RSUniRenderComposerAdapterTest, SetLayerColorSpace001, TestSize.Level2)
     auto rsSurface = nodePtr->GetRSSurface();
     rsSurface->SetColorSpace(GRAPHIC_COLOR_GAMUT_DISPLAY_P3);
 
-    auto buffer = new SurfaceBufferImpl();
+    sptr<SurfaceBuffer> buffer = new SurfaceBufferImpl();
     BufferRequestConfig requestConfig = {
         .width = 0x100,
         .height = 0x100,
@@ -1212,18 +1210,25 @@ HWTEST_F(RSUniRenderComposerAdapterTest, SetLayerColorSpace001, TestSize.Level2)
     GSError ret = buffer->Alloc(requestConfig);
     ASSERT_EQ(ret, GSERROR_OK);
 
-    auto layer = HdiLayerInfo::CreateHdiLayerInfo();
-    layer->SetBuffer(buffer, SyncFence::INVALID_FENCE);
+    nodePtr->SetBuffer(buffer, SyncFence::INVALID_FENCE, Rect(), 0);
 
-    composerAdapter_->SetLayerColorSpace(layer, nodePtr.get());
+    composerAdapter_->SetBufferColorSpace(*nodePtr);
 
-    std::vector<uint8_t> colorSpaceData;
-    ret = layer->GetBuffer()->GetMetadata(ATTRKEY_COLORSPACE_TYPE, colorSpaceData);
+    CM_ColorSpaceType colorSpaceType;
+    ret = MetadataHelper::GetColorSpaceType(buffer, colorSpaceType);
     ASSERT_TRUE(ret == GSERROR_OK || GSErrorStr(ret) == "<500 api call failed>with low error <Not supported>");
     if (ret == GSERROR_OK) {
-        CM_ColorSpaceType colorSpace;
-        ASSERT_EQ(MetadataManager::ConvertVecToMetadata(colorSpaceData, colorSpace), GSERROR_OK);
-        ASSERT_EQ(colorSpace, CM_P3_FULL);
+        ASSERT_EQ(colorSpaceType, CM_P3_FULL);
+    }
+
+    CM_ColorSpaceInfo colorSpaceInfo;
+    ret = MetadataHelper::GetColorSpaceInfo(buffer, colorSpaceInfo);
+    ASSERT_TRUE(ret == GSERROR_OK || GSErrorStr(ret) == "<500 api call failed>with low error <Not supported>");
+    if (ret == GSERROR_OK) {
+        ASSERT_EQ(colorSpaceInfo.primaries, COLORPRIMARIES_P3_D65);
+        ASSERT_EQ(colorSpaceInfo.transfunc, TRANSFUNC_SRGB);
+        ASSERT_EQ(colorSpaceInfo.matrix, MATRIX_P3);
+        ASSERT_EQ(colorSpaceInfo.range, RANGE_FULL);
     }
 }
 } // namespace

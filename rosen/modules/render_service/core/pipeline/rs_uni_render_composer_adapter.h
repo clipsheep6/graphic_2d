@@ -53,7 +53,7 @@ private:
         const ComposeInfo& info,
         const sptr<IConsumerSurface>& surface,
         RSBaseRenderNode* node) const;
-    void SetLayerColorSpace(const LayerInfoPtr& layer, RSBaseRenderNode* node) const;
+    void SetBufferColorSpace(RSDisplayRenderNode& node) const;
     void SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,
                                 const sptr<IConsumerSurface>& surface) const;
     void LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const;

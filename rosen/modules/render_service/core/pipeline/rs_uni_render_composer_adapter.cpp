@@ -217,7 +217,7 @@ void RSUniRenderComposerAdapter::SetBufferColorSpace(RSDisplayRenderNode& node) 
     }
 
     if (MetadataHelper::SetColorSpaceType(buffer, colorSpace) != GSERROR_OK) {
-        RS_LOGW("RSUniRenderComposerAdapter::SetBufferColorSpace set color space fail");
+        RS_LOGE("RSUniRenderComposerAdapter::SetBufferColorSpace set color space fail");
     }
 }
 

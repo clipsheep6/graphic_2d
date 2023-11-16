@@ -117,7 +117,8 @@ HWTEST_F(HdiOutputSysTest, UpdateInfosAfterCommit001, Function | MediumTest| Lev
 {
     sptr<SyncFence> fbFence = SyncFence::INVALID_FENCE;
     EXPECT_CALL(*mockDevice_, SetScreenVsyncEnabled(_, _)).WillRepeatedly(testing::Return(0));
-    ASSERT_EQ(HdiOutputSysTest::hdiOutput_->UpdateInfosAfterCommit(fbFence), 0);
+    HdiOutputSysTest::hdiOutput_->UpdateInfosAfterCommit();
+    ASSERT_EQ(HdiOutputSysTest::hdiOutput_->UpdatePts(fbFence), 0);
 }
 
 /*

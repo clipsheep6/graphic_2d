@@ -133,6 +133,11 @@ void HdiBackend::Repaint(const OutputPtr &output)
         return;
     }
 
+    if (getPtsrunner_ == nullptr || getPtshandler_ == nullptr) {
+        getPtsrunner_ = OHOS::AppExecFwk::EventRunner::Create("GetPresentFenceTime");
+        getPtshandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(getPtsrunner_);
+    }
+
     bool needFlush = false;
     int32_t ret = output->PreProcessLayersComp(needFlush);
     if (ret != GRAPHIC_DISPLAY_SUCCESS) {
@@ -150,10 +155,15 @@ void HdiBackend::Repaint(const OutputPtr &output)
         // return
     }
 
-    ret = output->UpdateInfosAfterCommit(fbFence);
-    if (ret != GRAPHIC_DISPLAY_SUCCESS) {
-        return;
-    }
+    output->UpdateInfosAfterCommit();
+    std::weak_ptr<HdiOutput> wOutput = output;
+    //async, with queue
+    getPtshandler_->PostTask([wOutput, fbFence]() {
+        auto output = wOutput.lock();
+        if (output != nullptr) {
+            output->UpdatePts(fbFence);
+        }
+    });
 
     ret = output->ReleaseFramebuffer(fbFence);
     if (ret != GRAPHIC_DISPLAY_SUCCESS) {

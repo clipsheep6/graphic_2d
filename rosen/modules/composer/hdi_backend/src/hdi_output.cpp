@@ -404,13 +404,12 @@ int32_t HdiOutput::Commit(sptr<SyncFence> &fbFence)
     return device_->Commit(screenId_, fbFence);
 }
 
-int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
+int32_t HdiOutput::UpdatePts(sptr<SyncFence> fbFence)
 {
-    UpdatePrevLayerInfo();
-
     if (sampler_ == nullptr) {
         sampler_ = CreateVSyncSampler();
     }
+    lastPresentFence_->Wait(10000); // 10000ms
     int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
     bool startSample = false;
     if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
@@ -427,7 +426,13 @@ int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
         ret = StartVSyncSampler();
     }
     lastPresentFence_ = fbFence;
+
     return ret;
+}
+
+void HdiOutput::UpdateInfosAfterCommit()
+{
+    UpdatePrevLayerInfo();
 }
 
 int32_t HdiOutput::ReleaseFramebuffer(const sptr<SyncFence>& releaseFence)

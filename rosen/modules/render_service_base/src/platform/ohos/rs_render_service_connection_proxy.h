@@ -134,7 +134,7 @@ public:
 
     int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat) override;
 
-    int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) override;
+    int32_t GetScreenSupportedHDRFormats(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) override;
 
     int32_t GetScreenHDRFormat(ScreenId id, ScreenHDRFormat& hdrFormat) override;
 

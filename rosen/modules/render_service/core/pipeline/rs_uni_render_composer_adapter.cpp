@@ -160,7 +160,7 @@ ComposeInfo RSUniRenderComposerAdapter::BuildComposeInfo(RSRcdSurfaceRenderNode&
     info.visibleRect = info.dstRect;
     info.zOrder = static_cast<int32_t>(node.GetGlobalZOrder());
     info.alpha.enGlobalAlpha = true;
-    info.alpha.gAlpha = 255;
+    info.alpha.gAlpha = 255; // 255 means not transparent
     SetPreBufferInfo(node, info);
     info.buffer = buffer;
     info.fence = node.GetAcquireFence();

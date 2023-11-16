@@ -345,7 +345,7 @@ void RoundCornerDisplay::RcdChooseHardwareResource()
 
 void RoundCornerDisplay::DrawRoundCorner(std::shared_ptr<RSPaintFilterCanvas> canvas)
 {
-	std::lock_guard<std::mutex> lock(resourceMut_);
+    std::lock_guard<std::mutex> lock(resourceMut_);
     if (supportHardware_) {
         return;
     }

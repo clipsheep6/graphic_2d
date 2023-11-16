@@ -25,7 +25,7 @@ RSRcdRenderVisitor::RSRcdRenderVisitor()
 {
     auto mainThread = RSMainThread::Instance();
     renderEngine_ = mainThread->GetRenderEngine();
-    uniGlobalZOrder_ = 1000.0; // make at toppest layer
+    uniGlobalZOrder_ = static_cast<float>(0x7FFFFFFF); // make at toppest layer
 }
 
 bool RSRcdRenderVisitor::ConsumeAndUpdateBuffer(RSRcdSurfaceRenderNode& node)

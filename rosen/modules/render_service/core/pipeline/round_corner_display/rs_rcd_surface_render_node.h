@@ -48,7 +48,7 @@ enum class RCDSurfaceType : uint32_t {
 };
 
 struct RcdExtInfo {
-    bool surfaceCreated_ = false;
+    bool surfaceCreated = false;
     RectI srcRect_;
     RectI dstRect_;
 
@@ -56,7 +56,7 @@ struct RcdExtInfo {
     RectF frameBounds;
     RectF frameViewPort;
 
-    RCDSurfaceType surfaceType_ = RCDSurfaceType::INVALID;
+    RCDSurfaceType surfaceType = RCDSurfaceType::INVALID;
 
     void Clear()
     {

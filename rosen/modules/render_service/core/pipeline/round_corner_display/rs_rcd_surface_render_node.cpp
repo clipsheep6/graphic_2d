@@ -28,11 +28,10 @@ RSRcdSurfaceRenderNode::RSRcdSurfaceRenderNode(
     NodeId id, RCDSurfaceType type, const std::weak_ptr<RSContext>& context)
     : RSRenderNode(id, context), RSSurfaceHandler(id)
 {
-    RS_LOGI("RCD: Start Create RSRcdSurfaceRenderNode %{public}d", type);
-    rcdExtInfo_.surfaceType_ = type;
+    RS_LOGD("RCD: Start Create RSRcdSurfaceRenderNode %{public}d", type);
+    rcdExtInfo_.surfaceType = type;
     MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(id, info);
-    RS_LOGI("RCD: Finish Create RSRcdSurfaceRenderNode %{public}d", type);
 }
 
 RSRcdSurfaceRenderNode::~RSRcdSurfaceRenderNode()
@@ -52,7 +51,7 @@ const RectI& RSRcdSurfaceRenderNode::GetDstRect() const
 
 bool RSRcdSurfaceRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
 {
-    RS_LOGI("RCD: Start RSRcdSurfaceRenderNode CreateSurface");
+    RS_LOGD("RCD: Start RSRcdSurfaceRenderNode CreateSurface");
     if (consumer_ != nullptr && surface_ != nullptr) {
         RS_LOGE("RSRcdSurfaceRenderNode::CreateSurface already created, return");
         return true;
@@ -72,38 +71,43 @@ bool RSRcdSurfaceRenderNode::CreateSurface(sptr<IBufferConsumerListener> listene
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(producer);
     auto client = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     surface_ = client->CreateRSSurface(surface);
-    RS_LOGI("RCD: RSRcdSurfaceRenderNode::CreateSurface end");
-    rcdExtInfo_.surfaceCreated_ = true;
+    rcdExtInfo_.surfaceCreated = true;
     return true;
 }
 
-void RSRcdSurfaceRenderNode::SetRcdBufferWidth(uint32_t width) {
+void RSRcdSurfaceRenderNode::SetRcdBufferWidth(uint32_t width)
+{
     rcdSourceInfo.bufferWidth = width;
 }
 
-uint32_t RSRcdSurfaceRenderNode::GetRcdBufferWidth() const {
+uint32_t RSRcdSurfaceRenderNode::GetRcdBufferWidth() const
+{
     return rcdSourceInfo.bufferWidth;
 }
 
-void RSRcdSurfaceRenderNode::SetRcdBufferHeight(uint32_t height) {
+void RSRcdSurfaceRenderNode::SetRcdBufferHeight(uint32_t height)
+{
     rcdSourceInfo.bufferHeight = height;
 }
 
-uint32_t RSRcdSurfaceRenderNode::GetRcdBufferHeight() const {
+uint32_t RSRcdSurfaceRenderNode::GetRcdBufferHeight() const
+{
     return rcdSourceInfo.bufferHeight;
 }
 
-void RSRcdSurfaceRenderNode::SetRcdBufferSize(uint32_t buffersize) {
+void RSRcdSurfaceRenderNode::SetRcdBufferSize(uint32_t buffersize)\
+{
     rcdSourceInfo.bufferSize = buffersize;
 }
 
-uint32_t RSRcdSurfaceRenderNode::GetRcdBufferSize() const {
+uint32_t RSRcdSurfaceRenderNode::GetRcdBufferSize() const
+{
     return rcdSourceInfo.bufferSize;
 }
 
 BufferRequestConfig RSRcdSurfaceRenderNode::GetHardenBufferRequestConfig() const
 {
-    RS_LOGI("RCD: Start GetHardenBufferRequestConfig");
+    RS_LOGD("RCD: Start GetHardenBufferRequestConfig");
     BufferRequestConfig config {};
     config.width = static_cast<int32_t>(GetRcdBufferWidth());
     // need to plus 2 while calculating the bufferHeight in hardware dss way
@@ -112,7 +116,7 @@ BufferRequestConfig RSRcdSurfaceRenderNode::GetHardenBufferRequestConfig() const
     config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
     config.usage = BUFFER_USAGE_HW_RENDER | BUFFER_USAGE_HW_TEXTURE | BUFFER_USAGE_HW_COMPOSER | BUFFER_USAGE_MEM_DMA
         | PRIV_USAGE_FBC_CLD_LAYER;
-    RS_LOGI("RCD: GetHardenBufferRequestConfig Buffer usage %{public}lx, width %{public}d, height %{public}d",
+    RS_LOGD("RCD: GetHardenBufferRequestConfig Buffer usage %{public}lx, width %{public}d, height %{public}d",
         config.usage, config.width, config.height);
     config.timeout = 0;
     return config;
@@ -120,7 +124,7 @@ BufferRequestConfig RSRcdSurfaceRenderNode::GetHardenBufferRequestConfig() const
 
 void RSRcdSurfaceRenderNode::PrepareHardwareResourceBuffer(rs_rcd::RoundCornerLayer* layerInfo)
 {
-    RS_LOGI("RCD: Start PrepareHardwareResourceBuffer");
+    RS_LOGD("RCD: Start PrepareHardwareResourceBuffer");
 
     if (layerInfo == nullptr) {
         RS_LOGE("RCD: layerInfo is nullptr");
@@ -157,7 +161,7 @@ void RSRcdSurfaceRenderNode::PrepareHardwareResourceBuffer(rs_rcd::RoundCornerLa
 
 bool RSRcdSurfaceRenderNode::SetHardwareResourceToBuffer() 
 {
-    RS_LOGI("RCD: Start RSRcdSurfaceRenderNode::SetHardwareResourceToBuffer");
+    RS_LOGD("RCD: Start RSRcdSurfaceRenderNode::SetHardwareResourceToBuffer");
     if (layerBitmap.drawsNothing()) {
         RS_LOGE("LayerBitmap draws Nothing");
         return false;
@@ -232,7 +236,7 @@ bool RSRcdSurfaceRenderNode::FillHardwareResource(HardwareLayerInfo &cldLayerInf
 
 bool RSRcdSurfaceRenderNode::IsSurfaceCreated() const
 {
-    return rcdExtInfo_.surfaceCreated_;
+    return rcdExtInfo_.surfaceCreated;
 }
 
 #ifdef NEW_RENDER_CONTEXT
@@ -251,7 +255,7 @@ sptr<IBufferConsumerListener> RSRcdSurfaceRenderNode::GetConsumerListener() cons
 
 void RSRcdSurfaceRenderNode::ClearBufferCache()
 {
-    if (surface_ && consumer_) {
+    if (surface_ != nullptr && consumer_ != nullptr) {
         surface_->ClearBuffer();
         consumer_->GoBackground();
     }
@@ -273,17 +277,17 @@ void RSRcdSurfaceRenderNode::Reset()
 
 bool RSRcdSurfaceRenderNode::IsBottomSurface() const
 {
-    return rcdExtInfo_.surfaceType_ == RCDSurfaceType::BOTTOM;
+    return rcdExtInfo_.surfaceType == RCDSurfaceType::BOTTOM;
 }
 
 bool RSRcdSurfaceRenderNode::IsTopSurface() const
 {
-    return rcdExtInfo_.surfaceType_ == RCDSurfaceType::TOP;
+    return rcdExtInfo_.surfaceType == RCDSurfaceType::TOP;
 }
 
 bool RSRcdSurfaceRenderNode::IsInvalidSurface() const
 {
-    return rcdExtInfo_.surfaceType_ == RCDSurfaceType::INVALID;
+    return rcdExtInfo_.surfaceType == RCDSurfaceType::INVALID;
 }
 
 float RSRcdSurfaceRenderNode::GetSurfaceWidth() const

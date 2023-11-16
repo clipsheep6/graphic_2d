@@ -67,7 +67,7 @@ public:
 
     void DrawRoundCorner(std::shared_ptr<RSPaintFilterCanvas> canvas);
 
-    void PostHardwareTask(const std::function<void()>& task) 
+    void PostHardwareTask(const std::function<void()>& task)
     {
         std::lock_guard<std::mutex> lock(resourceMut_);
         if (!supportHardware_) {

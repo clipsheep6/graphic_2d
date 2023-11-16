@@ -1177,12 +1177,12 @@ HWTEST_F(RSUniRenderComposerAdapterTest, LayerScaleDown006, TestSize.Level2)
 }
 
 /**
- * @tc.name: SetLayerColorSpace001
- * @tc.desc: Test RSUniRenderComposerAdapterTest.SetLayerColorSpace
+ * @tc.name: SetBufferColorSpace001
+ * @tc.desc: Test RSUniRenderComposerAdapterTest.SetBufferColorSpace
  * @tc.type: FUNC
  * @tc.require: issuesI8C4I9
 */
-HWTEST_F(RSUniRenderComposerAdapterTest, SetLayerColorSpace001, TestSize.Level2)
+HWTEST_F(RSUniRenderComposerAdapterTest, SetBufferColorSpace001, TestSize.Level2)
 {
     SetUp();
 

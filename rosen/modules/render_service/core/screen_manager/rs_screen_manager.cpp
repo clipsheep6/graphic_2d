@@ -1008,6 +1008,8 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
         info.state = ScreenState::PRODUCER_SURFACE_ENABLE;
     }
     info.skipFrameInterval = screen->GetScreenSkipFrameInterval();
+    info.pixelFormat = screen->GetPixelFormat();
+    info.isHDRScreen = screen->IsHDRScreen();
 
     return info;
 }
@@ -1162,6 +1164,44 @@ int32_t RSScreenManager::SetScreenCorrectionLocked(ScreenId id, ScreenRotation s
     return StatusCode::SUCCESS;
 }
 
+int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& pixelFormat) const 
+{
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    pixelFormat = screens_.at(id)->GetPixelFormat();
+    return StatusCode::SUCCESS;
+}
+
+int32_t RSScreenManager::SetPixelFormatLocked(ScreenId id, GraphicPixelFormat pixelFormat)
+{
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    return screens_.at(id)->SetPixelFormat(pixelFormat);
+}
+
+int32_t RSScreenManager::GetIsHDRScreenLocked(ScreenId id, bool& isHDRScreen) const
+{
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    isHDRScreen = screens_.at(id)->IsHDRScreen();
+    return StatusCode::SUCCESS;
+}
+
+int32_t RSScreenManager::SetIsHDRScreenLocked(ScreenId id, bool isHDRScreen)
+{
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return StatusCode::SCREEN_NOT_FOUND;
+    }
+    return screens_.at(id)->SetIsHDRScreen(isHDRScreen);
+}
+
 int32_t RSScreenManager::GetScreenGamutMapLocked(ScreenId id, ScreenGamutMap &mode) const
 {
     if (screens_.count(id) == 0) {
@@ -1280,6 +1320,31 @@ int32_t RSScreenManager::SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFr
     std::lock_guard<std::mutex> lock(mutex_);
     return SetScreenSkipFrameIntervalLocked(id, skipFrameInterval);
 }
+
+int32_t RSScreenManager::GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat) const 
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return GetPixelFormatLocked(id, pixelFormat);
+}
+
+int32_t RSScreenManager::SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return SetPixelFormatLocked(id, pixelFormat);
+}
+
+int32_t RSScreenManager::GetIsHDRScreen(ScreenId id, bool& isHDRScreen) const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return GetIsHDRScreenLocked(id, isHDRScreen);
+}
+
+int32_t RSScreenManager::SetIsHDRScreen(ScreenId id, bool isHDRScreen)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return SetIsHDRScreenLocked(id, isHDRScreen);
+}
+
 } // namespace impl
 
 sptr<RSScreenManager> CreateOrGetScreenManager()

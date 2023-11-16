@@ -1186,15 +1186,10 @@ int32_t RSScreenManager::GetScreenHDRCapabilityLocked(ScreenId id, RSScreenHDRCa
     for (uint32_t index = 0; index < formatCount; index++) {
         hdrFormats[index] = static_cast<ScreenHDRFormat>(hdrCapability.formats[index]);
     }
-    if (screens_.at(id)->IsVirtual()) {
-        screenHdrCapability.SetIsVirtual(true);
-        screenHdrCapability.SetVirtualHdrFormats(hdrFormats);
-    } else {
-        screenHdrCapability.SetHdrFormats(hdrFormats);
-    }
     screenHdrCapability.SetMaxLum(hdrCapability.maxLum);
     screenHdrCapability.SetMaxAverageLum(hdrCapability.maxAverageLum);
     screenHdrCapability.SetMinLum(hdrCapability.minLum);
+    screenHdrCapability.SetHdrFormats(hdrFormats);
     return StatusCode::SUCCESS;
 }
 

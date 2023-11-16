@@ -163,7 +163,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
             IterateOnDrawableRange(
                 RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, canvas);
             IterateOnDrawableRange(
-                RSPropertyDrawableSlot::SAVE_BOUNDS, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
+                RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
         } else {
             IterateOnDrawableRange(
                 RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);

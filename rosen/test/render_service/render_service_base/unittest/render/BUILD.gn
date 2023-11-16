@@ -29,6 +29,7 @@ ohos_unittest("RSRenderServiceBaseRenderTest") {
     "rs_path_test.cpp",
     "rs_shader_test.cpp",
     "rs_shadow_test.cpp",
+    "rs_dynamic_light_up_effect_test.cpp",
   ]
 
   configs = [

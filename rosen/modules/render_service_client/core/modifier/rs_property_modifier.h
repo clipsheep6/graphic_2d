@@ -454,6 +454,15 @@ protected:
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
 };
 
+class RSC_EXPORT RSUseShadowBatchingModifier : public RSAppearanceModifier {
+public:
+    explicit RSUseShadowBatchingModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSUseShadowBatchingModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
 class RSC_EXPORT RSSpherizeModifier : public RSAppearanceModifier {
 public:
     explicit RSSpherizeModifier(const std::shared_ptr<RSPropertyBase>& property);

@@ -363,6 +363,13 @@ bool RSSystemProperties::GetPropertyDrawableEnable()
     return propertyDrawableEnable;
 }
 
+bool RSSystemProperties::GetUseShadowBatchingEnabled()
+{
+    static bool useShadowBatching =
+        std::atoi((system::GetParameter("persist.useShadowBatching.enabled", "1")).c_str()) != 0;
+    return useShadowBatching;
+}
+
 float RSSystemProperties::GetAnimationScale()
 {
     static CachedHandle g_Handle = CachedParameterCreate("persist.sys.graphic.animationscale", "1.0");

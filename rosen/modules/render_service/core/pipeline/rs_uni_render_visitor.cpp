@@ -1680,6 +1680,14 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
     if (DrawBlurInCache(node) || node.GetChildrenCount() == 0) {
         return;
     }
+    if (RSSystemProperties::GetUseShadowBatchingEnabled() && (node.GetRenderProperties().GetUseShadowBatching())) {
+        auto children = node.GetSortedChildren();
+        for (auto& child : children) {
+            if (auto node = child->ReinterpretCastTo<RSCanvasRenderNode>()) {
+                node->ProcessShadowBatching(*canvas_);
+            }
+        }
+    }
     if (isSubThread_) {
         node.SetIsUsedBySubThread(true);
         for (auto& child : node.GetSortedChildren(true)) {

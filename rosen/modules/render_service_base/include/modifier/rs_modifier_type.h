@@ -79,33 +79,34 @@ enum class RSModifierType : int16_t {
     PIXEL_STRETCH,                 // 52
     PIXEL_STRETCH_PERCENT,         // 53
     USE_EFFECT,                    // 54
-    COLOR_BLEND_MODE,              // 55
-    SANDBOX,                       // 56
-    GRAY_SCALE,                    // 57
-    BRIGHTNESS,                    // 58
-    CONTRAST,                      // 59
-    SATURATE,                      // 60
-    SEPIA,                         // 61
-    INVERT,                        // 62
-    HUE_ROTATE,                    // 63
-    COLOR_BLEND,                   // 64
-    PARTICLE,                      // 65
-    SHADOW_IS_FILLED,              // 66
-    OUTER_BORDER_COLOR,            // 67
-    OUTER_BORDER_WIDTH,            // 68
-    OUTER_BORDER_STYLE,            // 69
-    OUTER_BORDER_RADIUS,           // 70
-    CUSTOM,                        // 71
-    EXTENDED,                      // 72
-    TRANSITION,                    // 73
-    BACKGROUND_STYLE,              // 74
-    CONTENT_STYLE,                 // 75
-    FOREGROUND_STYLE,              // 76
-    OVERLAY_STYLE,                 // 77
-    NODE_MODIFIER,                 // 78
-    ENV_FOREGROUND_COLOR,          // 79
-    ENV_FOREGROUND_COLOR_STRATEGY, // 80
-    GEOMETRYTRANS,                 // 81
+    USE_SHADOW_BATCHING,           // 55
+    COLOR_BLEND_MODE,              // 56
+    SANDBOX,                       // 57
+    GRAY_SCALE,                    // 58
+    BRIGHTNESS,                    // 59
+    CONTRAST,                      // 60
+    SATURATE,                      // 61
+    SEPIA,                         // 62
+    INVERT,                        // 63
+    HUE_ROTATE,                    // 64
+    COLOR_BLEND,                   // 65
+    PARTICLE,                      // 66
+    SHADOW_IS_FILLED,              // 67
+    OUTER_BORDER_COLOR,            // 68
+    OUTER_BORDER_WIDTH,            // 69
+    OUTER_BORDER_STYLE,            // 70
+    OUTER_BORDER_RADIUS,           // 71
+    CUSTOM,                        // 72
+    EXTENDED,                      // 73
+    TRANSITION,                    // 74
+    BACKGROUND_STYLE,              // 75
+    CONTENT_STYLE,                 // 76
+    FOREGROUND_STYLE,              // 77
+    OVERLAY_STYLE,                 // 78
+    NODE_MODIFIER,                 // 79
+    ENV_FOREGROUND_COLOR,          // 80
+    ENV_FOREGROUND_COLOR_STRATEGY, // 81
+    GEOMETRYTRANS,                 // 82
 };
 
 enum class RSRenderPropertyType : int16_t {

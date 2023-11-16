@@ -16,7 +16,7 @@
 #include "command/rs_base_node_command.h"
 
 #include "pipeline/rs_base_render_node.h"
-
+#include "platform/common/rs_log.h"
 namespace OHOS {
 namespace Rosen {
 
@@ -30,6 +30,7 @@ void BaseNodeCommandHelper::Destroy(RSContext& context, NodeId nodeId)
     node->ClearChildren();
     node->RemoveFromTree();
     nodeMap.UnregisterRenderNode(node->GetId());
+    ROSEN_LOGI("SurfaceNodeCommandHelper::Destroy %{public}" PRIu64 "  %{public}p", nodeId, node.get());
 }
 
 void BaseNodeCommandHelper::AddChild(RSContext& context, NodeId nodeId, NodeId childNodeId, int32_t index)

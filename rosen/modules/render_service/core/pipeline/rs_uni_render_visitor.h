@@ -293,6 +293,10 @@ private:
     sk_sp<SkImage> GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode);
 
     void SwitchColorFilterDrawing(int currentSaveCount);
+    void SaveCurSurface(std::shared_ptr<RSDirtyRegionManager> dirtyManager,
+        std::shared_ptr<RSSurfaceRenderNode> surfaceNode);
+    void RestoreCurSurface(std::shared_ptr<RSDirtyRegionManager> &dirtyManager,
+        std::shared_ptr<RSSurfaceRenderNode> &surfaceNode);
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
@@ -307,6 +311,8 @@ private:
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
     std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;
+    std::stack<std::shared_ptr<RSDirtyRegionManager>> surfaceDirtyManager_;
+    std::stack<std::shared_ptr<RSSurfaceRenderNode>> surfaceNode_;
     float curAlpha_ = 1.f;
     bool dirtyFlag_ { false };
     std::unique_ptr<RSRenderFrame> renderFrame_;

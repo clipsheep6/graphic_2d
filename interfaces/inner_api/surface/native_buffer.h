@@ -358,7 +358,7 @@ uint32_t OH_NativeBuffer_GetSeqNum(OH_NativeBuffer *buffer);
  * @since 11
  * @version 1.0
  */
-int32_t OH_NativeBuffer_SetColorSpace(OH_NativeBuffer *buffer, const OH_NativeBuffer_ColorSpace& colorSpace);
+int32_t OH_NativeBuffer_SetColorSpace(OH_NativeBuffer *buffer, OH_NativeBuffer_ColorSpace colorSpace);
 
 /**
  * @brief Get the color space of the OH_NativeBuffer.

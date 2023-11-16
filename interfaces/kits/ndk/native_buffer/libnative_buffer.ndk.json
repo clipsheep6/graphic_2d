@@ -5,5 +5,13 @@
     { "name": "OH_NativeBuffer_GetConfig" },
     { "name": "OH_NativeBuffer_Map" },
     { "name": "OH_NativeBuffer_Unmap" },
-    { "name": "OH_NativeBuffer_GetSeqNum" }
+    { "name": "OH_NativeBuffer_GetSeqNum" },
+    { "name": "OH_NativeBuffer_SetColorSpace" },
+    { "name": "OH_NativeBuffer_GetColorSpace" },
+    { "name": "OH_NativeBuffer_SetHDRMetadataType" },
+    { "name": "OH_NativeBuffer_GetHDRMetadataType" },
+    { "name": "OH_NativeBuffer_SetHDRStaticMetadata" },
+    { "name": "OH_NativeBuffer_GetHDRStaticMetadata" },
+    { "name": "OH_NativeBuffer_SetHDRVividDynMetadata" },
+    { "name": "OH_NativeBuffer_GetHDRVividDynMetadata" }
 ]

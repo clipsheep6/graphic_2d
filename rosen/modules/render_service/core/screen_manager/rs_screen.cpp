@@ -703,10 +703,10 @@ int32_t RSScreen::GetScreenHDRFormat(ScreenHDRFormat& hdrFormat) const
         return StatusCode::HDI_ERROR;
     }
     if (IsVirtual()) {
-        hdrFormat = hdrCapability_.formats[currentVirtualColorGamutIdx_];
+        hdrFormat = static_cast<ScreenHDRFormat>(hdrCapability_.formats[currentVirtualHDRFormatIdx_]);
         return StatusCode::SUCCESS;
     } else {
-        hdrFormat = supportedPhysicalColorGamuts_[currentPhysicalColorGamutIdx_];
+        hdrFormat = static_cast<ScreenHDRFormat>(hdrCapability_.formats[currentPhysicalHDRFormatIdx_]);
         return StatusCode::SUCCESS;
     }
     return StatusCode::HDI_ERROR;

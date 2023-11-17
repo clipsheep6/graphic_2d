@@ -1229,8 +1229,7 @@ int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& p
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return StatusCode::SCREEN_NOT_FOUND;
     }
-    pixelFormat = screens_.at(id)->GetPixelFormat();
-    return StatusCode::SUCCESS;
+    return screens_.at(id)->GetPixelFormat(pixelFormat);
 }
 
 int32_t RSScreenManager::SetPixelFormatLocked(ScreenId id, GraphicPixelFormat pixelFormat)
@@ -1242,7 +1241,7 @@ int32_t RSScreenManager::SetPixelFormatLocked(ScreenId id, GraphicPixelFormat pi
     return screens_.at(id)->SetPixelFormat(pixelFormat);
 }
 
-int32_t GetScreenSupportedHDRFormatsLocked(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) const
+int32_t RSScreenManager::GetScreenSupportedHDRFormatsLocked(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) const
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
@@ -1251,7 +1250,7 @@ int32_t GetScreenSupportedHDRFormatsLocked(ScreenId id, std::vector<ScreenHDRFor
     return screens_.at(id)->GetScreenSupportedHDRFormats(hdrFormats);
 }
 
-int32_t GetScreenHDRFormatLocked(ScreenId id, ScreenHDRFormat& hdrFormat) const
+int32_t RSScreenManager::GetScreenHDRFormatLocked(ScreenId id, ScreenHDRFormat& hdrFormat) const
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
@@ -1260,7 +1259,7 @@ int32_t GetScreenHDRFormatLocked(ScreenId id, ScreenHDRFormat& hdrFormat) const
     return screens_.at(id)->GetScreenHDRFormat(hdrFormat);
 }
 
-int32_t SetScreenHDRFormatLocked(ScreenId id, int32_t modeIdx)
+int32_t RSScreenManager::SetScreenHDRFormatLocked(ScreenId id, int32_t modeIdx)
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);

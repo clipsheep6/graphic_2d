@@ -685,7 +685,7 @@ void RSScreen::SetScreenVsyncEnabled(bool enabled) const
     }
 }
 
-int32_t GetScreenSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats) const
+int32_t RSScreen::GetScreenSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats) const
 {
     hdrFormats.clear();
     for (auto item : hdrCapability_.formats) {
@@ -697,7 +697,7 @@ int32_t GetScreenSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats) c
     return StatusCode::SUCCESS;
 }
 
-int32_t GetScreenHDRFormat(ScreenHDRFormat& hdrFormat) const
+int32_t RSScreen::GetScreenHDRFormat(ScreenHDRFormat& hdrFormat) const
 {
     if (hdrCapability_.formats.size() == 0) {
         return StatusCode::HDI_ERROR;
@@ -712,7 +712,7 @@ int32_t GetScreenHDRFormat(ScreenHDRFormat& hdrFormat) const
     return StatusCode::HDI_ERROR;
 }
 
-int32_t SetScreenHDRFormat(int32_t modeIdx)
+int32_t RSScreen::SetScreenHDRFormat(int32_t modeIdx)
 {
     if (modeIdx < 0 || modeIdx >= static_cast<int32_t>(hdrCapability_.formats.size())) {
         return StatusCode::INVALID_ARGUMENTS;
@@ -728,13 +728,13 @@ int32_t SetScreenHDRFormat(int32_t modeIdx)
     return StatusCode::HDI_ERROR;
 }
 
-int32_t GetPixelFormat(GraphicPixelFormat& pixelFormat) const
+int32_t RSScreen::GetPixelFormat(GraphicPixelFormat& pixelFormat) const
 {
     pixelFormat = pixelFormat_;
     return StatusCode::SUCCESS;
 }
 
-int32_t SetPixelFormat(GraphicPixelFormat pixelFormat)
+int32_t RSScreen::SetPixelFormat(GraphicPixelFormat pixelFormat)
 {
     pixelFormat_ = pixelFormat;
     return StatusCode::SUCCESS;

@@ -830,7 +830,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             ScreenId id = data.ReadUint64();
             ScreenHDRFormat hdrFormat;
-            int32_t result = GetScreenColorGamut(id, hdrFormat);
+            int32_t result = GetScreenHDRFormat(id, hdrFormat);
             reply.WriteInt32(result);
             if (result != StatusCode::SUCCESS) {
                 break;
@@ -846,7 +846,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             ScreenId id = data.ReadUint64();
             int32_t modeIdx = data.ReadInt32();
-            int32_t result = SetScreenColorGamut(id, modeIdx);
+            int32_t result = SetScreenHDRFormat(id, modeIdx);
             reply.WriteInt32(result);
             break;
         }

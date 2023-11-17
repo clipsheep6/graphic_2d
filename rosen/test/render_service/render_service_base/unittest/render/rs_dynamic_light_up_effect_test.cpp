@@ -40,7 +40,7 @@ void RSDynamicLightUpTest::TearDown() {}
  * @tc.desc:
  * @tc.type:FUNC
  */
-HWTEST_F(RSDynamicLightUpEffectTest, RSDynamicLightUpEffectTest001, TestSize.Level1)
+HWTEST_F(RSDynamicLightUpTest, RSDynamicLightUpTest001, TestSize.Level1)
 {
     RSProperties properties;
     properties.SetDynamicLightUpRate(0.5);

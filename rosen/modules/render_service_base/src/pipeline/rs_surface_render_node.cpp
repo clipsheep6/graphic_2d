@@ -251,7 +251,7 @@ void RSSurfaceRenderNode::ClearChildrenCache()
 void RSSurfaceRenderNode::OnTreeStateChanged()
 {
     RSRenderNode::OnTreeStateChanged();
-#ifdef RS_ENABLE_GL
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     if (grContext_ && !IsOnTheTree()) {
         if (auto context = GetContext().lock()) {
 #ifndef USE_ROSEN_DRAWING

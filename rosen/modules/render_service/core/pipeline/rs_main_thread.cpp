@@ -138,6 +138,10 @@ constexpr const char* MEM_MGR = "MemMgr";
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);
 #endif
+
+#ifdef RS_ENABLE_VK
+constexpr uint32_t DEFERRED_RELEASE_TIME_INTERVAL_MS = 200;
+#endif
 const std::map<int, int32_t> BLUR_CNT_TO_BLUR_CODE {
     { 1, 10021 },
     { 2, 10022 },
@@ -548,6 +552,11 @@ void RSMainThread::ProcessCommand()
 #endif
             }, AppExecFwk::EventQueue::Priority::IDLE);
         }
+    } else {
+#ifdef RS_ENABLE_VK
+        MemoryManager::PerformDeferedCleanup(grContext,
+            std::chrono::milliseconds(DEFERRED_RELEASE_TIME_INTERVAL_MS));
+#endif
     }
     if (RsFrameReport::GetInstance().GetEnable()) {
         RsFrameReport::GetInstance().AnimateStart();
@@ -2175,7 +2184,12 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
             RS_LOGW("this pid:%{public}d is resident process, no need release gpu resource", remotePid);
         }
 #ifdef NEW_SKIA
+#if defined(RS_ENABLE_GL)
         grContext->flushAndSubmit(true);
+#elif defined(RS_ENABLE_VK)
+        // Uni render doesn't need sync CPU, resources still queued up on the GPU can be released in next frames.
+        grContext->flushAndSubmit(false);
+#endif
 #else
         grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
 #endif

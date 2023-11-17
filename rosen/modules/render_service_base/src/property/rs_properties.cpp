@@ -123,6 +123,9 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
         prop->SetOuterBorderStyle(BORDER_TYPE_NONE);
     },                                                                   // OUTER_BORDER_STYLE,       69
     [](RSProperties* prop) { prop->SetOuterBorderRadius(0.f); },         // OUTER_BORDER_RADIUS,      70
+    [](RSProperties* prop) { prop->SetUseShadowBatching(false); },       // USE_SHADOW_BATCHING,      71
+    [](RSProperties* prop) { prop->SetGreyCoef1({0.f}); },               // GREY_COEF1,               72
+    [](RSProperties* prop) { prop->SetGreyCoef2({0.f}); },               // GREY_COEF2,               73
 };
 } // namespace
 
@@ -1026,6 +1029,22 @@ void RSProperties::SetDynamicLightUpDegree(const std::optional<float>& lightUpDe
     contentDirty_ = true;
 }
 
+void RSProperties::SetGreyCoef1(const std::optional<float>& greyCoef1)
+{
+    greyCoef1_ = greyCoef1;
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+void RSProperties::SetGreyCoef2(const std::optional<float>& greyCoef2)
+{
+    greyCoef2_ = greyCoef2;
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
 void RSProperties::SetFilter(const std::shared_ptr<RSFilter>& filter)
 {
     filter_ = filter;
@@ -1055,6 +1074,22 @@ const std::optional<float>& RSProperties::GetDynamicLightUpRate() const
 const std::optional<float>& RSProperties::GetDynamicLightUpDegree() const
 {
     return dynamicLightUpDegree_;
+}
+
+const std::optional<float>& RSProperties::GetGreyCoef1() const
+{
+    return greyCoef1_;
+}
+
+const std::optional<float>& RSProperties::GetGreyCoef2() const
+{
+    return greyCoef2_;
+}
+
+bool RSProperties::IsGreyAdjustmenValid() const
+{
+    return ROSEN_GNE(*greyCoef1_, 0.0) && ROSEN_LE(*greyCoef1_, 127.0) &&   // 127.0 number
+        ROSEN_GNE(*greyCoef2_, 0.0) && ROSEN_LE(*greyCoef2_, 127.0);        // 127.0 number
 }
 
 const std::shared_ptr<RSFilter>& RSProperties::GetFilter() const
@@ -1561,6 +1596,20 @@ void RSProperties::SetUseEffect(bool useEffect)
 bool RSProperties::GetUseEffect() const
 {
     return useEffect_;
+}
+
+void RSProperties::SetUseShadowBatching(bool useShadowBatching)
+{
+    if (useShadowBatching) {
+        isDrawn_ = true;
+    }
+    useShadowBatching_ = useShadowBatching;
+    SetDirty();
+}
+
+bool RSProperties::GetUseShadowBatching() const
+{
+    return useShadowBatching_;
 }
 
 void RSProperties::SetPixelStretch(const std::optional<Vector4f>& stretchSize)
@@ -2467,7 +2516,7 @@ void RSProperties::OnApplyModifiers()
             filter_.reset();
         }
         needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
-                      IsDynamicLightUpValid();
+                      IsDynamicLightUpValid() || IsGreyAdjustmenValid();
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
         CreateFilterCacheManagerIfNeed();
 #endif

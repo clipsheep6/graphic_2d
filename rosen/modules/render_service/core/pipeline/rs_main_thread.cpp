@@ -1890,6 +1890,19 @@ void RSMainThread::Animate(uint64_t timestamp)
     PerfAfterAnim(needRequestNextVsync);
 }
 
+void RSMainThread::ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData)
+{
+    if (!rsTransactionData || !RSSystemProperties::GetSingleFrameComposerEnabled()) {
+        return;
+    }
+
+    RSSingleFrameComposer::SetSingleFrameFlag(std::this_thread::get_id());
+    if (isUniRender_) {
+        context_->transactionTimestamp_ = rsTransactionData->GetTimestamp();
+        rsTransactionData->ProcessBySingleFrameComposer(*context_);
+    }
+}
+
 void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
     if (!rsTransactionData) {
@@ -2797,15 +2810,19 @@ void RSMainThread::HandleOnTrim(Memory::SystemMemoryLevel level)
 #else
                 auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
 #endif
+                RS_LOGD("Enter level:%{public}d, OnTrim Success", level);
                 switch (level) {
                     case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
-                        RS_LOGD("Enter level:%{public}d, OnTrim Success", level);
+                    case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
+                    case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
+                    case Memory::SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE:
                         MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
                         break;
                     default:
                         break;
                 }
-            }, AppExecFwk::EventQueue::Priority::IDLE);
+            },
+            AppExecFwk::EventQueue::Priority::IDLE);
     }
 }
 

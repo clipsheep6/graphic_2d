@@ -143,6 +143,7 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     isQuickSkipPreparationEnabled_ = (quickSkipPrepareType_ != QuickSkipPrepareType::DISABLED);
     isDrawingCacheEnabled_ = RSSystemParameters::GetDrawingCacheEnabled();
     RSTagTracker::UpdateReleaseGpuResourceEnable(RSSystemProperties::GetReleaseGpuResourceEnabled());
+    isScreenRotationAnimating_ = RSSystemProperties::GetCacheEnabledForRotation();
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     if (RSDrivenRenderManager::GetInstance().GetDrivenRenderEnabled()) {
         drivenInfo_ = std::make_unique<DrivenInfo>();
@@ -366,7 +367,7 @@ bool RSUniRenderVisitor::UpdateCacheChangeStatus(RSRenderNode& node)
         return true;
     }
     node.CheckDrawingCacheType();
-    if (!node.ShouldPaint() || isSurfaceRotationChanged_) {
+    if (!node.ShouldPaint() || isScreenRotationAnimating_) {
         node.SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
     // skip status check if there is no upper cache mark
@@ -540,11 +541,13 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     screenInfo_ = screenManager->QueryScreenInfo(node.GetScreenId());
     prepareClipRect_.SetAll(0, 0, screenInfo_.width, screenInfo_.height);
     // rcd message send
-    using rcd_msg = RSSingleton<RsMessageBus>;
-    rcd_msg::GetInstance().SendMsg<uint32_t, uint32_t>(TOPIC_RCD_DISPLAY_SIZE,
-        screenInfo_.width, screenInfo_.height);
-    rcd_msg::GetInstance().SendMsg<ScreenRotation>(TOPIC_RCD_DISPLAY_ROTATION,
-        node.GetScreenRotation());
+    if (!node.IsMirrorDisplay()) {
+        using rcd_msg = RSSingleton<RsMessageBus>;
+        rcd_msg::GetInstance().SendMsg<uint32_t, uint32_t>(TOPIC_RCD_DISPLAY_SIZE,
+            screenInfo_.width, screenInfo_.height);
+        rcd_msg::GetInstance().SendMsg<ScreenRotation>(TOPIC_RCD_DISPLAY_ROTATION,
+            node.GetScreenRotation());
+    }
 
 #ifndef USE_ROSEN_DRAWING
     parentSurfaceNodeMatrix_ = SkMatrix::I();
@@ -1678,13 +1681,28 @@ void RSUniRenderVisitor::DrawSurfaceOpaqueRegionForDFX(RSSurfaceRenderNode& node
     }
 }
 
+void RSUniRenderVisitor::ProcessShadowFirst(RSRenderNode& node, bool inSubThread)
+{
+    if (RSSystemProperties::GetUseShadowBatchingEnabled()
+        && (node.GetRenderProperties().GetUseShadowBatching())) {
+        auto& children = node.GetSortedChildren(inSubThread);
+        for (auto& child : children) {
+            if (auto node = child->ReinterpretCastTo<RSCanvasRenderNode>()) {
+                node->ProcessShadowBatching(*canvas_);
+            }
+        }
+    }
+}
+
 void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
 {
     if (DrawBlurInCache(node) || node.GetChildrenCount() == 0) {
         return;
     }
+    
     if (isSubThread_) {
         node.SetIsUsedBySubThread(true);
+        ProcessShadowFirst(node, isSubThread_);
         for (auto& child : node.GetSortedChildren(true)) {
             ProcessChildInner(node, child);
         }
@@ -1692,6 +1710,7 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
         node.ClearFullChildrenListIfNeeded(true);
         node.SetIsUsedBySubThread(false);
     } else {
+        ProcessShadowFirst(node, isSubThread_);
         for (auto& child : node.GetSortedChildren()) {
             ProcessChildInner(node, child);
         }
@@ -2235,7 +2254,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
             if (geoPtr != nullptr) {
                 // enable cache if screen rotation
-                canvas_->SetCacheType(RSSystemProperties::GetCacheEnabledForRotation() ?
+                canvas_->SetCacheType(isScreenRotationAnimating_ ?
                     RSPaintFilterCanvas::CacheType::ENABLED : RSPaintFilterCanvas::CacheType::DISABLED);
             }
 
@@ -2265,7 +2284,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
             if (geoPtr != nullptr) {
                 // enable cache if screen rotation
-                canvas_->SetCacheType(RSSystemProperties::GetCacheEnabledForRotation() ?
+                canvas_->SetCacheType(isScreenRotationAnimating_ ?
                     RSPaintFilterCanvas::CacheType::ENABLED : RSPaintFilterCanvas::CacheType::DISABLED);
             }
 
@@ -3495,6 +3514,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     canvas_->ConcatMatrix(geoPtr->GetMatrix());
 #endif
+    isNodeSingleFrameComposer_ = node.GetNodeIsSingleFrameComposer();
     bool isSubNodeOfSurfaceInProcess = isSubNodeOfSurfaceInProcess_;
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
         isSubNodeOfSurfaceInProcess_ = true;
@@ -3863,6 +3883,7 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     if (!node.ShouldPaint()) {
         return;
     }
+    node.MarkNodeSingleFrameComposer(isNodeSingleFrameComposer_);
 #ifdef RS_ENABLE_EGLQUERYSURFACE
     if ((isOpDropped_ && (curSurfaceNode_ != nullptr)) || isCanvasNodeSkipDfxEnabled_) {
         // If all the child nodes have drawing areas that do not exceed the current node, then current node

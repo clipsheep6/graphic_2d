@@ -173,6 +173,13 @@ bool RSSystemProperties::GetHardwareComposerEnabled()
     return hardwareComposerEnabled;
 }
 
+bool RSSystemProperties::GetUseShadowBatchingEnabled()
+{
+    static bool useShadowBatching =
+        std::atoi((system::GetParameter("persist.useShadowBatching.enabled", "1")).c_str()) != 0;
+    return useShadowBatching;
+}
+
 bool RSSystemProperties::GetAFBCEnabled()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.afbc.enabled", "1");
@@ -604,6 +611,13 @@ int RSSystemProperties::GetSyncTransactionWaitDelay()
     static int syncTransactionWaitDelay =
         std::atoi((system::GetParameter("persist.sys.graphic.syncTransactionWaitDelay", "100")).c_str());
     return syncTransactionWaitDelay;
+}
+
+bool RSSystemProperties::GetSingleFrameComposerEnabled()
+{
+    static bool singleFrameComposerEnabled =
+        (std::atoi((system::GetParameter("persist.sys.graphic.singleFrameComposer", "0")).c_str()) != 0);
+    return singleFrameComposerEnabled;
 }
 } // namespace Rosen
 } // namespace OHOS

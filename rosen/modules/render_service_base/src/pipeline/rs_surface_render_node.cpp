@@ -209,6 +209,10 @@ void RSSurfaceRenderNode::CollectSurface(
         return;
     }
 
+    if (IsAbilityComponent() || IsRosenWeb()) {
+        return;
+    }
+
 #ifndef ROSEN_CROSS_PLATFORM
     auto& consumer = GetConsumer();
     if (consumer != nullptr && consumer->GetTunnelHandle() != nullptr) {
@@ -227,6 +231,15 @@ void RSSurfaceRenderNode::CollectSurface(
             vec.emplace_back(shared_from_this());
         }
 #endif
+    }
+
+    for (auto &nodes : node->GetSubSurfaceNodes()) {
+        for (auto &node : nodes.second) {
+            auto surfaceNode = node.lock();
+            if (surfaceNode != nullptr) {
+                surfaceNode->CollectSurface(surfaceNode, vec, isUniRender, onlyFirstLevel);
+            }
+        }
     }
 }
 

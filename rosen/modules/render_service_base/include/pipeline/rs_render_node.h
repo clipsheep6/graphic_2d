@@ -116,6 +116,14 @@ public:
         return children_;
     }
 
+    inline const std::map<NodeId, std::vector<WeakPtr>> &GetSubSurfaceNodes() const
+    {
+        return subSurfaceNodes_;
+    }
+    bool IsSubSurfaceNeedDraw();
+    void AddSubSurfaceNode(SharedPtr child, SharedPtr parent);
+    void RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent);
+
     // flag: isOnTheTree; instanceRootNodeId: displaynode or leash/appnode attached to
     // firstLevelNodeId: surfacenode for uiFirst to assign task; cacheNodeId: drawing cache rootnode attached to
     virtual void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
@@ -614,6 +622,8 @@ private:
     std::vector<std::unique_ptr<RSPropertyDrawable>> propertyDrawablesVec_;
     uint8_t drawableVecStatus_ = 0;
     void UpdateDrawableVec();
+
+    std::map<NodeId, std::vector<WeakPtr>> subSurfaceNodes_;
 
     friend class RSAliasDrawable;
     friend class RSMainThread;

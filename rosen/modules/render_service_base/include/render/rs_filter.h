@@ -41,15 +41,15 @@ public:
     class RSFilterTask {
     public:
 #ifndef USE_ROSEN_DRAWING
-        virtual bool InitSurface(GrRecordingContext* grContext);
+        virtual bool InitSurface(GrRecordingContext* grContext) = 0;
 #else
-        virtual bool InitSurface(Drawing::GPUContext* grContext);
+        virtual bool InitSurface(Drawing::GPUContext* grContext) = 0;
 #endif
-        virtual bool Render();
-        virtual bool SaveFilteredImage();
-        virtual void SwapInit();
-        virtual bool SetDone();
-        virtual void SetTaskRelease();
+        virtual bool Render() = 0;
+        virtual bool SaveFilteredImage() = 0;
+        virtual void SwapInit() = 0;
+        virtual bool SetDone() = 0;
+        virtual void SetTaskRelease() = 0;
     };
     static std::function<void(std::weak_ptr<RSFilter::RSFilterTask>)> postTask;
     static std::function<void(std::weak_ptr<RSFilter::RSFilterTask>)> setRelease;

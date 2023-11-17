@@ -114,8 +114,8 @@ private:
     int notchSetting_ = WINDOW_NOTCH_DEFAULT;
     // status of the notch
     int notchStatus_ = notchSetting_;
-
-    int showResourceType_ = TOP_PORTRAIT;
+    
+    int showResourceType_ = (notchSetting_ == WINDOW_NOTCH_DEFAULT) ? TOP_PORTRAIT : TOP_HIDDEN;
 
     // status of the rotation
     ScreenRotation curOrientation_ = ScreenRotation::ROTATION_0;

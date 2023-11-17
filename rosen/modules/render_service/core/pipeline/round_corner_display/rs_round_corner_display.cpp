@@ -130,21 +130,23 @@ bool RoundCornerDisplay::GetTopSurfaceSource()
         return false;
     }
     LoadImg(rog_->portraitMap[rs_rcd::NODE_PORTRAIT].layerUp.fileName.c_str(), imgTopPortrait_);
-    DecodeBitmap(imgTopPortrait_, bitmapTopPortrait_);
     
     if (rog_->landscapeMap.count(rs_rcd::NODE_LANDSCAPE) < 1) {
         RS_LOGE("[%{public}s] LANDSACPE layerUp do not configured \n", __func__);
         return false;
     }
     LoadImg(rog_->landscapeMap[rs_rcd::NODE_LANDSCAPE].layerUp.fileName.c_str(), imgTopLadsOrit_);
-    DecodeBitmap(imgTopLadsOrit_, bitmapTopLadsOrit_);
     
     if (rog_->portraitMap.count(rs_rcd::NODE_PORTRAIT) < 1) {
         RS_LOGE("[%{public}s] PORTRAIT layerHide do not configured \n", __func__);
         return false;
     }
     LoadImg(rog_->portraitMap[rs_rcd::NODE_PORTRAIT].layerHide.fileName.c_str(), imgTopHidden_);
-    DecodeBitmap(imgTopHidden_, bitmapTopHidden_);
+    if (supportHardware_) {
+        DecodeBitmap(imgTopPortrait_, bitmapTopPortrait_);
+        DecodeBitmap(imgTopLadsOrit_, bitmapTopLadsOrit_);
+        DecodeBitmap(imgTopHidden_, bitmapTopHidden_);
+    }
     return true;
 }
 
@@ -159,7 +161,9 @@ bool RoundCornerDisplay::GetBottomSurfaceSource()
         return false;
     }
     LoadImg(rog_->portraitMap[rs_rcd::NODE_PORTRAIT].layerDown.fileName.c_str(), imgBottomPortrait_);
-    DecodeBitmap(imgBottomPortrait_, bitmapBottomPortrait_);
+    if (supportHardware_) {
+        DecodeBitmap(imgBottomPortrait_, bitmapBottomPortrait_);
+    }
     return true;
 }
 
@@ -247,6 +251,7 @@ void RoundCornerDisplay::UpdateOrientationStatus(ScreenRotation orientation)
     RS_LOGD("[%{public}s] curOrientation_ = %{public}d, lastOrientation_ = %{public}d \n",
         __func__, curOrientation_, lastOrientation_);
     updateFlag_["orientation"] = true;
+    
     int transitionFlag = -1; // default
     switch (lastOrientation_) {
         case ScreenRotation::ROTATION_0:
@@ -293,8 +298,10 @@ void RoundCornerDisplay::UpdateParameter(std::map<std::string, bool>& updateFlag
     if (flag) {
         RcdChooseTopResourceType();
         RcdChooseRSResource();
-        RcdChooseHardwareResource();
-        SetHardwareLayerSize();
+        if (supportHardware_) {
+            RcdChooseHardwareResource();
+            SetHardwareLayerSize();
+        }
     } else {
         RS_LOGD("[%{public}s] Status is not changed \n", __func__);
     }
@@ -348,8 +355,10 @@ void RoundCornerDisplay::RcdChooseRSResource()
         case TOP_LADS_ORIT:
             curTop_ = imgTopLadsOrit_;
             RS_LOGD("prepare imgTopLadsOrit_ resource \n");
+            break;
         default:
             RS_LOGE("[%{public}s] No showResourceType found with type %{public}d \n", __func__, showResourceType_);
+            break;
     }
     curBottom_ = imgBottomPortrait_;
 }
@@ -387,6 +396,7 @@ void RoundCornerDisplay::RcdChooseHardwareResource()
             break;
         default:
             RS_LOGE("[%{public}s] No showResourceType found with type %{public}d \n", __func__, showResourceType_);
+            break;
     }
     if (rog_->portraitMap.count(rs_rcd::NODE_PORTRAIT) < 1) {
         RS_LOGE("[%{public}s] PORTRAIT layerHide do not configured \n", __func__);

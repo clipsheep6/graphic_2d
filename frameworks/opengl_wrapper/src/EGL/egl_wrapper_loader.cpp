@@ -99,6 +99,10 @@ bool EglWrapperLoader::LoadEgl(const char *libName, EglHookTable *table)
 
 void *EglWrapperLoader::LoadGl(const char *libName, char const * const *glName, FunctionPointerType *entry)
 {
+    if(libName == nullptr || glName == nullptr || entry == nullptr)
+    {
+        WLOGD("LoadGL's implement is null");
+    }
     WLOGD("");
     std::string path = std::string(VENDOR_LIB_PATH) + std::string(libName);
     void *dlHandle = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
@@ -125,6 +129,10 @@ void *EglWrapperLoader::LoadGl(const char *libName, char const * const *glName, 
 
     FunctionPointerType *current = entry;
     char const * const *api = glName;
+    if(current == nullptr || api == nullptr)
+    {
+        WLOGD("current or api is null");
+    }
     while (*api) {
         char const *name = *api;
         FunctionPointerType func = (FunctionPointerType)dlsym(dlHandle, name);
@@ -144,6 +152,10 @@ void *EglWrapperLoader::LoadGl(const char *libName, char const * const *glName, 
 
 bool EglWrapperLoader::LoadVendorDriver(EglWrapperDispatchTable *table)
 {
+    if(table == nullptr)
+    {
+        WLOGD("table is null");
+    }
     WLOGD("EGL");
     if (!LoadEgl(LIB_EGL_NAME, &table->egl)) {
         WLOGE("LoadEgl Failed.");

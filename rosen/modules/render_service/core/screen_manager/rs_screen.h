@@ -82,7 +82,7 @@ public:
     virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
     virtual int32_t GetScreenSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats) const = 0;
     virtual int32_t GetScreenHDRFormat(ScreenHDRFormat& hdrFormat) const = 0;
-    virtual int32_t SetScreenHDRFormat(ScreenHDRFormat hdrFormat) = 0;
+    virtual int32_t SetScreenHDRFormat(int32_t modeIdx) = 0;
     virtual int32_t GetPixelFormat(GraphicPixelFormat& pixelFormat) const = 0;
     virtual int32_t SetPixelFormat(GraphicPixelFormat pixelFormat) = 0;
 };

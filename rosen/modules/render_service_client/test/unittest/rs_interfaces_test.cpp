@@ -827,6 +827,50 @@ HWTEST_F(RSInterfacesTest, SetScreenHDRFormat002, Function | SmallTest | Level2)
 }
 
 /*
+* Function: GetScreenSupportedColorSpaces
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenSupportedColorSpaces with INVALID_SCREEN_ID
+*                  2. check ret
+*/
+HWTEST_F(RSInterfacesTest, GetScreenSupportedColorSpaces002, Function | SmallTest | Level2)
+{
+    std::vector<CM_ColorSpaceType> colorSpaces;
+    int ret = rsInterfaces->GetScreenSupportedColorSpaces(INVALID_SCREEN_ID, colorSpaces);
+    EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
+}
+
+/*
+* Function: GetScreenColorSpace
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetScreenColorSpace with INVALID_SCREEN_ID
+*                  2. check ret
+*/
+HWTEST_F(RSInterfacesTest, GetScreenColorSpace002, Function | SmallTest | Level2)
+{
+    CM_ColorSpaceType colorSpace = CM_ColorSpaceType::CM_SRGB_FULL;
+    int ret = rsInterfaces->GetScreenColorSpace(INVALID_SCREEN_ID, colorSpace);
+    EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
+}
+
+/*
+* Function: SetScreenColorSpace
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenColorSpace with INVALID_SCREEN_ID
+*                  2. check ret
+*/
+HWTEST_F(RSInterfacesTest, SetScreenColorSpace002, Function | SmallTest | Level2)
+{
+    int ret = rsInterfaces->SetScreenColorSpace(INVALID_SCREEN_ID, 0);
+    EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
+}
+
+/*
 * Function: SetScreenGamutMap
 * Type: Function
 * Rank: Important(2)

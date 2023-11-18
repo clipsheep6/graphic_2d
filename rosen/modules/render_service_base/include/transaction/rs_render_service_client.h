@@ -207,6 +207,12 @@ public:
 
     int32_t SetScreenHDRFormat(ScreenId id, int32_t modeIdx);
 
+    int32_t GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces);
+
+    int32_t GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace);
+
+    int32_t SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace);
+
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType);
 
 #ifndef USE_ROSEN_DRAWING

@@ -457,6 +457,7 @@ private:
 #endif
     bool isNodeSingleFrameComposer_ = false;
     sk_sp<SkImage> cacheImgForCapture_ = nullptr;
+    void ProcessChildrenAboveCpatureWindow(RSRenderNode& node, NodeId rootIdForCpatureWindow);
 };
 } // namespace Rosen
 } // namespace OHOS

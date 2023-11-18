@@ -60,6 +60,7 @@ struct ScreenInfo {
 
     GraphicPixelFormat pixelFormat = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
     ScreenHDRFormat hdrFormat = ScreenHDRFormat::NOT_SUPPORT_HDR;
+    
     uint32_t GetRotatedWidth() const
     {
         return (rotation == ScreenRotation::ROTATION_0 || rotation == ScreenRotation::ROTATION_180) ? width : height;
@@ -174,6 +175,12 @@ public:
     virtual int32_t GetScreenHDRFormat(ScreenId id, ScreenHDRFormat& hdrFormat) const = 0;
 
     virtual int32_t SetScreenHDRFormat(ScreenId id, int32_t modeIdx) = 0;
+
+    virtual int32_t GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces) const = 0;
+
+    virtual int32_t GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace) const = 0;
+
+    virtual int32_t SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace) = 0;
 
     virtual void HandlePostureData(const SensorEvent * const event) = 0;
 
@@ -303,6 +310,12 @@ public:
 
     int32_t SetScreenHDRFormat(ScreenId id, int32_t modeIdx) override;
 
+    int32_t GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces) const override;
+
+    int32_t GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace) const override;
+
+    int32_t SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace) override;
+
     void HandlePostureData(const SensorEvent * const event) override;
 
     ScreenId GetActiveScreenId() const override;
@@ -360,6 +373,9 @@ private:
     int32_t GetScreenSupportedHDRFormatsLocked(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) const;
     int32_t GetScreenHDRFormatLocked(ScreenId id, ScreenHDRFormat& hdrFormat) const;
     int32_t SetScreenHDRFormatLocked(ScreenId id, int32_t modeIdx);
+    int32_t GetScreenSupportedColorSpacesLocked(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces) const;
+    int32_t GetScreenColorSpaceLocked(ScreenId id, CM_ColorSpaceType& colorSpace) const;
+    int32_t SetScreenColorSpaceLocked(ScreenId id, CM_ColorSpaceType colorSpace);
 
     void RegisterSensorCallback();
     void UnRegisterSensorCallback();

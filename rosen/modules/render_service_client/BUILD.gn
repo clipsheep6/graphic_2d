@@ -156,6 +156,7 @@ template("render_service_client_source_set") {
         "hisysevent:libhisysevent",
         "hitrace:hitrace_meter",
         "image_framework:image_native",
+        "drivers_interface_display:display_commontype_idl_headers",
       ]
 
       if (accessibility_enable) {

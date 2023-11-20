@@ -46,6 +46,7 @@
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "rs_hgm_config_data.h"
 #include "rs_occlusion_data.h"
+#include <surface_type.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -196,6 +197,14 @@ public:
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode);
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);
+
+    int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat);
+
+    int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat);
+
+    int32_t GetIsHDRScreen(ScreenId id, bool& isHDRScreen);
+
+    int32_t SetIsHDRScreen(ScreenId id, bool isHDRScreen);
 
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType);
 

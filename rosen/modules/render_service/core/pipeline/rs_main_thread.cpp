@@ -1497,6 +1497,11 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
         if (CheckSurfaceNeedProcess(occlusionSurfaces, curSurface)) {
             Occlusion::Region curRegion { occlusionRect };
             Occlusion::Region subResult = curRegion.Sub(accumulatedRegion);
+            // When the parent surface node is invisible due to subSurface node filter cache, the visible area of the
+            // parent surface node needs to be restored.
+            // if (RSSystemProperties::GetSubSurfaceEnabled() && subResult.IsEmpty()) {
+            //     curSurface->RestoreSurfaceVisibleRegion(subResult, accumulatedRegion);
+            // }
             RS_REGION_VISIBLE_LEVEL visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
             RS_LOGD("%{public}s nodeId[%{public}" PRIu64 "] visibleLevel[%{public}d]",
                 __func__, curSurface->GetId(), visibleLevel);

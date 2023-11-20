@@ -581,5 +581,12 @@ int RSSystemProperties::GetSyncTransactionWaitDelay()
         std::atoi((system::GetParameter("persist.sys.graphic.syncTransactionWaitDelay", "100")).c_str());
     return syncTransactionWaitDelay;
 }
+
+bool RSSystemProperties::GetSubSurfaceEnabled()
+{
+    static int subSurfaceEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.subSurface", "0")).c_str());
+    return subSurfaceEnabled;
+}
 } // namespace Rosen
 } // namespace OHOS

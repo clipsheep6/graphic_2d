@@ -818,6 +818,8 @@ public:
     {
         hasSkipLayer_ = hasSkipLayer;
     }
+
+    // void RestoreSurfaceVisibleRegion(Occlusion::Region &subResult, Occlusion::Region &accumulatedRegion);
 private:
     void OnResetParent() override;
     void ClearChildrenCache();

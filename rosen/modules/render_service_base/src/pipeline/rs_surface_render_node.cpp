@@ -228,6 +228,22 @@ void RSSurfaceRenderNode::CollectSurface(
         }
 #endif
     }
+
+    if (!RSSystemProperties::GetSubSurfaceEnabled()) {
+        return;
+    }
+
+    if (onlyFirstLevel) {
+        return;
+    }
+    for (auto &nodes : node->GetSubSurfaceNodes()) {
+        for (auto &node : nodes.second) {
+            auto surfaceNode = node.lock();
+            if (surfaceNode != nullptr) {
+                surfaceNode->CollectSurface(surfaceNode, vec, isUniRender, onlyFirstLevel);
+            }
+        }
+    }
 }
 
 void RSSurfaceRenderNode::ClearChildrenCache()
@@ -1513,6 +1529,21 @@ bool RSSurfaceRenderNode::HasOnlyOneRootNode() const
 
     return true;
 }
+
+// void RSSurfaceRenderNode::RestoreSurfaceVisibleRegion(Occlusion::Region &subResult, Occlusion::Region &accumulatedRegion)
+// {
+//     for (auto &nodes : GetSubSurfaceNodes()) {
+//         for (auto &node : nodes.second) {
+//             const auto &surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.lock());
+//             auto subSurfaceVisibleRegion = surfaceNode->GetVisibleRegion();
+//             if (surfaceNode->IsTransparent() && surfaceNode->GetFilterCacheValid() &&
+//                 subSurfaceVisibleRegion.Sub(accumulatedRegion).IsEmpty()) {
+//                 subResult.OrSelf(accumulatedRegion);
+//                 break;
+//             }
+//         }
+//     }
+// }
 
 } // namespace Rosen
 } // namespace OHOS

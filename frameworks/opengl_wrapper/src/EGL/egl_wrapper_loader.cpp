@@ -100,7 +100,7 @@ bool EglWrapperLoader::LoadEgl(const char *libName, EglHookTable *table)
 void *EglWrapperLoader::LoadGl(const char *libName, char const * const *glName, FunctionPointerType *entry)
 {
     if (libName == nullptr || glName == nullptr || entry == nullptr) {
-        WLOGD("LoadGL's implement is null");
+        WLOGE("LoadGL's IN parament is null");
     }
     WLOGD("");
     std::string path = std::string(VENDOR_LIB_PATH) + std::string(libName);

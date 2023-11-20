@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <unordered_set>
+#include <v1_0/CMColorSpace.h>
 
 #include "hgm_config_callback_manager.h"
 #include "ipc_callbacks/buffer_available_callback.h"
@@ -158,6 +159,22 @@ private:
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) override;
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) override;
+
+    int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat) override;
+
+    int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat) override;
+
+    int32_t GetScreenSupportedHDRFormats(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) override;
+
+    int32_t GetScreenHDRFormat(ScreenId id, ScreenHDRFormat& hdrFormat) override;
+
+    int32_t SetScreenHDRFormat(ScreenId id, int32_t modeIdx) override;
+
+    int32_t GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces) override;
+
+    int32_t GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace) override;
+
+    int32_t SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace) override;
 
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType) override;
 

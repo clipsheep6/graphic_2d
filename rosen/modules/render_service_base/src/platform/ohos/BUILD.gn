@@ -160,6 +160,7 @@ ohos_source_set("rosen_ohos_sources") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "window_manager:libwsutils",
+    "drivers_interface_display:display_commontype_idl_headers",
   ]
 
   if (accessibility_enable) {

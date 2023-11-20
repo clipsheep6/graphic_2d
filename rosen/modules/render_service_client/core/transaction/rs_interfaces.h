@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <mutex>
+#include <v1_0/CMColorSpace.h>
 
 #include "memory/rs_memory_graphic.h"
 #include "transaction/rs_render_service_client.h"
@@ -137,6 +138,22 @@ public:
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode);
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);
+
+    int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat);
+
+    int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat);
+
+    int32_t GetScreenSupportedHDRFormats(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats);
+
+    int32_t GetScreenHDRFormat(ScreenId id, ScreenHDRFormat& hdrFormat);
+
+    int32_t SetScreenHDRFormat(ScreenId id, int32_t modeIdx);
+
+    int32_t GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces);
+
+    int32_t GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace);
+
+    int32_t SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace);
 
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType);
 

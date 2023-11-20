@@ -19,6 +19,7 @@
 #include <iremote_broker.h>
 #include <string>
 #include <surface.h>
+#include <v1_0/CMColorSpace.h>
 
 #include "command/rs_command.h"
 #include "command/rs_node_showing_command.h"
@@ -155,6 +156,22 @@ public:
     virtual int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) = 0;
 
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) = 0;
+
+    virtual int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat) = 0;
+
+    virtual int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat) = 0;
+
+    virtual int32_t GetScreenSupportedHDRFormats(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) = 0;
+
+    virtual int32_t GetScreenHDRFormat(ScreenId id, ScreenHDRFormat& hdrFormat) = 0;
+
+    virtual int32_t SetScreenHDRFormat(ScreenId id, int32_t modeIdx) = 0;
+
+    virtual int32_t GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces) = 0;
+
+    virtual int32_t GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace) = 0;
+
+    virtual int32_t SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace) = 0;
 
     virtual int32_t GetScreenType(ScreenId id, RSScreenType& screenType) = 0;
 

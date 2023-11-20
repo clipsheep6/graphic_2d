@@ -18,6 +18,7 @@
 
 #include "command/rs_node_showing_command.h"
 #include <iremote_proxy.h>
+#include <v1_0/CMColorSpace.h>
 #include <platform/ohos/rs_irender_service_connection.h>
 #include <platform/ohos/rs_irender_service_connection_ipc_interface_code.h>
 #include "sandbox_utils.h"
@@ -129,6 +130,22 @@ public:
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) override;
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) override;
+
+    int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat) override;
+
+    int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat) override;
+
+    int32_t GetScreenSupportedHDRFormats(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats) override;
+
+    int32_t GetScreenHDRFormat(ScreenId id, ScreenHDRFormat& hdrFormat) override;
+
+    int32_t SetScreenHDRFormat(ScreenId id, int32_t modeIdx) override;
+
+    int32_t GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces) override;
+
+    int32_t GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace) override;
+
+    int32_t SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace) override;
 
     int32_t GetScreenType(ScreenId id, RSScreenType& screenType) override;
 

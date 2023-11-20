@@ -24,6 +24,7 @@
 #ifndef ROSEN_CROSS_PLATFORM
 #include <surface.h>
 #endif
+#include <v1_0/CMColorSpace.h>
 
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/iapplication_agent.h"

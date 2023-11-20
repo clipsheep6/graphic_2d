@@ -19,6 +19,7 @@
 #include <iremote_broker.h>
 #include <string>
 #include <surface.h>
+#include <v1_0/CMColorSpace.h>
 
 #include "command/rs_command.h"
 #include "command/rs_node_showing_command.h"

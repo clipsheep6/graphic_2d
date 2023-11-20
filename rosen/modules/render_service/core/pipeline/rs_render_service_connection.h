@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <unordered_set>
+#include <v1_0/CMColorSpace.h>
 
 #include "hgm_config_callback_manager.h"
 #include "ipc_callbacks/buffer_available_callback.h"

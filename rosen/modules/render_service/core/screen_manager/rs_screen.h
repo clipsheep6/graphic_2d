@@ -23,6 +23,7 @@
 #include <hdi_output.h>
 #include <hdi_screen.h>
 #include <screen_manager/screen_types.h>
+#include <v1_0/CMColorSpace.h>
 
 namespace OHOS {
 namespace Rosen {

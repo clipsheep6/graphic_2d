@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <mutex>
+#include <v1_0/CMColorSpace.h>
 
 #include "memory/rs_memory_graphic.h"
 #include "transaction/rs_render_service_client.h"

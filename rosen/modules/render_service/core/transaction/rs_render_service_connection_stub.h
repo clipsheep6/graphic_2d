@@ -19,6 +19,7 @@
 #include <iremote_stub.h>
 #include <message_option.h>
 #include <message_parcel.h>
+#include <v1_0/CMColorSpace.h>
 
 #include "platform/ohos/rs_irender_service_connection.h"
 #include "platform/ohos/rs_irender_service_connection_ipc_interface_code_access_verifier.h"

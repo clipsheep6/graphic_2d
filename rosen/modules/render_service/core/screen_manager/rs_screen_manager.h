@@ -33,6 +33,7 @@
 #include <screen_manager/screen_types.h>
 #include <screen_manager/rs_virtual_screen_resolution.h>
 #include <surface.h>
+#include <surface_type.h>
 #include "sensor_agent.h"
 #include "sensor_agent_type.h"
 

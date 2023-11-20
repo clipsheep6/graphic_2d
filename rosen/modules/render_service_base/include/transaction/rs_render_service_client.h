@@ -21,6 +21,7 @@
 #include <memory>
 #include <mutex>
 #include <refbase.h>
+#include <surface_type.h>
 #ifndef ROSEN_CROSS_PLATFORM
 #include <surface.h>
 #endif

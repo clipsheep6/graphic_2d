@@ -746,7 +746,7 @@ int32_t RSScreen::SetPixelFormat(GraphicPixelFormat pixelFormat)
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const
+int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const
 {
     colorSpaces.clear();
     if (IsVirtual()) {
@@ -764,62 +764,43 @@ int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& 
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreen::GetScreenColorSpace(CM_ColorSpaceType& colorSpace) const
+int32_t RSScreen::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const
 {
-    if (IsVirtual()) {
-        colorSpace = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[static_cast<GraphicColorGamut>(supportedVirtualColorGamuts_[currentVirtualColorGamutIdx_])];
-        return StatusCode::SUCCESS;
-    } else {
-        if (supportedPhysicalColorGamuts_.size() == 0) {
-            return StatusCode::HDI_ERROR;
-        }
-        colorSpace = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[static_cast<GraphicColorGamut>(supportedPhysicalColorGamuts_[currentPhysicalColorGamutIdx_])];
-        return StatusCode::SUCCESS;
-    }
-    return StatusCode::HDI_ERROR;
+    ScreenColorGamut curGamut;
+    int32_t result = GetScreenColorGamut(curGamut);
+    colorSpace = COMMON_COLOR_SPACE_TYPE_TO_RS_MAP[curGamut];
+    return result;
 }
 
-int32_t RSScreen::SetScreenColorSpace(CM_ColorSpaceType colorSpace) 
+int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) 
 {
-    auto iter = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.begin();
-    while (iter != RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.end()) {
-        if (iter.second == colorSpace) break;
-        ++iter;
-    }
+    auto iter = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.find(colorSpace);
     if (iter == RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.end()) {
         return StatusCode::INVALID_ARGUMENTS;
     }
     ScreenColorGamut dstColorGamut = static_cast<ScreenColorGamut>(iter.first);
     int32_t curIdx = 0;
     if (IsVirtual()) {
-        for (auto iter = supportedVirtualColorGamuts_.begin(); iter != supportedVirtualColorGamuts_.end(); ++iter) {
-            if (supportedVirtualColorGamuts_[curIdx] == dstColorGamut) {
-                currentVirtualColorGamutIdx_ = curIdx;
-                break;
-            }
-            ++curIdx;
-        }
-        if (curIdx >= supportedVirtualColorGamuts_.size()) {
+        aotu it = std::find(supportedVirtualColorGamuts_.begin(), supportedVirtualColorGamuts_.end(), dstColorGamut);
+        if (it == supportedVirtualColorGamuts_.end()) {
             return StatusCode::INVALID_ARGUMENTS;
         }
-        return StatusCode::SUCCESS;
+        curIdx = std::distance(supportedVirtualColorGamuts_.begin(), it);
+        return return StatusCode::SUCCESS;
     }
     std::vector<GraphicColorGamut> hdiMode;
     if (hdiScreen_->GetScreenSupportedColorGamuts(hdiMode) != GRAPHIC_DISPLAY_SUCCESS) {
         return StatusCode::HDI_ERROR;
     }
-    for (auto iter = hdiMode.begin(); iter != hdiMode.end(); ++iter) {
-        if (hdiMode[curIdx] == static_cast<GraphicColorGamut>(dstColorGamut)) {
-            int32_t result = hdiScreen_->SetScreenColorGamut(hdiMode[curIdx]);
-            if (result == GRAPHIC_DISPLAY_SUCCESS) {
-                currentPhysicalColorGamutIdx_ = curIdx;
-                return StatusCode::SUCCESS;
-            }
-        }
-        ++curIdx;
-    }
-    if (curIdx >= hdiMode.size()) {
+    auto it = std::find(hdiMode.begin(), hdiMode.end(), static_cast<GraphicColorGamut>(dstColorGamut));
+    if (it == hdiMode.end()) {
         return StatusCode::INVALID_ARGUMENTS;
+    }
+    curIdx = std::distance(hdiMode.begin(), it);
+    int32_t result = hdiScreen_->SetScreenColorGamut(hdiMode[curIdx]);
+    if (result == GRAPHIC_DISPLAY_SUCCESS) {
+        currentPhysicalColorGamutIdx_ = curIdx;
+        return StatusCode::SUCCESS;
     }
     return StatusCode::HDI_ERROR;
 }

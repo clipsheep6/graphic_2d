@@ -858,7 +858,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             ScreenId id = data.ReadUint64();
             std::vector<uint32_t> colorSpacesSend;
-            std::vector<CM_ColorSpaceType> colorSpaces;
+            std::vector<GraphicCM_ColorSpaceType> colorSpaces;
             int32_t result = GetScreenSupportedColorSpaces(id, colorSpaces);
             reply.WriteInt32(result);
             if (result != StatusCode::SUCCESS) {
@@ -875,7 +875,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             ScreenId id = data.ReadUint64();
-            CM_ColorSpaceType colorSpace;
+            GraphicCM_ColorSpaceType colorSpace;
             int32_t result = GetScreenColorSpace(id, colorSpace);
             reply.WriteInt32(result);
             if (result != StatusCode::SUCCESS) {
@@ -891,7 +891,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             ScreenId id = data.ReadUint64();
-            CM_ColorSpaceType colorSpace = static_cast<CM_ColorSpaceType>(data.ReadInt32());
+            GraphicCM_ColorSpaceType colorSpace = static_cast<GraphicCM_ColorSpaceType>(data.ReadInt32());
             int32_t result = SetScreenColorSpace(id, colorSpace);
             reply.WriteInt32(result);
             break;

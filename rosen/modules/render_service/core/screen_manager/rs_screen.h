@@ -85,9 +85,9 @@ public:
     virtual int32_t SetScreenHDRFormat(int32_t modeIdx) = 0;
     virtual int32_t GetPixelFormat(GraphicPixelFormat& pixelFormat) const = 0;
     virtual int32_t SetPixelFormat(GraphicPixelFormat pixelFormat) = 0;
-    virtual int32_t GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const = 0;
-    virtual int32_t GetScreenColorSpace(CM_ColorSpaceType& colorSpace) const = 0;
-    virtual int32_t SetScreenColorSpace(CM_ColorSpaceType colorSpace) = 0;
+    virtual int32_t GetScreenSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const = 0;
+    virtual int32_t GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const = 0;
+    virtual int32_t SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) = 0;
 };
 
 namespace impl {
@@ -147,9 +147,9 @@ public:
     int32_t SetScreenHDRFormat(int32_t modeIdx) override;
     int32_t GetPixelFormat(GraphicPixelFormat& pixelFormat) const override;
     int32_t SetPixelFormat(GraphicPixelFormat pixelFormat) override;
-    int32_t GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const override;
-    int32_t GetScreenColorSpace(CM_ColorSpaceType& colorSpace) const override;
-    int32_t SetScreenColorSpace(CM_ColorSpaceType colorSpace) override;
+    int32_t GetScreenSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const override;
+    int32_t GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const override;
+    int32_t SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) override;
 
 private:
     // create hdiScreen and get some information from drivers.
@@ -199,7 +199,7 @@ private:
     RSScreenType screenType_ = RSScreenType::UNKNOWN_TYPE_SCREEN;
     uint32_t skipFrameInterval_ = DEFAULT_SKIP_FRAME_INTERVAL;
     ScreenRotation screenRotation_ = ScreenRotation::ROTATION_0;
-    static std::map<GraphicColorGamut, CM_ColorSpaceType> RS_TO_COMMON_COLOR_SPACE_TYPE_MAP {
+    static std::map<GraphicColorGamut, GraphicCM_ColorSpaceType> RS_TO_COMMON_COLOR_SPACE_TYPE_MAP {
         {GRAPHIC_COLOR_GAMUT_STANDARD_BT601, CM_BT601_EBU_FULL},
         {GRAPHIC_COLOR_GAMUT_STANDARD_BT709, CM_BT709_FULL},
         {GRAPHIC_COLOR_GAMUT_SRGB, CM_SRGB_FULL},

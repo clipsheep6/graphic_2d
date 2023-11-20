@@ -747,7 +747,7 @@ int32_t RSRenderServiceClient::SetScreenHDRFormat(ScreenId id, int32_t modeIdx)
     return renderService->SetScreenHDRFormat(id, modeIdx);
 }
 
-int32_t RSRenderServiceClient::GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces)
+int32_t RSRenderServiceClient::GetScreenSupportedColorSpaces(ScreenId id, std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -756,7 +756,7 @@ int32_t RSRenderServiceClient::GetScreenSupportedColorSpaces(ScreenId id, std::v
     return renderService->GetScreenSupportedColorSpaces(id, colorSpaces);
 }
 
-int32_t RSRenderServiceClient::GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace)
+int32_t RSRenderServiceClient::GetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType& colorSpace)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
@@ -765,7 +765,7 @@ int32_t RSRenderServiceClient::GetScreenColorSpace(ScreenId id, CM_ColorSpaceTyp
     return renderService->GetScreenColorSpace(id, colorSpace);
 }
 
-int32_t RSRenderServiceClient::SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace)
+int32_t RSRenderServiceClient::SetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType colorSpace)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {

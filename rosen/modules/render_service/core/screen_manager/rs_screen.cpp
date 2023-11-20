@@ -746,7 +746,7 @@ int32_t RSScreen::SetPixelFormat(GraphicPixelFormat pixelFormat)
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const
+int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const
 {
     colorSpaces.clear();
     if (IsVirtual()) {
@@ -764,7 +764,7 @@ int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& 
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreen::GetScreenColorSpace(CM_ColorSpaceType& colorSpace) const
+int32_t RSScreen::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const
 {
     if (IsVirtual()) {
         colorSpace = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[static_cast<GraphicColorGamut>(supportedVirtualColorGamuts_[currentVirtualColorGamutIdx_])];
@@ -779,7 +779,7 @@ int32_t RSScreen::GetScreenColorSpace(CM_ColorSpaceType& colorSpace) const
     return StatusCode::HDI_ERROR;
 }
 
-int32_t RSScreen::SetScreenColorSpace(CM_ColorSpaceType colorSpace) 
+int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) 
 {
     auto iter = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.begin();
     while (iter != RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.end()) {

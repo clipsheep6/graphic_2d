@@ -828,7 +828,7 @@ int32_t RSRenderServiceConnection::SetScreenHDRFormat(ScreenId id, int32_t modeI
     }
 }
 
-int32_t RSRenderServiceConnection::GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces)
+int32_t RSRenderServiceConnection::GetScreenSupportedColorSpaces(ScreenId id, std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
@@ -840,7 +840,7 @@ int32_t RSRenderServiceConnection::GetScreenSupportedColorSpaces(ScreenId id, st
     }
 }
 
-int32_t RSRenderServiceConnection::GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace)
+int32_t RSRenderServiceConnection::GetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType& colorSpace)
 {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
@@ -852,7 +852,7 @@ int32_t RSRenderServiceConnection::GetScreenColorSpace(ScreenId id, CM_ColorSpac
     }
 }
 
-int32_t RSRenderServiceConnection::SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace)
+int32_t RSRenderServiceConnection::SetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType colorSpace)
 {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {

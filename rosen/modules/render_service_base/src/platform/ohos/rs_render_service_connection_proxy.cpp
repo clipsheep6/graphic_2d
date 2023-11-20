@@ -1327,7 +1327,7 @@ int32_t RSRenderServiceConnectionProxy::SetScreenHDRFormat(ScreenId id, int32_t 
     return result;
 }
 
-int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorSpaces(ScreenId id, std::vector<CM_ColorSpaceType>& colorSpaces)
+int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorSpaces(ScreenId id, std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1348,13 +1348,13 @@ int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorSpaces(ScreenId i
         std::vector<uint32_t> colorSpacesRecv;
         reply.ReadUInt32Vector(&colorSpacesRecv);
         for (auto i : colorSpacesRecv) {
-            colorSpaces.push_back(static_cast<CM_ColorSpaceType>(i));
+            colorSpaces.push_back(static_cast<GraphicCM_ColorSpaceType>(i));
         }
     }
     return result;
 }
 
-int32_t RSRenderServiceConnectionProxy::GetScreenColorSpace(ScreenId id, CM_ColorSpaceType& colorSpace)
+int32_t RSRenderServiceConnectionProxy::GetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType& colorSpace)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1371,12 +1371,12 @@ int32_t RSRenderServiceConnectionProxy::GetScreenColorSpace(ScreenId id, CM_Colo
     }
     int32_t result = reply.ReadInt32();
     if (result == SUCCESS) {
-        colorSpace = static_cast<CM_ColorSpaceType>(reply.ReadUint32());
+        colorSpace = static_cast<GraphicCM_ColorSpaceType>(reply.ReadUint32());
     }
     return result;
 }
 
-int32_t RSRenderServiceConnectionProxy::SetScreenColorSpace(ScreenId id, CM_ColorSpaceType colorSpace)
+int32_t RSRenderServiceConnectionProxy::SetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType colorSpace)
 {
     MessageParcel data;
     MessageParcel reply;

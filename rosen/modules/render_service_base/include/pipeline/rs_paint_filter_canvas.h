@@ -260,6 +260,7 @@ public:
     };
     CanvasStatus GetCanvasStatus() const;
     void SetCanvasStatus(const CanvasStatus& status);
+    SkCanvas* GetRecordingCanvas() const;
 #else
     // effect cache data relate
     struct CachedEffectData {
@@ -283,7 +284,6 @@ public:
 #endif
     bool GetRecordingState() const;
     void SetRecordingState(bool flag);
-    SkCanvas* GetRecordingCanvas() const;
 
 protected:
     using Env = struct {

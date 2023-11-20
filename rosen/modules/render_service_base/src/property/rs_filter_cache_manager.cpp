@@ -571,7 +571,7 @@ void RSFilterCacheManager::DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canva
     RS_OPTIONAL_TRACE_FUNC();
 
     // Draw in device coordinates.
-    Rrawing::AutoCanvasRestore autoRestore(canvas, true);
+    Drawing::AutoCanvasRestore autoRestore(canvas, true);
     canvas.ResetMatrix();
 
     // Only draw within the visible rect.

@@ -1862,6 +1862,7 @@ void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& n
 #endif
 }
 
+#ifndef USE_ROSEN_DRAWING
 sk_sp<SkImage> RSUniRenderVisitor::GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode)
 {
     sk_sp<SkImage> image = nullptr;
@@ -1879,6 +1880,28 @@ sk_sp<SkImage> RSUniRenderVisitor::GetCacheImageFromMirrorNode(std::shared_ptr<R
     }
     return image;
 }
+#else
+std::shared_ptr<Drawing::Image> RSUniRenderVisitor::GetCacheImageFromMirrorNode(
+    std::shared_ptr<RSDisplayRenderNode> mirrorNode)
+{
+    std::shared_ptr<Drawing::Image> image = nullptr;
+    auto cacheImage = mirrorNode->GetCacheImgForCapture();
+    if (cacheImage != nullptr) {
+        auto renderContext = renderEngine_->GetRenderContext();
+        if (renderContext != nullptr) {
+            auto grContext = renderContext->GetDrGPUContext();
+            auto imageBackendTexure = cacheImage->GetBackendTexture(false, nullptr);
+            if (grContext != nullptr && imageBackendTexure.IsValid()) {
+                Drawing::BitmapFormat bitmapFormat = {Drawing::ColorType::COLORTYPE_RGBA_8888,
+                    Drawing::AlphaType::ALPHATYPE_PERMUL};
+                image->BuildFromTexture(*grContext, imageBackendTexure.GetTextureInfo(),
+                    Drawing::TextureOrigin::BOTTOM_LEFT, bitmapFormat, nullptr);
+            }
+        }
+    }
+    return image;
+}
+#endif
 
 void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 {
@@ -2014,7 +2037,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 canvas_->restoreToCount(saveCount);
             }
 #else
-            sk_sp<SkImage> newImage = GetCacheImageFromMirrorNode(mirrorNode);
+            std::shared_ptr<Drawing::Image> newImage = GetCacheImageFromMirrorNode(mirrorNode);
             bool parallelComposition = RSMainThread::Instance()->GetParallelCompositionEnabled();
             if (parallelComposition && newImage && !displayHasSkipSurface_[mirrorNode->GetScreenId()] &&
                 !displayHasSecSurface_[mirrorNode->GetScreenId()]) {
@@ -4499,7 +4522,11 @@ void RSUniRenderVisitor::ScaleMirrorIfNeed(RSDisplayRenderNode& node)
     }
     // If the width and height not match the main screen, calculate the dstRect.
     if (mainWidth != boundsWidth || mainHeight != boundsHeight) {
+#ifndef USE_ROSEN_DRAWING
         canvas_->clear(SK_ColorBLACK);
+#else
+        canvas_->Clear(SK_ColorBLACK);
+#endif
         float mirrorScale = 1.0f; // 1 for init scale
         float startX = 0.0f;
         float startY = 0.0f;
@@ -4510,8 +4537,13 @@ void RSUniRenderVisitor::ScaleMirrorIfNeed(RSDisplayRenderNode& node)
             mirrorScale = boundsWidth / mainWidth;
             startY = (boundsHeight - (mirrorScale * mainHeight)) / 2; // 2 for calc Y
         }
+#ifndef USE_ROSEN_DRAWING
         canvas_->translate(startX, startY);
         canvas_->scale(mirrorScale, mirrorScale);
+#else
+        canvas_->Translate(startX, startY);
+        canvas_->Scale(mirrorScale, mirrorScale);
+#endif
     }
 }
 } // namespace Rosen

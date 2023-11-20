@@ -293,7 +293,11 @@ private:
     void UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node);
     bool IsFirstVisitedCacheForced() const;
     bool IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, int rotation) const;
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode);
+#else
+    std::shared_ptr<Drawing::Image> GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode);
+#endif
 
     void SwitchColorFilterDrawing(int currentSaveCount);
     void ProcessShadowFirst(RSRenderNode& node, bool inSubThread);
@@ -462,8 +466,11 @@ private:
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
 #endif
     bool isNodeSingleFrameComposer_ = false;
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> cacheImgForCapture_ = nullptr;
-
+#else
+    std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
+#endif
     uint32_t currentRefreshRate_ = 0;
 };
 } // namespace Rosen

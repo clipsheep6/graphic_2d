@@ -415,7 +415,7 @@ public:
     void MarkNodeGroup(NodeGroupType type, bool isNodeGroup);
     NodeGroupType GetNodeGroupType();
 
-    void MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer);
+    void MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer, pid_t pid = 0);
     virtual bool GetNodeIsSingleFrameComposer() const;
 
     /////////////////////////////////////////////
@@ -618,6 +618,7 @@ private:
     std::vector<std::unique_ptr<RSPropertyDrawable>> propertyDrawablesVec_;
     uint8_t drawableVecStatus_ = 0;
     void UpdateDrawableVec();
+    pid_t appPid_ = 0;
 
     friend class RSAliasDrawable;
     friend class RSMainThread;

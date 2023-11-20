@@ -36,7 +36,7 @@ static GSError ConvertMetadataToVec(const T& metadata, std::vector<uint8_t>& dat
 }
 
 template <typename T>
-static int32_t ConvertVecToMetadata(const std::vector<uint8_t>& data, T& metadata)
+static GSError ConvertVecToMetadata(const std::vector<uint8_t>& data, T& metadata)
 {
     if (data.size() != sizeof(T)) {
         return GSERROR_NOT_SUPPORT;

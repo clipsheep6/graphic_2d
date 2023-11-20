@@ -836,7 +836,7 @@ HWTEST_F(RSInterfacesTest, SetScreenHDRFormat002, Function | SmallTest | Level2)
 */
 HWTEST_F(RSInterfacesTest, GetScreenSupportedColorSpaces002, Function | SmallTest | Level2)
 {
-    std::vector<CM_ColorSpaceType> colorSpaces;
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
     int ret = rsInterfaces->GetScreenSupportedColorSpaces(INVALID_SCREEN_ID, colorSpaces);
     EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
 }
@@ -851,7 +851,7 @@ HWTEST_F(RSInterfacesTest, GetScreenSupportedColorSpaces002, Function | SmallTes
 */
 HWTEST_F(RSInterfacesTest, GetScreenColorSpace002, Function | SmallTest | Level2)
 {
-    CM_ColorSpaceType colorSpace = CM_ColorSpaceType::CM_SRGB_FULL;
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
     int ret = rsInterfaces->GetScreenColorSpace(INVALID_SCREEN_ID, colorSpace);
     EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
 }

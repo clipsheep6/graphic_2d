@@ -190,6 +190,12 @@ void RSSurfaceRenderNode::CollectSurface(
     const std::shared_ptr<RSBaseRenderNode>& node, std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender,
     bool onlyFirstLevel)
 {
+    if (IsScbScreen()) {
+        for (auto& child : node->GetSortedChildren()) {
+            child->CollectSurface(child, vec, isUniRender, onlyFirstLevel);
+        }
+        return;
+    }
     if (IsStartingWindow()) {
         if (isUniRender) {
             vec.emplace_back(shared_from_this());
@@ -259,10 +265,10 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
                 GetId(), GetName().c_str());
 #endif
             if (IsLeashWindow()) {
-                context->MarkNeedPurge(RSContext::PurgeType::PURGE_UNLOCK);
+                context->MarkNeedPurge(RSContext::PurgeType::GENTLY);
             }
             if (GetName().substr(0, 3) == "SCB") {
-                context->MarkNeedPurge(RSContext::PurgeType::PURGE_UNLOCK_SAFECACHE);
+                context->MarkNeedPurge(RSContext::PurgeType::STRONGLY);
             }
         }
     }
@@ -655,6 +661,11 @@ void RSSurfaceRenderNode::NotifyUIBufferAvailable()
         if (callbackFromUI_) {
             ROSEN_LOGD("RSSurfaceRenderNode::NotifyUIBufferAvailable nodeId = %{public}" PRIu64, GetId());
             callbackFromUI_->OnBufferAvailable();
+#ifdef OHOS_PLATFORM
+            if (IsAppWindow()) {
+                RSJankStats::GetInstance().SetFirstFrame(ExtractPid(GetId()));
+            }
+#endif
         }
     }
 }
@@ -794,17 +805,18 @@ void RSSurfaceRenderNode::AccumulateOcclusionRegion(Occlusion::Region& accumulat
 void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& region,
                                                     VisibleData& visibleVec,
                                                     std::map<uint32_t, bool>& pidVisMap,
-                                                    bool needSetVisibleRegion)
+                                                    bool needSetVisibleRegion,
+                                                    RS_REGION_VISIBLE_LEVEL visibleLevel)
 {
     if (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE || IsAbilityComponent()) {
         SetOcclusionVisible(true);
-        visibleVec.emplace_back(GetId());
+        visibleVec.emplace_back(std::make_pair(GetId(), ALL_VISIBLE));
         return;
     }
 
     bool vis = region.GetSize() > 0;
     if (vis) {
-        visibleVec.emplace_back(GetId());
+        visibleVec.emplace_back(std::make_pair(GetId(), visibleLevel));
     }
 
     // collect visible changed pid
@@ -825,7 +837,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
 
     for (auto& child : GetChildren()) {
         if (auto surfaceChild = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
-            surfaceChild->SetVisibleRegionRecursive(region, visibleVec, pidVisMap, needSetVisibleRegion);
+            surfaceChild->SetVisibleRegionRecursive(region, visibleVec, pidVisMap, needSetVisibleRegion, visibleLevel);
         }
     }
 }
@@ -968,7 +980,7 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusWithVisible(bool visible)
         return;
     }
     prevVisible_ = visible;
-#if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (!visible && !filterNodes_.empty()) {
         for (auto& node : filterNodes_) {
             node.second->GetMutableRenderProperties().ClearFilterCache();
@@ -1464,7 +1476,6 @@ void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
     }
 }
 
-#ifdef OHOS_PLATFORM
 void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId,
     NodeId cacheNodeId)
 {
@@ -1482,16 +1493,7 @@ void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, N
     // if node is marked as cacheRoot, update subtree status when update surface
     // in case prepare stage upper cacheRoot cannot specify dirty subnode
     RSBaseRenderNode::SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId, cacheNodeId);
-    if (flag == isReportFirstFrame_ || !IsAppWindow()) {
-        return;
-    }
-    if (flag) {
-        RSJankStats::GetInstance().SetFirstFrame();
-        RSJankStats::GetInstance().SetPid(ExtractPid(GetId()));
-    }
-    isReportFirstFrame_ = flag;
 }
-#endif
 
 CacheProcessStatus RSSurfaceRenderNode::GetCacheSurfaceProcessedStatus() const
 {
@@ -1515,6 +1517,18 @@ bool RSSurfaceRenderNode::HasOnlyOneRootNode() const
     }
 
     return true;
+}
+
+bool RSSurfaceRenderNode::GetNodeIsSingleFrameComposer() const
+{
+    bool flag = false;
+    if (RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()) {
+        auto idx = GetName().find("hwstylusfeature");
+        if (idx != std::string::npos) {
+            flag = true;
+        }
+    }
+    return isNodeSingleFrameComposer_ || flag;
 }
 
 } // namespace Rosen

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "c/drawing_font_collection.h"
 #include "c/drawing_text_typography.h"
 
 #ifndef USE_GRAPHIC_TEXT_GINE
@@ -360,6 +361,11 @@ void OH_Drawing_SetTextStyleLocale(OH_Drawing_TextStyle* style, const char* loca
 OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_TypographyStyle* style,
     OH_Drawing_FontCollection* fontCollection)
 {
+    if (!style || !fontCollection) {
+        return nullptr;
+    }
+
+    g_objectMgr.RemoveObject(fontCollection);
 #ifndef USE_GRAPHIC_TEXT_GINE
     const TypographyStyle* typoStyle = ConvertToOriginalText<TypographyStyle>(style);
     std::unique_ptr<TypographyCreate> handler = TypographyCreate::CreateRosenBuilder(*typoStyle,

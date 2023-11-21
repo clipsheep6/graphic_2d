@@ -163,6 +163,93 @@ enum OH_NativeBuffer_ColorSpace {
 };
 
 /**
+ * @brief Indicates the HDR metadata type of a native buffer
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 11
+ * @version 1.0
+*/
+enum OH_NativeBuffer_HDRMetadataType {
+    OH_HDR_METADATA_NONE,
+    OH_HDR_METADATA_VIDEO_HLG,
+    OH_HDR_METADATA_VIDEO_HDR10,
+    OH_HDR_METADATA_VIDEO_HDR_VIVID,
+    OH_HDR_METADATA_IMAGE_HDR_VIVID_DUAL,
+    OH_HDR_METADATA_IMAGE_HDR_VIVID_SINGLE,
+    OH_HDR_METADATA_IMAGE_HDR_ISO_DUAL,
+    OH_HDR_METADATA_IMAGE_HDR_ISO_SINGLE,
+};
+
+struct OH_NativeBuffer_ColorXY {
+    float x;
+    float y;
+} __attribute__ ((aligned(8)));
+
+struct OH_NativeBuffer_Smpte2086_Metadata {
+    OH_NativeBuffer_ColorXY displayPrimaryRed;
+    OH_NativeBuffer_ColorXY displayPrimaryGreen;
+    OH_NativeBuffer_ColorXY displayPrimaryBlue;
+    OH_NativeBuffer_ColorXY whitePoint;
+    float maxLuminance;
+    float minLuminance;
+} __attribute__ ((aligned(8)));
+
+struct OH_NativeBuffer_Cta861_3_Metadata {
+    float maxContentLightLevel;
+    float maxFrameAverageLightLevel;
+} __attribute__ ((aligned(8)));
+
+/**
+ * @brief Indicates the static HDR metadata a native buffer
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 11
+ * @version 1.0
+*/
+struct OH_NativeBuffer_HdrStaticMetadata {
+    OH_NativeBuffer_Smpte2086_Metadata smpte2086;
+    OH_NativeBuffer_Cta861_3_Metadata cta861;
+} __attribute__ ((aligned(8)));
+
+/**
+ * @brief Indicates the HDR Vivid dynamic metadata a native buffer
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 11
+ * @version 1.0
+*/
+struct OH_NativeBuffer_HdrVividMetadataV1{
+    unsigned int systemStartCode;
+    unsigned int minimumMaxRgbPq;
+    unsigned int averageMaxRgbPq;
+    unsigned int varianceMaxRgbPq;
+    unsigned int maximumMaxRgbPq;
+    unsigned int toneMappingMode;
+    unsigned int toneMappingParamNum;
+    unsigned int targetedSystemDisplayMaximumLuminance[2];
+    unsigned int baseFlag[4];
+    unsigned int baseParamMp[2];
+    unsigned int baseParamMm[2];
+    unsigned int baseParamMa[2];
+    unsigned int baseParamMb[2];
+    unsigned int baseParamMn[2];
+    unsigned int baseParamK1[2];
+    unsigned int baseParamK2[2];
+    unsigned int baseParamK3[2];
+    unsigned int baseParamDeltaMode[2];
+    unsigned int baseParamDelta[2];
+    unsigned int threeSplineFlag[2];
+    unsigned int threeSplineNum[2];
+    unsigned int threeSplineThMode[2][4];
+    unsigned int threeSplineThMb[2][4];
+    unsigned int threeSplineTh[2][4][3];
+    unsigned int threeSplineStrength[2][4];
+    unsigned int colorSaturationMappingFlag;
+    unsigned int colorSaturationNum;
+    unsigned int colorSaturationGain[16];
+};
+
+/**
  * @brief <b>OH_NativeBuffer</b> config. \n
  * Used to allocating new <b>OH_NativeBuffer</b> andquery parameters if existing ones.
  *
@@ -267,11 +354,104 @@ uint32_t OH_NativeBuffer_GetSeqNum(OH_NativeBuffer *buffer);
  * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
  * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
  * @param colorSpace Indicates the color space of native buffer, see <b>OH_NativeBuffer_ColorSpace</b>.
- * @return Returns the sequence number, which is unique for each OH_NativeBuffer.
+ * @return Returns an error code, 0 is success, otherwise, failed.
  * @since 11
  * @version 1.0
  */
 int32_t OH_NativeBuffer_SetColorSpace(OH_NativeBuffer *buffer, OH_NativeBuffer_ColorSpace colorSpace);
+
+/**
+ * @brief Get the color space of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the color space of native buffer, see <b>OH_NativeBuffer_ColorSpace</b>.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 11
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_GetColorSpace(const OH_NativeBuffer *buffer, OH_NativeBuffer_ColorSpace& colorSpace);
+
+/**
+ * @brief Set the HDR metadata type of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the HDR metadata type of native buffer, see <b>OH_NativeBuffer_HDRMetadataType</b>.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 11
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_SetHDRMetadataType(OH_NativeBuffer *buffer,
+    const OH_NativeBuffer_HDRMetadataType& hdrMetadataType);
+
+/**
+ * @brief Get the HDR metadata type of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the HDR metadata type of native buffer, see <b>OH_NativeBuffer_HDRMetadataType</b>.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 11
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_GetHDRMetadataType(const OH_NativeBuffer *buffer,
+    OH_NativeBuffer_HDRMetadataType& hdrMetadataType);
+
+/**
+ * @brief Set the HDR static metadata of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the HDR static metadata of native buffer, see <b>OH_NativeBuffer_HdrStaticMetadata</b>.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 11
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_SetHDRStaticMetadata(OH_NativeBuffer* buffer,
+    const OH_NativeBuffer_HdrStaticMetadata& hdrStaticMetadata);
+
+/**
+ * @brief Get the HDR static metadata of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the HDR static metadata of native buffer, see <b>OH_NativeBuffer_HdrStaticMetadata</b>.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 11
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_GetHDRStaticMetadata(const OH_NativeBuffer* buffer,
+    OH_NativeBuffer_HdrStaticMetadata& hdrStaticMetadata);
+
+/**
+ * @brief Set the HDR Vivid dynamic metadata of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the HDR Vivid dynamic metadata of native buffer,
+ * see <b>OH_NativeBuffer_HdrVividMetadataV1</b>.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 11
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_SetHDRVividDynMetadataV1(OH_NativeBuffer* buffer,
+    const OH_NativeBuffer_HdrVividMetadataV1& hdrVividMetadata);
+
+/**
+ * @brief Get the HDR Vivid dynamic metadata of the OH_NativeBuffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param colorSpace Indicates the HDR Vivid dynamic metadata of native buffer,
+ * see <b>OH_NativeBuffer_HdrVividMetadataV1</b>.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 11
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_GetHDRVividDynMetadataV1(const OH_NativeBuffer* buffer,
+    OH_NativeBuffer_HdrVividMetadataV1& hdrVividMetadata);
+
 #ifdef __cplusplus
 }
 #endif

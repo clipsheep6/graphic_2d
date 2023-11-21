@@ -199,8 +199,8 @@ private:
     RSScreenType screenType_ = RSScreenType::UNKNOWN_TYPE_SCREEN;
     uint32_t skipFrameInterval_ = DEFAULT_SKIP_FRAME_INTERVAL;
     ScreenRotation screenRotation_ = ScreenRotation::ROTATION_0;
-    static const std::map<GraphicColorGamut, GraphicCM_ColorSpaceType> RS_TO_COMMON_COLOR_SPACE_TYPE_MAP;
-    static const std::map<GraphicCM_ColorSpaceType, GraphicColorGamut> COMMON_COLOR_SPACE_TYPE_TO_RS_MAP;
+    static std::map<GraphicColorGamut, GraphicCM_ColorSpaceType> RS_TO_COMMON_COLOR_SPACE_TYPE_MAP;
+    static std::map<GraphicCM_ColorSpaceType, GraphicColorGamut> COMMON_COLOR_SPACE_TYPE_TO_RS_MAP;
 };
 } // namespace impl
 } // namespace Rosen

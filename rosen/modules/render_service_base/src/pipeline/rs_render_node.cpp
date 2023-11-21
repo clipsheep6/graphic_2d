@@ -1065,16 +1065,15 @@ void RSRenderNode::UpdateDrawableVec()
 {
     // Collect dirty slots
     auto dirtySlots = RSPropertyDrawable::GenerateDirtySlots(GetRenderProperties(), dirtyTypes_);
-    RSPropertyDrawableGenerateContext drawableContext(*this);
     // initialize necessary save/clip/restore
     if (drawableVecStatus_ == 0) {
-        RSPropertyDrawable::InitializeSaveRestore(drawableContext, propertyDrawablesVec_);
+        RSPropertyDrawable::InitializeSaveRestore(*this);
     }
     // Update or regenerate drawable
-    bool drawableChanged = RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, dirtySlots);
+    bool drawableChanged = RSPropertyDrawable::UpdateDrawableVec(*this, dirtySlots);
     // if 1. first initialized or 2. any drawables changed, update save/clip/restore
     if (drawableChanged || drawableVecStatus_ == 0) {
-        RSPropertyDrawable::UpdateSaveRestore(drawableContext, propertyDrawablesVec_, drawableVecStatus_);
+        RSPropertyDrawable::UpdateSaveRestore(*this, drawableVecStatus_);
     }
 }
 

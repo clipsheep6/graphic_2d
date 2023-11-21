@@ -32,7 +32,7 @@ public:
     ~RSBoundsGeometryDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
-    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderNode& node);
 };
 
 class RSClipBoundsDrawable : public RSPropertyDrawable {
@@ -41,7 +41,7 @@ public:
     ~RSClipBoundsDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
-    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderNode& node);
 };
 
 // ============================================================================
@@ -56,7 +56,7 @@ public:
     {}
 #endif
     ~RSBorderDrawable() override = default;
-    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderNode& node);
 
 protected:
 #ifndef USE_ROSEN_DRAWING
@@ -150,7 +150,7 @@ class RSMaskDrawable : public RSPropertyDrawable {
 public:
     explicit RSMaskDrawable(std::shared_ptr<RSMask> mask);
     ~RSMaskDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
 
 protected:
     std::shared_ptr<RSMask> mask_;
@@ -197,7 +197,7 @@ class RSShadowBaseDrawable : public RSPropertyDrawable {
 public:
     explicit RSShadowBaseDrawable(const RSProperties& properties);
     ~RSShadowBaseDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
 
 protected:
 #ifndef USE_ROSEN_DRAWING
@@ -253,9 +253,9 @@ class RSDynamicLightUpDrawable : public RSPropertyDrawable {
 public:
     explicit RSDynamicLightUpDrawable() = default;
     ~RSDynamicLightUpDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    bool Update(const RSRenderNode& node) override;
 };
 
 // ============================================================================
@@ -265,7 +265,7 @@ public:
     explicit RSBinarizationDrawable() = default;
     ~RSBinarizationDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
 };
 
 // ============================================================================
@@ -275,8 +275,8 @@ public:
     explicit RSLightUpEffectDrawable() = default;
     ~RSLightUpEffectDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
+    bool Update(const RSRenderNode& node) override;
 };
 
 // ============================================================================
@@ -285,9 +285,9 @@ class RSBackgroundFilterDrawable : public RSPropertyDrawable {
 public:
     explicit RSBackgroundFilterDrawable() = default;
     ~RSBackgroundFilterDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    bool Update(const RSRenderNode& node) override;
 };
 
 // ForegroundFilter
@@ -295,9 +295,9 @@ class RSForegroundFilterDrawable : public RSPropertyDrawable {
 public:
     explicit RSForegroundFilterDrawable() = default;
     ~RSForegroundFilterDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    bool Update(const RSRenderNode& node) override;
 };
 
 // EffectDataGenerate
@@ -306,7 +306,7 @@ public:
     explicit RSEffectDataGenerateDrawable() = default;
     ~RSEffectDataGenerateDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    bool Update(const RSRenderNode& node) override;
 };
 
 // RSEffectDataApply
@@ -314,9 +314,9 @@ class RSEffectDataApplyDrawable : public RSPropertyDrawable {
 public:
     explicit RSEffectDataApplyDrawable() = default;
     ~RSEffectDataApplyDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    bool Update(const RSRenderNode& node) override;
 };
 
 // ============================================================================
@@ -326,8 +326,8 @@ public:
     explicit RSLinearGradientBlurFilterDrawable() = default;
     ~RSLinearGradientBlurFilterDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
+    bool Update(const RSRenderNode& node) override;
 };
 
 // ============================================================================
@@ -341,8 +341,8 @@ public:
 #endif
     ~RSForegroundColorDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
+    bool Update(const RSRenderNode& node) override;
 
 private:
 #ifndef USE_ROSEN_DRAWING
@@ -358,9 +358,9 @@ class RSParticleDrawable : public RSPropertyDrawable {
 public:
     explicit RSParticleDrawable() = default;
     ~RSParticleDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    bool Update(const RSRenderNode& node) override;
 };
 
 
@@ -372,8 +372,8 @@ public:
     ~RSPixelStretchDrawable() override = default;
 
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
+    bool Update(const RSRenderNode& node) override;
 };
 
 // ============================================================================
@@ -408,8 +408,8 @@ public:
     }
 #endif
     ~RSBackgroundColorDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
+    bool Update(const RSRenderNode& node) override;
 };
 
 class RSBackgroundShaderDrawable : public RSBackgroundDrawable {
@@ -427,17 +427,17 @@ public:
     }
 #endif
     ~RSBackgroundShaderDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
+    bool Update(const RSRenderNode& node) override;
 };
 
 class RSBackgroundImageDrawable : public RSBackgroundDrawable {
 public:
     explicit RSBackgroundImageDrawable() = default;
     ~RSBackgroundImageDrawable() override = default;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    bool Update(const RSRenderNode& node) override;
 };
 
 // ============================================================================

@@ -27,7 +27,7 @@ public:
     ~RSFrameGeometryDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
-    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderNode& node);
 };
 
 // ============================================================================
@@ -38,7 +38,7 @@ public:
     ~RSClipFrameDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
-    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderNode& node);
 };
 
 // ============================================================================
@@ -52,8 +52,8 @@ public:
 #endif
     ~RSColorFilterDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
-    bool Update(const RSPropertyDrawableGenerateContext& context) override;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSRenderNode& node);
+    bool Update(const RSRenderNode& node) override;
 
 private:
 #ifndef USE_ROSEN_DRAWING

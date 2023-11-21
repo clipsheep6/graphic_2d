@@ -24,7 +24,6 @@
 namespace OHOS::Rosen {
 class RSPaintFilterCanvas;
 class RSProperties;
-class RSPropertyDrawableGenerateContext;
 class RSRenderNode;
 
 namespace Slot {
@@ -123,41 +122,26 @@ public:
 
     virtual void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) = 0;
     // return true if this drawable can be updated, default is false
-    virtual bool Update(const RSPropertyDrawableGenerateContext& context) { return false; };
+    virtual bool Update(const RSRenderNode& node)
+    {
+        return false;
+    };
 
     // Aliases
     using DrawablePtr = std::unique_ptr<RSPropertyDrawable>;
     using DrawableVec = std::vector<DrawablePtr>;
-    using DrawableGenerator = std::function<DrawablePtr(const RSPropertyDrawableGenerateContext&)>;
+    using DrawableGenerator = std::function<DrawablePtr(const RSRenderNode&)>;
 
     // Generator Utilities
-    static void InitializeSaveRestore(const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec);
+    static void InitializeSaveRestore(RSRenderNode& node);
     static std::unordered_set<Slot::RSPropertyDrawableSlot> GenerateDirtySlots(
         const RSProperties& properties, const std::unordered_set<RSModifierType>& dirtyTypes);
-    static bool UpdateDrawableVec(const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec,
-        std::unordered_set<Slot::RSPropertyDrawableSlot>& dirtySlots);
-    static void UpdateSaveRestore(
-        RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, uint8_t& drawableVecStatus);
+    static bool UpdateDrawableVec(RSRenderNode& node, std::unordered_set<Slot::RSPropertyDrawableSlot>& dirtySlots);
+    static void UpdateSaveRestore(RSRenderNode& node, uint8_t& drawableVecStatus);
 
 private:
-    static void UpdateSaveLayerSlots(const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec);
-};
-
-class RSPropertyDrawableGenerateContext {
-public:
-    explicit RSPropertyDrawableGenerateContext(RSRenderNode& node);
-    virtual ~RSPropertyDrawableGenerateContext() = default;
-
-    // disable copy and move
-    RSPropertyDrawableGenerateContext(const RSPropertyDrawableGenerateContext&) = delete;
-    RSPropertyDrawableGenerateContext(const RSPropertyDrawableGenerateContext&&) = delete;
-    RSPropertyDrawableGenerateContext& operator=(const RSPropertyDrawableGenerateContext&) = delete;
-    RSPropertyDrawableGenerateContext& operator=(const RSPropertyDrawableGenerateContext&&) = delete;
-
-    // member variable
-    const std::shared_ptr<RSRenderNode> node_;
-    const RSProperties& properties_;
-    bool hasChildren_;
+    static uint8_t CalculateDrawableVecStatus(RSRenderNode& node);
+    static void UpdateSaveLayerSlots(const RSRenderNode& node, DrawableVec& drawableVec);
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_H

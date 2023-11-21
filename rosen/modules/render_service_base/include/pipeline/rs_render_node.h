@@ -622,6 +622,7 @@ private:
     friend class RSAliasDrawable;
     friend class RSMainThread;
     friend class RSModifierDrawable;
+    friend class RSPropertyDrawable;
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
     friend class RSRenderTransition;

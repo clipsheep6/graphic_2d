@@ -30,7 +30,7 @@ void RSFrameGeometryDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canv
     canvas.Translate(node.GetRenderProperties().GetFrameOffsetX(), node.GetRenderProperties().GetFrameOffsetY());
 #endif
 }
-RSPropertyDrawable::DrawablePtr RSFrameGeometryDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
+RSPropertyDrawable::DrawablePtr RSFrameGeometryDrawable::Generate(const RSRenderNode& node)
 {
     return std::make_unique<RSFrameGeometryDrawable>();
 }
@@ -57,9 +57,9 @@ void RSColorFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas
 #endif
 }
 
-std::unique_ptr<RSPropertyDrawable> RSColorFilterDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
+std::unique_ptr<RSPropertyDrawable> RSColorFilterDrawable::Generate(const RSRenderNode& node)
 {
-    auto& colorFilter = context.properties_.GetColorFilter();
+    auto& colorFilter = node.GetRenderProperties().GetColorFilter();
     if (colorFilter == nullptr) {
         return nullptr;
     }
@@ -74,9 +74,9 @@ std::unique_ptr<RSPropertyDrawable> RSColorFilterDrawable::Generate(const RSProp
 #endif
 }
 
-bool RSColorFilterDrawable::Update(const RSPropertyDrawableGenerateContext& context)
+bool RSColorFilterDrawable::Update(const RSRenderNode& node)
 {
-    auto& colorFilter = context.properties_.GetColorFilter();
+    auto& colorFilter = node.GetRenderProperties().GetColorFilter();
     if (colorFilter == nullptr) {
         return false;
     }
@@ -88,10 +88,10 @@ bool RSColorFilterDrawable::Update(const RSPropertyDrawableGenerateContext& cont
     return true;
 }
 
-RSPropertyDrawable::DrawablePtr RSClipFrameDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
+RSPropertyDrawable::DrawablePtr RSClipFrameDrawable::Generate(const RSRenderNode& node)
 {
     // PLANNING: cache frame rect, and update when frame rect changed
-    return context.properties_.GetClipToFrame() ? std::make_unique<RSClipFrameDrawable>() : nullptr;
+    return node.GetRenderProperties().GetClipToFrame() ? std::make_unique<RSClipFrameDrawable>() : nullptr;
 }
 
 void RSClipFrameDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)

@@ -123,6 +123,17 @@ void RSPreComposeGroup::CreateShareEglContext()
 #endif
 }
 
+void RSPreComposeGroup::Close()
+{
+    if (handler_) {
+        auto task = [this] () {
+            ROSEN_LOGD("RSPreComposeThread Enqueue Close Task");
+            current_->Close();
+            last_->Close();
+        };
+        handler_->PostTask(task);
+    }
+}
 
 void RSPreComposeGroup::CreateShareGrContext()
 {
@@ -180,6 +191,11 @@ void RSPreComposeGroup::GetLastHwcNodes(std::shared_ptr<RSSurfaceRenderNode> sur
 Occlusion::Region RSPreComposeGroup::GetLastVisibleDirtyRegion()
 {
     return last_->GetDirtyVisibleRegion();
+}
+
+void RSPreComposeGroup::SetLastVsyncHardwareForcedDisabled(bool forcedDisabled)
+{
+    return last_->SetHardwareForcedDisabled(forcedDisabled);
 }
 
 Occlusion::Region RSPreComposeGroup::GetLastVisibleDirtyRegionWithGpuNodes()

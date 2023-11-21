@@ -1260,7 +1260,8 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
                 rootNode->GetSortedChildren().front());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
             std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
-            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes, focusNodeId_, deviceType_);
+            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes,
+                focusNodeId_, deviceType_, IsPreComposeOn());
             const auto& nodeMap = context_->GetNodeMap();
             RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
             uniVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
@@ -2507,8 +2508,12 @@ void RSMainThread::UpdateUIFirstSwitch()
 
 void RSMainThread::UpdatePreComposeSwitch()
 {
+    bool isLastPreComposeOn = isPreComposeOn_;
     isPreComposeOn_ = isUiFirstOn_ && childrenCount_ > UIFIRST_MINIMUM_NODE_NUMBER &&
         RSSystemProperties::GetPreComposeEnabled();
+    if (isLastPreComposeOn && !isPreComposeOn_) {
+        RSPreComposeManager::GetInstance()->Close();
+    }
 }
 
 bool RSMainThread::IsUIFirstOn() const

@@ -52,15 +52,18 @@ void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRend
     std::swap(surfaceIds, surfaceIds_);
 
     std::unordered_set<NodeId> nodeIds;
+    std::string logInfo = "RSPreComposeElement Id:" + std::to_string(id_) + " func:SetNewNodeList [";
     for (auto node : allSurfaceNodes_) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
         if (surface == nullptr) {
             continue;
         }
-        ROSEN_LOGD("RSPreComposeElement %d xxb node id %{public}" PRIu64 ", name %{public}s isDirty %{public}d",
-            id_, node->GetId(), surface->GetName().c_str(), node->IsDirty());
+        logInfo += "Node Name:" + surface->GetName() + " Id:" + std::to_string(static_cast<uint64_t>(node->GetId()));
+        logInfo += " IsDirty:" + std::to_string(node->IsDirty());
         nodeIds.insert(node->GetId());
     }
+    logInfo += "]";
+    ROSEN_LOGD("%{public}s", logInfo.c_str());
     std::swap(nodeIds_, nodeIds);
 }
 
@@ -100,9 +103,8 @@ void RSPreComposeElement::ClipRect()
     } else if (region.isRect()) {
         canvas_->clipRegion(region);
     } else {
-        SkPath dirtyPath;
-        region.getBoundaryPath(&dirtyPath);
-        canvas_->clipPath(dirtyPath, true);
+        ROSEN_LOGI("IsPath but clipRegion Instead");
+        canvas_->clipRegion(region);
     }
 #else
     Drawing::Region& region = regionManager_->GetClipRegion();
@@ -119,6 +121,7 @@ void RSPreComposeElement::CalVisDirtyRegion()
 
 void RSPreComposeElement::UpdateDirtyRegion()
 {
+    RS_TRACE_NAME("UpdateDirtyRegion");
     regionManager_->UpdateDirtyRegion(allSurfaceNodes_);
     isDirty_ = regionManager_->IsDirty();
     ClipRect();
@@ -137,6 +140,7 @@ ElementState RSPreComposeElement::GetState()
 
 void RSPreComposeElement::UpdateDirtyRegionAndImage()
 {
+    RS_TRACE_NAME("UpdateDirtyRegionAndImage");
     canvas_->save();
     UpdateDirtyRegion();
     UpdateImage();
@@ -145,6 +149,7 @@ void RSPreComposeElement::UpdateDirtyRegionAndImage()
 
 void RSPreComposeElement::UpdateImage()
 {
+    RS_TRACE_NAME("UpdateImage");
     ROSEN_LOGD("RSPreComposeElement Update start id %d", id_);
     if (cacheSurface_ == nullptr) {
         ROSEN_LOGE("cacheSurface_ is nullptr");
@@ -236,6 +241,24 @@ void RSPreComposeElement::Reset()
     lastOcclusionId_ = 0;
 }
 
+void RSPreComposeElement::Close()
+{
+    displayVisitor_ = nullptr;
+    focusNodeId_ = 0;
+    leashFocusId_ = 0;
+    state_ = ElementState::ELEMENT_STATE_IDLE;
+    std::unordered_set<NodeId> nodeIds;
+    std::unordered_set<NodeId> surfaceIds;
+    std::list<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeList;
+    std::vector<RSBaseRenderNode::SharedPtr> allSurfaceNodes;
+    swap(nodeIds, nodeIds_);
+    swap(surfaceIds, surfaceIds_);
+    swap(surfaceNodeList, surfaceNodeList_);
+    swap(allSurfaceNodes, allSurfaceNodes_);
+    canvas_->clear(SK_ColorTRANSPARENT);
+    isFirstFrame_ = true;
+}
+
 void RSPreComposeElement::UpdateOcclusion(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
     Occlusion::Region& accumulatedRegion, VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
     std::shared_ptr<RSPreComposeElement> next)
@@ -300,7 +323,7 @@ void RSPreComposeElement::UpdateHwcNodes()
 void RSPreComposeElement::GetHwcNodes(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
     std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair>& prevHwcEnabledNodes)
 {
-    if (getHwcNodesDone_) {
+    if (getHwcNodesDone_ || forcedDisabled_) {
         return;
     }
     if (surfaceNode->GetId() == focusNodeId_ || surfaceNode->GetId() == leashFocusId_) {
@@ -308,6 +331,11 @@ void RSPreComposeElement::GetHwcNodes(std::shared_ptr<RSSurfaceRenderNode> surfa
         getHwcNodesDone_ = true;
         return;
     }
+}
+
+void RSPreComposeElement::SetHardwareForcedDisabled(bool forcedDisabled)
+{
+    forcedDisabled_ = forcedDisabled;
 }
 
 Occlusion::Region RSPreComposeElement::GetDirtyVisibleRegion()
@@ -322,7 +350,7 @@ Occlusion::Region RSPreComposeElement::GetVisibleDirtyRegionWithGpuNodes()
     for (auto iter : hardwareNodes_) {
         auto parent = iter.second;
         auto child = iter.first;
-        if (child->IsHardwareForcedDisabledByFilter() == true) {
+        if (child->IsHardwareForcedDisabledByFilter() == true || forcedDisabled_) {
             child->SetHardwareForcedDisabledState(true);
             RectI hwcRect = child->GetDstRect();
             Occlusion::Rect dirtyRect { hwcRect.left_, hwcRect.top_,
@@ -363,8 +391,13 @@ void RSPreComposeElement::UpdateGpuNodesCanvasMatrix(std::shared_ptr<RSPaintFilt
 #ifndef USE_ROSEN_DRAWING
     if (region.isEmpty()) {
         canvas->clipRect(SkRect::MakeEmpty());
-    } else {
+    } else if (region.isRect()){
         canvas->clipRegion(region);
+    } else {
+        ROSEN_LOGD("isPath");
+        SkPath dirtyPath;
+        region.getBoundaryPath(&dirtyPath);
+        canvas->clipPath(dirtyPath, true);
     }
 #endif
     const auto& property = node->GetRenderProperties();

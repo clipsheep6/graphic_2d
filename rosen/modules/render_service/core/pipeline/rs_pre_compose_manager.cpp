@@ -53,7 +53,7 @@ void RSPreComposeManager::StartCurrentVsync(std::shared_ptr<RSDisplayRenderNode>
 }
 
 std::list<std::shared_ptr<RSSurfaceRenderNode>> RSPreComposeManager::GetSurfaceNodesFromDisplay(
-    std::shared_ptr<RSDisplayRenderNode>& displayNode, uint64_t focusNodeId, uint64_t& leashFocusId)
+    std::shared_ptr<RSDisplayRenderNode>& displayNode, uint64_t& focusNodeId, uint64_t& leashFocusId)
 {
     if (displayNode == nullptr) {
         ROSEN_LOGE("DisplayNode is nullptr");
@@ -76,6 +76,8 @@ std::list<std::shared_ptr<RSSurfaceRenderNode>> RSPreComposeManager::GetSurfaceN
     std::list<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeList;
     bool isPrecomposeNode = false;
     bool isFocusNode = false;
+    uint64_t lastNodeId = 0;
+    uint64_t lastLeashId = 0;
     for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
         auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
         if (node == nullptr) {
@@ -83,12 +85,21 @@ std::list<std::shared_ptr<RSSurfaceRenderNode>> RSPreComposeManager::GetSurfaceN
             continue;
         }
         std::string surfaceName = node->GetName();
+        if (isPrecomposeNode && surfaceName.substr(0,3) == "SCB") {
+            focusNodeId = lastNodeId;
+            leashFocusId = lastLeashId;
+            surfaceNodeList.pop_back();
+            break;
+        }
         isPrecomposeNode |= (surfaceName.substr(0, 3) != "SCB");
         if (node->GetId() == focusNodeId) {
             isFocusNode = true;
         }
+        lastNodeId = node->GetId();
         if (!isFocusNode && node->IsLeashWindow()) {
+            lastLeashId = node->GetId();
             for (auto& child : node->GetSortedChildren()) {
+                lastNodeId = node->GetId();
                 if (child && child->GetId() == focusNodeId) {
                     isFocusNode = true;
                     leashFocusId = node->GetId();
@@ -99,12 +110,9 @@ std::list<std::shared_ptr<RSSurfaceRenderNode>> RSPreComposeManager::GetSurfaceN
             break;
         }
         if (isPrecomposeNode) {
-            logInfo += "node:[ " + node->GetName() + ", " + std::to_string(node->GetId()) + " ]" +
-                "( " + std::to_string(node->HasFilter()) + ", " + std::to_string(node->HasAbilityComponent()) + " ); ";
             surfaceNodeList.push_back(node);
         }
     }
-    ROSEN_LOGD("surfaceNode in PreCompose is %{public}s", logInfo.c_str());
     return surfaceNodeList;
 }
 
@@ -115,6 +123,15 @@ void RSPreComposeManager::UpdateNodesByLastVsync(std::vector<RSBaseRenderNode::S
         return;
     }
     rsPreComposeGroup_->UpdateNodesByLastVsync(curAllSurfaces);
+}
+
+void RSPreComposeManager::SetLastVsyncHardwareForcedDisabled(bool forcedDisabled)
+{
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
+        return;
+    }
+    rsPreComposeGroup_->SetLastVsyncHardwareForcedDisabled(forcedDisabled);
 }
 
 void RSPreComposeManager::UpdateOcclusionByLastVsync(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
@@ -171,6 +188,15 @@ void RSPreComposeManager::UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRe
         return;
     }
     rsPreComposeGroup_->UpdateGlobalDirtyByLastVsync(dirtyManager);
+}
+
+void RSPreComposeManager::Close()
+{
+    if (rsPreComposeGroup_ == nullptr) {
+        ROSEN_LOGE("rsPreComposeGroup_ is nullptr");
+        return;
+    }
+    rsPreComposeGroup_->Close();
 }
 
 Occlusion::Region RSPreComposeManager::GetLastVisibleDirtyRegionWithGpuNodes()

@@ -48,6 +48,8 @@ public:
     void SetBufferAge(int32_t bufferAge);
     void UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager>& dirtyManager);
     void UpdateAppWindowNodesByLastVsync(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes);
+    void SetLastVsyncHardwareForcedDisabled(bool forcedDisabled);
+    void Close();
 
 private:
     void PushHistory(Occlusion::Region& region);

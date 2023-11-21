@@ -57,6 +57,8 @@ public:
     void StartCalculateAndDrawImage();
     void UpdateGlobalDirty(std::shared_ptr<RSDirtyRegionManager>& dirtyManager);
     void UpdateAppWindowNodes(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes);
+    void SetHardwareForcedDisabled(bool forcedDisabled);
+    void Close();
 
 private:
     void UpdateDirtyRegion();
@@ -101,6 +103,8 @@ private:
     Occlusion::Region visDirtyRegion_;
     Occlusion::Region visRegion_;
     Occlusion::Region aboveRegion_;
+    bool forcedDisabled_ = false;
+    bool isFirstFrame_ = true;
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> appWindowNodes_;
     std::vector<RSUniRenderVisitor::SurfaceDirtyMgrPair> hardwareNodes_;
     std::vector<std::pair<std::shared_ptr<RSSurfaceRenderNode>, Occlusion::Region>> gpuNodes_;

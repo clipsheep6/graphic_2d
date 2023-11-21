@@ -235,7 +235,6 @@ void RSUniRenderVisitor::SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisito
     prepareClipRect_ = visitor->prepareClipRect_;
     isOpDropped_ = visitor->isOpDropped_;
     isPartialRenderEnabled_ = visitor->isPartialRenderEnabled_;
-    isHardwareForcedDisabled_ = visitor->isHardwareForcedDisabled_;
     isUIFirst_ = visitor->isUIFirst_;
     canvas_ = canvas;
     isPreComposeThread_ = true;
@@ -1883,6 +1882,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 
         if (isPreComposeOn_) {
             RSPreComposeManager::GetInstance()->UpdateNodesByLastVsync(node.GetCurAllSurfaces());
+            RSPreComposeManager::GetInstance()->SetLastVsyncHardwareForcedDisabled(isHardwareForcedDisabled_);
         }
         if (isPartialRenderEnabled_) {
             CalcDirtyDisplayRegion(displayNodePtr);

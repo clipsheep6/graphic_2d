@@ -36,6 +36,7 @@ bool RSPreComposeRegionManager::CheckNodeChange()
     isNodeChange_ = false;
     std::vector<NodeId> curSurfaceIds;
     curSurfaceIds.reserve(curAllNodes_.size());
+    std::unordered_map<NodeId, RectI> curSurfaceVisiableRegion;
     for (auto node = curAllNodes_.begin(); node != curAllNodes_.end(); ++node) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*node);
         if (surface == nullptr) {
@@ -51,24 +52,13 @@ bool RSPreComposeRegionManager::CheckNodeChange()
             surface->GetDirtyManager()->GetCurrentFrameDirtyRegion().ToString().c_str(),
             surface->GetTransparentRegion().GetRegionInfo().c_str());
         curSurfaceIds.emplace_back(surface->GetId());
+        curSurfaceVisiableRegion[surface->GetId()] = surface->GetOldDirtyInSurface();
     }
     isNodeChange_ = lastSurfaceIds_ != curSurfaceIds;
     isDirty_ |= isNodeChange_;
     std::swap(curSurfaceIds, curSurfaceIds_);
-    return isNodeChange_;
-}
-
-void RSPreComposeRegionManager::GetChangedNodeRegion()
-{
-    std::unordered_map<NodeId, RectI> curSurfaceVisiableRegion;
-    for (auto node = curAllNodes_.begin(); node != curAllNodes_.end(); ++node) {
-        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*node);
-        if (surface == nullptr) {
-            continue;
-        }
-        curSurfaceVisiableRegion[surface->GetId()] = surface->GetOldDirtyInSurface();
-    }
     std::swap(curSurfaceVisiableRegion, curSurfaceVisiableRegion_);
+    return isNodeChange_;
 }
 
 bool RSPreComposeRegionManager::CheckSurfaceVisiable(OcclusionRectISet& occlusionSurfaces,
@@ -121,7 +111,6 @@ void RSPreComposeRegionManager::CalcOcclusion()
     std::swap(curVisMap, curVisMap_);
     std::swap(visNodes, visNodes_);
     std::swap(accumulatedRegion_, accumulatedRegion);
-    GetChangedNodeRegion();
 }
 
 void RSPreComposeRegionManager::CalcGlobalDirtyRegion()
@@ -153,7 +142,8 @@ void RSPreComposeRegionManager::CalcGlobalDirtyRegionByNodeChange()
             dirtyManager_->MergeDirtyRect(rect);
         }
     }
-    ROSEN_LOGD("RSPreComposeRegionManager global dirty region %{public}s", dirtyManager_->GetDirtyRegion().ToString().c_str());
+    ROSEN_LOGD("RSPreComposeRegionManager global dirty region %{public}s",
+        dirtyManager_->GetCurrentFrameDirtyRegion().ToString().c_str());
 }
 
 void RSPreComposeRegionManager::CalcGlobalDirtyRegionByContainer()

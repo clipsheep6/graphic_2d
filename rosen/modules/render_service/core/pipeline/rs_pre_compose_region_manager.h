@@ -77,7 +77,6 @@ private:
     Drawing::Region region_;
 #endif
     bool CheckNodeChange();
-    void GetChangedNodeRegion();
     bool CheckSurfaceVisiable(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusion();
     void CalcGlobalDirtyRegion();

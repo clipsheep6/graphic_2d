@@ -45,18 +45,18 @@ public:
     void SetBufferAge(int32_t bufferAge);
     void UpdateGlobalDirtyByLastVsync(std::shared_ptr<RSDirtyRegionManager> dirtyManager);
     void UpdateAppWindowNodesByLastVsync(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appWindowNodes);
+    void SetLastVsyncHardwareForcedDisabled(bool forcedDisabled);
+    void Close();
 
 private:
     RSPreComposeManager() = default;
     ~RSPreComposeManager() = default;
     std::list<std::shared_ptr<RSSurfaceRenderNode>> GetSurfaceNodesFromDisplay(
-        std::shared_ptr<RSDisplayRenderNode>& displayNode, uint64_t focusNodeId, uint64_t& leashFocusId);
+        std::shared_ptr<RSDisplayRenderNode>& displayNode, uint64_t& focusNodeId, uint64_t& leashFocusId);
     static inline sptr<RSPreComposeManager> instance_ = nullptr;
     std::unordered_set<NodeId> nodeIds_;
     std::shared_ptr<RSPreComposeGroup> rsPreComposeGroup_;
     std::shared_ptr<RSPreComposeGroup> MakeGroup(std::shared_ptr<RSDisplayRenderNode>& node);
-    // void GetAllSurfaceNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeList,
-    //     std::unorderd_set<NodeId>& nodeIds, std::vector<RSBaseRenderNode::SharedPtr>& surfaceNodes);
 };
 } // namespace Rosen
 } // namespace OHOS

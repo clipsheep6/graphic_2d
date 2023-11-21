@@ -448,7 +448,8 @@ int RSUniRenderUtil::GetRotationFromMatrix(Drawing::Matrix matrix)
 
 void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
     std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
-    std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes, uint64_t focusNodeId, DeviceType deviceType)
+    std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
+    uint64_t focusNodeId, DeviceType deviceType, bool isPreComposeOn)
 {
     if (displayNode == nullptr) {
         ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes display node is null");
@@ -536,7 +537,7 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
                 AssignMainThreadNode(mainThreadNodes, node);
             }
         } else { // PC or TABLET
-            if (node->QuerySubAssignable(isRotation)) {
+            if (node->QuerySubAssignable(isRotation, isPreComposeOn)) {
                 AssignSubThreadNode(subThreadNodes, node, deviceType, realFocusNodeId);
             } else {
                 AssignMainThreadNode(mainThreadNodes, node);

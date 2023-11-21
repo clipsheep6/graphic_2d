@@ -18,7 +18,11 @@
 
 #include "hdi_device.h"
 #include "graphic_error.h"
+#ifdef DRIVERS_INTERFACE_DISPLAY_ENABLE
 #include "v1_0/include/idisplay_composer_interface.h"
+#else
+#include "display_composer_interface.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {

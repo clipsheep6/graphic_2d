@@ -33,8 +33,12 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+#ifdef DRIVERS_INTERFACE_DISPLAY_ENABLE
 using namespace OHOS::HDI::Display::Composer::V1_0;
 using IDisplayComposerInterfaceSptr = sptr<IDisplayComposerInterface>;
+#else
+using IDisplayComposerInterfaceSptr = sptr<DisplayComposerInterface>;
+#endif
 static IDisplayComposerInterfaceSptr g_composer;
 }
 
@@ -66,7 +70,11 @@ HdiDeviceImpl::~HdiDeviceImpl()
 RosenError HdiDeviceImpl::Init()
 {
     if (g_composer == nullptr) {
+#ifdef DRIVERS_INTERFACE_DISPLAY_ENABLE
         g_composer = IDisplayComposerInterface::Get();
+#else
+        g_composer = DisplayComposerInterface::Get();
+#endif
         if (g_composer == nullptr) {
             HLOGE("IDisplayComposerInterface::Get return nullptr.");
             return ROSEN_ERROR_NOT_INIT;

@@ -45,6 +45,11 @@ public:
     void DrawTextBlob(const std::shared_ptr<TexgineTextBlob> &blob, float x, float y, const TexginePaint &paint);
 
     /*
+     * @brief Draws symbol  at (x, y), using SkTextBlob blob , TextStyle style, clip, SkMatrix, and SkPaint paint.
+     */
+    void DrawSymbol(const std::shared_ptr<TexgineTextBlob> &blob, float x, float y, const TexginePaint &paint);
+
+    /*
      * @brief Fills clip with color color using SkBlendMode::kSrc.
      *        This has the effect of replacing all pixels contained by clip with color.
      * @param color unpremultiplied ARGB

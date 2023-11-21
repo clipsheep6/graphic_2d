@@ -66,6 +66,7 @@ ohos_source_set("libtexgine_source") {
       "src/opentype_parser/opentype_basic_type.cpp",
       "src/opentype_parser/post_table_parser.cpp",
       "src/opentype_parser/ranges.cpp",
+      "export/symbol_engine/hw_symbol_txt.cpp",
       "src/shaper.cpp",
       "src/system_font_provider.cpp",
       "src/texgine_exception.cpp",

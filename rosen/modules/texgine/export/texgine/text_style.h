@@ -23,6 +23,7 @@
 
 #include "texgine_paint.h"
 #include "texgine/typography_types.h"
+#include "symbol_engine/hw_symbol_txt.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -105,6 +106,10 @@ struct TextStyle {
 
     // Implements the equality operator.
     bool operator ==(TextStyle const& rhs) const;
+
+    // symbol glyph
+    bool isSymbolGlyph = false;
+    HWSymbolTxt symbol;
 };
 } // namespace TextEngine
 } // namespace Rosen

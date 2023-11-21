@@ -181,7 +181,12 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
     }
 
     PaintShadow(canvas, offsetX, offsetY, xs.shadows);
-    canvas.DrawTextBlob(textBlob_, offsetX, offsetY, paint);
+    if (xs.isSymbolGlyph) {
+        canvas.DrawSymbol(textBlob_, offsetX, offsetY, paint);
+    } else {
+        canvas.DrawTextBlob(textBlob_, offsetX, offsetY, paint);
+    }
+    
     PaintDecoration(canvas, offsetX, offsetY, xs);
 }
 

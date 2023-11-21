@@ -45,6 +45,16 @@ void TexgineCanvas::DrawTextBlob(
     canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
 }
 
+void TexgineCanvas::DrawSymbol(const std::shared_ptr<TexgineTextBlob> &blob, float x, float y, const TexginePaint &paint)
+{
+    if (canvas_ == nullptr || blob == nullptr) {
+        return;
+    }
+
+    paint.SetColor(SkColorSetRGB(0,0,255));
+    canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
+}
+
 void TexgineCanvas::Clear(uint32_t color) const
 {
     if (canvas_ == nullptr) {

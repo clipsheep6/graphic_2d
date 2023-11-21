@@ -18,6 +18,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <codecvt>
 
 #include "typography_impl.h"
 
@@ -37,6 +38,9 @@ TypographyBuilderImpl::TypographyBuilderImpl(const TypographyStyle& ys,
 
 void TypographyBuilderImpl::PushStyle(const TextStyle& style)
 {
+    TextStyle style1 = style;
+    style1.fontFamilies = "HMSymbol-Regular";
+    style1.isSymbolGlyph = true;
     styleStack_.push(style);
     lastTextSpan_ = nullptr;
 }
@@ -88,12 +92,38 @@ void TypographyBuilderImpl::AppendSpan(const std::shared_ptr<TextSpan>& ts)
 
 void TypographyBuilderImpl::AppendSpan(const std::string& text)
 {
-    AppendSpan(TextSpan::MakeFromText(text));
+    // AppendSpan(TextSpan::MakeFromText(text));
+    std::string str81 = "\U000F0000";
+    std::string str82 = "\U000F0000";
+    std::string str83 = "\U000F0000";
+    std::string str84 = "\U000F0000";
+    std::string str85 = "\U000F0000";
+    std::string str86 = "\U000F0000";
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str81)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str82)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str83)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str84)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str85)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str86)));
 }
 
 void TypographyBuilderImpl::AppendSpan(const std::u16string& text)
 {
-    AppendSpan(TextSpan::MakeFromText(text));
+    //AppendSpan(TextSpan::MakeFromText(text));
+    std::string str81 = "\U000F0000";
+    std::string str82 = "\U000F0000";
+    std::string str83 = "\U000F0000";
+    std::string str84 = "\U000F0000";
+    std::string str85 = "\U000F0000";
+    std::string str86 = "\U000F0000";
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str81)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str82)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str83)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str84)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str85)));
+    AppendSpan(TextSpan::MakeFromText(convert.from_bytes(str86)));
 }
 
 void TypographyBuilderImpl::AppendSpan(const std::u32string& text)

@@ -19,6 +19,7 @@
 #include <memory>
 #include <unordered_set>
 #include <vector>
+
 #include "modifier/rs_render_modifier.h"
 
 namespace OHOS::Rosen {

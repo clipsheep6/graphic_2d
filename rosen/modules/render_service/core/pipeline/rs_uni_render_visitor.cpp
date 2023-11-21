@@ -907,7 +907,7 @@ void RSUniRenderVisitor::UpdateForegroundFilterCacheWithDirty(RSRenderNode& node
     RSDirtyRegionManager& dirtyManager)
 {
     node.UpdateFilterCacheManagerWithCacheRegion(prepareClipRect_);
-    node.UpdateFilterCacheWithDirty(dirtyManager, true);
+    node.UpdateFilterCacheWithDirty(dirtyManager, false);
 }
 
 void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)

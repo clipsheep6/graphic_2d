@@ -791,14 +791,14 @@ int32_t RSScreen::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) cons
 {
     ScreenColorGamut curGamut;
     int32_t result = GetScreenColorGamut(curGamut);
-    colorSpace = COMMON_COLOR_SPACE_TYPE_TO_RS_MAP[curGamut];
+    colorSpace = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[curGamut];
     return result;
 }
 
 int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) 
 {
-    auto iter = RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.find(colorSpace);
-    if (iter == RS_TO_COMMON_COLOR_SPACE_TYPE_MAP.end()) {
+    auto iter = COMMON_COLOR_SPACE_TYPE_TO_RS_MAP.find(colorSpace);
+    if (iter == COMMON_COLOR_SPACE_TYPE_TO_RS_MAP.end()) {
         return StatusCode::INVALID_ARGUMENTS;
     }
     ScreenColorGamut dstColorGamut = static_cast<ScreenColorGamut>(iter.first);
@@ -809,7 +809,7 @@ int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace)
             return StatusCode::INVALID_ARGUMENTS;
         }
         curIdx = std::distance(supportedVirtualColorGamuts_.begin(), it);
-        return return StatusCode::SUCCESS;
+        return StatusCode::SUCCESS;
     }
     std::vector<GraphicColorGamut> hdiMode;
     if (hdiScreen_->GetScreenSupportedColorGamuts(hdiMode) != GRAPHIC_DISPLAY_SUCCESS) {

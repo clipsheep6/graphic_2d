@@ -57,7 +57,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     if (!GetSizeFromDrawCmdModifiers(width, height)) {
         return;
     }
-
+    std::lock_guard<std::mutex> lock(mutex_);
     if (IsNeedResetSurface(width, height)) {
         if (preThreadInfo_.second && skSurface_) {
             preThreadInfo_.second(std::move(skSurface_));
@@ -72,7 +72,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         if (!ResetSurface(width, height, canvas)) {
             return;
         }
-#if (defined NEW_SKIA) && (defined RS_ENABLE_GL)
+#if (defined NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
         auto image = preSurface->makeImageSnapshot();
         if (!image) {
             return;
@@ -111,12 +111,9 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         GetRenderProperties().GetFrameGravity(), GetRenderProperties().GetFrameRect(), width, height, mat)) {
         canvas.concat(mat);
     }
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        skImage_ = skSurface_->makeImageSnapshot();
-        if (skImage_) {
-            SKResourceManager::Instance().HoldResource(skImage_);
-        }
+    skImage_ = skSurface_->makeImageSnapshot();
+    if (skImage_) {
+        SKResourceManager::Instance().HoldResource(skImage_);
     }
 #ifdef NEW_SKIA
     auto samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear);
@@ -160,8 +157,9 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
             RS_LOGE("RSCanvasDrawingRenderNode::ProcessRenderContents sharedBackendTexture is nullptr");
             return;
         }
-        auto newImage = std::make_shared<Drawing::image>();
-        Drawing::BitmapFormat info = { Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL };
+        auto newImage = std::make_shared<Drawing::Image>();
+        Drawing::BitmapFormat info = Drawing::BitmapFormat { Drawing::COLORTYPE::COLORTYPE_RGBA_8888,
+            Drawing::AlphaType::ALPHATYPE_PREMUL };
         bool ret = newImage->BuildFromTexture(*canvas.GetGPUContext(), sharedBackendTexture.GetTextureInfo(),
             origin, info, nullptr);
         if (!ret) {
@@ -202,7 +200,7 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
 {
     SkImageInfo info = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 
-#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+#if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
 #ifdef NEW_SKIA
     auto grContext = canvas.recordingContext();
 #else
@@ -272,12 +270,16 @@ void RSCanvasDrawingRenderNode::ApplyDrawCmdModifier(RSModifierContext& context,
 }
 
 #ifndef USE_ROSEN_DRAWING
-SkBitmap RSCanvasDrawingRenderNode::GetBitmap()
+SkBitmap RSCanvasDrawingRenderNode::GetBitmap(const uint64_t tid)
 {
     SkBitmap bitmap;
     std::lock_guard<std::mutex> lock(mutex_);
     if (!skImage_) {
         RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: skImage_ is nullptr");
+        return bitmap;
+    }
+    if (RSSystemProperties::GetUniRenderEnabled() && GetTid() != tid) {
+        RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: skImage_ used by multi threads");
         return bitmap;
     }
     if (!skImage_->asLegacyBitmap(&bitmap)) {
@@ -286,8 +288,10 @@ SkBitmap RSCanvasDrawingRenderNode::GetBitmap()
     return bitmap;
 }
 
-bool RSCanvasDrawingRenderNode::GetPixelmap(const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect)
+bool RSCanvasDrawingRenderNode::GetPixelmap(
+    const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect, const uint64_t tid)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!pixelmap || !rect) {
         RS_LOGE("RSCanvasDrawingRenderNode::GetPixelmap: pixelmap or rect is nullptr");
         return false;
@@ -301,6 +305,11 @@ bool RSCanvasDrawingRenderNode::GetPixelmap(const std::shared_ptr<Media::PixelMa
     sk_sp<SkImage> skImage = skSurface_->makeImageSnapshot();
     if (skImage == nullptr) {
         RS_LOGE("RSCanvasDrawingRenderNode::GetPixelmap: makeImageSnapshot failed");
+        return false;
+    }
+
+    if (RSSystemProperties::GetUniRenderEnabled() && GetTid() != tid) {
+        RS_LOGE("RSCanvasDrawingRenderNode::GetPixelmap: SkSurface used by multi threads");
         return false;
     }
 
@@ -349,7 +358,7 @@ bool RSCanvasDrawingRenderNode::GetPixelmap(const std::shared_ptr<Media::PixelMa
     Drawing::BitmapFormat info =
         Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
     auto bitmap = std::make_shared<Drawing::Bitmap>();
-    bitmap->Build(pixelmap->GetWidth(), pixelmap->GetHeight(), info)
+    bitmap->Build(pixelmap->GetWidth(), pixelmap->GetHeight(), info);
     if (!image->ReadPixels(*bitmap.get(), rect->GetLeft(), rect->GetTop())) {
         RS_LOGE("RSCanvasDrawingRenderNode::GetPixelmap: readPixels failed");
         return false;

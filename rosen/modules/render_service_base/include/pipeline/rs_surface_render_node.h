@@ -96,6 +96,11 @@ public:
         return GetName().find("RosenWeb") != std::string::npos;
     }
 
+    bool IsScbScreen() const
+    {
+        return nodeType_ == RSSurfaceNodeType::SCB_SCREEN_NODE;
+    }
+
     bool IsHardwareEnabledTopSurface() const
     {
         return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE && GetName() == "pointer window";
@@ -430,7 +435,8 @@ public:
         const Occlusion::Region& region,
         VisibleData& visibleVec,
         std::map<uint32_t, bool>& pidVisMap,
-        bool needSetVisibleRegion = true);
+        bool needSetVisibleRegion = true,
+        RS_REGION_VISIBLE_LEVEL visibleLevel = UNKNOW_VISIBLE_LEVEL);
 
     const Occlusion::Region& GetVisibleDirtyRegion() const
     {
@@ -717,7 +723,8 @@ public:
     void ResetAnimateState() {
         animateState_ = false;
     }
-    bool GetAnimateState() const{
+    bool GetAnimateState() const
+    {
         return animateState_;
     }
     bool IsParentLeashWindowInScale() const;
@@ -817,6 +824,17 @@ public:
     {
         hasSkipLayer_ = hasSkipLayer;
     }
+    
+    void SetForeground(bool isForeground)
+    {
+        isForeground_ = isForeground;
+    }
+
+    bool GetIsForeground() const
+    {
+        return isForeground_;
+    }
+    bool GetNodeIsSingleFrameComposer() const override;
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -1008,6 +1026,7 @@ private:
     uint32_t submittedSubThreadIndex_ = INT_MAX;
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
     std::atomic<bool> isNeedSubmitSubThread_ = true;
+    bool isForeground_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

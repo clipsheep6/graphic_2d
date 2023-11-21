@@ -56,6 +56,11 @@ ScreenId RSInterfaces::GetDefaultScreenId()
     return renderServiceClient_->GetDefaultScreenId();
 }
 
+ScreenId RSInterfaces::GetActiveScreenId()
+{
+    return renderServiceClient_->GetActiveScreenId();
+}
+
 std::vector<ScreenId> RSInterfaces::GetAllScreenIds()
 {
     return renderServiceClient_->GetAllScreenIds();
@@ -128,6 +133,11 @@ void RSInterfaces::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t ra
 void RSInterfaces::SetRefreshRateMode(int32_t refreshRateMode)
 {
     renderServiceClient_->SetRefreshRateMode(refreshRateMode);
+}
+
+void RSInterfaces::SyncFrameRateRange(const FrameRateRange& range)
+{
+    renderServiceClient_->SyncFrameRateRange(range);
 }
 
 uint32_t RSInterfaces::GetScreenCurrentRefreshRate(ScreenId id)
@@ -283,6 +293,14 @@ std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
     return renderServiceClient_->CreateVSyncReceiver(name, looper);
 }
 
+std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
+    const std::string& name,
+    uint64_t id,
+    const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)
+{
+    return renderServiceClient_->CreateVSyncReceiver(name, looper, id);
+}
+
 int32_t RSInterfaces::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability)
 {
     return renderServiceClient_->GetScreenHDRCapability(id, screenHdrCapability);
@@ -327,6 +345,11 @@ void RSInterfaces::SetAppWindowNum(uint32_t num)
 void RSInterfaces::ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow)
 {
     renderServiceClient_->ShowWatermark(watermarkImg, isShow);
+}
+
+int32_t RSInterfaces::ResizeVirtualScreen(ScreenId id, uint32_t width, uint32_t height)
+{
+    return renderServiceClient_->ResizeVirtualScreen(id, width, height);
 }
 
 MemoryGraphic RSInterfaces::GetMemoryGraphic(int pid)
@@ -374,11 +397,21 @@ void RSInterfaces::DisableCacheForRotation()
     renderServiceClient_->SetCacheEnabledForRotation(false);
 }
 
+void RSInterfaces::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback)
+{
+    renderServiceClient_->SetOnRemoteDiedCallback(callback);
+}
+
 #ifdef TP_FEATURE_ENABLE
 void RSInterfaces::SetTpFeatureConfig(int32_t feature, const char* config)
 {
     renderServiceClient_->SetTpFeatureConfig(feature, config);
 }
 #endif
+
+void RSInterfaces::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
+{
+    renderServiceClient_->SetVirtualScreenUsingStatus(isVirtualScreenUsingStatus);
+}
 } // namespace Rosen
 } // namespace OHOS

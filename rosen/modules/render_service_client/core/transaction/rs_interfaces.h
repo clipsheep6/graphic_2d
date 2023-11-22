@@ -138,9 +138,9 @@ public:
 
     int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability);
 
-    int32_t GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat);
+    int32_t GetPixelFormat(ScreenId id, ScreenPixelFormat& pixelFormat);
 
-    int32_t SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat);
+    int32_t SetPixelFormat(ScreenId id, ScreenPixelFormat pixelFormat);
 
     int32_t GetScreenSupportedHDRFormats(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats);
 

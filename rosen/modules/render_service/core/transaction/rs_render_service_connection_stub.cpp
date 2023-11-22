@@ -783,7 +783,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             ScreenId id = data.ReadUint64();
-            GraphicPixelFormat pixelFormat;
+            ScreenPixelFormat pixelFormat;
             int32_t result = GetPixelFormat(id, pixelFormat);
             reply.WriteInt32(result);
             if (result != StatusCode::SUCCESS) {
@@ -799,7 +799,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             ScreenId id = data.ReadUint64();
-            GraphicPixelFormat pixelFormat = static_cast<GraphicPixelFormat>(data.ReadInt32());
+            ScreenPixelFormat pixelFormat = static_cast<ScreenPixelFormat>(data.ReadInt32());
             int32_t result = SetPixelFormat(id, pixelFormat);
             reply.WriteInt32(result);
             break;
@@ -858,7 +858,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             ScreenId id = data.ReadUint64();
             std::vector<uint32_t> colorSpacesSend;
-            std::vector<GraphicCM_ColorSpaceType> colorSpaces;
+            std::vector<ScreenColorSpaceType> colorSpaces;
             int32_t result = GetScreenSupportedColorSpaces(id, colorSpaces);
             reply.WriteInt32(result);
             if (result != StatusCode::SUCCESS) {
@@ -875,7 +875,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             ScreenId id = data.ReadUint64();
-            GraphicCM_ColorSpaceType colorSpace;
+            ScreenColorSpaceType colorSpace;
             int32_t result = GetScreenColorSpace(id, colorSpace);
             reply.WriteInt32(result);
             if (result != StatusCode::SUCCESS) {
@@ -891,7 +891,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             ScreenId id = data.ReadUint64();
-            GraphicCM_ColorSpaceType colorSpace = static_cast<GraphicCM_ColorSpaceType>(data.ReadInt32());
+            ScreenColorSpaceType colorSpace = static_cast<ScreenColorSpaceType>(data.ReadInt32());
             int32_t result = SetScreenColorSpace(id, colorSpace);
             reply.WriteInt32(result);
             break;

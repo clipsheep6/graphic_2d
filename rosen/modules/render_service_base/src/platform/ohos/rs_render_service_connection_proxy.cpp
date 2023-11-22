@@ -1165,6 +1165,27 @@ int32_t RSRenderServiceConnectionProxy::SetScreenCorrection(ScreenId id, ScreenR
     return result;
 }
 
+bool RSRenderServiceConnectionProxy::SetVirtualMirrorScreenCanvasRotation(ScreenId id, bool canvasRotation)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return RS_CONNECTION_ERROR;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    data.WriteBool(canvasRotation);
+    uint32_t code = static_cast<uint32_t>(
+        RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_MIRROR_SCREEN_CANVAS_ROTATION);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        return RS_CONNECTION_ERROR;
+    }
+    bool result = reply.ReadBool();
+    return result;
+}
+
 int32_t RSRenderServiceConnectionProxy::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
 {
     MessageParcel data;

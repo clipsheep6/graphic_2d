@@ -306,12 +306,12 @@ int32_t RSInterfaces::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability&
     return renderServiceClient_->GetScreenHDRCapability(id, screenHdrCapability);
 }
 
-int32_t RSInterfaces::GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat)
+int32_t RSInterfaces::GetPixelFormat(ScreenId id, ScreenPixelFormat& pixelFormat)
 {
     return renderServiceClient_->GetPixelFormat(id, pixelFormat);
 }
 
-int32_t RSInterfaces::SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat)
+int32_t RSInterfaces::SetPixelFormat(ScreenId id, ScreenPixelFormat pixelFormat)
 {
     return renderServiceClient_->SetPixelFormat(id, pixelFormat);
 }

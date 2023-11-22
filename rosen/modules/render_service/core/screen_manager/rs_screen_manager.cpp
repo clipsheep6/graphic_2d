@@ -1223,7 +1223,7 @@ int32_t RSScreenManager::SetScreenSkipFrameIntervalLocked(ScreenId id, uint32_t 
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& pixelFormat) const 
+int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, ScreenPixelFormat& pixelFormat) const
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
@@ -1232,7 +1232,7 @@ int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& p
     return screens_.at(id)->GetPixelFormat(pixelFormat);
 }
 
-int32_t RSScreenManager::SetPixelFormatLocked(ScreenId id, GraphicPixelFormat pixelFormat)
+int32_t RSScreenManager::SetPixelFormatLocked(ScreenId id, ScreenPixelFormat pixelFormat)
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
@@ -1268,7 +1268,7 @@ int32_t RSScreenManager::SetScreenHDRFormatLocked(ScreenId id, int32_t modeIdx)
     return screens_.at(id)->SetScreenHDRFormat(modeIdx);
 }
 
-int32_t RSScreenManager::GetScreenSupportedColorSpacesLocked(ScreenId id, std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const
+int32_t RSScreenManager::GetScreenSupportedColorSpacesLocked(ScreenId id, std::vector<ScreenColorSpaceType>& colorSpaces) const
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
@@ -1277,7 +1277,7 @@ int32_t RSScreenManager::GetScreenSupportedColorSpacesLocked(ScreenId id, std::v
     return screens_.at(id)->GetScreenSupportedColorSpaces(colorSpaces);
 }
 
-int32_t RSScreenManager::GetScreenColorSpaceLocked(ScreenId id, GraphicCM_ColorSpaceType& colorSpace) const
+int32_t RSScreenManager::GetScreenColorSpaceLocked(ScreenId id, ScreenColorSpaceType& colorSpace) const
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
@@ -1286,7 +1286,7 @@ int32_t RSScreenManager::GetScreenColorSpaceLocked(ScreenId id, GraphicCM_ColorS
     return screens_.at(id)->GetScreenColorSpace(colorSpace);
 }
 
-int32_t RSScreenManager::SetScreenColorSpaceLocked(ScreenId id, GraphicCM_ColorSpaceType colorSpace)
+int32_t RSScreenManager::SetScreenColorSpaceLocked(ScreenId id, ScreenColorSpaceType colorSpace)
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
@@ -1355,13 +1355,13 @@ int32_t RSScreenManager::SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFr
     return SetScreenSkipFrameIntervalLocked(id, skipFrameInterval);
 }
 
-int32_t RSScreenManager::GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat) const 
+int32_t RSScreenManager::GetPixelFormat(ScreenId id, ScreenPixelFormat& pixelFormat) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return GetPixelFormatLocked(id, pixelFormat);
 }
 
-int32_t RSScreenManager::SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat)
+int32_t RSScreenManager::SetPixelFormat(ScreenId id, ScreenPixelFormat pixelFormat)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return SetPixelFormatLocked(id, pixelFormat);
@@ -1385,19 +1385,19 @@ int32_t RSScreenManager::SetScreenHDRFormat(ScreenId id, int32_t modeIdx)
     return SetScreenHDRFormatLocked(id, modeIdx);
 }
 
-int32_t RSScreenManager::GetScreenSupportedColorSpaces(ScreenId id, std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const
+int32_t RSScreenManager::GetScreenSupportedColorSpaces(ScreenId id, std::vector<ScreenColorSpaceType>& colorSpaces) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return GetScreenSupportedColorSpacesLocked(id, colorSpaces);
 }
 
-int32_t RSScreenManager::GetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType& colorSpace) const
+int32_t RSScreenManager::GetScreenColorSpace(ScreenId id, ScreenColorSpaceType& colorSpace) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return GetScreenColorSpaceLocked(id, colorSpace);
 }
 
-int32_t RSScreenManager::SetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType colorSpace)
+int32_t RSScreenManager::SetScreenColorSpace(ScreenId id, ScreenColorSpaceType colorSpace)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return SetScreenColorSpaceLocked(id, colorSpace);

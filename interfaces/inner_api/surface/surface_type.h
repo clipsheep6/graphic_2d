@@ -290,7 +290,7 @@ using GraphicColorGamut = enum {
     GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020 = 10,     /**< Display BT2020 */
 };
 
-using GraphicCM_ColorSpaceType = enum {
+using GraphicColorSpaceType = enum {
     GRAPHIC_CM_COLORSPACE_NONE,
 
     GRAPHIC_CM_BT601_EBU_FULL      = 2 | (1 << 8) | (2 << 16) | (1 << 21),  // COLORPRIMARIES_BT601_P | (TRANSFUNC_BT709 << 8) | (MATRIX_BT601_P << 16) | (RANGE_FULL << 21)

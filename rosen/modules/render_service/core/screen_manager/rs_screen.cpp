@@ -27,27 +27,27 @@ namespace Rosen {
 using namespace HiviewDFX;
 
 namespace impl {
-std::map<GraphicColorGamut, GraphicCM_ColorSpaceType> RSScreen::RS_TO_COMMON_COLOR_SPACE_TYPE_MAP {
-    {GRAPHIC_COLOR_GAMUT_STANDARD_BT601, GRAPHIC_CM_BT601_EBU_FULL},
-    {GRAPHIC_COLOR_GAMUT_STANDARD_BT709, GRAPHIC_CM_BT709_FULL},
-    {GRAPHIC_COLOR_GAMUT_SRGB, GRAPHIC_CM_SRGB_FULL},
-    {GRAPHIC_COLOR_GAMUT_ADOBE_RGB, GRAPHIC_CM_ADOBERGB_FULL},
-    {GRAPHIC_COLOR_GAMUT_DISPLAY_P3, GRAPHIC_CM_P3_FULL},
-    {GRAPHIC_COLOR_GAMUT_BT2020, GRAPHIC_CM_DISPLAY_BT2020_SRGB},
-    {GRAPHIC_COLOR_GAMUT_BT2100_PQ, GRAPHIC_CM_BT2020_PQ_FULL},
-    {GRAPHIC_COLOR_GAMUT_BT2100_HLG, GRAPHIC_CM_BT2020_HLG_FULL},
-    {GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020, GRAPHIC_CM_DISPLAY_BT2020_SRGB},
+std::map<GraphicColorGamut, ScreenColorSpaceType> RSScreen::RS_TO_COMMON_COLOR_SPACE_TYPE_MAP {
+    {GRAPHIC_COLOR_GAMUT_STANDARD_BT601, CM_BT601_EBU_FULL},
+    {GRAPHIC_COLOR_GAMUT_STANDARD_BT709, CM_BT709_FULL},
+    {GRAPHIC_COLOR_GAMUT_SRGB, CM_SRGB_FULL},
+    {GRAPHIC_COLOR_GAMUT_ADOBE_RGB, CM_ADOBERGB_FULL},
+    {GRAPHIC_COLOR_GAMUT_DISPLAY_P3, CM_P3_FULL},
+    {GRAPHIC_COLOR_GAMUT_BT2020, CM_DISPLAY_BT2020_SRGB},
+    {GRAPHIC_COLOR_GAMUT_BT2100_PQ, CM_BT2020_PQ_FULL},
+    {GRAPHIC_COLOR_GAMUT_BT2100_HLG, CM_BT2020_HLG_FULL},
+    {GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020, CM_DISPLAY_BT2020_SRGB},
 };
-std::map<GraphicCM_ColorSpaceType, GraphicColorGamut> RSScreen::COMMON_COLOR_SPACE_TYPE_TO_RS_MAP {
-    {GRAPHIC_CM_BT601_EBU_FULL, GRAPHIC_COLOR_GAMUT_STANDARD_BT601},
-    {GRAPHIC_CM_BT709_FULL, GRAPHIC_COLOR_GAMUT_STANDARD_BT709},
-    {GRAPHIC_CM_SRGB_FULL, GRAPHIC_COLOR_GAMUT_SRGB},
-    {GRAPHIC_CM_ADOBERGB_FULL, GRAPHIC_COLOR_GAMUT_ADOBE_RGB},
-    {GRAPHIC_CM_P3_FULL, GRAPHIC_COLOR_GAMUT_DISPLAY_P3},
-    {GRAPHIC_CM_DISPLAY_BT2020_SRGB, GRAPHIC_COLOR_GAMUT_BT2020},
-    {GRAPHIC_CM_BT2020_PQ_FULL, GRAPHIC_COLOR_GAMUT_BT2100_PQ},
-    {GRAPHIC_CM_BT2020_HLG_FULL, GRAPHIC_COLOR_GAMUT_BT2100_HLG},
-    {GRAPHIC_CM_DISPLAY_BT2020_SRGB, GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020},
+std::map<ScreenColorSpaceType, GraphicColorGamut> RSScreen::COMMON_COLOR_SPACE_TYPE_TO_RS_MAP {
+    {CM_BT601_EBU_FULL, GRAPHIC_COLOR_GAMUT_STANDARD_BT601},
+    {CM_BT709_FULL, GRAPHIC_COLOR_GAMUT_STANDARD_BT709},
+    {CM_SRGB_FULL, GRAPHIC_COLOR_GAMUT_SRGB},
+    {CM_ADOBERGB_FULL, GRAPHIC_COLOR_GAMUT_ADOBE_RGB},
+    {CM_P3_FULL, GRAPHIC_COLOR_GAMUT_DISPLAY_P3},
+    {CM_DISPLAY_BT2020_SRGB, GRAPHIC_COLOR_GAMUT_BT2020},
+    {CM_BT2020_PQ_FULL, GRAPHIC_COLOR_GAMUT_BT2100_PQ},
+    {CM_BT2020_HLG_FULL, GRAPHIC_COLOR_GAMUT_BT2100_HLG},
+    {CM_DISPLAY_BT2020_SRGB, GRAPHIC_COLOR_GAMUT_DISPLAY_BT2020},
 };
 
 RSScreen::RSScreen(ScreenId id,
@@ -757,19 +757,19 @@ int32_t RSScreen::SetScreenHDRFormat(int32_t modeIdx)
     return StatusCode::HDI_ERROR;
 }
 
-int32_t RSScreen::GetPixelFormat(GraphicPixelFormat& pixelFormat) const
+int32_t RSScreen::GetPixelFormat(ScreenPixelFormat& pixelFormat) const
 {
     pixelFormat = pixelFormat_;
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreen::SetPixelFormat(GraphicPixelFormat pixelFormat)
+int32_t RSScreen::SetPixelFormat(ScreenPixelFormat pixelFormat)
 {
     pixelFormat_ = pixelFormat;
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const
+int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<ScreenColorSpaceType>& colorSpaces) const
 {
     colorSpaces.clear();
     if (IsVirtual()) {
@@ -787,7 +787,7 @@ int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<GraphicCM_ColorSpace
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreen::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const
+int32_t RSScreen::GetScreenColorSpace(ScreenColorSpaceType& colorSpace) const
 {
     ScreenColorGamut curGamut;
     int32_t result = GetScreenColorGamut(curGamut);
@@ -795,7 +795,7 @@ int32_t RSScreen::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) cons
     return result;
 }
 
-int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) 
+int32_t RSScreen::SetScreenColorSpace(ScreenColorSpaceType colorSpace)
 {
     auto iter = COMMON_COLOR_SPACE_TYPE_TO_RS_MAP.find(colorSpace);
     if (iter == COMMON_COLOR_SPACE_TYPE_TO_RS_MAP.end()) {

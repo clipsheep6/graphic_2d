@@ -178,14 +178,14 @@ HWTEST_F(RSInterfacesTest, SetVirtualScreenPixelFormat001, Function | SmallTest 
     auto psurface = Surface::CreateSurfaceAsProducer(producer);
     uint32_t defaultWidth = 720;
     uint32_t defaultHeight = 1280;
-    GraphicPixelFormat pixelFormat = GRAPHIC_PIXEL_FMT_BGRA_8888;
+    ScreenPixelFormat pixelFormat = GRAPHIC_PIXEL_FMT_BGRA_8888;
     EXPECT_NE(psurface, nullptr);
 
     ScreenId virtualScreenId = rsInterfaces->CreateVirtualScreen(
         "virtual5", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
     EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
 
-    GraphicPixelFormat curPixelFormat;
+    ScreenPixelFormat curPixelFormat;
     int32_t ret = rsInterfaces->GetPixelFormat(virtualScreenId, curPixelFormat);
     EXPECT_NE(ret, StatusCode::SCREEN_NOT_FOUND);
     EXPECT_EQ(curPixelFormat, GRAPHIC_PIXEL_FMT_RGBA_8888);
@@ -836,7 +836,7 @@ HWTEST_F(RSInterfacesTest, SetScreenHDRFormat002, Function | SmallTest | Level2)
 */
 HWTEST_F(RSInterfacesTest, GetScreenSupportedColorSpaces002, Function | SmallTest | Level2)
 {
-    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
+    std::vector<ScreenColorSpaceType> colorSpaces;
     int ret = rsInterfaces->GetScreenSupportedColorSpaces(INVALID_SCREEN_ID, colorSpaces);
     EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
 }
@@ -851,7 +851,7 @@ HWTEST_F(RSInterfacesTest, GetScreenSupportedColorSpaces002, Function | SmallTes
 */
 HWTEST_F(RSInterfacesTest, GetScreenColorSpace002, Function | SmallTest | Level2)
 {
-    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::GRAPHIC_CM_SRGB_FULL;
+    ScreenColorSpaceType colorSpace = ScreenColorSpaceType::CM_SRGB_FULL;
     int ret = rsInterfaces->GetScreenColorSpace(INVALID_SCREEN_ID, colorSpace);
     EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
 }
@@ -866,7 +866,7 @@ HWTEST_F(RSInterfacesTest, GetScreenColorSpace002, Function | SmallTest | Level2
 */
 HWTEST_F(RSInterfacesTest, SetScreenColorSpace002, Function | SmallTest | Level2)
 {
-    int ret = rsInterfaces->SetScreenColorSpace(INVALID_SCREEN_ID, GraphicCM_ColorSpaceType::GRAPHIC_CM_COLORSPACE_NONE);
+    int ret = rsInterfaces->SetScreenColorSpace(INVALID_SCREEN_ID, ScreenColorSpaceType::CM_COLORSPACE_NONE);
     EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
 }
 

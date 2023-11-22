@@ -124,6 +124,46 @@ typedef enum : uint32_t {
 } ScreenHDRFormat;
 
 typedef enum : uint32_t {
+    GRAPHIC_PIXEL_FMT_CLUT8 = 0,                 /**< CLUT8 format */
+    GRAPHIC_PIXEL_FMT_CLUT1,                     /**< CLUT1 format */
+    GRAPHIC_PIXEL_FMT_CLUT4,                     /**< CLUT4 format */
+    GRAPHIC_PIXEL_FMT_RGB_565,                   /**< RGB565 format */
+    GRAPHIC_PIXEL_FMT_RGBA_5658,                 /**< RGBA5658 format */
+    GRAPHIC_PIXEL_FMT_RGBX_4444,                 /**< RGBX4444 format */
+    GRAPHIC_PIXEL_FMT_RGBA_4444,                 /**< RGBA4444 format */
+    GRAPHIC_PIXEL_FMT_RGB_444,                   /**< RGB444 format */
+    GRAPHIC_PIXEL_FMT_RGBX_5551,                 /**< RGBX5551 format */
+    GRAPHIC_PIXEL_FMT_RGBA_5551,                 /**< RGBA5551 format */
+    GRAPHIC_PIXEL_FMT_RGB_555,                   /**< RGB555 format */
+    GRAPHIC_PIXEL_FMT_RGBX_8888,                 /**< RGBX8888 format */
+    GRAPHIC_PIXEL_FMT_RGBA_8888,                 /**< RGBA8888 format */
+    GRAPHIC_PIXEL_FMT_RGB_888,                   /**< RGB888 format */
+    GRAPHIC_PIXEL_FMT_BGR_565,                   /**< BGR565 format */
+    GRAPHIC_PIXEL_FMT_BGRX_4444,                 /**< BGRX4444 format */
+    GRAPHIC_PIXEL_FMT_BGRA_4444,                 /**< BGRA4444 format */
+    GRAPHIC_PIXEL_FMT_BGRX_5551,                 /**< BGRX5551 format */
+    GRAPHIC_PIXEL_FMT_BGRA_5551,                 /**< BGRA5551 format */
+    GRAPHIC_PIXEL_FMT_BGRX_8888,                 /**< BGRX8888 format */
+    GRAPHIC_PIXEL_FMT_BGRA_8888,                 /**< BGRA8888 format */
+    GRAPHIC_PIXEL_FMT_YUV_422_I,                 /**< YUV422 interleaved format */
+    GRAPHIC_PIXEL_FMT_YCBCR_422_SP,              /**< YCBCR422 semi-planar format */
+    GRAPHIC_PIXEL_FMT_YCRCB_422_SP,              /**< YCRCB422 semi-planar format */
+    GRAPHIC_PIXEL_FMT_YCBCR_420_SP,              /**< YCBCR420 semi-planar format */
+    GRAPHIC_PIXEL_FMT_YCRCB_420_SP,              /**< YCRCB420 semi-planar format */
+    GRAPHIC_PIXEL_FMT_YCBCR_422_P,               /**< YCBCR422 planar format */
+    GRAPHIC_PIXEL_FMT_YCRCB_422_P,               /**< YCRCB422 planar format */
+    GRAPHIC_PIXEL_FMT_YCBCR_420_P,               /**< YCBCR420 planar format */
+    GRAPHIC_PIXEL_FMT_YCRCB_420_P,               /**< YCRCB420 planar format */
+    GRAPHIC_PIXEL_FMT_YUYV_422_PKG,              /**< YUYV422 packed format */
+    GRAPHIC_PIXEL_FMT_UYVY_422_PKG,              /**< UYVY422 packed format */
+    GRAPHIC_PIXEL_FMT_YVYU_422_PKG,              /**< YVYU422 packed format */
+    GRAPHIC_PIXEL_FMT_VYUY_422_PKG,              /**< VYUY422 packed format */
+    GRAPHIC_PIXEL_FMT_RGBA_1010102,              /**< RGBA_1010102 packed format */
+    GRAPHIC_PIXEL_FMT_VENDER_MASK = 0X7FFF0000,  /**< vendor mask format */
+    GRAPHIC_PIXEL_FMT_BUTT = 0X7FFFFFFF          /**< Invalid pixel format */
+} ScreenPixelFormat;
+
+typedef enum : uint32_t {
     MATAKEY_RED_PRIMARY_X = 0,
     MATAKEY_RED_PRIMARY_Y = 1,
     MATAKEY_GREEN_PRIMARY_X = 2,
@@ -179,6 +219,50 @@ typedef enum {
     SCREEN_MIRROR_TB,            /**< Top and bottom mirrors */
     SCREEN_MIRROR_BUTT           /**< Null operation */
 } ScreenMirrorType;
+
+/*
+ * @brief Enumerates the colorSpaceTypes.
+ */
+typedef enum {
+    CM_COLORSPACE_NONE,
+
+    CM_BT601_EBU_FULL      = 2 | (1 << 8) | (2 << 16) | (1 << 21),  // COLORPRIMARIES_BT601_P | (TRANSFUNC_BT709 << 8) | (MATRIX_BT601_P << 16) | (RANGE_FULL << 21)
+    CM_BT601_SMPLE_C_FULL  = 3 | (1 << 8) | (3 << 16) | (1 << 21),  // COLORPRIMARIES_BT601_N | (TRANSFUNC_BT709 << 8) | (MATRIX_BT601_N << 16) | (RANGE_FULL << 21)
+    CM_BT709_FULL          = 1 | (1 << 8) | (1 << 16) | (1 << 21),  // COLORPRIMARIES_BT709   | (TRANSFUNC_BT709 << 8) | (MATRIX_BT709   << 16) | (RANGE_FULL << 21)
+    CM_BT2020_HLG_FULL     = 4 | (5 << 8) | (4 << 16) | (1 << 21),  // COLORPRIMARIES_BT2020  | (TRANSFUNC_HLG   << 8) | (MATRIX_BT2020  << 16) | (RANGE_FULL << 21)
+    CM_BT2020_PQ_FULL      = 4 | (4 << 8) | (4 << 16) | (1 << 21),  // COLORPRIMARIES_BT2020  | (TRANSFUNC_PQ    << 8) | (MATRIX_BT2020  << 16) | (RANGE_FULL << 21)
+
+    CM_BT601_EBU_LIMIT     = 2 | (1 << 8) | (2 << 16) | (2 << 21),  // COLORPRIMARIES_BT601_P | (TRANSFUNC_BT709 << 8) | (MATRIX_BT601_P << 16) | (RANGE_LIMITED << 21)
+    CM_BT601_SMPLE_C_LIMIT = 3 | (1 << 8) | (3 << 16) | (2 << 21),  // COLORPRIMARIES_BT601_N | (TRANSFUNC_BT709 << 8) | (MATRIX_BT601_N << 16) | (RANGE_LIMITED << 21)
+    CM_BT709_LIMIT         = 1 | (1 << 8) | (1 << 16) | (2 << 21),  // COLORPRIMARIES_BT709   | (TRANSFUNC_BT709 << 8) | (MATRIX_BT709   << 16) | (RANGE_LIMITED << 21)
+    CM_BT2020_HLG_LIMIT    = 4 | (5 << 8) | (4 << 16) | (2 << 21),  // COLORPRIMARIES_BT2020  | (TRANSFUNC_HLG   << 8) | (MATRIX_BT2020  << 16) | (RANGE_LIMITED << 21)
+    CM_BT2020_PQ_LIMIT     = 4 | (4 << 8) | (4 << 16) | (2 << 21),  // COLORPRIMARIES_BT2020  | (TRANSFUNC_PQ    << 8) | (MATRIX_BT2020  << 16) | (RANGE_LIMITED << 21)
+
+    CM_SRGB_FULL           = 1 | (2 << 8) | (3 << 16) | (1 << 21),  // COLORPRIMARIES_SRGB     | (TRANSFUNC_SRGB     << 8) | (MATRIX_BT601_N  << 16) | (RANGE_FULL << 21)
+    CM_P3_FULL             = 6 | (2 << 8) | (3 << 16) | (1 << 21),  // COLORPRIMARIES_P3_D65   | (TRANSFUNC_SRGB     << 8) | (MATRIX_P3       << 16) | (RANGE_FULL << 21)
+    CM_P3_HLG_FULL         = 6 | (5 << 8) | (3 << 16) | (1 << 21),  // COLORPRIMARIES_P3_D65   | (TRANSFUNC_HLG      << 8) | (MATRIX_P3       << 16) | (RANGE_FULL << 21)
+    CM_P3_PQ_FULL          = 6 | (4 << 8) | (3 << 16) | (1 << 21),  // COLORPRIMARIES_P3_D65   | (TRANSFUNC_PQ       << 8) | (MATRIX_P3       << 16) | (RANGE_FULL << 21)
+    CM_ADOBERGB_FULL       = 23 | (6 << 8) | (0 << 16) | (1 << 21), // COLORPRIMARIES_ADOBERGB | (TRANSFUNC_ADOBERGB << 8) | (MATRIX_ADOBERGB << 16) | (RANGE_FULL << 21)
+
+    CM_SRGB_LIMIT          = 1 | (2 << 8) | (3 << 16) | (2 << 21),  // COLORPRIMARIES_SRGB     | (TRANSFUNC_SRGB     << 8) | (MATRIX_BT601_N  << 16) | (RANGE_LIMITED << 21)
+    CM_P3_LIMIT            = 6 | (2 << 8) | (3 << 16) | (2 << 21),  // COLORPRIMARIES_P3_D65   | (TRANSFUNC_SRGB     << 8) | (MATRIX_P3       << 16) | (RANGE_LIMITED << 21)
+    CM_P3_HLG_LIMIT        = 6 | (5 << 8) | (3 << 16) | (2 << 21),  // COLORPRIMARIES_P3_D65   | (TRANSFUNC_HLG      << 8) | (MATRIX_P3       << 16) | (RANGE_LIMITED << 21)
+    CM_P3_PQ_LIMIT         = 6 | (4 << 8) | (3 << 16) | (2 << 21),  // COLORPRIMARIES_P3_D65   | (TRANSFUNC_PQ       << 8) | (MATRIX_P3       << 16) | (RANGE_LIMITED << 21)
+    CM_ADOBERGB_LIMIT      = 23 | (6 << 8) | (0 << 16) | (2 << 21), // COLORPRIMARIES_ADOBERGB | (TRANSFUNC_ADOBERGB << 8) | (MATRIX_ADOBERGB << 16) | (RANGE_LIMITED << 21)
+
+    CM_LINEAR_SRGB         = 1 | (3 << 8),                          // COLORPRIMARIES_SRGB   | (TRANSFUNC_LINEAR << 8)
+    CM_LINEAR_BT709        = 1 | (3 << 8),                          // equal to CM_LINEAR_SRGB
+    CM_LINEAR_P3           = 6 | (3 << 8),                          // COLORPRIMARIES_P3_D65 | (TRANSFUNC_LINEAR << 8)
+    CM_LINEAR_BT2020       = 4 | (3 << 8),                          // COLORPRIMARIES_BT2020 | (TRANSFUNC_LINEAR << 8)
+
+    CM_DISPLAY_SRGB        = 1 | (2 << 8) | (3 << 16) | (1 << 21),  // equal to CM_SRGB_FULL
+    CM_DISPLAY_P3_SRGB     = 6 | (2 << 8) | (3 << 16) | (1 << 21),  // equal to CM_P3_FULL
+    CM_DISPLAY_P3_HLG      = 6 | (5 << 8) | (3 << 16) | (1 << 21),  // equal to CM_P3_HLG_FULL
+    CM_DISPLAY_P3_PQ       = 6 | (4 << 8) | (3 << 16) | (1 << 21),  // equal to CM_P3_PQ_FULL
+    CM_DISPLAY_BT2020_SRGB = 4 | (2 << 8) | (4 << 16) | (1 << 21),  // COLORPRIMARIES_BT2020   | (TRANSFUNC_SRGB << 8)     | (MATRIX_BT2020 << 16)   | (RANGE_FULL << 21)
+    CM_DISPLAY_BT2020_HLG  = 4 | (5 << 8) | (4 << 16) | (1 << 21),  // equal to CM_BT2020_HLG_FULL
+    CM_DISPLAY_BT2020_PQ   = 4 | (4 << 8) | (4 << 16) | (1 << 21)   // equal to CM_BT2020_PQ_FULL
+} ScreenColorSpaceType;
 
 /*
  * @brief Enumerates the color data spaces.

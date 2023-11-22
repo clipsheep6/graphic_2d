@@ -41,7 +41,7 @@ RSModifierExtractor::RSModifierExtractor(NodeId id) : id_(id) {}
             return std::static_pointer_cast<RSProperty<T>>(iter->second->GetProperty())->Get();                     \
         }                                                                                                           \
         T value = defaultValue;                                                                                     \
-        ROSEN_LOGI("RSModifierExtractor modifier size is %zu", node->modifiers_.size());                            \
+        ROSEN_LOGD("RSModifierExtractor modifier size is %zu", node->modifiers_.size());                            \
         for (auto& [_, modifier] : node->modifiers_) {                                                              \
             if (modifier->GetModifierType() == RSModifierType::propertyType) {                                      \
                 value operator std::static_pointer_cast<RSProperty<T>>(modifier->GetProperty())->Get();             \

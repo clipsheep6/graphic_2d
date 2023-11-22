@@ -68,6 +68,8 @@ public:
 #endif
     ~RSBorderDrawable() override = default;
     static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr GenerateOuter(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr GenerateCommon(const RSPropertyDrawableGenerateContext& context);
 
 protected:
 #ifndef USE_ROSEN_DRAWING
@@ -81,7 +83,7 @@ protected:
 class RSBorderDRRectDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderDRRectDrawable(SkPaint&& paint, const RSProperties& properties);
+    explicit RSBorderDRRectDrawable(SkPaint&& paint, const RSProperties& properties, const bool& isFirstLayerBorder);
 #else
     explicit RSBorderDRRectDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen, const RSProperties& properties);
 #endif
@@ -90,6 +92,7 @@ public:
     void OnBoundsChange(const RSProperties& properties);
 
 private:
+    bool isFirstLayerBorder_;
 #ifndef USE_ROSEN_DRAWING
     SkRRect inner_;
     SkRRect outer_;
@@ -102,7 +105,7 @@ private:
 class RSBorderFourLineDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderFourLineDrawable(SkPaint&& paint, const RSProperties& properties);
+    explicit RSBorderFourLineDrawable(SkPaint&& paint, const RSProperties& properties, const bool& isFirstLayerBorder);
 #else
     explicit RSBorderFourLineDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen, const RSProperties& properties);
 #endif
@@ -111,13 +114,14 @@ public:
     void OnBoundsChange(const RSProperties& properties);
 
 private:
+    bool isFirstLayerBorder_;
     RectF rect_;
 };
 
 class RSBorderPathDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderPathDrawable(SkPaint&& paint, const RSProperties& properties);
+    explicit RSBorderPathDrawable(SkPaint&& paint, const RSProperties& properties, const bool& isFirstLayerBorder);
 #else
     explicit RSBorderPathDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen, const RSProperties& properties);
 #endif
@@ -126,6 +130,7 @@ public:
     void OnBoundsChange(const RSProperties& properties);
 
 private:
+    bool isFirstLayerBorder_;
 #ifndef USE_ROSEN_DRAWING
     SkPath borderPath_;
 #else
@@ -136,7 +141,8 @@ private:
 class RSBorderFourLineRoundCornerDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderFourLineRoundCornerDrawable(SkPaint&& paint, const RSProperties& properties);
+    explicit RSBorderFourLineRoundCornerDrawable(SkPaint&& paint, const RSProperties& properties,
+        const bool& isFirstLayerBorder);
 #else
     explicit RSBorderFourLineRoundCornerDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen,
         const RSProperties& properties);
@@ -146,6 +152,7 @@ public:
     void OnBoundsChange(const RSProperties& properties);
 
 private:
+    bool isFirstLayerBorder_;
 #ifndef USE_ROSEN_DRAWING
     SkRRect innerRrect_;
     SkRRect rrect_;
@@ -374,7 +381,6 @@ public:
     bool Update(const RSPropertyDrawableGenerateContext& context) override;
 };
 
-
 // ============================================================================
 // PixelStretch
 class RSPixelStretchDrawable : public RSPropertyDrawable {
@@ -458,6 +464,7 @@ public:
     explicit RSSaveLayerBackgroundDrawable(std::shared_ptr<int> content) : content_(std::move(content)) {}
     ~RSSaveLayerBackgroundDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+
 private:
     std::shared_ptr<int> content_;
 };

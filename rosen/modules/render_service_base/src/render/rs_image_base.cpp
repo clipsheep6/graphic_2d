@@ -94,7 +94,7 @@ void RSImageBase::DrawImage(RSPaintFilterCanvas& canvas, const SkPaint& paint)
     auto dst = RSPropertiesPainter::Rect2SkRect(dstRect_);
 #ifdef NEW_SKIA
     auto texture = image_->getBackendTexture(true);
-    auto image = SkImage::MakeFromTexture(canvas.recordingContext(), texture, kBottomLeft_GrSurfaceOrigin, 
+    auto image = SkImage::MakeFromTexture(canvas.recordingContext(), texture, kBottomLeft_GrSurfaceOrigin,
         kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
     canvas.drawImageRect(image, src, dst, samplingOptions, &paint, SkCanvas::kStrict_SrcRectConstraint);
 #else

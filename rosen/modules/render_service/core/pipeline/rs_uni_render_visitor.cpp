@@ -669,7 +669,7 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
 {
     // dirtyFlag_ includes leashWindow dirty
     // window layout change(e.g. move or zooming) | proxyRenderNode's cmd
-    if (dirtyFlag_ || node.IsDirty() || node.IsLeashWindow() || node.IsScbScreen()) {
+    if (dirtyFlag_ || node.IsDirty() || !node.IsMainWindowType()) {
         return false;
     }
     if (curDisplayDirtyManager_) {
@@ -677,27 +677,14 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
     }
     // if node has to be prepared, it's not static
     bool isClassifyByRootNode = (quickSkipPrepareType_ >= QuickSkipPrepareType::STATIC_APP_INSTANCE);
-    NodeId rootId = node.GetInstanceRootNodeId();
-    if (RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(
-        isClassifyByRootNode ? rootId : node.GetId(), isClassifyByRootNode)) {
+    if (RSMainThread::Instance()->CheckMainWindowHasToBePrepared(node.ReinterpretCastTo<RSSurfaceRenderNode>(),
+        isClassifyByRootNode)) {
         return false;
-    }
-    if (node.IsMainWindowType()) {
-        curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
-        // [Attention] node's ability pid could be different but should have same rootId
-        auto abilityNodeIds = node.GetAbilityNodeIds();
-        bool result = isClassifyByRootNode
-            ? RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(rootId, true)
-            : std::any_of(abilityNodeIds.begin(), abilityNodeIds.end(), [&](uint64_t nodeId) {
-                return RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(nodeId, false);
-            });
-        if (result) {
-            return false;
-        }
     }
     RS_OPTIONAL_TRACE_NAME("Skip static surface " + node.GetName() + " nodeid - pid: " +
         std::to_string(node.GetId()) + " - " + std::to_string(ExtractPid(node.GetId())));
     // static node's dirty region is empty
+    curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
     curSurfaceDirtyManager_ = node.GetDirtyManager();
     if (curSurfaceDirtyManager_) {
         curSurfaceDirtyManager_->Clear();
@@ -960,7 +947,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     bool dirtyFlag = dirtyFlag_;
 
     RectI prepareClipRect = prepareClipRect_;
-    bool isQuickSkipPreparationEnabled = isQuickSkipPreparationEnabled_;
 
     // update geoptr with ContextMatrix
     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
@@ -1020,7 +1006,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         if (node.IsAppWindow()) {
             // if update appwindow, its children should not skip
             localZOrder_ = 0.0f;
-            isQuickSkipPreparationEnabled_ = false;
             node.ResetChildHardwareEnabledNodes();
 #ifndef USE_ROSEN_DRAWING
             boundsRect_ = SkRect::MakeWH(property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -1093,7 +1078,6 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // restore flags
     parentSurfaceNodeMatrix_ = parentSurfaceNodeMatrix;
     dirtyFlag_ = dirtyFlag;
-    isQuickSkipPreparationEnabled_ = isQuickSkipPreparationEnabled;
     prepareClipRect_ = prepareClipRect;
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
         isSubNodeOfSurfaceInPrepare_ = isSubNodeOfSurfaceInPrepare;

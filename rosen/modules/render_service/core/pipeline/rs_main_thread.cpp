@@ -2490,19 +2490,31 @@ void RSMainThread::SetAppWindowNum(uint32_t num)
     appWindowNum_ = num;
 }
 
-bool RSMainThread::CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyByRoot)
+bool RSMainThread::CheckMainWindowHasToBePrepared(std::shared_ptr<RSSurfaceRenderNode> surfaceNode,
+    bool isClassifyByRoot) const
 {
-    if (context_->activeNodesInRoot_.empty() || nodeId == INVALID_NODEID) {
+    if (surfaceNode == nullptr || context_->activeNodesInRoot_.empty()) {
         return false;
     }
+    std::unordered_set<NodeId> rootNodeIds = surfaceNode->GetAbilityNodeIds();
+    rootNodeIds.emplace(surfaceNode->GetId());
     if (!isClassifyByRoot) {
         // Match by PID
-        auto pid = ExtractPid(nodeId);
-        return std::any_of(context_->activeNodesInRoot_.begin(), context_->activeNodesInRoot_.end(),
-            [pid](const auto& iter) { return ExtractPid(iter.first) == pid; });
+        for (auto nodeId : rootNodeIds) {
+            auto pid = ExtractPid(nodeId);
+            if (std::any_of(context_->activeNodesInRoot_.begin(), context_->activeNodesInRoot_.end(),
+                [pid](const auto& iter) { return ExtractPid(iter.first) == pid; })) {
+                return true;
+            }
+        }
     } else {
-        return context_->activeNodesInRoot_.count(nodeId);
+        for (auto nodeId : rootNodeIds) {
+            if (context_->activeNodesInRoot_.count(nodeId)) {
+                return true;
+            }
+        }
     }
+    return false;
 }
 
 bool RSMainThread::IsDrawingGroupChanged(RSRenderNode& cacheRootNode) const

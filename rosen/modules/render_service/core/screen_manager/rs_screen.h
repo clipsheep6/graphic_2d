@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_set>
 
 #include <surface_type.h>
 #include <hdi_output.h>
@@ -34,6 +35,7 @@ struct VirtualScreenConfigs {
     uint32_t height = 0;
     sptr<Surface> surface = nullptr;
     int32_t flags = 0; // reserve flag.
+    std::unordered_set<uint64_t> filteredAppSet = {};
 };
 
 class RSScreen {
@@ -80,6 +82,7 @@ public:
     virtual void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) = 0;
     virtual uint32_t GetScreenSkipFrameInterval() const = 0;
     virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
+    virtual const std::unordered_set<uint64_t>& GetFilteredAppSet() const = 0;
 };
 
 namespace impl {
@@ -135,6 +138,7 @@ public:
     void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) override;
     uint32_t GetScreenSkipFrameInterval() const override;
     void SetScreenVsyncEnabled(bool enabled) const override;
+    const std::unordered_set<uint64_t>& GetFilteredAppSet () const override;
 
 private:
     // create hdiScreen and get some information from drivers.
@@ -178,6 +182,7 @@ private:
     RSScreenType screenType_ = RSScreenType::UNKNOWN_TYPE_SCREEN;
     uint32_t skipFrameInterval_ = DEFAULT_SKIP_FRAME_INTERVAL;
     ScreenRotation screenRotation_ = ScreenRotation::ROTATION_0;
+    std::unordered_set<uint64_t> filteredAppSet_ = {};
 };
 } // namespace impl
 } // namespace Rosen

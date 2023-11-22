@@ -343,7 +343,8 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
     uint32_t height,
     sptr<Surface> surface,
     ScreenId mirrorId,
-    int32_t flags)
+    int32_t flags,
+    std::list<NodeId> filteredAppList)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -367,6 +368,10 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
 
     data.WriteUint64(mirrorId);
     data.WriteInt32(flags);
+    data.WriteInt32(filteredAppList.size());
+    for(auto appId : filteredAppList) {
+        data.WriteUint64(appId);
+    }
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CREATE_VIRTUAL_SCREEN);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {

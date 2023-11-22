@@ -1722,6 +1722,32 @@ HWTEST_F(RSUniRenderVisitorTest, CheckIfSurfaceRenderNodeNeedProcess002, TestSiz
 }
 
 /**
+ * @tc.name: CheckIfSurfaceRenderNodeNeedProcess003
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckIfSurfaceRenderNodeNeedProcess for different types of filteredAppSet
+ * @tc.type: FUNC
+ * @tc.require: issueI8FSLX
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckIfSurfaceRenderNodeNeedProcess003, TestSize.Level2)
+{
+    auto surfaceNode = RSTestUtil::CreateSurfaceNode();
+    ASSERT_NE(surfaceNode, nullptr);
+    ScreenInfo info;
+
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->screenInfo_ = info;
+
+    // filteredAppSet is empty
+    ASSERT_TRUE(rsUniRenderVisitor->CheckIfSurfaceRenderNodeNeedProcess(*surfaceNode));
+    // filteredAppSet isn't empty and don't contain this surface node's id
+    rsUniRenderVisitor->screenInfo_.filteredAppSet.insert(surfaceNode->GetId() + 1);
+    ASSERT_FALSE(rsUniRenderVisitor->CheckIfSurfaceRenderNodeNeedProcess(*surfaceNode));
+    // filteredAppSet isn't empty and contain this surface node's id
+    rsUniRenderVisitor->screenInfo_.filteredAppSet.insert(surfaceNode->GetId());
+    ASSERT_TRUE(rsUniRenderVisitor->CheckIfSurfaceRenderNodeNeedProcess(*surfaceNode));
+}
+
+/**
  * @tc.name: PrepareSharedTransitionNode001
  * @tc.desc: Test RSUniRenderVisitorTest.PrepareSharedTransitionNode for unpaired transition nodes
  * @tc.type: FUNC

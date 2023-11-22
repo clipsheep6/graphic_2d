@@ -126,7 +126,7 @@ public:
     std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
 #endif
     ScreenId CreateVirtualScreen(const std::string& name, uint32_t width, uint32_t height, sptr<Surface> surface,
-        ScreenId mirrorId, int32_t flags);
+        ScreenId mirrorId, int32_t flags, std::list<NodeId> filteredAppList = {});
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
 #endif

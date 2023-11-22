@@ -21,6 +21,8 @@
 #include <mutex>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
+#include <list>
 
 #include <hdi_backend.h>
 #include <ipc_callbacks/screen_change_callback.h>
@@ -55,6 +57,7 @@ struct ScreenInfo {
     ScreenColorGamut colorGamut = ScreenColorGamut::COLOR_GAMUT_SRGB;
     ScreenState state = ScreenState::UNKNOWN;
     ScreenRotation rotation = ScreenRotation::ROTATION_0;
+    std::unordered_set<uint64_t> filteredAppSet = {};
 
     uint32_t skipFrameInterval = DEFAULT_SKIP_FRAME_INTERVAL;  // skip frame interval for change screen refresh rate
 
@@ -91,7 +94,8 @@ public:
         uint32_t height,
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
-        int flags = 0) = 0;
+        int flags = 0,
+        std::list<uint64_t> filteredAppList = {}) = 0;
 
     virtual int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) = 0;
 
@@ -213,7 +217,8 @@ public:
         uint32_t height,
         sptr<Surface> surface,
         ScreenId mirrorId,
-        int32_t flags) override;
+        int32_t flags,
+        std::list<uint64_t> filteredAppList) override;
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 

@@ -1968,7 +1968,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         auto processor = std::static_pointer_cast<RSUniRenderVirtualProcessor>(processor_);
         if (mirrorNode->GetSecurityDisplay() != isSecurityDisplay_ && processor &&
             (hasCaptureWindow_[mirrorNode->GetScreenId()] || displayHasSecSurface_[mirrorNode->GetScreenId()] ||
-            displayHasSkipSurface_[mirrorNode->GetScreenId()])) {
+            displayHasSkipSurface_[mirrorNode->GetScreenId()] || !screenInfo_.filteredAppSet.empty())) {
             canvas_ = processor->GetCanvas();
             if (canvas_ == nullptr) {
                 RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode failed to get canvas.");
@@ -1987,7 +1987,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             sk_sp<SkImage> newImage = GetCacheImageFromMirrorNode(mirrorNode);
             bool parallelComposition = RSMainThread::Instance()->GetParallelCompositionEnabled();
             if (parallelComposition && newImage && !displayHasSkipSurface_[mirrorNode->GetScreenId()] &&
-                !displayHasSecSurface_[mirrorNode->GetScreenId()]) {
+                !displayHasSecSurface_[mirrorNode->GetScreenId()] && screenInfo_.filteredAppSet.empty()) {
                 canvas_->save();
                 // If both canvas and skImage have rotated, we need to reset the canvas
                 if (resetRotate_) {
@@ -2018,7 +2018,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             sk_sp<SkImage> newImage = GetCacheImageFromMirrorNode(mirrorNode);
             bool parallelComposition = RSMainThread::Instance()->GetParallelCompositionEnabled();
             if (parallelComposition && newImage && !displayHasSkipSurface_[mirrorNode->GetScreenId()] &&
-                !displayHasSecSurface_[mirrorNode->GetScreenId()]) {
+                !displayHasSecSurface_[mirrorNode->GetScreenId()] && screenInfo_.filteredAppSet.empty()) {
                 canvas_->Save();
                 // If both canvas and skImage have rotated, we need to reset the canvas
                 if (resetRotate_) {
@@ -3401,12 +3401,18 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode
         RS_PROCESS_TRACE(isPhone_, false, node.GetName() + " App Occluded Leashwindow Skip");
         return false;
     }
-    auto mirrorNode = curDisplayNode_->GetMirrorSource().lock();
+    auto mirrorNode = curDisplayNode_ == nullptr ? nullptr : curDisplayNode_->GetMirrorSource().lock();
     if (!RSMainThread::Instance()->GetParallelCompositionEnabled() && isSecurityDisplay_ && mirrorNode &&
         mirrorNode->GetCacheImgForCapture() && node.processZOrder_ < curDisplayNode_->GetCaptureWindowZOrder()) {
         RS_PROCESS_TRACE(isPhone_, false, node.GetName() + " skip because of using cacheImgForCapture");
         RS_LOGD("RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess:\
             %{public}s skip because of using cacheImgForCapture", node.GetName().c_str());
+        return false;
+    }
+    if (!screenInfo_.filteredAppSet.empty() && screenInfo_.filteredAppSet.find(node.GetId()) == screenInfo_.filteredAppSet.end()) {
+        RS_PROCESS_TRACE(isPhone_, false, node.GetName() + " skip because it isn't filtered App");
+        RS_LOGD("RSUniRenderVisitor::CheckIfSurfaceRenderNodeNeedProcess:\
+            %{public}s skip because it isn't filtered App", node.GetName().c_str());
         return false;
     }
     return true;

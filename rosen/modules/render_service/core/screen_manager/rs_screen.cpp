@@ -52,7 +52,8 @@ RSScreen::RSScreen(const VirtualScreenConfigs &configs)
       height_(configs.height),
       isVirtual_(true),
       producerSurface_(configs.surface),
-      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN)
+      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN),
+      filteredAppSet_(configs.filteredAppSet)
 {
     hdrCapability_.formatCount = 0;
 }
@@ -687,6 +688,11 @@ void RSScreen::SetScreenVsyncEnabled(bool enabled) const
     if (hdiScreen_ != nullptr) {
         hdiScreen_->SetScreenVsyncEnabled(enabled);
     }
+}
+
+const std::unordered_set<uint64_t>& RSScreen::GetFilteredAppSet() const
+{
+    return filteredAppSet_;
 }
 } // namespace impl
 } // namespace Rosen

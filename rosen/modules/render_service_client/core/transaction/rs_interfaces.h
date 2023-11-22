@@ -59,7 +59,8 @@ public:
         uint32_t height,
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
-        int flags = 0);
+        int flags = 0,
+        std::list<NodeId> filteredAppList = {});
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
 #endif

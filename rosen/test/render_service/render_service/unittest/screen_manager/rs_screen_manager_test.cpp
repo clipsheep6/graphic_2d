@@ -88,6 +88,34 @@ HWTEST_F(RSScreenManagerTest, CreateVirtualScreen_001, TestSize.Level1)
 }
 
 /*
+ * @tc.name: CreateVirtualScreen_002
+ * @tc.desc: Test CreateVirtualScreen
+ * @tc.type: FUNC
+ * @tc.require: issueI8FSLX
+ */
+HWTEST_F(RSScreenManagerTest, CreateVirtualScreen_002, TestSize.Level1)
+{
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(nullptr, screenManager);
+    std::string name = "virtualScreen01";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+
+    std::list<NodeId> filteredAppList = {};
+
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface, INVALID_SCREEN_ID, -1, filteredAppList);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+    screenManager->RemoveVirtualScreen(id);
+    usleep(500);
+}
+
+/*
  * @tc.name: GetAllScreenIds_001
  * @tc.desc: Test GetAllScreenIds
  * @tc.type: FUNC
@@ -201,6 +229,38 @@ HWTEST_F(RSScreenManagerTest, QueryScreenInfo_001, TestSize.Level1)
     ASSERT_EQ(id, info.id);
     screenManager->RemoveVirtualScreen(id);
     sleep(1);
+}
+
+/*
+ * @tc.name: QueryScreenInfo_002
+ * @tc.desc: Test QueryScreenInfo
+ * @tc.type: FUNC
+ * @tc.require: issueI8FSLX
+ */
+HWTEST_F(RSScreenManagerTest, QueryScreenInfo_002, TestSize.Level1)
+{
+    auto screenManager = CreateOrGetScreenManager();
+    ASSERT_NE(nullptr, screenManager);
+    std::string name = "virtualScreen01";
+    uint32_t width = 480;
+    uint32_t height = 320;
+
+    auto csurface = IConsumerSurface::Create();
+    ASSERT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    ASSERT_NE(psurface, nullptr);
+
+    std::list<NodeId> filteredAppList = {1};
+
+    auto id = screenManager->CreateVirtualScreen(name, width, height, psurface, INVALID_SCREEN_ID, -1, filteredAppList);
+    ASSERT_NE(INVALID_SCREEN_ID, id);
+
+    auto info = screenManager->QueryScreenInfo(id);
+    ASSERT_NE(info.filteredAppSet.end(), info.filteredAppSet.find(1));
+
+    screenManager->RemoveVirtualScreen(id);
+    usleep(500);
 }
 
 /*

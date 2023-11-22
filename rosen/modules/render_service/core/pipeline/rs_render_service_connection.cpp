@@ -757,6 +757,12 @@ int32_t RSRenderServiceConnection::SetScreenCorrection(ScreenId id, ScreenRotati
     return screenManager_->SetScreenCorrection(id, screenRotation);
 }
 
+bool RSRenderServiceConnection::SetVirtualMirrorScreenBufferRotation(ScreenId id, bool bufferRotation)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return screenManager_->SetVirtualMirrorScreenBufferRotation(id, bufferRotation);
+}
+
 int32_t RSRenderServiceConnection::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
 {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();

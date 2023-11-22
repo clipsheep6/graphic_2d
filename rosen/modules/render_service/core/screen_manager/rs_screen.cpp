@@ -688,6 +688,23 @@ void RSScreen::SetScreenVsyncEnabled(bool enabled) const
         hdiScreen_->SetScreenVsyncEnabled(enabled);
     }
 }
+
+bool RSScreen::SetVirtualMirrorScreenBufferRotation(bool bufferRotation)
+{
+    if (IsVirtual()) {
+        if (bufferRotation) {
+            std::swap(width_, height_);
+            bufferRotation_ = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RSScreen::GetBufferRotation() const
+{
+    return bufferRotation_;
+}
 } // namespace impl
 } // namespace Rosen
 } // namespace OHOS

@@ -68,6 +68,7 @@ public:
     virtual void ResizeVirtualScreen(uint32_t width, uint32_t height) = 0;
     virtual int32_t GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut> &mode) const = 0;
     virtual int32_t GetScreenSupportedMetaDataKeys(std::vector<ScreenHDRMetadataKey> &keys) const = 0;
+    virtual bool GetBufferRotation() const = 0;
     virtual int32_t GetScreenColorGamut(ScreenColorGamut &mode) const = 0;
     virtual int32_t SetScreenColorGamut(int32_t modeIdx) = 0;
     virtual int32_t SetScreenGamutMap(ScreenGamutMap mode) = 0;
@@ -80,6 +81,7 @@ public:
     virtual void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) = 0;
     virtual uint32_t GetScreenSkipFrameInterval() const = 0;
     virtual void SetScreenVsyncEnabled(bool enabled) const = 0;
+    virtual bool SetVirtualMirrorScreenBufferRotation(bool bufferRotation) = 0;
 };
 
 namespace impl {
@@ -123,6 +125,7 @@ public:
     int32_t GetScreenBacklight() const override;
     int32_t GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut> &mode) const override;
     int32_t GetScreenSupportedMetaDataKeys(std::vector<ScreenHDRMetadataKey> &keys) const override;
+    bool GetBufferRotation() const override;
     int32_t GetScreenColorGamut(ScreenColorGamut &mode) const override;
     int32_t SetScreenColorGamut(int32_t modeIdx) override;
     int32_t SetScreenGamutMap(ScreenGamutMap mode) override;
@@ -135,6 +138,7 @@ public:
     void SetScreenSkipFrameInterval(uint32_t skipFrameInterval) override;
     uint32_t GetScreenSkipFrameInterval() const override;
     void SetScreenVsyncEnabled(bool enabled) const override;
+    bool SetVirtualMirrorScreenBufferRotation(bool bufferRotation) override;
 
 private:
     // create hdiScreen and get some information from drivers.
@@ -178,6 +182,7 @@ private:
     RSScreenType screenType_ = RSScreenType::UNKNOWN_TYPE_SCREEN;
     uint32_t skipFrameInterval_ = DEFAULT_SKIP_FRAME_INTERVAL;
     ScreenRotation screenRotation_ = ScreenRotation::ROTATION_0;
+    bool bufferRotation_ = false;
 };
 } // namespace impl
 } // namespace Rosen

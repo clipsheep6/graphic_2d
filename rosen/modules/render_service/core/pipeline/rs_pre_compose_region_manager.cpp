@@ -70,6 +70,24 @@ bool RSPreComposeRegionManager::CheckSurfaceVisiable(OcclusionRectISet& occlusio
     return occlusionSurfaces.size() > beforeSize ? true : false;
 }
 
+void RSPreComposeRegionManager::Clear()
+{
+    std::shared_ptr<RSDirtyRegionManager> dirtyManager = std::make_shared<RSDirtyRegionManager>();
+    std::vector<NodeId> lastSurfaceIds;
+    VisibleData curVisVec;
+    std::map<uint32_t, bool> curVisMap;
+    Occlusion::Region accumulatedRegion;
+    std::vector<NodeInfo> visNodes;
+    std::unordered_map<NodeId, RectI> lastSurfaceVisiableRegion;
+    std::swap(dirtyManager, dirtyManager_);
+    std::swap(lastSurfaceIds, lastSurfaceIds_);
+    std::swap(curVisVec, curVisVec_);
+    std::swap(curVisMap, curVisMap_);
+    std::swap(visNodes, visNodes_);
+    std::swap(accumulatedRegion, accumulatedRegion_);
+    std::swap(lastSurfaceVisiableRegion, lastSurfaceVisiableRegion_);
+}
+
 void RSPreComposeRegionManager::CalcOcclusion()
 {
     if (!CheckNodeChange()) {
@@ -113,8 +131,27 @@ void RSPreComposeRegionManager::CalcOcclusion()
     std::swap(accumulatedRegion_, accumulatedRegion);
 }
 
+void RSPreComposeRegionManager::CalcGlobalDirtyRegionByAnimate()
+{
+    bool isAnimate = false;
+    for (auto node = curAllNodes_.begin(); node != curAllNodes_.end(); ++node) {
+        auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*node);
+        if (surface == nullptr) {
+            continue;
+        }
+        ROSEN_LOGD("Name %{public}s IsScale %{public}d",
+            surface->GetName().c_str(), surface->IsScale());
+        isAnimate = isAnimate || (surface->IsLeashWindow() && surface->IsScale());
+    }
+    if (isAnimate) {
+        dirtyManager_->MergeDirtyRect(
+            RectI{ 0, 0, screenInfo_.width, screenInfo_.height });
+    }
+}
+
 void RSPreComposeRegionManager::CalcGlobalDirtyRegion()
 {
+    CalcGlobalDirtyRegionByAnimate();
     CalcGlobalDirtyRegionByNodeChange();
     CalcGlobalDirtyRegionByContainer();
 }

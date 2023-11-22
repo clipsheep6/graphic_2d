@@ -39,12 +39,11 @@ RSPreComposeElement::~RSPreComposeElement()
     ROSEN_LOGD("~RSPreComposeElement()");
 }
 
-void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList)
+void RSPreComposeElement::UpdateNewNodeList()
 {
-    surfaceNodeList_ = surfaceNodeList;
     std::unordered_set<NodeId> surfaceIds;
     std::vector<RSBaseRenderNode::SharedPtr> allSurfaceNodes;
-    for (auto surfaceNode : surfaceNodeList_) {
+    for (auto surfaceNode : surfaceNodeVec_) {
         surfaceNode->CollectSurface(surfaceNode, allSurfaceNodes, true, false);
         surfaceIds.insert(surfaceNode->GetId());
     }
@@ -52,7 +51,7 @@ void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRend
     std::swap(surfaceIds, surfaceIds_);
 
     std::unordered_set<NodeId> nodeIds;
-    std::string logInfo = "RSPreComposeElement Id:" + std::to_string(id_) + " func:SetNewNodeList [";
+    std::string logInfo = "RSPreComposeElement Id:" + std::to_string(id_) + " func:UpdateNewNodeList [";
     for (auto node : allSurfaceNodes_) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);
         if (surface == nullptr) {
@@ -65,6 +64,53 @@ void RSPreComposeElement::SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRend
     logInfo += "]";
     ROSEN_LOGD("%{public}s", logInfo.c_str());
     std::swap(nodeIds_, nodeIds);
+
+    std::unordered_set<NodeId> parentIds;
+    std::vector<std::shared_ptr<RSRenderNode>> parentNodeVec;
+    for (std::shared_ptr<RSRenderNode> node : surfaceNodeVec_) {
+        while (node != nullptr) {
+            auto parent = node->GetParent().lock();
+            if (parent != nullptr && parent->GetId() == publicParentNodeId_) {
+                parentIds.insert(node->GetId());
+                parentNodeVec.push_back(node);
+                break;
+            }
+            node = parent;
+        }
+    }
+    std::swap(parentIds_, parentIds);
+    std::swap(parentNodeVec, parentNodeVec_);
+}
+
+bool RSPreComposeElement::FindPublicParentBySurfaceNode(std::vector<std::shared_ptr<RSSurfaceRenderNode>>&
+    surfaceNodeVec)
+{
+    publicParentNodeId_ = 0;
+    std::unordered_set<NodeId> nodeIds;
+    std::shared_ptr<RSRenderNode> node = surfaceNodeVec[0];
+    while (node != nullptr) {
+        auto parent = node->GetParent().lock();
+        if (parent != nullptr) {
+            if (parent->GetId() == 0) {
+                break;
+            }
+            nodeIds.insert(parent->GetId());
+        }
+        node = parent;
+    }
+    node = surfaceNodeVec[1];
+    while (node != nullptr) {
+        auto parent = node->GetParent().lock();
+        if (parent != nullptr && nodeIds.count(parent->GetId()) != 0) {
+            publicParentNodeId_ = parent->GetId();
+            break;
+        }
+        node = parent;
+    }
+    if (publicParentNodeId_ == 0) {
+        return false;
+    }
+    return true;
 }
 
 void RSPreComposeElement::StartCalculateAndDrawImage()
@@ -79,15 +125,25 @@ void RSPreComposeElement::StartCalculateAndDrawImage()
     std::swap(hwcNodes_, hwcNodes);
 }
 
-void RSPreComposeElement::SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
+bool RSPreComposeElement::SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
         std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId, uint64_t leashFocusId)
 {
     ROSEN_LOGD("RSPreComposeElement %d", id_);
+    if (surfaceNodeList.size() <= 1) {
+        return false;
+    }
+    auto surfaceNodeVec = std::vector<std::shared_ptr<RSSurfaceRenderNode>>(
+        surfaceNodeList.begin(), surfaceNodeList.end());
+    if (FindPublicParentBySurfaceNode(surfaceNodeVec) == false) {
+        return false;
+    }
+    swap(surfaceNodeVec, surfaceNodeVec_);
     displayVisitor_ = visitor;
-    SetNewNodeList(surfaceNodeList);
+    UpdateNewNodeList();
     focusNodeId_ = focusNodeId;
     leashFocusId_ = leashFocusId;
     state_ = ElementState::ELEMENT_STATE_DOING;
+    return true;
 }
 
 void RSPreComposeElement::ClipRect()
@@ -158,7 +214,7 @@ void RSPreComposeElement::UpdateImage()
     visitor_ = std::make_shared<RSUniRenderVisitor>();
     visitor_->SetInfosForPreCompose(displayVisitor_, canvas_, PRECOMPOSE_THREAD_INDEX);
     canvas_->clear(SK_ColorTRANSPARENT);
-    for (auto node : surfaceNodeList_) {
+    for (auto node : parentNodeVec_) {
         if (node == nullptr) {
             ROSEN_LOGE("surfaceNode is nullptr");
             continue;
@@ -249,12 +305,16 @@ void RSPreComposeElement::Close()
     state_ = ElementState::ELEMENT_STATE_IDLE;
     std::unordered_set<NodeId> nodeIds;
     std::unordered_set<NodeId> surfaceIds;
-    std::list<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeList;
+    std::unordered_set<NodeId> parentIds;
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeVec;
     std::vector<RSBaseRenderNode::SharedPtr> allSurfaceNodes;
+    std::vector<std::shared_ptr<RSRenderNode>> parentNodeVec;
     swap(nodeIds, nodeIds_);
     swap(surfaceIds, surfaceIds_);
-    swap(surfaceNodeList, surfaceNodeList_);
+    swap(parentIds, parentIds_);
+    swap(surfaceNodeVec, surfaceNodeVec_);
     swap(allSurfaceNodes, allSurfaceNodes_);
+    swap(parentNodeVec, parentNodeVec_);
     canvas_->clear(SK_ColorTRANSPARENT);
     isFirstFrame_ = true;
 }
@@ -480,7 +540,7 @@ bool RSPreComposeElement::IsSkip()
 bool RSPreComposeElement::ProcessNode(RSBaseRenderNode& node, std::shared_ptr<RSPaintFilterCanvas>& canvas,
     uint32_t threadIndex)
 {
-    if (surfaceIds_.count(node.GetId()) != 0) {
+    if (parentIds_.count(node.GetId()) != 0) {
         ROSEN_LOGD("RSPreComposeElement node skip %{public}" PRIu64 " ", node.GetId());
         if (needDraw_) {
             needDraw_ = false;

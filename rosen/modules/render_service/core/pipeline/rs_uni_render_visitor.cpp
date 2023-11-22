@@ -239,6 +239,7 @@ void RSUniRenderVisitor::SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisito
     canvas_ = canvas;
     isPreComposeThread_ = true;
     threadIndex_ = threadIndex;
+    doAnimate_ = visitor->doAnimate_;
 }
 
 void RSUniRenderVisitor::UpdateStaticCacheSubTree(const std::shared_ptr<RSRenderNode>& cacheRootNode,

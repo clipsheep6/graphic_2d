@@ -36,7 +36,7 @@ public:
     RSPreComposeElement(ScreenInfo& info, int32_t id, std::shared_ptr<RSPreComposeRegionManager> regionManager);
     ~RSPreComposeElement();
     ElementState GetState();
-    void SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
+    bool SetParams(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList,
         std::shared_ptr<RSUniRenderVisitor> visitor, uint64_t focusNodeId, uint64_t leashFocusId);
 #if !(defined USE_ROSEN_DRAWING) && (defined NEW_SKIA)
     void Init(GrDirectContext *grContext);
@@ -63,7 +63,8 @@ public:
 private:
     void UpdateDirtyRegion();
     void UpdateImage();
-    void SetNewNodeList(std::list<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeList);
+    void UpdateNewNodeList();
+    bool FindPublicParentBySurfaceNode(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& surfaceNodeVec);
     void ClipRect();
     void UpdateHwcNodes();
     void UpdateHwcNodesCanvasRect(std::shared_ptr<RSPaintFilterCanvas>& canvas);
@@ -81,7 +82,10 @@ private:
     int32_t id_;
     std::unordered_set<NodeId> nodeIds_;
     std::unordered_set<NodeId> surfaceIds_;
-    std::list<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeList_;
+    std::unordered_set<NodeId> parentIds_;
+    NodeId publicParentNodeId_ = 0;
+    std::vector<std::shared_ptr<RSRenderNode>> parentNodeVec_;
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeVec_;
     std::vector<RSBaseRenderNode::SharedPtr> allSurfaceNodes_;
     ElementState state_ = ElementState::ELEMENT_STATE_IDLE;
     bool needDraw_ = false;

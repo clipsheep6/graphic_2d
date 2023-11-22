@@ -64,6 +64,7 @@ void RSPreComposeGroup::Init(ScreenInfo& info)
     runner_ = AppExecFwk::EventRunner::Create(name);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     runner_->Run();
+    regionManager_->SetScreenInfo(info);
     current_ = std::make_shared<RSPreComposeElement>(info, elementCount_++, regionManager_);
     last_ = std::make_shared<RSPreComposeElement>(info, elementCount_++, regionManager_);
     if (handler_) {
@@ -88,7 +89,14 @@ void RSPreComposeGroup::StartCurrentVsync(std::list<std::shared_ptr<RSSurfaceRen
         ROSEN_LOGW("current_ vsync is update image not end");
         return;
     }
-    current_->SetParams(surfaceNodeList, visitor, focusNodeId, leashFocusId);
+    if (surfaceNodeList.size() < 1) {
+        ROSEN_LOGW("surfaceNodeList is smaller than two, we not use precompose");
+        return;
+    }
+    if (current_->SetParams(surfaceNodeList, visitor, focusNodeId, leashFocusId) != true) {
+        ROSEN_LOGW("Params is error");
+        return;
+    }
     auto current = current_;
     if (handler_) {
         auto task = [current]() {
@@ -130,6 +138,7 @@ void RSPreComposeGroup::Close()
             ROSEN_LOGD("RSPreComposeThread Enqueue Close Task");
             current_->Close();
             last_->Close();
+            regionManager_->Clear();
         };
         handler_->PostTask(task);
     }

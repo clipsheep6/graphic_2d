@@ -22,6 +22,7 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "common/rs_occlusion_region.h"
 #include "transaction/rs_occlusion_data.h"
+#include "screen_manager/rs_screen_manager.h"
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
@@ -45,6 +46,10 @@ public:
         VisibleData& curVisVec, std::map<uint32_t, bool>& pidVisMap,
         std::vector<NodeInfo>& visNodes);
     bool IsDirty();
+    void Clear();
+    void SetScreenInfo(ScreenInfo& info) {
+        screenInfo_ = info;
+    }
     Occlusion::Region GetVisibleDirtyRegion();
     RectI GetNodeChangeDirtyRect();
 #ifndef USE_ROSEN_DRAWING
@@ -71,6 +76,7 @@ private:
     std::vector<RectI> dirtyRects_;
     bool isDirty_ = false;
     bool isNodeChange_ = false;
+    ScreenInfo screenInfo_;
 #ifndef USE_ROSEN_DRAWING
     SkRegion region_;
 #else
@@ -80,6 +86,7 @@ private:
     bool CheckSurfaceVisiable(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusion();
     void CalcGlobalDirtyRegion();
+    void CalcGlobalDirtyRegionByAnimate();
     void CalcGlobalDirtyRegionByNodeChange();
     void CalcGlobalDirtyRegionByContainer();
     void MergeDirtyHistory();

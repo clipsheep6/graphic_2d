@@ -30,6 +30,7 @@
 #include "utils/point.h"
 
 #include "typography_types.h"
+#include "hw_symbol_txt.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -123,6 +124,10 @@ struct TextStyle {
 #endif
 
     bool operator ==(const TextStyle &rhs) const;
+
+    // symbol glyph
+    bool isSymbolGlyph = false;
+    HWSymbolTxt symbol;
 };
 } // namespace Rosen
 } // namespace OHOS

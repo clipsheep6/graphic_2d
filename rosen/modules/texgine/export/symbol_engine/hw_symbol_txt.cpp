@@ -18,7 +18,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-    bool HWSymbolTxt::operatpr ==(HWSymbolTxt const &sym) const
+    bool HWSymbolTxt::operator ==(HWSymbolTxt const &sym) const
     {
         if (colorList_.size() != sym.colorList_.size()) {
             return false;

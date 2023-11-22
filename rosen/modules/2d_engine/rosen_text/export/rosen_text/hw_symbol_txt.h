@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HW_SYMBOL_TXT_H
-#define ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HW_SYMBOL_TXT_H
+#ifndef OSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
+#define OSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
 #pragma once
 #include <iostream>
 #include <vector>
@@ -23,7 +23,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace TextEngine {
 
 class HWSymbolTxt {
 public:
@@ -54,15 +53,12 @@ public:
     {
         return renderMode_;
     };
-
-    bool operator ==(HWSymbolTxt const &sym) const;
      
 public:
     std::vector<SColor> colorList_;
     SymbolRenderingStrategy renderMode_ = SymbolRenderingStrategy::SINGLE;
 };
 
-}
 }
 }
 #endif

@@ -154,6 +154,9 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .wordSpacing_ = style.wordSpacing_,
         .foreground_ = foreground,
         .background_ = background,
+        .isSymbolGlyph = style.isSymbolGlyph,
+        .symbol.colorList_ = style.symbol.GetRenderColor(),
+        .symbol.renderMode_ = style.symbol.GetRenderMode(),
 #else
         .fontWeight = Convert(style.fontWeight),
         .fontStyle = Convert(style.fontStyle),
@@ -173,6 +176,9 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .wordSpacing = style.wordSpacing,
         .foreground = foreground,
         .background = background,
+        .isSymbolGlyph = style.isSymbolGlyph,
+        .symbol.colorList_ = style.symbol.GetRenderColor(),
+        .symbol.renderMode_ = style.symbol.GetRenderMode(),
 #endif
     };
 

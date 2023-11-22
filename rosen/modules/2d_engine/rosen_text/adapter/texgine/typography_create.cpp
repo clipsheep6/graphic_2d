@@ -40,6 +40,10 @@ TypographyCreate::TypographyCreate(const TypographyStyle& style,
 void TypographyCreate::PushStyle(const TextStyle& style)
 {
     auto txtTextStyle = Convert(style);
+    auto fonts = txtTextStyle.fontFamilies;
+    if (std::find(fonts.begin(), fonts.end(), "HMSymbol-Regular") != fonts.end()) {
+        textTextStyle.isSymbolGlyph = true;
+    }
     builder_->PushStyle(txtTextStyle);
 }
 
@@ -51,6 +55,20 @@ void TypographyCreate::PopStyle()
 void TypographyCreate::AppendText(const std::u16string& text)
 {
     builder_->AppendSpan(text);
+    if (text.size() == 10) {
+        std::vector<uint32_t> symbol1 = {0XF0000};
+        std::vector<uint32_t> symbol2 = {0XF0001};
+        std::vector<uint32_t> symbol3 = {0XF0002};
+        std::vector<uint32_t> symbol4 = {0XF0003};
+        std::vector<uint32_t> symbol5 = {0XF0004};
+        std::vector<uint32_t> symbol6 = {0XF0005};
+        builder_->AppendSpan(symbol1);
+        builder_->AppendSpan(symbol2);
+        builder_->AppendSpan(symbol3);
+        builder_->AppendSpan(symbol4);
+        builder_->AppendSpan(symbol5);
+        builder_->AppendSpan(symbol6);
+    }
 }
 
 class TextEnginePlaceholderRun : public TextEngine::AnySpan {

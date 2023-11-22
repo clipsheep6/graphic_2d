@@ -51,7 +51,6 @@ void TexgineCanvas::DrawSymbol(const std::shared_ptr<TexgineTextBlob> &blob, flo
         return;
     }
 
-    // paint.SetColor(SkColorSetRGB(0,0,255));
     canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
 }
 

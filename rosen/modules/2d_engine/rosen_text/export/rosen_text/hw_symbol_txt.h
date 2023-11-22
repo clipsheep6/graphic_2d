@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
-#define OSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
+#ifndef ROSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
+#define ROSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
 #pragma once
 #include <iostream>
 #include <vector>
@@ -46,7 +46,7 @@ public:
 
     std::vector<SColor> GetRenderColor() const
     {
-       return colorList_;
+        return colorList_;
     };
 
     SymbolRenderingStrategy GetRenderMode() const
@@ -54,7 +54,7 @@ public:
         return renderMode_;
     };
      
-public:
+private:
     std::vector<SColor> colorList_;
     SymbolRenderingStrategy renderMode_ = SymbolRenderingStrategy::SINGLE;
 };

@@ -42,7 +42,7 @@ void TypographyCreate::PushStyle(const TextStyle& style)
     auto txtTextStyle = Convert(style);
     auto fonts = txtTextStyle.fontFamilies;
     if (std::find(fonts.begin(), fonts.end(), "HMSymbol-Regular") != fonts.end()) {
-        textTextStyle.isSymbolGlyph = true;
+        txtTextStyle.isSymbolGlyph = true;
     }
     builder_->PushStyle(txtTextStyle);
 }

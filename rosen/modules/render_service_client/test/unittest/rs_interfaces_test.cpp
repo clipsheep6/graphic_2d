@@ -161,41 +161,30 @@ HWTEST_F(RSInterfacesTest, SetVirtualScreenResolution001, Function | SmallTest |
 }
 
 /*
-* Function: SetVirtualScreenPixelFormat/GetVirtualScreenPixelFormat
+* Function: SetVirtualMirrorScreenCanvasRotation
 * Type: Function
 * Rank: Important(2)
 * EnvConditions: N/A
 * CaseDescription: 1. Call CreateVirtualScreen, use normal parameters.
-*                  2. Use SetVirtualScreenPixelFormat to set pixelFormat of virtualScreen
-*                  3. Use GetVirtualScreenPixelFormat to get current pixelFormat of virtualScreen
-*                  4. Check current pixelFormat of virtualScreen
+*                  2. Use SetVirtualMirrorScreenCanvasRotation to change the width and height of virtualScreen
+*                  3. Use GetVirtualScreenResolution to get current width and height of virtualScreen
+*                  4. Check current width and height of virtualScreen
 */
-HWTEST_F(RSInterfacesTest, SetVirtualScreenPixelFormat001, Function | SmallTest | Level2)
+HWTEST_F(RSInterfacesTest, SetVirtualMirrorScreenCanvasRotation001, Function | SmallTest | Level2)
 {
     auto csurface = IConsumerSurface::Create();
     EXPECT_NE(csurface, nullptr);
     auto producer = csurface->GetProducer();
     auto psurface = Surface::CreateSurfaceAsProducer(producer);
-    uint32_t defaultWidth = 720;
-    uint32_t defaultHeight = 1280;
-    GraphicPixelFormat pixelFormat = GRAPHIC_PIXEL_FMT_BGRA_8888;
+    uint32_t defaultWidth = 1344;
+    uint32_t defaultHeight = 2772;
     EXPECT_NE(psurface, nullptr);
 
     ScreenId virtualScreenId = rsInterfaces->CreateVirtualScreen(
         "virtual5", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
     EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
-
-    GraphicPixelFormat curPixelFormat;
-    int32_t ret = rsInterfaces->GetPixelFormat(virtualScreenId, curPixelFormat);
-    EXPECT_NE(ret, StatusCode::SCREEN_NOT_FOUND);
-    EXPECT_EQ(curPixelFormat, GRAPHIC_PIXEL_FMT_RGBA_8888);
-
-    rsInterfaces->SetPixelFormat(virtualScreenId, pixelFormat);
-
-    ret = rsInterfaces->GetPixelFormat(virtualScreenId, curPixelFormat);
-    EXPECT_NE(ret, StatusCode::SCREEN_NOT_FOUND);
-    EXPECT_EQ(curPixelFormat, GRAPHIC_PIXEL_FMT_BGRA_8888);
-
+    EXPECT_EQ(rsInterfaces->SetVirtualMirrorScreenCanvasRotation(virtualScreenId, true), true);
+    EXPECT_EQ(rsInterfaces->SetVirtualMirrorScreenCanvasRotation(virtualScreenId, false), false);
     rsInterfaces->RemoveVirtualScreen(virtualScreenId);
 }
 

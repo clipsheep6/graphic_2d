@@ -1510,6 +1510,60 @@ bool RSBaseRenderUtil::CreateNewColorGamutBitmap(sptr<OHOS::SurfaceBuffer> buffe
 }
 #endif
 
+#ifndef USE_ROSEN_DRAWING
+bool RSBaseRenderUtil::WritePreComposeToPng(int id, sk_sp<SkSurface> surface)
+#else
+bool RSBaseRenderUtil::WritePreComposeToPng(int id, std::shared_ptr<Drawing::Surface> surface)
+#endif
+{
+    auto dumpEnable = RSSystemProperties::GetDumpPreComposeEnabled();
+    if (!dumpEnable) {
+        return false;
+    }
+    if (!surface) {
+        return false;
+    }
+
+    struct timeval now;
+    gettimeofday(&now, nullptr);
+    constexpr int secToUsec = 1000 * 1000;
+    int64_t nowVal =  static_cast<int64_t>(now.tv_sec) * secToUsec + static_cast<int64_t>(now.tv_usec);
+    std::string filename = "/data/PreCompose_" +
+        std::to_string(id) + "_" +
+        std::to_string(nowVal) + ".png";
+    WriteToPngParam param;
+
+#ifndef USE_ROSEN_DRAWING
+    SkImageInfo info = SkImageInfo::Make(surface->width(), surface->height(),
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+    SkBitmap bitmap;
+    bitmap.setInfo(info);
+    bitmap.allocPixels();
+    surface->readPixels(bitmap, 0, 0);
+    param.width = static_cast<uint32_t>(surface->width());
+    param.height = static_cast<uint32_t>(surface->height());
+    param.data = static_cast<uint8_t *>(bitmap.getPixels());
+    param.stride = static_cast<uint32_t>(bitmap.rowBytes());
+    param.bitDepth = Detail::BITMAP_DEPTH;
+#else
+    auto image = surface->GetImageSnapshot();
+    if (!image) {
+        return false;
+    }
+    Drawing::BitmapFormat format = { Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL };
+    Drawing::Bitmap bitmap;
+    bitmap.Build(image->GetWidth(), image->GetHeight(), format);
+    image->ReadPixels(bitmap, 0, 0);
+    param.width = static_cast<uint32_t>(image->GetWidth());
+    param.height = static_cast<uint32_t>(image->GetHeight());
+    param.data = static_cast<uint8_t *>(bitmap.GetPixels());
+    param.stride = static_cast<uint32_t>(image->GetWidth() * Detail::BYTES_PER_PIXEL);
+    param.bitDepth = Detail::BITMAP_DEPTH;
+#endif
+
+    return WriteToPng(filename, param);
+}
+
 std::unique_ptr<RSTransactionData> RSBaseRenderUtil::ParseTransactionData(MessageParcel& parcel)
 {
     RS_TRACE_NAME("UnMarsh RSTransactionData: data size:" + std::to_string(parcel.GetDataSize()));

@@ -368,7 +368,7 @@ public:
 
     bool HasAbilityComponent() const;
     void SetHasAbilityComponent(bool hasAbilityComponent);
-    bool QuerySubAssignable(bool isRotation) const;
+    bool QuerySubAssignable(bool isRotation, bool isPreComposeOn) const;
 
     uint32_t GetCacheSurfaceThreadIndex() const;
 

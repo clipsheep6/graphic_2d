@@ -70,6 +70,8 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDis
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         auto surfaceDirtyRect = surfaceDirtyManager->GetDirtyRegion();
+        ROSEN_LOGD("Name %{public}s, dirtyRect %{public}s isDirty %{public}d", surfaceNode->GetName().c_str(),
+            surfaceDirtyRect.ToString().c_str(), surfaceDirtyManager->IsDirty());
         Occlusion::Rect dirtyRect { surfaceDirtyRect.left_, surfaceDirtyRect.top_,
             surfaceDirtyRect.GetRight(), surfaceDirtyRect.GetBottom() };
         auto visibleRegion = surfaceNode->GetVisibleRegion();
@@ -477,7 +479,8 @@ bool RSUniRenderUtil::Is3DRotation(Drawing::Matrix matrix)
 
 void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
     std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
-    std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes, uint64_t focusNodeId, DeviceType deviceType)
+    std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
+    uint64_t focusNodeId, DeviceType deviceType, bool isPreComposeOn)
 {
     if (displayNode == nullptr) {
         ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes display node is null");
@@ -565,7 +568,7 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
                 AssignMainThreadNode(mainThreadNodes, node);
                 continue;
             }
-            if (node->QuerySubAssignable(isRotation)) {
+            if (node->QuerySubAssignable(isRotation, isPreComposeOn)) {
                 AssignSubThreadNode(subThreadNodes, node, deviceType, realFocusNodeId);
             } else {
                 AssignMainThreadNode(mainThreadNodes, node);

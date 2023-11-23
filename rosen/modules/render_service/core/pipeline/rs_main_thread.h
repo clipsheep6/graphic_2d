@@ -91,6 +91,7 @@ public:
     bool IsIdle() const;
     void QosStateDump(std::string& dumpString);
     void RenderServiceTreeDump(std::string& dumpString);
+    bool IsPreComposeOn() const;
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
@@ -247,6 +248,7 @@ private:
     void SetRSEventDetectorLoopFinishTag();
     void UpdateUIFirstSwitch();
     uint32_t GetRefreshRate() const;
+    void UpdatePreComposeSwitch();
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
 
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
@@ -429,6 +431,8 @@ private:
     bool needResetSubThreadGrContext_ = false;
     uint64_t frameCountForResetSubThreadGrContext_ = 0;
 #endif
+    bool isPreComposeOn_ = false;
+    uint32_t childrenCount_ = 0;
 
     // used for informing hgm the bundle name of SurfaceRenderNodes
     bool noBundle_ = false;

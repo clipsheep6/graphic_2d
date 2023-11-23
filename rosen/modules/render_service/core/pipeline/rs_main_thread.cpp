@@ -70,6 +70,7 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_occlusion_config.h"
 #include "pipeline/sk_resource_manager.h"
+#include "pipeline/rs_pre_compose_manager.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_innovation.h"
 #include "platform/common/rs_system_properties.h"
@@ -1334,6 +1335,10 @@ bool RSMainThread::GetParallelCompositionEnabled()
 void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 {
     UpdateUIFirstSwitch();
+    UpdatePreComposeSwitch();
+    if (IsPreComposeOn()) {
+        RSPreComposeManager::GetInstance()->UpdateLastAndCurrentVsync();
+    }
     auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     uniVisitor->SetDrivenRenderFlag(hasDrivenNodeOnUniTree_, hasDrivenNodeMarkRender_);
@@ -1404,11 +1409,17 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
                 rootNode->GetSortedChildren().front());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
             std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
-            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes, focusNodeId_, deviceType_);
+            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes,
+                focusNodeId_, deviceType_, IsPreComposeOn());
             const auto& nodeMap = context_->GetNodeMap();
             RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
             uniVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
             RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
+        }
+        if (IsPreComposeOn()) {
+            auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
+                rootNode->GetSortedChildren().front());
+            RSPreComposeManager::GetInstance()->StartCurrentVsync(displayNode, uniVisitor, focusNodeId_);
         }
         rootNode->Process(uniVisitor);
     } else {
@@ -1519,6 +1530,10 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
         if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
             continue;
         }
+        if (IsPreComposeOn()) {
+            RSPreComposeManager::GetInstance()->UpdateOcclusionByLastVsync(
+                curSurface, accumulatedRegion, curVisVec, pidVisMap);
+        }
         Occlusion::Rect occlusionRect = curSurface->GetSurfaceOcclusionRect(isUniRender_);
         curSurface->setQosCal(qosPidCal_);
         if (CheckSurfaceNeedProcess(occlusionSurfaces, curSurface)) {
@@ -1590,6 +1605,9 @@ void RSMainThread::CalcOcclusion()
         }
     } else {
         node->CollectSurface(node, curAllSurfaces, isUniRender_, false);
+    }
+    if (IsPreComposeOn()) {
+        RSPreComposeManager::GetInstance()->UpdateNodesByLastVsync(curAllSurfaces);
     }
     // Judge whether it is dirty
     // Surface cnt changed or surface DstRectChanged or surface ZorderChanged
@@ -2673,23 +2691,38 @@ void RSMainThread::UpdateUIFirstSwitch()
         auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
             rootNode->GetSortedChildren().front());
         if (displayNode) {
-            uint32_t childrenCount = 0;
+            childrenCount_ = 0;
             if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
                 std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
                 displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
-                childrenCount = curAllSurfacesVec.size();
+                childrenCount_ = curAllSurfacesVec.size();
             } else {
-                childrenCount = displayNode->GetChildrenCount();
+                childrenCount_ = displayNode->GetChildrenCount();
             }
             isUiFirstOn_ = RSSystemProperties::GetUIFirstEnabled() &&
-                (childrenCount >= UIFIRST_MINIMUM_NODE_NUMBER);
+                (childrenCount_ >= UIFIRST_MINIMUM_NODE_NUMBER);
         }
+    }
+}
+
+void RSMainThread::UpdatePreComposeSwitch()
+{
+    bool isLastPreComposeOn = isPreComposeOn_;
+    isPreComposeOn_ = isUiFirstOn_ && childrenCount_ > UIFIRST_MINIMUM_NODE_NUMBER &&
+        RSSystemProperties::GetPreComposeEnabled();
+    if (isLastPreComposeOn && !isPreComposeOn_) {
+        RSPreComposeManager::GetInstance()->Close();
     }
 }
 
 bool RSMainThread::IsUIFirstOn() const
 {
     return isUiFirstOn_;
+}
+
+bool RSMainThread::IsPreComposeOn() const
+{
+    return isPreComposeOn_;
 }
 
 void RSMainThread::ReleaseSurface()

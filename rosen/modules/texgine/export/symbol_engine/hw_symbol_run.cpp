@@ -252,7 +252,6 @@ void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Te
     }
 }
 
-
 }
 }
 }

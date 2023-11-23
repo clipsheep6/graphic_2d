@@ -2091,9 +2091,9 @@ uint32_t RSRenderNode::GetCacheSurfaceThreadIndex() const
 {
     return cacheSurfaceThreadIndex_;
 }
-bool RSRenderNode::QuerySubAssignable(bool isRotation) const
+bool RSRenderNode::QuerySubAssignable(bool isRotation, bool isPreComposeOn) const
 {
-    return !hasFilter_ && !hasAbilityComponent_ && !isRotation && !hasHardwareNode_;
+    return !hasFilter_ && !hasAbilityComponent_ && !isRotation && (!hasHardwareNode_ || isPreComposeOn);
 }
 uint32_t RSRenderNode::GetCompletedSurfaceThreadIndex() const
 {

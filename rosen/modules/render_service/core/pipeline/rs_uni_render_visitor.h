@@ -69,6 +69,12 @@ public:
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
     void ChangeCacheRenderNodeMap(RSRenderNode& node, const uint32_t count = 0);
+    void SetInfosForPreCompose(std::shared_ptr<RSUniRenderVisitor>& visitor,
+        std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t threadIndex);
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetAppWindowNodes()
+    {
+        return appWindowNodesInZOrder_;
+    }
     void UpdateCacheRenderNodeMap(RSRenderNode& node);
     bool GenerateNodeContentCache(RSRenderNode& node);
     bool InitNodeCache(RSRenderNode& node);
@@ -471,6 +477,8 @@ private:
     bool CheckIfNeedResetRotate();
 
     uint32_t currentRefreshRate_ = 0;
+    bool isPreComposeOn_ = false;
+    bool isPreComposeThread_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

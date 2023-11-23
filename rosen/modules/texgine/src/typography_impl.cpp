@@ -533,10 +533,13 @@ int TypographyImpl::DoUpdateSpanMetrics(const VariantSpan &span, const TexgineFo
             ascent = coveredAscent;
         }
         if (style.halfLeading) {
-            double halfLeading = strut_.halfLeading == 0 ? HALF(style.fontSize) : strut_.halfLeading;
-            double lineHeight = style.heightScale * style.fontSize + halfLeading;
-            coveredAscent = HALF(lineHeight);
-            coveredDescent = HALF(lineHeight - style.fontSize);
+            double blobHeight = style.heightScale * style.fontSize;
+            double height = -*metrics.fAscent_ + *metrics.fDescent_;
+            double leading = blobHeight - height;
+            double available_vspace = blobHeight - leading;
+            double halfLeading = HALF(leading);
+            coveredAscent = -*metrics.fAscent_ / height * available_vspace + halfLeading;
+            coveredDescent = *metrics.fDescent_ / height * available_vspace + halfLeading;
         }
         lineMaxCoveredAscent_.back() = std::max(coveredAscent, lineMaxCoveredAscent_.back());
         lineMaxCoveredDescent_.back() = std::max(coveredDescent, lineMaxCoveredDescent_.back());

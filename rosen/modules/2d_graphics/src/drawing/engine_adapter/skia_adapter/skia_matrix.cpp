@@ -16,6 +16,7 @@
 #include "skia_matrix.h"
 
 #include "utils/matrix.h"
+#include "skia_matrix44.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -30,6 +31,11 @@ const SkMatrix& SkiaMatrix::ExportSkiaMatrix() const
 void SkiaMatrix::ImportMatrix(const SkMatrix& skMatrix)
 {
     skMatrix_ = skMatrix;
+}
+
+SkMatrix& SkiaMatrix::ExportMatrix()
+{
+    return skMatrix_;
 }
 
 void SkiaMatrix::Rotate(scalar degree, scalar px, scalar py)
@@ -62,6 +68,11 @@ void SkiaMatrix::PreTranslate(scalar dx, scalar dy)
     skMatrix_.preTranslate(dx, dy);
 }
 
+void SkiaMatrix::PostTranslate(scalar dx, scalar dy)
+{
+    skMatrix_.postTranslate(dx, dy);
+}
+
 void SkiaMatrix::PreScale(scalar sx, scalar sy)
 {
     skMatrix_.preScale(sx, sy);
@@ -77,9 +88,19 @@ void SkiaMatrix::PreConcat(const Matrix& other)
     skMatrix_.preConcat(other.GetImpl<SkiaMatrix>()->ExportSkiaMatrix());
 }
 
+void SkiaMatrix::PreConcat(const Matrix44& other)
+{
+    skMatrix_.preConcat(other.GetImpl<SkiaMatrix44>()->GetSkMatrix44().asM33());
+}
+
 void SkiaMatrix::PostConcat(const Matrix& other)
 {
     skMatrix_.postConcat(other.GetImpl<SkiaMatrix>()->ExportSkiaMatrix());
+}
+
+void SkiaMatrix::PostConcat(const Matrix44& other)
+{
+    skMatrix_.postConcat(other.GetImpl<SkiaMatrix44>()->GetSkMatrix44().asM33());
 }
 
 bool SkiaMatrix::Invert(Matrix& inverse) const

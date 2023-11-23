@@ -52,6 +52,11 @@ void Matrix::PreTranslate(scalar dx, scalar dy)
     matrixImplPtr->PreTranslate(dx, dy);
 }
 
+void Matrix::PostTranslate(scalar dx, scalar dy)
+{
+    matrixImplPtr->PostTranslate(dx, dy);
+}
+
 void Matrix::PreScale(scalar sx, scalar sy)
 {
     matrixImplPtr->PreScale(sx, sy);
@@ -67,7 +72,17 @@ void Matrix::PreConcat(const Matrix& other)
     matrixImplPtr->PreConcat(other);
 }
 
+void Matrix::PreConcat(const Matrix44& other)
+{
+    matrixImplPtr->PreConcat(other);
+}
+
 void Matrix::PostConcat(const Matrix& other)
+{
+    matrixImplPtr->PostConcat(other);
+}
+
+void Matrix::PostConcat(const Matrix44& other)
 {
     matrixImplPtr->PostConcat(other);
 }

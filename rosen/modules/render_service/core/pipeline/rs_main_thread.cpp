@@ -1521,7 +1521,6 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
     Occlusion::Region accumulatedRegion;
     VisibleData curVisVec;
     OcclusionRectISet occlusionSurfaces;
-
     bool hasFilterCacheOcclusion = false;
     bool filterCacheOcclusionEnabled = RSSystemParameters::GetFilterCacheOcculusionEnabled();
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
@@ -1536,7 +1535,7 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
             RS_REGION_VISIBLE_LEVEL visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
             RS_LOGD("%{public}s nodeId[%{public}" PRIu64 "] visibleLevel[%{public}d]",
                 __func__, curSurface->GetId(), visibleLevel);
-            curSurface->SetVisibleRegionRecursive(subResult, curVisVec, , true, visibleLevel);
+            curSurface->SetVisibleRegionRecursive(subResult, curVisVec, true, visibleLevel);
             curSurface->AccumulateOcclusionRegion(accumulatedRegion, curRegion, hasFilterCacheOcclusion, isUniRender_,
                 filterCacheOcclusionEnabled);
         } else {

@@ -84,7 +84,7 @@ public:
     ~RSAlphaDrawable() override = default;
     void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
 
-    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
+    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderNode& node);
 
 protected:
     float alpha_;

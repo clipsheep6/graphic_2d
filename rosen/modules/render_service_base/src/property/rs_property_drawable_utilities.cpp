@@ -84,14 +84,15 @@ void RSAlphaDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
     canvas.MultiplyAlpha(alpha_);
 }
-RSPropertyDrawable::DrawablePtr RSAlphaDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
+RSPropertyDrawable::DrawablePtr RSAlphaDrawable::Generate(const RSRenderNode& node)
 {
-    auto alpha = context.properties_.GetAlpha();
+    auto& properties = node.GetRenderProperties();
+    auto alpha = properties.GetAlpha();
     if (alpha == 1) {
         return nullptr;
     }
-    return context.properties_.GetAlphaOffscreen() ? std::make_unique<RSAlphaOffscreenDrawable>(alpha)
-                                                   : std::make_unique<RSAlphaDrawable>(alpha);
+    return properties.GetAlphaOffscreen() ? std::make_unique<RSAlphaOffscreenDrawable>(alpha)
+                                          : std::make_unique<RSAlphaDrawable>(alpha);
 }
 
 RSAlphaOffscreenDrawable::RSAlphaOffscreenDrawable(float alpha) : RSAlphaDrawable(alpha) {}

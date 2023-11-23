@@ -19,6 +19,7 @@
 #include <memory>
 
 #include <include/core/SkTextBlob.h>
+#include <include/core/SkPath.h>
 
 namespace OHOS {
 namespace Rosen {

@@ -45,12 +45,12 @@ void TexgineCanvas::DrawTextBlob(
     canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
 }
 
-void TexgineCanvas::DrawSymbol(const SkPath, &path const TexginePaint &paint)
+void TexgineCanvas::DrawSymbol(const SkPath &path, const TexginePaint &paint)
 {
     canvas_->drawPath(path, paint.GetPaint());
 }
 
-void TexgineCanvas::DrawPath(const SkPath, &path const TexginePaint &paint)
+void TexgineCanvas::DrawPath(const SkPath &path, const TexginePaint &paint)
 {
     canvas_->drawPath(path, paint.GetPaint());
 }

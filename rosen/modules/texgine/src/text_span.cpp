@@ -35,6 +35,7 @@
 #endif
 #include "text_converter.h"
 #include "word_breaker.h"
+#include "symbol_engine/hw_symbol_run.h"
 
 namespace OHOS {
 namespace Rosen {

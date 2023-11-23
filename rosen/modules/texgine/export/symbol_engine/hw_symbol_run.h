@@ -21,13 +21,13 @@
 #include <string>
 #include <vector>
 
-#include "third_party/skia/include/core/SkTextBlob"
+#include "third_party/skia/include/core/SkTextBlob.h"
 #include "third_party/skia/include/core/rs_hw_symbol.h"
 
 #include "hw_symbol_txt.h"
 #include "texgine/text_style.h"
 #include "texgine/utils/exlog.h"
-#include "texgine_text_blob"
+#include "texgine_text_blob.h"
 #include "texgine_canvas.h"
 
 namespace OHOS {
@@ -35,7 +35,7 @@ namespace Rosen {
 namespace TextEngine {
 class HWSymbolRun {
 public:
-    HWSymbolRun(){};
+    HWSymbolRun();
     ~HWSymbolRun(){};
 
     // demo test
@@ -51,11 +51,11 @@ public:
     // demo test
     static std::vector<SkPath> GetPathLayers(const std::vector<std::vector<size_t>>& layers, const SkPath& path);
 
-    SymbolLayersGoups GetLayerGroups(SkGlyphID symbolId);
+    SymbolLayersGroups GetLayerGroups(SkGlyphID symbolId);
 
     SymbolLayers GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText);
 
-    void SetSymbolRenderColor(cosnt SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
+    void SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
         SymbolLayers& symbolInfo);
     
     // demo test

@@ -40,7 +40,7 @@ public:
         colorList_ = {colorList};
     };
 
-    void SetRenderMode(SymbolRenderingStrategy renderMode)
+    void SetRenderModer(SymbolRenderingStrategy renderMode)
     {
         renderMode_ = renderMode;
     };
@@ -50,7 +50,7 @@ public:
        return colorList_;
     };
 
-    SymbolRenderingStrategy GetRenderMode() const
+    SymbolRenderingStrategy GetRenderModer() const
     {
         return renderMode_;
     };

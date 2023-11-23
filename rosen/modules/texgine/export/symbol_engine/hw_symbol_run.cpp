@@ -28,7 +28,7 @@ HWSymbolRun::HWSymbolRun()
 void HWSymbolRun::Read()
 {
     //68
-    std::vetor<std::vector<size_t> paths8 = {{6}, {4, 5}, {0, 1, 2, 3}};
+    std::vector<std::vector<size_t>> paths8 = {{6}, {4, 5}, {0, 1, 2, 3}};
     GroupInfo groupInfo;
     groupInfo.layerIndexes_ = std::vector<size_t>{0};
     RenderGroup group11;
@@ -43,29 +43,29 @@ void HWSymbolRun::Read()
     groupInfo.layerIndexes_ = std::vector<size_t>{2};
     RenderGroup group33;
     group33.groupInfo_ = {groupInfo};
-    group133.color_ = SColor{0.3, 0X00, 0X7A, 0XFF};
+    group33.color_ = SColor{0.3, 0X00, 0X7A, 0XFF};
 
     std::vector<RenderGroup> Groups8 = {group11, group22, group33};
     std::map<SymbolRenderingStrategy, std::vector<RenderGroup>> renderGroups8;
-    renderGroups6.inster({SymbolRenderingStrategy::MULTIPLE_OPACITY, Groups8});
+    renderGroups8.insert({SymbolRenderingStrategy::MULTIPLE_OPACITY, Groups8});
 
     groupInfo.layerIndexes_ = std::vector<size_t>{0, 1, 2};
     group11.groupInfo_ = {groupInfo};
-    group11.color_ = Scolor{1, 0X00, 0X00, 0X00};
+    group11.color_ = SColor{1, 0X00, 0X00, 0X00};
     renderGroups8.insert({SymbolRenderingStrategy::MULTIPLE_OPACITY, std::vector<RenderGroup> {group11}});
     SymbolLayersGroups symbol8 = {8, paths8, renderGroups8};
     symbolDemoInfo_.insert({8, symbol8});
 }
 
 // demo test 
-static void HWSymbolRun::PathOutlineDecompose(const SkPath& path, std::vector<SkPath>& paths)
+void HWSymbolRun::PathOutlineDecompose(const SkPath& path, std::vector<SkPath>& paths)
 {
     SkPath::RawIter iter = SkPath::RawIter(path);
     SkPoint pts[4]; // the 4 is number of points
     SkPath::Verb Verb;
     SkPath path_stemp;
-    while ((verb = iter.next(pts)) != SkPath::SDone_Verb) {
-        switch (verb) {
+    while ((Verb = iter.next(pts)) != SkPath::kDone_Verb) {
+        switch (Verb) {
             case SkPath::kMove_Verb:
                 if (!path_stemp.isEmpty()) {
                     paths.push_back(path_stemp);
@@ -93,7 +93,7 @@ static void HWSymbolRun::PathOutlineDecompose(const SkPath& path, std::vector<Sk
                     paths.push_back(path_stemp);
                 }
                 path_stemp.reset();
-                SKUNREACHABLE;
+                SkUNREACHABLE;
             default:
                 break;
         }
@@ -104,12 +104,12 @@ static void HWSymbolRun::PathOutlineDecompose(const SkPath& path, std::vector<Sk
 }
 
 // demo test
-static void HWSymbolRun::MultilayerPath(const std::vector<std::vector<size_t>>& multMap,
+void HWSymbolRun::MultilayerPath(const std::vector<std::vector<size_t>>& multMap,
     const std::vector<SkPath>& paths, std::vector<SkPath>& multPaths)
 {
     if (multPaths.empty()) {
         SkPath path;
-        for (size i= 0; i < paths.size(); i++) {
+        for (size_t i= 0; i < paths.size(); i++) {
             path.addPath(paths[i]);
         }
         multPaths.push_back(path);
@@ -138,7 +138,7 @@ std::vector<SkPath> HWSymbolRun::GetPathLayers(const std::vector<std::vector<siz
     return pathLayers;
 }
 
-SymbolLayersGoups HWSymbolRun::GetLayerGroups(SkGlyphID symbolId)
+SymbolLayersGroups HWSymbolRun::GetLayerGroups(SkGlyphID symbolId)
 {
     // todo : 调用资源框架的接口，获取symbol的多次渲染信息
     return symbolDemoInfo_[symbolId];
@@ -146,7 +146,7 @@ SymbolLayersGoups HWSymbolRun::GetLayerGroups(SkGlyphID symbolId)
 
 SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText)
 {
-    SymbolLayersGroups symbolInfoOrig = GetLayerGroups(glyphId);
+    SymbolLayersGroups symbolInfoOrign = GetLayerGroups(glyphId);
     SymbolLayers symbolInfo;
     symbolInfo.layers_ = symbolInfoOrign.layers_;
     symbolInfo.renderGroups_ = symbolInfoOrign.renderModesGroups_[SymbolRenderingStrategy::SINGLE];
@@ -159,7 +159,7 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
     return symbolInfo;
 }
 
-void HWSymbolRun::SetSymbolRenderColor(cosnt SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
+void HWSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
     SymbolLayers& symbolInfo)
 {
     if (colors.size() == 0) {
@@ -176,7 +176,7 @@ void HWSymbolRun::SetSymbolRenderColor(cosnt SymbolRenderingStrategy& renderMode
     }
 
     // MULTIPLE_COLOR: Supports mutiple color setting
-    if (renderMonde == SymbolRenderingStrategy::MULTIPLE_COLOR) {
+    if (renderMode == SymbolRenderingStrategy::MULTIPLE_COLOR) {
         for (size_t i = 0, j = 0; i < symbolInfo.renderGroups_.size() && j < colors.size(); ++i, ++j) {
             symbolInfo.renderGroups_[i].color_.r_ = colors[j].r_;
             symbolInfo.renderGroups_[i].color_.g_ = colors[j].g_;
@@ -185,7 +185,7 @@ void HWSymbolRun::SetSymbolRenderColor(cosnt SymbolRenderingStrategy& renderMode
     }
 }
 
-static void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
+void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
     const TexginePaint &paint, const TextStyle &style)
 {
     
@@ -201,7 +201,7 @@ static void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr
 }
 
 // demo test
-static void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
+void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
     const TexginePaint &paint, const TextStyle &style)
 {
     SkGlyphID glyphId = blob->GetFirstGlyphID();
@@ -209,11 +209,11 @@ static void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared
 
     TexginePaint paint1 = paint;
     paint1.SetAntiAlias(true);
-    paint1.SetStyle(TexgingPaint::Style::STROKEANDFILL);
+    paint1.SetStyle(TexginePaint::Style::STROKEANDFILL);
     canvas.DrawSymbol(path, paint);
 
     HWSymbolRun symbol;
-    SymbolLayer symbolInfo = symbol.GetSymbolLayers(glyphId, style.symbol);
+    SymbolLayers symbolInfo = symbol.GetSymbolLayers(glyphId, style.symbol);
     if (symbolInfo.symbolGlyphId_ != glyphId) {
         path = blob->GetPathbyGlyphID(symbolInfo.symbolGlyphId_);
     }
@@ -222,7 +222,7 @@ static void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared
     
     std::vector<RenderGroup> groups = symbolInfo.renderGroups_;
     if (groups.size() ==0) {
-        canvas.drawPath(path, paint1);
+        canvas.DrawPath(path, paint1);
     }
     for (auto group: groups) {
         SkPath multPath;
@@ -246,7 +246,7 @@ static void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared
             }
             multPath.addPath(pathStemp);
         }
-        paint1.SetColor(SkColorSetRGB(group.color_.r_, group.color_.g_, group.color_.b));
+        paint1.SetColor(SkColorSetRGB(group.color_.r_, group.color_.g_, group.color_.b_));
         paint1.SetAlphaf(group.color_.a_);
         canvas.DrawPath(multPath, paint1);
     }
@@ -256,5 +256,3 @@ static void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared
 }
 }
 }
-
-#endif

@@ -34,7 +34,7 @@ SkGlyphID TexgineTextBlob::GetFirstGlyphID(){
 
 SkPath TexgineTextBlob::GetPathbyGlyphID(const SkGlyphID& glyphId)
 {
-    return GetPathforTexBlob(glyphId, textBlob_.get());
+    return GetPathforTextBlob(glyphId, textBlob_.get());
 }
 
 } // namespace TextEngine

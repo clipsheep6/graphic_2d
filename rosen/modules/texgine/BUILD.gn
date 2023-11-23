@@ -38,6 +38,8 @@ config("libtexgine_public_config") {
     "export",
     "texgine_drawing",
     "//third_party/skia/third_party/externals/harfbuzz/src",
+    "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src",
   ]
 }
 

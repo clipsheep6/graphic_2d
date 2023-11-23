@@ -155,8 +155,6 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .foreground_ = foreground,
         .background_ = background,
         .isSymbolGlyph = style.isSymbolGlyph,
-        .symbol.colorList_ = style.symbol.GetRenderColor(),
-        .symbol.renderMode_ = style.symbol.GetRenderMode(),
 #else
         .fontWeight = Convert(style.fontWeight),
         .fontStyle = Convert(style.fontStyle),
@@ -177,8 +175,6 @@ TextEngine::TextStyle Convert(const TextStyle &style)
         .foreground = foreground,
         .background = background,
         .isSymbolGlyph = style.isSymbolGlyph,
-        .symbol.colorList_ = style.symbol.GetRenderColor(),
-        .symbol.renderMode_ = style.symbol.GetRenderMode(),
 #endif
     };
 

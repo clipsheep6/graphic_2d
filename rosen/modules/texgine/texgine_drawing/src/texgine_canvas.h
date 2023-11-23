@@ -47,7 +47,12 @@ public:
     /*
      * @brief Draws symbol  at (x, y), using SkTextBlob blob , TextStyle style, clip, SkMatrix, and SkPaint paint.
      */
-    void DrawSymbol(const std::shared_ptr<TexgineTextBlob> &blob, float x, float y, const TexginePaint &paint);
+    void DrawSymbol(const SkPath, &path const TexginePaint &paint);
+
+    /*
+     * @brief Draws Path , using SkPath path and SkPaint paint.
+     */
+    void DrawPath(const SkPath, &path const TexginePaint &paint);
 
     /*
      * @brief Fills clip with color color using SkBlendMode::kSrc.

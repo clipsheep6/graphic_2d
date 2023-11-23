@@ -35,6 +35,10 @@ public:
      */
     void SetTextBlob(const sk_sp<SkTextBlob> textBlob);
 
+    SkGlyphID GetFirstGlyphID();
+
+    SkPath GetPathbyGlyphID(const SkGlyphID& glyphId);
+
 private:
     sk_sp<SkTextBlob> textBlob_ = nullptr;
 };

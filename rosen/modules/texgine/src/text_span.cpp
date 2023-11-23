@@ -182,8 +182,7 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
 
     PaintShadow(canvas, offsetX, offsetY, xs.shadows);
     if (xs.isSymbolGlyph) {
-        paint.SetColor(0XFF0000FF);
-        canvas.DrawSymbol(textBlob_, offsetX, offsetY, paint);
+        HWSymbolRun::TestDrawSymbol(canvas, textBlob_, offsetX, offsetY, paint, xs);
     } else {
         canvas.DrawTextBlob(textBlob_, offsetX, offsetY, paint);
     }

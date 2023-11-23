@@ -170,6 +170,7 @@ config("glesv3_config") {
     "-Wall",
     "-Werror",
     "-g3",
+    "-fstack-protector-strong",
   ]
 }
 

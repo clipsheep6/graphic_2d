@@ -363,6 +363,44 @@ HWTEST_F(RSSurfaceNodeTest, GetSecurityLayer001, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SetSKipLayer001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSSurfaceNodeTest, SetSkipLayer001, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetSkipLayer(true);
+    EXPECT_TRUE(surfaceNode->GetSkipLayer());
+}
+
+/**
+ * @tc.name: SetSkipLayer002
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSSurfaceNodeTest, SetSkipLayer002, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetSkipLayer(false);
+    EXPECT_FALSE(surfaceNode->GetSkipLayer());
+}
+
+/**
+ * @tc.name: GetSkipLayer001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSSurfaceNodeTest, GetSkipLayer001, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    EXPECT_FALSE(surfaceNode->GetSkipLayer());
+}
+
+/**
  * @tc.name: Marshalling001
  * @tc.desc:
  * @tc.type:FUNC
@@ -1089,5 +1127,21 @@ HWTEST_F(RSSurfaceNodeTest, Fingerprint, TestSize.Level1)
     ASSERT_EQ(true, surfaceNode->GetFingerprint());
     surfaceNode->SetFingerprint(false);
     ASSERT_EQ(false, surfaceNode->GetFingerprint());
+}
+
+/**
+ * @tc.name: SetBootAnimation Test
+ * @tc.desc: SetBootAnimation and GetBootAnimation
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetBootAnimationTest, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetBootAnimation(true);
+    ASSERT_EQ(true, surfaceNode->GetBootAnimation());
+    surfaceNode->SetBootAnimation(false);
+    ASSERT_EQ(false, surfaceNode->GetBootAnimation());
 }
 } // namespace OHOS::Rosen

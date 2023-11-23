@@ -47,8 +47,9 @@ public:
     void SetPath(const std::shared_ptr<RSPath>& path);
     void SetMask(bool imageMask);
     void SetIsFilled(bool isFilled);
+    void SetColorStrategy(bool colorStrategy);
 
-    Color GetColor() const;
+    const Color& GetColor() const;
     float GetOffsetX() const;
     float GetOffsetY() const;
     float GetAlpha() const;
@@ -57,6 +58,7 @@ public:
     const std::shared_ptr<RSPath>& GetPath() const;
     bool GetMask() const;
     bool GetIsFilled() const;
+    bool GetColorStrategy() const;
 
     bool GetHardwareAcceleration() const
     {
@@ -75,6 +77,7 @@ private:
     std::shared_ptr<RSPath> path_ = nullptr;
     bool imageMask_ = false;
     bool isFilled_ = false;
+    bool colorStrategy_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

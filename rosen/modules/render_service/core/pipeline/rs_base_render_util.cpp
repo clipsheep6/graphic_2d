@@ -49,9 +49,6 @@ const uint32_t STUB_PIXEL_FMT_RGBA_16161616 = 0X7fff0001;
 const uint32_t STUB_PIXEL_FMT_RGBA_1010102 = 0X7fff0002;
 constexpr uint32_t MATRIX_SIZE = 20; // colorMatrix size
 constexpr int BITMAP_DEPTH = 8;
-#ifdef USE_ROSEN_DRAWING
-constexpr int BYTES_PER_PIXEL = 4;
-#endif
 
 inline constexpr float PassThrough(float v)
 {
@@ -988,7 +985,7 @@ BufferRequestConfig RSBaseRenderUtil::GetFrameBufferRequestConfig(
     config.width = static_cast<int32_t>(width);
     config.height = static_cast<int32_t>(height);
     config.strideAlignment = 0x8; // default stride is 8 Bytes.
-    config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
+    config.format = isPhysical ? GRAPHIC_PIXEL_FMT_RGBA_8888 : screenInfo.pixelFormat;
     config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_MEM_FB;
     config.timeout = 0;
     return config;
@@ -1616,7 +1613,7 @@ bool RSBaseRenderUtil::WriteCacheRenderNodeToPng(const RSRenderNode& node)
     param.width = static_cast<uint32_t>(image->GetWidth());
     param.height = static_cast<uint32_t>(image->GetHeight());
     param.data = static_cast<uint8_t *>(bitmap.GetPixels());
-    param.stride = static_cast<uint32_t>(image->GetWidth() * Detail::BYTES_PER_PIXEL);
+    param.stride = static_cast<uint32_t>(bitmap.GetRowBytes());
     param.bitDepth = Detail::BITMAP_DEPTH;
 #endif
 

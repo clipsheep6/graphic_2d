@@ -56,6 +56,11 @@ ScreenId RSInterfaces::GetDefaultScreenId()
     return renderServiceClient_->GetDefaultScreenId();
 }
 
+ScreenId RSInterfaces::GetActiveScreenId()
+{
+    return renderServiceClient_->GetActiveScreenId();
+}
+
 std::vector<ScreenId> RSInterfaces::GetAllScreenIds()
 {
     return renderServiceClient_->GetAllScreenIds();
@@ -130,6 +135,11 @@ void RSInterfaces::SetRefreshRateMode(int32_t refreshRateMode)
     renderServiceClient_->SetRefreshRateMode(refreshRateMode);
 }
 
+void RSInterfaces::SyncFrameRateRange(const FrameRateRange& range)
+{
+    renderServiceClient_->SyncFrameRateRange(range);
+}
+
 uint32_t RSInterfaces::GetScreenCurrentRefreshRate(ScreenId id)
 {
     return renderServiceClient_->GetScreenCurrentRefreshRate(id);
@@ -170,6 +180,12 @@ bool RSInterfaces::TakeSurfaceCaptureForUI(
 int32_t RSInterfaces::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
 {
     return renderServiceClient_->SetVirtualScreenResolution(id, width, height);
+}
+
+bool RSInterfaces::SetVirtualMirrorScreenBufferRotation(ScreenId id, bool bufferRotation)
+{
+    RS_LOGD("RSInterfaces::SetVirtualMirrorScreenBufferRotation is not supported.");
+    return true;
 }
 
 RSVirtualScreenResolution RSInterfaces::GetVirtualScreenResolution(ScreenId id)
@@ -260,6 +276,11 @@ int32_t RSInterfaces::SetScreenGamutMap(ScreenId id, ScreenGamutMap mode)
     return renderServiceClient_->SetScreenGamutMap(id, mode);
 }
 
+int32_t RSInterfaces::SetScreenCorrection(ScreenId id, ScreenRotation screenRotation)
+{
+    return renderServiceClient_->SetScreenCorrection(id, screenRotation);
+}
+
 int32_t RSInterfaces::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
 {
     return renderServiceClient_->GetScreenGamutMap(id, mode);
@@ -272,9 +293,57 @@ std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
     return renderServiceClient_->CreateVSyncReceiver(name, looper);
 }
 
+std::shared_ptr<VSyncReceiver> RSInterfaces::CreateVSyncReceiver(
+    const std::string& name,
+    uint64_t id,
+    const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper)
+{
+    return renderServiceClient_->CreateVSyncReceiver(name, looper, id);
+}
+
 int32_t RSInterfaces::GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability)
 {
     return renderServiceClient_->GetScreenHDRCapability(id, screenHdrCapability);
+}
+
+int32_t RSInterfaces::GetPixelFormat(ScreenId id, GraphicPixelFormat& pixelFormat)
+{
+    return renderServiceClient_->GetPixelFormat(id, pixelFormat);
+}
+
+int32_t RSInterfaces::SetPixelFormat(ScreenId id, GraphicPixelFormat pixelFormat)
+{
+    return renderServiceClient_->SetPixelFormat(id, pixelFormat);
+}
+
+int32_t RSInterfaces::GetScreenSupportedHDRFormats(ScreenId id, std::vector<ScreenHDRFormat>& hdrFormats)
+{
+    return renderServiceClient_->GetScreenSupportedHDRFormats(id, hdrFormats);
+}
+
+int32_t RSInterfaces::GetScreenHDRFormat(ScreenId id, ScreenHDRFormat& hdrFormat)
+{
+    return renderServiceClient_->GetScreenHDRFormat(id, hdrFormat);
+}
+
+int32_t RSInterfaces::SetScreenHDRFormat(ScreenId id, int32_t modeIdx)
+{
+    return renderServiceClient_->SetScreenHDRFormat(id, modeIdx);
+}
+
+int32_t RSInterfaces::GetScreenSupportedColorSpaces(ScreenId id, std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
+{
+    return renderServiceClient_->GetScreenSupportedColorSpaces(id, colorSpaces);
+}
+
+int32_t RSInterfaces::GetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType& colorSpace)
+{
+    return renderServiceClient_->GetScreenColorSpace(id, colorSpace);
+}
+
+int32_t RSInterfaces::SetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceType colorSpace)
+{
+    return renderServiceClient_->SetScreenColorSpace(id, colorSpace);
 }
 
 int32_t RSInterfaces::GetScreenType(ScreenId id, RSScreenType& screenType)
@@ -292,9 +361,10 @@ int32_t RSInterfaces::RegisterOcclusionChangeCallback(const OcclusionChangeCallb
     return renderServiceClient_->RegisterOcclusionChangeCallback(callback);
 }
 
-int32_t RSInterfaces::RegisterSurfaceOcclusionChangeCallback(NodeId id, const SurfaceOcclusionChangeCallback& callback)
+int32_t RSInterfaces::RegisterSurfaceOcclusionChangeCallback(
+    NodeId id, const SurfaceOcclusionChangeCallback& callback, std::vector<float>& partitionPoints)
 {
-    return renderServiceClient_->RegisterSurfaceOcclusionChangeCallback(id, callback);
+    return renderServiceClient_->RegisterSurfaceOcclusionChangeCallback(id, callback, partitionPoints);
 }
 
 int32_t RSInterfaces::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)
@@ -315,6 +385,11 @@ void RSInterfaces::SetAppWindowNum(uint32_t num)
 void RSInterfaces::ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow)
 {
     renderServiceClient_->ShowWatermark(watermarkImg, isShow);
+}
+
+int32_t RSInterfaces::ResizeVirtualScreen(ScreenId id, uint32_t width, uint32_t height)
+{
+    return renderServiceClient_->ResizeVirtualScreen(id, width, height);
 }
 
 MemoryGraphic RSInterfaces::GetMemoryGraphic(int pid)
@@ -362,11 +437,21 @@ void RSInterfaces::DisableCacheForRotation()
     renderServiceClient_->SetCacheEnabledForRotation(false);
 }
 
+void RSInterfaces::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback)
+{
+    renderServiceClient_->SetOnRemoteDiedCallback(callback);
+}
+
 #ifdef TP_FEATURE_ENABLE
 void RSInterfaces::SetTpFeatureConfig(int32_t feature, const char* config)
 {
     renderServiceClient_->SetTpFeatureConfig(feature, config);
 }
 #endif
+
+void RSInterfaces::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
+{
+    renderServiceClient_->SetVirtualScreenUsingStatus(isVirtualScreenUsingStatus);
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -31,7 +31,8 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) override;
-    void PostProcess() override;
+    void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
+    void PostProcess(RSDisplayRenderNode* node) override;
 
 private:
     sptr<Surface> producerSurface_;

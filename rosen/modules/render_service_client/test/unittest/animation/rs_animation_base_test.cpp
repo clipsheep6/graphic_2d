@@ -79,6 +79,7 @@ void RSAnimationBaseTest::InitAnimationWindow()
     option->SetWindowRect({ 0, 0, 720, 1280 });
     window = Window::Create("animation_ut", option);
     window->Show();
+    sleep(1);
     auto rect = window->GetRect();
     while (rect.width_ == 0 && rect.height_ == 0) {
         std::cout << "animation_ut create window failed: " << rect.width_ << " " << rect.height_ << std::endl;
@@ -86,6 +87,7 @@ void RSAnimationBaseTest::InitAnimationWindow()
         window->Destroy();
         window = Window::Create("animation_ut", option);
         window->Show();
+        sleep(1);
         rect = window->GetRect();
     }
     std::cout << "animation_ut create window " << rect.width_ << " " << rect.height_ << std::endl;
@@ -143,7 +145,8 @@ void RSAnimationBaseTest::NotifyStartAnimation()
     int64_t startNum = START_NUMBER;
     bool hasRunningAnimation = true;
     while (hasRunningAnimation) {
-        hasRunningAnimation = rsUiDirector->RunningCustomAnimation(startNum);
+        hasRunningAnimation = rsUiDirector->FlushAnimation(startNum);
+        rsUiDirector->FlushModifier();
         rsUiDirector->SendMessages();
         startNum += INCREASE_NUMBER;
         usleep(DELAY_TIME_REFRESH);

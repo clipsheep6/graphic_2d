@@ -15,9 +15,10 @@
 
 #include "animation/rs_render_particle_emitter.h"
 
-#include <cstdint>
 #include <cmath>
+#include <cstdint>
 #include <vector>
+
 namespace OHOS {
 namespace Rosen {
 RSRenderParticleEmitter::RSRenderParticleEmitter(std::shared_ptr<ParticleRenderParams> particleParams)
@@ -92,6 +93,9 @@ void RSRenderParticleEmitter::EmitParticle(int64_t deltaTime)
             particles_.push_back(particle);
             spawnNum_ -= 1.f;
         }
+        if (particleCount_ > static_cast<float>(maxParticle)) {
+            return;
+        }
     }
     while (spawnNum_ >= 1.f && std::ceil(last) <= static_cast<float>(maxParticle)) {
         auto particle = std::make_shared<RSRenderParticle>(particleParams_);
@@ -106,7 +110,7 @@ bool RSRenderParticleEmitter::IsEmitterFinish()
     return emitFinish_;
 }
 
-std::vector<std::shared_ptr<RSRenderParticle>> RSRenderParticleEmitter::GetParticles()
+const std::vector<std::shared_ptr<RSRenderParticle>>& RSRenderParticleEmitter::GetParticles()
 {
     return particles_;
 }

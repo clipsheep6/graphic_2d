@@ -16,10 +16,15 @@
 #include "image/image.h"
 
 #include "impl_factory.h"
+#include "skia_adapter/skia_image.h"
+#include "static_factory.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+BackendTexture::BackendTexture() noexcept
+    : isValid_(false), imageImplPtr(ImplFactory::CreateImageImpl()) {}
+
 BackendTexture::BackendTexture(bool isValid) noexcept
     : isValid_(isValid), imageImplPtr(ImplFactory::CreateImageImpl()) {}
 
@@ -40,6 +45,8 @@ const TextureInfo BackendTexture::GetTextureInfo() const
 
 Image::Image() noexcept : imageImplPtr(ImplFactory::CreateImageImpl()) {}
 
+Image::Image(std::shared_ptr<ImageImpl> imageImpl) : imageImplPtr(imageImpl) {}
+
 Image::Image(void* rawImg) noexcept : imageImplPtr(ImplFactory::CreateImageImpl(rawImg)) {}
 
 Image* Image::BuildFromBitmap(const Bitmap& bitmap)
@@ -54,10 +61,27 @@ Image* Image::BuildFromPicture(const Picture& picture, const SizeI& dimensions, 
         imageImplPtr->BuildFromPicture(picture, dimensions, matrix, brush, bitDepth, colorSpace));
 }
 
+std::shared_ptr<Image> MakeFromRaster(const Pixmap& pixmap,
+    RasterReleaseProc rasterReleaseProc, ReleaseContext releaseContext)
+{
+    return StaticFactory::MakeFromRaster(pixmap, rasterReleaseProc, releaseContext);
+}
+
+std::shared_ptr<Image> MakeRasterData(const ImageInfo& info, std::shared_ptr<Data> pixels,
+    size_t rowBytes)
+{
+    return StaticFactory::MakeRasterData(info, pixels, rowBytes);
+}
+
 #ifdef ACE_ENABLE_GPU
 bool Image::BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap)
 {
     return imageImplPtr->BuildFromBitmap(gpuContext, bitmap);
+}
+
+bool Image::MakeFromEncoded(const std::shared_ptr<Data>& data)
+{
+    return imageImplPtr->MakeFromEncoded(data);
 }
 
 bool Image::BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Data>& data, int width, int height,
@@ -72,6 +96,11 @@ bool Image::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, Te
     return imageImplPtr->BuildFromTexture(gpuContext, info, origin, bitmapFormat, colorSpace);
 }
 
+bool Image::BuildSubset(const std::shared_ptr<Image>& image, const RectI& rect, GPUContext& gpuContext)
+{
+    return imageImplPtr->BuildSubset(image, rect, gpuContext);
+}
+
 BackendTexture Image::GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) const
 {
     return imageImplPtr->GetBackendTexture(flushPendingGrContextIO, origin);
@@ -82,6 +111,11 @@ bool Image::IsValid(GPUContext* context) const
     return imageImplPtr->IsValid(context);
 }
 #endif
+
+bool Image::AsLegacyBitmap(Bitmap& bitmap) const
+{
+    return imageImplPtr->AsLegacyBitmap(bitmap);
+}
 
 int Image::GetWidth() const
 {
@@ -118,6 +152,12 @@ bool Image::ReadPixels(Bitmap& bitmap, int x, int y)
     return imageImplPtr->ReadPixels(bitmap, x, y);
 }
 
+bool Image::ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
+    int32_t srcX, int32_t srcY) const
+{
+    return imageImplPtr->ReadPixels(dstInfo, dstPixels, dstRowBytes, srcX, srcY);
+}
+
 bool Image::IsTextureBacked() const
 {
     return imageImplPtr->IsTextureBacked();
@@ -138,6 +178,26 @@ bool Image::IsLazyGenerated() const
     return imageImplPtr->IsLazyGenerated();
 }
 
+bool Image::GetROPixels(Bitmap& bitmap) const
+{
+    return imageImplPtr->GetROPixels(bitmap);
+}
+
+std::shared_ptr<Image> Image::MakeRasterImage() const
+{
+    return imageImplPtr->MakeRasterImage();
+}
+
+bool Image::CanPeekPixels() const
+{
+    return imageImplPtr->CanPeekPixels();
+}
+
+bool Image::IsOpaque() const
+{
+    return imageImplPtr->IsOpaque();
+}
+
 std::shared_ptr<Data> Image::Serialize() const
 {
     return imageImplPtr->Serialize();
@@ -146,6 +206,11 @@ std::shared_ptr<Data> Image::Serialize() const
 bool Image::Deserialize(std::shared_ptr<Data> data)
 {
     return imageImplPtr->Deserialize(data);
+}
+
+const sk_sp<SkImage> Image::ExportSkImage()
+{
+    return GetImpl<SkiaImage>()->GetImage();
 }
 
 } // namespace Drawing

@@ -93,6 +93,8 @@ public:
         SrcRectConstraint constraint = kStrict_SrcRectConstraint);
     void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkRect& dst,
         const SkSamplingOptions& samplingOptions, const SkPaint* paint);
+    void DrawRsImage(const std::shared_ptr<RSImageBase>& rsImage, const SkSamplingOptions& samplingOptions,
+        const SkPaint& paint, SrcRectConstraint constraint = kStrict_SrcRectConstraint);
     void DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelmap, SkScalar x, SkScalar y,
         const SkSamplingOptions& samplingOptions, const SkPaint* paint = nullptr);
     void DrawImageWithParm(const sk_sp<SkImage> image, const sk_sp<SkData> data,
@@ -109,6 +111,8 @@ public:
     void onDrawBitmapLattice(const SkBitmap& bm, const SkCanvas::Lattice& lattice, const SkRect& dst,
         const SkPaint* paint) override;
     void onDrawBitmapNine(const SkBitmap& bm, const SkIRect& center, const SkRect& dst, const SkPaint* paint) override;
+    void drawImageNine(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkIRect& center,
+        const SkRect& dst, SkFilterMode filter, const SkPaint* paint);
     void onDrawBitmapRect(const SkBitmap& bm, const SkRect* src, const SkRect& dst,
         const SkPaint* paint, SrcRectConstraint constraint) override;
     void onDrawImage(const SkImage* img, SkScalar x, SkScalar y, const SkPaint* paint)override;
@@ -200,5 +204,25 @@ private:
 } // namespace Rosen
 } // namespace OHOS
 
+#else
+#include "recording/recording_canvas.h"
+#include "recording/draw_cmd.h"
+
+namespace OHOS {
+namespace Media {
+class PixelMap;
+}
+namespace Rosen {
+class RSB_EXPORT ExtendRecordingCanvas : public Drawing::RecordingCanvas {
+public:
+    ExtendRecordingCanvas(int width, int weight);
+    ~ExtendRecordingCanvas() override = default;
+    void DrawImageWithParm(const std::shared_ptr<Drawing::Image>& image, const std::shared_ptr<Drawing::Data>& data,
+        const Drawing::AdaptiveImageInfo& rsImageInfo, const Drawing::SamplingOptions& sampling);
+    void DrawExtendPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
+        const Drawing::AdaptiveImageInfo& rsImageInfo, const Drawing::SamplingOptions& sampling);
+};
+} // namespace Rosen
+} // namespace OHOS
 #endif // USE_ROSEN_DRAWING
 #endif // RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RECORDING_CANVAS_H

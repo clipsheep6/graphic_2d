@@ -46,7 +46,7 @@ bool RSPhysicalScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX,
         [this](const auto& surface, const auto& layers) { Redraw(surface, layers); });
 }
 
-void RSPhysicalScreenProcessor::PostProcess()
+void RSPhysicalScreenProcessor::PostProcess(RSDisplayRenderNode* node)
 {
     composerAdapter_->CommitLayers(layers_);
     MultiLayersPerf(layers_.size());
@@ -72,6 +72,11 @@ void RSPhysicalScreenProcessor::ProcessDisplaySurface(RSDisplayRenderNode& node)
 void RSPhysicalScreenProcessor::ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node)
 {
     RS_LOGI("RSPhysicalScreenProcessor::ProcessDrivenSurface() is not supported.");
+}
+
+void RSPhysicalScreenProcessor::ProcessRcdSurface(RSRcdSurfaceRenderNode& node)
+{
+    RS_LOGI("RSPhysicalScreenProcessor::ProcessRcdSurface() is not supported");
 }
 
 void RSPhysicalScreenProcessor::Redraw(const sptr<Surface>& surface, const std::vector<LayerInfoPtr>& layers)

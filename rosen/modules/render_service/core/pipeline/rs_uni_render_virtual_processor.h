@@ -30,7 +30,8 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) override;
-    void PostProcess() override;
+    void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
+    void PostProcess(RSDisplayRenderNode* node) override;
 
     std::unique_ptr<RSPaintFilterCanvas> GetCanvas()
     {
@@ -43,6 +44,8 @@ private:
     bool forceCPU_ = false;
     bool isExpand_ = false;
     bool isPhone_ = false;
+    float boundsWidth_ = 0;
+    float boundsHeight_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

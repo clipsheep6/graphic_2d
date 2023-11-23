@@ -95,7 +95,7 @@ bool RSSystemProperties::GetHighContrastStatus()
 }
 
 #ifndef NEW_SKIA
-ReleaseGpuResourceType RSSystemProperties::GetReleaseGpuResourceEnabled()
+bool RSSystemProperties::GetReleaseResourceEnabled()
 {
     return {};
 }
@@ -169,6 +169,11 @@ bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetAnimationCacheEnabled()
+{
+    return {};
+}
+
 bool RSSystemProperties::GetPropertyDrawableEnable()
 {
     return {};
@@ -199,12 +204,27 @@ bool RSSystemProperties::GetFilterPartialRenderEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetColorPickerPartialEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetMaskLinearBlurEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetDebugTraceEnabled()
 {
     return false;
 }
 
 bool RSSystemProperties::FindNodeInTargetList(std::string node)
+{
+    return false;
+}
+
+bool RSSystemProperties::IsFoldScreenFlag()
 {
     return false;
 }
@@ -272,6 +292,21 @@ bool RSSystemProperties::GetSyncTransactionEnabled()
 int RSSystemProperties::GetSyncTransactionWaitDelay()
 {
     return 0;
+}
+
+bool RSSystemProperties::GetUseShadowBatchingEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetSingleFrameComposerEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
+{
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

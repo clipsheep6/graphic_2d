@@ -19,6 +19,8 @@
 #include "drawing/engine_adapter/impl_interface/image_impl.h"
 #include "utils/drawing_macros.h"
 
+#include "include/core/SkImage.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -152,6 +154,7 @@ private:
 
 class BackendTexture {
 public:
+    BackendTexture() noexcept;
     BackendTexture(bool isValid) noexcept;
     virtual ~BackendTexture() {};
 
@@ -175,11 +178,27 @@ public:
     Image() noexcept;
     // constructor adopt a raw image ptr, using for ArkUI, should remove after enable multi-media image decode.
     explicit Image(void* rawImg) noexcept;
+    explicit Image(std::shared_ptr<ImageImpl> imageImpl);
     virtual ~Image() {};
     Image* BuildFromBitmap(const Bitmap& bitmap);
     Image* BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix, const Brush& brush,
         BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace);
 
+    /*
+     * @brief                        Create Image from Pixmap.
+     * @param  pixmap                pixmap.
+     * @param  rasterReleaseProc     function called when pixels can be released; or nullptr.
+     * @param  releaseContext        state passed to rasterReleaseProc; or nullptr.
+     * @return                       Image sharing pixmap.
+     */
+    static std::shared_ptr<Image> MakeFromRaster(const Pixmap& pixmap,
+        RasterReleaseProc rasterReleaseProc, ReleaseContext releaseContext);
+
+    /*
+     * @brief  Create Image from ImageInfo, sharing pixels.
+     */
+    static std::shared_ptr<Image> MakeRasterData(const ImageInfo& info, std::shared_ptr<Data> pixels,
+                                                 size_t rowBytes);
 #ifdef ACE_ENABLE_GPU
     /*
      * @brief             Create Image from Bitmap. Image is uploaded to GPU back-end using context.
@@ -188,6 +207,8 @@ public:
      * @return            True if Image is created successed.
      */
     bool BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap);
+
+    bool MakeFromEncoded(const std::shared_ptr<Data>& data);
 
     /*
      * @brief             Create a GPU-backed Image from compressed data.
@@ -214,10 +235,17 @@ public:
     bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace);
 
+    bool BuildSubset(const std::shared_ptr<Image>& image, const RectI& rect, GPUContext& gpuContext);
+
     BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) const;
 
     bool IsValid(GPUContext* context) const;
 #endif
+
+    /*
+     * @brief  Creates raster Bitmap with same pixels as Image.
+     */
+    bool AsLegacyBitmap(Bitmap& bitmap) const;
 
     /*
      * @brief  Gets the width of Image.
@@ -258,6 +286,9 @@ public:
      */
     bool ReadPixels(Bitmap& bitmap, int x, int y);
 
+    bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
+                    int32_t srcX, int32_t srcY) const;
+
     bool ScalePixels(const Bitmap& bitmap, const SamplingOptions& sampling,
         bool allowCachingHint = true) const;
 
@@ -266,11 +297,22 @@ public:
     bool IsLazyGenerated() const;
 
     /*
+     * @brief  Get Bitmap by image's directContext, can call it if IsLazyGenerated return false.
+     */
+    bool GetROPixels(Bitmap& bitmap) const;
+
+    std::shared_ptr<Image> MakeRasterImage() const;
+
+    bool CanPeekPixels() const;
+
+    /*
      * @brief   Returns true the contents of Image was created on or uploaded to GPU memory,
                 and is available as a GPU texture.
      * @return  True if Image is a GPU texture.
      */
     bool IsTextureBacked() const;
+
+    bool IsOpaque() const;
 
     template<typename T>
     const std::shared_ptr<T> GetImpl() const
@@ -281,6 +323,8 @@ public:
     // using for recording, should to remove after using shared memory
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
+
+    const sk_sp<SkImage> ExportSkImage();
 
 private:
     std::shared_ptr<ImageImpl> imageImplPtr;

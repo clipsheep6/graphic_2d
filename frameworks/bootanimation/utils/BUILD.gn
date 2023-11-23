@@ -16,7 +16,10 @@ import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## Build libbootanimation_utils.so {{{
 config("libbootanimation_utils_config") {
-  include_dirs = [ "$graphic_2d_root/interfaces/inner_api/bootanimation" ]
+  include_dirs = [
+    "$graphic_2d_root/interfaces/inner_api/bootanimation",
+    "$graphic_2d_root/frameworks/bootanimation/include",
+  ]
 }
 
 ohos_shared_library("libbootanimation_utils") {
@@ -26,10 +29,14 @@ ohos_shared_library("libbootanimation_utils") {
 
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 
-  innerapi_tags = [ "platformsdk" ]
+  innerapi_tags = [
+    "platformsdk",
+    "sasdk",
+  ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

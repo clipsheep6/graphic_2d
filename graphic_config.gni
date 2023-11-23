@@ -24,7 +24,7 @@ declare_args() {
   graphic_2d_feature_parallel_render_enable = true
   graphic_2d_feature_enable_vulkan = false
   graphic_2d_feature_enable_filter_cache = true
-  graphic_2d_feature_parallel_upload_enable = true
+  graphic_2d_feature_parallel_upload_enable = false
   enable_text_gine = true
   use_texgine = true
   logger_enable_scope = false

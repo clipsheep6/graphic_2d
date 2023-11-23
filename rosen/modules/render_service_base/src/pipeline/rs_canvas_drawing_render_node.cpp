@@ -200,7 +200,7 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
 {
     SkImageInfo info = SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 
-#if ((defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)) || (defined RS_ENABLE_VK)
+#if (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)) && (defined RS_ENABLE_EGLIMAGE)
 #ifdef NEW_SKIA
     auto grContext = canvas.recordingContext();
 #else
@@ -420,7 +420,11 @@ bool RSCanvasDrawingRenderNode::IsNeedResetSurface(const int& width, const int& 
 
 void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType type)
 {
+#ifndef USE_ROSEN_DRAWING
     dirtyTypes_.emplace(type);
+#else
+    dirtyTypes_.set(static_cast<int>(type), true);
+#endif
     for (auto drawCmdModifier : drawCmdModifiers_) {
         if (drawCmdModifier.second.empty()) {
             continue;

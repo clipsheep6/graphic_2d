@@ -884,7 +884,7 @@ void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager
     if (manager == nullptr) {
         return;
     }
-    if (!manager->IsCacheValid()) {
+    if (!manager->IsCacheValid() && dirtyManager.IsCacheableFilterRectEmpty()) {
         dirtyManager.ResetSubNodeFilterCacheValid();
         return;
     }
@@ -897,9 +897,11 @@ void RSRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager
         return;
     }
     // record node's cache area if it has valid filter cache
-    if (!manager->IsCacheValid()) {
+    if (!manager->IsCacheValid() && dirtyManager.IsCacheableFilterRectEmpty()) {
         dirtyManager.ResetSubNodeFilterCacheValid();
-    } else if (ROSEN_EQ(GetGlobalAlpha(), 1.0f) && ROSEN_EQ(properties.GetCornerRadius().x_, 0.0f)) {
+    } else if (ROSEN_EQ(GetGlobalAlpha(), 1.0f) && ROSEN_EQ(properties.GetCornerRadius().x_, 0.0f) &&
+        cachedImageRect == dirtyManager.GetSurfaceRect()) {
+        // Only record full screen filter cache for occlusion calculation
         dirtyManager.UpdateCacheableFilterRect(cachedImageRect);
     }
 #endif

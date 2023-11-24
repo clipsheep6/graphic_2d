@@ -591,6 +591,17 @@ public:
         return transparentRegion_.IsIntersectWith(nodeRect);
     }
 
+    // Used when the node is opaque, but not calculate in occlusion
+    void SetTreatedAsTransparent(bool isOcclusion)
+    {
+        isTreatedAsTransparent_ = isOcclusion;
+    }
+
+    bool IsTreatedAsTransparent() const
+    {
+        return isTreatedAsTransparent_;
+    }
+
     bool SubNodeIntersectWithDirty(const RectI& r) const;
 
     // judge if a rect r is intersect with existing dirtyregion, include current surfacenode's dirtyregion, display
@@ -950,6 +961,7 @@ private:
     bool isFilterCacheFullyCovered_ = false;
     bool isFilterCacheValid_ = false;
     bool isFilterCacheStatusChanged_ = false;
+    bool isTreatedAsTransparent_ = false;
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>
         filterNodes_; // valid filter nodes within, including itself
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> drawingCacheNodes_;
@@ -1006,6 +1018,8 @@ private:
     std::shared_ptr<Drawing::Image> cachedImage_;
 #endif
 
+    // used for hardware enabled pointer window
+    bool isLastFrameNeedCalcGlobalDirty_ = true;
     // used for hardware enabled nodes
     bool isHardwareEnabledNode_ = false;
     bool isCurrentFrameHardwareEnabled_ = false;

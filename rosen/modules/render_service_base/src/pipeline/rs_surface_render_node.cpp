@@ -815,9 +815,11 @@ void RSSurfaceRenderNode::AccumulateOcclusionRegion(Occlusion::Region& accumulat
     if (GetName().find("hisearch") != std::string::npos) {
         return;
     }
+    SetTreatedAsTransparent(false);
     // when a surfacenode is in animation (i.e. 3d animation), its dstrect cannot be trusted, we treated it as a full
     // transparent layer.
     if (GetAnimateState() || IsParentLeashWindowInScale()) {
+        SetTreatedAsTransparent(true);
         ResetAnimateState();
         return;
     }
@@ -899,7 +901,7 @@ bool RSSurfaceRenderNode::SubNodeIntersectWithDirty(const RectI& r) const
         return true;
     }
     // if current node is transparent
-    if (IsTransparent() || IsCurrentNodeInTransparentRegion(nodeRect)) {
+    if (IsTransparent() || IsCurrentNodeInTransparentRegion(nodeRect) || IsTreatedAsTransparent()) {
         return dirtyRegionBelowCurrentLayer_.IsIntersectWith(nodeRect);
     }
     return false;

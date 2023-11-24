@@ -109,7 +109,7 @@ void HWSymbolRun::MultilayerPath(const std::vector<std::vector<size_t>>& multMap
 {
     if (multMap.empty()) {
         SkPath path;
-        for (size_t i= 0; i < paths.size(); i++) {
+        for (size_t i = 0; i < paths.size(); i++) {
             path.addPath(paths[i]);
         }
         multPaths.push_back(path);
@@ -166,7 +166,7 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
     if (symbolInfoOrign.renderModesGroups_.find(renderMode) != symbolInfoOrign.renderModesGroups_.end()) {
         symbolInfo.renderGroups_ = symbolInfoOrign.renderModesGroups_[renderMode];
         std::vector<SColor> colorList = symbolText.GetRenderColor();
-        if (!colorList.empty()){
+        if (!colorList.empty()) {
             SetSymbolRenderColor(renderMode, colorList, symbolInfo);
         }
     }
@@ -182,14 +182,15 @@ void HWSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode
     switch(renderMode) {
         // SINGLE and HIERARCHICAL: Supports single color setting
         case SymbolRenderingStrategy::SINGLE:
-        case renderMode == SymbolRenderingStrategy::MULTIPLE_OPACITY:
+        case SymbolRenderingStrategy::MULTIPLE_OPACITY:
             for (size_t i = 0; i < symbolInfo.renderGroups_.size(); ++i) {
                 symbolInfo.renderGroups_[i].color_.r_ = color[0].r_;
                 symbolInfo.renderGroups_[i].color_.g_ = color[0].g_;
                 symbolInfo.renderGroups_[i].color_.b_ = color[0].b_;
             }
             break;
-        case renderMode == SymbolRenderingStrategy::MULTIPLE_COLOR:
+        // MULtIPLE_COLOR: Supports mutiple color setting
+        case SymbolRenderingStrategy::MULTIPLE_COLOR:
             for (size_t i = 0, j = 0; i < symbolInfo.renderGroups_.size() && j < colors.size(); ++i, ++j) {
                 symbolInfo.renderGroups_[i].color_.r_ = colors[j].r_;
                 symbolInfo.renderGroups_[i].color_.g_ = colors[j].g_;
@@ -237,12 +238,12 @@ void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Te
     if (symbolInfo.symbolGlyphId_ != glyphId) {
         path = blob->GetPathbyGlyphID(symbolInfo.symbolGlyphId_);
     }
-
     path.offset(x, y);
     if (symbolInfo.renderGroups_.empty()) {
         canvas.DrawPath(path, paint1);
         return;
     }
+
     auto layer = symbolInfo.layers_;
     std::vector<SkPath> pathLayers = GetPathLayers(layer, path);
     std::vector<RenderGroup> groups = symbolInfo.renderGroups_;
@@ -263,7 +264,7 @@ void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Te
             }
             if (!pathMask.isEmpty()) {
                 SkPath outPath;
-                bool check = Op(pathStemp, pathLayers[h], SkPathOp::kDifference_SkPathOp, &outPath);
+                bool check = Op(pathStemp, pathMask, SkPathOp::kDifference_SkPathOp, &outPath);
                 if (check) {
                     pathStemp = outPath;
                 }

@@ -772,8 +772,6 @@ void RSMainThread::CheckAndUpdateTransactionIndex(std::shared_ptr<TransactionDat
     }
 }
 
-constexpr int32_t PERF_RS_COMMAND_CODE = 10031;
-constexpr int32_t PERF_RS_COMMAND_NUM = 50;
 void RSMainThread::PrefrequencyForUniRender(std::shared_ptr<TransactionDataMap> &transactionDataEffective)
 {
     static const std::map<int32_t, int32_t> commandToPerfCode {

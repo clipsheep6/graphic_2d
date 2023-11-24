@@ -842,7 +842,6 @@ public:
     {
         return isForeground_;
     }
-    bool GetNodeIsSingleFrameComposer() const override;
 private:
     void OnResetParent() override;
     void ClearChildrenCache();

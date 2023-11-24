@@ -1899,7 +1899,8 @@ void RSMainThread::Animate(uint64_t timestamp)
 
 void RSMainThread::ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
-    if (!rsTransactionData || !RSSystemProperties::GetSingleFrameComposerEnabled()) {
+    if (!rsTransactionData || !RSSystemProperties::GetSingleFrameComposerEnabled() ||
+        !RSSingleFrameComposer::IsShouldProcessByIpcThread(rsTransactionData->GetSendingPid())) {
         return;
     }
 

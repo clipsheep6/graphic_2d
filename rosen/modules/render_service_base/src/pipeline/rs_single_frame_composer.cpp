@@ -19,6 +19,8 @@ namespace OHOS {
 namespace Rosen {
 std::map<std::thread::id, uint64_t> RSSingleFrameComposer::ipcThreadIdMap_;
 std::mutex RSSingleFrameComposer::ipcThreadIdMapMutex_;
+std::map<pid_t, uint64_t> RSSingleFrameComposer::appPidMap_;
+std::mutex RSSingleFrameComposer::appPidMapMutex_;
 bool RSSingleFrameComposer::FindSingleFrameModifier(const std::list<std::shared_ptr<RSRenderModifier>>& modifierList)
 {
     for (auto iter = modifierList.begin(); iter != modifierList.end(); ++iter) {
@@ -113,5 +115,25 @@ void RSSingleFrameComposer::SingleFrameAddModifier(const std::shared_ptr<RSRende
     }
 }
 
+void RSSingleFrameComposer::AddAppPidToMap(bool isNodeSingleFrameComposer, pid_t pid)
+{
+    std::lock_guard<std::mutex> lock(appPidMapMutex_);
+    if (isNodeSingleFrameComposer) {
+        appPidMap_[pid] = 1;
+    } else {
+        if (appPidMap_.find(pid) != appPidMap_.end()) {
+            appPidMap_.erase(pid);
+        }
+    }
+}
+
+bool RSSingleFrameComposer::IsShouldProcessByIpcThread(pid_t pid)
+{
+    std::lock_guard<std::mutex> lock(appPidMapMutex_);
+    if (appPidMap_.find(pid) != appPidMap_.end() && appPidMap_[pid] != 0) {
+        return true;
+    }
+    return false;
+}
 }
 }

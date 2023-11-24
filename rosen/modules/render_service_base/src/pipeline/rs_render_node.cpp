@@ -504,6 +504,9 @@ void RSRenderNode::InternalRemoveSelfFromDisappearingChildren()
 
 RSRenderNode::~RSRenderNode()
 {
+    if (appPid_ != 0) {
+        RSSingleFrameComposer::AddAppPidToMap(false, appPid_);
+    }
     if (fallbackAnimationOnDestroy_) {
         FallbackAnimationsToRoot();
     }
@@ -1628,9 +1631,10 @@ void RSRenderNode::MarkNodeGroup(NodeGroupType type, bool isNodeGroup)
     }
 }
 
-void RSRenderNode::MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer)
+void RSRenderNode::MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer, pid_t pid)
 {
     isNodeSingleFrameComposer_ = isNodeSingleFrameComposer;
+    appPid_ = pid;
 }
 
 bool RSRenderNode::GetNodeIsSingleFrameComposer() const

@@ -18,7 +18,6 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
-#include <codecvt>
 
 #include "typography_impl.h"
 

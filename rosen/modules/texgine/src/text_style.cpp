@@ -65,6 +65,8 @@ bool TextStyle::operator ==(TextStyle const &rhs) const
            fontStyle == rhs.fontStyle &&
            fontFeature == rhs.fontFeature &&
            letterSpacing == rhs.letterSpacing &&
+           isSymbolGlyph == rhs.isSymbolGlyph &&
+           symbol == rhs.symbol &&
            wordSpacing == rhs.wordSpacing;
 }
 } // namespace TextEngine

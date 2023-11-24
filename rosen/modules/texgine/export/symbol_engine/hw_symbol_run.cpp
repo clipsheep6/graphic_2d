@@ -28,7 +28,7 @@ HWSymbolRun::HWSymbolRun()
 void HWSymbolRun::Read()
 {
     //68
-    std::vector<std::vector<size_t>> paths8 = {{6}, {4, 5}, {0, 1, 2, 3}};
+    std::vector<std::vector<size_t>> paths8 = {{3}, {2, 6}, {0, 1, 4, 5}};
     GroupInfo groupInfo;
     groupInfo.layerIndexes_ = std::vector<size_t>{0};
     RenderGroup group11;
@@ -51,8 +51,8 @@ void HWSymbolRun::Read()
 
     groupInfo.layerIndexes_ = std::vector<size_t>{0, 1, 2};
     group11.groupInfo_ = {groupInfo};
-    group11.color_ = SColor{1, 0X00, 0X00, 0X00};
-    renderGroups8.insert({SymbolRenderingStrategy::MULTIPLE_OPACITY, std::vector<RenderGroup> {group11}});
+    group11.color_ = SColor{1, 0X80, 0X80, 0X80};
+    renderGroups8.insert({SymbolRenderingStrategy::SINGLE, std::vector<RenderGroup> {group11}});
     SymbolLayersGroups symbol8 = {8, paths8, renderGroups8};
     symbolDemoInfo_.insert({8, symbol8});
 }
@@ -107,7 +107,7 @@ void HWSymbolRun::PathOutlineDecompose(const SkPath& path, std::vector<SkPath>& 
 void HWSymbolRun::MultilayerPath(const std::vector<std::vector<size_t>>& multMap,
     const std::vector<SkPath>& paths, std::vector<SkPath>& multPaths)
 {
-    if (multPaths.empty()) {
+    if (multMap.empty()) {
         SkPath path;
         for (size_t i= 0; i < paths.size(); i++) {
             path.addPath(paths[i]);
@@ -138,18 +138,29 @@ std::vector<SkPath> HWSymbolRun::GetPathLayers(const std::vector<std::vector<siz
     return pathLayers;
 }
 
-SymbolLayersGroups HWSymbolRun::GetLayerGroups(SkGlyphID symbolId)
+SymbolLayersGroups HWSymbolRun::GetLayerGroups(SkGlyphID symbolId, SymbolLayersGroups& symbolInfo)
 {
     // todo : 调用资源框架的接口，获取symbol的多次渲染信息
-    return symbolDemoInfo_[symbolId];
+    if (symbolDemoInfo_.find(symbolId) == symbolDemoInfo_.end()) {
+        return false;
+    }
+    symbolInfo = symbolDemoInfo_[symbolId];
+    return true;
 }
 
 SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText)
 {
-    SymbolLayersGroups symbolInfoOrign = GetLayerGroups(glyphId);
+    SymbolLayersGroups symbolInfoOrign;
     SymbolLayers symbolInfo;
+    symbolInfo.symbolGlyphId_ = glyphId;
+    bool check = GetLayerGroups(glyphId, symbolInfoOrign);
+    if (!check) {
+        return symbolInfo;
+    }
+
     symbolInfo.layers_ = symbolInfoOrign.layers_;
     symbolInfo.renderGroups_ = symbolInfoOrign.renderModesGroups_[SymbolRenderingStrategy::SINGLE];
+    symbolInfo.symbolGlyphId_ = symbolInfoOrign.symbolGlyphId_;
 
     SymbolRenderingStrategy renderMode = symbolText.GetRenderModer();
     if (symbolInfoOrign.renderModesGroups_.find(renderMode) != symbolInfoOrign.renderModesGroups_.end()) {
@@ -204,45 +215,51 @@ void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Texgin
 void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
     const TexginePaint &paint, const TextStyle &style)
 {
+    if (blob == nullptr) {
+        return;
+    }
+
     SkGlyphID glyphId = blob->GetFirstGlyphID();
     SkPath path = blob->GetPathbyGlyphID(glyphId);
 
     TexginePaint paint1 = paint;
     paint1.SetAntiAlias(true);
     paint1.SetStyle(TexginePaint::Style::STROKEANDFILL);
-    canvas.DrawSymbol(path, paint);
+    canvas.DrawPath(path, paint1);
 
     HWSymbolRun symbol;
     SymbolLayers symbolInfo = symbol.GetSymbolLayers(glyphId, style.symbol);
     if (symbolInfo.symbolGlyphId_ != glyphId) {
         path = blob->GetPathbyGlyphID(symbolInfo.symbolGlyphId_);
     }
+
+    path.offset(x, y);
+    if (symbolInfo.renderGroups_.size() ==0) {
+        canvas.DrawPath(path, paint1);
+        return;
+    }
     auto layer = symbolInfo.layers_;
     std::vector<SkPath> pathLayers = GetPathLayers(layer, path);
-    
     std::vector<RenderGroup> groups = symbolInfo.renderGroups_;
-    if (groups.size() ==0) {
-        canvas.DrawPath(path, paint1);
-    }
     for (auto group: groups) {
         SkPath multPath;
         for (auto groupInfo: group.groupInfo_) {
             SkPath pathStemp;
             for (auto k: groupInfo.layerIndexes_) {
-                if (k >= pathLayers.size()) {
-                    continue;
+                if (k < pathLayers.size()) {
+                    pathStemp.addPath(pathLayers[k]);
                 }
-                pathStemp.addPath(pathLayers[k]);
             }
+            SkPath pathMask;
             for (auto h : groupInfo.maskIndexes_) {
-                if (h >= pathLayers.size()) {
-                    continue;
+                if (h < pathLayers.size()) {
+                    pathMask.addPath(pathLayers[h]);
                 }
-                SkPath outPath;
-                bool check = Op(pathStemp, pathLayers[h], SkPathOp::kDifference_SkPathOp, &outPath);
-                if (check) {
-                    pathStemp = outPath;
-                }
+            }
+            SkPath outPath;
+            bool check = Op(pathStemp, pathLayers[h], SkPathOp::kDifference_SkPathOp, &outPath);
+            if (check) {
+                pathStemp = outPath;
             }
             multPath.addPath(pathStemp);
         }

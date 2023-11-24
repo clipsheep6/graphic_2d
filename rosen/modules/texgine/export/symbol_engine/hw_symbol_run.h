@@ -51,7 +51,7 @@ public:
     // demo test
     static std::vector<SkPath> GetPathLayers(const std::vector<std::vector<size_t>>& layers, const SkPath& path);
 
-    SymbolLayersGroups GetLayerGroups(SkGlyphID symbolId);
+    bool GetLayerGroups(SkGlyphID symbolId, SymbolLayersGroups& symbolInfo);
 
     SymbolLayers GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText);
 

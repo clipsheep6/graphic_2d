@@ -40,9 +40,23 @@ TypographyCreate::TypographyCreate(const TypographyStyle& style,
 void TypographyCreate::PushStyle(const TextStyle& style)
 {
     auto txtTextStyle = Convert(style);
-    std::vector<std::string> fonts = txtTextStyle.fontFamilies;
-    if (std::find(fonts.begin(), fonts.end(), "HMSymbol-Regular") != fonts.end()) {
+    txtTextStyle.isSymbolGlyph = false;
+    if (txtTextStyle.color == 0XFF00FF00) {
+        txtTextStyle.color = 0XFF808080;
         txtTextStyle.isSymbolGlyph = true;
+
+        std::vector<uint32_t> symbol2 = {0XF0001};
+        builder_->PushStyle(txtTextStyle);
+        builder_->AppendSpan(symbol2);
+        builder_->PopStyle();
+
+        txtTextStyle.symbol.SetRenderModer(SymbolRenderingStrategy::MULTIPLE_OPACITY);
+        builder_->PushStyle(txtTextStyle);
+        std::vector<uint32_t> symbol6 = {0XF0005};
+        builder_->AppendSpan(symbol6);
+        builder_->PopStyle();
+
+        txtTextStyle.isSymbolGlyph = false;
     }
     builder_->PushStyle(txtTextStyle);
 }
@@ -54,22 +68,6 @@ void TypographyCreate::PopStyle()
 
 void TypographyCreate::AppendText(const std::u16string& text)
 {
-    if (text.size() == 10) {
-        // std::vector<uint32_t> symbol1 = {0XF0000};
-        // builder_->AppendSpan(symbol1);
-        // std::vector<uint32_t> symbol2 = {0XF0001};
-        // builder_->AppendSpan(symbol2);
-        // std::vector<uint32_t> symbol3 = {0XF0002};
-        // builder_->AppendSpan(symbol3);
-        // std::vector<uint32_t> symbol4 = {0XF0003};
-        // builder_->AppendSpan(symbol4);
-        // std::vector<uint32_t> symbol5 = {0XF0004};
-        // builder_->AppendSpan(symbol5);
-        std::vector<uint32_t> symbol6 = {0XF0005};
-        builder_->AppendSpan(symbol6);
-        return;
-    }
-
     builder_->AppendSpan(text);
 }
 

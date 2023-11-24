@@ -127,7 +127,7 @@ public:
     /* Judge if rootnode has to be prepared based on it corresponding process is active
      * If its pid is in activeProcessPids_ set, return true
      */
-    bool CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyByRoot);
+    bool CheckMainWindowHasToBePrepared(std::shared_ptr<RSSurfaceRenderNode> surfaceNode, bool isClassifyByRoot) const;
     // check if active app has static drawing cache
     bool IsDrawingGroupChanged(RSRenderNode& cacheRootNode) const;
     // check if active instance only move or scale it's main window surface without rearrangement

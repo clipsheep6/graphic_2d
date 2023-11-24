@@ -184,12 +184,12 @@ void HWSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode
         case SymbolRenderingStrategy::SINGLE:
         case SymbolRenderingStrategy::MULTIPLE_OPACITY:
             for (size_t i = 0; i < symbolInfo.renderGroups_.size(); ++i) {
-                symbolInfo.renderGroups_[i].color_.r_ = color[0].r_;
-                symbolInfo.renderGroups_[i].color_.g_ = color[0].g_;
-                symbolInfo.renderGroups_[i].color_.b_ = color[0].b_;
+                symbolInfo.renderGroups_[i].color_.r_ = colors[0].r_; // the 0 indicates the the first color is used
+                symbolInfo.renderGroups_[i].color_.g_ = colors[0].g_; // the 0 indicates the the first color is used
+                symbolInfo.renderGroups_[i].color_.b_ = colors[0].b_; // the 0 indicates the the first color is used
             }
             break;
-        // MULtIPLE_COLOR: Supports mutiple color setting
+        // MULTIPLE_COLOR: Supports mutiple color setting
         case SymbolRenderingStrategy::MULTIPLE_COLOR:
             for (size_t i = 0, j = 0; i < symbolInfo.renderGroups_.size() && j < colors.size(); ++i, ++j) {
                 symbolInfo.renderGroups_[i].color_.r_ = colors[j].r_;

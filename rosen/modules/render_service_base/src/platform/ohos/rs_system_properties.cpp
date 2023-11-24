@@ -361,6 +361,13 @@ bool RSSystemProperties::GetAnimationCacheEnabled()
     return animationCacheEnabled;
 }
 
+bool RSSystemProperties::GetPerfForCommandEnable()
+{
+    auto deviceTypeStr = system::GetParameter("const.product.devicetype", "pc");
+    bool isPC = (deviceTypeStr == "pc" || deviceTypeStr == "2in1" || deviceTypeStr == "tablet");
+    return isPC || (std::atoi((system::GetParameter("rosen.perf.for.command.enabled", "0")).c_str()) != 0);
+}
+
 bool RSSystemProperties::GetPropertyDrawableEnable()
 {
     static bool propertyDrawableEnable =

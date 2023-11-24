@@ -257,6 +257,7 @@ private:
     void ProcessAllSyncTransactionData();
     void ProcessCommandForDividedRender();
     void ProcessCommandForUniRender();
+    void PrefrequencyForUniRender(std::shared_ptr<TransactionDataMap> &transactionDataEffective);
     void WaitUntilUnmarshallingTaskFinished();
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
     void WaitUntilUploadTextureTaskFinished();

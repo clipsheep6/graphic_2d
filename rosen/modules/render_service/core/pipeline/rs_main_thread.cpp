@@ -772,6 +772,37 @@ void RSMainThread::CheckAndUpdateTransactionIndex(std::shared_ptr<TransactionDat
     }
 }
 
+constexpr int32_t PERF_RS_COMMAND_CODE = 10031;
+constexpr int32_t PERF_RS_COMMAND_NUM = 50;
+void RSMainThread::PrefrequencyForUniRender(std::shared_ptr<TransactionDataMap> &transactionDataEffective)
+{
+    static const std::map<int32_t, int32_t> commandToPerfCode {
+        { 10, 10013 },
+        { 30, 10014 },
+        { 50, 10015 },
+    };
+    int32_t RSCommandNum = 0;
+    for (auto& rsTransactionElem: *transactionDataEffective) {
+        for (auto& rsTransaction: rsTransactionElem.second) {
+            if (rsTransaction) {
+                RSCommandNum += rsTransaction->GetPayload().size();
+            }
+        }
+    }
+    RS_TRACE_NAME("RSMainThread::ProcessCommandUni size " + std::to_string(RSCommandNum));
+    int32_t commandLevel = 0;
+    for (auto &it : commandToPerfCode) {
+        if (RSCommandNum < it.first) {
+            break;
+        }
+        commandLevel = it.first;
+    }
+    if (commandLevel != 0) {
+        RS_TRACE_NAME("RSMainThread::PerfRequest for New Commond");
+        PerfRequest(commandToPerfCode.at(commandLevel), true);
+    }
+}
+
 void RSMainThread::ProcessCommandForUniRender()
 {
     std::shared_ptr<TransactionDataMap> transactionDataEffective = std::make_shared<TransactionDataMap>();
@@ -795,6 +826,9 @@ void RSMainThread::ProcessCommandForUniRender()
     }
     if (!transactionDataEffective->empty()) {
         doDirectComposition_ = false;
+    }
+    if (RSSystemProperties::GetPerfForCommandEnable()) {
+        PrefrequencyForUniRender(transactionDataEffective);
     }
     RS_TRACE_NAME("RSMainThread::ProcessCommandUni" + transactionFlags);
     for (auto& rsTransactionElem: *transactionDataEffective) {

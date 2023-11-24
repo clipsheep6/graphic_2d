@@ -66,6 +66,8 @@
 #include "src/core/SkWriteBuffer.h"
 #include "src/image/SkImage_Base.h"
 
+#include "include/core/rs_hw_symbol.h"
+
 #include "pipeline/rs_draw_cmd_list.h"
 #ifdef NEW_SKIA
 #include "include/core/SkSamplingOptions.h"
@@ -131,6 +133,215 @@ static inline sk_sp<T> sk_reinterpret_cast(sk_sp<P> ptr)
     return sk_sp<T>(static_cast<T*>(SkSafeRef(ptr.get())));
 }
 } // namespace
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const GroupInfo& val)
+{
+    if (!MarshallingVec(parcel, val.layerIndexes_)) {
+        RS_LOGE("[%{public}s] failed GroupInfo layerIndexes_", __func__);
+        return false;
+    }
+    if (!MarshallingVec(parcel, val.maskIndexes_)) {
+        RS_LOGE("[%{public}s] failed GroupInfo maskIndexs_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, GroupInfo& val)
+{
+    if (!UnmarshallingVec(parcel, val.layerIndexes_)) {
+        RS_LOGE("[%{public}s] failed GroupInfo layerIndexes_", __func__);
+        return false;
+    }
+    if (!UnmarshallingVec(parcel, val.maskIndexes_)) {
+        RS_LOGE("[%{public}s] failed GroupInfo maskIndexs_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RenderGroup& val)
+{
+    if (!Marshalling(parcel, val.color_)) {
+        RS_LOGE("[%{public}s] failed RenderGroup color_", __func__);
+        return false;
+    }
+    if (!MarshallingVec(parcel, val.groupInfo_)) {
+        RS_LOGE("[%{public}s] failed RenderGroup groupInfo_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderGroup& val)
+{
+    if (!Unmarshalling(parcel, val.color_)) {
+        RS_LOGE("[%{public}s] failed RenderGroup color_", __func__);
+        return false;
+    }
+    if (!UnmarshallingVec(parcel, val.groupInfo_)) {
+        RS_LOGE("[%{public}s] failed RenderGroup groupInfo_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayers& val)
+{
+    if (!Marshalling(parcel, val.symbplGlyohId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers symbplGlyohId_", __func__);
+        return false;
+    }
+    if (!MarshallingVec2(parcel, val.layers_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers layers_", __func__);
+        return false;
+    }
+    if (!MarshallingVec(parcel, val.renderGroups_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers renderGroups_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayers& val)
+{
+    if (!Unmarshalling(parcel, val.symbplGlyohId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers symbplGlyohId_", __func__);
+        return false;
+    }
+    if (!UnmarshallingVec2(parcel, val.layers_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers layers_", __func__);
+        return false;
+    }
+    if (!UnmarshallingVec(parcel, val.renderGroups_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers renderGroups_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayersGroups& val)
+{
+    if (!Marshalling(parcel, val.symbplGlyohId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups symbplGlyohId_", __func__);
+        return false;
+    }
+    if (!MarshallingVec2(parcel, val.layers_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups layers_", __func__);
+        return false;
+    }
+
+    int size = val.renderModeGroups_.size();
+    if (size < 0) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups layers_", __func__);
+        return false;
+    }
+    Marshalling(parcel, size);
+    for (auto it = val.renderModeGroups_.begin(); it != val.renderModeGroups_.end(); it++) {
+        bool isOk = Marshalling(parcel, it->first) && 
+            MarshallingVec(parcel, it->second);
+        if (!isOk) {
+            RS_LOGE("[%{public}s] failed SymbolLayersGroups layers_", __func__);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayersGroups& val)
+{
+    if (!Unmarshalling(parcel, val.symbplGlyohId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups symbplGlyohId_", __func__);
+        return false;
+    }
+    if (!UnmarshallingVec2(parcel, val.layers_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups layers_", __func__);
+        return false;
+    }
+    int size = 0;
+    Unmarshalling(parcel, size);
+    if (size < 0) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups layers_", __func__);
+        return false;
+    }
+    for (int it = 0; it < size; it++) {
+        SymbolRenderingStrategy strategy;
+        std::vector<RenderGroup> render;
+        bool isOk = Unmarshalling(parcel, strategy) && 
+            UnmarshallingVec(parcel, render);
+        if (!isOk) {
+            RS_LOGE("[%{public}s] failed SymbolLayersGroups layers_", __func__);
+            return false;
+        }
+        if (val.renderModeGroups_.count(strategy) <= 0) {
+            val.renderModeGroups_.insert(std::pair(strategy, render));
+        } else {
+            val.renderModeGroups_[strategy] = render;
+        }
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const HWSymbolData& val)
+{
+    if (!Marshalling(parcel, val.symbolInfo_)) {
+        RS_LOGE("[%{public}s] failed HWSymbolData symbolInfo_", __func__);
+        return false;
+    }
+    if (!Marshalling(parcel, val.path_)) {
+        RS_LOGE("[%{public}s] failed HWSymbolData path_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, HWSymbolData& val)
+{
+    if (!Unmarshalling(parcel, val.symbolInfo_)) {
+        RS_LOGE("[%{public}s] failed HWSymbolData symbolInfo_", __func__);
+        return false;
+    }
+    if (!Unmarshalling(parcel, val.path_)) {
+        RS_LOGE("[%{public}s] failed HWSymbolData path_", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SkPoint& val)
+{
+    auto x = val.x();
+    auto y = val.y();
+    parcel.WriteFloat(x);
+    parcel.WriteFloat(y);
+    return true;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkPoint& val)
+{
+    auto x = parcel.ReadFloat();
+    auto y = parcel.ReadFloat();
+    val = SkPoint::Make(x, y);
+    return true;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SColor& val)
+{
+    bool isok = Marshalling(parcel, val.a_) &&
+        Marshalling(parcel, val.r_) &&
+        Marshalling(parcel, val.g_) &&
+        Marshalling(parcel, val.b_);
+    return isok;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SColor& val)
+{
+    bool isok = Unmarshalling(parcel, val.a_) &&
+        Unmarshalling(parcel, val.r_) &&
+        Unmarshalling(parcel, val.g_) &&
+        Unmarshalling(parcel, val.b_);
+    return isok;
+}
 
 #ifndef USE_ROSEN_DRAWING
 // SkData

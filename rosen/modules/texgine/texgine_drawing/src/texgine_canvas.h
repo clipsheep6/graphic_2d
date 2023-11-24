@@ -45,9 +45,9 @@ public:
     void DrawTextBlob(const std::shared_ptr<TexgineTextBlob> &blob, float x, float y, const TexginePaint &paint);
 
     /*
-     * @brief Draws symbol  at (x, y), using SkTextBlob blob , TextStyle style, clip, SkMatrix, and SkPaint paint.
+     * @brief Draws symbol at point, using clip, SkMatrix, and paint.
      */
-    void DrawSymbol(const SkPath &path, const TexginePaint &paint);
+    void DrawSymbol(const HWSymbolData &symbol, SkPoint locate, const TexginePaint &paint);
 
     /*
      * @brief Draws Path , using SkPath path and SkPaint paint.

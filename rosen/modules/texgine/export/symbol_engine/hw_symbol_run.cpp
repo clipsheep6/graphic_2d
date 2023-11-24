@@ -113,15 +113,15 @@ void HWSymbolRun::MultilayerPath(const std::vector<std::vector<size_t>>& multMap
             path.addPath(paths[i]);
         }
         multPaths.push_back(path);
+        return;
     }
 
     for (size_t i = 0; i < multMap.size(); i++) {
         SkPath path;
         for (size_t j = 0; j < multMap[i].size(); j++) {
-            if (multMap[i][j] >= paths.size()) {
-                continue;
+            if (multMap[i][j] < paths.size()) {
+                path.addPath(paths[multMap[i][j]]);
             }
-            path.addPath(paths[multMap[i][j]]);
         }
         multPaths.push_back(path);
     }
@@ -138,7 +138,7 @@ std::vector<SkPath> HWSymbolRun::GetPathLayers(const std::vector<std::vector<siz
     return pathLayers;
 }
 
-SymbolLayersGroups HWSymbolRun::GetLayerGroups(SkGlyphID symbolId, SymbolLayersGroups& symbolInfo)
+bool HWSymbolRun::GetLayerGroups(SkGlyphID symbolId, SymbolLayersGroups& symbolInfo)
 {
     // todo : 调用资源框架的接口，获取symbol的多次渲染信息
     if (symbolDemoInfo_.find(symbolId) == symbolDemoInfo_.end()) {
@@ -165,7 +165,10 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
     SymbolRenderingStrategy renderMode = symbolText.GetRenderModer();
     if (symbolInfoOrign.renderModesGroups_.find(renderMode) != symbolInfoOrign.renderModesGroups_.end()) {
         symbolInfo.renderGroups_ = symbolInfoOrign.renderModesGroups_[renderMode];
-        SetSymbolRenderColor(renderMode, symbolText.GetRenderColor(), symbolInfo);
+        std::vector<SColor> colorList = symbolText.GetRenderColor();
+        if (!colorList.empty()){
+            SetSymbolRenderColor(renderMode, colorList, symbolInfo);
+        }
     }
     return symbolInfo;
 }
@@ -173,26 +176,28 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
 void HWSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
     SymbolLayers& symbolInfo)
 {
-    if (colors.size() == 0) {
+    if (colors.empty()) {
         return;
     }
-    // SINGLE and HIERARCHICAL: Supports single color setting
-    if (renderMode == SymbolRenderingStrategy::SINGLE || renderMode == SymbolRenderingStrategy::MULTIPLE_OPACITY) {
-        SColor color = colors[0];
-        for (size_t i = 0; i < symbolInfo.renderGroups_.size(); ++i) {
-            symbolInfo.renderGroups_[i].color_.r_ = color.r_;
-            symbolInfo.renderGroups_[i].color_.g_ = color.g_;
-            symbolInfo.renderGroups_[i].color_.b_ = color.b_;
-        }
-    }
-
-    // MULTIPLE_COLOR: Supports mutiple color setting
-    if (renderMode == SymbolRenderingStrategy::MULTIPLE_COLOR) {
-        for (size_t i = 0, j = 0; i < symbolInfo.renderGroups_.size() && j < colors.size(); ++i, ++j) {
-            symbolInfo.renderGroups_[i].color_.r_ = colors[j].r_;
-            symbolInfo.renderGroups_[i].color_.g_ = colors[j].g_;
-            symbolInfo.renderGroups_[i].color_.b_ = colors[j].b_;
-        }
+    switch(renderMode) {
+        // SINGLE and HIERARCHICAL: Supports single color setting
+        case SymbolRenderingStrategy::SINGLE:
+        case renderMode == SymbolRenderingStrategy::MULTIPLE_OPACITY:
+            for (size_t i = 0; i < symbolInfo.renderGroups_.size(); ++i) {
+                symbolInfo.renderGroups_[i].color_.r_ = color[0].r_;
+                symbolInfo.renderGroups_[i].color_.g_ = color[0].g_;
+                symbolInfo.renderGroups_[i].color_.b_ = color[0].b_;
+            }
+            break;
+        case renderMode == SymbolRenderingStrategy::MULTIPLE_COLOR:
+            for (size_t i = 0, j = 0; i < symbolInfo.renderGroups_.size() && j < colors.size(); ++i, ++j) {
+                symbolInfo.renderGroups_[i].color_.r_ = colors[j].r_;
+                symbolInfo.renderGroups_[i].color_.g_ = colors[j].g_;
+                symbolInfo.renderGroups_[i].color_.b_ = colors[j].b_;
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -234,7 +239,7 @@ void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Te
     }
 
     path.offset(x, y);
-    if (symbolInfo.renderGroups_.size() ==0) {
+    if (symbolInfo.renderGroups_.empty()) {
         canvas.DrawPath(path, paint1);
         return;
     }
@@ -256,10 +261,12 @@ void HWSymbolRun::TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Te
                     pathMask.addPath(pathLayers[h]);
                 }
             }
-            SkPath outPath;
-            bool check = Op(pathStemp, pathLayers[h], SkPathOp::kDifference_SkPathOp, &outPath);
-            if (check) {
-                pathStemp = outPath;
+            if (!pathMask.isEmpty()) {
+                SkPath outPath;
+                bool check = Op(pathStemp, pathLayers[h], SkPathOp::kDifference_SkPathOp, &outPath);
+                if (check) {
+                    pathStemp = outPath;
+                }
             }
             multPath.addPath(pathStemp);
         }

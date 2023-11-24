@@ -55,7 +55,7 @@ public:
 
     SymbolLayers GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText);
 
-    void SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
+    static void SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
         SymbolLayers& symbolInfo);
     
     // demo test

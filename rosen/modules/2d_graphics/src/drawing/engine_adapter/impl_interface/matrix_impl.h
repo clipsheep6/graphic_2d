@@ -28,6 +28,7 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 class DRAWING_API Matrix;
+class DRAWING_API Matrix44;
 class MatrixImpl : public BaseImpl {
 public:
     // Matrix is a 3x3 float type matrix.
@@ -43,10 +44,13 @@ public:
 
     virtual void PreRotate(scalar degree) = 0;
     virtual void PreTranslate(scalar dx, scalar dy) = 0;
+    virtual void PostTranslate(scalar dx, scalar dy) = 0;
     virtual void PreScale(scalar sx, scalar sy) = 0;
     virtual void PostScale(scalar sx, scalar sy) = 0;
     virtual void PreConcat(const Matrix& other) = 0;
+    virtual void PreConcat(const Matrix44& other) = 0;
     virtual void PostConcat(const Matrix& other) = 0;
+    virtual void PostConcat(const Matrix44& other) = 0;
 
     virtual bool Invert(Matrix& inverse) const = 0;
     virtual void Multiply(const Matrix& a, const Matrix& b) = 0;

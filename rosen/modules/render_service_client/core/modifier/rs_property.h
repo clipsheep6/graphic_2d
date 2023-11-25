@@ -503,7 +503,7 @@ public:
 protected:
     void UpdateOnAllAnimationFinish() override
     {
-        RSProperty<T>::UpdateToRender(RSProperty<T>::stagingValue_, UPDATE_TYPE_OVERWRITE);
+        RSProperty<T>::UpdateToRender(RSProperty<T>::stagingValue_, UPDATE_TYPE_FORCE_OVERWRITE);
     }
 
     void UpdateExtendedAnimatableProperty(const T& value, PropertyUpdateType type)

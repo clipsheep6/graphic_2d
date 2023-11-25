@@ -61,9 +61,9 @@ std::shared_ptr<RSAnimation> RSImplicitCancelAnimationParam::CreateAnimation(std
     const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const
 {
     if (auto node = property->target_.lock()) {
-        node->CancelAnimationByProperty(property->GetId());
-        property->SetValue(endValue);
-        property->UpdateOnAllAnimationFinish();
+        node->CancelAnimationByProperty(property->GetId()); // remove all ui animation
+        property->SetValue(endValue);                       // force set ui value
+        property->UpdateOnAllAnimationFinish();             // force update RS value and remove all animation
     }
     return nullptr;
 }

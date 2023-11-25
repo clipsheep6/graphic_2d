@@ -31,7 +31,7 @@ ohos_unittest("RSScreenManagerTest") {
   ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+    "$graphic_2d_root/interfaces/inner_api/surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service/core",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",
@@ -70,7 +70,7 @@ ohos_unittest("RSScreenTest") {
   ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+    "$graphic_2d_root/interfaces/inner_api/surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service/core",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",

@@ -820,7 +820,7 @@ public:
     std::string GetTypeWithDesc() const override
     {
         std::string desc = "{Optype: " + GetOpTypeString(GetType()) + ", Description: { ";
-        desc += "\tSymbolID = " + std::to_string(symbol_.symbolInfo_.symbolGlyohId_) + "\n";
+        desc += "\tSymbolID = " + std::to_string(symbol_.symbolInfo_.symbolGlyphId_) + "\n";
         desc += "\tlocatex_ : " + std::to_string(locate_.x()) + "\n";
         desc += "\tlocatey_ : " + std::to_string(locate_.y()) + "\n";
         desc += "}, \n";

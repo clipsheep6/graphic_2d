@@ -367,7 +367,7 @@ OH_Drawing_TypographyCreate* OH_Drawing_CreateTypographyHandler(OH_Drawing_Typog
         return nullptr;
     }
 
-    objectMgr.RemoveObject(fontCollection);
+    objectMgr->RemoveObject(fontCollection);
 #ifndef USE_GRAPHIC_TEXT_GINE
     const TypographyStyle* typoStyle = ConvertToOriginalText<TypographyStyle>(style);
     std::unique_ptr<TypographyCreate> handler = TypographyCreate::CreateRosenBuilder(*typoStyle,

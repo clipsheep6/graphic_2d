@@ -47,7 +47,7 @@ OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
     OH_Drawing_FontCollection* fc = (OH_Drawing_FontCollection*)new OHOS::Rosen::AdapterTextEngine::FontCollection;
 #endif
 #endif
-    objectMgr.AddObject(fc);
+    objectMgr->AddObject(fc);
     return fc;
 }
 
@@ -57,7 +57,7 @@ void OH_Drawing_DestroyFontCollection(OH_Drawing_FontCollection* fontCollection)
         return;
     }
 
-    if (!objectMgr.RemoveObject(fontCollection)) {
+    if (!objectMgr->RemoveObject(fontCollection)) {
         return;
     }
 

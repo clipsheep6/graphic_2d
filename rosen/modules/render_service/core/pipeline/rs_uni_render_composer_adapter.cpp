@@ -199,7 +199,37 @@ void RSUniRenderComposerAdapter::SetComposeInfoToLayer(
     layer->SetCropRect(info.srcRect);
     layer->SetMatrix(info.matrix);
     layer->SetGravity(info.gravity);
+    SetLayerColorSpace(layer, node);
     SetMetaDataInfoToLayer(layer, info, surface);
+}
+
+void RSUniRenderComposerAdapter::SetLayerColorSpace(const LayerInfoPtr& layer, RSBaseRenderNode* node) const
+{
+    if (node == nullptr) {
+        return;
+    }
+    if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
+        if (auto rsSurface = displayNode->GetRSSurface()) {
+            GraphicColorGamut rsColorSpace = rsSurface->GetColorSpace();
+            switch (rsColorSpace) {
+                case GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB: {
+                    layer->SetColorDataSpace(GraphicColorDataSpace::GRAPHIC_GAMUT_SRGB);
+                }
+                case GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB: {
+                    layer->SetColorDataSpace(GraphicColorDataSpace::GRAPHIC_GAMUT_ADOBE_RGB);
+                }
+                case GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DISPLAY_P3: {
+                    layer->SetColorDataSpace(GraphicColorDataSpace::GRAPHIC_GAMUT_DISPLAY_P3);
+                }
+                case GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DCI_P3: {
+                    layer->SetColorDataSpace(GraphicColorDataSpace::GRAPHIC_GAMUT_DCI_P3);
+                }
+                default: {
+                    layer->SetColorDataSpace(GraphicColorDataSpace::GRAPHIC_COLOR_DATA_SPACE_UNKNOWN);
+                }
+            }
+        }
+    }
 }
 
 void RSUniRenderComposerAdapter::SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,

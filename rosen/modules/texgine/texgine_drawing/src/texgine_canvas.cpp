@@ -45,14 +45,12 @@ void TexgineCanvas::DrawTextBlob(
     canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
 }
 
-void TexgineCanvas::DrawTextBlob(
-    const std::shared_ptr<TexgineTextBlob> &blob, float x, float y, const TexginePaint &paint)
+void TexgineCanvas::DrawSymbol(const HWSymbolData &symbol, SkPoint locate, const TexginePaint &paint)
 {
-    if (canvas_ == nullptr || blob == nullptr) {
+    if (canvas_ == nullptr) {
         return;
     }
-
-    canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
+    canvas_->drawSymbol(symbol, locate, paint.GetPaint());
 }
 
 void TexgineCanvas::DrawPath(const SkPath &path, const TexginePaint &paint)

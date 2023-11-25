@@ -88,7 +88,8 @@
           "egl",
           "opengles",
           "vulkan-headers",
-          "vulkan-loader"
+          "vulkan-loader",
+          "vulkan-validationlayers"
         ]
       },
       "build": {
@@ -110,7 +111,8 @@
             "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
             "//third_party/vulkan-loader/openharmony:vulkan_loader",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
-            "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json"
+            "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json",
+            "//third_party/Vulkan-ValidationLayers/build-openharmony:VkLayer_khronos_validation"
           ],
           "fwk_group": [
             "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",

@@ -38,14 +38,10 @@
  */
 
 #include "drawing_text_declaration.h"
-#include "utils/object_mgr.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern OHOS::Rosen::Drawing::ObjectMgr g_objectMgr;
-
 /**
  * @brief Creates an <b>OH_Drawing_FontCollection</b> object.
  *

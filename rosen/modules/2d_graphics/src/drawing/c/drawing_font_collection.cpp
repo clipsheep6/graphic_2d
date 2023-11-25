@@ -24,8 +24,11 @@
 #include "texgine/font_collection.h"
 #endif
 #endif
+#include "utils/object_mgr.h"
 
-OHOS::Rosen::Drawing::ObjectMgr g_objectMgr;
+using namespace OHOS::Rosen::Drawing;
+
+static std::shared_ptr<ObjectMgr> objectMgr = ObjectMgr::GetInstance();
 
 template<typename T1, typename T2>
 inline T1* ConvertToFontCollection(T2* ptr)
@@ -44,7 +47,7 @@ OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
     OH_Drawing_FontCollection* fc = (OH_Drawing_FontCollection*)new OHOS::Rosen::AdapterTextEngine::FontCollection;
 #endif
 #endif
-    g_objectMgr.AddObject(fc);
+    objectMgr.AddObject(fc);
     return fc;
 }
 
@@ -54,7 +57,7 @@ void OH_Drawing_DestroyFontCollection(OH_Drawing_FontCollection* fontCollection)
         return;
     }
 
-    if (!g_objectMgr.RemoveObject(fontCollection)) {
+    if (!objectMgr.RemoveObject(fontCollection)) {
         return;
     }
 

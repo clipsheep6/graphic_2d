@@ -24,12 +24,14 @@ namespace Rosen {
 namespace Drawing {
 class ObjectMgr {
 public:
+    static std::shared_ptr<ObjectMgr> GetInstance() noexcept(true);
     void AddObject(void* obj);
     bool HasObject(void* obj);
     bool RemoveObject(void* obj);
     size_t ObjectCount();
 
 private:
+    static inline std::shared_ptr<ObjectMgr> objectMgr = nullptr;
     std::vector<void*> vector_;
     std::mutex mutex_;
 };

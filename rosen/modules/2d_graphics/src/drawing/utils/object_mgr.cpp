@@ -18,6 +18,18 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+std::shared_ptr<ObjectMgr> ObjectMgr::GetInstance() noexcept(true)
+{
+    if (objectMgr == nullptr) {
+        static std::mutex mutex;
+        std::lock_guard<std::mutex> lock(mutex);
+        if (objectMgr == nullptr) {
+            objectMgr.reset(new ObjectMgr());
+        }
+    }
+    return tfp;
+}
+
 void ObjectMgr::AddObject(void* obj)
 {
     std::lock_guard<std::mutex> lock(mutex_);

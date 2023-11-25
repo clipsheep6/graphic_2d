@@ -210,11 +210,15 @@ void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Texgin
     SkPath path = blob->GetPathbyGlyphID(glyphId);
     canvas.DrawSymbol(path, paint);
 
-    // HWSymbolData symbolData;
-    // symbolData.symbolInfo_ = GetSymbolLayers(glyphId, style.symbol);
-    // symbolData.path_ = path;
-    // SkPoint offset = SkPoint::Make(x, y);
-    // canvas->drawSymbol(symbolData, offset, paint);
+    HWSymbolData symbolData;
+    HWSymbolRun symbol;
+    symbolData.symbolInfo_ = symbol.GetSymbolLayers(glyphId, style.symbol);
+     if (symbolData.symbolInfo_.symbolGlyphId_ != glyphId) {
+        path = blob->GetPathbyGlyphID(symbolData.symbolInfo_.symbolGlyphId_);
+    }
+    symbolData.path_ = path;
+    SkPoint offset = SkPoint::Make(x, y);
+    canvas->drawSymbol(symbolData, offset, paint);
 }
 
 // demo test

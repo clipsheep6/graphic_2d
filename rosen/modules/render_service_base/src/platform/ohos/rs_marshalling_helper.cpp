@@ -188,8 +188,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderGroup& val)
 
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayers& val)
 {
-    if (!Marshalling(parcel, val.symbplGlyphId_)) {
-        RS_LOGE("[%{public}s] failed SymbolLayers symbplGlyphId_", __func__);
+    if (!Marshalling(parcel, val.symbolGlyphId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers symbolGlyphId_", __func__);
         return false;
     }
     if (!MarshallingVec2(parcel, val.layers_)) {
@@ -205,8 +205,8 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayers& val)
 
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayers& val)
 {
-    if (!Unmarshalling(parcel, val.symbplGlyphId_)) {
-        RS_LOGE("[%{public}s] failed SymbolLayers symbplGlyphId_", __func__);
+    if (!Unmarshalling(parcel, val.symbolGlyphId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayers symbolGlyphId_", __func__);
         return false;
     }
     if (!UnmarshallingVec2(parcel, val.layers_)) {
@@ -222,8 +222,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayers& val)
 
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayersGroups& val)
 {
-    if (!Marshalling(parcel, val.symbplGlyphId_)) {
-        RS_LOGE("[%{public}s] failed SymbolLayersGroups symbplGlyphId_", __func__);
+    if (!Marshalling(parcel, val.symbolGlyphId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups symbolGlyphId_", __func__);
         return false;
     }
     if (!MarshallingVec2(parcel, val.layers_)) {
@@ -250,8 +250,8 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayersGroups& 
 
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayersGroups& val)
 {
-    if (!Unmarshalling(parcel, val.symbplGlyphId_)) {
-        RS_LOGE("[%{public}s] failed SymbolLayersGroups symbplGlyphId_", __func__);
+    if (!Unmarshalling(parcel, val.symbolGlyphId_)) {
+        RS_LOGE("[%{public}s] failed SymbolLayersGroups symbolGlyphId_", __func__);
         return false;
     }
     if (!UnmarshallingVec2(parcel, val.layers_)) {

@@ -159,12 +159,12 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
     }
 
     symbolInfo.layers_ = symbolInfoOrign.layers_;
-    symbolInfo.renderGroups_ = symbolInfoOrign.renderModesGroups_[SymbolRenderingStrategy::SINGLE];
+    symbolInfo.renderGroups_ = symbolInfoOrign.renderModeGroups_[SymbolRenderingStrategy::SINGLE];
     symbolInfo.symbolGlyphId_ = symbolInfoOrign.symbolGlyphId_;
 
     SymbolRenderingStrategy renderMode = symbolText.GetRenderModer();
-    if (symbolInfoOrign.renderModesGroups_.find(renderMode) != symbolInfoOrign.renderModesGroups_.end()) {
-        symbolInfo.renderGroups_ = symbolInfoOrign.renderModesGroups_[renderMode];
+    if (symbolInfoOrign.renderModeGroups_.find(renderMode) != symbolInfoOrign.renderModeGroups_.end()) {
+        symbolInfo.renderGroups_ = symbolInfoOrign.renderModeGroups_[renderMode];
         std::vector<SColor> colorList = symbolText.GetRenderColor();
         if (!colorList.empty()) {
             SetSymbolRenderColor(renderMode, colorList, symbolInfo);

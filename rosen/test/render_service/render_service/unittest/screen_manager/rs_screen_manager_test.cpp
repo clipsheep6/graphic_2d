@@ -876,7 +876,8 @@ HWTEST_F(RSScreenManagerTest, GetScreenColorSpace_001, TestSize.Level1)
     auto id = screenManager->CreateVirtualScreen(name, width, height, psurface);
     ASSERT_NE(INVALID_SCREEN_ID, id);
 
-    ASSERT_EQ(SUCCESS, screenManager->SetScreenColorSpace(id, static_cast<GraphicCM_ColorSpaceType>(1 | (2 << 8) | (3 << 16) | (1 << 21))));
+    ASSERT_EQ(SUCCESS, screenManager->SetScreenColorSpace(
+        id, static_cast<GraphicCM_ColorSpaceType>(1 | (2 << 8) | (3 << 16) | (1 << 21))));
     GraphicCM_ColorSpaceType colorSpace;
     ASSERT_EQ(SUCCESS, screenManager->GetScreenColorSpace(id, colorSpace));
     ASSERT_EQ(GRAPHIC_CM_SRGB_FULL, colorSpace);

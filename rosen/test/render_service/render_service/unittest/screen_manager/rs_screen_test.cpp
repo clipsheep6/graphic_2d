@@ -377,7 +377,8 @@ HWTEST_F(RSScreenTest, SetScreenColorSpace_001, testing::ext::TestSize.Level1)
 {
     VirtualScreenConfigs config;
     auto virtualScreen = std::make_unique<impl::RSScreen>(config);
-    ASSERT_EQ(virtualScreen->SetScreenColorSpace(static_cast<GraphicCM_ColorSpaceType>(1 | (2 << 8) | (3 << 16) | (1 << 21))), SUCCESS);
+    ASSERT_EQ(virtualScreen->SetScreenColorSpace(
+        static_cast<GraphicCM_ColorSpaceType>(1 | (2 << 8) | (3 << 16) | (1 << 21))), SUCCESS);
 }
 
 /*

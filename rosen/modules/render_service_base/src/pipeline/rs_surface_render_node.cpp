@@ -1484,7 +1484,7 @@ std::vector<std::shared_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetLeashW
 
 bool RSSurfaceRenderNode::IsCurrentFrameStatic()
 {
-    if (dirtyManager_ == nullptr || !dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty()) {
+    if (IsMainWindowType() && !IsOnlyBasicGeoTransfrom()) {
         return false;
     }
     if (IsAppWindow()) {
@@ -1506,6 +1506,9 @@ bool RSSurfaceRenderNode::IsCurrentFrameStatic()
             if (nestedSurface && !nestedSurface->IsCurrentFrameStatic()) {
                 return false;
             }
+        }
+        if (dirtyManager_ == nullptr || !dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty()) {
+            return false;
         }
         return true;
     } else if (IsSelfDrawingType()) {

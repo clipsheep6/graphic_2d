@@ -1407,12 +1407,12 @@ HWTEST_F(RSUniRenderVisitorTest, CheckColorSpace001, TestSize.Level2)
     auto appWindowNode = RSTestUtil::CreateSurfaceNode();
     ASSERT_NE(appWindowNode, nullptr);
     appWindowNode->SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
-    appWindowNode->SetColorSpace(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB);
+    appWindowNode->SetColorSpace(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DISPLAY_P3);
     
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->colorGamutModes_.push_back(
-        static_cast<ScreenColorGamut>(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_ADOBE_RGB));
+        static_cast<ScreenColorGamut>(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DISPLAY_P3));
     rsUniRenderVisitor->CheckColorSpace(*appWindowNode);
     ASSERT_EQ(rsUniRenderVisitor->newColorSpace_, appWindowNode->GetColorSpace());
 }

@@ -39,14 +39,14 @@ public:
     {
         colorList_.clear();
         for (auto color: colorList) {
-            SColor colorIt = {color.GetAlphaF, color.GetRed(), color.GetGreen(), color.GetBlue()};
+            SColor colorIt = {color.GetAlphaF(), color.GetRed(), color.GetGreen(), color.GetBlue()};
             colorList_.push_back(colorIt);
         }
     };
 
-    void SetRenderColor(const std::vector<Drawing::Color>& colorList)
+    void SetRenderColor(const Drawing::Color& color)
     {
-        SColor colorIt = {color.GetAlphaF, color.GetRed(), color.GetGreen(), color.GetBlue()};
+        SColor colorIt = {color.GetAlphaF(), color.GetRed(), color.GetGreen(), color.GetBlue()};
         colorList_= {colorIt};
     };
 

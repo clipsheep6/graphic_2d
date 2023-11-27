@@ -39,9 +39,14 @@ public:
         colorList_ = {colorList};
     };
 
-    void SetRenderModer(SymbolRenderingStrategy renderMode)
+    void SetRenderMode(SymbolRenderingStrategy renderMode)
     {
         renderMode_ = renderMode;
+    };
+
+    void SetSymbolEffect(const EffectStrategy& effectStratey)
+    {
+        effectStratey_ = effectStratey;
     };
 
     std::vector<SColor> GetRenderColor() const
@@ -49,14 +54,20 @@ public:
         return colorList_;
     };
 
-    SymbolRenderingStrategy GetRenderModer() const
+    SymbolRenderingStrategy GetRenderMode() const
     {
         return renderMode_;
+    };
+
+    EffectStrategy GetEffectStrategy() const
+    {
+        return effectStratey_;
     };
      
 private:
     std::vector<SColor> colorList_;
     SymbolRenderingStrategy renderMode_ = SymbolRenderingStrategy::SINGLE;
+    EffectStrategy effectStratey_ = EffectStrategy::NONE;
 };
 
 }

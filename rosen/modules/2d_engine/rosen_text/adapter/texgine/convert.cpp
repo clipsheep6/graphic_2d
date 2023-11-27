@@ -178,6 +178,10 @@ TextEngine::TextStyle Convert(const TextStyle &style)
 #endif
     };
 
+    xs.symbol.colorList_ = style.symbol.GetRenderColor();
+    xs.symbol.renderMode_ = style.symbol.GetRenderMode();
+    xs.symbol.effectStratey_ = style.symbol.GetEffectStrategy();
+
 #ifndef USE_GRAPHIC_TEXT_GINE
     for (const auto &[tag, value] : style.fontFeatures_.GetFontFeatures()) {
         xs.fontFeature_.SetFeature(tag, value);

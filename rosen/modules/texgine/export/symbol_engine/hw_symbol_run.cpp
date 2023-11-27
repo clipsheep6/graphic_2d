@@ -162,7 +162,7 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
     symbolInfo.renderGroups_ = symbolInfoOrign.renderModeGroups_[SymbolRenderingStrategy::SINGLE];
     symbolInfo.symbolGlyphId_ = symbolInfoOrign.symbolGlyphId_;
 
-    SymbolRenderingStrategy renderMode = symbolText.GetRenderModer();
+    SymbolRenderingStrategy renderMode = symbolText.GetRenderMode();
     if (symbolInfoOrign.renderModeGroups_.find(renderMode) != symbolInfoOrign.renderModeGroups_.end()) {
         symbolInfo.renderGroups_ = symbolInfoOrign.renderModeGroups_[renderMode];
         std::vector<SColor> colorList = symbolText.GetRenderColor();
@@ -205,10 +205,12 @@ void HWSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode
 void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
     const TexginePaint &paint, const TextStyle &style)
 {
-    
+    if (blob == nullptr) {
+        return;
+    }
+
     SkGlyphID glyphId = blob->GetFirstGlyphID();
     SkPath path = blob->GetPathbyGlyphID(glyphId);
-    canvas.DrawSymbol(path, paint);
 
     HWSymbolData symbolData;
     HWSymbolRun symbol;
@@ -218,7 +220,7 @@ void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Texgin
     }
     symbolData.path_ = path;
     SkPoint offset = SkPoint::Make(x, y);
-    canvas->drawSymbol(symbolData, offset, paint);
+    canvas.DrawSymbol(symbolData, offset, paint);
 }
 
 // demo test

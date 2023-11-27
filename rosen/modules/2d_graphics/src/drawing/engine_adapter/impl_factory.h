@@ -57,8 +57,8 @@ public:
     static std::unique_ptr<DataImpl> CreateDataImpl();
 #ifdef ACE_ENABLE_GPU
     static std::unique_ptr<GPUContextImpl> CreateGPUContextImpl();
-#endif
     static std::unique_ptr<TraceMemoryDumpImpl> CreateTraceMemoryDumpImpl(const char* categoryKey, bool itemizeType);
+#endif
     static std::unique_ptr<BitmapImpl> CreateBitmapImpl();
     static std::unique_ptr<PixmapImpl> CreatePixmapImpl();
     static std::unique_ptr<PixmapImpl> CreatePixmapImpl(const ImageInfo& imageInfo, const void* addr, size_t rowBytes);

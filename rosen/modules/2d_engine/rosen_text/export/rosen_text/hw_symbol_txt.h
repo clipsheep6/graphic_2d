@@ -18,13 +18,14 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include "draw/color.h"
 
 #include "third_party/skia/include/core/rs_hw_symbol.h"
 
 namespace OHOS {
 namespace Rosen {
 
-class HWSymbolTxt {
+class RS_EXPORT HWSymbolTxt {
 public:
     HWSymbolTxt(){};
     ~HWSymbolTxt(){};
@@ -34,7 +35,22 @@ public:
         colorList_ = colorList;
     };
 
-     void SetRenderColor(const SColor& colorList)
+    void SetRenderColor(const std::vector<Drawing::Color>& colorList)
+    {
+        colorList_.clear();
+        for (auto color: colorList) {
+            SColor colorIt = {color.GetAlphaF, color.GetRed(), color.GetGreen(), color.GetBlue()};
+            colorList_.push_back(colorIt);
+        }
+    };
+
+    void SetRenderColor(const std::vector<Drawing::Color>& colorList)
+    {
+        SColor colorIt = {color.GetAlphaF, color.GetRed(), color.GetGreen(), color.GetBlue()};
+        colorList_= {colorIt};
+    };
+
+    void SetRenderColor(const SColor& colorList)
     {
         colorList_ = {colorList};
     };
@@ -44,9 +60,9 @@ public:
         renderMode_ = renderMode;
     };
 
-    void SetSymbolEffect(const EffectStrategy& effectStratey)
+    void SetSymbolEffect(const EffectStrategy& effectStrategy)
     {
-        effectStratey_ = effectStratey;
+        effectStrategy_ = effectStrategy;
     };
 
     std::vector<SColor> GetRenderColor() const
@@ -61,13 +77,13 @@ public:
 
     EffectStrategy GetEffectStrategy() const
     {
-        return effectStratey_;
+        return effectStrategy_;
     };
      
 private:
     std::vector<SColor> colorList_;
     SymbolRenderingStrategy renderMode_ = SymbolRenderingStrategy::SINGLE;
-    EffectStrategy effectStratey_ = EffectStrategy::NONE;
+    EffectStrategy effectStrategy_ = EffectStrategy::NONE;
 };
 
 }

@@ -31,7 +31,7 @@ namespace TextEngine {
                     return false;
                 }
         }
-        if (renderMode_ != sym.renderMode_) {
+        if (renderMode_ != sym.renderMode_ || effectStrategy_ != sym.effectStrategy_) {
             return false;
         }
         return true;

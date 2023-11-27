@@ -215,7 +215,7 @@ void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Texgin
     HWSymbolData symbolData;
     HWSymbolRun symbol;
     symbolData.symbolInfo_ = symbol.GetSymbolLayers(glyphId, style.symbol);
-     if (symbolData.symbolInfo_.symbolGlyphId_ != glyphId) {
+    if (symbolData.symbolInfo_.symbolGlyphId_ != glyphId) {
         path = blob->GetPathbyGlyphID(symbolData.symbolInfo_.symbolGlyphId_);
     }
     symbolData.path_ = path;

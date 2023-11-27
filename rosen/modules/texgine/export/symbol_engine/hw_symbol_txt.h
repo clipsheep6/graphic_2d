@@ -45,9 +45,9 @@ public:
         renderMode_ = renderMode;
     };
 
-    void SetSymbolEffect(const EffectStrategy& effectStratey)
+    void SetSymbolEffect(const EffectStrategy& effectStrategy)
     {
-        effectStratey_ = effectStratey;
+        effectStrategy_ = effectStrategy;
     };
 
     std::vector<SColor> GetRenderColor() const
@@ -62,7 +62,7 @@ public:
 
     EffectStrategy GetEffectStrategy() const
     {
-        return effectStratey_;
+        return effectStrategy_;
     };
 
     bool operator ==(HWSymbolTxt const &sym) const;
@@ -70,7 +70,7 @@ public:
 public:
     std::vector<SColor> colorList_;
     SymbolRenderingStrategy renderMode_ = SymbolRenderingStrategy::SINGLE;
-    EffectStrategy effectStratey_ = EffectStrategy::NONE;
+    EffectStrategy effectStrategy_ = EffectStrategy::NONE;
 };
 
 }

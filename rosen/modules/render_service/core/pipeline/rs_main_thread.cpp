@@ -1448,7 +1448,21 @@ void RSMainThread::Render()
     if (RSSystemProperties::GetRenderNodeTraceEnabled()) {
         RSPropertyTrace::GetInstance().RefreshNodeTraceInfo();
     }
-
+    // update ROG(Resolution Online Government) size if needed.
+    if (RSSystemProperties::IsPhoneType()) {
+        std::list<RSBaseRenderNode::SharedPtr> children = rootNode->GetSortedChildren();
+	if(!children.empty()) {
+	    auto child = children.front();
+	    if(child != nullptr && child->IsInstanceOf<RSDisplayRenderNode>()) {
+                auto displayNode = child->ReinterpretCastTo<RSDisplayRenderNode>();
+		if(displayNode) {
+		    auto screenManager_ = CreateOrGetScreenManager();
+		    screenManager_->SetRogScreenResolution(displayNode->GetScreenId(),
+	                displayNode->GetRogWidth(), displayNode->GetRogHeight());
+		}
+	    }
+	}
+    }
     if (isUniRender_) {
         UniRender(rootNode);
     } else {

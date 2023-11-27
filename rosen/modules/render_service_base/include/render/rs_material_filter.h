@@ -111,6 +111,8 @@ public:
     bool IsNearZero(float threshold = std::numeric_limits<float>::epsilon()) const override;
     void ReleaseColorPicker();
 
+    // blendmode
+    void SetDynamicDarkColorFilter(sk_sp<SkImage> imageSnapshot);
 private:
     BLUR_COLOR_MODE colorMode_;
     float radius_ {};

@@ -47,7 +47,7 @@ public:
     void SetRenderColor(const Drawing::Color& color)
     {
         SColor colorIt = {color.GetAlphaF(), color.GetRed(), color.GetGreen(), color.GetBlue()};
-        colorList_= {colorIt};
+        colorList_ = {colorIt};
     };
 
     void SetRenderColor(const SColor& colorList)

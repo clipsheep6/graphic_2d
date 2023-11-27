@@ -18,6 +18,8 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include "text_converter.h"
+#include "utils/log.h"
 
 #include "typography_impl.h"
 

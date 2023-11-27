@@ -35,6 +35,7 @@
 #endif
 #include "text_converter.h"
 #include "word_breaker.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -124,6 +125,12 @@ std::shared_ptr<TextSpan> TextSpan::MakeFromCharGroups(const CharGroups &cgs)
 
 void TextSpan::AddUTF16Text(const std::vector<uint16_t> &text)
 {
+    std::string tmpStr = TextConverter::ToStr(text);
+    if(!tmpStr.empty())
+    {
+        LOGE("BugTest | clp  TextSpan::AddUTF16Text  std::vector<uint16_t> text= %s ",
+            tmpStr.c_str());
+    }
     u16vect_.insert(u16vect_.end(), text.begin(), text.end());
 }
 

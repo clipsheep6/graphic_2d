@@ -30,6 +30,7 @@
 #include "texgine/utils/trace.h"
 #endif
 #include "word_breaker.h"
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -56,6 +56,7 @@ public:
     bool Update(const RSPropertyDrawableGenerateContext& context) override;
 
 private:
+    RRect rrect_;
 #ifndef USE_ROSEN_DRAWING
     SkPaint paint_;
 #else

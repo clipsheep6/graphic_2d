@@ -2815,20 +2815,8 @@ void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPain
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setColorFilter(colorFilter);
-    auto skSurface = canvas.GetSurface();
-    if (skSurface == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter skSurface is null");
-        return;
-    }
-    auto clipBounds = canvas.getDeviceClipBounds();
-    auto imageSnapshot = skSurface->makeImageSnapshot(clipBounds);
-    if (imageSnapshot == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter image is null");
-        return;
-    }
-    canvas.resetMatrix();
-    SkSamplingOptions options(SkFilterMode::kNearest, SkMipmapMode::kNone);
-    canvas.drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint);
+    SkCanvas::SaveLayerRec slr(nullptr, &paint, SkCanvas::kInitWithPrevious_SaveLayerFlag);
+    canvas.saveLayer(slr);
 #else
     Drawing::AutoCanvasRestore acr(canvas, true);
     canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);

@@ -39,22 +39,10 @@ void RSColorFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas
 {
     // if useEffect defined, use color filter from parent EffectView.
 #ifndef USE_ROSEN_DRAWING
-    auto skSurface = canvas.GetSurface();
-    if (skSurface == nullptr) {
-        ROSEN_LOGE("RSColorFilterDrawable::Draw skSurface is null");
-        return;
-    }
-    auto clipBounds = canvas.getDeviceClipBounds();
-    auto imageSnapshot = skSurface->makeImageSnapshot(clipBounds);
-    if (imageSnapshot == nullptr) {
-        ROSEN_LOGE("RSColorFilterDrawable::Draw image is null");
-        return;
-    }
     SkAutoCanvasRestore acr(&canvas, true);
-    canvas.resetMatrix();
-    static SkSamplingOptions options(SkFilterMode::kNearest, SkMipmapMode::kNone);
-    canvas.drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint_);
-
+    canvas.clipRRect(RSPropertiesPainter::RRect2SkRRect(rrect_), true);
+    SkCanvas::SaveLayerRec slr(nullptr, &paint_, SkCanvas::kInitWithPrevious_SaveLayerFlag);
+    canvas.saveLayer(slr);
 #else
     auto drSurface = canvas.GetSurface();
     if (drSurface == nullptr) {
@@ -101,6 +89,7 @@ std::unique_ptr<RSPropertyDrawable> RSColorFilterDrawable::Generate(const RSProp
 
 bool RSColorFilterDrawable::Update(const RSPropertyDrawableGenerateContext& context)
 {
+    rrect_ = context.properties_.GetRRect();
     auto& colorFilter = context.properties_.GetColorFilter();
     if (colorFilter == nullptr) {
         return false;

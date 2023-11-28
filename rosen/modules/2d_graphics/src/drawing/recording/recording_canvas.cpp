@@ -305,6 +305,15 @@ void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const s
         cmdList_->AddOp<DrawTextBlobOpItem::ConstructorHandle>(textBlobHandle, x, y);
     }
 }
+#ifdef ROSEN_OHOS
+void RecordingCanvas::DrawSurfaceBuffer(const DrawingSurfaceBufferInfo& surfaceBufferInfo)
+{
+    cmdList_->AddOp<DrawSurfaceBufferOpItem::ConstructorHandle>(
+        CmdListHelper::AddSurfaceBufferToCmdList(*cmdList_, surfaceBufferInfo.surfaceBuffer_),
+        surfaceBufferInfo.offSetX, surfaceBufferInfo.offSetY,
+        surfaceBufferInfo.width_, surfaceBufferInfo.height_);
+}
+#endif
 
 void RecordingCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)
 {

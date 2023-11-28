@@ -15,8 +15,8 @@
 
 #include <map>
 
-#include "font_styles.h"
-#include "texgine_exception.h"
+#include "../include/font_styles.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
 
 namespace OHOS {

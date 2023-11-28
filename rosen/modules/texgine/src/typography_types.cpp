@@ -19,8 +19,8 @@
 #include <variant>
 
 #include "texgine/any_span.h"
-#include "texgine_exception.h"
-#include "text_span.h"
+#include "../include/texgine_exception.h"
+#include "../include/text_span.h"
 
 namespace OHOS {
 namespace Rosen {

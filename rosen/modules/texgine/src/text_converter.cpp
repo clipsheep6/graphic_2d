@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "text_converter.h"
+#include "../include/text_converter.h"
 
 #include <unicode/utf8.h>
 

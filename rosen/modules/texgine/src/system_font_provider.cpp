@@ -17,9 +17,9 @@
 
 #include <mutex>
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
-#include "variant_font_style_set.h"
+#include "../include/variant_font_style_set.h"
 
 namespace OHOS {
 namespace Rosen {

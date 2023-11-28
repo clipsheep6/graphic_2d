@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "bidi_processer.h"
+#include "../include/bidi_processer.h"
 #include <unicode/ubidi.h>
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
 #ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"

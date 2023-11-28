@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "word_breaker.h"
+#include "../include/word_breaker.h"
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
 
 namespace OHOS {

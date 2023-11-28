@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "text_span.h"
+#include "../include/text_span.h"
 
 #include <iomanip>
 #include <stack>
@@ -21,11 +21,11 @@
 #include <hb-icu.h>
 #include <unicode/ubidi.h>
 
-#include "font_collection.h"
-#include "font_styles.h"
-#include "measurer.h"
+#include "../include/font_collection.h"
+#include "../include/font_styles.h"
+#include "../include/measurer.h"
 #include "texgine_dash_path_effect.h"
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine_mask_filter.h"
 #include "texgine_path.h"
 #include "texgine_path_1d_path_effect.h"
@@ -33,8 +33,8 @@
 #ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
 #endif
-#include "text_converter.h"
-#include "word_breaker.h"
+#include "../include/text_converter.h"
+#include "../include/word_breaker.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "variant_span.h"
+#include "../include/variant_span.h"
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
-#include "text_converter.h"
+#include "../include/text_converter.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "typeface.h"
+#include "../include/typeface.h"
 
 #include <hb.h>
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
 #ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"

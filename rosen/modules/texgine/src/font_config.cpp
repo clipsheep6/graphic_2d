@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "font_config.h"
+#include "../include/font_config.h"
 
 #include <dirent.h>
 #include <fstream>

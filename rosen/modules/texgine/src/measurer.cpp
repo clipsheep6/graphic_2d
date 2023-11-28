@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "measurer.h"
+#include "../include/measurer.h"
 
 namespace OHOS {
 namespace Rosen {

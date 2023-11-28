@@ -37,7 +37,7 @@ ohos_fuzztest("TypographyBuilderFuzzTest") {
 
   include_dirs = [
     "$graphic_2d_root/rosen/modules/texgine/export",
-    "$graphic_2d_root/rosen/modules/texgine/src",
+    "$graphic_2d_root/rosen/modules/texgine/include",
     "$graphic_2d_root/rosen/test/texgine/fuzztest",
   ]
 

@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "font_parser.h"
+#include "../include/font_parser.h"
 
 #include <codecvt>
 #include <iomanip>
 #include <securec.h>
 
-#include "font_config.h"
+#include "../include/font_config.h"
 #include "texgine/utils/exlog.h"
 
 namespace OHOS {

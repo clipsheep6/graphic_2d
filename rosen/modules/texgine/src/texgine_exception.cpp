@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 
 namespace OHOS {
 namespace Rosen {

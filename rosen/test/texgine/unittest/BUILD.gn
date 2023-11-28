@@ -35,6 +35,7 @@ config("texgine_test_config") {
   include_dirs = [
     "$graphic_2d_root/rosen/modules/texgine/export/texgine",
     "$graphic_2d_root/rosen/modules/texgine/src",
+    "$graphic_2d_root/rosen/modules/texgine/include",
     "$graphic_2d_root/rosen/modules/texgine/texgine_drawing",
     "$graphic_2d_root/rosen/modules/texgine/texgine_drawing/src",
   ]

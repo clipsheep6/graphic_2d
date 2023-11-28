@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "dynamic_font_style_set.h"
+#include "../include/dynamic_font_style_set.h"
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
 
 namespace OHOS {

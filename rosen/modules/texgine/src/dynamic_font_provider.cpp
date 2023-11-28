@@ -18,12 +18,12 @@
 #include <iostream>
 #include <mutex>
 
-#include "dynamic_font_style_set.h"
-#include "texgine_exception.h"
+#include "../include/dynamic_font_style_set.h"
+#include "../include/texgine_exception.h"
 #include "texgine_stream.h"
 #include "texgine/utils/exlog.h"
-#include "typeface.h"
-#include "variant_font_style_set.h"
+#include "../include/typeface.h"
+#include "../include/variant_font_style_set.h"
 
 namespace OHOS {
 namespace Rosen {

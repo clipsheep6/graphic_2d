@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "measurer_impl.h"
+#include "../include/measurer_impl.h"
 
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
 #ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
 #endif
-#include "text_converter.h"
+#include "../include/text_converter.h"
 
 namespace OHOS {
 namespace Rosen {

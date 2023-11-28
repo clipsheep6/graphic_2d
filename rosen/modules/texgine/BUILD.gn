@@ -30,6 +30,7 @@ config("libtexgine_config") {
   include_dirs = [
     "src",
     "export",
+    "include",
   ]
 }
 

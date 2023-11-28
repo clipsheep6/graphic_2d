@@ -263,6 +263,7 @@ void RSMainThread::Init()
             SKResourceManager::Instance().ReleaseResource();
             preSKReleaseResourceTimestamp_ = timestamp_;
         }
+        RSUploadTextureThread::Instance().ReleaseNotUsedPinnedViews();
     };
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();

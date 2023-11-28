@@ -52,8 +52,7 @@ void RSImplicitAnimationParam::ApplyTimingProtocol(const std::shared_ptr<RSAnima
     }
 }
 
-RSImplicitCancelAnimationParam::RSImplicitCancelAnimationParam(
-    const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve)
+RSImplicitCancelAnimationParam::RSImplicitCancelAnimationParam(const RSAnimationTimingProtocol& timingProtocol)
     : RSImplicitAnimationParam(timingProtocol, ImplicitAnimationParamType::CANCEL)
 {}
 
@@ -66,6 +65,11 @@ std::shared_ptr<RSAnimation> RSImplicitCancelAnimationParam::CreateAnimation(std
         property->UpdateOnAllAnimationFinish();             // force update RS value and remove all animation
     }
     return nullptr;
+}
+
+void RSImplicitCancelAnimationParam::AddPropertyToPendingSyncList(const std::shared_ptr<RSPropertyBase>& property)
+{
+    pendingSyncList_.emplace_back(property);
 }
 
 RSImplicitCurveAnimationParam::RSImplicitCurveAnimationParam(

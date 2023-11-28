@@ -25,16 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class ImplicitAnimationParamType {
-    CANCEL = -1,
-    NONE = 0,
-    CURVE,
-    KEYFRAME,
-    PATH,
-    SPRING,
-    INTERPOLATING_SPRING,
-    TRANSITION
-};
+enum class ImplicitAnimationParamType { NONE, CURVE, KEYFRAME, PATH, SPRING, INTERPOLATING_SPRING, TRANSITION, CANCEL, };
 
 class RSAnimation;
 class RSPropertyBase;
@@ -64,15 +55,19 @@ private:
 
 class RSImplicitCancelAnimationParam : public RSImplicitAnimationParam {
 public:
-    RSImplicitCancelAnimationParam(
-        const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
+    RSImplicitCancelAnimationParam(const RSAnimationTimingProtocol& timingProtocol);
 
     ~RSImplicitCancelAnimationParam() override = default;
 
+    // Reuse the CreateAnimation entry, what we actually do is cancel all existing animation and set ui value
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
 
     void AddPropertyToPendingSyncList(const std::shared_ptr<RSPropertyBase>& property);
+    void SyncProperties();
+
+private:
+    std::vector<const std::shared_ptr<RSPropertyBase>> pendingSyncList_;
 };
 
 class RSImplicitCurveAnimationParam : public RSImplicitAnimationParam {

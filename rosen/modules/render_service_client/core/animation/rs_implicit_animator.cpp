@@ -322,6 +322,24 @@ void RSImplicitAnimator::CreateImplicitTransition(RSNode& target)
     return;
 }
 
+void RSImplicitAnimator::CancelImplicitAnimation(
+    const std::shared_ptr<RSNode>& target, const std::shared_ptr<RSPropertyBase>& property)
+{
+    if (target == nullptr || property == nullptr) {
+        return;
+    }
+    if (!target->HasPropertyAnimation(property->GetId())) {
+        return;
+    }
+    auto params = implicitAnimationParams_.top();
+    if (params->GetType() != ImplicitAnimationParamType::CANCEL) {
+        return;
+    }
+    auto cancelImplicitParam = std::static_pointer_cast<RSImplicitCancelAnimationParam>(params);
+    cancelImplicitParam->AddPropertyToPendingSyncList(property);
+    return;
+}
+
 void RSImplicitAnimator::CreateEmptyAnimation()
 {
     auto target = RSNodeMap::Instance().GetAnimationFallbackNode();

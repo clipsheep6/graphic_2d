@@ -72,11 +72,13 @@ public:
         std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
         const std::shared_ptr<RSPropertyBase>& endValue);
 
-    void CreateImplicitTransition(RSNode& target);
-
     void CreateImplicitAnimationWithInitialVelocity(const std::shared_ptr<RSNode>& target,
         const std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
         const std::shared_ptr<RSPropertyBase>& endValue, const std::shared_ptr<RSPropertyBase>& velocity);
+
+    void CreateImplicitTransition(RSNode& target);
+    void CancelImplicitAnimation(
+        const std::shared_ptr<RSNode>& target, const std::shared_ptr<RSPropertyBase>& property);
 
 private:
     void EndImplicitAnimation();

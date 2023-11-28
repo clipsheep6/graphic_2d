@@ -71,6 +71,8 @@ public:
 
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
+
+    void AddPropertyToPendingSyncList(const std::shared_ptr<RSPropertyBase>& property);
 };
 
 class RSImplicitCurveAnimationParam : public RSImplicitAnimationParam {

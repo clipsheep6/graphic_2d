@@ -385,7 +385,17 @@ public:
         }
     }
 
-    // void SetWithoutAnimation(const T& value) override
+    void RequestCancelAnimation() const
+    {
+        auto node = RSProperty<T>::target_.lock();
+        if (node == nullptr) {
+            return;
+        }
+        auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+        if (implicitAnimator && implicitAnimator->NeedImplicitAnimation()) {
+            implicitAnimator->CancelImplicitAnimation(node, RSProperty<T>::shared_from_this());
+        }
+    }
 
     T Get() const override
     {

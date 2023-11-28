@@ -15,9 +15,9 @@
 
 #include "texgine/dynamic_file_font_provider.h"
 
-#include "mock.h"
+#include "../include/mock.h"
 #include "texgine/utils/exlog.h"
-#include "typeface.h"
+#include "../include/typeface.h"
 
 namespace OHOS {
 namespace Rosen {

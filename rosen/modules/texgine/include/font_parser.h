@@ -23,9 +23,9 @@
 #include <include/core/SkString.h>
 
 #include "include/core/SkTypeface.h"
-#include "opentype_parser/cmap_table_parser.h"
-#include "opentype_parser/name_table_parser.h"
-#include "opentype_parser/post_table_parser.h"
+#include "../src/opentype_parser/cmap_table_parser.h"
+#include "../src/opentype_parser/name_table_parser.h"
+#include "../src/opentype_parser/post_table_parser.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -25,8 +25,8 @@
 
 #include "texgine/typography.h"
 #include "texgine/utils/memory_usage_scope.h"
-#include "variant_font_style_set.h"
-#include "variant_span.h"
+#include "../include/variant_font_style_set.h"
+#include "../include/variant_span.h"
 
 struct hb_blob_t;
 

@@ -17,7 +17,7 @@
 
 #include <mutex>
 
-#include "font_parser.h"
+#include "../include/font_parser.h"
 #include "texgine/utils/exlog.h"
 
 namespace OHOS {

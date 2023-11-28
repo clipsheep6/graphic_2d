@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "typography_builder_impl.h"
+#include "../include/typography_builder_impl.h"
 
 #include <cassert>
 #include <iostream>
 #include <memory>
 
-#include "typography_impl.h"
+#include "../include/typography_impl.h"
 
 namespace OHOS {
 namespace Rosen {

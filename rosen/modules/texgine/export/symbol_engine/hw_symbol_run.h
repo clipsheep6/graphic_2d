@@ -21,8 +21,8 @@
 #include <string>
 #include <vector>
 
-#include "third_party/skia/include/core/SkTextBlob.h"
-#include "third_party/skia/include/core/rs_hw_symbol.h"
+#include <include/core/SkTextBlob.h>
+#include <include/core/rs_hw_symbol.h>
 
 #include "hw_symbol_txt.h"
 #include "texgine/text_style.h"
@@ -35,38 +35,16 @@ namespace Rosen {
 namespace TextEngine {
 class HWSymbolRun {
 public:
-    HWSymbolRun();
+    HWSymbolRun(){};
     ~HWSymbolRun(){};
 
-    // demo test
-    void Read();
-
-    // demo test 
-    static void PathOutlineDecompose(const SkPath& path, std::vector<SkPath>& paths);
-
-    // demo test
-    static void MultilayerPath(const std::vector<std::vector<size_t>>& multMap,
-        const std::vector<SkPath>& paths, std::vector<SkPath>& multPaths);
-
-    // demo test
-    static std::vector<SkPath> GetPathLayers(const std::vector<std::vector<size_t>>& layers, const SkPath& path);
-
-    bool GetLayerGroups(SkGlyphID symbolId, SymbolLayersGroups& symbolInfo);
-
-    SymbolLayers GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText);
+    static SymbolLayers GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText);
 
     static void SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
         SymbolLayers& symbolInfo);
-    
-    // demo test
-    static void TestDrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
-        const TexginePaint &paint, const TextStyle &style);
 
     static void DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
         const TexginePaint &paint, const TextStyle &style);
-
-private:
-    std::map<SkGlyphID, SymbolLayersGroups> symbolDemoInfo_;
 };
 
 }

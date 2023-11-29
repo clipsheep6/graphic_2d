@@ -19,7 +19,7 @@
 #include <iostream>
 #include <vector>
 
-#include "third_party/skia/include/core/rs_hw_symbol.h"
+#include <include/core/rs_hw_symbol.h>
 
 namespace OHOS {
 namespace Rosen {

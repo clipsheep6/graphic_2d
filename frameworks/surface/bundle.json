@@ -16,15 +16,7 @@
       "rom": "10000KB",
       "ram": "10000KB",
       "deps": {
-        "components": [
-          "libhilog",
-          "ipc_core",
-          "samgr_proxy",
-          "utils",
-          "libeventhandler",
-          "hdi_display_device",
-          "bytrace_core"
-        ],
+        "components": [],
         "third_party": [
           "libz"
         ]

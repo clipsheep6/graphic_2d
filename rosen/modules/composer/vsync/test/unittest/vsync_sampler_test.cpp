@@ -183,6 +183,38 @@ HWTEST_F(VSyncSamplerTest, GetRefrenceTime002, Function | MediumTest| Level3)
 }
 
 /*
+* Function: GetHardwarePeriod001
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetHardwarePeriod
+ */
+HWTEST_F(VSyncSamplerTest, GetHardwarePeriod001, Function | MediumTest| Level3)
+{
+    ASSERT_EQ(VSyncSamplerTest::vsyncSampler->GetHardwarePeriod(), 0);
+}
+
+/*
+* Function: GetHardwarePeriod002
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call GetHardwarePeriod
+ */
+HWTEST_F(VSyncSamplerTest, GetHardwarePeriod002, Function | MediumTest| Level3)
+{
+    VSyncSamplerTest::vsyncSampler->SetPendingPeriod(1);
+    bool ret = true;
+    for (int i = 1; i < SAMPLER_NUMBER + 1; i++) {
+        ret = VSyncSamplerTest::vsyncSampler->AddSample(i);
+    }
+    ASSERT_EQ(ret, false);
+    VSyncSamplerTest::vsyncSampler->SetPendingPeriod(1);
+    ASSERT_EQ(VSyncSamplerTest::vsyncSampler->GetHardwarePeriod(), 1);
+    VSyncSamplerTest::vsyncSampler->Reset();
+}
+
+/*
 * Function: AddPresentFenceTime001
 * Type: Function
 * Rank: Important(2)

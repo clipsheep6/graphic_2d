@@ -1874,10 +1874,6 @@ RectI RSRenderNode::GetFilterRect() const
 void RSRenderNode::UpdateFullScreenFilterCacheRect(
     RSDirtyRegionManager& dirtyManager, bool isForeground) const
 {
-    // Skip filter cache occlusion check for RSEffectRenderNode
-    if (IsInstanceOf<RSEffectRenderNode>()) {
-        return;
-    }
     auto& renderProperties = GetRenderProperties();
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     auto& manager = renderProperties.GetFilterCacheManager(isForeground);

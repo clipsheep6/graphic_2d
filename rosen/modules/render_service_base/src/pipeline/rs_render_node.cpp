@@ -28,6 +28,7 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_effect_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_recording_canvas.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -166,15 +167,10 @@ const std::set<RSModifierType> BASIC_GEOTRANSFROM_ANIMATION_TYPE = {
 };
 }
 
-RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context)
-{
-    isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
-}
+RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context) {}
 RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context)
     : isOnTheTree_(isOnTheTree), id_(id), context_(context)
-{
-    isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
-}
+{}
 
 void RSRenderNode::AddChild(SharedPtr child, int index)
 {
@@ -1037,7 +1033,7 @@ void RSRenderNode::RenderTraceDebug() const
 void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        IterateOnDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::BOUNDS_MATRIX, canvas);
+        DrawPropertyDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::BOUNDS_MATRIX, canvas);
         return;
     }
 #ifndef USE_ROSEN_DRAWING
@@ -1058,7 +1054,7 @@ void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        IterateOnDrawableRange(RSPropertyDrawableSlot::ALPHA, RSPropertyDrawableSlot::ALPHA, canvas);
+        DrawPropertyDrawable(RSPropertyDrawableSlot::ALPHA, canvas);
         return;
     }
     auto alpha = GetRenderProperties().GetAlpha();
@@ -1083,7 +1079,7 @@ void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        IterateOnDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::MASK, canvas);
+        DrawPropertyDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::MASK, canvas);
         return;
     }
     ApplyBoundsGeometry(canvas);
@@ -1099,7 +1095,7 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        IterateOnDrawableRange(RSPropertyDrawableSlot::RESTORE_ALL, RSPropertyDrawableSlot::RESTORE_ALL, canvas);
+        DrawPropertyDrawable(RSPropertyDrawableSlot::RESTORE_ALL, canvas);
         return;
     }
     canvas.RestoreStatus(renderNodeSaveCount_);
@@ -1108,7 +1104,7 @@ void RSRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
 void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        IterateOnDrawableRange(RSPropertyDrawableSlot::RESTORE_ALL, RSPropertyDrawableSlot::RESTORE_ALL, canvas);
+        DrawPropertyDrawable(RSPropertyDrawableSlot::RESTORE_ALL, canvas);
         return;
     }
     canvas.RestoreStatus(renderNodeSaveCount_);
@@ -2662,10 +2658,35 @@ void RSRenderNode::SetLastIsNeedAssignToSubThread(bool lastIsNeedAssignToSubThre
     lastIsNeedAssignToSubThread_ = lastIsNeedAssignToSubThread;
 }
 
-void RSRenderNode::IterateOnDrawableRange(
+void RSRenderNode::DrawPropertyDrawable(RSPropertyDrawableSlot index, RSPaintFilterCanvas& canvas)
+{
+    auto& drawablePtr = renderContent_->propertyDrawablesVec_[index];
+    if (!drawablePtr) {
+        return;
+    }
+    auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
+    if (recordingCanvas) {
+        recordingCanvas->DrawPropertyDrawable(shared_from_this(), index);
+    } else {
+        drawablePtr->Draw(*this, canvas);
+    }
+}
+
+void RSRenderNode::DrawPropertyDrawableRange(
     RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas)
 {
-    renderContent_->IterateOnDrawableRange(begin, end, canvas, *this);
+    auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
+    for (uint16_t index = begin; index <= end; index++) {
+        auto& drawablePtr = renderContent_->propertyDrawablesVec_[index];
+        if (!drawablePtr) {
+            continue;
+        }
+        if (recordingCanvas) {
+            recordingCanvas->DrawPropertyDrawable(shared_from_this(), static_cast<RSPropertyDrawableSlot>(index));
+        } else {
+            drawablePtr->Draw(*this, canvas);
+        }
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

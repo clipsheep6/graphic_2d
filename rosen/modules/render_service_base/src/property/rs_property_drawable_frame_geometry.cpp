@@ -24,7 +24,7 @@
 #include "src/image/SkImage_Base.h"
 
 namespace OHOS::Rosen {
-void RSFrameGeometryDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSFrameGeometryDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     canvas.translate(node.GetRenderProperties().GetFrameOffsetX(), node.GetRenderProperties().GetFrameOffsetY());
@@ -37,7 +37,7 @@ RSPropertyDrawable::DrawablePtr RSFrameGeometryDrawable::Generate(const RSProper
     return std::make_unique<RSFrameGeometryDrawable>();
 }
 
-void RSColorFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSColorFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) const
 {
     // if useEffect defined, use color filter from parent EffectView.
 #ifndef USE_ROSEN_DRAWING
@@ -59,7 +59,7 @@ void RSColorFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas
     canvas.drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint_);
 
 #else
-    canvas.ClipRoundRect(RSPropertiesPainter::RRect2DrawingRRect(node.GetMutableRenderProperties().GetRRect()),
+    canvas.ClipRoundRect(RSPropertiesPainter::RRect2DrawingRRect(node.GetRenderProperties().GetRRect()),
         Drawing::ClipOp::INTERSECT, true);
     auto drSurface = canvas.GetSurface();
     if (drSurface == nullptr) {
@@ -84,7 +84,7 @@ void RSColorFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas
 #endif
 }
 
-std::unique_ptr<RSPropertyDrawable> RSColorFilterDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
+RSPropertyDrawable::DrawablePtr RSColorFilterDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
 {
     auto& colorFilter = context.properties_.GetColorFilter();
     if (colorFilter == nullptr) {
@@ -127,7 +127,7 @@ RSPropertyDrawable::DrawablePtr RSClipFrameDrawable::Generate(const RSPropertyDr
     return context.properties_.GetClipToFrame() ? std::make_unique<RSClipFrameDrawable>() : nullptr;
 }
 
-void RSClipFrameDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSClipFrameDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     canvas.clipRect(RSPropertiesPainter::Rect2SkRect(node.GetRenderProperties().GetFrameRect()));

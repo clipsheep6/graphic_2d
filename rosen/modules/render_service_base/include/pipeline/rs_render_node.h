@@ -132,10 +132,7 @@ public:
     bool SubSurfaceNodeNeedDraw(PartialRenderType opDropType);
     void AddSubSurfaceNode(SharedPtr child, SharedPtr parent);
     void RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent);
-    inline bool GetSubSurfaceEnabled() const
-    {
-        return isSubSurfaceEnabled_;
-    }
+    inline static const bool isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
 
     // flag: isOnTheTree; instanceRootNodeId: displaynode or leash/appnode attached to
     // firstLevelNodeId: surfacenode for uiFirst to assign task; cacheNodeId: drawing cache rootnode attached to
@@ -536,7 +533,8 @@ protected:
 #endif
     bool isFullChildrenListValid_ = false;
     bool isBootAnimation_ = false;
-    void IterateOnDrawableRange(
+    void DrawPropertyDrawable(Slot::RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas);
+    void DrawPropertyDrawableRange(
         Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas);
 
 private:
@@ -687,7 +685,6 @@ private:
     void UpdateDrawableVec();
     bool isCalcPreferredFps_ = true;
 
-    bool isSubSurfaceEnabled_ = false;
     std::map<NodeId, std::vector<WeakPtr>> subSurfaceNodes_;
     pid_t appPid_ = 0;
 
@@ -699,6 +696,7 @@ private:
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
     friend class RSRenderTransition;
+    friend class PropertyDrawableOpItem;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

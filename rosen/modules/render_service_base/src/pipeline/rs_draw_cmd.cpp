@@ -170,6 +170,7 @@ void OpItemWithRSImage::Draw(RSPaintFilterCanvas& canvas, const SkRect* rect) co
         recordingCanvas->DrawRsImage(rsImage_, samplingOptions_, paint_);
         return;
     }
+    RS_TRACE_NAME_FMT("OpItemWithRSImage draw start %p", this);
     if (rsImage_) {
 #ifdef NEW_SKIA
         rsImage_->DrawImage(canvas, samplingOptions_, paint_);

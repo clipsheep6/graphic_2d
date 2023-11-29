@@ -15,6 +15,7 @@
 #include "memory/rs_memory_track.h"
 
 #include "platform/common/rs_log.h"
+#include "rs_trace.h"
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -159,6 +160,7 @@ void MemoryTrack::UpdatePictureInfo(const void* addr, NodeId nodeId, pid_t pid)
     std::lock_guard<std::mutex> lock(mutex_);
     auto itr = memPicRecord_.find(addr);
     if (itr != memPicRecord_.end()) {
+        RS_TRACE_NAME_FMT("MemoryTrack::UpdatePictureInfo size:%ld", itr->second.size);
         itr->second.pid = pid;
         itr->second.nid = nodeId;
     }

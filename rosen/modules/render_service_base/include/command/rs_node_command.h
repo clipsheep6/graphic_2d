@@ -89,6 +89,20 @@ public:
             modifier->Update(prop, isDelta);
         }
     }
+    static void UpdateModifierCMD(RSContext& context, NodeId nodeId, DrawCmdListPtr value, PropertyId id, bool isDelta)
+    {
+        std::shared_ptr<RSRenderPropertyBase> prop = std::make_shared<RSRenderProperty<DrawCmdListPtr>>(value, id);
+        auto& nodeMap = context.GetNodeMap();
+        auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
+        if (!node) {
+            return;
+        }
+        auto modifier = node->GetModifier(id);
+        if (modifier) {
+            modifier->Update(prop, isDelta);
+        }
+        value->UpdateNodeIdToPicture(nodeId);
+    }
 
     static void SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze);
     static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced);
@@ -168,7 +182,7 @@ ADD_COMMAND(RSUpdatePropertyRRect,
         NodeId, RRect, PropertyId, bool))
 #ifndef USE_ROSEN_DRAWING
 ADD_COMMAND(RSUpdatePropertyDrawCmdList,
-    ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifier<DrawCmdListPtr>,
+    ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifierCMD,
         NodeId, DrawCmdListPtr, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertySkMatrix,
     ARG(RS_NODE, UPDATE_MODIFIER_SKMATRIX, RSNodeCommandHelper::UpdateModifier<SkMatrix>,

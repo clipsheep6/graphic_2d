@@ -107,6 +107,8 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
 
     if (implicitAnimationParams_.top()->GetType() == ImplicitAnimationParamType::CANCEL) {
         // Cancel animation and call finish callback
+        auto params = std::static_pointer_cast<RSImplicitCancelAnimationParam>(implicitAnimationParams_.top());
+        params->SyncProperties();
         CloseImplicitAnimationInner();
     }
 

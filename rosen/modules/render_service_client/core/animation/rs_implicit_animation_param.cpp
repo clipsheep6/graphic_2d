@@ -72,6 +72,14 @@ void RSImplicitCancelAnimationParam::AddPropertyToPendingSyncList(const std::sha
     pendingSyncList_.emplace_back(property);
 }
 
+void RSImplicitCancelAnimationParam::SyncProperties()
+{
+    if (pendingSyncList_.empty()) {
+        return;
+    }
+    // Create task and execute it
+}
+
 RSImplicitCurveAnimationParam::RSImplicitCurveAnimationParam(
     const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve)
     : RSImplicitAnimationParam(timingProtocol, ImplicitAnimationParamType::CURVE), timingCurve_(timingCurve)

@@ -25,6 +25,7 @@ class RSRenderPropertyBase;
 
 enum RSNodeShowingCommandType : uint16_t {
     GET_RENDER_PROPERTY,
+    GET_RENDER_PROPERTIES,
 };
 
 class RSB_EXPORT RSNodeGetShowingPropertyAndCancelAnimation : public RSSyncTask {

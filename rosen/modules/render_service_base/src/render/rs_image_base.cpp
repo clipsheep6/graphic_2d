@@ -44,20 +44,6 @@ RSImageBase::~RSImageBase()
         pixelMap_ = nullptr;
         if (uniqueId_ > 0) {
             if (renderServiceImage_) {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-                if (!RSSystemProperties::GetRsVulkanEnabled() && isPinImage_) {
-                    RSUploadTextureThread::Instance().RemoveTask(std::to_string(uniqueId_));
-                    auto unpinTask = [image = image_]() {
-                        auto grContext = RSUploadTextureThread::Instance().GetShareGrContext().get();
-                        if (grContext && image) {
-                            SkImage_unpinAsTexture(image.get(), grContext);
-                        }
-                    };
-                    RSUploadTextureThread::Instance().PostSyncTask(unpinTask);
-                }
-#endif
-#endif
                 auto task = [uniqueId = uniqueId_]() {
                     RSImageCache::Instance().ReleasePixelMapCache(uniqueId);
                 };
@@ -401,7 +387,7 @@ RSImageBase* RSImageBase::Unmarshalling(Parcel& parcel)
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSImageBase::ConvertPixelMapToSkImage()
+void RSImageBase::ConvertPixelMapToSkImage(bool paraUpload)
 {
     if (!image_ && pixelMap_) {
         if (!pixelMap_->IsEditable()) {
@@ -425,21 +411,27 @@ void RSImageBase::ConvertPixelMapToSkImage()
             }
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-            if (!RSSystemProperties::GetRsVulkanEnabled() && renderServiceImage_) {
+            auto& instance = RSUploadTextureThread::Instance();
+            if (!RSSystemProperties::GetRsVulkanEnabled() && renderServiceImage_ &&
+                paraUpload && instance.IsEnable() && image_ &&
+                (instance.ImageSupportParallelUpload(image_->width(), image_->height()))) {
                 auto image = image_;
                 auto pixelMap = pixelMap_;
-                std::function<void()> uploadTexturetask = [image, pixelMap]() -> void {
-                    auto grContext = RSUploadTextureThread::Instance().GetShareGrContext().get();
+                auto count = instance.GetFrameCount();
+                std::function<void()> uploadTexturetask = [image, pixelMap, count]() -> void {
+                    RS_TRACE_NAME_FMT("parallel upload texture w%d h%d", image->width(), image->height());
+                    auto& instance = RSUploadTextureThread::Instance();
+                    if (!instance.TaskIsValid(count)) {
+                        RS_TRACE_END();
+                        return;
+                    }
+                    auto grContext = instance.GetShareGrContext().get();
                     if (grContext && image && pixelMap) {
                         SkImage_pinAsTexture(image.get(), grContext);
-                        SkImage_Base::ReleasePinnedViewFunc func = std::bind(
-                            &RSUploadTextureThread::AddToReleaseQueue,
-                            std::placeholders::_1);
-                        as_IB(image)->setReleasePinnedViewFunc(func);
                     }
+                    RS_TRACE_END();
                 };
                 RSUploadTextureThread::Instance().PostTask(uploadTexturetask, std::to_string(uniqueId_));
-                isPinImage_ = true;
             }
 #endif
 #endif

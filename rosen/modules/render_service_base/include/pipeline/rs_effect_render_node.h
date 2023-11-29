@@ -49,7 +49,7 @@ protected:
 
 private:
 #ifndef USE_ROSEN_DRAWING
-    std::optional<SkRect> effectRegion_ = std::nullopt;
+    std::optional<SkIRect> effectRegion_ = std::nullopt;
 #else
     std::optional<Drawing::RectF> effectRegion_ = std::nullopt;
 #endif

@@ -2309,6 +2309,16 @@ void ImageWithParmOpItem::SetNodeId(NodeId id)
         rsImage_->UpdateNodeIdToPicture(id);
     }
 }
+
+void PropertyDrawableOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+{
+    renderNode_->DrawPropertyDrawable(slot_, canvas);
+}
+
+PropertyDrawableOpItem::PropertyDrawableOpItem(
+    const std::shared_ptr<RSRenderNode>& renderNode, Slot::RSPropertyDrawableSlot slot)
+    : OpItem(sizeof(PropertyDrawableOpItem)), renderNode_(renderNode), slot_(slot)
+{}
 } // namespace Rosen
 } // namespace OHOS
 
@@ -2500,6 +2510,7 @@ RSExtendImageBaseOj *RSExtendImageBaseOj::Unmarshalling(Parcel &parcel)
     }
     return object;
 }
+
 } // namespace Rosen
 } // namespace OHOS
 #endif // USE_ROSEN_DRAWING

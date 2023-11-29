@@ -25,7 +25,7 @@ class RSFrameGeometryDrawable : public RSPropertyDrawable {
 public:
     explicit RSFrameGeometryDrawable() = default;
     ~RSFrameGeometryDrawable() override = default;
-    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) const override;
 
     static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
 };
@@ -36,7 +36,7 @@ class RSClipFrameDrawable : public RSPropertyDrawable {
 public:
     explicit RSClipFrameDrawable() = default;
     ~RSClipFrameDrawable() override = default;
-    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) const override;
 
     static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
 };
@@ -51,8 +51,8 @@ public:
     explicit RSColorFilterDrawable(Drawing::Brush&& brush) : brush_(std::move(brush)) {}
 #endif
     ~RSColorFilterDrawable() override = default;
-    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
-    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) const override;
+    static RSPropertyDrawable::DrawablePtr Generate(const RSPropertyDrawableGenerateContext& context);
     bool Update(const RSPropertyDrawableGenerateContext& context) override;
 
 private:

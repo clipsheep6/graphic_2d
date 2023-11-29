@@ -34,10 +34,6 @@ public:
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
 
-    const RSPropertyDrawable::DrawableVec& GetPropertyDrawableVec() const;
-    void IterateOnDrawableRange(Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end,
-        RSPaintFilterCanvas& canvas, RSRenderNode& node);
-
 private:
     RSProperties renderProperties_;
     RSPropertyDrawable::DrawableVec propertyDrawablesVec_;

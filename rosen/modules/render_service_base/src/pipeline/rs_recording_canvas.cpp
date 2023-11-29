@@ -460,6 +460,13 @@ bool RSRecordingCanvas::IsCustomTextType() const
 {
     return isCustomTextType_;
 }
+void RSRecordingCanvas::DrawPropertyDrawable(
+    const std::shared_ptr<RSRenderNode> node, Slot::RSPropertyDrawableSlot slot)
+{
+    RS_DRAWOP_TRACE_FUNC();
+    std::unique_ptr<OpItem> op = std::make_unique<PropertyDrawableOpItem>(node, slot);
+    AddOp(std::move(op));
+}
 } // namespace Rosen
 } // namespace OHOS
 

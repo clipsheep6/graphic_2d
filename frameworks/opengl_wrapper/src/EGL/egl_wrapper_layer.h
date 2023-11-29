@@ -35,7 +35,6 @@ private:
     EglWrapperLayer() : initialized_(false) {};
     bool LoadLayers(void);
     void InitLayers(EglWrapperDispatchTable *table);
-    void SetupLayerFuncTbl(EglWrapperDispatchTable *table);
 
     std::vector<LayerInitFunc> layerInit_;
     std::vector<LayerSetupFunc> layerSetup_;

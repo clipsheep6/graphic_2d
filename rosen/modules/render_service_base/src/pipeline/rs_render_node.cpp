@@ -1882,7 +1882,7 @@ void RSRenderNode::UpdateFullScreenFilterCacheRect(
     if (!manager->IsCacheValid() && dirtyManager.IsCacheableFilterRectEmpty()) {
         dirtyManager.InvalidateFilterCacheRect();
     } else if (ROSEN_EQ(GetGlobalAlpha(), 1.0f) && ROSEN_EQ(renderProperties.GetCornerRadius().x_, 0.0f) &&
-        manager->GetCachedImageRegion() == dirtyManager.GetSurfaceRect()) {
+        manager->GetCachedImageRegion() == dirtyManager.GetSurfaceRect() && !IsInstanceOf<RSEffectRenderNode>()) {
         // Only record full screen filter cache for occlusion calculation
         dirtyManager.UpdateCacheableFilterRect(manager->GetCachedImageRegion());
     }

@@ -25,12 +25,13 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
 {
     SymbolLayers symbolInfo;
     symbolInfo.symbolGlyphId_ = glyphId;
-    SymbolLayersGroups* symbolInfoOrign = HmSymbolConfig_OHOS::getInstance()->getSymbolLayersGroups(glyphId);
+    uint32_t symbolId = static_cast<uint32_t>(glyphId);
+    SymbolLayersGroups* symbolInfoOrign = HmSymbolConfig_OHOS::getInstance()->getSymbolLayersGroups(symbolId);
     if (symbolInfoOrign == nullptr) {
         return symbolInfo;
     }
 
-    symbolInfo.layers_ = symbolInfoOrign.layers_;
+    symbolInfo.layers_ = symbolInfoOrign->layers_;
     symbolInfo.renderGroups_ = symbolInfoOrign->renderModeGroups_[SymbolRenderingStrategy::SINGLE];
     symbolInfo.symbolGlyphId_ = symbolInfoOrign->symbolGlyphId_;
 

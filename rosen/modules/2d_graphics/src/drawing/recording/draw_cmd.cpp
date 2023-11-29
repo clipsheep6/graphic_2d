@@ -15,6 +15,9 @@
 
 #include "recording/draw_cmd.h"
 
+#include <parameter.h>
+#include <parameters.h>
+#include "platform/common/rs_system_properties.h"
 #include "recording/cmd_list_helper.h"
 #include "recording/draw_cmd_list.h"
 #include "recording/mem_allocator.h"
@@ -43,6 +46,14 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType_ = static_cast<OHOS::Rosen::GpuApiType>(
+    std::atoi((system::GetParameter("persist.sys.graphic.GpuApitype", "0")).c_str()));
+static inline OHOS::Rosen::GpuApiType GetGpuApiType()
+{
+    return gSystemGpuApiType_;
+}
+
 namespace {
 void BrushHandleToBrush(const BrushHandle& brushHandle, const CmdList& cmdList, Brush& brush)
 {

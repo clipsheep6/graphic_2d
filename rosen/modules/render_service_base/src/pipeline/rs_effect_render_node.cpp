@@ -78,12 +78,14 @@ RectI RSEffectRenderNode::GetFilterRect() const
         auto& matrix = GetRenderProperties().GetBoundsGeometry()->GetAbsMatrix();
 #ifndef USE_ROSEN_DRAWING
         auto bounds = effectRegion_->makeTransform(matrix).getBounds();
-        return {bounds.x(), bounds.y(), bounds.width(), bounds.height()};
+        SkIRect rect = bounds.roundOut();
+        return {rect.fLeft, rect.fTop, rect.fRight - rect.fLeft, rect.fBottom - rect.fTop};
 #else
         auto region = effectRegion_;
         region->Transform(matrix);
         auto bounds = region->GetBounds();
-        return {bounds.GetLeft(), bounds.GetRight(), bounds.GetWidth(), bounds.GetHeight()};
+        return {floorf(bounds.GetLeft()), floorf(bounds.GetRight()), ceilf(bounds.GetWidth()),
+            ceilf(bounds.GetHeight())};
 #endif
     }
     return {};

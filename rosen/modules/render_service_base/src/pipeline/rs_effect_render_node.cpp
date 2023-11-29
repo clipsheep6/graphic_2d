@@ -84,8 +84,8 @@ RectI RSEffectRenderNode::GetFilterRect() const
         auto region = effectRegion_;
         region->Transform(matrix);
         auto bounds = region->GetBounds().roundOut();
-        return { floorf(bounds.GetLeft()), floorf(bounds.GetRight()), ceilf(bounds.GetWidth()),
-            ceilf(bounds.GetHeight()) };
+        return {floorf(bounds.GetLeft()), floorf(bounds.GetRight()), ceilf(bounds.GetWidth()),
+            ceilf(bounds.GetHeight())};
 #endif
     }
     return {};

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "uni_header.h"
+#include "napi/uni_header.h"
 
 #include <map>
 #include <memory>

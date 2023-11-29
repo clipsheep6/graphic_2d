@@ -17,11 +17,8 @@
 #define ROSENRENDER_ROSEN_WEBGL_OBJECT_MANAGER
 
 #include <map>
-#include "../context/webgl_rendering_context_basic_base.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "context/webgl_rendering_context_basic_base.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -35,28 +32,39 @@ public:
 
     ~ObjectManager() {}
 
-    std::map<std::string, WebGLRenderingContextBasicBase *>& GetWebgl1ObjectMap()
+    WebGLRenderingContextBasicBase* GetWebGLContext(bool webGL2, const std::string& contextId)
     {
-        return webgl1Objects;
+        int index = webGL2 ? 1 : 0;
+        auto it = webGLObjects_[index].find(contextId);
+        if (it == webGLObjects_[index].end()) {
+            return nullptr;
+        }
+        return static_cast<WebGLRenderingContextBasicBase*>(it->second);
     }
 
-    std::map<std::string, WebGLRenderingContextBasicBase *>& GetWebgl2ObjectMap()
+    void AddWebGLObject(bool webGL2, const std::string& contextId, WebGLRenderingContextBasicBase* obj)
     {
-        return webgl2Objects;
+        int index = webGL2 ? 1 : 0;
+        webGLObjects_[index].insert({ contextId, obj });
+    }
+
+    void DeleteWebGLObject(bool webGL2, WebGLRenderingContextBasicBase* obj)
+    {
+        int index = webGL2 ? 1 : 0;
+        for (auto iter = webGLObjects_[index].begin(); iter != webGLObjects_[index].end(); iter++) {
+            if (iter->second == obj) {
+                webGLObjects_[index].erase(iter);
+                break;
+            }
+        }
     }
 
 private:
     ObjectManager() = default;
     ObjectManager(const ObjectManager&) = delete;
     ObjectManager& operator=(const ObjectManager&) = delete;
-    std::map<std::string, WebGLRenderingContextBasicBase *> webgl1Objects;
-    std::map<std::string, WebGLRenderingContextBasicBase *> webgl2Objects;
+    std::map<std::string, WebGLRenderingContextBasicBase*> webGLObjects_[2] {};
 };
 } // namespace Rosen
 } // namespace OHOS
-
-#ifdef __cplusplus
-}
-#endif
-
 #endif // ROSENRENDER_ROSEN_WEBGL_OBJECT_MANAGER

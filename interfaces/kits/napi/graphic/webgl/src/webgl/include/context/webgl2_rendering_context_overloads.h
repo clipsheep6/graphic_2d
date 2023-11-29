@@ -21,7 +21,7 @@
 #include "securec.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
 
 #ifdef __cplusplus
 extern "C" {

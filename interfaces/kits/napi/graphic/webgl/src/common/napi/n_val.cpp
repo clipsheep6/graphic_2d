@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 
-#include "n_val.h"
+#include "napi/n_val.h"
 
+#include <limits>
 #include <sstream>
 #include <string>
+#include "securec.h"
+#include "util/log.h"
+#include "napi/n_class.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -44,6 +48,56 @@ bool NVal::TypeIs(napi_valuetype expType) const
     return true;
 }
 
+bool NVal::IsNull() const
+{
+    if (val_ == nullptr) {
+        return true;
+    }
+    napi_valuetype valueType;
+    napi_typeof(env_, val_, &valueType);
+    if (valueType == napi_null) {
+        return true;
+    }
+    if (valueType == napi_undefined) {
+        return true;
+    }
+    return false;
+}
+
+bool NVal::IsUndefined() const
+{
+    if (val_ == nullptr) {
+        return false;
+    }
+    napi_valuetype valueType;
+    napi_typeof(env_, val_, &valueType);
+    if (valueType == napi_undefined) {
+        return true;
+    }
+    return false;
+}
+
+bool NVal::IsBufferArray() const
+{
+    if (val_ == nullptr) {
+        return false;
+    }
+    bool type = false;
+    napi_is_dataview(env_, val_, &type);
+    if (type) {
+        return true;
+    }
+    napi_is_arraybuffer(env_, val_, &type);
+    if (type) {
+        return true;
+    }
+    napi_is_typedarray(env_, val_, &type);
+    if (type) {
+        return true;
+    }
+    return false;
+}
+
 tuple<bool, bool> NVal::IsArray() const
 {
     bool res = false;
@@ -53,6 +107,15 @@ tuple<bool, bool> NVal::IsArray() const
 
 tuple<bool, unique_ptr<char[]>, size_t> NVal::ToUTF8String() const
 {
+    napi_valuetype valueType;
+    napi_typeof(env_, val_, &valueType);
+    if (valueType == napi_null) {
+        unique_ptr<char[]> str = make_unique<char[]>(1);
+        str[0] = '\0';
+        return {true, move(str), 0};
+    } else if (valueType != napi_string) {
+        return {false, nullptr, 0};
+    }
     size_t strLen = 0;
     napi_status status = napi_get_value_string_utf8(env_, val_, nullptr, -1, &strLen);
     if (status != napi_ok) {
@@ -103,9 +166,19 @@ tuple<bool, bool> NVal::IsTypeArray() const
     return make_tuple(status == napi_ok, res);
 }
 
+bool NVal::IsDataView() const
+{
+    bool res = false;
+    napi_status status = napi_is_dataview(env_, val_, &res);
+    return ((status == napi_ok) && res);
+}
+
 tuple<bool, bool> NVal::ToBool() const
 {
     bool flag = false;
+    if (IsNull()) {
+        return make_tuple(true, flag);
+    }
     napi_status status = napi_get_value_bool(env_, val_, &flag);
     return make_tuple(status == napi_ok, flag);
 }
@@ -117,18 +190,71 @@ tuple<bool, double> NVal::ToDouble() const
     return make_tuple(status == napi_ok, res);
 }
 
+tuple<bool, GLfloat> NVal::ToFloat() const
+{
+    if (IsUndefined()) {
+        float f = 0;
+        memset_s(&f, sizeof(f), 0xff, sizeof(f));
+        return make_tuple(true, f);
+    }
+    if (IsNull()) {
+        return make_tuple(true, 0);
+    }
+    double res = 0.0;
+    napi_status status = napi_get_value_double(env_, val_, &res);
+    return make_tuple(status == napi_ok, static_cast<GLfloat>(res));
+}
+
 tuple<bool, int32_t> NVal::ToInt32() const
 {
     int32_t res = 0;
+    if (IsNull()) {
+        return make_tuple(true, res);
+    }
     napi_status status = napi_get_value_int32(env_, val_, &res);
+    return make_tuple(status == napi_ok, res);
+}
+
+tuple<bool, uint32_t> NVal::ToUint32() const
+{
+    uint32_t res = 0;
+    if (IsNull()) {
+        return make_tuple(true, res);
+    }
+    napi_status status = napi_get_value_uint32(env_, val_, &res);
     return make_tuple(status == napi_ok, res);
 }
 
 tuple<bool, int64_t> NVal::ToInt64() const
 {
     int64_t res = 0;
+    if (IsNull()) {
+        return make_tuple(true, res);
+    }
     napi_status status = napi_get_value_int64(env_, val_, &res);
     return make_tuple(status == napi_ok, res);
+}
+
+tuple<bool, GLsizei> NVal::ToGLsizei() const
+{
+    int64_t res = 0;
+    if (IsNull()) {
+        return make_tuple(true, res);
+    }
+    napi_status status = napi_get_value_int64(env_, val_, &res);
+    return make_tuple(status == napi_ok, static_cast<GLsizei>(res));
+}
+
+tuple<bool, GLenum> NVal::ToGLenum() const
+{
+    int64_t res = 0;
+    napi_valuetype valueType;
+    napi_typeof(env_, val_, &valueType);
+    if (valueType == napi_null) {
+        return make_tuple(true, static_cast<GLenum>(res));
+    }
+    napi_status status = napi_get_value_int64(env_, val_, &res);
+    return make_tuple(status == napi_ok, static_cast<GLenum>(res));
 }
 
 tuple<bool, void *, size_t> NVal::ToArraybuffer() const
@@ -180,7 +306,7 @@ bool NVal::HasProp(string propName) const
     if (!env_ || !val_ || !TypeIs(napi_object)) {
         return false;
     }
-        
+
     napi_status status = napi_has_named_property(env_, val_, propName.c_str(), &res);
     return (status == napi_ok) && res;
 }

@@ -21,7 +21,7 @@
 #include <functional>
 #include <string>
 
-#include "n_val.h"
+#include "napi/n_val.h"
 
 namespace OHOS {
 namespace Rosen {

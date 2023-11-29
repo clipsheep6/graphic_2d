@@ -16,37 +16,43 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_SYNC
 #define ROSENRENDER_ROSEN_WEBGL_SYNC
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLSync final : public NExporter {
+class WebGLSync final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLSync";
+    inline static const int objectType = WEBGL_OBJECT_SYNC;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
-    void SetSync(long sync)
+    static NVal CreateObjectInstance(napi_env env, WebGLSync **instance)
     {
-        m_sync = sync;
+        return WebGLObject::CreateObjectInstance<WebGLSync>(env, instance);
     }
 
-    long GetSync() const
+    void SetSync(int64_t sync)
     {
-        return m_sync;
+        sync_ = sync;
     }
 
-    explicit WebGLSync() : m_sync(0) {};
+    int64_t GetSync() const
+    {
+        return sync_;
+    }
 
-    WebGLSync(napi_env env, napi_value exports) : NExporter(env, exports), m_sync(0) {};
+    explicit WebGLSync() : sync_(0) {};
+
+    WebGLSync(napi_env env, napi_value exports) : NExporter(env, exports), sync_(0) {};
 
     ~WebGLSync() {};
 private:
-    long m_sync;
+    int64_t sync_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -16,37 +16,52 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL_QUERY
 #define ROSENRENDER_ROSEN_WEBGL_QUERY
 
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
+#include "webgl_object.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGLQuery final : public NExporter {
+class WebGLQuery final : public NExporter, public WebGLObject {
 public:
     inline static const std::string className = "WebGLQuery";
+    inline static const int objectType = WEBGL_OBJECT_QUERY;
 
     bool Export(napi_env env, napi_value exports) override;
 
     std::string GetClassName() override;
 
     static napi_value Constructor(napi_env env, napi_callback_info info);
-
+    static NVal CreateObjectInstance(napi_env env, WebGLQuery **instance)
+    {
+        return WebGLObject::CreateObjectInstance<WebGLQuery>(env, instance);
+    }
     void SetQuery(unsigned int query)
     {
-        m_query = query;
+        query_ = query;
     }
 
     unsigned int GetQuery() const
     {
-        return m_query;
+        return query_;
     }
 
-    explicit WebGLQuery() : m_query(0) {};
+    explicit WebGLQuery() : query_(0) {};
 
-    WebGLQuery(napi_env env, napi_value exports) : NExporter(env, exports), m_query(0) {};
+    WebGLQuery(napi_env env, napi_value exports) : NExporter(env, exports), query_(0) {};
 
     ~WebGLQuery() {};
+
+    GLenum GetTarget()
+    {
+        return target_;
+    }
+    void SetTarget(GLenum target)
+    {
+        target_ = target;
+    }
 private:
-    unsigned int m_query;
+    unsigned int query_;
+    GLenum target_ { 0 };
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -16,13 +16,16 @@
 #ifndef ROSENRENDER_ROSEN_WEBGL2_RENDERING_CONTEXT
 #define ROSENRENDER_ROSEN_WEBGL2_RENDERING_CONTEXT
 
+#include "webgl_rendering_context_base.h"
+#include "webgl2_rendering_context_impl.h"
 #include "webgl2_rendering_context_base.h"
 #include "webgl2_rendering_context_overloads.h"
-#include "../../../common/napi/n_exporter.h"
+#include "napi/n_exporter.h"
 
 namespace OHOS {
 namespace Rosen {
-class WebGL2RenderingContext : public WebGL2RenderingContextBase,
+class WebGL2RenderingContext
+    : public WebGLRenderingContextBasicBase, public WebGLRenderingContextBase, WebGL2RenderingContextBase,
     public WebGL2RenderingContextOverloads, public NExporter {
 public:
     inline static const std::string className = "WebGL2RenderingContext";
@@ -31,11 +34,30 @@ public:
 
     std::string GetClassName() override;
 
-    WebGL2RenderingContext(napi_env env, napi_value exports) : NExporter(env, exports) {};
+    WebGL2RenderingContext(napi_env env, napi_value exports)
+        : WebGLRenderingContextBasicBase(),
+        NExporter(env, exports), contextImpl_(WEBGL_2_0, this) {}; // 2 is WebGL2
 
-    explicit WebGL2RenderingContext() {};
+    explicit WebGL2RenderingContext() : WebGLRenderingContextBasicBase(), contextImpl_(WEBGL_2_0, this) {};
 
     virtual ~WebGL2RenderingContext();
+
+    Impl::WebGL2RenderingContextImpl &GetWebGL2RenderingContextImpl()
+    {
+        return contextImpl_;
+    }
+
+    Impl::WebGLRenderingContextBaseImpl &GetWebGLRenderingContextImpl()
+    {
+        return contextImpl_;
+    }
+    void Init() override
+    {
+        WebGLRenderingContextBasicBase::Init();
+        contextImpl_.Init();
+    }
+private:
+    Impl::WebGL2RenderingContextImpl contextImpl_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -38,28 +38,28 @@ public:
 
     void SetCurrentSurface(EGLSurface eglSurface)
     {
-        mCurrentSurface = eglSurface;
+        currentSurface_ = eglSurface;
     }
 
     void SetPbufferAttributes(int eglWidth, int eglHeight)
     {
-        mEglWidth = eglWidth;
-        mEglHeight = eglHeight;
+        eglWidth_ = eglWidth;
+        eglHeight_ = eglHeight;
     }
 
     EGLSurface GetCurrentSurface() const
     {
-        return mCurrentSurface;
+        return currentSurface_;
     }
 
     EGLDisplay GetEGLDisplay() const
     {
-        return mEGLDisplay;
+        return eglDisplay_;
     }
 
     EGLContext GetEGLContext() const
     {
-        return mEGLContext;
+        return eglContext_;
     }
 
     EGLConfig GetConfig(int version, EGLDisplay eglDisplay);
@@ -71,18 +71,18 @@ public:
     EGLSurface CreateSurface(NativeWindow* window);
 
 private:
-    EglManager() : mEGLDisplay(EGL_NO_DISPLAY), mEGLConfig(nullptr), mEGLContext(EGL_NO_CONTEXT),
-        mCurrentSurface(nullptr) {}
+    EglManager() : eglDisplay_(EGL_NO_DISPLAY), eglConfig_(nullptr), eglContext_(EGL_NO_CONTEXT),
+        currentSurface_(nullptr) {}
     EglManager(const EglManager&) = delete;
     EglManager& operator=(const EglManager&) = delete;
-    EGLDisplay mEGLDisplay;
-    EGLConfig mEGLConfig;
-    EGLContext mEGLContext;
-    EGLSurface mCurrentSurface;
-    NativeWindow *mEglWindow = nullptr;
-    bool initialized = false;
-    int mEglWidth = 0;
-    int mEglHeight = 0;
+    EGLDisplay eglDisplay_;
+    EGLConfig eglConfig_;
+    EGLContext eglContext_;
+    EGLSurface currentSurface_;
+    NativeWindow *eglWindow_ = nullptr;
+    bool initialized_ = false;
+    int eglWidth_ = 0;
+    int eglHeight_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

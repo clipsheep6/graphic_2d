@@ -18,7 +18,7 @@
 
 
 #include <map>
-#include "../context/webgl_rendering_context_basic_base.h"
+#include "context/webgl_rendering_context_basic_base.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,14 +38,14 @@ public:
 
     std::map<int, std::string>& GetObjectMap()
     {
-        return objects;
+        return objects_;
     }
 
 private:
     ObjectSource() = default;
     ObjectSource(const ObjectSource&) = delete;
     ObjectSource& operator=(const ObjectSource&) = delete;
-    std::map<int, std::string> objects;
+    std::map<int, std::string> objects_;
 };
 } // namespace Rosen
 } // namespace OHOS

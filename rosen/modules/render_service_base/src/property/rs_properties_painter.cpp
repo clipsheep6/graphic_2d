@@ -1574,6 +1574,23 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         DrawGreyAdjustment(properties, canvas);
     }
 
+    // customized case for blur text of clock with dynamic brightness according to wallpaper brightness
+    if (properties.GetColorBlendMode() == static_cast<int>(RSColorBlendModeType::DST_IN)) {
+#ifndef USE_ROSEN_DRAWING
+        auto clipIBounds = canvas.getDeviceClipBounds();
+        auto imageSnapshot = skSurface->makeImageSnapshot(
+            needSnapshotOutset ? clipIBounds.makeOutset(-1, -1) : clipIBounds);
+#else
+        auto clipIBounds = canvas.GetDeviceClipBounds();
+        if (needSnapshotOutset) {
+            clipIBounds.MakeOutset(-1, -1);
+        }
+        auto imageSnapshot = surface->GetImageSnapshot(clipIBounds);
+#endif
+        auto material = std::static_cast<RSMaterialFilter>(filter);
+        material->SetDynamicDarkColorFilter(imageSnapshot);
+    }
+
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     // Optional use cacheManager to draw filter
     if (auto& cacheManager = properties.GetFilterCacheManager(filterType == FilterType::FOREGROUND_FILTER);

@@ -418,5 +418,71 @@ void RSMaterialFilter::ReleaseColorPicker()
 #endif
     }
 }
+
+void RSMaterialFilter::SetDynamicDarkColorFilter(sk_sp<SkImage> imageSnapshot)
+{
+    if (!colorPickerTask_) {
+        colorPickerTask_ = std::make_shared<RSColorPickerCacheTask>();
+    }
+    RSColor color;
+    if (RSColorPickerCacheTask::PostPartialColorPickerTask(colorPickerTask_, imageSnapshot)) {
+        if (!colorPickerTask_->GetColor(color)) {
+            colorPickerTask_->SetStatus(CacheProcessStatus::WAITING);
+            return;
+        }
+    }
+    float relaLum = RSColorPicker::CalcRelativeLum(color.AsRgbaInt());
+    float lightDegree = (1 + 0.05) / (relaLum + 0.05);
+    sk_sp<SkColorFilter> brightnessFilter;
+    if (lightDegree  < 1.9) {
+        // LightColorDegree less than 1.9 means light color picture.
+        float lightupDegree = brightness_ > 1 ? (brightness_ - 1) : brightness_;
+        float matrix[20] = {
+            lightupDegree, 0, 0, 0, 0,
+            0, lightupDegree, 0, 0, 0,
+            0, 0, lightupDegree, 0, 0,
+            0, 0,   0,           1, 0 };
+        brightnessFilter = SkColorFilters::Matrix(matrix);
+    } else if (lightDegree > 7) {
+        // LightColorDegree greater than 7 means dark color picture.
+        SkString blurString(R"(
+            uniform half dynamicLightUpRate;
+            uniform half dynamicLightUpDeg;
+            half4 main(half4 inColor) {
+                half4 c = inColor * 255; 
+                float x = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+                float y = (0 - dynamicLightUpRate) * x + dynamicLightUpDeg * 255;
+                float R = clamp((c.r + y) / 255, 0.0, 1.0);
+                float G = clamp((c.g + y) / 255, 0.0, 1.0);
+                float B = clamp((c.b + y) / 255, 0.0, 1.0);
+                return vec4(R, G, B, 1.0);
+            }
+        )");
+        auto [gEffect, error] = SkRuntimeEffect::MakeForColorFilter(blurString);
+        if (!error.isEmpty()) {
+            SkDebugf("shader make failed %s\n", error.c_str());
+            return;
+        }
+        struct Uniforms { float dynamicLightUpRate, dynamicLightUpDeg; };
+        Uniforms uniforms = {brightness_ - 1, brightness_ -1};
+        brightnessFilter = gEffect->makeColorFilter(SkData::MakeWithCopy(&uniforms, sizeof(uniforms)));
+    } else {
+        // this should be added, because we should recover colorFilter_ to original one
+        // when lightDegree change from dark/light to normal 
+        float normalizedDegree = brightness_ - 1.0;
+        const float brightnessMat[] = {
+            1.000000f, 0.000000f, 0.000000f, 0.000000f, normalizedDegree,
+            0.000000f, 1.000000f, 0.000000f, 0.000000f, normalizedDegree,
+            0.000000f, 0.000000f, 1.000000f, 0.000000f, normalizedDegree,
+            0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f,
+        };
+        brightnessFilter = SkColorFilters::Matrix(brightnessMat);
+    }
+    SkColorMatrix cm;
+    cm.setSaturation(saturation_);
+    sk_sp<SkColorFilter> satFilter = SkColorFilters::Matrix(cm);
+    colorFilter_ = SkColorFilters::Compose(satFilter, brightnessFilter);
+    hash_ = SkOpts::hash(&colorFilter_, sizeof(colorFilter_), hash_);
+}
 } // namespace Rosen
 } // namespace OHOS

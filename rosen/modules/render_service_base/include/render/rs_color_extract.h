@@ -69,6 +69,7 @@ public:
     static uint8_t GetARGB32ColorB(unsigned int color);
     NATIVEEXPORT void SetFeatureColorNum(int N);
     void GetNFeatureColors(int colorNum);
+    static float CalcRelativeLum(uint32_t color);
 protected:
     RSColorExtract(std::shared_ptr<SkPixmap> pixmap);
     RSColorExtract(std::shared_ptr<SkPixmap> pixmap, double* coordinates);
@@ -292,7 +293,6 @@ private:
     static uint8_t Rgb2Gray(uint32_t color);
     uint32_t CalcGrayMsd() const;
     static float NormalizeRgb(uint32_t val);
-    static float CalcRelativeLum(uint32_t color);
     float CalcContrastToWhite() const;
     std::vector<std::pair<uint32_t, uint32_t>> QuantizePixels(int colorNum);
     void SplitBoxes(std::priority_queue<VBox, std::vector<VBox>, std::less<VBox> > &queue, int maxSize);

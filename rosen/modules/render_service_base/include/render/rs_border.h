@@ -84,10 +84,10 @@ public:
     bool ApplyFourLine(SkPaint& paint) const;
     bool ApplyLineStyle(SkPaint& paint, int borderIdx, float length) const;
     void PaintFourLine(SkCanvas& canvas, SkPaint& paint, RectF rect) const;
-    void PaintTopPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const;
-    void PaintRightPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const;
-    void PaintBottomPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const;
-    void PaintLeftPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const;
+    void PaintTopPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const;
+    void PaintRightPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const;
+    void PaintBottomPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const;
+    void PaintLeftPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const;
 #else
     bool ApplyFillStyle(Drawing::Brush& brush) const;
     bool ApplyPathStyle(Drawing::Pen& pen) const;

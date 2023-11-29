@@ -34,21 +34,5 @@ const RSProperties& RSRenderContent::GetRenderProperties() const
     return renderProperties_;
 }
 
-const RSPropertyDrawable::DrawableVec& RSRenderContent::GetPropertyDrawableVec() const
-{
-    return propertyDrawablesVec_;
-}
-
-void RSRenderContent::IterateOnDrawableRange(Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end,
-    RSPaintFilterCanvas& canvas, RSRenderNode& node) 
-{
-    for (uint16_t index = begin; index <= end; index++) {
-        auto& drawablePtr = propertyDrawablesVec_[index];
-        if (drawablePtr) {
-            drawablePtr->Draw(node, canvas);
-        }
-    }
-}
-
 } // namespace Rosen
 } // namespace OHOS

@@ -26,7 +26,7 @@ namespace OHOS::Rosen {
 namespace {
 using namespace Slot;
 template<RSModifierType T>
-inline std::unique_ptr<RSModifierDrawable> CustomModifierAdapter(const RSPropertyDrawableGenerateContext&)
+inline RSModifierDrawable::DrawablePtr CustomModifierAdapter(const RSPropertyDrawableGenerateContext&)
 {
     return std::make_unique<RSModifierDrawable>(T);
 }
@@ -520,6 +520,7 @@ void RSPropertyDrawable::UpdateSaveLayerSlots(
     drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_CONTENT] =
         std::make_unique<RSSaveLayerContentDrawable>(contentCount, std::move(blendPaint));
     drawableVec[RSPropertyDrawableSlot::RESTORE_CONTENT] = std::make_unique<RSRestoreDrawable>(contentCount);
+
     auto backgroundCount = std::make_shared<int>(-1);
     drawableVec[RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND] =
         std::make_unique<RSSaveLayerBackgroundDrawable>(backgroundCount);

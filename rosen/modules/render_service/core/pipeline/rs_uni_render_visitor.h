@@ -309,12 +309,16 @@ private:
 
     void SwitchColorFilterDrawing(int currentSaveCount);
     void ProcessShadowFirst(RSRenderNode& node, bool inSubThread);
+
     void SaveCurSurface(std::shared_ptr<RSDirtyRegionManager> dirtyManager,
         std::shared_ptr<RSSurfaceRenderNode> surfaceNode);
     void RestoreCurSurface(std::shared_ptr<RSDirtyRegionManager> &dirtyManager,
         std::shared_ptr<RSSurfaceRenderNode> &surfaceNode);
     void PrepareSubSurfaceNodes(RSSurfaceRenderNode& node);
-    void ProcessSubSurfaceNodes(RSSurfaceRenderNode& node);
+    bool IsSubSurfaceNodeNeedSkip(RSSurfaceRenderNode& node);
+    bool IsParentOfFirstDirtySubNode(RSBaseRenderNode &node);
+    bool IsSubNodeNeedDraw(RSBaseRenderNode &node);
+    bool IsSubSurfaceNodeNeedDraw(RSSurfaceRenderNode& node);
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
@@ -392,6 +396,9 @@ private:
     std::stack<bool> isDrawingCacheChanged_ = {};
     std::vector<RectI> accumulatedDirtyRegions_ = {};
     bool isSubSurfaceEnabled_ = false;
+    std::shared_ptr<RSSurfaceRenderNode> parentSurfaceNode_ = nullptr
+    std::shared_ptr<RSSurfaceRenderNode> firstDirtySubSurfaceNode_ = nullptr;
+    bool isSubNodeNeedDraw_ = true;
 
     bool needFilter_ = false;
     GraphicColorGamut newColorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;

@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
-#define ROSEN_TEXT_EXPORT_ROSEN_TEXT_HW_SYMBOL_TXT_H
+#ifndef ROSEN_TEXT_EXPORT_ROSEN_TEXT_HM_SYMBOL_TXT_H
+#define ROSEN_TEXT_EXPORT_ROSEN_TEXT_HM_SYMBOL_TXT_H
 #pragma once
 #include <iostream>
 #include <vector>
 #include "draw/color.h"
 
-#include "include/core/rs_hw_symbol.h"
+#include "include/core/rs_hm_symbol.h"
 
 namespace OHOS {
 namespace Rosen {
 
-class RS_EXPORT HWSymbolTxt {
+class RS_EXPORT HMSymbolTxt {
 public:
-    HWSymbolTxt(){};
-    ~HWSymbolTxt(){};
+    HMSymbolTxt(){};
+    ~HMSymbolTxt(){};
 
     void SetRenderColor(const std::vector<SColor>& colorList)
     {

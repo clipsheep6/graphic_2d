@@ -80,8 +80,8 @@ void RSCustomRestoreDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canv
 RSModifierDrawable::RSModifierDrawable(RSModifierType type) : type_(type) {}
 void RSModifierDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    auto itr = node.drawCmdModifiers_.find(type_);
-    if (itr == node.drawCmdModifiers_.end() || itr->second.empty()) {
+    auto itr = node.GetMutableDrawCmdModifiers().find(type_);
+    if (itr == node.GetMutableDrawCmdModifiers().end() || itr->second.empty()) {
         return;
     }
     RSModifierContext context = { node.GetMutableRenderProperties(), &canvas };

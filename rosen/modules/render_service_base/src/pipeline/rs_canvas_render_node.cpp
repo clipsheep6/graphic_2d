@@ -368,8 +368,8 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 
 void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
 {
-    auto itr = drawCmdModifiers_.find(type);
-    if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
+    auto itr = GetMutableDrawCmdModifiers().find(type);
+    if (itr == GetMutableDrawCmdModifiers().end() || itr->second.empty()) {
         return;
     }
 
@@ -459,8 +459,8 @@ RectF RSCanvasRenderNode::GetDrivenContentClipFrameRect() const
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     // temporary solution for driven content clip
     RectF rect;
-    auto itr = drawCmdModifiers_.find(RSModifierType::CONTENT_STYLE);
-    if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
+    auto itr = GetDrawCmdModifiers().find(RSModifierType::CONTENT_STYLE);
+    if (itr == GetDrawCmdModifiers().end() || itr->second.empty()) {
         return rect;
     }
     if (!itr->second.empty()) {
@@ -479,8 +479,8 @@ void RSCanvasRenderNode::DrawDrivenContent(RSPaintFilterCanvas& canvas)
 {
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
-    auto itr = drawCmdModifiers_.find(RSModifierType::CONTENT_STYLE);
-    if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
+    auto itr = GetMutableDrawCmdModifiers().find(RSModifierType::CONTENT_STYLE);
+    if (itr == GetMutableDrawCmdModifiers().end() || itr->second.empty()) {
         return;
     }
     int32_t index = 0;

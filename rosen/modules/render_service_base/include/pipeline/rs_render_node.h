@@ -36,6 +36,7 @@
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
+#include "pipeline/rs_render_content.h"
 #include "pipeline/rs_single_frame_composer.h"
 #include "property/rs_properties.h"
 #include "property/rs_property_drawable.h"
@@ -213,6 +214,8 @@ public:
 
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
+    std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>>& GetMutableDrawCmdModifiers();
+    const std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>>& GetDrawCmdModifiers() const;
     void UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled);
     bool IsRenderUpdateIgnored() const;
 
@@ -263,13 +266,13 @@ public:
     bool NeedInitCacheCompletedSurface() const;
     inline bool IsPureContainer() const
     {
-        return (drawCmdModifiers_.empty() && !renderProperties_.isDrawn_ && !renderProperties_.alphaNeedApply_);
+        return (GetDrawCmdModifiers().empty() && !GetRenderProperties().isDrawn_ && !GetRenderProperties().alphaNeedApply_);
     }
 
     bool IsContentNode() const
     {
-        return ((drawCmdModifiers_.size() == 1 && drawCmdModifiers_.count(RSModifierType::CONTENT_STYLE)) ||
-            drawCmdModifiers_.empty()) && !renderProperties_.isDrawn_;
+        return ((GetDrawCmdModifiers().size() == 1 && GetDrawCmdModifiers().count(RSModifierType::CONTENT_STYLE)) ||
+            GetDrawCmdModifiers().empty()) && !GetRenderProperties().isDrawn_;
     }
 
 #ifndef USE_ROSEN_DRAWING
@@ -499,7 +502,6 @@ protected:
     static void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier);
     RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
-    std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
     std::shared_ptr<RSSingleFrameComposer> singleFrameComposer_ = nullptr;
     bool isNodeSingleFrameComposer_ = false;
     // if true, it means currently it's in partial render mode and this node is intersect with dirtyRegion
@@ -517,7 +519,6 @@ protected:
 #endif
     bool isFullChildrenListValid_ = false;
     bool isBootAnimation_ = false;
-    RSProperties renderProperties_;
     void IterateOnDrawableRange(
         Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas);
 
@@ -659,14 +660,14 @@ private:
     std::unordered_map<PropertyId, std::variant<float, Vector2f, Vector4f>> propertyValueMap_;
     std::vector<HgmModifierProfile> hgmModifierProfileList_;
 
-    std::vector<std::unique_ptr<RSPropertyDrawable>> propertyDrawablesVec_;
-    uint8_t drawableVecStatus_ = 0;
     void UpdateDrawableVec();
     bool isCalPreferredNode_ = true;
 
     bool isSubSurfaceEnabled_ = false;
     std::map<NodeId, std::vector<WeakPtr>> subSurfaceNodes_;
     pid_t appPid_ = 0;
+
+    RSRenderContent renderContent_;
 
     friend class RSAliasDrawable;
     friend class RSMainThread;

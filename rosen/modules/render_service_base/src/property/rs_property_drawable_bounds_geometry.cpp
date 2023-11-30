@@ -27,8 +27,8 @@
 
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_optional_trace.h"
-#include "pipeline/rs_canvas_render_node.h"
-#include "pipeline/rs_effect_render_node.h"
+#include "pipeline/rs_canvas_render_RSRenderContent& content.h"
+#include "pipeline/rs_effect_render_RSRenderContent& content.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties.h"
@@ -42,12 +42,12 @@ constexpr int PARAM_DOUBLE = 2;
 namespace OHOS::Rosen {
 // ============================================================================
 // Bounds geometry
-void RSBoundsGeometryDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBoundsGeometryDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
-    canvas.concat(node.GetRenderProperties().GetBoundsGeometry()->GetMatrix());
+    canvas.concat(RSRenderContent& content.GetRenderProperties().GetBoundsGeometry()->GetMatrix());
 #else
-    canvas.ConcatMatrix(node.GetRenderProperties().GetBoundsGeometry()->GetMatrix());
+    canvas.ConcatMatrix(RSRenderContent& content.GetRenderProperties().GetBoundsGeometry()->GetMatrix());
 #endif
 }
 RSPropertyDrawable::DrawablePtr RSBoundsGeometryDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
@@ -55,10 +55,10 @@ RSPropertyDrawable::DrawablePtr RSBoundsGeometryDrawable::Generate(const RSPrope
     return std::make_unique<RSBoundsGeometryDrawable>();
 }
 
-void RSClipBoundsDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSClipBoundsDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
     // Planning: Generate() should calculate the draw op and cache it
-    auto& properties = node.GetMutableRenderProperties();
+    auto& properties = RSRenderContent& content.GetMutableRenderProperties();
 #ifndef USE_ROSEN_DRAWING
     if (properties.GetClipBounds() != nullptr) {
         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
@@ -102,9 +102,9 @@ RSPropertyDrawable::DrawablePtr RSPointLightDrawable::Generate(const RSPropertyD
     return nullptr;
 }
 
-void RSPointLightDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSPointLightDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = node.GetMutableRenderProperties();
+    auto& properties = RSRenderContent& content.GetMutableRenderProperties();
     const auto& illuminatedPtr = properties.GetIlluminated();
     if (illuminatedPtr && illuminatedPtr->IsIlluminated() && ROSEN_EQ(properties.GetBloom(), 0.f)) {
         RSPropertiesPainter::DrawLight(properties, canvas);
@@ -205,7 +205,7 @@ void RSBorderDRRectDrawable::OnBoundsChange(const RSProperties& properties)
     outer_ = RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect());
 #endif
 }
-void RSBorderDRRectDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBorderDRRectDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
     canvas.drawDRRect(outer_, inner_, paint_);
@@ -238,16 +238,16 @@ void RSBorderFourLineDrawable::OnBoundsChange(const RSProperties& properties)
         rect_ = properties.GetBoundsRect().MakeOutset(properties.GetOuterBorder()->GetWidthFour());
     }
 }
-void RSBorderFourLineDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBorderFourLineDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
     if (isFirstLayerBorder_) {
-        node.GetMutableRenderProperties().GetBorder()->PaintFourLine(canvas, paint_, rect_);
+        RSRenderContent& content.GetMutableRenderProperties().GetBorder()->PaintFourLine(canvas, paint_, rect_);
     } else {
-        node.GetMutableRenderProperties().GetOuterBorder()->PaintFourLine(canvas, paint_, rect_);
+        RSRenderContent& content.GetMutableRenderProperties().GetOuterBorder()->PaintFourLine(canvas, paint_, rect_);
     }
 #else
-    node.GetMutableRenderProperties().GetBorder()->PaintFourLine(canvas, pen_, rect_);
+    RSRenderContent& content.GetMutableRenderProperties().GetBorder()->PaintFourLine(canvas, pen_, rect_);
 #endif
 }
 
@@ -288,7 +288,7 @@ void RSBorderPathDrawable::OnBoundsChange(const RSProperties& properties)
     borderPath_.AddRoundRect(RSPropertiesPainter::RRect2DrawingRRect(rrect));
 #endif
 }
-void RSBorderPathDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBorderPathDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
     canvas.drawPath(borderPath_, paint_);
@@ -334,11 +334,11 @@ void RSBorderFourLineRoundCornerDrawable::OnBoundsChange(const RSProperties& pro
     rrect_ = RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect());
 #endif
 }
-void RSBorderFourLineRoundCornerDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBorderFourLineRoundCornerDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
     SkAutoCanvasRestore acr(&canvas, true);
-    auto& properties = node.GetMutableRenderProperties();
+    auto& properties = RSRenderContent& content.GetMutableRenderProperties();
     canvas.clipRRect(innerRrect_, SkClipOp::kDifference, true);
     if (isFirstLayerBorder_) {
         properties.GetBorder()->PaintTopPath(canvas, paint_, rrect_);
@@ -353,7 +353,7 @@ void RSBorderFourLineRoundCornerDrawable::Draw(RSRenderNode& node, RSPaintFilter
     }
 #else
     Drawing::AutoCanvasRestore acr(canvas, true);
-    auto& properties = node.GetMutableRenderProperties();
+    auto& properties = RSRenderContent& content.GetMutableRenderProperties();
     canvas.ClipRoundRect(innerRrect_, Drawing::ClipOp::DIFFERENCE, true);
     properties.GetBorder()->PaintTopPath(canvas, pen_, rrect_);
     properties.GetBorder()->PaintRightPath(canvas, pen_, rrect_);
@@ -405,9 +405,9 @@ RSMaskDrawable::RSMaskDrawable(std::shared_ptr<RSMask> mask) : mask_(std::move(m
 
 RSSvgDomMaskDrawable::RSSvgDomMaskDrawable(std::shared_ptr<RSMask> mask) : RSMaskDrawable(mask) {}
 
-void RSSvgDomMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSSvgDomMaskDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = node.GetRenderProperties();
+    auto& properties = RSRenderContent& content.GetRenderProperties();
 #ifndef USE_ROSEN_DRAWING
     auto bounds = RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect());
 
@@ -447,9 +447,9 @@ void RSSvgDomMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 
 RSSvgPictureMaskDrawable::RSSvgPictureMaskDrawable(std::shared_ptr<RSMask> mask) : RSMaskDrawable(mask) {}
 
-void RSSvgPictureMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSSvgPictureMaskDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = node.GetRenderProperties();
+    auto& properties = RSRenderContent& content.GetRenderProperties();
 #ifndef USE_ROSEN_DRAWING
     auto bounds = RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect());
     canvas.save();
@@ -488,9 +488,9 @@ void RSSvgPictureMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& can
 
 RSGradientMaskDrawable::RSGradientMaskDrawable(std::shared_ptr<RSMask> mask) : RSMaskDrawable(mask) {}
 
-void RSGradientMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSGradientMaskDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = node.GetRenderProperties();
+    auto& properties = RSRenderContent& content.GetRenderProperties();
 #ifndef USE_ROSEN_DRAWING
     auto bounds = RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect());
     canvas.save();
@@ -532,9 +532,9 @@ void RSGradientMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canva
 
 RSPathMaskDrawable::RSPathMaskDrawable(std::shared_ptr<RSMask> mask) : RSMaskDrawable(mask) {}
 
-void RSPathMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSPathMaskDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = node.GetRenderProperties();
+    auto& properties = RSRenderContent& content.GetRenderProperties();
 #ifndef USE_ROSEN_DRAWING
     auto bounds = RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect());
     canvas.save();
@@ -603,9 +603,9 @@ RSShadowDrawable::RSShadowDrawable(const RSProperties& properties)
 {}
 
 #ifndef USE_ROSEN_DRAWING
-void RSShadowBaseDrawable::ClipShadowPath(RSRenderNode& node, RSPaintFilterCanvas& canvas, SkPath& skPath)
+void RSShadowBaseDrawable::ClipShadowPath(RSRenderContent& content, RSPaintFilterCanvas& canvas, SkPath& skPath)
 {
-    const RSProperties& properties = node.GetRenderProperties();
+    const RSProperties& properties = RSRenderContent& content.GetRenderProperties();
     if (properties.GetShadowPath() && !properties.GetShadowPath()->GetSkiaPath().isEmpty()) {
         skPath = properties.GetShadowPath()->GetSkiaPath();
         if (!properties.GetShadowIsFilled()) {
@@ -624,9 +624,9 @@ void RSShadowBaseDrawable::ClipShadowPath(RSRenderNode& node, RSPaintFilterCanva
     }
 }
 #else
-void RSShadowBaseDrawable::ClipShadowPath(RSRenderNode& node, RSPaintFilterCanvas& canvas, Drawing::Path& path)
+void RSShadowBaseDrawable::ClipShadowPath(RSRenderContent& content, RSPaintFilterCanvas& canvas, Drawing::Path& path)
 {
-    const RSProperties& properties = node.GetRenderProperties();
+    const RSProperties& properties = RSRenderContent& content.GetRenderProperties();
     if (properties.GetShadowPath() && !properties.GetShadowPath()->GetDrawingPath().IsValid()) {
         path = properties.GetShadowPath()->GetDrawingPath();
         if (!properties.GetShadowIsFilled()) {
@@ -647,11 +647,11 @@ void RSShadowBaseDrawable::ClipShadowPath(RSRenderNode& node, RSPaintFilterCanva
 }
 #endif
 
-RSColor RSShadowDrawable::GetColorForShadow(RSRenderNode& node, RSPaintFilterCanvas& canvas,
+RSColor RSShadowDrawable::GetColorForShadow(RSRenderContent& content, RSPaintFilterCanvas& canvas,
     SkPath& skPath, SkMatrix& matrix, SkIRect& deviceClipBounds)
 {
     RSColor colorPicked;
-    const RSProperties& properties = node.GetRenderProperties();
+    const RSProperties& properties = RSRenderContent& content.GetRenderProperties();
     // color shadow alpha deault is 255, if need to be changed, should add a arkui interface
     auto shadowAlpha = UINT8_MAX;
     auto& colorPickerTask = properties.GetColorPickerCacheTaskShadow();
@@ -672,7 +672,7 @@ RSColor RSShadowDrawable::GetColorForShadow(RSRenderNode& node, RSPaintFilterCan
     return RSColor(colorPicked.GetRed(), colorPicked.GetGreen(), colorPicked.GetBlue(), shadowAlpha);
 }
 
-void RSShadowDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSShadowDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
         return;
@@ -681,13 +681,13 @@ void RSShadowDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
     auto deviceClipBounds = canvas.getDeviceClipBounds();
     SkAutoCanvasRestore acr(&canvas, true);
     SkPath skPath;
-    ClipShadowPath(node, canvas, skPath);
+    ClipShadowPath(RSRenderContent& content, canvas, skPath);
     skPath.offset(offsetX_, offsetY_);
     auto matrix = canvas.getTotalMatrix();
     matrix.setTranslateX(std::ceil(matrix.getTranslateX()));
     matrix.setTranslateY(std::ceil(matrix.getTranslateY()));
     canvas.setMatrix(matrix);
-    RSColor colorPicked = GetColorForShadow(node, canvas, skPath, matrix, deviceClipBounds);
+    RSColor colorPicked = GetColorForShadow(RSRenderContent& content, canvas, skPath, matrix, deviceClipBounds);
     SkPaint paint;
     paint.setColor(SkColorSetARGB(colorPicked.GetAlpha(), colorPicked.GetRed(),
         colorPicked.GetGreen(), colorPicked.GetBlue()));
@@ -697,7 +697,7 @@ void RSShadowDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 #else
     Drawing::AutoCanvasRestore acr(canvas, true);
     Drawing::Path path;
-    ClipShadowPath(node, canvas, path);
+    ClipShadowPath(RSRenderContent& content, canvas, path);
     path.Offset(offsetX_, offsetY_);
     auto matrix = canvas.GetTotalMatrix();
     matrix.Set(Drawing::Matrix::SCALE_X, std::ceil(matrix.Get(Drawing::Matrix::SCALE_X)));
@@ -719,7 +719,7 @@ RSHardwareAccelerationShadowDrawable::RSHardwareAccelerationShadowDrawable(const
     : RSShadowBaseDrawable(properties), shadowElevation_(properties.GetShadowElevation())
 {}
 
-void RSHardwareAccelerationShadowDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSHardwareAccelerationShadowDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
         return;
@@ -727,7 +727,7 @@ void RSHardwareAccelerationShadowDrawable::Draw(RSRenderNode& node, RSPaintFilte
 #ifndef USE_ROSEN_DRAWING
     SkAutoCanvasRestore acr(&canvas, true);
     SkPath skPath;
-    ClipShadowPath(node, canvas, skPath);
+    ClipShadowPath(RSRenderContent& content, canvas, skPath);
     skPath.offset(offsetX_, offsetY_);
     RSAutoCanvasRestore rst(&canvas);
     auto matrix = canvas.getTotalMatrix();
@@ -746,7 +746,7 @@ void RSHardwareAccelerationShadowDrawable::Draw(RSRenderNode& node, RSPaintFilte
 #else
     Drawing::AutoCanvasRestore acr(canvas, true);
     Drawing::Path path;
-    ClipShadowPath(node, canvas, path);
+    ClipShadowPath(RSRenderContent& content, canvas, path);
     path.Offset(offsetX_, offsetY_);
     auto matrix = canvas.GetTotalMatrix();
     matrix.Set(Drawing::Matrix::SCALE_X, std::ceil(matrix.Get(Drawing::Matrix::SCALE_X)));
@@ -784,10 +784,10 @@ RSColorfulShadowDrawable::RSColorfulShadowDrawable(const RSProperties& propertie
         Drawing::ImageFilter::CreateBlurImageFilter(blurRadius, blurRadius, Drawing::TileMode::DECAL, nullptr));
     blurBrush_.SetFilter(filter);
 #endif
-    node_ = properties.backref_;
+    RSRenderContent& content_ = properties.backref_;
 }
 
-void RSColorfulShadowDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSColorfulShadowDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
         return;
@@ -795,7 +795,7 @@ void RSColorfulShadowDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& can
 #ifndef USE_ROSEN_DRAWING
     SkAutoCanvasRestore acr(&canvas, true);
     SkPath skPath;
-    ClipShadowPath(node, canvas, skPath);
+    ClipShadowPath(RSRenderContent& content, canvas, skPath);
     // save layer, draw image with clipPath, blur and draw back
     canvas.saveLayer(nullptr, &blurPaint_);
     canvas.translate(offsetX_, offsetY_);
@@ -803,17 +803,17 @@ void RSColorfulShadowDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& can
 #else
     Drawing::AutoCanvasRestore acr(canvas, true);
     Drawing::Path path;
-    ClipShadowPath(node, canvas, path);
+    ClipShadowPath(RSRenderContent& content, canvas, path);
     // save layer, draw image with clipPath, blur and draw back
     Drawing::SaveLayerOps slr(nullptr, &blurBrush_);
     canvas.SaveLayer(slr);
     canvas.Translate(offsetX_, offsetY_);
     canvas.ClipPath(path, Drawing::ClipOp::INTERSECT, false);
 #endif
-    // draw node content as shadow
+    // draw RSRenderContent& content content as shadow
     // [PLANNING]: maybe we should also draw background color / image here, and we should cache the shadow image
-    if (auto node = RSBaseRenderNode::ReinterpretCast<RSCanvasRenderNode>(node_.lock())) {
-        node->InternalDrawContent(canvas);
+    if (auto RSRenderContent& content = RSBaseRenderRSRenderContent& content::ReinterpretCast<RSCanvasRenderRSRenderContent& content>(RSRenderContent& content_.lock())) {
+        RSRenderContent& content->InternalDrawContent(canvas);
     }
 }
 
@@ -833,9 +833,9 @@ bool RSDynamicLightUpDrawable::Update(const RSPropertyDrawableGenerateContext& c
     return context.properties_.IsDynamicLightUpValid();
 }
 
-void RSDynamicLightUpDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSDynamicLightUpDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    RSPropertiesPainter::DrawDynamicLightUp(node.GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawDynamicLightUp(RSRenderContent& content.GetRenderProperties(), canvas);
 }
 
 // ============================================================================
@@ -855,9 +855,9 @@ bool RSLightUpEffectDrawable::Update(const RSPropertyDrawableGenerateContext& co
 
 // ============================================================================
 // Binarization
-void RSBinarizationDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBinarizationDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    RSPropertiesPainter::DrawBinarizationShader(node.GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawBinarizationShader(RSRenderContent& content.GetRenderProperties(), canvas);
 }
 
 std::unique_ptr<RSPropertyDrawable> RSBinarizationDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
@@ -871,9 +871,9 @@ std::unique_ptr<RSPropertyDrawable> RSBinarizationDrawable::Generate(const RSPro
 
 // ============================================================================
 // LightUpEffect
-void RSLightUpEffectDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSLightUpEffectDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    RSPropertiesPainter::DrawLightUpEffect(node.GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawLightUpEffect(RSRenderContent& content.GetRenderProperties(), canvas);
 }
 
 // ============================================================================
@@ -889,20 +889,20 @@ std::unique_ptr<RSPropertyDrawable> RSBackgroundFilterDrawable::Generate(
     if (filter == nullptr) {
         return nullptr;
     }
-    if (context.node_->IsInstanceOf<RSEffectRenderNode>()) {
-        // for RSEffectRenderNode, we just use generates effect data, instead of draw filter
+    if (context.RSRenderContent& content_->IsInstanceOf<RSEffectRenderRSRenderContent& content>()) {
+        // for RSEffectRenderRSRenderContent& content, we just use generates effect data, instead of draw filter
         return std::make_unique<RSEffectDataGenerateDrawable>();
     }
     return std::make_unique<RSBackgroundFilterDrawable>();
 }
 
-void RSBackgroundFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBackgroundFilterDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    // fix compatibility with Node Group, copied from RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren
+    // fix compatibility with RSRenderContent& content Group, copied from RSCanvasRenderRSRenderContent& content::ProcessAnimatePropertyBeforeChildren
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::OFFSCREEN) {
         return;
     }
-    RSPropertiesPainter::DrawFilter(node.GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
+    RSPropertiesPainter::DrawFilter(RSRenderContent& content.GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
 }
 
 // foreground filter
@@ -925,9 +925,9 @@ bool RSForegroundFilterDrawable::Update(const RSPropertyDrawableGenerateContext&
     return context.properties_.GetFilter() != nullptr;
 }
 
-void RSForegroundFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSForegroundFilterDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    RSPropertiesPainter::DrawFilter(node.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
+    RSPropertiesPainter::DrawFilter(RSRenderContent& content.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
 }
 
 // effect data
@@ -936,11 +936,11 @@ bool RSEffectDataGenerateDrawable::Update(const RSPropertyDrawableGenerateContex
     return context.properties_.GetBackgroundFilter() != nullptr;
 }
 
-void RSEffectDataGenerateDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSEffectDataGenerateDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    if (auto effectNode = node.ReinterpretCastTo<RSEffectRenderNode>()) {
-        if (auto& region = effectNode->effectRegion_) {
-            RSPropertiesPainter::DrawBackgroundEffect(node.GetRenderProperties(), canvas, region->getBounds());
+    if (auto effectRSRenderContent& content = RSRenderContent& content.ReinterpretCastTo<RSEffectRenderRSRenderContent& content>()) {
+        if (auto& region = effectRSRenderContent& content->effectRegion_) {
+            RSPropertiesPainter::DrawBackgroundEffect(RSRenderContent& content.GetRenderProperties(), canvas, region->getBounds());
         }
     }
 }
@@ -965,13 +965,13 @@ bool RSBackgroundFilterDrawable::Update(const RSPropertyDrawableGenerateContext&
     return context.properties_.GetFilter() != nullptr;
 }
 
-void RSEffectDataApplyDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSEffectDataApplyDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    // fix compatibility with Node Group, copied from RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren
+    // fix compatibility with RSRenderContent& content Group, copied from RSCanvasRenderRSRenderContent& content::ProcessAnimatePropertyBeforeChildren
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::OFFSCREEN) {
         return;
     }
-    RSPropertiesPainter::ApplyBackgroundEffect(node.GetRenderProperties(), canvas);
+    RSPropertiesPainter::ApplyBackgroundEffect(RSRenderContent& content.GetRenderProperties(), canvas);
 }
 
 // ============================================================================
@@ -991,16 +991,16 @@ bool RSLinearGradientBlurFilterDrawable::Update(const RSPropertyDrawableGenerate
     return context.properties_.GetLinearGradientBlurPara() != nullptr;
 }
 
-void RSLinearGradientBlurFilterDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSLinearGradientBlurFilterDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    RSPropertiesPainter::DrawLinearGradientBlurFilter(node.GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawLinearGradientBlurFilter(RSRenderContent& content.GetRenderProperties(), canvas);
 }
 
 // ============================================================================
 // ForegroundColor
-void RSForegroundColorDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSForegroundColorDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = node.GetMutableRenderProperties();
+    auto& properties = RSRenderContent& content.GetMutableRenderProperties();
 #ifndef USE_ROSEN_DRAWING
     canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetRRect()), paint_);
 #else
@@ -1059,14 +1059,14 @@ bool RSParticleDrawable::Update(const RSPropertyDrawableGenerateContext& context
     return properties.GetPixelStretch().has_value();
 }
 
-void RSParticleDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSParticleDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    RSPropertiesPainter::DrawParticle(node.GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawParticle(RSRenderContent& content.GetRenderProperties(), canvas);
 }
 
-void RSPixelStretchDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSPixelStretchDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    RSPropertiesPainter::DrawPixelStretch(node.GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawPixelStretch(RSRenderContent& content.GetRenderProperties(), canvas);
 }
 
 bool RSPixelStretchDrawable::Update(const RSPropertyDrawableGenerateContext& context)
@@ -1087,10 +1087,10 @@ std::unique_ptr<RSPropertyDrawable> RSPixelStretchDrawable::Generate(const RSPro
 
 // ============================================================================
 // Background
-void RSBackgroundDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBackgroundDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
-    canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(node.GetMutableRenderProperties().GetRRect()), paint_);
+    canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(RSRenderContent& content.GetMutableRenderProperties().GetRRect()), paint_);
 #else
     canvas.DrawBackground(brush_);
 #endif
@@ -1176,9 +1176,9 @@ bool RSBackgroundImageDrawable::Update(const RSPropertyDrawableGenerateContext& 
     return true;
 }
 
-void RSBackgroundImageDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSBackgroundImageDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
-    auto& properties = node.GetMutableRenderProperties();
+    auto& properties = RSRenderContent& content.GetMutableRenderProperties();
     const auto& image = properties.GetBgImage();
 
 #ifndef USE_ROSEN_DRAWING
@@ -1194,7 +1194,7 @@ void RSBackgroundImageDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& ca
 
 // ============================================================================
 // SaveLayerBackground
-void RSSaveLayerBackgroundDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSSaveLayerBackgroundDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
     *content_ = canvas.saveLayer(nullptr, nullptr);
@@ -1204,7 +1204,7 @@ void RSSaveLayerBackgroundDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas
 }
 
 // SaveLayerContent
-void RSSaveLayerContentDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+void RSSaveLayerContentDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
     *content_ = canvas.saveLayer(nullptr, &blendPaint_);

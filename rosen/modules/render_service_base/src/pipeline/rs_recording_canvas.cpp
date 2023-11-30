@@ -529,7 +529,7 @@ void RSRecordingCanvas::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkSca
     AddOp(std::move(op));
 }
 
-void RSRecordingCanvas::onDrawSymbol(const HWSymbolData& symbol, SkPoint locate, const SkPaint& paint)
+void RSRecordingCanvas::onDrawSymbol(const HMSymbolData& symbol, SkPoint locate, const SkPaint& paint)
 {
     std::unique_ptr<OpItem> op = std::make_unique<SymbolOpItem>(symbol, locate, paint);
     RS_LOGI("RSRecordingCanvas::onDrawSymbol at %{public}d, %{public}d",

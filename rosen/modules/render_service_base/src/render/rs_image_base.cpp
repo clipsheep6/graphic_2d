@@ -24,6 +24,7 @@
 #include "common/rs_background_thread.h"
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
 #include "common/rs_upload_texture_thread.h"
+#include "src/image/SkImage_Base.h"
 #endif
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
@@ -429,6 +430,10 @@ void RSImageBase::ConvertPixelMapToSkImage()
                     auto grContext = RSUploadTextureThread::Instance().GetShareGrContext().get();
                     if (grContext && image && pixelMap) {
                         SkImage_pinAsTexture(image.get(), grContext);
+                        SkImage_Base::ReleasePinnedViewFunc func = std::bind(
+                            &RSUploadTextureThread::AddToReleaseQueue,
+                            std::placeholders::_1);
+                        as_IB(image)->setReleasePinnedViewFunc(func);
                     }
                 };
                 RSUploadTextureThread::Instance().PostTask(uploadTexturetask, std::to_string(uniqueId_));

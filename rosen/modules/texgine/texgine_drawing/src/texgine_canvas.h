@@ -47,7 +47,7 @@ public:
     /*
      * @brief Draws symbol at point, using clip, SkMatrix, and paint.
      */
-    void DrawSymbol(const HWSymbolData &symbol, SkPoint locate, const TexginePaint &paint);
+    void DrawSymbol(const HMSymbolData &symbol, SkPoint locate, const TexginePaint &paint);
 
     /*
      * @brief Draws Path , using SkPath path and SkPaint paint.

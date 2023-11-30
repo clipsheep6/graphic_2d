@@ -45,7 +45,7 @@ void TexgineCanvas::DrawTextBlob(
     canvas_->drawTextBlob(blob->GetTextBlob(), x, y, paint.GetPaint());
 }
 
-void TexgineCanvas::DrawSymbol(const HWSymbolData &symbol, SkPoint locate, const TexginePaint &paint)
+void TexgineCanvas::DrawSymbol(const HMSymbolData &symbol, SkPoint locate, const TexginePaint &paint)
 {
     if (canvas_ == nullptr) {
         return;

@@ -166,8 +166,8 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RenderGroup& val)
         RS_LOGE("[%{public}s] failed RenderGroup color_", __func__);
         return false;
     }
-    if (!MarshallingVec(parcel, val.groupInfo_)) {
-        RS_LOGE("[%{public}s] failed RenderGroup groupInfo_", __func__);
+    if (!MarshallingVec(parcel, val.groupInfos_)) {
+        RS_LOGE("[%{public}s] failed RenderGroup groupInfos_", __func__);
         return false;
     }
     return true;
@@ -179,8 +179,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderGroup& val)
         RS_LOGE("[%{public}s] failed RenderGroup color_", __func__);
         return false;
     }
-    if (!UnmarshallingVec(parcel, val.groupInfo_)) {
-        RS_LOGE("[%{public}s] failed RenderGroup groupInfo_", __func__);
+    if (!UnmarshallingVec(parcel, val.groupInfos_)) {
+        RS_LOGE("[%{public}s] failed RenderGroup groupInfos_", __func__);
         return false;
     }
     return true;

@@ -387,7 +387,7 @@ void SymbolOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     }
     for (auto group : groups) {
         SkPath multPath;
-        for (auto groupInfo : group.groupInfo_) {
+        for (auto groupInfo : group.groupInfos_) {
             SkPath pathStemp;
             for (auto k : groupInfo.layerIndexes_) {
                 if (k >= pathLayers.size()) {

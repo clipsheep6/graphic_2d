@@ -868,12 +868,12 @@ public:
         return isForeground_;
     }
     bool GetNodeIsSingleFrameComposer() const override;
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetLeashWindowNestedSurfaces();
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
-    std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetLeashWindowNestedSurfaces();
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;

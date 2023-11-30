@@ -95,6 +95,7 @@ private:
         uint64_t focusNodeId = 0);
     static void SortSubThreadNodes(std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     static void HandleHardwareNode(const std::shared_ptr<RSSurfaceRenderNode>& node);
+    static void UpdateSurfaceBasicGeoTransform(std::shared_ptr<RSSurfaceRenderNode> node);
 #ifndef USE_ROSEN_DRAWING
     static void PostReleaseSurfaceTask(sk_sp<SkSurface>&& surface, uint32_t threadIndex);
 #else

@@ -490,7 +490,6 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
     bool rotationCache = RSSystemProperties::GetCacheEnabledForRotation();
     bool isFocusNodeFound = false;
     uint64_t realFocusNodeId = 0;
-    std::string logInfo = "";
     std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
         std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
@@ -520,13 +519,6 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
             }
         }
     }
-    // trace info for assign window nodes
-    bool debugTraceEnable = Rosen::RSSystemProperties::GetDebugTraceEnabled();
-    if (debugTraceEnable) {
-        logInfo += "{ rotationCache: " + std::to_string(rotationCache) + ", " +
-            "isRotation: " + std::to_string(isRotation) + " }; " +
-            "realFocusNodeId: " + std::to_string(realFocusNodeId) + " ]";
-    }
     for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
         auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
         if (node == nullptr) {
@@ -536,13 +528,6 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         bool isNeedAssignToSubThread = !rotationCache && node->IsLeashWindow()
             && (node->IsScale() || ROSEN_EQ(node->GetGlobalAlpha(), 0.0f))
             && !node->HasFilter();
-        // trace info for assign window nodes
-        if (debugTraceEnable) {
-            logInfo += "node:[ " + node->GetName() + ", " + std::to_string(node->GetId()) + " ]" +
-                "( " + std::to_string(static_cast<uint32_t>(node->GetCacheSurfaceProcessedStatus())) + ", " +
-                std::to_string(node->HasFilter()) + ", " + std::to_string(node->HasAbilityComponent()) +
-                ", " + std::to_string(node->IsScale()) + ", " + std::to_string(isNeedAssignToSubThread) + " ); ";
-        }
         std::string surfaceName = node->GetName();
         bool needFilter = surfaceName == ENTRY_VIEW || surfaceName == WALLPAPER_VIEW ||
             surfaceName == SYSUI_STATUS_BAR || surfaceName == SCREENLOCK_WINDOW ||
@@ -576,7 +561,6 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         }
     }
     SortSubThreadNodes(subThreadNodes);
-    RS_OPTIONAL_TRACE_NAME("RSUniRenderUtil::AssignWindowNodes:" + logInfo);
 }
 
 void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
@@ -600,6 +584,23 @@ void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRe
     }
 }
 
+void RSUniRenderUtil::UpdateSurfaceBasicGeoTransform(std::shared_ptr<RSSurfaceRenderNode> node)
+{
+    if (node->IsMainWindowType()) {
+        node->SetOnlyBasicGeoTransfrom(
+            RSMainThread::Instance()->CheckIfInstanceOnlySurfaceBasicGeoTransform(node->GetId()));
+    }
+    if (node->IsLeashWindow()) {
+        auto nestedSurfaces = node->GetLeashWindowNestedSurfaces();
+        for (auto& nestedSurface : nestedSurfaces) {
+            if (nestedSurface && nestedSurface->IsMainWindowType()) {
+                nestedSurface->SetOnlyBasicGeoTransfrom(
+                    RSMainThread::Instance()->CheckIfInstanceOnlySurfaceBasicGeoTransform(nestedSurface->GetId()));
+            }
+        }
+    }
+}
+
 void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
     const std::shared_ptr<RSSurfaceRenderNode>& node, DeviceType deviceType, uint64_t focusNodeId)
 {
@@ -610,6 +611,7 @@ void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRen
     node->SetNeedSubmitSubThread(true);
     node->SetCacheType(CacheType::CONTENT);
     node->SetIsMainThreadNode(false);
+    UpdateSurfaceBasicGeoTransform(node);
 
     // skip complete static window, DO NOT assign it to subthread.
     if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DONE &&

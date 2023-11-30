@@ -108,6 +108,11 @@ public:
     void ResetIsOnlyBasicGeoTransfrom();
     bool IsOnlyBasicGeoTransfrom() const;
 
+    void SetOnlyBasicGeoTransfrom(bool onlyBasicGeoTransfrom)
+    {
+        isOnlyBasicGeoTransform_ = onlyBasicGeoTransfrom;
+    }
+
     WeakPtr GetParent() const;
 
     inline NodeId GetId() const

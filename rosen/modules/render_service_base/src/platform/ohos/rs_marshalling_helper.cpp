@@ -66,7 +66,7 @@
 #include "src/core/SkWriteBuffer.h"
 #include "src/image/SkImage_Base.h"
 
-#include "include/core/rs_hw_symbol.h"
+#include "include/core/rs_hm_symbol.h"
 
 #include "pipeline/rs_draw_cmd_list.h"
 #ifdef NEW_SKIA
@@ -282,27 +282,27 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayersGroups& val)
     return true;
 }
 
-bool RSMarshallingHelper::Marshalling(Parcel& parcel, const HWSymbolData& val)
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const HMSymbolData& val)
 {
     if (!Marshalling(parcel, val.symbolInfo_)) {
-        RS_LOGE("[%{public}s] failed HWSymbolData symbolInfo_", __func__);
+        RS_LOGE("[%{public}s] failed HMSymbolData symbolInfo_", __func__);
         return false;
     }
     if (!Marshalling(parcel, val.path_)) {
-        RS_LOGE("[%{public}s] failed HWSymbolData path_", __func__);
+        RS_LOGE("[%{public}s] failed HMSymbolData path_", __func__);
         return false;
     }
     return true;
 }
 
-bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, HWSymbolData& val)
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, HMSymbolData& val)
 {
     if (!Unmarshalling(parcel, val.symbolInfo_)) {
-        RS_LOGE("[%{public}s] failed HWSymbolData symbolInfo_", __func__);
+        RS_LOGE("[%{public}s] failed HMSymbolData symbolInfo_", __func__);
         return false;
     }
     if (!Unmarshalling(parcel, val.path_)) {
-        RS_LOGE("[%{public}s] failed HWSymbolData path_", __func__);
+        RS_LOGE("[%{public}s] failed HMSymbolData path_", __func__);
         return false;
     }
     return true;

@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HW_SYMBOL_TXT_H
-#define ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HW_SYMBOL_TXT_H
+#ifndef ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HM_SYMBOL_TXT_H
+#define ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HM_SYMBOL_TXT_H
 #pragma once
 #include <iostream>
 #include <vector>
 
-#include <include/core/rs_hw_symbol.h>
+#include <include/core/rs_hm_symbol.h>
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
 
-class HWSymbolTxt {
+class HMSymbolTxt {
 public:
-    HWSymbolTxt(){};
-    ~HWSymbolTxt(){};
+    HMSymbolTxt(){};
+    ~HMSymbolTxt(){};
 
     void SetRenderColor(const std::vector<SColor>& colorList)
     {
@@ -65,7 +65,7 @@ public:
         return effectStrategy_;
     };
 
-    bool operator ==(HWSymbolTxt const &sym) const;
+    bool operator ==(HMSymbolTxt const &sym) const;
      
 public:
     std::vector<SColor> colorList_;

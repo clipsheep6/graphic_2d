@@ -35,7 +35,7 @@
 #endif
 #include "text_converter.h"
 #include "word_breaker.h"
-#include "symbol_engine/hw_symbol_run.h"
+#include "symbol_engine/hm_symbol_run.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -183,7 +183,7 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
 
     PaintShadow(canvas, offsetX, offsetY, xs.shadows);
     if (xs.isSymbolGlyph) {
-        HWSymbolRun::DrawSymbol(canvas, textBlob_, offsetX, offsetY, paint, xs);
+        HMSymbolRun::DrawSymbol(canvas, textBlob_, offsetX, offsetY, paint, xs);
     } else {
         canvas.DrawTextBlob(textBlob_, offsetX, offsetY, paint);
     }

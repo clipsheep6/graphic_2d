@@ -352,7 +352,7 @@ void TextBlobOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
     }
 }
 
-SymbolOpItem::SymbolOpItem(const HWSymbolData& symbol, SkPoint locate, const SkPaint& paint)
+SymbolOpItem::SymbolOpItem(const HMSymbolData& symbol, SkPoint locate, const SkPaint& paint)
     : OpItemWithPaint(sizeof(SymbolOpItem)), symbol_(symbol), locate_(locate), paint_(paint), nodeId_(0)
 {
 
@@ -368,9 +368,9 @@ void SymbolOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 
     // 2.0 split path
     std::vector<SkPath> paths;
-    HWSymbol::PathOutlineDecompose(path, paths);
+    HMSymbol::PathOutlineDecompose(path, paths);
     std::vector<SkPath> pathLayers;
-    HWSymbol::MultilayerPath(symbol_.symbolInfo_.layers_, paths, pathLayers);
+    HMSymbol::MultilayerPath(symbol_.symbolInfo_.layers_, paths, pathLayers);
 
     // 3.0 set paint
     SkPaint paintCopy = paint_;
@@ -430,7 +430,7 @@ bool SymbolOpItem::Marshalling(Parcel& parcel) const
 
 OpItem* SymbolOpItem::Unmarshalling(Parcel& parcel)
 {
-    HWSymbolData symbol;
+    HMSymbolData symbol;
     SkPoint point;
     SkPaint paint;
     bool success = RSMarshallingHelper::Unmarshalling(parcel, symbol) &&

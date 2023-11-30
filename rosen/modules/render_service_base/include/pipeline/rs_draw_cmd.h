@@ -103,7 +103,7 @@ enum RSOpType : uint16_t {
     RESTORE_ALPHA_OPITEM,
     SURFACEBUFFER_OPITEM,
     SCALE_OPITEM,
-    HW_SYMBOL_OPITEM,
+    HM_SYMBOL_OPITEM,
 };
 namespace {
     std::string GetOpTypeString(RSOpType type)
@@ -153,7 +153,7 @@ namespace {
             GETOPTYPESTRING(RESTORE_ALPHA_OPITEM);
             GETOPTYPESTRING(SURFACEBUFFER_OPITEM);
             GETOPTYPESTRING(SCALE_OPITEM);
-            GETOPTYPESTRING(HW_SYMBOL_OPITEM);
+            GETOPTYPESTRING(HM_SYMBOL_OPITEM);
             default:
                 break;
         }
@@ -809,7 +809,7 @@ private:
 class SymbolOpItem : public OpItemWithPaint
 {
 public:
-    SymbolOpItem(const HWSymbolData& symbol, SkPoint locate, const SkPaint& paint);
+    SymbolOpItem(const HMSymbolData& symbol, SkPoint locate, const SkPaint& paint);
     ~SymbolOpItem() override {};
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
     std::optional<SkRect> GetCacheBounds() const override
@@ -829,7 +829,7 @@ public:
 
     RSOpType GetType() const override
     {
-        return RSOpType::HW_SYMBOL_OPITEM;
+        return RSOpType::HM_SYMBOL_OPITEM;
     }
 
     void SetNodeId(NodeId id) override
@@ -841,7 +841,7 @@ public:
     [[nodiscard]] static OpItem* Unmarshalling(Parcel& parcel);
 
 private:
-    HWSymbolData symbol_;
+    HMSymbolData symbol_;
     SkPoint locate_;
     SkPaint paint_;
 

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HW_SYMBOL_RUN_H
-#define ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HW_SYMBOL_RUN_H
+#ifndef ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HM_SYMBOL_RUN_H
+#define ROSEN_MODULES_TEXGINE_EXPORT_SYMBOL_ENGINE_HM_SYMBOL_RUN_H
 
 #pragma once
 #include <iostream>
@@ -22,9 +22,9 @@
 #include <vector>
 
 #include <include/core/SkTextBlob.h>
-#include <include/core/rs_hw_symbol.h>
+#include <include/core/rs_hm_symbol.h>
 
-#include "hw_symbol_txt.h"
+#include "hm_symbol_txt.h"
 #include "texgine/text_style.h"
 #include "texgine/utils/exlog.h"
 #include "texgine_text_blob.h"
@@ -33,12 +33,12 @@
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-class HWSymbolRun {
+class HMSymbolRun {
 public:
-    HWSymbolRun(){};
-    ~HWSymbolRun(){};
+    HMSymbolRun(){};
+    ~HMSymbolRun(){};
 
-    static SymbolLayers GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText);
+    static SymbolLayers GetSymbolLayers(const SkGlyphID& glyphId, const HMSymbolTxt& symbolText);
 
     static void SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
         SymbolLayers& symbolInfo);

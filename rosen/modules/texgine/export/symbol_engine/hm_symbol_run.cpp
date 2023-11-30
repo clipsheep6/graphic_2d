@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "hw_symbol_run.h"
+#include "hm_symbol_run.h"
 #include <include/pathops/SkPathOps.h>
 #include <src/ports/skia_ohos/HmSymbolConfig_ohos.h>
 
@@ -21,7 +21,7 @@ namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
 
-SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymbolTxt& symbolText)
+SymbolLayers HMSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HMSymbolTxt& symbolText)
 {
     SymbolLayers symbolInfo;
     symbolInfo.symbolGlyphId_ = glyphId;
@@ -46,7 +46,7 @@ SymbolLayers HWSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HWSymb
     return symbolInfo;
 }
 
-void HWSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
+void HMSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode, const std::vector<SColor>& colors,
     SymbolLayers& symbolInfo)
 {
     if (colors.empty()) {
@@ -75,7 +75,7 @@ void HWSymbolRun::SetSymbolRenderColor(const SymbolRenderingStrategy& renderMode
     }
 }
 
-void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
+void HMSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<TexgineTextBlob> &blob, float x, float y,
     const TexginePaint &paint, const TextStyle &style)
 {
     if (blob == nullptr) {
@@ -85,7 +85,7 @@ void HWSymbolRun::DrawSymbol(TexgineCanvas &canvas, const std::shared_ptr<Texgin
     SkGlyphID glyphId = blob->GetFirstGlyphID();
     SkPath path = blob->GetPathbyGlyphID(glyphId);
 
-    HWSymbolData symbolData;
+    HMSymbolData symbolData;
     symbolData.symbolInfo_ = GetSymbolLayers(glyphId, style.symbol);
     if (symbolData.symbolInfo_.symbolGlyphId_ != glyphId) {
         path = blob->GetPathbyGlyphID(symbolData.symbolInfo_.symbolGlyphId_);

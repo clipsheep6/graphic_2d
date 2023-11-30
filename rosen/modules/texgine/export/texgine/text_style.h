@@ -23,7 +23,7 @@
 
 #include "texgine_paint.h"
 #include "texgine/typography_types.h"
-#include "symbol_engine/hw_symbol_txt.h"
+#include "symbol_engine/hm_symbol_txt.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -109,7 +109,7 @@ struct TextStyle {
 
     // symbol glyph
     bool isSymbolGlyph = false;
-    HWSymbolTxt symbol;
+    HMSymbolTxt symbol;
 };
 } // namespace TextEngine
 } // namespace Rosen

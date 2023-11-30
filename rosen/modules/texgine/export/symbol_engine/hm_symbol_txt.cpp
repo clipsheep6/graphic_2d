@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "hw_symbol_txt.h"
+#include "hm_symbol_txt.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
-    bool HWSymbolTxt::operator ==(HWSymbolTxt const &sym) const
+    bool HMSymbolTxt::operator ==(HMSymbolTxt const &sym) const
     {
         if (colorList_.size() != sym.colorList_.size()) {
             return false;

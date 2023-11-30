@@ -30,7 +30,7 @@
 #include "utils/point.h"
 
 #include "typography_types.h"
-#include "hw_symbol_txt.h"
+#include "hm_symbol_txt.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -127,7 +127,7 @@ struct TextStyle {
 
     // symbol glyph
     bool isSymbolGlyph = false;
-    HWSymbolTxt symbol;
+    HMSymbolTxt symbol;
 };
 } // namespace Rosen
 } // namespace OHOS

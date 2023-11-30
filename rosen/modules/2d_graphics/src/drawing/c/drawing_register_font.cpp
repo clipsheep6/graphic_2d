@@ -17,6 +17,7 @@
 #include <filesystem>
 #endif
 #include <fstream>
+#include <limits.h>
 #include "c/drawing_register_font.h"
 
 #ifndef USE_GRAPHIC_TEXT_GINE
@@ -49,7 +50,13 @@ static bool StdFilesystemExists(const std::string &p, std::error_code &ec)
 #else
 static bool StdFilesystemExists(const std::string &p)
 {
+    char *canonicalPath = realpath(p.c_str(), nullptr);
+    if (canonicalPath == nullptr) {
+        return false;
+    }
     std::ifstream f(p.c_str());
+    free(canonicalPath);
+    canonicalPath = nullptr;
     return f.good();
 }
 #endif

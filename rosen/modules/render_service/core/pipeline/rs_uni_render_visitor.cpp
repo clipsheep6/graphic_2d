@@ -531,14 +531,12 @@ void RSUniRenderVisitor::PrepareSubSurfaceNodes(RSSurfaceRenderNode& node)
     if (!isSubSurfaceEnabled_) {
         return;
     }
-    for (auto &nodes : node.GetSubSurfaceNodes()) {
-        for (auto &node : nodes.second) {
-            auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.lock());
-            if (surfaceNode != nullptr) {
-                SaveCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
-                PrepareSurfaceRenderNode(*surfaceNode);
-                RestoreCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
-            }
+    for (auto &nodeWptr : node.GetSubSurfaceNodes()) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeWptr.lock());
+        if (surfaceNode != nullptr) {
+            SaveCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
+            PrepareSurfaceRenderNode(*surfaceNode);
+            RestoreCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
         }
     }
 }
@@ -548,14 +546,12 @@ void RSUniRenderVisitor::ProcessSubSurfaceNodes(RSSurfaceRenderNode& node)
     if (!isSubSurfaceEnabled_) {
         return;
     }
-    for (auto &nodes : node.GetSubSurfaceNodes()) {
-        for (auto &node : nodes.second) {
-            auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.lock());
-            if (surfaceNode != nullptr && ProcessSharedTransitionNode(*surfaceNode)) {
-                SaveCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
-                ProcessSurfaceRenderNode(*surfaceNode);
-                RestoreCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
-            }
+    for (auto &nodeWptr : node.GetSubSurfaceNodes()) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeWptr.lock());
+        if (surfaceNode != nullptr && ProcessSharedTransitionNode(*surfaceNode)) {
+            SaveCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
+            ProcessSurfaceRenderNode(*surfaceNode);
+            RestoreCurSurface(curSurfaceDirtyManager_, curSurfaceNode_);
         }
     }
 }

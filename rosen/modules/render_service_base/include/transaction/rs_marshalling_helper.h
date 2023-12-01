@@ -361,7 +361,12 @@ public:
     static void BeginNoSharedMem(std::thread::id tid);
     static void EndNoSharedMem();
     static bool GetUseSharedMem(std::thread::id tid);
+    static std::mutex& GetMutex()
+    {
+        return recordingMutex;
+    }
 private:
+    static std::mutex recordingMutex;
     static bool WriteToParcel(Parcel& parcel, const void* data, size_t size);
     static const void* ReadFromParcel(Parcel& parcel, size_t size, bool& isMalloc);
     static bool SkipFromParcel(Parcel& parcel, size_t size);

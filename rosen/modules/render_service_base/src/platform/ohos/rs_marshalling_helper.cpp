@@ -392,7 +392,12 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkTextBlob>& val)
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SkPaint& val)
 {
     SkBinaryWriteBuffer writer;
-    writer.writePaint(val);
+    if (!g_useSharedMem && g_tid == std::this_thread::get_id()){
+        std::lock_guard<std::mutex> lock(recordingMutex);
+        writer.writePaint(val);
+    } else {
+        writer.writePaint(val);
+    }
     size_t length = writer.bytesWritten();
     sk_sp<SkData> data = SkData::MakeUninitialized(length);
     writer.writeToMemory(data->writable_data());

@@ -1438,7 +1438,16 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             uniVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
             RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
         }
+#if defined(RS_ENABLE_VK)
+        if (RSSystemProperties::GetRecordingEnabled()) {
+            std::lock_guard<std::mutex> lock(RSMarshallingHelper::GetMutex());
+            rootNode->Process(uniVisitor);
+        } else {
+            rootNode->Process(uniVisitor);
+        }
+#else
         rootNode->Process(uniVisitor);
+#endif
     } else {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)

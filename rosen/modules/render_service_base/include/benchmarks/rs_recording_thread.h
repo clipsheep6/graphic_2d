@@ -49,7 +49,7 @@ public:
 
     RSRecordingThread(RenderContext* context) : renderContext_(context){};
     ~RSRecordingThread();
-    
+
     static RSRecordingThread& Instance(RenderContext* context);
     void Start();
     bool IsIdle();
@@ -69,7 +69,7 @@ public:
     {
         return mode_ != RecordingMode::STOP_RECORDING;
     }
- 
+
 private:
     void CreateShareEglContext();
     void DestroyShareEglContext();

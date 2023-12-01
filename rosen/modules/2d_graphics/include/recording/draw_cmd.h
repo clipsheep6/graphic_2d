@@ -1237,7 +1237,8 @@ class DrawSurfaceBufferOpItem : public DrawOpItem {
 public:
     struct ConstructorHandle : public OpItem {
         ConstructorHandle(uint32_t surfaceBufferId, int offSetX, int offSetY, int width, int height)
-            : OpItem(DrawOpItem::SURFACEBUFFER_OPITEM), surfaceBufferId(surfaceBufferId), surfaceBufferInfo(nullptr, offSetX, offSetY, width, height) {}
+            : OpItem(DrawOpItem::SURFACEBUFFER_OPITEM), surfaceBufferId(surfaceBufferId), 
+            surfaceBufferInfo(nullptr, offSetX, offSetY, width, height) {}
         ~ConstructorHandle() override = default;
         uint32_t surfaceBufferId;
         DrawingSurfaceBufferInfo surfaceBufferInfo;

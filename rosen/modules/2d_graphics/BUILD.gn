@@ -254,7 +254,7 @@ template("graphics2d_source_set") {
 
     if (platform == "ohos" || platform == "ohos_ng") {
       external_deps = [
-        "c_utils:utils",  
+        "c_utils:utils",
         "hilog:libhilog",
         "image_framework:image_native",
       ]

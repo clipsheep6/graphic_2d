@@ -401,8 +401,8 @@ bool RSCanvasDrawingRenderNode::GetPixelmap(
 
 bool RSCanvasDrawingRenderNode::GetSizeFromDrawCmdModifiers(int& width, int& height)
 {
-    auto it = drawCmdModifiers_.find(RSModifierType::CONTENT_STYLE);
-    if (it == drawCmdModifiers_.end() || it->second.empty()) {
+    auto it = GetDrawCmdModifiers().find(RSModifierType::CONTENT_STYLE);
+    if (it == GetDrawCmdModifiers().end() || it->second.empty()) {
         return false;
     }
     for (const auto& modifier : it->second) {
@@ -457,7 +457,7 @@ void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType type)
 #else
     dirtyTypes_.set(static_cast<int>(type), true);
 #endif
-    for (auto drawCmdModifier : drawCmdModifiers_) {
+    for (auto drawCmdModifier : GetDrawCmdModifiers()) {
         if (drawCmdModifier.second.empty()) {
             continue;
         }

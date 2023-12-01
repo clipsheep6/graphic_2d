@@ -26,7 +26,7 @@ namespace OHOS::Rosen {
 namespace {
 using namespace Slot;
 template<RSModifierType T>
-inline RSModifierDrawable::DrawablePtr CustomModifierAdapter(const RSPropertyDrawableGenerateContext&)
+inline RSModifierDrawable::DrawablePtr CustomModifierAdapter(const RSRenderContent&)
 {
     return std::make_unique<RSModifierDrawable>(T);
 }
@@ -285,7 +285,7 @@ std::unordered_set<RSPropertyDrawableSlot> RSPropertyDrawable::GenerateDirtySlot
 }
 #endif
 
-bool RSPropertyDrawable::UpdateDrawableVec(const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec,
+bool RSPropertyDrawable::UpdateDrawableVec(const RSRenderContent& content, DrawableVec& drawableVec,
     std::unordered_set<RSPropertyDrawableSlot>& dirtySlots)
 {
     if (dirtySlots.empty()) {
@@ -296,14 +296,14 @@ bool RSPropertyDrawable::UpdateDrawableVec(const RSPropertyDrawableGenerateConte
     auto drawableSlotChanged = false;
     for (const auto& slot : dirtySlots) {
         auto& origDrawable = drawableVec[slot];
-        if (origDrawable != nullptr && origDrawable->Update(context)) {
+        if (origDrawable != nullptr && origDrawable->Update(content)) {
             continue;
         }
         auto& generator = g_drawableGeneratorLut[static_cast<int>(slot)];
         if (!generator) {
             continue;
         }
-        auto drawable = generator(context);
+        auto drawable = generator(content);
         if (bool(origDrawable) != bool(drawable)) {
             // drawable slot changed (nullptr to non-nullptr or vice versa)
             drawableSlotChanged = true;
@@ -313,7 +313,7 @@ bool RSPropertyDrawable::UpdateDrawableVec(const RSPropertyDrawableGenerateConte
 
     // Step 2.2: post-generate hooks (PLANNING: refactor this into a separate function)
     if (dirtySlots.count(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)) {
-        UpdateSaveLayerSlots(context, drawableVec);
+        UpdateSaveLayerSlots(content, drawableVec);
     }
 
     // Temporary fix, change of clipToBounds should trigger UpdateSaveRestore
@@ -333,19 +333,16 @@ inline bool HasPropertyDrawableInRange(
 }
 
 inline uint8_t CalculateDrawableVecStatus(
-    RSPropertyDrawableGenerateContext& context, RSPropertyDrawable::DrawableVec& drawableVec)
+    RSRenderContent& content, RSPropertyDrawable::DrawableVec& drawableVec)
 {
     uint8_t result = 0;
-    auto& properties = context.properties_;
+    auto& properties = content.GetRenderProperties();
 
     if (properties.GetClipToBounds() || properties.GetClipToRRect() || properties.GetClipBounds() != nullptr) {
         result |= DrawableVecStatus::CLIP_BOUNDS;
     }
     if (properties.GetClipToFrame()) {
         result |= DrawableVecStatus::CLIP_FRAME;
-    }
-    if (context.hasChildren_) {
-        result |= DrawableVecStatus::HAS_CHILDREN;
     }
 
     if (HasPropertyDrawableInRange(
@@ -379,7 +376,7 @@ constexpr std::array frameSlotsToErase = {
 };
 
 void OptimizeBoundsSaveRestore(
-    RSPropertyDrawableGenerateContext& context, RSPropertyDrawable::DrawableVec& drawableVec, uint8_t flags)
+    RSRenderContent& content, RSPropertyDrawable::DrawableVec& drawableVec, uint8_t flags)
 {
     // Erase existing save/clip/restore before re-generating
     for (auto& slot : boundsSlotsToErase) {
@@ -389,7 +386,7 @@ void OptimizeBoundsSaveRestore(
     if (flags & DrawableVecStatus::CLIP_BOUNDS) {
         // case 1: ClipToBounds set.
         // add one clip, and reuse SAVE_ALL and RESTORE_ALL.
-        drawableVec[RSPropertyDrawableSlot::CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(context);
+        drawableVec[RSPropertyDrawableSlot::CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(content);
         return;
     }
 
@@ -400,7 +397,7 @@ void OptimizeBoundsSaveRestore(
         // part 1: before children
         std::tie(drawableVec[RSPropertyDrawableSlot::BG_SAVE_BOUNDS],
             drawableVec[RSPropertyDrawableSlot::BG_RESTORE_BOUNDS]) = GenerateSaveRestore(RSPaintFilterCanvas::kCanvas);
-        drawableVec[RSPropertyDrawableSlot::CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(context);
+        drawableVec[RSPropertyDrawableSlot::CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(content);
 
         // part 2: after children, add aliases
         drawableVec[RSPropertyDrawableSlot::FG_SAVE_BOUNDS] = GenerateAlias(RSPropertyDrawableSlot::BG_SAVE_BOUNDS);
@@ -415,7 +412,7 @@ void OptimizeBoundsSaveRestore(
         std::tie(drawableVec[RSPropertyDrawableSlot::BG_SAVE_BOUNDS],
             drawableVec[RSPropertyDrawableSlot::BG_RESTORE_BOUNDS]) = GenerateSaveRestore(RSPaintFilterCanvas::kCanvas);
 
-        drawableVec[RSPropertyDrawableSlot::CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(context);
+        drawableVec[RSPropertyDrawableSlot::CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(content);
         return;
     }
 
@@ -424,7 +421,7 @@ void OptimizeBoundsSaveRestore(
         std::tie(drawableVec[RSPropertyDrawableSlot::FG_SAVE_BOUNDS],
             drawableVec[RSPropertyDrawableSlot::FG_RESTORE_BOUNDS]) = GenerateSaveRestore(RSPaintFilterCanvas::kCanvas);
 
-        drawableVec[RSPropertyDrawableSlot::FG_CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(context);
+        drawableVec[RSPropertyDrawableSlot::FG_CLIP_TO_BOUNDS] = RSClipBoundsDrawable::Generate(content);
         return;
     }
     // case 5: ClipToBounds not set and no bounds properties, no need to save/clip/restore.
@@ -432,7 +429,7 @@ void OptimizeBoundsSaveRestore(
 }
 
 void OptimizeFrameSaveRestore(
-    RSPropertyDrawableGenerateContext& context, RSPropertyDrawable::DrawableVec& drawableVec, uint8_t flags)
+    RSRenderContent& content, RSPropertyDrawable::DrawableVec& drawableVec, uint8_t flags)
 {
     // Erase existing save/clip/restore before re-generating
     for (auto& slot : frameSlotsToErase) {
@@ -451,49 +448,45 @@ void OptimizeFrameSaveRestore(
 } // namespace
 
 void RSPropertyDrawable::InitializeSaveRestore(
-    const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec)
+    const RSRenderContent& content, DrawableVec& drawableVec)
 {
     std::tie(drawableVec[RSPropertyDrawableSlot::SAVE_ALL], drawableVec[RSPropertyDrawableSlot::RESTORE_ALL]) =
         GenerateSaveRestore(RSPaintFilterCanvas::kALL);
-    drawableVec[RSPropertyDrawableSlot::BOUNDS_MATRIX] = RSBoundsGeometryDrawable::Generate(context);
-    drawableVec[RSPropertyDrawableSlot::FRAME_OFFSET] = RSFrameGeometryDrawable::Generate(context);
+    drawableVec[RSPropertyDrawableSlot::BOUNDS_MATRIX] = RSBoundsGeometryDrawable::Generate(content);
+    drawableVec[RSPropertyDrawableSlot::FRAME_OFFSET] = RSFrameGeometryDrawable::Generate(content);
 }
 
 
 void RSPropertyDrawable::UpdateSaveRestore(
-    RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec, uint8_t& drawableVecStatus)
+    RSRenderContent& content, DrawableVec& drawableVec, uint8_t& drawableVecStatus)
 {
     // ====================================================================
     // Step 3: Universal save/clip/restore optimization
 
     // calculate new drawable map status
-    auto drawableVecStatusNew = CalculateDrawableVecStatus(context, drawableVec);
+    auto drawableVecStatusNew = CalculateDrawableVecStatus(content, drawableVec);
 
     // calculate changed bits
     uint8_t changedBits = drawableVecStatus ^ drawableVecStatusNew;
     if (changedBits & BOUNDS_MASK) {
         // update bounds save/clip if need
-        OptimizeBoundsSaveRestore(context, drawableVec, drawableVecStatusNew);
+        OptimizeBoundsSaveRestore(content, drawableVec, drawableVecStatusNew);
     }
     if (changedBits & FRAME_MASK) {
         // update frame save/clip if need
-        OptimizeFrameSaveRestore(context, drawableVec, drawableVecStatusNew);
+        OptimizeFrameSaveRestore(content, drawableVec, drawableVecStatusNew);
     }
     drawableVecStatus = drawableVecStatusNew;
 }
 
-RSPropertyDrawableGenerateContext::RSPropertyDrawableGenerateContext(RSRenderNode& node)
-    : node_(node.shared_from_this()), properties_(node.GetRenderProperties()), hasChildren_(!node.GetChildren().empty())
-{}
-
 #ifndef USE_ROSEN_DRAWING
-void ConvertBlendmodeToPaint(const RSPropertyDrawableGenerateContext& context, SkPaint& blendPaint)
+void ConvertBlendmodeToPaint(const RSRenderContent& content, SkPaint& blendPaint)
 {
     static const std::unordered_map<int, SkBlendMode> skBlendModeLUT = {
         { static_cast<int>(RSColorBlendModeType::DST_IN), SkBlendMode::kDstIn },
         { static_cast<int>(RSColorBlendModeType::SRC_IN), SkBlendMode::kSrcIn }
     };
-    auto& properties = context.properties_;
+    auto& properties = content.GetRenderProperties();
     int blendMode = properties.GetColorBlendMode();
     auto iter = skBlendModeLUT.find(blendMode);
     if (iter == skBlendModeLUT.end()) {
@@ -503,7 +496,7 @@ void ConvertBlendmodeToPaint(const RSPropertyDrawableGenerateContext& context, S
     blendPaint.setBlendMode(skBlendModeLUT.at(blendMode));
 }
 #else
-void ConvertBlendmodeToPaint(const RSPropertyDrawableGenerateContext& context, Drawing::Brush& blendBrush)
+void ConvertBlendmodeToPaint(const RSRenderContent& context, Drawing::Brush& blendBrush)
 {
     static const std::unordered_map<int, Drawing::BlendMode> BlendModeLUT = {
         { static_cast<int>(RSColorBlendModeType::DST_IN), Drawing::BlendMode::DST_IN },
@@ -521,11 +514,11 @@ void ConvertBlendmodeToPaint(const RSPropertyDrawableGenerateContext& context, D
 #endif
 
 void RSPropertyDrawable::UpdateSaveLayerSlots(
-    const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec)
+    const RSRenderContent& content, DrawableVec& drawableVec)
 {
 #ifndef USE_ROSEN_DRAWING
     SkPaint blendPaint;
-    ConvertBlendmodeToPaint(context, blendPaint);
+    ConvertBlendmodeToPaint(content, blendPaint);
     // blendmode value is invalid, clear relative 4 slots
     if (!blendPaint.asBlendMode().has_value()) {
 #else

@@ -16,10 +16,11 @@
 #ifndef USE_ROSEN_DRAWING
 #include "pipeline/rs_recording_canvas.h"
 
+#include "rs_trace.h"
+
 #include "pipeline/rs_draw_cmd.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
-#include "rs_trace.h"
 
 #define RS_DRAWOP_TRACE_FUNC() \
     if (RSSystemProperties::GetDrawOpTraceEnabled()) { \
@@ -461,10 +462,10 @@ bool RSRecordingCanvas::IsCustomTextType() const
     return isCustomTextType_;
 }
 void RSRecordingCanvas::DrawPropertyDrawable(
-    const std::shared_ptr<RSRenderNode> node, Slot::RSPropertyDrawableSlot slot)
+    const std::shared_ptr<RSRenderContent> content, Slot::RSPropertyDrawableSlot slot)
 {
     RS_DRAWOP_TRACE_FUNC();
-    std::unique_ptr<OpItem> op = std::make_unique<PropertyDrawableOpItem>(node, slot);
+    std::unique_ptr<OpItem> op = std::make_unique<PropertyDrawableOpItem>(std::move(content), slot);
     AddOp(std::move(op));
 }
 } // namespace Rosen

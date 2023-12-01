@@ -39,6 +39,8 @@ private:
     RSPropertyDrawable::DrawableVec propertyDrawablesVec_;
 
     friend class RSRenderNode;
+    friend class RSAliasDrawable;
+    friend class PropertyDrawableOpItem;
 };
 } // namespace Rosen
 } // namespace OHOS

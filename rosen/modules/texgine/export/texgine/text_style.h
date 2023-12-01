@@ -25,6 +25,7 @@
 #include "texgine/typography_types.h"
 #include "symbol_engine/hm_symbol_txt.h"
 
+#include "draw/pen.h"
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
@@ -82,7 +83,7 @@ struct TextStyle {
     FontWeight fontWeight = FontWeight::W400;
     FontStyle fontStyle = FontStyle::NORMAL;
     std::vector<std::string> fontFamilies = {};
-    double fontSize = 16.0;
+    double fontSize = 14.0;
     FontFeatures fontFeature;
 
     // Decoration style
@@ -103,7 +104,6 @@ struct TextStyle {
     std::optional<TexginePaint> foreground = std::nullopt;
     std::optional<TexginePaint> background = std::nullopt;
     std::vector<TextShadow> shadows;
-
     // Implements the equality operator.
     bool operator ==(TextStyle const& rhs) const;
 

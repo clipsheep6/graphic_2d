@@ -31,6 +31,7 @@
         "graphic_2d_feature_color_gamut_enable",
         "graphic_2d_feature_use_texgine",
         "graphic_2d_feature_rs_enable_uni_render",
+        "graphic_2d_feature_use_video_processing_engine",
         "graphic_2d_feature_wuji_enable",
         "graphic_2d_feature_enable_afbc",
         "graphic_2d_feature_freemem_enable",
@@ -71,7 +72,8 @@
           "memmgr",
           "memmgr_plugin",
           "sensor",
-          "qos_manager"
+          "qos_manager",
+          "video_processing_engine"
         ],
         "third_party": [
           "flutter",
@@ -195,8 +197,7 @@
             "header": {
               "header_files": [
                 "graphic_common.h",
-                "graphic_common_c.h",
-                "metadata_convertor.h"
+                "graphic_common_c.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/interfaces/inner_api/common"
             }

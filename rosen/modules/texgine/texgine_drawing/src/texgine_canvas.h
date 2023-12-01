@@ -18,7 +18,11 @@
 
 #include <memory>
 
+#ifndef USE_ROSEN_DRAWING
 #include <include/core/SkCanvas.h>
+#else
+#include "drawing.h"
+#endif
 
 #include "texgine_rect.h"
 #include "texgine_paint.h"
@@ -74,7 +78,11 @@ public:
     /*
      * @brief Returns the pointer of SkCanvas what user sets to TexgineCanvas
      */
+#ifndef USE_ROSEN_DRAWING
     SkCanvas *GetCanvas() const;
+#else
+    RSCanvas *GetCanvas() const;
+#endif
 
     /*
      * @brief Removes changes to SkMatrix and clip since SkCanvas state was
@@ -85,10 +93,18 @@ public:
     /*
      * @brief Sets SkCanvas to TexgineCanvas what user want
      */
+#ifndef USE_ROSEN_DRAWING
     void SetCanvas(SkCanvas *canvas);
+#else
+    void SetCanvas(RSCanvas *canvas);
+#endif
 
 private:
+#ifndef USE_ROSEN_DRAWING
     SkCanvas *canvas_ = nullptr;
+#else
+    RSCanvas *canvas_ = nullptr;
+#endif
 };
 } // namespace TextEngine
 } // namespace Rosen

@@ -42,11 +42,6 @@ napi_value CreateJsColorSpaceObject(napi_env env, std::shared_ptr<ColorSpace>& c
     std::unique_ptr<JsColorSpace> jsColorSpace = std::make_unique<JsColorSpace>(colorSpace);
     napi_wrap(env, object, jsColorSpace.release(), JsColorSpace::Finalizer, nullptr, nullptr);
     BindFunctions(env, object);
-
-    std::shared_ptr<NativeReference> jsColorSpaceNativeRef;
-    napi_ref jsColorSpaceRef = nullptr;
-    napi_create_reference(env, object, 1, &jsColorSpaceRef);
-    jsColorSpaceNativeRef.reset(reinterpret_cast<NativeReference*>(jsColorSpaceRef));
     return object;
 }
 

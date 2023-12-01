@@ -40,6 +40,24 @@ TypographyCreate::TypographyCreate(const TypographyStyle& style,
 void TypographyCreate::PushStyle(const TextStyle& style)
 {
     auto txtTextStyle = Convert(style);
+    txtTextStyle.isSymbolGlyph = false;
+    if (txtTextStyle.color == 0XFF00FF00) {
+        txtTextStyle.color = 0XFF808080;
+        txtTextStyle.isSymbolGlyph = true;
+
+        std::vector<uint32_t> symbol2 = {0XF0001};
+        builder_->PushStyle(txtTextStyle);
+        builder_->AppendSpan(symbol2);
+        builder_->PopStyle();
+
+        txtTextStyle.symbol.SetRenderMode(SymbolRenderingStrategy::MULTIPLE_OPACITY);
+        builder_->PushStyle(txtTextStyle);
+        std::vector<uint32_t> symbol6 = {0XF0005};
+        builder_->AppendSpan(symbol6);
+        builder_->PopStyle();
+
+        txtTextStyle.isSymbolGlyph = false;
+    }
     builder_->PushStyle(txtTextStyle);
 }
 
@@ -52,6 +70,12 @@ void TypographyCreate::AppendText(const std::u16string& text)
 {
     builder_->AppendSpan(text);
 }
+
+ void TypographyCreate::AppendSymbol(const uint32_t& symbolId) 
+ {
+    std::vector<uint32_t> symbol = {symbolId};
+    builder_->AppendSpan(symbol);
+ }
 
 class TextEnginePlaceholderRun : public TextEngine::AnySpan {
 public:

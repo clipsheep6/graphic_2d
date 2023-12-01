@@ -79,12 +79,12 @@ void RSCustomRestoreDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas
 RSModifierDrawable::RSModifierDrawable(RSModifierType type) : type_(type) {}
 void RSModifierDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    (void)type_;
-    // auto itr = node.drawCmdModifiers_.find(type_);
-    // if (itr == node.drawCmdModifiers_.end() || itr->second.empty()) {
-    //     return;
-    // }
-    // RSModifierContext context = { node.GetMutableRenderProperties(), &canvas };
+    // (void)type_;
+    auto itr = content.drawCmdModifiers_.find(type_);
+    if (itr == content.drawCmdModifiers_.end() || itr->second.empty()) {
+        return;
+    }
+    RSModifierContext context = { content.renderProperties_, &canvas };
     // if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
     //     bool needSkip = false;
     //     if (node.GetNodeIsSingleFrameComposer() && node.singleFrameComposer_ != nullptr) {
@@ -98,9 +98,9 @@ void RSModifierDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& can
     //         modifier->Apply(context);
     //     }
     // } else {
-    //     for (const auto& modifier : itr->second) {
-    //         modifier->Apply(context);
-    //     }
+        for (const auto& modifier : itr->second) {
+            modifier->Apply(context);
+        }
     // }
 }
 

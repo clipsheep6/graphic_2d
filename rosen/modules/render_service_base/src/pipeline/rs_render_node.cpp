@@ -142,6 +142,20 @@ GrBackendTexture MakeBackendTexture(uint32_t width, uint32_t height, VkFormat fo
 
 namespace OHOS {
 namespace Rosen {
+bool RSRenderNode::IsPureContainer() const
+{
+    auto& drawCmdModifiers_ = renderContent_->drawCmdModifiers_;
+    return (drawCmdModifiers_.empty() && !GetRenderProperties().isDrawn_ && !GetRenderProperties().alphaNeedApply_);
+}
+
+bool RSRenderNode::IsContentNode() const
+{
+    auto& drawCmdModifiers_ = renderContent_->drawCmdModifiers_;
+    return ((drawCmdModifiers_.size() == 1 && drawCmdModifiers_.count(RSModifierType::CONTENT_STYLE)) ||
+               drawCmdModifiers_.empty()) &&
+           !GetRenderProperties().isDrawn_;
+}
+
 using Slot::RSPropertyDrawableSlot;
 namespace {
 const std::set<RSModifierType> GROUPABLE_ANIMATION_TYPE = {
@@ -851,9 +865,9 @@ bool RSRenderNode::Update(
     auto parentProperties = parent ? &parent->GetRenderProperties() : nullptr;
     bool dirty = GetMutableRenderProperties().UpdateGeometry(parentProperties, parentDirty, offset,
         GetContextClipRegion());
-    if ((IsDirty() || dirty) && drawCmdModifiers_.count(RSModifierType::GEOMETRYTRANS)) {
+    if ((IsDirty() || dirty) && renderContent_->drawCmdModifiers_.count(RSModifierType::GEOMETRYTRANS)) {
         RSModifierContext context = { GetMutableRenderProperties() };
-        for (auto& modifier : drawCmdModifiers_[RSModifierType::GEOMETRYTRANS]) {
+        for (auto& modifier : renderContent_->drawCmdModifiers_[RSModifierType::GEOMETRYTRANS]) {
             modifier->Apply(context);
         }
     }
@@ -1129,7 +1143,7 @@ void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier>& modifier
         modifiers_.emplace(modifier->GetPropertyId(), modifier);
     } else {
         modifier->SetSingleFrameModifier(false);
-        drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
+        renderContent_->drawCmdModifiers_[modifier->GetType()].emplace_back(modifier);
     }
     modifier->GetProperty()->Attach(shared_from_this());
     SetDirty();
@@ -1167,7 +1181,7 @@ void RSRenderNode::RemoveModifierInternal(const PropertyId& id)
         modifiers_.erase(it);
         return;
     }
-    for (auto& [type, modifiers] : drawCmdModifiers_) {
+    for (auto& [type, modifiers] : renderContent_->drawCmdModifiers_) {
         modifiers.remove_if([id](const auto& modifier) -> bool {
             return modifier ? modifier->GetPropertyId() == id : true;
         });
@@ -1196,7 +1210,7 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
 void RSRenderNode::DumpNodeInfo(DfxString& log)
 {
 #ifndef USE_ROSEN_DRAWING
-    for (auto& [type, modifiers] : drawCmdModifiers_) {
+    for (const auto& [type, modifiers] : renderContent_->drawCmdModifiers_) {
         for (auto modifier : modifiers) {
             modifier->DumpPicture(log);
         }
@@ -1413,7 +1427,7 @@ std::shared_ptr<RSRenderModifier> RSRenderNode::GetModifier(const PropertyId& id
     if (modifiers_.count(id)) {
         return modifiers_[id];
     }
-    for (auto& [type, modifiers] : drawCmdModifiers_) {
+    for (const auto& [type, modifiers] : renderContent_->drawCmdModifiers_) {
         auto it = std::find_if(modifiers.begin(), modifiers.end(),
             [id](const auto& modifier) -> bool { return modifier->GetPropertyId() == id; });
         if (it != modifiers.end()) {
@@ -1429,7 +1443,7 @@ void RSRenderNode::FilterModifiersByPid(pid_t pid)
     EraseIf(modifiers_, [pid](const auto& pair) -> bool { return ExtractPid(pair.first) == pid; });
 
     // remove all modifiers added by given pid (by matching higher 32 bits of node id)
-    for (auto& [type, modifiers] : drawCmdModifiers_) {
+    for (auto& [type, modifiers] : renderContent_->drawCmdModifiers_) {
         modifiers.remove_if(
             [pid](const auto& it) -> bool { return ExtractPid(it->GetPropertyId()) == pid; });
     }

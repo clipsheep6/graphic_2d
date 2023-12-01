@@ -26,6 +26,8 @@ namespace Rosen {
 class RSB_EXPORT RSRenderContent {
 public:
     RSRenderContent();
+    ~RSRenderContent() = default;
+
     RSRenderContent(const RSRenderContent&) = delete;
     RSRenderContent(const RSRenderContent&&) = delete;
     RSRenderContent& operator=(const RSRenderContent&) = delete;
@@ -33,14 +35,17 @@ public:
 
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
+    using DrawCmdContainer = std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>>;
 
 private:
     RSProperties renderProperties_;
     RSPropertyDrawable::DrawableVec propertyDrawablesVec_;
+    DrawCmdContainer drawCmdModifiers_;
 
     friend class RSRenderNode;
     friend class RSAliasDrawable;
     friend class PropertyDrawableOpItem;
+    friend class RSModifierDrawable;
 };
 } // namespace Rosen
 } // namespace OHOS

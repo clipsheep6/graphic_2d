@@ -367,27 +367,27 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 
 void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
 {
-    auto itr = drawCmdModifiers_.find(type);
-    if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
+    auto itr = GetDrawCmdModifiers().find(type);
+    if (itr == GetDrawCmdModifiers().end() || itr->second.empty()) {
         return;
     }
 
-    if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
-        bool needSkip = false;
-        if (GetNodeIsSingleFrameComposer() && singleFrameComposer_ != nullptr) {
-            needSkip = singleFrameComposer_->SingleFrameModifierAddToList(type, itr->second);
-        }
+    // if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
+    //     bool needSkip = false;
+    //     if (GetNodeIsSingleFrameComposer() && singleFrameComposer_ != nullptr) {
+    //         needSkip = singleFrameComposer_->SingleFrameModifierAddToList(type, itr->second);
+    //     }
+    //     for (const auto& modifier : itr->second) {
+    //         if (singleFrameComposer_ != nullptr && singleFrameComposer_->SingleFrameIsNeedSkip(needSkip, modifier)) {
+    //             continue;
+    //         }
+    //         modifier->Apply(context);
+    //     }
+    // } else {
         for (const auto& modifier : itr->second) {
-            if (singleFrameComposer_ != nullptr && singleFrameComposer_->SingleFrameIsNeedSkip(needSkip, modifier)) {
-                continue;
-            }
             modifier->Apply(context);
         }
-    } else {
-        for (const auto& modifier : itr->second) {
-            modifier->Apply(context);
-        }
-    }
+    // }
 }
 
 void RSCanvasRenderNode::InternalDrawContent(RSPaintFilterCanvas& canvas)
@@ -458,8 +458,8 @@ RectF RSCanvasRenderNode::GetDrivenContentClipFrameRect() const
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     // temporary solution for driven content clip
     RectF rect;
-    auto itr = drawCmdModifiers_.find(RSModifierType::CONTENT_STYLE);
-    if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
+    auto itr = GetDrawCmdModifiers().find(RSModifierType::CONTENT_STYLE);
+    if (itr == GetDrawCmdModifiers().end() || itr->second.empty()) {
         return rect;
     }
     if (!itr->second.empty()) {
@@ -478,8 +478,8 @@ void RSCanvasRenderNode::DrawDrivenContent(RSPaintFilterCanvas& canvas)
 {
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
-    auto itr = drawCmdModifiers_.find(RSModifierType::CONTENT_STYLE);
-    if (itr == drawCmdModifiers_.end() || itr->second.empty()) {
+    auto itr = GetDrawCmdModifiers().find(RSModifierType::CONTENT_STYLE);
+    if (itr == GetDrawCmdModifiers().end() || itr->second.empty()) {
         return;
     }
     int32_t index = 0;

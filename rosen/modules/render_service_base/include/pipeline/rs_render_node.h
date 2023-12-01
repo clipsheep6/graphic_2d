@@ -260,15 +260,12 @@ public:
 
     bool NeedInitCacheSurface() const;
     bool NeedInitCacheCompletedSurface() const;
-    inline bool IsPureContainer() const
-    {
-        return (drawCmdModifiers_.empty() && !GetRenderProperties().isDrawn_ && !GetRenderProperties().alphaNeedApply_);
-    }
+    bool IsPureContainer() const;
+    bool IsContentNode() const;
 
-    bool IsContentNode() const
+    inline const RSRenderContent::DrawCmdContainer& GetDrawCmdModifiers() const
     {
-        return ((drawCmdModifiers_.size() == 1 && drawCmdModifiers_.count(RSModifierType::CONTENT_STYLE)) ||
-            drawCmdModifiers_.empty()) && !GetRenderProperties().isDrawn_;
+        return renderContent_->drawCmdModifiers_;
     }
 
 #ifndef USE_ROSEN_DRAWING
@@ -502,7 +499,6 @@ protected:
     static void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier);
     RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
-    std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
     std::shared_ptr<RSSingleFrameComposer> singleFrameComposer_ = nullptr;
     bool isNodeSingleFrameComposer_ = false;
     // if true, it means currently it's in partial render mode and this node is intersect with dirtyRegion

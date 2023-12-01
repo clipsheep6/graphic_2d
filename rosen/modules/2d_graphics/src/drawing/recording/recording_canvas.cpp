@@ -303,7 +303,7 @@ void RecordingCanvas::DrawSurfaceBuffer(const DrawingSurfaceBufferInfo& surfaceB
 {
     cmdList_->AddOp<DrawSurfaceBufferOpItem::ConstructorHandle>(
         CmdListHelper::AddSurfaceBufferToCmdList(*cmdList_, surfaceBufferInfo.surfaceBuffer_),
-        surfaceBufferInfo.offSetX, surfaceBufferInfo.offSetY,
+        surfaceBufferInfo.offSetX_, surfaceBufferInfo.offSetY_,
         surfaceBufferInfo.width_, surfaceBufferInfo.height_);
 }
 #endif

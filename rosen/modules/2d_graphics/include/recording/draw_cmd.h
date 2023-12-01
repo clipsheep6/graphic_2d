@@ -36,7 +36,7 @@
 #include "EGL/eglext.h"
 #include "GLES2/gl2.h"
 #include "GLES2/gl2ext.h"
-#include "include/gpu/gl/GrGlTypes.h"
+#include "include/gpu/gl/GrGLTypes.h"
 #include "include/gpu/GrBackendSurface.h"
 #endif
 #endif
@@ -1239,7 +1239,7 @@ public:
         ConstructorHandle(uint32_t surfaceBufferId, int offSetX, int offSetY, int width, int height)
             : OpItem(DrawOpItem::SURFACEBUFFER_OPITEM), surfaceBufferId(surfaceBufferId), surfaceBufferInfo(nullptr, offSetX, offSetY, width, height) {}
         ~ConstructorHandle() override = default;
-        surfaceBufferId surfaceBufferId;
+        uint32_t surfaceBufferId;
         DrawingSurfaceBufferInfo surfaceBufferInfo;
     };
 

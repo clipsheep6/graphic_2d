@@ -63,7 +63,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
-class RSRenderNode;
+class RSRenderContent;
 namespace Slot{
 enum RSPropertyDrawableSlot : uint8_t;
 }
@@ -783,7 +783,7 @@ private:
 
 class PropertyDrawableOpItem : public OpItem {
 public:
-    PropertyDrawableOpItem(const std::shared_ptr<RSRenderNode>& renderNode, Slot::RSPropertyDrawableSlot slot);
+    PropertyDrawableOpItem(const std::shared_ptr<RSRenderContent>& content, Slot::RSPropertyDrawableSlot slot);
     ~PropertyDrawableOpItem() override = default;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -801,8 +801,7 @@ public:
     }
 
 private:
-    // PLANNING: use RSContent instead of RSRenderNode
-    const std::shared_ptr<RSRenderNode> renderNode_;
+    const std::shared_ptr<RSRenderContent> content_;
     const Slot::RSPropertyDrawableSlot slot_;
 };
 

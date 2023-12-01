@@ -18,7 +18,6 @@
 
 #ifndef USE_ROSEN_DRAWING
 
-#include "common/rs_macros.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkCanvasVirtualEnforcer.h"
@@ -27,9 +26,12 @@
 #include "include/core/SkPath.h"
 #include "include/core/SkRect.h"
 #include "include/utils/SkNoDrawCanvas.h"
+
+#include "common/rs_macros.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "property/rs_properties_def.h"
 #include "render/rs_image.h"
+
 #ifdef NEW_SKIA
 #include "src/core/SkVerticesPriv.h"
 #endif
@@ -46,7 +48,7 @@ class PixelMap;
 namespace Rosen {
 class DrawCmdList;
 class OpItem;
-class RSRenderNode;
+class RSRenderContent;
 namespace Slot{
 enum RSPropertyDrawableSlot : uint8_t;
 }
@@ -108,7 +110,7 @@ public:
     void DrawPixelMapWithParm(
         const std::shared_ptr<Media::PixelMap>& pixelmap,
         const Rosen::RsImageInfo& rsImageInfo, const SkSamplingOptions& samplingOptions, const SkPaint& paint);
-    void DrawPropertyDrawable(const std::shared_ptr<RSRenderNode> node, Slot::RSPropertyDrawableSlot slot);
+    void DrawPropertyDrawable(const std::shared_ptr<RSRenderContent> content, Slot::RSPropertyDrawableSlot slot);
 #else
     GrContext* getGrContext() override;
     void SetGrContext(GrContext* grContext);

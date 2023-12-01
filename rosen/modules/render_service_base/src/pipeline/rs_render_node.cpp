@@ -1350,18 +1350,17 @@ void RSRenderNode::UpdateDrawableVec()
 {
     // Collect dirty slots
     auto dirtySlots = RSPropertyDrawable::GenerateDirtySlots(GetRenderProperties(), dirtyTypes_);
-    RSPropertyDrawableGenerateContext drawableContext(*this);
     // initialize necessary save/clip/restore
     if (drawableVecStatus_ == 0) {
-        RSPropertyDrawable::InitializeSaveRestore(drawableContext, renderContent_->propertyDrawablesVec_);
+        RSPropertyDrawable::InitializeSaveRestore(*renderContent_, renderContent_->propertyDrawablesVec_);
     }
     // Update or regenerate drawable
-    bool drawableChanged = RSPropertyDrawable::UpdateDrawableVec(drawableContext,
-        renderContent_->propertyDrawablesVec_, dirtySlots);
+    bool drawableChanged =
+        RSPropertyDrawable::UpdateDrawableVec(*renderContent_, renderContent_->propertyDrawablesVec_, dirtySlots);
     // if 1. first initialized or 2. any drawables changed, update save/clip/restore
     if (drawableChanged || drawableVecStatus_ == 0) {
-        RSPropertyDrawable::UpdateSaveRestore(drawableContext, renderContent_->propertyDrawablesVec_,
-            drawableVecStatus_);
+        RSPropertyDrawable::UpdateSaveRestore(
+            *renderContent_, renderContent_->propertyDrawablesVec_, drawableVecStatus_);
     }
 }
 
@@ -2666,9 +2665,9 @@ void RSRenderNode::DrawPropertyDrawable(RSPropertyDrawableSlot index, RSPaintFil
     }
     auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
     if (recordingCanvas) {
-        recordingCanvas->DrawPropertyDrawable(shared_from_this(), index);
+        recordingCanvas->DrawPropertyDrawable(renderContent_, index);
     } else {
-        drawablePtr->Draw(*this, canvas);
+        drawablePtr->Draw(*renderContent_, canvas);
     }
 }
 
@@ -2682,9 +2681,9 @@ void RSRenderNode::DrawPropertyDrawableRange(
             continue;
         }
         if (recordingCanvas) {
-            recordingCanvas->DrawPropertyDrawable(shared_from_this(), static_cast<RSPropertyDrawableSlot>(index));
+            recordingCanvas->DrawPropertyDrawable(renderContent_, static_cast<RSPropertyDrawableSlot>(index));
         } else {
-            drawablePtr->Draw(*this, canvas);
+            drawablePtr->Draw(*renderContent_, canvas);
         }
     }
 }

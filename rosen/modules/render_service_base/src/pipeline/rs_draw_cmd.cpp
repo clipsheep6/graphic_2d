@@ -2458,12 +2458,16 @@ void ImageWithParmOpItem::SetNodeId(NodeId id)
 
 void PropertyDrawableOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
-    renderNode_->DrawPropertyDrawable(slot_, canvas);
+    auto& drawablePtr = content_->propertyDrawablesVec_[static_cast<size_t>(slot_)];
+    if (!drawablePtr) {
+        return;
+    }
+    drawablePtr->Draw(*content_, canvas);
 }
 
 PropertyDrawableOpItem::PropertyDrawableOpItem(
-    const std::shared_ptr<RSRenderNode>& renderNode, Slot::RSPropertyDrawableSlot slot)
-    : OpItem(sizeof(PropertyDrawableOpItem)), renderNode_(renderNode), slot_(slot)
+    const std::shared_ptr<RSRenderContent>& content, Slot::RSPropertyDrawableSlot slot)
+    : OpItem(sizeof(PropertyDrawableOpItem)), content_(content), slot_(slot)
 {}
 } // namespace Rosen
 } // namespace OHOS

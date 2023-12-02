@@ -242,12 +242,10 @@ void RSSurfaceRenderNode::CollectSurface(
         if (onlyFirstLevel) {
             return;
         }
-        for (auto &nodes : node->GetSubSurfaceNodes()) {
-            for (auto &node : nodes.second) {
-                auto surfaceNode = node.lock();
-                if (surfaceNode != nullptr) {
-                    surfaceNode->CollectSurface(surfaceNode, vec, isUniRender, onlyFirstLevel);
-                }
+        for (auto &nodeWptr : node->GetSubSurfaceNodes()) {
+            auto surfaceNode = nodeWptr.lock();
+            if (surfaceNode != nullptr) {
+                surfaceNode->CollectSurface(surfaceNode, vec, isUniRender, onlyFirstLevel);
             }
         }
     }

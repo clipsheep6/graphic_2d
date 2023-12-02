@@ -121,7 +121,7 @@ public:
         return children_;
     }
 
-    inline const std::map<NodeId, std::vector<WeakPtr>> &GetSubSurfaceNodes() const
+    inline const std::vector<WeakPtr> &GetSubSurfaceNodes() const
     {
         return subSurfaceNodes_;
     }
@@ -129,6 +129,7 @@ public:
     bool SubSurfaceNodeNeedDraw(PartialRenderType opDropType);
     void AddSubSurfaceNode(SharedPtr child, SharedPtr parent);
     void RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent);
+    void FindSubSurfaceNode(SharedPtr node, std::vector<WeakPtr> &subSurfaceNodes);
     inline bool GetSubSurfaceEnabled() const
     {
         return isSubSurfaceEnabled_;
@@ -670,7 +671,8 @@ private:
     bool isCalcPreferredFps_ = true;
 
     bool isSubSurfaceEnabled_ = false;
-    std::map<NodeId, std::vector<WeakPtr>> subSurfaceNodes_;
+    WeakPtr parentSurface_;
+    std::vector<WeakPtr> subSurfaceNodes_;
     pid_t appPid_ = 0;
 
     const std::shared_ptr<RSRenderContent> renderContent_ = std::make_shared<RSRenderContent>();

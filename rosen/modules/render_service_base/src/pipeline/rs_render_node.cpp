@@ -345,47 +345,44 @@ bool RSRenderNode::IsFirstLevelSurfaceNode()
     if (!this->IsInstanceOf<RSSurfaceRenderNode>()) {
         return false;
     }
-    auto parentNode = parent_.lock();
-    while (parentNode && !parentNode->IsInstanceOf<RSDisplayRenderNode>()) {
-        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentNode);
-        if (node != nullptr && (node->IsMainWindowType() || node->IsLeashWindow())) {
-            return false;
-        }
-        parentNode = parentNode->GetParent().lock();
-    }
-    return true;
+    return parentSurface_.lock() == nullptr;
 }
 
 bool RSRenderNode::SubSurfaceNodeNeedDraw(PartialRenderType opDropType)
 {
-    for (auto &nodes : subSurfaceNodes_) {
-        for (auto &node : nodes.second) {
-            const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.lock());
-            if (surfaceNode != nullptr &&
-                (surfaceNode->SubNodeNeedDraw(surfaceNode->GetOldDirtyInSurface(), opDropType) ||
-                surfaceNode->SubSurfaceNodeNeedDraw(opDropType))) {
-                return true;
-            }
+    for (auto &nodeWptr : subSurfaceNodes_) {
+        const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeWptr.lock());
+        if (surfaceNode != nullptr &&
+            (surfaceNode->SubNodeNeedDraw(surfaceNode->GetOldDirtyInSurface(), opDropType) ||
+            surfaceNode->SubSurfaceNodeNeedDraw(opDropType))) {
+            return true;
         }
     }
     return false;
 }
 
-void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
+void RSRenderNode::FindSubSurfaceNode(SharedPtr node, std::vector<WeakPtr>& subSurfaceNodes)
 {
-    if (parent->subSurfaceNodes_.find(child->GetId()) != parent->subSurfaceNodes_.end()) {
-        return;
-    }
-    std::vector<WeakPtr> subSurfaceNodes;
-    if (child->IsInstanceOf<RSSurfaceRenderNode>() &&
-        (RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)->IsMainWindowType() ||
-        RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)->IsLeashWindow())) {
-        subSurfaceNodes.push_back(child);
-    } else {
-        for (auto &nodes : child->subSurfaceNodes_) {
-            subSurfaceNodes.insert(subSurfaceNodes.end(), nodes.second.begin(), nodes.second.end());
+    for (auto &nodeWptr : node->children_) {
+        const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(nodeWptr.lock());
+        if (surfaceNode != nullptr && (surfaceNode->IsMainWindowType() || surfaceNode->IsLeashWindow())) {
+            subSurfaceNodes.push_back(nodeWptr);
+        } else {
+            FindSubSurfaceNode(nodeWptr.lock(), subSurfaceNodes);
         }
     }
+}
+
+void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
+{
+    std::vector<WeakPtr> subSurfaceNodes;
+    const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+    if (surfaceNode != nullptr && (surfaceNode->IsMainWindowType() || surfaceNode->IsLeashWindow())) {
+        subSurfaceNodes.push_back(child);
+    } else {
+        FindSubSurfaceNode(child, subSurfaceNodes);
+    }
+
     if (subSurfaceNodes.size() == 0) {
         return;
     }
@@ -393,20 +390,21 @@ void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
     auto childNode = child;
     auto parentNode = parent;
     while (parentNode && !parentNode->IsInstanceOf<RSDisplayRenderNode>()) {
-        auto id = childNode->GetId();
-        if (parentNode->subSurfaceNodes_.find(id) == parentNode->subSurfaceNodes_.end()) {
-            parentNode->subSurfaceNodes_.insert({id, subSurfaceNodes});
-        } else {
-            parentNode->subSurfaceNodes_[id].insert(parentNode->subSurfaceNodes_[id].end(),
-                subSurfaceNodes.begin(), subSurfaceNodes.end());
-        }
-        std::sort(parentNode->subSurfaceNodes_[id].begin(), parentNode->subSurfaceNodes_[id].end(),
-            [](const auto &first, const auto &second) {
-            return
-                first.lock()->GetRenderProperties().GetPositionZ() <
-                second.lock()->GetRenderProperties().GetPositionZ();
-        });
         if (parentNode->IsInstanceOf<RSSurfaceRenderNode>()) {
+            for (auto nodeWptr : subSurfaceNodes) {
+                auto nodeSptr = nodeWptr.lock();
+                if (nodeSptr != nullptr) {
+                    nodeSptr->parentSurface_ = parentNode;
+                }
+            }
+            parentNode->subSurfaceNodes_.insert(parentNode->subSurfaceNodes_.end(),
+                subSurfaceNodes.begin(), subSurfaceNodes.end());
+            std::sort(parentNode->subSurfaceNodes_.begin(), parentNode->subSurfaceNodes_.end(),
+                [](const auto &first, const auto &second) {
+                return
+                    first.lock()->GetRenderProperties().GetPositionZ() <
+                    second.lock()->GetRenderProperties().GetPositionZ();
+            });
             break;
         }
         childNode = parentNode;
@@ -416,32 +414,31 @@ void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
 
 void RSRenderNode::RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent)
 {
-    if (parent->subSurfaceNodes_.find(child->GetId()) == parent->subSurfaceNodes_.end()) {
-        return;
+    std::vector<WeakPtr> subSurfaceNodes;
+    const auto& surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+    if (surfaceNode != nullptr && (surfaceNode->IsMainWindowType() || surfaceNode->IsLeashWindow())) {
+        subSurfaceNodes.push_back(child);
+    } else {
+        FindSubSurfaceNode(child, subSurfaceNodes);
     }
-    auto subSurfaceNodes = parent->subSurfaceNodes_[child->GetId()];
-    parent->subSurfaceNodes_.erase(child->GetId());
-    auto childNode = parent;
-    auto parentNode = parent->GetParent().lock();
-    while (parentNode && !parentNode->IsInstanceOf<RSDisplayRenderNode>()) {
-        auto id = childNode->GetId();
-        for (auto iter : subSurfaceNodes) {
-            parentNode->subSurfaceNodes_[id].erase(
-                remove_if(parentNode->subSurfaceNodes_[id].begin(), parentNode->subSurfaceNodes_[id].end(),
-                    [iter](WeakPtr it) {
-                        return iter.lock() && it.lock() && iter.lock()->GetId() == it.lock()->GetId();
-                    }),
-                parentNode->subSurfaceNodes_[id].end()
-            );
+
+    for (auto nodeWptr : subSurfaceNodes) {
+        auto nodeSptr = nodeWptr.lock();
+        if (nodeSptr == nullptr) {
+            continue;
         }
-        if (parentNode->subSurfaceNodes_[id].size() == 0) {
-            parentNode->subSurfaceNodes_.erase(id);
+        auto parentSurface = nodeSptr->parentSurface_.lock();
+        if (parentSurface == nullptr) {
+            continue;
         }
-        if (parentNode->IsInstanceOf<RSSurfaceRenderNode>()) {
-            break;
-        }
-        childNode = parentNode;
-        parentNode = parentNode->GetParent().lock();
+        parentSurface->subSurfaceNodes_.erase(
+            remove_if(parentSurface->subSurfaceNodes_.begin(), parentSurface->subSurfaceNodes_.end(),
+                [nodeSptr](WeakPtr it) {
+                    return it.lock() && nodeSptr->GetId() == it.lock()->GetId();
+                }),
+            parentSurface->subSurfaceNodes_.end()
+        );
+        nodeSptr->parentSurface_.reset();
     }
 }
 

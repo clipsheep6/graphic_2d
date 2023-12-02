@@ -79,6 +79,8 @@
 namespace OHOS {
 namespace Rosen {
 
+std::mutex RSMarshallingHelper::recordingMutex;
+
 #define MARSHALLING_AND_UNMARSHALLING(TYPE, TYPENAME)                      \
     bool RSMarshallingHelper::Marshalling(Parcel& parcel, const TYPE& val) \
     {                                                                      \

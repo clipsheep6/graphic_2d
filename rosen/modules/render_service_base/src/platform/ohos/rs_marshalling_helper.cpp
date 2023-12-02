@@ -99,7 +99,8 @@ namespace {
     std::thread::id g_tid = std::thread::id();
 }
 
- 
+std::mutex RSMarshallingHelper::recordingMutex;
+
 #define MARSHALLING_AND_UNMARSHALLING(TYPE, TYPENAME)                      \
     bool RSMarshallingHelper::Marshalling(Parcel& parcel, const TYPE& val) \
     {                                                                      \

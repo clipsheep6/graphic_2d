@@ -1968,7 +1968,11 @@ void RSUniRenderVisitor::ProcessShadowFirst(RSRenderNode& node, bool inSubThread
 void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
 {
     if (DrawBlurInCache(node) || node.GetChildrenCount() == 0 ||
+#ifndef USE_ROSEN_DRAWING
         (canvas_ && canvas_->getDeviceClipBounds().isEmpty())) {
+#else
+        (canvas_ && canvas_->GetDeviceClipBounds().IsEmpty())) {
+#endif
         return;
     }
 
@@ -4148,8 +4152,7 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     ProcessCanvasRenderNode(node);
     canvas_->restoreToCount(saveCount);
 #else
-    int saveCount;
-    saveCount = canvas_->GetSaveCount();
+    int saveCount = canvas_->GetSaveCount();
     canvas_->Save();
     ProcessCanvasRenderNode(node);
     canvas_->RestoreToCount(saveCount);

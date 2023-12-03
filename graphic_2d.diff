@@ -1,0 +1,460 @@
+diff --git a/rosen/modules/2d_graphics/BUILD.gn b/rosen/modules/2d_graphics/BUILD.gn
+index 5642dd3a2..032227eb3 100755
+--- a/rosen/modules/2d_graphics/BUILD.gn
++++ b/rosen/modules/2d_graphics/BUILD.gn
+@@ -40,6 +40,7 @@ config("export_config") {
+     "$drawing_src_dir/engine_adapter",
+     "$rosen_root/modules/render_service_base/include",
+     "$rosen_root/modules/texgine/texgine_drawing/src",
++    "$rosen_root/modules/2d_engine/rosen_text/export",
+   ]
+ 
+   if (ace_enable_gpu) {
+diff --git a/rosen/modules/2d_graphics/include/utils/memory_stream.h b/rosen/modules/2d_graphics/include/utils/memory_stream.h
+index 0eb4e3070..2a4f2a2a9 100644
+--- a/rosen/modules/2d_graphics/include/utils/memory_stream.h
++++ b/rosen/modules/2d_graphics/include/utils/memory_stream.h
+@@ -20,11 +20,12 @@
+ #include <cstdint>
+ 
+ #include "impl_interface/memory_stream_impl.h"
++#include "utils/drawing_macros.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+ namespace Drawing {
+-class MemoryStream {
++class DRAWING_API MemoryStream {
+ public:
+     MemoryStream();
+     MemoryStream(const void* data, size_t length, bool copyData = false);
+diff --git a/rosen/modules/render_service/BUILD.gn b/rosen/modules/render_service/BUILD.gn
+index d724feed7..f77b360be 100644
+--- a/rosen/modules/render_service/BUILD.gn
++++ b/rosen/modules/render_service/BUILD.gn
+@@ -209,8 +209,6 @@ ohos_shared_library("librender_service") {
+ 
+   if (defined(use_rosen_drawing) && use_rosen_drawing) {
+     defines += [ "USE_ROSEN_DRAWING" ]
+-    deps -=
+-        [ "$graphic_2d_root/rosen/samples/2d_graphics:drawing_engine_sample" ]
+     deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
+   }
+ 
+diff --git a/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp b/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
+index d7bd0c2b5..0c074b40c 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
+@@ -2320,9 +2320,9 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
+     dumpString.append("trimMem: " + type + "\n");
+ #else
+ #ifdef NEW_RENDER_CONTEXT
+-    auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
++    auto gpuContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
+ #else
+-    auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
++    auto gpuContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+ #endif
+     if (type.empty()) {
+         gpuContext->Flush();
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
+index 932e030b0..63ca98e4a 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_uni_render_visitor.cpp
+@@ -1954,7 +1954,11 @@ void RSUniRenderVisitor::ProcessShadowFirst(RSRenderNode& node, bool inSubThread
+ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
+ {
+     if (DrawBlurInCache(node) || node.GetChildrenCount() == 0 ||
++#ifndef USE_ROSEN_DRAWING
+         (canvas_ && canvas_->getDeviceClipBounds().isEmpty())) {
++#else
++        (canvas_ && canvas_->GetDeviceClipBounds().IsEmpty())) {
++#endif
+         return;
+     }
+ 
+@@ -4139,8 +4143,7 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
+     ProcessCanvasRenderNode(node);
+     canvas_->restoreToCount(saveCount);
+ #else
+-    int saveCount;
+-    saveCount = canvas_->GetSaveCount();
++    int saveCount = canvas_->GetSaveCount();
+     canvas_->Save();
+     ProcessCanvasRenderNode(node);
+     canvas_->RestoreToCount(saveCount);
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_canvas_drawing_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_canvas_drawing_render_node.h
+index 2f4292f33..7bd785a4c 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_canvas_drawing_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_canvas_drawing_render_node.h
+@@ -86,8 +86,13 @@ private:
+     bool isGpuSurface_ = true;
+ #endif
+     std::unique_ptr<RSPaintFilterCanvas> canvas_;
++#ifndef USE_ROSEN_DRAWING
+     ThreadInfo curThreadInfo_ = { UNI_MAIN_THREAD_INDEX, std::function<void(sk_sp<SkSurface>)>() };
+     ThreadInfo preThreadInfo_ = { UNI_MAIN_THREAD_INDEX, std::function<void(sk_sp<SkSurface>)>() };
++#else
++    ThreadInfo curThreadInfo_ = { UNI_MAIN_THREAD_INDEX, std::function<void(std::shared_ptr<Drawing::Surface>)>() };
++    ThreadInfo preThreadInfo_ = { UNI_MAIN_THREAD_INDEX, std::function<void(std::shared_ptr<Drawing::Surface>)>() };
++#endif
+     std::mutex drawCmdListsMutex_;
+ #ifndef USE_ROSEN_DRAWING
+     std::map<RSModifierType, std::list<DrawCmdListPtr>> drawCmdLists_;
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_effect_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_effect_render_node.h
+index 97c4ebe96..7a4b2ca22 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_effect_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_effect_render_node.h
+@@ -51,7 +51,7 @@ private:
+ #ifndef USE_ROSEN_DRAWING
+     std::optional<SkIRect> effectRegion_ = std::nullopt;
+ #else
+-    std::optional<Drawing::RectF> effectRegion_ = std::nullopt;
++    std::optional<Drawing::RectI> effectRegion_ = std::nullopt;
+ #endif
+     friend class RSEffectDataGenerateDrawable;
+ };
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h b/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h
+index 11fff7701..3ab636e42 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h
+@@ -299,7 +299,6 @@ protected:
+     const std::stack<float>& GetAlphaStack();
+     const std::stack<Env>& GetEnvStack();
+     bool OnFilter() const override;
+-    bool OnFilterWithBrush(Drawing::Brush& brush) const override;
+     inline bool OnFilterWithBrush(Drawing::Brush& brush) const override
+     {
+         float alpha = alphaStack_.top();
+diff --git a/rosen/modules/render_service_base/include/property/rs_properties.h b/rosen/modules/render_service_base/include/property/rs_properties.h
+index 3019de64f..fc5804f5e 100755
+--- a/rosen/modules/render_service_base/include/property/rs_properties.h
++++ b/rosen/modules/render_service_base/include/property/rs_properties.h
+@@ -16,6 +16,9 @@
+ #ifndef RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_H
+ #define RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_H
+ 
++#ifdef USE_ROSEN_DRAWING
++#include <bitset>
++#endif
+ #include <optional>
+ #include <tuple>
+ #include <vector>
+diff --git a/rosen/modules/render_service_base/include/property/rs_property_drawable.h b/rosen/modules/render_service_base/include/property/rs_property_drawable.h
+index 32bbbbd40..0e00a531c 100644
+--- a/rosen/modules/render_service_base/include/property/rs_property_drawable.h
++++ b/rosen/modules/render_service_base/include/property/rs_property_drawable.h
+@@ -16,6 +16,9 @@
+ #ifndef RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_H
+ #define RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_H
+ 
++#ifdef USE_ROSEN_DRAWING
++#include <bitset>
++#endif
+ #include <memory>
+ #include <set>
+ #include <vector>
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_canvas_drawing_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_canvas_drawing_render_node.cpp
+index e2cb97d89..0c82e4a26 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_canvas_drawing_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_canvas_drawing_render_node.cpp
+@@ -148,7 +148,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
+             return;
+         }
+         preThreadInfo_ = curThreadInfo_;
+-    } else if (preThreadInfo_.first != curThreadInfo_.first) {
++    } else if ((isGpuSurface_) && (preThreadInfo_.first != curThreadInfo_.first)) {
+         auto preMatrix = canvas_->GetTotalMatrix();
+         auto preSurface = surface_;
+         if (!ResetSurface(width, height, canvas)) {
+@@ -246,12 +246,15 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
+ 
+ #if (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)) && (defined RS_ENABLE_EGLIMAGE)
+     auto gpuContext = canvas.GetGPUContext();
++    isGpuSurface_ = true;
+     if (gpuContext == nullptr) {
+         RS_LOGD("RSCanvasDrawingRenderNode::ResetSurface: gpuContext is nullptr");
++        isGpuSurface_ = false;
+         surface_ = Drawing::Surface::MakeRaster(info);
+     } else {
+         surface_ = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, info);
+         if (!surface_) {
++            isGpuSurface_ = false;
+             surface_ = Drawing::Surface::MakeRaster(info);
+         }
+     }
+@@ -338,7 +341,7 @@ bool RSCanvasDrawingRenderNode::GetPixelmap(
+ Drawing::Bitmap RSCanvasDrawingRenderNode::GetBitmap(const uint64_t tid)
+ {
+     Drawing::Bitmap bitmap;
+-    std::lock_guard<std::mutex> lock(mutex_);
++    std::lock_guard<std::mutex> lock(drawingMutex_);
+     if (!image_) {
+         RS_LOGE("RSCanvasDrawingRenderNode::GetBitmap: image_ is nullptr");
+         return bitmap;
+@@ -356,7 +359,8 @@ Drawing::Bitmap RSCanvasDrawingRenderNode::GetBitmap(const uint64_t tid)
+ bool RSCanvasDrawingRenderNode::GetPixelmap(
+     const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect, const uint64_t tid)
+ {
+-    if (!pixelmap) {
++    std::lock_guard<std::mutex> lock(drawingMutex_);
++    if (!pixelmap || !rect) {
+         RS_LOGE("RSCanvasDrawingRenderNode::GetPixelmap: pixelmap is nullptr");
+         return false;
+     }
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_effect_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_effect_render_node.cpp
+index e31b1f548..2426bc90f 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_effect_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_effect_render_node.cpp
+@@ -55,12 +55,12 @@ void RSEffectRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
+ void RSEffectRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
+ {
+     RSRenderNode::ProcessTransitionBeforeChildren(canvas);
++#ifndef USE_ROSEN_DRAWING
+     auto& properties = GetRenderProperties();
+     // Disable effect region if either of the following conditions is met:
+     // 1. Effect region is null or empty
+     // 2. Background filter is null
+     // 3. Canvas is offscreen
+-#ifndef USE_ROSEN_DRAWING
+     if (effectRegion_.has_value() && properties.GetBackgroundFilter() != nullptr &&
+         canvas.GetCacheType() != RSPaintFilterCanvas::CacheType::OFFSCREEN) {
+         RSPropertiesPainter::DrawBackgroundEffect(properties, canvas, *effectRegion_);
+@@ -78,8 +78,8 @@ RectI RSEffectRenderNode::GetFilterRect() const
+         ROSEN_LOGE("RSEffectRenderNode::GetFilterRect: effectRegion has no value");
+         return {};
+     }
+-    auto& matrix = GetRenderProperties().GetBoundsGeometry()->GetAbsMatrix();
+ #ifndef USE_ROSEN_DRAWING
++    auto& matrix = GetRenderProperties().GetBoundsGeometry()->GetAbsMatrix();
+     // re-map local rect to absolute rect
+     auto bounds = matrix.mapRect(SkRect::Make(*effectRegion_)).roundOut();
+     return { bounds.x(), bounds.y(), bounds.width(), bounds.height() };
+@@ -100,10 +100,10 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& reg
+         ROSEN_LOGE("RSEffectRenderNode::SetEffectRegion: region has no value");
+         return;
+     }
++#ifndef USE_ROSEN_DRAWING
+     const auto& geoPtr = GetRenderProperties().GetBoundsGeometry();
+     const auto& matrix = geoPtr->GetAbsMatrix();
+     const auto& absRect = geoPtr->GetAbsRect();
+-#ifndef USE_ROSEN_DRAWING
+     // intersect effect region with node bounds
+     auto rect = region->getBounds();
+     if (!rect.intersect(
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_paint_filter_canvas.cpp b/rosen/modules/render_service_base/src/pipeline/rs_paint_filter_canvas.cpp
+index b3218e55a..939ba6ad4 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_paint_filter_canvas.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_paint_filter_canvas.cpp
+@@ -941,24 +941,6 @@ bool RSPaintFilterCanvas::OnFilter() const
+     return alphaStack_.top() > 0.f;
+ }
+ 
+-bool RSPaintFilterCanvas::OnFilterWithBrush(Brush& brush) const
+-{
+-    if (brush.GetColor() == 0x00000001) { // foreground color and foreground color strategy identification
+-        brush.SetColor(envStack_.top().envForegroundColor_.AsArgbInt());
+-    }
+-
+-    // use alphaStack_.top() to multiply alpha
+-    if (alphaStack_.top() < 1 && alphaStack_.top() > 0) {
+-        brush.SetAlpha(brush.GetAlpha() * alphaStack_.top());
+-    }
+-    return alphaStack_.top() > 0.f;
+-}
+-
+-void RSPaintFilterCanvas::SetRecordingState(bool flag)
+-{
+-    recordingState_ = flag;
+-}
+-
+ #endif // USE_ROSEN_DRAWING
+ 
+ bool RSPaintFilterCanvas::GetRecordingState() const
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+index a5834f9bf..b1a77c539 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+@@ -134,7 +134,6 @@ void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canva
+ #else
+     renderNodeSaveCount_ = canvas.SaveAllStatus();
+ #endif
+-
+     // Apply alpha to canvas
+     const RSProperties& properties = GetRenderProperties();
+     canvas.MultiplyAlpha(properties.GetAlpha());
+diff --git a/rosen/modules/render_service_base/src/pipeline/sk_resource_manager.cpp b/rosen/modules/render_service_base/src/pipeline/sk_resource_manager.cpp
+index 4356c3300..d3ccffc29 100644
+--- a/rosen/modules/render_service_base/src/pipeline/sk_resource_manager.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/sk_resource_manager.cpp
+@@ -50,7 +50,7 @@ void SKResourceManager::HoldResource(const std::shared_ptr<Drawing::Image> &img)
+         return;
+     }
+     std::scoped_lock<std::recursive_mutex> lock(mutex_);
+-    if (std::any_of(images_[tid].cbegin(), images[tid].cend(), 
++    if (std::any_of(images_[tid].cbegin(), images_[tid].cend(), 
+         [&img](const std::shared_ptr<Drawing::Image>& image) {
+             return image.get() == img.get();
+         })) {
+diff --git a/rosen/modules/render_service_base/src/platform/windows/rs_marshalling_helper.cpp b/rosen/modules/render_service_base/src/platform/windows/rs_marshalling_helper.cpp
+index afa9a0cd4..4aa4c19f6 100644
+--- a/rosen/modules/render_service_base/src/platform/windows/rs_marshalling_helper.cpp
++++ b/rosen/modules/render_service_base/src/platform/windows/rs_marshalling_helper.cpp
+@@ -662,6 +662,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
+     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSPath>)      \
+     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSShader>)    \
+     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSLinearGradientBlurPara>)    \
++    EXPLICIT_INSTANTIATION(TEMPLATE, RSRenderParticleVector)       \
+     EXPLICIT_INSTANTIATION(TEMPLATE, Vector2f)                     \
+     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<uint32_t>)            \
+     EXPLICIT_INSTANTIATION(TEMPLATE, Vector4<Color>)               \
+diff --git a/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp b/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
+index ffff42251..839ccae49 100755
+--- a/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
+@@ -2130,30 +2130,40 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
+     }
+ 
+     Drawing::Brush brush;
+-    Drawing::Matrix inverseMat, scaleMat;
++    Drawing::Matrix inverseMat, rotateMat;
+     auto boundsGeo = (properties.GetBoundsGeometry());
+     if (boundsGeo && !boundsGeo->IsEmpty()) {
+-        if (!canvas.GetTotalMatrix().Invert(inverseMat)) {
+-            ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get inverse matrix failed.");
++        auto transMat = canvas.GetTotalMatrix();
++        rotateMat.SetScale(transMat.Get(Drawing::Matrix::SCALE_X), transMat.Get(Drawing::Matrix::SCALE_Y));
++        rotateMat.Set(Drawing::Matrix::SKEW_X, transMat.Get(Drawing::Matrix::SKEW_X));
++        rotateMat.Set(Drawing::Matrix::SKEW_Y, transMat.Get(Drawing::Matrix::SKEW_Y));
++        rotateMat.PreTranslate(-bounds.GetLeft(), -bounds.GetTop());
++        rotateMat.PostTranslate(bounds.GetLeft(), bounds.GetTop());
++        
++        Drawing::Rect transBounds;
++        rotateMat.MapRect(transBounds, bounds);
++        rotateMat.Set(Drawing::Matrix::TRANS_X, bounds.GetLeft() - transBounds.GetLeft());
++        rotateMat.Set(Drawing::Matrix::TRANS_Y, bounds.GetTop() - transBounds.GetTop());
++        if (!rotateMat.Invert(inverseMat)) {
++            ROSEN_LOGE("RSPropertiesPainter::DrawPixelStretch get invert matrix failed.");
+         }
+-        scaleMat.Set(Drawing::Matrix::SCALE_X, inverseMat.Get(Drawing::Matrix::SCALE_X));
+-        scaleMat.Set(Drawing::Matrix::SCALE_Y, inverseMat.Get(Drawing::Matrix::SCALE_Y));
+     }
+ 
+     canvas.Save();
+     canvas.Translate(bounds.GetLeft(), bounds.GetTop());
+     Drawing::SamplingOptions samplingOptions;
+-    if (pixelStretch->x_ > 0) {
++    constexpr static float EPS = 1e-5f;
++    if (pixelStretch->x_ > EPS || pixelStretch->y_ > EPS || pixelStretch->z_ > EPS || pixelStretch->w_ > EPS) {
+         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(
+-            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, scaleMat));
++            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, inverseMat));
+         canvas.AttachBrush(brush);
+         canvas.DrawRect(Drawing::Rect(-pixelStretch->x_, -pixelStretch->y_,
+             -pixelStretch->x_ + scaledBounds.GetWidth(), -pixelStretch->y_ + scaledBounds.GetHeight()));
+         canvas.DetachBrush();
+     } else {
+-        scaleMat.PostScale(scaledBounds.GetWidth() / bounds.GetWidth(), scaledBounds.GetHeight() / bounds.GetHeight());
++        inverseMat.PostScale(scaledBounds.GetWidth() / bounds.GetWidth(), scaledBounds.GetHeight() / bounds.GetHeight());
+         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(
+-            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, scaleMat));
++            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, inverseMat));
+ 
+         canvas.Translate(-pixelStretch->x_, -pixelStretch->y_);
+         canvas.AttachBrush(brush);
+@@ -2261,7 +2271,7 @@ void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaint
+     Drawing::Brush brush;
+     brush.SetAntiAlias(antiAlias);
+     auto bgColor = properties.GetBackgroundColor();
+-    if (bgColor != RgbPalette::Transparent()) {
++    if (bgColor != RgbPalette::Transparent() && !isSurfaceView) {
+         brush.SetColor(Drawing::Color(bgColor.AsArgbInt()));
+         canvas.AttachBrush(brush);
+         canvas.DrawRoundRect(RRect2DrawingRRect(properties.GetRRect()));
+diff --git a/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp b/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp
+index 796ecd1fc..d60da2b3b 100644
+--- a/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp
+@@ -361,7 +361,7 @@ void RSBorderFourLineRoundCornerDrawable::Draw(RSRenderNode& node, RSPaintFilter
+ #else
+     Drawing::AutoCanvasRestore acr(canvas, true);
+     auto& properties = node.GetMutableRenderProperties();
+-    canvas.ClipRoundRect(rrect_, true);
++    canvas.ClipRoundRect(rrect_,Drawing::ClipOp::INTERSECT, true);
+     canvas.ClipRoundRect(innerRrect_, Drawing::ClipOp::DIFFERENCE, true);
+     properties.GetBorder()->PaintTopPath(canvas, pen_, rrect_);
+     properties.GetBorder()->PaintRightPath(canvas, pen_, rrect_);
+diff --git a/rosen/modules/render_service_base/src/render/rs_pixel_map_util.cpp b/rosen/modules/render_service_base/src/render/rs_pixel_map_util.cpp
+index 23f61c529..51967cae5 100644
+--- a/rosen/modules/render_service_base/src/render/rs_pixel_map_util.cpp
++++ b/rosen/modules/render_service_base/src/render/rs_pixel_map_util.cpp
+@@ -42,7 +42,7 @@ static sk_sp<SkColorSpace> ColorSpaceToSkColorSpace(ColorSpace colorSpace)
+     }
+ }
+ #else
+-static std::shared_ptr<Drawing::ColorSpace> ColorSpaceToDrawingColorSpace(Drawing::ColorSpace colorSpace)
++static std::shared_ptr<Drawing::ColorSpace> ColorSpaceToDrawingColorSpace(ColorSpace colorSpace)
+ {
+     switch (colorSpace) {
+         case ColorSpace::LINEAR_SRGB:
+@@ -194,7 +194,7 @@ std::shared_ptr<Drawing::Image> RSPixelMapUtil::ExtractDrawingImage(
+     Drawing::ImageInfo drawingImageInfo { imageInfo.size.width, imageInfo.size.height,
+         PixelFormatToDrawingColorType(imageInfo.pixelFormat),
+ 	AlphaTypeToDrawingAlphaType(imageInfo.alphaType),
+-	ColorSpaceToDrawingColorSpace(ImageInfo.colorSpace) };
++	ColorSpaceToDrawingColorSpace(imageInfo.colorSpace) };
+     Drawing::Pixmap imagePixmap(drawingImageInfo, reinterpret_cast<const void*>(pixelMap->GetPixels()), pixelMap->GetRowStride());
+     return Drawing::Image::MakeFromRaster(imagePixmap, PixelMapReleaseProc, new PixelMapReleaseContext(pixelMap));
+ }
+diff --git a/rosen/test/render_service/render_service/unittest/pipeline/BUILD.gn b/rosen/test/render_service/render_service/unittest/pipeline/BUILD.gn
+index 991cdc801..528b47bdb 100644
+--- a/rosen/test/render_service/render_service/unittest/pipeline/BUILD.gn
++++ b/rosen/test/render_service/render_service/unittest/pipeline/BUILD.gn
+@@ -764,7 +764,7 @@ ohos_static_library("rs_test_common") {
+   ]
+ 
+   if (defined(use_rosen_drawing) && use_rosen_drawing) {
+-    public_deps += [ "$graphic_2d_root/rosen/modules/2d_graphics::2d_graphics" ]
++    public_deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
+   }
+ 
+   external_deps = [
+diff --git a/rosen/test/render_service/render_service_base/unittest/command/BUILD.gn b/rosen/test/render_service/render_service_base/unittest/command/BUILD.gn
+index 6a3edec37..e787c0faf 100644
+--- a/rosen/test/render_service/render_service_base/unittest/command/BUILD.gn
++++ b/rosen/test/render_service/render_service_base/unittest/command/BUILD.gn
+@@ -55,7 +55,7 @@ ohos_unittest("RSNodeCommandTest") {
+     deps += [ "//third_party/flutter/build/skia:ace_skia_ohos" ]
+   }
+   if (defined(use_rosen_drawing) && use_rosen_drawing) {
+-    public_deps = [ "$graphic_2d_root/rosen/modules/2d_graphics::2d_graphics" ]
++    public_deps = [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics" ]
+   }
+   external_deps = [
+     "c_utils:utils",
+diff --git a/rosen/test/render_service/render_service_base/unittest/common/BUILD.gn b/rosen/test/render_service/render_service_base/unittest/common/BUILD.gn
+index 4c075093c..22d372d07 100644
+--- a/rosen/test/render_service/render_service_base/unittest/common/BUILD.gn
++++ b/rosen/test/render_service/render_service_base/unittest/common/BUILD.gn
+@@ -48,7 +48,7 @@ ohos_unittest("RSRenderServiceBaseCommonTest") {
+     "$graphic_2d_root/rosen/test/include",
+   ]
+   if (defined(use_rosen_drawing) && use_rosen_drawing) {
+-    public_deps = [ "$graphic_2d_root/rosen/modules/2d_graphics::2d_graphics" ]
++    public_deps = [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
+   }
+   deps = [
+     "../../../../../modules/render_service_base:render_service_base_src",
+diff --git a/rosen/test/render_service/render_service_base/unittest/overdraw/BUILD.gn b/rosen/test/render_service/render_service_base/unittest/overdraw/BUILD.gn
+index 7b5a81880..2c6f310d0 100644
+--- a/rosen/test/render_service/render_service_base/unittest/overdraw/BUILD.gn
++++ b/rosen/test/render_service/render_service_base/unittest/overdraw/BUILD.gn
+@@ -36,7 +36,7 @@ ohos_unittest("overdraw_test") {
+     "//third_party/googletest:gmock",
+   ]
+   if (defined(use_rosen_drawing) && use_rosen_drawing) {
+-    public_deps = [ "$graphic_2d_root/rosen/modules/2d_graphics::2d_graphics" ]
++    public_deps = [ "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics" ]
+   }
+   external_deps = [ "hilog:libhilog" ]
+   if (defined(use_new_skia) && use_new_skia) {

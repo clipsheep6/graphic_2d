@@ -134,7 +134,6 @@ void RSSurfaceRenderNode::PrepareRenderBeforeChildren(RSPaintFilterCanvas& canva
 #else
     renderNodeSaveCount_ = canvas.SaveAllStatus();
 #endif
-
     // Apply alpha to canvas
     const RSProperties& properties = GetRenderProperties();
     canvas.MultiplyAlpha(properties.GetAlpha());

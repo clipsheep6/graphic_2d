@@ -1593,5 +1593,15 @@ bool RSSurfaceRenderNode::GetNodeIsSingleFrameComposer() const
     }
     return isNodeSingleFrameComposer_ || flag;
 }
+
+bool RSSurfaceRenderNode::IsParentOfSharedTransitionNode() const
+{
+    return IsParentOfSharedTransitionNode_;
+}
+
+void RSSurfaceRenderNode::SetParentOfSharedTransitionNodeFlag(bool IsParentOfSharedTransitionNode)
+{
+    IsParentOfSharedTransitionNode_ = IsParentOfSharedTransitionNode;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -288,6 +288,13 @@ void RSUniRenderVisitor::UpdateStaticCacheSubTree(const std::shared_ptr<RSRender
         if (child->GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
             child->SetDrawingCacheChanged(false);
         }
+        if (child->GetSharedTransitionParam().has_value()) {
+            curSurfaceNode_->SetParentOfSharedTransitionNodeFlag(true);
+            auto leashNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(curSurfaceNode_->GetParent().lock());
+            if (leashNode) {
+                leashNode->SetParentOfSharedTransitionNodeFlag(true);
+            }
+        }
         // [planning] pay attention to outofparent case
         if (auto surfaceNode = child->ReinterpretCastTo<RSSurfaceRenderNode>()) {
             // fully prepare hwcLayer and its subnodes
@@ -4729,6 +4736,12 @@ bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSBaseRenderN
 
 void RSUniRenderVisitor::PrepareSharedTransitionNode(RSBaseRenderNode& node)
 {
+    curSurfaceNode_->SetParentOfSharedTransitionNodeFlag(true);
+    auto leashNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(curSurfaceNode_->GetParent().lock());
+    if (leashNode) {
+        leashNode->SetParentOfSharedTransitionNodeFlag(true);
+    }
+
     // Sanity check done by caller, transitionParam should always has value.
     auto& transitionParam = node.GetSharedTransitionParam();
 

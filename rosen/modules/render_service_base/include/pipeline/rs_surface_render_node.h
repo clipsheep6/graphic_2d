@@ -873,6 +873,9 @@ public:
         return isForeground_;
     }
     bool GetNodeIsSingleFrameComposer() const override;
+
+    bool IsParentOfSharedTransitionNode() const;
+    void SetParentOfSharedTransitionNodeFlag(bool IsParentOfSharedTransitionNode);
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -1073,6 +1076,8 @@ private:
     std::shared_ptr<RSSurfaceTexture> surfaceTexture_ {};
 #endif
     bool isForeground_ = false;
+
+    bool IsParentOfSharedTransitionNode_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

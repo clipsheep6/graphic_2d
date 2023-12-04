@@ -61,6 +61,22 @@ void SKResourceManager::HoldResource(const std::shared_ptr<Drawing::Image> &img)
 }
 #endif
 
+void HoldResourceMain(sk_sp<SkImage> img)
+{
+#ifdef ROSEN_OHOS
+    auto tid = getpid();
+    if (!RSTaskDispatcher::GetInstance().HasRegisteredTask(tid)) {
+        return;
+    }
+    std::scoped_lock<std::recursive_mutex> lock(mutex_);
+    if (std::any_of(skImages_[tid].cbegin(), skImages_[tid].cend(),
+        [&img](const sk_sp<SkImage>& skImage) {return skImage.get() == img.get(); })) {
+            return ;
+    }
+    skImages_[tid].push_back(img);
+#endif
+}
+
 void SKResourceManager::ReleaseResource()
 {
 #ifdef ROSEN_OHOS

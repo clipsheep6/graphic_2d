@@ -213,6 +213,11 @@ public:
         return curDrawStatusVec_;
     }
 
+    bool CheckIsHardwareEnabledBufferUpdated() const
+    {
+        return isHardwareEnabledBufferUpdated_;
+    }
+
     DeviceType GetDeviceType() const;
     bool IsSingleDisplay();
     uint64_t GetFocusNodeId() const;

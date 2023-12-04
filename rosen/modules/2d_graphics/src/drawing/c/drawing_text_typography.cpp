@@ -31,6 +31,7 @@
 #include <locale>
 #include <vector>
 #include <string>
+#include "utils/log.h"
 
 #ifndef USE_GRAPHIC_TEXT_GINE
 using namespace rosen;
@@ -398,6 +399,12 @@ void OH_Drawing_TypographyHandlerPushTextStyle(OH_Drawing_TypographyCreate* hand
 
 void OH_Drawing_TypographyHandlerAddText(OH_Drawing_TypographyCreate* handler, const char* text)
 {
+    if (text) {
+        LOGI("AddText, text = %{public}s", text);
+    } else {
+        LOGE("AddText, null text");
+        return;
+    }
     const std::u16string wideText =
         std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.from_bytes(text);
 #ifndef USE_GRAPHIC_TEXT_GINE

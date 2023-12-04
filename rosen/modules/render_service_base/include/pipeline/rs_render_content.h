@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSB_EXPORT RSRenderContent {
+class RSB_EXPORT RSRenderContent : public std::enable_shared_from_this<RSRenderContent> {
 public:
     RSRenderContent();
     ~RSRenderContent() = default;
@@ -38,6 +38,10 @@ public:
     using DrawCmdContainer = std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>>;
 
 private:
+    void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas);
+    void DrawPropertyDrawableRange(
+        RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas);
+
     RSProperties renderProperties_;
     RSPropertyDrawable::DrawableVec propertyDrawablesVec_;
     DrawCmdContainer drawCmdModifiers_;
@@ -45,6 +49,7 @@ private:
     friend class RSRenderNode;
     friend class RSAliasDrawable;
     friend class PropertyDrawableOpItem;
+    friend class PropertyDrawableRangeOpItem;
     friend class RSModifierDrawable;
 };
 } // namespace Rosen

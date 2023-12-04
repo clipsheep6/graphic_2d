@@ -47,9 +47,7 @@ namespace Rosen {
 class DrawCmdList;
 class OpItem;
 class RSRenderContent;
-namespace Slot{
-enum RSPropertyDrawableSlot : uint8_t;
-}
+enum class RSPropertyDrawableSlot : uint8_t;
 #ifdef ROSEN_OHOS
 struct RSSurfaceBufferInfo {
     RSSurfaceBufferInfo() = default;
@@ -108,7 +106,9 @@ public:
     void DrawPixelMapWithParm(
         const std::shared_ptr<Media::PixelMap>& pixelmap,
         const Rosen::RsImageInfo& rsImageInfo, const SkSamplingOptions& samplingOptions, const SkPaint& paint);
-    void DrawPropertyDrawable(const std::shared_ptr<RSRenderContent> content, Slot::RSPropertyDrawableSlot slot);
+    void DrawPropertyDrawable(const std::shared_ptr<RSRenderContent> content, RSPropertyDrawableSlot slot);
+    void DrawPropertyDrawableRange(
+        const std::shared_ptr<RSRenderContent> content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
 #else
     GrContext* getGrContext() override;
     void SetGrContext(GrContext* grContext);

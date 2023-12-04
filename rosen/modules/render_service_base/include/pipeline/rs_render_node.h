@@ -516,9 +516,15 @@ protected:
 #endif
     bool isFullChildrenListValid_ = false;
     bool isBootAnimation_ = false;
-    void DrawPropertyDrawable(Slot::RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas);
-    void DrawPropertyDrawableRange(
-        Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas);
+    inline void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas)
+    {
+        renderContent_->DrawPropertyDrawable(slot, canvas);
+    }
+    inline void DrawPropertyDrawableRange(
+        RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas)
+    {
+        renderContent_->DrawPropertyDrawableRange(begin, end, canvas);
+    }
 
 private:
     NodeId id_;

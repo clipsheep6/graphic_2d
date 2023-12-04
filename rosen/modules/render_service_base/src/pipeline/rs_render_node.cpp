@@ -27,7 +27,6 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_effect_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_recording_canvas.h"
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -54,7 +53,6 @@ bool RSRenderNode::IsContentNode() const
            !GetRenderProperties().isDrawn_;
 }
 
-using Slot::RSPropertyDrawableSlot;
 namespace {
 const std::set<RSModifierType> GROUPABLE_ANIMATION_TYPE = {
     RSModifierType::ALPHA,
@@ -2523,37 +2521,6 @@ bool RSRenderNode::GetLastIsNeedAssignToSubThread() const
 void RSRenderNode::SetLastIsNeedAssignToSubThread(bool lastIsNeedAssignToSubThread)
 {
     lastIsNeedAssignToSubThread_ = lastIsNeedAssignToSubThread;
-}
-
-void RSRenderNode::DrawPropertyDrawable(RSPropertyDrawableSlot index, RSPaintFilterCanvas& canvas)
-{
-    auto& drawablePtr = renderContent_->propertyDrawablesVec_[index];
-    if (!drawablePtr) {
-        return;
-    }
-    auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
-    if (recordingCanvas) {
-        recordingCanvas->DrawPropertyDrawable(renderContent_, index);
-    } else {
-        drawablePtr->Draw(*renderContent_, canvas);
-    }
-}
-
-void RSRenderNode::DrawPropertyDrawableRange(
-    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas)
-{
-    auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
-    for (uint16_t index = begin; index <= end; index++) {
-        auto& drawablePtr = renderContent_->propertyDrawablesVec_[index];
-        if (!drawablePtr) {
-            continue;
-        }
-        if (recordingCanvas) {
-            recordingCanvas->DrawPropertyDrawable(renderContent_, static_cast<RSPropertyDrawableSlot>(index));
-        } else {
-            drawablePtr->Draw(*renderContent_, canvas);
-        }
-    }
 }
 } // namespace Rosen
 } // namespace OHOS

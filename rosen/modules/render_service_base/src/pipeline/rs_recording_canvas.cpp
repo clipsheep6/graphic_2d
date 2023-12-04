@@ -34,7 +34,7 @@ RSRecordingCanvas::RSRecordingCanvas(int width, int height) : SkCanvasVirtualEnf
     drawCmdList_ = std::make_shared<DrawCmdList>(width, height);
 }
 
-RSRecordingCanvas::~RSRecordingCanvas() {}
+RSRecordingCanvas::~RSRecordingCanvas() = default;
 
 std::shared_ptr<DrawCmdList> RSRecordingCanvas::GetDrawCmdList() const
 {
@@ -462,10 +462,17 @@ bool RSRecordingCanvas::IsCustomTextType() const
     return isCustomTextType_;
 }
 void RSRecordingCanvas::DrawPropertyDrawable(
-    const std::shared_ptr<RSRenderContent> content, Slot::RSPropertyDrawableSlot slot)
+    const std::shared_ptr<RSRenderContent> content, RSPropertyDrawableSlot slot)
 {
     RS_DRAWOP_TRACE_FUNC();
     std::unique_ptr<OpItem> op = std::make_unique<PropertyDrawableOpItem>(std::move(content), slot);
+    AddOp(std::move(op));
+}
+void RSRecordingCanvas::DrawPropertyDrawableRange(
+    const std::shared_ptr<RSRenderContent> content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end)
+{
+    RS_DRAWOP_TRACE_FUNC();
+    std::unique_ptr<OpItem> op = std::make_unique<PropertyDrawableRangeOpItem>(std::move(content), begin, end);
     AddOp(std::move(op));
 }
 } // namespace Rosen

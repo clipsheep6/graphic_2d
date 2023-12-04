@@ -953,7 +953,7 @@ bool RSSurfaceRenderNode::SubNodeNeedDraw(const RectI &r, PartialRenderType opDr
 }
 
 void RSSurfaceRenderNode::ResetSurfaceOpaqueRegion(const RectI& screeninfo, const RectI& absRect,
-    const ScreenRotation screenRotation, const bool isFocusWindow)
+    const ScreenRotation screenRotation, const bool isFocusWindow, float radius)
 {
     Occlusion::Rect absRectR {absRect};
     Occlusion::Region oldOpaqueRegion { opaqueRegion_ };
@@ -968,9 +968,8 @@ void RSSurfaceRenderNode::ResetSurfaceOpaqueRegion(const RectI& screeninfo, cons
         if (IsAppWindow() && HasContainerWindow()) {
             opaqueRegion_ = ResetOpaqueRegion(absRect, screenRotation, isFocusWindow);
         } else {
-            auto corner = GetWindowCornerRadius();
-            if (!corner.IsZero()) {
-                opaqueRegion_ = SetCornerRadiusOpaqueRegion(absRect, std::ceil(corner.x_));
+            if (radius > 0) {
+                opaqueRegion_ = SetCornerRadiusOpaqueRegion(absRect, radius);
             } else {
                 opaqueRegion_ = Occlusion::Region{absRectR};
             }
@@ -1342,24 +1341,26 @@ void RSSurfaceRenderNode::ResetSurfaceContainerRegion(const RectI& screeninfo, c
     containerRegion_ = absRegion.Sub(innerRectRegion);
 }
 
-bool RSSurfaceRenderNode::CheckOpaqueRegionBaseInfo(
-    const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow)
+bool RSSurfaceRenderNode::CheckOpaqueRegionBaseInfo(const RectI& screeninfo, const RectI& absRect,
+    const ScreenRotation screenRotation, const bool isFocusWindow, float radius)
 {
     return opaqueRegionBaseInfo_.screenRect_ == screeninfo &&
         opaqueRegionBaseInfo_.absRect_ == absRect &&
         opaqueRegionBaseInfo_.screenRotation_ == screenRotation &&
         opaqueRegionBaseInfo_.isFocusWindow_ == isFocusWindow &&
+        opaqueRegionBaseInfo_.radius_ == radius &&
         opaqueRegionBaseInfo_.isTransparent_ == IsTransparent() &&
         opaqueRegionBaseInfo_.hasContainerWindow_ == HasContainerWindow();
 }
 
-void RSSurfaceRenderNode::SetOpaqueRegionBaseInfo(
-    const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow)
+void RSSurfaceRenderNode::SetOpaqueRegionBaseInfo(const RectI& screeninfo, const RectI& absRect,
+    const ScreenRotation screenRotation, const bool isFocusWindow, float radius)
 {
     opaqueRegionBaseInfo_.screenRect_ = screeninfo;
     opaqueRegionBaseInfo_.absRect_ = absRect;
     opaqueRegionBaseInfo_.screenRotation_ = screenRotation;
     opaqueRegionBaseInfo_.isFocusWindow_ = isFocusWindow;
+    opaqueRegionBaseInfo_.radius_ = radius;
     opaqueRegionBaseInfo_.isTransparent_ = IsTransparent();
     opaqueRegionBaseInfo_.hasContainerWindow_ = HasContainerWindow();
 }

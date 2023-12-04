@@ -14,11 +14,16 @@
  */
 
 #include "common/rs_upload_texture_thread.h"
+#include "rs_trace.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
+#include "pipeline/rs_task_dispatcher.h"
+#ifdef NEW_SKIA
+#include "src/gpu/GrSurfaceProxy.h"
+#endif
 #if defined(RS_ENABLE_UNI_RENDER) && defined(RS_ENABLE_GL)
 #include "render_context/render_context.h"
 #endif
-#include "rs_trace.h"
 
 namespace OHOS::Rosen {
 RSUploadTextureThread& RSUploadTextureThread::Instance()
@@ -60,14 +65,69 @@ void RSUploadTextureThread::RemoveTask(const std::string& name)
         handler_->RemoveTask(name);
     }
 }
+ 
+bool RSUploadTextureThread::IsEnable() const
+{
+    return uploadProperity_ && isTargetPlatform_;
+}
+
+void RSUploadTextureThread::OnRenderEnd()
+{
+    if (IsEnable()) {
+        std::unique_lock<std::mutex> lock(uploadTaskMutex_);
+        enableTime_ = true;
+        uploadTaskCond_.notify_all();
+    }
+}
+
+void RSUploadTextureThread::OnProcessBegin()
+{
+    if (IsEnable()) {
+        std::unique_lock<std::mutex> lock(uploadTaskMutex_);
+        enableTime_ = false;
+    }
+    frameCount_.fetch_add(1);
+}
+
+int64_t RSUploadTextureThread::GetFrameCount() const
+{
+    return frameCount_.load();
+}
+
+void RSUploadTextureThread::WaitUntilRenderEnd()
+{
+    RS_TRACE_NAME("Waitfor render_service finish");
+    std::unique_lock<std::mutex> lock(uploadTaskMutex_);
+    uploadTaskCond_.wait(lock, [this]() { return enableTime_; });
+}
+
+bool RSUploadTextureThread::TaskIsValid(int64_t count)
+{
+    if (count < frameCount_.load()) {
+        return false;
+    }
+    WaitUntilRenderEnd();
+    return true;
+}
+
+bool RSUploadTextureThread::ImageSupportParallelUpload(int w, int h)
+{
+    return (w < IMG_WIDTH_MAX) && (h < IMG_HEIGHT_MAX);
+}
 
 #if defined(RS_ENABLE_UNI_RENDER) && defined(RS_ENABLE_GL)
 #ifndef USE_ROSEN_DRAWING
 void RSUploadTextureThread::InitRenderContext(RenderContext* context)
 {
     renderContext_ = context;
+    isTargetPlatform_ = RSSystemProperties::IsPhoneType();
+    uploadProperity_ = RSSystemProperties::GetParallelUploadTexture();
     PostTask([this]() {
         grContext_ = CreateShareGrContext();
+        auto taskDispatchFunc = [](const RSTaskDispatcher::RSTask& task, bool isSyncTask = false) {
+            RSUploadTextureThread::Instance().PostTask(task);
+        };
+        RSTaskDispatcher::GetInstance().RegisterTaskDispatchFunc(gettid(), taskDispatchFunc);
     });
 }
 
@@ -126,6 +186,7 @@ sk_sp<GrDirectContext> RSUploadTextureThread::CreateShareGrContext()
 void RSUploadTextureThread::CleanGrResource()
 {
     PostTask([this]() {
+        WaitUntilRenderEnd();
         RS_TRACE_NAME("ResetGrContext release resource");
         if (grContext_ == nullptr) {
             RS_LOGE("RSUploadTextureThread::grContext_ is nullptr");
@@ -135,6 +196,7 @@ void RSUploadTextureThread::CleanGrResource()
         RS_LOGI("RSUploadTextureThread::CleanGrResource() finished");
     });
 }
+
 #endif
 #endif
 }

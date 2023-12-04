@@ -24,6 +24,7 @@
 #include "common/rs_background_thread.h"
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
 #include "common/rs_upload_texture_thread.h"
+#include "src/image/SkImage_Base.h"
 #endif
 #include "common/rs_common_def.h"
 #include "platform/common/rs_log.h"
@@ -43,20 +44,6 @@ RSImageBase::~RSImageBase()
         pixelMap_ = nullptr;
         if (uniqueId_ > 0) {
             if (renderServiceImage_) {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-                if (isPinImage_) {
-                    RSUploadTextureThread::Instance().RemoveTask(std::to_string(uniqueId_));
-                    auto unpinTask = [image = image_]() {
-                        auto grContext = RSUploadTextureThread::Instance().GetShareGrContext().get();
-                        if (grContext && image) {
-                            SkImage_unpinAsTexture(image.get(), grContext);
-                        }
-                    };
-                    RSUploadTextureThread::Instance().PostSyncTask(unpinTask);
-                }
-#endif
-#endif                
                 auto task = [uniqueId = uniqueId_]() {
                     RSImageCache::Instance().ReleasePixelMapCache(uniqueId);
                 };
@@ -393,41 +380,52 @@ RSImageBase* RSImageBase::Unmarshalling(Parcel& parcel)
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-void RSImageBase::ConvertPixelMapToSkImage()
+void RSImageBase::ConvertPixelMapToSkImage(bool paraUpload)
 {
+    // paraUpload only enable in render_service or UnmarshalThread
+    pid_t tid = paraUpload ? getpid() : gettid();
     if (!image_ && pixelMap_) {
         if (!pixelMap_->IsEditable()) {
 #if defined(ROSEN_OHOS)
-            image_ = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
+            image_ = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, tid);
 #else
             image_ = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_);
 #endif
         }
         if (!image_) {
             image_ = RSPixelMapUtil::ExtractSkImage(pixelMap_);
-            if (image_) {
+            if (image_ && !paraUpload) { // parallel upload task will hold resource later in task
                 SKResourceManager::Instance().HoldResource(image_);
             }
             if (!pixelMap_->IsEditable()) {
 #if defined(ROSEN_OHOS)
-                RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image_, gettid());
+                RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image_, tid);
 #else
                 RSImageCache::Instance().CacheRenderSkiaImageByPixelMapId(uniqueId_, image_);
 #endif
             }
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-            if (renderServiceImage_) {
+            auto& instance = RSUploadTextureThread::Instance();
+            if (renderServiceImage_ && paraUpload && instance.IsEnable() && image_ &&
+                (instance.ImageSupportParallelUpload(image_->width(), image_->height()))) {
                 auto image = image_;
                 auto pixelMap = pixelMap_;
-                std::function<void()> uploadTexturetask = [image, pixelMap]() -> void {
-                    auto grContext = RSUploadTextureThread::Instance().GetShareGrContext().get();
-                    if (grContext && image && pixelMap) {
-                        SkImage_pinAsTexture(image.get(), grContext);
+                auto count = instance.GetFrameCount();
+                std::function<void()> uploadTexturetask = [image, pixelMap, count]() -> void {
+                    
+                    auto& instance = RSUploadTextureThread::Instance();
+                    auto grContext = instance.GetShareGrContext().get();
+                    if (grContext && image && pixelMap && instance.TaskIsValid(count)) {
+                        RS_TRACE_NAME_FMT("parallel upload texture w%d h%d", image->width(), image->height());
+                        if (SkImage_pinAsTexture(image.get(), grContext)) {
+                            SKResourceManager::Instance().HoldResource(image);
+                            return;
+                        }
                     }
+                    SKResourceManager::Instance().HoldResourceMain(image); // main
                 };
                 RSUploadTextureThread::Instance().PostTask(uploadTexturetask, std::to_string(uniqueId_));
-                isPinImage_ = true;
             }
 #endif
 #endif

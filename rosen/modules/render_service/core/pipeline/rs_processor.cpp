@@ -18,6 +18,7 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "platform/common/rs_log.h"
 #include "rs_base_render_util.h"
+#include "rs_trace.h"
 #ifdef SOC_PERF_ENABLE
 #include "socperf_client.h"
 #endif
@@ -48,6 +49,7 @@ constexpr int32_t FRAME_TRACE_PERF_REQUESTED_CODE = 10024;
 void PerfRequest(int32_t perfRequestCode, bool onOffTag)
 {
 #ifdef SOC_PERF_ENABLE
+    RS_TRACE_NAME("RSMainThread::PerfRequest level" + std::to_string(perfRequestCode));
     OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(perfRequestCode, onOffTag, "");
     RS_LOGD("RSProcessor::soc perf info [%{public}d %{public}d]", perfRequestCode, onOffTag);
 #endif

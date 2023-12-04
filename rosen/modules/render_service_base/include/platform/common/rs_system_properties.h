@@ -152,6 +152,7 @@ public:
     static bool GetPropertyDrawableEnable();
 
     static bool GetAnimationCacheEnabled();
+    static bool GetPerfForCommandEnable();
 
     static bool GetBoolSystemProperty(const char* name, bool defaultValue);
     static int WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context);

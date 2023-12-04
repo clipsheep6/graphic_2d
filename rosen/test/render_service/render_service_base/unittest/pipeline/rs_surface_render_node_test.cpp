@@ -183,8 +183,10 @@ HWTEST_F(RSSurfaceRenderNodeTest, ResetSurfaceOpaqueRegion02, TestSize.Level1)
     RectI screenRect {0, 0, 2560, 1600};
     RectI absRect {0, 100, 400, 500};
     surfaceRenderNode.SetAbilityBGAlpha(0);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, false);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, true);
+    auto radius = std::ceil(std::max(surfaceRenderNode.GetWindowCornerRadius().x_,
+        surfaceRenderNode.GetGlobalCornerRaius().x_));
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, false, radius);
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, true, radius);
 }
 
 /**
@@ -202,8 +204,10 @@ HWTEST_F(RSSurfaceRenderNodeTest, ResetSurfaceOpaqueRegion03, TestSize.Level1)
     surfaceRenderNode.SetGlobalAlpha(1.0f);
     surfaceRenderNode.SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
     surfaceRenderNode.SetContainerWindow(true, 1.0f);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, false);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, true);
+    auto radius = std::ceil(std::max(surfaceRenderNode.GetWindowCornerRadius().x_,
+        surfaceRenderNode.GetGlobalCornerRaius().x_));
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, false, radius);
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, true, radius);
 }
 
 /**
@@ -220,8 +224,10 @@ HWTEST_F(RSSurfaceRenderNodeTest, ResetSurfaceOpaqueRegion04, TestSize.Level1)
     surfaceRenderNode.SetAbilityBGAlpha(255);
     surfaceRenderNode.SetGlobalAlpha(1.0f);
     surfaceRenderNode.GetMutableRenderProperties().SetCornerRadius(Vector4f(15.0f));
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, false);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, true);
+    auto radius = std::ceil(std::max(surfaceRenderNode.GetWindowCornerRadius().x_,
+        surfaceRenderNode.GetGlobalCornerRaius().x_));
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, false, radius);
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_0, true, radius);
 }
 
 /**
@@ -239,8 +245,10 @@ HWTEST_F(RSSurfaceRenderNodeTest, ResetSurfaceOpaqueRegion05, TestSize.Level1)
     surfaceRenderNode.SetGlobalAlpha(1.0f);
     surfaceRenderNode.SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
     surfaceRenderNode.SetContainerWindow(true, 1.0f);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_90, false);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_90, true);
+    auto radius = std::ceil(std::max(surfaceRenderNode.GetWindowCornerRadius().x_,
+        surfaceRenderNode.GetGlobalCornerRaius().x_));
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_90, false, radius);
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_90, true, radius);
 }
 
 /**
@@ -258,8 +266,10 @@ HWTEST_F(RSSurfaceRenderNodeTest, ResetSurfaceOpaqueRegion06, TestSize.Level1)
     surfaceRenderNode.SetGlobalAlpha(1.0f);
     surfaceRenderNode.SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
     surfaceRenderNode.SetContainerWindow(true, 1.0f);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_180, false);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_180, true);
+    auto radius = std::ceil(std::max(surfaceRenderNode.GetWindowCornerRadius().x_,
+        surfaceRenderNode.GetGlobalCornerRaius().x_));
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_180, false, radius);
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_180, true, radius);
 }
 
 /**
@@ -277,8 +287,10 @@ HWTEST_F(RSSurfaceRenderNodeTest, ResetSurfaceOpaqueRegion07, TestSize.Level1)
     surfaceRenderNode.SetGlobalAlpha(1.0f);
     surfaceRenderNode.SetSurfaceNodeType(RSSurfaceNodeType::APP_WINDOW_NODE);
     surfaceRenderNode.SetContainerWindow(true, 1.0f);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_270, false);
-    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_270, true);
+    auto radius = std::ceil(std::max(surfaceRenderNode.GetWindowCornerRadius().x_,
+        surfaceRenderNode.GetGlobalCornerRaius().x_));
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_270, false, radius);
+    surfaceRenderNode.ResetSurfaceOpaqueRegion(screenRect, absRect, ScreenRotation::ROTATION_270, true, radius);
 }
 
 /**

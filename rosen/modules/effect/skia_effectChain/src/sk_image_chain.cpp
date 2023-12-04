@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <algorithm>
 #include "egl_manager.h"
 #if defined(NEW_SKIA)
 #include <include/gpu/GrDirectContext.h>
@@ -22,6 +22,7 @@
 #include "include/gpu/gl/GrGLInterface.h"
 #include "rs_trace.h"
 #include "sk_image_chain.h"
+#include "sk_image_filter_factory.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -146,6 +147,103 @@ void SKImageChain::SetClipRRect(SkRRect* rRect)
 std::shared_ptr<Media::PixelMap> SKImageChain::GetPixelMap()
 {
     return dstPixelMap_;
+}
+
+void SKImageChain::GenerateVerticalGradientFilters(float gradientRadius,
+                    float fullBlurStart, float fullBlurEnd, float gradientBlurEnd)
+{
+    int height = srcPixelMap_->GetHeight();
+    int fullBlurStartPos = static_cast<int>(height * fullBlurStart);
+    int fullBlurEndPos = static_cast<int>(height * fullBlurEnd);
+    int gradientBlurEndPos = static_cast<int>(height * gradientBlurEnd);
+    int gradientBlurInterval;
+    if (gradientBlurEndPos > fullBlurStartPos && gradientBlurEndPos > fullBlurEndPos) {
+        gradientBlurInterval = gradientBlurEndPos - std::max(fullBlurStartPos, fullBlurEndPos);
+    } else {
+        gradientBlurInterval = std::min(fullBlurStartPos, fullBlurEndPos) - gradientBlurEndPos;
+    }
+    filterNum_ = gradientBlurInterval / LINES_PER_FILTER;
+    float radiusInterval = gradientRadius / filterNum_;
+
+    for (int i = 0; i < filterNum_; i++) {
+        auto filter = Rosen::SKImageFilterFactory::Blur(gradientRadius - i * radiusInterval);
+        gradientFilters_.emplace_back(filter);
+    }
+}
+
+void SKImageChain::GenerateHorizontalGradientFilters(float gradientRadius,
+                    float fullBlurStart, float fullBlurEnd, float gradientBlurEnd)
+{
+    int width = srcPixelMap_->GetWidth();
+    int fullBlurStartPos = static_cast<int>(width * fullBlurStart);
+    int fullBlurEndPos = static_cast<int>(width * fullBlurEnd);
+    int gradientBlurEndPos = static_cast<int>(width * gradientBlurEnd);
+    int gradientBlurInterval;
+    if (gradientBlurEndPos > fullBlurStartPos && gradientBlurEndPos > fullBlurEndPos) {
+        gradientBlurInterval = gradientBlurEndPos - std::max(fullBlurStartPos, fullBlurEndPos);
+    } else {
+        gradientBlurInterval = std::min(fullBlurStartPos, fullBlurEndPos) - gradientBlurEndPos;
+    }
+    filterNum_ = gradientBlurInterval / LINES_PER_FILTER;
+    float radiusInterval = gradientRadius / filterNum_;
+
+    for (int i = 0; i < filterNum_; i++) {
+        auto filter = Rosen::SKImageFilterFactory::Blur(gradientRadius - i * radiusInterval);
+        gradientFilters_.emplace_back(filter);
+    }
+}
+
+void SKImageChain::GradientBlurDraw(GradientBlurMode mode)
+{
+    if (canvas_ == nullptr) {
+        InitWithoutCanvas();
+        if (forceCPU_) {
+            if (!CreateCPUCanvas()) {
+                LOGE("Failed to create canvas for CPU.");
+                return;
+            }
+        } else {
+            if (!CreateGPUCanvas()) {
+                LOGE("Failed to create canvas for GPU.");
+                return;
+            }
+        }
+    }
+    if (image_ == nullptr) {
+        LOGE("The image_ is nullptr, nothing to draw.");
+        return;
+    }
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "SKImageChain::GradientBlurDraw");
+    for (int i = 0; i < filterNum_; i++) {
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setBlendMode(SkBlendMode::kSrc);
+        paint.setImageFilter(gradientFilters_[i]);
+        SkRect rect;
+        if (mode == VERTICAL_GRADIENT_BLUR_MODE) {
+            rect = SkRect::MakeXYWH(0, i * LINES_PER_FILTER, srcPixelMap_->GetWidth(), LINES_PER_FILTER);
+        } else if (mode == HORIZONTAL_GRADIENT_BLUR_MODE) {
+            rect = SkRect::MakeXYWH(i * LINES_PER_FILTER, 0, LINES_PER_FILTER, srcPixelMap_->GetHeight());            
+        } else {
+            return;
+        }
+        canvas_->clipRect(rect, true);
+        canvas_->save();
+        canvas_->resetMatrix();
+#if defined(NEW_SKIA)
+        canvas_->drawImage(image_.get(), 0, 0, SkSamplingOptions(), &paint);
+#else
+        canvas_->drawImage(image_.get(), 0, 0, &paint);
+#endif
+
+    }
+    if (!forceCPU_ && dstPixmap_ != nullptr) {
+        if (!canvas_->readPixels(*dstPixmap_.get(), 0, 0)) {
+            LOGE("Failed to readPixels to target Pixmap.");
+        }
+    }
+    canvas_->restore();
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);    
 }
 
 void SKImageChain::Draw()

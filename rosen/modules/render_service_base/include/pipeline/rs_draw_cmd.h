@@ -64,9 +64,7 @@ namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
 class RSRenderContent;
-namespace Slot{
-enum RSPropertyDrawableSlot : uint8_t;
-}
+enum class RSPropertyDrawableSlot : uint8_t;
 
 enum RSOpType : uint16_t {
     OPITEM,
@@ -115,6 +113,7 @@ enum RSOpType : uint16_t {
     SCALE_OPITEM,
     HM_SYMBOL_OPITEM,
     PROPERTY_DRAWABLE_OPITEM,
+    PROPERTY_DRAWABLE_RANGE_OPITEM,
 };
 namespace {
     std::string GetOpTypeString(RSOpType type)
@@ -167,6 +166,7 @@ namespace {
             GETOPTYPESTRING(SCALE_OPITEM);
             GETOPTYPESTRING(HM_SYMBOL_OPITEM);
             GETOPTYPESTRING(PROPERTY_DRAWABLE_OPITEM);
+            GETOPTYPESTRING(PROPERTY_DRAWABLE_RANGE_OPITEM);
             default:
                 break;
         }
@@ -783,14 +783,14 @@ private:
 
 class PropertyDrawableOpItem : public OpItem {
 public:
-    PropertyDrawableOpItem(const std::shared_ptr<RSRenderContent>& content, Slot::RSPropertyDrawableSlot slot);
+    PropertyDrawableOpItem(const std::shared_ptr<RSRenderContent>& content, RSPropertyDrawableSlot slot);
     ~PropertyDrawableOpItem() override = default;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
     std::string GetTypeWithDesc() const override
     {
         std::string desc = "{OpType: " + GetOpTypeString(GetType()) +", Description:{";
-        desc += "\tslot: " + std::to_string(slot_) + "\n";
+        desc += "\tslot: " + std::to_string(static_cast<int>(slot_)) + "\n";
         desc += "}, \n";
         return desc;
     }
@@ -802,7 +802,34 @@ public:
 
 private:
     const std::shared_ptr<RSRenderContent> content_;
-    const Slot::RSPropertyDrawableSlot slot_;
+    const RSPropertyDrawableSlot slot_;
+};
+
+class PropertyDrawableRangeOpItem : public OpItem {
+public:
+    PropertyDrawableRangeOpItem(
+        const std::shared_ptr<RSRenderContent>& content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
+    ~PropertyDrawableRangeOpItem() override = default;
+    void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
+
+    std::string GetTypeWithDesc() const override
+    {
+        std::string desc = "{OpType: " + GetOpTypeString(GetType()) +", Description:{";
+        desc += "\tslots: " + std::to_string(static_cast<int>(begin_)) + " to " +
+                std::to_string(static_cast<int>(end_)) + "\n";
+        desc += "}, \n";
+        return desc;
+    }
+
+    RSOpType GetType() const override
+    {
+        return RSOpType::PROPERTY_DRAWABLE_RANGE_OPITEM;
+    }
+
+private:
+    const std::shared_ptr<RSRenderContent> content_;
+    const RSPropertyDrawableSlot begin_;
+    const RSPropertyDrawableSlot end_;
 };
 
 class TextBlobOpItem : public OpItemWithPaint {

@@ -14,13 +14,14 @@
  */
 
 #include "pipeline/rs_render_content.h"
+#include "pipeline/rs_recording_canvas.h"
 
 namespace OHOS {
 namespace Rosen {
 RSRenderContent::RSRenderContent()
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        propertyDrawablesVec_.resize(Slot::RSPropertyDrawableSlot::MAX);
+        propertyDrawablesVec_.resize(static_cast<size_t>(RSPropertyDrawableSlot::MAX));
     }
 }
 
@@ -34,5 +35,37 @@ const RSProperties& RSRenderContent::GetRenderProperties() const
     return renderProperties_;
 }
 
+void RSRenderContent::DrawPropertyDrawable(RSPropertyDrawableSlot index, RSPaintFilterCanvas& canvas)
+{
+    auto& drawablePtr = propertyDrawablesVec_[static_cast<size_t>(index)];
+    if (!drawablePtr) {
+        return;
+    }
+    auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
+    if (recordingCanvas) {
+        recordingCanvas->DrawPropertyDrawable(shared_from_this(), index);
+    } else {
+        drawablePtr->Draw(*this, canvas);
+    }
+}
+
+void RSRenderContent::DrawPropertyDrawableRange(
+    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas)
+{
+    auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
+
+    if (recordingCanvas) {
+        recordingCanvas->DrawPropertyDrawableRange(shared_from_this(), begin, end);
+        return;
+    }
+
+    for (uint16_t index = static_cast<size_t>(begin); index <= static_cast<size_t>(end); index++) {
+        auto& drawablePtr = propertyDrawablesVec_[index];
+        if (!drawablePtr) {
+            continue;
+        }
+        drawablePtr->Draw(*this, canvas);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

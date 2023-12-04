@@ -22,12 +22,10 @@
 namespace OHOS::Rosen {
 // ============================================================================
 // alias (reference or soft link) of another drawable
-RSAliasDrawable::RSAliasDrawable(Slot::RSPropertyDrawableSlot slot) : slot_(slot) {}
+RSAliasDrawable::RSAliasDrawable(RSPropertyDrawableSlot slot) : slot_(slot) {}
 void RSAliasDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    if (auto& drawable = content.propertyDrawablesVec_[slot_]) {
-        drawable->Draw(content, canvas);
-    }
+    content.DrawPropertyDrawable(slot_, canvas);
 }
 
 // ============================================================================

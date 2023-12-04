@@ -24,12 +24,12 @@ namespace OHOS::Rosen {
 // alias (reference or soft link) of another drawable
 class RSAliasDrawable : public RSPropertyDrawable {
 public:
-    explicit RSAliasDrawable(Slot::RSPropertyDrawableSlot slot);
+    explicit RSAliasDrawable(RSPropertyDrawableSlot slot);
     ~RSAliasDrawable() override = default;
     void Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
 
 private:
-    Slot::RSPropertyDrawableSlot slot_;
+    RSPropertyDrawableSlot slot_;
 };
 
 // ============================================================================

@@ -1,0 +1,103 @@
+# Copyright 2013 The Flutter Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+
+if (graphic_2d_feature_enable_vulkan) {
+  config("vulkan_shell_config") {
+    visibility = [ ":*" ]
+
+    include_dirs = [
+      "vulkan_application.h",
+      "vulkan_backbuffer.h",
+      "vulkan_command_buffer.h",
+      "vulkan_debug_report.h",
+      "vulkan_device.h",
+      "vulkan_handle.h",
+      "vulkan_hilog.h",
+      "vulkan_image.h",
+      "vulkan_interface.h",
+      "vulkan_native_surface.h",
+      "vulkan_native_surface_ohos.h",
+      "vulkan_proc_table.h",
+      "vulkan_provider.h",
+      "vulkan_surface.h",
+      "vulkan_swapchain.h",
+      "vulkan_utilities.h",
+      "vulkan_window.h",
+    ]
+
+    cflags = [
+      "-Wall",
+      "-Wno-unused-function",
+      "-Wno-unused-variable",
+      "-Wno-missing-braces",
+      "-Wno-unused-private-field",
+      "-Werror",
+      "-g3",
+    ]
+  }
+
+  config("vulkan_shell_public_config") {
+    include_dirs = [
+      "//foundation/graphic/graphic_2d/frameworks/surface/include",
+      "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
+      "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+      "//commonlibrary/c_utils/base/include",
+      "//third_party/skia",
+    ]
+
+    cflags = [ "-Wno-error=deprecated-declarations" ]
+
+    defines = [
+      "VK_USE_PLATFORM_OHOS",
+      "NDEBUG",
+    ]
+  }
+
+  ohos_shared_library("vulkan_shell") {
+    sources = [
+      "vulkan_application.cc",
+      "vulkan_backbuffer.cc",
+      "vulkan_command_buffer.cc",
+      "vulkan_debug_report.cc",
+      "vulkan_device.cc",
+      "vulkan_handle.cc",
+      "vulkan_image.cc",
+      "vulkan_interface.cc",
+      "vulkan_native_surface.cc",
+      "vulkan_native_surface_ohos.cc",
+      "vulkan_proc_table.cc",
+      "vulkan_provider.cc",
+      "vulkan_surface.cc",
+      "vulkan_swapchain.cc",
+      "vulkan_utilities.cc",
+      "vulkan_window.cc",
+    ]
+
+    if (graphic_2d_feature_enable_vulkan) {
+      defines = [ "RS_ENABLE_VK" ]
+    }
+
+    configs = [ ":vulkan_shell_config" ]
+
+    public_configs = [ ":vulkan_shell_public_config" ]
+
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+    ]
+
+    public_deps = [
+      "//foundation/graphic/graphic_2d:libsurface",
+      "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
+      "//third_party/skia:skia_ohos",
+      "//third_party/vulkan-headers:vulkan_headers",
+    ]
+
+    part_name = "graphic_2d"
+    subsystem_name = "graphic"
+  }
+}

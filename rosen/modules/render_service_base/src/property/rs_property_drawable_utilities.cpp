@@ -23,7 +23,7 @@ namespace OHOS::Rosen {
 // ============================================================================
 // alias (reference or soft link) of another drawable
 RSAliasDrawable::RSAliasDrawable(RSPropertyDrawableSlot slot) : slot_(slot) {}
-void RSAliasDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSAliasDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
     content.DrawPropertyDrawable(slot_, canvas);
 }
@@ -31,7 +31,7 @@ void RSAliasDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas
 // ============================================================================
 // Save and Restore
 RSSaveDrawable::RSSaveDrawable(std::shared_ptr<int> content) : content_(std::move(content)) {}
-void RSSaveDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSSaveDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     *content_ = canvas.save();
@@ -42,7 +42,7 @@ void RSSaveDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas)
 }
 
 RSRestoreDrawable::RSRestoreDrawable(std::shared_ptr<int> content) : content_(std::move(content)) {}
-void RSRestoreDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     canvas.restoreToCount(*content_);
@@ -55,7 +55,7 @@ RSCustomSaveDrawable::RSCustomSaveDrawable(
     std::shared_ptr<RSPaintFilterCanvas::SaveStatus> content, RSPaintFilterCanvas::SaveType type)
     : content_(std::move(content)), type_(type)
 {}
-void RSCustomSaveDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSCustomSaveDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     *content_ = canvas.Save(type_);
@@ -67,7 +67,7 @@ void RSCustomSaveDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& c
 RSCustomRestoreDrawable::RSCustomRestoreDrawable(std::shared_ptr<RSPaintFilterCanvas::SaveStatus> content)
     : content_(std::move(content))
 {}
-void RSCustomRestoreDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSCustomRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
     canvas.RestoreStatus(*content_);
 }
@@ -75,37 +75,24 @@ void RSCustomRestoreDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas
 // ============================================================================
 // Adapter for RSRenderModifier
 RSModifierDrawable::RSModifierDrawable(RSModifierType type) : type_(type) {}
-void RSModifierDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSModifierDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    // (void)type_;
     auto itr = content.drawCmdModifiers_.find(type_);
     if (itr == content.drawCmdModifiers_.end() || itr->second.empty()) {
         return;
     }
-    RSModifierContext context = { content.renderProperties_, &canvas };
-    // if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
-    //     bool needSkip = false;
-    //     if (node.GetNodeIsSingleFrameComposer() && node.singleFrameComposer_ != nullptr) {
-    //         needSkip = node.singleFrameComposer_->SingleFrameModifierAddToList(type_, itr->second);
-    //     }
-    //     for (const auto& modifier : itr->second) {
-    //         if (node.singleFrameComposer_ != nullptr &&
-    //             node.singleFrameComposer_->SingleFrameIsNeedSkip(needSkip, modifier)) {
-    //             continue;
-    //         }
-    //         modifier->Apply(context);
-    //     }
-    // } else {
-        for (const auto& modifier : itr->second) {
-            modifier->Apply(context);
-        }
-    // }
+    // temporary fix, will refactor RSRenderModifier::Apply to workaround this issue
+    RSModifierContext context = { const_cast<RSRenderContent&>(content).renderProperties_, &canvas };
+    // PLANNING: add back single-frame compose
+    for (const auto& modifier : itr->second) {
+        modifier->Apply(context);
+    }
 }
 
 // ============================================================================
 // Alpha
 RSAlphaDrawable::RSAlphaDrawable(float alpha) : RSPropertyDrawable(), alpha_(alpha) {}
-void RSAlphaDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSAlphaDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
     canvas.MultiplyAlpha(alpha_);
 }
@@ -120,7 +107,7 @@ RSPropertyDrawable::DrawablePtr RSAlphaDrawable::Generate(const RSRenderContent&
 }
 
 RSAlphaOffscreenDrawable::RSAlphaOffscreenDrawable(float alpha) : RSAlphaDrawable(alpha) {}
-void RSAlphaOffscreenDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSAlphaOffscreenDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     auto rect = RSPropertiesPainter::Rect2SkRect(content.GetRenderProperties().GetBoundsRect());

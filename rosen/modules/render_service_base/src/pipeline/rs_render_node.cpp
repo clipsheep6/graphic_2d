@@ -141,6 +141,15 @@ GrBackendTexture MakeBackendTexture(uint32_t width, uint32_t height, VkFormat fo
 
 namespace OHOS {
 namespace Rosen {
+void RSRenderNode::OnRegister()
+{
+    renderContent_->type_ = GetType();
+    renderContent_->renderProperties_.backref_ = weak_from_this();
+    if (RSSystemProperties::GetPropertyDrawableEnable()) {
+        renderContent_->propertyDrawablesVec_.resize(static_cast<size_t>(RSPropertyDrawableSlot::MAX));
+    }
+}
+
 bool RSRenderNode::IsPureContainer() const
 {
     auto& drawCmdModifiers_ = renderContent_->drawCmdModifiers_;
@@ -173,7 +182,7 @@ const std::unordered_set<RSModifierType> ANIMATION_MODIFIER_TYPE  = {
     RSModifierType::ROTATION,
     RSModifierType::FRAME,
 };
-const std::set<RSModifierType> BASIC_GEOTRANSFROM_ANIMATION_TYPE = {
+const std::set<RSModifierType> BASIC_GEOTRANSFORM_ANIMATION_TYPE = {
     RSModifierType::TRANSLATE,
     RSModifierType::SCALE,
 };
@@ -648,12 +657,12 @@ void RSRenderNode::DumpNodeType(std::string& out) const
     }
 }
 
-void RSRenderNode::ResetIsOnlyBasicGeoTransfrom()
+void RSRenderNode::ResetIsOnlyBasicGeoTransform()
 {
     isOnlyBasicGeoTransform_ = true;
 }
 
-bool RSRenderNode::IsOnlyBasicGeoTransfrom() const
+bool RSRenderNode::IsOnlyBasicGeoTransform() const
 {
     return isOnlyBasicGeoTransform_;
 }
@@ -1312,7 +1321,7 @@ bool RSRenderNode::ApplyModifiers()
         if (isCalcPreferredFps_ && HasAnimation() && ANIMATION_MODIFIER_TYPE.count(modifier->GetType())) {
             animationModifiers.push_back(modifier);
         }
-        if (!BASIC_GEOTRANSFROM_ANIMATION_TYPE.count(modifier->GetType())) {
+        if (!BASIC_GEOTRANSFORM_ANIMATION_TYPE.count(modifier->GetType())) {
             isOnlyBasicGeoTransform_ = false;
         }
     }
@@ -2050,7 +2059,7 @@ void RSRenderNode::UpdateFullScreenFilterCacheRect(
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     auto& manager = renderProperties.GetFilterCacheManager(isForeground);
     // Record node's cache area if it has valid filter cache
-    // If there are any invalid caches under full screen cache filter, the occlusion shoud be invalidated
+    // If there are any invalid caches under full screen cache filter, the occlusion should be invalidated
     if (!manager->IsCacheValid() && dirtyManager.IsCacheableFilterRectEmpty()) {
         dirtyManager.InvalidateFilterCacheRect();
     } else if (ROSEN_EQ(GetGlobalAlpha(), 1.0f) && ROSEN_EQ(renderProperties.GetCornerRadius().x_, 0.0f) &&

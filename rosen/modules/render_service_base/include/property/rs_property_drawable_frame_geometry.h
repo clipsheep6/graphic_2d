@@ -25,7 +25,7 @@ class RSFrameGeometryDrawable : public RSPropertyDrawable {
 public:
     explicit RSFrameGeometryDrawable() = default;
     ~RSFrameGeometryDrawable() override = default;
-    void Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
+    void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
 
     static RSPropertyDrawable::DrawablePtr Generate(const RSRenderContent& content);
 };
@@ -36,7 +36,7 @@ class RSClipFrameDrawable : public RSPropertyDrawable {
 public:
     explicit RSClipFrameDrawable() = default;
     ~RSClipFrameDrawable() override = default;
-    void Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
+    void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
 
     static RSPropertyDrawable::DrawablePtr Generate(const RSRenderContent& content);
 };
@@ -51,7 +51,7 @@ public:
     explicit RSColorFilterDrawable(Drawing::Brush&& brush) : brush_(std::move(brush)) {}
 #endif
     ~RSColorFilterDrawable() override = default;
-    void Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
+    void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
     static RSPropertyDrawable::DrawablePtr Generate(const RSRenderContent& content);
     bool Update(const RSRenderContent& content) override;
 

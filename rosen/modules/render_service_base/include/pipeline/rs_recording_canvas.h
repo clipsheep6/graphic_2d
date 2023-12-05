@@ -108,9 +108,9 @@ public:
     void DrawPixelMapWithParm(
         const std::shared_ptr<Media::PixelMap>& pixelmap,
         const Rosen::RsImageInfo& rsImageInfo, const SkSamplingOptions& samplingOptions, const SkPaint& paint);
-    void DrawPropertyDrawable(const std::shared_ptr<RSRenderContent> content, RSPropertyDrawableSlot slot);
+    void DrawPropertyDrawable(const std::shared_ptr<const RSRenderContent> content, RSPropertyDrawableSlot slot);
     void DrawPropertyDrawableRange(
-        const std::shared_ptr<RSRenderContent> content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
+        const std::shared_ptr<const RSRenderContent> content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
 #else
     GrContext* getGrContext() override;
     void SetGrContext(GrContext* grContext);

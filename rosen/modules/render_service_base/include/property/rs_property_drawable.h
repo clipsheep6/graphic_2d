@@ -114,7 +114,7 @@ public:
     RSPropertyDrawable& operator=(const RSPropertyDrawable&) = delete;
     RSPropertyDrawable& operator=(const RSPropertyDrawable&&) = delete;
 
-    virtual void Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const = 0;
+    virtual void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const = 0;
     // return true if this drawable can be updated, default is false
     virtual bool Update(const RSRenderContent& content) { return false; };
 

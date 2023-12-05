@@ -36,15 +36,17 @@ public:
     RSProperties& GetMutableRenderProperties();
     const RSProperties& GetRenderProperties() const;
     using DrawCmdContainer = std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>>;
+    RSRenderNodeType GetType() const;
 
 private:
-    void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas);
+    void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas) const;
     void DrawPropertyDrawableRange(
-        RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas);
+        RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas) const;
 
     RSProperties renderProperties_;
     RSPropertyDrawable::DrawableVec propertyDrawablesVec_;
     DrawCmdContainer drawCmdModifiers_;
+    RSRenderNodeType type_ = RSRenderNodeType::UNKNOW;
 
     friend class RSRenderNode;
     friend class RSAliasDrawable;

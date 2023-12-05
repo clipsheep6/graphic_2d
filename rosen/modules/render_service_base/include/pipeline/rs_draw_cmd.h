@@ -168,9 +168,8 @@ namespace {
             GETOPTYPESTRING(PROPERTY_DRAWABLE_OPITEM);
             GETOPTYPESTRING(PROPERTY_DRAWABLE_RANGE_OPITEM);
             default:
-                break;
+                return "";
         }
-        return "";
     }
 #undef GETOPTYPESTRING
 }
@@ -783,7 +782,7 @@ private:
 
 class PropertyDrawableOpItem : public OpItem {
 public:
-    PropertyDrawableOpItem(const std::shared_ptr<RSRenderContent>& content, RSPropertyDrawableSlot slot);
+    PropertyDrawableOpItem(const std::shared_ptr<const RSRenderContent>& content, RSPropertyDrawableSlot slot);
     ~PropertyDrawableOpItem() override = default;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -801,14 +800,14 @@ public:
     }
 
 private:
-    const std::shared_ptr<RSRenderContent> content_;
+    const std::shared_ptr<const RSRenderContent> content_;
     const RSPropertyDrawableSlot slot_;
 };
 
 class PropertyDrawableRangeOpItem : public OpItem {
 public:
-    PropertyDrawableRangeOpItem(
-        const std::shared_ptr<RSRenderContent>& content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end);
+    PropertyDrawableRangeOpItem(const std::shared_ptr<const RSRenderContent>& content, RSPropertyDrawableSlot begin,
+        RSPropertyDrawableSlot end);
     ~PropertyDrawableRangeOpItem() override = default;
     void Draw(RSPaintFilterCanvas& canvas, const SkRect*) const override;
 
@@ -827,7 +826,7 @@ public:
     }
 
 private:
-    const std::shared_ptr<RSRenderContent> content_;
+    const std::shared_ptr<const RSRenderContent> content_;
     const RSPropertyDrawableSlot begin_;
     const RSPropertyDrawableSlot end_;
 };

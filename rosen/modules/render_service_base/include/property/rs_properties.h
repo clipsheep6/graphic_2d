@@ -288,7 +288,7 @@ public:
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
     bool IsDynamicLightUpValid() const;
-    bool IsGreyAdjustmenValid() const;
+    bool IsGreyAdjustmentValid() const;
 
     // Image effect properties
     void SetGrayScale(const std::optional<float>& grayScale);
@@ -307,12 +307,6 @@ public:
     const std::optional<float>& GetHueRotate() const;
     void SetColorBlend(const std::optional<Color>& colorBlend);
     const std::optional<Color>& GetColorBlend() const;
-
-#ifndef USE_ROSEN_DRAWING
-    const sk_sp<SkColorFilter>& GetColorFilter() const;
-#else
-    const std::shared_ptr<Drawing::ColorFilter>& GetColorFilter() const;
-#endif
 
     void SetLightIntensity(float lightIntensity);
     void SetLightPosition(const Vector4f& lightPosition);
@@ -343,6 +337,18 @@ public:
     const RRect& GetRRect() const;
     RRect GetInnerRRect() const;
     RectF GetFrameRect() const;
+
+#ifndef USE_ROSEN_DRAWING
+    using ColorFilterPtr = sk_sp<SkColorFilter>;
+    using EffectRegionType = std::optional<SkIRect>;
+#else
+    using ColorFilterPtr = std::shared_ptr<Drawing::ColorFilter>;
+    using EffectRegionType = std::optional<Drawing::RectI>;
+#endif
+
+    const ColorFilterPtr& GetColorFilter() const;
+    const EffectRegionType& GetEffectRegion() const;
+    void SetEffectRegion(const EffectRegionType& effectRegion);
 
     void OnApplyModifiers();
 
@@ -444,11 +450,9 @@ private:
     RRect rrect_ = RRect{};
 
     RSRenderParticleVector particles_;
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkColorFilter> colorFilter_ = nullptr;
-#else
-    std::shared_ptr<Drawing::ColorFilter> colorFilter_ = nullptr;
-#endif
+
+    ColorFilterPtr colorFilter_ = nullptr;
+    EffectRegionType effectRegion_ = std::nullopt;
 
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     void CreateFilterCacheManagerIfNeed();
@@ -467,7 +471,6 @@ private:
     friend class RSEffectDataGenerateDrawable;
     friend class RSPropertiesPainter;
     friend class RSRenderNode;
-    friend class RSRenderNodeMap;
 };
 } // namespace Rosen
 } // namespace OHOS

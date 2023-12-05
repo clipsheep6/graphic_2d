@@ -33,6 +33,9 @@ bool GPUContext::BuildFromGL(const GPUContextOptions& options)
 #ifdef RS_ENABLE_VK
 bool GPUContext::BuildFromVK(const GrVkBackendContext& context)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return false;
+    }
     return impl_->BuildFromVK(context);
 }
 #endif

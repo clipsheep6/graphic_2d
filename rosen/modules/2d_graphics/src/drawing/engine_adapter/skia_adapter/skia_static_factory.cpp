@@ -62,6 +62,9 @@ std::shared_ptr<Typeface> SkiaStaticFactory::MakeFromName(const char familyName[
 std::shared_ptr<Surface> SkiaStaticFactory::MakeFromBackendRenderTarget(GPUContext* gpuuContext,
     const VKTextureInfo& info, TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return nullptr;
+    }
     return SkiaSurface::MakeFromBackendRenderTarget(gpuuContext, info, origin, deleteVkImage, cleanHelper);
 }
 #endif

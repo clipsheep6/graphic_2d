@@ -309,12 +309,11 @@ void Shaper::ConsiderTailEllipsis(const TypographyStyle &style, const std::share
     double lastLineWidth = lastLine.GetAllSpanWidth();
     params.widthLimit -= lastLine.indent;
     if (params.maxLines < lineMetrics_.size()) {
-        if (params.ellipsisWidth > 0 && lastLineWidth + params.ellipsisWidth < params.widthLimit) {
-            lastLine.lineSpans.push_back(lineMetrics_[params.maxLines].lineSpans.front());
+        if (params.ellipsisWidth > 0 && lastLineWidth < params.widthLimit) {
+            lastLine.lineSpans = lineMetrics_[params.maxLines-1].lineSpans;
             lastLineWidth = lastLine.GetAllSpanWidth();
         }
         lineMetrics_.erase(lineMetrics_.begin() + params.maxLines, lineMetrics_.end());
-        isErase = true;
     }
 
     if (params.ellipsisSpans.empty() || (!isErase && lastLineWidth <= params.widthLimit)) {
@@ -325,9 +324,6 @@ void Shaper::ConsiderTailEllipsis(const TypographyStyle &style, const std::share
     if (ts == nullptr) {
         if (lastLineWidth + params.ellipsisWidth > params.widthLimit) {
             lastLine.lineSpans.pop_back();
-            lastLine.lineSpans.insert(lastLine.lineSpans.end(), params.ellipsisSpans.begin(),
-                params.ellipsisSpans.end());
-        } else if (isErase) {
             lastLine.lineSpans.insert(lastLine.lineSpans.end(), params.ellipsisSpans.begin(),
                 params.ellipsisSpans.end());
         }

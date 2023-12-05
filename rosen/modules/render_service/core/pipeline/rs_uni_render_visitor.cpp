@@ -863,7 +863,8 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
 {
     // dirtyFlag_ includes leashWindow dirty
     // window layout change(e.g. move or zooming) | proxyRenderNode's cmd
-    if (dirtyFlag_ || node.IsDirty() || node.IsLeashWindow() || node.IsScbScreen()) {
+    // temporary cannot deal with leashWindow and scbScreen
+    if (dirtyFlag_ || node.IsDirty() || !node.IsMainWindowType() || curDisplayNode_ == nullptr) {
         return false;
     }
     if (curDisplayDirtyManager_) {
@@ -876,18 +877,16 @@ bool RSUniRenderVisitor::CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& nod
         isClassifyByRootNode ? rootId : node.GetId(), isClassifyByRootNode)) {
         return false;
     }
-    if (node.IsMainWindowType()) {
-        curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
-        // [Attention] node's ability pid could be different but should have same rootId
-        auto abilityNodeIds = node.GetAbilityNodeIds();
-        bool result = isClassifyByRootNode
-            ? RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(rootId, true)
-            : std::any_of(abilityNodeIds.begin(), abilityNodeIds.end(), [&](uint64_t nodeId) {
-                return RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(nodeId, false);
-            });
-        if (result) {
-            return false;
-        }
+    curSurfaceNode_ = node.ReinterpretCastTo<RSSurfaceRenderNode>();
+    // [Attention] node's ability pid could be different but should have same rootId
+    auto abilityNodeIds = node.GetAbilityNodeIds();
+    bool result = isClassifyByRootNode
+        ? RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(rootId, true)
+        : std::any_of(abilityNodeIds.begin(), abilityNodeIds.end(), [&](uint64_t nodeId) {
+            return RSMainThread::Instance()->CheckNodeHasToBePreparedByPid(nodeId, false);
+        });
+    if (result) {
+        return false;
     }
     RS_OPTIONAL_TRACE_NAME("Skip static surface " + node.GetName() + " nodeid - pid: " +
         std::to_string(node.GetId()) + " - " + std::to_string(ExtractPid(node.GetId())));
@@ -1011,6 +1010,9 @@ void RSUniRenderVisitor::CollectAppNodeForHwc(std::shared_ptr<RSSurfaceRenderNod
 
 void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node)
 {
+    if (node.IsMainWindowType()) {
+        dirtyFlag_ = dirtyFlag_ || node.GetCacheGeoPreparationDelay();
+    }
     // if current surfacenode is a main window type, reset the curSurfaceDirtyManager
     // reset leash window's dirtyManager pointer to avoid curSurfaceDirtyManager mis-pointing
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
@@ -1058,6 +1060,7 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRen
         }
     }
     if (node.IsMainWindowType()) {
+        node.ResetCacheGeoPreparationDelay();
         bool hasFilter = node.IsTransparent() && properties.NeedFilter();
         bool hasHardwareNode = !node.GetChildHardwareEnabledNodes().empty();
         bool hasAbilityComponent = !node.GetAbilityNodeIds().empty();
@@ -1148,6 +1151,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
     // stop traversal if node keeps static
     if (isQuickSkipPreparationEnabled_ && CheckIfSurfaceRenderNodeStatic(node)) {
+        node.SetCacheGeoPreparationDelay(dirtyFlag_);
         // node type is mainwindow.
         if (node.GetHasSecurityLayer() && node.GetId() == node.GetInstanceRootNodeId()) {
             displayHasSecSurface_[currentVisitDisplay_] = true;

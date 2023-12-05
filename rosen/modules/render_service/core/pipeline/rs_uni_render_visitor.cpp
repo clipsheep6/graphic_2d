@@ -385,6 +385,15 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
     logicParentNode_ = node.weak_from_this();
     node.ResetChildrenRect();
 
+    auto tempCornerRadius = curCornerRadius_;
+    if (!isSubNodeOfSurfaceInPrepare_ &&
+        node.GetRenderProperties().GetCornerRadius().x_ > curCornerRadius_.x_) {
+        curCornerRadius_ = node.GetRenderProperties().GetCornerRadius();
+    }
+    if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
+        node.SetGlobalCornerRaius(curCornerRadius_);
+    }
+
     float alpha = curAlpha_;
     curAlpha_ *= node.GetRenderProperties().GetAlpha();
     node.SetGlobalAlpha(curAlpha_);
@@ -413,6 +422,7 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
         UpdateStaticCacheSubTree(node.ReinterpretCastTo<RSRenderNode>(), children);
     }
 
+    curCornerRadius_ = std::move(tempCornerRadius);
     curAlpha_ = alpha;
     // restore environment variables
     logicParentNode_ = std::move(parentNode);
@@ -1333,14 +1343,15 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // needs to be done before CheckOpaqueRegionBaseInfo
     auto screenRotation = curDisplayNode_->GetRotation();
     auto screenRect = RectI(0, 0, screenInfo_.width, screenInfo_.height);
+    auto radius = std::ceil(std::max(node.GetWindowCornerRadius().x_, node.GetGlobalCornerRaius().x_));
     if (!node.CheckOpaqueRegionBaseInfo(
-        screenRect, geoPtr->GetAbsRect(), screenRotation, node.IsFocusedNode(currentFocusedNodeId_))
+        screenRect, geoPtr->GetAbsRect(), screenRotation, node.IsFocusedNode(currentFocusedNodeId_), radius)
         && node.GetSurfaceNodeType() != RSSurfaceNodeType::SELF_DRAWING_NODE) {
         node.ResetSurfaceOpaqueRegion(screenRect, geoPtr->GetAbsRect(),
-            screenRotation, node.IsFocusedNode(currentFocusedNodeId_));
+            screenRotation, node.IsFocusedNode(currentFocusedNodeId_), radius);
     }
     node.SetOpaqueRegionBaseInfo(
-        screenRect, geoPtr->GetAbsRect(), screenRotation, node.IsFocusedNode(currentFocusedNodeId_));
+        screenRect, geoPtr->GetAbsRect(), screenRotation, node.IsFocusedNode(currentFocusedNodeId_), radius);
 }
 
 void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)

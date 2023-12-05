@@ -354,15 +354,15 @@ inline uint8_t CalculateDrawableVecStatus(RSRenderContent& content, RSPropertyDr
     }
 
     if (HasPropertyDrawableInRange(
-            drawableVec, RSPropertyDrawableSlot::BG_PROPERTIES_BEGIN, RSPropertyDrawableSlot::BG_PROPERTIES_END)) {
+        drawableVec, RSPropertyDrawableSlot::BG_PROPERTIES_BEGIN, RSPropertyDrawableSlot::BG_PROPERTIES_END)) {
         result |= DrawableVecStatus::BG_BOUNDS_PROPERTY;
     }
     if (HasPropertyDrawableInRange(
-            drawableVec, RSPropertyDrawableSlot::FG_PROPERTIES_BEGIN, RSPropertyDrawableSlot::FG_PROPERTIES_END)) {
+        drawableVec, RSPropertyDrawableSlot::FG_PROPERTIES_BEGIN, RSPropertyDrawableSlot::FG_PROPERTIES_END)) {
         result |= DrawableVecStatus::FG_BOUNDS_PROPERTY;
     }
     if (HasPropertyDrawableInRange(drawableVec, RSPropertyDrawableSlot::CONTENT_PROPERTIES_BEGIN,
-            RSPropertyDrawableSlot::CONTENT_PROPERTIES_END)) {
+        RSPropertyDrawableSlot::CONTENT_PROPERTIES_END)) {
         result |= DrawableVecStatus::FRAME_PROPERTY;
     }
 

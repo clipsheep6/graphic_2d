@@ -1759,7 +1759,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         canvas.SetAlpha(1.0);
     }
 
-    if (properties.IsGreyAdjustmenValid()) {
+    if (properties.IsGreyAdjustmentValid()) {
         DrawGreyAdjustment(properties, canvas);
     }
 

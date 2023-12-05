@@ -2316,7 +2316,7 @@ void PropertyDrawableOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) co
 }
 
 PropertyDrawableOpItem::PropertyDrawableOpItem(
-    const std::shared_ptr<RSRenderContent>& content, RSPropertyDrawableSlot slot)
+    const std::shared_ptr<const RSRenderContent>& content, RSPropertyDrawableSlot slot)
     : OpItem(sizeof(PropertyDrawableOpItem)), content_(content), slot_(slot)
 {}
 
@@ -2326,7 +2326,7 @@ void PropertyDrawableRangeOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect
 }
 
 PropertyDrawableRangeOpItem::PropertyDrawableRangeOpItem(
-    const std::shared_ptr<RSRenderContent>& content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end)
+    const std::shared_ptr<const RSRenderContent>& content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end)
     : OpItem(sizeof(PropertyDrawableOpItem)), content_(content), begin_(begin), end_(end)
 {}
 } // namespace Rosen

@@ -106,8 +106,8 @@ public:
     // if there is any new dirty op, check it
     bool IsContentDirty() const;
     void SetContentDirty();
-    void ResetIsOnlyBasicGeoTransfrom();
-    bool IsOnlyBasicGeoTransfrom() const;
+    void ResetIsOnlyBasicGeoTransform();
+    bool IsOnlyBasicGeoTransform() const;
 
     WeakPtr GetParent() const;
 
@@ -673,6 +673,8 @@ private:
     pid_t appPid_ = 0;
 
     const std::shared_ptr<RSRenderContent> renderContent_ = std::make_shared<RSRenderContent>();
+
+    void OnRegister();
 
     friend class RSAliasDrawable;
     friend class RSMainThread;

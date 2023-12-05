@@ -18,12 +18,7 @@
 
 namespace OHOS {
 namespace Rosen {
-RSRenderContent::RSRenderContent()
-{
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        propertyDrawablesVec_.resize(static_cast<size_t>(RSPropertyDrawableSlot::MAX));
-    }
-}
+RSRenderContent::RSRenderContent() = default;
 
 RSProperties& RSRenderContent::GetMutableRenderProperties()
 {
@@ -35,7 +30,7 @@ const RSProperties& RSRenderContent::GetRenderProperties() const
     return renderProperties_;
 }
 
-void RSRenderContent::DrawPropertyDrawable(RSPropertyDrawableSlot index, RSPaintFilterCanvas& canvas)
+void RSRenderContent::DrawPropertyDrawable(RSPropertyDrawableSlot index, RSPaintFilterCanvas& canvas) const
 {
     auto& drawablePtr = propertyDrawablesVec_[static_cast<size_t>(index)];
     if (!drawablePtr) {
@@ -50,22 +45,22 @@ void RSRenderContent::DrawPropertyDrawable(RSPropertyDrawableSlot index, RSPaint
 }
 
 void RSRenderContent::DrawPropertyDrawableRange(
-    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas)
+    RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas) const
 {
-    auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas());
-
-    if (recordingCanvas) {
+    if (auto recordingCanvas = static_cast<RSRecordingCanvas*>(canvas.GetRecordingCanvas())) {
         recordingCanvas->DrawPropertyDrawableRange(shared_from_this(), begin, end);
         return;
     }
-
-    for (uint16_t index = static_cast<size_t>(begin); index <= static_cast<size_t>(end); index++) {
-        auto& drawablePtr = propertyDrawablesVec_[index];
-        if (!drawablePtr) {
-            continue;
+    for (auto index = static_cast<size_t>(begin); index <= static_cast<size_t>(end); index++) {
+        if (auto& drawablePtr = propertyDrawablesVec_[index]) {
+            drawablePtr->Draw(*this, canvas);
         }
-        drawablePtr->Draw(*this, canvas);
     }
+}
+
+RSRenderNodeType RSRenderContent::GetType() const
+{
+    return type_;
 }
 } // namespace Rosen
 } // namespace OHOS

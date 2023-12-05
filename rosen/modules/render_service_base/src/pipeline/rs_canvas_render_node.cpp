@@ -360,7 +360,8 @@ void RSCanvasRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& can
 void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        DrawPropertyDrawableRange(RSPropertyDrawableSlot::FOREGROUND_STYLE, RSPropertyDrawableSlot::RESTORE_ALL, canvas);
+        DrawPropertyDrawableRange(
+            RSPropertyDrawableSlot::FOREGROUND_STYLE, RSPropertyDrawableSlot::RESTORE_ALL, canvas);
         return;
     }
     ProcessAnimatePropertyAfterChildren(canvas);
@@ -374,23 +375,10 @@ void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModi
     if (itr == GetDrawCmdModifiers().end() || itr->second.empty()) {
         return;
     }
-
-    // if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
-    //     bool needSkip = false;
-    //     if (GetNodeIsSingleFrameComposer() && singleFrameComposer_ != nullptr) {
-    //         needSkip = singleFrameComposer_->SingleFrameModifierAddToList(type, itr->second);
-    //     }
-    //     for (const auto& modifier : itr->second) {
-    //         if (singleFrameComposer_ != nullptr && singleFrameComposer_->SingleFrameIsNeedSkip(needSkip, modifier)) {
-    //             continue;
-    //         }
-    //         modifier->Apply(context);
-    //     }
-    // } else {
-        for (const auto& modifier : itr->second) {
-            modifier->Apply(context);
-        }
-    // }
+    // PLANNING: add back single-frame compose
+    for (const auto& modifier : itr->second) {
+        modifier->Apply(context);
+    }
 }
 
 void RSCanvasRenderNode::InternalDrawContent(RSPaintFilterCanvas& canvas)

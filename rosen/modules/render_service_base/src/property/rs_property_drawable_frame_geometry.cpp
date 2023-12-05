@@ -24,7 +24,7 @@
 #include "src/image/SkImage_Base.h"
 
 namespace OHOS::Rosen {
-void RSFrameGeometryDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSFrameGeometryDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     canvas.translate(content.GetRenderProperties().GetFrameOffsetX(), content.GetRenderProperties().GetFrameOffsetY());
@@ -37,7 +37,7 @@ RSPropertyDrawable::DrawablePtr RSFrameGeometryDrawable::Generate(const RSRender
     return std::make_unique<RSFrameGeometryDrawable>();
 }
 
-void RSColorFilterDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSColorFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
     // if useEffect defined, use color filter from parent EffectView.
 #ifndef USE_ROSEN_DRAWING
@@ -126,7 +126,7 @@ RSPropertyDrawable::DrawablePtr RSClipFrameDrawable::Generate(const RSRenderCont
     return content.GetRenderProperties().GetClipToFrame() ? std::make_unique<RSClipFrameDrawable>() : nullptr;
 }
 
-void RSClipFrameDrawable::Draw(RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+void RSClipFrameDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
     canvas.clipRect(RSPropertiesPainter::Rect2SkRect(content.GetRenderProperties().GetFrameRect()));

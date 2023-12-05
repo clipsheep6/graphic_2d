@@ -466,6 +466,7 @@ private:
     friend class RSCanvasRenderNode;
     friend class RSColorfulShadowDrawable;
     friend class RSEffectDataGenerateDrawable;
+    friend class RSModifierDrawable;
     friend class RSPropertiesPainter;
     friend class RSRenderNode;
 };

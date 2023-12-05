@@ -371,13 +371,28 @@ void RSCanvasRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 
 void RSCanvasRenderNode::ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type)
 {
-    auto itr = GetDrawCmdModifiers().find(type);
-    if (itr == GetDrawCmdModifiers().end() || itr->second.empty()) {
+    // temporary workaround, PLANNING: refactor single frame compose without modifing draw cmd list
+    auto& drawCmdModifiers = const_cast<RSRenderContent::DrawCmdContainer&>(GetDrawCmdModifiers());
+    auto itr = drawCmdModifiers.find(type);
+    if (itr == drawCmdModifiers.end() || itr->second.empty()) {
         return;
     }
-    // PLANNING: add back single-frame compose
-    for (const auto& modifier : itr->second) {
-        modifier->Apply(context);
+
+    if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
+        bool needSkip = false;
+        if (GetNodeIsSingleFrameComposer() && singleFrameComposer_ != nullptr) {
+            needSkip = singleFrameComposer_->SingleFrameModifierAddToList(type, itr->second);
+        }
+        for (const auto& modifier : itr->second) {
+            if (singleFrameComposer_ != nullptr && singleFrameComposer_->SingleFrameIsNeedSkip(needSkip, modifier)) {
+                continue;
+            }
+            modifier->Apply(context);
+        }
+    } else {
+        for (const auto& modifier : itr->second) {
+            modifier->Apply(context);
+        }
     }
 }
 

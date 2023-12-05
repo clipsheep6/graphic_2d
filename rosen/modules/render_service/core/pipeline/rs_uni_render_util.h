@@ -68,6 +68,7 @@ public:
     static bool Is3DRotation(Drawing::Matrix matrix);
 #endif
 
+    static void ReleaseColorPickerResource(std::shared_ptr<RSRenderNode>& node);
     static void AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes, uint64_t focusNodeId = 0,
@@ -87,6 +88,7 @@ public:
         std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     // use floor value of translateX and translateY in matrix of canvas to avoid jittering
     static void FloorTransXYInCanvasMatrix(RSPaintFilterCanvas& canvas);
+    static bool IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode> node, bool isDisplayRotation);
 private:
     static void AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
         const std::shared_ptr<RSSurfaceRenderNode>& node);

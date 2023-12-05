@@ -885,6 +885,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
         visibleRegion_ = region;
         SetOcclusionVisible(vis);
     }
+    // when there is filter cache occlusion, also save occlusion status without filter cache
+    SetOcclusionVisibleWithoutFilter(vis);
 
     for (auto& child : GetChildren()) {
         if (auto surfaceChild = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
@@ -1032,7 +1034,7 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusWithVisible(bool visible)
     }
     prevVisible_ = visible;
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    if (!visible && !filterNodes_.empty()) {
+    if (!visible && !filterNodes_.empty() && !isOcclusionVisibleWithoutFilter_) {
         for (auto& node : filterNodes_) {
             node.second->GetMutableRenderProperties().ClearFilterCache();
         }
@@ -1046,13 +1048,14 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         return;
     }
     // traversal filter nodes including app window
-    EraseIf(filterNodes_, [this](const auto& pair) {
+    EraseIf(filterNodes_, [this, &clipRect](const auto& pair) {
         auto& node = pair.second;
         if (node == nullptr || !node->IsOnTheTree() || !node->GetRenderProperties().NeedFilter()) {
             return true;
         }
         node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
         node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
+        node->UpdateFilterCacheManagerWithCacheRegion(*dirtyManager_, clipRect);
         return false;
     });
     SetFilterCacheFullyCovered(false);
@@ -1488,7 +1491,7 @@ std::vector<std::shared_ptr<RSSurfaceRenderNode>> RSSurfaceRenderNode::GetLeashW
 
 bool RSSurfaceRenderNode::IsCurrentFrameStatic()
 {
-    if (dirtyManager_ == nullptr || !dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty()) {
+    if (IsMainWindowType() && !surfaceCacheContentStatic_) {
         return false;
     }
     if (IsAppWindow()) {
@@ -1506,8 +1509,14 @@ bool RSSurfaceRenderNode::IsCurrentFrameStatic()
         // leashwindow subthread cache considered static if and only if all nested surfacenode static
         // (include appwindow and starting window)
         auto nestedSurfaceNodes = GetLeashWindowNestedSurfaces();
-        for (auto& nestedSurface: nestedSurfaceNodes) {
-            if (nestedSurface && !nestedSurface->IsCurrentFrameStatic()) {
+        if (nestedSurfaceNodes.size() > 0) {
+            for (auto& nestedSurface: nestedSurfaceNodes) {
+                if (nestedSurface && !nestedSurface->IsCurrentFrameStatic()) {
+                    return false;
+                }
+            }
+        } else {
+            if (dirtyManager_ == nullptr || !dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty()) {
                 return false;
             }
         }
@@ -1517,6 +1526,12 @@ bool RSSurfaceRenderNode::IsCurrentFrameStatic()
     } else {
         return false;
     }
+}
+
+bool RSSurfaceRenderNode::IsUIFirstCacheReusable()
+{
+    return GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DONE &&
+        IsCurrentFrameStatic() && HasCachedTexture();
 }
 
 void RSSurfaceRenderNode::UpdateCacheSurfaceDirtyManager(int bufferAge)
@@ -1590,6 +1605,16 @@ bool RSSurfaceRenderNode::GetNodeIsSingleFrameComposer() const
         }
     }
     return isNodeSingleFrameComposer_ || flag;
+}
+
+bool RSSurfaceRenderNode::GetHasSharedTransitionNode() const
+{
+    return hasSharedTransitionNode_;
+}
+
+void RSSurfaceRenderNode::SetHasSharedTransitionNode(bool hasSharedTransitionNode)
+{
+    hasSharedTransitionNode_ = hasSharedTransitionNode;
 }
 } // namespace Rosen
 } // namespace OHOS

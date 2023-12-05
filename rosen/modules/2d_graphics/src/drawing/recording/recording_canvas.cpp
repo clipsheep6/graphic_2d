@@ -188,8 +188,8 @@ void RecordingCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
 
 void RecordingCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
 {
-    auto verticesHandle = CmdListHelper::AddVerticesToCmdList(*cmdList_, vertices);
-    cmdList_->AddOp<DrawVerticesOpItem::ConstructorHandle>(verticesHandle, mode);
+    auto opDataHandle = CmdListHelper::AddVerticesToCmdList(*cmdList_, vertices);
+    cmdList_->AddOp<DrawVerticesOpItem::ConstructorHandle>(opDataHandle, mode);
 }
 
 void RecordingCanvas::DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
@@ -298,6 +298,15 @@ void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const s
     auto textBlobHandle = CmdListHelper::AddTextBlobToCmdList(*cmdList_, blob);
     cmdList_->AddOp<DrawTextBlobOpItem::ConstructorHandle>(textBlobHandle, x, y);
 }
+#ifdef ROSEN_OHOS
+void RecordingCanvas::DrawSurfaceBuffer(const DrawingSurfaceBufferInfo& surfaceBufferInfo)
+{
+    cmdList_->AddOp<DrawSurfaceBufferOpItem::ConstructorHandle>(
+        CmdListHelper::AddSurfaceBufferToCmdList(*cmdList_, surfaceBufferInfo.surfaceBuffer_),
+        surfaceBufferInfo.offSetX_, surfaceBufferInfo.offSetY_,
+        surfaceBufferInfo.width_, surfaceBufferInfo.height_);
+}
+#endif
 
 void RecordingCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)
 {
@@ -468,7 +477,7 @@ void RecordingCanvas::ClipAdaptiveRoundRect(const std::vector<Point>& radius)
 void RecordingCanvas::DrawImage(const std::shared_ptr<Image>& image, const std::shared_ptr<Data>& data,
     const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
 {
-    ImageHandle imageHandle;
+    OpDataHandle imageHandle;
     if (data != nullptr) {
         imageHandle = CmdListHelper::AddCompressDataToCmdList(*cmdList_, data);
         cmdList_->AddOp<DrawAdaptiveImageOpItem::ConstructorHandle>(imageHandle, rsImageInfo, smapling, false);

@@ -225,6 +225,8 @@ private:
     std::string cacheDir_;
     std::shared_ptr<MemoryHandler> mHandler_;
     std::mutex shareContextMutex_;
+
+    sk_sp<SkColorSpace> ConvertColorGamutToSkColorSpace(GraphicColorGamut colorGamut) const;
 };
 
 class RenderContextFactory {

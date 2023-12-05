@@ -87,6 +87,7 @@ public:
     uint32_t GetUniqueID() const override;
     ImageInfo GetImageInfo() override;
     bool ReadPixels(Bitmap& bitmap, int x, int y) override;
+    bool ReadPixels(Pixmap& pixmap, int x, int y) override;
     bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
                     int32_t srcX, int32_t srcY) const override;
     bool IsTextureBacked() const override;
@@ -118,12 +119,6 @@ public:
 #endif
 #endif
 
-    static GrBackendTexture ConvertToGrBackendTexture(const TextureInfo& info);
-    static GrSurfaceOrigin ConvertToGrSurfaceOrigin(const TextureOrigin& origin);
-#ifdef RS_ENABLE_VK
-    static GrBackendTexture ConvertToGrBackendTexture(const VKTextureInfo& info);
-    static void ConvertToVKTexture(const GrBackendTexture& backendTexture, VKTextureInfo& info);
-#endif
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
 

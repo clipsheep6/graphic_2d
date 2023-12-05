@@ -16,6 +16,7 @@
 #include "pipeline/rs_render_node.h"
 
 #include <algorithm>
+#include <memory>
 #include <mutex>
 #include <set>
 
@@ -65,17 +66,11 @@ const std::set<RSModifierType> BASIC_GEOTRANSFROM_ANIMATION_TYPE = {
 
 RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context)
 {
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        propertyDrawablesVec_.resize(RSPropertyDrawableSlot::MAX);
-    }
     isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
 }
 RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context)
     : isOnTheTree_(isOnTheTree), id_(id), context_(context)
 {
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        propertyDrawablesVec_.resize(RSPropertyDrawableSlot::MAX);
-    }
     isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
 }
 
@@ -543,6 +538,16 @@ void RSRenderNode::DumpNodeType(std::string& out) const
     }
 }
 
+void RSRenderNode::ResetIsOnlyBasicGeoTransfrom()
+{
+    isOnlyBasicGeoTransform_ = true;
+}
+
+bool RSRenderNode::IsOnlyBasicGeoTransfrom() const
+{
+    return isOnlyBasicGeoTransform_;
+}
+
 // attention: current all base node's dirty ops causing content dirty
 void RSRenderNode::SetContentDirty()
 {
@@ -662,40 +667,60 @@ void RSRenderNode::FallbackAnimationsToRoot()
     animationManager_.animations_.clear();
 }
 
-std::tuple<bool, bool, bool> RSRenderNode::Animate(int64_t timestamp)
+void RSRenderNode::ActivateDisplaySync()
 {
+    if (!displaySync_) {
+        displaySync_ = std::make_shared<RSRenderDisplaySync>(GetId());
+    }
+}
+
+void RSRenderNode::InActivateDisplaySync()
+{
+    displaySync_ = nullptr;
+}
+
+FrameRateRange RSRenderNode::CalcExpectedFrameRateRange(int32_t preferredFps)
+{
+    FrameRateRange nodeRange;
+    if (displaySync_ != nullptr) {
+        if (preferredFps > 0) {
+            nodeRange = {0, RANGE_MAX_REFRESHRATE, preferredFps};
+        }
+        auto animationRange = animationManager_.GetFrameRateRange();
+        if (animationRange.IsValid()) {
+            displaySync_->SetExpectedFrameRateRange(animationRange);
+            nodeRange.Merge(animationRange);
+        }
+    }
+    return nodeRange;
+}
+
+std::tuple<bool, bool, bool> RSRenderNode::Animate(int64_t timestamp, int64_t period, bool isDisplaySyncEnabled)
+{
+    if (displaySync_ && displaySync_->OnFrameSkip(timestamp, period, isDisplaySyncEnabled)) {
+        return displaySync_->GetAnimateResult();
+    }
     if (lastTimestamp_ < 0) {
         lastTimestamp_ = timestamp;
     } else {
         timeDelta_ = (static_cast<float>(timestamp - lastTimestamp_)) / NS_TO_S;
         lastTimestamp_ = timestamp;
     }
-    return animationManager_.Animate(timestamp, IsOnTheTree());
-}
-
-const FrameRateRange& RSRenderNode::GetRSFrameRateRange()
-{
-    if (rsRange_.IsValid()) {
-        return rsRange_;
+    auto animateResult = animationManager_.Animate(timestamp, IsOnTheTree());
+    if (displaySync_) {
+        displaySync_->SetAnimateResult(animateResult);
     }
-    auto& animationRsRange = animationManager_.GetFrameRateRangeFromRSAnimations();
-    rsRange_.Set(animationRsRange.min_, animationRsRange.max_, animationRsRange.preferred_);
-    return rsRange_;
-}
-
-void RSRenderNode::ResetRSFrameRateRange()
-{
-    rsRange_.Reset();
-}
-
-void RSRenderNode::ResetUIFrameRateRange()
-{
-    uiRange_.Reset();
+    return animateResult;
 }
 
 bool RSRenderNode::IsClipBound() const
 {
-    return renderProperties_.GetClipBounds() || renderProperties_.GetClipToFrame();
+    return GetRenderProperties().GetClipBounds() || GetRenderProperties().GetClipToFrame();
+}
+
+const std::shared_ptr<RSRenderContent> RSRenderNode::GetRenderContent() const
+{
+    return renderContent_;
 }
 
 bool RSRenderNode::Update(
@@ -705,7 +730,7 @@ bool RSRenderNode::Update(
     // no need to update invisible nodes
     if (!ShouldPaint() && !isLastVisible_) {
         SetClean();
-        renderProperties_.ResetDirty();
+        GetMutableRenderProperties().ResetDirty();
         return false;
     }
     // [planning] surfaceNode use frame instead
@@ -726,7 +751,8 @@ bool RSRenderNode::Update(
     // [planing] using drawcmdModifierDirty from dirtyType_
     parentDirty = parentDirty || (dirtyStatus_ != NodeDirty::CLEAN);
     auto parentProperties = parent ? &parent->GetRenderProperties() : nullptr;
-    bool dirty = renderProperties_.UpdateGeometry(parentProperties, parentDirty, offset, GetContextClipRegion());
+    bool dirty = GetMutableRenderProperties().UpdateGeometry(parentProperties, parentDirty, offset,
+        GetContextClipRegion());
     if ((IsDirty() || dirty) && drawCmdModifiers_.count(RSModifierType::GEOMETRYTRANS)) {
         RSModifierContext context = { GetMutableRenderProperties() };
         for (auto& modifier : drawCmdModifiers_[RSModifierType::GEOMETRYTRANS]) {
@@ -735,7 +761,7 @@ bool RSRenderNode::Update(
     }
     isDirtyRegionUpdated_ = false;
     isLastVisible_ = ShouldPaint();
-    renderProperties_.ResetDirty();
+    GetMutableRenderProperties().ResetDirty();
 
     // Note:
     // 1. cache manager will use dirty region to update cache validity, background filter cache manager should use
@@ -749,12 +775,12 @@ bool RSRenderNode::Update(
 
 RSProperties& RSRenderNode::GetMutableRenderProperties()
 {
-    return renderProperties_;
+    return renderContent_->GetMutableRenderProperties();
 }
 
 const RSProperties& RSRenderNode::GetRenderProperties() const
 {
-    return renderProperties_;
+    return renderContent_->GetRenderProperties();
 }
 
 void RSRenderNode::UpdateDirtyRegion(
@@ -779,24 +805,25 @@ void RSRenderNode::UpdateDirtyRegion(
     } else {
         RectI drawRegion;
         RectI shadowRect;
-        auto dirtyRect = renderProperties_.GetDirtyRect(drawRegion);
+        auto dirtyRect = GetRenderProperties().GetDirtyRect(drawRegion);
         auto rectFromRenderProperties = dirtyRect;
-        if (renderProperties_.IsShadowValid()) {
+        if (GetRenderProperties().IsShadowValid()) {
             SetShadowValidLastFrame(true);
             if (IsInstanceOf<RSSurfaceRenderNode>()) {
-                const RectF absBounds = {0, 0, renderProperties_.GetBoundsWidth(), renderProperties_.GetBoundsHeight()};
-                RRect absClipRRect = RRect(absBounds, renderProperties_.GetCornerRadius());
-                RSPropertiesPainter::GetShadowDirtyRect(shadowRect, renderProperties_, &absClipRRect);
+                const RectF absBounds = {0, 0, GetRenderProperties().GetBoundsWidth(),
+                    GetRenderProperties().GetBoundsHeight()};
+                RRect absClipRRect = RRect(absBounds, GetRenderProperties().GetCornerRadius());
+                RSPropertiesPainter::GetShadowDirtyRect(shadowRect, GetRenderProperties(), &absClipRRect);
             } else {
-                RSPropertiesPainter::GetShadowDirtyRect(shadowRect, renderProperties_);
+                RSPropertiesPainter::GetShadowDirtyRect(shadowRect, GetRenderProperties());
             }
             if (!shadowRect.IsEmpty()) {
                 dirtyRect = dirtyRect.JoinRect(shadowRect);
             }
         }
 
-        if (renderProperties_.pixelStretch_) {
-            auto stretchDirtyRect = renderProperties_.GetPixelStretchDirtyRect();
+        if (GetRenderProperties().pixelStretch_) {
+            auto stretchDirtyRect = GetRenderProperties().GetPixelStretchDirtyRect();
             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
         }
 
@@ -836,18 +863,18 @@ bool RSRenderNode::IsSelfDrawingNode() const
 
 bool RSRenderNode::IsDirty() const
 {
-    return dirtyStatus_ != NodeDirty::CLEAN || renderProperties_.IsDirty();
+    return dirtyStatus_ != NodeDirty::CLEAN || GetRenderProperties().IsDirty();
 }
 
 bool RSRenderNode::IsContentDirty() const
 {
     // Considering renderNode, it should consider both basenode's case and its properties
-    return isContentDirty_ || renderProperties_.IsContentDirty();
+    return isContentDirty_ || GetRenderProperties().IsContentDirty();
 }
 
 void RSRenderNode::UpdateRenderStatus(RectI& dirtyRegion, bool isPartialRenderEnabled)
 {
-    auto dirtyRect = renderProperties_.GetDirtyRect();
+    auto dirtyRect = GetRenderProperties().GetDirtyRect();
     // should judge if there's any child out of parent
     if (!isPartialRenderEnabled || HasChildrenOutOfRect()) {
         isRenderUpdateIgnored_ = false;
@@ -932,7 +959,7 @@ void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
         IterateOnDrawableRange(RSPropertyDrawableSlot::ALPHA, RSPropertyDrawableSlot::ALPHA, canvas);
         return;
     }
-    auto alpha = renderProperties_.GetAlpha();
+    auto alpha = GetRenderProperties().GetAlpha();
     if (alpha < 1.f) {
         if (!(GetRenderProperties().GetAlphaOffscreen() || IsForcedDrawInGroup())) {
             canvas.MultiplyAlpha(alpha);
@@ -1070,11 +1097,15 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
 
 void RSRenderNode::DumpNodeInfo(DfxString& log)
 {
+#ifndef USE_ROSEN_DRAWING
     for (auto& [type, modifiers] : drawCmdModifiers_) {
         for (auto modifier : modifiers) {
             modifier->DumpPicture(log);
         }
     }
+#else
+// Drawing is not supported
+#endif
 }
 
 void RSRenderNode::AddModifierProfile(const std::shared_ptr<RSRenderModifier>& modifier, float width, float height)
@@ -1138,14 +1169,6 @@ void RSRenderNode::AddModifierProfile(const std::shared_ptr<RSRenderModifier>& m
     }
 }
 
-void RSRenderNode::SetRSFrameRateRangeByPreferred(int32_t preferred)
-{
-    if (preferred > 0) {
-        FrameRateRange frameRateRange = {0, RANGE_MAX_REFRESHRATE, preferred};
-        SetRSFrameRateRange(frameRateRange);
-    }
-}
-
 bool RSRenderNode::ApplyModifiers()
 {
     // quick reject test
@@ -1157,15 +1180,14 @@ bool RSRenderNode::ApplyModifiers()
         return false;
     }
     hgmModifierProfileList_.clear();
-    isOnlyBasicGeoTransform_ = !IsContentDirty();
-    const auto prevPositionZ = renderProperties_.GetPositionZ();
+    const auto prevPositionZ = GetRenderProperties().GetPositionZ();
 
     // Reset and re-apply all modifiers
-    RSModifierContext context = { renderProperties_ };
+    RSModifierContext context = { GetMutableRenderProperties() };
     std::vector<std::shared_ptr<RSRenderModifier>> animationModifiers;
 
     // Reset before apply modifiers
-    renderProperties_.ResetProperty(dirtyTypes_);
+    GetMutableRenderProperties().ResetProperty(dirtyTypes_);
 
     // Apply modifiers
     for (auto& [id, modifier] : modifiers_) {
@@ -1177,7 +1199,7 @@ bool RSRenderNode::ApplyModifiers()
             continue;
         }
         modifier->Apply(context);
-        if (isCalPreferredNode_ && HasAnimation() && ANIMATION_MODIFIER_TYPE.count(modifier->GetType())) {
+        if (isCalcPreferredFps_ && HasAnimation() && ANIMATION_MODIFIER_TYPE.count(modifier->GetType())) {
             animationModifiers.push_back(modifier);
         }
         if (!BASIC_GEOTRANSFROM_ANIMATION_TYPE.count(modifier->GetType())) {
@@ -1189,11 +1211,11 @@ bool RSRenderNode::ApplyModifiers()
         AddModifierProfile(modifier, context.properties_.GetBoundsWidth(), context.properties_.GetBoundsHeight());
     }
     // execute hooks
-    renderProperties_.OnApplyModifiers();
+    GetMutableRenderProperties().OnApplyModifiers();
     OnApplyModifiers();
 
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    if (auto& manager = renderProperties_.GetFilterCacheManager(false);
+    if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
         manager != nullptr &&
 #ifndef USE_ROSEN_DRAWING
         (dirtyTypes_.count(RSModifierType::BACKGROUND_COLOR) || dirtyTypes_.count(RSModifierType::BG_IMAGE))) {
@@ -1203,7 +1225,7 @@ bool RSRenderNode::ApplyModifiers()
 #endif
         manager->UpdateCacheStateWithDirtyRegion();
     }
-    if (auto& manager = renderProperties_.GetFilterCacheManager(true)) {
+    if (auto& manager = GetRenderProperties().GetFilterCacheManager(true)) {
         manager->UpdateCacheStateWithDirtyRegion();
     }
 
@@ -1223,7 +1245,7 @@ bool RSRenderNode::ApplyModifiers()
     UpdateShouldPaint();
 
     // return true if positionZ changed
-    return renderProperties_.GetPositionZ() != prevPositionZ;
+    return GetRenderProperties().GetPositionZ() != prevPositionZ;
 }
 
 void RSRenderNode::UpdateDrawableVec()
@@ -1233,13 +1255,15 @@ void RSRenderNode::UpdateDrawableVec()
     RSPropertyDrawableGenerateContext drawableContext(*this);
     // initialize necessary save/clip/restore
     if (drawableVecStatus_ == 0) {
-        RSPropertyDrawable::InitializeSaveRestore(drawableContext, propertyDrawablesVec_);
+        RSPropertyDrawable::InitializeSaveRestore(drawableContext, renderContent_->propertyDrawablesVec_);
     }
     // Update or regenerate drawable
-    bool drawableChanged = RSPropertyDrawable::UpdateDrawableVec(drawableContext, propertyDrawablesVec_, dirtySlots);
+    bool drawableChanged = RSPropertyDrawable::UpdateDrawableVec(drawableContext,
+        renderContent_->propertyDrawablesVec_, dirtySlots);
     // if 1. first initialized or 2. any drawables changed, update save/clip/restore
     if (drawableChanged || drawableVecStatus_ == 0) {
-        RSPropertyDrawable::UpdateSaveRestore(drawableContext, propertyDrawablesVec_, drawableVecStatus_);
+        RSPropertyDrawable::UpdateSaveRestore(drawableContext, renderContent_->propertyDrawablesVec_,
+            drawableVecStatus_);
     }
 }
 
@@ -1323,12 +1347,12 @@ void RSRenderNode::UpdateShouldPaint()
 {
     // node should be painted if either it is visible or it has disappearing transition animation, but only when its
     // alpha is not zero
-    shouldPaint_ = (renderProperties_.GetAlpha() > 0.0f) &&
-        (renderProperties_.GetVisible() || HasDisappearingTransition(false));
+    shouldPaint_ = (GetRenderProperties().GetAlpha() > 0.0f) &&
+        (GetRenderProperties().GetVisible() || HasDisappearingTransition(false));
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (!shouldPaint_) {
         // clear filter cache when node is not visible
-        renderProperties_.ClearFilterCache();
+        GetMutableRenderProperties().ClearFilterCache();
     }
 #endif
 }
@@ -1383,11 +1407,11 @@ bool RSRenderNode::NeedInitCacheSurface() const
     int width = 0;
     int height = 0;
     if (cacheType == CacheType::ANIMATE_PROPERTY &&
-        renderProperties_.IsShadowValid() && !renderProperties_.IsSpherizeValid()) {
-        const RectF boundsRect = renderProperties_.GetBoundsRect();
+        GetRenderProperties().IsShadowValid() && !GetRenderProperties().IsSpherizeValid()) {
+        const RectF boundsRect = GetRenderProperties().GetBoundsRect();
         RRect rrect = RRect(boundsRect, {0, 0, 0, 0});
         RectI shadowRect;
-        RSPropertiesPainter::GetShadowDirtyRect(shadowRect, renderProperties_, &rrect, false);
+        RSPropertiesPainter::GetShadowDirtyRect(shadowRect, GetRenderProperties(), &rrect, false);
         width = shadowRect.GetWidth();
         height = shadowRect.GetHeight();
     } else {
@@ -1460,11 +1484,11 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
     boundsWidth_ = size.x_;
     boundsHeight_ = size.y_;
     if (cacheType == CacheType::ANIMATE_PROPERTY &&
-        renderProperties_.IsShadowValid() && !renderProperties_.IsSpherizeValid()) {
-        const RectF boundsRect = renderProperties_.GetBoundsRect();
+        GetRenderProperties().IsShadowValid() && !GetRenderProperties().IsSpherizeValid()) {
+        const RectF boundsRect = GetRenderProperties().GetBoundsRect();
         RRect rrect = RRect(boundsRect, {0, 0, 0, 0});
         RectI shadowRect;
-        RSPropertiesPainter::GetShadowDirtyRect(shadowRect, renderProperties_, &rrect, false);
+        RSPropertiesPainter::GetShadowDirtyRect(shadowRect, GetRenderProperties(), &rrect, false);
         width = shadowRect.GetWidth();
         height = shadowRect.GetHeight();
         shadowRectOffsetX_ = -shadowRect.GetLeft();
@@ -1550,7 +1574,7 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
             cacheImage = cacheImage->makeRasterImage();
         }
     }
-    if ((cacheType == CacheType::ANIMATE_PROPERTY && renderProperties_.IsShadowValid()) || isUIFirst) {
+    if ((cacheType == CacheType::ANIMATE_PROPERTY && GetRenderProperties().IsShadowValid()) || isUIFirst) {
         canvas.drawImage(cacheImage, -shadowRectOffsetX_ * scaleX, -shadowRectOffsetY_ * scaleY, samplingOptions);
     } else {
         canvas.drawImage(cacheImage, 0.f, 0.f, samplingOptions);
@@ -1619,7 +1643,7 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
     Drawing::Brush brush;
     canvas.AttachBrush(brush);
     auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
-    if ((cacheType == CacheType::ANIMATE_PROPERTY && renderProperties_.IsShadowValid()) || isUIFirst) {
+    if ((cacheType == CacheType::ANIMATE_PROPERTY && GetRenderProperties().IsShadowValid()) || isUIFirst) {
         canvas.DrawImage(*cacheImage, -shadowRectOffsetX_ * scaleX,
             -shadowRectOffsetY_ * scaleY, samplingOptions);
     } else {
@@ -1629,7 +1653,7 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
     canvas.Restore();
 }
 
-std::shared_ptr<Drawing::Image> GetCompletedImage(
+std::shared_ptr<Drawing::Image> RSRenderNode::GetCompletedImage(
     RSPaintFilterCanvas& canvas, uint32_t threadIndex, bool isUIFirst)
 {
     if (isUIFirst) {
@@ -1874,10 +1898,6 @@ RectI RSRenderNode::GetFilterRect() const
 void RSRenderNode::UpdateFullScreenFilterCacheRect(
     RSDirtyRegionManager& dirtyManager, bool isForeground) const
 {
-    // Skip filter cache occlusion check for RSEffectRenderNode
-    if (IsInstanceOf<RSEffectRenderNode>()) {
-        return;
-    }
     auto& renderProperties = GetRenderProperties();
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     auto& manager = renderProperties.GetFilterCacheManager(isForeground);
@@ -1886,7 +1906,7 @@ void RSRenderNode::UpdateFullScreenFilterCacheRect(
     if (!manager->IsCacheValid() && dirtyManager.IsCacheableFilterRectEmpty()) {
         dirtyManager.InvalidateFilterCacheRect();
     } else if (ROSEN_EQ(GetGlobalAlpha(), 1.0f) && ROSEN_EQ(renderProperties.GetCornerRadius().x_, 0.0f) &&
-        manager->GetCachedImageRegion() == dirtyManager.GetSurfaceRect()) {
+        manager->GetCachedImageRegion() == dirtyManager.GetSurfaceRect() && !IsInstanceOf<RSEffectRenderNode>()) {
         // Only record full screen filter cache for occlusion calculation
         dirtyManager.UpdateCacheableFilterRect(manager->GetCachedImageRegion());
     }
@@ -1950,7 +1970,7 @@ void RSRenderNode::OnTreeStateChanged()
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (!isOnTheTree_) {
         // clear filter cache when node is removed from tree
-        renderProperties_.ClearFilterCache();
+        GetMutableRenderProperties().ClearFilterCache();
     }
 #endif
 }
@@ -2414,7 +2434,7 @@ bool RSRenderNode::HasCachedTexture() const
 void RSRenderNode::SetDrawRegion(const std::shared_ptr<RectF>& rect)
 {
     drawRegion_ = rect;
-    renderProperties_.SetDrawRegion(rect);
+    GetMutableRenderProperties().SetDrawRegion(rect);
 }
 const std::shared_ptr<RectF>& RSRenderNode::GetDrawRegion() const
 {
@@ -2431,10 +2451,6 @@ OutOfParentType RSRenderNode::GetOutOfParent() const
 RSRenderNode::NodeGroupType RSRenderNode::GetNodeGroupType()
 {
     return nodeGroupType_;
-}
-void RSRenderNode::SetRSFrameRateRange(FrameRateRange range)
-{
-    rsRange_ = range;
 }
 void RSRenderNode::UpdateUIFrameRateRange(const FrameRateRange& range)
 {
@@ -2491,15 +2507,19 @@ void RSRenderNode::SetIsUsedBySubThread(bool isUsedBySubThread)
     isUsedBySubThread_.store(isUsedBySubThread);
 }
 
+bool RSRenderNode::GetLastIsNeedAssignToSubThread() const
+{
+    return lastIsNeedAssignToSubThread_;
+}
+void RSRenderNode::SetLastIsNeedAssignToSubThread(bool lastIsNeedAssignToSubThread)
+{
+    lastIsNeedAssignToSubThread_ = lastIsNeedAssignToSubThread;
+}
+
 void RSRenderNode::IterateOnDrawableRange(
     RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas)
 {
-    for (uint16_t index = begin; index <= end; index++) {
-        auto& drawablePtr = propertyDrawablesVec_[index];
-        if (drawablePtr) {
-            drawablePtr->Draw(*this, canvas);
-        }
-    }
+    renderContent_->IterateOnDrawableRange(begin, end, canvas, *this);
 }
 } // namespace Rosen
 } // namespace OHOS

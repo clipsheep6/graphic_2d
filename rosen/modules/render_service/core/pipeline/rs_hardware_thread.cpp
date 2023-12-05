@@ -39,8 +39,6 @@
 #ifdef RS_ENABLE_EGLIMAGE
 #include "rs_egl_image_manager.h"
 #endif // RS_ENABLE_EGLIMAGE
-#include <parameter.h>
-#include <parameters.h>
 
 #ifdef USE_VIDEO_PROCESSING_ENGINE
 #include "metadata_helper.h"
@@ -134,7 +132,7 @@ void RSHardwareThread::RefreshRateCounts(std::string& dumpString)
     if (refreshRateCounts_.empty()) {
         return;
     }
-    std::map<uint32_t, int>::iterator iter;
+    std::map<uint32_t, uint64_t>::iterator iter;
     for (iter = refreshRateCounts_.begin(); iter != refreshRateCounts_.end(); iter++) {
         dumpString.append(
             "Refresh Rate:" + std::to_string(iter->first) + ", Count:" + std::to_string(iter->second) + ";\n");
@@ -206,8 +204,8 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
     RSTaskMessage::RSTask task = [this, output = output, layers = layers, rate = rate, timestamp = currTimestamp]() {
         RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers rate: %d, now: %lu", rate, timestamp);
         ExecuteSwitchRefreshRate(rate);
-        AddRefreshRateCount(rate);
         PerformSetActiveMode(output);
+        AddRefreshRateCount();
         output->SetLayerInfo(layers);
         if (output->IsDeviceValid()) {
             hdiBackend_->Repaint(output);
@@ -346,7 +344,15 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
     bool forceCPU = RSBaseRenderEngine::NeedForceCPU(layers);
     auto screenManager = CreateOrGetScreenManager();
     auto screenInfo = screenManager->QueryScreenInfo(screenId);
+    sk_sp<SkColorSpace> skColorSpace = nullptr;
+#ifdef USE_VIDEO_PROCESSING_ENGINE
+    GraphicColorGamut colorGamut = ComputeTargetColorGamut(layers);
+    GraphicPixelFormat pixelFormat = ComputeTargetPixelFormat(layers);
+    auto renderFrameConfig = RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo, true, colorGamut, pixelFormat);
+    skColorSpace = RSBaseRenderEngine::ConvertColorGamutToSkColorSpace(colorGamut);
+#else
     auto renderFrameConfig = RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo, true);
+#endif
     auto renderFrame = uniRenderEngine_->RequestFrame(surface, renderFrameConfig, forceCPU);
     if (renderFrame == nullptr) {
         RS_LOGE("RsDebug RSHardwareThread::Redraw：failed to request frame.");
@@ -364,11 +370,6 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
     std::unordered_map<int32_t, std::unique_ptr<ImageCacheSeq>> imageCacheSeqs;
 #endif // RS_ENABLE_VK
 #endif // RS_ENABLE_EGLIMAGE
-
-#ifdef USE_VIDEO_PROCESSING_ENGINE
-    GraphicColorGamut colorGamut = GRAPHIC_COLOR_GAMUT_SRGB;
-    colorGamut = ComputeTargetColorGamut(layers);
-#endif
 
     for (const auto& layer : layers) {
         if (layer == nullptr) {
@@ -460,7 +461,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #ifdef NEW_SKIA
 #if defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
             auto image = SkImage::MakeFromTexture(canvas->recordingContext(), backendTexture,
-                kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
+                kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, skColorSpace);
 #elif defined(RS_ENABLE_VK)
             auto imageCache = uniRenderEngine_->GetVkImageManager()->CreateImageCacheFromBuffer(
                 params.buffer, params.acquireFence);
@@ -497,12 +498,20 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
             }
 
 #ifdef USE_VIDEO_PROCESSING_ENGINE
-            sk_sp<SkShader> imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+            SkMatrix matrix;
+            auto sx = params.dstRect.width() / params.srcRect.width();
+            auto sy = params.dstRect.height() / params.srcRect.height();
+            matrix.setScaleTranslate(sx, sy, params.dstRect.x(), params.dstRect.y());
+            sk_sp<SkShader> imageShader = image->makeShader(SkSamplingOptions(), matrix);
             if (imageShader == nullptr) {
                 RS_LOGE("RSHardwareThread::DrawImage imageShader is nullptr.");
             } else {
                 params.paint.setShader(imageShader);
                 params.targetColorGamut = colorGamut;
+
+                auto screenManager = CreateOrGetScreenManager();
+                params.screenBrightnessNits = screenManager->GetScreenBrightnessNits(screenId);
+
                 uniRenderEngine_->ColorSpaceConvertor(imageShader, params);
             }
 #endif
@@ -606,9 +615,13 @@ void RSHardwareThread::LayerPresentTimestamp(const LayerInfoPtr& layer, const sp
     }
 }
 
-void RSHardwareThread::AddRefreshRateCount(uint32_t rate)
+void RSHardwareThread::AddRefreshRateCount()
 {
-    auto [iter, success] = refreshRateCounts_.try_emplace(rate, 1);
+    auto screenManager = CreateOrGetScreenManager();
+    ScreenId id = screenManager->GetDefaultScreenId();
+    auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
+    uint32_t currentRefreshRate = hgmCore.GetScreenCurrentRefreshRate(id);
+    auto [iter, success] = refreshRateCounts_.try_emplace(currentRefreshRate, 1);
     if (!success) {
         iter->second++;
     }
@@ -626,18 +639,43 @@ GraphicColorGamut RSHardwareThread::ComputeTargetColorGamut(const std::vector<La
             continue;
         }
 
-        CM_ColorSpaceType colorSpace;
-        if (MetadataHelper::GetColorSpaceType(buffer, colorSpace) != GSERROR_OK) {
+        CM_ColorSpaceInfo colorSpaceInfo;
+        if (MetadataHelper::GetColorSpaceInfo(buffer, colorSpaceInfo) != GSERROR_OK) {
             RS_LOGW("RSHardwareThread::ComputeTargetColorGamut Get color space from surface buffer failed");
             continue;
         }
 
-        if (colorSpace != CM_DISPLAY_SRGB) {
+        if (colorSpaceInfo.primaries != COLORPRIMARIES_SRGB) {
             colorGamut = GRAPHIC_COLOR_GAMUT_DISPLAY_P3;
+            break;
         }
     }
 
     return colorGamut;
+}
+
+GraphicPixelFormat RSHardwareThread::ComputeTargetPixelFormat(const std::vector<LayerInfoPtr>& layers)
+{
+    using namespace HDI::Display::Graphic::Common::V1_0;
+    GraphicPixelFormat pixelFormat = GRAPHIC_PIXEL_FMT_RGBA_8888;
+    for (auto& layer : layers) {
+        auto buffer = layer->GetBuffer();
+        if (buffer == nullptr) {
+            RS_LOGW("RSHardwareThread::ComputeTargetPixelFormat The buffer of layer is nullptr");
+            continue;
+        }
+
+        auto bufferPixelFormat = buffer->GetFormat();
+        if (bufferPixelFormat == GRAPHIC_PIXEL_FMT_RGBA_1010102 ||
+            bufferPixelFormat == GRAPHIC_PIXEL_FMT_YCBCR_P010 ||
+            bufferPixelFormat == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
+            pixelFormat = GRAPHIC_PIXEL_FMT_RGBA_1010102;
+            RS_LOGD("RSHardwareThread::ComputeTargetPixelFormat pixelformat is set to 1010102 for 10bit buffer");
+            break;
+        }
+    }
+
+    return pixelFormat;
 }
 #endif
 }

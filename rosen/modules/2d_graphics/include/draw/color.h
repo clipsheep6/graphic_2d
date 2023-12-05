@@ -72,7 +72,7 @@ public:
 
     constexpr static uint8_t RGB_MAX = 255;
     // Return color value from component values.
-    static inline ColorQuad ColorQuadSetARGB(uint32_t r, uint32_t g, uint32_t b, uint32_t a)
+    static inline ColorQuad ColorQuadSetARGB(uint32_t a, uint32_t r, uint32_t g, uint32_t b)
     {
         return ((a & 0xffu) << 24) | ((r & 0xffu) << 16) | ((g & 0xffu) << 8) | ((b & 0xffu) << 0);
     }
@@ -132,7 +132,10 @@ public:
     void SetRgbF(scalar r, scalar g, scalar b, scalar a = 1.0);
 
     void SetColorQuad(uint32_t c);
-    ColorQuad CastToColorQuad() const;
+    inline ColorQuad CastToColorQuad() const
+    {
+        return ((alpha_ & 0xffu) << 24) | ((red_ & 0xffu) << 16) | ((green_ & 0xffu) << 8) | ((blue_ & 0xffu) << 0);
+    }
 
     friend DRAWING_API bool operator==(const Color& c1, const Color& c2);
     friend DRAWING_API bool operator!=(const Color& c1, const Color& c2);

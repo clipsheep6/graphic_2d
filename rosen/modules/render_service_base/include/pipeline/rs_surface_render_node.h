@@ -103,6 +103,17 @@ public:
         return nodeType_ == RSSurfaceNodeType::SCB_SCREEN_NODE;
     }
 
+    void SetNodeDirty(bool isNodeDirty)
+    {
+        isNodeDirty_ = isNodeDirty || isNodeDirtyInLastFrame_;
+        isNodeDirtyInLastFrame_ = isNodeDirty;
+    }
+
+    bool IsNodeDirty() const
+    {
+        return isNodeDirty_;
+    }
+
     bool IsHardwareEnabledTopSurface() const
     {
         return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE && GetName() == "pointer window";
@@ -403,6 +414,11 @@ public:
     bool GetOcclusionVisible() const
     {
         return isOcclusionVisible_;
+    }
+
+    void SetOcclusionVisibleWithoutFilter(bool visible)
+    {
+        isOcclusionVisibleWithoutFilter_ = visible;
     }
 
     const Occlusion::Region& GetVisibleRegion() const
@@ -843,6 +859,18 @@ public:
         hasSkipLayer_ = hasSkipLayer;
     }
 
+    bool GetSurfaceCacheContentStatic()
+    {
+        return surfaceCacheContentStatic_;
+    }
+
+    void SetSurfaceCacheContentStatic(bool contentStatic)
+    {
+        surfaceCacheContentStatic_ = contentStatic;
+    }
+
+    bool IsUIFirstCacheReusable();
+
 #ifdef USE_SURFACE_TEXTURE
     std::shared_ptr<RSSurfaceTexture> GetSurfaceTexture() const { return surfaceTexture_; };
     void SetSurfaceTexture(const std::shared_ptr<RSSurfaceTexture> &texture) { surfaceTexture_ = texture; }
@@ -858,6 +886,18 @@ public:
         return isForeground_;
     }
     bool GetNodeIsSingleFrameComposer() const override;
+
+    void SetAncestorDisplayNode(const RSBaseRenderNode::WeakPtr& ancestorDisplayNode)
+    {
+        ancestorDisplayNode_ = ancestorDisplayNode;
+    }
+
+    RSBaseRenderNode::WeakPtr GetAncestorDisplayNode() const
+    {
+        return ancestorDisplayNode_;
+    }
+    bool GetHasSharedTransitionNode() const;
+    void SetHasSharedTransitionNode(bool hasSharedTransitionNode);
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -935,6 +975,7 @@ private:
     bool isDirtyRegionAlignedEnable_ = false;
     Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
+    bool isOcclusionVisibleWithoutFilter_ = true;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     std::shared_ptr<RSDirtyRegionManager> cacheSurfaceDirtyManager_ = nullptr;
     RectI dstRect_;
@@ -1022,8 +1063,9 @@ private:
     std::shared_ptr<Drawing::Image> cachedImage_;
 #endif
 
-    // used for hardware enabled pointer window
-    bool isLastFrameNeedCalcGlobalDirty_ = true;
+    // only used in hardware enabled pointer window, when gpu -> hardware composer
+    bool isNodeDirtyInLastFrame_ = true;
+    bool isNodeDirty_ = true;
     // used for hardware enabled nodes
     bool isHardwareEnabledNode_ = false;
     bool isCurrentFrameHardwareEnabled_ = false;
@@ -1045,6 +1087,7 @@ private:
     bool prevVisible_ = false;
     bool hasSecurityLayer_ = false;
     bool hasSkipLayer_ = false;
+    bool surfaceCacheContentStatic_ = false;
 
     uint32_t processZOrder_ = -1;
 
@@ -1056,6 +1099,9 @@ private:
     std::shared_ptr<RSSurfaceTexture> surfaceTexture_ {};
 #endif
     bool isForeground_ = false;
+
+    RSBaseRenderNode::WeakPtr ancestorDisplayNode_;
+    bool hasSharedTransitionNode_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

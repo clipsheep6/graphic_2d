@@ -25,10 +25,6 @@
 #include <parameters.h>
 #include "param/sys_param.h"
 
-void SensorPostureDataCallback(SensorEvent *event)
-{
-    OHOS::Rosen::CreateOrGetScreenManager()->HandlePostureData(event);
-}
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -40,6 +36,10 @@ namespace {
     constexpr float HALF_FOLDED_MAX_THRESHOLD = 140.0F;
     constexpr float OPEN_HALF_FOLDED_MIN_THRESHOLD = 25.0F;
     constexpr uint32_t WAIT_FOR_ACTIVE_SCREEN_ID_TIMEOUT = 1000;
+    void SensorPostureDataCallback(SensorEvent *event)
+    {
+        OHOS::Rosen::CreateOrGetScreenManager()->HandlePostureData(event);
+    }
 } // namespace
 using namespace HiviewDFX;
 namespace impl {
@@ -195,7 +195,8 @@ ScreenId RSScreenManager::GetActiveScreenId()
     }
     activeScreenIdAssignedCV_.wait_until(lock, std::chrono::system_clock::now() +
         std::chrono::milliseconds(WAIT_FOR_ACTIVE_SCREEN_ID_TIMEOUT), [this]() {
-            return isPostureSensorDataHandled_; });
+            return isPostureSensorDataHandled_; 
+        });
     if (isFirstTimeToGetActiveScreenId_) {
         isFirstTimeToGetActiveScreenId_ = false;
         UnRegisterSensorCallback();
@@ -203,6 +204,34 @@ ScreenId RSScreenManager::GetActiveScreenId()
     RS_LOGD("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
     return activeScreenId_;
 }
+
+#ifdef USE_VIDEO_PROCESSING_ENGINE
+float RSScreenManager::GetScreenBrightnessNits(ScreenId id)
+{
+    constexpr float DEFAULT_SCREEN_LIGHT_NITS = 500.0;
+    constexpr float DEFAULT_SCREEN_LIGHT_MAX_NITS = 1200.0;
+    constexpr int32_t DEFAULT_SCREEN_LIGHT_MAX_LEVEL = 255;
+
+    float screenBrightnessNits = DEFAULT_SCREEN_LIGHT_NITS;
+
+    RSScreenType screenType;
+    if (GetScreenType(id, screenType) != SUCCESS) {
+        RS_LOGW("RSScreenManager::GetScreenBrightnessNits GetScreenType fail.");
+        return screenBrightnessNits;
+    }
+
+    if (screenType == VIRTUAL_TYPE_SCREEN) {
+        return screenBrightnessNits;
+    }
+
+    int32_t backLightLevel = GetScreenBacklight(id);
+    if (backLightLevel <= 0) {
+        return screenBrightnessNits;
+    }
+
+    return DEFAULT_SCREEN_LIGHT_MAX_NITS * backLightLevel / DEFAULT_SCREEN_LIGHT_MAX_LEVEL;
+}
+#endif
 
 void RSScreenManager::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data)
 {
@@ -826,7 +855,7 @@ void RSScreenManager::RemoveVirtualScreenLocked(ScreenId id)
         return;
     }
 
-    screens_.erase(id);                                                                                                                                                                                                                
+    screens_.erase(id);
 
     // Update other screens' mirrorId.
     for (auto &[id, screen] : screens_) {

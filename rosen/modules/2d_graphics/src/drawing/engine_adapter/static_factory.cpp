@@ -59,6 +59,9 @@ std::shared_ptr<Typeface> StaticFactory::MakeFromName(const char familyName[], F
 std::shared_ptr<Surface> StaticFactory::MakeFromBackendRenderTarget(GPUContext* gpuContext, const VKTextureInfo& info,
     TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return nullptr;
+    }
     return EngineStaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteVkImage, cleanHelper);
 }
 #endif

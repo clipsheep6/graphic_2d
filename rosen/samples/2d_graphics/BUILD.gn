@@ -79,11 +79,6 @@ ohos_executable("drawing_engine_sample") {
     "$graphic_2d_root/rosen/modules/render_service_base/src/platform/ohos/backend",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
-    "//commonlibrary/c_utils/base/include",
-    "//third_party/skia",
   ]
 
   sources += [
@@ -123,7 +118,7 @@ ohos_executable("drawing_engine_sample") {
 
     deps += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
   }
-  defines = [
+  defines += [
     "VK_USE_PLATFORM_OHOS",
     "NDEBUG",
   ]
@@ -133,7 +128,11 @@ ohos_executable("drawing_engine_sample") {
     #"//third_party/skia:skia",
   ]
   if (graphic_2d_feature_enable_flutter_vulkan) {
-    #include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
+    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+    "//commonlibrary/c_utils/base/include",
+    "//third_party/skia",
   }
   public_deps += [
     "$graphic_2d_root:libvulkan",

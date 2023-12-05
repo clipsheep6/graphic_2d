@@ -33,6 +33,24 @@ constexpr int DEFAULT_PARTIAL_RENDER_ENABLED_VALUE = 2;
 constexpr int DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE = 4;
 constexpr int DEFAULT_CORRECTION_MODE_VALUE = 999;
 
+#if defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)
+const bool RSSystemProperties::aceVulkanEnabled_ =
+    (RSSystemProperties::GetRSEventProperty("const.gpu.vendor").compare("higpu.v200") == 0);
+#elif defined (ACE_ENABLE_GL)
+const bool RSSystemProperties::aceVulkanEnabled_ = false;
+#else
+const bool RSSystemProperties::aceVulkanEnabled_ = true;
+#endif
+
+#if defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK)
+const bool RSSystemProperties::rsVulkanEnabled_ =
+    (RSSystemProperties::GetRSEventProperty("const.gpu.vendor").compare("higpu.v200") == 0);
+#elif defined (RS_ENABLE_GL)
+const bool RSSystemProperties::rsVulkanEnabled_ = false;
+#else
+const bool RSSystemProperties::rsVulkanEnabled_ = true;
+#endif
+
 int ConvertToInt(const char *originValue, int defaultValue)
 {
     return originValue == nullptr ? defaultValue : std::atoi(originValue);
@@ -145,9 +163,15 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
 {
     int changed = 0;
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "0");
-    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
-    return static_cast<PartialRenderType>(ConvertToInt(enable, 0));
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "0");
+        const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+        return static_cast<PartialRenderType>(ConvertToInt(enable, 0));
+    } else {
+        static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "4");
+        const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+        return static_cast<PartialRenderType>(ConvertToInt(enable, DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE));
+    }
 #else
     static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "4");
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);

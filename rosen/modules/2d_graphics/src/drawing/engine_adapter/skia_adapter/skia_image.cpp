@@ -171,6 +171,9 @@ bool SkiaImage::BuildFromTexture(GPUContext& gpuContext, const VKTextureInfo& in
     BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
     void (*deleteFunc)(void*), void* cleanupHelper)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return false;
+    }
     grContext_ = gpuContext.GetImpl<SkiaGPUContext>()->GetGrContext();
     if (!grContext_) {
         LOGE("SkiaImage BuildFromTexture grContext_ is null");

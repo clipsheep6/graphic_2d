@@ -44,6 +44,9 @@ bool Surface::Bind(const FrameBuffer& frameBuffer)
 std::shared_ptr<Surface> Surface::MakeFromBackendRenderTarget(GPUContext* gpuContext, const VKTextureInfo& info,
     TextureOrigin origin, void (*deleteFunc)(void*), void* cleanupHelper)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return nullptr;
+    }
     return StaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteFunc, cleanupHelper);
 }
 #endif
@@ -124,6 +127,9 @@ void Surface::Flush(FlushInfo *drawingflushInfo)
 #ifdef RS_ENABLE_VK
 void Surface::Wait(int32_t time, const VkSemaphore& semaphore)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return;
+    }
     if (!impl_) {
         LOGE("surfaceImpl Wait failed impl nullptr");
         return;

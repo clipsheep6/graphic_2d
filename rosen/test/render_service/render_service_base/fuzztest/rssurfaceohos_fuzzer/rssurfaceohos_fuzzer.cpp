@@ -20,6 +20,7 @@
 #include "iconsumer_surface.h"
 #include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
+#include "platform/common/rs_system_properties.h"
 #if ACE_ENABLE_GL
 #include "render_context/render_context.h"
 #endif
@@ -60,8 +61,10 @@ bool RSSurfaceOhosFuzzTest(const uint8_t* data, size_t size)
 
     auto rsSurfaceFrameOhosRaster = RSSurfaceFrameOhosRaster(GetData<int32_t>(), GetData<int32_t>());
 #if ACE_ENABLE_GL
-    RenderContext renderContext_;
-    rsSurfaceFrameOhosRaster.SetRenderContext(&renderContext_);
+    if (!RSSystemProperties::GetAceVulkanEnabled()) {
+        RenderContext renderContext_;
+        rsSurfaceFrameOhosRaster.SetRenderContext(&renderContext_);
+    }
 #endif
     (void)rsSurfaceFrameOhosRaster.GetBufferAge();
     rsSurfaceFrameOhosRaster.SetReleaseFence(GetData<int32_t>());

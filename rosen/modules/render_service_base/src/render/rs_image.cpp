@@ -191,7 +191,7 @@ void RSImage::ApplyImageFit()
     imageParameter.frameH = frameH;
     imageParameter.dstW = dstW;
     imageParameter.dstH = dstH;
-    RectF tempRectF = dstRect_; 
+    RectF tempRectF = dstRect_;
     dstRect_ = ApplyImageFitSwitch(imageParameter, imageFit_, tempRectF);
 }
 
@@ -227,6 +227,10 @@ void RSImage::ApplyCanvasClip(Drawing::Canvas& canvas)
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 static SkImage::CompressionType PixelFormatToCompressionType(Media::PixelFormat pixelFormat) {
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return SkImage::CompressionType::kNone;
+    }
+
     switch (pixelFormat) {
         case Media::PixelFormat::ASTC_4x4: return SkImage::CompressionType::kASTC_RGBA8_4x4;
         case Media::PixelFormat::ASTC_6x6: return SkImage::CompressionType::kASTC_RGBA8_6x6;
@@ -240,6 +244,9 @@ static SkImage::CompressionType PixelFormatToCompressionType(Media::PixelFormat 
 void RSImage::UploadGpu(RSPaintFilterCanvas& canvas)
 {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return;
+    }
     if (compressData_) {
         auto cache = RSImageCache::Instance().GetRenderSkiaImageCacheByPixelMapId(uniqueId_, gettid());
         std::lock_guard<std::mutex> lock(mutex_);
@@ -340,11 +347,13 @@ void RSImage::DrawImageRepeatRect(const Drawing::SamplingOptions& samplingOption
     // draw repeat rect
 #ifndef USE_ROSEN_DRAWING
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
 #if !defined(RS_ENABLE_PARALLEL_UPLOAD) || !defined(RS_ENABLE_UNI_RENDER)
-    if (pixelMap_ != nullptr && image_ == nullptr) {
-        ConvertPixelMapToSkImage();
-    }
+        if (pixelMap_ != nullptr && image_ == nullptr) {
+            ConvertPixelMapToSkImage();
+        }
 #endif
+    }
 #else
     ConvertPixelMapToSkImage();
 #endif
@@ -406,6 +415,9 @@ void RSImage::SetCompressData(
 #endif
 {
 #ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return;
+    }
     compressData_ = data;
     if (compressData_) {
         srcRect_.SetAll(0.0, 0.0, width, height);
@@ -423,6 +435,9 @@ void RSImage::SetCompressData(
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 void RSImage::SetCompressData(const sk_sp<SkData> compressData)
 {
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return;
+    }
     isDrawn_ = false;
     compressData_ = compressData;
 }
@@ -647,11 +662,13 @@ RSImage* RSImage::Unmarshalling(Parcel& parcel)
     rsImage->MarkRenderServiceImage();
     RSImageBase::IncreaseCacheRefCount(uniqueId, useSkImage, pixelMap);
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-    if (pixelMap != nullptr) {
-        rsImage->ConvertPixelMapToSkImage();
-    }
+        if (pixelMap != nullptr) {
+            rsImage->ConvertPixelMapToSkImage();
+        }
 #endif
+    }
 #endif
     return rsImage;
 }

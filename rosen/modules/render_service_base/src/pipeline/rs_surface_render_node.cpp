@@ -275,17 +275,19 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
 {
     RSRenderNode::OnTreeStateChanged();
 #ifdef RS_ENABLE_GL
-    if (grContext_ && !IsOnTheTree()) {
-        if (auto context = GetContext().lock()) {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        if (grContext_ && !IsOnTheTree()) {
+            if (auto context = GetContext().lock()) {
 #ifndef USE_ROSEN_DRAWING
-            RS_TRACE_NAME_FMT("need purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
-                GetId(), GetName().c_str());
+                RS_TRACE_NAME_FMT("need purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
+                    GetId(), GetName().c_str());
 #endif
-            if (IsLeashWindow()) {
-                context->MarkNeedPurge(RSContext::PurgeType::GENTLY);
-            }
-            if (GetName().substr(0, 3) == "SCB") {
-                context->MarkNeedPurge(RSContext::PurgeType::STRONGLY);
+                if (IsLeashWindow()) {
+                    context->MarkNeedPurge(RSContext::PurgeType::GENTLY);
+                }
+                if (GetName().substr(0, 3) == "SCB") {
+                    context->MarkNeedPurge(RSContext::PurgeType::STRONGLY);
+                }
             }
         }
     }

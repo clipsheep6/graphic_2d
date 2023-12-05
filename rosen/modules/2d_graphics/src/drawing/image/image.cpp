@@ -105,6 +105,9 @@ bool Image::BuildFromTexture(GPUContext& gpuContext, const VKTextureInfo& info, 
     BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
     void (*deleteFunc)(void*), void* cleanupHelper)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return false;
+    }
     return imageImplPtr->BuildFromTexture(gpuContext, info, origin, bitmapFormat,
         colorSpace, deleteFunc, cleanupHelper);
 }

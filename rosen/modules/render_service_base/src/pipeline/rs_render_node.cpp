@@ -1610,6 +1610,9 @@ sk_sp<SkImage> RSRenderNode::GetCompletedImage(RSPaintFilterCanvas& canvas, uint
         return completeImage;
     }
 #if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return completeImage;
+    }
     GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin;
     auto backendTexture = completeImage->getBackendTexture(false, &origin);
     if (!backendTexture.isValid()) {

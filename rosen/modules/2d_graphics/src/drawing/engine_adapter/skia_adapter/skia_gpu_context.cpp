@@ -94,6 +94,9 @@ bool SkiaGPUContext::BuildFromGL(const GPUContextOptions& options)
 #ifdef RS_ENABLE_VK
 bool SkiaGPUContext::BuildFromVK(const GrVkBackendContext& context)
 {
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        return false;
+    }
     grContext_ = GrDirectContext::MakeVulkan(context);
     return grContext_ != nullptr ? true : false;
 }

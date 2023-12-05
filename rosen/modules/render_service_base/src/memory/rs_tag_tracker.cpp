@@ -117,8 +117,10 @@ RSTagTracker::RSTagTracker(GrContext* grContext, NodeId nodeId, RSTagTracker::TA
         return;
     }
 #ifdef RS_ENABLE_GL
-    GrGpuResourceTag tag(ExtractPid(nodeId), 0, nodeId, tagType);
-    grContext_->setCurrentGrResourceTag(tag);
+    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+        GrGpuResourceTag tag(ExtractPid(nodeId), 0, nodeId, tagType);
+        grContext_->setCurrentGrResourceTag(tag);
+    }
 #endif
 }
 #else

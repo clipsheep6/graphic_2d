@@ -1610,6 +1610,9 @@ sk_sp<SkImage> RSRenderNode::GetCompletedImage(RSPaintFilterCanvas& canvas, uint
         return completeImage;
     }
 #if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return completeImage;
+    }
     GrSurfaceOrigin origin = kBottomLeft_GrSurfaceOrigin;
     auto backendTexture = completeImage->getBackendTexture(false, &origin);
     if (!backendTexture.isValid()) {
@@ -2209,6 +2212,9 @@ void RSRenderNode::UpdateCompletedCacheSurface()
 void RSRenderNode::SetTextureValidFlag(bool isValid)
 {
 #ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return;
+	}
     std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
     isTextureValid_ = isValid;
 #endif
@@ -2220,7 +2226,9 @@ void RSRenderNode::ClearCacheSurface(bool isClearCompletedCacheSurface)
     if (isClearCompletedCacheSurface) {
         cacheCompletedSurface_ = nullptr;
 #if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
-        isTextureValid_ = false;
+        if (!RSSystemProperties::GetRsVulkanEnabled()) {
+            isTextureValid_ = false;
+	    }
 #endif
     }
 }

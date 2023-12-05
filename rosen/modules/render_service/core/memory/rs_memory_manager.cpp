@@ -650,6 +650,9 @@ void MemoryManager::DumpDrawingGpuMemory(DfxString& log, const GrContext* grCont
     }
     /////////////////////////////GPU/////////////////////////
 #ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        return;
+    }
     std::string gpuInfo;
     // total
     DumpGpuCache(log, grContext, nullptr, gpuInfo);

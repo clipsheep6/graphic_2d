@@ -120,7 +120,7 @@ public:
 
     // Aliases
     using DrawablePtr = std::unique_ptr<RSPropertyDrawable>;
-    using DrawableVec = std::vector<DrawablePtr>;
+    using DrawableVec = std::array<DrawablePtr, static_cast<size_t>(RSPropertyDrawableSlot::MAX)>;
     using DrawableGenerator = std::function<DrawablePtr(const RSRenderContent&)>;
 
     // Generator Utilities

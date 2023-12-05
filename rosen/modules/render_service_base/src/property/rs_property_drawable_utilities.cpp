@@ -77,15 +77,36 @@ void RSCustomRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilter
 RSModifierDrawable::RSModifierDrawable(RSModifierType type) : type_(type) {}
 void RSModifierDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    auto itr = content.drawCmdModifiers_.find(type_);
-    if (itr == content.drawCmdModifiers_.end() || itr->second.empty()) {
+    // single-frame-compose needs to access render node & mutable draw cmd list during the render process
+    // PLANNING: this is a temporarily workaround, should refactor later
+    auto nodePtr = content.GetRenderProperties().backref_.lock();
+    if (nodePtr == nullptr) {
+        return;
+    }
+    auto& node = *nodePtr;
+    auto& drawCmdModifiers = const_cast<RSRenderContent::DrawCmdContainer&>(content.drawCmdModifiers_);
+    auto itr = drawCmdModifiers.find(type_);
+    if (itr == drawCmdModifiers.end() || itr->second.empty()) {
         return;
     }
     // temporary fix, will refactor RSRenderModifier::Apply to workaround this issue
     RSModifierContext context = { const_cast<RSRenderContent&>(content).renderProperties_, &canvas };
-    // PLANNING: add back single-frame compose
-    for (const auto& modifier : itr->second) {
-        modifier->Apply(context);
+    if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
+        bool needSkip = false;
+        if (node.GetNodeIsSingleFrameComposer() && node.singleFrameComposer_ != nullptr) {
+            needSkip = node.singleFrameComposer_->SingleFrameModifierAddToList(type_, itr->second);
+        }
+        for (const auto& modifier : itr->second) {
+            if (node.singleFrameComposer_ != nullptr &&
+                node.singleFrameComposer_->SingleFrameIsNeedSkip(needSkip, modifier)) {
+                continue;
+            }
+            modifier->Apply(context);
+        }
+    } else {
+        for (const auto& modifier : itr->second) {
+            modifier->Apply(context);
+        }
     }
 }
 

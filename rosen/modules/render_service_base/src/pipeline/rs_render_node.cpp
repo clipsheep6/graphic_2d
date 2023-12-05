@@ -145,9 +145,6 @@ void RSRenderNode::OnRegister()
 {
     renderContent_->type_ = GetType();
     renderContent_->renderProperties_.backref_ = weak_from_this();
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        renderContent_->propertyDrawablesVec_.resize(static_cast<size_t>(RSPropertyDrawableSlot::MAX));
-    }
 }
 
 bool RSRenderNode::IsPureContainer() const

@@ -20,9 +20,7 @@
 
 #include "vulkan_application.h"
 #include "vulkan_device.h"
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 #include "vulkan_native_surface.h"
 #include "vulkan_surface.h"
 #include "vulkan_swapchain.h"
@@ -141,18 +139,14 @@ GrVkBackendContext& VulkanWindow::GetSkiaBackendContext() {
 bool VulkanWindow::CreateSkiaGrContext() {
 
   if (!CreateSkiaBackendContext(&sk_backend_context_)) {
-#ifdef RS_ENABLE_VK
     LOGE("CreateSkiaGrContext CreateSkiaBackendContext is false");
-#endif
     return false;
   }
 
   sk_sp<GrDirectContext> context = GrDirectContext::MakeVulkan(sk_backend_context_);
 
   if (context == nullptr) {
-#ifdef RS_ENABLE_VK
     LOGE("CreateSkiaGrContext context is null");
-#endif
     return false;
   }
 
@@ -167,17 +161,13 @@ bool VulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context) {
   auto getProc = vk->CreateSkiaGetProc();
 
   if (getProc == nullptr) {
-#ifdef RS_ENABLE_VK
     LOGE("CreateSkiaBackendContext getProc is null");
-#endif
     return false;
   }
 
   uint32_t skia_features = 0;
   if (!logical_device_->GetPhysicalDeviceFeaturesSkia(&skia_features)) {
-#ifdef RS_ENABLE_VK
     LOGE("CreateSkiaBackendContext GetPhysicalDeviceFeaturesSkia is false");
-#endif
     return false;
   }
 
@@ -243,9 +233,7 @@ sk_sp<SkSurface> VulkanWindow::AcquireSurface(int bufferCount) {
 
     if (acquire_result ==
         VulkanSwapchain::AcquireStatus::ErrorSurfaceOutOfDate) {
-#ifdef RS_ENABLE_VK
       LOGE("AcquireSurface surface out of date");
-#endif
       // Surface out of date. Recreate the swapchain at the new configuration.
       if (RecreateSwapchain()) {
         // Swapchain was recreated, try surface acquisition again.
@@ -281,7 +269,6 @@ bool VulkanWindow::SwapBuffers() {
   return swapchain_->Submit();
 }
 
-#ifdef RS_ENABLE_VK
 void VulkanWindow::PresentAll() {
   //-----------------------------------------
   // create shared fences if not already
@@ -347,44 +334,33 @@ VkPhysicalDevice VulkanWindow::GetPhysicalDevice() {
 VulkanProcTable &VulkanWindow::GetVkProcTable() {
   return *vk;
 }
-#endif
 
 bool VulkanWindow::RecreateSwapchain() {
-#ifdef RS_ENABLE_VK
   if (is_offscreen_) {
       LOGE("offscreen vulkan window, don't need swapchian");
       return false;
   }
-#endif
   // This way, we always lose our reference to the old swapchain. Even if we
   // cannot create a new one to replace it.
   auto old_swapchain = std::move(swapchain_);
 
   if (!vk->IsValid()) {
-#ifdef RS_ENABLE_VK
     LOGE("RecreateSwapchain vk not valid");
-#endif
     return false;
   }
 
   if (logical_device_ == nullptr || !logical_device_->IsValid()) {
-#ifdef RS_ENABLE_VK
     LOGE("RecreateSwapchain logical_device_ not valid");
-#endif
     return false;
   }
 
   if (surface_ == nullptr || !surface_->IsValid()) {
-#ifdef RS_ENABLE_VK
     LOGE("RecreateSwapchain surface_ not valid");
-#endif
     return false;
   }
 
   if (skia_gr_context_ == nullptr) {
-#ifdef RS_ENABLE_VK
     LOGE("RecreateSwapchain skia_gr_context_ not valid");
-#endif
     return false;
   }
 
@@ -393,9 +369,7 @@ bool VulkanWindow::RecreateSwapchain() {
       std::move(old_swapchain), logical_device_->GetGraphicsQueueIndex());
 
   if (!swapchain->IsValid()) {
-#ifdef RS_ENABLE_VK
     LOGE("RecreateSwapchain swapchain not valid");
-#endif
     return false;
   }
 

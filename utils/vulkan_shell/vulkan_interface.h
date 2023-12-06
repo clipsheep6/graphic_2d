@@ -19,12 +19,9 @@
 #include <string>
 
 
-
-#ifdef RS_ENABLE_VK
 #ifndef VK_USE_PLATFORM_OHOS
 #define VK_USE_PLATFORM_OHOS
 #endif  // VK_USE_PLATFORM_OHOS
-#endif  // RS_ENABLE_VK
 
 #if !VULKAN_LINK_STATICALLY
 #define VK_NO_PROTOTYPES 1

@@ -19,9 +19,7 @@
 #include <vector>
 
 #include "vulkan_device.h"
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 #include "vulkan_proc_table.h"
 #include "vulkan_utilities.h"
 

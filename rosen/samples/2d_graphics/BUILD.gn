@@ -122,12 +122,8 @@ ohos_executable("drawing_engine_sample") {
     "VK_USE_PLATFORM_OHOS",
     "NDEBUG",
   ]
-  #defines = [ "USE_CANVASKIT0310_SKIA" ]
-  #defines += gpu_defines
-  deps += [
-    #"//third_party/skia:skia",
-  ]
-  if (graphic_2d_feature_enable_flutter_vulkan) {
+  if (graphic_2d_feature_enable_vulkan) {
+    "$graphic_2d_root/utils/vulkan_shell",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",

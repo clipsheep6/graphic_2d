@@ -156,33 +156,6 @@ OnVulkanDebugReportCallback(VkDebugReportFlagsEXT flags,
 
   padding += 1;
 
-#ifndef RS_ENABLE_VK
-  std::stringstream stream;
-
-  stream << std::endl;
-
-  stream << "--- Vulkan Debug Report  ----------------------------------------";
-
-  stream << std::endl;
-
-  for (const auto& item : items) {
-    stream << "| " << std::setw(static_cast<int>(padding)) << item.first
-           << std::setw(0) << ": " << item.second << std::endl;
-  }
-
-  stream << "-----------------------------------------------------------------";
-
-  if (flags & kVulkanErrorFlags) {
-    if (ValidationErrorsFatal()) {
-      FML_DCHECK(false) << stream.str();
-    } else {
-      FML_LOG(ERROR) << stream.str();
-    }
-  } else {
-    FML_LOG(INFO) << stream.str();
-  }
-#endif
-
   // Returning false tells the layer not to stop when the event occurs, so
   // they see the same behavior with and without validation layers enabled.
   return VK_FALSE;

@@ -27,10 +27,6 @@ class VulkanDebugReport {
   const VulkanHandle<VkInstance>& application_;
   VulkanHandle<VkDebugReportCallbackEXT> handle_;
   bool valid_;
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanDebugReport);
-#endif
 };
 
 }  // namespace vulkan

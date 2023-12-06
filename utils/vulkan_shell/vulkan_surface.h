@@ -37,10 +37,6 @@ class VulkanSurface {
   std::unique_ptr<VulkanNativeSurface> native_surface_;
   VulkanHandle<VkSurfaceKHR> surface_;
   bool valid_;
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanSurface);
-#endif
 };
 
 }  // namespace vulkan

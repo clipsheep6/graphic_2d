@@ -55,10 +55,6 @@ class VulkanApplication {
   bool ExtensionSupported(
       const std::vector<VkExtensionProperties>& supported_extensions,
       std::string extension_name);
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanApplication);
-#endif
 };
 
 }  // namespace vulkan

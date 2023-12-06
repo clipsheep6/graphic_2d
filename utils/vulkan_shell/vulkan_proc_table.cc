@@ -88,10 +88,6 @@ bool VulkanProcTable::SetupLoaderProcAddresses() {
 
   VulkanHandle<VkInstance> null_instance(VK_NULL_HANDLE, nullptr);
 
-#ifndef RS_ENABLE_VK
-  ACQUIRE_PROC(CreateInstance, null_instance);
-  ACQUIRE_PROC(EnumerateInstanceExtensionProperties, null_instance);
-#endif
   ACQUIRE_PROC(EnumerateInstanceLayerProperties, null_instance);
 
   return true;
@@ -134,13 +130,6 @@ bool VulkanProcTable::SetupInstanceProcAddresses(
   // returns false on failure). Wrap the optional proc acquisitions in an
   // anonymous lambda and invoke it. We don't really care about the result since
   // users of Debug reporting functions check for their presence explicitly.
-#ifndef RS_ENABLE_VK
-  [this, &handle]() -> bool {
-    ACQUIRE_PROC(CreateDebugReportCallbackEXT, handle);
-    ACQUIRE_PROC(DestroyDebugReportCallbackEXT, handle);
-    return true;
-  }();
-#endif
 
   instance_ = {handle, nullptr};
   return true;

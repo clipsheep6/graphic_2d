@@ -24,14 +24,8 @@ class VulkanBackbuffer {
 
   bool IsValid() const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool WaitFences();
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool ResetFences();
 
   const VulkanHandle<VkFence>& GetUsageFence() const;
@@ -69,10 +63,6 @@ class VulkanBackbuffer {
 
 #ifdef RS_ENABLE_VK
   bool multi_threading_ = false;
-#endif
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanBackbuffer);
 #endif
 };
 

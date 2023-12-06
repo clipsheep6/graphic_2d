@@ -90,14 +90,7 @@ class VulkanWindow {
 
   bool CreateSkiaBackendContext(GrVkBackendContext* context);
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool RecreateSwapchain();
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanWindow);
-#endif
 };
 
 }  // namespace vulkan

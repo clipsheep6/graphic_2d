@@ -23,19 +23,10 @@ class VulkanCommandBuffer {
 
   VkCommandBuffer Handle() const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool Begin() const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool End() const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool InsertPipelineBarrier(
       VkPipelineStageFlagBits src_stage_flags,
       VkPipelineStageFlagBits dest_stage_flags,
@@ -53,10 +44,6 @@ class VulkanCommandBuffer {
   const VulkanHandle<VkCommandPool>& pool_;
   VulkanHandle<VkCommandBuffer> handle_;
   bool valid_;
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanCommandBuffer);
-#endif
 };
 
 }  // namespace vulkan

@@ -20,9 +20,6 @@ class VulkanImage {
 
   bool IsValid() const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool InsertImageMemoryBarrier(const VulkanCommandBuffer& command_buffer,
                                 VkPipelineStageFlagBits src_pipline_bits,
                                 VkPipelineStageFlagBits dest_pipline_bits,
@@ -34,10 +31,6 @@ class VulkanImage {
   VkImageLayout layout_;
   uint32_t /* mask of VkAccessFlagBits */ access_flags_;
   bool valid_;
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanImage);
-#endif
 };
 
 }  // namespace vulkan

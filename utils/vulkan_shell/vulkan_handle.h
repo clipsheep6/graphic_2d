@@ -69,10 +69,6 @@ class VulkanHandle {
     handle_ = VK_NULL_HANDLE;
     disposer_ = nullptr;
   }
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanHandle);
-#endif
 };
 
 }  // namespace vulkan

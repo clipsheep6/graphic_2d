@@ -58,9 +58,6 @@ class VulkanSwapchain {
 
   /// Submit a previously acquired. There must not be consecutive calls to
   /// |Submit| without and interleaving |AcquireFrame|.
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool Submit();
 
   SkISize GetSize() const;
@@ -132,10 +129,6 @@ class VulkanSwapchain {
   VulkanBackbuffer* GetNextBackbuffer();
 #endif  // OS_ANDROID
 #endif  // RS_ENABLE_VK
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanSwapchain);
-#endif
 };
 
 }  // namespace vulkan

@@ -8,26 +8,6 @@
 #include <string>
 
 
-#ifndef RS_ENABLE_VK
-#if !defined(FUCHSIA_SDK)
-#define VULKAN_LINK_STATICALLY OS_FUCHSIA
-#endif  //  !defined(FUCHSIA_SDK)
-
-#if OS_ANDROID
-#ifndef VK_USE_PLATFORM_ANDROID_KHR
-#define VK_USE_PLATFORM_ANDROID_KHR 1
-#endif  // VK_USE_PLATFORM_ANDROID_KHR
-#endif  // OS_ANDROID
-
-#if OS_FUCHSIA
-#ifndef VK_USE_PLATFORM_MAGMA_KHR
-#define VK_USE_PLATFORM_MAGMA_KHR 1
-#endif  // VK_USE_PLATFORM_MAGMA_KHR
-#ifndef VK_USE_PLATFORM_FUCHSIA
-#define VK_USE_PLATFORM_FUCHSIA 1
-#endif  // VK_USE_PLATFORM_FUCHSIA
-#endif  // OS_FUCHSIA
-#endif  // not define RS_ENABLE_VK
 
 #ifdef RS_ENABLE_VK
 #ifndef VK_USE_PLATFORM_OHOS

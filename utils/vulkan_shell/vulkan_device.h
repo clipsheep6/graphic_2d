@@ -35,48 +35,27 @@ class VulkanDevice {
 
   void ReleaseDeviceOwnership();
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool GetSurfaceCapabilities(const VulkanSurface& surface,
                               VkSurfaceCapabilitiesKHR* capabilities) const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool GetPhysicalDeviceFeatures(VkPhysicalDeviceFeatures* features) const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool GetPhysicalDeviceFeaturesSkia(
       uint32_t* /* mask of GrVkFeatureFlags */ features) const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   int ChooseSurfaceFormat(const VulkanSurface& surface,
                           std::vector<VkFormat> desired_formats,
                           VkSurfaceFormatKHR* format) const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool ChoosePresentMode(const VulkanSurface& surface,
                          VkPresentModeKHR* present_mode) const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool QueueSubmit(std::vector<VkPipelineStageFlags> wait_dest_pipeline_stages,
                    const std::vector<VkSemaphore>& wait_semaphores,
                    const std::vector<VkSemaphore>& signal_semaphores,
                    const std::vector<VkCommandBuffer>& command_buffers,
                    const VulkanHandle<VkFence>& fence) const;
 
-#ifndef RS_ENABLE_VK
-  FML_WARN_UNUSED_RESULT
-#endif
   bool WaitIdle() const;
   VulkanProcTable& vk;
   VulkanHandle<VkPhysicalDevice> physical_device_;
@@ -92,10 +71,6 @@ class VulkanDevice {
   bool valid_;
 
   std::vector<VkQueueFamilyProperties> GetQueueFamilyProperties() const;
-
-#ifndef RS_ENABLE_VK
-  FML_DISALLOW_COPY_AND_ASSIGN(VulkanDevice);
-#endif
 };
 
 }  // namespace vulkan

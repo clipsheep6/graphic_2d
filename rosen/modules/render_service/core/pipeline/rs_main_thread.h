@@ -214,6 +214,10 @@ public:
     {
         return curDrawStatusVec_;
     }
+    void SetAppVSyncDistributor(const sptr<VSyncDistributor>& appVSyncDistributor)
+    {
+        appVSyncDistributor_ = appVSyncDistributor;
+    }
 
     DeviceType GetDeviceType() const;
     bool IsSingleDisplay();
@@ -253,8 +257,10 @@ private:
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void CalcOcclusion();
-    bool CheckQosVisChanged(std::map<uint32_t, RSVisibleLevel>& pidVisMap);
-    void CallbackToQOS(std::map<uint32_t, RSVisibleLevel>& pidVisMap);
+    bool CheckSurfaceVisChanged(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+        std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
+    void SetVSyncRateByVisibleLevel(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+        std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void CallbackToWMS(VisibleData& curVisVec);
     void SendCommands();
     void SurfaceOcclusionCallback();
@@ -349,6 +355,7 @@ private:
     std::condition_variable unmarshalTaskCond_;
     std::mutex unmarshalMutex_;
     int32_t unmarshalFinishedCount_ = 0;
+    sptr<VSyncDistributor> appVSyncDistributor_ = nullptr;
 
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
     RSTaskMessage::RSTask uploadTextureBarrierTask_;
@@ -401,6 +408,8 @@ private:
     uint32_t appWindowNum_ = 0;
     uint32_t requestNextVsyncNum_ = 0;
     bool lastFrameHasFilter_ = false;
+    bool vsyncControlEnabled_ = true;
+    bool systemAnimatedScenesEnabled_ = false;
 
     std::shared_ptr<RSBaseRenderEngine> renderEngine_;
     std::shared_ptr<RSBaseRenderEngine> uniRenderEngine_;
@@ -461,6 +470,9 @@ private:
     // for surface occlusion change callback
     std::mutex surfaceOcclusionMutex_;
     std::vector<NodeId> lastRegisteredSurfaceOnTree_;
+    std::mutex systemAnimatedScenesMutex_;
+    int32_t threeFingerCnt_ = 0;
+    int32_t systemAnimatedScenesCnt_ = 0;
     std::unordered_map<NodeId, // map<node ID, <pid, callback, partition points vector, level>>
         std::tuple<pid_t, sptr<RSISurfaceOcclusionChangeCallback>,
         std::vector<float>, uint8_t>> surfaceOcclusionListeners_;

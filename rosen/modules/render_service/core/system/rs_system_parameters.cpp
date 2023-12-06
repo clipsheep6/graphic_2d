@@ -68,6 +68,22 @@ QuickSkipPrepareType RSSystemParameters::GetQuickSkipPrepareType()
     return static_cast<QuickSkipPrepareType>(ConvertToInt(type, DEFAULT_QUICK_SKIP_PREPARE_TYPE_VALUE));
 }
 
+bool RSSystemParameters::GetVSyncControlEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.vsynccontrol.enabled", "1");
+    int changed = 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enable, 1) != 0;
+}
+
+bool RSSystemParameters::GetSystemAnimatedScenesEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.systemanimatedscenes.enabled", "0");
+    int changed = 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enable, 1) != 0;
+}
+
 bool RSSystemParameters::GetFilterCacheOcculusionEnabled()
 {
     static bool filterCacheOcclusionEnabled =

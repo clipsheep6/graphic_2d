@@ -861,7 +861,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
                                                     VisibleData& visibleVec,
                                                     std::map<uint32_t, RSVisibleLevel>& pidVisMap,
                                                     bool needSetVisibleRegion,
-                                                    RSVisibleLevel visibleLevel)
+                                                    RSVisibleLevel visibleLevel,
+                                                    int32_t systemAnimatedScenesCnt)
 {
     if (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE || IsAbilityComponent()) {
         SetOcclusionVisible(true);
@@ -875,7 +876,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
     }
 
     // collect visible changed pid
-    if (qosPidCal_ && GetType() == RSRenderNodeType::SURFACE_NODE && !IsMultiInstance()) {
+    if (qosPidCal_ && GetType() == RSRenderNodeType::SURFACE_NODE &&
+        systemAnimatedScenesCnt == 0 && !IsMultiInstance()) {
         uint32_t tmpPid = ExtractPid(GetId());
         pidVisMap[tmpPid] = visibleLevel;
     }
@@ -890,7 +892,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
 
     for (auto& child : GetChildren()) {
         if (auto surfaceChild = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
-            surfaceChild->SetVisibleRegionRecursive(region, visibleVec, pidVisMap, needSetVisibleRegion, visibleLevel);
+            surfaceChild->SetVisibleRegionRecursive(region, visibleVec, pidVisMap, needSetVisibleRegion,
+                visibleLevel, systemAnimatedScenesCnt);
         }
     }
 }

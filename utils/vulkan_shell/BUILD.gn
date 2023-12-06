@@ -70,7 +70,6 @@ if (graphic_2d_feature_enable_vulkan) {
       "vulkan_native_surface.cc",
       "vulkan_native_surface_ohos.cc",
       "vulkan_proc_table.cc",
-      "vulkan_provider.cc",
       "vulkan_surface.cc",
       "vulkan_swapchain.cc",
       "vulkan_utilities.cc",

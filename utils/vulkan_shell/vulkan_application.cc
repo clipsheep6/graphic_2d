@@ -1,6 +1,17 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "vulkan_application.h"
 
@@ -67,7 +78,6 @@ VulkanApplication::VulkanApplication(
 
   // Configure init structs.
 
-#ifdef RS_ENABLE_VK
   const VkApplicationInfo info = {
       .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
       .pNext = nullptr,
@@ -77,17 +87,6 @@ VulkanApplication::VulkanApplication(
       .engineVersion = VK_MAKE_VERSION(1, 0, 0),
       .apiVersion = api_version_,
   };
-#else
-  const VkApplicationInfo info = {
-      .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-      .pNext = nullptr,
-      .pApplicationName = application_name.c_str(),
-      .applicationVersion = application_version,
-      .pEngineName = "FlutterEngine",
-      .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-      .apiVersion = api_version_,
-  };
-#endif
 
   const VkInstanceCreateInfo create_info = {
       .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -106,49 +105,28 @@ VulkanApplication::VulkanApplication(
 
   if (VK_CALL_LOG_ERROR(vk.CreateInstance(&create_info, nullptr, &instance)) !=
       VK_SUCCESS) {
-#ifdef RS_ENABLE_VK
     LOGE("Could not create application instance.");
-#else
-    FML_DLOG(INFO) << "Could not create application instance.";
-#endif
     return;
   }
 
   // Now that we have an instance, setup instance proc table entries.
   if (!vk.SetupInstanceProcAddresses(instance)) {
-#ifdef RS_ENABLE_VK
     LOGE("Could not setup instance proc addresses.");
-#else
-    FML_DLOG(INFO) << "Could not setup instance proc addresses.";
-#endif
     return;
   }
 
   instance_ = {instance, [this](VkInstance i) {
-#ifdef RS_ENABLE_VK
                  LOGE("Destroying Vulkan instance");
-#else
-                 FML_LOG(INFO) << "Destroying Vulkan instance";
-#endif
                  vk.DestroyInstance(i, nullptr);
                }};
 
   if (enable_instance_debugging) {
     auto debug_report = std::make_unique<VulkanDebugReport>(vk, instance_);
     if (!debug_report->IsValid()) {
-#ifdef RS_ENABLE_VK
       LOGE("Vulkan debugging was enabled but could not be setup for this instance.");
-#else
-      FML_LOG(INFO) << "Vulkan debugging was enabled but could not be setup "
-                       "for this instance.";
-#endif
     } else {
       debug_report_ = std::move(debug_report);
-#ifdef RS_ENABLE_VK
       LOGE("Debug reporting is enabled.");
-#else
-      FML_DLOG(INFO) << "Debug reporting is enabled.";
-#endif
     }
   }
 
@@ -181,21 +159,13 @@ std::vector<VkPhysicalDevice> VulkanApplication::GetPhysicalDevices() const {
   uint32_t device_count = 0;
   if (VK_CALL_LOG_ERROR(vk.EnumeratePhysicalDevices(instance_, &device_count,
                                                     nullptr)) != VK_SUCCESS) {
-#ifdef RS_ENABLE_VK
     LOGE("Could not enumerate physical device.");
-#else
-    FML_DLOG(INFO) << "Could not enumerate physical device.";
-#endif
     return {};
   }
 
   if (device_count == 0) {
     // No available devices.
-#ifdef RS_ENABLE_VK
     LOGE("No physical devices found.");
-#else
-    FML_DLOG(INFO) << "No physical devices found.";
-#endif
     return {};
   }
 
@@ -205,11 +175,7 @@ std::vector<VkPhysicalDevice> VulkanApplication::GetPhysicalDevices() const {
 
   if (VK_CALL_LOG_ERROR(vk.EnumeratePhysicalDevices(
           instance_, &device_count, physical_devices.data())) != VK_SUCCESS) {
-#ifdef RS_ENABLE_VK
     LOGE("Could not enumerate physical device.");
-#else
-    FML_DLOG(INFO) << "Could not enumerate physical device.";
-#endif
     return {};
   }
 
@@ -224,11 +190,7 @@ VulkanApplication::AcquireFirstCompatibleLogicalDevice() const {
       return logical_device;
     }
   }
-#ifdef RS_ENABLE_VK
   LOGE("Could not acquire compatible logical device.");
-#else
-  FML_DLOG(INFO) << "Could not acquire compatible logical device.";
-#endif
   return nullptr;
 }
 

@@ -40,8 +40,8 @@ class RSVulkanSwapchain {
   RSVulkanSwapchain(const RSVulkanProcTable& vk,
                   const RSVulkanDevice& device,
                   const RSVulkanSurface& surface,
-                  GrDirectContext* skia_context,
-                  std::unique_ptr<RSVulkanSwapchain> old_swapchain,
+                  GrDirectContext* skiaContext,
+                  std::unique_ptr<RSVulkanSwapchain> oldSwapchain,
                   uint32_t queue_family_index);
 
   ~RSVulkanSwapchain();
@@ -77,40 +77,40 @@ class RSVulkanSwapchain {
 
   void AddToPresent();
 
-  static void PresentAll(RSVulkanHandle<VkFence>& shared_fence);
+  static void PresentAll(RSVulkanHandle<VkFence>& sharedFence);
 
  private:
   const RSVulkanProcTable& vk;
   const RSVulkanDevice& device_;
   VkSurfaceCapabilitiesKHR capabilities_;
-  VkSurfaceFormatKHR surface_format_;
+  VkSurfaceFormatKHR surfaceFormat_;
   RSVulkanHandle<VkSwapchainKHR> swapchain_;
   std::vector<std::unique_ptr<RSVulkanBackbuffer>> backbuffers_;
   std::vector<std::unique_ptr<RSVulkanImage>> images_;
   std::vector<sk_sp<SkSurface>> surfaces_;
-  VkPipelineStageFlagBits current_pipeline_stage_;
-  size_t current_backbuffer_index_;
-  size_t current_image_index_;
+  VkPipelineStageFlagBits currentPipelineStage_;
+  size_t currentBackbufferIndex_;
+  size_t currentImageIndex_;
   bool valid_;
-  static std::mutex map_mutex_;
-  static std::unordered_map<std::thread::id, RSVulkanSwapchain*> to_be_present_;
+  static std::mutex mapMutex_;
+  static std::unordered_map<std::thread::id, RSVulkanSwapchain*> toBePresent_;
 
   std::vector<VkImage> GetImages() const;
 
-  bool CreateSwapchainImages(GrDirectContext* skia_context,
-                             SkColorType color_type,
-                             sk_sp<SkColorSpace> color_space);
+  bool CreateSwapchainImages(GrDirectContext* skiaContext,
+                             SkColorType colorType,
+                             sk_sp<SkColorSpace> colorSpace);
 
-  sk_sp<SkSurface> CreateSkiaSurface(GrDirectContext* skia_context,
+  sk_sp<SkSurface> CreateSkiaSurface(GrDirectContext* skiaContext,
                                      VkImage image,
                                      const SkISize& size,
-                                     SkColorType color_type,
-                                     sk_sp<SkColorSpace> color_space) const;
+                                     SkColorType colorType,
+                                     sk_sp<SkColorSpace> colorSpace) const;
 
   RSVulkanBackbuffer* GetNextBackbuffer();
 
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_SWAPCHAIN_H_

@@ -44,8 +44,8 @@ class RSVulkanBackbuffer;
 class RSVulkanWindow {
  public:
   typedef std::shared_ptr<RSVulkanWindow> Ptr;
-  RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> native_surface,
-               bool is_offscreen = false);
+  RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> nativeSurface,
+               bool isOffscreen = false);
 
   ~RSVulkanWindow();
 
@@ -60,29 +60,29 @@ class RSVulkanWindow {
 
   bool FlushCommands();
   static void PresentAll();
-  static void InitializeVulkan(size_t thread_num = 0);
+  static void InitializeVulkan(size_t threadNum = 0);
   static bool WaitForSharedFence();
   static bool ResetSharedFence();
   static VkDevice GetDevice();
   static VkPhysicalDevice GetPhysicalDevice();
   static RSVulkanProcTable &GetVkProcTable();
 
-  static std::unique_ptr<RSVulkanDevice> logical_device_;
+  static std::unique_ptr<RSVulkanDevice> logicalDevice_;
   static RSVulkanProcTable* vk;
 
  public:
   bool valid_;
   static std::unique_ptr<RSVulkanApplication> application_;
-  bool is_offscreen_ = false;
-  static std::thread::id device_thread_;
-  static std::vector<RSVulkanHandle<VkFence>> shared_fences_;
-  static uint32_t shared_fence_index_;
+  bool isOffscreen_ = false;
+  static std::thread::id deviceThread_;
+  static std::vector<RSVulkanHandle<VkFence>> sharedFences_;
+  static uint32_t sharedFenceIndex_;
   static bool presenting_;
   std::unique_ptr<RSVulkanSurface> surface_;
   std::unique_ptr<RSVulkanSwapchain> swapchain_;
-  sk_sp<GrDirectContext> skia_gr_context_;
+  sk_sp<GrDirectContext> skiaGrContext_;
 
-  GrVkBackendContext sk_backend_context_;
+  GrVkBackendContext skBackendContext_;
 
   bool CreateSkiaGrContext();
 
@@ -91,6 +91,6 @@ class RSVulkanWindow {
   bool RecreateSwapchain();
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_WINDOW_H_

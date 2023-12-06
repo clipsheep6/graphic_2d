@@ -22,16 +22,16 @@
 
 namespace OHOS::Rosen::vulkan {
 
-RSVulkanNativeSurfaceOHOS::RSVulkanNativeSurfaceOHOS(struct NativeWindow* native_window) : native_window_(native_window)
+RSVulkanNativeSurfaceOHOS::RSVulkanNativeSurfaceOHOS(struct NativeWindow* native_window) : nativeWindow_(native_window)
 {
-    if (native_window_ == nullptr) {
+    if (nativeWindow_ == nullptr) {
         return;
     }
 }
 
 RSVulkanNativeSurfaceOHOS::~RSVulkanNativeSurfaceOHOS()
 {
-    if (native_window_ == nullptr) {
+    if (nativeWindow_ == nullptr) {
         return;
     }
 }
@@ -58,7 +58,7 @@ VkSurfaceKHR RSVulkanNativeSurfaceOHOS::CreateSurfaceHandle(
         .sType = VK_STRUCTURE_TYPE_SURFACE_CREATE_INFO_OHOS,
         .pNext = nullptr,
         .flags = 0,
-        .window = native_window_,
+        .window = nativeWindow_,
     };
 
     VkSurfaceKHR surface = VK_NULL_HANDLE;
@@ -73,14 +73,14 @@ VkSurfaceKHR RSVulkanNativeSurfaceOHOS::CreateSurfaceHandle(
 
 bool RSVulkanNativeSurfaceOHOS::IsValid() const
 {
-    return native_window_ != nullptr;
+    return nativeWindow_ != nullptr;
 }
 
 SkISize RSVulkanNativeSurfaceOHOS::GetSize() const
 {
     int width, height;
-    int err = NativeWindowHandleOpt(native_window_, GET_BUFFER_GEOMETRY, &height, &width);
-    return native_window_ == nullptr || err != OHOS::GSERROR_OK ? SkISize::Make(0, 0) : SkISize::Make(width, height);
+    int err = NativeWindowHandleOpt(nativeWindow_, GET_BUFFER_GEOMETRY, &height, &width);
+    return nativeWindow_ == nullptr || err != OHOS::GSERROR_OK ? SkISize::Make(0, 0) : SkISize::Make(width, height);
 }
 
-} // namespace OHOS::Rosen::vulkan 
+} // namespace OHOS::Rosen::vulkan

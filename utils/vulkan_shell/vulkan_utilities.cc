@@ -115,4 +115,4 @@ std::vector<std::string> DeviceLayersToEnable(
   return InstanceOrDeviceLayersToEnable(vk, physical_device);
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

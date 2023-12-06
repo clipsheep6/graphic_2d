@@ -51,28 +51,28 @@ class RSVulkanBackbuffer {
 
   RSVulkanCommandBuffer& GetRenderCommandBuffer();
 
-  void SetMultiThreading() { multi_threading_ = true; }
+  void SetMultiThreading() { multiThreading_ = true; }
 
-  void UnsetMultiThreading() { multi_threading_ = false; }
+  void UnsetMultiThreading() { multiThreading_ = false; }
 
-  bool IsMultiThreading() { return multi_threading_; }
+  bool IsMultiThreading() { return multiThreading_; }
 
  private:
   const RSVulkanProcTable& vk;
   const RSVulkanHandle<VkDevice>& device_;
   std::array<RSVulkanHandle<VkSemaphore>, 2> semaphores_;
   std::array<RSVulkanHandle<VkFence>, 2> use_fences_;
-  RSVulkanCommandBuffer usage_command_buffer_;
-  RSVulkanCommandBuffer render_command_buffer_;
+  RSVulkanCommandBuffer usageCommandBuffer_;
+  RSVulkanCommandBuffer renderCommandBuffer_;
   bool valid_;
 
   bool CreateSemaphores();
 
   bool CreateFences();
 
-  bool multi_threading_ = false;
+  bool multiThreading_ = false;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_BACKBUFFER_H_

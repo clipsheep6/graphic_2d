@@ -40,19 +40,19 @@ static uint32_t FindQueueIndex(const std::vector<VkQueueFamilyProperties>& prope
 }
 
 RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysicalDevice> physical_device)
-    : vk(p_vk), physical_device_(std::move(physical_device)),
-      graphics_queue_index_(std::numeric_limits<uint32_t>::max()),
-      compute_queue_index_(std::numeric_limits<uint32_t>::max()), valid_(false)
+    : vk(p_vk), physicalDevice_(std::move(physical_device)),
+      graphicQueueIndex_(std::numeric_limits<uint32_t>::max()),
+      computeQueueIndex_(std::numeric_limits<uint32_t>::max()), valid_(false)
 {
-  if (!physical_device_ || !vk.AreInstanceProcsSetup()) {
+  if (!physicalDevice_ || !vk.AreInstanceProcsSetup()) {
     return;
   }
 
   std::vector<VkQueueFamilyProperties> properties = GetQueueFamilyProperties();
-  graphics_queue_index_ = FindQueueIndex(properties, VK_QUEUE_GRAPHICS_BIT);
-  compute_queue_index_ = FindQueueIndex(properties, VK_QUEUE_COMPUTE_BIT);
+  graphicQueueIndex_ = FindQueueIndex(properties, VK_QUEUE_GRAPHICS_BIT);
+  computeQueueIndex_ = FindQueueIndex(properties, VK_QUEUE_COMPUTE_BIT);
 
-  if (graphics_queue_index_ == kVulkanInvalidGraphicsQueueIndex) {
+  if (graphicQueueIndex_ == kVulkanInvalidGraphicsQueueIndex) {
     LOGE("Could not find the graphics queue index.");
     return;
   }
@@ -63,17 +63,17 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
       .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
       .pNext = nullptr,
       .flags = 0,
-      .queueFamilyIndex = graphics_queue_index_,
+      .queueFamilyIndex = graphicQueueIndex_,
       .queueCount = 1,
       .pQueuePriorities = priorities,
   } };
 
-  if (compute_queue_index_ != kVulkanInvalidGraphicsQueueIndex && compute_queue_index_ != graphics_queue_index_) {
+  if (computeQueueIndex_ != kVulkanInvalidGraphicsQueueIndex && computeQueueIndex_ != graphicQueueIndex_) {
     queue_create.push_back({
         .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .queueFamilyIndex = graphics_queue_index_,
+        .queueFamilyIndex = graphicQueueIndex_,
         .queueCount = 1,
         .pQueuePriorities = priorities,
     });
@@ -83,7 +83,7 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
   };
 
-  auto enabled_layers = DeviceLayersToEnable(vk, physical_device_);
+  auto enabled_layers = DeviceLayersToEnable(vk, physicalDevice_);
 
   const char* layers[enabled_layers.size()];
 
@@ -106,7 +106,7 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
 
   VkDevice device = VK_NULL_HANDLE;
 
-  if (VK_CALL_LOG_ERROR(vk.CreateDevice(physical_device_, &create_info, nullptr,
+  if (VK_CALL_LOG_ERROR(vk.CreateDevice(physicalDevice_, &create_info, nullptr,
                                         &device)) != VK_SUCCESS) {
     LOGE("Could not create device.");
     return;
@@ -122,7 +122,7 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
 
   VkQueue queue = VK_NULL_HANDLE;
 
-  vk.GetDeviceQueue(device_, graphics_queue_index_, 0, &queue);
+  vk.GetDeviceQueue(device_, graphicQueueIndex_, 0, &queue);
 
   if (queue == VK_NULL_HANDLE) {
     LOGE("Could not get the device queue handle.");
@@ -146,7 +146,7 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
     return;
   }
 
-  command_pool_ = {command_pool, [this](VkCommandPool pool) {
+  commandPool_ = {command_pool, [this](VkCommandPool pool) {
                     vk.DestroyCommandPool(device_, pool, nullptr);
                   }};
 
@@ -175,7 +175,7 @@ void RSVulkanDevice::ReleaseDeviceOwnership() {
 
 const RSVulkanHandle<VkPhysicalDevice>& RSVulkanDevice::GetPhysicalDeviceHandle()
     const {
-  return physical_device_;
+  return physicalDevice_;
 }
 
 const RSVulkanHandle<VkQueue>& RSVulkanDevice::GetQueueHandle() const {
@@ -183,11 +183,11 @@ const RSVulkanHandle<VkQueue>& RSVulkanDevice::GetQueueHandle() const {
 }
 
 const RSVulkanHandle<VkCommandPool>& RSVulkanDevice::GetCommandPool() const {
-  return command_pool_;
+  return commandPool_;
 }
 
 uint32_t RSVulkanDevice::GetGraphicsQueueIndex() const {
-  return graphics_queue_index_;
+  return graphicQueueIndex_;
 }
 
 bool RSVulkanDevice::GetSurfaceCapabilities(
@@ -200,7 +200,7 @@ bool RSVulkanDevice::GetSurfaceCapabilities(
 
   bool success =
       VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceCapabilitiesKHR(
-          physical_device_, surface.Handle(), capabilities)) == VK_SUCCESS;
+          physicalDevice_, surface.Handle(), capabilities)) == VK_SUCCESS;
 
   if (!success) {
     LOGE("GetPhysicalDeviceSurfaceCapabilitiesKHR not success");
@@ -229,10 +229,10 @@ bool RSVulkanDevice::GetSurfaceCapabilities(
 
 bool RSVulkanDevice::GetPhysicalDeviceFeatures(
     VkPhysicalDeviceFeatures* features) const {
-  if (features == nullptr || !physical_device_) {
+  if (features == nullptr || !physicalDevice_) {
     return false;
   }
-  vk.GetPhysicalDeviceFeatures(physical_device_, features);
+  vk.GetPhysicalDeviceFeatures(physicalDevice_, features);
   return true;
 }
 
@@ -267,12 +267,12 @@ std::vector<VkQueueFamilyProperties> RSVulkanDevice::GetQueueFamilyProperties()
     const {
   uint32_t count = 0;
 
-  vk.GetPhysicalDeviceQueueFamilyProperties(physical_device_, &count, nullptr);
+  vk.GetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &count, nullptr);
 
   std::vector<VkQueueFamilyProperties> properties;
   properties.resize(count, {});
 
-  vk.GetPhysicalDeviceQueueFamilyProperties(physical_device_, &count,
+  vk.GetPhysicalDeviceQueueFamilyProperties(physicalDevice_, &count,
                                             properties.data());
 
   return properties;
@@ -288,7 +288,7 @@ int RSVulkanDevice::ChooseSurfaceFormat(const RSVulkanSurface& surface,
 
   uint32_t format_count = 0;
   if (VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceFormatsKHR(
-          physical_device_, surface.Handle(), &format_count, nullptr)) !=
+          physicalDevice_, surface.Handle(), &format_count, nullptr)) !=
       VK_SUCCESS) {
     LOGE("ChooseSurfaceFormat sGetPhysicalDeviceSurfaceFormatsKHR not success");
     return -1;
@@ -301,7 +301,7 @@ int RSVulkanDevice::ChooseSurfaceFormat(const RSVulkanSurface& surface,
 
   VkSurfaceFormatKHR formats[format_count];
   if (VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceFormatsKHR(
-          physical_device_, surface.Handle(), &format_count, formats)) !=
+          physicalDevice_, surface.Handle(), &format_count, formats)) !=
       VK_SUCCESS) {
     LOGE("ChooseSurfaceFormat sGetPhysicalDeviceSurfaceFormatsKHR not success 2");
     return -1;
@@ -375,4 +375,4 @@ bool RSVulkanDevice::QueueSubmit(
   return true;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

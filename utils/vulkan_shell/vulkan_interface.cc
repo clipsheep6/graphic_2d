@@ -81,4 +81,4 @@ std::string VulkanResultToString(VkResult result) {
   return "";
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

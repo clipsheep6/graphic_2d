@@ -29,10 +29,10 @@ RSVulkanBackbuffer::RSVulkanBackbuffer(const RSVulkanProcTable& p_vk,
                                    const RSVulkanHandle<VkCommandPool>& pool)
     : vk(p_vk),
       device_(device),
-      usage_command_buffer_(p_vk, device, pool),
-      render_command_buffer_(p_vk, device, pool),
+      usageCommandBuffer_(p_vk, device, pool),
+      renderCommandBuffer_(p_vk, device, pool),
       valid_(false) {
-  if (!usage_command_buffer_.IsValid() || !render_command_buffer_.IsValid()) {
+  if (!usageCommandBuffer_.IsValid() || !renderCommandBuffer_.IsValid()) {
     LOGE("Command buffers were not valid.");
     return;
   }
@@ -151,11 +151,11 @@ const RSVulkanHandle<VkSemaphore>& RSVulkanBackbuffer::GetRenderSemaphore() cons
 }
 
 RSVulkanCommandBuffer& RSVulkanBackbuffer::GetUsageCommandBuffer() {
-  return usage_command_buffer_;
+  return usageCommandBuffer_;
 }
 
 RSVulkanCommandBuffer& RSVulkanBackbuffer::GetRenderCommandBuffer() {
-  return render_command_buffer_;
+  return renderCommandBuffer_;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

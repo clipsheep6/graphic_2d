@@ -132,7 +132,7 @@ class RSVulkanProcTable {
 
  private:
   void* handle_;
-  bool acquired_mandatory_proc_addresses_;
+  bool acquiredMandatoryProcAddresses_;
   RSVulkanHandle<VkInstance> instance_;
   RSVulkanHandle<VkDevice> device_;
 
@@ -140,12 +140,12 @@ class RSVulkanProcTable {
   bool SetupLoaderProcAddresses();
   bool CloseLibraryHandle();
   PFN_vkVoidFunction AcquireProc(
-      const char* proc_name,
+      const char* procName,
       const RSVulkanHandle<VkInstance>& instance) const;
-  PFN_vkVoidFunction AcquireProc(const char* proc_name,
+  PFN_vkVoidFunction AcquireProc(const char* procName,
                                  const RSVulkanHandle<VkDevice>& device) const;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_PROC_TABLE_H_

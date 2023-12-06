@@ -82,6 +82,6 @@ class RSVulkanHandle {
   }
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_HANDLE_H_

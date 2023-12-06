@@ -27,8 +27,8 @@
 namespace OHOS::Rosen::vulkan {
 
 RSVulkanProcTable::RSVulkanProcTable()
-    : handle_(nullptr), acquired_mandatory_proc_addresses_(false) {
-  acquired_mandatory_proc_addresses_ =
+    : handle_(nullptr), acquiredMandatoryProcAddresses_(false) {
+  acquiredMandatoryProcAddresses_ =
       OpenLibraryHandle() && SetupLoaderProcAddresses();
 }
 
@@ -37,7 +37,7 @@ RSVulkanProcTable::~RSVulkanProcTable() {
 }
 
 bool RSVulkanProcTable::HasAcquiredMandatoryProcAddresses() const {
-  return acquired_mandatory_proc_addresses_;
+  return acquiredMandatoryProcAddresses_;
 }
 
 bool RSVulkanProcTable::IsValid() const {
@@ -223,4 +223,4 @@ GrVkGetProc RSVulkanProcTable::CreateSkiaGetProc() const {
   };
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

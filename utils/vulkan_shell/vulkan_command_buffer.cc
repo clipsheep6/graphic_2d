@@ -92,4 +92,4 @@ bool RSVulkanCommandBuffer::InsertPipelineBarrier(
   return true;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

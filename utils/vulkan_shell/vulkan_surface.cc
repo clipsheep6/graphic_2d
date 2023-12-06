@@ -27,15 +27,15 @@ RSVulkanSurface::RSVulkanSurface(
     std::unique_ptr<RSVulkanNativeSurface> native_surface)
     : vk(p_vk),
       application_(application),
-      native_surface_(std::move(native_surface)),
+      nativeSurface_(std::move(native_surface)),
       valid_(false) {
-  if (native_surface_ == nullptr || !native_surface_->IsValid()) {
+  if (nativeSurface_ == nullptr || !nativeSurface_->IsValid()) {
     LOGE("Native surface was invalid.");
     return;
   }
 
   VkSurfaceKHR surface =
-      native_surface_->CreateSurfaceHandle(vk, application.GetInstance());
+      nativeSurface_->CreateSurfaceHandle(vk, application.GetInstance());
 
   if (surface == VK_NULL_HANDLE) {
     LOGE("Could not create the surface handle.");
@@ -61,11 +61,11 @@ const RSVulkanHandle<VkSurfaceKHR>& RSVulkanSurface::Handle() const {
 }
 
 const RSVulkanNativeSurface& RSVulkanSurface::GetNativeSurface() const {
-  return *native_surface_;
+  return *nativeSurface_;
 }
 
 SkISize RSVulkanSurface::GetSize() const {
-  return valid_ ? native_surface_->GetSize() : SkISize::Make(0, 0);
+  return valid_ ? nativeSurface_->GetSize() : SkISize::Make(0, 0);
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

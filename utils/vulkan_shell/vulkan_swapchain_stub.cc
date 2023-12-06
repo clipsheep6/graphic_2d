@@ -42,4 +42,4 @@ SkISize RSVulkanSwapchain::GetSize() const {
   return SkISize::Make(0, 0);
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

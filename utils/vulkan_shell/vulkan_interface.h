@@ -51,6 +51,6 @@ namespace OHOS::Rosen::vulkan {
 
 std::string VulkanResultToString(VkResult result);
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_INTERFACE_H_

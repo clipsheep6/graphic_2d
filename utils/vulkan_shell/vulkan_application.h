@@ -36,10 +36,10 @@ class RSVulkanProcTable;
 class RSVulkanApplication {
  public:
   RSVulkanApplication(RSVulkanProcTable& vk,
-                    const std::string& application_name,
-                    std::vector<std::string> enabled_extensions,
-                    uint32_t application_version = VK_MAKE_VERSION(1, 0, 0),
-                    uint32_t api_version = VK_MAKE_VERSION(1, 0, 0));
+                    const std::string& applicationName,
+                    std::vector<std::string> enabledExtensions,
+                    uint32_t applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+                    uint32_t apiVersion = VK_MAKE_VERSION(1, 0, 0));
 
   ~RSVulkanApplication();
 
@@ -56,18 +56,18 @@ class RSVulkanApplication {
  private:
   RSVulkanProcTable& vk;
   RSVulkanHandle<VkInstance> instance_;
-  uint32_t api_version_;
-  std::unique_ptr<RSVulkanDebugReport> debug_report_;
+  uint32_t apiVersion_;
+  std::unique_ptr<RSVulkanDebugReport> debugReport_;
   bool valid_;
 
   std::vector<VkPhysicalDevice> GetPhysicalDevices() const;
   std::vector<VkExtensionProperties> GetSupportedInstanceExtensions(
       const RSVulkanProcTable& vk) const;
   bool ExtensionSupported(
-      const std::vector<VkExtensionProperties>& supported_extensions,
-      std::string extension_name);
+      const std::vector<VkExtensionProperties>& supportedExtensions,
+      std::string extensionName);
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_APPLICATION_H_

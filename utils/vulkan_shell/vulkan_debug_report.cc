@@ -206,4 +206,4 @@ bool RSVulkanDebugReport::IsValid() const {
   return valid_;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

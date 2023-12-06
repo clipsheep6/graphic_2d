@@ -32,8 +32,8 @@ std::vector<std::string> InstanceLayersToEnable(const RSVulkanProcTable& vk);
 
 std::vector<std::string> DeviceLayersToEnable(
     const RSVulkanProcTable& vk,
-    const RSVulkanHandle<VkPhysicalDevice>& physical_device);
+    const RSVulkanHandle<VkPhysicalDevice>& physicalDevice);
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_UTILITIES_H_

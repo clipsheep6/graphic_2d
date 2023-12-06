@@ -28,7 +28,7 @@ class RSVulkanSurface;
 class RSVulkanDevice {
  public:
   RSVulkanDevice(RSVulkanProcTable& vk,
-               RSVulkanHandle<VkPhysicalDevice> physical_device);
+               RSVulkanHandle<VkPhysicalDevice> physicalDevice);
 
   ~RSVulkanDevice();
 
@@ -55,33 +55,33 @@ class RSVulkanDevice {
       uint32_t* /* mask of GrVkFeatureFlags */ features) const;
 
   int ChooseSurfaceFormat(const RSVulkanSurface& surface,
-                          std::vector<VkFormat> desired_formats,
+                          std::vector<VkFormat> desiredFormats,
                           VkSurfaceFormatKHR* format) const;
 
   bool ChoosePresentMode(const RSVulkanSurface& surface,
                          VkPresentModeKHR* present_mode) const;
 
-  bool QueueSubmit(std::vector<VkPipelineStageFlags> wait_dest_pipeline_stages,
-                   const std::vector<VkSemaphore>& wait_semaphores,
-                   const std::vector<VkSemaphore>& signal_semaphores,
-                   const std::vector<VkCommandBuffer>& command_buffers,
+  bool QueueSubmit(std::vector<VkPipelineStageFlags> waitDestPipelineStages,
+                   const std::vector<VkSemaphore>& waitSemaphores,
+                   const std::vector<VkSemaphore>& signalSemaphores,
+                   const std::vector<VkCommandBuffer>& commandBuffers,
                    const RSVulkanHandle<VkFence>& fence) const;
 
   bool WaitIdle() const;
   RSVulkanProcTable& vk;
-  RSVulkanHandle<VkPhysicalDevice> physical_device_;
+  RSVulkanHandle<VkPhysicalDevice> physicalDevice_;
   RSVulkanHandle<VkDevice> device_;
 
  private:
   RSVulkanHandle<VkQueue> queue_;
-  RSVulkanHandle<VkCommandPool> command_pool_;
-  uint32_t graphics_queue_index_;
-  uint32_t compute_queue_index_;
+  RSVulkanHandle<VkCommandPool> commandPool_;
+  uint32_t graphicQueueIndex_;
+  uint32_t computeQueueIndex_;
   bool valid_;
 
   std::vector<VkQueueFamilyProperties> GetQueueFamilyProperties() const;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_DEVICE_H_

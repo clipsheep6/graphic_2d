@@ -29,7 +29,7 @@ class RSVulkanSurface {
  public:
   RSVulkanSurface(RSVulkanProcTable& vk,
                 RSVulkanApplication& application,
-                std::unique_ptr<RSVulkanNativeSurface> native_surface);
+                std::unique_ptr<RSVulkanNativeSurface> nativeSurface);
 
   ~RSVulkanSurface();
 
@@ -45,11 +45,11 @@ class RSVulkanSurface {
  private:
   RSVulkanProcTable& vk;
   RSVulkanApplication& application_;
-  std::unique_ptr<RSVulkanNativeSurface> native_surface_;
+  std::unique_ptr<RSVulkanNativeSurface> nativeSurface_;
   RSVulkanHandle<VkSurfaceKHR> surface_;
   bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_SURFACE_H_

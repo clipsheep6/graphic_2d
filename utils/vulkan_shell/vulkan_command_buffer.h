@@ -39,15 +39,15 @@ class RSVulkanCommandBuffer {
   bool End() const;
 
   bool InsertPipelineBarrier(
-      VkPipelineStageFlagBits src_stage_flags,
-      VkPipelineStageFlagBits dest_stage_flags,
-      uint32_t /* mask of VkDependencyFlagBits */ dependency_flags,
-      uint32_t memory_barrier_count,
-      const VkMemoryBarrier* memory_barriers,
-      uint32_t buffer_memory_barrier_count,
-      const VkBufferMemoryBarrier* buffer_memory_barriers,
-      uint32_t image_memory_barrier_count,
-      const VkImageMemoryBarrier* image_memory_barriers) const;
+      VkPipelineStageFlagBits srcStageFlags,
+      VkPipelineStageFlagBits destStageFlags,
+      uint32_t /* mask of VkDependencyFlagBits */ dependencyFlags,
+      uint32_t memoryBarrierCount,
+      const VkMemoryBarrier* memoryBarriers,
+      uint32_t bufferMemoryBarrierCount,
+      const VkBufferMemoryBarrier* bufferMemoryBarriers,
+      uint32_t imageMemoryBarrierCount,
+      const VkImageMemoryBarrier* imageMemoryBarriers) const;
 
  private:
   const RSVulkanProcTable& vk;
@@ -57,6 +57,6 @@ class RSVulkanCommandBuffer {
   bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_COMMAND_BUFFER_H_

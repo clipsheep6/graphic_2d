@@ -25,7 +25,7 @@ class RSVulkanNativeSurfaceOHOS : public RSVulkanNativeSurface {
  public:
   /// Create a native surface from the valid NativeWindow reference. Ownership
   /// of the NativeWindow is assumed by this instance.
-  RSVulkanNativeSurfaceOHOS(struct NativeWindow* native_window);
+  RSVulkanNativeSurfaceOHOS(struct NativeWindow* nativeWindow);
 
   ~RSVulkanNativeSurfaceOHOS();
 
@@ -42,9 +42,9 @@ class RSVulkanNativeSurfaceOHOS : public RSVulkanNativeSurface {
   SkISize GetSize() const override;
 
  private:
-  struct NativeWindow* native_window_;
+  struct NativeWindow* nativeWindow_;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_

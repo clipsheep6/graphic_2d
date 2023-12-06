@@ -30,26 +30,26 @@ namespace OHOS::Rosen::vulkan {
 
 RSVulkanProcTable* RSVulkanWindow::vk;
 std::unique_ptr<RSVulkanApplication> RSVulkanWindow::application_;
-std::unique_ptr<RSVulkanDevice> RSVulkanWindow::logical_device_;
-std::thread::id RSVulkanWindow::device_thread_;
-std::vector<RSVulkanHandle<VkFence>> RSVulkanWindow::shared_fences_;
-uint32_t RSVulkanWindow::shared_fence_index_;
+std::unique_ptr<RSVulkanDevice> RSVulkanWindow::logicalDevice_;
+std::thread::id RSVulkanWindow::deviceThread_;
+std::vector<RSVulkanHandle<VkFence>> RSVulkanWindow::sharedFences_;
+uint32_t RSVulkanWindow::sharedFenceIndex_;
 bool RSVulkanWindow::presenting_ = false;
 
 void RSVulkanWindow::InitializeVulkan(size_t thread_num)
 {
-  if (shared_fences_.size() < thread_num) {
-    shared_fences_.resize(thread_num);
-    shared_fence_index_ = 0;
+  if (sharedFences_.size() < thread_num) {
+    sharedFences_.resize(thread_num);
+    sharedFenceIndex_ = 0;
   }
 
-  if (logical_device_ != nullptr) {
+  if (logicalDevice_ != nullptr) {
     LOGI("Vulkan Already Initialized");
     return;
   }
 
   LOGI("First Initialize Vulkan");
-  device_thread_ = std::this_thread::get_id();
+  deviceThread_ = std::this_thread::get_id();
 
   vk = new RSVulkanProcTable();
   if (!vk->HasAcquiredMandatoryProcAddresses()) {
@@ -72,8 +72,8 @@ void RSVulkanWindow::InitializeVulkan(size_t thread_num)
   }
 
   // Create the device.
-  logical_device_ = application_->AcquireFirstCompatibleLogicalDevice();
-  if (logical_device_ == nullptr || !logical_device_->IsValid() || !vk->AreDeviceProcsSetup()) {
+  logicalDevice_ = application_->AcquireFirstCompatibleLogicalDevice();
+  if (logicalDevice_ == nullptr || !logicalDevice_->IsValid() || !vk->AreDeviceProcsSetup()) {
     // Make certain the device was created and it setup the device proc table
     // entries.
     LOGE("Device proc addresses have not been setup.");
@@ -82,12 +82,12 @@ void RSVulkanWindow::InitializeVulkan(size_t thread_num)
 }
 
 RSVulkanWindow::RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> native_surface, bool is_offscreen)
-    : valid_(false), is_offscreen_(is_offscreen)
+    : valid_(false), isOffscreen_(is_offscreen)
 {
   LOGE("VulkanWindow init enter");
 
   InitializeVulkan();
-  if (logical_device_ == nullptr) {
+  if (logicalDevice_ == nullptr) {
     LOGE("InitializeVulkan failed");
     return;
   }
@@ -132,18 +132,18 @@ GrDirectContext* RSVulkanWindow::GetSkiaGrContext() {
 }
 
 GrVkBackendContext& RSVulkanWindow::GetSkiaBackendContext() {
-  return sk_backend_context_;
+  return skBackendContext_;
 }
 
 
 bool RSVulkanWindow::CreateSkiaGrContext() {
 
-  if (!CreateSkiaBackendContext(&sk_backend_context_)) {
+  if (!CreateSkiaBackendContext(&skBackendContext_)) {
     LOGE("CreateSkiaGrContext CreateSkiaBackendContext is false");
     return false;
   }
 
-  sk_sp<GrDirectContext> context = GrDirectContext::MakeVulkan(sk_backend_context_);
+  sk_sp<GrDirectContext> context = GrDirectContext::MakeVulkan(skBackendContext_);
 
   if (context == nullptr) {
     LOGE("CreateSkiaGrContext context is null");
@@ -166,19 +166,19 @@ bool RSVulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context) {
   }
 
   uint32_t skia_features = 0;
-  if (!logical_device_->GetPhysicalDeviceFeaturesSkia(&skia_features)) {
+  if (!logicalDevice_->GetPhysicalDeviceFeaturesSkia(&skia_features)) {
     LOGE("CreateSkiaBackendContext GetPhysicalDeviceFeaturesSkia is false");
     return false;
   }
 
   context->fInstance = application_->GetInstance();
-  context->fPhysicalDevice = logical_device_->GetPhysicalDeviceHandle();
-  context->fDevice = logical_device_->GetHandle();
-  context->fQueue = logical_device_->GetQueueHandle();
-  context->fGraphicsQueueIndex = logical_device_->GetGraphicsQueueIndex();
+  context->fPhysicalDevice = logicalDevice_->GetPhysicalDeviceHandle();
+  context->fDevice = logicalDevice_->GetHandle();
+  context->fQueue = logicalDevice_->GetQueueHandle();
+  context->fGraphicsQueueIndex = logicalDevice_->GetGraphicsQueueIndex();
   context->fMinAPIVersion = application_->GetAPIVersion();
   uint32_t extensionFlags = kKHR_surface_GrVkExtensionFlag;
-  if (!is_offscreen_) {
+  if (!isOffscreen_) {
     extensionFlags |= kKHR_swapchain_GrVkExtensionFlag;
     extensionFlags |= surface_->GetNativeSurface().GetSkiaExtensionName();
   }
@@ -191,7 +191,7 @@ bool RSVulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context) {
 }
 
 sk_sp<SkSurface> RSVulkanWindow::AcquireSurface(int bufferCount) {
-  if (is_offscreen_ || !IsValid()) {
+  if (isOffscreen_ || !IsValid()) {
     LOGE("Surface is invalid or offscreen.");
     return nullptr;
   }
@@ -256,11 +256,11 @@ sk_sp<SkSurface> RSVulkanWindow::AcquireSurface(int bufferCount) {
 }
 
 bool RSVulkanWindow::SwapBuffers() {
-  if (is_offscreen_ || !IsValid()) {
+  if (isOffscreen_ || !IsValid()) {
       LOGE("Window was invalid or offscreen.");
       return false;
   }
-  if (device_thread_ != std::this_thread::get_id()) {
+  if (deviceThread_ != std::this_thread::get_id()) {
     LOGI("MT mode in VulkanWindow::SwapBuffers()");
     swapchain_->AddToPresent();
     return swapchain_->FlushCommands();
@@ -273,7 +273,7 @@ void RSVulkanWindow::PresentAll() {
   //-----------------------------------------
   // create shared fences if not already
   //-----------------------------------------
-  if (!shared_fences_[shared_fence_index_]) {
+  if (!sharedFences_[sharedFenceIndex_]) {
     const VkFenceCreateInfo create_info = {
       .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
       .pNext = nullptr,
@@ -281,30 +281,30 @@ void RSVulkanWindow::PresentAll() {
     };
 
     auto fence_collect = [](VkFence fence) {
-      RSVulkanWindow::vk->DestroyFence(RSVulkanWindow::logical_device_->GetHandle(), fence, nullptr);
+      RSVulkanWindow::vk->DestroyFence(RSVulkanWindow::logicalDevice_->GetHandle(), fence, nullptr);
     };
 
     VkFence fence = VK_NULL_HANDLE;
 
-    if (VK_CALL_LOG_ERROR(vk->CreateFence(logical_device_->GetHandle(), &create_info, nullptr, &fence)) != VK_SUCCESS) {
+    if (VK_CALL_LOG_ERROR(vk->CreateFence(logicalDevice_->GetHandle(), &create_info, nullptr, &fence)) != VK_SUCCESS) {
       return;
     }
-    shared_fences_[shared_fence_index_] = {fence, fence_collect};
+    sharedFences_[sharedFenceIndex_] = {fence, fence_collect};
   }
-  RSVulkanSwapchain::PresentAll(shared_fences_[shared_fence_index_]);
-  shared_fence_index_++;
-  if (shared_fence_index_ >= shared_fences_.size()) {
-    shared_fence_index_ = 0;
+  RSVulkanSwapchain::PresentAll(sharedFences_[sharedFenceIndex_]);
+  sharedFenceIndex_++;
+  if (sharedFenceIndex_ >= sharedFences_.size()) {
+    sharedFenceIndex_ = 0;
   }
   presenting_ = true;
 }
 
 bool RSVulkanWindow::WaitForSharedFence() {
   if (presenting_) {
-    if (shared_fences_[shared_fence_index_]) {
-      VkFence fence = shared_fences_[shared_fence_index_];
+    if (sharedFences_[sharedFenceIndex_]) {
+      VkFence fence = sharedFences_[sharedFenceIndex_];
       return VK_CALL_LOG_ERROR(vk->WaitForFences(
-        logical_device_->GetHandle(), 1, &fence, true,
+        logicalDevice_->GetHandle(), 1, &fence, true,
         std::numeric_limits<uint64_t>::max())) == VK_SUCCESS;
     }
   }
@@ -314,21 +314,21 @@ bool RSVulkanWindow::WaitForSharedFence() {
 bool RSVulkanWindow::ResetSharedFence() {
   if (presenting_) {
       presenting_ = false;
-      if (shared_fences_[shared_fence_index_]) {
-        VkFence fence = shared_fences_[shared_fence_index_];
+      if (sharedFences_[sharedFenceIndex_]) {
+        VkFence fence = sharedFences_[sharedFenceIndex_];
         return VK_CALL_LOG_ERROR(vk->ResetFences(
-            logical_device_->GetHandle(), 1, &fence)) == VK_SUCCESS;
+            logicalDevice_->GetHandle(), 1, &fence)) == VK_SUCCESS;
       }
   }
   return false;
 }
 
 VkDevice RSVulkanWindow::GetDevice() {
-  return logical_device_->GetHandle();
+  return logicalDevice_->GetHandle();
 }
 
 VkPhysicalDevice RSVulkanWindow::GetPhysicalDevice() {
-  return logical_device_->GetPhysicalDeviceHandle();
+  return logicalDevice_->GetPhysicalDeviceHandle();
 }
 
 RSVulkanProcTable &RSVulkanWindow::GetVkProcTable() {
@@ -336,7 +336,7 @@ RSVulkanProcTable &RSVulkanWindow::GetVkProcTable() {
 }
 
 bool RSVulkanWindow::RecreateSwapchain() {
-  if (is_offscreen_) {
+  if (isOffscreen_) {
       LOGE("offscreen vulkan window, don't need swapchian");
       return false;
   }
@@ -349,8 +349,8 @@ bool RSVulkanWindow::RecreateSwapchain() {
     return false;
   }
 
-  if (logical_device_ == nullptr || !logical_device_->IsValid()) {
-    LOGE("RecreateSwapchain logical_device_ not valid");
+  if (logicalDevice_ == nullptr || !logicalDevice_->IsValid()) {
+    LOGE("RecreateSwapchain logicalDevice_ not valid");
     return false;
   }
 
@@ -365,8 +365,8 @@ bool RSVulkanWindow::RecreateSwapchain() {
   }
 
   auto swapchain = std::make_unique<RSVulkanSwapchain>(
-      *vk, *logical_device_, *surface_, skia_gr_context_.get(),
-      std::move(old_swapchain), logical_device_->GetGraphicsQueueIndex());
+      *vk, *logicalDevice_, *surface_, skia_gr_context_.get(),
+      std::move(old_swapchain), logicalDevice_->GetGraphicsQueueIndex());
 
   if (!swapchain->IsValid()) {
     LOGE("RecreateSwapchain swapchain not valid");
@@ -377,4 +377,4 @@ bool RSVulkanWindow::RecreateSwapchain() {
   return true;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

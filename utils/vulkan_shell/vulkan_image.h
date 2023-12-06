@@ -31,19 +31,19 @@ class RSVulkanImage {
 
   bool IsValid() const;
 
-  bool InsertImageMemoryBarrier(const RSVulkanCommandBuffer& command_buffer,
-                                VkPipelineStageFlagBits src_pipline_bits,
-                                VkPipelineStageFlagBits dest_pipline_bits,
-                                VkAccessFlagBits dest_access_flags,
-                                VkImageLayout dest_layout);
+  bool InsertImageMemoryBarrier(const RSVulkanCommandBuffer& commandBuffer,
+                                VkPipelineStageFlagBits srcPiplineBits,
+                                VkPipelineStageFlagBits destPiplineBits,
+                                VkAccessFlagBits destAccessFlags,
+                                VkImageLayout destLayout);
 
  private:
   RSVulkanHandle<VkImage> handle_;
   VkImageLayout layout_;
-  uint32_t /* mask of VkAccessFlagBits */ access_flags_;
+  uint32_t /* mask of VkAccessFlagBits */ accessFlags_;
   bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_IMAGE_H_

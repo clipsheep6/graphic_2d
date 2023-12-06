@@ -31,7 +31,7 @@ RSVulkanApplication::RSVulkanApplication(
     std::vector<std::string> enabled_extensions,
     uint32_t application_version,
     uint32_t api_version)
-    : vk(p_vk), api_version_(api_version), valid_(false) {
+    : vk(p_vk), apiVersion_(api_version), valid_(false) {
   // Check if we want to enable debugging.
   std::vector<VkExtensionProperties> supported_extensions =
       GetSupportedInstanceExtensions(vk);
@@ -71,7 +71,7 @@ RSVulkanApplication::RSVulkanApplication(
       .applicationVersion = application_version,
       .pEngineName = "Rosen",
       .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-      .apiVersion = api_version_,
+      .apiVersion = apiVersion_,
   };
 
   const VkInstanceCreateInfo create_info = {
@@ -111,7 +111,7 @@ RSVulkanApplication::RSVulkanApplication(
     if (!debug_report->IsValid()) {
       LOGE("Vulkan debugging was enabled but could not be setup for this instance.");
     } else {
-      debug_report_ = std::move(debug_report);
+      debugReport_ = std::move(debug_report);
       LOGE("Debug reporting is enabled.");
     }
   }
@@ -126,7 +126,7 @@ bool RSVulkanApplication::IsValid() const {
 }
 
 uint32_t RSVulkanApplication::GetAPIVersion() const {
-  return api_version_;
+  return apiVersion_;
 }
 
 const RSVulkanHandle<VkInstance>& RSVulkanApplication::GetInstance() const {
@@ -221,4 +221,4 @@ bool RSVulkanApplication::ExtensionSupported(
   return false;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

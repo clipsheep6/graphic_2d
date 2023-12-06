@@ -39,6 +39,6 @@ class RSVulkanNativeSurface {
   virtual SkISize GetSize() const = 0;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_NATIVE_SURFACE_H_

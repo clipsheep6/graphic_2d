@@ -23,7 +23,7 @@ namespace OHOS::Rosen::vulkan {
 RSVulkanImage::RSVulkanImage(RSVulkanHandle<VkImage> image)
     : handle_(std::move(image)),
       layout_(VK_IMAGE_LAYOUT_UNDEFINED),
-      access_flags_(0),
+      accessFlags_(0),
       valid_(false) {
   if (!handle_) {
     return;
@@ -47,7 +47,7 @@ bool RSVulkanImage::InsertImageMemoryBarrier(
   const VkImageMemoryBarrier image_memory_barrier = {
       .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
       .pNext = nullptr,
-      .srcAccessMask = access_flags_,
+      .srcAccessMask = accessFlags_,
       .dstAccessMask = dest_access_flags,
       .oldLayout = layout_,
       .newLayout = dest_layout,
@@ -70,11 +70,11 @@ bool RSVulkanImage::InsertImageMemoryBarrier(
   );
 
   if (success) {
-    access_flags_ = dest_access_flags;
+    accessFlags_ = dest_access_flags;
     layout_ = dest_layout;
   }
 
   return success;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

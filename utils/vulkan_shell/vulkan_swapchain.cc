@@ -48,8 +48,8 @@ static std::vector<FormatInfo> DesiredFormatInfos() {
            SkColorSpace::MakeSRGBLinear()}};
 }
 
-std::mutex RSVulkanSwapchain::map_mutex_;
-std::unordered_map<std::thread::id, RSVulkanSwapchain*> RSVulkanSwapchain::to_be_present_;
+std::mutex RSVulkanSwapchain::mapMutex_;
+std::unordered_map<std::thread::id, RSVulkanSwapchain*> RSVulkanSwapchain::toBePresent_;
 
 RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
                                  const RSVulkanDevice& device,
@@ -61,10 +61,10 @@ RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
     : vk(p_vk),
       device_(device),
       capabilities_(),
-      surface_format_(),
-      current_pipeline_stage_(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT),
-      current_backbuffer_index_(0),
-      current_image_index_(0),
+      surfaceFormat_(),
+      currentPipelineStage_(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT),
+      currentBackbufferIndex_(0),
+      currentImageIndex_(0),
       valid_(false) {
   if (!device_.IsValid() || !surface.IsValid() || skia_context == nullptr) {
     LOGE("Device or surface is invalid.");
@@ -88,7 +88,7 @@ RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
   }
 
   int format_index =
-      device_.ChooseSurfaceFormat(surface, desired_formats, &surface_format_);
+      device_.ChooseSurfaceFormat(surface, desired_formats, &surfaceFormat_);
   if (format_index < 0) {
     LOGE("Could not choose surface format.");
     return;
@@ -135,8 +135,8 @@ RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
       .flags = 0,
       .surface = surface_handle,
       .minImageCount = capabilities_.minImageCount,
-      .imageFormat = surface_format_.format,
-      .imageColorSpace = surface_format_.colorSpace,
+      .imageFormat = surfaceFormat_.format,
+      .imageColorSpace = surfaceFormat_.colorSpace,
       .imageExtent = capabilities_.currentExtent,
       .imageArrayLayers = 1,
       .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
@@ -245,7 +245,7 @@ sk_sp<SkSurface> RSVulkanSwapchain::CreateSkiaSurface(
   image_info.fImage = image;
   image_info.fImageTiling = VK_IMAGE_TILING_OPTIMAL;
   image_info.fImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  image_info.fFormat = surface_format_.format;
+  image_info.fFormat = surfaceFormat_.format;
   image_info.fImageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
                                   VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -331,7 +331,7 @@ RSVulkanBackbuffer* RSVulkanSwapchain::GetNextBackbuffer() {
   }
 
   auto next_backbuffer_index =
-      (current_backbuffer_index_ + 1) % backbuffers_.size();
+      (currentBackbufferIndex_ + 1) % backbuffers_.size();
 
   auto& backbuffer = backbuffers_[next_backbuffer_index];
 
@@ -339,7 +339,7 @@ RSVulkanBackbuffer* RSVulkanSwapchain::GetNextBackbuffer() {
     return nullptr;
   }
 
-  current_backbuffer_index_ = next_backbuffer_index;
+  currentBackbufferIndex_ = next_backbuffer_index;
   return backbuffer.get();
 }
 
@@ -449,7 +449,7 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
 
   if (!image->InsertImageMemoryBarrier(
           backbuffer->GetUsageCommandBuffer(),   // command buffer
-          current_pipeline_stage_,               // src_pipeline_bits
+          currentPipelineStage_,               // src_pipeline_bits
           destination_pipeline_stage,            // dest_pipeline_bits
           VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,  // dest_access_flags
           destination_image_layout               // dest_layout
@@ -457,7 +457,7 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
     LOGE("Could not insert image memory barrier.");
     return error;
   } else {
-    current_pipeline_stage_ = destination_pipeline_stage;
+    currentPipelineStage_ = destination_pipeline_stage;
   }
 
   // ---------------------------------------------------------------------------
@@ -511,7 +511,7 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
   }
   backendRT.setVkImageLayout(destination_image_layout);
 
-  current_image_index_ = next_image_index;
+  currentImageIndex_ = next_image_index;
 
   return {AcquireStatus::Success, surface};
 }
@@ -522,9 +522,9 @@ bool RSVulkanSwapchain::FlushCommands() {
     return false;
   }
 
-  sk_sp<SkSurface> surface = surfaces_[current_image_index_];
-  const std::unique_ptr<RSVulkanImage>& image = images_[current_image_index_];
-  auto backbuffer = backbuffers_[current_backbuffer_index_].get();
+  sk_sp<SkSurface> surface = surfaces_[currentImageIndex_];
+  const std::unique_ptr<RSVulkanImage>& image = images_[currentImageIndex_];
+  auto backbuffer = backbuffers_[currentBackbufferIndex_].get();
 
   // ---------------------------------------------------------------------------
   // Step 0:
@@ -551,7 +551,7 @@ bool RSVulkanSwapchain::FlushCommands() {
 
   if (!image->InsertImageMemoryBarrier(
           backbuffer->GetRenderCommandBuffer(),  // command buffer
-          current_pipeline_stage_,               // src_pipeline_bits
+          currentPipelineStage_,               // src_pipeline_bits
           destination_pipeline_stage,            // dest_pipeline_bits
           VK_ACCESS_MEMORY_READ_BIT,             // dest_access_flags
           destination_image_layout               // dest_layout
@@ -559,7 +559,7 @@ bool RSVulkanSwapchain::FlushCommands() {
     LOGE("Could not insert memory barrier.");
     return false;
   } else {
-    current_pipeline_stage_ = destination_pipeline_stage;
+    currentPipelineStage_ = destination_pipeline_stage;
   }
 
   // ---------------------------------------------------------------------------
@@ -574,17 +574,17 @@ bool RSVulkanSwapchain::FlushCommands() {
 }
 
 void RSVulkanSwapchain::AddToPresent() {
-  std::lock_guard<std::mutex> lock(map_mutex_);
-  to_be_present_[std::this_thread::get_id()] = this;
+  std::lock_guard<std::mutex> lock(mapMutex_);
+  toBePresent_[std::this_thread::get_id()] = this;
 }
 
 void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence) {
-  if (to_be_present_.empty()) {
+  if (toBePresent_.empty()) {
     LOGE("nothing to be presented");
     return;
   }
 
-  std::lock_guard<std::mutex> lock(map_mutex_);
+  std::lock_guard<std::mutex> lock(mapMutex_);
   // ---------------------------------------------------------------------------
   // Submit all the command buffer to the device queue. Tell it to signal the render
   // semaphore.
@@ -594,20 +594,20 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence) {
   std::vector<VkCommandBuffer> command_buffers;
   std::vector<VkSwapchainKHR> swapchains;
   std::vector<uint32_t> present_image_indices;
-  queue_signal_semaphores.reserve(to_be_present_.size());
-  command_buffers.reserve(to_be_present_.size());
-  swapchains.reserve(to_be_present_.size());
-  present_image_indices.reserve(to_be_present_.size());
+  queue_signal_semaphores.reserve(toBePresent_.size());
+  command_buffers.reserve(toBePresent_.size());
+  swapchains.reserve(toBePresent_.size());
+  present_image_indices.reserve(toBePresent_.size());
   RSVulkanSwapchain* tmpSwapChain = nullptr;
-  for (const auto& entry : to_be_present_) {
+  for (const auto& entry : toBePresent_) {
     auto swapchain = entry.second;
     if (!tmpSwapChain) tmpSwapChain = swapchain;
-    auto backbuffer = swapchain->backbuffers_[swapchain->current_backbuffer_index_].get();
+    auto backbuffer = swapchain->backbuffers_[swapchain->currentBackbufferIndex_].get();
     backbuffer->SetMultiThreading();
     queue_signal_semaphores.push_back(backbuffer->GetRenderSemaphore());
     command_buffers.push_back(backbuffer->GetRenderCommandBuffer().Handle());
     swapchains.push_back(swapchain->swapchain_);
-    present_image_indices.push_back(static_cast<uint32_t>(swapchain->current_image_index_));
+    present_image_indices.push_back(static_cast<uint32_t>(swapchain->currentImageIndex_));
   }
 
   const RSVulkanProcTable& vk = tmpSwapChain->vk;
@@ -645,7 +645,7 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence) {
     return;
   }
 
-  to_be_present_.clear();
+  toBePresent_.clear();
 }
 
 bool RSVulkanSwapchain::Submit() {
@@ -655,9 +655,9 @@ bool RSVulkanSwapchain::Submit() {
     return false;
   }
 
-  sk_sp<SkSurface> surface = surfaces_[current_image_index_];
-  const std::unique_ptr<RSVulkanImage>& image = images_[current_image_index_];
-  auto backbuffer = backbuffers_[current_backbuffer_index_].get();
+  sk_sp<SkSurface> surface = surfaces_[currentImageIndex_];
+  const std::unique_ptr<RSVulkanImage>& image = images_[currentImageIndex_];
+  auto backbuffer = backbuffers_[currentBackbufferIndex_].get();
 
   // ---------------------------------------------------------------------------
   // Step 0:
@@ -684,7 +684,7 @@ bool RSVulkanSwapchain::Submit() {
 
   if (!image->InsertImageMemoryBarrier(
           backbuffer->GetRenderCommandBuffer(),  // command buffer
-          current_pipeline_stage_,               // src_pipeline_bits
+          currentPipelineStage_,               // src_pipeline_bits
           destination_pipeline_stage,            // dest_pipeline_bits
           VK_ACCESS_MEMORY_READ_BIT,             // dest_access_flags
           destination_image_layout               // dest_layout
@@ -692,7 +692,7 @@ bool RSVulkanSwapchain::Submit() {
     LOGE("Could not insert memory barrier.");
     return false;
   } else {
-    current_pipeline_stage_ = destination_pipeline_stage;
+    currentPipelineStage_ = destination_pipeline_stage;
   }
 
   // ---------------------------------------------------------------------------
@@ -732,7 +732,7 @@ bool RSVulkanSwapchain::Submit() {
   // Submit the present operation and wait on the render semaphore.
   // ---------------------------------------------------------------------------
   VkSwapchainKHR swapchain = swapchain_;
-  uint32_t present_image_index = static_cast<uint32_t>(current_image_index_);
+  uint32_t present_image_index = static_cast<uint32_t>(currentImageIndex_);
   const VkPresentInfoKHR present_info = {
       .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
       .pNext = nullptr,
@@ -754,4 +754,4 @@ bool RSVulkanSwapchain::Submit() {
   return true;
 }
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

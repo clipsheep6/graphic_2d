@@ -19,4 +19,4 @@ namespace OHOS::Rosen::vulkan {
 
 //
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan

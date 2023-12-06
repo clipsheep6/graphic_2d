@@ -40,6 +40,6 @@ class RSVulkanDebugReport {
   bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan 
+}  // namespace OHOS::Rosen::vulkan
 
 #endif  // RS_VULKAN_VULKAN_DEBUG_REPORT_H_

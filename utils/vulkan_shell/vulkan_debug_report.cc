@@ -32,128 +32,125 @@ std::string RSVulkanDebugReport::DebugExtensionName()
     return VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 }
 
-static const char* VkDebugReportFlagsEXTToString(VkDebugReportFlagsEXT flags)
+static const char* VkDebugReportFlagsEXTToString(VkDebugReportFlagsEXT reportFlags)
 {
-    if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) {
-        return "Information";
-    } else if (flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) {
-        return "Warning";
-    } else if (flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) {
-        return "Performance Warning";
-    } else if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
-        return "Error";
-    } else if (flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) {
-        return "Debug";
+    if (reportFlags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) {
+        return "Flag: Information";
+    } else if (reportFlags & VK_DEBUG_REPORT_WARNING_BIT_EXT) {
+        return "Flag: Warning";
+    } else if (reportFlags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) {
+        return "Flag: Performance Warning";
+    } else if (reportFlags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
+        return "Flag: Error";
+    } else if (reportFlags & VK_DEBUG_REPORT_DEBUG_BIT_EXT) {
+        return "Flag: Debug";
     }
-    return "UNKNOWN";
+    return "Flag: UNKNOWN";
 }
 
 static const char* VkDebugReportObjectTypeEXTToString(VkDebugReportObjectTypeEXT type)
 {
     switch (type) {
         case VK_DEBUG_REPORT_OBJECT_TYPE_UNKNOWN_EXT:
-            return "Unknown";
+            return "Type: Unknown";
         case VK_DEBUG_REPORT_OBJECT_TYPE_INSTANCE_EXT:
-            return "Instance";
+            return "Type: Instance";
         case VK_DEBUG_REPORT_OBJECT_TYPE_PHYSICAL_DEVICE_EXT:
-            return "Physical Device";
+            return "Type: Physical Device";
         case VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_EXT:
-            return "Device";
+            return "Type: Device";
         case VK_DEBUG_REPORT_OBJECT_TYPE_QUEUE_EXT:
-            return "Queue";
+            return "Type: Queue";
         case VK_DEBUG_REPORT_OBJECT_TYPE_SEMAPHORE_EXT:
-            return "Semaphore";
+            return "Type: Semaphore";
         case VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_BUFFER_EXT:
-            return "Command Buffer";
+            return "Type: Command Buffer";
         case VK_DEBUG_REPORT_OBJECT_TYPE_FENCE_EXT:
-            return "Fence";
+            return "Type: Fence";
         case VK_DEBUG_REPORT_OBJECT_TYPE_DEVICE_MEMORY_EXT:
-            return "Device Memory";
+            return "Type: Device Memory";
         case VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_EXT:
-            return "Buffer";
+            return "Type: Buffer";
         case VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_EXT:
-            return "Image";
+            return "Type: Image";
         case VK_DEBUG_REPORT_OBJECT_TYPE_EVENT_EXT:
-            return "Event";
+            return "Type: Event";
         case VK_DEBUG_REPORT_OBJECT_TYPE_QUERY_POOL_EXT:
-            return "Query Pool";
+            return "Type: Query Pool";
         case VK_DEBUG_REPORT_OBJECT_TYPE_BUFFER_VIEW_EXT:
-            return "Buffer View";
+            return "Type: Buffer View";
         case VK_DEBUG_REPORT_OBJECT_TYPE_IMAGE_VIEW_EXT:
-            return "Image_view";
+            return "Type: Image_view";
         case VK_DEBUG_REPORT_OBJECT_TYPE_SHADER_MODULE_EXT:
-            return "Shader Module";
+            return "Type: Shader Module";
         case VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_CACHE_EXT:
-            return "Pipeline Cache";
+            return "Type: Pipeline Cache";
         case VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_LAYOUT_EXT:
-            return "Pipeline Layout";
+            return "Type: Pipeline Layout";
         case VK_DEBUG_REPORT_OBJECT_TYPE_RENDER_PASS_EXT:
-            return "Render Pass";
+            return "Type: Render Pass";
         case VK_DEBUG_REPORT_OBJECT_TYPE_PIPELINE_EXT:
-            return "Pipeline";
+            return "Type: Pipeline";
         case VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT_EXT:
-            return "Descriptor Set Layout";
+            return "Type: Descriptor Set Layout";
         case VK_DEBUG_REPORT_OBJECT_TYPE_SAMPLER_EXT:
-            return "Sampler";
+            return "Type: Sampler";
         case VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_POOL_EXT:
-            return "Descriptor Pool";
+            return "Type: Descriptor Pool";
         case VK_DEBUG_REPORT_OBJECT_TYPE_DESCRIPTOR_SET_EXT:
-            return "Descriptor Set";
+            return "Type: Descriptor Set";
         case VK_DEBUG_REPORT_OBJECT_TYPE_FRAMEBUFFER_EXT:
-            return "Framebuffer";
+            return "Type: Framebuffer";
         case VK_DEBUG_REPORT_OBJECT_TYPE_COMMAND_POOL_EXT:
-            return "Command Pool";
+            return "Type: Command Pool";
         case VK_DEBUG_REPORT_OBJECT_TYPE_SURFACE_KHR_EXT:
-            return "Surface";
+            return "Type: Surface";
         case VK_DEBUG_REPORT_OBJECT_TYPE_SWAPCHAIN_KHR_EXT:
-            return "Swapchain";
+            return "Type: Swapchain";
         case VK_DEBUG_REPORT_OBJECT_TYPE_DEBUG_REPORT_EXT:
-            return "Debug";
+            return "Type: Debug";
         default:
             break;
     }
 
-    return "Unknown";
+    return "Type: Unknown";
 }
 
-static VKAPI_ATTR VkBool32 OnVulkanDebugReportCallback(VkDebugReportFlagsEXT flags,
+static VKAPI_ATTR VkBool32 OnVulkanDebugReportCallback(VkDebugReportFlagsEXT reportFlags,
     VkDebugReportObjectTypeEXT object_type, uint64_t object, size_t location, int32_t message_code,
     const char* layer_prefix, const char* message, void* user_data)
 {
-    std::vector<std::pair<std::string, std::string>> items;
+    std::vector<std::pair<std::string, std::string>> reportItems;
 
-    items.emplace_back("Severity", VkDebugReportFlagsEXTToString(flags));
+    reportItems.emplace_back("Severity", VkDebugReportFlagsEXTToString(reportFlags));
 
-    items.emplace_back("Object Type", VkDebugReportObjectTypeEXTToString(object_type));
+    reportItems.emplace_back("Object Type", VkDebugReportObjectTypeEXTToString(object_type));
 
-    items.emplace_back("Object Handle", std::to_string(object));
+    reportItems.emplace_back("Object Handle", std::to_string(object));
 
     if (location != 0) {
-        items.emplace_back("Location", std::to_string(location));
+        reportItems.emplace_back("Location", std::to_string(location));
     }
 
     if (message_code != 0) {
-        items.emplace_back("Message Code", std::to_string(message_code));
+        reportItems.emplace_back("Message Code", std::to_string(message_code));
     }
 
     if (layer_prefix != nullptr) {
-        items.emplace_back("Layer", layer_prefix);
+        reportItems.emplace_back("Layer", layer_prefix);
     }
 
     if (message != nullptr) {
-        items.emplace_back("Message", message);
+        reportItems.emplace_back("Message", message);
     }
 
     size_t padding = 0;
 
-    for (const auto& item : items) {
+    for (const auto& item : reportItems) {
         padding = std::max(padding, item.first.size());
     }
 
     padding += 1;
-
-    // Returning false tells the layer not to stop when the event occurs, so
-    // they see the same behavior with and without validation layers enabled.
     return VK_FALSE;
 }
 
@@ -168,19 +165,19 @@ RSVulkanDebugReport::RSVulkanDebugReport(const RSVulkanProcTable& p_vk, const RS
         return;
     }
 
-    VkDebugReportFlagsEXT flags = kVulkanErrorFlags;
+    VkDebugReportFlagsEXT reportFlags = kVulkanErrorFlags;
     if (ValidationLayerInfoMessagesEnabled())
-        flags |= kVulkanInfoFlags;
-    const VkDebugReportCallbackCreateInfoEXT create_info = {
+        reportFlags |= kVulkanInfoFlags;
+    const VkDebugReportCallbackCreateInfoEXT createInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT,
         .pNext = nullptr,
-        .flags = flags,
+        .reportFlags = reportFlags,
         .pfnCallback = &vulkan::OnVulkanDebugReportCallback,
         .pUserData = nullptr,
     };
 
     VkDebugReportCallbackEXT handle = VK_NULL_HANDLE;
-    if (VK_CALL_LOG_ERROR(vk.CreateDebugReportCallbackEXT(application_, &create_info, nullptr, &handle)) !=
+    if (VK_CALL_LOG_ERROR(vk.CreateDebugReportCallbackEXT(application_, &createInfo, nullptr, &handle)) !=
         VK_SUCCESS) {
         return;
     }

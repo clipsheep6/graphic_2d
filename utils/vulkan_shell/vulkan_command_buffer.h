@@ -46,7 +46,7 @@ public:
 private:
     const RSVulkanProcTable& vk;
     const RSVulkanHandle<VkDevice>& device_;
-    const RSVulkanHandle<VkCommandPool>& pool_;
+    const RSVulkanHandle<VkCommandPool>& commandPool_;
     RSVulkanHandle<VkCommandBuffer> handle_;
     bool valid_;
 };

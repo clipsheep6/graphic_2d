@@ -424,8 +424,8 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
     if (!image->InsertImageMemoryBarrier(backbuffer->GetUsageCommandBuffer(), // command buffer
             currentPipelineStage_,                                            // src_pipeline_bits
             destination_pipeline_stage,                                       // dest_pipeline_bits
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,                             // dest_access_flags
-            destination_image_layout                                          // dest_layout
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,                             // destAccessFlags
+            destination_image_layout                                          // destLayout
             )) {
         LOGE("Could not insert image memory barrier.");
         return error;
@@ -446,14 +446,14 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
     // Step 7:
     // Submit the command buffer to the device queue.
     // ---------------------------------------------------------------------------
-    std::vector<VkSemaphore> wait_semaphores = { backbuffer->GetUsageSemaphore() };
-    std::vector<VkSemaphore> signal_semaphores = {};
-    std::vector<VkCommandBuffer> command_buffers = { backbuffer->GetUsageCommandBuffer().Handle() };
+    std::vector<VkSemaphore> waitSemaphores = { backbuffer->GetUsageSemaphore() };
+    std::vector<VkSemaphore> signalSemaphores = {};
+    std::vector<VkCommandBuffer> commandBuffers = { backbuffer->GetUsageCommandBuffer().Handle() };
 
-    if (!device_.QueueSubmit({ destination_pipeline_stage }, // wait_dest_pipeline_stages
-            wait_semaphores,                                 // wait_semaphores
-            signal_semaphores,                               // signal_semaphores
-            command_buffers,                                 // command_buffers
+    if (!device_.QueueSubmit({ destination_pipeline_stage }, // waitDestPipelineStages
+            waitSemaphores,                                 // waitSemaphores
+            signalSemaphores,                               // signalSemaphores
+            commandBuffers,                                 // commandBuffers
             backbuffer->GetUsageFence()                      // fence
             )) {
         LOGE("Could not submit to the device queue.");
@@ -522,8 +522,8 @@ bool RSVulkanSwapchain::FlushCommands()
     if (!image->InsertImageMemoryBarrier(backbuffer->GetRenderCommandBuffer(), // command buffer
             currentPipelineStage_,                                             // src_pipeline_bits
             destination_pipeline_stage,                                        // dest_pipeline_bits
-            VK_ACCESS_MEMORY_READ_BIT,                                         // dest_access_flags
-            destination_image_layout                                           // dest_layout
+            VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
+            destination_image_layout                                           // destLayout
             )) {
         LOGE("Could not insert memory barrier.");
         return false;
@@ -560,13 +560,13 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence)
     // Submit all the command buffer to the device queue. Tell it to signal the render
     // semaphore.
     // ---------------------------------------------------------------------------
-    std::vector<VkSemaphore> wait_semaphores = {};
+    std::vector<VkSemaphore> waitSemaphores = {};
     std::vector<VkSemaphore> queue_signal_semaphores;
-    std::vector<VkCommandBuffer> command_buffers;
+    std::vector<VkCommandBuffer> commandBuffers;
     std::vector<VkSwapchainKHR> swapchains;
     std::vector<uint32_t> present_image_indices;
     queue_signal_semaphores.reserve(toBePresent_.size());
-    command_buffers.reserve(toBePresent_.size());
+    commandBuffers.reserve(toBePresent_.size());
     swapchains.reserve(toBePresent_.size());
     present_image_indices.reserve(toBePresent_.size());
     RSVulkanSwapchain* tmpSwapChain = nullptr;
@@ -577,7 +577,7 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence)
         auto backbuffer = swapchain->backbuffers_[swapchain->currentBackbufferIndex_].get();
         backbuffer->SetMultiThreading();
         queue_signal_semaphores.push_back(backbuffer->GetRenderSemaphore());
-        command_buffers.push_back(backbuffer->GetRenderCommandBuffer().Handle());
+        commandBuffers.push_back(backbuffer->GetRenderCommandBuffer().Handle());
         swapchains.push_back(swapchain->swapchain_);
         present_image_indices.push_back(static_cast<uint32_t>(swapchain->currentImageIndex_));
     }
@@ -585,8 +585,8 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence)
     const RSVulkanProcTable& vk = tmpSwapChain->vk;
     const RSVulkanDevice& device = tmpSwapChain->device_;
 
-    if (!device.QueueSubmit({ /*Empty, No wait Semaphores. */ }, wait_semaphores, queue_signal_semaphores,
-            command_buffers, shared_fence)) {
+    if (!device.QueueSubmit({ /*Empty, No wait Semaphores. */ }, waitSemaphores, queue_signal_semaphores,
+            commandBuffers, shared_fence)) {
         LOGE("Could not submit to the device queue");
         return;
     }
@@ -650,8 +650,8 @@ bool RSVulkanSwapchain::Submit()
     if (!image->InsertImageMemoryBarrier(backbuffer->GetRenderCommandBuffer(), // command buffer
             currentPipelineStage_,                                             // src_pipeline_bits
             destination_pipeline_stage,                                        // dest_pipeline_bits
-            VK_ACCESS_MEMORY_READ_BIT,                                         // dest_access_flags
-            destination_image_layout                                           // dest_layout
+            VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
+            destination_image_layout                                           // destLayout
             )) {
         LOGE("Could not insert memory barrier.");
         return false;
@@ -673,14 +673,14 @@ bool RSVulkanSwapchain::Submit()
     // Submit the command buffer to the device queue. Tell it to signal the render
     // semaphore.
     // ---------------------------------------------------------------------------
-    std::vector<VkSemaphore> wait_semaphores = {};
+    std::vector<VkSemaphore> waitSemaphores = {};
     std::vector<VkSemaphore> queue_signal_semaphores = { backbuffer->GetRenderSemaphore() };
-    std::vector<VkCommandBuffer> command_buffers = { backbuffer->GetRenderCommandBuffer().Handle() };
+    std::vector<VkCommandBuffer> commandBuffers = { backbuffer->GetRenderCommandBuffer().Handle() };
 
-    if (!device_.QueueSubmit({ /* Empty. No wait semaphores. */ }, // wait_dest_pipeline_stages
-            wait_semaphores,                                       // wait_semaphores
-            queue_signal_semaphores,                               // signal_semaphores
-            command_buffers,                                       // command_buffers
+    if (!device_.QueueSubmit({ /* Empty. No wait semaphores. */ }, // waitDestPipelineStages
+            waitSemaphores,                                       // waitSemaphores
+            queue_signal_semaphores,                               // signalSemaphores
+            commandBuffers,                                       // commandBuffers
             backbuffer->GetRenderFence()                           // fence
             )) {
         LOGE("Could not submit to the device queue.");

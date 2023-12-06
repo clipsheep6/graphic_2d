@@ -37,37 +37,37 @@ bool RSVulkanImage::IsValid() const
     return valid_;
 }
 
-bool RSVulkanImage::InsertImageMemoryBarrier(const RSVulkanCommandBuffer& command_buffer,
-    VkPipelineStageFlagBits src_pipline_bits, VkPipelineStageFlagBits dest_pipline_bits,
-    VkAccessFlagBits dest_access_flags, VkImageLayout dest_layout)
+bool RSVulkanImage::InsertImageMemoryBarrier(const RSVulkanCommandBuffer& commandBuffer,
+    VkPipelineStageFlagBits srcPiplineBits, VkPipelineStageFlagBits destPiplineBits,
+    VkAccessFlagBits destAccessFlags, VkImageLayout destLayout)
 {
-    const VkImageMemoryBarrier image_memory_barrier = {
+    const VkImageMemoryBarrier imageMemoryBarrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = nullptr,
         .srcAccessMask = accessFlags_,
-        .dstAccessMask = dest_access_flags,
+        .dstAccessMask = destAccessFlags,
         .oldLayout = layout_,
-        .newLayout = dest_layout,
+        .newLayout = destLayout,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .image = handle_,
         .subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 },
     };
 
-    bool success = command_buffer.InsertPipelineBarrier(src_pipline_bits, // src_stage_flags
-        dest_pipline_bits,                                                // dest_stage_flags
+    bool success = commandBuffer.InsertPipelineBarrier(srcPiplineBits, // src_stage_flags
+        destPiplineBits,                                                // dest_stage_flags
         0,                                                                // dependency_flags
         0,                                                                // memory_barrier_count
         nullptr,                                                          // memory_barriers
         0,                                                                // buffer_memory_barrier_count
         nullptr,                                                          // buffer_memory_barriers
         1,                                                                // image_memory_barrier_count
-        &image_memory_barrier                                             // image_memory_barriers
+        &imageMemoryBarrier                                             // image_memory_barriers
     );
 
     if (success) {
-        accessFlags_ = dest_access_flags;
-        layout_ = dest_layout;
+        accessFlags_ = destAccessFlags;
+        layout_ = destLayout;
     }
 
     return success;

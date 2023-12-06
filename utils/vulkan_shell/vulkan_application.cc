@@ -25,8 +25,8 @@
 
 namespace OHOS::Rosen::vulkan {
 
-RSVulkanApplication::RSVulkanApplication(RSVulkanProcTable& p_vk, const std::string& application_name,
-    std::vector<std::string> enabled_extensions, uint32_t application_version, uint32_t api_version)
+RSVulkanApplication::RSVulkanApplication(RSVulkanProcTable& p_vk, const std::string& applicationName,
+    std::vector<std::string> enabledExtensions, uint32_t applicationVersion, uint32_t api_version)
     : vk(p_vk), apiVersion_(api_version), valid_(false)
 {
     std::vector<VkExtensionProperties> supported_extensions = GetSupportedInstanceExtensions(vk);
@@ -34,47 +34,47 @@ RSVulkanApplication::RSVulkanApplication(RSVulkanProcTable& p_vk, const std::str
         IsDebuggingEnabled() && ExtensionSupported(supported_extensions, RSVulkanDebugReport::DebugExtensionName());
 
     if (enable_instance_debugging) {
-        enabled_extensions.emplace_back(RSVulkanDebugReport::DebugExtensionName());
+        enabledExtensions.emplace_back(RSVulkanDebugReport::DebugExtensionName());
     }
 
-    const char* extensions[enabled_extensions.size()];
+    const char* extensions[enabledExtensions.size()];
 
-    for (size_t i = 0; i < enabled_extensions.size(); i++) {
-        extensions[i] = enabled_extensions[i].c_str();
+    for (size_t i = 0; i < enabledExtensions.size(); i++) {
+        extensions[i] = enabledExtensions[i].c_str();
     }
 
-    const std::vector<std::string> enabled_layers = InstanceLayersToEnable(vk);
+    const std::vector<std::string> enabledLayers = InstanceLayersToEnable(vk);
 
-    const char* layers[enabled_layers.size()];
+    const char* layers[enabledLayers.size()];
 
-    for (size_t i = 0; i < enabled_layers.size(); i++) {
-        layers[i] = enabled_layers[i].c_str();
+    for (size_t i = 0; i < enabledLayers.size(); i++) {
+        layers[i] = enabledLayers[i].c_str();
     }
 
     const VkApplicationInfo info = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = nullptr,
-        .pApplicationName = application_name.c_str(),
-        .applicationVersion = application_version,
+        .pApplicationName = applicationName.c_str(),
+        .applicationVersion = applicationVersion,
         .pEngineName = "Rosen",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
         .apiVersion = apiVersion_,
     };
 
-    const VkInstanceCreateInfo create_info = {
+    const VkInstanceCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
         .pApplicationInfo = &info,
-        .enabledLayerCount = static_cast<uint32_t>(enabled_layers.size()),
+        .enabledLayerCount = static_cast<uint32_t>(enabledLayers.size()),
         .ppEnabledLayerNames = layers,
-        .enabledExtensionCount = static_cast<uint32_t>(enabled_extensions.size()),
+        .enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size()),
         .ppEnabledExtensionNames = extensions,
     };
 
     VkInstance instance = VK_NULL_HANDLE;
 
-    if (VK_CALL_LOG_ERROR(vk.CreateInstance(&create_info, nullptr, &instance)) != VK_SUCCESS) {
+    if (VK_CALL_LOG_ERROR(vk.CreateInstance(&createInfo, nullptr, &instance)) != VK_SUCCESS) {
         LOGE("Could not create application instance.");
         return;
     }

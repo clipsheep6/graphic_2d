@@ -28,14 +28,14 @@ public:
     using Handle = T;
     using Disposer = std::function<void(Handle)>;
 
-    RSVulkanHandle() : handle_(VK_NULL_HANDLE) {}
+    RSVulkanHandle() : vkHandle_(VK_NULL_HANDLE) {}
 
-    RSVulkanHandle(Handle handle, Disposer disposer = nullptr) : handle_(handle), disposer_(disposer) {}
+    RSVulkanHandle(Handle handle, Disposer disposer = nullptr) : vkHandle_(handle), vkDisposer_(disposer) {}
 
-    RSVulkanHandle(RSVulkanHandle&& other) : handle_(other.handle_), disposer_(other.disposer_)
+    RSVulkanHandle(RSVulkanHandle&& other) : vkHandle_(other.vkHandle_), vkDisposer_(other.vkDisposer_)
     {
-        other.handle_ = VK_NULL_HANDLE;
-        other.disposer_ = nullptr;
+        other.vkHandle_ = VK_NULL_HANDLE;
+        other.vkDisposer_ = nullptr;
     }
 
     ~RSVulkanHandle()
@@ -45,27 +45,25 @@ public:
 
     RSVulkanHandle& operator=(RSVulkanHandle&& other)
     {
-        if (handle_ != other.handle_) {
+        if (vkHandle_ != other.vkHandle_) {
             DisposeIfNecessary();
         }
 
-        handle_ = other.handle_;
-        disposer_ = other.disposer_;
-
-        other.handle_ = VK_NULL_HANDLE;
-        other.disposer_ = nullptr;
-
+        vkHandle_ = other.vkHandle_;
+        other.vkHandle_ = VK_NULL_HANDLE;
+        vkDisposer_ = other.vkDisposer_;
+        other.vkDisposer_ = nullptr;
         return *this;
     }
 
     operator bool() const
     {
-        return handle_ != VK_NULL_HANDLE;
+        return vkHandle_ != VK_NULL_HANDLE;
     }
 
     operator Handle() const
     {
-        return handle_;
+        return vkHandle_;
     }
 
     /// Relinquish responsibility of collecting the underlying handle when this
@@ -73,7 +71,7 @@ public:
     /// the lifetime of the handle extends past the lifetime of this object.
     void ReleaseOwnership()
     {
-        disposer_ = nullptr;
+        vkDisposer_ = nullptr;
     }
 
     void Reset()
@@ -82,19 +80,19 @@ public:
     }
 
 private:
-    Handle handle_;
-    Disposer disposer_;
+    Handle vkHandle_;
+    Disposer vkDisposer_;
 
     void DisposeIfNecessary()
     {
-        if (handle_ == VK_NULL_HANDLE) {
+        if (vkHandle_ == VK_NULL_HANDLE) {
             return;
         }
-        if (disposer_) {
-            disposer_(handle_);
+        if (vkDisposer_) {
+            vkDisposer_(vkHandle_);
         }
-        handle_ = VK_NULL_HANDLE;
-        disposer_ = nullptr;
+        vkHandle_ = VK_NULL_HANDLE;
+        vkDisposer_ = nullptr;
     }
 };
 

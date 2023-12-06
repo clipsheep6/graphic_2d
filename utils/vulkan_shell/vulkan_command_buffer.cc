@@ -22,26 +22,26 @@ namespace OHOS::Rosen::vulkan {
 
 RSVulkanCommandBuffer::RSVulkanCommandBuffer(
     const RSVulkanProcTable& p_vk, const RSVulkanHandle<VkDevice>& device, const RSVulkanHandle<VkCommandPool>& pool)
-    : vk(p_vk), device_(device), pool_(pool), valid_(false)
+    : vk(p_vk), device_(device), commandPool_(pool), valid_(false)
 {
     const VkCommandBufferAllocateInfo allocateInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
-        .commandPool = pool_,
+        .commandPool = commandPool_,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = 1,
     };
 
-    VkCommandBuffer buffer = VK_NULL_HANDLE;
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
 
-    if (VK_CALL_LOG_ERROR(vk.AllocateCommandBuffers(device_, &allocateInfo, &buffer)) != VK_SUCCESS) {
+    if (VK_CALL_LOG_ERROR(vk.AllocateCommandBuffers(device_, &allocateInfo, &commandBuffer)) != VK_SUCCESS) {
         LOGE("Could not allocate command buffers.");
         return;
     }
 
-    auto buffer_collect = [this](VkCommandBuffer buffer) { vk.FreeCommandBuffers(device_, pool_, 1, &buffer); };
+    auto buffer_collect = [this](VkCommandBuffer commandBuffer) { vk.FreeCommandBuffers(device_, commandPool_, 1, &commandBuffer); };
 
-    handle_ = { buffer, buffer_collect };
+    handle_ = { commandBuffer, buffer_collect };
 
     valid_ = true;
 }
@@ -60,13 +60,13 @@ VkCommandBuffer RSVulkanCommandBuffer::Handle() const
 
 bool RSVulkanCommandBuffer::Begin() const
 {
-    const VkCommandBufferBeginInfo info {
+    const VkCommandBufferBeginInfo commandBufferBeginInfo {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext = nullptr,
         .flags = 0,
         .pInheritanceInfo = nullptr,
     };
-    return VK_CALL_LOG_ERROR(vk.BeginCommandBuffer(handle_, &info)) == VK_SUCCESS;
+    return VK_CALL_LOG_ERROR(vk.BeginCommandBuffer(handle_, &commandBufferBeginInfo)) == VK_SUCCESS;
 }
 
 bool RSVulkanCommandBuffer::End() const

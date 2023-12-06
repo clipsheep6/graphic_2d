@@ -58,7 +58,7 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
 
     const float priorities[1] = { 1.0f };
 
-    std::vector<VkDeviceQueueCreateInfo> queue_create { {
+    std::vector<VkDeviceQueueCreateInfo> queueCreate { {
         .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
@@ -68,7 +68,7 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
     } };
 
     if (computeQueueIndex_ != kVulkanInvalidGraphicsQueueIndex && computeQueueIndex_ != graphicQueueIndex_) {
-        queue_create.push_back({
+        queueCreate.push_back({
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
@@ -82,21 +82,21 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     };
 
-    auto enabled_layers = DeviceLayersToEnable(vk, physicalDevice_);
+    auto enabledLayers = DeviceLayersToEnable(vk, physicalDevice_);
 
-    const char* layers[enabled_layers.size()];
+    const char* layers[enabledLayers.size()];
 
-    for (size_t i = 0; i < enabled_layers.size(); i++) {
-        layers[i] = enabled_layers[i].c_str();
+    for (size_t i = 0; i < enabledLayers.size(); i++) {
+        layers[i] = enabledLayers[i].c_str();
     }
 
     const VkDeviceCreateInfo create_info = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .queueCreateInfoCount = queue_create.size(),
-        .pQueueCreateInfos = queue_create.data(),
-        .enabledLayerCount = static_cast<uint32_t>(enabled_layers.size()),
+        .queueCreateInfoCount = queueCreate.size(),
+        .pQueueCreateInfos = queueCreate.data(),
+        .enabledLayerCount = static_cast<uint32_t>(enabledLayers.size()),
         .ppEnabledLayerNames = layers,
         .enabledExtensionCount = sizeof(extensions) / sizeof(const char*),
         .ppEnabledExtensionNames = extensions,
@@ -128,21 +128,21 @@ RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysica
 
     queue_ = queue;
 
-    const VkCommandPoolCreateInfo command_pool_create_info = {
+    const VkCommandPoolCreateInfo commandPoolCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext = nullptr,
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
         .queueFamilyIndex = 0,
     };
 
-    VkCommandPool command_pool = VK_NULL_HANDLE;
-    if (VK_CALL_LOG_ERROR(vk.CreateCommandPool(device_, &command_pool_create_info, nullptr, &command_pool)) !=
+    VkCommandPool commandPool = VK_NULL_HANDLE;
+    if (VK_CALL_LOG_ERROR(vk.CreateCommandPool(device_, &commandPoolCreateInfo, nullptr, &commandPool)) !=
         VK_SUCCESS) {
         LOGE("Could not create the command pool.");
         return;
     }
 
-    commandPool_ = { command_pool, [this](VkCommandPool pool) { vk.DestroyCommandPool(device_, pool, nullptr); } };
+    commandPool_ = { commandPool, [this](VkCommandPool pool) { vk.DestroyCommandPool(device_, pool, nullptr); } };
 
     valid_ = true;
 }
@@ -227,40 +227,40 @@ bool RSVulkanDevice::GetSurfaceCapabilities(
     return true;
 }
 
-bool RSVulkanDevice::GetPhysicalDeviceFeatures(VkPhysicalDeviceFeatures* features) const
+bool RSVulkanDevice::GetPhysicalDeviceFeatures(VkPhysicalDeviceFeatures* DeviceFeatures) const
 {
-    if (features == nullptr || !physicalDevice_) {
+    if (DeviceFeatures == nullptr || !physicalDevice_) {
         return false;
     }
-    vk.GetPhysicalDeviceFeatures(physicalDevice_, features);
+    vk.GetPhysicalDeviceFeatures(physicalDevice_, DeviceFeatures);
     return true;
 }
 
-bool RSVulkanDevice::GetPhysicalDeviceFeaturesSkia(uint32_t* sk_features) const
+bool RSVulkanDevice::GetPhysicalDeviceFeaturesSkia(uint32_t* skFeatures) const
 {
-    if (sk_features == nullptr) {
+    if (skFeatures == nullptr) {
         return false;
     }
 
-    VkPhysicalDeviceFeatures features;
+    VkPhysicalDeviceFeatures DeviceFeatures;
 
-    if (!GetPhysicalDeviceFeatures(&features)) {
+    if (!GetPhysicalDeviceFeatures(&DeviceFeatures)) {
         return false;
     }
 
     uint32_t flags = 0;
 
-    if (features.geometryShader) {
+    if (DeviceFeatures.geometryShader) {
         flags |= kGeometryShader_GrVkFeatureFlag;
     }
-    if (features.dualSrcBlend) {
+    if (DeviceFeatures.dualSrcBlend) {
         flags |= kDualSrcBlend_GrVkFeatureFlag;
     }
-    if (features.sampleRateShading) {
+    if (DeviceFeatures.sampleRateShading) {
         flags |= kSampleRateShading_GrVkFeatureFlag;
     }
 
-    *sk_features = flags;
+    *skFeatures = flags;
     return true;
 }
 
@@ -279,41 +279,41 @@ std::vector<VkQueueFamilyProperties> RSVulkanDevice::GetQueueFamilyProperties() 
 }
 
 int RSVulkanDevice::ChooseSurfaceFormat(
-    const RSVulkanSurface& surface, std::vector<VkFormat> desired_formats, VkSurfaceFormatKHR* format) const
+    const RSVulkanSurface& surface, std::vector<VkFormat> desiredFormats, VkSurfaceFormatKHR* format) const
 {
     if (!surface.IsValid() || format == nullptr) {
         LOGE("ChooseSurfaceFormat surface not valid or format == null");
         return -1;
     }
 
-    uint32_t format_count = 0;
+    uint32_t formatCount = 0;
     if (VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceFormatsKHR(
-            physicalDevice_, surface.Handle(), &format_count, nullptr)) != VK_SUCCESS) {
+            physicalDevice_, surface.Handle(), &formatCount, nullptr)) != VK_SUCCESS) {
         LOGE("ChooseSurfaceFormat sGetPhysicalDeviceSurfaceFormatsKHR not success");
         return -1;
     }
 
-    if (format_count == 0) {
+    if (formatCount == 0) {
         LOGE("ChooseSurfaceFormat format count = 0");
         return -1;
     }
 
-    VkSurfaceFormatKHR formats[format_count];
+    VkSurfaceFormatKHR formats[formatCount];
     if (VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceFormatsKHR(
-            physicalDevice_, surface.Handle(), &format_count, formats)) != VK_SUCCESS) {
+            physicalDevice_, surface.Handle(), &formatCount, formats)) != VK_SUCCESS) {
         LOGE("ChooseSurfaceFormat sGetPhysicalDeviceSurfaceFormatsKHR not success 2");
         return -1;
     }
 
-    std::map<VkFormat, VkSurfaceFormatKHR> supported_formats;
-    for (uint32_t i = 0; i < format_count; i++) {
-        supported_formats[formats[i].format] = formats[i];
+    std::map<VkFormat, VkSurfaceFormatKHR> supportedFormats;
+    for (uint32_t i = 0; i < formatCount; i++) {
+        supportedFormats[formats[i].format] = formats[i];
     }
 
     // Try to find the first supported format in the list of desired formats.
-    for (size_t i = 0; i < desired_formats.size(); ++i) {
-        auto found = supported_formats.find(desired_formats[i]);
-        if (found != supported_formats.end()) {
+    for (size_t i = 0; i < desiredFormats.size(); ++i) {
+        auto found = supportedFormats.find(desiredFormats[i]);
+        if (found != supportedFormats.end()) {
             *format = found->second;
             return static_cast<int>(i);
         }
@@ -329,41 +329,31 @@ bool RSVulkanDevice::ChoosePresentMode(const RSVulkanSurface& surface, VkPresent
         return false;
     }
 
-    // https://github.com/LunarG/VulkanSamples/issues/98 indicates that
-    // VK_PRESENT_MODE_FIFO_KHR is preferable on mobile platforms. The problems
-    // mentioned in the ticket w.r.t the application being faster that the refresh
-    // rate of the screen should not be faced by any Flutter platforms as they are
-    // powered by Vsync pulses instead of depending the the submit to block.
-    // However, for platforms that don't have VSync providers setup, it is better
-    // to fall back to FIFO. For platforms that do have VSync providers, there
-    // should be little difference. In case there is a need for a mode other than
-    // FIFO, availability checks must be performed here before returning the
-    // result. FIFO is always present.
     *present_mode = VK_PRESENT_MODE_FIFO_KHR;
     return true;
 }
 
-bool RSVulkanDevice::QueueSubmit(std::vector<VkPipelineStageFlags> wait_dest_pipeline_stages,
-    const std::vector<VkSemaphore>& wait_semaphores, const std::vector<VkSemaphore>& signal_semaphores,
-    const std::vector<VkCommandBuffer>& command_buffers, const RSVulkanHandle<VkFence>& fence) const
+bool RSVulkanDevice::QueueSubmit(std::vector<VkPipelineStageFlags> waitDestPipelineStages,
+    const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkSemaphore>& signalSemaphores,
+    const std::vector<VkCommandBuffer>& commandBuffers, const RSVulkanHandle<VkFence>& fence) const
 {
-    if (wait_semaphores.size() != wait_dest_pipeline_stages.size()) {
+    if (waitSemaphores.size() != waitDestPipelineStages.size()) {
         return false;
     }
 
-    const VkSubmitInfo submit_info = {
+    const VkSubmitInfo submitInfo = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .pNext = nullptr,
-        .waitSemaphoreCount = static_cast<uint32_t>(wait_semaphores.size()),
-        .pWaitSemaphores = wait_semaphores.data(),
-        .pWaitDstStageMask = wait_dest_pipeline_stages.data(),
-        .commandBufferCount = static_cast<uint32_t>(command_buffers.size()),
-        .pCommandBuffers = command_buffers.data(),
-        .signalSemaphoreCount = static_cast<uint32_t>(signal_semaphores.size()),
-        .pSignalSemaphores = signal_semaphores.data(),
+        .waitSemaphoreCount = static_cast<uint32_t>(waitSemaphores.size()),
+        .pWaitSemaphores = waitSemaphores.data(),
+        .pWaitDstStageMask = waitDestPipelineStages.data(),
+        .commandBufferCount = static_cast<uint32_t>(commandBuffers.size()),
+        .pCommandBuffers = commandBuffers.data(),
+        .signalSemaphoreCount = static_cast<uint32_t>(signalSemaphores.size()),
+        .pSignalSemaphores = signalSemaphores.data(),
     };
 
-    if (VK_CALL_LOG_ERROR(vk.QueueSubmit(queue_, 1, &submit_info, fence)) != VK_SUCCESS) {
+    if (VK_CALL_LOG_ERROR(vk.QueueSubmit(queue_, 1, &submitInfo, fence)) != VK_SUCCESS) {
         return false;
     }
 

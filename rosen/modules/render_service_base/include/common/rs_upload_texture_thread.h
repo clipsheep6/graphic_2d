@@ -16,6 +16,9 @@
 #ifndef RS_UPLOAD_TEXTURE_THREAD_H
 #define RS_UPLOAD_TEXTURE_THREAD_H
 
+#include <vector>
+#include <mutex>
+
 #include "event_handler.h"
 #include "common/rs_macros.h"
 #if defined(RS_ENABLE_UNI_RENDER) && defined(RS_ENABLE_GL)
@@ -25,6 +28,7 @@
 #include "include/core/SkSurface.h"
 #ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
+#include "src/gpu/GrSurfaceProxyView.h"
 #endif
 #endif
 #endif
@@ -45,6 +49,9 @@ public:
 #ifndef USE_ROSEN_DRAWING
     sk_sp<GrDirectContext> GetShareGrContext() const;
     void CleanGrResource();
+    void AddViewToReleaseQueue(GrSurfaceProxyView& view);
+    void ReleaseNotUsedPinnedViews();
+    static void AddToReleaseQueue(GrSurfaceProxyView& view);
 #endif
 #endif
 private:
@@ -64,6 +71,8 @@ private:
     RenderContext* renderContext_ = nullptr;
     sk_sp<GrDirectContext> grContext_ = nullptr;
     EGLContext eglShareContext_ = EGL_NO_CONTEXT;
+    std::mutex proxyViewMutex_;
+    std::vector<GrSurfaceProxyView> proxyView_;
 #endif
 #endif
 };

@@ -271,6 +271,7 @@ void RSMainThread::Init()
             SKResourceManager::Instance().ReleaseResource();
             preSKReleaseResourceTimestamp_ = timestamp_;
         }
+        RSUploadTextureThread::Instance().ReleaseNotUsedPinnedViews();
     };
 #if defined(ROSEN_OHOS) && defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
     std::function<void*(VkImage, VkDeviceMemory)> createCleanup = [] (VkImage image, VkDeviceMemory memory) -> void* {

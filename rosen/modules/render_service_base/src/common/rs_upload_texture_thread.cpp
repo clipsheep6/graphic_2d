@@ -135,6 +135,35 @@ void RSUploadTextureThread::CleanGrResource()
         RS_LOGI("RSUploadTextureThread::CleanGrResource() finished");
     });
 }
+
+void RSUploadTextureThread::AddToReleaseQueue(GrSurfaceProxyView& view)
+{
+    RSUploadTextureThread::Instance().AddViewToReleaseQueue(view);
+}
+
+void RSUploadTextureThread::AddViewToReleaseQueue(GrSurfaceProxyView& view)
+{
+    std::unique_lock<std::mutex> lock(proxyViewMutex_);
+    proxyView_.push_back(std::move(view));
+}
+
+void RSUploadTextureThread::ReleaseNotUsedPinnedViews()
+{
+    size_t size;
+    {
+        std::unique_lock<std::mutex> lock(proxyViewMutex_);
+        size = proxyView_.size();
+    }
+    if (size > 0) {
+        PostTask([this]() {
+            RS_TRACE_NAME("ReleaseNotUsedPinnedViews");
+            std::unique_lock<std::mutex> lock(proxyViewMutex_);
+            RS_LOGE("hh_test ReleaseNotUsedPinnedViews %d", (int)proxyView_.size());
+            proxyView_.clear();
+        });
+    }
+}
+
 #endif
 #endif
 }

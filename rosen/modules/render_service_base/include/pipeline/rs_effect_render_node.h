@@ -47,13 +47,6 @@ public:
 protected:
     RectI GetFilterRect() const override;
 
-private:
-#ifndef USE_ROSEN_DRAWING
-    std::optional<SkIRect> effectRegion_ = std::nullopt;
-#else
-    std::optional<Drawing::RectF> effectRegion_ = std::nullopt;
-#endif
-    friend class RSEffectDataGenerateDrawable;
 };
 } // namespace Rosen
 } // namespace OHOS

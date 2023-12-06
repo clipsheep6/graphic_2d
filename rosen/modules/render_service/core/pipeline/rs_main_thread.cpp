@@ -950,7 +950,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         }
         // Reset BasicGeoTrans info at the beginning of cmd process
         if (surfaceNode->IsMainWindowType()) {
-            surfaceNode->ResetIsOnlyBasicGeoTransfrom();
+            surfaceNode->ResetIsOnlyBasicGeoTransform();
         }
         if (surfaceNode->IsHardwareEnabledType()
             && CheckSubThreadNodeStatusIsDoing(surfaceNode->GetInstanceRootNodeId())) {
@@ -2641,7 +2641,7 @@ bool RSMainThread::CheckIfInstanceOnlySurfaceBasicGeoTransform(NodeId instanceNo
                 continue;
             }
             // filter active nodes except instance surface itself
-            if (id != instanceNodeId || !subNode->IsOnlyBasicGeoTransfrom()) {
+            if (id != instanceNodeId || !subNode->IsOnlyBasicGeoTransform()) {
                 return false;
             }
         }

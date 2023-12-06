@@ -16,10 +16,11 @@
 #ifndef USE_ROSEN_DRAWING
 #include "pipeline/rs_recording_canvas.h"
 
+#include "rs_trace.h"
+
 #include "pipeline/rs_draw_cmd.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
-#include "rs_trace.h"
 
 #define RS_DRAWOP_TRACE_FUNC() \
     if (RSSystemProperties::GetDrawOpTraceEnabled()) { \
@@ -33,7 +34,7 @@ RSRecordingCanvas::RSRecordingCanvas(int width, int height) : SkCanvasVirtualEnf
     drawCmdList_ = std::make_shared<DrawCmdList>(width, height);
 }
 
-RSRecordingCanvas::~RSRecordingCanvas() {}
+RSRecordingCanvas::~RSRecordingCanvas() = default;
 
 std::shared_ptr<DrawCmdList> RSRecordingCanvas::GetDrawCmdList() const
 {
@@ -459,6 +460,20 @@ void RSRecordingCanvas::SetIsCustomTextType(bool isCustomTextType)
 bool RSRecordingCanvas::IsCustomTextType() const
 {
     return isCustomTextType_;
+}
+void RSRecordingCanvas::DrawPropertyDrawable(
+    const std::shared_ptr<const RSRenderContent> content, RSPropertyDrawableSlot slot)
+{
+    RS_DRAWOP_TRACE_FUNC();
+    std::unique_ptr<OpItem> op = std::make_unique<PropertyDrawableOpItem>(std::move(content), slot);
+    AddOp(std::move(op));
+}
+void RSRecordingCanvas::DrawPropertyDrawableRange(
+    const std::shared_ptr<const RSRenderContent> content, RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end)
+{
+    RS_DRAWOP_TRACE_FUNC();
+    std::unique_ptr<OpItem> op = std::make_unique<PropertyDrawableRangeOpItem>(std::move(content), begin, end);
+    AddOp(std::move(op));
 }
 } // namespace Rosen
 } // namespace OHOS

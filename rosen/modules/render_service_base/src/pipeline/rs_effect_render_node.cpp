@@ -56,14 +56,15 @@ void RSEffectRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
 {
     RSRenderNode::ProcessTransitionBeforeChildren(canvas);
     auto& properties = GetRenderProperties();
+    const auto& effectRegion = properties.GetEffectRegion();
     // Disable effect region if either of the following conditions is met:
     // 1. Effect region is null or empty
     // 2. Background filter is null
     // 3. Canvas is offscreen
 #ifndef USE_ROSEN_DRAWING
-    if (effectRegion_.has_value() && properties.GetBackgroundFilter() != nullptr &&
+    if (effectRegion.has_value() && properties.GetBackgroundFilter() != nullptr &&
         canvas.GetCacheType() != RSPaintFilterCanvas::CacheType::OFFSCREEN) {
-        RSPropertiesPainter::DrawBackgroundEffect(properties, canvas, *effectRegion_);
+        RSPropertiesPainter::DrawBackgroundEffect(properties, canvas, *effectRegion);
     } else {
         canvas.SetEffectData(nullptr);
     }
@@ -74,14 +75,16 @@ void RSEffectRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas
 
 RectI RSEffectRenderNode::GetFilterRect() const
 {
-    if (!effectRegion_.has_value()) {
+    auto& properties = GetRenderProperties();
+    const auto& effectRegion = properties.GetEffectRegion();
+    if (!effectRegion.has_value()) {
         ROSEN_LOGE("RSEffectRenderNode::GetFilterRect: effectRegion has no value");
         return {};
     }
     auto& matrix = GetRenderProperties().GetBoundsGeometry()->GetAbsMatrix();
 #ifndef USE_ROSEN_DRAWING
     // re-map local rect to absolute rect
-    auto bounds = matrix.mapRect(SkRect::Make(*effectRegion_)).roundOut();
+    auto bounds = matrix.mapRect(SkRect::Make(*effectRegion)).roundOut();
     return { bounds.x(), bounds.y(), bounds.width(), bounds.height() };
 #else
     // PLANNING: add drawing implementation
@@ -95,8 +98,9 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<SkPath>& region)
 void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& region)
 #endif
 {
+    auto& properties = GetMutableRenderProperties();
     if (!region.has_value()) {
-        effectRegion_.reset();
+        properties.SetEffectRegion(std::nullopt);
         ROSEN_LOGE("RSEffectRenderNode::SetEffectRegion: region has no value");
         return;
     }
@@ -108,7 +112,7 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& reg
     auto rect = region->getBounds();
     if (!rect.intersect(
         SkRect::MakeLTRB(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom()))) {
-        effectRegion_.reset();
+        properties.SetEffectRegion(std::nullopt);
         ROSEN_LOGE("RSEffectRenderNode::SetEffectRegion: intersect rect failed.");
         return;
     }
@@ -116,12 +120,12 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& reg
     // Map absolute rect to local matrix
     SkMatrix revertMatrix;
     if (!matrix.invert(&revertMatrix)) {
-        effectRegion_.reset();
+        properties.SetEffectRegion(std::nullopt);
         ROSEN_LOGE("RSEffectRenderNode::SetEffectRegion: get invert matrix failed.");
         return;
     }
-    auto prevEffectRegion = std::move(effectRegion_);
-    effectRegion_ = revertMatrix.mapRect(rect).roundOut();
+    auto prevEffectRegion = properties.GetEffectRegion();
+    properties.SetEffectRegion(revertMatrix.mapRect(rect).roundOut());
 
     // Update cache state if filter region has changed
     auto& manager = GetRenderProperties().GetFilterCacheManager(false);
@@ -129,7 +133,7 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& reg
         ROSEN_LOGE("RSEffectRenderNode::SetEffectRegion: CacheManager is null or invalid");
         return;
     }
-    if (prevEffectRegion.has_value() && !prevEffectRegion->contains(*effectRegion_)) {
+    if (prevEffectRegion.has_value() && !prevEffectRegion->contains(*properties.GetEffectRegion())) {
         manager->UpdateCacheStateWithFilterRegion();
     }
 #else

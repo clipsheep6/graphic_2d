@@ -15,8 +15,8 @@
 
 #include "vulkan_handle.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 //
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

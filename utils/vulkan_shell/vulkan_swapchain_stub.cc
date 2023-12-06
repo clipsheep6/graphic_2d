@@ -15,31 +15,31 @@
 
 #include "vulkan_swapchain.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanSwapchain::VulkanSwapchain(const VulkanProcTable& p_vk,
-                                 const VulkanDevice& device,
-                                 const VulkanSurface& surface,
+RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
+                                 const RSVulkanDevice& device,
+                                 const RSVulkanSurface& surface,
                                  GrDirectContext* skia_context,
-                                 std::unique_ptr<VulkanSwapchain> old_swapchain,
+                                 std::unique_ptr<RSVulkanSwapchain> old_swapchain,
                                  uint32_t queue_family_index) {}
 
-VulkanSwapchain::~VulkanSwapchain() = default;
+RSVulkanSwapchain::~RSVulkanSwapchain() = default;
 
-bool VulkanSwapchain::IsValid() const {
+bool RSVulkanSwapchain::IsValid() const {
   return false;
 }
 
-VulkanSwapchain::AcquireResult VulkanSwapchain::AcquireSurface() {
+RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface() {
   return {AcquireStatus::ErrorSurfaceLost, nullptr};
 }
 
-bool VulkanSwapchain::Submit() {
+bool RSVulkanSwapchain::Submit() {
   return false;
 }
 
-SkISize VulkanSwapchain::GetSize() const {
+SkISize RSVulkanSwapchain::GetSize() const {
   return SkISize::Make(0, 0);
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

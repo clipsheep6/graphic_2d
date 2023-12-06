@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_COMMAND_BUFFER_H_
-#define FLUTTER_VULKAN_VULKAN_COMMAND_BUFFER_H_
+#ifndef RS_VULKAN_VULKAN_COMMAND_BUFFER_H_
+#define RS_VULKAN_VULKAN_COMMAND_BUFFER_H_
 
 #include "vulkan_handle.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanProcTable;
+class RSVulkanProcTable;
 
-class VulkanCommandBuffer {
+class RSVulkanCommandBuffer {
  public:
-  VulkanCommandBuffer(const VulkanProcTable& vk,
-                      const VulkanHandle<VkDevice>& device,
-                      const VulkanHandle<VkCommandPool>& pool);
+  RSVulkanCommandBuffer(const RSVulkanProcTable& vk,
+                      const RSVulkanHandle<VkDevice>& device,
+                      const RSVulkanHandle<VkCommandPool>& pool);
 
-  ~VulkanCommandBuffer();
+  ~RSVulkanCommandBuffer();
 
   bool IsValid() const;
 
@@ -50,13 +50,13 @@ class VulkanCommandBuffer {
       const VkImageMemoryBarrier* image_memory_barriers) const;
 
  private:
-  const VulkanProcTable& vk;
-  const VulkanHandle<VkDevice>& device_;
-  const VulkanHandle<VkCommandPool>& pool_;
-  VulkanHandle<VkCommandBuffer> handle_;
+  const RSVulkanProcTable& vk;
+  const RSVulkanHandle<VkDevice>& device_;
+  const RSVulkanHandle<VkCommandPool>& pool_;
+  RSVulkanHandle<VkCommandBuffer> handle_;
   bool valid_;
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_COMMAND_BUFFER_H_
+#endif  // RS_VULKAN_VULKAN_COMMAND_BUFFER_H_

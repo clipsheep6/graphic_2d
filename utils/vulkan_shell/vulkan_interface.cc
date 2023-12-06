@@ -15,7 +15,7 @@
 
 #include "vulkan_interface.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 std::string VulkanResultToString(VkResult result) {
   switch (result) {
@@ -81,4 +81,4 @@ std::string VulkanResultToString(VkResult result) {
   return "";
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

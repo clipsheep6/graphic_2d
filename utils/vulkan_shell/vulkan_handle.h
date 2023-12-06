@@ -13,35 +13,35 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_HANDLE_H_
-#define FLUTTER_VULKAN_VULKAN_HANDLE_H_
+#ifndef RS_VULKAN_VULKAN_HANDLE_H_
+#define RS_VULKAN_VULKAN_HANDLE_H_
 
 #include <functional>
 
 #include "vulkan_interface.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 template <class T>
-class VulkanHandle {
+class RSVulkanHandle {
  public:
   using Handle = T;
   using Disposer = std::function<void(Handle)>;
 
-  VulkanHandle() : handle_(VK_NULL_HANDLE) {}
+  RSVulkanHandle() : handle_(VK_NULL_HANDLE) {}
 
-  VulkanHandle(Handle handle, Disposer disposer = nullptr)
+  RSVulkanHandle(Handle handle, Disposer disposer = nullptr)
       : handle_(handle), disposer_(disposer) {}
 
-  VulkanHandle(VulkanHandle&& other)
+  RSVulkanHandle(RSVulkanHandle&& other)
       : handle_(other.handle_), disposer_(other.disposer_) {
     other.handle_ = VK_NULL_HANDLE;
     other.disposer_ = nullptr;
   }
 
-  ~VulkanHandle() { DisposeIfNecessary(); }
+  ~RSVulkanHandle() { DisposeIfNecessary(); }
 
-  VulkanHandle& operator=(VulkanHandle&& other) {
+  RSVulkanHandle& operator=(RSVulkanHandle&& other) {
     if (handle_ != other.handle_) {
       DisposeIfNecessary();
     }
@@ -82,6 +82,6 @@ class VulkanHandle {
   }
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_HANDLE_H_
+#endif  // RS_VULKAN_VULKAN_HANDLE_H_

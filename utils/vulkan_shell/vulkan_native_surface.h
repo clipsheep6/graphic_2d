@@ -13,32 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_NATIVE_SURFACE_H_
-#define FLUTTER_VULKAN_VULKAN_NATIVE_SURFACE_H_
+#ifndef RS_VULKAN_VULKAN_NATIVE_SURFACE_H_
+#define RS_VULKAN_VULKAN_NATIVE_SURFACE_H_
 
 #include "third_party/skia/include/core/SkSize.h"
 #include "vulkan_handle.h"
 #include "vulkan_proc_table.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanNativeSurface {
+class RSVulkanNativeSurface {
  public:
-  virtual ~VulkanNativeSurface() = default;
+  virtual ~RSVulkanNativeSurface() = default;
 
   virtual const char* GetExtensionName() const = 0;
 
   virtual uint32_t GetSkiaExtensionName() const = 0;
 
   virtual VkSurfaceKHR CreateSurfaceHandle(
-      VulkanProcTable& vk,
-      const VulkanHandle<VkInstance>& instance) const = 0;
+      RSVulkanProcTable& vk,
+      const RSVulkanHandle<VkInstance>& instance) const = 0;
 
   virtual bool IsValid() const = 0;
 
   virtual SkISize GetSize() const = 0;
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_NATIVE_SURFACE_H_
+#endif  // RS_VULKAN_VULKAN_NATIVE_SURFACE_H_

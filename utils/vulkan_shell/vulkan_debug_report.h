@@ -13,33 +13,33 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_DEBUG_REPORT_H_
-#define FLUTTER_VULKAN_VULKAN_DEBUG_REPORT_H_
+#ifndef RS_VULKAN_VULKAN_DEBUG_REPORT_H_
+#define RS_VULKAN_VULKAN_DEBUG_REPORT_H_
 
 #include "vulkan_handle.h"
 #include "vulkan_interface.h"
 #include "vulkan_proc_table.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanDebugReport {
+class RSVulkanDebugReport {
  public:
   static std::string DebugExtensionName();
 
-  VulkanDebugReport(const VulkanProcTable& vk,
-                    const VulkanHandle<VkInstance>& application);
+  RSVulkanDebugReport(const RSVulkanProcTable& vk,
+                    const RSVulkanHandle<VkInstance>& application);
 
-  ~VulkanDebugReport();
+  ~RSVulkanDebugReport();
 
   bool IsValid() const;
 
  private:
-  const VulkanProcTable& vk;
-  const VulkanHandle<VkInstance>& application_;
-  VulkanHandle<VkDebugReportCallbackEXT> handle_;
+  const RSVulkanProcTable& vk;
+  const RSVulkanHandle<VkInstance>& application_;
+  RSVulkanHandle<VkDebugReportCallbackEXT> handle_;
   bool valid_;
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_DEBUG_REPORT_H_
+#endif  // RS_VULKAN_VULKAN_DEBUG_REPORT_H_

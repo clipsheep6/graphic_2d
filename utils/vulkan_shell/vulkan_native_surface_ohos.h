@@ -13,29 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_
-#define FLUTTER_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_
+#ifndef RS_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_
+#define RS_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_
 
 #include "vulkan_native_surface.h"
 #include "window.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanNativeSurfaceOHOS : public VulkanNativeSurface {
+class RSVulkanNativeSurfaceOHOS : public RSVulkanNativeSurface {
  public:
   /// Create a native surface from the valid NativeWindow reference. Ownership
   /// of the NativeWindow is assumed by this instance.
-  VulkanNativeSurfaceOHOS(struct NativeWindow* native_window);
+  RSVulkanNativeSurfaceOHOS(struct NativeWindow* native_window);
 
-  ~VulkanNativeSurfaceOHOS();
+  ~RSVulkanNativeSurfaceOHOS();
 
   const char* GetExtensionName() const override;
 
   uint32_t GetSkiaExtensionName() const override;
 
   VkSurfaceKHR CreateSurfaceHandle(
-      VulkanProcTable& vk,
-      const VulkanHandle<VkInstance>& instance) const override;
+      RSVulkanProcTable& vk,
+      const RSVulkanHandle<VkInstance>& instance) const override;
 
   bool IsValid() const override;
 
@@ -45,6 +45,6 @@ class VulkanNativeSurfaceOHOS : public VulkanNativeSurface {
   struct NativeWindow* native_window_;
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_
+#endif  // RS_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_

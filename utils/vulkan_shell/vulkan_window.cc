@@ -26,17 +26,17 @@
 #include "vulkan_swapchain.h"
 #include "third_party/skia/include/gpu/GrDirectContext.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanProcTable* VulkanWindow::vk;
-std::unique_ptr<VulkanApplication> VulkanWindow::application_;
-std::unique_ptr<VulkanDevice> VulkanWindow::logical_device_;
-std::thread::id VulkanWindow::device_thread_;
-std::vector<VulkanHandle<VkFence>> VulkanWindow::shared_fences_;
-uint32_t VulkanWindow::shared_fence_index_;
-bool VulkanWindow::presenting_ = false;
+RSVulkanProcTable* RSVulkanWindow::vk;
+std::unique_ptr<RSVulkanApplication> RSVulkanWindow::application_;
+std::unique_ptr<RSVulkanDevice> RSVulkanWindow::logical_device_;
+std::thread::id RSVulkanWindow::device_thread_;
+std::vector<RSVulkanHandle<VkFence>> RSVulkanWindow::shared_fences_;
+uint32_t RSVulkanWindow::shared_fence_index_;
+bool RSVulkanWindow::presenting_ = false;
 
-void VulkanWindow::InitializeVulkan(size_t thread_num)
+void RSVulkanWindow::InitializeVulkan(size_t thread_num)
 {
   if (shared_fences_.size() < thread_num) {
     shared_fences_.resize(thread_num);
@@ -51,7 +51,7 @@ void VulkanWindow::InitializeVulkan(size_t thread_num)
   LOGI("First Initialize Vulkan");
   device_thread_ = std::this_thread::get_id();
 
-  vk = new VulkanProcTable();
+  vk = new RSVulkanProcTable();
   if (!vk->HasAcquiredMandatoryProcAddresses()) {
     LOGE("Proc table has not acquired mandatory proc addresses.");
     return;
@@ -63,7 +63,7 @@ void VulkanWindow::InitializeVulkan(size_t thread_num)
       VK_OHOS_SURFACE_EXTENSION_NAME               // child extension
   };
 
-  application_ = std::make_unique<VulkanApplication>(*vk, "Rosen", std::move(extensions));
+  application_ = std::make_unique<RSVulkanApplication>(*vk, "Rosen", std::move(extensions));
   if (!application_->IsValid() || !vk->AreInstanceProcsSetup()) {
     // Make certain the application instance was created and it setup the
     // instance proc table entries.
@@ -81,7 +81,7 @@ void VulkanWindow::InitializeVulkan(size_t thread_num)
   }
 }
 
-VulkanWindow::VulkanWindow(std::unique_ptr<VulkanNativeSurface> native_surface, bool is_offscreen)
+RSVulkanWindow::RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> native_surface, bool is_offscreen)
     : valid_(false), is_offscreen_(is_offscreen)
 {
   LOGE("VulkanWindow init enter");
@@ -99,7 +99,7 @@ VulkanWindow::VulkanWindow(std::unique_ptr<VulkanNativeSurface> native_surface, 
 
   // Create the logical surface from the native platform surface.
   if (!is_offscreen) {
-    surface_ = std::make_unique<VulkanSurface>(*vk, *application_, std::move(native_surface));
+    surface_ = std::make_unique<RSVulkanSurface>(*vk, *application_, std::move(native_surface));
     if (!surface_->IsValid()) {
       LOGE("Vulkan surface is invalid.");
       return;
@@ -121,22 +121,22 @@ VulkanWindow::VulkanWindow(std::unique_ptr<VulkanNativeSurface> native_surface, 
   valid_ = true;
 }
 
-VulkanWindow::~VulkanWindow() = default;
+RSVulkanWindow::~RSVulkanWindow() = default;
 
-bool VulkanWindow::IsValid() const {
+bool RSVulkanWindow::IsValid() const {
   return valid_;
 }
 
-GrDirectContext* VulkanWindow::GetSkiaGrContext() {
+GrDirectContext* RSVulkanWindow::GetSkiaGrContext() {
   return skia_gr_context_.get();
 }
 
-GrVkBackendContext& VulkanWindow::GetSkiaBackendContext() {
+GrVkBackendContext& RSVulkanWindow::GetSkiaBackendContext() {
   return sk_backend_context_;
 }
 
 
-bool VulkanWindow::CreateSkiaGrContext() {
+bool RSVulkanWindow::CreateSkiaGrContext() {
 
   if (!CreateSkiaBackendContext(&sk_backend_context_)) {
     LOGE("CreateSkiaGrContext CreateSkiaBackendContext is false");
@@ -157,7 +157,7 @@ bool VulkanWindow::CreateSkiaGrContext() {
   return true;
 }
 
-bool VulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context) {
+bool RSVulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context) {
   auto getProc = vk->CreateSkiaGetProc();
 
   if (getProc == nullptr) {
@@ -190,7 +190,7 @@ bool VulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context) {
   return true;
 }
 
-sk_sp<SkSurface> VulkanWindow::AcquireSurface(int bufferCount) {
+sk_sp<SkSurface> RSVulkanWindow::AcquireSurface(int bufferCount) {
   if (is_offscreen_ || !IsValid()) {
     LOGE("Surface is invalid or offscreen.");
     return nullptr;
@@ -216,23 +216,23 @@ sk_sp<SkSurface> VulkanWindow::AcquireSurface(int bufferCount) {
 
   while (true) {
     sk_sp<SkSurface> surface;
-    auto acquire_result = VulkanSwapchain::AcquireStatus::ErrorSurfaceLost;
+    auto acquire_result = RSVulkanSwapchain::AcquireStatus::ErrorSurfaceLost;
 
     std::tie(acquire_result, surface) = swapchain_->AcquireSurface(bufferCount);
 
-    if (acquire_result == VulkanSwapchain::AcquireStatus::Success) {
+    if (acquire_result == RSVulkanSwapchain::AcquireStatus::Success) {
       // Successfully acquired a surface from the swapchain. Nothing more to do.
       return surface;
     }
 
-    if (acquire_result == VulkanSwapchain::AcquireStatus::ErrorSurfaceLost) {
+    if (acquire_result == RSVulkanSwapchain::AcquireStatus::ErrorSurfaceLost) {
       // Surface is lost. This is an unrecoverable error.
       LOGE("Swapchain reported surface was lost.");
       return nullptr;
     }
 
     if (acquire_result ==
-        VulkanSwapchain::AcquireStatus::ErrorSurfaceOutOfDate) {
+        RSVulkanSwapchain::AcquireStatus::ErrorSurfaceOutOfDate) {
       LOGE("AcquireSurface surface out of date");
       // Surface out of date. Recreate the swapchain at the new configuration.
       if (RecreateSwapchain()) {
@@ -255,7 +255,7 @@ sk_sp<SkSurface> VulkanWindow::AcquireSurface(int bufferCount) {
   return nullptr;
 }
 
-bool VulkanWindow::SwapBuffers() {
+bool RSVulkanWindow::SwapBuffers() {
   if (is_offscreen_ || !IsValid()) {
       LOGE("Window was invalid or offscreen.");
       return false;
@@ -269,7 +269,7 @@ bool VulkanWindow::SwapBuffers() {
   return swapchain_->Submit();
 }
 
-void VulkanWindow::PresentAll() {
+void RSVulkanWindow::PresentAll() {
   //-----------------------------------------
   // create shared fences if not already
   //-----------------------------------------
@@ -281,7 +281,7 @@ void VulkanWindow::PresentAll() {
     };
 
     auto fence_collect = [](VkFence fence) {
-      VulkanWindow::vk->DestroyFence(VulkanWindow::logical_device_->GetHandle(), fence, nullptr);
+      RSVulkanWindow::vk->DestroyFence(RSVulkanWindow::logical_device_->GetHandle(), fence, nullptr);
     };
 
     VkFence fence = VK_NULL_HANDLE;
@@ -291,7 +291,7 @@ void VulkanWindow::PresentAll() {
     }
     shared_fences_[shared_fence_index_] = {fence, fence_collect};
   }
-  VulkanSwapchain::PresentAll(shared_fences_[shared_fence_index_]);
+  RSVulkanSwapchain::PresentAll(shared_fences_[shared_fence_index_]);
   shared_fence_index_++;
   if (shared_fence_index_ >= shared_fences_.size()) {
     shared_fence_index_ = 0;
@@ -299,7 +299,7 @@ void VulkanWindow::PresentAll() {
   presenting_ = true;
 }
 
-bool VulkanWindow::WaitForSharedFence() {
+bool RSVulkanWindow::WaitForSharedFence() {
   if (presenting_) {
     if (shared_fences_[shared_fence_index_]) {
       VkFence fence = shared_fences_[shared_fence_index_];
@@ -311,7 +311,7 @@ bool VulkanWindow::WaitForSharedFence() {
   return false;
 }
 
-bool VulkanWindow::ResetSharedFence() {
+bool RSVulkanWindow::ResetSharedFence() {
   if (presenting_) {
       presenting_ = false;
       if (shared_fences_[shared_fence_index_]) {
@@ -323,19 +323,19 @@ bool VulkanWindow::ResetSharedFence() {
   return false;
 }
 
-VkDevice VulkanWindow::GetDevice() {
+VkDevice RSVulkanWindow::GetDevice() {
   return logical_device_->GetHandle();
 }
 
-VkPhysicalDevice VulkanWindow::GetPhysicalDevice() {
+VkPhysicalDevice RSVulkanWindow::GetPhysicalDevice() {
   return logical_device_->GetPhysicalDeviceHandle();
 }
 
-VulkanProcTable &VulkanWindow::GetVkProcTable() {
+RSVulkanProcTable &RSVulkanWindow::GetVkProcTable() {
   return *vk;
 }
 
-bool VulkanWindow::RecreateSwapchain() {
+bool RSVulkanWindow::RecreateSwapchain() {
   if (is_offscreen_) {
       LOGE("offscreen vulkan window, don't need swapchian");
       return false;
@@ -364,7 +364,7 @@ bool VulkanWindow::RecreateSwapchain() {
     return false;
   }
 
-  auto swapchain = std::make_unique<VulkanSwapchain>(
+  auto swapchain = std::make_unique<RSVulkanSwapchain>(
       *vk, *logical_device_, *surface_, skia_gr_context_.get(),
       std::move(old_swapchain), logical_device_->GetGraphicsQueueIndex());
 
@@ -377,4 +377,4 @@ bool VulkanWindow::RecreateSwapchain() {
   return true;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

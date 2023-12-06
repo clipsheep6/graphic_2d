@@ -25,7 +25,7 @@
 #include "third_party/skia/include/gpu/GrDirectContext.h"
 #include "third_party/skia/include/gpu/vk/GrVkTypes.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 namespace {
 struct FormatInfo {
@@ -48,14 +48,14 @@ static std::vector<FormatInfo> DesiredFormatInfos() {
            SkColorSpace::MakeSRGBLinear()}};
 }
 
-std::mutex VulkanSwapchain::map_mutex_;
-std::unordered_map<std::thread::id, VulkanSwapchain*> VulkanSwapchain::to_be_present_;
+std::mutex RSVulkanSwapchain::map_mutex_;
+std::unordered_map<std::thread::id, RSVulkanSwapchain*> RSVulkanSwapchain::to_be_present_;
 
-VulkanSwapchain::VulkanSwapchain(const VulkanProcTable& p_vk,
-                                 const VulkanDevice& device,
-                                 const VulkanSurface& surface,
+RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
+                                 const RSVulkanDevice& device,
+                                 const RSVulkanSurface& surface,
                                  GrDirectContext* skia_context,
-                                 std::unique_ptr<VulkanSwapchain> old_swapchain,
+                                 std::unique_ptr<RSVulkanSwapchain> old_swapchain,
                                  uint32_t queue_family_index)
 
     : vk(p_vk),
@@ -176,13 +176,13 @@ VulkanSwapchain::VulkanSwapchain(const VulkanProcTable& p_vk,
   valid_ = true;
 }
 
-VulkanSwapchain::~VulkanSwapchain() = default;
+RSVulkanSwapchain::~RSVulkanSwapchain() = default;
 
-bool VulkanSwapchain::IsValid() const {
+bool RSVulkanSwapchain::IsValid() const {
   return valid_;
 }
 
-std::vector<VkImage> VulkanSwapchain::GetImages() const {
+std::vector<VkImage> RSVulkanSwapchain::GetImages() const {
   uint32_t count = 0;
   if (VK_CALL_LOG_ERROR(vk.GetSwapchainImagesKHR(
           device_.GetHandle(), swapchain_, &count, nullptr)) != VK_SUCCESS) {
@@ -206,7 +206,7 @@ std::vector<VkImage> VulkanSwapchain::GetImages() const {
   return images;
 }
 
-SkISize VulkanSwapchain::GetSize() const {
+SkISize RSVulkanSwapchain::GetSize() const {
   VkExtent2D extents = capabilities_.currentExtent;
 
   if (extents.width < capabilities_.minImageExtent.width) {
@@ -224,7 +224,7 @@ SkISize VulkanSwapchain::GetSize() const {
   return SkISize::Make(extents.width, extents.height);
 }
 
-sk_sp<SkSurface> VulkanSwapchain::CreateSkiaSurface(
+sk_sp<SkSurface> RSVulkanSwapchain::CreateSkiaSurface(
     GrDirectContext* gr_context,
     VkImage image,
     const SkISize& size,
@@ -268,7 +268,7 @@ sk_sp<SkSurface> VulkanSwapchain::CreateSkiaSurface(
   );
 }
 
-bool VulkanSwapchain::CreateSwapchainImages(GrDirectContext* skia_context,
+bool RSVulkanSwapchain::CreateSwapchainImages(GrDirectContext* skia_context,
                                             SkColorType color_type,
                                             sk_sp<SkColorSpace> color_space) {
   std::vector<VkImage> images = GetImages();
@@ -282,7 +282,7 @@ bool VulkanSwapchain::CreateSwapchainImages(GrDirectContext* skia_context,
 
   for (const VkImage& image : images) {
     // Populate the backbuffer.
-    auto backbuffer = std::make_unique<VulkanBackbuffer>(
+    auto backbuffer = std::make_unique<RSVulkanBackbuffer>(
         vk, device_.GetHandle(), device_.GetCommandPool());
 
     if (!backbuffer->IsValid()) {
@@ -292,7 +292,7 @@ bool VulkanSwapchain::CreateSwapchainImages(GrDirectContext* skia_context,
     backbuffers_.emplace_back(std::move(backbuffer));
 
     // Populate the image.
-    auto vulkan_image = std::make_unique<VulkanImage>(image);
+    auto vulkan_image = std::make_unique<RSVulkanImage>(image);
 
     if (!vulkan_image->IsValid()) {
       LOGE("vulkan_image Not Valid()");
@@ -323,7 +323,7 @@ bool VulkanSwapchain::CreateSwapchainImages(GrDirectContext* skia_context,
   return true;
 }
 
-VulkanBackbuffer* VulkanSwapchain::GetNextBackbuffer() {
+RSVulkanBackbuffer* RSVulkanSwapchain::GetNextBackbuffer() {
   auto available_backbuffers = backbuffers_.size();
 
   if (available_backbuffers == 0) {
@@ -343,7 +343,7 @@ VulkanBackbuffer* VulkanSwapchain::GetNextBackbuffer() {
   return backbuffer.get();
 }
 
-VulkanSwapchain::AcquireResult VulkanSwapchain::AcquireSurface(int bufferCount) {
+RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCount) {
   AcquireResult error = {AcquireStatus::ErrorSurfaceLost, nullptr};
 
   if (!IsValid()) {
@@ -516,14 +516,14 @@ VulkanSwapchain::AcquireResult VulkanSwapchain::AcquireSurface(int bufferCount) 
   return {AcquireStatus::Success, surface};
 }
 
-bool VulkanSwapchain::FlushCommands() {
+bool RSVulkanSwapchain::FlushCommands() {
   if (!IsValid()) {
     LOGE("Swapchain was invalid.");
     return false;
   }
 
   sk_sp<SkSurface> surface = surfaces_[current_image_index_];
-  const std::unique_ptr<VulkanImage>& image = images_[current_image_index_];
+  const std::unique_ptr<RSVulkanImage>& image = images_[current_image_index_];
   auto backbuffer = backbuffers_[current_backbuffer_index_].get();
 
   // ---------------------------------------------------------------------------
@@ -573,12 +573,12 @@ bool VulkanSwapchain::FlushCommands() {
   return true;
 }
 
-void VulkanSwapchain::AddToPresent() {
+void RSVulkanSwapchain::AddToPresent() {
   std::lock_guard<std::mutex> lock(map_mutex_);
   to_be_present_[std::this_thread::get_id()] = this;
 }
 
-void VulkanSwapchain::PresentAll(VulkanHandle<VkFence>& shared_fence) {
+void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence) {
   if (to_be_present_.empty()) {
     LOGE("nothing to be presented");
     return;
@@ -598,7 +598,7 @@ void VulkanSwapchain::PresentAll(VulkanHandle<VkFence>& shared_fence) {
   command_buffers.reserve(to_be_present_.size());
   swapchains.reserve(to_be_present_.size());
   present_image_indices.reserve(to_be_present_.size());
-  VulkanSwapchain* tmpSwapChain = nullptr;
+  RSVulkanSwapchain* tmpSwapChain = nullptr;
   for (const auto& entry : to_be_present_) {
     auto swapchain = entry.second;
     if (!tmpSwapChain) tmpSwapChain = swapchain;
@@ -610,8 +610,8 @@ void VulkanSwapchain::PresentAll(VulkanHandle<VkFence>& shared_fence) {
     present_image_indices.push_back(static_cast<uint32_t>(swapchain->current_image_index_));
   }
 
-  const VulkanProcTable& vk = tmpSwapChain->vk;
-  const VulkanDevice& device = tmpSwapChain->device_;
+  const RSVulkanProcTable& vk = tmpSwapChain->vk;
+  const RSVulkanDevice& device = tmpSwapChain->device_;
 
   if (!device.QueueSubmit(
       {/*Empty, No wait Semaphores. */},
@@ -648,15 +648,15 @@ void VulkanSwapchain::PresentAll(VulkanHandle<VkFence>& shared_fence) {
   to_be_present_.clear();
 }
 
-bool VulkanSwapchain::Submit() {
-  LOGI("VulkanSwapchain::Submit()");
+bool RSVulkanSwapchain::Submit() {
+  LOGI("RSVulkanSwapchain::Submit()");
   if (!IsValid()) {
     LOGE("Swapchain was invalid.");
     return false;
   }
 
   sk_sp<SkSurface> surface = surfaces_[current_image_index_];
-  const std::unique_ptr<VulkanImage>& image = images_[current_image_index_];
+  const std::unique_ptr<RSVulkanImage>& image = images_[current_image_index_];
   auto backbuffer = backbuffers_[current_backbuffer_index_].get();
 
   // ---------------------------------------------------------------------------
@@ -754,4 +754,4 @@ bool VulkanSwapchain::Submit() {
   return true;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

@@ -19,12 +19,12 @@
 #include "vulkan_hilog.h"
 #include "vulkan_native_surface.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanSurface::VulkanSurface(
-    VulkanProcTable& p_vk,
-    VulkanApplication& application,
-    std::unique_ptr<VulkanNativeSurface> native_surface)
+RSVulkanSurface::RSVulkanSurface(
+    RSVulkanProcTable& p_vk,
+    RSVulkanApplication& application,
+    std::unique_ptr<RSVulkanNativeSurface> native_surface)
     : vk(p_vk),
       application_(application),
       native_surface_(std::move(native_surface)),
@@ -50,22 +50,22 @@ VulkanSurface::VulkanSurface(
   valid_ = true;
 }
 
-VulkanSurface::~VulkanSurface() = default;
+RSVulkanSurface::~RSVulkanSurface() = default;
 
-bool VulkanSurface::IsValid() const {
+bool RSVulkanSurface::IsValid() const {
   return valid_;
 }
 
-const VulkanHandle<VkSurfaceKHR>& VulkanSurface::Handle() const {
+const RSVulkanHandle<VkSurfaceKHR>& RSVulkanSurface::Handle() const {
   return surface_;
 }
 
-const VulkanNativeSurface& VulkanSurface::GetNativeSurface() const {
+const RSVulkanNativeSurface& RSVulkanSurface::GetNativeSurface() const {
   return *native_surface_;
 }
 
-SkISize VulkanSurface::GetSize() const {
+SkISize RSVulkanSurface::GetSize() const {
   return valid_ ? native_surface_->GetSize() : SkISize::Make(0, 0);
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

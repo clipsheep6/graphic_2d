@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_UTILITIES_H_
-#define FLUTTER_VULKAN_VULKAN_UTILITIES_H_
+#ifndef RS_VULKAN_VULKAN_UTILITIES_H_
+#define RS_VULKAN_VULKAN_UTILITIES_H_
 
 #include <string>
 #include <vector>
@@ -22,18 +22,18 @@
 #include "vulkan_handle.h"
 #include "vulkan_proc_table.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 bool IsDebuggingEnabled();
 bool ValidationLayerInfoMessagesEnabled();
 bool ValidationErrorsFatal();
 
-std::vector<std::string> InstanceLayersToEnable(const VulkanProcTable& vk);
+std::vector<std::string> InstanceLayersToEnable(const RSVulkanProcTable& vk);
 
 std::vector<std::string> DeviceLayersToEnable(
-    const VulkanProcTable& vk,
-    const VulkanHandle<VkPhysicalDevice>& physical_device);
+    const RSVulkanProcTable& vk,
+    const RSVulkanHandle<VkPhysicalDevice>& physical_device);
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_UTILITIES_H_
+#endif  // RS_VULKAN_VULKAN_UTILITIES_H_

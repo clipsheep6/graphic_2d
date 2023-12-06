@@ -20,7 +20,7 @@
 
 #include "vulkan_utilities.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 static const VkDebugReportFlagsEXT kVulkanErrorFlags =
     VK_DEBUG_REPORT_WARNING_BIT_EXT |
     VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT;
@@ -29,7 +29,7 @@ static const VkDebugReportFlagsEXT kVulkanErrorFlags =
 static const VkDebugReportFlagsEXT kVulkanInfoFlags =
     VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
 
-std::string VulkanDebugReport::DebugExtensionName() {
+std::string RSVulkanDebugReport::DebugExtensionName() {
   return VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
 }
 
@@ -163,9 +163,9 @@ OnVulkanDebugReportCallback(VkDebugReportFlagsEXT flags,
   return VK_FALSE;
 }
 
-VulkanDebugReport::VulkanDebugReport(
-    const VulkanProcTable& p_vk,
-    const VulkanHandle<VkInstance>& application)
+RSVulkanDebugReport::RSVulkanDebugReport(
+    const RSVulkanProcTable& p_vk,
+    const RSVulkanHandle<VkInstance>& application)
     : vk(p_vk), application_(application), valid_(false) {
   if (!IsDebuggingEnabled() || !vk.CreateDebugReportCallbackEXT ||
       !vk.DestroyDebugReportCallbackEXT) {
@@ -200,10 +200,10 @@ VulkanDebugReport::VulkanDebugReport(
   valid_ = true;
 }
 
-VulkanDebugReport::~VulkanDebugReport() = default;
+RSVulkanDebugReport::~RSVulkanDebugReport() = default;
 
-bool VulkanDebugReport::IsValid() const {
+bool RSVulkanDebugReport::IsValid() const {
   return valid_;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

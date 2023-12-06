@@ -24,35 +24,35 @@
     LOGE("Could not acquire proc: vk" #name);                \
   }
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanProcTable::VulkanProcTable()
+RSVulkanProcTable::RSVulkanProcTable()
     : handle_(nullptr), acquired_mandatory_proc_addresses_(false) {
   acquired_mandatory_proc_addresses_ =
       OpenLibraryHandle() && SetupLoaderProcAddresses();
 }
 
-VulkanProcTable::~VulkanProcTable() {
+RSVulkanProcTable::~RSVulkanProcTable() {
   CloseLibraryHandle();
 }
 
-bool VulkanProcTable::HasAcquiredMandatoryProcAddresses() const {
+bool RSVulkanProcTable::HasAcquiredMandatoryProcAddresses() const {
   return acquired_mandatory_proc_addresses_;
 }
 
-bool VulkanProcTable::IsValid() const {
+bool RSVulkanProcTable::IsValid() const {
   return instance_ && device_;
 }
 
-bool VulkanProcTable::AreInstanceProcsSetup() const {
+bool RSVulkanProcTable::AreInstanceProcsSetup() const {
   return instance_;
 }
 
-bool VulkanProcTable::AreDeviceProcsSetup() const {
+bool RSVulkanProcTable::AreDeviceProcsSetup() const {
   return device_;
 }
 
-bool VulkanProcTable::SetupLoaderProcAddresses() {
+bool RSVulkanProcTable::SetupLoaderProcAddresses() {
   if (handle_ == nullptr) {
     return true;
   }
@@ -73,15 +73,15 @@ bool VulkanProcTable::SetupLoaderProcAddresses() {
     return false;
   }
 
-  VulkanHandle<VkInstance> null_instance(VK_NULL_HANDLE, nullptr);
+  RSVulkanHandle<VkInstance> null_instance(VK_NULL_HANDLE, nullptr);
 
   ACQUIRE_PROC(EnumerateInstanceLayerProperties, null_instance);
 
   return true;
 }
 
-bool VulkanProcTable::SetupInstanceProcAddresses(
-    const VulkanHandle<VkInstance>& handle) {
+bool RSVulkanProcTable::SetupInstanceProcAddresses(
+    const RSVulkanHandle<VkInstance>& handle) {
   ACQUIRE_PROC(CreateDevice, handle);
   ACQUIRE_PROC(DestroyDevice, handle);
   ACQUIRE_PROC(DestroyInstance, handle);
@@ -109,8 +109,8 @@ bool VulkanProcTable::SetupInstanceProcAddresses(
   return true;
 }
 
-bool VulkanProcTable::SetupDeviceProcAddresses(
-    const VulkanHandle<VkDevice>& handle) {
+bool RSVulkanProcTable::SetupDeviceProcAddresses(
+    const RSVulkanHandle<VkDevice>& handle) {
   ACQUIRE_PROC(AllocateCommandBuffers, handle);
   ACQUIRE_PROC(AllocateMemory, handle);
   ACQUIRE_PROC(BeginCommandBuffer, handle);
@@ -149,7 +149,7 @@ bool VulkanProcTable::SetupDeviceProcAddresses(
   return true;
 }
 
-bool VulkanProcTable::OpenLibraryHandle() {
+bool RSVulkanProcTable::OpenLibraryHandle() {
   LOGI("VulkanProcTable OpenLibararyHandle.");
 #if VULKAN_LINK_STATICALLY
   static char kDummyLibraryHandle = '\0';
@@ -167,7 +167,7 @@ bool VulkanProcTable::OpenLibraryHandle() {
 #endif  // VULKAN_LINK_STATICALLY
 }
 
-bool VulkanProcTable::CloseLibraryHandle() {
+bool RSVulkanProcTable::CloseLibraryHandle() {
 #if VULKAN_LINK_STATICALLY
   handle_ = nullptr;
   return true;
@@ -185,9 +185,9 @@ bool VulkanProcTable::CloseLibraryHandle() {
 #endif
 }
 
-PFN_vkVoidFunction VulkanProcTable::AcquireProc(
+PFN_vkVoidFunction RSVulkanProcTable::AcquireProc(
     const char* proc_name,
-    const VulkanHandle<VkInstance>& instance) const {
+    const RSVulkanHandle<VkInstance>& instance) const {
   if (proc_name == nullptr || !GetInstanceProcAddr) {
     return nullptr;
   }
@@ -196,9 +196,9 @@ PFN_vkVoidFunction VulkanProcTable::AcquireProc(
   return GetInstanceProcAddr(instance, proc_name);
 }
 
-PFN_vkVoidFunction VulkanProcTable::AcquireProc(
+PFN_vkVoidFunction RSVulkanProcTable::AcquireProc(
     const char* proc_name,
-    const VulkanHandle<VkDevice>& device) const {
+    const RSVulkanHandle<VkDevice>& device) const {
   if (proc_name == nullptr || !device || !GetDeviceProcAddr) {
     return nullptr;
   }
@@ -206,7 +206,7 @@ PFN_vkVoidFunction VulkanProcTable::AcquireProc(
   return GetDeviceProcAddr(device, proc_name);
 }
 
-GrVkGetProc VulkanProcTable::CreateSkiaGetProc() const {
+GrVkGetProc RSVulkanProcTable::CreateSkiaGetProc() const {
   if (!IsValid()) {
     return nullptr;
   }
@@ -223,4 +223,4 @@ GrVkGetProc VulkanProcTable::CreateSkiaGetProc() const {
   };
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

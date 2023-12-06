@@ -20,34 +20,34 @@
 #include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
 #include <graphic_common.h>
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanNativeSurfaceOHOS::VulkanNativeSurfaceOHOS(struct NativeWindow* native_window) : native_window_(native_window)
+RSVulkanNativeSurfaceOHOS::RSVulkanNativeSurfaceOHOS(struct NativeWindow* native_window) : native_window_(native_window)
 {
     if (native_window_ == nullptr) {
         return;
     }
 }
 
-VulkanNativeSurfaceOHOS::~VulkanNativeSurfaceOHOS()
+RSVulkanNativeSurfaceOHOS::~RSVulkanNativeSurfaceOHOS()
 {
     if (native_window_ == nullptr) {
         return;
     }
 }
 
-const char* VulkanNativeSurfaceOHOS::GetExtensionName() const
+const char* RSVulkanNativeSurfaceOHOS::GetExtensionName() const
 {
     return VK_OHOS_SURFACE_EXTENSION_NAME;
 }
 
-uint32_t VulkanNativeSurfaceOHOS::GetSkiaExtensionName() const
+uint32_t RSVulkanNativeSurfaceOHOS::GetSkiaExtensionName() const
 {
     return kKHR_ohos_surface_GrVkExtensionFlag;
 }
 
-VkSurfaceKHR VulkanNativeSurfaceOHOS::CreateSurfaceHandle(
-    VulkanProcTable& vk, const VulkanHandle<VkInstance>& instance) const
+VkSurfaceKHR RSVulkanNativeSurfaceOHOS::CreateSurfaceHandle(
+    RSVulkanProcTable& vk, const RSVulkanHandle<VkInstance>& instance) const
 {
     if (!vk.IsValid() || !instance) {
         LOGE("CreateSurfaceHandle vk or instance is not valid");
@@ -71,16 +71,16 @@ VkSurfaceKHR VulkanNativeSurfaceOHOS::CreateSurfaceHandle(
     return surface;
 }
 
-bool VulkanNativeSurfaceOHOS::IsValid() const
+bool RSVulkanNativeSurfaceOHOS::IsValid() const
 {
     return native_window_ != nullptr;
 }
 
-SkISize VulkanNativeSurfaceOHOS::GetSize() const
+SkISize RSVulkanNativeSurfaceOHOS::GetSize() const
 {
     int width, height;
     int err = NativeWindowHandleOpt(native_window_, GET_BUFFER_GEOMETRY, &height, &width);
     return native_window_ == nullptr || err != OHOS::GSERROR_OK ? SkISize::Make(0, 0) : SkISize::Make(width, height);
 }
 
-} // namespace vulkan
+} // namespace OHOS::Rosen::vulkan 

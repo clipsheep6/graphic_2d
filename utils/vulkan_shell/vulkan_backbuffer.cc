@@ -22,11 +22,11 @@
 #include "third_party/skia/include/gpu/vk/GrVkTypes.h"
 #include "vulkan/vulkan.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanBackbuffer::VulkanBackbuffer(const VulkanProcTable& p_vk,
-                                   const VulkanHandle<VkDevice>& device,
-                                   const VulkanHandle<VkCommandPool>& pool)
+RSVulkanBackbuffer::RSVulkanBackbuffer(const RSVulkanProcTable& p_vk,
+                                   const RSVulkanHandle<VkDevice>& device,
+                                   const RSVulkanHandle<VkCommandPool>& pool)
     : vk(p_vk),
       device_(device),
       usage_command_buffer_(p_vk, device, pool),
@@ -50,15 +50,15 @@ VulkanBackbuffer::VulkanBackbuffer(const VulkanProcTable& p_vk,
   valid_ = true;
 }
 
-VulkanBackbuffer::~VulkanBackbuffer() {
+RSVulkanBackbuffer::~RSVulkanBackbuffer() {
   WaitFences();
 }
 
-bool VulkanBackbuffer::IsValid() const {
+bool RSVulkanBackbuffer::IsValid() const {
   return valid_;
 }
 
-bool VulkanBackbuffer::CreateSemaphores() {
+bool RSVulkanBackbuffer::CreateSemaphores() {
   const VkSemaphoreCreateInfo create_info = {
       .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
       .pNext = nullptr,
@@ -83,7 +83,7 @@ bool VulkanBackbuffer::CreateSemaphores() {
   return true;
 }
 
-bool VulkanBackbuffer::CreateFences() {
+bool RSVulkanBackbuffer::CreateFences() {
   const VkFenceCreateInfo create_info = {
       .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
       .pNext = nullptr,
@@ -108,7 +108,7 @@ bool VulkanBackbuffer::CreateFences() {
   return true;
 }
 
-bool VulkanBackbuffer::WaitFences() {
+bool RSVulkanBackbuffer::WaitFences() {
   VkFence fences[use_fences_.size()];
 
   for (size_t i = 0; i < use_fences_.size(); i++) {
@@ -122,7 +122,7 @@ bool VulkanBackbuffer::WaitFences() {
   return  result == VK_SUCCESS;
 }
 
-bool VulkanBackbuffer::ResetFences() {
+bool RSVulkanBackbuffer::ResetFences() {
   VkFence fences[use_fences_.size()];
 
   for (size_t i = 0; i < use_fences_.size(); i++) {
@@ -134,28 +134,28 @@ bool VulkanBackbuffer::ResetFences() {
          VK_SUCCESS;
 }
 
-const VulkanHandle<VkFence>& VulkanBackbuffer::GetUsageFence() const {
+const RSVulkanHandle<VkFence>& RSVulkanBackbuffer::GetUsageFence() const {
   return use_fences_[0];
 }
 
-const VulkanHandle<VkFence>& VulkanBackbuffer::GetRenderFence() const {
+const RSVulkanHandle<VkFence>& RSVulkanBackbuffer::GetRenderFence() const {
   return use_fences_[1];
 }
 
-const VulkanHandle<VkSemaphore>& VulkanBackbuffer::GetUsageSemaphore() const {
+const RSVulkanHandle<VkSemaphore>& RSVulkanBackbuffer::GetUsageSemaphore() const {
   return semaphores_[0];
 }
 
-const VulkanHandle<VkSemaphore>& VulkanBackbuffer::GetRenderSemaphore() const {
+const RSVulkanHandle<VkSemaphore>& RSVulkanBackbuffer::GetRenderSemaphore() const {
   return semaphores_[1];
 }
 
-VulkanCommandBuffer& VulkanBackbuffer::GetUsageCommandBuffer() {
+RSVulkanCommandBuffer& RSVulkanBackbuffer::GetUsageCommandBuffer() {
   return usage_command_buffer_;
 }
 
-VulkanCommandBuffer& VulkanBackbuffer::GetRenderCommandBuffer() {
+RSVulkanCommandBuffer& RSVulkanBackbuffer::GetRenderCommandBuffer() {
   return render_command_buffer_;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

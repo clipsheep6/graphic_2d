@@ -18,9 +18,9 @@
 #include "vulkan_command_buffer.h"
 #include "vulkan_proc_table.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanImage::VulkanImage(VulkanHandle<VkImage> image)
+RSVulkanImage::RSVulkanImage(RSVulkanHandle<VkImage> image)
     : handle_(std::move(image)),
       layout_(VK_IMAGE_LAYOUT_UNDEFINED),
       access_flags_(0),
@@ -32,14 +32,14 @@ VulkanImage::VulkanImage(VulkanHandle<VkImage> image)
   valid_ = true;
 }
 
-VulkanImage::~VulkanImage() = default;
+RSVulkanImage::~RSVulkanImage() = default;
 
-bool VulkanImage::IsValid() const {
+bool RSVulkanImage::IsValid() const {
   return valid_;
 }
 
-bool VulkanImage::InsertImageMemoryBarrier(
-    const VulkanCommandBuffer& command_buffer,
+bool RSVulkanImage::InsertImageMemoryBarrier(
+    const RSVulkanCommandBuffer& command_buffer,
     VkPipelineStageFlagBits src_pipline_bits,
     VkPipelineStageFlagBits dest_pipline_bits,
     VkAccessFlagBits dest_access_flags,
@@ -77,4 +77,4 @@ bool VulkanImage::InsertImageMemoryBarrier(
   return success;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

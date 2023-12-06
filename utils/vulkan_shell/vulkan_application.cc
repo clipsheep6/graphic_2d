@@ -23,10 +23,10 @@
 #include "vulkan_proc_table.h"
 #include "vulkan_utilities.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanApplication::VulkanApplication(
-    VulkanProcTable& p_vk,
+RSVulkanApplication::RSVulkanApplication(
+    RSVulkanProcTable& p_vk,
     const std::string& application_name,
     std::vector<std::string> enabled_extensions,
     uint32_t application_version,
@@ -38,25 +38,13 @@ VulkanApplication::VulkanApplication(
   bool enable_instance_debugging =
       IsDebuggingEnabled() &&
       ExtensionSupported(supported_extensions,
-                         VulkanDebugReport::DebugExtensionName());
+                         RSVulkanDebugReport::DebugExtensionName());
 
   // Configure extensions.
 
   if (enable_instance_debugging) {
-    enabled_extensions.emplace_back(VulkanDebugReport::DebugExtensionName());
+    enabled_extensions.emplace_back(RSVulkanDebugReport::DebugExtensionName());
   }
-#if OS_FUCHSIA
-  if (ExtensionSupported(supported_extensions,
-                         VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME)) {
-    // VK_KHR_get_physical_device_properties2 is a dependency of the memory
-    // capabilities extension, so the validation layers require that it be
-    // enabled.
-    enabled_extensions.emplace_back(
-        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-    enabled_extensions.emplace_back(
-        VK_KHR_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME);
-  }
-#endif
 
   const char* extensions[enabled_extensions.size()];
 
@@ -119,7 +107,7 @@ VulkanApplication::VulkanApplication(
                }};
 
   if (enable_instance_debugging) {
-    auto debug_report = std::make_unique<VulkanDebugReport>(vk, instance_);
+    auto debug_report = std::make_unique<RSVulkanDebugReport>(vk, instance_);
     if (!debug_report->IsValid()) {
       LOGE("Vulkan debugging was enabled but could not be setup for this instance.");
     } else {
@@ -131,25 +119,25 @@ VulkanApplication::VulkanApplication(
   valid_ = true;
 }
 
-VulkanApplication::~VulkanApplication() = default;
+RSVulkanApplication::~RSVulkanApplication() = default;
 
-bool VulkanApplication::IsValid() const {
+bool RSVulkanApplication::IsValid() const {
   return valid_;
 }
 
-uint32_t VulkanApplication::GetAPIVersion() const {
+uint32_t RSVulkanApplication::GetAPIVersion() const {
   return api_version_;
 }
 
-const VulkanHandle<VkInstance>& VulkanApplication::GetInstance() const {
+const RSVulkanHandle<VkInstance>& RSVulkanApplication::GetInstance() const {
   return instance_;
 }
 
-void VulkanApplication::ReleaseInstanceOwnership() {
+void RSVulkanApplication::ReleaseInstanceOwnership() {
   instance_.ReleaseOwnership();
 }
 
-std::vector<VkPhysicalDevice> VulkanApplication::GetPhysicalDevices() const {
+std::vector<VkPhysicalDevice> RSVulkanApplication::GetPhysicalDevices() const {
   if (!IsValid()) {
     return {};
   }
@@ -180,10 +168,10 @@ std::vector<VkPhysicalDevice> VulkanApplication::GetPhysicalDevices() const {
   return physical_devices;
 }
 
-std::unique_ptr<VulkanDevice>
-VulkanApplication::AcquireFirstCompatibleLogicalDevice() const {
+std::unique_ptr<RSVulkanDevice>
+RSVulkanApplication::AcquireFirstCompatibleLogicalDevice() const {
   for (auto device_handle : GetPhysicalDevices()) {
-    auto logical_device = std::make_unique<VulkanDevice>(vk, device_handle);
+    auto logical_device = std::make_unique<RSVulkanDevice>(vk, device_handle);
     if (logical_device->IsValid()) {
       return logical_device;
     }
@@ -193,8 +181,8 @@ VulkanApplication::AcquireFirstCompatibleLogicalDevice() const {
 }
 
 std::vector<VkExtensionProperties>
-VulkanApplication::GetSupportedInstanceExtensions(
-    const VulkanProcTable& vk) const {
+RSVulkanApplication::GetSupportedInstanceExtensions(
+    const RSVulkanProcTable& vk) const {
   if (!vk.EnumerateInstanceExtensionProperties) {
     return std::vector<VkExtensionProperties>();
   }
@@ -219,7 +207,7 @@ VulkanApplication::GetSupportedInstanceExtensions(
   return properties;
 }
 
-bool VulkanApplication::ExtensionSupported(
+bool RSVulkanApplication::ExtensionSupported(
     const std::vector<VkExtensionProperties>& supported_instance_extensions,
     std::string extension_name) {
   uint32_t count = supported_instance_extensions.size();
@@ -233,4 +221,4 @@ bool VulkanApplication::ExtensionSupported(
   return false;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

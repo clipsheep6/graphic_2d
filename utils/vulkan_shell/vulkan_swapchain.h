@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_SWAPCHAIN_H_
-#define FLUTTER_VULKAN_VULKAN_SWAPCHAIN_H_
+#ifndef RS_VULKAN_VULKAN_SWAPCHAIN_H_
+#define RS_VULKAN_VULKAN_SWAPCHAIN_H_
 
 #include <memory>
 #include <utility>
@@ -27,24 +27,24 @@
 #include "third_party/skia/include/core/SkSize.h"
 #include "third_party/skia/include/core/SkSurface.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanProcTable;
-class VulkanDevice;
-class VulkanSurface;
-class VulkanBackbuffer;
-class VulkanImage;
+class RSVulkanProcTable;
+class RSVulkanDevice;
+class RSVulkanSurface;
+class RSVulkanBackbuffer;
+class RSVulkanImage;
 
-class VulkanSwapchain {
+class RSVulkanSwapchain {
  public:
-  VulkanSwapchain(const VulkanProcTable& vk,
-                  const VulkanDevice& device,
-                  const VulkanSurface& surface,
+  RSVulkanSwapchain(const RSVulkanProcTable& vk,
+                  const RSVulkanDevice& device,
+                  const RSVulkanSurface& surface,
                   GrDirectContext* skia_context,
-                  std::unique_ptr<VulkanSwapchain> old_swapchain,
+                  std::unique_ptr<RSVulkanSwapchain> old_swapchain,
                   uint32_t queue_family_index);
 
-  ~VulkanSwapchain();
+  ~RSVulkanSwapchain();
 
   bool IsValid() const;
 
@@ -77,23 +77,23 @@ class VulkanSwapchain {
 
   void AddToPresent();
 
-  static void PresentAll(VulkanHandle<VkFence>& shared_fence);
+  static void PresentAll(RSVulkanHandle<VkFence>& shared_fence);
 
  private:
-  const VulkanProcTable& vk;
-  const VulkanDevice& device_;
+  const RSVulkanProcTable& vk;
+  const RSVulkanDevice& device_;
   VkSurfaceCapabilitiesKHR capabilities_;
   VkSurfaceFormatKHR surface_format_;
-  VulkanHandle<VkSwapchainKHR> swapchain_;
-  std::vector<std::unique_ptr<VulkanBackbuffer>> backbuffers_;
-  std::vector<std::unique_ptr<VulkanImage>> images_;
+  RSVulkanHandle<VkSwapchainKHR> swapchain_;
+  std::vector<std::unique_ptr<RSVulkanBackbuffer>> backbuffers_;
+  std::vector<std::unique_ptr<RSVulkanImage>> images_;
   std::vector<sk_sp<SkSurface>> surfaces_;
   VkPipelineStageFlagBits current_pipeline_stage_;
   size_t current_backbuffer_index_;
   size_t current_image_index_;
   bool valid_;
   static std::mutex map_mutex_;
-  static std::unordered_map<std::thread::id, VulkanSwapchain*> to_be_present_;
+  static std::unordered_map<std::thread::id, RSVulkanSwapchain*> to_be_present_;
 
   std::vector<VkImage> GetImages() const;
 
@@ -107,10 +107,10 @@ class VulkanSwapchain {
                                      SkColorType color_type,
                                      sk_sp<SkColorSpace> color_space) const;
 
-  VulkanBackbuffer* GetNextBackbuffer();
+  RSVulkanBackbuffer* GetNextBackbuffer();
 
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_SWAPCHAIN_H_
+#endif  // RS_VULKAN_VULKAN_SWAPCHAIN_H_

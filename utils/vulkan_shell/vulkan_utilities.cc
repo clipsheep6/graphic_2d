@@ -18,7 +18,7 @@
 #include <algorithm>
 #include <unordered_set>
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 bool IsDebuggingEnabled() {
 #ifndef NDEBUG
@@ -35,15 +35,12 @@ bool ValidationLayerInfoMessagesEnabled() {
 }
 
 bool ValidationErrorsFatal() {
-#if OS_FUCHSIA
-  return false;
-#endif
 
   return true;
 }
 
 static std::vector<std::string> InstanceOrDeviceLayersToEnable(
-    const VulkanProcTable& vk,
+    const RSVulkanProcTable& vk,
     VkPhysicalDevice physical_device) {
   if (!IsDebuggingEnabled()) {
     return {};
@@ -104,13 +101,13 @@ static std::vector<std::string> InstanceOrDeviceLayersToEnable(
   return available_candidates;
 }
 
-std::vector<std::string> InstanceLayersToEnable(const VulkanProcTable& vk) {
+std::vector<std::string> InstanceLayersToEnable(const RSVulkanProcTable& vk) {
   return InstanceOrDeviceLayersToEnable(vk, VK_NULL_HANDLE);
 }
 
 std::vector<std::string> DeviceLayersToEnable(
-    const VulkanProcTable& vk,
-    const VulkanHandle<VkPhysicalDevice>& physical_device) {
+    const RSVulkanProcTable& vk,
+    const RSVulkanHandle<VkPhysicalDevice>& physical_device) {
   if (!physical_device) {
     return {};
   }
@@ -118,4 +115,4 @@ std::vector<std::string> DeviceLayersToEnable(
   return InstanceOrDeviceLayersToEnable(vk, physical_device);
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

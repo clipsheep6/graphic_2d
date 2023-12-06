@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_PROVIDER_H_
-#define FLUTTER_VULKAN_VULKAN_PROVIDER_H_
+#ifndef RS_VULKAN_VULKAN_PROVIDER_H_
+#define RS_VULKAN_VULKAN_PROVIDER_H_
 
 #include "vulkan_handle.h"
 #include "vulkan_proc_table.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanProvider {
+class RSVulkanProvider {
  public:
-  virtual const vulkan::VulkanProcTable& vk() = 0;
-  virtual const vulkan::VulkanHandle<VkDevice>& vk_device() = 0;
+  virtual const vulkan::RSVulkanProcTable& vk() = 0;
+  virtual const vulkan::RSVulkanHandle<VkDevice>& vk_device() = 0;
 
-  vulkan::VulkanHandle<VkFence> CreateFence() {
+  vulkan::RSVulkanHandle<VkFence> CreateFence() {
     const VkFenceCreateInfo create_info = {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = nullptr,
@@ -35,7 +35,7 @@ class VulkanProvider {
     VkFence fence;
     if (VK_CALL_LOG_ERROR(vk().CreateFence(vk_device(), &create_info, nullptr,
                                            &fence)) != VK_SUCCESS)
-      return vulkan::VulkanHandle<VkFence>();
+      return vulkan::RSVulkanHandle<VkFence>();
 
     return {fence, [this](VkFence fence) {
               vk().DestroyFence(vk_device(), fence, nullptr);
@@ -43,6 +43,6 @@ class VulkanProvider {
   }
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_PROVIDER_H_
+#endif  // RS_VULKAN_VULKAN_PROVIDER_H_

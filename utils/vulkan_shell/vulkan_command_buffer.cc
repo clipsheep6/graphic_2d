@@ -18,12 +18,12 @@
 #include "vulkan_hilog.h"
 #include "vulkan_proc_table.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-VulkanCommandBuffer::VulkanCommandBuffer(
-    const VulkanProcTable& p_vk,
-    const VulkanHandle<VkDevice>& device,
-    const VulkanHandle<VkCommandPool>& pool)
+RSVulkanCommandBuffer::RSVulkanCommandBuffer(
+    const RSVulkanProcTable& p_vk,
+    const RSVulkanHandle<VkDevice>& device,
+    const RSVulkanHandle<VkCommandPool>& pool)
     : vk(p_vk), device_(device), pool_(pool), valid_(false) {
   const VkCommandBufferAllocateInfo allocate_info = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -50,17 +50,17 @@ VulkanCommandBuffer::VulkanCommandBuffer(
   valid_ = true;
 }
 
-VulkanCommandBuffer::~VulkanCommandBuffer() = default;
+RSVulkanCommandBuffer::~RSVulkanCommandBuffer() = default;
 
-bool VulkanCommandBuffer::IsValid() const {
+bool RSVulkanCommandBuffer::IsValid() const {
   return valid_;
 }
 
-VkCommandBuffer VulkanCommandBuffer::Handle() const {
+VkCommandBuffer RSVulkanCommandBuffer::Handle() const {
   return handle_;
 }
 
-bool VulkanCommandBuffer::Begin() const {
+bool RSVulkanCommandBuffer::Begin() const {
   const VkCommandBufferBeginInfo info{
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
       .pNext = nullptr,
@@ -71,11 +71,11 @@ bool VulkanCommandBuffer::Begin() const {
   return VK_CALL_LOG_ERROR(vk.BeginCommandBuffer(handle_, &info)) == VK_SUCCESS;
 }
 
-bool VulkanCommandBuffer::End() const {
+bool RSVulkanCommandBuffer::End() const {
   return VK_CALL_LOG_ERROR(vk.EndCommandBuffer(handle_)) == VK_SUCCESS;
 }
 
-bool VulkanCommandBuffer::InsertPipelineBarrier(
+bool RSVulkanCommandBuffer::InsertPipelineBarrier(
     VkPipelineStageFlagBits src_stage_flags,
     VkPipelineStageFlagBits dest_stage_flags,
     uint32_t /* mask of VkDependencyFlagBits */ dependency_flags,
@@ -92,4 +92,4 @@ bool VulkanCommandBuffer::InsertPipelineBarrier(
   return true;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

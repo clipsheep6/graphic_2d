@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_PROC_TABLE_H_
-#define FLUTTER_VULKAN_VULKAN_PROC_TABLE_H_
+#ifndef RS_VULKAN_VULKAN_PROC_TABLE_H_
+#define RS_VULKAN_VULKAN_PROC_TABLE_H_
 
 #include "vulkan_handle.h"
 #include "vulkan_interface.h"
 #include "third_party/skia/include/core/SkRefCnt.h"
 #include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanProcTable {
+class RSVulkanProcTable {
  public:
   template <class T>
   class Proc {
@@ -52,9 +52,9 @@ class VulkanProcTable {
     T proc_;
   };
 
-  VulkanProcTable();
+  RSVulkanProcTable();
 
-  ~VulkanProcTable();
+  ~RSVulkanProcTable();
 
   bool HasAcquiredMandatoryProcAddresses() const;
 
@@ -64,9 +64,9 @@ class VulkanProcTable {
 
   bool AreDeviceProcsSetup() const;
 
-  bool SetupInstanceProcAddresses(const VulkanHandle<VkInstance>& instance);
+  bool SetupInstanceProcAddresses(const RSVulkanHandle<VkInstance>& instance);
 
-  bool SetupDeviceProcAddresses(const VulkanHandle<VkDevice>& device);
+  bool SetupDeviceProcAddresses(const RSVulkanHandle<VkDevice>& device);
 
   GrVkGetProc CreateSkiaGetProc() const;
 
@@ -133,19 +133,19 @@ class VulkanProcTable {
  private:
   void* handle_;
   bool acquired_mandatory_proc_addresses_;
-  VulkanHandle<VkInstance> instance_;
-  VulkanHandle<VkDevice> device_;
+  RSVulkanHandle<VkInstance> instance_;
+  RSVulkanHandle<VkDevice> device_;
 
   bool OpenLibraryHandle();
   bool SetupLoaderProcAddresses();
   bool CloseLibraryHandle();
   PFN_vkVoidFunction AcquireProc(
       const char* proc_name,
-      const VulkanHandle<VkInstance>& instance) const;
+      const RSVulkanHandle<VkInstance>& instance) const;
   PFN_vkVoidFunction AcquireProc(const char* proc_name,
-                                 const VulkanHandle<VkDevice>& device) const;
+                                 const RSVulkanHandle<VkDevice>& device) const;
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_PROC_TABLE_H_
+#endif  // RS_VULKAN_VULKAN_PROC_TABLE_H_

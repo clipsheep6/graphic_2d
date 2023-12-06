@@ -25,7 +25,7 @@
 #include "vulkan_utilities.h"
 #include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 constexpr auto kVulkanInvalidGraphicsQueueIndex =
     std::numeric_limits<uint32_t>::max();
@@ -39,7 +39,7 @@ static uint32_t FindQueueIndex(const std::vector<VkQueueFamilyProperties>& prope
   return kVulkanInvalidGraphicsQueueIndex;
 }
 
-VulkanDevice::VulkanDevice(VulkanProcTable& p_vk, VulkanHandle<VkPhysicalDevice> physical_device)
+RSVulkanDevice::RSVulkanDevice(RSVulkanProcTable& p_vk, RSVulkanHandle<VkPhysicalDevice> physical_device)
     : vk(p_vk), physical_device_(std::move(physical_device)),
       graphics_queue_index_(std::numeric_limits<uint32_t>::max()),
       compute_queue_index_(std::numeric_limits<uint32_t>::max()), valid_(false)
@@ -153,45 +153,45 @@ VulkanDevice::VulkanDevice(VulkanProcTable& p_vk, VulkanHandle<VkPhysicalDevice>
   valid_ = true;
 }
 
-VulkanDevice::~VulkanDevice() {
+RSVulkanDevice::~RSVulkanDevice() {
   WaitIdle();
 }
 
-bool VulkanDevice::IsValid() const {
+bool RSVulkanDevice::IsValid() const {
   return valid_;
 }
 
-bool VulkanDevice::WaitIdle() const {
+bool RSVulkanDevice::WaitIdle() const {
   return VK_CALL_LOG_ERROR(vk.DeviceWaitIdle(device_)) == VK_SUCCESS;
 }
 
-const VulkanHandle<VkDevice>& VulkanDevice::GetHandle() const {
+const RSVulkanHandle<VkDevice>& RSVulkanDevice::GetHandle() const {
   return device_;
 }
 
-void VulkanDevice::ReleaseDeviceOwnership() {
+void RSVulkanDevice::ReleaseDeviceOwnership() {
   device_.ReleaseOwnership();
 }
 
-const VulkanHandle<VkPhysicalDevice>& VulkanDevice::GetPhysicalDeviceHandle()
+const RSVulkanHandle<VkPhysicalDevice>& RSVulkanDevice::GetPhysicalDeviceHandle()
     const {
   return physical_device_;
 }
 
-const VulkanHandle<VkQueue>& VulkanDevice::GetQueueHandle() const {
+const RSVulkanHandle<VkQueue>& RSVulkanDevice::GetQueueHandle() const {
   return queue_;
 }
 
-const VulkanHandle<VkCommandPool>& VulkanDevice::GetCommandPool() const {
+const RSVulkanHandle<VkCommandPool>& RSVulkanDevice::GetCommandPool() const {
   return command_pool_;
 }
 
-uint32_t VulkanDevice::GetGraphicsQueueIndex() const {
+uint32_t RSVulkanDevice::GetGraphicsQueueIndex() const {
   return graphics_queue_index_;
 }
 
-bool VulkanDevice::GetSurfaceCapabilities(
-    const VulkanSurface& surface,
+bool RSVulkanDevice::GetSurfaceCapabilities(
+    const RSVulkanSurface& surface,
     VkSurfaceCapabilitiesKHR* capabilities) const {
   if (!surface.IsValid() || capabilities == nullptr) {
     LOGE("GetSurfaceCapabilities surface is not valid or capabilities is null");
@@ -227,7 +227,7 @@ bool VulkanDevice::GetSurfaceCapabilities(
   return true;
 }
 
-bool VulkanDevice::GetPhysicalDeviceFeatures(
+bool RSVulkanDevice::GetPhysicalDeviceFeatures(
     VkPhysicalDeviceFeatures* features) const {
   if (features == nullptr || !physical_device_) {
     return false;
@@ -236,7 +236,7 @@ bool VulkanDevice::GetPhysicalDeviceFeatures(
   return true;
 }
 
-bool VulkanDevice::GetPhysicalDeviceFeaturesSkia(uint32_t* sk_features) const {
+bool RSVulkanDevice::GetPhysicalDeviceFeaturesSkia(uint32_t* sk_features) const {
   if (sk_features == nullptr) {
     return false;
   }
@@ -263,7 +263,7 @@ bool VulkanDevice::GetPhysicalDeviceFeaturesSkia(uint32_t* sk_features) const {
   return true;
 }
 
-std::vector<VkQueueFamilyProperties> VulkanDevice::GetQueueFamilyProperties()
+std::vector<VkQueueFamilyProperties> RSVulkanDevice::GetQueueFamilyProperties()
     const {
   uint32_t count = 0;
 
@@ -278,7 +278,7 @@ std::vector<VkQueueFamilyProperties> VulkanDevice::GetQueueFamilyProperties()
   return properties;
 }
 
-int VulkanDevice::ChooseSurfaceFormat(const VulkanSurface& surface,
+int RSVulkanDevice::ChooseSurfaceFormat(const RSVulkanSurface& surface,
                                       std::vector<VkFormat> desired_formats,
                                       VkSurfaceFormatKHR* format) const {
   if (!surface.IsValid() || format == nullptr) {
@@ -324,7 +324,7 @@ int VulkanDevice::ChooseSurfaceFormat(const VulkanSurface& surface,
   return -1;
 }
 
-bool VulkanDevice::ChoosePresentMode(const VulkanSurface& surface,
+bool RSVulkanDevice::ChoosePresentMode(const RSVulkanSurface& surface,
                                      VkPresentModeKHR* present_mode) const {
   if (!surface.IsValid() || present_mode == nullptr) {
     LOGE("ChoosePresentMode surface not valid or presentmode is null");
@@ -345,12 +345,12 @@ bool VulkanDevice::ChoosePresentMode(const VulkanSurface& surface,
   return true;
 }
 
-bool VulkanDevice::QueueSubmit(
+bool RSVulkanDevice::QueueSubmit(
     std::vector<VkPipelineStageFlags> wait_dest_pipeline_stages,
     const std::vector<VkSemaphore>& wait_semaphores,
     const std::vector<VkSemaphore>& signal_semaphores,
     const std::vector<VkCommandBuffer>& command_buffers,
-    const VulkanHandle<VkFence>& fence) const {
+    const RSVulkanHandle<VkFence>& fence) const {
   if (wait_semaphores.size() != wait_dest_pipeline_stages.size()) {
     return false;
   }
@@ -375,4 +375,4 @@ bool VulkanDevice::QueueSubmit(
   return true;
 }
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 

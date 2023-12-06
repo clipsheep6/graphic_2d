@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_APPLICATION_H_
-#define FLUTTER_VULKAN_VULKAN_APPLICATION_H_
+#ifndef RS_VULKAN_VULKAN_APPLICATION_H_
+#define RS_VULKAN_VULKAN_APPLICATION_H_
 
 #include <memory>
 #include <string>
@@ -23,51 +23,51 @@
 #include "vulkan_debug_report.h"
 #include "vulkan_handle.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 static const int kGrCacheMaxCount = 8192;
 static const size_t kGrCacheMaxByteSize = 512 * (1 << 20);
 
-class VulkanDevice;
-class VulkanProcTable;
+class RSVulkanDevice;
+class RSVulkanProcTable;
 
-/// Applications using Vulkan acquire a VulkanApplication that attempts to
+/// Applications using Vulkan acquire a RSVulkanApplication that attempts to
 /// create a VkInstance (with debug reporting optionally enabled).
-class VulkanApplication {
+class RSVulkanApplication {
  public:
-  VulkanApplication(VulkanProcTable& vk,
+  RSVulkanApplication(RSVulkanProcTable& vk,
                     const std::string& application_name,
                     std::vector<std::string> enabled_extensions,
                     uint32_t application_version = VK_MAKE_VERSION(1, 0, 0),
                     uint32_t api_version = VK_MAKE_VERSION(1, 0, 0));
 
-  ~VulkanApplication();
+  ~RSVulkanApplication();
 
   bool IsValid() const;
 
   uint32_t GetAPIVersion() const;
 
-  const VulkanHandle<VkInstance>& GetInstance() const;
+  const RSVulkanHandle<VkInstance>& GetInstance() const;
 
   void ReleaseInstanceOwnership();
 
-  std::unique_ptr<VulkanDevice> AcquireFirstCompatibleLogicalDevice() const;
+  std::unique_ptr<RSVulkanDevice> AcquireFirstCompatibleLogicalDevice() const;
 
  private:
-  VulkanProcTable& vk;
-  VulkanHandle<VkInstance> instance_;
+  RSVulkanProcTable& vk;
+  RSVulkanHandle<VkInstance> instance_;
   uint32_t api_version_;
-  std::unique_ptr<VulkanDebugReport> debug_report_;
+  std::unique_ptr<RSVulkanDebugReport> debug_report_;
   bool valid_;
 
   std::vector<VkPhysicalDevice> GetPhysicalDevices() const;
   std::vector<VkExtensionProperties> GetSupportedInstanceExtensions(
-      const VulkanProcTable& vk) const;
+      const RSVulkanProcTable& vk) const;
   bool ExtensionSupported(
       const std::vector<VkExtensionProperties>& supported_extensions,
       std::string extension_name);
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_APPLICATION_H_
+#endif  // RS_VULKAN_VULKAN_APPLICATION_H_

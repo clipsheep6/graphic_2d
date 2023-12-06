@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_WINDOW_H_
-#define FLUTTER_VULKAN_VULKAN_WINDOW_H_
+#ifndef RS_VULKAN_VULKAN_WINDOW_H_
+#define RS_VULKAN_VULKAN_WINDOW_H_
 
 #include <memory>
 #include <tuple>
@@ -31,23 +31,23 @@
 #include "third_party/skia/include/gpu/GrDirectContext.h"
 #include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanNativeSurface;
-class VulkanDevice;
-class VulkanSurface;
-class VulkanSwapchain;
-class VulkanImage;
-class VulkanApplication;
-class VulkanBackbuffer;
+class RSVulkanNativeSurface;
+class RSVulkanDevice;
+class RSVulkanSurface;
+class RSVulkanSwapchain;
+class RSVulkanImage;
+class RSVulkanApplication;
+class RSVulkanBackbuffer;
 
-class VulkanWindow {
+class RSVulkanWindow {
  public:
-  typedef std::shared_ptr<VulkanWindow> Ptr;
-  VulkanWindow(std::unique_ptr<VulkanNativeSurface> native_surface,
+  typedef std::shared_ptr<RSVulkanWindow> Ptr;
+  RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> native_surface,
                bool is_offscreen = false);
 
-  ~VulkanWindow();
+  ~RSVulkanWindow();
 
   bool IsValid() const;
 
@@ -65,21 +65,21 @@ class VulkanWindow {
   static bool ResetSharedFence();
   static VkDevice GetDevice();
   static VkPhysicalDevice GetPhysicalDevice();
-  static VulkanProcTable &GetVkProcTable();
+  static RSVulkanProcTable &GetVkProcTable();
 
-  static std::unique_ptr<VulkanDevice> logical_device_;
-  static VulkanProcTable* vk;
+  static std::unique_ptr<RSVulkanDevice> logical_device_;
+  static RSVulkanProcTable* vk;
 
  public:
   bool valid_;
-  static std::unique_ptr<VulkanApplication> application_;
+  static std::unique_ptr<RSVulkanApplication> application_;
   bool is_offscreen_ = false;
   static std::thread::id device_thread_;
-  static std::vector<VulkanHandle<VkFence>> shared_fences_;
+  static std::vector<RSVulkanHandle<VkFence>> shared_fences_;
   static uint32_t shared_fence_index_;
   static bool presenting_;
-  std::unique_ptr<VulkanSurface> surface_;
-  std::unique_ptr<VulkanSwapchain> swapchain_;
+  std::unique_ptr<RSVulkanSurface> surface_;
+  std::unique_ptr<RSVulkanSwapchain> swapchain_;
   sk_sp<GrDirectContext> skia_gr_context_;
 
   GrVkBackendContext sk_backend_context_;
@@ -91,6 +91,6 @@ class VulkanWindow {
   bool RecreateSwapchain();
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_WINDOW_H_
+#endif  // RS_VULKAN_VULKAN_WINDOW_H_

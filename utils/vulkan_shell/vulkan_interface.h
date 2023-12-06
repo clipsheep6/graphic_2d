@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_INTERFACE_H_
-#define FLUTTER_VULKAN_VULKAN_INTERFACE_H_
+#ifndef RS_VULKAN_VULKAN_INTERFACE_H_
+#define RS_VULKAN_VULKAN_INTERFACE_H_
 
 #include <string>
 
@@ -47,10 +47,10 @@
 
 #endif  // NDEBUG
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
 std::string VulkanResultToString(VkResult result);
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_INTERFACE_H_
+#endif  // RS_VULKAN_VULKAN_INTERFACE_H_

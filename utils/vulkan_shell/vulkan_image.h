@@ -13,37 +13,37 @@
  * limitations under the License.
  */
 
-#ifndef FLUTTER_VULKAN_VULKAN_IMAGE_H_
-#define FLUTTER_VULKAN_VULKAN_IMAGE_H_
+#ifndef RS_VULKAN_VULKAN_IMAGE_H_
+#define RS_VULKAN_VULKAN_IMAGE_H_
 
 #include "vulkan_handle.h"
 
-namespace vulkan {
+namespace OHOS::Rosen::vulkan {
 
-class VulkanProcTable;
-class VulkanCommandBuffer;
+class RSVulkanProcTable;
+class RSVulkanCommandBuffer;
 
-class VulkanImage {
+class RSVulkanImage {
  public:
-  VulkanImage(VulkanHandle<VkImage> image);
+  RSVulkanImage(RSVulkanHandle<VkImage> image);
 
-  ~VulkanImage();
+  ~RSVulkanImage();
 
   bool IsValid() const;
 
-  bool InsertImageMemoryBarrier(const VulkanCommandBuffer& command_buffer,
+  bool InsertImageMemoryBarrier(const RSVulkanCommandBuffer& command_buffer,
                                 VkPipelineStageFlagBits src_pipline_bits,
                                 VkPipelineStageFlagBits dest_pipline_bits,
                                 VkAccessFlagBits dest_access_flags,
                                 VkImageLayout dest_layout);
 
  private:
-  VulkanHandle<VkImage> handle_;
+  RSVulkanHandle<VkImage> handle_;
   VkImageLayout layout_;
   uint32_t /* mask of VkAccessFlagBits */ access_flags_;
   bool valid_;
 };
 
-}  // namespace vulkan
+}  // namespace OHOS::Rosen::vulkan 
 
-#endif  // FLUTTER_VULKAN_VULKAN_IMAGE_H_
+#endif  // RS_VULKAN_VULKAN_IMAGE_H_

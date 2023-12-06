@@ -17,9 +17,7 @@
 
 #include <limits>
 
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 #include "vulkan_proc_table.h"
 #include "third_party/skia/include/gpu/vk/GrVkTypes.h"
 #include "vulkan/vulkan.h"

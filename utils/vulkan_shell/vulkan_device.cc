@@ -19,9 +19,7 @@
 #include <map>
 #include <vector>
 
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 #include "vulkan_proc_table.h"
 #include "vulkan_surface.h"
 #include "vulkan_utilities.h"
@@ -329,9 +327,7 @@ int VulkanDevice::ChooseSurfaceFormat(const VulkanSurface& surface,
 bool VulkanDevice::ChoosePresentMode(const VulkanSurface& surface,
                                      VkPresentModeKHR* present_mode) const {
   if (!surface.IsValid() || present_mode == nullptr) {
-#ifdef RS_ENABLE_VK
     LOGE("ChoosePresentMode surface not valid or presentmode is null");
-#endif
     return false;
   }
 

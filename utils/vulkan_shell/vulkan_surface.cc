@@ -16,9 +16,7 @@
 #include "vulkan_surface.h"
 
 #include "vulkan_application.h"
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 #include "vulkan_native_surface.h"
 
 namespace vulkan {

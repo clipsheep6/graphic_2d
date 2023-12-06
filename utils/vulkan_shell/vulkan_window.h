@@ -58,7 +58,6 @@ class VulkanWindow {
 
   bool SwapBuffers();
 
-#ifdef RS_ENABLE_VK
   bool FlushCommands();
   static void PresentAll();
   static void InitializeVulkan(size_t thread_num = 0);
@@ -67,7 +66,6 @@ class VulkanWindow {
   static VkDevice GetDevice();
   static VkPhysicalDevice GetPhysicalDevice();
   static VulkanProcTable &GetVkProcTable();
-#endif
 
   static std::unique_ptr<VulkanDevice> logical_device_;
   static VulkanProcTable* vk;

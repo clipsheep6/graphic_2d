@@ -76,9 +76,7 @@ class VulkanDevice {
   VulkanHandle<VkQueue> queue_;
   VulkanHandle<VkCommandPool> command_pool_;
   uint32_t graphics_queue_index_;
-#ifdef RS_ENABLE_VK
   uint32_t compute_queue_index_;
-#endif
   bool valid_;
 
   std::vector<VkQueueFamilyProperties> GetQueueFamilyProperties() const;

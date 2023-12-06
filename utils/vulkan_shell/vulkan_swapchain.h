@@ -1,6 +1,17 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef FLUTTER_VULKAN_VULKAN_SWAPCHAIN_H_
 #define FLUTTER_VULKAN_VULKAN_SWAPCHAIN_H_
@@ -62,7 +73,6 @@ class VulkanSwapchain {
 
   SkISize GetSize() const;
 
-#ifdef RS_ENABLE_VK
   bool FlushCommands();
 
   void AddToPresent();
@@ -98,37 +108,7 @@ class VulkanSwapchain {
                                      sk_sp<SkColorSpace> color_space) const;
 
   VulkanBackbuffer* GetNextBackbuffer();
-#else
-#if OS_ANDROID
- private:
-  const VulkanProcTable& vk;
-  const VulkanDevice& device_;
-  VkSurfaceCapabilitiesKHR capabilities_;
-  VkSurfaceFormatKHR surface_format_;
-  VulkanHandle<VkSwapchainKHR> swapchain_;
-  std::vector<std::unique_ptr<VulkanBackbuffer>> backbuffers_;
-  std::vector<std::unique_ptr<VulkanImage>> images_;
-  std::vector<sk_sp<SkSurface>> surfaces_;
-  VkPipelineStageFlagBits current_pipeline_stage_;
-  size_t current_backbuffer_index_;
-  size_t current_image_index_;
-  bool valid_;
 
-  std::vector<VkImage> GetImages() const;
-
-  bool CreateSwapchainImages(GrDirectContext* skia_context,
-                             SkColorType color_type,
-                             sk_sp<SkColorSpace> color_space);
-
-  sk_sp<SkSurface> CreateSkiaSurface(GrDirectContext* skia_context,
-                                     VkImage image,
-                                     const SkISize& size,
-                                     SkColorType color_type,
-                                     sk_sp<SkColorSpace> color_space) const;
-
-  VulkanBackbuffer* GetNextBackbuffer();
-#endif  // OS_ANDROID
-#endif  // RS_ENABLE_VK
 };
 
 }  // namespace vulkan

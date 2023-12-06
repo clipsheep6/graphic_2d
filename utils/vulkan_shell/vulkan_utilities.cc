@@ -1,6 +1,17 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "vulkan_utilities.h"
 
@@ -40,21 +51,11 @@ static std::vector<std::string> InstanceOrDeviceLayersToEnable(
 
   // NOTE: The loader is sensitive to the ordering here. Please do not rearrange
   // this list.
-#if OS_FUCHSIA
-  // Fuchsia uses the updated Vulkan loader and validation layers which no
-  // longer includes the image validation layer.
-  const std::vector<std::string> candidates = {
-      "VK_LAYER_GOOGLE_threading",      "VK_LAYER_LUNARG_parameter_validation",
-      "VK_LAYER_LUNARG_object_tracker", "VK_LAYER_LUNARG_core_validation",
-      "VK_LAYER_LUNARG_device_limits",  "VK_LAYER_LUNARG_swapchain",
-      "VK_LAYER_GOOGLE_unique_objects"};
-#else
   const std::vector<std::string> candidates = {
       "VK_LAYER_GOOGLE_threading",      "VK_LAYER_LUNARG_parameter_validation",
       "VK_LAYER_LUNARG_object_tracker", "VK_LAYER_LUNARG_core_validation",
       "VK_LAYER_LUNARG_device_limits",  "VK_LAYER_LUNARG_image",
       "VK_LAYER_LUNARG_swapchain",      "VK_LAYER_GOOGLE_unique_objects"};
-#endif
 
   uint32_t count = 0;
 

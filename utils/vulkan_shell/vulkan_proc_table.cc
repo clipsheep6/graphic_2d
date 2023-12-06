@@ -1,6 +1,17 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "vulkan_proc_table.h"
 
@@ -10,18 +21,10 @@
 #include "vulkan_hilog.h"
 #endif
 
-#ifdef RS_ENABLE_VK
 #define ACQUIRE_PROC(name, context)                          \
   if (!(name = AcquireProc("vk" #name, context))) {          \
     LOGE("Could not acquire proc: vk" #name);                \
   }
-#else
-#define ACQUIRE_PROC(name, context)                          \
-  if (!(name = AcquireProc("vk" #name, context))) {          \
-    FML_DLOG(INFO) << "Could not acquire proc: vk" << #name; \
-    return false;                                            \
-  }
-#endif
 
 namespace vulkan {
 
@@ -78,11 +81,7 @@ bool VulkanProcTable::SetupLoaderProcAddresses() {
 #endif
 
   if (!GetInstanceProcAddr) {
-#ifdef RS_ENABLE_VK
     LOGE("Could not acquire vkGetInstanceProcAddr.");
-#else
-    FML_DLOG(WARNING) << "Could not acquire vkGetInstanceProcAddr.";
-#endif
     return false;
   }
 
@@ -100,7 +99,6 @@ bool VulkanProcTable::SetupInstanceProcAddresses(
   ACQUIRE_PROC(DestroyInstance, handle);
   ACQUIRE_PROC(EnumerateDeviceLayerProperties, handle);
   ACQUIRE_PROC(EnumeratePhysicalDevices, handle);
-#ifdef RS_ENABLE_VK
   ACQUIRE_PROC(GetPhysicalDeviceFeatures, handle);
   ACQUIRE_PROC(GetPhysicalDeviceQueueFamilyProperties, handle);
   ACQUIRE_PROC(GetPhysicalDeviceSurfaceCapabilitiesKHR, handle);
@@ -111,19 +109,7 @@ bool VulkanProcTable::SetupInstanceProcAddresses(
   ACQUIRE_PROC(CreateSurfaceOHOS, handle);
   ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties, handle);
   ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties2, handle);
-#else
-  ACQUIRE_PROC(GetDeviceProcAddr, handle);
-  ACQUIRE_PROC(GetPhysicalDeviceFeatures, handle);
-  ACQUIRE_PROC(GetPhysicalDeviceQueueFamilyProperties, handle);
-#if OS_ANDROID
-  ACQUIRE_PROC(GetPhysicalDeviceSurfaceCapabilitiesKHR, handle);
-  ACQUIRE_PROC(GetPhysicalDeviceSurfaceFormatsKHR, handle);
-  ACQUIRE_PROC(GetPhysicalDeviceSurfacePresentModesKHR, handle);
-  ACQUIRE_PROC(GetPhysicalDeviceSurfaceSupportKHR, handle);
-  ACQUIRE_PROC(DestroySurfaceKHR, handle);
-  ACQUIRE_PROC(CreateAndroidSurfaceKHR, handle);
-#endif  // OS_ANDROID
-#endif // RS_ENABLE_VK
+
 
   // The debug report functions are optional. We don't want proc acquisition to
   // fail here because the optional methods were not present (since ACQUIRE_PROC
@@ -163,7 +149,6 @@ bool VulkanProcTable::SetupDeviceProcAddresses(
   ACQUIRE_PROC(ResetCommandBuffer, handle);
   ACQUIRE_PROC(ResetFences, handle);
   ACQUIRE_PROC(WaitForFences, handle);
-#ifdef RS_ENABLE_VK
   ACQUIRE_PROC(AcquireNextImageKHR, handle);
   ACQUIRE_PROC(CreateSwapchainKHR, handle);
   ACQUIRE_PROC(DestroySwapchainKHR, handle);
@@ -171,19 +156,7 @@ bool VulkanProcTable::SetupDeviceProcAddresses(
   ACQUIRE_PROC(QueuePresentKHR, handle);
   ACQUIRE_PROC(GetNativeBufferPropertiesOHOS, handle);
   ACQUIRE_PROC(QueueSignalReleaseImageOHOS, handle);
-#else
-#if OS_ANDROID
-  ACQUIRE_PROC(AcquireNextImageKHR, handle);
-  ACQUIRE_PROC(CreateSwapchainKHR, handle);
-  ACQUIRE_PROC(DestroySwapchainKHR, handle);
-  ACQUIRE_PROC(GetSwapchainImagesKHR, handle);
-  ACQUIRE_PROC(QueuePresentKHR, handle);
-#endif  // OS_ANDROID
-#if OS_FUCHSIA
-  ACQUIRE_PROC(GetMemoryZirconHandleFUCHSIA, handle);
-  ACQUIRE_PROC(ImportSemaphoreZirconHandleFUCHSIA, handle);
-#endif  // OS_FUCHSIA
-#endif // RS_ENABLE_VK
+
   device_ = {handle, nullptr};
   return true;
 }
@@ -199,11 +172,7 @@ bool VulkanProcTable::OpenLibraryHandle() {
   dlerror();  // clear existing errors on thread.
   handle_ = dlopen("/system/lib64/libvulkan.so", RTLD_NOW | RTLD_LOCAL);
   if (handle_ == nullptr) {
-#ifdef RS_ENABLE_VK
     LOGE("Could not open the vulkan library: %s", dlerror());
-#else
-    FML_DLOG(WARNING) << "Could not open the vulkan library: " << dlerror();
-#endif
     return false;
   }
   return true;
@@ -218,15 +187,9 @@ bool VulkanProcTable::CloseLibraryHandle() {
   if (handle_ != nullptr) {
     dlerror();  // clear existing errors on thread.
     if (dlclose(handle_) != 0) {
-#ifdef RS_ENABLE_VK
       LOGE("Could not close the vulkan library handle. This "
                  "indicates a leak.");
       LOGE("%s", dlerror());
-#else
-      FML_DLOG(ERROR) << "Could not close the vulkan library handle. This "
-                         "indicates a leak.";
-      FML_DLOG(ERROR) << dlerror();
-#endif
     }
     handle_ = nullptr;
   }

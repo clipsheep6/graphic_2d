@@ -1,6 +1,17 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "vulkan_debug_report.h"
 
@@ -10,7 +21,6 @@
 #include "vulkan_utilities.h"
 
 namespace vulkan {
-#ifdef RS_ENABLE_VK
 static const VkDebugReportFlagsEXT kVulkanErrorFlags =
     VK_DEBUG_REPORT_WARNING_BIT_EXT |
     VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT;
@@ -18,14 +28,6 @@ static const VkDebugReportFlagsEXT kVulkanErrorFlags =
 
 static const VkDebugReportFlagsEXT kVulkanInfoFlags =
     VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-#else
-static const VkDebugReportFlagsEXT kVulkanErrorFlags FML_ALLOW_UNUSED_TYPE =
-    VK_DEBUG_REPORT_WARNING_BIT_EXT |
-    VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT;
-
-static const VkDebugReportFlagsEXT kVulkanInfoFlags FML_ALLOW_UNUSED_TYPE =
-    VK_DEBUG_REPORT_INFORMATION_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
-#endif
 
 std::string VulkanDebugReport::DebugExtensionName() {
   return VK_EXT_DEBUG_REPORT_EXTENSION_NAME;

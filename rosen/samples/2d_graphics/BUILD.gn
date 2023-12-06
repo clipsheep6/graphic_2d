@@ -58,7 +58,6 @@ ohos_executable("drawing_engine_sample") {
         "$graphic_2d_root/utils/vulkan_shell/vulkan_native_surface.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_native_surface_ohos.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_proc_table.cc",
-        "$graphic_2d_root/utils/vulkan_shell/vulkan_provider.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_surface.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_swapchain.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_utilities.cc",

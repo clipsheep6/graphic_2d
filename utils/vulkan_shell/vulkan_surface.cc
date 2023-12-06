@@ -1,6 +1,17 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "vulkan_surface.h"
 
@@ -21,11 +32,7 @@ VulkanSurface::VulkanSurface(
       native_surface_(std::move(native_surface)),
       valid_(false) {
   if (native_surface_ == nullptr || !native_surface_->IsValid()) {
-#ifdef RS_ENABLE_VK
     LOGE("Native surface was invalid.");
-#else
-    FML_DLOG(INFO) << "Native surface was invalid.";
-#endif
     return;
   }
 
@@ -33,11 +40,7 @@ VulkanSurface::VulkanSurface(
       native_surface_->CreateSurfaceHandle(vk, application.GetInstance());
 
   if (surface == VK_NULL_HANDLE) {
-#ifdef RS_ENABLE_VK
     LOGE("Could not create the surface handle.");
-#else
-    FML_DLOG(INFO) << "Could not create the surface handle.";
-#endif
     return;
   }
 

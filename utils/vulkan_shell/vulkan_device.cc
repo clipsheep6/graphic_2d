@@ -1,6 +1,17 @@
-// Copyright 2013 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "vulkan_device.h"
 
@@ -21,7 +32,6 @@ namespace vulkan {
 constexpr auto kVulkanInvalidGraphicsQueueIndex =
     std::numeric_limits<uint32_t>::max();
 
-#ifdef RS_ENABLE_VK
 static uint32_t FindQueueIndex(const std::vector<VkQueueFamilyProperties>& properties, VkQueueFlagBits flagBits) {
   for (uint32_t i = 0, count = static_cast<uint32_t>(properties.size()); i < count; i++) {
     if (properties[i].queueFlags & flagBits) {
@@ -30,20 +40,7 @@ static uint32_t FindQueueIndex(const std::vector<VkQueueFamilyProperties>& prope
   }
   return kVulkanInvalidGraphicsQueueIndex;
 }
-#else
-static uint32_t FindGraphicsQueueIndex(
-    const std::vector<VkQueueFamilyProperties>& properties) {
-  for (uint32_t i = 0, count = static_cast<uint32_t>(properties.size());
-       i < count; i++) {
-    if (properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      return i;
-    }
-  }
-  return kVulkanInvalidGraphicsQueueIndex;
-}
-#endif
 
-#ifdef RS_ENABLE_VK
 VulkanDevice::VulkanDevice(VulkanProcTable& p_vk, VulkanHandle<VkPhysicalDevice> physical_device)
     : vk(p_vk), physical_device_(std::move(physical_device)),
       graphics_queue_index_(std::numeric_limits<uint32_t>::max()),
@@ -157,124 +154,9 @@ VulkanDevice::VulkanDevice(VulkanProcTable& p_vk, VulkanHandle<VkPhysicalDevice>
 
   valid_ = true;
 }
-#else
-VulkanDevice::VulkanDevice(VulkanProcTable& p_vk,
-                           VulkanHandle<VkPhysicalDevice> physical_device)
-    : vk(p_vk),
-      physical_device_(std::move(physical_device)),
-      graphics_queue_index_(std::numeric_limits<uint32_t>::max()),
-      valid_(false) {
-  if (!physical_device_ || !vk.AreInstanceProcsSetup()) {
-    return;
-  }
-
-  graphics_queue_index_ = FindGraphicsQueueIndex(GetQueueFamilyProperties());
-
-  if (graphics_queue_index_ == kVulkanInvalidGraphicsQueueIndex) {
-    FML_DLOG(INFO) << "Could not find the graphics queue index.";
-    return;
-  }
-
-  const float priorities[1] = {1.0f};
-
-  const VkDeviceQueueCreateInfo queue_create = {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-      .pNext = nullptr,
-      .flags = 0,
-      .queueFamilyIndex = graphics_queue_index_,
-      .queueCount = 1,
-      .pQueuePriorities = priorities,
-  };
-
-  const char* extensions[] = {
-#if OS_ANDROID
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-#endif
-#if OS_FUCHSIA
-    VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
-    VK_FUCHSIA_EXTERNAL_MEMORY_EXTENSION_NAME,
-    VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
-    VK_FUCHSIA_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
-#endif
-  };
-
-  auto enabled_layers = DeviceLayersToEnable(vk, physical_device_);
-
-  const char* layers[enabled_layers.size()];
-
-  for (size_t i = 0; i < enabled_layers.size(); i++) {
-    layers[i] = enabled_layers[i].c_str();
-  }
-
-  const VkDeviceCreateInfo create_info = {
-      .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-      .pNext = nullptr,
-      .flags = 0,
-      .queueCreateInfoCount = 1,
-      .pQueueCreateInfos = &queue_create,
-      .enabledLayerCount = static_cast<uint32_t>(enabled_layers.size()),
-      .ppEnabledLayerNames = layers,
-      .enabledExtensionCount = sizeof(extensions) / sizeof(const char*),
-      .ppEnabledExtensionNames = extensions,
-      .pEnabledFeatures = nullptr,
-  };
-
-  VkDevice device = VK_NULL_HANDLE;
-
-  if (VK_CALL_LOG_ERROR(vk.CreateDevice(physical_device_, &create_info, nullptr,
-                                        &device)) != VK_SUCCESS) {
-    FML_DLOG(INFO) << "Could not create device.";
-    return;
-  }
-
-  device_ = {device,
-             [this](VkDevice device) { vk.DestroyDevice(device, nullptr); }};
-
-  if (!vk.SetupDeviceProcAddresses(device_)) {
-    FML_DLOG(INFO) << "Could not setup device proc addresses.";
-    return;
-  }
-
-  VkQueue queue = VK_NULL_HANDLE;
-
-  vk.GetDeviceQueue(device_, graphics_queue_index_, 0, &queue);
-
-  if (queue == VK_NULL_HANDLE) {
-    FML_DLOG(INFO) << "Could not get the device queue handle.";
-    return;
-  }
-
-  queue_ = queue;
-
-  const VkCommandPoolCreateInfo command_pool_create_info = {
-      .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-      .pNext = nullptr,
-      .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-      .queueFamilyIndex = 0,
-  };
-
-  VkCommandPool command_pool = VK_NULL_HANDLE;
-  if (VK_CALL_LOG_ERROR(vk.CreateCommandPool(device_, &command_pool_create_info,
-                                             nullptr, &command_pool)) !=
-      VK_SUCCESS) {
-    FML_DLOG(INFO) << "Could not create the command pool.";
-    return;
-  }
-
-  command_pool_ = {command_pool, [this](VkCommandPool pool) {
-                     vk.DestroyCommandPool(device_, pool, nullptr);
-                   }};
-
-  valid_ = true;
-}
-#endif
 
 VulkanDevice::~VulkanDevice() {
-#ifdef RS_ENABLE_VK
   WaitIdle();
-#else
-  FML_ALLOW_UNUSED_LOCAL(WaitIdle());
-#endif
 }
 
 bool VulkanDevice::IsValid() const {
@@ -313,8 +195,7 @@ uint32_t VulkanDevice::GetGraphicsQueueIndex() const {
 bool VulkanDevice::GetSurfaceCapabilities(
     const VulkanSurface& surface,
     VkSurfaceCapabilitiesKHR* capabilities) const {
-#ifdef RS_ENABLE_VK
-if (!surface.IsValid() || capabilities == nullptr) {
+  if (!surface.IsValid() || capabilities == nullptr) {
     LOGE("GetSurfaceCapabilities surface is not valid or capabilities is null");
     return false;
   }
@@ -346,41 +227,6 @@ if (!surface.IsValid() || capabilities == nullptr) {
   capabilities->currentExtent.width = size.width();
   capabilities->currentExtent.height = size.height();
   return true;
-#else
-#if OS_ANDROID
-  if (!surface.IsValid() || capabilities == nullptr) {
-    return false;
-  }
-
-  bool success =
-      VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceCapabilitiesKHR(
-          physical_device_, surface.Handle(), capabilities)) == VK_SUCCESS;
-
-  if (!success) {
-    return false;
-  }
-
-  // Check if the physical device surface capabilities are valid. If so, there
-  // is nothing more to do.
-  if (capabilities->currentExtent.width != 0xFFFFFFFF &&
-      capabilities->currentExtent.height != 0xFFFFFFFF) {
-    return true;
-  }
-
-  // Ask the native surface for its size as a fallback.
-  SkISize size = surface.GetSize();
-
-  if (size.width() == 0 || size.height() == 0) {
-    return false;
-  }
-
-  capabilities->currentExtent.width = size.width();
-  capabilities->currentExtent.height = size.height();
-  return true;
-#else
-  return false;
-#endif // OS_ANDROID
-#endif // RS_ENABLE_VK
 }
 
 bool VulkanDevice::GetPhysicalDeviceFeatures(
@@ -437,7 +283,6 @@ std::vector<VkQueueFamilyProperties> VulkanDevice::GetQueueFamilyProperties()
 int VulkanDevice::ChooseSurfaceFormat(const VulkanSurface& surface,
                                       std::vector<VkFormat> desired_formats,
                                       VkSurfaceFormatKHR* format) const {
-#ifdef RS_ENABLE_VK
   if (!surface.IsValid() || format == nullptr) {
     LOGE("ChooseSurfaceFormat surface not valid or format == null");
     return -1;
@@ -478,45 +323,6 @@ int VulkanDevice::ChooseSurfaceFormat(const VulkanSurface& surface,
     }
   }
   LOGE("ChooseSurfaceFormat failded");
-#else
-#if OS_ANDROID
-  if (!surface.IsValid() || format == nullptr) {
-    return -1;
-  }
-
-  uint32_t format_count = 0;
-  if (VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceFormatsKHR(
-          physical_device_, surface.Handle(), &format_count, nullptr)) !=
-      VK_SUCCESS) {
-    return -1;
-  }
-
-  if (format_count == 0) {
-    return -1;
-  }
-
-  VkSurfaceFormatKHR formats[format_count];
-  if (VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceFormatsKHR(
-          physical_device_, surface.Handle(), &format_count, formats)) !=
-      VK_SUCCESS) {
-    return -1;
-  }
-
-  std::map<VkFormat, VkSurfaceFormatKHR> supported_formats;
-  for (uint32_t i = 0; i < format_count; i++) {
-    supported_formats[formats[i].format] = formats[i];
-  }
-
-  // Try to find the first supported format in the list of desired formats.
-  for (size_t i = 0; i < desired_formats.size(); ++i) {
-    auto found = supported_formats.find(desired_formats[i]);
-    if (found != supported_formats.end()) {
-      *format = found->second;
-      return static_cast<int>(i);
-    }
-  }
-#endif // OS_ANDROID
-#endif // RS_ENABLE_VK
   return -1;
 }
 

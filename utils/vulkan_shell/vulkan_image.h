@@ -24,26 +24,23 @@ class RSVulkanProcTable;
 class RSVulkanCommandBuffer;
 
 class RSVulkanImage {
- public:
-  RSVulkanImage(RSVulkanHandle<VkImage> image);
+public:
+    RSVulkanImage(RSVulkanHandle<VkImage> image);
 
-  ~RSVulkanImage();
+    ~RSVulkanImage();
 
-  bool IsValid() const;
+    bool IsValid() const;
 
-  bool InsertImageMemoryBarrier(const RSVulkanCommandBuffer& commandBuffer,
-                                VkPipelineStageFlagBits srcPiplineBits,
-                                VkPipelineStageFlagBits destPiplineBits,
-                                VkAccessFlagBits destAccessFlags,
-                                VkImageLayout destLayout);
+    bool InsertImageMemoryBarrier(const RSVulkanCommandBuffer& commandBuffer, VkPipelineStageFlagBits srcPiplineBits,
+        VkPipelineStageFlagBits destPiplineBits, VkAccessFlagBits destAccessFlags, VkImageLayout destLayout);
 
- private:
-  RSVulkanHandle<VkImage> handle_;
-  VkImageLayout layout_;
-  uint32_t /* mask of VkAccessFlagBits */ accessFlags_;
-  bool valid_;
+private:
+    RSVulkanHandle<VkImage> handle_;
+    VkImageLayout layout_;
+    uint32_t /* mask of VkAccessFlagBits */ accessFlags_;
+    bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_IMAGE_H_
+#endif // RS_VULKAN_VULKAN_IMAGE_H_

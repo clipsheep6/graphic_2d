@@ -22,50 +22,47 @@
 namespace OHOS::Rosen::vulkan {
 
 RSVulkanSurface::RSVulkanSurface(
-    RSVulkanProcTable& p_vk,
-    RSVulkanApplication& application,
-    std::unique_ptr<RSVulkanNativeSurface> native_surface)
-    : vk(p_vk),
-      application_(application),
-      nativeSurface_(std::move(native_surface)),
-      valid_(false) {
-  if (nativeSurface_ == nullptr || !nativeSurface_->IsValid()) {
-    LOGE("Native surface was invalid.");
-    return;
-  }
+    RSVulkanProcTable& p_vk, RSVulkanApplication& application, std::unique_ptr<RSVulkanNativeSurface> native_surface)
+    : vk(p_vk), application_(application), nativeSurface_(std::move(native_surface)), valid_(false)
+{
+    if (nativeSurface_ == nullptr || !nativeSurface_->IsValid()) {
+        LOGE("Native surface was invalid.");
+        return;
+    }
 
-  VkSurfaceKHR surface =
-      nativeSurface_->CreateSurfaceHandle(vk, application.GetInstance());
+    VkSurfaceKHR surface = nativeSurface_->CreateSurfaceHandle(vk, application.GetInstance());
 
-  if (surface == VK_NULL_HANDLE) {
-    LOGE("Could not create the surface handle.");
-    return;
-  }
+    if (surface == VK_NULL_HANDLE) {
+        LOGE("Could not create the surface handle.");
+        return;
+    }
 
-  surface_ = {surface, [this](VkSurfaceKHR surface) {
-                vk.DestroySurfaceKHR(application_.GetInstance(), surface,
-                                     nullptr);
-              }};
+    surface_ = { surface,
+        [this](VkSurfaceKHR surface) { vk.DestroySurfaceKHR(application_.GetInstance(), surface, nullptr); } };
 
-  valid_ = true;
+    valid_ = true;
 }
 
 RSVulkanSurface::~RSVulkanSurface() = default;
 
-bool RSVulkanSurface::IsValid() const {
-  return valid_;
+bool RSVulkanSurface::IsValid() const
+{
+    return valid_;
 }
 
-const RSVulkanHandle<VkSurfaceKHR>& RSVulkanSurface::Handle() const {
-  return surface_;
+const RSVulkanHandle<VkSurfaceKHR>& RSVulkanSurface::Handle() const
+{
+    return surface_;
 }
 
-const RSVulkanNativeSurface& RSVulkanSurface::GetNativeSurface() const {
-  return *nativeSurface_;
+const RSVulkanNativeSurface& RSVulkanSurface::GetNativeSurface() const
+{
+    return *nativeSurface_;
 }
 
-SkISize RSVulkanSurface::GetSize() const {
-  return valid_ ? nativeSurface_->GetSize() : SkISize::Make(0, 0);
+SkISize RSVulkanSurface::GetSize() const
+{
+    return valid_ ? nativeSurface_->GetSize() : SkISize::Make(0, 0);
 }
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan

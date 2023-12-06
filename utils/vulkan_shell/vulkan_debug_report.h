@@ -23,23 +23,22 @@
 namespace OHOS::Rosen::vulkan {
 
 class RSVulkanDebugReport {
- public:
-  static std::string DebugExtensionName();
+public:
+    static std::string DebugExtensionName();
 
-  RSVulkanDebugReport(const RSVulkanProcTable& vk,
-                    const RSVulkanHandle<VkInstance>& application);
+    RSVulkanDebugReport(const RSVulkanProcTable& vk, const RSVulkanHandle<VkInstance>& application);
 
-  ~RSVulkanDebugReport();
+    ~RSVulkanDebugReport();
 
-  bool IsValid() const;
+    bool IsValid() const;
 
- private:
-  const RSVulkanProcTable& vk;
-  const RSVulkanHandle<VkInstance>& application_;
-  RSVulkanHandle<VkDebugReportCallbackEXT> handle_;
-  bool valid_;
+private:
+    const RSVulkanProcTable& vk;
+    const RSVulkanHandle<VkInstance>& application_;
+    RSVulkanHandle<VkDebugReportCallbackEXT> handle_;
+    bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_DEBUG_REPORT_H_
+#endif // RS_VULKAN_VULKAN_DEBUG_REPORT_H_

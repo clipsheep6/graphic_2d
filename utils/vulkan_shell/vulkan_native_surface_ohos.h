@@ -22,29 +22,27 @@
 namespace OHOS::Rosen::vulkan {
 
 class RSVulkanNativeSurfaceOHOS : public RSVulkanNativeSurface {
- public:
-  /// Create a native surface from the valid NativeWindow reference. Ownership
-  /// of the NativeWindow is assumed by this instance.
-  RSVulkanNativeSurfaceOHOS(struct NativeWindow* nativeWindow);
+public:
+    /// Create a native surface from the valid NativeWindow reference. Ownership
+    /// of the NativeWindow is assumed by this instance.
+    RSVulkanNativeSurfaceOHOS(struct NativeWindow* nativeWindow);
 
-  ~RSVulkanNativeSurfaceOHOS();
+    ~RSVulkanNativeSurfaceOHOS();
 
-  const char* GetExtensionName() const override;
+    const char* GetExtensionName() const override;
 
-  uint32_t GetSkiaExtensionName() const override;
+    uint32_t GetSkiaExtensionName() const override;
 
-  VkSurfaceKHR CreateSurfaceHandle(
-      RSVulkanProcTable& vk,
-      const RSVulkanHandle<VkInstance>& instance) const override;
+    VkSurfaceKHR CreateSurfaceHandle(RSVulkanProcTable& vk, const RSVulkanHandle<VkInstance>& instance) const override;
 
-  bool IsValid() const override;
+    bool IsValid() const override;
 
-  SkISize GetSize() const override;
+    SkISize GetSize() const override;
 
- private:
-  struct NativeWindow* nativeWindow_;
+private:
+    struct NativeWindow* nativeWindow_;
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_
+#endif // RS_VULKAN_VULKAN_NATIVE_SURFACE_OHOS_H_

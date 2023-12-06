@@ -16,8 +16,8 @@
 #ifndef RS_VULKAN_VULKAN_SURFACE_H_
 #define RS_VULKAN_VULKAN_SURFACE_H_
 
-#include "vulkan_handle.h"
 #include "third_party/skia/include/core/SkSize.h"
+#include "vulkan_handle.h"
 
 namespace OHOS::Rosen::vulkan {
 
@@ -26,30 +26,29 @@ class RSVulkanApplication;
 class RSVulkanNativeSurface;
 
 class RSVulkanSurface {
- public:
-  RSVulkanSurface(RSVulkanProcTable& vk,
-                RSVulkanApplication& application,
-                std::unique_ptr<RSVulkanNativeSurface> nativeSurface);
+public:
+    RSVulkanSurface(
+        RSVulkanProcTable& vk, RSVulkanApplication& application, std::unique_ptr<RSVulkanNativeSurface> nativeSurface);
 
-  ~RSVulkanSurface();
+    ~RSVulkanSurface();
 
-  bool IsValid() const;
+    bool IsValid() const;
 
-  /// Returns the current size of the surface or (0, 0) if invalid.
-  SkISize GetSize() const;
+    /// Returns the current size of the surface or (0, 0) if invalid.
+    SkISize GetSize() const;
 
-  const RSVulkanHandle<VkSurfaceKHR>& Handle() const;
+    const RSVulkanHandle<VkSurfaceKHR>& Handle() const;
 
-  const RSVulkanNativeSurface& GetNativeSurface() const;
+    const RSVulkanNativeSurface& GetNativeSurface() const;
 
- private:
-  RSVulkanProcTable& vk;
-  RSVulkanApplication& application_;
-  std::unique_ptr<RSVulkanNativeSurface> nativeSurface_;
-  RSVulkanHandle<VkSurfaceKHR> surface_;
-  bool valid_;
+private:
+    RSVulkanProcTable& vk;
+    RSVulkanApplication& application_;
+    std::unique_ptr<RSVulkanNativeSurface> nativeSurface_;
+    RSVulkanHandle<VkSurfaceKHR> surface_;
+    bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_SURFACE_H_
+#endif // RS_VULKAN_VULKAN_SURFACE_H_

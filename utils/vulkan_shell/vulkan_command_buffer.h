@@ -23,40 +23,34 @@ namespace OHOS::Rosen::vulkan {
 class RSVulkanProcTable;
 
 class RSVulkanCommandBuffer {
- public:
-  RSVulkanCommandBuffer(const RSVulkanProcTable& vk,
-                      const RSVulkanHandle<VkDevice>& device,
-                      const RSVulkanHandle<VkCommandPool>& pool);
+public:
+    RSVulkanCommandBuffer(const RSVulkanProcTable& vk, const RSVulkanHandle<VkDevice>& device,
+        const RSVulkanHandle<VkCommandPool>& pool);
 
-  ~RSVulkanCommandBuffer();
+    ~RSVulkanCommandBuffer();
 
-  bool IsValid() const;
+    bool IsValid() const;
 
-  VkCommandBuffer Handle() const;
+    VkCommandBuffer Handle() const;
 
-  bool Begin() const;
+    bool Begin() const;
 
-  bool End() const;
+    bool End() const;
 
-  bool InsertPipelineBarrier(
-      VkPipelineStageFlagBits srcStageFlags,
-      VkPipelineStageFlagBits destStageFlags,
-      uint32_t /* mask of VkDependencyFlagBits */ dependencyFlags,
-      uint32_t memoryBarrierCount,
-      const VkMemoryBarrier* memoryBarriers,
-      uint32_t bufferMemoryBarrierCount,
-      const VkBufferMemoryBarrier* bufferMemoryBarriers,
-      uint32_t imageMemoryBarrierCount,
-      const VkImageMemoryBarrier* imageMemoryBarriers) const;
+    bool InsertPipelineBarrier(VkPipelineStageFlagBits srcStageFlags, VkPipelineStageFlagBits destStageFlags,
+        uint32_t /* mask of VkDependencyFlagBits */ dependencyFlags, uint32_t memoryBarrierCount,
+        const VkMemoryBarrier* memoryBarriers, uint32_t bufferMemoryBarrierCount,
+        const VkBufferMemoryBarrier* bufferMemoryBarriers, uint32_t imageMemoryBarrierCount,
+        const VkImageMemoryBarrier* imageMemoryBarriers) const;
 
- private:
-  const RSVulkanProcTable& vk;
-  const RSVulkanHandle<VkDevice>& device_;
-  const RSVulkanHandle<VkCommandPool>& pool_;
-  RSVulkanHandle<VkCommandBuffer> handle_;
-  bool valid_;
+private:
+    const RSVulkanProcTable& vk;
+    const RSVulkanHandle<VkDevice>& device_;
+    const RSVulkanHandle<VkCommandPool>& pool_;
+    RSVulkanHandle<VkCommandBuffer> handle_;
+    bool valid_;
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_COMMAND_BUFFER_H_
+#endif // RS_VULKAN_VULKAN_COMMAND_BUFFER_H_

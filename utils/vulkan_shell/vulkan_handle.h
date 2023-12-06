@@ -22,66 +22,82 @@
 
 namespace OHOS::Rosen::vulkan {
 
-template <class T>
+template<class T>
 class RSVulkanHandle {
- public:
-  using Handle = T;
-  using Disposer = std::function<void(Handle)>;
+public:
+    using Handle = T;
+    using Disposer = std::function<void(Handle)>;
 
-  RSVulkanHandle() : handle_(VK_NULL_HANDLE) {}
+    RSVulkanHandle() : handle_(VK_NULL_HANDLE) {}
 
-  RSVulkanHandle(Handle handle, Disposer disposer = nullptr)
-      : handle_(handle), disposer_(disposer) {}
+    RSVulkanHandle(Handle handle, Disposer disposer = nullptr) : handle_(handle), disposer_(disposer) {}
 
-  RSVulkanHandle(RSVulkanHandle&& other)
-      : handle_(other.handle_), disposer_(other.disposer_) {
-    other.handle_ = VK_NULL_HANDLE;
-    other.disposer_ = nullptr;
-  }
-
-  ~RSVulkanHandle() { DisposeIfNecessary(); }
-
-  RSVulkanHandle& operator=(RSVulkanHandle&& other) {
-    if (handle_ != other.handle_) {
-      DisposeIfNecessary();
+    RSVulkanHandle(RSVulkanHandle&& other) : handle_(other.handle_), disposer_(other.disposer_)
+    {
+        other.handle_ = VK_NULL_HANDLE;
+        other.disposer_ = nullptr;
     }
 
-    handle_ = other.handle_;
-    disposer_ = other.disposer_;
-
-    other.handle_ = VK_NULL_HANDLE;
-    other.disposer_ = nullptr;
-
-    return *this;
-  }
-
-  operator bool() const { return handle_ != VK_NULL_HANDLE; }
-
-  operator Handle() const { return handle_; }
-
-  /// Relinquish responsibility of collecting the underlying handle when this
-  /// object is collected. It is the responsibility of the caller to ensure that
-  /// the lifetime of the handle extends past the lifetime of this object.
-  void ReleaseOwnership() { disposer_ = nullptr; }
-
-  void Reset() { DisposeIfNecessary(); }
-
- private:
-  Handle handle_;
-  Disposer disposer_;
-
-  void DisposeIfNecessary() {
-    if (handle_ == VK_NULL_HANDLE) {
-      return;
+    ~RSVulkanHandle()
+    {
+        DisposeIfNecessary();
     }
-    if (disposer_) {
-      disposer_(handle_);
+
+    RSVulkanHandle& operator=(RSVulkanHandle&& other)
+    {
+        if (handle_ != other.handle_) {
+            DisposeIfNecessary();
+        }
+
+        handle_ = other.handle_;
+        disposer_ = other.disposer_;
+
+        other.handle_ = VK_NULL_HANDLE;
+        other.disposer_ = nullptr;
+
+        return *this;
     }
-    handle_ = VK_NULL_HANDLE;
-    disposer_ = nullptr;
-  }
+
+    operator bool() const
+    {
+        return handle_ != VK_NULL_HANDLE;
+    }
+
+    operator Handle() const
+    {
+        return handle_;
+    }
+
+    /// Relinquish responsibility of collecting the underlying handle when this
+    /// object is collected. It is the responsibility of the caller to ensure that
+    /// the lifetime of the handle extends past the lifetime of this object.
+    void ReleaseOwnership()
+    {
+        disposer_ = nullptr;
+    }
+
+    void Reset()
+    {
+        DisposeIfNecessary();
+    }
+
+private:
+    Handle handle_;
+    Disposer disposer_;
+
+    void DisposeIfNecessary()
+    {
+        if (handle_ == VK_NULL_HANDLE) {
+            return;
+        }
+        if (disposer_) {
+            disposer_(handle_);
+        }
+        handle_ = VK_NULL_HANDLE;
+        disposer_ = nullptr;
+    }
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_HANDLE_H_
+#endif // RS_VULKAN_VULKAN_HANDLE_H_

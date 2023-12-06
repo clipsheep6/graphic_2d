@@ -17,19 +17,18 @@
 #define RS_VULKAN_VULKAN_WINDOW_H_
 
 #include <memory>
+#include <native_window.h>
+#include <thread>
 #include <tuple>
 #include <utility>
 #include <vector>
-#include <thread>
 
-#include <native_window.h>
-
-#include "vulkan_proc_table.h"
 #include "third_party/skia/include/core/SkRefCnt.h"
 #include "third_party/skia/include/core/SkSize.h"
 #include "third_party/skia/include/core/SkSurface.h"
 #include "third_party/skia/include/gpu/GrDirectContext.h"
 #include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
+#include "vulkan_proc_table.h"
 
 namespace OHOS::Rosen::vulkan {
 
@@ -42,55 +41,54 @@ class RSVulkanApplication;
 class RSVulkanBackbuffer;
 
 class RSVulkanWindow {
- public:
-  typedef std::shared_ptr<RSVulkanWindow> Ptr;
-  RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> nativeSurface,
-               bool isOffscreen = false);
+public:
+    typedef std::shared_ptr<RSVulkanWindow> Ptr;
+    RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> nativeSurface, bool isOffscreen = false);
 
-  ~RSVulkanWindow();
+    ~RSVulkanWindow();
 
-  bool IsValid() const;
+    bool IsValid() const;
 
-  GrDirectContext* GetSkiaGrContext();
-  GrVkBackendContext &GetSkiaBackendContext();
+    GrDirectContext* GetSkiaGrContext();
+    GrVkBackendContext& GetSkiaBackendContext();
 
-  sk_sp<SkSurface> AcquireSurface(int bufferCount = -1);
+    sk_sp<SkSurface> AcquireSurface(int bufferCount = -1);
 
-  bool SwapBuffers();
+    bool SwapBuffers();
 
-  bool FlushCommands();
-  static void PresentAll();
-  static void InitializeVulkan(size_t threadNum = 0);
-  static bool WaitForSharedFence();
-  static bool ResetSharedFence();
-  static VkDevice GetDevice();
-  static VkPhysicalDevice GetPhysicalDevice();
-  static RSVulkanProcTable &GetVkProcTable();
+    bool FlushCommands();
+    static void PresentAll();
+    static void InitializeVulkan(size_t threadNum = 0);
+    static bool WaitForSharedFence();
+    static bool ResetSharedFence();
+    static VkDevice GetDevice();
+    static VkPhysicalDevice GetPhysicalDevice();
+    static RSVulkanProcTable& GetVkProcTable();
 
-  static std::unique_ptr<RSVulkanDevice> logicalDevice_;
-  static RSVulkanProcTable* vk;
+    static std::unique_ptr<RSVulkanDevice> logicalDevice_;
+    static RSVulkanProcTable* vk;
 
- public:
-  bool valid_;
-  static std::unique_ptr<RSVulkanApplication> application_;
-  bool isOffscreen_ = false;
-  static std::thread::id deviceThread_;
-  static std::vector<RSVulkanHandle<VkFence>> sharedFences_;
-  static uint32_t sharedFenceIndex_;
-  static bool presenting_;
-  std::unique_ptr<RSVulkanSurface> surface_;
-  std::unique_ptr<RSVulkanSwapchain> swapchain_;
-  sk_sp<GrDirectContext> skiaGrContext_;
+public:
+    bool valid_;
+    static std::unique_ptr<RSVulkanApplication> application_;
+    bool isOffscreen_ = false;
+    static std::thread::id deviceThread_;
+    static std::vector<RSVulkanHandle<VkFence>> sharedFences_;
+    static uint32_t sharedFenceIndex_;
+    static bool presenting_;
+    std::unique_ptr<RSVulkanSurface> surface_;
+    std::unique_ptr<RSVulkanSwapchain> swapchain_;
+    sk_sp<GrDirectContext> skiaGrContext_;
 
-  GrVkBackendContext skBackendContext_;
+    GrVkBackendContext skBackendContext_;
 
-  bool CreateSkiaGrContext();
+    bool CreateSkiaGrContext();
 
-  bool CreateSkiaBackendContext(GrVkBackendContext* context);
+    bool CreateSkiaBackendContext(GrVkBackendContext* context);
 
-  bool RecreateSwapchain();
+    bool RecreateSwapchain();
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_WINDOW_H_
+#endif // RS_VULKAN_VULKAN_WINDOW_H_

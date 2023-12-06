@@ -15,10 +15,11 @@
 
 #include "vulkan_native_surface_ohos.h"
 
+#include <graphic_common.h>
+
+#include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
 #include "vulkan_hilog.h"
 #include "window.h"
-#include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
-#include <graphic_common.h>
 
 namespace OHOS::Rosen::vulkan {
 

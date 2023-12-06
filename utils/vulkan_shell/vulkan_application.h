@@ -34,40 +34,35 @@ class RSVulkanProcTable;
 /// Applications using Vulkan acquire a RSVulkanApplication that attempts to
 /// create a VkInstance (with debug reporting optionally enabled).
 class RSVulkanApplication {
- public:
-  RSVulkanApplication(RSVulkanProcTable& vk,
-                    const std::string& applicationName,
-                    std::vector<std::string> enabledExtensions,
-                    uint32_t applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-                    uint32_t apiVersion = VK_MAKE_VERSION(1, 0, 0));
+public:
+    RSVulkanApplication(RSVulkanProcTable& vk, const std::string& applicationName,
+        std::vector<std::string> enabledExtensions, uint32_t applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+        uint32_t apiVersion = VK_MAKE_VERSION(1, 0, 0));
 
-  ~RSVulkanApplication();
+    ~RSVulkanApplication();
 
-  bool IsValid() const;
+    bool IsValid() const;
 
-  uint32_t GetAPIVersion() const;
+    uint32_t GetAPIVersion() const;
 
-  const RSVulkanHandle<VkInstance>& GetInstance() const;
+    const RSVulkanHandle<VkInstance>& GetInstance() const;
 
-  void ReleaseInstanceOwnership();
+    void ReleaseInstanceOwnership();
 
-  std::unique_ptr<RSVulkanDevice> AcquireFirstCompatibleLogicalDevice() const;
+    std::unique_ptr<RSVulkanDevice> AcquireFirstCompatibleLogicalDevice() const;
 
- private:
-  RSVulkanProcTable& vk;
-  RSVulkanHandle<VkInstance> instance_;
-  uint32_t apiVersion_;
-  std::unique_ptr<RSVulkanDebugReport> debugReport_;
-  bool valid_;
+private:
+    RSVulkanProcTable& vk;
+    RSVulkanHandle<VkInstance> instance_;
+    uint32_t apiVersion_;
+    std::unique_ptr<RSVulkanDebugReport> debugReport_;
+    bool valid_;
 
-  std::vector<VkPhysicalDevice> GetPhysicalDevices() const;
-  std::vector<VkExtensionProperties> GetSupportedInstanceExtensions(
-      const RSVulkanProcTable& vk) const;
-  bool ExtensionSupported(
-      const std::vector<VkExtensionProperties>& supportedExtensions,
-      std::string extensionName);
+    std::vector<VkPhysicalDevice> GetPhysicalDevices() const;
+    std::vector<VkExtensionProperties> GetSupportedInstanceExtensions(const RSVulkanProcTable& vk) const;
+    bool ExtensionSupported(const std::vector<VkExtensionProperties>& supportedExtensions, std::string extensionName);
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_APPLICATION_H_
+#endif // RS_VULKAN_VULKAN_APPLICATION_H_

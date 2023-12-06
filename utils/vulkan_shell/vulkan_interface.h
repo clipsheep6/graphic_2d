@@ -18,39 +18,37 @@
 
 #include <string>
 
-
 #ifndef VK_USE_PLATFORM_OHOS
 #define VK_USE_PLATFORM_OHOS
-#endif  // VK_USE_PLATFORM_OHOS
+#endif // VK_USE_PLATFORM_OHOS
 
 #if !VULKAN_LINK_STATICALLY
 #define VK_NO_PROTOTYPES 1
-#endif  // !VULKAN_LINK_STATICALLY
+#endif // !VULKAN_LINK_STATICALLY
 
 #include "vulkan/vulkan.h"
 
 #ifndef NDEBUG
 
-#define VK_CALL_LOG_ERROR(expression)                            \
-  ({                                                             \
-    __typeof__(expression) _rc = (expression);                   \
-    if (_rc != VK_SUCCESS) {                                     \
-      LOGE("Vulkan call '" #expression "' failed with error %s", \
-           vulkan::VulkanResultToString(_rc));                   \
-    }                                                            \
-    _rc;                                                         \
-  })
+#define VK_CALL_LOG_ERROR(expression)                                                                      \
+    ({                                                                                                     \
+        __typeof__(expression) _rc = (expression);                                                         \
+        if (_rc != VK_SUCCESS) {                                                                           \
+            LOGE("Vulkan call '" #expression "' failed with error %s", vulkan::VulkanResultToString(_rc)); \
+        }                                                                                                  \
+        _rc;                                                                                               \
+    })
 
-#else  // NDEBUG
+#else // NDEBUG
 
 #define VK_CALL_LOG_ERROR(expression) (expression)
 
-#endif  // NDEBUG
+#endif // NDEBUG
 
 namespace OHOS::Rosen::vulkan {
 
 std::string VulkanResultToString(VkResult result);
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_INTERFACE_H_
+#endif // RS_VULKAN_VULKAN_INTERFACE_H_

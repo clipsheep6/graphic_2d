@@ -22,27 +22,25 @@
 namespace OHOS::Rosen::vulkan {
 
 class RSVulkanProvider {
- public:
-  virtual const vulkan::RSVulkanProcTable& vk() = 0;
-  virtual const vulkan::RSVulkanHandle<VkDevice>& vk_device() = 0;
+public:
+    virtual const vulkan::RSVulkanProcTable& vk() = 0;
+    virtual const vulkan::RSVulkanHandle<VkDevice>& vk_device() = 0;
 
-  vulkan::RSVulkanHandle<VkFence> CreateFence() {
-    const VkFenceCreateInfo create_info = {
-        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = 0,
-    };
-    VkFence fence;
-    if (VK_CALL_LOG_ERROR(vk().CreateFence(vk_device(), &create_info, nullptr,
-                                           &fence)) != VK_SUCCESS)
-      return vulkan::RSVulkanHandle<VkFence>();
+    vulkan::RSVulkanHandle<VkFence> CreateFence()
+    {
+        const VkFenceCreateInfo create_info = {
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+        };
+        VkFence fence;
+        if (VK_CALL_LOG_ERROR(vk().CreateFence(vk_device(), &create_info, nullptr, &fence)) != VK_SUCCESS)
+            return vulkan::RSVulkanHandle<VkFence>();
 
-    return {fence, [this](VkFence fence) {
-              vk().DestroyFence(vk_device(), fence, nullptr);
-            }};
-  }
+        return { fence, [this](VkFence fence) { vk().DestroyFence(vk_device(), fence, nullptr); } };
+    }
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_PROVIDER_H_
+#endif // RS_VULKAN_VULKAN_PROVIDER_H_

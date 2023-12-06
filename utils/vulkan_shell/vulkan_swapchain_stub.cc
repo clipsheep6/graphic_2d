@@ -17,29 +17,31 @@
 
 namespace OHOS::Rosen::vulkan {
 
-RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
-                                 const RSVulkanDevice& device,
-                                 const RSVulkanSurface& surface,
-                                 GrDirectContext* skia_context,
-                                 std::unique_ptr<RSVulkanSwapchain> old_swapchain,
-                                 uint32_t queue_family_index) {}
+RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk, const RSVulkanDevice& device,
+    const RSVulkanSurface& surface, GrDirectContext* skia_context, std::unique_ptr<RSVulkanSwapchain> old_swapchain,
+    uint32_t queue_family_index)
+{}
 
 RSVulkanSwapchain::~RSVulkanSwapchain() = default;
 
-bool RSVulkanSwapchain::IsValid() const {
-  return false;
+bool RSVulkanSwapchain::IsValid() const
+{
+    return false;
 }
 
-RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface() {
-  return {AcquireStatus::ErrorSurfaceLost, nullptr};
+RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface()
+{
+    return { AcquireStatus::ErrorSurfaceLost, nullptr };
 }
 
-bool RSVulkanSwapchain::Submit() {
-  return false;
+bool RSVulkanSwapchain::Submit()
+{
+    return false;
 }
 
-SkISize RSVulkanSwapchain::GetSize() const {
-  return SkISize::Make(0, 0);
+SkISize RSVulkanSwapchain::GetSize() const
+{
+    return SkISize::Make(0, 0);
 }
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan

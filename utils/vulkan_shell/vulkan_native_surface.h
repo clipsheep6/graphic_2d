@@ -23,22 +23,21 @@
 namespace OHOS::Rosen::vulkan {
 
 class RSVulkanNativeSurface {
- public:
-  virtual ~RSVulkanNativeSurface() = default;
+public:
+    virtual ~RSVulkanNativeSurface() = default;
 
-  virtual const char* GetExtensionName() const = 0;
+    virtual const char* GetExtensionName() const = 0;
 
-  virtual uint32_t GetSkiaExtensionName() const = 0;
+    virtual uint32_t GetSkiaExtensionName() const = 0;
 
-  virtual VkSurfaceKHR CreateSurfaceHandle(
-      RSVulkanProcTable& vk,
-      const RSVulkanHandle<VkInstance>& instance) const = 0;
+    virtual VkSurfaceKHR CreateSurfaceHandle(
+        RSVulkanProcTable& vk, const RSVulkanHandle<VkInstance>& instance) const = 0;
 
-  virtual bool IsValid() const = 0;
+    virtual bool IsValid() const = 0;
 
-  virtual SkISize GetSize() const = 0;
+    virtual SkISize GetSize() const = 0;
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_NATIVE_SURFACE_H_
+#endif // RS_VULKAN_VULKAN_NATIVE_SURFACE_H_

@@ -18,61 +18,69 @@
 
 #include <array>
 
-#include "vulkan_command_buffer.h"
-#include "vulkan_handle.h"
 #include "third_party/skia/include/core/SkSize.h"
 #include "third_party/skia/include/core/SkSurface.h"
+#include "vulkan_command_buffer.h"
+#include "vulkan_handle.h"
 
 namespace OHOS::Rosen::vulkan {
 
 class RSVulkanBackbuffer {
- public:
-  RSVulkanBackbuffer(const RSVulkanProcTable& vk,
-                   const RSVulkanHandle<VkDevice>& device,
-                   const RSVulkanHandle<VkCommandPool>& pool);
+public:
+    RSVulkanBackbuffer(
+        const RSVulkanProcTable& vk, const RSVulkanHandle<VkDevice>& device, const RSVulkanHandle<VkCommandPool>& pool);
 
-  ~RSVulkanBackbuffer();
+    ~RSVulkanBackbuffer();
 
-  bool IsValid() const;
+    bool IsValid() const;
 
-  bool WaitFences();
+    bool WaitFences();
 
-  bool ResetFences();
+    bool ResetFences();
 
-  const RSVulkanHandle<VkFence>& GetUsageFence() const;
+    const RSVulkanHandle<VkFence>& GetUsageFence() const;
 
-  const RSVulkanHandle<VkFence>& GetRenderFence() const;
+    const RSVulkanHandle<VkFence>& GetRenderFence() const;
 
-  const RSVulkanHandle<VkSemaphore>& GetUsageSemaphore() const;
+    const RSVulkanHandle<VkSemaphore>& GetUsageSemaphore() const;
 
-  const RSVulkanHandle<VkSemaphore>& GetRenderSemaphore() const;
+    const RSVulkanHandle<VkSemaphore>& GetRenderSemaphore() const;
 
-  RSVulkanCommandBuffer& GetUsageCommandBuffer();
+    RSVulkanCommandBuffer& GetUsageCommandBuffer();
 
-  RSVulkanCommandBuffer& GetRenderCommandBuffer();
+    RSVulkanCommandBuffer& GetRenderCommandBuffer();
 
-  void SetMultiThreading() { multiThreading_ = true; }
+    void SetMultiThreading()
+    {
+        multiThreading_ = true;
+    }
 
-  void UnsetMultiThreading() { multiThreading_ = false; }
+    void UnsetMultiThreading()
+    {
+        multiThreading_ = false;
+    }
 
-  bool IsMultiThreading() { return multiThreading_; }
+    bool IsMultiThreading()
+    {
+        return multiThreading_;
+    }
 
- private:
-  const RSVulkanProcTable& vk;
-  const RSVulkanHandle<VkDevice>& device_;
-  std::array<RSVulkanHandle<VkSemaphore>, 2> semaphores_;
-  std::array<RSVulkanHandle<VkFence>, 2> use_fences_;
-  RSVulkanCommandBuffer usageCommandBuffer_;
-  RSVulkanCommandBuffer renderCommandBuffer_;
-  bool valid_;
+private:
+    const RSVulkanProcTable& vk;
+    const RSVulkanHandle<VkDevice>& device_;
+    std::array<RSVulkanHandle<VkSemaphore>, 2> semaphores_;
+    std::array<RSVulkanHandle<VkFence>, 2> useFences_;
+    RSVulkanCommandBuffer usageCommandBuffer_;
+    RSVulkanCommandBuffer renderCommandBuffer_;
+    bool valid_;
 
-  bool CreateSemaphores();
+    bool CreateSemaphores();
 
-  bool CreateFences();
+    bool CreateFences();
 
-  bool multiThreading_ = false;
+    bool multiThreading_ = false;
 };
 
-}  // namespace OHOS::Rosen::vulkan
+} // namespace OHOS::Rosen::vulkan
 
-#endif  // RS_VULKAN_VULKAN_BACKBUFFER_H_
+#endif // RS_VULKAN_VULKAN_BACKBUFFER_H_

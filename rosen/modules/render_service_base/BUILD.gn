@@ -156,6 +156,7 @@ ohos_source_set("render_service_base_src") {
     "src/pipeline/rs_canvas_drawing_render_node.cpp",
     "src/pipeline/rs_canvas_render_node.cpp",
     "src/pipeline/rs_context.cpp",
+    "src/pipeline/rs_decide_hardware_enable.cpp"
     "src/pipeline/rs_dirty_region_manager.cpp",
     "src/pipeline/rs_display_render_node.cpp",
     "src/pipeline/rs_draw_cmd.cpp",

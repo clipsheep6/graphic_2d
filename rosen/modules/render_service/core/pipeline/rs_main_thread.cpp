@@ -51,6 +51,7 @@
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
+#include "pipeline/rs_dicide_hardware_enable.h"
 #include "pipeline/rs_divided_render_util.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_render_engine.h"
@@ -930,6 +931,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         ResetHardwareEnabledState();
     }
     RS_OPTIONAL_TRACE_BEGIN("RSMainThread::ConsumeAndUpdateAllNodes");
+    RSDecideHardwareEnable::Instance()->UpdateVSyncCnt();
     bool needRequestNextVsync = false;
     bufferTimestamps_.clear();
     const auto& nodeMap = GetContext().GetNodeMap();
@@ -949,11 +951,16 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         }
         auto& surfaceHandler = static_cast<RSSurfaceHandler&>(*surfaceNode);
         surfaceHandler.ResetCurrentFrameBufferConsumed();
-        if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
+        bool isUpdateBuffer = false;
+        if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler, isUpdateBuffer)) {
             this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
             if (surfaceNode->IsCurrentFrameBufferConsumed() && !surfaceNode->IsHardwareEnabledType()) {
                 surfaceNode->SetContentDirty();
                 doDirectComposition_ = false;
+            }
+            if (isUpdateBuffer) {
+                surfaceNode->SetSharedPtrAddr(reinterpret_cast<uint64_t>(surfaceNode.get()));
+                RSDecideHardwareEnable::Instance()->UpdateSurfaceNode(reinterpret_cast<uint64_t>(surfaceNode.get()));
             }
         }
 
@@ -1003,7 +1010,9 @@ void RSMainThread::CollectInfoForHardwareComposer()
             if (surfaceNode->GetBuffer() != nullptr) {
                 selfDrawingNodes_.emplace_back(surfaceNode);
             }
-            if (!surfaceNode->IsHardwareEnabledType()) {
+            if (!surfaceNode->IsHardwareEnabledType() ||
+                !RSDecideHardwareEnable::Instance()->IsShouldHardwareEnable(
+                    reinterpret_cast<uint64_t>(surfaceNode.get()))) {
                 return;
             }
 

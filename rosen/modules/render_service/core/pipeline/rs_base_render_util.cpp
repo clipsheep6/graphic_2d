@@ -1031,7 +1031,7 @@ GSError RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
     return OHOS::GSERROR_OK;
 }
 
-bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
+bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, bool& isUpdateBuffer)
 {
     auto availableBufferCnt = surfaceHandler.GetAvailableBufferCount();
     if (availableBufferCnt <= 0) {
@@ -1060,6 +1060,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
     RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer success, timestamp = %{public}" PRId64 ".",
         surfaceHandler.GetNodeId(), timestamp);
     surfaceHandler.ReduceAvailableBuffer();
+    isUpdateBuffer = true;
     return true;
 }
 

@@ -126,6 +126,7 @@ public:
     }
     bool IsFirstLevelSurfaceNode();
     bool SubSurfaceNodeNeedDraw(PartialRenderType opDropType);
+    void SetParentSurfaceNode(std::vector<WeakPtr> &subSurfaceNodes, SharedPtr parentSurfaceNode);
     void AddSubSurfaceNode(SharedPtr child, SharedPtr parent);
     void RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent);
     inline bool GetSubSurfaceEnabled() const
@@ -670,6 +671,7 @@ private:
     bool isCalcPreferredFps_ = true;
 
     bool isSubSurfaceEnabled_ = false;
+    WeakPtr parentSurfaceNode_;
     std::map<NodeId, std::vector<WeakPtr>> subSurfaceNodes_;
     pid_t appPid_ = 0;
 

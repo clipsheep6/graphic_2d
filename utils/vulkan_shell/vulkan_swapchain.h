@@ -49,22 +49,13 @@ class RSVulkanSwapchain {
   bool IsValid() const;
 
   enum class AcquireStatus {
-    /// A valid SkSurface was acquired successfully from the swapchain.
     Success,
-    /// The underlying surface of the swapchain was permanently lost. This is an
-    /// unrecoverable error. The entire surface must be recreated along with the
-    /// swapchain.
     ErrorSurfaceLost,
-    /// The swapchain surface is out-of-date with the underlying surface. The
-    /// swapchain must be recreated.
     ErrorSurfaceOutOfDate,
   };
 
   using AcquireResult = std::pair<AcquireStatus, sk_sp<SkSurface>>;
 
-  /// Acquire an SkSurface from the swapchain for the caller to render into for
-  /// later submission via |Submit|. There must not be consecutive calls to
-  /// |AcquireFrame| without and interleaving |Submit|.
   AcquireResult AcquireSurface(int bufferCount = -1);
 
   /// Submit a previously acquired. There must not be consecutive calls to

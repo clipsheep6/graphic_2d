@@ -44,9 +44,6 @@ ohos_executable("drawing_engine_sample") {
   if (ace_enable_gpu) {
     if (graphic_2d_feature_enable_vulkan) {
       sources += [
-        "drawing_engine/drawing_surface/surface_frame_ohos_vulkan.cpp",
-        "drawing_engine/drawing_surface/surface_ohos_vulkan.cpp",
-        "drawing_engine/vulkan_render_backend.cpp",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_application.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_backbuffer.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_command_buffer.cc",
@@ -62,6 +59,9 @@ ohos_executable("drawing_engine_sample") {
         "$graphic_2d_root/utils/vulkan_shell/vulkan_swapchain.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_utilities.cc",
         "$graphic_2d_root/utils/vulkan_shell/vulkan_window.cc",
+        "drawing_engine/drawing_surface/surface_frame_ohos_vulkan.cpp",
+        "drawing_engine/drawing_surface/surface_ohos_vulkan.cpp",
+        "drawing_engine/vulkan_render_backend.cpp",
       ]
     } else {
       sources += [
@@ -129,9 +129,9 @@ ohos_executable("drawing_engine_sample") {
   if (graphic_2d_feature_enable_vulkan) {
     include_dirs += [
       "$graphic_2d_root/utils/vulkan_shell",
-      "//foundation/graphic/graphic_2d/frameworks/surface/include",
-      "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-      "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+      "$graphic_2d_root/frameworks/surface/include",
+      "$graphic_2d_root/rosen/modules/2d_graphics/include",
+      "$graphic_2d_root/interfaces/inner_api/surface",
       "//commonlibrary/c_utils/base/include",
       "//third_party/skia",
     ]

@@ -30,8 +30,8 @@ namespace OHOS::Rosen::vulkan {
 namespace {
 struct FormatInfo {
   VkFormat format_;
-  SkColorType color_type_;
-  sk_sp<SkColorSpace> color_space_;
+  SkColorType colorType_;
+  sk_sp<SkColorSpace> colorSpace_;
 };
 }  // namespace
 
@@ -80,7 +80,7 @@ RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
   std::vector<VkFormat> desired_formats(format_infos.size());
   for (size_t i = 0; i < format_infos.size(); ++i) {
     if (skia_context->colorTypeSupportedAsSurface(
-            format_infos[i].color_type_)) {
+            format_infos[i].colorType_)) {
       desired_formats[i] = format_infos[i].format_;
     } else {
       desired_formats[i] = VK_FORMAT_UNDEFINED;
@@ -167,8 +167,8 @@ RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk,
                 }};
 
   if (!CreateSwapchainImages(skia_context,
-                             format_infos[format_index].color_type_,
-                             format_infos[format_index].color_space_)) {
+                             format_infos[format_index].colorType_,
+                             format_infos[format_index].colorSpace_)) {
     LOGE("Could not create swapchain images.");
     return;
   }

@@ -28,8 +28,6 @@ bool IsDebuggingEnabled() {
 #endif
 }
 
-// Whether to show Vulkan validation layer info messages in addition
-// to the error messages.
 bool ValidationLayerInfoMessagesEnabled() {
   return false;
 }
@@ -57,13 +55,11 @@ static std::vector<std::string> InstanceOrDeviceLayersToEnable(
   uint32_t count = 0;
 
   if (physical_device == VK_NULL_HANDLE) {
-    if (VK_CALL_LOG_ERROR(vk.EnumerateInstanceLayerProperties(
-            &count, nullptr)) != VK_SUCCESS) {
+    if (VK_CALL_LOG_ERROR(vk.EnumerateInstanceLayerProperties(&count, nullptr)) != VK_SUCCESS) {
       return {};
     }
   } else {
-    if (VK_CALL_LOG_ERROR(vk.EnumerateDeviceLayerProperties(
-            physical_device, &count, nullptr)) != VK_SUCCESS) {
+    if (VK_CALL_LOG_ERROR(vk.EnumerateDeviceLayerProperties(physical_device, &count, nullptr)) != VK_SUCCESS) {
       return {};
     }
   }
@@ -78,18 +74,17 @@ static std::vector<std::string> InstanceOrDeviceLayersToEnable(
     }
   } else {
     if (VK_CALL_LOG_ERROR(vk.EnumerateDeviceLayerProperties(
-            physical_device, &count, properties.data())) != VK_SUCCESS) {
+        physical_device, &count, properties.data())) != VK_SUCCESS) {
       return {};
     }
   }
 
   std::unordered_set<std::string> available_extensions;
+  std::vector<std::string> available_candidates;
 
   for (size_t i = 0; i < count; i++) {
     available_extensions.emplace(properties[i].layerName);
   }
-
-  std::vector<std::string> available_candidates;
 
   for (const auto& candidate : candidates) {
     auto found = available_extensions.find(candidate);

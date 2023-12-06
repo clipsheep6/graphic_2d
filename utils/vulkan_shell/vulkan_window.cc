@@ -198,12 +198,6 @@ sk_sp<SkSurface> RSVulkanWindow::AcquireSurface(int bufferCount) {
 
   auto surface_size = surface_->GetSize();
 
-  // This check is theoretically unnecessary as the swapchain should report that
-  // the surface is out-of-date and perform swapchain recreation at the new
-  // configuration. However, on Android, the swapchain never reports that it is
-  // of date. Hence this extra check. Platforms that don't have this issue, or,
-  // cant report this information (which is optional anyway), report a zero
-  // size.
   if (surface_size != SkISize::Make(0, 0) &&
       surface_size != swapchain_->GetSize()) {
     LOGE("Swapchain and surface sizes are out of sync. Recreating swapchain.");
@@ -234,12 +228,9 @@ sk_sp<SkSurface> RSVulkanWindow::AcquireSurface(int bufferCount) {
     if (acquire_result ==
         RSVulkanSwapchain::AcquireStatus::ErrorSurfaceOutOfDate) {
       LOGE("AcquireSurface surface out of date");
-      // Surface out of date. Recreate the swapchain at the new configuration.
       if (RecreateSwapchain()) {
-        // Swapchain was recreated, try surface acquisition again.
         continue;
       } else {
-        // Could not recreate the swapchain at the new configuration.
         LOGE("Swapchain reported surface was out of date but "
                            "could not recreate the swapchain at the new "
                            "configuration.");

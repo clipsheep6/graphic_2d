@@ -42,31 +42,36 @@ ohos_executable("drawing_engine_sample") {
   ]
 
   if (ace_enable_gpu) {
-    sources += [
-      "drawing_engine/drawing_surface/surface_frame_ohos_gl.cpp",
-      "drawing_engine/drawing_surface/surface_frame_ohos_vulkan.cpp",
-      "drawing_engine/drawing_surface/surface_ohos_gl.cpp",
-      "drawing_engine/drawing_surface/surface_ohos_vulkan.cpp",
-      "drawing_engine/egl_manager.cpp",
-      "drawing_engine/gles_render_backend.cpp",
-      "drawing_engine/vulkan_render_backend.cpp",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_application.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_backbuffer.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_command_buffer.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_debug_report.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_device.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_handle.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_image.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_interface.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_native_surface.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_native_surface_ohos.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_proc_table.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_provider.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_surface.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_swapchain.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_utilities.cc",
-      "$graphic_2d_root/utils/vulkan_shell/vulkan_window.cc",
-    ]
+    if (graphic_2d_feature_enable_vulkan) {
+      sources += [
+        "drawing_engine/drawing_surface/surface_frame_ohos_vulkan.cpp",
+        "drawing_engine/drawing_surface/surface_ohos_vulkan.cpp",
+        "drawing_engine/vulkan_render_backend.cpp",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_application.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_backbuffer.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_command_buffer.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_debug_report.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_device.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_handle.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_image.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_interface.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_native_surface.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_native_surface_ohos.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_proc_table.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_provider.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_surface.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_swapchain.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_utilities.cc",
+        "$graphic_2d_root/utils/vulkan_shell/vulkan_window.cc",
+      ]
+    } else {
+      sources += [
+        "drawing_engine/drawing_surface/surface_frame_ohos_gl.cpp",
+        "drawing_engine/drawing_surface/surface_ohos_gl.cpp",
+        "drawing_engine/egl_manager.cpp",
+        "drawing_engine/gles_render_backend.cpp",
+      ]
+    }
   }
 
   include_dirs = [
@@ -123,12 +128,14 @@ ohos_executable("drawing_engine_sample") {
     "NDEBUG",
   ]
   if (graphic_2d_feature_enable_vulkan) {
-    "$graphic_2d_root/utils/vulkan_shell",
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
-    "//commonlibrary/c_utils/base/include",
-    "//third_party/skia",
+    include_dirs += [
+      "$graphic_2d_root/utils/vulkan_shell",
+      "//foundation/graphic/graphic_2d/frameworks/surface/include",
+      "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics/include",
+      "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
+      "//commonlibrary/c_utils/base/include",
+      "//third_party/skia",
+    ]
   }
   public_deps += [
     "$graphic_2d_root:libvulkan",

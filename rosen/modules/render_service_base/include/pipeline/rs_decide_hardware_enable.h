@@ -27,11 +27,11 @@ namespace Rosen {
 struct SortElements {
     uint64_t frequecy;
     uint64_t recent;
-}
+};
 class RSB_EXPORT RSDecideHardwareEnable {
 public:
     static RSDecideHardwareEnable* Instance();
-    bool IsShouldHardwareEnable(NodeId nodeId) const;
+    bool IsShouldHardwareEnable(NodeId nodeId);
     void UpdateSurfaceBufferSortVector();
     void UpdateSurfaceNode(NodeId nodeId);
     void DeleteSurfaceNode(NodeId nodeId);
@@ -45,7 +45,7 @@ private:
     std::unordered_map<NodeId, std::pair<std::queue<uint32_t>, SortElements>> surfaceBufferUpdateMap_;
     std::vector<std::pair<NodeId, double>> surfaceBufferSortVec_;
     uint32_t vsyncCnt_ = 0;
-}
+};
 }
 }
 

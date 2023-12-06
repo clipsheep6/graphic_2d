@@ -54,18 +54,18 @@ void RSDecideHardwareEnable::UpdateSurfaceBufferSortVector()
     std::sort(surfaceBufferSortVec_.begin(), surfaceBufferSortVec_.end(), SortVectorCmp);
 }
 
-bool RSDecideHardwareEnable::IsShouldHardwareEnable(NodeId nodeId) const
+bool RSDecideHardwareEnable::IsShouldHardwareEnable(NodeId nodeId)
 {
     if (surfaceBufferUpdateMap_.find(nodeId) == surfaceBufferUpdateMap_.end()) {
         return false;
     }
     uint32_t queueTail = surfaceBufferUpdateMap_[nodeId].first.back();
     if (vsyncCnt_ >= queueTail) {
-        if (vsyncCnt - queueTail > LONGTIME_NO_UPDATE_VSYNC_CNT) {
+        if ((vsyncCnt_ - queueTail) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
             return false;
         }
     } else {
-        if ((UINT32_MAX - queueTail) + vsyncCnt_ > LONGTIME_NO_UPDATE_VSYNC_CNT) {
+        if (((UINT32_MAX - queueTail) + vsyncCnt_) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
             return false;
         }
     }
@@ -93,43 +93,43 @@ void RSDecideHardwareEnable::UpdateSurfaceNode(NodeId nodeId)
     }
     if (surfaceBufferUpdateMap_.find(nodeId) == surfaceBufferUpdateMap_.end()) {
         std::queue<uint32_t> queue;
-        queue.push(vsyncCnt_)
+        queue.push(vsyncCnt_);
         SortElements sortElements = {0, 0};
         surfaceBufferUpdateMap_[nodeId] = std::make_pair(queue, sortElements);
         return;
     }
 
-    auto& queue = &(surfaceBufferUpdateMap_[nodeId].first);
-    auto& sortElements = &(surfaceBufferUpdateMap_[nodeId].second);
-    uint32_t queueHead = queue.front();
-    uint32_t queueTail = queue.back();
-    uint32_t queueSize = queue.size();
-    if (queue.size() > VSYNC_CNT_QUEUE_MAX_SIZE) {
-        queue.pop();
-        uint32_t queueNewHead = queue.front();
+    auto queue = &(surfaceBufferUpdateMap_[nodeId].first);
+    auto sortElements = &(surfaceBufferUpdateMap_[nodeId].second);
+    uint32_t queueHead = queue->front();
+    uint32_t queueTail = queue->back();
+    uint32_t queueSize = queue->size();
+    if (queueSize > VSYNC_CNT_QUEUE_MAX_SIZE) {
+        queue->pop();
+        uint32_t queueNewHead = queue->front();
         if (LIKELY(queueNewHead >= queueHead)) {
-            sortElements.frequecy -= (queueNewHead - queueHead);
+            sortElements->frequecy -= (queueNewHead - queueHead);
         } else {
-            sortElements.frequecy -= ((UINT32_MAX - queueHead) + queueNewHead);
+            sortElements->frequecy -= ((UINT32_MAX - queueHead) + queueNewHead);
         }
         if (LIKELY(vsyncCnt_ >= queueHead)) {
-            sortElements.recent -= (vsyncCnt_ - queueHead);
+            sortElements->recent -= (vsyncCnt_ - queueHead);
         } else {
-            sortElements.recent -= ((UINT32_MAX - queueHead) + vsyncCnt_);
+            sortElements->recent -= ((UINT32_MAX - queueHead) + vsyncCnt_);
         }
     }
 
     if (LIKELY(vsyncCnt_ >= queueTail)) {
-        sortElements.frequecy += (vsyncCnt_ - queueTail);
-        sortElements.recent += ((vsyncCnt_ - queueTail) * queueSize);
+        sortElements->frequecy += (vsyncCnt_ - queueTail);
+        sortElements->recent += ((vsyncCnt_ - queueTail) * queueSize);
     } else {
-        sortElements.frequecy += ((UINT32_MAX - queueTail) + vsyncCnt_);
-        sortElements.recent += (((UINT32_MAX - queueTail) + vsyncCnt_) * queueSize);
+        sortElements->frequecy += ((UINT32_MAX - queueTail) + vsyncCnt_);
+        sortElements->recent += (((UINT32_MAX - queueTail) + vsyncCnt_) * queueSize);
     }
 
     RS_OPTIONAL_TRACE_NAME("RSDecideHardwareEnable::UpdateSurfaceNode nodeId:" +
         std::to_string(nodeId) + " vsyncCnt_:" + std::to_string(vsyncCnt_) + " frequecy:" +
-        std::to_string(sortElements.frequecy) + " recent:" + std::to_string(sortElements.recent));
+        std::to_string(sortElements->frequecy) + " recent:" + std::to_string(sortElements->recent));
     surfaceBufferUpdateMap_[nodeId].first.push(vsyncCnt_);
 }
 

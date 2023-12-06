@@ -951,7 +951,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         }
         auto& surfaceHandler = static_cast<RSSurfaceHandler&>(*surfaceNode);
         surfaceHandler.ResetCurrentFrameBufferConsumed();
-        if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
+        if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler, surfaceNode->GetId())) {
             this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
             if (surfaceNode->IsCurrentFrameBufferConsumed() && !surfaceNode->IsHardwareEnabledType()) {
                 surfaceNode->SetContentDirty();
@@ -1007,7 +1007,7 @@ void RSMainThread::CollectInfoForHardwareComposer()
                 selfDrawingNodes_.emplace_back(surfaceNode);
             }
             if (!surfaceNode->IsHardwareEnabledType() ||
-                !RSDecideHardwareEnable::Instance()->IsShouldHardwareEnable(surfaceNode->GetId()) {
+                !RSDecideHardwareEnable::Instance()->IsShouldHardwareEnable(surfaceNode->GetId())) {
                 return;
             }
 

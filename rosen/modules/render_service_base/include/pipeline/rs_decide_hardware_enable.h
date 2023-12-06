@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef RS_DICIDE_HARDWARE_ENABLE_H
-#define RS_DICIDE_HARDWARE_ENABLE_H
+#ifndef RS_DECIDE_HARDWARE_ENABLE_H
+#define RS_DECIDE_HARDWARE_ENABLE_H
 
 #include <utility>
 #include <queue>
 #include <unordered_map>
 #include "common/rs_macros.h"
+#include "pipeline/rs_surface_render_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -30,17 +31,19 @@ struct SortElements {
 class RSB_EXPORT RSDecideHardwareEnable {
 public:
     static RSDecideHardwareEnable* Instance();
-    bool IsShouldHardwareEnable(uint64_t surfaceNodePtr) const;
-    void UpdateSurfaceNode(uint64_t surfaceNodePtr);
-    void DeleteSurfaceNode(uint64_t surfaceNodePtr);
+    bool IsShouldHardwareEnable(NodeId nodeId) const;
+    void UpdateSurfaceBufferSortVector();
+    void UpdateSurfaceNode(NodeId nodeId);
+    void DeleteSurfaceNode(NodeId nodeId);
     void UpdateVSyncCnt();
 
 private:
     RSDecideHardwareEnable() = default;
     ~RSDecideHardwareEnable() noexcept = default;
-    static bool SortVectorCmp(const std::pair<uint64_t, double>& p1, const std::pair<uint64_t, double>& p2);
+    static bool SortVectorCmp(const std::pair<NodeId, double>& p1, const std::pair<NodeId, double>& p2);
 
-    std::unordered_map<uint64_t, std::pair<std::queue<uint32_t>, SortElements>> surfaceBufferUpdateMap_;
+    std::unordered_map<NodeId, std::pair<std::queue<uint32_t>, SortElements>> surfaceBufferUpdateMap_;
+    std::vector<std::pair<NodeId, double>> surfaceBufferSortVec_;
     uint32_t vsyncCnt_ = 0;
 }
 }

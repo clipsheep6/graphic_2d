@@ -897,11 +897,6 @@ public:
     }
     bool GetHasSharedTransitionNode() const;
     void SetHasSharedTransitionNode(bool hasSharedTransitionNode);
-
-    void SetSharedPtrAddr(uint64_t addr)
-    {
-        sharedPtrAddr_ = addr;
-    }
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -1106,7 +1101,6 @@ private:
 
     RSBaseRenderNode::WeakPtr ancestorDisplayNode_;
     bool hasSharedTransitionNode_ = false;
-    uint64_t sharedPtrAddr_ = 0;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

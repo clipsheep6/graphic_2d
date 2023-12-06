@@ -34,7 +34,7 @@
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/rs_rt_refresh_callback.h"
-#include "pipeline/rs_dicide_hardware_enable.h"
+#include "pipeline/rs_decide_hardware_enable.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
@@ -67,7 +67,7 @@ RSSurfaceRenderNode::~RSSurfaceRenderNode()
     SetSurfaceTexture(nullptr);
 #endif
     MemoryTrack::Instance().RemoveNodeRecord(GetId());
-    RSDecideHardwareEnable::Instance()->DeleteSurfaceNode(sharedPtrAddr_);
+    RSDecideHardwareEnable::Instance()->DeleteSurfaceNode(GetId());
 }
 
 #ifndef ROSEN_CROSS_PLATFORM

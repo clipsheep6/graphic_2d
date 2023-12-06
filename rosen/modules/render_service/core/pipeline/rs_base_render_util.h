@@ -107,7 +107,7 @@ enum class ColorFilterMode {
     DALTONIZATION_NORMAL_MODE = 16,
     COLOR_FILTER_END = 32,
 };
-static bool IsUpdateBuffer = false;
+
 class RSBaseRenderUtil {
 public:
     static bool IsNeedClient(RSRenderNode& node, const ComposeInfo& info);
@@ -127,7 +127,7 @@ public:
     static void SetPropertiesForCanvas(RSPaintFilterCanvas& canvas, const BufferDrawParam& params);
 
     static GSError DropFrameProcess(RSSurfaceHandler& node);
-    static bool ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, bool& isUpdateBuffer = IsUpdateBuffer);
+    static bool ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, NodeId nodeId = 0);
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
 
     static std::unique_ptr<RSTransactionData> ParseTransactionData(MessageParcel& parcel);

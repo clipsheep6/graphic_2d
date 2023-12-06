@@ -57,7 +57,7 @@ ohos_executable("hello_composer") {
   external_deps = [
     "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "c_utils:utils",
+    "c_utils:utils"
   ]
 
   part_name = "graphic_2d"

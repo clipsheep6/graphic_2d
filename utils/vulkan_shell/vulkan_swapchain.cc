@@ -17,9 +17,7 @@
 
 #include "vulkan_backbuffer.h"
 #include "vulkan_device.h"
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 #include "vulkan_image.h"
 #include "vulkan_proc_table.h"
 #include "vulkan_surface.h"
@@ -364,14 +362,12 @@ VulkanSwapchain::AcquireResult VulkanSwapchain::AcquireSurface(int bufferCount) 
     return error;
   }
 
-#ifdef RS_ENABLE_VK
   // -----------------------------------------------------------------------------
   // when back buffer is used in multi threading mode it need to wait shared fence
   // instead of its private fence
   // -----------------------------------------------------------------------------
 
   if (!backbuffer->IsMultiThreading()) {
-#endif
     // ---------------------------------------------------------------------------
     // Step 1:
     // Wait for use readiness.
@@ -389,9 +385,7 @@ VulkanSwapchain::AcquireResult VulkanSwapchain::AcquireSurface(int bufferCount) 
       LOGE("Could not reset fences.");
       return error;
     }
-#ifdef RS_ENABLE_VK
   } // !backbuffer->IsMultiThreading()
-#endif
 
   // ---------------------------------------------------------------------------
   // Step 3:
@@ -495,11 +489,9 @@ VulkanSwapchain::AcquireResult VulkanSwapchain::AcquireSurface(int bufferCount) 
     return error;
   }
 
-#ifdef RS_ENABLE_VK
   // reset to not under multi-threading by default
   // the reality will be judged later in flush stage
   backbuffer->UnsetMultiThreading();
-#endif
   // ---------------------------------------------------------------------------
   // Step 8:
   // Tell Skia about the updated image layout.
@@ -524,7 +516,6 @@ VulkanSwapchain::AcquireResult VulkanSwapchain::AcquireSurface(int bufferCount) 
   return {AcquireStatus::Success, surface};
 }
 
-#ifdef RS_ENABLE_VK
 bool VulkanSwapchain::FlushCommands() {
   if (!IsValid()) {
     LOGE("Swapchain was invalid.");
@@ -656,7 +647,6 @@ void VulkanSwapchain::PresentAll(VulkanHandle<VkFence>& shared_fence) {
 
   to_be_present_.clear();
 }
-#endif
 
 bool VulkanSwapchain::Submit() {
   LOGI("VulkanSwapchain::Submit()");
@@ -736,9 +726,7 @@ bool VulkanSwapchain::Submit() {
     return false;
   }
 
-#ifdef RS_ENABLE_VK
   backbuffer->UnsetMultiThreading();
-#endif
   // ---------------------------------------------------------------------------
   // Step 5:
   // Submit the present operation and wait on the render semaphore.

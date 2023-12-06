@@ -17,9 +17,7 @@
 
 #include <dlfcn.h>
 
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 
 #define ACQUIRE_PROC(name, context)                          \
   if (!(name = AcquireProc("vk" #name, context))) {          \
@@ -59,7 +57,6 @@ bool VulkanProcTable::SetupLoaderProcAddresses() {
     return true;
   }
 
-#ifdef RS_ENABLE_VK
   GetInstanceProcAddr =
 #if VULKAN_LINK_STATICALLY
       GetInstanceProcAddr = &vkGetInstanceProcAddr;
@@ -70,15 +67,6 @@ bool VulkanProcTable::SetupLoaderProcAddresses() {
           dlsym(handle_, "vkEnumerateInstanceExtensionProperties"));
       CreateInstance = reinterpret_cast<PFN_vkCreateInstance>(dlsym(handle_, "vkCreateInstance"));
 #endif // VULKAN_LINK_STATICALLY
-#else
-  GetInstanceProcAddr =
-#if VULKAN_LINK_STATICALLY
-      GetInstanceProcAddr = &vkGetInstanceProcAddr;
-#else   // VULKAN_LINK_STATICALLY
-      reinterpret_cast<PFN_vkGetInstanceProcAddr>(
-          dlsym(handle_, "vkGetInstanceProcAddr"));
-#endif  // VULKAN_LINK_STATICALLY
-#endif
 
   if (!GetInstanceProcAddr) {
     LOGE("Could not acquire vkGetInstanceProcAddr.");

@@ -51,13 +51,11 @@ class VulkanBackbuffer {
 
   VulkanCommandBuffer& GetRenderCommandBuffer();
 
-#ifdef RS_ENABLE_VK
   void SetMultiThreading() { multi_threading_ = true; }
 
   void UnsetMultiThreading() { multi_threading_ = false; }
 
   bool IsMultiThreading() { return multi_threading_; }
-#endif
 
  private:
   const VulkanProcTable& vk;
@@ -72,9 +70,7 @@ class VulkanBackbuffer {
 
   bool CreateFences();
 
-#ifdef RS_ENABLE_VK
   bool multi_threading_ = false;
-#endif
 };
 
 }  // namespace vulkan

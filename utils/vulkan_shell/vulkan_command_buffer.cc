@@ -15,9 +15,7 @@
 
 #include "vulkan_command_buffer.h"
 
-#ifdef RS_ENABLE_VK
 #include "vulkan_hilog.h"
-#endif
 #include "vulkan_proc_table.h"
 
 namespace vulkan {

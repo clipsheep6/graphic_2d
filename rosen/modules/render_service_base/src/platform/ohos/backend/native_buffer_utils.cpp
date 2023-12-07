@@ -65,12 +65,10 @@ bool CreateVkImage(const RsVulkanContext& vkContext, VkImage* image,
 
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 
-    VkImageCreateFlags flags = 0;
-
     const VkImageCreateInfo imageCreateInfo = {
         VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
         &externalMemoryImageInfo,
-        flags,
+        0,
         VK_IMAGE_TYPE_2D,
         nbFormatProps.format,
         imageSize,

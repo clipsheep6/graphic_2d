@@ -50,14 +50,12 @@ RSBaseRenderEngine::~RSBaseRenderEngine() noexcept
 {
 }
 
-#ifdef RS_ENABLE_VK
 void RSBaseRenderEngine::Init(bool independentContext)
-#else
-void RSBaseRenderEngine::Init()
-#endif
 {
+    (void)independentContext;
 #if defined(NEW_RENDER_CONTEXT)
     RenderType renderType = RenderType::GLES;
+#ifndef USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_GL)
     renderType = RenderType::GLES;
 #elif defined(RS_ENABLE_VK)
@@ -65,6 +63,16 @@ void RSBaseRenderEngine::Init()
 #else
     renderType = RenderType::RASTER;
 #endif
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        renderType = RenderType::GLES;
+    } else if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        renderType = RenderType::VULKAN;
+    } else {
+        renderType = RenderType::RASTER;
+    }
+#endif // USE_ROSEN_DRAWING
     renderContext_ = RenderContextBaseFactory::CreateRenderContext(renderType);
     renderContext_->Init();
     drawingContext_ = std::make_shared<Rosen::DrawingContext>(renderContext_->GetRenderType());
@@ -73,7 +81,9 @@ void RSBaseRenderEngine::Init()
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
     renderContext_ = std::make_shared<RenderContext>();
 #ifdef RS_ENABLE_GL
-    renderContext_->InitializeEglContext();
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        renderContext_->InitializeEglContext();
+    }
 #endif
     if (RSUniRenderJudgement::IsUniRender()) {
         RS_LOGI("RSRenderEngine::RSRenderEngine set new cacheDir");
@@ -89,11 +99,16 @@ void RSBaseRenderEngine::Init()
 #endif // RS_ENABLE_VK
 #else
 #if defined(RS_ENABLE_VK)
-    skContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext(independentContext);
-    vkImageManager_ = std::make_shared<RSVkImageManager>();
-    renderContext_->SetUpGpuContext(skContext_);
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        skContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext(independentContext);
+        vkImageManager_ = std::make_shared<RSVkImageManager>();
+        renderContext_->SetUpGpuContext(skContext_);
+    } else {
+        renderContext_->SetUpGpuContext(nullptr);
+    }
 #else
-    renderContext_->SetUpGpuContext();
+    renderContext_->SetUpGpuContext(nullptr);
 #endif
 #endif // USE_ROSEN_DRAWING
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
@@ -109,10 +124,14 @@ void RSBaseRenderEngine::Init()
 #ifdef RS_ENABLE_VK
 #ifndef USE_ROSEN_DRAWING
     skContext_ = RsVulkanContext::GetSingleton().CreateSkContext();
-#else
-    skContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext();
-#endif
     vkImageManager_ = std::make_shared<RSVkImageManager>();
+#else
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        skContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext();
+        vkImageManager_ = std::make_shared<RSVkImageManager>();
+    }
+#endif
 #endif
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     colorSpaceConverterDisplay_ = Media::VideoProcessingEngine::ColorSpaceConverterDisplay::Create();
@@ -122,6 +141,12 @@ void RSBaseRenderEngine::Init()
 void RSBaseRenderEngine::ResetCurrentContext()
 {
 #if (defined RS_ENABLE_GL)
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
+
     if (renderContext_ == nullptr) {
         RS_LOGE("This render context is nullptr.");
         return;
@@ -183,22 +208,39 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
 #ifdef NEW_SKIA
 #if defined(RS_ENABLE_GL)
     if (canvas.recordingContext() == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer Context is null!");
+        return nullptr;
+    }
 #elif defined(RS_ENABLE_VK)
     if (renderContext_->GetGrContext() == nullptr) {
+        RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer Context is null!");
+        return nullptr;
+    }
 #endif
-#else
+#else // NEW_SKIA
     if (canvas.getGrContext() == nullptr) {
-#endif
-#else
+        RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer Context is null!");
+        return nullptr;
+    }
+#endif // NEW_SKIA
+#else // USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_GL)
-    if (canvas.GetGPUContext() == nullptr) {
-#elif defined(RS_ENABLE_VK)
-    if (renderContext_->GetDrGPUContext() == nullptr) {
-#endif
-#endif
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL &&
+        canvas.GetGPUContext() == nullptr) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer GrContext is null!");
         return nullptr;
     }
+#endif
+#if defined(RS_ENABLE_VK)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        if (renderContext_->GetDrGPUContext() == nullptr) {
+            RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer GrContext is null!");
+            return nullptr;
+        }
+    }
+#endif
+#endif  // USE_ROSEN_DRAWING
     auto eglTextureId = eglImageManager_->MapEglImageFromSurfaceBuffer(buffer, acquireFence, threadIndex);
     if (eglTextureId == 0) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer MapEglImageFromSurfaceBuffer return invalid texture ID");
@@ -208,9 +250,9 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
     sk_sp<SkColorSpace> skColorSpace = nullptr;
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     skColorSpace = ConvertColorGamutToSkColorSpace(colorGamut);
-#else
+#else // USE_VIDEO_PROCESSING_ENGINE
     (void)colorGamut;
-#endif
+#endif // USE_VIDEO_PROCESSING_ENGINE
 
     SkColorType colorType = kRGBA_8888_SkColorType;
     auto pixelFmt = buffer->GetFormat();
@@ -242,11 +284,11 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
     return SkImage::MakeFromTexture(renderContext_->GetGrContext(), backendTexture,
         surfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
 #endif
-#else
+#else // NEW_SKIA
     return SkImage::MakeFromTexture(canvas.getGrContext(), backendTexture,
         surfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
 #endif
-#else
+#else // USE_ROSEN_DRAWING
     Drawing::ColorType colorType = (buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
         Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
     Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
@@ -257,20 +299,30 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
     externalTextureInfo.SetHeight(buffer->GetSurfaceBufferHeight());
 
 #if defined(RS_ENABLE_GL)
-    externalTextureInfo.SetIsMipMapped(false);
-    externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
-    externalTextureInfo.SetID(eglTextureId);
-    externalTextureInfo.SetFormat(GL_RGBA8);
-    if (!image->BuildFromTexture(*canvas.GetGPUContext(), externalTextureInfo,
-#elif defined(RS_ENABLE_VK)
-    if (!image->BuildFromTexture(*renderContext_->GetDrGPUContext(), externalTextureInfo,
-#endif
-        Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr, nullptr, nullptr)) {
-        RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer image BuildFromTexture failed");
-        return nullptr;
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        externalTextureInfo.SetIsMipMapped(false);
+        externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
+        externalTextureInfo.SetID(eglTextureId);
+        externalTextureInfo.SetFormat(GL_RGBA8);
+        if (!image->BuildFromTexture(*canvas.GetGPUContext(), externalTextureInfo,
+            Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr)) {
+            RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer image BuildFromTexture failed");
+            return nullptr;
+        }
     }
+#endif // RS_ENABLE_GL
+#if defined(RS_ENABLE_VK)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        if (!image->BuildFromTexture(*renderContext_->GetDrGPUContext(), externalTextureInfo,
+            Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr)) {
+            RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer image BuildFromTexture failed");
+            return nullptr;
+        }
+    }
+#endif // RS_ENABLE_VK
     return image;
-#endif
+#endif // USE_ROSEN_DRAWING
 #else
     return nullptr;
 #endif // RS_ENABLE_EGLIMAGE
@@ -323,7 +375,8 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
         }
     }
 #endif
-#else
+#else // NEW_RENDER_CONTEXT
+#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_GL
     if (renderContext_ != nullptr) {
         rsSurface->SetRenderContext(renderContext_.get());
@@ -334,6 +387,21 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
         std::static_pointer_cast<RSSurfaceOhosVulkan>(rsSurface)->SetSkContext(skContext_);
     }
 #endif
+#else // USE_ROSEN_DRAWING
+#ifdef RS_ENABLE_GL
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL &&
+        renderContext_ != nullptr) {
+        rsSurface->SetRenderContext(renderContext_.get());
+    }
+#endif // RS_ENABLE_GL
+#ifdef RS_ENABLE_VK
+    if ((OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) &&
+        skContext_ != nullptr) {
+        std::static_pointer_cast<RSSurfaceOhosVulkan>(rsSurface)->SetSkContext(skContext_);
+    }
+#endif // RS_ENABLE_VK
+#endif // USE_ROSEN_DRAWING
 #endif
     auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height, 0, useAFBC);
     RS_OPTIONAL_TRACE_END();
@@ -365,6 +433,8 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surfa
     rsSurface = std::static_pointer_cast<RSRenderSurfaceOhos>(renderSurface);
 #else
     std::shared_ptr<RSSurfaceOhos> rsSurface = nullptr;
+
+#ifndef USE_ROSEN_DRAWING
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
     if (forceCPU) {
         rsSurface = std::make_shared<RSSurfaceOhosRaster>(targetSurface);
@@ -376,6 +446,28 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surfa
 #else
     rsSurface = std::make_shared<RSSurfaceOhosRaster>(targetSurface);
 #endif // (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+#else // USE_ROSEN_DRAWING
+    switch (OHOS::Rosen::RSSystemProperties::GetGpuApiType()) {
+        case OHOS::Rosen::GpuApiType::OPENGL:
+#if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+            if (forceCPU) {
+                rsSurface = std::make_shared<RSSurfaceOhosRaster>(targetSurface);
+            } else {
+                rsSurface = std::make_shared<RSSurfaceOhosGl>(targetSurface);
+            }
+            break;
+#endif
+        case OHOS::Rosen::GpuApiType::VULKAN:
+        case OHOS::Rosen::GpuApiType::DDGR:
+#if defined(RS_ENABLE_VK)
+            rsSurface = std::make_shared<RSSurfaceOhosVulkan>(targetSurface);
+#endif
+            break;
+    }
+    if (rsSurface == nullptr) {
+        rsSurface = std::make_shared<RSSurfaceOhosRaster>(targetSurface);
+    }
+#endif // USE_ROSEN_DRAWING
 #endif
     RS_OPTIONAL_TRACE_END();
     return RequestFrame(rsSurface, config, forceCPU, useAFBC);
@@ -647,9 +739,16 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
 {
     RS_OPTIONAL_TRACE_BEGIN("RSBaseRenderEngine::DrawImage(GPU)");
 #ifdef RS_ENABLE_VK
-    auto imageCache = vkImageManager_->MapVkImageFromSurfaceBuffer(params.buffer,
-        params.acquireFence, params.threadIndex);
-    auto& backendTexture = imageCache->GetBackendTexture();
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#endif // USE_ROSEN_DRAWING
+        auto imageCache = vkImageManager_->MapVkImageFromSurfaceBuffer(params.buffer,
+            params.acquireFence, params.threadIndex);
+        auto& backendTexture = imageCache->GetBackendTexture();
+#ifdef USE_ROSEN_DRAWING
+    }
+#endif // USE_ROSEN_DRAWING
 #ifndef USE_ROSEN_DRAWING
     if (!backendTexture.isValid()) {
         ROSEN_LOGE("RSBaseRenderEngine::DrawImage: backendTexture is not valid!!!");
@@ -663,38 +762,46 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
     auto surfaceOrigin = kTopLeft_GrSurfaceOrigin;
 #else
     auto surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
-#endif
+#endif // ROSEN_EMULATOR
     auto image = SkImage::MakeFromTexture(
         canvas.recordingContext(), backendTexture, surfaceOrigin, colorType, kPremul_SkAlphaType,
         SkColorSpace::MakeSRGB(), NativeBufferUtils::DeleteVkImage, imageCache->RefCleanupHelper());
     
     canvas.drawImageRect(image, params.srcRect, params.dstRect,
         SkSamplingOptions(), &(params.paint), SkCanvas::kStrict_SrcRectConstraint);
-#else
-    Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
-        Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
-    Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
-    auto image = std::make_shared<Drawing::Image>();
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
+            Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
+        Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
+        auto image = std::make_shared<Drawing::Image>();
 #ifndef ROSEN_EMULATOR
-    auto surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
+        auto surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
 #else
-    auto surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
-#endif
-    if (!image->BuildFromTexture(*canvas.GetGPUContext(), backendTexture.GetTextureInfo(),
-        surfaceOrigin, bitmapFormat, nullptr,
-        NativeBufferUtils::DeleteVkImage, imageCache->RefCleanupHelper())) {
-            ROSEN_LOGE("RSBaseRenderEngine::DrawImage: backendTexture is not valid!!!");
-            RS_OPTIONAL_TRACE_END();
-            return;
-        }
-        
-        canvas.AttachBrush(params.paint);
-        canvas.DrawImageRect(*image, params.srcRect, params.dstRect,
-            Drawing::SamplingOptions(), Drawing::SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
-        canvas.DetachBrush();
-#endif
+        auto surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
+#endif // ROSEN_EMULATOR
+        if (!image->BuildFromTexture(*canvas.GetGPUContext(), backendTexture,
+            surfaceOrigin, bitmapFormat, nullptr,
+            NativeBufferUtils::DeleteVkImage, imageCache->RefCleanupHelper())) {
+                ROSEN_LOGE("RSBaseRenderEngine::DrawImage: backendTexture is not valid!!!");
+                RS_OPTIONAL_TRACE_END();
+                return;
+            }
+
+            canvas.AttachBrush(params.paint);
+            canvas.DrawImageRect(*image, params.srcRect, params.dstRect,
+                Drawing::SamplingOptions(), Drawing::SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
+            canvas.DetachBrush();
+    }
+#endif // USE_ROSEN_DRAWING
     RS_OPTIONAL_TRACE_END();
-#else // RS_ENABLE_VK
+#endif // RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     auto image = CreateEglImageFromBuffer(canvas, params.buffer, params.acquireFence, params.threadIndex,
         params.targetColorGamut);
     if (image == nullptr) {
@@ -718,7 +825,7 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
         params.paint.setShader(imageShader);
         ColorSpaceConvertor(imageShader, params);
     }
-#endif
+#endif // USE_VIDEO_PROCESSING_ENGINE
 
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
@@ -731,14 +838,14 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
 #else
     canvas.drawRect(params.dstRect, (params.paint));
 #endif // USE_VIDEO_PROCESSING_ENGINE
-#else
+#else // NEW_SKIA
 #ifndef USE_VIDEO_PROCESSING_ENGINE
     canvas.drawImageRect(image, params.srcRect, params.dstRect, &(params.paint));
 #else
     canvas.drawRect(params.dstRect, &(params.paint));
 #endif // USE_VIDEO_PROCESSING_ENGINE
-#endif
-#else
+#endif // NEW_SKIA
+#else // USE_ROSEN_DRAWING
     canvas.AttachBrush(params.paint);
     auto samplingOptions = RSSystemProperties::IsPhoneType()
                                ? Drawing::SamplingOptions()
@@ -746,14 +853,19 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
     canvas.DrawImageRect(*image.get(), params.srcRect, params.dstRect, samplingOptions,
         Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
     canvas.DetachBrush();
-#endif
+#endif // USE_ROSEN_DRAWING
     RS_OPTIONAL_TRACE_END();
-#endif // RS_ENABLE_VK
 }
 
 void RSBaseRenderEngine::RegisterDeleteBufferListener(const sptr<IConsumerSurface>& consumer, bool isForUniRedraw)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     auto regUnMapVkImageFunc = [this, isForUniRedraw](int32_t bufferId) {
         if (isForUniRedraw) {
             vkImageManager_->UnMapVkImageFromSurfaceBufferForUniRedraw(bufferId);
@@ -786,6 +898,12 @@ void RSBaseRenderEngine::RegisterDeleteBufferListener(const sptr<IConsumerSurfac
 void RSBaseRenderEngine::RegisterDeleteBufferListener(RSSurfaceHandler& handler)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     auto regUnMapVkImageFunc = [this](int32_t bufferId) {
         vkImageManager_->UnMapVkImageFromSurfaceBuffer(bufferId);
     };
@@ -804,6 +922,12 @@ void RSBaseRenderEngine::RegisterDeleteBufferListener(RSSurfaceHandler& handler)
 void RSBaseRenderEngine::ShrinkCachesIfNeeded(bool isForUniRedraw)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (vkImageManager_ != nullptr) {
         vkImageManager_->ShrinkCachesIfNeeded(isForUniRedraw);
     }

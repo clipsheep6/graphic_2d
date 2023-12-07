@@ -73,6 +73,13 @@ bool SKImageChain::CreateCPUCanvas()
 bool SKImageChain::CreateGPUCanvas()
 {
 #ifdef ACE_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        LOGI("GPU rendering is not supported.");
+        return false;
+    }
+#endif // USE_ROSEN_DRAWING
+
     EglManager::GetInstance().Init();
     sk_sp<const GrGLInterface> glInterface(GrGLCreateNativeInterface());
 #if defined(NEW_SKIA)

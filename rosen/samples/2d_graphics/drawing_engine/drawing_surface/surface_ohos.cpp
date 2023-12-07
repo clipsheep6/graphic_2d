@@ -38,14 +38,27 @@ std::shared_ptr<SurfaceBase> SurfaceOhos::CreateSurface(sptr<Surface> surface)
     switch (type) {
         case RenderBackendType::VULKAN:
 #ifdef ACE_ENABLE_VK
-            LOGI("SurfaceOhos::CreateSurface with vulkan backend");
-            producer = std::make_shared<SurfaceOhosVulkan>(surface);
+#ifdef USE_ROSEN_DRAWING
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+                OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#endif // USE_ROSEN_DRAWING
+                LOGI("SurfaceOhos::CreateSurface with vulkan backend");
+                producer = std::make_shared<SurfaceOhosVulkan>(surface);
+#ifdef USE_ROSEN_DRAWING
+            }
+#endif // USE_ROSEN_DRAWING
 #endif
             break;
         case RenderBackendType::GLES:
 #ifdef ACE_ENABLE_GL
-            LOGI("SurfaceOhos::CreateSurface with gles backend");
-            producer = std::make_shared<SurfaceOhosGl>(surface);
+#ifdef USE_ROSEN_DRAWING
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+                LOGI("SurfaceOhos::CreateSurface with gles backend");
+                producer = std::make_shared<SurfaceOhosGl>(surface);
+#ifdef USE_ROSEN_DRAWING
+            }
+#endif // USE_ROSEN_DRAWING
 #endif
             break;
         case RenderBackendType::SOFTWARE:

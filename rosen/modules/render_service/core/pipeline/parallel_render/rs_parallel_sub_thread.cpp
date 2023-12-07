@@ -79,7 +79,13 @@ void RSParallelSubThread::MainLoop()
 {
     InitSubThread();
 #ifdef RS_ENABLE_GL
+#ifndef USE_ROSEN_DRAWING
     CreateShareEglContext();
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        CreateShareEglContext();
+    }
+#endif // USE_ROSEN_DRAWING
 #endif
     while (true) {
         WaitTaskSync();
@@ -152,6 +158,11 @@ void RSParallelSubThread::InitSubThread()
 void RSParallelSubThread::CreateShareEglContext()
 {
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (renderContext_ == nullptr) {
         RS_LOGE("renderContext_ is nullptr");
         return;
@@ -274,6 +285,12 @@ void RSParallelSubThread::Render()
     auto physicalGeoPtr = (
         physicalDisplayNode->GetRenderProperties().GetBoundsGeometry());
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
+
     if (canvas_ == nullptr) {
         RS_LOGE("Canvas is nullptr");
         return;
@@ -329,7 +346,16 @@ void RSParallelSubThread::Render()
 #else
     canvas_->RestoreToCount(saveCount);
 #endif
-#elif RS_ENABLE_VK
+    return;
+#endif
+
+#ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (!displayNode_) {
         RS_LOGE("RSParallelSubThread::Render displayNode_ nullptr");
         return;
@@ -473,6 +499,11 @@ bool RSParallelSubThread::WaitReleaseFence()
 void RSParallelSubThread::CreateResource()
 {
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     int width, height;
     RSParallelRenderManager::Instance()->GetFrameSize(width, height);
     if (width != surfaceWidth_ || height != surfaceHeight_) {
@@ -501,7 +532,18 @@ void RSParallelSubThread::CreateResource()
 #endif
     }
     visitor_ = std::make_shared<RSUniRenderVisitor>(canvas_, threadIndex_);
-#elif RS_ENABLE_VK
+    visitor_->CopyPropertyForParallelVisitor(
+        RSParallelRenderManager::Instance()->GetUniVisitor());
+    return;
+#endif
+
+#ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     displayNode_ = RSParallelRenderManager::Instance()->GetParallelDisplayNode(threadIndex_);
     if (!displayNode_) {
         RS_LOGE("RSParallelSubThread::CreateResource displayNode_ nullptr");
@@ -510,9 +552,9 @@ void RSParallelSubThread::CreateResource()
     visitor_ = std::make_shared<RSUniRenderVisitor>(nullptr, threadIndex_);
     visitor_->SetRenderFrame(
         RSParallelRenderManager::Instance()->GetParallelFrame(threadIndex_));
-#endif
     visitor_->CopyPropertyForParallelVisitor(
         RSParallelRenderManager::Instance()->GetUniVisitor());
+#endif
 }
 
 #ifndef USE_ROSEN_DRAWING

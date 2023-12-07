@@ -33,6 +33,16 @@ constexpr int DEFAULT_PARTIAL_RENDER_ENABLED_VALUE = 2;
 constexpr int DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE = 4;
 constexpr int DEFAULT_CORRECTION_MODE_VALUE = 999;
 
+#ifdef RS_ENABLE_VK
+static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
+const GpuApiType RSSystemProperties::systemGpuApiType_ =
+    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
+        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
+        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
+            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
+#else
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::OPENGL;
+#endif
 int ConvertToInt(const char *originValue, int defaultValue)
 {
     return originValue == nullptr ? defaultValue : std::atoi(originValue);
@@ -144,6 +154,7 @@ PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
 PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
 {
     int changed = 0;
+#ifndef USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
     static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "0");
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
@@ -153,6 +164,24 @@ PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return static_cast<PartialRenderType>(ConvertToInt(enable, DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE));
 #endif
+#else // USE_ROSEN_DRAWING
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "0");
+        const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+        return static_cast<PartialRenderType>(ConvertToInt(enable, 0));
+    } else {
+        static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "4");
+        const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+        return static_cast<PartialRenderType>(ConvertToInt(enable, DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE));
+    }
+#else
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "4");
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+    return static_cast<PartialRenderType>(ConvertToInt(enable, DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE));
+#endif
+#endif // USE_ROSEN_DRAWING
 }
 
 bool RSSystemProperties::GetReleaseResourceEnabled()
@@ -188,6 +217,9 @@ bool RSSystemProperties::GetUseShadowBatchingEnabled()
 bool RSSystemProperties::GetAFBCEnabled()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.afbc.enabled", "1");
+    if (systemGpuApiType_ != GpuApiType::OPENGL) { // only valid with skiagl
+        return false;
+    }
     int changed = 0;
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(enable, 1) != 0;

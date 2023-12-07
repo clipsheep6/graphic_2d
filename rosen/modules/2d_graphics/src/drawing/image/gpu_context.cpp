@@ -12,17 +12,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <parameter.h>
+#include <parameters.h>
 #include "image/gpu_context.h"
 
 #include "impl_factory.h"
 #ifdef RS_ENABLE_VK
 #include "include/gpu/vk/GrVkBackendContext.h"
 #endif
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+#if defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType =
+    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
+        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
+        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
+            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
+
+static inline OHOS::Rosen::GpuApiType GetGpuApiType()
+{
+    return gSystemGpuApiType;
+}
+#endif
 GPUContext::GPUContext() : impl_(ImplFactory::CreateGPUContextImpl()) {}
 
 bool GPUContext::BuildFromGL(const GPUContextOptions& options)
@@ -33,6 +48,12 @@ bool GPUContext::BuildFromGL(const GPUContextOptions& options)
 #ifdef RS_ENABLE_VK
 bool GPUContext::BuildFromVK(const GrVkBackendContext& context)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return false;
+    }
+#endif // USE_ROSEN_DRAWING
     return impl_->BuildFromVK(context);
 }
 #endif

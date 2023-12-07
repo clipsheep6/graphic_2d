@@ -30,13 +30,26 @@ CanvasContext* CanvasContext::Create()
     switch (type) {
         case RenderBackendType::VULKAN:
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#endif
             std::cout << "CanvasContext::Create with vulkan backend" << std::endl;
             return new CanvasContext(std::make_unique<VulkanRenderBackend>());
+#ifdef USE_ROSEN_DRAWING
+        }
+#endif
 #endif
         case RenderBackendType::GLES:
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif
             std::cout << "CanvasContext::Create with gles backend" << std::endl;
             return new CanvasContext(std::make_unique<GLESRenderBackend>());
+#ifdef USE_ROSEN_DRAWING
+        }
+#endif
 #endif
         case RenderBackendType::SOFTWARE:
             std::cout << "CanvasContext::Create with software backend" << std::endl;

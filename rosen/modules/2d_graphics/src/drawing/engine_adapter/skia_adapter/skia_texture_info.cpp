@@ -22,6 +22,13 @@ namespace Drawing {
 #ifdef RS_ENABLE_VK
 GrBackendTexture SkiaTextureInfo::ConvertToGrBackendVKTexture(const TextureInfo& info)
 {
+#ifdef USE_ROSEN_DRAWING
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+            GrBackendTexture backendTexture = { 0 };
+            return backendTexture;
+        }
+#endif // USE_ROSEN_DRAWING
     auto vkInfo = info.GetVKTextureInfo();
     GrVkImageInfo imageInfo;
         
@@ -67,6 +74,12 @@ GrBackendTexture SkiaTextureInfo::ConvertToGrBackendVKTexture(const TextureInfo&
 
 void SkiaTextureInfo::ConvertToVKTexture(const GrBackendTexture& backendTexture, TextureInfo& info)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     std::shared_ptr<VKTextureInfo> vkInfo = std::make_shared<VKTextureInfo>();
     info.SetWidth(backendTexture.width());
     info.SetHeight(backendTexture.height());
@@ -104,7 +117,6 @@ void SkiaTextureInfo::ConvertToVKTexture(const GrBackendTexture& backendTexture,
     vkInfo->sharingMode = vkImageInfo.fSharingMode;
 
     info.SetVKTextureInfo(vkInfo);
-    return info;
 }
 #endif
 

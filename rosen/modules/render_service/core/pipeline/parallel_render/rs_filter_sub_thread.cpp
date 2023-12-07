@@ -143,6 +143,11 @@ void RSFilterSubThread::CreateShareEglContext()
         return;
     }
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     eglShareContext_ = renderContext_->CreateShareContext();
     if (eglShareContext_ == EGL_NO_CONTEXT) {
         RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
@@ -158,6 +163,11 @@ void RSFilterSubThread::CreateShareEglContext()
 void RSFilterSubThread::DestroyShareEglContext()
 {
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (renderContext_ != nullptr) {
         eglDestroyContext(renderContext_->GetEGLDisplay(), eglShareContext_);
         eglShareContext_ = EGL_NO_CONTEXT;
@@ -262,22 +272,26 @@ sk_sp<GrContext> RSFilterSubThread::CreateShareGrContext()
 std::shared_ptr<Drawing::GPUContext> RSFilterSubThread::CreateShareGrContext()
 {
     RS_TRACE_NAME("CreateShareGrContext");
-    CreateShareEglContext();
     auto gpuContext = std::make_shared<Drawing::GPUContext>();
-    Drawing::GPUContextOptions options;
-    auto handler = std::make_shared<MemoryHandler>();
-    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    auto size = glesVersion ? strlen(glesVersion) : 0;
-    handler->ConfigureContext(&options, glesVersion, size, SHADER_CACHE_DIR, true);
-
 #ifdef RS_ENABLE_GL
-    if (!gpuContext->BuildFromGL(options)) {
-        RS_LOGE("nullptr gpuContext is null");
-        return nullptr;
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        CreateShareEglContext();
+        Drawing::GPUContextOptions options;
+        auto handler = std::make_shared<MemoryHandler>();
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : 0;
+        handler->ConfigureContext(&options, glesVersion, size, SHADER_CACHE_DIR, true);
+
+        if (!gpuContext->BuildFromGL(options)) {
+            RS_LOGE("nullptr gpuContext is null");
+            return nullptr;
+        }
     }
 #endif
 #ifdef RS_ENABLE_VK
-    if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext())) {
+    if ((OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) &&
+        !gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext())) {
         RS_LOGE("nullptr gpuContext is null");
         return nullptr;
     }

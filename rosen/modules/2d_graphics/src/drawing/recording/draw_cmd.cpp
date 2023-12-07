@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <parameter.h>
+#include <parameters.h>
 #include "recording/draw_cmd.h"
 
 #include "recording/cmd_list_helper.h"
@@ -39,10 +40,27 @@
 #include "utils/scalar.h"
 #include "utils/log.h"
 #include "draw/surface.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+
+#ifdef RS_ENABLE_VK
+static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType =
+    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
+        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
+        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
+            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
+#else
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType = GpuApiType::OPENGL;
+#endif
+static inline OHOS::Rosen::GpuApiType GetGpuApiType()
+{
+    return gSystemGpuApiType;
+}
+
 namespace {
 void BrushHandleToBrush(const BrushHandle& brushHandle, const CmdList& cmdList, Brush& brush)
 {
@@ -1460,12 +1478,14 @@ void DrawSurfaceBufferOpItem::Playback(Canvas* canvas, const Rect* rect)
 void DrawSurfaceBufferOpItem::Clear()
 {
 #ifdef RS_ENABLE_GL
-    if (texId_ != 0U) {
-        glDeleteTextures(1, &texId_);
-    }
-    if (eglImage_ != EGL_NO_IMAGE_KHR) {
-        auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-        eglDestroyImageKHR(disp, eglImage_);
+    if (GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        if (texId_ != 0U) {
+            glDeleteTextures(1, &texId_);
+        }
+        if (eglImage_ != EGL_NO_IMAGE_KHR) {
+            auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+            eglDestroyImageKHR(disp, eglImage_);
+        }
     }
 #endif
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
@@ -1479,31 +1499,37 @@ void DrawSurfaceBufferOpItem::Clear()
 void DrawSurfaceBufferOpItem::Draw(Canvas* canvas)
 {
 #ifdef RS_ENABLE_VK
-    if (!DrawSurfaceBufferOpItem::makeBackendTextureFromNativeBuffer ||
-        !DrawSurfaceBufferOpItem::deleteVkImage ||
-        !DrawSurfaceBufferOpItem::vulkanCleanupHelper ||
-        !canvas) {
-        return;
+    if (GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        if (!DrawSurfaceBufferOpItem::makeBackendTextureFromNativeBuffer ||
+            !DrawSurfaceBufferOpItem::deleteVkImage ||
+            !DrawSurfaceBufferOpItem::vulkanCleanupHelper ||
+            !canvas) {
+            return;
+        }
+        auto backendTexture = DrawSurfaceBufferOpItem::makeBackendTextureFromNativeBuffer(nativeWindowBuffer_,
+            surfaceBufferInfo_.width_, surfaceBufferInfo_.height_);
+        Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
+            Drawing::AlphaType::ALPHATYPE_PREMUL };
+        auto ptr = [](void* context) {
+            DrawSurfaceBufferOpItem::deleteVkImage(context);
+        }
+        auto image = std::make_shared<Drawing::Image>();
+        auto vkTextureInfo = backendTexture.GetTextureInfo().GetVKTextureInfo();
+        if (!vkTextureInfo && !image->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
+            Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr, ptr,
+            DrawSurfaceBufferOpItem::vulkanCleanupHelper(vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory))) {
+            LOGE("DrawSurfaceBufferOpItem::Draw: image BuildFromTexture failed");
+            return;
+        }
+        canvas->DrawImage(*image, surfaceBufferInfo_.offSetX_, surfaceBufferInfo_.offSetY_, Drawing::SamplingOptions());
     }
-    auto backendTexture = DrawSurfaceBufferOpItem::makeBackendTextureFromNativeBuffer(nativeWindowBuffer_,
-        surfaceBufferInfo_.width_, surfaceBufferInfo_.height_);
-    Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
-        Drawing::AlphaType::ALPHATYPE_PREMUL };
-    auto ptr = [](void* context) {
-        DrawSurfaceBufferOpItem::deleteVkImage(context);
-    }
-    auto image = std::make_shared<Drawing::Image>();
-    auto vkTextureInfo = backendTexture.GetTextureInfo().GetVKTextureInfo();
-    if (!vkTextureInfo && !image->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
-        Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr, ptr,
-        DrawSurfaceBufferOpItem::vulkanCleanupHelper(vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory))) {
-        LOGE("DrawSurfaceBufferOpItem::Draw: image BuildFromTexture failed");
-        return;
-    }
-    canvas->DrawImage(*image, surfaceBufferInfo_.offSetX_, surfaceBufferInfo_.offSetY_, Drawing::SamplingOptions());
 #endif
 
 #ifdef RS_ENABLE_GL
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
     EGLint attrs[] = {
         EGL_IMAGE_PRESERVED,
         EGL_TRUE,

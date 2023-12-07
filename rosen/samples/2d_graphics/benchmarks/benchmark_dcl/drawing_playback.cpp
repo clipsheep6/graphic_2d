@@ -370,13 +370,28 @@ void DrawingDCL::Test(Drawing::Canvas* canvas, int width, int height)
         case IterateType::REPLAY_MSKP:
             std::cout << "replay mskp... " << std::endl;
 #ifdef RS_ENABLE_VK
+#ifndef USE_ROSEN_DRAWING
             UpdateParameters(ReplayMSKP(skiaCanvas_) || (beginFrame_ == 1));
+#else // USE_ROSEN_DRAWING
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+                OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+                UpdateParameters(ReplayMSKP(skiaCanvas_) || (beginFrame_ == 1));
+            }
+#endif // USE_ROSEN_DRAWING
 #endif
             break;
         case IterateType::REPLAY_SKP:
             std::cout << "replay skp... " << std::endl;
 #ifdef RS_ENABLE_VK
+#ifndef USE_ROSEN_DRAWING
             ReplaySKP(skiaCanvas_);
+#else // USE_ROSEN_DRAWING
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+                OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+                ReplaySKP(skiaCanvas_);
+            }
+#endif // USE_ROSEN_DRAWING
+
 #endif
             break;
         case IterateType::OTHER:

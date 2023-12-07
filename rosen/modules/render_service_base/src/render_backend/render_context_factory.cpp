@@ -35,7 +35,14 @@ std::shared_ptr<RenderContextBase> RenderContextBaseFactory::CreateRenderContext
         renderContext = std::make_shared<RenderContextOhosRaster>();
     } else {
 #ifdef RS_ENABLE_VK
-        renderContext = std::make_shared<RenderContextOhosVk>();
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#ifdef USE_ROSEN_DRAWING
+#endif // USE_ROSEN_DRAWING
+            renderContext = std::make_shared<RenderContextOhosVk>();
+#ifdef USE_ROSEN_DRAWING
+        }
+#endif // USE_ROSEN_DRAWING
 #endif
     }
     renderContext->SetPlatformName(PlatformName::OHOS);

@@ -432,14 +432,20 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #endif
 
 #if defined(ACE_ENABLE_GL)
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
 #if defined(NEW_RENDER_CONTEXT)
-    std::shared_ptr<RenderContextBase> rc = RSRenderThread::Instance().GetRenderContext();
-    std::shared_ptr<DrawingContext> dc = RSRenderThread::Instance().GetDrawingContext();
-    rsSurface->SetDrawingContext(dc);
+        std::shared_ptr<RenderContextBase> rc = RSRenderThread::Instance().GetRenderContext();
+        std::shared_ptr<DrawingContext> dc = RSRenderThread::Instance().GetDrawingContext();
+        rsSurface->SetDrawingContext(dc);
 #else
-    RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
+        RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
 #endif
-    rsSurface->SetRenderContext(rc);
+        rsSurface->SetRenderContext(rc);
+#ifdef USE_ROSEN_DRAWING
+    }
+#endif // USE_ROSEN_DRAWING
 #endif
     uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->RequestFrame");

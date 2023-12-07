@@ -12,14 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <parameter.h>
+#include <parameters.h>
 #include "static_factory.h"
 
 #include "skia_adapter/skia_static_factory.h"
-
+#include "platform/common/rs_system_properties.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+#if defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType =
+    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
+        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
+        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
+            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
+static inline OHOS::Rosen::GpuApiType GetGpuApiType()
+{
+    return gSystemGpuApiType;
+}
+#endif // USE_ROSEN_DRAWING
 using EngineStaticFactory = SkiaStaticFactory;
 
 std::shared_ptr<TextBlob> StaticFactory::MakeFromText(const void* text, size_t byteLength,
@@ -59,6 +72,12 @@ std::shared_ptr<Typeface> StaticFactory::MakeFromName(const char familyName[], F
 std::shared_ptr<Surface> StaticFactory::MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
     TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return nullptr;
+    }
+#endif // USE_ROSEN_DRAWING
     return EngineStaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteVkImage, cleanHelper);
 }
 #endif

@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <parameter.h>
+#include <parameters.h>
 #include "skia_surface.h"
 
 #include "include/gpu/GrBackendSemaphore.h"
@@ -28,6 +29,7 @@
 #include "skia_image.h"
 #include "skia_image_info.h"
 #include "skia_texture_info.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -39,6 +41,20 @@ static constexpr int STENCIL_BITS = 8;
 #ifdef NEW_SKIA
 static constexpr uint32_t SURFACE_PROPS_FLAGS = 0;
 #endif
+#endif
+
+#if defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType =
+    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
+        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
+        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
+            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
+
+static inline OHOS::Rosen::GpuApiType GetGpuApiType()
+{
+    return gSystemGpuApiType;
+}
 #endif
 
 SkiaSurface::SkiaSurface() {}
@@ -104,7 +120,7 @@ bool SkiaSurface::Bind(const FrameBuffer& frameBuffer)
     GrGLFramebufferInfo framebufferInfo;
     framebufferInfo.fFBOID = frameBuffer.FBOID;
     framebufferInfo.fFormat = frameBuffer.Format;
-    GrBackendRenderTarget backendRenderTarget(
+    GrBackendRenderTarget backendRenderTarget( 
         frameBuffer.width, frameBuffer.height, FB_SAMPLE_COUNT, STENCIL_BITS, framebufferInfo);
 
     SkColorType colorType = kRGBA_8888_SkColorType;
@@ -132,6 +148,12 @@ bool SkiaSurface::Bind(const FrameBuffer& frameBuffer)
 std::shared_ptr<Surface> SkiaSurface::MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
     TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return nullptr;
+    }
+#endif // USE_ROSEN_DRAWING
     sk_sp<GrDirectContext> grContext = nullptr;
     if (gpuContext) {
         std::shared_ptr<SkiaGPUContext> skiaGpuContext = gpuContext->GetImpl<SkiaGPUContext>();
@@ -344,6 +366,12 @@ void SkiaSurface::Flush(FlushInfo *drawingflushInfo)
 #ifdef RS_ENABLE_VK
 void SkiaSurface::Wait(int32_t time, const VkSemaphore& semaphore)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (skSurface_ == nullptr) {
         LOGE("skSurface is nullptr");
         return;

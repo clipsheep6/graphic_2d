@@ -48,6 +48,12 @@ namespace Rosen {
 namespace {
 SkColorType GetSkColorTypeFromVkFormat(VkFormat vkFormat)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return kRGBA_8888_SkColorType;
+    }
+#endif // USE_ROSEN_DRAWING
     switch (vkFormat) {
         case VK_FORMAT_R8G8B8A8_UNORM:
             return kRGBA_8888_SkColorType;
@@ -1054,16 +1060,29 @@ void SurfaceBufferOpItem::Clear() const noexcept
 {
     RS_TRACE_NAME("SurfaceBufferOpItem::Clear");
 #ifdef RS_ENABLE_VK
+#ifndef USE_ROSEN_DRAWING
     skImage_ = nullptr;
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        skImage_ = nullptr;
+    }
+#endif // USE_ROSEN_DRAWING
 #endif
 #ifdef RS_ENABLE_GL
-    if (texId_ != 0U) {
-        glDeleteTextures(1, &texId_);
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+        if (texId_ != 0U) {
+            glDeleteTextures(1, &texId_);
+        }
+        if (eglImage_ != EGL_NO_IMAGE_KHR) {
+            auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+            eglDestroyImageKHR(disp, eglImage_);
+        }
+#ifdef USE_ROSEN_DRAWING
     }
-    if (eglImage_ != EGL_NO_IMAGE_KHR) {
-        auto disp = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-        eglDestroyImageKHR(disp, eglImage_);
-    }
+#endif // USE_ROSEN_DRAWING
 #endif
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     if (nativeWindowBuffer_ != nullptr) {
@@ -2313,7 +2332,7 @@ void ImageWithParmOpItem::SetNodeId(NodeId id)
 } // namespace Rosen
 } // namespace OHOS
 
-#else
+#else // USE_ROSEN_DRAWING
 #include "pipeline/rs_draw_cmd.h"
 #include "platform/common/rs_log.h"
 #include "render/rs_pixel_map_util.h"
@@ -2325,6 +2344,7 @@ void ImageWithParmOpItem::SetNodeId(NodeId id)
 #include "platform/ohos/backend/native_buffer_utils.h"
 #include "platform/ohos/backend/rs_vulkan_context.h"
 #endif
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -2378,14 +2398,17 @@ void RSExtendImageObject::Playback(Drawing::Canvas& canvas, const Drawing::Rect&
 {
 #if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     std::shared_ptr<Media::PixelMap> pixelmap = rsImage_->GetPixelMap();
+    std::shared_ptr<Drawing::Image> dmaImage;
     if (pixelmap != nullptr && pixelmap->GetAllocatorType() == Media::AllocatorType::DMA_ALLOC) {
-#if defined(RS_ENABLE_GL)
-        std::shared_ptr<Drawing::Image> dmaImage = GetDrawingImageFromSurfaceBuffer(canvas,
-            reinterpret_cast<SurfaceBuffer*>(pixelmap->GetFd()));
-#else
-        std::shared_ptr<Drawing::Image> dmaImage = MakeFromTextureForVK(canvas,
-            reinterpret_cast<SurfaceBuffer*>(pixelmap->GetFd()));
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+            dmaImage = GetDrawingImageFromSurfaceBuffer(canvas,
+                reinterpret_cast<SurfaceBuffer*>(pixelmap->GetFd()));
+        } else {
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+            dmaImage = MakeFromTextureForVK(canvas,
+                reinterpret_cast<SurfaceBuffer*>(pixelmap->GetFd()));
 #endif
+        }
         rsImage_->SetDmaImage(dmaImage);
     } else {
         if (pixelmap && pixelmap->IsAstc()) {
@@ -2422,6 +2445,10 @@ RSExtendImageObject *RSExtendImageObject::Unmarshalling(Parcel &parcel)
 std::shared_ptr<Drawing::Image> RSExtendImageObject::GetDrawingImageFromSurfaceBuffer(
     Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer) const
 {
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return nullptr;
+    }
+
     if (surfaceBuffer == nullptr) {
         RS_LOGE("GetDrawingImageFromSurfaceBuffer surfaceBuffer is nullptr");
         return nullptr;
@@ -2528,6 +2555,10 @@ std::shared_ptr<Drawing::Image> RSExtendImageObject::MakeFromTextureForVK(Drawin
 RSExtendImageObject::~RSExtendImageObject()
 {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+
     RSTaskDispatcher::GetInstance().PostTask(tid_, [texId = texId_,
                                                     nativeWindowBuffer = nativeWindowBuffer_,
                                                     eglImage = eglImage_]() {

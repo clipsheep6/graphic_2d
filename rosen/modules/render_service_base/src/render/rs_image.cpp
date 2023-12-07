@@ -191,7 +191,7 @@ void RSImage::ApplyImageFit()
     imageParameter.frameH = frameH;
     imageParameter.dstW = dstW;
     imageParameter.dstH = dstH;
-    RectF tempRectF = dstRect_; 
+    RectF tempRectF = dstRect_;
     dstRect_ = ApplyImageFitSwitch(imageParameter, imageFit_, tempRectF);
 }
 
@@ -277,6 +277,9 @@ void RSImage::UploadGpu(RSPaintFilterCanvas& canvas)
 void RSImage::UploadGpu(Drawing::Canvas& canvas)
 {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
     if (compressData_) {
         auto cache = RSImageCache::Instance().GetRenderDrawingImageCacheByPixelMapId(uniqueId_, gettid());
         std::lock_guard<std::mutex> lock(mutex_);
@@ -408,6 +411,11 @@ void RSImage::SetCompressData(
 #endif
 {
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     compressData_ = data;
     if (compressData_) {
         srcRect_.SetAll(0.0, 0.0, width, height);

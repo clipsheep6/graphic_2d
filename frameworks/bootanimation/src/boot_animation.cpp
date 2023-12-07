@@ -222,16 +222,22 @@ void BootAnimation::InitRsSurface()
         return;
     }
 #ifdef ACE_ENABLE_GL
-    rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
-    if (rc_ == nullptr) {
-        LOGE("InitilizeEglContext failed");
-        return;
-    } else {
-        LOGI("init egl context");
-        rc_->InitializeEglContext();
-        rsSurface_->SetRenderContext(rc_);
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+        rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
+        if (rc_ == nullptr) {
+            LOGE("InitilizeEglContext failed");
+            return;
+        } else {
+            LOGI("init egl context");
+            rc_->InitializeEglContext();
+            rsSurface_->SetRenderContext(rc_);
+        }
+#ifdef USE_ROSEN_DRAWING
     }
-#endif
+#endif // USE_ROSEN_DRAWING
+#endif // ACE_ENABLE_GL
     if (rc_ == nullptr) {
         LOGI("rc is nullptr, use cpu");
     }

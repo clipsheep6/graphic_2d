@@ -275,7 +275,12 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
 {
     RSRenderNode::OnTreeStateChanged();
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+#ifndef USE_ROSEN_DRAWING
     if (grContext_ && !IsOnTheTree()) {
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL &&
+        grContext_ && !IsOnTheTree()) {
+#endif // USE_ROSEN_DRAWING
         if (auto context = GetContext().lock()) {
 #ifndef USE_ROSEN_DRAWING
             RS_TRACE_NAME_FMT("need purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",

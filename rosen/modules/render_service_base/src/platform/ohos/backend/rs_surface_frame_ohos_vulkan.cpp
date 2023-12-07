@@ -41,10 +41,13 @@ void RSSurfaceFrameOhosVulkan::SetDamageRegion(int32_t left, int32_t top, int32_
     skIRects.push_back(skIRect);
     surface_->setDrawingArea(skIRects);
 #else
-    std::vector<Drawing::RectI> rects;
-    Drawing::RectI rect = {left, top, width, height};
-    rects.push_back(rect);
-    surface_->SetDrawingArea(rects);
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        std::vector<Drawing::RectI> rects;
+        Drawing::RectI rect = {left, top, width, height};
+        rects.push_back(rect);
+        surface_->SetDrawingArea(rects);
+    }
 #endif
 #endif
 }
@@ -61,12 +64,15 @@ void RSSurfaceFrameOhosVulkan::SetDamageRegion(const std::vector<RectI>& rects)
     }
     surface_->setDrawingArea(skIRects);
 #else
-    std::vector<Drawing::RectI> iRects;
-    for (auto &rect : rects) {
-        Drawing::RectI iRect = {rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom()};
-        iRects.push_back(iRect);
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        std::vector<Drawing::RectI> iRects;
+        for (auto &rect : rects) {
+            Drawing::RectI iRect = {rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom()};
+            iRects.push_back(iRect);
+        }
+        surface_->SetDrawingArea(iRects);
     }
-    surface_->SetDrawingArea(iRects);
 #endif
 #endif
 }

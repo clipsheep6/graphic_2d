@@ -56,8 +56,15 @@ RSParallelRenderManager::RSParallelRenderManager()
     }
     readyBufferNum_ = 0;
 #ifdef RS_ENABLE_VK
-    parallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
-    backParallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#endif // USE_ROSEN_DRAWING
+        parallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+        backParallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+#ifdef USE_ROSEN_DRAWING
+    }
+#endif // USE_ROSEN_DRAWING
 #endif
 }
 
@@ -103,6 +110,7 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
 #ifdef NEW_RENDER_CONTEXT
         drawingContext_ = drawingContext;
 #endif
+#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_GL
         if (context) {
 #endif
@@ -114,6 +122,22 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
 #ifdef RS_ENABLE_GL
         }
 #endif
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        for (uint32_t i = 0; i < threadNum; ++i) {
+            auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
+            curThread->StartSubThread();
+            threadList_.push_back(std::move(curThread));
+        }
+    } else if (context) {
+        for (uint32_t i = 0; i < threadNum; ++i) {
+            auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
+            curThread->StartSubThread();
+            threadList_.push_back(std::move(curThread));
+        }
+    }
+#endif // USE_ROSEN_DRAWING
         processTaskManager_.Initialize(threadNum);
         prepareTaskManager_.Initialize(threadNum);
         calcCostTaskManager_.Initialize(threadNum);
@@ -686,6 +710,12 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
     const std::shared_ptr<RSBaseRenderEngine> renderEngine, const ScreenInfo screenInfo)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     auto& context = RSMainThread::Instance()->GetContext();
     parallelFrames_.clear();
     std::swap(parallelDisplayNodes_, backParallelDisplayNodes_);
@@ -720,6 +750,12 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
 void RSParallelRenderManager::ProcessParallelDisplaySurface(RSUniRenderVisitor &visitor)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     for (int i = 0; i < PARALLEL_THREAD_NUM; i++) {
         if (!parallelDisplayNodes_[i]) {
             continue;
@@ -732,6 +768,12 @@ void RSParallelRenderManager::ProcessParallelDisplaySurface(RSUniRenderVisitor &
 void RSParallelRenderManager::ReleaseBuffer()
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     for (int i = 0; i < PARALLEL_THREAD_NUM; i++) {
         if (!parallelDisplayNodes_[i]) {
             continue;
@@ -745,6 +787,12 @@ void RSParallelRenderManager::ReleaseBuffer()
 void RSParallelRenderManager::NotifyUniRenderFinish()
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     readyBufferNum_++;
     if (readyBufferNum_ == PARALLEL_THREAD_NUM) {
         RS_TRACE_NAME("RSParallelRenderManager::NotifyUniRenderFinish");
@@ -758,6 +806,12 @@ std::shared_ptr<RSDisplayRenderNode> RSParallelRenderManager::GetParallelDisplay
     uint32_t subMainThreadIdx)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return nullptr;
+    }
+#endif // USE_ROSEN_DRAWING
     return parallelDisplayNodes_[subMainThreadIdx];
 #else
     return nullptr;
@@ -768,6 +822,12 @@ std::unique_ptr<RSRenderFrame> RSParallelRenderManager::GetParallelFrame(
     uint32_t subMainThreadIdx)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return nullptr;
+    }
+#endif // USE_ROSEN_DRAWING
     return std::move(parallelFrames_[subMainThreadIdx]);
 #else
     return nullptr;

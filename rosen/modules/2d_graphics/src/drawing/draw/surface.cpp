@@ -12,16 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <parameter.h>
+#include <parameters.h>
 #include "draw/surface.h"
 
 #include "impl_factory.h"
 #include "static_factory.h"
 #include "utils/log.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+#if defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType =
+    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
+        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
+        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
+            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
+
+static inline OHOS::Rosen::GpuApiType GetGpuApiType()
+{
+    return gSystemGpuApiType;
+}
+#endif
 Surface::Surface() : impl_(ImplFactory::CreateSurfaceImpl()), cachedCanvas_(nullptr) {}
 
 bool Surface::Bind(const Bitmap& bitmap)
@@ -44,6 +59,12 @@ bool Surface::Bind(const FrameBuffer& frameBuffer)
 std::shared_ptr<Surface> Surface::MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
     TextureOrigin origin, void (*deleteFunc)(void*), void* cleanupHelper)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return nullptr;
+    }
+#endif // USE_ROSEN_DRAWING
     return StaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteFunc, cleanupHelper);
 }
 #endif
@@ -124,6 +145,12 @@ void Surface::Flush(FlushInfo *drawingflushInfo)
 #ifdef RS_ENABLE_VK
 void Surface::Wait(int32_t time, const VkSemaphore& semaphore)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (!impl_) {
         LOGE("surfaceImpl Wait failed impl nullptr");
         return;

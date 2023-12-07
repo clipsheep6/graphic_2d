@@ -605,27 +605,32 @@ std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std:
     Drawing::ImageInfo info = Drawing::ImageInfo{pixelmap->GetWidth(), pixelmap->GetHeight(),
         Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL};
 #if (defined RS_ENABLE_GL) && (defined RS_ENABLE_EGLIMAGE)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
 #if defined(NEW_RENDER_CONTEXT)
-    auto drawingContext = RSMainThread::Instance()->GetRenderEngine()->GetDrawingContext();
-    if (drawingContext == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
-        return nullptr;
-    }
-    drawingContext->SetUpDrawingContext();
-    return Drawing::Surface::MakeRenderTarget(drawingContext->GetDrawingContext, fasle, info);
+        auto drawingContext = RSMainThread::Instance()->GetRenderEngine()->GetDrawingContext();
+        if (drawingContext == nullptr) {
+            RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
+            return nullptr;
+        }
+        drawingContext->SetUpDrawingContext();
+        return Drawing::Surface::MakeRenderTarget(drawingContext->GetDrawingContext, fasle, info);
 #else
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
-    if (renderContext == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
-        return nullptr;
-    }
-    renderContext->SetUpGpuContext();
-    return Drawing::Surface::MakeRenderTarget(renderContext->GetDrGPUContext(), false, info);
+        auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+        if (renderContext == nullptr) {
+            RS_LOGE("RSSurfaceCaptureTask::CreateSurface: renderContext is nullptr");
+            return nullptr;
+        }
+        renderContext->SetUpGpuContext(nullptr);
+        return Drawing::Surface::MakeRenderTarget(renderContext->GetDrGPUContext(), false, info);
 #endif
+    }
 #endif
 #ifdef RS_ENABLE_VK
-    return Drawing::Surface::MakeRenderTarget(
-        RSMainThread::Instance()->GetRenderEngine()->GetSkContext().get(), false, info);
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        return Drawing::Surface::MakeRenderTarget(
+            RSMainThread::Instance()->GetRenderEngine()->GetSkContext().get(), false, info);
+    }
 #endif
     return Drawing::Surface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
@@ -705,13 +710,13 @@ void RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node
         RS_LOGE("RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: Canvas is null!");
         return;
     }
-    
+
     if (IsUniRender()) {
         FindHardwareEnabledNodes();
         if (hasSecurityOrSkipLayer_) {
             RS_LOGD("RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: \
                 process RSDisplayRenderNode(id:[%{public}" PRIu64 "]) Not using UniRender buffer.", node.GetId());
-            
+
             // Adding matrix affine transformation logic
             auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
             if (geoPtr != nullptr) {

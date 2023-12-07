@@ -43,6 +43,8 @@ class Setting {
 public:
     static RenderBackendType GetRenderBackendType()
     {
+
+#ifndef USE_ROSEN_DRAWING
 #if defined(ACE_ENABLE_VK)
         RenderBackendType type = RenderBackendType::VULKAN;
 #elif defined(ACE_ENABLE_GL)
@@ -51,6 +53,20 @@ public:
         RenderBackendType type = RenderBackendType::SOFTWARE;
 #endif
         return type;
+#else // USE_ROSEN_DRAWING
+#if defined(ACE_ENABLE_VK)
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            return RenderBackendType::VULKAN;
+        }
+#endif
+#if defined(ACE_ENABLE_GL)
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+            return RenderBackendType::GLES;
+        }
+#endif
+        return RenderBackendType::SOFTWARE;
+#endif // USE_ROSEN_DRAWING
     }
 };
 }

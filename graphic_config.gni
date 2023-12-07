@@ -27,6 +27,7 @@ declare_args() {
   graphic_2d_feature_freemem_enable = false
   graphic_2d_feature_parallel_render_enable = true
   graphic_2d_feature_enable_vulkan = false
+  graphic_2d_feature_enable_opengl = true
   graphic_2d_feature_enable_flutter_vulkan = false
   graphic_2d_feature_enable_filter_cache = true
   graphic_2d_feature_parallel_upload_enable = true
@@ -47,6 +48,11 @@ declare_args() {
     is_cross_platform = false
     use_new_render_context = false
   }
+
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    graphic_2d_feature_enable_opengl = true
+    graphic_2d_feature_enable_vulkan = true
+  }
 }
 
 gpu_defines = []
@@ -64,7 +70,8 @@ if (graphic_2d_feature_ace_enable_gpu) {
       "ACE_ENABLE_VK",
       "RS_ENABLE_VK",
     ]
-  } else {
+  }
+  if (graphic_2d_feature_enable_opengl) {
     gpu_defines += [
       "ACE_ENABLE_GL",
       "RS_ENABLE_GL",
@@ -135,7 +142,9 @@ if (graphic_2d_feature_rs_enable_uni_render) {
   rs_enable_driven_render = false
 }
 
-if (graphic_2d_feature_enable_afbc) {
+if (graphic_2d_feature_enable_afbc && defined(use_rosen_drawing) && use_rosen_drawing) {
+  gpu_defines += [ "RS_ENABLE_AFBC" ]
+} else if (graphic_2d_feature_enable_afbc) {
   gpu_defines += [ "RS_ENABLE_AFBC" ]
 }
 

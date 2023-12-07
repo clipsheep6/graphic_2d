@@ -139,6 +139,9 @@ void RSUIDirector::GoBackground()
             }
         });
 #ifdef ACE_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
         RSRenderThread::Instance().PostTask([this]() {
             auto renderContext = RSRenderThread::Instance().GetRenderContext();
             if (renderContext != nullptr) {
@@ -152,6 +155,9 @@ void RSUIDirector::GoBackground()
 #endif
             }
         });
+#ifdef USE_ROSEN_DRAWING
+    }
+#endif // USE_ROSEN_DRAWING
 #endif
     }
 }

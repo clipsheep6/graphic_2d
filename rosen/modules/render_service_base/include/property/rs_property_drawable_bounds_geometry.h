@@ -478,35 +478,34 @@ public:
 
 // ============================================================================
 // SaveLayerBackground
-class RSSaveLayerBackgroundDrawable : public RSPropertyDrawable {
-public:
-    explicit RSSaveLayerBackgroundDrawable(std::shared_ptr<int> content) : content_(std::move(content)) {}
-    ~RSSaveLayerBackgroundDrawable() override = default;
-    void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
-private:
-    std::shared_ptr<int> content_;
-};
+// class RSSaveLayerBackgroundDrawable : public RSPropertyDrawable {
+// public:
+//     explicit RSSaveLayerBackgroundDrawable(std::shared_ptr<int> content) : content_(std::move(content)) {}
+//     ~RSSaveLayerBackgroundDrawable() override = default;
+//     void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
+// private:
+//     std::shared_ptr<int> content_;
+// };
 
-// SaveLayerContent
-class RSSaveLayerContentDrawable : public RSPropertyDrawable {
-public:
-#ifndef USE_ROSEN_DRAWING
-    explicit RSSaveLayerContentDrawable(std::shared_ptr<int> content, SkPaint&& blendPaint)
-        : content_(std::move(content)), blendPaint_(std::move(blendPaint)) {}
-#else
-    explicit RSSaveLayerContentDrawable(std::shared_ptr<int> content, Drawing::Brush&& blendBrush)
-        : content_(std::move(content)), blendBrush_(std::move(blendBrush)) {}
-#endif
-    ~RSSaveLayerContentDrawable() override = default;
-    void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
-
-private:
-    std::shared_ptr<int> content_;
-#ifndef USE_ROSEN_DRAWING
-    SkPaint blendPaint_;
-#else
-    Drawing::Brush blendBrush_;
-#endif
-};
+// // SaveLayerContent
+// class RSSaveLayerContentDrawable : public RSPropertyDrawable {
+// public:
+// #ifndef USE_ROSEN_DRAWING
+//     explicit RSSaveLayerContentDrawable(std::shared_ptr<int> content, SkPaint&& blendPaint)
+//         : content_(std::move(content)), blendPaint_(std::move(blendPaint)) {}
+// #else
+//     explicit RSSaveLayerContentDrawable(std::shared_ptr<int> content, Drawing::Brush&& blendBrush)
+//         : content_(std::move(content)), blendBrush_(std::move(blendBrush)) {}
+// #endif
+//     ~RSSaveLayerContentDrawable() override = default;
+//     void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
+// private:
+//     std::shared_ptr<int> content_;
+// #ifndef USE_ROSEN_DRAWING
+//     SkPaint blendPaint_;
+// #else
+//     Drawing::Brush blendBrush_;
+// #endif
+// };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_BOUNDS_GEOMETRY_H

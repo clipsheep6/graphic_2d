@@ -1260,27 +1260,27 @@ void RSBackgroundImageDrawable::Draw(const RSRenderContent& content, RSPaintFilt
 #endif
 }
 
-// ============================================================================
-// SaveLayerBackground
-void RSSaveLayerBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
-{
-#ifndef USE_ROSEN_DRAWING
-    *content_ = canvas.saveLayer(nullptr, nullptr);
-#else
-    canvas.SaveLayer({ nullptr, nullptr });
-    *content_ = canvas.GetSaveCount() - 1;
-#endif
-}
+// // ============================================================================
+// // SaveLayerBackground
+// void RSSaveLayerBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+// {
+// #ifndef USE_ROSEN_DRAWING
+//     *content_ = canvas.saveLayer(nullptr, nullptr);
+// #else
+//     canvas.SaveLayer({ nullptr, nullptr });
+//     *content_ = canvas.GetSaveCount() - 1;
+// #endif
+// }
 
-// SaveLayerContent
-void RSSaveLayerContentDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
-{
-#ifndef USE_ROSEN_DRAWING
-    *content_ = canvas.saveLayer(nullptr, &blendPaint_);
-#else
-    canvas.SaveLayer({ nullptr, &blendBrush_ });
-    *content_ = canvas.GetSaveCount() - 1;
-#endif
-}
+// // SaveLayerContent
+// void RSSaveLayerContentDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+// {
+// #ifndef USE_ROSEN_DRAWING
+//     *content_ = canvas.saveLayer(nullptr, &blendPaint_);
+// #else
+//     canvas.SaveLayer({ nullptr, &blendBrush_ });
+//     *content_ = canvas.GetSaveCount() - 1;
+// #endif
+// }
 
 } // namespace OHOS::Rosen

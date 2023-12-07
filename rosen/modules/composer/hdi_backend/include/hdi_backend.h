@@ -16,6 +16,7 @@
 #ifndef HDI_BACKEND_HDI_BACKEND_H
 #define HDI_BACKEND_HDI_BACKEND_H
 
+#include <event_handler.h>
 #include <functional>
 #include <unordered_map>
 #include <refbase.h>
@@ -72,6 +73,8 @@ private:
     OnScreenHotplugFunc onScreenHotplugCb_ = nullptr;
     OnPrepareCompleteFunc onPrepareCompleteCb_ = nullptr;
     std::unordered_map<uint32_t, OutputPtr> outputs_;
+    std::shared_ptr<OHOS::AppExecFwk::EventRunner> getPtsrunner_ = nullptr;
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> getPtshandler_ = nullptr;
 
     static void OnHdiBackendHotPlugEvent(uint32_t deviceId, bool connected, void *data);
     RosenError InitDevice();

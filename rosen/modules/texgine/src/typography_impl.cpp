@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-#include "typography_impl.h"
+#include "../include/typography_impl.h"
 
 #include <cassert>
 #include <functional>
 #include <variant>
 
-#include "font_collection.h"
-#include "shaper.h"
+#include "../include/font_collection.h"
+#include "../include/shaper.h"
 #include "texgine/any_span.h"
-#include "texgine_exception.h"
-#include "text_span.h"
+#include "../include/texgine_exception.h"
+#include "../include/text_span.h"
 #include "texgine/typography_types.h"
 #include "texgine/utils/exlog.h"
 #ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
 #endif
-#include "word_breaker.h"
+#include "../include/word_breaker.h"
 
 namespace OHOS {
 namespace Rosen {

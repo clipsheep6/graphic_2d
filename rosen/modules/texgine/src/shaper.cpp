@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-#include "shaper.h"
+#include "../include/shaper.h"
 
 #include <queue>
 #include <variant>
 
-#include "bidi_processer.h"
-#include "line_breaker.h"
-#include "measurer.h"
+#include "../include/bidi_processer.h"
+#include "../include/line_breaker.h"
+#include "../include/measurer.h"
 #include "texgine/any_span.h"
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 #include "texgine/utils/exlog.h"
 #ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
 #endif
-#include "text_breaker.h"
-#include "text_merger.h"
-#include "text_reverser.h"
-#include "text_shaper.h"
+#include "../include/text_breaker.h"
+#include "../include/text_merger.h"
+#include "../include/text_reverser.h"
+#include "../include/text_shaper.h"
 
 namespace OHOS {
 namespace Rosen {

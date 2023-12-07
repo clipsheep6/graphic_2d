@@ -21,13 +21,13 @@
 #include <stack>
 
 #include "hb.h"
-#include "line_metrics.h"
+#include "../../include/line_metrics.h"
 #include "texgine/any_span.h"
 #include "texgine/dynamic_font_provider.h"
 #include "texgine/theme_font_provider.h"
 #include "texgine/system_font_provider.h"
-#include "typeface.h"
-#include "typography_impl.h"
+#include "../../include/typeface.h"
+#include "../../include/typography_impl.h"
 
 namespace OHOS {
 namespace Rosen {

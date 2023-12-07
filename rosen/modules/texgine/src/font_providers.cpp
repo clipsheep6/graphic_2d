@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "font_collection.h"
+#include "../include/font_collection.h"
 #include "texgine/font_providers.h"
 #include "texgine/system_font_provider.h"
 

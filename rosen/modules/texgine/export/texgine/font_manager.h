@@ -18,7 +18,7 @@
 
 #include <texgine/typography_types.h>
 
-#include "font_parser.h"
+#include "../../include/font_parser.h"
 #include "texgine_font_style.h"
 
 namespace OHOS {

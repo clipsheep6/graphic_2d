@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "text_reverser.h"
+#include "../include/text_reverser.h"
 
 #include "texgine/utils/exlog.h"
 #ifdef LOGGER_ENABLE_SCOPE

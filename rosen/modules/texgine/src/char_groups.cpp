@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "char_groups.h"
+#include "../include/char_groups.h"
 
 #include <algorithm>
 #include <cassert>
 
 #include "texgine/utils/exlog.h"
-#include "texgine_exception.h"
+#include "../include/texgine_exception.h"
 
 namespace OHOS {
 namespace Rosen {

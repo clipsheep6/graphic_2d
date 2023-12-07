@@ -19,7 +19,7 @@
 #include <iostream>
 #include <memory>
 
-#include "opentype_parser/cmap_parser.h"
+#include "../src/opentype_parser/cmap_parser.h"
 #include "texgine_string.h"
 #include "texgine_typeface.h"
 

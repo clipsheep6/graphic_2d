@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "text_shaper.h"
+#include "../include/text_shaper.h"
 
-#include "measurer.h"
+#include "../include/measurer.h"
+#include "../include/texgine_exception.h"
 #include "texgine_font_manager.h"
-#include "texgine_exception.h"
 #include "texgine_font.h"
 #include "texgine_text_blob_builder.h"
 #include "texgine/typography_types.h"

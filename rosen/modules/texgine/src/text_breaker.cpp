@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#include "text_breaker.h"
+#include "../include/text_breaker.h"
 
 #include <cassert>
 
 #include <unicode/uchar.h>
 
-#include "measurer.h"
+#include "../include/measurer.h"
 #include "texgine/any_span.h"
-#include "texgine_exception.h"
-#include "text_span.h"
+#include "../include/texgine_exception.h"
+#include "../include/text_span.h"
 #include "texgine/utils/exlog.h"
 #ifdef LOGGER_ENABLE_SCOPE
 #include "texgine/utils/trace.h"
 #endif
-#include "text_converter.h"
-#include "word_breaker.h"
+#include "../include/text_converter.h"
+#include "../include/word_breaker.h"
 
 namespace OHOS {
 namespace Rosen {

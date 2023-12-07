@@ -30,7 +30,7 @@ public:
 
     RSVulkanHandle() : vkHandle_(VK_NULL_HANDLE) {}
 
-    explicit RSVulkanHandle(Handle handle, Disposer disposer = nullptr) : vkHandle_(handle), vkDisposer_(disposer) {}
+    RSVulkanHandle(Handle handle, Disposer disposer = nullptr) : vkHandle_(handle), vkDisposer_(disposer) {}
 
     RSVulkanHandle(RSVulkanHandle&& other) : vkHandle_(other.vkHandle_), vkDisposer_(other.vkDisposer_)
     {

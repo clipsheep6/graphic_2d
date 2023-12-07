@@ -27,7 +27,7 @@ public:
     /// of the NativeWindow is assumed by this instance.
     explicit RSVulkanNativeSurfaceOHOS(struct NativeWindow* nativeWindow);
 
-    ~RSVulkanNativeSurfaceOHOS() final;
+    ~RSVulkanNativeSurfaceOHOS();
 
     const char* GetExtensionName() const override;
 

@@ -134,6 +134,7 @@ std::shared_ptr<RSRenderSurface> RSRenderServiceClient::CreateRSSurface(const sp
 #else
 std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Surface> &surface)
 {
+#ifndef USE_ROSEN_DRAWING
 #if defined(ACE_ENABLE_VK)
     // GPU render
     std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosVulkan>(surface);
@@ -145,6 +146,27 @@ std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Sur
     std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosRaster>(surface);
 #endif
     return producer;
+#else // USE_ROSEN_DRAWING
+    std::shared_ptr<RSSurface> producer = nullptr;
+    switch(OHOS::Rosen::RSSystemProperties::GetGpuApiType()) {
+        case OHOS::Rosen::GpuApiType::VULKAN:
+        case OHOS::Rosen::GpuApiType::DDGR:
+#if defined(ACE_ENABLE_VK)
+            producer = std::make_shared<RSSurfaceOhosVulkan>(surface);
+            return producer;
+#endif
+        case OHOS::Rosen::GpuApiType::OPENGL:
+#if defined(ACE_ENABLE_GL)
+            producer = std::make_shared<RSSurfaceOhosGl>(surface);
+            return producer;
+#endif
+            break;
+    }
+    if (producer == nullptr) {
+        producer = std::make_shared<RSSurfaceOhosRaster>(surface);
+    }
+    return producer;
+#endif // USE_ROSEN_DRAWING
 }
 #endif
 

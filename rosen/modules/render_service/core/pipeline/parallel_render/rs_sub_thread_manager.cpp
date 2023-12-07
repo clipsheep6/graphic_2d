@@ -77,6 +77,12 @@ void RSSubThreadManager::StartFilterThread(RenderContext* context)
 void RSSubThreadManager::StartColorPickerThread(RenderContext* context)
 {
 #if defined(NEW_SKIA) && defined(RS_ENABLE_GL)
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
+
     if (!RSSystemProperties::GetColorPickerPartialEnabled() || !RSUniRenderJudgement::IsUniRender()) {
         RS_LOGD("RSSubThreadManager::StartColorPickerThread:Filter thread not run");
         return;

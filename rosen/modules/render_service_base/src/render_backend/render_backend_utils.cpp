@@ -41,11 +41,18 @@ bool RenderBackendUtils::RenderBackendUtils::IsValidFrame(const std::shared_ptr<
         return false;
     }
 #ifdef RS_ENABLE_VK
-    VulkanState* vulkanState = frame->vulkanState;
-    if (vulkanState == nullptr) {
-        LOGE("VulkanState is nullptr");
-        return false;
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#endif // USE_ROSEN_DRAWING
+        VulkanState* vulkanState = frame->vulkanState;
+        if (vulkanState == nullptr) {
+            LOGE("VulkanState is nullptr");
+            return false;
+        }
+#ifdef USE_ROSEN_DRAWING
     }
+#endif // USE_ROSEN_DRAWING
 #endif
     return true;
 }

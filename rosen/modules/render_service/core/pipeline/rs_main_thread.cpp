@@ -344,20 +344,22 @@ void RSMainThread::Init()
         grContext->setResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
     }
 #else
-    auto gpuContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetDrGPUContext() :
-        renderEngine_->GetRenderContext()->GetDrGPUContext();
-    if (gpuContext == nullptr) {
-        RS_LOGE("RSMainThread::Init gpuContext is nullptr!");
-        return;
-    }
-    int32_t maxResources = 0;
-    size_t maxResourcesSize = 0;
-    gpuContext->GetResourceCacheLimits(&maxResources, &maxResourcesSize);
-    if (maxResourcesSize > 0) {
-        gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
-            std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
-    } else {
-        gpuContext->SetResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        auto gpuContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetDrGPUContext() :
+            renderEngine_->GetRenderContext()->GetDrGPUContext();
+        if (gpuContext == nullptr) {
+            RS_LOGE("RSMainThread::Init gpuContext is nullptr!");
+            return;
+        }
+        int32_t maxResources = 0;
+        size_t maxResourcesSize = 0;
+        gpuContext->GetResourceCacheLimits(&maxResources, &maxResourcesSize);
+        if (maxResourcesSize > 0) {
+            gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
+                std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
+        } else {
+            gpuContext->SetResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
+        }
     }
 #endif
 #endif
@@ -1255,6 +1257,12 @@ void RSMainThread::WaitUtilDrivenRenderFinished()
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
 void RSMainThread::WaitUntilUploadTextureTaskFinished()
 {
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
+
     if (!isUniRender_) {
         return;
     }
@@ -1263,7 +1271,7 @@ void RSMainThread::WaitUntilUploadTextureTaskFinished()
         std::unique_lock<std::mutex> lock(uploadTextureMutex_);
         //upload texture maximum waiting time is 100ms
         //otherwise main thread upload texture
-        static const uint32_t WAIT_FOR_UPLOAD_FINISH_TIMEOUT = 100; 
+        static const uint32_t WAIT_FOR_UPLOAD_FINISH_TIMEOUT = 100;
         uploadTextureTaskCond_.wait_until(lock, std::chrono::system_clock::now() +
             std::chrono::milliseconds(WAIT_FOR_UPLOAD_FINISH_TIMEOUT), [this]() {
                  return uploadTextureFinishedCount_ > 0; });

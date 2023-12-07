@@ -98,11 +98,7 @@ public:
     {
         return surface_;
     }
-#ifdef RS_ENABLE_VK
     bool SetUpGpuContext(std::shared_ptr<Drawing::GPUContext> drawingContext);
-#else
-    bool SetUpGpuContext();
-#endif
 #endif
 
     EGLSurface CreateEGLSurface(EGLNativeWindowType eglNativeWindow);
@@ -182,11 +178,11 @@ public:
     }
 #endif
     EGLContext CreateShareContext();
-#ifdef ROSEN_IOS    
+#ifdef ROSEN_IOS
     sk_sp<SkColorSpace> ColorSpace() const { return color_space_; }
     bool UpdateStorageSizeIfNecessary();
     bool ResourceMakeCurrent();
-#endif    
+#endif
 
 private:
 #ifndef USE_ROSEN_DRAWING
@@ -216,7 +212,7 @@ private:
     int32_t storage_width_ = 0;
     int32_t storage_height_ = 0;
     bool valid_ = false;
-#endif   
+#endif
     EGLConfig config_;
 #ifndef ROSEN_CROSS_PLATFORM
     GraphicColorGamut colorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;

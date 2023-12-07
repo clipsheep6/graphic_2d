@@ -14,6 +14,7 @@
  */
 #include "platform/common/rs_log.h"
 #include "platform/drawing/rs_surface_converter.h"
+#include "platform/common/rs_system_properties.h"
 #if defined(NEW_RENDER_CONTEXT)
 #include "render_backend/ohos/rs_render_surface_ohos.h"
 #else
@@ -44,6 +45,8 @@ sptr<Surface> RSSurfaceConverter::ConvertToOhosSurface(std::shared_ptr<RSSurface
         ROSEN_LOGE("nullptr input");
         return nullptr;
     }
+
+#ifndef USE_ROSEN_DRAWING
 #if defined(ACE_ENABLE_VK)
     auto derivedPtr = std::static_pointer_cast<RSSurfaceOhosVulkan>(surface); // gpu render
 #elif defined(ACE_ENABLE_GL)
@@ -52,6 +55,23 @@ sptr<Surface> RSSurfaceConverter::ConvertToOhosSurface(std::shared_ptr<RSSurface
     auto derivedPtr = std::static_pointer_cast<RSSurfaceOhosRaster>(surface); // cpu render
 #endif
     return derivedPtr->GetSurface();
+#else // USE_ROSEN_DRAWING
+#if defined(ACE_ENABLE_VK)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        auto derivedPtr = std::static_pointer_cast<RSSurfaceOhosVulkan>(surface); // gpu render
+        return derivedPtr->GetSurface();
+    }
+#endif
+#if defined(ACE_ENABLE_GL)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        auto derivedPtr = std::static_pointer_cast<RSSurfaceOhosGl>(surface); // gpu render
+        return derivedPtr->GetSurface();
+    }
+#endif
+    auto derivedPtr = std::static_pointer_cast<RSSurfaceOhosRaster>(surface); // cpu render
+    return derivedPtr->GetSurface();
+#endif // USE_ROSEN_DRAWING
 }
 #endif
 

@@ -74,11 +74,7 @@ void RSHardwareThread::Start()
                     return;
                 }
                 uniRenderEngine_ = std::make_shared<RSUniRenderEngine>();
-#ifdef RS_ENABLE_VK
                 uniRenderEngine_->Init(true);
-#else
-                uniRenderEngine_->Init();
-#endif
             }).wait();
     }
     auto onPrepareCompleteFunc = [this](auto& surface, const auto& param, void* data) {
@@ -366,11 +362,20 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         return;
     }
 #ifdef RS_ENABLE_EGLIMAGE
+#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_VK
     std::unordered_map<int32_t, std::shared_ptr<NativeVkImageRes>> imageCacheSeqs;
 #else // RS_ENABLE_VK
     std::unordered_map<int32_t, std::unique_ptr<ImageCacheSeq>> imageCacheSeqs;
 #endif // RS_ENABLE_VK
+#else // USE_ROSEN_DRAWING
+#ifdef RS_ENABLE_VK
+    std::unordered_map<int32_t, std::shared_ptr<NativeVkImageRes>> imageCacheSeqsVK;
+#endif // RS_ENABLE_VK
+#ifdef RS_ENABLE_GL
+    std::unordered_map<int32_t, std::unique_ptr<ImageCacheSeq>> imageCacheSeqs;
+#endif // RS_ENABLE_VK
+#endif // USE_ROSEN_DRAWING
 #endif // RS_ENABLE_EGLIMAGE
     bool softDrawFlag = false;
     for (const auto& layer : layers) {
@@ -434,19 +439,27 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 RS_LOGE("RSHardwareThread::Redraw CreateEglImageFromBuffer GrContext is null!");
                 continue;
             }
+            uint32_t bufferId = 0;
 #if defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
-            auto eglImageCache = uniRenderEngine_->GetEglImageManager()->CreateImageCacheFromBuffer(params.buffer,
-                params.acquireFence);
-            if (eglImageCache == nullptr) {
-                continue;
+            uint32_t eglTextureId = 0;
+#ifdef USE_ROSEN_DRAWING
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+                auto eglImageCache = uniRenderEngine_->GetEglImageManager()->CreateImageCacheFromBuffer(params.buffer,
+                    params.acquireFence);
+                if (eglImageCache == nullptr) {
+                    continue;
+                }
+                eglTextureId = eglImageCache->TextureId();
+                if (eglTextureId == 0) {
+                    RS_LOGE("RSHardwareThread::Redraw CreateImageCacheFromBuffer return invalid texture ID");
+                    continue;
+                }
+                bufferId = params.buffer->GetSeqNum();
+                imageCacheSeqs[bufferId] = std::move(eglImageCache);
+#ifdef USE_ROSEN_DRAWING
             }
-            auto eglTextureId = eglImageCache->TextureId();
-            if (eglTextureId == 0) {
-                RS_LOGE("RSHardwareThread::Redraw CreateImageCacheFromBuffer return invalid texture ID");
-                continue;
-            }
-            auto bufferId = params.buffer->GetSeqNum();
-            imageCacheSeqs[bufferId] = std::move(eglImageCache);
+#endif // USE_ROSEN_DRAWING
 #endif
 #ifndef USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
@@ -542,47 +555,53 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #endif // USE_VIDEO_PROCESSING_ENGINE
 #endif
 #else // USE_ROSEN_DRAWING
+            std::shared_ptr<Drawing::Image> image = nullptr;
 #if defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
-            Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
-                Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
-            Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+                Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
+                    Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
+                Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
 
-            Drawing::TextureInfo externalTextureInfo;
-            externalTextureInfo.SetWidth(params.buffer->GetSurfaceBufferWidth());
-            externalTextureInfo.SetHeight(params.buffer->GetSurfaceBufferHeight());
-            externalTextureInfo.SetIsMipMapped(false);
-            externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
-            externalTextureInfo.SetID(eglTextureId);
-            externalTextureInfo.SetFormat(GL_RGBA8);
+                Drawing::TextureInfo externalTextureInfo;
+                externalTextureInfo.SetWidth(params.buffer->GetSurfaceBufferWidth());
+                externalTextureInfo.SetHeight(params.buffer->GetSurfaceBufferHeight());
+                externalTextureInfo.SetIsMipMapped(false);
+                externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
+                externalTextureInfo.SetID(eglTextureId);
+                externalTextureInfo.SetFormat(GL_RGBA8);
 
-            auto image = std::make_shared<Drawing::Image>();
-            if (!image->BuildFromTexture(*canvas->GetGPUContext(), externalTextureInfo,
-                Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr)) {
-                RS_LOGE("RSHardwareThread::Redraw: image BuildFromTexture failed");
-                return;
+                image = std::make_shared<Drawing::Image>();
+                if (!image->BuildFromTexture(*canvas->GetGPUContext(), externalTextureInfo,
+                    Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr)) {
+                    RS_LOGE("RSHardwareThread::Redraw: image BuildFromTexture failed");
+                    return;
+                }
             }
-#elif defined RS_ENABLE_VK
-            auto imageCache = uniRenderEngine_->GetVkImageManager()->CreateImageCacheFromBuffer(
-                params.buffer, params.acquireFence);
-            if (!imageCache) {
-                continue;
-            }
-            auto bufferId = params.buffer->GetSeqNum();
-            imageCacheSeqs[bufferId] = imageCache;
-            auto& backendTexture = imageCache->GetBackendTexture();
+#endif
+#if defined RS_ENABLE_VK
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+                OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+                auto imageCache = uniRenderEngine_->GetVkImageManager()->CreateImageCacheFromBuffer(
+                    params.buffer, params.acquireFence);
+                if (!imageCache) {
+                    continue;
+                }
+                bufferId = params.buffer->GetSeqNum();
+                imageCacheSeqsVK[bufferId] = imageCache;
+                auto& backendTexture = imageCache->GetBackendTexture();
 
-            Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
-                Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
-            Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
+                Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
+                    Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
+                Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
 
-            auto image = std::make_shared<Drawing::Image>();
-            if (!image->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
-                Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr,
-                NativeBufferUtils::DeleteVkImage,
-                imageCache->RefCleanupHelper())) {
-                RS_LOGE("RSHardwareThread::Redraw: image BuildFromTexture failed");
-                return;
-            }
+                image = std::make_shared<Drawing::Image>();
+                if (!image->BuildFromTexture(*canvas->GetGPUContext(), backendTexture,
+                    Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr,
+                    NativeBufferUtils::DeleteVkImage,
+                    imageCache->RefCleanupHelper())) {
+                    RS_LOGE("RSHardwareThread::Redraw: image BuildFromTexture failed");
+                    return;
+                }
 #endif
             canvas->AttachBrush(params.paint);
             RS_TRACE_NAME_FMT("DrawImage(GPU) seqNum: %d", bufferId);
@@ -609,8 +628,17 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 
     renderFrame->Flush();
 #ifdef RS_ENABLE_EGLIMAGE
+#ifndef USE_ROSEN_DRAWING
+    imageCacheSeqs.clear();
+#else
+#ifdef RS_ENABLE_VK
+    imageCacheSeqsVK.clear();
+#endif
+#ifdef RS_ENABLE_GL
     imageCacheSeqs.clear();
 #endif
+#endif // USE_ROSEN_DRAWING
+#endif // RS_ENABLE_EGLIMAGE
     RS_LOGD("RsDebug RSHardwareThread::Redraw flush frame buffer end");
 }
 

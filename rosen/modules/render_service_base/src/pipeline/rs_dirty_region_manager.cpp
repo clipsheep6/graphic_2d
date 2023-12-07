@@ -136,20 +136,34 @@ RectI RSDirtyRegionManager::GetDirtyRegionFlipWithinSurface() const
     } else {
         glRect = dirtyRegion_;
     }
+
+#ifndef USE_ROSEN_DRAWING
 #ifndef RS_ENABLE_VK
     // left-top to left-bottom corner(in current surface)
     glRect.top_ = surfaceRect_.height_ - glRect.top_ - glRect.height_;
 #endif
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        glRect.top_ = surfaceRect_.height_ - glRect.top_ - glRect.height_;
+    }
+#endif // USE_ROSEN_DRAWING
     return glRect;
 }
 
 RectI RSDirtyRegionManager::GetRectFlipWithinSurface(const RectI& rect) const
 {
     RectI glRect = rect;
+#ifndef USE_ROSEN_DRAWING
 #ifndef RS_ENABLE_VK
     // left-top to left-bottom corner(in current surface)
     glRect.top_ = surfaceRect_.height_ - rect.top_ - rect.height_;
 #endif
+#else // USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        glRect.top_ = surfaceRect_.height_ - rect.top_ - rect.height_;
+    }
+#endif // USE_ROSEN_DRAWING
+
     return glRect;
 }
 

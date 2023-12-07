@@ -209,12 +209,23 @@ RSUniRenderVisitor::RSUniRenderVisitor()
 RSUniRenderVisitor::RSUniRenderVisitor(std::shared_ptr<RSPaintFilterCanvas> canvas, uint32_t surfaceIndex)
     : RSUniRenderVisitor()
 {
+#ifndef USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_PARALLEL_RENDER) && (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK))
     parallelRenderVisitorIndex_ = surfaceIndex;
 #if defined(RS_ENABLE_GL)
     canvas_ = canvas;
 #endif
 #endif
+#else // USE_ROSEN_DRAWING
+#if defined(RS_ENABLE_PARALLEL_RENDER) && (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK))
+    parallelRenderVisitorIndex_ = surfaceIndex;
+#if defined(RS_ENABLE_GL)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        canvas_ = canvas;
+    }
+#endif
+#endif
+#endif // USE_ROSEN_DRAWING
 }
 
 RSUniRenderVisitor::RSUniRenderVisitor(const RSUniRenderVisitor& visitor) : RSUniRenderVisitor()
@@ -998,9 +1009,17 @@ void RSUniRenderVisitor::CollectAppNodeForHwc(std::shared_ptr<RSSurfaceRenderNod
     }
 
     if (isParallel_ && !isUIFirst_) {
+#ifndef USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
         RSParallelRenderManager::Instance()->AddAppWindowNode(parallelRenderVisitorIndex_, surfaceNode);
 #endif
+#else // USE_ROSEN_DRAWING
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+            RSParallelRenderManager::Instance()->AddAppWindowNode(parallelRenderVisitorIndex_, surfaceNode);
+        }
+#endif
+#endif // USE_ROSEN_DRAWING
     } else {
         if (surfaceNode->IsHardwareEnabledTopSurface()) {
             hardwareEnabledTopNodes_.emplace_back(surfaceNode);
@@ -2064,6 +2083,13 @@ void RSUniRenderVisitor::ProcessChildInner(RSRenderNode& node, const RSRenderNod
 void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
+
     RS_TRACE_NAME("ProcessParallelDisplayRenderNode[" + std::to_string(node.GetId()));
     RS_LOGD("RSUniRenderVisitor::ProcessParallelDisplayRenderNode node: %{public}" PRIu64 ", child size:%{public}u",
         node.GetId(), node.GetChildrenCount());
@@ -2207,18 +2233,38 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         node.SetCacheImgForCapture(nullptr);
     }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
-    if (node.IsParallelDisplayNode()) {
-        ProcessParallelDisplayRenderNode(node);
-        return;
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#endif // USE_ROSEN_DRAWING
+        if (node.IsParallelDisplayNode()) {
+            ProcessParallelDisplayRenderNode(node);
+            return;
+        }
+#ifdef USE_ROSEN_DRAWING
     }
+#endif // USE_ROSEN_DRAWING
+
 #endif
     RS_TRACE_NAME("ProcessDisplayRenderNode[" + std::to_string(node.GetScreenId()) + "]" +
         node.GetDirtyManager()->GetDirtyRegion().ToString().c_str());
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode node: %{public}" PRIu64 ", child size:%{public}u",
         node.GetId(), node.GetChildrenCount());
+
+
+#ifndef USE_ROSEN_DRAWING
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
     bool isNeedCalcCost = node.GetSurfaceChangedRects().size() > 0;
 #endif
+#else // USE_ROSEN_DRAWING
+#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
+    bool isNeedCalcCost = false;
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        isNeedCalcCost = node.GetSurfaceChangedRects().size() > 0;
+    }
+#endif
+#endif // USE_ROSEN_DRAWING
+
     sptr<RSScreenManager> screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
@@ -2347,7 +2393,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
 #else
 #if defined RS_ENABLE_GL
-            glFinish();
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+                glFinish();
+            }
 #endif
             std::shared_ptr<Drawing::Image> cacheImageProcessed = GetCacheImageFromMirrorNode(mirrorNode);
             if (cacheImageProcessed && !displayHasSkipSurface_[mirrorNode->GetScreenId()] &&
@@ -2457,33 +2505,39 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
 
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_OLD_VK)
-        if (isParallel_ &&!isPartialRenderEnabled_) {
-            auto parallelRenderManager = RSParallelRenderManager::Instance();
-            vulkan::VulkanWindow::InitializeVulkan(
-                parallelRenderManager->GetParallelThreadNumber());
-            RS_OPTIONAL_TRACE_BEGIN("RSUniRender::VK::WaitFence");
-            vulkan::VulkanWindow::WaitForSharedFence();
-            vulkan::VulkanWindow::ResetSharedFence();
-            RS_OPTIONAL_TRACE_END();
-            parallelRenderManager->CopyVisitorAndPackTask(*this, node);
-            parallelRenderManager->InitDisplayNodeAndRequestFrame(renderEngine_, screenInfo_);
-            parallelRenderManager->LoadBalanceAndNotify(TaskType::PROCESS_TASK);
-            parallelRenderManager->WaitProcessEnd();
-            parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
-            vulkan::VulkanWindow::PresentAll();
+#ifdef USE_ROSEN_DRAWING
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+#endif // USE_ROSEN_DRAWING
+            if (isParallel_ &&!isPartialRenderEnabled_) {
+                auto parallelRenderManager = RSParallelRenderManager::Instance();
+                vulkan::VulkanWindow::InitializeVulkan(
+                    parallelRenderManager->GetParallelThreadNumber());
+                RS_OPTIONAL_TRACE_BEGIN("RSUniRender::VK::WaitFence");
+                vulkan::VulkanWindow::WaitForSharedFence();
+                vulkan::VulkanWindow::ResetSharedFence();
+                RS_OPTIONAL_TRACE_END();
+                parallelRenderManager->CopyVisitorAndPackTask(*this, node);
+                parallelRenderManager->InitDisplayNodeAndRequestFrame(renderEngine_, screenInfo_);
+                parallelRenderManager->LoadBalanceAndNotify(TaskType::PROCESS_TASK);
+                parallelRenderManager->WaitProcessEnd();
+                parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
+                vulkan::VulkanWindow::PresentAll();
 
-            RS_OPTIONAL_TRACE_BEGIN("RSUniRender:WaitUtilUniRenderFinished");
-            RSMainThread::Instance()->WaitUtilUniRenderFinished();
-            RS_OPTIONAL_TRACE_END();
+                RS_OPTIONAL_TRACE_BEGIN("RSUniRender:WaitUtilUniRenderFinished");
+                RSMainThread::Instance()->WaitUtilUniRenderFinished();
+                RS_OPTIONAL_TRACE_END();
 
-            parallelRenderManager->ProcessParallelDisplaySurface(*this);
-            processor_->PostProcess();
+                parallelRenderManager->ProcessParallelDisplaySurface(*this);
+                processor_->PostProcess();
 
-            parallelRenderManager->ReleaseBuffer();
-
-            isParallel_ = false;
-            return;
+                parallelRenderManager->ReleaseBuffer();
+                isParallel_ = false;
+                return;
+            }
+#ifdef USE_ROSEN_DRAWING
         }
+#endif // USE_ROSEN_DRAWING
 #endif
 
         auto rsSurface = node.GetRSSurface();
@@ -2540,8 +2594,11 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #ifndef USE_ROSEN_DRAWING
         int saveCountBeforeClip = canvas_->save();
 #else
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
         int saveCountBeforeClip = canvas_->GetSaveCout();
         canvas_->Save();
+    }
 #endif
 #endif
 #ifdef RS_ENABLE_EGLQUERYSURFACE
@@ -2572,11 +2629,27 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
             if (!isDirtyRegionAlignedEnable_) {
                 for (auto& r : rects) {
+#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_VK
                     auto topAfterFlip = r.top_;
 #else
                     auto topAfterFlip = screenInfo_.GetRotatedHeight() - r.GetBottom();
 #endif
+#else // USE_ROSEN_DRAWING
+                    int32_t topAfterFlip = 0;
+#ifdef RS_ENABLE_VK
+                    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+                        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+                        topAfterFlip = r.top_;
+                    } else {
+                        topAfterFlip = screenInfo_.GetRotatedHeight() - r.GetBottom();
+                    }
+#else
+                    topAfterFlip = screenInfo_.GetRotatedHeight() - r.GetBottom();
+#endif
+#endif // USE_ROSEN_DRAWING
+
+
 #ifndef USE_ROSEN_DRAWING
                     region.op(SkIRect::MakeXYWH(r.left_, topAfterFlip, r.width_, r.height_), SkRegion::kUnion_Op);
 #else
@@ -2602,9 +2675,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             } else {
                 RS_TRACE_NAME("RSUniRenderVisitor: clipPath");
                 clipPath = true;
+#ifdef RS_ENABLE_VK
+                canvas_->ClipRegion(region);
+#else
                 SkPath dirtyPath;
                 region.getBoundaryPath(&dirtyPath);
                 canvas_->clipPath(dirtyPath, true);
+#endif
             }
             canvas_->clear(SK_ColorTRANSPARENT);
 #else
@@ -2616,9 +2693,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             } else {
                 RS_TRACE_NAME("RSUniRenderVisitor: clipPath");
                 clipPath = true;
-                Drawing::Path dirtyPath;
-                region.GetBoundaryPath(&dirtyPath);
-                canvas_->ClipPath(dirtyPath, Drawing::ClipOp::INTERSECT, true);
+                if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN) {
+                    canvas_->ClipRegion(region);
+                } else {
+                    Drawing::Path dirtyPath;
+                    region.GetBoundaryPath(&dirtyPath);
+                    canvas_->ClipPath(dirtyPath, Drawing::ClipOp::INTERSECT, true);
+                }
             }
             canvas_->Clear(Drawing::Color::COLOR_TRANSPARENT);
 #endif
@@ -2626,10 +2707,14 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
 
 #ifdef RS_ENABLE_VK
+        else
 #ifndef USE_ROSEN_DRAWING
         canvas_->clear(SK_ColorTRANSPARENT);
 #else
-        canvas_->Clear(Drawing::Color::COLOR_TRANSPARENT);
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            canvas_->Clear(Drawing::Color::COLOR_TRANSPARENT);
+        }
 #endif
 #endif
         RSPropertiesPainter::SetBgAntiAlias(true);
@@ -2696,26 +2781,32 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
         }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-        if ((isParallel_ && !isUIFirst_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) && isCalcCostEnable_) {
-            auto parallelRenderManager = RSParallelRenderManager::Instance();
-            parallelRenderManager->CopyCalcCostVisitorAndPackTask(*this, node, isNeedCalcCost,
-                doAnimate_, isOpDropped_);
-            if (parallelRenderManager->IsNeedCalcCost()) {
-                parallelRenderManager->LoadBalanceAndNotify(TaskType::CALC_COST_TASK);
-                parallelRenderManager->WaitCalcCostEnd();
-                parallelRenderManager->UpdateNodeCost(node);
+#ifdef USE_ROSEN_DRAWING
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+            if ((isParallel_ && !isUIFirst_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) && isCalcCostEnable_) {
+                auto parallelRenderManager = RSParallelRenderManager::Instance();
+                parallelRenderManager->CopyCalcCostVisitorAndPackTask(*this, node, isNeedCalcCost,
+                    doAnimate_, isOpDropped_);
+                if (parallelRenderManager->IsNeedCalcCost()) {
+                    parallelRenderManager->LoadBalanceAndNotify(TaskType::CALC_COST_TASK);
+                    parallelRenderManager->WaitCalcCostEnd();
+                    parallelRenderManager->UpdateNodeCost(node);
+                }
             }
+            if (isParallel_ && !isUIFirst_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) {
+                ClearTransparentBeforeSaveLayer();
+                auto parallelRenderManager = RSParallelRenderManager::Instance();
+                parallelRenderManager->SetFrameSize(screenInfo_.width, screenInfo_.height);
+                parallelRenderManager->CopyVisitorAndPackTask(*this, node);
+                parallelRenderManager->LoadBalanceAndNotify(TaskType::PROCESS_TASK);
+                parallelRenderManager->MergeRenderResult(*canvas_);
+                parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
+                parallelRenderManager->ProcessFilterSurfaceRenderNode();
+            }
+#ifdef USE_ROSEN_DRAWING
         }
-        if (isParallel_ && !isUIFirst_ && ((rects.size() > 0) || !isPartialRenderEnabled_)) {
-            ClearTransparentBeforeSaveLayer();
-            auto parallelRenderManager = RSParallelRenderManager::Instance();
-            parallelRenderManager->SetFrameSize(screenInfo_.width, screenInfo_.height);
-            parallelRenderManager->CopyVisitorAndPackTask(*this, node);
-            parallelRenderManager->LoadBalanceAndNotify(TaskType::PROCESS_TASK);
-            parallelRenderManager->MergeRenderResult(*canvas_);
-            parallelRenderManager->CommitSurfaceNum(node.GetChildrenCount());
-            parallelRenderManager->ProcessFilterSurfaceRenderNode();
-        }
+#endif // USE_ROSEN_DRAWING
 #endif
         if (saveLayerCnt > 0) {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
@@ -2749,6 +2840,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         // the following code makes DirtyRegion visible, enable this method by turning on the dirtyregiondebug property
         if (isPartialRenderEnabled_) {
             if (isDirtyRegionDfxEnabled_) {
+#ifdef RS_ENABLE_VK
+                if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+                    OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+                    std::vector<RectI> emptyRects;
+                    renderFrame_->SetDamageRegion(emptyRects);
+                }
+#endif
                 DrawAllSurfaceDirtyRegionForDFX(node, dirtyRegionTest);
             }
             if (isTargetDirtyRegionDfxEnabled_) {
@@ -2793,7 +2891,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #ifndef USE_ROSEN_DRAWING
         canvas_->restoreToCount(saveCountBeforeClip);
 #else
-        canvas_->RestoreToCount(saveCountBeforeClip);
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            canvas_->RestoreToCount(saveCountBeforeClip);
+        }
 #endif
 #endif
         RS_TRACE_BEGIN("RSUniRender:FlushFrame");
@@ -2928,14 +3029,21 @@ void RSUniRenderVisitor::UpdateHardwareEnabledInfoBeforeCreateLayer()
     }
     if (isParallel_ && !isUIFirst_) {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
-        std::vector<std::shared_ptr<RSSurfaceRenderNode>>().swap(appWindowNodesInZOrder_);
-        auto subThreadNum = RSParallelRenderManager::Instance()->GetParallelThreadNumber();
-        auto appWindowNodesMap = RSParallelRenderManager::Instance()->GetAppWindowNodes();
-        std::vector<std::shared_ptr<RSSurfaceRenderNode>> appWindowNodes;
-        for (uint32_t i = 0; i < subThreadNum; i++) {
-            appWindowNodes = appWindowNodesMap[i];
-            appWindowNodesInZOrder_.insert(appWindowNodesInZOrder_.end(), appWindowNodes.begin(), appWindowNodes.end());
+#ifdef USE_ROSEN_DRAWING
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+            std::vector<std::shared_ptr<RSSurfaceRenderNode>>().swap(appWindowNodesInZOrder_);
+            auto subThreadNum = RSParallelRenderManager::Instance()->GetParallelThreadNumber();
+            auto appWindowNodesMap = RSParallelRenderManager::Instance()->GetAppWindowNodes();
+            std::vector<std::shared_ptr<RSSurfaceRenderNode>> appWindowNodes;
+            for (uint32_t i = 0; i < subThreadNum; i++) {
+                appWindowNodes = appWindowNodesMap[i];
+                appWindowNodesInZOrder_.insert(appWindowNodesInZOrder_.end(), appWindowNodes.begin(),
+                    appWindowNodes.end());
+            }
+#ifdef USE_ROSEN_DRAWING
         }
+#endif // USE_ROSEN_DRAWING
 #endif
     }
     globalZOrder_ = 0.0f;
@@ -3504,12 +3612,30 @@ std::vector<RectI> RSUniRenderVisitor::GetDirtyRects(const Occlusion::Region &re
     std::vector<RectI> retRects;
     for (const Occlusion::Rect& rect : rects) {
         // origin transformation
+
+#ifndef USE_ROSEN_DRAWING
 #ifdef RS_ENABLE_VK
         retRects.emplace_back(RectI(rect.left_, rect.top_,
+            rect.right_ - rect.left_, rect.bottom_ - rect.top_));
 #else
         retRects.emplace_back(RectI(rect.left_, screenInfo_.GetRotatedHeight() - rect.bottom_,
-#endif
             rect.right_ - rect.left_, rect.bottom_ - rect.top_));
+#endif
+#else // USE_ROSEN_DRAWING
+#ifdef RS_ENABLE_VK
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            retRects.emplace_back(RectI(rect.left_, rect.top_,
+                rect.right_ - rect.left_, rect.bottom_ - rect.top_));
+        } else {
+            retRects.emplace_back(RectI(rect.left_, screenInfo_.GetRotatedHeight() - rect.bottom_,
+                rect.right_ - rect.left_, rect.bottom_ - rect.top_));
+        }
+#else
+        retRects.emplace_back(RectI(rect.left_, screenInfo_.GetRotatedHeight() - rect.bottom_,
+            rect.right_ - rect.left_, rect.bottom_ - rect.top_));
+#endif
+#endif // USE_ROSEN_DRAWING
     }
     RS_LOGD("GetDirtyRects size %{public}d %{public}s", region.GetSize(), region.GetRegionInfo().c_str());
     return retRects;
@@ -3891,7 +4017,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 #ifndef USE_ROSEN_DRAWING
     node.SetGrContext(renderEngine_->GetSkContext().get());
 #else
-    node.SetDrawingGPUContext(renderEngine_->GetSkContext().get());
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        node.SetDrawingGPUContext(renderEngine_->GetSkContext().get());
+    }
 #endif
 #endif
     bool keepFilterCache = false;
@@ -4610,13 +4739,19 @@ bool RSUniRenderVisitor::AdaptiveSubRenderThreadMode(bool doParallel)
 void RSUniRenderVisitor::ParallelRenderEnableHardwareComposer(RSSurfaceRenderNode& node)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
-    if (isParallel_ && !isUIFirst_) {
-        const auto& property = node.GetRenderProperties();
-        auto dstRect = node.GetDstRect();
-        RectF clipRect = {dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetWidth(), dstRect.GetHeight()};
-        RSParallelRenderManager::Instance()->AddSelfDrawingSurface(parallelRenderVisitorIndex_,
-            property.GetCornerRadius().IsZero(), clipRect, property.GetCornerRadius());
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+        if (isParallel_ && !isUIFirst_) {
+            const auto& property = node.GetRenderProperties();
+            auto dstRect = node.GetDstRect();
+            RectF clipRect = {dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetWidth(), dstRect.GetHeight()};
+            RSParallelRenderManager::Instance()->AddSelfDrawingSurface(parallelRenderVisitorIndex_,
+                property.GetCornerRadius().IsZero(), clipRect, property.GetCornerRadius());
+        }
+#ifdef USE_ROSEN_DRAWING
     }
+#endif // USE_ROSEN_DRAWING
 #endif
 }
 
@@ -4739,16 +4874,24 @@ void RSUniRenderVisitor::SetAppWindowNum(uint32_t num)
 bool RSUniRenderVisitor::ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode)
 {
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined (RS_ENABLE_GL)
-    auto parallelRenderManager = RSParallelRenderManager::Instance();
-    parallelRenderManager->SetParallelMode(true);
-    if (parallelRenderManager->GetParallelMode()) {
-        parallelRenderManager->PackParallelCompositionTask(shared_from_this(), rootNode);
-        parallelRenderManager->LoadBalanceAndNotify(TaskType::COMPOSITION_TASK);
-        parallelRenderManager->WaitCompositionEnd();
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+#endif // USE_ROSEN_DRAWING
+        auto parallelRenderManager = RSParallelRenderManager::Instance();
+        parallelRenderManager->SetParallelMode(true);
+        if (parallelRenderManager->GetParallelMode()) {
+            parallelRenderManager->PackParallelCompositionTask(shared_from_this(), rootNode);
+            parallelRenderManager->LoadBalanceAndNotify(TaskType::COMPOSITION_TASK);
+            parallelRenderManager->WaitCompositionEnd();
+        } else {
+            return false;
+        }
+        return true;
+#ifdef USE_ROSEN_DRAWING
     } else {
         return false;
     }
-    return true;
+#endif // USE_ROSEN_DRAWING
 #else
     return false;
 #endif
@@ -4925,8 +5068,10 @@ void RSUniRenderVisitor::tryCapture(float width, float height)
     recordingCanvas_ = std::make_unique<Drawing::RecordingCanvas>(width, height);
     RS_TRACE_NAME("RSUniRender:Recording begin");
 #ifdef RS_ENABLE_GL
-    auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
-    recordingCanvas_->SetGrRecordingContext(renderContext->GetSharedDrGPUContext());
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
+        recordingCanvas_->SetGrRecordingContext(renderContext->GetSharedDrGPUContext());
+    }
 #endif
     canvas_->addCanvas(recordingCanvas_.get());
     RSRecordingThread::Instance(renderEngine_->GetRenderContext().get()).CheckAndRecording();

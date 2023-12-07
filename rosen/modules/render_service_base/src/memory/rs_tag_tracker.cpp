@@ -133,8 +133,10 @@ RSTagTracker::RSTagTracker(Drawing::GPUContext* gpuContext, NodeId nodeId, RSTag
         return;
     }
 #ifdef RS_ENABLE_GL
-    Drawing::GPUResourceTag tag(ExtractPid(nodeId), 0, nodeId, tagType);
-    gpuContext_->SetCurrentGpuResourceTag(tag);
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        Drawing::GPUResourceTag tag(ExtractPid(nodeId), 0, nodeId, tagType);
+        gpuContext_->SetCurrentGpuResourceTag(tag);
+    }
 #endif
 }
 #endif

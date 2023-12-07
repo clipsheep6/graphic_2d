@@ -125,6 +125,11 @@ void RSSubThread::CreateShareEglContext()
         return;
     }
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     eglShareContext_ = renderContext_->CreateShareContext();
     if (eglShareContext_ == EGL_NO_CONTEXT) {
         RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
@@ -140,6 +145,11 @@ void RSSubThread::CreateShareEglContext()
 void RSSubThread::DestroyShareEglContext()
 {
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (renderContext_ != nullptr) {
         eglDestroyContext(renderContext_->GetEGLDisplay(), eglShareContext_);
         eglShareContext_ = EGL_NO_CONTEXT;
@@ -221,7 +231,7 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         }
 #endif
         surfaceNodePtr->UpdateBackendTexture();
-        RSMainThread::Instance()->PostTask([]() { 
+        RSMainThread::Instance()->PostTask([]() {
             RSMainThread::Instance()->SetIsCachedSurfaceUpdated(true);
         });
         surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);
@@ -276,29 +286,36 @@ std::shared_ptr<Drawing::GPUContext> RSSubThread::CreateShareGrContext()
 {
     RS_TRACE_NAME("CreateShareGrContext");
 #ifdef RS_ENABLE_GL
-    CreateShareEglContext();
-    auto gpuContext = std::make_shared<Drawing::GPUContext>();
-    Drawing::GPUContextOptions options;
-    auto handler = std::make_shared<MemoryHandler>();
-    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    auto size = glesVersion ? strlen(glesVersion) : 0;
-    /* /data/service/el0/render_service is shader cache dir*/
-    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        CreateShareEglContext();
+        auto gpuContext = std::make_shared<Drawing::GPUContext>();
+        Drawing::GPUContextOptions options;
+        auto handler = std::make_shared<MemoryHandler>();
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : 0;
+        /* /data/service/el0/render_service is shader cache dir*/
+        handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
 
-    if (!gpuContext->BuildFromGL(options)) {
-        RS_LOGE("nullptr gpuContext is null");
-        return nullptr;
+        if (!gpuContext->BuildFromGL(options)) {
+            RS_LOGE("nullptr gpuContext is null");
+            return nullptr;
+        }
+        return gpuContext;
     }
 #endif
 
 #ifdef RS_ENABLE_VK
-    auto gpuContext = std::make_shared<Drawing::GPUContext>();
-    if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext())) {
-        RS_LOGE("nullptr gpuContext is null");
-        return nullptr;
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        auto gpuContext = std::make_shared<Drawing::GPUContext>();
+        if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext())) {
+            RS_LOGE("nullptr gpuContext is null");
+            return nullptr;
+        }
+        return gpuContext;
     }
 #endif
-    return gpuContext;
+    return nullptr;
 }
 #endif
 

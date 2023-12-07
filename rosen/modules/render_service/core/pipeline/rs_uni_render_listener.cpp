@@ -36,6 +36,14 @@ void RSUniRenderListener::OnBufferAvailable()
     RS_LOGD("RSUniRenderListener::OnBufferAvailable node id:%{public}" PRIu64, node->GetId());
     node->IncreaseAvailableBuffer();
 #if (defined RS_ENABLE_PARALLEL_RENDER) && (defined RS_ENABLE_VK)
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        RSMainThread::Instance()->NotifyUniRenderFinish();
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
+
     if (node->IsParallelDisplayNode()) {
         RSParallelRenderManager::Instance()->NotifyUniRenderFinish();
         return;

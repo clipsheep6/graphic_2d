@@ -108,6 +108,9 @@ GrContext* DrawingContext::GetDrawingContext() const
 bool DrawingContext::SetUpDrawingContext()
 {
 #if defined(RS_ENABLE_GL)
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return false;
+    }
     if (gpuContext_ != nullptr) {
         LOGD("gpuContext_ has already initialized");
         return true;
@@ -212,6 +215,13 @@ sk_sp<SkSurface> DrawingContext::AcquireSurfaceInRaster(const std::shared_ptr<RS
 sk_sp<SkSurface> DrawingContext::AcquireSurfaceInVulkan(const std::shared_ptr<RSRenderSurfaceFrame>& frame)
 {
 #ifdef RS_ENABLE_VK
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return nullptr;
+    }
+#endif // USE_ROSEN_DRAWING
+
     VulkanState* vulkanState = frame->vulkanState;
     if (vulkanState == nullptr) {
         LOGE("Failed to acquire surface in vulkan, vulkanState is nullptr");

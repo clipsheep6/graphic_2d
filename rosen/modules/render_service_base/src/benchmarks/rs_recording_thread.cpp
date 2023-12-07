@@ -121,6 +121,11 @@ void RSRecordingThread::CreateShareEglContext()
         return;
     }
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     eglShareContext_ = renderContext_->CreateShareContext();
     if (eglShareContext_ == EGL_NO_CONTEXT) {
         RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
@@ -136,6 +141,11 @@ void RSRecordingThread::CreateShareEglContext()
 void RSRecordingThread::DestroyShareEglContext()
 {
 #ifdef RS_ENABLE_GL
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (renderContext_ != nullptr) {
         eglDestroyContext(renderContext_->GetEGLDisplay(), eglShareContext_);
         eglShareContext_ = EGL_NO_CONTEXT;
@@ -147,7 +157,7 @@ bool RSRecordingThread::IsIdle()
 {
     return handler_ && handler_->IsIdle();
 }
- 
+
 void RSRecordingThread::PostTask(const std::function<void()> &task)
 {
     if (handler_) {

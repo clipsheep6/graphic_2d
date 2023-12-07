@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <parameter.h>
+#include <parameters.h>
 #include "skia_image.h"
 
 #ifdef ROSEN_OHOS
@@ -35,6 +36,7 @@
 #include "skia_pixmap.h"
 #include "skia_surface.h"
 #include "skia_texture_info.h"
+#include "platform/common/rs_system_properties.h"
 
 #ifdef ACE_ENABLE_GPU
 #include "skia_gpu_context.h"
@@ -43,6 +45,19 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+#ifdef USE_ROSEN_DRAWING
+static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
+static const OHOS::Rosen::GpuApiType gSystemGpuApiType =
+    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
+        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
+        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
+            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
+
+static inline OHOS::Rosen::GpuApiType GetGpuApiType()
+{
+    return gSystemGpuApiType;
+}
+#endif
 SkiaImage::SkiaImage() noexcept : skiaImage_(nullptr) {}
 
 SkiaImage::SkiaImage(sk_sp<SkImage> skImg) noexcept : skiaImage_(skImg) {}
@@ -170,6 +185,12 @@ bool SkiaImage::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info
     BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
     void (*deleteFunc)(void*), void* cleanupHelper)
 {
+#ifdef USE_ROSEN_DRAWING
+    if (GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        return false;
+    }
+#endif // USE_ROSEN_DRAWING
     grContext_ = gpuContext.GetImpl<SkiaGPUContext>()->GetGrContext();
     if (!grContext_) {
         LOGE("SkiaImage BuildFromTexture grContext_ is null");

@@ -48,6 +48,11 @@ void RSBackgroundThread::PostTask(const std::function<void()>& task)
 #ifdef RS_ENABLE_GL
 void RSBackgroundThread::CreateShareEglContext()
 {
+#ifdef USE_ROSEN_DRAWING
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::OPENGL) {
+        return;
+    }
+#endif // USE_ROSEN_DRAWING
     if (renderContext_ == nullptr) {
         RS_LOGE("renderContext_ is nullptr.");
         return;
@@ -142,28 +147,41 @@ std::shared_ptr<Drawing::GPUContext> RSBackgroundThread::CreateShareGPUContext()
 {
     RS_TRACE_NAME("CreateShareGrContext");
 #ifdef RS_ENABLE_GL
-    auto gpuContext = std::make_shared<Drawing::GPUContext>();
-    CreateShareEglContext();
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+        auto gpuContext = std::make_shared<Drawing::GPUContext>();
+        CreateShareEglContext();
 
-    Drawing::GPUContextOptions options = {};
-    auto handler = std::make_shared<MemoryHandler>();
-    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    auto size = glesVersion ? strlen(glesVersion) : 0;
-    /* /data/service/el0/render_service is shader cache dir*/
-    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
-    if (!gpuContext->BuildFromGL(options)) {
-        RS_LOGE("BuildFromGL fail");
-        return nullptr;
+        Drawing::GPUContextOptions options = {};
+        auto handler = std::make_shared<MemoryHandler>();
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : 0;
+        /* /data/service/el0/render_service is shader cache dir*/
+        handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+        if (!gpuContext->BuildFromGL(options)) {
+            RS_LOGE("BuildFromGL fail");
+            return nullptr;
+        }
+        if (gpuContext == nullptr) {
+            RS_LOGE("BuildFromVK fail")
+            return nullptr;
+        }
+        return gpuContext;
     }
 #endif
+
 #ifdef RS_ENABLE_VK
-    auto gpuContext = RsVulkanContext::GetSingleton().CreateDrawingContext();
-#endif
-    if (gpuContext == nullptr) {
-        RS_LOGE("BuildFromVK fail")
-        return nullptr;
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        auto gpuContext = RsVulkanContext::GetSingleton().CreateDrawingContext();
+        if (gpuContext == nullptr) {
+            RS_LOGE("BuildFromVK fail")
+            return nullptr;
+        }
+        return gpuContext;
     }
-    return gpuContext;
+#endif
+
+    return nullptr;
 }
 
 void RSBackgroundThread::CleanGrResource()

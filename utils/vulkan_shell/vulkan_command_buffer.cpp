@@ -21,8 +21,8 @@
 namespace OHOS::Rosen::vulkan {
 
 RSVulkanCommandBuffer::RSVulkanCommandBuffer(
-    const RSVulkanProcTable& p_vk, const RSVulkanHandle<VkDevice>& device, const RSVulkanHandle<VkCommandPool>& pool)
-    : vk(p_vk), device_(device), commandPool_(pool), valid_(false)
+    const RSVulkanProcTable& procVk, const RSVulkanHandle<VkDevice>& device, const RSVulkanHandle<VkCommandPool>& pool)
+    : vk(procVk), device_(device), commandPool_(pool), valid_(false)
 {
     const VkCommandBufferAllocateInfo allocateInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -39,9 +39,9 @@ RSVulkanCommandBuffer::RSVulkanCommandBuffer(
         return;
     }
 
-    auto buffer_collect = [this](VkCommandBuffer commandBuffer) { vk.FreeCommandBuffers(device_, commandPool_, 1, &commandBuffer); };
+    auto bufferCollect = [this](VkCommandBuffer commandBuffer) { vk.FreeCommandBuffers(device_, commandPool_, 1, &commandBuffer); };
 
-    handle_ = { commandBuffer, buffer_collect };
+    handle_ = { commandBuffer, bufferCollect };
 
     valid_ = true;
 }
@@ -75,7 +75,7 @@ bool RSVulkanCommandBuffer::End() const
 }
 
 bool RSVulkanCommandBuffer::InsertPipelineBarrier(VkPipelineStageFlagBits srcStageFlags,
-    VkPipelineStageFlagBits destStageFlags, uint32_t /* mask of VkDependencyFlagBits */ dependencyFlags,
+    VkPipelineStageFlagBits destStageFlags, uint32_t dependencyFlags,
     uint32_t memoryBarrierCount, const VkMemoryBarrier* memoryBarriers, uint32_t bufferMemoryBarrierCount,
     const VkBufferMemoryBarrier* bufferMemoryBarriers, uint32_t imageMemoryBarrierCount,
     const VkImageMemoryBarrier* imageMemoryBarriers) const

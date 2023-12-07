@@ -37,7 +37,7 @@ public:
 private:
     RSVulkanHandle<VkImage> handle_;
     VkImageLayout layout_;
-    uint32_t /* mask of VkAccessFlagBits */ accessFlags_;
+    uint32_t accessFlags_;
     bool valid_;
 };
 

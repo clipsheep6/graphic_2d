@@ -25,8 +25,8 @@
 namespace OHOS::Rosen::vulkan {
 
 RSVulkanBackbuffer::RSVulkanBackbuffer(
-    const RSVulkanProcTable& p_vk, const RSVulkanHandle<VkDevice>& device, const RSVulkanHandle<VkCommandPool>& pool)
-    : vk(p_vk), device_(device), usageCommandBuffer_(p_vk, device, pool), renderCommandBuffer_(p_vk, device, pool),
+    const RSVulkanProcTable& procVk, const RSVulkanHandle<VkDevice>& device, const RSVulkanHandle<VkCommandPool>& pool)
+    : vk(procVk), device_(device), usageCommandBuffer_(procVk, device, pool), renderCommandBuffer_(procVk, device, pool),
       valid_(false)
 {
     if (!usageCommandBuffer_.IsValid() || !renderCommandBuffer_.IsValid()) {
@@ -65,14 +65,14 @@ bool RSVulkanBackbuffer::CreateSemaphores()
         .flags = 0,
     };
 
-    auto semaphore_collect = [this](VkSemaphore semaphore) { vk.DestroySemaphore(device_, semaphore, nullptr); };
+    auto semaphoreCollect = [this](VkSemaphore semaphore) { vk.DestroySemaphore(device_, semaphore, nullptr); };
 
     for (size_t i = 0; i < semaphores_.size(); i++) {
         VkSemaphore semaphore = VK_NULL_HANDLE;
         if (VK_CALL_LOG_ERROR(vk.CreateSemaphore(device_, &createInfo, nullptr, &semaphore)) != VK_SUCCESS) {
             return false;
         }
-        semaphores_[i] = { semaphore, semaphore_collect };
+        semaphores_[i] = { semaphore, semaphoreCollect };
     }
 
     return true;

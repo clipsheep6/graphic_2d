@@ -59,19 +59,19 @@ if (graphic_2d_feature_enable_vulkan) {
 
   ohos_shared_library("vulkan_shell") {
     sources = [
-      "vulkan_application.cc",
-      "vulkan_backbuffer.cc",
-      "vulkan_command_buffer.cc",
-      "vulkan_debug_report.cc",
-      "vulkan_device.cc",
-      "vulkan_image.cc",
-      "vulkan_interface.cc",
-      "vulkan_native_surface_ohos.cc",
-      "vulkan_proc_table.cc",
-      "vulkan_surface.cc",
-      "vulkan_swapchain.cc",
-      "vulkan_utilities.cc",
-      "vulkan_window.cc",
+      "vulkan_application.cpp",
+      "vulkan_backbuffer.cpp",
+      "vulkan_command_buffer.cpp",
+      "vulkan_debug_report.cpp",
+      "vulkan_device.cpp",
+      "vulkan_image.cpp",
+      "vulkan_interface.cpp",
+      "vulkan_native_surface_ohos.cpp",
+      "vulkan_proc_table.cpp",
+      "vulkan_surface.cpp",
+      "vulkan_swapchain.cpp",
+      "vulkan_utilities.cpp",
+      "vulkan_window.cpp",
     ]
 
     if (graphic_2d_feature_enable_vulkan) {

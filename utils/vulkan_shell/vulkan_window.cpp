@@ -81,8 +81,8 @@ void RSVulkanWindow::InitializeVulkan(size_t thread_num)
     }
 }
 
-RSVulkanWindow::RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> native_surface, bool is_offscreen)
-    : valid_(false), isOffscreen_(is_offscreen)
+RSVulkanWindow::RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> nativeSurface, bool isOffscreen)
+    : valid_(false), isOffscreen_(isOffscreen)
 {
     LOGE("VulkanWindow init enter");
 
@@ -92,14 +92,14 @@ RSVulkanWindow::RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> native_sur
         return;
     }
 
-    if (!is_offscreen && (native_surface == nullptr || !native_surface->IsValid())) {
+    if (!isOffscreen && (nativeSurface == nullptr || !nativeSurface->IsValid())) {
         LOGE("Native surface is invalid.");
         return;
     }
 
     // Create the logical surface from the native platform surface.
-    if (!is_offscreen) {
-        surface_ = std::make_unique<RSVulkanSurface>(*vk, *application_, std::move(native_surface));
+    if (!isOffscreen) {
+        surface_ = std::make_unique<RSVulkanSurface>(*vk, *application_, std::move(nativeSurface));
         if (!surface_->IsValid()) {
             LOGE("Vulkan surface is invalid.");
             return;
@@ -113,7 +113,7 @@ RSVulkanWindow::RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> native_sur
     }
 
     // Create the swapchain.
-    if (!is_offscreen && !RecreateSwapchain()) {
+    if (!isOffscreen && !RecreateSwapchain()) {
         LOGE("Could not setup the swapchain initially.");
         return;
     }
@@ -130,7 +130,7 @@ bool RSVulkanWindow::IsValid() const
 
 GrDirectContext* RSVulkanWindow::GetSkiaGrContext()
 {
-    return skia_gr_context_.get();
+    return skiaGrContext_.get();
 }
 
 GrVkBackendContext& RSVulkanWindow::GetSkiaBackendContext()
@@ -152,9 +152,9 @@ bool RSVulkanWindow::CreateSkiaGrContext()
         return false;
     }
 
-    context->setResourceCacheLimits(kGrCacheMaxCount, kGrCacheMaxByteSize);
+    context->setResourceCacheLimits(K_GR_CACHE_MAX_COUNT, K_GR_CACHE_MAX_BYTE_SIZE);
 
-    skia_gr_context_ = context;
+    skiaGrContext_ = context;
 
     return true;
 }
@@ -162,14 +162,13 @@ bool RSVulkanWindow::CreateSkiaGrContext()
 bool RSVulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context)
 {
     auto getProc = vk->CreateSkiaGetProc();
-
     if (getProc == nullptr) {
         LOGE("CreateSkiaBackendContext getProc is null");
         return false;
     }
 
-    uint32_t skia_features = 0;
-    if (!logicalDevice_->GetPhysicalDeviceFeaturesSkia(&skia_features)) {
+    uint32_t skiaFeatures = 0;
+    if (!logicalDevice_->GetPhysicalDeviceFeaturesSkia(&skiaFeatures)) {
         LOGE("CreateSkiaBackendContext GetPhysicalDeviceFeaturesSkia is false");
         return false;
     }
@@ -187,7 +186,7 @@ bool RSVulkanWindow::CreateSkiaBackendContext(GrVkBackendContext* context)
     }
     context->fExtensions = extensionFlags;
 
-    context->fFeatures = skia_features;
+    context->fFeatures = skiaFeatures;
     context->fGetProc = std::move(getProc);
     context->fOwnsInstanceAndDevice = false;
     return true;
@@ -201,7 +200,6 @@ sk_sp<SkSurface> RSVulkanWindow::AcquireSurface(int bufferCount)
     }
 
     auto surface_size = surface_->GetSize();
-
     if (surface_size != SkISize::Make(0, 0) && surface_size != swapchain_->GetSize()) {
         LOGE("Swapchain and surface sizes are out of sync. Recreating swapchain.");
         if (!RecreateSwapchain()) {
@@ -213,22 +211,22 @@ sk_sp<SkSurface> RSVulkanWindow::AcquireSurface(int bufferCount)
 
     while (true) {
         sk_sp<SkSurface> surface;
-        auto acquire_result = RSVulkanSwapchain::AcquireStatus::ErrorSurfaceLost;
+        auto acquireResult = RSVulkanSwapchain::AcquireStatus::ERROR_SURFACE_LOST;
 
-        std::tie(acquire_result, surface) = swapchain_->AcquireSurface(bufferCount);
+        std::tie(acquireResult, surface) = swapchain_->AcquireSurface(bufferCount);
 
-        if (acquire_result == RSVulkanSwapchain::AcquireStatus::Success) {
+        if (acquireResult == RSVulkanSwapchain::AcquireStatus::SUCCESS) {
             // Successfully acquired a surface from the swapchain. Nothing more to do.
             return surface;
         }
 
-        if (acquire_result == RSVulkanSwapchain::AcquireStatus::ErrorSurfaceLost) {
+        if (acquireResult == RSVulkanSwapchain::AcquireStatus::ERROR_SURFACE_LOST) {
             // Surface is lost. This is an unrecoverable error.
             LOGE("Swapchain reported surface was lost.");
             return nullptr;
         }
 
-        if (acquire_result == RSVulkanSwapchain::AcquireStatus::ErrorSurfaceOutOfDate) {
+        if (acquireResult == RSVulkanSwapchain::AcquireStatus::ERROR_SURFACE_OUT_OF_DATE) {
             LOGE("AcquireSurface surface out of date");
             if (RecreateSwapchain()) {
                 continue;
@@ -275,7 +273,7 @@ void RSVulkanWindow::PresentAll()
             .flags = VK_FENCE_CREATE_SIGNALED_BIT,
         };
 
-        auto fence_collect = [](VkFence fence) {
+        auto fenceCollect = [](VkFence fence) {
             RSVulkanWindow::vk->DestroyFence(RSVulkanWindow::logicalDevice_->GetHandle(), fence, nullptr);
         };
 
@@ -285,7 +283,7 @@ void RSVulkanWindow::PresentAll()
             VK_SUCCESS) {
             return;
         }
-        sharedFences_[sharedFenceIndex_] = { fence, fence_collect };
+        sharedFences_[sharedFenceIndex_] = { fence, fenceCollect };
     }
     RSVulkanSwapchain::PresentAll(sharedFences_[sharedFenceIndex_]);
     sharedFenceIndex_++;
@@ -301,7 +299,7 @@ bool RSVulkanWindow::WaitForSharedFence()
         if (sharedFences_[sharedFenceIndex_]) {
             VkFence fence = sharedFences_[sharedFenceIndex_];
             return VK_CALL_LOG_ERROR(vk->WaitForFences(logicalDevice_->GetHandle(), 1, &fence, true,
-                       std::numeric_limits<uint64_t>::max())) == VK_SUCCESS;
+                std::numeric_limits<uint64_t>::max())) == VK_SUCCESS;
         }
     }
     return false;
@@ -359,14 +357,13 @@ bool RSVulkanWindow::RecreateSwapchain()
         return false;
     }
 
-    if (skia_gr_context_ == nullptr) {
-        LOGE("RecreateSwapchain skia_gr_context_ not valid");
+    if (skiaGrContext_ == nullptr) {
+        LOGE("RecreateSwapchain skiaGrContext_ not valid");
         return false;
     }
 
-    auto swapchain = std::make_unique<RSVulkanSwapchain>(*vk, *logicalDevice_, *surface_, skia_gr_context_.get(),
+    auto swapchain = std::make_unique<RSVulkanSwapchain>(*vk, *logicalDevice_, *surface_, skiaGrContext_.get(),
         std::move(old_swapchain), logicalDevice_->GetGraphicsQueueIndex());
-
     if (!swapchain->IsValid()) {
         LOGE("RecreateSwapchain swapchain not valid");
         return false;

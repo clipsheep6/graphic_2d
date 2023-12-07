@@ -38,16 +38,16 @@ class RSVulkanImage;
 class RSVulkanSwapchain {
 public:
     RSVulkanSwapchain(const RSVulkanProcTable& vk, const RSVulkanDevice& device, const RSVulkanSurface& surface,
-        GrDirectContext* skiaContext, std::unique_ptr<RSVulkanSwapchain> oldSwapchain, uint32_t queue_family_index);
+        GrDirectContext* skiaContext, std::unique_ptr<RSVulkanSwapchain> oldSwapchain, uint32_t queueFamilyIndex);
 
     ~RSVulkanSwapchain();
 
     bool IsValid() const;
 
     enum class AcquireStatus {
-        Success,
-        ErrorSurfaceLost,
-        ErrorSurfaceOutOfDate,
+        SUCCESS,
+        ERROR_SURFACE_LOST,
+        ERROR_SURFACE_OUT_OF_DATE,
     };
 
     using AcquireResult = std::pair<AcquireStatus, sk_sp<SkSurface>>;

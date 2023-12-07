@@ -23,7 +23,7 @@
 
 namespace OHOS::Rosen::vulkan {
 
-RSVulkanNativeSurfaceOHOS::RSVulkanNativeSurfaceOHOS(struct NativeWindow* native_window) : nativeWindow_(native_window)
+RSVulkanNativeSurfaceOHOS::RSVulkanNativeSurfaceOHOS(struct NativeWindow* nativeWindow) : nativeWindow_(nativeWindow)
 {
     if (nativeWindow_ == nullptr) {
         return;

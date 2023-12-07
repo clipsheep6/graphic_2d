@@ -17,9 +17,9 @@
 
 namespace OHOS::Rosen::vulkan {
 
-RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk, const RSVulkanDevice& device,
-    const RSVulkanSurface& surface, GrDirectContext* skia_context, std::unique_ptr<RSVulkanSwapchain> old_swapchain,
-    uint32_t queue_family_index)
+RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& procVk, const RSVulkanDevice& device,
+    const RSVulkanSurface& surface, GrDirectContext* skiaContext, std::unique_ptr<RSVulkanSwapchain> oldSwapchain,
+    uint32_t queueFamilyIndex)
 {}
 
 RSVulkanSwapchain::~RSVulkanSwapchain() = default;
@@ -31,7 +31,7 @@ bool RSVulkanSwapchain::IsValid() const
 
 RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface()
 {
-    return { AcquireStatus::ErrorSurfaceLost, nullptr };
+    return { AcquireStatus::ERROR_SURFACE_LOST, nullptr };
 }
 
 bool RSVulkanSwapchain::Submit()

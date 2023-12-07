@@ -171,7 +171,7 @@ RSVulkanDebugReport::RSVulkanDebugReport(const RSVulkanProcTable& p_vk, const RS
     const VkDebugReportCallbackCreateInfoEXT createInfo = {
         .sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT,
         .pNext = nullptr,
-        .reportFlags = reportFlags,
+        .flags = reportFlags,
         .pfnCallback = &vulkan::OnVulkanDebugReportCallback,
         .pUserData = nullptr,
     };

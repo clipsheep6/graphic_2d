@@ -22,8 +22,8 @@
 namespace OHOS::Rosen::vulkan {
 
 RSVulkanSurface::RSVulkanSurface(
-    RSVulkanProcTable& p_vk, RSVulkanApplication& application, std::unique_ptr<RSVulkanNativeSurface> native_surface)
-    : vk(p_vk), application_(application), nativeSurface_(std::move(native_surface)), valid_(false)
+    RSVulkanProcTable& procVk, RSVulkanApplication& application, std::unique_ptr<RSVulkanNativeSurface> nativeSurface)
+    : vk(procVk), application_(application), nativeSurface_(std::move(nativeSurface)), valid_(false)
 {
     if (nativeSurface_ == nullptr || !nativeSurface_->IsValid()) {
         LOGE("Native surface was invalid.");
@@ -31,7 +31,6 @@ RSVulkanSurface::RSVulkanSurface(
     }
 
     VkSurfaceKHR surface = nativeSurface_->CreateSurfaceHandle(vk, application.GetInstance());
-
     if (surface == VK_NULL_HANDLE) {
         LOGE("Could not create the surface handle.");
         return;

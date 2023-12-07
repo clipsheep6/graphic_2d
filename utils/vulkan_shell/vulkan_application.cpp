@@ -25,15 +25,14 @@
 
 namespace OHOS::Rosen::vulkan {
 
-RSVulkanApplication::RSVulkanApplication(RSVulkanProcTable& p_vk, const std::string& applicationName,
-    std::vector<std::string> enabledExtensions, uint32_t applicationVersion, uint32_t api_version)
-    : vk(p_vk), apiVersion_(api_version), valid_(false)
+RSVulkanApplication::RSVulkanApplication(RSVulkanProcTable& procVk, const std::string& applicationName,
+    std::vector<std::string> enabledExtensions, uint32_t applicationVersion, uint32_t apiVersion)
+    : vk(procVk), apiVersion_(apiVersion), valid_(false)
 {
-    std::vector<VkExtensionProperties> supported_extensions = GetSupportedInstanceExtensions(vk);
-    bool enable_instance_debugging =
-        IsDebuggingEnabled() && ExtensionSupported(supported_extensions, RSVulkanDebugReport::DebugExtensionName());
-
-    if (enable_instance_debugging) {
+    std::vector<VkExtensionProperties> supportedExtensions = GetSupportedInstanceExtensions(vk);
+    bool enableInstanceDebugging =
+        IsDebuggingEnabled() && ExtensionSupported(supportedExtensions, RSVulkanDebugReport::DebugExtensionName());
+    if (enableInstanceDebugging) {
         enabledExtensions.emplace_back(RSVulkanDebugReport::DebugExtensionName());
     }
 
@@ -85,11 +84,11 @@ RSVulkanApplication::RSVulkanApplication(RSVulkanProcTable& p_vk, const std::str
     }
 
     instance_ = { instance, [this](VkInstance i) {
-                     LOGE("Destroying Vulkan instance");
-                     vk.DestroyInstance(i, nullptr);
-                 } };
+        LOGE("Destroying Vulkan instance");
+        vk.DestroyInstance(i, nullptr);
+    } };
 
-    if (enable_instance_debugging) {
+    if (enableInstanceDebugging) {
         auto debug_report = std::make_unique<RSVulkanDebugReport>(vk, instance_);
         if (!debug_report->IsValid()) {
             LOGE("Vulkan debugging was enabled but could not be setup for this instance.");
@@ -130,13 +129,13 @@ std::vector<VkPhysicalDevice> RSVulkanApplication::GetPhysicalDevices() const
         return {};
     }
 
-    uint32_t device_count = 0;
-    if (VK_CALL_LOG_ERROR(vk.EnumeratePhysicalDevices(instance_, &device_count, nullptr)) != VK_SUCCESS) {
+    uint32_t deviceCount = 0;
+    if (VK_CALL_LOG_ERROR(vk.EnumeratePhysicalDevices(instance_, &deviceCount, nullptr)) != VK_SUCCESS) {
         LOGE("Could not enumerate physical device.");
         return {};
     }
 
-    if (device_count == 0) {
+    if (deviceCount == 0) {
         // No available devices.
         LOGE("No physical devices found.");
         return {};
@@ -144,9 +143,9 @@ std::vector<VkPhysicalDevice> RSVulkanApplication::GetPhysicalDevices() const
 
     std::vector<VkPhysicalDevice> physical_devices;
 
-    physical_devices.resize(device_count);
+    physical_devices.resize(deviceCount);
 
-    if (VK_CALL_LOG_ERROR(vk.EnumeratePhysicalDevices(instance_, &device_count, physical_devices.data())) !=
+    if (VK_CALL_LOG_ERROR(vk.EnumeratePhysicalDevices(instance_, &deviceCount, physical_devices.data())) !=
         VK_SUCCESS) {
         LOGE("Could not enumerate physical device.");
         return {};

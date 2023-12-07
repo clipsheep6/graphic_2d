@@ -81,7 +81,7 @@ public:
 
     GrVkGetProc CreateSkiaGetProc() const;
 
-#define VK_DEFINE_PROC(name) Proc<PFN_vk##name> name
+#define VK_DEFINE_PROC(name) RSProc<PFN_vk##name> name
 
     VK_DEFINE_PROC(AcquireNextImageKHR);
     VK_DEFINE_PROC(AllocateCommandBuffers);

@@ -17,7 +17,7 @@
 
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/GrDirectContext.h"
-#include "skia/include/gpu/vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
 #include "vulkan_backbuffer.h"
 #include "vulkan_device.h"
 #include "vulkan_hilog.h"
@@ -47,11 +47,11 @@ static std::vector<FormatInfo> DesiredFormatInfos()
 std::mutex RSVulkanSwapchain::mapMutex_;
 std::unordered_map<std::thread::id, RSVulkanSwapchain*> RSVulkanSwapchain::toBePresent_;
 
-RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk, const RSVulkanDevice& device,
+RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& procVk, const RSVulkanDevice& device,
     const RSVulkanSurface& surface, GrDirectContext* skiaContext, std::unique_ptr<RSVulkanSwapchain> oldSwapchain,
     uint32_t queueFamilyIndex)
 
-    : vk(p_vk), device_(device), capabilities_(), surfaceFormat_(),
+    : vk(procVk), device_(device), capabilities_(), surfaceFormat_(),
       currentPipelineStage_(VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT), currentBackbufferIndex_(0), currentImageIndex_(0),
       valid_(false)
 {
@@ -91,9 +91,9 @@ RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk, const RSVulk
 
     VkBool32 supported = VK_FALSE;
     if (VK_CALL_LOG_ERROR(vk.GetPhysicalDeviceSurfaceSupportKHR(device_.GetPhysicalDeviceHandle(), // physical device
-            queueFamilyIndex,                                                                    // queue family
-            surface.Handle(),                                                                      // surface to test
-            &supported)) != VK_SUCCESS) {
+        queueFamilyIndex,                                                                    // queue family
+        surface.Handle(),                                                                      // surface to test
+        &supported)) != VK_SUCCESS) {
         LOGE("Could not get physical device surface support.");
         return;
     }
@@ -144,12 +144,12 @@ RSVulkanSwapchain::RSVulkanSwapchain(const RSVulkanProcTable& p_vk, const RSVulk
     }
 
     swapchain_ = { swapchain, [this](VkSwapchainKHR swapchain) {
-                      device_.WaitIdle();
-                      vk.DestroySwapchainKHR(device_.GetHandle(), swapchain, nullptr);
-                  } };
+        device_.WaitIdle();
+        vk.DestroySwapchainKHR(device_.GetHandle(), swapchain, nullptr);
+    } };
 
     if (!CreateSwapchainImages(
-            skiaContext, formatInfos[formatIndex].colorType_, formatInfos[formatIndex].colorSpace_)) {
+        skiaContext, formatInfos[formatIndex].colorType_, formatInfos[formatIndex].colorSpace_)) {
         LOGE("Could not create swapchain images.");
         return;
     }
@@ -240,8 +240,7 @@ sk_sp<SkSurface> RSVulkanSwapchain::CreateSkiaSurface(GrDirectContext* gr_contex
         kTopLeft_GrSurfaceOrigin,                             // origin
         color_type,                                           // color type
         std::move(color_space),                               // color space
-        &props                                                // surface properties
-    );
+        &props);                                              // surface properties
 }
 
 bool RSVulkanSwapchain::CreateSwapchainImages(
@@ -259,7 +258,6 @@ bool RSVulkanSwapchain::CreateSwapchainImages(
     for (const VkImage& image : images) {
         // Populate the backbuffer.
         auto backbuffer = std::make_unique<RSVulkanBackbuffer>(vk, device_.GetHandle(), device_.GetCommandPool());
-
         if (!backbuffer->IsValid()) {
             return false;
         }
@@ -278,7 +276,6 @@ bool RSVulkanSwapchain::CreateSwapchainImages(
 
         // Populate the surface.
         auto surface = CreateSkiaSurface(skiaContext, image, surface_size, color_type, color_space);
-
         if (surface == nullptr) {
             LOGE("surface is nullptr");
             return false;
@@ -300,7 +297,6 @@ bool RSVulkanSwapchain::CreateSwapchainImages(
 RSVulkanBackbuffer* RSVulkanSwapchain::GetNextBackbuffer()
 {
     auto availableBackbuffers = backbuffers_.size();
-
     if (availableBackbuffers == 0) {
         return nullptr;
     }
@@ -319,7 +315,7 @@ RSVulkanBackbuffer* RSVulkanSwapchain::GetNextBackbuffer()
 
 RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCount)
 {
-    AcquireResult error = { AcquireStatus::ErrorSurfaceLost, nullptr };
+    AcquireResult error = { AcquireStatus::ERROR_SURFACE_LOST, nullptr };
 
     if (!IsValid()) {
         LOGE("Swapchain was invalid.");
@@ -327,7 +323,6 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
     }
 
     auto backbuffer = GetNextBackbuffer();
-
     if (backbuffer == nullptr) {
         LOGE("Could not get the next backbuffer.");
         return error;
@@ -360,13 +355,13 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
     switch (acquireResult) {
         case VK_SUCCESS:
             break;
-        case VK_ERROR_OUT_OF_DATE_KHR:
-            return { AcquireStatus::ErrorSurfaceOutOfDate, nullptr };
         case VK_ERROR_SURFACE_LOST_KHR:
-            return { AcquireStatus::ErrorSurfaceLost, nullptr };
+            return { AcquireStatus::ERROR_SURFACE_LOST, nullptr };
+        case VK_ERROR_OUT_OF_DATE_KHR:
+            return { AcquireStatus::ERROR_SURFACE_OUT_OF_DATE, nullptr };
         default:
             LOGE("Unexpected result from AcquireNextImageKHR: %d", acquireResult);
-            return { AcquireStatus::ErrorSurfaceLost, nullptr };
+            return { AcquireStatus::ERROR_SURFACE_LOST, nullptr };
     }
 
     // Simple sanity checking of image index.
@@ -390,11 +385,11 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
     VkImageLayout destinationImageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     if (!image->InsertImageMemoryBarrier(backbuffer->GetUsageCommandBuffer(), // command buffer
-            currentPipelineStage_,                                            // src_pipeline_bits
-            destinationPipelineStage,                                       // dest_pipeline_bits
-            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,                             // destAccessFlags
-            destinationImageLayout                                          // destLayout
-            )) {
+        currentPipelineStage_,                                            // src_pipeline_bits
+        destinationPipelineStage,                                       // dest_pipeline_bits
+        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,                             // destAccessFlags
+        destinationImageLayout                                          // destLayout
+        )) {
         LOGE("Could not insert image memory barrier.");
         return error;
     } else {
@@ -411,11 +406,11 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
     std::vector<VkCommandBuffer> commandBuffers = { backbuffer->GetUsageCommandBuffer().Handle() };
 
     if (!device_.QueueSubmit({ destinationPipelineStage }, // waitDestPipelineStages
-            waitSemaphores,                                 // waitSemaphores
-            signalSemaphores,                               // signalSemaphores
-            commandBuffers,                                 // commandBuffers
-            backbuffer->GetUsageFence()                      // fence
-            )) {
+        waitSemaphores,                                 // waitSemaphores
+        signalSemaphores,                               // signalSemaphores
+        commandBuffers,                                 // commandBuffers
+        backbuffer->GetUsageFence()                      // fence
+        )) {
         LOGE("Could not submit to the device queue.");
         return error;
     }
@@ -439,7 +434,7 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
 
     currentImageIndex_ = nextImageIndex;
 
-    return { AcquireStatus::Success, surface };
+    return { AcquireStatus::SUCCESS, surface };
 }
 
 bool RSVulkanSwapchain::FlushCommands()
@@ -464,11 +459,11 @@ bool RSVulkanSwapchain::FlushCommands()
     VkImageLayout destinationImageLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     if (!image->InsertImageMemoryBarrier(backbuffer->GetRenderCommandBuffer(), // command buffer
-            currentPipelineStage_,                                             // src_pipeline_bits
-            destinationPipelineStage,                                        // dest_pipeline_bits
-            VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
-            destinationImageLayout                                           // destLayout
-            )) {
+        currentPipelineStage_,                                             // src_pipeline_bits
+        destinationPipelineStage,                                        // dest_pipeline_bits
+        VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
+        destinationImageLayout                                           // destLayout
+        )) {
         LOGE("Could not insert memory barrier.");
         return false;
     } else {
@@ -525,8 +520,8 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence)
     const RSVulkanProcTable& vk = tmpSwapChain->vk;
     const RSVulkanDevice& device = tmpSwapChain->device_;
 
-    if (!device.QueueSubmit({ /*Empty, No wait Semaphores. */ }, waitSemaphores, queueSignalSemaphores,
-            commandBuffers, shared_fence)) {
+    if (!device.QueueSubmit({}, waitSemaphores, queueSignalSemaphores,
+        commandBuffers, shared_fence)) {
         LOGE("Could not submit to the device queue");
         return;
     }
@@ -544,7 +539,6 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence)
         .pImageIndices = present_image_indices.data(),
         .pResults = nullptr,
     };
-
     if (VK_CALL_LOG_ERROR(vk.QueuePresentKHR(device.GetQueueHandle(), &presentInfo)) != VK_SUCCESS) {
         LOGE("Could not submit the present operation");
         return;
@@ -576,11 +570,11 @@ bool RSVulkanSwapchain::Submit()
     VkImageLayout destinationImageLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     if (!image->InsertImageMemoryBarrier(backbuffer->GetRenderCommandBuffer(), // command buffer
-            currentPipelineStage_,                                             // src_pipeline_bits
-            destinationPipelineStage,                                        // dest_pipeline_bits
-            VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
-            destinationImageLayout                                           // destLayout
-            )) {
+        currentPipelineStage_,                                             // src_pipeline_bits
+        destinationPipelineStage,                                        // dest_pipeline_bits
+        VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
+        destinationImageLayout                                           // destLayout
+        )) {
         LOGE("Could not insert memory barrier.");
         return false;
     } else {
@@ -596,12 +590,12 @@ bool RSVulkanSwapchain::Submit()
     std::vector<VkSemaphore> queueSignalSemaphores = { backbuffer->GetRenderSemaphore() };
     std::vector<VkCommandBuffer> commandBuffers = { backbuffer->GetRenderCommandBuffer().Handle() };
 
-    if (!device_.QueueSubmit({ /* Empty. No wait semaphores. */ }, // waitDestPipelineStages
-            waitSemaphores,                                       // waitSemaphores
-            queueSignalSemaphores,                               // signalSemaphores
-            commandBuffers,                                       // commandBuffers
-            backbuffer->GetRenderFence()                           // fence
-            )) {
+    if (!device_.QueueSubmit({}, // waitDestPipelineStages
+        waitSemaphores,                                       // waitSemaphores
+        queueSignalSemaphores,                               // signalSemaphores
+        commandBuffers,                                       // commandBuffers
+        backbuffer->GetRenderFence()                           // fence
+        )) {
         LOGE("Could not submit to the device queue.");
         return false;
     }
@@ -623,7 +617,6 @@ bool RSVulkanSwapchain::Submit()
         .pImageIndices = &presentImageIndex,
         .pResults = nullptr,
     };
-
     if (VK_CALL_LOG_ERROR(vk.QueuePresentKHR(device_.GetQueueHandle(), &presentInfo)) != VK_SUCCESS) {
         LOGE("Could not submit the present operation.");
         return false;

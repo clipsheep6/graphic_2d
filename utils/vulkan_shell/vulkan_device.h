@@ -49,7 +49,7 @@ public:
 
     bool GetPhysicalDeviceFeatures(VkPhysicalDeviceFeatures* features) const;
 
-    bool GetPhysicalDeviceFeaturesSkia(uint32_t* /* mask of GrVkFeatureFlags */ features) const;
+    bool GetPhysicalDeviceFeaturesSkia(uint32_t* features) const;
 
     int ChooseSurfaceFormat(
         const RSVulkanSurface& surface, std::vector<VkFormat> desiredFormats, VkSurfaceFormatKHR* format) const;

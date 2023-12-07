@@ -38,7 +38,7 @@ public:
     bool End() const;
 
     bool InsertPipelineBarrier(VkPipelineStageFlagBits srcStageFlags, VkPipelineStageFlagBits destStageFlags,
-        uint32_t /* mask of VkDependencyFlagBits */ dependencyFlags, uint32_t memoryBarrierCount,
+        uint32_t dependencyFlags, uint32_t memoryBarrierCount,
         const VkMemoryBarrier* memoryBarriers, uint32_t bufferMemoryBarrierCount,
         const VkBufferMemoryBarrier* bufferMemoryBarriers, uint32_t imageMemoryBarrierCount,
         const VkImageMemoryBarrier* imageMemoryBarriers) const;

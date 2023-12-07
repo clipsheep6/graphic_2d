@@ -401,7 +401,7 @@ void TypographyImpl::DoLayout()
         lineMetrics_[size - 1].lineSpans.erase(lineMetrics_[size - 1].lineSpans.begin());
     }
 
-    for (auto i = 0; i < static_cast<int>(lineMetrics_.size()); i++) {
+    for (auto i = 0; i < lineMetrics_.size(); i++) {
         double offsetX = 0;
         for (auto &vs : lineMetrics_[i].lineSpans) {
             vs.AdjustOffsetY(yOffsets_[i]);

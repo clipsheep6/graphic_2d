@@ -23,11 +23,11 @@
 #include <utility>
 #include <vector>
 
-#include "third_party/skia/include/core/SkRefCnt.h"
-#include "third_party/skia/include/core/SkSize.h"
-#include "third_party/skia/include/core/SkSurface.h"
-#include "third_party/skia/include/gpu/GrDirectContext.h"
-#include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkSurface.h"
+#include "include/gpu/GrDirectContext.h"
+#include "include/gpu/vk/GrVkBackendContext.h"
 #include "vulkan_proc_table.h"
 
 namespace OHOS::Rosen::vulkan {

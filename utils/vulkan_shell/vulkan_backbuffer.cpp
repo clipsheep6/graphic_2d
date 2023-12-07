@@ -17,7 +17,7 @@
 
 #include <limits>
 
-#include "third_party/skia/include/gpu/vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
 #include "vulkan/vulkan.h"
 #include "vulkan_hilog.h"
 #include "vulkan_proc_table.h"
@@ -26,8 +26,8 @@ namespace OHOS::Rosen::vulkan {
 
 RSVulkanBackbuffer::RSVulkanBackbuffer(
     const RSVulkanProcTable& procVk, const RSVulkanHandle<VkDevice>& device, const RSVulkanHandle<VkCommandPool>& pool)
-    : vk(procVk), device_(device), usageCommandBuffer_(procVk, device, pool), renderCommandBuffer_(procVk, device, pool),
-      valid_(false)
+    : vk(procVk), device_(device), usageCommandBuffer_(procVk, device, pool),
+    renderCommandBuffer_(procVk, device, pool), valid_(false)
 {
     if (!usageCommandBuffer_.IsValid() || !renderCommandBuffer_.IsValid()) {
         LOGE("Command buffers were not valid.");

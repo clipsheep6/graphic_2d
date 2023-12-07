@@ -39,7 +39,8 @@ RSVulkanCommandBuffer::RSVulkanCommandBuffer(
         return;
     }
 
-    auto bufferCollect = [this](VkCommandBuffer commandBuffer) { vk.FreeCommandBuffers(device_, commandPool_, 1, &commandBuffer); };
+    auto bufferCollect = [this](VkCommandBuffer commandBuffer) {
+        vk.FreeCommandBuffers(device_, commandPool_, 1, &commandBuffer); };
 
     handle_ = { commandBuffer, bufferCollect };
 

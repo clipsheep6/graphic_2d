@@ -25,9 +25,9 @@ class RSVulkanNativeSurfaceOHOS : public RSVulkanNativeSurface {
 public:
     /// Create a native surface from the valid NativeWindow reference. Ownership
     /// of the NativeWindow is assumed by this instance.
-    RSVulkanNativeSurfaceOHOS(struct NativeWindow* nativeWindow);
+    explicit RSVulkanNativeSurfaceOHOS(struct NativeWindow* nativeWindow);
 
-    ~RSVulkanNativeSurfaceOHOS();
+    ~RSVulkanNativeSurfaceOHOS() final;
 
     const char* GetExtensionName() const override;
 

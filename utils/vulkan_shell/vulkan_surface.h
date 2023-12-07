@@ -16,7 +16,7 @@
 #ifndef RS_VULKAN_VULKAN_SURFACE_H_
 #define RS_VULKAN_VULKAN_SURFACE_H_
 
-#include "third_party/skia/include/core/SkSize.h"
+#include "include/core/SkSize.h"
 #include "vulkan_handle.h"
 
 namespace OHOS::Rosen::vulkan {

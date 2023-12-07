@@ -55,7 +55,7 @@ bool RSVulkanImage::InsertImageMemoryBarrier(const RSVulkanCommandBuffer& comman
     };
 
     bool success = commandBuffer.InsertPipelineBarrier(srcPiplineBits, destPiplineBits, 0, 0, nullptr, 0, nullptr, 1,
-      &imageMemoryBarrier);
+        &imageMemoryBarrier);
     if (success) {
         accessFlags_ = destAccessFlags;
         layout_ = destLayout;

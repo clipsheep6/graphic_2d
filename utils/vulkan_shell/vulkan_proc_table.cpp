@@ -20,7 +20,7 @@
 #include "vulkan_hilog.h"
 
 #define ACQUIRE_PROC(name, context)                   \
-    if (!(name = AcquireProc("vk" #name, context))) { \
+    if (!((name) = AcquireProc("vk" #name, (context)))) { \
         LOGE("Could not acquire proc: vk" #name);     \
     }
 

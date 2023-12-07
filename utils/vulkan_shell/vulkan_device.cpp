@@ -19,7 +19,7 @@
 #include <map>
 #include <vector>
 
-#include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
+#include "include/gpu/vk/GrVkBackendContext.h"
 #include "vulkan_hilog.h"
 #include "vulkan_proc_table.h"
 #include "vulkan_surface.h"

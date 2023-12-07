@@ -16,8 +16,8 @@
 #ifndef RS_VULKAN_VULKAN_PROC_TABLE_H_
 #define RS_VULKAN_VULKAN_PROC_TABLE_H_
 
-#include "third_party/skia/include/core/SkRefCnt.h"
-#include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/vk/GrVkBackendContext.h"
 #include "vulkan_handle.h"
 #include "vulkan_interface.h"
 
@@ -30,7 +30,7 @@ public:
     public:
         using Proto = T;
 
-        RSProc(T proc = nullptr) : proc_(proc) {}
+        explicit RSProc(T proc = nullptr) : proc_(proc) {}
 
         ~RSProc()
         {
@@ -81,7 +81,7 @@ public:
 
     GrVkGetProc CreateSkiaGetProc() const;
 
-#define VK_DEFINE_PROC(name) RSProc<PFN_vk##name> name
+#define VK_DEFINE_PROC(name) RSProc<PFN_vk##name> (name)
 
     VK_DEFINE_PROC(AcquireNextImageKHR);
     VK_DEFINE_PROC(AllocateCommandBuffers);

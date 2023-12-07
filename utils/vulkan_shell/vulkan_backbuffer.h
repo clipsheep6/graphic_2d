@@ -18,8 +18,8 @@
 
 #include <array>
 
-#include "third_party/skia/include/core/SkSize.h"
-#include "third_party/skia/include/core/SkSurface.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkSurface.h"
 #include "vulkan_command_buffer.h"
 #include "vulkan_handle.h"
 
@@ -68,8 +68,10 @@ public:
 private:
     const RSVulkanProcTable& vk;
     const RSVulkanHandle<VkDevice>& device_;
-    std::array<RSVulkanHandle<VkSemaphore>, 2> semaphores_;
-    std::array<RSVulkanHandle<VkFence>, 2> useFences_;
+    const size_t SEMAPHORE_SIZE = 2;
+    const size_t FENCE_SIZE = 2;
+    std::array<RSVulkanHandle<VkSemaphore>, SEMAPHORE_SIZE> semaphores_;
+    std::array<RSVulkanHandle<VkFence>, SEMAPHORE_SIZE> useFences_;
     RSVulkanCommandBuffer usageCommandBuffer_;
     RSVulkanCommandBuffer renderCommandBuffer_;
     bool valid_;

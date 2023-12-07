@@ -17,7 +17,7 @@
 
 #include <graphic_common.h>
 
-#include "third_party/skia/include/gpu/vk/GrVkBackendContext.h"
+#include "include/gpu/vk/GrVkBackendContext.h"
 #include "vulkan_hilog.h"
 #include "window.h"
 

@@ -230,7 +230,6 @@ sk_sp<SkSurface> RSVulkanSwapchain::CreateSkiaSurface(GrDirectContext* gr_contex
     imageInfo.fSampleCount = 1;
     imageInfo.fLevelCount = 1;
 
-    // TODO(chinmaygarde): Setup the stencil buffer and the sampleCnt.
     GrBackendRenderTarget backendRenderTarget(size.fWidth, size.fHeight, 0, imageInfo);
     SkSurfaceProps props(0, SkPixelGeometry::kUnknown_SkPixelGeometry);
 
@@ -388,8 +387,7 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
         currentPipelineStage_,                                            // src_pipeline_bits
         destinationPipelineStage,                                       // dest_pipeline_bits
         VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,                             // destAccessFlags
-        destinationImageLayout                                          // destLayout
-        )) {
+        destinationImageLayout)) {                                          // destLayout
         LOGE("Could not insert image memory barrier.");
         return error;
     } else {
@@ -409,8 +407,7 @@ RSVulkanSwapchain::AcquireResult RSVulkanSwapchain::AcquireSurface(int bufferCou
         waitSemaphores,                                 // waitSemaphores
         signalSemaphores,                               // signalSemaphores
         commandBuffers,                                 // commandBuffers
-        backbuffer->GetUsageFence()                      // fence
-        )) {
+        backbuffer->GetUsageFence())) {                      // fence
         LOGE("Could not submit to the device queue.");
         return error;
     }
@@ -462,8 +459,7 @@ bool RSVulkanSwapchain::FlushCommands()
         currentPipelineStage_,                                             // src_pipeline_bits
         destinationPipelineStage,                                        // dest_pipeline_bits
         VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
-        destinationImageLayout                                           // destLayout
-        )) {
+        destinationImageLayout)) {                                         // destLayout
         LOGE("Could not insert memory barrier.");
         return false;
     } else {
@@ -517,7 +513,7 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence)
         present_image_indices.push_back(static_cast<uint32_t>(swapchain->currentImageIndex_));
     }
 
-    const RSVulkanProcTable& vk = tmpSwapChain->vk;
+    const RSVulkanProcTable& tmpVk = tmpSwapChain->vk;
     const RSVulkanDevice& device = tmpSwapChain->device_;
 
     if (!device.QueueSubmit({}, waitSemaphores, queueSignalSemaphores,
@@ -539,7 +535,7 @@ void RSVulkanSwapchain::PresentAll(RSVulkanHandle<VkFence>& shared_fence)
         .pImageIndices = present_image_indices.data(),
         .pResults = nullptr,
     };
-    if (VK_CALL_LOG_ERROR(vk.QueuePresentKHR(device.GetQueueHandle(), &presentInfo)) != VK_SUCCESS) {
+    if (VK_CALL_LOG_ERROR(tmpVk.QueuePresentKHR(device.GetQueueHandle(), &presentInfo)) != VK_SUCCESS) {
         LOGE("Could not submit the present operation");
         return;
     }
@@ -573,8 +569,7 @@ bool RSVulkanSwapchain::Submit()
         currentPipelineStage_,                                             // src_pipeline_bits
         destinationPipelineStage,                                        // dest_pipeline_bits
         VK_ACCESS_MEMORY_READ_BIT,                                         // destAccessFlags
-        destinationImageLayout                                           // destLayout
-        )) {
+        destinationImageLayout)) {                                           // destLayout
         LOGE("Could not insert memory barrier.");
         return false;
     } else {

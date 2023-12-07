@@ -25,9 +25,6 @@
 
 namespace OHOS::Rosen::vulkan {
 
-static const int K_GR_CACHE_MAX_COUNT = 8192;
-static const size_t K_GR_CACHE_MAX_BYTE_SIZE = 512 * (1 << 20);
-
 class RSVulkanDevice;
 class RSVulkanProcTable;
 

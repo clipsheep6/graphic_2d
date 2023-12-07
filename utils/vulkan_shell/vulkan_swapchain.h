@@ -23,8 +23,8 @@
 #include <utility>
 #include <vector>
 
-#include "third_party/skia/include/core/SkSize.h"
-#include "third_party/skia/include/core/SkSurface.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkSurface.h"
 #include "vulkan_handle.h"
 
 namespace OHOS::Rosen::vulkan {

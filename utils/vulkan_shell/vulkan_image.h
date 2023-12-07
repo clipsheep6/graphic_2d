@@ -25,7 +25,7 @@ class RSVulkanCommandBuffer;
 
 class RSVulkanImage {
 public:
-    RSVulkanImage(RSVulkanHandle<VkImage> image);
+    explicit RSVulkanImage(RSVulkanHandle<VkImage> image);
 
     ~RSVulkanImage();
 

@@ -18,7 +18,7 @@
 #include <memory>
 #include <string>
 
-#include "third_party/skia/include/gpu/GrDirectContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "vulkan_application.h"
 #include "vulkan_device.h"
 #include "vulkan_hilog.h"
@@ -28,6 +28,9 @@
 
 namespace OHOS::Rosen::vulkan {
 
+static const int K_GR_CACHE_MAX_COUNT = 8192;
+static const size_t K_GR_CACHE_MAX_BYTE_SIZE = 512 * (1 << 20);
+
 RSVulkanProcTable* RSVulkanWindow::vk;
 std::unique_ptr<RSVulkanApplication> RSVulkanWindow::application_;
 std::unique_ptr<RSVulkanDevice> RSVulkanWindow::logicalDevice_;
@@ -36,10 +39,10 @@ std::vector<RSVulkanHandle<VkFence>> RSVulkanWindow::sharedFences_;
 uint32_t RSVulkanWindow::sharedFenceIndex_;
 bool RSVulkanWindow::presenting_ = false;
 
-void RSVulkanWindow::InitializeVulkan(size_t thread_num)
+void RSVulkanWindow::InitializeVulkan(size_t threadNum)
 {
-    if (sharedFences_.size() < thread_num) {
-        sharedFences_.resize(thread_num);
+    if (sharedFences_.size() < threadNum) {
+        sharedFences_.resize(threadNum);
         sharedFenceIndex_ = 0;
     }
 

@@ -43,7 +43,7 @@ class RSVulkanBackbuffer;
 class RSVulkanWindow {
 public:
     typedef std::shared_ptr<RSVulkanWindow> Ptr;
-    RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> nativeSurface, bool isOffscreen = false);
+    explicit RSVulkanWindow(std::unique_ptr<RSVulkanNativeSurface> nativeSurface, bool isOffscreen = false);
 
     ~RSVulkanWindow();
 

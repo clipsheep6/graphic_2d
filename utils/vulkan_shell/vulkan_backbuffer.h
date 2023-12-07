@@ -68,8 +68,8 @@ public:
 private:
     const RSVulkanProcTable& vk;
     const RSVulkanHandle<VkDevice>& device_;
-    const size_t SEMAPHORE_SIZE = 2;
-    const size_t FENCE_SIZE = 2;
+    const size_t semaphoreSize_ = 2;
+    const size_t fenceSize_ = 2;
     std::array<RSVulkanHandle<VkSemaphore>, SEMAPHORE_SIZE> semaphores_;
     std::array<RSVulkanHandle<VkFence>, SEMAPHORE_SIZE> useFences_;
     RSVulkanCommandBuffer usageCommandBuffer_;

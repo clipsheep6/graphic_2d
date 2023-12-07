@@ -134,17 +134,22 @@ std::shared_ptr<RSRenderSurface> RSRenderServiceClient::CreateRSSurface(const sp
 #else
 std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Surface> &surface)
 {
-#if defined(ACE_ENABLE_VK)
-    // GPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosVulkan>(surface);
-#elif defined(ACE_ENABLE_GL)
-    // GPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosGl>(surface);
-#else
-    // CPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosRaster>(surface);
+#if defined (ACE_ENABLE_VK)
+    if (RSSystemProperties::GetAceVulkanEnabled()) {
+        // GPU render
+        return std::make_shared<RSSurfaceOhosVulkan>(surface);
+    }
 #endif
-    return producer;
+
+#if defined (ACE_ENABLE_GL)
+    if (!RSSystemProperties::GetAceVulkanEnabled()) {
+        // GPU render
+        return std::make_shared<RSSurfaceOhosGl>(surface);
+    }
+#endif
+
+    // CPU render
+    return std::make_shared<RSSurfaceOhosRaster>(surface);
 }
 #endif
 

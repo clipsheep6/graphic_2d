@@ -26,7 +26,7 @@
 
 namespace OHOS::Rosen::vulkan {
 
-RSVulkanProcTable::RSVulkanProcTable() : handle_(nullptr), acquiredMandatoryProcAddresses_(false)
+RSVulkanProcTable::RSVulkanProcTable() : vkHandle_(nullptr), acquiredMandatoryProcAddresses_(false)
 {
     acquiredMandatoryProcAddresses_ = OpenLibraryHandle() && SetupLoaderProcAddresses();
 }
@@ -58,20 +58,20 @@ bool RSVulkanProcTable::AreDeviceProcsSetup() const
 
 bool RSVulkanProcTable::SetupLoaderProcAddresses()
 {
-    if (handle_ == nullptr) {
+    if (!vkHandle_) {
         return true;
     }
 
     GetInstanceProcAddr =
 #if VULKAN_LINK_STATICALLY
         GetInstanceProcAddr = &vkGetInstanceProcAddr;
-#else  // VULKAN_LINK_STATICALLY
-        reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(handle_, "vkGetInstanceProcAddr"));
-    GetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(dlsym(handle_, "vkGetDeviceProcAddr"));
+#else
+        reinterpret_cast<PFN_vkGetInstanceProcAddr>(dlsym(vkHandle_, "vkGetInstanceProcAddr"));
+    GetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(dlsym(vkHandle_, "vkGetDeviceProcAddr"));
     EnumerateInstanceExtensionProperties = reinterpret_cast<PFN_vkEnumerateInstanceExtensionProperties>(
-        dlsym(handle_, "vkEnumerateInstanceExtensionProperties"));
-    CreateInstance = reinterpret_cast<PFN_vkCreateInstance>(dlsym(handle_, "vkCreateInstance"));
-#endif // VULKAN_LINK_STATICALLY
+        dlsym(vkHandle_, "vkEnumerateInstanceExtensionProperties"));
+    CreateInstance = reinterpret_cast<PFN_vkCreateInstance>(dlsym(vkHandle_, "vkCreateInstance"));
+#endif
 
     if (!GetInstanceProcAddr) {
         LOGE("Could not acquire vkGetInstanceProcAddr.");
@@ -85,23 +85,23 @@ bool RSVulkanProcTable::SetupLoaderProcAddresses()
     return true;
 }
 
-bool RSVulkanProcTable::SetupInstanceProcAddresses(const RSVulkanHandle<VkInstance>& handle)
+bool RSVulkanProcTable::SetupInstanceProcAddresses(const RSVulkanHandle<VkInstance>& vkHandle)
 {
-    ACQUIRE_PROC(CreateDevice, handle);
-    ACQUIRE_PROC(DestroyDevice, handle);
-    ACQUIRE_PROC(DestroyInstance, handle);
-    ACQUIRE_PROC(EnumerateDeviceLayerProperties, handle);
-    ACQUIRE_PROC(EnumeratePhysicalDevices, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceFeatures, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceQueueFamilyProperties, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceSurfaceCapabilitiesKHR, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceSurfaceFormatsKHR, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceSurfacePresentModesKHR, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceSurfaceSupportKHR, handle);
-    ACQUIRE_PROC(DestroySurfaceKHR, handle);
-    ACQUIRE_PROC(CreateSurfaceOHOS, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties, handle);
-    ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties2, handle);
+    ACQUIRE_PROC(CreateDevice, vkHandle);
+    ACQUIRE_PROC(DestroyDevice, vkHandle);
+    ACQUIRE_PROC(DestroyInstance, vkHandle);
+    ACQUIRE_PROC(EnumerateDeviceLayerProperties, vkHandle);
+    ACQUIRE_PROC(EnumeratePhysicalDevices, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceFeatures, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceQueueFamilyProperties, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceSurfaceCapabilitiesKHR, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceSurfaceFormatsKHR, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceSurfacePresentModesKHR, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceSurfaceSupportKHR, vkHandle);
+    ACQUIRE_PROC(DestroySurfaceKHR, vkHandle);
+    ACQUIRE_PROC(CreateSurfaceOHOS, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties, vkHandle);
+    ACQUIRE_PROC(GetPhysicalDeviceMemoryProperties2, vkHandle);
 
     // The debug report functions are optional. We don't want proc acquisition to
     // fail here because the optional methods were not present (since ACQUIRE_PROC
@@ -109,47 +109,47 @@ bool RSVulkanProcTable::SetupInstanceProcAddresses(const RSVulkanHandle<VkInstan
     // anonymous lambda and invoke it. We don't really care about the result since
     // users of Debug reporting functions check for their presence explicitly.
 
-    instance_ = { handle, nullptr };
+    instance_ = { vkHandle, nullptr };
     return true;
 }
 
-bool RSVulkanProcTable::SetupDeviceProcAddresses(const RSVulkanHandle<VkDevice>& handle)
+bool RSVulkanProcTable::SetupDeviceProcAddresses(const RSVulkanHandle<VkDevice>& vkHandle)
 {
-    ACQUIRE_PROC(AllocateCommandBuffers, handle);
-    ACQUIRE_PROC(AllocateMemory, handle);
-    ACQUIRE_PROC(BeginCommandBuffer, handle);
-    ACQUIRE_PROC(BindImageMemory, handle);
-    ACQUIRE_PROC(BindImageMemory2, handle);
-    ACQUIRE_PROC(CmdPipelineBarrier, handle);
-    ACQUIRE_PROC(CreateCommandPool, handle);
-    ACQUIRE_PROC(CreateFence, handle);
-    ACQUIRE_PROC(CreateImage, handle);
-    ACQUIRE_PROC(CreateImageView, handle);
-    ACQUIRE_PROC(CreateSemaphore, handle);
-    ACQUIRE_PROC(DestroyCommandPool, handle);
-    ACQUIRE_PROC(DestroyFence, handle);
-    ACQUIRE_PROC(DestroyImage, handle);
-    ACQUIRE_PROC(DestroySemaphore, handle);
-    ACQUIRE_PROC(DeviceWaitIdle, handle);
-    ACQUIRE_PROC(EndCommandBuffer, handle);
-    ACQUIRE_PROC(FreeCommandBuffers, handle);
-    ACQUIRE_PROC(FreeMemory, handle);
-    ACQUIRE_PROC(GetDeviceQueue, handle);
-    ACQUIRE_PROC(GetImageMemoryRequirements, handle);
-    ACQUIRE_PROC(QueueSubmit, handle);
-    ACQUIRE_PROC(QueueWaitIdle, handle);
-    ACQUIRE_PROC(ResetCommandBuffer, handle);
-    ACQUIRE_PROC(ResetFences, handle);
-    ACQUIRE_PROC(WaitForFences, handle);
-    ACQUIRE_PROC(AcquireNextImageKHR, handle);
-    ACQUIRE_PROC(CreateSwapchainKHR, handle);
-    ACQUIRE_PROC(DestroySwapchainKHR, handle);
-    ACQUIRE_PROC(GetSwapchainImagesKHR, handle);
-    ACQUIRE_PROC(QueuePresentKHR, handle);
-    ACQUIRE_PROC(GetNativeBufferPropertiesOHOS, handle);
-    ACQUIRE_PROC(QueueSignalReleaseImageOHOS, handle);
+    ACQUIRE_PROC(AllocateCommandBuffers, vkHandle);
+    ACQUIRE_PROC(AllocateMemory, vkHandle);
+    ACQUIRE_PROC(BeginCommandBuffer, vkHandle);
+    ACQUIRE_PROC(BindImageMemory, vkHandle);
+    ACQUIRE_PROC(BindImageMemory2, vkHandle);
+    ACQUIRE_PROC(CmdPipelineBarrier, vkHandle);
+    ACQUIRE_PROC(CreateCommandPool, vkHandle);
+    ACQUIRE_PROC(CreateFence, vkHandle);
+    ACQUIRE_PROC(CreateImage, vkHandle);
+    ACQUIRE_PROC(CreateImageView, vkHandle);
+    ACQUIRE_PROC(CreateSemaphore, vkHandle);
+    ACQUIRE_PROC(DestroyCommandPool, vkHandle);
+    ACQUIRE_PROC(DestroyFence, vkHandle);
+    ACQUIRE_PROC(DestroyImage, vkHandle);
+    ACQUIRE_PROC(DestroySemaphore, vkHandle);
+    ACQUIRE_PROC(DeviceWaitIdle, vkHandle);
+    ACQUIRE_PROC(EndCommandBuffer, vkHandle);
+    ACQUIRE_PROC(FreeCommandBuffers, vkHandle);
+    ACQUIRE_PROC(FreeMemory, vkHandle);
+    ACQUIRE_PROC(GetDeviceQueue, vkHandle);
+    ACQUIRE_PROC(GetImageMemoryRequirements, vkHandle);
+    ACQUIRE_PROC(QueueSubmit, vkHandle);
+    ACQUIRE_PROC(QueueWaitIdle, vkHandle);
+    ACQUIRE_PROC(ResetCommandBuffer, vkHandle);
+    ACQUIRE_PROC(ResetFences, vkHandle);
+    ACQUIRE_PROC(WaitForFences, vkHandle);
+    ACQUIRE_PROC(AcquireNextImageKHR, vkHandle);
+    ACQUIRE_PROC(CreateSwapchainKHR, vkHandle);
+    ACQUIRE_PROC(DestroySwapchainKHR, vkHandle);
+    ACQUIRE_PROC(GetSwapchainImagesKHR, vkHandle);
+    ACQUIRE_PROC(QueuePresentKHR, vkHandle);
+    ACQUIRE_PROC(GetNativeBufferPropertiesOHOS, vkHandle);
+    ACQUIRE_PROC(QueueSignalReleaseImageOHOS, vkHandle);
 
-    device_ = { handle, nullptr };
+    device_ = { vkHandle, nullptr };
     return true;
 }
 
@@ -163,8 +163,8 @@ bool RSVulkanProcTable::OpenLibraryHandle()
 #else  // VULKAN_LINK_STATICALLY
     LOGI("VulkanProcTable OpenLibararyHandle: dlopen libvulkan.so.");
     dlerror(); // clear existing errors on thread.
-    handle_ = dlopen("/system/lib64/libvulkan.so", RTLD_NOW | RTLD_LOCAL);
-    if (handle_ == nullptr) {
+    vkHandle_ = dlopen("/system/lib64/libvulkan.so", RTLD_NOW | RTLD_LOCAL);
+    if (vkHandle_ == nullptr) {
         LOGE("Could not open the vulkan library: %s", dlerror());
         return false;
     }
@@ -178,37 +178,36 @@ bool RSVulkanProcTable::CloseLibraryHandle()
     handle_ = nullptr;
     return true;
 #else
-    if (handle_ != nullptr) {
+    if (vkHandle_ != nullptr) {
         dlerror(); // clear existing errors on thread.
-        if (dlclose(handle_) != 0) {
-            LOGE("Could not close the vulkan library handle. This "
-                 "indicates a leak.");
+        if (dlclose(vkHandle_) != 0) {
+            LOGE("Could not close the vulkan library handle. This indicates a leak.");
             LOGE("%s", dlerror());
         }
-        handle_ = nullptr;
+        vkHandle_ = nullptr;
     }
-    return handle_ == nullptr;
+    return vkHandle_ == nullptr;
 #endif
 }
 
 PFN_vkVoidFunction RSVulkanProcTable::AcquireProc(
-    const char* proc_name, const RSVulkanHandle<VkInstance>& instance) const
+    const char* procName, const RSVulkanHandle<VkInstance>& instance) const
 {
-    if (proc_name == nullptr || !GetInstanceProcAddr) {
+    if (procName == nullptr || !GetInstanceProcAddr) {
         return nullptr;
     }
 
     // A VK_NULL_HANDLE as the instance is an acceptable parameter.
-    return GetInstanceProcAddr(instance, proc_name);
+    return GetInstanceProcAddr(instance, procName);
 }
 
-PFN_vkVoidFunction RSVulkanProcTable::AcquireProc(const char* proc_name, const RSVulkanHandle<VkDevice>& device) const
+PFN_vkVoidFunction RSVulkanProcTable::AcquireProc(const char* procName, const RSVulkanHandle<VkDevice>& device) const
 {
-    if (proc_name == nullptr || !device || !GetDeviceProcAddr) {
+    if (procName == nullptr || !device || !GetDeviceProcAddr) {
         return nullptr;
     }
 
-    return GetDeviceProcAddr(device, proc_name);
+    return GetDeviceProcAddr(device, procName);
 }
 
 GrVkGetProc RSVulkanProcTable::CreateSkiaGetProc() const
@@ -217,15 +216,15 @@ GrVkGetProc RSVulkanProcTable::CreateSkiaGetProc() const
         return nullptr;
     }
 
-    return [this](const char* proc_name, VkInstance instance, VkDevice device) {
+    return [this](const char* procName, VkInstance instance, VkDevice device) {
         if (device != VK_NULL_HANDLE) {
-            auto result = AcquireProc(proc_name, { device, nullptr });
+            auto result = AcquireProc(procName, { device, nullptr });
             if (result != nullptr) {
                 return result;
             }
         }
 
-        return AcquireProc(proc_name, { instance, nullptr });
+        return AcquireProc(procName, { instance, nullptr });
     };
 }
 

@@ -54,16 +54,8 @@ bool RSVulkanImage::InsertImageMemoryBarrier(const RSVulkanCommandBuffer& comman
         .subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 },
     };
 
-    bool success = commandBuffer.InsertPipelineBarrier(srcPiplineBits, // src_stage_flags
-        destPiplineBits,                                                // dest_stage_flags
-        0,                                                                // dependency_flags
-        0,                                                                // memory_barrier_count
-        nullptr,                                                          // memory_barriers
-        0,                                                                // buffer_memory_barrier_count
-        nullptr,                                                          // buffer_memory_barriers
-        1,                                                                // image_memory_barrier_count
-        &imageMemoryBarrier                                             // image_memory_barriers
-    );
+    bool success = commandBuffer.InsertPipelineBarrier(srcPiplineBits, destPiplineBits, 0, 0, nullptr, 0, nullptr, 1,
+        imageMemoryBarrier);
 
     if (success) {
         accessFlags_ = destAccessFlags;

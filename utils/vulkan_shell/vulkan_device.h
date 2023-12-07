@@ -54,7 +54,7 @@ public:
     int ChooseSurfaceFormat(
         const RSVulkanSurface& surface, std::vector<VkFormat> desiredFormats, VkSurfaceFormatKHR* format) const;
 
-    bool ChoosePresentMode(const RSVulkanSurface& surface, VkPresentModeKHR* present_mode) const;
+    bool ChoosePresentMode(const RSVulkanSurface& surface, VkPresentModeKHR* presentMode) const;
 
     bool QueueSubmit(std::vector<VkPipelineStageFlags> waitDestPipelineStages,
         const std::vector<VkSemaphore>& waitSemaphores, const std::vector<VkSemaphore>& signalSemaphores,

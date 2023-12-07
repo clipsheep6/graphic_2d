@@ -322,14 +322,14 @@ int RSVulkanDevice::ChooseSurfaceFormat(
     return -1;
 }
 
-bool RSVulkanDevice::ChoosePresentMode(const RSVulkanSurface& surface, VkPresentModeKHR* present_mode) const
+bool RSVulkanDevice::ChoosePresentMode(const RSVulkanSurface& surface, VkPresentModeKHR* presentMode) const
 {
-    if (!surface.IsValid() || present_mode == nullptr) {
+    if (!surface.IsValid() || presentMode == nullptr) {
         LOGE("ChoosePresentMode surface not valid or presentmode is null");
         return false;
     }
 
-    *present_mode = VK_PRESENT_MODE_FIFO_KHR;
+    *presentMode = VK_PRESENT_MODE_FIFO_KHR;
     return true;
 }
 

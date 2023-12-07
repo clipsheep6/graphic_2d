@@ -26,24 +26,24 @@ namespace OHOS::Rosen::vulkan {
 class RSVulkanProcTable {
 public:
     template<class T>
-    class Proc {
+    class RSProc {
     public:
         using Proto = T;
 
-        Proc(T proc = nullptr) : proc_(proc) {}
+        RSProc(T proc = nullptr) : proc_(proc) {}
 
-        ~Proc()
+        ~RSProc()
         {
             proc_ = nullptr;
         }
 
-        Proc operator=(T proc)
+        RSProc operator=(T proc)
         {
             proc_ = proc;
             return *this;
         }
 
-        Proc operator=(PFN_vkVoidFunction proc)
+        RSProc operator=(PFN_vkVoidFunction proc)
         {
             proc_ = reinterpret_cast<Proto>(proc);
             return *this;
@@ -81,68 +81,68 @@ public:
 
     GrVkGetProc CreateSkiaGetProc() const;
 
-#define DEFINE_PROC(name) Proc<PFN_vk##name> name
+#define VK_DEFINE_PROC(name) Proc<PFN_vk##name> name
 
-    DEFINE_PROC(AcquireNextImageKHR);
-    DEFINE_PROC(AllocateCommandBuffers);
-    DEFINE_PROC(AllocateMemory);
-    DEFINE_PROC(BeginCommandBuffer);
-    DEFINE_PROC(BindImageMemory);
-    DEFINE_PROC(BindImageMemory2);
-    DEFINE_PROC(CmdPipelineBarrier);
-    DEFINE_PROC(CreateCommandPool);
-    DEFINE_PROC(CreateDebugReportCallbackEXT);
-    DEFINE_PROC(CreateDevice);
-    DEFINE_PROC(CreateFence);
-    DEFINE_PROC(CreateImage);
-    DEFINE_PROC(CreateImageView);
-    DEFINE_PROC(CreateInstance);
-    DEFINE_PROC(CreateSemaphore);
-    DEFINE_PROC(CreateSwapchainKHR);
-    DEFINE_PROC(DestroyCommandPool);
-    DEFINE_PROC(DestroyDebugReportCallbackEXT);
-    DEFINE_PROC(DestroyDevice);
-    DEFINE_PROC(DestroyFence);
-    DEFINE_PROC(DestroyImage);
-    DEFINE_PROC(DestroyInstance);
-    DEFINE_PROC(DestroySemaphore);
-    DEFINE_PROC(DestroySurfaceKHR);
-    DEFINE_PROC(DestroySwapchainKHR);
-    DEFINE_PROC(DeviceWaitIdle);
-    DEFINE_PROC(EndCommandBuffer);
-    DEFINE_PROC(EnumerateDeviceLayerProperties);
-    DEFINE_PROC(EnumerateInstanceExtensionProperties);
-    DEFINE_PROC(EnumerateInstanceLayerProperties);
-    DEFINE_PROC(EnumeratePhysicalDevices);
-    DEFINE_PROC(FreeCommandBuffers);
-    DEFINE_PROC(FreeMemory);
-    DEFINE_PROC(GetDeviceProcAddr);
-    DEFINE_PROC(GetDeviceQueue);
-    DEFINE_PROC(GetImageMemoryRequirements);
-    DEFINE_PROC(GetInstanceProcAddr);
-    DEFINE_PROC(GetPhysicalDeviceFeatures);
-    DEFINE_PROC(GetPhysicalDeviceQueueFamilyProperties);
-    DEFINE_PROC(QueueSubmit);
-    DEFINE_PROC(QueueWaitIdle);
-    DEFINE_PROC(ResetCommandBuffer);
-    DEFINE_PROC(ResetFences);
-    DEFINE_PROC(WaitForFences);
-    DEFINE_PROC(GetPhysicalDeviceSurfaceCapabilitiesKHR);
-    DEFINE_PROC(GetPhysicalDeviceSurfaceFormatsKHR);
-    DEFINE_PROC(GetPhysicalDeviceSurfacePresentModesKHR);
-    DEFINE_PROC(GetPhysicalDeviceSurfaceSupportKHR);
-    DEFINE_PROC(GetSwapchainImagesKHR);
-    DEFINE_PROC(QueuePresentKHR);
-    DEFINE_PROC(CreateSurfaceOHOS);
-    DEFINE_PROC(GetPhysicalDeviceMemoryProperties);
-    DEFINE_PROC(GetPhysicalDeviceMemoryProperties2);
-    DEFINE_PROC(GetNativeBufferPropertiesOHOS);
-    DEFINE_PROC(QueueSignalReleaseImageOHOS);
+    VK_DEFINE_PROC(AcquireNextImageKHR);
+    VK_DEFINE_PROC(AllocateCommandBuffers);
+    VK_DEFINE_PROC(AllocateMemory);
+    VK_DEFINE_PROC(BeginCommandBuffer);
+    VK_DEFINE_PROC(BindImageMemory);
+    VK_DEFINE_PROC(BindImageMemory2);
+    VK_DEFINE_PROC(CmdPipelineBarrier);
+    VK_DEFINE_PROC(CreateCommandPool);
+    VK_DEFINE_PROC(CreateDebugReportCallbackEXT);
+    VK_DEFINE_PROC(CreateDevice);
+    VK_DEFINE_PROC(CreateFence);
+    VK_DEFINE_PROC(CreateImage);
+    VK_DEFINE_PROC(CreateImageView);
+    VK_DEFINE_PROC(CreateInstance);
+    VK_DEFINE_PROC(CreateSemaphore);
+    VK_DEFINE_PROC(CreateSwapchainKHR);
+    VK_DEFINE_PROC(DestroyCommandPool);
+    VK_DEFINE_PROC(DestroyDebugReportCallbackEXT);
+    VK_DEFINE_PROC(DestroyDevice);
+    VK_DEFINE_PROC(DestroyFence);
+    VK_DEFINE_PROC(DestroyImage);
+    VK_DEFINE_PROC(DestroyInstance);
+    VK_DEFINE_PROC(DestroySemaphore);
+    VK_DEFINE_PROC(DestroySurfaceKHR);
+    VK_DEFINE_PROC(DestroySwapchainKHR);
+    VK_DEFINE_PROC(DeviceWaitIdle);
+    VK_DEFINE_PROC(EndCommandBuffer);
+    VK_DEFINE_PROC(EnumerateDeviceLayerProperties);
+    VK_DEFINE_PROC(EnumerateInstanceExtensionProperties);
+    VK_DEFINE_PROC(EnumerateInstanceLayerProperties);
+    VK_DEFINE_PROC(EnumeratePhysicalDevices);
+    VK_DEFINE_PROC(FreeCommandBuffers);
+    VK_DEFINE_PROC(FreeMemory);
+    VK_DEFINE_PROC(GetDeviceProcAddr);
+    VK_DEFINE_PROC(GetDeviceQueue);
+    VK_DEFINE_PROC(GetImageMemoryRequirements);
+    VK_DEFINE_PROC(GetInstanceProcAddr);
+    VK_DEFINE_PROC(GetPhysicalDeviceFeatures);
+    VK_DEFINE_PROC(GetPhysicalDeviceQueueFamilyProperties);
+    VK_DEFINE_PROC(QueueSubmit);
+    VK_DEFINE_PROC(QueueWaitIdle);
+    VK_DEFINE_PROC(ResetCommandBuffer);
+    VK_DEFINE_PROC(ResetFences);
+    VK_DEFINE_PROC(WaitForFences);
+    VK_DEFINE_PROC(GetPhysicalDeviceSurfaceCapabilitiesKHR);
+    VK_DEFINE_PROC(GetPhysicalDeviceSurfaceFormatsKHR);
+    VK_DEFINE_PROC(GetPhysicalDeviceSurfacePresentModesKHR);
+    VK_DEFINE_PROC(GetPhysicalDeviceSurfaceSupportKHR);
+    VK_DEFINE_PROC(GetSwapchainImagesKHR);
+    VK_DEFINE_PROC(QueuePresentKHR);
+    VK_DEFINE_PROC(CreateSurfaceOHOS);
+    VK_DEFINE_PROC(GetPhysicalDeviceMemoryProperties);
+    VK_DEFINE_PROC(GetPhysicalDeviceMemoryProperties2);
+    VK_DEFINE_PROC(GetNativeBufferPropertiesOHOS);
+    VK_DEFINE_PROC(QueueSignalReleaseImageOHOS);
 
-#undef DEFINE_PROC
+#undef VK_DEFINE_PROC
 
 private:
-    void* handle_;
+    void* vkHandle_;
     bool acquiredMandatoryProcAddresses_;
     RSVulkanHandle<VkInstance> instance_;
     RSVulkanHandle<VkDevice> device_;

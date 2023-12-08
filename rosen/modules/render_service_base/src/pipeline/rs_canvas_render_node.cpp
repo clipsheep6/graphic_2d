@@ -207,20 +207,25 @@ void RSCanvasRenderNode::ProcessShadowBatching(RSPaintFilterCanvas& canvas)
     RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);
 }
 
+void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildrenWithDrawable(RSPaintFilterCanvas& canvas)
+{
+    auto parent = GetParent().lock();
+    if (RSSystemProperties::GetUseShadowBatchingEnabled() &&
+        parent && parent->GetRenderProperties().GetUseShadowBatching()) {
+        IterateOnDrawableRange(
+            RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, canvas);
+        IterateOnDrawableRange(
+            RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
+    } else {
+        IterateOnDrawableRange(
+            RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
+    }
+}
+
 void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas)
 {
     if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        auto parent = GetParent().lock();
-        if (RSSystemProperties::GetUseShadowBatchingEnabled() &&
-            parent && parent->GetRenderProperties().GetUseShadowBatching()) {
-            IterateOnDrawableRange(
-                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, canvas);
-            IterateOnDrawableRange(
-                RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
-        } else {
-            IterateOnDrawableRange(
-                RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
-        }
+        ProcessAnimatePropertyBeforeChildrenWithDrawable(canvas);
         return;
     }
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };

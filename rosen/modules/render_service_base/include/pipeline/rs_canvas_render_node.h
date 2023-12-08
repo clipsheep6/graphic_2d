@@ -84,6 +84,7 @@ private:
     // functions that are dedicated to driven render [start]
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [end]
+    void ProcessAnimatePropertyBeforeChildrenWithDrawable(RSPaintFilterCanvas& canvas);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;

@@ -473,7 +473,7 @@ void HelloComposer::DoPrepareCompleted(sptr<Surface> surface, const struct Prepa
             clientCount++;
         }
     }
-    LOGI("clientCount: %{public}d", clientCount);
+    LOGI("clientCount value: %{public}d", clientCount);
 
     auto addr = static_cast<uint8_t *>(fbBuffer->GetVirAddr());
     if (hasClient) {

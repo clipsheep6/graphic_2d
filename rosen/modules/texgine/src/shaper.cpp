@@ -308,9 +308,11 @@ void Shaper::ConsiderTailEllipsis(const TypographyStyle &style, const std::share
     auto &lastLine = params.maxLines < lineMetrics_.size() ? lineMetrics_[params.maxLines - 1] : lineMetrics_.back();
     double lastLineWidth = lastLine.GetAllSpanWidth();
     params.widthLimit -= lastLine.indent;
-    if (params.maxLines < lineMetrics_.size()) {
+    if (params.maxLines < lineMetrics_.size() && lastLineWidth + params.ellipsisWidth < params.widthLimit) {
         if (params.ellipsisWidth > 0 && lastLineWidth < params.widthLimit) {
             lastLine.lineSpans = lineMetrics_[params.maxLines-1].lineSpans;
+            lastLine.lineSpans.insert(lastLine.lineSpans.end(), params.ellipsisSpans.begin(),
+                params.ellipsisSpans.end());
             lastLineWidth = lastLine.GetAllSpanWidth();
         }
         lineMetrics_.erase(lineMetrics_.begin() + params.maxLines, lineMetrics_.end());

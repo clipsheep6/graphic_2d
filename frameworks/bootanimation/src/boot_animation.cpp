@@ -154,7 +154,7 @@ void BootAnimation::Run(Rosen::ScreenId id, int screenWidth, int screenHeight)
         if (id > 0) {
             LOGI("SetScreenPowerStatus POWER_STATUS_OFF_FAKE: 0");
             interface.SetScreenPowerStatus(0, Rosen::ScreenPowerStatus::POWER_STATUS_OFF_FAKE);
-            LOGI("SetScreenPowerStatus POWER_STATUS_ON: %{public}llu", id);
+            LOGI("SetScreenPowerStatus POWER_STATUS_ON: %{public}lu", id);
             interface.SetScreenPowerStatus(id, Rosen::ScreenPowerStatus::POWER_STATUS_ON);
         }
     } else if (interface.GetScreenPowerStatus(id) != Rosen::ScreenPowerStatus::POWER_STATUS_ON) {

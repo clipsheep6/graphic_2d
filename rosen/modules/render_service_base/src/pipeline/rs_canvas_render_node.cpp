@@ -255,6 +255,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
     }
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     DrawShadow(context, canvas);
+    RSPropertiesPainter::DrawBloom(GetRenderProperties(), canvas);
     // Inter-UI component blur & blending effect -- An empty layer
     int colorBlendMode = GetRenderProperties().GetColorBlendMode();
     EnableColorBlendModeFilterLayer(canvas, colorBlendMode);

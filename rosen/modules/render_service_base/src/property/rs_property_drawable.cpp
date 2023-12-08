@@ -129,7 +129,7 @@ static const std::unordered_map<RSModifierType, RSPropertyDrawableSlot> g_proper
     { RSModifierType::LIGHT_INTENSITY, RSPropertyDrawableSlot::POINT_LIGHT },
     { RSModifierType::LIGHT_POSITION, RSPropertyDrawableSlot::POINT_LIGHT },
     { RSModifierType::ILLUMINATED_TYPE, RSPropertyDrawableSlot::POINT_LIGHT },
-    { RSModifierType::BLOOM, RSPropertyDrawableSlot::POINT_LIGHT },
+    { RSModifierType::BLOOM, RSPropertyDrawableSlot::BLOOM },
     { RSModifierType::CUSTOM, RSPropertyDrawableSlot::INVALID },
     { RSModifierType::EXTENDED, RSPropertyDrawableSlot::INVALID },
     { RSModifierType::TRANSITION, RSPropertyDrawableSlot::TRANSITION },
@@ -157,6 +157,7 @@ static const std::array<RSPropertyDrawable::DrawableGenerator, RSPropertyDrawabl
     CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR>, // ENV_FOREGROUND_COLOR
     RSShadowDrawable::Generate,                                  // SHADOW,
     RSOutlineDrawable::Generate,                                 // OUTLINE,
+    RSBloomDrawable::Generate,                                   // BLOOM,
 
     // BG properties in Bounds Clip
     nullptr,                                                              // SAVE_LAYER_BACKGROUND

@@ -1005,6 +1005,13 @@ void RSRenderNode::UpdateDirtyRegion(
                 dirtyRect = dirtyRect.JoinRect(outlineRect);
             }
         }
+        RectI bloomRect;
+        if (GetRenderProperties().IsBloomValid()) {
+            RSPropertiesPainter::GetBloomDirtyRect(bloomRect, GetRenderProperties());
+            if (!bloomRect.IsEmpty()) {
+                dirtyRect = dirtyRect.JoinRect(bloomRect);
+            }
+        }
 
         if (GetRenderProperties().pixelStretch_) {
             auto stretchDirtyRect = GetRenderProperties().GetPixelStretchDirtyRect();

@@ -329,6 +329,139 @@ void RSPropertiesPainter::Clip(Drawing::Canvas& canvas, RectF rect, bool isAntiA
 #endif
 
 #ifndef USE_ROSEN_DRAWING
+void RSPropertiesPainter::GetBloomDirtyRect(RectI& dirtyBloom, const RSProperties& properties)
+{
+    if (!properties.IsBloomValid() &&
+        properties.GetIlluminatedType() != static_cast<int>(IlluminatedType::BLOOM_BORDER) &&
+        properties.GetIlluminatedType() != static_cast<int>(IlluminatedType::BLOOM_BORDER_CONTENT)) {
+        return;
+    }
+    SkPath skPath;
+    if (properties.GetClipBounds()) {
+        skPath = properties.GetClipBounds()->GetSkiaPath();
+    } else {
+        skPath.addRRect(RRect2SkRRect(properties.GetRRect()));
+    }
+    SkRect bloomRect = skPath.getBounds();
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, properties.GetBloom()));
+    if (paint.canComputeFastBounds()) {
+        paint.computeFastBounds(bloomRect, &bloomRect);
+    }
+
+    auto geoPtr = (properties.GetBoundsGeometry());
+    SkMatrix matrix = geoPtr ? geoPtr->GetAbsMatrix() : SkMatrix::I();
+    matrix.mapRect(&bloomRect);
+
+    dirtyBloom.left_ = bloomRect.left();
+    dirtyBloom.top_ = bloomRect.top();
+    dirtyBloom.width_ = bloomRect.width();
+    dirtyBloom.height_ = bloomRect.height();
+}
+#else
+void RSPropertiesPainter::GetBloomDirtyRect(RectI& dirtyBloom, const RSProperties& properties)
+{
+    if (!properties.IsBloomValid() &&
+        properties.GetIlluminatedType() != static_cast<int>(IlluminatedType::BLOOM_BORDER) &&
+        properties.GetIlluminatedType() != static_cast<int>(IlluminatedType::BLOOM_BORDER_CONTENT)) {
+        return;
+    }
+    Drawing::Path path;
+    if (properties.GetClipBounds()) {
+        path = properties.GetClipBounds()->GetDrawingPath();
+    } else {
+        path.AddRoundRect(RRect2DrawingRRect(properties.GetRRect()));
+    }
+    Drawing::Rect bloomRect = path.GetBounds();
+    Drawing::Brush brush;
+    brush.SetAntiAlias(true);
+    Drawing::Filter filter;
+    filter.SetMaskFilter(
+        Drawing::MaskFilter::CreateBlurMaskFilter(Drawing::BlurType::NORMAL, properties.GetShadowRadius()));
+    brush.SetFilter(filter);
+    if (brush.CanComputeFastBounds()) {
+        brush.ComputeFastBounds(bloomRect, &bloomRect);
+    }
+
+    auto geoPtr = (properties.GetBoundsGeometry());
+    Drawing::Matrix matrix = geoPtr ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
+    matrix.MapRect(bloomRect, bloomRect);
+
+    dirtyBloom.left_ = bloomRect.GetLeft();
+    dirtyBloom.top_ = bloomRect.GetTop();
+    dirtyBloom.width_ = bloomRect.GetWidth();
+    dirtyBloom.height_ = bloomRect.GetHeight();
+}
+#endif
+
+#ifndef USE_ROSEN_DRAWING
+void RSPropertiesPainter::DrawBloom(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+    // skip bloom if not valid or cache is enabled
+    if (properties.IsSpherizeValid() || !properties.IsBloomValid() ||
+        canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
+        return;
+    }
+    RSAutoCanvasRestore acr(&canvas);
+    SkPath skPath;
+    if (properties.GetClipBounds()) {
+        skPath = properties.GetClipBounds()->GetSkiaPath();
+        canvas.clipPath(skPath, SkClipOp::kDifference, true);
+    } else {
+        skPath.addRRect(RRect2SkRRect(properties.GetRRect()));
+        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), SkClipOp::kDifference, true);
+    }
+    RSAutoCanvasRestore rst(&canvas);
+    auto matrix = canvas.getTotalMatrix();
+    matrix.setTranslateX(std::ceil(matrix.getTranslateX()));
+    matrix.setTranslateY(std::ceil(matrix.getTranslateY()));
+    canvas.setMatrix(matrix);
+    constexpr int BLOOM_COLOR = 0x40FFFFFF;
+    SkPaint paint;
+    paint.setColor(BLOOM_COLOR);
+    paint.setAntiAlias(true);
+    paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, properties.GetBloom()));
+    canvas.drawPath(skPath, paint);
+}
+#else
+void RSPropertiesPainter::DrawBloom(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+    // skip bloom if not valid or cache is enabled
+    if (properties.IsSpherizeValid() || !properties.IsBloomValid() ||
+        canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
+        return;
+    }
+    Drawing::AutoCanvasRestore acr(canvas, true);
+    Drawing::Path path;
+    if (properties.GetClipBounds()) {
+        path = properties.GetClipBounds()->GetDrawingPath();
+        canvas.ClipPath(path, Drawing::ClipOp::DIFFERENCE, true);
+    } else {
+        path.AddRoundRect(RRect2DrawingRRect(properties.GetRRect()));
+        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::DIFFERENCE, true);
+    }
+    RSAutoCanvasRestore rst(&canvas);
+    auto matrix = canvas.GetTotalMatrix();
+    matrix.Set(Drawing::Matrix::TRANS_X, std::ceil(matrix.Get(Drawing::Matrix::TRANS_X)));
+    matrix.Set(Drawing::Matrix::TRANS_Y, std::ceil(matrix.Get(Drawing::Matrix::TRANS_Y)));
+    canvas.SetMatrix(matrix);
+
+    Drawing::Brush brush;
+    constexpr int BLOOM_COLOR = 0x40FFFFFF;
+    brush.SetColor(BLOOM_COLOR);
+    brush.SetAntiAlias(true);
+    Drawing::Filter filter;
+    filter.SetMaskFilter(
+        Drawing::MaskFilter::CreateBlurMaskFilter(Drawing::BlurType::NORMAL, properties.GetBloom()));
+    brush.SetFilter(filter);
+    canvas.AttachBrush(brush);
+    canvas.DrawPath(path);
+    canvas.DetachBrush();
+}
+#endif
+
+#ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties,
     const RRect* rrect, bool isAbsCoordinate, bool radiusInclude)
 {
@@ -2591,17 +2724,20 @@ void RSPropertiesPainter::DrawLightInner(const RSProperties& properties, SkCanva
     }
     lightBuilder->uniform("lightPos") = lightPositionMatrix;
     lightBuilder->uniform("viewPos") = viewPosMatrix;
-    SkPaint paint;
-    paint.setAntiAlias(true);
     auto illuminatedType = properties.GetIlluminated()->GetIlluminatedType();
     ROSEN_LOGD("RSPropertiesPainter::DrawLight illuminatedType:%{public}d", illuminatedType);
     if (illuminatedType == IlluminatedType::CONTENT) {
-        DrawContentLight(properties, canvas, lightBuilder, paint, lightIntensityV4);
+        DrawContentLight(properties, canvas, lightBuilder, lightIntensityV4);
     } else if (illuminatedType == IlluminatedType::BORDER) {
-        DrawBorderLight(properties, canvas, lightBuilder, paint, lightIntensityV4);
+        DrawBorderLight(properties, canvas, lightBuilder, false, lightIntensityV4);
     } else if (illuminatedType == IlluminatedType::BORDER_CONTENT) {
-        DrawContentLight(properties, canvas, lightBuilder, paint, lightIntensityV4);
-        DrawBorderLight(properties, canvas, lightBuilder, paint, lightIntensityV4);
+        DrawContentLight(properties, canvas, lightBuilder, lightIntensityV4);
+        DrawBorderLight(properties, canvas, lightBuilder, false, lightIntensityV4);
+    } else if (illuminatedType == IlluminatedType::BLOOM_BORDER) {
+        DrawBorderLight(properties, canvas, lightBuilder, true, lightIntensityV4);
+    } else if (illuminatedType == IlluminatedType::BLOOM_BORDER_CONTENT) {
+        DrawContentLight(properties, canvas, lightBuilder, lightIntensityV4);
+        DrawBorderLight(properties, canvas, lightBuilder, true, lightIntensityV4);
     }
 }
 #else
@@ -2627,29 +2763,30 @@ void RSPropertiesPainter::DrawLightInner(const RSProperties& properties, Drawing
     }
     lightBuilder->SetUniform("lightPos", lightPositionMatrix);
     lightBuilder->SetUniform("viewPos", viewPosMatrix);
-    Drawing::Pen pen;
-    Drawing::Brush brush;
-    pen.SetAntiAlias(true);
-    brush.SetAntiAlias(true);
     auto illuminatedType = properties.GetIlluminated()->GetIlluminatedType();
     ROSEN_LOGD("RSPropertiesPainter::DrawLight illuminatedType:%{public}d", illuminatedType);
     if (illuminatedType == IlluminatedType::CONTENT) {
-        DrawContentLight(properties, canvas, lightBuilder, brush, lightIntensityV4);
+        DrawContentLight(properties, canvas, lightBuilder, lightIntensityV4);
     } else if (illuminatedType == IlluminatedType::BORDER) {
-        DrawBorderLight(properties, canvas, lightBuilder, pen, lightIntensityV4);
+        DrawBorderLight(properties, canvas, lightBuilder, false, lightIntensityV4);
     } else if (illuminatedType == IlluminatedType::BORDER_CONTENT) {
-        DrawContentLight(properties, canvas, lightBuilder, brush, lightIntensityV4);
-        DrawBorderLight(properties, canvas, lightBuilder, pen, lightIntensityV4);
+        DrawContentLight(properties, canvas, lightBuilder, lightIntensityV4);
+        DrawBorderLight(properties, canvas, lightBuilder, false, lightIntensityV4);
+    } else if (illuminatedType == IlluminatedType::BLOOM_BORDER) {
+        DrawBorderLight(properties, canvas, lightBuilder, true, lightIntensityV4);
+    } else if (illuminatedType == IlluminatedType::BLOOM_BORDER_CONTENT) {
+        DrawContentLight(properties, canvas, lightBuilder, lightIntensityV4);
+        DrawBorderLight(properties, canvas, lightBuilder, true, lightIntensityV4);
     }
 }
 #endif
 
 #ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::DrawContentLight(const RSProperties& properties, SkCanvas& canvas,
-    std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, SkPaint& paint, SkV4& lightIntensity)
+    std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, SkV4& lightIntensity)
 #else
 void RSPropertiesPainter::DrawContentLight(const RSProperties& properties, Drawing::Canvas& canvas,
-    std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Drawing::Brush& brush, Vector4f& lightIntensity)
+    std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Vector4f& lightIntensity)
 #endif
 {
     // content light
@@ -2662,12 +2799,16 @@ void RSPropertiesPainter::DrawContentLight(const RSProperties& properties, Drawi
 #ifndef USE_ROSEN_DRAWING
     lightBuilder->uniform("specularStrength") = contentStrength;
     shader = lightBuilder->makeShader(nullptr, false);
+    SkPaint paint;
+    paint.setAntiAlias(true);
     paint.setShader(shader);
     canvas.drawRRect(RRect2SkRRect(properties.GetRRect()), paint);
 #else
     lightBuilder->SetUniformVec4("specularStrength", contentStrength.x_,
         contentStrength.y_, contentStrength.z_, contentStrength.w_);
     shader = lightBuilder->MakeShader(nullptr, false);
+    Drawing::Brush brush;
+    brush.SetAntiAlias(true);
     brush.SetShaderEffect(shader);
     canvas.AttachBrush(brush);
     canvas.DrawRoundRect(RRect2DrawingRRect(properties.GetRRect()));
@@ -2677,10 +2818,10 @@ void RSPropertiesPainter::DrawContentLight(const RSProperties& properties, Drawi
 
 #ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::DrawBorderLight(const RSProperties& properties, SkCanvas& canvas,
-    std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, SkPaint& paint, SkV4& lightIntensity)
+    std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, bool bloom, SkV4& lightIntensity)
 #else
 void RSPropertiesPainter::DrawBorderLight(const RSProperties& properties, Drawing::Canvas& canvas,
-    std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Drawing::Pen& pen, Vector4f& lightIntensity)
+    std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, bool bloom, Vector4f& lightIntensity)
 #endif
 {
     // border light
@@ -2692,16 +2833,29 @@ void RSPropertiesPainter::DrawBorderLight(const RSProperties& properties, Drawin
 #ifndef USE_ROSEN_DRAWING
     lightBuilder->uniform("specularStrength") = lightIntensity;
     shader = lightBuilder->makeShader(nullptr, false);
+    SkPaint paint;
+    paint.setAntiAlias(true);
     paint.setShader(shader);
     float borderWidth = std::ceil(properties.GetIlluminatedBorderWidth());
     paint.setStrokeWidth(borderWidth);
     paint.setStyle(SkPaint::Style::kStroke_Style);
+    if (bloom) {
+        paint.setMaskFilter(SkMaskFilter::MakeBlur(kNormal_SkBlurStyle, 2 * borderWidth));
+    }
 #else
     lightBuilder->SetUniformVec4("specularStrength", lightIntensity.x_,
         lightIntensity.y_, lightIntensity.z_, lightIntensity.w_);
     shader = lightBuilder->MakeShader(nullptr, false);
-    pen.SetShaderEffect(shader);
+    Drawing::Pen pen;
+    pen.SetAntiAlias(true);
     float borderWidth = std::ceil(properties.GetIlluminatedBorderWidth());
+    if (bloom) {
+        Drawing::Filter filter;
+        filter.SetMaskFilter(
+        Drawing::MaskFilter::CreateBlurMaskFilter(Drawing::BlurType::NORMAL, 2 * borderWidth));
+        pen.SetFilter(filter);
+    }
+    pen.SetShaderEffect(shader);
     pen.SetWidth(borderWidth);
 #endif
     auto borderRect = properties.GetRRect().rect_;

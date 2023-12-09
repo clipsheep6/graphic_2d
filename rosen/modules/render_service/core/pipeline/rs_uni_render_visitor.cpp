@@ -2474,6 +2474,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
             if (needCreateDisplayNodeLayer || forceUpdateFlag_) {
                 processor_->ProcessDisplaySurface(node);
+                if (screenInfo_.state == ScreenState::HDI_OUTPUT_ENABLE) {
+                    DoScreenRcdTask(processor_, rcdInfo_);
+                }
                 processor_->PostProcess(&node);
             }
             return;

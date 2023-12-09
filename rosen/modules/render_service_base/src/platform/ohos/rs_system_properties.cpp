@@ -43,7 +43,9 @@ constexpr int DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE = 4;
 constexpr int DEFAULT_CORRECTION_MODE_VALUE = 999;
 
 #if defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)
-const bool RSSystemProperties::aceVulkanEnabled_ = false;
+const bool RSSystemProperties::aceVulkanEnabled_ =
+    (RSSystemProperties::GetRSEventProperty("const.gpu.vendor").compare("higpu.v200") == 0) &&
+    (RSSystemProperties::GetRSEventProperty("const.build.product").compare("ALN") == 0);
 #elif defined (ACE_ENABLE_GL)
 const bool RSSystemProperties::aceVulkanEnabled_ = false;
 #else
@@ -51,7 +53,9 @@ const bool RSSystemProperties::aceVulkanEnabled_ = true;
 #endif
 
 #if defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK)
-const bool RSSystemProperties::rsVulkanEnabled_ = false;
+const bool RSSystemProperties::rsVulkanEnabled_ =
+    (RSSystemProperties::GetRSEventProperty("const.gpu.vendor").compare("higpu.v200") == 0) &&
+    (RSSystemProperties::GetRSEventProperty("const.build.product").compare("ALN") == 0);
 #elif defined (RS_ENABLE_GL)
 const bool RSSystemProperties::rsVulkanEnabled_ = false;
 #else
@@ -207,9 +211,6 @@ bool RSSystemProperties::GetUseShadowBatchingEnabled()
 bool RSSystemProperties::GetAFBCEnabled()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.afbc.enabled", "1");
-    if (systemGpuApiType_ != GpuApiType::OPENGL && systemGpuApiType_ != GpuApiType::VULKAN) {
-        return false;
-    }
     int changed = 0;
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(enable, 1) != 0;

@@ -19,7 +19,9 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 #if defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)
-const bool SystemProperties::aceVulkanEnabled_ = false;
+const bool SystemProperties::aceVulkanEnabled_ =
+    (system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) &&
+    (system::GetParameter("const.build.product", "0").compare("ALN") == 0);
 #elif defined (ACE_ENABLE_GL)
 const bool SystemProperties::aceVulkanEnabled_ = false;
 #else
@@ -27,7 +29,9 @@ const bool SystemProperties::aceVulkanEnabled_ = true;
 #endif
 
 #if defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK)
-const bool SystemProperties::rsVulkanEnabled_ = false;
+const bool SystemProperties::rsVulkanEnabled_ =
+    (system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) &&
+    (system::GetParameter("const.build.product", "0").compare("ALN") == 0);
 #elif defined (RS_ENABLE_GL)
 const bool SystemProperties::rsVulkanEnabled_ = false;
 #else

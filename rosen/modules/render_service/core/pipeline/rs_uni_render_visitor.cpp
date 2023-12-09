@@ -2649,7 +2649,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 RS_TRACE_NAME("RSUniRenderVisitor: clipPath");
                 clipPath = true;
 #ifdef RS_ENABLE_VK
-                canvas_->clipRegion(region);
+                if (RSSystemProperties::GetRsVulkanEnabled()) {
+                    canvas_->clipRegion(region);
+                } else {
+                    SkPath dirtyPath;
+                    region.getBoundaryPath(&dirtyPath);
+                    canvas_->clipPath(dirtyPath, true);
+                }
 #else
                 SkPath dirtyPath;
                 region.getBoundaryPath(&dirtyPath);

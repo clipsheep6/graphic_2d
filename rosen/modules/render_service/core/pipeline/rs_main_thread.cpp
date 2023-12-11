@@ -625,15 +625,28 @@ std::unordered_map<NodeId, bool> RSMainThread::GetCacheCmdSkippedNodes() const
     return cacheCmdSkippedNodes_;
 }
 
-bool RSMainThread::CheckParallelSubThreadNodesStatus()
+void RSMainThread::ResetSubThreadGrContext()
 {
-    RS_OPTIONAL_TRACE_FUNC();
-    cacheCmdSkippedInfo_.clear();
-    cacheCmdSkippedNodes_.clear();
-    if (subThreadNodes_.empty()) {
+#if defined(RS_ENABLE_VK)
+    if (RSSystemProperties::GetRsVulkanEnabled()) {
+        constexpr uint64_t delayNumOfFrameCount_ = 6;
+        if (!needResetSubThreadGrContext_) {
+            needResetSubThreadGrContext_ = true;
+            frameCountForResetSubThreadGrContext_ = frameCount_.load();
+        } else if (frameCount_.load() > frameCountForResetSubThreadGrContext_ + delayNumOfFrameCount_) {
+            needResetSubThreadGrContext_ = false;
+            RSSubThreadManager::Instance()->ResetSubThreadGrContext();
+        }
+    } else {
         RSSubThreadManager::Instance()->ResetSubThreadGrContext();
-        return false;
     }
+#else
+    RSSubThreadManager::Instance()->ResetSubThreadGrContext();
+#endif
+}
+
+void RSMainThread::CheckParallelSubThreadNodesStatusImplementation()
+{
     for (auto& node : subThreadNodes_) {
         if (node == nullptr) {
             RS_LOGE("RSMainThread::CheckParallelSubThreadNodesStatus sunThreadNode is nullptr!");
@@ -677,6 +690,24 @@ bool RSMainThread::CheckParallelSubThreadNodesStatus()
             }
         }
     }
+}
+
+bool RSMainThread::CheckParallelSubThreadNodesStatus()
+{
+    RS_OPTIONAL_TRACE_FUNC();
+    cacheCmdSkippedInfo_.clear();
+    cacheCmdSkippedNodes_.clear();
+    if (subThreadNodes_.empty()) {
+        ResetSubThreadGrContext();
+        return false;
+    } else {
+#ifdef RS_ENABLE_VK
+        if (RSSystemProperties::GetRsVulkanEnabled()) {
+            needResetSubThreadGrContext_ = false;
+        }
+#endif
+    }
+    CheckParallelSubThreadNodesStatusImplementation();
     if (!cacheCmdSkippedNodes_.empty()) {
         return true;
     }

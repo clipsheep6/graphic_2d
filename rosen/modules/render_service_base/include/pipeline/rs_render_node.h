@@ -109,8 +109,8 @@ public:
     // if there is any new dirty op, check it
     bool IsContentDirty() const;
     void SetContentDirty();
-    void ResetIsOnlyBasicGeoTransfrom();
-    bool IsOnlyBasicGeoTransfrom() const;
+    void ResetIsOnlyBasicGeoTransform();
+    bool IsOnlyBasicGeoTransform() const;
 
     WeakPtr GetParent() const;
 
@@ -132,10 +132,7 @@ public:
     bool SubSurfaceNodeNeedDraw(PartialRenderType opDropType);
     void AddSubSurfaceNode(SharedPtr child, SharedPtr parent);
     void RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent);
-    inline bool GetSubSurfaceEnabled() const
-    {
-        return isSubSurfaceEnabled_;
-    }
+    inline static const bool isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
 
     // flag: isOnTheTree; instanceRootNodeId: displaynode or leash/appnode attached to
     // firstLevelNodeId: surfacenode for uiFirst to assign task; cacheNodeId: drawing cache rootnode attached to
@@ -266,15 +263,12 @@ public:
 
     bool NeedInitCacheSurface() const;
     bool NeedInitCacheCompletedSurface() const;
-    inline bool IsPureContainer() const
-    {
-        return (drawCmdModifiers_.empty() && !GetRenderProperties().isDrawn_ && !GetRenderProperties().alphaNeedApply_);
-    }
+    bool IsPureContainer() const;
+    bool IsContentNode() const;
 
-    bool IsContentNode() const
+    inline const RSRenderContent::DrawCmdContainer& GetDrawCmdModifiers() const
     {
-        return ((drawCmdModifiers_.size() == 1 && drawCmdModifiers_.count(RSModifierType::CONTENT_STYLE)) ||
-            drawCmdModifiers_.empty()) && !GetRenderProperties().isDrawn_;
+        return renderContent_->drawCmdModifiers_;
     }
 
 #ifndef USE_ROSEN_DRAWING
@@ -518,7 +512,6 @@ protected:
     static void SendCommandFromRT(std::unique_ptr<RSCommand>& command, NodeId nodeId);
     void AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& modifier);
     RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
-    std::map<RSModifierType, std::list<std::shared_ptr<RSRenderModifier>>> drawCmdModifiers_;
     std::shared_ptr<RSSingleFrameComposer> singleFrameComposer_ = nullptr;
     bool isNodeSingleFrameComposer_ = false;
     // if true, it means currently it's in partial render mode and this node is intersect with dirtyRegion
@@ -536,8 +529,15 @@ protected:
 #endif
     bool isFullChildrenListValid_ = false;
     bool isBootAnimation_ = false;
-    void IterateOnDrawableRange(
-        Slot::RSPropertyDrawableSlot begin, Slot::RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas);
+    inline void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas)
+    {
+        renderContent_->DrawPropertyDrawable(slot, canvas);
+    }
+    inline void DrawPropertyDrawableRange(
+        RSPropertyDrawableSlot begin, RSPropertyDrawableSlot end, RSPaintFilterCanvas& canvas)
+    {
+        renderContent_->DrawPropertyDrawableRange(begin, end, canvas);
+    }
 
 private:
     NodeId id_;
@@ -687,11 +687,12 @@ private:
     void UpdateDrawableVec();
     bool isCalcPreferredFps_ = true;
 
-    bool isSubSurfaceEnabled_ = false;
     std::map<NodeId, std::vector<WeakPtr>> subSurfaceNodes_;
     pid_t appPid_ = 0;
 
     const std::shared_ptr<RSRenderContent> renderContent_ = std::make_shared<RSRenderContent>();
+
+    void OnRegister();
 
     friend class RSAliasDrawable;
     friend class RSMainThread;
@@ -699,6 +700,7 @@ private:
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
     friend class RSRenderTransition;
+    friend class PropertyDrawableOpItem;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

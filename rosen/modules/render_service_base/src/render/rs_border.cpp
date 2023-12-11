@@ -376,7 +376,7 @@ void RSBorder::PaintFourLine(Drawing::Canvas& canvas, Drawing::Pen& pen, RectF r
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSBorder::PaintTopPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const
+void RSBorder::PaintTopPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const
 #else
 void RSBorder::PaintTopPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawing::RoundRect& rrect) const
 #endif
@@ -491,7 +491,7 @@ void RSBorder::PaintTopPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawing:
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSBorder::PaintRightPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const
+void RSBorder::PaintRightPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const
 {
     float offsetX = rrect.rect().x();
     float offsetY = rrect.rect().y();
@@ -609,7 +609,7 @@ void RSBorder::PaintRightPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawin
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSBorder::PaintBottomPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const
+void RSBorder::PaintBottomPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const
 {
     float offsetX = rrect.rect().x();
     float offsetY = rrect.rect().y();
@@ -731,7 +731,7 @@ void RSBorder::PaintBottomPath(Drawing::Canvas& canvas, Drawing::Pen& pen, Drawi
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSBorder::PaintLeftPath(SkCanvas& canvas, SkPaint& paint, SkRRect& rrect) const
+void RSBorder::PaintLeftPath(SkCanvas& canvas, SkPaint& paint, const SkRRect& rrect) const
 {
     float offsetX = rrect.rect().x();
     float offsetY = rrect.rect().y();

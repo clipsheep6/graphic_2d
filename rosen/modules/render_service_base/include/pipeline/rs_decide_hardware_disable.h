@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RS_DECIDE_HARDWARE_ENABLE_H
-#define RS_DECIDE_HARDWARE_ENABLE_H
+#ifndef RS_DECIDE_HARDWARE_DISABLE_H
+#define RS_DECIDE_HARDWARE_DISABLE_H
 
 #include <utility>
 #include <queue>
@@ -27,19 +27,20 @@ namespace Rosen {
 struct SortElements {
     uint64_t frequecy;
     uint64_t recent;
+    std::weak_ptr<RSSurfaceRenderNode> surfaceNode;
 };
-class RSB_EXPORT RSDecideHardwareEnable {
+class RSB_EXPORT RSDecideHardwareDisable {
 public:
-    static RSDecideHardwareEnable* Instance();
-    bool IsShouldHardwareEnable(NodeId nodeId);
+    static RSDecideHardwareDisable* Instance();
+    bool IsHardwareDisabledBySort(NodeId nodeId);
     void UpdateSurfaceBufferSortVector();
-    void UpdateSurfaceNode(NodeId nodeId);
+    void UpdateSurfaceNode(const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode);
     void DeleteSurfaceNode(NodeId nodeId);
     void UpdateVSyncCnt();
 
 private:
-    RSDecideHardwareEnable() = default;
-    ~RSDecideHardwareEnable() noexcept = default;
+    RSDecideHardwareDisable() = default;
+    ~RSDecideHardwareDisable() noexcept = default;
     static bool SortVectorCmp(const std::pair<NodeId, double>& p1, const std::pair<NodeId, double>& p2);
 
     std::unordered_map<NodeId, std::pair<std::queue<uint32_t>, SortElements>> surfaceBufferUpdateMap_;

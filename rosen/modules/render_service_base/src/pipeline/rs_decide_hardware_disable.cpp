@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "pipeline/rs_decide_hardware_enable.h"
+#include "pipeline/rs_decide_hardware_disable.h"
 #include <algorithm>
 #include <cfloat>
 #include <math.h>
@@ -25,22 +25,26 @@ namespace Rosen {
 const uint32_t VSYNC_CNT_QUEUE_MAX_SIZE = 10;
 const uint32_t SUPPORT_HWC_MAX_SIZE = 8;
 const uint32_t LONGTIME_NO_UPDATE_VSYNC_CNT = 100;
-RSDecideHardwareEnable* RSDecideHardwareEnable::Instance()
+RSDecideHardwareDisable* RSDecideHardwareDisable::Instance()
 {
-    static RSDecideHardwareEnable instance;
+    static RSDecideHardwareDisable instance;
     return &instance;
 }
 
-bool RSDecideHardwareEnable::SortVectorCmp(const std::pair<NodeId, double>& p1,
+bool RSDecideHardwareDisable::SortVectorCmp(const std::pair<NodeId, double>& p1,
     const std::pair<NodeId, double>& p2)
 {
     return p1.second < p2.second;
 }
 
-void RSDecideHardwareEnable::UpdateSurfaceBufferSortVector()
+void RSDecideHardwareDisable::UpdateSurfaceBufferSortVector()
 {
     std::vector <std::pair<NodeId, double>>().swap(surfaceBufferSortVec_);
     for (auto iter = surfaceBufferUpdateMap_.begin(); iter != surfaceBufferUpdateMap_.end(); ++iter) {
+        auto surfaceNode = iter->second.second.surfaceNode.lock();
+        if (surfaceNode && surfaceNode->GetHardwareForcedDisabled()) {
+            continue;
+        }
         uint32_t queueSize = iter->second.first.size();
         uint32_t queueTail = iter->second.first.back();
         uint64_t recent = iter->second.second.recent + (vsyncCnt_ - queueTail) * queueSize;
@@ -54,47 +58,51 @@ void RSDecideHardwareEnable::UpdateSurfaceBufferSortVector()
     std::sort(surfaceBufferSortVec_.begin(), surfaceBufferSortVec_.end(), SortVectorCmp);
 }
 
-bool RSDecideHardwareEnable::IsShouldHardwareEnable(NodeId nodeId)
+bool RSDecideHardwareDisable::IsHardwareDisabledBySort(NodeId nodeId)
 {
     if (surfaceBufferUpdateMap_.find(nodeId) == surfaceBufferUpdateMap_.end()) {
-        return false;
+        return true;
     }
     uint32_t queueTail = surfaceBufferUpdateMap_[nodeId].first.back();
     if (vsyncCnt_ >= queueTail) {
         if ((vsyncCnt_ - queueTail) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
-            return false;
+            return true;
         }
     } else {
         if (((UINT32_MAX - queueTail) + vsyncCnt_) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
-            return false;
+            return true;
         }
     }
 
     uint32_t sequence = 0;
+    bool flag = false;
     for (auto iter = surfaceBufferSortVec_.begin(); iter != surfaceBufferSortVec_.end(); ++iter) {
         if ((*iter).first == nodeId) {
+            flag = true;
             break;
         }
         sequence++;
     }
 
-    RS_OPTIONAL_TRACE_NAME("RSDecideHardwareEnable::IsShouldHardwareEnable nodeId:" + std::to_string(nodeId) +
+    RS_OPTIONAL_TRACE_NAME("RSDecideHardwareDisable::IsHardwareDisabledBySort nodeId:" + std::to_string(nodeId) +
+        " flag:" + std::to_string(flag) + " vecSize:" + std::to_string(static_cast<uint32_t>(surfaceBufferSortVec_.size())) +
         " sequence:" + std::to_string(sequence));
-    if (sequence < SUPPORT_HWC_MAX_SIZE) {
-        return true;
+    if (flag && sequence < SUPPORT_HWC_MAX_SIZE) {
+        return false;
     }
-    return false;
+    return true;
 }
 
-void RSDecideHardwareEnable::UpdateSurfaceNode(NodeId nodeId)
+void RSDecideHardwareDisable::UpdateSurfaceNode(const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode)
 {
-    if (nodeId == 0) {
+    if (surfaceNode == nullptr) {
         return;
     }
+    NodeId nodeId = surfaceNode->GetId();
     if (surfaceBufferUpdateMap_.find(nodeId) == surfaceBufferUpdateMap_.end()) {
         std::queue<uint32_t> queue;
         queue.push(vsyncCnt_);
-        SortElements sortElements = {0, 0};
+        SortElements sortElements = {0, 0, surfaceNode};
         surfaceBufferUpdateMap_[nodeId] = std::make_pair(queue, sortElements);
         return;
     }
@@ -127,23 +135,23 @@ void RSDecideHardwareEnable::UpdateSurfaceNode(NodeId nodeId)
         sortElements->recent += (((UINT32_MAX - queueTail) + vsyncCnt_) * queueSize);
     }
 
-    RS_OPTIONAL_TRACE_NAME("RSDecideHardwareEnable::UpdateSurfaceNode nodeId:" +
+    RS_OPTIONAL_TRACE_NAME("RSDecideHardwareDisable::UpdateSurfaceNode nodeId:" +
         std::to_string(nodeId) + " vsyncCnt_:" + std::to_string(vsyncCnt_) + " frequecy:" +
         std::to_string(sortElements->frequecy) + " recent:" + std::to_string(sortElements->recent));
     surfaceBufferUpdateMap_[nodeId].first.push(vsyncCnt_);
 }
 
-void RSDecideHardwareEnable::DeleteSurfaceNode(NodeId nodeId)
+void RSDecideHardwareDisable::DeleteSurfaceNode(NodeId nodeId)
 {
     if (surfaceBufferUpdateMap_.find(nodeId) == surfaceBufferUpdateMap_.end()) {
         return;
     }
     
-    RS_OPTIONAL_TRACE_NAME("RSDecideHardwareEnable::DeleteSurfaceNode nodeId:" + std::to_string(nodeId));
+    RS_OPTIONAL_TRACE_NAME("RSDecideHardwareDisable::DeleteSurfaceNode nodeId:" + std::to_string(nodeId));
     surfaceBufferUpdateMap_.erase(nodeId);
 }
 
-void RSDecideHardwareEnable::UpdateVSyncCnt()
+void RSDecideHardwareDisable::UpdateVSyncCnt()
 {
     vsyncCnt_++;
 }

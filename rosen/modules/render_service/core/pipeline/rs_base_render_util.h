@@ -127,7 +127,8 @@ public:
     static void SetPropertiesForCanvas(RSPaintFilterCanvas& canvas, const BufferDrawParam& params);
 
     static GSError DropFrameProcess(RSSurfaceHandler& node);
-    static bool ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, NodeId nodeId = 0);
+    static bool ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler,
+        const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode = nullptr);
     static bool ReleaseBuffer(RSSurfaceHandler& surfaceHandler);
 
     static std::unique_ptr<RSTransactionData> ParseTransactionData(MessageParcel& parcel);

@@ -196,6 +196,11 @@ public:
         isHardwareDisabledByCache_ = disabledByCache;
     }
 
+    void SetHardwareDisabledBySort(bool disabledBySort)
+    {
+        isHardwareDisabledBySort_ = disabledBySort;
+    }
+
     void SetHardwareForcedDisabledStateByFilter(bool forcesDisabled)
     {
         isHardwareForcedDisabledByFilter_ = forcesDisabled;
@@ -206,9 +211,15 @@ public:
         return isHardwareForcedDisabledByFilter_;
     }
 
-    bool IsHardwareForcedDisabled() const
+    bool GetHardwareForcedDisabled() const
     {
         return isHardwareForcedDisabled_ || isHardwareDisabledByCache_ ||
+            GetDstRect().GetWidth() <= 1 || GetDstRect().GetHeight() <= 1; // avoid fallback by composer
+    }
+
+    bool IsHardwareForcedDisabled() const
+    {
+        return isHardwareForcedDisabled_ || isHardwareDisabledByCache_ || isHardwareDisabledBySort_ ||
             GetDstRect().GetWidth() <= 1 || GetDstRect().GetHeight() <= 1; // avoid fallback by composer
     }
 
@@ -1076,6 +1087,7 @@ private:
     bool isHardwareForcedDisabled_ = false;
     bool isHardwareForcedDisabledByFilter_ = false;
     bool isHardwareDisabledByCache_ = false;
+    bool isHardwareDisabledBySort_ = false;
     float localZOrder_ = 0.0f;
     std::vector<WeakPtr> childHardwareEnabledNodes_;
     int32_t nodeCost_ = 0;

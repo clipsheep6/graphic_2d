@@ -24,7 +24,7 @@
 #include "common/rs_vector2.h"
 #include "common/rs_vector3.h"
 #include "include/utils/SkCamera.h"
-#include "pipeline/rs_decide_hardware_enable.h"
+#include "pipeline/rs_decide_hardware_disable.h"
 #include "platform/common/rs_log.h"
 #include "png.h"
 #include "rs_trace.h"
@@ -1032,7 +1032,8 @@ GSError RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
     return OHOS::GSERROR_OK;
 }
 
-bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, NodeId nodeId)
+bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler,
+    const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode)
 {
     auto availableBufferCnt = surfaceHandler.GetAvailableBufferCount();
     if (availableBufferCnt <= 0) {
@@ -1061,7 +1062,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler, 
     RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer success, timestamp = %{public}" PRId64 ".",
         surfaceHandler.GetNodeId(), timestamp);
     surfaceHandler.ReduceAvailableBuffer();
-    RSDecideHardwareEnable::Instance()->UpdateSurfaceNode(nodeId);
+    RSDecideHardwareDisable::Instance()->UpdateSurfaceNode(surfaceNode);
     return true;
 }
 

@@ -39,6 +39,7 @@
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
+#include "pipeline/rs_decide_hardware_disable.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_effect_render_node.h"
@@ -4003,6 +4004,8 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                     RSUniRenderUtil::GetRotationDegreeFromMatrix(node.GetTotalMatrix()) % ROTATION_90 != 0) &&
                     (!node.IsHardwareEnabledTopSurface() || node.HasSubNodeShouldPaint()));
                 node.SetHardwareDisabledByCache(isUpdateCachedSurface_);
+                bool isHardwareDisabledBySort = RSDecideHardwareDisable::Instance()->IsHardwareDisabledBySort(node.GetId());
+                node.SetHardwareDisabledBySort(isHardwareDisabledBySort);
             }
             // if this window is in freeze state, disable hardware composer for its child surfaceView
             if (IsHardwareComposerEnabled() && !node.IsHardwareForcedDisabled() && node.IsHardwareEnabledType()) {

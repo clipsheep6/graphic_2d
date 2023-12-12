@@ -38,6 +38,7 @@ public:
     void HoldResource(const std::shared_ptr<Drawing::Image> &img);
 #endif
     void ReleaseResource();
+    void HoldResourceMain(sk_sp<SkImage> img);
 private:
     SKResourceManager() = default;
     ~SKResourceManager() = default;

@@ -77,6 +77,7 @@ private:
         int strokeWidth = 6);
 #endif // USE_ROSEN_DRAWING
     void DrawDirtyRegion();
+    bool CreateBufferAndCanvasForIsSameRender(RSRenderNode& node);
     // Update damageRegion based on buffer age, and then set it through egl api
 #ifdef NEW_RENDER_CONTEXT
     void UpdateDirtyAndSetEGLDamageRegion(std::shared_ptr<RSRenderSurface>& surface);

@@ -350,12 +350,18 @@ public:
     int32_t CalcExpectedFrameRate(const std::string& scene, float speed);
 
     void SetOutOfParent(OutOfParentType outOfParent);
+
+    // set surfaceId here use NodeId to instead of
+    void SetSameRenderSurfaceId(NodeId sameRenderSurfaceId);
+
 protected:
-    explicit RSNode(bool isRenderServiceNode);
-    explicit RSNode(bool isRenderServiceNode, NodeId id);
+    explicit RSNode(bool isRenderServiceNode, bool isSamelayerRender);
+    explicit RSNode(bool isRenderServiceNode, bool isSamelayerRender, NodeId id);
 
     bool isRenderServiceNode_;
+    bool isSameLayerRenderNode_ = false;
     bool skipDestroyCommandInDestructor_ = false;
+    SurfaceId sameRenderSurfaceId_ = 0;
 
     bool drawContentLast_ = false;
 
@@ -368,6 +374,12 @@ protected:
     }
 
     std::vector<PropertyId> GetModifierIds() const;
+
+    SurfaceId GetSameRenderSurfaceId() const
+    {
+        return sameRenderSurfaceId_;
+    }
+
     bool isCustomTextType_ = false;
 
 private:

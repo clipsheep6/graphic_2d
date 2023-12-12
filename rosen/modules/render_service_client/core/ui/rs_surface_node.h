@@ -43,6 +43,7 @@ namespace OHOS {
 namespace Rosen {
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
+    bool isSamelayerRender = false;
     void* additionalData = nullptr;
 };
 

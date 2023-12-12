@@ -2576,33 +2576,29 @@ void RSPropertiesPainter::DrawLightInner(const RSProperties& properties, Drawing
     const auto& contentAbsRect = geoPtr->GetAbsRect();
     auto iter = lightSources.begin();
     auto cnt = 0;
-    Drawing::Matrix44::Buffer lightPositionBuffer;
+    Drawing::Matrix44 lightPositionMatrix;
+    Drawing::Matrix44 viewPosMatrix;
     Vector4f lightIntensityV4;
     constexpr int MAX_LIGHT_SOUCES = 4;
-    while (iter != lightSources.end() && cnt < MAX_LIGHT_SOUCES) {
+     while (iter != lightSources.end() && cnt < MAX_LIGHT_SOUCES) {
         const auto& lightPosition = (*iter)->GetAbsLightPosition();
         auto lightIntensity = (*iter)->GetLightIntensity();
         auto lightPosX = lightPosition[0] - contentAbsRect.left_;
         auto lightPosY = lightPosition[1] - contentAbsRect.top_;
         auto lightPosZ = lightPosition[2];
+        lightPositionMatrix.SetCol(cnt, lightPosX, lightPosY, lightPosZ, 0);
+        viewPosMatrix.SetCol(cnt, lightPosX, lightPosY, lightPosZ, 0);
         lightIntensityV4[cnt] = lightIntensity;
-        lightPositionBuffer[0][cnt] = lightPosX;
-        lightPositionBuffer[1][cnt] = lightPosY;
-        lightPositionBuffer[2][cnt] = lightPosZ;
         iter++;
         cnt++;
     }
-    Drawing::Matrix44::Buffer viewPosBuffer = lightPositionBuffer;
-    Drawing::Matrix44 lightPositionMatrix;
-    Drawing::Matrix44 viewPosMatrix;
-    lightPositionMatrix.SetMatrix44ColMajor(lightPositionBuffer);
-    viewPosMatrix.SetMatrix44ColMajor(viewPosBuffer);
     lightBuilder->SetUniform("lightPos", lightPositionMatrix);
     lightBuilder->SetUniform("viewPos", viewPosMatrix);
     Drawing::Pen pen;
     Drawing::Brush brush;
     pen.SetAntiAlias(true);
     brush.SetAntiAlias(true);
+    auto illuminatedType = properties.GetIlluminated()->GetIlluminatedType();
     ROSEN_LOGD("RSPropertiesPainter::DrawLight illuminatedType:%{public}d", illuminatedType);
     if (illuminatedType == IlluminatedType::CONTENT) {
         DrawContentLight(properties, canvas, lightBuilder, brush, lightIntensityV4);
@@ -2636,7 +2632,8 @@ void RSPropertiesPainter::DrawContentLight(const RSProperties& properties, Drawi
     paint.setShader(shader);
     canvas.drawRRect(RRect2SkRRect(properties.GetRRect()), paint);
 #else
-    lightBuilder->SetUniform("specularStrength", contentStrength);
+    auto data = lightIntensity.GetData<float>();
+    lightBuilder->SetUniformVec4("specularStrength", data->x_, data->y_, data->z_, data->w_);
     shader = lightBuilder->MakeShader(nullptr, false);
     brush.SetShaderEffect(shader);
     canvas.AttachBrush(brush);
@@ -2667,7 +2664,8 @@ void RSPropertiesPainter::DrawBorderLight(const RSProperties& properties, Drawin
     paint.setStrokeWidth(borderWidth);
     paint.setStyle(SkPaint::Style::kStroke_Style);
 #else
-    lightBuilder->SetUniform("specularStrength", lightIntensity);
+    auto data = lightIntensity.GetData<float>();
+    lightBuilder->SetUniformVec4("specularStrength", data->x_, data->y_, data->z_, data->w_);
     shader = lightBuilder->MakeShader(nullptr, false);
     pen.SetShaderEffect(shader);
     float borderWidth = std::ceil(properties.GetIlluminatedBorderWidth());

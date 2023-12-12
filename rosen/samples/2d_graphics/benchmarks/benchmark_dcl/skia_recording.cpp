@@ -91,15 +91,16 @@ SkCanvas* SkiaRecording::BeginCapture(SkCanvas* canvas, int width, int height)
         }
     }
     // Create a canvas pointer, fill it depending on what kind of capture is requested (if any)
+    SkCanvas* pictureCanvas = nullptr;
     switch (captureMode_) {
         case SkiaCaptureMode::SINGLE_FRAME:
             recorder_ = std::make_unique<SkPictureRecorder>();
-            pictureCanvas_ = recorder_->beginRecording(width, height);
+            pictureCanvas = recorder_->beginRecording(width, height);
             break;
         case SkiaCaptureMode::MULTI_FRAME:
             // If a multi frame recording is active, initialize recording for a single frame of a
             // multi frame file.
-            pictureCanvas_ = multiPic_->beginPage(width, height);
+            pictureCanvas = multiPic_->beginPage(width, height);
             break;
         case SkiaCaptureMode::NONE:
             // Returning here in the non-capture case means we can count on pictureCanvas being
@@ -108,11 +109,9 @@ SkCanvas* SkiaRecording::BeginCapture(SkCanvas* canvas, int width, int height)
     }
 
     // Setting up an nway canvas is common to any kind of capture.
-    if (nwayCanvas_ == nullptr) {
-        nwayCanvas_ = std::make_unique<SkNWayCanvas>(width, height);
-    }
+    nwayCanvas_ = std::make_unique<SkNWayCanvas>(width, height);
     nwayCanvas_->addCanvas(canvas);
-    nwayCanvas_->addCanvas(pictureCanvas_);
+    nwayCanvas_->addCanvas(pictureCanvas);
 
     return nwayCanvas_.get();
 }
@@ -122,7 +121,7 @@ void SkiaRecording::EndCapture()
     if (captureMode_ == SkiaCaptureMode::NONE) {
         return;
     }
-    nwayCanvas_->removeAll();
+    nwayCanvas_.reset();
 
     if (captureFrameNum_ > 0 && captureMode_ == SkiaCaptureMode::MULTI_FRAME) {
         if (!multiPic_) {

@@ -54,19 +54,14 @@ public:
     bool SetUpGrContext() {return true;}
     void Destroy() override;
     void RenderFrame() override;
-    SkCanvas* AcquireSkCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
-    Drawing::Canvas* AcquireDrCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
+    SkCanvas* AcquireCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
 private:
 #if defined(USE_CANVASKIT0310_SKIA) || defined(NEW_SKIA)
     sk_sp<GrDirectContext> grContext_ = nullptr;
 #else
     sk_sp<GrContext> grContext_ = nullptr;
 #endif
-    SkSurface* skSurface_ = nullptr;
-#ifdef ENABLE_DDGR_OPTIMIZE
-    Drawing::Surface* drSurface_ = nullptr;
-    std::shared_ptr<DDGR::Surface> dSurface_ = nullptr;
-#endif
+    sk_sp<SkSurface> skSurface_ = nullptr;
 };
 }
 }

@@ -16,7 +16,6 @@
 #ifndef DRAWING_PROXY_H
 #define DRAWING_PROXY_H
 #include "canvas_context.h"
-#include "draw/canvas.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -24,8 +23,7 @@ class DrawingProxy {
 public:
     DrawingProxy();
     virtual ~DrawingProxy();
-    SkCanvas* AcquireSkCanvas(std::unique_ptr<SurfaceFrame>& frame);
-    Drawing::Canvas* AcquireDrCanvas(std::unique_ptr<SurfaceFrame>& frame);
+    SkCanvas* AcquireCanvas(std::unique_ptr<SurfaceFrame>& frame);
     void* CreateSurface(void* window);
     void MakeCurrent();
     void InitDrawContext();

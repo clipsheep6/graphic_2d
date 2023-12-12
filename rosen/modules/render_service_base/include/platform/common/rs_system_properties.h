@@ -200,6 +200,8 @@ public:
     {
         return rsVulkanEnabled_;
     }
+
+    static bool GetParallelUploadTexture();
 private:
     RSSystemProperties() = default;
 

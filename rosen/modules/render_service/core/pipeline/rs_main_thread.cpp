@@ -262,6 +262,7 @@ void RSMainThread::Init()
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
         SKResourceManager::Instance().ReleaseResource();
+        RSUploadTextureThread::Instance().OnRenderEnd();
     };
 #if defined(ROSEN_OHOS) && defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
     if (GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN || GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
@@ -289,14 +290,6 @@ void RSMainThread::Init()
                 std::lock_guard<std::mutex> lock(unmarshalMutex_);
                 ++unmarshalFinishedCount_;
             }
-
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-            if (!RSSystemProperties::GetRsVulkanEnabled()) {
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-                RSUploadTextureThread::Instance().PostTask(uploadTextureBarrierTask_);
-#endif
-            }
-#endif
             unmarshalTaskCond_.notify_all();
         };
         RSUnmarshalThread::Instance().Start();
@@ -1272,29 +1265,8 @@ void RSMainThread::WaitUntilUploadTextureTaskFinished()
     if (!isUniRender_) {
         return;
     }
-    RS_OPTIONAL_TRACE_BEGIN("RSMainThread::WaitUntilUploadTextureTaskFinished");
-    {
-        std::unique_lock<std::mutex> lock(uploadTextureMutex_);
-        //upload texture maximum waiting time is 100ms
-        //otherwise main thread upload texture
-        static const uint32_t WAIT_FOR_UPLOAD_FINISH_TIMEOUT = 100; 
-        uploadTextureTaskCond_.wait_until(lock, std::chrono::system_clock::now() +
-            std::chrono::milliseconds(WAIT_FOR_UPLOAD_FINISH_TIMEOUT), [this]() {
-                 return uploadTextureFinishedCount_ > 0; });
-        --uploadTextureFinishedCount_;
-    }
-    if (uploadTextureFence != EGL_NO_SYNC_KHR) {
-        auto diplayID = GetRenderEngine()->GetRenderContext().get()->GetEGLDisplay();
-        EGLint waitStatus = eglWaitSyncKHR(diplayID, uploadTextureFence, 0);
-        if (waitStatus == EGL_FALSE) {
-            ROSEN_LOGE("eglClientWaitSyncKHR error 0x%{public}x", eglGetError());
-        } else if (waitStatus == EGL_TIMEOUT_EXPIRED_KHR) {
-            ROSEN_LOGE("create eglClientWaitSyncKHR timeout");
-        }
-        eglDestroySyncKHR(diplayID, uploadTextureFence);
-    }
-    uploadTextureFence = EGL_NO_SYNC_KHR;
-    RS_OPTIONAL_TRACE_END();
+    RSUploadTextureThread::Instance().OnProcessBegin();
+    return;
 }
 #endif
 

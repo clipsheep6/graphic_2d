@@ -115,6 +115,14 @@ bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(
     // write a flag at the begin of parcel to identify parcel type
     // 0: indicate normal parcel
     // 1: indicate ashmem parcel
+    if (!transactionData) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::FillParcelWithTransactionData transactionData nullptr!");
+        return false;
+    }
+    if (!data) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::FillParcelWithTransactionData data nullptr!");
+        return false;
+    }
     data->WriteInt32(0);
 
     // 1. marshalling RSTransactionData
@@ -1484,6 +1492,10 @@ bool RSRenderServiceConnectionProxy::GetPixelmap(
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         return false;
     }
+    if (!pixelmap) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetPixelmap pixelmap nullptr!");
+        return false;
+    }
     option.SetFlags(MessageOption::TF_SYNC);
     data.WriteUint64(id);
     data.WriteParcelable(pixelmap.get());
@@ -1601,6 +1613,10 @@ int32_t RSRenderServiceConnectionProxy::RegisterHgmConfigChangeCallback(sptr<RSI
     MessageOption option;
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
         return RS_CONNECTION_ERROR;
+    }
+    if (!callback) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterHgmConfigChangeCallback: callback is nullptr.");
+        return INVALID_ARGUMENTS;
     }
     option.SetFlags(MessageOption::TF_SYNC);
     data.WriteRemoteObject(callback->AsObject());

@@ -53,16 +53,6 @@ std::unique_ptr<SurfaceFrame> SurfaceOhosGl::RequestFrame(int32_t width, int32_t
     return ret;
 }
 
-std::unique_ptr<SurfaceFrame> SurfaceOhosGl::NativeRequestFrame(int32_t width, int32_t height)
-{
-    return RequestFrame(width, height);
-}
-
-bool SurfaceOhosGl::NativeFlushFrame(std::unique_ptr<SurfaceFrame>& frame)
-{
-    return FlushFrame(frame);
-}
-
 bool SurfaceOhosGl::FlushFrame(std::unique_ptr<SurfaceFrame>& frame)
 {
     if (drawingProxy_ == nullptr) {
@@ -75,24 +65,13 @@ bool SurfaceOhosGl::FlushFrame(std::unique_ptr<SurfaceFrame>& frame)
     return true;
 }
 
-SkCanvas* SurfaceOhosGl::GetSkCanvas(std::unique_ptr<SurfaceFrame>& frame)
+SkCanvas* SurfaceOhosGl::GetCanvas(std::unique_ptr<SurfaceFrame>& frame)
 {
     if (drawingProxy_ == nullptr) {
-        LOGE("drawingProxy_ is nullptr, can not GetSkCanvas");
+        LOGE("drawingProxy_ is nullptr, can not GetCanvas");
         return nullptr;
     }
-    return drawingProxy_->AcquireSkCanvas(frame);
+    return drawingProxy_->AcquireCanvas(frame);
 }
-
-#ifdef USR_ROSEN_DRAWING
-Drawing::Canvas* SurfaceOhosGl::GetCanvas(std::unique_ptr<SurfaceFrame>& frame)
-{
-    if (drawingProxy_ == nullptr) {
-        LOGE("drawingProxy_ is nullptr, can not GetSkCanvas");
-        return nullptr;
-    }
-    return drawingProxy_->AcquireDrCanvas(frame);
-}
-#endif
 } // namespace Rosen
 } // namespace OHOS

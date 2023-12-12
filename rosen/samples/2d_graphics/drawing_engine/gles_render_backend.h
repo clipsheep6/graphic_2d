@@ -31,8 +31,6 @@
 
 #include "interface_render_backend.h"
 #include "egl_manager.h"
-#include "draw/surface.h"
-#include "image/gpu_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -57,11 +55,9 @@ public:
     }
 #endif
     bool SetUpGrContext();
-    bool SetUpDrContext();
     void Destroy() override;
     void RenderFrame() override;
-    SkCanvas* AcquireSkCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
-    Drawing::Canvas* AcquireDrCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
+    SkCanvas* AcquireCanvas(std::unique_ptr<SurfaceFrame>& frame) override;
 private:
     EGLManager* eglManager_ = nullptr;
 #if defined(USE_CANVASKIT0310_SKIA) || defined(NEW_SKIA)
@@ -70,10 +66,6 @@ private:
     sk_sp<GrContext> grContext_ = nullptr;
 #endif
     sk_sp<SkSurface> skSurface_ = nullptr;
-    SkSurface* pSkSurface_ = nullptr;
-
-    std::shared_ptr<Drawing::GPUContext> drGPUContext_ = nullptr;
-    std::shared_ptr<Drawing::Surface> drSurface_ = nullptr;
 };
 }
 }

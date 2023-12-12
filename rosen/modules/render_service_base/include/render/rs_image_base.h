@@ -67,7 +67,7 @@ public:
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-    void ConvertPixelMapToSkImage();
+    void ConvertPixelMapToSkImage(bool parallelUpload = false);
 #else
     void ConvertPixelMapToDrawingImage();
 #endif
@@ -107,12 +107,6 @@ protected:
     bool isDrawn_ = false;
     uint64_t uniqueId_ = 0;
     bool renderServiceImage_ = false;
-
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-    bool isPinImage_ = false;
-#endif
-#endif
 };
 } // namespace Rosen
 } // namespace OHOS

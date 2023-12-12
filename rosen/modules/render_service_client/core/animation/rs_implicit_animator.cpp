@@ -113,6 +113,7 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         auto params = std::static_pointer_cast<RSImplicitCancelAnimationParam>(implicitAnimationParams_.top());
         params->SyncProperties();
         CloseImplicitAnimationInner();
+        return {};
     }
 
     const auto& finishCallback = std::get<const std::shared_ptr<AnimationFinishCallback>>(globalImplicitParams_.top());

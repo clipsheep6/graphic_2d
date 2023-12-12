@@ -68,8 +68,9 @@ class RSB_EXPORT RSNodeGetShowingPropertiesAndCancelAnimation : public RSSyncTas
     constexpr static uint16_t commandSubType = GET_RENDER_PROPERTIES;
 
 public:
-    explicit RSNodeGetShowingPropertiesAndCancelAnimation(uint64_t timeoutNS = 1e8)
-        : RSSyncTask(timeoutNS)
+    using propertiesMap = std::map<std::pair<NodeId, PropertyId>, std::shared_ptr<RSRenderPropertyBase>>;
+    explicit RSNodeGetShowingPropertiesAndCancelAnimation(uint64_t timeoutNS, propertiesMap&& map)
+        : RSSyncTask(timeoutNS), properties_(std::move(map))
     {}
     ~RSNodeGetShowingPropertiesAndCancelAnimation() override = default;
 
@@ -82,10 +83,10 @@ public:
     static RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
     void Process(RSContext& context) override;
 
-    void SetProperties(std::map<std::pair<NodeId, PropertyId>,
-        std::shared_ptr<RSRenderPropertyBase>>& properties) { this->properties_ = properties; }
-    std::map<std::pair<NodeId, PropertyId>, std::shared_ptr<RSRenderPropertyBase>>&
-        GetProperties() { return this->properties_; }
+    const propertiesMap& GetProperties() const
+    {
+        return this->properties_;
+    }
 
     bool IsTimeout() const
     {
@@ -93,7 +94,8 @@ public:
     }
 
 private:
-    std::map<std::pair<NodeId, PropertyId>, std::shared_ptr<RSRenderPropertyBase>> properties_;
+    RSNodeGetShowingPropertiesAndCancelAnimation(): RSSyncTask(1e8) {}
+    propertiesMap properties_;
     bool isTimeout_ = true;
 };
 

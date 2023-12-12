@@ -119,7 +119,8 @@ public:
         return 0.0f;
     }
 
-    virtual void SetValueFromRender(std::shared_ptr<RSRenderPropertyBase>& rsRenderPropertyBase) {};
+    virtual void SetValueFromRender(const std::shared_ptr<const RSRenderPropertyBase>& rsRenderPropertyBase) {};
+
 protected:
     virtual void SetIsCustom(bool isCustom) {}
 
@@ -459,13 +460,13 @@ public:
         return true;
     }
 
-    void SetValueFromRender(std::shared_ptr<RSRenderPropertyBase>& rsRenderPropertyBase) override {
-        auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(rsRenderPropertyBase);
+    void SetValueFromRender(const std::shared_ptr<const RSRenderPropertyBase>& rsRenderPropertyBase) override
+    {
+        auto renderProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(rsRenderPropertyBase);
         if (!renderProperty) {
             return;
         }
         RSProperty<T>::stagingValue_ = renderProperty->Get();
-        // this->SetValue(renderProperty->Get());
     }
 
     void SetUpdateCallback(const std::function<void(T)>& updateCallback)

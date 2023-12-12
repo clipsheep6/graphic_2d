@@ -113,7 +113,7 @@ RSCommand* RSNodeGetShowingPropertiesAndCancelAnimation::Unmarshalling(Parcel& p
     if (!RSMarshallingHelper::Unmarshalling(parcel, timeoutNS)) {
         return nullptr;
     }
-    auto command = new RSNodeGetShowingPropertiesAndCancelAnimation(timeoutNS);
+    auto command = new RSNodeGetShowingPropertiesAndCancelAnimation();
     if (!command->ReadFromParcel(parcel)) {
         delete command;
         return nullptr;
@@ -142,22 +142,23 @@ void RSNodeGetShowingPropertiesAndCancelAnimation::Process(RSContext& context)
 {
     isTimeout_ = false;
     auto& nodeMap = context.GetNodeMap();
-    for (auto& nodeProperty : properties_) {
-        auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeProperty.first.first);
+    for (auto& [key, value]: properties_) {
+        auto& [nodeId, propertyId] = key;
+        auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
         if (!node) {
             result_ = false;
             continue;
         }
-        auto modifier = node->GetModifier(nodeProperty.first.second);
+        auto modifier = node->GetModifier(propertyId);
         if (!modifier) {
             result_ = false;
             continue;
         }
-        nodeProperty.second = modifier->GetProperty();
-        result_ = (nodeProperty.second != nullptr);
+        value = modifier->GetProperty();
+        result_ = (value != nullptr);
         if (result_) {
             auto& animationManager = node->GetAnimationManager();
-            animationManager.CancelAnimationByPropertyId(nodeProperty.second->GetId());
+            animationManager.CancelAnimationByPropertyId(propertyId);
         }
     }
 }

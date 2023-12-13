@@ -217,6 +217,11 @@ public:
         return curDrawStatusVec_;
     }
 
+    bool CheckIsHardwareEnabledBufferUpdated() const
+    {
+        return isHardwareEnabledBufferUpdated_;
+    }
+
     DeviceType GetDeviceType() const;
     bool IsSingleDisplay();
     bool GetNoNeedToPostTask();

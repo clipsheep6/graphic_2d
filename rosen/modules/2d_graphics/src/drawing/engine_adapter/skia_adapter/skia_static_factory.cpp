@@ -18,9 +18,9 @@
 #include "skia_adapter/skia_data.h"
 #include "skia_adapter/skia_surface.h"
 #include "skia_adapter/skia_image.h"
-#include "skia_adapter/skia_font_style_set.h"
 #include "skia_adapter/skia_text_blob.h"
 #include "skia_adapter/skia_typeface.h"
+#include "utils/system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -60,8 +60,12 @@ std::shared_ptr<Typeface> SkiaStaticFactory::MakeFromName(const char familyName[
 #ifdef ACE_ENABLE_GPU
 #ifdef RS_ENABLE_VK
 std::shared_ptr<Surface> SkiaStaticFactory::MakeFromBackendRenderTarget(GPUContext* gpuuContext,
-    const VKTextureInfo& info, TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
+    TextureInfo& info, TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
 {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     return SkiaSurface::MakeFromBackendRenderTarget(gpuuContext, info, origin, deleteVkImage, cleanHelper);
 }
 #endif
@@ -114,9 +118,9 @@ const Rect& SkiaStaticFactory::ComputeFastBounds(const Brush& brush, const Rect&
     return SkiaPaint::ComputeFastBounds(brush, orig, storage);
 }
 
-FontStyleSet* SkiaStaticFactory::CreateEmptyFontStyleSet()
+bool SkiaStaticFactory::AsBlendMode(const Brush& brush)
 {
-    return SkiaFontStyleSet::CreateEmpty();
+    return SkiaPaint::AsBlendMode(brush);
 }
 
 std::shared_ptr<Data> SkiaStaticFactory::MakeDataFromFileName(const char path[])

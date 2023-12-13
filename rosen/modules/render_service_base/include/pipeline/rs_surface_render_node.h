@@ -36,6 +36,7 @@
 #include "platform/common/rs_surface_ext.h"
 #include "property/rs_properties_painter.h"
 #include "screen_manager/screen_types.h"
+#include "surface_type.h"
 #include "transaction/rs_occlusion_data.h"
 
 #ifndef USE_ROSEN_DRAWING
@@ -230,8 +231,9 @@ public:
                nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     }
 
-    // used to determine whether the layer-1 surfacenodes can be skipped in the subthread of focus-first framework
-    bool IsCurrentFrameStatic();
+    bool IsUIFirstSelfDrawCheck();
+    bool IsVisibleDirtyEmpty(DeviceType deviceType);
+    bool IsCurFrameStatic(DeviceType deviceType);
     void UpdateCacheSurfaceDirtyManager(int bufferAge = 2);
 
     bool GetNeedSubmitSubThread() const
@@ -540,9 +542,9 @@ public:
     void SetLocalZOrder(float localZOrder);
     float GetLocalZOrder() const;
 
-#ifndef ROSEN_CROSS_PLATFORM
     void SetColorSpace(GraphicColorGamut colorSpace);
     GraphicColorGamut GetColorSpace() const;
+#ifndef ROSEN_CROSS_PLATFORM
     void SetConsumer(const sptr<IConsumerSurface>& consumer);
     void SetBlendType(GraphicBlendType blendType);
     GraphicBlendType GetBlendType();
@@ -665,8 +667,10 @@ public:
 
     // [planning] Remove this after skia is upgraded, the clipRegion is supported
     void ResetChildrenFilterRects();
-    void UpdateChildrenFilterRects(const RectI& rect);
+    void UpdateChildrenFilterRects(std::shared_ptr<RSRenderNode> filternode, const RectI& rect, bool cacheValid);
     const std::vector<RectI>& GetChildrenNeedFilterRects() const;
+    const std::vector<bool>& GetChildrenNeedFilterRectsCacheValid() const;
+    const std::vector<std::shared_ptr<RSRenderNode>>& GetChildrenFilterNodes() const;
 
     // manage abilities' nodeid info
     void UpdateAbilityNodeIds(NodeId id, bool isAdded);
@@ -684,19 +688,19 @@ public:
         return GetNodeId() == focusedNodeId;
     }
 
-    void ResetSurfaceOpaqueRegion(
-        const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow);
+    void ResetSurfaceOpaqueRegion(const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation,
+        const bool isFocusWindow, const Vector4<int>& cornerRadius);
     Occlusion::Region ResetOpaqueRegion(
         const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow) const;
     Occlusion::Region SetUnfocusedWindowOpaqueRegion(const RectI& absRect, const ScreenRotation screenRotation) const;
     Occlusion::Region SetFocusedWindowOpaqueRegion(const RectI& absRect, const ScreenRotation screenRotation) const;
-    Occlusion::Region SetCornerRadiusOpaqueRegion(const RectI& absRect, float radius) const;
+    Occlusion::Region SetCornerRadiusOpaqueRegion(const RectI& absRect, const Vector4<int>& cornerRadius) const;
     void ResetSurfaceContainerRegion(const RectI& screeninfo, const RectI& absRect,
         const ScreenRotation screenRotation);
-    bool CheckOpaqueRegionBaseInfo(
-        const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow);
-    void SetOpaqueRegionBaseInfo(
-        const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation, const bool isFocusWindow);
+    bool CheckOpaqueRegionBaseInfo(const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation,
+        const bool isFocusWindow, const Vector4<int>& cornerRadius);
+    void SetOpaqueRegionBaseInfo(const RectI& screeninfo, const RectI& absRect, const ScreenRotation screenRotation,
+        const bool isFocusWindow, const Vector4<int>& cornerRadius);
 
     bool IsStartAnimationFinished() const;
     void SetStartAnimationFinished();
@@ -858,6 +862,28 @@ public:
         hasSkipLayer_ = hasSkipLayer;
     }
 
+    bool GetSurfaceCacheContentStatic()
+    {
+        return surfaceCacheContentStatic_;
+    }
+
+    void SetSurfaceCacheContentStatic(bool contentStatic)
+    {
+        surfaceCacheContentStatic_ = contentStatic;
+    }
+
+    size_t GetLastFrameChildrenCnt()
+    {
+        return lastFrameChildrenCnt_;
+    }
+
+    void SetLastFrameChildrenCnt(size_t childrenCnt)
+    {
+        lastFrameChildrenCnt_ = childrenCnt;
+    }
+
+    bool IsUIFirstCacheReusable(DeviceType deviceType);
+
 #ifdef USE_SURFACE_TEXTURE
     std::shared_ptr<RSSurfaceTexture> GetSurfaceTexture() const { return surfaceTexture_; };
     void SetSurfaceTexture(const std::shared_ptr<RSSurfaceTexture> &texture) { surfaceTexture_ = texture; }
@@ -873,12 +899,27 @@ public:
         return isForeground_;
     }
     bool GetNodeIsSingleFrameComposer() const override;
+
+    void SetAncestorDisplayNode(const RSBaseRenderNode::WeakPtr& ancestorDisplayNode)
+    {
+        ancestorDisplayNode_ = ancestorDisplayNode;
+    }
+
+    RSBaseRenderNode::WeakPtr GetAncestorDisplayNode() const
+    {
+        return ancestorDisplayNode_;
+    }
+    bool GetHasSharedTransitionNode() const;
+    void SetHasSharedTransitionNode(bool hasSharedTransitionNode);
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;
     Vector4f GetWindowCornerRadius();
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> GetLeashWindowNestedSurfaces();
+    bool IsHistoryOccludedDirtyRegionNeedSubmit();
+    void ClearHistoryUnSubmittedDirtyInfo();
+    void UpdateHistoryUnsubmittedDirtyInfo();
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
@@ -922,8 +963,8 @@ private:
     std::string name_;
     std::string bundleName_;
     RSSurfaceNodeType nodeType_ = RSSurfaceNodeType::DEFAULT;
-#ifndef ROSEN_CROSS_PLATFORM
     GraphicColorGamut colorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+#ifndef ROSEN_CROSS_PLATFORM
     GraphicBlendType blendType_ = GraphicBlendType::GRAPHIC_BLEND_SRCOVER;
 #endif
     bool isNotifyRTBufferAvailablePre_ = false;
@@ -973,6 +1014,8 @@ private:
     bool opaqueRegionChanged_ = false;
     // [planning] Remove this after skia is upgraded, the clipRegion is supported
     std::vector<RectI> childrenFilterRects_;
+    std::vector<bool> childrenFilterRectsCacheValid_;
+    std::vector<std::shared_ptr<RSRenderNode>> childrenFilterNodes_;
     std::unordered_set<NodeId> abilityNodeIds_;
     // transparent region of the surface, floating window's container window is always treated as transparent
     Occlusion::Region transparentRegion_;
@@ -994,6 +1037,7 @@ private:
         bool isFocusWindow_;
         bool isTransparent_;
         bool hasContainerWindow_;
+        Vector4<int> cornerRadius_;
     };
     
     //<screenRect, absRect, screenRotation, isFocusWindow, isTransparent, hasContainerWindow>
@@ -1073,6 +1117,15 @@ private:
     std::shared_ptr<RSSurfaceTexture> surfaceTexture_ {};
 #endif
     bool isForeground_ = false;
+
+    RSBaseRenderNode::WeakPtr ancestorDisplayNode_;
+    bool hasSharedTransitionNode_ = false;
+    size_t lastFrameChildrenCnt_ = 0;
+    // node only have translate and scale changes
+    bool surfaceCacheContentStatic_ = false;
+
+    std::atomic<bool> hasUnSubmittedOccludedDirtyRegion_ = false;
+    RectI historyUnSubmittedOccludedDirtyRegion_;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

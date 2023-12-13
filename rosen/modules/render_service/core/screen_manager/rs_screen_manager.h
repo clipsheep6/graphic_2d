@@ -224,6 +224,10 @@ public:
     virtual ScreenId GetActiveScreenId() = 0;
     /* only used for mock tests */
     virtual void MockHdiScreenConnected(std::unique_ptr<impl::RSScreen>& rsScreen) = 0;
+
+#ifdef USE_VIDEO_PROCESSING_ENGINE
+    virtual float GetScreenBrightnessNits(ScreenId id) = 0;
+#endif
 };
 
 sptr<RSScreenManager> CreateOrGetScreenManager();
@@ -375,6 +379,11 @@ public:
         }
         screens_[rsScreen->Id()] = std::move(rsScreen);
     }
+
+#ifdef USE_VIDEO_PROCESSING_ENGINE
+    float GetScreenBrightnessNits(ScreenId id) override;
+#endif
+
 private:
     RSScreenManager();
     ~RSScreenManager() noexcept override;
@@ -402,8 +411,6 @@ private:
     void RemoveVirtualScreenLocked(ScreenId id);
     ScreenId GenerateVirtualScreenIdLocked();
     void ReuseVirtualScreenIdLocked(ScreenId id);
-    void MirrorChangeDefaultScreenResolution(ScreenId id, uint32_t width, uint32_t height);
-    ScreenId GetMirrorScreenId(ScreenId id);
 
     int32_t GetScreenSupportedColorGamutsLocked(ScreenId id, std::vector<ScreenColorGamut>& mode) const;
     int32_t GetScreenSupportedMetaDataKeysLocked(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) const;

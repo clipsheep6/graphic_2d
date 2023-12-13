@@ -1631,6 +1631,26 @@ void RSRenderServiceConnectionProxy::SetAppWindowNum(uint32_t num)
     }
 }
 
+bool RSRenderServiceConnectionProxy::SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return false;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint32(static_cast<uint32_t>(systemAnimatedScenes));
+    uint32_t code = static_cast<uint32_t>(
+        RSIRenderServiceConnectionInterfaceCode::SET_SYSTEM_ANIMATED_SCENES);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        return false;
+    }
+    bool result = reply.ReadBool();
+    return result;
+}
+
 void RSRenderServiceConnectionProxy::ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow)
 {
     if (watermarkImg == nullptr) {
@@ -1751,6 +1771,7 @@ void RSRenderServiceConnectionProxy::ReportDataBaseRs(
     data.WriteInt64(info.inputTime);
     data.WriteInt64(info.beginVsyncTime);
     data.WriteInt64(info.endVsyncTime);
+    data.WriteBool(info.isDisplayAnimator);
     data.WriteString(info.sceneId);
     data.WriteString(info.versionName);
     data.WriteString(info.bundleName);

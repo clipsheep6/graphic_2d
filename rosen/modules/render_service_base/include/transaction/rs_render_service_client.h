@@ -67,6 +67,7 @@ struct DataBaseRs {
     int64_t inputTime = 0;
     int64_t beginVsyncTime = 0;
     int64_t endVsyncTime = 0;
+    bool isDisplayAnimator = false;
     std::string sceneId;
     std::string versionName;
     std::string bundleName;
@@ -238,6 +239,8 @@ public:
     int32_t RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback);
 
     void SetAppWindowNum(uint32_t num);
+
+    bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes);
 
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
 

@@ -88,6 +88,12 @@ enum class HgmRefreshRateModes {
     SET_RATE_MODE_HIGH = 3
 };
 
+enum class GpuApiType {
+    OPENGL = 0,
+    VULKAN,
+    DDGR,
+};
+
 using OnSystemPropertyChanged = void(*)(const char*, const char*, void*);
 
 class RSB_EXPORT RSSystemProperties final {
@@ -161,6 +167,7 @@ public:
     static bool IsFoldScreenFlag();
     static bool GetCacheCmdEnabled();
     static bool GetASTCEnabled();
+    static bool GetCachedBlurPartialRenderEnabled();
     static bool GetImageGpuResourceCacheEnable(int width, int height);
 #if defined (ENABLE_DDGR_OPTIMIZE)
     static bool GetDDGRIntegrateEnable();
@@ -173,12 +180,20 @@ public:
     static bool GetSingleFrameComposerEnabled();
     static bool GetSingleFrameComposerCanvasNodeEnabled();
     static bool GetSubSurfaceEnabled();
+    static bool GetSecurityPermissionCheckEnabled();
+
+    static inline GpuApiType GetGpuApiType()
+    {
+        return RSSystemProperties::systemGpuApiType_;
+    }
+
 private:
     RSSystemProperties() = default;
 
     static inline bool isUniRenderEnabled_ = false;
     inline static bool isDrawTextAsBitmap_ = false;
     inline static bool cacheEnabledForRotation_ = false;
+    static const GpuApiType systemGpuApiType_;
 };
 
 } // namespace Rosen

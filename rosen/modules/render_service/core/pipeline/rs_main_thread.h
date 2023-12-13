@@ -180,6 +180,8 @@ public:
 #endif
 
     void SetDirtyFlag();
+    void SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync);
+    void SetNoNeedToPostTask(bool noNeedToPostTask);
     void SetAccessibilityConfigChanged();
     void ForceRefreshForUni();
     void TrimMem(std::unordered_set<std::u16string>& argSets, std::string& result);
@@ -188,6 +190,8 @@ public:
     void CountMem(int pid, MemoryGraphic& mem);
     void CountMem(std::vector<MemoryGraphic>& mems);
     void SetAppWindowNum(uint32_t num);
+    bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes);
+    SystemAnimatedScenes GetSystemAnimatedScenes();
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
     void SetIsCachedSurfaceUpdated(bool isCachedSurfaceUpdated);
     void SetForceUpdateUniRenderFlag(bool flag)
@@ -215,8 +219,13 @@ public:
 
     DeviceType GetDeviceType() const;
     bool IsSingleDisplay();
+    bool GetNoNeedToPostTask();
     uint64_t GetFocusNodeId() const;
     uint64_t GetFocusLeashWindowId() const;
+    bool GetClearMemDeeply() const
+    {
+        return clearMemDeeply_;
+    }
 
     void SubscribeAppState();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
@@ -243,6 +252,7 @@ private:
     void ReleaseAllNodesBuffer();
     void Render();
     void SetDeviceType();
+    void ColorPickerRequestVsyncIfNeed();
     void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
@@ -291,8 +301,6 @@ private:
     bool IsNeedSkip(NodeId instanceRootNodeId, pid_t pid);
 
     // UIFirst
-    void ResetSubThreadGrContext();
-    void CheckParallelSubThreadNodesStatusImplementation();
     bool CheckParallelSubThreadNodesStatus();
     void CacheCommands();
     bool CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const;
@@ -307,6 +315,7 @@ private:
     bool IsLastFrameUIFirstEnabled(NodeId appNodeId) const;
     RSVisibleLevel GetRegionVisibleLevel(const Occlusion::Region& curRegion,
         const Occlusion::Region& visibleRegion);
+    void PrintCurrentStatus();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -331,7 +340,6 @@ private:
     uint64_t lastAnimateTimestamp_ = 0;
     uint64_t prePerfTimestamp_ = 0;
     uint64_t lastCleanCacheTimestamp_ = 0;
-    uint64_t preSKReleaseResourceTimestamp_ = 0;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;
 
     std::shared_ptr<RSContext> context_;
@@ -364,6 +372,7 @@ private:
     std::condition_variable displayNodeBufferReleasedCond_;
 
     bool clearMemoryFinished_ = true;
+    bool clearMemDeeply_ = false;
 
     // driven render
     mutable std::mutex drivenRenderMutex_;
@@ -396,6 +405,10 @@ private:
     uint32_t appWindowNum_ = 0;
     uint32_t requestNextVsyncNum_ = 0;
     bool lastFrameHasFilter_ = false;
+
+    bool colorPickerForceRequestVsync_ = false;
+    std::atomic_bool noNeedToPostTask_ = false;
+    std::atomic_int colorPickerRequestFrameNum_ = 15;
 
     std::shared_ptr<RSBaseRenderEngine> renderEngine_;
     std::shared_ptr<RSBaseRenderEngine> uniRenderEngine_;
@@ -439,10 +452,6 @@ private:
     DeviceType deviceType_ = DeviceType::PHONE;
     bool isCachedSurfaceUpdated_ = false;
     bool isUiFirstOn_ = false;
-#ifdef RS_ENABLE_VK
-    bool needResetSubThreadGrContext_ = false;
-    uint64_t frameCountForResetSubThreadGrContext_ = 0;
-#endif
 
     // used for informing hgm the bundle name of SurfaceRenderNodes
     bool noBundle_ = false;
@@ -468,6 +477,7 @@ private:
 
     std::shared_ptr<RSAppStateListener> rsAppStateListener_;
     int32_t subscribeFailCount_ = 0;
+    SystemAnimatedScenes systemAnimatedScenes_ = SystemAnimatedScenes::OTHERS;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

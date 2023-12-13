@@ -408,9 +408,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
     curDirtyManager_ = node.GetDirtyManager();
 
-#ifndef ROSEN_CROSS_PLATFORM
     auto surfaceNodeColorSpace = ptr->GetColorSpace();
-#endif
 #ifdef NEW_RENDER_CONTEXT
     std::shared_ptr<RSRenderSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(ptr);
 #else
@@ -423,23 +421,24 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     // Update queue size for each process loop in case it dynamically changes
     queueSize_ = rsSurface->GetQueueSize();
 
-#ifndef ROSEN_CROSS_PLATFORM
     auto rsSurfaceColorSpace = rsSurface->GetColorSpace();
     if (surfaceNodeColorSpace != rsSurfaceColorSpace) {
         ROSEN_LOGD("Set new colorspace %{public}d to rsSurface", surfaceNodeColorSpace);
         rsSurface->SetColorSpace(surfaceNodeColorSpace);
     }
-#endif
 
 #if defined(ACE_ENABLE_GL)
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if defined(NEW_RENDER_CONTEXT)
-    std::shared_ptr<RenderContextBase> rc = RSRenderThread::Instance().GetRenderContext();
-    std::shared_ptr<DrawingContext> dc = RSRenderThread::Instance().GetDrawingContext();
-    rsSurface->SetDrawingContext(dc);
+        std::shared_ptr<RenderContextBase> rc = RSRenderThread::Instance().GetRenderContext();
+        std::shared_ptr<DrawingContext> dc = RSRenderThread::Instance().GetDrawingContext();
+        rsSurface->SetDrawingContext(dc);
 #else
-    RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
+        RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
 #endif
-    rsSurface->SetRenderContext(rc);
+        rsSurface->SetRenderContext(rc);
+    }
 #endif
     uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->RequestFrame");

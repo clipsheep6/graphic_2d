@@ -29,11 +29,13 @@ TexgineFontStyleSet::TexgineFontStyleSet(RSFontStyleSet *set)
 
 TexgineFontStyleSet::~TexgineFontStyleSet()
 {
-#ifndef USE_ROSEN_DRAWING
     if (set_) {
+#ifndef USE_ROSEN_DRAWING
         set_->unref();
-    }
+#else
+        delete set_;
 #endif
+    }
 }
 
 int TexgineFontStyleSet::Count() const
@@ -87,16 +89,6 @@ std::shared_ptr<TexgineTypeface> TexgineFontStyleSet::MatchStyle(std::shared_ptr
     RSTypeface* typeface = set_->MatchStyle(style);
 #endif
     return std::make_shared<TexgineTypeface>(typeface);
-}
-
-std::shared_ptr<TexgineFontStyleSet> TexgineFontStyleSet::CreateEmpty()
-{
-#ifndef USE_ROSEN_DRAWING
-    auto fss = SkFontStyleSet::CreateEmpty();
-#else
-    RSFontStyleSet* fss = RSFontStyleSet::CreateEmpty();
-#endif
-    return std::make_shared<TexgineFontStyleSet>(fss);
 }
 } // namespace TextEngine
 } // namespace Rosen

@@ -16,6 +16,9 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_H
 #define RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_H
 
+#ifdef USE_ROSEN_DRAWING
+#include <bitset>
+#endif
 #include <optional>
 #include <tuple>
 #include <vector>
@@ -313,10 +316,12 @@ public:
 
     void SetLightIntensity(float lightIntensity);
     void SetLightPosition(const Vector4f& lightPosition);
+    void SetIlluminatedBorderWidth(float illuminatedBorderWidth);
     void SetIlluminatedType(int illuminatedType);
     void SetBloom(float bloomIntensity);
     float GetLightIntensity() const;
     Vector4f GetLightPosition() const;
+    float GetIlluminatedBorderWidth() const;
     int GetIlluminatedType() const;
     float GetBloom() const;
     void CalculateAbsLightPosition();

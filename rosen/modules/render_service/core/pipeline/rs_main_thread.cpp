@@ -95,6 +95,9 @@
 #if defined(RS_ENABLE_DRIVEN_RENDER)
 #include "pipeline/driven_render/rs_driven_render_manager.h"
 #endif
+#if defined(ROSEN_OHOS) && defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+#include "include/recording/draw_cmd.h"
+#endif
 
 #include "pipeline/round_corner_display/rs_rcd_render_manager.h"
 #include "scene_board_judgement.h"
@@ -120,7 +123,6 @@ constexpr uint64_t PERF_PERIOD = 250000000;
 constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t SKIP_COMMAND_FREQ_LIMIT = 30;
 constexpr uint64_t PERF_PERIOD_BLUR = 80000000;
-constexpr uint64_t SK_RELEASE_RESOURCE_PERIOD = 5000000000;
 constexpr uint64_t MAX_DYNAMIC_STATUS_TIME = 5000000000;
 constexpr uint64_t PERF_PERIOD_MULTI_WINDOW = 80000000;
 constexpr uint32_t MULTI_WINDOW_PERF_START_NUM = 2;
@@ -259,11 +261,17 @@ void RSMainThread::Init()
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
-        if (timestamp_ - preSKReleaseResourceTimestamp_ > SK_RELEASE_RESOURCE_PERIOD) {
-            SKResourceManager::Instance().ReleaseResource();
-            preSKReleaseResourceTimestamp_ = timestamp_;
-        }
+        SKResourceManager::Instance().ReleaseResource();
     };
+#if defined(ROSEN_OHOS) && defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+    if (GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN || GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        std::function<void*(VkImage, VkDeviceMemory)> createCleanup = [] (VkImage image, VkDeviceMemory memory) -> void* {
+            return new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(), image, memory);
+        };
+        Drawing::DrawSurfaceBufferOpItem::SetBaseCallback(NativeBufferUtils::MakeBackendTextureFromNativeBuffer,
+            NativeBufferUtils::DeleteVkImage, createCleanup);
+    }
+#endif
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();
     qosPidCal_ = deviceType_ == DeviceType::PC;
@@ -283,9 +291,12 @@ void RSMainThread::Init()
             }
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+            if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+                RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-            RSUploadTextureThread::Instance().PostTask(uploadTextureBarrierTask_);
+                RSUploadTextureThread::Instance().PostTask(uploadTextureBarrierTask_);
 #endif
+            }
 #endif
             unmarshalTaskCond_.notify_all();
         };
@@ -314,41 +325,44 @@ void RSMainThread::Init()
         renderEngine_->Init();
     }
 #ifdef RS_ENABLE_GL
-    int cacheLimitsTimes = 3;
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        int cacheLimitsTimes = 3;
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_RENDER_CONTEXT
-    auto grContext = isUniRender_? uniRenderEngine_->GetDrawingContext()->GetDrawingContext() :
-        renderEngine_->GetDrawingContext()->GetDrawingContext();
+        auto grContext = isUniRender_? uniRenderEngine_->GetDrawingContext()->GetDrawingContext() :
+            renderEngine_->GetDrawingContext()->GetDrawingContext();
 #else
-    auto grContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetGrContext() :
-        renderEngine_->GetRenderContext()->GetGrContext();
+        auto grContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetGrContext() :
+            renderEngine_->GetRenderContext()->GetGrContext();
 #endif
-    int maxResources = 0;
-    size_t maxResourcesSize = 0;
-    grContext->getResourceCacheLimits(&maxResources, &maxResourcesSize);
-    if (maxResourcesSize > 0) {
-        grContext->setResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
-            std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
-    } else {
-        grContext->setResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
-    }
+        int maxResources = 0;
+        size_t maxResourcesSize = 0;
+        grContext->getResourceCacheLimits(&maxResources, &maxResourcesSize);
+        if (maxResourcesSize > 0) {
+            grContext->setResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
+                std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
+        } else {
+            grContext->setResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
+        }
 #else
-    auto gpuContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetDrGPUContext() :
-        renderEngine_->GetRenderContext()->GetDrGPUContext();
-    if (gpuContext == nullptr) {
-        RS_LOGE("RSMainThread::Init gpuContext is nullptr!");
-        return;
-    }
-    int32_t maxResources = 0;
-    size_t maxResourcesSize = 0;
-    gpuContext->GetResourceCacheLimits(&maxResources, &maxResourcesSize);
-    if (maxResourcesSize > 0) {
-        gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
-            std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
-    } else {
-        gpuContext->SetResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
-    }
+        auto gpuContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetDrGPUContext() :
+            renderEngine_->GetRenderContext()->GetDrGPUContext();
+        if (gpuContext == nullptr) {
+            RS_LOGE("RSMainThread::Init gpuContext is nullptr!");
+            return;
+        }
+        int32_t maxResources = 0;
+        size_t maxResourcesSize = 0;
+        gpuContext->GetResourceCacheLimits(&maxResources, &maxResourcesSize);
+        if (maxResourcesSize > 0) {
+            gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
+                std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
+        } else {
+            gpuContext->SetResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
+        }
 #endif
+    }
 #endif
     RSInnovation::OpenInnovationSo();
 #if defined(RS_ENABLE_DRIVEN_RENDER)
@@ -359,18 +373,21 @@ void RSMainThread::Init()
     RSRcdRenderManager::InitInstance();
 
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-    uploadTextureBarrierTask_ = [this]() {
-        auto renderContext = GetRenderEngine()->GetRenderContext().get();
-        uploadTextureFence = eglCreateSyncKHR(renderContext->GetEGLDisplay(), EGL_SYNC_FENCE_KHR, nullptr);
-        {
-            std::lock_guard<std::mutex> lock(uploadTextureMutex_);
-            ++uploadTextureFinishedCount_;
-        }
-        uploadTextureTaskCond_.notify_all();
-    };
-    RSUploadTextureThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
+        uploadTextureBarrierTask_ = [this]() {
+            auto renderContext = GetRenderEngine()->GetRenderContext().get();
+            uploadTextureFence = eglCreateSyncKHR(renderContext->GetEGLDisplay(), EGL_SYNC_FENCE_KHR, nullptr);
+            {
+                std::lock_guard<std::mutex> lock(uploadTextureMutex_);
+                ++uploadTextureFinishedCount_;
+            }
+            uploadTextureTaskCond_.notify_all();
+        };
+        RSUploadTextureThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
 #endif
+    }
 #endif
 
 #if defined(ACCESSIBILITY_ENABLE)
@@ -400,6 +417,7 @@ void RSMainThread::Init()
         });
     });
     SubscribeAppState();
+    PrintCurrentStatus();
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)
@@ -544,6 +562,30 @@ void RSMainThread::ProcessCommand()
     }
 }
 
+void RSMainThread::PrintCurrentStatus()
+{
+#ifndef USE_ROSEN_DRAWING
+    RS_LOGE("RSMainThread::PrintCurrentStatus: drawing is closed");
+#else
+    std::string gpuType = "";
+    switch (OHOS::Rosen::RSSystemProperties::GetGpuApiType()) {
+        case OHOS::Rosen::GpuApiType::OPENGL:
+            gpuType = "opengl";
+            break;
+        case OHOS::Rosen::GpuApiType::VULKAN:
+            gpuType = "vulkan";
+            break;
+        case OHOS::Rosen::GpuApiType::DDGR:
+            gpuType = "ddgr";
+            break;
+        default:
+            break;
+    }
+    RS_LOGI("[Drawing] Version: Non-released");
+    RS_LOGE("RSMainThread::PrintCurrentStatus:  drawing is opened, gpu type is %{public}s", gpuType.c_str());
+#endif
+}
+
 void RSMainThread::CacheCommands()
 {
     RS_OPTIONAL_TRACE_FUNC();
@@ -586,24 +628,15 @@ std::unordered_map<NodeId, bool> RSMainThread::GetCacheCmdSkippedNodes() const
     return cacheCmdSkippedNodes_;
 }
 
-void RSMainThread::ResetSubThreadGrContext()
+bool RSMainThread::CheckParallelSubThreadNodesStatus()
 {
-#ifdef RS_ENABLE_VK
-    constexpr uint64_t delayNumOfFrameCount_ = 2;
-    if (!needResetSubThreadGrContext_) {
-        needResetSubThreadGrContext_ = true;
-        frameCountForResetSubThreadGrContext_ = frameCount_.load();
-    } else if (frameCount_.load() > frameCountForResetSubThreadGrContext_ + delayNumOfFrameCount_) {
-        needResetSubThreadGrContext_ = false;
+    RS_OPTIONAL_TRACE_FUNC();
+    cacheCmdSkippedInfo_.clear();
+    cacheCmdSkippedNodes_.clear();
+    if (subThreadNodes_.empty()) {
         RSSubThreadManager::Instance()->ResetSubThreadGrContext();
+        return false;
     }
-#else
-    RSSubThreadManager::Instance()->ResetSubThreadGrContext();
-#endif
-}
-
-void RSMainThread::CheckParallelSubThreadNodesStatusImplementation()
-{
     for (auto& node : subThreadNodes_) {
         if (node == nullptr) {
             RS_LOGE("RSMainThread::CheckParallelSubThreadNodesStatus sunThreadNode is nullptr!");
@@ -647,22 +680,6 @@ void RSMainThread::CheckParallelSubThreadNodesStatusImplementation()
             }
         }
     }
-}
-
-bool RSMainThread::CheckParallelSubThreadNodesStatus()
-{
-    RS_OPTIONAL_TRACE_FUNC();
-    cacheCmdSkippedInfo_.clear();
-    cacheCmdSkippedNodes_.clear();
-    if (subThreadNodes_.empty()) {
-        ResetSubThreadGrContext();
-        return false;
-    } else {
-#ifdef RS_ENABLE_VK
-        needResetSubThreadGrContext_ = false;
-#endif
-    }
-    CheckParallelSubThreadNodesStatusImplementation();
     if (!cacheCmdSkippedNodes_.empty()) {
         return true;
     }
@@ -942,7 +959,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
             return;
         }
         // Reset BasicGeoTrans info at the beginning of cmd process
-        if (surfaceNode->IsMainWindowType()) {
+        if (surfaceNode->IsMainWindowType() || surfaceNode->IsLeashWindow()) {
             surfaceNode->ResetIsOnlyBasicGeoTransfrom();
         }
         if (surfaceNode->IsHardwareEnabledType()
@@ -1171,6 +1188,7 @@ void RSMainThread::ClearMemoryCache(bool deeply)
         return;
     }
     this->clearMemoryFinished_ = false;
+    this->clearMemDeeply_ = this->clearMemDeeply_ || deeply;
     PostTask([this, deeply]() {
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_RENDER_CONTEXT
@@ -1183,9 +1201,10 @@ void RSMainThread::ClearMemoryCache(bool deeply)
         }
         RS_LOGD("Clear memory cache");
         RS_TRACE_NAME_FMT("Clear memory cache");
+        SKResourceManager::Instance().ReleaseResource();
         grContext->flush();
         SkGraphics::PurgeAllCaches(); // clear cpu cache
-        if (deeply) {
+        if (deeply || this->deviceType_ != DeviceType::PHONE) {
             MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
         } else {
             MemoryManager::ReleaseUnlockGpuResource(grContext);
@@ -1208,8 +1227,9 @@ void RSMainThread::ClearMemoryCache(bool deeply)
         grContext->FlushAndSubmit(true);
 #endif
         this->clearMemoryFinished_ = true;
+        this->clearMemDeeply_ = false;
     },
-    CLEAR_GPU_CACHE, 3000 / GetRefreshRate()); // The unit is milliseconds
+    CLEAR_GPU_CACHE, (this->deviceType_ == DeviceType::PHONE ? 3000 : 1000) / GetRefreshRate());
 }
 
 void RSMainThread::WaitUtilUniRenderFinished()
@@ -1249,6 +1269,10 @@ void RSMainThread::WaitUtilDrivenRenderFinished()
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
 void RSMainThread::WaitUntilUploadTextureTaskFinished()
 {
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        return;
+    }
     if (!isUniRender_) {
         return;
     }
@@ -1353,13 +1377,32 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
         RS_TRACE_NAME_FMT("RSMainThread::ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate);
     }
 
-    auto appFrameLinkers = GetContext().GetFrameRateLinkerMap().GetFrameRateLinkerMap();
+    auto appFrameLinkers = GetContext().GetFrameRateLinkerMap().Get();
     frameRateMgr_->UniProcessData(0, timestamp, rsFrameRateLinker_, appFrameLinkers, idleTimerExpiredFlag_);
 }
 
 bool RSMainThread::GetParallelCompositionEnabled()
 {
     return doParallelComposition_;
+}
+
+void RSMainThread::ColorPickerRequestVsyncIfNeed()
+{
+    if (colorPickerForceRequestVsync_) {
+        colorPickerRequestFrameNum_--;
+        if (colorPickerRequestFrameNum_ > 0) {
+            RSMainThread::Instance()->SetNoNeedToPostTask(false);
+            RSMainThread::Instance()->SetDirtyFlag();
+            RequestNextVSync();
+        } else {
+            // The last frame reset to 15, then to request next 15 frames if need
+            colorPickerRequestFrameNum_ = 15;
+            RSMainThread::Instance()->SetNoNeedToPostTask(true);
+            colorPickerForceRequestVsync_ = false;
+        }
+    } else {
+        RSMainThread::Instance()->SetNoNeedToPostTask(false);
+    }
 }
 
 void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
@@ -1386,6 +1429,12 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             needTraverseNodeTree = !uniVisitor->DoDirectComposition(rootNode);
         } else if (forceUpdateUniRenderFlag_) {
             RS_TRACE_NAME("RSMainThread::UniRender ForceUpdateUniRender");
+        } else if (colorPickerForceRequestVsync_) {
+            RS_TRACE_NAME("RSMainThread::UniRender ColorPickerForceRequestVsync");
+            RSMainThread::Instance()->SetNoNeedToPostTask(false);
+            RSMainThread::Instance()->SetDirtyFlag();
+            RequestNextVSync();
+            return;
         } else {
             RS_LOGI("RSMainThread::Render nothing to update");
             for (auto& node: hardwareEnabledNodes_) {
@@ -1394,13 +1443,19 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
                 }
             }
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+            if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+                RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-            WaitUntilUploadTextureTaskFinished();
+                WaitUntilUploadTextureTaskFinished();
 #endif
+            }
 #endif
             return;
         }
     }
+
+    ColorPickerRequestVsyncIfNeed();
+
     isCachedSurfaceUpdated_ = false;
     if (needTraverseNodeTree) {
         uniVisitor->SetAnimateState(doWindowAnimate_);
@@ -1420,24 +1475,30 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
                 isDirty_ = false;
                 PerfForBlurIfNeeded();
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+                if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+                    RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-                WaitUntilUploadTextureTaskFinished();
+                    WaitUntilUploadTextureTaskFinished();
 #endif
+                }
 #endif
                 return;
             }
         }
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+        if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+            RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-        WaitUntilUploadTextureTaskFinished();
+            WaitUntilUploadTextureTaskFinished();
 #endif
+        }
 #endif
         if (IsUIFirstOn()) {
             auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
                 rootNode->GetSortedChildren().front());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
             std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
-            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes, focusNodeId_, deviceType_);
+            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes);
             const auto& nodeMap = context_->GetNodeMap();
             RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
             uniVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
@@ -1446,9 +1507,12 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         rootNode->Process(uniVisitor);
     } else {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+        if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+            RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-        WaitUntilUploadTextureTaskFinished();
+            WaitUntilUploadTextureTaskFinished();
 #endif
+        }
 #endif
     }
     isDirty_ = false;
@@ -1461,9 +1525,12 @@ void RSMainThread::Render()
     const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
 #if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+        if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+            RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
 #if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-        WaitUntilUploadTextureTaskFinished();
+            WaitUntilUploadTextureTaskFinished();
 #endif
+        }
 #endif
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");
         return;
@@ -1604,6 +1671,8 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
                 filterCacheOcclusionEnabled);
         } else {
             curSurface->SetVisibleRegionRecursive({}, curVisVec, pidVisMap);
+            RS_LOGD("%{public}s nodeId[%{public}" PRIu64 "] visibleLevel[%{public}d]",
+                __func__, curSurface->GetId(), RSVisibleLevel::RS_INVISIBLE);
         }
     }
 
@@ -2321,9 +2390,9 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
     dumpString.append("trimMem: " + type + "\n");
 #else
 #ifdef NEW_RENDER_CONTEXT
-    auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
+    auto gpuContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
 #else
-    auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+    auto gpuContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
 #endif
     if (type.empty()) {
         gpuContext->Flush();
@@ -2483,6 +2552,21 @@ void RSMainThread::SetDirtyFlag()
     isDirty_ = true;
 }
 
+void RSMainThread::SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync)
+{
+    colorPickerForceRequestVsync_ = colorPickerForceRequestVsync;
+}
+
+void RSMainThread::SetNoNeedToPostTask(bool noNeedToPostTask)
+{
+    noNeedToPostTask_ = noNeedToPostTask;
+}
+
+bool RSMainThread::GetNoNeedToPostTask()
+{
+    return noNeedToPostTask_.load();
+}
+
 void RSMainThread::SetAccessibilityConfigChanged()
 {
     isAccessibilityConfigChanged_ = true;
@@ -2535,15 +2619,14 @@ void RSMainThread::PerfForBlurIfNeeded()
     int blurCnt = RSPropertiesPainter::GetAndResetBlurCnt();
     // clamp blurCnt to 0~3.
     blurCnt = std::clamp<int>(blurCnt, 0, 3);
-    if (blurCnt != preBlurCnt && preBlurCnt != 0) {
+    if (blurCnt > preBlurCnt && preBlurCnt != 0) {
         PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(preBlurCnt), false);
-        preBlurCnt = 0;
     }
     if (blurCnt == 0) {
         return;
     }
     static uint64_t prePerfTimestamp = 0;
-    if (timestamp_ - prePerfTimestamp > PERF_PERIOD_BLUR || blurCnt != preBlurCnt) {
+    if (timestamp_ - prePerfTimestamp > PERF_PERIOD_BLUR || blurCnt > preBlurCnt) {
         PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(blurCnt), true);
         prePerfTimestamp = timestamp_;
         preBlurCnt = blurCnt;
@@ -2579,6 +2662,22 @@ void RSMainThread::RenderFrameStart(uint64_t timestamp)
 void RSMainThread::SetAppWindowNum(uint32_t num)
 {
     appWindowNum_ = num;
+}
+
+bool RSMainThread::SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes)
+{
+    if (systemAnimatedScenes < SystemAnimatedScenes::ENTER_MISSION_CENTER ||
+            systemAnimatedScenes > SystemAnimatedScenes::OTHERS) {
+        RS_LOGD("RSMainThread::SetSystemAnimatedScenes Out of range.");
+        return false;
+    }
+    systemAnimatedScenes_ = systemAnimatedScenes;
+    return true;
+}
+
+SystemAnimatedScenes RSMainThread::GetSystemAnimatedScenes()
+{
+    return systemAnimatedScenes_;
 }
 
 bool RSMainThread::CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyByRoot)
@@ -2753,7 +2852,7 @@ void RSMainThread::UpdateRogSizeIfNeeded()
     }
 }
 
-const uint32_t UIFIRST_MINIMUM_NODE_NUMBER = 12; // minimum window number(12) for enabling UIFirst
+const uint32_t UIFIRST_MINIMUM_NODE_NUMBER = 4; // minimum window number(4) for enabling UIFirst
 
 void RSMainThread::UpdateUIFirstSwitch()
 {
@@ -2767,16 +2866,22 @@ void RSMainThread::UpdateUIFirstSwitch()
         auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
             rootNode->GetSortedChildren().front());
         if (displayNode) {
-            uint32_t childrenCount = 0;
-            if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-                std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
-                displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
-                childrenCount = curAllSurfacesVec.size();
-            } else {
-                childrenCount = displayNode->GetChildrenCount();
+            uint32_t childrenLeashWindowCount = 0;
+            bool isUIFirstMiniWindowNumSatisfied = false;
+            std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
+            displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
+            for (auto it = curAllSurfacesVec.begin(); it != curAllSurfacesVec.end(); it++) {
+                if (auto surfaceNode = (*it)->ReinterpretCastTo<RSSurfaceRenderNode>()) {
+                    if (surfaceNode->IsLeashWindow()) {
+                        childrenLeashWindowCount++;
+                    }
+                }
+                if (childrenLeashWindowCount >= UIFIRST_MINIMUM_NODE_NUMBER) {
+                    isUIFirstMiniWindowNumSatisfied = true;
+                    break;
+                }
             }
-            isUiFirstOn_ = RSSystemProperties::GetUIFirstEnabled() &&
-                (childrenCount >= UIFIRST_MINIMUM_NODE_NUMBER);
+            isUiFirstOn_ = RSSystemProperties::GetUIFirstEnabled() && isUIFirstMiniWindowNumSatisfied;
         }
     }
 }

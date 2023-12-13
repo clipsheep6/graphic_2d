@@ -12,6 +12,9 @@
 # limitations under the License.
 
 declare_args() {
+  graphic_2d_feature_product = "default"
+  graphic_2d_feature_enable_pgo = false
+  graphic_2d_feature_pgo_path = ""
   graphic_2d_feature_bootanimation_enable = true
   graphic_2d_feature_ace_enable_gpu = true
   graphic_2d_feature_color_gamut_enable = false
@@ -24,8 +27,10 @@ declare_args() {
   graphic_2d_feature_freemem_enable = false
   graphic_2d_feature_parallel_render_enable = true
   graphic_2d_feature_enable_vulkan = false
+  graphic_2d_feature_enable_flutter_vulkan = false
+  graphic_2d_feature_enable_opengl = true
   graphic_2d_feature_enable_filter_cache = true
-  graphic_2d_feature_parallel_upload_enable = true
+  graphic_2d_feature_parallel_upload_enable = false
   enable_text_gine = true
   use_texgine = true
   use_video_processing_engine = false
@@ -45,19 +50,27 @@ declare_args() {
   }
 }
 
+if (graphic_2d_feature_product == "phone") {
+  graphic_2d_feature_enable_vulkan = false
+}
+
 gpu_defines = []
 accessibility_defines = []
 if (enable_text_gine) {
   gpu_defines += [ "USE_GRAPHIC_TEXT_GINE" ]
 }
 if (graphic_2d_feature_ace_enable_gpu) {
+  if (graphic_2d_feature_enable_flutter_vulkan) {
+    gpu_defines += [ "RS_ENABLE_OLD_VK" ]
+  }
   if (graphic_2d_feature_enable_vulkan) {
     rs_enable_parallel_upload = false
     gpu_defines += [
       "ACE_ENABLE_VK",
       "RS_ENABLE_VK",
     ]
-  } else {
+  }
+  if (graphic_2d_feature_enable_opengl) {
     gpu_defines += [
       "ACE_ENABLE_GL",
       "RS_ENABLE_GL",
@@ -89,10 +102,11 @@ if (graphic_2d_feature_ace_enable_gpu) {
 
   libvulkan = []
   if (graphic_2d_feature_enable_vulkan) {
-    libvulkan += [
-      "//third_party/flutter/engine/flutter/vulkan:vulkan_flutter",
-      "//third_party/vulkan-loader/openharmony:vulkan_loader",
-    ]
+    libvulkan += [ "//third_party/vulkan-loader/openharmony:vulkan_loader" ]
+  }
+  if (graphic_2d_feature_enable_flutter_vulkan) {
+    libvulkan +=
+        [ "//third_party/flutter/engine/flutter/vulkan:vulkan_flutter" ]
   }
 } else {
   gpu_defines = [ "ACE_DISABLE_GL" ]
@@ -127,7 +141,7 @@ if (graphic_2d_feature_rs_enable_uni_render) {
   rs_enable_driven_render = false
 }
 
-if (graphic_2d_feature_enable_afbc && !graphic_2d_feature_enable_vulkan) {
+if (graphic_2d_feature_enable_afbc) {
   gpu_defines += [ "RS_ENABLE_AFBC" ]
 }
 
@@ -154,6 +168,7 @@ check_graphic_ext_file_args = [
   "--filename",
   rebase_path("//foundation/graphic/graphic_2d_ext/ohcore/build/config.gni"),
 ]
+
 check_ddgr_ext_file_args = [
   "--filename",
   rebase_path("//foundation/graphic/graphic_2d_ext/ddgr/ddgr_config.gni"),
@@ -184,6 +199,7 @@ memmgr_root = "//foundation/resourceschedule/memmgr"
 memmgr_plugin_root = "//foundation/resourceschedule/memmgr_plugin"
 fuzz_test_output_path = "graphic_2d/graphic_2d"
 video_processing_engine_root = "//foundation/multimedia/video_processing_engine"
+arkui_root = "//foundation/arkui"
 
 accessibility_enable = false
 if (defined(global_parts_info) &&

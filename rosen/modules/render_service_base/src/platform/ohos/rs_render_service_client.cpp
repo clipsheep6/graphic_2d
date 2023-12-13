@@ -31,6 +31,7 @@
 #include "ipc_callbacks/hgm_config_change_callback_stub.h"
 #include "ipc_callbacks/rs_occlusion_change_callback_stub.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #ifdef NEW_RENDER_CONTEXT
 #include "render_backend/rs_surface_factory.h"
 #endif
@@ -134,17 +135,20 @@ std::shared_ptr<RSRenderSurface> RSRenderServiceClient::CreateRSSurface(const sp
 #else
 std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Surface> &surface)
 {
-#if defined(ACE_ENABLE_VK)
-    // GPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosVulkan>(surface);
-#elif defined(ACE_ENABLE_GL)
-    // GPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosGl>(surface);
-#else
-    // CPU render
-    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosRaster>(surface);
+#if defined (ACE_ENABLE_VK)
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        return std::make_shared<RSSurfaceOhosVulkan>(surface); // GPU render
+    }
 #endif
-    return producer;
+
+#if defined (ACE_ENABLE_GL)
+    if (Rosen::RSSystemProperties::GetGpuApiType() != Rosen::GpuApiType::VULKAN &&
+        Rosen::RSSystemProperties::GetGpuApiType() != Rosen::GpuApiType::DDGR) {
+        return std::make_shared<RSSurfaceOhosGl>(surface); // GPU render
+    }
+#endif
+    return std::make_shared<RSSurfaceOhosRaster>(surface); // CPU render
 }
 #endif
 
@@ -935,6 +939,16 @@ void RSRenderServiceClient::SetAppWindowNum(uint32_t num)
     if (renderService != nullptr) {
         renderService->SetAppWindowNum(num);
     }
+}
+
+bool RSRenderServiceClient::SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::SetSystemAnimatedScenes renderService == nullptr!");
+        return false;
+    }
+    return renderService->SetSystemAnimatedScenes(systemAnimatedScenes);
 }
 
 void RSRenderServiceClient::ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow)

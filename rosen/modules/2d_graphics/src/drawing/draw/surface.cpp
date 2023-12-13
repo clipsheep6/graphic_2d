@@ -18,6 +18,7 @@
 #include "impl_factory.h"
 #include "static_factory.h"
 #include "utils/log.h"
+#include "utils/system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -41,9 +42,13 @@ bool Surface::Bind(const FrameBuffer& frameBuffer)
 }
 
 #ifdef RS_ENABLE_VK
-std::shared_ptr<Surface> Surface::MakeFromBackendRenderTarget(GPUContext* gpuContext, const VKTextureInfo& info,
+std::shared_ptr<Surface> Surface::MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
     TextureOrigin origin, void (*deleteFunc)(void*), void* cleanupHelper)
 {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     return StaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteFunc, cleanupHelper);
 }
 #endif
@@ -124,6 +129,10 @@ void Surface::Flush(FlushInfo *drawingflushInfo)
 #ifdef RS_ENABLE_VK
 void Surface::Wait(int32_t time, const VkSemaphore& semaphore)
 {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     if (!impl_) {
         LOGE("surfaceImpl Wait failed impl nullptr");
         return;
@@ -139,6 +148,17 @@ void Surface::SetDrawingArea(const std::vector<RectI>& rects)
     }
     impl_->SetDrawingArea(rects);
 }
+
+void Surface::ClearDrawingArea()
+{
+    if (!impl_) {
+        LOGE("surfaceImpl ClearDrawingArea failed impl nullptr");
+        return;
+    }
+    impl_->ClearDrawingArea();
+}
+
+
 #endif
 
 } // namespace Drawing

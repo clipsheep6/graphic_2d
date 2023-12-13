@@ -195,7 +195,8 @@ ScreenId RSScreenManager::GetActiveScreenId()
     }
     activeScreenIdAssignedCV_.wait_until(lock, std::chrono::system_clock::now() +
         std::chrono::milliseconds(WAIT_FOR_ACTIVE_SCREEN_ID_TIMEOUT), [this]() {
-            return isPostureSensorDataHandled_; });
+            return isPostureSensorDataHandled_;
+        });
     if (isFirstTimeToGetActiveScreenId_) {
         isFirstTimeToGetActiveScreenId_ = false;
         UnRegisterSensorCallback();
@@ -203,6 +204,34 @@ ScreenId RSScreenManager::GetActiveScreenId()
     RS_LOGD("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
     return activeScreenId_;
 }
+
+#ifdef USE_VIDEO_PROCESSING_ENGINE
+float RSScreenManager::GetScreenBrightnessNits(ScreenId id)
+{
+    constexpr float DEFAULT_SCREEN_LIGHT_NITS = 500.0;
+    constexpr float DEFAULT_SCREEN_LIGHT_MAX_NITS = 1200.0;
+    constexpr int32_t DEFAULT_SCREEN_LIGHT_MAX_LEVEL = 255;
+
+    float screenBrightnessNits = DEFAULT_SCREEN_LIGHT_NITS;
+
+    RSScreenType screenType;
+    if (GetScreenType(id, screenType) != SUCCESS) {
+        RS_LOGW("RSScreenManager::GetScreenBrightnessNits GetScreenType fail.");
+        return screenBrightnessNits;
+    }
+
+    if (screenType == VIRTUAL_TYPE_SCREEN) {
+        return screenBrightnessNits;
+    }
+
+    int32_t backLightLevel = GetScreenBacklight(id);
+    if (backLightLevel <= 0) {
+        return screenBrightnessNits;
+    }
+
+    return DEFAULT_SCREEN_LIGHT_MAX_NITS * backLightLevel / DEFAULT_SCREEN_LIGHT_MAX_LEVEL;
+}
+#endif
 
 void RSScreenManager::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data)
 {
@@ -563,62 +592,6 @@ void RSScreenManager::ReuseVirtualScreenIdLocked(ScreenId id)
     freeVirtualScreenIds_.push(id);
 }
 
-ScreenId RSScreenManager::GetMirrorScreenId(ScreenId id)
-{
-    ScreenId mirroredId = INVALID_SCREEN_ID;
-    auto mainThread = RSMainThread::Instance();
-    if (mainThread == nullptr) {
-        return mirroredId;
-    }
-
-    const auto& nodeMap = mainThread->GetContext().GetNodeMap();
-    nodeMap.TraversalNodes([&id, &mirroredId](const std::shared_ptr<RSBaseRenderNode>& node) {
-        if (node == nullptr || !node->IsInstanceOf<RSDisplayRenderNode>()) {
-            return;
-        }
-        RSDisplayRenderNode& displayNode = *(RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node));
-        if (displayNode.GetScreenId() != id) {
-            return;
-        }
-        std::shared_ptr<RSDisplayRenderNode> mirroredNode = displayNode.GetMirrorSource().lock();
-        if (mirroredNode != nullptr) {
-            mirroredId = mirroredNode->GetScreenId();
-        }
-    });
-    return mirroredId;
-}
-
-// The main screen resolution can be changed by the mirrored screen.
-void RSScreenManager::MirrorChangeDefaultScreenResolution(ScreenId id, uint32_t width, uint32_t height)
-{
-    if (screens_.count(id) == 0) {
-        RS_LOGD("RSScreenManager %{public}s: set fails because no screen access is currently available!", __func__);
-        return;
-    }
-
-    ScreenId mirroredId = GetMirrorScreenId(id);
-    if (mirroredId == INVALID_SCREEN_ID) {
-        RS_LOGD("RSScreenManager %{public}s: mirror screen is invalid.", __func__);
-        return;
-    }
-    ScreenId mainId = GetDefaultScreenId();
-    if (mirroredId == mainId) {
-        bool resolutionSetSuccess = false;
-        std::vector<GraphicDisplayModeInfo> mainMode = screens_.at(mainId)->GetSupportedModes();
-        for (uint32_t i = 0; i < mainMode.size(); i++) {
-            if (static_cast<uint32_t>(mainMode[i].width) == width &&
-                static_cast<uint32_t>(mainMode[i].height) == height) {
-                screens_.at(mainId)->SetActiveMode(i);
-                resolutionSetSuccess = true;
-                break;
-            }
-        }
-        if (!resolutionSetSuccess) {
-            RS_LOGD("RSScreenManager %{public}s: not support the current resolution!", __func__);
-        }
-    }
-}
-
 void RSScreenManager::GetVirtualScreenResolutionLocked(ScreenId id,
     RSVirtualScreenResolution& virtualScreenResolution) const
 {
@@ -804,10 +777,13 @@ int32_t RSScreenManager::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surf
     }
     screens_.at(id)->SetProducerSurface(surface);
     RS_LOGD("RSScreenManager %{public}s: set virtual screen surface success!", __func__);
-    // if SetVirtualScreenSurface success, better to request the next vsync, avoiding prolong black screen
+    // if SetVirtualScreenSurface success, force a refresh of one frame, avoiding prolong black screen
     auto mainThread = RSMainThread::Instance();
     if (mainThread != nullptr) {
-        mainThread->RequestNextVSync();
+        mainThread->PostTask([mainThread]() {
+            mainThread->SetDirtyFlag();
+        });
+        mainThread->ForceRefreshForUni();
     }
     return SUCCESS;
 }
@@ -826,7 +802,7 @@ void RSScreenManager::RemoveVirtualScreenLocked(ScreenId id)
         return;
     }
 
-    screens_.erase(id);                                                                                                                                                                                                                
+    screens_.erase(id);
 
     // Update other screens' mirrorId.
     for (auto &[id, screen] : screens_) {
@@ -848,16 +824,6 @@ void RSScreenManager::SetScreenActiveMode(ScreenId id, uint32_t modeId)
         return;
     }
     screens_.at(id)->SetActiveMode(modeId);
-
-    // The main screen resolution can be changed on the mirrored physical screen.
-    auto supportedModes = screens_.at(id)->GetSupportedModes();
-    if (modeId >= supportedModes.size()) {
-        RS_LOGE("RSScreenManager %{public}s: set fails because the index is out of bounds.", __func__);
-        return;
-    }
-    uint32_t width = supportedModes[modeId].width;
-    uint32_t height = supportedModes[modeId].height;
-    MirrorChangeDefaultScreenResolution(id, width, height);
 }
 
 int32_t RSScreenManager::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
@@ -870,10 +836,6 @@ int32_t RSScreenManager::SetVirtualScreenResolution(ScreenId id, uint32_t width,
     }
     screens_.at(id)->SetResolution(width, height);
     RS_LOGD("RSScreenManager %{public}s: set virtual screen resolution success", __func__);
-
-    // The main screen resolution can be changed by the mirrored virtual screen.
-    MirrorChangeDefaultScreenResolution(id, width, height);
-
     return SUCCESS;
 }
 
@@ -1295,7 +1257,7 @@ int32_t RSScreenManager::SetScreenSkipFrameIntervalLocked(ScreenId id, uint32_t 
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& pixelFormat) const 
+int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& pixelFormat) const
 {
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);

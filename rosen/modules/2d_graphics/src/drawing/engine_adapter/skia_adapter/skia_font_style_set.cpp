@@ -27,7 +27,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-SkiaFontStyleSet::SkiaFontStyleSet(std::shared_ptr<SkFontStyleSet> skFontStyleSet) : skFontStyleSet_(skFontStyleSet) {}
+SkiaFontStyleSet::SkiaFontStyleSet(sk_sp<SkFontStyleSet> skFontStyleSet) : skFontStyleSet_(skFontStyleSet) {}
 
 Typeface* SkiaFontStyleSet::CreateTypeface(int index)
 {
@@ -81,18 +81,6 @@ Typeface* SkiaFontStyleSet::MatchStyle(const FontStyle& pattern)
 int SkiaFontStyleSet::Count()
 {
     return skFontStyleSet_->count();
-}
-
-FontStyleSet* SkiaFontStyleSet::CreateEmpty()
-{
-    SkFontStyleSet* skFontStyleSetPtr = SkFontStyleSet::CreateEmpty();
-    if (!skFontStyleSetPtr) {
-        LOGE("SkiaFontStyleSet::CreateEmpty, skFontStyleSet nullptr");
-        return nullptr;
-    }
-    std::shared_ptr<SkFontStyleSet> skFontStyleSet{skFontStyleSetPtr};
-    std::shared_ptr<FontStyleSetImpl> fontStyleSetImpl = std::make_shared<SkiaFontStyleSet>(skFontStyleSet);
-    return new FontStyleSet(fontStyleSetImpl);
 }
 } // namespace Drawing
 } // namespace Rosen

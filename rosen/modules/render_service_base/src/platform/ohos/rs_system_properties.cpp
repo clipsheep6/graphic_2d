@@ -26,12 +26,38 @@
 
 namespace OHOS {
 namespace Rosen {
-
 constexpr int DEFAULT_CACHE_WIDTH = 1344;
 constexpr int DEFAULT_CACHE_HEIGHT = 2772;
 constexpr int DEFAULT_PARTIAL_RENDER_ENABLED_VALUE = 2;
 constexpr int DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE = 4;
 constexpr int DEFAULT_CORRECTION_MODE_VALUE = 999;
+
+#if (defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)) || (defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK))
+static GpuApiType GpuApiType()
+{
+    if (!((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) &&
+          (system::GetParameter("const.build.product", "0").compare("ALN") == 0))) {
+        return GpuApiType::OPENGL;
+    }
+
+    if (std::atoi(system::GetParameter(
+        "persist.sys.graphic.GpuApitype", "-1").c_str()) == (-1)) { // -1 is invalid type
+        return GpuApiType::VULKAN;
+    }
+    if (std::atoi(system::GetParameter("persist.sys.graphic.GpuApitype", "0").c_str()) == 0) {
+        return GpuApiType::OPENGL;
+    }
+    return GpuApiType::VULKAN;
+}
+#endif
+
+#if (defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)) || (defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK))
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType();
+#elif defined (ACE_ENABLE_GL) || defined (RS_ENABLE_GL)
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::OPENGL;
+#else
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::VULKAN;
+#endif
 
 int ConvertToInt(const char *originValue, int defaultValue)
 {
@@ -144,15 +170,9 @@ PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
 PartialRenderType RSSystemProperties::GetUniPartialRenderEnabled()
 {
     int changed = 0;
-#if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_VK)
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "0");
-    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
-    return static_cast<PartialRenderType>(ConvertToInt(enable, 0));
-#else
     static CachedHandle g_Handle = CachedParameterCreate("rosen.uni.partialrender.enabled", "4");
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return static_cast<PartialRenderType>(ConvertToInt(enable, DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE));
-#endif
 }
 
 bool RSSystemProperties::GetReleaseResourceEnabled()
@@ -415,7 +435,7 @@ bool RSSystemProperties::GetFilterPartialRenderEnabled()
     // Determine whether the filter partial render should be enabled. The default value is 0,
     // which means that it is unenabled.
     static bool enabled =
-        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "1")).c_str()) != 0;
+        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "0")).c_str()) != 0;
     return enabled;
 }
 
@@ -548,6 +568,15 @@ bool RSSystemProperties::GetASTCEnabled()
     return isASTCEnabled;
 }
 
+// GetCachedBlurPartialRenderEnabled Option On: no need to expand blur dirtyregion if blur has background cache
+bool RSSystemProperties::GetCachedBlurPartialRenderEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.cachedblurpartialrender.enabled", "1");
+    int changed = 0;
+    const char *type = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(type, 1) != 0;
+}
+
 bool RSSystemProperties::GetImageGpuResourceCacheEnable(int width, int height)
 {
     static bool cacheEnable =
@@ -594,7 +623,8 @@ bool RSSystemProperties::GetSnapshotWithDMAEnabled()
 {
     static bool isSupportDma = system::GetParameter("const.product.devicetype", "pc") == "phone" ||
         system::GetParameter("const.product.devicetype", "pc") == "tablet" ||
-        system::GetParameter("const.product.devicetype", "pc") == "pc";
+        system::GetParameter("const.product.devicetype", "pc") == "pc" ||
+        system::GetParameter("const.product.devicetype", "pc") == "2in1";
     return isSupportDma && system::GetBoolParameter("rosen.snapshotDma.enabled", true);
 }
 
@@ -637,6 +667,12 @@ bool RSSystemProperties::GetSubSurfaceEnabled()
     static bool subSurfaceEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.subSurface", "0")).c_str());
     return subSurfaceEnabled;
+}
+bool RSSystemProperties::GetSecurityPermissionCheckEnabled()
+{
+    static bool openSecurityPermissionCheck =
+        std::atoi((system::GetParameter("persist.sys.graphic.openSecurityPermissionCheck", "0")).c_str()) != 0;
+    return openSecurityPermissionCheck;
 }
 } // namespace Rosen
 } // namespace OHOS

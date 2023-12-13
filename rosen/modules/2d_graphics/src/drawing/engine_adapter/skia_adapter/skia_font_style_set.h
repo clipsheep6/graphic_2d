@@ -30,7 +30,7 @@ class SkiaFontStyleSet : public FontStyleSetImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
 
-    explicit SkiaFontStyleSet(std::shared_ptr<SkFontStyleSet> skFontStyleSet);
+    explicit SkiaFontStyleSet(sk_sp<SkFontStyleSet> skFontStyleSet);
     virtual ~SkiaFontStyleSet() = default;
 
     AdapterType GetType() const override
@@ -46,10 +46,8 @@ public:
 
     int Count() override;
 
-    static FontStyleSet* CreateEmpty();
-
 private:
-    std::shared_ptr<SkFontStyleSet> skFontStyleSet_;
+    sk_sp<SkFontStyleSet> skFontStyleSet_;
 };
 } // namespace Drawing
 } // namespace Rosen

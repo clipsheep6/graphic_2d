@@ -112,6 +112,7 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion()
         ROSEN_LOGD("RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Delaying cache "
                    "invalidation for %{public}d frames.",
             cacheUpdateInterval_);
+        pendingPurge_ = true;
     } else {
         InvalidateCache();
     }
@@ -155,10 +156,16 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
         return false;
     }
 #ifndef USE_ROSEN_DRAWING
+    GrSurfaceOrigin surfaceOrigin = kTopLeft_GrSurfaceOrigin;
 #ifdef RS_ENABLE_VK
-    auto surfaceOrigin = kTopLeft_GrSurfaceOrigin;
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        surfaceOrigin = kTopLeft_GrSurfaceOrigin;
+    } else {
+        surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
+    }
 #else
-    auto surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
+    surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
 #endif
     auto threadImage = SkImage::MakeFromTexture(cacheCanvas->recordingContext(), cacheBackendTexture_,
         surfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
@@ -444,6 +451,7 @@ void RSFilterCacheManager::TakeSnapshot(
     cacheUpdateInterval_ =
         isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
     cachedFilterHash_ = 0;
+    pendingPurge_ = false;
 }
 #else
 void RSFilterCacheManager::TakeSnapshot(
@@ -749,12 +757,12 @@ std::tuple<Drawing::RectI, Drawing::RectI> RSFilterCacheManager::ValidateParams(
 
 inline void RSFilterCacheManager::CompactCache(bool shouldClearFilteredCache)
 {
-    if (shouldClearFilteredCache) {
-        cachedFilteredSnapshot_.reset();
-    } else {
-        task_->Reset();
-        cachedSnapshot_.reset();
+    if (pendingPurge_) {
+        InvalidateCache();
+        return;
     }
+    InvalidateCache(
+        shouldClearFilteredCache ? CacheType::CACHE_TYPE_FILTERED_SNAPSHOT : CacheType::CACHE_TYPE_SNAPSHOT);
 }
 } // namespace Rosen
 } // namespace OHOS

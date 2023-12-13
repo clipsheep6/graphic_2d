@@ -21,7 +21,6 @@
 #include "draw/brush.h"
 #include "draw/surface.h"
 #include "image/pixmap.h"
-#include "text/font_style_set.h"
 #include "text/text_blob.h"
 #include "text/typeface.h"
 #include "utils/data.h"
@@ -42,7 +41,7 @@ public:
     static std::shared_ptr<Typeface> MakeFromName(const char familyName[], FontStyle fontStyle);
 #ifdef ACE_ENABLE_GPU
 #ifdef RS_ENABLE_VK
-    static std::shared_ptr<Surface> MakeFromBackendRenderTarget(GPUContext* gpuContext, const VKTextureInfo& info,
+    static std::shared_ptr<Surface> MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
         TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper);
 #endif
     static std::shared_ptr<Surface> MakeRenderTarget(GPUContext* gpuContext, bool budgeted, const ImageInfo& imageInfo);
@@ -57,7 +56,7 @@ public:
     static std::shared_ptr<TextBlob> DeserializeTextBlob(const void* data, size_t size);
     static bool CanComputeFastBounds(const Brush& brush);
     static const Rect& ComputeFastBounds(const Brush& brush, const Rect& orig, Rect* storage);
-    static FontStyleSet* CreateEmptyFontStyleSet();
+    static bool AsBlendMode(const Brush& brush);
     static std::shared_ptr<Data> MakeDataFromFileName(const char path[]);
 };
 } // namespace Drawing

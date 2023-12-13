@@ -56,8 +56,11 @@ RSParallelRenderManager::RSParallelRenderManager()
     }
     readyBufferNum_ = 0;
 #ifdef RS_ENABLE_VK
-    parallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
-    backParallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        parallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+        backParallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+    }
 #endif
 }
 
@@ -103,17 +106,20 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
 #ifdef NEW_RENDER_CONTEXT
         drawingContext_ = drawingContext;
 #endif
-#ifdef RS_ENABLE_GL
-        if (context) {
+
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+            RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR || context) {
 #endif
             for (uint32_t i = 0; i < threadNum; ++i) {
                 auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
                 curThread->StartSubThread();
                 threadList_.push_back(std::move(curThread));
             }
-#ifdef RS_ENABLE_GL
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         }
 #endif
+
         processTaskManager_.Initialize(threadNum);
         prepareTaskManager_.Initialize(threadNum);
         calcCostTaskManager_.Initialize(threadNum);
@@ -686,6 +692,10 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
     const std::shared_ptr<RSBaseRenderEngine> renderEngine, const ScreenInfo screenInfo)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     auto& context = RSMainThread::Instance()->GetContext();
     parallelFrames_.clear();
     std::swap(parallelDisplayNodes_, backParallelDisplayNodes_);
@@ -720,6 +730,10 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
 void RSParallelRenderManager::ProcessParallelDisplaySurface(RSUniRenderVisitor &visitor)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     for (int i = 0; i < PARALLEL_THREAD_NUM; i++) {
         if (!parallelDisplayNodes_[i]) {
             continue;
@@ -732,6 +746,10 @@ void RSParallelRenderManager::ProcessParallelDisplaySurface(RSUniRenderVisitor &
 void RSParallelRenderManager::ReleaseBuffer()
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     for (int i = 0; i < PARALLEL_THREAD_NUM; i++) {
         if (!parallelDisplayNodes_[i]) {
             continue;
@@ -745,6 +763,10 @@ void RSParallelRenderManager::ReleaseBuffer()
 void RSParallelRenderManager::NotifyUniRenderFinish()
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     readyBufferNum_++;
     if (readyBufferNum_ == PARALLEL_THREAD_NUM) {
         RS_TRACE_NAME("RSParallelRenderManager::NotifyUniRenderFinish");
@@ -758,6 +780,10 @@ std::shared_ptr<RSDisplayRenderNode> RSParallelRenderManager::GetParallelDisplay
     uint32_t subMainThreadIdx)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     return parallelDisplayNodes_[subMainThreadIdx];
 #else
     return nullptr;
@@ -768,6 +794,10 @@ std::unique_ptr<RSRenderFrame> RSParallelRenderManager::GetParallelFrame(
     uint32_t subMainThreadIdx)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     return std::move(parallelFrames_[subMainThreadIdx]);
 #else
     return nullptr;

@@ -16,6 +16,7 @@
 #include "static_factory.h"
 
 #include "skia_adapter/skia_static_factory.h"
+#include "utils/system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -56,9 +57,13 @@ std::shared_ptr<Typeface> StaticFactory::MakeFromName(const char familyName[], F
 
 #ifdef ACE_ENABLE_GPU
 #ifdef RS_ENABLE_VK
-std::shared_ptr<Surface> StaticFactory::MakeFromBackendRenderTarget(GPUContext* gpuContext, const VKTextureInfo& info,
+std::shared_ptr<Surface> StaticFactory::MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
     TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
 {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     return EngineStaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteVkImage, cleanHelper);
 }
 #endif
@@ -111,11 +116,10 @@ const Rect& StaticFactory::ComputeFastBounds(const Brush& brush, const Rect& ori
     return EngineStaticFactory::ComputeFastBounds(brush, orig, storage);
 }
 
-FontStyleSet* StaticFactory::CreateEmptyFontStyleSet()
+bool StaticFactory::AsBlendMode(const Brush& brush)
 {
-    return EngineStaticFactory::CreateEmptyFontStyleSet();
+    return EngineStaticFactory::AsBlendMode(brush);
 }
-
 std::shared_ptr<Data> StaticFactory::MakeDataFromFileName(const char path[])
 {
     return EngineStaticFactory::MakeDataFromFileName(path);

@@ -61,6 +61,9 @@ class RSContext;
 class RSNodeVisitor;
 class RSCommand;
 class RSPropertyDrawable;
+namespace NativeBufferUtils {
+class VulkanCleanupHelper;
+}
 class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode>  {
 public:
 
@@ -427,6 +430,7 @@ public:
 #else
     void UpdateEffectRegion(std::optional<Drawing::Path>& region);
 #endif
+    bool IsBackgroundFilterCacheValid() const;
     void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground=true) const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
@@ -456,6 +460,16 @@ public:
     void SetGlobalAlpha(float alpha);
     float GetGlobalAlpha() const;
     virtual void OnAlphaChanged() {}
+
+    inline const Vector4f& GetGlobalCornerRadius() noexcept
+    {
+        return globalCornerRadius_;
+    }
+
+    inline void SetGlobalCornerRadius(const Vector4f& globalCornerRadius) noexcept
+    {
+        globalCornerRadius_ = globalCornerRadius;
+    }
 
     void UpdateUIFrameRateRange(const FrameRateRange& range);
     const FrameRateRange& GetUIFrameRateRange() const;
@@ -596,6 +610,10 @@ private:
 #ifndef USE_ROSEN_DRAWING
     GrBackendTexture cacheBackendTexture_;
     GrBackendTexture cacheCompletedBackendTexture_;
+#ifdef RS_ENABLE_VK
+    NativeBufferUtils::VulkanCleanupHelper* cacheCleanupHelper_ = nullptr;
+    NativeBufferUtils::VulkanCleanupHelper* cacheCompletedCleanupHelper_ = nullptr;
+#endif
 #else
     Drawing::BackendTexture cacheBackendTexture_;
     Drawing::BackendTexture cacheCompletedBackendTexture_;
@@ -639,6 +657,7 @@ private:
     bool isContentChanged_ = false;
     OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
     float globalAlpha_ = 1.0f;
+    Vector4f globalCornerRadius_{ 0.f, 0.f, 0.f, 0.f };
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 
     std::shared_ptr<RectF> drawRegion_ = nullptr;

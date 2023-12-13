@@ -148,7 +148,7 @@ size_t TypographyImpl::FindGlyphTargetIndex(size_t line,
     offsetX = 0;
     size_t targetIndex = 0;
     for (const auto &width : widths) {
-        if (x < offsetX + HALF(fabs(width))) {
+        if (x < offsetX + fabs(width) * typographyStyle_.textSplitRatio) {
             break;
         }
 
@@ -205,7 +205,7 @@ IndexAndAffinity TypographyImpl::GetGlyphIndexByCoordinate(double x, double y) c
 
     // calc affinity
     if (targetIndex > 0 && targetIndex < widths.size()) {
-        auto mid = offsetX + HALF(fabs(widths[targetIndex]));
+        auto mid = offsetX + fabs(widths[targetIndex]) * typographyStyle_.textSplitRatio;
         if (x < mid) {
             count--;
             affinity = Affinity::NEXT;
@@ -285,7 +285,6 @@ void TypographyImpl::Layout(double maxWidth)
         didExceedMaxLines_ = shaper.DidExceedMaxLines();
         maxIntrinsicWidth_ = shaper.GetMaxIntrinsicWidth();
         minIntrinsicWidth_ = shaper.GetMinIntrinsicWidth();
-        ProcessHardBreak();
 
         auto ret = ComputeStrut();
         if (ret) {
@@ -303,37 +302,6 @@ void TypographyImpl::Layout(double maxWidth)
         ApplyAlignment();
     } catch (struct TexgineException &e) {
         LOGEX_FUNC_LINE(ERROR) << "catch exception: " << e.message;
-    }
-}
-
-void TypographyImpl::ProcessHardBreak()
-{
-    bool isAllHardBreak = false;
-    int lineCount = static_cast<int>(lineMetrics_.size());
-    // If the number of lines equal 1 and the char is hard break, add a new line.
-    if (lineCount == 1 && lineMetrics_.back().lineSpans.back().IsHardBreak()) {
-        isAllHardBreak = true;
-        // When the number of lines more than 1, and the text ending with two hard breaks, add a new line.
-    } else if (lineCount > 1) {
-        // 1 is the last line, 2 is the penultimate line.
-        isAllHardBreak = lineMetrics_[lineCount - 1].lineSpans.front().IsHardBreak() &&
-            lineMetrics_[lineCount - 2].lineSpans.back().IsHardBreak();
-    }
-
-    if (isAllHardBreak) {
-        lineMetrics_.push_back(lineMetrics_.back());
-    }
-
-    for (auto i = 0; i < static_cast<int>(lineMetrics_.size() - 2); i++) {
-        if (!lineMetrics_[i].lineSpans.back().IsHardBreak() &&
-                lineMetrics_[i + 1].lineSpans.front().IsHardBreak()) {
-            lineMetrics_[i].lineSpans.push_back(lineMetrics_[i + 1].lineSpans.front());
-            lineMetrics_[i + 1].lineSpans.erase(lineMetrics_[i + 1].lineSpans.begin());
-        }
-
-        if (lineMetrics_[i + 1].lineSpans.empty()) {
-                lineMetrics_.erase(lineMetrics_.begin() + (i + 1));
-        }
     }
 }
 
@@ -405,8 +373,7 @@ void TypographyImpl::DoLayout()
         double offsetX = 0;
         for (auto &vs : lineMetrics_[i].lineSpans) {
             vs.AdjustOffsetY(yOffsets_[i]);
-            offsetX += HALF(vs.GetTextStyle().letterSpacing);
-            vs.AdjustOffsetX(offsetX);
+            vs.AdjustOffsetX(offsetX + HALF(vs.GetTextStyle().letterSpacing));
             offsetX += vs.GetWidth();
 
             lineMetrics_[i].width = offsetX;
@@ -519,7 +486,7 @@ int TypographyImpl::DoUpdateSpanMetrics(const VariantSpan &span, const TexgineFo
     if (!onlyUseStrut) {
         double coveredDescent = 0;
         if (style.heightOnly) {
-            double metricsHeight = style.heightScale * style.fontSize;
+            double metricsHeight = -*metrics.fAscent_ + descent_;
             if (fabs(metricsHeight) < DBL_EPSILON) {
                 LOGEX_FUNC_LINE(ERROR) << "metrics is error";
                 return FAILED;
@@ -531,8 +498,6 @@ int TypographyImpl::DoUpdateSpanMetrics(const VariantSpan &span, const TexgineFo
             coveredAscent = (-*metrics.fAscent_ + HALF(*metrics.fLeading_));
             coveredDescent = (*metrics.fDescent_ + HALF(*metrics.fLeading_));
         }
-        lineMaxCoveredAscent_.back() = std::max(coveredAscent, lineMaxCoveredAscent_.back());
-        lineMaxCoveredDescent_.back() = std::max(coveredDescent, lineMaxCoveredDescent_.back());
         if (auto as = span.TryToAnySpan(); as != nullptr) {
             UpadateAnySpanMetrics(as, coveredAscent, coveredDescent);
             ascent = coveredAscent;
@@ -545,9 +510,9 @@ int TypographyImpl::DoUpdateSpanMetrics(const VariantSpan &span, const TexgineFo
             double halfLeading = HALF(leading);
             coveredAscent = -*metrics.fAscent_ / height * availableVspace + halfLeading;
             coveredDescent = *metrics.fDescent_ / height * availableVspace + halfLeading;
-            lineMaxCoveredAscent_.back() = std::max(lineMaxCoveredAscent_.back(), coveredAscent);
-            lineMaxCoveredDescent_.back() = std::max(lineMaxCoveredDescent_.back(), coveredDescent);
         }
+        lineMaxCoveredAscent_.back() = std::max(lineMaxCoveredAscent_.back(), coveredAscent);
+        lineMaxCoveredDescent_.back() = std::max(lineMaxCoveredDescent_.back(), coveredDescent);
     }
     lineMaxAscent_.back() = std::max(lineMaxAscent_.back(), ascent);
     return SUCCESSED;

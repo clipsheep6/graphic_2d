@@ -86,7 +86,7 @@ struct NativeSurfaceInfo {
 #else
     std::shared_ptr<Drawing::Surface> drawingSurface_ = nullptr;
 #endif
-    uint32_t lastPresentedCount = 0;
+    uint32_t lastPresentedCount = -1;
 
     ~NativeSurfaceInfo()
     {
@@ -109,7 +109,7 @@ GrBackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWi
 bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, NativeWindowBuffer* nativeWindowBuffer,
     NativeSurfaceInfo& nativeSurface, int width, int height);
 
-Drawing::VKTextureInfo MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
+Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
     int width, int height);
 #endif
 }

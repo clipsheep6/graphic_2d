@@ -42,7 +42,7 @@ RSRecordingThread &RSRecordingThread::Instance(RenderContext* context)
 
 void RSRecordingThread::Start()
 {
-    runner_ = AppExecFwk::EventRunner::Create("RRecordingThread");
+    runner_ = AppExecFwk::EventRunner::Create("RSRecordingThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     PostTask([this]() {
         grContext_ = CreateShareGrContext();
@@ -58,40 +58,53 @@ sk_sp<GrContext> RSRecordingThread::CreateShareGrContext()
 {
     RS_TRACE_NAME("RSRecordingThread::CreateShareGrContext");
 #ifdef RS_ENABLE_GL
-    CreateShareEglContext();
-    const GrGLInterface *grGlInterface = GrGLCreateNativeInterface();
-    sk_sp<const GrGLInterface> glInterface(grGlInterface);
-    if (glInterface.get() == nullptr) {
-        RS_LOGE("CreateShareGrContext failed");
-        return nullptr;
-    }
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        CreateShareEglContext();
+        const GrGLInterface *grGlInterface = GrGLCreateNativeInterface();
+        sk_sp<const GrGLInterface> glInterface(grGlInterface);
+        if (glInterface.get() == nullptr) {
+            RS_LOGE("CreateShareGrContext failed");
+            return nullptr;
+        }
 
-    GrContextOptions options = {};
-    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
-    options.fPreferExternalImagesOverES3 = true;
-    options.fDisableDistanceFieldPaths = true;
+        GrContextOptions options = {};
+        options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+        options.fPreferExternalImagesOverES3 = true;
+        options.fDisableDistanceFieldPaths = true;
 
-    auto handler = std::make_shared<MemoryHandler>();
-    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    auto size = glesVersion ? strlen(glesVersion) : 0;
-    /* /data/service/el0/render_service is shader cache dir*/
-    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+        auto handler = std::make_shared<MemoryHandler>();
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : 0;
+        /* /data/service/el0/render_service is shader cache dir*/
+        handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
 
 #ifdef NEW_SKIA
-    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(std::move(glInterface), options);
+        sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(std::move(glInterface), options);
 #else
-    sk_sp<GrContext> grContext = GrContext::MakeGL(std::move(glInterface), options);
+        sk_sp<GrContext> grContext = GrContext::MakeGL(std::move(glInterface), options);
 #endif
-#endif
-#ifdef RS_ENABLE_VK
-    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeVulkan(
-        RsVulkanContext::GetSingleton().GetGrVkBackendContext());
-#endif
-    if (grContext == nullptr) {
-        RS_LOGE("nullptr grContext is null");
-        return nullptr;
+        if (grContext == nullptr) {
+            RS_LOGE("nullptr grContext is null");
+            return nullptr;
+        }
+        return grContext;
     }
-    return grContext;
+#endif
+
+#ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        sk_sp<GrDirectContext> grContext = GrDirectContext::MakeVulkan(
+            RsVulkanContext::GetSingleton().GetGrVkBackendContext());
+        if (grContext == nullptr) {
+            RS_LOGE("nullptr grContext is null");
+            return nullptr;
+        }
+        return grContext;
+    }
+#endif
+    return nullptr;
 }
 #else
 std::shared_ptr<Drawing::GPUContext> RSRecordingThread::CreateShareGrContext()
@@ -116,9 +129,13 @@ std::shared_ptr<Drawing::GPUContext> RSRecordingThread::CreateShareGrContext()
 
 void RSRecordingThread::CreateShareEglContext()
 {
-#ifdef RS_ENABLE_GL
     if (renderContext_ == nullptr) {
         RS_LOGE("renderContext_ is nullptr");
+        return;
+    }
+#ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
         return;
     }
     eglShareContext_ = renderContext_->CreateShareContext();
@@ -136,6 +153,10 @@ void RSRecordingThread::CreateShareEglContext()
 void RSRecordingThread::DestroyShareEglContext()
 {
 #ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        return;
+    }
     if (renderContext_ != nullptr) {
         eglDestroyContext(renderContext_->GetEGLDisplay(), eglShareContext_);
         eglShareContext_ = EGL_NO_CONTEXT;
@@ -147,7 +168,7 @@ bool RSRecordingThread::IsIdle()
 {
     return handler_ && handler_->IsIdle();
 }
- 
+
 void RSRecordingThread::PostTask(const std::function<void()> &task)
 {
     if (handler_) {
@@ -179,6 +200,40 @@ bool RSRecordingThread::CheckAndRecording()
     return GetRecordingEnabled();
 }
 
+void RSRecordingThread::FinishRecordingOneFrameTask(RecordingMode modeSubThread)
+{
+    for (int curFrameIndex = 0; curFrameIndex < dumpFrameNum_; curFrameIndex++) {
+        std::shared_ptr<MessageParcel> messageParcel = std::make_shared<MessageParcel>();
+        std::string opsDescription = "drawing ops no description";
+        if (modeSubThread == RecordingMode::HIGH_SPPED_RECORDING) {
+            RS_LOGI("RSRecordingThread::High speed!");
+            messageParcel->SetMaxCapacity(RECORDING_PARCEL_CAPCITY);
+            RSMarshallingHelper::BeginNoSharedMem(std::this_thread::get_id());
+#ifndef USE_ROSEN_DRAWING
+            drawCmdListVec_[curFrameIndex]->Marshalling(*messageParcel);
+#endif
+            RSMarshallingHelper::EndNoSharedMem();
+#ifndef USE_ROSEN_DRAWING
+            opsDescription = drawCmdListVec_[curFrameIndex]-> GetOpsWithDesc();
+#endif
+        } else if (modeSubThread == RecordingMode::LOW_SPEED_RECORDING) {
+            messageParcel = messageParcelVec_[curFrameIndex];
+#ifndef USE_ROSEN_DRAWING
+            opsDescription = opsDescriptionVec_[curFrameIndex];
+#endif
+        }
+        OHOS::Rosen::Benchmarks::WriteMessageParcelToFile(messageParcel, opsDescription, curFrameIndex, fileDir_);
+    }
+    drawCmdListVec_.clear();
+    messageParcelVec_.clear();
+    opsDescriptionVec_.clear();
+    curDumpFrame_ = 0;
+    dumpFrameNum_ = 0;
+    fileDir_ = "";
+    RSSystemProperties::SetRecordingDisenabled();
+    RS_LOGD("RSRecordingThread::FinishRecordingOneFrame isRecordingEnabled = false");
+}
+
 void RSRecordingThread::FinishRecordingOneFrame()
 {
     std::string line = "RSRecordingThread::FinishRecordingOneFrame curDumpFrame = " + std::to_string(curDumpFrame_) +
@@ -191,39 +246,19 @@ void RSRecordingThread::FinishRecordingOneFrame()
     }
     auto modeSubThread = mode_;
     mode_ = RecordingMode::STOP_RECORDING;
-    RSTaskMessage::RSTask task = [this, modeSubThread]() {
-        for (int curFrameIndex = 0; curFrameIndex < dumpFrameNum_; curFrameIndex++) {
-            std::shared_ptr<MessageParcel> messageParcel = std::make_shared<MessageParcel>();
-            std::string opsDescription = "drawing ops no description";
-            if (modeSubThread == RecordingMode::HIGH_SPPED_RECORDING) {
-                RS_LOGI("RSRecordingThread::High speed!");
-                messageParcel->SetMaxCapacity(RECORDING_PARCEL_CAPCITY);
-                RSMarshallingHelper::BeginNoSharedMem(std::this_thread::get_id());
-#ifndef USE_ROSEN_DRAWING
-                drawCmdListVec_[curFrameIndex]->Marshalling(*messageParcel);
+#ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        RSTaskMessage::RSTask task = [this, modeSubThread]() {
+            FinishRecordingOneFrameTask(modeSubThread);
+        };
+        PostTask(task);
+    } else {
+        FinishRecordingOneFrameTask(modeSubThread);
+    }
+#else
+    FinishRecordingOneFrameTask(modeSubThread);
 #endif
-                RSMarshallingHelper::EndNoSharedMem();
-#ifndef USE_ROSEN_DRAWING
-                opsDescription = drawCmdListVec_[curFrameIndex]-> GetOpsWithDesc();
-#endif
-            } else if (modeSubThread == RecordingMode::LOW_SPEED_RECORDING) {
-                messageParcel = messageParcelVec_[curFrameIndex];
-#ifndef USE_ROSEN_DRAWING
-                opsDescription = opsDescriptionVec_[curFrameIndex];
-#endif
-            }
-            OHOS::Rosen::Benchmarks::WriteMessageParcelToFile(messageParcel, opsDescription, curFrameIndex, fileDir_);
-        }
-        drawCmdListVec_.clear();
-        messageParcelVec_.clear();
-        opsDescriptionVec_.clear();
-        curDumpFrame_ = 0;
-        dumpFrameNum_ = 0;
-        fileDir_ = "";
-        RSSystemProperties::SetRecordingDisenabled();
-        RS_LOGD("RSRecordingThread::FinishRecordingOneFrame isRecordingEnabled = false");
-    };
-    PostTask(task);
 }
 
 #ifndef USE_ROSEN_DRAWING

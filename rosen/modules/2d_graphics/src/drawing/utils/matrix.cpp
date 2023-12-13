@@ -22,7 +22,7 @@ namespace Rosen {
 namespace Drawing {
 Matrix::Matrix() : matrixImplPtr(ImplFactory::CreateMatrixImpl()) {}
 
-Matrix::Matrix(const Matrix& other) : matrixImplPtr(ImplFactory::CreateMatrixImpl()) {}
+Matrix::Matrix(const Matrix& other) : matrixImplPtr(ImplFactory::CreateMatrixImpl(other)) {}
 
 Matrix& Matrix::operator=(const Matrix& matrix)
 {
@@ -48,6 +48,11 @@ void Matrix::Scale(scalar sx, scalar sy, scalar px, scalar py)
 void Matrix::SetScale(scalar sx, scalar sy)
 {
     matrixImplPtr->SetScale(sx, sy);
+}
+
+void Matrix::SetScaleTranslate(scalar sx, scalar sy, scalar dx, scalar dy)
+{
+    matrixImplPtr->SetScaleTranslate(sx, sy, dx, dy);
 }
 
 void Matrix::PreRotate(scalar degree)

@@ -164,6 +164,11 @@ public:
 
     using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, RSPaintFilterCanvas::CanvasStatus>;
 private:
+    void PartialRenderOptionInit();
+    void CalcChildFilterNodeDirtyRegion(std::shared_ptr<RSSurfaceRenderNode>& currentSurfaceNode,
+        std::shared_ptr<RSDisplayRenderNode>& displayNode);
+    void CalcSurfaceFilterNodeDirtyRegion(std::shared_ptr<RSSurfaceRenderNode>& currentSurfaceNode,
+        std::shared_ptr<RSDisplayRenderNode>& displayNode);
     void DrawWatermarkIfNeed(RSDisplayRenderNode& node, bool isMirror = false);
 #ifndef USE_ROSEN_DRAWING
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const SkColor color,
@@ -224,6 +229,8 @@ private:
     void AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDisplayRenderNode>& node) const;
     // merge last childRect as dirty if any child has been removed
     void MergeRemovedChildDirtyRegion(RSRenderNode& node);
+    // Reset curSurface info as upper surfaceParent in case surfaceParent has multi children
+    void ResetCurSurfaceInfoAsUpperSurfaceParent(RSSurfaceRenderNode& node);
 
     // set global dirty region to each surface node
     void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
@@ -250,6 +257,12 @@ private:
      * If so, reset status flag and stop traversal
      */
     bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node);
+    /* Judge if uifirst surface render node could skip subtree preparation:
+     * mainwindow check if it has leashwindow parent
+     * If so, check parent or check itself
+     */
+    bool CheckIfUIFirstSurfaceContentReusable(std::shared_ptr<RSSurfaceRenderNode>& node);
+
     void PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node);
     void PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRenderNode& node);
     // judge if node's cache changes
@@ -322,6 +335,7 @@ private:
     std::stack<std::shared_ptr<RSDirtyRegionManager>> surfaceDirtyManager_;
     std::stack<std::shared_ptr<RSSurfaceRenderNode>> surfaceNode_;
     float curAlpha_ = 1.f;
+    Vector4f curCornerRadius_{ 0.f, 0.f, 0.f, 0.f };
     bool dirtyFlag_ { false };
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
@@ -393,6 +407,9 @@ private:
     bool isSubThread_ = false;
     bool isUIFirst_ = false;
     uint32_t threadIndex_ = UNI_MAIN_THREAD_INDEX;
+    // check each surface could be reused per frame
+    // currently available to uiFirst
+    bool isCachedSurfaceReuse_ = false;
 
     bool isDirtyRegionAlignedEnable_ = false;
     std::shared_ptr<std::mutex> surfaceNodePrepareMutex_;
@@ -462,6 +479,7 @@ private:
     bool curDirty_ = false;
     bool curContentDirty_ = false;
     bool isPhone_ = false;
+    bool isCacheBlurPartialRenderEnabled_ = false;
 
     NodeId firstVisitedCache_ = INVALID_NODEID;
     std::unordered_set<NodeId> visitedCacheNodeIds_ = {};
@@ -491,9 +509,6 @@ private:
     void ProcessChildrenForScreenRecordingOptimization(RSDisplayRenderNode& node, NodeId rootIdOfCaptureWindow);
     NodeId FindInstanceChildOfDisplay(std::shared_ptr<RSRenderNode> node);
     bool CheckIfNeedResetRotate();
-#ifdef USE_VIDEO_PROCESSING_ENGINE
-    float GetScreenBrightnessNits();
-#endif
 };
 } // namespace Rosen
 } // namespace OHOS

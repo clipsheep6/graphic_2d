@@ -941,24 +941,6 @@ bool RSPaintFilterCanvas::OnFilter() const
     return alphaStack_.top() > 0.f;
 }
 
-bool RSPaintFilterCanvas::OnFilterWithBrush(Brush& brush) const
-{
-    if (brush.GetColor() == 0x00000001) { // foreground color and foreground color strategy identification
-        brush.SetColor(envStack_.top().envForegroundColor_.AsArgbInt());
-    }
-
-    // use alphaStack_.top() to multiply alpha
-    if (alphaStack_.top() < 1 && alphaStack_.top() > 0) {
-        brush.SetAlpha(brush.GetAlpha() * alphaStack_.top());
-    }
-    return alphaStack_.top() > 0.f;
-}
-
-void RSPaintFilterCanvas::SetRecordingState(bool flag)
-{
-    recordingState_ = flag;
-}
-
 #endif // USE_ROSEN_DRAWING
 
 bool RSPaintFilterCanvas::GetRecordingState() const
@@ -1152,73 +1134,6 @@ void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
     }
     isParallelCanvas_ = other.isParallelCanvas_;
 }
-
-RSColorFilterCanvas::RSColorFilterCanvas(RSPaintFilterCanvas* canvas)
-    : RSPaintFilterCanvas(canvas)
-{}
-
-#ifndef USE_ROSEN_DRAWING
-bool RSColorFilterCanvas::onFilter(SkPaint& paint) const
-{
-    // foreground color and foreground color strategy identification
-    if (paint.getColor() == 0x00000001) {
-        // creates a color filter that blends the foreground color with the destination color
-        paint.setColorFilter(SkColorFilters::Blend(GetEnvForegroundColor().AsArgbInt(), SkBlendMode::kDstIn));
-    }
-
-    return RSPaintFilterCanvas::onFilter(paint);
-}
-#else
-CoreCanvas& RSColorFilterCanvas::AttachPen(const Pen& pen)
-{
-    if (canvas_ == nullptr) {
-        return *this;
-    }
-
-    Pen p(pen);
-    if (p.GetColor() == 0x00000001) { // foreground color and foreground color strategy identification
-        p.SetColor(GetEnvStack().top().envForegroundColor_.AsArgbInt());
-        // creates a color filter that blends the foreground color with the destination color
-        Drawing::Filter filter;
-        filter.SetColorFilter(Drawing::ColorFilter::CreateBlendModeColorFilter(
-            GetEnvForegroundColor().AsArgbInt(), Drawing::BlendMode::DST_IN));
-        p.SetFilter(filter);
-    }
-
-    // use alphaStack_.top() to multiply alpha
-    if (GetAlphaStack().top() < 1 && GetAlphaStack().top() > 0) {
-        p.SetAlpha(p.GetAlpha() * GetAlphaStack().top());
-    }
-
-    canvas_->AttachPen(p);
-    return *this;
-}
-
-CoreCanvas& RSColorFilterCanvas::AttachBrush(const Brush& brush)
-{
-    if (canvas_ == nullptr) {
-        return *this;
-    }
-
-    Brush b(brush);
-    if (b.GetColor() == 0x00000001) { // foreground color and foreground color strategy identification
-        b.SetColor(GetEnvStack().top().envForegroundColor_.AsArgbInt());
-        // creates a color filter that blends the foreground color with the destination color
-        Drawing::Filter filter;
-        filter.SetColorFilter(Drawing::ColorFilter::CreateBlendModeColorFilter(
-            GetEnvForegroundColor().AsArgbInt(), Drawing::BlendMode::DST_IN));
-        b.SetFilter(filter);
-    }
-
-    // use alphaStack_.top() to multiply alpha
-    if (GetAlphaStack().top() < 1 && GetAlphaStack().top() > 0) {
-        b.SetAlpha(b.GetAlpha() * GetAlphaStack().top());
-    }
-
-    canvas_->AttachBrush(b);
-    return *this;
-}
-#endif
 
 void RSPaintFilterCanvas::SetHighContrast(bool enabled)
 {

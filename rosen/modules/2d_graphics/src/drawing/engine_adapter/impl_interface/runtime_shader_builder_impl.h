@@ -42,7 +42,10 @@ public:
     virtual void SetChild(const std::string& name, std::shared_ptr<ShaderEffect> shader) = 0;
     virtual void SetUniform(const std::string& name, float val) = 0;
     virtual void SetUniform(const std::string& name, float x, float y) = 0;
+    virtual void SetUniform(const std::string& name, float x, float y, float z) = 0;
     virtual void SetUniform(const std::string& name, float x, float y, float width, float height) = 0;
+    virtual void SetUniform(const std::string& name, const Matrix44& uniformMatrix44) = 0;
+    virtual void SetUniformVec4(const std::string& name, float x, float y, float z, float w) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

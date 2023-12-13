@@ -2832,5 +2832,16 @@ bool RSMarshallingHelper::GetUseSharedMem(std::thread::id tid)
     }
     return true;
 }
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val)
+{
+    return RSRenderPropertyBase::Marshalling(parcel, val);
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val)
+{
+    ROSEN_LOGE("zouwei RSMarshallingHelper::Unmarshalling");
+    return RSRenderPropertyBase::Unmarshalling(parcel, val);
+}
 } // namespace Rosen
 } // namespace OHOS

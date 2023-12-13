@@ -33,6 +33,7 @@
 #include "modifier/rs_modifier_type.h"
 #include "modifier/rs_render_property.h"
 #include "pipeline/rs_node_map.h"
+#include "platform/common/rs_log.h"
 #include "property/rs_properties_def.h"
 #include "render/rs_border.h"
 #include "render/rs_filter.h"
@@ -393,6 +394,7 @@ public:
         if (node == nullptr) {
             return;
         }
+        ROSEN_LOGE("zouwei RequestCancelAnimation");
         auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
         if (implicitAnimator && implicitAnimator->NeedImplicitAnimation()) {
             implicitAnimator->CancelImplicitAnimation(node, RSProperty<T>::shared_from_this());
@@ -414,6 +416,7 @@ public:
 
     bool GetShowingValueAndCancelAnimation() override
     {
+        // return false;
         auto node = RSProperty<T>::target_.lock();
         if (node == nullptr) {
             return false;

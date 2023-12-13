@@ -45,8 +45,6 @@ public:
     bool CheckHeader(Parcel& parcel) const override;
     bool ReadFromParcel(Parcel& parcel) override;
 
-    static RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
-
     void Process(RSContext& context) override;
     std::shared_ptr<RSRenderPropertyBase> GetProperty() const
     {
@@ -61,6 +59,7 @@ private:
     NodeId targetId_ = 0;
     std::shared_ptr<RSRenderPropertyBase> property_;
     bool isTimeout_ = true;
+    static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
 };
 
 class RSB_EXPORT RSNodeGetShowingPropertiesAndCancelAnimation : public RSSyncTask {
@@ -80,7 +79,6 @@ public:
     bool CheckHeader(Parcel& parcel) const override;
     bool ReadFromParcel(Parcel& parcel) override;
 
-    static RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
     void Process(RSContext& context) override;
 
     const propertiesMap& GetProperties() const
@@ -97,6 +95,7 @@ private:
     RSNodeGetShowingPropertiesAndCancelAnimation(): RSSyncTask(1e8) {}
     propertiesMap properties_;
     bool isTimeout_ = true;
+    static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
 };
 
 } // namespace Rosen

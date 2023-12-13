@@ -119,19 +119,23 @@ bool RSRenderPropertyBase::Marshalling(Parcel& parcel, const std::shared_ptr<RSR
 
 bool RSRenderPropertyBase::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val)
 {
+    ROSEN_LOGE("zouwei RSRenderPropertyBase::Unmarshalling 1");
     int16_t typeId = 0;
     if (!parcel.ReadInt16(typeId)) {
         return false;
     }
+    ROSEN_LOGE("zouwei RSRenderPropertyBase::Unmarshalling 2");
     RSRenderPropertyType type = static_cast<RSRenderPropertyType>(typeId);
     if (type == RSRenderPropertyType::INVALID) {
         val.reset();
         return true;
     }
+    ROSEN_LOGE("zouwei RSRenderPropertyBase::Unmarshalling 3");
     PropertyId id = 0;
     if (!parcel.ReadUint64(id)) {
         return false;
     }
+    ROSEN_LOGE("zouwei RSRenderPropertyBase::Unmarshalling 4");
     switch (type) {
         case RSRenderPropertyType::PROPERTY_FLOAT: {
             float value;

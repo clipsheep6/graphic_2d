@@ -42,7 +42,7 @@ std::shared_ptr<RSAlphaModifier> alpha_;
 
 void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
 {
-    std::cout << "rs app demo Init Rosen Backend!" << std::endl;
+    std::cout << "ooxx rs app demo Init Rosen Backend!" << std::endl;
 
     rootNode = RSRootNode::Create();
     rootNode->SetBounds(0, 0, width, height);
@@ -133,42 +133,48 @@ int main()
         []() { std::cout << "the first animation finish callback" << std::endl; });
 
     int64_t startNum = 80825861106;
-    int64_t interruptNum = 80825861106 + 100000000 * 10;
+    // int64_t interruptNum = 80825861106 + 100000000 * 10;
 
     bool hasRunningAnimation = true;
     bool stopSignal = true;
+
+    std::cout << "attempt to cancel animation" << std::endl;
 
     while (hasRunningAnimation) {
         hasRunningAnimation = rsUiDirector->FlushAnimation(startNum);
         rsUiDirector->FlushModifier();
         rsUiDirector->SendMessages();
 
+        std::cout << "attempt to cancel animation 111111" << std::endl;
+
         // simulate to stop animation by gesture
-        if ((startNum >= interruptNum) && stopSignal) {
-            // set duration to 0
-            protocol.SetDuration(0);
+        // if ((startNum >= interruptNum) && stopSignal) {
+        // set duration to 0
+        protocol.SetDuration(0);
 
-            // send cancel request
-            RSNode::Animate(
-                protocol, RSAnimationTimingCurve::EASE_IN_OUT,
-                [&]() {
-                    auto propertyXY =
-                        std::static_pointer_cast<RSAnimatableProperty<Vector2f>>(translateXY_->GetProperty());
-                    if (propertyXY) {
-                        propertyXY->RequestCancelAnimation();
-                    }
-                    auto propertyAlpha = std::static_pointer_cast<RSAnimatableProperty<float>>(alpha_->GetProperty());
-                    if (propertyAlpha) {
-                        propertyAlpha->RequestCancelAnimation();
-                    }
-                },
-                [&]() {
-                    // this finish callback will also execute, though this closure create no animation
-                    std::cout << "request cancel animation finish callback" << std::endl;
-                });
+        // send cancel request
+        RSNode::Animate(
+            protocol, RSAnimationTimingCurve::EASE_IN_OUT,
+            [&]() {
+                std::cout << "attempt to cancel animation 0" << std::endl;
+                auto propertyXY = std::static_pointer_cast<RSAnimatableProperty<Vector2f>>(translateXY_->GetProperty());
+                if (propertyXY) {
+                    std::cout << "attempt to cancel animation 1" << std::endl;
+                    propertyXY->RequestCancelAnimation();
+                }
+                auto propertyAlpha = std::static_pointer_cast<RSAnimatableProperty<float>>(alpha_->GetProperty());
+                if (propertyAlpha) {
+                    std::cout << "attempt to cancel animation 2" << std::endl;
+                    propertyAlpha->RequestCancelAnimation();
+                }
+            },
+            [&]() {
+                // this finish callback will also execute, though this closure create no animation
+                std::cout << "request cancel animation finish callback" << std::endl;
+            });
 
-            stopSignal = false;
-        }
+        stopSignal = false;
+        // }
         startNum += 100000000;
         usleep(100000);
     }

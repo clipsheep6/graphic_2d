@@ -93,9 +93,12 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
         return;
     }
 
+    ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 1");
+
     if (!task->Marshalling(data)) {
         return;
     }
+    ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 2");
 
     option.SetFlags(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::EXECUTE_SYNCHRONOUS_TASK);
@@ -104,9 +107,13 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
         return;
     }
 
+    ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 3");
     if (task->CheckHeader(reply)) {
+        ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 4");
         task->ReadFromParcel(reply);
+        ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 5");
     }
+    ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 6");
 }
 
 bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(

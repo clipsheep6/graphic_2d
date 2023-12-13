@@ -37,6 +37,7 @@ public:
     void GoBackground();
     void GoForeground();
     void Init(bool shouldCreateRenderThread = true);
+    void StartSameRender();
     void Destroy();
     void SetRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode);
     void SetAbilityBGAlpha(uint8_t alpha);

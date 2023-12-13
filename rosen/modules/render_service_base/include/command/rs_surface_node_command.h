@@ -59,12 +59,14 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_SET_BOOT_ANIMATION,
     SURFACE_NODE_CREATE_SURFACE_EXT,
     SURFACE_NODE_SET_FOREGROUND,
+    SURFACE_NODE_SET_SURFACE,
 };
 
 class RSB_EXPORT SurfaceNodeCommandHelper {
 public:
     static void Create(RSContext& context,
-        NodeId nodeId, RSSurfaceNodeType surfaceNodeType = RSSurfaceNodeType::DEFAULT);
+        NodeId nodeId, RSSurfaceNodeType surfaceNodeType = RSSurfaceNodeType::DEFAULT, bool isSameLayerRender = false);
+    static void SetSameRenderSurface(RSContext& context, NodeId id, SurfaceId surfaceId);
 #ifndef USE_ROSEN_DRAWING
     static void SetContextMatrix(RSContext& context, NodeId nodeId, const std::optional<SkMatrix>& matrix);
 #else
@@ -102,7 +104,9 @@ public:
 };
 
 ADD_COMMAND(RSSurfaceNodeCreate,
-    ARG(SURFACE_NODE, SURFACE_NODE_CREATE, SurfaceNodeCommandHelper::Create, NodeId, RSSurfaceNodeType))
+    ARG(SURFACE_NODE, SURFACE_NODE_CREATE, SurfaceNodeCommandHelper::Create, NodeId, RSSurfaceNodeType, bool))
+ADD_COMMAND(RSSurfaceNodeSetSurface,
+    ARG(ROOT_NODE, SURFACE_NODE_SET_SURFACE, SurfaceNodeCommandHelper::SetSameRenderSurface, NodeId, SurfaceId))
 #ifndef USE_ROSEN_DRAWING
 ADD_COMMAND(
     RSSurfaceNodeSetContextMatrix, ARG(SURFACE_NODE, SURFACE_NODE_SET_CONTEXT_MATRIX,

@@ -69,12 +69,14 @@ RSUIDirector::~RSUIDirector()
     Destroy();
 }
 
-void RSUIDirector::Init(bool shouldCreateRenderThread)
+void RSUIDirector::Init(bool isSameLayerRender)
 {
     AnimationCommandHelper::SetAnimationCallbackProcessor(AnimationCallbackProcessor);
 
     isUniRenderEnabled_ = RSSystemProperties::GetUniRenderEnabled();
-    if (shouldCreateRenderThread && !isUniRenderEnabled_) {
+    // DividedRender must create RT
+    // uniRender and set isSameLayerRender create RT
+    if ((isSameLayerRender && isUniRenderEnabled_) || (!isUniRenderEnabled_)) {
         auto renderThreadClient = RSIRenderClient::CreateRenderThreadClient();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {

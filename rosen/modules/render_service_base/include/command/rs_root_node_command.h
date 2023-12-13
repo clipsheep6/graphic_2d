@@ -25,6 +25,7 @@ namespace Rosen {
 enum RSRootNodeCommandType : uint16_t {
     ROOT_NODE_CREATE,
     ROOT_NODE_ATTACH,
+    ROOT_NODE_SET_SURFACE,
     ATTACH_TO_UNI_SURFACENODE,
     SET_ENABLE_RENDER,
     UPDATE_SUGGESTED_BUFFER_SIZE,
@@ -32,14 +33,17 @@ enum RSRootNodeCommandType : uint16_t {
 
 class RSB_EXPORT RootNodeCommandHelper {
 public:
-    static void Create(RSContext& context, NodeId id);
+    static void Create(RSContext& context, NodeId id, bool isSameLayerRender);
+    static void SetSameRenderSurface(RSContext& context, NodeId id, SurfaceId surfaceId);
     static void AttachRSSurfaceNode(RSContext& context, NodeId id, NodeId surfaceNodeId);
     static void AttachToUniSurfaceNode(RSContext& context, NodeId id, NodeId surfaceNodeId);
     static void SetEnableRender(RSContext& context, NodeId id, bool flag);
     static void UpdateSuggestedBufferSize(RSContext& context, NodeId id, float width, float height);
 };
 
-ADD_COMMAND(RSRootNodeCreate, ARG(ROOT_NODE, ROOT_NODE_CREATE, RootNodeCommandHelper::Create, NodeId))
+ADD_COMMAND(RSRootNodeCreate, ARG(ROOT_NODE, ROOT_NODE_CREATE, RootNodeCommandHelper::Create, NodeId, bool))
+ADD_COMMAND(RSRootNodeSetSurface,
+    ARG(ROOT_NODE, ROOT_NODE_SET_SURFACE, RootNodeCommandHelper::SetSameRenderSurface, NodeId, SurfaceId))
 ADD_COMMAND(RSRootNodeAttachRSSurfaceNode,
     ARG(ROOT_NODE, ROOT_NODE_ATTACH, RootNodeCommandHelper::AttachRSSurfaceNode, NodeId, NodeId))
 ADD_COMMAND(RSRootNodeSetEnableRender,

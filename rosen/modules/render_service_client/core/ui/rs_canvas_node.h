@@ -37,7 +37,7 @@ public:
 
     ~RSCanvasNode() override;
 
-    static SharedPtr Create(bool isRenderServiceNode = false);
+    static SharedPtr Create(bool isSamelayerRender = false, bool isRenderServiceNode = false);
 
 #ifndef USE_ROSEN_DRAWING
     SkCanvas* BeginRecording(int width, int height);
@@ -53,7 +53,7 @@ public:
     void SetFreeze(bool isFreeze) override;
 
 protected:
-    RSCanvasNode(bool isRenderServiceNode);
+    RSCanvasNode(bool isRenderServiceNode, bool isSamelayerRender = false);
     RSCanvasNode(const RSCanvasNode&) = delete;
     RSCanvasNode(const RSCanvasNode&&) = delete;
     RSCanvasNode& operator=(const RSCanvasNode&) = delete;

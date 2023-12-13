@@ -36,7 +36,7 @@ public:
     ~RSUIDirector();
     void GoBackground();
     void GoForeground();
-    void Init(bool shouldCreateRenderThread = true);
+    void Init(bool isSameLayerRender = false);
     void Destroy();
     void SetRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode);
     void SetAbilityBGAlpha(uint8_t alpha);

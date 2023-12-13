@@ -383,7 +383,7 @@ public:
                 sendValue, hasPropertyAnimation ? UPDATE_TYPE_INCREMENTAL : UPDATE_TYPE_OVERWRITE);
         } else {
             RSProperty<T>::UpdateToRender(
-                sendValue, hasPropertyAnimation ? UPDATE_TYPE_INCREMENTAL : UPDATE_TYPE_INCREMENTAL);
+                sendValue, hasPropertyAnimation ? UPDATE_TYPE_INCREMENTAL : UPDATE_TYPE_OVERWRITE);
         }
     }
 

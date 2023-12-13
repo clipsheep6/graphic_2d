@@ -19,7 +19,7 @@
 #include "directory_ex.h"
 #include "vulkan/vulkan.h"
 
-#ifdef __aarch64__
+#if defined(__aarch64__) || (defined(__riscv) && __riscv_xlen == 64)
 constexpr const char *LIB_CACULATE_PATH = "/system/lib64/libvulkan.so";
 #else
 constexpr const char *LIB_CACULATE_PATH = "/system/lib/libvulkan.so";

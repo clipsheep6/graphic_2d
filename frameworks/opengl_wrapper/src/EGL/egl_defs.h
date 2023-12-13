@@ -35,6 +35,10 @@ extern char const * const gEglApiNames[EGL_API_NUM];
 extern char const * const gGlApiNames1[GL_API_NUM];
 extern char const * const gGlApiNames2[GL_API_NUM];
 extern char const * const gGlApiNames3[GL_API_NUM];
+#if defined(__riscv)
+extern char const * const gGlApiNames4[GL_API_NUM];
+extern char const * const gGlApiNames5[GL_API_NUM];
+#endif
 extern const std::map<std::string, EglWrapperFuncPointer> gExtensionMap;
 
 extern GlHookTable gGlHookNoContext;

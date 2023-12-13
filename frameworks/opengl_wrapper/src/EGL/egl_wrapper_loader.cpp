@@ -26,7 +26,7 @@
 using namespace OHOS;
 namespace OHOS {
 namespace {
-#ifdef __aarch64__
+#if defined(__aarch64__) || (defined(__riscv) && __riscv_xlen == 64)
     constexpr const char *VENDOR_LIB_PATH = "/vendor/lib64/chipsetsdk/";
     constexpr const char *SYSTEM_LIB_PATH = "/system/lib64/";
 #else
@@ -37,6 +37,10 @@ constexpr const char *LIB_EGL_NAME = "libEGL_impl.so";
 constexpr const char *LIB_GLESV1_NAME = "libGLESv1_impl.so";
 constexpr const char *LIB_GLESV2_NAME = "libGLESv2_impl.so";
 constexpr const char *LIB_GLESV3_NAME = "libGLESv3_impl.so";
+#if defined(__riscv)
+constexpr const char *LIB_GLESV4_NAME = "libGLESv1_CM_PVR_MESA.so";
+constexpr const char *LIB_GLESV5_NAME = "libGLESv2_PVR_MESA.so";
+#endif
 }
 
 EglWrapperLoader& EglWrapperLoader::GetInstance()
@@ -152,7 +156,7 @@ bool EglWrapperLoader::LoadVendorDriver(EglWrapperDispatchTable *table)
 
     WLOGD("GLESV1");
     dlGlHandle1_ = LoadGl(LIB_GLESV1_NAME, gGlApiNames1, (FunctionPointerType *)&table->gl.table1);
-    if (!dlEglHandle_) {
+    if (!dlGlHandle1_) {
         WLOGE("LoadGl GLESV1 Failed.");
         return false;
     }
@@ -170,7 +174,19 @@ bool EglWrapperLoader::LoadVendorDriver(EglWrapperDispatchTable *table)
         WLOGE("LoadGl GLESV3 Failed.");
         return false;
     }
+#if defined(__riscv)
+    dlGlHandle4_ = LoadGl(LIB_GLESV4_NAME, gGlApiNames4, (FunctionPointerType *)&table->gl.table1);
+    if (!dlGlHandle4_) {
+        WLOGE("LoadGl GLESV4 Failed.");
+        return false;
+    }
 
+    dlGlHandle5_ = LoadGl(LIB_GLESV5_NAME, gGlApiNames5, (FunctionPointerType *)&table->gl.table2);
+    if (!dlGlHandle5_) {
+        WLOGE("LoadGl GLESV5 Failed.");
+        return false;
+    }
+#endif
     return true;
 }
 
@@ -227,6 +243,16 @@ bool EglWrapperLoader::Unload(EglWrapperDispatchTable *table)
         dlGlHandle3_ = nullptr;
     }
 
+#if defined(__riscv)
+    if (dlGlHandle4_) {
+        dlclose(dlGlHandle4_);
+        dlGlHandle4_ = nullptr;
+    }
+    if (dlGlHandle5_) {
+        dlclose(dlGlHandle5_);
+        dlGlHandle5_ = nullptr;
+    }
+#endif
     return true;
 }
 
@@ -250,6 +276,15 @@ void *EglWrapperLoader::GetProcAddrFromDriver(const char *name)
         func = dlsym(dlGlHandle1_, name);
     }
 
+#if defined(__riscv)
+    if (!func && dlEglHandle_) {
+        GetProcAddressType getProcAddr =
+            (GetProcAddressType)dlsym(dlEglHandle_, "eglGetProcAddress");
+        if (getProcAddr != nullptr) {
+            func = (void *)getProcAddr(name);
+        }
+    }
+#endif
     return func;
 }
 } // namespace OHOS

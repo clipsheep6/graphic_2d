@@ -60,6 +60,18 @@ char const * const gGlApiNames3[GL_API_NUM] = {
     nullptr
 };
 
+#if defined(__riscv)
+char const * const gGlApiNames4[GL_API_NUM] = {
+#include "../gl1_hook_entries.in"
+    nullptr
+};
+
+char const * const gGlApiNames5[GL_API_NUM] = {
+#include "../gl2_hook_entries.in"
+    nullptr
+};
+#endif
+
 using namespace OHOS;
 
 static std::mutex gInitMutex;

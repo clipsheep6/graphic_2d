@@ -18,7 +18,7 @@
 
 #include "hdi_device.h"
 #include "graphic_error.h"
-#include "v1_0/include/idisplay_composer_interface.h"
+#include "v1_1/include/idisplay_composer_interface.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -29,6 +29,7 @@ public:
     RosenError Init();
     /* set & get device screen info begin */
     int32_t RegHotPlugCallback(HotPlugCallback callback, void *data) override;
+    int32_t RegRefreshCallback(RefreshCallback callback, void *data) override;
     int32_t RegScreenVBlankCallback(uint32_t screenId, VBlankCallback callback, void *data) override;
     bool RegHwcDeadCallback(OnHwcDeadCallback callback, void *data) override;
     int32_t GetScreenCapability(uint32_t screenId, GraphicDisplayCapability &info) override;

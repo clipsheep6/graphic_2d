@@ -389,7 +389,9 @@ private:
     ~RSScreenManager() noexcept override;
 
     static void OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data);
+    static void OnRefresh(ScreenId id, void *data);
     void OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected);
+    void OnRefreshEvent(ScreenId id);
     static void OnHwcDead(void *data);
     void OnHwcDeadEvent();
     void CleanAndReinit();

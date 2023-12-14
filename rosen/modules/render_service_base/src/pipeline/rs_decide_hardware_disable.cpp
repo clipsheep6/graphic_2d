@@ -75,16 +75,6 @@ bool RSDecideHardwareDisable::IsInHwcWhiteList(const std::string& nodeName)
     return false;
 }
 
-void RSDecideHardwareDisable::EraseSurfaceBufferSortVec(NodeId nodeId)
-{
-    for (auto iter = surfaceBufferSortVec_.begin(); iter != surfaceBufferSortVec_.end(); ++iter) {
-        if ((*iter).first == nodeId) {
-            surfaceBufferSortVec_.erase(iter);
-            return;
-        } 
-    }
-}
-
 bool RSDecideHardwareDisable::IsHardwareDisabledBySort(const RSSurfaceRenderNode& node)
 {
     if (IsInHwcWhiteList(node.GetName())) {
@@ -97,12 +87,10 @@ bool RSDecideHardwareDisable::IsHardwareDisabledBySort(const RSSurfaceRenderNode
     uint32_t queueTail = surfaceBufferUpdateMap_[nodeId].first.back();
     if (vsyncCnt_ >= queueTail) {
         if ((vsyncCnt_ - queueTail) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
-            EraseSurfaceBufferSortVec(nodeId);
             return true;
         }
     } else {
         if (((UINT32_MAX - queueTail) + vsyncCnt_) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
-            EraseSurfaceBufferSortVec(nodeId);
             return true;
         }
     }

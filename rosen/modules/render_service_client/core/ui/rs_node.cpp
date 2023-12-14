@@ -78,15 +78,16 @@ bool IsPathAnimatableModifier(const RSModifierType& type)
 }
 }
 
-RSNode::RSNode(bool isRenderServiceNode, NodeId id)
-    : isRenderServiceNode_(isRenderServiceNode), id_(id), stagingPropertiesExtractor_(id), showingPropertiesFreezer_(id)
+RSNode::RSNode(bool isRenderServiceNode, NodeId id, bool isSamelayerRender)
+    : isRenderServiceNode_(isRenderServiceNode), isSameLayerRenderNode_(isSamelayerRender),
+    id_(id), stagingPropertiesExtractor_(id), showingPropertiesFreezer_(id)
 {
     InitUniRenderEnabled();
     UpdateImplicitAnimator();
 }
 
-RSNode::RSNode(bool isRenderServiceNode) : RSNode(isRenderServiceNode, GenerateId())
-{}
+RSNode::RSNode(bool isRenderServiceNode, bool isSamelayerRender)
+    : RSNode(isRenderServiceNode, GenerateId(), isSamelayerRender) {}
 
 RSNode::~RSNode()
 {
@@ -125,6 +126,11 @@ void RSNode::OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtoc
             std::make_shared<AnimationFinishCallback>(finishCallback, timingProtocol.GetFinishCallbackType());
     }
     implicitAnimator->OpenImplicitAnimation(timingProtocol, timingCurve, std::move(animationFinishCallback));
+}
+
+void RSNode::SetSameRenderSurfaceId(SurfaceId sameRenderSurfaceId)
+{
+    sameRenderSurfaceId_ = sameRenderSurfaceId;
 }
 
 std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation()
@@ -1612,7 +1618,7 @@ bool RSNode::IsUniRenderEnabled() const
 
 bool RSNode::IsRenderServiceNode() const
 {
-    return g_isUniRenderEnabled || isRenderServiceNode_;
+    return (g_isUniRenderEnabled || isRenderServiceNode_) && (!isSameLayerRenderNode_);
 }
 
 void RSNode::AddChild(SharedPtr child, int index)

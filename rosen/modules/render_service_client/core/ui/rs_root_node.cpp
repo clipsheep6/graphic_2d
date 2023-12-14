@@ -24,21 +24,28 @@
 
 namespace OHOS {
 namespace Rosen {
-std::shared_ptr<RSNode> RSRootNode::Create(bool isRenderServiceNode)
+std::shared_ptr<RSNode> RSRootNode::Create(bool isRenderServiceNode, bool isSamelayerRender)
 {
-    std::shared_ptr<RSRootNode> node(new RSRootNode(isRenderServiceNode));
+    std::shared_ptr<RSRootNode> node(new RSRootNode(isRenderServiceNode, isSamelayerRender));
     RSNodeMap::MutableInstance().RegisterNode(node);
 
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy == nullptr) {
         return node;
     }
-    std::unique_ptr<RSCommand> command = std::make_unique<RSRootNodeCreate>(node->GetId());
+    std::unique_ptr<RSCommand> command = std::make_unique<RSRootNodeCreate>(node->GetId(), isSamelayerRender);
     transactionProxy->AddCommand(command, node->IsRenderServiceNode());
+    auto sameRenderSurfaceId = node->GetSameRenderSurfaceId();
+    if (sameRenderSurfaceId != 0) {
+        std::unique_ptr<RSCommand> command =
+            std::make_unique<RSRootNodeSetSurface>(node->GetId(), sameRenderSurfaceId);
+        transactionProxy->AddCommand(command, false);
+    }
     return node;
 }
 
-RSRootNode::RSRootNode(bool isRenderServiceNode) : RSCanvasNode(isRenderServiceNode) {}
+RSRootNode::RSRootNode(bool isRenderServiceNode, bool isSamelayerRender)
+    : RSCanvasNode(isRenderServiceNode, isSamelayerRender) {}
 
 void RSRootNode::AttachRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode) const
 {

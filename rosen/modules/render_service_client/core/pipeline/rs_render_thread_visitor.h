@@ -85,6 +85,10 @@ private:
 #endif
     // Reset and update children node's info like outOfParent and isRemoveChild
     void ResetAndPrepareChildrenNode(RSRenderNode& node, std::shared_ptr<RSBaseRenderNode> nodeParent);
+    void ProcessSurfaceViewInRT(RSSurfaceRenderNode& node);
+#ifdef ROSEN_OHOS
+    bool CreateBufferAndCanvasForSameRender(RSRenderNode& node);
+#endif
 
     bool UpdateAnimatePropertyCacheSurface(RSRenderNode& node);
 

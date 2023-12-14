@@ -3306,7 +3306,7 @@ HWTEST_F(RSNodeTest, SetModifier001, TestSize.Level1)
 
 class RSC_EXPORT MockRSNode : public RSNode {
 public:
-    MockRSNode() : RSNode(false) {}
+    MockRSNode() : RSNode(false, false) {}
     virtual ~MockRSNode() = default;
     std::vector<PropertyId> GetModifierIds() const {
         return RSNode::GetModifierIds();

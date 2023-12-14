@@ -53,7 +53,7 @@ HWTEST_F(RSPathAnimationTest, SetEndFractionTest001, Level1)
     auto animationPath = nullptr;
     float frac = 3.0f;
     RSPathAnimation rsPathAnimation(prop, animationPath);
-    auto per = std::make_shared<RSNode>(true);
+    auto per = std::make_shared<RSNode>(true, false);
     rsPathAnimation.StartInner(per);
     rsPathAnimation.SetEndFraction(frac);
     ASSERT_EQ(res, true);

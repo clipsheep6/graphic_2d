@@ -107,9 +107,11 @@ private:
 #ifndef USE_ROSEN_DRAWING
     SkMatrix parentSurfaceNodeMatrix_;
     std::optional<SkPath> effectRegion_ = std::nullopt;
+    SkIRect effectNodeAbsBounds_ = SkIRect::MakeEmpty();
 #else
     Drawing::Matrix parentSurfaceNodeMatrix_;
     std::optional<Drawing::Path> effectRegion_ = std::nullopt;
+    Drawing::RectI effectNodeAbsBounds_ = {};
 #endif // USE_ROSEN_DRAWING
 
     std::map<NodeId, std::function<void(float, float, float, float)>> surfaceCallbacks_;

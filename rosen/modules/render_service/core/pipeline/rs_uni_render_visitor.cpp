@@ -4004,7 +4004,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                     RSUniRenderUtil::GetRotationDegreeFromMatrix(node.GetTotalMatrix()) % ROTATION_90 != 0) &&
                     (!node.IsHardwareEnabledTopSurface() || node.HasSubNodeShouldPaint()));
                 node.SetHardwareDisabledByCache(isUpdateCachedSurface_);
-                bool isHardwareDisabledBySort = RSDecideHardwareDisable::Instance()->IsHardwareDisabledBySort(node.GetId());
+                bool isHardwareDisabledBySort = RSDecideHardwareDisable::Instance()->IsHardwareDisabledBySort(node);
                 node.SetHardwareDisabledBySort(isHardwareDisabledBySort);
             }
             // if this window is in freeze state, disable hardware composer for its child surfaceView

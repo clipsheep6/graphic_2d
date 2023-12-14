@@ -25,6 +25,9 @@ namespace Rosen {
 const uint32_t VSYNC_CNT_QUEUE_MAX_SIZE = 10;
 const uint32_t SUPPORT_HWC_MAX_SIZE = 8;
 const uint32_t LONGTIME_NO_UPDATE_VSYNC_CNT = 100;
+const std::string HWC_WHITE_LIST[] = {
+    "pointer window",
+};
 RSDecideHardwareDisable* RSDecideHardwareDisable::Instance()
 {
     static RSDecideHardwareDisable instance;
@@ -40,10 +43,14 @@ bool RSDecideHardwareDisable::SortVectorCmp(const std::pair<NodeId, double>& p1,
 void RSDecideHardwareDisable::UpdateSurfaceBufferSortVector()
 {
     std::vector <std::pair<NodeId, double>>().swap(surfaceBufferSortVec_);
+    curVSyncHwcWhiteCnt_ = 0;
     for (auto iter = surfaceBufferUpdateMap_.begin(); iter != surfaceBufferUpdateMap_.end(); ++iter) {
         auto surfaceNode = iter->second.second.surfaceNode.lock();
         if (surfaceNode && surfaceNode->GetHardwareForcedDisabled()) {
             continue;
+        }
+        if (IsInHwcWhiteList(surfaceNode->GetName())) {
+            curVSyncHwcWhiteCnt_++;
         }
         uint32_t queueSize = iter->second.first.size();
         uint32_t queueTail = iter->second.first.back();
@@ -58,8 +65,22 @@ void RSDecideHardwareDisable::UpdateSurfaceBufferSortVector()
     std::sort(surfaceBufferSortVec_.begin(), surfaceBufferSortVec_.end(), SortVectorCmp);
 }
 
-bool RSDecideHardwareDisable::IsHardwareDisabledBySort(NodeId nodeId)
+bool RSDecideHardwareDisable::IsInHwcWhiteList(const std::string& nodeName)
 {
+    for (std::string i : HWC_WHITE_LIST) {
+        if (nodeName.compare(i) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RSDecideHardwareDisable::IsHardwareDisabledBySort(const RSSurfaceRenderNode& node)
+{
+    if (IsInHwcWhiteList(node.GetName())) {
+        return false;
+    }
+    NodeId nodeId = node.GetId();
     if (surfaceBufferUpdateMap_.find(nodeId) == surfaceBufferUpdateMap_.end()) {
         return true;
     }
@@ -86,9 +107,11 @@ bool RSDecideHardwareDisable::IsHardwareDisabledBySort(NodeId nodeId)
 
     RS_OPTIONAL_TRACE_NAME("RSDecideHardwareDisable::IsHardwareDisabledBySort nodeId:" + std::to_string(nodeId) +
         " flag:" + std::to_string(flag) + " vecSize:" + std::to_string(static_cast<uint32_t>(surfaceBufferSortVec_.size())) +
-        " sequence:" + std::to_string(sequence));
-    if (flag && sequence < SUPPORT_HWC_MAX_SIZE) {
-        return false;
+        " sequence:" + std::to_string(sequence) + " curVSyncHwcWhiteCnt_:" + std::to_string(curVSyncHwcWhiteCnt_));
+    if (curVSyncHwcWhiteCnt_ < SUPPORT_HWC_MAX_SIZE) {
+        if (flag && (sequence < (SUPPORT_HWC_MAX_SIZE - curVSyncHwcWhiteCnt_))) {
+            return false;
+        }
     }
     return true;
 }

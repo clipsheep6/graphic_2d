@@ -32,7 +32,7 @@ struct SortElements {
 class RSB_EXPORT RSDecideHardwareDisable {
 public:
     static RSDecideHardwareDisable* Instance();
-    bool IsHardwareDisabledBySort(NodeId nodeId);
+    bool IsHardwareDisabledBySort(const RSSurfaceRenderNode& node);
     void UpdateSurfaceBufferSortVector();
     void UpdateSurfaceNode(const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode);
     void DeleteSurfaceNode(NodeId nodeId);
@@ -42,10 +42,12 @@ private:
     RSDecideHardwareDisable() = default;
     ~RSDecideHardwareDisable() noexcept = default;
     static bool SortVectorCmp(const std::pair<NodeId, double>& p1, const std::pair<NodeId, double>& p2);
+    bool IsInHwcWhiteList(const std::string& nodeName);
 
     std::unordered_map<NodeId, std::pair<std::queue<uint32_t>, SortElements>> surfaceBufferUpdateMap_;
     std::vector<std::pair<NodeId, double>> surfaceBufferSortVec_;
     uint32_t vsyncCnt_ = 0;
+    uint32_t curVSyncHwcWhiteCnt_ = 0;
 };
 }
 }

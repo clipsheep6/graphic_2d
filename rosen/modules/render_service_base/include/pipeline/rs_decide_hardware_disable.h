@@ -43,6 +43,7 @@ private:
     ~RSDecideHardwareDisable() noexcept = default;
     static bool SortVectorCmp(const std::pair<NodeId, double>& p1, const std::pair<NodeId, double>& p2);
     bool IsInHwcWhiteList(const std::string& nodeName);
+    void EraseSurfaceBufferSortVec(NodeId nodeId);
 
     std::unordered_map<NodeId, std::pair<std::queue<uint32_t>, SortElements>> surfaceBufferUpdateMap_;
     std::vector<std::pair<NodeId, double>> surfaceBufferSortVec_;

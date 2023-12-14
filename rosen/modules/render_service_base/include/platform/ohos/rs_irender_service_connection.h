@@ -44,7 +44,7 @@
 
 namespace OHOS {
 namespace Rosen {
-
+static std::mutex ipcMutex_;
 class RSIRenderServiceConnection : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.rosen.RenderServiceConnection");

@@ -951,6 +951,9 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
     bool needRequestNextVsync = false;
     bufferTimestamps_.clear();
     const auto& nodeMap = GetContext().GetNodeMap();
+    std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    bool isMultiDisplay = rootNode && rootNode->GetChildrenCount() > 1;
+    isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || isMultiDisplay;
     nodeMap.TraverseSurfaceNodes(
         [this, &needRequestNextVsync](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) mutable {
         if (surfaceNode == nullptr) {
@@ -969,7 +972,8 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         surfaceHandler.ResetCurrentFrameBufferConsumed();
         if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
             this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
-            if (surfaceNode->IsCurrentFrameBufferConsumed() && !surfaceNode->IsHardwareEnabledType()) {
+            if (surfaceNode->IsCurrentFrameBufferConsumed() &&
+                (!surfaceNode->IsHardwareEnabledType() || isHardwareForcedDisabled_)) {
                 surfaceNode->SetContentDirty();
                 doDirectComposition_ = false;
             }
@@ -1082,12 +1086,9 @@ void RSMainThread::CheckIfHardwareForcedDisabled()
     ColorFilterMode colorFilterMode = renderEngine_->GetColorFilterMode();
     bool hasColorFilter = colorFilterMode >= ColorFilterMode::INVERT_COLOR_ENABLE_MODE &&
         colorFilterMode <= ColorFilterMode::INVERT_DALTONIZATION_TRITANOMALY_MODE;
-    std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
-    bool isMultiDisplay = rootNode && rootNode->GetChildrenCount() > 1;
-
     // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
     // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
-    isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ || isMultiDisplay || hasColorFilter;
+    isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ || hasColorFilter;
 }
 
 void RSMainThread::CollectInfoForDrivenRender()
@@ -1414,6 +1415,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     uniVisitor->SetAppWindowNum(appWindowNum_);
     uniVisitor->SetProcessorRenderEngine(GetRenderEngine());
     uniVisitor->SetForceUpdateFlag(forceUpdateUniRenderFlag_);
+    SetPCRecordingScene(false);
 
     if (isHardwareForcedDisabled_) {
         uniVisitor->MarkHardwareForcedDisabled();
@@ -1555,7 +1557,9 @@ void RSMainThread::Render()
         renderEngine_->ShrinkCachesIfNeeded();
     }
     CallbackDrawContextStatusToWMS();
-    PerfForBlurIfNeeded();
+    if (!isPCRecordingScene_) {
+        PerfForBlurIfNeeded();
+    }
 }
 
 void RSMainThread::CallbackDrawContextStatusToWMS()
@@ -2567,6 +2571,16 @@ bool RSMainThread::GetNoNeedToPostTask()
 void RSMainThread::SetAccessibilityConfigChanged()
 {
     isAccessibilityConfigChanged_ = true;
+}
+
+void RSMainThread::SetPCRecordingScene(bool isPCRecordingScene)
+{
+    isPCRecordingScene_ = isPCRecordingScene;
+}
+
+bool RSMainThread::IsPCRecordingScene() const
+{
+    return isPCRecordingScene_;
 }
 
 void RSMainThread::PerfAfterAnim(bool needRequestNextVsync)

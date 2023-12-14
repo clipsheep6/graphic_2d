@@ -49,6 +49,7 @@ public:
     virtual void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) = 0;
     void SetSecurityDisplay(bool isSecurityDisplay);
     void SetDisplayHasSecSurface(bool displayHasSecSurface);
+    void RequestPerfForPCRecordingScene();
 
 #ifndef USE_ROSEN_DRAWING
     const SkMatrix& GetScreenTransformMatrix() const

@@ -109,6 +109,11 @@ void RSProcessor::RequestPerf(uint32_t layerLevel, bool onOffTag)
     }
 }
 
+void RSProcessor::RequestPerfForPCRecordingScene()
+{
+    RequestPerf(PERF_LEVEL_3_REQUESTED_CODE, true);
+}
+
 bool RSProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
                        std::shared_ptr<RSBaseRenderEngine> renderEngine)
 {

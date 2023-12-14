@@ -70,7 +70,7 @@ void RSUniRenderProcessor::PostProcess(RSDisplayRenderNode* node)
         }
     }
     uniComposerAdapter_->CommitLayers(layers_);
-    if (!isPhone_) {
+    if (!isPhone_ && !RSMainThread::Instance()->IsPCRecordingScene()) {
         MultiLayersPerf(layerNum);
     }
     RS_LOGD("RSUniRenderProcessor::PostProcess layers_:%{public}zu", layers_.size());

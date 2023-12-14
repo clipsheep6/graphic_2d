@@ -25,6 +25,7 @@ class RSRenderPropertyBase;
 
 enum RSNodeShowingCommandType : uint16_t {
     GET_RENDER_PROPERTY,
+    GET_RENDER_PROPERTIES,
 };
 
 class RSB_EXPORT RSNodeGetShowingPropertyAndCancelAnimation : public RSSyncTask {
@@ -36,9 +37,6 @@ public:
         NodeId targetId, std::shared_ptr<RSRenderPropertyBase> property, uint64_t timeoutNS = 1e8)
         : RSSyncTask(timeoutNS), targetId_(targetId), property_(property)
     {}
-    RSNodeGetShowingPropertyAndCancelAnimation(const RSNodeGetShowingPropertyAndCancelAnimation&) = delete;
-    RSNodeGetShowingPropertyAndCancelAnimation& operator=(const RSNodeGetShowingPropertyAndCancelAnimation&) = delete;
-    RSNodeGetShowingPropertyAndCancelAnimation(RSNodeGetShowingPropertyAndCancelAnimation&&) = delete;
     ~RSNodeGetShowingPropertyAndCancelAnimation() override = default;
 
     bool Marshalling(Parcel& parcel) const override;
@@ -46,8 +44,6 @@ public:
 
     bool CheckHeader(Parcel& parcel) const override;
     bool ReadFromParcel(Parcel& parcel) override;
-
-    static RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
 
     void Process(RSContext& context) override;
     std::shared_ptr<RSRenderPropertyBase> GetProperty() const
@@ -63,6 +59,37 @@ private:
     NodeId targetId_ = 0;
     std::shared_ptr<RSRenderPropertyBase> property_;
     bool isTimeout_ = true;
+    static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
+};
+
+class RSB_EXPORT RSNodeGetShowingPropertiesAndCancelAnimation : public RSSyncTask {
+    constexpr static uint16_t commandType = RS_NODE_SYNCHRONOUS_READ_PROPERTY;
+    constexpr static uint16_t commandSubType = GET_RENDER_PROPERTIES;
+
+public:
+    using propertiesMap = std::map<std::pair<NodeId, PropertyId>, std::shared_ptr<RSRenderPropertyBase>>;
+    explicit RSNodeGetShowingPropertiesAndCancelAnimation(uint64_t timeoutNS, propertiesMap&& map)
+        : RSSyncTask(timeoutNS), properties_(std::move(map))
+    {}
+    ~RSNodeGetShowingPropertiesAndCancelAnimation() override = default;
+
+    bool Marshalling(Parcel& parcel) const override;
+    static RSCommand* Unmarshalling(Parcel& parcel);
+
+    bool CheckHeader(Parcel& parcel) const override;
+    bool ReadFromParcel(Parcel& parcel) override;
+
+    void Process(RSContext& context) override;
+
+    const propertiesMap& GetProperties() const
+    {
+        return this->properties_;
+    }
+
+private:
+    RSNodeGetShowingPropertiesAndCancelAnimation(uint64_t timeoutNS): RSSyncTask(timeoutNS) {}
+    propertiesMap properties_;
+    static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
 };
 
 } // namespace Rosen

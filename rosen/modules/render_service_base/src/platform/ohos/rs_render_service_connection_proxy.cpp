@@ -98,15 +98,16 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
     }
 
     option.SetFlags(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::EXECUTE_SYNCHRONOUS_TASK);
+    auto code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::EXECUTE_SYNCHRONOUS_TASK);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
         return;
     }
 
-    if (task->CheckHeader(reply)) {
-        task->ReadFromParcel(reply);
+    if (!task->CheckHeader(reply)) {
+        return;
     }
+    task->ReadFromParcel(reply);
 }
 
 bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(

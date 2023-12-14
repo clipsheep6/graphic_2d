@@ -37,10 +37,12 @@ using namespace std;
 
 std::shared_ptr<RSNode> rootNode;
 std::vector<std::shared_ptr<RSCanvasNode>> nodes;
+std::shared_ptr<RSTranslateModifier> translateXY_;
+std::shared_ptr<RSAlphaModifier> alpha_;
 
 void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
 {
-    std::cout << "rs app demo Init Rosen Backend!" << std::endl;
+    std::cout << "ooxx rs app demo Init Rosen Backend!" << std::endl;
 
     rootNode = RSRootNode::Create();
     rootNode->SetBounds(0, 0, width, height);
@@ -54,51 +56,16 @@ void Init(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
 
     rootNode->AddChild(nodes[0], -1);
 
-    rootNode->AddChild(nodes[0], -1);
+    auto propertyXY = std::make_shared<RSAnimatableProperty<Vector2f>>(Vector2f(0.f, 0.f));
+    translateXY_ = std::make_shared<RSTranslateModifier>(propertyXY);
+    nodes[0]->AddModifier(translateXY_);
+
+    auto propertyAlpha = std::make_shared<RSAnimatableProperty<float>>(1.0f);
+    alpha_ = std::make_shared<RSAlphaModifier>(propertyAlpha);
+    nodes[0]->AddModifier(alpha_);
+
     rsUiDirector->SetRoot(rootNode->GetId());
 }
-
-class NodeModifier : public RSNodeModifier {
-public:
-    NodeModifier() = default;
-    virtual ~NodeModifier() = default;
-
-    void Modify(RSNode& target) const override
-    {
-        target.SetTranslate(translate_->Get());
-    }
-
-    void SetTranslate(Vector2f translate)
-    {
-        if (translate_ == nullptr) {
-            translate_ = std::make_shared<RSAnimatableProperty<Vector2f>>(translate);
-            AttachProperty(translate_);
-        } else {
-            translate_->Set(translate);
-        }
-    }
-
-    Vector2f GetTranslate() const
-    {
-        return currentTranslateValue_;
-    }
-
-    bool SetTranslateCallBack()
-    {
-        if (!translate_) {
-            return false;
-        }
-
-        // add callback for each frame
-        translate_->SetUpdateCallback([&](Vector2f vec) { currentTranslateValue_ = vec; });
-        return true;
-    }
-
-    Vector2f currentTranslateValue_ = Vector2f(0.0f, 0.0f);
-
-private:
-    std::shared_ptr<RSAnimatableProperty<Vector2f>> translate_;
-};
 
 int main()
 {
@@ -112,14 +79,16 @@ int main()
     option->SetWindowRect({ 0, 0, 720, 1280 });
     auto window = Window::Create("app_demo", option);
     window->Show();
-    auto rect = window->GetRect();
+    sleep(1);
+    auto rect = window->GetRequestRect();
     while (rect.width_ == 0 && rect.height_ == 0) {
         std::cout << "rs app demo create window failed: " << rect.width_ << " " << rect.height_ << std::endl;
         window->Hide();
         window->Destroy();
         window = Window::Create("app_demo", option);
         window->Show();
-        rect = window->GetRect();
+        sleep(1);
+        rect = window->GetRequestRect();
     }
     std::cout << "rs app demo create window " << rect.width_ << " " << rect.height_ << std::endl;
     auto surfaceNode = window->GetSurfaceNode();
@@ -136,36 +105,10 @@ int main()
     rsUiDirector->SetRSSurfaceNode(surfaceNode);
     Init(rsUiDirector, rect.width_, rect.height_);
 
-    std::cout << "rs app demo stage " << cnt++ << std::endl;
-
-    // simulate sliding trajecity
-    int pointsNum = 30;
-    vector<Vector2f> handPoint(pointsNum);
-    for (int i = 0; i < handPoint.size(); i++) {
-        handPoint[i].data_[0] = 0.0f;
-        handPoint[i].data_[1] = 0.5f * i * i;
-    }
-
-    // simulate sliding stage
-    for (auto vec : handPoint) {
-        nodes[0]->SetTranslate(vec);
-        rsUiDirector->SendMessages();
-        usleep(30000);
-    }
-
-    // calculate sliding velocity
-    auto velocity = (handPoint[pointsNum - 1] - handPoint[pointsNum - 2]) * (1.0f / (30000.0f * 1e-6));
-
-    // calculate final points
-    Vector2f finalTrans = handPoint[pointsNum - 1] + velocity * 0.5;
+    Vector2f finalTrans = { 0.f, 800.f };
+    float finalAlpha = 0.5;
 
     std::cout << "rs app demo stage " << cnt++ << std::endl;
-
-    auto nodeModifier = std::make_shared<NodeModifier>();
-    nodes[0]->AddModifier(nodeModifier);
-
-    // init property
-    nodes[0]->SetTranslate(handPoint[pointsNum - 1]);
 
     RSAnimationTimingProtocol protocol;
     // duration is not effective when the curve is interpolatingSpring
@@ -177,45 +120,61 @@ int main()
     RSNode::Animate(
         protocol, timingCurve,
         [&]() {
-            std::cout << "the end tranlate of sliding animation is " << finalTrans.data_[0] << ", "
-                      << finalTrans.data_[1] << std::endl;
-            nodeModifier->SetTranslate(finalTrans);
+            auto propertyXY = std::static_pointer_cast<RSAnimatableProperty<Vector2f>>(translateXY_->GetProperty());
+            if (propertyXY) {
+                propertyXY->Set({ finalTrans.data_[0], finalTrans.data_[1] });
+            }
+
+            auto propertyAlpha = std::static_pointer_cast<RSAnimatableProperty<float>>(alpha_->GetProperty());
+            if (propertyAlpha) {
+                propertyAlpha->Set(finalAlpha);
+            }
         },
-        []() { std::cout << "sliding animation finish callback" << std::endl; });
+        []() { std::cout << "the first animation finish callback" << std::endl; });
 
     int64_t startNum = 80825861106;
-    int64_t interruptNum = 80825861106 * 15;
+    // int64_t interruptNum = 80825861106 + 100000000 * 10;
 
     bool hasRunningAnimation = true;
     bool stopSignal = true;
+
+    std::cout << "attempt to cancel animation" << std::endl;
 
     while (hasRunningAnimation) {
         hasRunningAnimation = rsUiDirector->FlushAnimation(startNum);
         rsUiDirector->FlushModifier();
         rsUiDirector->SendMessages();
-        std::cout << "the current translate is " << nodeModifier->GetTranslate().data_[0] << ", "
-                  << nodeModifier->GetTranslate().data_[1] << endl;
+
+        std::cout << "attempt to cancel animation 111111" << std::endl;
 
         // simulate to stop animation by gesture
-        if ((startNum >= interruptNum) && stopSignal) {
-            std::cout << "stop sliding animation in current translate " << nodeModifier->GetTranslate().data_[0] << ", "
-                      << nodeModifier->GetTranslate().data_[1] << endl;
+        // if ((startNum >= interruptNum) && stopSignal) {
+        // set duration to 0
+        protocol.SetDuration(0);
 
-            // set duration to 0
-            protocol.SetDuration(0);
+        // send cancel request
+        RSNode::Animate(
+            protocol, RSAnimationTimingCurve::EASE_IN_OUT,
+            [&]() {
+                std::cout << "attempt to cancel animation 0" << std::endl;
+                auto propertyXY = std::static_pointer_cast<RSAnimatableProperty<Vector2f>>(translateXY_->GetProperty());
+                if (propertyXY) {
+                    std::cout << "attempt to cancel animation 1" << std::endl;
+                    propertyXY->RequestCancelAnimation();
+                }
+                auto propertyAlpha = std::static_pointer_cast<RSAnimatableProperty<float>>(alpha_->GetProperty());
+                if (propertyAlpha) {
+                    std::cout << "attempt to cancel animation 2" << std::endl;
+                    propertyAlpha->RequestCancelAnimation();
+                }
+            },
+            [&]() {
+                // this finish callback will also execute, though this closure create no animation
+                std::cout << "request cancel animation finish callback" << std::endl;
+            });
 
-            // create interrupt animation
-            RSNode::Animate(
-                protocol, RSAnimationTimingCurve::EASE_IN_OUT,
-                [&]() { nodeModifier->SetTranslate(nodeModifier->GetTranslate()); },
-                [&]() {
-                    std::cout << "interrupt animation finish callback, the end translate is "
-                              << nodeModifier->GetTranslate().data_[0] << ", " << nodeModifier->GetTranslate().data_[1]
-                              << std::endl;
-                });
-
-            stopSignal = false;
-        }
+        stopSignal = false;
+        // }
         startNum += 100000000;
         usleep(100000);
     }

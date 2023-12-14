@@ -23,8 +23,8 @@
 namespace OHOS {
 namespace Rosen {
 const uint32_t VSYNC_CNT_QUEUE_MAX_SIZE = 10;
-const uint32_t SUPPORT_HWC_MAX_SIZE = 8;
-const uint32_t LONGTIME_NO_UPDATE_VSYNC_CNT = 100;
+const uint32_t SUPPORT_HWC_MAX_SIZE = 7;
+const uint32_t LONGTIME_NO_UPDATE_VSYNC_CNT = 120;
 const std::string HWC_WHITE_LIST[] = {
     "pointer window",
 };
@@ -81,9 +81,6 @@ bool RSDecideHardwareDisable::IsHardwareDisabledBySort(const RSSurfaceRenderNode
         return false;
     }
     NodeId nodeId = node.GetId();
-    if (surfaceBufferUpdateMap_.find(nodeId) == surfaceBufferUpdateMap_.end()) {
-        return true;
-    }
     uint32_t queueTail = surfaceBufferUpdateMap_[nodeId].first.back();
     if (vsyncCnt_ >= queueTail) {
         if ((vsyncCnt_ - queueTail) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
@@ -101,6 +98,19 @@ bool RSDecideHardwareDisable::IsHardwareDisabledBySort(const RSSurfaceRenderNode
         if ((*iter).first == nodeId) {
             flag = true;
             break;
+        }
+        if (IsInHwcWhiteList(node.GetName())) {
+            continue;
+        }
+        uint32_t queueTail = surfaceBufferUpdateMap_[(*iter).first].first.back();
+        if (vsyncCnt_ >= queueTail) {
+            if ((vsyncCnt_ - queueTail) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
+                continue;
+            }
+        } else {
+            if (((UINT32_MAX - queueTail) + vsyncCnt_) > LONGTIME_NO_UPDATE_VSYNC_CNT) {
+                continue;
+            }
         }
         sequence++;
     }

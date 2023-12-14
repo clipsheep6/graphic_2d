@@ -361,7 +361,6 @@ public:
         if (!parcel.WriteUint32(val.size())) {
             return false;
         }
-        ROSEN_LOGE("zouwei Marshalling size = %d", val.size());
         for (const auto& [key, value] : val) {
             if (!Marshalling(parcel, key) || !Marshalling(parcel, value)) {
                 return false;
@@ -377,7 +376,6 @@ public:
             return false;
         }
         val.clear();
-        ROSEN_LOGE("zouwei Unmarshalling size = %d", size);
         for (uint32_t i = 0; i < size; ++i) {
             T key;
             P value;
@@ -386,7 +384,6 @@ public:
             }
             val.emplace(key, value);
         }
-        ROSEN_LOGE("zouwei Unmarshalling size1 = %d", val.size());
         return true;
     }
 

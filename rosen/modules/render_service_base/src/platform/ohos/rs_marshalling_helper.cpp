@@ -2835,14 +2835,11 @@ bool RSMarshallingHelper::GetUseSharedMem(std::thread::id tid)
 
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val)
 {
-    ROSEN_LOGE("zouwei RSMarshallingHelper::Marshalling RSRenderPropertyBase << !! is nullptr = %{public}d", val == nullptr);
-
     return RSRenderPropertyBase::Marshalling(parcel, val);
 }
 
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val)
 {
-    ROSEN_LOGE("zouwei RSMarshallingHelper::Unmarshalling RSRenderPropertyBase << !!");
     return RSRenderPropertyBase::Unmarshalling(parcel, val);
 }
 } // namespace Rosen

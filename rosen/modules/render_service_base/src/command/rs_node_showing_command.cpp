@@ -97,25 +97,21 @@ bool RSNodeGetShowingPropertiesAndCancelAnimation::Marshalling(Parcel& parcel) c
            RSMarshallingHelper::Marshalling(parcel, timeoutNS_) &&
            RSMarshallingHelper::Marshalling(parcel, success_) &&
            RSMarshallingHelper::Marshalling(parcel, properties_);
-    ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::Marshalling, result: %d", result);
     return result;
 }
 
 // construct cancelAnimation & SetProperties
 RSCommand* RSNodeGetShowingPropertiesAndCancelAnimation::Unmarshalling(Parcel& parcel)
 {
-    ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::UnMarshalling");
     uint64_t timeoutNS;
     if (!RSMarshallingHelper::Unmarshalling(parcel, timeoutNS)) {
         return nullptr;
     }
-    // ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::UnMarshalling 1, timeoutNS: %" PRIu64, timeoutNS);
     auto command = new RSNodeGetShowingPropertiesAndCancelAnimation(timeoutNS);
     if (!command->ReadFromParcel(parcel)) {
         delete command;
         return nullptr;
     }
-    // ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::UnMarshalling success");
     return command;
 }
 
@@ -124,24 +120,10 @@ bool RSNodeGetShowingPropertiesAndCancelAnimation::CheckHeader(Parcel& parcel) c
     uint16_t type;
     uint16_t subType;
     uint64_t timeoutNS;
-    bool unmarshallingResult = true;
 
-    if (RSMarshallingHelper::Unmarshalling(parcel, type)) {
-        // ROSEN_LOGE("zouwei Unmarshalled type: %d, expected: %d", type, commandType);
-        unmarshallingResult = unmarshallingResult && (type == commandType);
-    }
-
-    if (RSMarshallingHelper::Unmarshalling(parcel, subType)) {
-        // ROSEN_LOGE("zouwei Unmarshalled subType: %d, expected: %d", subType, commandSubType);
-        unmarshallingResult = unmarshallingResult && (subType == commandSubType);
-    }
-
-    if (RSMarshallingHelper::Unmarshalling(parcel, timeoutNS)) {
-        // ROSEN_LOGE("zouwei Unmarshalled timeoutNS: %" PRIu64 " expected: %" PRIu64, timeoutNS, timeoutNS_);
-        unmarshallingResult = unmarshallingResult && (timeoutNS == timeoutNS_);
-    }
-
-    return unmarshallingResult;
+    return RSMarshallingHelper::Unmarshalling(parcel, type) && type == commandType &&
+           RSMarshallingHelper::Unmarshalling(parcel, subType) && subType == commandSubType &&
+           RSMarshallingHelper::Unmarshalling(parcel, timeoutNS) && timeoutNS == timeoutNS_;
 }
 
 bool RSNodeGetShowingPropertiesAndCancelAnimation::ReadFromParcel(Parcel& parcel)
@@ -152,38 +134,31 @@ bool RSNodeGetShowingPropertiesAndCancelAnimation::ReadFromParcel(Parcel& parcel
     if (!RSMarshallingHelper::Unmarshalling(parcel, properties_)) {
         return false;
     }
-    ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::ReadFromParcel  !!!!!! size %d", properties_.size());
     return true;
 }
 
 void RSNodeGetShowingPropertiesAndCancelAnimation::Process(RSContext& context)
 {
-    ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::Process");
-
     success_ = true;
     auto& nodeMap = context.GetNodeMap();
     for (auto& [key, value]: properties_) {
+        // value should already initialized as nullptr
         auto& [nodeId, propertyId] = key;
         auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
         if (!node) {
-            ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::Process fail 1 %" PRId64, nodeId);
             continue;
         }
         auto modifier = node->GetModifier(propertyId);
         if (!modifier) {
-            ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::Process fail 2 %" PRId64, propertyId);
             continue;
         }
         value = modifier->GetProperty();
-        if (value != nullptr) {
-            ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::Process success");
-            auto& animationManager = node->GetAnimationManager();
-            animationManager.CancelAnimationByPropertyId(propertyId);
-        } else {
-            ROSEN_LOGE("zouwei, RSNodeGetShowingPropertiesAndCancelAnimation::Process fail 3");
+        if (!value) {
+            continue;
         }
+        auto& animationManager = node->GetAnimationManager();
+        animationManager.CancelAnimationByPropertyId(propertyId);
     }
 }
-
 } // namespace Rosen
 } // namespace OHOS

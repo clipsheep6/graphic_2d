@@ -447,7 +447,7 @@ public:
             transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());
         }
 
-        if (!task->GetResult()) {
+        if (!task->IsSuccess()) {
             // corresponding to case 2, as the new showing value is the same as staging value,
             // need not to update the value, only need to clear animations in rs node.
             node->CancelAnimationByProperty(this->id_);

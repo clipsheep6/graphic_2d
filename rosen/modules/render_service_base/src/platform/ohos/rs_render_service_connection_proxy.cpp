@@ -108,12 +108,12 @@ void RSRenderServiceConnectionProxy::ExecuteSynchronousTask(const std::shared_pt
     }
 
     ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 3");
-    if (task->CheckHeader(reply)) {
-        ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 4");
-        task->ReadFromParcel(reply);
-        ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 5");
+    if (!task->CheckHeader(reply)) {
+        ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 6 -> checkHeader failed");
     }
-    ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 6");
+    ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 4 -> readFromParcel");
+    task->ReadFromParcel(reply);
+    ROSEN_LOGE("zouwei, RSRenderServiceConnectionProxy::ExecuteSynchronousTask 5 -> read Done");
 }
 
 bool RSRenderServiceConnectionProxy::FillParcelWithTransactionData(

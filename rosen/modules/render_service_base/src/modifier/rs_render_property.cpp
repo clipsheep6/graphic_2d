@@ -39,7 +39,7 @@ void RSRenderPropertyBase::OnChange() const
 bool RSRenderPropertyBase::Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val)
 {
     if (val == nullptr) {
-        parcel.WriteUint64(static_cast<int16_t>(RSModifierType::INVALID));
+        parcel.WriteUint16(static_cast<int16_t>(RSModifierType::INVALID));
         return true;
     }
     RSRenderPropertyType type = val->GetPropertyType();

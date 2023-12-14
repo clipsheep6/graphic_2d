@@ -1141,22 +1141,18 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 ret = ERR_INVALID_STATE;
                 break;
             }
-            ROSEN_LOGE("zouwei, RSRenderServiceConnectionStub::OnRemoteRequest 1 %d %d", type, subType);
             auto func = RSCommandFactory::Instance().GetUnmarshallingFunc(type, subType);
             if (func == nullptr) {
                 ret = ERR_INVALID_STATE;
                 break;
             }
-            ROSEN_LOGE("zouwei, RSRenderServiceConnectionStub::OnRemoteRequest 2");
             auto command = static_cast<RSSyncTask*>((*func)(data));
             if (command == nullptr) {
                 ret = ERR_INVALID_STATE;
                 break;
             }
-            ROSEN_LOGE("zouwei, RSRenderServiceConnectionStub::OnRemoteRequest 3");
             std::shared_ptr<RSSyncTask> task(command);
             ExecuteSynchronousTask(task);
-            ROSEN_LOGE("zouwei, RSRenderServiceConnectionStub::OnRemoteRequest 4");
             if (!task->Marshalling(reply)) {
                 ret = ERR_INVALID_STATE;
             }

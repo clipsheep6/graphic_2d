@@ -86,15 +86,9 @@ public:
         return this->properties_;
     }
 
-    bool IsTimeout() const
-    {
-        return isTimeout_;
-    }
-
 private:
-    RSNodeGetShowingPropertiesAndCancelAnimation(): RSSyncTask(1e8) {}
+    RSNodeGetShowingPropertiesAndCancelAnimation(uint64_t timeoutNS): RSSyncTask(timeoutNS) {}
     propertiesMap properties_;
-    bool isTimeout_ = true;
     static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
 };
 

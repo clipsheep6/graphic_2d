@@ -210,23 +210,18 @@ void RSRenderServiceConnection::CommitTransaction(std::unique_ptr<RSTransactionD
 
 void RSRenderServiceConnection::ExecuteSynchronousTask(const std::shared_ptr<RSSyncTask>& task)
 {
-    ROSEN_LOGE("zouwei, RSRenderServiceConnection::ExecuteSynchronousTask 1 timeout %" PRIu64, task->GetTimeout());
     std::mutex mutex;
     std::unique_lock<std::mutex> lock(mutex);
     auto cv = std::make_shared<std::condition_variable>();
     auto& mainThread = mainThread_;
     mainThread->PostTask([task, cv, &mainThread]() {
-        ROSEN_LOGE("zouwei, RSRenderServiceConnection::ExecuteSynchronousTask 2");
         if (task == nullptr || cv == nullptr) {
             return;
         }
-        ROSEN_LOGE("zouwei, RSRenderServiceConnection::ExecuteSynchronousTask 3");
         task->Process(mainThread->GetContext());
         cv->notify_all();
     });
-    // cv->wait_for(lock, std::chrono::nanoseconds(task->GetTimeout()));
-    cv->wait(lock);
-    ROSEN_LOGE("zouwei, RSRenderServiceConnection::ExecuteSynchronousTask 4");
+    cv->wait_for(lock, std::chrono::nanoseconds(task->GetTimeout()));
 }
 
 bool RSRenderServiceConnection::GetUniRenderEnabled()

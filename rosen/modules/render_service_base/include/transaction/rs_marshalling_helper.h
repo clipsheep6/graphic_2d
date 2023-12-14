@@ -24,6 +24,7 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
+#include "platform/common/rs_log.h"
 
 #ifdef USE_ROSEN_DRAWING
 #include "image/image.h"
@@ -357,12 +358,16 @@ public:
     template<typename T, typename P>
     static bool Marshalling(Parcel& parcel, const std::map<T, P>& val)
     {
-        bool success = parcel.WriteUint32(val.size());
-        for (const auto& [key, value] : val) {
-            success = success && Marshalling(parcel, key);
-            success = success && Marshalling(parcel, value);
+        if (!parcel.WriteUint32(val.size())) {
+            return false;
         }
-        return success;
+        ROSEN_LOGE("zouwei Marshalling size = %d", val.size());
+        for (const auto& [key, value] : val) {
+            if (!Marshalling(parcel, key) || !Marshalling(parcel, value)) {
+                return false;
+            }
+        }
+        return true;
     }
     template<typename T, typename P>
     static bool Unmarshalling(Parcel& parcel, std::map<T, P>& val)
@@ -372,6 +377,7 @@ public:
             return false;
         }
         val.clear();
+        ROSEN_LOGE("zouwei Unmarshalling size = %d", size);
         for (uint32_t i = 0; i < size; ++i) {
             T key;
             P value;
@@ -380,6 +386,7 @@ public:
             }
             val.emplace(key, value);
         }
+        ROSEN_LOGE("zouwei Unmarshalling size1 = %d", val.size());
         return true;
     }
 

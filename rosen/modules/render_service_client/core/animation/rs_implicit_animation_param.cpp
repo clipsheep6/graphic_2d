@@ -67,11 +67,11 @@ std::shared_ptr<RSAnimation> RSImplicitCancelAnimationParam::CreateAnimation(std
     if (node == nullptr) {
         return nullptr;
     }
-    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::CreateAnimation, cancel 1 +++++++");
+    // ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::CreateAnimation, cancel 1 +++++++");
     node->CancelAnimationByProperty(property->GetId()); // remove all ui animation
-    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::CreateAnimation, cancel 2 +++++++");
+    // ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::CreateAnimation, cancel 2 +++++++");
     property->SetValue(endValue);                       // force set ui value
-    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::CreateAnimation, cancel 3 +++++++");
+    // ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::CreateAnimation, cancel 3 +++++++");
     property->UpdateOnAllAnimationFinish();             // force update RS value and remove all animation
     return nullptr;
 }
@@ -86,7 +86,7 @@ void RSImplicitCancelAnimationParam::SyncProperties()
     if (pendingSyncList_.empty()) {
         return;
     }
-    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::SyncProperties, this is start+++++++ %d", pendingSyncList_.size());
+    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::SyncProperties, this is start+++++++ !!!!!!! size: %d", pendingSyncList_.size());
     // Create task and execute it
     RSNodeGetShowingPropertiesAndCancelAnimation::propertiesMap properties;
     for (auto& rsProperty : pendingSyncList_) {
@@ -105,15 +105,11 @@ void RSImplicitCancelAnimationParam::SyncProperties()
     RSTransactionProxy::GetInstance()->ExecuteSynchronousTask(task, true);
     // when task is timeout, the caller need to decide whether to call this function again
 
-    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::SyncProperties, task->IsTimeout() = %d size = %d", task->IsTimeout(), task->GetProperties().size());
-    if (!task || task->IsTimeout()) {
+    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::SyncProperties, !!!!!!! task->GetResult() = %d", task->GetResult());
+    if (!task || !task->GetResult()) {
         return;
     }
-    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::SyncProperties, this is after bool 11111+++++++ %d %d", pendingSyncList_.size(), task->GetProperties().size());
-
-    if (!task->GetResult()) {
-        return;
-    }
+    ROSEN_LOGE("zouwei, RSImplicitCancelAnimationParam::SyncProperties, this is after bool 11111+++++++ !!!!!!!  size %d", task->GetProperties().size());
 
     for (const auto& [key, value] : task->GetProperties()) {
         if (value == nullptr) {

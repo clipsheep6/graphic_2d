@@ -75,6 +75,7 @@ constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
 constexpr uint32_t CACHE_MAX_UPDATE_TIME = 2;
 constexpr int ROTATION_90 = 90;
 constexpr int ROTATION_270 = 270;
+constexpr float EPSILON_SCALE = 0.00001f;
 static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
 static const std::string BIGFLODER_BUNDLE_NAME = "SCBDesktop2";
@@ -1357,6 +1358,11 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         int boundsHeight = ceil(property.GetBoundsHeight());
         bool isScale = (std::min(absRect.GetWidth(), absRect.GetHeight()) != std::min(boundsWidth, boundsHeight))
             || (std::max(absRect.GetWidth(), absRect.GetHeight()) != std::max(boundsWidth, boundsHeight));
+        if (RSMainThread::Instance()->GetDeviceType() == DeviceType::PC) {
+            auto matrix = geoPtr->GetAbsMatrix();
+            isScale = (!ROSEN_EQ(matrix.getScaleX(), 1.f, EPSILON_SCALE) ||
+                !ROSEN_EQ(matrix.getScaleY(), 1.f, EPSILON_SCALE));
+        }
         node.SetIsScale(isScale);
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER)

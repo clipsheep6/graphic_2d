@@ -820,7 +820,7 @@ void RSSurfaceRenderNode::AccumulateOcclusionRegion(Occlusion::Region& accumulat
     SetTreatedAsTransparent(false);
     // when a surfacenode is in animation (i.e. 3d animation), its dstrect cannot be trusted, we treated it as a full
     // transparent layer.
-    if (GetAnimateState() || IsParentLeashWindowInScale()) {
+    if ((GetAnimateState() || IsParentLeashWindowInScale()) && !isOcclusionInSpecificScenes_) {
         SetTreatedAsTransparent(true);
         ResetAnimateState();
         return;

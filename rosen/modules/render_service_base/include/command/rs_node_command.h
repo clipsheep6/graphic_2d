@@ -68,6 +68,7 @@ enum RSNodeCommandType : uint16_t {
     MARK_NODE_GROUP,
     UPDATE_UI_FRAME_RATE_RANGE,
     MARK_NODE_SINGLE_FRAME_COMPOSER,
+    NODE_SET_SURFACE,
 };
 
 class RSB_EXPORT RSNodeCommandHelper {
@@ -130,6 +131,7 @@ public:
     static void MarkContentChanged(RSContext& context, NodeId nodeId, bool isChanged);
     static void SetDrawRegion(RSContext& context, NodeId nodeId, std::shared_ptr<RectF> rect);
     static void SetOutOfParent(RSContext& context, NodeId nodeId, OutOfParentType outOfParent);
+    static void SetSameRenderSurface(RSContext& context, NodeId id, SurfaceId surfaceId);
 
     static void RegisterGeometryTransitionPair(RSContext& context, NodeId inNodeId, NodeId outNodeId);
     static void UnregisterGeometryTransitionPair(RSContext& context, NodeId inNodeId, NodeId outNodeId);
@@ -243,6 +245,8 @@ ADD_COMMAND(RSUnregisterGeometryTransitionNodePair,
     ARG(RS_NODE, UNREGISTER_GEOMETRY_TRANSITION, RSNodeCommandHelper::UnregisterGeometryTransitionPair, NodeId, NodeId))
 ADD_COMMAND(RSUpdateUIFrameRateRange,
     ARG(RS_NODE, UPDATE_UI_FRAME_RATE_RANGE, RSNodeCommandHelper::UpdateUIFrameRateRange, NodeId, FrameRateRange))
+ADD_COMMAND(RSSetSurface,
+    ARG(RS_NODE, NODE_SET_SURFACE, RSNodeCommandHelper::SetSameRenderSurface, NodeId, SurfaceId))
 } // namespace Rosen
 } // namespace OHOS
 

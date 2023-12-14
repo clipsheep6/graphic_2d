@@ -150,6 +150,15 @@ void RSNodeCommandHelper::UnregisterGeometryTransitionPair(RSContext& context, N
     }
 }
 
+void RSNodeCommandHelper::SetSameRenderSurface(RSContext& context, NodeId id, SurfaceId surfaceId)
+{
+    auto& nodeMap = context.GetNodeMap();
+    if (auto node = nodeMap.GetRenderNode<RSRenderNode>(id)) {
+        node->SetSameRenderSurfaceId(surfaceId);
+        context.GetGlobalRootRenderNode()->AddChild(node);
+    }
+}
+
 void RSNodeCommandHelper::UpdateUIFrameRateRange(RSContext& context, NodeId nodeId, FrameRateRange range)
 {
     auto& nodeMap = context.GetNodeMap();

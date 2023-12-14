@@ -72,7 +72,7 @@ HWTEST_F(RSAnimationTest, StartTest001, Level1)
 HWTEST_F(RSAnimationTest, StartTest002, Level1)
 {
     RSAnimation rsAnimation;
-    auto per = std::make_shared<RSNode>(true);
+    auto per = std::make_shared<RSNode>(true, false);
     rsAnimation.StartInner(per);
     rsAnimation.Start(per);
     ASSERT_NE(per, nullptr);

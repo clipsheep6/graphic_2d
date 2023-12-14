@@ -167,14 +167,30 @@ const std::set<RSModifierType> BASIC_GEOTRANSFROM_ANIMATION_TYPE = {
 };
 }
 
-RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : id_(id), context_(context)
+RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isSamelayerRender)
+    : id_(id), context_(context), isSamelayerRender_(isSamelayerRender)
 {
     isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
 }
-RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context)
-    : isOnTheTree_(isOnTheTree), id_(id), context_(context)
+RSRenderNode::RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context, bool isSamelayerRender)
+    : isOnTheTree_(isOnTheTree), id_(id), context_(context), isSamelayerRender_(isSamelayerRender)
 {
     isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
+}
+
+bool RSRenderNode::GetIsSamelayerRender() const
+{
+    return isSamelayerRender_;
+}
+
+void RSRenderNode::SetSameRenderSurfaceId(NodeId sameRenderSurfaceId)
+{
+    sameRenderSurfaceId_ = sameRenderSurfaceId;
+}
+
+SurfaceId RSRenderNode::GetSameRenderSurfaceId() const
+{
+    return sameRenderSurfaceId_;
 }
 
 void RSRenderNode::AddChild(SharedPtr child, int index)

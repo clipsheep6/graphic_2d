@@ -29,6 +29,7 @@ enum RSCanvasNodeCommandType : uint16_t {
     CANVAS_NODE_CREATE,
     CANVAS_NODE_UPDATE_RECORDING,
     CANVAS_NODE_CLEAR_RECORDING,
+    CANVAS_NODE_SET_SURFACE,
 };
 
 #ifndef USE_ROSEN_DRAWING
@@ -41,7 +42,7 @@ class DrawCmdList;
 
 class RSB_EXPORT RSCanvasNodeCommandHelper {
 public:
-    static void Create(RSContext& context, NodeId id);
+    static void Create(RSContext& context, NodeId id, bool isSameLayerRender = false);
 #ifndef USE_ROSEN_DRAWING
     static void UpdateRecording(
         RSContext& context, NodeId id, std::shared_ptr<DrawCmdList> drawCmds, uint16_t modifierType);
@@ -50,6 +51,7 @@ public:
         RSContext& context, NodeId id, std::shared_ptr<Drawing::DrawCmdList> drawCmds, uint16_t modifierType);
 #endif
     static void ClearRecording(RSContext& context, NodeId id);
+    static void SetSameRenderSurface(RSContext& context, NodeId id, SurfaceId surfaceId);
 private:
 #ifndef USE_ROSEN_DRAWING
     static bool AddCmdToSingleFrameComposer(std::shared_ptr<RSCanvasRenderNode> node,
@@ -60,7 +62,9 @@ private:
 #endif
 };
 
-ADD_COMMAND(RSCanvasNodeCreate, ARG(CANVAS_NODE, CANVAS_NODE_CREATE, RSCanvasNodeCommandHelper::Create, NodeId))
+ADD_COMMAND(RSCanvasNodeCreate, ARG(CANVAS_NODE, CANVAS_NODE_CREATE, RSCanvasNodeCommandHelper::Create, NodeId, bool))
+ADD_COMMAND(RSCanvasNodeSetSurface,
+    ARG(CANVAS_NODE, CANVAS_NODE_SET_SURFACE, RSCanvasNodeCommandHelper::SetSameRenderSurface, NodeId, SurfaceId))
 #ifndef USE_ROSEN_DRAWING
 ADD_COMMAND(RSCanvasNodeUpdateRecording,
     ARG(CANVAS_NODE, CANVAS_NODE_UPDATE_RECORDING, RSCanvasNodeCommandHelper::UpdateRecording, NodeId,

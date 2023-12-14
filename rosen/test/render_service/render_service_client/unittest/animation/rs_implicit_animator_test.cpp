@@ -183,7 +183,7 @@ HWTEST_F(RSImplicitAnimatorTest, OpenImplicitAnimationTest, Level1)
 HWTEST_F(RSImplicitAnimatorTest, CreateImplicitTransitionTest, Level1)
 {
     RSImplicitAnimator rsImplicitAnimator;
-    RSNode target(true);
+    RSNode target(true, false);
     int res = 1;
     rsImplicitAnimator.CreateImplicitTransition(target);
     ASSERT_NE(res, 0);

@@ -170,7 +170,7 @@ bool RSDisplayNode::IsMirrorDisplay() const
 }
 
 RSDisplayNode::RSDisplayNode(const RSDisplayNodeConfig& config)
-    : RSNode(true), screenId_(config.screenId), offsetX_(0), offsetY_(0), isMirroredDisplay_(config.isMirrored)
+    : RSNode(true, false), screenId_(config.screenId), offsetX_(0), offsetY_(0), isMirroredDisplay_(config.isMirrored)
 {
     (void)screenId_;
     (void)offsetX_;
@@ -178,7 +178,7 @@ RSDisplayNode::RSDisplayNode(const RSDisplayNodeConfig& config)
 }
 
 RSDisplayNode::RSDisplayNode(const RSDisplayNodeConfig& config, NodeId id)
-    : RSNode(true, id), screenId_(config.screenId), offsetX_(0), offsetY_(0), isMirroredDisplay_(config.isMirrored)
+    : RSNode(true, false, id), screenId_(config.screenId), offsetX_(0), offsetY_(0), isMirroredDisplay_(config.isMirrored)
 {}
 
 void RSDisplayNode::SetBootAnimation(bool isBootAnimation)

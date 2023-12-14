@@ -20,10 +20,18 @@
 namespace OHOS {
 namespace Rosen {
 
-void RSCanvasDrawingNodeCommandHelper::Create(RSContext& context, NodeId id)
+void RSCanvasDrawingNodeCommandHelper::Create(RSContext& context, NodeId id, bool isSameLayerRender)
 {
-    auto node = std::make_shared<RSCanvasDrawingRenderNode>(id, context.weak_from_this());
+    auto node = std::make_shared<RSCanvasDrawingRenderNode>(id, context.weak_from_this(), isSameLayerRender);
     context.GetMutableNodeMap().RegisterRenderNode(node);
+}
+
+void RSCanvasDrawingNodeCommandHelper::SetSameRenderSurface(RSContext& context, NodeId id, NodeId surfaceId)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(id)) {
+        node->SetSameRenderSurfaceId(surfaceId);
+        context.GetGlobalRootRenderNode()->AddChild(node);
+    }
 }
 
 } // namespace Rosen

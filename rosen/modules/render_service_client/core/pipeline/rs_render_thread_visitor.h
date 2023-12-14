@@ -77,6 +77,7 @@ private:
         int strokeWidth = 6);
 #endif // USE_ROSEN_DRAWING
     void DrawDirtyRegion();
+    bool CreateBufferAndCanvasForSameRender(RSRenderNode& node);
     // Update damageRegion based on buffer age, and then set it through egl api
 #ifdef NEW_RENDER_CONTEXT
     void UpdateDirtyAndSetEGLDamageRegion(std::shared_ptr<RSRenderSurface>& surface);
@@ -85,6 +86,7 @@ private:
 #endif
     // Reset and update children node's info like outOfParent and isRemoveChild
     void ResetAndPrepareChildrenNode(RSRenderNode& node, std::shared_ptr<RSBaseRenderNode> nodeParent);
+    void ProcessSurfaceViewInRT(RSSurfaceRenderNode& node);
 
     bool UpdateAnimatePropertyCacheSurface(RSRenderNode& node);
 

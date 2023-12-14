@@ -32,14 +32,14 @@ public:
 
     ~RSRootNode() override = default;
 
-    static std::shared_ptr<RSNode> Create(bool isRenderServiceNode = false);
+    static std::shared_ptr<RSNode> Create(bool isSamelayerRender = false, bool isRenderServiceNode = false);
 
 protected:
     void AttachRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode) const;
     void SetEnableRender(bool flag) const;
     void OnBoundsSizeChanged() const override;
 
-    explicit RSRootNode(bool isRenderServiceNode);
+    explicit RSRootNode(bool isRenderServiceNode, bool isSamelayerRender);
     RSRootNode(const RSRootNode&) = delete;
     RSRootNode(const RSRootNode&&) = delete;
     RSRootNode& operator=(const RSRootNode&) = delete;

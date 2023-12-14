@@ -95,6 +95,19 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
     GoForeground();
 }
 
+void RSUIDirector::StartSameRender()
+{
+    isUniRenderEnabled_ = RSSystemProperties::GetUniRenderEnabled();
+    if (isUniRenderEnabled_) {
+        auto renderThreadClient = RSIRenderClient::CreateRenderThreadClient();
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->SetRenderThreadClient(renderThreadClient);   
+        }
+        RSRenderThread::Instance().Start();
+    }
+}
+
 void RSUIDirector::GoForeground()
 {
     ROSEN_LOGD("RSUIDirector::GoForeground");

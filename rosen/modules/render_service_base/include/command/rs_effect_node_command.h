@@ -24,14 +24,18 @@ namespace Rosen {
 
 enum RSEffectNodeCommandType : uint16_t {
     EFFECT_NODE_CREATE,
+    EFFECT_NODE_SET_SURFACE,
 };
 
 class RSB_EXPORT EffectNodeCommandHelper {
 public:
-    static void Create(RSContext& context, NodeId id);
+    static void Create(RSContext& context, NodeId id, bool isSameLayerRender = false);
+    static void SetSameRenderSurface(RSContext& context, NodeId id, SurfaceId surfaceId);
 };
 
-ADD_COMMAND(RSEffectNodeCreate, ARG(EFFECT_NODE, EFFECT_NODE_CREATE, EffectNodeCommandHelper::Create, NodeId))
+ADD_COMMAND(RSEffectNodeCreate, ARG(EFFECT_NODE, EFFECT_NODE_CREATE, EffectNodeCommandHelper::Create, NodeId, bool))
+ADD_COMMAND(RSEffectNodeSetSurface,
+    ARG(EFFECT_NODE, EFFECT_NODE_SET_SURFACE, EffectNodeCommandHelper::SetSameRenderSurface, NodeId, SurfaceId))
 
 } // namespace Rosen
 } // namespace OHOS

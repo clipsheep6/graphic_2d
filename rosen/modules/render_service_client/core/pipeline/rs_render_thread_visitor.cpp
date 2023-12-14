@@ -28,6 +28,7 @@
 #endif
 
 #include "rs_trace.h"
+#include "surface_utils.h"
 
 #include "command/rs_base_node_command.h"
 #include "common/rs_obj_abs_geometry.h"
@@ -41,6 +42,11 @@
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
+#include "platform/ohos/backend/rs_surface_ohos_gl.h"
+#include "platform/ohos/backend/rs_surface_ohos_raster.h"
+#ifdef RS_ENABLE_VK
+#include "platform/ohos/backend/rs_surface_ohos_vulkan.h"
+#endif
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
 #else
@@ -388,10 +394,91 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
     RS_TRACE_END();
 }
 
+std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface)
+{
+#if defined(ACE_ENABLE_VK)
+    // GPU render
+    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosVulkan>(surface);
+#elif defined(ACE_ENABLE_GL)
+    // GPU render
+    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosGl>(surface);
+#else
+    // CPU render
+    std::shared_ptr<RSSurface> producer = std::make_shared<RSSurfaceOhosRaster>(surface);
+#endif
+    return producer;
+}
+
+bool RSRenderThreadVisitor::CreateBufferAndCanvasForSameRender(RSRenderNode& node)
+{
+    sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(node.GetSameRenderSurfaceId());
+    std::shared_ptr<RSSurface> rsSurface = CreateRSSurface(surface);
+    if (rsSurface == nullptr) {
+        ROSEN_LOGE("CreateBufferAndCanvasForSameRender nodeId is %llu No RSSurface found", node.GetId());
+        return false;
+    }
+#if defined(ACE_ENABLE_GL)
+#if defined(NEW_RENDER_CONTEXT)
+    std::shared_ptr<RenderContextBase> rc = RSRenderThread::Instance().GetRenderContext();
+    std::shared_ptr<DrawingContext> dc = RSRenderThread::Instance().GetDrawingContext();
+    rsSurface->SetDrawingContext(dc);
+#else
+    RenderContext* rc = RSRenderThread::Instance().GetRenderContext();
+#endif
+    rsSurface->SetRenderContext(rc);
+#endif
+    uiTimestamp_ = RSRenderThread::Instance().GetUITimestamp();
+    const auto& property = node.GetRenderProperties();
+    const float bufferWidth = property.GetBoundsWidth() * property.GetScaleX();
+    const float bufferHeight = property.GetBoundsHeight() * property.GetScaleY();
+    auto surfaceFrame = rsSurface->RequestFrame(bufferWidth, bufferHeight, uiTimestamp_);
+#ifndef USE_ROSEN_DRAWING
+#ifdef NEW_RENDER_CONTEXT
+    auto skSurface = rsSurface->GetSurface();
+#else
+    auto skSurface = surfaceFrame->GetSurface();
+#endif
+    if (skSurface == nullptr) {
+        ROSEN_LOGE("skSurface null.");
+        return false;
+    }
+    if (skSurface->getCanvas() == nullptr) {
+        ROSEN_LOGE("skSurface.getCanvas is null.");
+        return false;
+    }
+#else
+    auto surface = surfaceFrame->GetSurface();
+    if (surface == nullptr) {
+        ROSEN_LOGE("surface null.");
+        return false;
+    }
+    if (surface->GetCanvas() == nullptr) {
+        ROSEN_LOGE("surface.GetCanvas is null.");
+        return false;
+    }
+#endif
+    return true;
+#ifndef USE_ROSEN_DRAWING
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(skSurface.get());
+#else
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface.get());
+#endif // USE_ROSEN_DRAWING
+    node.Process(shared_from_this());
+#ifdef NEW_RENDER_CONTEXT
+    rsSurface->FlushFrame(uiTimestamp_);
+#else
+    rsSurface->FlushFrame(surfaceFrame, uiTimestamp_);
+#endif
+}
+
 void RSRenderThreadVisitor::ProcessChildren(RSRenderNode& node)
 {
     for (auto& child : node.GetSortedChildren()) {
-        child->Process(shared_from_this());
+        if (child->GetSameRenderSurfaceId() != 0) {
+            CreateBufferAndCanvasForSameRender(*child);
+        } else {
+            child->Process(shared_from_this());
+        }
     }
 }
 
@@ -734,6 +821,23 @@ void RSRenderThreadVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
+void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
+{
+// #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+//     if (node.GetBuffer() == nullptr) {
+//         ROSEN_LOGE("RSRenderThreadVisitor::ProcessSurfaceViewInRT node surfaceBuffer_ is nullptr");
+//         return;
+//     }
+// #endif
+//     auto buffer = node.GetBuffer();
+//     const auto& properties = node.GetRenderProperties();
+//     RSSurfaceBufferInfo rsSurfaceBufferInfo(buffer, properties.GetBoundsPositionX(), properties.GetBoundsPositionY(),
+//         properties.GetBoundsWidth(), properties.GetBoundsHeight());
+//     std::unique_ptr<OpItem> op = std::make_unique<SurfaceBufferOpItem>(rsSurfaceBufferInfo);
+//     SkRect tmpRect;
+//     op->Draw(*canvas_, &tmpRect);
+}
+
 void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (!canvas_) {
@@ -766,6 +870,12 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     node.SetContextMatrix(contextMatrix);
     node.SetContextAlpha(canvas_->GetAlpha());
+
+    if (node.GetIsSamelayerRender()) {
+        // 处理同层渲染surfaceNode的逻辑
+        ProcessSurfaceViewInRT(node);
+        return;
+    }
 
     // PLANNING: This is a temporary modification. Animation for surfaceView should not be triggered in RenderService.
     // We plan to refactor code here.

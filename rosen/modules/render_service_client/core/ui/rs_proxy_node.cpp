@@ -76,7 +76,7 @@ RSProxyNode::~RSProxyNode()
     ROSEN_LOGD("RSProxyNode::~RSProxyNode, id:%{public}" PRIu64, GetId());
 }
 
-RSProxyNode::RSProxyNode(NodeId targetNodeId, std::string name) : RSNode(true), name_(std::move(name))
+RSProxyNode::RSProxyNode(NodeId targetNodeId, std::string name) : RSNode(true, false), name_(std::move(name))
 {
     // hacky trick: replace self node id with provided targetNodeId, use self generated id as proxyNodeId
     proxyNodeId_ = GetId();

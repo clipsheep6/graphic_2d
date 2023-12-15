@@ -199,6 +199,8 @@ void RSUniRenderVisitor::PartialRenderOptionInit()
     auto screenNum = screenManager->GetAllScreenIds().size();
     isPartialRenderEnabled_ = (screenNum <= 1) && (partialRenderType_ != PartialRenderType::DISABLED) &&
         RSMainThread::Instance()->IsSingleDisplay();
+    // [PLANNING] disable hardware composer for foldable device, remove it when partial render is enabled
+    isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || (screenNum > 1);
     dirtyRegionDebugType_ = RSSystemProperties::GetDirtyRegionDebugType();
     surfaceRegionDebugType_ = RSSystemProperties::GetSurfaceRegionDfxType();
     isRegionDebugEnabled_ = (dirtyRegionDebugType_ != DirtyRegionDebugType::DISABLED) ||

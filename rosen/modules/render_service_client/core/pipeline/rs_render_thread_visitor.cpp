@@ -157,7 +157,7 @@ void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
             DirtyRegionType::UPDATE_DIRTY_REGION, node.GetOldDirty());
     }
     ResetAndPrepareChildrenNode(node, nodeParent);
-    node.UpdateEffectRegion(effectRegion_);
+    node.UpdateEffectRegion(effectNodeAbsBounds_, effectRegion_);
     dirtyFlag_ = dirtyFlag;
 }
 

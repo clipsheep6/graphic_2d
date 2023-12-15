@@ -426,9 +426,9 @@ public:
     OutOfParentType GetOutOfParent() const;
 
 #ifndef USE_ROSEN_DRAWING
-    void UpdateEffectRegion(std::optional<SkPath>& region);
+    void UpdateEffectRegion(const SkIRect& effectNodeAbsBounds, std::optional<SkPath>& region);
 #else
-    void UpdateEffectRegion(std::optional<Drawing::Path>& region);
+    void UpdateEffectRegion(const Drawing::RectI& effectNodeAbsBounds, std::optional<Drawing::Path>& region);
 #endif
     bool IsBackgroundFilterCacheValid() const;
     virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = true) const;

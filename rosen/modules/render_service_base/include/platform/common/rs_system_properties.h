@@ -187,6 +187,8 @@ public:
         return RSSystemProperties::systemGpuApiType_;
     }
 
+    static bool GetEffectMergeEnabled();
+
 private:
     RSSystemProperties() = default;
 

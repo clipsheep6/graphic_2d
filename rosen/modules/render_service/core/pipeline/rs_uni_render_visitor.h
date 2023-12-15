@@ -473,8 +473,10 @@ private:
     bool resetRotate_ = false;
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkPath> effectRegion_ = std::nullopt;
+    SkIRect effectNodeAbsBounds_ = SkIRect::MakeEmpty();
 #else
     std::optional<Drawing::Path> effectRegion_ = std::nullopt;
+    Drawing::RectI effectNodeAbsBounds_ = {};
 #endif
     bool curDirty_ = false;
     bool curContentDirty_ = false;

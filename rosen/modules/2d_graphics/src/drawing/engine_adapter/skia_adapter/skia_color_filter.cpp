@@ -41,6 +41,11 @@ void SkiaColorFilter::InitWithColorMatrix(const ColorMatrix& m)
     filter_ = SkColorFilters::Matrix(dst);
 }
 
+void SkiaColorFilter::InitWithColorFloat(const float f[20])
+{
+    filter_ = SkColorFilters::Matrix(f);
+}
+
 void SkiaColorFilter::InitWithLinearToSrgbGamma()
 {
     filter_ = SkColorFilters::LinearToSRGBGamma();

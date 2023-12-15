@@ -37,6 +37,7 @@ public:
 
     void InitWithBlendMode(ColorQuad c, BlendMode mode) override;
     void InitWithColorMatrix(const ColorMatrix& m) override;
+    void InitWithColorFloat(const float f[20]) override;
     void InitWithLinearToSrgbGamma() override;
     void InitWithSrgbGammaToLinear() override;
     void InitWithCompose(const ColorFilter& f1, const ColorFilter& f2) override;

@@ -178,6 +178,34 @@ void OH_Drawing_CanvasDrawPath(OH_Drawing_Canvas*, const OH_Drawing_Path*);
 void OH_Drawing_CanvasDrawBitmap(OH_Drawing_Canvas*, const OH_Drawing_Bitmap*, float left, float top);
 
 /**
+ * @brief Draws a arc.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param left Indicates the left position of the arc.
+ * @param top Indicates the top position of the arc.
+ * @param right Indicates the right position of the arc.
+ * @param bottom Indicates the bottom position of the arc.
+ * @param startAngle Indicates the startAngle of the arc.
+ * @param sweepAngle Indicates the sweepAngle of the arc.
+ * @since 11
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawArc(OH_Drawing_Canvas*, float left, float top, float right, float bottom,
+    float startAngle, float sweepAngle);
+
+/**
+ * @brief Draws a roundrect.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_RoundRect Indicates the roundrect witch will be draw.
+ * @since 11
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas*, OH_Drawing_RoundRect* cRoundRect);
+
+/**
  * @brief Enumerates clip op.
  * 
  * @since 11

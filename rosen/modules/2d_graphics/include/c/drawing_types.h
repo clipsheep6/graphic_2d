@@ -85,6 +85,14 @@ typedef struct OH_Drawing_Path OH_Drawing_Path;
 typedef struct OH_Drawing_Bitmap OH_Drawing_Bitmap;
 
 /**
+ * @brief Defines a roundrect, which is a memory that contains the pixel data of a shape.
+ * 
+ * @since 8
+ * @version 1.0
+ */
+typedef struct OH_Drawing_RoundRect OH_Drawing_RoundRect;
+
+/**
  * @brief Enumerates storage formats of bitmap pixels.
  * 
  * @since 8

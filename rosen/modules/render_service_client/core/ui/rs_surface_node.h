@@ -44,6 +44,7 @@ namespace Rosen {
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
     void* additionalData = nullptr;
+    bool isSamelayerRender = false;
 };
 
 class RSC_EXPORT RSSurfaceNode : public RSNode {

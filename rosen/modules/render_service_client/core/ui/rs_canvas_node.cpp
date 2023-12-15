@@ -29,21 +29,22 @@
 
 namespace OHOS {
 namespace Rosen {
-RSCanvasNode::SharedPtr RSCanvasNode::Create(bool isRenderServiceNode)
+RSCanvasNode::SharedPtr RSCanvasNode::Create(bool isRenderServiceNode, bool isSamelayerRender)
 {
-    SharedPtr node(new RSCanvasNode(isRenderServiceNode));
+    SharedPtr node(new RSCanvasNode(isRenderServiceNode, isSamelayerRender));
     RSNodeMap::MutableInstance().RegisterNode(node);
 
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy == nullptr) {
         return node;
     }
-    std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasNodeCreate>(node->GetId());
+    std::unique_ptr<RSCommand> command = std::make_unique<RSCanvasNodeCreate>(node->GetId(), isSamelayerRender);
     transactionProxy->AddCommand(command, node->IsRenderServiceNode());
     return node;
 }
 
-RSCanvasNode::RSCanvasNode(bool isRenderServiceNode) : RSNode(isRenderServiceNode) {}
+RSCanvasNode::RSCanvasNode(bool isRenderServiceNode, bool isSamelayerRender)
+    : RSNode(isRenderServiceNode, isSamelayerRender) {}
 
 RSCanvasNode::~RSCanvasNode() {}
 

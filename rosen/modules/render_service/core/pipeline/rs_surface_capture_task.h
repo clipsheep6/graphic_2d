@@ -24,11 +24,13 @@
 #include "include/core/SkMatrix.h"
 #include "include/core/SkSurface.h"
 #ifdef ROSEN_OHOS
+#ifdef RS_ENABLE_GL
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include <GLES/gl.h>
 #include "GLES2/gl2.h"
 #include "GLES2/gl2ext.h"
+#endif
 
 #include "surface_buffer.h"
 #include "window.h"
@@ -175,16 +177,24 @@ private:
     ScreenRotation screenCorrection_ = ScreenRotation::ROTATION_0;
 };
 
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
+#if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
 #ifndef USE_ROSEN_DRAWING
 class DmaMem {
 public:
     sptr<SurfaceBuffer> DmaMemAlloc(SkImageInfo &dstInfo, const std::unique_ptr<Media::PixelMap>& pixelmap);
     sk_sp<SkSurface> GetSkSurfaceFromSurfaceBuffer(sptr<SurfaceBuffer> surfaceBuffer);
-    void ReleaseGLMemory();
+#ifdef RS_ENABLE_GL
+    sk_sp<SkSurface> GetSkSurfaceWithGL(sptr<SurfaceBuffer> surfaceBuffer);
+#endif
+#ifdef RS_ENABLE_VK
+    sk_sp<SkSurface> GetSkSurfaceWithVk(sptr<SurfaceBuffer> surfaceBuffer);
+#endif
+    void ReleaseDmaMemory();
 private:
+#ifdef RS_ENABLE_GL
     EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;
     GLuint texId_ = 0;
+#endif
     OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
 };
 #endif

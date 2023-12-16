@@ -323,10 +323,11 @@ void RSUniRenderVisitor::UpdateStaticCacheSubTree(const std::shared_ptr<RSRender
             PrepareEffectNodeIfCacheReuse(cacheRootNode, effectNode);
             return;
         }
-        if (child->GetRenderProperties().NeedFilter() || child->GetRenderProperties().GetUseEffect()) {
+        if (child->GetRenderProperties().NeedFilter() || (hasEffectParentNode_ &&
+            child->GetRenderProperties().GetUseEffect())) {
             child->Update(*curSurfaceDirtyManager_, cacheRootNode, dirtyFlag_, prepareClipRect_);
         }
-        if (child->GetRenderProperties().GetUseEffect()) {
+        if (hasEffectParentNode_ && child->GetRenderProperties().GetUseEffect()) {
             child->UpdateEffectRegion(effectRegion_);
             if (effectRegion_) {
 #ifndef USE_ROSEN_DRAWING
@@ -358,8 +359,10 @@ void RSUniRenderVisitor::PrepareEffectNodeIfCacheReuse(const std::shared_ptr<RSR
     if (effectNode == nullptr || curSurfaceDirtyManager_ == nullptr) {
         return;
     }
-    auto effectRegion = effectRegion_;
-    effectRegion_ = effectNode->InitializeEffectRegion();
+    
+    bool hasEffectParentNode = hasEffectParentNode_;
+    // since subtree in reuse cache, only update parent matrix without collect again
+    hasEffectParentNode_ = false;
     effectNode->Update(*curSurfaceDirtyManager_, cacheRootNode, dirtyFlag_, prepareClipRect_);
     if (effectNode->GetRenderProperties().NeedFilter()) {
         UpdateForegroundFilterCacheWithDirty(*effectNode, *curSurfaceDirtyManager_);
@@ -369,7 +372,6 @@ void RSUniRenderVisitor::PrepareEffectNodeIfCacheReuse(const std::shared_ptr<RSR
         }
     }
     UpdateStaticCacheSubTree(effectNode, effectNode->GetSortedChildren());
-    effectNode->SetEffectRegion(effectRegion_);
     if (effectRegion_) {
 #ifndef USE_ROSEN_DRAWING
         auto regionRect = effectRegion_->getBounds();
@@ -381,8 +383,10 @@ void RSUniRenderVisitor::PrepareEffectNodeIfCacheReuse(const std::shared_ptr<RSR
             effectNode->GetId(), regionRect.GetLeft(), regionRect.GetTop(),
             regionRect.GetWidth(), regionRect.GetHeight());
 #endif
+    } else {
+        RS_LOGD("PrepareEffectNodeIfCacheReuse node %{public}llu meets empty effectRegion_", effectNode->GetId());
     }
-    effectRegion_ = effectRegion;
+    hasEffectParentNode_ = hasEffectParentNode;
 }
 
 void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
@@ -1686,6 +1690,8 @@ void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
     auto effectRegion = effectRegion_;
+    bool hasEffectParentNode = hasEffectParentNode_;
+    hasEffectParentNode_ = true;
 
     effectRegion_ = node.InitializeEffectRegion();
     auto parentNode = node.GetParent().lock();
@@ -1716,6 +1722,7 @@ void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
         UpdateForegroundFilterCacheWithDirty(node, *curSurfaceDirtyManager_);
     }
 
+    hasEffectParentNode_ = hasEffectParentNode;
     effectRegion_ = effectRegion;
     dirtyFlag_ = dirtyFlag;
     prepareClipRect_ = prepareClipRect;

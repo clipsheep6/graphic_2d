@@ -93,9 +93,11 @@ RectI RSEffectRenderNode::GetFilterRect() const
     auto bounds = matrix.mapRect(SkRect::Make(*effectRegion_)).roundOut();
     return { bounds.x(), bounds.y(), bounds.width(), bounds.height() };
 #else
-    Drawing::Rect dst;
-    matrix.MapRect(dst, Drawing::Rect(*effectRegion_));
-    auto bounds = dst.RoundOut();
+    Drawing::Rect bounds;
+    // re-map local rect to absolute rect
+    Drawing::Rect effectRect = Drawing::Rect(*effectRegion_);
+    effectRect.RoundOut();
+    matrix.MapRect(bounds, effectRect);
     return { bounds.GetLeft(), bounds.GetTop(), bounds.GetWidth(), bounds.GetHeight() };
 #endif
 }
@@ -115,9 +117,6 @@ std::optional<Drawing::Path> RSEffectRenderNode::InitializeEffectRegion() const
 
 #ifndef USE_ROSEN_DRAWING
 void RSEffectRenderNode::SetEffectRegion(const std::optional<SkPath>& region)
-#else
-void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& region)
-#endif
 {
     const auto& properties = GetRenderProperties();
     // if background image is set, use bounds as effect region
@@ -135,7 +134,7 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& reg
     const auto& geoPtr = properties.GetBoundsGeometry();
     const auto& matrix = geoPtr->GetAbsMatrix();
     const auto& absRect = geoPtr->GetAbsRect();
-#ifndef USE_ROSEN_DRAWING
+
     // intersect effect region with node bounds
     auto rect = region->getBounds();
     if (!rect.intersect(
@@ -153,35 +152,55 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& reg
         return;
     }
     UpdateEffectRegion(revertMatrix.mapRect(rect).roundOut());
+}
 #else
-    // PLANNING: add drawing implementation
+void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::Path>& region)
+{
+    const auto& properties = GetRenderProperties();
+    auto bounds = RSPropertiesPainter::Rect2DrawingRect(properties.GetBoundsRect());
+    bounds.RoundOut();
+    // if background image is set, use bounds as effect region
+    if (properties.GetBgImage()) {
+        UpdateEffectRegion(Drawing::RectI{bounds.GetLeft(), bounds.GetTop(),
+            bounds.GetRight(), bounds.GetBottom()});
+        return;
+    }
+
+    if (!region.has_value() || !region->IsValid()) {
+        ROSEN_LOGD("RSEffectRenderNode::SetEffectRegion: no effect region.");
+        UpdateEffectRegion(std::nullopt);
+        return;
+    }
+
+    const auto& geoPtr = properties.GetBoundsGeometry();
+    const auto& absRect = geoPtr->GetAbsRect();
     // intersect effect region with node bounds
     auto rect = region->GetBounds();
     if (!rect.Intersect(
-        Drawing::RectF(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom()))) {
-        ROSEN_LOGE("RSEffectRenderNode::SetEffectRegion: intersect rect failed.");
+        Drawing::Rect(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom()))) {
+        ROSEN_LOGD("RSEffectRenderNode::SetEffectRegion: no valid effect region.");
         UpdateEffectRegion(std::nullopt);
         return;
     }
 
     // Map absolute rect to local matrix
+    const auto& matrix = geoPtr->GetAbsMatrix();
     Drawing::Matrix revertMatrix;
     if (!matrix.Invert(revertMatrix)) {
-        ROSEN_LOGE("RSEffectRenderNode::SetEffectRegion: get invert matrix failed.");
+        ROSEN_LOGD("RSEffectRenderNode::SetEffectRegion: cannot map effect region to local coordinates.");
         UpdateEffectRegion(std::nullopt);
         return;
     }
-    Drawing::Rect dst;
-    revertMatrix.MapRect(dst, rect);
-    UpdateEffectRegion(dst.RoundOut());
-#endif
+
+    revertMatrix.MapRect(bounds, rect);
+    bounds.RoundOut();
+    UpdateEffectRegion(Drawing::RectI{bounds.GetLeft(), bounds.GetTop(),
+        bounds.GetRight(), bounds.GetBottom()});
 }
+#endif
 
 #ifndef USE_ROSEN_DRAWING
 void RSEffectRenderNode::UpdateEffectRegion(const std::optional<SkIRect>& region)
-#else
-void RSEffectRenderNode::UpdateEffectRegion(const std::optional<Drawing::RectI>& region);
-#endif
 {
     // clear cache if new region is null or outside current region
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
@@ -191,6 +210,18 @@ void RSEffectRenderNode::UpdateEffectRegion(const std::optional<Drawing::RectI>&
     }
     effectRegion_ = region;
 }
+#else
+void RSEffectRenderNode::UpdateEffectRegion(const std::optional<Drawing::RectI>& region)
+{
+    // clear cache if new region is null or outside current region
+    if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
+        manager && manager->IsCacheValid() &&
+        (!region.has_value() || (effectRegion_.has_value() && !effectRegion_->Contains(*region)))) {
+        manager->UpdateCacheStateWithFilterRegion();
+    }
+    effectRegion_ = region;
+}
+#endif
 
 void RSEffectRenderNode::UpdateFilterCacheManagerWithCacheRegion(
     RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect) const

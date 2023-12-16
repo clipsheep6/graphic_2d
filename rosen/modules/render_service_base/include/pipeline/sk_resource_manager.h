@@ -17,6 +17,7 @@
 #define SK_RESOURCE_MANAGER_H
 #include <list>
 #include <map>
+#include <set>
 #include <mutex>
 #include <unistd.h>
 

@@ -35,6 +35,7 @@
 #include "rs_trace.h"
 
 #include "animation/rs_animation_fraction.h"
+#include "animation/rs_animation_trace_utils.h"
 #include "command/rs_message_processor.h"
 #include "common/rs_background_thread.h"
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
@@ -2002,6 +2003,9 @@ void RSMainThread::Animate(uint64_t timestamp)
         // request vsync if: 1. node has running animation, or 2. transition animation just ended
         needRequestNextVsync = needRequestNextVsync || nodeNeedRequestNextVsync || (node.use_count() == 1);
         isCalculateAnimationValue = isCalculateAnimationValue || nodeCalculateAnimationValue;
+        if (!isCalculateAnimationValue && needRequestNextVsync) {
+            RSAnimationTraceUtils::GetInstance().addAnimationNameTrace("Animation running empty", node->GetId());
+        }
         if (node->template IsInstanceOf<RSSurfaceRenderNode>() && hasRunningAnimation) {
             if (isUniRender_) {
                 auto surfacenode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node);

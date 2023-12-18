@@ -15,6 +15,7 @@
 
 #include "animation/rs_render_property_animation.h"
 
+#include "animation/rs_animation_trace_utils.h"
 #include "modifier/rs_render_property.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "platform/common/rs_log.h"
@@ -151,6 +152,12 @@ void RSRenderPropertyAnimation::OnRemoveOnCompletion()
     }
 
     SetPropertyValue(backwardValue);
+}
+
+void RSRenderPropertyAnimation::DumpFraction(float fraction)
+{
+    RSAnimationTraceUtils::GetInstance().addAnimationFrameTrace(
+        GetTargetId(), GetAnimationId(), GetPropertyId(), fraction, GetPropertyValue());
 }
 } // namespace Rosen
 } // namespace OHOS

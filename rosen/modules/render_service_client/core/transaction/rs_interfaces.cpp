@@ -461,6 +461,7 @@ void RSInterfaces::SetTpFeatureConfig(int32_t feature, const char* config)
 
 void RSInterfaces::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
 {
+    RS_LOGE("RSInterfaces::SetVirtualScreenUsingStatus");
     renderServiceClient_->SetVirtualScreenUsingStatus(isVirtualScreenUsingStatus);
 }
 } // namespace Rosen

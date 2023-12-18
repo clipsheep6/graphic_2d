@@ -1219,6 +1219,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             auto isVirtualScreenUsingStatus = data.ReadBool();
+            RS_LOGE("OnRemoteRequest::SetVirtualScreenUsingStatus");
             SetVirtualScreenUsingStatus(isVirtualScreenUsingStatus);
             break;
         }

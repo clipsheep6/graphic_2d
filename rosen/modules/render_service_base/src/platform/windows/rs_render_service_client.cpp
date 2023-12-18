@@ -432,6 +432,7 @@ void RSRenderServiceClient::SetTpFeatureConfig(int32_t feature, const char* conf
 
 void RSRenderServiceClient::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
 {
+    RS_LOGE("RSRenderServiceClient::SetVirtualScreenUsingStatus NULL2");
 }
 } // namespace Rosen
 } // namespace OHOS

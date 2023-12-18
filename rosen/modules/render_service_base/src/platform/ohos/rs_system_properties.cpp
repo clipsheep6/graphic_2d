@@ -634,6 +634,12 @@ bool RSSystemProperties::IsPhoneType()
     return isPhone;
 }
 
+bool RSSystemProperties::IsPcType()
+{
+    static bool isPc = system::GetParameter("const.product.devicetype", "pc") == "pc";
+    return isPc;
+}
+
 bool RSSystemProperties::GetSyncTransactionEnabled()
 {
     static bool syncTransactionEnabled =

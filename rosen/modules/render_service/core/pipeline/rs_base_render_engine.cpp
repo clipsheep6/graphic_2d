@@ -226,16 +226,19 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
 #endif // NEW_SKIA
 #else
 #if defined(RS_ENABLE_GL)
-    if (canvas.GetGPUContext() == nullptr) {
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR && canvas.GetGPUContext() == nullptr) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer GrContext is null!");
         return nullptr;
     }
-#elif defined(RS_ENABLE_VK)
-    if (renderContext_->GetDrGPUContext() == nullptr) {
+#endif // RS_ENABLE_GL
+#if defined(RS_ENABLE_VK)
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR && renderContext_->GetDrGPUContext() == nullptr) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer GrContext is null!");
         return nullptr;
     }
-#endif
+#endif // RS_ENABLE_VK
 #endif // USE_ROSEN_DRAWING
     auto eglTextureId = eglImageManager_->MapEglImageFromSurfaceBuffer(buffer, acquireFence, threadIndex);
     if (eglTextureId == 0) {

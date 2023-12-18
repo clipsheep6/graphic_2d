@@ -673,11 +673,11 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
     }
 
     if (isTopGpuDraw && RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable()) {
-        RSSingleton<RoundCornerDisplay>::GetInstance().DrawTopRoundCorner(canvas.get());
+        RSSingleton<RoundCornerDisplay>::GetInstance().DrawTopRoundCorner(canvas);
     }
 
     if (isBottomGpuDraw && RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable()) {
-        RSSingleton<RoundCornerDisplay>::GetInstance().DrawBottomRoundCorner(canvas.get());
+        RSSingleton<RoundCornerDisplay>::GetInstance().DrawBottomRoundCorner(canvas);
     }
     renderFrame->Flush();
 #ifdef RS_ENABLE_EGLIMAGE

@@ -27,6 +27,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "screen_manager/screen_types.h"
 #include "pipeline/round_corner_display/rs_round_corner_config.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -71,11 +72,24 @@ public:
     // update curOrientation_ and lastOrientation_
     void UpdateOrientationStatus(ScreenRotation orientation);
 
-    void DrawRoundCorner(RSPaintFilterCanvas* canvas);
+    template<class TCanvas>
+    void DrawRoundCorner(TCanvas& canvas)
+    {
+        DrawTopRoundCorner(canvas);
+        DrawBottomRoundCorner(canvas);
+    }
+    
+    template<class TCanvas>
+    void DrawTopRoundCorner(TCanvas& canvas)
+    {
+        DrawOneRoundCorner(canvas, TOP_SURFACE);
+    }
 
-    void DrawTopRoundCorner(RSPaintFilterCanvas* canvas);
-
-    void DrawBottomRoundCorner(RSPaintFilterCanvas* canvas);
+    template<class TCanvas>
+    void DrawBottomRoundCorner(TCanvas& canvas)
+    {
+        DrawOneRoundCorner(canvas, BOTTOM_SURFACE);
+    }
 
     bool IsSupportHardware() const
     {
@@ -211,6 +225,48 @@ private:
     void RcdChooseRSResource();
 
     void RcdChooseHardwareResource();
+
+    template<class TCanvas>
+    void DrawOneRoundCorner(TCanvas& canvas, int topOrBottom)
+    {
+        RS_TRACE_BEGIN("RCD::DrawOneRoundCorner : surfaceType" + std::to_string(surfaceType));
+        std::lock_guard<std::mutex> lock(resourceMut_);
+        if (canvas == nullptr) {
+            RS_LOGE("[%{public}s] Canvas is null \n", __func__);
+            return;
+        }
+        UpdateParameter(updateFlag_);
+        if (surfaceType == TOP_SURFACE) {
+            RS_LOGD("[%{public}s] draw TopSurface start  \n", __func__);
+            if (curTop_ != nullptr) {
+    #ifndef USE_ROSEN_DRAWING
+                canvas->drawImage(curTop_, 0, 0);
+    #else
+                Drawing::Brush brush;
+                canvas->AttachBrush(brush);
+                canvas->DrawImage(*curTop_, 0, 0, Drawing::SamplingOptions());
+                canvas->DetachBrush();
+    #endif
+                RS_LOGD("[%{public}s] Draw top \n", __func__);
+            }
+        } else if (surfaceType == BOTTOM_SURFACE) {
+            RS_LOGD("[%{public}s] BottomSurface supported \n", __func__);
+            if (curBottom_ != nullptr) {
+    #ifndef USE_ROSEN_DRAWING
+                canvas->drawImage(curBottom_, 0, displayHeight_ - curBottom_->height());
+    #else
+                Drawing::Brush brush;
+                canvas->AttachBrush(brush);
+                canvas->DrawImage(*curBottom_, 0, displayHeight_ - curBottom_->GetHeight(), Drawing::SamplingOptions());
+                canvas->DetachBrush();
+    #endif
+                RS_LOGD("[%{public}s] Draw Bottom \n", __func__);
+            }
+        } else {
+            RS_LOGD("[%{public}s] Surface Type is not valid \n", __func__);
+        }
+        RS_TRACE_END();
+    }
 };
 } // namespace Rosen
 } // namespace OHOS

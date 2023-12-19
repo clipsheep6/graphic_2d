@@ -46,6 +46,8 @@
 #else
 #include "platform/drawing/rs_surface.h"
 #endif
+#include "pixel_map_from_surface.h"
+#include "render/rs_pixel_map_util.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
@@ -732,7 +734,19 @@ void RSRenderThreadVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
 
 void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
 {
-    // TODO: deal with surfaceNode in same render
+    const auto& property = node.GetRenderProperties();
+    Media::Rect rect = {0, 0, static_cast<int32_t>(property.GetBoundsWidth()),
+        static_cast<int32_t>(property.GetBoundsHeight())};
+    auto pixelmap = Media::CreatePixelMapFromSurfaceId(node.GetSurfaceId(), rect);
+#ifndef USE_ROSEN_DRAWING
+    auto image = RSPixelMapUtil::ExtractSkImage(std::move(pixelmap));
+    canvas_->drawImage(
+        image, node.GetRenderProperties().GetBoundsPositionX(), node.GetRenderProperties().GetBoundsPositionY());
+#else
+    auto image = RSPixelMapUtil::ExtractDrawingImage(pixelMap);
+    canvas_->DrawImage(*image, node.GetRenderProperties().GetBoundsPositionX(),
+        node.GetRenderProperties().GetBoundsPositionY(), Drawing::SamplingOptions());
+#endif
 }
 
 void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
@@ -768,23 +782,23 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     node.SetContextMatrix(contextMatrix);
     node.SetContextAlpha(canvas_->GetAlpha());
 
-    if (node.GetIsTextureExportNode()) {
-        // TODO: deal with surfaceNode in same render
-        ProcessSurfaceViewInRT(node);
-        return;
-    }
-
     // PLANNING: This is a temporary modification. Animation for surfaceView should not be triggered in RenderService.
     // We plan to refactor code here.
     node.SetContextBounds(node.GetRenderProperties().GetBounds());
 #ifdef USE_SURFACE_TEXTURE
-    if (node.GetSurfaceNodeType() == RSSurfaceNodeType::SURFACE_TEXTURE_NODE) {
+    if (node.GetIsTextureExportNode()) {
+        ProcessSurfaceViewInRT(node);
+    } else if (node.GetSurfaceNodeType() == RSSurfaceNodeType::SURFACE_TEXTURE_NODE) {
         ProcessTextureSurfaceRenderNode(node);
     } else {
         ProcessOtherSurfaceRenderNode(node);
     }
 #else
-    ProcessOtherSurfaceRenderNode(node);
+    if (node.GetIsTextureExportNode()) {
+        ProcessSurfaceViewInRT(node);
+    } else {
+        ProcessOtherSurfaceRenderNode(node);
+    }
 #endif
 
     // 1. add this node to parent's children list

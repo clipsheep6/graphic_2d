@@ -88,6 +88,9 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
             config.nodeType, surfaceNodeConfig.isTextureExportNode);
         if (surfaceNodeConfig.isTextureExportNode) {
             transactionProxy->AddCommand(command, false);
+#ifndef ROSEN_CROSS_PLATFORM
+            node->SetSurfaceIdToRenderNode();
+#endif
         } else {
             transactionProxy->AddCommand(command, isWindow);
         }
@@ -293,6 +296,26 @@ void RSSurfaceNode::SetColorSpace(GraphicColorGamut colorSpace)
     }
 }
 
+void RSSurfaceNode::SetTextureExport(bool isTextureExportNode)
+{
+    isTextureExportNode_ = isTextureExportNode;
+    if (!isTextureExportNode_) {
+        DoFlushModifier();
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeCreate>(GetId(),
+        RSSurfaceNodeType::SELF_DRAWING_NODE, isTextureExportNode);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy == nullptr) {
+        return;
+    }
+    transactionProxy->AddCommand(command, !isTextureExportNode);
+#ifndef ROSEN_CROSS_PLATFORM
+    SetSurfaceIdToRenderNode();
+#endif
+    DoFlushModifier();
+}
+
 void RSSurfaceNode::SetAbilityBGAlpha(uint8_t alpha)
 {
     std::unique_ptr<RSCommand> command =
@@ -391,6 +414,20 @@ std::shared_ptr<RSSurfaceNode> RSSurfaceNode::Unmarshalling(Parcel& parcel)
     surfaceNode->skipDestroyCommandInDestructor_ = true;
 
     return surfaceNode;
+}
+
+void RSSurfaceNode::SetSurfaceIdToRenderNode()
+{
+    auto surface = GetSurface(); 
+    if (surface) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSurfaceNodeSetSurfaceId>(GetId(),
+            surface->GetUniqueId());
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy == nullptr) {
+            return;
+        }
+        transactionProxy->AddCommand(command, false);
+    }
 }
 
 RSNode::SharedPtr RSSurfaceNode::UnmarshallingAsProxyNode(Parcel& parcel)

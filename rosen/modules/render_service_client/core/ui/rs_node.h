@@ -372,6 +372,8 @@ protected:
         return false;
     }
 
+    void DoFlushModifier();
+
     std::vector<PropertyId> GetModifierIds() const;
     bool isCustomTextType_ = false;
 

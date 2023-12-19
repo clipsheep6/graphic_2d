@@ -105,6 +105,7 @@ public:
     void SetHardwareEnabled(bool isEnabled);
     void SetBootAnimation(bool isBootAnimation);
     bool GetBootAnimation() const;
+    void SetTextureExport(bool isTextureExportNode);
 
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<OHOS::Surface> GetSurface() const;
@@ -155,6 +156,10 @@ private:
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
     bool CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config, SurfaceId surfaceId = 0);
     void OnBoundsSizeChanged() const override;
+#ifndef ROSEN_CROSS_PLATFORM
+    // this function is only used in texture export
+    void SetSurfaceIdToRenderNode();
+#endif
     std::pair<std::string, std::string> SplitSurfaceNodeName(std::string surfaceNodeName);
 #ifdef NEW_RENDER_CONTEXT
     std::shared_ptr<RSRenderSurface> surface_;

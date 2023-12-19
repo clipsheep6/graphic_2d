@@ -65,7 +65,11 @@ public:
     void ProcessRootRenderNode(RSRootRenderNode& node) override;
     void ProcessSurfaceRenderNode(RSSurfaceRenderNode& node) override;
     void ProcessEffectRenderNode(RSEffectRenderNode& node) override;
+    void ProcessMirrorNode(std::shared_ptr<RSDisplayRenderNode>& mirrorNode);
+    void ProcessMirrorNodeInner(std::shared_ptr<RSDisplayRenderNode>& mirrorNode);
+    void ProcessNodesOverCaptureWindow(std::shared_ptr<RSDisplayRenderNode>& mirrorNode);
 
+    void DrawCacheSurfaceInMirrorNode(sk_sp<SkImage>& cacheImageProcessed);
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
     void ChangeCacheRenderNodeMap(RSRenderNode& node, const uint32_t count = 0);
@@ -389,6 +393,7 @@ private:
     QuickSkipPrepareType quickSkipPrepareType_;
     DirtyRegionDebugType dirtyRegionDebugType_;
     SurfaceRegionDebugType surfaceRegionDebugType_;
+    DeviceType deviceType_ = DeviceType::PHONE;
     bool isRegionDebugEnabled_ = false;
     bool isDirty_ = false;
     // added for judge if drawing cache changes

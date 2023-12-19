@@ -138,6 +138,11 @@ void RSUniRenderVirtualProcessor::CanvasRotation(ScreenRotation screenRotation, 
 #endif
 }
 
+bool RSUniRenderVirtualProcessor::IsCanvasCreated() const
+{
+    return canvas_ != nullptr;
+}
+
 void RSUniRenderVirtualProcessor::PostProcess(RSDisplayRenderNode* node)
 {
     if (producerSurface_ == nullptr) {

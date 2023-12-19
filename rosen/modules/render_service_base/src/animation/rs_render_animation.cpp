@@ -290,6 +290,7 @@ bool RSRenderAnimation::Animate(int64_t time)
     }
 
     OnAnimate(fraction);
+    DumpFraction(fraction);
     if (isRepeatFinished) {
         ProcessOnRepeatFinish();
     }

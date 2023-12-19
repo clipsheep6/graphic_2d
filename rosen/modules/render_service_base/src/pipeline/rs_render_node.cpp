@@ -1090,7 +1090,7 @@ void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
 #else
             auto rect = RSPropertiesPainter::Rect2DrawingRect(GetRenderProperties().GetBoundsRect());
             Drawing::Brush brush;
-            brush.SetAlphaF(std::clamp(alpha, 0.f, 1.f) * UINT8_MAX);
+            brush.SetAlpha(std::clamp(alpha, 0.f, 1.f) * UINT8_MAX);
             Drawing::SaveLayerOps slr(&rect, &brush);
             canvas.SaveLayer(slr);
 #endif
@@ -1818,7 +1818,7 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
         canvas.DrawImage(*cacheImage, -shadowRectOffsetX_ * scaleX,
             -shadowRectOffsetY_ * scaleY, samplingOptions);
     } else {
-        canvas.DrawImage(*cacheImage, 0.0, 0.0, Drawing::SamplingOptions());
+        canvas.DrawImage(*cacheImage, 0.0, 0.0, samplingOptions);
     }
     canvas.DetachBrush();
     canvas.Restore();

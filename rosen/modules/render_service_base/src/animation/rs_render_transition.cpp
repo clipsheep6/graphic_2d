@@ -15,6 +15,7 @@
 
 #include "animation/rs_render_transition.h"
 
+#include "animation/rs_animation_trace_utils.h"
 #include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
@@ -80,6 +81,8 @@ void RSRenderTransition::OnAnimate(float fraction)
     if (isTransitionIn_) {
         valueFraction = 1 - valueFraction;
     }
+    RSAnimationTraceUtils::GetInstance().addTranstionFrameTrace(
+        GetTargetId(), GetAnimationId(), fraction, valueFraction);
     for (auto& effect : effects_) {
         effect->UpdateFraction(valueFraction);
     }

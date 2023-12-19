@@ -2876,7 +2876,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         if ((screenInfo_.state == ScreenState::HDI_OUTPUT_ENABLE) &&
             RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable() &&
             (!RSSingleton<RoundCornerDisplay>::GetInstance().IsSupportHardware())) {
-            RSSingleton<RoundCornerDisplay>::GetInstance().DrawRoundCorner(canvas_.get());
+            RSSingleton<RoundCornerDisplay>::GetInstance().DrawRoundCorner(canvas_);
         }
         auto mainThread = RSMainThread::Instance();
         if (!mainThread->GetClearMemoryFinished()) {

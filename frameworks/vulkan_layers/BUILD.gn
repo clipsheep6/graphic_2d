@@ -33,7 +33,7 @@ config("vulkan_public_config") {
     "swapchain",
     "include",
     "//third_party/vulkan-loader/loader/generated",
-    "../../frameworks/surface/include",
+    "../../../graphic_surface/surface/include",
   ]
 }
 

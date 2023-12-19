@@ -31,7 +31,7 @@ ohos_systemtest("native_window_buffer_test") {
   sources = [ "native_window_buffer_test.cpp" ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_surface/surface/include",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/security/access_token/interfaces/innerkits/accesstoken/include",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",
@@ -71,7 +71,7 @@ ohos_systemtest("surface_ipc_test") {
   sources = [ "surface_ipc_test.cpp" ]
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_surface/surface/include",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/security/access_token/interfaces/innerkits/accesstoken/include",
     "//base/security/access_token/interfaces/innerkits/token_setproc/include",

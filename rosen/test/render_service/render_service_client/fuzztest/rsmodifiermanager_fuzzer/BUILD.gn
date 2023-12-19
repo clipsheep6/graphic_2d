@@ -22,7 +22,7 @@ ohos_fuzztest("RSModifierManagerFuzzTest") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_surface/surface/include",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core",
   ]

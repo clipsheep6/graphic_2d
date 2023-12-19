@@ -25,7 +25,7 @@ ohos_fuzztest("RSRenderImageFuzzTest") {
   }
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_surface/surface/include",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include",
   ]
   deps = [

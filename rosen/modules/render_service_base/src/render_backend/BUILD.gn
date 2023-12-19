@@ -32,6 +32,8 @@ ohos_static_library("librender_backend") {
     "//drivers/peripheral/display/interfaces/include/",
     "$graphic_2d_root/rosen/modules/render_service_client/core",
     "$graphic_2d_root/utils/log",
+    "$graphic_surface_root/surface/include",
+    "$graphic_surface_root/interfaces/inner_api/surface",
   ]
 
   defines = []
@@ -55,7 +57,7 @@ ohos_static_library("librender_backend") {
   if (rs_enable_gpu) {
     include_dirs += [
       "//third_party/openssl/include",
-      "$graphic_2d_root/frameworks/surface/include",
+      "$graphic_surface_root/surface/include",
       "$graphic_2d_root/interfaces/inner_api/common",
     ]
 

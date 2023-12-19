@@ -58,6 +58,7 @@
           "hitrace",
           "ability_runtime",
           "drivers_interface_display",
+          "graphic_surface",
           "c_utils",
           "access_token",
           "safwk",

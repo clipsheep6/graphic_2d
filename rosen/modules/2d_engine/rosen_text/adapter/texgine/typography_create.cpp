@@ -40,6 +40,13 @@ TypographyCreate::TypographyCreate(const TypographyStyle& style,
 void TypographyCreate::PushStyle(const TextStyle& style)
 {
     auto txtTextStyle = Convert(style);
+    if (style.color == 0xFF00FF00){
+        txtTextStyle.isSymbolGlyph=true;
+        builder_->PushStyle(txtTextStyle);
+        AppendSymbol(0xF0001);
+        PopStyle();
+        txtTextStyle.isSymbolGlyph=false;
+    }
     builder_->PushStyle(txtTextStyle);
 }
 

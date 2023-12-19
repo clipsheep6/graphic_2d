@@ -88,3 +88,7 @@ group("libnative_image") {
 group("libbootanimation_utils") {
   public_deps = [ "frameworks/bootanimation/utils:libbootanimation_utils" ]
 }
+
+group(libopencl) {
+  public_deps = libopencl
+}

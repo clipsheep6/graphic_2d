@@ -27,6 +27,7 @@ declare_args() {
   graphic_2d_feature_freemem_enable = false
   graphic_2d_feature_parallel_render_enable = true
   graphic_2d_feature_enable_vulkan = false
+  graphic_2d_fearure_enable_opencl = false
   graphic_2d_feature_enable_flutter_vulkan = false
   graphic_2d_feature_enable_opengl = true
   graphic_2d_feature_enable_filter_cache = true
@@ -52,6 +53,7 @@ declare_args() {
 
 if (graphic_2d_feature_product == "phone") {
   graphic_2d_feature_enable_vulkan = true
+  graphic_2d_feature_enable_opencl = true
 }
 
 gpu_defines = []
@@ -103,6 +105,10 @@ if (graphic_2d_feature_ace_enable_gpu) {
   libvulkan = []
   if (graphic_2d_feature_enable_vulkan) {
     libvulkan += [ "//third_party/vulkan-loader/openharmony:vulkan_loader" ]
+  }
+  libopencl = []
+  if (graphic_2d_feature_enable_opencl) {
+    libopencl += [ "//third_party/opencl-icd-loader:libopencl" ]
   }
   if (graphic_2d_feature_enable_flutter_vulkan) {
     libvulkan +=

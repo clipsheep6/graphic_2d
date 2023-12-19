@@ -130,7 +130,6 @@ ohos_executable("drawing_engine_sample") {
       "$graphic_2d_root/frameworks/surface/include",
       "$graphic_2d_root/rosen/modules/2d_graphics/include",
       "$graphic_2d_root/interfaces/inner_api/surface",
-      "//commonlibrary/c_utils/base/include",
       "//third_party/skia",
     ]
   }

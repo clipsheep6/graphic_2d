@@ -1900,24 +1900,12 @@ void RSPropertiesPainter::DrawBackgroundImageAsEffect(const RSProperties& proper
     // draw background onto offscreen canvas
     RSPropertiesPainter::DrawBackground(properties, *offscreenCanvas);
     // generate effect data
-#ifndef USE_ROSEN_DRAWING
-    RSPropertiesPainter::DrawBackgroundEffect(
-        properties, *offscreenCanvas, SkIRect::MakeWH(boundsRect.GetWidth(), boundsRect.GetHeight()));
-#else
-    RSPropertiesPainter::DrawBackgroundEffect(
-        properties, *offscreenCanvas, Drawing::RectI(0, 0, boundsRect.GetWidth(), boundsRect.GetHeight()));
-#endif
+    RSPropertiesPainter::DrawBackgroundEffect(properties, *offscreenCanvas);
     // extract effect data from offscreen canvas and set to canvas
     canvas.SetEffectData(offscreenCanvas->GetEffectData());
 }
 
-#ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawBackgroundEffect(
-    const RSProperties& properties, RSPaintFilterCanvas& canvas, const SkIRect& rect)
-#else
-void RSPropertiesPainter::DrawBackgroundEffect(
-    const RSProperties& properties, RSPaintFilterCanvas& canvas, const Drawing::RectI& rect)
-#endif
+void RSPropertiesPainter::DrawBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
     auto& RSFilter = properties.GetBackgroundFilter();
     if (RSFilter == nullptr) {
@@ -1932,8 +1920,7 @@ void RSPropertiesPainter::DrawBackgroundEffect(
     }
 
 #ifndef USE_ROSEN_DRAWING
-    SkAutoCanvasRestore acr(&canvas, true);
-    canvas.clipIRect(rect);
+    auto bounds = RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect()).roundOut();
     auto filter = std::static_pointer_cast<RSSkiaFilter>(RSFilter);
 #else
     Drawing::AutoCanvasRestore acr(canvas, true);
@@ -1945,14 +1932,14 @@ void RSPropertiesPainter::DrawBackgroundEffect(
     // Optional use cacheManager to draw filter
     if (auto& cacheManager = properties.GetFilterCacheManager(false);
         cacheManager != nullptr && !canvas.GetDisableFilterCache()) {
-        auto&& data = cacheManager->GeneratedCachedEffectData(canvas, filter);
+        auto&& data = cacheManager->GeneratedCachedEffectData(canvas, filter, bounds, bounds);
         canvas.SetEffectData(data);
         return;
     }
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-    auto imageRect = canvas.getDeviceClipBounds();
+    auto imageRect = bounds;
     auto imageSnapshot = surface->makeImageSnapshot(imageRect);
 #else
     auto imageRect = canvas.GetDeviceClipBounds();

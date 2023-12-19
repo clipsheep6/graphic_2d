@@ -89,7 +89,7 @@ public:
         const sk_sp<SkSurface>& spherizeSurface);
     // EffectView and useEffect
     static void DrawBackgroundImageAsEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
-    static void DrawBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas, const SkIRect& rect);
+    static void DrawBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static sk_sp<SkBlender> MakeDynamicLightUpBlender(
         float dynamicLightUpRate, float dynamicLightUpDeg);
     static void DrawGreyAdjustment(const RSProperties& properties, RSPaintFilterCanvas& canvas);
@@ -121,8 +121,7 @@ public:
     // EffectView and useEffect
     static void DrawBackgroundImageAsEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     // EffectView and useEffect
-    static void DrawBackgroundEffect(
-        const RSProperties& properties, RSPaintFilterCanvas& canvas, const Drawing::RectI& rect);
+    static void DrawBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static std::shared_ptr<Drawing::ShaderEffect> MakeDynamicLightUpShader(
         float dynamicLightUpRate, float dynamicLightUpDeg, std::shared_ptr<Drawing::ShaderEffect> imageShader);
     static void DrawGreyAdjustment(const RSProperties& properties, RSPaintFilterCanvas& canvas);

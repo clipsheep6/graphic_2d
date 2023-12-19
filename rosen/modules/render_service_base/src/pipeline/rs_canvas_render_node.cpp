@@ -264,9 +264,9 @@ void RSCanvasRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanva
 
     ApplyDrawCmdModifier(context, RSModifierType::BACKGROUND_STYLE);
 
-    if (GetRenderProperties().IsDynamicLightUpValid()) {
-        RSPropertiesPainter::DrawDynamicLightUp(GetRenderProperties(), canvas);
-    }
+    // if (GetRenderProperties().IsDynamicLightUpValid()) {
+    //     RSPropertiesPainter::DrawDynamicLightUp(GetRenderProperties(), canvas);
+    // }
 
 #ifndef USE_ROSEN_DRAWING
     canvasNodeSaveCount_ = canvas.Save();
@@ -326,7 +326,7 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     if (aiInvert.has_value()) {
         RSPropertiesPainter::DrawBinarizationShader(GetRenderProperties(), canvas);
     }
-    RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
+    // RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
 
     canvas.RestoreStatus(canvasNodeSaveCount_);
     int colorBlendMode = GetRenderProperties().GetColorBlendMode();
@@ -338,12 +338,12 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
         canvas.Restore();
 #endif
     }
-    if (GetRenderProperties().IsLightUpEffectValid()) {
-        RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);
-    }
+    // if (GetRenderProperties().IsLightUpEffectValid()) {
+    //     RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);
+    // }
     RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
-    auto para = GetRenderProperties().GetLinearGradientBlurPara();
-    RSPropertiesPainter::DrawLinearGradientBlurFilter(GetRenderProperties(), canvas);
+    // auto para = GetRenderProperties().GetLinearGradientBlurPara();
+    // RSPropertiesPainter::DrawLinearGradientBlurFilter(GetRenderProperties(), canvas);
 
     auto illuminatedPtr_ = GetRenderProperties().GetIlluminated();
     if (illuminatedPtr_ && illuminatedPtr_->IsIlluminated()) {

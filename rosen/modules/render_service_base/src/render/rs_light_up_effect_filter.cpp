@@ -24,122 +24,94 @@
 namespace OHOS {
 namespace Rosen {
 RSLightUpEffectFilter::RSLightUpEffectFilter(float lightUpDegree)
-#ifndef USE_ROSEN_DRAWING
-    : RSSkiaFilter(RSLightUpEffectFilter::CreateLightUpEffectFilter(lightUpDegree)),
-#else
-    : RSDrawingFilter(RSLightUpEffectFilter::CreateLightUpEffectFilter(lightUpDegree)),
-#endif
-      lightUpDegree_(lightUpDegree)
-{
-    type_ = FilterType::LIGHT_UP_EFFECT;
-
-    hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
-    hash_ = SkOpts::hash(&lightUpDegree_, sizeof(lightUpDegree_), hash_);
-}
+    : lightUpDegree_(lightUpDegree) {};
 
 RSLightUpEffectFilter::~RSLightUpEffectFilter() = default;
-
-#ifndef USE_ROSEN_DRAWING
-sk_sp<SkImageFilter> RSLightUpEffectFilter::CreateLightUpEffectFilter(float lightUpDegree)
-{
-    float normalizedDegree = lightUpDegree - 1.0;
-    const float lightUp[] = {
-        1.000000f, 0.000000f, 0.000000f, 0.000000f, normalizedDegree,
-        0.000000f, 1.000000f, 0.000000f, 0.000000f, normalizedDegree,
-        0.000000f, 0.000000f, 1.000000f, 0.000000f, normalizedDegree,
-        0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f,
-    };
-    sk_sp<SkColorFilter> lightUpFilter = SkColorFilters::Matrix(lightUp);
-
-    return SkImageFilters::ColorFilter(lightUpFilter, nullptr);
-}
-#else
-std::shared_ptr<Drawing::ImageFilter> RSLightUpEffectFilter::CreateLightUpEffectFilter(float lightUpDegree)
-{
-    float normalizedDegree = lightUpDegree - 1.0;
-    const Drawing::scalar lightUp[] = {
-        1.000000f, 0.000000f, 0.000000f, 0.000000f, normalizedDegree,
-        0.000000f, 1.000000f, 0.000000f, 0.000000f, normalizedDegree,
-        0.000000f, 0.000000f, 1.000000f, 0.000000f, normalizedDegree,
-        0.000000f, 0.000000f, 0.000000f, 1.000000f, 0.000000f,
-    };
-    Drawing::ColorMatrix cm;
-    cm.SetArray(lightUp);
-    std::shared_ptr<Drawing::ColorFilter> lightUpFilter = Drawing::ColorFilter::CreateMatrixColorFilter(cm);
-
-    return Drawing::ImageFilter::CreateColorFilterImageFilter(*lightUpFilter, nullptr);
-}
-#endif
 
 float RSLightUpEffectFilter::GetLightUpDegree()
 {
     return lightUpDegree_;
 }
 
-std::string RSLightUpEffectFilter::GetDescription()
-{
-    return "RSLightUpEffectFilter light up degree is " + std::to_string(lightUpDegree_);
-}
-
 #ifndef USE_ROSEN_DRAWING
-std::shared_ptr<RSSkiaFilter> RSLightUpEffectFilter::Compose(const std::shared_ptr<RSSkiaFilter>& other) const
+sk_sp<SkShader> RSLightUpEffectFilter::MakeLightUpEffectShader(float lightUpDeg, sk_sp<SkShader> imageShader)
 #else
-std::shared_ptr<RSDrawingFilter> RSLightUpEffectFilter::Compose(const std::shared_ptr<RSDrawingFilter>& other) const
+std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeLightUpEffectShader(
+    float lightUpDeg, std::shared_ptr<Drawing::ShaderEffect> imageShader)
 #endif
 {
-    std::shared_ptr<RSLightUpEffectFilter> result = std::make_shared<RSLightUpEffectFilter>(lightUpDegree_);
+    static constexpr char prog[] = R"(
+        uniform half lightUpDeg;
+        uniform shader imageShader;
+        vec3 rgb2hsv(in vec3 c)
+        {
+            vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+            vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+            vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+            float d = q.x - min(q.w, q.y);
+            float e = 1.0e-10;
+            return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+        }
+        vec3 hsv2rgb(in vec3 c)
+        {
+            vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+            return c.z * mix(vec3(1.0), rgb, c.y);
+        }
+        half4 main(float2 coord)
+        {
+            vec3 hsv = rgb2hsv(imageShader.eval(coord).rgb);
+            float satUpper = clamp(hsv.y * 1.2, 0.0, 1.0);
+            hsv.y = mix(satUpper, hsv.y, lightUpDeg);
+            hsv.z += lightUpDeg - 1.0;
+            return vec4(hsv2rgb(hsv), 1.0);
+        }
+    )";
 #ifndef USE_ROSEN_DRAWING
-    result->imageFilter_ = SkImageFilters::Compose(imageFilter_, other->GetImageFilter());
+    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
+    sk_sp<SkShader> children[] = {imageShader};
+    size_t childCount = 1;
+    return effect->makeShader(SkData::MakeWithCopy(
+        &lightUpDeg, sizeof(lightUpDeg)), children, childCount, nullptr, false);
 #else
-    result->imageFilter_ = Drawing::ImageFilter::CreateComposeImageFilter(imageFilter_, other->GetImageFilter());
+    std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
+    std::shared_ptr<Drawing::ShaderEffect> children[] = {imageShader};
+    size_t childCount = 1;
+    auto data = std::make_shared<Drawing::Data>();
+    data->BuildWithCopy(&lightUpDeg, sizeof(lightUpDeg));
+    return effect->MakeShader(data, children, childCount, nullptr, false);
 #endif
-    auto otherHash = other->Hash();
-    result->hash_ = SkOpts::hash(&otherHash, sizeof(otherHash), hash_);
-    return result;
 }
 
-std::shared_ptr<RSFilter> RSLightUpEffectFilter::Add(const std::shared_ptr<RSFilter>& rhs)
+void RSLightUpEffectFilter::PreProcess(sk_sp<SkImage> image)
 {
-    if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::LIGHT_UP_EFFECT)) {
-        return shared_from_this();
-    }
-    auto lightUpFilter = std::static_pointer_cast<RSLightUpEffectFilter>(rhs);
-    return std::make_shared<RSLightUpEffectFilter>(lightUpDegree_ + lightUpFilter->GetLightUpDegree());
+    return;
 }
 
-std::shared_ptr<RSFilter> RSLightUpEffectFilter::Sub(const std::shared_ptr<RSFilter>& rhs)
+void RSLightUpEffectFilter::PostProcess(RSPaintFilterCanvas& canvas)
 {
-    if ((rhs == nullptr) || (rhs->GetFilterType() != FilterType::LIGHT_UP_EFFECT)) {
-        return shared_from_this();
-    }
-    auto lightUpFilter = std::static_pointer_cast<RSLightUpEffectFilter>(rhs);
-    return std::make_shared<RSLightUpEffectFilter>(lightUpDegree_ - lightUpFilter->GetLightUpDegree());
+    return;
 }
 
-std::shared_ptr<RSFilter> RSLightUpEffectFilter::Multiply(float rhs)
+sk_sp<SkImage> RSLightUpEffectFilter::ProcessImage(SkCanvas& canvas, const sk_sp<SkImage>& image) const
 {
-    return std::make_shared<RSLightUpEffectFilter>(lightUpDegree_ * rhs);
-}
-
-std::shared_ptr<RSFilter> RSLightUpEffectFilter::Negate()
-{
-    return std::make_shared<RSLightUpEffectFilter>(-lightUpDegree_);
-}
-
-bool RSLightUpEffectFilter::IsNearEqual(const std::shared_ptr<RSFilter>& other, float threshold) const
-{
-    auto otherLightUpFilter = std::static_pointer_cast<RSLightUpEffectFilter>(other);
-    if (otherLightUpFilter == nullptr) {
-        ROSEN_LOGE("RSLightUpEffectFilter::IsNearEqual: the types of filters are different.");
-        return true;
-    }
-    float otherLightUpDegree = otherLightUpFilter->GetLightUpDegree();
-    return ROSEN_EQ(lightUpDegree_, otherLightUpDegree, threshold);
-}
-
-bool RSLightUpEffectFilter::IsNearZero(float threshold) const
-{
-    return ROSEN_EQ(lightUpDegree_, 0.0f, threshold);
+#ifndef USE_ROSEN_DRAWING
+    auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+    auto shader = MakeLightUpEffectShader(GetLightUpDegree(), imageShader);
+    SkPaint paint;
+    paint.setShader(shader);
+    canvas.resetMatrix();
+    canvas.drawPaint(paint);
+#else
+    Drawing::Matrix scaleMat;
+    auto imageShader = Drawing::ShaderEffect::CreateImageShader(
+        *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
+        Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), scaleMat);
+    auto shader = MakeLightUpEffectShader(GetLightUpDegree(), imageShader);
+    Drawing::Brush brush;
+    brush.SetShaderEffect(shader);
+    canvas.ResetMatrix();
+    canvas.DrawBackground(brush);
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -875,651 +875,651 @@ void RSPropertiesPainter::DrawShadowInner(
 }
 #endif
 
-void RSPropertiesPainter::TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias)
-{
-    if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM)) {
-        direction += 2; // 2 is used to transtorm diagnal direction.
-    } else if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP) ||
-                    direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
-        direction -= 1; // 1 is used to transtorm diagnal direction.
-    }
-    if (direction <= static_cast<uint8_t>(GradientDirection::BOTTOM)) {
-        if (direction < directionBias) {
-            direction += DIRECTION_NUM;
-        }
-        direction -= directionBias;
-    } else {
-        direction -= DIRECTION_NUM;
-        if (direction < directionBias) {
-            direction += DIRECTION_NUM;
-        }
-        direction -= directionBias;
-        direction += DIRECTION_NUM;
-    }
-    if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
-        direction -= 2; // 2 is used to restore diagnal direction.
-    } else if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM) ||
-                        direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP)) {
-        direction += 1; // 1 is used to restore diagnal direction.
-    }
-}
+// void RSPropertiesPainter::TransformGradientBlurDirection(uint8_t& direction, const uint8_t directionBias)
+// {
+//     if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM)) {
+//         direction += 2; // 2 is used to transtorm diagnal direction.
+//     } else if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP) ||
+//                     direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
+//         direction -= 1; // 1 is used to transtorm diagnal direction.
+//     }
+//     if (direction <= static_cast<uint8_t>(GradientDirection::BOTTOM)) {
+//         if (direction < directionBias) {
+//             direction += DIRECTION_NUM;
+//         }
+//         direction -= directionBias;
+//     } else {
+//         direction -= DIRECTION_NUM;
+//         if (direction < directionBias) {
+//             direction += DIRECTION_NUM;
+//         }
+//         direction -= directionBias;
+//         direction += DIRECTION_NUM;
+//     }
+//     if (direction == static_cast<uint8_t>(GradientDirection::RIGHT_BOTTOM)) {
+//         direction -= 2; // 2 is used to restore diagnal direction.
+//     } else if (direction == static_cast<uint8_t>(GradientDirection::LEFT_BOTTOM) ||
+//                         direction == static_cast<uint8_t>(GradientDirection::RIGHT_TOP)) {
+//         direction += 1; // 1 is used to restore diagnal direction.
+//     }
+// }
 
-#ifndef USE_ROSEN_DRAWING
-bool RSPropertiesPainter::GetGradientDirectionPoints(
-    SkPoint (&pts)[2], const SkRect& clipBounds, GradientDirection direction)
-#else
-bool RSPropertiesPainter::GetGradientDirectionPoints(
-    Drawing::Point (&pts)[2], const Drawing::Rect& clipBounds, GradientDirection direction)
-#endif
-{
-    switch (direction) {
-        case GradientDirection::BOTTOM: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(clipBounds.width() / 2, 0); // 2 represents middle of width;
-            pts[1].set(clipBounds.width() / 2, clipBounds.height()); // 2 represents middle of width;
-#else
-            pts[0].Set(clipBounds.GetWidth() / 2, 0); // 2 represents middle of width;
-            pts[1].Set(clipBounds.GetWidth() / 2, clipBounds.GetHeight()); // 2 represents middle of width;
-#endif
-            break;
-        }
-        case GradientDirection::TOP: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(clipBounds.width() / 2, clipBounds.height()); // 2 represents middle of width;
-            pts[1].set(clipBounds.width() / 2, 0); // 2 represents middle of width;
-#else
-            pts[0].Set(clipBounds.GetWidth() / 2, clipBounds.GetHeight()); // 2 represents middle of width;
-            pts[1].Set(clipBounds.GetWidth() / 2, 0); // 2 represents middle of width;
-#endif
-            break;
-        }
-        case GradientDirection::RIGHT: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(0, clipBounds.height() / 2); // 2 represents middle of height;
-            pts[1].set(clipBounds.width(), clipBounds.height() / 2); // 2 represents middle of height;
-#else
-            pts[0].Set(0, clipBounds.GetHeight() / 2); // 2 represents middle of height;
-            pts[1].Set(clipBounds.GetWidth(), clipBounds.GetHeight() / 2); // 2 represents middle of height;
-#endif
-            break;
-        }
-        case GradientDirection::LEFT: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(clipBounds.width(), clipBounds.height() / 2); // 2 represents middle of height;
-            pts[1].set(0, clipBounds.height() / 2); // 2 represents middle of height;
-#else
-            pts[0].Set(clipBounds.GetWidth(), clipBounds.GetHeight() / 2); // 2 represents middle of height;
-            pts[1].Set(0, clipBounds.GetHeight() / 2); // 2 represents middle of height;
-#endif
-            break;
-        }
-        case GradientDirection::RIGHT_BOTTOM: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(0, 0);
-            pts[1].set(clipBounds.width(), clipBounds.height());
-#else
-            pts[0].Set(0, 0);
-            pts[1].Set(clipBounds.GetWidth(), clipBounds.GetHeight());
-#endif
-            break;
-        }
-        case GradientDirection::LEFT_TOP: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(clipBounds.width(), clipBounds.height());
-            pts[1].set(0, 0);
-#else
-            pts[0].Set(clipBounds.GetWidth(), clipBounds.GetHeight());
-            pts[1].Set(0, 0);
-#endif
-            break;
-        }
-        case GradientDirection::LEFT_BOTTOM: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(clipBounds.width(), 0);
-            pts[1].set(0, clipBounds.height());
-#else
-            pts[0].Set(clipBounds.GetWidth(), 0);
-            pts[1].Set(0, clipBounds.GetHeight());
-#endif
-            break;
-        }
-        case GradientDirection::RIGHT_TOP: {
-#ifndef USE_ROSEN_DRAWING
-            pts[0].set(0, clipBounds.height());
-            pts[1].set(clipBounds.width(), 0);
-#else
-            pts[0].Set(0, clipBounds.GetHeight());
-            pts[1].Set(clipBounds.GetWidth(), 0);
-#endif
-            break;
-        }
-        default: {
-            return false;
-        }
-    }
-    return true;
-}
+// #ifndef USE_ROSEN_DRAWING
+// bool RSPropertiesPainter::GetGradientDirectionPoints(
+//     SkPoint (&pts)[2], const SkRect& clipBounds, GradientDirection direction)
+// #else
+// bool RSPropertiesPainter::GetGradientDirectionPoints(
+//     Drawing::Point (&pts)[2], const Drawing::Rect& clipBounds, GradientDirection direction)
+// #endif
+// {
+//     switch (direction) {
+//         case GradientDirection::BOTTOM: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(clipBounds.width() / 2, 0); // 2 represents middle of width;
+//             pts[1].set(clipBounds.width() / 2, clipBounds.height()); // 2 represents middle of width;
+// #else
+//             pts[0].Set(clipBounds.GetWidth() / 2, 0); // 2 represents middle of width;
+//             pts[1].Set(clipBounds.GetWidth() / 2, clipBounds.GetHeight()); // 2 represents middle of width;
+// #endif
+//             break;
+//         }
+//         case GradientDirection::TOP: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(clipBounds.width() / 2, clipBounds.height()); // 2 represents middle of width;
+//             pts[1].set(clipBounds.width() / 2, 0); // 2 represents middle of width;
+// #else
+//             pts[0].Set(clipBounds.GetWidth() / 2, clipBounds.GetHeight()); // 2 represents middle of width;
+//             pts[1].Set(clipBounds.GetWidth() / 2, 0); // 2 represents middle of width;
+// #endif
+//             break;
+//         }
+//         case GradientDirection::RIGHT: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(0, clipBounds.height() / 2); // 2 represents middle of height;
+//             pts[1].set(clipBounds.width(), clipBounds.height() / 2); // 2 represents middle of height;
+// #else
+//             pts[0].Set(0, clipBounds.GetHeight() / 2); // 2 represents middle of height;
+//             pts[1].Set(clipBounds.GetWidth(), clipBounds.GetHeight() / 2); // 2 represents middle of height;
+// #endif
+//             break;
+//         }
+//         case GradientDirection::LEFT: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(clipBounds.width(), clipBounds.height() / 2); // 2 represents middle of height;
+//             pts[1].set(0, clipBounds.height() / 2); // 2 represents middle of height;
+// #else
+//             pts[0].Set(clipBounds.GetWidth(), clipBounds.GetHeight() / 2); // 2 represents middle of height;
+//             pts[1].Set(0, clipBounds.GetHeight() / 2); // 2 represents middle of height;
+// #endif
+//             break;
+//         }
+//         case GradientDirection::RIGHT_BOTTOM: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(0, 0);
+//             pts[1].set(clipBounds.width(), clipBounds.height());
+// #else
+//             pts[0].Set(0, 0);
+//             pts[1].Set(clipBounds.GetWidth(), clipBounds.GetHeight());
+// #endif
+//             break;
+//         }
+//         case GradientDirection::LEFT_TOP: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(clipBounds.width(), clipBounds.height());
+//             pts[1].set(0, 0);
+// #else
+//             pts[0].Set(clipBounds.GetWidth(), clipBounds.GetHeight());
+//             pts[1].Set(0, 0);
+// #endif
+//             break;
+//         }
+//         case GradientDirection::LEFT_BOTTOM: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(clipBounds.width(), 0);
+//             pts[1].set(0, clipBounds.height());
+// #else
+//             pts[0].Set(clipBounds.GetWidth(), 0);
+//             pts[1].Set(0, clipBounds.GetHeight());
+// #endif
+//             break;
+//         }
+//         case GradientDirection::RIGHT_TOP: {
+// #ifndef USE_ROSEN_DRAWING
+//             pts[0].set(0, clipBounds.height());
+//             pts[1].set(clipBounds.width(), 0);
+// #else
+//             pts[0].Set(0, clipBounds.GetHeight());
+//             pts[1].Set(clipBounds.GetWidth(), 0);
+// #endif
+//             break;
+//         }
+//         default: {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<SkShader> RSPropertiesPainter::MakeAlphaGradientShader(
-    const SkRect& clipBounds, const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias)
-{
-    std::vector<SkColor> c;
-    std::vector<SkScalar> p;
-    SkPoint pts[2];
-#else
-std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeAlphaGradientShader(
-    const Drawing::Rect& clipBounds, const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias)
-{
-    std::vector<Drawing::ColorQuad> c;
-    std::vector<Drawing::scalar> p;
-    Drawing::Point pts[2];
-#endif
+// #ifndef USE_ROSEN_DRAWING
+// sk_sp<SkShader> RSPropertiesPainter::MakeAlphaGradientShader(
+//     const SkRect& clipBounds, const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias)
+// {
+//     std::vector<SkColor> c;
+//     std::vector<SkScalar> p;
+//     SkPoint pts[2];
+// #else
+// std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeAlphaGradientShader(
+//     const Drawing::Rect& clipBounds, const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias)
+// {
+//     std::vector<Drawing::ColorQuad> c;
+//     std::vector<Drawing::scalar> p;
+//     Drawing::Point pts[2];
+// #endif
 
-    uint8_t direction = static_cast<uint8_t>(para->direction_);
-    if (directionBias != 0) {
-        TransformGradientBlurDirection(direction, directionBias);
-    }
-    bool result = GetGradientDirectionPoints(
-        pts, clipBounds, static_cast<GradientDirection>(direction));
-    if (!result) {
-        return nullptr;
-    }
-    uint8_t ColorMax = 255;
-    uint8_t ColorMin = 0;
-    if (para->fractionStops_[0].second > 0.01) {  // 0.01 represents the fraction bias
-#ifndef USE_ROSEN_DRAWING
-        c.emplace_back(SkColorSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
-#else
-        c.emplace_back(Drawing::Color::ColorQuadSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
-#endif
-        p.emplace_back(para->fractionStops_[0].second - 0.01); // 0.01 represents the fraction bias
-    }
-    for (size_t i = 0; i < para->fractionStops_.size(); i++) {
-#ifndef USE_ROSEN_DRAWING
-        c.emplace_back(SkColorSetARGB(
-            static_cast<uint8_t>(para->fractionStops_[i].first * ColorMax), ColorMax, ColorMax, ColorMax));
-#else
-        c.emplace_back(Drawing::Color::ColorQuadSetARGB(
-            static_cast<uint8_t>(para->fractionStops_[i].first * ColorMax), ColorMax, ColorMax, ColorMax));
-#endif
-        p.emplace_back(para->fractionStops_[i].second);
-    }
-    // 0.01 represents the fraction bias
-    if (para->fractionStops_[para->fractionStops_.size() - 1].second < (1 - 0.01)) {
-#ifndef USE_ROSEN_DRAWING
-        c.emplace_back(SkColorSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
-#else
-        c.emplace_back(Drawing::Color::ColorQuadSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
-#endif
-        // 0.01 represents the fraction bias
-        p.emplace_back(para->fractionStops_[para->fractionStops_.size() - 1].second + 0.01);
-    }
-#ifndef USE_ROSEN_DRAWING
-    auto shader = SkGradientShader::MakeLinear(pts, &c[0], &p[0], p.size(), SkTileMode::kClamp);
-    return shader;
-#else
-    return Drawing::ShaderEffect::CreateLinearGradient(pts[0], pts[1], c, p, Drawing::TileMode::CLAMP);
-#endif
-}
+//     uint8_t direction = static_cast<uint8_t>(para->direction_);
+//     if (directionBias != 0) {
+//         TransformGradientBlurDirection(direction, directionBias);
+//     }
+//     bool result = GetGradientDirectionPoints(
+//         pts, clipBounds, static_cast<GradientDirection>(direction));
+//     if (!result) {
+//         return nullptr;
+//     }
+//     uint8_t ColorMax = 255;
+//     uint8_t ColorMin = 0;
+//     if (para->fractionStops_[0].second > 0.01) {  // 0.01 represents the fraction bias
+// #ifndef USE_ROSEN_DRAWING
+//         c.emplace_back(SkColorSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
+// #else
+//         c.emplace_back(Drawing::Color::ColorQuadSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
+// #endif
+//         p.emplace_back(para->fractionStops_[0].second - 0.01); // 0.01 represents the fraction bias
+//     }
+//     for (size_t i = 0; i < para->fractionStops_.size(); i++) {
+// #ifndef USE_ROSEN_DRAWING
+//         c.emplace_back(SkColorSetARGB(
+//             static_cast<uint8_t>(para->fractionStops_[i].first * ColorMax), ColorMax, ColorMax, ColorMax));
+// #else
+//         c.emplace_back(Drawing::Color::ColorQuadSetARGB(
+//             static_cast<uint8_t>(para->fractionStops_[i].first * ColorMax), ColorMax, ColorMax, ColorMax));
+// #endif
+//         p.emplace_back(para->fractionStops_[i].second);
+//     }
+//     // 0.01 represents the fraction bias
+//     if (para->fractionStops_[para->fractionStops_.size() - 1].second < (1 - 0.01)) {
+// #ifndef USE_ROSEN_DRAWING
+//         c.emplace_back(SkColorSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
+// #else
+//         c.emplace_back(Drawing::Color::ColorQuadSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
+// #endif
+//         // 0.01 represents the fraction bias
+//         p.emplace_back(para->fractionStops_[para->fractionStops_.size() - 1].second + 0.01);
+//     }
+// #ifndef USE_ROSEN_DRAWING
+//     auto shader = SkGradientShader::MakeLinear(pts, &c[0], &p[0], p.size(), SkTileMode::kClamp);
+//     return shader;
+// #else
+//     return Drawing::ShaderEffect::CreateLinearGradient(pts[0], pts[1], c, p, Drawing::TileMode::CLAMP);
+// #endif
+// }
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<SkShader> RSPropertiesPainter::MakeHorizontalMeanBlurShader(
-    float radiusIn, sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader)
-#else
-std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeHorizontalMeanBlurShader(float radiusIn,
-    std::shared_ptr<Drawing::ShaderEffect> shader, std::shared_ptr<Drawing::ShaderEffect> gradientShader)
-#endif
-{
-    const char* prog = R"(
-        uniform half r;
-        uniform shader imageShader;
-        uniform shader gradientShader;
-        half4 meanFilter(float2 coord, half radius)
-        {
-            half4 sum = vec4(0.0);
-            half div = 0;
-            for (half x = -30.0; x < 30.0; x += 1.0) {
-                if (x > radius) {
-                    break;
-                }
-                if (abs(x) < radius) {
-                    div += 1;
-                    sum += imageShader.eval(coord + float2(x, 0));
-                }
-            }
-            return half4(sum.xyz / div, 1.0);
-        }
-        half4 main(float2 coord)
-        {
-            if (abs(gradientShader.eval(coord).a - 0) < 0.001) {
-                return imageShader.eval(coord);
-            }
-            float val = clamp(r * gradientShader.eval(coord).a, 1.0, r);
-            return meanFilter(coord, val);
-        }
-    )";
-#ifndef USE_ROSEN_DRAWING
-    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    sk_sp<SkShader> children[] = {shader, gradientShader};
-    size_t childCount = 2;
-    return effect->makeShader(SkData::MakeWithCopy(
-        &radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
-#else
-    std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
-    std::shared_ptr<Drawing::ShaderEffect> children[] = {shader, gradientShader};
-    size_t childCount = 2;
-    std::shared_ptr<Drawing::Data> data = std::make_shared<Drawing::Data>();
-    data->BuildWithCopy(&radiusIn, sizeof(radiusIn));
-    return effect->MakeShader(data, children, childCount, nullptr, false);
-#endif
-}
+// #ifndef USE_ROSEN_DRAWING
+// sk_sp<SkShader> RSPropertiesPainter::MakeHorizontalMeanBlurShader(
+//     float radiusIn, sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader)
+// #else
+// std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeHorizontalMeanBlurShader(float radiusIn,
+//     std::shared_ptr<Drawing::ShaderEffect> shader, std::shared_ptr<Drawing::ShaderEffect> gradientShader)
+// #endif
+// {
+//     const char* prog = R"(
+//         uniform half r;
+//         uniform shader imageShader;
+//         uniform shader gradientShader;
+//         half4 meanFilter(float2 coord, half radius)
+//         {
+//             half4 sum = vec4(0.0);
+//             half div = 0;
+//             for (half x = -30.0; x < 30.0; x += 1.0) {
+//                 if (x > radius) {
+//                     break;
+//                 }
+//                 if (abs(x) < radius) {
+//                     div += 1;
+//                     sum += imageShader.eval(coord + float2(x, 0));
+//                 }
+//             }
+//             return half4(sum.xyz / div, 1.0);
+//         }
+//         half4 main(float2 coord)
+//         {
+//             if (abs(gradientShader.eval(coord).a - 0) < 0.001) {
+//                 return imageShader.eval(coord);
+//             }
+//             float val = clamp(r * gradientShader.eval(coord).a, 1.0, r);
+//             return meanFilter(coord, val);
+//         }
+//     )";
+// #ifndef USE_ROSEN_DRAWING
+//     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
+//     sk_sp<SkShader> children[] = {shader, gradientShader};
+//     size_t childCount = 2;
+//     return effect->makeShader(SkData::MakeWithCopy(
+//         &radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
+// #else
+//     std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
+//     std::shared_ptr<Drawing::ShaderEffect> children[] = {shader, gradientShader};
+//     size_t childCount = 2;
+//     std::shared_ptr<Drawing::Data> data = std::make_shared<Drawing::Data>();
+//     data->BuildWithCopy(&radiusIn, sizeof(radiusIn));
+//     return effect->MakeShader(data, children, childCount, nullptr, false);
+// #endif
+// }
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<SkShader> RSPropertiesPainter::MakeVerticalMeanBlurShader(
-    float radiusIn, sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader)
-#else
-std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeVerticalMeanBlurShader(float radiusIn,
-    std::shared_ptr<Drawing::ShaderEffect> shader, std::shared_ptr<Drawing::ShaderEffect> gradientShader)
-#endif
-{
-    const char* prog = R"(
-        uniform half r;
-        uniform shader imageShader;
-        uniform shader gradientShader;
-        half4 meanFilter(float2 coord, half radius)
-        {
-            half4 sum = vec4(0.0);
-            half div = 0;
-            for (half y = -30.0; y < 30.0; y += 1.0) {
-                if (y > radius) {
-                    break;
-                }
-                if (abs(y) < radius) {
-                    div += 1;
-                    sum += imageShader.eval(coord + float2(0, y));
-                }
-            }
-            return half4(sum.xyz / div, 1.0);
-        }
-        half4 main(float2 coord)
-        {
-            if (abs(gradientShader.eval(coord).a - 0) < 0.001) {
-                return imageShader.eval(coord);
-            }
-            float val = clamp(r * gradientShader.eval(coord).a, 1.0, r);
-            return meanFilter(coord, val);
-        }
-    )";
-#ifndef USE_ROSEN_DRAWING
-    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    sk_sp<SkShader> children[] = {shader, gradientShader};
-    size_t childCount = 2;
-    return effect->makeShader(SkData::MakeWithCopy(
-        &radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
-#else
-    std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
-    std::shared_ptr<Drawing::ShaderEffect> children[] = {shader, gradientShader};
-    size_t childCount = 2;
-    std::shared_ptr<Drawing::Data> data = std::make_shared<Drawing::Data>();
-    data->BuildWithCopy(&radiusIn, sizeof(radiusIn));
-    return effect->MakeShader(data, children, childCount, nullptr, false);
-#endif
-}
+// #ifndef USE_ROSEN_DRAWING
+// sk_sp<SkShader> RSPropertiesPainter::MakeVerticalMeanBlurShader(
+//     float radiusIn, sk_sp<SkShader> shader, sk_sp<SkShader> gradientShader)
+// #else
+// std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeVerticalMeanBlurShader(float radiusIn,
+//     std::shared_ptr<Drawing::ShaderEffect> shader, std::shared_ptr<Drawing::ShaderEffect> gradientShader)
+// #endif
+// {
+//     const char* prog = R"(
+//         uniform half r;
+//         uniform shader imageShader;
+//         uniform shader gradientShader;
+//         half4 meanFilter(float2 coord, half radius)
+//         {
+//             half4 sum = vec4(0.0);
+//             half div = 0;
+//             for (half y = -30.0; y < 30.0; y += 1.0) {
+//                 if (y > radius) {
+//                     break;
+//                 }
+//                 if (abs(y) < radius) {
+//                     div += 1;
+//                     sum += imageShader.eval(coord + float2(0, y));
+//                 }
+//             }
+//             return half4(sum.xyz / div, 1.0);
+//         }
+//         half4 main(float2 coord)
+//         {
+//             if (abs(gradientShader.eval(coord).a - 0) < 0.001) {
+//                 return imageShader.eval(coord);
+//             }
+//             float val = clamp(r * gradientShader.eval(coord).a, 1.0, r);
+//             return meanFilter(coord, val);
+//         }
+//     )";
+// #ifndef USE_ROSEN_DRAWING
+//     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
+//     sk_sp<SkShader> children[] = {shader, gradientShader};
+//     size_t childCount = 2;
+//     return effect->makeShader(SkData::MakeWithCopy(
+//         &radiusIn, sizeof(radiusIn)), children, childCount, nullptr, false);
+// #else
+//     std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
+//     std::shared_ptr<Drawing::ShaderEffect> children[] = {shader, gradientShader};
+//     size_t childCount = 2;
+//     std::shared_ptr<Drawing::Data> data = std::make_shared<Drawing::Data>();
+//     data->BuildWithCopy(&radiusIn, sizeof(radiusIn));
+//     return effect->MakeShader(data, children, childCount, nullptr, false);
+// #endif
+// }
 
-#ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawHorizontalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
-    float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding)
-{
-    auto image = skSurface->makeImageSnapshot(clipIPadding);
-    if (image == nullptr) {
-        return;
-    }
-    auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
-    auto shader = MakeHorizontalMeanBlurShader(radius, imageShader, alphaGradientShader);
-    SkPaint paint;
-    paint.setShader(shader);
-    canvas.drawRect(SkRect::Make(clipIPadding.makeOffset(-clipIPadding.left(), -clipIPadding.top())), paint);
-}
-#else
-void RSPropertiesPainter::DrawHorizontalLinearGradientBlur(Drawing::Surface* surface, RSPaintFilterCanvas& canvas,
-    float radius, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader, const Drawing::RectI& clipIPadding)
-{
-    auto image = surface->GetImageSnapshot(clipIPadding);
-    if (image == nullptr) {
-        return;
-    }
-    Drawing::Matrix m;
-    auto imageShader = Drawing::ShaderEffect::CreateImageShader(
-        *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
-        Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), m);
-    auto shader = MakeHorizontalMeanBlurShader(radius, imageShader, alphaGradientShader);
-    Drawing::Brush brush;
-    brush.SetShaderEffect(shader);
-    canvas.AttachBrush(brush);
-    Drawing::Rect rect = clipIPadding;
-    rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
-    canvas.DrawRect(rect);
-    canvas.DetachBrush();
-}
-#endif
+// #ifndef USE_ROSEN_DRAWING
+// void RSPropertiesPainter::DrawHorizontalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
+//     float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding)
+// {
+//     auto image = skSurface->makeImageSnapshot(clipIPadding);
+//     if (image == nullptr) {
+//         return;
+//     }
+//     auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+//     auto shader = MakeHorizontalMeanBlurShader(radius, imageShader, alphaGradientShader);
+//     SkPaint paint;
+//     paint.setShader(shader);
+//     canvas.drawRect(SkRect::Make(clipIPadding.makeOffset(-clipIPadding.left(), -clipIPadding.top())), paint);
+// }
+// #else
+// void RSPropertiesPainter::DrawHorizontalLinearGradientBlur(Drawing::Surface* surface, RSPaintFilterCanvas& canvas,
+//     float radius, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader, const Drawing::RectI& clipIPadding)
+// {
+//     auto image = surface->GetImageSnapshot(clipIPadding);
+//     if (image == nullptr) {
+//         return;
+//     }
+//     Drawing::Matrix m;
+//     auto imageShader = Drawing::ShaderEffect::CreateImageShader(
+//         *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
+//         Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), m);
+//     auto shader = MakeHorizontalMeanBlurShader(radius, imageShader, alphaGradientShader);
+//     Drawing::Brush brush;
+//     brush.SetShaderEffect(shader);
+//     canvas.AttachBrush(brush);
+//     Drawing::Rect rect = clipIPadding;
+//     rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
+//     canvas.DrawRect(rect);
+//     canvas.DetachBrush();
+// }
+// #endif
 
-#ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawVerticalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
-    float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding)
-{
-    auto image = skSurface->makeImageSnapshot(clipIPadding);
-    if (image == nullptr) {
-        return;
-    }
-    auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
-    auto shader = MakeVerticalMeanBlurShader(radius, imageShader, alphaGradientShader);
-    SkPaint paint;
-    paint.setShader(shader);
-    canvas.drawRect(SkRect::Make(clipIPadding.makeOffset(-clipIPadding.left(), -clipIPadding.top())), paint);
-}
-#else
-void RSPropertiesPainter::DrawVerticalLinearGradientBlur(Drawing::Surface* surface, RSPaintFilterCanvas& canvas,
-    float radius, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader, const Drawing::RectI& clipIPadding)
-{
-    auto image = surface->GetImageSnapshot(clipIPadding);
-    if (image == nullptr) {
-        return;
-    }
-    Drawing::Matrix m;
-    auto imageShader = Drawing::ShaderEffect::CreateImageShader(
-        *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
-        Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), m);
-    auto shader = MakeVerticalMeanBlurShader(radius, imageShader, alphaGradientShader);
-    Drawing::Brush brush;
-    brush.SetShaderEffect(shader);
-    canvas.AttachBrush(brush);
-    Drawing::Rect rect = clipIPadding;
-    rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
-    canvas.DrawRect(rect);
-    canvas.DetachBrush();
-}
-#endif
+// #ifndef USE_ROSEN_DRAWING
+// void RSPropertiesPainter::DrawVerticalLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
+//     float radius, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding)
+// {
+//     auto image = skSurface->makeImageSnapshot(clipIPadding);
+//     if (image == nullptr) {
+//         return;
+//     }
+//     auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+//     auto shader = MakeVerticalMeanBlurShader(radius, imageShader, alphaGradientShader);
+//     SkPaint paint;
+//     paint.setShader(shader);
+//     canvas.drawRect(SkRect::Make(clipIPadding.makeOffset(-clipIPadding.left(), -clipIPadding.top())), paint);
+// }
+// #else
+// void RSPropertiesPainter::DrawVerticalLinearGradientBlur(Drawing::Surface* surface, RSPaintFilterCanvas& canvas,
+//     float radius, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader, const Drawing::RectI& clipIPadding)
+// {
+//     auto image = surface->GetImageSnapshot(clipIPadding);
+//     if (image == nullptr) {
+//         return;
+//     }
+//     Drawing::Matrix m;
+//     auto imageShader = Drawing::ShaderEffect::CreateImageShader(
+//         *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
+//         Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), m);
+//     auto shader = MakeVerticalMeanBlurShader(radius, imageShader, alphaGradientShader);
+//     Drawing::Brush brush;
+//     brush.SetShaderEffect(shader);
+//     canvas.AttachBrush(brush);
+//     Drawing::Rect rect = clipIPadding;
+//     rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
+//     canvas.DrawRect(rect);
+//     canvas.DetachBrush();
+// }
+// #endif
 
-#ifndef USE_ROSEN_DRAWING
-uint8_t RSPropertiesPainter::CalcDirectionBias(const SkMatrix& mat)
-{
-    uint8_t directionBias = 0;
-    // 1 and 3 represents rotate matrix's index
-    if ((mat.get(1) > FLOAT_ZERO_THRESHOLD) && (mat.get(3) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        directionBias = 1; // 1 represents rotate 90 degree
-    // 0 and 4 represents rotate matrix's index
-    } else if ((mat.get(0) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(4) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        directionBias = 2; // 2 represents rotate 180 degree
-    // 1 and 3 represents rotate matrix's index
-    } else if ((mat.get(1) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(3) > FLOAT_ZERO_THRESHOLD)) {
-        directionBias = 3; // 3 represents rotate 270 degree
-    }
-    return directionBias;
-}
-#else
-uint8_t RSPropertiesPainter::CalcDirectionBias(const Drawing::Matrix& mat)
-{
-    uint8_t directionBias = 0;
-    // 1 and 3 represents rotate matrix's index
-    if ((mat.Get(1) > FLOAT_ZERO_THRESHOLD) && (mat.Get(3) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        directionBias = 1; // 1 represents rotate 90 degree
-    // 0 and 4 represents rotate matrix's index
-    } else if ((mat.Get(0) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.Get(4) < (0 - FLOAT_ZERO_THRESHOLD))) {
-        directionBias = 2; // 2 represents rotate 180 degree
-    // 1 and 3 represents rotate matrix's index
-    } else if ((mat.Get(1) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.Get(3) > FLOAT_ZERO_THRESHOLD)) {
-        directionBias = 3; // 3 represents rotate 270 degree
-    }
-    return directionBias;
-}
-#endif
+// #ifndef USE_ROSEN_DRAWING
+// uint8_t RSPropertiesPainter::CalcDirectionBias(const SkMatrix& mat)
+// {
+//     uint8_t directionBias = 0;
+//     // 1 and 3 represents rotate matrix's index
+//     if ((mat.get(1) > FLOAT_ZERO_THRESHOLD) && (mat.get(3) < (0 - FLOAT_ZERO_THRESHOLD))) {
+//         directionBias = 1; // 1 represents rotate 90 degree
+//     // 0 and 4 represents rotate matrix's index
+//     } else if ((mat.get(0) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(4) < (0 - FLOAT_ZERO_THRESHOLD))) {
+//         directionBias = 2; // 2 represents rotate 180 degree
+//     // 1 and 3 represents rotate matrix's index
+//     } else if ((mat.get(1) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.get(3) > FLOAT_ZERO_THRESHOLD)) {
+//         directionBias = 3; // 3 represents rotate 270 degree
+//     }
+//     return directionBias;
+// }
+// #else
+// uint8_t RSPropertiesPainter::CalcDirectionBias(const Drawing::Matrix& mat)
+// {
+//     uint8_t directionBias = 0;
+//     // 1 and 3 represents rotate matrix's index
+//     if ((mat.Get(1) > FLOAT_ZERO_THRESHOLD) && (mat.Get(3) < (0 - FLOAT_ZERO_THRESHOLD))) {
+//         directionBias = 1; // 1 represents rotate 90 degree
+//     // 0 and 4 represents rotate matrix's index
+//     } else if ((mat.Get(0) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.Get(4) < (0 - FLOAT_ZERO_THRESHOLD))) {
+//         directionBias = 2; // 2 represents rotate 180 degree
+//     // 1 and 3 represents rotate matrix's index
+//     } else if ((mat.Get(1) < (0 - FLOAT_ZERO_THRESHOLD)) && (mat.Get(3) > FLOAT_ZERO_THRESHOLD)) {
+//         directionBias = 3; // 3 represents rotate 270 degree
+//     }
+//     return directionBias;
+// }
+// #endif
 
-#ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawLinearGradientBlurFilter(
-    const RSProperties& properties, RSPaintFilterCanvas& canvas, const std::optional<SkRect>& rect)
-#else
-void RSPropertiesPainter::DrawLinearGradientBlurFilter(
-    const RSProperties& properties, RSPaintFilterCanvas& canvas, const std::optional<Drawing::Rect>& rect)
-#endif
-{
-    if (!BLUR_ENABLED) {
-        ROSEN_LOGD("RSPropertiesPainter::DrawLinearGradientBlurFilter close blur.");
-        return;
-    }
-    const auto& para = properties.GetLinearGradientBlurPara();
-    if (para == nullptr || para->blurRadius_ <= 0) { return; }
-#ifndef USE_ROSEN_DRAWING
-    SkSurface* surface = canvas.GetSurface();
-    if (surface == nullptr) {
-        return;
-    }
-    SkAutoCanvasRestore acr(&canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (rect.has_value()) {
-        canvas.clipRect((*rect), true);
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else { // we always do clip for DrawLinearGradientBlurFilter, even if ClipToBounds is false
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
+// #ifndef USE_ROSEN_DRAWING
+// void RSPropertiesPainter::DrawLinearGradientBlurFilter(
+//     const RSProperties& properties, RSPaintFilterCanvas& canvas, const std::optional<SkRect>& rect)
+// #else
+// void RSPropertiesPainter::DrawLinearGradientBlurFilter(
+//     const RSProperties& properties, RSPaintFilterCanvas& canvas, const std::optional<Drawing::Rect>& rect)
+// #endif
+// {
+//     if (!BLUR_ENABLED) {
+//         ROSEN_LOGD("RSPropertiesPainter::DrawLinearGradientBlurFilter close blur.");
+//         return;
+//     }
+//     const auto& para = properties.GetLinearGradientBlurPara();
+//     if (para == nullptr || para->blurRadius_ <= 0) { return; }
+// #ifndef USE_ROSEN_DRAWING
+//     SkSurface* surface = canvas.GetSurface();
+//     if (surface == nullptr) {
+//         return;
+//     }
+//     SkAutoCanvasRestore acr(&canvas, true);
+//     if (RSSystemProperties::GetPropertyDrawableEnable()) {
+//         // do nothing
+//     } else if (rect.has_value()) {
+//         canvas.clipRect((*rect), true);
+//     } else if (properties.GetClipBounds() != nullptr) {
+//         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+//     } else { // we always do clip for DrawLinearGradientBlurFilter, even if ClipToBounds is false
+//         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+//     }
 
-    auto clipBounds = canvas.getDeviceClipBounds();
-    auto clipIPadding = clipBounds.makeOutset(-1, -1);
-    SkMatrix mat = canvas.getTotalMatrix();
-#else
-    Drawing::Surface* surface = canvas.GetSurface();
-    if (surface == nullptr) {
-        return;
-    }
-    Drawing::AutoCanvasRestore acr(canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (rect.has_value()) {
-        canvas.ClipRect((*rect), Drawing::ClipOp::INTERSECT, true);
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else { // we always do clip for DrawLinearGradientBlurFilter, even if ClipToBounds is false
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    }
+//     auto clipBounds = canvas.getDeviceClipBounds();
+//     auto clipIPadding = clipBounds.makeOutset(-1, -1);
+//     SkMatrix mat = canvas.getTotalMatrix();
+// #else
+//     Drawing::Surface* surface = canvas.GetSurface();
+//     if (surface == nullptr) {
+//         return;
+//     }
+//     Drawing::AutoCanvasRestore acr(canvas, true);
+//     if (RSSystemProperties::GetPropertyDrawableEnable()) {
+//         // do nothing
+//     } else if (rect.has_value()) {
+//         canvas.ClipRect((*rect), Drawing::ClipOp::INTERSECT, true);
+//     } else if (properties.GetClipBounds() != nullptr) {
+//         canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
+//     } else { // we always do clip for DrawLinearGradientBlurFilter, even if ClipToBounds is false
+//         canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
+//     }
 
-    auto clipBounds = canvas.GetDeviceClipBounds();
-    auto clipIPadding = clipBounds;
-    clipBounds.MakeOutset(-1, -1);
-    Drawing::Matrix mat = canvas.GetTotalMatrix();
-#endif
-    uint8_t directionBias = CalcDirectionBias(mat);
+//     auto clipBounds = canvas.GetDeviceClipBounds();
+//     auto clipIPadding = clipBounds;
+//     clipBounds.MakeOutset(-1, -1);
+//     Drawing::Matrix mat = canvas.GetTotalMatrix();
+// #endif
+//     uint8_t directionBias = CalcDirectionBias(mat);
 
-#ifndef USE_ROSEN_DRAWING
-    auto alphaGradientShader = MakeAlphaGradientShader(SkRect::Make(clipIPadding), para, directionBias);
-#else
-    auto alphaGradientShader = MakeAlphaGradientShader(clipIPadding, para, directionBias);
-#endif
-    if (alphaGradientShader == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawLinearGradientBlurFilter alphaGradientShader null");
-        return;
-    }
+// #ifndef USE_ROSEN_DRAWING
+//     auto alphaGradientShader = MakeAlphaGradientShader(SkRect::Make(clipIPadding), para, directionBias);
+// #else
+//     auto alphaGradientShader = MakeAlphaGradientShader(clipIPadding, para, directionBias);
+// #endif
+//     if (alphaGradientShader == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawLinearGradientBlurFilter alphaGradientShader null");
+//         return;
+//     }
 
-#ifndef USE_ROSEN_DRAWING
-    canvas.resetMatrix();
-    canvas.translate(clipIPadding.left(), clipIPadding.top());
-#else
-    canvas.ResetMatrix();
-    canvas.Translate(clipIPadding.GetLeft(), clipIPadding.GetTop());
-#endif
+// #ifndef USE_ROSEN_DRAWING
+//     canvas.resetMatrix();
+//     canvas.translate(clipIPadding.left(), clipIPadding.top());
+// #else
+//     canvas.ResetMatrix();
+//     canvas.Translate(clipIPadding.GetLeft(), clipIPadding.GetTop());
+// #endif
 
-    DrawLinearGradientBlur(surface, canvas, para, alphaGradientShader, clipIPadding);
-}
+//     DrawLinearGradientBlur(surface, canvas, para, alphaGradientShader, clipIPadding);
+// }
 
-#ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawLinearGradientBlur(SkSurface* surface, RSPaintFilterCanvas& canvas,
-    const std::shared_ptr<RSLinearGradientBlurPara>& para, sk_sp<SkShader> alphaGradientShader,
-    const SkIRect& clipIPadding)
-#else
-void RSPropertiesPainter::DrawLinearGradientBlur(Drawing::Surface* surface, RSPaintFilterCanvas& canvas,
-    const std::shared_ptr<RSLinearGradientBlurPara>& para, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader,
-    const Drawing::RectI& clipIPadding)
-#endif
-{
-    if (para == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawLinearGradientBlur para null");
-        return;
-    }
+// #ifndef USE_ROSEN_DRAWING
+// void RSPropertiesPainter::DrawLinearGradientBlur(SkSurface* surface, RSPaintFilterCanvas& canvas,
+//     const std::shared_ptr<RSLinearGradientBlurPara>& para, sk_sp<SkShader> alphaGradientShader,
+//     const SkIRect& clipIPadding)
+// #else
+// void RSPropertiesPainter::DrawLinearGradientBlur(Drawing::Surface* surface, RSPaintFilterCanvas& canvas,
+//     const std::shared_ptr<RSLinearGradientBlurPara>& para, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader,
+//     const Drawing::RectI& clipIPadding)
+// #endif
+// {
+//     if (para == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawLinearGradientBlur para null");
+//         return;
+//     }
 
-    if (RSSystemProperties::GetMaskLinearBlurEnabled()) {
-        // use faster LinearGradientBlur if valid
-        RS_OPTIONAL_TRACE_NAME("DrawLinearGradientBlur_mask");
-        if (para->LinearGradientBlurFilter_ == nullptr) {
-            ROSEN_LOGE("RSPropertiesPainter::DrawLinearGradientBlur blurFilter null");
-            return;
-        }
-        auto& RSFilter = para->LinearGradientBlurFilter_;
-#ifndef USE_ROSEN_DRAWING
-        auto filter = std::static_pointer_cast<RSSkiaFilter>(RSFilter);
-#else
-        auto filter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
-#endif
-        DrawMaskLinearGradientBlur(surface, canvas, filter, alphaGradientShader, clipIPadding);
-    } else {
-        // use original LinearGradientBlur
-        RS_OPTIONAL_TRACE_NAME("DrawLinearGradientBlur_original");
-        float radius = para->blurRadius_ / 2;
-        DrawHorizontalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
-        DrawVerticalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
-        DrawHorizontalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
-        DrawVerticalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
-    }
-}
+//     if (RSSystemProperties::GetMaskLinearBlurEnabled()) {
+//         // use faster LinearGradientBlur if valid
+//         RS_OPTIONAL_TRACE_NAME("DrawLinearGradientBlur_mask");
+//         if (para->LinearGradientBlurFilter_ == nullptr) {
+//             ROSEN_LOGE("RSPropertiesPainter::DrawLinearGradientBlur blurFilter null");
+//             return;
+//         }
+//         auto& RSFilter = para->LinearGradientBlurFilter_;
+// #ifndef USE_ROSEN_DRAWING
+//         auto filter = std::static_pointer_cast<RSSkiaFilter>(RSFilter);
+// #else
+//         auto filter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
+// #endif
+//         DrawMaskLinearGradientBlur(surface, canvas, filter, alphaGradientShader, clipIPadding);
+//     } else {
+//         // use original LinearGradientBlur
+//         RS_OPTIONAL_TRACE_NAME("DrawLinearGradientBlur_original");
+//         float radius = para->blurRadius_ / 2;
+//         DrawHorizontalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
+//         DrawVerticalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
+//         DrawHorizontalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
+//         DrawVerticalLinearGradientBlur(surface, canvas, radius, alphaGradientShader, clipIPadding);
+//     }
+// }
 
-#ifndef USE_ROSEN_DRAWING
-void RSPropertiesPainter::DrawMaskLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
-    std::shared_ptr<RSSkiaFilter>& blurFilter, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding)
-{
-    auto image = skSurface->makeImageSnapshot(clipIPadding);
-    if (image == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawMaskLinearGradientBlur image is null");
-        return;
-    }
+// #ifndef USE_ROSEN_DRAWING
+// void RSPropertiesPainter::DrawMaskLinearGradientBlur(SkSurface* skSurface, RSPaintFilterCanvas& canvas,
+//     std::shared_ptr<RSSkiaFilter>& blurFilter, sk_sp<SkShader> alphaGradientShader, const SkIRect& clipIPadding)
+// {
+//     auto image = skSurface->makeImageSnapshot(clipIPadding);
+//     if (image == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawMaskLinearGradientBlur image is null");
+//         return;
+//     }
 
-    auto offscreenRect = clipIPadding;
-    auto offscreenSurface = skSurface->makeSurface(offscreenRect.width(), offscreenRect.height());
-    RSPaintFilterCanvas offscreenCanvas(offscreenSurface.get());
+//     auto offscreenRect = clipIPadding;
+//     auto offscreenSurface = skSurface->makeSurface(offscreenRect.width(), offscreenRect.height());
+//     RSPaintFilterCanvas offscreenCanvas(offscreenSurface.get());
 
-    blurFilter->DrawImageRect(offscreenCanvas, image, SkRect::Make(image->bounds().makeOutset(-1, -1)),
-        SkRect::Make(image->bounds()));
-    auto filteredSnapshot = offscreenSurface->makeImageSnapshot();
-    auto srcImageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
-    auto blurImageShader = filteredSnapshot->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
-    auto shader = MakeMeanBlurShader(srcImageShader, blurImageShader, alphaGradientShader);
+//     blurFilter->DrawImageRect(offscreenCanvas, image, SkRect::Make(image->bounds().makeOutset(-1, -1)),
+//         SkRect::Make(image->bounds()));
+//     auto filteredSnapshot = offscreenSurface->makeImageSnapshot();
+//     auto srcImageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+//     auto blurImageShader = filteredSnapshot->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+//     auto shader = MakeMeanBlurShader(srcImageShader, blurImageShader, alphaGradientShader);
 
-    SkPaint paint;
-    paint.setShader(shader);
-    canvas.drawRect(SkRect::Make(clipIPadding.makeOffset(-clipIPadding.left(), -clipIPadding.top())), paint);
-}
-#else
-void RSPropertiesPainter::DrawMaskLinearGradientBlur(Drawing::Surface* drSurface, RSPaintFilterCanvas& canvas,
-    std::shared_ptr<RSDrawingFilter>& blurFilter, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader,
-    const Drawing::RectI& clipIPadding)
-{
-    auto image = drSurface->GetImageSnapshot(clipIPadding);
-    if (image == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawMaskLinearGradientBlur image is null");
-        return;
-    }
+//     SkPaint paint;
+//     paint.setShader(shader);
+//     canvas.drawRect(SkRect::Make(clipIPadding.makeOffset(-clipIPadding.left(), -clipIPadding.top())), paint);
+// }
+// #else
+// void RSPropertiesPainter::DrawMaskLinearGradientBlur(Drawing::Surface* drSurface, RSPaintFilterCanvas& canvas,
+//     std::shared_ptr<RSDrawingFilter>& blurFilter, std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader,
+//     const Drawing::RectI& clipIPadding)
+// {
+//     auto image = drSurface->GetImageSnapshot(clipIPadding);
+//     if (image == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawMaskLinearGradientBlur image is null");
+//         return;
+//     }
 
-    auto offscreenRect = clipIPadding;
-    auto offscreenSurface = drSurface->MakeSurface(offscreenRect.GetWidth(), offscreenRect.GetHeight());
-    RSPaintFilterCanvas offscreenCanvas(offscreenSurface.get());
+//     auto offscreenRect = clipIPadding;
+//     auto offscreenSurface = drSurface->MakeSurface(offscreenRect.GetWidth(), offscreenRect.GetHeight());
+//     RSPaintFilterCanvas offscreenCanvas(offscreenSurface.get());
 
-    auto imageInfo = image->GetImageInfo();
-    auto tmpRect = Drawing::Rect(0, 0, imageInfo.GetWidth(), imageInfo.GetHeight());
-    auto dstRect = tmpRect;
-    tmpRect.MakeOutset(-1, -1);
-    auto srcRect = Drawing::Rect(tmpRect.GetLeft(), tmpRect.GetTop(), tmpRect.GetRight(), tmpRect.GetBottom());
-    blurFilter->DrawImageRect(offscreenCanvas, image, srcRect, dstRect);
-    auto filteredSnapshot = offscreenSurface->GetImageSnapshot();
-    Drawing::Matrix matrix;
-    auto srcImageShader = Drawing::ShaderEffect::CreateImageShader(*image, Drawing::TileMode::CLAMP,
-        Drawing::TileMode::CLAMP, Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), matrix);
-    auto blurImageShader = Drawing::ShaderEffect::CreateImageShader(*filteredSnapshot, Drawing::TileMode::CLAMP,
-        Drawing::TileMode::CLAMP, Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), matrix);
-    auto shader = MakeMeanBlurShader(srcImageShader, blurImageShader, alphaGradientShader);
+//     auto imageInfo = image->GetImageInfo();
+//     auto tmpRect = Drawing::Rect(0, 0, imageInfo.GetWidth(), imageInfo.GetHeight());
+//     auto dstRect = tmpRect;
+//     tmpRect.MakeOutset(-1, -1);
+//     auto srcRect = Drawing::Rect(tmpRect.GetLeft(), tmpRect.GetTop(), tmpRect.GetRight(), tmpRect.GetBottom());
+//     blurFilter->DrawImageRect(offscreenCanvas, image, srcRect, dstRect);
+//     auto filteredSnapshot = offscreenSurface->GetImageSnapshot();
+//     Drawing::Matrix matrix;
+//     auto srcImageShader = Drawing::ShaderEffect::CreateImageShader(*image, Drawing::TileMode::CLAMP,
+//         Drawing::TileMode::CLAMP, Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), matrix);
+//     auto blurImageShader = Drawing::ShaderEffect::CreateImageShader(*filteredSnapshot, Drawing::TileMode::CLAMP,
+//         Drawing::TileMode::CLAMP, Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), matrix);
+//     auto shader = MakeMeanBlurShader(srcImageShader, blurImageShader, alphaGradientShader);
 
-    Drawing::Brush brush;
-    brush.SetShaderEffect(shader);
-    Drawing::Rect rect = clipIPadding;
-    rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
-    canvas.AttachBrush(brush);
-    canvas.DrawRect(rect);
-    canvas.DetachBrush();
-}
-#endif
+//     Drawing::Brush brush;
+//     brush.SetShaderEffect(shader);
+//     Drawing::Rect rect = clipIPadding;
+//     rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
+//     canvas.AttachBrush(brush);
+//     canvas.DrawRect(rect);
+//     canvas.DetachBrush();
+// }
+// #endif
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<SkShader> RSPropertiesPainter::MakeMeanBlurShader(sk_sp<SkShader> srcImageShader,
-        sk_sp<SkShader> blurImageShader, sk_sp<SkShader> gradientShader)
-#else
-std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeMeanBlurShader(
-    std::shared_ptr<Drawing::ShaderEffect> srcImageShader, std::shared_ptr<Drawing::ShaderEffect> blurImageShader,
-    std::shared_ptr<Drawing::ShaderEffect> gradientShader)
-#endif
-{
-    const char* prog = R"(
-        uniform shader srcImageShader;
-        uniform shader blurImageShader;
-        uniform shader gradientShader;
-        half4 meanFilter(float2 coord)
-        {
-            vec3 srcColor = vec3(srcImageShader.eval(coord).r,
-                srcImageShader.eval(coord).g, srcImageShader.eval(coord).b);
-            vec3 blurColor = vec3(blurImageShader.eval(coord).r,
-                blurImageShader.eval(coord).g, blurImageShader.eval(coord).b);
-            float gradient = gradientShader.eval(coord).a;
+// #ifndef USE_ROSEN_DRAWING
+// sk_sp<SkShader> RSPropertiesPainter::MakeMeanBlurShader(sk_sp<SkShader> srcImageShader,
+//         sk_sp<SkShader> blurImageShader, sk_sp<SkShader> gradientShader)
+// #else
+// std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeMeanBlurShader(
+//     std::shared_ptr<Drawing::ShaderEffect> srcImageShader, std::shared_ptr<Drawing::ShaderEffect> blurImageShader,
+//     std::shared_ptr<Drawing::ShaderEffect> gradientShader)
+// #endif
+// {
+//     const char* prog = R"(
+//         uniform shader srcImageShader;
+//         uniform shader blurImageShader;
+//         uniform shader gradientShader;
+//         half4 meanFilter(float2 coord)
+//         {
+//             vec3 srcColor = vec3(srcImageShader.eval(coord).r,
+//                 srcImageShader.eval(coord).g, srcImageShader.eval(coord).b);
+//             vec3 blurColor = vec3(blurImageShader.eval(coord).r,
+//                 blurImageShader.eval(coord).g, blurImageShader.eval(coord).b);
+//             float gradient = gradientShader.eval(coord).a;
 
-            vec3 color = blurColor * gradient + srcColor * (1 - gradient);
-            return vec4(color, 1.0);
-        }
-        half4 main(float2 coord)
-        {
-            if (abs(gradientShader.eval(coord).a) < 0.001) {
-                return srcImageShader.eval(coord);
-            }
+//             vec3 color = blurColor * gradient + srcColor * (1 - gradient);
+//             return vec4(color, 1.0);
+//         }
+//         half4 main(float2 coord)
+//         {
+//             if (abs(gradientShader.eval(coord).a) < 0.001) {
+//                 return srcImageShader.eval(coord);
+//             }
             
-            if (abs(gradientShader.eval(coord).a) > 0.999) {
-                return blurImageShader.eval(coord);
-            }
+//             if (abs(gradientShader.eval(coord).a) > 0.999) {
+//                 return blurImageShader.eval(coord);
+//             }
 
-            return meanFilter(coord);
-        }
-    )";
+//             return meanFilter(coord);
+//         }
+//     )";
 
-#ifndef USE_ROSEN_DRAWING
-    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    if (!effect) {
-        ROSEN_LOGE("MakeMeanBlurShader::RuntimeShader effect error: %{public}s\n", err.c_str());
-        return nullptr;
-    }
+// #ifndef USE_ROSEN_DRAWING
+//     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
+//     if (!effect) {
+//         ROSEN_LOGE("MakeMeanBlurShader::RuntimeShader effect error: %{public}s\n", err.c_str());
+//         return nullptr;
+//     }
 
-    SkRuntimeShaderBuilder builder(effect);
-    builder.child("srcImageShader") = srcImageShader;
-    builder.child("blurImageShader") = blurImageShader;
-    builder.child("gradientShader") = gradientShader;
-    return builder.makeShader(nullptr, false);
-#else
-    std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
-    if (!effect) {
-        ROSEN_LOGE("MakeMeanBlurShader::RuntimeShader effect error\n");
-        return nullptr;
-    }
+//     SkRuntimeShaderBuilder builder(effect);
+//     builder.child("srcImageShader") = srcImageShader;
+//     builder.child("blurImageShader") = blurImageShader;
+//     builder.child("gradientShader") = gradientShader;
+//     return builder.makeShader(nullptr, false);
+// #else
+//     std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
+//     if (!effect) {
+//         ROSEN_LOGE("MakeMeanBlurShader::RuntimeShader effect error\n");
+//         return nullptr;
+//     }
 
-    std::shared_ptr<Drawing::RuntimeShaderBuilder> builder = std::make_shared<Drawing::RuntimeShaderBuilder>(effect);
-    builder->SetChild("srcImageShader", srcImageShader);
-    builder->SetChild("blurImageShader", blurImageShader);
-    builder->SetChild("gradientShader", gradientShader);
-    return builder->MakeShader(nullptr, false);
-#endif
-}
+//     std::shared_ptr<Drawing::RuntimeShaderBuilder> builder = std::make_shared<Drawing::RuntimeShaderBuilder>(effect);
+//     builder->SetChild("srcImageShader", srcImageShader);
+//     builder->SetChild("blurImageShader", blurImageShader);
+//     builder->SetChild("gradientShader", gradientShader);
+//     return builder->MakeShader(nullptr, false);
+// #endif
+// }
 
 #ifndef USE_ROSEN_DRAWING
 sk_sp<SkShader> RSPropertiesPainter::MakeGreyAdjustmentShader(const float coef1, const float coef2,
@@ -2249,6 +2249,51 @@ int RSPropertiesPainter::GetAndResetBlurCnt()
     auto blurCnt = g_blurCnt;
     g_blurCnt = 0;
     return blurCnt;
+}
+
+void RSPropertiesPainter::GenerateForegroundFilter(const RSProperties& properties)
+{
+    std::shared_ptr<RSSkiaFilter> foregroundFilter = nullptr;
+    if (properties.GetColorFilter()) {
+        std::shared_ptr<RSShaderFilter> colorShaderFilter = 
+            std::make_shared<RSColorFilter>(properties.GetColorFilter());
+        auto colorFilter = std::make_shared<RSSkiaFilter>(colorShaderFilter);
+        foregroundFilter = colorFilter->Compose(foregroundFilter);
+    }
+    if (properties.GetFilter()) {
+        std::shared_ptr<RSSkiaFilter> originalFilter = properties.GetFilter();
+        foregroundFilter = originalFilter->Compose(foregroundFilter);
+    }
+    if (properties.IsLightUpEffectValid()) {
+        std::shared_ptr<RSShaderFilter> lightUpShaderFilter = 
+            std::make_shared<RSLightUpEffectFilter>(properties.GetLightUpEffect());
+        auto lightUpFilter = std::make_shared<RSSkiaFilter>(lightUpShaderFilter);
+        foregroundFilter = lightUpFilter->Compose(foregroundFilter);
+    }
+    auto para = properties.GetLinearGradientBlurPara();
+    if (para && para->blurRadius_ > 0) {
+        std::shared_ptr<RSShaderFilter> linearGradientBlurShaderFilter = 
+            std::make_shared<RSLinearGradientBlurFilter>(properties.GetLinearGradientBlurPara());
+        auto linearGradientBlurFilter = std::make_shared<RSSkiaFilter>(linearGradientBlurShaderFilter);
+        foregroundFilter = linearGradientBlurFilter->Compose(foregroundFilter);
+    }
+    SetFilter(foregroundFilter);
+}
+
+void RSPropertiesPainter::GenerateBackgroundFilter(const RSProperties& properties)
+{
+    std::shared_ptr<RSSkiaFilter> backgroundFilter = nullptr;
+    if (properties.GetBackgroundFilter()) {
+        std::shared_ptr<RSSkiaFilter> originalFilter = properties.GetBackgroundFilter();
+        backgroundFilter = originalFilter->Compose(backgroundFilter);
+    }
+    if (properties.IsDynamicLightUpValid()) {
+        std::shared_ptr<RSShaderFilter> dynamicLightUpShaderFilter = 
+            std::make_shared<RSDynamicLightUpFilter>(properties.GetDynamicLightUpRate(), properties.GetDynamicLightUpDegree());
+        auto dynamicLightUpFilter = std::make_shared<RSSkiaFilter>(dynamicLightUpShaderFilter);
+        backgroundFilter = dynamicLightUpFilter->Compose(backgroundFilter);
+    }
+    SetBackgroundFilter(backgroundFilter);
 }
 
 void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas,
@@ -3207,61 +3252,61 @@ void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFi
 }
 #endif
 
-void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
-{
-    // if useEffect defined, use color filter from parent EffectView.
-    auto& colorFilter = properties.GetColorFilter();
-    if (colorFilter == nullptr) {
-        return;
-    }
-#ifndef USE_ROSEN_DRAWING
-    SkAutoCanvasRestore acr(&canvas, true);
-    canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setColorFilter(colorFilter);
-    auto skSurface = canvas.GetSurface();
-    if (skSurface == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter skSurface is null");
-        return;
-    }
-    auto clipBounds = canvas.getDeviceClipBounds();
-    auto imageSnapshot = skSurface->makeImageSnapshot(clipBounds);
-    if (imageSnapshot == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter image is null");
-        return;
-    }
-    as_IB(imageSnapshot)->hintCacheGpuResource();
-    canvas.resetMatrix();
-    SkSamplingOptions options(SkFilterMode::kNearest, SkMipmapMode::kNone);
-    canvas.drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint);
-#else
-    Drawing::AutoCanvasRestore acr(canvas, true);
-    canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    Drawing::Brush brush;
-    brush.SetAntiAlias(true);
-    Drawing::Filter filter;
-    filter.SetColorFilter(colorFilter);
-    brush.SetFilter(filter);
-    auto surface = canvas.GetSurface();
-    if (surface == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter surface is null");
-        return;
-    }
-    auto clipBounds = canvas.GetDeviceClipBounds();
-    auto imageSnapshot = surface->GetImageSnapshot(clipBounds);
-    if (imageSnapshot == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter image is null");
-        return;
-    }
-    as_IB(imageSnapshot->ExportSkImage().get())->hintCacheGpuResource();
-    canvas.ResetMatrix();
-    Drawing::SamplingOptions options(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NONE);
-    canvas.AttachBrush(brush);
-    canvas.DrawImageRect(*imageSnapshot, clipBounds, options);
-    canvas.DetachBrush();
-#endif
-}
+// void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+// {
+//     // if useEffect defined, use color filter from parent EffectView.
+//     auto& colorFilter = properties.GetColorFilter();
+//     if (colorFilter == nullptr) {
+//         return;
+//     }
+// #ifndef USE_ROSEN_DRAWING
+//     SkAutoCanvasRestore acr(&canvas, true);
+//     canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+//     SkPaint paint;
+//     paint.setAntiAlias(true);
+//     paint.setColorFilter(colorFilter);
+//     auto skSurface = canvas.GetSurface();
+//     if (skSurface == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter skSurface is null");
+//         return;
+//     }
+//     auto clipBounds = canvas.getDeviceClipBounds();
+//     auto imageSnapshot = skSurface->makeImageSnapshot(clipBounds);
+//     if (imageSnapshot == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter image is null");
+//         return;
+//     }
+//     as_IB(imageSnapshot)->hintCacheGpuResource();
+//     canvas.resetMatrix();
+//     SkSamplingOptions options(SkFilterMode::kNearest, SkMipmapMode::kNone);
+//     canvas.drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint);
+// #else
+//     Drawing::AutoCanvasRestore acr(canvas, true);
+//     canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
+//     Drawing::Brush brush;
+//     brush.SetAntiAlias(true);
+//     Drawing::Filter filter;
+//     filter.SetColorFilter(colorFilter);
+//     brush.SetFilter(filter);
+//     auto surface = canvas.GetSurface();
+//     if (surface == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter surface is null");
+//         return;
+//     }
+//     auto clipBounds = canvas.GetDeviceClipBounds();
+//     auto imageSnapshot = surface->GetImageSnapshot(clipBounds);
+//     if (imageSnapshot == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter image is null");
+//         return;
+//     }
+//     as_IB(imageSnapshot->ExportSkImage().get())->hintCacheGpuResource();
+//     canvas.ResetMatrix();
+//     Drawing::SamplingOptions options(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NONE);
+//     canvas.AttachBrush(brush);
+//     canvas.DrawImageRect(*imageSnapshot, clipBounds, options);
+//     canvas.DetachBrush();
+// #endif
+// }
 
 #ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::DrawBinarizationShader(const RSProperties& properties, RSPaintFilterCanvas& canvas)
@@ -3437,228 +3482,228 @@ std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeBinarizationShad
 #endif
 }
 
-void RSPropertiesPainter::DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
-{
-#ifndef USE_ROSEN_DRAWING
-    SkSurface* skSurface = canvas.GetSurface();
-    if (skSurface == nullptr) {
-        ROSEN_LOGD("RSPropertiesPainter::DrawLightUpEffect skSurface is null");
-        return;
-    }
-    SkAutoCanvasRestore acr(&canvas, true);
-    if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
+// void RSPropertiesPainter::DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+// {
+// #ifndef USE_ROSEN_DRAWING
+//     SkSurface* skSurface = canvas.GetSurface();
+//     if (skSurface == nullptr) {
+//         ROSEN_LOGD("RSPropertiesPainter::DrawLightUpEffect skSurface is null");
+//         return;
+//     }
+//     SkAutoCanvasRestore acr(&canvas, true);
+//     if (properties.GetClipBounds() != nullptr) {
+//         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+//     } else {
+//         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+//     }
 
-    auto clipBounds = canvas.getDeviceClipBounds();
-    auto image = skSurface->makeImageSnapshot(clipBounds);
-    if (image == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawLightUpEffect image is null");
-        return;
-    }
-    auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
-    auto shader = MakeLightUpEffectShader(properties.GetLightUpEffect(), imageShader);
-    SkPaint paint;
-    paint.setShader(shader);
-    canvas.resetMatrix();
-    canvas.translate(clipBounds.left(), clipBounds.top());
-    canvas.drawPaint(paint);
-#else
-    Drawing::Surface* surface = canvas.GetSurface();
-    if (surface == nullptr) {
-        ROSEN_LOGD("RSPropertiesPainter::DrawLightUpEffect surface is null");
-        return;
-    }
-    Drawing::AutoCanvasRestore acr(canvas, true);
-    if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    }
+//     auto clipBounds = canvas.getDeviceClipBounds();
+//     auto image = skSurface->makeImageSnapshot(clipBounds);
+//     if (image == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawLightUpEffect image is null");
+//         return;
+//     }
+//     auto imageShader = image->makeShader(SkSamplingOptions(SkFilterMode::kLinear));
+//     auto shader = MakeLightUpEffectShader(properties.GetLightUpEffect(), imageShader);
+//     SkPaint paint;
+//     paint.setShader(shader);
+//     canvas.resetMatrix();
+//     canvas.translate(clipBounds.left(), clipBounds.top());
+//     canvas.drawPaint(paint);
+// #else
+//     Drawing::Surface* surface = canvas.GetSurface();
+//     if (surface == nullptr) {
+//         ROSEN_LOGD("RSPropertiesPainter::DrawLightUpEffect surface is null");
+//         return;
+//     }
+//     Drawing::AutoCanvasRestore acr(canvas, true);
+//     if (properties.GetClipBounds() != nullptr) {
+//         canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
+//     } else {
+//         canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
+//     }
 
-    auto clipBounds = canvas.GetDeviceClipBounds();
-    auto image = surface->GetImageSnapshot(clipBounds);
-    if (image == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawLightUpEffect image is null");
-        return;
-    }
-    Drawing::Matrix scaleMat;
-    auto imageShader = Drawing::ShaderEffect::CreateImageShader(
-        *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
-        Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), scaleMat);
-    auto shader = MakeLightUpEffectShader(properties.GetLightUpEffect(), imageShader);
-    Drawing::Brush brush;
-    brush.SetShaderEffect(shader);
-    canvas.ResetMatrix();
-    canvas.Translate(clipBounds.GetLeft(), clipBounds.GetTop());
-    canvas.DrawBackground(brush);
-#endif
-}
+//     auto clipBounds = canvas.GetDeviceClipBounds();
+//     auto image = surface->GetImageSnapshot(clipBounds);
+//     if (image == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawLightUpEffect image is null");
+//         return;
+//     }
+//     Drawing::Matrix scaleMat;
+//     auto imageShader = Drawing::ShaderEffect::CreateImageShader(
+//         *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
+//         Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), scaleMat);
+//     auto shader = MakeLightUpEffectShader(properties.GetLightUpEffect(), imageShader);
+//     Drawing::Brush brush;
+//     brush.SetShaderEffect(shader);
+//     canvas.ResetMatrix();
+//     canvas.Translate(clipBounds.GetLeft(), clipBounds.GetTop());
+//     canvas.DrawBackground(brush);
+// #endif
+// }
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<SkShader> RSPropertiesPainter::MakeLightUpEffectShader(float lightUpDeg, sk_sp<SkShader> imageShader)
-#else
-std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeLightUpEffectShader(
-    float lightUpDeg, std::shared_ptr<Drawing::ShaderEffect> imageShader)
-#endif
-{
-    static constexpr char prog[] = R"(
-        uniform half lightUpDeg;
-        uniform shader imageShader;
-        vec3 rgb2hsv(in vec3 c)
-        {
-            vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-            vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-            vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-            float d = q.x - min(q.w, q.y);
-            float e = 1.0e-10;
-            return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-        }
-        vec3 hsv2rgb(in vec3 c)
-        {
-            vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
-            return c.z * mix(vec3(1.0), rgb, c.y);
-        }
-        half4 main(float2 coord)
-        {
-            vec3 hsv = rgb2hsv(imageShader.eval(coord).rgb);
-            float satUpper = clamp(hsv.y * 1.2, 0.0, 1.0);
-            hsv.y = mix(satUpper, hsv.y, lightUpDeg);
-            hsv.z += lightUpDeg - 1.0;
-            return vec4(hsv2rgb(hsv), 1.0);
-        }
-    )";
-#ifndef USE_ROSEN_DRAWING
-    auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
-    sk_sp<SkShader> children[] = {imageShader};
-    size_t childCount = 1;
-    return effect->makeShader(SkData::MakeWithCopy(
-        &lightUpDeg, sizeof(lightUpDeg)), children, childCount, nullptr, false);
-#else
-    std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
-    std::shared_ptr<Drawing::ShaderEffect> children[] = {imageShader};
-    size_t childCount = 1;
-    auto data = std::make_shared<Drawing::Data>();
-    data->BuildWithCopy(&lightUpDeg, sizeof(lightUpDeg));
-    return effect->MakeShader(data, children, childCount, nullptr, false);
-#endif
-}
+// #ifndef USE_ROSEN_DRAWING
+// sk_sp<SkShader> RSPropertiesPainter::MakeLightUpEffectShader(float lightUpDeg, sk_sp<SkShader> imageShader)
+// #else
+// std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeLightUpEffectShader(
+//     float lightUpDeg, std::shared_ptr<Drawing::ShaderEffect> imageShader)
+// #endif
+// {
+//     static constexpr char prog[] = R"(
+//         uniform half lightUpDeg;
+//         uniform shader imageShader;
+//         vec3 rgb2hsv(in vec3 c)
+//         {
+//             vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+//             vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+//             vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+//             float d = q.x - min(q.w, q.y);
+//             float e = 1.0e-10;
+//             return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+//         }
+//         vec3 hsv2rgb(in vec3 c)
+//         {
+//             vec3 rgb = clamp(abs(mod(c.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
+//             return c.z * mix(vec3(1.0), rgb, c.y);
+//         }
+//         half4 main(float2 coord)
+//         {
+//             vec3 hsv = rgb2hsv(imageShader.eval(coord).rgb);
+//             float satUpper = clamp(hsv.y * 1.2, 0.0, 1.0);
+//             hsv.y = mix(satUpper, hsv.y, lightUpDeg);
+//             hsv.z += lightUpDeg - 1.0;
+//             return vec4(hsv2rgb(hsv), 1.0);
+//         }
+//     )";
+// #ifndef USE_ROSEN_DRAWING
+//     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
+//     sk_sp<SkShader> children[] = {imageShader};
+//     size_t childCount = 1;
+//     return effect->makeShader(SkData::MakeWithCopy(
+//         &lightUpDeg, sizeof(lightUpDeg)), children, childCount, nullptr, false);
+// #else
+//     std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
+//     std::shared_ptr<Drawing::ShaderEffect> children[] = {imageShader};
+//     size_t childCount = 1;
+//     auto data = std::make_shared<Drawing::Data>();
+//     data->BuildWithCopy(&lightUpDeg, sizeof(lightUpDeg));
+//     return effect->MakeShader(data, children, childCount, nullptr, false);
+// #endif
+// }
 
-void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas)
-{
-#ifndef USE_ROSEN_DRAWING
-    SkAutoCanvasRestore acr(&canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
+// void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+// {
+// #ifndef USE_ROSEN_DRAWING
+//     SkAutoCanvasRestore acr(&canvas, true);
+//     if (RSSystemProperties::GetPropertyDrawableEnable()) {
+//         // do nothing
+//     } else if (properties.GetClipBounds() != nullptr) {
+//         canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
+//     } else {
+//         canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
+//     }
 
-    auto blender = MakeDynamicLightUpBlender(properties.GetDynamicLightUpRate().value() * canvas.GetAlpha(),
-        properties.GetDynamicLightUpDegree().value() * canvas.GetAlpha());
-    SkPaint paint;
-    paint.setBlender(blender);
-    canvas.drawPaint(paint);
-#else
-    Drawing::Surface* surface = canvas.GetSurface();
-    if (surface == nullptr) {
-        ROSEN_LOGD("RSPropertiesPainter::DrawDynamicLightUp surface is null");
-        return;
-    }
-    Drawing::AutoCanvasRestore acr(canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    }
+//     auto blender = MakeDynamicLightUpBlender(properties.GetDynamicLightUpRate().value() * canvas.GetAlpha(),
+//         properties.GetDynamicLightUpDegree().value() * canvas.GetAlpha());
+//     SkPaint paint;
+//     paint.setBlender(blender);
+//     canvas.drawPaint(paint);
+// #else
+//     Drawing::Surface* surface = canvas.GetSurface();
+//     if (surface == nullptr) {
+//         ROSEN_LOGD("RSPropertiesPainter::DrawDynamicLightUp surface is null");
+//         return;
+//     }
+//     Drawing::AutoCanvasRestore acr(canvas, true);
+//     if (RSSystemProperties::GetPropertyDrawableEnable()) {
+//         // do nothing
+//     } else if (properties.GetClipBounds() != nullptr) {
+//         canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
+//     } else {
+//         canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
+//     }
 
-    auto clipBounds = canvas.GetDeviceClipBounds();
-    auto image = surface->GetImageSnapshot(clipBounds);
-    if (image == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawDynamicLightUp image is null");
-        return;
-    }
-    Drawing::Matrix scaleMat;
-    auto imageShader = Drawing::ShaderEffect::CreateImageShader(
-        *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
-        Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), scaleMat);
-    auto shader = MakeDynamicLightUpShader(
-        properties.GetDynamicLightUpRate().value(), properties.GetDynamicLightUpDegree().value(), imageShader);
-    Drawing::Brush brush;
-    brush.SetShaderEffect(shader);
-    canvas.ResetMatrix();
-    canvas.Translate(clipBounds.GetLeft(), clipBounds.GetTop());
-    canvas.DrawBackground(brush);
-#endif
-}
+//     auto clipBounds = canvas.GetDeviceClipBounds();
+//     auto image = surface->GetImageSnapshot(clipBounds);
+//     if (image == nullptr) {
+//         ROSEN_LOGE("RSPropertiesPainter::DrawDynamicLightUp image is null");
+//         return;
+//     }
+//     Drawing::Matrix scaleMat;
+//     auto imageShader = Drawing::ShaderEffect::CreateImageShader(
+//         *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
+//         Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), scaleMat);
+//     auto shader = MakeDynamicLightUpShader(
+//         properties.GetDynamicLightUpRate().value(), properties.GetDynamicLightUpDegree().value(), imageShader);
+//     Drawing::Brush brush;
+//     brush.SetShaderEffect(shader);
+//     canvas.ResetMatrix();
+//     canvas.Translate(clipBounds.GetLeft(), clipBounds.GetTop());
+//     canvas.DrawBackground(brush);
+// #endif
+// }
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<SkBlender> RSPropertiesPainter::MakeDynamicLightUpBlender(
-    float dynamicLightUpRate, float dynamicLightUpDeg)
-#else
-std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeDynamicLightUpShader(
-    float dynamicLightUpRate, float dynamicLightUpDeg, std::shared_ptr<Drawing::ShaderEffect> imageShader)
-#endif
-{
-#ifndef USE_ROSEN_DRAWING
-    static constexpr char prog[] = R"(
-        uniform half dynamicLightUpRate;
-        uniform half dynamicLightUpDeg;
+// #ifndef USE_ROSEN_DRAWING
+// sk_sp<SkBlender> RSPropertiesPainter::MakeDynamicLightUpBlender(
+//     float dynamicLightUpRate, float dynamicLightUpDeg)
+// #else
+// std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeDynamicLightUpShader(
+//     float dynamicLightUpRate, float dynamicLightUpDeg, std::shared_ptr<Drawing::ShaderEffect> imageShader)
+// #endif
+// {
+// #ifndef USE_ROSEN_DRAWING
+//     static constexpr char prog[] = R"(
+//         uniform half dynamicLightUpRate;
+//         uniform half dynamicLightUpDeg;
 
-        vec4 main(vec4 src, vec4 dst) {
-            float x = 0.299 * dst.r + 0.587 * dst.g + 0.114 * dst.b;
-            float y = (0 - dynamicLightUpRate) * x + dynamicLightUpDeg;
-            float R = clamp((dst.r + y), 0.0, 1.0);
-            float G = clamp((dst.g + y), 0.0, 1.0);
-            float B = clamp((dst.b + y), 0.0, 1.0);
-            return vec4(R, G, B, 1.0);
-        }
-    )";
+//         vec4 main(vec4 src, vec4 dst) {
+//             float x = 0.299 * dst.r + 0.587 * dst.g + 0.114 * dst.b;
+//             float y = (0 - dynamicLightUpRate) * x + dynamicLightUpDeg;
+//             float R = clamp((dst.r + y), 0.0, 1.0);
+//             float G = clamp((dst.g + y), 0.0, 1.0);
+//             float B = clamp((dst.b + y), 0.0, 1.0);
+//             return vec4(R, G, B, 1.0);
+//         }
+//     )";
 
-    auto [effect, err] = SkRuntimeEffect::MakeForBlender(SkString(prog));
-    if (!effect) {
-        ROSEN_LOGE("MakeDynamicLightUpBlender::RuntimeBlender effect error: %{public}s\n", err.c_str());
-        return nullptr;
-    }
-    SkRuntimeBlendBuilder builder(effect);
-    builder.uniform("dynamicLightUpRate") = dynamicLightUpRate;
-    builder.uniform("dynamicLightUpDeg") = dynamicLightUpDeg;
-    return builder.makeBlender();
-#else
-    static constexpr char prog[] = R"(
-        uniform half dynamicLightUpRate;
-        uniform half dynamicLightUpDeg;
-        uniform shader imageShader;
+//     auto [effect, err] = SkRuntimeEffect::MakeForBlender(SkString(prog));
+//     if (!effect) {
+//         ROSEN_LOGE("MakeDynamicLightUpBlender::RuntimeBlender effect error: %{public}s\n", err.c_str());
+//         return nullptr;
+//     }
+//     SkRuntimeBlendBuilder builder(effect);
+//     builder.uniform("dynamicLightUpRate") = dynamicLightUpRate;
+//     builder.uniform("dynamicLightUpDeg") = dynamicLightUpDeg;
+//     return builder.makeBlender();
+// #else
+//     static constexpr char prog[] = R"(
+//         uniform half dynamicLightUpRate;
+//         uniform half dynamicLightUpDeg;
+//         uniform shader imageShader;
 
-        half4 main(float2 coord) {
-            vec3 c = vec3(imageShader.eval(coord).r * 255,
-                imageShader.eval(coord).g * 255, imageShader.eval(coord).b * 255);
-            float x = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
-            float y = (0 - dynamicLightUpRate) * x + dynamicLightUpDeg * 255;
-            float R = clamp((c.r + y) / 255, 0.0, 1.0);
-            float G = clamp((c.g + y) / 255, 0.0, 1.0);
-            float B = clamp((c.b + y) / 255, 0.0, 1.0);
-            return vec4(R, G, B, 1.0);
-        }
-    )";
-    std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
-    if (!effect) {
-        ROSEN_LOGE("MakeDynamicLightUpShader::RuntimeShader effect error\n");
-        return nullptr;
-    }
-    std::shared_ptr<Drawing::RuntimeShaderBuilder> builder = std::make_shared<Drawing::RuntimeShaderBuilder>(effect);
-    builder->SetChild("imageShader", imageShader);
-    builder->SetUniform("dynamicLightUpRate", dynamicLightUpRate);
-    builder->SetUniform("dynamicLightUpDeg", dynamicLightUpDeg);
-    return builder->MakeShader(nullptr, false);
-#endif
-}
+//         half4 main(float2 coord) {
+//             vec3 c = vec3(imageShader.eval(coord).r * 255,
+//                 imageShader.eval(coord).g * 255, imageShader.eval(coord).b * 255);
+//             float x = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+//             float y = (0 - dynamicLightUpRate) * x + dynamicLightUpDeg * 255;
+//             float R = clamp((c.r + y) / 255, 0.0, 1.0);
+//             float G = clamp((c.g + y) / 255, 0.0, 1.0);
+//             float B = clamp((c.b + y) / 255, 0.0, 1.0);
+//             return vec4(R, G, B, 1.0);
+//         }
+//     )";
+//     std::shared_ptr<Drawing::RuntimeEffect> effect = Drawing::RuntimeEffect::CreateForShader(prog);
+//     if (!effect) {
+//         ROSEN_LOGE("MakeDynamicLightUpShader::RuntimeShader effect error\n");
+//         return nullptr;
+//     }
+//     std::shared_ptr<Drawing::RuntimeShaderBuilder> builder = std::make_shared<Drawing::RuntimeShaderBuilder>(effect);
+//     builder->SetChild("imageShader", imageShader);
+//     builder->SetUniform("dynamicLightUpRate", dynamicLightUpRate);
+//     builder->SetUniform("dynamicLightUpDeg", dynamicLightUpDeg);
+//     return builder->MakeShader(nullptr, false);
+// #endif
+// }
 
 void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {

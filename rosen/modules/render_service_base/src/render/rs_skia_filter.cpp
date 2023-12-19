@@ -23,7 +23,10 @@ namespace OHOS {
 namespace Rosen {
 #ifndef USE_ROSEN_DRAWING
 RSSkiaFilter::RSSkiaFilter(sk_sp<SkImageFilter> imageFilter) : RSFilter(), imageFilter_(imageFilter) {}
-
+RSSkiaFilter::RSSkiaFilter(std::shared_ptr<RSShaderFilter> shaderFilter) : RSFilter()
+{
+    shaderFilters_.emplace_back(shaderFilter);
+}
 RSSkiaFilter::~RSSkiaFilter() {}
 #else
 RSDrawingFilter::RSDrawingFilter(std::shared_ptr<Drawing::ImageFilter> imageFilter)

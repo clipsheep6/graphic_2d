@@ -22,11 +22,8 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifndef USE_ROSEN_DRAWING
-class RSB_EXPORT RSLightUpEffectFilter : public RSSkiaFilter {
-#else
-class RSB_EXPORT RSLightUpEffectFilter : public RSDrawingFilter {
-#endif
+
+class RSB_EXPORT RSLightUpEffectFilter : public RSShaderFilter {
 public:
     RSLightUpEffectFilter(float lightUpDegree);
     RSLightUpEffectFilter(const RSLightUpEffectFilter&) = delete;
@@ -34,28 +31,18 @@ public:
     ~RSLightUpEffectFilter() override;
     float GetLightUpDegree();
 #ifndef USE_ROSEN_DRAWING
-    std::shared_ptr<RSSkiaFilter> Compose(const std::shared_ptr<RSSkiaFilter>& other) const override;
+sk_sp<SkShader> MakeLightUpEffectShader(float lightUpDeg, sk_sp<SkShader> imageShader);
 #else
-    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override;
+std::shared_ptr<Drawing::ShaderEffect> MakeLightUpEffectShader(
+    float lightUpDeg, std::shared_ptr<Drawing::ShaderEffect> imageShader);
 #endif
-    std::string GetDescription() override;
 
-    std::shared_ptr<RSFilter> Add(const std::shared_ptr<RSFilter>& rhs) override;
-    std::shared_ptr<RSFilter> Sub(const std::shared_ptr<RSFilter>& rhs) override;
-    std::shared_ptr<RSFilter> Multiply(float rhs) override;
-    std::shared_ptr<RSFilter> Negate() override;
-    bool IsNearEqual(
-        const std::shared_ptr<RSFilter>& other, float threshold = std::numeric_limits<float>::epsilon()) const override;
-    bool IsNearZero(float threshold = std::numeric_limits<float>::epsilon()) const override;
+    void PreProcess(sk_sp<SkImage> image) override;
+    void PostProcess(RSPaintFilterCanvas& canvas) override;
+    sk_sp<SkImage> ProcessImage(SkCanvas& canvas, const sk_sp<SkImage>& image) const override;
 
 private:
     float lightUpDegree_ = 0.f;
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImageFilter> CreateLightUpEffectFilter(float lightUpDegree);
-#else
-    std::shared_ptr<Drawing::ImageFilter> CreateLightUpEffectFilter(float lightUpDegree);
-#endif
-
     friend class RSMarshallingHelper;
 };
 } // namespace Rosen

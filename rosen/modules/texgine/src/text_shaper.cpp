@@ -84,7 +84,7 @@ int TextShaper::Shape(const VariantSpan &span, const TypographyStyle &ys,
 
     auto xs = span.GetTextStyle();
     std::shared_ptr<TextSpan> ts = span.TryToTextSpan();
-    if (ts->cgs_.JudgeOnlyHardBreak()) {
+    if (ts->cgs_.GetBack().IsHardBreak()) {
         xs = ys.ConvertToTextStyle();
     }
 

@@ -31,6 +31,7 @@ RSOffscreenRenderThread::RSOffscreenRenderThread()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSOffscreenRender");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+
 #ifdef ROSEN_OHOS
     PostTask([this]() {
         renderContext_ = std::make_shared<RenderContext>();

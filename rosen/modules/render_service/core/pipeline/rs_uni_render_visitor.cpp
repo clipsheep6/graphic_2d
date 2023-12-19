@@ -1388,11 +1388,14 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     if (node.IsLeashWindow()) {
         // scale
-        auto absRect = geoPtr->GetAbsRect();
-        int boundsWidth = ceil(property.GetBoundsWidth());
-        int boundsHeight = ceil(property.GetBoundsHeight());
-        bool isScale = (std::min(absRect.GetWidth(), absRect.GetHeight()) != std::min(boundsWidth, boundsHeight))
-            || (std::max(absRect.GetWidth(), absRect.GetHeight()) != std::max(boundsWidth, boundsHeight));
+        auto matrix = geoPtr->GetAbsMatrix();
+        SkScalar scaleFactors[2];
+        bool isScale = false;
+        if (matrix.getMinMaxScales(scaleFactors)) {
+            isScale = !ROSEN_EQ(scaleFactors[0], 1.f) || !ROSEN_EQ(scaleFactors[1], 1.f);
+        } else {
+            RS_LOGE("getMinMaxScales fail, node:%{public}s %{public}" PRIu64 "", node.GetName().c_str(), node.GetId());
+        }
         node.SetIsScale(isScale);
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER)

@@ -38,6 +38,7 @@ constexpr const char* SCREENLOCK_WINDOW = "ScreenLockWindow";
 constexpr const char* SYSUI_DROPDOWN = "SysUI_Dropdown";
 constexpr const char* SYSUI_STATUS_BAR = "SysUI_StatusBar";
 constexpr const char* PRIVACY_INDICATOR = "PrivacyIndicator";
+constexpr int ROTATION_90 = 90;
 };
 void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge,
     bool useAlignedDirtyRegion)
@@ -505,10 +506,18 @@ void RSUniRenderUtil::ReleaseColorPickerResource(std::shared_ptr<RSRenderNode>& 
 
 bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode> node, bool isDisplayRotation)
 {
-    bool rotationCache = RSSystemProperties::GetCacheEnabledForRotation();
-    bool isNeedAssignToSubThread = !rotationCache && node->IsLeashWindow()
-        && (node->IsScale() || ROSEN_EQ(node->GetGlobalAlpha(), 0.0f))
-        && !node->HasFilter();
+    bool isNeedAssignToSubThread = false;
+    if (node->IsLeashWindow()) {
+        auto geoPtr = (node->GetMutableRenderProperties().GetBoundsGeometry());
+        bool nodeIsRotating = GetRotationDegreeFromMatrix(geoPtr->GetAbsMatrix()) % ROTATION_90 != 0;
+        isNeedAssignToSubThread = !nodeIsRotating && node->IsLeashWindow() && (node->IsScale()
+            || ROSEN_EQ(node->GetGlobalAlpha(), 0.0f)) && !node->HasFilter();
+        std::string logInfo = "[ " + node->GetName() + ", " + std::to_string(node->GetId()) + " ]" +
+                "( " + std::to_string(static_cast<uint32_t>(node->GetCacheSurfaceProcessedStatus())) + ", " +
+                std::to_string(nodeIsRotating) + ", " + std::to_string(node->HasFilter()) + ", " +
+                std::to_string(node->IsScale()) + ", " + std::to_string(isNeedAssignToSubThread) + " )";
+        RS_TRACE_NAME("assign info: " + logInfo);
+    }
     std::string surfaceName = node->GetName();
     bool needFilter = surfaceName == ENTRY_VIEW || surfaceName == WALLPAPER_VIEW ||
         surfaceName == SYSUI_STATUS_BAR || surfaceName == SCREENLOCK_WINDOW ||

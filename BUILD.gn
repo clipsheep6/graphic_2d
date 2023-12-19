@@ -89,6 +89,6 @@ group("libbootanimation_utils") {
   public_deps = [ "frameworks/bootanimation/utils:libbootanimation_utils" ]
 }
 
-group(libopencl) {
+group("libopencl") {
   public_deps = libopencl
 }

@@ -108,7 +108,7 @@ if (graphic_2d_feature_ace_enable_gpu) {
   }
   libopencl = []
   if (graphic_2d_feature_enable_opencl) {
-    libopencl += [ "//third_party/opencl-icd-loader:libopencl" ]
+    libopencl += [ "//third_party/opencl-icd-loader:opencl_icd_loader" ]
   }
   if (graphic_2d_feature_enable_flutter_vulkan) {
     libvulkan +=

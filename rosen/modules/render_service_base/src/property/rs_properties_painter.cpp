@@ -1720,8 +1720,14 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         return;
     }
     // use provided filter if not null
-    auto& RSFilter = externalFilter ? externalFilter
-        : ((filterType == FilterType::BACKGROUND_FILTER) ? properties.GetBackgroundFilter() : properties.GetFilter());
+    auto& RSFilter = externalFilter ? externalFilter : nullptr;
+    if (filterType == FilterType::BACKGROUND_FILTER) {
+        GenerateBackgroundFilter(properties);
+        RSFilter = properties.GetBackgroundFilter();
+    } else if (filterType == FilterType::FOREGROUND_FILTER) {
+        GenerateForegroundFilter(properties);
+        RSFilter = properties.GetForegroundFilter();
+    }
     if (RSFilter == nullptr) {
         return;
     }

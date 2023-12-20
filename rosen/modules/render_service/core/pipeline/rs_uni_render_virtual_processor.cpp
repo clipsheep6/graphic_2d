@@ -167,15 +167,18 @@ void RSUniRenderVirtualProcessor::ProcessDisplaySurface(RSDisplayRenderNode& nod
             return;
         }
 
-        const auto& property = node.GetRenderProperties();
-        auto geoPtr = (property.GetBoundsGeometry());
-        if (geoPtr) {
+        if (!RSSystemProperties::IsFoldScreenFlag()) {
+            const auto& property = node.GetRenderProperties();
+            auto geoPtr = (property.GetBoundsGeometry());
+            if (geoPtr) {
 #ifndef USE_ROSEN_DRAWING
-            canvas_->setMatrix(geoPtr->GetAbsMatrix());
+                canvas_->setMatrix(geoPtr->GetAbsMatrix());
 #else
-            canvas_->SetMatrix(geoPtr->GetAbsMatrix());
+                canvas_->SetMatrix(geoPtr->GetAbsMatrix());
 #endif
+            }
         }
+        
 
 #ifndef USE_ROSEN_DRAWING
         canvas_->save();

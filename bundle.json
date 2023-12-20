@@ -93,7 +93,8 @@
           "egl",
           "opengles",
           "vulkan-headers",
-          "vulkan-loader"
+          "vulkan-loader",
+          "opencl-icd-loader"
         ]
       },
       "build": {

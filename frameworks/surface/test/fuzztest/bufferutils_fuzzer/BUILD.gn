@@ -32,9 +32,9 @@ ohos_fuzztest("BufferUtilsFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [ "bufferutils_fuzzer.cpp" ]
-  deps = [ "//foundation/graphic/graphic_2d:libsurface" ]
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]

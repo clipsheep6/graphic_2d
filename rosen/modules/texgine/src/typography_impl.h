@@ -71,7 +71,7 @@ private:
     void DoLayout();
     int UpdateMetrics();
     int UpdateSpanMetrics(VariantSpan &span, double &coveredAscent);
-    int DoUpdateSpanMetrics(const VariantSpan &span, const TexgineFontMetrics &metrics,
+    int DoUpdateSpanMetrics(const VariantSpan &span, const std::shared_ptr<TexgineFontMetrics> metrics,
         const TextStyle &style, double &coveredAscent);
     void UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span, double &coveredAscent, double &coveredDescent);
     void ApplyAlignment();
@@ -81,8 +81,8 @@ private:
     void ComputeWordBoundary() const;
     void ComputeSpans(int lineIndex, double baseline, const CalcResult &calcResult,
         std::vector<TextRect> &lineBoxes) const;
-    std::vector<TextRect> GenTextRects(std::shared_ptr<TextSpan> &ts, double offsetX, double offsetY) const;
-
+    std::vector<TextRect> GenTextRects(std::shared_ptr<TextSpan> &ts, double offsetX, double offsetY,
+        double spanGapWidth) const;
     TypographyStyle typographyStyle_;
     std::vector<VariantSpan> spans_;
     std::shared_ptr<FontProviders> fontProviders_;

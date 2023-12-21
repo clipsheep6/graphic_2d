@@ -145,6 +145,7 @@ private:
     static RRect GetInnerRRectForDrawingBorder(const RSProperties& properties,
                                                const std::shared_ptr<RSBorder>& border,
                                                const Vector4f& innerOutset, const bool& isFirstLayerBorder);
+    static void ClipCanvas(const RSProperties& properties, RSPaintFilterCanvas& canvas);
 #ifndef USE_ROSEN_DRAWING
     static void DrawColorfulShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
     static void DrawShadowInner(const RSProperties& properties, RSPaintFilterCanvas& canvas, SkPath& path);
@@ -186,6 +187,8 @@ private:
                                const std::shared_ptr<RSBorder>& border, Vector4f& outset,
                                Vector4f& innerOutset, const bool isFirstLayerBorder);
     static const std::shared_ptr<SkRuntimeShaderBuilder>& GetPhongShaderBuilder();
+    static void DrawBackgroundWithOffScreen(const RSProperties& properties, RSPaintFilterCanvas& canvas,
+        SkSurface* surface, const std::shared_ptr<RSSkiaFilter>& filter);
 #else // USE_ROSEN_DRAWING
     static void DrawColorfulShadowInner(
         const RSProperties& properties, RSPaintFilterCanvas& canvas, Drawing::Path& path);
@@ -232,6 +235,8 @@ private:
                                const std::shared_ptr<RSBorder>& border, Vector4f& outset,
                                Vector4f& innerOutset, const bool isFirstLayerBorder);
     static const std::shared_ptr<Drawing::RuntimeShaderBuilder>& GetPhongShaderBuilder();
+    static void DrawBackgroundWithOffScreen(const RSProperties& properties, RSPaintFilterCanvas& canvas,
+        Drawing::Surface* surface, const std::shared_ptr<RSDrawingFilter>& filter);
 #endif // USE_ROSEN_DRAWING
     inline static int g_blurCnt = 0;
 };

@@ -335,5 +335,10 @@ bool RSSystemProperties::GetSecurityPermissionCheckEnabled()
 {
     return false;
 }
+
+bool RSSystemProperties::GetEffectMergeEnabled()
+{
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

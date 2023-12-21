@@ -1390,12 +1390,12 @@ void RSRenderNode::UpdateDrawableVec()
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region)
+void RSRenderNode::UpdateEffectRegion(const SkIRect& effectNodeAbsBounds, std::optional<SkPath>& region)
 #else
-void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
+void RSRenderNode::UpdateEffectRegion(const Drawing::RectI& effectNodeAbsBounds, std::optional<Drawing::Path>& region)
 #endif
 {
-    if (!region.has_value()) {
+    if (effectNodeAbsBounds.isEmpty() || !region.has_value()) {
         return;
     }
     const auto& property = GetRenderProperties();
@@ -1407,8 +1407,15 @@ void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
     if (!geoPtr) {
         return;
     }
+    const auto& absRect = geoPtr->GetAbsRect();
 
 #ifndef USE_ROSEN_DRAWING
+    auto childAbsBounds = SkRect::MakeLTRB(
+        absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom());
+    if (!effectNodeAbsBounds.contains(childAbsBounds)) {
+        ROSEN_LOGD("%{public}s current node is out of parent effect render node.", __func__);
+        return;
+    }
     SkPath clipPath;
     if (property.GetClipBounds() != nullptr) {
         clipPath = property.GetClipBounds()->GetSkiaPath();

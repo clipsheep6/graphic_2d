@@ -327,7 +327,7 @@ void RSUniRenderVisitor::UpdateStaticCacheSubTree(const std::shared_ptr<RSRender
             child->Update(*curSurfaceDirtyManager_, cacheRootNode, dirtyFlag_, prepareClipRect_);
         }
         if (child->GetRenderProperties().GetUseEffect()) {
-            child->UpdateEffectRegion(effectRegion_);
+            child->UpdateEffectRegion(effectNodeAbsBounds_, effectRegion_);
             if (effectRegion_) {
 #ifndef USE_ROSEN_DRAWING
                 auto rect = effectRegion_->getBounds();
@@ -358,6 +358,16 @@ void RSUniRenderVisitor::PrepareEffectNodeIfCacheReuse(const std::shared_ptr<RSR
     if (effectNode == nullptr || curSurfaceDirtyManager_ == nullptr) {
         return;
     }
+    auto geoPtr = effectNode->GetRenderProperties().GetBoundsGeometry();
+    if (!geoPtr) {
+        return;
+    }
+    const auto& absRect = geoPtr->GetAbsRect();
+#ifndef USE_ROSEN_DRAWING
+    effectNodeAbsBounds_.setLTRB(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom());
+#else
+    // TODO for drawing
+#endif
     auto effectRegion = effectRegion_;
     effectRegion_ = effectNode->InitializeEffectRegion();
     effectNode->Update(*curSurfaceDirtyManager_, cacheRootNode, dirtyFlag_, prepareClipRect_);
@@ -1650,7 +1660,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     PrepareChildren(node);
     // attention: accumulate direct parent's childrenRect
     node.UpdateParentChildrenRect(logicParentNode_.lock());
-    node.UpdateEffectRegion(effectRegion_);
+    node.UpdateEffectRegion(effectNodeAbsBounds_, effectRegion_);
     if (property.NeedFilter()) {
         // filterRects_ is used in RSUniRenderVisitor::CalcDirtyFilterRegion
         // When oldDirtyRect of node with filter has intersect with any surfaceNode or displayNode dirtyRegion,
@@ -1683,6 +1693,16 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
 
 void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 {
+    auto geoPtr = node.GetRenderProperties().GetBoundsGeometry();
+    if (!geoPtr) {
+        return;
+    }
+    const auto& absRect = geoPtr->GetAbsRect();
+#ifndef USE_ROSEN_DRAWING
+    effectNodeAbsBounds_.setLTRB(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom());
+#else
+    // TODO for drawing
+#endif
     bool dirtyFlag = dirtyFlag_;
     RectI prepareClipRect = prepareClipRect_;
     auto effectRegion = effectRegion_;

@@ -978,9 +978,9 @@ bool RSEffectDataGenerateDrawable::Update(const RSPropertyDrawableGenerateContex
 void RSEffectDataGenerateDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
     if (auto effectNode = node.ReinterpretCastTo<RSEffectRenderNode>()) {
-        if (auto& region = effectNode->effectRegion_) {
+        if (effectNode->GetNeedFilter()) {
 #ifndef USE_ROSEN_DRAWING
-            RSPropertiesPainter::DrawBackgroundEffect(node.GetRenderProperties(), canvas, *region);
+            RSPropertiesPainter::DrawBackgroundEffect(node.GetRenderProperties(), canvas);
 #else
             RSPropertiesPainter::DrawBackgroundEffect(node.GetRenderProperties(), canvas, *region);
 #endif

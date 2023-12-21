@@ -35,6 +35,7 @@
 #include "common/rs_obj_geometry.h"
 #include "common/rs_vector4.h"
 #include "modifier/rs_modifier.h"
+#include "modifier/rs_property.h"
 #include "modifier/rs_property_modifier.h"
 #include "pipeline/rs_node_map.h"
 #include "platform/common/rs_log.h"
@@ -77,15 +78,16 @@ bool IsPathAnimatableModifier(const RSModifierType& type)
 }
 }
 
-RSNode::RSNode(bool isRenderServiceNode, NodeId id)
-    : isRenderServiceNode_(isRenderServiceNode), id_(id), stagingPropertiesExtractor_(id), showingPropertiesFreezer_(id)
+RSNode::RSNode(bool isRenderServiceNode, NodeId id, bool isTextureExportNode)
+    : isRenderServiceNode_(isRenderServiceNode), isTextureExportNode_(isTextureExportNode),
+    id_(id), stagingPropertiesExtractor_(id), showingPropertiesFreezer_(id)
 {
     InitUniRenderEnabled();
     UpdateImplicitAnimator();
 }
 
-RSNode::RSNode(bool isRenderServiceNode) : RSNode(isRenderServiceNode, GenerateId())
-{}
+RSNode::RSNode(bool isRenderServiceNode, bool isTextureExportNode)
+    : RSNode(isRenderServiceNode, GenerateId(), isTextureExportNode) {}
 
 RSNode::~RSNode()
 {
@@ -217,7 +219,8 @@ std::vector<std::shared_ptr<RSAnimation>> RSNode::AnimateWithCurrentOptions(
         ROSEN_LOGE("Failed to open implicit animation, implicit animator is null!");
         return {};
     }
-    auto finishCallbackType = timingSensitive ? FinishCallbackType::TIME_SENSITIVE : FinishCallbackType::TIME_SENSITIVE;
+    auto finishCallbackType =
+        timingSensitive ? FinishCallbackType::TIME_SENSITIVE : FinishCallbackType::TIME_INSENSITIVE;
     // re-use the current options and replace the finish callback
     auto animationFinishCallback = std::make_shared<AnimationFinishCallback>(finishCallback, finishCallbackType);
     implicitAnimator->OpenImplicitAnimation(std::move(animationFinishCallback));
@@ -311,9 +314,19 @@ void RSNode::FinishAnimationByProperty(const PropertyId& id)
 
 void RSNode::CancelAnimationByProperty(const PropertyId& id)
 {
-    std::unique_lock<std::mutex> lock(animationMutex_);
     animatingPropertyNum_.erase(id);
-    EraseIf(animations_, [id](const auto& pair) { return (pair.second && (pair.second->GetPropertyId() == id)); });
+    std::vector<std::shared_ptr<RSAnimation>> toBeRemoved;
+    {
+        std::unique_lock<std::mutex> lock(animationMutex_);
+        EraseIf(animations_, [id, &toBeRemoved](const auto& pair) {
+            if (pair.second && (pair.second->GetPropertyId() == id)) {
+                toBeRemoved.emplace_back(pair.second);
+                return true;
+            }
+            return false;
+        });
+    }
+    toBeRemoved.clear();
 }
 
 const RSModifierExtractor& RSNode::GetStagingProperties() const
@@ -342,6 +355,9 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
         }
     }
 
+    // Note: Animation cancellation logic is now handled by RSImplicitAnimator. The code below might cause Spring
+    // Animations with a zero duration to not inherit velocity correctly, an issue slated for future resolution.
+    // This code is retained to ensure backward compatibility with specific arkui component animations.
     if (animation->GetDuration() <= 0) {
         FinishAnimationByProperty(animation->GetPropertyId());
     }
@@ -405,7 +421,6 @@ void RSNode::SetProperty(RSModifierType modifierType, T value)
     }
     auto property = std::make_shared<PropertyName>(value);
     auto propertyModifier = std::make_shared<ModifierName>(property);
-    ROSEN_LOGI("RSNode::SetProperty modifier");
     propertyModifiers_.emplace(modifierType, propertyModifier);
     AddModifier(propertyModifier);
 }
@@ -1052,9 +1067,9 @@ void RSNode::SetShadowIsFilled(bool shadowIsFilled)
     SetProperty<RSShadowIsFilledModifier, RSProperty<bool>>(RSModifierType::SHADOW_IS_FILLED, shadowIsFilled);
 }
 
-void RSNode::SetShadowColorStrategy(bool shadowColorStrategy)
+void RSNode::SetShadowColorStrategy(int shadowColorStrategy)
 {
-    SetProperty<RSShadowColorStrategyModifier, RSProperty<bool>>(
+    SetProperty<RSShadowColorStrategyModifier, RSProperty<int>>(
         RSModifierType::SHADOW_COLOR_STRATEGY, shadowColorStrategy);
 }
 
@@ -1449,7 +1464,7 @@ void RSNode::MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer)
     if (isNodeSingleFrameComposer_ != isNodeSingleFrameComposer) {
         isNodeSingleFrameComposer_ = isNodeSingleFrameComposer;
         std::unique_ptr<RSCommand> command =
-            std::make_unique<RSMarkNodeSingleFrameComposer>(GetId(), isNodeSingleFrameComposer);
+            std::make_unique<RSMarkNodeSingleFrameComposer>(GetId(), isNodeSingleFrameComposer, GetRealPid());
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
             transactionProxy->AddCommand(command, IsRenderServiceNode());
@@ -1475,6 +1490,12 @@ void RSNode::SetLightPosition(float positionX, float positionY, float positionZ)
 void RSNode::SetLightPosition(const Vector4f& lightPosition)
 {
     SetProperty<RSLightPositionModifier, RSAnimatableProperty<Vector4f>>(RSModifierType::LIGHT_POSITION, lightPosition);
+}
+
+void RSNode::SetIlluminatedBorderWidth(float illuminatedBorderWidth)
+{
+    SetProperty<RSIlluminatedBorderWidthModifier, RSAnimatableProperty<float>>(
+        RSModifierType::ILLUMINATED_BORDER_WIDTH, illuminatedBorderWidth);
 }
 
 void RSNode::SetIlluminatedType(uint32_t illuminatedType)
@@ -1605,7 +1626,7 @@ bool RSNode::IsUniRenderEnabled() const
 
 bool RSNode::IsRenderServiceNode() const
 {
-    return g_isUniRenderEnabled || isRenderServiceNode_;
+    return (g_isUniRenderEnabled || isRenderServiceNode_) && (!isTextureExportNode_);
 }
 
 void RSNode::AddChild(SharedPtr child, int index)

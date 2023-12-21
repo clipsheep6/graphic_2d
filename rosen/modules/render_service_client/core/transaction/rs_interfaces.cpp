@@ -73,9 +73,10 @@ ScreenId RSInterfaces::CreateVirtualScreen(
     uint32_t height,
     sptr<Surface> surface,
     ScreenId mirrorId,
-    int flags)
+    int flags,
+    std::vector<NodeId> filteredAppVector)
 {
-    return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
+    return renderServiceClient_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags, filteredAppVector);
 }
 
 int32_t RSInterfaces::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
@@ -153,6 +154,16 @@ int32_t RSInterfaces::GetCurrentRefreshRateMode()
 std::vector<int32_t> RSInterfaces::GetScreenSupportedRefreshRates(ScreenId id)
 {
     return renderServiceClient_->GetScreenSupportedRefreshRates(id);
+}
+
+bool RSInterfaces::GetShowRefreshRateEnabled()
+{
+    return renderServiceClient_->GetShowRefreshRateEnabled();
+}
+    
+void RSInterfaces::SetShowRefreshRateEnabled(bool enable)
+{
+    return renderServiceClient_->SetShowRefreshRateEnabled(enable);
 }
 
 bool RSInterfaces::TakeSurfaceCaptureForUI(
@@ -360,6 +371,11 @@ int32_t RSInterfaces::SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrame
     return renderServiceClient_->SetScreenSkipFrameInterval(id, skipFrameInterval);
 }
 
+bool RSInterfaces::SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes)
+{
+    return renderServiceClient_->SetSystemAnimatedScenes(systemAnimatedScenes);
+}
+
 int32_t RSInterfaces::RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback)
 {
     return renderServiceClient_->RegisterOcclusionChangeCallback(callback);
@@ -379,6 +395,11 @@ int32_t RSInterfaces::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)
 int32_t RSInterfaces::RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback)
 {
     return renderServiceClient_->RegisterHgmConfigChangeCallback(callback);
+}
+
+int32_t RSInterfaces::RegisterHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback)
+{
+    return renderServiceClient_->RegisterHgmRefreshRateModeChangeCallback(callback);
 }
 
 void RSInterfaces::SetAppWindowNum(uint32_t num)
@@ -434,6 +455,26 @@ void RSInterfaces::ReportEventJankFrame(DataBaseRs info)
 void RSInterfaces::EnableCacheForRotation()
 {
     renderServiceClient_->SetCacheEnabledForRotation(true);
+}
+
+void RSInterfaces::NotifyLightFactorStatus(bool isSafe)
+{
+    renderServiceClient_->NotifyLightFactorStatus(isSafe);
+}
+
+void RSInterfaces::NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList)
+{
+    renderServiceClient_->NotifyPackageEvent(listSize, packageList);
+}
+
+void RSInterfaces::NotifyRefreshRateEvent(const EventInfo& eventInfo)
+{
+    renderServiceClient_->NotifyRefreshRateEvent(eventInfo);
+}
+
+void RSInterfaces::NotifyTouchEvent(int32_t touchStatus)
+{
+    renderServiceClient_->NotifyTouchEvent(touchStatus);
 }
 
 void RSInterfaces::DisableCacheForRotation()

@@ -30,6 +30,7 @@ public:
     std::shared_ptr<ColorSpace> GetColorSpace() const;
     ColorType GetColorType() const;
     AlphaType GetAlphaType() const;
+    ColorQuad GetColor(int x, int y) const;
     size_t GetRowBytes() const;
     const void* GetAddr() const;
     int32_t GetWidth() const;
@@ -37,7 +38,7 @@ public:
     bool ScalePixels(const Pixmap& dst, const SamplingOptions& options) const;
 
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return pixmapImplPtr_->DowncastingTo<T>();
     }

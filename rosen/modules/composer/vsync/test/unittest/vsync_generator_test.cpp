@@ -87,6 +87,21 @@ HWTEST_F(VSyncGeneratorTest, UpdateMode002, Function | MediumTest| Level0)
 }
 
 /*
+* Function: UpdateMode003
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call UpdateMode
+ */
+HWTEST_F(VSyncGeneratorTest, UpdateMode003, Function | MediumTest| Level0)
+{
+    VSyncGeneratorTest::vsyncGenerator_->SetVSyncMode(VSYNC_MODE_LTPO);
+    ASSERT_EQ(VSyncGeneratorTest::vsyncGenerator_->UpdateMode(0, 0, 0), VSYNC_ERROR_OK);
+    // 25000000 is period, refreshRate is 40hz，for JudgeRefreshRateLocked test
+    ASSERT_EQ(VSyncGeneratorTest::vsyncGenerator_->UpdateMode(25000000, 0, 0), VSYNC_ERROR_OK);
+}
+
+/*
 * Function: AddListener001
 * Type: Function
 * Rank: Important(2)
@@ -109,6 +124,21 @@ HWTEST_F(VSyncGeneratorTest, AddListener001, Function | MediumTest| Level0)
 HWTEST_F(VSyncGeneratorTest, AddListener002, Function | MediumTest| Level0)
 {
     ASSERT_EQ(VSyncGeneratorTest::vsyncGenerator_->AddListener(2, nullptr), VSYNC_ERROR_INVALID_ARGUMENTS);
+}
+
+/*
+* Function: AddListener003
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call AddListener
+ */
+HWTEST_F(VSyncGeneratorTest, AddListener003, Function | MediumTest| Level0)
+{
+    VSyncGeneratorTest::vsyncGenerator_->SetVSyncMode(VSYNC_MODE_LTPO);
+    VSyncGeneratorTest::vsyncGenerator_->UpdateMode(2, 0, 0);
+    sptr<VSyncGeneratorTestCallback> callback = new VSyncGeneratorTestCallback;
+    ASSERT_EQ(VSyncGeneratorTest::vsyncGenerator_->AddListener(2, callback), VSYNC_ERROR_OK);
 }
 
 /*

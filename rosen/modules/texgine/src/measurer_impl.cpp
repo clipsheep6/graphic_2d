@@ -174,11 +174,7 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
         std::shared_ptr<Typeface> lastTypeface = nullptr;
         while (utf16Index < runsit->end) {
             U16_NEXT(text_.data(), utf16Index, runsit->end, cp);
-            if (lastTypeface && lastTypeface->Has(cp)) {
-                LOGCEX_DEBUG() << " cached";
-                continue;
-            }
-            if (lastTypeface && runsit->typeface) {
+            if (runsit->typeface) {
                 LOGCEX_DEBUG() << " new";
                 auto next = runsit;
                 struct MeasuringRun run = {.start = utf16Index - U16_LENGTH(cp), .end = runsit->end,
@@ -192,8 +188,7 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
                                  (char)(((runsit->script) >> SECOND_BYTE) & 0xFF),
                                  (char)(((runsit->script) >> THIRD_BYTE) & 0xFF),
                                  (char)((runsit->script) & 0xFF), '\0'};
-            bool fallbackTypeface = false;
-            lastTypeface = fontCollection_.GetTypefaceForChar(cp, style_, runScript, locale_, fallbackTypeface);
+            lastTypeface = fontCollection_.GetTypefaceForChar(cp, style_, runScript, locale_);
             if (lastTypeface == nullptr) {
                 LOGCEX_DEBUG() << " no typeface";
                 continue;
@@ -201,9 +196,6 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
 
             LOGCEX_DEBUG() << " found at " << lastTypeface->GetName();
             runsit->typeface = lastTypeface;
-            if (fallbackTypeface) {
-                lastTypeface = nullptr;
-            }
         }
     }
 }
@@ -332,7 +324,7 @@ int MeasurerImpl::DoShape(CharGroups &cgs, MeasuringRun &run, size_t &index)
         LOGEX_FUNC_LINE(ERROR) << "text is nullptr";
         return FAILED;
     }
-    hb_buffer_add_utf16(hbuffer, text_.data(), INVALID_TEXT_LENGTH, run.start, run.end - run.start);
+    hb_buffer_add_utf16(hbuffer, text_.data(), text_.size(), run.start, run.end - run.start);
     hb_buffer_set_direction(hbuffer, rtl_ ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
     auto icuGetUnicodeFuncs = hb_unicode_funcs_create(hb_icu_get_unicode_funcs());
     if (!icuGetUnicodeFuncs) {

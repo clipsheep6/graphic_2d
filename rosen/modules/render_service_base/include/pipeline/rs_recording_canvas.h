@@ -37,6 +37,8 @@
 #include "surface_buffer.h"
 #endif
 
+#include "include/core/SkHMSymbol.h"
+
 namespace OHOS {
 namespace Media {
 class PixelMap;
@@ -102,6 +104,8 @@ public:
     void DrawPixelMapWithParm(
         const std::shared_ptr<Media::PixelMap>& pixelmap,
         const Rosen::RsImageInfo& rsImageInfo, const SkSamplingOptions& samplingOptions, const SkPaint& paint);
+    void drawImageNine(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkIRect& center,
+        const SkRect& dst, SkFilterMode filter, const SkPaint* paint);
 #else
     GrContext* getGrContext() override;
     void SetGrContext(GrContext* grContext);
@@ -111,8 +115,6 @@ public:
     void onDrawBitmapLattice(const SkBitmap& bm, const SkCanvas::Lattice& lattice, const SkRect& dst,
         const SkPaint* paint) override;
     void onDrawBitmapNine(const SkBitmap& bm, const SkIRect& center, const SkRect& dst, const SkPaint* paint) override;
-    void drawImageNine(const std::shared_ptr<Media::PixelMap>& pixelmap, const SkIRect& center,
-        const SkRect& dst, SkFilterMode filter, const SkPaint* paint);
     void onDrawBitmapRect(const SkBitmap& bm, const SkRect* src, const SkRect& dst,
         const SkPaint* paint, SrcRectConstraint constraint) override;
     void onDrawImage(const SkImage* img, SkScalar x, SkScalar y, const SkPaint* paint)override;
@@ -170,6 +172,7 @@ public:
     void onDrawAnnotation(const SkRect&, const char[], SkData*) override;
 
     void onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) override;
+    void onDrawSymbol(const HMSymbolData& symbol, SkPoint locate, const SkPaint& paint) override;
 
     void onDrawPatch(const SkPoint[12], const SkColor[4], const SkPoint[4], SkBlendMode, const SkPaint&) override;
     void onDrawPoints(SkCanvas::PointMode mode, size_t count, const SkPoint pts[], const SkPaint& paint) override;
@@ -219,11 +222,14 @@ public:
     ~ExtendRecordingCanvas() override = default;
     void DrawImageWithParm(const std::shared_ptr<Drawing::Image>& image, const std::shared_ptr<Drawing::Data>& data,
         const Drawing::AdaptiveImageInfo& rsImageInfo, const Drawing::SamplingOptions& sampling);
-    void DrawExtendPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
+    void DrawPixelMapWithParm(const std::shared_ptr<Media::PixelMap>& pixelMap,
         const Drawing::AdaptiveImageInfo& rsImageInfo, const Drawing::SamplingOptions& sampling);
     void DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelMap, const Drawing::Rect& src,
         const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling,
         Drawing::SrcRectConstraint constraint = Drawing::SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
+private:
+    template<typename T, typename... Args>
+    void AddOp(Args&&... args);
 };
 } // namespace Rosen
 } // namespace OHOS

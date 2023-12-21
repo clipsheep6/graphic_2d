@@ -102,7 +102,7 @@ public:
         CACHE_TYPE_NONE              = 0,
         CACHE_TYPE_SNAPSHOT          = 1,
         CACHE_TYPE_FILTERED_SNAPSHOT = 2,
-        CACHE_TYPE_BOTH              = 3,
+        CACHE_TYPE_BOTH              = CACHE_TYPE_SNAPSHOT | CACHE_TYPE_FILTERED_SNAPSHOT,
     };
 
     // Call this function to manually invalidate the cache. The next time DrawFilter() is called, it will regenerate the
@@ -222,14 +222,15 @@ private:
         GrBackendTexture resultBackendTexture_;
         SkISize surfaceSize_;
         std::weak_ptr<RSSkiaFilter> filter_;
+        GrBackendTexture cacheCompletedBackendTexture_;
 #else
         std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
         Drawing::BackendTexture cacheBackendTexture_;
         Drawing::BackendTexture resultBackendTexture_;
         Drawing::RectI surfaceSize_;
-        std::weak_ptr<RSSkiaFilter> filter_;
+        std::weak_ptr<RSDrawingFilter> filter_;
+        Drawing::BackendTexture cacheCompletedBackendTexture_;
 #endif
-        GrBackendTexture cacheCompletedBackendTexture_;
         std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
         std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot_ = nullptr;
         std::mutex grBackendTextureMutex_;
@@ -264,6 +265,8 @@ private:
     // To reduce memory usage, clear one of the cached images.
     inline void CompactCache(bool shouldClearFilteredCache);
 
+    const char* GetCacheState() const;
+
     // We keep both the snapshot and filtered snapshot in the cache, and clear unneeded one in next frame.
     // Note: rect in cachedSnapshot_ and cachedFilteredSnapshot_ is in device coordinate.
     std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot_ = nullptr;
@@ -273,6 +276,8 @@ private:
     uint32_t cachedFilterHash_ = 0;
     // Cache age, used to determine if we can delay the cache update.
     int cacheUpdateInterval_ = 0;
+    // Whether we need to purge the cache after this frame.
+    bool pendingPurge_ = false;
     // Region of the cached image, used to determine if we need to invalidate the cache.
     RectI snapshotRegion_; // Note: in device coordinate.
 

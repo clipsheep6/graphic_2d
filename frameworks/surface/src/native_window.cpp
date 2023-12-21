@@ -39,6 +39,7 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
     OHNativeWindow* nativeWindow = new OHNativeWindow();
     nativeWindow->surface =
                 *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSurface);
+    BLOGE_CHECK_AND_RETURN_RET(nativeWindow->surface != nullptr, nullptr, "window surface is null");
     nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
     nativeWindow->config.height = nativeWindow->surface->GetDefaultHeight();
     nativeWindow->config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
@@ -107,6 +108,7 @@ int32_t NativeWindowRequestBuffer(OHNativeWindow *window,
     }
     OHOS::sptr<OHOS::SurfaceBuffer> sfbuffer;
     OHOS::sptr<OHOS::SyncFence> releaseFence = OHOS::SyncFence::INVALID_FENCE;
+    BLOGE_CHECK_AND_RETURN_RET(window->surface != nullptr, SURFACE_ERROR_ERROR, "window surface is null");
     int32_t ret = window->surface->RequestBuffer(sfbuffer, releaseFence, window->config);
     if (ret != OHOS::GSError::GSERROR_OK || sfbuffer == nullptr) {
         BLOGE("API failed, please check RequestBuffer function ret:%{public}d, Queue Id:%{public}" PRIu64,
@@ -175,24 +177,23 @@ int32_t NativeWindowFlushBuffer(OHNativeWindow *window, OHNativeWindowBuffer *bu
     return OHOS::GSERROR_OK;
 }
 
-int32_t GetLastFlushedBuffer(OHNativeWindow *window, OHNativeWindowBuffer **buffer)
+int32_t GetLastFlushedBuffer(OHNativeWindow *window, OHNativeWindowBuffer **buffer, int *fenceFd, float matrix[16])
 {
     if (window == nullptr || buffer == nullptr) {
         BLOGE("parameter error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
-
-    if (window->bufferCache_.find(window->lastBufferSeqNum) != window->bufferCache_.end()) {
-        if (window->bufferCache_[window->lastBufferSeqNum]->sfbuffer->GetUsage() & BUFFER_USAGE_PROTECTED) {
-            BLOGE("Not allowed to obtain protect surface buffer");
-            return OHOS::GSERROR_NO_PERMISSION;
-        }
-        *buffer = window->bufferCache_[window->lastBufferSeqNum];
-        BLOGD("The last flushed buffer seqNum is %{public}u", window->lastBufferSeqNum);
-        return OHOS::GSERROR_OK;
+    OHNativeWindowBuffer *nwBuffer = new OHNativeWindowBuffer();
+    OHOS::sptr<OHOS::SyncFence> acquireFence = OHOS::SyncFence::INVALID_FENCE;
+    int32_t ret = window->surface->GetLastFlushedBuffer(nwBuffer->sfbuffer, acquireFence, matrix);
+    if (ret != OHOS::GSError::GSERROR_OK || nwBuffer->sfbuffer == nullptr) {
+        BLOGE("GetLastFlushedBuffer fail");
+        return ret;
     }
-
-    return OHOS::GSERROR_NO_BUFFER;
+    *buffer = nwBuffer;
+    NativeObjectReference(nwBuffer);
+    *fenceFd = acquireFence->Dup();
+    return OHOS::GSERROR_OK;
 }
 
 int32_t NativeWindowCancelBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer)
@@ -201,7 +202,7 @@ int32_t NativeWindowCancelBuffer(OHNativeWindow *window, OHNativeWindowBuffer *b
         BLOGE("parameter error, please check input parameter");
         return OHOS::GSERROR_INVALID_ARGUMENTS;
     }
-
+    BLOGE_CHECK_AND_RETURN_RET(window->surface != nullptr, SURFACE_ERROR_ERROR, "window surface is null");
     window->surface->CancelBuffer(buffer->sfbuffer);
     return OHOS::GSERROR_OK;
 }

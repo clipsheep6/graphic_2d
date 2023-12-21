@@ -47,8 +47,12 @@ public:
     double GetPostBreak() const;
     double GetPreBreak() const;
     bool IsRTL() const;
+
+    void PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
+    void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
     void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY, const std::vector<TextShadow> &shadows);
+
     std::shared_ptr<TextSpan> CloneWithCharGroups(CharGroups const &cgs);
 
     void operator+=(TextSpan const &textSpan)
@@ -56,14 +60,13 @@ public:
         u16vect_.insert(u16vect_.end(), textSpan.u16vect_.begin(), textSpan.u16vect_.end());
     }
 
-    TexgineFontMetrics tmetrics_;
+    std::shared_ptr<TexgineFontMetrics> tmetrics_ = std::make_shared<TexgineFontMetrics>();
     bool rtl_ = false;
     std::shared_ptr<Typeface> typeface_ = nullptr;
 
     std::vector<uint16_t> u16vect_;
     std::shared_ptr<TexgineTextBlob> textBlob_ = nullptr;
     std::vector<double> glyphWidths_;
-
     CharGroups cgs_;
 
     double preBreak_ = 0.0;
@@ -81,9 +84,6 @@ private:
     friend class TextShaper;
     friend class TextReverser;
     friend void ReportMemoryUsage(std::string const &member, TextSpan const &that, bool needThis);
-
-    void PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs);
-    void PaintDecorationStyle(TexgineCanvas &canvas, double left, double right, double y, const TextStyle &xs);
 };
 } // namespace TextEngine
 } // namespace Rosen

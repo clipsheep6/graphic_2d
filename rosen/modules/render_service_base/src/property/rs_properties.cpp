@@ -101,7 +101,8 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
     [](RSProperties* prop) { prop->SetShadowRadius(0.f); },              // SHADOW_RADIUS,            46
     [](RSProperties* prop) { prop->SetShadowPath({}); },                 // SHADOW_PATH,              47
     [](RSProperties* prop) { prop->SetShadowMask(false); },              // SHADOW_MASK,              48
-    [](RSProperties* prop) { prop->SetShadowColorStrategy(false); },     // ShadowColorStrategy,      49
+    [](RSProperties* prop) { prop->SetShadowColorStrategy(               // ShadowColorStrategy,      49
+        SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE); },
     [](RSProperties* prop) { prop->SetMask({}); },                       // MASK,                     50
     [](RSProperties* prop) { prop->SetSpherize(0.f); },                  // SPHERIZE,                 51
     [](RSProperties* prop) { prop->SetLightUpEffect(1.f); },             // LIGHT_UP_EFFECT,          52
@@ -133,8 +134,9 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
     [](RSProperties* prop) { prop->SetGreyCoef2(0.f); },               // GREY_COEF2,                 75
     [](RSProperties* prop) { prop->SetLightIntensity(-1.f); },            // LIGHT_INTENSITY           76
     [](RSProperties* prop) { prop->SetLightPosition({}); },               // LIGHT_POSITION            77
-    [](RSProperties* prop) { prop->SetIlluminatedType(-1); },             // ILLUMINATED_TYPE          78
-    [](RSProperties* prop) { prop->SetBloom({}); },                       // BLOOM                     79
+    [](RSProperties* prop) { prop->SetIlluminatedBorderWidth({}); },      // ILLUMINATED_BORDER_WIDTH  78
+    [](RSProperties* prop) { prop->SetIlluminatedType(-1); },             // ILLUMINATED_TYPE          79
+    [](RSProperties* prop) { prop->SetBloom({}); },                       // BLOOM                     80
 };
 } // namespace
 
@@ -189,6 +191,9 @@ void RSProperties::SetBounds(Vector4f bounds)
     boundsGeo_->SetRect(bounds.x_, bounds.y_, bounds.z_, bounds.w_);
     hasBounds_ = true;
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -198,6 +203,9 @@ void RSProperties::SetBoundsSize(Vector2f size)
     hasBounds_ = true;
     geoDirty_ = true;
     contentDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -223,6 +231,9 @@ void RSProperties::SetBoundsPosition(Vector2f position)
 {
     boundsGeo_->SetPosition(position.x_, position.y_);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -230,6 +241,9 @@ void RSProperties::SetBoundsPositionX(float positionX)
 {
     boundsGeo_->SetX(positionX);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -237,6 +251,9 @@ void RSProperties::SetBoundsPositionY(float positionY)
 {
     boundsGeo_->SetY(positionY);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -282,6 +299,9 @@ void RSProperties::SetFrame(Vector4f frame)
     }
     frameGeo_->SetRect(frame.x_, frame.y_, frame.z_, frame.w_);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -290,6 +310,9 @@ void RSProperties::SetFrameSize(Vector2f size)
     frameGeo_->SetSize(size.x_, size.y_);
     geoDirty_ = true;
     contentDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -313,6 +336,9 @@ void RSProperties::SetFramePosition(Vector2f position)
 {
     frameGeo_->SetPosition(position.x_, position.y_);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -320,6 +346,9 @@ void RSProperties::SetFramePositionX(float positionX)
 {
     frameGeo_->SetX(positionX);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -327,6 +356,9 @@ void RSProperties::SetFramePositionY(float positionY)
 {
     frameGeo_->SetY(positionY);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -475,8 +507,7 @@ void RSProperties::UpdateSandBoxMatrix(const std::optional<Drawing::Matrix>& roo
 #ifndef USE_ROSEN_DRAWING
     sandbox_->matrix_ = rootMat.preTranslate(sandbox_->position_->x_, sandbox_->position_->y_);
 #else
-    Drawing::Matrix matrix;
-    matrix.DeepCopy(rootMatrix.value());
+    Drawing::Matrix matrix = rootMatrix.value();
     matrix.PreTranslate(sandbox_->position_->x_, sandbox_->position_->y_);
     sandbox_->matrix_ = matrix;
 #endif
@@ -619,11 +650,21 @@ void RSProperties::SetScaleY(float sy)
     SetDirty();
 }
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+bool RSProperties::GetOpincPropDirty() const
+{
+    return isOpincPropDirty_ && alphaNeedApply_;
+}
+#endif
+
 void RSProperties::SetTranslate(Vector2f translate)
 {
     boundsGeo_->SetTranslateX(translate[0]);
     boundsGeo_->SetTranslateY(translate[1]);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -631,6 +672,9 @@ void RSProperties::SetTranslateX(float translate)
 {
     boundsGeo_->SetTranslateX(translate);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -638,6 +682,9 @@ void RSProperties::SetTranslateY(float translate)
 {
     boundsGeo_->SetTranslateY(translate);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -730,7 +777,6 @@ void RSProperties::SetAlpha(float alpha)
         alphaNeedApply_ = true;
     }
     SetDirty();
-    contentDirty_ = true;
 }
 
 float RSProperties::GetAlpha() const
@@ -1132,7 +1178,7 @@ const std::shared_ptr<RSFilter>& RSProperties::GetFilter() const
 bool RSProperties::IsDynamicLightUpValid() const
 {
     return dynamicLightUpRate_.has_value() && dynamicLightUpDegree_.has_value() &&
-           ROSEN_GNE(*dynamicLightUpRate_, 0.0) && ROSEN_GE(*dynamicLightUpDegree_, 0.0) &&
+           ROSEN_GNE(*dynamicLightUpRate_, 0.0) && ROSEN_GE(*dynamicLightUpDegree_, -1.0) &&
            ROSEN_LE(*dynamicLightUpDegree_, 1.0);
 }
 
@@ -1254,7 +1300,7 @@ void RSProperties::SetShadowIsFilled(bool shadowIsFilled)
     contentDirty_ = true;
 }
 
-void RSProperties::SetShadowColorStrategy(bool shadowColorStrategy)
+void RSProperties::SetShadowColorStrategy(int shadowColorStrategy)
 {
     if (!shadow_.has_value()) {
         shadow_ = std::make_optional<RSShadow>();
@@ -1265,8 +1311,9 @@ void RSProperties::SetShadowColorStrategy(bool shadowColorStrategy)
     // [planning] if shadow stores as texture and out of node
     // node content would not be affected
     contentDirty_ = true;
-    if (shadowColorStrategy && colorPickerTaskShadow_ == nullptr) {
+    if (shadowColorStrategy != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE && colorPickerTaskShadow_ == nullptr) {
         CreateColorPickerTaskForShadow();
+        colorPickerTaskShadow_->SetShadowColorStrategy(shadowColorStrategy);
     }
 }
 
@@ -1317,9 +1364,9 @@ bool RSProperties::GetShadowIsFilled() const
     return shadow_ ? shadow_->GetIsFilled() : false;
 }
 
-bool RSProperties::GetShadowColorStrategy() const
+int RSProperties::GetShadowColorStrategy() const
 {
-    return shadow_ ? shadow_->GetColorStrategy() : false;
+    return shadow_ ? shadow_->GetColorStrategy() : SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE;
 }
 
 const std::optional<RSShadow>& RSProperties::GetShadow() const
@@ -1482,9 +1529,14 @@ RRect RSProperties::GetInnerRRect() const
         rect.top_ += border_->GetWidth(RSBorder::TOP);
         rect.width_ -= border_->GetWidth(RSBorder::LEFT) + border_->GetWidth(RSBorder::RIGHT);
         rect.height_ -= border_->GetWidth(RSBorder::TOP) + border_->GetWidth(RSBorder::BOTTOM);
-        cornerRadius = cornerRadius - GetBorderWidth();
     }
     RRect rrect = RRect(rect, cornerRadius);
+    if (border_) {
+        rrect.radius_[0] -= { border_->GetWidth(RSBorder::LEFT), border_->GetWidth(RSBorder::TOP) };
+        rrect.radius_[1] -= { border_->GetWidth(RSBorder::RIGHT), border_->GetWidth(RSBorder::TOP) };
+        rrect.radius_[2] -= { border_->GetWidth(RSBorder::RIGHT), border_->GetWidth(RSBorder::BOTTOM) };
+        rrect.radius_[3] -= { border_->GetWidth(RSBorder::LEFT), border_->GetWidth(RSBorder::BOTTOM) };
+    }
     return rrect;
 }
 
@@ -1508,6 +1560,9 @@ void RSProperties::ResetDirty()
     isDirty_ = false;
     geoDirty_ = false;
     contentDirty_ = false;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = false;
+#endif
 }
 
 bool RSProperties::IsDirty() const
@@ -1752,6 +1807,16 @@ void RSProperties::SetLightPosition(const Vector4f& lightPosition)
     contentDirty_ = true;
 }
 
+void RSProperties::SetIlluminatedBorderWidth(float illuminatedBorderWidth)
+{
+    if (!illuminatedPtr_) {
+        illuminatedPtr_ = std::make_shared<RSIlluminated>();
+    }
+    illuminatedPtr_->SetIlluminatedBorderWidth(illuminatedBorderWidth);
+    SetDirty();
+    contentDirty_ = true;
+}
+
 void RSProperties::SetIlluminatedType(int illuminatedType)
 {
     if (!illuminatedPtr_) {
@@ -1806,6 +1871,11 @@ int RSProperties::GetIlluminatedType() const
 float RSProperties::GetBloom() const
 {
     return illuminatedPtr_ ? illuminatedPtr_->GetBloomIntensity() : 0.f;
+}
+
+float RSProperties::GetIlluminatedBorderWidth() const
+{
+    return illuminatedPtr_ ? illuminatedPtr_->GetIlluminatedBorderWidth() : 0.f;
 }
 
 void RSProperties::CalculateAbsLightPosition()
@@ -1989,9 +2059,7 @@ void RSProperties::GenerateColorFilter()
         filter = SkColorFilters::Matrix(matrix);
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
-        Drawing::ColorMatrix colorMatrix;
-        colorMatrix.SetArray(matrix);
-        filter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        filter = Drawing::ColorFilter::CreateFloatColorFilter(matrix);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
         }
@@ -2009,9 +2077,7 @@ void RSProperties::GenerateColorFilter()
         filter = SkColorFilters::Matrix(matrix);
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
-        Drawing::ColorMatrix colorMatrix;
-        colorMatrix.SetArray(matrix);
-        filter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        filter = Drawing::ColorFilter::CreateFloatColorFilter(matrix);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
         }
@@ -2030,9 +2096,7 @@ void RSProperties::GenerateColorFilter()
         filter = SkColorFilters::Matrix(matrix);
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
-        Drawing::ColorMatrix colorMatrix;
-        colorMatrix.SetArray(matrix);
-        filter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        filter = Drawing::ColorFilter::CreateFloatColorFilter(matrix);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
         }
@@ -2053,9 +2117,7 @@ void RSProperties::GenerateColorFilter()
         filter = SkColorFilters::Matrix(matrix);
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
-        Drawing::ColorMatrix colorMatrix;
-        colorMatrix.SetArray(matrix);
-        filter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        filter = Drawing::ColorFilter::CreateFloatColorFilter(matrix);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
         }
@@ -2081,9 +2143,7 @@ void RSProperties::GenerateColorFilter()
         filter = SkColorFilters::Matrix(matrix);
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
-        Drawing::ColorMatrix colorMatrix;
-        colorMatrix.SetArray(matrix);
-        filter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        filter = Drawing::ColorFilter::CreateFloatColorFilter(matrix);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
         }
@@ -2106,9 +2166,7 @@ void RSProperties::GenerateColorFilter()
         filter = SkColorFilters::Matrix(matrix);
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
-        Drawing::ColorMatrix colorMatrix;
-        colorMatrix.SetArray(matrix);
-        filter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        filter = Drawing::ColorFilter::CreateFloatColorFilter(matrix);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
         }
@@ -2148,9 +2206,7 @@ void RSProperties::GenerateColorFilter()
         filter = SkColorFilters::Matrix(matrix);
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
-        Drawing::ColorMatrix colorMatrix;
-        colorMatrix.SetArray(matrix);
-        filter = Drawing::ColorFilter::CreateMatrixColorFilter(colorMatrix);
+        filter = Drawing::ColorFilter::CreateFloatColorFilter(matrix);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
         }
@@ -2166,7 +2222,7 @@ void RSProperties::GenerateColorFilter()
         colorFilter_ = filter->makeComposed(colorFilter_);
 #else
         filter = Drawing::ColorFilter::CreateBlendModeColorFilter(Drawing::Color::ColorQuadSetARGB(
-            colorBlend.GetRed(), colorBlend.GetGreen(), colorBlend.GetBlue(), colorBlend.GetAlpha()),
+            colorBlend.GetAlpha(), colorBlend.GetRed(), colorBlend.GetGreen(), colorBlend.GetBlue()),
             Drawing::BlendMode::PLUS);
         if (colorFilter_) {
             filter->Compose(*colorFilter_);
@@ -2690,6 +2746,10 @@ void RSProperties::OnApplyModifiers()
         if (clipToFrame_ && clipToBounds_ && frameOffsetX_ == 0 && frameOffsetY_ == 0) {
             clipToFrame_ = false;
         }
+        if (RSSystemProperties::IsPcType()) {
+            frameGeo_->Round();
+            boundsGeo_->Round();
+        }
     }
     if (colorFilterNeedUpdate_) {
         GenerateColorFilter();
@@ -2699,7 +2759,7 @@ void RSProperties::OnApplyModifiers()
     }
     if (filterNeedUpdate_) {
         filterNeedUpdate_ = false;
-        if (IsShadowValid()) {
+        if (GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE) {
             filterNeedUpdate_ = true;
         }
         if (backgroundFilter_ != nullptr && !backgroundFilter_->IsValid()) {
@@ -2709,7 +2769,8 @@ void RSProperties::OnApplyModifiers()
             filter_.reset();
         }
         needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
-                        IsDynamicLightUpValid() || IsShadowValid() || IsGreyAdjustmenValid();
+                        IsDynamicLightUpValid() || IsGreyAdjustmenValid() ||
+                        GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE;
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
         CreateFilterCacheManagerIfNeed();
 #endif

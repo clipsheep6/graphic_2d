@@ -19,14 +19,22 @@
 
 namespace OHOS {
 namespace Rosen {
+#if (defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)) || (defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK))
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::OPENGL;
+#elif defined (ACE_ENABLE_GL) || defined (RS_ENABLE_GL)
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::OPENGL;
+#else
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::VULKAN;
+#endif
+
 int RSSystemProperties::GetDumpFrameNum()
 {
     return 0;
 }
 
-bool RSSystemProperties::GetRecordingEnabled()
+int RSSystemProperties::GetRecordingEnabled()
 {
-    return false;
+    return 0;
 }
 
 bool RSSystemProperties::IsSceneBoardEnabled()
@@ -279,7 +287,17 @@ bool RSSystemProperties::GetASTCEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetCachedBlurPartialRenderEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetImageGpuResourceCacheEnable(int width, int height)
+{
+    return false;
+}
+
+bool RSSystemProperties::IsPcType()
 {
     return false;
 }
@@ -310,6 +328,10 @@ bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
 }
 
 bool RSSystemProperties::GetSubSurfaceEnabled()
+{
+    return false;
+}
+bool RSSystemProperties::GetSecurityPermissionCheckEnabled()
 {
     return false;
 }

@@ -44,6 +44,8 @@ namespace Rosen {
 struct RSSurfaceNodeConfig {
     std::string SurfaceNodeName = "SurfaceNode";
     void* additionalData = nullptr;
+    bool isTextureExportNode = false;
+    SurfaceId surfaceId = 0;
 };
 
 class RSC_EXPORT RSSurfaceNode : public RSNode {
@@ -88,7 +90,7 @@ public:
     bool SetBufferAvailableCallback(BufferAvailableCallback callback);
     bool IsBufferAvailable() const;
     using BoundsChangedCallback = std::function<void(const Rosen::Vector4f&)>;
-    void SetBoundsChangedCallback(BoundsChangedCallback callback);
+    void SetBoundsChangedCallback(BoundsChangedCallback callback) override;
     void SetAnimationFinished();
 
     bool Marshalling(Parcel& parcel) const;
@@ -106,13 +108,13 @@ public:
 
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<OHOS::Surface> GetSurface() const;
-
+#endif
     void SetColorSpace(GraphicColorGamut colorSpace);
     GraphicColorGamut GetColorSpace()
     {
         return colorSpace_;
     }
-#endif
+
     std::string GetName() const
     {
         return name_;
@@ -151,7 +153,7 @@ private:
     void CreateSurfaceExt(const RSSurfaceExtConfig& config);
 #endif
     bool CreateNode(const RSSurfaceRenderNodeConfig& config);
-    bool CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config);
+    bool CreateNodeAndSurface(const RSSurfaceRenderNodeConfig& config, SurfaceId surfaceId = 0);
     void OnBoundsSizeChanged() const override;
     std::pair<std::string, std::string> SplitSurfaceNodeName(std::string surfaceNodeName);
 #ifdef NEW_RENDER_CONTEXT
@@ -165,9 +167,7 @@ private:
     BufferAvailableCallback callback_;
     bool bufferAvailable_ = false;
     BoundsChangedCallback boundsChangedCallback_;
-#ifndef ROSEN_CROSS_PLATFORM
     GraphicColorGamut colorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
-#endif
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
     bool hasFingerprint_ = false;

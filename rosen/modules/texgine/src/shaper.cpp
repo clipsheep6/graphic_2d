@@ -177,7 +177,7 @@ std::vector<LineMetrics> Shaper::DoShapeBeforeEllipsis(std::vector<VariantSpan> 
     BidiProcesser bp;
     auto newSpans = bp.ProcessBidiText(spans, tstyle.direction);
     if (newSpans.empty()) {
-        LOGEX_FUNC_LINE(ERROR) << "Process BidiText failed";
+        LOGEX_FUNC_LINE_DEBUG() << "Process BidiText failed";
         return {};
     }
 
@@ -226,7 +226,9 @@ void Shaper::ConsiderHeadEllipsis(const TypographyStyle &ys, const std::shared_p
     double lastLineWidth = lastLine.GetAllSpanWidth();
     if (params.maxLines < lineMetrics_.size()) {
         if (params.ellipsisWidth > 0) {
-            while (lastLineWidth + params.ellipsisWidth < params.widthLimit) {
+            // lineMetrics_.size() - 2 is the index of second to last
+            while (!lineMetrics_[lineMetrics_.size() - 2].lineSpans.empty() &&
+                lastLineWidth + params.ellipsisWidth < params.widthLimit) {
                 // lineMetrics_.size() - 2 is the index of second to last
                 auto lastSpan = lineMetrics_[lineMetrics_.size() - 2].lineSpans.back();
                 // lineMetrics_.size() - 2 is the index of second to last
@@ -309,7 +311,8 @@ void Shaper::ConsiderTailEllipsis(const TypographyStyle &style, const std::share
     double lastLineWidth = lastLine.GetAllSpanWidth();
     params.widthLimit -= lastLine.indent;
     if (params.maxLines < lineMetrics_.size()) {
-        if (params.ellipsisWidth > 0 && lastLineWidth + params.ellipsisWidth < params.widthLimit) {
+        if (params.ellipsisWidth > 0 && lastLineWidth + params.ellipsisWidth < params.widthLimit &&
+            style.wordBreakType == WordBreakType::BREAK_ALL) {
             lastLine.lineSpans.push_back(lineMetrics_[params.maxLines].lineSpans.front());
             lastLineWidth = lastLine.GetAllSpanWidth();
         }
@@ -347,7 +350,10 @@ std::vector<LineMetrics> Shaper::CreatePartlySpan(const bool cutRight, const Typ
     size_t startIndex = static_cast<size_t>(textSpan->cgs_.GetRange().start);
     size_t endIndex = static_cast<size_t>(textSpan->cgs_.GetRange().end);
     double deletedWidth = 0.0;
-    while (startIndex < endIndex && deletedWidth < exceedWidth) {
+    while (startIndex < endIndex) {
+        if (deletedWidth >= exceedWidth) {
+            break;
+        }
         if (cutRight) {
             endIndex--;
             deletedWidth += textSpan->cgs_.GetCharWidth(endIndex);

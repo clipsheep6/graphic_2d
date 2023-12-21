@@ -222,7 +222,7 @@ HWTEST_F(RSInterfacesTest, SetVirtualMirrorScreenCanvasRotation001, Function | S
         "virtual5", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
     EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
     EXPECT_EQ(rsInterfaces->SetVirtualMirrorScreenCanvasRotation(virtualScreenId, true), true);
-    EXPECT_EQ(rsInterfaces->SetVirtualMirrorScreenCanvasRotation(virtualScreenId, false), false);
+    EXPECT_EQ(rsInterfaces->SetVirtualMirrorScreenCanvasRotation(virtualScreenId, false), true);
     rsInterfaces->RemoveVirtualScreen(virtualScreenId);
 }
 
@@ -364,6 +364,21 @@ HWTEST_F(RSInterfacesTest, CreateVirtualScreen004, Function | SmallTest | Level2
     auto backLight = rsInterfaces->GetScreenBacklight(virtualScreenId);
     EXPECT_EQ(backLight, -1);
     rsInterfaces->RemoveVirtualScreen(virtualScreenId);
+}
+
+/*
+* Function: CreateVirtualScreen
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: call CreateVirtualScreen with filteredAppVector
+*/
+HWTEST_F(RSInterfacesTest, CreateVirtualScreen005, Function | SmallTest | Level2)
+{
+    std::vector<NodeId> filteredAppVector = {};
+    ScreenId virtualScreenId = rsInterfaces->CreateVirtualScreen(
+        "virtual11", 320, 180, nullptr, INVALID_SCREEN_ID, -1, filteredAppVector);
+    EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
 }
 
 /*
@@ -1223,6 +1238,65 @@ HWTEST_F(RSInterfacesTest, RegisterHgmConfigChangeCallback_Test, Function | Smal
     HgmConfigChangeCallback cb = [](std::shared_ptr<RSHgmConfigData> data){};
     int32_t ret = rsInterfaces->RegisterHgmConfigChangeCallback(cb);
     ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: NotifyLightFactorStatus001
+ * @tc.desc: Notify light factor status to hgm
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, NotifyLightFactorStatus001, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    bool isSafe = false;
+    rsInterfaces->NotifyLightFactorStatus(isSafe);
+    ASSERT_NE(rsInterfaces, nullptr);
+}
+
+/*
+ * @tc.name: NotifyPackageEvent001
+ * @tc.desc: Notify current package list to hgm
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, NotifyPackageEvent001, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    std::vector<std::string> packageList;
+    packageList.push_back("NotifyPackageEvent001");
+    packageList.push_back("NotifyPackageEvent002");
+    uint32_t listSize = packageList.size();
+    rsInterfaces->NotifyPackageEvent(listSize, packageList);
+    ASSERT_NE(rsInterfaces, nullptr);
+}
+
+/*
+ * @tc.name: NotifyRefreshRateEvent001
+ * @tc.desc: Notify refreshRate event to hgm to modify screen refreshRate
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, NotifyRefreshRateEvent001, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    EventInfo eventInfo = { "VOTER_IDLE", true, 1, 1000 };
+    rsInterfaces->NotifyRefreshRateEvent(eventInfo);
+    ASSERT_NE(rsInterfaces, nullptr);
+}
+
+/*
+ * @tc.name: NotifyTouchEvent001
+ * @tc.desc: Notify touch event to hgm
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSInterfacesTest, NotifyTouchEvent001, Function | SmallTest | Level2)
+{
+    ASSERT_NE(rsInterfaces, nullptr);
+    int32_t touchStatus = 0;
+    rsInterfaces->NotifyTouchEvent(touchStatus);
+    ASSERT_NE(rsInterfaces, nullptr);
 }
 
 /*

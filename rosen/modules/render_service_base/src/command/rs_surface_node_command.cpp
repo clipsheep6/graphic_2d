@@ -25,9 +25,9 @@
 namespace OHOS {
 namespace Rosen {
 
-void SurfaceNodeCommandHelper::Create(RSContext& context, NodeId id, RSSurfaceNodeType type)
+void SurfaceNodeCommandHelper::Create(RSContext& context, NodeId id, RSSurfaceNodeType type, bool isTextureExportNode)
 {
-    auto node = std::make_shared<RSSurfaceRenderNode>(id, context.weak_from_this());
+    auto node = std::make_shared<RSSurfaceRenderNode>(id, context.weak_from_this(), isTextureExportNode);
     node->SetSurfaceNodeType(type);
     auto& nodeMap = context.GetMutableNodeMap();
     nodeMap.RegisterRenderNode(node);
@@ -86,14 +86,12 @@ void SurfaceNodeCommandHelper::SetFingerprint(RSContext& context, NodeId id, boo
     }
 }
 
-#ifndef ROSEN_CROSS_PLATFORM
 void SurfaceNodeCommandHelper::SetColorSpace(RSContext& context, NodeId id, GraphicColorGamut colorSpace)
 {
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
         node->SetColorSpace(colorSpace);
     }
 }
-#endif
 
 void SurfaceNodeCommandHelper::UpdateSurfaceDefaultSize(RSContext& context, NodeId id, float width, float height)
 {

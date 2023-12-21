@@ -66,13 +66,8 @@ bool RSRcdRenderVisitor::ConsumeAndUpdateBuffer(RSRcdSurfaceRenderNode& node)
 void RSRcdRenderVisitor::ProcessRcdSurfaceRenderNode(RSRcdSurfaceRenderNode& node, rs_rcd::RoundCornerLayer* layerInfo,
     bool resourceChanged)
 {
-    if (uniProcessor_ == nullptr) {
-        RS_LOGE("RSRcdRenderVisitor RSProcessor is null!");
-        return;
-    }
-
-    if (node.IsInvalidSurface()) {
-        RS_LOGE("RSRcdRenderVisitor RCDSurfaceType is NONE!");
+    if (uniProcessor_ == nullptr || node.IsInvalidSurface()) {
+        RS_LOGE("RSRcdRenderVisitor RSProcessor is null or node invalid!");
         return;
     }
 
@@ -83,9 +78,9 @@ void RSRcdRenderVisitor::ProcessRcdSurfaceRenderNode(RSRcdSurfaceRenderNode& nod
     }
 
     auto surfaceNodePtr = node.ReinterpretCastTo<RSRcdSurfaceRenderNode>();
-    if (!node.IsSurfaceCreated()) {
+    if (surfaceNodePtr == nullptr || (!node.IsSurfaceCreated())) {
         sptr<IBufferConsumerListener> listener = new RSRcdRenderListener(surfaceNodePtr);
-        if (!node.CreateSurface(listener)) {
+        if (listener == nullptr || (!node.CreateSurface(listener))) {
             RS_LOGE("RSRcdRenderVisitor::RenderExpandedFrame CreateSurface failed");
             return;
         }
@@ -97,7 +92,10 @@ void RSRcdRenderVisitor::ProcessRcdSurfaceRenderNode(RSRcdSurfaceRenderNode& nod
         return;
     }
 
-    node.PrepareHardwareResourceBuffer(layerInfo);
+    if (layerInfo == nullptr || (!node.PrepareHardwareResourceBuffer(layerInfo))) {
+        RS_LOGE("PrepareHardwareResourceBuffer is wrong");
+        return;
+    }
 
 #ifdef NEW_RENDER_CONTEXT
     auto renderFrame = renderEngine_->RequestFrame(std::static_pointer_cast<RSRenderSurfaceOhos>(rsSurface),

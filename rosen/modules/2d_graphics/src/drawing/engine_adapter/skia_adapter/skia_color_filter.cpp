@@ -41,6 +41,11 @@ void SkiaColorFilter::InitWithColorMatrix(const ColorMatrix& m)
     filter_ = SkColorFilters::Matrix(dst);
 }
 
+void SkiaColorFilter::InitWithColorFloat(const float f[20])
+{
+    filter_ = SkColorFilters::Matrix(f);
+}
+
 void SkiaColorFilter::InitWithLinearToSrgbGamma()
 {
     filter_ = SkColorFilters::LinearToSRGBGamma();
@@ -66,6 +71,11 @@ void SkiaColorFilter::Compose(const ColorFilter& f)
     if (filter_ != nullptr && skColorFilterImpl != nullptr) {
         filter_ = filter_->makeComposed(skColorFilterImpl->GetColorFilter());
     }
+}
+
+void SkiaColorFilter::InitWithCompose(const float f1[MATRIX_SIZE], const float f2[MATRIX_SIZE])
+{
+    filter_ = SkColorFilters::Compose(SkColorFilters::Matrix(f1), SkColorFilters::Matrix(f2));
 }
 
 void SkiaColorFilter::InitWithLuma()
@@ -110,6 +120,15 @@ bool SkiaColorFilter::Deserialize(std::shared_ptr<Data> data)
 #else
     return false;
 #endif
+}
+
+bool SkiaColorFilter::AsAColorMatrix(scalar matrix[MATRIX_SIZE]) const
+{
+    if (filter_ == nullptr) {
+        LOGE("SkiaColorFilter::AsAColorMatrix filter_ is nullptr!");
+        return false;
+    }
+    return filter_->asAColorMatrix(matrix);
 }
 
 } // namespace Drawing

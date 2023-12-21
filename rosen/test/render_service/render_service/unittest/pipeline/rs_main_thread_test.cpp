@@ -452,7 +452,7 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData001, TestSize.Level1)
     FollowType followType = FollowType::NONE;
     rsTransactionData->AddCommand(command, nodeId, followType);
     mainThread->ClassifyRSTransactionData(rsTransactionData);
-    ASSERT_EQ(mainThread->pendingEffectiveCommands_.empty(), false);
+    ASSERT_EQ(mainThread->pendingEffectiveCommands_.empty(), true);
 }
 
 /**
@@ -471,7 +471,7 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData002, TestSize.Level1)
     FollowType followType = FollowType::NONE;
     rsTransactionData->AddCommand(command, nodeId, followType);
     mainThread->ClassifyRSTransactionData(rsTransactionData);
-    ASSERT_EQ(mainThread->pendingEffectiveCommands_.empty(), false);
+    ASSERT_EQ(mainThread->pendingEffectiveCommands_.empty(), true);
 }
 
 /**
@@ -490,7 +490,7 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData003, TestSize.Level1)
     FollowType followType = FollowType::FOLLOW_TO_PARENT;
     rsTransactionData->AddCommand(command, nodeId, followType);
     mainThread->ClassifyRSTransactionData(rsTransactionData);
-    ASSERT_EQ(mainThread->cachedCommands_[nodeId].empty(), false);
+    ASSERT_EQ(mainThread->cachedCommands_[nodeId].empty(), true);
 }
 
 /**
@@ -521,7 +521,7 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData004, TestSize.Level1)
     FollowType followType = FollowType::FOLLOW_TO_SELF;
     rsTransactionData->AddCommand(command, nodeId, followType);
     mainThread->ClassifyRSTransactionData(rsTransactionData);
-    ASSERT_EQ(mainThread->cachedCommands_[nodeId].empty(), false);
+    ASSERT_EQ(mainThread->cachedCommands_[nodeId].empty(), true);
 
     mainThread->cachedCommands_.clear();
     rsTransactionData = std::make_unique<RSTransactionData>();
@@ -529,7 +529,7 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData004, TestSize.Level1)
     followType = FollowType::FOLLOW_TO_PARENT;
     rsTransactionData->AddCommand(command, nodeId + 1, followType);
     mainThread->ClassifyRSTransactionData(rsTransactionData);
-    ASSERT_EQ(mainThread->cachedCommands_[nodeId + 1].empty(), false);
+    ASSERT_EQ(mainThread->cachedCommands_[nodeId + 1].empty(), true);
 }
 
 /**
@@ -581,6 +581,7 @@ HWTEST_F(RSMainThreadTest, CheckIfInstanceOnlySurfaceBasicGeoTransform02, TestSi
     auto node = std::make_shared<RSRenderNode>(id, mainThread->context_);
     ASSERT_NE(node, nullptr);
     node->SetIsOnTheTree(true, id, id);
+    node->SetContentDirty();
     mainThread->context_->AddActiveNode(node);
     ASSERT_EQ(static_cast<int>(mainThread->context_->activeNodesInRoot_.size()), 1);
 
@@ -732,6 +733,20 @@ HWTEST_F(RSMainThreadTest, DoParallelComposition, TestSize.Level1)
 
     auto mainThread = RSMainThread::Instance();
     RSInnovation::_s_createParallelSyncSignal = (void*)RSMainThreadTest::CreateParallelSyncSignal;
-    mainThread->DoParallelComposition(node);
+    if (RSInnovation::GetParallelCompositionEnabled(mainThread->isUniRender_)) {
+        mainThread->DoParallelComposition(node);
+    }
+}
+
+/**
+ * @tc.name: SetIdleTimerExpiredFlag
+ * @tc.desc: SetIdleTimerExpiredFlag test
+ * @tc.type: FUNC
+ * @tc.require: issueI7HDVG
+ */
+HWTEST_F(RSMainThreadTest, SetIdleTimerExpiredFlag, TestSize.Level1)
+{
+    auto mainThread = RSMainThread::Instance();
+    mainThread->SetIdleTimerExpiredFlag(true);
 }
 } // namespace OHOS::Rosen

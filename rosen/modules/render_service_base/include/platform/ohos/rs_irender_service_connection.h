@@ -81,7 +81,8 @@ public:
         uint32_t height,
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
-        int32_t flags = 0) = 0;
+        int32_t flags = 0,
+        std::vector<NodeId> filteredAppVector = {}) = 0;
 
     virtual int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) = 0;
 
@@ -102,6 +103,10 @@ public:
     virtual int32_t GetCurrentRefreshRateMode() = 0;
 
     virtual std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id) = 0;
+
+    virtual bool GetShowRefreshRateEnabled() = 0;
+    
+    virtual void SetShowRefreshRateEnabled(bool enable) = 0;
 
     virtual int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) = 0;
 
@@ -196,13 +201,25 @@ public:
 
     virtual int32_t RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) = 0;
 
+    virtual int32_t RegisterHgmRefreshRateModeChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) = 0;
+
     virtual void SetAppWindowNum(uint32_t num) = 0;
+
+    virtual bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes) = 0;
 
     virtual void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow) = 0;
 
     virtual int32_t ResizeVirtualScreen(ScreenId id, uint32_t width, uint32_t height) = 0;
 
     virtual void ReportJankStats() = 0;
+
+    virtual void NotifyLightFactorStatus(bool isSafe) = 0;
+
+    virtual void NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList) = 0;
+
+    virtual void NotifyRefreshRateEvent(const EventInfo& eventInfo) = 0;
+
+    virtual void NotifyTouchEvent(int32_t touchStatus) = 0;
 
     virtual void ReportEventResponse(DataBaseRs info) = 0;
 

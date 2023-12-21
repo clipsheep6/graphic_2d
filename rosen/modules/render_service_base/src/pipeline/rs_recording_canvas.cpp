@@ -171,6 +171,15 @@ void RSRecordingCanvas::DrawPixelMapWithParm(const std::shared_ptr<Media::PixelM
     AddOp(std::move(op));
 }
 
+void RSRecordingCanvas::drawImageNine(
+    const std::shared_ptr<Media::PixelMap>& pixelmap, const SkIRect& center, const SkRect& dst,
+    SkFilterMode filter, const SkPaint* paint)
+{
+    RS_DRAWOP_TRACE_FUNC();
+    std::unique_ptr<OpItem> op = std::make_unique<PixelmapNineOpItem>(pixelmap, center, dst, filter, paint);
+    AddOp(std::move(op));
+}
+
 void RSRecordingCanvas::DrawImageLatticeAsBitmap(
     const SkImage* image, const SkCanvas::Lattice& lattice, const SkRect& dst, const SkPaint* paint)
 {
@@ -381,6 +390,13 @@ void RSRecordingCanvas::onDrawTextBlob(const SkTextBlob* blob, SkScalar x, SkSca
     AddOp(std::move(op));
 }
 
+void RSRecordingCanvas::onDrawSymbol(const HMSymbolData& symbol, SkPoint locate, const SkPaint& paint)
+{
+    RS_DRAWOP_TRACE_FUNC();
+    std::unique_ptr<OpItem> op = std::make_unique<SymbolOpItem>(symbol, locate, paint);
+    AddOp(std::move(op));
+}
+
 void RSRecordingCanvas::DrawAdaptiveRRect(float radius, const SkPaint& paint)
 {
     RS_DRAWOP_TRACE_FUNC();
@@ -480,16 +496,16 @@ void ExtendRecordingCanvas::DrawImageWithParm(
     auto object = std::make_shared<RSExtendImageObject>(image, data, rsImageInfo);
     auto objectHandle =
         Drawing::CmdListHelper::AddImageObjectToCmdList(*Drawing::RecordingCanvas::GetDrawCmdList(), object);
-    Drawing::RecordingCanvas::GetDrawCmdList()->AddOp<Drawing::DrawImageWithParmOpItem>(objectHandle, sampling);
+    AddOp<Drawing::DrawImageWithParmOpItem::ConstructorHandle>(objectHandle, sampling);
 }
 
-void ExtendRecordingCanvas::DrawExtendPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
+void ExtendRecordingCanvas::DrawPixelMapWithParm(const std::shared_ptr<Media::PixelMap>& pixelMap,
     const Drawing::AdaptiveImageInfo& rsImageInfo, const Drawing::SamplingOptions& sampling)
 {
     auto object = std::make_shared<RSExtendImageObject>(pixelMap, rsImageInfo);
     auto objectHandle =
         Drawing::CmdListHelper::AddImageObjectToCmdList(*Drawing::RecordingCanvas::GetDrawCmdList(), object);
-    Drawing::RecordingCanvas::GetDrawCmdList()->AddOp<Drawing::DrawExtendPixelMapOpItem>(objectHandle, sampling);
+    AddOp<Drawing::DrawPixelMapWithParmOpItem::ConstructorHandle>(objectHandle, sampling);
 }
 
 void ExtendRecordingCanvas::DrawPixelMapRect(const std::shared_ptr<Media::PixelMap>& pixelMap, const Drawing::Rect& src,
@@ -499,7 +515,36 @@ void ExtendRecordingCanvas::DrawPixelMapRect(const std::shared_ptr<Media::PixelM
     auto object = std::make_shared<RSExtendImageBaseOj>(pixelMap, src, dst);
     auto objectHandle =
         Drawing::CmdListHelper::AddImageBaseOjToCmdList(*Drawing::RecordingCanvas::GetDrawCmdList(), object);
-    Drawing::RecordingCanvas::GetDrawCmdList()->AddOp<Drawing::DrawPixelMapRectOpItem>(objectHandle, sampling);
+    AddOp<Drawing::DrawPixelMapRectOpItem::ConstructorHandle>(objectHandle, sampling);
+}
+
+template<typename T, typename... Args>
+void ExtendRecordingCanvas::AddOp(Args&&... args)
+{
+    Drawing::PaintHandle paintHandle;
+    bool brushValid = paintBrush_.IsValid();
+    bool penValid = paintPen_.IsValid();
+    if (!brushValid && !penValid) {
+        paintHandle.isAntiAlias = true;
+        paintHandle.style = Drawing::Paint::PaintStyle::PAINT_FILL;
+        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+        return;
+    }
+    if (brushValid && penValid && Drawing::Paint::CanCombinePaint(paintBrush_, paintPen_)) {
+        paintPen_.SetStyle(Drawing::Paint::PaintStyle::PAINT_FILL_STROKE);
+        Drawing::RecordingCanvas::GenerateHandleFromPaint(*cmdList_, paintPen_, paintHandle);
+        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+        paintPen_.SetStyle(Drawing::Paint::PaintStyle::PAINT_STROKE);
+        return;
+    }
+    if (brushValid) {
+        Drawing::RecordingCanvas::GenerateHandleFromPaint(*cmdList_, paintBrush_, paintHandle);
+        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+    }
+    if (penValid) {
+        Drawing::RecordingCanvas::GenerateHandleFromPaint(*cmdList_, paintPen_, paintHandle);
+        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

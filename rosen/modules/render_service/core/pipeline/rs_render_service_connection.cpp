@@ -18,9 +18,11 @@
 #include "common/rs_background_thread.h"
 #include "hgm_core.h"
 #include "hgm_command.h"
+#include "hgm_frame_rate_manager.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
+#include "pipeline/rs_realtime_refresh_rate_manager.h"
 #include "pipeline/rs_render_frame_rate_linker_map.h"
 #include "pipeline/rs_render_node_map.h"
 #include "pipeline/rs_render_service_listener.h"
@@ -127,6 +129,11 @@ void RSRenderServiceConnection::CleanAll(bool toDelete) noexcept
         [this]() {
             RS_TRACE_NAME_FMT("ClearTransactionDataPidInfo %d", remotePid_);
             mainThread_->ClearTransactionDataPidInfo(remotePid_);
+        }).wait();
+    mainThread_->ScheduleTask(
+        [this]() {
+            RS_TRACE_NAME_FMT("CleanHgmEvent %d", remotePid_);
+            mainThread_->GetFrameRateMgr()->CleanVote(remotePid_);
         }).wait();
     mainThread_->ScheduleTask(
         [this]() {
@@ -334,14 +341,16 @@ ScreenId RSRenderServiceConnection::CreateVirtualScreen(
     uint32_t height,
     sptr<Surface> surface,
     ScreenId mirrorId,
-    int32_t flags)
+    int32_t flags,
+    std::vector<NodeId> filteredAppVector)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto newVirtualScreenId = screenManager_->CreateVirtualScreen(name, width, height, surface, mirrorId, flags);
+    auto newVirtualScreenId = screenManager_->CreateVirtualScreen(
+        name, width, height, surface, mirrorId, flags, filteredAppVector);
     virtualScreenIds_.insert(newVirtualScreenId);
     if (surface != nullptr) {
-        auto& hgmCore = HgmCore::Instance();
-        hgmCore.StartScreenScene(SceneType::SCREEN_RECORD);
+        EventInfo event = { "VOTER_VIRTUALDISPLAY", ADD_VOTE, OLED_60_HZ, OLED_60_HZ, name };
+        NotifyRefreshRateEvent(event);
     }
     return newVirtualScreenId;
 }
@@ -357,9 +366,8 @@ void RSRenderServiceConnection::RemoveVirtualScreen(ScreenId id)
     std::lock_guard<std::mutex> lock(mutex_);
     screenManager_->RemoveVirtualScreen(id);
     virtualScreenIds_.erase(id);
-    auto& hgmCore = HgmCore::Instance();
-    hgmCore.StopScreenScene(SceneType::SCREEN_RECORD);
-    hgmCore.SetModeBySettingConfig();
+    EventInfo event = { "VOTER_VIRTUALDISPLAY", REMOVE_VOTE };
+    NotifyRefreshRateEvent(event);
 }
 
 int32_t RSRenderServiceConnection::SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback)
@@ -422,7 +430,7 @@ void RSRenderServiceConnection::SetRefreshRateMode(int32_t refreshRateMode)
 void RSRenderServiceConnection::SyncFrameRateRange(const FrameRateRange& range)
 {
     auto& context = mainThread_->GetContext();
-    auto& frameRateLikerMap = context.GetFrameRateLinkerMap().GetFrameRateLinkerMap();
+    auto& frameRateLikerMap = context.GetFrameRateLinkerMap().Get();
     auto iter = std::find_if(frameRateLikerMap.begin(), frameRateLikerMap.end(), [this](const auto& pair) {
         return ExtractPid(pair.first) == remotePid_;
     });
@@ -447,6 +455,16 @@ std::vector<int32_t> RSRenderServiceConnection::GetScreenSupportedRefreshRates(S
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     std::vector<int32_t> rates = hgmCore.GetScreenComponentRefreshRates(id);
     return rates;
+}
+
+bool RSRenderServiceConnection::GetShowRefreshRateEnabled()
+{
+    return RSRealtimeRefreshRateManager::Instance().GetShowRefreshRateEnabled();
+}
+    
+void RSRenderServiceConnection::SetShowRefreshRateEnabled(bool enable)
+{
+    return RSRealtimeRefreshRateManager::Instance().SetShowRefreshRateEnabled(enable);
 }
 
 int32_t RSRenderServiceConnection::GetCurrentRefreshRateMode()
@@ -474,6 +492,8 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         RSHardwareThread::Instance().ScheduleTask(
             [=]() { screenManager_->SetScreenPowerStatus(id, status); }).wait();
+
+        OHOS::Rosen::HgmCore::Instance().NotifyScreenPowerStatus(id, status);
     } else {
         mainThread_->ScheduleTask(
             [=]() { screenManager_->SetScreenPowerStatus(id, status); }).wait();
@@ -939,6 +959,9 @@ bool RSRenderServiceConnection::GetPixelmap(
     auto getPixelmapTask = [&node, &pixelmap, rect, &result, tid]() {
         result = node->GetPixelmap(pixelmap, rect, tid);
     };
+    if (!node->IsOnTheTree()) {
+        node->ClearOp();
+    }
     if (tid == UINT32_MAX) {
         if (!mainThread_->IsIdle()) {
             return false;
@@ -1005,12 +1028,31 @@ int32_t RSRenderServiceConnection::RegisterHgmConfigChangeCallback(sptr<RSIHgmCo
     return StatusCode::SUCCESS;
 }
 
+int32_t RSRenderServiceConnection::RegisterHgmRefreshRateModeChangeCallback(
+    sptr<RSIHgmConfigChangeCallback> callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!callback) {
+        RS_LOGD("RSRenderServiceConnection::RegisterHgmRefreshRateModeChangeCallback: callback is nullptr");
+        return StatusCode::INVALID_ARGUMENTS;
+    }
+
+    HgmConfigCallbackManager::GetInstance()->RegisterHgmRefreshRateModeChangeCallback(remotePid_, callback);
+    return StatusCode::SUCCESS;
+}
+
 void RSRenderServiceConnection::SetAppWindowNum(uint32_t num)
 {
     auto task = [this, num]() -> void {
         mainThread_->SetAppWindowNum(num);
     };
     mainThread_->PostTask(task);
+}
+
+bool RSRenderServiceConnection::SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return mainThread_->SetSystemAnimatedScenes(systemAnimatedScenes);
 }
 
 void RSRenderServiceConnection::ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow)
@@ -1037,6 +1079,26 @@ void RSRenderServiceConnection::ReportJankStats()
 {
     auto task = [this]() -> void { RSJankStats::GetInstance().ReportJankStats(); };
     mainThread_->PostTask(task);
+}
+
+void RSRenderServiceConnection::NotifyLightFactorStatus(bool isSafe)
+{
+    mainThread_->GetFrameRateMgr()->HandleLightFactorStatus(isSafe);
+}
+
+void RSRenderServiceConnection::NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList)
+{
+    mainThread_->GetFrameRateMgr()->HandlePackageEvent(listSize, packageList);
+}
+
+void RSRenderServiceConnection::NotifyRefreshRateEvent(const EventInfo& eventInfo)
+{
+    mainThread_->GetFrameRateMgr()->HandleRefreshRateEvent(remotePid_, eventInfo);
+}
+
+void RSRenderServiceConnection::NotifyTouchEvent(int32_t touchStatus)
+{
+    mainThread_->GetFrameRateMgr()->HandleTouchEvent(touchStatus);
 }
 
 void RSRenderServiceConnection::ReportEventResponse(DataBaseRs info)
@@ -1097,13 +1159,11 @@ void RSRenderServiceConnection::SetTpFeatureConfig(int32_t feature, const char* 
 void RSRenderServiceConnection::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
 {
     if (isVirtualScreenUsingStatus) {
-        auto& hgmCore = HgmCore::Instance();
-        hgmCore.StartScreenScene(SceneType::SCREEN_RECORD);
-        hgmCore.SetModeBySettingConfig();
+        EventInfo event = { "VOTER_VIRTUALDISPLAY", ADD_VOTE, OLED_60_HZ, OLED_60_HZ };
+        NotifyRefreshRateEvent(event);
     } else {
-        auto& hgmCore = HgmCore::Instance();
-        hgmCore.StopScreenScene(SceneType::SCREEN_RECORD);
-        hgmCore.SetModeBySettingConfig();
+        EventInfo event = { "VOTER_VIRTUALDISPLAY", REMOVE_VOTE };
+        NotifyRefreshRateEvent(event);
     }
     return;
 }

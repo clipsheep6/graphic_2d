@@ -28,13 +28,13 @@
 #include "include/core/SkColor.h"
 #include "include/effects/SkColorMatrix.h"
 #include "include/effects/SkImageFilters.h"
-#include "property/rs_color_picker_cache_task.h"
 #else
 #include "effect/color_filter.h"
 #include "draw/color.h"
 #include "effect/color_matrix.h"
 #include "effect/image_filter.h"
 #endif
+#include "property/rs_color_picker_cache_task.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -102,6 +102,7 @@ public:
     void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const Drawing::Rect& src, const Drawing::Rect& dst) const override;
 #endif
+    void SetGreyCoef(float greyCoef1, float greyCoef2, bool isGreyCoefValid) override;
 
     float GetRadius() const;
     bool CanSkipFrame() const override;
@@ -116,6 +117,9 @@ private:
     float radius_ {};
     float saturation_ = 1.f;
     float brightness_ = 1.f;
+    float greyCoef1_ = 0.f;
+    float greyCoef2_ = 0.f;
+    bool isGreyCoefValid_ = false;
     RSColor maskColor_ = RSColor();
 
 #ifndef USE_ROSEN_DRAWING
@@ -131,10 +135,10 @@ private:
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkColorFilter> colorFilter_;
-    std::shared_ptr<RSColorPickerCacheTask> colorPickerTask_;
 #else
     std::shared_ptr<Drawing::ColorFilter> colorFilter_;
 #endif
+    std::shared_ptr<RSColorPickerCacheTask> colorPickerTask_;
     friend class RSMarshallingHelper;
 };
 } // namespace Rosen

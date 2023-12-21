@@ -37,6 +37,7 @@
 #include "platform/drawing/rs_surface.h"
 #endif
 #include "rs_irender_client.h"
+#include "variable_frame_rate/rs_variable_frame_rate.h"
 #include "screen_manager/rs_screen_capability.h"
 #include "screen_manager/rs_screen_data.h"
 #include "screen_manager/rs_screen_hdr_capability.h"
@@ -58,6 +59,7 @@ using OcclusionChangeCallback = std::function<void(std::shared_ptr<RSOcclusionDa
 using SurfaceOcclusionChangeCallback = std::function<void(float)>;
 using HgmConfigChangeCallback = std::function<void(std::shared_ptr<RSHgmConfigData>)>;
 using OnRemoteDiedCallback = std::function<void()>;
+using HgmRefreshRateModeChangeCallback = std::function<void(int32_t)>;
 
 struct DataBaseRs {
     int32_t appPid = -1;
@@ -67,6 +69,7 @@ struct DataBaseRs {
     int64_t inputTime = 0;
     int64_t beginVsyncTime = 0;
     int64_t endVsyncTime = 0;
+    bool isDisplayAnimator = false;
     std::string sceneId;
     std::string versionName;
     std::string bundleName;
@@ -127,7 +130,7 @@ public:
     std::shared_ptr<RSSurface> CreateRSSurface(const sptr<Surface> &surface);
 #endif
     ScreenId CreateVirtualScreen(const std::string& name, uint32_t width, uint32_t height, sptr<Surface> surface,
-        ScreenId mirrorId, int32_t flags);
+        ScreenId mirrorId, int32_t flags, std::vector<NodeId> filteredAppVector = {});
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface);
 #endif
@@ -149,6 +152,10 @@ public:
     int32_t GetCurrentRefreshRateMode();
 
     std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id);
+
+    bool GetShowRefreshRateEnabled();
+    
+    void SetShowRefreshRateEnabled(bool enable);
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height);
 
@@ -237,13 +244,25 @@ public:
 
     int32_t RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback);
 
+    int32_t RegisterHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback);
+
     void SetAppWindowNum(uint32_t num);
+
+    bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes);
 
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
 
     int32_t ResizeVirtualScreen(ScreenId id, uint32_t width, uint32_t height);
 
     void ReportJankStats();
+
+    void NotifyLightFactorStatus(bool isSafe);
+
+    void NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList);
+
+    void NotifyRefreshRateEvent(const EventInfo& eventInfo);
+
+    void NotifyTouchEvent(int32_t touchStatus);
 
     void ReportEventResponse(DataBaseRs info);
 

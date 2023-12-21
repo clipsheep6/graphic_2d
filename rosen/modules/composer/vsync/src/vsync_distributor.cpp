@@ -146,7 +146,7 @@ int32_t VSyncConnection::PostEvent(int64_t now, int64_t period, int64_t vsyncCou
     // 1, 2: index of array data.
     data[1] = now + period;
     data[2] = vsyncCount;
-    if ((CreateVSyncGenerator()->GetVSyncMode()) && info_.name_ == "rs") {
+    if ((CreateVSyncGenerator()->GetVSyncMode() == VSYNC_MODE_LTPS) && info_.name_ == "rs") {
         // 5000000 is the vsync offset.
         data[1] += period - 5000000;
     }
@@ -353,7 +353,8 @@ void VSyncDistributor::OnVSyncEvent(int64_t now, int64_t period, uint32_t refres
     event_.vsyncCount++;
     event_.period = period;
     if (refreshRate > 0) {
-        event_.vsyncPulseCount += (VSYNC_MAX_REFRESHRATE / refreshRate);
+        event_.vsyncPulseCount += static_cast<int64_t>(VSYNC_MAX_REFRESHRATE / refreshRate);
+        generatorRefreshRate_ = refreshRate;
     }
     vsyncMode_ = vsyncMode;
     ChangeConnsRateLocked();
@@ -406,8 +407,9 @@ void VSyncDistributor::CollectConnectionsLTPO(bool &waitForVSync, int64_t timest
             continue;
         }
         waitForVSync = true;
+        int64_t vsyncPulseFreq = static_cast<int64_t>(connections_[i]->vsyncPulseFreq_);
         if (timestamp > 0 &&
-            (vsyncCount - connections_[i]->referencePulseCount_) % connections_[i]->vsyncPulseFreq_ == 0) {
+            (vsyncCount - connections_[i]->referencePulseCount_) % vsyncPulseFreq == 0) {
             conns.push_back(connections_[i]);
             connections_[i]->triggerThisTime_ = false;
             if (connections_[i]->rate_ == 0) {
@@ -420,7 +422,12 @@ void VSyncDistributor::CollectConnectionsLTPO(bool &waitForVSync, int64_t timest
 void VSyncDistributor::PostVSyncEvent(const std::vector<sptr<VSyncConnection>> &conns, int64_t timestamp)
 {
     for (uint32_t i = 0; i < conns.size(); i++) {
-        int32_t ret = conns[i]->PostEvent(timestamp, event_.period, event_.vsyncCount);
+        int64_t period = event_.period;
+        if ((generatorRefreshRate_ > 0) && (conns[i]->refreshRate_ > 0) &&
+            (generatorRefreshRate_ % conns[i]->refreshRate_ == 0)) {
+            period = event_.period * (generatorRefreshRate_ / conns[i]->refreshRate_);
+        }
+        int32_t ret = conns[i]->PostEvent(timestamp, period, event_.vsyncCount);
         VLOGD("Distributor name:%{public}s, connection name:%{public}s, ret:%{public}d",
             name_.c_str(), conns[i]->info_.name_.c_str(), ret);
         if (ret == 0 || ret == ERRNO_OTHER) {
@@ -571,17 +578,20 @@ VsyncError VSyncDistributor::GetVSyncPeriod(int64_t &period)
 void VSyncDistributor::ChangeConnsRateLocked()
 {
     std::lock_guard<std::mutex> locker(changingConnsRefreshRatesMtx_);
-    for (auto refreshRate : changingConnsRefreshRates_) {
+    for (auto connRefreshRate : changingConnsRefreshRates_) {
         for (auto conn : connections_) {
-            if (conn->id_ != refreshRate.first) {
+            if (conn->id_ != connRefreshRate.first) {
                 continue;
             }
-            if ((refreshRate.second <= 0) ||
-                ((refreshRate.second > 0) && (VSYNC_MAX_REFRESHRATE % refreshRate.second != 0))) {
+            uint32_t refreshRate = connRefreshRate.second;
+            if ((generatorRefreshRate_ <= 0) || (refreshRate <= 0) ||
+                (VSYNC_MAX_REFRESHRATE % refreshRate != 0) || (generatorRefreshRate_ % refreshRate != 0)) {
+                conn->refreshRate_ = 0;
                 conn->vsyncPulseFreq_ = 1;
                 continue;
             }
-            conn->vsyncPulseFreq_ = VSYNC_MAX_REFRESHRATE / refreshRate.second;
+            conn->refreshRate_ = refreshRate;
+            conn->vsyncPulseFreq_ = VSYNC_MAX_REFRESHRATE / refreshRate;
             conn->referencePulseCount_ = event_.vsyncPulseCount;
         }
     }

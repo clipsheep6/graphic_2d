@@ -61,7 +61,8 @@ public:
         uint32_t height,
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
-        int32_t flags = 0) override;
+        int32_t flags = 0,
+        std::vector<NodeId> filteredAppVector = {}) override;
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 
@@ -82,6 +83,10 @@ public:
     int32_t GetCurrentRefreshRateMode() override;
 
     std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id) override;
+
+    bool GetShowRefreshRateEnabled() override;
+    
+    void SetShowRefreshRateEnabled(bool enable) override;
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) override;
 
@@ -169,13 +174,25 @@ public:
 
     int32_t RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
 
+    int32_t RegisterHgmRefreshRateModeChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
+
     void SetAppWindowNum(uint32_t num) override;
+
+    bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes) override;
 
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow) override;
 
     int32_t ResizeVirtualScreen(ScreenId id, uint32_t width, uint32_t height) override;
 
     void ReportJankStats() override;
+
+    void NotifyLightFactorStatus(bool isSafe) override;
+
+    void NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList) override;
+
+    void NotifyRefreshRateEvent(const EventInfo& eventInfo) override;
+
+    void NotifyTouchEvent(int32_t touchStatus) override;
 
     void ReportEventResponse(DataBaseRs info) override;
 

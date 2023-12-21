@@ -26,6 +26,17 @@
 
 namespace OHOS {
 namespace Rosen {
+const char* RSFilterCacheManager::GetCacheState() const
+{
+    if (cachedFilteredSnapshot_ != nullptr) {
+        return "Filtered image found in cache. Reusing cached result.";
+    } else if (cachedSnapshot_ != nullptr) {
+        return "Snapshot found in cache. Generating filtered image using cached data.";
+    } else {
+        return "No valid cache found.";
+    }
+}
+
 #define CHECK_CACHE_PROCESS_STATUS                                       \
     do {                                                                 \
         if (cacheProcessStatus_.load() == CacheProcessStatus::WAITING) { \
@@ -112,6 +123,7 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion()
         ROSEN_LOGD("RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Delaying cache "
                    "invalidation for %{public}d frames.",
             cacheUpdateInterval_);
+        pendingPurge_ = true;
     } else {
         InvalidateCache();
     }
@@ -155,21 +167,38 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
         return false;
     }
 #ifndef USE_ROSEN_DRAWING
+    GrSurfaceOrigin surfaceOrigin = kTopLeft_GrSurfaceOrigin;
 #ifdef RS_ENABLE_VK
-    auto surfaceOrigin = kTopLeft_GrSurfaceOrigin;
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        surfaceOrigin = kTopLeft_GrSurfaceOrigin;
+    } else {
+        surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
+    }
 #else
-    auto surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
+    surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
 #endif
     auto threadImage = SkImage::MakeFromTexture(cacheCanvas->recordingContext(), cacheBackendTexture_,
         surfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
     auto src = SkRect::MakeSize(SkSize::Make(surfaceSize_));
     auto dst = SkRect::MakeSize(SkSize::Make(surfaceSize_));
 #else
+    Drawing::TextureOrigin surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
+#ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
+    } else {
+        surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
+    }
+#else
+    surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
+#endif
     Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
         Drawing::AlphaType::ALPHATYPE_PREMUL };
     auto threadImage = std::make_shared<Drawing::Image>();
     if (!threadImage->BuildFromTexture(*cacheCanvas->GetGPUContext(), cacheBackendTexture_.GetTextureInfo(),
-        Drawing::TextureOrigin::BOTTOM_LEFT, bitmapFormat, nullptr)) {
+        surfaceOrigin, bitmapFormat, nullptr)) {
         ROSEN_LOGE("RSFilterCacheManager::Render: cacheCanvas is null");
         return false;
     }
@@ -293,6 +322,7 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
 #endif
         return;
     }
+    RS_TRACE_NAME_FMT("RSFilterCacheManager::DrawFilter status: %s", GetCacheState());
     CheckCachedImages(canvas);
     if (!IsCacheValid()) {
         TakeSnapshot(canvas, filter, src, needSnapshotOutset);
@@ -373,6 +403,7 @@ const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> RSFilterCacheManage
 #endif
         return nullptr;
     }
+    RS_TRACE_NAME_FMT("RSFilterCacheManager::GeneratedCachedEffectData status: %s", GetCacheState());
     CheckCachedImages(canvas);
     if (!IsCacheValid()) {
         TakeSnapshot(canvas, filter, src);
@@ -439,6 +470,7 @@ void RSFilterCacheManager::TakeSnapshot(
     cacheUpdateInterval_ =
         isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
     cachedFilterHash_ = 0;
+    pendingPurge_ = false;
 }
 #else
 void RSFilterCacheManager::TakeSnapshot(
@@ -532,6 +564,12 @@ void RSFilterCacheManager::GenerateFilteredSnapshot(
             filteredSnapshot->width(), filteredSnapshot->height());
         as_IB(filteredSnapshot)->hintCacheGpuResource();
     }
+    if (RSSystemProperties::GetRecordingEnabled()) {
+        if (filteredSnapshot->isTextureBacked()) {
+            RS_LOGI("RSFilterCacheManager::GenerateFilteredSnapshot cachedImage from texture to raster image");
+            filteredSnapshot = filteredSnapshot->makeRasterImage();
+        }
+    }
 #else
     auto filteredSnapshot = offscreenSurface->GetImageSnapshot();
     if (RSSystemProperties::GetImageGpuResourceCacheEnable(filteredSnapshot->GetWidth(),
@@ -608,6 +646,9 @@ void RSFilterCacheManager::InvalidateCache(CacheType cacheType)
     if (cacheType & CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
         cachedFilteredSnapshot_.reset();
     }
+    task_->SetStatus(CacheProcessStatus::WAITING);
+    task_->SetCompleted(false);
+    task_->Reset();
 }
 
 void RSFilterCacheManager::ReleaseCacheOffTree()
@@ -667,9 +708,11 @@ inline static bool IsCacheInvalid(const RSPaintFilterCanvas::CachedEffectData& c
 void RSFilterCacheManager::CheckCachedImages(RSPaintFilterCanvas& canvas)
 {
     if (cachedSnapshot_ != nullptr && IsCacheInvalid(*cachedSnapshot_, canvas)) {
+        ROSEN_LOGE("RSFilterCacheManager::CheckCachedImages cachedSnapshot_ is invalid");
         cachedSnapshot_.reset();
     }
     if (cachedFilteredSnapshot_ != nullptr && IsCacheInvalid(*cachedFilteredSnapshot_, canvas)) {
+        ROSEN_LOGE("RSFilterCacheManager::CheckCachedImages cachedFilteredSnapshot_ is invalid");
         cachedFilteredSnapshot_.reset();
     }
 }
@@ -697,8 +740,7 @@ std::tuple<SkIRect, SkIRect> RSFilterCacheManager::ValidateParams(
         snapshotRegion_.GetTop() > dst.y() || snapshotRegion_.GetBottom() < dst.bottom()) {
         // dst region is out of snapshot region, cache is invalid.
         // It should already be checked by UpdateCacheStateWithFilterRegion in prepare phase, we should never be here.
-        ROSEN_LOGD("RSFilterCacheManager::ValidateParams Cache expired. Reason: dst region is out of snapshot region.");
-        InvalidateCache();
+        ROSEN_LOGE("RSFilterCacheManager::ValidateParams Cache expired. Reason: dst region is out of snapshot region.");
     }
     return { src, dst };
 }
@@ -735,12 +777,12 @@ std::tuple<Drawing::RectI, Drawing::RectI> RSFilterCacheManager::ValidateParams(
 
 inline void RSFilterCacheManager::CompactCache(bool shouldClearFilteredCache)
 {
-    if (shouldClearFilteredCache) {
-        cachedFilteredSnapshot_.reset();
-    } else {
-        task_->Reset();
-        cachedSnapshot_.reset();
+    if (pendingPurge_) {
+        InvalidateCache();
+        return;
     }
+    InvalidateCache(
+        shouldClearFilteredCache ? CacheType::CACHE_TYPE_FILTERED_SNAPSHOT : CacheType::CACHE_TYPE_SNAPSHOT);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "effect/runtime_effect.h"
-
 #include "impl_factory.h"
 
+#include "effect/runtime_effect.h"
 #include "skia_adapter/skia_impl_factory.h"
+#include "utils/matrix.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -126,6 +126,18 @@ std::unique_ptr<SurfaceImpl> ImplFactory::CreateSurfaceImpl()
     return EngineImplFactory::CreateSurface();
 }
 
+// opinc_begin
+std::unique_ptr<OpListHandleImpl> ImplFactory::CreateOplistHandleImpl()
+{
+#ifdef ENABLE_DDGR_OPTIMIZE
+    if (GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        return DDGRImplFactory::CreateOplistHandle();
+    }
+#endif
+    return EngineImplFactory::CreateOplistHandle();
+}
+// opinc_end
+
 std::unique_ptr<PathEffectImpl> ImplFactory::CreatePathEffectImpl()
 {
     return EngineImplFactory::CreatePathEffect();
@@ -139,6 +151,11 @@ std::unique_ptr<ColorSpaceImpl> ImplFactory::CreateColorSpaceImpl()
 std::unique_ptr<MatrixImpl> ImplFactory::CreateMatrixImpl()
 {
     return EngineImplFactory::CreateMatrix();
+}
+
+std::unique_ptr<MatrixImpl> ImplFactory::CreateMatrixImpl(const Matrix& other)
+{
+    return EngineImplFactory::CreateMatrix(other);
 }
 
 std::unique_ptr<Matrix44Impl> ImplFactory::CreateMatrix44Impl()
@@ -185,6 +202,28 @@ std::unique_ptr<TextBlobBuilderImpl> ImplFactory::CreateTextBlobBuilderImpl()
 std::shared_ptr<FontMgrImpl> ImplFactory::CreateDefaultFontMgrImpl()
 {
     return EngineImplFactory::CreateDefaultFontMgr();
+}
+
+#ifndef USE_TEXGINE
+std::shared_ptr<FontMgrImpl> ImplFactory::CreateDynamicFontMgrImpl()
+{
+    return EngineImplFactory::CreateDynamicFontMgr();
+}
+#endif
+
+std::shared_ptr<MemoryStreamImpl> ImplFactory::CreateMemoryStreamImpl()
+{
+    return EngineImplFactory::CreateMemoryStream();
+}
+
+std::shared_ptr<MemoryStreamImpl> ImplFactory::CreateMemoryStreamImpl(const void* data, size_t length, bool copyData)
+{
+    return EngineImplFactory::CreateMemoryStream(data, length, copyData);
+}
+
+std::shared_ptr<ResourceHolderImpl> ImplFactory::CreateResourceHolderImpl()
+{
+    return EngineImplFactory::CreateResourceHolder();
 }
 } // namespace Drawing
 } // namespace Rosen

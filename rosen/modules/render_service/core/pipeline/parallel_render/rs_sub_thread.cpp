@@ -125,6 +125,9 @@ void RSSubThread::CreateShareEglContext()
         return;
     }
 #ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::OPENGL) {
+        return;
+    }
     eglShareContext_ = renderContext_->CreateShareContext();
     if (eglShareContext_ == EGL_NO_CONTEXT) {
         RS_LOGE("eglShareContext_ is EGL_NO_CONTEXT");
@@ -140,6 +143,9 @@ void RSSubThread::CreateShareEglContext()
 void RSSubThread::DestroyShareEglContext()
 {
 #ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::OPENGL) {
+        return;
+    }
     if (renderContext_ != nullptr) {
         eglDestroyContext(renderContext_->GetEGLDisplay(), eglShareContext_);
         eglShareContext_ = EGL_NO_CONTEXT;
@@ -221,7 +227,7 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         }
 #endif
         surfaceNodePtr->UpdateBackendTexture();
-        RSMainThread::Instance()->PostTask([]() { 
+        RSMainThread::Instance()->PostTask([]() {
             RSMainThread::Instance()->SetIsCachedSurfaceUpdated(true);
         });
         surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);
@@ -240,55 +246,83 @@ sk_sp<GrDirectContext> RSSubThread::CreateShareGrContext()
 {
     RS_TRACE_NAME("CreateShareGrContext");
 #ifdef RS_ENABLE_GL
-    CreateShareEglContext();
-    const GrGLInterface *grGlInterface = GrGLCreateNativeInterface();
-    sk_sp<const GrGLInterface> glInterface(grGlInterface);
-    if (glInterface.get() == nullptr) {
-        RS_LOGE("CreateShareGrContext failed");
-        return nullptr;
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        CreateShareEglContext();
+        const GrGLInterface *grGlInterface = GrGLCreateNativeInterface();
+        sk_sp<const GrGLInterface> glInterface(grGlInterface);
+        if (glInterface.get() == nullptr) {
+            RS_LOGE("CreateShareGrContext failed");
+            return nullptr;
+        }
+
+        GrContextOptions options = {};
+        options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+        options.fPreferExternalImagesOverES3 = true;
+        options.fDisableDistanceFieldPaths = true;
+
+        auto handler = std::make_shared<MemoryHandler>();
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : 0;
+        /* /data/service/el0/render_service is shader cache dir*/
+        handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+
+        sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(std::move(glInterface), options);
+        if (grContext == nullptr) {
+            RS_LOGE("nullptr grContext is null");
+            return nullptr;
+        }
+        return grContext;
     }
-
-    GrContextOptions options = {};
-    options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
-    options.fPreferExternalImagesOverES3 = true;
-    options.fDisableDistanceFieldPaths = true;
-
-    auto handler = std::make_shared<MemoryHandler>();
-    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    auto size = glesVersion ? strlen(glesVersion) : 0;
-    /* /data/service/el0/render_service is shader cache dir*/
-    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
-
-    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeGL(std::move(glInterface), options);
 #endif
 
 #ifdef RS_ENABLE_VK
-    sk_sp<GrDirectContext> grContext = GrDirectContext::MakeVulkan(RsVulkanContext::GetSingleton().GetGrVkBackendContext());
-#endif
-    if (grContext == nullptr) {
-        RS_LOGE("nullptr grContext is null");
-        return nullptr;
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        sk_sp<GrDirectContext> grContext = GrDirectContext::MakeVulkan(RsVulkanContext::GetSingleton().GetGrVkBackendContext());
+        if (grContext == nullptr) {
+            RS_LOGE("nullptr grContext is null");
+            return nullptr;
+        }
+        return grContext;
     }
-    return grContext;
+#endif
+    return nullptr;
 }
 #else
 std::shared_ptr<Drawing::GPUContext> RSSubThread::CreateShareGrContext()
 {
     RS_TRACE_NAME("CreateShareGrContext");
-    CreateShareEglContext();
-    auto gpuContext = std::make_shared<Drawing::GPUContext>();
-    Drawing::GPUContextOptions options;
-    auto handler = std::make_shared<MemoryHandler>();
-    auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    auto size = glesVersion ? strlen(glesVersion) : 0;
-    /* /data/service/el0/render_service is shader cache dir*/
-    handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
+#ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        CreateShareEglContext();
+        auto gpuContext = std::make_shared<Drawing::GPUContext>();
+        Drawing::GPUContextOptions options;
+        auto handler = std::make_shared<MemoryHandler>();
+        auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto size = glesVersion ? strlen(glesVersion) : 0;
+        /* /data/service/el0/render_service is shader cache dir*/
+        handler->ConfigureContext(&options, glesVersion, size, "/data/service/el0/render_service", true);
 
-    if (!gpuContext->BuildFromGL(options)) {
-        RS_LOGE("nullptr gpuContext is null");
-        return nullptr;
+        if (!gpuContext->BuildFromGL(options)) {
+            RS_LOGE("nullptr gpuContext is null");
+            return nullptr;
+        }
+        return gpuContext;
     }
-    return gpuContext;
+#endif
+
+#ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        auto gpuContext = std::make_shared<Drawing::GPUContext>();
+        if (!gpuContext->BuildFromVK(RsVulkanContext::GetSingleton().GetGrVkBackendContext())) {
+            RS_LOGE("nullptr gpuContext is null");
+            return nullptr;
+        }
+        return gpuContext;
+    }
+#endif
+    return nullptr;
 }
 #endif
 
@@ -299,8 +333,10 @@ void RSSubThread::ResetGrContext()
         return;
     }
 #ifndef USE_ROSEN_DRAWING
+    grContext_->flushAndSubmit(true);
     grContext_->freeGpuResources();
 #else
+    grContext_->FlushAndSubmit(true);
     grContext_->FreeGpuResources();
 #endif
 }

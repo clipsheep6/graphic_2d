@@ -25,7 +25,7 @@ namespace OHOS::Rosen {
 RSAliasDrawable::RSAliasDrawable(Slot::RSPropertyDrawableSlot slot) : slot_(slot) {}
 void RSAliasDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 {
-    auto& it = node.propertyDrawablesVec_[slot_];
+    auto& it = node.GetRenderContent()->GetPropertyDrawableVec()[slot_];
     if (it) {
         it->Draw(node, canvas);
     }
@@ -130,7 +130,7 @@ void RSAlphaOffscreenDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& can
 #else
     auto rect = RSPropertiesPainter::Rect2DrawingRect(node.GetRenderProperties().GetBoundsRect());
     Drawing::Brush brush;
-    brush.SetAlphaF(std::clamp(alpha_, 0.f, 1.f) * UINT8_MAX);
+    brush.SetAlpha(std::clamp(alpha_, 0.f, 1.f) * UINT8_MAX);
     Drawing::SaveLayerOps slr(&rect, &brush);
     canvas.SaveLayer(slr);
 #endif

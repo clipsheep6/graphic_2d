@@ -20,8 +20,6 @@ config("render_service_link_config") {
     ldflags = [
       "-Wl,--lto-O2",
       "-Wl,-mllvm",
-      "-Wl,-import-instr-limit=5",
-      "-Wl,-mllvm",
       "-Wl,-wholeprogramdevirt-check=fallback",
       "-Wl,-Bsymbolic",
     ]
@@ -48,11 +46,29 @@ ohos_shared_library("librender_service") {
   if (use_musl) {
     defines += [ "FRAME_AWARE_TRACE" ]
   }
+  if (use_video_processing_engine) {
+    defines += [ "USE_VIDEO_PROCESSING_ENGINE" ]
+  }
   defines += gpu_defines
   if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
+    defines += [ "IS_OHOS" ]
     cflags = [ "-flto=thin" ]
     if (enhanced_opt) {
       cflags += [ "-fwhole-program-vtables" ]
+      if (graphic_2d_feature_enable_pgo &&
+          graphic_2d_feature_product != "default") {
+        cflags += [
+          "-fprofile-use=" + rebase_path(
+                  "${graphic_2d_feature_pgo_path}/librender_service.profdata",
+                  root_build_dir),
+          "-Wno-error=backend-plugin",
+          "-Wno-profile-instr-out-of-date",
+          "-Wno-profile-instr-unprofiled",
+        ]
+      }
+      if (graphic_2d_feature_product == "pc" && target_cpu == "arm64") {
+        cflags += [ "-moutline-atomics" ]
+      }
     }
   }
 
@@ -75,6 +91,7 @@ ohos_shared_library("librender_service") {
     "core/pipeline/rs_processor.cpp",
     "core/pipeline/rs_processor_factory.cpp",
     "core/pipeline/rs_qos_thread.cpp",
+    "core/pipeline/rs_realtime_refresh_rate_manager.cpp",
     "core/pipeline/rs_render_engine.cpp",
     "core/pipeline/rs_render_service.cpp",
     "core/pipeline/rs_render_service_connection.cpp",
@@ -168,6 +185,9 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/hgm_screen_manager",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/utils",
   ]
+  if (use_video_processing_engine) {
+    include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
+  }
 
   deps = [
     "$graphic_2d_root:libsurface",
@@ -175,8 +195,12 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_frame_trace:render_frame_trace",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
-    "$graphic_2d_root/rosen/samples/2d_graphics:drawing_engine_sample",
   ]
+
+  if (rs_enable_recording_dcl) {
+    dep +=
+        [ "$graphic_2d_root/rosen/samples/2d_graphics:drawing_engine_sample" ]
+  }
 
   public_deps = [
     "//third_party/libpng:libpng",
@@ -195,7 +219,7 @@ ohos_shared_library("librender_service") {
   }
 
   if (rs_enable_gpu) {
-    if (graphic_2d_feature_enable_vulkan) {
+    if (graphic_2d_feature_enable_flutter_vulkan) {
       include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
     }
 
@@ -209,6 +233,7 @@ ohos_shared_library("librender_service") {
 
   external_deps = [
     "c_utils:utils",
+    "drivers_interface_display:display_commontype_idl_headers",
     "eventhandler:libeventhandler",
     "hicollie:libhicollie",
     "hilog:libhilog",
@@ -221,6 +246,9 @@ ohos_shared_library("librender_service") {
     "sensor:sensor_interface_native",
     "window_manager:libwsutils",
   ]
+  if (use_video_processing_engine) {
+    external_deps += [ "video_processing_engine:videoprocessingengine" ]
+  }
 
   if (defined(ddgr_ext_configs)) {
     libs = ddgr_ext_configs.ddgr_libs
@@ -284,10 +312,12 @@ ohos_executable("render_service") {
   include_dirs = [
     "core",
     "//commonlibrary/c_utils/base/include",
+    "$graphic_2d_root/frameworks/surface/include",
   ]
 
   deps = [
     ":librender_service",
+    "$graphic_2d_root:libsurface",
     "$graphic_2d_root/rosen/modules/composer:libcomposer",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
@@ -295,6 +325,7 @@ ohos_executable("render_service") {
 
   external_deps = [
     "c_utils:utils",
+    "drivers_interface_display:display_commontype_idl_headers",
     "hilog:libhilog",
     "ipc:ipc_core",
     "sensor:sensor_interface_native",

@@ -35,7 +35,7 @@ public:
     Brush(int rgba) noexcept;
 
     ~Brush() {}
-    Color GetColor() const;
+    const Color& GetColor() const;
     void SetColor(const Color& c);
     void SetColor(int c);
     void SetARGB(int a, int r, int g, int b);
@@ -44,15 +44,25 @@ public:
     std::shared_ptr<ColorSpace> GetColorSpace() const;
     void SetColor(const Color4f& cf, std::shared_ptr<ColorSpace> s);
 
-    uint32_t GetAlpha() const;
+    inline uint32_t GetAlpha() const
+    {
+        return color_.GetAlpha();
+    }
+
+    inline scalar GetAlphaF() const
+    {
+        return color_.GetAlphaF();
+    }
+
     void SetAlpha(uint32_t a);
     void SetAlphaF(scalar a);
 
-    BlendMode GetBlendMode() const;
-    void SetBlendMode(BlendMode mode);
+    const BlendMode& GetBlendMode() const { return blendMode_; }
+    void SetBlendMode(const BlendMode& mode);
 
     void SetFilter(const Filter& filter);
-    Filter GetFilter() const;
+    const Filter& GetFilter() const;
+    bool HasFilter() const { return hasFilter_; }
 
     void SetShaderEffect(std::shared_ptr<ShaderEffect> e);
     std::shared_ptr<ShaderEffect> GetShaderEffect() const;
@@ -63,6 +73,7 @@ public:
     bool CanComputeFastBounds();
     const Rect& ComputeFastBounds(const Rect& orig, Rect* storage);
 
+    bool AsBlendMode();
     void Reset();
 
     friend DRAWING_API bool operator==(const Brush& b1, const Brush& b2);
@@ -76,6 +87,7 @@ private:
     std::shared_ptr<ShaderEffect> shaderEffect_;
 
     bool antiAlias_;
+    bool hasFilter_ = false;
 };
 } // namespace Drawing
 } // namespace Rosen

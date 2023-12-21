@@ -45,7 +45,7 @@ void SkiaFontMgr::LoadDynamicFont(const std::string& familyName, const uint8_t* 
 {
     auto stream = std::make_unique<SkMemoryStream>(data, dataLength, true);
     auto typeface = SkTypeface::MakeFromStream(std::move(stream));
-    auto dynamicFontMgr = static_cast<txt::DynamicFontManager>(skFontMgr_.get());
+    auto dynamicFontMgr = static_cast<txt::DynamicFontManager*>(skFontMgr_.get());
     if (familyName.empty()) {
         dynamicFontMgr->font_provider().RegisterTypeface(typeface);
     } else {
@@ -56,7 +56,7 @@ void SkiaFontMgr::LoadDynamicFont(const std::string& familyName, const uint8_t* 
 void SkiaFontMgr::LoadThemeFont(const std::string& familyName, const std::string& themeName,
     const uint8_t* data, size_t dataLength)
 {
-    auto dynamicFontMgr = static_cast<txt::DynamicFontManager>(skFontMgr_.get());
+    auto dynamicFontMgr = static_cast<txt::DynamicFontManager*>(skFontMgr_.get());
     if (familyName.empty() || data == nullptr) {
         dynamicFontMgr->font_provider().RegisterTypeface(nullptr, themeName);
     } else {
@@ -91,6 +91,19 @@ FontStyleSet* SkiaFontMgr::MatchFamily(const char familyName[]) const
     sk_sp<SkFontStyleSet> skFontStyleSet{skFontStyleSetPtr};
     std::shared_ptr<FontStyleSetImpl> fontStyleSetImpl = std::make_shared<SkiaFontStyleSet>(skFontStyleSet);
     return new FontStyleSet(fontStyleSetImpl);
+}
+
+Typeface* SkiaFontMgr::MatchFamilyStyle(const char familyName[], const FontStyle& fontStyle) const
+{
+    SkFontStyle skFontStyle;
+    SkiaConvertUtils::DrawingFontStyleCastToSkFontStyle(fontStyle, skFontStyle);
+    SkTypeface* skTypeface =
+        skFontMgr_->matchFamilyStyle(familyName, skFontStyle);
+    if (!skTypeface) {
+        return nullptr;
+    }
+    std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(sk_sp(skTypeface));
+    return new Typeface(typefaceImpl);
 }
 } // namespace Drawing
 } // namespace Rosen

@@ -223,7 +223,7 @@ void BootAnimation::InitRsSurface()
         return;
     }
 #ifdef ACE_ENABLE_GL
-    if (!Rosen::RSSystemProperties::GetAceVulkanEnabled()) {
+    if (Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
         rc_ = OHOS::Rosen::RenderContextFactory::GetInstance().CreateEngine();
         if (rc_ == nullptr) {
             LOGE("InitilizeEglContext failed");
@@ -234,7 +234,7 @@ void BootAnimation::InitRsSurface()
             rsSurface_->SetRenderContext(rc_);
         }
     }
-#endif
+#endif // ACE_ENABLE_GL
     if (rc_ == nullptr) {
         LOGI("rc is nullptr, use cpu");
     }

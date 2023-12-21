@@ -26,55 +26,37 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef RS_ENABLE_VK
-static const int32_t INVALID_SYS_GPU_API_TYPE = -1;
-const GpuApiType RSSystemProperties::systemGpuApiType_ =
-    (std::atoi(system::GetParameter("persist.sys.graphic.GpuApiType", "-1").c_str()) != INVALID_SYS_GPU_API_TYPE) ?
-        (static_cast<GpuApiType>(std::atoi((system::GetParameter("persist.sys.graphic.GpuApiType", "0")).c_str()))) :
-        ((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) ?
-            RSSystemProperties::GetDefaultHiGpuV200Platform() : GpuApiType::OPENGL);
-#else
-const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::OPENGL;
-#endif
 constexpr int DEFAULT_CACHE_WIDTH = 1344;
 constexpr int DEFAULT_CACHE_HEIGHT = 2772;
 constexpr int DEFAULT_PARTIAL_RENDER_ENABLED_VALUE = 2;
 constexpr int DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE = 4;
 constexpr int DEFAULT_CORRECTION_MODE_VALUE = 999;
 
-#if defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)
-static bool VulkanEnabled()
+#if (defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)) || (defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK))
+static GpuApiType SystemGpuApiType()
 {
     if (!((system::GetParameter("const.gpu.vendor", "0").compare("higpu.v200") == 0) &&
           (system::GetParameter("const.build.product", "0").compare("ALN") == 0))) {
-        return false;
+        return GpuApiType::OPENGL;
     }
 
     if (std::atoi(system::GetParameter(
         "persist.sys.graphic.GpuApitype", "-1").c_str()) == (-1)) { // -1 is invalid type
-        return true;
+        return GpuApiType::VULKAN;
     }
     if (std::atoi(system::GetParameter("persist.sys.graphic.GpuApitype", "0").c_str()) == 0) {
-        return false;
+        return GpuApiType::OPENGL;
     }
-    return true;
+    return GpuApiType::VULKAN;
 }
 #endif
 
-#if defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)
-const bool RSSystemProperties::aceVulkanEnabled_ = VulkanEnabled();
-#elif defined (ACE_ENABLE_GL)
-const bool RSSystemProperties::aceVulkanEnabled_ = false;
+#if (defined (ACE_ENABLE_GL) && defined (ACE_ENABLE_VK)) || (defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK))
+const GpuApiType RSSystemProperties::systemGpuApiType_ = SystemGpuApiType();
+#elif defined (ACE_ENABLE_GL) || defined (RS_ENABLE_GL)
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::OPENGL;
 #else
-const bool RSSystemProperties::aceVulkanEnabled_ = true;
-#endif
-
-#if defined (RS_ENABLE_GL) && defined (RS_ENABLE_VK)
-const bool RSSystemProperties::rsVulkanEnabled_ = VulkanEnabled();
-#elif defined (RS_ENABLE_GL)
-const bool RSSystemProperties::rsVulkanEnabled_ = false;
-#else
-const bool RSSystemProperties::rsVulkanEnabled_ = true;
+const GpuApiType RSSystemProperties::systemGpuApiType_ = GpuApiType::VULKAN;
 #endif
 
 int ConvertToInt(const char *originValue, int defaultValue)
@@ -586,6 +568,15 @@ bool RSSystemProperties::GetASTCEnabled()
     return isASTCEnabled;
 }
 
+// GetCachedBlurPartialRenderEnabled Option On: no need to expand blur dirtyregion if blur has background cache
+bool RSSystemProperties::GetCachedBlurPartialRenderEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.cachedblurpartialrender.enabled", "1");
+    int changed = 0;
+    const char *type = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(type, 1) != 0;
+}
+
 bool RSSystemProperties::GetImageGpuResourceCacheEnable(int width, int height)
 {
     static bool cacheEnable =
@@ -632,7 +623,8 @@ bool RSSystemProperties::GetSnapshotWithDMAEnabled()
 {
     static bool isSupportDma = system::GetParameter("const.product.devicetype", "pc") == "phone" ||
         system::GetParameter("const.product.devicetype", "pc") == "tablet" ||
-        system::GetParameter("const.product.devicetype", "pc") == "pc";
+        system::GetParameter("const.product.devicetype", "pc") == "pc" ||
+        system::GetParameter("const.product.devicetype", "pc") == "2in1";
     return isSupportDma && system::GetBoolParameter("rosen.snapshotDma.enabled", true);
 }
 
@@ -640,6 +632,13 @@ bool RSSystemProperties::IsPhoneType()
 {
     static bool isPhone = system::GetParameter("const.product.devicetype", "pc") == "phone";
     return isPhone;
+}
+
+bool RSSystemProperties::IsPcType()
+{
+    static bool isPc = (system::GetParameter("const.product.devicetype", "pc") == "pc") ||
+                       (system::GetParameter("const.product.devicetype", "pc") == "2in1");
+    return isPc;
 }
 
 bool RSSystemProperties::GetSyncTransactionEnabled()
@@ -669,6 +668,30 @@ bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
         (std::atoi((system::GetParameter("persist.sys.graphic.singleFrameComposerCanvasNode", "0")).c_str()) != 0);
     return singleFrameComposerCanvasNodeEnabled;
 }
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+const DdgrOpincType RSSystemProperties::ddgrOpincType_ =
+    static_cast<DdgrOpincType>(std::atoi((system::GetParameter("persist.ddgr.opinctype", "1")).c_str()));
+
+DdgrOpincType RSSystemProperties::GetDdgrOpincType()
+{
+    return ddgrOpincType_;
+}
+
+bool RSSystemProperties::IsDdgrOpincEnable()
+{
+    return GetDdgrOpincType() == DdgrOpincType::DDGR_AUTOCACHE ||
+        GetDdgrOpincType() == DdgrOpincType::DDGR_RENDERCACHE ||
+        GetDdgrOpincType() == DdgrOpincType::DDGR_OPINCUPDATE;
+}
+
+bool RSSystemProperties::GetAutoCacheDebugEnabled()
+{
+    static bool autocacheDebug =
+        system::GetBoolParameter("persist.ddgr.rendercache.debug.enabled", false);
+    return autocacheDebug;
+}
+#endif
 
 bool RSSystemProperties::GetSubSurfaceEnabled()
 {

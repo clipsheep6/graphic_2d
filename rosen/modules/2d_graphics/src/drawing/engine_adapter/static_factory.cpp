@@ -60,7 +60,8 @@ std::shared_ptr<Typeface> StaticFactory::MakeFromName(const char familyName[], F
 std::shared_ptr<Surface> StaticFactory::MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
     TextureOrigin origin, void (*deleteVkImage)(void *), void* cleanHelper)
 {
-    if (!SystemProperties::GetRsVulkanEnabled()) {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         return nullptr;
     }
     return EngineStaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteVkImage, cleanHelper);
@@ -122,6 +123,37 @@ bool StaticFactory::AsBlendMode(const Brush& brush)
 std::shared_ptr<Data> StaticFactory::MakeDataFromFileName(const char path[])
 {
     return EngineStaticFactory::MakeDataFromFileName(path);
+}
+
+void StaticFactory::PathOutlineDecompose(const Path& path, std::vector<Path>& paths)
+{
+    EngineStaticFactory::PathOutlineDecompose(path, paths);
+}
+
+void StaticFactory::MultilayerPath(const std::vector<std::vector<size_t>>& multMap,
+    const std::vector<Path>& paths, std::vector<Path>& multPaths)
+{
+    EngineStaticFactory::MultilayerPath(multMap, paths, multPaths);
+}
+
+void StaticFactory::GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<uint16_t>& glyphIds)
+{
+    EngineStaticFactory::GetDrawingGlyphIDforTextBlob(blob, glyphIds);
+}
+
+Path StaticFactory::GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob)
+{
+    return EngineStaticFactory::GetDrawingPathforTextBlob(glyphId, blob);
+}
+
+DrawingSymbolLayersGroups* StaticFactory::GetSymbolLayersGroups(uint32_t glyphId)
+{
+    return EngineStaticFactory::GetSymbolLayersGroups(glyphId);
+}
+
+FontStyleSet* StaticFactory::CreateEmpty()
+{
+    return EngineStaticFactory::CreateEmpty();
 }
 } // namespace Drawing
 } // namespace Rosen

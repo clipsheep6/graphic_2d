@@ -53,6 +53,7 @@ public:
 
     void PreScale(scalar sx, scalar sy, scalar sz = 1);
 
+    void SetCol(int column, scalar x, scalar y, scalar z, scalar w);
     /*
      * @brief        Gets new Matrix44 to Matrix44  multiplied by Matrix44 other.
      * @param other  on right side of multiply expression.
@@ -79,7 +80,7 @@ public:
      * @return  Adaptation Layer instance.
      */
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return impl_->DowncastingTo<T>();
     }

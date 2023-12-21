@@ -55,7 +55,8 @@ using GraphicCompositionType = enum {
     GRAPHIC_COMPOSITION_DEVICE_CLEAR, /**< Device clear composition type, the device will clear the target region. */
     GRAPHIC_COMPOSITION_CLIENT_CLEAR, /**< Client clear composition type, the service will clear the target region. */
     GRAPHIC_COMPOSITION_TUNNEL,       /**< Tunnel composition type, used for tunnel. */
-    GRAPHIC_COMPOSITION_BUTT
+    GRAPHIC_COMPOSITION_BUTT,
+    GRAPHIC_COMPOSITION_SOLID_COLOR   /**< used for SetLayerColor. */
 };
 
 using GraphicLayerAlpha = struct {
@@ -128,6 +129,7 @@ using GraphicPixelFormat = enum {
     GRAPHIC_PIXEL_FMT_YCBCR_P010 = 35,              /**< YCBCR420 semi-planar 10bit packed format */
     GRAPHIC_PIXEL_FMT_YCRCB_P010 = 36,              /**< YCRCB420 semi-planar 10bit packed format */
     GRAPHIC_PIXEL_FMT_RAW10 = 37,                   /**< Raw 10bit packed format */
+    GRAPHIC_PIXEL_FMT_BLOB = 38,                    /**< BLOB format */
     GRAPHIC_PIXEL_FMT_VENDER_MASK = 0X7FFF0000,     /**< vendor mask format */
     GRAPHIC_PIXEL_FMT_BUTT = 0X7FFFFFFF             /**< Invalid pixel format */
 };

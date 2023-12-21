@@ -19,6 +19,7 @@
 #include "sys_binder.h"
 
 #include "command/rs_command_factory.h"
+#include "hgm_frame_rate_manager.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_judgement.h"
@@ -403,6 +404,26 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             for (auto ratesIter : rates) {
                 reply.WriteInt32(ratesIter);
             }
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_SHOW_REFRESH_RATE_ENABLED): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            bool enable = GetShowRefreshRateEnabled();
+            reply.WriteBool(enable);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SHOW_REFRESH_RATE_ENABLED): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            bool enable = data.ReadBool();
+            SetShowRefreshRateEnabled(enable);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_VIRTUAL_SCREEN_RESOLUTION): {
@@ -1169,6 +1190,52 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             SetHardwareEnabled(id, isEnabled);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_LIGHT_FACTOR_STATUS) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto isSafe = data.ReadBool();
+            NotifyLightFactorStatus(isSafe);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_PACKAGE_EVENT) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto listSize = data.ReadUint32();
+            std::vector<std::string> packageList;
+            for (auto i = 0; i < listSize; i++) {
+                packageList.push_back(data.ReadString());
+            }
+            NotifyPackageEvent(listSize, packageList);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_REFRESH_RATE_EVENT) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            EventInfo eventInfo = {
+                data.ReadString(), data.ReadBool(), data.ReadUint32(), data.ReadUint32(), data.ReadString(),
+            };
+            NotifyRefreshRateEvent(eventInfo);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_TOUCH_EVENT) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto touchStatus = data.ReadInt32();
+            NotifyTouchEvent(touchStatus);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_HGM_CFG_CALLBACK) : {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -1186,6 +1253,27 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             int32_t status = RegisterHgmConfigChangeCallback(callback);
+            reply.WriteInt32(status);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REFRESH_RATE_MODE_CHANGE_CALLBACK) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIHgmConfigChangeCallback> callback =
+                iface_cast<RSIHgmConfigChangeCallback>(remoteObject);
+            if (callback == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            int32_t status = RegisterHgmRefreshRateModeChangeCallback(callback);
             reply.WriteInt32(status);
             break;
         }

@@ -156,6 +156,16 @@ std::vector<int32_t> RSInterfaces::GetScreenSupportedRefreshRates(ScreenId id)
     return renderServiceClient_->GetScreenSupportedRefreshRates(id);
 }
 
+bool RSInterfaces::GetShowRefreshRateEnabled()
+{
+    return renderServiceClient_->GetShowRefreshRateEnabled();
+}
+    
+void RSInterfaces::SetShowRefreshRateEnabled(bool enable)
+{
+    return renderServiceClient_->SetShowRefreshRateEnabled(enable);
+}
+
 bool RSInterfaces::TakeSurfaceCaptureForUI(
     std::shared_ptr<RSNode> node, std::shared_ptr<SurfaceCaptureCallback> callback, float scaleX, float scaleY)
 {
@@ -387,6 +397,11 @@ int32_t RSInterfaces::RegisterHgmConfigChangeCallback(const HgmConfigChangeCallb
     return renderServiceClient_->RegisterHgmConfigChangeCallback(callback);
 }
 
+int32_t RSInterfaces::RegisterHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback)
+{
+    return renderServiceClient_->RegisterHgmRefreshRateModeChangeCallback(callback);
+}
+
 void RSInterfaces::SetAppWindowNum(uint32_t num)
 {
     renderServiceClient_->SetAppWindowNum(num);
@@ -440,6 +455,26 @@ void RSInterfaces::ReportEventJankFrame(DataBaseRs info)
 void RSInterfaces::EnableCacheForRotation()
 {
     renderServiceClient_->SetCacheEnabledForRotation(true);
+}
+
+void RSInterfaces::NotifyLightFactorStatus(bool isSafe)
+{
+    renderServiceClient_->NotifyLightFactorStatus(isSafe);
+}
+
+void RSInterfaces::NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList)
+{
+    renderServiceClient_->NotifyPackageEvent(listSize, packageList);
+}
+
+void RSInterfaces::NotifyRefreshRateEvent(const EventInfo& eventInfo)
+{
+    renderServiceClient_->NotifyRefreshRateEvent(eventInfo);
+}
+
+void RSInterfaces::NotifyTouchEvent(int32_t touchStatus)
+{
+    renderServiceClient_->NotifyTouchEvent(touchStatus);
 }
 
 void RSInterfaces::DisableCacheForRotation()

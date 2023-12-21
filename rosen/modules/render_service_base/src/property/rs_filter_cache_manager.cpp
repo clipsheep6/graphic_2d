@@ -26,6 +26,17 @@
 
 namespace OHOS {
 namespace Rosen {
+const char* RSFilterCacheManager::GetCacheState() const
+{
+    if (cachedFilteredSnapshot_ != nullptr) {
+        return "Filtered image found in cache. Reusing cached result.";
+    } else if (cachedSnapshot_ != nullptr) {
+        return "Snapshot found in cache. Generating filtered image using cached data.";
+    } else {
+        return "No valid cache found.";
+    }
+}
+
 #define CHECK_CACHE_PROCESS_STATUS                                       \
     do {                                                                 \
         if (cacheProcessStatus_.load() == CacheProcessStatus::WAITING) { \
@@ -112,6 +123,7 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion()
         ROSEN_LOGD("RSFilterCacheManager::UpdateCacheStateWithDirtyRegion Delaying cache "
                    "invalidation for %{public}d frames.",
             cacheUpdateInterval_);
+        pendingPurge_ = true;
     } else {
         InvalidateCache();
     }
@@ -157,7 +169,8 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
 #ifndef USE_ROSEN_DRAWING
     GrSurfaceOrigin surfaceOrigin = kTopLeft_GrSurfaceOrigin;
 #ifdef RS_ENABLE_VK
-    if (RSSystemProperties::GetRsVulkanEnabled()) {
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
         surfaceOrigin = kTopLeft_GrSurfaceOrigin;
     } else {
         surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
@@ -170,10 +183,16 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
     auto src = SkRect::MakeSize(SkSize::Make(surfaceSize_));
     auto dst = SkRect::MakeSize(SkSize::Make(surfaceSize_));
 #else
+    Drawing::TextureOrigin surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
 #ifdef RS_ENABLE_VK
-    auto surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
+    } else {
+        surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
+    }
 #else
-    auto surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
+    surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
 #endif
     Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
         Drawing::AlphaType::ALPHATYPE_PREMUL };
@@ -303,6 +322,7 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
 #endif
         return;
     }
+    RS_TRACE_NAME_FMT("RSFilterCacheManager::DrawFilter status: %s", GetCacheState());
     CheckCachedImages(canvas);
     if (!IsCacheValid()) {
         TakeSnapshot(canvas, filter, src, needSnapshotOutset);
@@ -383,6 +403,7 @@ const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> RSFilterCacheManage
 #endif
         return nullptr;
     }
+    RS_TRACE_NAME_FMT("RSFilterCacheManager::GeneratedCachedEffectData status: %s", GetCacheState());
     CheckCachedImages(canvas);
     if (!IsCacheValid()) {
         TakeSnapshot(canvas, filter, src);
@@ -449,6 +470,7 @@ void RSFilterCacheManager::TakeSnapshot(
     cacheUpdateInterval_ =
         isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
     cachedFilterHash_ = 0;
+    pendingPurge_ = false;
 }
 #else
 void RSFilterCacheManager::TakeSnapshot(
@@ -686,9 +708,11 @@ inline static bool IsCacheInvalid(const RSPaintFilterCanvas::CachedEffectData& c
 void RSFilterCacheManager::CheckCachedImages(RSPaintFilterCanvas& canvas)
 {
     if (cachedSnapshot_ != nullptr && IsCacheInvalid(*cachedSnapshot_, canvas)) {
+        ROSEN_LOGE("RSFilterCacheManager::CheckCachedImages cachedSnapshot_ is invalid");
         cachedSnapshot_.reset();
     }
     if (cachedFilteredSnapshot_ != nullptr && IsCacheInvalid(*cachedFilteredSnapshot_, canvas)) {
+        ROSEN_LOGE("RSFilterCacheManager::CheckCachedImages cachedFilteredSnapshot_ is invalid");
         cachedFilteredSnapshot_.reset();
     }
 }
@@ -716,8 +740,7 @@ std::tuple<SkIRect, SkIRect> RSFilterCacheManager::ValidateParams(
         snapshotRegion_.GetTop() > dst.y() || snapshotRegion_.GetBottom() < dst.bottom()) {
         // dst region is out of snapshot region, cache is invalid.
         // It should already be checked by UpdateCacheStateWithFilterRegion in prepare phase, we should never be here.
-        ROSEN_LOGD("RSFilterCacheManager::ValidateParams Cache expired. Reason: dst region is out of snapshot region.");
-        InvalidateCache();
+        ROSEN_LOGE("RSFilterCacheManager::ValidateParams Cache expired. Reason: dst region is out of snapshot region.");
     }
     return { src, dst };
 }
@@ -754,12 +777,12 @@ std::tuple<Drawing::RectI, Drawing::RectI> RSFilterCacheManager::ValidateParams(
 
 inline void RSFilterCacheManager::CompactCache(bool shouldClearFilteredCache)
 {
-    if (shouldClearFilteredCache) {
-        cachedFilteredSnapshot_.reset();
-    } else {
-        task_->Reset();
-        cachedSnapshot_.reset();
+    if (pendingPurge_) {
+        InvalidateCache();
+        return;
     }
+    InvalidateCache(
+        shouldClearFilteredCache ? CacheType::CACHE_TYPE_FILTERED_SNAPSHOT : CacheType::CACHE_TYPE_SNAPSHOT);
 }
 } // namespace Rosen
 } // namespace OHOS

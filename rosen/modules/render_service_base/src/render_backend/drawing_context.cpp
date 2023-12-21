@@ -50,7 +50,7 @@ sk_sp<SkSurface> DrawingContext::AcquireSurface(const std::shared_ptr<RSRenderSu
 bool DrawingContext::SetUpDrawingContext()
 {
 #if defined(RS_ENABLE_GL)
-    if (RSSystemProperties::GetRsVulkanEnabled()) {
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::OPENGL) {
         return false;
     }
     if (grContext_ != nullptr) {
@@ -111,6 +111,9 @@ GrContext* DrawingContext::GetDrawingContext() const
 bool DrawingContext::SetUpDrawingContext()
 {
 #if defined(RS_ENABLE_GL)
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::OPENGL) {
+        return false;
+    }
     if (gpuContext_ != nullptr) {
         LOGD("gpuContext_ has already initialized");
         return true;
@@ -215,7 +218,8 @@ sk_sp<SkSurface> DrawingContext::AcquireSurfaceInRaster(const std::shared_ptr<RS
 sk_sp<SkSurface> DrawingContext::AcquireSurfaceInVulkan(const std::shared_ptr<RSRenderSurfaceFrame>& frame)
 {
 #ifdef RS_ENABLE_VK
-    if (!RSSystemProperties::GetRsVulkanEnabled()) {
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         return nullptr;
     }
     VulkanState* vulkanState = frame->vulkanState;

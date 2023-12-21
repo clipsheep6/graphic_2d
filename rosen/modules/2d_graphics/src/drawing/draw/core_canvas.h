@@ -177,7 +177,7 @@ public:
      * @brief Gets GPU context of the GPU surface associated with Canvas.
      */
 #ifdef ACE_ENABLE_GPU
-    virtual std::shared_ptr<GPUContext> GetGPUContext() const;
+    virtual std::shared_ptr<GPUContext> GetGPUContext();
 #endif
 
     /**
@@ -398,6 +398,13 @@ public:
     virtual void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
 
+    // opinc_begin
+    virtual bool BeginOpRecording(const Rect* bound = nullptr, bool isDynamic = false);
+    virtual Drawing::OpListHandle EndOpRecording();
+    virtual void DrawOpList(Drawing::OpListHandle handle);
+    virtual int CanDrawOpList(Drawing::OpListHandle handle);
+    // opinc_end
+
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
     virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
@@ -433,6 +440,9 @@ public:
     */
     virtual void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y);
 
+    // symbol
+    virtual void DrawSymbol(const DrawingHMSymbolData& symbol, Point locate);
+
     // clip
     /**
      * @brief Replace the clipping area with the intersection or difference between the
@@ -461,12 +471,14 @@ public:
      */
     virtual void ClipRoundRect(const RoundRect& roundRect, ClipOp op = ClipOp::INTERSECT, bool doAntiAlias = false);
 
-    /**
-     * @brief Replace the clipping area with the intersection or difference of the
-     * current clipping area and Path, and use a clipping edge that is aliased or anti-aliased.
-     * @param path        To combine with clip.
-     * @param op          To apply to clip.
-     * @param doAntiAlias true if clip is to be anti-aliased. The default value is false.
+    virtual void ClipRoundRect(const Rect& rect, std::vector<Point>& pts, bool doAntiAlias = false);
+
+    /*
+     * @brief              Replace the clipping area with the intersection or difference of the
+                           current clipping area and Path, and use a clipping edge that is aliased or anti-aliased.
+     * @param path         To combine with clip.
+     * @param op           To apply to clip.
+     * @param doAntiAlias  true if clip is to be anti-aliased. The default value is false.
      */
     virtual void ClipPath(const Path& path, ClipOp op = ClipOp::INTERSECT, bool doAntiAlias = false);
 
@@ -632,12 +644,7 @@ public:
      * @return CoreCanvas& 
      */
     virtual CoreCanvas& AttachBrush(const Brush& brush);
-
-    /**
-     * @brief Detach pen from canvas.
-     * 
-     * @return CoreCanvas& 
-     */
+    virtual CoreCanvas& AttachPaint(const Paint& paint);
     virtual CoreCanvas& DetachPen();
     
     /**
@@ -646,13 +653,15 @@ public:
      * @return CoreCanvas& 
      */
     virtual CoreCanvas& DetachBrush();
+    virtual CoreCanvas& DetachPaint();
 
+    virtual ColorQuad GetEnvForegroundColor() const;
     virtual bool isHighContrastEnabled() const;
     virtual Drawing::CacheType GetCacheType() const;
     virtual Drawing::Surface* GetSurface() const;
 
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return impl_->DowncastingTo<T>();
     }
@@ -660,9 +669,15 @@ public:
 
 protected:
     CoreCanvas(int32_t width, int32_t height);
+    Paint paintBrush_;
+    Paint paintPen_;
 
 private:
+    void AttachPaint();
     std::shared_ptr<CoreCanvasImpl> impl_;
+#ifdef ACE_ENABLE_GPU
+    std::shared_ptr<GPUContext> gpuContext_;
+#endif
 };
 } // namespace Drawing
 } // namespace Rosen

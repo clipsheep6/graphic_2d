@@ -49,6 +49,7 @@ std::unordered_map<uint32_t, std::string> typeOpDes = {
     { DrawOpItem::IMAGE_RECT_OPITEM,        "IMAGE_RECT_OPITEM" },
     { DrawOpItem::PICTURE_OPITEM,           "PICTURE_OPITEM" },
     { DrawOpItem::TEXT_BLOB_OPITEM,         "TEXT_BLOB_OPITEM" },
+    { DrawOpItem::SYMBOL_OPITEM,            "SYMBOL_OPITEM" },
     { DrawOpItem::CLIP_RECT_OPITEM,         "CLIP_RECT_OPITEM" },
     { DrawOpItem::CLIP_IRECT_OPITEM,        "CLIP_IRECT_OPITEM" },
     { DrawOpItem::CLIP_ROUND_RECT_OPITEM,   "CLIP_ROUND_RECT_OPITEM" },
@@ -67,10 +68,6 @@ std::unordered_map<uint32_t, std::string> typeOpDes = {
     { DrawOpItem::SAVE_LAYER_OPITEM,        "SAVE_LAYER_OPITEM" },
     { DrawOpItem::RESTORE_OPITEM,           "RESTORE_OPITEM" },
     { DrawOpItem::DISCARD_OPITEM,           "DISCARD_OPITEM" },
-    { DrawOpItem::ATTACH_PEN_OPITEM,        "ATTACH_PEN_OPITEM" },
-    { DrawOpItem::ATTACH_BRUSH_OPITEM,      "ATTACH_BRUSH_OPITEM" },
-    { DrawOpItem::DETACH_PEN_OPITEM,        "DETACH_PEN_OPITEM" },
-    { DrawOpItem::DETACH_BRUSH_OPITEM,      "DETACH_BRUSH_OPITEM" },
     { DrawOpItem::CLIP_ADAPTIVE_ROUND_RECT_OPITEM, "CLIP_ADAPTIVE_ROUND_RECT_OPITEM" },
     { DrawOpItem::ADAPTIVE_IMAGE_OPITEM,    "ADAPTIVE_IMAGE_OPITEM" },
     { DrawOpItem::ADAPTIVE_PIXELMAP_OPITEM, "ADAPTIVE_PIXELMAP_OPITEM" },
@@ -145,6 +142,13 @@ void DrawCmdList::SetHeight(int32_t height)
     height_ = height;
 }
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+size_t DrawCmdList::GetSize() const
+{
+    return opIncItemCnt_;
+}
+#endif
+
 bool DrawCmdList::IsEmpty() const
 {
     uint32_t offset = 2 * sizeof(int32_t); // 2 is width and height.Offset of first OpItem is behind the w and h
@@ -173,6 +177,37 @@ std::string DrawCmdList::GetOpsWithDesc() const
     return desc;
 }
 
+bool DrawCmdList::IsCmdListOpitem(uint32_t& type)
+{
+    if (type == DrawOpItem::CMD_LIST_OPITEM) {
+        unmarshalledOpItems_.clear();
+        return true;
+    }
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    if (type > DrawOpItem::OPINC_COUNT_OPITEM_START && type < DrawOpItem::OPINC_COUNT_OPITEM_END) {
+        opIncItemCnt_++;
+    }
+#endif
+    return false;
+}
+
+void DrawCmdList::UnmarshallingOpsReset()
+{
+    unmarshalledOpItems_.clear();
+    lastOpGenSize_ = 0;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    opIncItemCnt_ = 0;
+#endif
+}
+
+void DrawCmdList::UnmarshallingOpsEnd()
+{
+    lastOpGenSize_ = opAllocator_.GetSize();
+    if ((int)imageAllocator_.GetSize() > 0) {
+        imageAllocator_.ClearData();
+    }
+}
+
 void DrawCmdList::UnmarshallingOps()
 {
     uint32_t offset = 2 * sizeof(int32_t); // 2 is width and height.Offset of first OpItem is behind the w and h
@@ -181,9 +216,7 @@ void DrawCmdList::UnmarshallingOps()
     }
 
     UnmarshallingPlayer player = { *this };
-    unmarshalledOpItems_.clear();
-    lastOpGenSize_ = 0;
-
+    UnmarshallingOpsReset();
     uint32_t opReplaceIndex = 0;
     do {
         void* itemPtr = opAllocator_.OffsetToAddr(offset);
@@ -193,8 +226,7 @@ void DrawCmdList::UnmarshallingOps()
             break;
         }
         uint32_t type = curOpItemPtr->GetType();
-        if (type == DrawOpItem::CMD_LIST_OPITEM) {
-            unmarshalledOpItems_.clear();
+        if (IsCmdListOpitem(type)) {
             return;
         }
         auto op = player.Unmarshalling(type, itemPtr);
@@ -210,8 +242,13 @@ void DrawCmdList::UnmarshallingOps()
                 break;
             }
             auto* replaceOpItemPtr = static_cast<OpItem*>(replacePtr);
-            unmarshalledOpItems_.emplace_back(player.Unmarshalling(replaceOpItemPtr->GetType(), replacePtr));
-            opReplacedByDrivenRender_.emplace_back((unmarshalledOpItems_.size() - 1), op);
+            auto replaceOp = player.Unmarshalling(replaceOpItemPtr->GetType(), replacePtr);
+            if (replaceOp) {
+                unmarshalledOpItems_.emplace_back(replaceOp);
+                opReplacedByDrivenRender_.emplace_back((unmarshalledOpItems_.size() - 1), op);
+            } else {
+                unmarshalledOpItems_.emplace_back(op);
+            }
             opReplaceIndex++;
         } else {
             unmarshalledOpItems_.emplace_back(op);
@@ -222,11 +259,7 @@ void DrawCmdList::UnmarshallingOps()
             break;
         }
     } while (offset != 0);
-    lastOpGenSize_ = opAllocator_.GetSize();
-
-    if ((int)imageAllocator_.GetSize() > 0) {
-        imageAllocator_.ClearData();
-    }
+    UnmarshallingOpsEnd();
 }
 
 std::vector<std::shared_ptr<DrawOpItem>> DrawCmdList::UnmarshallingCmdList()
@@ -302,9 +335,12 @@ void DrawCmdList::Playback(Canvas& canvas, const Rect* rect)
         lastOpGenSize_ = opAllocator_.GetSize();
     } else {
         for (auto op : unmarshalledOpItems_) {
-            op->Playback(&canvas, &tmpRect);
+            if (op) {
+                op->Playback(&canvas, &tmpRect);
+            }
         }
     }
+    canvas.DetachPaint();
 }
 
 void DrawCmdList::GenerateCache(Canvas* canvas, const Rect* rect)
@@ -348,37 +384,19 @@ void DrawCmdList::GenerateCacheInRenderService(Canvas* canvas, const Rect* rect)
         return;
     }
 
-    DrawOpItem* brushOp = nullptr;
-    DrawOpItem* penOp = nullptr;
-
     for (int i = 0; i < unmarshalledOpItems_.size(); ++i) {
         auto opItem = unmarshalledOpItems_[i];
+        if (!opItem) {
+            continue;
+        }
         uint32_t type = opItem->GetType();
-        switch (type) {
-            case DrawOpItem::ATTACH_PEN_OPITEM:
-                penOp = opItem.get();
-                break;
-            case DrawOpItem::ATTACH_BRUSH_OPITEM:
-                brushOp = opItem.get();
-                break;
-            case DrawOpItem::DETACH_PEN_OPITEM:
-                penOp = nullptr;
-                break;
-            case DrawOpItem::DETACH_BRUSH_OPITEM:
-                brushOp = nullptr;
-                break;
-            case DrawOpItem::TEXT_BLOB_OPITEM: {
-                DrawTextBlobOpItem* textBlobOp = static_cast<DrawTextBlobOpItem*>(opItem.get());
-                auto replaceCache = textBlobOp->GenerateCachedOpItem(
-                    canvas, static_cast<AttachPenOpItem*>(penOp), static_cast<AttachBrushOpItem*>(brushOp));
-                if (replaceCache) {
-                    opReplacedByDrivenRender_.emplace_back(i, unmarshalledOpItems_[i]);
-                    unmarshalledOpItems_[i] = replaceCache;
-                }
-                break;
+        if (type == DrawOpItem::TEXT_BLOB_OPITEM) {
+            DrawTextBlobOpItem* textBlobOp = static_cast<DrawTextBlobOpItem*>(opItem.get());
+            auto replaceCache = textBlobOp->GenerateCachedOpItem(canvas);
+            if (replaceCache) {
+                opReplacedByDrivenRender_.emplace_back(i, unmarshalledOpItems_[i]);
+                unmarshalledOpItems_[i] = replaceCache;
             }
-            default:
-                break;
         }
     }
 

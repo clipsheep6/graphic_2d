@@ -124,6 +124,11 @@ public:
         return mainThreadId_;
     }
 
+    bool CheckIsHardwareEnabledBufferUpdated() const
+    {
+        return isHardwareEnabledBufferUpdated_;
+    }
+
     /* Judge if rootnode has to be prepared based on it corresponding process is active
      * If its pid is in activeProcessPids_ set, return true
      */
@@ -231,6 +236,7 @@ public:
     void HandleOnTrim(Memory::SystemMemoryLevel level);
     const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetSelfDrawingNodes() const;
     bool GetParallelCompositionEnabled();
+    std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -297,7 +303,7 @@ private:
     void CheckAndUpdateTransactionIndex(
         std::shared_ptr<TransactionDataMap>& transactionDataEffective, std::string& transactionFlags);
 
-    bool IsRenderedProcess(pid_t pid) const;
+    bool IsResidentProcess(pid_t pid) const;
     bool IsNeedSkip(NodeId instanceRootNodeId, pid_t pid);
 
     // UIFirst
@@ -316,6 +322,7 @@ private:
     RSVisibleLevel GetRegionVisibleLevel(const Occlusion::Region& curRegion,
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
+    void WaitUntilUploadTextureTaskFinishedForGL();
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

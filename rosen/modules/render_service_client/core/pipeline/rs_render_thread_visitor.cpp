@@ -190,11 +190,7 @@ void RSRenderThreadVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
     }
     auto effectRegion = effectRegion_;
 
-#ifndef USE_ROSEN_DRAWING
-    effectRegion_ = SkPath();
-#else
-    effectRegion_ = Drawing::Path();
-#endif
+    effectRegion_ = node.InitializeEffectRegion();
     bool dirtyFlag = dirtyFlag_;
     auto nodeParent = node.GetParent().lock();
     dirtyFlag_ = node.Update(*curDirtyManager_, nodeParent, dirtyFlag_);
@@ -388,8 +384,22 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
     RS_TRACE_END();
 }
 
+void RSRenderThreadVisitor::ProcessShadowFirst(RSRenderNode& node)
+{
+    if (RSSystemProperties::GetUseShadowBatchingEnabled()
+        && (node.GetRenderProperties().GetUseShadowBatching())) {
+        auto& children = node.GetSortedChildren();
+        for (auto& child : children) {
+            if (auto node = child->ReinterpretCastTo<RSCanvasRenderNode>()) {
+                node->ProcessShadowBatching(*canvas_);
+            }
+        }
+    }
+}
+
 void RSRenderThreadVisitor::ProcessChildren(RSRenderNode& node)
 {
+    ProcessShadowFirst(node);
     for (auto& child : node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
@@ -428,7 +438,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
 #if defined(ACE_ENABLE_GL)
-    if (!RSSystemProperties::GetAceVulkanEnabled()) {
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
 #if defined(NEW_RENDER_CONTEXT)
         std::shared_ptr<RenderContextBase> rc = RSRenderThread::Instance().GetRenderContext();
         std::shared_ptr<DrawingContext> dc = RSRenderThread::Instance().GetDrawingContext();
@@ -734,6 +744,11 @@ void RSRenderThreadVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
+void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
+{
+    // TODO: deal with surfaceNode in same render
+}
+
 void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
     if (!canvas_) {
@@ -766,6 +781,12 @@ void RSRenderThreadVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     node.SetContextMatrix(contextMatrix);
     node.SetContextAlpha(canvas_->GetAlpha());
+
+    if (node.GetIsTextureExportNode()) {
+        // TODO: deal with surfaceNode in same render
+        ProcessSurfaceViewInRT(node);
+        return;
+    }
 
     // PLANNING: This is a temporary modification. Animation for surfaceView should not be triggered in RenderService.
     // We plan to refactor code here.

@@ -44,13 +44,14 @@ public:
     static RenderBackendType GetRenderBackendType()
     {
 #if defined(ACE_ENABLE_VK)
-        if (RSSystemProperties::GetAceVulkanEnabled()) {
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+            RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
             return RenderBackendType::VULKAN;
         }
 #endif
 
 #if defined(ACE_ENABLE_GL)
-        if (!RSSystemProperties::GetAceVulkanEnabled()) {
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
             return RenderBackendType::GLES;
         }
 #endif

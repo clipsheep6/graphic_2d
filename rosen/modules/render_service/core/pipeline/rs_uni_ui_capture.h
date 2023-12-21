@@ -41,8 +41,7 @@ namespace Rosen {
 
 class RSUniUICapture {
 public:
-    RSUniUICapture(NodeId nodeId, float scaleX, float scaleY)
-        : nodeId_(nodeId), scaleX_(scaleX), scaleY_(scaleY) {}
+    RSUniUICapture(NodeId nodeId, float scaleX, float scaleY);
     ~RSUniUICapture() = default;
 
     std::shared_ptr<Media::PixelMap> TakeLocalCapture();
@@ -102,12 +101,15 @@ private:
     std::shared_ptr<Drawing::Surface> CreateSurface(const std::shared_ptr<Media::PixelMap>& pixelmap) const;
     void PostTaskToRSRecord(std::shared_ptr<Drawing::RecordingCanvas> canvas, std::shared_ptr<RSRenderNode> node,
         std::shared_ptr<RSUniUICaptureVisitor> visitor);
+    bool CopyDataToPixelMap(std::shared_ptr<Drawing::Image> img,
+        std::shared_ptr<Media::PixelMap> pixelmap);
 #endif
     std::shared_ptr<Media::PixelMap> CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node) const;
 
     NodeId nodeId_;
     float scaleX_;
     float scaleY_;
+    bool isUniRender_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

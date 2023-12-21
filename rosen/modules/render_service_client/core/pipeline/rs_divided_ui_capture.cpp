@@ -38,6 +38,7 @@
 #include "render/rs_pixel_map_util.h"
 #include "transaction/rs_render_service_client.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -82,84 +83,11 @@ std::shared_ptr<Media::PixelMap> RSDividedUICapture::TakeLocalCapture()
     }
     auto canvas = std::make_shared<RSPaintFilterCanvas>(drSurface.get());
 #endif
-    if (!node->IsOnTheTree()) {
-        visitor->SetPaintFilterCanvas(canvas);
-        node->ApplyModifiers();
-        node->Prepare(visitor);
-        node->Process(visitor);
-    } else {
-        PostTaskToRTRecord(recordingCanvas, node, visitor);
-        auto drawCallList = recordingCanvas->GetDrawCmdList();
-        drawCallList->Playback(*canvas);
-    }
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
-    sk_sp<SkImage> img(skSurface.get()->makeImageSnapshot());
-    if (!img) {
-        RS_LOGE("RSDividedUICapture::TakeLocalCapture: img is nullptr");
-        RSOffscreenRenderThread::Instance().CleanGrResource();
-        return nullptr;
-    }
-    if (!CopyDataToPixelMap(img, pixelmap)) {
-        RS_LOGE("RSDividedUICapture::TakeLocalCapture: CopyDataToPixelMap failed");
-        RSOffscreenRenderThread::Instance().CleanGrResource();
-        return nullptr;
-    }
-    RSOffscreenRenderThread::Instance().CleanGrResource();
-#endif
+    PostTaskToRTRecord(recordingCanvas, node, visitor);
+    auto drawCallList = recordingCanvas->GetDrawCmdList();
+    drawCallList->Playback(*canvas);
     return pixelmap;
 }
-
-#ifdef ROSEN_OHOS
-bool RSDividedUICapture::CopyDataToPixelMap(sk_sp<SkImage> img, std::shared_ptr<Media::PixelMap> pixelmap)
-{
-    auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
-    SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
-        kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-#ifdef ROSEN_OHOS
-    int fd = AshmemCreate("RSDividedUICapture Data", size);
-    if (fd < 0) {
-        RS_LOGE("RSDividedUICapture::CopyDataToPixelMap AshmemCreate fd < 0");
-        return false;
-    }
-    int result = AshmemSetProt(fd, PROT_READ | PROT_WRITE);
-    if (result < 0) {
-        RS_LOGE("RSDividedUICapture::CopyDataToPixelMap AshmemSetProt error");
-        ::close(fd);
-        return false;
-    }
-    void* ptr = ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    auto data = static_cast<uint8_t*>(ptr);
-    if (ptr == MAP_FAILED || ptr == nullptr) {
-        RS_LOGE("RSDividedUICapture::CopyDataToPixelMap data is nullptr");
-        ::close(fd);
-        return false;
-    }
-
-    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
-        RS_LOGE("RSDividedUICapture::CopyDataToPixelMap readPixels failed");
-        ::close(fd);
-        return false;
-    }
-    void* fdPtr = new int32_t();
-    *static_cast<int32_t*>(fdPtr) = fd;
-    pixelmap->SetPixelsAddr(data, fdPtr, size, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
-#else
-    auto data = (uint8_t *)malloc(size);
-    if (data == nullptr) {
-        RS_LOGE("RSDividedUICapture::CopyDataToPixelMap data is nullptr");
-        return false;
-    }
-    if (!img->readPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
-        RS_LOGE("RSDividedUICapture::CopyDataToPixelMap readPixels failed");
-        free(data);
-        data = nullptr;
-        return false;
-    }
-    pixelmap->SetPixelsAddr(data, nullptr, size, Media::AllocatorType::HEAP_ALLOC, nullptr);
-#endif
-    return true;
-}
-#endif
 
 std::shared_ptr<Media::PixelMap> RSDividedUICapture::CreatePixelMapByNode(std::shared_ptr<RSRenderNode> node) const
 {
@@ -190,23 +118,6 @@ std::shared_ptr<Drawing::Surface> RSDividedUICapture::CreateSurface(
 #ifndef USE_ROSEN_DRAWING
     SkImageInfo info = SkImageInfo::Make(pixelmap->GetWidth(), pixelmap->GetHeight(),
         kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
-#if defined(NEW_RENDER_CONTEXT)
-    auto drawingContext = RSOffscreenRenderThread::Instance().GetRenderContext();
-    if (drawingContext == nullptr) {
-        RS_LOGE("RSDividedUICapture::CreateSurface: renderContext is nullptr");
-        return nullptr;
-    }
-    return SkSurface::MakeRenderTarget(drawingContext->GetDrawingContext(), SkBudgeted::kNo, info);
-#else
-    auto renderContext = RSOffscreenRenderThread::Instance().GetRenderContext();
-    if (renderContext == nullptr) {
-        RS_LOGE("RSDividedUICapture::CreateSurface: renderContext is nullptr");
-        return nullptr;
-    }
-    return SkSurface::MakeRenderTarget(renderContext->GetGrContext(), SkBudgeted::kNo, info);
-#endif
-#endif
     return SkSurface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 #else
     Drawing::BitmapFormat format = { Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL };
@@ -250,7 +161,11 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::SetPaintFilterCanvas(std::sh
         return;
     }
     canvas_ = canvas;
+#ifndef USE_ROSEN_DRAWING
     canvas_->scale(scaleX_, scaleY_);
+#else
+    canvas_->Scale(scaleX_, scaleY_);
+#endif // USE_ROSEN_DRAWING
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -263,6 +178,10 @@ void RSDividedUICapture::PostTaskToRTRecord(std::shared_ptr<Drawing::RecordingCa
 {
     std::function<void()> recordingDrawCall = [canvas, node, visitor]() -> void {
         visitor->SetCanvas(canvas);
+        if (!node->IsOnTheTree()) {
+            node->ApplyModifiers();
+            node->Prepare(visitor);
+        }
         node->Process(visitor);
     };
     RSRenderThread::Instance().PostSyncTask(recordingDrawCall);
@@ -372,7 +291,6 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessEffectRenderNode(RSEf
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
-
 class RSOffscreenRenderCallback : public SurfaceCaptureCallback {
 public:
     void OnSurfaceCapture(std::shared_ptr<Media::PixelMap> pixelmap) override
@@ -417,7 +335,7 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::ProcessSurfaceRenderNode(RSS
     }
     std::shared_ptr<RSOffscreenRenderCallback> callback = std::make_shared<RSOffscreenRenderCallback>();
     auto renderServiceClient = std::make_unique<RSRenderServiceClient>();
-    renderServiceClient->TakeSurfaceCapture(node.GetId(), callback, scaleX_, scaleY_);
+    renderServiceClient->TakeSurfaceCapture(node.GetId(), callback, scaleX_, scaleY_, SurfaceCaptureType::UICAPTURE);
     std::shared_ptr<Media::PixelMap> pixelMap = callback->GetResult(2000);
     if (pixelMap == nullptr) {
         ROSEN_LOGE("RSDividedUICaptureVisitor::TakeLocalCapture failed to get pixelmap, return nullptr!");
@@ -469,6 +387,5 @@ void RSDividedUICapture::RSDividedUICaptureVisitor::PrepareEffectRenderNode(RSEf
     node.Update(*dirtyManager, nullptr, false);
     PrepareChildren(node);
 }
-
 } // namespace Rosen
 } // namespace OHOS

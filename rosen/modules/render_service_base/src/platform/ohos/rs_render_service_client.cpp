@@ -31,6 +31,7 @@
 #include "ipc_callbacks/hgm_config_change_callback_stub.h"
 #include "ipc_callbacks/rs_occlusion_change_callback_stub.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #ifdef NEW_RENDER_CONTEXT
 #include "render_backend/rs_surface_factory.h"
 #endif
@@ -135,13 +136,14 @@ std::shared_ptr<RSRenderSurface> RSRenderServiceClient::CreateRSSurface(const sp
 std::shared_ptr<RSSurface> RSRenderServiceClient::CreateRSSurface(const sptr<Surface> &surface)
 {
 #if defined (ACE_ENABLE_VK)
-    if (RSSystemProperties::GetAceVulkanEnabled()) {
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
         return std::make_shared<RSSurfaceOhosVulkan>(surface); // GPU render
     }
 #endif
 
 #if defined (ACE_ENABLE_GL)
-    if (!RSSystemProperties::GetAceVulkanEnabled()) {
+    if (RSSystemProperties::GetGpuApiType() == Rosen::GpuApiType::OPENGL) {
         return std::make_shared<RSSurfaceOhosGl>(surface); // GPU render
     }
 #endif
@@ -154,6 +156,7 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
     const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper,
     uint64_t id)
 {
+    ROSEN_LOGD("RSRenderServiceClient::CreateVSyncReceiver Start");
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
         return nullptr;
@@ -428,6 +431,28 @@ std::vector<int32_t> RSRenderServiceClient::GetScreenSupportedRefreshRates(Scree
     }
 
     return renderService->GetScreenSupportedRefreshRates(id);
+}
+
+bool RSRenderServiceClient::GetShowRefreshRateEnabled()
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGW("RSRenderServiceClient renderService == nullptr!");
+        return false;
+    }
+
+    return renderService->GetShowRefreshRateEnabled();
+}
+    
+void RSRenderServiceClient::SetShowRefreshRateEnabled(bool enable)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGW("RSRenderServiceClient renderService == nullptr!");
+        return;
+    }
+
+    return renderService->SetShowRefreshRateEnabled(enable);
 }
 
 int32_t RSRenderServiceClient::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
@@ -915,6 +940,10 @@ public:
         }
     }
 
+    void OnHgmRefreshRateModeChanged(int32_t refreshRateMode) override
+    {
+    }
+
 private:
     HgmConfigChangeCallback cb_;
 };
@@ -928,6 +957,39 @@ int32_t RSRenderServiceClient::RegisterHgmConfigChangeCallback(const HgmConfigCh
     }
     sptr<CustomHgmConfigChangeCallback> cb = new CustomHgmConfigChangeCallback(callback);
     return renderService->RegisterHgmConfigChangeCallback(cb);
+}
+
+class CustomHgmRefreshRateModeChangeCallback : public RSHgmConfigChangeCallbackStub
+{
+public:
+    explicit CustomHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback) : cb_(callback) {}
+    ~CustomHgmRefreshRateModeChangeCallback() override {};
+
+    void OnHgmRefreshRateModeChanged(int32_t refreshRateMode) override
+    {
+        if (cb_ != nullptr) {
+            cb_(refreshRateMode);
+        }
+    }
+
+    void OnHgmConfigChanged(std::shared_ptr<RSHgmConfigData> configData) override
+    {
+    }
+
+private:
+    HgmRefreshRateModeChangeCallback cb_;
+};
+
+int32_t RSRenderServiceClient::RegisterHgmRefreshRateModeChangeCallback(
+    const HgmRefreshRateModeChangeCallback& callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::RegisterHgmRefreshRateModeChangeCallback renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+    sptr<CustomHgmRefreshRateModeChangeCallback> cb = new CustomHgmRefreshRateModeChangeCallback(callback);
+    return renderService->RegisterHgmRefreshRateModeChangeCallback(cb);
 }
 
 void RSRenderServiceClient::SetAppWindowNum(uint32_t num)
@@ -1004,6 +1066,38 @@ void RSRenderServiceClient::SetHardwareEnabled(NodeId id, bool isEnabled)
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService != nullptr) {
         renderService->SetHardwareEnabled(id, isEnabled);
+    }
+}
+
+void RSRenderServiceClient::NotifyLightFactorStatus(bool isSafe)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->NotifyLightFactorStatus(isSafe);
+    }
+}
+
+void RSRenderServiceClient::NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->NotifyPackageEvent(listSize, packageList);
+    }
+}
+
+void RSRenderServiceClient::NotifyRefreshRateEvent(const EventInfo& eventInfo)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->NotifyRefreshRateEvent(eventInfo);
+    }
+}
+
+void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService != nullptr) {
+        renderService->NotifyTouchEvent(touchStatus);
     }
 }
 

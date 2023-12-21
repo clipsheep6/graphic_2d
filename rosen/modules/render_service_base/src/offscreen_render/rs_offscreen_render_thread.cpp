@@ -15,6 +15,7 @@
 
 #include "offscreen_render/rs_offscreen_render_thread.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #ifdef ROSEN_OHOS
 #include "render_context/render_context.h"
 #endif
@@ -30,15 +31,23 @@ RSOffscreenRenderThread::RSOffscreenRenderThread()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSOffscreenRender");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    if (!RSSystemProperties::GetUniRenderEnabled()) {
+        return;
+    }
 #ifdef ROSEN_OHOS
     PostTask([this]() {
         renderContext_ = std::make_shared<RenderContext>();
-        renderContext_->InitializeEglContext();
-#if defined(RS_ENABLE_VK)
+#ifdef RS_ENABLE_GL
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+            renderContext_->InitializeEglContext();
+        }
+#endif
+
+#ifndef USE_ROSEN_DRAWING
         renderContext_->SetUpGrContext(nullptr);
 #else
-        renderContext_->SetUpGrContext(nullptr);
-#endif // RS_ENABLE_VK
+        renderContext_->SetUpGpuContext(nullptr);
+#endif // USE_ROSEN_DRAWING
     });
 #endif
 }
@@ -53,18 +62,32 @@ void RSOffscreenRenderThread::PostTask(const std::function<void()>& task)
 #ifdef ROSEN_OHOS
 const std::shared_ptr<RenderContext>& RSOffscreenRenderThread::GetRenderContext()
 {
+    if (!renderContext_) {
+        return nullptr;
+    }
     return renderContext_;
 }
 
 void RSOffscreenRenderThread::CleanGrResource()
 {
     PostTask([this]() {
+        if (!renderContext_) {
+            return;
+        }
+#ifndef USE_ROSEN_DRAWING
         auto grContext = renderContext_->GetGrContext();
+#else
+        auto grContext = renderContext_->GetDrGPUContext();
+#endif
         if (grContext == nullptr) {
             RS_LOGE("RSOffscreenRenderThread::grContext is nullptr");
             return;
         }
+#ifndef USE_ROSEN_DRAWING
         grContext->freeGpuResources();
+#else
+        grContext->FreeGpuResources();
+#endif
         RS_LOGI("RSOffscreenRenderThread::CleanGrResource() finished");
     });
 }

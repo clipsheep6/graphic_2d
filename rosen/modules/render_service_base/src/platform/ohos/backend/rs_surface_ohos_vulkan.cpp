@@ -153,9 +153,14 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
             return nullptr;
         }
 
+#ifndef USE_ROSEN_DRAWING
         if (!nativeSurface.skSurface) {
+#else
+        if (!nativeSurface.drawingSurface) {
+#endif
             ROSEN_LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
             mSurfaceList.pop_back();
+            mSurfaceMap.erase(nativeWindowBuffer);
             return nullptr;
         } else {
             ROSEN_LOGD("RSSurfaceOhosVulkan: skSurface create success %{public}zu", mSurfaceMap.size());

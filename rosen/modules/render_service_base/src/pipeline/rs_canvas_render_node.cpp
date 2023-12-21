@@ -108,7 +108,8 @@ static inline void EnableColorBlendModeMaskLayer(RSPaintFilterCanvas& canvas, in
     }
 }
 
-RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>& context) : RSRenderNode(id, context)
+RSCanvasRenderNode::RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
+    : RSRenderNode(id, context, isTextureExportNode)
 {
     MemoryInfo info = {sizeof(*this), ExtractPid(id), id, MEMORY_TYPE::MEM_RENDER_NODE};
     MemoryTrack::Instance().AddNodeRecord(id, info);
@@ -212,7 +213,7 @@ void RSCanvasRenderNode::DrawShadow(RSModifierContext& context, RSPaintFilterCan
     ApplyDrawCmdModifier(context, RSModifierType::TRANSITION);
     ApplyDrawCmdModifier(context, RSModifierType::ENV_FOREGROUND_COLOR);
     
-    if (RSSystemProperties::GetUseShadowBatchingEnabled() && RSUniRenderJudgement::IsUniRender()) {
+    if (RSSystemProperties::GetUseShadowBatchingEnabled()) {
         auto parent = GetParent().lock();
         if (!(parent && parent->GetRenderProperties().GetUseShadowBatching())) {
             RSPropertiesPainter::DrawShadow(GetRenderProperties(), canvas);

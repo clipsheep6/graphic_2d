@@ -75,8 +75,9 @@ public:
         return Type;
     }
 
-    explicit RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
-    explicit RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context = {});
+    explicit RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {}, bool isTextureExportNode = false);
+    explicit RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context = {},
+        bool isTextureExportNode = false);
     RSRenderNode(const RSRenderNode&) = delete;
     RSRenderNode(const RSRenderNode&&) = delete;
     RSRenderNode& operator=(const RSRenderNode&) = delete;
@@ -142,6 +143,8 @@ public:
     virtual void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
         NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID);
     bool IsOnTheTree() const;
+
+    bool GetIsTextureExportNode() const;
 
     // return children and disappeared children, not guaranteed to be sorted by z-index
     const std::list<SharedPtr>& GetChildren(bool inSubThread = false);
@@ -258,7 +261,7 @@ public:
 
     // update parent's children rect including childRect and itself
     void UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const;
-    void UpdateFilterCacheManagerWithCacheRegion(
+    virtual void UpdateFilterCacheManagerWithCacheRegion(
         RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect = std::nullopt) const;
 
     void SetStaticCached(bool isStaticCached);
@@ -347,6 +350,18 @@ public:
         return isCacheSurfaceNeedUpdate_;
     }
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool IsOnTreeDirty();
+    void SetDirtyByOnTree();
+    Vector4f GetOptionBufferBound() const;
+    void SetOpincRectOutParent(bool outFlag);
+    bool IsOpincInsideOf(Vector2f& sR, Vector2f& pR) const;
+    Vector2f GetOpincBufferSize() const;
+#ifdef USE_ROSEN_DRAWING
+    Drawing::Rect GetOpincBufferBound() const;
+#endif
+#endif
+
     int GetShadowRectOffsetX() const;
     int GetShadowRectOffsetY() const;
 
@@ -430,7 +445,8 @@ public:
 #else
     void UpdateEffectRegion(std::optional<Drawing::Path>& region);
 #endif
-    void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground=true) const;
+    bool IsBackgroundFilterCacheValid() const;
+    virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = true) const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
     bool IsForcedDrawInGroup() const;
@@ -439,6 +455,9 @@ public:
     bool HasCacheableAnim() const { return hasCacheableAnim_; }
     enum NodeGroupType {
         NONE = 0,
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+        GROUPED_BY_AUTO,
+#endif
         GROUPED_BY_ANIM,
         GROUPED_BY_UI,
         GROUPED_BY_USER,
@@ -497,12 +516,24 @@ public:
         isCalcPreferredFps_ = isCalcPreferredFps;
     }
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    class RSAutoCache;
+    const std::shared_ptr<RSAutoCache>& GetAutoCache();
+    RectI lastBoundRect_ = {0, 0, 0, 0};
+    RectF lastFrameRect_ = {0, 0, 0, 0};
+    int rectChangeCount_ = 0;
+    bool isOpincRectOutParent_ = false;
+#endif
+
     const std::shared_ptr<RSRenderContent> GetRenderContent() const;
 protected:
     virtual void OnApplyModifiers() {}
 
     enum class NodeDirty {
         CLEAN = 0,
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+        ON_TREE_DIRTY,
+#endif
         DIRTY,
     };
     void SetClean();
@@ -594,6 +625,9 @@ private:
     // bounds and frame modifiers must be unique
     std::shared_ptr<RSRenderModifier> boundsModifier_;
     std::shared_ptr<RSRenderModifier> frameModifier_;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    std::shared_ptr<RSAutoCache> autoCache_;
+#endif
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> GetCompletedImage(RSPaintFilterCanvas& canvas, uint32_t threadIndex, bool isUIFirst);
@@ -609,13 +643,13 @@ private:
 #ifndef USE_ROSEN_DRAWING
     GrBackendTexture cacheBackendTexture_;
     GrBackendTexture cacheCompletedBackendTexture_;
-#ifdef RS_ENABLE_VK
-    NativeBufferUtils::VulkanCleanupHelper* cacheCleanupHelper_ = nullptr;
-    NativeBufferUtils::VulkanCleanupHelper* cacheCompletedCleanupHelper_ = nullptr;
-#endif
 #else
     Drawing::BackendTexture cacheBackendTexture_;
     Drawing::BackendTexture cacheCompletedBackendTexture_;
+#endif
+#ifdef RS_ENABLE_VK
+    NativeBufferUtils::VulkanCleanupHelper* cacheCleanupHelper_ = nullptr;
+    NativeBufferUtils::VulkanCleanupHelper* cacheCompletedCleanupHelper_ = nullptr;
 #endif
     bool isTextureValid_ = false;
 #endif
@@ -670,6 +704,8 @@ private:
     float boundsHeight_ = 0.0f;
     bool hasCacheableAnim_ = false;
     bool geometryChangeNotPerceived_ = false;
+
+    bool isTextureExportNode_ = false;
 
     std::atomic_bool isUsedBySubThread_ = false;
     bool lastIsNeedAssignToSubThread_ = false;

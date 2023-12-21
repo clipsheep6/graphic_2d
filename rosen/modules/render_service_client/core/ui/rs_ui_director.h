@@ -34,10 +34,11 @@ public:
     static std::shared_ptr<RSUIDirector> Create();
 
     ~RSUIDirector();
-    void GoBackground();
-    void GoForeground();
+    void GoBackground(bool isTextureExport = false);
+    void GoForeground(bool isTextureExport = false);
     void Init(bool shouldCreateRenderThread = true);
-    void Destroy();
+    void StartTextureExport();
+    void Destroy(bool isTextureExport = false);
     void SetRSSurfaceNode(std::shared_ptr<RSSurfaceNode> surfaceNode);
     void SetAbilityBGAlpha(uint8_t alpha);
     /**
@@ -64,6 +65,8 @@ public:
     void SetRequestVsyncCallback(const std::function<void()>& callback);
 
     static void PostFrameRateTask(const std::function<void()>& task);
+
+    int32_t GetCurrentRefreshRateMode();
 
 private:
     void AttachSurface();
@@ -92,6 +95,7 @@ private:
     int surfaceHeight_ = 0;
     std::string cacheDir_;
     static std::function<void()> requestVsyncCallback_;
+    bool isHgmConfigChangeCallbackReg_ = false;
 
     friend class RSApplicationAgentImpl;
     friend class RSRenderThread;

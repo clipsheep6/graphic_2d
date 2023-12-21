@@ -94,6 +94,15 @@ enum class GpuApiType {
     DDGR,
 };
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+enum class DdgrOpincType {
+    DDGR_OPINC_NONE = 0,
+    DDGR_AUTOCACHE,
+    DDGR_RENDERCACHE,
+    DDGR_OPINCUPDATE,
+};
+#endif
+
 using OnSystemPropertyChanged = void(*)(const char*, const char*, void*);
 
 class RSB_EXPORT RSSystemProperties final {
@@ -167,12 +176,14 @@ public:
     static bool IsFoldScreenFlag();
     static bool GetCacheCmdEnabled();
     static bool GetASTCEnabled();
+    static bool GetCachedBlurPartialRenderEnabled();
     static bool GetImageGpuResourceCacheEnable(int width, int height);
 #if defined (ENABLE_DDGR_OPTIMIZE)
     static bool GetDDGRIntegrateEnable();
 #endif
     static bool GetSnapshotWithDMAEnabled();
     static bool IsPhoneType();
+    static bool IsPcType();
     static bool GetSyncTransactionEnabled();
     static int GetSyncTransactionWaitDelay();
     static bool GetUseShadowBatchingEnabled();
@@ -181,25 +192,17 @@ public:
     static bool GetSubSurfaceEnabled();
     static bool GetSecurityPermissionCheckEnabled();
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static DdgrOpincType GetDdgrOpincType();
+    static bool IsDdgrOpincEnable();
+    static bool GetAutoCacheDebugEnabled();
+#endif
+
     static inline GpuApiType GetGpuApiType()
     {
         return RSSystemProperties::systemGpuApiType_;
     }
 
-    static inline GpuApiType GetDefaultHiGpuV200Platform()
-    {
-        return RSSystemProperties::DefaultHiGpuV200Platform_;
-    }
-
-    static inline bool GetAceVulkanEnabled() noexcept
-    {
-        return aceVulkanEnabled_;
-    }
-
-    static inline bool GetRsVulkanEnabled() noexcept
-    {
-        return rsVulkanEnabled_;
-    }
 private:
     RSSystemProperties() = default;
 
@@ -207,9 +210,9 @@ private:
     inline static bool isDrawTextAsBitmap_ = false;
     inline static bool cacheEnabledForRotation_ = false;
     static const GpuApiType systemGpuApiType_;
-    static const GpuApiType DefaultHiGpuV200Platform_ = GpuApiType::OPENGL;
-    static const bool aceVulkanEnabled_;
-    static const bool rsVulkanEnabled_;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static const DdgrOpincType ddgrOpincType_;
+#endif
 };
 
 } // namespace Rosen

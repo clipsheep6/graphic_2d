@@ -20,6 +20,9 @@
 #include <memory>
 
 #include "pipeline/rs_canvas_render_node.h"
+#ifdef USE_ROSEN_DRAWING
+#include "recording/recording_canvas.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -29,6 +32,7 @@ using ThreadInfo = std::pair<uint32_t, std::function<void(sk_sp<SkSurface>)>>;
 #else
 using ThreadInfo = std::pair<uint32_t, std::function<void(std::shared_ptr<Drawing::Surface>)>>;
 #endif
+class RSRecordingCanvas;
 
 class RSB_EXPORT RSCanvasDrawingRenderNode : public RSCanvasRenderNode {
 public:
@@ -36,7 +40,8 @@ public:
     using SharedPtr = std::shared_ptr<RSCanvasDrawingRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::CANVAS_DRAWING_NODE;
 
-    explicit RSCanvasDrawingRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
+    explicit RSCanvasDrawingRenderNode(NodeId id,
+        const std::weak_ptr<RSContext>& context = {}, bool isTextureExportNode = false);
     virtual ~RSCanvasDrawingRenderNode();
 
     void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
@@ -78,12 +83,15 @@ private:
     bool ResetSurfaceWithTexture(int width, int height, RSPaintFilterCanvas& canvas);
 #endif
 
+    std::mutex imageMutex_;
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> skSurface_;
     sk_sp<SkImage> skImage_;
+    std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
 #else
     std::shared_ptr<Drawing::Surface> surface_;
     std::shared_ptr<Drawing::Image> image_;
+    std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas_;
 #endif
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     bool isGpuSurface_ = true;

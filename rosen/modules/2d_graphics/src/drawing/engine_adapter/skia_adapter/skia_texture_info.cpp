@@ -23,14 +23,14 @@ namespace Drawing {
 #ifdef RS_ENABLE_VK
 GrBackendTexture SkiaTextureInfo::ConvertToGrBackendVKTexture(const TextureInfo& info)
 {
-    auto vkInfo = info.GetVKTextureInfo();
     GrVkImageInfo imageInfo;
-
-    if (!SystemProperties::GetRsVulkanEnabled()) {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         GrBackendTexture backendTexture(0, 0, imageInfo);
         return backendTexture;
     }
 
+    auto vkInfo = info.GetVKTextureInfo();
     if (!vkInfo) {
         GrBackendTexture backendTexture(info.GetWidth(), info.GetHeight(), imageInfo);
         return backendTexture;
@@ -73,7 +73,8 @@ GrBackendTexture SkiaTextureInfo::ConvertToGrBackendVKTexture(const TextureInfo&
 
 void SkiaTextureInfo::ConvertToVKTexture(const GrBackendTexture& backendTexture, TextureInfo& info)
 {
-    if (!SystemProperties::GetRsVulkanEnabled()) {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         return;
     }
     std::shared_ptr<VKTextureInfo> vkInfo = std::make_shared<VKTextureInfo>();
@@ -119,7 +120,15 @@ void SkiaTextureInfo::ConvertToVKTexture(const GrBackendTexture& backendTexture,
 GrBackendTexture SkiaTextureInfo::ConvertToGrBackendTexture(const TextureInfo& info)
 {
 #ifdef RS_ENABLE_VK
-    return ConvertToGrBackendVKTexture(info);
+    if (GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        return ConvertToGrBackendVKTexture(info);
+    } else {
+        GrGLTextureInfo grGLTextureInfo = { info.GetTarget(), info.GetID(), info.GetFormat() };
+        GrBackendTexture backendTexture(info.GetWidth(), info.GetHeight(),
+            static_cast<GrMipMapped>(info.GetIsMipMapped()), grGLTextureInfo);
+        return backendTexture;
+    }
 #else
     GrGLTextureInfo grGLTextureInfo = { info.GetTarget(), info.GetID(), info.GetFormat() };
     GrBackendTexture backendTexture(info.GetWidth(), info.GetHeight(),

@@ -32,8 +32,13 @@ enum class BitDepth {
 };
 
 enum class CompressedType {
-    ETC1,
-    ASTC,
+    NoneType,
+    ETC2_RGB8_UNORM, // the same ad ETC1
+    BC1_RGB8_UNORM,
+    BC1_RGBA8_UNORM,
+    ASTC_RGBA8_4x4,
+    ASTC_RGBA8_6x6,
+    ASTC_RGBA8_8x8,
 };
 
 enum class TextureOrigin {
@@ -227,10 +232,10 @@ public:
 
     bool IsValid() const;
     void SetTextureInfo(const TextureInfo& textureInfo);
-    const TextureInfo GetTextureInfo() const;
+    const TextureInfo& GetTextureInfo() const;
 
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return imageImplPtr->DowncastingTo<T>();
     }
@@ -393,7 +398,7 @@ public:
     bool IsOpaque() const;
 
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return imageImplPtr->DowncastingTo<T>();
     }

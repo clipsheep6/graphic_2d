@@ -45,7 +45,8 @@ bool Surface::Bind(const FrameBuffer& frameBuffer)
 std::shared_ptr<Surface> Surface::MakeFromBackendRenderTarget(GPUContext* gpuContext, TextureInfo& info,
     TextureOrigin origin, void (*deleteFunc)(void*), void* cleanupHelper)
 {
-    if (!SystemProperties::GetRsVulkanEnabled()) {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         return nullptr;
     }
     return StaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin, deleteFunc, cleanupHelper);
@@ -128,7 +129,8 @@ void Surface::Flush(FlushInfo *drawingflushInfo)
 #ifdef RS_ENABLE_VK
 void Surface::Wait(int32_t time, const VkSemaphore& semaphore)
 {
-    if (!SystemProperties::GetRsVulkanEnabled()) {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         return;
     }
     if (!impl_) {
@@ -140,6 +142,10 @@ void Surface::Wait(int32_t time, const VkSemaphore& semaphore)
 
 void Surface::SetDrawingArea(const std::vector<RectI>& rects)
 {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     if (!impl_) {
         LOGE("surfaceImpl SetDrawingArea failed impl nullptr");
         return;
@@ -149,6 +155,10 @@ void Surface::SetDrawingArea(const std::vector<RectI>& rects)
 
 void Surface::ClearDrawingArea()
 {
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     if (!impl_) {
         LOGE("surfaceImpl ClearDrawingArea failed impl nullptr");
         return;

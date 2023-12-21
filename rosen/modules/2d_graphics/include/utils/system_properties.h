@@ -19,21 +19,22 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+enum class GpuApiType {
+    OPENGL = 0,
+    VULKAN,
+    DDGR,
+};
 class SystemProperties {
 public:
-    static inline bool GetAceVulkanEnabled() noexcept
+    static inline GpuApiType GetGpuApiType()
     {
-        return aceVulkanEnabled_;
+        return SystemProperties::systemGpuApiType_;
     }
 
-    static inline bool GetRsVulkanEnabled() noexcept
-    {
-        return rsVulkanEnabled_;
-    }
+    static bool GetHMSymbolEnable();
 
 private:
-    static const bool aceVulkanEnabled_;
-    static const bool rsVulkanEnabled_;
+    static const GpuApiType systemGpuApiType_;
 };
 } // namespace Drawing
 } // namespace Rosen

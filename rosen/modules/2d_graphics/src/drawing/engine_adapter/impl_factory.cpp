@@ -126,6 +126,18 @@ std::unique_ptr<SurfaceImpl> ImplFactory::CreateSurfaceImpl()
     return EngineImplFactory::CreateSurface();
 }
 
+// opinc_begin
+std::unique_ptr<OpListHandleImpl> ImplFactory::CreateOplistHandleImpl()
+{
+#ifdef ENABLE_DDGR_OPTIMIZE
+    if (GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        return DDGRImplFactory::CreateOplistHandle();
+    }
+#endif
+    return EngineImplFactory::CreateOplistHandle();
+}
+// opinc_end
+
 std::unique_ptr<PathEffectImpl> ImplFactory::CreatePathEffectImpl()
 {
     return EngineImplFactory::CreatePathEffect();
@@ -207,6 +219,11 @@ std::shared_ptr<MemoryStreamImpl> ImplFactory::CreateMemoryStreamImpl()
 std::shared_ptr<MemoryStreamImpl> ImplFactory::CreateMemoryStreamImpl(const void* data, size_t length, bool copyData)
 {
     return EngineImplFactory::CreateMemoryStream(data, length, copyData);
+}
+
+std::shared_ptr<ResourceHolderImpl> ImplFactory::CreateResourceHolderImpl()
+{
+    return EngineImplFactory::CreateResourceHolder();
 }
 } // namespace Drawing
 } // namespace Rosen

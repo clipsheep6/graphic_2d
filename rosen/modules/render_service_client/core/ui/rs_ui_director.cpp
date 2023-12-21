@@ -90,16 +90,29 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
     if (auto rsApplicationAgent = RSApplicationAgentImpl::Instance()) {
         rsApplicationAgent->RegisterRSApplicationAgent();
     }
-    RSFrameRatePolicy::GetInstance()->RegisterHgmConfigChangeCallback();
 
     GoForeground();
 }
 
-void RSUIDirector::GoForeground()
+void RSUIDirector::StartTextureExport()
+{
+    isUniRenderEnabled_ = RSSystemProperties::GetUniRenderEnabled();
+    if (isUniRenderEnabled_) {
+        auto renderThreadClient = RSIRenderClient::CreateRenderThreadClient();
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->SetRenderThreadClient(renderThreadClient);
+        }
+        RSRenderThread::Instance().Start();
+    }
+    RSRenderThread::Instance().UpdateWindowStatus(true);
+}
+
+void RSUIDirector::GoForeground(bool isTextureExport)
 {
     ROSEN_LOGD("RSUIDirector::GoForeground");
     if (!isActive_) {
-        if (!isUniRenderEnabled_) {
+        if (!isUniRenderEnabled_ || isTextureExport) {
             RSRenderThread::Instance().UpdateWindowStatus(true);
         }
         isActive_ = true;
@@ -113,11 +126,11 @@ void RSUIDirector::GoForeground()
     }
 }
 
-void RSUIDirector::GoBackground()
+void RSUIDirector::GoBackground(bool isTextureExport)
 {
     ROSEN_LOGD("RSUIDirector::GoBackground");
     if (isActive_) {
-        if (!isUniRenderEnabled_) {
+        if (!isUniRenderEnabled_ || isTextureExport) {
             RSRenderThread::Instance().UpdateWindowStatus(false);
         }
         isActive_ = false;
@@ -140,7 +153,7 @@ void RSUIDirector::GoBackground()
             }
         });
 #ifdef ACE_ENABLE_GL
-        if (!RSSystemProperties::GetAceVulkanEnabled()) {
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
             RSRenderThread::Instance().PostTask([this]() {
                 auto renderContext = RSRenderThread::Instance().GetRenderContext();
                 if (renderContext != nullptr) {
@@ -159,10 +172,10 @@ void RSUIDirector::GoBackground()
     }
 }
 
-void RSUIDirector::Destroy()
+void RSUIDirector::Destroy(bool isTextureExport)
 {
     if (root_ != 0) {
-        if (!isUniRenderEnabled_) {
+        if (!isUniRenderEnabled_ || isTextureExport) {
             if (auto node = RSNodeMap::Instance().GetNode<RSRootNode>(root_)) {
                 node->RemoveFromTree();
             }
@@ -297,6 +310,10 @@ void RSUIDirector::SetUITaskRunner(const TaskRunner& uiTaskRunner)
 {
     std::unique_lock<std::mutex> lock(g_uiTaskRunnersVisitorMutex);
     g_uiTaskRunners[this] = uiTaskRunner;
+    if (!isHgmConfigChangeCallbackReg_) {
+        RSFrameRatePolicy::GetInstance()->RegisterHgmConfigChangeCallback();
+        isHgmConfigChangeCallbackReg_ = true;
+    }
 }
 
 void RSUIDirector::SendMessages()
@@ -386,6 +403,11 @@ void RSUIDirector::PostTask(const std::function<void()>& task)
         taskRunner(task);
         return;
     }
+}
+
+int32_t RSUIDirector::GetCurrentRefreshRateMode()
+{
+    return RSFrameRatePolicy::GetInstance()->GetRefreshRateMode();
 }
 } // namespace Rosen
 } // namespace OHOS

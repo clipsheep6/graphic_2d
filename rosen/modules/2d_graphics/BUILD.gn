@@ -377,6 +377,12 @@ if (!is_arkui_x) {
   ## Build 2d_graphics.so
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
     ohos_shared_library("2d_graphics") {
+      branch_protector_ret = "pac_ret"
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        debug = true
+      }
       platform = current_os
       if (platform == "mingw") {
         platform = "windows"
@@ -395,6 +401,12 @@ if (!is_arkui_x) {
     }
   } else {
     ohos_shared_library("2d_graphics") {
+      branch_protector_ret = "pac_ret"
+      sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+        debug = true
+      }
       version_script = "2d_graphics.versionscript"
       symlink_target_name = [ "libnative_drawing.so" ]
       deps = [ ":2d_graphics_source_ohos" ]
@@ -408,6 +420,12 @@ if (!is_arkui_x) {
 
 if (enable_text_gine) {
   ohos_shared_library("2d_graphics_new") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     platform = current_os
     if (platform == "mingw") {
       platform = "windows"
@@ -424,6 +442,12 @@ if (enable_text_gine) {
 
 ## Build 2d_graphics.so
 ohos_shared_library("2d_graphics_canvaskit0310") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "$drawing_src_dir/draw/brush.cpp",
     "$drawing_src_dir/draw/color.cpp",
@@ -510,6 +534,12 @@ if (enable_text_gine) {
     defines += [ "USE_TEXGINE" ]
   }
   ohos_shared_library("2d_graphics_drawing") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     include_dirs = [
       "include",
       "$src_dir",

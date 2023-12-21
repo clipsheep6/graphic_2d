@@ -30,6 +30,12 @@ if (enable_text_gine) {
   defines = [ "USE_GRAPHIC_TEXT_GINE" ]
 
   ohos_shared_library("rosen_text") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     include_dirs = [ "$graphic_2d_root/rosen/modules/2d_graphics/include" ]
     public_deps = [ ":rosen_text_inner" ]
     public_configs =
@@ -130,6 +136,12 @@ if (enable_text_gine) {
   }
 
   ohos_shared_library("rosen_text") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     public_configs = [ ":rosen_text_config" ]
 
     public_deps = [ "ui:rosen_text_ui" ]

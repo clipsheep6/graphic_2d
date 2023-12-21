@@ -24,6 +24,12 @@ config("color_space_object_config") {
 }
 
 ohos_shared_library("color_space_object_convertor") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "color_space_object_convertor/color_space_object_convertor.cpp",
     "color_space_object_convertor/js_color_space.cpp",
@@ -58,6 +64,12 @@ config("color_manager_napi_config") {
 }
 
 ohos_shared_library("colorspacemanager_napi") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "colorspacemanager_napi/color_space_manager_module.cpp",
     "colorspacemanager_napi/js_color_space_manager.cpp",

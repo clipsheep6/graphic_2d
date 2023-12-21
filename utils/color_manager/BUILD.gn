@@ -34,6 +34,12 @@ config("color_manager_public_config") {
 }
 
 ohos_shared_library("color_manager") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "src/color.cpp",
     "src/color_space.cpp",

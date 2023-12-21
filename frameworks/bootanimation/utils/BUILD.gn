@@ -23,6 +23,12 @@ config("libbootanimation_utils_config") {
 }
 
 ohos_shared_library("libbootanimation_utils") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   public_configs = [ ":libbootanimation_utils_config" ]
 
   sources = [ "boot_animation_utils.cpp" ]

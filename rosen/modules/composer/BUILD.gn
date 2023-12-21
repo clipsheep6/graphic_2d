@@ -41,6 +41,12 @@ config("composer_public_config") {
 }
 
 ohos_shared_library("libcomposer") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "hdi_backend/src/hdi_backend.cpp",
     "hdi_backend/src/hdi_device.cpp",

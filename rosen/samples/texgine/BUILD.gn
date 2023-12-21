@@ -60,6 +60,12 @@ config("libskia_rs_framework_public_config") {
 }
 
 ohos_shared_library("libskia_rs_framework") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [ "skia_rs_framework.cpp" ]
 
   configs = [ ":libskia_rs_framework_config" ]

@@ -27,6 +27,12 @@ config("texgine_drawing_public_config") {
 }
 
 ohos_shared_library("libtexgine_drawing") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   if (is_ok) {
     sources = [
       "src/texgine_canvas.cpp",

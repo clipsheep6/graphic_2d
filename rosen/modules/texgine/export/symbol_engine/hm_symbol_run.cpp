@@ -15,7 +15,9 @@
 
 #include "hm_symbol_run.h"
 #include "include/pathops/SkPathOps.h"
+#ifndef ROSEN_CROSS_PLATFORM
 #include "src/ports/skia_ohos/HmSymbolConfig_ohos.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -25,8 +27,12 @@ SymbolLayers HMSymbolRun::GetSymbolLayers(const SkGlyphID& glyphId, const HMSymb
 {
     SymbolLayers symbolInfo;
     symbolInfo.symbolGlyphId = glyphId;
+#ifndef ROSEN_CROSS_PLATFORM
     uint32_t symbolId = static_cast<uint32_t>(glyphId);
     SymbolLayersGroups* symbolInfoOrign = HmSymbolConfig_OHOS::getInstance()->getSymbolLayersGroups(symbolId);
+#else
+    SymbolLayersGroups* symbolInfoOrign = nullptr;
+#endif
     if (symbolInfoOrign == nullptr) {
         return symbolInfo;
     }

@@ -29,7 +29,7 @@ pid_t GetRealPid(void)
 #elif defined(OHOS_LITE) || defined(__APPLE__) || defined(__gnu_linux__)
     return getpid();
 #else
-    return getprocpid();
+    return getpid();
 #endif
 }
 } // namespace OHOS

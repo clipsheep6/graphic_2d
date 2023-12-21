@@ -286,7 +286,7 @@ public:
 
     /**
      * @brief Path contains an array of path contour, each of which may be open or closed.
-     * If SkRRect is filled, Path::PathFillType determines whether path contour
+     * If RRect is filled, Path::PathFillType determines whether path contour
      * describes inside or outside of fill; If stroked, use pen to stroke width
      * describes the line thickness, Pen::CapStyle describes line ends, and
      * Pen::Join describes how corners are drawn.
@@ -349,7 +349,7 @@ public:
     virtual void DrawVertices(const Vertices& vertices, BlendMode mode);
 
     /**
-     * @brief Draws Image image stretched proportionally to fit into Rect dst. IRect
+     * @brief Draw image stretched proportionally to fit into Rect dst. IRect
      * center divides the image into nine sections: four sides, four corners, and
      * the center. Corners are unmodified or scaled down proportionately if their sides
      * are larger than dst; center and four sides are scaled to fit remaining space, if any.
@@ -583,7 +583,7 @@ public:
     /**
      * @brief Triggers the immediate execution of all pending draw operations.
      * If Canvas is associated with GPU surface, resolves all pending GPU operations.
-     * If SkCanvas is associated with raster surface, has no effect; raster draw 
+     * If Canvas is associated with raster surface, has no effect; raster draw 
      * operations are never deferred.
      */
     virtual void Flush();
@@ -644,15 +644,30 @@ public:
      * @return CoreCanvas& 
      */
     virtual CoreCanvas& AttachBrush(const Brush& brush);
+
+    /**
+     * @brief Attach paint to canvas to draw something.
+     * @param paint tool to fill or stroke something
+     * @return CoreCanvas& 
+     */
     virtual CoreCanvas& AttachPaint(const Paint& paint);
+    
+    /**
+     * @brief Detach pen from canvas.
+     * @return CoreCanvas& 
+     */
     virtual CoreCanvas& DetachPen();
     
     /**
      * @brief Detach brush from canvas.
-     * 
      * @return CoreCanvas& 
      */
     virtual CoreCanvas& DetachBrush();
+
+    /**
+     * @brief Detach paint from canvas.
+     * @return CoreCanvas& 
+     */
     virtual CoreCanvas& DetachPaint();
 
     virtual ColorQuad GetEnvForegroundColor() const;

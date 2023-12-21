@@ -78,6 +78,8 @@ constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
 constexpr uint32_t CACHE_MAX_UPDATE_TIME = 2;
 constexpr int ROTATION_90 = 90;
 constexpr int ROTATION_270 = 270;
+constexpr float CUBIC_B = 1 / 3.0f;
+constexpr float CUBIC_C = 1 / 3.0f;
 static const std::string CAPTURE_WINDOW_NAME = "CapsuleWindow";
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
 static const std::string BIGFLODER_BUNDLE_NAME = "SCBDesktop2";
@@ -2552,7 +2554,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 SkPaint paint;
                 paint.setAntiAlias(true);
 #ifdef NEW_SKIA
-                canvas_->drawImage(cacheImageProcessed, 0, 0, SkSamplingOptions(), &paint);
+                canvas_->drawImage(cacheImageProcessed, 0, 0,
+                    SkSamplingOptions(SkCubicResampler {CUBIC_B, CUBIC_C}), &paint);
 #else
                 paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
                 canvas_->drawImage(cacheImageProcessed, 0, 0, &paint);

@@ -1077,7 +1077,9 @@ void RSRenderServiceClient::SetTpFeatureConfig(int32_t feature, const char* conf
 void RSRenderServiceClient::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    RS_LOGE("RSRenderServiceClient::SetVirtualScreenUsingStatus");
     if (renderService != nullptr) {
+        RS_LOGE("RSRenderServiceClient::SetVirtualScreenUsingStatus renderService not null");
         renderService->SetVirtualScreenUsingStatus(isVirtualScreenUsingStatus);
     }
 }

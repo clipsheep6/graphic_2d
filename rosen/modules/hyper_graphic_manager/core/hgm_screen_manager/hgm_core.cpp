@@ -38,6 +38,7 @@ static std::map<uint32_t, int64_t> IDEAL_PERIOD = {
 
 HgmCore& HgmCore::Instance()
 {
+    HGM_LOGE("HgmCore initialization");
     static HgmCore instance;
     if (instance.IsInit()) {
         return instance;

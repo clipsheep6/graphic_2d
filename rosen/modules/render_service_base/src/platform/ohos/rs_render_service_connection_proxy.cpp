@@ -1885,6 +1885,7 @@ void RSRenderServiceConnectionProxy::SetTpFeatureConfig(int32_t feature, const c
 #endif
 void RSRenderServiceConnectionProxy::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
 {
+    RS_LOGE("RSRenderServiceConnectionProxy::SetVirtualScreenUsingStatus");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

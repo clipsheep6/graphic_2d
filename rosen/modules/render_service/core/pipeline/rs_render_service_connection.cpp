@@ -1121,10 +1121,12 @@ void RSRenderServiceConnection::SetTpFeatureConfig(int32_t feature, const char* 
 void RSRenderServiceConnection::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
 {
     if (isVirtualScreenUsingStatus) {
+        RS_LOGE("RSRenderServiceConnection::SetVirtualScreenUsingStatus Use Status");
         auto& hgmCore = HgmCore::Instance();
         hgmCore.StartScreenScene(SceneType::SCREEN_RECORD);
         hgmCore.SetModeBySettingConfig();
     } else {
+        RS_LOGE("RSRenderServiceConnection::SetVirtualScreenUsingStatus not use Status");
         auto& hgmCore = HgmCore::Instance();
         hgmCore.StopScreenScene(SceneType::SCREEN_RECORD);
         hgmCore.SetModeBySettingConfig();

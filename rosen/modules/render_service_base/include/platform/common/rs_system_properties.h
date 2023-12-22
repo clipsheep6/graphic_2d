@@ -94,6 +94,15 @@ enum class GpuApiType {
     DDGR,
 };
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+enum class DdgrOpincType {
+    DDGR_OPINC_NONE = 0,
+    DDGR_AUTOCACHE,
+    DDGR_RENDERCACHE,
+    DDGR_OPINCUPDATE,
+};
+#endif
+
 using OnSystemPropertyChanged = void(*)(const char*, const char*, void*);
 
 class RSB_EXPORT RSSystemProperties final {
@@ -174,6 +183,7 @@ public:
 #endif
     static bool GetSnapshotWithDMAEnabled();
     static bool IsPhoneType();
+    static bool IsPcType();
     static bool GetSyncTransactionEnabled();
     static int GetSyncTransactionWaitDelay();
     static bool GetUseShadowBatchingEnabled();
@@ -181,6 +191,12 @@ public:
     static bool GetSingleFrameComposerCanvasNodeEnabled();
     static bool GetSubSurfaceEnabled();
     static bool GetSecurityPermissionCheckEnabled();
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static DdgrOpincType GetDdgrOpincType();
+    static bool IsDdgrOpincEnable();
+    static bool GetAutoCacheDebugEnabled();
+#endif
 
     static inline GpuApiType GetGpuApiType()
     {
@@ -194,6 +210,9 @@ private:
     inline static bool isDrawTextAsBitmap_ = false;
     inline static bool cacheEnabledForRotation_ = false;
     static const GpuApiType systemGpuApiType_;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static const DdgrOpincType ddgrOpincType_;
+#endif
 };
 
 } // namespace Rosen

@@ -107,18 +107,16 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         return {};
     }
 
-    if (implicitAnimationParams_.top()->GetType() == ImplicitAnimationParamType::CANCEL) {
-        // Special case: if implicit animation param type is CANCEL, we need to cancel all implicit animations
-        auto params = std::static_pointer_cast<RSImplicitCancelAnimationParam>(implicitAnimationParams_.top());
-        params->SyncProperties();
-        CloseImplicitAnimationInner();
-        return {};
-    }
-
     const auto& finishCallback = std::get<const std::shared_ptr<AnimationFinishCallback>>(globalImplicitParams_.top());
     auto& currentAnimations = implicitAnimations_.top();
     auto& currentKeyframeAnimations = keyframeAnimations_.top();
-    // if no implicit animation created
+
+    // Special case: if implicit animation param type is CANCEL, we need to cancel all implicit animations
+    if (implicitAnimationParams_.top()->GetType() == ImplicitAnimationParamType::CANCEL) {
+        std::static_pointer_cast<RSImplicitCancelAnimationParam>(implicitAnimationParams_.top())->SyncProperties();
+    }
+
+    // if no implicit animation created by current implicit animation param, we need to take care of finish callback
     if (currentAnimations.empty() && currentKeyframeAnimations.empty()) {
         // If finish callback either 1. is null or 2. is referenced by any animation or implicitly parameters, we don't
         // do anything.
@@ -126,9 +124,10 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
             CloseImplicitAnimationInner();
             return {};
         }
-        // we are the only one who holds the finish callback, if the callback is NOT timing sensitive, we need to
-        // execute it asynchronously, in order to avoid timing issues.
-        if (finishCallback->finishCallbackType_ == FinishCallbackType::TIME_INSENSITIVE) {
+        // we are the only one who holds the finish callback, if the callback is NOT timing sensitive, or if implicit
+        // animation param type is CANCEL, we need to execute it asynchronously, in order to avoid timing issues.
+        if (finishCallback->finishCallbackType_ == FinishCallbackType::TIME_INSENSITIVE ||
+            implicitAnimationParams_.top()->GetType() == ImplicitAnimationParamType::CANCEL) {
             ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, execute finish "
                        "callback asynchronously");
             RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
@@ -474,13 +473,13 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
         }
         case ImplicitAnimationParamType::CANCEL: {
             // Create animation with CANCEL type will cancel all running animations of the target.
-            // Note: To avoid current ImplicitAnimation Param changing the behavior of the callbacks, we need to add an
-            // isolation layer
-            implicitAnimationParams_.push(std::make_shared<RSImplicitAnimationParam>());
             property->SetValue(endValue);                         // force set ui value
             property->UpdateOnAllAnimationFinish();               // force sync RS value and cancel all RS animations
+            // Note: The callbacks of the canceled animations will be executed within the current implicit animation
+            // context, consistent with previous behavior. However, this may cause issues and may be changed in the
+            // future.
             target->CancelAnimationByProperty(property->GetId()); // remove all ui animation
-            implicitAnimations_.pop();                            // restore implicit animation param
+            return;
             return;
         }
         default:

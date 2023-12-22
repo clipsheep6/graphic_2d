@@ -259,6 +259,24 @@ Boundary TypographyImpl::GetWordBoundaryByIndex(size_t index) const
     return {right, right};
 }
 
+double TypographyImpl::GetLineHeight(int lineNumber)
+{
+    if (lineNumber >= 0 && lineNumber < lineMetrics_.size()) {
+        return lineMetrics_[lineNumber].GetMaxHeight();
+    } else {
+        return 0.0;
+    }
+}
+
+double TypographyImpl::GetLineWidth(int lineNumber)
+{
+    if (lineNumber >= 0 && lineNumber < lineMetrics_.size()) {
+        return lineMetrics_[lineNumber].width;
+    } else {
+        return 0.0;
+    }
+}
+
 void TypographyImpl::Layout(double maxWidth)
 {
     boundariesCache_ = {};
@@ -269,14 +287,21 @@ void TypographyImpl::Layout(double maxWidth)
         LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "TypographyImpl::Layout");
         LOGEX_FUNC_LINE_DEBUG() << "Layout maxWidth: " << maxWidth << ", spans.size(): " << spans_.size();
         maxWidth_ = floor(maxWidth);
-        if (spans_.empty()) {
+        auto isEmptySpans = spans_.empty();
+        if (isEmptySpans) {
             LOGEX_FUNC_LINE(ERROR) << "Empty spans";
-            return;
+            std::vector<uint16_t> text{u'\n'};
+            VariantSpan vs = TextSpan::MakeFromText(text);
+            vs.SetTextStyle(typographyStyle_.ConvertToTextStyle());
+            spans_.push_back(vs);
         }
 
         Shaper shaper;
         shaper.SetIndents(indents_);
         lineMetrics_ = shaper.DoShape(spans_, typographyStyle_, fontProviders_, maxWidth_);
+        if (isEmptySpans) {
+            lineMetrics_.pop_back();
+        }
         if (lineMetrics_.size() == 0) {
             LOGEX_FUNC_LINE_DEBUG() << "Shape failed";
             return;
@@ -627,8 +652,16 @@ void TypographyImpl::ComputeSpans(int lineIndex, double baseline, const CalcResu
             spanBoxes.push_back({.rect = rect, .direction = TextDirection::LTR});
         }
 
+        bool isJustify = typographyStyle_.GetEquivalentAlign() == TextAlign::JUSTIFY &&
+            lineIndex != lineMetrics_.size() - 1 && !lineMetrics_[lineIndex].lineSpans.back().IsHardBreak() &&
+            lineMetrics_[lineIndex].lineSpans.size() > 1;
+        double spanGapWidth = 0.0;
+        if (isJustify) {
+            spanGapWidth = (maxWidth_ - lineMetrics_[lineIndex].width) /
+                (lineMetrics_[lineIndex].lineSpans.size() - 1);
+        }
         if (auto ts = span.TryToTextSpan(); ts != nullptr) {
-            std::vector<TextRect> boxes = GenTextRects(ts, offsetX, offsetY);
+            std::vector<TextRect> boxes = GenTextRects(ts, offsetX, offsetY, spanGapWidth);
             spanBoxes.insert(spanBoxes.end(), boxes.begin(), boxes.end());
         }
 
@@ -643,7 +676,8 @@ void TypographyImpl::ComputeSpans(int lineIndex, double baseline, const CalcResu
     }
 }
 
-std::vector<TextRect> TypographyImpl::GenTextRects(std::shared_ptr<TextSpan> &ts, double offsetX, double offsetY) const
+std::vector<TextRect> TypographyImpl::GenTextRects(std::shared_ptr<TextSpan> &ts, double offsetX, double offsetY,
+    double spanGapWidth) const
 {
     double top = *(ts->tmetrics_->fAscent_);
     double height = *(ts->tmetrics_->fDescent_) - *(ts->tmetrics_->fAscent_);
@@ -654,9 +688,12 @@ std::vector<TextRect> TypographyImpl::GenTextRects(std::shared_ptr<TextSpan> &ts
         auto cg = ts->cgs_.Get(i);
         // If is emoji, don`t need process ligature, so set chars size to 1
         int charsSize = cg.IsEmoji() ? 1 : static_cast<int>(cg.chars.size());
+        double spanWidth = ts->glyphWidths_[i] / charsSize;
+        if (i == ts->glyphWidths_.size() - 1) {
+            spanWidth += spanGapWidth;
+        }
         for (int j = 0; j < charsSize; j++) {
-            auto rect = TexgineRect::MakeXYWH(offsetX + width, offsetY + top,
-                ts->glyphWidths_[i] / charsSize, height);
+            auto rect = TexgineRect::MakeXYWH(offsetX + width, offsetY + top, spanWidth, height);
             boxes.push_back({.rect = rect, .direction = TextDirection::LTR});
             width += ts->glyphWidths_[i] / charsSize;
         }

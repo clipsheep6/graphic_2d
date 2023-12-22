@@ -132,6 +132,9 @@ public:
     float GetTranslateX() const;
     float GetTranslateY() const;
     float GetTranslateZ() const;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool GetOpincPropDirty() const;
+#endif
 
     void SetScale(Vector2f scale);
     void SetScaleX(float sx);
@@ -203,6 +206,7 @@ public:
     void SetFilter(const std::shared_ptr<RSFilter>& filter);
     const std::shared_ptr<RSFilter>& GetBackgroundFilter() const;
     const std::shared_ptr<RSLinearGradientBlurPara>& GetLinearGradientBlurPara() const;
+    bool IsLinearGradientBlurValid() const;
     const std::shared_ptr<RSFilter>& GetFilter() const;
     bool NeedFilter() const;
 
@@ -372,6 +376,9 @@ private:
     bool contentDirty_ = false;
     bool isDrawn_ = false;
     bool alphaNeedApply_ = false;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool isOpincPropDirty_ = false;
+#endif
 
     bool hasBounds_ = false;
     bool useEffect_ = false;

@@ -711,7 +711,7 @@ void DrawImageOpItem::Playback(Canvas* canvas, const Rect* rect)
 /* DrawImageRectOpItem */
 DrawImageRectOpItem::DrawImageRectOpItem(const CmdList& cmdList, DrawImageRectOpItem::ConstructorHandle* handle)
     : DrawWithPaintOpItem(cmdList, handle->paintHandle, IMAGE_RECT_OPITEM), src_(handle->src), dst_(handle->dst),
-      sampling_(handle->sampling), constraint_(handle->constraint)
+      sampling_(handle->sampling), constraint_(handle->constraint), isForeground_(handle->isForeground)
 {
     image_ = CmdListHelper::GetImageFromCmdList(cmdList, handle->image);
 }
@@ -725,6 +725,18 @@ void DrawImageRectOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     if (image_ == nullptr) {
         LOGE("DrawImageRectOpItem image is null");
+        return;
+    }
+    if (isForeground_) {
+        AutoCanvasRestore acr(*canvas, false);
+        SaveLayerOps ops;
+        canvas->SaveLayer(ops);
+        canvas->AttachPaint(paint_);
+        canvas->DrawImageRect(*image_, src_, dst_, sampling_, constraint_);
+        Brush brush;
+        brush.SetColor(canvas->GetEnvForegroundColor());
+        brush.SetBlendMode(Drawing::BlendMode::SRC_IN);
+        canvas->DrawBackground(brush);
         return;
     }
     canvas->AttachPaint(paint_);
@@ -804,6 +816,11 @@ bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(
     }
 
     //OffscreenCanvas used once, detach is unnecessary, FakeBrush/Pen avoid affecting ImageRectOp, attach is necessary.
+    bool isForeground = false;
+    if (p.GetColor() == Drawing::Color::COLOR_FOREGROUND) {
+        isForeground = true;
+        p.SetColor(Drawing::Color::COLOR_BLACK);
+    }
     offscreenCanvas->AttachPaint(p);
     offscreenCanvas->DrawTextBlob(textBlob, x, y);
 
@@ -817,7 +834,7 @@ bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(
     fakePaintHandle.isAntiAlias = true;
     fakePaintHandle.style = Paint::PaintStyle::PAINT_FILL;
     cmdList.AddOp<DrawImageRectOpItem::ConstructorHandle>(
-        imageHandle, src, dst, sampling, SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT, fakePaintHandle);
+        imageHandle, src, dst, sampling, SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT, fakePaintHandle, isForeground);
     return true;
 }
 
@@ -938,27 +955,38 @@ void DrawSymbolOpItem::Playback(Canvas* canvas, const Rect* rect)
         return;
     }
 
-    Drawing::Path path(symbol_.path_);
+    Path path(symbol_.path_);
 
     // 1.0 move path
     path.Offset(locate_.GetX(), locate_.GetY());
 
     // 2.0 split path
-    std::vector<Drawing::Path> paths;
+    std::vector<Path> paths;
     DrawingHMSymbol::PathOutlineDecompose(path, paths);
-    std::vector<Drawing::Path> pathLayers;
+    std::vector<Path> pathLayers;
     DrawingHMSymbol::MultilayerPath(symbol_.symbolInfo_.layers, paths, pathLayers);
-    canvas->AttachPaint(paint_);
+
+    // 3.0 set paint
+    Paint paintCopy = paint_;
+    paintCopy.SetAntiAlias(true);
+    paintCopy.SetStyle(Paint::PaintStyle::PAINT_FILL_STROKE);
+    paintCopy.SetWidth(0.0f);
+    paintCopy.SetJoinStyle(Pen::JoinStyle::ROUND_JOIN);
 
     // draw path
-    std::vector<Drawing::DrawingRenderGroup> groups = symbol_.symbolInfo_.renderGroups;
+    std::vector<DrawingRenderGroup> groups = symbol_.symbolInfo_.renderGroups;
     LOGD("SymbolOpItem::Draw RenderGroup size %{public}d", static_cast<int>(groups.size()));
     if (groups.size() == 0) {
+        canvas->AttachPaint(paintCopy);
         canvas->DrawPath(path);
     }
     for (auto group : groups) {
-        Drawing::Path multPath;
+        Path multPath;
         MergeDrawingPath(multPath, group, pathLayers);
+        // color
+        paintCopy.SetColor(Color::ColorQuadSetARGB(0xFF, group.color.r, group.color.g, group.color.b));
+        paintCopy.SetAlphaF(group.color.a);
+        canvas->AttachPaint(paintCopy);
         canvas->DrawPath(multPath);
     }
 }
@@ -1532,7 +1560,7 @@ void DrawSurfaceBufferOpItem::Draw(Canvas* canvas)
         };
         auto image = std::make_shared<Drawing::Image>();
         auto vkTextureInfo = backendTexture.GetTextureInfo().GetVKTextureInfo();
-        if (!vkTextureInfo && !image->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
+        if (!vkTextureInfo || !image->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
             Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr, ptr,
             DrawSurfaceBufferOpItem::vulkanCleanupHelper(vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory))) {
             LOGE("DrawSurfaceBufferOpItem::Draw: image BuildFromTexture failed");
@@ -1603,10 +1631,14 @@ void DrawSurfaceBufferOpItem::Draw(Canvas* canvas)
                 externalTextureInfo.SetFormat(GL_RGBA8_OES);
     Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
         Drawing::AlphaType::ALPHATYPE_PREMUL };
+    if (!canvas->GetGPUContext()) {
+        LOGE("DrawSurfaceBufferOpItem::Draw: gpu context is nullptr");
+        return;
+    }
     auto newImage = std::make_shared<Drawing::Image>();
     if (!newImage->BuildFromTexture(*canvas->GetGPUContext(), externalTextureInfo,
         Drawing::TextureOrigin::TOP_LEFT, bitmapFormat, nullptr)) {
-        LOGD("RSFilterCacheManager::Render: cacheCanvas is null");
+        LOGE("DrawSurfaceBufferOpItem::Draw: image BuildFromTexture failed");
         return;
     }
     canvas->DrawImage(*newImage, surfaceBufferInfo_.offSetX_, surfaceBufferInfo_.offSetY_, Drawing::SamplingOptions());

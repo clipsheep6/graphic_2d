@@ -303,6 +303,15 @@ void RSNode::RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation)
     animations_.erase(animation->GetId());
 }
 
+void RSNode::FinishAnimationByProperty(const PropertyId& id)
+{
+    for (const auto& [animationId, animation] : animations_) {
+        if (animation->GetPropertyId() == id) {
+            animation->Finish();
+        }
+    }
+}
+
 void RSNode::CancelAnimationByProperty(const PropertyId& id)
 {
     animatingPropertyNum_.erase(id);
@@ -344,6 +353,13 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
             ROSEN_LOGE("Failed to add animation, animation already exists!");
             return;
         }
+    }
+
+    // Note: Animation cancellation logic is now handled by RSImplicitAnimator. The code below might cause Spring
+    // Animations with a zero duration to not inherit velocity correctly, an issue slated for future resolution.
+    // This code is retained to ensure backward compatibility with specific arkui component animations.
+    if (animation->GetDuration() <= 0) {
+        FinishAnimationByProperty(animation->GetPropertyId());
     }
 
     AddAnimationInner(animation);
@@ -1297,6 +1313,20 @@ void RSNode::AddModifier(const std::shared_ptr<RSModifier> modifier)
             std::unique_ptr<RSCommand> cmdForRemote =
                 std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());
             transactionProxy->AddCommand(cmdForRemote, true, GetFollowType(), GetId());
+        }
+    }
+}
+
+void RSNode::DoFlushModifier()
+{
+    if (modifiers_.empty()) {
+        return;
+    }
+    for (const auto& [_, modifier] : modifiers_) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSAddModifier>(GetId(), modifier->CreateRenderModifier());
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, IsRenderServiceNode(), GetFollowType(), GetId());
         }
     }
 }

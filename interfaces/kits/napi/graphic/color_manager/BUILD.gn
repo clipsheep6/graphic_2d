@@ -68,6 +68,12 @@ if (current_os == "ohos") {
   }
 } else {
   ohos_source_set("color_space_object_convertor") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     public_deps = [ ":color_space_object_convertor_source" ]
     deps = [ "$graphic_2d_root/utils/color_manager:color_manager" ]
     part_name = "graphic_2d"
@@ -90,6 +96,11 @@ template("colorspacemanager_napi_source_set") {
   forward_variables_from(invoker, "*")
 
   ohos_source_set(target_name) {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     sources = [
       "colorspacemanager_napi/color_space_manager_module.cpp",
       "colorspacemanager_napi/js_color_space_manager.cpp",

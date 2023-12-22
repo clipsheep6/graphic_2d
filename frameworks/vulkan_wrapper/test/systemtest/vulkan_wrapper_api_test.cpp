@@ -85,7 +85,8 @@ public:
  */
 HWTEST_F(VulkanWrapperApiTest, dlopen_Test, TestSize.Level1)
 {
-#ifdef __aarch64__
+
+#if defined(__aarch64__) || defined(__riscv)
     const char *path = "/system/lib64/libvulkan.so";
 #else
     const char *path = "/system/lib/libvulkan.so";

@@ -192,7 +192,7 @@ void VulkanWrapperUnitTest::TearDownTestCase()
  */
 HWTEST_F(VulkanWrapperUnitTest, dlopen_Test, TestSize.Level1)
 {
-#ifdef __aarch64__
+#if defined(__aarch64__) || (defined(__riscv) && __riscv_xlen == 64)
     const char *path = "/system/lib64/libvulkan.so";
 #else
     const char *path = "/system/lib/libvulkan.so";

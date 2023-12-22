@@ -41,6 +41,10 @@ private:
     void *dlGlHandle1_;
     void *dlGlHandle2_;
     void *dlGlHandle3_;
+#if defined(__riscv)
+    void *dlGlHandle4_;
+    void *dlGlHandle5_;
+#endif
 };
 } // namespace OHOS
 #endif // FRAMEWORKS_OPENGL_WRAPPER_EGL_WRAPPER_LOADER_H

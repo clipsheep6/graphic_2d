@@ -20,6 +20,7 @@
 #include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
 #include "sandbox_utils.h"
 #endif
+#include "platform/common/rs_log.h"
 
 #ifdef _WIN32
 #define getuid() 0
@@ -50,6 +51,8 @@ void DrawEventReport(FrameMsg& frameMsg, std::string stringId)
         "UID", uid,
         "ABILITY_NAME", frameMsg.abilityName,
         "MSG", msg);
+    RS_LOGI("JANK_FRAME_SKIP PID：%{public}d, UID:%{public}u, ABILITY_NAME:%{public}s, MSG:%{public}s",
+        pid, uid, frameMsg.abilityName.c_str(), msg.c_str());
 #endif
 }
 }

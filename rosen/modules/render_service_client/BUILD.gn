@@ -20,6 +20,7 @@ config("render_service_client_config") {
     "$graphic_2d_root/rosen/modules",
     "$graphic_2d_root/rosen/modules/render_service_client/core",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
+    "$graphic_2d_root/frameworks/innerkitsimpl/egl_image/include",
     "$graphic_2d_root/interfaces/inner_api/common",
     "$graphic_2d_root/interfaces/inner_api/surface",
     "$graphic_2d_root/interfaces/inner_api/composer",
@@ -36,6 +37,7 @@ template("render_service_client_source_set") {
     defines += [ "MODULE_RSC" ]
     is_static_lib = invoker.is_static_lib
     include_dirs = [
+      "$graphic_2d_root/frameworks/innerkitsimpl/egl_image/include",
       "$graphic_2d_root/rosen/modules/2d_graphics/src",
       "$graphic_2d_root/rosen/modules/render_frame_trace/include",
       "$graphic_2d_root/rosen/modules/render_service_base/src",
@@ -233,7 +235,9 @@ ohos_shared_library("librender_service_client") {
   innerapi_tags = [ "platformsdk" ]
 
   if (enhanced_opt) {
-    configs = [ ":render_service_client_link_config" ]
+    configs = [ ":render_service_client_link_config",
+    "$graphic_2d_root/frameworks/innerkitsimpl/egl_image:egl_image"
+     ]
   }
 
   part_name = "graphic_2d"

@@ -182,7 +182,7 @@ void RSUIDirector::Destroy(bool isTextureExport)
         }
         root_ = 0;
     }
-    GoBackground();
+    GoBackground(isTextureExport);
     std::unique_lock<std::mutex> lock(g_uiTaskRunnersVisitorMutex);
     g_uiTaskRunners.erase(this);
 }

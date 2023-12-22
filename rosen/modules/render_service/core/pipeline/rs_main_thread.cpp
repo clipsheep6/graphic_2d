@@ -1991,6 +1991,7 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         gpuContext->Flush();
         SkGraphics::PurgeAllCaches(); // clear cpu cache
         if (!IsResidentProcess(remotePid)) {
+            RS_LOGE("zs process exit %{public}d", remotePid);
             ReleaseExitSurfaceNodeAllGpuResource(gpuContext);
         } else {
             RS_LOGW("this pid:%{public}d is resident process, no need release gpu resource", remotePid);

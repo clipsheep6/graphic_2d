@@ -39,6 +39,12 @@ if (current_os != "ohos") {
   }
 } else {
   ohos_shared_library("EGL") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     sources = [
       "src/EGL/egl.cpp",
       "src/EGL/egl_core.cpp",
@@ -98,6 +104,12 @@ config("glesv1_public_config") {
 }
 
 ohos_shared_library("GLESv1") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "src/GLES1/gles1.cpp",
     "src/thread_private_data_ctl.cpp",
@@ -138,6 +150,12 @@ config("glesv2_public_config") {
 }
 
 ohos_shared_library("GLESv2") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "src/GLES2/gles2.cpp",
     "src/thread_private_data_ctl.cpp",
@@ -186,6 +204,12 @@ if (current_os != "ohos") {
   }
 } else {
   ohos_shared_library("GLESv3") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     sources = [
       "src/GLES3/gles3.cpp",
       "src/thread_private_data_ctl.cpp",
@@ -263,6 +287,12 @@ config("debug_layer_test_public_config") {
 }
 
 ohos_shared_library("debug_layer_test1") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [ "test/debug_layer_test1.cpp" ]
   configs = [ ":debug_layer_test_config" ]
 
@@ -279,6 +309,12 @@ ohos_shared_library("debug_layer_test1") {
 }
 
 ohos_shared_library("debug_layer_test2") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [ "test/debug_layer_test2.cpp" ]
   configs = [ ":debug_layer_test_config" ]
 

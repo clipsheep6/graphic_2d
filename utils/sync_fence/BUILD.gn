@@ -37,6 +37,12 @@ config("sync_fence_public_config") {
 }
 
 ohos_shared_library("sync_fence") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "src/sync_fence.cpp",
     "src/sync_fence_timeline.cpp",

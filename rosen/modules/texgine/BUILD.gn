@@ -163,6 +163,12 @@ ohos_source_set("libtexgine_source") {
 }
 
 ohos_shared_library("libtexgine") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   public_deps = [ ":libtexgine_source" ]
 
   platform = current_os

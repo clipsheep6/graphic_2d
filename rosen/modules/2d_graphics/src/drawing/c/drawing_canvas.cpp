@@ -46,6 +46,11 @@ static const Bitmap& CastToBitmap(const OH_Drawing_Bitmap& cBitmap)
     return reinterpret_cast<const Bitmap&>(cBitmap);
 }
 
+static const RoundRect& CastToRoundRect(const OH_Drawing_RoundRect& cRoundRect)
+{
+    return reinterpret_cast<const RoundRect&>(cRoundRect);
+}
+
 OH_Drawing_Canvas* OH_Drawing_CanvasCreate()
 {
     return (OH_Drawing_Canvas*)new Canvas;
@@ -188,6 +193,26 @@ void OH_Drawing_CanvasClipRect(OH_Drawing_Canvas* cCanvas, float left, float top
     }
     Rect rect{left, top, right, bottom};
     canvas->ClipRect(rect, CClipOpCastToClipOp(cClipOp), doAntiAlias);
+}
+
+void OH_Drawing_CanvasDrawArc(OH_Drawing_Canvas* cCanvas, float left, float top, float right, float bottom,
+    float startAngle, float sweepAngle)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return;
+    }
+    Rect rect{left, top, right, bottom};
+    canvas->DrawArc(rect, startAngle, sweepAngle);
+}
+
+void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas* cCanvas, OH_Drawing_RoundRect* cRoundRect)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return;
+    }
+    canvas->DrawRoundRect(CastToRoundRect(*cRoundRect));
 }
 
 void OH_Drawing_CanvasTranslate(OH_Drawing_Canvas* cCanvas, float dx, float dy)

@@ -81,6 +81,7 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/c/drawing_path.cpp",
       "$drawing_src_dir/c/drawing_pen.cpp",
       "$drawing_src_dir/c/drawing_register_font.cpp",
+      "$drawing_src_dir/c/drawing_roundrect.cpp",
       "$drawing_src_dir/c/drawing_text_typography.cpp",
       "$drawing_src_dir/draw/OpListHandle.cpp",
       "$drawing_src_dir/draw/brush.cpp",
@@ -520,6 +521,7 @@ ohos_shared_library("2d_graphics_canvaskit0310") {
     "$drawing_src_dir/text/text.cpp",
     "$drawing_src_dir/utils/camera3d.cpp",
     "$drawing_src_dir/utils/matrix.cpp",
+    "$drawing_src_dir/utils/roudn_rect.cpp",
   ]
 
   if (enable_text_gine) {
@@ -583,6 +585,7 @@ if (enable_text_gine) {
       "$drawing_src_dir/c/drawing_path.cpp",
       "$drawing_src_dir/c/drawing_pen.cpp",
       "$drawing_src_dir/c/drawing_register_font.cpp",
+      "$drawing_src_dir/c/drawing_roundrect.cpp",
       "$drawing_src_dir/c/drawing_text_typography.cpp",
     ]
 

@@ -96,7 +96,7 @@ void RSImplicitCancelAnimationParam::ExecuteSyncPropertiesTask(
     RSNodeGetShowingPropertiesAndCancelAnimation::PropertiesMap&& propertiesMap, bool isRenderService)
 {
     // create task and execute it in RS
-    auto task = std::make_shared<RSNodeGetShowingPropertiesAndCancelAnimation>(1e10, std::move(propertiesMap));
+    auto task = std::make_shared<RSNodeGetShowingPropertiesAndCancelAnimation>(1e8, std::move(propertiesMap));
     RSTransactionProxy::GetInstance()->ExecuteSynchronousTask(task, isRenderService);
 
     // Test if the task is executed successfully

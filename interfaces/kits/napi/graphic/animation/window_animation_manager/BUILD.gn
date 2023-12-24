@@ -15,6 +15,12 @@ import("//build/ohos.gni")
 import("../../../../../../graphic_config.gni")
 
 ohos_shared_library("windowanimationmanager_napi") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   include_dirs = [
     "//foundation/window/window_manager/wm/include",
     "//foundation/window/window_manager/wmserver/include",

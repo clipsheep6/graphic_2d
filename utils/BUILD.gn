@@ -87,6 +87,12 @@ config("libgraphic_utils_public_config") {
 }
 
 ohos_shared_library("libgraphic_utils") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   public_configs = [ ":libgraphic_utils_public_config" ]
 
   public_deps = [

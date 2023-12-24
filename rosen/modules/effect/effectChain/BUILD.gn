@@ -44,6 +44,12 @@ config("effect_public_config") {
 }
 
 ohos_shared_library("libeffectchain") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   sources = [ "//third_party/cJSON/cJSON.c" ]
 
   external_deps = [

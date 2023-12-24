@@ -229,6 +229,12 @@ config("render_service_client_link_config") {
 }
 
 ohos_shared_library("librender_service_client") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   public_deps = [ ":render_service_client_src" ]
   innerapi_tags = [ "platformsdk" ]
 

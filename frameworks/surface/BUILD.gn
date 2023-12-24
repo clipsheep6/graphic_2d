@@ -55,6 +55,12 @@ config("surface_public_config") {
 }
 
 ohos_shared_library("surface") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   sources = [
     "src/buffer_client_producer.cpp",
     "src/buffer_extra_data_impl.cpp",

@@ -21,16 +21,16 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 
-DrawingSymbolLayersGroups* SkiaHmSymbolConfigOhos::GetSymbolLayersGroups(uint32_t glyphId)
+std::shared_ptr<DrawingSymbolLayersGroups> SkiaHmSymbolConfigOhos::GetSymbolLayersGroups(uint32_t glyphId)
 {
     SymbolLayersGroups* groups = HmSymbolConfig_OHOS::getInstance()->getSymbolLayersGroups(glyphId);
     if (!groups) {
         return nullptr;
     }
 
-    DrawingSymbolLayersGroups drawingGroups;
-    drawingGroups.symbolGlyphId = groups->symbolGlyphId;
-    drawingGroups.layers = groups->layers;
+    std::shared_ptr<DrawingSymbolLayersGroups> drawingGroups = std::make_shared<DrawingSymbolLayersGroups>();
+    drawingGroups->symbolGlyphId = groups->symbolGlyphId;
+    drawingGroups->layers = groups->layers;
 
     std::vector<DrawingAnimationSetting> drawingSettings;
     auto settings = groups->animationSettings;
@@ -52,10 +52,10 @@ DrawingSymbolLayersGroups* SkiaHmSymbolConfigOhos::GetSymbolLayersGroups(uint32_
         iter++;
     }
 
-    drawingGroups.animationSettings = drawingSettings;
-    drawingGroups.renderModeGroups = drawingRenderModeGroups;
+    drawingGroups->animationSettings = drawingSettings;
+    drawingGroups->renderModeGroups = drawingRenderModeGroups;
 
-    return &drawingGroups;
+    return drawingGroups;
 }
 
 DrawingAnimationSetting SkiaHmSymbolConfigOhos::ConvertToDrawingAnimationSetting(AnimationSetting setting)

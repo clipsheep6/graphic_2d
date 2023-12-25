@@ -1439,14 +1439,23 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     if (node.IsLeashWindow()) {
         // scale
-        auto matrix = geoPtr->GetAbsMatrix();
-        SkScalar scaleFactors[2];
+        auto absMatrix = geoPtr->GetAbsMatrix();
         bool isScale = false;
-        if (matrix.getMinMaxScales(scaleFactors)) {
+#ifdef USE_ROSEN_DRAWING
+        SkScalar skScaleFactors[2];
+        if (absMatrix.getMinMaxScales(skScaleFactors)) {
+            isScale = !ROSEN_EQ(skScaleFactors[0], 1.f) || !ROSEN_EQ(skScaleFactors[1], 1.f);
+        } else {
+            RS_LOGE("USE_ROSEN_DRAWING getMinMaxScales fail, node:%{public}s %{public}" PRIu64 "", node.GetName().c_str(), node.GetId());
+        }
+#else
+        Drawing::scalar scaleFactors[2];
+        if (absMatrix.GetMinMaxScales(scaleFactors)) {
             isScale = !ROSEN_EQ(scaleFactors[0], 1.f) || !ROSEN_EQ(scaleFactors[1], 1.f);
         } else {
             RS_LOGE("getMinMaxScales fail, node:%{public}s %{public}" PRIu64 "", node.GetName().c_str(), node.GetId());
         }
+#endif
         node.SetIsScale(isScale);
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER)
@@ -2154,6 +2163,7 @@ bool RSUniRenderVisitor::DrawDetailedTypesOfDirtyRegionForDFX(RSSurfaceRenderNod
         { DirtyRegionDebugType::REMOVE_CHILD_RECT, DirtyRegionType::REMOVE_CHILD_RECT },
         { DirtyRegionDebugType::RENDER_PROPERTIES_RECT, DirtyRegionType::RENDER_PROPERTIES_RECT },
         { DirtyRegionDebugType::CANVAS_NODE_SKIP_RECT, DirtyRegionType::CANVAS_NODE_SKIP_RECT },
+        { DirtyRegionDebugType::OUTLINE_RECT, DirtyRegionType::OUTLINE_RECT },
     };
     auto matchType = DIRTY_REGION_DEBUG_TYPE_MAP.find(dirtyRegionDebugType_);
     if (matchType != DIRTY_REGION_DEBUG_TYPE_MAP.end()) {

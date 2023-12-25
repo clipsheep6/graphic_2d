@@ -449,7 +449,7 @@ if (enable_text_gine) {
     }
     deps = [
       ":2d_graphics_source_$platform",
-      "$rosen_root/modules/texgine/texgine_drawing:libtexgine_drawing",
+      # "$rosen_root/modules/texgine/texgine_drawing:libtexgine_drawing",
     ]
     public_deps = [ "//third_party/bounds_checking_function:libsec_static" ]
     defines += [ "USE_GRAPHIC_TEXT_GINE" ]

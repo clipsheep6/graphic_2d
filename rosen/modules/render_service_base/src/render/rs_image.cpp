@@ -163,8 +163,9 @@ RectF ApplyImageFitSwitch(ImageParameter &imageParameter, ImageFit imageFit_, Re
             imageParameter.dstH = std::min(imageParameter.frameH, imageParameter.frameW / imageParameter.ratio);
             break;
     }
-    tempRectF.SetAll((imageParameter.frameW - imageParameter.dstW) / 2,
-        (imageParameter.frameH - imageParameter.dstH) / 2, imageParameter.dstW, imageParameter.dstH);
+    tempRectF.SetAll(std::round((imageParameter.frameW - imageParameter.dstW) / 2),
+        std::round((imageParameter.frameH - imageParameter.dstH) / 2),
+        std::round(imageParameter.dstW), std::round(imageParameter.dstH));
     return tempRectF;
 }
 

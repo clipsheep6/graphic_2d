@@ -46,9 +46,10 @@ class RSImplicitAnimationParam {
 public:
     virtual ~RSImplicitAnimationParam() = default;
     ImplicitAnimationParamType GetType() const;
+    RSImplicitAnimationParam() = default;
 
 protected:
-    explicit RSImplicitAnimationParam(const RSAnimationTimingProtocol& timingProtocol, ImplicitAnimationParamType type);
+    RSImplicitAnimationParam(const RSAnimationTimingProtocol& timingProtocol, ImplicitAnimationParamType type);
     void ApplyTimingProtocol(const std::shared_ptr<RSAnimation>& animation) const;
     ImplicitAnimationParamType animationType_ { ImplicitAnimationParamType::INVALID };
 

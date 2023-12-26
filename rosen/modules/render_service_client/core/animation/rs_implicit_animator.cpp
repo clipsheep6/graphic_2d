@@ -130,7 +130,11 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
             implicitAnimationParams_.top()->GetType() == ImplicitAnimationParamType::CANCEL) {
             ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, execute finish "
                        "callback asynchronously");
-            RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
+            // we should execute the finish callback in a isolated implicit animation context
+            implicitAnimationParams_.emplace(std::make_shared<RSImplicitAnimationParam>());
+            finishCallback->Execute(); // execute the finish callback
+            implicitAnimationParams_.pop();
+            // clean up
             CloseImplicitAnimationInner();
             return {};
         }

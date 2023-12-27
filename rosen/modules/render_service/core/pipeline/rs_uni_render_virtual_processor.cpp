@@ -210,6 +210,17 @@ void RSUniRenderVirtualProcessor::ProcessDisplaySurface(RSDisplayRenderNode& nod
                 CanvasRotation(mainScreenRotation_, mirrorWidth_, mirrorHeight_);
             }
         }
+        if (mainScreenRotation_ == ScreenRotation::ROTATION_180) {
+#ifndef USE_ROSEN_DRAWING
+            canvas_->translate(mirrorWidth_ / 2.0f, mirrorHeight_ / 2.0f);
+            canvas_->rotate(-180);
+            canvas_->translate(-mirrorWidth_ / 2.0f, -mirrorHeight_ / 2.0f);
+#else
+            canvas_->Translate(mirrorWidth_ / 2.0f, mirrorHeight_ / 2.0f);
+            canvas_->Rotate(-180, 0, 0);
+            canvas_->Translate(-mirrorWidth_ / 2.0f, -mirrorHeight_ / 2.0f);
+#endif
+        }
         
         // If the width and height not match the main screen, calculate the dstRect.
         if (mainWidth != mirrorWidth_ || mainHeight != mirrorHeight_) {

@@ -28,6 +28,7 @@
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
 #else
+#include "draw/canvas.h"
 #include "draw/surface.h"
 #include "utils/rect.h"
 #endif
@@ -82,6 +83,7 @@ public:
         const std::optional<SkIRect>& dstRect = std::nullopt);
 
     void PostPartialFilterRenderTask(const std::shared_ptr<RSSkiaFilter>& filter);
+    void PostPartialFilterRenderInit(const std::shared_ptr<RSSkiaFilter>& filter);
 #else
     // Call this function during the process phase to apply the filter. Depending on the cache state, it may either
     // regenerate the cache or reuse the existing cache.
@@ -97,6 +99,7 @@ public:
         const std::optional<Drawing::RectI>& dstRect = std::nullopt);
 
     void PostPartialFilterRenderTask(const std::shared_ptr<RSDrawingFilter>& filter);
+    void PostPartialFilterRenderInit(const std::shared_ptr<RSDrawingFilter>& filter);
 #endif
     enum CacheType : uint8_t {
         CACHE_TYPE_NONE              = 0,
@@ -119,7 +122,9 @@ private:
     class RSFilterCacheTask : public RSFilter::RSFilterTask {
     public:
         static const bool FilterPartialRenderEnabled;
-        bool isTaskTooLong = false;
+        bool isFirstInit_ = true;
+        bool needClearSurface_ = false;
+        bool isCachedFiltered = false;
         RSFilterCacheTask() = default;
         virtual ~RSFilterCacheTask() = default;
 #ifndef USE_ROSEN_DRAWING
@@ -128,8 +133,10 @@ private:
         bool InitSurface(Drawing::GPUContext* grContext) override;
 #endif
         bool Render() override;
-
-        CacheProcessStatus GetStatus() const
+        bool SaveFilteredImage() override;
+        void SwapInit() override;
+        bool SetDone() override;
+        CacheProcessStatus GetStatus()
         {
             return cacheProcessStatus_.load();
         }
@@ -143,55 +150,57 @@ private:
         void InitTask(std::shared_ptr<RSSkiaFilter> filter,
             std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot, SkISize size)
         {
-            filter_ = filter;
-            cachedSnapshot_ = cachedSnapshot;
-            cacheBackendTexture_ = cachedSnapshot_->cachedImage_->getBackendTexture(false);
-            surfaceSize_ = size;
+            if (surfaceSizeBefore_.width() != size.width() || surfaceSizeBefore_.height() != size.height()) {
+                needClearSurface_ = true;
+            }
+            filterBefore_ = filter;
+            cachedSnapshotBefore_ = cachedSnapshot;
+            surfaceSizeBefore_ = size;
         }
 
         GrBackendTexture GetResultTexture() const
         {
             return cacheCompletedBackendTexture_;
         }
+
+        bool IsImageSizeValid(SkISize imageSize);
 #else
         void InitTask(std::shared_ptr<RSDrawingFilter> filter,
             std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot, Drawing::RectI size)
         {
-            filter_ = filter;
-            cachedSnapshot_ = cachedSnapshot;
-            cacheBackendTexture_ = cachedSnapshot_->cachedImage_->GetBackendTexture(false, nullptr);
-            surfaceSize_ = size;
+            if (surfaceSizeBefore_.GetWidth() != size.GetWidth() ||
+                surfaceSizeBefore_.GetHeight() != size.GetHeight()) {
+                needClearSurface_ = true;
+            }
+            filterBefore_ = filter;
+            cachedSnapshotBefore_ = cachedSnapshot;
+            surfaceSizeBefore_ = size;
         }
 
         Drawing::BackendTexture GetResultTexture() const
         {
             return cacheCompletedBackendTexture_;
         }
+
+        bool IsImageSizeValid(Drawing::RectI imageSize);
 #endif
 
         void Reset()
         {
-            cachedSnapshot_.reset();
+            cachedSnapshotBefore_.reset();
+        }
+
+        void ResetInTask()
+        {
+            cachedSnapshotInTask_.reset();
         }
 
         void ResetGrContext()
         {
-#ifndef USE_ROSEN_DRAWING
-            if (cacheSurface_ != nullptr) {
-                GrDirectContext* grContext_ = cacheSurface_->recordingContext()->asDirectContext();
-                cacheSurface_ = nullptr;
-                grContext_->freeGpuResources();
-            }
-#else
-            if (cacheSurface_ != nullptr) {
-                std::shared_ptr<Drawing::GPUContext> gpuContext_ = cacheSurface_->GetCanvas()->GetGPUContext();
-                cacheSurface_ = nullptr;
-                gpuContext_->FreeGpuResources();
-            }
-#endif
+            cacheSurface_ = nullptr;
+            cacheCompletedSurface_ = nullptr;
+            RSFilter::clearGpuContext();
         }
-
-        bool WaitTaskFinished();
 
         void Notify()
         {
@@ -213,31 +222,37 @@ private:
             isCompleted_ = val;
         }
 
-        void SawpTexture()
+        void SwapTexture()
         {
-            std::unique_lock<std::mutex> lock(grBackendTextureMutex_);
             std::swap(resultBackendTexture_, cacheCompletedBackendTexture_);
+            std::swap(cacheSurface_, cacheCompletedSurface_);
         }
 
     private:
 #ifndef USE_ROSEN_DRAWING
-        sk_sp<SkSurface> cacheSurface_ = nullptr;
         GrBackendTexture cacheBackendTexture_;
         GrBackendTexture resultBackendTexture_;
-        SkISize surfaceSize_;
-        std::weak_ptr<RSSkiaFilter> filter_;
         GrBackendTexture cacheCompletedBackendTexture_;
+        sk_sp<SkSurface> cacheSurface_ = nullptr;
+        sk_sp<SkSurface> cacheCompletedSurface_ = nullptr;
+        SkISize surfaceSize_;
+        SkISize surfaceSizeBefore_;
+        std::shared_ptr<RSSkiaFilter> filter_ = nullptr;
+        std::shared_ptr<RSSkiaFilter> filterBefore_ = nullptr;
 #else
-        std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
         Drawing::BackendTexture cacheBackendTexture_;
         Drawing::BackendTexture resultBackendTexture_;
-        Drawing::RectI surfaceSize_;
-        std::weak_ptr<RSDrawingFilter> filter_;
         Drawing::BackendTexture cacheCompletedBackendTexture_;
+        std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
+        std::shared_ptr<Drawing::Surface> cacheCompletedSurface_ = nullptr;
+        Drawing::RectI surfaceSize_;
+        Drawing::RectI surfaceSizeBefore_;
+        std::shared_ptr<RSDrawingFilter> filter_ = nullptr;
+        std::shared_ptr<RSDrawingFilter> filterBefore_ = nullptr;
 #endif
         std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
-        std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot_ = nullptr;
-        std::mutex grBackendTextureMutex_;
+        std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshotInTask_ = nullptr;
+        std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshotBefore_ = nullptr;
         std::condition_variable cvParallelRender_;
         std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_ = nullptr;
         bool isCompleted_ = false;
@@ -248,6 +263,8 @@ private:
         const SkIRect& srcRect, const bool needSnapshotOutset = true);
     void GenerateFilteredSnapshot(
         RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& dstRect);
+    void FilterPartialRender(
+        RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& dstRect);
     void DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas, const SkIRect& dstRect) const;
     // Validate the input srcRect and dstRect, and return the validated rects.
     std::tuple<SkIRect, SkIRect> ValidateParams(RSPaintFilterCanvas& canvas,
@@ -256,6 +273,8 @@ private:
     void TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
         const Drawing::RectI& srcRect, const bool needSnapshotOutset = true);
     void GenerateFilteredSnapshot(
+        RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect);
+    void FilterPartialRender(
         RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect);
     void DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas, const Drawing::RectI& dstRect) const;
     // Validate the input srcRect and dstRect, and return the validated rects.

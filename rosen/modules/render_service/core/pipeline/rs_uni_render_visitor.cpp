@@ -2596,7 +2596,11 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             sk_sp<SkImage> cacheImageProcessed = GetCacheImageFromMirrorNode(mirrorNode);
             if (cacheImageProcessed && !displayHasSkipSurface_[mirrorNode->GetScreenId()] &&
                 !displayHasSecSurface_[mirrorNode->GetScreenId()] && screenInfo_.filteredAppSet.empty()) {
-                ScaleMirrorIfNeed(node);
+                bool canvasRotation = screenManager->GetCanvasRotation(node.GetScreenId());
+                ScaleMirrorIfNeed(node, canvasRotation);
+                if (canvasRotation) {
+                    RotateMirrorCanvasIfNeed(node);
+                }
                 canvas_->save();
                 // If both canvas and skImage have rotated, we need to reset the canvas
                 if (resetRotate_) {
@@ -5510,20 +5514,28 @@ void RSUniRenderVisitor::RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node)
 #endif
 }
 
-void RSUniRenderVisitor::ScaleMirrorIfNeed(RSDisplayRenderNode& node)
+void RSUniRenderVisitor::ScaleMirrorIfNeed(RSDisplayRenderNode& node, bool castScreen)
 {
     auto screenManager = CreateOrGetScreenManager();
     auto mirrorNode = node.GetMirrorSource().lock();
     auto mainScreenInfo = screenManager->QueryScreenInfo(mirrorNode->GetScreenId());
     float mainWidth = static_cast<float>(mainScreenInfo.width);
     float mainHeight = static_cast<float>(mainScreenInfo.height);
-    if ((RSSystemProperties::IsFoldScreenFlag() && mirrorNode->GetScreenId() == 0) ||
-        node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_90 ||
-        node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_270) {
-        std::swap(mainWidth, mainHeight);
-    }
-    if (mirrorAutoRotate_) {
-        std::swap(mainWidth, mainHeight);
+    if (castScreen) {
+        if ((RSSystemProperties::IsFoldScreenFlag() && mirrorNode->GetScreenId() == 0) ||
+            mirrorNode->GetScreenRotation() == ScreenRotation::ROTATION_90 ||
+            mirrorNode->GetScreenRotation() == ScreenRotation::ROTATION_270) {
+            std::swap(mainWidth, mainHeight);
+        }
+    } else {
+        if ((RSSystemProperties::IsFoldScreenFlag() && mirrorNode->GetScreenId() == 0) ||
+            node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_90 ||
+            node.getFirstTimeScreenRotation() == ScreenRotation::ROTATION_270) {
+            std::swap(mainWidth, mainHeight);
+        }
+        if (mirrorAutoRotate_) {
+            std::swap(mainWidth, mainHeight);
+        }
     }
     float boundsWidth = node.GetRenderProperties().GetBoundsWidth();
     float boundsHeight = node.GetRenderProperties().GetBoundsHeight();

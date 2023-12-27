@@ -424,6 +424,11 @@ public:
         isOcclusionVisibleWithoutFilter_ = visible;
     }
 
+    void SetOcclusionInSpecificScenes(bool isOcclusionInSpecificScenes)
+    {
+        isOcclusionInSpecificScenes_ = isOcclusionInSpecificScenes;
+    }
+
     const Occlusion::Region& GetVisibleRegion() const
     {
         return visibleRegion_;
@@ -1006,6 +1011,7 @@ private:
     Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     bool isOcclusionVisibleWithoutFilter_ = true;
+    bool isOcclusionInSpecificScenes_ = false;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     std::shared_ptr<RSDirtyRegionManager> cacheSurfaceDirtyManager_ = nullptr;
     RectI dstRect_;

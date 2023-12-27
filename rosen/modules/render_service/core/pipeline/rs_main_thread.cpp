@@ -631,7 +631,8 @@ bool RSMainThread::CheckParallelSubThreadNodesStatus()
     RS_OPTIONAL_TRACE_FUNC();
     cacheCmdSkippedInfo_.clear();
     cacheCmdSkippedNodes_.clear();
-    if (subThreadNodes_.empty()) {
+    if (subThreadNodes_.empty() &&
+        (deviceType_ == DeviceType::PHONE || (childrenLeashWindowCount_ > 0 && isUiFirstOn_ == false))) {
         RSSubThreadManager::Instance()->ResetSubThreadGrContext();
         return false;
     }
@@ -2863,17 +2864,17 @@ void RSMainThread::UpdateUIFirstSwitch()
         auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
             rootNode->GetSortedChildren().front());
         if (displayNode) {
-            uint32_t childrenLeashWindowCount = 0;
+            childrenLeashWindowCount_ = 0;
             bool isUIFirstMiniWindowNumSatisfied = false;
             std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
             displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
             for (auto it = curAllSurfacesVec.begin(); it != curAllSurfacesVec.end(); it++) {
                 if (auto surfaceNode = (*it)->ReinterpretCastTo<RSSurfaceRenderNode>()) {
                     if (surfaceNode->IsLeashWindow()) {
-                        childrenLeashWindowCount++;
+                        childrenLeashWindowCount_++;
                     }
                 }
-                if (childrenLeashWindowCount >= UIFIRST_MINIMUM_NODE_NUMBER) {
+                if (childrenLeashWindowCount_ >= UIFIRST_MINIMUM_NODE_NUMBER) {
                     isUIFirstMiniWindowNumSatisfied = true;
                     break;
                 }

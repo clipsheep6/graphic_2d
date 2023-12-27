@@ -1416,11 +1416,23 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     if (node.IsLeashWindow()) {
         // scale
-        auto absRect = geoPtr->GetAbsRect();
-        int boundsWidth = ceil(property.GetBoundsWidth());
-        int boundsHeight = ceil(property.GetBoundsHeight());
-        bool isScale = (std::min(absRect.GetWidth(), absRect.GetHeight()) != std::min(boundsWidth, boundsHeight))
-            || (std::max(absRect.GetWidth(), absRect.GetHeight()) != std::max(boundsWidth, boundsHeight));
+        auto absMatrix = geoPtr->GetAbsMatrix();
+        bool isScale = false;
+#ifdef USE_ROSEN_DRAWING
+        SkScalar skScaleFactors[2];
+        if (absMatrix.getMinMaxScales(skScaleFactors)) {
+            isScale = !ROSEN_EQ(skScaleFactors[0], 1.f) || !ROSEN_EQ(skScaleFactors[1], 1.f);
+        } else {
+            RS_LOGE("USE_ROSEN_DRAWING getMinMaxScales fail, node:%{public}s %{public}" PRIu64 "", node.GetName().c_str(), node.GetId());
+        }
+#else
+        Drawing::scalar scaleFactors[2];
+        if (absMatrix.GetMinMaxScales(scaleFactors)) {
+            isScale = !ROSEN_EQ(scaleFactors[0], 1.f) || !ROSEN_EQ(scaleFactors[1], 1.f);
+        } else {
+            RS_LOGE("getMinMaxScales fail, node:%{public}s %{public}" PRIu64 "", node.GetName().c_str(), node.GetId());
+        }
+#endif
         node.SetIsScale(isScale);
     }
 #if defined(RS_ENABLE_DRIVEN_RENDER)

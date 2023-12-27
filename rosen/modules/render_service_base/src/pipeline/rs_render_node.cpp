@@ -37,6 +37,9 @@
 #include "property/rs_property_trace.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+#include "rs_auto_cache.h"
+#endif
 
 #ifdef RS_ENABLE_VK
 #include "include/gpu/GrBackendSurface.h"
@@ -46,7 +49,6 @@
 
 #ifdef RS_ENABLE_VK
 namespace {
-#ifndef USE_ROSEN_DRAWING
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
@@ -68,6 +70,7 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
     return UINT32_MAX;
 }
 
+#ifndef USE_ROSEN_DRAWING
 void SetVkImageInfo(GrVkImageInfo& skImageInfo, const VkImageCreateInfo& imageInfo)
 {
     skImageInfo.fImageTiling = imageInfo.tiling;
@@ -79,8 +82,26 @@ void SetVkImageInfo(GrVkImageInfo& skImageInfo, const VkImageCreateInfo& imageIn
     skImageInfo.fYcbcrConversionInfo = {};
     skImageInfo.fSharingMode = imageInfo.sharingMode;
 }
+#else
+void SetVkImageInfo(std::shared_ptr<OHOS::Rosen::Drawing::VKTextureInfo> vkImageInfo,
+    const VkImageCreateInfo& imageInfo)
+{
+    vkImageInfo->imageTiling = imageInfo.tiling;
+    vkImageInfo->imageLayout = imageInfo.initialLayout;
+    vkImageInfo->format = imageInfo.format;
+    vkImageInfo->imageUsageFlags = imageInfo.usage;
+    vkImageInfo->levelCount = imageInfo.mipLevels;
+    vkImageInfo->currentQueueFamily = VK_QUEUE_FAMILY_EXTERNAL;
+    vkImageInfo->sharingMode = imageInfo.sharingMode;
+}
+#endif
 
+#ifndef USE_ROSEN_DRAWING
 GrBackendTexture MakeBackendTexture(uint32_t width, uint32_t height, VkFormat format = VK_FORMAT_R8G8B8A8_UNORM)
+#else
+OHOS::Rosen::Drawing::BackendTexture MakeBackendTexture(uint32_t width, uint32_t height,
+    VkFormat format = VK_FORMAT_R8G8B8A8_UNORM)
+#endif
 {
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
     VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
@@ -127,6 +148,7 @@ GrBackendTexture MakeBackendTexture(uint32_t width, uint32_t height, VkFormat fo
 
     vkContext.vkBindImageMemory(device, image, memory, 0);
 
+#ifndef USE_ROSEN_DRAWING
     GrVkAlloc alloc;
     alloc.fMemory = memory;
     alloc.fOffset = memRequirements.size;
@@ -137,8 +159,24 @@ GrBackendTexture MakeBackendTexture(uint32_t width, uint32_t height, VkFormat fo
     SetVkImageInfo(skImageInfo, imageInfo);
 
     return GrBackendTexture(width, height, skImageInfo);
-}
+#else
+    OHOS::Rosen::Drawing::BackendTexture backendTexture(true);
+    OHOS::Rosen::Drawing::TextureInfo textureInfo;
+    textureInfo.SetWidth(width);
+    textureInfo.SetHeight(height);
+
+    std::shared_ptr<OHOS::Rosen::Drawing::VKTextureInfo> vkImageInfo =
+        std::make_shared<OHOS::Rosen::Drawing::VKTextureInfo>();
+    vkImageInfo->vkImage = image;
+    vkImageInfo->vkAlloc.memory = memory;
+    vkImageInfo->vkAlloc.size = memRequirements.size;
+
+    SetVkImageInfo(vkImageInfo, imageInfo);
+    textureInfo.SetVKTextureInfo(vkImageInfo);
+    backendTexture.SetTextureInfo(textureInfo);
+    return backendTexture;
 #endif
+}
 } // un-named
 #endif
 
@@ -672,14 +710,39 @@ void RSRenderNode::SetDirty()
 {
     // Sometimes dirtyStatus_ were not correctly reset, we use dirtyTypes_ to determine if we should add to active list
 #ifndef USE_ROSEN_DRAWING
-    if (dirtyStatus_ == NodeDirty::CLEAN || dirtyTypes_.empty()) {
+    bool dirtyEmpty = dirtyTypes_.empty();
 #else
-    if (dirtyStatus_ == NodeDirty::CLEAN || dirtyTypes_.none()) {
+    bool dirtyEmpty = dirtyTypes_.none();
+#endif
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    if (dirtyStatus_ < NodeDirty::DIRTY || dirtyEmpty) {
+#else
+    if (dirtyStatus_ == NodeDirty::CLEAN || dirtyEmpty) {
 #endif
         AddActiveNode();
         dirtyStatus_ = NodeDirty::DIRTY;
     }
 }
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+void RSRenderNode::SetDirtyByOnTree()
+{
+#ifndef USE_ROSEN_DRAWING
+    bool dirtyEmpty = dirtyTypes_.empty();
+#else
+    bool dirtyEmpty = dirtyTypes_.none();
+#endif
+    if (dirtyStatus_ < NodeDirty::ON_TREE_DIRTY || dirtyEmpty) {
+        AddActiveNode();
+        dirtyStatus_ = NodeDirty::ON_TREE_DIRTY;
+    }
+}
+
+bool RSRenderNode::IsOnTreeDirty()
+{
+    return dirtyStatus_ == NodeDirty::ON_TREE_DIRTY && !renderProperties_.IsDirty();
+}
+#endif
 
 void RSRenderNode::SetClean()
 {
@@ -934,6 +997,15 @@ void RSRenderNode::UpdateDirtyRegion(
             }
         }
 
+        auto outline = GetRenderProperties().GetOutline();
+        RectI outlineRect;
+        if (outline && outline->HasBorder()) {
+            RSPropertiesPainter::GetOutlineDirtyRect(outlineRect, GetRenderProperties());
+            if (!outlineRect.IsEmpty()) {
+                dirtyRect = dirtyRect.JoinRect(outlineRect);
+            }
+        }
+
         if (GetRenderProperties().pixelStretch_) {
             auto stretchDirtyRect = GetRenderProperties().GetPixelStretchDirtyRect();
             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
@@ -961,6 +1033,8 @@ void RSRenderNode::UpdateDirtyRegion(
                     GetId(), GetType(), DirtyRegionType::PREPARE_CLIP_RECT, clipRect.value_or(RectI()));
                 dirtyManager.UpdateDirtyRegionInfoForDfx(
                     GetId(), GetType(), DirtyRegionType::RENDER_PROPERTIES_RECT, rectFromRenderProperties);
+                dirtyManager.UpdateDirtyRegionInfoForDfx(
+                    GetId(), GetType(), DirtyRegionType::OUTLINE_RECT, outlineRect);
             }
         }
     }
@@ -1372,6 +1446,7 @@ bool RSRenderNode::ApplyModifiers()
 
 void RSRenderNode::UpdateDrawableVec()
 {
+#ifndef ROSEN_ARKUI_X
     // Collect dirty slots
     auto dirtySlots = RSPropertyDrawable::GenerateDirtySlots(GetRenderProperties(), dirtyTypes_);
     RSPropertyDrawableGenerateContext drawableContext(*this);
@@ -1387,12 +1462,13 @@ void RSRenderNode::UpdateDrawableVec()
         RSPropertyDrawable::UpdateSaveRestore(drawableContext, renderContent_->propertyDrawablesVec_,
             drawableVecStatus_);
     }
+#endif
 }
 
 #ifndef USE_ROSEN_DRAWING
-void RSRenderNode::UpdateEffectRegion(std::optional<SkPath>& region)
+void RSRenderNode::UpdateEffectRegion(std::optional<SkIRect>& region)
 #else
-void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
+void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::RectI>& region)
 #endif
 {
     if (!region.has_value()) {
@@ -1402,34 +1478,12 @@ void RSRenderNode::UpdateEffectRegion(std::optional<Drawing::Path>& region)
     if (!property.GetUseEffect()) {
         return;
     }
-    auto& effectPath = region.value();
-    auto geoPtr = (property.GetBoundsGeometry());
-    if (!geoPtr) {
-        return;
-    }
 
+    auto absRect = property.GetBoundsGeometry()->GetAbsRect();
 #ifndef USE_ROSEN_DRAWING
-    SkPath clipPath;
-    if (property.GetClipBounds() != nullptr) {
-        clipPath = property.GetClipBounds()->GetSkiaPath();
-    } else {
-        auto rrect = RSPropertiesPainter::RRect2SkRRect(property.GetRRect());
-        clipPath.addRRect(rrect);
-    }
-
-    // accumulate children clip path, with matrix
-    effectPath.addPath(clipPath, geoPtr->GetAbsMatrix());
+    region->join(SkIRect::MakeXYWH(absRect.GetLeft(), absRect.GetTop(), absRect.GetWidth(), absRect.GetHeight()));
 #else
-    Drawing::Path clipPath;
-    if (property.GetClipBounds() != nullptr) {
-        clipPath = property.GetClipBounds()->GetDrawingPath();
-    } else {
-        auto rrect = RSPropertiesPainter::RRect2DrawingRRect(property.GetRRect());
-        clipPath.AddRoundRect(rrect);
-    }
-
-    // accumulate children clip path, with matrix
-    effectPath.AddPath(clipPath, geoPtr->GetAbsMatrix());
+    region->Join(Drawing::RectI(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom()));
 #endif
 }
 
@@ -1642,7 +1696,7 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
         OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
         std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         cacheBackendTexture_ = MakeBackendTexture(width, height);
-        if (!cacheBackendTexture_.isValid()) {
+        if (!cacheBackendTexture_.IsValid()) {
             if (func) {
                 func(std::move(cacheSurface_), std::move(cacheCompletedSurface_),
                     cacheSurfaceThreadIndex_, completedSurfaceThreadIndex_);
@@ -1673,9 +1727,36 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
         }
         return;
     }
-    Drawing::ImageInfo info = Drawing::ImageInfo::MakeN32Premul(width, height);
-    std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
-    cacheSurface_ = Drawing::Surface::MakeRenderTarget(gpuContext, true, info);
+#ifdef RS_ENABLE_GL
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        Drawing::ImageInfo info = Drawing::ImageInfo::MakeN32Premul(width, height);
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+        cacheSurface_ = Drawing::Surface::MakeRenderTarget(gpuContext, true, info);
+    }
+#endif
+#ifdef RS_ENABLE_VK
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+        cacheBackendTexture_ = MakeBackendTexture(width, height);
+        auto vkTextureInfo = cacheBackendTexture_.GetTextureInfo().GetVKTextureInfo();
+        if (!cacheBackendTexture_.isValid() || !vkTextureInfo) {
+            if (func) {
+                func(std::move(cacheSurface_), std::move(cacheCompletedSurface_),
+                    cacheSurfaceThreadIndex_, completedSurfaceThreadIndex_);
+                ClearCacheSurface();
+            }
+            return;
+        }
+        cacheCleanupHelper_ = new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
+            vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory);
+        cacheSurface_ = Drawing::Surface::MakeFromBackendTexture(
+            gpuContext, cacheBackendTexture_.GetTextureInfo(), Drawing::TextureOrigin::BOTTOM_LEFT,
+            1, Drawing::ColorType::COLORTYPE_RGBA_8888, nullptr,
+            NativeBufferUtils::DeleteVkImage, cacheCleanupHelper_);
+    }
+#endif
 #else
     cacheSurface_ = Drawing::Surface::MakeRasterN32Premul(width, height);
 #endif
@@ -1699,6 +1780,43 @@ Vector2f RSRenderNode::GetOptionalBufferSize() const
     // bounds vector4f: x y z w -> left top width height
     return { vector4f.z_, vector4f.w_ };
 }
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+Vector4f RSRenderNode::GetOptionBufferBound() const
+{
+    const auto& modifier = boundsModifier_ ? boundsModifier_ : frameModifier_;
+    if (!modifier) {
+        return {0.0f, 0.0f, 0.0f, 0.0f};
+    }
+    auto renderProperty = std::static_pointer_cast<RSRenderAnimatableProperty<Vector4f>>(modifier->GetProperty());
+    // bounds vector4f: x y z w -> left top width height
+    return renderProperty->Get();
+}
+
+Vector2f RSRenderNode::GetOpincBufferSize() const
+{
+    auto vector4f = GetOptionBufferBound();
+    return {vector4f.x_ + vector4f.z_, vector4f.y_ + vector4f.w_};
+}
+
+#ifdef USE_ROSEN_DRAWING
+Drawing::Rect RSRenderNode::GetOpincBufferBound() const
+{
+    auto vector4f = GetOptionBufferBound();
+    return {vector4f.x_, vector4f.y_, vector4f.x_ + vector4f.z_, vector4f.y_ + vector4f.w_};
+}
+#endif
+
+void RSRenderNode::SetOpincRectOutParent(bool outFlag)
+{
+    isOpincRectOutParent_ = outFlag;
+}
+
+bool RSRenderNode::IsOpincInsideOf(Vector2f& sR, Vector2f& pR) const
+{
+    return (sR.x_ <= pR.x_ && sR.y_ <= pR.y_);
+}
+#endif
 
 #ifndef USE_ROSEN_DRAWING
 void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex, bool isUIFirst)
@@ -1813,9 +1931,15 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
         canvas.Restore();
         return;
     }
+    auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
+    if (RSSystemProperties::GetRecordingEnabled()) {
+        if (cacheImage->IsTextureBacked()) {
+            RS_LOGI("RSRenderNode::DrawCacheSurface convert cacheImage from texture to raster image");
+            cacheImage = cacheImage->MakeRasterImage();
+        }
+    }
     Drawing::Brush brush;
     canvas.AttachBrush(brush);
-    auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
     if ((cacheType == CacheType::ANIMATE_PROPERTY && GetRenderProperties().IsShadowValid()) || isUIFirst) {
         canvas.DrawImage(*cacheImage, -shadowRectOffsetX_ * scaleX,
             -shadowRectOffsetY_ * scaleY, samplingOptions);
@@ -1836,16 +1960,34 @@ std::shared_ptr<Drawing::Image> RSRenderNode::GetCompletedImage(
             RS_LOGE("invalid grBackendTexture_");
             return nullptr;
         }
+#ifdef RS_ENABLE_VK
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            if (!cacheCompletedSurface_ || !cacheCompletedCleanupHelper_) {
+                return nullptr;
+            }
+        }
+#endif
         auto image = std::make_shared<Drawing::Image>();
         Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
         Drawing::BitmapFormat info = Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888,
             Drawing::ALPHATYPE_PREMUL };
-        bool ret = image->BuildFromTexture(*canvas.GetGPUContext(), cacheCompletedBackendTexture_.GetTextureInfo(),
-            origin, info, nullptr);
-        if (!ret) {
-            RS_LOGE("RSRenderNode::GetCompletedImage image BuildFromTexture failed");
-            return nullptr;
+#ifdef RS_ENABLE_GL
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+            image->BuildFromTexture(*canvas.GetGPUContext(), cacheCompletedBackendTexture_.GetTextureInfo(),
+                origin, info, nullptr);
         }
+#endif
+
+#ifdef RS_ENABLE_VK
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            image->BuildFromTexture(*canvas.GetGPUContext(), cacheCompletedBackendTexture_.GetTextureInfo(),
+                origin, info, nullptr,
+                NativeBufferUtils::DeleteVkImage, cacheCompletedCleanupHelper_->Ref());
+        }
+#endif
         return image;
 #endif
     }
@@ -1896,8 +2038,7 @@ void RSRenderNode::UpdateBackendTexture()
     cacheBackendTexture_
         = cacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
 #else
-    auto image = cacheSurface_->GetImageSnapshot();
-    cacheBackendTexture_ = image->GetBackendTexture(false, nullptr);
+    cacheBackendTexture_ = cacheSurface_->GetBackendTexture();
 #endif
 }
 #endif
@@ -1962,7 +2103,8 @@ void RSRenderNode::CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd)
         return;
     }
     auto context = GetContext().lock();
-    if (!context || !context->GetNodeMap().IsResidentProcessNode(GetId())) {
+    if (!RSSystemProperties::GetAnimationCacheEnabled() ||
+        !context || !context->GetNodeMap().IsResidentProcessNode(GetId())) {
         return;
     }
     auto target = modifiers_.find(id);
@@ -1995,7 +2137,11 @@ void RSRenderNode::CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd)
 
 bool RSRenderNode::IsForcedDrawInGroup() const
 {
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    return nodeGroupType_ == NodeGroupType::GROUPED_BY_USER || nodeGroupType_ == NodeGroupType::GROUPED_BY_AUTO;
+#else
     return nodeGroupType_ == NodeGroupType::GROUPED_BY_USER;
+#endif
 }
 
 bool RSRenderNode::IsSuggestedDrawInGroup() const
@@ -2006,8 +2152,22 @@ bool RSRenderNode::IsSuggestedDrawInGroup() const
 void RSRenderNode::MarkNodeGroup(NodeGroupType type, bool isNodeGroup)
 {
     if (type >= nodeGroupType_) {
-        nodeGroupType_ = isNodeGroup ? type : NodeGroupType::NONE;
-        SetDirty();
+        if (isNodeGroup && type == NodeGroupType::GROUPED_BY_UI) {
+            auto context = GetContext().lock();
+            if (context && context->GetNodeMap().IsResidentProcessNode(GetId())) {
+                nodeGroupType_ = type;
+                SetDirty();
+            }
+        } else {
+            nodeGroupType_ = isNodeGroup ? type : NodeGroupType::NONE;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+            if (nodeGroupType_ != NodeGroupType::GROUPED_BY_AUTO) {
+                SetDirty();
+            }
+#else
+            SetDirty();
+#endif
+        }
     }
 }
 
@@ -2026,12 +2186,26 @@ void RSRenderNode::CheckDrawingCacheType()
 {
     if (nodeGroupType_ == NodeGroupType::NONE) {
         SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    } else if (IsForcedDrawInGroup()) {
+#else
     } else if (nodeGroupType_ == NodeGroupType::GROUPED_BY_USER) {
+#endif
         SetDrawingCacheType(RSDrawingCacheType::FORCED_CACHE);
     } else {
         SetDrawingCacheType(RSDrawingCacheType::TARGETED_CACHE);
     }
 }
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+const std::shared_ptr<RSRenderNode::RSAutoCache>& RSRenderNode::GetAutoCache()
+{
+    if (autoCache_ == nullptr) {
+        autoCache_ = std::make_shared<RSRenderNode::RSAutoCache>(*this);
+    }
+    return autoCache_;
+}
+#endif
 
 void RSRenderNode::ResetFilterRectsInCache(const std::unordered_set<NodeId>& curRects)
 {
@@ -2134,7 +2308,11 @@ void RSRenderNode::OnTreeStateChanged()
         isFullChildrenListValid_ = false;
         ClearFullChildrenListIfNeeded();
     } else {
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+        SetDirtyByOnTree();
+#else
         SetDirty();
+#endif
     }
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (!isOnTheTree_) {
@@ -2460,6 +2638,22 @@ bool RSRenderNode::GetCacheGeoPreparationDelay() const
 {
     return cacheGeoPreparationDelay_;
 }
+
+void RSRenderNode::StoreMustRenewedInfo()
+{
+    mustRenewedInfo_ = hasHardwareNode_ || hasFilter_ || effectNodeNum_ > 0;
+}
+
+bool RSRenderNode::HasMustRenewedInfo() const
+{
+    return mustRenewedInfo_;
+}
+
+void RSRenderNode::SetUseEffectNodes(uint32_t val)
+{
+    effectNodeNum_ = val;
+}
+
 void RSRenderNode::SetVisitedCacheRootIds(const std::unordered_set<NodeId>& visitedNodes)
 {
     visitedCacheRoots_ = visitedNodes;

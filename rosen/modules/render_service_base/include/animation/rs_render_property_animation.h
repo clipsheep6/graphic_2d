@@ -62,6 +62,7 @@ protected:
 
     virtual void InitValueEstimator() {}
 
+    void DumpFraction(float fraction) override;
 protected:
     PropertyId propertyId_;
     std::shared_ptr<RSRenderPropertyBase> originValue_;

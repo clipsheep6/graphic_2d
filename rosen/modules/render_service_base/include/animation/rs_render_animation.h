@@ -177,6 +177,8 @@ protected:
 
     virtual void OnAnimate(float fraction) {}
 
+    virtual void DumpFraction(float fraction) {}
+
     virtual void OnRemoveOnCompletion() {}
 
     void FinishOnCurrentPosition();

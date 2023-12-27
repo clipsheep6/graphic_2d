@@ -17,6 +17,7 @@
 
 #include "animation/rs_animation.h"
 #include "animation/rs_animation_callback.h"
+#include "animation/rs_animation_trace_utils.h"
 #include "animation/rs_implicit_animation_param.h"
 #include "animation/rs_path_animation.h"
 #include "modifier/rs_property.h"
@@ -374,6 +375,7 @@ void RSImplicitAnimator::CreateEmptyAnimation()
     // make the spring animation stop at an appropriate time and call the callback function.
     auto endValue = std::make_shared<RSAnimatableProperty<float>>(100.0); // 100: for spring animation stop timing
     auto startValue = std::make_shared<RSAnimatableProperty<float>>(0.f);
+    RSAnimationTraceUtils::GetInstance().addAnimationNameTrace("CreateEmptyAnimation");
     CreateImplicitAnimation(target, property, startValue, endValue);
     return;
 }
@@ -419,17 +421,7 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
             } else {
                 keyframeImplicitParam->AddKeyframe(keyframeIter->second, startValue, endValue);
             }
-            if (animation == nullptr) {
-                ROSEN_LOGE("Failed to create animation!");
-                return;
-            }
-            if (repeatCallback != nullptr) {
-                animation->SetRepeatCallback(std::move(repeatCallback));
-                repeatCallback.reset();
-            }
-            // for keyframe animations, we don't add it to target now, we will add it later in
-            // RSImplicitAnimator::CloseImplicitAnimation.
-            return;
+            break;
         }
         case ImplicitAnimationParamType::SPRING: {
             auto springImplicitParam = static_cast<RSImplicitSpringAnimationParam*>(params.get());
@@ -460,16 +452,7 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
         case ImplicitAnimationParamType::TRANSITION: {
             auto implicitTransitionParam = static_cast<RSImplicitTransitionParam*>(params.get());
             animation = implicitTransitionParam->CreateAnimation(property, startValue, endValue);
-            if (animation == nullptr) {
-                ROSEN_LOGE("Failed to create animation!");
-                return;
-            }
-            if (repeatCallback != nullptr) {
-                animation->SetRepeatCallback(std::move(repeatCallback));
-                repeatCallback.reset();
-            }
-            // this will create custom transition animation, there is no need to add it to target.
-            return;
+            break;
         }
         case ImplicitAnimationParamType::CANCEL: {
             // Create animation with CANCEL type will cancel all running animations of the target.
@@ -494,6 +477,18 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
     if (repeatCallback != nullptr) {
         animation->SetRepeatCallback(std::move(repeatCallback));
         repeatCallback.reset();
+    }
+
+    RSAnimationTraceUtils::GetInstance().addAnimationCreateTrace(target->GetId(), property->GetId(), animation->GetId(),
+        static_cast<int>(params->GetType()), static_cast<int>(property->type_), startValue->GetRenderProperty(),
+        endValue->GetRenderProperty(), animation->GetStartDelay(), animation->GetDuration());
+
+    if (params->GetType() == ImplicitAnimationParamType::TRANSITION ||
+        params->GetType() == ImplicitAnimationParamType::KEYFRAME) {
+        // for transition this will create custom transition animation, there is no need to add it to target.
+        // for keyframe animations, we don't add it to target now, we will add it later in
+        // RSImplicitAnimator::CloseImplicitAnimation.
+        return;
     }
     target->AddAnimation(animation);
     implicitAnimations_.top().emplace_back(animation, target->GetId());

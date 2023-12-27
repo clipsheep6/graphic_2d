@@ -254,6 +254,8 @@ void RSMainThread::Init()
         CollectInfoForDrivenRender();
 #endif
         Render();
+        auto subThreadManager = RSSubThreadManager::Instance();
+        subThreadManager->SubmitFilterSubThreadTask();
         InformHgmNodeInfo();
         ReleaseAllNodesBuffer();
         SendCommands();

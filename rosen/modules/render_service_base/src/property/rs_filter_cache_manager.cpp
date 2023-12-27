@@ -19,6 +19,7 @@
 #include "include/gpu/GrBackendSurface.h"
 #include "src/image/SkImage_Base.h"
 
+#include "rs_trace.h"
 #include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
@@ -26,6 +27,8 @@
 
 namespace OHOS {
 namespace Rosen {
+constexpr int FILTER_PARTIAL_WIDTH = 1250;
+constexpr int FILTER_PARTIAL_HEIGHT = 2000;
 const char* RSFilterCacheManager::GetCacheState() const
 {
     if (cachedFilteredSnapshot_ != nullptr) {
@@ -39,7 +42,7 @@ const char* RSFilterCacheManager::GetCacheState() const
 
 #define CHECK_CACHE_PROCESS_STATUS                                       \
     do {                                                                 \
-        if (cacheProcessStatus_.load() == CacheProcessStatus::WAITING) { \
+        if (GetStatus() != CacheProcessStatus::DOING) {                  \
             return false;                                                \
         }                                                                \
     } while (false)
@@ -75,29 +78,46 @@ inline static bool isEqualRect(const Drawing::RectI& src, const RectI& dst)
 
 void RSFilterCacheManager::UpdateCacheStateWithFilterHash(const std::shared_ptr<RSFilter>& filter)
 {
+    RS_OPTIONAL_TRACE_FUNC();
     auto filterHash = filter->Hash();
-    if (task_->GetStatus() == CacheProcessStatus::DONE) {
-        task_->Reset();
-    }
-    if (RSFilterCacheTask::FilterPartialRenderEnabled && cachedSnapshot_ != nullptr &&
-        cachedFilterHash_ != filterHash && cachedSnapshot_->cachedImage_ != nullptr) {
-#ifndef USE_ROSEN_DRAWING
-        auto rsFilter = std::static_pointer_cast<RSSkiaFilter>(filter);
-#else
-        auto rsFilter = std::static_pointer_cast<RSDrawingFilter>(filter);
-#endif
-        PostPartialFilterRenderTask(rsFilter);
-    }
     if (cachedFilteredSnapshot_ == nullptr || cachedFilterHash_ == filterHash) {
         return;
     }
-    RS_OPTIONAL_TRACE_FUNC();
-
     // filter changed, clear the filtered snapshot.
     ROSEN_LOGD("RSFilterCacheManager::UpdateCacheStateWithFilterHash Cache expired. Reason: Cached filtered hash "
                "%{public}X does not match new hash %{public}X.",
         cachedFilterHash_, filterHash);
     cachedFilteredSnapshot_.reset();
+}
+#ifndef USE_ROSEN_DRAWING
+void RSFilterCacheManager::PostPartialFilterRenderInit(const std::shared_ptr<RSSkiaFilter>& filter)
+#else
+void RSFilterCacheManager::PostPartialFilterRenderInit(const std::shared_ptr<RSDrawingFilter>& filter)
+#endif
+{
+    RS_OPTIONAL_TRACE_FUNC();
+    task_->SetCompleted(task_->GetStatus() == CacheProcessStatus::DONE);
+    if (task_->GetStatus() == CacheProcessStatus::DOING) {
+        task_->SetCompleted(!task_->isFirstInit_);
+    }
+    if (task_->GetStatus() == CacheProcessStatus::DONE) {
+        task_->Reset();
+        task_->isFirstInit_ = false;
+        task_->SwapTexture();
+        task_->SetStatus(CacheProcessStatus::WAITING);
+    }
+    if (RSFilterCacheTask::FilterPartialRenderEnabled &&
+        (cachedSnapshot_ != nullptr && cachedSnapshot_->cachedImage_ != nullptr) &&
+        (cachedFilteredSnapshot_ == nullptr || cachedFilteredSnapshot_->cachedImage_ == nullptr) &&
+#ifndef USE_ROSEN_DRAWING
+        task_->IsImageSizeValid(cachedSnapshot_->cachedRect_.size())) {
+#else
+        task_->IsImageSizeValid(cachedSnapshot_->cachedRect_)) {
+#endif
+        PostPartialFilterRenderTask(filter);
+    } else {
+        task_->isCachedFiltered = true;
+    }
 }
 
 void RSFilterCacheManager::UpdateCacheStateWithFilterRegion()
@@ -137,10 +157,13 @@ bool RSFilterCacheManager::RSFilterCacheTask::InitSurface(GrRecordingContext* gr
 bool RSFilterCacheManager::RSFilterCacheTask::InitSurface(Drawing::GPUContext* grContext)
 #endif
 {
-    RS_TRACE_NAME("InitSurface");
-    if (cacheSurface_ != nullptr) {
+    RS_OPTIONAL_TRACE_FUNC();
+
+    if (!needClearSurface_) {
         return true;
     }
+    cacheSurface_ = nullptr;
+
     auto runner = AppExecFwk::EventRunner::Current();
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 #ifndef USE_ROSEN_DRAWING
@@ -155,19 +178,25 @@ bool RSFilterCacheManager::RSFilterCacheTask::InitSurface(Drawing::GPUContext* g
 
 bool RSFilterCacheManager::RSFilterCacheTask::Render()
 {
-    RS_TRACE_NAME_FMT("RSFilterCacheManager::RSFilterCacheTask::Render:%p", this);
+    RS_OPTIONAL_TRACE_FUNC();
     ROSEN_LOGD("RSFilterCacheManager::RSFilterCacheTask::Render:%{public}p", this);
+
+    SetStatus(CacheProcessStatus::DOING);
+
     if (cacheSurface_ == nullptr) {
         SetStatus(CacheProcessStatus::WAITING);
         return false;
     }
+
     CHECK_CACHE_PROCESS_STATUS;
+
     auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(cacheSurface_.get());
     if (cacheCanvas == nullptr) {
         SetStatus(CacheProcessStatus::WAITING);
         ROSEN_LOGE("RSFilterCacheManager::Render: cacheCanvas is null");
         return false;
     }
+
 #ifndef USE_ROSEN_DRAWING
     GrSurfaceOrigin surfaceOrigin = kTopLeft_GrSurfaceOrigin;
 #ifdef RS_ENABLE_VK
@@ -179,12 +208,17 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
     }
 #else
     surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
-#endif
-    auto threadImage = SkImage::MakeFromTexture(cacheCanvas->recordingContext(), cacheBackendTexture_,
-        surfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+#endif // RS_ENABLE_VK
+    auto threadImage = SkImage::MakeFromTexture(cacheCanvas->recordingContext(), cacheBackendTexture_, surfaceOrigin,
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+    if (!threadImage) {
+        SetStatus(CacheProcessStatus::WAITING);
+        ROSEN_LOGE("RSFilterCacheManager::Render: threadImage is null");
+        return false;
+    }
     auto src = SkRect::MakeSize(SkSize::Make(surfaceSize_));
     auto dst = SkRect::MakeSize(SkSize::Make(surfaceSize_));
-#else
+#else // USE_ROSEN_DRAWING
     Drawing::TextureOrigin surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
 #ifdef RS_ENABLE_VK
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
@@ -195,67 +229,78 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
     }
 #else
     surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
-#endif
+#endif // RS_ENABLE_VK
     Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
         Drawing::AlphaType::ALPHATYPE_PREMUL };
     auto threadImage = std::make_shared<Drawing::Image>();
     if (!threadImage->BuildFromTexture(*cacheCanvas->GetGPUContext(), cacheBackendTexture_.GetTextureInfo(),
         surfaceOrigin, bitmapFormat, nullptr)) {
+        SetStatus(CacheProcessStatus::WAITING);
         ROSEN_LOGE("RSFilterCacheManager::Render: cacheCanvas is null");
         return false;
     }
     auto src = Drawing::Rect(0, 0, surfaceSize_.GetWidth(), surfaceSize_.GetHeight());
     auto dst = Drawing::Rect(0, 0, surfaceSize_.GetWidth(), surfaceSize_.GetHeight());
-#endif
+#endif // USE_ROSEN_DRAWING
     CHECK_CACHE_PROCESS_STATUS;
-    {
-        auto filterTemp = filter_.lock();
-        if (!filterTemp) {
-            SetStatus(CacheProcessStatus::WAITING);
-            ROSEN_LOGE("RSFilterCacheManager::Render: filterTemp is null");
-            return false;
-        }
-        filterTemp->DrawImageRect(*cacheCanvas, threadImage, src, dst);
-        filterTemp->PostProcess(*cacheCanvas);
-    }
+    filter_->DrawImageRect(*cacheCanvas, threadImage, src, dst);
+    filter_->PostProcess(*cacheCanvas);
     CHECK_CACHE_PROCESS_STATUS;
-#ifndef USE_ROSEN_DRAWING
-    cacheSurface_->flushAndSubmit(true);
-#else
-    cacheSurface_->FlushAndSubmit(true);
-#endif
-    CHECK_CACHE_PROCESS_STATUS;
-    {
-        std::unique_lock<std::mutex> lock(grBackendTextureMutex_);
-#ifndef USE_ROSEN_DRAWING
-        resultBackendTexture_ =
-            cacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
-#else
-        resultBackendTexture_ = cacheSurface_->GetBackendTexture();
-#endif
-    }
-    CHECK_CACHE_PROCESS_STATUS;
-    cacheProcessStatus_.store(CacheProcessStatus::DONE);
-    Notify();
     return true;
 }
 
-bool RSFilterCacheManager::RSFilterCacheTask::WaitTaskFinished()
+bool RSFilterCacheManager::RSFilterCacheTask::SaveFilteredImage()
 {
-    std::unique_lock<std::mutex> lock(grBackendTextureMutex_);
-    if (GetStatus() != CacheProcessStatus::DOING) {
-        return GetStatus() == CacheProcessStatus::DONE;
+    CHECK_CACHE_PROCESS_STATUS;
+#ifndef USE_ROSEN_DRAWING
+    resultBackendTexture_ =
+        cacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
+#else
+    auto snapShot = cacheSurface_->GetImageSnapshot();
+    if (snapShot != nullptr) {
+        resultBackendTexture_ = snapShot->GetBackendTexture(false, nullptr);
     }
-    const long TIME_OUT = 1; // 1 milliseconds
-    if (!cvParallelRender_.wait_for(lock, std::chrono::milliseconds(TIME_OUT),
-        [this] { return cacheProcessStatus_ == CacheProcessStatus::DONE; })) {
-        RS_OPTIONAL_TRACE_NAME("WaitTaskFinished, wait failed, CacheProcessStatus_:" +
-            std::to_string(static_cast<unsigned int>(cacheProcessStatus_.load())));
+#endif
+    CHECK_CACHE_PROCESS_STATUS;
+    return true;
+}
+
+void RSFilterCacheManager::RSFilterCacheTask::SwapInit()
+{
+    std::swap(filter_, filterBefore_);
+    std::swap(cachedSnapshotInTask_, cachedSnapshotBefore_);
+    std::swap(surfaceSize_, surfaceSizeBefore_);
+    if (cachedSnapshotInTask_ != nullptr) {
+#ifndef USE_ROSEN_DRAWING
+        cacheBackendTexture_ = cachedSnapshotInTask_->cachedImage_->getBackendTexture(false);
+#else
+        cacheBackendTexture_ = cachedSnapshotInTask_->cachedImage_->GetBackendTexture(false, nullptr);
+#endif
+    }
+}
+
+bool RSFilterCacheManager::RSFilterCacheTask::SetDone()
+{
+    CHECK_CACHE_PROCESS_STATUS;
+    SetStatus(CacheProcessStatus::DONE);
+    return true;
+}
+#ifndef USE_ROSEN_DRAWING
+bool RSFilterCacheManager::RSFilterCacheTask::IsImageSizeValid(SkISize imageSize)
+#else
+bool RSFilterCacheManager::RSFilterCacheTask::IsImageSizeValid(Drawing::RectI imageSize)
+#endif
+{
+    RS_OPTIONAL_TRACE_FUNC();
+#ifndef USE_ROSEN_DRAWING
+    if (imageSize.width() >= FILTER_PARTIAL_WIDTH && imageSize.height() >= FILTER_PARTIAL_HEIGHT) {
+#else
+    if (imageSize.GetWidth() >= FILTER_PARTIAL_WIDTH && imageSize.GetHeight() >= FILTER_PARTIAL_HEIGHT) {
+#endif
+        return true;
+    } else {
         return false;
     }
-    RS_OPTIONAL_TRACE_NAME("WaitTaskFinished, wait success, CacheProcessStatus_:" +
-        std::to_string(static_cast<unsigned int>(cacheProcessStatus_.load())));
-    return true;
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -265,33 +310,16 @@ void RSFilterCacheManager::PostPartialFilterRenderTask(const std::shared_ptr<RSD
 #endif
 {
     RS_OPTIONAL_TRACE_FUNC();
-    task_->SetCompleted(task_->GetStatus() == CacheProcessStatus::DONE);
-    if (task_->GetStatus() == CacheProcessStatus::DOING && !task_->isTaskTooLong && !task_->WaitTaskFinished()) {
-        task_->isTaskTooLong = true;
-    }
-    if (task_->GetStatus() == CacheProcessStatus::DONE) {
-        task_->SawpTexture();
-        task_->SetStatus(CacheProcessStatus::WAITING);
-        task_->isTaskTooLong = false;
-    }
-    if (SoloTaskPrepare) {
-        SoloTaskPrepare = false;
-    } else {
-        task_->SetCompleted(false);
-        return;
-    }
     // Prepare a backup of common resources for threads
-    if (RSFilter::postTask != nullptr && task_->GetStatus() == CacheProcessStatus::WAITING) {
+    if (RSFilter::postTask != nullptr && (task_->GetStatus() == CacheProcessStatus::WAITING)) {
         // Because the screenshot is zoomed out, here you need to zoom in
 #ifndef USE_ROSEN_DRAWING
-        auto dstCopy = cachedSnapshot_->cachedRect_.makeOutset(1, 1);
+        auto dstCopy = cachedSnapshot_->cachedRect_;
         task_->InitTask(filter, cachedSnapshot_, dstCopy.size());
 #else
         auto dstCopy = cachedSnapshot_->cachedRect_;
-        dstCopy.MakeOutset(1, 1);
         task_->InitTask(filter, cachedSnapshot_, dstCopy);
 #endif
-        task_->SetStatus(CacheProcessStatus::DOING);
         RSFilter::postTask(task_);
     } else {
         ROSEN_LOGD("RSFilterCacheManager::PostPartialFilterRenderTask: postTask is null");
@@ -330,52 +358,69 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
     } else {
         --cacheUpdateInterval_;
     }
-
+    PostPartialFilterRenderInit(filter);
     bool shouldClearFilteredCache = false;
     if (cachedFilteredSnapshot_ == nullptr || cachedFilteredSnapshot_->cachedImage_ == nullptr) {
         auto previousFilterHash = cachedFilterHash_;
         if (RSFilterCacheTask::FilterPartialRenderEnabled && task_->IsCompleted()) {
-#ifndef USE_ROSEN_DRAWING
-            auto filteredSnapshot = SkImage::MakeFromTexture(canvas.recordingContext(), task_->GetResultTexture(),
-                kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
-#else
-            auto filteredSnapshot = std::make_shared<Drawing::Image>();
-            Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
-                Drawing::AlphaType::ALPHATYPE_PREMUL };
-            filteredSnapshot->BuildFromTexture(*canvas.GetGPUContext(),
-                task_->GetResultTexture().GetTextureInfo(),
-                Drawing::TextureOrigin::BOTTOM_LEFT, bitmapFormat, nullptr);
-#endif
-            auto filteredRect = dst;
-#ifndef USE_ROSEN_DRAWING
-            if (RSSystemProperties::GetImageGpuResourceCacheEnable(
-                filteredSnapshot->width(), filteredSnapshot->height())) {
-                ROSEN_LOGD("GenerateFilteredSnapshot cache image resource(width:%{public}d, height:%{public}d).",
-                    filteredSnapshot->width(), filteredSnapshot->height());
-                as_IB(filteredSnapshot)->hintCacheGpuResource();
-            }
-#else
-            if (RSSystemProperties::GetImageGpuResourceCacheEnable(
-                filteredSnapshot->GetWidth(), filteredSnapshot->GetHeight())) {
-                ROSEN_LOGD("GenerateFilteredSnapshot cache image resource(width:%{public}d, height:%{public}d).",
-                    filteredSnapshot->GetWidth(), filteredSnapshot->GetHeight());
-                as_IB(filteredSnapshot->ExportSkImage().get())->hintCacheGpuResource();
-            }
-#endif
-            cachedFilteredSnapshot_ =
-                std::make_shared<RSPaintFilterCanvas::CachedEffectData>(std::move(filteredSnapshot), filteredRect);
-            cachedFilterHash_ = filter->Hash();
+            FilterPartialRender(canvas, filter, dst);
         } else {
             GenerateFilteredSnapshot(canvas, filter, dst);
         }
-        SoloTaskPrepare = true;
         // If 1. the filter hash matches, 2. the filter region is whole snapshot region, we can safely clear original
         // snapshot, else we need to clear the filtered snapshot.
         shouldClearFilteredCache = previousFilterHash != cachedFilterHash_ || !isEqualRect(dst, snapshotRegion_);
     }
     DrawCachedFilteredSnapshot(canvas, dst);
+    task_->isCachedFiltered = false;
+    task_->SetCompleted(false);
     // To reduce the memory consumption, we only keep either the cached snapshot or the filtered image.
     CompactCache(shouldClearFilteredCache);
+}
+
+#ifndef USE_ROSEN_DRAWING
+void RSFilterCacheManager::FilterPartialRender(
+    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSSkiaFilter>& filter, const SkIRect& dstRect)
+#else
+void RSFilterCacheManager::FilterPartialRender(
+    RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect)
+#endif
+{
+    RS_OPTIONAL_TRACE_FUNC();
+#ifndef USE_ROSEN_DRAWING
+    auto filteredSnapshot = SkImage::MakeFromTexture(canvas.recordingContext(), task_->GetResultTexture(),
+        kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+#else
+    auto filteredSnapshot = std::make_shared<Drawing::Image>();
+    Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
+        Drawing::AlphaType::ALPHATYPE_PREMUL };
+    filteredSnapshot->BuildFromTexture(*canvas.GetGPUContext(), task_->GetResultTexture().GetTextureInfo(),
+        Drawing::TextureOrigin::BOTTOM_LEFT, bitmapFormat, nullptr);
+#endif
+    if (filteredSnapshot == nullptr) {
+        return;
+    } else {
+#ifndef USE_ROSEN_DRAWING
+        auto filteredRect = SkIRect::MakeWH(filteredSnapshot->width(), filteredSnapshot->height());
+        if (RSSystemProperties::GetImageGpuResourceCacheEnable(filteredSnapshot->width(), filteredSnapshot->height())) {
+            ROSEN_LOGD("GenerateFilteredSnapshot cache image resource(width:%{public}d, height:%{public}d).",
+                filteredSnapshot->width(), filteredSnapshot->height());
+            as_IB(filteredSnapshot)->hintCacheGpuResource();
+        }
+#else
+        auto filteredRect = Drawing::RectI(0, 0, filteredSnapshot->GetWidth(), filteredSnapshot->GetHeight());
+        if (RSSystemProperties::GetImageGpuResourceCacheEnable(
+                filteredSnapshot->GetWidth(), filteredSnapshot->GetHeight())) {
+            ROSEN_LOGD("GenerateFilteredSnapshot cache image resource(width:%{public}d, height:%{public}d).",
+                filteredSnapshot->GetWidth(), filteredSnapshot->GetHeight());
+            as_IB(filteredSnapshot->ExportSkImage().get())->hintCacheGpuResource();
+        }
+#endif
+        cachedFilteredSnapshot_.reset();
+        cachedFilteredSnapshot_ =
+            std::make_shared<RSPaintFilterCanvas::CachedEffectData>(std::move(filteredSnapshot), filteredRect);
+        cachedFilterHash_ = filter->Hash();
+    }
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -452,11 +497,13 @@ void RSFilterCacheManager::TakeSnapshot(
         ROSEN_LOGE("RSFilterCacheManager::TakeSnapshot failed to make an image snapshot.");
         return;
     }
+
     if (RSSystemProperties::GetImageGpuResourceCacheEnable(snapshot->width(), snapshot->height())) {
         ROSEN_LOGD("TakeSnapshot cache image resource(width:%{public}d, height:%{public}d).", snapshot->width(),
             snapshot->height());
         as_IB(snapshot)->hintCacheGpuResource();
     }
+
     filter->PreProcess(snapshot);
 
     // Update the cache state.
@@ -609,10 +656,11 @@ void RSFilterCacheManager::DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canva
 
     // The cache type and parameters has been validated, dstRect must be subset of cachedFilteredSnapshot_->cachedRect_.
     auto dst = SkRect::Make(dstRect);
-    auto src = SkRect::Make(dstRect.makeOffset(-cachedFilteredSnapshot_->cachedRect_.topLeft()));
-
+    SkRect src;
+    src = SkRect::MakeSize(SkSize::Make(cachedFilteredSnapshot_->cachedRect_.size()));
     SkPaint paint;
     paint.setAntiAlias(true);
+
     canvas.drawImageRect(cachedFilteredSnapshot_->cachedImage_, src, dst, SkSamplingOptions(), &paint,
         SkCanvas::kFast_SrcRectConstraint);
 }
@@ -633,8 +681,14 @@ void RSFilterCacheManager::DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canva
 
     // The cache type and parameters has been validated, dstRect must be subset of cachedFilteredSnapshot_->cachedRect_.
     Drawing::Rect dst = {dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetRight(), dstRect.GetBottom()};
-    Drawing::Rect src = {dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetRight(), dstRect.GetBottom()};
-    src.Offset(-cachedFilteredSnapshot_->cachedRect_.GetLeft(), -cachedFilteredSnapshot_->cachedRect_.GetTop());
+    Drawing::Rect src;
+    if (task_->isCachedFiltered) {
+        src = {dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetRight(), dstRect.GetBottom()};
+        src.Offset(-cachedFilteredSnapshot_->cachedRect_.GetLeft(), -cachedFilteredSnapshot_->cachedRect_.GetTop());
+    } else {
+        src = {0, 0,
+            cachedFilteredSnapshot_->cachedRect_->GetWidth(), cachedFilteredSnapshot_->cachedRect_->GetHeight()};
+    }
 
     Drawing::Brush brush;
     brush.SetAntiAlias(true);
@@ -654,18 +708,17 @@ void RSFilterCacheManager::InvalidateCache(CacheType cacheType)
     if (cacheType & CacheType::CACHE_TYPE_FILTERED_SNAPSHOT) {
         cachedFilteredSnapshot_.reset();
     }
-    task_->SetStatus(CacheProcessStatus::WAITING);
-    task_->SetCompleted(false);
-    task_->Reset();
 }
 
 void RSFilterCacheManager::ReleaseCacheOffTree()
 {
-    RS_OPTIONAL_TRACE_NAME("WaitTaskFinished, wait failed, CacheProcessStatus_:");
+    RS_TRACE_NAME_FMT("RSFilterCacheManager::ReleaseCacheOffTree():%p", task_.get());
     ROSEN_LOGD("RSFilterCacheManager::ReleaseCacheOffTree task_:%{public}p", task_.get());
     cachedSnapshot_.reset();
     cachedFilteredSnapshot_.reset();
+    task_->ResetInTask();
     task_->SetCompleted(false);
+    task_->isFirstInit_ = true;
     task_->SetStatus(CacheProcessStatus::WAITING);
     task_->Reset();
     if (task_->GetHandler() != nullptr) {

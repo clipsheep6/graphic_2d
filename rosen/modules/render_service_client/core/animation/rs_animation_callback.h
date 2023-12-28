@@ -17,7 +17,6 @@
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_ANIMATION_CALLBACK_H
 
 #include <functional>
-#include <utility>
 
 #include "animation/rs_animation_timing_protocol.h"
 #include "common/rs_macros.h"
@@ -26,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 class RSC_EXPORT AnimationCallback {
 public:
-    explicit AnimationCallback(const std::function<void()>&& callback);
+    explicit AnimationCallback(const std::function<void()>& callback);
     virtual ~AnimationCallback();
 
 protected:
@@ -35,10 +34,10 @@ protected:
 
 class RSC_EXPORT AnimationFinishCallback : public AnimationCallback {
 public:
-    AnimationFinishCallback(
-        std::function<void()> callback, FinishCallbackType finishCallbackType = FinishCallbackType::TIME_SENSITIVE);
+    AnimationFinishCallback(const std::function<void()>& callback,
+        FinishCallbackType finishCallbackType = FinishCallbackType::TIME_SENSITIVE);
     ~AnimationFinishCallback() override = default;
-    // Execute the callback function immediately, can only be called once.
+    // Execute the callback function immediately.
     void Execute();
 
     const FinishCallbackType finishCallbackType_;
@@ -46,9 +45,9 @@ public:
 
 class RSC_EXPORT AnimationRepeatCallback {
 public:
-    AnimationRepeatCallback(std::function<void()> callback) : callback_(std::move(callback)) {}
-    ~AnimationRepeatCallback() = default;
-    // Execute the callback function, can be called repeatedly.
+    AnimationRepeatCallback(const std::function<void()>& callback) : callback_(callback) {};
+    ~AnimationRepeatCallback() {};
+    // Execute the callback function repeatitive.
     void Execute();
 
 protected:

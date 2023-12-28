@@ -22,6 +22,11 @@
 namespace OHOS {
 namespace Rosen {
 
+RSCommandRegister<RSNodeGetShowingPropertyAndCancelAnimation::commandType,
+    RSNodeGetShowingPropertyAndCancelAnimation::commandSubType,
+    RSNodeGetShowingPropertyAndCancelAnimation::Unmarshalling>
+    RSNodeGetShowingPropertyAndCancelAnimation::registry;
+
 bool RSNodeGetShowingPropertyAndCancelAnimation::Marshalling(Parcel& parcel) const
 {
     return RSMarshallingHelper::Marshalling(parcel, commandType) &&
@@ -29,7 +34,7 @@ bool RSNodeGetShowingPropertyAndCancelAnimation::Marshalling(Parcel& parcel) con
            RSMarshallingHelper::Marshalling(parcel, targetId_) &&
            RSMarshallingHelper::Marshalling(parcel, timeoutNS_) &&
            RSMarshallingHelper::Marshalling(parcel, isTimeout_) &&
-           RSMarshallingHelper::Marshalling(parcel, success_) &&
+           RSMarshallingHelper::Marshalling(parcel, result_) &&
            (property_ == nullptr || RSRenderPropertyBase::Marshalling(parcel, property_));
 }
 
@@ -65,7 +70,7 @@ bool RSNodeGetShowingPropertyAndCancelAnimation::CheckHeader(Parcel& parcel) con
 bool RSNodeGetShowingPropertyAndCancelAnimation::ReadFromParcel(Parcel& parcel)
 {
     return RSMarshallingHelper::Unmarshalling(parcel, isTimeout_) &&
-           RSMarshallingHelper::Unmarshalling(parcel, success_) &&
+           RSMarshallingHelper::Unmarshalling(parcel, result_) &&
            RSRenderPropertyBase::Unmarshalling(parcel, property_);
 }
 
@@ -75,89 +80,19 @@ void RSNodeGetShowingPropertyAndCancelAnimation::Process(RSContext& context)
     auto& nodeMap = context.GetNodeMap();
     auto node = nodeMap.GetRenderNode<RSRenderNode>(targetId_);
     if (!node || !property_) {
-        success_ = false;
+        result_ = false;
         return;
     }
     auto modifier = node->GetModifier(property_->GetId());
     if (!modifier) {
-        success_ = false;
+        result_ = false;
         return;
     }
     property_ = modifier->GetProperty();
-    success_ = (property_ != nullptr);
-    if (success_) {
+    result_ = (property_ != nullptr);
+    if (result_) {
         auto& animationManager = node->GetAnimationManager();
         animationManager.CancelAnimationByPropertyId(property_->GetId());
-    }
-}
-
-bool RSNodeGetShowingPropertiesAndCancelAnimation::Marshalling(Parcel& parcel) const
-{
-    bool result = RSMarshallingHelper::Marshalling(parcel, commandType) &&
-           RSMarshallingHelper::Marshalling(parcel, commandSubType) &&
-           RSMarshallingHelper::Marshalling(parcel, timeoutNS_) &&
-           RSMarshallingHelper::Marshalling(parcel, success_) &&
-           RSMarshallingHelper::Marshalling(parcel, propertiesMap_);
-    return result;
-}
-
-// construct cancelAnimation & SetProperties
-RSCommand* RSNodeGetShowingPropertiesAndCancelAnimation::Unmarshalling(Parcel& parcel)
-{
-    uint64_t timeoutNS;
-    if (!RSMarshallingHelper::Unmarshalling(parcel, timeoutNS)) {
-        return nullptr;
-    }
-    auto command = new RSNodeGetShowingPropertiesAndCancelAnimation(timeoutNS);
-    if (!command->ReadFromParcel(parcel)) {
-        delete command;
-        return nullptr;
-    }
-    return command;
-}
-
-bool RSNodeGetShowingPropertiesAndCancelAnimation::CheckHeader(Parcel& parcel) const
-{
-    uint16_t type;
-    uint16_t subType;
-    uint64_t timeoutNS;
-
-    return RSMarshallingHelper::Unmarshalling(parcel, type) && type == commandType &&
-           RSMarshallingHelper::Unmarshalling(parcel, subType) && subType == commandSubType &&
-           RSMarshallingHelper::Unmarshalling(parcel, timeoutNS) && timeoutNS == timeoutNS_;
-}
-
-bool RSNodeGetShowingPropertiesAndCancelAnimation::ReadFromParcel(Parcel& parcel)
-{
-    if (!RSMarshallingHelper::Unmarshalling(parcel, success_)) {
-        return false;
-    }
-    if (!RSMarshallingHelper::Unmarshalling(parcel, propertiesMap_)) {
-        return false;
-    }
-    return true;
-}
-
-void RSNodeGetShowingPropertiesAndCancelAnimation::Process(RSContext& context)
-{
-    success_ = true;
-    auto& nodeMap = context.GetNodeMap();
-    for (auto& [key, value]: propertiesMap_) {
-        // value should already initialized as nullptr
-        auto& [nodeId, propertyId] = key;
-        auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
-        if (!node) {
-            continue;
-        }
-        auto modifier = node->GetModifier(propertyId);
-        if (!modifier) {
-            continue;
-        }
-        value = modifier->GetProperty();
-        if (!value) {
-            continue;
-        }
-        node->GetAnimationManager().CancelAnimationByPropertyId(propertyId);
     }
 }
 } // namespace Rosen

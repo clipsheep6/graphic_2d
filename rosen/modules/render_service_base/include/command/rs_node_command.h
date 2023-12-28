@@ -76,7 +76,7 @@ public:
     static void RemoveModifier(RSContext& context, NodeId nodeId, PropertyId propertyId);
 
     template<typename T>
-    static void UpdateModifier(RSContext& context, NodeId nodeId, T value, PropertyId id, PropertyUpdateType type)
+    static void UpdateModifier(RSContext& context, NodeId nodeId, T value, PropertyId id, bool isDelta)
     {
         std::shared_ptr<RSRenderPropertyBase> prop = std::make_shared<RSRenderProperty<T>>(value, id);
         auto& nodeMap = context.GetNodeMap();
@@ -85,22 +85,8 @@ public:
             return;
         }
         auto modifier = node->GetModifier(id);
-        if (!modifier) {
-            return;
-        }
-        switch (type) {
-            case UPDATE_TYPE_OVERWRITE:
-                modifier->Update(prop, false);
-                break;
-            case UPDATE_TYPE_INCREMENTAL:
-                modifier->Update(prop, true);
-                break;
-            case UPDATE_TYPE_FORCE_OVERWRITE:
-                modifier->Update(prop, false);
-                node->GetAnimationManager().CancelAnimationByPropertyId(id);
-                break;
-            default:
-                break;
+        if (modifier) {
+            modifier->Update(prop, isDelta);
         }
     }
 #ifndef USE_ROSEN_DRAWING
@@ -157,73 +143,73 @@ ADD_COMMAND(RSRemoveModifier,
 
 ADD_COMMAND(RSUpdatePropertyBool,
     ARG(RS_NODE, UPDATE_MODIFIER_BOOL, RSNodeCommandHelper::UpdateModifier<bool>,
-        NodeId, bool, PropertyId, PropertyUpdateType))
+        NodeId, bool, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyFloat,
     ARG(RS_NODE, UPDATE_MODIFIER_FLOAT, RSNodeCommandHelper::UpdateModifier<float>,
-        NodeId, float, PropertyId, PropertyUpdateType))
+        NodeId, float, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyInt,
     ARG(RS_NODE, UPDATE_MODIFIER_INT, RSNodeCommandHelper::UpdateModifier<int>,
-        NodeId, int, PropertyId, PropertyUpdateType))
+        NodeId, int, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyColor,
     ARG(RS_NODE, UPDATE_MODIFIER_COLOR, RSNodeCommandHelper::UpdateModifier<Color>,
-        NodeId, Color, PropertyId, PropertyUpdateType))
+        NodeId, Color, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyGravity,
     ARG(RS_NODE, UPDATE_MODIFIER_GRAVITY, RSNodeCommandHelper::UpdateModifier<Gravity>,
-        NodeId, Gravity, PropertyId, PropertyUpdateType))
+        NodeId, Gravity, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyMatrix3f,
     ARG(RS_NODE, UPDATE_MODIFIER_MATRIX3F, RSNodeCommandHelper::UpdateModifier<Matrix3f>,
-        NodeId, Matrix3f, PropertyId, PropertyUpdateType))
+        NodeId, Matrix3f, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyQuaternion,
     ARG(RS_NODE, UPDATE_MODIFIER_QUATERNION, RSNodeCommandHelper::UpdateModifier<Quaternion>,
-        NodeId, Quaternion, PropertyId, PropertyUpdateType))
+        NodeId, Quaternion, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyFilter,
     ARG(RS_NODE, UPDATE_MODIFIER_FILTER_PTR, RSNodeCommandHelper::UpdateModifier<std::shared_ptr<RSFilter>>,
-        NodeId, std::shared_ptr<RSFilter>, PropertyId, PropertyUpdateType))
+        NodeId, std::shared_ptr<RSFilter>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyImage,
     ARG(RS_NODE, UPDATE_MODIFIER_IMAGE_PTR, RSNodeCommandHelper::UpdateModifier<std::shared_ptr<RSImage>>,
-        NodeId, std::shared_ptr<RSImage>, PropertyId, PropertyUpdateType))
+        NodeId, std::shared_ptr<RSImage>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyMask,
     ARG(RS_NODE, UPDATE_MODIFIER_MASK_PTR, RSNodeCommandHelper::UpdateModifier<std::shared_ptr<RSMask>>,
-        NodeId, std::shared_ptr<RSMask>, PropertyId, PropertyUpdateType))
+        NodeId, std::shared_ptr<RSMask>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyPath,
     ARG(RS_NODE, UPDATE_MODIFIER_PATH_PTR, RSNodeCommandHelper::UpdateModifier<std::shared_ptr<RSPath>>,
-        NodeId, std::shared_ptr<RSPath>, PropertyId, PropertyUpdateType))
+        NodeId, std::shared_ptr<RSPath>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyLinearGradientBlurPara,
     ARG(RS_NODE, UPDATE_MODIFIER_GRADIENT_BLUR_PTR,
         RSNodeCommandHelper::UpdateModifier<std::shared_ptr<RSLinearGradientBlurPara>>,
-        NodeId, std::shared_ptr<RSLinearGradientBlurPara>, PropertyId, PropertyUpdateType))
+        NodeId, std::shared_ptr<RSLinearGradientBlurPara>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyShader,
     ARG(RS_NODE, UPDATE_MODIFIER_SHADER_PTR, RSNodeCommandHelper::UpdateModifier<std::shared_ptr<RSShader>>,
-        NodeId, std::shared_ptr<RSShader>, PropertyId, PropertyUpdateType))
+        NodeId, std::shared_ptr<RSShader>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyVector2f,
     ARG(RS_NODE, UPDATE_MODIFIER_VECTOR2F, RSNodeCommandHelper::UpdateModifier<Vector2f>,
-        NodeId, Vector2f, PropertyId, PropertyUpdateType))
+        NodeId, Vector2f, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyBorderStyle,
     ARG(RS_NODE, UPDATE_MODIFIER_VECTOR4_BORDER_STYLE, RSNodeCommandHelper::UpdateModifier<Vector4<uint32_t>>,
-        NodeId, Vector4<uint32_t>, PropertyId, PropertyUpdateType))
+        NodeId, Vector4<uint32_t>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyVector4Color,
     ARG(RS_NODE, UPDATE_MODIFIER_VECTOR4_COLOR, RSNodeCommandHelper::UpdateModifier<Vector4<Color>>,
-        NodeId, Vector4<Color>, PropertyId, PropertyUpdateType))
+        NodeId, Vector4<Color>, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyVector4f,
     ARG(RS_NODE, UPDATE_MODIFIER_VECTOR4F, RSNodeCommandHelper::UpdateModifier<Vector4f>,
-        NodeId, Vector4f, PropertyId, PropertyUpdateType))
+        NodeId, Vector4f, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyRRect,
     ARG(RS_NODE, UPDATE_MODIFIER_RRECT, RSNodeCommandHelper::UpdateModifier<RRect>,
-        NodeId, RRect, PropertyId, PropertyUpdateType))
+        NodeId, RRect, PropertyId, bool))
 #ifndef USE_ROSEN_DRAWING
 ADD_COMMAND(RSUpdatePropertyDrawCmdList,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifierDrawCmdList,
-        NodeId, DrawCmdListPtr, PropertyId, PropertyUpdateType))
+        NodeId, DrawCmdListPtr, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertySkMatrix,
     ARG(RS_NODE, UPDATE_MODIFIER_SKMATRIX, RSNodeCommandHelper::UpdateModifier<SkMatrix>,
-        NodeId, SkMatrix, PropertyId, PropertyUpdateType))
+        NodeId, SkMatrix, PropertyId, bool))
 #else
 ADD_COMMAND(RSUpdatePropertyDrawCmdList,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifier<Drawing::DrawCmdListPtr>,
-        NodeId, Drawing::DrawCmdListPtr, PropertyId, PropertyUpdateType))
+        NodeId, Drawing::DrawCmdListPtr, PropertyId, bool))
 ADD_COMMAND(RSUpdatePropertyDrawingMatrix,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAWING_MATRIX, RSNodeCommandHelper::UpdateModifier<Drawing::Matrix>,
-        NodeId, Drawing::Matrix, PropertyId, PropertyUpdateType))
+        NodeId, Drawing::Matrix, PropertyId, bool))
 #endif
 
 ADD_COMMAND(RSSetFreeze,

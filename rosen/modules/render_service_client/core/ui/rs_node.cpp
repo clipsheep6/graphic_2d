@@ -314,19 +314,9 @@ void RSNode::FinishAnimationByProperty(const PropertyId& id)
 
 void RSNode::CancelAnimationByProperty(const PropertyId& id)
 {
+    std::unique_lock<std::mutex> lock(animationMutex_);
     animatingPropertyNum_.erase(id);
-    std::vector<std::shared_ptr<RSAnimation>> toBeRemoved;
-    {
-        std::unique_lock<std::mutex> lock(animationMutex_);
-        EraseIf(animations_, [id, &toBeRemoved](const auto& pair) {
-            if (pair.second && (pair.second->GetPropertyId() == id)) {
-                toBeRemoved.emplace_back(pair.second);
-                return true;
-            }
-            return false;
-        });
-    }
-    toBeRemoved.clear();
+    EraseIf(animations_, [id](const auto& pair) { return (pair.second && (pair.second->GetPropertyId() == id)); });
 }
 
 const RSModifierExtractor& RSNode::GetStagingProperties() const
@@ -355,9 +345,6 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
         }
     }
 
-    // Note: Animation cancellation logic is now handled by RSImplicitAnimator. The code below might cause Spring
-    // Animations with a zero duration to not inherit velocity correctly, an issue slated for future resolution.
-    // This code is retained to ensure backward compatibility with specific arkui component animations.
     if (animation->GetDuration() <= 0) {
         FinishAnimationByProperty(animation->GetPropertyId());
     }

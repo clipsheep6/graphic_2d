@@ -91,14 +91,14 @@ public:
     {
         return timeoutNS_;
     }
-    inline bool IsSuccess() const
+    inline bool GetResult() const
     {
-        return success_;
+        return result_;
     }
 
 protected:
     uint64_t timeoutNS_ = 0;
-    bool success_ = false;
+    bool result_ = false;
 };
 
 } // namespace Rosen

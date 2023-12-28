@@ -18,7 +18,6 @@
 
 #include <functional>
 #include <memory>
-#include <vector>
 
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"
@@ -26,16 +25,8 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class ImplicitAnimationParamType {
-    INVALID,
-    CURVE,
-    KEYFRAME,
-    PATH,
-    SPRING,
-    INTERPOLATING_SPRING,
-    TRANSITION,
-    CANCEL
-};
+enum class ImplicitAnimationParamType { NONE, CURVE, KEYFRAME, PATH, SPRING, INTERPOLATING_SPRING, TRANSITION };
+
 class RSAnimation;
 class RSPropertyBase;
 class RSMotionPathOption;
@@ -44,31 +35,22 @@ class RSTransitionEffect;
 
 class RSImplicitAnimationParam {
 public:
+    explicit RSImplicitAnimationParam(const RSAnimationTimingProtocol& timingProtocol);
     virtual ~RSImplicitAnimationParam() = default;
     ImplicitAnimationParamType GetType() const;
 
+    std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const
+    {
+        return nullptr;
+    }
+
 protected:
-    explicit RSImplicitAnimationParam(const RSAnimationTimingProtocol& timingProtocol, ImplicitAnimationParamType type);
     void ApplyTimingProtocol(const std::shared_ptr<RSAnimation>& animation) const;
-    ImplicitAnimationParamType animationType_ { ImplicitAnimationParamType::INVALID };
+    ImplicitAnimationParamType animationType_ { ImplicitAnimationParamType::NONE };
 
 private:
     RSAnimationTimingProtocol timingProtocol_;
-};
-
-class RSImplicitCancelAnimationParam : public RSImplicitAnimationParam {
-public:
-    RSImplicitCancelAnimationParam(const RSAnimationTimingProtocol& timingProtocol);
-
-    ~RSImplicitCancelAnimationParam() override = default;
-
-    void AddPropertyToPendingSyncList(const std::shared_ptr<RSPropertyBase>& property);
-    void SyncProperties();
-
-private:
-    void ExecuteSyncPropertiesTask(
-        RSNodeGetShowingPropertiesAndCancelAnimation::PropertiesMap&& propertiesMap, bool isRenderService);
-    std::vector<std::shared_ptr<RSPropertyBase>> pendingSyncList_;
 };
 
 class RSImplicitCurveAnimationParam : public RSImplicitAnimationParam {
@@ -76,7 +58,7 @@ public:
     RSImplicitCurveAnimationParam(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
 
-    ~RSImplicitCurveAnimationParam() override = default;
+    virtual ~RSImplicitCurveAnimationParam() = default;
 
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
@@ -90,7 +72,7 @@ public:
     RSImplicitKeyframeAnimationParam(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve, float fraction);
 
-    ~RSImplicitKeyframeAnimationParam() override = default;
+    virtual ~RSImplicitKeyframeAnimationParam() = default;
 
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
@@ -108,7 +90,7 @@ public:
     RSImplicitPathAnimationParam(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<RSMotionPathOption>& motionPathOption);
 
-    ~RSImplicitPathAnimationParam() override = default;
+    virtual ~RSImplicitPathAnimationParam() = default;
 
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
@@ -122,7 +104,7 @@ class RSImplicitSpringAnimationParam : public RSImplicitAnimationParam {
 public:
     RSImplicitSpringAnimationParam(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
-    ~RSImplicitSpringAnimationParam() override = default;
+    virtual ~RSImplicitSpringAnimationParam() = default;
 
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
@@ -135,7 +117,7 @@ class RSImplicitInterpolatingSpringAnimationParam : public RSImplicitAnimationPa
 public:
     RSImplicitInterpolatingSpringAnimationParam(
         const RSAnimationTimingProtocol& timingProtocol, const RSAnimationTimingCurve& timingCurve);
-    ~RSImplicitInterpolatingSpringAnimationParam() override = default;
+    virtual ~RSImplicitInterpolatingSpringAnimationParam() = default;
 
     std::shared_ptr<RSAnimation> CreateAnimation(std::shared_ptr<RSPropertyBase> property,
         const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue) const;
@@ -149,7 +131,7 @@ public:
     RSImplicitTransitionParam(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const std::shared_ptr<const RSTransitionEffect>& effect,
         bool isTransitionIn);
-    ~RSImplicitTransitionParam() override = default;
+    virtual ~RSImplicitTransitionParam() = default;
 
     std::shared_ptr<RSAnimation> CreateAnimation();
 

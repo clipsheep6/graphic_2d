@@ -292,7 +292,7 @@ public:
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
     bool IsDynamicLightUpValid() const;
-    bool IsGreyAdjustmenValid() const;
+    bool IsGreyAdjustmentValid() const;
 
     // Image effect properties
     void SetGrayScale(const std::optional<float>& grayScale);

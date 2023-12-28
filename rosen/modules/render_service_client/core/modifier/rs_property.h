@@ -118,6 +118,7 @@ public:
     {
         return 0.0f;
     }
+    virtual void SetValueFromRender(const std::shared_ptr<const RSRenderPropertyBase>& rsRenderPropertyBase) {};
 
 protected:
     virtual void SetIsCustom(bool isCustom) {}
@@ -217,18 +218,19 @@ private:
     friend class RSCustomTransitionEffect;
     friend class RSExtendedModifier;
     friend class RSGeometryTransModifier;
+    friend class RSImplicitAnimationParam;
     friend class RSImplicitAnimator;
     friend class RSImplicitCurveAnimationParam;
     friend class RSImplicitInterpolatingSpringAnimationParam;
     friend class RSImplicitKeyframeAnimationParam;
     friend class RSImplicitSpringAnimationParam;
     friend class RSImplicitTransitionParam;
-    friend class RSModifier;
-    friend class RSPropertyAnimation;
-    friend class RSPathAnimation;
-    friend class RSKeyframeAnimation;
-    friend class RSSpringAnimation;
     friend class RSInterpolatingSpringAnimation;
+    friend class RSKeyframeAnimation;
+    friend class RSModifier;
+    friend class RSPathAnimation;
+    friend class RSPropertyAnimation;
+    friend class RSSpringAnimation;
     friend class RSTransition;
     template<typename T1>
     friend class RSAnimatableProperty;
@@ -382,6 +384,18 @@ public:
         }
     }
 
+    void RequestCancelAnimation()
+    {
+        auto node = RSProperty<T>::target_.lock();
+        if (node == nullptr) {
+            return;
+        }
+        auto implicitAnimator = RSImplicitAnimatorMap::Instance().GetAnimator(gettid());
+        if (implicitAnimator && implicitAnimator->NeedImplicitAnimation()) {
+            implicitAnimator->CancelImplicitAnimation(node, RSProperty<T>::shared_from_this());
+        }
+    }
+
     T Get() const override
     {
         if (RSProperty<T>::isCustom_) {
@@ -427,7 +441,7 @@ public:
             transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());
         }
 
-        if (!task->GetResult()) {
+        if (!task->IsSuccess()) {
             // corresponding to case 2, as the new showing value is the same as staging value,
             // need not to update the value, only need to clear animations in rs node.
             node->CancelAnimationByProperty(this->id_);
@@ -441,6 +455,15 @@ public:
         RSProperty<T>::stagingValue_ = renderProperty->Get();
         node->CancelAnimationByProperty(this->id_);
         return true;
+    }
+
+    void SetValueFromRender(const std::shared_ptr<const RSRenderPropertyBase>& rsRenderPropertyBase) override
+    {
+        auto renderProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<T>>(rsRenderPropertyBase);
+        if (!renderProperty) {
+            return;
+        }
+        RSProperty<T>::stagingValue_ = renderProperty->Get();
     }
 
     void SetUpdateCallback(const std::function<void(T)>& updateCallback)

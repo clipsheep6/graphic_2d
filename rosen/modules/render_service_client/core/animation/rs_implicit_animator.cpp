@@ -93,9 +93,13 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         return {};
     }
 
-    const auto& finishCallback = std::get<const std::shared_ptr<AnimationFinishCallback>>(globalImplicitParams_.top());
+    [[maybe_unused]] const auto& [protocol, curve, finishCallback, unused_repeatCallback] = globalImplicitParams_.top();
     auto& currentAnimations = implicitAnimations_.top();
     auto& currentKeyframeAnimations = keyframeAnimations_.top();
+
+    // Special case: if implicit animation param type is CANCEL, we need to cancel all implicit animations
+    implicitAnimationParams_.top()->SyncProperties();
+
     // if no implicit animation created
     if (currentAnimations.empty() && currentKeyframeAnimations.empty()) {
         // If finish callback either 1. is null or 2. is referenced by any animation or implicitly parameters, we don't
@@ -112,7 +116,7 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
         if (finishCallback->finishCallbackType_ == FinishCallbackType::TIME_INSENSITIVE) {
             ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, execute finish "
                        "callback asynchronously");
-            RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
+            RSUIDirector::PostTask([callback = finishCallback]() { callback->Execute(); });
             globalImplicitParams_.pop();
             implicitAnimations_.pop();
             keyframeAnimations_.pop();
@@ -319,6 +323,23 @@ void RSImplicitAnimator::CreateImplicitTransition(RSNode& target)
         target.AddAnimation(transition);
         implicitAnimations_.top().push_back({ transition, target.GetId() });
     }
+    return;
+}
+
+void RSImplicitAnimator::CancelImplicitAnimation(
+    const std::shared_ptr<RSNode>& target, const std::shared_ptr<RSPropertyBase>& property)
+{
+    if (target == nullptr || property == nullptr || property->GetIsCustom()) {
+        return;
+    }
+    if (!target->HasPropertyAnimation(property->GetId())) {
+        return;
+    }
+    if (implicitAnimationParams_.empty()) {
+        return;
+    }
+    auto params = implicitAnimationParams_.top();
+    params->AddPropertyToPendingSyncList(property);
     return;
 }
 

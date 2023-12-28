@@ -40,7 +40,7 @@ public:
     RSImplicitAnimator() = default;
     virtual ~RSImplicitAnimator() = default;
 
-    // open implicit animation with given animation options, finish callback and repeatcallback
+    // open implicit animation with given animation options, finish callback and repeat callback
     int OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, std::shared_ptr<AnimationFinishCallback>&& finishCallback,
         std::shared_ptr<AnimationRepeatCallback>&& repeatCallback);
@@ -77,6 +77,9 @@ public:
     void CreateImplicitAnimationWithInitialVelocity(const std::shared_ptr<RSNode>& target,
         const std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
         const std::shared_ptr<RSPropertyBase>& endValue, const std::shared_ptr<RSPropertyBase>& velocity);
+
+    void CancelImplicitAnimation(
+        const std::shared_ptr<RSNode>& target, const std::shared_ptr<RSPropertyBase>& property);
 
 private:
     void EndImplicitAnimation();

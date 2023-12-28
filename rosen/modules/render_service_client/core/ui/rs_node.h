@@ -402,8 +402,8 @@ private:
     bool HasPropertyAnimation(const PropertyId& id);
     void FallbackAnimationsToRoot();
     void AddAnimationInner(const std::shared_ptr<RSAnimation>& animation);
-    void RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void FinishAnimationByProperty(const PropertyId& id);
+    void RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void CancelAnimationByProperty(const PropertyId& id);
     const std::shared_ptr<RSModifier> GetModifier(const PropertyId& propertyId);
     virtual void OnBoundsSizeChanged() const {};
@@ -444,6 +444,7 @@ private:
     friend class RSCurveAnimation;
     friend class RSExtendedModifier;
     friend class RSGeometryTransModifier;
+    friend class RSImplicitAnimationParam;
     friend class RSImplicitAnimator;
     friend class RSInterpolatingSpringAnimation;
     friend class RSKeyframeAnimation;

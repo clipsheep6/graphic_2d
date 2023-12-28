@@ -155,6 +155,7 @@ GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
     auto dret = g_displayBuffer->AllocMem(info, handle);
     if (dret == GRAPHIC_DISPLAY_SUCCESS) {
         std::lock_guard<std::mutex> lock(mutex_);
+        g_displayBuffer->RegisterBuffer(handle);
         surfaceBufferColorGamut_ = static_cast<GraphicColorGamut>(config.colorGamut);
         transform_ = static_cast<GraphicTransformType>(config.transform);
         surfaceBufferWidth_ = config.width;
@@ -486,6 +487,7 @@ GSError SurfaceBufferImpl::ReadFromMessageParcel(MessageParcel &parcel)
     if (handle_ == nullptr) {
         return GSERROR_API_FAILED;
     }
+    g_displayBuffer->RegisterBuffer(handle);
 
     return GSERROR_OK;
 }

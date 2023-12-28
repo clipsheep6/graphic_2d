@@ -29,7 +29,6 @@ config("surface_config") {
 
 config("surface_public_config") {
   include_dirs = [
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "$graphic_2d_root/interfaces/inner_api/surface",
     "$graphic_2d_root/interfaces/inner_api/common",
     "$graphic_2d_root/utils/sandbox",
@@ -76,10 +75,7 @@ ohos_shared_library("surface") {
 
   configs = [ ":surface_config" ]
 
-  public_configs = [
-    ":surface_public_config",
-    "//commonlibrary/c_utils/base:utils_config",
-  ]
+  public_configs = [ ":surface_public_config" ]
 
   deps = [ "$graphic_2d_root/utils/sync_fence:sync_fence" ]
 

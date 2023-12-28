@@ -31,14 +31,15 @@
 
 namespace OHOS {
 namespace Rosen {
+static const std::string UNIRENDER_CACHE_DIR = "/data/service/el0/render_service";
 class MemoryHandler {
 public:
 #ifndef USE_ROSEN_DRAWING
     static void ConfigureContext(GrContextOptions* context, const char* identity, const size_t size,
-        const std::string& cacheFilePath, bool isUni);
+        const std::string& cacheFilePath = UNIRENDER_CACHE_DIR, bool isUni = true);
 #else
     static void ConfigureContext(Drawing::GPUContextOptions* context, const char* identity, const size_t size,
-        const std::string& cacheFilePath, bool isUni);
+        const std::string& cacheFilePath = UNIRENDER_CACHE_DIR, bool isUni = true);
 #endif
     MemoryHandler() = default;
 #ifndef USE_ROSEN_DRAWING

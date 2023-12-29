@@ -356,8 +356,13 @@ void RSMainThread::Init()
             grContext->setResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
         }
 #else
+#ifdef NEW_RENDER_CONTEXT
+        auto gpuContext = isUniRender_? uniRenderEngine_->GetDrawingContext()->GetDrawingContext() :
+            renderEngine_->GetDrawingContext()->GetDrawingContext();
+#else
         auto gpuContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetDrGPUContext() :
             renderEngine_->GetRenderContext()->GetDrGPUContext();
+#endif
         if (gpuContext == nullptr) {
             RS_LOGE("RSMainThread::Init gpuContext is nullptr!");
             return;
@@ -961,7 +966,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         surfaceNode->ResetAnimateState();
         // Reset BasicGeoTrans info at the beginning of cmd process
         if (surfaceNode->IsMainWindowType() || surfaceNode->IsLeashWindow()) {
-            surfaceNode->ResetIsOnlyBasicGeoTransfrom();
+            surfaceNode->ResetIsOnlyBasicGeoTransform();
         }
         if (surfaceNode->IsHardwareEnabledType()
             && CheckSubThreadNodeStatusIsDoing(surfaceNode->GetInstanceRootNodeId())) {
@@ -2356,7 +2361,7 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         gpuContext->FlushAndSubmit(true);
     } else if (type == "uihidden") {
         gpuContext->Flush();
-        gpuContext->PurgeUnlockedResources(true);
+        gpuContext->PurgeUnlockAndSafeCacheGpuResources();
         gpuContext->FlushAndSubmit(true);
     } else if (type == "shader") {
 #ifdef NEW_RENDER_CONTEXT
@@ -2670,7 +2675,7 @@ bool RSMainThread::CheckIfInstanceOnlySurfaceBasicGeoTransform(NodeId instanceNo
                 continue;
             }
             // filter active nodes except instance surface itself
-            if (id != instanceNodeId || !subNode->IsOnlyBasicGeoTransfrom()) {
+            if (id != instanceNodeId || !subNode->IsOnlyBasicGeoTransform()) {
                 return false;
             }
         }

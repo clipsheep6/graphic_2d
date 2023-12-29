@@ -40,7 +40,7 @@ public:
     RSImplicitAnimator() = default;
     virtual ~RSImplicitAnimator() = default;
 
-    // open implicit animation with given animation options, finish callback and repeatcallback
+    // open implicit animation with given animation options, finish callback and repeat callback
     int OpenImplicitAnimation(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, std::shared_ptr<AnimationFinishCallback>&& finishCallback,
         std::shared_ptr<AnimationRepeatCallback>&& repeatCallback);
@@ -72,11 +72,12 @@ public:
         std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
         const std::shared_ptr<RSPropertyBase>& endValue);
 
+    void CreateImplicitTransition(RSNode& target);
+
     void CreateImplicitAnimationWithInitialVelocity(const std::shared_ptr<RSNode>& target,
         const std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
         const std::shared_ptr<RSPropertyBase>& endValue, const std::shared_ptr<RSPropertyBase>& velocity);
 
-    void CreateImplicitTransition(RSNode& target);
     void CancelImplicitAnimation(
         const std::shared_ptr<RSNode>& target, const std::shared_ptr<RSPropertyBase>& property);
 
@@ -85,9 +86,6 @@ private:
     void BeginImplicitCurveAnimation();
     void BeginImplicitSpringAnimation();
     void BeginImplicitInterpolatingSpringAnimation();
-    void BeginImplicitCancelAnimation();
-
-    void CloseImplicitAnimationInner();
     
     void PushImplicitParam(const std::shared_ptr<RSImplicitAnimationParam>& implicitParam);
     void PopImplicitParam();

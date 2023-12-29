@@ -33,8 +33,7 @@ enum class ImplicitAnimationParamType {
     PATH,
     SPRING,
     INTERPOLATING_SPRING,
-    TRANSITION,
-    CANCEL
+    TRANSITION
 };
 class RSAnimation;
 class RSPropertyBase;
@@ -52,23 +51,16 @@ protected:
     void ApplyTimingProtocol(const std::shared_ptr<RSAnimation>& animation) const;
     ImplicitAnimationParamType animationType_ { ImplicitAnimationParamType::INVALID };
 
-private:
-    RSAnimationTimingProtocol timingProtocol_;
-};
-
-class RSImplicitCancelAnimationParam : public RSImplicitAnimationParam {
-public:
-    RSImplicitCancelAnimationParam(const RSAnimationTimingProtocol& timingProtocol);
-
-    ~RSImplicitCancelAnimationParam() override = default;
-
     void AddPropertyToPendingSyncList(const std::shared_ptr<RSPropertyBase>& property);
     void SyncProperties();
 
 private:
+    RSAnimationTimingProtocol timingProtocol_;
     void ExecuteSyncPropertiesTask(
         RSNodeGetShowingPropertiesAndCancelAnimation::PropertiesMap&& propertiesMap, bool isRenderService);
     std::vector<std::shared_ptr<RSPropertyBase>> pendingSyncList_;
+
+    friend class RSImplicitAnimator;
 };
 
 class RSImplicitCurveAnimationParam : public RSImplicitAnimationParam {

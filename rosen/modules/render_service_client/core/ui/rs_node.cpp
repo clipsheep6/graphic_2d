@@ -355,9 +355,6 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
         }
     }
 
-    // Note: Animation cancellation logic is now handled by RSImplicitAnimator. The code below might cause Spring
-    // Animations with a zero duration to not inherit velocity correctly, an issue slated for future resolution.
-    // This code is retained to ensure backward compatibility with specific arkui component animations.
     if (animation->GetDuration() <= 0) {
         FinishAnimationByProperty(animation->GetPropertyId());
     }

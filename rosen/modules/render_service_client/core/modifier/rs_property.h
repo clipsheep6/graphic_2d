@@ -118,7 +118,6 @@ public:
     {
         return 0.0f;
     }
-
     virtual void SetValueFromRender(const std::shared_ptr<const RSRenderPropertyBase>& rsRenderPropertyBase) {};
 
 protected:
@@ -215,24 +214,24 @@ private:
         const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
     friend bool operator!=(
         const std::shared_ptr<const RSPropertyBase>& a, const std::shared_ptr<const RSPropertyBase>& b);
-    friend class RSTransition;
-    friend class RSSpringAnimation;
-    friend class RSPropertyAnimation;
-    friend class RSPathAnimation;
-    friend class RSModifier;
-    friend class RSKeyframeAnimation;
-    friend class RSInterpolatingSpringAnimation;
-    friend class RSImplicitTransitionParam;
-    friend class RSImplicitSpringAnimationParam;
-    friend class RSImplicitKeyframeAnimationParam;
-    friend class RSImplicitInterpolatingSpringAnimationParam;
-    friend class RSImplicitCancelAnimationParam;
-    friend class RSImplicitCurveAnimationParam;
-    friend class RSImplicitAnimator;
-    friend class RSGeometryTransModifier;
-    friend class RSExtendedModifier;
-    friend class RSCustomTransitionEffect;
     friend class RSCurveAnimation;
+    friend class RSCustomTransitionEffect;
+    friend class RSExtendedModifier;
+    friend class RSGeometryTransModifier;
+    friend class RSImplicitAnimationParam;
+    friend class RSImplicitAnimator;
+    friend class RSImplicitCurveAnimationParam;
+    friend class RSImplicitInterpolatingSpringAnimationParam;
+    friend class RSImplicitKeyframeAnimationParam;
+    friend class RSImplicitSpringAnimationParam;
+    friend class RSImplicitTransitionParam;
+    friend class RSInterpolatingSpringAnimation;
+    friend class RSKeyframeAnimation;
+    friend class RSModifier;
+    friend class RSPathAnimation;
+    friend class RSPropertyAnimation;
+    friend class RSSpringAnimation;
+    friend class RSTransition;
     template<typename T1>
     friend class RSAnimatableProperty;
     template<uint16_t commandType, uint16_t commandSubType>
@@ -267,7 +266,7 @@ public:
         if (isCustom_) {
             MarkModifierDirty();
         } else {
-            UpdateToRender(stagingValue_, UPDATE_TYPE_OVERWRITE);
+            UpdateToRender(stagingValue_, false);
         }
     }
 
@@ -277,7 +276,7 @@ public:
     }
 
 protected:
-    void UpdateToRender(const T& value, PropertyUpdateType type) const
+    void UpdateToRender(const T& value, bool isDelta) const
     {}
 
     void SetValue(const std::shared_ptr<RSPropertyBase>& value) override
@@ -381,8 +380,7 @@ public:
         if (RSProperty<T>::isCustom_) {
             UpdateExtendedAnimatableProperty(sendValue, hasPropertyAnimation);
         } else {
-            RSProperty<T>::UpdateToRender(
-                sendValue, hasPropertyAnimation ? UPDATE_TYPE_INCREMENTAL : UPDATE_TYPE_OVERWRITE);
+            RSProperty<T>::UpdateToRender(sendValue, hasPropertyAnimation);
         }
     }
 
@@ -523,11 +521,7 @@ public:
 protected:
     void UpdateOnAllAnimationFinish() override
     {
-        if (RSProperty<T>::isCustom_) {
-            UpdateExtendedAnimatableProperty(RSProperty<T>::stagingValue_, false);
-        } else {
-            RSProperty<T>::UpdateToRender(RSProperty<T>::stagingValue_, UPDATE_TYPE_FORCE_OVERWRITE);
-        }
+        RSProperty<T>::UpdateToRender(RSProperty<T>::stagingValue_, false);
     }
 
     void UpdateExtendedAnimatableProperty(const T& value, bool isDelta)
@@ -678,49 +672,49 @@ private:
 };
 
 template<>
-RSC_EXPORT void RSProperty<bool>::UpdateToRender(const bool& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<bool>::UpdateToRender(const bool& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<float>::UpdateToRender(const float& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<float>::UpdateToRender(const float& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<int>::UpdateToRender(const int& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<int>::UpdateToRender(const int& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<Color>::UpdateToRender(const Color& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<Color>::UpdateToRender(const Color& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<Gravity>::UpdateToRender(const Gravity& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<Gravity>::UpdateToRender(const Gravity& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<Matrix3f>::UpdateToRender(const Matrix3f& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<Matrix3f>::UpdateToRender(const Matrix3f& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<Quaternion>::UpdateToRender(const Quaternion& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<Quaternion>::UpdateToRender(const Quaternion& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<std::shared_ptr<RSFilter>>::UpdateToRender(
-    const std::shared_ptr<RSFilter>& value, PropertyUpdateType type) const;
+    const std::shared_ptr<RSFilter>& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<std::shared_ptr<RSImage>>::UpdateToRender(
-    const std::shared_ptr<RSImage>& value, PropertyUpdateType type) const;
+    const std::shared_ptr<RSImage>& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<std::shared_ptr<RSMask>>::UpdateToRender(
-    const std::shared_ptr<RSMask>& value, PropertyUpdateType type) const;
+    const std::shared_ptr<RSMask>& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<std::shared_ptr<RSPath>>::UpdateToRender(
-    const std::shared_ptr<RSPath>& value, PropertyUpdateType type) const;
+    const std::shared_ptr<RSPath>& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<std::shared_ptr<RSLinearGradientBlurPara>>::UpdateToRender(
-    const std::shared_ptr<RSLinearGradientBlurPara>& value, PropertyUpdateType type) const;
+    const std::shared_ptr<RSLinearGradientBlurPara>& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<std::shared_ptr<RSShader>>::UpdateToRender(
-    const std::shared_ptr<RSShader>& value, PropertyUpdateType type) const;
+    const std::shared_ptr<RSShader>& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<Vector4<uint32_t>>::UpdateToRender(
-    const Vector4<uint32_t>& value, PropertyUpdateType type) const;
+    const Vector4<uint32_t>& value, bool isDelta) const;
 template<>
 RSC_EXPORT void RSProperty<Vector4<Color>>::UpdateToRender(
-    const Vector4<Color>& value, PropertyUpdateType type) const;
+    const Vector4<Color>& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta) const;
 template<>
-RSC_EXPORT void RSProperty<RRect>::UpdateToRender(const RRect& value, PropertyUpdateType type) const;
+RSC_EXPORT void RSProperty<RRect>::UpdateToRender(const RRect& value, bool isDelta) const;
 
 template<>
 RSC_EXPORT bool RSProperty<float>::IsValid(const float& value);

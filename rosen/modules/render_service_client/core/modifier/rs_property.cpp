@@ -154,119 +154,119 @@ bool operator!=(const std::shared_ptr<const RSPropertyBase>& a, const std::share
     return !a->IsEqual(b);
 }
 
-#define UPDATE_TO_RENDER(Command, value, type)                                                                        \
+#define UPDATE_TO_RENDER(Command, value, isDelta)                                                                     \
     do {                                                                                                              \
         auto node = target_.lock();                                                                                   \
         auto transactionProxy = RSTransactionProxy::GetInstance();                                                    \
         if (transactionProxy && node) {                                                                               \
-            std::unique_ptr<RSCommand> command = std::make_unique<Command>(node->GetId(), value, id_, type);          \
+            std::unique_ptr<RSCommand> command = std::make_unique<Command>(node->GetId(), value, id_, isDelta);       \
             transactionProxy->AddCommand(command, node->IsRenderServiceNode(), node->GetFollowType(), node->GetId()); \
             if (node->NeedForcedSendToRemote()) {                                                                     \
                 std::unique_ptr<RSCommand> commandForRemote =                                                         \
-                    std::make_unique<Command>(node->GetId(), value, id_, type);                                       \
+                    std::make_unique<Command>(node->GetId(), value, id_, isDelta);                                    \
                 transactionProxy->AddCommand(commandForRemote, true, node->GetFollowType(), node->GetId());           \
             }                                                                                                         \
         }                                                                                                             \
     } while (0)
 
 template<>
-void RSProperty<bool>::UpdateToRender(const bool& value, PropertyUpdateType type) const
+void RSProperty<bool>::UpdateToRender(const bool& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyBool, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyBool, value, isDelta);
 }
 template<>
-void RSProperty<float>::UpdateToRender(const float& value, PropertyUpdateType type) const
+void RSProperty<float>::UpdateToRender(const float& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyFloat, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyFloat, value, isDelta);
 }
 template<>
-void RSProperty<int>::UpdateToRender(const int& value, PropertyUpdateType type) const
+void RSProperty<int>::UpdateToRender(const int& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyInt, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyInt, value, isDelta);
 }
 template<>
-void RSProperty<Color>::UpdateToRender(const Color& value, PropertyUpdateType type) const
+void RSProperty<Color>::UpdateToRender(const Color& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyColor, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyColor, value, isDelta);
 }
 template<>
-void RSProperty<Gravity>::UpdateToRender(const Gravity& value, PropertyUpdateType type) const
+void RSProperty<Gravity>::UpdateToRender(const Gravity& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyGravity, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyGravity, value, isDelta);
 }
 template<>
-void RSProperty<Matrix3f>::UpdateToRender(const Matrix3f& value, PropertyUpdateType type) const
+void RSProperty<Matrix3f>::UpdateToRender(const Matrix3f& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyMatrix3f, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyMatrix3f, value, isDelta);
 }
 template<>
-void RSProperty<Quaternion>::UpdateToRender(const Quaternion& value, PropertyUpdateType type) const
+void RSProperty<Quaternion>::UpdateToRender(const Quaternion& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyQuaternion, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyQuaternion, value, isDelta);
 }
 template<>
 void RSProperty<std::shared_ptr<RSFilter>>::UpdateToRender(
-    const std::shared_ptr<RSFilter>& value, PropertyUpdateType type) const
+    const std::shared_ptr<RSFilter>& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyFilter, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyFilter, value, isDelta);
 }
 template<>
 void RSProperty<std::shared_ptr<RSImage>>::UpdateToRender(
-    const std::shared_ptr<RSImage>& value, PropertyUpdateType type) const
+    const std::shared_ptr<RSImage>& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyImage, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyImage, value, isDelta);
 }
 template<>
 void RSProperty<std::shared_ptr<RSMask>>::UpdateToRender(
-    const std::shared_ptr<RSMask>& value, PropertyUpdateType type) const
+    const std::shared_ptr<RSMask>& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyMask, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyMask, value, isDelta);
 }
 template<>
 void RSProperty<std::shared_ptr<RSPath>>::UpdateToRender(
-    const std::shared_ptr<RSPath>& value, PropertyUpdateType type) const
+    const std::shared_ptr<RSPath>& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyPath, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyPath, value, isDelta);
 }
 template<>
 void RSProperty<std::shared_ptr<RSLinearGradientBlurPara>>::UpdateToRender(
-    const std::shared_ptr<RSLinearGradientBlurPara>& value, PropertyUpdateType type) const
+    const std::shared_ptr<RSLinearGradientBlurPara>& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyLinearGradientBlurPara, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyLinearGradientBlurPara, value, isDelta);
 }
 template<>
 void RSProperty<std::shared_ptr<RSShader>>::UpdateToRender(
-    const std::shared_ptr<RSShader>& value, PropertyUpdateType type) const
+    const std::shared_ptr<RSShader>& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyShader, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyShader, value, isDelta);
 }
 template<>
-void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, PropertyUpdateType type) const
+void RSProperty<Vector2f>::UpdateToRender(const Vector2f& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyVector2f, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyVector2f, value, isDelta);
 }
 template<>
 void RSProperty<Vector4<uint32_t>>::UpdateToRender(const Vector4<uint32_t>& value,
-    PropertyUpdateType type) const
+    bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyBorderStyle, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyBorderStyle, value, isDelta);
 }
 template<>
 void RSProperty<Vector4<Color>>::UpdateToRender(const Vector4<Color>& value,
-    PropertyUpdateType type) const
+    bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyVector4Color, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyVector4Color, value, isDelta);
 }
 template<>
-void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, PropertyUpdateType type) const
+void RSProperty<Vector4f>::UpdateToRender(const Vector4f& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyVector4f, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyVector4f, value, isDelta);
 }
 
 template<>
-void RSProperty<RRect>::UpdateToRender(const RRect& value, PropertyUpdateType type) const
+void RSProperty<RRect>::UpdateToRender(const RRect& value, bool isDelta) const
 {
-    UPDATE_TO_RENDER(RSUpdatePropertyRRect, value, type);
+    UPDATE_TO_RENDER(RSUpdatePropertyRRect, value, isDelta);
 }
 
 template<>

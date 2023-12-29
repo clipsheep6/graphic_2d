@@ -492,15 +492,8 @@ bool RSRenderNode::IsFirstLevelSurfaceNode()
     if (!this->IsInstanceOf<RSSurfaceRenderNode>()) {
         return false;
     }
-    auto parentNode = parent_.lock();
-    while (parentNode && !parentNode->IsInstanceOf<RSDisplayRenderNode>()) {
-        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentNode);
-        if (node != nullptr && (node->IsMainWindowType() || node->IsLeashWindow())) {
-            return false;
-        }
-        parentNode = parentNode->GetParent().lock();
-    }
-    return true;
+
+    return parentSurfaceNode_.lock() == nullptr;
 }
 
 bool RSRenderNode::SubSurfaceNodeNeedDraw(PartialRenderType opDropType)
@@ -516,6 +509,21 @@ bool RSRenderNode::SubSurfaceNodeNeedDraw(PartialRenderType opDropType)
         }
     }
     return false;
+}
+
+void RSRenderNode::SetParentSurfaceNode(std::vector<WeakPtr> &subSurfaceNodes, SharedPtr parentSurfaceNode)
+{
+    for (auto nodeWptr : subSurfaceNodes) {
+        auto nodeSptr = nodeWptr.lock();
+        if (nodeSptr == nullptr) {
+            continue;
+        }
+        if (parentSurfaceNode != nullptr) {
+            nodeSptr->parentSurfaceNode_ = parentSurfaceNode;
+        } else {
+            nodeSptr->parentSurfaceNode_.reset();
+        }
+    }
 }
 
 void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
@@ -554,6 +562,7 @@ void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
                 second.lock()->GetRenderProperties().GetPositionZ();
         });
         if (parentNode->IsInstanceOf<RSSurfaceRenderNode>()) {
+            SetParentSurfaceNode(subSurfaceNodes, parentNode);
             break;
         }
         childNode = parentNode;
@@ -567,6 +576,10 @@ void RSRenderNode::RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent)
         return;
     }
     auto subSurfaceNodes = parent->subSurfaceNodes_[child->GetId()];
+    if (subSurfaceNodes.size() == 0) {
+        return;
+    }
+    SetParentSurfaceNode(subSurfaceNodes, nullptr);
     parent->subSurfaceNodes_.erase(child->GetId());
     auto childNode = parent;
     auto parentNode = parent->GetParent().lock();

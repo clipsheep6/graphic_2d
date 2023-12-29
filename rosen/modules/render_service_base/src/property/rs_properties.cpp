@@ -1819,6 +1819,11 @@ void RSProperties::SetBloom(float bloomIntensity)
     contentDirty_ = true;
 }
 
+bool RSProperties::IsBloomValid() const
+{
+    return illuminatedPtr_ && illuminatedPtr_->IsBloomValid();
+}
+
 float RSProperties::GetLightIntensity() const
 {
     return lightSourcePtr_ ? lightSourcePtr_->GetLightIntensity() : 0.f;

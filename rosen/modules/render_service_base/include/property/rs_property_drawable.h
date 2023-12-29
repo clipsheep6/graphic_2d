@@ -45,6 +45,7 @@ enum RSPropertyDrawableSlot : uint8_t {
     ENV_FOREGROUND_COLOR,
     SHADOW,
     OUTLINE,
+    BLOOM,
 
     // BG properties in Bounds Clip
     SAVE_LAYER_BACKGROUND,

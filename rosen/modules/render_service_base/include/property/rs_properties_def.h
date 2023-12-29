@@ -222,6 +222,10 @@ public:
     {
         return lightSources_;
     }
+    bool IsBloomValid() const
+    {
+        return !ROSEN_EQ(bloomIntensity_, 0.f);
+    }
 
 private:
     IlluminatedType illuminatedType_ = IlluminatedType::NONE;

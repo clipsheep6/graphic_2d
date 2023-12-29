@@ -615,6 +615,24 @@ void RSPathMaskDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
 }
 
 // ============================================================================
+// Bloom
+std::unique_ptr<RSPropertyDrawable> RSBloomDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
+{
+    const auto& properties = context.properties_;
+    if (properties.IsSpherizeValid() || !properties.IsBloomValid()) {
+        return nullptr;
+    }
+    return std::make_unique<RSBloomDrawable>();
+}
+void RSBloomDrawable::Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+{
+    const RSProperties& properties = node.GetRenderProperties();
+    if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED || !properties.IsBloomValid()) {
+        return;
+    }
+    RSPropertiesPainter::DrawBloom(properties, canvas);
+}
+// ============================================================================
 // Shadow
 std::unique_ptr<RSPropertyDrawable> RSShadowBaseDrawable::Generate(const RSPropertyDrawableGenerateContext& context)
 {

@@ -226,6 +226,16 @@ public:
 };
 
 // ============================================================================
+// Bloom
+class RSBloomDrawable : public RSPropertyDrawable {
+public:
+    explicit RSBloomDrawable() = default;
+    ~RSBloomDrawable() override = default;
+    static std::unique_ptr<RSPropertyDrawable> Generate(const RSPropertyDrawableGenerateContext& context);
+    void Draw(RSRenderNode& node, RSPaintFilterCanvas& canvas) override;
+};
+
+// ============================================================================
 // Shadow
 class RSShadowBaseDrawable : public RSPropertyDrawable {
 public:

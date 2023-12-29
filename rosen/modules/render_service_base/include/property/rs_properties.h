@@ -326,6 +326,7 @@ public:
     int GetIlluminatedType() const;
     float GetBloom() const;
     void CalculateAbsLightPosition();
+    bool IsBloomValid() const;
     const std::shared_ptr<RSLightSource>& GetLightSource() const;
     const std::shared_ptr<RSIlluminated>& GetIlluminated() const;
 

@@ -48,6 +48,8 @@ public:
     static void GetShadowDirtyRect(RectI& dirtyShadow, const RSProperties& properties,
         const RRect* rrect = nullptr, bool isAbsCoordinate = true, bool radiusInclude = true);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
+    static void DrawBloom(const RSProperties& properties, RSPaintFilterCanvas& canvas);
+    static void GetBloomDirtyRect(RectI& dirtyBloom, const RSProperties& properties);
     static int GetAndResetBlurCnt();
     static void GetOutlineDirtyRect(RectI& dirtyOutline,
         const RSProperties& properties, const bool& isAbsCoordinate = true);
@@ -153,9 +155,9 @@ private:
         const std::unordered_set<std::shared_ptr<RSLightSource>>& lightSources,
         const std::shared_ptr<RSObjAbsGeometry>& geoPtr);
     static void DrawContentLight(const RSProperties& properties, SkCanvas& canvas,
-        std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, SkPaint& paint, SkV4& lightIntensity);
+        std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, SkV4& lightIntensity);
     static void DrawBorderLight(const RSProperties& properties, SkCanvas& canvas,
-        std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, SkPaint& paint, SkV4& lightIntensity);
+        std::shared_ptr<SkRuntimeShaderBuilder>& lightBuilder, bool bloom, SkV4& lightIntensity);
     static bool GetGradientDirectionPoints(SkPoint (&pts)[2],
                                 const SkRect& clipBounds, GradientDirection direction);
     static sk_sp<SkShader> MakeAlphaGradientShader(const SkRect& clipBounds,
@@ -194,9 +196,9 @@ private:
         const std::unordered_set<std::shared_ptr<RSLightSource>>& lightSources,
         const std::shared_ptr<RSObjAbsGeometry>& geoPtr);
     static void DrawContentLight(const RSProperties& properties, Drawing::Canvas& canvas,
-        std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Drawing::Brush& brush, Vector4f& lightIntensity);
+        std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Vector4f& lightIntensity);
     static void DrawBorderLight(const RSProperties& properties, Drawing::Canvas& canvas,
-        std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Drawing::Pen& pen, Vector4f& lightIntensity);
+        std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, bool bloom, Vector4f& lightIntensity);
     static bool GetGradientDirectionPoints(
         Drawing::Point (&pts)[2], const Drawing::Rect& clipBounds, GradientDirection direction);
     static std::shared_ptr<Drawing::ShaderEffect> MakeAlphaGradientShader(const Drawing::Rect& clipBounds,

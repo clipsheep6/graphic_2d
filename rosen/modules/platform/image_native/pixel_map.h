@@ -147,10 +147,7 @@ public:
         return 0;
     }
 
-    NATIVEEXPORT int32_t GetRowStride() const
-    {
-        return rowStride_;
-    }
+    NATIVEEXPORT int32_t GetRowStride() const;
 
     NATIVEEXPORT bool Marshalling(Parcel &data) const override;
     NATIVEEXPORT static PixelMap *Unmarshalling(Parcel &data);

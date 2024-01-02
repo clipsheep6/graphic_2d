@@ -104,7 +104,7 @@ bool MakeFromNativeWindowBuffer(sk_sp<GrDirectContext> skContext, NativeWindowBu
     NativeSurfaceInfo& nativeSurface, int width, int height);
 
 GrBackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
-    int width, int height);
+    int width, int height, bool isRenderable);
 #else
 bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, NativeWindowBuffer* nativeWindowBuffer,
     NativeSurfaceInfo& nativeSurface, int width, int height);

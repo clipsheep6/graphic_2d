@@ -291,7 +291,7 @@ GrVkYcbcrConversionInfo GetYcbcrInfo(VkNativeBufferFormatPropertiesOHOS& nbForma
 
 #ifndef USE_ROSEN_DRAWING
 GrBackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
-    int width, int height)
+    int width, int height, bool isRenderable)
 #else
 Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
     int width, int height)
@@ -315,6 +315,9 @@ Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* n
     VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_SAMPLED_BIT;
     if (nbFormatProps.format != VK_FORMAT_UNDEFINED) {
         usageFlags = usageFlags | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        if (isRenderable) {
+            usageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        }
     }
 
     VkImage image;

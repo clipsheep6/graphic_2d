@@ -1143,10 +1143,21 @@ RSPropertyDrawable::DrawablePtr RSPixelStretchDrawable::Generate(const RSRenderC
 void RSBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
-    canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(content.GetRenderProperties().GetRRect()), paint_);
+    // use drawrrect to avoid texture update in phone screen rotation scene.
+    if (RSSystemProperties::IsPhoneType()) {
+        canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(content.GetRenderProperties().GetRRect()), paint_);
+    } else {
+        canvas.drawRect(RSPropertiesPainter::Rect2SkRect(content.GetRenderProperties().GetBoundsRect()), paint_);
+    }
+    
 #else
     canvas.AttachBrush(brush_);
-    canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(content.GetRenderProperties().GetRRect()));
+    // use drawrrect to avoid texture update in phone screen rotation scene
+    if (RSSystemProperties::IsPhoneType()) {
+        canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(content.GetRenderProperties().GetRRect()));
+    } else {
+        canvas.DrawRect(RSPropertiesPainter::Rect2DrawingRect(content.GetRenderProperties().GetBoundsRect()));
+    }
     canvas.DetachBrush();
 #endif
 }

@@ -398,13 +398,6 @@ public:
     virtual void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
 
-    // opinc_begin
-    virtual bool BeginOpRecording(const Rect* bound = nullptr, bool isDynamic = false);
-    virtual Drawing::OpListHandle EndOpRecording();
-    virtual void DrawOpList(Drawing::OpListHandle handle);
-    virtual int CanDrawOpList(Drawing::OpListHandle handle);
-    // opinc_end
-
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
     virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
@@ -596,16 +589,9 @@ public:
     virtual void Clear(ColorQuad color);
 
     /**
-     * @brief Saves RSMatrix and clip.
-     * Calling Restore() discards changes to RSMatrix and clip,
-     * restoring the RSMatrix and clip to their state when Save() was called.
-     * RSMatrix may be changed by Translate(), Scale(), Rotate(), Skew(), ConcatMatrix(), SetMatrix(),
-     * and ResetMatrix(). Clip may be changed by ClipRect(), ClipRRect(), ClipPath(), ClipRegion().
-     * Saved Canvas state is put on a stack; multiple calls to Save() should be balance
-     * by an equal number of calls to Restore().
-     * Call RestoreToCount() with result to restore this and subsequent saves.
+     * @brief Saves Matrix and clipping area, return the number of saved states.
      */
-    virtual void Save();
+    virtual uint32_t Save();
 
     /**
      * @brief Saves Matrix and clipping area, and allocates Surface for subsequent drawing.

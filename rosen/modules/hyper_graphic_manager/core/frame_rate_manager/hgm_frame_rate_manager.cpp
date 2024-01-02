@@ -15,6 +15,7 @@
 
 #include "hgm_frame_rate_manager.h"
 
+#include <algorithm>
 #include "common/rs_optional_trace.h"
 #include "common/rs_thread_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"
@@ -141,6 +142,7 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
+            FrameRateReport();
         }
     }
 }
@@ -171,7 +173,17 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
     if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
         forceUpdateCallback_(false, true);
+        FrameRateReport();
     }
+}
+
+void HgmFrameRateManager::FrameRateReport()
+{
+    std::unordered_map<pid_t, uint32_t> rates;
+    rates[GetRealPid()] = currRefreshRate_;
+    auto alignRate = HgmCore::Instance().GetAlignRate();
+    rates[UNI_APP_PID] = (alignRate == 0) ? currRefreshRate_ : alignRate;
+    FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
 }
 
 bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
@@ -187,8 +199,11 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
         controllerRateChanged = true;
         frameRateChanged = true;
     }
+
+    auto& hgmCore = HgmCore::Instance();
+    auto screenCurrentRefreshRate = hgmCore.GetScreenCurrentRefreshRate(hgmCore.GetActiveScreenId());
     RS_TRACE_NAME_FMT("CollectFrameRateChange refreshRate: %d, rsFrameRate: %d, finalRange = (%d, %d, %d)",
-        currRefreshRate_, rsFrameRate, finalRange.min_, finalRange.max_, finalRange.preferred_);
+        screenCurrentRefreshRate, rsFrameRate, finalRange.min_, finalRange.max_, finalRange.preferred_);
     RS_TRACE_INT("PreferredFrameRate", static_cast<int>(finalRange.preferred_));
 
     for (auto linker : appFrameRateLinkers) {
@@ -214,6 +229,7 @@ void HgmFrameRateManager::HandleFrameRateChangeForLTPO(uint64_t timestamp)
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != HgmCore::Instance().GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
+            FrameRateReport();
         }
     };
 
@@ -357,13 +373,14 @@ int32_t HgmFrameRateManager::CalModifierPreferred(const HgmModifierProfile &hgmM
         SpeedTransType::TRANS_PIXEL_TO_MM, hgmModifierProfile.xSpeed, hgmModifierProfile.ySpeed, hgmScreen);
     auto mixSpeed = sqrt(xSpeed * xSpeed + ySpeed * ySpeed);
 
-    auto dynamicSetting = configData->GetAnimationDynamicSetting(curScreenStrategyId_,
-                                                                 std::to_string(curRefreshRateMode_),
-                                                                 hgmModifierProfile.hgmModifierType);
-    for (const auto &iter: dynamicSetting) {
-        if (mixSpeed >= iter.second.min && (mixSpeed < iter.second.max || iter.second.max == -1)) {
-            return iter.second.preferred_fps;
-        }
+    auto dynamicSetting = configData->GetAnimationDynamicSetting(
+        curScreenStrategyId_, std::to_string(curRefreshRateMode_), hgmModifierProfile.hgmModifierType);
+    auto iter = std::find_if(dynamicSetting.begin(), dynamicSetting.end(),
+        [&mixSpeed](auto iter) {
+            return mixSpeed >= iter.second.min && (mixSpeed < iter.second.max || iter.second.max == -1);
+        });
+    if (iter != dynamicSetting.end()) {
+        return iter->second.preferred_fps;
     }
     return HGM_ERROR;
 }
@@ -508,6 +525,7 @@ void HgmFrameRateManager::HandleRefreshRateMode(RefreshRateMode refreshRateMode)
     curRefreshRateMode_ = refreshRateMode;
     SyncAppVote();
     HgmCore::Instance().SetLtpoConfig();
+    FrameRateReport();
     HgmConfigCallbackManager::GetInstance()->SyncHgmConfigChangeCallback();
 }
 
@@ -542,6 +560,7 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
 
     SyncAppVote();
     hgmCore.SetLtpoConfig();
+    FrameRateReport();
     HgmConfigCallbackManager::GetInstance()->SyncHgmConfigChangeCallback();
 
     // hgm warning: use !isLtpo_ instead after GetDisplaySupportedModes ready

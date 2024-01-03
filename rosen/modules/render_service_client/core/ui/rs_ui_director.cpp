@@ -410,5 +410,21 @@ int32_t RSUIDirector::GetCurrentRefreshRateMode()
 {
     return RSFrameRatePolicy::GetInstance()->GetRefreshRateMode();
 }
+
+void RSUIDirector::SetVsyncPeriodToModifierManager(int64_t vsyncPeriod)
+{
+    auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
+    if (modifierManager != nullptr) {
+        modifierManager->SetVsyncPeriod(vsyncPeriod);
+    }
+}
+
+void RSUIDirector::SetDisplaySyncEnableToModifierManager(bool isDisplaySyncEnabled)
+{
+    auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
+    if (modifierManager != nullptr) {
+        modifierManager->SetDisplaySyncEnable(isDisplaySyncEnabled);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

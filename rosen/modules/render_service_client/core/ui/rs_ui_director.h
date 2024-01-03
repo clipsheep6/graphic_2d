@@ -68,6 +68,10 @@ public:
 
     int32_t GetCurrentRefreshRateMode();
 
+    void SetVsyncPeriodToModifierManager(int64_t vsyncPeriod);
+
+    void SetDisplaySyncEnableToModifierManager(bool isDisplaySyncEnabled);
+
 private:
     void AttachSurface();
     static void RecvMessages();

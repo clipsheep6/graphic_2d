@@ -23,6 +23,7 @@
 #include "animation/rs_frame_rate_range.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
+#include "render_service_base/include/pipeline/rs_render_display_sync.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -48,6 +49,12 @@ public:
     void UnregisterSpringAnimation(PropertyId propertyId, AnimationId animId);
     std::shared_ptr<RSRenderAnimation> QuerySpringAnimation(PropertyId propertyId);
 
+    bool JudgeAnimateWhetherSkip(AnimationId animId, int64_t time);
+    void SetVsyncPeriod(int64_t vsyncPeriod);
+    int64_t GetVsyncPeriod() const;
+    void SetDisplaySyncEnable(bool isDisplaySyncEnabled);
+    bool IsDisplaySyncEnabled() const;
+
 private:
     void OnAnimationFinished(const std::shared_ptr<RSRenderAnimation>& animation);
     const std::shared_ptr<RSRenderAnimation> GetAnimation(AnimationId id) const;
@@ -57,6 +64,10 @@ private:
     std::unordered_map<PropertyId, AnimationId> springAnimations_;
 
     FrameRateRange uiRange_ = {0, 0, 0};
+
+    std::unordered_map<AnimationId, std::weak_ptr<RSRenderDisplaySync>> displaySyncs_;
+    int64_t vsyncPeriod_ = -1;
+    bool isDisplaySyncEnabled_ = false;
 
     template <typename T>
     friend class RSAnimatableProperty;

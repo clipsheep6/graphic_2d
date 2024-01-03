@@ -2470,6 +2470,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     }
 
     if (mirrorNode) {
+        isHardwareForcedDisabled_ = true;
         auto processor = std::static_pointer_cast<RSUniRenderVirtualProcessor>(processor_);
         if (mirrorNode->GetSecurityDisplay() != isSecurityDisplay_ && processor &&
             (hasCaptureWindow_[mirrorNode->GetScreenId()] || displayHasSecSurface_[mirrorNode->GetScreenId()] ||
@@ -2582,7 +2583,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
 #endif
         } else {
-            processor_->ProcessDisplaySurface(*mirrorNode);
+            canvas_ = processor->GetCanvas();
+            ProcessChildren(*mirrorNode);
         }
     } else if (node.GetCompositeType() == RSDisplayRenderNode::CompositeType::UNI_RENDER_EXPAND_COMPOSITE) {
         auto processor = std::static_pointer_cast<RSUniRenderVirtualProcessor>(processor_);

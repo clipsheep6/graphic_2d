@@ -542,7 +542,7 @@ EGLBoolean EglWrapperDisplay::SwapBuffers(EGLSurface surf)
     EGLBoolean ret = EGL_FALSE;
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglSwapBuffers) {
-        if(disp_ = nullptr || surfPtr = nullptr) {
+        if(disp_ = nullptr || surfPtr->GetEglSurface = nullptr) {
             WLOGE("here is nullptr cause problem.")
         }
         ret = table->egl.eglSwapBuffers(disp_, surfPtr->GetEglSurface());

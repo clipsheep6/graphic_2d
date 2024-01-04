@@ -154,61 +154,62 @@ static const std::unordered_map<RSModifierType, RSPropertyDrawableSlot> g_proper
 // index = RSPropertyDrawableType, value = DrawableGenerator
 static const std::array<RSPropertyDrawable::DrawableGenerator, static_cast<size_t>(RSPropertyDrawableSlot::MAX)>
     g_drawableGeneratorLut = {
-        nullptr, // INVALID = 0,
-        nullptr, // SAVE_ALL,
+    nullptr, // INVALID = 0,
+    nullptr, // SAVE_ALL,
 
-        // Bounds Geometry
-        nullptr,                                                     // BOUNDS_MATRIX,
-        RSAlphaDrawable::Generate,                                   // ALPHA,
-        RSMaskDrawable::Generate,                                    // MASK,
-        CustomModifierAdapter<RSModifierType::TRANSITION>,           // TRANSITION,
-        CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR>, // ENV_FOREGROUND_COLOR
-        RSShadowDrawable::Generate,                                  // SHADOW,
-        nullptr,                                                     // BLEND MODE
+    // Bounds Geometry
+    nullptr,                                                     // BOUNDS_MATRIX,
+    RSAlphaDrawable::Generate,                                   // ALPHA,
+    RSMaskDrawable::Generate,                                    // MASK,
+    CustomModifierAdapter<RSModifierType::TRANSITION>,           // TRANSITION,
+    CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR>, // ENV_FOREGROUND_COLOR
+    RSShadowDrawable::Generate,                                  // SHADOW,
+    BlendSaveDrawableGenerate,                                   // BLEND_MODE
 
-        // BG properties in Bounds Clip
-        nullptr,                                                              // BG_SAVE_BOUNDS
-        nullptr,                                                              // CLIP_TO_BOUNDS,
-        RSBackgroundColorDrawable::Generate,                                  // BACKGROUND_COLOR,
-        RSBackgroundShaderDrawable::Generate,                                 // BACKGROUND_SHADER
-        RSBackgroundImageDrawable::Generate,                                  // BACKGROUND_IMAGE
-        RSBackgroundFilterDrawable::Generate,                                 // BACKGROUND_FILTER,
-        RSEffectDataApplyDrawable::Generate,                                  // USE_EFFECT
-        CustomModifierAdapter<RSModifierType::BACKGROUND_STYLE>,              // BACKGROUND_STYLE
-        RSDynamicLightUpDrawable::Generate,                                   // DYNAMIC_LIGHT_UP,
-        CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY>, // ENV_FOREGROUND_COLOR_STRATEGY
-        nullptr,                                                              // BG_RESTORE_BOUNDS,
+    // BG properties in Bounds Clip
+    nullptr,                                                              // BG_SAVE_BOUNDS
+    nullptr,                                                              // CLIP_TO_BOUNDS,
+    RSBackgroundColorDrawable::Generate,                                  // BACKGROUND_COLOR,
+    RSBackgroundShaderDrawable::Generate,                                 // BACKGROUND_SHADER
+    RSBackgroundImageDrawable::Generate,                                  // BACKGROUND_IMAGE
+    RSBackgroundFilterDrawable::Generate,                                 // BACKGROUND_FILTER,
+    RSEffectDataApplyDrawable::Generate,                                  // USE_EFFECT
+    CustomModifierAdapter<RSModifierType::BACKGROUND_STYLE>,              // BACKGROUND_STYLE
+    RSDynamicLightUpDrawable::Generate,                                   // DYNAMIC_LIGHT_UP,
+    CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY>, // ENV_FOREGROUND_COLOR_STRATEGY
+    nullptr,                                                              // BG_RESTORE_BOUNDS,
 
-        // Frame Geometry
-        nullptr,                                                 // SAVE_FRAME,
-        nullptr,                                                 // FRAME_OFFSET,
-        RSClipFrameDrawable::Generate,                           // CLIP_TO_FRAME,
-        CustomModifierAdapter<RSModifierType::CONTENT_STYLE>,    // CONTENT_STYLE
-        nullptr,                                                 // CHILDREN,
-        CustomModifierAdapter<RSModifierType::FOREGROUND_STYLE>, // FOREGROUND_STYLE
-        nullptr,                                                 // RESTORE_FRAME,
+    // Frame Geometry
+    nullptr,                                                 // SAVE_FRAME,
+    nullptr,                                                 // FRAME_OFFSET,
+    RSClipFrameDrawable::Generate,                           // CLIP_TO_FRAME,
+    CustomModifierAdapter<RSModifierType::CONTENT_STYLE>,    // CONTENT_STYLE
+    nullptr,                                                 // CHILDREN,
+    CustomModifierAdapter<RSModifierType::FOREGROUND_STYLE>, // FOREGROUND_STYLE
+    nullptr,                                                 // RESTORE_FRAME,
 
-        // FG properties in Bounds clip
-        nullptr,                                      // FG_SAVE_BOUNDS,
-        nullptr,                                      // EXTRA_CLIP_TO_BOUNDS,
-        RSBinarizationDrawable::Generate,             // BINARIZATION,
-        RSColorFilterDrawable::Generate,              // COLOR_FILTER,
-        RSLightUpEffectDrawable::Generate,            // LIGHT_UP_EFFECT,
-        RSForegroundFilterDrawable::Generate,         // FOREGROUND_FILTER,
-        RSLinearGradientBlurFilterDrawable::Generate, // LINEAR_GRADIENT_BLUR_FILTER,
-        RSForegroundColorDrawable::Generate,          // FOREGROUND_COLOR,
-        nullptr,                                      // FG_RESTORE_BOUNDS
+    // FG properties in Bounds clip
+    nullptr,                                      // FG_SAVE_BOUNDS,
+    nullptr,                                      // EXTRA_CLIP_TO_BOUNDS,
+    RSBinarizationDrawable::Generate,             // BINARIZATION,
+    RSColorFilterDrawable::Generate,              // COLOR_FILTER,
+    RSLightUpEffectDrawable::Generate,            // LIGHT_UP_EFFECT,
+    RSForegroundFilterDrawable::Generate,         // FOREGROUND_FILTER,
+    RSLinearGradientBlurFilterDrawable::Generate, // LINEAR_GRADIENT_BLUR_FILTER,
+    RSForegroundColorDrawable::Generate,          // FOREGROUND_COLOR,
+    nullptr,                                      // FG_RESTORE_BOUNDS
 
-        // No clip (unless ClipToBounds is set)
-        RSPointLightDrawable::Generate,                       // POINT_LIGHT
-        RSBorderDrawable::Generate,                           // BORDER,
-        RSOutlineDrawable::Generate,                          // OUTLINE,
-        CustomModifierAdapter<RSModifierType::OVERLAY_STYLE>, // OVERLAY
-        RSParticleDrawable::Generate,                         // PARTICLE_EFFECT,
-        RSPixelStretchDrawable::Generate,                     // PIXEL_STRETCH,
+    nullptr,                                              // RESTORE_BLEND
+    // No clip (unless ClipToBounds is set)
+    RSPointLightDrawable::Generate,                       // POINT_LIGHT
+    RSBorderDrawable::Generate,                           // BORDER,
+    RSOutlineDrawable::Generate,                                 // OUTLINE,
+    CustomModifierAdapter<RSModifierType::OVERLAY_STYLE>, // OVERLAY
+    RSParticleDrawable::Generate,                         // PARTICLE_EFFECT,
+    RSPixelStretchDrawable::Generate,                     // PIXEL_STRETCH,
 
-        nullptr, // RESTORE_ALL,
-    };
+    nullptr, // RESTORE_ALL,
+};
 
 enum DrawableVecStatus : uint8_t {
     CLIP_TO_BOUNDS          = 1 << 0,
@@ -336,9 +337,9 @@ bool RSPropertyDrawable::UpdateDrawableVec(
     }
 
     // Step 2.2: post-generate hooks (PLANNING: refactor this into a separate function)
-    // if (dirtySlots.count(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)) {
-    //     UpdateSaveLayerSlots(content, drawableVec);
-    // }
+    if (dirtySlots.count(RSPropertyDrawableSlot::BLEND_MODE)) {
+        UpdateSaveLayerSlots(content, drawableVec);
+    }
 
     // Temporary fix, change of clipToBounds should trigger UpdateSaveRestore
     if (!drawableSlotChanged && dirtySlots.count(RSPropertyDrawableSlot::CLIP_TO_BOUNDS)) {
@@ -515,78 +516,14 @@ void RSPropertyDrawable::UpdateSaveRestore(
     drawableVecStatus = drawableVecStatusNew;
 }
 
-// namespace {
-// #ifndef USE_ROSEN_DRAWING
-// void ConvertBlendModeToPaint(const RSRenderContent& content, SkPaint& blendPaint)
-// {
-//     static const std::unordered_map<int, SkBlendMode> skBlendModeLUT = {
-//         { static_cast<int>(RSColorBlendMode::DST_IN), SkBlendMode::kDstIn },
-//         { static_cast<int>(RSColorBlendMode::SRC_IN), SkBlendMode::kSrcIn }
-//     };
-//     auto& properties = content.GetRenderProperties();
-//     int blendMode = properties.GetColorBlendMode();
-//     auto iter = skBlendModeLUT.find(blendMode);
-//     if (iter == skBlendModeLUT.end()) {
-//         ROSEN_LOGE("The desired color_blend_mode is undefined, will behave as no blendmode.");
-//         return;
-//     }
-//     blendPaint.setBlendMode(skBlendModeLUT.at(blendMode));
-// }
-// #else
-// void ConvertBlendModeToPaint(const RSRenderContent& content, Drawing::Brush& blendBrush)
-// {
-//     static const std::unordered_map<int, Drawing::BlendMode> BlendModeLUT = {
-//         { static_cast<int>(RSColorBlendMode::DST_IN), Drawing::BlendMode::DST_IN },
-//         { static_cast<int>(RSColorBlendMode::SRC_IN), Drawing::BlendMode::SRC_IN }
-//     };
-//     auto& properties = content.GetRenderProperties();
-//     int blendMode = properties.GetColorBlendMode();
-//     auto iter = BlendModeLUT.find(blendMode);
-//     if (iter == BlendModeLUT.end()) {
-//         ROSEN_LOGE("The desired color_blend_mode is undefined, will behave as no blendmode.");
-//         return;
-//     }
-//     blendBrush.SetBlendMode(BlendModeLUT.at(blendMode));
-// }
-// #endif
-// } // namespace
-
-// void RSPropertyDrawable::UpdateSaveLayerSlots(const RSRenderContent& content, DrawableVec& drawableVec)
-// {
-// #ifndef USE_ROSEN_DRAWING
-//     SkPaint blendPaint;
-//     ConvertBlendModeToPaint(content, blendPaint);
-//     // blendmode value is invalid, clear relative 4 slots
-//     if (!blendPaint.asBlendMode().has_value()) {
-// #else
-//     Drawing::Brush blendBrush;
-//     ConvertBlendModeToPaint(content, blendBrush);
-//     // blendmode value is invalid, clear relative 4 slots
-//     if (!blendBrush.AsBlendMode()) {
-// #endif
-//         drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)] = nullptr;
-//         drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::RESTORE_CONTENT)] = nullptr;
-//         drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND)] = nullptr;
-//         drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::RESTORE_BACKGROUND)] = nullptr;
-//         return;
-//     }
-//     // dirty slots COLOR_BLEND changed from none to valid value
-//     auto contentCount = std::make_shared<int>(-1);
-// #ifndef USE_ROSEN_DRAWING
-//     drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)] =
-//         std::make_unique<RSSaveLayerContentDrawable>(contentCount, std::move(blendPaint));
-// #else
-//     drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::SAVE_LAYER_CONTENT)] =
-//         std::make_unique<RSSaveLayerContentDrawable>(contentCount, std::move(blendBrush));
-// #endif
-//     drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::RESTORE_CONTENT)] =
-//         std::make_unique<RSRestoreDrawable>(contentCount);
-
-//     auto backgroundCount = std::make_shared<int>(-1);
-//     drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::SAVE_LAYER_BACKGROUND)] =
-//         std::make_unique<RSSaveLayerBackgroundDrawable>(backgroundCount);
-//     drawableVec[static_cast<size_t>(RSPropertyDrawableSlot::RESTORE_BACKGROUND)] =
-//         std::make_unique<RSRestoreDrawable>(backgroundCount);
-// }
+void RSPropertyDrawable::UpdateSaveLayerSlots(
+    const RSPropertyDrawableGenerateContext& context, DrawableVec& drawableVec)
+{
+    if (drawableVec[RSPropertyDrawableSlot::BLEND_MODE] == nullptr) {
+        drawableVec[RSPropertyDrawableSlot::RESTORE_BLEND_MODE] = nullptr;
+        return;
+    }
+    drawableVec[RSPropertyDrawableSlot::RESTORE_BLEND_MODE] = BlendRestoreDrawableGenerate(context);
+}
 
 } // namespace OHOS::Rosen

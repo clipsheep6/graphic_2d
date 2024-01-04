@@ -110,17 +110,16 @@ enum class RSColorBlendMode : int16_t {
 
 // color blend apply mode
 enum class RSColorBlendApplyType : int16_t {
-    SAVE_LAYER,  // Apply blending by drawing the content onto an offscreen buffer and blend it when drawing it back to
-                 // the screen
     FAST,        // Apply blending by drawing the content with the blend mode, without using an offscreen buffer
 
-    DEFAULT = SAVE_LAYER
+    SAVE_LAYER,  // Apply blending by drawing the content onto an offscreen buffer and blend it when drawing it back to
+                 // the screen
 };
 
 class Decoration final {
 public:
-    Decoration() = default;
-    ~Decoration() = default;
+    Decoration() {}
+    ~Decoration() {}
     std::shared_ptr<RSShader> bgShader_ = nullptr;
     std::shared_ptr<RSImage> bgImage_ = nullptr;
     RectF bgImageRect_ = RectF();
@@ -130,8 +129,8 @@ public:
 
 class Sandbox final {
 public:
-    Sandbox() = default;
-    ~Sandbox() = default;
+    Sandbox() {}
+    ~Sandbox() {}
     std::optional<Vector2f> position_;
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkMatrix> matrix_;
@@ -153,7 +152,7 @@ enum class IlluminatedType : uint32_t {
 class RSLightSource final {
 public:
     RSLightSource() = default;
-    ~RSLightSource() = default;
+    ~RSLightSource() {}
     void SetLightPosition(const Vector4f& lightPosition)
     {
         lightPosition_ = lightPosition;

@@ -43,8 +43,8 @@ enum class RSPropertyDrawableSlot : uint8_t {
     TRANSITION,
     ENV_FOREGROUND_COLOR,
     SHADOW,
-    BLEND_MODE,
 
+    BLEND_MODE,
     // BG properties in Bounds Clip
     BG_SAVE_BOUNDS,
     CLIP_TO_BOUNDS,
@@ -78,6 +78,7 @@ enum class RSPropertyDrawableSlot : uint8_t {
     FOREGROUND_COLOR,
     FG_RESTORE_BOUNDS,
 
+    RESTORE_BLEND_MODE,
     // No clip (unless ClipToBounds is set)
     POINT_LIGHT,
     BORDER,
@@ -138,7 +139,7 @@ public:
         RSRenderContent& content, DrawableVec& drawableVec, uint8_t& drawableVecStatus);
 
 private:
-    // static void UpdateSaveLayerSlots(const RSRenderContent& content, DrawableVec& drawableVec);
+    static void UpdateSaveLayerSlots(const RSRenderContent& content, DrawableVec& drawableVec);
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_H

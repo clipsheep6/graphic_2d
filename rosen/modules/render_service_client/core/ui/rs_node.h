@@ -303,8 +303,9 @@ public:
 
     void SetUseShadowBatching(bool useShadowBatching);
 
-    void SetColorBlendMode(RSColorBlendMode blendMode);
-    void SetColorBlendApplyType(RSColorBlendApplyType applyType);
+    void SetColorBlendMode(RSColorBlendMode colorBlendMode);
+
+    void SetColorBlendApplyType(RSColorBlendApplyType colorBlendApplyType);
 
     // driven render
     void MarkDrivenRender(bool flag);

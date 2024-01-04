@@ -18,11 +18,11 @@ module_output_path = "graphic_2d/graphic_2d"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("SurfaceUtilsFuzzTest") {
-  fuzz_config_file = "//foundation/graphic/graphic_2d/frameworks/surface/test/fuzztest/surfaceutils_fuzzer"
+  fuzz_config_file = "//foundation/graphic/graphic_surface/surface/test/fuzztest/surfaceutils_fuzzer"
   module_out_path = module_output_path
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_surface/surface/include",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
   ]
   cflags = [

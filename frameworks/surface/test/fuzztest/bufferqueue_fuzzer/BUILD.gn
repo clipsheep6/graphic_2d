@@ -22,7 +22,7 @@ ohos_fuzztest("BufferQueueFuzzTest") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//foundation/graphic/graphic_surface/surface/include",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
   ]
   cflags = [
@@ -33,11 +33,11 @@ ohos_fuzztest("BufferQueueFuzzTest") {
   ]
   sources = [ "bufferqueue_fuzzer.cpp" ]
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
   ]
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_single",
   ]

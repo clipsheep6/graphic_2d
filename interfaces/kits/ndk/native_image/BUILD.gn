@@ -16,7 +16,7 @@ import("//build/ohos/ndk/ndk.gni")
 
 ohos_ndk_headers("native_image_header") {
   dest_dir = "$ndk_headers_out_dir/native_image"
-  sources = [ "//foundation/graphic/graphic_2d/interfaces/inner_api/surface/native_image.h" ]
+  sources = [ "//foundation/graphic/graphic_surface/interfaces/inner_api/surface/native_image.h" ]
 }
 
 ohos_ndk_library("libnative_image_ndk") {

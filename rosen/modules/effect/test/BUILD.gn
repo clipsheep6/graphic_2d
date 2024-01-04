@@ -28,7 +28,7 @@ ohos_executable("test_effect_chain") {
     include_dirs = [
       "$graphic_2d_root/rosen/modules/effect/effectChain/include",
       "$graphic_2d_root/rosen/modules/effect/egl/include",
-      "$graphic_2d_root/interfaces/inner_api/surface",
+      "$graphic_surface_root/interfaces/inner_api/surface",
       "//third_party/EGL/api",
       "//third_party/openGLES/api",
     ]

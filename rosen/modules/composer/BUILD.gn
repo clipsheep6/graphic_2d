@@ -52,7 +52,7 @@ ohos_shared_library("libcomposer") {
   ]
 
   include_dirs = [
-    "$graphic_2d_root/frameworks/surface/include",
+    "$graphic_surface_root/surface/include",
     "$graphic_2d_root/utils/log",
   ]
 

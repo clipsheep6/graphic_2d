@@ -287,7 +287,7 @@ ohos_unittest("native_image_test") {
 ## Build surface_test_common.a {{{
 config("surface_test_common_public_config") {
   include_dirs = [
-    "$graphic_2d_root/frameworks/surface/include",
+    "$graphic_surface_root/surface/include",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "//base/security/access_token/interfaces/innerkits/nativetoken/include",
     "//base/security/access_token/interfaces/innerkits/accesstoken/include",

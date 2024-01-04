@@ -40,7 +40,7 @@ ohos_source_set("windows") {
 
   include_dirs = [
     "$rosen_root/modules/render_service_base/include",
-    "$graphic_2d_root/interfaces/inner_api/surface",
+    "$graphic_surface_root/interfaces/inner_api/surface",
   ]
 
   defines += [ "MODULE_RSB" ]

@@ -38,7 +38,7 @@ config("pipeline_test") {
 ## Build RSBaseRenderEngineTest
 ohos_systemtest("RSBaseRenderEngineTest") {
   module_out_path = module_output_path
-  include_dirs = [ "$graphic_2d_root/frameworks/surface/include" ]
+  include_dirs = [ "$graphic_surface_root/surface/include" ]
   sources = [ "rs_base_render_engine_test.cpp" ]
   deps = [ ":rs_test_common" ]
   external_deps = [

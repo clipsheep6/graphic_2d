@@ -42,7 +42,8 @@ public:
     void StartColorPicker();
     void PostTask(const std::function<void()>& task);
     void PostSyncTask(const std::function<void()>& task);
-    void RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filterTask);
+    void RenderCache(std::vector<std::weak_ptr<RSFilter::RSFilterTask>>& filterTaskList);
+    void FlushAndSubmit();
     void ColorPickerRenderCache(std::weak_ptr<RSColorPickerCacheTask> colorPickerTask);
 
     void ResetGrContext();
@@ -61,7 +62,9 @@ private:
 #else
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
 #endif
-
+    std::atomic<bool> isWorking_ = false;
+    std::vector<std::weak_ptr<RSFilter::RSFilterTask>> filterTaskList_;
+    std::vector<std::weak_ptr<RSFilter::RSFilterTask>> filterReadyTaskList_;
     uint32_t threadIndex_ = 0;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

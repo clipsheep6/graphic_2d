@@ -81,7 +81,7 @@ namespace OHOS {
         void *virAddr = static_cast<void*>(GetStringFromData(STR_LEN).data());
 
         // test
-        OH_NativeBuffer* buffer = OH_NativeBuffer_Alloc(&config);
+        OH_NativeBuffer *buffer = OH_NativeBuffer_Alloc(&config);
         OH_NativeBuffer_GetSeqNum(buffer);
         OH_NativeBuffer_GetConfig(buffer, &checkConfig);
         OH_NativeBuffer_Reference(buffer);

@@ -261,6 +261,7 @@ void RSRenderNode::AddChild(SharedPtr child, int index)
     // A child is not on the tree until its parent is on the tree
     if (isOnTheTree_) {
         child->SetIsOnTheTree(true, instanceRootNodeId_, firstLevelNodeId_, drawingCacheRootId_);
+        UpdateParentSubSurface(true);
     }
     SetContentDirty();
     isFullChildrenListValid_ = false;
@@ -310,6 +311,7 @@ void RSRenderNode::RemoveChild(SharedPtr child, bool skipTransition)
     if (it == children_.end()) {
         return;
     }
+    child->UpdateParentSubSurface(false);
     // avoid duplicate entry in disappearingChildren_ (this should not happen)
     disappearingChildren_.remove_if([&child](const auto& pair) -> bool { return pair.first == child; });
     // if child has disappearing transition, add it to disappearingChildren_
@@ -356,6 +358,7 @@ void RSRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId f
     for (auto& [child, _] : disappearingChildren_) {
         child->SetIsOnTheTree(flag, instanceRootNodeId, firstLevelNodeId, cacheNodeId);
     }
+    UpdateSubSurface(isOnTheTree_);
 }
 
 void RSRenderNode::UpdateChildrenRect(const RectI& subRect)
@@ -390,6 +393,7 @@ void RSRenderNode::AddCrossParentChild(const SharedPtr& child, int32_t index)
     // A child is not on the tree until its parent is on the tree
     if (isOnTheTree_) {
         child->SetIsOnTheTree(true, instanceRootNodeId_, firstLevelNodeId_, drawingCacheRootId_);
+        child->UpdateParentSubSurface(isOnTheTree_);
     }
     SetContentDirty();
     isFullChildrenListValid_ = false;
@@ -419,6 +423,7 @@ void RSRenderNode::RemoveCrossParentChild(const SharedPtr& child, const WeakPtr&
         disappearingChildren_.emplace_back(child, origPos);
     } else {
         child->SetParent(newParent);
+        child->UpdateParentSubSurface(true);
         // attention: set new parent means 'old' parent has removed this child
         hasRemovedChild_ = true;
     }
@@ -493,6 +498,7 @@ void RSRenderNode::ResetParent()
         }
         parentNode->hasRemovedChild_ = true;
         parentNode->SetContentDirty();
+        UpdateParentSubSurface(false);
     }
     parent_.reset();
     SetIsOnTheTree(false);
@@ -2596,6 +2602,43 @@ void RSRenderNode::SetVisitedCacheRootIds(const std::unordered_set<NodeId>& visi
 const std::unordered_set<NodeId>& RSRenderNode::GetVisitedCacheRootIds() const
 {
     return visitedCacheRoots_;
+}
+void RSRenderNode::UpdateSubSurface(bool isAdded, bool updateParent)
+{
+    if (updateParent) {
+        auto parentNode = parent_.lock();
+        if (subSurfaceIds_ == 0 || parentNode == nullptr) {
+            return;
+        }
+        if (isAdded) {
+            parentNode->subSurfaceIds_ += subSurfaceIds_;
+        } else {
+            parentNode->subSurfaceIds_ = 0;
+        }
+        return;
+    }
+    if (isAdded) {
+        subSurfaceIds_ += 1;
+    } else {
+        subSurfaceIds_ = 0;
+    }
+}
+void RSRenderNode::UpdateParentSubSurface(bool isAdded)
+{
+    auto parentNode = parent_.lock();
+    if (subSurfaceIds_ == 0 || parentNode == nullptr) {
+        return;
+    }
+    if (isAdded) {
+        parentNode->subSurfaceIds_ += subSurfaceIds_;
+    } else {
+        parentNode->subSurfaceIds_ -= subSurfaceIds_;
+    }
+    parentNode->UpdateParentSubSurface(isAdded);
+}
+bool RSRenderNode::HasSubSurface() const
+{
+    return subSurfaceIds_ > 0;
 }
 void RSRenderNode::SetDrawingCacheRootId(NodeId id)
 {

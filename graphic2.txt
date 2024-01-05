@@ -1,0 +1,380 @@
+diff --git a/rosen/modules/2d_engine/rosen_text/BUILD.gn b/rosen/modules/2d_engine/rosen_text/BUILD.gn
+index 07abe1dd1..11607b3be 100755
+--- a/rosen/modules/2d_engine/rosen_text/BUILD.gn
++++ b/rosen/modules/2d_engine/rosen_text/BUILD.gn
+@@ -25,11 +25,22 @@ if (enable_text_gine) {
+       "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
+       "//third_party/bounds_checking_function/include/",
+       "$rosen_root/modules/texgine/texgine_drawing/src",
++      # HmSymbolRSNode deps path
++      "$graphic_2d_root/rosen/modules",
++      "$graphic_2d_root/rosen/modules/render_service_client",
++      "$graphic_2d_root/rosen/modules/render_service_client/core",
++      "$graphic_2d_root/rosen/modules/render_service_base",
++      "$graphic_2d_root/rosen/modules/render_service_base/include",
++      "$graphic_2d_root/rosen/modules/platform/image_native",
+     ]
+   }
+ 
+   defines = [ "USE_GRAPHIC_TEXT_GINE" ]
+-
++  if (defined(external_deps)) {
++    external_deps += [ "hilog:libhilog" ]
++  } else {
++    external_deps = [ "hilog:libhilog" ]
++  }
+   ohos_shared_library("rosen_text") {
+     include_dirs = [ "$graphic_2d_root/rosen/modules/2d_graphics/include" ]
+     public_deps = [ ":rosen_text_inner" ]
+diff --git a/rosen/modules/2d_engine/rosen_text/adapter/texgine/typography.h b/rosen/modules/2d_engine/rosen_text/adapter/texgine/typography.h
+index cb032ab4a..17757aec0 100644
+--- a/rosen/modules/2d_engine/rosen_text/adapter/texgine/typography.h
++++ b/rosen/modules/2d_engine/rosen_text/adapter/texgine/typography.h
+@@ -19,6 +19,8 @@
+ #include "rosen_text/typography.h"
+ 
+ #include "texgine/typography.h"
++#include "rosen_text/symbol_animation_config.h"
++#include "platform/common/rs_log.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -57,6 +59,17 @@ public:
+     {
+         return 0.0;
+     }
++    void SetAnimation(std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)> animationFunc) override {
++        RS_LOGE("HmSymbolcheck adapter texgine animationFunc");
++        if(animationFunc == nullptr){
++            RS_LOGE("HmSymbolcheck adapter texgine animationFunc null ");
++
++        }else{
++            typography_->SetAnimation(animationFunc);
++            RS_LOGD("HmSymbolcheck adapter texgine SetAnimation success ");
++
++        }
++    }
+ 
+ private:
+     std::shared_ptr<TextEngine::Typography> typography_ = nullptr;
+diff --git a/rosen/modules/2d_engine/rosen_text/export/rosen_text/typography.h b/rosen/modules/2d_engine/rosen_text/export/rosen_text/typography.h
+index 1cf892adc..2a798d569 100644
+--- a/rosen/modules/2d_engine/rosen_text/export/rosen_text/typography.h
++++ b/rosen/modules/2d_engine/rosen_text/export/rosen_text/typography.h
+@@ -25,6 +25,8 @@
+ #include "utils/rect.h"
+ 
+ #include "typography_types.h"
++#include "symbol_animation_config.h"
++
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -93,6 +95,8 @@ public:
+     virtual Boundary GetWordBoundaryByIndex(size_t index) = 0;
+     virtual double GetLineHeight(int lineNumber) = 0;
+     virtual double GetLineWidth(int lineNumber) = 0;
++    virtual void SetAnimation(std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)> animationFunc)= 0;
++
+ };
+ } // namespace Rosen
+ } // namespace OHOS
+diff --git a/rosen/modules/2d_graphics/src/drawing/recording/draw_cmd.cpp b/rosen/modules/2d_graphics/src/drawing/recording/draw_cmd.cpp
+index afd50acca..e0629638e 100644
+--- a/rosen/modules/2d_graphics/src/drawing/recording/draw_cmd.cpp
++++ b/rosen/modules/2d_graphics/src/drawing/recording/draw_cmd.cpp
+@@ -992,13 +992,14 @@ std::shared_ptr<DrawOpItem> DrawSymbolOpItem::Unmarshalling(const CmdList& cmdLi
+ 
+ void DrawSymbolOpItem::SetSymbol()
+ {
+-    LOGD("SymbolOpItem::SetSymbol GlyphId %{public}d", static_cast<int>(symbol_.symbolInfo_.symbolGlyphId));
+-    if (symbol_.symbolInfo_.effect == DrawingEffectStrategy::SCALE) {
+-        if (!startAnimation_) {
+-            InitialScale();
+-        }
+-        SetScale(0); // scale animation only has one element
+-    } else if (symbol_.symbolInfo_.effect == DrawingEffectStrategy::HIERARCHICAL) {
++    // LOGD("SymbolOpItem::SetSymbol GlyphId %{public}d", static_cast<int>(symbol_.symbolInfo_.symbolGlyphId));
++    // if (symbol_.symbolInfo_.effect == DrawingEffectStrategy::SCALE) {
++    //     if (!startAnimation_) {
++    //         InitialScale();
++    //     }
++    //     SetScale(0); // scale animation only has one element
++    // } else 
++    if (symbol_.symbolInfo_.effect == DrawingEffectStrategy::HIERARCHICAL) {
+         if (!startAnimation_) {
+             InitialVariableColor();
+         }
+@@ -1131,10 +1132,10 @@ void DrawSymbolOpItem::Playback(Canvas* canvas, const Rect* rect)
+ 
+     Path path(symbol_.path_);
+ 
+-    if (startAnimation_ && symbol_.symbolInfo_.effect == DrawingEffectStrategy::SCALE &&
+-            !animation_.empty()) {
+-        UpdateScale(animation_[0].curValue, path);
+-    }
++    // if (startAnimation_ && symbol_.symbolInfo_.effect == DrawingEffectStrategy::SCALE &&
++    //         !animation_.empty()) {
++    //     UpdateScale(animation_[0].curValue, path);
++    // }
+ 
+     // 1.0 move path
+     path.Offset(locate_.GetX(), locate_.GetY());
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd.cpp b/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd.cpp
+index f358c9133..214964a3b 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_draw_cmd.cpp
+@@ -390,12 +390,13 @@ static void MergePath(SkPath& multPath, RenderGroup& group, std::vector<SkPath>&
+ void SymbolOpItem::SetSymbol()
+ {
+     ROSEN_LOGD("SymbolOpItem::SetSymbol GlyphId %{public}d", static_cast<int>(symbol_.symbolInfo_.symbolGlyphId));
+-    if (symbol_.symbolInfo_.effect == EffectStrategy::SCALE) {
+-        if (!startAnimation_) {
+-            InitialScale();
+-        }
+-        SetScale(0); // scale animation only has one element
+-    } else if (symbol_.symbolInfo_.effect == EffectStrategy::HIERARCHICAL) {
++    // if (symbol_.symbolInfo_.effect == EffectStrategy::SCALE) {
++    //     if (!startAnimation_) {
++    //         InitialScale();
++    //     }
++    //     SetScale(0); // scale animation only has one element
++    // } else 
++    if (symbol_.symbolInfo_.effect == EffectStrategy::HIERARCHICAL) {
+         if (!startAnimation_) {
+             InitialVariableColor();
+         }
+@@ -517,10 +518,10 @@ void SymbolOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
+ {
+     SkPath path(symbol_.path_);
+ 
+-    if (startAnimation_ && symbol_.symbolInfo_.effect == EffectStrategy::SCALE &&
+-            !animation_.empty()) {
+-        UpdateScale(animation_[0].curValue, path);
+-    }
++    // if (startAnimation_ && symbol_.symbolInfo_.effect == EffectStrategy::SCALE &&
++    //         !animation_.empty()) {
++    //     UpdateScale(animation_[0].curValue, path);
++    // }
+ 
+     // 1.0 move path
+     path.offset(locate_.x(), locate_.y());
+diff --git a/rosen/modules/render_service_client/BUILD.gn b/rosen/modules/render_service_client/BUILD.gn
+index 48999e9b4..82a065c30 100644
+--- a/rosen/modules/render_service_client/BUILD.gn
++++ b/rosen/modules/render_service_client/BUILD.gn
+@@ -23,6 +23,8 @@ config("render_service_client_config") {
+     "$graphic_2d_root/interfaces/inner_api/common",
+     "$graphic_2d_root/interfaces/inner_api/surface",
+     "$graphic_2d_root/interfaces/inner_api/composer",
++    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/export/rosen_text/",
++
+     "//drivers/peripheral/display/interfaces/include",
+     "//drivers/peripheral/base",
+     "$graphic_2d_root/frameworks/surface/include",
+@@ -46,6 +48,7 @@ ohos_source_set("render_service_client_src") {
+     "$graphic_2d_root/rosen/modules/2d_graphics/src",
+     "$graphic_2d_root/rosen/modules/render_frame_trace/include",
+     "$graphic_2d_root/rosen/modules/render_service_base/src",
++    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/symbol/symbol_animation",
+     "//foundation/graphic/graphic_2d/utils/log",
+     "//foundation/graphic/graphic_2d/utils/sandbox",
+   ]
+@@ -67,6 +70,7 @@ ohos_source_set("render_service_client_src") {
+     "core/animation/rs_spring_animation.cpp",
+     "core/animation/rs_transition.cpp",
+     "core/animation/rs_transition_effect.cpp",
++    "core/animation/rs_symbol_animation.cpp",
+ 
+     #modifier
+     "core/modifier/rs_extended_modifier.cpp",
+diff --git a/rosen/modules/texgine/BUILD.gn b/rosen/modules/texgine/BUILD.gn
+index 512bd04d4..4559c0796 100644
+--- a/rosen/modules/texgine/BUILD.gn
++++ b/rosen/modules/texgine/BUILD.gn
+@@ -42,6 +42,7 @@ config("libtexgine_public_config") {
+     "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
+     "$graphic_2d_root/rosen/modules/2d_graphics/include",
+     "$graphic_2d_root/rosen/modules/2d_graphics/src",
++    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/export/rosen_text"
+   ]
+ }
+ 
+@@ -178,6 +179,8 @@ ohos_shared_library("libtexgine") {
+     } else {
+       deps = [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics_new" ]
+     }
++    deps += [ "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client" ]
++
+   }
+   innerapi_tags = [ "platformsdk" ]
+   part_name = "graphic_2d"
+diff --git a/rosen/modules/texgine/export/texgine/typography.h b/rosen/modules/texgine/export/texgine/typography.h
+index 3a01596f5..4ae831943 100644
+--- a/rosen/modules/texgine/export/texgine/typography.h
++++ b/rosen/modules/texgine/export/texgine/typography.h
+@@ -23,6 +23,7 @@
+ #include "texgine_font.h"
+ #include "texgine_rect.h"
+ #include "texgine/typography_types.h"
++#include "symbol_animation_config.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -203,6 +204,7 @@ public:
+      * @return The struct of word boundary
+      */
+     virtual Boundary GetWordBoundaryByIndex(size_t index) const = 0;
++    virtual void SetAnimation(std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)> animationFunc)= 0;
+ 
+ private:
+     friend void ReportMemoryUsage(const std::string& member, const Typography& that, const bool needThis);
+diff --git a/rosen/modules/texgine/src/text_span.cpp b/rosen/modules/texgine/src/text_span.cpp
+index acdd8d7ab..92c775945 100644
+--- a/rosen/modules/texgine/src/text_span.cpp
++++ b/rosen/modules/texgine/src/text_span.cpp
+@@ -213,6 +213,20 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
+ 
+     PaintShadow(canvas, offsetX, offsetY, xs.shadows);
+     if (xs.isSymbolGlyph && G_IS_HMSYMBOL_ENABLE) {
++        int effect = xs.symbol.GetEffectStrategy();
++        RS_LOGD(" HmSymbol text_span get spanSymbolAnimationConfig success %{public}d", effect);
++
++        auto spanSymbolAnimationConfig = std::make_shared<SymbolAnimationConfig>();
++        spanSymbolAnimationConfig->effectStrategy = SymbolAnimationEffectStrategy(xs.symbol.GetEffectStrategy());            
++        if(spanSymbolAnimationConfig->effectStrategy == SymbolAnimationEffectStrategy::SYMBOL_SCALE){
++
++            if (animationFunc_){
++                animationFunc_(spanSymbolAnimationConfig);
++            }else{
++                RS_LOGE(" HmSymbol text_span get animationFunc null");
++            }
++        }
++
+         std::pair<double, double> offset(offsetX, offsetY);
+         HMSymbolRun::DrawSymbol(canvas, textBlob_, offset, paint, xs);
+     } else {
+diff --git a/rosen/modules/texgine/src/text_span.h b/rosen/modules/texgine/src/text_span.h
+index 3b4133042..1ef7bb306 100644
+--- a/rosen/modules/texgine/src/text_span.h
++++ b/rosen/modules/texgine/src/text_span.h
+@@ -24,6 +24,8 @@
+ #include "texgine_text_blob.h"
+ #include "texgine/typography.h"
+ #include "texgine/typography_style.h"
++#include "platform/common/rs_log.h"
++#include "symbol_animation_config.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -75,8 +77,20 @@ public:
+     double lineHeight_ = 0.0;
+     double lineY_ = 0.0;
+     double absLineY_ = 0.0;
+-
++    void SetAnimation(std::function<bool(const std::shared_ptr<OHOS::Rosen::TextEngine::SymbolAnimationConfig>&)> animationFunc) 
++    {   
++        if(!animationFunc) {
++            RS_LOGE(" HmSymbol text_span get SetAnimation failed");
++        }else{
++            animationFunc_ = animationFunc;
++            RS_LOGD(" HmSymbol text_span get SetAnimation success");
++        }
++    }
+ private:
++
++    std::function<bool(const std::shared_ptr<OHOS::Rosen::TextEngine::SymbolAnimationConfig>&)> animationFunc_ =nullptr;
++
++
+     friend class TextBreaker;
+     friend class BidiProcesser;
+     friend class ControllerForTest;
+@@ -87,6 +101,9 @@ private:
+     friend class TextShaper;
+     friend class TextReverser;
+     friend void ReportMemoryUsage(std::string const &member, TextSpan const &that, bool needThis);
++
++
++
+ };
+ } // namespace TextEngine
+ } // namespace Rosen
+diff --git a/rosen/modules/texgine/src/typography_impl.cpp b/rosen/modules/texgine/src/typography_impl.cpp
+index f61f46c01..6687f3ed3 100644
+--- a/rosen/modules/texgine/src/typography_impl.cpp
++++ b/rosen/modules/texgine/src/typography_impl.cpp
+@@ -586,6 +586,10 @@ void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY
+         bool leftRound = false;
+         bool rightRound = false;
+         for (auto &span : metric.lineSpans) {
++            if(animationFunc_){
++                span.SetAnimation(animationFunc_);
++            }
++
+             if (span.HasBackgroundRect()) {
+                 int styleId = span.GetTextStyle().styleId;
+                 // index - 1 is previous index, -1 is the invalid styleId
+diff --git a/rosen/modules/texgine/src/typography_impl.h b/rosen/modules/texgine/src/typography_impl.h
+index e28b0dc97..839105f02 100644
+--- a/rosen/modules/texgine/src/typography_impl.h
++++ b/rosen/modules/texgine/src/typography_impl.h
+@@ -22,6 +22,8 @@
+ #include "line_metrics.h"
+ #include "texgine/typography.h"
+ #include "texgine/typography_types.h"
++#include "symbol_animation_config.h"
++#include "platform/common/rs_log.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -66,7 +68,20 @@ public:
+     double GetLineHeight(int lineNumber);
+     double GetLineWidth(int lineNumber);
+ 
++    void SetAnimation(std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)> animationFunc) override {
++        if(animationFunc == nullptr){
++            RS_LOGE("HmSymbol typography_impl::SetAnimation null ");
++
++        }else{
++            animationFunc_ = animationFunc;
++            RS_LOGD("HmSymbol typography_impl::SetAnimation success ");
++
++        }
++    }
+ private:
++
++    std::function<bool(const std::shared_ptr<SymbolAnimationConfig>&)> animationFunc_ = nullptr ;
++
+     void ReportMemoryUsage(const std::string &member, bool needThis) const override;
+ 
+     int ComputeStrut();
+diff --git a/rosen/modules/texgine/src/variant_span.h b/rosen/modules/texgine/src/variant_span.h
+index 78f4dc48e..a236d5c71 100644
+--- a/rosen/modules/texgine/src/variant_span.h
++++ b/rosen/modules/texgine/src/variant_span.h
+@@ -24,6 +24,8 @@
+ #include "texgine/font_providers.h"
+ #include "texgine/any_span.h"
+ #include "text_span.h"
++#include "platform/common/rs_log.h"
++#include "symbol_animation_config.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -91,7 +93,16 @@ public:
+     bool operator ==(const VariantSpan &rhs) const noexcept(false);
+     bool operator !=(std::nullptr_t) const noexcept(false);
+     bool operator !=(const VariantSpan &rhs) const noexcept(false);
++    void SetAnimation(std::function<bool(const std::shared_ptr<OHOS::Rosen::TextEngine::SymbolAnimationConfig>&)> animationFunc) {
++        if(animationFunc == nullptr){
++            RS_LOGE("HmSymbol variant_span.h null ");
+ 
++        }else{
++            ts_->SetAnimation(animationFunc);
++            RS_LOGD("HmSymbol variant_span.h success ");
++
++        }
++    }
+ private:
+     void CheckPointer(bool nullable = false) const noexcept(false);
+ 

@@ -39,16 +39,6 @@ GSError ProducerSurfaceDelegator::ClearBufferSlot(int32_t slot)
     return GSERROR_OK;
 }
 
-GSError ProducerSurfaceDelegator::CancelBuffer(int32_t slot, int32_t fenceFd)
-{
-    return GSERROR_OK;
-}
-
-GSError ProducerSurfaceDelegator::DetachBuffer(int32_t slot)
-{
-    return GSERROR_OK;
-}
-
 int ProducerSurfaceDelegator::OnDequeueBuffer(MessageParcel &data, MessageParcel &reply)
 {
     return ERR_NONE;

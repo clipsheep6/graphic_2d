@@ -33,6 +33,8 @@ public:
     GSError QueueBuffer(int32_t slot, int32_t acquireFence);
     GSError ReleaseBuffer(const sptr<SurfaceBuffer> &buffer, const sptr<SyncFence> &fence);
     GSError ClearBufferSlot(int32_t slot);
+    GSError CancelBuffer(int32_t slot, int32_t fenceFd);
+    GSError DetachBuffer(int32_t slot);
     int OnDequeueBuffer(MessageParcel &data, MessageParcel &reply);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 

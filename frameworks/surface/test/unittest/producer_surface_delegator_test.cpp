@@ -224,6 +224,52 @@ HWTEST_F(ProducerSurfaceDelegatorTest, ReleaseBuffer002, Function | MediumTest |
 }
 
 /*
+* Function: DetachBuffer
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call DetachBuffer
+*                  2. check ret
+ */
+HWTEST_F(ProducerSurfaceDelegatorTest, DetachBuffer001, Function | MediumTest | Level2)
+{
+    int32_t slot = -1;
+    GSError ret = qwe->DetachBuffer(slot);
+    ASSERT_EQ(ret, GSERROR_OK);
+}
+
+/*
+* Function: CancelBuffer
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call CancelBuffer
+*                  2. check ret
+ */
+HWTEST_F(ProducerSurfaceDelegatorTest, CancelBuffer001, Function | MediumTest | Level2)
+{
+    int32_t slot = -1;
+    int32_t fenceFd = -1;
+    GSError ret = qwe->CancelBuffer(slot, fenceFd);
+    ASSERT_EQ(ret, GSERROR_OK);
+}
+
+/*
+* Function: ClearBufferSlot
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call ClearBufferSlot
+*                  2. check ret
+ */
+HWTEST_F(ProducerSurfaceDelegatorTest, ClearBufferSlot001, Function | MediumTest | Level2)
+{
+    int32_t slot = -1;
+    GSError ret = qwe->ClearBufferSlot(slot);
+    ASSERT_EQ(ret, GSERROR_OK);
+}
+
+/*
 * Function: OnRemoteRequest
 * Type: Function
 * Rank: Important(2)

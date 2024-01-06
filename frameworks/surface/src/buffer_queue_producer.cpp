@@ -203,7 +203,19 @@ int32_t BufferQueueProducer::GetLastFlushedBufferRemote(MessageParcel &arguments
 
 int32_t BufferQueueProducer::AttachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option)
 {
-    BLOGNE("BufferQueueProducer::AttachBufferRemote not support remote");
+    sptr<SurfaceBuffer> buffer;
+    uint32_t sequence;
+    int32_t timeOut;
+    GSError ret = ReadSurfaceBufferImpl(arguments, sequence, buffer);
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Read surface buffer impl failed, return %{public}d", ret);
+        reply.WriteInt32(ret);
+        return 0;
+    }
+    timeOut = arguments.ReadUint32();
+
+    ret = AttachBuffer(buffer, timeOut);
+    reply.WriteInt32(ret);
     return 0;
 }
 
@@ -445,10 +457,16 @@ GSError BufferQueueProducer::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
 
 GSError BufferQueueProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
 {
+    int32_t timeOut = 0;
+    return AttachBuffer(buffer, timeOut);
+}
+
+GSError BufferQueueProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut)
+{
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
-    return bufferQueue_->AttachBuffer(buffer);
+    return bufferQueue_->AttachBuffer(buffer, timeOut);
 }
 
 GSError BufferQueueProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
@@ -456,6 +474,7 @@ GSError BufferQueueProducer::DetachBuffer(sptr<SurfaceBuffer>& buffer)
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
+
     return bufferQueue_->DetachBuffer(buffer);
 }
 

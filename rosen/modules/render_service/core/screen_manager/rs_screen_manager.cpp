@@ -77,6 +77,11 @@ bool RSScreenManager::Init() noexcept
         return false;
     }
 
+    if (composer_->RegScreenRefresh(&RSScreenManager::OnRefresh, this) != 0) {
+        RS_LOGE("RSScreenManager %{public}s: Failed to register OnRefresh Func to composer.", __func__);
+        return false;
+    }
+
     if (composer_->RegHwcDeadListener(&RSScreenManager::OnHwcDead, this) != 0) {
         RS_LOGE("RSScreenManager %{public}s: Failed to register OnHwcDead Func to composer.", __func__);
         return false;
@@ -273,6 +278,33 @@ void RSScreenManager::OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool co
         return;
     }
     mainThread->RequestNextVSync();
+}
+
+void RSScreenManager::OnRefresh(ScreenId id, void *data)
+{
+    RSScreenManager *screenManager = nullptr;
+    if (data != nullptr) {
+        screenManager = static_cast<RSScreenManager *>(data);
+    } else {
+        screenManager = static_cast<RSScreenManager *>(RSScreenManager::GetInstance().GetRefPtr());
+    }
+
+    if (screenManager == nullptr) {
+        RS_LOGE("RSScreenManager %{public}s: Failed to find RSScreenManager instance.", __func__);
+        return;
+    }
+
+    screenManager->SetScreenPowerStatus(id, ScreenPowerStatus::POWER_STATUS_ON);
+    screenManager->OnRefreshEvent(id);
+}
+
+void RSScreenManager::OnRefreshEvent(ScreenId id)
+{
+    auto mainThread = RSMainThread::Instance();
+    if (mainThread == nullptr) {
+        return;
+    }
+    mainThread->ForceRefreshForUni();
 }
 
 void RSScreenManager::OnHwcDead(void *data)
@@ -852,7 +884,7 @@ int32_t RSScreenManager::SetRogScreenResolution(ScreenId id, uint32_t width, uin
 
 void RSScreenManager::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
 
     if (screens_.count(id) == 0) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);

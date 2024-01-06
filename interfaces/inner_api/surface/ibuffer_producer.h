@@ -82,6 +82,7 @@ public:
     virtual GSError UnRegisterReleaseListener() = 0;
     virtual GSError GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
                                         sptr<SyncFence>& fence, float matrix[16]) = 0;
+    virtual GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) = 0;
 
     DECLARE_INTERFACE_DESCRIPTOR(u"surf.IBufferProducer");
 

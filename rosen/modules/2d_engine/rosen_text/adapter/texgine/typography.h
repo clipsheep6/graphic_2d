@@ -17,10 +17,10 @@
 #define ROSEN_TEXT_ADAPTER_TEXGINE_TYPOGRAPHY_H
 
 #include "rosen_text/typography.h"
-+#include "rosen_text/symbol_animation_config.h"
+#include "rosen_text/symbol_animation_config.h"
 
 #include "texgine/typography.h"
-+#include "platform/common/rs_log.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

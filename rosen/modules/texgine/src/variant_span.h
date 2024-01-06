@@ -25,8 +25,8 @@
 #include "texgine/any_span.h"
 #include "text_span.h"
 
-+#include "platform/common/rs_log.h"
-+#include "symbol_animation_config.h"
+#include "platform/common/rs_log.h"
+#include "symbol_animation_config.h"
 
 namespace OHOS {
 namespace Rosen {

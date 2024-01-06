@@ -23,7 +23,7 @@
 #include "texgine_font.h"
 #include "texgine_rect.h"
 #include "texgine/typography_types.h"
-+#include "symbol_animation_config.h"
+#include "symbol_animation_config.h"
 
 namespace OHOS {
 namespace Rosen {

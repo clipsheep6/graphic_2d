@@ -22,8 +22,8 @@
 #include "line_metrics.h"
 #include "texgine/typography.h"
 #include "texgine/typography_types.h"
-+#include "symbol_animation_config.h"
-+#include "platform/common/rs_log.h"
+#include "symbol_animation_config.h"
+#include "platform/common/rs_log.h"
  
 namespace OHOS {
 namespace Rosen {

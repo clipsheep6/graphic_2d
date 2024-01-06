@@ -33,10 +33,10 @@ namespace OHOS {
 namespace Rosen {
 
 const Vector2f CENTER_NODE_COORDINATE = {0.5f,0.5f}; //scale from the center of the node
-const int SCALE_ANIMATION_INTERVAL = 1000; // scale animation consists of two animation, the interval between two animation is 1000
-const unsigned int UNIT_GROUP = 0;  // the number of group is 0 when AnimationSubType is UNIT
-const unsigned int UNIT_PERIOD = 0;  // the number of time period is 0 when AnimationSubType is UNIT
-const unsigned int UNIT_NODE = 0;  // the number of node is 0 when AnimationSubType is UNIT
+const int SCALE_ANIMATION_INTERVAL = 1000; //the interval between two animation
+const unsigned int UNIT_GROUP = 0;  // AnimationSubType is UNIT
+const unsigned int UNIT_PERIOD = 0;  //  AnimationSubType is UNIT
+const unsigned int UNIT_NODE = 0;  // AnimationSubType is UNIT
 
 
 class RSC_EXPORT RSSymbolAnimation {
@@ -49,22 +49,21 @@ public:
 
     void SetNode(std::shared_ptr<RSNode>& rsNode){
         rsNode_ = rsNode;
-
-        if(rsNode_){
+        if (rsNode_) {
             RS_LOGD("HmSymbol RSSymbolAnimation::SetNode get ID rsnodeid = %{public}lu", rsNode_->GetId());
-
-        }else{
+        } else {
             RS_LOGE("HmSymbol RSSymbolAnimation::SetNode :failed");
         }
-
     }
 
 private:
     std::shared_ptr<RSNode> rsNode_ = nullptr;
 
     std::shared_ptr<RSAnimation> ScaleSymbolAnimation(const std::shared_ptr<RSNode>& rsNode,
-        const Vector2f& scaleValueBegin=Vector2f{0.f,0.f}, const Vector2f& scaleValue=Vector2f{0.f,0.f},
-        const Vector2f& scaleValueEnd=Vector2f{0.f,0.f}, const int delay = 0);
+        const Vector2f& scaleValueBegin = Vector2f{0.f, 0.f}, 
+        const Vector2f& scaleValue= Vector2f{0.f, 0.f},
+        const Vector2f& scaleValueEnd = Vector2f{0.f, 0.f}, 
+        const int delay = 0);
 
     bool isEqual(const Vector2f val1, const Vector2f val2);
     RSAnimationTimingCurve SetScaleSpringTimingCurve();
@@ -76,9 +75,6 @@ private:
     std::shared_ptr<RSAnimatableProperty<Vector2f>> scaleStartProperty_;
     std::shared_ptr<RSAnimatableProperty<Vector2f>> scaleProperty_;
     std::shared_ptr<RSAnimatableProperty<Vector2f>> scaleEndProperty_;
-
-
-
     std::shared_ptr<RSAnimatableProperty<Vector2f>> pivotProperty_;
     std::shared_ptr<RSAnimatableProperty<float>> alphaProperty_;
     std::shared_ptr<RSAnimatableProperty<float>> alphaProperty1_;

@@ -68,10 +68,11 @@ public:
     double GetLineHeight(int lineNumber);
     double GetLineWidth(int lineNumber);
     void SetAnimation(
-        std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)> animationFunc) override {
-        if(animationFunc == nullptr){
+        std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)> animationFunc) override 
+    {
+        if (animationFunc == nullptr) {
             RS_LOGE("HmSymbol typography_impl::SetAnimation null ");
-        }else{
+        } else {
             animationFunc_ = animationFunc;
             RS_LOGD("HmSymbol typography_impl::SetAnimation success");
         }
@@ -117,7 +118,6 @@ private:
     double minIntrinsicWidth_ = 0.0;
     std::vector<float> indents_;
     std::function<bool(const std::shared_ptr<SymbolAnimationConfig>&)> animationFunc_ = nullptr;
-
 };
 } // namespace TextEngine
 } // namespace Rosen

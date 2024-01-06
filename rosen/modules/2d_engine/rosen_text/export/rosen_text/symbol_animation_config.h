@@ -20,7 +20,8 @@ namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
 
-enum SymbolAnimationEffectStrategy{
+enum SymbolAnimationEffectStrategy
+{
     INVALID_EFFECT_STRATEGY = 0,
     SYMBOL_NONE = 1,
     SYMBOL_SCALE = 2,
@@ -28,9 +29,11 @@ enum SymbolAnimationEffectStrategy{
 };
 
 
-struct SymbolAnimationConfig{
+struct SymbolAnimationConfig
+{
     SymbolAnimationEffectStrategy effectStrategy;
 };
+
 }
 }
 }

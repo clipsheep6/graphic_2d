@@ -591,7 +591,7 @@ void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY
         bool leftRound = false;
         bool rightRound = false;
         for (auto &span : metric.lineSpans) {
-            if(animationFunc_){
+            if (animationFunc_) {
                 span.SetAnimation(animationFunc_);
             }
             if (span.HasBackgroundRect()) {

@@ -160,7 +160,7 @@ private:
     bool CheckProducerCacheList();
     GSError SetProducerCacheCleanFlagLocked(bool flag);
     GSError AttachBufferUpdateStatus(std::unique_lock<std::mutex> &lock, uint32_t sequence, int32_t timeOut);
-    GSError AttachBufferUpdateBufferInfo(sptr<SurfaceBuffer>& buffer);
+    void AttachBufferUpdateBufferInfo(sptr<SurfaceBuffer>& buffer);
     void ReportBufferRelesed(sptr<IProducerListener> listener, sptr<SurfaceBuffer>& buffer,
         const sptr<SyncFence> &fence);
 

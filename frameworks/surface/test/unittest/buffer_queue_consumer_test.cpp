@@ -52,7 +52,7 @@ public:
     static inline std::vector<Rect> damages = {};
     static inline sptr<BufferQueue> bq = nullptr;
     static inline sptr<BufferQueueConsumer> bqc = nullptr;
-    static inline sptr<BufferQueueConsumer> bqt = nullptr;
+    static inline sptr<BufferQueueConsumer> byt = nullptr;
     static inline sptr<BufferExtraData> bedata = nullptr;
     static inline sptr<ProducerSurfaceDelegator> surfaceDelegator = nullptr;
     static inline sptr<IConsumerSurface> csurface = nullptr;
@@ -147,7 +147,7 @@ HWTEST_F(BufferQueueConsumerTest, AcqRel002, Function | MediumTest | Level2)
     ASSERT_NE(ret, OHOS::GSERROR_OK);
 
     int32_t timeOut = 1;
-    ret = bqc->Attatch(buffer, timeOut);
+    ret = bqc->AttachBuffer(buffer, timeOut);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
 }
 /*

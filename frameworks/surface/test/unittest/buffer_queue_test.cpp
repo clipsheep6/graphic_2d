@@ -717,7 +717,7 @@ HWTEST_F(BufferQueueTest, AttachBuffer002, Function | MediumTest | Level2)
 HWTEST_F(BufferQueueTest, RegisterSurfaceDelegator001, Function | MediumTest | Level2)
 {
     surfaceDelegator = ProducerSurfaceDelegator::Create();
-    GSError ret = bqc->RegisterSurfaceDelegator(surfaceDelegator->AsObject(), csurface1);
+    GSError ret = bq->RegisterSurfaceDelegator(surfaceDelegator->AsObject(), csurface1);
     ASSERT_EQ(ret, GSERROR_OK);
 }
 }

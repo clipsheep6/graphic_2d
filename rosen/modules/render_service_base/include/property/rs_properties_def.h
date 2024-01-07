@@ -67,16 +67,60 @@ enum class OutOfParentType {
     UNKNOWN
 };
 
-enum class RSColorBlendModeType : int16_t {
-    NONE = 0,
-    DST_IN,
-    SRC_IN,
+// color blend mode, see third_party/skia/include/core/SkBlendMode.h
+enum class RSColorBlendMode : int16_t {
+    NONE = 0, // Note: The NONE blend mode is different from SRC_OVER. When using it with
+              // RSColorBlendApplyType::SAVE_LAYER, it does not create an offscreen buffer. However, when using it
+              // with RSColorBlendApplyType::FAST, it does not modify the blend mode of subsequent content.
+
+    CLEAR,    // r = 0
+    SRC,      // r = s
+    DST,      // r = d
+    SRC_OVER, // r = s + (1-sa)*d
+    DST_OVER, // r = d + (1-da)*s
+    SRC_IN,   // r = s * da
+    DST_IN,   // r = d * sa
+    SRC_OUT,  // r = s * (1-da)
+    DST_OUT,  // r = d * (1-sa)
+    SRC_ATOP, // r = s*da + d*(1-sa)
+    DST_ATOP, // r = d*sa + s*(1-da)
+    XOR,      // r = s*(1-da) + d*(1-sa)
+    PLUS,     // r = min(s + d, 1)
+    MODULATE, // r = s*d
+    SCREEN,   // r = s + d - s*d
+
+    OVERLAY,     // multiply or screen, depending on destination
+    DARKEN,      // rc = s + d - max(s*da, d*sa), ra = SRC_OVER
+    LIGHTEN,     // rc = s + d - min(s*da, d*sa), ra = SRC_OVER
+    COLOR_DODGE, // brighten destination to reflect source
+    COLOR_BURN,  // darken destination to reflect source
+    HARD_LIGHT,  // multiply or screen, depending on source
+    SOFT_LIGHT,  // lighten or darken, depending on source
+    DIFFERENCE,  // rc = s + d - 2*(min(s*da, d*sa)), ra = SRC_OVER
+    EXCLUSION,   // rc = s + d - two(s*d), ra = SRC_OVER
+    MULTIPLY,    // r = s*(1-da) + d*(1-sa) + s*d
+
+    HUE,        // hue of source with saturation and luminosity of destination
+    SATURATION, // saturation of source with hue and luminosity of destination
+    COLOR,      // hue and saturation of source with luminosity of destination
+    LUMINOSITY, // luminosity of source with hue and saturation of destination
+
+    MAX = LUMINOSITY,
+};
+
+// color blend apply mode
+enum class RSColorBlendApplyType : int16_t {
+    FAST,        // Apply blending by drawing the content with the blend mode, without using an offscreen buffer
+
+    SAVE_LAYER,  // Apply blending by drawing the content onto an offscreen buffer and blend it when drawing it back to
+                 // the screen
+    MAX = SAVE_LAYER
 };
 
 class Decoration final {
 public:
-    Decoration() {}
-    ~Decoration() {}
+    Decoration() = default;
+    ~Decoration() = default;
     std::shared_ptr<RSShader> bgShader_ = nullptr;
     std::shared_ptr<RSImage> bgImage_ = nullptr;
     RectF bgImageRect_ = RectF();
@@ -86,8 +130,8 @@ public:
 
 class Sandbox final {
 public:
-    Sandbox() {}
-    ~Sandbox() {}
+    Sandbox() = default;
+    ~Sandbox() = default;
     std::optional<Vector2f> position_;
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkMatrix> matrix_;
@@ -109,7 +153,7 @@ enum class IlluminatedType : uint32_t {
 class RSLightSource final {
 public:
     RSLightSource() = default;
-    ~RSLightSource() {}
+    ~RSLightSource() = default;
     void SetLightPosition(const Vector4f& lightPosition)
     {
         lightPosition_ = lightPosition;

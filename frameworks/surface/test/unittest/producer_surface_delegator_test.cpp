@@ -22,7 +22,7 @@
 #include <message_option.h>
 #include <message_parcel.h>
 #include "transact_surface_delegator_stub.h"
-#include "buffer_log.h"
+#include "consumer_surface.h"
 #include "producer_surface_delegator.h"
 #include "buffer_queue_producer.h"
 
@@ -59,7 +59,8 @@ public:
         return true;
     }
 
-    bool CheckObjectLegality() const{
+    bool CheckObjectLegality() const
+    {
         return true;
     }
 
@@ -285,14 +286,14 @@ HWTEST_F(ProducerSurfaceDelegatorTest, OnRemoteRequest001, Function | MediumTest
     MessageOption option;
     data.WriteInt32(1);
     data.WriteInt32(2);
-    int ret = qwe->OnRemoteRequest(Code, data, reply, option);
+    int ret = qwe->OnRemoteRequest(code, data, reply, option);
     ASSERT_NE(ret, ERR_NULL_OBJECT);
 
     code = 1; // QUEUEBUFFER
     MessageParcel dataQueue;
     dataQueue.WriteInt32(10);
     dataQueue.WriteFileDescriptor(20);
-    GSError ret = qwe->OnRemoteRequest(code, dataQueue, reply, option);
+    ret = qwe->OnRemoteRequest(code, dataQueue, reply, option);
     ASSERT_EQ(ret, ERR_NONE);
 }
 } // namespace OHOS::Rosen

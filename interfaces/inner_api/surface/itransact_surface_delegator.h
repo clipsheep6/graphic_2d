@@ -16,10 +16,7 @@
 #ifndef ITRANSACT_SURFACE_DELEGATOR_H
 #define ITRANSACT_SURFACE_DELEGATOR_H
 
-#include <map>
-#include <iremote_stub.h>
-#include "surface.h"
-#include "itransact_surface_delegator.h"
+#include <iremote_broker.h>
 
 namespace OHOS {
 class ITransactSurfaceDelegator : public IRemoteBroker {
@@ -30,14 +27,14 @@ public:
 
 protected:
     enum {
-        DEQUEUEBUFFER = 0;
-        QUEUEBUFFER = 1;
-        ACUIREBUFFER = 2;
-        RELESEBUFFER =  3;
-        CLEARBUFFERSLOT = 4;
-        CLIENT = 5;
-        CANCELBUFFER = 6;
-        DETACHBUFFER = 7;
+        DEQUEUEBUFFER = 0,
+        QUEUEBUFFER = 1,
+        ACQUIREBUFFER = 2,
+        RELEASEBUFFER = 3,
+        CLEARBUFFERSLOT = 4,
+        CLIENT = 5,
+        CANCELBUFFER = 6,
+        DETACHBUFFER = 7,
     };
 };
 } // namespace OHOS

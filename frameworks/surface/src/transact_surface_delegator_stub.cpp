@@ -14,7 +14,7 @@
  */
 
 #include <message_option.h>
-#include <iremote_parcel.h>
+#include <message_parcel.h>
 #include "transact_surface_delegator_stub.h"
 #include "buffer_log.h"
 #include "sync_fence.h"
@@ -35,7 +35,8 @@ int32_t TransactSurfaceDelegatorStub::SendSelfProxy()
     return ERR_NONE;
 }
 
-int32_t TransactSurfaceDelegatorStub::SendMessage(int32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t TransactSurfaceDelegatorStub::SendMessage(int32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
 {
     return ERR_NONE;
 }

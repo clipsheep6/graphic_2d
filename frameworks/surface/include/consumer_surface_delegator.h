@@ -21,7 +21,10 @@
 namespace OHOS {
 class ConsumerSurfaceDelegator : public TransactSurfaceDelegatorStub {
 public:
-    static sptr<ConsumerSurfaceDelegator> Create();
+    static sptr<ConsumerSurfaceDelegator> Create()
+    {
+        return sptr<ConsumerSurfaceDelegator> (new ConsumerSurfaceDelegator());
+    }
     ~ConsumerSurfaceDelegator() = default;
     GSError DequeueBuffer();
     GSError QueueBuffer();

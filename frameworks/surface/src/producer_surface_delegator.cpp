@@ -54,7 +54,8 @@ int ProducerSurfaceDelegator::OnDequeueBuffer(MessageParcel &data, MessageParcel
     return ERR_NONE;
 }
 
-int ProducerSurfaceDelegator::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int ProducerSurfaceDelegator::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
 {
     return ERR_NONE;
 }

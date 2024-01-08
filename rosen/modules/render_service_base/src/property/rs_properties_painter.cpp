@@ -1924,14 +1924,26 @@ void RSPropertiesPainter::DrawBackgroundEffect(
 
     auto& matrix = properties.GetBoundsGeometry()->GetAbsMatrix();
 #ifndef USE_ROSEN_DRAWING
-    auto boundsRect = Rect2SkRect(properties.GetBoundsRect());
-    auto bounds = matrix.mapRect(boundsRect).roundOut();
+    SkIRect bounds;
+    if (properties.GetClipBounds() != nullptr) {
+        bounds = matrix.mapRect(properties.GetClipBounds()->GetSkiaPath().getBounds()).roundOut();
+    } else {
+        auto absRect = properties.GetBoundsGeometry()->GetAbsRect();
+        bounds = SkIRect::MakeLTRB(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom());
+    }
     auto filter = std::static_pointer_cast<RSSkiaFilter>(RSFilter);
 #else
-    auto boundsRect = Rect2DrawingRect(properties.GetBoundsRect());
-    Drawing::Rect dst;
-    matrix.MapRect(dst, boundsRect);
-    auto bounds = dst.RoundOut();
+    Drawing::RectI bounds;
+    if (properties.GetClipBounds() != nullptr) {
+        Drawing::Rect absRect;
+        matrix.MapRect(absRect, properties.GetClipBounds()->GetDrawingPath().GetBounds());
+        bounds = absRect.RoundOut();
+    } else {
+        auto absRect = properties.GetBoundsGeometry()->GetAbsRect();
+        bounds = Drawing::RectI(absRect.GetLeft(), absRect.GetTop(), absRect.GetRight(), absRect.GetBottom());
+    }
+    RS_OPTIONAL_TRACE_NAME_FMT("DrawBackgroundEffect node bounds:l=%d, t= %d, w=%d, h=%d",
+        bounds.GetLeft(), bounds.GetTop(), bounds.GetWidth(), bounds.GetHeight());
     auto filter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
 #endif
 
@@ -2067,6 +2079,10 @@ void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, 
     auto dstRect = SkRect::Make(canvas.getDeviceClipBounds());
     // srcRect: map dstRect onto cache coordinate
     auto srcRect = dstRect.makeOffset(-effectData->cachedRect_.left(), -effectData->cachedRect_.top());
+    RS_OPTIONAL_TRACE_NAME_FMT(
+        "ApplyBackgroundEffect dstRect:l=%f, t= %f, w=%f, h=%f, srcRect: l=%f, t= %f, w=%f, h=%f",
+        dstRect.left(), dstRect.top(), dstRect.width(), dstRect.height(),
+        srcRect.left(), srcRect.top(), srcRect.width(), srcRect.height());
     canvas.drawImageRect(effectData->cachedImage_, srcRect, dstRect, SkSamplingOptions(), &defaultPaint,
         SkCanvas::kFast_SrcRectConstraint);
 #else
@@ -2079,6 +2095,10 @@ void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, 
     // srcRect: map dstRect onto cache coordinate
     Drawing::Rect srcRect = dstRect;
     srcRect.Offset(-effectData->cachedRect_.GetLeft(), -effectData->cachedRect_.GetTop());
+    RS_OPTIONAL_TRACE_NAME_FMT(
+        "ApplyBackgroundEffect dstRect:l=%f, t= %f, w=%f, h=%f, srcRect: l=%f, t= %f, w=%f, h=%f",
+        dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetWidth(), dstRect.GetHeight(),
+        srcRect.GetLeft(), srcRect.GetTop(), srcRect.GetWidth(), srcRect.GetHeight());   
     canvas.DrawImageRect(*effectData->cachedImage_, srcRect, dstRect,
                          Drawing::SamplingOptions(), Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
     canvas.DetachBrush();

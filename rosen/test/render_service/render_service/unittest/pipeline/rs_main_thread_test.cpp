@@ -553,43 +553,42 @@ HWTEST_F(RSMainThreadTest, AddActiveNode, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckAndUpdateInstanceContentStaticStatus01
+ * @tc.name: CheckIfInstanceOnlySurfaceBasicGeoTransform01
  * @tc.desc: Test static instance(no dirty) would be classify as only basic geo transform
  * @tc.type: FUNC
  * @tc.require: issueI8IXTX
  */
-HWTEST_F(RSMainThreadTest, CheckAndUpdateInstanceContentStaticStatus01, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, CheckIfInstanceOnlySurfaceBasicGeoTransform01, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     mainThread->context_->activeNodesInRoot_.clear();
     // valid nodeid
     NodeId id = 1;
-    auto node = std::make_shared<RSSurfaceRenderNode>(id, mainThread->context_);
+    auto node = std::make_shared<RSRenderNode>(id, mainThread->context_);
     ASSERT_NE(node, nullptr);
-    mainThread->CheckAndUpdateInstanceContentStaticStatus(node);
-    ASSERT_EQ(node->GetSurfaceCacheContentStatic(), true);
+    ASSERT_EQ(mainThread->CheckIfInstanceOnlySurfaceBasicGeoTransform(id), true);
 }
 
 /**
- * @tc.name: CheckAndUpdateInstanceContentStaticStatus02
+ * @tc.name: CheckIfInstanceOnlySurfaceBasicGeoTransform02
  * @tc.desc: Test new instance would not be classify as only basic geo transform
  * @tc.type: FUNC
  * @tc.require: issueI8IXTX
  */
-HWTEST_F(RSMainThreadTest, CheckAndUpdateInstanceContentStaticStatus02, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, CheckIfInstanceOnlySurfaceBasicGeoTransform02, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     mainThread->context_->activeNodesInRoot_.clear();
     // valid nodeid
     NodeId id = 1;
-    auto node = std::make_shared<RSSurfaceRenderNode>(id, mainThread->context_);
+    auto node = std::make_shared<RSRenderNode>(id, mainThread->context_);
     ASSERT_NE(node, nullptr);
     node->SetIsOnTheTree(true, id, id);
     node->SetContentDirty();
     mainThread->context_->AddActiveNode(node);
     ASSERT_EQ(static_cast<int>(mainThread->context_->activeNodesInRoot_.size()), 1);
-    mainThread->CheckAndUpdateInstanceContentStaticStatus(node);
-    ASSERT_EQ(node->GetSurfaceCacheContentStatic(), false);
+
+    ASSERT_EQ(mainThread->CheckIfInstanceOnlySurfaceBasicGeoTransform(id), false);
 }
 
 /**

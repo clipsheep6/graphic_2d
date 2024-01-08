@@ -178,8 +178,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             auto surfaceName = data.ReadString();
             auto type = static_cast<RSSurfaceNodeType>(data.ReadUint8());
             auto bundleName = data.ReadString();
+            bool isTextureExportNode = data.ReadBool();
             RSSurfaceRenderNodeConfig config = {
-                .id = nodeId, .name = surfaceName, .bundleName = bundleName, .nodeType = type};
+                .id = nodeId, .name = surfaceName, .bundleName = bundleName, .nodeType = type,
+                .isTextureExportNode = isTextureExportNode};
             sptr<Surface> surface = CreateNodeAndSurface(config);
             if (surface == nullptr) {
                 ret = ERR_NULL_OBJECT;
@@ -1155,6 +1157,17 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             ReportEventJankFrame(info);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REPORT_EVENT_GAMESTATE): {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            GameStateData info;
+            ReadGameStateDataRs(info, data);
+            ReportGameStateData(info);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::EXECUTE_SYNCHRONOUS_TASK): {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {
@@ -1341,6 +1354,15 @@ void RSRenderServiceConnectionStub::ReadDataBaseRs(DataBaseRs& info, MessageParc
     info.pageUrl = data.ReadString();
     info.sourceType = data.ReadString();
     info.note = data.ReadString();
+}
+
+void RSRenderServiceConnectionStub::ReadGameStateDataRs(GameStateData& info, MessageParcel& data)
+{
+    info.pid = data.ReadInt32();
+    info.uid =  data.ReadInt32();
+    info.state = data.ReadInt32();
+    info.renderTid = data.ReadInt32();
+    info.bundleName = data.ReadString();
 }
 
 const RSInterfaceCodeSecurityManager RSRenderServiceConnectionStub::securityManager_ = \

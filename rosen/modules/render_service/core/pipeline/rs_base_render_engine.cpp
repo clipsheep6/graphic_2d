@@ -334,7 +334,7 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
         }
         externalTextureInfo.SetFormat(glType);
         if (!image->BuildFromTexture(*canvas.GetGPUContext(), externalTextureInfo,
-            surfaceOrigin, bitmapFormat, drawingColorSpace, nullptr, nullptr)) {
+            surfaceOrigin, bitmapFormat, nullptr)) {
             RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer image BuildFromTexture failed");
             return nullptr;
         }
@@ -345,7 +345,7 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
     if ((RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
         RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) &&
         !image->BuildFromTexture(*renderContext_->GetDrGPUContext(), externalTextureInfo,
-        surfaceOrigin, bitmapFormat, drawingColorSpace, nullptr, nullptr)) {
+        surfaceOrigin, bitmapFormat, nullptr)) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer image BuildFromTexture failed");
         return nullptr;
     }
@@ -853,19 +853,13 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
         auto surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
 #endif
         if (!image->BuildFromTexture(*canvas.GetGPUContext(), backendTexture.GetTextureInfo(),
-            surfaceOrigin, bitmapFormat, drawingColorSpace,
+            surfaceOrigin, bitmapFormat, nullptr,
             NativeBufferUtils::DeleteVkImage, imageCache->RefCleanupHelper())) {
             ROSEN_LOGE("RSBaseRenderEngine::DrawImage: backendTexture is not valid!!!");
             RS_OPTIONAL_TRACE_END();
             return;
         }
-
-        canvas.AttachBrush(params.paint);
-        canvas.DrawImageRect(*image, params.srcRect, params.dstRect,
-            Drawing::SamplingOptions(), Drawing::SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
-        canvas.DetachBrush();
 #endif // USE_ROSEN_DRAWING
-        RS_OPTIONAL_TRACE_END();
     }
 #endif // RS_ENABLE_VK
 
@@ -892,9 +886,13 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
     if (!RSSystemProperties::GetUniRenderEnabled()) {
         samplingOptions = SkSamplingOptions();
     } else {
-        samplingOptions = RSSystemProperties::IsPhoneType()
-                              ? SkSamplingOptions()
-                              : SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear);
+        if (params.isMirror) {
+            samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNearest);
+        } else {
+            samplingOptions = RSSystemProperties::IsPhoneType()
+                                ? SkSamplingOptions()
+                                : SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear);
+        }
     }
     sk_sp<SkShader> imageShader = image->makeShader(samplingOptions, matrix);
     if (imageShader == nullptr) {
@@ -912,9 +910,13 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
     if (!RSSystemProperties::GetUniRenderEnabled()) {
         samplingOptions = Drawing::SamplingOptions();
     } else {
-        samplingOptions = RSSystemProperties::IsPhoneType()
-                              ? Drawing::SamplingOptions()
-                              : Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR);
+        if (params.isMirror) {
+            samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NEAREST);
+        } else {
+            samplingOptions = RSSystemProperties::IsPhoneType()
+                                ? Drawing::SamplingOptions()
+                                : Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR);
+        }
     }
     auto imageShader = Drawing::ShaderEffect::CreateImageShader(
         *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, matrix);

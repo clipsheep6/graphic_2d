@@ -197,6 +197,9 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     if (!data.WriteString(config.bundleName)) {
         return nullptr;
     }
+    if (!data.WriteBool(config.isTextureExportNode)) {
+        return nullptr;
+    }
     option.SetFlags(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CREATE_NODE_AND_SURFACE);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
@@ -630,7 +633,7 @@ bool RSRenderServiceConnectionProxy::GetShowRefreshRateEnabled()
     bool enable = reply.ReadBool();
     return enable;
 }
-    
+
 void RSRenderServiceConnectionProxy::SetShowRefreshRateEnabled(bool enable)
 {
     MessageParcel data;
@@ -1322,7 +1325,7 @@ int32_t RSRenderServiceConnectionProxy::GetScreenSupportedHDRFormats(
         hdrFormats.clear();
         std::vector<uint32_t> hdrFormatsRecv;
         reply.ReadUInt32Vector(&hdrFormatsRecv);
-        std::transform(hdrFormatsRecv.begin(), hdrFormatsRecv.end(), hdrFormats.end(),
+        std::transform(hdrFormatsRecv.begin(), hdrFormatsRecv.end(), back_inserter(hdrFormats),
                        [](uint32_t i) -> ScreenHDRFormat {return static_cast<ScreenHDRFormat>(i);});
     }
     return result;
@@ -1391,7 +1394,7 @@ int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorSpaces(
         colorSpaces.clear();
         std::vector<uint32_t> colorSpacesRecv;
         reply.ReadUInt32Vector(&colorSpacesRecv);
-        std::transform(colorSpacesRecv.begin(), colorSpacesRecv.end(), colorSpaces.end(),
+        std::transform(colorSpacesRecv.begin(), colorSpacesRecv.end(), back_inserter(colorSpaces),
                        [](uint32_t i) -> GraphicCM_ColorSpaceType {return static_cast<GraphicCM_ColorSpaceType>(i);});
     }
     return result;
@@ -1841,6 +1844,33 @@ void RSRenderServiceConnectionProxy::ReportDataBaseRs(
     data.WriteString(info.sourceType);
     data.WriteString(info.note);
     option.SetFlags(MessageOption::TF_ASYNC);
+}
+
+void RSRenderServiceConnectionProxy::ReportGameStateDataRs(
+    MessageParcel& data, MessageParcel& reply, MessageOption& option, GameStateData info)
+{
+    data.WriteInt32(info.pid);
+    data.WriteInt32(info.uid);
+    data.WriteInt32(info.state);
+    data.WriteInt32(info.renderTid);
+    data.WriteString(info.bundleName);
+    option.SetFlags(MessageOption::TF_ASYNC);
+}
+
+void RSRenderServiceConnectionProxy::ReportGameStateData(GameStateData info)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return;
+    }
+    ReportGameStateDataRs(data, reply, option, info);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REPORT_EVENT_GAMESTATE);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::ReportGameStateData: Send Request err.");
+    }
 }
 
 void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnabled)

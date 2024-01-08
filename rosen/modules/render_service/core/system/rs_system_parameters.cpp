@@ -62,10 +62,24 @@ bool RSSystemParameters::GetShowRefreshRateEnabled()
 
 QuickSkipPrepareType RSSystemParameters::GetQuickSkipPrepareType()
 {
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.quickskipprepare.enabled", "4");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.quickskipprepare.enabled", "5");
     int changed = 0;
     const char *type = CachedParameterGetChanged(g_Handle, &changed);
     return static_cast<QuickSkipPrepareType>(ConvertToInt(type, DEFAULT_QUICK_SKIP_PREPARE_TYPE_VALUE));
+}
+
+bool RSSystemParameters::GetVSyncControlEnabled()
+{
+    static bool vsyncControlEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.vsyncControlEnabled", "1")).c_str()) != 0;
+    return vsyncControlEnabled;
+}
+
+bool RSSystemParameters::GetSystemAnimatedScenesEnabled()
+{
+    static bool systemAnimatedScenesEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.systemAnimatedScenesEnabled", "1")).c_str()) != 0;
+    return systemAnimatedScenesEnabled;
 }
 
 bool RSSystemParameters::GetFilterCacheOcculusionEnabled()

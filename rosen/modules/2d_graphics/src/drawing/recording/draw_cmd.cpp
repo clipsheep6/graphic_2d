@@ -766,6 +766,22 @@ void DrawPictureOpItem::Playback(Canvas* canvas, const Rect* rect)
 }
 
 /* DrawTextBlobOpItem */
+void SimplifyPaint(ColorQuad colorQuad, Paint& paint)
+{
+    Color color{colorQuad};
+    paint.SetColor(color);
+    paint.SetShaderEffect(nullptr);
+    if (paint.HasFilter()) {
+        Filter filter = paint.GetFilter();
+        if (filter.GetColorFilter() != nullptr) {
+            filter.SetColorFilter(nullptr);
+            paint.SetFilter(filter);
+        }
+    }
+    paint.SetWidth(1.04); // 1.04 is empirical value
+    paint.SetJoinStyle(Pen::JoinStyle::ROUND_JOIN);
+}
+
 DrawTextBlobOpItem::DrawTextBlobOpItem(const CmdList& cmdList, DrawTextBlobOpItem::ConstructorHandle* handle)
     : DrawWithPaintOpItem(cmdList, handle->paintHandle, TEXT_BLOB_OPITEM), x_(handle->x), y_(handle->y)
 {
@@ -783,8 +799,45 @@ void DrawTextBlobOpItem::Playback(Canvas* canvas, const Rect* rect)
         LOGE("DrawTextBlobOpItem textBlob is null");
         return;
     }
-    canvas->AttachPaint(paint_);
-    canvas->DrawTextBlob(textBlob_.get(), x_, y_);
+    Drawing::RectI globalClipBounds = canvas->GetDeviceClipBounds();
+    if (globalClipBounds.GetWidth() == 1 && !callFromCacheFunc_) {
+        // if the ClipBound's width == 1, the textblob will draw outside of the clip,
+        // this is a workround for this case
+        if (!cacheImage_) {
+            cacheImage_ = GenerateCachedOpItem(canvas);
+        }
+        if (cacheImage_) {
+            cacheImage_->Playback(canvas, rect);
+        }
+        return;
+    }
+    if (canvas->isHighContrastEnabled()) {
+        LOGD("DrawTextBlobOpItem::Playback highContrastEnabled, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        ColorQuad colorQuad = paint_.GetColor().CastToColorQuad();
+        if (Color::ColorQuadGetA(colorQuad) == 0) {
+            canvas->AttachPaint(paint_);
+            canvas->DrawTextBlob(textBlob_.get(), x_, y_);
+            return;
+        }
+        uint32_t channelSum = Color::ColorQuadGetR(colorQuad) + Color::ColorQuadGetG(colorQuad) +
+            Color::ColorQuadGetB(colorQuad);
+        bool flag = channelSum < 594; // 594 is empirical value
+
+        Paint outlinePaint(paint_);
+        SimplifyPaint(flag ? Color::COLOR_WHITE : Color::COLOR_BLACK, outlinePaint);
+        outlinePaint.SetStyle(Paint::PAINT_FILL_STROKE);
+        canvas->AttachPaint(outlinePaint);
+        canvas->DrawTextBlob(textBlob_.get(), x_, y_);
+
+        Paint innerPaint(paint_);
+        SimplifyPaint(flag ? Color::COLOR_BLACK : Color::COLOR_WHITE, innerPaint);
+        innerPaint.SetStyle(Paint::PAINT_FILL);
+        canvas->AttachPaint(innerPaint);
+        canvas->DrawTextBlob(textBlob_.get(), x_, y_);
+    } else {
+        canvas->AttachPaint(paint_);
+        canvas->DrawTextBlob(textBlob_.get(), x_, y_);
+    }
 }
 
 bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(
@@ -929,7 +982,9 @@ std::shared_ptr<ImageSnapshotOpItem> DrawTextBlobOpItem::GenerateCachedOpItem(Ca
         offscreenCanvas->Translate(-bounds->GetLeft(), -bounds->GetTop());
     }
 
+    callFromCacheFunc_ = true;
     Playback(offscreenCanvas, nullptr);
+    callFromCacheFunc_ = false;
 
     std::shared_ptr<Image> image = offscreenSurface->GetImageSnapshot();
     Drawing::Rect src(0, 0, image->GetWidth(), image->GetHeight());
@@ -1534,6 +1589,15 @@ void DrawImageWithParmOpItem::Playback(Canvas* canvas, const Rect* rect)
     objectHandle_->Playback(*canvas, *rect, sampling_, false);
 }
 
+void DrawImageWithParmOpItem::SetNodeId(NodeId id)
+{
+    if (objectHandle_ == nullptr) {
+        LOGE("DrawImageWithParmOpItem objectHandle is nullptr!");
+        return;
+    }
+    objectHandle_->SetNodeId(id);
+}
+
 /* DrawPixelMapWithParmOpItem */
 DrawPixelMapWithParmOpItem::DrawPixelMapWithParmOpItem(
     const CmdList& cmdList, DrawPixelMapWithParmOpItem::ConstructorHandle* handle)
@@ -1558,6 +1622,15 @@ void DrawPixelMapWithParmOpItem::Playback(Canvas* canvas, const Rect* rect)
     objectHandle_->Playback(*canvas, *rect, sampling_, false);
 }
 
+void DrawPixelMapWithParmOpItem::SetNodeId(NodeId id)
+{
+    if (objectHandle_ == nullptr) {
+        LOGE("DrawPixelMapWithParmOpItem objectHandle is nullptr!");
+        return;
+    }
+    objectHandle_->SetNodeId(id);
+}
+
 /* DrawPixelMapRectOpItem */
 DrawPixelMapRectOpItem::DrawPixelMapRectOpItem(
     const CmdList& cmdList, DrawPixelMapRectOpItem::ConstructorHandle* handle)
@@ -1580,6 +1653,15 @@ void DrawPixelMapRectOpItem::Playback(Canvas* canvas, const Rect* rect)
     }
     canvas->AttachPaint(paint_);
     objectHandle_->Playback(*canvas, *rect, sampling_);
+}
+
+void DrawPixelMapRectOpItem::SetNodeId(NodeId id)
+{
+    if (objectHandle_ == nullptr) {
+        LOGE("DrawPixelMapRectOpItem objectHandle is nullptr!");
+        return;
+    }
+    objectHandle_->SetNodeId(id);
 }
 
 ImageSnapshotOpItem::ImageSnapshotOpItem(std::shared_ptr<Image> image, const Rect& src, const Rect& dst)
@@ -1762,32 +1844,32 @@ void DrawSurfaceBufferOpItem::Draw(Canvas* canvas)
     GLuint originTexture;
     glGetIntegerv(GL_TEXTURE_BINDING_2D, reinterpret_cast<GLint *>(&originTexture));
     GLint minFilter;
-    glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &minFilter);
+    glGetTexParameteriv(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, &minFilter);
     GLint magFilter;
-    glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, &magFilter);
+    glGetTexParameteriv(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, &magFilter);
     GLint wrapS;
-    glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, &wrapS);
+    glGetTexParameteriv(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, &wrapS);
     GLint wrapT;
-    glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, &wrapT);
+    glGetTexParameteriv(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, &wrapT);
 
     // Create texture object
     texId_ = 0;
     glGenTextures(1, &texId_);
-    glBindTexture(GL_TEXTURE_2D, texId_);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, static_cast<GLeglImageOES>(eglImage_));
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, texId_);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, static_cast<GLeglImageOES>(eglImage_));
 
     // restore
-    glBindTexture(GL_TEXTURE_2D, originTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, originTexture);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, minFilter);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, magFilter);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, wrapS);
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, wrapT);
 
-    GrGLTextureInfo textureInfo = { GL_TEXTURE_2D, texId_, GL_RGBA8_OES };
+    GrGLTextureInfo textureInfo = { GL_TEXTURE_EXTERNAL_OES, texId_, GL_RGBA8_OES };
 
     GrBackendTexture backendTexture(
         surfaceBufferInfo_.width_, surfaceBufferInfo_.height_, GrMipMapped::kNo, textureInfo);
@@ -1796,7 +1878,7 @@ void DrawSurfaceBufferOpItem::Draw(Canvas* canvas)
                 externalTextureInfo.SetWidth(surfaceBufferInfo_.width_);
                 externalTextureInfo.SetHeight(surfaceBufferInfo_.height_);
                 externalTextureInfo.SetIsMipMapped(false);
-                externalTextureInfo.SetTarget(GL_TEXTURE_2D);
+                externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
                 externalTextureInfo.SetID(texId_);
                 externalTextureInfo.SetFormat(GL_RGBA8_OES);
     Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,

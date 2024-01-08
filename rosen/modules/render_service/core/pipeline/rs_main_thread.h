@@ -94,7 +94,7 @@ public:
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
-    void ClearMemoryCache(bool deeply = false);
+    void ClearMemoryCache(ClearMemoryMoment moment, bool deeply = false);
 
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)
@@ -137,7 +137,7 @@ public:
     bool IsDrawingGroupChanged(RSRenderNode& cacheRootNode) const;
     // check if active instance only move or scale it's main window surface without rearrangement
     // instanceNodeId should be MainWindowType, or it cannot grep correct app's info
-    bool CheckIfInstanceOnlySurfaceBasicGeoTransform(NodeId instanceNodeId) const;
+    void CheckAndUpdateInstanceContentStaticStatus(std::shared_ptr<RSSurfaceRenderNode> instanceNode) const;
 
     void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app);
     void UnRegisterApplicationAgent(sptr<IApplicationAgent> app);
@@ -221,6 +221,10 @@ public:
     {
         return curDrawStatusVec_;
     }
+    void SetAppVSyncDistributor(const sptr<VSyncDistributor>& appVSyncDistributor)
+    {
+        appVSyncDistributor_ = appVSyncDistributor;
+    }
 
     DeviceType GetDeviceType() const;
     bool IsSingleDisplay();
@@ -230,6 +234,22 @@ public:
     bool GetClearMemDeeply() const
     {
         return clearMemDeeply_;
+    }
+
+    ClearMemoryMoment GetClearMoment() const
+    {
+        if (!context_) {
+            return ClearMemoryMoment::NO_CLEAR;
+        }
+        return context_->clearMoment_;
+    }
+
+    void SetClearMoment(ClearMemoryMoment moment)
+    {
+        if (!context_) {
+            return;
+        }
+        context_->clearMoment_ = moment;
     }
 
     void SubscribeAppState();
@@ -263,8 +283,10 @@ private:
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void CalcOcclusion();
-    bool CheckQosVisChanged(std::map<uint32_t, RSVisibleLevel>& pidVisMap);
-    void CallbackToQOS(std::map<uint32_t, RSVisibleLevel>& pidVisMap);
+    bool CheckSurfaceVisChanged(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+        std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
+    void SetVSyncRateByVisibleLevel(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+        std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     void CallbackToWMS(VisibleData& curVisVec);
     void SendCommands();
     void SurfaceOcclusionCallback();
@@ -357,6 +379,7 @@ private:
     std::condition_variable unmarshalTaskCond_;
     std::mutex unmarshalMutex_;
     int32_t unmarshalFinishedCount_ = 0;
+    sptr<VSyncDistributor> appVSyncDistributor_ = nullptr;
 
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
     RSTaskMessage::RSTask uploadTextureBarrierTask_;
@@ -409,6 +432,8 @@ private:
     uint32_t appWindowNum_ = 0;
     uint32_t requestNextVsyncNum_ = 0;
     bool lastFrameHasFilter_ = false;
+    bool vsyncControlEnabled_ = true;
+    bool systemAnimatedScenesEnabled_ = false;
 
     bool colorPickerForceRequestVsync_ = false;
     std::atomic_bool noNeedToPostTask_ = false;
@@ -473,6 +498,9 @@ private:
     // for surface occlusion change callback
     std::mutex surfaceOcclusionMutex_;
     std::vector<NodeId> lastRegisteredSurfaceOnTree_;
+    std::mutex systemAnimatedScenesMutex_;
+    int32_t threeFingerCnt_ = 0;
+    int32_t systemAnimatedScenesCnt_ = 0;
     std::unordered_map<NodeId, // map<node ID, <pid, callback, partition points vector, level>>
         std::tuple<pid_t, sptr<RSISurfaceOcclusionChangeCallback>,
         std::vector<float>, uint8_t>> surfaceOcclusionListeners_;

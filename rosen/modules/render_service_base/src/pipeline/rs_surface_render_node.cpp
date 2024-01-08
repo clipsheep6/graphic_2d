@@ -48,8 +48,8 @@
 namespace OHOS {
 namespace Rosen {
 RSSurfaceRenderNode::RSSurfaceRenderNode(
-    const RSSurfaceRenderNodeConfig& config, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
-    : RSRenderNode(config.id, context, isTextureExportNode), RSSurfaceHandler(config.id), name_(config.name),
+    const RSSurfaceRenderNodeConfig& config, const std::weak_ptr<RSContext>& context)
+    : RSRenderNode(config.id, context, config.isTextureExportNode), RSSurfaceHandler(config.id), name_(config.name),
       bundleName_(config.bundleName), nodeType_(config.nodeType),
       dirtyManager_(std::make_shared<RSDirtyRegionManager>()),
       cacheSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
@@ -60,8 +60,9 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(
 #endif
 }
 
-RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isSameLayerRender)
-    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig { id, "SurfaceNode" }, context, isSameLayerRender)
+RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
+    : RSSurfaceRenderNode(RSSurfaceRenderNodeConfig { .id = id, .name = "SurfaceNode",
+    .isTextureExportNode = isTextureExportNode}, context)
 {}
 
 RSSurfaceRenderNode::~RSSurfaceRenderNode()
@@ -298,15 +299,15 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     if (grContext_ && !IsOnTheTree()) {
         if (auto context = GetContext().lock()) {
-#ifndef USE_ROSEN_DRAWING
             RS_TRACE_NAME_FMT("need purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
                 GetId(), GetName().c_str());
-#endif
+            RS_LOGD("need purgeUnlockedResources this SurfaceNode isn't on the tree Id:%" PRIu64 " Name:%s",
+                GetId(), GetName().c_str());
             if (IsLeashWindow()) {
-                context->MarkNeedPurge(RSContext::PurgeType::GENTLY);
+                context->MarkNeedPurge(ClearMemoryMoment::COMMON_SURFACE_NODE_HIDE, RSContext::PurgeType::GENTLY);
             }
             if (GetName().substr(0, 3) == "SCB") {
-                context->MarkNeedPurge(RSContext::PurgeType::STRONGLY);
+                context->MarkNeedPurge(ClearMemoryMoment::SCENEBOARD_SURFACE_NODE_HIDE, RSContext::PurgeType::STRONGLY);
             }
         }
     }
@@ -664,7 +665,7 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
                 if (node == nullptr) {
                     return;
                 }
-                node->NotifyRTBufferAvailable();
+                node->NotifyRTBufferAvailable(node->GetIsTextureExportNode());
             }, true);
         renderServiceClient->RegisterBufferClearListener(
             GetId(), [weakThis = weak_from_this()]() {
@@ -677,16 +678,18 @@ void RSSurfaceRenderNode::ConnectToNodeInRenderService()
     }
 }
 
-void RSSurfaceRenderNode::NotifyRTBufferAvailable()
+void RSSurfaceRenderNode::NotifyRTBufferAvailable(bool isTextureExportNode)
 {
     // In RS, "isNotifyRTBufferAvailable_ = true" means buffer is ready and need to trigger ipc callback.
     // In RT, "isNotifyRTBufferAvailable_ = true" means RT know that RS have had available buffer
     // and ready to trigger "callbackForRenderThreadRefresh_" to "clip" on parent surface.
-    isNotifyRTBufferAvailablePre_ = isNotifyRTBufferAvailable_;
-    if (isNotifyRTBufferAvailable_) {
-        return;
+    if (!isTextureExportNode) {
+        isNotifyRTBufferAvailablePre_ = isNotifyRTBufferAvailable_;
+        if (isNotifyRTBufferAvailable_) {
+            return;
+        }
+        isNotifyRTBufferAvailable_ = true;
     }
-    isNotifyRTBufferAvailable_ = true;
 
     if (isRefresh_) {
         ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %{public}" PRIu64 " RenderThread", GetId());
@@ -815,6 +818,28 @@ Occlusion::Rect RSSurfaceRenderNode::GetSurfaceOcclusionRect(bool isUniRender)
     return occlusionRect;
 }
 
+bool RSSurfaceRenderNode::QueryIfAllHwcChildrenForceDisabledByFilter()
+{
+    std::shared_ptr<RSSurfaceRenderNode> appWindow;
+    for (auto& child : GetSortedChildren()) {
+        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+        if (node && node->IsAppWindow()) {
+            appWindow = node;
+            break;
+        }
+    }
+    if (appWindow) {
+        auto hardwareEnabledNodes = appWindow->GetChildHardwareEnabledNodes();
+        for (auto& hardwareEnabledNode : hardwareEnabledNodes) {
+            auto hardwareEnabledNodePtr = hardwareEnabledNode.lock();
+            if (hardwareEnabledNodePtr && !hardwareEnabledNodePtr->IsHardwareForcedDisabledByFilter()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void RSSurfaceRenderNode::AccumulateOcclusionRegion(Occlusion::Region& accumulatedRegion,
     Occlusion::Region& curRegion,
     bool& hasFilterCacheOcclusion,
@@ -844,7 +869,7 @@ void RSSurfaceRenderNode::AccumulateOcclusionRegion(Occlusion::Region& accumulat
     SetTreatedAsTransparent(false);
     // when a surfacenode is in animation (i.e. 3d animation), its dstrect cannot be trusted, we treated it as a full
     // transparent layer.
-    if (GetAnimateState() || IsParentLeashWindowInScale()) {
+    if ((GetAnimateState() || IsParentLeashWindowInScale()) && !isOcclusionInSpecificScenes_) {
         SetTreatedAsTransparent(true);
         return;
     }
@@ -884,7 +909,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
                                                     VisibleData& visibleVec,
                                                     std::map<uint32_t, RSVisibleLevel>& pidVisMap,
                                                     bool needSetVisibleRegion,
-                                                    RSVisibleLevel visibleLevel)
+                                                    RSVisibleLevel visibleLevel,
+                                                    int32_t systemAnimatedScenesCnt)
 {
     if (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE || IsAbilityComponent()) {
         SetOcclusionVisible(true);
@@ -898,7 +924,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
     }
 
     // collect visible changed pid
-    if (qosPidCal_ && GetType() == RSRenderNodeType::SURFACE_NODE && !IsMultiInstance()) {
+    if (qosPidCal_ && GetType() == RSRenderNodeType::SURFACE_NODE &&
+        systemAnimatedScenesCnt == 0 && !IsMultiInstance()) {
         uint32_t tmpPid = ExtractPid(GetId());
         pidVisMap[tmpPid] = visibleLevel;
     }
@@ -913,7 +940,8 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
 
     for (auto& child : GetChildren()) {
         if (auto surfaceChild = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
-            surfaceChild->SetVisibleRegionRecursive(region, visibleVec, pidVisMap, needSetVisibleRegion, visibleLevel);
+            surfaceChild->SetVisibleRegionRecursive(region, visibleVec, pidVisMap, needSetVisibleRegion,
+                visibleLevel, systemAnimatedScenesCnt);
         }
     }
 }
@@ -1028,7 +1056,7 @@ void RSSurfaceRenderNode::UpdateFilterNodes(const std::shared_ptr<RSRenderNode>&
     if (nodePtr == nullptr) {
         return;
     }
-    filterNodes_.emplace(nodePtr->GetId(), nodePtr);
+    filterNodes_.emplace_back(nodePtr);
 }
 
 void RSSurfaceRenderNode::UpdateDrawingCacheNodes(const std::shared_ptr<RSRenderNode>& nodePtr)
@@ -1063,7 +1091,7 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusWithVisible(bool visible)
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (!visible && !filterNodes_.empty() && !isOcclusionVisibleWithoutFilter_) {
         for (auto& node : filterNodes_) {
-            node.second->GetMutableRenderProperties().ClearFilterCache();
+            node->GetMutableRenderProperties().ClearFilterCache();
         }
     }
 #endif
@@ -1075,16 +1103,14 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         return;
     }
     // traversal filter nodes including app window
-    EraseIf(filterNodes_, [this, &clipRect](const auto& pair) {
-        auto& node = pair.second;
+    for (auto node : filterNodes_) {
         if (node == nullptr || !node->IsOnTheTree() || !node->GetRenderProperties().NeedFilter()) {
-            return true;
+            continue;
         }
         node->UpdateFilterCacheWithDirty(*dirtyManager_, false);
         node->UpdateFilterCacheWithDirty(*dirtyManager_, true);
         node->UpdateFilterCacheManagerWithCacheRegion(*dirtyManager_, clipRect);
-        return false;
-    });
+    }
     SetFilterCacheFullyCovered(false);
     if (IsTransparent() && dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {
         SetFilterCacheFullyCovered(true);
@@ -1451,6 +1477,33 @@ void RSSurfaceRenderNode::ResetAbilityNodeIds()
     abilityNodeIds_.clear();
 }
 
+void RSSurfaceRenderNode::UpdateSurfaceCacheContentStatic(
+    const std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>& activeNodeIds)
+{
+    dirtyContentNodeNum_ = 0;
+    dirtyGeoNodeNum_ = 0;
+    dirtynodeNum_ = activeNodeIds.size();
+    surfaceCacheContentStatic_ = IsOnlyBasicGeoTransform();
+    if (dirtynodeNum_ == 0) {
+        RS_LOGD("Clear surface %{public}" PRIu64 " dirtynodes surfaceCacheContentStatic_:%{public}d",
+            GetId(), surfaceCacheContentStatic_);
+        return;
+    }
+    for (auto [id, subNode] : activeNodeIds) {
+        auto node = subNode.lock();
+        if (node == nullptr || (id == GetId() && surfaceCacheContentStatic_)) {
+            continue;
+        }
+        // classify active nodes except instance surface itself
+        if (node->IsContentDirty()) {
+            dirtyContentNodeNum_++;
+        } else {
+            dirtyGeoNodeNum_++;
+        }
+    }
+    surfaceCacheContentStatic_ = surfaceCacheContentStatic_ && !(dirtyContentNodeNum_ == 0 || dirtyGeoNodeNum_ == 0);
+}
+
 const std::unordered_set<NodeId>& RSSurfaceRenderNode::GetAbilityNodeIds() const
 {
     return abilityNodeIds_;
@@ -1593,9 +1646,9 @@ bool RSSurfaceRenderNode::IsUIFirstSelfDrawCheck()
 
 bool RSSurfaceRenderNode::IsCurFrameStatic(DeviceType deviceType)
 {
-    bool isDirty = deviceType == DeviceType::PHONE ?
-        (dirtyManager_ == nullptr || !dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty()) :
-        (IsMainWindowType() && !surfaceCacheContentStatic_);
+    bool isDirty = deviceType == DeviceType::PC ?
+        (IsMainWindowType() && !surfaceCacheContentStatic_) :
+        (dirtyManager_ == nullptr || !dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty());
     if (isDirty) {
         return false;
     }
@@ -1626,7 +1679,7 @@ bool RSSurfaceRenderNode::IsVisibleDirtyEmpty(DeviceType deviceType)
         return false;
     }
     if (!dirtyManager_->GetCurrentFrameDirtyRegion().IsEmpty()) {
-        if (deviceType == DeviceType::PHONE) {
+        if (deviceType != DeviceType::PC) {
             return false;
         }
         // Visible dirty region optimization takes effecct only in PC or TABLET scenarios
@@ -1638,7 +1691,7 @@ bool RSSurfaceRenderNode::IsVisibleDirtyEmpty(DeviceType deviceType)
         isStaticUnderVisibleRegion = true;
     }
     if (IsMainWindowType()) {
-        if (deviceType != DeviceType::PHONE) {
+        if (deviceType == DeviceType::PC) {
             if (IsHistoryOccludedDirtyRegionNeedSubmit()) {
                 ClearHistoryUnSubmittedDirtyInfo();
                 return false;
@@ -1738,6 +1791,24 @@ bool RSSurfaceRenderNode::GetNodeIsSingleFrameComposer() const
         }
     }
     return isNodeSingleFrameComposer_ || flag;
+}
+
+bool RSSurfaceRenderNode::QuerySubAssignable(bool isRotation)
+{
+    bool hasTransparentSurface = false;
+    if (IsLeashWindow()) {
+        for (auto &child : GetSortedChildren()) {
+            auto childSurfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            if (childSurfaceNode && childSurfaceNode->IsTransparent()) {
+                hasTransparentSurface = true;
+                break;
+            }
+        }
+    } else {
+        hasTransparentSurface = IsTransparent();
+    }
+    return !(hasTransparentSurface && ChildHasFilter()) && !HasFilter() &&
+        !HasAbilityComponent() && !isRotation && QueryIfAllHwcChildrenForceDisabledByFilter();
 }
 
 bool RSSurfaceRenderNode::GetHasSharedTransitionNode() const

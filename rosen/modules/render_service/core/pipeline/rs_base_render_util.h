@@ -78,6 +78,7 @@ struct BufferDrawParam {
     GraphicColorGamut targetColorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
 
     bool useCPU = false;
+    bool isMirror = false;
     bool setColorFilter = true;
     std::vector<GraphicHDRMetaData> metaDatas = {}; // static meta datas for HDR10
     GraphicHDRMetaDataSet metaDataSet; // dynamic meta datas for HDR10+, HDR VIVID
@@ -154,6 +155,7 @@ public:
 
     static bool WriteSurfaceRenderNodeToPng(const RSSurfaceRenderNode& node);
     static bool WriteCacheRenderNodeToPng(const RSRenderNode& node);
+    static bool WriteSurfaceBufferToPng(sptr<SurfaceBuffer>& buffer, uint64_t id = 0);
 
     static bool WritePixelMapToPng(Media::PixelMap& pixelMap);
     static void DealWithSurfaceRotationAndGravity(GraphicTransformType transform, Gravity gravity,

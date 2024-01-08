@@ -112,6 +112,7 @@ enum class RSVisibleLevel : uint32_t {
     RS_SEMI_NONDEFAULT_VISIBLE,
     RS_SEMI_DEFAULT_VISIBLE,
     RS_INVISIBLE,
+    RS_SYSTEM_ANIMATE_SCENE,
     RS_UNKNOW_VISIBLE_LEVEL,
 };
 
@@ -150,6 +151,8 @@ enum class SystemAnimatedScenes : uint32_t {
     ENTER_APP_CENTER, // Enter the app center
     EXIT_APP_CENTER, // Exit the app center
     APPEAR_MISSION_CENTER, // A special case scenario that displays the mission center
+    ENTER_WIND_CLEAR, // Enter win+D in clear screen mode
+    ENTER_WIND_RECOVER, // Enter win+D in recover mode
     OTHERS, // 1.Default state 2.The state in which the animation ends
 };
 
@@ -173,6 +176,7 @@ struct RSSurfaceRenderNodeConfig {
     std::string bundleName = "";
     RSSurfaceNodeType nodeType = RSSurfaceNodeType::DEFAULT;
     void* additionalData = nullptr;
+    bool isTextureExportNode = false;
 };
 
 // types for RSSurfaceExt

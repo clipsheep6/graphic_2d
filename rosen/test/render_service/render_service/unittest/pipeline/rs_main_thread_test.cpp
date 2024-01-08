@@ -233,48 +233,51 @@ HWTEST_F(RSMainThreadTest, CalcOcclusion, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckQosVisChanged001
- * @tc.desc: Test RSMainThreadTest.CheckQosVisChanged, pidVisMap is empty
+ * @tc.name: CheckSurfaceVisChanged001
+ * @tc.desc: Test RSMainThreadTest.CheckSurfaceVisChanged, pidVisMap is empty
  * @tc.type: FUNC
  * @tc.require: issueI60QXK
  */
-HWTEST_F(RSMainThreadTest, CheckQosVisChanged001, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, CheckSurfaceVisChanged001, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    auto isVisibleChanged = mainThread->CheckQosVisChanged(pidVisMap);
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    auto isVisibleChanged = mainThread->CheckSurfaceVisChanged(pidVisMap, curAllSurfaces);
     ASSERT_EQ(false, isVisibleChanged);
 }
 
 /**
- * @tc.name: CheckQosVisChanged002
- * @tc.desc: Test RSMainThreadTest.CheckQosVisChanged, pidVisMap is not empty
+ * @tc.name: CheckSurfaceVisChanged002
+ * @tc.desc: Test RSMainThreadTest.CheckSurfaceVisChanged, pidVisMap is not empty
  * @tc.type: FUNC
  * @tc.require: issueI60QXK
  */
-HWTEST_F(RSMainThreadTest, CheckQosVisChanged002, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, CheckSurfaceVisChanged002, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     std::map<uint32_t, RSVisibleLevel> pidVisMap;
     pidVisMap[0] = RSVisibleLevel::RS_ALL_VISIBLE;
     mainThread->lastPidVisMap_[0] = RSVisibleLevel::RS_INVISIBLE;
-    auto isVisibleChanged = mainThread->CheckQosVisChanged(pidVisMap);
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    auto isVisibleChanged = mainThread->CheckSurfaceVisChanged(pidVisMap, curAllSurfaces);
     ASSERT_EQ(true, isVisibleChanged);
 }
 
 /**
- * @tc.name: CheckQosVisChanged003
- * @tc.desc: Test RSMainThreadTest.CheckQosVisChanged, pidVisMap is not empty, lastPidVisMap_ equals to pidVisMap
+ * @tc.name: CheckSurfaceVisChanged003
+ * @tc.desc: Test RSMainThreadTest.CheckSurfaceVisChanged, pidVisMap is not empty, lastPidVisMap_ equals to pidVisMap
  * @tc.type: FUNC
  * @tc.require: issueI60QXK
  */
-HWTEST_F(RSMainThreadTest, CheckQosVisChanged003, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, CheckSurfaceVisChanged003, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     std::map<uint32_t, RSVisibleLevel> pidVisMap;
     pidVisMap[0] = RSVisibleLevel::RS_ALL_VISIBLE;
     mainThread->lastPidVisMap_[0] = RSVisibleLevel::RS_ALL_VISIBLE;
-    auto isVisibleChanged = mainThread->CheckQosVisChanged(pidVisMap);
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    auto isVisibleChanged = mainThread->CheckSurfaceVisChanged(pidVisMap, curAllSurfaces);
     ASSERT_EQ(false, isVisibleChanged);
 }
 
@@ -550,42 +553,43 @@ HWTEST_F(RSMainThreadTest, AddActiveNode, TestSize.Level1)
 }
 
 /**
- * @tc.name: CheckIfInstanceOnlySurfaceBasicGeoTransform01
+ * @tc.name: CheckAndUpdateInstanceContentStaticStatus01
  * @tc.desc: Test static instance(no dirty) would be classify as only basic geo transform
  * @tc.type: FUNC
  * @tc.require: issueI8IXTX
  */
-HWTEST_F(RSMainThreadTest, CheckIfInstanceOnlySurfaceBasicGeoTransform01, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, CheckAndUpdateInstanceContentStaticStatus01, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     mainThread->context_->activeNodesInRoot_.clear();
     // valid nodeid
     NodeId id = 1;
-    auto node = std::make_shared<RSRenderNode>(id, mainThread->context_);
+    auto node = std::make_shared<RSSurfaceRenderNode>(id, mainThread->context_);
     ASSERT_NE(node, nullptr);
-    ASSERT_EQ(mainThread->CheckIfInstanceOnlySurfaceBasicGeoTransform(id), true);
+    mainThread->CheckAndUpdateInstanceContentStaticStatus(node);
+    ASSERT_EQ(node->GetSurfaceCacheContentStatic(), true);
 }
 
 /**
- * @tc.name: CheckIfInstanceOnlySurfaceBasicGeoTransform02
+ * @tc.name: CheckAndUpdateInstanceContentStaticStatus02
  * @tc.desc: Test new instance would not be classify as only basic geo transform
  * @tc.type: FUNC
  * @tc.require: issueI8IXTX
  */
-HWTEST_F(RSMainThreadTest, CheckIfInstanceOnlySurfaceBasicGeoTransform02, TestSize.Level1)
+HWTEST_F(RSMainThreadTest, CheckAndUpdateInstanceContentStaticStatus02, TestSize.Level1)
 {
     auto mainThread = RSMainThread::Instance();
     mainThread->context_->activeNodesInRoot_.clear();
     // valid nodeid
     NodeId id = 1;
-    auto node = std::make_shared<RSRenderNode>(id, mainThread->context_);
+    auto node = std::make_shared<RSSurfaceRenderNode>(id, mainThread->context_);
     ASSERT_NE(node, nullptr);
     node->SetIsOnTheTree(true, id, id);
     node->SetContentDirty();
     mainThread->context_->AddActiveNode(node);
     ASSERT_EQ(static_cast<int>(mainThread->context_->activeNodesInRoot_.size()), 1);
-
-    ASSERT_EQ(mainThread->CheckIfInstanceOnlySurfaceBasicGeoTransform(id), false);
+    mainThread->CheckAndUpdateInstanceContentStaticStatus(node);
+    ASSERT_EQ(node->GetSurfaceCacheContentStatic(), false);
 }
 
 /**

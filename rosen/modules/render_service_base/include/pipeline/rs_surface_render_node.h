@@ -66,8 +66,7 @@ public:
 
     explicit RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {},
         bool isTextureExportNode = false);
-    explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config,
-        const std::weak_ptr<RSContext>& context = {}, bool isTextureExportNode = false);
+    explicit RSSurfaceRenderNode(const RSSurfaceRenderNodeConfig& config, const std::weak_ptr<RSContext>& context = {});
     ~RSSurfaceRenderNode() override;
 
     void PrepareRenderBeforeChildren(RSPaintFilterCanvas& canvas);
@@ -425,6 +424,11 @@ public:
         isOcclusionVisibleWithoutFilter_ = visible;
     }
 
+    void SetOcclusionInSpecificScenes(bool isOcclusionInSpecificScenes)
+    {
+        isOcclusionInSpecificScenes_ = isOcclusionInSpecificScenes;
+    }
+
     const Occlusion::Region& GetVisibleRegion() const
     {
         return visibleRegion_;
@@ -461,7 +465,8 @@ public:
         VisibleData& visibleVec,
         std::map<uint32_t, RSVisibleLevel>& pidVisMap,
         bool needSetVisibleRegion = true,
-        RSVisibleLevel visibleLevel = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL);
+        RSVisibleLevel visibleLevel = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL,
+        int32_t systemAnimatedScenesCnt = 0);
 
     const Occlusion::Region& GetVisibleDirtyRegion() const
     {
@@ -564,7 +569,7 @@ public:
     // Only SurfaceNode in RT calls "ConnectToNodeInRenderService" to send callback method to RS
     void ConnectToNodeInRenderService();
 
-    void NotifyRTBufferAvailable();
+    void NotifyRTBufferAvailable(bool isTextureExportNode = false);
     bool IsNotifyRTBufferAvailable() const;
     bool IsNotifyRTBufferAvailablePre() const;
 
@@ -871,9 +876,14 @@ public:
         return surfaceCacheContentStatic_;
     }
 
-    void SetSurfaceCacheContentStatic(bool contentStatic)
+    void UpdateSurfaceCacheContentStatic(
+        const std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>& activeNodeIds);
+    // temperory limit situation:
+    // subtree no drawingcache and geodirty
+    // contentdirty 1 specifically for buffer update
+    bool IsContentDirtyNodeLimited() const
     {
-        surfaceCacheContentStatic_ = contentStatic;
+        return drawingCacheNodes_.empty() && dirtyGeoNodeNum_ == 0 && dirtyContentNodeNum_ <= 1;
     }
 
     size_t GetLastFrameChildrenCnt()
@@ -923,6 +933,8 @@ public:
     {
         return ancestorDisplayNode_;
     }
+    bool QuerySubAssignable(bool isRotation);
+    bool QueryIfAllHwcChildrenForceDisabledByFilter();
     bool GetHasSharedTransitionNode() const;
     void SetHasSharedTransitionNode(bool hasSharedTransitionNode);
 
@@ -1015,6 +1027,7 @@ private:
     Occlusion::Region alignedVisibleDirtyRegion_;
     bool isOcclusionVisible_ = true;
     bool isOcclusionVisibleWithoutFilter_ = true;
+    bool isOcclusionInSpecificScenes_ = false;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
     std::shared_ptr<RSDirtyRegionManager> cacheSurfaceDirtyManager_ = nullptr;
     RectI dstRect_;
@@ -1040,6 +1053,9 @@ private:
     std::vector<bool> childrenFilterRectsCacheValid_;
     std::vector<std::shared_ptr<RSRenderNode>> childrenFilterNodes_;
     std::unordered_set<NodeId> abilityNodeIds_;
+    size_t dirtyContentNodeNum_ = 0;
+    size_t dirtyGeoNodeNum_ = 0;
+    size_t dirtynodeNum_ = 0;
     // transparent region of the surface, floating window's container window is always treated as transparent
     Occlusion::Region transparentRegion_;
 
@@ -1048,8 +1064,8 @@ private:
     bool isFilterCacheValidForOcclusion_ = false;
     bool isFilterCacheStatusChanged_ = false;
     bool isTreatedAsTransparent_ = false;
-    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>
-        filterNodes_; // valid filter nodes within, including itself
+    // valid filter nodes within, including itself
+    std::vector<std::shared_ptr<RSRenderNode>> filterNodes_;
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> drawingCacheNodes_;
 
     struct OpaqueRegionBaseInfo

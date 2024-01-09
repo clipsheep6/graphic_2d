@@ -265,7 +265,7 @@ Boundary TypographyImpl::GetWordBoundaryByIndex(size_t index) const
 
 double TypographyImpl::GetLineHeight(int lineNumber)
 {
-    if (lineNumber >= 0 && lineNumber < lineMetrics_.size()) {
+    if (lineNumber >= 0 && lineNumber < static_cast<int>(lineMetrics_.size())) {
         return lineMetrics_[lineNumber].GetMaxHeight();
     } else {
         return 0.0;
@@ -274,7 +274,7 @@ double TypographyImpl::GetLineHeight(int lineNumber)
 
 double TypographyImpl::GetLineWidth(int lineNumber)
 {
-    if (lineNumber >= 0 && lineNumber < lineMetrics_.size()) {
+    if (lineNumber >= 0 && lineNumber < static_cast<int>(lineMetrics_.size())) {
         return lineMetrics_[lineNumber].width;
     } else {
         return 0.0;
@@ -585,7 +585,7 @@ void TypographyImpl::UpadateAnySpanMetrics(std::shared_ptr<AnySpan> &span, doubl
 void TypographyImpl::Paint(TexgineCanvas &canvas, double offsetX, double offsetY)
 {
     for (auto &metric : lineMetrics_) {
-        int spanCount = metric.lineSpans.size();
+        int spanCount = static_cast<int>(metric.lineSpans.size());
         int index = 0;
         int preIndex = -1; // Init preIndex to -1
         bool leftRound = false;
@@ -692,7 +692,8 @@ void TypographyImpl::ComputeSpans(int lineIndex, double baseline, const CalcResu
         }
 
         bool isJustify = typographyStyle_.GetEquivalentAlign() == TextAlign::JUSTIFY &&
-            lineIndex != lineMetrics_.size() - 1 && !lineMetrics_[lineIndex].lineSpans.back().IsHardBreak() &&
+            lineIndex != static_cast<int>(lineMetrics_.size() - 1) &&
+            !lineMetrics_[lineIndex].lineSpans.back().IsHardBreak() &&
             lineMetrics_[lineIndex].lineSpans.size() > 1;
         double spanGapWidth = 0.0;
         if (isJustify) {
@@ -728,7 +729,7 @@ std::vector<TextRect> TypographyImpl::GenTextRects(std::shared_ptr<TextSpan> &ts
         // If is emoji, don`t need process ligature, so set chars size to 1
         int charsSize = cg.IsEmoji() ? 1 : static_cast<int>(cg.chars.size());
         double spanWidth = ts->glyphWidths_[i] / charsSize;
-        if (i == ts->glyphWidths_.size() - 1) {
+        if (i == static_cast<int>(ts->glyphWidths_.size() - 1)) {
             spanWidth += spanGapWidth;
         }
         for (int j = 0; j < charsSize; j++) {

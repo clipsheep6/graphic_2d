@@ -393,7 +393,9 @@ private:
     ~RSScreenManager() noexcept override;
 
     static void OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data);
+    static void OnRefresh(ScreenId id, void *data);
     void OnHotPlugEvent(std::shared_ptr<HdiOutput> &output, bool connected);
+    void OnRefreshEvent(ScreenId id);
     static void OnHwcDead(void *data);
     void OnHwcDeadEvent();
     void CleanAndReinit();
@@ -441,6 +443,7 @@ private:
     FoldState TransferAngleToScreenState(float angle);
 
     mutable std::mutex mutex_;
+    mutable std::recursive_mutex recursive_mutex_;
     HdiBackend *composer_ = nullptr;
     ScreenId defaultScreenId_ = INVALID_SCREEN_ID;
     std::map<ScreenId, std::unique_ptr<OHOS::Rosen::RSScreen>> screens_;

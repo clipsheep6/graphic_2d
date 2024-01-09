@@ -14,9 +14,7 @@
  */
 
 #include "js_pen.h"
-
 #include <cstdint>
-
 #include "../js_drawing_utils.h"
 #include "../color_filter_napi/js_color_filter.h"
 

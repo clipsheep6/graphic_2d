@@ -21,6 +21,7 @@
 #include "platform/common/rs_log.h"
 #include "transaction/rs_interfaces.h"
 #include "ui/rs_ui_director.h"
+#include "common/rs_optional_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -120,6 +121,8 @@ int32_t RSFrameRatePolicy::GetPreferredFps(const std::string& scene, float speed
             pair.second.maxSpeed == -1);
     });
     if (iter != attributes.end()) {
+        RS_OPTIONAL_TRACE_NAME_FMT("RSFrameRatePolicy::GetPreferredFps: scene: %s, speed: %f, rate: %d",
+            scene.c_str(), speedMM, iter->second.preferredFps);
         return iter->second.preferredFps;
     }
     return 0;

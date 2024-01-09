@@ -34,7 +34,7 @@ public:
         return Type::DRAW_CMD_LIST;
     }
 
-    /*
+    /**
      * @brief         Clear Draw Ops Param
      */
     void ClearOp();
@@ -43,44 +43,44 @@ public:
 
     std::string GetOpsWithDesc() const;
 
-    /*
+    /**
      * @brief       Creates a DrawCmdList with contiguous buffers.
      * @param data  A contiguous buffers.
      */
     static std::shared_ptr<DrawCmdList> CreateFromData(const CmdListData& data, bool isCopy = false);
 
-    /*
+    /**
      * @brief         Unmarshalling Draw Ops Param from contiguous buffers
      */
     void UnmarshallingOps();
 
-    /*
+    /**
      * @brief         Draw cmd is empty or not.
      */
     bool IsEmpty() const;
 
-    /*
+    /**
      * @brief         Calls the corresponding operations of all opitems in DrawCmdList to the canvas.
      * @param canvas  Implements the playback action of the DrawCmdList in the Canvas.
      */
     void Playback(Canvas& canvas, const Rect* rect = nullptr);
 
-    /*
+    /**
      * @brief  Gets the width of the DrawCmdList.
      */
     int32_t GetWidth() const;
 
-    /*
+    /**
      * @brief  Gets the height of the DrawCmdList.
      */
     int32_t GetHeight() const;
 
-    /*
+    /**
      * @brief  Sets the width of the DrawCmdList.
      */
     void SetWidth(int32_t width);
 
-    /*
+    /**
      * @brief  Sets the height of the DrawCmdList.
      */
     void SetHeight(int32_t height);

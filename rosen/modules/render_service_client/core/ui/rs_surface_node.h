@@ -140,6 +140,8 @@ public:
 #endif
     void SetForeground(bool isForeground);
 
+    void SetSurface(sptr<Surface> surface);
+
 protected:
     bool NeedForcedSendToRemote() const override;
     RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode);

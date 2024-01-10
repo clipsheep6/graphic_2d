@@ -2757,16 +2757,11 @@ void RSPropertiesPainter::DrawBorderLight(const RSProperties& properties, Drawin
 #ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::DrawBorderBase(const RSProperties& properties, SkCanvas& canvas,
     const std::shared_ptr<RSBorder>& border, const bool& isOutline)
-#else
-void RSPropertiesPainter::DrawBorderBase(const RSProperties& properties, Drawing::Canvas& canvas,
-    const std::shared_ptr<RSBorder>& border, const bool& isOutline)
-#endif
 {
     if (!border || !border->HasBorder()) {
         return;
     }
 
-#ifndef USE_ROSEN_DRAWING
     SkPaint paint;
     paint.setAntiAlias(true);
     if (border->ApplyFillStyle(paint)) {
@@ -2806,14 +2801,21 @@ void RSPropertiesPainter::DrawBorderBase(const RSProperties& properties, Drawing
             border->PaintLeftPath(canvas, paint, rrect, center);
         }
     }
+}
 #else
+void RSPropertiesPainter::DrawBorderBase(const RSProperties& properties, Drawing::Canvas& canvas,
+    const std::shared_ptr<RSBorder>& border, const bool& isOutline)
+{
+    if (!border || !border->HasBorder()) {
+        return;
+    }
+
     Drawing::Brush brush;
     Drawing::Pen pen;
     brush.SetAntiAlias(true);
     pen.SetAntiAlias(true);
     if (border->ApplyFillStyle(brush)) {
-        auto roundRect = RRect2DrawingRRect(GetRRectForDrawingBorder(
-            properties, border, isOutline));
+        auto roundRect = RRect2DrawingRRect(GetRRectForDrawingBorder(properties, border, isOutline));
         auto innerRoundRect = RRect2DrawingRRect(GetInnerRRectForDrawingBorder(
             properties, border, isOutline));
         canvas.AttachBrush(brush);
@@ -2838,8 +2840,7 @@ void RSPropertiesPainter::DrawBorderBase(const RSProperties& properties, Drawing
             canvas.DetachPen();
         } else {
             Drawing::AutoCanvasRestore acr(canvas, true);
-            auto rrect = RRect2DrawingRRect(GetRRectForDrawingBorder(
-                properties, border, isOutline));
+            auto rrect = RRect2DrawingRRect(GetRRectForDrawingBorder(properties, border, isOutline));
             canvas.ClipRoundRect(rrect, Drawing::ClipOp::INTERSECT, true);
             auto innerRoundRect = RRect2DrawingRRect(GetInnerRRectForDrawingBorder(
                 properties, border, isOutline));
@@ -2853,8 +2854,8 @@ void RSPropertiesPainter::DrawBorderBase(const RSProperties& properties, Drawing
             border->PaintLeftPath(canvas, pen, rrect, center);
         }
     }
-#endif
 }
+#endif
 
 #ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::DrawBorder(const RSProperties& properties, SkCanvas& canvas)

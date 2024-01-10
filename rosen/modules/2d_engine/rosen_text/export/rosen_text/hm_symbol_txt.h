@@ -172,6 +172,7 @@ private:
     std::vector<SColor> colorList_;
     SymbolRenderingStrategy renderMode_ = SymbolRenderingStrategy::SINGLE;
     EffectStrategy effectStrategy_ = EffectStrategy::NONE;
+
 #else
     std::vector<Drawing::DrawingSColor> colorList_;
     Drawing::DrawingSymbolRenderingStrategy renderMode_ = Drawing::DrawingSymbolRenderingStrategy::SINGLE;

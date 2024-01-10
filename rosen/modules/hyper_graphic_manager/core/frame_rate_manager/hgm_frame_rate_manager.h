@@ -103,7 +103,6 @@ private:
 
     void DeliverRefreshRateVote(pid_t pid, std::string eventName, bool eventStatus,
         uint32_t min = OLED_NULL_HZ, uint32_t max = OLED_NULL_HZ);
-    std::string GetScreenType(ScreenId screenId);
     void MarkVoteChange();
     VoteRange ProcessRefreshRateVote();
     void UpdateVoteRule();

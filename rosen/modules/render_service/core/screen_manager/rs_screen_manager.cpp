@@ -410,11 +410,21 @@ void RSScreenManager::AddScreenToHgm(std::shared_ptr<HdiOutput> &output)
     hgmCore.SetActiveScreenId(thisId);
 
     // for each supported mode, use the index as modeId to add the detailed mode to hgm
+    auto supportedModesExt = screens_.at(thisId)->GetSupportedModesExt();
+    if (supportedModesExt.empty()) {
+        RS_LOGW("GetScreenSupportedModesExt fail, use v1_0 instead. screenId:%{public}" PRIu64 "", thisId);
+        auto supportedModes = screens_.at(thisId)->GetSupportedModes();
+        uint32_t groupId = 0;
+        for (auto &mode : supportedModes) {
+            supportedModesExt.emplace_back(GraphicDisplayModeInfoExt(
+                {mode.width, mode.height, mode.freshRate, mode.id, groupId}));
+            groupId++;
+        }
+    }
     int32_t modeId = 0;
-    auto supportedModes = screens_[thisId]->GetSupportedModes();
-    for (auto mode = supportedModes.begin(); mode != supportedModes.end(); ++mode) {
-        if (hgmCore.AddScreenInfo(thisId, (*mode).width, (*mode).height,
-            (*mode).freshRate, modeId)) {
+    for (auto &mode : supportedModesExt) {
+        if (hgmCore.AddScreenInfoExt(thisId, RSScreenModeInfoExt(mode.width, mode.height,
+            mode.freshRate, modeId, mode.groupId))) {
             RS_LOGW("RSScreenManager failed to add a screen profile to the screen : %{public}" PRIu64 "", thisId);
         }
         modeId++;
@@ -639,6 +649,23 @@ std::vector<RSScreenModeInfo> RSScreenManager::GetScreenSupportedModesLocked(Scr
         screenSupportedModes[idx].SetScreenModeId(displaySupportedModes[idx].id);
     }
     return screenSupportedModes;
+}
+
+std::vector<RSScreenModeInfoExt> RSScreenManager::GetScreenSupportedModesExtLocked(ScreenId id) const
+{
+    std::vector<RSScreenModeInfoExt> screenSupportedModesExt;
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return screenSupportedModesExt;
+    }
+
+    const auto& displaySupportedModesExt = screens_.at(id)->GetSupportedModesExt();
+    for (auto &mode : displaySupportedModesExt) {
+        screenSupportedModesExt.emplace_back(
+            RSScreenModeInfoExt(mode.width, mode.height, mode.freshRate, mode.id, mode.groupId)
+        );
+    }
+    return screenSupportedModesExt;
 }
 
 RSScreenCapability RSScreenManager::GetScreenCapabilityLocked(ScreenId id) const
@@ -917,6 +944,13 @@ std::vector<RSScreenModeInfo> RSScreenManager::GetScreenSupportedModes(ScreenId 
     std::lock_guard<std::mutex> lock(mutex_);
 
     return GetScreenSupportedModesLocked(id);
+}
+
+std::vector<RSScreenModeInfoExt> RSScreenManager::GetScreenSupportedModesExt(ScreenId id) const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    return GetScreenSupportedModesExtLocked(id);
 }
 
 RSScreenCapability RSScreenManager::GetScreenCapability(ScreenId id) const

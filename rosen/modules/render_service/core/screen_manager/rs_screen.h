@@ -61,6 +61,7 @@ public:
     virtual void SetPowerStatus(uint32_t powerStatus) = 0;
     virtual std::optional<GraphicDisplayModeInfo> GetActiveMode() const = 0;
     virtual const std::vector<GraphicDisplayModeInfo>& GetSupportedModes() const = 0;
+    virtual const std::vector<GraphicDisplayModeInfoExt>& GetSupportedModesExt() const = 0;
     virtual const GraphicDisplayCapability& GetCapability() const = 0;
     virtual uint32_t GetPowerStatus() const = 0;
     virtual std::shared_ptr<HdiOutput> GetOutput() const = 0;
@@ -132,6 +133,7 @@ public:
     void SetPowerStatus(uint32_t powerStatus) override;
     std::optional<GraphicDisplayModeInfo> GetActiveMode() const override;
     const std::vector<GraphicDisplayModeInfo>& GetSupportedModes() const override;
+    const std::vector<GraphicDisplayModeInfoExt>& GetSupportedModesExt() const override;
     const GraphicDisplayCapability& GetCapability() const override;
     uint32_t GetPowerStatus() const override;
     std::shared_ptr<HdiOutput> GetOutput() const override;
@@ -199,6 +201,7 @@ private:
     std::shared_ptr<HdiOutput> hdiOutput_; // has value if the screen is physical
     std::unique_ptr<HdiScreen> hdiScreen_; // has value if the screen is physical
     std::vector<GraphicDisplayModeInfo> supportedModes_;
+    std::vector<GraphicDisplayModeInfoExt> supportedModesExt_;
     GraphicDisplayCapability capability_ = {"test1", GRAPHIC_DISP_INTF_HDMI, 1921, 1081, 0, 0, true, 0};
     GraphicHDRCapability hdrCapability_;
     sptr<Surface> producerSurface_;  // has value if the screen is virtual

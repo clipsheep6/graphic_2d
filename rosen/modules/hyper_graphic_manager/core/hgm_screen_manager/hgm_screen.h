@@ -27,6 +27,7 @@
 #include "refbase.h"
 #include "screen_manager/screen_types.h"
 #include "screen_manager/rs_screen_mode_info.h"
+#include "screen_manager/rs_screen_mode_info_ext.h"
 
 #include "hgm_command.h"
 
@@ -38,6 +39,12 @@ struct ScreenSize {
     int32_t height;
     int32_t phyWidth;
     int32_t phyHeight;
+};
+
+enum ScreenMaterialType : uint32_t {
+    LTPO1 = 1,
+    LTPO2 = 2,
+    LTPS = 3,
 };
 
 class HgmScreen : public virtual RefBase {
@@ -105,12 +112,18 @@ public:
     {
         return yDpi_;
     }
+    
+    ScreenMaterialType GetScreenMaterialType()
+    {
+        return screenMaterialType_;
+    }
 
     uint32_t GetActiveRefreshRate() const;
     int32_t SetActiveRefreshRate(int32_t sceneId, uint32_t rate);
     int32_t SetRateAndResolution(int32_t sceneId, uint32_t rate, int32_t width, int32_t height);
     int32_t SetRefreshRateRange(uint32_t minRate, uint32_t maxRate);
     int32_t AddScreenModeInfo(int32_t width, int32_t height, uint32_t rate, int32_t modeId);
+    int32_t AddScreenModeInfoExt(const RSScreenModeInfoExt& screenModeInfoExt);
 
 private:
     class ScreenProfile {
@@ -156,6 +169,22 @@ private:
         int32_t modeId_ = -1;
     };
 
+    class ScreenProfileExt : public ScreenProfile {
+    public:
+        ScreenProfileExt(int32_t width, int32_t height, uint32_t rate, int32_t modeId, uint32_t groupId)
+            : ScreenProfile(width, height, rate, modeId), groupId_(groupId) {}
+
+        ~ScreenProfileExt() = default;
+
+        uint32_t GetGroupId() const
+        {
+            return groupId_;
+        }
+
+    private:
+        uint32_t groupId_;
+    };
+
     ScreenId id_ = 0;
     int32_t activeModeId_ = 0;
     int32_t width_ = 0;
@@ -168,14 +197,16 @@ private:
     int32_t customFrameRateMode_ = -1;
     std::unordered_set<uint32_t> supportedRefreshRates_;
     std::unordered_set<int32_t> supportedModeIds_;
-    std::vector<std::shared_ptr<ScreenProfile>> screenModeInfos_;
+    std::vector<std::shared_ptr<ScreenProfileExt>> screenModeInfos_;
+    ScreenMaterialType screenMaterialType_;
     std::mutex baseMutex_;
 
     void SetActiveModeId(int32_t modeId);
-    std::shared_ptr<ScreenProfile> GetModeViaId(int32_t id) const;
+    std::shared_ptr<ScreenProfileExt> GetModeViaId(int32_t id) const;
     bool IfSwitchToRate(int32_t sceneId, uint32_t rate) const;
     int32_t GetModeIdViaRate(uint32_t rate) const;
     int32_t GetModeIdViaResolutionAndRate(int32_t width, int32_t height, uint32_t rate) const;
+    void UpdateScreenMaterialType();
     static constexpr uint32_t RATE_NOT_SUPPORTED = 0;
 
     // defined by xml configuration, participate in refresh rate decision system

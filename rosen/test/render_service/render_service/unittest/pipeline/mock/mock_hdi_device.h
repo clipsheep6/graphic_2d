@@ -35,6 +35,7 @@ public:
     MOCK_METHOD2(RegHwcDeadCallback, bool(OnHwcDeadCallback, void*));
     MOCK_METHOD2(GetScreenCapability, int32_t(uint32_t, GraphicDisplayCapability&));
     MOCK_METHOD2(GetScreenSupportedModes, int32_t(uint32_t, std::vector<GraphicDisplayModeInfo>&));
+    MOCK_METHOD2(GetScreenSupportedModesExt, int32_t(uint32_t, std::vector<GraphicDisplayModeInfoExt>&));
     MOCK_METHOD2(GetScreenMode, int32_t(uint32_t, uint32_t&));
     MOCK_METHOD2(SetScreenMode, int32_t(uint32_t, uint32_t));
     MOCK_METHOD2(GetScreenPowerStatus, int32_t(uint32_t, GraphicDispPowerStatus&));

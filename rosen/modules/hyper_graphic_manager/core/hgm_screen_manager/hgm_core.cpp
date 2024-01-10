@@ -295,6 +295,33 @@ int32_t HgmCore::AddScreenInfo(ScreenId id, int32_t width, int32_t height, uint3
     return HGM_SCREEN_PARAM_ERROR;
 }
 
+int32_t HgmCore::AddScreenInfoExt(ScreenId id, const RSScreenModeInfoExt& screenModeInfoExt)
+{
+    // add a supported screen mode to the screen
+    auto screen = GetScreen(id);
+    if (!screen) {
+        HGM_LOGW("HgmCore failed to get screen of : " PUBU64 "", id);
+        return HGM_NO_SCREEN;
+    }
+
+    if (screen->AddScreenModeInfoExt(screenModeInfoExt) == EXEC_SUCCESS) {
+        return EXEC_SUCCESS;
+    }
+
+    HGM_LOGW("HgmCore failed to add screen mode info of screen : " PUBU64 "", id);
+    return HGM_SCREEN_PARAM_ERROR;
+}
+
+ScreenMaterialType HgmCore::GetScreenMaterialType(ScreenId id)
+{
+    auto screen = GetScreen(id);
+    if (!screen) {
+        HGM_LOGW("HgmCore failed to get screen of : " PUBU64 "", id);
+        return ScreenMaterialType::LTPO1;
+    }
+    return screen->GetScreenMaterialType();
+}
+
 int32_t HgmCore::RefreshBundleName(const std::string& name)
 {
     if (name == currentBundleName_) {

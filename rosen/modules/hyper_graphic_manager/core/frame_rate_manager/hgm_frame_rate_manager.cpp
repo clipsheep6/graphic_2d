@@ -62,10 +62,10 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
     auto& hgmCore = HgmCore::Instance();
     curRefreshRateMode_ = static_cast<RefreshRateMode>(hgmCore.GetCurrentRefreshRateMode());
 
-    // hgm warning: get non active screenId in non-folding devices（from sceneboard）
+    // hgm warning ok: get non active screenId in non-folding devices（from sceneboard）
     auto screenList = hgmCore.GetScreenIds();
     curScreenId_ = screenList.empty() ? 0 : screenList.front();
-    isLtpo_ = (GetScreenType(curScreenId_) == "LTPO");
+    isLtpo_ = (hgmCore.GetScreenMaterialType(curScreenId_) == ScreenMaterialType::LTPO2);
     std::string curScreenName = "screen" + std::to_string(curScreenId_) + "_" + (isLtpo_ ? "LTPO" : "LTPS");
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
@@ -536,7 +536,7 @@ void HgmFrameRateManager::HandleRefreshRateMode(RefreshRateMode refreshRateMode)
 
 void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus status)
 {
-    // hgm warning: strategy for screen off
+    // hgm warning ok: strategy for screen off
     HGM_LOGI("HandleScreenPowerStatus curScreen:%{public}d status:%{public}d",
         static_cast<int>(curScreenId_), static_cast<int>(status));
     if (status != ScreenPowerStatus::POWER_STATUS_ON) {
@@ -550,9 +550,8 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
     auto screenList = hgmCore.GetScreenIds();
     auto screenPos = find(screenList.begin(), screenList.end(), id);
     curScreenId_ = (screenPos == screenList.end()) ? 0 : id;
-    HGM_LOGI("HandleScreenPowerStatus curScreen:%{public}d", static_cast<int>(curScreenId_));
 
-    isLtpo_ = (GetScreenType(curScreenId_) == "LTPO");
+    isLtpo_ = (hgmCore.GetScreenMaterialType(curScreenId_) == ScreenMaterialType::LTPO2);
     std::string curScreenName = "screen" + std::to_string(curScreenId_) + "_" + (isLtpo_ ? "LTPO" : "LTPS");
 
     auto configData = hgmCore.GetPolicyConfigData();
@@ -562,14 +561,16 @@ void HgmFrameRateManager::HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus
             curScreenStrategyId_ = "LTPO-DEFAULT";
         }
     }
+    HGM_LOGI("HandleScreenPowerStatus curScreen:%{public}d screenMaterialType:%{public}d strategyId:%{public}s",
+        static_cast<int>(curScreenId_), hgmCore.GetScreenMaterialType(curScreenId_), curScreenStrategyId_.c_str());
 
     SyncAppVote();
     hgmCore.SetLtpoConfig();
     FrameRateReport();
     HgmConfigCallbackManager::GetInstance()->SyncHgmConfigChangeCallback();
 
-    // hgm warning: use !isLtpo_ instead after GetDisplaySupportedModes ready
-    if (curScreenStrategyId_.find("LTPO") == std::string::npos) {
+    // hgm warning ok: use !isLtpo_ instead after GetDisplaySupportedModes ready
+    if (!isLtpo_) {
         DeliverRefreshRateVote(0, "VOTER_LTPO", REMOVE_VOTE);
     }
 }
@@ -657,6 +658,8 @@ void HgmFrameRateManager::DeliverRefreshRateVote(pid_t pid, std::string eventNam
 
     std::lock_guard<std::mutex> lock(voteMutex_);
     auto& vec = voteRecord_[eventName];
+
+    // clear
     if ((pid == 0) & (eventStatus == REMOVE_VOTE)) {
         if (!vec.empty()) {
             vec.clear();
@@ -665,24 +668,31 @@ void HgmFrameRateManager::DeliverRefreshRateVote(pid_t pid, std::string eventNam
         return;
     }
 
-    for (auto it = vec.begin(); it != vec.end(); it++) {
-        if ((*it).first != pid) {
-            continue;
-        }
-
+    // modify
+    auto iter = std::find_if(vec.begin(), vec.end(), [&pid](auto iter) { return iter.first == pid; });
+    if (iter != vec.end()) {
         if (eventStatus == REMOVE_VOTE) {
-            it = vec.erase(it);
+            // remove
+            vec.erase(iter);
             MarkVoteChange();
-            return;
         } else {
-            if ((*it).second.first != min || (*it).second.second != max) {
-                (*it).second = std::make_pair(min, max);
+            // update threshold
+            if (iter->second.first != min || iter->second.second != max) {
+                iter->second = std::make_pair(min, max);
                 MarkVoteChange();
             }
-            return;
+            // pid to back
+            if (iter != vec.end() - 1) {
+                auto val = *iter;
+                vec.erase(iter);
+                vec.emplace_back(val);
+                MarkVoteChange();
+            }
         }
+        return;
     }
 
+    // add
     if (eventStatus == ADD_VOTE) {
         pidRecord_.insert(pid);
         vec.push_back(std::make_pair(pid, std::make_pair(min, max)));
@@ -802,12 +812,6 @@ void HgmFrameRateManager::UpdateVoteRule()
     } else {
         voters_.insert(dstPos, srcScene);
     }
-}
-
-std::string HgmFrameRateManager::GetScreenType(ScreenId screenId)
-{
-    // hgm warning: use GetDisplaySupportedModes instead
-    return (screenId == 0) ? "LTPO" : "LTPS";
 }
 
 void HgmFrameRateManager::CleanVote(pid_t pid)

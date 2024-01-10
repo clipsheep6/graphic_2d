@@ -19,8 +19,8 @@
 
 #include "txt/paragraph_builder.h"
 
-#include "flutter/display_list/dl_paint.h"
-#include "third_party/skia/modules/skparagraph/include/ParagraphBuilder.h"
+#include "paragraph_skia.h"
+#include "modules/skparagraph/include/ParagraphBuilder.h"
 
 namespace txt {
 
@@ -32,8 +32,7 @@ namespace txt {
 class ParagraphBuilderSkia : public ParagraphBuilder {
  public:
   ParagraphBuilderSkia(const ParagraphStyle& style,
-                       std::shared_ptr<FontCollection> font_collection,
-                       const bool impeller_enabled);
+                       std::shared_ptr<FontCollection> font_collection);
 
   virtual ~ParagraphBuilderSkia();
 
@@ -46,22 +45,16 @@ class ParagraphBuilderSkia : public ParagraphBuilder {
 
  private:
   skia::textlayout::ParagraphPainter::PaintID CreatePaintID(
-      const flutter::DlPaint& dl_paint);
+      const PaintRecord& paint);
   skia::textlayout::ParagraphStyle TxtToSkia(const ParagraphStyle& txt);
   skia::textlayout::TextStyle TxtToSkia(const TextStyle& txt);
 
   std::shared_ptr<skia::textlayout::ParagraphBuilder> builder_;
   TextStyle base_style_;
 
-  /// @brief      Whether Impeller is enabled in the runtime.
-  ///
-  /// @note       As of the time of this writing, this is used to draw text
-  ///             decorations (i.e. dashed and dotted lines) directly using the
-  ///             `drawLine` API, because Impeller's path rendering does not
-  ///             support dashed and dotted lines (but Skia's does).
-  const bool impeller_enabled_;
+
   std::stack<TextStyle> txt_style_stack_;
-  std::vector<flutter::DlPaint> dl_paints_;
+  std::vector<PaintRecord> paints_;
 };
 
 }  // namespace txt

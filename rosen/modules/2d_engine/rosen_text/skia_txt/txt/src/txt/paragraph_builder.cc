@@ -16,9 +16,9 @@
 
 #include "paragraph_builder.h"
 
-#include "flutter/third_party/txt/src/skia/paragraph_builder_skia.h"
+#include "skia/paragraph_builder_skia.h"
 #include "paragraph_style.h"
-#include "third_party/icu/source/common/unicode/unistr.h"
+#include "third_party/icu/icu4c/source/common/unicode/unistr.h"
 
 namespace txt {
 
@@ -30,10 +30,8 @@ namespace txt {
 /// @param[in]  impeller_enabled  Whether Impeller is enabled in the runtime.
 std::unique_ptr<ParagraphBuilder> ParagraphBuilder::CreateSkiaBuilder(
     const ParagraphStyle& style,
-    std::shared_ptr<FontCollection> font_collection,
-    const bool impeller_enabled) {
-  return std::make_unique<ParagraphBuilderSkia>(style, font_collection,
-                                                impeller_enabled);
+    std::shared_ptr<FontCollection> font_collection) {
+  return std::make_unique<ParagraphBuilderSkia>(style, font_collection);
 }
 
 }  // namespace txt

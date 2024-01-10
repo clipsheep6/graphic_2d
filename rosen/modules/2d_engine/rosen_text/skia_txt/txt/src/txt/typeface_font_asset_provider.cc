@@ -16,7 +16,6 @@
 
 #include "txt/typeface_font_asset_provider.h"
 
-#include "flutter/fml/logging.h"
 #include "third_party/skia/include/core/SkString.h"
 #include "third_party/skia/include/core/SkTypeface.h"
 
@@ -37,13 +36,13 @@ std::string TypefaceFontAssetProvider::GetFamilyName(int index) const {
 }
 
 // |FontAssetProvider|
-sk_sp<SkFontStyleSet> TypefaceFontAssetProvider::MatchFamily(
+SkFontStyleSet* TypefaceFontAssetProvider::MatchFamily(
     const std::string& family_name) {
   auto found = registered_families_.find(CanonicalFamilyName(family_name));
   if (found == registered_families_.end()) {
     return nullptr;
   }
-  return found->second;
+  return (SkFontStyleSet*)(found->second.get());
 }
 
 void TypefaceFontAssetProvider::RegisterTypeface(sk_sp<SkTypeface> typeface) {
@@ -103,15 +102,15 @@ void TypefaceFontStyleSet::getStyle(int index,
   }
 }
 
-sk_sp<SkTypeface> TypefaceFontStyleSet::createTypeface(int i) {
+SkTypeface* TypefaceFontStyleSet::createTypeface(int i) {
   size_t index = i;
   if (index >= typefaces_.size()) {
     return nullptr;
   }
-  return typefaces_[index];
+  return (SkTypeface*)(typefaces_[index].get());;
 }
 
-sk_sp<SkTypeface> TypefaceFontStyleSet::matchStyle(const SkFontStyle& pattern) {
+SkTypeface* TypefaceFontStyleSet::matchStyle(const SkFontStyle& pattern) {
   return matchStyleCSS3(pattern);
 }
 

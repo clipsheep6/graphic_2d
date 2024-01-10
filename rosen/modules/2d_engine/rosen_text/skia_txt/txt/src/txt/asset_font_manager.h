@@ -20,7 +20,7 @@
 #include <memory>
 #include <utility>
 
-#include "flutter/fml/macros.h"
+#include "macros.h"
 #include "third_party/skia/include/core/SkFontMgr.h"
 #include "third_party/skia/include/core/SkStream.h"
 #include "txt/font_asset_provider.h"
@@ -36,7 +36,7 @@ class AssetFontManager : public SkFontMgr {
 
  protected:
   // |SkFontMgr|
-  sk_sp<SkFontStyleSet> onMatchFamily(const char familyName[]) const override;
+   SkFontStyleSet* onMatchFamily(const char familyName[]) const override;
 
   std::unique_ptr<FontAssetProvider> font_provider_;
 
@@ -48,14 +48,14 @@ class AssetFontManager : public SkFontMgr {
   void onGetFamilyName(int index, SkString* familyName) const override;
 
   // |SkFontMgr|
-  sk_sp<SkFontStyleSet> onCreateStyleSet(int index) const override;
+  SkFontStyleSet* onCreateStyleSet(int index) const override;
 
   // |SkFontMgr|
-  sk_sp<SkTypeface> onMatchFamilyStyle(const char familyName[],
+  SkTypeface* onMatchFamilyStyle(const char familyName[],
                                        const SkFontStyle&) const override;
 
   // |SkFontMgr|
-  sk_sp<SkTypeface> onMatchFamilyStyleCharacter(
+  SkTypeface* onMatchFamilyStyleCharacter(
       const char familyName[],
       const SkFontStyle&,
       const char* bcp47[],

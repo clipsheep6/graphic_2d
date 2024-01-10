@@ -20,8 +20,9 @@
 #include <optional>
 
 #include "txt/paragraph.h"
+#include "txt/paint_record.h"
 
-#include "third_party/skia/modules/skparagraph/include/Paragraph.h"
+#include "modules/skparagraph/include/Paragraph.h"
 
 namespace txt {
 
@@ -29,8 +30,7 @@ namespace txt {
 class ParagraphSkia : public Paragraph {
  public:
   ParagraphSkia(std::unique_ptr<skia::textlayout::Paragraph> paragraph,
-                std::vector<flutter::DlPaint>&& dl_paints,
-                bool impeller_enabled);
+                std::vector<PaintRecord>&& paints);
 
   virtual ~ParagraphSkia() = default;
 
@@ -62,7 +62,9 @@ class ParagraphSkia : public Paragraph {
 
   void Layout(double width) override;
 
-  bool Paint(flutter::DisplayListBuilder* builder, double x, double y) override;
+  bool Paint(SkCanvas* canvas, double x, double y) override;
+
+  bool Paint(ParagraphPainter* painter, double x, double y) override;
 
   std::vector<TextBox> GetRectsForRange(
       size_t start,
@@ -75,25 +77,15 @@ class ParagraphSkia : public Paragraph {
   PositionWithAffinity GetGlyphPositionAtCoordinate(double dx,
                                                     double dy) override;
 
-  bool GetGlyphInfoAt(
-      unsigned offset,
-      skia::textlayout::Paragraph::GlyphInfo* glyphInfo) const override;
-
-  bool GetClosestGlyphInfoAtCoordinate(
-      double dx,
-      double dy,
-      skia::textlayout::Paragraph::GlyphInfo* glyphInfo) const override;
-
   Range<size_t> GetWordBoundary(size_t offset) override;
 
  private:
   TextStyle SkiaToTxt(const skia::textlayout::TextStyle& skia);
 
   std::unique_ptr<skia::textlayout::Paragraph> paragraph_;
-  std::vector<flutter::DlPaint> dl_paints_;
+  std::vector<PaintRecord> paints_;
   std::optional<std::vector<LineMetrics>> line_metrics_;
   std::vector<TextStyle> line_metrics_styles_;
-  const bool impeller_enabled_;
 };
 
 }  // namespace txt

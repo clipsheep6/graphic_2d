@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "flutter/fml/macros.h"
+#include "macros.h"
 #include "third_party/skia/include/core/SkFontMgr.h"
 #include "txt/font_asset_provider.h"
 
@@ -42,10 +42,10 @@ class TypefaceFontStyleSet : public SkFontStyleSet {
   void getStyle(int index, SkFontStyle* style, SkString* name) override;
 
   // |SkFontStyleSet|
-  sk_sp<SkTypeface> createTypeface(int index) override;
+  SkTypeface* createTypeface(int index) override;
 
   // |SkFontStyleSet|
-  sk_sp<SkTypeface> matchStyle(const SkFontStyle& pattern) override;
+  SkTypeface* matchStyle(const SkFontStyle& pattern) override;
 
  private:
   std::vector<sk_sp<SkTypeface>> typefaces_;
@@ -70,7 +70,7 @@ class TypefaceFontAssetProvider : public FontAssetProvider {
   std::string GetFamilyName(int index) const override;
 
   // |FontAssetProvider|
-  sk_sp<SkFontStyleSet> MatchFamily(const std::string& family_name) override;
+  SkFontStyleSet* MatchFamily(const std::string& family_name) override;
 
  private:
   std::unordered_map<std::string, sk_sp<TypefaceFontStyleSet>>

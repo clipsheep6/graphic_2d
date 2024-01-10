@@ -22,7 +22,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "flutter/fml/macros.h"
+#include "macros.h"
 #include "third_party/googletest/googletest/include/gtest/gtest_prod.h"  // nogncheck
 #include "third_party/skia/include/core/SkFontMgr.h"
 #include "third_party/skia/include/core/SkRefCnt.h"
@@ -40,7 +40,7 @@ class FontCollection : public std::enable_shared_from_this<FontCollection> {
 
   size_t GetFontManagersCount() const;
 
-  void SetupDefaultFontManager(uint32_t font_initialization_data);
+  void SetupDefaultFontManager();
   void SetDefaultFontManager(sk_sp<SkFontMgr> font_manager);
   void SetAssetFontManager(sk_sp<SkFontMgr> font_manager);
   void SetDynamicFontManager(sk_sp<SkFontMgr> font_manager);

@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "flutter/fml/macros.h"
+#include "macros.h"
 #include "font_collection.h"
 #include "paragraph.h"
 #include "paragraph_style.h"
@@ -33,8 +33,7 @@ class ParagraphBuilder {
  public:
   static std::unique_ptr<ParagraphBuilder> CreateSkiaBuilder(
       const ParagraphStyle& style,
-      std::shared_ptr<FontCollection> font_collection,
-      const bool impeller_enabled);
+      std::shared_ptr<FontCollection> font_collection);
 
   virtual ~ParagraphBuilder() = default;
 

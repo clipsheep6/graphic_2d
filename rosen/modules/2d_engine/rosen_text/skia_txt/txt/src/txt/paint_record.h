@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google Inc.
+ * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef TXT_FONT_ASSET_PROVIDER_H_
-#define TXT_FONT_ASSET_PROVIDER_H_
+#ifndef LIB_TXT_SRC_PAINT_RECORD_H_
+#define LIB_TXT_SRC_PAINT_RECORD_H_
 
+#include <optional>
 #include <string>
-
-#include "third_party/skia/include/core/SkFontMgr.h"
+#include <vector>
 
 namespace txt {
 
-class FontAssetProvider {
+class PaintRecord {
  public:
-  virtual ~FontAssetProvider() = default;
 
-  virtual size_t GetFamilyCount() const = 0;
-  virtual std::string GetFamilyName(int index) const = 0;
-  virtual SkFontStyleSet* MatchFamily(const std::string& family_name) = 0;
-
- protected:
-  static std::string CanonicalFamilyName(std::string family_name);
 };
 
 }  // namespace txt
 
-#endif  // TXT_FONT_ASSET_PROVIDER_H_
+#endif  // LIB_TXT_SRC_PAINT_RECORD_H_

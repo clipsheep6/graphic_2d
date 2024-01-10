@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "flutter/display_list/dl_paint.h"
+#include "paint_record.h"
 #include "font_features.h"
 #include "font_style.h"
 #include "font_weight.h"
@@ -56,8 +56,8 @@ class TextStyle {
   double height = 1.0;
   bool has_height_override = false;
   std::string locale;
-  std::optional<flutter::DlPaint> background;
-  std::optional<flutter::DlPaint> foreground;
+  std::optional<PaintRecord> background;
+  std::optional<PaintRecord> foreground;
   // An ordered list of shadows where the first shadow will be drawn first (at
   // the bottom).
   std::vector<TextShadow> text_shadows;

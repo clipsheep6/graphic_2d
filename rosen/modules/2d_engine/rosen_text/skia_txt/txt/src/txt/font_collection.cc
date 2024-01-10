@@ -24,8 +24,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "flutter/fml/logging.h"
-#include "flutter/fml/trace_event.h"
 #include "txt/platform.h"
 #include "txt/text_style.h"
 
@@ -43,9 +41,8 @@ size_t FontCollection::GetFontManagersCount() const {
   return GetFontManagerOrder().size();
 }
 
-void FontCollection::SetupDefaultFontManager(
-    uint32_t font_initialization_data) {
-  default_font_manager_ = GetDefaultFontManager(font_initialization_data);
+void FontCollection::SetupDefaultFontManager() {
+  default_font_manager_ = GetDefaultFontManager();
   skt_collection_.reset();
 }
 

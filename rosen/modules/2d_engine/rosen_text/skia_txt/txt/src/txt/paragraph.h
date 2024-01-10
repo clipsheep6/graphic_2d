@@ -18,13 +18,12 @@
 #ifndef LIB_TXT_SRC_PARAGRAPH_H_
 #define LIB_TXT_SRC_PARAGRAPH_H_
 
-#include "flutter/display_list/dl_builder.h"
 #include "line_metrics.h"
 #include "paragraph_style.h"
 #include "third_party/skia/include/core/SkFont.h"
 #include "third_party/skia/include/core/SkRect.h"
-#include "third_party/skia/modules/skparagraph/include/Metrics.h"
-#include "third_party/skia/modules/skparagraph/include/Paragraph.h"
+#include "modules/skparagraph/include/Metrics.h"
+#include "modules/skparagraph/include/Paragraph.h"
 
 class SkCanvas;
 
@@ -148,9 +147,9 @@ class Paragraph {
 
   // Paints the laid out text onto the supplied DisplayListBuilder at
   // (x, y) offset from the origin. Only valid after Layout() is called.
-  virtual bool Paint(flutter::DisplayListBuilder* builder,
-                     double x,
-                     double y) = 0;
+  virtual bool Paint(SkCanvas* canvas, double x, double y) = 0;
+
+  virtual bool Paint(ParagraphPainter* painter, double x, double y) = 0;
 
   // Returns a vector of bounding boxes that enclose all text between start and
   // end glyph indexes, including start and excluding end.
@@ -175,15 +174,6 @@ class Paragraph {
   // with the top left corner as the origin, and +y direction as down.
   virtual PositionWithAffinity GetGlyphPositionAtCoordinate(double dx,
                                                             double dy) = 0;
-
-  virtual bool GetGlyphInfoAt(
-      unsigned offset,
-      skia::textlayout::Paragraph::GlyphInfo* glyphInfo) const = 0;
-
-  virtual bool GetClosestGlyphInfoAtCoordinate(
-      double dx,
-      double dy,
-      skia::textlayout::Paragraph::GlyphInfo* glyphInfo) const = 0;
 
   // Finds the first and last glyphs that define a word containing the glyph at
   // index offset.

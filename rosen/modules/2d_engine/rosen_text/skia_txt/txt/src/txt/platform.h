@@ -8,14 +8,14 @@
 #include <string>
 #include <vector>
 
-#include "flutter/fml/macros.h"
+#include "macros.h"
 #include "third_party/skia/include/core/SkFontMgr.h"
 
 namespace txt {
 
 std::vector<std::string> GetDefaultFontFamilies();
 
-sk_sp<SkFontMgr> GetDefaultFontManager(uint32_t font_initialization_data = 0);
+sk_sp<SkFontMgr> GetDefaultFontManager();
 
 }  // namespace txt
 

@@ -24,7 +24,7 @@ namespace Rosen {
 namespace Drawing {
 class DRAWING_API RecordingImageFilter : public ImageFilter {
 public:
-    /*
+    /**
      * @brief         Creates a CreateBlurImageFilterOpItem to add to the ImageFilterCmdList.
      * @param sigmaX  The Gaussian sigma value of X axis.
      * @param sigmaY  The Gaussian sigma value of Y axis.
@@ -34,7 +34,7 @@ public:
     static std::shared_ptr<RecordingImageFilter> CreateBlurImageFilter(scalar sigmaX, scalar sigmaY,
         TileMode mode, const std::shared_ptr<ImageFilter>& input);
 
-    /*
+    /**
      * @brief        Creates a CreateColorFilterImageFilterOpItem to add to the ImageFilterCmdList.
      * @param cf     The color filter that transforms the input image.
      * @param input  The input filter. If null, will use source bitmap.
@@ -42,7 +42,7 @@ public:
     static std::shared_ptr<RecordingImageFilter> CreateColorFilterImageFilter(const ColorFilter& cf,
         const std::shared_ptr<ImageFilter>& input);
 
-    /*
+    /**
      * @brief        Creates a CreateOffsetImageFilterOpItem to add to the ImageFilterCmdList.
      * @param dx     The x offset of the image in local space.
      * @param dy     The y offset of the image in local space.
@@ -51,7 +51,7 @@ public:
     static std::shared_ptr<RecordingImageFilter> CreateOffsetImageFilter(scalar dx, scalar dy,
         const std::shared_ptr<ImageFilter>& input);
 
-    /*
+    /**
      * @brief                 Creates a CreateArithmeticImageFilterOpItem to add to the ImageFilterCmdList.
      * @param coefficients    Get the four coefficients used to combine the foreground and background in the vector.
                               And The vector size must be four, otherwise the call fails.
@@ -63,7 +63,7 @@ public:
         const std::vector<scalar>& coefficients, bool enforcePMColor,
         const std::shared_ptr<ImageFilter>& background, const std::shared_ptr<ImageFilter>& foreground);
 
-    /*
+    /**
      * @brief     Creates a CreateComposeImageFilterOpItem to add to the ImageFilterCmdList.
      * @param f1  The outer filter that evaluates the results of inner.
      * @param f2  The inner filter that produces the input to outer.
@@ -79,7 +79,7 @@ public:
         return DrawingType::RECORDING;
     }
 
-    /*
+    /**
      * @brief  Gets the pointer to the ImageFilterCmdList.
      */
     std::shared_ptr<ImageFilterCmdList> GetCmdList() const

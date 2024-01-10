@@ -24,13 +24,13 @@ namespace Rosen {
 namespace Drawing {
 class DRAWING_API RecordingShaderEffect : public ShaderEffect {
 public:
-    /*
+    /**
      * @brief        Creates a CreateColorShaderOpItem to add to the ShaderEffectCmdList.
      * @param color  32-bit ARGB color value.
      */
     static std::shared_ptr<RecordingShaderEffect> CreateColorShader(ColorQuad color);
 
-    /*
+    /**
      * @brief       Creates a CreateBlendShaderOpItem to add to the ShaderEffectCmdList.
      * @param dst   To Blend.
      * @param src   To Blend.
@@ -39,7 +39,7 @@ public:
     static std::shared_ptr<RecordingShaderEffect> CreateBlendShader(const ShaderEffect& dst,
         const ShaderEffect& src, BlendMode mode);
 
-    /*
+    /**
      * @brief           Creates a CreateImageShaderOpItem to add to the ShaderEffectCmdList.
      * @param image     Dimensions are taken from Image.
      * @param tileX     Tiling in the x direction.
@@ -50,7 +50,7 @@ public:
     static std::shared_ptr<RecordingShaderEffect> CreateImageShader(
         const Image& image, TileMode tileX, TileMode tileY, const SamplingOptions& sampling, const Matrix& matrix);
 
-    /*
+    /**
      * @brief          Creates a CreatePictureShaderOpItem to add to the ShaderEffectCmdList.
      * @param picture  Shader will draw with this picture.
      * @param tileX    Tiling in the x direction.
@@ -62,7 +62,7 @@ public:
     static std::shared_ptr<RecordingShaderEffect> CreatePictureShader(const Picture& picture,
         TileMode tileX, TileMode tileY, FilterMode mode, const Matrix& matrix, const Rect& rect);
 
-    /*
+    /**
      * @brief          Creates a CreateLinearGradientOpItem to add to the ShaderEffectCmdList.
      * @param startPt  The start point for the gradient.
      * @param endPt    The end point for the gradient.
@@ -74,7 +74,7 @@ public:
     static std::shared_ptr<RecordingShaderEffect> CreateLinearGradient(const Point& startPt, const Point& endPt,
         const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode);
 
-    /*
+    /**
      * @brief           Creates a CreateRadialGradientOpItem to add to the ShaderEffectCmdList.
      * @param centerPt  The center point of the circle for this gradient.
      * @param radius    Must be positive, the radius of the gradient circle.
@@ -85,7 +85,7 @@ public:
      */
     static std::shared_ptr<RecordingShaderEffect> CreateRadialGradient(const Point& centerPt, scalar radius,
         const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode);
-    /*
+    /**
      * @brief              Creates a CreateTwoPointConicalOpItem to add to the ShaderEffectCmdList.
      * @param startPt      The center point for the start circle.
      * @param startRadius  The radius for the start circle.
@@ -100,7 +100,7 @@ public:
     static std::shared_ptr<RecordingShaderEffect> CreateTwoPointConical(const Point& startPt, scalar startRadius,
         const Point& endPt, scalar endRadius, const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos,
         TileMode mode, const Matrix *matrix);
-    /*
+    /**
      * @brief             Creates a CreateSweepGradientOpItem to add to the ShaderEffectCmdList.
      * @param centerPt    The center point for the sweep.
      * @param colors      The vector of colors, to be distributed around the center point.
@@ -122,7 +122,7 @@ public:
         return DrawingType::RECORDING;
     }
 
-    /*
+    /**
      * @brief  Gets the pionter to ShaderEffectCmdList.
      */
     std::shared_ptr<ShaderEffectCmdList> GetCmdList() const

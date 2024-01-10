@@ -54,7 +54,7 @@ public:
     void Scale(scalar sx, scalar sy, scalar px, scalar py);
     void SetScale(scalar sx, scalar sy);
     void SetScaleTranslate(scalar sx, scalar sy, scalar dx, scalar dy);
-    /*
+    /**
      * @brief         Sets Matrix to Matrix multiplied by Matrix constructed
      *                from rotating by degrees about pivot point(0,0).
      * @param degree  Angle of axes relative to upright axes.
@@ -63,7 +63,7 @@ public:
 
     void PostRotate(scalar degree);
 
-    /*
+    /**
      * @brief         Sets Matrix to Matrix constructed from rotating by degrees
      *                about pivot point(px,py), multiplied by Matrix.
      * @param degree  Angle of axes relative to upright axes.
@@ -72,7 +72,7 @@ public:
      */
     void PostRotate(scalar degree, scalar px, scalar py);
 
-    /*
+    /**
      * @brief     Sets Matrix to Matrix constructed from translation (dx, dy) multiplied by Matrix.
      * @param dx  X-axis translation after applying Matrix.
      * @param dy  Y-axis translation after applying Matrix.
@@ -81,7 +81,7 @@ public:
 
     void PostTranslate(scalar dx, scalar dy);
 
-    /*
+    /**
      * @brief     Sets Matrix to Matrix multiplied by Matrix constructed
      *            from scaling by (sx, sy) about pivot point (0, 0).
      * @param sx  Horizontal scale factor.
@@ -91,7 +91,7 @@ public:
 
     void PostScale(scalar sx, scalar sy);
     
-    /*
+    /**
      * @brief         Sets Matrix to Matrix constructed from scaling by (sx, sy)
      *                about pivot point(px,py), multiplied by Matrix.
      * @param sx      horizontal scale factor
@@ -101,31 +101,31 @@ public:
      */
     void PostScale(scalar sx, scalar sy, scalar px, scalar py);
 
-    /*
+    /**
      * @brief         Sets Matrix to Matrix other multiplied by Matrix.
      * @param other   Matrix on left side of multiply expression.
      */
     void PreConcat(const Matrix& other);
 
-    /*
+    /**
      * @brief         Sets Matrix to Matrix other multiplied by Matrix44.
      * @param other   Matrix on left side of multiply expression.
      */
     void PreConcat(const Matrix44& matrix44);
 
-    /*
+    /**
      * @brief         Sets Matrix to Matrix other multiplied by Matrix.
      * @param other   Matrix on right side of multiply expression.
      */
     void PostConcat(const Matrix& other);
 
-    /*
+    /**
      * @brief         Sets Matrix to Matrix other multiplied by Matrix44.
      * @param other   Matrix on right side of multiply expression.
      */
     void PostConcat(const Matrix44& matrix44);
 
-    /*
+    /**
      * @brief           Sets inverse to the inverse of Matrix.
      * @param inverse   To store to inverse Matrix, may be nullptr.
      * @return          Return true if Matrix can be inverted, otherwise return false.
@@ -133,7 +133,7 @@ public:
     bool Invert(Matrix& inverse) const;
     Matrix operator*(const Matrix& other);
 
-    /*
+    /**
      * @brief         Compares Matrix and other.
      * @param other   To compare Matrix.
      * @return        True if Matrix and other are numerically equal.
@@ -143,7 +143,7 @@ public:
         scalar persp0, scalar persp1, scalar persp2);
     void MapPoints(std::vector<Point>& dst, const std::vector<Point>& src, uint32_t count) const;
 
-    /*
+    /**
      * @brief       Sets dst to bounds of src corners mapped by Matrix.
      * @param dst   Storage for bounds of map.
      * @param src   To map.
@@ -151,7 +151,7 @@ public:
      */
     bool MapRect(Rect& dst, const Rect& src) const;
 
-    /*
+    /**
      * @brief         Sets Matrix value.
      * @param index   One of Index.
      * @param value   Scalar to store in Matrix.
@@ -159,13 +159,13 @@ public:
     void Set(Index index, scalar value);
     scalar Get(int index) const;
 
-    /*
+    /**
      * @brief         Copies nine scalar values contained by Matrix into buffer.
      * @param buffer  Storage for nine scalar values
      */
     void GetAll(Buffer& buffer) const;
 
-    /*
+    /**
      * @brief         Copies nine scalar values contained by Matrix from buffer.
      * @param buffer  Storage for nine scalar values
      */
@@ -183,11 +183,12 @@ public:
         return reinterpret_cast<const T*>(matrixImplPtr.get());
     }
 
-    /*
-     * Returns true if matrix is Identity. Identity matrix is:
+    /**
+     * @brief Returns true if matrix is Identity. Identity matrix is:
      *    | 1 0 0 |
      *    | 0 1 0 |
      *    | 0 0 1 |
+     * @return true if is identity
      */
     bool IsIdentity() const;
 

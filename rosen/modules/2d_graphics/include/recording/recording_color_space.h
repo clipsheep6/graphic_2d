@@ -25,23 +25,23 @@ namespace Drawing {
 class DRAWING_API RecordingColorSpace : public ColorSpace {
 public:
 
-    /*
+    /**
      * @brief  Creates a CreateSRGBOpItem to add to the ColorSpaceCmdList.
      */
     static std::shared_ptr<RecordingColorSpace> CreateSRGB();
 
-    /*
+    /**
      * @brief  Creates a CreateSRGBLinearOpItem to add to the ColorSpaceCmdList.
      */
     static std::shared_ptr<RecordingColorSpace> CreateSRGBLinear();
 
-    /*
+    /**
      * @brief        Creates a CreateRefImageOpItem to add to the ColorSpaceCmdList.
      * @param image  The range of colors.
      */
     static std::shared_ptr<RecordingColorSpace> CreateRefImage(const Image& image);
 
-    /*
+    /**
      * @brief         Creates a CreateRGBOpItem to add to the ColorSpaceCmdList.
      * @param func    The type of transfer function.
      * @param matrix  The type of transfer matrix.
@@ -56,7 +56,7 @@ public:
         return DrawingType::RECORDING;
     }
 
-    /*
+    /**
      * @brief  Gets the pointer to the ColorSpaceCmdList.
      */
     std::shared_ptr<ColorSpaceCmdList> GetCmdList() const

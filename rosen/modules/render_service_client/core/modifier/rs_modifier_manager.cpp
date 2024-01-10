@@ -90,6 +90,8 @@ bool RSModifierManager::Animate(int64_t time, int64_t vsyncPeriod)
             return true;
         }
 
+        auto targetId = animation->GetTargetId();
+        RS_TRACE_NAME("RSModifierManager::Animate targetId: " + std::to_string(targetId));
         bool isFinished = false;
         AnimationId animId = animation->GetAnimationId();
         if (!JudgeAnimateWhetherSkip(animId, time, vsyncPeriod)) {

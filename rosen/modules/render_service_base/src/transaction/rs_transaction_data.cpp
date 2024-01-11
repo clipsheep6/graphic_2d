@@ -28,6 +28,10 @@ static constexpr size_t PARCEL_MAX_CPACITY = 2000 * 1024; // upper bound of parc
 static constexpr size_t PARCEL_SPLIT_THRESHOLD = 1800 * 1024; // should be < PARCEL_MAX_CPACITY
 }
 
+std::function<void(uint64_t, uint64_t, int)> RSTransactionData::alarmLogFunc = [](uint64_t nodeId, uint64_t count, int num) { 
+    ROSEN_LOGW("jerryX--1 node:%{public}llu send %{public}llu commands, total num of rsNode is %{public}d", nodeId, count, num);
+};
+
 RSTransactionData* RSTransactionData::Unmarshalling(Parcel& parcel)
 {
     auto transactionData = new RSTransactionData();
@@ -37,6 +41,11 @@ RSTransactionData* RSTransactionData::Unmarshalling(Parcel& parcel)
     ROSEN_LOGE("RSTransactionData Unmarshalling Failed");
     delete transactionData;
     return nullptr;
+}
+
+void RSTransactionData::AddAlarmLog(std::function<void(uint64_t, uint64_t, int)> func) {
+    ROSEN_LOGW("jerryX-- RSTransactionData::AddAlarmLog");
+	alarmLogFunc = func;
 }
 
 RSTransactionData::~RSTransactionData()
@@ -55,8 +64,16 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
     size_t marshaledSize = 0;
     static bool isUniRender = RSSystemProperties::GetUniRenderEnabled();
     success = success && parcel.WriteBool(isUniRender);
+    std::unordered_map<NodeId, uint64_t> commandNodeIdCount;
     while (marshallingIndex_ < payload_.size()) {
         auto& [nodeId, followType, command] = payload_[marshallingIndex_];
+        
+        if (commandNodeIdCount.count(nodeId)) {
+            commandNodeIdCount[nodeId] += 1;
+        } else {
+            commandNodeIdCount[nodeId] = 1;
+        }
+        
         if (!isUniRender) {
             success = success && parcel.WriteUint64(nodeId);
             success = success && parcel.WriteUint8(static_cast<uint8_t>(followType));
@@ -72,13 +89,28 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
             break;
         }
     }
-    if (marshaledSize < payload_.size()) {
+    if (marshallingIndex_ > 10) {
+        uint64_t maxCount = 0;
+        NodeId maxNodeId = -1;
+        int rsNodeNum = 0;
+        for (auto it = commandNodeIdCount.begin(); it != commandNodeIdCount.end(); ++it) {
+            if (it->second > maxCount) {
+                maxNodeId = it->first;
+                maxCount = it->second;
+            }
+            ROSEN_LOGW("jerryX rsNodeId of command: %{public}llu", it->first);
+            rsNodeNum++;
+        }
+
         // correct command size recorded in Parcel
         *reinterpret_cast<int32_t*>(parcel.GetData() + recordPosition) = static_cast<int32_t>(marshaledSize);
-        ROSEN_LOGW("RSTransactionData::Marshalling data split to several parcels"
+        ROSEN_LOGW("jerryX-- RSTransactionData::Marshalling data split to several parcels"
                    ", marshaledSize:%{public}zu, marshallingIndex_:%{public}zu, total count:%{public}zu"
-                   ", parcel size:%{public}zu, threshold:%{public}zu",
-            marshaledSize, marshallingIndex_, payload_.size(), parcel.GetDataSize(), PARCEL_SPLIT_THRESHOLD);
+                   ", parcel size:%{public}zu, threshold:%{public}zu, node:%{public}llu send %{public}llu commands",
+            marshaledSize, marshallingIndex_, payload_.size(), parcel.GetDataSize(), PARCEL_SPLIT_THRESHOLD, 
+		    maxNodeId, maxCount);
+
+        RSTransactionData::alarmLogFunc(maxNodeId, maxCount, rsNodeNum);
     }
     success = success && parcel.WriteBool(needSync_);
     success = success && parcel.WriteBool(needCloseSync_);

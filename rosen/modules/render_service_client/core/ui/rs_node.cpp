@@ -139,6 +139,21 @@ std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation()
     return implicitAnimator->CloseImplicitAnimation();
 }
 
+void RSNode::SetFrameNodeInfo(int32_t id, std::string tag) {
+    ROSEN_LOGE("jerryX--- RSNode::SetFrameNodeInfo rsNodeId = %{public}llu ", 
+        "frameId = %{public}d, tag = %{public}s", GetId(), id, tag.c_str());
+	frameNodeId = id;
+	frameNodeTag = tag;
+}
+
+int32_t RSNode::GetFrameNodeId() {
+	return frameNodeId;
+}
+
+std::string RSNode::GetFrameNodeTag() {
+	return frameNodeTag;
+}
+
 void RSNode::AddKeyFrame(
     float fraction, const RSAnimationTimingCurve& timingCurve, const PropertyCallback& propertyCallback)
 {

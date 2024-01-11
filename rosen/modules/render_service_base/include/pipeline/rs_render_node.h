@@ -200,11 +200,7 @@ public:
 
     virtual void AddDirtyType(RSModifierType type)
     {
-#ifndef USE_ROSEN_DRAWING
-        dirtyTypes_.emplace(type);
-#else
         dirtyTypes_.set(static_cast<int>(type), true);
-#endif
     }
 
     std::tuple<bool, bool, bool> Animate(int64_t timestamp, int64_t period = 0, bool isDisplaySyncEnabled = false);
@@ -553,12 +549,7 @@ protected:
     bool isOnTheTree_ = false;
     NodeId drawingCacheRootId_ = INVALID_NODEID;
     bool mustRenewedInfo_ = false;
-
-#ifndef USE_ROSEN_DRAWING
-    std::unordered_set<RSModifierType> dirtyTypes_;
-#else
     std::bitset<static_cast<int>(RSModifierType::MAX_RS_MODIFIER_TYPE)> dirtyTypes_;
-#endif
     bool isBootAnimation_ = false;
     inline void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas)
     {

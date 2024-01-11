@@ -788,17 +788,9 @@ void RSRenderNode::SetContentDirty()
 
 void RSRenderNode::SetDirty(bool forceAddToActiveList)
 {
-#ifndef USE_ROSEN_DRAWING
-    bool dirtyEmpty = dirtyTypes_.empty();
-#else
     bool dirtyEmpty = dirtyTypes_.none();
-#endif
     // TO avoid redundant add, only add if both: 1. on-tree node 2. newly dirty node (or forceAddToActiveList = true)
-#ifdef DDGR_ENABLE_FEATURE_OPINC
-    if (dirtyStatus_ < NodeDirty::DIRTY || dirtyEmpty || forceAddToActiveList) {
-#else
     if (dirtyStatus_ == NodeDirty::CLEAN || dirtyEmpty || forceAddToActiveList) {
-#endif
         if (auto context = GetContext().lock()) {
             context->AddActiveNode(shared_from_this());
         }
@@ -809,11 +801,7 @@ void RSRenderNode::SetDirty(bool forceAddToActiveList)
 #ifdef DDGR_ENABLE_FEATURE_OPINC
 void RSRenderNode::SetDirtyByOnTree(bool forceAddToActiveList)
 {
-#ifndef USE_ROSEN_DRAWING
-    bool dirtyEmpty = dirtyTypes_.empty();
-#else
     bool dirtyEmpty = dirtyTypes_.none();
-#endif
     if (isOnTheTree_ && (dirtyStatus_ < NodeDirty::ON_TREE_DIRTY || dirtyEmpty || forceAddToActiveList)) {
         if (auto context = GetContext().lock()) {
             context->AddActiveNode(shared_from_this());
@@ -1375,11 +1363,7 @@ void RSRenderNode::DumpNodeInfo(DfxString& log)
 bool RSRenderNode::ApplyModifiers()
 {
     // quick reject test
-#ifndef USE_ROSEN_DRAWING
-    if (!RSRenderNode::IsDirty() || dirtyTypes_.empty()) {
-#else
     if (!RSRenderNode::IsDirty() || dirtyTypes_.none()) {
-#endif
         return false;
     }
     const auto prevPositionZ = GetRenderProperties().GetPositionZ();
@@ -1392,11 +1376,7 @@ bool RSRenderNode::ApplyModifiers()
 
     // Apply modifiers
     for (auto& [id, modifier] : modifiers_) {
-#ifndef USE_ROSEN_DRAWING
-        if (!dirtyTypes_.count(modifier->GetType())) {
-#else
         if (!dirtyTypes_.test(static_cast<size_t>(modifier->GetType()))) {
-#endif
             continue;
         }
         modifier->Apply(context);
@@ -1411,12 +1391,8 @@ bool RSRenderNode::ApplyModifiers()
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
         manager != nullptr &&
-#ifndef USE_ROSEN_DRAWING
-        (dirtyTypes_.count(RSModifierType::BACKGROUND_COLOR) || dirtyTypes_.count(RSModifierType::BG_IMAGE))) {
-#else
         (dirtyTypes_.test(static_cast<size_t>(RSModifierType::BACKGROUND_COLOR)) ||
         dirtyTypes_.test(static_cast<size_t>(RSModifierType::BG_IMAGE)))) {
-#endif
         manager->InvalidateCache();
     }
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(true)) {
@@ -1430,11 +1406,7 @@ bool RSRenderNode::ApplyModifiers()
 #endif
 
     // update state
-#ifndef USE_ROSEN_DRAWING
-    dirtyTypes_.clear();
-#else
     dirtyTypes_.reset();
-#endif
     UpdateShouldPaint();
 
     // update rate decider scale reference size.
@@ -1656,7 +1628,8 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
         cacheSurface_ = nullptr;
     }
     auto cacheType = GetCacheType();
-    float width = 0.0f, height = 0.0f;
+    float width = 0.0f;
+    float height = 0.0f;
     Vector2f size = GetOptionalBufferSize();
     boundsWidth_ = size.x_;
     boundsHeight_ = size.y_;

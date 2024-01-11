@@ -623,11 +623,7 @@ bool RSCanvasDrawingRenderNode::IsNeedResetSurface() const
 
 void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType type)
 {
-#ifndef USE_ROSEN_DRAWING
-    dirtyTypes_.emplace(type);
-#else
     dirtyTypes_.set(static_cast<int>(type), true);
-#endif
     for (auto& drawCmdModifier : GetDrawCmdModifiers()) {
         if (drawCmdModifier.second.empty()) {
             continue;

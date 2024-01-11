@@ -331,7 +331,7 @@ RectI RSDirtyRegionManager::MergeHistory(unsigned int age, RectI rect) const
     // therefore, this loop merges rect with age frames' dirtyRect
     // Attention: should not set i >= 0 for unsigned int!!!!!
     for (unsigned int i = historySize_; i > historySize_ - age; --i) {
-        auto subRect = GetHistory((i - 1));
+        auto subRect = GetHistory(i);
         if (subRect.IsEmpty()) {
             continue;
         }

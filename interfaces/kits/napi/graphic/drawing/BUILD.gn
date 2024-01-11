@@ -27,6 +27,7 @@ config("drawing_config") {
     "../drawing",
     "../../../../../../../multimedia/image_framework/interfaces/innerkits/include/",
     "../../../../../rosen/modules/2d_graphics/include",
+    "../../../../../rosen/modules/2d_graphics/src",
     "../../../../../rosen/modules/2d_graphics/src/drawing/engine_adapter",
   ]
 }
@@ -63,7 +64,7 @@ ohos_shared_library("drawing_napi_impl") {
     "text_blob_napi/js_text_blob.cpp",
   ]
 
-  configs = [ ":drawing_config" ]
+  public_configs = [ ":drawing_config" ]
 
   deps = [
     "../../../../../rosen/modules/2d_graphics:2d_graphics",

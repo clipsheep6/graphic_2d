@@ -540,12 +540,6 @@ const std::vector<float>& RSSystemProperties::GetAiInvertCoef()
     return aiInvertCoef;
 }
 
-bool RSSystemProperties::GetProxyNodeDebugEnabled()
-{
-    static bool proxyNodeDebugEnabled = system::GetParameter("persist.sys.graphic.proxyNodeDebugEnabled", "0") != "0";
-    return proxyNodeDebugEnabled;
-}
-
 bool RSSystemProperties::GetUIFirstEnabled()
 {
 #ifdef ROSEN_EMULATOR

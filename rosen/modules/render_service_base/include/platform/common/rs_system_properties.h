@@ -161,7 +161,6 @@ public:
     static HgmRefreshRateModes GetHgmRefreshRateModesEnabled();
 
     static float GetAnimationScale();
-    static bool GetProxyNodeDebugEnabled();
     static bool GetFilterCacheEnabled();
     static int GetFilterCacheUpdateInterval();
     static int GetFilterCacheSizeThreshold();

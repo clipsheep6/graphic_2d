@@ -64,7 +64,7 @@ class ParagraphSkia : public Paragraph {
 
   bool Paint(SkCanvas* canvas, double x, double y) override;
 
-  bool Paint(ParagraphPainter* painter, double x, double y) override;
+  bool Paint(RSCanvas* canvas, double x, double y) override;
 
   std::vector<TextBox> GetRectsForRange(
       size_t start,

@@ -99,10 +99,9 @@ skt::ParagraphStyle ParagraphBuilderSkia::TxtToSkia(const ParagraphStyle& txt) {
   skt::TextStyle text_style;
 
   // Convert the default color of an SkParagraph text style into a DlPaint.
-  // TODO: paint record
-  // PaintRecord paint;
-  // paint.setColor(flutter::DlColor(text_style.getColor()));
-  // text_style.setForegroundPaintID(CreatePaintID(paint));
+  PaintRecord paint;
+  paint.SetColor(text_style.getColor());
+  text_style.setForegroundPaintID(CreatePaintID(paint));
 
   text_style.setFontStyle(MakeSkFontStyle(txt.font_weight, txt.font_style));
   text_style.setFontSize(SkDoubleToScalar(txt.font_size));
@@ -175,10 +174,9 @@ skt::TextStyle ParagraphBuilderSkia::TxtToSkia(const TextStyle& txt) {
   if (txt.foreground.has_value()) {
     skia.setForegroundPaintID(CreatePaintID(txt.foreground.value()));
   } else {
-    // TODO: paint record
-    // PaintRecord paint;
-    // paint.setColor(flutter::DlColor(txt.color));
-    // skia.setForegroundPaintID(CreatePaintID(paint));
+    PaintRecord paint;
+    paint.SetColor(txt.color);
+    skia.setForegroundPaintID(CreatePaintID(paint));
   }
 
   skia.resetFontFeatures();

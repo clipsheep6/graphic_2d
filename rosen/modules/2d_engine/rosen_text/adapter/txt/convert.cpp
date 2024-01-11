@@ -14,6 +14,7 @@
  */
 
 #include "convert.h"
+#include "txt/paint_record.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -73,11 +74,11 @@ txt::ParagraphStyle Convert(const TypographyStyle &style)
         .text_direction = static_cast<txt::TextDirection>(style.textDirection),
         .max_lines = style.maxLines,
         .ellipsis = style.ellipsis,
-        .ellipsis_modal = static_cast<txt::EllipsisModal>(style.ellipsisModal),
+        // .ellipsis_modal = static_cast<txt::EllipsisModal>(style.ellipsisModal),
         .locale = style.locale,
-        .break_strategy = static_cast<minikin::BreakStrategy>(style.breakStrategy),
-        .word_break_type = static_cast<minikin::WordBreakType>(style.wordBreakType),
-        .text_split_ratio = style.textSplitRatio,
+        // .break_strategy = static_cast<minikin::BreakStrategy>(style.breakStrategy),
+        // .word_break_type = static_cast<minikin::WordBreakType>(style.wordBreakType),
+        // .text_split_ratio = style.textSplitRatio,
     };
 }
 
@@ -114,34 +115,47 @@ txt::TextStyle Convert(const TextStyle &style)
     textStyle.height = style.heightScale;
     textStyle.has_height_override = style.heightOnly;
     textStyle.locale = style.locale;
-    textStyle.backgroundRect = { style.backgroundRect.color, style.backgroundRect.leftTopRadius,
-        style.backgroundRect.rightTopRadius, style.backgroundRect.rightBottomRadius,
-        style.backgroundRect.leftBottomRadius };
-    textStyle.styleId = style.styleId;
-#ifndef USE_ROSEN_DRAWING
-    textStyle.has_background = style.background.has_value();
-    textStyle.background = style.background.value_or(SkPaint());
-    textStyle.has_foreground = style.foreground.has_value();
-    textStyle.foreground = style.foreground.value_or(SkPaint());
-#else
-    textStyle.has_background_pen = style.backgroundPen.has_value();
-    textStyle.background_pen = style.backgroundPen.value_or(RSPen());
-    textStyle.has_background_brush = style.backgroundBrush.has_value();
-    textStyle.background_brush = style.backgroundBrush.value_or(RSBrush());
-    textStyle.has_foreground_pen = style.foregroundPen.has_value();
-    textStyle.foreground_pen = style.foregroundPen.value_or(RSPen());
-    textStyle.has_foreground_brush = style.foregroundBrush.has_value();
-    textStyle.foreground_brush = style.foregroundBrush.value_or(RSBrush());
-#endif
+//     textStyle.backgroundRect = { style.backgroundRect.color, style.backgroundRect.leftTopRadius,
+//         style.backgroundRect.rightTopRadius, style.backgroundRect.rightBottomRadius,
+//         style.backgroundRect.leftBottomRadius };
+//     textStyle.styleId = style.styleId;
+// #ifndef USE_ROSEN_DRAWING
+//     textStyle.has_background = style.background.has_value();
+//     textStyle.background = style.background.value_or(SkPaint());
+//     textStyle.has_foreground = style.foreground.has_value();
+//     textStyle.foreground = style.foreground.value_or(SkPaint());
+// #else
+//     textStyle.has_background_pen = style.backgroundPen.has_value();
+//     textStyle.background_pen = style.backgroundPen.value_or(RSPen());
+//     textStyle.has_background_brush = style.backgroundBrush.has_value();
+//     textStyle.background_brush = style.backgroundBrush.value_or(RSBrush());
+//     textStyle.has_foreground_pen = style.foregroundPen.has_value();
+//     textStyle.foreground_pen = style.foregroundPen.value_or(RSPen());
+//     textStyle.has_foreground_brush = style.foregroundBrush.has_value();
+//     textStyle.foreground_brush = style.foregroundBrush.value_or(RSBrush());
+// #endif
+    if (style.backgroundPen.has_value() || style.backgroundBrush.has_value()) {
+        textStyle.background = txt::PaintRecord(
+            style.backgroundBrush.value_or(Drawing::Brush()),
+            style.backgroundPen.value_or(Drawing::Pen())
+        );
+    }
+    if (style.backgroundPen.has_value() || style.backgroundBrush.has_value()) {
+        textStyle.foreground = txt::PaintRecord(
+            style.foregroundBrush.value_or(Drawing::Brush()),
+            style.foregroundPen.value_or(Drawing::Pen())
+        );
+    }
 
-    textStyle.isSymbolGlyph = style.isSymbolGlyph;
+    // textStyle.isSymbolGlyph = style.isSymbolGlyph;
     for (const auto &[color, offset, radius] : style.shadows) {
         auto shadowColor = SkColorSetARGB(color.GetAlpha(), color.GetRed(), color.GetGreen(), color.GetBlue());
-#ifndef USE_ROSEN_DRAWING
+// #ifndef USE_ROSEN_DRAWING
+//         auto shadowOffset = SkPoint::Make(offset.GetX(), offset.GetY());
+// #else
+//         auto shadowOffset = RSPoint{ offset.GetX(), offset.GetY() };
+// #endif
         auto shadowOffset = SkPoint::Make(offset.GetX(), offset.GetY());
-#else
-        auto shadowOffset = RSPoint{ offset.GetX(), offset.GetY() };
-#endif
         textStyle.text_shadows.emplace_back(shadowColor, shadowOffset, radius);
     }
 

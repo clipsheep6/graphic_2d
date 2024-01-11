@@ -27,7 +27,17 @@
 
 class SkCanvas;
 
+namespace OHOS {
+namespace Rosen {
+namespace Drawing {
+    class Canvas;
+}
+}
+}
+
 namespace txt {
+
+using RSCanvas = OHOS::Rosen::Drawing::Canvas;
 
 // Interface for text layout engines.  The current implementation is based on
 // Skia's SkShaper/SkParagraph text layout module.
@@ -149,7 +159,7 @@ class Paragraph {
   // (x, y) offset from the origin. Only valid after Layout() is called.
   virtual bool Paint(SkCanvas* canvas, double x, double y) = 0;
 
-  virtual bool Paint(ParagraphPainter* painter, double x, double y) = 0;
+  virtual bool Paint(RSCanvas* canvas, double x, double y) = 0;
 
   // Returns a vector of bounding boxes that enclose all text between start and
   // end glyph indexes, including start and excluding end.

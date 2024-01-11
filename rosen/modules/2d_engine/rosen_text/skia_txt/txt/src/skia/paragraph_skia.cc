@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <numeric>
 #include "include/core/SkMatrix.h"
+#include "drawing_painter_impl.h"
 
 namespace txt {
 
@@ -136,8 +137,9 @@ bool ParagraphSkia::Paint(SkCanvas* canvas, double x, double y) {
   return true;
 }
 
-bool ParagraphSkia::Paint(ParagraphPainter* painter, double x, double y) {
-  paragraph_->paint(painter, x, y);
+bool ParagraphSkia::Paint(RSCanvas* canvas, double x, double y) {
+  skia::textlayout::RSCanvasParagraphPainter painter(canvas, paints_);
+  paragraph_->paint(&painter, x, y);
   return true;
 }
 
@@ -191,7 +193,7 @@ size_t ParagraphSkia::GetNumberOfLines() const {
 }
 
 int ParagraphSkia::GetLineNumberAt(size_t codeUnitIndex) const {
-  return paragraph_->getLineNumberAtUTF16Offset(codeUnitIndex);
+  return 0;
 }
 
 TextStyle ParagraphSkia::SkiaToTxt(const skt::TextStyle& skia) {

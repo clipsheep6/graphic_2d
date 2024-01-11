@@ -313,6 +313,7 @@ template("graphics2d_source_set") {
         remove_configs = [ "//build/config/compiler:default_include_dirs" ]
         include_dirs += [
           "$flutter_root/txt/src",
+          "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/txt/src",
           "//third_party/skia/third_party/externals/harfbuzz/src",
           "//",
           root_gen_dir,

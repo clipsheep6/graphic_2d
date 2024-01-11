@@ -16,7 +16,7 @@
 #include "typography.h"
 
 #include "skia_adapter/skia_canvas.h"
-#include "txt/paragraph_txt.h"
+#include "skia/paragraph_skia.h"
 
 #include "convert.h"
 
@@ -92,19 +92,20 @@ bool Typography::DidExceedMaxLines() const
 
 int Typography::GetLineCount() const
 {
-    auto paragraphTxt = reinterpret_cast<txt::ParagraphTxt *>(paragraph_.get());
+    auto paragraphTxt = reinterpret_cast<txt::ParagraphSkia *>(paragraph_.get());
     if (paragraphTxt) {
-        return paragraphTxt->GetLineCount();
+        return paragraphTxt->GetNumberOfLines();
     }
     return 0;
 }
 
 void Typography::SetIndents(const std::vector<float>& indents)
 {
-    auto paragraphTxt = reinterpret_cast<txt::ParagraphTxt *>(paragraph_.get());
-    if (paragraphTxt) {
-        paragraphTxt->SetIndents(indents);
-    }
+    // TODO: 
+    // auto paragraphTxt = reinterpret_cast<txt::ParagraphSkia *>(paragraph_.get());
+    // if (paragraphTxt) {
+    //     paragraphTxt->SetIndents(indents);
+    // }
 }
 
 void Typography::Layout(double width)
@@ -170,12 +171,20 @@ Boundary Typography::GetWordBoundaryByIndex(size_t index)
 
 double Typography::GetLineHeight(int lineNumber)
 {
-    return paragraph_->GetLineHeight(lineNumber);
+    const auto &lines = paragraph_->GetLineMetrics();
+    if (lineNumber < lines.size()) {
+        return lines[lineNumber].height;
+    }
+    return 0.0;
 }
 
 double Typography::GetLineWidth(int lineNumber)
 {
-    return paragraph_->GetLineWidth(lineNumber);
+    const auto &lines = paragraph_->GetLineMetrics();
+    if (lineNumber < lines.size()) {
+        return lines[lineNumber].width;
+    }
+    return 0.0;
 }
 } // namespace AdapterTxt
 } // namespace Rosen

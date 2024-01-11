@@ -17,15 +17,48 @@
 #ifndef LIB_TXT_SRC_PAINT_RECORD_H_
 #define LIB_TXT_SRC_PAINT_RECORD_H_
 
-#include <optional>
-#include <string>
-#include <vector>
+#include "draw/pen.h"
+#include "draw/brush.h"
+#include "third_party/skia/include/core/SkColor.h"
 
 namespace txt {
 
-class PaintRecord {
- public:
+struct PaintRecord {
+    using RSBrush = OHOS::Rosen::Drawing::Brush;
+    using RSPen = OHOS::Rosen::Drawing::Pen;
+    using RSColor = OHOS::Rosen::Drawing::Color;
 
+    RSBrush brush;
+    RSPen pen;
+
+    PaintRecord() {}
+    PaintRecord(RSBrush brush, RSPen pen) : brush(brush), pen(pen) {}
+
+    void SetColor(const RSColor &c) {
+        brush.SetColor(c);
+        pen.SetColor(c);
+    }
+
+    void SetColor(SkColor c) {
+        SetColor(ToRSColor(c));
+    }
+
+    bool operator ==(const PaintRecord& rhs) const {
+        return brush == rhs.brush && pen == rhs.pen;
+    }
+
+    bool operator !=(const PaintRecord& rhs) const {
+        return !(*this == rhs);
+    }
+
+    static RSColor ToRSColor(SkColor c) {
+        return RSColor(
+            SkColorGetR(c),
+            SkColorGetG(c),
+            SkColorGetB(c),
+            SkColorGetA(c)
+        );
+    }
 };
 
 }  // namespace txt

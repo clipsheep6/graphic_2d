@@ -20,6 +20,7 @@
 #include <unordered_set>
 
 #include "ipc_callbacks/buffer_available_callback.h"
+#include "ipc_callbacks/buffer_clear_callback.h"
 #include "pipeline/rs_render_service.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_render_service_connection_stub.h"
@@ -115,6 +116,9 @@ private:
 
     void RegisterBufferAvailableListener(
         NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread) override;
+    
+    void RegisterBufferClearListener(
+        NodeId id, sptr<RSIBufferClearCallback> callback) override;
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) override;
 

@@ -29,6 +29,7 @@
 #include "common/rs_occlusion_region.h"
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
+#include "ipc_callbacks/buffer_clear_callback.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
@@ -287,6 +288,8 @@ public:
     // to save callback method sent by RT or UI which depends on the value of "isFromRenderThread".
     void RegisterBufferAvailableListener(
         sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread);
+    
+    void RegisterBufferClearListener(sptr<RSIBufferClearCallback> callback);
 
     // Only SurfaceNode in RT calls "ConnectToNodeInRenderService" to send callback method to RS
     void ConnectToNodeInRenderService();
@@ -294,6 +297,8 @@ public:
     void NotifyRTBufferAvailable();
     bool IsNotifyRTBufferAvailable() const;
     bool IsNotifyRTBufferAvailablePre() const;
+
+    void SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvailable);
 
     void NotifyUIBufferAvailable();
     bool IsNotifyUIBufferAvailable() const;
@@ -546,6 +551,7 @@ private:
     std::mutex mutexRT_;
     std::mutex mutexUI_;
     std::mutex mutex_;
+    std::mutex mutexClear_;
 
     std::mutex parallelVisitMutex_;
 
@@ -574,6 +580,7 @@ private:
     std::atomic_bool isBufferAvailable_ = false;
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
+    sptr<RSIBufferClearCallback> clearBufferCallback_;
     std::function<void(void)> callbackForRenderThreadRefresh_ = nullptr;
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;

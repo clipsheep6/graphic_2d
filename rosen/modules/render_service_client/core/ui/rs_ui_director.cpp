@@ -352,7 +352,7 @@ void RSUIDirector::RecvMessages(std::shared_ptr<RSTransactionData> cmds)
     }
     ROSEN_LOGD("RSUIDirector::RecvMessages success");
     PostTask([cmds]() {
-        ROSEN_LOGD("RSUIDirector::ProcessMessages success");
+        ROSEN_LOGI("RSUIDirector::ProcessMessages success");
         RSUIDirector::ProcessMessages(cmds);
         std::unique_lock<std::mutex> lock(g_vsyncCallbackMutex);
         if (requestVsyncCallback_ != nullptr) {

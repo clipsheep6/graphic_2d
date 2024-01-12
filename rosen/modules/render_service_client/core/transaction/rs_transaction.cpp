@@ -26,6 +26,8 @@ void RSTransaction::FlushImplicitTransaction()
 {
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
+        RS_TRACE_NAME("FlushImplicitTransaction");
+        ROSEN_LOGI("FlushImplicitTransaction")；
         transactionProxy->FlushImplicitTransaction();
     }
 }

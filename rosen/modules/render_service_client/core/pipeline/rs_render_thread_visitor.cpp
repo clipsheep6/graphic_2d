@@ -100,6 +100,7 @@ void RSRenderThreadVisitor::PrepareBaseRenderNode(RSBaseRenderNode& node)
 
 void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
 {
+    RS_TRACE_NAME("PrepareRenderNodes");
     if (isIdle_) {
         curDirtyManager_ = node.GetDirtyManager();
         curDirtyManager_->Clear();
@@ -116,10 +117,13 @@ void RSRenderThreadVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     } else {
         PrepareCanvasRenderNode(node);
     }
+    RS_TRACE_NAME("PreparedNodes: " + std::to_string(preparedCanvasNodeInCurrentSurface_));
+    preparedCanvasNodeInCurrentSurface_ = 0;
 }
 
 void RSRenderThreadVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode& node)
 {
+    preparedCanvasNodeInCurrentSurface_++;
     node.ApplyModifiers();
     if (!node.ShouldPaint()) {
         return;
@@ -434,6 +438,10 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
     needUpdateSurfaceNode_ = false;
     node.SetNeedUpdateSurfaceNode(false);
+    // count processed canvas node
+    RS_TRACE_BEGIN("ProcessedNodes: " + std::to_string(processedCanvasNodeInCurrentSurface_));
+    processedCanvasNodeInCurrentSurface_ = 0; // reset
+    RS_TRACE_END();
     RS_TRACE_END();
 
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -473,6 +481,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 
 void RSRenderThreadVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
 {
+    processedCanvasNodeInCurrentSurface_++;
     if (!node.ShouldPaint()) {
         return;
     }

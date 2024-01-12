@@ -72,6 +72,8 @@ private:
     void ClipHoleForSurfaceNode(RSSurfaceRenderNode& node);
 
     std::vector<NodeId> childSurfaceNodeIds_;
+    unsigned int preparedCanvasNodeInCurrentSurface_ = 0;
+    unsigned int processedCanvasNodeInCurrentSurface_ = 0;
     SkMatrix parentSurfaceNodeMatrix_;
     bool needUpdateSurfaceNode_ = false;
 

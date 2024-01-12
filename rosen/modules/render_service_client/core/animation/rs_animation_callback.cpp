@@ -14,13 +14,18 @@
  */
 
 #include "animation/rs_animation_callback.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
-AnimationCallback::AnimationCallback(const std::function<void()>&& callback) : callback_(std::move(callback)) {}
+AnimationCallback::AnimationCallback(const std::function<void()>&& callback) : callback_(std::move(callback))
+{
+    ROSEN_LOGD("AnimationCallback make (%public}p)", this);
+}
 
 AnimationCallback::~AnimationCallback()
 {
+    ROSEN_LOGD("AnimationCallback run (%public}p) callback_ nullptr is = %{public}d", this, callback_ == nullptr);
     if (callback_ != nullptr) {
         callback_();
     }

@@ -18,6 +18,7 @@
 #ifdef ROSEN_OHOS
 #include "platform/ohos/rs_render_service_connect_hub.h"
 #endif
+#include "platform/common/rs_log.h"
 #include "rs_trace.h"
 #include "ui/rs_ui_director.h"
 #include "sandbox_utils.h"
@@ -65,6 +66,7 @@ void RSApplicationAgentImpl::RegisterRSApplicationAgent()
 void RSApplicationAgentImpl::OnTransaction(std::shared_ptr<RSTransactionData> transactionData)
 {
     RS_TRACE_NAME("RSApplicationAgentImpl::OnTransaction");
+    ROSEN_LOGI("RSApplicationAgentImpl::OnTransaction")；
     RSUIDirector::RecvMessages(transactionData);
 }
 #endif

@@ -398,11 +398,7 @@ void RSSurfaceRenderNode::ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanv
     }
 #endif
 
-#ifndef ROSEN_CROSS_PLATFORM
-    RSPropertiesPainter::DrawBackground(property, canvas, true, IsSelfDrawingNode() && (GetBuffer() != nullptr));
-#else
     RSPropertiesPainter::DrawBackground(property, canvas);
-#endif
     RSPropertiesPainter::DrawMask(property, canvas);
     RSPropertiesPainter::DrawFilter(property, canvas, FilterType::BACKGROUND_FILTER);
 #ifndef USE_ROSEN_DRAWING
@@ -918,7 +914,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
         return;
     }
 
-    bool vis = region.GetSize() > 0;
+    bool vis = !region.IsEmpty();
     if (vis) {
         visibleVec.emplace_back(std::make_pair(GetId(), GetVisibleLevelForWMS(visibleLevel)));
     }
@@ -1072,7 +1068,7 @@ void RSSurfaceRenderNode::ResetDrawingCacheStatusIfNodeStatic(
 {
     // traversal drawing cache nodes including app window
     EraseIf(drawingCacheNodes_, [this, &allRects](const auto& pair) {
-        auto& node = pair.second;
+        auto node = pair.second.lock();
         if (node == nullptr || !node->IsOnTheTree()) {
             return true;
         }

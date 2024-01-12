@@ -303,7 +303,9 @@ public:
 
     void SetUseShadowBatching(bool useShadowBatching);
 
-    void SetColorBlendMode(RSColorBlendModeType blendMode);
+    void SetColorBlendMode(RSColorBlendMode colorBlendMode);
+
+    void SetColorBlendApplyType(RSColorBlendApplyType colorBlendApplyType);
 
     // driven render
     void MarkDrivenRender(bool flag);
@@ -441,6 +443,7 @@ private:
 
     FrameRateRange nodeRange_ = { 0, 0, 0 };
     std::mutex animationMutex_;
+    std::recursive_mutex propertyMutex;
 
     friend class RSUIDirector;
     friend class RSTransition;

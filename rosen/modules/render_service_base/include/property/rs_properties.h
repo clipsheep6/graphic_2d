@@ -30,6 +30,7 @@
 #include "modifier/rs_modifier_type.h"
 #include "property/rs_properties_def.h"
 #include "property/rs_color_picker_cache_task.h"
+#include "render/rs_aibar_filter.h"
 #include "render/rs_border.h"
 #include "render/rs_filter.h"
 #include "render/rs_gradient_blur_para.h"
@@ -334,6 +335,8 @@ public:
 
     void SetColorBlendMode(int colorBlendMode);
     int GetColorBlendMode() const;
+    void SetColorBlendApplyType(int colorBlendApplyType);
+    int GetColorBlendApplyType() const;
 
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     const std::unique_ptr<RSFilterCacheManager>& GetFilterCacheManager(bool isForeground) const;
@@ -382,6 +385,7 @@ private:
     bool useShadowBatching_ = false;
 
     int colorBlendMode_ = 0;
+    int colorBlendApplyType_ = 0;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 

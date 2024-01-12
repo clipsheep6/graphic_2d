@@ -422,12 +422,8 @@ static void MergePath(SkPath& multPath, RenderGroup& group, std::vector<SkPath>&
 void SymbolOpItem::SetSymbol()
 {
     ROSEN_LOGD("SymbolOpItem::SetSymbol GlyphId %{public}d", static_cast<int>(symbol_.symbolInfo_.symbolGlyphId));
-    if (symbol_.symbolInfo_.effect == EffectStrategy::SCALE) {
-        if (!startAnimation_) {
-            InitialScale();
-        }
-        SetScale(0); // scale animation only has one element
-    } else if (symbol_.symbolInfo_.effect == EffectStrategy::HIERARCHICAL) {
+
+    if (symbol_.symbolInfo_.effect == EffectStrategy::HIERARCHICAL) {
         if (!startAnimation_) {
             InitialVariableColor();
         }
@@ -548,11 +544,6 @@ void SymbolOpItem::UpdataVariableColor(const double cur, size_t index)
 void SymbolOpItem::Draw(RSPaintFilterCanvas& canvas, const SkRect*) const
 {
     SkPath path(symbol_.path_);
-
-    if (startAnimation_ && symbol_.symbolInfo_.effect == EffectStrategy::SCALE &&
-            !animation_.empty()) {
-        UpdateScale(animation_[0].curValue, path);
-    }
 
     // 1.0 move path
     path.offset(locate_.x(), locate_.y());
@@ -2826,8 +2817,13 @@ bool RSExtendImageObject::GetDrawingImageFromSurfaceBuffer(Drawing::Canvas& canv
     if (!image_) {
         image_ = std::make_shared<Drawing::Image>();
     }
+#ifndef ROSEN_EMULATOR
+    auto surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
+#else
+    auto surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
+#endif
     if (!image_->BuildFromTexture(*(canvas.GetGPUContext()), externalTextureInfo,
-        Drawing::TextureOrigin::TOP_LEFT, bitmapFormat,
+        surfaceOrigin, bitmapFormat,
         std::make_shared<Drawing::ColorSpace>(Drawing::ColorSpace::ColorSpaceType::SRGB))) {
         RS_LOGE("BuildFromTexture failed");
         return false;
@@ -2961,6 +2957,23 @@ RSExtendImageBaseObj *RSExtendImageBaseObj::Unmarshalling(Parcel &parcel)
         return nullptr;
     }
     return object;
+}
+
+void RSExtendDrawFuncObj::Playback(Drawing::Canvas* canvas, const Drawing::Rect* rect)
+{
+    if (drawFunc_) {
+        drawFunc_(canvas, rect);
+    }
+}
+
+bool RSExtendDrawFuncObj::Marshalling(Parcel &parcel) const
+{
+    return false;
+}
+
+RSExtendDrawFuncObj *RSExtendDrawFuncObj::Unmarshalling(Parcel &parcel)
+{
+    return nullptr;
 }
 } // namespace Rosen
 } // namespace OHOS

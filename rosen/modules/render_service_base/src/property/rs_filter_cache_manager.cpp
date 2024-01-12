@@ -14,6 +14,8 @@
  */
 
 #include "property/rs_filter_cache_manager.h"
+#include "rs_trace.h"
+#include "render/rs_filter.h"
 
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
 #include "include/gpu/GrBackendSurface.h"
@@ -232,11 +234,15 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
     Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_RGBA_8888,
         Drawing::AlphaType::ALPHATYPE_PREMUL };
     auto threadImage = std::make_shared<Drawing::Image>();
-    if (!threadImage->BuildFromTexture(*cacheCanvas->GetGPUContext(), cacheBackendTexture_.GetTextureInfo(),
-            surfaceOrigin, bitmapFormat, nullptr)) {
-        SetStatus(CacheProcessStatus::WAITING);
-        ROSEN_LOGE("RSFilterCacheManager::Render: cacheCanvas is null");
-        return false;
+    CHECK_CACHE_PROCESS_STATUS;
+    {
+        std::unique_lock<std::mutex> lock(grBackendTextureMutex_);
+        if (!threadImage->BuildFromTexture(*cacheCanvas->GetGPUContext(), cacheBackendTexture_.GetTextureInfo(),
+                surfaceOrigin, bitmapFormat, nullptr)) {
+            SetStatus(CacheProcessStatus::WAITING);
+            ROSEN_LOGE("RSFilterCacheManager::Render: cacheCanvas is null");
+            return false;
+        }
     }
     auto src = Drawing::Rect(0, 0, snapshotSize_.GetWidth(), snapshotSize_.GetHeight());
     auto dst = Drawing::Rect(0, 0, dstRect_.GetWidth(), dstRect_.GetHeight());
@@ -393,6 +399,9 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
         task_->cachedFirstFilter_ = cachedFilteredSnapshot_;
     }
     DrawCachedFilteredSnapshot(canvas, dst);
+    if (filter->GetFilterType() == RSFilter::AIBAR) {
+        shouldClearFilteredCache = false;
+    }
     task_->SetCompleted(false);
     // To reduce the memory consumption, we only keep either the cached snapshot or the filtered image.
     CompactCache(shouldClearFilteredCache);
@@ -486,9 +495,14 @@ void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::
     // by `hdc shell param set persist.sys.graphic.filterCacheUpdateInterval <interval>`, the default value is 1.
     // Update: we also considered the filter parameters, only enable skip-frame if the blur radius is large enough.
     // Note: the cache will be invalidated immediately if the cached region cannot fully cover the filter region.
-    bool isLargeArea = IsLargeArea(srcRect.width(), srcRect.height());
-    cacheUpdateInterval_ =
-        isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
+    if (filter->GetFilterType() == RSFilter::AIBAR) {
+        // when dirty region change, delay 5 frames to update
+        cacheUpdateInterval_ = 5;
+    } else {
+        bool isLargeArea = IsLargeArea(srcRect.width(), srcRect.height());
+        cacheUpdateInterval_ =
+            isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
+    }
     cachedFilterHash_ = 0;
     pendingPurge_ = false;
 }
@@ -530,9 +544,14 @@ void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::
     // by `hdc shell param set persist.sys.graphic.filterCacheUpdateInterval <interval>`, the default value is 1.
     // Update: we also considered the filter parameters, only enable skip-frame if the blur radius is large enough.
     // Note: the cache will be invalidated immediately if the cached region cannot fully cover the filter region.
-    bool isLargeArea = IsLargeArea(srcRect.GetWidth(), srcRect.GetHeight());
-    cacheUpdateInterval_ =
-        isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
+    if (filter->GetFilterType() == RSFilter::AIBAR) {
+        // when dirty region change, delay 5 frames to update
+        cacheUpdateInterval_ = 5;
+    } else {
+        bool isLargeArea = IsLargeArea(srcRect.GetWidth(), srcRect.GetHeight());
+        cacheUpdateInterval_ =
+            isLargeArea && filter->CanSkipFrame() ? RSSystemProperties::GetFilterCacheUpdateInterval() : 0;
+    }
     cachedFilterHash_ = 0;
     pendingPurge_ = false;
 }
@@ -737,6 +756,7 @@ void RSFilterCacheManager::ReleaseCacheOffTree()
 {
     RS_OPTIONAL_TRACE_FUNC();
     ROSEN_LOGD("RSFilterCacheManager::ReleaseCacheOffTree task_:%{public}p", task_.get());
+    std::unique_lock<std::mutex> lock(task_->grBackendTextureMutex_);
     cachedSnapshot_.reset();
     cachedFilteredSnapshot_.reset();
     newCache_ = false;
@@ -866,7 +886,7 @@ std::tuple<Drawing::RectI, Drawing::RectI> RSFilterCacheManager::ValidateParams(
 
 inline void RSFilterCacheManager::CompactCache(bool shouldClearFilteredCache)
 {
-    if (pendingPurge_) {
+    if (pendingPurge_ && cacheUpdateInterval_ == 0) {
         InvalidateCache();
         return;
     }

@@ -202,6 +202,8 @@ public:
     BitmapFormat GetFormat() const;
     void SetFormat(const BitmapFormat& format);
 
+    void SetInfo(const ImageInfo& info);
+
     /**
      * @brief Returns width, height, AlphaType, ColorType, and ColorSpace.
      * @return reference to ImageInfo

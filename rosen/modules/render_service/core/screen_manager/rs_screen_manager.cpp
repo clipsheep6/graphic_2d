@@ -224,7 +224,11 @@ float RSScreenManager::GetScreenBrightnessNits(ScreenId id)
         return screenBrightnessNits;
     }
 
-    int32_t backLightLevel = GetScreenBacklight(id);
+    if (screenBacklight_.count(id) == 0) {
+        return screenBrightnessNits;
+    }
+
+    int32_t backLightLevel = screenBacklight_[id];
     if (backLightLevel <= 0) {
         return screenBrightnessNits;
     }

@@ -143,6 +143,8 @@ if (enable_text_gine) {
       "./skia_txt:skia_txt",
     ]
 
+    public_deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
+
     part_name = "graphic_2d"
     subsystem_name = "graphic"
   }

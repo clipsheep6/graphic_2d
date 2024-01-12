@@ -549,6 +549,62 @@ HWTEST_F(HyperGraphicManagerTest, HgmCoreTests, Function | MediumTest | Level2)
 }
 
 /**
+ * @tc.name: GetScreenMaterialType
+ * @tc.desc: Others functions in GetScreenMaterialType
+ * @tc.type: FUNC
+ * @tc.require: I7NJ2G
+ */
+HWTEST_F(HyperGraphicManagerTest, GetScreenMaterialType, Function | MediumTest | Level1)
+{
+    auto &instance = HgmCore::Instance();
+    ScreenId screenId1 = 7;
+    ScreenId screenId2 = 8;
+    ScreenId screenId3 = 9;
+    sptr<HgmScreen> screen = nullptr;
+    int32_t width = 1344;
+    int32_t height = 2772;
+    uint32_t rate1 = 120;
+    uint32_t rate2 = 60;
+    uint32_t rate3 = -1;
+    int32_t mode1 = 1;
+    int32_t mode2 = 2;
+    int32_t mode3 = 3;
+    int32_t groupId1 = 1;
+    int32_t groupId2 = 2;
+    int32_t groupId3 = 3;
+    instance.AddScreen(screenId1, 1, screenSize);
+    instance.AddScreen(screenId1, 2, screenSize);
+    instance.AddScreen(screenId1, 3, screenSize);
+    instance.AddScreenInfo(screenId2, width, height, rate2, mode2);
+
+    PART("HgmCore") {
+        STEP("1. screen material type: LTPO1") {
+            instance.AddScreenInfoExt(screenId1, RSScreenModeInfoExt(width, height, rate1, mode1, groupId1));
+            instance.AddScreenInfoExt(screenId1, RSScreenModeInfoExt(width, height, rate2, mode2, groupId2));
+            instance.AddScreenInfoExt(screenId1, RSScreenModeInfoExt(width, height, rate3, mode3, groupId2));
+            auto screenMaterialType = instance.GetScreenMaterialType(screenId1);
+            STEP_ASSERT_EQ(screenMaterialType, ScreenMaterialType::LTPO1);
+        }
+
+        STEP("2. screen material type: LTPO2") {
+            instance.AddScreenInfoExt(screenId2, RSScreenModeInfoExt(width, height, rate1, mode1, groupId1));
+            instance.AddScreenInfoExt(screenId2, RSScreenModeInfoExt(width, height, rate2, mode2, groupId1));
+            instance.AddScreenInfoExt(screenId2, RSScreenModeInfoExt(width, height, rate3, mode3, groupId1));
+            auto screenMaterialType = instance.GetScreenMaterialType(screenId2);
+            STEP_ASSERT_EQ(screenMaterialType, ScreenMaterialType::LTPO2);
+        }
+
+        STEP("3. screen material type: LTPS") {
+            instance.AddScreenInfoExt(screenId3, RSScreenModeInfoExt(width, height, rate1, mode1, groupId1));
+            instance.AddScreenInfoExt(screenId3, RSScreenModeInfoExt(width, height, rate2, mode2, groupId2));
+            instance.AddScreenInfoExt(screenId3, RSScreenModeInfoExt(width, height, rate3, mode3, groupId3));
+            auto screenMaterialType = instance.GetScreenMaterialType(screenId3);
+            STEP_ASSERT_EQ(screenMaterialType, ScreenMaterialType::LTPS);
+        }
+    }
+}
+
+/**
  * @tc.name: RefreshBundleName
  * @tc.desc: Verify the result of RefreshBundleName
  * @tc.type: FUNC

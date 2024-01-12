@@ -118,28 +118,26 @@ void RSScreen::PhysicalScreenInit() noexcept
 {
     hdiScreen_ = HdiScreen::CreateHdiScreen(ScreenPhysicalId(id_));
     if (hdiScreen_ == nullptr) {
-        RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to CreateHdiScreens.",
-            __func__, id_);
+        RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to CreateHdiScreens.", __func__, id_);
         return;
     }
 
     hdiScreen_->Init();
     if (hdiScreen_->GetScreenSupportedModes(supportedModes_) < 0) {
-        RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to GetScreenSupportedModes.",
-            __func__, id_);
+        RS_LOGE("RSScreen %{public}s: (id %{public}" PRIu64 ") failed to GetScreenSupportedModes.", __func__, id_);
     }
-    
+    if (hdiScreen_->GetScreenSupportedModesExt(supportedModesExt_) < 0) {
+        RS_LOGE("RSScreen %{public}s: (id %{public}" PRIu64 ") failed to GetScreenSupportedModesExt.", __func__, id_);
+    }
     if (hdiScreen_->GetHDRCapabilityInfos(hdrCapability_) < 0) {
-        RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to GetHDRCapabilityInfos.",
-            __func__, id_);
+        RS_LOGE("RSScreen %{public}s: (id %{public}" PRIu64 ") failed to GetHDRCapabilityInfos.", __func__, id_);
     }
     std::transform(hdrCapability_.formats.begin(), hdrCapability_.formats.end(),
                    back_inserter(supportedPhysicalHDRFormats_),
                    [](GraphicHDRFormat item) -> ScreenHDRFormat {return HDI_HDR_FORMAT_TO_RS_MAP[item];});
     auto status = GraphicDispPowerStatus::GRAPHIC_POWER_STATUS_ON;
     if (hdiScreen_->SetScreenPowerStatus(status) < 0) {
-        RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to SetScreenPowerStatus.",
-            __func__, id_);
+        RS_LOGE("RSScreen %{public}s: (id %{public}" PRIu64 ") failed to SetScreenPowerStatus.", __func__, id_);
     }
     auto activeMode = GetActiveMode();
     if (activeMode) {
@@ -373,6 +371,11 @@ std::optional<GraphicDisplayModeInfo> RSScreen::GetActiveMode() const
 const std::vector<GraphicDisplayModeInfo>& RSScreen::GetSupportedModes() const
 {
     return supportedModes_;
+}
+
+const std::vector<GraphicDisplayModeInfoExt>& RSScreen::GetSupportedModesExt() const
+{
+    return supportedModesExt_;
 }
 
 const GraphicDisplayCapability& RSScreen::GetCapability() const

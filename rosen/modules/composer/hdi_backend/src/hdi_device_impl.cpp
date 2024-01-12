@@ -159,6 +159,34 @@ int32_t HdiDeviceImpl::GetScreenSupportedModes(uint32_t screenId, std::vector<Gr
     return ret;
 }
 
+int32_t HdiDeviceImpl::GetScreenSupportedModesExt(uint32_t screenId, std::vector<GraphicDisplayModeInfoExt> &modes)
+{
+    CHECK_FUNC(g_composer);
+    std::vector<OHOS::HDI::Display::Composer::V1_1::DisplayModeInfoExt> hdiModes;
+    int32_t ret = g_composer->GetDisplaySupportedModesExt(screenId, hdiModes);
+    if (ret != GRAPHIC_DISPLAY_SUCCESS) {
+        HLOGE("Get screen supported modes failed, ret is %{public}d.", ret);
+        return ret;
+    }
+
+    modes.clear();
+    modes.reserve(hdiModes.size());
+    HLOGI("GetScreenSupportedModesExt screenId:%{public}u", screenId);
+    for (auto iter = hdiModes.begin(); iter != hdiModes.end(); iter++) {
+        GraphicDisplayModeInfoExt tempMode = {
+            .width = iter->v1_0.width,
+            .height = iter->v1_0.height,
+            .freshRate = iter->v1_0.freshRate,
+            .id = iter->v1_0.id,
+            .groupId = iter->groupId
+        };
+        modes.emplace_back(tempMode);
+        HLOGI("ModeInfoExt width:%{public}d height:%{public}d freshRate:%{public}u id:%{public}d groupId:%{public}d",
+            tempMode.width, tempMode.height, tempMode.freshRate, tempMode.id, tempMode.groupId);
+    }
+    return ret;
+}
+
 int32_t HdiDeviceImpl::GetScreenMode(uint32_t screenId, uint32_t &modeId)
 {
     CHECK_FUNC(g_composer);

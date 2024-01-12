@@ -124,6 +124,12 @@ int32_t HdiScreen::GetScreenSupportedModes(std::vector<GraphicDisplayModeInfo> &
     return device_->GetScreenSupportedModes(screenId_, modes);
 }
 
+int32_t HdiScreen::GetScreenSupportedModesExt(std::vector<GraphicDisplayModeInfoExt> &modes) const
+{
+    CHECK_DEVICE_NULL(device_);
+    return device_->GetScreenSupportedModesExt(screenId_, modes);
+}
+
 int32_t HdiScreen::GetScreenMode(uint32_t &modeId) const
 {
     CHECK_DEVICE_NULL(device_);

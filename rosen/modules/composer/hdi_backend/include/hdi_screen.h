@@ -38,6 +38,7 @@ public:
 
     int32_t GetScreenCapability(GraphicDisplayCapability &info) const;
     int32_t GetScreenSupportedModes(std::vector<GraphicDisplayModeInfo> &modes) const;
+    int32_t GetScreenSupportedModesExt(std::vector<GraphicDisplayModeInfoExt> &modes) const;
     int32_t GetScreenMode(uint32_t &modeId) const;
     int32_t SetScreenMode(uint32_t modeId) const;
     int32_t GetScreenPowerStatus(GraphicDispPowerStatus &status) const;

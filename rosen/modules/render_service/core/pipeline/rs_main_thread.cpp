@@ -1367,8 +1367,8 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
         RS_TRACE_NAME_FMT("RSMainThread::ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate);
     }
 
-    // hgm warning: use IsLtpo instead after GetDisplaySupportedModes ready
-    if (frameRateMgr_->GetCurScreenStrategyId().find("LTPO") == std::string::npos) {
+    // hgm warning ok: use IsLtpo instead after GetDisplaySupportedModes ready
+    if (!frameRateMgr_->IsLtpo()) {
         frameRateMgr_->UniProcessDataForLtps(idleTimerExpiredFlag_);
     } else {
         auto appFrameLinkers = GetContext().GetFrameRateLinkerMap().Get();

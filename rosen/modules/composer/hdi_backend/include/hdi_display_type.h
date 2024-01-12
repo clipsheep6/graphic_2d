@@ -77,6 +77,17 @@ typedef struct {
     int32_t id;         /**< ID of the mode */
 } GraphicDisplayModeInfo;
 
+/**
+ * @brief Defines output mode ext info.
+ */
+typedef struct {
+    uint32_t width;      /**< Width in pixel */
+    uint32_t height;     /**< Height in pixel */
+    uint32_t freshRate; /**< Fresh rate per second */
+    int32_t id;         /**< ID of the mode */
+    uint32_t groupId; /* ltpo groupId */
+} GraphicDisplayModeInfoExt;
+
 typedef enum {
     GRAPHIC_POWER_STATUS_ON,              /**< The power status is on. */
     GRAPHIC_POWER_STATUS_STANDBY,         /**< The power status is standby. */

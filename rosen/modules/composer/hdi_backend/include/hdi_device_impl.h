@@ -32,6 +32,7 @@ public:
     bool RegHwcDeadCallback(OnHwcDeadCallback callback, void *data) override;
     int32_t GetScreenCapability(uint32_t screenId, GraphicDisplayCapability &info) override;
     int32_t GetScreenSupportedModes(uint32_t screenId, std::vector<GraphicDisplayModeInfo> &modes) override;
+    int32_t GetScreenSupportedModesExt(uint32_t screenId, std::vector<GraphicDisplayModeInfoExt> &modes) override;
     int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId) override;
     int32_t SetScreenMode(uint32_t screenId, uint32_t modeId) override;
     int32_t GetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus &status) override;

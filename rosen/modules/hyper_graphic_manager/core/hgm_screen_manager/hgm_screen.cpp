@@ -16,6 +16,7 @@
 #include "hgm_screen.h"
 
 #include <cmath>
+#include <map>
 #include "hgm_log.h"
 
 namespace OHOS::Rosen {
@@ -103,8 +104,32 @@ int32_t HgmScreen::AddScreenModeInfo(int32_t width, int32_t height, uint32_t rat
         supportedRefreshRates_.emplace(rate);
     }
 
-    auto newProfile = std::make_shared<ScreenProfile>(width, height, rate, modeId);
+    auto newProfile = std::make_shared<ScreenProfileExt>(width, height, rate, modeId, 0);
     screenModeInfos_.emplace_back(newProfile);
+    return EXEC_SUCCESS;
+}
+
+int32_t HgmScreen::AddScreenModeInfoExt(const RSScreenModeInfoExt& screenModeInfoExt)
+{
+    if (supportedModeIds_.find(screenModeInfoExt.GetScreenModeId()) == supportedModeIds_.end()) {
+        supportedModeIds_.emplace(screenModeInfoExt.GetScreenModeId());
+    } else {
+        return HGM_SCREEN_MODE_EXIST;
+    }
+
+    if (supportedRefreshRates_.find(screenModeInfoExt.GetScreenRefreshRate()) == supportedRefreshRates_.end()) {
+        supportedRefreshRates_.emplace(screenModeInfoExt.GetScreenRefreshRate());
+    }
+
+    auto newProfile = std::make_shared<ScreenProfileExt>(
+        screenModeInfoExt.GetScreenWidth(),
+        screenModeInfoExt.GetScreenHeight(),
+        screenModeInfoExt.GetScreenRefreshRate(),
+        screenModeInfoExt.GetScreenModeId(),
+        screenModeInfoExt.GetGroupId());
+    screenModeInfos_.emplace_back(newProfile);
+
+    UpdateScreenMaterialType();
     return EXEC_SUCCESS;
 }
 
@@ -114,7 +139,7 @@ void HgmScreen::SetActiveModeId(int32_t modeId)
     activeModeId_ = modeId;
 }
 
-std::shared_ptr<HgmScreen::ScreenProfile> HgmScreen::GetModeViaId(int32_t id) const
+std::shared_ptr<HgmScreen::ScreenProfileExt> HgmScreen::GetModeViaId(int32_t id) const
 {
     for (auto mode : screenModeInfos_) {
         if (mode->GetModeId() != id) {
@@ -183,5 +208,32 @@ int32_t HgmScreen::GetModeIdViaResolutionAndRate(int32_t width, int32_t height, 
     HGM_LOGW("HgmScreen NO mode is found for w : %{public}d, h : %{public}d, rate : %{public}u",
         width, height, rate);
     return HGM_ERROR;
+}
+
+void HgmScreen::UpdateScreenMaterialType()
+{
+    std::map<uint32_t, uint32_t> groupInfoCnt;
+    for (auto &mode : screenModeInfos_) {
+        auto iter = groupInfoCnt.find(mode->GetGroupId());
+        if (iter == groupInfoCnt.end()) {
+            groupInfoCnt[mode->GetGroupId()] = 1;
+        } else {
+            iter->second++;
+        }
+    }
+
+    if (groupInfoCnt.size() == 1) {
+        screenMaterialType_ = ScreenMaterialType::LTPO2;
+    } else if (std::any_of(groupInfoCnt.begin(), groupInfoCnt.end(),
+        [](const std::pair<uint32_t, uint32_t>& val) { return val.second > 1;})) {
+        screenMaterialType_ = ScreenMaterialType::LTPO1;
+    } else {
+        screenMaterialType_ = ScreenMaterialType::LTPS;
+    }
+    HGM_LOGI("InitScreenMaterialType screen%{public}u:%{public}s", static_cast<uint32_t>(id_),
+        screenMaterialType_ == ScreenMaterialType::LTPO1 ? "LTPO1" :
+        screenMaterialType_ == ScreenMaterialType::LTPO2 ? "LTPO2" :
+        screenMaterialType_ == ScreenMaterialType::LTPS ? "LTPS" :
+        "UnKnown");
 }
 } // namespace OHOS::Rosen

@@ -29,6 +29,7 @@
 #include <refbase.h>
 #include <screen_manager/rs_screen_props.h>
 #include <screen_manager/rs_screen_mode_info.h>
+#include <screen_manager/rs_screen_mode_info_ext.h>
 #include <screen_manager/rs_screen_capability.h>
 #include <screen_manager/rs_screen_data.h>
 #include <screen_manager/rs_screen_hdr_capability.h>
@@ -145,6 +146,8 @@ public:
     virtual void GetScreenActiveMode(ScreenId id, RSScreenModeInfo& screenModeInfo) const = 0;
 
     virtual std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId id) const = 0;
+
+    virtual std::vector<RSScreenModeInfoExt> GetScreenSupportedModesExt(ScreenId id) const = 0;
 
     virtual RSScreenCapability GetScreenCapability(ScreenId id) const = 0;
 
@@ -296,6 +299,8 @@ public:
 
     std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId id) const override;
 
+    std::vector<RSScreenModeInfoExt> GetScreenSupportedModesExt(ScreenId id) const override;
+
     RSScreenCapability GetScreenCapability(ScreenId id) const override;
 
     ScreenPowerStatus GetScreenPowerStatus(ScreenId id) const override;
@@ -407,6 +412,7 @@ private:
     void GetVirtualScreenResolutionLocked(ScreenId id, RSVirtualScreenResolution& virtualScreenResolution) const;
     void GetScreenActiveModeLocked(ScreenId id, RSScreenModeInfo& screenModeInfo) const;
     std::vector<RSScreenModeInfo> GetScreenSupportedModesLocked(ScreenId id) const;
+    std::vector<RSScreenModeInfoExt> GetScreenSupportedModesExtLocked(ScreenId id) const;
     RSScreenCapability GetScreenCapabilityLocked(ScreenId id) const;
     ScreenPowerStatus GetScreenPowerStatusLocked(ScreenId id) const;
     ScreenRotation GetScreenCorrectionLocked(ScreenId id) const;

@@ -34,31 +34,31 @@ public:
         return Type::PATH_CMD_LIST;
     }
 
-    /*
-     * @brief       Creates a PathCmdList with contiguous buffers.
-     * @param data  A contiguous buffers.
+    /**
+     * @brief Creates a PathCmdList with contiguous buffers.
+     * @param data A contiguous buffers.
      */
     static std::shared_ptr<PathCmdList> CreateFromData(const CmdListData& data, bool isCopy = false);
 
-    /*
-     * @brief  Calls the corresponding operations of all opitems in PathCmdList to the path.
+    /**
+     * @brief Calls the corresponding operations of all opitems in PathCmdList to the path.
      */
     std::shared_ptr<Path> Playback() const;
 };
 
 /* OpItem */
-/*
- * @brief  Helper class for path playback.
- *         Contains the playback context and a static mapping table: { OpItemType， OpItemPlaybackFunc }.
+/**
+ * @brief Helper class for path playback.
+ * Contains the playback context and a static mapping table: { OpItemType， OpItemPlaybackFunc }.
  */
 class PathPlayer {
 public:
     PathPlayer(Path& path, const CmdList& cmdList);
     ~PathPlayer() = default;
 
-    /*
-     * @brief  Obtain the corresponding func according to the type lookup mapping table
-     *         and then invoke the func to plays opItem back to path which in context.
+    /**
+     * @brief Obtain the corresponding func according to the type lookup mapping table
+     * and then invoke the func to plays opItem back to path which in context.
      */
     bool Playback(uint32_t type, const void* opItem);
 

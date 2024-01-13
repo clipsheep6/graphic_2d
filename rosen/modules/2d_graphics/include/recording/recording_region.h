@@ -32,6 +32,9 @@ public:
         return DrawingType::RECORDING;
     }
 
+    /**
+     * @brief  Gets the pointer to the RegionCmdList.
+     */
     std::shared_ptr<RegionCmdList> GetCmdList() const;
 
     bool SetRect(const RectI& rectI) override;

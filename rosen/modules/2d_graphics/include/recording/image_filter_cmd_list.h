@@ -32,13 +32,13 @@ public:
         return Type::IMAGE_FILTER_CMD_LIST;
     }
 
-    /*
+    /**
      * @brief       Creates a ImageFilterCmdList with contiguous buffers.
      * @param data  A contiguous buffers.
      */
     static std::shared_ptr<ImageFilterCmdList> CreateFromData(const CmdListData& data, bool isCopy = false);
 
-    /*
+    /**
      * @brief  Creates a ImageFilter by the ImageFilterCmdList playback operation.
      */
     std::shared_ptr<ImageFilter> Playback() const;

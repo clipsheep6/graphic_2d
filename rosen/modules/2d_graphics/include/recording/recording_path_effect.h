@@ -25,7 +25,7 @@ namespace Drawing {
 class DRAWING_API RecordingPathEffect : public PathEffect {
 public:
 
-    /*
+    /**
      * @brief            Creates a CreateDashPathEffectOpItem to add to the PathEffectCmdList.
      * @param intervals  Containing an even number array.
      * @param phase      The offset of the intervals array.
@@ -33,7 +33,7 @@ public:
     static std::shared_ptr<RecordingPathEffect> CreateDashPathEffect(
         const std::vector<scalar>& intervals, scalar phase);
 
-    /*
+    /**
      * @brief          Creates a CreatePathDashEffectOpItem to add to the PathEffectCmdList.
      * @param path     To replicate.
      * @param advance  The space distance between path.
@@ -43,13 +43,13 @@ public:
     static std::shared_ptr<RecordingPathEffect> CreatePathDashEffect(
         const Path& path, scalar advance, scalar phase, PathDashStyle style);
 
-    /*
+    /**
      * @brief         Creates a CreateCornerPathEffectOpItem to add to the PathEffectCmdList.
      * @param radius  Must be greater than zero.
      */
     static std::shared_ptr<RecordingPathEffect> CreateCornerPathEffect(scalar radius);
 
-    /*
+    /**
      * @brief             Creates a CreateDiscretePathEffectOpItem to add to the PathEffectCmdList.
      * @param segLength   segLength.
      * @param dev         dev.
@@ -58,14 +58,14 @@ public:
     static std::shared_ptr<RecordingPathEffect> CreateDiscretePathEffect(
         scalar segLength, scalar dev, uint32_t seedAssist = 0);
 
-    /*
+    /**
      * @brief     Creates a CreateSumPathEffectOpItem to add to the PathEffectCmdList.
      * @param e1  The first PathEffect.
      * @param e2  The second PathEffect.
      */
     static std::shared_ptr<RecordingPathEffect> CreateSumPathEffect(const PathEffect& e1, const PathEffect& e2);
 
-    /*
+    /**
      * @brief     Creates a CreateComposePathEffectOpItem to add to the PathEffectCmdList.
      * @param e1  To apply the inner effect to the path.
      * @param e2  To apply the outer effect to the inner's result.
@@ -80,7 +80,7 @@ public:
         return DrawingType::RECORDING;
     }
 
-    /*
+    /**
      * @brief  Gets the pointer to the PathEffectCmdList.
      */
     std::shared_ptr<PathEffectCmdList> GetCmdList() const

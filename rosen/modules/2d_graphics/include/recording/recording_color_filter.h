@@ -24,37 +24,37 @@ namespace Rosen {
 namespace Drawing {
 class DRAWING_API RecordingColorFilter : public ColorFilter {
 public:
-    /*
+    /**
      * @brief       Creates a CreateBlendModeColorFilterOpItem to add to the ColorFilterCmdList.
      * @param c     32-bits ARGB color value.
      * @param mode  The mode of blend.
      */
     static std::shared_ptr<RecordingColorFilter> CreateBlendModeColorFilter(ColorQuad c, BlendMode mode);
 
-    /*
+    /**
      * @brief     Creates a CreateComposeColorFilterOpItem to add to the ColorFilterCmdList.
      * @param f1  A ColorFilter to combine.
      * @param f2  Another ColorFilter to combine.
      */
     static std::shared_ptr<RecordingColorFilter> CreateComposeColorFilter(const ColorFilter& f1, const ColorFilter& f2);
 
-    /*
+    /**
      * @brief    Creates a CreateMatrixColorFilterOpItem to add to the ColorFilterCmdList.
      * @param m  Initialize from the ColorMatrix.
      */
     static std::shared_ptr<RecordingColorFilter> CreateMatrixColorFilter(const ColorMatrix& m);
 
-    /*
+    /**
      * @brief  Creates a CreateLinearToSrgbGamaOpItem to add to the ColorFilterCmdList.
      */
     static std::shared_ptr<RecordingColorFilter> CreateLinearToSrgbGamma();
 
-    /*
+    /**
      * @brief  Creates a CreateSrgbGammaToLinearOpItem to add to the ColorFilterCmdList.
      */
     static std::shared_ptr<RecordingColorFilter> CreateSrgbGammaToLinear();
 
-    /*
+    /**
      * @brief  Creates a CreateLumaColorFilterOpItem to add to the ColorFilterCmdList.
      */
     static std::shared_ptr<RecordingColorFilter> CreateLumaColorFilter();
@@ -69,7 +69,7 @@ public:
 
     void Compose(const ColorFilter& filter) override;
 
-    /*
+    /**
      * @brief  Gets the pointer to the ColorFilterCmdList.
      */
     std::shared_ptr<ColorFilterCmdList> GetCmdList() const

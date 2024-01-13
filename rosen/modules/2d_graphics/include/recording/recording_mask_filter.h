@@ -34,6 +34,9 @@ public:
         return DrawingType::RECORDING;
     }
 
+    /**
+     * @brief  Gets the pointer to the MaskFilterCmdList.
+     */
     std::shared_ptr<MaskFilterCmdList> GetCmdList() const
     {
         return cmdList_;

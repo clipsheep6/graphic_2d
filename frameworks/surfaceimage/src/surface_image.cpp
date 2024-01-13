@@ -149,8 +149,8 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
     }
     UpdateSurfaceInfo(seqNum, buffer, fence, timestamp, damage);
     auto utils = SurfaceUtils::GetInstance();
-    utils->ComputeTransformMatrix(currentTransformMatrix_, currentSurfaceBuffer_,
-        currentTransformType_, currentCrop_);
+    utils->ComputeTransformMatrix(currentTransformMatrix_, TRANSFORM_MATRIX_ELE_COUNT,
+        currentSurfaceBuffer_, currentTransformType_, currentCrop_);
 
     ret = WaitOnFence();
     return ret;

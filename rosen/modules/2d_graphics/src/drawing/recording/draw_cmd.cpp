@@ -1208,11 +1208,12 @@ void DrawSymbolOpItem::SetVariableColor(size_t index)
     animation.startDuration = animation.startDuration - duration;
     if (animation.startValue == animation.endValue ||
         animation.startDuration > 0) {
+        animation_[index] = animation;
         return;
     }
     
     // cal step
-    float calSpeed = 1.2 / 800 * duration; //800 and 1.2 is duration
+    float calSpeed = 1.2 / 700 * duration; //800 and 1.2 is duration
 
     if (abs(animation.curValue - animation.endValue) < calSpeed) {
         double stemp = animation.startValue;

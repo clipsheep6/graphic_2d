@@ -55,6 +55,7 @@ public:
 
     void Process(RSContext& context);
     void ProcessBySingleFrameComposer(RSContext& context);
+    static void AddAlarmLog(std::function<void(uint64_t, uint64_t, int)> func);
 
     void Clear();
 
@@ -174,6 +175,7 @@ private:
     bool isCached_ { false };
     int32_t syncTransactionCount_ { 0 };
     uint64_t syncId_ { 0 };
+    static std::function<void(uint64_t, uint64_t, int)> alarmLogFunc;
     mutable std::mutex commandMutex_;
 
     friend class RSTransactionProxy;

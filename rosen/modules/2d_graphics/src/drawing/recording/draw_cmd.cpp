@@ -1214,7 +1214,7 @@ void DrawSymbolOpItem::SetVariableColor(size_t index)
     // cal step
     float calSpeed = 1.2 / 800 * duration; //800 and 1.2 is duration
 
-    if (abs(animation.curValue - animation.endValue) < animation.speedValue) {
+    if (abs(animation.curValue - animation.endValue) < calSpeed) {
         double stemp = animation.startValue;
         animation.startValue = animation.endValue;
         animation.endValue = stemp;

@@ -1122,7 +1122,15 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRen
             curSurfaceNode_->UpdateFilterNodes(node.shared_from_this());
         }
     }
-    if (node.IsMainWindowType()) {
+    if (node.IsLeashWindow()) {
+        auto& children = node.GetSortedChildren();
+        for (auto& child : children) {
+            if (child->ChildHasFilter()) {
+                node.SetChildHasFilter(true);
+                break;
+            }
+        }
+    } else if (node.IsMainWindowType()) {
         isCachedSurfaceReuse_ = false;
         isSurfaceDirtyNodeLimited_ = false;
         node.SetUseEffectNodes(effectNodeNum_);
@@ -5461,7 +5469,7 @@ void RSUniRenderVisitor::tryCapture(float width, float height)
     if (!RSSystemProperties::GetRecordingEnabled()) {
         return;
     }
-    recordingCanvas_ = std::make_unique<Drawing::RecordingCanvas>(width, height);
+    recordingCanvas_ = std::make_unique<ExtendRecordingCanvas>(width, height);
     RS_TRACE_NAME("RSUniRender:Recording begin");
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();

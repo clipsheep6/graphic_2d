@@ -144,6 +144,17 @@ SurfaceError SurfaceImage::UpdateSurfaceImage()
         ReleaseBuffer(buffer, -1);
         return ret;
     }
+    
+    if (seqNum != currentSurfaceImage_ && currentSurfaceBuffer_ != nullptr) {
+        ret = ReleaseBuffer(currentSurfaceBuffer_, -1);
+        if (ret != SURFACE_ERROR_OK) {
+            BLOGE("release currentSurfaceBuffer_ failed %{public}d", ret);
+        }
+    }
+    UpdateSurfaceInfo(seqNum, buffer, fence, timestamp, damage);
+    auto utils = SurfaceUtils::GetInstance();
+    utils->ComputeTransformMatrix(currentTransformMatrix_, TRANSFORM_MATRIX_ELE_COUNT,
+        currentSurfaceBuffer_, currentTransformType_, currentCrop_);
 
     uint32_t seqNum = buffer->GetSeqNum();
     UpdateSurfaceInfo(seqNum, buffer, acquireFence, timestamp, damage);

@@ -58,8 +58,19 @@ public:
         }
     }
 
+    bool GetRecordingState() const
+    {
+        return recordingState_;
+    }
+
+    void SetRecordingState(bool flag)
+    {
+        recordingState_ = flag;
+    }
+
 protected:
     std::vector<Canvas*> pCanvasList_;
+    bool recordingState_ = false;
 };
 
 class AutoCanvasRestore {

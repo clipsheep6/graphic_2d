@@ -632,6 +632,9 @@ ohos_unittest("RSBaseRenderEngineUnitTest") {
 
 ## Build RSRoundCornerDisplayTest
 ohos_unittest("RSRoundCornerDisplayTest") {
+  cflags = ["--coverage"]
+  cflags_cc = ["--coverage"]
+  ldflags = ["--coverage"]
   module_out_path = module_output_path
   sources = [ "rs_round_corner_display_test.cpp" ]
   include_dirs = [

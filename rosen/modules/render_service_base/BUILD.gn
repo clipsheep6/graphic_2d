@@ -17,7 +17,7 @@ import(
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 config("export_config") {
-  cflags_cc = [ "-std=c++17" ]
+  cflags_cc = [ "-std=c++17", "--coverage" ]
   include_dirs = [ "include" ]
 
   defines = rs_common_define
@@ -319,10 +319,11 @@ ohos_source_set("render_service_base_src") {
     "-Wno-missing-field-initializers",
     "-Wno-c++11-narrowing",
     "-fvisibility=hidden",
+    "--coverage"
   ]
 
   if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
-    cflags += [ "-flto=thin" ]
+    cflags += [ "-flto=thin" , "--coverage"]
     if (enhanced_opt) {
       cflags += [ "-fwhole-program-vtables" ]
       if (graphic_2d_feature_enable_pgo &&
@@ -345,6 +346,7 @@ ohos_source_set("render_service_base_src") {
   cflags_cc = [
     "-std=c++17",
     "-fvisibility-inlines-hidden",
+    "--coverage"
   ]
 
   public_configs = [ ":export_config" ]
@@ -466,6 +468,7 @@ config("render_service_base_link_config") {
       "-Wl,-mllvm",
       "-Wl,-wholeprogramdevirt-check=fallback",
       "-Wl,-Bsymbolic",
+      "--coverage"
     ]
   }
 }

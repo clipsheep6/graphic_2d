@@ -337,11 +337,11 @@ void RSUIDirector::RecvMessages()
     if (GetRealPid() == -1) {
         return;
     }
-    static const uint32_t pid = static_cast<uint32_t>(GetRealPid());
+    const uint32_t tid = static_cast<uint32_t>(gettid());
     static std::mutex recvMessagesMutex;
     std::unique_lock<std::mutex> lock(recvMessagesMutex);
-    if (RSMessageProcessor::Instance().HasTransaction(pid)) {
-        auto transactionDataPtr = RSMessageProcessor::Instance().GetTransaction(pid);
+    if (RSMessageProcessor::Instance().HasTransaction(tid)) {
+        auto transactionDataPtr = RSMessageProcessor::Instance().GetTransaction(tid);
         RecvMessages(transactionDataPtr);
     }
 }
@@ -372,6 +372,10 @@ void RSUIDirector::ProcessMessages(std::shared_ptr<RSTransactionData> cmds)
 
 void RSUIDirector::AnimationCallbackProcessor(NodeId nodeId, AnimationId animId, AnimationCallbackEvent event)
 {
+    if (ExtractPid(nodeId) != gettid() || ExtractPid(animId) != gettid()) {
+        return;
+    }
+
     // try find the node by nodeId
     if (auto nodePtr = RSNodeMap::Instance().GetNode<RSNode>(nodeId)) {
         if (!nodePtr->AnimationCallback(animId, event)) {

@@ -1782,7 +1782,7 @@ void RSNode::SetOutOfParent(OutOfParentType outOfParent)
 
 NodeId RSNode::GenerateId()
 {
-    static pid_t pid_ = GetRealPid();
+    pid_t tid_ = gettid();
     static std::atomic<uint32_t> currentId_ = 1; // surfaceNode is seted correctly during boot when currentId is 1
 
     auto currentId = currentId_.fetch_add(1, std::memory_order_relaxed);
@@ -1792,7 +1792,7 @@ NodeId RSNode::GenerateId()
     }
 
     // concat two 32-bit numbers to one 64-bit number
-    return ((NodeId)pid_ << 32) | currentId;
+    return ((NodeId)tid_ << 32) | currentId;
 }
 
 void RSNode::InitUniRenderEnabled()

@@ -5079,6 +5079,7 @@ bool RSUniRenderVisitor::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> r
 void RSUniRenderVisitor::DrawWatermarkIfNeed(RSDisplayRenderNode& node, bool isMirror)
 {
     if (RSMainThread::Instance()->GetWatermarkFlag()) {
+        RS_OPTIONAL_TRACE_NAME("RSUniRenderVisitor::DrawWatermarkIfNeed");
         auto screenManager = CreateOrGetScreenManager();
         auto mainScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
         auto mainWidth = static_cast<float>(mainScreenInfo.width);

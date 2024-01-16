@@ -19,6 +19,7 @@
 #include "rs_test_util.h"
 #include "pipeline/rs_surface_capture_task.h"
 #include "pipeline/rs_uni_render_judgement.h"
+#include "recording/recording_canvas.h"
 #include "pipeline/rs_uni_render_engine.h"
 
 using namespace testing;
@@ -43,6 +44,7 @@ public:
     std::shared_ptr<SkCanvas> skCanvas_;
 #else
     std::shared_ptr<Drawing::Canvas> drawingCanvas_;
+    std::shared_ptr<Drawing::RecordingCanvas> drawingRecordingCanvas_ = nullptr;
 #endif
 };
 
@@ -60,13 +62,20 @@ void RSRenderEngineTest::SetUp()
     if (visitor_ == nullptr) {
         return;
     }
+    visitor_->renderEngine_ = std::make_shared<RSUniRenderEngine>();
+    visitor_->renderEngine_->Init();
 #ifndef USE_ROSEN_DRAWING
     visitor_->canvas_ = std::make_unique<RSPaintFilterCanvas>(skCanvas_.get());
 #else
-    visitor_->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas_.get());
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        visitor_->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas_.get());
+    } else {
+        drawingRecordingCanvas_ = std::make_shared<Drwaing::RecordingCanvas>(10, 10);
+        auto& renderContext = visitor_->renderEngine_->GetRenderContext();
+        visitor_->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingRecordingCanvas_.get());
+    }
 #endif
-    visitor_->renderEngine_ = std::make_shared<RSUniRenderEngine>();
-    visitor_->renderEngine_->Init();
 }
 void RSRenderEngineTest::TearDown() {}
 
@@ -156,12 +165,22 @@ HWTEST_F(RSRenderEngineTest, DrawLayers001, TestSize.Level1)
 HWTEST_F(RSRenderEngineTest, DrawWithParams001, TestSize.Level1)
 {
     auto renderEngine = std::make_shared<RSRenderEngine>();
+    std::unique_ptr<Drawing::RecordingCanvas> drawingRecordingCanvas = nullptr;
 #ifndef USE_ROSEN_DRAWING
     std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
     std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
 #else
     std::unique_ptr<Drawing::Canvas> drawingCanvas = std::make_unique<Drawing::Canvas>(10, 10);
-    std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    std::shared_ptr<RSPaintFilterCanvas> canvas = nullptr;
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        canvas = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+    } else {
+        renderEngine->Init();
+        drawingRecordingCanvas = std::make_shared<Drwaing::RecordingCanvas>(10, 10);
+        drawingRecordingCanvas->SetGrRecordingContext(renderEngine->GetRenderContext()->GetSharedDrGPUContext());
+        visitor_->canvas_ = std::make_shared<RSPaintFilterCanvas>(std::move(drawingRecordingCanvas).get());
+    }
 #endif
     auto node = RSTestUtil::CreateSurfaceNodeWithBuffer();
     auto param = RSDividedRenderUtil::CreateBufferDrawParam(*node);

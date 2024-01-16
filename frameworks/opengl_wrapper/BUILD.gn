@@ -66,7 +66,7 @@ if (current_os != "ohos") {
       "init:libbeget_proxy",
       "init:libbegetutil",
     ]
-
+    license_file = "//third_party/EGL/LICENSE"
     if (defined(graphic_2d_ext_configs.vendor_root)) {
       install_enable = false
     }
@@ -116,6 +116,7 @@ ohos_shared_library("GLESv1") {
   output_name = "GLESv1"
   output_extension = "so"
 
+  license_file = "//third_party/openGLES/LICENSE"
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
@@ -151,6 +152,7 @@ ohos_shared_library("GLESv2") {
     "//third_party/openGLES:libGLES",
   ]
 
+  license_file = "//third_party/openGLES/LICENSE"
   external_deps = [ "hilog:libhilog" ]
 
   output_name = "GLESv2"
@@ -204,6 +206,8 @@ if (current_os != "ohos") {
     if (defined(graphic_2d_ext_configs.vendor_root)) {
       install_enable = false
     }
+
+    license_file = "//third_party/openGLES/LICENSE"
 
     output_name = "GLESv3"
     output_extension = "so"

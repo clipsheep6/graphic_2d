@@ -16,9 +16,19 @@
 #ifndef ROSEN_TEXT_SYMBOL_ANIMATION_CONFIG_H
 #define ROSEN_TEXT_SYMBOL_ANIMATION_CONFIG_H
 
+#ifndef USE_ROSEN_DRAWING
+#include <include/core/HMSymbol.h>
+#endif
+
+#include "draw/path.h"
+#include "text/hm_symbol.h"
+#include "common/rs_vector4.h"
+
+
 namespace OHOS {
 namespace Rosen {
 namespace TextEngine {
+
 
 enum SymbolAnimationEffectStrategy {
     INVALID_EFFECT_STRATEGY = 0,
@@ -27,12 +37,34 @@ enum SymbolAnimationEffectStrategy {
     SYMBOL_HIERARCHICAL = 3,
 };
 
-
-struct SymbolAnimationConfig {
-    SymbolAnimationEffectStrategy effectStrategy;
+#ifndef USE_ROSEN_DRAWING
+using SymbolNode = struct SymbolNode {
+    SkPath path;
+    SColor color;
+    Vector4f nodeBoundary;
+    uint32_t animationIndex;
 };
+using SymbolAnimationConfig = struct SymbolAnimationConfig {
+    std::vector<SymbolNode> SymbolNodes;
+    uint32_t numNodes = 0;
+    SymbolAnimationEffectStrategy effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_NONE;
+};
+#else
+using SymbolNode = struct SymbolNode {
+    Drawing::Path path;
+    Drawing::DrawingSColor color;
+    Vector4f nodeBoundary;
+    uint32_t animationIndex;
+};
+using SymbolAnimationConfig = struct SymbolAnimationConfig {
+    std::vector<SymbolNode> SymbolNodes;
+    uint32_t numNodes = 0;
+    SymbolAnimationEffectStrategy effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_NONE;
+};
+#endif
 }
 }
 }
+
 
 #endif

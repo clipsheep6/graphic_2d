@@ -17,7 +17,7 @@
 #include "animation/rs_symbol_animation.h"
 #include "animation/rs_keyframe_animation.h"
 #include "platform/common/rs_log.h"
-
+#include "draw/paint.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -32,13 +32,17 @@ RSSymbolAnimation::~RSSymbolAnimation()
 bool RSSymbolAnimation::SetSymbolAnimation(
     const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig)
 {
-    if (!rsNode_) {
+    if (rsNode_ == nullptr) {
         ROSEN_LOGE("HmSymbol RSSymbolAnimation::getNode :failed");
         return false;
     }
 
+    if (!rsNode_->canvasNodesList.empty()) {
+        rsNode_->canvasNodesList.clear();
+    }
+
     if (symbolAnimationConfig->effectStrategy == TextEngine::SymbolAnimationEffectStrategy::SYMBOL_SCALE) {
-        return SetScaleUnitAnimation(rsNode_);
+        return SetScaleUnitAnimation(symbolAnimationConfig);
     } else if (symbolAnimationConfig->effectStrategy ==
         TextEngine::SymbolAnimationEffectStrategy::SYMBOL_HIERARCHICAL) {
         return SetNoneAnimation(rsNode_);
@@ -65,8 +69,7 @@ bool RSSymbolAnimation::isEqual(const Vector2f val1, const Vector2f val2)
 
 bool RSSymbolAnimation::SetNoneAnimation(const std::shared_ptr<RSNode>& rsNode)
 {
-    if (!rsNode) {
-        ROSEN_LOGE("[%{public}s] No symbol rsNode to be animated \n", __func__);
+    if (rsNode == nullptr) {
         return false;
     }
     const Vector2f pivotNone1Value = {0.25f, 0.25f};
@@ -95,21 +98,80 @@ std::shared_ptr<RSAnimation> RSSymbolAnimation::NoneSymbolAnimation(const std::s
     return keyframeAnimation;
 }
 
-bool RSSymbolAnimation::SetScaleUnitAnimation(const std::shared_ptr<RSNode>& rsNode)
+bool RSSymbolAnimation::SetScaleUnitAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&
+    symbolAnimationConfig)
 {
-    if (!rsNode) {
-        ROSEN_LOGE("[%{public}s] No symbol rsNode to be animated \n", __func__);
+    auto nodeNum = symbolAnimationConfig->numNodes;
+    if (nodeNum <= 0) {
+        ROSEN_LOGE("[%{public}s] nodeNum is less than 0 \n", __func__);
         return false;
     }
-    const Vector2f scaleValueBegin = {1.0f, 1.0f};
-    const Vector2f scaleValue = {1.15f, 1.15f};
+
+    auto canvasNode = RSCanvasNode::Create();
+    rsNode_->canvasNodesList.emplace_back(canvasNode);
+    Vector4f bounds = rsNode_->GetStagingProperties().GetBounds();
+    SetSymbolGeometry(canvasNode, Vector4f(0.0f, 0.0f, bounds[2], bounds[3])); // index 2 width 3 height
+    const Vector2f scaleValueBegin = {1.0f, 1.0f}; // 1.0 scale
+    const Vector2f scaleValue = {1.15f, 1.15f};    // 1.5 scale
     const Vector2f scaleValueEnd = scaleValueBegin;
-    auto animation = ScaleSymbolAnimation(rsNode, scaleValueBegin, scaleValue, scaleValueEnd);
+    auto animation = ScaleSymbolAnimation(canvasNode, scaleValueBegin, scaleValue, scaleValueEnd);
     if (!animation) {
         return false;
     }
-    animation->Start(rsNode);
+    animation->Start(canvasNode);
+    auto recordingCanvas = canvasNode->BeginRecording(bounds[2], bounds[3]);
+
+#ifndef USE_ROSEN_DRAWING
+    SkPaint paint;
+    paint.setColor(symbolAnimationConfig->SymbolNodes[0].color);
+    paint.setAntiAlias(true);
+    recordingCanvas->drawPath(symbolAnimationConfig->SymbolNodes[0].path, paint);
+#else
+    Drawing::Brush brush;
+    brush.SetColor(Drawing::Color::ColorQuadSetARGB(0xFF, symbolAnimationConfig->SymbolNodes[0].color.r,
+        symbolAnimationConfig->SymbolNodes[0].color.g, symbolAnimationConfig->SymbolNodes[0].color.b));
+
+    brush.SetAlphaF(symbolAnimationConfig->SymbolNodes[0].color.a);
+    brush.SetAntiAlias(true);
+
+    Drawing::Pen pen;
+    pen.SetColor(Drawing::Color::ColorQuadSetARGB(0xFF, symbolAnimationConfig->SymbolNodes[0].color.r,
+        symbolAnimationConfig->SymbolNodes[0].color.g, symbolAnimationConfig->SymbolNodes[0].color.b));
+    pen.SetAlphaF(symbolAnimationConfig->SymbolNodes[0].color.a);
+    pen.SetAntiAlias(true);
+
+    symbolAnimationConfig->SymbolNodes[0].path.Offset(symbolAnimationConfig->SymbolNodes[0].nodeBoundary[0],
+        symbolAnimationConfig->SymbolNodes[0].nodeBoundary[1]);
+    recordingCanvas->AttachBrush(brush);
+    recordingCanvas->DrawPath(symbolAnimationConfig->SymbolNodes[0].path);
+    recordingCanvas->DetachBrush();
+    recordingCanvas->AttachPen(pen);
+    recordingCanvas->DrawPath(symbolAnimationConfig->SymbolNodes[0].path);
+    recordingCanvas->DetachPen();
+#endif
+    canvasNode->FinishRecording();
+    rsNode_->AddChild(canvasNode, -1);
     return true;
+}
+
+void RSSymbolAnimation::SetSymbolGeometry(const std::shared_ptr<RSNode>& rsNode, const Vector4f bounds)
+{
+    if (!rsNode) {
+        return;
+    }
+    std::shared_ptr<RSAnimatableProperty<Vector4f>> frameProperty = nullptr;
+    std::shared_ptr<RSAnimatableProperty<Vector4f>> boundsProperty = nullptr;
+
+    bool isFrameCreate = CreateOrSetModifierValue(frameProperty, bounds);
+    if (isFrameCreate) {
+        auto frameModifier = std::make_shared<RSFrameModifier>(frameProperty);
+        rsNode->AddModifier(frameModifier);
+    }
+    bool isBoundsCreate = CreateOrSetModifierValue(boundsProperty, bounds);
+    if (isBoundsCreate) {
+        auto boundsModifier = std::make_shared<RSBoundsModifier>(boundsProperty);
+        rsNode->AddModifier(boundsModifier);
+    }
 }
 
 std::shared_ptr<RSAnimation> RSSymbolAnimation::ScaleSymbolAnimation(

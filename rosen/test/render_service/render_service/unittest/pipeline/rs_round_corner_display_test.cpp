@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -92,7 +92,7 @@ HWTEST_F(RSRoundCornerDisplayTest, UpdateParameterTest, TestSize.Level1)
     ScreenRotation curOrientation = ScreenRotation::ROTATION_0;
     rcdInstance.UpdateOrientationStatus(curOrientation);
 
-    int notchStatus = 0;
+    int notchStatus = WINDOW_NOTCH_DEFAULT;
     rcdInstance.UpdateNotchStatus(notchStatus);
 
     uint32_t width = 1344;
@@ -121,7 +121,7 @@ HWTEST_F(RSRoundCornerDisplayTest, RSDrawRoundCornerTest, TestSize.Level1)
     ScreenRotation curOrientation = ScreenRotation::ROTATION_0;
     rcdInstance.UpdateOrientationStatus(curOrientation);
 
-    int notchStatus = 0;
+    int notchStatus = WINDOW_NOTCH_DEFAULT;
     rcdInstance.UpdateNotchStatus(notchStatus);
 
     uint32_t width = 1344;
@@ -138,5 +138,77 @@ HWTEST_F(RSRoundCornerDisplayTest, RSDrawRoundCornerTest, TestSize.Level1)
     ASSERT_NE(canvas, nullptr);
     rcdInstance.DrawRoundCorner(canvas.get());
 }
+
+/*
+ * @tc.name: RSLoadImgTest
+ * @tc.desc: Test RSRoundCornerDisplayTest.RSLoadImgTest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSRoundCornerDisplayTest, RSLoadImgTest, TestSize.Level1)
+{
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkImage> imgBottomPortrait;
+    SkBitmap bitmapBottomPortrait;
+#else
+    std::shared_ptr<Drawing::Image> imgBottomPortrait;
+    Drawing::Bitmap bitmapBottomPortrait;
+#endif
+    const char* path = "port_down.png";
+
+    auto& rcdInstance = RSSingleton<RoundCornerDisplay>::GetInstance();
+    rcdInstance.Init();
+
+    rcdInstance.LoadImg(path, imgBottomPortrait);
+    ASSERT_NE(imgBottomPortrait, nullptr);
+    rcdInstance.DecodeBitmap(imgBottomPortrait, bitmapBottomPortrait);
+}
+
+/*
+ * @tc.name: RSGetSurfaceSourceTest
+ * @tc.desc: Test RSRoundCornerDisplayTest.RSGetSurfaceSourceTest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSRoundCornerDisplayTest, RSGetSurfaceSourceTest, TestSize.Level1)
+{
+    auto& rcdInstance = RSSingleton<RoundCornerDisplay>::GetInstance();
+    rcdInstance.Init();
+
+    uint32_t width = 1344;
+    uint32_t height = 2772;
+    rcdInstance.UpdateDisplayParameter(width, height);
+
+    rcdInstance.GetTopSurfaceSource();
+    rcdInstance.GetBottomSurfaceSource();
+}
+
+/*
+ * @tc.name: RSChooseResourceTest
+ * @tc.desc: Test RSRoundCornerDisplayTest.RSChooseResourceTest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSRoundCornerDisplayTest, RSChooseResourceTest, TestSize.Level1)
+{
+    auto& rcdInstance = RSSingleton<RoundCornerDisplay>::GetInstance();
+    rcdInstance.Init();
+
+    ScreenRotation curOrientation = ScreenRotation::ROTATION_90;
+    rcdInstance.UpdateOrientationStatus(curOrientation);
+
+    int notchStatus = WINDOW_NOTCH_HIDDEN;
+    rcdInstance.UpdateNotchStatus(notchStatus);
+
+    uint32_t width = 1344;
+    uint32_t height = 2772;
+    rcdInstance.UpdateDisplayParameter(width, height);
+
+    rcdInstance.RcdChooseTopResourceType();
+
+    rcdInstance.RcdChooseRSResource();
+    rcdInstance.RcdChooseHardwareResource();
+}
+
 
 }

@@ -748,7 +748,7 @@ HWTEST_F(RSPropertiesPainterTest, DrawGreyAdjustment001, TestSize.Level1)
     RSPaintFilterCanvas canvas(&drawingCanvas);
     std::shared_ptr<Drawing::Image> image;
 #endif
-    auto greyImage = RSPropertiesPainter::DrawGreyAdjustment(canvas, image, 
+    auto greyImage = RSPropertiesPainter::DrawGreyAdjustment(canvas, image,
         properties.GetGreyCoef1(), properties.GetGreyCoef2());
 }
 
@@ -771,7 +771,7 @@ HWTEST_F(RSPropertiesPainterTest, DrawGreyAdjustment002, TestSize.Level1)
     RSPaintFilterCanvas canvas(&drawingCanvas);
     std::shared_ptr<Drawing::Image> image;
 #endif
-    auto greyImage = RSPropertiesPainter::DrawGreyAdjustment(canvas, image, 
+    auto greyImage = RSPropertiesPainter::DrawGreyAdjustment(canvas, image,
         properties.GetGreyCoef1(), properties.GetGreyCoef2());
 }
 } // namespace Rosen

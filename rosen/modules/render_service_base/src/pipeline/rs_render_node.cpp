@@ -211,7 +211,7 @@ const std::set<RSModifierType> CACHEABLE_ANIMATION_TYPE = {
     RSModifierType::BOUNDS,
     RSModifierType::FRAME,
 };
-const std::unordered_set<RSModifierType> ANIMATION_MODIFIER_TYPE  = {
+const std::unordered_set<RSModifierType> ANIMATION_MODIFIER_TYPE = {
     RSModifierType::TRANSLATE,
     RSModifierType::SCALE,
     RSModifierType::ROTATION_X,
@@ -725,11 +725,7 @@ void RSRenderNode::SetContentDirty()
 void RSRenderNode::SetDirty()
 {
     // Sometimes dirtyStatus_ were not correctly reset, we use dirtyTypes_ to determine if we should add to active list
-#ifndef USE_ROSEN_DRAWING
-    if (dirtyStatus_ == NodeDirty::CLEAN || dirtyTypes_.empty()) {
-#else
     if (dirtyStatus_ == NodeDirty::CLEAN || dirtyTypes_.none()) {
-#endif
         AddActiveNode();
         dirtyStatus_ = NodeDirty::DIRTY;
     }
@@ -1369,11 +1365,7 @@ void RSRenderNode::AddModifierProfile(const std::shared_ptr<RSRenderModifier>& m
 bool RSRenderNode::ApplyModifiers()
 {
     // quick reject test
-#ifndef USE_ROSEN_DRAWING
-    if (!RSRenderNode::IsDirty() || dirtyTypes_.empty()) {
-#else
     if (!RSRenderNode::IsDirty() || dirtyTypes_.none()) {
-#endif
         return false;
     }
     hgmModifierProfileList_.clear();
@@ -1388,11 +1380,7 @@ bool RSRenderNode::ApplyModifiers()
 
     // Apply modifiers
     for (auto& [id, modifier] : modifiers_) {
-#ifndef USE_ROSEN_DRAWING
-        if (!dirtyTypes_.count(modifier->GetType())) {
-#else
         if (!dirtyTypes_.test(static_cast<size_t>(modifier->GetType()))) {
-#endif
             continue;
         }
         modifier->Apply(context);
@@ -1414,12 +1402,8 @@ bool RSRenderNode::ApplyModifiers()
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
         manager != nullptr &&
-#ifndef USE_ROSEN_DRAWING
-        (dirtyTypes_.count(RSModifierType::BACKGROUND_COLOR) || dirtyTypes_.count(RSModifierType::BG_IMAGE))) {
-#else
         (dirtyTypes_.test(static_cast<size_t>(RSModifierType::BACKGROUND_COLOR)) ||
         dirtyTypes_.test(static_cast<size_t>(RSModifierType::BG_IMAGE)))) {
-#endif
         manager->InvalidateCache();
     }
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(true)) {
@@ -1433,11 +1417,7 @@ bool RSRenderNode::ApplyModifiers()
 #endif
 
     // update state
-#ifndef USE_ROSEN_DRAWING
-    dirtyTypes_.clear();
-#else
     dirtyTypes_.reset();
-#endif
     lastApplyTimestamp_ = lastTimestamp_;
     UpdateShouldPaint();
 

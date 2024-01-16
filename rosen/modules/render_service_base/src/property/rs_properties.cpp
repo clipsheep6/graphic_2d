@@ -156,19 +156,6 @@ RSProperties::RSProperties()
 
 RSProperties::~RSProperties() = default;
 
-#ifndef USE_ROSEN_DRAWING
-void RSProperties::ResetProperty(const std::unordered_set<RSModifierType>& dirtyTypes)
-{
-    for (const auto& type : dirtyTypes) {
-        if (type >= RSModifierType::CUSTOM) {
-            continue;
-        }
-        if (auto& resetFunc = g_propertyResetterLUT[static_cast<uint8_t>(type)]) {
-            resetFunc(this);
-        }
-    }
-}
-#else
 void RSProperties::ResetProperty(const std::bitset<static_cast<int>(RSModifierType::MAX_RS_MODIFIER_TYPE)>& dirtyTypes)
 {
     if (dirtyTypes.none()) {
@@ -182,7 +169,6 @@ void RSProperties::ResetProperty(const std::bitset<static_cast<int>(RSModifierTy
         }
     }
 }
-#endif
 
 void RSProperties::SetBounds(Vector4f bounds)
 {

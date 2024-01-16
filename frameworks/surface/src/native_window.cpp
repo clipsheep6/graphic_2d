@@ -21,6 +21,7 @@
 #include "buffer_log.h"
 #include "window.h"
 #include "surface_type.h"
+#include "surface_utils.h"
 #include "sync_fence.h"
 
 #ifndef WEAK_ALIAS
@@ -36,9 +37,17 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
         BLOGE("parameter error, please check input parameter");
         return nullptr;
     }
-    OHNativeWindow* nativeWindow = new OHNativeWindow();
-    nativeWindow->surface =
-                *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSurface);
+
+    OHOS::sptr<OHOS::Surface> surface = *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSurface);
+    auto utils = SurfaceUtils::GetInstance();
+    OHNativeWindow* nativeWindow = reinterpret_cast<OHNativeWindow*>(utils->GetNativeWindow(surface->GetUniqueId()));
+    if (nativeWindow != nullptr) {
+        BLOGD("get nativeWindow from cache.");
+        return nativeWindow;
+    }
+
+    nativeWindow = new OHNativeWindow();
+    nativeWindow->surface = surface;
     BLOGE_CHECK_AND_RETURN_RET(nativeWindow->surface != nullptr, nullptr, "window surface is null");
     nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
     nativeWindow->config.height = nativeWindow->surface->GetDefaultHeight();
@@ -50,6 +59,7 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
     nativeWindow->config.transform = GraphicTransformType::GRAPHIC_ROTATE_NONE;
 
     NativeObjectReference(nativeWindow);
+    utils->AddNativeWindow(surface->GetUniqueId(), nativeWindow);
     nativeWindow->surface->SetWptrNativeWindowToPSurface(nativeWindow);
     return nativeWindow;
 }
@@ -443,12 +453,60 @@ int32_t NativeWindowSetTunnelHandle(OHNativeWindow *window, const OHExtDataHandl
     return window->surface->SetTunnelHandle(reinterpret_cast<const OHOS::GraphicExtDataHandle*>(handle));
 }
 
+int32_t GetSurfaceId(OHNativeWindow *window, uint64_t *surfaceId)
+{
+    if (window == nullptr || surfaceId == nullptr) {
+        BLOGE("parameter error, please check input parameter");
+        return OHOS::GSERROR_INVALID_ARGUMENTS;
+    }
+
+    *surfaceId = window->surface->GetUniqueId();
+    auto utils = SurfaceUtils::GetInstance();
+    utils->Add(*surfaceId, window->surface);
+    return OHOS::GSERROR_OK;
+}
+
+OHNativeWindow* CreateNativeWindowFromSurfaceId(uint64_t *surfaceId)
+{
+    if (surfaceId == nullptr) {
+        BLOGE("parameter error, please check input parameter");
+        return nullptr;
+    }
+
+    auto utils = SurfaceUtils::GetInstance();
+    OHNativeWindow* nativeWindow = reinterpret_cast<OHNativeWindow*>(utils->GetNativeWindow(*surfaceId));
+    if (nativeWindow != nullptr) {
+        BLOGD("get nativeWindow from cache.");
+        return nativeWindow;
+    }
+
+    nativeWindow = new OHNativeWindow();
+    nativeWindow->surface = utils->GetSurface(*surfaceId);
+    BLOGE_CHECK_AND_RETURN_RET(nativeWindow->surface != nullptr, nullptr, "window surface is null");
+    nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
+    nativeWindow->config.height = nativeWindow->surface->GetDefaultHeight();
+    nativeWindow->config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA;
+    nativeWindow->config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
+    nativeWindow->config.strideAlignment = 8;   // default stride is 8
+    nativeWindow->config.timeout = 3000;        // default timeout is 3000 ms
+    nativeWindow->config.colorGamut = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    nativeWindow->config.transform = GraphicTransformType::GRAPHIC_ROTATE_NONE;
+
+    NativeObjectReference(nativeWindow);
+    utils->AddNativeWindow(nativeWindow->surface->GetUniqueId(), nativeWindow);
+    nativeWindow->surface->SetWptrNativeWindowToPSurface(nativeWindow);
+    return nativeWindow;
+}
+
 NativeWindow::NativeWindow() : NativeWindowMagic(NATIVE_OBJECT_MAGIC_WINDOW), surface(nullptr)
 {
 }
 
 NativeWindow::~NativeWindow()
 {
+    auto utils = SurfaceUtils::GetInstance();
+    utils->Remove(surface->GetUniqueId());
+    utils->RemoveNativeWindow(surface->GetUniqueId());
     for (auto &[seqNum, buffer] : bufferCache_) {
         NativeObjectUnreference(buffer);
     }
@@ -483,3 +541,6 @@ WEAK_ALIAS(NativeWindowSetScalingMode, OH_NativeWindow_NativeWindowSetScalingMod
 WEAK_ALIAS(NativeWindowSetMetaData, OH_NativeWindow_NativeWindowSetMetaData);
 WEAK_ALIAS(NativeWindowSetMetaDataSet, OH_NativeWindow_NativeWindowSetMetaDataSet);
 WEAK_ALIAS(NativeWindowSetTunnelHandle, OH_NativeWindow_NativeWindowSetTunnelHandle);
+WEAK_ALIAS(GetSurfaceId, OH_NativeWindow_GetSurfaceId);
+WEAK_ALIAS(CreateNativeWindowFromSurfaceId, OH_NativeWindow_CreateNativeWindowFromSurfaceId);
+

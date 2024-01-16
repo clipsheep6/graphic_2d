@@ -629,14 +629,12 @@ RSPropertyDrawable::DrawablePtr RSShadowBaseDrawable::Generate(const RSRenderCon
     if (properties.GetShadowMask()) {
         return std::make_unique<RSColorfulShadowDrawable>(properties);
     } else {
-        if (properties.GetShadow()->GetHardwareAcceleration()) {
-            if (properties.GetShadowElevation() <= 0.f) {
-                return nullptr;
-            }
+        if (properties.GetShadowElevation() > 0.f) {
             return std::make_unique<RSHardwareAccelerationShadowDrawable>(properties);
         } else {
             return std::make_unique<RSShadowDrawable>(properties);
         }
+        return nullptr;
     }
 }
 
@@ -828,13 +826,13 @@ RSColorfulShadowDrawable::RSColorfulShadowDrawable(const RSProperties& propertie
 {
 #ifndef USE_ROSEN_DRAWING
     const SkScalar blurRadius =
-        properties.GetShadow()->GetHardwareAcceleration()
+        properties.GetShadowElevation() > 0.f
             ? 0.25f * properties.GetShadowElevation() * (1 + properties.GetShadowElevation() / 128.0f)
             : properties.GetShadowRadius();
     blurPaint_.setImageFilter(SkImageFilters::Blur(blurRadius, blurRadius, SkTileMode::kDecal, nullptr));
 #else
     const Drawing::scalar blurRadius =
-        properties.GetShadow()->GetHardwareAcceleration()
+        properties.GetShadowElevation() > 0.f
             ? 0.25f * properties.GetShadowElevation() * (1 + properties.GetShadowElevation() / 128.0f)
             : properties.GetShadowRadius();
     Drawing::Filter filter;
@@ -1287,9 +1285,13 @@ RSBlendSaveLayerDrawable::RSBlendSaveLayerDrawable(int blendMode)
 void RSBlendSaveLayerDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
-    canvas.saveLayer(nullptr, &blendPaint_);
+    auto paint = blendPaint_;
+    paint.setAlphaf(canvas.GetAlpha());
+    canvas.saveLayer(nullptr, &paint);
 #else
-    Drawing::SaveLayerOps maskLayerRec(nullptr, &blendBrush_, nullptr, 0);
+    auto brush = blendBrush_;
+    brush.SetAlphaF(canvas.GetAlpha());
+    Drawing::SaveLayerOps maskLayerRec(nullptr, &brush, nullptr, 0);
     canvas.SaveLayer(maskLayerRec);
 #endif
     canvas.SaveBlendMode();

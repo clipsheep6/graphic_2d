@@ -143,9 +143,9 @@ HWTEST(RSBaseRenderEngineUnitTest, DrawDisplayNodeWithParams001, TestSize.Level1
         std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
         std::shared_ptr<RSPaintFilterCanvas> recordingCanvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
     #else
-        std::unique_ptr<Drawing::RecordingCanvas> drawingRecordingCanvas = std::make_unique<Drawing::RecordingCanvas>(10, 10);
+        auto drawingRecordingCanvas = std::make_unique<Drawing::RecordingCanvas>(10, 10);
         drawingRecordingCanvas->SetGrRecordingContext(renderEngine->GetRenderContext()->GetSharedDrGPUContext());
-        std::shared_ptr<RSPaintFilterCanvas> recordingCanvas = std::make_shared<RSPaintFilterCanvas>(drawingRecordingCanvas.get());
+        auto recordingCanvas = std::make_shared<RSPaintFilterCanvas>(drawingRecordingCanvas.get());
     #endif
         ASSERT_NE(recordingCanvas, nullptr);
         renderEngine->DrawDisplayNodeWithParams(*recordingCanvas, *node, param);
@@ -156,9 +156,9 @@ HWTEST(RSBaseRenderEngineUnitTest, DrawDisplayNodeWithParams001, TestSize.Level1
         auto renderEngine = std::make_shared<RSRenderEngine>();
     #ifndef USE_ROSEN_DRAWING
         std::unique_ptr<SkCanvas> skCanvas = std::make_unique<SkCanvas>(10, 10);
-        std::shared_ptr<RSPaintFilterCanvas> recordingCanvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
+        std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(skCanvas.get());
     #else
-        std::unique_ptr<Drawing::RecordingCanvas> drawingCanvas = std::make_unique<Drawing::Canvas>(10, 10);
+        std::unique_ptr<Drawing::Canvas> drawingCanvas = std::make_unique<Drawing::Canvas>(10, 10);
         std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
     #endif
         ASSERT_NE(canvas, nullptr);

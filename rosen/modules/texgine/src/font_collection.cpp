@@ -132,6 +132,7 @@ std::shared_ptr<Typeface> FontCollection::GetTypefaceForChar(const uint32_t &ch,
     for (const auto &fontStyleSet : fontStyleSets_) {
         std::shared_ptr<Typeface> typeface = nullptr;
         struct TypefaceCacheKey key = {.fss = fontStyleSet, .fs = style};
+        std::unique_lock<std::mutex> lck(mutex_);
         if (auto it = typefaceCache_.find(key); it != typefaceCache_.end()) {
             typeface = it->second;
         } else {
@@ -237,8 +238,12 @@ std::shared_ptr<Typeface> FontCollection::FindFallBackTypeface(const uint32_t &c
     }
     // fallback cache
     struct FallbackCacheKey key = {.script = script, .locale = locale, .fs = style};
-    if (auto it = fallbackCache_.find(key); it != fallbackCache_.end() && it->second->Has(ch)) {
-        return it->second;
+
+    {
+        std::unique_lock<std::mutex> lck(mutex_);
+        if (auto it = fallbackCache_.find(key); it != fallbackCache_.end() && it->second->Has(ch)) {
+            return it->second;
+        }
     }
 
     // fallback

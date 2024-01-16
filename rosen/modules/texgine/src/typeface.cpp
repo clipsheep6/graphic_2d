@@ -103,6 +103,7 @@ bool Typeface::Has(uint32_t ch)
 {
     while (cmapParser_ == nullptr) {
         auto name = GetName();
+        std::unique_lock<std::mutex> lck(mutex_);
         auto it = cmapCache_.find(name);
         if (it != cmapCache_.end()) {
             cmapParser_ = cmapCache_[name];

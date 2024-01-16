@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <memory>
+#include <mutex>
 
 #include "opentype_parser/cmap_parser.h"
 #include "texgine_string.h"
@@ -56,6 +57,7 @@ private:
     std::unique_ptr<char[]> cmapData_ = nullptr;
     bool isFakeItalic_ = false;
     bool isFakeBold_ = false;
+    static inline std::mutex mutex_;  // protect cmapCache_ access
     static inline std::map<std::string, std::shared_ptr<CmapParser>> cmapCache_;
 };
 } // namespace TextEngine

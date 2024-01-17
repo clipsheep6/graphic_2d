@@ -41,9 +41,31 @@ public:
 #ifndef USE_ROSEN_DRAWING
     SymbolNodeBuild(const AnimationSetting animationSetting, const HMSymbolData symbolData,
     const EffectStrategy effectStrategy, const std::pair<double, double> offset);
+
+    void AddWholeAnimation(std::vector<RenderGroup>& renderGroups,
+                           std::vector<SkPath> &pathLayers,
+                           const Vector4f &nodeBounds,
+                           std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig);
+
+    void AddHierarchicalAnimation(std::vector<RenderGroup>& renderGroups,
+                                  std::vector<SkPath> &pathLayers,
+                                  const Vector4f &nodeBounds,
+                                  std::vector<GroupSetting> &groupSettings,
+                                  std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig);
 #else
     SymbolNodeBuild(const RSAnimationSetting animationSetting, const RSHMSymbolData symbolData,
     const RSEffectStrategy effectStrategy, const std::pair<double, double> offset);
+
+    void AddWholeAnimation(std::vector<RSRenderGroup>& renderGroups,
+                           std::vector<RSPath> &pathLayers,
+                           const Vector4f &nodeBounds,
+                           std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig);
+
+    void AddHierarchicalAnimation(std::vector<RSRenderGroup>& renderGroups,
+                                  std::vector<RSPath> &pathLayers,
+                                  const Vector4f &nodeBounds,
+                                  const std::vector<RSGroupSetting> &groupSettings,
+                                  std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig);
 #endif
     ~SymbolNodeBuild() {}
     bool DecomposeSymbolAndDraw();

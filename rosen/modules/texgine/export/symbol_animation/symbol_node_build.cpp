@@ -78,8 +78,68 @@ SymbolNodeBuild::SymbolNodeBuild(const RSAnimationSetting animationSetting, cons
     offsetY_ = offset.second;
 }
 
+#ifndef USE_ROSEN_DRAWING
+void SymbolNodeBuild::AddWholeAnimation(std::vector<RenderGroup>& renderGroups,
+                                        std::vector<SkPath> &pathLayers,
+                                        const Vector4f &nodeBounds,
+                                        std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig)
+#else
+void SymbolNodeBuild::AddWholeAnimation(std::vector<RSRenderGroup>& renderGroups,
+                                        std::vector<RSPath> &pathLayers,
+                                        const Vector4f &nodeBounds,
+                                        std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig)
+#endif
+{
+    for (auto group : renderGroups) {
+#ifndef USE_ROSEN_DRAWING
+        SkPath multPath;
+#else
+        RSPath multPath;
+#endif
+        MergePath(multPath, group.groupInfos, pathLayers);
+        SymbolNode symbolNode = {multPath, group.color, nodeBounds, 0};
+        symbolAnimationConfig->SymbolNodes.push_back(symbolNode);
+    }
+    symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();
+}
 
 #ifndef USE_ROSEN_DRAWING
+void SymbolNodeBuild::AddHierarchicalAnimation(std::vector<RenderGroup>& renderGroups,
+                                               std::vector<SkPath> &pathLayers,
+                                               const Vector4f &nodeBounds,
+                                               const std::vector<GroupSetting> &groupSettings,
+                                               std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig)
+#else
+void SymbolNodeBuild::AddHierarchicalAnimation(std::vector<RSRenderGroup>& renderGroups,
+                                               std::vector<RSPath> &pathLayers,
+                                               const Vector4f &nodeBounds,
+                                               const std::vector<RSGroupSetting> &groupSettings,
+                                               std::shared_ptr<SymbolAnimationConfig> symbolAnimationConfig)
+#endif
+{
+#ifndef USE_ROSEN_DRAWING
+    SColor color;
+#else
+    RSSColor color;
+#endif
+    size_t i = 0;
+    for (auto groupSetting: groupSettings) {
+#ifndef USE_ROSEN_DRAWING
+        SkPath multPath;
+#else
+        RSPath multPath;
+#endif
+        MergePath(multPath, groupSetting.groupInfos, pathLayers);
+        if (i <= renderGroups.size()) {
+            color = renderGroups[i].color;
+            i++;
+        }
+        SymbolNode symbolNode = {multPath, color, nodeBounds, groupSetting.animationIndex};
+        symbolAnimationConfig->SymbolNodes.push_back(symbolNode);
+    }
+    symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();
+}
+
 bool SymbolNodeBuild::DecomposeSymbolAndDraw()
 {
     if (symbolData_.symbolInfo_.renderGroups.size() <= 0) {
@@ -89,95 +149,46 @@ bool SymbolNodeBuild::DecomposeSymbolAndDraw()
         return false;
     }
     auto symbolAnimationConfig = std::make_shared<SymbolAnimationConfig>();
+#ifndef USE_ROSEN_DRAWING
     std::vector<SkPath> paths;
     HMSymbol::PathOutlineDecompose(symbolData_.path_, paths);
     std::vector<SkPath> pathLayers;
     HMSymbol::MultilayerPath(symbolData_.symbolInfo_.layers, paths, pathLayers);
-    if (effectStrategy_ == EffectStrategy::SCALE) {
-        for (auto group : symbolData_.symbolInfo_.renderGroups) {
-            SkPath multPath;
-            MergePath(multPath, group.groupInfos, pathLayers);
-            auto rect = multPath.getBounds();
-            float nodeWidth = rect.fRight - rect.fLeft;
-            float nodeHeight = rect.fTop - rect.fBottom;
-            Vector4f nodeBounds = Vector4f(offsetX_, offsetY_, nodeWidth, nodeHeight);
-            SymbolNode symbolNode = {multPath, group.color, nodeBounds, 0};
-            symbolAnimationConfig->SymbolNodes.push_back(symbolNode);
-        }
-        symbolAnimationConfig->effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_SCALE;
-        symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();
-    }
-    if (effectStrategy_ == EffectStrategy::HIERARCHICAL) {
-        SColor color = symbolData_.symbolInfo_.renderGroups[0].color;
-        for (size_t i = 0; i < animationSetting_.groupSettings.size(); i++) {
-            SkPath multPath;
-            GroupSetting groupSetting = animationSetting_.groupSettings[i];
-            MergePath(multPath, groupSetting.groupInfos, pathLayers);
-            auto rect = multPath.getBounds();
-            float nodeWidth = abs(rect.fRight - rect.fLeft);
-            float nodeHeight = abs(rect.fTop - rect.fBottom);
-            Vector4f nodeBounds = Vector4f(offsetX_, offsetY_, nodeWidth, nodeHeight);
-            SymbolNode symbolNode = {multPath, color, nodeBounds, groupSetting.animationIndex};
-            symbolAnimationConfig->SymbolNodes.push_back(symbolNode);
-        }
-        symbolAnimationConfig->effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_HIERARCHICAL;
-        symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();
-    }
-    animationFunc_(symbolAnimationConfig);
-    return true;
-}
+    auto rect = symbolData_.path_.getBounds();
+    float nodeWidth = rect.fRight - rect.fLeft;
+    float nodeHeight = rect.fTop - rect.fBottom;
 #else
-bool SymbolNodeBuild::DecomposeSymbolAndDraw()
-{
-    if (symbolData_.symbolInfo_.renderGroups.size() <= 0) {
-        return false;
-    }
-
-    if (animationFunc_ == nullptr) {
-        return false;
-    }
-    auto symbolAnimationConfig = std::make_shared<SymbolAnimationConfig>();
     std::vector<RSPath> paths;
     RSHMSymbol::PathOutlineDecompose(symbolData_.path_, paths);
     std::vector<RSPath> pathLayers;
     RSHMSymbol::MultilayerPath(symbolData_.symbolInfo_.layers, paths, pathLayers);
+    auto rect = symbolData_.path_.GetBounds();
+    float nodeWidth = rect.GetWidth();
+    float nodeHeight = rect.GetHeight();
+#endif
+    Vector4f nodeBounds = Vector4f(offsetX_, offsetY_, nodeWidth, nodeHeight);
+
+#ifndef USE_ROSEN_DRAWING
+    if (effectStrategy_ == EffectStrategy::SCALE) {
+#else
     if (effectStrategy_ == RSEffectStrategy::SCALE) {
-        for (auto group : symbolData_.symbolInfo_.renderGroups) {
-            RSPath multPath;
-            MergePath(multPath, group.groupInfos, pathLayers);
-            auto rect = multPath.GetBounds();
-            float nodeWidth = rect.GetWidth();
-            float nodeHeight = rect.GetHeight();
-            Vector4f nodeBounds = Vector4f(offsetX_, offsetY_, nodeWidth, nodeHeight);
-            SymbolNode symbolNode = {multPath, group.color, nodeBounds, 1};
-            symbolAnimationConfig->SymbolNodes.push_back(symbolNode);
-        }
+#endif
+        AddWholeAnimation(symbolData_.symbolInfo_.renderGroups, pathLayers,
+            nodeBounds, symbolAnimationConfig);
         symbolAnimationConfig->effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_SCALE;
-        symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();
     }
-
+#ifndef USE_ROSEN_DRAWING
+    if (effectStrategy_ == EffectStrategy::HIERARCHICAL) {
+#else
     if (effectStrategy_ == RSEffectStrategy::HIERARCHICAL) {
-        RSSColor color = symbolData_.symbolInfo_.renderGroups[0].color;
-
-        for (size_t i = 0; i < animationSetting_.groupSettings.size(); i++) {
-            RSPath multPath;
-            RSGroupSetting groupSetting = animationSetting_.groupSettings[i];
-            MergePath(multPath, groupSetting.groupInfos, pathLayers);
-            auto rect = multPath.GetBounds();
-            float nodeWidth = rect.GetWidth();
-            float nodeHeight = rect.GetHeight();
-            Vector4f nodeBounds = Vector4f(offsetX_, offsetY_, nodeWidth, nodeHeight);
-            SymbolNode symbolNode = {multPath, color, nodeBounds, groupSetting.animationIndex};
-            symbolAnimationConfig->SymbolNodes.push_back(symbolNode);
-        }
+#endif
+        AddHierarchicalAnimation(symbolData_.symbolInfo_.renderGroups, pathLayers,
+            nodeBounds, animationSetting_.groupSettings, symbolAnimationConfig);
         symbolAnimationConfig->effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_HIERARCHICAL;
-        symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();
     }
     animationFunc_(symbolAnimationConfig);
     return true;
 }
-#endif
-
 }
 }
 }

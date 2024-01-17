@@ -75,7 +75,7 @@ HWTEST_F(EglWrapperEntryTest, CheckEglWrapperApi001, Level1)
 HWTEST_F(EglWrapperEntryTest, CheckEglWrapperApi002, Level2)
 {
     auto result = CheckEglWrapperApi("");
-    ASSERT_TRUE(!result);
+    ASSERT_FALSE(result);
 }
 
 /**
@@ -111,7 +111,7 @@ HWTEST_F(EglWrapperEntryTest, ValidateDisplay002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglChooseConfigImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglChooseConfig(dpy, nullptr, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -123,8 +123,8 @@ HWTEST_F(EglWrapperEntryTest, EglChooseConfigImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglChooseConfigImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -140,8 +140,8 @@ HWTEST_F(EglWrapperEntryTest, EglChooseConfigImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglChooseConfigImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -158,7 +158,7 @@ HWTEST_F(EglWrapperEntryTest, EglChooseConfigImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCopyBuffersImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCopyBuffers(dpy, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -170,8 +170,8 @@ HWTEST_F(EglWrapperEntryTest, EglCopyBuffersImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCopyBuffersImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -187,7 +187,7 @@ HWTEST_F(EglWrapperEntryTest, EglCopyBuffersImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateContextImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateContext(dpy, nullptr, nullptr, nullptr);
     ASSERT_EQ(EGL_NO_CONTEXT, result);
 }
@@ -199,8 +199,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateContextImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateContextImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -216,7 +216,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateContextImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePbufferSurfaceImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreatePbufferSurface(dpy, nullptr, nullptr);
     ASSERT_EQ(EGL_NO_CONTEXT, result);
 }
@@ -228,8 +228,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePbufferSurfaceImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePbufferSurfaceImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -245,7 +245,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePbufferSurfaceImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePixmapSurfaceImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreatePixmapSurface(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_NO_CONTEXT, result);
 }
@@ -257,8 +257,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePixmapSurfaceImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePixmapSurfaceImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -274,7 +274,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePixmapSurfaceImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateWindowSurfaceImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateWindowSurface(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_NO_SURFACE, result);
 }
@@ -286,8 +286,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateWindowSurfaceImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateWindowSurfaceImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -303,7 +303,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateWindowSurfaceImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyContextImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglDestroyContext(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -315,8 +315,8 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyContextImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyContextImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -332,7 +332,7 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyContextImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroySurfaceImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglDestroySurface(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -344,8 +344,8 @@ HWTEST_F(EglWrapperEntryTest, EglDestroySurfaceImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroySurfaceImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -361,7 +361,7 @@ HWTEST_F(EglWrapperEntryTest, EglDestroySurfaceImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetConfigAttribImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglGetConfigAttrib(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -373,12 +373,24 @@ HWTEST_F(EglWrapperEntryTest, EglGetConfigAttribImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetConfigAttribImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
 
+    auto result = gWrapperHook.wrapper.eglGetConfigAttrib(dpy, nullptr, 0, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetConfigAttribImpl003
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetConfigAttribImpl003, Level1)
+{
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     auto result = gWrapperHook.wrapper.eglGetConfigAttrib(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -390,7 +402,7 @@ HWTEST_F(EglWrapperEntryTest, EglGetConfigAttribImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetConfigsImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglGetConfigs(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -402,8 +414,8 @@ HWTEST_F(EglWrapperEntryTest, EglGetConfigsImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetConfigsImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -419,14 +431,14 @@ HWTEST_F(EglWrapperEntryTest, EglGetConfigsImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetConfigsImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
     EGLint numConfig = 1;
 
-    auto result = gWrapperHook.wrapper.eglGetConfigs(dpy, nullptr, 0, &numConfig);
+    auto result = gWrapperHook.wrapper.eglGetConfigs(dpy, nullptr, 1, &numConfig);
     ASSERT_NE(EGL_FALSE, result);
 }
 
@@ -525,7 +537,7 @@ HWTEST_F(EglWrapperEntryTest, EglGetProcAddressImpL002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglInitializeImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglInitialize(dpy, nullptr, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -537,8 +549,8 @@ HWTEST_F(EglWrapperEntryTest, EglInitializeImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglInitializeImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
     auto result = gWrapperHook.wrapper.eglInitialize(dpy, &majorVersion, &minorVersion);
@@ -552,7 +564,7 @@ HWTEST_F(EglWrapperEntryTest, EglInitializeImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglMakeCurrentImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglMakeCurrent(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -564,8 +576,8 @@ HWTEST_F(EglWrapperEntryTest, EglMakeCurrentImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglMakeCurrentImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -581,7 +593,7 @@ HWTEST_F(EglWrapperEntryTest, EglMakeCurrentImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryContextImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglQueryContext(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -593,8 +605,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryContextImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryContextImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -610,8 +622,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryContextImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryContextImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -628,7 +640,7 @@ HWTEST_F(EglWrapperEntryTest, EglQueryContextImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStringImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglQueryString(dpy, 0);
     ASSERT_EQ(nullptr, result);
 }
@@ -640,8 +652,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStringImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStringImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -657,7 +669,7 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStringImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQuerySurfaceImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglQuerySurface(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -669,8 +681,8 @@ HWTEST_F(EglWrapperEntryTest, EglQuerySurfaceImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglQuerySurfaceImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -686,8 +698,8 @@ HWTEST_F(EglWrapperEntryTest, EglQuerySurfaceImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQuerySurfaceImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -704,7 +716,7 @@ HWTEST_F(EglWrapperEntryTest, EglQuerySurfaceImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglSwapBuffersImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglSwapBuffers(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -716,8 +728,8 @@ HWTEST_F(EglWrapperEntryTest, EglSwapBuffersImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglSwapBuffersImpl002, Level1)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -733,7 +745,7 @@ HWTEST_F(EglWrapperEntryTest, EglSwapBuffersImpl002, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglTerminateImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglTerminate(dpy);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -745,8 +757,8 @@ HWTEST_F(EglWrapperEntryTest, EglTerminateImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglTerminateImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -762,10 +774,11 @@ HWTEST_F(EglWrapperEntryTest, EglTerminateImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglWaitGLImpl001, Level1)
 {
-    auto temp = gWrapperHook.isLoad;
-    gWrapperHook.isLoad = false;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    auto temp = table->isLoad;
+    table->isLoad = false;
     auto result = gWrapperHook.wrapper.eglWaitGL();
-    ASSERT_EQ(EGL_FALSE, result);
+    ASSERT_FALSE(result);
     gWrapperHook.isLoad = temp;
 }
 
@@ -777,8 +790,9 @@ HWTEST_F(EglWrapperEntryTest, EglWaitGLImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglWaitGLImpl002, Level2)
 {
-    auto temp = gWrapperHook.isLoad;
-    gWrapperHook.isLoad = true;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    auto temp = table->isLoad;
+    table->isLoad = true;
     auto result = gWrapperHook.wrapper.eglWaitGL();
     ASSERT_NE(EGL_FALSE, result);
     gWrapperHook.isLoad = temp;
@@ -794,8 +808,8 @@ HWTEST_F(EglWrapperEntryTest, EglWaitNativeImpl001, Level1)
 {
     auto temp = gWrapperHook.isLoad;
     gWrapperHook.isLoad = false;
-    auto result = gWrapperHook.wrapper.eglWaitNative(1);
-    ASSERT_EQ(EGL_FALSE, result);
+    auto result = gWrapperHook.wrapper.eglWaitNative(EGL_CORE_NATIVE_ENGINE);
+    ASSERT_FALSE(result);
     gWrapperHook.isLoad = temp;
 }
 
@@ -808,7 +822,7 @@ HWTEST_F(EglWrapperEntryTest, EglWaitNativeImpl002, Level2)
 {
     auto temp = gWrapperHook.isLoad;
     gWrapperHook.isLoad = true;
-    auto result = gWrapperHook.wrapper.eglWaitNative(1);
+    auto result = gWrapperHook.wrapper.eglWaitNative(EGL_CORE_NATIVE_ENGINE);
     ASSERT_NE(EGL_FALSE, result);
     gWrapperHook.isLoad = temp;
 }
@@ -820,9 +834,9 @@ HWTEST_F(EglWrapperEntryTest, EglWaitNativeImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglBindTexImageImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglBindTexImage(dpy, nullptr, 0);
-    ASSERT_EQ(EGL_FALSE, result);
+    ASSERT_EQ(0, result);
 }
 
 /**
@@ -832,8 +846,8 @@ HWTEST_F(EglWrapperEntryTest, EglBindTexImageImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglBindTexImageImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -849,7 +863,7 @@ HWTEST_F(EglWrapperEntryTest, EglBindTexImageImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglReleaseTexImageImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglReleaseTexImage(dpy, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -861,8 +875,8 @@ HWTEST_F(EglWrapperEntryTest, EglReleaseTexImageImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglReleaseTexImageImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -878,7 +892,7 @@ HWTEST_F(EglWrapperEntryTest, EglReleaseTexImageImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglSurfaceAttribImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglSurfaceAttrib(dpy, nullptr, 0, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -890,8 +904,8 @@ HWTEST_F(EglWrapperEntryTest, EglSurfaceAttribImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglSurfaceAttribImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -907,7 +921,7 @@ HWTEST_F(EglWrapperEntryTest, EglSurfaceAttribImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglSwapIntervalImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglSwapInterval(dpy, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -919,8 +933,8 @@ HWTEST_F(EglWrapperEntryTest, EglSwapIntervalImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglSwapIntervalImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -992,7 +1006,7 @@ HWTEST_F(EglWrapperEntryTest, EglQueryAPIImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePbufferFromClientBufferImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreatePbufferFromClientBuffer(dpy, 0, nullptr, nullptr, nullptr);
     ASSERT_EQ(EGL_NO_SURFACE, result);
 }
@@ -1035,7 +1049,7 @@ HWTEST_F(EglWrapperEntryTest, EglWaitClientImpl001, Level1)
     auto temp = gWrapperHook.isLoad;
     gWrapperHook.isLoad = false;
     auto result = gWrapperHook.wrapper.eglWaitClient();
-    ASSERT_EQ(EGL_FALSE, result);
+    ASSERT_FALSE(result);
     gWrapperHook.isLoad = temp;
 }
 
@@ -1060,7 +1074,7 @@ HWTEST_F(EglWrapperEntryTest, EglWaitClientImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateSyncImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateSync(dpy, 0, nullptr);
     ASSERT_EQ(EGL_NO_SYNC, result);
 }
@@ -1072,8 +1086,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateSyncImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateSyncImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1089,7 +1103,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateSyncImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroySyncImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglDestroySync(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1101,8 +1115,8 @@ HWTEST_F(EglWrapperEntryTest, EglDestroySyncImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroySyncImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1118,7 +1132,7 @@ HWTEST_F(EglWrapperEntryTest, EglDestroySyncImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglClientWaitSync(dpy, nullptr, 0, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1130,8 +1144,8 @@ HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1147,7 +1161,7 @@ HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglGetSyncAttrib(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1159,8 +1173,8 @@ HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1176,8 +1190,8 @@ HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1214,7 +1228,7 @@ HWTEST_F(EglWrapperEntryTest, EglDupNativeFenceFDANDROIDImpl001, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateImageImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateImage(dpy, nullptr, 0, nullptr, nullptr);
     ASSERT_EQ(EGL_NO_IMAGE, result);
 }
@@ -1226,8 +1240,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateImageImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateImageImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1243,7 +1257,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateImageImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyImageImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglDestroyImage(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1255,8 +1269,8 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyImageImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyImageImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1272,7 +1286,7 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyImageImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePlatformWindowSurfaceImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreatePlatformWindowSurface(dpy, nullptr, nullptr, nullptr);
     ASSERT_EQ(EGL_NO_SURFACE, result);
 }
@@ -1284,8 +1298,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePlatformWindowSurfaceImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePlatformWindowSurfaceImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1301,7 +1315,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePlatformWindowSurfaceImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePlatformPixmapSurfaceImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreatePlatformPixmapSurface(dpy, nullptr, nullptr, nullptr);
     ASSERT_EQ(EGL_NO_SURFACE, result);
 }
@@ -1313,8 +1327,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePlatformPixmapSurfaceImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreatePlatformPixmapSurfaceImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1330,7 +1344,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreatePlatformPixmapSurfaceImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglWaitSyncImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglWaitSync(dpy, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1342,8 +1356,8 @@ HWTEST_F(EglWrapperEntryTest, EglWaitSyncImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglWaitSyncImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1359,7 +1373,7 @@ HWTEST_F(EglWrapperEntryTest, EglWaitSyncImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglLockSurfaceKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglLockSurfaceKHR(dpy, nullptr, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1371,8 +1385,8 @@ HWTEST_F(EglWrapperEntryTest, EglLockSurfaceKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglLockSurfaceKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1388,8 +1402,8 @@ HWTEST_F(EglWrapperEntryTest, EglLockSurfaceKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglUnlockSurfaceKHRImpl001, Level1)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1405,8 +1419,8 @@ HWTEST_F(EglWrapperEntryTest, EglUnlockSurfaceKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglUnlockSurfaceKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1422,7 +1436,7 @@ HWTEST_F(EglWrapperEntryTest, EglUnlockSurfaceKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateImageKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateImageKHR(dpy, 0, 0, nullptr, nullptr);
     ASSERT_EQ(EGL_NO_IMAGE_KHR, result);
 }
@@ -1434,8 +1448,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateImageKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateImageKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1451,7 +1465,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateImageKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyImageKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglDestroyImageKHR(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1463,8 +1477,8 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyImageKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyImageKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1480,7 +1494,7 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyImageKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateSyncKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateSyncKHR(dpy, 0, nullptr);
     ASSERT_EQ(EGL_NO_SYNC_KHR, result);
 }
@@ -1492,8 +1506,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateSyncKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateSyncKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1509,7 +1523,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateSyncKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroySyncKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglDestroySyncKHR(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1521,8 +1535,8 @@ HWTEST_F(EglWrapperEntryTest, EglDestroySyncKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroySyncKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1538,7 +1552,7 @@ HWTEST_F(EglWrapperEntryTest, EglDestroySyncKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglClientWaitSyncKHR(dpy, nullptr, 0, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1550,8 +1564,8 @@ HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1567,7 +1581,7 @@ HWTEST_F(EglWrapperEntryTest, EglClientWaitSyncKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglGetSyncAttribKHR(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1579,8 +1593,8 @@ HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1596,8 +1610,8 @@ HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribKHRImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1614,7 +1628,7 @@ HWTEST_F(EglWrapperEntryTest, EglGetSyncAttribKHRImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglSignalSyncKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglSignalSyncKHR(dpy, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1626,8 +1640,8 @@ HWTEST_F(EglWrapperEntryTest, EglSignalSyncKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglSignalSyncKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1643,7 +1657,7 @@ HWTEST_F(EglWrapperEntryTest, EglSignalSyncKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateStreamKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateStreamKHR(dpy, nullptr);
     ASSERT_EQ(EGL_NO_STREAM_KHR, result);
 }
@@ -1655,8 +1669,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateStreamKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateStreamKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1673,8 +1687,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateStreamKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyStreamKHRImpl001, Level1)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1690,8 +1704,8 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyStreamKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglDestroyStreamKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1707,7 +1721,7 @@ HWTEST_F(EglWrapperEntryTest, EglDestroyStreamKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamAttribKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglStreamAttribKHR(dpy, nullptr, 0, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1719,8 +1733,8 @@ HWTEST_F(EglWrapperEntryTest, EglStreamAttribKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamAttribKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1736,7 +1750,7 @@ HWTEST_F(EglWrapperEntryTest, EglStreamAttribKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglQueryStreamKHR(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1748,8 +1762,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1765,8 +1779,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamKHRImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1783,7 +1797,7 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamKHRImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamu64KHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglQueryStreamu64KHR(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1795,8 +1809,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamu64KHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamu64KHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1812,8 +1826,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamu64KHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamu64KHRImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1830,7 +1844,7 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamu64KHRImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamConsumerGLTextureExternalKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglStreamConsumerGLTextureExternalKHR(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1842,8 +1856,8 @@ HWTEST_F(EglWrapperEntryTest, EglStreamConsumerGLTextureExternalKHRImpl001, Leve
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamConsumerGLTextureExternalKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1859,7 +1873,7 @@ HWTEST_F(EglWrapperEntryTest, EglStreamConsumerGLTextureExternalKHRImpl002, Leve
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamConsumerAcquireKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglStreamConsumerAcquireKHR(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1871,8 +1885,8 @@ HWTEST_F(EglWrapperEntryTest, EglStreamConsumerAcquireKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamConsumerAcquireKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1888,7 +1902,7 @@ HWTEST_F(EglWrapperEntryTest, EglStreamConsumerAcquireKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglStreamConsumerReleaseKHR(dpy, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1900,8 +1914,8 @@ HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4; 
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1917,7 +1931,7 @@ HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateStreamProducerSurfaceKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateStreamProducerSurfaceKHR(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_NO_SURFACE, result);
 }
@@ -1929,8 +1943,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateStreamProducerSurfaceKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateStreamProducerSurfaceKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1946,7 +1960,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateStreamProducerSurfaceKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamTimeKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglQueryStreamTimeKHR(dpy, nullptr, 0, nullptr);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -1958,8 +1972,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamTimeKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamTimeKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1975,8 +1989,8 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamTimeKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglQueryStreamTimeKHRImpl003, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -1993,7 +2007,7 @@ HWTEST_F(EglWrapperEntryTest, EglQueryStreamTimeKHRImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetStreamFileDescriptorKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglGetStreamFileDescriptorKHR(dpy, nullptr);
     ASSERT_EQ(EGL_NO_FILE_DESCRIPTOR_KHR, result);
 }
@@ -2005,8 +2019,8 @@ HWTEST_F(EglWrapperEntryTest, EglGetStreamFileDescriptorKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetStreamFileDescriptorKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -2023,7 +2037,7 @@ HWTEST_F(EglWrapperEntryTest, EglGetStreamFileDescriptorKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateStreamFromFileDescriptorKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglCreateStreamFromFileDescriptorKHR(dpy, EGL_NO_FILE_DESCRIPTOR_KHR);
     ASSERT_EQ(EGL_NO_STREAM_KHR, result);
 }
@@ -2035,8 +2049,8 @@ HWTEST_F(EglWrapperEntryTest, EglCreateStreamFromFileDescriptorKHRImpl001, Level
  */
 HWTEST_F(EglWrapperEntryTest, EglCreateStreamFromFileDescriptorKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -2052,7 +2066,7 @@ HWTEST_F(EglWrapperEntryTest, EglCreateStreamFromFileDescriptorKHRImpl002, Level
  */
 HWTEST_F(EglWrapperEntryTest, EglWaitSyncKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglWaitSyncKHR(dpy, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -2064,8 +2078,8 @@ HWTEST_F(EglWrapperEntryTest, EglWaitSyncKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglWaitSyncKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -2103,7 +2117,7 @@ HWTEST_F(EglWrapperEntryTest, EglGetPlatformDisplayEXTImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglGetPlatformDisplayEXTImpl003, Level2)
 {
-    auto result = gWrapperHook.wrapper.eglGetPlatformDisplayEXT(EGL_PLATFORM_OHOS_KHR, EGL_DEFAULT_DISPLAY, nullptr);
+    auto result = gWrapperHook.wrapper.eglGetPlatformDisplayEXT(EGL_PLATFORM_OHOS_KHR,  EGL_DEFAULT_DISPLAY, nullptr);
     ASSERT_NE(EGL_NO_DISPLAY, result);
 }
 
@@ -2114,7 +2128,7 @@ HWTEST_F(EglWrapperEntryTest, EglGetPlatformDisplayEXTImpl003, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglSwapBuffersWithDamageKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglSwapBuffersWithDamageKHR(dpy, nullptr, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -2126,8 +2140,8 @@ HWTEST_F(EglWrapperEntryTest, EglSwapBuffersWithDamageKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglSwapBuffersWithDamageKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);
@@ -2143,7 +2157,7 @@ HWTEST_F(EglWrapperEntryTest, EglSwapBuffersWithDamageKHRImpl002, Level2)
  */
 HWTEST_F(EglWrapperEntryTest, EglSetDamageRegionKHRImpl001, Level1)
 {
-    EGLDisplay dpy = nullptr;
+    EGLDisplay dpy = EGL_NO_DISPLAY;
     auto result = gWrapperHook.wrapper.eglSetDamageRegionKHR(dpy, nullptr, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
@@ -2155,8 +2169,8 @@ HWTEST_F(EglWrapperEntryTest, EglSetDamageRegionKHRImpl001, Level1)
  */
 HWTEST_F(EglWrapperEntryTest, EglSetDamageRegionKHRImpl002, Level2)
 {
-    EGLint majorVersion;
-    EGLint minorVersion;
+    EGLint majorVersion = 1;
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);

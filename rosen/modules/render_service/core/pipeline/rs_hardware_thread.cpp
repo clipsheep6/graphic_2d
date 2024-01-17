@@ -520,9 +520,11 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
             (void)backendTexturePtr;
 #if defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
             if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
-                auto glType = GL_RGBA8;
-                if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
-                    glType = GL_RGB10_A2;
+                auto glType = GR_GL_RGBA8;
+                if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
+                    glType = GR_GL_BGRA8;
+                } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
+                    glType = GR_GL_RGB10_A2;
                 }
 
                 GrGLTextureInfo grExternalTextureInfo = { GL_TEXTURE_EXTERNAL_OES, eglTextureId,
@@ -612,7 +614,8 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 externalTextureInfo.SetIsMipMapped(false);
                 externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
                 externalTextureInfo.SetID(eglTextureId);
-                externalTextureInfo.SetFormat(GL_RGBA8);
+                externalTextureInfo.SetFormat(static_cast<GrGLenum>(
+                    (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ? GR_GL_BGRA8 : GR_GL_RGBA8));
 
                 image = std::make_shared<Drawing::Image>();
                 if (!image->BuildFromTexture(*canvas->GetGPUContext(), externalTextureInfo,

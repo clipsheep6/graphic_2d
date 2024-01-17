@@ -270,8 +270,6 @@ typedef struct OHExtDataHandle {
 /**
  * @brief Creates an <b>OHNativeWindow</b> instance. 
  * A new <b>OHNativeWindow</b> instance is created each time this function is called.\n
- * For the same pSurface, if <b>OH_NativeWindow_DestroyNativeWindow</b> is not invaked,
- * the created OHNativeWindow is the same.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
  * @param pSurface Indicates the pointer to a <b>ProduceSurface</b>. The type is a pointer to <b>sptr<OHOS::Surface></b>.
@@ -517,8 +515,6 @@ int32_t OH_NativeWindow_GetSurfaceId(OHNativeWindow *window, uint64_t *surfaceId
 
 /**
  * @brief Creates an <b>OHNativeWindow</b> instance.\n
- * For the same surfaceId, if <b>OH_NativeWindow_DestroyNativeWindow</b> is not invaked,
- * the created OHNativeWindow is the same.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
  * @param surfaceId Indicates the pointer to a surfaceId.

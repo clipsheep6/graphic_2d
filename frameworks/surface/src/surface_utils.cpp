@@ -155,7 +155,7 @@ SurfaceError SurfaceUtils::RemoveNativeWindow(uint64_t uniqueId)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     if (nativeWindowCache_.count(uniqueId) == 0) {
-        BLOGE("Delete failed without nativeWindow by uniqueId %" PRIu64, uniqueId);
+        BLOGW("Delete failed without nativeWindow by uniqueId %" PRIu64, uniqueId);
         return GSERROR_INVALID_OPERATING;
     }
     nativeWindowCache_.erase(uniqueId);

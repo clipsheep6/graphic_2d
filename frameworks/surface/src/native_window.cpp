@@ -38,16 +38,9 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
         return nullptr;
     }
 
-    OHOS::sptr<OHOS::Surface> surface = *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSurface);
-    auto utils = SurfaceUtils::GetInstance();
-    OHNativeWindow* nativeWindow = reinterpret_cast<OHNativeWindow*>(utils->GetNativeWindow(surface->GetUniqueId()));
-    if (nativeWindow != nullptr) {
-        BLOGD("get nativeWindow from cache.");
-        return nativeWindow;
-    }
-
-    nativeWindow = new OHNativeWindow();
-    nativeWindow->surface = surface;
+    OHNativeWindow* nativeWindow = new OHNativeWindow();
+    nativeWindow->surface =
+                *reinterpret_cast<OHOS::sptr<OHOS::Surface> *>(pSurface);
     BLOGE_CHECK_AND_RETURN_RET(nativeWindow->surface != nullptr, nullptr, "window surface is null");
     nativeWindow->config.width = nativeWindow->surface->GetDefaultWidth();
     nativeWindow->config.height = nativeWindow->surface->GetDefaultHeight();
@@ -59,7 +52,8 @@ OHNativeWindow* CreateNativeWindowFromSurface(void* pSurface)
     nativeWindow->config.transform = GraphicTransformType::GRAPHIC_ROTATE_NONE;
 
     NativeObjectReference(nativeWindow);
-    utils->AddNativeWindow(surface->GetUniqueId(), nativeWindow);
+    auto utils = SurfaceUtils::GetInstance();
+    utils->AddNativeWindow(nativeWindow->surface->GetUniqueId(), nativeWindow);
     nativeWindow->surface->SetWptrNativeWindowToPSurface(nativeWindow);
     return nativeWindow;
 }
@@ -476,6 +470,7 @@ OHNativeWindow* CreateNativeWindowFromSurfaceId(uint64_t *surfaceId)
     auto utils = SurfaceUtils::GetInstance();
     OHNativeWindow* nativeWindow = reinterpret_cast<OHNativeWindow*>(utils->GetNativeWindow(*surfaceId));
     if (nativeWindow != nullptr) {
+        NativeObjectReference(nativeWindow);
         BLOGD("get nativeWindow from cache.");
         return nativeWindow;
     }

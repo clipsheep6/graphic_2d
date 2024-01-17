@@ -178,6 +178,7 @@ HWTEST_F(NativeWindowTest, CreateNativeWindowFromSurfaceId001, Function | Medium
     int32_t ret = OH_NativeWindow_GetSurfaceId(nativeWindow, &surfaceId);
     ASSERT_EQ(ret, OHOS::GSERROR_OK);
     ASSERT_EQ(surfaceId, pSurface->GetUniqueId());
+    OH_NativeWindow_DestroyNativeWindow(nativeWindow);
 }
 
 /*

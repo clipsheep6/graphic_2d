@@ -14,11 +14,13 @@
  */
 
 #include "skia_font.h"
+#include <memory>
 
 #include "include/core/SkFontTypes.h"
 
 #include "skia_adapter/skia_convert_utils.h"
 #include "skia_adapter/skia_typeface.h"
+#include "skia_typeface.h"
 #include "text/font.h"
 #include "utils/log.h"
 
@@ -69,6 +71,14 @@ void SkiaFont::SetTypeface(std::shared_ptr<Typeface> typeface)
     }
     sk_sp<SkTypeface> skTypeface = skiaTypeface->GetTypeface();
     skFont_.setTypeface(skTypeface);
+}
+
+Typeface* SkiaFont::GetTypeface()
+{
+    sk_sp<SkTypeface> skTypeface = skFont_.refTypeface();
+    std::shared_ptr<SkiaTypeface> skiaTypeface = std::make_shared<SkiaTypeface>(skTypeface);
+    typeface_ = std::make_shared<Typeface>(skiaTypeface);
+    return typeface_.get();
 }
 
 void SkiaFont::SetSize(scalar textSize)

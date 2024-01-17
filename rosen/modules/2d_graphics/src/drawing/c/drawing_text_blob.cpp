@@ -104,7 +104,7 @@ void OH_Drawing_TextBlobGetBounds(OH_Drawing_TextBlob* cTextBlob, OH_Drawing_Rec
     if (cRect != nullptr) {
         Rect* outRect = const_cast<Rect*>(CastToRect(cRect));
         *outRect = Rect(rect->GetLeft(), rect->GetTop(),
-            rect->GetRight(), rect->GetWidth());
+            rect->GetRight(), rect->GetBottom());
     }
 }
 

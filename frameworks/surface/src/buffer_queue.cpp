@@ -455,6 +455,10 @@ GSError BufferQueue::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
     buffer = bufferQueueCache_[lastFlusedSequence_].buffer;
     fence = lastFlusedFence_;
     Rect damage = {};
+    if (buffer != nullptr) {
+        damage.w = buffer->GetWidth();
+        damage.h = buffer->GetHeight();
+    }
     auto utils = SurfaceUtils::GetInstance();
     utils->ComputeTransformMatrix(matrix, matrixSize, buffer, lastFlushedTransform_, damage);
     return GSERROR_OK;

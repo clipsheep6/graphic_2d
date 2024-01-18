@@ -1343,10 +1343,10 @@ bool RSRenderNode::ApplyModifiers()
         manager != nullptr &&
         (dirtyTypes_.test(static_cast<size_t>(RSModifierType::BACKGROUND_COLOR)) ||
         dirtyTypes_.test(static_cast<size_t>(RSModifierType::BG_IMAGE)))) {
-        manager->InvalidateCache();
+        manager->UpdateCacheStateWithDirtyRegion();
     }
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(true)) {
-        manager->InvalidateCache();
+        manager->UpdateCacheStateWithDirtyRegion();
     }
 
     // Generate drawable

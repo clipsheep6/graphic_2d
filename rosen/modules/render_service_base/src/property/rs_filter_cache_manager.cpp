@@ -161,6 +161,15 @@ void RSFilterCacheManager::UpdateCacheStateWithDirtyRegion()
     }
 }
 
+void RSFilterCacheManager::UpdateCacheStateWithOnTreeState()
+{
+    if (!IsCacheValid()) {
+        return;
+    }
+    RS_OPTIONAL_TRACE_FUNC();
+    InvalidateCache();
+}
+
 #ifndef USE_ROSEN_DRAWING
 bool RSFilterCacheManager::RSFilterCacheTask::InitSurface(GrRecordingContext* grContext)
 #else

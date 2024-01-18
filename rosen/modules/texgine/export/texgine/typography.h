@@ -207,6 +207,10 @@ public:
     virtual void SetAnimation(
         std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)>& animationFunc)= 0;
 
+    virtual double GetLineHeight(int lineNumber) const = 0;
+    
+    virtual double GetLineWidth(int lineNumber) const = 0;
+
 private:
     friend void ReportMemoryUsage(const std::string& member, const Typography& that, const bool needThis);
 };

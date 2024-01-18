@@ -263,7 +263,7 @@ Boundary TypographyImpl::GetWordBoundaryByIndex(size_t index) const
     return {right, right};
 }
 
-double TypographyImpl::GetLineHeight(int lineNumber)
+double TypographyImpl::GetLineHeight(int lineNumber) const
 {
     if (lineNumber >= 0 && lineNumber < static_cast<int>(lineMetrics_.size())) {
         return lineMetrics_[lineNumber].GetMaxHeight();
@@ -272,7 +272,7 @@ double TypographyImpl::GetLineHeight(int lineNumber)
     }
 }
 
-double TypographyImpl::GetLineWidth(int lineNumber)
+double TypographyImpl::GetLineWidth(int lineNumber) const
 {
     if (lineNumber >= 0 && lineNumber < static_cast<int>(lineMetrics_.size())) {
         return lineMetrics_[lineNumber].width;

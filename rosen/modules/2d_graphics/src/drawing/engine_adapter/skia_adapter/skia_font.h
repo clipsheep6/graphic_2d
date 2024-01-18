@@ -42,6 +42,7 @@ public:
     void SetSubpixel(bool isSubpixel) override;
     void SetHinting(FontHinting hintingLevel) override;
     void SetTypeface(std::shared_ptr<Typeface> typeface) override;
+    Typeface* GetTypeface() override;
     void SetSize(scalar textSize) override;
     void SetEmbolden(bool isEmbolden) override;
     void SetScaleX(scalar scaleX) override;
@@ -60,6 +61,7 @@ public:
 
 private:
     SkFont skFont_;
+    std::shared_ptr<Typeface> typeface_ = nullptr;
 };
 } // namespace Drawing
 } // namespace Rosen

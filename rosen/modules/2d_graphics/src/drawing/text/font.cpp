@@ -46,6 +46,11 @@ void Font::SetTypeface(std::shared_ptr<Typeface> typeface)
     fontImpl_->SetTypeface(typeface);
 }
 
+Typeface* Font::GetTypeface()
+{
+    return fontImpl_->GetTypeface();
+}
+
 void Font::SetSize(scalar textSize)
 {
     fontImpl_->SetSize(textSize);

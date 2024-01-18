@@ -66,6 +66,11 @@ public:
     void SetTypeface(std::shared_ptr<Typeface> typeface);
 
     /*
+     * @brief           Get Typeface of font.
+     */
+    Typeface* GetTypeface();
+
+    /*
      * @brief           Set text size.
      * @param textSize  Text size.
      */

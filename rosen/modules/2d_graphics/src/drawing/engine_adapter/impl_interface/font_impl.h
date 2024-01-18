@@ -38,6 +38,7 @@ public:
     virtual void SetSubpixel(bool isSubpixel) = 0;
     virtual void SetHinting(FontHinting hintingLevel) = 0;
     virtual void SetTypeface(std::shared_ptr<Typeface> typeface) = 0;
+    virtual Typeface* GetTypeface() = 0;
     virtual void SetSize(scalar textSize) = 0;
     virtual void SetEmbolden(bool isEmbolden) = 0;
     virtual void SetScaleX(scalar scaleX) = 0;

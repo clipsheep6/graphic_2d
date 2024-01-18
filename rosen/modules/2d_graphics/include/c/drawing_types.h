@@ -38,6 +38,7 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -173,6 +174,14 @@ typedef struct OH_Drawing_ColorFilter OH_Drawing_ColorFilter;
 typedef struct OH_Drawing_Font OH_Drawing_Font;
 
 /**
+ * @brief Defines a memoryStream, which is used to describe the memory stream.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_MemoryStream OH_Drawing_MemoryStream;
+
+/**
  * @brief Defines a typeface, which is used to describe the typeface.
  *
  * @since 11
@@ -248,7 +257,7 @@ typedef enum {
 } OH_Drawing_AlphaFormat;
 
 /**
- * @brief The blending operation generates a new color for the two colors (source, target).
+ * @brief The blending operation generates a new color for the two colors (source, destination).
  * These operations are the same on the 4 color channels: red, green, blue, alpha.
  * For these, we use alpha channel as an example, rather than naming each channel individually.
  *

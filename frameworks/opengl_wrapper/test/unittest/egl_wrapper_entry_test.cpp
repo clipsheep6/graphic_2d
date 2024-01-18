@@ -1915,7 +1915,7 @@ HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseKHRImpl001, Level1)
 HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseKHRImpl002, Level2)
 {
     EGLint majorVersion = 1;
-    EGLint minorVersion = 4; 
+    EGLint minorVersion = 4;
     EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
     ASSERT_EQ(ret, EGL_TRUE);

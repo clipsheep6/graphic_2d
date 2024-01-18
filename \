@@ -1,0 +1,19 @@
+Revert "多屏判断优化"
+
+This reverts commit f7eefaa25f0072b600343cd27d33ed99907adc72.
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch new
+# Your branch is ahead of 'origin/master' by 1 commit.
+#   (use "git push" to publish your local commits)
+#
+# Changes to be committed:
+#	modified:   rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
+#	modified:   rosen/modules/render_service/core/screen_manager/rs_screen_manager.cpp
+#	modified:   rosen/modules/render_service/core/screen_manager/rs_screen_manager.h
+#
+# Untracked files:
+#	.vscode/
+#

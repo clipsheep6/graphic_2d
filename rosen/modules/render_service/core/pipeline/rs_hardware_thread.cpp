@@ -53,6 +53,22 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr uint32_t HARDWARE_THREAD_TASK_NUM = 2;
+
+#if defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+Drawing::ColorType GetColorTypeFromBufferFormat(int32_t pixelFmt)
+{
+    switch (pixelFmt) {
+        case GRAPHIC_PIXEL_FMT_RGBA_8888:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+        case GRAPHIC_PIXEL_FMT_BGRA_8888 :
+            return Drawing::ColorType::COLORTYPE_BGRA_8888;
+        case GRAPHIC_PIXEL_FMT_RGB_565:
+            return Drawing::ColorType::COLORTYPE_RGB_565;
+        default:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+    }
+}
+#endif
 }
 
 RSHardwareThread& RSHardwareThread::Instance()
@@ -216,7 +232,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
 
         RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers rate: %d, now: %lu", currentRate, timestamp);
         ExecuteSwitchRefreshRate(rate);
-        PerformSetActiveMode(output);
+        PerformSetActiveMode(output, timestamp);
         AddRefreshRateCount();
         output->SetLayerInfo(layers);
         if (output->IsDeviceValid()) {
@@ -270,7 +286,7 @@ void RSHardwareThread::ExecuteSwitchRefreshRate(uint32_t refreshRate)
 
     auto screenManager = CreateOrGetScreenManager();
     auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
-    ScreenId id = RSMainThread::Instance()->GetFrameRateMgr()->GetCurScreenId();
+    ScreenId id = hgmCore.GetFrameRateMgr()->GetCurScreenId();
     if (refreshRate != hgmCore.GetScreenCurrentRefreshRate(id)) {
         RS_LOGI("RSHardwareThread::CommitAndReleaseLayers screenId %{public}d refreshRate %{public}d",
             static_cast<int>(id), refreshRate);
@@ -281,7 +297,7 @@ void RSHardwareThread::ExecuteSwitchRefreshRate(uint32_t refreshRate)
     }
 }
 
-void RSHardwareThread::PerformSetActiveMode(OutputPtr output)
+void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp)
 {
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     auto screenManager = CreateOrGetScreenManager();
@@ -318,7 +334,8 @@ void RSHardwareThread::PerformSetActiveMode(OutputPtr output)
             hdiBackend_->StartSample(output);
         } else {
             auto pendingPeriod = hgmCore.GetIdealPeriod(hgmCore.GetScreenCurrentRefreshRate(id));
-            hdiBackend_->SetPendingPeriod(output, pendingPeriod);
+            int64_t pendingTimestamp = static_cast<int64_t>(timestamp);
+            hdiBackend_->SetPendingMode(output, pendingPeriod, pendingTimestamp);
             hdiBackend_->StartSample(output);
         }
     }
@@ -419,12 +436,10 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         }
 
         if (layer->GetSurface()->GetName() == "RCDTopSurfaceNode") {
-            RS_LOGE("RCD::HradDraw::RCDTopSurface failed. Start GPU draw");
             isTopGpuDraw = true;
             continue;
         }
         if (layer->GetSurface()->GetName() == "RCDBottomSurfaceNode") {
-            RS_LOGE("RCD::HradDraw::RCDTopSurface failed. Start GPU draw");
             isBottomGpuDraw = true;
             continue;
         }
@@ -597,7 +612,8 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 externalTextureInfo.SetIsMipMapped(false);
                 externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
                 externalTextureInfo.SetID(eglTextureId);
-                externalTextureInfo.SetFormat(GL_RGBA8);
+                auto glType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ? GR_GL_BGRA8 : GR_GL_RGBA8;
+                externalTextureInfo.SetFormat(glType);
 
                 image = std::make_shared<Drawing::Image>();
                 if (!image->BuildFromTexture(*canvas->GetGPUContext(), externalTextureInfo,
@@ -610,6 +626,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #ifdef RS_ENABLE_VK
             if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
                 RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+                colorType = GetColorTypeFromBufferFormat(params.buffer->GetFormat());
                 auto imageCache = uniRenderEngine_->GetVkImageManager()->CreateImageCacheFromBuffer(
                     params.buffer, params.acquireFence);
                 if (!imageCache) {

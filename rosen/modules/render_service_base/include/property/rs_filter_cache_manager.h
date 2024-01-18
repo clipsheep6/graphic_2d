@@ -130,6 +130,7 @@ private:
         bool needClearSurface_ = false;
         std::atomic<bool> isTaskRelease_ = false;
         std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedFirstFilter_ = nullptr;
+        std::mutex grBackendTextureMutex_;
         RSFilterCacheTask() = default;
         virtual ~RSFilterCacheTask() = default;
 #ifndef USE_ROSEN_DRAWING
@@ -141,7 +142,6 @@ private:
         bool SaveFilteredImage() override;
         void SwapInit() override;
         bool SetDone() override;
-        void SetTaskRelease() override;
         CacheProcessStatus GetStatus() const
         {
             return cacheProcessStatus_.load();
@@ -213,6 +213,7 @@ private:
             cacheSurface_ = nullptr;
             cacheCompletedSurface_ = nullptr;
             RSFilter::clearGpuContext();
+            isTaskRelease_.store(false);
         }
 
         void Notify()

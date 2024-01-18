@@ -21,7 +21,8 @@
         "SystemCapability.Graphic.Graphic2D.NativeDrawing",
         "SystemCapability.Graphic.Graphic2D.WebGL",
         "SystemCapability.Graphic.Graphic2D.WebGL2",
-        "SystemCapability.Graphic.Vulkan"
+        "SystemCapability.Graphic.Vulkan",
+        "SystemCapability.Graphics.Drawing"
       ],
       "adapted_system_type": [ "standard" ],
       "features": [
@@ -67,7 +68,6 @@
           "image_framework",
           "ipc",
           "player_framework",
-          "audio_framework",
           "resource_schedule_service",
           "soc_perf",
           "accessibility",
@@ -76,8 +76,7 @@
           "memmgr_plugin",
           "sensor",
           "qos_manager",
-          "video_processing_engine",
-          "drivers_interface_hwsched"
+          "video_processing_engine"
         ],
         "third_party": [
           "flutter",

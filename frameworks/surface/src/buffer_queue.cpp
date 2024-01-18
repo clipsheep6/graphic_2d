@@ -61,7 +61,7 @@ static bool IsLocalRender()
 BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared), isLocalRender_(IsLocalRender())
 {
-    BLOGNI("ctor, Queue id: %{public}" PRIu64 " isShared: %{public}d", uniqueId_, isShared);
+    BLOGND("ctor, Queue id: %{public}" PRIu64 " isShared: %{public}d", uniqueId_, isShared);
     bufferManager_ = BufferManager::GetInstance();
     if (isShared_ == true) {
         queueSize_ = 1;
@@ -70,7 +70,7 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
 
 BufferQueue::~BufferQueue()
 {
-    BLOGNI("dtor, Queue id: %{public}" PRIu64, uniqueId_);
+    BLOGND("dtor, Queue id: %{public}" PRIu64, uniqueId_);
     for (auto &[id, _] : bufferQueueCache_) {
         if (onBufferDeleteForRSMainThread_ != nullptr) {
             onBufferDeleteForRSMainThread_(id);
@@ -355,13 +355,11 @@ GSError BufferQueue::CancelBuffer(uint32_t sequence, const sptr<BufferExtraData>
     std::lock_guard<std::mutex> lockGuard(mutex_);
 
     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-        BLOGN_FAILURE_ID(sequence, "not found in cache");
         return GSERROR_NO_ENTRY;
     }
 
     if (bufferQueueCache_[sequence].state != BUFFER_STATE_REQUESTED &&
         bufferQueueCache_[sequence].state != BUFFER_STATE_ATTACHED) {
-        BLOGN_FAILURE_ID(sequence, "state is neither BUFFER_STATE_REQUESTED nor BUFFER_STATE_ATTACHED");
         return GSERROR_INVALID_OPERATING;
     }
     bufferQueueCache_[sequence].state = BUFFER_STATE_RELEASED;
@@ -438,7 +436,8 @@ GSError BufferQueue::FlushBuffer(uint32_t sequence, const sptr<BufferExtraData> 
     return sret;
 }
 
-GSError BufferQueue::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence, float matrix[16])
+GSError BufferQueue::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
+    sptr<SyncFence>& fence, float matrix[16], int32_t matrixSize)
 {
     if (bufferQueueCache_.find(lastFlusedSequence_) == bufferQueueCache_.end()) {
         BLOGN_FAILURE_ID(lastFlusedSequence_, "not found in cache");
@@ -457,7 +456,7 @@ GSError BufferQueue::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer, sptr<Sync
     fence = lastFlusedFence_;
     Rect damage = {};
     auto utils = SurfaceUtils::GetInstance();
-    utils->ComputeTransformMatrix(matrix, buffer, lastFlushedTransform_, damage);
+    utils->ComputeTransformMatrix(matrix, matrixSize, buffer, lastFlushedTransform_, damage);
     return GSERROR_OK;
 }
 
@@ -606,14 +605,13 @@ GSError BufferQueue::ReleaseBuffer(sptr<SurfaceBuffer> &buffer, const sptr<SyncF
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
         if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-            BLOGN_FAILURE_ID(sequence, "not find in cache, Queue id: %{public}" PRIu64, uniqueId_);
             return GSERROR_NO_ENTRY;
         }
 
         if (isShared_ == false) {
             const auto &state = bufferQueueCache_[sequence].state;
             if (state != BUFFER_STATE_ACQUIRED && state != BUFFER_STATE_ATTACHED) {
-                BLOGN_FAILURE_ID(sequence, "invalid state");
+                BLOGND("invalid state");
                 return GSERROR_NO_ENTRY;
             }
         }
@@ -670,7 +668,7 @@ GSError BufferQueue::AllocBuffer(sptr<SurfaceBuffer> &buffer,
 
     ret = bufferImpl->Map();
     if (ret == GSERROR_OK) {
-        BLOGN_SUCCESS_ID(sequence, "Map");
+        BLOGND("Success seq:%{public}d Map", sequence);
         bufferQueueCache_[sequence] = ele;
         buffer = bufferImpl;
     } else {
@@ -900,7 +898,7 @@ GSError BufferQueue::SetQueueSize(uint32_t queueSize)
         queueSize_ = queueSize;
     }
 
-    BLOGN_SUCCESS("queue size: %{public}d, Queue id: %{public}" PRIu64, queueSize_, uniqueId_);
+    BLOGND("queue size: %{public}d, Queue id: %{public}" PRIu64, queueSize_, uniqueId_);
     return GSERROR_OK;
 }
 
@@ -1125,7 +1123,6 @@ GSError BufferQueue::SetMetaData(uint32_t sequence, const std::vector<GraphicHDR
         return GSERROR_INVALID_ARGUMENTS;
     }
     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-        BLOGN_FAILURE_ID(sequence, "not find in cache");
         return GSERROR_NO_ENTRY;
     }
     bufferQueueCache_[sequence].metaData.clear();
@@ -1150,7 +1147,6 @@ GSError BufferQueue::SetMetaDataSet(uint32_t sequence, GraphicHDRMetadataKey key
         return GSERROR_INVALID_ARGUMENTS;
     }
     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-        BLOGN_FAILURE_ID(sequence, "not find in cache");
         return GSERROR_NO_ENTRY;
     }
     bufferQueueCache_[sequence].metaDataSet.clear();
@@ -1186,7 +1182,6 @@ GSError BufferQueue::GetMetaDataSet(uint32_t sequence, GraphicHDRMetadataKey &ke
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-        BLOGN_FAILURE_ID(sequence, "not find in cache");
         return GSERROR_NO_ENTRY;
     }
     metaData.clear();
@@ -1238,7 +1233,6 @@ GSError BufferQueue::SetPresentTimestamp(uint32_t sequence, const GraphicPresent
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-        BLOGN_FAILURE_ID(sequence, "not find in cache");
         return GSERROR_NO_ENTRY;
     }
     bufferQueueCache_[sequence].presentTimestamp = timestamp;
@@ -1249,7 +1243,6 @@ GSError BufferQueue::GetPresentTimestamp(uint32_t sequence, GraphicPresentTimest
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
-        BLOGN_FAILURE_ID(sequence, "not find in cache");
         return GSERROR_NO_ENTRY;
     }
     if (type != bufferQueueCache_.at(sequence).presentTimestamp.type) {

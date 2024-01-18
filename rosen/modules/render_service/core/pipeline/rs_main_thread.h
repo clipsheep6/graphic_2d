@@ -199,6 +199,7 @@ public:
     SystemAnimatedScenes GetSystemAnimatedScenes();
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
     void SetIsCachedSurfaceUpdated(bool isCachedSurfaceUpdated);
+    pid_t GetDesktopPidForRotationScene() const;
     void SetForceUpdateUniRenderFlag(bool flag)
     {
         forceUpdateUniRenderFlag_ = flag;
@@ -295,6 +296,7 @@ private:
     void SetRSEventDetectorLoopStartTag();
     void SetRSEventDetectorLoopFinishTag();
     void CallbackDrawContextStatusToWMS();
+    void CheckSystemSceneStatus();
     void UpdateUIFirstSwitch();
     // ROG: Resolution Online Government
     void UpdateRogSizeIfNeeded();
@@ -471,6 +473,7 @@ private:
 
     std::shared_ptr<HgmFrameRateManager> frameRateMgr_ = nullptr;
     std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker_ = nullptr;
+    pid_t desktopPidForRotationScene_ = 0;
     FrameRateRange rsCurrRange_;
 
     // UIFirst
@@ -500,8 +503,9 @@ private:
     std::mutex surfaceOcclusionMutex_;
     std::vector<NodeId> lastRegisteredSurfaceOnTree_;
     std::mutex systemAnimatedScenesMutex_;
-    int32_t threeFingerCnt_ = 0;
-    int32_t systemAnimatedScenesCnt_ = 0;
+    std::list<std::pair<SystemAnimatedScenes, time_t>> systemAnimatedScenesList_;
+    std::list<std::pair<SystemAnimatedScenes, time_t>> threeFingerScenesList_;
+    bool isReduceVSyncBySystemAnimatedScenes_ = false;
     std::unordered_map<NodeId, // map<node ID, <pid, callback, partition points vector, level>>
         std::tuple<pid_t, sptr<RSISurfaceOcclusionChangeCallback>,
         std::vector<float>, uint8_t>> surfaceOcclusionListeners_;

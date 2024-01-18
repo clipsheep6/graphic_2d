@@ -62,7 +62,7 @@ ProducerSurface::~ProducerSurface()
     BLOGND("dtor, name:%{public}s, Queue Id:%{public}" PRIu64, name_.c_str(), queueId_);
     auto ret = Disconnect();
     if (ret != GSERROR_OK) {
-        BLOGNE("Disconnect failed, %{public}s", GSErrorStr(ret).c_str());
+        BLOGND("Disconnect failed, %{public}s", GSErrorStr(ret).c_str());
     }
 }
 
@@ -171,9 +171,9 @@ GSError ProducerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer, const sptr<Syn
 }
 
 GSError ProducerSurface::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
-    sptr<SyncFence>& fence, float matrix[16])
+    sptr<SyncFence>& fence, float matrix[16], int32_t matrixSize)
 {
-    auto ret = producer_->GetLastFlushedBuffer(buffer, fence, matrix);
+    auto ret = producer_->GetLastFlushedBuffer(buffer, fence, matrix, matrixSize);
     return ret;
 }
 

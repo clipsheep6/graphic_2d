@@ -20,7 +20,6 @@
 
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"
-#include "animation/rs_frame_rate_range.h"
 #include "animation/rs_motion_path_option.h"
 #include "animation/rs_particle_params.h"
 #include "animation/rs_transition_effect.h"
@@ -353,17 +352,22 @@ public:
 
     void SetAiInvert(const Vector4f& aiInvert);
 
+    void SetSystemBarEffect();
+
     void SetHueRotate(float hueRotate);
 
     void SetColorBlend(uint32_t colorValue);
 
-    void AddFRCSceneInfo(const std::string& scene, float speed);
-
-    void UpdateUIFrameRateRange(const FrameRateRange& range);
-
     int32_t CalcExpectedFrameRate(const std::string& scene, float speed);
 
     void SetOutOfParent(OutOfParentType outOfParent);
+
+    void SetFrameNodeInfo(int32_t id, std::string tag);
+
+    int32_t GetFrameNodeId();
+
+    std::string GetFrameNodeTag();
+
     using BoundsChangedCallback = std::function<void (const Rosen::Vector4f&)>;
     virtual void SetBoundsChangedCallback(BoundsChangedCallback callback){};
     bool IsTextureExportNode() const
@@ -398,6 +402,8 @@ private:
     static void InitUniRenderEnabled();
     NodeId id_;
     NodeId parent_ = 0;
+    int32_t frameNodeId_ = -1;
+    std::string frameNodeTag_;
     std::vector<NodeId> children_;
     void SetParent(NodeId parent);
     void RemoveChildById(NodeId childId);
@@ -441,7 +447,6 @@ private:
     std::shared_ptr<RSImplicitAnimator> implicitAnimator_;
     std::shared_ptr<const RSTransitionEffect> transitionEffect_;
 
-    FrameRateRange nodeRange_ = { 0, 0, 0 };
     std::mutex animationMutex_;
     std::recursive_mutex propertyMutex;
 

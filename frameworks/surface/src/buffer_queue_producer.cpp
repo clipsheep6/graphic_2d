@@ -27,6 +27,10 @@
 #include "sync_fence.h"
 
 namespace OHOS {
+namespace {
+constexpr int32_t BUFFER_MATRIX_SIZE = 16;
+} // namespace
+
 BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
     : producerSurfaceDeathRecipient_(new ProducerSurfaceDeathRecipient(this))
 {
@@ -72,7 +76,7 @@ BufferQueueProducer::~BufferQueueProducer()
 GSError BufferQueueProducer::CheckConnectLocked()
 {
     if (connectedPid_ == 0) {
-        BLOGNI("this BufferQueue has no connections");
+        BLOGND("this BufferQueue has no connections");
         return GSERROR_INVALID_OPERATING;
     }
 
@@ -190,8 +194,8 @@ int32_t BufferQueueProducer::GetLastFlushedBufferRemote(MessageParcel &arguments
 {
     sptr<SurfaceBuffer> buffer;
     sptr<SyncFence> fence;
-    float matrix[16];
-    GSError sret = GetLastFlushedBuffer(buffer, fence, matrix);
+    float matrix[BUFFER_MATRIX_SIZE];
+    GSError sret = GetLastFlushedBuffer(buffer, fence, matrix, BUFFER_MATRIX_SIZE);
     reply.WriteInt32(sret);
     if (sret == GSERROR_OK) {
         uint32_t sequence = buffer->GetSeqNum();
@@ -466,12 +470,12 @@ GSError BufferQueueProducer::FlushBuffer(uint32_t sequence, const sptr<BufferExt
 }
 
 GSError BufferQueueProducer::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
-    sptr<SyncFence>& fence, float matrix[16])
+    sptr<SyncFence>& fence, float matrix[16], int32_t matrixSize)
 {
     if (bufferQueue_ == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
-    return bufferQueue_->GetLastFlushedBuffer(buffer, fence, matrix);
+    return bufferQueue_->GetLastFlushedBuffer(buffer, fence, matrix, matrixSize);
 }
 
 GSError BufferQueueProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
@@ -729,7 +733,7 @@ void BufferQueueProducer::OnBufferProducerRemoteDied()
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (connectedPid_ == 0) {
-            BLOGNI("this bufferQueue has no connections");
+            BLOGND("this bufferQueue has no connections");
             return;
         }
         connectedPid_ = 0;
@@ -760,7 +764,7 @@ void BufferQueueProducer::ProducerSurfaceDeathRecipient::OnRemoteDied(const wptr
         BLOGNI("token doesn't match, ignore it.");
         return;
     }
-    BLOGNW("remote object died.");
+    BLOGND("remote object died.");
     producer->OnBufferProducerRemoteDied();
 }
 }; // namespace OHOS

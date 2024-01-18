@@ -135,6 +135,12 @@ public:
         isHardwareEnabledNode_ = isEnabled;
     }
 
+    bool NeedBilinearInterpolation() const
+    {
+        return nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE && isHardwareEnabledNode_ &&
+            name_ == "SceneViewer Model0";
+    }
+
     void SetSubNodeShouldPaint()
     {
         hasSubNodeShouldPaint_ = true;
@@ -466,7 +472,7 @@ public:
         std::map<uint32_t, RSVisibleLevel>& pidVisMap,
         bool needSetVisibleRegion = true,
         RSVisibleLevel visibleLevel = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL,
-        int32_t systemAnimatedScenesCnt = 0);
+        bool isSystemAnimatedScenes = false);
 
     const Occlusion::Region& GetVisibleDirtyRegion() const
     {
@@ -937,6 +943,7 @@ public:
     bool QueryIfAllHwcChildrenForceDisabledByFilter();
     bool GetHasSharedTransitionNode() const;
     void SetHasSharedTransitionNode(bool hasSharedTransitionNode);
+    Vector2f GetGravityTranslate(float imgWidth, float imgHeight);
 
     bool HasWindowCorner()
     {
@@ -1066,7 +1073,7 @@ private:
     bool isTreatedAsTransparent_ = false;
     // valid filter nodes within, including itself
     std::vector<std::shared_ptr<RSRenderNode>> filterNodes_;
-    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> drawingCacheNodes_;
+    std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> drawingCacheNodes_;
 
     struct OpaqueRegionBaseInfo
     {
@@ -1097,7 +1104,7 @@ private:
         }
     public:
         // temporary const value from ACE container_modal_constants.h, will be replaced by uniform interface
-        const static int CONTAINER_TITLE_HEIGHT = 37;   // container title height = 37 vp
+        const static int CONTAINER_TITLE_HEIGHT = 48;   // container title height = 48 vp
         const static int CONTENT_PADDING = 4;           // container <--> content distance 4 vp
         const static int CONTAINER_BORDER_WIDTH = 1;    // container border width 2 vp
         const static int CONTAINER_OUTER_RADIUS = 16;   // container outer radius 16 vp

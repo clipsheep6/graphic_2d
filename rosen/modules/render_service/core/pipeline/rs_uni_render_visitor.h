@@ -520,7 +520,7 @@ private:
 #ifndef USE_ROSEN_DRAWING
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
 #else
-    std::shared_ptr<Drawing::RecordingCanvas> recordingCanvas_;
+    std::shared_ptr<ExtendRecordingCanvas> recordingCanvas_;
 #endif
 #endif
     bool isNodeSingleFrameComposer_ = false;
@@ -533,8 +533,6 @@ private:
 #endif
 
     void SetHasSharedTransitionNode(RSSurfaceRenderNode& surfaceNode, bool hasSharedTransitionNode);
-
-    void CollectSingleSurface(RSSurfaceRenderNode& node, std::vector<RSBaseRenderNode::SharedPtr>& vec);
 
     // attention: please synchronize the change of RSUniRenderVisitor::ProcessChildren to this func
     void ProcessChildrenForScreenRecordingOptimization(RSDisplayRenderNode& node, NodeId rootIdOfCaptureWindow);

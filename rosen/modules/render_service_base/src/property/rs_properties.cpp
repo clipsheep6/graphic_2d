@@ -118,6 +118,7 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
     [](RSProperties* prop) { prop->SetSepia({}); },                      // SEPIA
     [](RSProperties* prop) { prop->SetInvert({}); },                     // INVERT
     [](RSProperties* prop) { prop->SetAiInvert({}); },                   // AIINVERT
+    [](RSProperties* prop) { prop->SetSystemBarEffect({}); },            // SYSTEMBAREFFECT
     [](RSProperties* prop) { prop->SetHueRotate({}); },                  // HUE_ROTATE
     [](RSProperties* prop) { prop->SetColorBlend({}); },                 // COLOR_BLEND
     [](RSProperties* prop) { prop->SetParticles({}); },                  // PARTICLE
@@ -952,7 +953,7 @@ const std::shared_ptr<RSBorder>& RSProperties::GetBorder() const
 void RSProperties::SetOutlineColor(Vector4<Color> color)
 {
     if (!outline_) {
-        outline_ = std::make_shared<RSBorder>();
+        outline_ = std::make_shared<RSBorder>(true);
     }
     outline_->SetColorFour(color);
     if (outline_->GetColor().GetAlpha() > 0) {
@@ -965,7 +966,7 @@ void RSProperties::SetOutlineColor(Vector4<Color> color)
 void RSProperties::SetOutlineWidth(Vector4f width)
 {
     if (!outline_) {
-        outline_ = std::make_shared<RSBorder>();
+        outline_ = std::make_shared<RSBorder>(true);
     }
     outline_->SetWidthFour(width);
     if (!width.IsZero()) {
@@ -978,7 +979,7 @@ void RSProperties::SetOutlineWidth(Vector4f width)
 void RSProperties::SetOutlineStyle(Vector4<uint32_t> style)
 {
     if (!outline_) {
-        outline_ = std::make_shared<RSBorder>();
+        outline_ = std::make_shared<RSBorder>(true);
     }
     outline_->SetStyleFour(style);
     SetDirty();
@@ -988,7 +989,7 @@ void RSProperties::SetOutlineStyle(Vector4<uint32_t> style)
 void RSProperties::SetOutlineRadius(Vector4f radius)
 {
     if (!outline_) {
-        outline_ = std::make_shared<RSBorder>();
+        outline_ = std::make_shared<RSBorder>(true);
     }
     outline_->SetRadiusFour(radius);
     isDrawn_ = true;
@@ -1692,6 +1693,9 @@ void RSProperties::SetPixelStretch(const std::optional<Vector4f>& stretchSize)
     SetDirty();
     pixelStretchNeedUpdate_ = true;
     contentDirty_ = true;
+    if (pixelStretch_.has_value() && pixelStretch_->IsZero()) {
+        pixelStretch_ = std::nullopt;
+    }
 }
 
 const std::optional<Vector4f>& RSProperties::GetPixelStretch() const
@@ -1718,6 +1722,9 @@ void RSProperties::SetPixelStretchPercent(const std::optional<Vector4f>& stretch
     SetDirty();
     pixelStretchNeedUpdate_ = true;
     contentDirty_ = true;
+    if (pixelStretchPercent_.has_value() && pixelStretchPercent_->IsZero()) {
+        pixelStretchPercent_ = std::nullopt;
+    }
 }
 
 const std::optional<Vector4f>& RSProperties::GetPixelStretchPercent() const
@@ -1954,6 +1961,7 @@ void RSProperties::SetAiInvert(const std::optional<Vector4f>& aiInvert)
 {
     aiInvert_ = aiInvert;
     colorFilterNeedUpdate_ = true;
+    filterNeedUpdate_ = true;
     SetDirty();
     contentDirty_ = true;
     isDrawn_ = true;
@@ -1962,6 +1970,21 @@ void RSProperties::SetAiInvert(const std::optional<Vector4f>& aiInvert)
 const std::optional<Vector4f>& RSProperties::GetAiInvert() const
 {
     return aiInvert_;
+}
+
+void RSProperties::SetSystemBarEffect(bool systemBarEffect)
+{
+    systemBarEffect_ = systemBarEffect;
+    colorFilterNeedUpdate_ = true;
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+    isDrawn_ = true;
+}
+
+bool RSProperties::GetSystemBarEffect() const
+{
+    return systemBarEffect_;
 }
 
 void RSProperties::SetHueRotate(const std::optional<float>& hueRotate)
@@ -2720,11 +2743,11 @@ void RSProperties::ClearFilterCache()
     }
     if (backgroundFilter_ != nullptr && (backgroundFilter_->GetFilterType() == RSFilter::MATERIAL)) {
         auto filter = std::static_pointer_cast<RSMaterialFilter>(backgroundFilter_);
-        filter->ReleaseColorPicker();
+        filter->ReleaseColorPickerFilter();
     }
     if (filter_ != nullptr && (filter_->GetFilterType() == RSFilter::MATERIAL)) {
         auto filter = std::static_pointer_cast<RSMaterialFilter>(filter_);
-        filter->ReleaseColorPicker();
+        filter->ReleaseColorPickerFilter();
     }
 }
 
@@ -2765,10 +2788,22 @@ void RSProperties::OnApplyModifiers()
         if (GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE) {
             filterNeedUpdate_ = true;
         }
+        if (aiInvert_.has_value() || systemBarEffect_) {
+            auto aiBarFilter = std::make_shared<RSAIBarFilter>();
+            backgroundFilter_ = aiBarFilter;
+        }
         if (backgroundFilter_ != nullptr && !backgroundFilter_->IsValid()) {
+            if (backgroundFilter_->GetFilterType() == RSFilter::MATERIAL) {
+                auto filter = std::static_pointer_cast<RSMaterialFilter>(backgroundFilter_);
+                filter->ReleaseColorPickerFilter();
+            }
             backgroundFilter_.reset();
         }
         if (filter_ != nullptr && !filter_->IsValid()) {
+            if (filter_->GetFilterType() == RSFilter::MATERIAL) {
+                auto filter = std::static_pointer_cast<RSMaterialFilter>(filter_);
+                filter->ReleaseColorPickerFilter();
+            }
             filter_.reset();
         }
         IfLinearGradientBlurInvalid();
@@ -2862,6 +2897,22 @@ int RSProperties::GetColorBlendApplyType() const
 const std::shared_ptr<RSColorPickerCacheTask>& RSProperties::GetColorPickerCacheTaskShadow() const
 {
     return colorPickerTaskShadow_;
+}
+
+void RSProperties::ReleaseColorPickerTaskShadow() const
+{
+    if (colorPickerTaskShadow_ == nullptr) {
+        return;
+    }
+    #ifdef IS_OHOS
+    auto initHandler = colorPickerTaskShadow_->GetInitHandler();
+        if (initHandler != nullptr) {
+            auto task = colorPickerTaskShadow_;
+            task->SetWaitRelease(true);
+            initHandler->PostTask(
+                [task]() { task->ReleaseColorPicker(); }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        }
+    #endif
 }
 
 bool RSProperties::GetHaveEffectRegion() const

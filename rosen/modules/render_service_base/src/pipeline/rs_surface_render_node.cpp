@@ -898,7 +898,8 @@ WINDOW_LAYER_INFO_TYPE RSSurfaceRenderNode::GetVisibleLevelForWMS(RSVisibleLevel
 
 bool RSSurfaceRenderNode::IsMultiInstance()
 {
-    return GetName().find("filemanager") != std::string::npos || GetName().find("browser") != std::string::npos;
+    return GetName().find("filemanager") != std::string::npos || GetName().find("browser") != std::string::npos ||
+        GetName().find("shell_assistant") != std::string::npos;
 }
 
 void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& region,
@@ -906,7 +907,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
                                                     std::map<uint32_t, RSVisibleLevel>& pidVisMap,
                                                     bool needSetVisibleRegion,
                                                     RSVisibleLevel visibleLevel,
-                                                    int32_t systemAnimatedScenesCnt)
+                                                    bool isSystemAnimatedScenes)
 {
     if (nodeType_ == RSSurfaceNodeType::SELF_DRAWING_NODE || IsAbilityComponent()) {
         SetOcclusionVisible(true);
@@ -920,10 +921,9 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
     }
 
     // collect visible changed pid
-    if (qosPidCal_ && GetType() == RSRenderNodeType::SURFACE_NODE &&
-        systemAnimatedScenesCnt == 0 && !IsMultiInstance()) {
+    if (qosPidCal_ && GetType() == RSRenderNodeType::SURFACE_NODE && !isSystemAnimatedScenes) {
         uint32_t tmpPid = ExtractPid(GetId());
-        pidVisMap[tmpPid] = visibleLevel;
+        pidVisMap[tmpPid] = IsMultiInstance() ? RSVisibleLevel::RS_ALL_VISIBLE : visibleLevel;
     }
 
     visibleRegionForCallBack_ = region;
@@ -937,7 +937,7 @@ void RSSurfaceRenderNode::SetVisibleRegionRecursive(const Occlusion::Region& reg
     for (auto& child : GetChildren()) {
         if (auto surfaceChild = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)) {
             surfaceChild->SetVisibleRegionRecursive(region, visibleVec, pidVisMap, needSetVisibleRegion,
-                visibleLevel, systemAnimatedScenesCnt);
+                visibleLevel, isSystemAnimatedScenes);
         }
     }
 }
@@ -1068,7 +1068,7 @@ void RSSurfaceRenderNode::ResetDrawingCacheStatusIfNodeStatic(
 {
     // traversal drawing cache nodes including app window
     EraseIf(drawingCacheNodes_, [this, &allRects](const auto& pair) {
-        auto& node = pair.second;
+        auto node = pair.second.lock();
         if (node == nullptr || !node->IsOnTheTree()) {
             return true;
         }
@@ -1497,7 +1497,8 @@ void RSSurfaceRenderNode::UpdateSurfaceCacheContentStatic(
             dirtyGeoNodeNum_++;
         }
     }
-    surfaceCacheContentStatic_ = surfaceCacheContentStatic_ && !(dirtyContentNodeNum_ == 0 || dirtyGeoNodeNum_ == 0);
+    // if mainwindow node only basicGeoTransform and no subnode dirty, it is marked as CacheContentStatic_
+    surfaceCacheContentStatic_ = surfaceCacheContentStatic_ && dirtyContentNodeNum_ == 0 && dirtyGeoNodeNum_ == 0;
 }
 
 const std::unordered_set<NodeId>& RSSurfaceRenderNode::GetAbilityNodeIds() const
@@ -1815,6 +1816,34 @@ bool RSSurfaceRenderNode::GetHasSharedTransitionNode() const
 void RSSurfaceRenderNode::SetHasSharedTransitionNode(bool hasSharedTransitionNode)
 {
     hasSharedTransitionNode_ = hasSharedTransitionNode;
+}
+
+Vector2f RSSurfaceRenderNode::GetGravityTranslate(float imgWidth, float imgHeight)
+{
+    Gravity gravity = GetRenderProperties().GetFrameGravity();
+    if (IsLeashWindow()) {
+        for (auto child : GetSortedChildren()) {
+            auto childSurfaceNode = child ? child->ReinterpretCastTo<RSSurfaceRenderNode>() : nullptr;
+            if (childSurfaceNode) {
+                gravity = childSurfaceNode->GetRenderProperties().GetFrameGravity();
+                break;
+            }
+        }
+    }
+
+    float boundsWidth = GetRenderProperties().GetBoundsWidth();
+    float boundsHeight = GetRenderProperties().GetBoundsHeight();
+#ifndef USE_ROSEN_DRAWING
+    SkMatrix gravityMatrix;
+    RSPropertiesPainter::GetGravityMatrix(gravity, RectF {0.0f, 0.0f, boundsWidth, boundsHeight},
+        imgWidth, imgHeight, gravityMatrix);
+    return {gravityMatrix.getTranslateX(), gravityMatrix.getTranslateY()};
+#else
+    Drawing::Matrix gravityMatrix;
+    RSPropertiesPainter::GetGravityMatrix(gravity, RectF {0.0f, 0.0f, boundsWidth, boundsHeight},
+        imgWidth, imgHeight, gravityMatrix);
+    return {gravityMatrix.Get(Drawing::Matrix::TRANS_X), gravityMatrix.Get(Drawing::Matrix::TRANS_Y)};
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

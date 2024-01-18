@@ -23,6 +23,12 @@
 #include "../js_drawing_utils.h"
 #include "native_value.h"
 
+#ifdef WINDOWS_PLATFORM
+#ifdef DIFFERENCE
+#undef DIFFERENCE
+#endif
+#endif
+
 namespace OHOS::Rosen {
 namespace Drawing {
 struct JsEnumInt {
@@ -57,7 +63,7 @@ static const std::vector<struct JsEnumInt> g_blendMode = {
     { "EXCLUSION", static_cast<int32_t>(BlendMode::EXCLUSION) },
     { "MULTIPLY", static_cast<int32_t>(BlendMode::MULTIPLY) },
     { "HUE", static_cast<int32_t>(BlendMode::HUE) },
-    { "STATURATION", static_cast<int32_t>(BlendMode::STATURATION) },
+    { "SATURATION", static_cast<int32_t>(BlendMode::STATURATION) },
     { "COLOR", static_cast<int32_t>(BlendMode::COLOR_MODE) },
     { "LUMINOSITY", static_cast<int32_t>(BlendMode::LUMINOSITY) },
 };

@@ -139,6 +139,22 @@ std::vector<std::shared_ptr<RSAnimation>> RSNode::CloseImplicitAnimation()
     return implicitAnimator->CloseImplicitAnimation();
 }
 
+void RSNode::SetFrameNodeInfo(int32_t id, std::string tag)
+{
+    frameNodeId_ = id;
+    frameNodeTag_ = tag;
+}
+
+int32_t RSNode::GetFrameNodeId()
+{
+    return frameNodeId_;
+}
+
+std::string RSNode::GetFrameNodeTag()
+{
+    return frameNodeTag_;
+}
+
 void RSNode::AddKeyFrame(
     float fraction, const RSAnimationTimingCurve& timingCurve, const PropertyCallback& propertyCallback)
 {
@@ -1109,11 +1125,13 @@ void RSNode::SetShadowAlpha(float alpha)
 
 void RSNode::SetShadowElevation(float elevation)
 {
+    SetProperty<RSShadowRadiusModifier, RSAnimatableProperty<float>>(RSModifierType::SHADOW_RADIUS, 0);
     SetProperty<RSShadowElevationModifier, RSAnimatableProperty<float>>(RSModifierType::SHADOW_ELEVATION, elevation);
 }
 
 void RSNode::SetShadowRadius(float radius)
 {
+    SetProperty<RSShadowElevationModifier, RSAnimatableProperty<float>>(RSModifierType::SHADOW_ELEVATION, 0);
     SetProperty<RSShadowRadiusModifier, RSAnimatableProperty<float>>(RSModifierType::SHADOW_RADIUS, radius);
 }
 
@@ -1635,6 +1653,11 @@ void RSNode::SetAiInvert(const Vector4f& aiInvert)
     SetProperty<RSAiInvertModifier, RSAnimatableProperty<Vector4f>>(RSModifierType::AIINVERT, aiInvert);
 }
 
+void RSNode::SetSystemBarEffect()
+{
+    SetProperty<RSSystemBarEffectModifier, RSAnimatableProperty<bool>>(RSModifierType::SYSTEMBAREFFECT, true);
+}
+
 void RSNode::SetHueRotate(float hueRotate)
 {
     SetProperty<RSHueRotateModifier, RSAnimatableProperty<float>>(RSModifierType::HUE_ROTATE, hueRotate);
@@ -1646,29 +1669,10 @@ void RSNode::SetColorBlend(uint32_t colorValue)
     SetProperty<RSColorBlendModifier, RSAnimatableProperty<Color>>(RSModifierType::COLOR_BLEND, colorBlend);
 }
 
-void RSNode::AddFRCSceneInfo(const std::string& scene, float speed)
-{
-    int preferredFps = RSFrameRatePolicy::GetInstance()->GetPreferredFps(scene, speed);
-    FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, preferredFps};
-    if (!range.IsValid()) {
-        return;
-    }
-    UpdateUIFrameRateRange(range);
-}
-
 int32_t RSNode::CalcExpectedFrameRate(const std::string& scene, float speed)
 {
     auto preferredFps = RSFrameRatePolicy::GetInstance()->GetPreferredFps(scene, speed);
     return preferredFps;
-}
-
-void RSNode::UpdateUIFrameRateRange(const FrameRateRange& range)
-{
-    std::unique_ptr<RSCommand> command = std::make_unique<RSUpdateUIFrameRateRange>(GetId(), range);
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->AddCommand(command, IsRenderServiceNode());
-    }
 }
 
 void RSNode::SetOutOfParent(OutOfParentType outOfParent)

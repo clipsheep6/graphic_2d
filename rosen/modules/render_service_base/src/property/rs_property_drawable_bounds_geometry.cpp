@@ -629,14 +629,12 @@ RSPropertyDrawable::DrawablePtr RSShadowBaseDrawable::Generate(const RSRenderCon
     if (properties.GetShadowMask()) {
         return std::make_unique<RSColorfulShadowDrawable>(properties);
     } else {
-        if (properties.GetShadow()->GetHardwareAcceleration()) {
-            if (properties.GetShadowElevation() <= 0.f) {
-                return nullptr;
-            }
+        if (properties.GetShadowElevation() > 0.f) {
             return std::make_unique<RSHardwareAccelerationShadowDrawable>(properties);
         } else {
             return std::make_unique<RSShadowDrawable>(properties);
         }
+        return nullptr;
     }
 }
 
@@ -811,10 +809,10 @@ void RSHardwareAccelerationShadowDrawable::Draw(const RSRenderContent& content, 
     matrix.Set(Drawing::Matrix::TRANS_Y, std::ceil(matrix.Get(Drawing::Matrix::TRANS_Y)));
     canvas.SetMatrix(matrix);
     Drawing::Point3 planeParams = { 0.0f, 0.0f, shadowElevation_ };
-    Drawing::scalar centerX = path.GetBounds().GetLeft() + path.GetBounds().GetWidth() / 2;
-    Drawing::scalar centerY = path.GetBounds().GetTop() + path.GetBounds().GetHeight() / 2;
-    Drawing::Point3 lightPos = { canvas.GetTotalMatrix().Get(Drawing::Matrix::TRANS_X) + centerX,
-        canvas.GetTotalMatrix().Get(Drawing::Matrix::TRANS_Y) + centerY, DEFAULT_LIGHT_HEIGHT };
+    std::vector<Drawing::Point> pt{{path.GetBounds().GetLeft() + path.GetBounds().GetWidth() / 2,
+        path.GetBounds().GetTop() + path.GetBounds().GetHeight() / 2}};
+    canvas.GetTotalMatrix().MapPoints(pt, pt, 1);
+    Drawing::Point3 lightPos = {pt[0].GetX(), pt[0].GetY(), DEFAULT_LIGHT_HEIGHT};
     Color ambientColor = Color::FromArgbInt(DEFAULT_AMBIENT_COLOR);
     ambientColor.MultiplyAlpha(canvas.GetAlpha());
     Color spotColor = color_;
@@ -828,13 +826,13 @@ RSColorfulShadowDrawable::RSColorfulShadowDrawable(const RSProperties& propertie
 {
 #ifndef USE_ROSEN_DRAWING
     const SkScalar blurRadius =
-        properties.GetShadow()->GetHardwareAcceleration()
+        properties.GetShadowElevation() > 0.f
             ? 0.25f * properties.GetShadowElevation() * (1 + properties.GetShadowElevation() / 128.0f)
             : properties.GetShadowRadius();
     blurPaint_.setImageFilter(SkImageFilters::Blur(blurRadius, blurRadius, SkTileMode::kDecal, nullptr));
 #else
     const Drawing::scalar blurRadius =
-        properties.GetShadow()->GetHardwareAcceleration()
+        properties.GetShadowElevation() > 0.f
             ? 0.25f * properties.GetShadowElevation() * (1 + properties.GetShadowElevation() / 128.0f)
             : properties.GetShadowRadius();
     Drawing::Filter filter;
@@ -909,22 +907,6 @@ RSPropertyDrawable::DrawablePtr RSLightUpEffectDrawable::Generate(const RSRender
 bool RSLightUpEffectDrawable::Update(const RSRenderContent& content)
 {
     return content.GetRenderProperties().IsLightUpEffectValid();
-}
-
-// ============================================================================
-// Binarization
-void RSBinarizationDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
-{
-    RSPropertiesPainter::DrawBinarizationShader(content.GetRenderProperties(), canvas);
-}
-
-RSPropertyDrawable::DrawablePtr RSBinarizationDrawable::Generate(const RSRenderContent& content)
-{
-    auto& aiInvert = content.GetRenderProperties().GetAiInvert();
-    if (!aiInvert.has_value()) {
-        return nullptr;
-    }
-    return std::make_unique<RSBinarizationDrawable>();
 }
 
 // ============================================================================
@@ -1303,9 +1285,21 @@ RSBlendSaveLayerDrawable::RSBlendSaveLayerDrawable(int blendMode)
 void RSBlendSaveLayerDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
 #ifndef USE_ROSEN_DRAWING
-    canvas.saveLayer(nullptr, &blendPaint_);
+    auto matrix = canvas.getTotalMatrix();
+    matrix.setTranslateX(std::ceil(matrix.getTranslateX()));
+    matrix.setTranslateY(std::ceil(matrix.getTranslateY()));
+    canvas.setMatrix(matrix);
+    auto paint = blendPaint_;
+    paint.setAlphaf(canvas.GetAlpha());
+    canvas.saveLayer(nullptr, &paint);
 #else
-    Drawing::SaveLayerOps maskLayerRec(nullptr, &blendBrush_, nullptr, 0);
+    auto matrix = canvas.GetTotalMatrix();
+    matrix.Set(Drawing::Matrix::TRANS_X, std::ceil(matrix.Get(Drawing::Matrix::TRANS_X)));
+    matrix.Set(Drawing::Matrix::TRANS_Y, std::ceil(matrix.Get(Drawing::Matrix::TRANS_Y)));
+    canvas.SetMatrix(matrix);
+    auto brush = blendBrush_;
+    brush.SetAlphaF(canvas.GetAlpha());
+    Drawing::SaveLayerOps maskLayerRec(nullptr, &brush, nullptr, 0);
     canvas.SaveLayer(maskLayerRec);
 #endif
     canvas.SaveBlendMode();

@@ -371,6 +371,7 @@ ohos_source_set("render_service_base_src") {
     sources += [
       "src/benchmarks/file_utils.cpp",
       "src/benchmarks/rs_recording_thread.cpp",
+      "src/common/rs_common_tools.cpp",
     ]
   }
 

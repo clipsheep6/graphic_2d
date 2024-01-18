@@ -61,19 +61,11 @@ public:
     static void GetDarkColor(RSColor& color);
 
     static void DrawPixelStretch(const RSProperties& properties, RSPaintFilterCanvas& canvas);
-    static void DrawForegroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void ApplyBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
-
-    // Foreground Color filter
-    static void DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas);
-
     static void DrawBinarizationShader(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawLightUpEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawParticle(const RSProperties& properties, RSPaintFilterCanvas& canvas);
-
-    static void BeginBlendMode(RSPaintFilterCanvas& canvas, const RSProperties& properties);
-    static void EndBlendMode(RSPaintFilterCanvas& canvas, const RSProperties& properties);
 
 #ifndef USE_ROSEN_DRAWING
     static void Clip(SkCanvas& canvas, RectF rect, bool isAntiAlias = true);

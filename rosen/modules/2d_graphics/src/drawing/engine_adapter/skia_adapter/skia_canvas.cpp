@@ -24,6 +24,7 @@
 #ifdef SUPPORT_OHOS_PIXMAP
 #include "pixel_map.h"
 #endif
+#include "skia_convert_utils.h"
 #ifdef ACE_ENABLE_GPU
 #include "skia_gpu_context.h"
 #endif
@@ -432,6 +433,69 @@ void SkiaCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4],
             static_cast<SkBlendMode>(mode), *paint);
     }
     return;
+}
+
+void SkiaCanvas::DrawAtlas(const std::shared_ptr<Image> image, const std::vector<RSXform> xform,
+    const std::vector<Rect> tex, const std::vector<ColorQuad> colors, int count, BlendMode mode,
+    const SamplingOptions& sampling, const std::vector<Rect> cullRect)
+{
+    if (image == nullptr) {
+        LOGE("image is null, return on line %{public}d", __LINE__);
+        return;
+    }
+    auto skImageImpl = image->GetImpl<SkiaImage>();
+    sk_sp<SkImage> img = nullptr;
+    if (skImageImpl != nullptr) {
+        img = skImageImpl->GetImage();
+        if (img == nullptr) {
+            LOGE("img is null, return on line %{public}d", __LINE__);
+            return;
+        }
+    }
+
+    std::vector<SkRSXform> skXform;
+    auto xformSize = xform.size();
+    for (size_t i = 0; i < xformSize; ++i) {
+        SkRSXform skRSXform;
+        SkiaConvertUtils::DrawingRSXformCastToSkXform(xform[i], skRSXform);
+        skXform.emplace_back(skRSXform);
+    }
+    
+    std::vector<SkRect> skTex;
+    auto texSize = tex.size();
+    for (size_t i = 0; i < texSize; ++i) {
+        auto rect = SkRect::MakeLTRB(tex[i].GetLeft(), tex[i].GetTop(), tex[i].GetRight(), tex[i].GetBottom());
+        skTex.emplace_back(rect);
+    }
+    
+    std::vector<SkColor> skColors;
+    auto colorSize = colors.size();
+    for (size_t i = 0; i < colorSize; ++i) {
+        skColors.emplace_back(static_cast<SkColor>(colors[i]));
+    }
+
+    SkSamplingOptions samplingOptions;
+    if (sampling.GetUseCubic()) {
+        samplingOptions = SkSamplingOptions({ sampling.GetCubicCoffB(), sampling.GetCubicCoffC() });
+    } else {
+        samplingOptions = SkSamplingOptions(static_cast<SkFilterMode>(sampling.GetFilterMode()),
+            static_cast<SkMipmapMode>(sampling.GetMipmapMode()));
+    }
+    
+    std::vector<SkRect> skCullRect;
+    auto cullRectSize = cullRect.size();
+    for (size_t i = 0; i < cullRectSize; ++i) {
+        skCullRect.emplace_back(SkRect::MakeLTRB(cullRect[i].GetLeft(), cullRect[i].GetTop(),
+            cullRect[i].GetRight(), cullRect[i].GetBottom()));
+    }
+
+    SortedPaints& paints = skiaPaint_.GetSortedPaints();
+    for (int i = 0; i < paints.count_; i++) {
+        SkPaint* paint = paints.paints_[i];
+        skCanvas_->drawAtlas(img.get(), skXform.empty() ? nullptr : skXform.data(),
+            skTex.empty() ? nullptr : skTex.data(), skColors.empty() ? nullptr : skColors.data(), count,
+            static_cast<SkBlendMode>(mode), samplingOptions, skCullRect.empty() ? nullptr : skCullRect.data(), paint);
+    }
 }
 
 void SkiaCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],

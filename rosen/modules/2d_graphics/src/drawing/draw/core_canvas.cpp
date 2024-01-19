@@ -172,6 +172,14 @@ void CoreCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4], co
     impl_->DrawPatch(cubics, colors, texCoords, mode);
 }
 
+void CoreCanvas::DrawAtlas(const std::shared_ptr<Image> image, const std::vector<RSXform> xform,
+    const std::vector<Rect> tex, const std::vector<ColorQuad> colors, int count, BlendMode mode,
+    const SamplingOptions& sampling, const std::vector<Rect> cullRect)
+{
+    AttachPaint();
+    impl_->DrawAtlas(image, xform, tex, colors, count, mode, sampling, cullRect);
+}
+
 void CoreCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
     QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
 {

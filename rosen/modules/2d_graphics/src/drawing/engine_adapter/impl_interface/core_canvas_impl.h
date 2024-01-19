@@ -96,6 +96,9 @@ public:
     virtual void DrawRegion(const Region& region) = 0;
     virtual void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode) = 0;
+    virtual void DrawAtlas(const std::shared_ptr<Image> image, const std::vector<RSXform> xform,
+        const std::vector<Rect> tex, const std::vector<ColorQuad> colors, int count, BlendMode mode,
+        const SamplingOptions& sampling, const std::vector<Rect> cullRect) = 0;
     virtual void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
         QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) = 0;
     virtual void DrawVertices(const Vertices& vertices, BlendMode mode) = 0;

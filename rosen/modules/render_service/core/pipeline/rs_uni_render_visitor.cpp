@@ -1429,14 +1429,16 @@ void RSUniRenderVisitor::UpdateSurfaceRenderNodeScale(RSSurfaceRenderNode& node)
         SkScalar skScaleFactors[2];
         getMinMaxScales = absMatrix.getMinMaxScales(skScaleFactors);
         if (getMinMaxScales) {
-            isScale = !ROSEN_EQ(skScaleFactors[0], 1.f) || !ROSEN_EQ(skScaleFactors[1], 1.f);
+            // only the node scaling value is less than 1，set true.
+            isScale = (1.f - skScaleFactors[0] > EPSILON_SCALE) || (1.f - skScaleFactors[1] > EPSILON_SCALE);
         }
 #else
         // scaleFactors[0]-minimum scaling factor, scaleFactors[1]-maximum scaling factor
         Drawing::scalar scaleFactors[2];
         getMinMaxScales = absMatrix.GetMinMaxScales(scaleFactors);
         if (getMinMaxScales) {
-            isScale = !ROSEN_EQ(scaleFactors[0], 1.f) || !ROSEN_EQ(scaleFactors[1], 1.f);
+            // only the node scaling value is less than 1，set true.
+            isScale = (1.f - scaleFactors[0] > EPSILON_SCALE) || (1.f - scaleFactors[1] > EPSILON_SCALE);
         }
 #endif
         if (!getMinMaxScales) {

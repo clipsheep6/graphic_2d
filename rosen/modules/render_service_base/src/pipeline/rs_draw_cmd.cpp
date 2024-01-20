@@ -2642,6 +2642,7 @@ DrawFuncOpItem::DrawFuncOpItem(DrawFunc&& func)
 } // namespace OHOS
 
 #else
+#include "common/rs_common_tools.h"
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_recording_canvas.h"
 #include "platform/common/rs_log.h"
@@ -2704,6 +2705,11 @@ RSExtendImageObject::RSExtendImageObject(const std::shared_ptr<Media::PixelMap>&
     const Drawing::AdaptiveImageInfo& imageInfo)
 {
     if (pixelMap) {
+#if defined(ROSEN_OHOS)
+        if (RSSystemProperties::GetDumpUIPixelmapEnabled()) {
+            CommonTools::SavePixelmapToFile(pixelMap, "/data/storage/el1/base/imageObject_");
+        }
+#endif
         rsImage_ = std::make_shared<RSImage>();
         rsImage_->SetPixelMap(pixelMap);
         rsImage_->SetImageFit(imageInfo.fitNum);

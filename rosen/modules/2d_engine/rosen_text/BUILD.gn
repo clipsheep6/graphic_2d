@@ -102,6 +102,7 @@ if (enable_text_gine) {
     include_dirs = [
       "$flutter_root/engine",
       "$rosen_root/modules/render_service_base/include",
+      "$rosen_root/modules/2d_engine/rosen_text/skia_txt/txt/src",
     ]
 
     defines += [
@@ -137,7 +138,12 @@ if (enable_text_gine) {
       }
     }
 
-    deps = [ "$skia_root_new:skia_$platform" ]
+    deps = [
+      "$skia_root_new:skia_$platform",
+      "./skia_txt:skia_txt",
+    ]
+
+    public_deps = [ "$graphic_2d_root/rosen/modules/texgine:libtexgine_source" ]
 
     part_name = "graphic_2d"
     subsystem_name = "graphic"

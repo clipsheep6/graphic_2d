@@ -1,0 +1,217 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.. All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
+import("$graphic_2d_root/rosen/modules/2d_engine/rosen_text/config.gni")
+
+import("$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules/skparagraph/skparagraph.gni")
+import("$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules/skunicode/skunicode.gni")
+import("$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules/skshaper/skshaper.gni")
+
+config("skia_txt_public_config") {
+  include_dirs = [
+    "../export",
+    "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
+  ]
+}
+
+defines = [ "USE_GRAPHIC_TEXT_GINE" ]
+
+ohos_source_set("skia_txt") {
+  public_configs = [ ":skia_txt_public_config" ]
+  include_dirs = [
+    "$rosen_root/modules/render_service_base/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing",
+    "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/adapter/txt",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/txt/src",
+    "//third_party/skia",
+  ]
+
+  defines += [
+    "USE_GRAPHIC_TEXT_GINE",
+    "WINDOWS_PLATFORM",
+  ]
+  cflags = [ "-std=c++17" ]
+
+  skia_txt_root = "$rosen_root/modules/2d_engine/rosen_text/skia_txt/"
+  sources = [
+    "$skia_txt_root/txt/src/txt/asset_font_manager.cc",
+    "$skia_txt_root/txt/src/txt/font_asset_provider.cc",
+    "$skia_txt_root/txt/src/txt/font_collection.cc",
+    "$skia_txt_root/txt/src/txt/font_features.cc",
+    "$skia_txt_root/txt/src/skia/paragraph_builder_skia.cc",
+    "$skia_txt_root/txt/src/skia/paragraph_skia.cc",
+    "$skia_txt_root/txt/src/txt/paragraph_builder.cc",
+    "$skia_txt_root/txt/src/txt/text_decoration.cc",
+    "$skia_txt_root/txt/src/txt/text_shadow.cc",
+    "$skia_txt_root/txt/src/txt/text_style.cc",
+    "$skia_txt_root/txt/src/txt/paragraph_style.cc",
+    "$skia_txt_root/txt/src/txt/placeholder_run.cc",
+    "$skia_txt_root/txt/src/txt/typeface_font_asset_provider.cc",
+    "$skia_txt_root/txt/src/skia/drawing_painter_impl.cc",
+  ]
+
+  platform = current_os
+  if (platform == "mingw") {
+    platform = "windows"
+  }
+
+  if (platform == "ohos" || platform == "ohos_ng") {
+    sources += [ "$skia_txt_root/txt/src/txt/platform_ohos.cc" ]
+  } else if (platform == "windows") {
+    sources += [ "$skia_txt_root/txt/src/txt/platform_windows.cc" ]
+  } else if (platform == "mac" || platform == "ios") {
+    sources += [ "$skia_txt_root/txt/src/txt/platform_mac.mm" ]
+  } else if (platform == "android") {
+    sources += [ "$skia_txt_root/txt/src/txt/platform_android.cc" ]
+  } else if (platform == "linux") {
+    sources += [ "$skia_txt_root/txt/src/txt/platform_linux.cc" ]
+  }
+
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+    if (ace_enable_gpu) {
+      defines += [ "ACE_ENABLE_GPU" ]
+    }
+  }
+  defines += ["OHOS_STANDARD_SYSTEM"]
+  deps = [
+    "$skia_root_new:skia_$platform",
+    ":skia_unicode",
+    ":skia_shaper",
+    ":skia_paragraph",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+  ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_source_set("skia_paragraph") {
+  public_configs = [ ":skia_txt_public_config" ]
+  include_dirs = [
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules/skparagraph",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/txt/src",
+    "//third_party/skia",
+  ]
+
+  defines += [
+    "USE_GRAPHIC_TEXT_GINE",
+    "WINDOWS_PLATFORM",
+  ]
+  cflags = [ "-std=c++17" ]
+
+  skia_txt_root = "$rosen_root/modules/2d_engine/rosen_text/skia_txt/modules"
+  sources = [
+    "$skia_txt_root/skparagraph/src/Decorations.cpp",
+    "$skia_txt_root/skparagraph/src/FontArguments.cpp",
+    "$skia_txt_root/skparagraph/src/FontCollection.cpp",
+    "$skia_txt_root/skparagraph/src/OneLineShaper.cpp",
+    "$skia_txt_root/skparagraph/src/ParagraphBuilderImpl.cpp",
+    "$skia_txt_root/skparagraph/src/ParagraphCache.cpp",
+    "$skia_txt_root/skparagraph/src/ParagraphImpl.cpp",
+    "$skia_txt_root/skparagraph/src/ParagraphPainterImpl.cpp",
+    "$skia_txt_root/skparagraph/src/ParagraphStyle.cpp",
+    "$skia_txt_root/skparagraph/src/Run.cpp",
+    "$skia_txt_root/skparagraph/src/TextLine.cpp",
+    "$skia_txt_root/skparagraph/src/TextShadow.cpp",
+    "$skia_txt_root/skparagraph/src/TextStyle.cpp",
+    "$skia_txt_root/skparagraph/src/TextWrapper.cpp",
+    "$skia_txt_root/skparagraph/src/TypefaceFontProvider.cpp",
+  ]
+
+  platform = current_os
+  if (platform == "mingw") {
+    platform = "windows"
+  }
+
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
+    if (ace_enable_gpu) {
+      defines += [ "ACE_ENABLE_GPU" ]
+    }
+  }
+
+  deps = [
+    "$skia_root_new:skia_$platform",
+    ":skia_unicode",
+    ":skia_shaper",
+  ]
+
+  external_deps = [
+    "hilog:libhilog",
+  ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_source_set("skia_unicode") {
+  include_dirs = [
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules/skunicode",
+    "//third_party/skia",
+  ]
+  public = skia_unicode_public
+  defines += [ "SKUNICODE_IMPLEMENTATION=1" ]
+  sources = skia_unicode_sources
+  defines += [ "SK_UNICODE_AVAILABLE" ]
+  sources += skia_unicode_icu_sources
+  defines += [ "SK_UNICODE_ICU_IMPLEMENTATION" ]
+  sources += skia_unicode_builtin_icu_sources
+
+  platform = current_os
+  deps = [
+    "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform",
+    "$skia_root_new:skia_$platform",
+  ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_source_set("skia_shaper") {
+  include_dirs = [
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt",
+    "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt/modules/skshaper",
+    "//third_party/skia",
+  ]
+  defines += [ "SKSHAPER_IMPLEMENTATION=1" ]
+  sources = skia_shaper_primitive_sources
+  sources += skia_shaper_harfbuzz_sources
+
+  platform = current_os
+  deps = [
+    "$graphic_2d_root/rosen/build/harfbuzz:rosen_libharfbuzz_$platform",
+    "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform",
+    "$skia_root_new:skia_$platform",
+    ":skia_unicode",
+  ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}

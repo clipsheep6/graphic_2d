@@ -32,7 +32,7 @@ TypographyCreate::TypographyCreate(const TypographyStyle& style,
 {
     auto paragraphStyle = Convert(style);
     auto txtFontCollection = Convert(collection)->Get();
-    builder_ = txt::ParagraphBuilder::CreateTxtBuilder(paragraphStyle, txtFontCollection);
+    builder_ = txt::ParagraphBuilder::CreateSkiaBuilder(paragraphStyle, txtFontCollection);
 }
 
 void TypographyCreate::PushStyle(const TextStyle& style)
@@ -53,7 +53,7 @@ void TypographyCreate::AppendText(const std::u16string& text)
 
 void TypographyCreate::AppendSymbol(const uint32_t& symbolId)
 {
-    builder_->AddSymbol(symbolId);
+    // builder_->AddSymbol(symbolId);
 }
 
 void TypographyCreate::AppendPlaceholder(const PlaceholderSpan& span)

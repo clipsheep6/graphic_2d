@@ -50,6 +50,7 @@ public:
 
     bool ContainPid(pid_t pid) const;
     void FilterNodeByPid(pid_t pid);
+    void MoveRenderNode(pid_t pid);
     void FilterRenderNodeByPid(pid_t pid);
     void TraversalNodes(std::function<void (const std::shared_ptr<RSBaseRenderNode>&)> func) const;
     void TraverseSurfaceNodes(std::function<void (const std::shared_ptr<RSSurfaceRenderNode>&)> func) const;
@@ -72,7 +73,7 @@ private:
     RSRenderNodeMap& operator=(const RSRenderNodeMap&&) = delete;
 
 private:
-    mutable std::mutex renderNodeMapMut_;
+    mutable std::mutex renderNodeMapMoveMut_;
     std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>> renderNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>> renderNodeMapMove_;
     std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> surfaceNodeMap_;

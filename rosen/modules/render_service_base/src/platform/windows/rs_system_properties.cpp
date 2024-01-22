@@ -352,5 +352,15 @@ bool RSSystemProperties::GetEffectMergeEnabled()
 {
     return true;
 }
+
+bool RSSystemProperties::GetDumpUIPixelmapEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetDumpUICaptureEnabled()
+{
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

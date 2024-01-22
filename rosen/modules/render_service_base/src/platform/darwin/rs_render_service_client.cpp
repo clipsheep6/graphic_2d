@@ -459,6 +459,11 @@ void RSRenderServiceClient::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& 
 {
 }
 
+DirtyRegionAreas RSRenderServiceClient::GetCurrentDirtyRegionAreas(ScreenId id)
+{
+    return DirtyRegionAreas {};
+}
+
 #ifdef TP_FEATURE_ENABLE
 void RSRenderServiceClient::SetTpFeatureConfig(int32_t feature, const char* config)
 {

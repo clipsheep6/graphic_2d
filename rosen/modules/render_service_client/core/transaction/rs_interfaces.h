@@ -224,6 +224,8 @@ public:
 
     void SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback);
 
+    DirtyRegionAreas GetCurrentDirtyRegionAreas(ScreenId id);
+
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config);
 #endif

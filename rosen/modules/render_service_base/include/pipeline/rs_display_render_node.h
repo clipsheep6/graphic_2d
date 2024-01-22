@@ -28,6 +28,7 @@
 #include "memory/rs_memory_track.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
+#include "transaction/rs_render_service_client.h"
 #include <screen_manager/screen_types.h>
 #ifdef NEW_RENDER_CONTEXT
 #include "rs_render_surface.h"
@@ -143,6 +144,15 @@ public:
     bool SkipFrame(uint32_t skipFrameInterval);
     void SetBootAnimation(bool isBootAnimation) override;
     bool GetBootAnimation() const override;
+
+    // XPower GPU dirty region function
+    void UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(std::vector<RectI> rects);
+    void UpdateGlobalDirtyRegionAreasAndFrameNumberForXpower(RectI rect);
+    void AddSkipProcessFramesNumberForXpower();
+    void SetWindowNameForXpower(std::string& windowName);
+    DirtyRegionAreas GetGpuDirtyRegionInfo();
+    void ResetDirtyRegionAreas();
+
     WeakPtr GetMirrorSource() const
     {
         return mirrorSource_;
@@ -314,6 +324,16 @@ private:
     bool isSecurityDisplay_ = false;
     WeakPtr mirrorSource_;
     float lastRotation_ = 0.f;
+
+    // XPower GPU dirty region parameter
+    int64_t activeDirtyRegionAreas_;
+    int64_t globalDirtyRegionAreas_;
+    int32_t skipProcessFramesNumber_;
+    int32_t activeFramesNumber_;
+    int32_t globalFramesNumber_;
+    std::string windowName_;
+    DirtyRegionAreas gpuDirtyRegionInfo_;
+
 #ifndef USE_ROSEN_DRAWING
     SkMatrix initMatrix_;
 #else

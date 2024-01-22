@@ -32,7 +32,7 @@ public:
 
     ~RSStepsInterpolator() override {};
 
-    float Interpolate(float fraction) const override;
+    float InterpolateImpl(float fraction) const override;
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSStepsInterpolator* Unmarshalling(Parcel& parcel);
 private:

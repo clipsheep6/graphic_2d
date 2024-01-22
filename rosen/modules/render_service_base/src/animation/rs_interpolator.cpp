@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "sandbox_utils.h"
+
 #include "animation/rs_animation_common.h"
 #include "animation/rs_cubic_bezier_interpolator.h"
 #include "animation/rs_spring_interpolator.h"
@@ -29,7 +31,38 @@ namespace Rosen {
 const std::shared_ptr<RSInterpolator> RSInterpolator::DEFAULT =
     std::make_shared<RSCubicBezierInterpolator>(0.42f, 0.0f, 0.58f, 1.0f);
 
-RSInterpolator* RSInterpolator::Unmarshalling(Parcel& parcel)
+RSInterpolator::RSInterpolator() : id_(GenerateId()) {}
+
+RSInterpolator::~RSInterpolator()
+{
+    EraseIf(interpolators_, [](auto& it) { return it.second.lock() == nullptr; });
+}
+
+uint64_t RSInterpolator::GenerateId()
+{
+    static pid_t pid_ = GetRealPid();
+    static std::atomic<uint32_t> currentId_ = 0;
+
+    auto currentId = currentId_.fetch_add(1, std::memory_order_relaxed);
+    if (currentId == UINT32_MAX) {
+        ROSEN_LOGE("RSInterpolator Id overflow");
+    }
+
+    // concat two 32-bit numbers to one 64-bit number
+    return ((AnimationId)pid_ << 32) | (currentId);
+}
+
+float RSInterpolator::Interpolate(float input)
+{
+    if (input == prevInput_) {
+        return prevOutput_;
+    }
+    prevInput_ = input;
+    prevOutput_ = InterpolateImpl(input);
+    return prevOutput_;
+}
+
+std::shared_ptr<RSInterpolator> RSInterpolator::Unmarshalling(Parcel& parcel)
 {
     uint16_t interpolatorType = parcel.ReadUint16();
     RSInterpolator* ret = nullptr;
@@ -52,7 +85,24 @@ RSInterpolator* RSInterpolator::Unmarshalling(Parcel& parcel)
         default:
             break;
     }
-    return ret;
+    if (ret == nullptr) {
+        return nullptr;
+    }
+    if (auto it = interpolators_.find(ret->id_); it != interpolators_.end() && !it->second.expired()) {
+        delete ret;
+        return it->second.lock();
+    }
+    std::shared_ptr<RSInterpolator> ptr(ret);
+    interpolators_.emplace(ret->id_, ptr);
+    return ptr;
+}
+
+bool LinearInterpolator::Marshalling(Parcel& parcel) const
+{
+    if (!parcel.WriteUint16(InterpolatorType::LINEAR)) {
+        return false;
+    }
+    return true;
 }
 
 RSCustomInterpolator* RSCustomInterpolator::Unmarshalling(Parcel& parcel)
@@ -99,7 +149,7 @@ void RSCustomInterpolator::Convert(int duration)
     }
 }
 
-float RSCustomInterpolator::Interpolate(float input) const
+float RSCustomInterpolator::InterpolateImpl(float input) const
 {
     if (input < times_[0] + EPSILON) {
         return times_[0];
@@ -119,5 +169,15 @@ float RSCustomInterpolator::Interpolate(float input) const
     float ret = fraction * (values_[endLocation] - values_[startLocation]) + values_[startLocation];
     return ret;
 }
+
+bool RSCustomInterpolator::Marshalling(Parcel& parcel) const
+{
+    if (!(parcel.WriteUint16(InterpolatorType::CUSTOM) && parcel.WriteFloatVector(times_) &&
+            parcel.WriteFloatVector(values_))) {
+        return false;
+    }
+    return true;
+}
+
 } // namespace Rosen
 } // namespace OHOS

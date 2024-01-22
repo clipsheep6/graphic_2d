@@ -39,32 +39,35 @@ enum InterpolatorType : uint16_t {
     STEPS,
 };
 
-class RSInterpolator : public Parcelable {
+class RSB_EXPORT RSInterpolator : public Parcelable {
 public:
     static RSB_EXPORT const std::shared_ptr<RSInterpolator> DEFAULT;
-    RSInterpolator() = default;
-    virtual ~RSInterpolator() = default;
+    RSInterpolator();
+    ~RSInterpolator() override;
 
-    virtual bool Marshalling(Parcel& parcel) const override = 0;
-    [[nodiscard]] static RSB_EXPORT RSInterpolator* Unmarshalling(Parcel& parcel);
+    bool Marshalling(Parcel& parcel) const override = 0;
+    [[nodiscard]] static RSB_EXPORT std::shared_ptr<RSInterpolator> Unmarshalling(Parcel& parcel);
 
-    virtual float Interpolate(float input) const = 0;
+    float Interpolate(float input);
+
+private:
+    virtual float InterpolateImpl(float input) const = 0;
+    static uint64_t GenerateId();
+    const uint64_t id_;
+    float prevInput_ {-1.0f};
+    float prevOutput_ {-1.0f};
+    inline static std::unordered_map<uint32_t, std::weak_ptr<RSInterpolator>> interpolators_;
 };
 
-class LinearInterpolator : public RSInterpolator {
+class RSB_EXPORT LinearInterpolator : public RSInterpolator {
 public:
     LinearInterpolator() = default;
-    virtual ~LinearInterpolator() = default;
+    ~LinearInterpolator() override = default;
 
-    bool Marshalling(Parcel& parcel) const override
-    {
-        if (!parcel.WriteUint16(InterpolatorType::LINEAR)) {
-            return false;
-        }
-        return true;
-    }
+    bool Marshalling(Parcel& parcel) const override;
 
-    float Interpolate(float input) const override
+private:
+    float InterpolateImpl(float input) const override
     {
         return input;
     }
@@ -73,22 +76,14 @@ public:
 class RSB_EXPORT RSCustomInterpolator : public RSInterpolator {
 public:
     RSCustomInterpolator(const std::function<float(float)>& func, int duration);
-    virtual ~RSCustomInterpolator() = default;
+    ~RSCustomInterpolator() override = default;
 
-    float Interpolate(float input) const override;
-
-    bool Marshalling(Parcel& parcel) const override
-    {
-        if (!(parcel.WriteUint16(InterpolatorType::CUSTOM) && parcel.WriteFloatVector(times_) &&
-                parcel.WriteFloatVector(values_))) {
-            return false;
-        }
-        return true;
-    }
+    bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSCustomInterpolator* Unmarshalling(Parcel& parcel);
 
 private:
     RSCustomInterpolator(const std::vector<float>&& times, const std::vector<float>&& values);
+    float InterpolateImpl(float input) const override;
     void Convert(int duration);
 
     std::vector<float> times_;

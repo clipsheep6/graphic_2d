@@ -28,7 +28,7 @@ public:
 
     ~RSSpringInterpolator() override {};
 
-    float Interpolate(float fraction) const override;
+    float InterpolateImpl(float fraction) const override;
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSSpringInterpolator* Unmarshalling(Parcel& parcel);
 

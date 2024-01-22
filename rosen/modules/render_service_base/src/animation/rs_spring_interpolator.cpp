@@ -54,7 +54,7 @@ RSSpringInterpolator* RSSpringInterpolator::Unmarshalling(Parcel& parcel)
     return ret;
 }
 
-float RSSpringInterpolator::Interpolate(float fraction) const
+float RSSpringInterpolator::InterpolateImpl(float fraction) const
 {
     if (fraction <= 0) {
         return 0;

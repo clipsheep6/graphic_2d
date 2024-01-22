@@ -48,7 +48,7 @@ RSStepsInterpolator* RSStepsInterpolator::Unmarshalling(Parcel& parcel)
     return new RSStepsInterpolator(steps, static_cast<StepsCurvePosition>(position));
 }
 
-float RSStepsInterpolator::Interpolate(float fraction) const
+float RSStepsInterpolator::InterpolateImpl(float fraction) const
 {
     if (fraction < fractionMin || fraction > fractionMax) {
         ROSEN_LOGE("Fraction is less than 0 or larger than 1, return 1.");

@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 
 #include "include/core/SkRect.h"
+#include "rs_base_render_util.h"
 #include "rs_trace.h"
 
 #include "common/rs_common_def.h"
@@ -110,6 +111,7 @@ std::shared_ptr<Media::PixelMap> RSUniUICapture::TakeLocalCapture()
     }
     RSOffscreenRenderThread::Instance().CleanGrResource();
 #endif
+    RSBaseRenderUtil::WritePixelMapToPng(*pixelmap);
     return pixelmap;
 }
 
@@ -342,6 +344,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<ExtendReco
     auto renderContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext();
     canvas->SetGrRecordingContext(renderContext->GetSharedDrGPUContext());
     canvas_ = std::make_shared<RSPaintFilterCanvas>(canvas.get());
+    canvas_->SetRecordingState(true);
     canvas_->Scale(scaleX_, scaleY_);
     canvas_->SetDisableFilterCache(true);
     canvas_->SetRecordingState(true);

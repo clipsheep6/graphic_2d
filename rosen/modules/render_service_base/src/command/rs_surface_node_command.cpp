@@ -180,36 +180,50 @@ void SurfaceNodeCommandHelper::SetAnimationFinished(RSContext& context, NodeId n
 
 void SurfaceNodeCommandHelper::AttachToDisplay(RSContext& context, NodeId nodeId, uint64_t screenId)
 {
-    const auto& nodeMap = context.GetNodeMap();
-    auto surfaceRenderNode = nodeMap.GetRenderNode<RSSurfaceRenderNode>(nodeId);
-    if (surfaceRenderNode == nullptr) {
-        return;
+    auto task = [&context, nodeId, screenId]() {
+        const auto& nodeMap = context.GetNodeMap();
+        auto surfaceRenderNode = nodeMap.GetRenderNode<RSSurfaceRenderNode>(nodeId);
+        if (surfaceRenderNode == nullptr) {
+            return false;
+        }
+        nodeMap.TraverseDisplayNodes(
+            [&surfaceRenderNode, &screenId](const std::shared_ptr<RSDisplayRenderNode>& displayRenderNode) {
+                if (displayRenderNode == nullptr || displayRenderNode->GetScreenId() != screenId ||
+                    displayRenderNode->GetBootAnimation() != surfaceRenderNode->GetBootAnimation()) {
+                    return;
+                }
+                displayRenderNode->AddChild(surfaceRenderNode);
+            });
+        return true;
+    };
+    if (!task()) {
+        RS_LOGI("SurfaceNodeCommandHelper::AttachToDisplay fail, retry, nodeId:%{public}" PRIu64 "", nodeId);
+        context.PostTask(task);
     }
-    nodeMap.TraverseDisplayNodes(
-        [&surfaceRenderNode, &screenId](const std::shared_ptr<RSDisplayRenderNode>& displayRenderNode) {
-            if (displayRenderNode == nullptr || displayRenderNode->GetScreenId() != screenId ||
-                displayRenderNode->GetBootAnimation() != surfaceRenderNode->GetBootAnimation()) {
-                return;
-            }
-            displayRenderNode->AddChild(surfaceRenderNode);
-        });
 }
 
 void SurfaceNodeCommandHelper::DetachToDisplay(RSContext& context, NodeId nodeId, uint64_t screenId)
 {
-    const auto& nodeMap = context.GetNodeMap();
-    auto surfaceRenderNode = nodeMap.GetRenderNode<RSSurfaceRenderNode>(nodeId);
-    if (surfaceRenderNode == nullptr) {
-        return;
+    auto task = [&context, nodeId, screenId]() {
+        const auto& nodeMap = context.GetNodeMap();
+        auto surfaceRenderNode = nodeMap.GetRenderNode<RSSurfaceRenderNode>(nodeId);
+        if (surfaceRenderNode == nullptr) {
+            return false;
+        }
+        nodeMap.TraverseDisplayNodes(
+            [&surfaceRenderNode, &screenId](const std::shared_ptr<RSDisplayRenderNode>& displayRenderNode) {
+                if (displayRenderNode == nullptr || displayRenderNode->GetScreenId() != screenId ||
+                    displayRenderNode->GetBootAnimation() != surfaceRenderNode->GetBootAnimation()) {
+                    return;
+                }
+                displayRenderNode->RemoveChild(surfaceRenderNode);
+            });
+        return true;
+    };
+    if (!task()) {
+        RS_LOGI("SurfaceNodeCommandHelper::DetachToDisplay fail, retry, nodeId:%{public}" PRIu64 "", nodeId);
+        context.PostTask(task);
     }
-    nodeMap.TraverseDisplayNodes(
-        [&surfaceRenderNode, &screenId](const std::shared_ptr<RSDisplayRenderNode>& displayRenderNode) {
-            if (displayRenderNode == nullptr || displayRenderNode->GetScreenId() != screenId ||
-                displayRenderNode->GetBootAnimation() != surfaceRenderNode->GetBootAnimation()) {
-                return;
-            }
-            displayRenderNode->RemoveChild(surfaceRenderNode);
-        });
 }
 
 void SurfaceNodeCommandHelper::SetBootAnimation(RSContext& context, NodeId nodeId, bool isBootAnimation)

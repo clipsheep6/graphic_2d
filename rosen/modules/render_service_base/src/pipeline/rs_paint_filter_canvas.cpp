@@ -1078,16 +1078,6 @@ Drawing::Canvas* RSPaintFilterCanvas::GetRecordingCanvas() const
 
 #endif // USE_ROSEN_DRAWING
 
-bool RSPaintFilterCanvas::GetRecordingState() const
-{
-    return recordingState_;
-}
-
-void RSPaintFilterCanvas::SetRecordingState(bool flag)
-{
-    recordingState_ = flag;
-}
-
 void RSPaintFilterCanvas::MultiplyAlpha(float alpha)
 {
     // multiply alpha to top of stack

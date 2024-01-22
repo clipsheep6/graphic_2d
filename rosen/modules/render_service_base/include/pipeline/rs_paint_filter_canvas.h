@@ -308,8 +308,6 @@ public:
     void SetCanvasStatus(const CanvasStatus& status);
     Drawing::Canvas* GetRecordingCanvas() const override;
 #endif
-    bool GetRecordingState() const;
-    void SetRecordingState(bool flag);
 
 protected:
     using Env = struct {

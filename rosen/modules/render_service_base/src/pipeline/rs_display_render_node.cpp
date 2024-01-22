@@ -148,6 +148,48 @@ bool RSDisplayRenderNode::GetBootAnimation() const
     return isBootAnimation_;
 }
 
+void RSDisplayRenderNode::UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(std::vector<RectI> rects)
+{
+    ++activeFramesNumber_;
+    for (auto rect : rects) {
+        activeDirtyRegionAreas_ += rect.width_ * rect.height_;
+    }
+}
+
+void RSDisplayRenderNode::UpdateGlobalDirtyRegionAreasAndFrameNumberForXpower(RectI rect)
+{
+    ++globalFramesNumber_;
+    globalDirtyRegionAreas_ += rect.width_ * rect.height_;
+}
+
+void RSDisplayRenderNode::AddSkipProcessFramesNumberForXpower()
+{
+    ++skipProcessFramesNumber_;
+}
+
+void RSDisplayRenderNode::SetWindowNameForXpower(std::string& windowName)
+{
+    windowName_ = windowName;
+}
+
+DirtyRegionAreas RSDisplayRenderNode::GetGpuDirtyRegionInfo()
+{
+    DirtyRegionAreas gpuDirtyRegionInfo(activeDirtyRegionAreas_ / activeFramesNumber_,
+                                        globalDirtyRegionAreas_ / globalFramesNumber_, skipProcessFramesNumber_,
+                                        activeFramesNumber_, globalFramesNumber_, windowName_);
+    ResetDirtyRegionAreas();
+    return gpuDirtyRegionInfo;
+}
+
+void RSDisplayRenderNode::ResetDirtyRegionAreas()
+{
+    activeDirtyRegionAreas_ = 0;
+    globalDirtyRegionAreas_ = 0;
+    skipProcessFramesNumber_ = 0;
+    activeFramesNumber_ = 0;
+    globalFramesNumber_ = 0;
+}
+
 #ifndef ROSEN_CROSS_PLATFORM
 bool RSDisplayRenderNode::CreateSurface(sptr<IBufferConsumerListener> listener)
 {

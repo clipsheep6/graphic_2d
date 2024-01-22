@@ -37,6 +37,10 @@ bool RSIRenderServiceConnectionInterfaceCodeAccessVerifier::IsExclusiveVerificat
             hasPermission = CheckPermission(code);
             break;
         }
+        case static_cast<CodeUnderlyingType>(CodeEnumType::GET_CURRENT_DIRTY_REGION_AREAS): {
+            hasPermission = CheckPermission(code);
+            break;
+        }
         default: {
             break;
         }

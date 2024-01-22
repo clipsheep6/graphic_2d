@@ -240,6 +240,11 @@ std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> RSRenderNodeMap
     return residentSurfaceNodeMap_;
 }
 
+std::unordered_map<NodeId, std::shared_ptr<RSDisplayRenderNode>> RSRenderNodeMap::GetDisplayNodeMap() const
+{
+    return displayNodeMap_;
+}
+
 template<>
 const std::shared_ptr<RSBaseRenderNode> RSRenderNodeMap::GetRenderNode(NodeId id) const
 {

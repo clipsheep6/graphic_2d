@@ -88,6 +88,23 @@ struct GameStateData {
     std::string bundleName;
 };
 
+struct DirtyRegionAreas {
+    int64_t activeDirtyRegionAreas;
+    int64_t globalDirtyRegionAreas;
+    int32_t skipProcessFramesNumber;
+    int32_t activeFramesNumber;
+    int32_t globalFramesNumber;
+    std::string windowName;
+    DirtyRegionAreas()
+        : activeDirtyRegionAreas(), globalDirtyRegionAreas(), skipProcessFramesNumber(), activeFramesNumber(),
+          globalFramesNumber(), windowName() {}
+    DirtyRegionAreas(int64_t activeDirtyRegionAreas_, int64_t globalDirtyRegionAreas_, int32_t skipProcessFramesNumber_,
+        int32_t activeFramesNumber_, int32_t globalFramesNumber_, std::string windowName_)
+        : activeDirtyRegionAreas(activeDirtyRegionAreas_), globalDirtyRegionAreas(globalDirtyRegionAreas_),
+          skipProcessFramesNumber(skipProcessFramesNumber_), activeFramesNumber(activeFramesNumber_),
+          globalFramesNumber(globalFramesNumber_), windowName(windowName_) {}
+};
+
 class SurfaceCaptureCallback {
 public:
     SurfaceCaptureCallback() {}

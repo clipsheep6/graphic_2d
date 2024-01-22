@@ -2020,6 +2020,32 @@ void RSRenderServiceConnectionProxy::RunOnRemoteDiedCallback()
     }
 }
 
+DirtyRegionAreas RSRenderServiceConnectionProxy::GetCurrentDirtyRegionAreas(ScreenId id)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    DirtyRegionAreas dirtyRegionAreas;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return dirtyRegionAreas;
+    }
+    option.SetFlags(MessageOption::TF_ASYNC);
+    data.WriteUint64(id);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_CURRENT_DIRTY_REGION_AREAS);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetCurrentDirtyRegionAreas: Send Request err.");
+        return dirtyRegionAreas;
+    }
+    dirtyRegionAreas.activeDirtyRegionAreas = reply.ReadInt64();
+    dirtyRegionAreas.globalDirtyRegionAreas = reply.ReadInt64();
+    dirtyRegionAreas.skipProcessFramesNumber = reply.ReadInt32();
+    dirtyRegionAreas.activeFramesNumber = reply.ReadInt32();
+    dirtyRegionAreas.globalFramesNumber = reply.ReadInt32();
+    dirtyRegionAreas.windowName = reply.ReadString();
+    return dirtyRegionAreas;
+}
+
 #ifdef TP_FEATURE_ENABLE
 void RSRenderServiceConnectionProxy::SetTpFeatureConfig(int32_t feature, const char* config)
 {

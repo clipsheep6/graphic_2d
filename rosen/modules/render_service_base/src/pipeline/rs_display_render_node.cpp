@@ -152,19 +152,19 @@ void RSDisplayRenderNode::UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(st
 {
     ++activeFramesNumber_;
     for (auto rect : rects) {
-        globalDirtyRegionAreas += rect.width_ * rect.height_;
+        globalDirtyRegionAreas_ += rect.width_ * rect.height_;
     }
 }
 
 void RSDisplayRenderNode::UpdateGlobalDirtyRegionAreasAndFrameNumberForXpower(RectI rect)
 {
     ++globalFramesNumber_;
-    globalDirtyRegionAreas += rect.width_ * rect.height_;
+    globalDirtyRegionAreas_ += rect.width_ * rect.height_;
 }
 
 void RSDisplayRenderNode::AddSkipProcessFramesNumberForXpower()
 {
-    ++skipProcessFramesNumber;
+    ++skipProcessFramesNumber_;
 }
 
 void RSDisplayRenderNode::SetWindowNameForXpower(std::string& windowName)

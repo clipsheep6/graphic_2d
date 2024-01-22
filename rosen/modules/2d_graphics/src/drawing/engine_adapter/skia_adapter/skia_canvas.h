@@ -26,6 +26,7 @@
 #include "include/core/SkPoint3.h"
 #include "include/core/SkRegion.h"
 #include "include/core/SkRRect.h"
+#include "include/core/SkRSXform.h"
 #include "include/utils/SkShadowUtils.h"
 #include "skia_bitmap.h"
 #include "skia_image.h"
@@ -92,6 +93,9 @@ public:
     void DrawRegion(const Region& region) override;
     void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode) override;
+    void DrawAtlas(const std::shared_ptr<Image> image, const std::vector<RSXform> xform,
+        const std::vector<Rect> tex, const std::vector<ColorQuad> colors, int count, BlendMode mode,
+        const SamplingOptions& sampling, const std::vector<Rect> cullRect) override;
     void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
         QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) override;
     void DrawVertices(const Vertices& vertices, BlendMode mode) override;

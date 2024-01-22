@@ -175,6 +175,7 @@ private:
     bool needCloseSync_ { false };
     bool isCached_ { false };
     int32_t syncTransactionCount_ { 0 };
+    int32_t syncTransactionCountExt_ { 0 };
     uint64_t syncId_ { 0 };
     static std::function<void(uint64_t, int, int)> alarmLogFunc;
     mutable std::mutex commandMutex_;

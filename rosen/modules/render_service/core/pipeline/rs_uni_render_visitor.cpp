@@ -2722,6 +2722,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             && !curDisplayDirtyManager_->IsCurrentFrameDirty()) {
             RS_LOGD("DisplayNode skip");
             RS_TRACE_NAME("DisplayNode skip");
+            node.AddSkipProcessFramesNumberForXpower();
 #ifdef OHOS_PLATFORM
             RSJankStats::GetInstance().SetSkipDisplayNode();
 #endif
@@ -2873,9 +2874,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 SetSurfaceGlobalDirtyRegion(displayNodePtr);
             }
             rects = GetDirtyRects(dirtyRegion);
+            if(!rects.empty()) {
+                node.UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(rects);
+            }
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
+                node.UpdateGlobalDirtyRegionAreasAndFrameNumberForXpower(rect);
             }
             if (!isDirtyRegionAlignedEnable_) {
                 for (auto& r : rects) {

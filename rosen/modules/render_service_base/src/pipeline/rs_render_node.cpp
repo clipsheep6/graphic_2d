@@ -2492,6 +2492,11 @@ void RSRenderNode::ResetDrawingCacheNeedUpdate()
 {
     drawingCacheNeedUpdate_ = false;
 }
+bool RSRenderNode::GetDrawingCacheEnabledRotation() const
+{
+    // by default
+    return false;
+}
 void RSRenderNode::SetCacheGeoPreparationDelay(bool val)
 {
     cacheGeoPreparationDelay_ = cacheGeoPreparationDelay_ || val;

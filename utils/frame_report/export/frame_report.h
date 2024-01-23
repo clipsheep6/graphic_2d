@@ -30,6 +30,8 @@ struct FpsCalculator {
     int fps;
 };
 
+using GetEnableFunc = int (*)();
+using SetParamFunc = void(*)(int, int, int, int);
 class FrameReport {
 public:
     static FrameReport& GetInstance();
@@ -41,6 +43,8 @@ public:
     void SetQueueBufferTime(std::string& name, int64_t queueBufferTime);
     void SetPendingBufferNum(std::string& name, int32_t pendingBufferNum);
     void Report(std::string& name);
+    int GetEnable();
+    void SetFrameParam(int requestId, int load, int schedFrameNum, int value);
 
 private:
     FrameReport();
@@ -80,6 +84,8 @@ private:
     void* schedMsgFunc_ = nullptr;
     void* schedHandle_ = nullptr;
     bool schedSoLoaded_ = false;
+    GetEnableFunc getEnableFunc_ = nullptr;
+    SetParamFunc setParamFunc_ = nullptr;
 };
 
 } // namespace Rosen

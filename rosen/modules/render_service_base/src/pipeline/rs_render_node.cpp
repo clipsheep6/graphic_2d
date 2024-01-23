@@ -2505,6 +2505,10 @@ void RSRenderNode::ResetDrawingCacheNeedUpdate()
 {
     drawingCacheNeedUpdate_ = false;
 }
+bool RSRenderNode::GetDrawingCacheFrozen() const
+{
+    return isNodeGroupFrozen_;
+}
 void RSRenderNode::SetCacheGeoPreparationDelay(bool val)
 {
     cacheGeoPreparationDelay_ = cacheGeoPreparationDelay_ || val;

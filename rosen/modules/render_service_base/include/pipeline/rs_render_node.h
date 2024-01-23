@@ -371,6 +371,8 @@ public:
     // manage cache root nodeid
     void SetDrawingCacheRootId(NodeId id);
     NodeId GetDrawingCacheRootId() const;
+    // specify if cache could be frozen
+    bool GetDrawingCacheFrozen() const;
     // record cache geodirty for preparation optimization
     void SetCacheGeoPreparationDelay(bool val);
     void ResetCacheGeoPreparationDelay();

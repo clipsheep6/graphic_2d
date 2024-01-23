@@ -401,23 +401,23 @@ int32_t OH_Drawing_CanvasGetHeight(OH_Drawing_Canvas*);
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @return An <b>OH_Drawing_Rect</b> object, represents the boundar of clip,
+ * @return The pointer to an <b>OH_Drawing_Rect</b> object, represents the boundar of clip,
  * transformed by inverse of matrix.
  * @since 12
  * @version 1.0
  */
-OH_Drawing_Rect OH_Drawing_CanvasGetLocalClipBounds(OH_Drawing_Canvas*);
+OH_Drawing_Rect* OH_Drawing_CanvasGetLocalClipBounds(OH_Drawing_Canvas*);
 
 /**
  * @brief Get a 3x3 matrix of the transform from local coordinates to 'device'
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Matrix Indicates the pointer to an <b>OH_Drawing_Matrix</b> object.
+ * @return The pointer to an <b>OH_Drawing_Matrix</b> object.
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_CanvasGetTotalMatrix(OH_Drawing_Canvas*, OH_Drawing_Matrix*);
+OH_Drawing_Matrix* OH_Drawing_CanvasGetLocalToDevice(OH_Drawing_Canvas*);
 
 /**
  * @brief Use the passed matrix to transforming the geometry, then use existing matrix.

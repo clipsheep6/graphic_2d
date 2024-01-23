@@ -32,11 +32,6 @@ static const Matrix* CastToMatrix(const OH_Drawing_Matrix* cMatrix)
     return reinterpret_cast<const Matrix*>(cMatrix);
 }
 
-static const Rect& CastToRect(const OH_Drawing_Rect& cRect)
-{
-    return reinterpret_cast<const Rect&>(cRect);
-}
-
 static const RoundRect& CastToRoundRect(const OH_Drawing_RoundRect& cRoundRect)
 {
     return reinterpret_cast<const RoundRect&>(cRoundRect);
@@ -141,7 +136,8 @@ void OH_Drawing_PathAddArc(OH_Drawing_Path* cPath,
     if (path == nullptr) {
         return;
     }
-    path->AddArc(CastToRect(*oval), startAngle, sweepAngle);
+    Rect rect(oval->left, oval->top, oval->right, oval->bottom);
+    path->AddArc(rect, startAngle, sweepAngle);
 }
 
 void OH_Drawing_PathAddPath(OH_Drawing_Path* cPath,

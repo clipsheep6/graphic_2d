@@ -21,11 +21,6 @@ using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
 
-static const Rect& CastToRect(const OH_Drawing_Rect& cRect)
-{
-    return reinterpret_cast<const Rect&>(cRect);
-}
-
 static RoundRect* CastToRoundRect(OH_Drawing_RoundRect* cRoundRect)
 {
     return reinterpret_cast<RoundRect*>(cRoundRect);
@@ -36,7 +31,8 @@ OH_Drawing_RoundRect* OH_Drawing_RoundRectCreate(const OH_Drawing_Rect* cRect, f
     if (cRect == nullptr) {
         return nullptr;
     }
-    return (OH_Drawing_RoundRect*)new RoundRect(CastToRect(*cRect), xRad, yRad);
+    return (OH_Drawing_RoundRect*)new RoundRect(Rect(cRect->left, cRect->top, cRect->right, cRect->bottom),
+        xRad, yRad);
 }
 
 void OH_Drawing_RoundRectDestroy(OH_Drawing_RoundRect* cRoundRect)

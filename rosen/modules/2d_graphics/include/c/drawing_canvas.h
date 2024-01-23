@@ -31,8 +31,10 @@
 /**
  * @file drawing_canvas.h
  *
- * @brief Declares functions related to the <b>canvas</b> object in the drawing module.
+ * @brief 文件中定义了与画布相关的功能函数。
  *
+ * 引用文件"native_drawing/drawing_canvas.h"
+ * @library libnative_drawing.so
  * @since 8
  * @version 1.0
  */
@@ -44,20 +46,20 @@ extern "C" {
 #endif
 
 /**
- * @brief Creates an <b>OH_Drawing_Canvas</b> object.
+ * @brief 用于创建一个画布对象。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @return Returns the pointer to the <b>OH_Drawing_Canvas</b> object created.
+ * @return 函数会返回一个指针，指针指向创建的画布对象。
  * @since 8
  * @version 1.0
  */
 OH_Drawing_Canvas* OH_Drawing_CanvasCreate(void);
 
 /**
- * @brief Destroys an <b>OH_Drawing_Canvas</b> object and reclaims the memory occupied by the object.
+ * @brief 用于销毁画布对象并回收该对象占有的内存。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
  * @since 8
  * @version 1.0
  */
@@ -68,19 +70,19 @@ void OH_Drawing_CanvasDestroy(OH_Drawing_Canvas*);
  * is output to the bitmap (this process is called CPU rendering).
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Bitmap 指向位图对象的指针。
  * @since 8
  * @version 1.0
  */
 void OH_Drawing_CanvasBind(OH_Drawing_Canvas*, OH_Drawing_Bitmap*);
 
 /**
- * @brief Attaches a pen to a canvas so that the canvas will use the style and color of the pen to outline a shape.
+ * @brief 用于设置画笔给画布，画布将会使用设置画笔的样式和颜色去绘制图形形状的轮廓。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Pen 指向画笔对象的指针。
  * @since 8
  * @version 1.0
  */
@@ -91,39 +93,38 @@ void OH_Drawing_CanvasAttachPen(OH_Drawing_Canvas*, const OH_Drawing_Pen*);
  * and color of the pen to outline a shape.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
  * @since 8
  * @version 1.0
  */
 void OH_Drawing_CanvasDetachPen(OH_Drawing_Canvas*);
 
 /**
- * @brief Attaches a brush to a canvas so that the canvas will use the style and color of the brush to fill in a shape.
+ * @brief 用于设置画刷给画布，画布将会使用设置的画刷样式和颜色去填充绘制的图形形状。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Brush Indicates the pointer to an <b>OH_Drawing_Brush</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Brush 指向画刷对象的指针。
  * @since 8
  * @version 1.0
  */
 void OH_Drawing_CanvasAttachBrush(OH_Drawing_Canvas*, const OH_Drawing_Brush*);
 
 /**
- * @brief Detaches the brush from a canvas so that the canvas will not use the style
- * and color of the brush to fill in a shape.
+ * @brief 用于去除掉画布中的画刷，使用后画布将不去填充图形形状。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
  * @since 8
  * @version 1.0
  */
 void OH_Drawing_CanvasDetachBrush(OH_Drawing_Canvas*);
 
 /**
- * @brief Saves the current canvas status (canvas matrix) to the top of the stack.
+ * @brief 用于保存当前画布的状态（画布矩阵）到一个栈顶。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
  * @since 8
  * @version 1.0
  */
@@ -146,138 +147,138 @@ void OH_Drawing_CanvasSaveLayer(OH_Drawing_Canvas*, const OH_Drawing_Rect*, cons
  * @brief Restores the canvas status (canvas matrix) saved on the top of the stack.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
  * @since 8
  * @version 1.0
  */
 void OH_Drawing_CanvasRestore(OH_Drawing_Canvas*);
 
 /**
- * @brief Gets the number of the canvas status (canvas matrix) saved in the stack.
+ * @brief 用于获取栈中保存的画布状态（画布矩阵）的数量。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @return Returns a 32-bit variable that describes the number of canvas status.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @return 函数会返回一个32位的值描述画布状态（画布矩阵）的数量。
  * @since 11
  * @version 1.0
  */
 uint32_t OH_Drawing_CanvasGetSaveCount(OH_Drawing_Canvas*);
 
 /**
- * @brief Restores the specific number of the canvas status (canvas matrix) saved in the stack.
+ * @brief 用于恢复到指定数量的画布状态（画布矩阵）。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param saveCount Indicates the specific number of canvas status.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param saveCount 指定的画布状态（画布矩阵）数量。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasRestoreToCount(OH_Drawing_Canvas*, uint32_t saveCount);
 
 /**
- * @brief Draws a line segment.
+ * @brief 用于画一条直线段。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param x1 Indicates the x coordinate of the start point of the line segment.
- * @param y1 Indicates the y coordinate of the start point of the line segment.
- * @param x2 Indicates the x coordinate of the end point of the line segment.
- * @param y2 Indicates the y coordinate of the end point of the line segment.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param x1 线段起始点的横坐标。
+ * @param y1 线段起始点的纵坐标。
+ * @param x2 线段结束点的横坐标。
+ * @param y2 线段结束点的纵坐标。
  * @since 8
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawLine(OH_Drawing_Canvas*, float x1, float y1, float x2, float y2);
 
 /**
- * @brief Draws a path.
+ * @brief 用于画一个自定义路径。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Path Indicates the pointer to an <b>OH_Drawing_Path</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Path 指向路径对象的指针。
  * @since 8
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawPath(OH_Drawing_Canvas*, const OH_Drawing_Path*);
 
 /**
- * @brief Draws a bitmap.
+ * @brief 用于画一个位图，位图又称为点阵图像、像素图或栅格图像，是由像素（图片元素）的单个点组成。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
- * @param left Indicates the left position of the <b>OH_Drawing_Bitmap</b>.
- * @param top Indicates the top position of the <b>OH_Drawing_Bitmap</b>.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Bitmap 指向位图对象的指针。
+ * @param left 位图对象左上角的横坐标。
+ * @param top 位图对象左上角的纵坐标。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawBitmap(OH_Drawing_Canvas*, const OH_Drawing_Bitmap*, float left, float top);
 
 /**
- * @brief Draws a rect.
+ * @brief 用于画一个矩形。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Rect 指向矩形对象的指针。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawRect(OH_Drawing_Canvas*, const OH_Drawing_Rect*);
 
 /**
- * @brief Draws a circle.
+ * @brief 用于画一个圆形。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Point Indicates the pointer to an <b>OH_Drawing_Point</b> object.
- * @param radius Indicates the radius of the circle.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Point 指向坐标点对象的指针，表示圆心。
+ * @param radius 圆形的半径。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawCircle(OH_Drawing_Canvas*, const OH_Drawing_Point*, float radius);
 
 /**
- * @brief Draws an oval.
+ * @brief 用于画一个椭圆。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Rect 指向矩形对象的指针。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawOval(OH_Drawing_Canvas*, const OH_Drawing_Rect*);
 
 /**
- * @brief Draws an arc.
+ * @brief 用于画一个弧。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
- * @param startAngle Indicates the startAngle of the arc.
- * @param sweepAngle Indicates the sweepAngle of the arc.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Rect 指向矩形对象的指针。
+ * @param startAngle 弧的起始角度。
+ * @param sweepAngle 弧的扫描角度。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawArc(OH_Drawing_Canvas*, const OH_Drawing_Rect*, float startAngle, float sweepAngle);
 
 /**
- * @brief Draws a roundrect.
+ * @brief 用于画一个圆角矩形。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_RoundRect Indicates the pointer to an <b>OH_Drawing_RoundRect</b> object.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_RoundRect 指向圆角矩形对象的指针。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas*, const OH_Drawing_RoundRect*);
 
 /**
- * @brief Draws a textblob.
+ * @brief 用于画一段文字。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_TextBlob Indicates the pointer to an <b>OH_Drawing_TextBlob</b> object.
- * @param x Indicates the horizontal offset applied to blob.
- * @param y Indicates the vertical offset applied to blob.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_TextBlob 指向文本对象的指针。
+ * @param x 文本对象左下角的横坐标。
+ * @param y 文本对象左下角的纵坐标。
  * @since 11
  * @version 1.0
  */
@@ -291,23 +292,23 @@ void OH_Drawing_CanvasDrawTextBlob(OH_Drawing_Canvas*, const OH_Drawing_TextBlob
  */
 typedef enum {
     /**
-     * Clip with difference.
+     * 将指定区域裁剪（取差集）。
      */
     DIFFERENCE,
     /**
-     * Clip with intersection.
+     * 将指定区域保留（取交集）。
      */
     INTERSECT,
 } OH_Drawing_CanvasClipOp;
 
 /**
- * @brief Clip a rect.
+ * @brief 用于裁剪一个矩形。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
- * @param clipOp Indicates the operation to apply to clip.
- * @param doAntiAlias Indicates whether clip operation requires anti-aliased.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Rect 指向矩形对象的指针。
+ * @param clipOp 裁剪方式。支持可选的具体裁剪方式可见@{link OH_Drawing_CanvasClipOp}枚举。
+ * @param doAntiAlias 值为true则做抗锯齿处理，反之不做。
  * @since 11
  * @version 1.0
  */
@@ -315,13 +316,13 @@ void OH_Drawing_CanvasClipRect(OH_Drawing_Canvas*, const OH_Drawing_Rect*,
     OH_Drawing_CanvasClipOp clipOp, bool doAntiAlias);
 
 /**
- * @brief Clip a path.
+ * @brief 用于裁剪一个自定义路径。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param OH_Drawing_Path Indicates the pointer to an <b>OH_Drawing_Path</b> object.
- * @param clipOp Indicates the operation to apply to clip.
- * @param doAntiAlias Indicates whether clip operation requires anti-aliased.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param OH_Drawing_Path 指向路径对象的指针。
+ * @param clipOp 裁剪方式。支持可选的具体裁剪方式可见@{link OH_Drawing_CanvasClipOp}枚举。
+ * @param doAntiAlias 真为抗锯齿，假则不做抗锯齿处理。
  * @since 11
  * @version 1.0
  */
@@ -329,48 +330,48 @@ void OH_Drawing_CanvasClipPath(OH_Drawing_Canvas*, const OH_Drawing_Path*,
     OH_Drawing_CanvasClipOp clipOp, bool doAntiAlias);
 
 /**
- * @brief Rotates by degrees. Positive degrees rotates clockwise.
+ * @brief 用于画布旋转一定的角度，正数表示顺时针旋转，负数反之。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param degrees Indicates the amount to rotate, in degrees.
- * @param px Indicates the x-axis value of the point to rotate about.
- * @param py Indicates the y-axis value of the point to rotate about.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param degrees 旋转角度。
+ * @param px 旋转中心的横坐标。
+ * @param py 旋转中心的纵坐标。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasRotate(OH_Drawing_Canvas*, float degrees, float px, float py);
 
 /**
- * @brief Translates by dx along the x-axis and dy along the y-axis.
+ * @brief 用于平移画布一段距离。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param dx Indicates the distance to translate on x-axis.
- * @param dy Indicates the distance to translate on y-axis.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param dx 水平方向移动的距离。
+ * @param dy 垂直方向移动的距离。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasTranslate(OH_Drawing_Canvas*, float dx, float dy);
 
 /**
- * @brief Scales by sx on the x-axis and sy on the y-axis.
+ * @brief 用于画布缩放。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param sx Indicates the amount to scale on x-axis.
- * @param sy Indicates the amount to scale on y-axis.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param sx 水平方向缩放的比例。
+ * @param sy 垂直方向缩放的比例。
  * @since 11
  * @version 1.0
  */
 void OH_Drawing_CanvasScale(OH_Drawing_Canvas*, float sx, float sy);
 
 /**
- * @brief Clears a canvas by using a specified color.
+ * @brief 用于使用指定颜色去清空画布。
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @param color Indicates the color, which is a 32-bit (ARGB) variable.
+ * @param OH_Drawing_Canvas 指向画布对象的指针。
+ * @param color 描述颜色的32位（ARGB）变量。
  * @since 8
  * @version 1.0
  */
@@ -401,23 +402,23 @@ int32_t OH_Drawing_CanvasGetHeight(OH_Drawing_Canvas*);
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @return The pointer to an <b>OH_Drawing_Rect</b> object, represents the boundar of clip,
+ * @return An <b>OH_Drawing_Rect</b> object, represents the boundar of clip,
  * transformed by inverse of matrix.
  * @since 12
  * @version 1.0
  */
-OH_Drawing_Rect* OH_Drawing_CanvasGetLocalClipBounds(OH_Drawing_Canvas*);
+OH_Drawing_Rect OH_Drawing_CanvasGetLocalClipBounds(OH_Drawing_Canvas*);
 
 /**
  * @brief Get a 3x3 matrix of the transform from local coordinates to 'device'
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
- * @return The pointer to an <b>OH_Drawing_Matrix</b> object.
+ * @param OH_Drawing_Matrix Indicates the pointer to an <b>OH_Drawing_Matrix</b> object.
  * @since 12
  * @version 1.0
  */
-OH_Drawing_Matrix* OH_Drawing_CanvasGetLocalToDevice(OH_Drawing_Canvas*);
+void OH_Drawing_CanvasGetTotalMatrix(OH_Drawing_Canvas*, OH_Drawing_Matrix*);
 
 /**
  * @brief Use the passed matrix to transforming the geometry, then use existing matrix.

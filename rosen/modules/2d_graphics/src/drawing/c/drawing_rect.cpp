@@ -21,17 +21,17 @@ using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
 
-static Rect* CastToRect(OH_Drawing_Rect* cRect)
-{
-    return reinterpret_cast<Rect*>(cRect);
-}
-
 OH_Drawing_Rect* OH_Drawing_RectCreate(float left, float top, float right, float bottom)
 {
-    return (OH_Drawing_Rect*)new Rect(left, top, right, bottom);
+    OH_Drawing_Rect cRect = new OH_Drawing_Rect();
+    cRect->left = left;
+    cRect->top = top;
+    cRect->right = right;
+    cRect->bottom = bottom;
+    return cRect;
 }
 
 void OH_Drawing_RectDestroy(OH_Drawing_Rect* cRect)
 {
-    delete CastToRect(cRect);
+    delete cRect;
 }

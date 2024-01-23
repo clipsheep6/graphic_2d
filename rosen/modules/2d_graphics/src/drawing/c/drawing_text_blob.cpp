@@ -35,6 +35,11 @@ static const Font& CastToFont(const OH_Drawing_Font& cFont)
     return reinterpret_cast<const Font&>(cFont);
 }
 
+static const Rect* CastToRect(const OH_Drawing_Rect* cRect)
+{
+    return reinterpret_cast<const Rect*>(cRect);
+}
+
 static const Point* CastToPoint(const OH_Drawing_Point* cPoint)
 {
     return reinterpret_cast<const Point*>(cPoint);
@@ -114,8 +119,7 @@ const OH_Drawing_RunBuffer* OH_Drawing_TextBlobBuilderAllocRunPos(OH_Drawing_Tex
     if (textBlobBuilder == nullptr) {
         return nullptr;
     }
-    std::shared_ptr<Rect> dRect = std::make_shared<Rect>(cRect->left, cRect->top, cRect->right, cRect->bottom);
-    return (const OH_Drawing_RunBuffer*)&textBlobBuilder->AllocRunPos(CastToFont(*cFont), count, dRect.get());
+    return (const OH_Drawing_RunBuffer*)&textBlobBuilder->AllocRunPos(CastToFont(*cFont), count, CastToRect(cRect));
 }
 
 OH_Drawing_TextBlob* OH_Drawing_TextBlobBuilderMake(OH_Drawing_TextBlobBuilder* cTextBlobBuilder)

@@ -115,16 +115,7 @@ typedef struct OH_Drawing_PathEffect OH_Drawing_PathEffect;
  * @since 11
  * @version 1.0
  */
-typedef struct {
-    /** the left of rect */
-    float left;
-    /** the top of rect */
-    float top;
-    /** the right of rect */
-    float right;
-    /** the bottom of rect */
-    float bottom;
-} OH_Drawing_Rect;
+typedef struct OH_Drawing_Rect OH_Drawing_Rect;
 
 /**
  * @brief Defines a roundRect, which is used to describe the round rectangle.

@@ -874,10 +874,13 @@ void DrawImageRectOpItem::Playback(Canvas* canvas, const Rect* rect)
     auto texture = image_->GetBackendTexture(true, &origin);
     auto newImage = std::make_shared<Drawing::Image>();
     Drawing::BitmapFormat info = Drawing::BitmapFormat {Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL};
-    bool ret = newImage->BuildFromTexture(*canvas->GetGPUContext(), texture.GetTextureInfo(), origin, info, nullptr);
-    if (ret) {
-        canvas->DrawImageRect(*newImage, src_, dst_, sampling_, constraint_);
-        return;
+    auto gpuContext = canvas->GetGPUContext();
+    if (gpuContext != nullptr) {
+        bool ret = newImage->BuildFromTexture(*gpuContext, texture.GetTextureInfo(), origin, info, nullptr);
+        if (ret) {
+            canvas->DrawImageRect(*newImage, src_, dst_, sampling_, constraint_);
+            return;
+        }
     }
     canvas->DrawImageRect(*image_, src_, dst_, sampling_, constraint_);
 }

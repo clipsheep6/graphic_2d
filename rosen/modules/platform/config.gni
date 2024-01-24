@@ -37,4 +37,5 @@ if (platform == "ohos") {
 
 appframework_root = "//foundation/appframework"
 c_utils_root = "//commonlibrary/c_utils"
+graphic_2d_root = "//foundation/graphic/graphic_2d"
 image_framework_root = "//foundation/multimedia/image_framework"

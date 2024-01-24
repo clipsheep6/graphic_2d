@@ -61,6 +61,37 @@ ohos_source_set("impl_eventhandler") {
 
 # eventhandler }}}
 
+# thread_pool {{{
+
+config("thread_pool_config") {
+  include_dirs = [
+    "thread_pool",
+    "$graphic_2d_root/utils/frame_report",
+  ]
+}
+
+ohos_source_set("thread_pool") {
+  public_configs = [ ":thread_pool_config" ]
+  sources = [ "thread_pool/task_pool_executor.cpp" ]
+  cflags = [ "-std=c++17" ]
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.resourceschedule_resource_schedule_service)) {
+    defines = [ "RES_SCHED_ENABLE" ]
+    deps = [
+      ":utils",
+      "$graphic_2d_root/utils:frame_report",
+    ]
+    external_deps = [
+      "ipc:ipc_core",
+      "resource_schedule_service:ressched_client",
+    ]
+  }
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+# thread_pool }}}
+
 # hilog {{{
 ohos_source_set("hilog") {
   if (current_os == "android" || current_os == "ios") {

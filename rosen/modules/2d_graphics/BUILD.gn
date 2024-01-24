@@ -27,6 +27,7 @@ config("2d_graphics_config") {
     "$drawing_src_dir",
     "$drawing_src_dir/engine_adapter",
     "$platform_dir/image_native",
+    "$platform_dir/thread_pool",
     "$rosen_root/modules/render_service_base/include",
     "$rosen_root/modules/texgine/texgine_drawing/src",
   ]
@@ -329,6 +330,10 @@ template("graphics2d_source_set") {
 
       deps += [ "//third_party/skia:skia_$platform" ]
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+    }
+    if (defined(use_rosen_drawing) && use_rosen_drawing) {
+      include_dirs += [ "$platform_dir/thread_pool" ]
+      deps += [ "$platform_dir:thread_pool" ]
     }
     if (enable_text_gine) {
       deps += [ "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner" ]

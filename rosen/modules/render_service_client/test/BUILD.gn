@@ -478,7 +478,7 @@ ohos_executable("render_service_client_tunnel_handle_demo") {
 
     # render_service_base include
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface/",
+    "graphic_surface_root/interfaces/inner_api/surface/",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/wmclient/",
   ]
 
@@ -508,7 +508,7 @@ ohos_executable("render_service_client_overlay_demo") {
 
     # render_service_base include
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface/",
+    "graphic_surface_root/interfaces/inner_api/surface/",
     "//foundation/graphic/graphic_2d/interfaces/inner_api/wmclient/",
   ]
 

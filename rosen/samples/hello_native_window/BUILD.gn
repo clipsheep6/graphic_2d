@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/graphic/graphic_2d/graphic_config.gni")
 
 ## Build hello_native_window {{{
 config("hello_native_window_config") {
@@ -26,8 +27,8 @@ config("hello_native_window_config") {
 
 config("hello_native_window_public_config") {
   include_dirs = [
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "$graphic_surface_root/interfaces/inner_api/surface",
+    "$graphic_surface_root/surface/include",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
   ]
 }
@@ -41,8 +42,7 @@ ohos_executable("hello_native_window") {
 
   public_configs = [ ":hello_native_window_public_config" ]
 
-  deps = [ "//foundation/graphic/graphic_2d/frameworks/surface:surface" ]
-
+  external_deps = [ "graphic_surface:surface" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

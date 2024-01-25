@@ -129,6 +129,7 @@ ohos_source_set("render_service_base_src") {
     "src/common/rs_thread_handler_generic.cpp",
     "src/common/rs_thread_looper_generic.cpp",
     "src/common/rs_thread_looper_impl.cpp",
+    "src/common/rs_gpu_dirty_region.cpp",
 
     #delegate
     "src/delegate/rs_functional_delegate.cpp",

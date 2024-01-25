@@ -459,6 +459,10 @@ void RSRenderServiceClient::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& 
 {
 }
 
+GpuDirtyRegionInfo RSRenderServiceClient::GetCurrentGpuDirtyRegionInfo(ScreenId id)
+{
+    return GpuDirtyRegionInfo {};
+}
 
 #ifdef TP_FEATURE_ENABLE
 void RSRenderServiceClient::SetTpFeatureConfig(int32_t feature, const char* config)

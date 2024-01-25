@@ -495,6 +495,11 @@ void RSInterfaces::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback)
     renderServiceClient_->SetOnRemoteDiedCallback(callback);
 }
 
+GpuDirtyRegionInfo RSInterfaces::GetCurrentGpuDirtyRegionInfo(ScreenId id)
+{
+    return renderServiceClient_->GetCurrentGpuDirtyRegionInfo(id);
+}
+
 #ifdef TP_FEATURE_ENABLE
 void RSInterfaces::SetTpFeatureConfig(int32_t feature, const char* config)
 {

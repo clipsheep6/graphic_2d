@@ -61,8 +61,8 @@ ohos_unittest("RSRenderServiceBasePlatformTest") {
     "//third_party/googletest:gtest_main",
   ]
 
+  public_external_deps = [ "graphic_surface:surface" ]
   public_deps = [
-    "$graphic_2d_root:libsurface",
     "$graphic_2d_root/rosen/modules/composer/vsync:libvsync",
     "$graphic_2d_root/utils:sync_fence",
     "//commonlibrary/c_utils/base:utils",

@@ -33,7 +33,6 @@ config("vulkan_public_config") {
     "swapchain",
     "include",
     "//third_party/vulkan-loader/loader/generated",
-    "../../frameworks/surface/include",
   ]
 }
 
@@ -45,7 +44,6 @@ ohos_shared_library("vulkan_swapchain_layer") {
   public_configs = [ ":vulkan_public_config" ]
 
   deps = [
-    "$graphic_2d_root:libsurface",
     "$graphic_2d_root/utils:sync_fence",
     "//third_party/vulkan-headers:vulkan_headers",
   ]
@@ -54,6 +52,8 @@ ohos_shared_library("vulkan_swapchain_layer") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+
+  public_external_deps = [ "graphic_surface:surface" ]
 
   output_name = "vulkan_swapchain"
   output_extension = "so"

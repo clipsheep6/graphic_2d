@@ -377,12 +377,10 @@ ohos_source_set("render_service_base_src") {
   }
 
   include_dirs = [
-    "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/utils/color_manager/export",
     "$graphic_2d_root/utils/log",
-    "$graphic_2d_root/interfaces/inner_api/surface",
   ]
   include_dirs += [ "//third_party/skia/src" ]
   deps = [
@@ -391,6 +389,7 @@ ohos_source_set("render_service_base_src") {
     "$rosen_root/modules/platform:ipc_core",
   ]
   external_deps = [ "hilog:libhilog" ]
+  public_external_deps = [ "graphic_surface:surface" ]
 
   if (!is_mingw && !is_mac && !is_cross_platform) {
     defines += [ "ENABLE_RUST" ]

@@ -28,7 +28,6 @@ config("native_image_config") {
 config("libnative_image_public_config") {
   include_dirs = [
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-    "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/utils/sandbox",
     "include",
   ]
@@ -54,7 +53,6 @@ ohos_shared_library("libnative_image") {
 
   deps = [
     "$graphic_2d_root:libgl",
-    "$graphic_2d_root/frameworks/surface:surface",
     "$graphic_2d_root/utils:sync_fence",
   ]
 
@@ -65,6 +63,8 @@ ohos_shared_library("libnative_image") {
     "hilog:libhilog",
     "ipc:ipc_single",
   ]
+
+  public_external_deps = [ "graphic_surface:surface" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"

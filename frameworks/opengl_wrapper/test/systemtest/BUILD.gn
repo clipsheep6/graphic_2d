@@ -27,8 +27,6 @@ ohos_systemtest("opengl_wrapper_api_test") {
 
   sources = [ "opengl_wrapper_api_test.cpp" ]
 
-  include_dirs =
-      [ "//foundation/graphic/graphic_2d/frameworks/surface/include" ]
 
   cflags = [
     "-Wall",
@@ -40,7 +38,6 @@ ohos_systemtest("opengl_wrapper_api_test") {
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
     "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
     "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
@@ -51,5 +48,6 @@ ohos_systemtest("opengl_wrapper_api_test") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+  public_external_deps = [ "graphic_surface:surface" ]
 }
 ## SystemTest opengl_wrapper_api_test }}}

@@ -38,11 +38,11 @@ config("pipeline_test") {
 ## Build RSBaseRenderEngineTest
 ohos_systemtest("RSBaseRenderEngineTest") {
   module_out_path = module_output_path
-  include_dirs = [ "$graphic_2d_root/frameworks/surface/include" ]
   sources = [ "rs_base_render_engine_test.cpp" ]
   deps = [ ":rs_test_common" ]
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
   ]
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {

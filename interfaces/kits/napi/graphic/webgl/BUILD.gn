@@ -22,7 +22,7 @@ config("render_config") {
 
 ohos_source_set("webgl_src") {
   include_dirs = [
-    "$graphic_2d_root/interfaces/inner_api/surface",
+    "$graphic_surface_root/interfaces/inner_api/surface",
     "$graphic_2d_root/interfaces/kits/napi/graphic/webgl/include",
     "$graphic_2d_root/interfaces/kits/napi/graphic/webgl/common",
     "//third_party/node/src",

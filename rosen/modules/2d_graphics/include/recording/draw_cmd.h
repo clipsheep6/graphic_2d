@@ -662,9 +662,11 @@ class DrawImageRectOpItem : public DrawWithPaintOpItem {
 public:
     struct ConstructorHandle : public OpItem {
         ConstructorHandle(const OpDataHandle& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
-            SrcRectConstraint constraint, const PaintHandle& paintHandle, bool isForeground = false)
+            SrcRectConstraint constraint, const PaintHandle& paintHandle, bool isForeground = false,
+             bool isTextBlobCache = false)
             : OpItem(DrawOpItem::IMAGE_RECT_OPITEM), image(image), src(src), dst(dst),
-              sampling(sampling), constraint(constraint), paintHandle(paintHandle), isForeground(isForeground) {}
+              sampling(sampling), constraint(constraint), paintHandle(paintHandle), isForeground(isForeground),
+              isTextBlobCache(isTextBlobCache) {}
         ~ConstructorHandle() override = default;
         OpDataHandle image;
         Rect src;
@@ -673,12 +675,14 @@ public:
         SrcRectConstraint constraint;
         PaintHandle paintHandle;
         bool isForeground;
+        bool isTextBlobCache;
     };
     DrawImageRectOpItem(const DrawCmdList& cmdList, ConstructorHandle* handle);
     DrawImageRectOpItem(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
-        SrcRectConstraint constraint, const Paint& paint, bool isForeground = false)
+        SrcRectConstraint constraint, const Paint& paint, bool isForeground = false, bool isTextBlobCache = false)
         : DrawWithPaintOpItem(paint, DrawOpItem::IMAGE_RECT_OPITEM), src_(src), dst_(dst), sampling_(sampling),
-          constraint_(constraint), image_(std::make_shared<Image>(image)), isForeground_(isForeground) {}
+          constraint_(constraint), image_(std::make_shared<Image>(image)), isForeground_(isForeground),
+          isTextBlobCache_(isTextBlobCache) {}
     ~DrawImageRectOpItem() override = default;
 
     static std::shared_ptr<DrawOpItem> Unmarshalling(const DrawCmdList& cmdList, void* handle);
@@ -691,6 +695,7 @@ private:
     SrcRectConstraint constraint_;
     std::shared_ptr<Image> image_;
     bool isForeground_ = false;
+    bool isTextBlobCache_ = false;
 };
 
 class DrawPictureOpItem : public DrawOpItem {

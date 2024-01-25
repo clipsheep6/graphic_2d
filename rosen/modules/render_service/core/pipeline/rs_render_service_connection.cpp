@@ -1190,6 +1190,20 @@ void RSRenderServiceConnection::SetCacheEnabledForRotation(bool isEnabled)
     RSSystemProperties::SetCacheEnabledForRotation(isEnabled);
 }
 
+DirtyRegionAreas RSRenderServiceConnection::GetCurrentDirtyRegionAreas(ScreenId id)
+{
+    auto displayNodeMap = RSMainThread::Instance()->GetContext().GetNodeMap().GetDisplayNodeMap();
+    DirtyRegionAreas dirtyRegionAreas;
+    for (auto displayNodePtr:displayNodeMap) {
+        if (id == displayNodePtr.second->GetScreenId()) {
+            dirtyRegionAreas = displayNodePtr.second->GetGpuDirtyRegionInfo();
+        } else {
+            continue;
+        }
+    }
+    return dirtyRegionAreas;
+}
+
 #ifdef TP_FEATURE_ENABLE
 void RSRenderServiceConnection::SetTpFeatureConfig(int32_t feature, const char* config)
 {

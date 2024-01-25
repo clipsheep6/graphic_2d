@@ -31,8 +31,7 @@ int RSImplicitAnimator::OpenImplicitAnimation(const RSAnimationTimingProtocol& t
     const RSAnimationTimingCurve& timingCurve, std::shared_ptr<AnimationFinishCallback>&& finishCallback,
     std::shared_ptr<AnimationRepeatCallback>&& repeatCallback)
 {
-    globalImplicitParams_.push({ timingProtocol, timingCurve, std::move(finishCallback),
-        std::move(repeatCallback) });
+    globalImplicitParams_.push({ timingProtocol, timingCurve, std::move(finishCallback), std::move(repeatCallback) });
     implicitAnimations_.push({});
     keyframeAnimations_.push({});
     durationKeyframeParams_.push({ false, 0, 0 });
@@ -102,6 +101,31 @@ void RSImplicitAnimator::CloseImplicitAnimationInner()
     EndImplicitAnimation();
 }
 
+bool RSImplicitAnimator::DealEmptyAnimations(const std::shared_ptr<AnimationFinishCallback>& finishCallback)
+{
+    // If finish callback either 1. is null or 2. is referenced by any animation or implicitly parameters, we don't
+    // do anything.
+    if (finishCallback.use_count() != 1) {
+        CloseImplicitAnimationInner();
+        return false;
+    }
+    // we are the only one who holds the finish callback, if the callback is NOT timing sensitive, we need to
+    // execute it asynchronously, in order to avoid timing issues.
+    if (finishCallback->finishCallbackType_ == FinishCallbackType::TIME_INSENSITIVE) {
+        ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, execute finish "
+                   "callback asynchronously");
+        RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
+        CloseImplicitAnimationInner();
+        return false;
+    }
+    // we are the only one who holds the finish callback, and the callback is timing sensitive, we need to create an
+    // empty animation that act like a timer, in order to execute it on the right time.
+    ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, creating empty 'timer' "
+               "animation.");
+    CreateEmptyAnimation();
+    return true;
+}
+
 std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnimation()
 {
     if (globalImplicitParams_.empty() || implicitAnimations_.empty() || keyframeAnimations_.empty()) {
@@ -119,26 +143,9 @@ std::vector<std::shared_ptr<RSAnimation>> RSImplicitAnimator::CloseImplicitAnima
     auto& currentKeyframeAnimations = keyframeAnimations_.top();
     // if no implicit animation created by current implicit animation param, we need to take care of finish callback
     if (currentAnimations.empty() && currentKeyframeAnimations.empty()) {
-        // If finish callback either 1. is null or 2. is referenced by any animation or implicitly parameters, we don't
-        // do anything.
-        if (finishCallback.use_count() != 1) {
-            CloseImplicitAnimationInner();
+        if (!DealEmptyAnimations(finishCallback)) {
             return {};
         }
-        // we are the only one who holds the finish callback, if the callback is NOT timing sensitive, we need to
-        // execute it asynchronously, in order to avoid timing issues.
-        if (finishCallback->finishCallbackType_ == FinishCallbackType::TIME_INSENSITIVE) {
-            ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, execute finish "
-                       "callback asynchronously");
-            RSUIDirector::PostTask([finishCallback]() { finishCallback->Execute(); });
-            CloseImplicitAnimationInner();
-            return {};
-        }
-        // we are the only one who holds the finish callback, and the callback is timing sensitive, we need to create an
-        // empty animation that act like a timer, in order to execute it on the right time.
-        ROSEN_LOGD("RSImplicitAnimator::CloseImplicitAnimation, No implicit animations created, creating empty 'timer' "
-                   "animation.");
-        CreateEmptyAnimation();
     }
     std::vector<std::shared_ptr<RSAnimation>> resultAnimations;
     [[maybe_unused]] auto& [isDurationKeyframe, totalDuration, currentDuration] = durationKeyframeParams_.top();
@@ -265,9 +272,9 @@ void RSImplicitAnimator::EndImplicitAnimation()
 {
     if (implicitAnimationParams_.empty() ||
         (implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::CANCEL &&
-        implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::CURVE &&
-        implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::SPRING &&
-        implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::INTERPOLATING_SPRING)) {
+            implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::CURVE &&
+            implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::SPRING &&
+            implicitAnimationParams_.top()->GetType() != ImplicitAnimationParamType::INTERPOLATING_SPRING)) {
         ROSEN_LOGE("Failed to end implicit animation, need to begin implicit animation firstly!");
         return;
     }
@@ -436,22 +443,97 @@ void RSImplicitAnimator::SetPropertyValue(
     }
 }
 
-void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& target,
+bool RSImplicitAnimator::DealKeyframeImplicitParam(const std::shared_ptr<RSNode>& target,
     std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
-    const std::shared_ptr<RSPropertyBase>& endValue)
+    const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSAnimation>& animation)
 {
-    if (globalImplicitParams_.empty() || implicitAnimations_.empty() || keyframeAnimations_.empty()) {
-        ROSEN_LOGE("Failed to create implicit animation, need to open implicit animation firstly!");
-        return;
-    }
-
-    if (target == nullptr || property == nullptr) {
-        return;
-    }
-
-    std::shared_ptr<RSAnimation> animation;
     auto params = implicitAnimationParams_.top();
     auto& repeatCallback = std::get<std::shared_ptr<AnimationRepeatCallback>>(globalImplicitParams_.top());
+    auto keyframeImplicitParam = static_cast<RSImplicitKeyframeAnimationParam*>(params.get());
+    auto& keyframeAnimations = keyframeAnimations_.top();
+    auto keyframeIter = keyframeAnimations.find({ target->GetId(), property->GetId() });
+    [[maybe_unused]] auto& [isDurationKeyframe, totalDuration, unused] = durationKeyframeParams_.top();
+    SetPropertyValue(property, endValue);
+    if (keyframeIter == keyframeAnimations.end()) {
+        animation =
+            keyframeImplicitParam->CreateAnimation(property, isDurationKeyframe, totalDuration, startValue, endValue);
+        keyframeAnimations[{ target->GetId(), property->GetId() }] = animation;
+    } else {
+        if (isDurationKeyframe) {
+            keyframeImplicitParam->AddKeyframe(keyframeIter->second, totalDuration, startValue, endValue);
+        } else {
+            keyframeImplicitParam->AddKeyframe(keyframeIter->second, startValue, endValue);
+        }
+    }
+    if (animation == nullptr) {
+        ROSEN_LOGE("Failed to create animation!");
+        return false;
+    }
+    if (repeatCallback != nullptr) {
+        animation->SetRepeatCallback(std::move(repeatCallback));
+        repeatCallback.reset();
+    }
+    // for keyframe animations, we don't add it to target now, we will add it later in
+    // RSImplicitAnimator::CloseImplicitAnimation.
+    return false;
+}
+
+bool RSImplicitAnimator::DealImplicitTransitionParam(const std::shared_ptr<RSNode>& target,
+    std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
+    const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSAnimation>& animation)
+{
+    auto params = implicitAnimationParams_.top();
+    auto& repeatCallback = std::get<std::shared_ptr<AnimationRepeatCallback>>(globalImplicitParams_.top());
+    auto implicitTransitionParam = static_cast<RSImplicitTransitionParam*>(params.get());
+    animation = implicitTransitionParam->CreateAnimation(property, startValue, endValue);
+    if (animation == nullptr) {
+        ROSEN_LOGE("Failed to create animation!");
+        return false;
+    }
+    if (repeatCallback != nullptr) {
+        animation->SetRepeatCallback(std::move(repeatCallback));
+        repeatCallback.reset();
+    }
+    // this will create custom transition animation, there is no need to add it to target.
+    return false;
+}
+
+bool RSImplicitAnimator::DealCancelImplicitParam(const std::shared_ptr<RSNode>& target,
+    std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
+    const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSAnimation>& animation)
+{
+    auto params = implicitAnimationParams_.top();
+    // CreateEmptyAnimation
+    if (property->id_ == 0) {
+        auto curveImplicitParam = static_cast<RSImplicitCancelAnimationParam*>(params.get());
+        animation = curveImplicitParam->CreateEmptyAnimation(property, startValue, endValue);
+        return true;
+    }
+
+    // Create animation with CANCEL type will cancel all running animations of the given property and target.
+    // Note: We are currently in the process of refactoring and accidentally changed the order of animation
+    // callbacks. Originally, the order was OnChange before OnFinish, but we mistakenly changed it to OnFinish
+    // before OnChange. This change has caused some issues, and we need to revert it back to the original order.
+    // However, before fixing this, we discovered that there are some changes in arkui that rely on this 'bug'.
+    // If we change it back to the original order, it will break the list swipe animation. Therefore, we need
+    // to carefully consider the implications of this change before proceeding.
+    if (property->GetIsCustom()) {
+        property->SetValue(endValue);                         // update set ui value
+        property->UpdateCustomAnimation();                    // force sync RS value for custom property
+        target->CancelAnimationByProperty(property->GetId()); // finish all ui animation
+    } else {
+        target->FinishAnimationByProperty(property->GetId()); // finish all ui animation
+        property->SetValue(endValue);                         // update set ui value
+        property->UpdateOnAllAnimationFinish();               // force sync RS value for native property
+    }
+    return false;
+}
+
+bool RSImplicitAnimator::DealImplicitAnimationParams(const std::shared_ptr<RSNode>& target,
+    std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
+    const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSAnimation>& animation)
+{
+    auto params = implicitAnimationParams_.top();
     switch (params->GetType()) {
         case ImplicitAnimationParamType::CURVE: {
             auto curveImplicitParam = static_cast<RSImplicitCurveAnimationParam*>(params.get());
@@ -459,33 +541,7 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
             break;
         }
         case ImplicitAnimationParamType::KEYFRAME: {
-            auto keyframeImplicitParam = static_cast<RSImplicitKeyframeAnimationParam*>(params.get());
-            auto& keyframeAnimations = keyframeAnimations_.top();
-            auto keyframeIter = keyframeAnimations.find({ target->GetId(), property->GetId() });
-            [[maybe_unused]] auto& [isDurationKeyframe, totalDuration, unused] = durationKeyframeParams_.top();
-            SetPropertyValue(property, endValue);
-            if (keyframeIter == keyframeAnimations.end()) {
-                animation = keyframeImplicitParam->CreateAnimation(property, isDurationKeyframe, totalDuration,
-                    startValue, endValue);
-                keyframeAnimations[{ target->GetId(), property->GetId() }] = animation;
-            } else {
-                if (isDurationKeyframe) {
-                    keyframeImplicitParam->AddKeyframe(keyframeIter->second, totalDuration, startValue, endValue);
-                } else {
-                    keyframeImplicitParam->AddKeyframe(keyframeIter->second, startValue, endValue);
-                }
-            }
-            if (animation == nullptr) {
-                ROSEN_LOGE("Failed to create animation!");
-                return;
-            }
-            if (repeatCallback != nullptr) {
-                animation->SetRepeatCallback(std::move(repeatCallback));
-                repeatCallback.reset();
-            }
-            // for keyframe animations, we don't add it to target now, we will add it later in
-            // RSImplicitAnimator::CloseImplicitAnimation.
-            return;
+            return DealKeyframeImplicitParam(target, property, startValue, endValue, animation);
         }
         case ImplicitAnimationParamType::SPRING: {
             auto springImplicitParam = static_cast<RSImplicitSpringAnimationParam*>(params.get());
@@ -514,48 +570,35 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
             break;
         }
         case ImplicitAnimationParamType::TRANSITION: {
-            auto implicitTransitionParam = static_cast<RSImplicitTransitionParam*>(params.get());
-            animation = implicitTransitionParam->CreateAnimation(property, startValue, endValue);
-            if (animation == nullptr) {
-                ROSEN_LOGE("Failed to create animation!");
-                return;
-            }
-            if (repeatCallback != nullptr) {
-                animation->SetRepeatCallback(std::move(repeatCallback));
-                repeatCallback.reset();
-            }
-            // this will create custom transition animation, there is no need to add it to target.
-            return;
+            return DealImplicitTransitionParam(target, property, startValue, endValue, animation);
         }
         case ImplicitAnimationParamType::CANCEL: {
-            // CreateEmptyAnimation
-            if (property->id_ == 0) {
-                auto curveImplicitParam = static_cast<RSImplicitCancelAnimationParam*>(params.get());
-                animation = curveImplicitParam->CreateEmptyAnimation(property, startValue, endValue);
-                break;
-            }
-
-            // Create animation with CANCEL type will cancel all running animations of the given property and target.
-            // Note: We are currently in the process of refactoring and accidentally changed the order of animation
-            // callbacks. Originally, the order was OnChange before OnFinish, but we mistakenly changed it to OnFinish
-            // before OnChange. This change has caused some issues, and we need to revert it back to the original order.
-            // However, before fixing this, we discovered that there are some changes in arkui that rely on this 'bug'.
-            // If we change it back to the original order, it will break the list swipe animation. Therefore, we need
-            // to carefully consider the implications of this change before proceeding.
-            if (property->GetIsCustom()) {
-                property->SetValue(endValue);                         // update set ui value
-                property->UpdateCustomAnimation();                    // force sync RS value for custom property
-                target->CancelAnimationByProperty(property->GetId()); // finish all ui animation
-            } else {
-                target->FinishAnimationByProperty(property->GetId()); // finish all ui animation
-                property->SetValue(endValue);                         // update set ui value
-                property->UpdateOnAllAnimationFinish();               // force sync RS value for native property
-            }
-            return;
+            return DealCancelImplicitParam(target, property, startValue, endValue, animation);
         }
         default:
             ROSEN_LOGE("Failed to create animation, unknow type!");
             break;
+    }
+    return true;
+}
+
+void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& target,
+    std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
+    const std::shared_ptr<RSPropertyBase>& endValue)
+{
+    if (globalImplicitParams_.empty() || implicitAnimations_.empty() || keyframeAnimations_.empty()) {
+        ROSEN_LOGE("Failed to create implicit animation, need to open implicit animation firstly!");
+        return;
+    }
+
+    if (target == nullptr || property == nullptr) {
+        return;
+    }
+
+    std::shared_ptr<RSAnimation> animation;
+    auto& repeatCallback = std::get<std::shared_ptr<AnimationRepeatCallback>>(globalImplicitParams_.top());
+    if (!DealImplicitAnimationParams(target, property, startValue, endValue, animation)) {
+        return;
     }
 
     if (animation == nullptr) {

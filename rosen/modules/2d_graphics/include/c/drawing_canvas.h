@@ -213,6 +213,21 @@ void OH_Drawing_CanvasDrawPath(OH_Drawing_Canvas*, const OH_Drawing_Path*);
 void OH_Drawing_CanvasDrawBitmap(OH_Drawing_Canvas*, const OH_Drawing_Bitmap*, float left, float top);
 
 /**
+ * @brief Draw the specified area of the bitmap to the specified area of the canvas .
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param src the area of source bitmap, can be nullptr.
+ * @param dst the area of destination canvas.
+ * @param OH_Drawing_SamplingOptions the sampling mode.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawBitmapRect(OH_Drawing_Canvas*, const OH_Drawing_Bitmap*, const OH_Drawing_Rect* src,
+    const OH_Drawing_Rect* dst, const OH_Drawing_SamplingOptions*);
+
+/**
  * @brief Draws a rect.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

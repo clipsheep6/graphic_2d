@@ -239,6 +239,21 @@ void OH_Drawing_CanvasDrawBitmap(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Bi
     canvas->DrawBitmap(CastToBitmap(*cBitmap), left, top);
 }
 
+void OH_Drawing_CanvasDrawBitmapRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Bitmap* cBitmap,
+    const OH_Drawing_Rect* src, const OH_Drawing_Rect* dst, const OH_Drawing_SamplingOptions* sampling)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr || cBitmap == nullptr || dst == nullptr || sampling == nullptr) {
+        return;
+    }
+    if (src == nullptr) {
+        canvas->DrawBitmap(CastToBitmap(*cBitmap), CastToRect(*dst), CastToSamplingOptions(*sampling));
+    } else {
+        canvas->DrawBitmap(CastToBitmap(*cBitmap), CastToRect(*src),
+            CastToRect(*dst), CastToSamplingOptions(*sampling));
+    }
+}
+
 void OH_Drawing_CanvasDrawRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Rect* cRect)
 {
     if (cRect == nullptr) {

@@ -71,9 +71,8 @@ public:
 
     bool NeedImplicitAnimation();
 
-    void CreateImplicitAnimation(const std::shared_ptr<RSNode>& target,
-        std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
-        const std::shared_ptr<RSPropertyBase>& endValue);
+    void CreateImplicitAnimation(const std::shared_ptr<RSNode>& target, std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue);
 
     void CreateImplicitAnimationWithInitialVelocity(const std::shared_ptr<RSNode>& target,
         const std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
@@ -91,6 +90,26 @@ private:
     void BeginImplicitCancelAnimation();
 
     void CloseImplicitAnimationInner();
+    bool ProcessEmptyAnimations(const std::shared_ptr<AnimationFinishCallback>& finishCallback);
+
+    bool ProcessImplicitAnimationParams(const std::shared_ptr<RSNode>& target, std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue,
+        std::shared_ptr<RSAnimation>& animation);
+    bool ProcessKeyframeImplicitParam(const std::shared_ptr<RSNode>& target, std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue,
+        std::shared_ptr<RSAnimation>& animation);
+    bool ProcessSpringImplicitParam(const std::shared_ptr<RSNode>& target, std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue,
+        std::shared_ptr<RSAnimation>& animation);
+    bool ProcessInterpolatingSpringImplicitParam(const std::shared_ptr<RSNode>& target,
+        std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
+        const std::shared_ptr<RSPropertyBase>& endValue, std::shared_ptr<RSAnimation>& animation);
+    bool ProcessImplicitTransitionParam(const std::shared_ptr<RSNode>& target, std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue,
+        std::shared_ptr<RSAnimation>& animation);
+    bool ProcessCancelImplicitParam(const std::shared_ptr<RSNode>& target, std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue,
+        std::shared_ptr<RSAnimation>& animation);
 
     void PushImplicitParam(const std::shared_ptr<RSImplicitAnimationParam>& implicitParam);
     void PopImplicitParam();

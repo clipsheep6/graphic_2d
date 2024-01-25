@@ -2296,17 +2296,6 @@ void RSRenderNode::ResortChildren()
     fullChildrenList_ = std::move(fullChildrenList);
 }
 
-void RSRenderNode::ApplyChildrenModifiers()
-{
-    bool anyChildZOrderChanged = false;
-    for (auto& child : *GetSortedChildren()) {
-        anyChildZOrderChanged = child->ApplyModifiers() || anyChildZOrderChanged;
-    }
-    if (anyChildZOrderChanged) {
-        isChildrenSorted_ = false;
-    }
-}
-
 uint32_t RSRenderNode::GetChildrenCount() const
 {
     return children_.size();

@@ -28,7 +28,6 @@ config("render_service_client_config") {
     "//drivers/peripheral/base",
     "$graphic_2d_root/rosen/modules/2d_graphics",
   ]
-  public_external_deps = [ "graphic_surface:surface" ]
   defines = rs_common_define
 }
 

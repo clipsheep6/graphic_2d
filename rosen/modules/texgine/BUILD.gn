@@ -112,13 +112,14 @@ ohos_source_set("libtexgine_source") {
 
     public_deps = [ "texgine_drawing:libtexgine_drawing" ]
 
+    defines = []
     if (is_arkui_x) {
+      defines += [ "CROSS_PLATFORM" ]
       public_deps += [ "//third_party/jsoncpp:jsoncpp_static" ]
     } else {
       public_deps += [ "//third_party/jsoncpp:jsoncpp" ]
     }
 
-    defines = []
     if (defined(use_rosen_drawing) && use_rosen_drawing) {
       defines += [ "USE_ROSEN_DRAWING" ]
       if (ace_enable_gpu) {

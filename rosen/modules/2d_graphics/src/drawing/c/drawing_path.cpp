@@ -205,3 +205,14 @@ void OH_Drawing_PathReset(OH_Drawing_Path* cPath)
     }
     path->Reset();
 }
+
+OH_Drawing_Rect* OH_Drawing_PathGetBounds(OH_Drawing_Path* cPath)
+{
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return nullptr;
+    }
+    Rect *rect = new Rect();
+    *rect = path->GetBounds();
+    return (OH_Drawing_Rect*)rect;
+}

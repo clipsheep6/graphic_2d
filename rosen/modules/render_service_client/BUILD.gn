@@ -17,6 +17,8 @@ import("render_service_client.gni")
 
 config("render_service_client_config") {
   include_dirs = [
+    "$graphic_2d_root/../graphic_surface/interfaces/inner_api/surface",
+    "$graphic_2d_root/../graphic_surface/interfaces/inner_api/utils",
     "$graphic_2d_root/rosen/modules",
     "$graphic_2d_root/rosen/modules/render_service_client/core",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
@@ -174,6 +176,7 @@ template("render_service_client_source_set") {
       public_external_deps = [ "graphic_surface:surface" ]
       external_deps = [
         "c_utils:utils",
+        "graphic_surface:surface",
         "hisysevent:libhisysevent",
         "hitrace:hitrace_meter",
         "image_framework:image_native",

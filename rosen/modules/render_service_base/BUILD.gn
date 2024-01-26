@@ -377,6 +377,10 @@ ohos_source_set("render_service_base_src") {
   }
 
   include_dirs = [
+    "$graphic_2d_root/interfaces/inner_api/common",
+    "$graphic_2d_root/../graphic_surface/surface/include",
+    "$graphic_2d_root/../graphic_surface/interfaces/inner_api/surface",
+    "$graphic_2d_root/../graphic_surface/interfaces/inner_api/utils",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/utils/color_manager/export",
@@ -387,8 +391,12 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
     "$rosen_root/modules/platform:hilog",
     "$rosen_root/modules/platform:ipc_core",
+    "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
   ]
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [ 
+    "graphic_surface:surface",
+    "hilog:libhilog",
+  ]
   public_external_deps = [ "graphic_surface:surface" ]
 
   if (!is_mingw && !is_mac && !is_cross_platform) {

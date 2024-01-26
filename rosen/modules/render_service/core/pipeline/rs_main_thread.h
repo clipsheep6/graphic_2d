@@ -456,7 +456,7 @@ private:
 #endif
 
     // used for hardware enabled case
-    bool doDirectComposition_ = true;
+    bool doDirectComposition_ = false;
     bool isHardwareEnabledBufferUpdated_ = false;
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledNodes_;
     std::vector<std::shared_ptr<RSSurfaceRenderNode>> selfDrawingNodes_;

@@ -231,14 +231,18 @@ template("graphics2d_source_set") {
     if (ace_enable_gpu) {
       sources += [
         "$drawing_src_dir/engine_adapter/skia_adapter/skia_gpu_context.cpp",
-        "$drawing_src_dir/engine_adapter/skia_adapter/skia_task_executor.cpp",
         "$drawing_src_dir/image/gpu_context.cpp",
       ]
       defines += [ "ACE_ENABLE_GPU" ]
-      if (!build_ohos_sdk) {
-        include_dirs += [ "$graphic_2d_root/utils/frame_report" ]
-        defines += [ "RES_SCHED_ENABLE" ]
-        deps += [ "$graphic_2d_root/utils:frame_report" ]
+      if (platform == "ohos" || platform == "ohos_ng") {
+        sources += [
+          "$drawing_src_dir/engine_adapter/skia_adapter/skia_task_executor.cpp",
+        ]
+        if (!build_ohos_sdk) {
+          include_dirs += [ "$graphic_2d_root/utils/frame_report" ]
+          defines += [ "RES_SCHED_ENABLE" ]
+          deps += [ "$graphic_2d_root/utils:frame_report" ]
+        }
       }
     }
 

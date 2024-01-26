@@ -504,6 +504,7 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawTextBlob, TestSize
     OH_Drawing_Font *font = OH_Drawing_FontCreate();
     OH_Drawing_FontSetFakeBoldText(font, true);
     OH_Drawing_FontSetTextSize(font, 20);
+    OH_Drawing_FontGetTextSize(font);
     OH_Drawing_FontSetTextSkewX(font, 0.25);
     OH_Drawing_Typeface *typeSurface = OH_Drawing_TypefaceCreateDefault();
     OH_Drawing_FontSetTypeface(font, typeSurface);

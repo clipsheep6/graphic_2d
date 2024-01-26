@@ -424,6 +424,32 @@ HWTEST_F(RectTest, RectJoin003, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RectGetWidthTest001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:I6ZMMK
+ * @tc.author:
+ */
+HWTEST_F(RectTest, RectGetWidthTest001, TestSize.Level1)
+{
+    RectF rectF(2.0f, 4.0f, 6.0f, 8.0f);
+    EXPECT_EQ(4.0f, rectF.GetWidth());  
+}
+
+/**
+ * @tc.name: RectGetWidthTest002
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require:I6ZMMK
+ * @tc.author:
+ */
+HWTEST_F(RectTest, RectGetWidthTest002, TestSize.Level1)
+{
+    RectF rectF(2.0f, 4.0f, 8.0f, 10.0f);
+    EXPECT_EQ(6.0f, rectF.GetWidth());  
+}
+
+/**
  * @tc.name: RectICreateAndDestroy001
  * @tc.desc:
  * @tc.type: FUNC

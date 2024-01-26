@@ -200,6 +200,17 @@ void OH_Drawing_CanvasDrawLine(OH_Drawing_Canvas*, float x1, float y1, float x2,
 void OH_Drawing_CanvasDrawPath(OH_Drawing_Canvas*, const OH_Drawing_Path*);
 
 /**
+ * @brief Draws a point.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Point Indicates the pointer to an <b>OH_Drawing_Point</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawPoint(OH_Drawing_Canvas*, const OH_Drawing_Point*);
+
+/**
  * @brief Draws a bitmap.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

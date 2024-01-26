@@ -172,6 +172,16 @@ typedef struct {
  */
 float OH_Drawing_FontGetMetrics(OH_Drawing_Font*, OH_Drawing_Font_Metrics*);
 
+/**
+ * @brief Gets text size for an <b>OH_Drawing_Font</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Font Indicates the pointer to an <b>OH_Drawing_Font</b> object.
+ * @since 12
+ * @version 1.0
+ */
+float OH_Drawing_FontGetTextSize(OH_Drawing_Font*);
+
 #ifdef __cplusplus
 }
 #endif

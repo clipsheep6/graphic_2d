@@ -31,6 +31,15 @@ OH_Drawing_Rect* OH_Drawing_RectCreate(float left, float top, float right, float
     return (OH_Drawing_Rect*)new Rect(left, top, right, bottom);
 }
 
+float OH_Drawing_RectGetHeight(OH_Drawing_Rect* cRect)
+{
+    Rect* rect = CastToRect(cRect);
+    if (rect == nullptr) {
+        return 0;
+    }
+    return rect->GetHeight();
+}
+
 void OH_Drawing_RectDestroy(OH_Drawing_Rect* cRect)
 {
     delete CastToRect(cRect);
@@ -46,4 +55,12 @@ bool OH_Drawing_RectIntersect(OH_Drawing_Rect* cRect, OH_Drawing_Rect* other)
     }
 
     return rect->Intersect(*otherRect);
+}
+float OH_Drawing_RectGetWidth(OH_Drawing_Rect* cRect)
+{
+    Rect* rect = CastToRect(cRect);
+    if (rect == nullptr) {
+        return 0;
+    }
+    return rect->GetWidth();
 }

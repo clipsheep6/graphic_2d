@@ -167,6 +167,7 @@ HWTEST_F(NativeDrawingPathTest, NativeDrawingPathTest_path009, TestSize.Level1)
 /*
  * @tc.name: NativeDrawingPathTest_path010
  * @tc.desc: test for PathAddOval func.
+ * @tc.desc: test for PathGetBounds func.
  * @tc.type: FUNC
  * @tc.require: AR000GTO5R
  */
@@ -178,6 +179,13 @@ HWTEST_F(NativeDrawingPathTest, NativeDrawingPathTest_path010, TestSize.Level1)
     EXPECT_TRUE(IsScalarAlmostEqual(reinterpret_cast<Path*>(path9)->GetBounds().GetWidth(), 500.0));
     EXPECT_TRUE(IsScalarAlmostEqual(reinterpret_cast<Path*>(path9)->GetBounds().GetHeight(), 300.0));
     OH_Drawing_PathDestroy(path9);
+    OH_Drawing_Path* path8 = OH_Drawing_PathCreate();
+    OH_Drawing_PathLineTo(path8, 50, 40);
+    OH_Drawing_PathClose(path8);
+    OH_Drawing_Rect *rect = OH_Drawing_PathGetBounds(path8);
+    EXPECT_TRUE(IsScalarAlmostEqual(reinterpret_cast<Rect*>(rect)->GetRight(), 50.0));
+    EXPECT_TRUE(IsScalarAlmostEqual(reinterpret_cast<Rect*>(rect)->GetBottom(), 40.0));
+    OH_Drawing_PathDestroy(path8);
 }
 } // namespace Drawing
 } // namespace Rosen

@@ -227,6 +227,18 @@ void OH_Drawing_CanvasDrawPath(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Path
     canvas->DrawPath(CastToPath(*cPath));
 }
 
+void OH_Drawing_CanvasDrawPoint(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Point* cPoint)
+{
+    if (cPoint == nullptr) {
+        return;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return;
+    }
+    canvas->DrawPoint(CastToPoint(*cPoint));
+}
+
 void OH_Drawing_CanvasDrawBitmap(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Bitmap* cBitmap, float left, float top)
 {
     if (cBitmap == nullptr) {

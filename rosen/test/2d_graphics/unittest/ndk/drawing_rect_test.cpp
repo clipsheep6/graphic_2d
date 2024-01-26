@@ -79,6 +79,18 @@ HWTEST_F(NativeDrawingRectTest, NativeDrawingRectTest_Intersect, TestSize.Level1
     OH_Drawing_RectDestroy(other1);
     OH_Drawing_RectDestroy(other2);
 }
+ * @tc.name: NativeDrawingRectTest001
+ * @tc.desc: test for get height of rect.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingRectTest, NativeDrawingRectTest001, TestSize.Level1)
+{
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, 400, 800);
+    float height = OH_Drawing_RectGetHeight(rect);
+    EXPECT_EQ(height, 800); // 800 means height
+    OH_Drawing_RectDestroy(rect);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

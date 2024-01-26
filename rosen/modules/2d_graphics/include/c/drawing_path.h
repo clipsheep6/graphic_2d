@@ -306,6 +306,17 @@ void OH_Drawing_PathClose(OH_Drawing_Path*);
  */
 void OH_Drawing_PathReset(OH_Drawing_Path*);
 
+/**
+ * @brief Get path boundary.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Path Indicates the pointer to an <b>OH_Drawing_Path</b> object.
+ * @return Returns the pointer to the <b>OH_Drawing_Rect</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_Rect* OH_Drawing_PathGetBounds(OH_Drawing_Path*);
+
 #ifdef __cplusplus
 }
 #endif

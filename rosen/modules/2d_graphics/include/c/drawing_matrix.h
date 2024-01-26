@@ -161,18 +161,18 @@ void OH_Drawing_MatrixRotate(OH_Drawing_Matrix*, float degree, float px, float p
 void OH_Drawing_MatrixTranslate(OH_Drawing_Matrix*, float dx, float dy);
 
 /**
- * @brief Sets matrix to scale by sx and sy, about a pivot point at (px, py).
+ * @brief  Sets Matrix to scale
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Matrix Indicates the pointer to an <b>OH_Drawing_Matrix</b> object.
- * @param sx Indicates the horizontal scale factor.
- * @param sy Indicates the vertical scale factor.
- * @param px Indicates the pivot on x-axis.
- * @param py Indicates the pivot on y-axis.
+ * @param scaleX  horizontal scale factor
+ * @param scaleY  vertical scale factor
+ * @param pivotX  pivot on x-axis
+ * @param pivotY  pivot on y-axis
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_MatrixScale(OH_Drawing_Matrix*, float sx, float sy, float px, float py);
+void OH_Drawing_MatrixScale(OH_Drawing_Matrix*, float scaleX, float scaleY, float pivotX, float pivotY);
 
 /**
  * @brief Sets inverse to reciprocal matrix, returning true if matrix can be inverted.

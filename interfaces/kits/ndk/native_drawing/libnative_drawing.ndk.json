@@ -94,6 +94,7 @@
     { "name": "OH_Drawing_MatrixIsEqual" },
     { "name": "OH_Drawing_MatrixIsIdentity" },
     { "name": "OH_Drawing_MatrixDestroy" },
+    { "name": "OH_Drawing_MatrixScale" },
     { "name": "OH_Drawing_PathCreate" },
     { "name": "OH_Drawing_PathCopy" },
     { "name": "OH_Drawing_PathDestroy" },

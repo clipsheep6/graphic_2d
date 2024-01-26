@@ -150,3 +150,12 @@ void OH_Drawing_MatrixDestroy(OH_Drawing_Matrix* cMatrix)
 {
     delete CastToMatrix(cMatrix);
 }
+
+void OH_Drawing_MatrixScale(OH_Drawing_Matrix* cMatrix, float scaleX, float scaleY, float pivotX, float pivotY)
+{
+     Matrix* matrix = CastToMatrix(cMatrix);
+    if (matrix == nullptr) {
+        return;
+    }
+    matrix->Scale(scaleX, scaleY, pivotX, pivotY);
+}

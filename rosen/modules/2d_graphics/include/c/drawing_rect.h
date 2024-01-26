@@ -88,8 +88,8 @@ void OH_Drawing_RectDestroy(OH_Drawing_Rect*);
  * @since 12
  * @version 1.0
  */
- 
 bool OH_Drawing_RectIntersect(OH_Drawing_Rect* cRect, OH_Drawing_Rect* other);
+
  * @brief Obtains the width of a rect.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

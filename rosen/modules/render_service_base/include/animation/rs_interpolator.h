@@ -19,12 +19,9 @@
 #include <cmath>
 #include <functional>
 #include <memory>
-#include <vector>
-
-#include "common/rs_macros.h"
-
 #include <parcel.h>
 #include <refbase.h>
+#include <vector>
 
 #include "common/rs_macros.h"
 
@@ -42,7 +39,6 @@ enum InterpolatorType : uint16_t {
 class RSB_EXPORT RSInterpolator : public Parcelable {
 public:
     static RSB_EXPORT const std::shared_ptr<RSInterpolator> DEFAULT;
-    RSInterpolator();
     ~RSInterpolator() override;
 
     bool Marshalling(Parcel& parcel) const override = 0;
@@ -50,12 +46,16 @@ public:
 
     float Interpolate(float input);
 
+protected:
+    RSInterpolator();
+    RSInterpolator(uint64_t id) : id_(id) {};
+    const uint64_t id_;
+
 private:
     virtual float InterpolateImpl(float input) const = 0;
     static uint64_t GenerateId();
-    const uint64_t id_;
-    float prevInput_ {-1.0f};
-    float prevOutput_ {-1.0f};
+    float prevInput_ { -1.0f };
+    float prevOutput_ { -1.0f };
     inline static std::unordered_map<uint32_t, std::weak_ptr<RSInterpolator>> interpolators_;
 };
 
@@ -65,8 +65,10 @@ public:
     ~LinearInterpolator() override = default;
 
     bool Marshalling(Parcel& parcel) const override;
+    [[nodiscard]] static LinearInterpolator* Unmarshalling(Parcel& parcel);
 
 private:
+    LinearInterpolator(uint64_t id) : RSInterpolator(id) {}
     float InterpolateImpl(float input) const override
     {
         return input;
@@ -82,7 +84,7 @@ public:
     [[nodiscard]] static RSCustomInterpolator* Unmarshalling(Parcel& parcel);
 
 private:
-    RSCustomInterpolator(const std::vector<float>&& times, const std::vector<float>&& values);
+    RSCustomInterpolator(uint64_t id, const std::vector<float>&& times, const std::vector<float>&& values);
     float InterpolateImpl(float input) const override;
     void Convert(int duration);
 

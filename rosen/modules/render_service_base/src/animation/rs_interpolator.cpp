@@ -35,7 +35,7 @@ RSInterpolator::RSInterpolator() : id_(GenerateId()) {}
 
 RSInterpolator::~RSInterpolator()
 {
-    EraseIf(interpolators_, [](auto& it) { return it.second.lock() == nullptr; });
+    interpolators_.erase(id_);
 }
 
 uint64_t RSInterpolator::GenerateId()
@@ -89,6 +89,7 @@ std::shared_ptr<RSInterpolator> RSInterpolator::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     if (auto it = interpolators_.find(ret->id_); it != interpolators_.end() && !it->second.expired()) {
+        // if we already have this id in cache, return it
         delete ret;
         return it->second.lock();
     }
@@ -102,27 +103,58 @@ bool LinearInterpolator::Marshalling(Parcel& parcel) const
     if (!parcel.WriteUint16(InterpolatorType::LINEAR)) {
         return false;
     }
+    if (!parcel.WriteUint64(id_)) {
+        return false;
+    }
     return true;
 }
 
-RSCustomInterpolator* RSCustomInterpolator::Unmarshalling(Parcel& parcel)
+LinearInterpolator* LinearInterpolator::Unmarshalling(Parcel& parcel)
 {
-    std::vector<float> times, values;
-    if (!(parcel.ReadFloatVector(&times) && parcel.ReadFloatVector(&values))) {
-        ROSEN_LOGE("Unmarshalling CustomInterpolator failed");
+    uint64_t id = parcel.ReadUint64();
+    if (id == 0) {
+        ROSEN_LOGE("Unmarshalling LinearInterpolator failed");
         return nullptr;
     }
-    return new RSCustomInterpolator(std::move(times), std::move(values));
+    return new LinearInterpolator(id);
 }
 
-RSCustomInterpolator::RSCustomInterpolator(const std::vector<float>&& times, const std::vector<float>&& values)
-    : times_(times), values_(values)
+RSCustomInterpolator::RSCustomInterpolator(
+    uint64_t id, const std::vector<float>&& times, const std::vector<float>&& values)
+    : RSInterpolator(id), times_(times), values_(values)
 {}
 
 RSCustomInterpolator::RSCustomInterpolator(const std::function<float(float)>& func, int duration)
     : interpolateFunc_(func)
 {
     Convert(duration);
+}
+
+bool RSCustomInterpolator::Marshalling(Parcel& parcel) const
+{
+    if (!parcel.WriteUint16(InterpolatorType::CUSTOM)) {
+        ROSEN_LOGE("RSCustomInterpolator::Marshalling, Write type failed");
+    }
+    if (!parcel.WriteUint64(id_)) {
+        ROSEN_LOGE("RSCustomInterpolator::Marshalling, Write id failed");
+        return false;
+    }
+    if (!parcel.WriteFloatVector(times_) || !parcel.WriteFloatVector(values_)) {
+        ROSEN_LOGE("RSCustomInterpolator::Marshalling, Write value failed");
+        return false;
+    }
+    return true;
+}
+
+RSCustomInterpolator* RSCustomInterpolator::Unmarshalling(Parcel& parcel)
+{
+    uint64_t id = parcel.ReadUint64();
+    std::vector<float> times, values;
+    if (!(parcel.ReadFloatVector(&times) && parcel.ReadFloatVector(&values))) {
+        ROSEN_LOGE("Unmarshalling CustomInterpolator failed");
+        return nullptr;
+    }
+    return new RSCustomInterpolator(id, std::move(times), std::move(values));
 }
 
 void RSCustomInterpolator::Convert(int duration)
@@ -169,15 +201,5 @@ float RSCustomInterpolator::InterpolateImpl(float input) const
     float ret = fraction * (values_[endLocation] - values_[startLocation]) + values_[startLocation];
     return ret;
 }
-
-bool RSCustomInterpolator::Marshalling(Parcel& parcel) const
-{
-    if (!(parcel.WriteUint16(InterpolatorType::CUSTOM) && parcel.WriteFloatVector(times_) &&
-            parcel.WriteFloatVector(values_))) {
-        return false;
-    }
-    return true;
-}
-
 } // namespace Rosen
 } // namespace OHOS

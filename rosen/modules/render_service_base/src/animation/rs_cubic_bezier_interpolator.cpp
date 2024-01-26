@@ -15,12 +15,16 @@
 
 #include "animation/rs_cubic_bezier_interpolator.h"
 
-
 namespace OHOS {
 namespace Rosen {
 RSCubicBezierInterpolator::RSCubicBezierInterpolator(float ctrx1, float ctry1, float ctrx2, float ctry2)
     : controllx1_(ctrx1), controlly1_(ctry1), controllx2_(ctrx2), controlly2_(ctry2)
 {}
+
+RSCubicBezierInterpolator::RSCubicBezierInterpolator(uint64_t id, float ctrx1, float ctry1, float ctrx2, float ctry2)
+    : RSInterpolator(id), controllx1_(ctrx1), controlly1_(ctry1), controllx2_(ctrx2), controlly2_(ctry2)
+{}
+
 float RSCubicBezierInterpolator ::InterpolateImpl(float input) const
 {
     constexpr float ONE = 1.0f;
@@ -35,6 +39,9 @@ bool RSCubicBezierInterpolator::Marshalling(Parcel& parcel) const
     if (!parcel.WriteUint16(InterpolatorType::CUBIC_BEZIER)) {
         return false;
     }
+    if (!parcel.WriteUint64(id_)) {
+        return false;
+    }
     if (!(parcel.WriteFloat(controllx1_) && parcel.WriteFloat(controlly1_) && parcel.WriteFloat(controllx2_) &&
             parcel.WriteFloat(controlly2_))) {
         return false;
@@ -43,6 +50,10 @@ bool RSCubicBezierInterpolator::Marshalling(Parcel& parcel) const
 }
 RSCubicBezierInterpolator* RSCubicBezierInterpolator::Unmarshalling(Parcel& parcel)
 {
+    auto id = parcel.ReadUint64();
+    if (id == 0) {
+        return nullptr;
+    }
     float x1 = 0;
     float y1 = 0;
     float x2 = 0;
@@ -50,13 +61,15 @@ RSCubicBezierInterpolator* RSCubicBezierInterpolator::Unmarshalling(Parcel& parc
     if (!(parcel.ReadFloat(x1) && parcel.ReadFloat(y1) && parcel.ReadFloat(x2) && parcel.ReadFloat(y2))) {
         return nullptr;
     }
-    return new RSCubicBezierInterpolator(x1, y1, x2, y2);
+    return new RSCubicBezierInterpolator(id, x1, y1, x2, y2);
 }
+
 float RSCubicBezierInterpolator::GetCubicBezierValue(const float time, const float ctr1, const float ctr2) const
 {
     return THIRD_RDER * (1.0f - time) * (1.0f - time) * time * ctr1 + THIRD_RDER * (1.0f - time) * time * time * ctr2 +
            time * time * time;
 }
+
 int RSCubicBezierInterpolator::BinarySearch(float key) const
 {
     int low = 0;

@@ -33,6 +33,7 @@ public:
     [[nodiscard]] static RSSpringInterpolator* Unmarshalling(Parcel& parcel);
 
 private:
+    RSSpringInterpolator(uint64_t id, float response, float dampingRatio, float initialVelocity);
     float estimatedDuration_ = 0.0f;
 };
 } // namespace Rosen

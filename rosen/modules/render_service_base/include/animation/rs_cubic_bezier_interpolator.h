@@ -16,15 +16,16 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_CUBIC_BEZIER_INTERPOLATOR_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_CUBIC_BEZIER_INTERPOLATOR_H
 
-#include "animation/rs_interpolator.h"
 #include <cinttypes>
+
+#include "animation/rs_interpolator.h"
 #include "common/rs_common_def.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSB_EXPORT RSCubicBezierInterpolator : public RSInterpolator {
 public:
-    explicit RSCubicBezierInterpolator(float ctrx1, float ctry1, float ctrx2, float ctry2);
+    RSCubicBezierInterpolator(float ctrx1, float ctry1, float ctrx2, float ctry2);
     ~RSCubicBezierInterpolator() override = default;
 
     float InterpolateImpl(float input) const override;
@@ -33,6 +34,7 @@ public:
     [[nodiscard]] static RSCubicBezierInterpolator* Unmarshalling(Parcel& parcel);
 
 private:
+    RSCubicBezierInterpolator(uint64_t id, float ctrx1, float ctry1, float ctrx2, float ctry2);
     float GetCubicBezierValue(const float time, const float ctr1, const float ctr2) const;
 
     int BinarySearch(float key) const;

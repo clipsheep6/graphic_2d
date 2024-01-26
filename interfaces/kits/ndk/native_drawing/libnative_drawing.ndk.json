@@ -76,6 +76,7 @@
     { "name": "OH_Drawing_FontGetTypeface" },
     { "name": "OH_Drawing_FontSetLinearMetrics" },
     { "name": "OH_Drawing_FontGetMetrics" },
+    { "name": "OH_Drawing_FontGetTextSize" },
     { "name": "OH_Drawing_MaskFilterCreateBlur" },
     { "name": "OH_Drawing_MaskFilterDestroy" },
     { "name": "OH_Drawing_MatrixCreate" },

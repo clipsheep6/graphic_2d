@@ -77,6 +77,17 @@ float OH_Drawing_RectGetHeight(OH_Drawing_Rect* cRect);
  */
 void OH_Drawing_RectDestroy(OH_Drawing_Rect*);
 
+/**
+ * @brief Obtains the width of a rect.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @return Returns the width.
+ * @since 12
+ * @version 1.0
+ */
+float OH_Drawing_RectGetWidth(OH_Drawing_Rect*);
+
 #ifdef __cplusplus
 }
 #endif

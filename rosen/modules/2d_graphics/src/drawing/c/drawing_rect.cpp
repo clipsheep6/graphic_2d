@@ -44,3 +44,12 @@ void OH_Drawing_RectDestroy(OH_Drawing_Rect* cRect)
 {
     delete CastToRect(cRect);
 }
+
+float OH_Drawing_RectGetWidth(OH_Drawing_Rect* cRect)
+{
+    Rect* rect = CastToRect(cRect);
+    if (rect == nullptr) {
+        return 0;
+    }
+    return rect->GetWidth();
+}

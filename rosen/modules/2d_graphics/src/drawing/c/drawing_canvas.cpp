@@ -227,6 +227,18 @@ void OH_Drawing_CanvasDrawPath(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Path
     canvas->DrawPath(CastToPath(*cPath));
 }
 
+void OH_Drawing_CanvasDrawPoint(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Point* cPoint)
+{
+    if (cPoint == nullptr) {
+        return;
+    }
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return;
+    }
+    canvas->DrawPoint(CastToPoint(*cPoint));
+}
+
 void OH_Drawing_CanvasDrawBitmap(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Bitmap* cBitmap, float left, float top)
 {
     if (cBitmap == nullptr) {
@@ -286,6 +298,15 @@ void OH_Drawing_CanvasDrawArc(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Rect*
         return;
     }
     canvas->DrawArc(CastToRect(*cRect), startAngle, sweepAngle);
+}
+
+void OH_Drawing_CanvasDrawColor(OH_Drawing_Canvas* cCanvas, uint32_t color, OH_Drawing_BlendMode cBlendMode)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return;
+    }
+    canvas->DrawColor(color, static_cast<BlendMode>(cBlendMode));
 }
 
 void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_RoundRect* cRoundRect)

@@ -37,6 +37,11 @@ static const Rect& CastToRect(const OH_Drawing_Rect& cRect)
     return reinterpret_cast<const Rect&>(cRect);
 }
 
+static const Rect* CastToRect(const OH_Drawing_Rect* cRect)
+{
+    return reinterpret_cast<const Rect*>(cRect);
+}
+
 static const RoundRect& CastToRoundRect(const OH_Drawing_RoundRect& cRoundRect)
 {
     return reinterpret_cast<const RoundRect&>(cRoundRect);
@@ -118,6 +123,19 @@ void OH_Drawing_PathAddRect(OH_Drawing_Path* cPath, float left,
     path->AddRect(left, top, right, bottom, static_cast<PathDirection>(dir));
 }
 
+void OH_Drawing_PathAddOval(OH_Drawing_Path* cPath,
+    const OH_Drawing_Rect* oval, OH_Drawing_PathDirection dir)
+{
+    if (oval == nullptr) {
+        return;
+    }
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return;
+    }
+    path->AddOval(CastToRect(*oval), static_cast<PathDirection>(dir));
+}
+
 void OH_Drawing_PathAddRoundRect(OH_Drawing_Path* cPath,
     const OH_Drawing_RoundRect* roundRect, OH_Drawing_PathDirection dir)
 {
@@ -142,6 +160,15 @@ void OH_Drawing_PathAddArc(OH_Drawing_Path* cPath,
         return;
     }
     path->AddArc(CastToRect(*oval), startAngle, sweepAngle);
+}
+
+void OH_Drawing_PathAddCircle(OH_Drawing_Path* cPath, float x, float y, float radius, OH_Drawing_PathDirection dir)
+{
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return;
+    }
+    path->AddCircle(x, y, radius, static_cast<PathDirection>(dir));
 }
 
 void OH_Drawing_PathAddPath(OH_Drawing_Path* cPath,
@@ -186,6 +213,21 @@ void OH_Drawing_SetFillStyle(OH_Drawing_Path* cPath, OH_Drawing_PathFillType fil
         return;
     }
     path->SetFillStyle(static_cast<PathFillType>(fillstyle));
+}
+
+void OH_Drawing_PathGetBounds(OH_Drawing_Path* cPath, OH_Drawing_Rect* cRect)
+{
+    if (cRect == nullptr) {
+        return;
+    }
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return;
+    }
+    Rect* outRect = const_cast<Rect*>(CastToRect(cRect));
+    Rect rect = path->GetBounds();
+    *outRect = Rect(rect.GetLeft(), rect.GetTop(),
+        rect.GetRight(), rect.GetBottom());
 }
 
 void OH_Drawing_PathClose(OH_Drawing_Path* cPath)

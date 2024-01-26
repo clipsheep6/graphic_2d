@@ -200,6 +200,17 @@ void OH_Drawing_CanvasDrawLine(OH_Drawing_Canvas*, float x1, float y1, float x2,
 void OH_Drawing_CanvasDrawPath(OH_Drawing_Canvas*, const OH_Drawing_Path*);
 
 /**
+ * @brief Draws a point.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param OH_Drawing_Point Indicates the pointer to an <b>OH_Drawing_Point</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawPoint(OH_Drawing_Canvas*, const OH_Drawing_Point*);
+
+/**
  * @brief Draws a bitmap.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -533,6 +544,18 @@ bool OH_Drawing_CanvasReadPixels(OH_Drawing_Canvas*, OH_Drawing_Image_Info*,
  * @version 1.0
  */
 bool OH_Drawing_CanvasReadPixelsToBitmap(OH_Drawing_Canvas*, OH_Drawing_Bitmap*, int32_t srcX, int32_t srcY);
+
+/**
+ * @brief Draws Color.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param color Indicates the color to set, which is a 32-bit (ARGB) variable.
+ * @param cBlendMode Indicates the blend mode.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasDrawColor(OH_Drawing_Canvas* cCanvas, uint32_t color, OH_Drawing_BlendMode cBlendMode);
 
 #ifdef __cplusplus
 }

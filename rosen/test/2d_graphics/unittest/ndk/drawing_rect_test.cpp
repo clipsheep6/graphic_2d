@@ -15,6 +15,9 @@
 
 #include "gtest/gtest.h"
 
+#include "c/drawing_color.h"
+#include "c/drawing_filter.h"
+#include "c/drawing_mask_filter.h"
 #include "c/drawing_rect.h"
 
 using namespace testing;
@@ -37,6 +40,45 @@ void NativeDrawingRectTest::SetUp() {}
 void NativeDrawingRectTest::TearDown() {}
 
 /*
+ * @tc.name: NativeDrawingRectTest_CreateAndDestroy
+ * @tc.desc: test for create Rect and destroy Rect.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingRectTest, NativeDrawingRectTest_CreateAndDestroy, TestSize.Level1)
+{
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(100, 200, 500, 300);
+    EXPECT_NE(nullptr, rect);
+    OH_Drawing_RectDestroy(rect);
+}
+
+/*
+ * @tc.name: NativeDrawingRectTest_Intersect
+ * @tc.desc: test for the Intersect methods of Rect.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingRectTest, NativeDrawingRectTest_Intersect, TestSize.Level1)
+{
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(100, 200, 500, 300);
+    EXPECT_NE(nullptr, rect);
+
+    OH_Drawing_Rect *other1 = OH_Drawing_RectCreate(300, 250, 600, 400);
+    EXPECT_NE(nullptr, other1);
+
+    OH_Drawing_Rect *other2 = OH_Drawing_RectCreate(600, 400, 700, 500);
+    EXPECT_NE(nullptr, other2);
+
+    bool ret = OH_Drawing_RectIntersect(rect, other1);
+    EXPECT_EQ(ret, true);
+
+    ret = OH_Drawing_RectIntersect(rect, other2);
+    EXPECT_EQ(ret, false);
+
+    OH_Drawing_RectDestroy(rect);
+    OH_Drawing_RectDestroy(other1);
+    OH_Drawing_RectDestroy(other2);
+}
  * @tc.name: NativeDrawingRectTest001
  * @tc.desc: test for get height of rect.
  * @tc.type: FUNC

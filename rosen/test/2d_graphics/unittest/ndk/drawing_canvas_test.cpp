@@ -565,6 +565,19 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawTextBlob, TestSize
     OH_Drawing_FontDestroy(nullptr);
     OH_Drawing_TypefaceDestroy(nullptr);
 }
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_DrawColor
+ * @tc.desc: test for OH_Drawing_CanvasDrawColor.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawColor, TestSize.Level1)
+{
+    OH_Drawing_CanvasDrawColor(canvas_, 0xFFFF0000, BLEND_MODE_DARKEN);
+    OH_Drawing_CanvasDrawColor(canvas_, 0xFF00FFFF, BLEND_MODE_SRC_OVER);
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

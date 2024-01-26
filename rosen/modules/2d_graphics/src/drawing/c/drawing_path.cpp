@@ -118,6 +118,19 @@ void OH_Drawing_PathAddRect(OH_Drawing_Path* cPath, float left,
     path->AddRect(left, top, right, bottom, static_cast<PathDirection>(dir));
 }
 
+void OH_Drawing_PathAddOval(OH_Drawing_Path* cPath,
+    const OH_Drawing_Rect* oval, OH_Drawing_PathDirection dir)
+{
+    if (oval == nullptr) {
+        return;
+    }
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return;
+    }
+    path->AddOval(CastToRect(*oval), static_cast<PathDirection>(dir));
+}
+
 void OH_Drawing_PathAddRoundRect(OH_Drawing_Path* cPath,
     const OH_Drawing_RoundRect* roundRect, OH_Drawing_PathDirection dir)
 {

@@ -300,6 +300,15 @@ void OH_Drawing_CanvasDrawArc(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Rect*
     canvas->DrawArc(CastToRect(*cRect), startAngle, sweepAngle);
 }
 
+void OH_Drawing_CanvasDrawColor(OH_Drawing_Canvas* cCanvas, uint32_t color, OH_Drawing_BlendMode cBlendMode)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return;
+    }
+    canvas->DrawColor(color, static_cast<BlendMode>(cBlendMode));
+}
+
 void OH_Drawing_CanvasDrawRoundRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_RoundRect* cRoundRect)
 {
     if (cRoundRect == nullptr) {

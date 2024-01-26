@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "c/drawing_path.h"
+#include "c/drawing_rect.h"
 #include "draw/path.h"
 #include "utils/scalar.h"
 
@@ -165,12 +166,19 @@ HWTEST_F(NativeDrawingPathTest, NativeDrawingPathTest_path009, TestSize.Level1)
 
 /*
  * @tc.name: NativeDrawingPathTest_path010
+ * @tc.desc: test for PathAddOval func.
  * @tc.desc: test for PathGetBounds func.
  * @tc.type: FUNC
  * @tc.require: AR000GTO5R
  */
 HWTEST_F(NativeDrawingPathTest, NativeDrawingPathTest_path010, TestSize.Level1)
 {
+    OH_Drawing_Path* path9 = OH_Drawing_PathCreate();
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(0, 100, 500, 400);
+    OH_Drawing_PathAddOval(path9, rect, PATH_DIRECTION_CW);
+    EXPECT_TRUE(IsScalarAlmostEqual(reinterpret_cast<Path*>(path9)->GetBounds().GetWidth(), 500.0));
+    EXPECT_TRUE(IsScalarAlmostEqual(reinterpret_cast<Path*>(path9)->GetBounds().GetHeight(), 300.0));
+    OH_Drawing_PathDestroy(path9);
     OH_Drawing_Path* path8 = OH_Drawing_PathCreate();
     OH_Drawing_PathLineTo(path8, 50, 40);
     OH_Drawing_PathClose(path8);

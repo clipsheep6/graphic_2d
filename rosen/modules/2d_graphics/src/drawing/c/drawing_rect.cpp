@@ -45,6 +45,17 @@ void OH_Drawing_RectDestroy(OH_Drawing_Rect* cRect)
     delete CastToRect(cRect);
 }
 
+bool OH_Drawing_RectIntersect(OH_Drawing_Rect* cRect, OH_Drawing_Rect* other)
+{
+    Rect* rect = CastToRect(cRect);
+    Rect* otherRect = CastToRect(other);
+
+    if ((rect == nullptr) || (otherRect == nullptr)) {
+        return false;
+    }
+
+    return rect->Intersect(*otherRect);
+}
 float OH_Drawing_RectGetWidth(OH_Drawing_Rect* cRect)
 {
     Rect* rect = CastToRect(cRect);

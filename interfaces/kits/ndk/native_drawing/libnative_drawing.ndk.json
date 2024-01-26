@@ -106,6 +106,7 @@
     { "name": "OH_Drawing_PathAddRoundRect" },
     { "name": "OH_Drawing_PathAddOval" },
     { "name": "OH_Drawing_PathAddArc" },
+    { "name": "OH_Drawing_PathAddCircle" },
     { "name": "OH_Drawing_PathAddPath" },
     { "name": "OH_Drawing_PathContains" },
     { "name": "OH_Drawing_PathTransform" },

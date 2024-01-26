@@ -157,6 +157,15 @@ void OH_Drawing_PathAddArc(OH_Drawing_Path* cPath,
     path->AddArc(CastToRect(*oval), startAngle, sweepAngle);
 }
 
+void OH_Drawing_PathAddCircle(OH_Drawing_Path* cPath, float x, float y, float radius, OH_Drawing_PathDirection dir)
+{
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return;
+    }
+    path->AddCircle(x, y, radius, static_cast<PathDirection>(dir));
+}
+
 void OH_Drawing_PathAddPath(OH_Drawing_Path* cPath,
     const OH_Drawing_Path* src, const OH_Drawing_Matrix* matrix)
 {

@@ -187,6 +187,20 @@ HWTEST_F(NativeDrawingPathTest, NativeDrawingPathTest_path010, TestSize.Level1)
     EXPECT_TRUE(IsScalarAlmostEqual(reinterpret_cast<Rect*>(rect)->GetBottom(), 40.0));
     OH_Drawing_PathDestroy(path8);
 }
+
+/*
+ * @tc.name: NativeDrawingPathTest_path011
+ * @tc.desc: test for PathAddCircle func.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingPathTest, NativeDrawingPathTest_path011, TestSize.Level1)
+{
+    OH_Drawing_Path* path11 = OH_Drawing_PathCreate();
+    OH_Drawing_PathAddCircle(path11, 50, 50, 40, PATH_DIRECTION_CW);
+    OH_Drawing_PathClose(path11);
+    OH_Drawing_PathDestroy(path11);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

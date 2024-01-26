@@ -658,7 +658,7 @@ bool RSMainThread::CheckParallelSubThreadNodesStatus()
             if (node->IsAppWindow()) {
                 pid = ExtractPid(node->GetId());
             } else if (node->IsLeashWindow()) {
-                for (auto& child : node->GetSortedChildren()) {
+                for (auto& child : *node->GetSortedChildren()) {
                     auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
                     if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
                         pid = ExtractPid(child->GetId());
@@ -1016,7 +1016,7 @@ bool RSMainThread::CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const
         if (node->GetId() == appNodeId) {
             return true;
         }
-        for (auto& child : node->GetSortedChildren()) {
+        for (auto& child : *node->GetSortedChildren()) {
             auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
             if (surfaceNode && surfaceNode->GetId() == appNodeId) {
                 return true;
@@ -1102,7 +1102,7 @@ bool RSMainThread::IsLastFrameUIFirstEnabled(NodeId appNodeId) const
                 return true;
             }
         } else {
-            for (auto& child : node->GetSortedChildren()) {
+            for (auto& child : *node->GetSortedChildren()) {
                 auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
                 if (surfaceNode && surfaceNode->IsAppWindow() && surfaceNode->GetId() == appNodeId) {
                     return true;
@@ -1498,7 +1498,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         }
         if (IsUIFirstOn()) {
             auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
-                rootNode->GetSortedChildren().front());
+                rootNode->GetFirstChild());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
             std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
             RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes);
@@ -1752,8 +1752,7 @@ void RSMainThread::CalcOcclusion()
     }
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
     if (node->GetChildrenCount()== 1) {
-        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
-            node->GetSortedChildren().front());
+        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node->GetFirstChild());
         if (displayNode) {
             curAllSurfaces = displayNode->GetCurAllSurfaces();
         }
@@ -2326,7 +2325,7 @@ bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootN
 
     (*RemoveStoppedThreads)();
 
-    auto children = rootNode->GetSortedChildren();
+    auto children = *rootNode->GetSortedChildren();
     bool animate_ = doWindowAnimate_;
     for (auto it = children.rbegin(); it != children.rend(); it++) {
         auto child = *it;
@@ -2916,16 +2915,13 @@ void RSMainThread::UpdateRogSizeIfNeeded()
     if (!rootNode) {
         return;
     }
-    std::list<RSBaseRenderNode::SharedPtr> children = rootNode->GetSortedChildren();
-    if (!children.empty()) {
-        auto child = children.front();
-        if (child != nullptr && child->IsInstanceOf<RSDisplayRenderNode>()) {
-            auto displayNode = child->ReinterpretCastTo<RSDisplayRenderNode>();
-            if (displayNode) {
-                auto screenManager_ = CreateOrGetScreenManager();
-                screenManager_->SetRogScreenResolution(displayNode->GetScreenId(),
-                    displayNode->GetRogWidth(), displayNode->GetRogHeight());
-            }
+    auto child = rootNode->GetFirstChild();
+    if (child != nullptr && child->IsInstanceOf<RSDisplayRenderNode>()) {
+        auto displayNode = child->ReinterpretCastTo<RSDisplayRenderNode>();
+        if (displayNode) {
+            auto screenManager_ = CreateOrGetScreenManager();
+            screenManager_->SetRogScreenResolution(
+                displayNode->GetScreenId(), displayNode->GetRogWidth(), displayNode->GetRogHeight());
         }
     }
 }
@@ -2939,11 +2935,11 @@ void RSMainThread::UpdateUIFirstSwitch()
     if (!rootNode) {
         return;
     }
-    auto sortedChildren = rootNode->GetSortedChildren();
-    if (sortedChildren.empty()) {
+    auto firstChildren = rootNode->GetFirstChild();
+    if (!firstChildren) {
         return;
     }
-    auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(sortedChildren.front());
+    auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(firstChildren);
     if (!displayNode) {
         return;
     }

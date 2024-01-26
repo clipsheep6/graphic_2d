@@ -177,6 +177,20 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawPath, TestSize.Lev
 }
 
 /*
+ * @tc.name: NativeDrawingCanvasTest_DrawPoint
+ * @tc.desc: test for OH_Drawing_CanvasDrawPoint.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawPoint, TestSize.Level1)
+{
+   
+    OH_Drawing_Point* point_ = OH_Drawing_PointCreate(360,500);  
+    OH_Drawing_CanvasDrawPoint(canvas_,point_);
+    OH_Drawing_PointDestroy(point_);
+}
+
+/*
  * @tc.name: NativeDrawingCanvasTest_SaveAndRestore
  * @tc.desc: test for OH_Drawing_CanvasSave & OH_Drawing_CanvasRestore.
  * @tc.type: FUNC

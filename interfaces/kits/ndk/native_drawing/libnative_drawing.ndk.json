@@ -34,6 +34,7 @@
     { "name": "OH_Drawing_CanvasDrawLine" },
     { "name": "OH_Drawing_CanvasDrawOval" },
     { "name": "OH_Drawing_CanvasDrawPath" },
+    { "name": "OH_Drawing_CanvasDrawPoint" },
     { "name": "OH_Drawing_CanvasDrawRect" },
     { "name": "OH_Drawing_CanvasDrawRoundRect" },
     { "name": "OH_Drawing_CanvasDrawTextBlob" },

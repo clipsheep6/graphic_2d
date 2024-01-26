@@ -110,6 +110,7 @@
     { "name": "OH_Drawing_SetFillStyle" },
     { "name": "OH_Drawing_PathClose" },
     { "name": "OH_Drawing_PathReset" },
+    { "name": "OH_Drawing_PathGetBounds" },   
     { "name": "OH_Drawing_PenCreate" },
     { "name": "OH_Drawing_PenDestroy" },
     { "name": "OH_Drawing_PenGetAlpha" },

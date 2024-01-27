@@ -2857,4 +2857,341 @@ HWTEST_F(RSUniRenderVisitorTest, ProcessShadowFirst001, TestSize.Level1)
     rsUniRenderVisitor->ProcessShadowFirst(*node, true);
 }
 
+/**
+ * @tc.name: UpdateSubTreeInCache003
+ * @tc.desc: Test RSUniRenderVisitorTest.UpdateSubTreeInCache
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, UpdateSubTreeInCache003, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    // prepare child lists
+    auto childLists = std::list<RSRenderNode::SharedPtr>();
+    childLists.emplace_back(nullptr);
+    auto child1 = std::make_shared<RSSurfaceRenderNode>(1);
+    childLists.emplace_back(child1);
+    auto child2 = std::make_shared<RSEffectRenderNode>(2);
+    childLists.emplace_back(child2);
+    rsUniRenderVisitor->UpdateSubTreeInCache(node, node->GetSortedChildren());
+}
+
+/**
+ * @tc.name: PrepareEffectNodeIfCacheReuse001
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareEffectNodeIfCacheReuse001 
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareEffectNodeIfCacheReuse001, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->PrepareEffectNodeIfCacheReuse(node, nullptr);
+}
+
+/**
+ * @tc.name: PrepareEffectNodeIfCacheReuse002
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareEffectNodeIfCacheReuse002
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareEffectNodeIfCacheReuse002, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->curSurfaceDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
+    auto effectNode = std::make_shared<RSEffectRenderNode>(1);
+    rsUniRenderVisitor->PrepareEffectNodeIfCacheReuse(node, effectNode);
+}
+
+/**
+ * @tc.name: PrepareEffectNodeIfCacheReuse003
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareEffectNodeIfCacheReuse003
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareEffectNodeIfCacheReuse003, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->curSurfaceDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
+    auto effectNode = std::make_shared<RSEffectRenderNode>(1);
+    effectNode->GetMutableRenderProperties().needFilter_ = true;
+    rsUniRenderVisitor->PrepareEffectNodeIfCacheReuse(node, effectNode);
+}
+
+/**
+ * @tc.name: PrepareEffectNodeIfCacheReuse004
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareEffectNodeIfCacheReuse004
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareEffectNodeIfCacheReuse004, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->curSurfaceDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
+    auto effectNode = std::make_shared<RSEffectRenderNode>(1);
+    effectNode->GetMutableRenderProperties().needFilter_ = true;
+    effectNode->instanceRootNodeId_ = 0x0FFF;
+    rsUniRenderVisitor->curSurfaceNode_ = std::make_shared<RSSurfaceRenderNode>(0xFFF);
+    rsUniRenderVisitor->PrepareEffectNodeIfCacheReuse(node, effectNode);
+}
+
+/**
+ * @tc.name: DisableNodeCacheInSetting001
+ * @tc.desc: Test RSUniRenderVisitorTest.DisableNodeCacheInSetting001
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, DisableNodeCacheInSetting001, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto node = std::make_shared<RSRenderNode>(0);
+    rsUniRenderVisitor->DisableNodeCacheInSetting(*node);
+}
+
+/**
+ * @tc.name: DisableNodeCacheInSetting002
+ * @tc.desc: Test RSUniRenderVisitorTest.DisableNodeCacheInSetting001
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, DisableNodeCacheInSetting001, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto node = std::make_shared<RSRenderNode>(0);
+    node->drawingCacheType_ = RSDrawingCacheType::TARGETED_CACHE;
+    rsUniRenderVisitor->DisableNodeCacheInSetting(*node);
+}
+
+/**
+ * @tc.name: DisableNodeCacheInSetting003
+ * @tc.desc: Test RSUniRenderVisitorTest.DisableNodeCacheInSetting003
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, DisableNodeCacheInSetting001, TestSize.Level2)
+{
+    NodeId id = 0;
+    auto node = std::make_shared<RSRenderNode>(id);
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->firstVisitedCache_ = INVALID_NODEID;
+    auto node = std::make_shared<RSRenderNode>(0);
+    node->drawingCacheType_ = RSDrawingCacheType::TARGETED_CACHE;
+    rsUniRenderVisitor->DisableNodeCacheInSetting(*node);
+}
+
+/**
+ * @tc.name: IsFirstVisitedCacheForced
+ * @tc.desc: Test RSUniRenderVisitorTest.IsFirstVisitedCacheForced
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, IsFirstVisitedCacheForced, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->firstVisitedCache_ = INVALID_NODEID;
+    ASSERT_FALSE(rsUniRenderVisitor->IsFirstVisitedCacheForced());
+    rsUniRenderVisitor->firstVisitedCache_ = 1;
+    ASSERT_FALSE(rsUniRenderVisitor->IsFirstVisitedCacheForced());
+}
+
+/**
+ * @tc.name: SaveCurSurface
+ * @tc.desc: Test RSUniRenderVisitorTest.SaveCurSurface
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, SaveCurSurface, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isSubSurfaceEnabled_ = true;
+    auto manager = std::make_shared<RSDirtyRegionManager>();
+    auto node = std::make_shared<RSSurfaceRenderNode>(1);
+    rsUniRenderVisitor->SaveCurSurface(manager, node);
+}
+
+/**
+ * @tc.name: RestoreCurSurface
+ * @tc.desc: Test RSUniRenderVisitorTest.RestoreCurSurface
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, RestoreCurSurface, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isSubSurfaceEnabled_ = true;
+    auto manager = std::make_shared<RSDirtyRegionManager>();
+    auto node = std::make_shared<RSSurfaceRenderNode>(1);
+    rsUniRenderVisitor->SaveCurSurface(manager, node);
+    rsUniRenderVisitor->RestoreCurSurface(manager, node);
+}
+
+/**
+ * @tc.name: PrepareSubSurfaceNodes
+ * @tc.desc: Test RSUniRenderVisitorTest.PrepareSubSurfaceNodes
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareSubSurfaceNodes, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isSubSurfaceEnabled_ = true;
+    auto node = std::make_shared<RSSurfaceRenderNode>(1);
+    std::vector<std::weak_ptr<RSRenderNode>> ptrs;
+    auto subNode1 = std::make_shared<RSSurfaceRenderNode>(2);
+    RSDisplayNodeConfig config;
+    auto subNode2 = std::make_shared<RSDisplayRenderNode>(3, config);
+    ptrs.push_back(subNode1);
+    ptrs.push_back(subNode2);
+    node->subSurfaceNodes_[1] = ptrs;
+    rsUniRenderVisitor->PrepareSubSurfaceNodes(*node);
+}
+
+/**
+ * @tc.name: ProcessSubSurfaceNodes
+ * @tc.desc: Test RSUniRenderVisitorTest.ProcessSubSurfaceNodes
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, PrepareSubSurfaceNodes, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isSubSurfaceEnabled_ = true;
+    auto node = std::make_shared<RSSurfaceRenderNode>(1);
+    std::vector<std::weak_ptr<RSRenderNode>> ptrs;
+    auto subNode1 = std::make_shared<RSSurfaceRenderNode>(2);
+    RSDisplayNodeConfig config;
+    auto subNode2 = std::make_shared<RSDisplayRenderNode>(3, config);
+    ptrs.push_back(subNode1);
+    ptrs.push_back(subNode2);
+    node->subSurfaceNodes_[1] = ptrs;
+    rsUniRenderVisitor->ProcessSubSurfaceNodes(*node);
+}
+
+/**
+ * @tc.name: SetNodeCacheChangeStatus
+ * @tc.desc: Test RSUniRenderVisitorTest.SetNodeCacheChangeStatus
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, SetNodeCacheChangeStatus, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto parent = std::make_shared<RSSurfaceRenderNode>(1);
+    auto child = std::make_shared<RSSurfaceRenderNode>(2);
+    parent->AddChild(child);
+    child->SetChildHasFilter(true);
+    rsUniRenderVisitor->isDrawingCacheEnabled_ = true;
+    child->SetDrawingCacheType(RSDrawingCacheType::TARGETED_CACHE);
+    rsUniRenderVisitor->curCacheFilterRects_.push({});
+    rsUniRenderVisitor->SetNodeCacheChangeStatus(*child);
+}
+
+/**
+ * @tc.name: ClearTransparentBeforeSaveLayerTest002
+ * @tc.desc: Test RSUniRenderVisitorTest.ClearTransparentBeforeSaveLayerTest002
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, ClearTransparentBeforeSaveLayerTest002, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isHardwareForcedDisabled_ = false;
+    auto node = std::make_shared<RSSurfaceRenderNode>(1);
+    rsUniRenderVisitor->hardwareEnabledNodes_.push_back(node);
+    rsUniRenderVisitor->ClearTransparentBeforeSaveLayer();
+}
+
+/**
+ * @tc.name: CheckIfUIFirstSurfaceContentReusable001
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckIfUIFirstSurfaceContentReusable001
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckIfUIFirstSurfaceContentReusable001, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    bool assigned = false;
+    rsUniRenderVisitor->CheckIfUIFirstSurfaceContentReusable(nullptr, assigned);
+
+}
+
+/**
+ * @tc.name: CheckIfUIFirstSurfaceContentReusable002
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckIfUIFirstSurfaceContentReusable002
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckIfUIFirstSurfaceContentReusable002, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isUIFirst_ = true;
+    bool assigned = false;
+    auto node = std::make_shared<RSSurfaceRenderNode>(1);
+    rsUniRenderVisitor->CheckIfUIFirstSurfaceContentReusable(node, assigned);
+}
+
+/**
+ * @tc.name: CheckIfUIFirstSurfaceContentReusable003
+ * @tc.desc: Test RSUniRenderVisitorTest.CheckIfUIFirstSurfaceContentReusable003
+ *           node doesn't have Child
+ * @tc.type: FUNC
+ * @tc.require: issueI7UGLR
+ */
+HWTEST_F(RSUniRenderVisitorTest, CheckIfUIFirstSurfaceContentReusable003, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    rsUniRenderVisitor->isUIFirst_ = true;
+    bool assigned = false;
+    auto parent = std::make_shared<RSSurfaceRenderNode>(1);
+    auto child = std::make_shared<RSSurfaceRenderNode>(2);
+    rsUniRenderVisitor->CheckIfUIFirstSurfaceContentReusable(child, assigned);
+}
 } // OHOS::Rosen

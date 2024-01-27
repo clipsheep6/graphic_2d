@@ -62,7 +62,6 @@ public:
         std::shared_ptr<OHOS::AppExecFwk::EventHandler> && colorPickerThreadhandler);
 #endif
 
-    void ResetGrContext();
     void DumpMem(DfxString& log);
     float GetAppGpuMemoryInMB();
 

@@ -64,14 +64,10 @@ bool RSRenderService::Init()
 
     auto generator = CreateVSyncGenerator();
 
-    // The offset needs to be set
-    int64_t offset = 0;
-    if (!HgmCore::Instance().GetLtpoEnabled()) {
-        if (RSUniRenderJudgement::GetUniRenderEnabledType() == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
-            offset = UNI_RENDER_VSYNC_OFFSET;
-        }
-        rsVSyncController_ = new VSyncController(generator, offset);
-        appVSyncController_ = new VSyncController(generator, offset);
+    if (RSUniRenderJudgement::GetUniRenderEnabledType() == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL &&
+        !HgmCore::Instance().GetLtpoEnabled()) {
+        rsVSyncController_ = new VSyncController(generator, UNI_RENDER_VSYNC_OFFSET);
+        appVSyncController_ = new VSyncController(generator, UNI_RENDER_VSYNC_OFFSET);
     } else {
         rsVSyncController_ = new VSyncController(generator, 0);
         appVSyncController_ = new VSyncController(generator, 0);

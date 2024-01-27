@@ -114,7 +114,8 @@ void RSFilterCacheManager::PostPartialFilterRenderInit(const std::shared_ptr<RSD
     if (task_->isTaskRelease_.load()) {
         return;
     }
-    if (task_->cachedFirstFilter_ != nullptr && task_->isFirstInit_) {
+    if (task_->cachedFirstFilter_ != nullptr && task_->isFirstInit_ &&
+        task_->GetStatus() == CacheProcessStatus::DOING) {
         cachedFilteredSnapshot_ = task_->cachedFirstFilter_;
     } else {
         task_->cachedFirstFilter_ = nullptr;
@@ -127,6 +128,7 @@ void RSFilterCacheManager::PostPartialFilterRenderInit(const std::shared_ptr<RSD
 #else
         IsNearlyFullScreen(cachedSnapshot_->cachedRect_, canvasWidth, canvasHeight)) {
 #endif
+        task_->Reset();
         PostPartialFilterRenderTask(filter, dstRect);
     }
 }
@@ -192,12 +194,15 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
     ROSEN_LOGD("RSFilterCacheManager::RSFilterCacheTask::Render:%{public}p", this);
     if (cacheSurface_ == nullptr) {
         SetStatus(CacheProcessStatus::WAITING);
+        isFirstInit_ = true;
+        ROSEN_LOGE("RSFilterCacheManager::Render: cacheSurface_ is null");
         return false;
     }
     CHECK_CACHE_PROCESS_STATUS;
     auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(cacheSurface_.get());
     if (cacheCanvas == nullptr) {
         SetStatus(CacheProcessStatus::WAITING);
+        isFirstInit_ = true;
         ROSEN_LOGE("RSFilterCacheManager::Render: cacheCanvas is null");
         return false;
     }
@@ -242,8 +247,9 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
         std::unique_lock<std::mutex> lock(grBackendTextureMutex_);
         if (!threadImage->BuildFromTexture(*cacheCanvas->GetGPUContext(), cacheBackendTexture_.GetTextureInfo(),
                 surfaceOrigin, bitmapFormat, nullptr)) {
+            isFirstInit_ = true;
             SetStatus(CacheProcessStatus::WAITING);
-            ROSEN_LOGE("RSFilterCacheManager::Render: cacheCanvas is null");
+            ROSEN_LOGE("RSFilterCacheManager::Render: BuildFromTexture is null");
             return false;
         }
     }
@@ -259,6 +265,7 @@ bool RSFilterCacheManager::RSFilterCacheTask::Render()
 
 bool RSFilterCacheManager::RSFilterCacheTask::SaveFilteredImage()
 {
+    RS_TRACE_NAME_FMT("RSFilterCacheTask::SaveFilteredImage: task:%p", this);
     CHECK_CACHE_PROCESS_STATUS;
 #ifndef USE_ROSEN_DRAWING
     resultBackendTexture_ =
@@ -294,7 +301,7 @@ void RSFilterCacheManager::RSFilterCacheTask::SwapInit()
 
 bool RSFilterCacheManager::RSFilterCacheTask::SetDone()
 {
-    RS_OPTIONAL_TRACE_FUNC();
+    RS_TRACE_NAME_FMT("RSFilterCacheTask::SetDone:%d  task:%p", isTaskRelease_.load(), this);
     CHECK_CACHE_PROCESS_STATUS;
     if (isTaskRelease_.load()) {
         SetStatus(CacheProcessStatus::WAITING);
@@ -303,6 +310,7 @@ bool RSFilterCacheManager::RSFilterCacheTask::SetDone()
     }
     return true;
 }
+
 #ifndef USE_ROSEN_DRAWING
 bool RSFilterCacheManager::IsNearlyFullScreen(SkISize imageSize, int32_t canvasWidth, int32_t canvasHeight)
 #else

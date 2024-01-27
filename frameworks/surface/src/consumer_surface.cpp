@@ -263,8 +263,10 @@ GSError ConsumerSurface::SetUserData(const std::string &key, const std::string &
     }
     userData_[key] = val;
     std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
-    if (onUserDataChange_ != nullptr) {
-        onUserDataChange_(key, val);
+    auto iter = onUserDataChange_.begin();
+    while (iter != onUserDataChange_.end()) {
+        iter->second(key, val);
+        iter++;
     }
 
     return GSERROR_OK;
@@ -314,17 +316,36 @@ GSError ConsumerSurface::UnregisterConsumerListener()
     return consumer_->UnregisterConsumerListener();
 }
 
-GSError ConsumerSurface::RegisterUserDataChangeListener(OnUserDataChangeFunc func)
+GSError ConsumerSurface::RegisterUserDataChangeListener(const std::string &funcName, OnUserDataChangeFunc func)
 {
     std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
-    onUserDataChange_ = func;
+    if (onUserDataChange_.find(funcName) != onUserDataChange_.end()) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    
+    onUserDataChange_[funcName] = func;
     return GSERROR_OK;
 }
 
-GSError ConsumerSurface::UnRegisterUserDataChangeListener()
+GSError ConsumerSurface::UnRegisterUserDataChangeListener(const std::string &funcName)
 {
     std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
-    onUserDataChange_ = nullptr;
+    auto iter = onUserDataChange_.begin();
+    while (iter != onUserDataChange_.end()) {
+        if (iter->first == funcName) {
+            onUserDataChange_.erase(iter);
+            return GSERROR_OK;
+        }
+        iter++;
+    }
+
+    return GSERROR_INVALID_ARGUMENTS;
+}
+
+GSError ConsumerSurface::ClearUserDataChangeListener()
+{
+    std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
+    onUserDataChange_.clear();
     return GSERROR_OK;
 }
 

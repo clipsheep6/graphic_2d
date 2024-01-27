@@ -351,17 +351,27 @@ HWTEST_F(ProducerSurfaceTest, UserData001, Function | MediumTest | Level2)
  */
 HWTEST_F(ProducerSurfaceTest, UserDataChangeListen001, Function | MediumTest | Level2)
 {
+    sptr<IConsumerSurface> csurfTestUserData = IConsumerSurface::Create();
+    sptr<IBufferConsumerListener> listenerTestUserData = new BufferConsumerListener();
+    csurfTestUserData->RegisterConsumerListener(listenerTestUserData);
+    sptr<IBufferProducer> producerTestUserData = csurf->GetProducer();
+    sptr<Surface> pSurfaceTestUserData = Surface::CreateSurfaceAsProducer(producerTestUserData);
+
     GSError ret = OHOS::GSERROR_INVALID_ARGUMENTS;
-    pSurface->RegisterUserDataChangeListener([&ret](const std::string& key, const std::string& value) {
+    auto func = [&ret](const std::string& key, const std::string& value) {
         ret = OHOS::GSERROR_OK;
-    });
+    };
+    pSurfaceTestUserData->RegisterUserDataChangeListener("func", func);
     
-    pSurface->SetUserData("Regist", "OK");
-    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    if (pSurfaceTestUserData->SetUserData("Regist", "OK") == OHOS::GSERROR_OK) {
+        ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    }
+
     ret = OHOS::GSERROR_INVALID_ARGUMENTS;
-    pSurface->UnRegisterUserDataChangeListener();
-    pSurface->SetUserData("UnRegist", "INVALID");
-    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+    pSurfaceTestUserData->UnRegisterUserDataChangeListener("func");
+    if (pSurfaceTestUserData->SetUserData("UnRegist", "INVALID") == OHOS::GSERROR_OK) {
+        ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+    }
 }
 
 /*

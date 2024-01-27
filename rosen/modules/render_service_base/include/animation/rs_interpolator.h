@@ -21,6 +21,7 @@
 #include <memory>
 #include <parcel.h>
 #include <refbase.h>
+#include <unordered_map>
 #include <vector>
 
 #include "common/rs_macros.h"
@@ -49,7 +50,7 @@ public:
 protected:
     RSInterpolator();
     RSInterpolator(uint64_t id) : id_(id) {};
-    const uint64_t id_;
+    uint64_t id_;
 
 private:
     virtual float InterpolateImpl(float input) const = 0;

@@ -35,7 +35,9 @@ RSInterpolator::RSInterpolator() : id_(GenerateId()) {}
 
 RSInterpolator::~RSInterpolator()
 {
-    interpolators_.erase(id_);
+    if (id_) {
+        interpolators_.erase(id_);
+    }
 }
 
 uint64_t RSInterpolator::GenerateId()
@@ -68,7 +70,7 @@ std::shared_ptr<RSInterpolator> RSInterpolator::Unmarshalling(Parcel& parcel)
     RSInterpolator* ret = nullptr;
     switch (interpolatorType) {
         case InterpolatorType::LINEAR:
-            ret = new LinearInterpolator();
+            ret = LinearInterpolator::Unmarshalling(parcel);
             break;
         case InterpolatorType::CUSTOM:
             ret = RSCustomInterpolator::Unmarshalling(parcel);
@@ -88,8 +90,10 @@ std::shared_ptr<RSInterpolator> RSInterpolator::Unmarshalling(Parcel& parcel)
     if (ret == nullptr) {
         return nullptr;
     }
+    // if we already have this id in cache, return it
     if (auto it = interpolators_.find(ret->id_); it != interpolators_.end() && !it->second.expired()) {
-        // if we already have this id in cache, return it
+        // avoid the destructor unregister the id from cache
+        ret->id_ = 0;
         delete ret;
         return it->second.lock();
     }

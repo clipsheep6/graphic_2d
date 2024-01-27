@@ -66,19 +66,17 @@ bool RSRenderService::Init()
 
     // The offset needs to be set
     int64_t offset = 0;
-    if (!HgmCore::Instance().GetLtpoEnabled()) {
-        if (RSUniRenderJudgement::GetUniRenderEnabledType() == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
-            offset = UNI_RENDER_VSYNC_OFFSET;
-        }
-        rsVSyncController_ = new VSyncController(generator, offset);
-        appVSyncController_ = new VSyncController(generator, offset);
-    } else {
-        rsVSyncController_ = new VSyncController(generator, 0);
-        appVSyncController_ = new VSyncController(generator, 0);
-        generator->SetVSyncMode(VSYNC_MODE_LTPO);
+    if (RSUniRenderJudgement::GetUniRenderEnabledType() == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL &&
+        !HgmCore::Instance().GetLtpoEnabled()) {
+        offset = UNI_RENDER_VSYNC_OFFSET;
     }
+    rsVSyncController_ = new VSyncController(generator, offset);
+    appVSyncController_ = new VSyncController(generator, offset);
     rsVSyncDistributor_ = new VSyncDistributor(rsVSyncController_, "rs");
     appVSyncDistributor_ = new VSyncDistributor(appVSyncController_, "app");
+    if (HgmCore::Instance().GetLtpoEnabled()) {
+        generator->SetVSyncMode(VSYNC_MODE_LTPO);
+    }
 
     mainThread_ = RSMainThread::Instance();
     if (mainThread_ == nullptr) {

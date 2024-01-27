@@ -2160,11 +2160,14 @@ void RSRenderNode::UpdateFilterCacheManagerWithCacheRegion(
 void RSRenderNode::OnTreeStateChanged()
 {
     if (!isOnTheTree_) {
+        // Keep a reference to fullChildrenList_ to prevent its deletion when swapping it
+        auto prevFullChildrenList = fullChildrenList_;
+
         // attempt to clear FullChildrenList, to avoid memory leak
         std::lock_guard<std::mutex> lock(fullChildrenListMutex_);
         isFullChildrenListValid_ = false;
         isChildrenSorted_ = false;
-        std::atomic_store(&fullChildrenList_, emptyChildrenList);
+        std::atomic_store_explicit(&fullChildrenList_, emptyChildrenList, std::memory_order_release);
     } else {
         SetDirty();
     }
@@ -2194,12 +2197,12 @@ bool RSRenderNode::HasDisappearingTransition(bool recursive) const
 
 RSRenderNode::ChildrenListSharedPtr RSRenderNode::GetChildren()
 {
-    return std::atomic_load(&fullChildrenList_);
+    return std:: atomic_load_explicit(&fullChildrenList_, std::memory_order_acquire);
 }
 
 RSRenderNode::ChildrenListSharedPtr RSRenderNode::GetSortedChildren()
 {
-    return std::atomic_load(&fullChildrenList_);
+    return std:: atomic_load_explicit(&fullChildrenList_, std::memory_order_acquire);
 }
 
 std::shared_ptr<RSRenderNode> RSRenderNode::GetFirstChild() const
@@ -2225,9 +2228,10 @@ void RSRenderNode::GenerateFullChildrenList()
 
     // both children_ and disappearingChildren_ are empty, no need to generate fullChildrenList_
     if (children_.empty() && disappearingChildren_.empty()) {
+        auto prevFullChildrenList = fullChildrenList_;
         isFullChildrenListValid_ = true;
         isChildrenSorted_ = true;
-        std::atomic_store(&fullChildrenList_, emptyChildrenList);
+        std::atomic_store_explicit(&fullChildrenList_, emptyChildrenList, std::memory_order_release);
         return;
     }
 
@@ -2278,13 +2282,16 @@ void RSRenderNode::GenerateFullChildrenList()
         return first->GetRenderProperties().GetPositionZ() < second->GetRenderProperties().GetPositionZ();
     });
 
-    // update flags
+    // Keep a reference to fullChildrenList_ to prevent its deletion when swapping it
+    auto prevFullChildrenList = fullChildrenList_;
+
+    // Update the flag to indicate that children are now valid and sorted
     isFullChildrenListValid_ = true;
     isChildrenSorted_ = true;
-    // Type conversion
+
+    // Move the fullChildrenList to fullChildrenList_ atomically
     ChildrenListSharedPtr constFullChildrenList = std::move(fullChildrenList);
-    // atomic assign
-    std::atomic_exchange(&fullChildrenList_, std::move(constFullChildrenList));
+    std:: atomic_store_explicit(&fullChildrenList_, constFullChildrenList, std::memory_order_release);
 }
 
 void RSRenderNode::ResortChildren()
@@ -2294,20 +2301,23 @@ void RSRenderNode::ResortChildren()
         return;
     }
 
-    // Copy on write
+    // Make a copy of the fullChildrenList for sorting
     auto fullChildrenList = std::make_shared<std::list<std::shared_ptr<RSRenderNode>>>(*fullChildrenList_);
 
-    // sort all children by z-order (note: std::list::sort is stable) if needed
+    // Sort the children by their z-order (note: std::list::sort is stable)
     fullChildrenList->sort([](const auto& first, const auto& second) -> bool {
         return first->GetRenderProperties().GetPositionZ() < second->GetRenderProperties().GetPositionZ();
     });
 
-    // update flags
+    // Keep a reference to fullChildrenList_ to prevent its deletion when swapping it
+    auto prevFullChildrenList = fullChildrenList_;
+
+    // Update the flag to indicate that children are now sorted
     isChildrenSorted_ = true;
-    // Type conversion
+
+    // Move the fullChildrenList to fullChildrenList_ atomically
     ChildrenListSharedPtr constFullChildrenList = std::move(fullChildrenList);
-    // atomic assign
-    std::atomic_exchange(&fullChildrenList_, std::move(constFullChildrenList));
+    std:: atomic_store_explicit(&fullChildrenList_, constFullChildrenList, std::memory_order_release);
 }
 
 uint32_t RSRenderNode::GetChildrenCount() const

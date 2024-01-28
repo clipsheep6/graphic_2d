@@ -119,11 +119,11 @@ OH_Drawing_TextBlob* OH_Drawing_TextBlobCreateFromString(const char* str,
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_TextBlob Indicates the pointer to an <b>OH_Drawing_TextBlob</b> object.
- * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @return OH_Drawing_Rect Indicates an <b>OH_Drawing_Rect</b> object.
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_TextBlobGetBounds(OH_Drawing_TextBlob*, OH_Drawing_Rect*);
+OH_Drawing_Rect OH_Drawing_TextBlobGetBounds(OH_Drawing_TextBlob*);
 
 /**
  * @brief Defines a run, supplies storage for glyphs and positions.

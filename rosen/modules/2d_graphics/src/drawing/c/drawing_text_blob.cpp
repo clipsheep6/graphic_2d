@@ -35,11 +35,6 @@ static const Font& CastToFont(const OH_Drawing_Font& cFont)
     return reinterpret_cast<const Font&>(cFont);
 }
 
-static const Rect* CastToRect(const OH_Drawing_Rect* cRect)
-{
-    return reinterpret_cast<const Rect*>(cRect);
-}
-
 static const Point* CastToPoint(const OH_Drawing_Point* cPoint)
 {
     return reinterpret_cast<const Point*>(cPoint);
@@ -90,7 +85,7 @@ OH_Drawing_TextBlob* OH_Drawing_TextBlobCreateFromString(const char* str,
     return (OH_Drawing_TextBlob*)textBlob.get();
 }
 
-void OH_Drawing_TextBlobGetBounds(OH_Drawing_TextBlob* cTextBlob, OH_Drawing_Rect* cRect)
+OH_Drawing_Rect OH_Drawing_TextBlobGetBounds(OH_Drawing_TextBlob* cTextBlob)
 {
     auto it = g_textBlobMap.find(cTextBlob);
     if (it == g_textBlobMap.end()) {
@@ -100,12 +95,8 @@ void OH_Drawing_TextBlobGetBounds(OH_Drawing_TextBlob* cTextBlob, OH_Drawing_Rec
     if (textblob == nullptr) {
         return;
     }
-    std::shared_ptr<Rect> rect = textblob->Bounds();
-    if (cRect != nullptr) {
-        Rect* outRect = const_cast<Rect*>(CastToRect(cRect));
-        *outRect = Rect(rect->GetLeft(), rect->GetTop(),
-            rect->GetRight(), rect->GetBottom());
-    }
+    Rect rect = textblob->Bounds();
+    OH_Drawing_Rect dRect = { rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom() };
 }
 
 const OH_Drawing_RunBuffer* OH_Drawing_TextBlobBuilderAllocRunPos(OH_Drawing_TextBlobBuilder* cTextBlobBuilder,
@@ -119,7 +110,8 @@ const OH_Drawing_RunBuffer* OH_Drawing_TextBlobBuilderAllocRunPos(OH_Drawing_Tex
     if (textBlobBuilder == nullptr) {
         return nullptr;
     }
-    return (const OH_Drawing_RunBuffer*)&textBlobBuilder->AllocRunPos(CastToFont(*cFont), count, CastToRect(cRect));
+    std::shared_ptr<Rect> dRect = std::make_shared<Rect>(cRect->left, cRect->top, cRect->right, cRect->bottom);
+    return (const OH_Drawing_RunBuffer*)&textBlobBuilder->AllocRunPos(CastToFont(*cFont), count, dRect.get());
 }
 
 OH_Drawing_TextBlob* OH_Drawing_TextBlobBuilderMake(OH_Drawing_TextBlobBuilder* cTextBlobBuilder)

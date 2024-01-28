@@ -100,6 +100,7 @@ scalar Font::MeasureText(const void* text, size_t byteLength, TextEncoding encod
 {
     return fontImpl_->MeasureText(text, byteLength, encoding);
 }
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

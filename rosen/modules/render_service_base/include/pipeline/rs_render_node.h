@@ -145,7 +145,7 @@ public:
 
     bool GetIsTextureExportNode() const;
 
-    using ChildrenListSharedPtr = std::shared_ptr<const std::list<std::shared_ptr<RSRenderNode>>>;
+    using ChildrenListSharedPtr = std::shared_ptr<const std::vector<std::shared_ptr<RSRenderNode>>>;
     // return children and disappeared children, not guaranteed to be sorted by z-index
     ChildrenListSharedPtr GetChildren();
     // return children and disappeared children, sorted by z-index

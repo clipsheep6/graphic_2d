@@ -215,7 +215,7 @@ const std::set<RSModifierType> BASIC_GEOTRANSFORM_ANIMATION_TYPE = {
     RSModifierType::TRANSLATE,
     RSModifierType::SCALE,
 };
-static const auto emptyChildrenList = std::make_shared<const std::list<std::shared_ptr<RSRenderNode>>>();
+static const auto emptyChildrenList = std::make_shared<const std::vector<std::shared_ptr<RSRenderNode>>>();
 }
 
 RSRenderNode::RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
@@ -2246,7 +2246,7 @@ void RSRenderNode::GenerateFullChildrenList()
     }
 
     // Step 0: Initialize
-    auto fullChildrenList = std::make_shared<std::list<std::shared_ptr<RSRenderNode>>>();
+    auto fullChildrenList = std::make_shared<std::vector<std::shared_ptr<RSRenderNode>>>();
 
     // Step 1: Copy all children into sortedChildren while checking and removing expired children.
     children_.remove_if([&](const auto& child) -> bool {
@@ -2287,8 +2287,8 @@ void RSRenderNode::GenerateFullChildrenList()
         }
     });
     
-    // Step 3: Sort all children by z-order (note: std::list::sort is stable)
-    fullChildrenList->sort([](const auto& first, const auto& second) -> bool {
+    // Step 3: Sort all children by z-order
+    std::stable_sort(fullChildrenList->begin(), fullChildrenList->end(), [](const auto& first, const auto& second) -> bool {
         return first->GetRenderProperties().GetPositionZ() < second->GetRenderProperties().GetPositionZ();
     });
 
@@ -2312,10 +2312,10 @@ void RSRenderNode::ResortChildren()
     }
 
     // Make a copy of the fullChildrenList for sorting
-    auto fullChildrenList = std::make_shared<std::list<std::shared_ptr<RSRenderNode>>>(*fullChildrenList_);
+    auto fullChildrenList = std::make_shared<std::vector<std::shared_ptr<RSRenderNode>>>(*fullChildrenList_);
 
-    // Sort the children by their z-order (note: std::list::sort is stable)
-    fullChildrenList->sort([](const auto& first, const auto& second) -> bool {
+    // Sort the children by their z-order
+    std::stable_sort(fullChildrenList->begin(), fullChildrenList->end(), [](const auto& first, const auto& second) -> bool {
         return first->GetRenderProperties().GetPositionZ() < second->GetRenderProperties().GetPositionZ();
     });
 

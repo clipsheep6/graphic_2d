@@ -563,11 +563,9 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         return;
     }
     bool isRotation = displayNode->IsRotationChanged();
-    std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-        std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
-        displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
-        std::copy(curAllSurfacesVec.begin(), curAllSurfacesVec.end(), std::back_inserter(curAllSurfaces));
+        displayNode->CollectSurface(displayNode, curAllSurfaces, true, true);
     } else {
         curAllSurfaces = *displayNode->GetSortedChildren();
     }
@@ -745,11 +743,9 @@ void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
     if (displayNode == nullptr) {
         return;
     }
-    std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-        std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
-        displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
-        std::copy(curAllSurfacesVec.begin(), curAllSurfacesVec.end(), std::back_inserter(curAllSurfaces));
+        displayNode->CollectSurface(displayNode, curAllSurfaces, true, true);
     } else {
         curAllSurfaces = *displayNode->GetSortedChildren();
     }

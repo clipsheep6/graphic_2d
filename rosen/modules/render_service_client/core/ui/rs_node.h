@@ -323,6 +323,7 @@ public:
 
     // Mark preferentially draw node and childrens
     void MarkNodeGroup(bool isNodeGroup, bool isForced = true);
+    void MarkNodeGroupFrozen(bool isFrozen);
 
     void MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer);
 
@@ -434,6 +435,7 @@ private:
     bool drivenFlag_ = false;
 
     bool isNodeGroup_ = false;
+    bool isNodeGroupFrozen_ = false;
 
     bool isNodeSingleFrameComposer_ = false;
 

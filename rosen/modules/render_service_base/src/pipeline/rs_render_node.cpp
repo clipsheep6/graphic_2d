@@ -2055,6 +2055,16 @@ void RSRenderNode::MarkNodeGroup(NodeGroupType type, bool isNodeGroup)
     }
 }
 
+void RSRenderNode::MarkNodeGroupFrozen(bool isFrozen)
+{
+    if (isNodeGroupFrozen_ == isFrozen) {
+        return;
+    }
+    RS_TRACE_NAME_FMT("MarkNodeGroupFrozen node %llu: %d->%d", isNodeGroupFrozen_, isFrozen);
+    isNodeGroupFrozen_ = isFrozen;
+    SetDirty();
+}
+
 void RSRenderNode::MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer, pid_t pid)
 {
     isNodeSingleFrameComposer_ = isNodeSingleFrameComposer;

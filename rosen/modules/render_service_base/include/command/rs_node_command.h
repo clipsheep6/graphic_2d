@@ -66,6 +66,7 @@ enum RSNodeCommandType : uint16_t {
     UNREGISTER_GEOMETRY_TRANSITION,
 
     MARK_NODE_GROUP,
+    MARK_NODE_GROUP_FROZEN,
     MARK_NODE_SINGLE_FRAME_COMPOSER,
 };
 
@@ -131,6 +132,7 @@ public:
 
     static void SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze);
     static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced);
+    static void MarkNodeGroupFrozen(RSContext& context, NodeId nodeId, bool isFrozen);
     static void MarkNodeSingleFrameComposer(RSContext& context, NodeId nodeId, bool isNodeFasterDraw, pid_t pid);
 
     static void MarkDrivenRender(RSContext& context, NodeId nodeId, bool flag);
@@ -224,6 +226,8 @@ ADD_COMMAND(RSSetFreeze,
     ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))
 ADD_COMMAND(RSMarkNodeGroup,
     ARG(RS_NODE, MARK_NODE_GROUP, RSNodeCommandHelper::MarkNodeGroup, NodeId, bool, bool))
+ADD_COMMAND(RSMarkNodeGroupFrozen,
+    ARG(RS_NODE, MARK_NODE_GROUP_FROZEN, RSNodeCommandHelper::MarkNodeGroupFrozen, NodeId, bool))
 ADD_COMMAND(RSMarkNodeSingleFrameComposer,
     ARG(RS_NODE, MARK_NODE_SINGLE_FRAME_COMPOSER, RSNodeCommandHelper::MarkNodeSingleFrameComposer,
         NodeId, bool, pid_t))

@@ -1794,9 +1794,9 @@ HWTEST_F(RSMainThreadTest, ClassifyRSTransactionData005, TestSize.Level1)
     auto data = std::make_unique<RSTransactionData>();
     data->SetIndex(1);
     data->payload_.resize(2);
-    data->payload_[0] = std::tuple<NodeId, 
+    data->payload_[0] = std::tuple<NodeId,
         FollowType, std::unique_ptr<RSCommand>>(0, FollowType::None, nullptr);
-    data->payload_[1] = std::tuple<NodeId, 
+    data->payload_[1] = std::tuple<NodeId,
         FollowType, std::unique_ptr<RSCommand>>(2, FollowType::FOLLOW_TO_PARENT, nullptr);
     mainThread->ClassifyRSTransactionData(data);
 }

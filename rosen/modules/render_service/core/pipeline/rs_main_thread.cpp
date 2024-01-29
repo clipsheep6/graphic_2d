@@ -1125,6 +1125,9 @@ void RSMainThread::CheckIfHardwareForcedDisabled()
     // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
     // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
     isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ || isMultiDisplay || hasColorFilter;
+    RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: CheckIfHardwareForcedDisabled isHardwareForcedDisabled_:%d "
+        "doWindowAnimate_:%d isMultiDisplay:%d hasColorFilter:%d",
+        isHardwareForcedDisabled_, doWindowAnimate_.load(), isMultiDisplay, hasColorFilter);
 }
 
 void RSMainThread::CollectInfoForDrivenRender()
@@ -1421,6 +1424,9 @@ void RSMainThread::WaitUntilUploadTextureTaskFinishedForGL()
 
 void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 {
+    if (isAccessibilityConfigChanged_) {
+        RSUniRenderVisitor::ClearRenderGroupCache();
+    }
     UpdateUIFirstSwitch();
     UpdateRogSizeIfNeeded();
     auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
@@ -1928,7 +1934,7 @@ void RSMainThread::SurfaceOcclusionCallback()
             } else if (!vectorEmpty && ROSEN_EQ(visibleAreaRatio, 1.0f)) {
                 level = partitionVector.size();
             } else if (!vectorEmpty && (visibleAreaRatio > 0.0f)) {
-                for (auto &point : partitionVector) {
+                for (const auto &point : partitionVector) {
                     if (visibleAreaRatio > point) {
                         level += 1;
                         continue;
@@ -2261,7 +2267,7 @@ void RSMainThread::SendCommands()
         RSMessageProcessor::Instance().GetAllTransactions());
     RSMessageProcessor::Instance().ReInitializeMovedMap();
     PostTask([this, transactionMapPtr]() {
-        for (auto& transactionIter : *transactionMapPtr) {
+        for (const auto& transactionIter : *transactionMapPtr) {
             auto pid = transactionIter.first;
             auto appIter = applicationAgentMap_.find(pid);
             if (appIter == applicationAgentMap_.end()) {

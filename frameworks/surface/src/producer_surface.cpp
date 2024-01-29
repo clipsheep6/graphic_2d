@@ -341,6 +341,13 @@ GSError ProducerSurface::SetUserData(const std::string &key, const std::string &
         return GSERROR_OUT_OF_RANGE;
     }
     userData_[key] = val;
+    std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
+    auto iter = onUserDataChange_.begin();
+    while (iter != onUserDataChange_.end()) {
+        iter->second(key, val);
+        iter++;
+    }
+
     return GSERROR_OK;
 }
 
@@ -400,6 +407,39 @@ GSError ProducerSurface::UnRegisterReleaseListener()
 GSError ProducerSurface::RegisterDeleteBufferListener(OnDeleteBufferFunc func, bool isForUniRedraw)
 {
     return GSERROR_NOT_SUPPORT;
+}
+
+GSError ProducerSurface::RegisterUserDataChangeListener(const std::string &funcName, OnUserDataChangeFunc func)
+{
+    std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
+    if (onUserDataChange_.find(funcName) != onUserDataChange_.end()) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    
+    onUserDataChange_[funcName] = func;
+    return GSERROR_OK;
+}
+
+GSError ProducerSurface::UnRegisterUserDataChangeListener(const std::string &funcName)
+{
+    std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
+    auto iter = onUserDataChange_.begin();
+    while (iter != onUserDataChange_.end()) {
+        if (iter->first == funcName) {
+            onUserDataChange_.erase(iter);
+            return GSERROR_OK;
+        }
+        iter++;
+    }
+
+    return GSERROR_INVALID_ARGUMENTS;
+}
+
+GSError ProducerSurface::ClearUserDataChangeListener()
+{
+    std::lock_guard<std::mutex> lockGuard(onUserDataChangeMutex_);
+    onUserDataChange_.clear();
+    return GSERROR_OK;
 }
 
 bool ProducerSurface::IsRemote()

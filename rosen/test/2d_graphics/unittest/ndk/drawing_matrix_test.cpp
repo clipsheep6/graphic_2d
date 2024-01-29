@@ -53,6 +53,26 @@ HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_SetMatrix, TestSize.Le
     OH_Drawing_MatrixDestroy(matrix);
     OH_Drawing_MatrixDestroy(nullptr);
 }
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_Scale
+ * @tc.desc: test for Scale.
+ * @tc.type: FUNC
+ * @tc.require: 
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_Scale, TestSize.Level1)
+{
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetMatrix(
+        matrix,
+        1, 0, 0,
+        0, -1, 0,
+        0, 0, 1);
+    ASSERT_TRUE(matrix != nullptr);
+    OH_Drawing_MatrixScale(matrix, 32.1f, 10.6f, 800, 90.1f);
+    OH_Drawing_MatrixScale(matrix, 16.5f, 50.6f, 150.8f, 560.9f);
+    OH_Drawing_MatrixDestroy(matrix);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

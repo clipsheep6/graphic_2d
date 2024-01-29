@@ -122,3 +122,14 @@ float OH_Drawing_FontGetMetrics(OH_Drawing_Font* cFont, OH_Drawing_Font_Metrics*
     cFontMetrics->bottom = metrics.fBottom;
     return ret;
 }
+
+float OH_Drawing_FontGetTextSize(OH_Drawing_Font* cFont)
+{
+    float ret = -1;
+    Font* font = CastToFont(cFont);
+    if (font == nullptr) {
+        return ret;
+    }
+    ret = font->GetSize();
+    return ret;
+}

@@ -121,6 +121,19 @@ void OH_Drawing_PathAddRect(OH_Drawing_Path* cPath, float left,
     path->AddRect(left, top, right, bottom, static_cast<PathDirection>(dir));
 }
 
+void OH_Drawing_PathAddOval(OH_Drawing_Path* cPath,
+    const OH_Drawing_Rect* oval, OH_Drawing_PathDirection dir)
+{
+    if (oval == nullptr) {
+        return;
+    }
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return;
+    }
+    path->AddOval(CastToRect(*oval), static_cast<PathDirection>(dir));
+}
+
 void OH_Drawing_PathAddRoundRect(OH_Drawing_Path* cPath,
     const OH_Drawing_RoundRect* roundRect, OH_Drawing_PathDirection dir)
 {
@@ -146,6 +159,15 @@ void OH_Drawing_PathAddArc(OH_Drawing_Path* cPath,
         return;
     }
     path->AddArc(CastToRect(*oval), startAngle, sweepAngle);
+}
+
+void OH_Drawing_PathAddCircle(OH_Drawing_Path* cPath, float x, float y, float radius, OH_Drawing_PathDirection dir)
+{
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return;
+    }
+    path->AddCircle(x, y, radius, static_cast<PathDirection>(dir));
 }
 
 void OH_Drawing_PathAddPath(OH_Drawing_Path* cPath,
@@ -211,4 +233,15 @@ void OH_Drawing_PathReset(OH_Drawing_Path* cPath)
         return;
     }
     path->Reset();
+}
+
+OH_Drawing_Rect* OH_Drawing_PathGetBounds(OH_Drawing_Path* cPath)
+{
+    Path* path = CastToPath(cPath);
+    if (path == nullptr) {
+        return nullptr;
+    }
+    Rect *rect = new Rect();
+    *rect = path->GetBounds();
+    return (OH_Drawing_Rect*)rect;
 }

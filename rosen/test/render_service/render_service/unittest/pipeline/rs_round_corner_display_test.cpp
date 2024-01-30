@@ -687,4 +687,139 @@ HWTEST_F(RSRoundCornerDisplayTest, RSRcdSurfaceRenderNode, TestSize.Level1)
     }
 }
 
+/*
+ * @tc.name: ProcessRcdSurfaceRenderNode1
+ * @tc.desc: Test ProcessRcdSurfaceRenderNode1
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSRoundCornerDisplayTest, ProcessRcdSurfaceRenderNode1, TestSize.Level1)
+{
+    // prepare test
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkImage> imgBottomPortrait;
+    SkBitmap bitmapBottomPortrait;
+#else
+    std::shared_ptr<Drawing::Image> imgBottomPortrait;
+    Drawing::Bitmap bitmapBottomPortrait;
+#endif
+    const char* path = "port_down.png";
+
+    auto& rcdInstance = RSSingleton<RoundCornerDisplay>::GetInstance();
+    rcdInstance.Init();
+    rcdInstance.LoadImg(path, imgBottomPortrait);
+    ASSERT_NE(imgBottomPortrait, nullptr);
+    rcdInstance.DecodeBitmap(imgBottomPortrait, bitmapBottomPortrait);
+
+    auto& rcdCfg = RSSingleton<rs_rcd::RCDConfig>::GetInstance();
+    rcdCfg.Load(rs_rcd::PATH_CONFIG_FILE);
+    rs_rcd::LCDModel* lcdModel = rcdCfg.GetLcdModel(rs_rcd::ATTR_DEFAULT);
+    ASSERT_NE(lcdModel, nullptr);
+    int width_mate40 = 1344;
+    int height_mate40 = 2772;
+    int width_mate60 = 1260;
+    int height_mate60 = 2720;
+    int width = width_mate40;
+    int height = height_mate40;
+    rs_rcd::ROGSetting* rog = lcdModel->GetRog(width, height);
+    if (rog == nullptr) {
+        rog = lcdModel->GetRog(width_mate60, height_mate60);
+        width = width_mate60;
+        height = height_mate60;
+    }
+    ASSERT_NE(rog, nullptr);
+
+    rs_rcd::RoundCornerHardware hardInfo;
+    hardInfo.bottomLayer = &rog->portraitMap[rs_rcd::NODE_PORTRAIT].layerDown;
+    ASSERT_NE(hardInfo.bottomLayer, nullptr);
+    hardInfo.bottomLayer->layerWidth = width;
+    hardInfo.bottomLayer->layerHeight = height;
+    hardInfo.bottomLayer->curBitmap = &bitmapBottomPortrait;
+
+    std::shared_ptr<RSRcdSurfaceRenderNode> bottomSurfaceNode =
+        std::make_shared<RSRcdSurfaceRenderNode>(0, RCDSurfaceType::BOTTOM);
+    ASSERT_NE(bottomSurfaceNode, nullptr);
+    auto visitor = std::make_shared<RSRcdRenderVisitor>();
+    ASSERT_NE(visitor, nullptr);
+
+    // test
+    visitor->ProcessRcdSurfaceRenderNode(*bottomSurfaceNode, hardInfo.bottomLayer, true);
+}
+
+
+/*
+ * @tc.name: ProcessRcdSurfaceRenderNode2
+ * @tc.desc: Test ProcessRcdSurfaceRenderNode2
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSRoundCornerDisplayTest, ProcessRcdSurfaceRenderNode2, TestSize.Level1)
+{
+    // prepare test
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkImage> imgBottomPortrait;
+    SkBitmap bitmapBottomPortrait;
+#else
+    std::shared_ptr<Drawing::Image> imgBottomPortrait;
+    Drawing::Bitmap bitmapBottomPortrait;
+#endif
+    const char* path = "port_down.png";
+
+    auto& rcdInstance = RSSingleton<RoundCornerDisplay>::GetInstance();
+    rcdInstance.Init();
+    rcdInstance.LoadImg(path, imgBottomPortrait);
+    ASSERT_NE(imgBottomPortrait, nullptr);
+    rcdInstance.DecodeBitmap(imgBottomPortrait, bitmapBottomPortrait);
+
+    auto& rcdCfg = RSSingleton<rs_rcd::RCDConfig>::GetInstance();
+    rcdCfg.Load(rs_rcd::PATH_CONFIG_FILE);
+    rs_rcd::LCDModel* lcdModel = rcdCfg.GetLcdModel(rs_rcd::ATTR_DEFAULT);
+    ASSERT_NE(lcdModel, nullptr);
+    int width_mate40 = 1344;
+    int height_mate40 = 2772;
+    int width_mate60 = 1260;
+    int height_mate60 = 2720;
+    int width = width_mate40;
+    int height = height_mate40;
+    rs_rcd::ROGSetting* rog = lcdModel->GetRog(width, height);
+    if (rog == nullptr) {
+        rog = lcdModel->GetRog(width_mate60, height_mate60);
+        width = width_mate60;
+        height = height_mate60;
+    }
+    ASSERT_NE(rog, nullptr);
+
+    rs_rcd::RoundCornerHardware hardInfo;
+    hardInfo.bottomLayer = &rog->portraitMap[rs_rcd::NODE_PORTRAIT].layerDown;
+    ASSERT_NE(hardInfo.bottomLayer, nullptr);
+    hardInfo.bottomLayer->layerWidth = width;
+    hardInfo.bottomLayer->layerHeight = height;
+    hardInfo.bottomLayer->curBitmap = &bitmapBottomPortrait;
+
+    std::shared_ptr<RSRcdSurfaceRenderNode> bottomSurfaceNode =
+        std::make_shared<RSRcdSurfaceRenderNode>(0, RCDSurfaceType::BOTTOM);
+    ASSERT_NE(bottomSurfaceNode, nullptr);
+    auto visitor = std::make_shared<RSRcdRenderVisitor>();
+    ASSERT_NE(visitor, nullptr);
+
+    // test
+    visitor->ProcessRcdSurfaceRenderNode(*bottomSurfaceNode, hardInfo.bottomLayer, false);
+}
+
+
+/*
+ * @tc.name: ConsumeAndUpdateBufferTest
+ * @tc.desc: Test RSRoundCornerDisplayTest.ConsumeAndUpdateBufferTest
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSRoundCornerDisplayTest, ConsumeAndUpdateBufferTest, TestSize.Level1)
+{
+    std::shared_ptr<RSRcdSurfaceRenderNode> topSurfaceNode =
+        std::make_shared<RSRcdSurfaceRenderNode>(0, RCDSurfaceType::TOP);
+    ASSERT_NE(topSurfaceNode, nullptr);
+    auto visitor = std::make_shared<RSRcdRenderVisitor>();
+    ASSERT_EQ(true, visitor->ConsumeAndUpdateBuffer(*topSurfaceNode));
+}
+
 }

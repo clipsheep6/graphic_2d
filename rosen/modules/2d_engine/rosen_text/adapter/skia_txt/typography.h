@@ -33,6 +33,8 @@ public:
     double GetMaxIntrinsicWidth() override;
     double GetAlphabeticBaseline() override;
     double GetIdeographicBaseline() override;
+    double GetMaxGlyphBoundsTop() override;
+    double GetMaxGlyphBoundsBottom() override;
     bool DidExceedMaxLines() const override;
     int GetLineCount() const override;
 
@@ -52,6 +54,7 @@ public:
     void SetAnimation(
         std::function<bool(const std::shared_ptr<OHOS::Rosen::TextEngine::SymbolAnimationConfig>&)>& animationFunc
     ) override;
+    Drawing::FontMetrics MeasureText() override;
 
 private:
     std::unique_ptr<SPText::Paragraph> paragraph_ = nullptr;

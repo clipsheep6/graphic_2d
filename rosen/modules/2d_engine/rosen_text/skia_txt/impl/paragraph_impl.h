@@ -46,6 +46,10 @@ public:
 
     double GetIdeographicBaseline() override;
 
+    double GetMaxGlyphBoundsTop() override;
+
+    double GetMaxGlyphBoundsBottom() override;
+
     bool DidExceedMaxLines() override;
 
     size_t GetLineCount() const override;
@@ -81,6 +85,8 @@ public:
             animationFunc_ = animationFunc;
         }
     }
+
+    OHOS::Rosen::Drawing::FontMetrics MeasureText() override;
 
 private:
     TextStyle SkStyleToTextStyle(const skia::textlayout::TextStyle& skia);

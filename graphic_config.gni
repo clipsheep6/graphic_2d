@@ -200,6 +200,7 @@ if (exec_script(check_graphic_ext_file_script,
 
 flutter_root = "//third_party/flutter"
 ace_flutter_engine_root = "$flutter_root/build"
+appframework_root = "//foundation/appframework"
 graphic_2d_root = "//foundation/graphic/graphic_2d"
 hilog_root = "//base/hiviewdfx/hilog"
 window_base_path = "//foundation/window/window_manager"

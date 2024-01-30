@@ -49,7 +49,7 @@ SurfaceImage::SurfaceImage(uint32_t textureId, uint32_t textureTarget)
       updateSurfaceImage_(false),
       eglDisplay_(EGL_NO_DISPLAY),
       eglContext_(EGL_NO_CONTEXT),
-      currentSurfaceImage_(0),
+      currentSurfaceImage_(UINT_MAX),
       currentSurfaceBuffer_(nullptr),
       currentTimeStamp_(0)
 {
@@ -105,8 +105,7 @@ void SurfaceImage::UpdateSurfaceInfo(uint32_t seqNum, sptr<SurfaceBuffer> buffer
     currentCrop_ = damage;
     currentTransformType_ = ConsumerSurface::GetTransform();
     auto utils = SurfaceUtils::GetInstance();
-    utils->ComputeTransformMatrix(currentTransformMatrix_, TRANSFORM_MATRIX_ELE_COUNT,
-        currentSurfaceBuffer_, currentTransformType_, currentCrop_);
+    utils->ComputeTransformMatrix(currentTransformMatrix_, currentSurfaceBuffer_, currentTransformType_, currentCrop_);
 
     // wait on this acquireFence.
     if (acquireFence != nullptr) {

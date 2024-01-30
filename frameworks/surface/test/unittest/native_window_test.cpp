@@ -111,6 +111,7 @@ void NativeWindowTest::TearDownTestCase()
     cSurface = nullptr;
     producer = nullptr;
     pSurface = nullptr;
+    OH_NativeWindow_DestroyNativeWindow(nativeWindow);
     nativeWindow = nullptr;
     nativeWindowBuffer = nullptr;
 }
@@ -509,7 +510,7 @@ HWTEST_F(NativeWindowTest, GetLastFlushedBuffer001, Function | MediumTest | Leve
 HWTEST_F(NativeWindowTest, GetLastFlushedBuffer002, Function | MediumTest | Level2)
 {
     int code = SET_USAGE;
-    uint64_t usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_PROTECTED;
+    uint64_t usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_PROTECTED;
     ASSERT_EQ(NativeWindowHandleOpt(nativeWindow, code, usage), OHOS::GSERROR_OK);
 
     NativeWindowBuffer* nativeWindowBuffer = nullptr;
@@ -614,19 +615,6 @@ HWTEST_F(NativeWindowTest, Unreference001, Function | MediumTest | Level2)
 HWTEST_F(NativeWindowTest, DestroyNativeWindow001, Function | MediumTest | Level2)
 {
     OH_NativeWindow_DestroyNativeWindow(nullptr);
-}
-
-/*
-* Function: OH_NativeWindow_DestroyNativeWindow
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call OH_NativeWindow_DestroyNativeWindow
-*                  2. check ret
- */
-HWTEST_F(NativeWindowTest, DestroyNativeWindow002, Function | MediumTest | Level2)
-{
-    OH_NativeWindow_DestroyNativeWindow(nativeWindow);
 }
 
 /*

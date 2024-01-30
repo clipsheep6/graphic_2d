@@ -130,9 +130,10 @@ public:
             IsHardwareEnabledTopSurface();
     }
 
-    void SetHardwareEnabled(bool isEnabled)
+    void SetHardwareEnabled(bool isEnabled, SelfDrawingNodeType selfDrawingType = SelfDrawingNodeType::DEFAULT)
     {
         isHardwareEnabledNode_ = isEnabled;
+        selfDrawingType_ = selfDrawingType;
     }
 
     bool NeedBilinearInterpolation() const
@@ -154,17 +155,6 @@ public:
     bool HasSubNodeShouldPaint() const
     {
         return hasSubNodeShouldPaint_;
-    }
-
-    // used for hwc node
-    bool IsNewOnTree() const
-    {
-        return isNewOnTree_;
-    }
-
-    void ResetIsNewOnTree()
-    {
-        isNewOnTree_ = false;
     }
 
     bool IsLastFrameHardwareEnabled() const
@@ -317,6 +307,7 @@ public:
     void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) override {}
     void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
+    bool IsNeedSetVSync();
 
     void SetContextBounds(const Vector4f bounds);
 
@@ -368,7 +359,6 @@ public:
 
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
-    bool IsMultiInstance();
 
     std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
     std::shared_ptr<RSDirtyRegionManager> GetCacheSurfaceDirtyManager() const;
@@ -399,6 +389,11 @@ public:
     Occlusion::Region& GetTransparentRegion()
     {
         return transparentRegion_;
+    }
+
+    const Occlusion::Region& GetOpaqueRegion() const
+    {
+        return opaqueRegion_;
     }
 
     Occlusion::Region& GetOpaqueRegion()
@@ -877,6 +872,16 @@ public:
         hasSkipLayer_ = hasSkipLayer;
     }
 
+    bool GetHwcDelayDirtyFlag() const noexcept
+    {
+        return hwcDelayDirtyFlag_;
+    }
+
+    void SetHwcDelayDirtyFlag(bool hwcDelayDirtyFlag)
+    {
+        hwcDelayDirtyFlag_ = hwcDelayDirtyFlag;
+    }
+
     bool GetSurfaceCacheContentStatic()
     {
         return surfaceCacheContentStatic_;
@@ -944,6 +949,7 @@ public:
     bool GetHasSharedTransitionNode() const;
     void SetHasSharedTransitionNode(bool hasSharedTransitionNode);
     Vector2f GetGravityTranslate(float imgWidth, float imgHeight);
+    bool GetHasTransparentSurface() const;
 
     bool HasWindowCorner()
     {
@@ -1133,9 +1139,9 @@ private:
     bool isNodeDirty_ = true;
     // used for hardware enabled nodes
     bool isHardwareEnabledNode_ = false;
+    SelfDrawingNodeType selfDrawingType_ = SelfDrawingNodeType::DEFAULT;
     bool isCurrentFrameHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;
-    bool isNewOnTree_ = false;
     bool hasSubNodeShouldPaint_ = false;
     // mark if this self-drawing node is forced not to use hardware composer
     // in case where this node's parent window node is occluded or is appFreeze, this variable will be marked true
@@ -1155,6 +1161,9 @@ private:
 
     uint32_t processZOrder_ = -1;
 
+    // mark if this self-drawing node do not consume buffer when gpu -> hwc
+    bool hwcDelayDirtyFlag_ = false;
+
     // UIFirst
     uint32_t submittedSubThreadIndex_ = INT_MAX;
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
@@ -1172,6 +1181,7 @@ private:
 
     std::atomic<bool> hasUnSubmittedOccludedDirtyRegion_ = false;
     RectI historyUnSubmittedOccludedDirtyRegion_;
+    bool hasTransparentSurface_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

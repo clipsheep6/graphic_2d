@@ -57,7 +57,7 @@ public:
     GSError FlushBuffer(sptr<SurfaceBuffer>& buffer,
                         const sptr<SyncFence>& fence, BufferFlushConfig &config) override;
     GSError GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
-        sptr<SyncFence>& fence, float matrix[16], int32_t matrixSize) override;
+        sptr<SyncFence>& fence, float matrix[16]) override;
     GSError FlushBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence,
                         BufferFlushConfigWithDamages &config) override;
     GSError AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
@@ -130,7 +130,7 @@ private:
     bool IsRemote();
     void CleanAllLocked();
 
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     std::atomic_bool inited_ = false;
     std::map<int32_t, sptr<SurfaceBuffer>> bufferProducerCache_;
     std::map<std::string, std::string> userData_;

@@ -27,7 +27,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class SkiaTextBlob : public TextBlobImpl {
+class DRAWING_API SkiaTextBlob : public TextBlobImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
 
@@ -41,6 +41,8 @@ public:
 
     static std::shared_ptr<TextBlob> MakeFromText(const void* text, size_t byteLength,
         const Font& font, TextEncoding encoding);
+    static std::shared_ptr<TextBlob> MakeFromPosText(const void* text, size_t byteLength,
+        const Point pos[], const Font& font, TextEncoding encoding);
     static std::shared_ptr<TextBlob> MakeFromRSXform(const void* text, size_t byteLength,
         const RSXform xform[], const Font& font, TextEncoding encoding);
 

@@ -245,7 +245,8 @@ std::shared_ptr<Surface> SkiaSurface::MakeRenderTarget(GPUContext* gpuContext,
     sk_sp<SkSurface> skSurface =
         SkSurface::MakeRenderTarget(grContext.get(), static_cast<SkBudgeted>(budgeted), skImageInfo);
     if (skSurface == nullptr) {
-        LOGE("skSurface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGE("skSurface nullptr, %{public}s, %{public}d [%{public}d %{public}d]", __FUNCTION__, __LINE__,
+            imageInfo.GetWidth(), imageInfo.GetHeight());
         return nullptr;
     }
     std::shared_ptr<Surface> surface = std::make_shared<Surface>();
@@ -313,7 +314,7 @@ std::shared_ptr<Image> SkiaSurface::GetImageSnapshot() const
 
     auto skImage = skSurface_->makeImageSnapshot();
     if (skImage == nullptr) {
-        LOGE("skSurface makeImageSnashot failed");
+        LOGD("skSurface makeImageSnashot failed");
         return nullptr;
     }
 
@@ -332,7 +333,7 @@ std::shared_ptr<Image> SkiaSurface::GetImageSnapshot(const RectI& bounds) const
     auto iRect = SkIRect::MakeLTRB(bounds.GetLeft(), bounds.GetTop(), bounds.GetRight(), bounds.GetBottom());
     auto skImage = skSurface_->makeImageSnapshot(iRect);
     if (skImage == nullptr) {
-        LOGE("skSurface makeImageSnashot failed");
+        LOGD("skSurface makeImageSnashot failed");
         return nullptr;
     }
 

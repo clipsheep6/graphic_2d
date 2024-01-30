@@ -1220,7 +1220,7 @@ void DrawSymbolOpItem::InitialVariableColor()
         animation.endValue = 1; // 1 means alpha end value
         animation.speedValue = 0.08; // 0.08 means alpha change step
         animation.number = 0; // 0 means number of times that the animation to be played
-        animation.startDuration = standStartDuration - 100 * j; //100 is start time duration
+        animation.startDuration = standStartDuration - static_cast<long long>(100 * j); //100 is start time duration
         animation.curTime = standStartTime; // every group have same start timestamp
         animation_.push_back(animation);
         symbol_.symbolInfo_.renderGroups[j].color.a = animation.startValue;
@@ -1747,8 +1747,6 @@ SaveLayerOpItem::SaveLayerOpItem(const DrawCmdList& cmdList, SaveLayerOpItem::Co
     if (hasBrush_) {
         BrushHandleToBrush(handle->brushHandle, cmdList, brush_);
     }
-
-    imageFilter_ = CmdListHelper::GetImageFilterFromCmdList(cmdList, handle->imageFilter);
 }
 
 std::shared_ptr<DrawOpItem> SaveLayerOpItem::Unmarshalling(const DrawCmdList& cmdList, void* handle)
@@ -1762,8 +1760,7 @@ void SaveLayerOpItem::Marshalling(DrawCmdList& cmdList)
     if (hasBrush_) {
         BrushToBrushHandle(brush_, cmdList, brushHandle);
     }
-    FlattenableHandle imageFilter = CmdListHelper::AddImageFilterToCmdList(cmdList, imageFilter_);
-    cmdList.AddOp<ConstructorHandle>(rect_, hasBrush_, brushHandle, imageFilter, saveLayerFlags_);
+    cmdList.AddOp<ConstructorHandle>(rect_, hasBrush_, brushHandle, saveLayerFlags_);
 }
 
 void SaveLayerOpItem::Playback(Canvas* canvas, const Rect* rect)
@@ -1773,7 +1770,7 @@ void SaveLayerOpItem::Playback(Canvas* canvas, const Rect* rect)
         rectPtr = &rect_;
     }
     Brush* brushPtr = hasBrush_ ? &brush_ : nullptr;
-    SaveLayerOps slo(rectPtr, brushPtr, imageFilter_, saveLayerFlags_);
+    SaveLayerOps slo(rectPtr, brushPtr, saveLayerFlags_);
     canvas->SaveLayer(slo);
 }
 

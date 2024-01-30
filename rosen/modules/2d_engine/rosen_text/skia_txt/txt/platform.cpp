@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,25 +13,32 @@
  * limitations under the License.
  */
 
-#include <surface.h>
+#include "txt/platform.h"
 
-#include <hilog/log.h>
-
-#include "buffer_log.h"
-#include "producer_egl_surface.h"
+#ifndef OHOS_STANDARD_SYSTEM
+#include "third_party/skia/src/ports/SkFontMgr_ohos.h"
+#endif
 
 namespace OHOS {
-sptr<EglSurface> EglSurface::CreateEglSurfaceAsProducer(sptr<IBufferProducer>& producer)
+namespace Rosen {
+namespace SPText {
+std::vector<std::string> GetDefaultFontFamilies()
 {
-    if (producer == nullptr) {
-        BLOGE("Failure, Reason: producer is nullptr.");
-        return nullptr;
-    }
-
-    sptr<ProducerEglSurface> surf = new ProducerEglSurface(producer);
-    if (surf == nullptr) {
-        BLOGE("Failure, Reason: no memory.");
-    }
-    return surf;
+#ifdef OHOS_STANDARD_SYSTEM
+    return { "OhosThemeFont", "HarmonyOS-Sans" };
+#else
+    return "sans-serif";
+#endif
 }
+
+sk_sp<SkFontMgr> GetDefaultFontManager()
+{
+#ifdef OHOS_STANDARD_SYSTEM
+    return SkFontMgr::RefDefault();
+#else
+    return SkFontMgr_New_OHOS();
+#endif
+}
+} // namespace SPText
+} // namespace Rosen
 } // namespace OHOS

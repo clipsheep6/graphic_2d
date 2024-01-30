@@ -31,7 +31,8 @@ declare_args() {
   graphic_2d_feature_enable_filter_cache = true
   graphic_2d_feature_parallel_upload_enable = true
   enable_text_gine = true
-  use_texgine = true
+  use_texgine = false
+  use_skia_txt = true
   use_video_processing_engine = false
   logger_enable_scope = false
   texgine_enable_debug_log = false
@@ -39,6 +40,7 @@ declare_args() {
   graphic_2d_feature_drivers_interface_display_enable = true
   graphic_2d_feature_tp_switch_enbale = false
   graphic_2d_feature_enable_recording_dcl = true
+  graphic_2d_feature_use_igraphics_extend_hooks = false
 
   if (defined(is_arkui_x) && is_arkui_x) {
     use_new_render_context = false

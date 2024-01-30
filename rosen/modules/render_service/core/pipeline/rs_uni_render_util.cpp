@@ -33,14 +33,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-constexpr const char* ENTRY_VIEW = "EntryView";
-constexpr const char* WALLPAPER_VIEW = "WallpaperView";
-constexpr const char* SCREENLOCK_WINDOW = "ScreenLockWindow";
-constexpr const char* SYSUI_DROPDOWN = "SysUI_Dropdown";
-constexpr const char* SYSUI_STATUS_BAR = "SysUI_StatusBar";
-constexpr const char* PRIVACY_INDICATOR = "PrivacyIndicator";
-};
 void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge,
     bool useAlignedDirtyRegion)
 {
@@ -531,12 +523,9 @@ bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode>
         RS_TRACE_NAME("assign info: " + logInfo);
     }
     std::string surfaceName = node->GetName();
-    bool needFilter = surfaceName == ENTRY_VIEW || surfaceName == WALLPAPER_VIEW ||
-        surfaceName == SYSUI_STATUS_BAR || surfaceName == SCREENLOCK_WINDOW ||
-        surfaceName == SYSUI_DROPDOWN || surfaceName == PRIVACY_INDICATOR;
     bool needFilterSCB = surfaceName.substr(0, 3) == "SCB" ||
         surfaceName.substr(0, 13) == "BlurComponent"; // filter BlurComponent, 13 is string len
-    if (needFilter || needFilterSCB || node->IsSelfDrawingType()) {
+    if (needFilterSCB || node->IsSelfDrawingType()) {
         return false;
     }
     if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) { // node exceed one vsync
@@ -602,7 +591,6 @@ void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRe
         ROSEN_LOGW("RSUniRenderUtil::AssignMainThreadNode node is nullptr");
         return;
     }
-    RS_TRACE_NAME_FMT("AssignMainThread: %s", node->GetName().c_str());
     mainThreadNodes.emplace_back(node);
     bool changeThread = !node->IsMainThreadNode();
     node->SetIsMainThreadNode(true);
@@ -614,6 +602,13 @@ void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRe
         ClearCacheSurface(*node, UNI_MAIN_THREAD_INDEX);
         node->SetIsMainThreadNode(true);
         node->SetTextureValidFlag(false);
+    }
+    if (RSMainThread::Instance()->GetDeviceType() == DeviceType::PC) {
+        RS_TRACE_NAME_FMT("AssignMainThread: name: %s, id: %lu, [HasTransparentSurface: %d, ChildHasFilter: %d,"
+            "HasFilter: %d, HasAbilityComponent: %d, QueryIfAllHwcChildrenForceDisabledByFilter: %d]",
+            node->GetName().c_str(), node->GetId(), node->GetHasTransparentSurface(),
+            node->ChildHasFilter(), node->HasFilter(), node->HasAbilityComponent(),
+            node->QueryIfAllHwcChildrenForceDisabledByFilter());
     }
 }
 
@@ -751,7 +746,7 @@ void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
     for (auto& child : oldChildren) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (tmpSet.count(surface) == 0) {
-            if (surface->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
+            if (surface && surface->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
                 tmpSet.emplace(surface);
                 continue;
             }

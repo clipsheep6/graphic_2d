@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -38,6 +38,7 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -91,6 +92,22 @@ typedef struct OH_Drawing_Bitmap OH_Drawing_Bitmap;
  * @version 1.0
  */
 typedef struct OH_Drawing_Point OH_Drawing_Point;
+
+/**
+ * @brief Defines a point of 3x3, which is used to describe the coordinate point.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_Point3 OH_Drawing_Point3;
+
+/**
+ * @brief Defines a pathEffect, which is used to affects stroked paths.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_PathEffect OH_Drawing_PathEffect;
 
 /**
  * @brief Defines a rect, which is used to describe the rectangle.
@@ -157,6 +174,14 @@ typedef struct OH_Drawing_ColorFilter OH_Drawing_ColorFilter;
 typedef struct OH_Drawing_Font OH_Drawing_Font;
 
 /**
+ * @brief Defines a memoryStream, which is used to describe the memory stream.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_MemoryStream OH_Drawing_MemoryStream;
+
+/**
  * @brief Defines a typeface, which is used to describe the typeface.
  *
  * @since 11
@@ -172,6 +197,22 @@ typedef struct OH_Drawing_Typeface OH_Drawing_Typeface;
  * @version 1.0
  */
 typedef struct OH_Drawing_TextBlob OH_Drawing_TextBlob;
+
+/**
+ * @brief Defines a image, which is used to describe a two dimensional array of pixels to draw.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_Image OH_Drawing_Image;
+
+/**
+ * @brief Defines a sampling options, which is used to describe the sampling mode.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_SamplingOptions OH_Drawing_SamplingOptions;
 
 /**
  * @brief Defines a textBlobBuilder, which is used to build the textBlob.
@@ -232,7 +273,7 @@ typedef enum {
 } OH_Drawing_AlphaFormat;
 
 /**
- * @brief The blending operation generates a new color for the two colors (source, target).
+ * @brief The blending operation generates a new color for the two colors (source, destination).
  * These operations are the same on the 4 color channels: red, green, blue, alpha.
  * For these, we use alpha channel as an example, rather than naming each channel individually.
  *
@@ -310,6 +351,23 @@ typedef enum {
     /** luminosity of source with hue and saturation of destination. */
     BLEND_MODE_LUMINOSITY,
 } OH_Drawing_BlendMode;
+
+/**
+ * @brief Defines image info struct.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct {
+    /** storage for width of image */
+    int32_t width;
+    /** storage for height of image */
+    int32_t height;
+    /** storage for color formats */
+    OH_Drawing_ColorFormat colorType;
+    /** storage for alpha formats */
+    OH_Drawing_AlphaFormat alphaType;
+} OH_Drawing_Image_Info;
 
 #ifdef __cplusplus
 }

@@ -69,6 +69,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 static bool g_isUniRenderEnabled = false;
+std::once_flag flag_;
 bool IsPathAnimatableModifier(const RSModifierType& type)
 {
     if (type == RSModifierType::BOUNDS || type == RSModifierType::FRAME || type == RSModifierType::TRANSLATE) {
@@ -83,6 +84,15 @@ RSNode::RSNode(bool isRenderServiceNode, NodeId id, bool isTextureExportNode)
     id_(id), stagingPropertiesExtractor_(id), showingPropertiesFreezer_(id)
 {
     InitUniRenderEnabled();
+    if (g_isUniRenderEnabled && isTextureExportNode) {
+        std::call_once(flag_, []() {
+            auto renderThreadClient = RSIRenderClient::CreateRenderThreadClient();
+            auto transactionProxy = RSTransactionProxy::GetInstance();
+            if (transactionProxy != nullptr) {
+                transactionProxy->SetRenderThreadClient(renderThreadClient);
+            }
+        });
+    }
     UpdateImplicitAnimator();
 }
 
@@ -857,8 +867,8 @@ void RSNode::SetParticleDrawRegion(std::vector<ParticleParams>& particleParams)
         if (particleType == ParticleType::POINTS) {
             auto radius = particleParams[i].emitterConfig_.radius_;
             auto radiusMax = radius * scaleMax;
-            left = std::min(left, position.x_ - radiusMax);
-            top = std::min(top, position.y_ - radiusMax);
+            left = std::min(left - radiusMax, position.x_ - radiusMax);
+            top = std::min(top - radiusMax, position.y_ - radiusMax);
             right = std::max(right + radiusMax + radiusMax, position.x_ + emitSize.x_ + radiusMax + radiusMax);
             bottom = std::max(bottom + radiusMax + radiusMax, position.y_ + emitSize.y_ + radiusMax + radiusMax);
         } else {
@@ -875,8 +885,8 @@ void RSNode::SetParticleDrawRegion(std::vector<ParticleParams>& particleParams)
             }
             float imageSizeWidthMax = imageSizeWidth * scaleMax;
             float imageSizeHeightMax = imageSizeHeight * scaleMax;
-            left = std::min(left, position.x_ - imageSizeWidthMax);
-            top = std::min(top, position.y_ - imageSizeHeightMax);
+            left = std::min(left - imageSizeWidthMax, position.x_ - imageSizeWidthMax);
+            top = std::min(top - imageSizeHeightMax, position.y_ - imageSizeHeightMax);
             right = std::max(right + imageSizeWidthMax + imageSizeWidthMax,
                 position.x_ + emitSize.x_ + imageSizeWidthMax + imageSizeWidthMax);
             bottom = std::max(bottom + imageSizeHeightMax + imageSizeHeightMax,
@@ -1158,7 +1168,7 @@ void RSNode::SetShadowColorStrategy(int shadowColorStrategy)
 
 void RSNode::SetFrameGravity(Gravity gravity)
 {
-    ROSEN_LOGI("RSNode::SetFrameGravity, gravity = %{public}d", gravity);
+    ROSEN_LOGD("RSNode::SetFrameGravity, gravity = %{public}d", gravity);
     SetProperty<RSFrameGravityModifier, RSProperty<Gravity>>(RSModifierType::FRAME_GRAVITY, gravity);
 }
 
@@ -1736,7 +1746,7 @@ void RSNode::AddChild(SharedPtr child, int index)
         return;
     }
     if (child->parent_ == id_) {
-        ROSEN_LOGI("RSNode::AddChild, child already exist");
+        ROSEN_LOGD("RSNode::AddChild, child already exist");
         return;
     }
     if (child->GetType() == RSUINodeType::DISPLAY_NODE) {

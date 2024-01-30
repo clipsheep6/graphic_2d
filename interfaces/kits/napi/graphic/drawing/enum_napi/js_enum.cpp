@@ -69,10 +69,10 @@ static const std::vector<struct JsEnumInt> g_blendMode = {
 };
 
 static const std::vector<struct JsEnumInt> g_textEncoding = {
-    { "TEXTENCODING_UTF8", static_cast<int32_t>(TextEncoding::UTF8) },
-    { "TEXTENCODING_UTF16", static_cast<int32_t>(TextEncoding::UTF16) },
-    { "TEXTENCODING_UTF32", static_cast<int32_t>(TextEncoding::UTF32) },
-    { "TEXTENCODING_GLYPH_ID", static_cast<int32_t>(TextEncoding::GLYPH_ID) },
+    { "TEXT_ENCODING_UTF8", static_cast<int32_t>(TextEncoding::UTF8) },
+    { "TEXT_ENCODING_UTF16", static_cast<int32_t>(TextEncoding::UTF16) },
+    { "TEXT_ENCODING_UTF32", static_cast<int32_t>(TextEncoding::UTF32) },
+    { "TEXT_ENCODING_GLYPH_ID", static_cast<int32_t>(TextEncoding::GLYPH_ID) },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
@@ -85,16 +85,16 @@ napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)
     for (auto it = g_intEnumClassMap.begin(); it != g_intEnumClassMap.end(); it++) {
         auto &enumClassName = it->first;
         auto &enumItemVec = it->second;
-        int32_t vecSize = enumItemVec.size();
+        auto vecSize = enumItemVec.size();
         std::vector<napi_value> value;
         value.resize(vecSize);
-        for (int32_t index = 0; index < vecSize; ++index) {
+        for (size_t index = 0; index < vecSize; ++index) {
             napi_create_int32(env, enumItemVec[index].enumInt, &value[index]);
         }
 
         std::vector<napi_property_descriptor> property;
         property.resize(vecSize);
-        for (int32_t index = 0; index < vecSize; ++index) {
+        for (size_t index = 0; index < vecSize; ++index) {
             property[index] = napi_property_descriptor DECLARE_NAPI_STATIC_PROPERTY(
                 enumItemVec[index].enumName.data(), value[index]);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,23 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_SURFACE_INCLUDE_EGL_CONSUMER_SURFACE_H
-#define FRAMEWORKS_SURFACE_INCLUDE_EGL_CONSUMER_SURFACE_H
+#ifndef ROSEN_RENDER_SERVICE_BASE_COMMON_RS_COMMON_TOOL_H
+#define ROSEN_RENDER_SERVICE_BASE_COMMON_RS_COMMON_TOOL_H
 
+#include <memory>
 #include <string>
 
-#include "consumer_surface.h"
-
 namespace OHOS {
-class EglConsumerSurface : public ConsumerSurface {
-public:
-    EglConsumerSurface(const std::string &name, bool isShared = false);
-    virtual ~EglConsumerSurface();
-    GSError Init();
-
-    GSError AcquireBuffer(sptr<SurfaceBuffer>& buffer, int32_t &fence,
-        int64_t &timestamp, Rect &damage) override;
-};
+namespace Media {
+class PixelMap;
+}
+namespace Rosen {
+namespace CommonTools {
+void SavePixelmapToFile(const std::shared_ptr<Media::PixelMap>& pixelMap, const std::string& dst);
+} // namespace CommonTools
+} // namespace Rosen
 } // namespace OHOS
 
-#endif // FRAMEWORKS_SURFACE_INCLUDE_EGL_CONSUMER_SURFACE_H
+#endif // RS_FILE_UTILs

@@ -15,6 +15,7 @@
 
 #include "pipeline/rs_hardware_thread.h"
 #include <memory>
+#include <unistd.h>
 
 #ifdef RS_ENABLE_EGLIMAGE
 #include "src/gpu/gl/GrGLDefines.h"
@@ -95,6 +96,7 @@ void RSHardwareThread::Start()
                 }
                 uniRenderEngine_ = std::make_shared<RSUniRenderEngine>();
                 uniRenderEngine_->Init(true);
+                hardwareTid_ = gettid();
             }).wait();
     }
     auto onPrepareCompleteFunc = [this](auto& surface, const auto& param, void* data) {
@@ -103,6 +105,11 @@ void RSHardwareThread::Start()
     if (hdiBackend_ != nullptr) {
         hdiBackend_->RegPrepareComplete(onPrepareCompleteFunc, this);
     }
+}
+
+int RSHardwareThread::GetHardwareTid() const
+{
+    return hardwareTid_;
 }
 
 void RSHardwareThread::PostTask(const std::function<void()>& task)
@@ -600,10 +607,16 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #endif // USE_VIDEO_PROCESSING_ENGINE
 #else // USE_ROSEN_DRAWING
             std::shared_ptr<Drawing::Image> image = nullptr;
-            Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
-                Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
 #if defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
             if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+                Drawing::ColorType colorType = Drawing::ColorType::COLORTYPE_RGBA_8888;
+                auto pixelFmt = params.buffer->GetFormat();
+                if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
+                    colorType = Drawing::ColorType::COLORTYPE_BGRA_8888;
+                } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
+                    colorType = Drawing::ColorType::COLORTYPE_RGBA_1010102;
+                }
+
                 Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
 
                 Drawing::TextureInfo externalTextureInfo;
@@ -612,7 +625,12 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 externalTextureInfo.SetIsMipMapped(false);
                 externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
                 externalTextureInfo.SetID(eglTextureId);
-                auto glType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ? GR_GL_BGRA8 : GR_GL_RGBA8;
+                auto glType = GR_GL_RGBA8;
+                if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
+                    glType = GR_GL_BGRA8;
+                } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
+                    glType = GL_RGB10_A2;
+                }
                 externalTextureInfo.SetFormat(glType);
 
                 image = std::make_shared<Drawing::Image>();
@@ -626,7 +644,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #ifdef RS_ENABLE_VK
             if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
                 RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
-                colorType = GetColorTypeFromBufferFormat(params.buffer->GetFormat());
+                Drawing::ColorType colorType = GetColorTypeFromBufferFormat(params.buffer->GetFormat());
                 auto imageCache = uniRenderEngine_->GetVkImageManager()->CreateImageCacheFromBuffer(
                     params.buffer, params.acquireFence);
                 if (!imageCache) {
@@ -664,8 +682,6 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
             } else {
                 params.paint.SetShaderEffect(imageShader);
                 params.targetColorGamut = colorGamut;
-
-                auto screenManager = CreateOrGetScreenManager();
                 params.screenBrightnessNits = screenManager->GetScreenBrightnessNits(screenId);
 
                 uniRenderEngine_->ColorSpaceConvertor(imageShader, params);

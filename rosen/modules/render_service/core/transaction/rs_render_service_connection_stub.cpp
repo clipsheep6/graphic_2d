@@ -184,9 +184,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             auto type = static_cast<RSSurfaceNodeType>(data.ReadUint8());
             auto bundleName = data.ReadString();
             bool isTextureExportNode = data.ReadBool();
+            bool isSync = data.ReadBool();
             RSSurfaceRenderNodeConfig config = {
                 .id = nodeId, .name = surfaceName, .bundleName = bundleName, .nodeType = type,
-                .isTextureExportNode = isTextureExportNode};
+                .isTextureExportNode = isTextureExportNode, .isSync = isSync};
             sptr<Surface> surface = CreateNodeAndSurface(config);
             if (surface == nullptr) {
                 ret = ERR_NULL_OBJECT;
@@ -1215,7 +1216,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto id = data.ReadUint64();
             auto isEnabled = data.ReadBool();
-            SetHardwareEnabled(id, isEnabled);
+            auto selfDrawingType = static_cast<SelfDrawingNodeType>(data.ReadUint8());
+            SetHardwareEnabled(id, isEnabled, selfDrawingType);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_LIGHT_FACTOR_STATUS) : {

@@ -133,7 +133,7 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
     CalcRefreshRate(curScreenId_, finalRange);
 
     bool frameRateChanged = CollectFrameRateChange(finalRange, rsFrameRateLinker, appFrameRateLinkers);
-    if (hgmCore.GetLtpoEnabled() & frameRateChanged) {
+    if (hgmCore.GetLtpoEnabled() && frameRateChanged) {
         HandleFrameRateChangeForLTPO(timestamp);
     } else {
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
@@ -161,7 +161,7 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     // max used here
     finalRange = {voteResult.second, voteResult.second, voteResult.second};
     CalcRefreshRate(curScreenId_, finalRange);
-    if ((currRefreshRate_ < lastPendingRate) & !isReduceAllowed_) {
+    if ((currRefreshRate_ < lastPendingRate) && !isReduceAllowed_) {
         // Can't reduce the refreshRate in ltps mode
         RS_TRACE_NAME_FMT("Can't reduce to [%d], keep [%d] please", currRefreshRate_, lastPendingRate);
         currRefreshRate_ = lastPendingRate;
@@ -358,51 +358,48 @@ void HgmFrameRateManager::Reset()
     appChangeData_.clear();
 }
 
-int32_t HgmFrameRateManager::CalModifierPreferred(const HgmModifierProfile &hgmModifierProfile)
+int32_t HgmFrameRateManager::GetExpectedFrameRate(const RSPropertyUnit unit, float velocity) const
 {
-    auto& hgmCore = HgmCore::Instance();
-    sptr<HgmScreen> hgmScreen = hgmCore.GetScreen(hgmCore.GetActiveScreenId());
-    auto configData = hgmCore.GetPolicyConfigData();
-    if (!hgmScreen || configData == nullptr) {
-        return HGM_ERROR;
+    switch (unit) {
+        case RSPropertyUnit::PIXEL_POSITION:
+            return GetPreferredFps("translate", PixelToMM(velocity));
+        case RSPropertyUnit::PIXEL_SIZE:
+        case RSPropertyUnit::RATIO_SCALE:
+            return GetPreferredFps("scale", PixelToMM(velocity));
+        case RSPropertyUnit::ANGLE_ROTATION:
+            return GetPreferredFps("rotation", velocity);
+        default:
+            return 0;
     }
-    auto [xSpeed, ySpeed] = applyDimension(
-        SpeedTransType::TRANS_PIXEL_TO_MM, hgmModifierProfile.xSpeed, hgmModifierProfile.ySpeed, hgmScreen);
-    auto mixSpeed = sqrt(xSpeed * xSpeed + ySpeed * ySpeed);
-
-    auto dynamicSetting = configData->GetAnimationDynamicSetting(
-        curScreenStrategyId_, std::to_string(curRefreshRateMode_), hgmModifierProfile.hgmModifierType);
-    auto iter = std::find_if(dynamicSetting.begin(), dynamicSetting.end(),
-        [&mixSpeed](auto iter) {
-            return mixSpeed >= iter.second.min && (mixSpeed < iter.second.max || iter.second.max == -1);
-        });
-    if (iter != dynamicSetting.end()) {
-        RS_OPTIONAL_TRACE_NAME_FMT("CalModifierPreferred: ModifierType: %s, speed: %f, rate: %d",
-            HGM_MODIFIER_TYPE_MAP.at(static_cast<int>(hgmModifierProfile.hgmModifierType)).c_str(),
-            mixSpeed, iter->second.preferred_fps);
-        return iter->second.preferred_fps;
-    }
-    return HGM_ERROR;
 }
 
-std::pair<float, float> HgmFrameRateManager::applyDimension(
-    SpeedTransType speedTransType, float xSpeed, float ySpeed, sptr<HgmScreen> hgmScreen)
+int32_t HgmFrameRateManager::GetPreferredFps(const std::string& type, float velocity) const
 {
-    auto xDpi = hgmScreen->GetXDpi();
-    auto yDpi = hgmScreen->GetYDpi();
-    if (xDpi < MARGIN || yDpi < MARGIN) {
-        return std::pair<float, float>(0, 0);
+    auto configData = HgmCore::Instance().GetPolicyConfigData();
+    if (!configData) {
+        return 0;
     }
-    switch (speedTransType) {
-        case SpeedTransType::TRANS_MM_TO_PIXEL:
-            return std::pair<float, float>(
-                xSpeed * xDpi / INCH_2_MM, ySpeed * yDpi / INCH_2_MM);
-        case SpeedTransType::TRANS_PIXEL_TO_MM:
-            return std::pair<float, float>(
-                xSpeed / xDpi * INCH_2_MM, ySpeed / yDpi * INCH_2_MM);
-        default:
-            return std::pair<float, float>(0, 0);
+    auto config = configData->GetRSAnimateRateConfig(curScreenStrategyId_, std::to_string(curRefreshRateMode_), type);
+    auto iter = std::find_if(config.begin(), config.end(), [&velocity](const auto& pair) {
+        return velocity >= pair.second.min && (velocity < pair.second.max || pair.second.max == -1);
+    });
+    if (iter != config.end()) {
+        RS_OPTIONAL_TRACE_NAME_FMT("GetPreferredFps: type: %d, speed: %f, rate: %d",
+            type.c_str(), velocity, iter->second.preferred_fps);
+        return iter->second.preferred_fps;
     }
+    return 0;
+}
+
+float HgmFrameRateManager::PixelToMM(float velocity) const
+{
+    float velocityMM = 0.0f;
+    auto& hgmCore = HgmCore::Instance();
+    sptr<HgmScreen> hgmScreen = hgmCore.GetScreen(hgmCore.GetActiveScreenId());
+    if (hgmScreen && hgmScreen->GetPpi() > 0.f) {
+        velocityMM = velocity / hgmScreen->GetPpi() * INCH_2_MM;
+    }
+    return velocityMM;
 }
 
 std::shared_ptr<HgmOneShotTimer> HgmFrameRateManager::GetScreenTimer(ScreenId screenId) const
@@ -628,7 +625,7 @@ void HgmFrameRateManager::SyncAppVote()
 
     isTouchEnable_ = (configData->strategyConfigs_[curXmlStrategy].dynamicMode != 0);
     touchFps_ = configData->strategyConfigs_[curXmlStrategy].max;
-    idleFps_ = std::min(configData->strategyConfigs_[curXmlStrategy].min, static_cast<int32_t>(OLED_60_HZ));
+    idleFps_ = std::max(configData->strategyConfigs_[curXmlStrategy].min, static_cast<int32_t>(OLED_60_HZ));
 }
 
 void HgmFrameRateManager::MarkVoteChange()
@@ -652,7 +649,7 @@ void HgmFrameRateManager::DeliverRefreshRateVote(pid_t pid, std::string eventNam
 
     std::lock_guard<std::mutex> lock(voteMutex_);
     auto& vec = voteRecord_[eventName];
-    if ((pid == 0) & (eventStatus == REMOVE_VOTE)) {
+    if ((pid == 0) && (eventStatus == REMOVE_VOTE)) {
         if (!vec.empty()) {
             vec.clear();
             MarkVoteChange();
@@ -770,9 +767,9 @@ void HgmFrameRateManager::UpdateVoteRule()
         return;
     }
     auto curSceneConfig = curScreenSceneList[lastScene];
-    uint32_t scenePriority = std::stoi(curSceneConfig.priority);
-    uint32_t min = configData->strategyConfigs_[curSceneConfig.strategy].min;
-    uint32_t max = configData->strategyConfigs_[curSceneConfig.strategy].max;
+    uint32_t scenePriority = static_cast<uint32_t>(std::stoi(curSceneConfig.priority));
+    uint32_t min = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].min);
+    uint32_t max = static_cast<uint32_t>(configData->strategyConfigs_[curSceneConfig.strategy].max);
     HGM_LOGI("UpdateVoteRule: SceneName:%{public}s", lastScene.c_str());
     DeliverRefreshRateVote((*scenePos).second, "VOTER_SCENE", ADD_VOTE, min, max);
 

@@ -200,6 +200,9 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     if (!data.WriteBool(config.isTextureExportNode)) {
         return nullptr;
     }
+    if (!data.WriteBool(config.isSync)) {
+        return nullptr;
+    }
     option.SetFlags(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::CREATE_NODE_AND_SURFACE);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
@@ -1874,7 +1877,7 @@ void RSRenderServiceConnectionProxy::ReportGameStateData(GameStateData info)
     }
 }
 
-void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnabled)
+void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnabled, SelfDrawingNodeType selfDrawingType)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1886,6 +1889,9 @@ void RSRenderServiceConnectionProxy::SetHardwareEnabled(NodeId id, bool isEnable
         return;
     }
     if (!data.WriteBool(isEnabled)) {
+        return;
+    }
+    if (!data.WriteUint8(static_cast<uint8_t>(selfDrawingType))) {
         return;
     }
     option.SetFlags(MessageOption::TF_ASYNC);

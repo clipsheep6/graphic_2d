@@ -171,7 +171,7 @@ void RSCanvasRenderNode::PropertyDrawableRender(RSPaintFilterCanvas& canvas)
         DrawPropertyDrawableRange(
             RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::ENV_FOREGROUND_COLOR, canvas);
         DrawPropertyDrawableRange(
-            RSPropertyDrawableSlot::BLEND_MODE, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
+            RSPropertyDrawableSlot::BG_SAVE_BOUNDS, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
     } else {
         DrawPropertyDrawableRange(RSPropertyDrawableSlot::TRANSITION, RSPropertyDrawableSlot::CLIP_TO_FRAME, canvas);
     }
@@ -261,6 +261,10 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
     RSModifierContext context = { GetMutableRenderProperties(), &canvas };
     ApplyDrawCmdModifier(context, RSModifierType::FOREGROUND_STYLE);
 
+    auto& aiInvert = GetRenderProperties().GetAiInvert();
+    if (aiInvert.has_value()) {
+        RSPropertiesPainter::DrawBinarizationShader(GetRenderProperties(), canvas);
+    }
     RSPropertiesPainter::DrawColorFilter(GetRenderProperties(), canvas);
 
     canvas.RestoreStatus(canvasNodeSaveCount_);
@@ -269,8 +273,6 @@ void RSCanvasRenderNode::ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas
         RSPropertiesPainter::DrawLightUpEffect(GetRenderProperties(), canvas);
     }
     RSPropertiesPainter::DrawFilter(GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
-    auto para = GetRenderProperties().GetLinearGradientBlurPara();
-    RSPropertiesPainter::DrawLinearGradientBlurFilter(GetRenderProperties(), canvas);
 
     auto illuminatedPtr_ = GetRenderProperties().GetIlluminated();
     if (illuminatedPtr_ && illuminatedPtr_->IsIlluminated()) {

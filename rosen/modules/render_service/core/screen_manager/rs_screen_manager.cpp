@@ -27,6 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
 namespace {
     constexpr float ANGLE_MIN_VAL = 0.0F;
     constexpr float ANGLE_MAX_VAL = 180.0F;
@@ -41,6 +42,7 @@ namespace {
         OHOS::Rosen::CreateOrGetScreenManager()->HandlePostureData(event);
     }
 } // namespace
+#endif
 using namespace HiviewDFX;
 namespace impl {
 std::once_flag RSScreenManager::createFlag_;
@@ -84,13 +86,18 @@ bool RSScreenManager::Init() noexcept
 
     // call ProcessScreenHotPlugEvents() for primary screen immediately in main thread.
     ProcessScreenHotPlugEvents();
+
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     if (isFoldScreenFlag_) {
         RegisterSensorCallback();
     }
+#endif
+
     RS_LOGI("RSScreenManager Init succeed");
     return true;
 }
 
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
 void RSScreenManager::RegisterSensorCallback()
 {
     user.callback = SensorPostureDataCallback;
@@ -190,7 +197,7 @@ ScreenId RSScreenManager::GetActiveScreenId()
     if (isPostureSensorDataHandled_) {
         isFirstTimeToGetActiveScreenId_ = false;
         UnRegisterSensorCallback();
-        RS_LOGD("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
+        RS_LOGI("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
         return activeScreenId_;
     }
     activeScreenIdAssignedCV_.wait_until(lock, std::chrono::system_clock::now() +
@@ -201,9 +208,10 @@ ScreenId RSScreenManager::GetActiveScreenId()
         isFirstTimeToGetActiveScreenId_ = false;
         UnRegisterSensorCallback();
     }
-    RS_LOGD("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
+    RS_LOGI("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
     return activeScreenId_;
 }
+#endif
 
 #ifdef USE_VIDEO_PROCESSING_ENGINE
 float RSScreenManager::GetScreenBrightnessNits(ScreenId id)
@@ -879,7 +887,7 @@ void RSScreenManager::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status
             mainThread->RequestNextVSync();
         }
 
-        RS_LOGI("RSScreenManager %{public}s: Set system power on, request a frame", __func__);
+        RS_LOGD("RSScreenManager %{public}s: Set system power on, request a frame", __func__);
     }
     screenPowerStatus_[id] = status;
 }
@@ -1012,6 +1020,10 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
     }
 
     const auto &screen = screens_.at(id);
+    if (!screen) {
+        RS_LOGE("RSScreenManager::QueryScreenInfo screen %{public}" PRIu64 " has no info.", id);
+        return info;
+    }
     info.id = id;
     info.width = screen->Width();
     info.height = screen->Height();

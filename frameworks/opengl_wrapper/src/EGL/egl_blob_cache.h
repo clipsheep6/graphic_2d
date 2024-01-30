@@ -19,13 +19,13 @@ namespace OHOS {
 class BlobCache {
     public:
     static BlobCache* get();
-    static void BlobCache::setBlobFunc(const void* key, EGLsizeiANDROID keySize, const void* value,
-                    EGLsizeiANDROID valueSize)
+    static void setBlobFunc(const void* key, EGLsizeiANDROID keySize, const void* value,
+                    EGLsizeiANDROID valueSize);
     static EGLsizeiANDROID getBlobFunc(const void* key, EGLsizeiANDROID keySize, void* value,
                                EGLsizeiANDROID valueSize);
 
-    void BlobCache::setBlob(const void* key, EGLsizeiANDROID keySize, const void* value,
-                    EGLsizeiANDROID valueSize)
+    void setBlob(const void* key, EGLsizeiANDROID keySize, const void* value,
+                    EGLsizeiANDROID valueSize);
     EGLsizeiANDROID getBlob(const void* key, EGLsizeiANDROID keySize, void* value,
                                EGLsizeiANDROID valueSize);
     void initialize(EGLDisplay dpy);

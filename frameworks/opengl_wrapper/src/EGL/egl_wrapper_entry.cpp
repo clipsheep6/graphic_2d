@@ -310,7 +310,7 @@ EGLBoolean EglInitializeImpl(EGLDisplay dpy, EGLint *major, EGLint *minor)
     }
     EGLBoolean ret = display->Init(major, minor);
     if (ret != EGL_FALSE) {
-        blob_cache::get()->initialize(dpy);
+        BlobCache::get()->initialize(dpy);
     }
     return ret;
 }

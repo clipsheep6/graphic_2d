@@ -35,9 +35,10 @@ void BlobCache::setBlob(const void* key, EGLsizeiANDROID keySize, const void* va
 
 EGLsizeiANDROID BlobCache::getBlob(const void* key, EGLsizeiANDROID keySize, void* value,
                                EGLsizeiANDROID valueSize) {
+                                return 1;
 }
 
-void BlobCache::initialize(EGLDisplay dpy); {
+void BlobCache::initialize(EGLDisplay dpy) {
     
 }
 

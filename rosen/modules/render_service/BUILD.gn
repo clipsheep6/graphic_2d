@@ -342,7 +342,6 @@ ohos_executable("render_service") {
 
   deps = [
     ":librender_service",
-    "//foundation/graphic/graphic_2d/utils:libgraphic_utils",
     "$graphic_2d_root/rosen/modules/composer:libcomposer",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",

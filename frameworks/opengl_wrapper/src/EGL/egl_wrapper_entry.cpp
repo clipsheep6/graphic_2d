@@ -1215,7 +1215,7 @@ void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, 
 
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
-        ret = table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(), BlobCache::setBlobFunc,  BlobCache::getBlobFunc);
+        table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(), BlobCache::setBlobFunc,  BlobCache::getBlobFunc);
     } else {
         WLOGE("EglSetBlobCacheFuncsANDROIDImpl platform is not found.");
     }

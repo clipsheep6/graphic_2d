@@ -31,5 +31,5 @@ class BlobCache {
     void initialize(EGLDisplay dpy);
     private:
     static BlobCache *blob_cache_;
-}
+};
 }

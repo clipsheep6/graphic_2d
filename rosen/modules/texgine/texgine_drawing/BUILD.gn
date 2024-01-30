@@ -124,7 +124,7 @@ if (defined(use_rosen_drawing) && use_rosen_drawing) {
     deps = []
 
     if (is_cross_platform) {
-      public_deps += [ "//foundation/appframework/icu_data:static_icudata" ]
+      public_deps += [ "$appframework_root/icu_data:static_icudata" ]
     }
 
     innerapi_tags = [ "platformsdk" ]

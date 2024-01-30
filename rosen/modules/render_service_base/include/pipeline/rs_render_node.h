@@ -559,7 +559,6 @@ private:
     ChildrenListSharedPtr fullChildrenList_;
     bool isFullChildrenListValid_ = false;
     bool isChildrenSorted_ = false;
-    std::mutex fullChildrenListMutex_;
 
     void UpdateFullChildrenListIfNeeded();
     void GenerateFullChildrenList();

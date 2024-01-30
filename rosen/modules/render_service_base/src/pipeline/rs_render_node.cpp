@@ -2174,7 +2174,6 @@ void RSRenderNode::OnTreeStateChanged()
         auto prevFullChildrenList = fullChildrenList_;
 
         // attempt to clear FullChildrenList, to avoid memory leak
-        std::lock_guard<std::mutex> lock(fullChildrenListMutex_);
         isFullChildrenListValid_ = false;
         isChildrenSorted_ = false;
         std::atomic_store_explicit(&fullChildrenList_, emptyChildrenList, std::memory_order_release);
@@ -2231,11 +2230,6 @@ void RSRenderNode::UpdateFullChildrenListIfNeeded()
 
 void RSRenderNode::GenerateFullChildrenList()
 {
-    std::lock_guard<std::mutex> lock(fullChildrenListMutex_);
-    if (isFullChildrenListValid_) {
-        return;
-    }
-
     // both children_ and disappearingChildren_ are empty, no need to generate fullChildrenList_
     if (children_.empty() && disappearingChildren_.empty()) {
         auto prevFullChildrenList = fullChildrenList_;
@@ -2306,11 +2300,6 @@ void RSRenderNode::GenerateFullChildrenList()
 
 void RSRenderNode::ResortChildren()
 {
-    std::lock_guard<std::mutex> lock(fullChildrenListMutex_);
-    if (isChildrenSorted_) {
-        return;
-    }
-
     // Make a copy of the fullChildrenList for sorting
     auto fullChildrenList = std::make_shared<std::vector<std::shared_ptr<RSRenderNode>>>(*fullChildrenList_);
 

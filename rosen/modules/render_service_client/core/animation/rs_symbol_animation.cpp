@@ -23,6 +23,11 @@
 
 namespace OHOS {
 namespace Rosen {
+static const Vector2f CENTER_NODE_COORDINATE = {0.5f, 0.5f}; //scale center node
+static const unsigned int UNIT_GROUP = 0;  // AnimationSubType is UNIT
+static const unsigned int UNIT_PERIOD = 0;  // AnimationSubType is UNIT
+static const unsigned int UNIT_NODE = 0;  // AnimationSubType is UNIT
+
 RSSymbolAnimation::RSSymbolAnimation()
 {
 }
@@ -89,7 +94,7 @@ Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path &path, const flo
     // the newOffset is offset of path on new node;
     Vector2f nodeTranslation = {offsetX + left, offsetY + top};
     Vector2f newOffset = {-left, -top};
-    
+
     return Vector4f(nodeTranslation[0], nodeTranslation[1], newOffset[0], newOffset[1]);
 }
 

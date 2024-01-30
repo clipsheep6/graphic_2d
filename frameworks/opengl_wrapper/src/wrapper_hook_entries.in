@@ -231,4 +231,4 @@ CALL_HOOK_API_RET(eglDupNativeFenceFDANDROID, dpy, sync)
 
 /* EglSetBlobCacheFuncsANDROID */
 HOOK_API_ENTRY(void, eglSetBlobCacheFuncsANDROID, EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
-CALL_HOOK_API(eglSetBlobCacheFuncsANDROID, dpy, sync)
+CALL_HOOK_API(eglSetBlobCacheFuncsANDROID, dpy, set, get)

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "egl_blob_cache.h"
+#include "../wrapper_log.h"
 namespace OHOS{
 BlobCache* BlobCache::blob_cache_;
 BlobCache* BlobCache::get() {
@@ -31,10 +32,13 @@ EGLsizeiANDROID BlobCache::getBlobFunc(const void* key, EGLsizeiANDROID keySize,
 
 void BlobCache::setBlob(const void* key, EGLsizeiANDROID keySize, const void* value,
                     EGLsizeiANDROID valueSize) {
+    WLOGE("wxt set");
+
 }
 
 EGLsizeiANDROID BlobCache::getBlob(const void* key, EGLsizeiANDROID keySize, void* value,
                                EGLsizeiANDROID valueSize) {
+    WLOGE("wxt get");
                                 return 1;
 }
 

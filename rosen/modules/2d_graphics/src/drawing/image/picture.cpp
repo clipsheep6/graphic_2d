@@ -32,6 +32,16 @@ bool Picture::Deserialize(std::shared_ptr<Data> data)
     return pictureImplPtr->Deserialize(data);
 }
 
+std::shared_ptr<Picture> Picture::MakePlaceHolder(Rect cull)
+{
+    return pictureImplPtr->MakePlaceHolder(cull);
+}
+
+void Picture::PlayBack(CoreCanvas* canvas)
+{
+    pictureImplPtr->PlayBack(canvas);
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

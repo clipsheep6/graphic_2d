@@ -47,6 +47,8 @@
 #include "skia_adapter/skia_text_blob_builder.h"
 #include "skia_adapter/skia_trace_memory_dump.h"
 #include "skia_adapter/skia_memory_stream.h"
+#include "skia_adapter/skia_path_measure.h"
+#include "skia_adapter/skia_path_recorder.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -253,6 +255,21 @@ std::shared_ptr<MemoryStreamImpl> SkiaImplFactory::CreateMemoryStream(const void
 std::shared_ptr<ResourceHolderImpl> SkiaImplFactory::CreateResourceHolder()
 {
     return std::make_shared<SkiaResourceHolder>();
+}
+
+std::unique_ptr<PathMeasureImpl> SkiaImplFactory::CreatePathMeasure()
+{
+    return std::make_unique<SkiaPathMeasure>();
+}
+
+std::unique_ptr<PathMeasureImpl> SkiaImplFactory::CreatePathMeasure(const Path& path, bool forceClosed, scalar resScale)
+{
+    return std::make_unique<SkiaPathMeasure>(path, forceClosed, resScale);
+}
+
+std::unique_ptr<PictureRecorderImpl> SkiaImplFactory::CreatePictureRecorder()
+{
+    return std::make_unique<SkiaPictureRecorder>();
 }
 } // namespace Drawing
 } // namespace Rosen

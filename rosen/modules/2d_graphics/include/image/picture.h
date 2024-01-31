@@ -32,6 +32,8 @@ public:
     }
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
+    std::shared_ptr<Picture> MakePlaceHolder(Rect cull);
+    void PlayBack(CoreCanvas* canvas);
 private:
     std::shared_ptr<PictureImpl> pictureImplPtr;
 };

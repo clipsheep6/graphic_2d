@@ -97,6 +97,11 @@ public:
     bool GetPositionAndTangent(scalar distance, Point& position, Point& tangent, bool forceClosed) const override;
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
+    bool Equals(const Path& a, const Path& b) const override;
+    bool IsLine(Point line[2]) const override;
+    bool IsRect(Rect* rect, bool* isClosed = nullptr, PathDirection* direction = nullptr) const override;
+    bool IsOval(Rect* bounds) const override;
+    bool IsRRect(RoundRect* rrect) const override;
 private:
     SkPath path_;
 };

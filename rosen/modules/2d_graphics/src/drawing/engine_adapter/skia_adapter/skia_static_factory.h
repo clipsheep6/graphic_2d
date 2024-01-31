@@ -74,6 +74,7 @@ public:
     static Path GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob);
     static std::shared_ptr<DrawingSymbolLayersGroups> GetSymbolLayersGroups(uint32_t glyphId);
     static FontStyleSet* CreateEmpty();
+    static bool GetFillPath(const Brush& brush, const Path& src, Path* dst, const Rect* cullRect, const Matrix& ctm);
 };
 } // namespace Drawing
 } // namespace Rosen

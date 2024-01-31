@@ -196,6 +196,11 @@ bool Matrix::HasPerspective() const
 {
     return matrixImplPtr->HasPerspective();
 }
+
+bool SetRectToRect(const Rect& src, const Rect& dst, Matrix::MatrixScaleToFit stf)
+{
+    return matrixImplPtr->SetRectToRect(src, dst, stf);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

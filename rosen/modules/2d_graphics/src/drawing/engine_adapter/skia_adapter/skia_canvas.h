@@ -153,6 +153,8 @@ public:
 
     SkCanvas* ExportSkCanvas() const;
     void ImportSkCanvas(SkCanvas* skCanvas);
+    Size GetBaseLayerSize() override;
+    int SaveLaterAlpha(const Rect* bounds, U8CPU alpha) override;
 
 private:
     void RoundRectCastToSkRRect(const RoundRect& roundRect, SkRRect& skRRect) const;

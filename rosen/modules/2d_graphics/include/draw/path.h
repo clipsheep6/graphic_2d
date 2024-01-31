@@ -179,6 +179,12 @@ public:
         return impl_->DowncastingTo<T>();
     }
 
+    bool operator==(const Path& p) const;
+    bool IsLine(Point line[2]) const;
+    bool IsRect(Rect* rect, bool* isClosed = nullptr, PathDirection* direction = nullptr) const;
+    bool IsOval(Rect* bounds) const;
+    bool IsRRect(RoundRect* rrect) const;
+
 private:
     std::shared_ptr<PathImpl> impl_;
 };

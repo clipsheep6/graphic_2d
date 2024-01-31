@@ -237,6 +237,13 @@ bool SkiaMatrix::HasPerspective() const
 {
     return skMatrix_.hasPerspective();
 }
+
+bool SkiaMatrix::SetRectToRect(const Rect& src, const Rect& dst, int stf)
+{
+    SkRect skSrc = SkRect::MakeXYWH(src.GetLeft(), src.GetTop(), src.GetWidth(), src.GetHeight());
+    SkRect skDst = SkRect::MakeXYWH(dst.GetLeft(), dst.GetTop(), dst.GetWidth(), dst.GetHeight());
+    return skMatrix_.setRectToRect(skSrc, skDst, static_cast<SkMatrix::ScaleToFit>(stf));
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

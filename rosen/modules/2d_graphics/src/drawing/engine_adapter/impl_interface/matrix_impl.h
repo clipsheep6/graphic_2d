@@ -75,6 +75,7 @@ public:
 
     virtual bool GetMinMaxScales(scalar scaleFactors[2]) = 0;
     virtual bool HasPerspective() const = 0;
+    virtual bool SetRectToRect(const Rect& src, const Rect& dst, int stf) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

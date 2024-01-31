@@ -252,6 +252,11 @@ bool operator!=(const Paint& p1, const Paint& p2)
         p1.shaderEffect_ != p2.shaderEffect_ ||
         p1.pathEffect_ != p2.pathEffect_;
 }
+
+void Paint::SetDither(bool dither)
+{
+    dither_ = dither;
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

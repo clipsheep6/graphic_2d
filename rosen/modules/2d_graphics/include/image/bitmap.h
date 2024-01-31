@@ -81,6 +81,8 @@ public:
 
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
+    int RowBytesAsPixels() const;
+    size_t ComputeByteSize() const;
 
 private:
     std::shared_ptr<BitmapImpl> bmpImplPtr;

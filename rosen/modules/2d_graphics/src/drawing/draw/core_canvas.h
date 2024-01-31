@@ -372,6 +372,9 @@ public:
     }
     std::shared_ptr<CoreCanvasImpl> GetCanvasData() const;
 
+    virtual Size GetBaseLayerSize() const;
+    virtual int SaveLaterAlpha(const Rect* bounds, U8CPU alpha) const;
+
 protected:
     CoreCanvas(int32_t width, int32_t height);
     Paint paintBrush_;

@@ -277,6 +277,16 @@ bool SkiaBitmap::Deserialize(std::shared_ptr<Data> data)
     return true;
 }
 
+int SkiaBitmap::RowBytesAsPixels() const
+{
+    return skiaBitmap_.rowBytesAsPixels();
+}
+
+size_t SkiaBitmap::ComputeByteSize() const
+{
+    return skiaBitmap_.computeByteSize();
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

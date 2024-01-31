@@ -93,6 +93,11 @@ public:
     virtual bool GetPositionAndTangent(scalar distance, Point& position, Point& tangent, bool forceClosed) const = 0;
     virtual std::shared_ptr<Data> Serialize() const = 0;
     virtual bool Deserialize(std::shared_ptr<Data> data) = 0;
+    virtual bool Equals(const Path& a, const Path& b) const = 0;
+    virtual bool IsLine(Point line[2]) const = 0;
+    virtual bool IsRect(Rect* rect, bool* isClosed = nullptr, PathDirection* direction = nullptr) const = 0;
+    virtual bool IsOval(Rect* bounds) const = 0;
+    virtual bool IsRRect(RoundRect* rrect) const = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

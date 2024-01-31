@@ -180,6 +180,12 @@ FontStyleSet* SkiaStaticFactory::CreateEmpty()
 {
     return SkiaFontStyleSet::CreateEmpty();
 }
+
+bool SkiaStaticFactory::GetFillPath(const Brush& brush, const Path& src,
+    Path* dst, const Rect* cullRect, const Matrix& ctm)
+{
+    return SkiaPaint::GetFillPath(brush, src, dst, cullRect, ctm);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

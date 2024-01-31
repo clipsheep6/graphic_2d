@@ -21,6 +21,8 @@
 #include "include/core/SkPathMeasure.h"
 #include "include/core/SkString.h"
 #include "skia_matrix.h"
+#include "skia_canvas.h"
+#include "skia_adapter/skia_convert_utils.h"
 
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
@@ -387,6 +389,67 @@ bool SkiaPath::Deserialize(std::shared_ptr<Data> data)
     return true;
 }
 
+bool SkiaPath::Equals(const Path& a, const Path& b) const
+{
+    auto skPathImpl1 = a.GetImpl<SkiaPath>();
+    auto skPathImpl2 = b.GetImpl<SkiaPath>();
+    if (skPathImpl1 != nullptr && skPathImpl2 != nullptr) {
+        return (skPathImpl1->GetPath() == skPathImpl2->GetPath());
+    }
+    return false;
+}
+
+bool SkiaPath::IsLine(Point line[2]) const
+{
+    const size_t linePointCount = 2;
+    std::vector<SkPoint> skiaLine = {};
+    if (line != nullptr) {
+        skiaLine.resize(linePointCount);
+        for (size_t i = 0; i < linePointCount; ++i) {
+            skiaLine[i].fX = line[i].GetX();
+            skiaLine[i].fY = line[i].GetY();
+        }
+    }
+    return path_.isLine(skiaLine.empty() ? nullptr : skiaLine.data());
+}
+
+bool SkiaPath::IsRect(Rect* rect, bool* isClosed, PathDirection* direction) const
+{
+    if (!rect) {
+        LOGE("rect is null, return on line %{public}d", __LINE__);
+        return false;
+    }
+    SKRect skRect;
+    SkiaConvertUtils::DrawingRectCastToSkRect(*rect, skRect);
+#if defined(USE_CANVASKIT0310_SKIA) || defined(NEW_SKIA)
+    SkPathDirection pathDir = static_cast<SkPathDirection>(*direction);
+#else
+    SkPath::Direction pathDir = static_cast<SkPath::Direction>(*direction);
+#endif
+    return path_.isRect(&skRect, isClosed, &pathDir);
+}
+
+bool SkiaPath::IsOval(Rect* bounds) const
+{
+    if (!bounds) {
+        LOGE("bounds is null, return on line %{public}d", __LINE__);
+        return false;
+    }
+    SkRect skBounds;
+    SkiaConvertUtils::DrawingRectCastToSkRect(*bounds, skBounds);
+    return path_.isOval(&skBounds);
+}
+
+bool SkiaPath::IsRRect(RoundRect* rrect) const
+{
+    if (!rrect) {
+        LOGE("rrect is null, return on line %{public}d", __LINE__);
+        return false;
+    }
+    SkRRect rRect;
+    SkiaCanvas::RoundRectCastToSkRRect(*rrect, rRect);
+    return path_.isRRect(&rRect);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

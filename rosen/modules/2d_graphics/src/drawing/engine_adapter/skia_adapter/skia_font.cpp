@@ -160,6 +160,56 @@ const SkFont& SkiaFont::GetFont() const
 {
     return skFont_;
 }
+
+bool SkiaFont::IsForceAutoHinting() const
+{
+    return skFont_.isForceAutoHinting();
+}
+
+bool SkiaFont::IsEmbeddedBitmaps() const
+{
+    return skFont_.isEmbeddedBitmaps();
+}
+
+bool SkiaFont::IsSubpixel() const
+{
+    return skFont_.isSubpixel();
+}
+
+bool SkiaFont::IsLinearMetrics() const
+{
+    return skFont_.isLinearMetrics();
+}
+
+bool SkiaFont::IsEmbolden() const
+{
+    return skFont_.isEmbolden();
+}
+
+void SkiaFont::SetForceAutoHinting(bool forceAutoHinting)
+{
+    skFont_.setForceAutoHinting(forceAutoHinting);
+}
+
+void SkiaFont::SetEmbeddedBitmaps(bool embeddedBitmaps)
+{
+    skFont_.setEmbeddedBitmaps(embeddedBitmaps);
+}
+
+FontHinting SkiaFont::GetHinting() const
+{
+    return static_cast<FontHinting>(skFont_.getHinting());
+}
+
+scalar SkiaFont::GetScaleX() const
+{
+    return skFont_.getScaleX();
+}
+
+scalar SkiaFont::GetSkewX() const
+{
+    return skFont_.getSkewX();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

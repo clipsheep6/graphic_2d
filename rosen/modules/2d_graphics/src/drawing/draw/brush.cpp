@@ -173,6 +173,33 @@ bool operator!=(const Brush& b1, const Brush& b2)
 {
     return !(b1 == b2);
 }
+
+bool Brush::IsDither() const
+{
+    return dither_;
+}
+
+void Brush::SetDither(bool dither)
+{
+    dither_ = dither;
+}
+
+bool Brush::GetFillPath(const Path& src, Path* dst, const Rect* cullRect, scalar resScale)
+{
+    Matrix m;
+    m.SetScale(resScale, resScale);
+    return StaticFactory::GetFillPath(*this, src, dst, cullRect, m);
+}
+
+bool Brush::GetFillPath(const Path& src, Path* dst, const Rect* cullRect, const Matrix& ctm)
+{
+    return StaticFactory::GetFillPath(*this, src, dst, cullRect, ctm);
+}
+
+bool Brush::GetFillPath(const Path& src, Path* dst)
+{
+    return GetFillPath(src, dst, nullptr, 1);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -92,6 +92,9 @@ public:
     friend bool operator==(const Paint& p1, const Paint& p2);
     friend bool operator!=(const Paint& p1, const Paint& p2);
 
+    void SetDither(bool dither);
+    bool IsDither() const { return dither_; }
+
 private:
     const scalar DEFAULT_MITER_VAL = 4.0f;
     bool antiAlias_ = false;
@@ -109,6 +112,8 @@ private:
     std::shared_ptr<ColorSpace> colorSpace_ = nullptr;
     std::shared_ptr<ShaderEffect> shaderEffect_ = nullptr;
     std::shared_ptr<PathEffect> pathEffect_ = nullptr;
+
+    bool dither_;
 };
 } // namespace Drawing
 } // namespace Rosen

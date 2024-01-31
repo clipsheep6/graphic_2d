@@ -66,6 +66,8 @@ public:
 
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
+    int RowBytesAsPixels() const override;
+    size_t ComputeByteSize() const override;
 
 private:
     SkBitmap skiaBitmap_;

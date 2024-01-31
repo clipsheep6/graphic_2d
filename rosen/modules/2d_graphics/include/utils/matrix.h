@@ -198,6 +198,15 @@ public:
     bool GetMinMaxScales(scalar scaleFactors[2]);
     bool HasPerspective() const;
 
+    enum MatrixScaleToFit {
+        FILL_STF,
+        START_STF,
+        CENTER_STF,
+        END_STF,
+    };
+
+    bool SetRectToRect(const Rect& src, const Rect& dst, MatrixScaleToFit stf);
+
 private:
     std::shared_ptr<MatrixImpl> matrixImplPtr;
 };

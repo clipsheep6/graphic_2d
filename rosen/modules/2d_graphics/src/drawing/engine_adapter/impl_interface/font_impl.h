@@ -52,6 +52,16 @@ public:
 
     virtual scalar MeasureText(const void* text, size_t byteLength, TextEncoding encoding) = 0;
     virtual int CountText(const void* text, size_t byteLength, TextEncoding encoding) const = 0;
+    virtual bool IsForceAutoHinting() const = 0;
+    virtual bool IsEmbeddedBitmaps() const = 0;
+    virtual bool IsSubpixel() const = 0;
+    virtual bool IsLinearMetrics() const = 0;
+    virtual bool IsEmbolden() const = 0;
+    virtual void SetForceAutoHinting(bool forceAutoHinting) = 0;
+    virtual void SetEmbeddedBitmaps(bool embeddedBitmaps) = 0;
+    virtual FontHinting GetHinting() const = 0;
+    virtual scalar GetScaleX() const = 0;
+    virtual scalar GetSkewX() const = 0;
 
 protected:
     FontImpl() noexcept = default;

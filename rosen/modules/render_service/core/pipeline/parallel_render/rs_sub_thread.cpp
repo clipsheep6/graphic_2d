@@ -172,6 +172,7 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         RSMainThread::Instance()->GetFocusLeashWindowId());
     auto screenManager = CreateOrGetScreenManager();
     visitor->SetScreenInfo(screenManager->QueryScreenInfo(screenManager->GetDefaultScreenId()));
+    bool needRequestVsync = false;
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     while (threadTask->GetTaskSize() > 0) {
         auto task = threadTask->GetNextRenderTask();
@@ -207,6 +208,7 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         RSTagTracker nodeProcessTracker(grContext_.get(), surfaceNodePtr->GetId(),
             RSTagTracker::TAGTYPE::TAG_SUB_THREAD);
         bool needNotify = !surfaceNodePtr->HasCachedTexture();
+        needRequestVsync = true;
         node->Process(visitor);
         nodeProcessTracker.SetTagEnd();
 #ifndef USE_ROSEN_DRAWING
@@ -237,9 +239,17 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
 
         if (needNotify) {
             RSSubThreadManager::Instance()->NodeTaskNotify(node->GetId());
+            std::weak_ptr<RSSurfaceRenderNode> nodeWeak(surfaceNodePtr);
+            RSMainThread::Instance()->PostTask([nodeWeak]() {
+                auto node = nodeWeak.lock();
+                node->UpdateCompletedCacheSurface();
+                node->ClearCachedImage();
+            });
         }
     }
-    RSMainThread::Instance()->RequestNextVSync();
+    if (needRequestVsync) {
+        RSMainThread::Instance()->RequestNextVSync();
+    }
 #endif
 }
 

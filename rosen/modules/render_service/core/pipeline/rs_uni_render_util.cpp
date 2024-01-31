@@ -373,16 +373,16 @@ bool RSUniRenderUtil::HandleSubThreadNode(RSSurfaceRenderNode& node, RSPaintFilt
         !node.QueryIfAllHwcChildrenForceDisabledByFilter()) {
         return false; // this node should do DSS composition in mainThread although it is assigned to subThread
     }
-    if (!node.HasCachedTexture()) {
-        RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", node.GetId());
-#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-        RSSubThreadManager::Instance()->WaitNodeTask(node.GetId());
-        node.UpdateCompletedCacheSurface();
-#endif
+    if (node.HasCachedTexture()) {
+        RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode DrawCacheSurface %" PRIu64 "", node.GetId());
+        node.DrawCacheSurface(canvas, UNI_MAIN_THREAD_INDEX, true);
+        return true;
+    } else if (node.GetCachedImage()) {
+        RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode DrawCacheImage %" PRIu64 "", node.GetId());
+        node.DrawCacheImage(canvas);
+        return true;
     }
-    RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode %" PRIu64 "", node.GetId());
-    node.DrawCacheSurface(canvas, UNI_MAIN_THREAD_INDEX, true);
-    return true;
+    return false;
 }
 
 bool RSUniRenderUtil::HandleCaptureNode(RSRenderNode& node, RSPaintFilterCanvas& canvas)

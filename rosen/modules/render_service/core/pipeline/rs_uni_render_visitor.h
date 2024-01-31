@@ -340,6 +340,8 @@ private:
     void PrepareSubSurfaceNodes(RSSurfaceRenderNode& node);
     void ProcessSubSurfaceNodes(RSSurfaceRenderNode& node);
 
+    void SetSurfaceNodeCacheImage(RSSurfaceRenderNode& node);
+
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
 #else

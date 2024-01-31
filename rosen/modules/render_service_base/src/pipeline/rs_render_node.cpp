@@ -2487,6 +2487,14 @@ int RSRenderNode::GetShadowRectOffsetY() const
 {
     return shadowRectOffsetY_;
 }
+float RSRenderNode::GetBoundsWidth() const
+{
+    return boundsWidth_;
+}
+float RSRenderNode::GetBoundsHeight() const
+{
+    return boundsHeight_;
+}
 void RSRenderNode::SetDrawingCacheType(RSDrawingCacheType cacheType)
 {
     drawingCacheType_ = cacheType;

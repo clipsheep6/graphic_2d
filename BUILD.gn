@@ -74,10 +74,6 @@ group("libgl") {
   public_deps = libgl
 }
 
-group("libvulkan") {
-  public_deps = libvulkan
-}
-
 group("libnative_image") {
   public_deps = [ "frameworks/surfaceimage:libnative_image" ]
 }

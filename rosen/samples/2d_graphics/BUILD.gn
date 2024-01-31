@@ -108,7 +108,6 @@ ohos_executable("drawing_engine_sample") {
     include_dirs += [ "//third_party/flutter/engine/flutter/vulkan" ]
   }
   public_deps += [
-    "$graphic_2d_root:libvulkan",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
     "//third_party/openssl:libcrypto_shared",
   ]

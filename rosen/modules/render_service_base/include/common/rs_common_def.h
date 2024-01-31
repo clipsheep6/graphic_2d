@@ -61,7 +61,7 @@ enum class FollowType : uint8_t {
 #define LIKELY(exp) (__builtin_expect((exp) != 0, true))
 #define UNLIKELY(exp) (__builtin_expect((exp) != 0, false))
 
-static inline const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
+static inline const std::unordered_map<RSUINodeType, const char*> RSUINodeTypeStrs = {
     {RSUINodeType::UNKNOW,              "UNKNOW"},
     {RSUINodeType::DISPLAY_NODE,        "DisplayNode"},
     {RSUINodeType::RS_NODE,             "RsNode"},

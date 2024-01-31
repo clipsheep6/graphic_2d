@@ -48,7 +48,10 @@ ohos_unittest("RSRenderServiceClientAnimationTest") {
   ]
 
   subsystem_name = "graphic"
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [ 
+    "c_utils:utils",
+    "graphic_surface:surface",
+  ]
 }
 
 ###############################################################################

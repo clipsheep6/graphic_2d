@@ -52,7 +52,6 @@ ohos_shared_library("libcomposer") {
   ]
 
   include_dirs = [
-    "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/utils/log",
   ]
 
@@ -66,8 +65,6 @@ ohos_shared_library("libcomposer") {
     "//commonlibrary/c_utils/base:utils_config",
   ]
 
-  deps = [ "$graphic_2d_root:libsurface" ]
-
   public_deps = [
     "$graphic_2d_root/utils:buffer_handle",
     "$graphic_2d_root/utils:scoped_bytrace",
@@ -77,6 +74,7 @@ ohos_shared_library("libcomposer") {
 
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",

@@ -23,7 +23,6 @@ ohos_fuzztest("HdiScreenFuzzTest") {
 
   include_dirs = [
     "//foundation/graphic/graphic_2d/rosen/modules/composer/hdi_backend/include",
-    "//foundation/graphic/graphic_2d/interfaces/inner_api/surface",
   ]
   cflags = [
     "-g",
@@ -40,6 +39,7 @@ ohos_fuzztest("HdiScreenFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
   ]
 }

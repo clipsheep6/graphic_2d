@@ -815,11 +815,11 @@ ohos_unittest("RSUniRenderVirtualProcessorTest") {
 ## Build RSBaseRenderEngineUnitTest
 ohos_unittest("RSBaseRenderEngineUnitTest") {
   module_out_path = module_output_path
-  include_dirs = [ "$graphic_2d_root/frameworks/surface/include" ]
   sources = [ "rs_base_render_engine_test.cpp" ]
   deps = [ ":rs_test_common" ]
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
   ]
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
@@ -1080,7 +1080,6 @@ ohos_unittest("RSUnmarshalThreadTest") {
 ## Build rs_test_common.a {{{
 config("rs_test_common_public_config") {
   include_dirs = [
-    "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/rosen/include",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/frame_rate_manager",
     "$graphic_2d_root/rosen/modules/render_service/core",
@@ -1125,6 +1124,7 @@ ohos_static_library("rs_test_common") {
     defines += [ "USE_ROSEN_DRAWING" ]
   }
 
+  public_external_deps = [ "graphic_surface:surface" ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",

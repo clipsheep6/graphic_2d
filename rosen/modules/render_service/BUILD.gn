@@ -162,8 +162,6 @@ ohos_shared_library("librender_service") {
   include_dirs = [
     "core",
     "core/round_corner_display",
-    "$graphic_2d_root/frameworks/surface/include",
-    "$graphic_2d_root/interfaces/inner_api/surface",
     "$graphic_2d_root/rosen/include",
     "$graphic_2d_root/rosen/modules/2d_graphics",
     "$graphic_2d_root/rosen/modules/composer/vsync/include",
@@ -191,13 +189,14 @@ ohos_shared_library("librender_service") {
   }
 
   deps = [
-    "$graphic_2d_root:libsurface",
     "$graphic_2d_root/rosen/modules/composer:libcomposer",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_frame_trace:render_frame_trace",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
     "$graphic_2d_root/utils:frame_report",
   ]
+
+  public_external_deps = [ "graphic_surface:surface" ]
 
   if (rs_enable_recording_dcl && defined(use_rosen_drawing) &&
       use_rosen_drawing) {
@@ -249,6 +248,7 @@ ohos_shared_library("librender_service") {
     "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",
     "eventhandler:libeventhandler",
+    "graphic_surface:surface",
     "hicollie:libhicollie",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -335,14 +335,13 @@ ohos_executable("render_service") {
 
   include_dirs = [
     "core",
+    "$graphic_2d_root/interfaces/inner_api/common",
     "//commonlibrary/c_utils/base/include",
-    "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/utils/color_manager/export",
   ]
 
   deps = [
     ":librender_service",
-    "$graphic_2d_root:libsurface",
     "$graphic_2d_root/rosen/modules/composer:libcomposer",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
@@ -354,6 +353,8 @@ ohos_executable("render_service") {
     "hilog:libhilog",
     "ipc:ipc_core",
   ]
+
+  public_external_deps = [ "graphic_surface:surface" ]
 
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
     external_deps += [ "sensor:sensor_interface_native" ]

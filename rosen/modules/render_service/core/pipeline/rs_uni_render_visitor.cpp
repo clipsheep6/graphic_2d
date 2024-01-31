@@ -2203,6 +2203,7 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
 void RSUniRenderVisitor::ProcessChildrenForScreenRecordingOptimization(
     RSDisplayRenderNode& node, NodeId rootIdOfCaptureWindow)
 {
+    RS_OPTIONAL_TRACE_NAME("RSUniRenderVisitor::ProcessChildrenForScreenRecordingOptimization");
     if (DrawBlurInCache(node) || node.GetChildrenCount() == 0) {
         return;
     }
@@ -2215,6 +2216,11 @@ void RSUniRenderVisitor::ProcessChildrenForScreenRecordingOptimization(
         }
         if (startVisit) {
             ProcessChildInner(node, child);
+        } else {
+            RS_OPTIONAL_TRACE_NAME_FMT("skip process node %s because of screen recording optimization",
+                std::to_string(child->GetId()).c_str());
+            RS_LOGD("RSUniRenderVisitor::ProcessChildrenForScreenRecordingOptimization \
+                skip process node %{public}s because of screen recording optimization", std::to_string(child->GetId()).c_str());
         }
     }
 }
@@ -2568,6 +2574,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             bool canvasRotation = screenManager->GetCanvasRotation(node.GetScreenId());
             if (cacheImageProcessed && !displayHasSkipSurface_[mirrorNode->GetScreenId()] &&
                 !displayHasSecSurface_[mirrorNode->GetScreenId()] && screenInfo_.filteredAppSet.empty()) {
+                RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode screen recording optimization is enable")
                 ScaleMirrorIfNeed(node, canvasRotation);
                 if (canvasRotation && !(RSSystemProperties::IsFoldScreenFlag() && mirrorNode->GetScreenId() == 0)) {
                     RotateMirrorCanvasIfNeed(node);

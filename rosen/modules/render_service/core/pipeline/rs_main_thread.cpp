@@ -2911,14 +2911,17 @@ void RSMainThread::ShowWatermark(const std::shared_ptr<Media::PixelMap> &waterma
 {
     std::lock_guard<std::mutex> lock(watermarkMutex_);
     isShow_ = isShow;
-    if (isShow_) {
+    if (isShow_ && watermarkImg) {
+        if (watermarkImg_ && (watermarkImg_->GetWidth() == watermarkImg->GetWidth()) &&
+            (watermarkImg_->GetHeight() == watermarkImg->GetHeight())) {
+            RS_LOGD("RSMainThread::ShowWatermark image already exists.");
+        } else {
 #ifndef USE_ROSEN_DRAWING
-        watermarkImg_ = RSPixelMapUtil::ExtractSkImage(std::move(watermarkImg));
+            watermarkImg_ = RSPixelMapUtil::ExtractSkImage(std::move(watermarkImg));
 #else
-        watermarkImg_ = RSPixelMapUtil::ExtractDrawingImage(std::move(watermarkImg));
+            watermarkImg_ = RSPixelMapUtil::ExtractDrawingImage(std::move(watermarkImg));
 #endif
-    } else {
-        watermarkImg_ = nullptr;
+        }
     }
     SetDirtyFlag();
     RequestNextVSync();

@@ -43,7 +43,8 @@ EGLsizeiANDROID BlobCache::getBlob(const void* key, EGLsizeiANDROID keySize, voi
 }
 
 void BlobCache::initialize(EGLDisplay dpy) {
-    
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(), BlobCache::setBlobFunc,  BlobCache::getBlobFunc);
 }
 
 }

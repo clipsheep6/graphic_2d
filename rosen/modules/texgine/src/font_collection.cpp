@@ -283,6 +283,7 @@ std::shared_ptr<Typeface> FontCollection::FindFallBackTypeface(const uint32_t &c
         return nullptr;
     }
     auto typeface = std::make_shared<Typeface>(fallbackTypeface);
+    fallbackCache_[key] = typeface;
     return typeface;
 }
 

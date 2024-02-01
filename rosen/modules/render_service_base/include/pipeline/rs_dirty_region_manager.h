@@ -47,7 +47,7 @@ enum DirtyRegionType {
     TYPE_AMOUNT
 };
 
-const std::map<DirtyRegionType, std::string> DIRTY_REGION_TYPE_MAP {
+const std::map<DirtyRegionType, const char*> DIRTY_REGION_TYPE_MAP {
     { DirtyRegionType::UPDATE_DIRTY_REGION, "UPDATE_DIRTY_REGION" },
     { DirtyRegionType::OVERLAY_RECT, "OVERLAY_RECT" },
     { DirtyRegionType::FILTER_RECT, "FILTER_RECT" },

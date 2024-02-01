@@ -2098,7 +2098,7 @@ void RSUniRenderVisitor::DrawAndTraceSingleDirtyRegionTypeForDFX(RSSurfaceRender
         std::to_string(node.GetId()) + "] has dirtytype " + matchType->second + subInfo);
     ROSEN_LOGD("DrawAndTraceSingleDirtyRegionTypeForDFX target surface node %{public}s, id[%{public}" PRIu64 "]"
         "has dirtytype %{public}s%{public}s",
-        node.GetName().c_str(), node.GetId(), matchType->second.c_str(), subInfo.c_str());
+        node.GetName().c_str(), node.GetId(), matchType->second, subInfo.c_str());
 }
 
 bool RSUniRenderVisitor::DrawDetailedTypesOfDirtyRegionForDFX(RSSurfaceRenderNode& node)

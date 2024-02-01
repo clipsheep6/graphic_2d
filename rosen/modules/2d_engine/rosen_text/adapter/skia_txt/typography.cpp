@@ -105,6 +105,21 @@ void Typography::Layout(double width)
     return paragraph_->Layout(width);
 }
 
+double Typography::GetMaxGlyphBoundsTop()
+{
+    return paragraph_->GetMaxGlyphBoundsTop();
+}
+
+double Typography::GetMaxGlyphBoundsBottom()
+{
+    return paragraph_->GetMaxGlyphBoundsBottom();
+}
+
+Drawing::FontMetrics Typography::MeasureText()
+{
+    return paragraph_->MeasureText();
+}
+
 void Typography::Paint(SkCanvas *canvas, double x, double y)
 {
     return paragraph_->Paint(canvas, x, y);

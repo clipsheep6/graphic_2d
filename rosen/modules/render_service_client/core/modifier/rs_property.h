@@ -238,6 +238,7 @@ private:
     friend class RSAnimatableProperty;
     template<uint16_t commandType, uint16_t commandSubType>
     friend class RSGetShowingValueAndCancelAnimationTask;
+    friend class RSAnimationClientLogUtils;
 };
 
 template<typename T>

@@ -100,6 +100,9 @@ bool RSTransactionData::Marshalling(Parcel& parcel) const
             success = success && parcel.WriteUint64(nodeId);
             success = success && parcel.WriteUint8(static_cast<uint8_t>(followType));
         }
+        if (!command) {
+            return false;
+        }
         success = success && command->Marshalling(parcel);
         if (!success) {
             ROSEN_LOGE("failed RSTransactionData::Marshalling type:%{public}s", command->PrintType().c_str());

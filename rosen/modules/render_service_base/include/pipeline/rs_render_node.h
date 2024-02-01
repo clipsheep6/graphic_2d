@@ -366,6 +366,8 @@ public:
     // manage cache root nodeid
     void SetDrawingCacheRootId(NodeId id);
     NodeId GetDrawingCacheRootId() const;
+    // specify if cache could be enabled during rotation
+    virtual bool GetDrawingCacheEnabledRotation() const;
     // record cache geodirty for preparation optimization
     void SetCacheGeoPreparationDelay(bool val);
     void ResetCacheGeoPreparationDelay();

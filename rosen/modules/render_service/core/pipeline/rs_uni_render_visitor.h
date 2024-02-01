@@ -290,6 +290,7 @@ private:
     // return false if cache static and simplify its subtree traversal
     bool UpdateCacheChangeStatus(RSRenderNode& node);
     bool IsDrawingCacheStatic(RSRenderNode& node);
+    bool IsNodeCachableWhileRotation(RSRenderNode& node) const;
     // if cache root reuses, update its subtree
     // [attention] check curSurfaceDirtyManager_ before function calls
     void UpdateSubTreeInCache(const std::shared_ptr<RSRenderNode>& cacheRootNode,

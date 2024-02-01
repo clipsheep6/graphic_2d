@@ -1080,6 +1080,11 @@ void RSSurfaceRenderNode::ResetDrawingCacheStatusIfNodeStatic(
     });
 }
 
+bool RSSurfaceRenderNode::GetDrawingCacheEnabledRotation() const
+{
+    return IsAbilityComponent();
+}
+
 void RSSurfaceRenderNode::UpdateFilterCacheStatusWithVisible(bool visible)
 {
     if (visible == prevVisible_) {

@@ -4723,6 +4723,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     }
     if (node.IsMainWindowType() || node.IsLeashWindow()) {
         isSubNodeOfSurfaceInProcess_ = isSubNodeOfSurfaceInProcess;
+        SetSurfaceNodeCacheImage(node);
         // release full children list used by sub thread
     }
 }
@@ -5734,6 +5735,22 @@ bool RSUniRenderVisitor::IsOutOfScreenRegion(RectI rect)
     }
 
     return false;
+}
+
+void RSUniRenderVisitor::SetSurfaceNodeCacheImage(RSSurfaceRenderNode& node)
+{
+    if (!isUIFirst_ || node.IsMainThreadNode() || node.HasCachedTexture()) {
+        return;
+    }
+#ifndef USE_ROSEN_DRAWING
+    auto rect = SkIRect::MakeXYWH(0, 0, node.GetDstRect().GetWidth(), node.GetDstRect().GetHeight());
+    auto image = canvas_->GetSurface()->makeImageSnapshot(rect);
+    node.SetCachedImage(image);
+#else
+    Drawing::RectI rect(0, 0, node.GetDstRect().GetWidth(), node.GetDstRect().GetHeight());
+    auto image = canvas_->GetSurface()->GetImageSnapshot(rect);
+    node.SetCachedImage(image);
+#endif
 }
 } // namespace Rosen
 } // namespace OHOS

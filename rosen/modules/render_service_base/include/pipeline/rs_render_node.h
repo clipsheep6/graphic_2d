@@ -353,6 +353,8 @@ public:
 
     int GetShadowRectOffsetX() const;
     int GetShadowRectOffsetY() const;
+    float GetBoundsWidth() const;
+    float GetBoundsHeight() const;
 
     void SetDrawingCacheType(RSDrawingCacheType cacheType);
     RSDrawingCacheType GetDrawingCacheType() const;

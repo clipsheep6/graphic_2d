@@ -1892,5 +1892,55 @@ Vector2f RSSurfaceRenderNode::GetGravityTranslate(float imgWidth, float imgHeigh
     return {gravityMatrix.Get(Drawing::Matrix::TRANS_X), gravityMatrix.Get(Drawing::Matrix::TRANS_Y)};
 #endif
 }
+
+void RSSurfaceRenderNode::DrawCacheImage(RSPaintFilterCanvas& canvas)
+{
+    if (ROSEN_EQ(GetBoundsWidth(), 0.f) || ROSEN_EQ(GetBoundsHeight(), 0.f)) {
+        return;
+    }
+    Vector2f size = GetOptionalBufferSize();
+    float scaleX = size.x_ / GetBoundsWidth();
+    float scaleY = size.y_ / GetBoundsHeight();
+#ifndef USE_ROSEN_DRAWING
+    canvas.save();
+    canvas.scale(scaleX, scaleY);
+    if (cachedImage_ == nullptr) {
+        canvas.Restore();
+        return;
+    }
+    auto samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone);
+    if (RSSystemProperties::GetRecordingEnabled()) {
+        if (cachedImage_->isTextureBacked()) {
+            RS_LOGI("DrawCacheImage convert cacheImage from texture to raster image");
+            cachedImage_ = cachedImage_->makeRasterImage();
+        }
+    }
+    Vector2f gravity = GetGravityTranslate(cachedImage_->Width(), cachedImage_->Height());
+    canvas.drawImage(cachedImage_, -GetShadowRectOffsetX() * scaleX + gravity.x_,
+        -GetShadowRectOffsetY() * scaleY + gravity.y_, samplingOptions);
+    canvas.restore();
+#else
+    canvas.Save();
+    canvas.Scale(scaleX, scaleY);
+    if (cachedImage_ == nullptr) {
+        canvas.Restore();
+        return;
+    }
+    auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
+    if (RSSystemProperties::GetRecordingEnabled()) {
+        if (cachedImage_->IsTextureBacked()) {
+            RS_LOGI("DrawCacheImage convert cacheImage from texture to raster image");
+            cachedImage_ = cachedImage_->MakeRasterImage();
+        }
+    }
+    Drawing::Brush brush;
+    canvas.AttachBrush(brush);
+    Vector2f gravity = GetGravityTranslate(cachedImage_->GetWidth(), cachedImage_->GetHeight());
+    canvas.DrawImage(*cachedImage_, -GetShadowRectOffsetX() * scaleX + gravity.x_,
+            -GetShadowRectOffsetY() * scaleY + gravity.y_, samplingOptions);
+    canvas.DetachBrush();
+    canvas.Restore();
+#endif
+}
 } // namespace Rosen
 } // namespace OHOS

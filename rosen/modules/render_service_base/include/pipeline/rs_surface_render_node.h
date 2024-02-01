@@ -323,6 +323,8 @@ public:
 
     void OnApplyModifiers() override;
 
+    void DrawCacheImage(RSPaintFilterCanvas& canvas);
+
 #ifndef USE_ROSEN_DRAWING
     void SetTotalMatrix(const SkMatrix& totalMatrix)
 #else
@@ -729,8 +731,6 @@ public:
     void SetCachedImage(std::shared_ptr<Drawing::Image> image)
 #endif
     {
-        SetContentDirty();
-        std::lock_guard<std::mutex> lock(cachedImageMutex_);
         cachedImage_ = image;
     }
 
@@ -740,13 +740,11 @@ public:
     std::shared_ptr<Drawing::Image> GetCachedImage() const
 #endif
     {
-        std::lock_guard<std::mutex> lock(cachedImageMutex_);
         return cachedImage_;
     }
 
     void ClearCachedImage()
     {
-        std::lock_guard<std::mutex> lock(cachedImageMutex_);
         cachedImage_ = nullptr;
     }
 
@@ -1139,7 +1137,6 @@ private:
     ContainerConfig containerConfig_;
 
     bool startAnimationFinished_ = false;
-    mutable std::mutex cachedImageMutex_;
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> cachedImage_;
 #else

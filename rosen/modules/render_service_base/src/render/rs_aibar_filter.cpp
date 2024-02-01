@@ -131,15 +131,7 @@ bool RSAIBarFilter::IsAiInvertCoefValid(const std::vector<float>& aiInvertCoef)
 #ifndef USE_ROSEN_DRAWING
 std::shared_ptr<SkRuntimeShaderBuilder> RSAIBarFilter::MakeBinarizationShader(
     float imageWidth, float imageHeight, sk_sp<SkShader> imageShader)
-#else
-std::shared_ptr<Drawing::RuntimeShaderBuilder> RSAIBarFilter::MakeBinarizationShader(
-    float imageWidth, float imageHeight, std::shared_ptr<Drawing::ShaderEffect> imageShader)
-#endif
 {
-#ifndef USE_ROSEN_DRAWING
-#else
-    static std::shared_ptr<Drawing::RuntimeEffect> binarizationShaderEffect_;
-#endif
     // coefficient of saturation borrowed from
     // the saturate filter in RSProperties::GenerateColorFilter()
     static constexpr char prog[] = R"(
@@ -164,7 +156,6 @@ std::shared_ptr<Drawing::RuntimeShaderBuilder> RSAIBarFilter::MakeBinarizationSh
         }
     )";
     std::vector<float> aiInvertCoef = GetAiInvertCoef();
-#ifndef USE_ROSEN_DRAWING
     auto [effect, err] = SkRuntimeEffect::MakeForShader(SkString(prog));
     if (!effect) {
         ROSEN_LOGE("MakeBinarizationShader::RuntimeShader effect error: %{public}s\n", err.c_str());
@@ -179,7 +170,37 @@ std::shared_ptr<Drawing::RuntimeShaderBuilder> RSAIBarFilter::MakeBinarizationSh
     builder->uniform("saturation", aiInvertCoef[4]); // aiInvertCoef[4] is saturation
 
     return builder;
+}
+
 #else
+std::shared_ptr<Drawing::RuntimeShaderBuilder> RSAIBarFilter::MakeBinarizationShader(
+    float imageWidth, float imageHeight, std::shared_ptr<Drawing::ShaderEffect> imageShader)
+{
+    static std::shared_ptr<Drawing::RuntimeEffect> binarizationShaderEffect_;
+    // coefficient of saturation borrowed from
+    // the saturate filter in RSProperties::GenerateColorFilter()
+    static constexpr char prog[] = R"(
+        uniform half low;
+        uniform half high;
+        uniform half threshold;
+        uniform half opacity;
+        uniform half saturation;
+        uniform shader imageShader;
+
+        const vec3 toLuminance = vec3(0.3086, 0.6094, 0.0820);
+
+        half4 main(float2 coord) {
+            half3 c = imageShader.eval(coord).rgb;
+            float gray = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b;
+            float bin = mix(high, low, step(threshold, gray));
+            half3 invert = half3(bin, bin, bin);
+            float luminance = dot(c, toLuminance);
+            half3 satAdjust = mix(vec3(luminance), c, saturation);
+            half3 res = mix(satAdjust, invert, opacity);
+            return half4(res, 1.0);
+        }
+    )";
+    std::vector<float> aiInvertCoef = GetAiInvertCoef();
     if (binarizationShaderEffect_ == nullptr) {
         binarizationShaderEffect_ = Drawing::RuntimeEffect::CreateForShader(prog);
         if (binarizationShaderEffect_ == nullptr) {
@@ -197,8 +218,8 @@ std::shared_ptr<Drawing::RuntimeShaderBuilder> RSAIBarFilter::MakeBinarizationSh
     builder->SetUniform("saturation", aiInvertCoef[4]); // aiInvertCoef[4] is saturation
 
     return builder;
-#endif
 }
+#endif
 
 } // namespace Rosen
 } // namespace OHOS

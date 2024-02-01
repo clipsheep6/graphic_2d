@@ -53,6 +53,14 @@ void RSNodeCommandHelper::MarkNodeGroup(RSContext& context, NodeId nodeId, bool 
     }
 }
 
+void RSNodeCommandHelper::MarkNodeGroupFrozen(RSContext& context, NodeId nodeId, bool isFrozen)
+{
+    auto& nodeMap = context.GetNodeMap();
+    if (auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId)) {
+        node->MarkNodeGroupFrozen(isFrozen);
+    }
+}
+
 void RSNodeCommandHelper::MarkNodeSingleFrameComposer(RSContext& context,
     NodeId nodeId, bool isNodeSingleFrameComposer, pid_t pid)
 {

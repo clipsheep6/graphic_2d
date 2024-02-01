@@ -366,6 +366,8 @@ public:
     // manage cache root nodeid
     void SetDrawingCacheRootId(NodeId id);
     NodeId GetDrawingCacheRootId() const;
+    // specify if cache could be frozen
+    bool GetDrawingCacheFrozen() const;
     // record cache geodirty for preparation optimization
     void SetCacheGeoPreparationDelay(bool val);
     void ResetCacheGeoPreparationDelay();
@@ -448,6 +450,7 @@ public:
         GROUPED_BY_USER,
     };
     void MarkNodeGroup(NodeGroupType type, bool isNodeGroup);
+    void MarkNodeGroupFrozen(bool isFrozen);
     NodeGroupType GetNodeGroupType();
 
     void MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer, pid_t pid = 0);
@@ -670,6 +673,7 @@ private:
 
     std::shared_ptr<RectF> drawRegion_ = nullptr;
     NodeGroupType nodeGroupType_ = NodeGroupType::NONE;
+    bool isNodeGroupFrozen_ = false;
 
     // shadowRectOffset means offset between shadowRect and absRect of node
     int shadowRectOffsetX_ = 0;

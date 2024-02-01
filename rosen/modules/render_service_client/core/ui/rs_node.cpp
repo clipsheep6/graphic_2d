@@ -1588,6 +1588,19 @@ void RSNode::MarkNodeGroup(bool isNodeGroup, bool isForced)
     }
 }
 
+void RSNode::MarkNodeGroupFrozen(bool isFrozen)
+{
+    if (isNodeGroupFrozen_ == isFrozen) {
+        return;
+    }
+    isNodeGroupFrozen_ = isFrozen;
+    std::unique_ptr<RSCommand> command = std::make_unique<RSMarkNodeGroupFrozen>(GetId(), isFrozen);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
 void RSNode::MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer)
 {
     if (isNodeSingleFrameComposer_ != isNodeSingleFrameComposer) {

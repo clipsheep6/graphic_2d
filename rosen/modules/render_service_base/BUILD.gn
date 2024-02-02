@@ -18,7 +18,10 @@ import(
 
 config("export_config") {
   cflags_cc = [ "-std=c++17" ]
-  include_dirs = [ "include" ]
+  include_dirs = [ 
+   "include",
+   "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/include/render_backend",
+ ]
 
   defines = rs_common_define
 }

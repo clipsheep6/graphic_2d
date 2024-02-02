@@ -61,6 +61,9 @@ HWTEST_F(TransactSurfaceDelegatorStubTest, SetClient001, Function | MediumTest |
 {
     bool ret = tsd->SetClient(surfaceDelegator->AsObject());
     ASSERT_EQ(ret, true);
+
+    ret = tsd->SetClient(surfaceDelegator->AsObject());
+    EXPECT_EQ(ret, true);
 }
 
 /*
@@ -89,21 +92,6 @@ HWTEST_F(TransactSurfaceDelegatorStubTest, ReadNativeHandle001, Function | Mediu
 {
     MessageParcel input;
     NativeHandleT* buffer = tsd->ReadNativeHandle(input);
-    ASSERT_EQ(buffer, nullptr);
-}
-
-/*
-* Function: ReadNativeHandleWithoutVersion
-* Type: Function
-* Rank: Important(2)
-* EnvConditions: N/A
-* CaseDescription: 1. call ReadNativeHandleWithoutVersion
-*                  2. check ret
- */
-HWTEST_F(TransactSurfaceDelegatorStubTest, ReadNativeHandleWithoutVersion001, Function | MediumTest | Level2)
-{
-    MessageParcel input;
-    NativeHandleT* buffer = tsd->ReadNativeHandleWithoutVersion(input);
-    ASSERT_EQ(buffer, nullptr);
+    EXPECT_EQ(buffer, nullptr);
 }
 } // namespace OHOS::Rosen

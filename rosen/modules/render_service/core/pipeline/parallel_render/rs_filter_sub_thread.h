@@ -74,7 +74,6 @@ public:
 #endif
 #endif
 
-    void ResetGrContext();
     void DumpMem(DfxString& log);
     float GetAppGpuMemoryInMB();
 

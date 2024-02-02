@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+
 #include "property/rs_properties.h"
 
 #include <algorithm>

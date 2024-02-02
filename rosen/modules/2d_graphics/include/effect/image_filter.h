@@ -34,6 +34,7 @@ public:
         OFFSET,
         ARITHMETIC,
         COMPOSE,
+        GRADIENT_BLUR,
     };
     /*
      * @brief         Create a filter that blurs its input by the separate X and Y sinma value.

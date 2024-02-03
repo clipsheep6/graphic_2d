@@ -89,4 +89,35 @@ HWTEST_F(RSEffectRenderNodeTest, GetFilterRect, TestSize.Level1)
     rsEffectRenderNode.SetEffectRegion(path);
     rsEffectRenderNode.GetFilterRect();
 }
+
+/**
+ * @tc.name: SetRotationChanged
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSEffectRenderNodeTest, SetRotationChanged, TestSize.Level1)
+{
+    std::shared_ptr<RSNodeVisitor> visitor = nullptr;
+    NodeId nodeId = 0;
+    std::weak_ptr<RSContext> context;
+    RSEffectRenderNode rsEffectRenderNode(nodeId, context);
+    rsEffectRenderNode.SetRotationChanged(true);
+    ASSERT_TRUE(rsEffectRenderNode.GetRotationChanged());
+}
+
+/**
+ * @tc.name: SetRotationChanged
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSEffectRenderNodeTest, SetInvalidateTimesForRotation, TestSize.Level1)
+{
+    std::shared_ptr<RSNodeVisitor> visitor = nullptr;
+    NodeId nodeId = 0;
+    std::weak_ptr<RSContext> context;
+    RSEffectRenderNode rsEffectRenderNode(nodeId, context);
+    rsEffectRenderNode.SetInvalidateTimesForRotation(0);
+}
 } // namespace OHOS::Rosen

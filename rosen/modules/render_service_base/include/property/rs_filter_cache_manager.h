@@ -128,7 +128,7 @@ private:
     class RSFilterCacheTask : public RSFilter::RSFilterTask {
     public:
         static const bool FilterPartialRenderEnabled;
-        bool isFirstInit_ = true;
+        std::atomic<bool> isFirstInit_ = true;
         bool needClearSurface_ = false;
         std::atomic<bool> isTaskRelease_ = false;
         std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedFirstFilter_ = nullptr;

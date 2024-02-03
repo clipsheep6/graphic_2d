@@ -315,14 +315,9 @@ void RSFilterSubThread::DestroyShareEglContext()
 void RSFilterSubThread::RenderCache(std::vector<std::weak_ptr<RSFilter::RSFilterTask>>& filterTaskList)
 {
     RS_TRACE_NAME_FMT("RSFilterSubThread::RenderCache:%zu", filterTaskList.size());
+    int errorTaskNum = 0;
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
-    }
-    if (fence_->Wait(SYNC_TIME_OUT) < 0) {
-        RS_LOGE("RSFilterSubThread::RenderCache: fence time out");
-        filterTaskList.clear();
-        isWorking_.store(false);
-        return;
     }
     if (grContext_ == nullptr) {
         RS_LOGE("RSFilterSubThread::RenderCache: grContext is null");
@@ -333,17 +328,32 @@ void RSFilterSubThread::RenderCache(std::vector<std::weak_ptr<RSFilter::RSFilter
     for (auto& task : filterTaskList) {
         auto workTask = task.lock();
         if (!workTask) {
+            errorTaskNum++;
             RS_LOGE("RSFilterSubThread::RenderCache: Render task is null");
             continue;
         }
         if (!workTask->InitSurface(grContext_.get())) {
+            errorTaskNum++;
             RS_LOGE("RSFilterSubThread::RenderCache: InitSurface failed");
             continue;
         }
         if (!workTask->Render()) {
+            errorTaskNum++;
             RS_LOGE("RSFilterSubThread::RenderCache: Render failed");
             continue;
         }
+    }
+    if (errorTaskNum == filterTaskList.size()) {
+        RS_LOGE("RSFilterSubThread::RenderCache: fence time out");
+        filterTaskList.clear();
+        isWorking_.store(false);
+        return;
+    }
+    if (fence_->Wait(SYNC_TIME_OUT) < 0) {
+        RS_LOGE("RSFilterSubThread::RenderCache: fence time out");
+        filterTaskList.clear();
+        isWorking_.store(false);
+        return;
     }
 #ifndef USE_ROSEN_DRAWING
     grContext_->flushAndSubmit(true);

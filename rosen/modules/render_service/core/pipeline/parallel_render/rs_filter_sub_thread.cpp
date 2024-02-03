@@ -519,19 +519,4 @@ std::shared_ptr<Drawing::GPUContext> RSFilterSubThread::CreateShareGrContext()
     return nullptr;
 }
 #endif
-
-void RSFilterSubThread::ResetGrContext()
-{
-    RS_TRACE_NAME("ResetGrContext release resource");
-    if (grContext_ == nullptr) {
-        return;
-    }
-#ifndef USE_ROSEN_DRAWING
-    grContext_->flushAndSubmit(true);
-    grContext_->freeGpuResources();
-#else
-    grContext_->FlushAndSubmit(true);
-    grContext_->FreeGpuResources();
-#endif
-}
 } // namespace OHOS::Rosen

@@ -831,8 +831,7 @@ REGISTER_UNMARSHALLING_FUNC(DrawImageRect, DrawOpItem::IMAGE_RECT_OPITEM, DrawIm
 
 DrawImageRectOpItem::DrawImageRectOpItem(const DrawCmdList& cmdList, DrawImageRectOpItem::ConstructorHandle* handle)
     : DrawWithPaintOpItem(cmdList, handle->paintHandle, IMAGE_RECT_OPITEM), src_(handle->src), dst_(handle->dst),
-      sampling_(handle->sampling), constraint_(handle->constraint), isForeground_(handle->isForeground),
-      isTextBlobCache_(handle->isTextBlobCache)
+      sampling_(handle->sampling), constraint_(handle->constraint), isForeground_(handle->isForeground)
 {
     image_ = CmdListHelper::GetImageFromCmdList(cmdList, handle->image);
 }
@@ -856,30 +855,12 @@ void DrawImageRectOpItem::Playback(Canvas* canvas, const Rect* rect)
         LOGE("DrawImageRectOpItem image is null");
         return;
     }
-    auto newImage = std::make_shared<Drawing::Image>();
-    bool useNewImage = false;
-    if (isTextBlobCache_) {
-        // if TextBlobOP generate cache before uifirst enable, uifirst's subthread can not use cache result,
-        // rebind the cached image to the current thread.
-        Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
-        auto texture = image_->GetBackendTexture(true, &origin);
-        Drawing::BitmapFormat info = Drawing::BitmapFormat {Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL};
-        auto gpuContext = canvas->GetGPUContext();
-        if (gpuContext != nullptr) {
-            useNewImage = newImage->BuildFromTexture(*canvas->GetGPUContext(),
-                texture.GetTextureInfo(), origin, info, nullptr);
-        }
-    }
     if (isForeground_) {
         AutoCanvasRestore acr(*canvas, false);
         SaveLayerOps ops;
         canvas->SaveLayer(ops);
         canvas->AttachPaint(paint_);
-        if (useNewImage) {
-            canvas->DrawImageRect(*newImage, src_, dst_, sampling_, constraint_);
-        } else {
-            canvas->DrawImageRect(*image_, src_, dst_, sampling_, constraint_);
-        }
+        canvas->DrawImageRect(*image_, src_, dst_, sampling_, constraint_);
         Brush brush;
         brush.SetColor(canvas->GetEnvForegroundColor());
         brush.SetBlendMode(Drawing::BlendMode::SRC_IN);
@@ -887,10 +868,6 @@ void DrawImageRectOpItem::Playback(Canvas* canvas, const Rect* rect)
         return;
     }
     canvas->AttachPaint(paint_);
-    if (useNewImage) {
-        canvas->DrawImageRect(*newImage, src_, dst_, sampling_, constraint_);
-        return;
-    }
     canvas->DrawImageRect(*image_, src_, dst_, sampling_, constraint_);
 }
 
@@ -1077,8 +1054,8 @@ bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(
     PaintHandle fakePaintHandle;
     fakePaintHandle.isAntiAlias = true;
     fakePaintHandle.style = Paint::PaintStyle::PAINT_FILL;
-    cmdList.AddOp<DrawImageRectOpItem::ConstructorHandle>(imageHandle, src, dst, sampling,
-         SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT, fakePaintHandle, isForeground, true);
+    cmdList.AddOp<DrawImageRectOpItem::ConstructorHandle>(
+        imageHandle, src, dst, sampling, SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT, fakePaintHandle, isForeground);
     return true;
 }
 
@@ -1133,7 +1110,7 @@ bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(DrawCmdList& cm
     fakePaintHandle.isAntiAlias = true;
     fakePaintHandle.style = Paint::PaintStyle::PAINT_FILL;
     cmdList.AddOp<DrawImageRectOpItem::ConstructorHandle>(imageHandle, src, dst, sampling,
-        SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT, fakePaintHandle, false, true);
+        SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT, fakePaintHandle);
     return true;
 }
 
@@ -1183,7 +1160,7 @@ std::shared_ptr<DrawImageRectOpItem> DrawTextBlobOpItem::GenerateCachedOpItem(Ca
     fakePaint.SetStyle(Paint::PaintStyle::PAINT_FILL);
     fakePaint.SetAntiAlias(true);
     return std::make_shared<DrawImageRectOpItem>(*image, src, dst, SamplingOptions(),
-        SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT, fakePaint, false, true);
+        SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT, fakePaint);
 }
 
 /* DrawSymbolOpItem */

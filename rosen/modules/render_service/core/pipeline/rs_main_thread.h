@@ -528,7 +528,7 @@ private:
     std::shared_ptr<RSAppStateListener> rsAppStateListener_;
     int32_t subscribeFailCount_ = 0;
     SystemAnimatedScenes systemAnimatedScenes_ = SystemAnimatedScenes::OTHERS;
-    uint32_t LeashWindowCount_ = 0;
+    uint32_t leashWindowCount_ = 0;
 
     std::atomic_bool mainLooping_ = false;
 };

@@ -45,6 +45,12 @@
 #include "visitor/rs_node_visitor.h"
 #include "property/rs_property_drawable.h"
 
+#ifdef RS_ENABLE_VK
+#include "include/gpu/GrBackendSurface.h"
+#include "platform/ohos/backend/native_buffer_utils.h"
+#include "platform/ohos/backend/rs_vulkan_context.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 const int SCB_NODE_NAME_PREFIX_LENGTH = 3;
@@ -1875,5 +1881,259 @@ Vector2f RSSurfaceRenderNode::GetGravityTranslate(float imgWidth, float imgHeigh
     return {gravityMatrix.Get(Drawing::Matrix::TRANS_X), gravityMatrix.Get(Drawing::Matrix::TRANS_Y)};
 #endif
 }
+
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+void RSSurfaceRenderNode::UpdatePriorBackendTexture()
+{
+    if (priorCacheSurface_ == nullptr) {
+        return;
+    }
+#ifndef USE_ROSEN_DRAWING
+    priorCacheBackendTexture_
+        = priorCacheSurface_->getBackendTexture(SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
+#else
+    priorCacheBackendTexture_ = priorCacheSurface_->GetBackendTexture();
+#endif
+}
+#endif
+
+#ifndef USE_ROSEN_DRAWING
+sk_sp<SkSurface> RSSurfaceRenderNode::GetPriorCacheSurface() const
+#else
+std::shared_ptr<Drawing::Surface> RSSurfaceRenderNode::GetPriorCacheSurface() const
+#endif
+{
+    return priorCacheSurface_;
+}
+
+void RSSurfaceRenderNode::ClearPriorCacheSurface()
+{
+    priorCacheSurface_ = nullptr;
+#ifdef RS_ENABLE_VK
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        priorCacheCleanupHelper_ = nullptr;
+    }
+#endif
+}
+
+#ifndef USE_ROSEN_DRAWING
+void RSSurfaceRenderNode::InitPriorCacheSurface(GrRecordingContext* grContext)
+#else
+void RSSurfaceRenderNode::InitPriorCacheSurface(Drawing::GPUContext* gpuContext)
+#endif
+{
+	priorCacheSurface_ = nullptr;
+    float width = 0.0f, height = 0.0f;
+    Vector2f size = GetOptionalBufferSize();
+    SetBoundsWidth(size.x_);
+    SetBoundsHeight(size.y_);
+	width = GetBoundsWidth();
+	height = GetBoundsHeight();
+#ifndef USE_ROSEN_DRAWING
+#if (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)) && (defined RS_ENABLE_EGLIMAGE)
+    if (grContext == nullptr) {
+        return;
+    }
+#ifdef RS_ENABLE_GL
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
+        priorCacheSurface_ = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kYes, info);
+    }
+#endif
+#ifdef RS_ENABLE_VK
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        priorCacheBackendTexture_ = NativeBufferUtils::MakeBackendTexture(width, height);
+        if (!priorCacheBackendTexture_.isValid()) {
+            return;
+        }
+        GrVkImageInfo imageInfo;
+        priorCacheBackendTexture_.getVkImageInfo(&imageInfo);
+        priorCacheCleanupHelper_ = new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
+            imageInfo.fImage, imageInfo.fAlloc.fMemory);
+        SkSurfaceProps props(0, SkPixelGeometry::kUnknown_SkPixelGeometry);
+        priorCacheSurface_ = SkSurface::MakeFromBackendTexture(
+            grContext, priorCacheBackendTexture_, kBottomLeft_GrSurfaceOrigin, 1, kRGBA_8888_SkColorType,
+            SkColorSpace::MakeSRGB(), &props, NativeBufferUtils::DeleteVkImage, priorCacheCleanupHelper_);
+    }
+#endif
+#else
+    priorCacheSurface_ = SkSurface::MakeRasterN32Premul(width, height);
+#endif
+#else // USE_ROSEN_DRAWING
+#if (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)) && (defined RS_ENABLE_EGLIMAGE)
+    if (gpuContext == nullptr) {
+        return;
+    }
+#ifdef RS_ENABLE_GL
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+        Drawing::ImageInfo info = Drawing::ImageInfo::MakeN32Premul(width, height);
+        priorCacheSurface_ = Drawing::Surface::MakeRenderTarget(gpuContext, true, info);
+    }
+#endif
+#ifdef RS_ENABLE_VK
+    if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+        OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+        priorCacheBackendTexture_ = NativeBufferUtils::MakeBackendTexture(width, height);
+        auto vkTextureInfo = priorCacheBackendTexture_.GetTextureInfo().GetVKTextureInfo();
+        if (!priorCacheBackendTexture_.IsValid() || !vkTextureInfo) {
+            return;
+        }
+        priorCacheCleanupHelper_ = new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
+            vkTextureInfo->vkImage, vkTextureInfo->vkAlloc.memory);
+        priorCacheSurface_ = Drawing::Surface::MakeFromBackendTexture(
+            gpuContext, priorCacheBackendTexture_.GetTextureInfo(), Drawing::TextureOrigin::BOTTOM_LEFT,
+            1, Drawing::ColorType::COLORTYPE_RGBA_8888, nullptr,
+            NativeBufferUtils::DeleteVkImage, priorCacheCleanupHelper_);
+    }
+#endif
+#else
+    priorCacheSurface_ = Drawing::Surface::MakeRasterN32Premul(width, height);
+#endif
+#endif // USE_ROSEN_DRAWING
+}
+
+#ifndef USE_ROSEN_DRAWING
+sk_sp<SkImage> RSSurfaceRenderNode::GetPriorCacheImage(RSPaintFilterCanvas& canvas)
+{
+#if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+        if (!priorCacheBackendTexture_.isValid()) {
+            RS_LOGE("invalid grBackendTexture_");
+            return nullptr;
+        }
+#ifdef RS_ENABLE_VK
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            if (!priorCacheSurface_ || !priorCacheCleanupHelper_) {
+                return nullptr;
+            }
+        }
+#endif
+        sk_sp<SkImage> image = nullptr;
+#ifdef RS_ENABLE_GL
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+            image = SkImage::MakeFromTexture(canvas.recordingContext(), priorCacheBackendTexture_,
+                kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
+        }
+#endif
+
+#ifdef RS_ENABLE_VK
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            image = SkImage::MakeFromTexture(canvas.recordingContext(), priorCacheBackendTexture_,
+                kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr,
+                NativeBufferUtils::DeleteVkImage, priorCacheCleanupHelper_->Ref());
+        }
+#endif
+        return image;
+#endif
+}
+
+void RSSurfaceRenderNode::DrawPriorCacheSurface(RSPaintFilterCanvas& canvas)
+{
+    if (ROSEN_EQ(GetBoundsWidth(), 0.f) || ROSEN_EQ(GetBoundsHeight(), 0.f)) {
+        return;
+    }
+    auto cacheType = GetCacheType();
+    canvas.save();
+    Vector2f size = GetOptionalBufferSize();
+    float scaleX = size.x_ / GetBoundsWidth();
+    float scaleY = size.y_ / GetBoundsHeight();
+    canvas.scale(scaleX, scaleY);
+    auto cacheImage = GetPriorCacheImage(canvas);
+    if (cacheImage == nullptr) {
+        canvas.restore();
+        return;
+    }
+    auto samplingOptions = SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone);
+    if (RSSystemProperties::GetRecordingEnabled()) {
+        if (cacheImage->isTextureBacked()) {
+            RS_LOGI("RSSurfaceRenderNode::DrawPriorCacheSurface convert cacheImage from texture to raster image");
+            cacheImage = cacheImage->makeRasterImage();
+        }
+    }
+	auto surfaceNode = ReinterpretCastTo<RSSurfaceRenderNode>();
+	Vector2f gravityTranslate = surfaceNode ?
+		surfaceNode->GetGravityTranslate(cacheImage->Width(), cacheImage->Height()) : Vector2f(0.0f, 0.0f);
+	canvas.drawImage(cacheImage, -GetShadowRectOffsetX() * scaleX + gravityTranslate.x_,
+		-GetShadowRectOffsetY() * scaleY + gravityTranslate.y_, samplingOptions);
+    canvas.restore();
+}
+#else
+std::shared_ptr<Drawing::Image> RSSurfaceRenderNode::GetPriorCacheImage(RSPaintFilterCanvas& canvas)
+{
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+        if (!priorCacheBackendTexture_.IsValid()) {
+            RS_LOGE("invalid grBackendTexture_");
+            return nullptr;
+        }
+#ifdef RS_ENABLE_VK
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            if (!priorCacheSurface_ || !priorCacheCleanupHelper_) {
+                return nullptr;
+            }
+        }
+#endif
+        auto image = std::make_shared<Drawing::Image>();
+        Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
+        Drawing::BitmapFormat info = Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888,
+            Drawing::ALPHATYPE_PREMUL };
+#ifdef RS_ENABLE_GL
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::VULKAN &&
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() != OHOS::Rosen::GpuApiType::DDGR) {
+            image->BuildFromTexture(*canvas.GetGPUContext(), priorCacheBackendTexture_.GetTextureInfo(),
+                origin, info, nullptr);
+        }
+#endif
+#ifdef RS_ENABLE_VK
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            image->BuildFromTexture(*canvas.GetGPUContext(), priorCacheBackendTexture_.GetTextureInfo(),
+                origin, info, nullptr,
+                NativeBufferUtils::DeleteVkImage, priorCacheCleanupHelper_->Ref());
+        }
+#endif
+        return image;
+#endif
+}
+
+void RSSurfaceRenderNode::DrawPriorCacheSurface(RSPaintFilterCanvas& canvas)
+{
+    if (ROSEN_EQ(GetBoundsWidth(), 0.f) || ROSEN_EQ(GetBoundsHeight(), 0.f)) {
+        return;
+    }
+    canvas.Save();
+    Vector2f size = GetOptionalBufferSize();
+    float scaleX = size.x_ / GetBoundsWidth();
+    float scaleY = size.y_ / GetBoundsHeight();
+    canvas.Scale(scaleX, scaleY);
+    auto cacheImage = GetPriorCacheImage(canvas);
+    if (cacheImage == nullptr) {
+        canvas.Restore();
+        return;
+    }
+    auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
+    if (RSSystemProperties::GetRecordingEnabled()) {
+        if (cacheImage->IsTextureBacked()) {
+            RS_LOGI("RSSurfaceRenderNode::DrawPriorCacheSurface convert cacheImage from texture to raster image");
+            cacheImage = cacheImage->MakeRasterImage();
+        }
+    }
+    Drawing::Brush brush;
+    canvas.AttachBrush(brush);
+	auto surfaceNode = ReinterpretCastTo<RSSurfaceRenderNode>();
+	Vector2f gravityTranslate = surfaceNode ?
+		surfaceNode->GetGravityTranslate(cacheImage->GetWidth(), cacheImage->GetHeight()) : Vector2f(0.0f, 0.0f);
+	canvas.DrawImage(*cacheImage, -GetShadowRectOffsetX() * scaleX + gravityTranslate.x_,
+		-GetShadowRectOffsetY() * scaleY + gravityTranslate.y_, samplingOptions);
+    canvas.DetachBrush();
+    canvas.Restore();
+}
+#endif
 } // namespace Rosen
 } // namespace OHOS

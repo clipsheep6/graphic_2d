@@ -937,6 +937,18 @@ public:
         return !cornerRadius.IsZero();
     }
 
+#ifndef USE_ROSEN_DRAWING
+    void InitPriorCacheSurface(GrRecordingContext* grContext);
+    sk_sp<SkSurface> GetPriorCacheSurface() const;
+#else
+    void InitPriorCacheSurface(Drawing::GPUContext* gpuContext);
+    std::shared_ptr<Drawing::Surface> GetPriorCacheSurface() const;
+#endif
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+    void UpdatePriorBackendTexture();
+#endif
+    void DrawPriorCacheSurface(RSPaintFilterCanvas& canvas);
+    void ClearPriorCacheSurface();
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -1157,7 +1169,23 @@ private:
     bool hasTransparentSurface_ = false;
     bool forceUIFirst_ = false;
     bool forceUIFirstChanged_ = false;
-
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<SkSurface> priorCacheSurface_ = nullptr;
+    sk_sp<SkImage> GetPriorCacheImage(RSPaintFilterCanvas& canvas);
+#else
+    std::shared_ptr<Drawing::Surface> priorCacheSurface_ = nullptr;
+    std::shared_ptr<Drawing::Image> GetPriorCacheImage(RSPaintFilterCanvas& canvas);
+#endif
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+#ifndef USE_ROSEN_DRAWING
+    GrBackendTexture priorCacheBackendTexture_;
+#else
+    Drawing::BackendTexture priorCacheBackendTexture_;
+#endif
+#ifdef RS_ENABLE_VK
+    NativeBufferUtils::VulkanCleanupHelper* priorCacheCleanupHelper_ = nullptr;
+#endif
+#endif
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;
     friend class RSRenderService;

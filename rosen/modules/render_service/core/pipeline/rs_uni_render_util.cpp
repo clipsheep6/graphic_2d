@@ -373,16 +373,44 @@ bool RSUniRenderUtil::HandleSubThreadNode(RSSurfaceRenderNode& node, RSPaintFilt
         !node.QueryIfAllHwcChildrenForceDisabledByFilter()) {
         return false; // this node should do DSS composition in mainThread although it is assigned to subThread
     }
-    if (!node.HasCachedTexture()) {
+    if (!DealFirstFrameForUIFirst(node)) {
+        return false;
+    }
+    if (node.HasCachedTexture()) {
+        RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode DrawCacheSurface %" PRIu64 "", node.GetId());
+        node.DrawCacheSurface(canvas, UNI_MAIN_THREAD_INDEX, true);
+        return true;
+    } else if (node.GetPriorCacheSurface()) {
+        RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode DrawPriorCacheSurface %" PRIu64 "", node.GetId());
+        node.DrawPriorCacheSurface(canvas);
+        return true;
+    }
+    return false;
+}
+
+bool RSUniRenderUtil::DealFirstFrameForUIFirst(RSSurfaceRenderNode& node)
+{
+    if (node.HasCachedTexture() || node.GetPriorCacheSurface()) {
+        return true;
+    }
+
+    if (RSMainThread::Instance()->UsePriorCache()) {
+        RS_TRACE_NAME_FMT("InitPriorCacheSurface wait %" PRIu64 "", node.GetId());
+#ifndef USE_ROSEN_DRAWING
+        auto grContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext()->GetGrContext();
+#else
+        auto grContext = RSMainThread::Instance()->GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+#endif
+        node.InitPriorCacheSurface(grContext);
+        return false;
+    } else {
         RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", node.GetId());
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         RSSubThreadManager::Instance()->WaitNodeTask(node.GetId());
         node.UpdateCompletedCacheSurface();
 #endif
+        return true;
     }
-    RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode %" PRIu64 "", node.GetId());
-    node.DrawCacheSurface(canvas, UNI_MAIN_THREAD_INDEX, true);
-    return true;
 }
 
 bool RSUniRenderUtil::HandleCaptureNode(RSRenderNode& node, RSPaintFilterCanvas& canvas)

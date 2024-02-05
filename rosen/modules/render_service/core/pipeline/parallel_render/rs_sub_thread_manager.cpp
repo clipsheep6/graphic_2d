@@ -205,6 +205,11 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
         if (!child) {
             continue;
         }
+        if (RSMainThread::Instance()->UsePriorCache() &&
+            !child->HasCachedTexture() && !child->GetPriorCacheSurface()) {
+            RS_OPTIONAL_TRACE_NAME_FMT("no cache skip node: [%s, %llu]", child->GetName().c_str(), child->GetId());
+            continue;
+        }
         if (!child->ShouldPaint()) {
             RS_OPTIONAL_TRACE_NAME_FMT("SubmitTask skip node: [%s, %llu]", child->GetName().c_str(), child->GetId());
             continue;

@@ -4643,6 +4643,14 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 #endif
         }
 
+        std::shared_ptr<RSPaintFilterCanvas> priorCacheCanvas = nullptr;
+        if (isUIFirst_ && !node.HasCachedTexture() &&
+            RSMainThread::Instance()->UsePriorCache()) {
+            if(auto priorCacheSurface = node.GetPriorCacheSurface()) {
+                priorCacheCanvas = std::make_shared<RSPaintFilterCanvas>(priorCacheSurface.get());
+                swap(canvas_, priorCacheCanvas);
+            }
+        }
         if (node.IsAppWindow()) {
             if (!node.IsNotifyUIBufferAvailable() && IsFirstFrameReadyToDraw(node)) {
                 node.NotifyUIBufferAvailable();
@@ -4656,6 +4664,15 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             ProcessChildren(node);
         }
         node.ProcessRenderAfterChildren(*canvas_);
+
+        if (priorCacheCanvas) {
+            canvas_->GetSurface()->FlushAndSubmit(true);
+            swap(canvas_, priorCacheCanvas);
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+            node.UpdatePriorBackendTexture();
+#endif
+            node.DrawPriorCacheSurface(*canvas_);
+        }
     }
 
     RSPropertiesPainter::SetBgAntiAlias(bgAntiAliasState);

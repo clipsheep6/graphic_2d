@@ -260,6 +260,11 @@ public:
         return mainLooping_.load();
     }
 
+    bool UsePriorCache() const
+    {
+        return forceUIFirstChanged_ && deviceType_ == DeviceType::PHONE;
+    }
+
     void SubscribeAppState();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
     const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetSelfDrawingNodes() const;
@@ -281,6 +286,7 @@ private:
     void Animate(uint64_t timestamp);
     void ApplyModifiers();
     void ConsumeAndUpdateAllNodes();
+    void UpdateForceUIFirstChanged();
     void CollectInfoForHardwareComposer();
     void CollectInfoForDrivenRender();
     void ReleaseAllNodesBuffer();

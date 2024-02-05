@@ -239,6 +239,17 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
 
         if (needNotify) {
             RSSubThreadManager::Instance()->NodeTaskNotify(node->GetId());
+        } 
+        if (RSMainThread::Instance()->UsePriorCache()) {
+            std::weak_ptr<RSSurfaceRenderNode> nodeWeak(surfaceNodePtr);
+            RSMainThread::Instance()->PostTask([nodeWeak, needNotify]() {
+                auto node = nodeWeak.lock();
+                if (needNotify) {
+                    node->UpdateCompletedCacheSurface();
+                } else if (node->GetPriorCacheSurface()) {
+                    node->ClearPriorCacheSurface();
+                }
+            });
         }
     }
     if (needRequestVsync) {

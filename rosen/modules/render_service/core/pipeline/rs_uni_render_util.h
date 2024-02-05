@@ -101,6 +101,7 @@ private:
 #else
     static void PostReleaseSurfaceTask(std::shared_ptr<Drawing::Surface>&& surface, uint32_t threadIndex);
 #endif
+    static bool DealFirstFrameForUIFirst(RSSurfaceRenderNode& node);
 };
 }
 }

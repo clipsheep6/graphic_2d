@@ -1027,6 +1027,24 @@ bool RSMainThread::CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const
     return false;
 }
 
+void RSMainThread::UpdateForceUIFirstChanged()
+{
+    if (!isUniRender_) {
+        return;
+    }
+    const auto& nodeMap = GetContext().GetNodeMap();
+    nodeMap.TraverseSurfaceNodes(
+        [this, &nodeMap](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) mutable {
+            if (surfaceNode == nullptr || !surfaceNode->IsOnTheTree()) {
+                return;
+            }
+            if (surfaceNode->GetForceUIFirstChanged()) {
+                forceUIFirstChanged_ = true;
+                surfaceNode->SetForceUIFirstChanged(false);
+            }
+        });
+}
+
 void RSMainThread::CollectInfoForHardwareComposer()
 {
     if (!isUniRender_) {
@@ -1038,10 +1056,6 @@ void RSMainThread::CollectInfoForHardwareComposer()
         [this, &nodeMap](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) mutable {
             if (surfaceNode == nullptr || !surfaceNode->IsOnTheTree()) {
                 return;
-            }
-            if (surfaceNode->IsLeashWindow() && surfaceNode->GetForceUIFirstChanged()) {
-                forceUIFirstChanged_ = true;
-                surfaceNode->SetForceUIFirstChanged(false);
             }
             if (surfaceNode->GetBuffer() != nullptr) {
                 selfDrawingNodes_.emplace_back(surfaceNode);
@@ -1129,7 +1143,7 @@ void RSMainThread::CheckIfHardwareForcedDisabled()
     // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
     // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
     isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ || isMultiDisplay || hasColorFilter ||
-        forceUIFirstChanged_;
+        UsePriorCache();
     RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: CheckIfHardwareForcedDisabled isHardwareForcedDisabled_:%d "
         "doWindowAnimate_:%d isMultiDisplay:%d hasColorFilter:%d forceUIFirstChanged:%d",
         isHardwareForcedDisabled_, doWindowAnimate_.load(), isMultiDisplay, hasColorFilter, forceUIFirstChanged_);
@@ -1477,8 +1491,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     isCachedSurfaceUpdated_ = false;
     if (needTraverseNodeTree) {
         uniVisitor->SetAnimateState(doWindowAnimate_);
-        uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_ || forceUIFirstChanged_);
-        forceUIFirstChanged_ = false;
+        uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_ || UsePriorCache());
         isAccessibilityConfigChanged_ = false;
         SetFocusLeashWindowId();
         uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
@@ -1521,6 +1534,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     isDirty_ = false;
     forceUpdateUniRenderFlag_ = false;
     idleTimerExpiredFlag_ = false;
+    forceUIFirstChanged_ = false;
 }
 
 pid_t RSMainThread::GetDesktopPidForRotationScene() const

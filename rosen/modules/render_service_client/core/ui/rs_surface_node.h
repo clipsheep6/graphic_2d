@@ -140,6 +140,7 @@ public:
     void SetSurfaceTextureUpdateCallBack(const RSSurfaceTextureUpdateCallBack& updateCallback);
 #endif
     void SetForeground(bool isForeground);
+    void SetForceUIFirst(bool forceUIFirst);
 
 protected:
     bool NeedForcedSendToRemote() const override;

@@ -501,6 +501,12 @@ public:
     void SetLastIsNeedAssignToSubThread(bool lastIsNeedAssignToSubThread);
     bool GetLastIsNeedAssignToSubThread() const;
 
+    void SetBoundsWidth(float width);
+    float GetBoundsWidth() const;
+
+    void SetBoundsHeight(float height);
+    float GetBoundsHeight() const;
+
     void SetIsTextureExportNode(bool isTextureExportNode)
     {
         isTextureExportNode_ = isTextureExportNode;

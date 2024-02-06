@@ -272,6 +272,22 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_Scale, TestSize.Level1
 }
 
 /*
+ * @tc.name: NativeDrawingCanvasTest_Shear
+ * @tc.desc: test for OH_Drawing_CanvasShear.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_Shear, TestSize.Level1)
+{
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(100, 100, 300, 300);
+    OH_Drawing_CanvasShear(nullptr, 0, 0.3f);
+    OH_Drawing_BrushSetColor(brush_, 0xFF67C23A);
+    OH_Drawing_CanvasShear(canvas_, 0, 0.3f);
+    OH_Drawing_CanvasDrawRect(canvas_, rect);
+    OH_Drawing_RectDestroy(rect);
+}
+
+/*
  * @tc.name: NativeDrawingCanvasTest_ClipRect
  * @tc.desc: test for OH_Drawing_CanvasClipRect.
  * @tc.type: FUNC

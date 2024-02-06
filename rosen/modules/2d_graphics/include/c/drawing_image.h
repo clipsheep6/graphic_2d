@@ -108,6 +108,17 @@ int32_t OH_Drawing_ImageGetHeight(OH_Drawing_Image*);
  */
 void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image*, OH_Drawing_Image_Info*);
 
+/**
+ * @brief Gets opaque property of image.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @return Returns true if image is opaque.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_ImageIsOpaque(OH_Drawing_Image*);
+
 #ifdef __cplusplus
 }
 #endif

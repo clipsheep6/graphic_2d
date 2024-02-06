@@ -76,3 +76,11 @@ void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image* cImage, OH_Drawing_Image_Inf
     cImageInfo->colorType = static_cast<OH_Drawing_ColorFormat>(imageInfo.GetColorType());
     cImageInfo->alphaType = static_cast<OH_Drawing_AlphaFormat>(imageInfo.GetAlphaType());
 }
+
+bool OH_Drawing_ImageIsOpaque(OH_Drawing_Image* cImage)
+{
+    if (cImage == nullptr) {
+        return false;
+    }
+    return CastToImage(cImage)->IsOpaque();
+}

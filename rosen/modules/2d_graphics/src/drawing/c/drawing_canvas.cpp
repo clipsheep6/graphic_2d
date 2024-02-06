@@ -405,6 +405,15 @@ void OH_Drawing_CanvasScale(OH_Drawing_Canvas* cCanvas, float sx, float sy)
     canvas->Scale(sx, sy);
 }
 
+void OH_Drawing_CanvasShear(OH_Drawing_Canvas* cCanvas, float sx, float sy)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return;
+    }
+    canvas->Shear(sx, sy);
+}
+
 void OH_Drawing_CanvasClear(OH_Drawing_Canvas* cCanvas, uint32_t color)
 {
     Canvas* canvas = CastToCanvas(cCanvas);

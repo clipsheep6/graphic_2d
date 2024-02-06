@@ -381,6 +381,18 @@ void OH_Drawing_CanvasTranslate(OH_Drawing_Canvas*, float dx, float dy);
 void OH_Drawing_CanvasScale(OH_Drawing_Canvas*, float sx, float sy);
 
 /**
+ * @brief Used for image shear transformation.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Canvas Indicates the pointer to an <b>OH_Drawing_Canvas</b> object.
+ * @param sx shear value in X.
+ * @param sy shear value in Y
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_CanvasShear(OH_Drawing_Canvas*, float sx, float sy);
+
+/**
  * @brief Get the width of a canvas.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

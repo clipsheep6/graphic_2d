@@ -238,6 +238,7 @@ bool RSSurfaceWindows::SetupGrContext()
     GrContextOptions options;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
 #if !defined(NEW_SKIA)
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
     const auto &grContext = GrContext::MakeGL(glinterface, options);

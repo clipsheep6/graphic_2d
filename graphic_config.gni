@@ -107,17 +107,12 @@ if (graphic_2d_feature_ace_enable_gpu) {
     "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
   ]
 
-  libvulkan = []
-  if (graphic_2d_feature_enable_vulkan) {
-    libvulkan += [ "//third_party/vulkan-loader/openharmony:vulkan_loader" ]
-  }
 } else {
   gpu_defines = [ "ACE_DISABLE_GL" ]
   ace_enable_gpu = false
   rs_enable_gpu = false
   surface_enable_gpu = false
   libgl = []
-  libvulkan = []
 }
 
 if (graphic_2d_feature_parallel_upload_enable &&

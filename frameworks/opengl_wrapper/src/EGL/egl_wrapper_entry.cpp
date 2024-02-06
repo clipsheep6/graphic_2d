@@ -308,11 +308,7 @@ EGLBoolean EglInitializeImpl(EGLDisplay dpy, EGLint *major, EGLint *minor)
         ThreadPrivateDataCtl::SetError(EGL_BAD_DISPLAY);
         return EGL_FALSE;
     }
-    EGLBoolean ret = display->Init(major, minor);
-    if (ret != EGL_FALSE) {
-        BlobCache::get()->initialize(dpy);
-    }
-    return ret;
+    return display->Init(major, minor);
 }
 
 EGLBoolean EglMakeCurrentImpl(EGLDisplay dpy, EGLSurface draw,

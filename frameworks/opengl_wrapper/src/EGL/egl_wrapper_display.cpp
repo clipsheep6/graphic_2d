@@ -14,7 +14,7 @@
  */
 
 #include "egl_wrapper_display.h"
-
+#include "egl_blob_cache.h"
 #include "egl_defs.h"
 #include "egl_wrapper_context.h"
 #include "egl_wrapper_surface.h"
@@ -68,6 +68,14 @@ EGLBoolean EglWrapperDisplay::Init(EGLint *major, EGLint *minor)
         } else {
             WLOGE("eglInitialize Error.");
         }
+
+        if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
+            BlobCache::get()->initialize();
+            table->egl.eglSetBlobCacheFuncsANDROID(disp_, BlobCache::setBlobFunc,  BlobCache::getBlobFunc);
+        } else {
+            WLOGE("EglSetBlobCacheFuncsANDROIDImpl platform is not found.");
+        }
+
         return ret;
     }
     WLOGE("eglInitialize is invalid.");

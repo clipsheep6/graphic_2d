@@ -14,10 +14,17 @@
  */
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <pair>
+#include <memory>
 
 namespace OHOS {
 class BlobCache {
     public:
+    class Blob{
+        void *data_;
+        size_t data_size_;
+        bool operator<(const Blob& rhs) const;
+    }
     static BlobCache* get();
     static void setBlobFunc(const void* key, EGLsizeiANDROID keySize, const void* value,
                     EGLsizeiANDROID valueSize);
@@ -28,8 +35,12 @@ class BlobCache {
                     EGLsizeiANDROID valueSize);
     EGLsizeiANDROID getBlob(const void* key, EGLsizeiANDROID keySize, void* value,
                                EGLsizeiANDROID valueSize);
-    void initialize(EGLDisplay dpy);
+    void initialize();
+
+    void setEglFilePath(const char* filePath);
     private:
     static BlobCache *blob_cache_;
+    std::vector<std::pair<Blob>> mblob_;
+    char* file_path_;
 };
 }

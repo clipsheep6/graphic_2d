@@ -217,6 +217,12 @@ public:
     void SetScaleX(float scaleX);
     void SetScaleY(float scaleY);
 
+    void SetSkew(float skew);
+    void SetSkew(float skewX, float skewY);
+    void SetSkew(const Vector2f& skew);
+    void SetSkewX(float skewX);
+    void SetSkewY(float skewY);
+
     void SetAlpha(float alpha);
     void SetAlphaOffscreen(bool alphaOffscreen);
 
@@ -400,6 +406,10 @@ protected:
     std::vector<PropertyId> GetModifierIds() const;
     bool isCustomTextType_ = false;
 
+    std::recursive_mutex& GetPropertyMutex()
+    {
+        return propertyMutex_;
+    }
 private:
     static NodeId GenerateId();
     static void InitUniRenderEnabled();
@@ -451,7 +461,7 @@ private:
     std::shared_ptr<const RSTransitionEffect> transitionEffect_;
 
     std::mutex animationMutex_;
-    std::recursive_mutex propertyMutex;
+    std::recursive_mutex propertyMutex_;
 
     friend class RSUIDirector;
     friend class RSTransition;

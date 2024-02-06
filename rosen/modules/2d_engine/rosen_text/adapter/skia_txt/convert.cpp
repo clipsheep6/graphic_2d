@@ -96,9 +96,7 @@ SPText::PlaceholderRun Convert(const PlaceholderSpan& run)
 SPText::TextStyle Convert(const TextStyle& style)
 {
     SPText::TextStyle textStyle;
-    auto color = SkColorSetARGB(
-        style.color.GetAlpha(), style.color.GetRed(), style.color.GetGreen(), style.color.GetBlue());
-    textStyle.color = color;
+    textStyle.color = style.color.CastToColorQuad();
     textStyle.decoration = static_cast<SPText::TextDecoration>(style.decoration);
     auto decorationColor = SkColorSetARGB(style.decorationColor.GetAlpha(), style.decorationColor.GetRed(),
         style.decorationColor.GetGreen(), style.decorationColor.GetBlue());
@@ -116,6 +114,10 @@ SPText::TextStyle Convert(const TextStyle& style)
     textStyle.height = style.heightScale;
     textStyle.heightOverride = style.heightOnly;
     textStyle.locale = style.locale;
+    textStyle.backgroundRect = { style.backgroundRect.color, style.backgroundRect.leftTopRadius,
+        style.backgroundRect.rightTopRadius, style.backgroundRect.rightBottomRadius,
+        style.backgroundRect.leftBottomRadius };
+    textStyle.styleId = style.styleId;
     textStyle.isSymbolGlyph = style.isSymbolGlyph;
 
     if (style.isSymbolGlyph) {

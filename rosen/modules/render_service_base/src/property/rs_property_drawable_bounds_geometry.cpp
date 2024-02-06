@@ -39,6 +39,7 @@
 
 namespace {
 constexpr int PARAM_DOUBLE = 2;
+constexpr int16_t BORDER_TRANSPARENT = 255;
 } // namespace
 namespace OHOS::Rosen {
 // ============================================================================
@@ -356,6 +357,9 @@ void RSBorderFourLineRoundCornerDrawable::Draw(const RSRenderContent& content, R
     Drawing::scalar centerX = innerRrect_.GetRect().GetLeft() + innerRrect_.GetRect().GetWidth() / 2;
     Drawing::scalar centerY = innerRrect_.GetRect().GetTop() + innerRrect_.GetRect().GetHeight() / 2;
     Drawing::Point center = { centerX, centerY };
+    auto rect = rrect_.GetRect();
+    Drawing::SaveLayerOps slr(&rect, nullptr);
+    canvas.SaveLayer(slr);
     if (drawBorder_) {
         properties.GetBorder()->PaintTopPath(canvas, pen, rrect_, center);
         properties.GetBorder()->PaintRightPath(canvas, pen, rrect_, center);
@@ -728,6 +732,10 @@ RSColor RSShadowDrawable::GetColorForShadow(const RSRenderContent& content, RSPa
 
 void RSShadowDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
+    if (content.GetRenderProperties().GetNeedSkipShadow()) {
+        RS_TRACE_NAME("RSShadowDrawable::Draw NeedSkipShadow");
+        return;
+    }
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
         return;
     }
@@ -909,6 +917,22 @@ RSPropertyDrawable::DrawablePtr RSLightUpEffectDrawable::Generate(const RSRender
 bool RSLightUpEffectDrawable::Update(const RSRenderContent& content)
 {
     return content.GetRenderProperties().IsLightUpEffectValid();
+}
+
+// ============================================================================
+// Binarization
+void RSBinarizationDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+{
+    RSPropertiesPainter::DrawBinarizationShader(content.GetRenderProperties(), canvas);
+}
+ 
+RSPropertyDrawable::DrawablePtr RSBinarizationDrawable::Generate(const RSRenderContent& content)
+{
+    auto& aiInvert = content.GetRenderProperties().GetAiInvert();
+    if (!aiInvert.has_value()) {
+        return nullptr;
+    }
+    return std::make_unique<RSBinarizationDrawable>();
 }
 
 // ============================================================================
@@ -1107,12 +1131,17 @@ void RSBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCan
 {
     auto& properties = content.GetRenderProperties();
     bool antiAlias = RSPropertiesPainter::GetBgAntiAlias() || !properties.GetCornerRadius().IsZero();
+    auto borderColorAlpha = properties.GetBorderColor()[0].GetAlpha();
 #ifndef USE_ROSEN_DRAWING
     SkPaint paint = paint_;
     paint.setAntiAlias(antiAlias);
     // use drawrrect to avoid texture update in phone screen rotation scene.
     if (RSSystemProperties::IsPhoneType()) {
-        canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetRRect()), paint);
+        if (borderColorAlpha < BORDER_TRANSPARENT) {
+            canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetRRect()), paint);
+        } else {
+            canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetInnerRRect()), paint);
+        }
     } else {
         canvas.drawRect(RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect()), paint);
     }
@@ -1122,7 +1151,11 @@ void RSBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCan
     canvas.AttachBrush(brush);
     // use drawrrect to avoid texture update in phone screen rotation scene
     if (RSSystemProperties::IsPhoneType()) {
-        canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect()));
+        if (borderColorAlpha < BORDER_TRANSPARENT) {
+            canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect()));
+        } else {
+            canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetInnerRRect()));
+        }
     } else {
         canvas.DrawRect(RSPropertiesPainter::Rect2DrawingRect(properties.GetBoundsRect()));
     }

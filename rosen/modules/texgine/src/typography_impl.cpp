@@ -425,7 +425,7 @@ void TypographyImpl::ComputeRoundRect(VariantSpan& span, int& index, int& preInd
     bool leftRound = false;
     bool rightRound = false;
     if (span.HasBackgroundRect()) {
-        int lineSpanCount = metric.lineSpans.size();
+        int lineSpanCount = static_cast<int>(metric.lineSpans.size());
         int styleId = span.GetTextStyle().styleId;
         // index - 1 is previous index, -1 is the invalid styleId
         int preStyleId = index == 0 ? -1 : metric.lineSpans[index - 1].GetTextStyle().styleId;
@@ -456,7 +456,7 @@ void TypographyImpl::ComputeRoundRect(VariantSpan& span, int& index, int& preInd
         double maxRoundRectRadius = MAX_INT_VALUE;
         double minTop = MAX_INT_VALUE;
         double maxBottom = 0;
-        for (auto &gSpan : groupSpans) {
+        for (const auto &gSpan : groupSpans) {
             maxRoundRectRadius = std::fmin(std::fmin(gSpan.GetWidth(), gSpan.GetHeight()), maxRoundRectRadius);
             minTop = std::fmin(minTop, gSpan.GetTop());
             maxBottom = std::fmax(maxBottom, gSpan.GetBottom());

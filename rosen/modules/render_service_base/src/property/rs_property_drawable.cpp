@@ -71,6 +71,7 @@ static const std::unordered_map<RSModifierType, RSPropertyDrawableSlot> g_proper
     { RSModifierType::ROTATION_Y, RSPropertyDrawableSlot::BOUNDS_MATRIX },
     { RSModifierType::CAMERA_DISTANCE, RSPropertyDrawableSlot::BOUNDS_MATRIX },
     { RSModifierType::SCALE, RSPropertyDrawableSlot::BOUNDS_MATRIX },
+    { RSModifierType::SKEW, RSPropertyDrawableSlot::BOUNDS_MATRIX },
     { RSModifierType::TRANSLATE, RSPropertyDrawableSlot::BOUNDS_MATRIX },
     { RSModifierType::TRANSLATE_Z, RSPropertyDrawableSlot::BOUNDS_MATRIX },
     { RSModifierType::SUBLAYER_TRANSFORM, RSPropertyDrawableSlot::INVALID },
@@ -111,7 +112,7 @@ static const std::unordered_map<RSModifierType, RSPropertyDrawableSlot> g_proper
     { RSModifierType::MASK, RSPropertyDrawableSlot::MASK },
     { RSModifierType::SPHERIZE, RSPropertyDrawableSlot::INVALID },
     { RSModifierType::LIGHT_UP_EFFECT, RSPropertyDrawableSlot::LIGHT_UP_EFFECT },
-    { RSModifierType::AIINVERT, RSPropertyDrawableSlot::BACKGROUND_FILTER },
+    { RSModifierType::AIINVERT, RSPropertyDrawableSlot::BINARIZATION },
     { RSModifierType::SYSTEMBAREFFECT, RSPropertyDrawableSlot::BACKGROUND_FILTER },
     { RSModifierType::PIXEL_STRETCH, RSPropertyDrawableSlot::PIXEL_STRETCH },
     { RSModifierType::PIXEL_STRETCH_PERCENT, RSPropertyDrawableSlot::PIXEL_STRETCH },
@@ -193,6 +194,7 @@ static const std::array<RSPropertyDrawable::DrawableGenerator, LUT_SIZE> g_drawa
     // FG properties in Bounds clip
     nullptr,                                      // FG_SAVE_BOUNDS
     nullptr,                                      // EXTRA_CLIP_TO_BOUNDS
+    RSBinarizationDrawable::Generate,             // BINARIZATION,
     RSColorFilterDrawable::Generate,              // COLOR_FILTER
     RSLightUpEffectDrawable::Generate,            // LIGHT_UP_EFFECT
     RSForegroundFilterDrawable::Generate,         // FOREGROUND_FILTER
@@ -356,7 +358,7 @@ inline bool HasPropertyDrawableInRange(
         [](const auto& drawablePtr) { return drawablePtr != nullptr; });
 }
 
-inline uint8_t CalculateDrawableVecStatus(RSRenderContent& content, RSPropertyDrawable::DrawableVec& drawableVec)
+uint8_t CalculateDrawableVecStatus(RSRenderContent& content, const RSPropertyDrawable::DrawableVec& drawableVec)
 {
     uint8_t result = 0;
     auto& properties = content.GetRenderProperties();

@@ -46,6 +46,14 @@ public:
 
     double GetIdeographicBaseline() override;
 
+    double GetGlyphsBoundsTop() override;
+
+    double GetGlyphsBoundsBottom() override;
+
+    double GetGlyphsBoundsLeft() override;
+
+    double GetGlyphsBoundsRight() override;
+
     bool DidExceedMaxLines() override;
 
     size_t GetLineCount() const override;
@@ -82,8 +90,10 @@ public:
         }
     }
 
+    OHOS::Rosen::Drawing::FontMetrics MeasureText() override;
+
 private:
-    TextStyle SkStyleToTextStyle(const skia::textlayout::TextStyle& skia);
+    TextStyle SkStyleToTextStyle(const skia::textlayout::TextStyle& skStyle);
 
     std::unique_ptr<skia::textlayout::Paragraph> paragraph_;
     std::vector<PaintRecord> paints_;

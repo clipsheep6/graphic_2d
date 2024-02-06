@@ -105,6 +105,31 @@ void Typography::Layout(double width)
     return paragraph_->Layout(width);
 }
 
+double Typography::GetGlyphsBoundsTop()
+{
+    return paragraph_->GetGlyphsBoundsTop();
+}
+
+double Typography::GetGlyphsBoundsBottom()
+{
+    return paragraph_->GetGlyphsBoundsBottom();
+}
+
+double Typography::GetGlyphsBoundsLeft()
+{
+    return paragraph_->GetGlyphsBoundsLeft();
+}
+
+double Typography::GetGlyphsBoundsRight()
+{
+    return paragraph_->GetGlyphsBoundsRight();
+}
+
+Drawing::FontMetrics Typography::MeasureText()
+{
+    return paragraph_->MeasureText();
+}
+
 void Typography::Paint(SkCanvas *canvas, double x, double y)
 {
     return paragraph_->Paint(canvas, x, y);
@@ -168,7 +193,7 @@ Boundary Typography::GetActualTextRange(int lineNumber, bool includeSpaces)
 double Typography::GetLineHeight(int lineNumber)
 {
     const auto &lines = paragraph_->GetLineMetrics();
-    if (lineNumber < lines.size()) {
+    if (lineNumber < static_cast<int>(lines.size())) {
         return lines[lineNumber].height;
     }
     return 0.0;
@@ -177,7 +202,7 @@ double Typography::GetLineHeight(int lineNumber)
 double Typography::GetLineWidth(int lineNumber)
 {
     const auto &lines = paragraph_->GetLineMetrics();
-    if (lineNumber < lines.size()) {
+    if (lineNumber < static_cast<int>(lines.size())) {
         return lines[lineNumber].width;
     }
     return 0.0;

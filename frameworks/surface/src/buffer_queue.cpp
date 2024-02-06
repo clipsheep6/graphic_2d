@@ -20,11 +20,11 @@
 #include <sys/time.h>
 #include <cinttypes>
 #include <unistd.h>
+#include <parameters.h>
 #include <scoped_bytrace.h>
 
 #include "buffer_utils.h"
 #include "buffer_log.h"
-#include "buffer_manager.h"
 #include "hitrace_meter.h"
 #include "sandbox_utils.h"
 #include "surface_buffer_impl.h"
@@ -62,7 +62,6 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared), isLocalRender_(IsLocalRender())
 {
     BLOGND("ctor, Queue id: %{public}" PRIu64 " isShared: %{public}d", uniqueId_, isShared);
-    bufferManager_ = BufferManager::GetInstance();
     if (isShared_ == true) {
         queueSize_ = 1;
     }
@@ -189,9 +188,48 @@ bool BufferQueue::QueryIfBufferAvailable()
     return ret;
 }
 
+static GSError DelegatorDequeueBuffer(wptr<ConsumerSurfaceDelegator>& delegator,
+                                      const BufferRequestConfig& config,
+                                      sptr<BufferExtraData>& bedata,
+                                      struct IBufferProducer::RequestBufferReturnValue& retval)
+{
+    auto consumerDelegator = delegator.promote();
+    if (consumerDelegator == nullptr) {
+        BLOGE("Consumer surface delegator has been expired");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    auto ret = consumerDelegator->DequeueBuffer(config, bedata, retval);
+    if (ret != GSERROR_OK) {
+        BLOGE("Consumer surface delegator failed to dequeuebuffer, err: %{public}d", ret);
+        return ret;
+    }
+
+    ret = retval.buffer->Map();
+    if (ret != GSERROR_OK) {
+        BLOGE("Buffer map failed, err: %{public}d", ret);
+        return ret;
+    }
+    retval.buffer->SetSurfaceBufferWidth(retval.buffer->GetWidth());
+    retval.buffer->SetSurfaceBufferHeight(retval.buffer->GetHeight());
+
+    return GSERROR_OK;
+}
+
+static void SetReturnValue(sptr<SurfaceBuffer>& buffer, sptr<BufferExtraData>& bedata,
+                           struct IBufferProducer::RequestBufferReturnValue& retval)
+{
+    retval.sequence = buffer->GetSeqNum();
+    bedata = buffer->GetExtraData();
+    retval.fence = SyncFence::INVALID_FENCE;
+}
+
 GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<BufferExtraData> &bedata,
     struct IBufferProducer::RequestBufferReturnValue &retval)
 {
+    if (wpCSurfaceDelegator_ != nullptr) {
+        return DelegatorDequeueBuffer(wpCSurfaceDelegator_, config, bedata, retval);
+    }
+
     ScopedBytrace func(__func__);
     if (!GetStatus()) {
         BLOGN_FAILURE_RET(GSERROR_NO_CONSUMER);
@@ -237,9 +275,7 @@ GSError BufferQueue::RequestBuffer(const BufferRequestConfig &config, sptr<Buffe
 
     ret = AllocBuffer(buffer, config);
     if (ret == GSERROR_OK) {
-        retval.sequence = buffer->GetSeqNum();
-        bedata = buffer->GetExtraData();
-        retval.fence = SyncFence::INVALID_FENCE;
+        SetReturnValue(buffer, bedata, retval);
         BLOGND("Success alloc Buffer[%{public}d %{public}d] id: %{public}d id: %{public}" PRIu64, config.width,
             config.height, retval.sequence, uniqueId_);
     } else {
@@ -432,6 +468,18 @@ GSError BufferQueue::FlushBuffer(uint32_t sequence, const sptr<BufferExtraData> 
     }
     BLOGND("Success Buffer seq id: %{public}d Queue id: %{public}" PRIu64 " AcquireFence:%{public}d",
         sequence, uniqueId_, fence->Get());
+
+    if (wpCSurfaceDelegator_ != nullptr) {
+        auto consumerDelegator = wpCSurfaceDelegator_.promote();
+        if (consumerDelegator == nullptr) {
+            BLOGE("Consumer surface delegator has been expired");
+            return GSERROR_INVALID_ARGUMENTS;
+        }
+        sret = consumerDelegator->QueueBuffer(bufferQueueCache_[sequence].buffer, fence->Get());
+        if (sret != GSERROR_OK) {
+            BLOGNE("Consumer surface delegator failed to dequeuebuffer");
+        }
+    }
     return sret;
 }
 
@@ -465,7 +513,8 @@ GSError BufferQueue::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
 
 void BufferQueue::DumpToFile(uint32_t sequence)
 {
-    if (access("/data/bq_dump", F_OK) == -1) {
+    static bool dumpBufferEnabled = system::GetParameter("persist.dumpbuffer.enabled", "0") != "0";
+    if (!dumpBufferEnabled || access("/data/bq_dump", F_OK) == -1) {
         return;
     }
 
@@ -531,7 +580,9 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
         static SyncFenceTracker acquireFenceThread("Acquire Fence");
         acquireFenceThread.TrackFence(fence);
     }
-    // if you need dump SurfaceBuffer to file, you should call DumpToFile(sequence) here
+    // if you need dump SurfaceBuffer to file, you should execute hdc shell param set persist.dumpbuffer.enabled 1
+    // and reboot your device
+    DumpToFile(sequence);
     return GSERROR_OK;
 }
 
@@ -779,12 +830,11 @@ GSError BufferQueue::AttachBuffer(sptr<SurfaceBuffer> &buffer, int32_t timeOut)
     }
 
     uint32_t sequence = buffer->GetSeqNum();
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (bufferQueueCache_.find(sequence) != bufferQueueCache_.end()) {
-            return AttachBufferUpdateStatus(lock, sequence, timeOut);
-        }
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (bufferQueueCache_.find(sequence) != bufferQueueCache_.end()) {
+        return AttachBufferUpdateStatus(lock, sequence, timeOut);
     }
+
     BufferElement ele = {
         .buffer = buffer,
         .state = BUFFER_STATE_ATTACHED,
@@ -856,11 +906,15 @@ GSError BufferQueue::RegisterSurfaceDelegator(sptr<IRemoteObject> client, sptr<S
 {
     sptr<ConsumerSurfaceDelegator> surfaceDelegator = ConsumerSurfaceDelegator::Create();
     if (surfaceDelegator == nullptr) {
-        BLOGE("RegisterSurfaceDelegator failed for the surface delegator is nullptr");
+        BLOGE("Failed to register consumer delegator because the surface delegator is nullptr");
         return GSERROR_INVALID_ARGUMENTS;
     }
     if (!surfaceDelegator->SetClient(client)) {
-        BLOGE("set the surface delegator client failed");
+        BLOGE("Failed to set client");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    if (!surfaceDelegator->SetBufferQueue(this)) {
+        BLOGE("Failed to set bufferqueue");
         return GSERROR_INVALID_ARGUMENTS;
     }
 
@@ -1087,11 +1141,16 @@ GraphicTransformType BufferQueue::GetTransform() const
 GSError BufferQueue::IsSupportedAlloc(const std::vector<BufferVerifyAllocInfo> &infos,
                                       std::vector<bool> &supporteds) const
 {
-    GSError ret = bufferManager_->IsSupportedAlloc(infos, supporteds);
-    if (ret != GSERROR_OK) {
-        BLOGN_FAILURE_API(IsSupportedAlloc, ret);
+    supporteds.clear();
+    for (uint32_t index = 0; index < infos.size(); index++) {
+        if (infos[index].format == GRAPHIC_PIXEL_FMT_RGBA_8888 ||
+            infos[index].format == GRAPHIC_PIXEL_FMT_YCRCB_420_SP) {
+            supporteds.push_back(true);
+        } else {
+            supporteds.push_back(false);
+        }
     }
-    return ret;
+    return GSERROR_OK;
 }
 
 GSError BufferQueue::SetScalingMode(uint32_t sequence, ScalingMode scalingMode)

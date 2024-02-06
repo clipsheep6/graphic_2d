@@ -65,6 +65,7 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
     [](RSProperties* prop) { prop->SetRotationY(0.f); },                 // ROTATION_Y
     [](RSProperties* prop) { prop->SetCameraDistance(0.f); },            // CAMERA_DISTANCE
     [](RSProperties* prop) { prop->SetScale(Vector2f(1.f, 1.f)); },      // SCALE
+    [](RSProperties* prop) { prop->SetSkew(Vector2f(0.f, 0.f)); },       // SKEW
     [](RSProperties* prop) { prop->SetTranslate(Vector2f(0.f, 0.f)); },  // TRANSLATE
     [](RSProperties* prop) { prop->SetTranslateZ(0.f); },                // TRANSLATE_Z
     [](RSProperties* prop) { prop->SetSublayerTransform({}); },          // SUBLAYER_TRANSFORM
@@ -194,6 +195,9 @@ void RSProperties::SetBounds(Vector4f bounds)
     boundsGeo_->SetRect(bounds.x_, bounds.y_, bounds.z_, bounds.w_);
     hasBounds_ = true;
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -203,6 +207,9 @@ void RSProperties::SetBoundsSize(Vector2f size)
     hasBounds_ = true;
     geoDirty_ = true;
     contentDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -228,6 +235,9 @@ void RSProperties::SetBoundsPosition(Vector2f position)
 {
     boundsGeo_->SetPosition(position.x_, position.y_);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -235,6 +245,9 @@ void RSProperties::SetBoundsPositionX(float positionX)
 {
     boundsGeo_->SetX(positionX);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -242,6 +255,9 @@ void RSProperties::SetBoundsPositionY(float positionY)
 {
     boundsGeo_->SetY(positionY);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -287,6 +303,9 @@ void RSProperties::SetFrame(Vector4f frame)
     }
     frameGeo_->SetRect(frame.x_, frame.y_, frame.z_, frame.w_);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -295,6 +314,9 @@ void RSProperties::SetFrameSize(Vector2f size)
     frameGeo_->SetSize(size.x_, size.y_);
     geoDirty_ = true;
     contentDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -318,6 +340,9 @@ void RSProperties::SetFramePosition(Vector2f position)
 {
     frameGeo_->SetPosition(position.x_, position.y_);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -325,6 +350,9 @@ void RSProperties::SetFramePositionX(float positionX)
 {
     frameGeo_->SetX(positionX);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -332,6 +360,9 @@ void RSProperties::SetFramePositionY(float positionY)
 {
     frameGeo_->SetY(positionY);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -634,11 +665,42 @@ void RSProperties::SetScaleY(float sy)
     SetDirty();
 }
 
+void RSProperties::SetSkew(Vector2f skew)
+{
+    boundsGeo_->SetSkew(skew.x_, skew.y_);
+    geoDirty_ = true;
+    SetDirty();
+}
+
+void RSProperties::SetSkewX(float skewX)
+{
+    boundsGeo_->SetSkewX(skewX);
+    geoDirty_ = true;
+    SetDirty();
+}
+
+void RSProperties::SetSkewY(float skewY)
+{
+    boundsGeo_->SetSkewY(skewY);
+    geoDirty_ = true;
+    SetDirty();
+}
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+bool RSProperties::GetOpincPropDirty() const
+{
+    return isOpincPropDirty_ && !alphaNeedApply_;
+}
+#endif
+
 void RSProperties::SetTranslate(Vector2f translate)
 {
     boundsGeo_->SetTranslateX(translate[0]);
     boundsGeo_->SetTranslateY(translate[1]);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -646,6 +708,9 @@ void RSProperties::SetTranslateX(float translate)
 {
     boundsGeo_->SetTranslateX(translate);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -653,6 +718,9 @@ void RSProperties::SetTranslateY(float translate)
 {
     boundsGeo_->SetTranslateY(translate);
     geoDirty_ = true;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = true;
+#endif
     SetDirty();
 }
 
@@ -701,6 +769,21 @@ float RSProperties::GetScaleY() const
 Vector2f RSProperties::GetScale() const
 {
     return { boundsGeo_->GetScaleX(), boundsGeo_->GetScaleY() };
+}
+
+float RSProperties::GetSkewX() const
+{
+    return boundsGeo_->GetSkewX();
+}
+
+float RSProperties::GetSkewY() const
+{
+    return boundsGeo_->GetSkewY();
+}
+
+Vector2f RSProperties::GetSkew() const
+{
+    return { boundsGeo_->GetSkewX(), boundsGeo_->GetSkewY() };
 }
 
 Vector2f RSProperties::GetTranslate() const
@@ -1541,6 +1624,9 @@ void RSProperties::ResetDirty()
     isDirty_ = false;
     geoDirty_ = false;
     contentDirty_ = false;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    isOpincPropDirty_ = false;
+#endif
 }
 
 bool RSProperties::IsDirty() const
@@ -1697,6 +1783,16 @@ void RSProperties::SetUseShadowBatching(bool useShadowBatching)
 bool RSProperties::GetUseShadowBatching() const
 {
     return useShadowBatching_;
+}
+
+void RSProperties::SetNeedSkipShadow(bool needSkipShadow)
+{
+    needSkipShadow_ = needSkipShadow;
+}
+
+bool RSProperties::GetNeedSkipShadow() const
+{
+    return needSkipShadow_;
 }
 
 void RSProperties::SetPixelStretch(const std::optional<Vector4f>& stretchSize)
@@ -1973,7 +2069,6 @@ void RSProperties::SetAiInvert(const std::optional<Vector4f>& aiInvert)
 {
     aiInvert_ = aiInvert;
     colorFilterNeedUpdate_ = true;
-    filterNeedUpdate_ = true;
     SetDirty();
     contentDirty_ = true;
     isDrawn_ = true;
@@ -2800,27 +2895,20 @@ void RSProperties::OnApplyModifiers()
         if (GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE) {
             filterNeedUpdate_ = true;
         }
-        if (aiInvert_.has_value() || systemBarEffect_) {
+        if (systemBarEffect_) {
             auto aiBarFilter = std::make_shared<RSAIBarFilter>();
             backgroundFilter_ = aiBarFilter;
         }
         if (backgroundFilter_ != nullptr && !backgroundFilter_->IsValid()) {
-            if (backgroundFilter_->GetFilterType() == RSFilter::MATERIAL) {
-                auto filter = std::static_pointer_cast<RSMaterialFilter>(backgroundFilter_);
-                filter->ReleaseColorPickerFilter();
-            }
             backgroundFilter_.reset();
         }
         if (filter_ != nullptr && !filter_->IsValid()) {
-            if (filter_->GetFilterType() == RSFilter::MATERIAL) {
-                auto filter = std::static_pointer_cast<RSMaterialFilter>(filter_);
-                filter->ReleaseColorPickerFilter();
-            }
             filter_.reset();
         }
         IfLinearGradientBlurInvalid();
         if (linearGradientBlurPara_) {
-            auto linearBlurFilter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara_);
+            auto linearBlurFilter = std::make_shared<RSLinearGradientBlurFilter>(linearGradientBlurPara_,
+                frameGeo_->GetWidth(), frameGeo_->GetHeight());
             filter_ = linearBlurFilter;
         }
         needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
@@ -2920,16 +3008,9 @@ void RSProperties::ReleaseColorPickerTaskShadow() const
     if (colorPickerTaskShadow_ == nullptr) {
         return;
     }
-    #ifdef IS_OHOS
-    auto initHandler = colorPickerTaskShadow_->GetInitHandler();
-        if (initHandler != nullptr) {
-            auto task = colorPickerTaskShadow_;
-            task->SetWaitRelease(true);
-            initHandler->PostTask(
-                [task]() { task->ReleaseColorPicker(); }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
-        }
-    #endif
+    colorPickerTaskShadow_->ReleaseColorPicker();
 }
+
 
 bool RSProperties::GetHaveEffectRegion() const
 {

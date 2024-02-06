@@ -184,6 +184,7 @@ sk_sp<GrDirectContext> RSUploadTextureThread::CreateShareGrContext()
 
     GrContextOptions options = {};
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
 

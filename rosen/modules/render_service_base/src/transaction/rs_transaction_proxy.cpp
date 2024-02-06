@@ -20,13 +20,15 @@
 
 namespace OHOS {
 namespace Rosen {
-std::once_flag RSTransactionProxy::flag_;
-RSTransactionProxy* RSTransactionProxy::instance_ = nullptr;
+namespace RSTransactionProxyLocal {
+static thread_local std::once_flag flag_;
+static thread_local RSTransactionProxy* instance_ = nullptr;
+};
 
 RSTransactionProxy* RSTransactionProxy::GetInstance()
 {
-    std::call_once(flag_, &RSTransactionProxy::Init);
-    return instance_;
+    std::call_once(RSTransactionProxyLocal::flag_, &RSTransactionProxy::Init);
+    return RSTransactionProxyLocal::instance_;
 }
 
 RSTransactionProxy::RSTransactionProxy()
@@ -39,13 +41,13 @@ RSTransactionProxy::~RSTransactionProxy()
 
 void RSTransactionProxy::Init()
 {
-    instance_ = new RSTransactionProxy();
+    RSTransactionProxyLocal::instance_ = new RSTransactionProxy();
     ::atexit(&RSTransactionProxy::Destroy);
 }
 
 void RSTransactionProxy::Destroy()
 {
-    instance_ = nullptr;
+    RSTransactionProxyLocal::instance_ = nullptr;
 }
 
 void RSTransactionProxy::SetRenderThreadClient(std::unique_ptr<RSIRenderClient>& renderThreadClient)

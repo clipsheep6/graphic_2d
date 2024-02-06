@@ -90,8 +90,6 @@ private:
     std::shared_ptr<RSIRenderClient> renderServiceClient_ = RSIRenderClient::CreateRenderServiceClient();
     std::unique_ptr<RSIRenderClient> renderThreadClient_ = nullptr;
     uint64_t timestamp_ = 0;
-    static std::once_flag flag_;
-    static RSTransactionProxy* instance_;
     bool needSync_ { false };
     uint64_t syncId_ { 0 };
 };

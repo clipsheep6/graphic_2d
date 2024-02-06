@@ -541,3 +541,12 @@ bool OH_Drawing_CanvasReadPixelsToBitmap(OH_Drawing_Canvas* cCanvas, OH_Drawing_
     }
     return canvas->ReadPixels(CastToBitmap(*cBitmap), srcX, srcY);
 }
+
+OH_Drawing_GpuContext* OH_Drawing_CanvasGetGpuContext(OH_Drawing_Canvas* cCanvas)
+{
+    Canvas* canvas = CastToCanvas(cCanvas);
+    if (canvas == nullptr) {
+        return nullptr;
+    }
+    return (OH_Drawing_GpuContext*)canvas->GetGpuContext().get();
+}

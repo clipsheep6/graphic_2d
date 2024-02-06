@@ -75,6 +75,8 @@ void OH_Drawing_ImageDestroy(OH_Drawing_Image*);
  */
 bool OH_Drawing_ImageBuildFromBitmap(OH_Drawing_Image*, OH_Drawing_Bitmap*);
 
+bool OH_Drawing_ImageBuildFromBitmapWithGpu(OH_Drawing_Image*, OH_Drawing_GpuContext*, OH_Drawing_Bitmap*);
+
 /**
  * @brief Gets pixel count in each row of image.
  *

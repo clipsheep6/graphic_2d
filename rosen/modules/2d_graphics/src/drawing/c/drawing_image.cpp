@@ -30,6 +30,11 @@ static Bitmap& CastToBitmap(OH_Drawing_Bitmap& cBitmap)
     return reinterpret_cast<Bitmap&>(cBitmap);
 }
 
+static GPUContext& CastToGpuContext(OH_Drawing_GpuContext& cGpuContext)
+{
+    return reinterpret_cast<GPUContext&>(cGpuContext);
+}
+
 OH_Drawing_Image* OH_Drawing_ImageCreate()
 {
     return (OH_Drawing_Image*)new Image();
@@ -46,6 +51,14 @@ bool OH_Drawing_ImageBuildFromBitmap(OH_Drawing_Image* cImage, OH_Drawing_Bitmap
         return false;
     }
     return CastToImage(cImage)->BuildFromBitmap(CastToBitmap(*cBitmap));
+}
+
+bool OH_Drawing_ImageBuildFromBitmapWithGpu(OH_Drawing_Image* cImage, OH_Drawing_GpuContext* cGpuContext, OH_Drawing_Bitmap* cBitmap)
+{
+    if (cImage == nullptr || cBitmap == nullptr || cBitmap == nullptr) {
+        return false;
+    }
+    return CastToImage(cImage)->BuildFromBitmap(CastToGpuContext(*cGpuContext), CastToBitmap(*cBitmap));
 }
 
 int32_t OH_Drawing_ImageGetWidth(OH_Drawing_Image* cImage)

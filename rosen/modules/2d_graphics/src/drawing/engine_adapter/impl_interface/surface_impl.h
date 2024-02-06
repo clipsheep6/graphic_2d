@@ -16,6 +16,7 @@
 #ifndef DRAWING_SURFACE_IMPL_H
 #define DRAWING_SURFACE_IMPL_H
 
+#include <vector>
 #include "base_impl.h"
 #include "utils/rect.h"
 #ifdef RS_ENABLE_VK

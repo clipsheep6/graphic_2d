@@ -18,6 +18,7 @@
 #include <memory>
 
 namespace OHOS {
+void setEglFilePath(const char* filePath);
 class BlobCache {
     public:
     class Blob{

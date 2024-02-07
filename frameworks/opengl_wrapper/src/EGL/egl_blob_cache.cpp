@@ -15,12 +15,15 @@
 #include "egl_blob_cache.h"
 #include "../wrapper_log.h"
 namespace OHOS{
-static void setEglFilePath(const char* filePath) {
+void setEglFilePath(const char* filePath) {
     BlobCache::get()->setEglFilePath(filePath);
 }
 
 BlobCache* BlobCache::blob_cache_;
 BlobCache* BlobCache::get() {
+    if (BlobCache::blob_cache_ == nullptr) {
+        BlobCache::blob_cache_ = new BlobCache();
+    }
     return BlobCache::blob_cache_;
 }
 
@@ -63,16 +66,17 @@ EGLsizeiANDROID BlobCache::getBlob(const void* key, EGLsizeiANDROID keySize, voi
                                EGLsizeiANDROID valueSize) {
     WLOGE("wxt get");
     auto index = std::find_if(mblob_.begin(), mblob_.end(), [&key, keySize](std::pair<Blob, Blob> &blobPair))-> bool {
-        if (keySize == blobPair.first->data_size_) {
-            return memcmp(key, blobPair.first->data_, keySize) < 0;
+        if (keySize == blobPair.first.data_size_) {
+            return memcmp(key, blobPair.first.data_, keySize) < 0;
         } else {
             return false;
         }
     }
     EGLsizeiANDROID ret = -1;
     if (index != mblob_.end()) {
-        memcpy(value, index->second->data_, index->second->data_size_);
-        ret = index->second->data_size_;
+        value = malloc(index->second.data_size_);
+        memcpy(value, index->second.data_, index->second.data_size_);
+        ret = index->second.data_size_;
     }
     return ret;
 }

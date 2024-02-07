@@ -33,6 +33,8 @@ public:
 
     GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence);
 
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer);
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer);
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer);
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut);
 

@@ -167,6 +167,26 @@ GSError BufferClientProducer::FlushBuffer(uint32_t sequence, const sptr<BufferEx
     return GSERROR_OK;
 }
 
+GSError BufferClientProducer::AttachBufferToQueue(sptr<SurfaceBuffer>& buffer)
+{
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+    int32_t sequence = buffer->GetSeqNum();
+    WriteSurfaceBufferImpl(arguments, sequence, buffer);
+    SEND_REQUEST_WITH_SEQ(BUFFER_PRODUCER_ATTACH_BUFFER_TO_QUEUE, arguments, reply, option, sequence);
+    CHECK_RETVAL_WITH_SEQ(reply, sequence);
+    return GSERROR_OK;
+}
+
+GSError BufferClientProducer::DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer)
+{
+    DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
+    int32_t sequence = buffer->GetSeqNum();
+    WriteSurfaceBufferImpl(arguments, sequence, buffer);
+    SEND_REQUEST_WITH_SEQ(BUFFER_PRODUCER_DETACH_BUFFER_FROM_QUEUE, arguments, reply, option, sequence);
+    CHECK_RETVAL_WITH_SEQ(reply, sequence);
+    return GSERROR_OK;
+}
+
 GSError BufferClientProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
 {
     return GSERROR_NOT_SUPPORT;

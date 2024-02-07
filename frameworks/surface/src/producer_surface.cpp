@@ -228,6 +228,22 @@ GSError ProducerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fenc
     return GSERROR_NOT_SUPPORT;
 }
 
+GSError ProducerSurface::AttachBufferToQueue(sptr<SurfaceBuffer>& buffer)
+{
+    if (buffer == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return producer_->AttachBufferToQueue(buffer);
+}
+
+GSError ProducerSurface::DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer)
+{
+    if (buffer == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return producer_->DetachBufferFromQueue(buffer);
+}
+
 GSError ProducerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)
 {
     if (buffer == nullptr) {

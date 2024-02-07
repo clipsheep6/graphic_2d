@@ -6,6 +6,8 @@
     { "name": "OH_NativeWindow_DestroyNativeWindowBuffer" },
     { "name": "OH_NativeWindow_NativeWindowRequestBuffer" },
     { "name": "OH_NativeWindow_NativeWindowFlushBuffer" },
+    { "name": "OH_NativeWindow_NativeWindowAttachBuffer" },
+    { "name": "OH_NativeWindow_NativeWindowDetachBuffer" },
     { "name": "OH_NativeWindow_GetLastFlushedBuffer" },
     { "name": "OH_NativeWindow_NativeWindowAbortBuffer" },
     { "name": "OH_NativeWindow_NativeWindowHandleOpt" },

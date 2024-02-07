@@ -67,6 +67,8 @@ BufferQueueProducer::BufferQueueProducer(sptr<BufferQueue>& bufferQueue)
         &BufferQueueProducer::UnRegisterReleaseListenerRemote;
     memberFuncMap_[BUFFER_PRODUCER_GET_LAST_FLUSHED_BUFFER] = &BufferQueueProducer::GetLastFlushedBufferRemote;
     memberFuncMap_[BUFFER_PRODUCER_REGISTER_DEATH_RECIPIENT] = &BufferQueueProducer::RegisterDeathRecipient;
+    memberFuncMap_[BUFFER_PRODUCER_ATTACH_BUFFER_TO_QUEUE] = &BufferQueueProducer::AttachBufferToQueueRemote;
+    memberFuncMap_[BUFFER_PRODUCER_DETACH_BUFFER_FROM_QUEUE] = &BufferQueueProducer::DetachBufferFromQueueRemote;
 }
 
 BufferQueueProducer::~BufferQueueProducer()
@@ -204,6 +206,38 @@ int32_t BufferQueueProducer::GetLastFlushedBufferRemote(MessageParcel &arguments
         std::vector<float> writeMatrixVector(matrix, matrix + sizeof(matrix) / sizeof(float));
         reply.WriteFloatVector(writeMatrixVector);
     }
+    return 0;
+}
+
+int32_t BufferQueueProducer::AttachBufferToQueueRemote(MessageParcel &arguments,
+    MessageParcel &reply, MessageOption &option)
+{
+    sptr<SurfaceBuffer> buffer;
+    uint32_t sequence;
+    GSError ret = ReadSurfaceBufferImpl(arguments, sequence, buffer);
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Read surface buffer impl failed, return %{public}d", ret);
+        reply.WriteInt32(ret);
+        return 0;
+    }
+    ret = AttachBufferToQueue(buffer);
+    reply.WriteInt32(ret);
+    return 0;
+}
+
+int32_t BufferQueueProducer::DetachBufferFromQueueRemote(MessageParcel &arguments,
+    MessageParcel &reply, MessageOption &option)
+{
+    sptr<SurfaceBuffer> buffer;
+    uint32_t sequence;
+    GSError ret = ReadSurfaceBufferImpl(arguments, sequence, buffer);
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("Read surface buffer impl failed, return %{public}d", ret);
+        reply.WriteInt32(ret);
+        return 0;
+    }
+    ret = DetachBufferFromQueue(buffer);
+    reply.WriteInt32(ret);
     return 0;
 }
 
@@ -476,6 +510,22 @@ GSError BufferQueueProducer::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
         return GSERROR_INVALID_ARGUMENTS;
     }
     return bufferQueue_->GetLastFlushedBuffer(buffer, fence, matrix, matrixSize);
+}
+
+GSError BufferQueueProducer::AttachBufferToQueue(sptr<SurfaceBuffer>& buffer)
+{
+    if (bufferQueue_ == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return bufferQueue_->AttachBufferToQueue(buffer, InvokerType::PRODUCER_INVOKER);
+}
+
+GSError BufferQueueProducer::DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer)
+{
+    if (bufferQueue_ == nullptr) {
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return bufferQueue_->DetachBufferFromQueue(buffer, InvokerType::PRODUCER_INVOKER);
 }
 
 GSError BufferQueueProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)

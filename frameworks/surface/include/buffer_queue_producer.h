@@ -48,6 +48,9 @@ public:
     GSError GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
         float matrix[16], int32_t matrixSize) override;
 
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer);
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer);
+
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) override;
 
@@ -98,6 +101,8 @@ private:
     int32_t RequestBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CancelBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t FlushBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t AttachBufferToQueueRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t DetachBufferFromQueueRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t AttachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t DetachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetQueueSizeRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);

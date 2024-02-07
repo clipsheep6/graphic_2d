@@ -97,6 +97,8 @@ public:
 
     static sptr<SurfaceBuffer> Create();
 
+    virtual const BufferRequestConfig& GetBufferRequestConfig() const = 0;
+
 protected:
     SurfaceBuffer(){}
     SurfaceBuffer(const SurfaceBuffer&) = delete;

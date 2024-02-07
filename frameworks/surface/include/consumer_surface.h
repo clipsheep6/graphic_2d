@@ -62,6 +62,8 @@ public:
 
     GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence) override;
 
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
     GSError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;
 

@@ -54,6 +54,9 @@ public:
     uint32_t GetDefaultUsage() override;
     GSError SetTransform(GraphicTransformType transform) override;
 
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer);
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer);
+
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) override;
     GSError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;

@@ -39,6 +39,11 @@ enum BufferState {
     BUFFER_STATE_ATTACHED,
 };
 
+enum InvokerType {
+    PRODUCER_INVOKER,
+    CONSUMER_INVOKER,
+};
+
 using BufferElement = struct BufferElement {
     sptr<SurfaceBuffer> buffer;
     BufferState state;
@@ -82,6 +87,9 @@ public:
     GSError AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
                           int64_t &timestamp, std::vector<Rect> &damages);
     GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence);
+
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
 
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut);
 

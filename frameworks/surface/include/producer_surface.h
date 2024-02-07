@@ -64,6 +64,9 @@ public:
                           int64_t &timestamp, Rect &damage) override;
     GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence) override;
 
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
+
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) override;
 

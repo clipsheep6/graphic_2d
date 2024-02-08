@@ -359,10 +359,13 @@ void RSUniRenderVisitor::UpdateSubTreeInCache(const std::shared_ptr<RSRenderNode
             child->UpdateEffectRegion(effectRegion_);
         }
         if (child->GetRenderProperties().NeedFilter()) {
-            UpdateForegroundFilterCacheWithDirty(*child, *curSurfaceDirtyManager_);
-            if (curSurfaceNode_ && curSurfaceNode_->GetId() == child->GetInstanceRootNodeId()) {
-                curSurfaceNode_->UpdateChildrenFilterRects(child, child->GetOldDirtyInSurface(),
-                    child->IsBackgroundFilterCacheValid());
+            auto geoPtr = child->GetRenderProperties().GetBoundsGeometry();
+            if (geoPtr && !geoPtr->GetAbsRect().IsEmpty()) {
+                UpdateForegroundFilterCacheWithDirty(*child, *curSurfaceDirtyManager_);
+                if (curSurfaceNode_ && curSurfaceNode_->GetId() == child->GetInstanceRootNodeId()) {
+                    curSurfaceNode_->UpdateChildrenFilterRects(child, child->GetOldDirtyInSurface(),
+                        child->IsBackgroundFilterCacheValid());
+                }
             }
         }
         UpdateSubTreeInCache(child, *child->GetSortedChildren());
@@ -1163,7 +1166,7 @@ void RSUniRenderVisitor::PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRen
         return;
     }
     const auto& properties = node.GetRenderProperties();
-    if (properties.NeedFilter()) {
+    if (properties.NeedFilter() && !node.GetDstRect().IsEmpty()) {
         UpdateForegroundFilterCacheWithDirty(node, *curSurfaceDirtyManager_);
         if (auto parentNode = node.GetParent().lock()) {
             parentNode->SetChildHasFilter(true);
@@ -1784,7 +1787,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         effectNodeNum_++;
     }
     node.UpdateEffectRegion(effectRegion_);
-    if (property.NeedFilter()) {
+    if (property.NeedFilter() && !geoPtr->GetAbsRect().IsEmpty()) {
         // filterRects_ is used in RSUniRenderVisitor::CalcDirtyFilterRegion
         // When oldDirtyRect of node with filter has intersect with any surfaceNode or displayNode dirtyRegion,
         // the whole oldDirtyRect should be render in this vsync.
@@ -1844,8 +1847,9 @@ void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
     PrepareChildren(node);
     node.UpdateParentChildrenRect(logicParentNode_.lock());
     node.SetEffectRegion(effectRegion_);
+    auto geoPtr = node.GetRenderProperties().GetBoundsGeometry();
 
-    if (node.GetRenderProperties().NeedFilter()) {
+    if (node.GetRenderProperties().NeedFilter() && geoPtr && !geoPtr->GetAbsRect().IsEmpty()) {
         // filterRects_ is used in RSUniRenderVisitor::CalcDirtyFilterRegion
         // When oldDirtyRect of node with filter has intersect with any surfaceNode or displayNode dirtyRegion,
         // the whole oldDirtyRect should be render in this vsync.

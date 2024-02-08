@@ -1801,8 +1801,9 @@ void RSProperties::SetPixelStretch(const std::optional<Vector4f>& stretchSize)
     SetDirty();
     pixelStretchNeedUpdate_ = true;
     contentDirty_ = true;
+    pixelStretchPercent_ = std::nullopt;
     if (pixelStretch_.has_value() && pixelStretch_->IsZero()) {
-        pixelStretch_ = std::nullopt;
+        pixelStretch_ = std::nullopt;W
     }
 }
 
@@ -1830,6 +1831,7 @@ void RSProperties::SetPixelStretchPercent(const std::optional<Vector4f>& stretch
     SetDirty();
     pixelStretchNeedUpdate_ = true;
     contentDirty_ = true;
+    pixelStretch_ = std::nullopt;
     if (pixelStretchPercent_.has_value() && pixelStretchPercent_->IsZero()) {
         pixelStretchPercent_ = std::nullopt;
     }

@@ -17,6 +17,7 @@
 #define ROSEN_MODULES_TEXGINE_SRC_FONT_COLLECTION_H
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -77,6 +78,7 @@ private:
     };
     std::map<std::string, int> supportScript_;
     std::map<uint32_t, int> chinesePointUnicode_;
+    static inline std::mutex mutex_;    // protects fallbackCache_
     static inline std::map<struct FallbackCacheKey, std::shared_ptr<Typeface>> fallbackCache_;
 };
 } // namespace TextEngine

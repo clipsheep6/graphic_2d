@@ -33,7 +33,7 @@ namespace TextEngine {
 constexpr static uint8_t FIRST_BYTE = 24;
 constexpr static uint8_t SECOND_BYTE = 16;
 constexpr static uint8_t THIRD_BYTE = 8;
-static std::string g_detectionName;
+thread_local static std::string g_detectionName;
 
 namespace {
 void DumpCharGroup(int32_t index, const CharGroup &cg, double glyphEm,

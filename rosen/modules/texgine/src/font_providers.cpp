@@ -16,6 +16,7 @@
 #include "font_collection.h"
 #include "texgine/font_providers.h"
 #include "texgine/system_font_provider.h"
+#include <mutex>
 
 namespace OHOS {
 namespace Rosen {
@@ -34,6 +35,8 @@ std::shared_ptr<FontProviders> FontProviders::SystemFontOnly() noexcept(true)
 
 void FontProviders::AppendFontProvider(const std::shared_ptr<IFontProvider> &provider) noexcept(true)
 {
+    std::unique_lock<std::mutex> lck(mutex_);
+
     if (provider == nullptr) {
         return;
     }

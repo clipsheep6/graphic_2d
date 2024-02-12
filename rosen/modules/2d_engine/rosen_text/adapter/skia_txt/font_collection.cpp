@@ -24,7 +24,7 @@ namespace Rosen {
 
 std::shared_ptr<FontCollection> FontCollection::Create()
 {
-    static std::shared_ptr<FontCollection> instance = std::make_shared<AdapterTxt::FontCollection>();
+    static thread_local std::shared_ptr<FontCollection> instance = std::make_shared<AdapterTxt::FontCollection>();
     return instance;
 }
 

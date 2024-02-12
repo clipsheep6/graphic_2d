@@ -259,8 +259,8 @@ void RSProfiler::MainThreadOnFrameEnd()
                 }
 
                 Network::commandOutput_ = "RSMainThread::MainLoop TREE_PIDS: count=" +
-                                         std::to_string(static_cast<int>(nodeMap.GetRenderNodeCount())) +
-                                         " time=" + std::to_string(Utils::Now()) + "\n";
+                                          std::to_string(static_cast<int>(nodeMap.GetRenderNodeCount())) +
+                                          " time=" + std::to_string(Utils::Now()) + "\n";
                 Network::commandOutput_ += ss.str();
             } else if (Network::commandData_[0] == "rsrecord_pause_at" && Network::commandData_.size() >= minCmdLen) {
                 const double recordPauseTime = atof(Network::commandData_[1].c_str());
@@ -411,49 +411,51 @@ void RSProfiler::MainThreadOnFrameEnd()
                     switch (node->GetType()) {
                         case RSRenderNodeType::UNKNOW:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|UNKNOWN;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|UNKNOWN;\n";
                             break;
                         case RSRenderNodeType::RS_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|RS_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|RS_NODE;\n";
                             break;
                         case RSRenderNodeType::DISPLAY_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|DISPLAY_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|DISPLAY_NODE;\n";
                             break;
                         case RSRenderNodeType::SURFACE_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|SURFACE_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|SURFACE_NODE;\n";
                             break;
                         case RSRenderNodeType::PROXY_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|PROXY_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|PROXY_NODE;\n";
                             break;
                         case RSRenderNodeType::CANVAS_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|CANVAS_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|CANVAS_NODE;\n";
                             break;
                         case RSRenderNodeType::EFFECT_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|EFFECT_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|EFFECT_NODE;\n";
                             break;
                         case RSRenderNodeType::ROOT_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|ROOT_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|ROOT_NODE;\n";
                             break;
                         case RSRenderNodeType::CANVAS_DRAWING_NODE:
                             Network::commandOutput_ += "pid=" + std::to_string(node->GetId() >> bits32) +
-                                                      " node_id=" + std::to_string(node->GetId() & mask32Bits) +
-                                                      "|CANVAS_DRAWING_NODE;\n";
+                                                       " node_id=" + std::to_string(node->GetId() & mask32Bits) +
+                                                       "|CANVAS_DRAWING_NODE;\n";
                             break;
+                        default:
+                            Network::commandOutput_ += "unexpected node type";
                     }
                     auto parent = node->GetParent().lock();
                     if (parent == nullptr || parent->GetId() == 0) {
@@ -469,7 +471,6 @@ void RSProfiler::MainThreadOnFrameEnd()
                     const NodeId nodeId = std::atoll(Network::commandData_[1].c_str());
 
                     auto node = nodeMap.GetRenderNode(nodeId);
-
                     if (node != nullptr) {
                         Network::commandOutput_ = "MOD_LIST=";
                         node->DumpModifiers(Network::commandOutput_);
@@ -489,7 +490,6 @@ void RSProfiler::MainThreadOnFrameEnd()
                     const NodeId nodeId = atoll(Network::commandData_[1].c_str());
 
                     auto node = nodeMap.GetRenderNode(nodeId);
-
                     if (node != nullptr) {
                         Network::commandOutput_ = "PROP_LIST=";
                         node->DumpRenderProperties(Network::commandOutput_);
@@ -521,8 +521,8 @@ void RSProfiler::MainThreadOnFrameEnd()
                 }
 
                 Network::commandOutput_ += "RSMainThread::MainLoop TREE_PIDS: count=" +
-                                          std::to_string(static_cast<int>(nodeMap.GetRenderNodeCount())) +
-                                          " time=" + std::to_string(Utils::Now()) + "\n";
+                                           std::to_string(static_cast<int>(nodeMap.GetRenderNodeCount())) +
+                                           " time=" + std::to_string(Utils::Now()) + "\n";
                 Network::commandOutput_ += ss.str();
             } else if (Network::commandData_[0] == "rssurface_pid" && Network::commandData_.size() >= minCmdLen &&
                        !Network::commandData_[1].empty()) {
@@ -541,8 +541,8 @@ void RSProfiler::MainThreadOnFrameEnd()
                 if (pid > 0) {
                     auto& nodeMap = rsmt->GetContext().GetMutableNodeMap();
                     const NodeId rootNid = (static_cast<NodeId>(pid) << bits32) | 1;
-                    auto node = nodeMap.GetRenderNode(rootNid);
                     Network::debugReadParentNode = 0;
+                    auto node = nodeMap.GetRenderNode(rootNid);
                     if (node != nullptr) {
                         auto p = node->GetParent().lock();
                         if (p != nullptr) {
@@ -550,7 +550,7 @@ void RSProfiler::MainThreadOnFrameEnd()
                         }
                     }
                     Network::commandOutput_ =
-                        "OK parent: parent_pid=" + std::to_string(Network::debugReadParentNode >> 32) +
+                        "OK parent: parent_pid=" + std::to_string(Network::debugReadParentNode >> bits32) +
                         " parent_node=" + std::to_string(Network::debugReadParentNode & mask32Bits);
                     nodeMap.FilterNodeByPid(pid);
                     RSMainThread::Instance()->PostTask([]() {
@@ -560,8 +560,8 @@ void RSProfiler::MainThreadOnFrameEnd()
                 } else {
                     Network::commandOutput_ = "ERROR: pid is zero";
                 }
-            } else if (Network::commandData_[0] == "rstree_prepare_replay" && Network::commandData_.size() >= minCmdLen &&
-                       !Network::commandData_[1].empty()) {
+            } else if (Network::commandData_[0] == "rstree_prepare_replay" &&
+                       Network::commandData_.size() >= minCmdLen && !Network::commandData_[1].empty()) {
                 const int pid = atoi(Network::commandData_[1].c_str());
                 if (pid > 0) {
                     auto& nodeMap = rsmt->GetContext().GetMutableNodeMap();
@@ -589,8 +589,7 @@ void RSProfiler::MainThreadOnFrameEnd()
                 std::stringstream ss;
                 ss << "Recording current frame cmds (for .rdc) into : /data/default.drawing";
                 Network::commandOutput_ = ss.str();
-            }
-            else {
+            } else {
                 Network::commandOutput_ = "COMMAND NOT FOUND";
             }
             Network::commandData_.clear();
@@ -603,11 +602,10 @@ void RSProfiler::MainThreadOnFrameEnd()
             RSMainThread::Instance()->SetAccessibilityConfigChanged();
             RSMainThread::Instance()->RequestNextVSync();
         });
-        std::string const path = "/data/storage/el2/base/temp/HuaweiReplay";
         int rdcnum = 0;
         std::vector<std::string> filenameVec;
-        // Checks is the folder exists
-        if (std::filesystem::exists(path)) {
+        std::string const path = "/data/storage/el2/base/temp/HuaweiReplay";
+        if (std::filesystem::exists(path)) { // Checks is the folder exists
             for (const auto& entry : std::filesystem::directory_iterator(path)) {
                 std::string const filestr = entry.path();
                 RS_LOGD("TWO_D_RDC : %s", filestr.c_str());
@@ -625,8 +623,9 @@ void RSProfiler::MainThreadOnFrameEnd()
                 const int size = 1 + filenameVec[1].length();
                 char* buf = new char[size];
                 buf[0] = static_cast<char>(PackageID::RS_PROFILER_RDC_BINARY);
-                std::memcpy(&buf[1], filenameVec[1].c_str(), filenameVec[1].length());
-
+                if (memcpy_s(&buf[1], size - 1, filenameVec[1].c_str(), filenameVec[1].length()) != 0) {
+                    RS_LOGD("save RDC: memcpy failed");
+                }
                 // sends .rdc path to the client
                 Network::SendBinary(buf, size);
 
@@ -663,12 +662,12 @@ void RSProfiler::MainThreadOnFrameEnd()
     // Need to check which interfaces are used and which we are mostly interested inz
     // Also need to get the difference from frame to frame
     std::string const iface = std::string("wlan0");
-    auto statsVec = Network::GetStats(iface);
     constexpr int bitsInOneByte = 8;
+    auto statsVec = Network::GetStats(iface);
     if (!statsVec.empty()) {
         for (auto& bw : statsVec) {
-            RS_LOGD("TWO_D: Iface: %s; Transmitted: %f; Received: %f", iface.c_str(), (float)bw.transmittedBytes * bitsInOneByte,
-                (float)bw.receivedBytes * bitsInOneByte);
+            RS_LOGD("TWO_D: Iface: %s; Transmitted: %f; Received: %f", iface.c_str(),
+                (float)bw.transmittedBytes * bitsInOneByte, (float)bw.receivedBytes * bitsInOneByte);
         }
     }
 }

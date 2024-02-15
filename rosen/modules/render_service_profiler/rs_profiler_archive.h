@@ -13,17 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_PROFILER_ARCHIVE_H
-#define RENDER_SERVICE_PROFILER_ARCHIVE_H
+#ifndef RS_PROFILER_ARCHIVE_H
+#define RS_PROFILER_ARCHIVE_H
 
 #include <cstring>
 #include <filesystem>
 #include <iostream>
-#include <securec.h>
 #include <string>
 #include <vector>
 
+#ifndef REPLAY_TOOL_CLIENT
+#include <securec.h>
+
 #include "platform/common/rs_log.h"
+
+#else
+#include <fmt/printf.h>
+#include <spdlog/spdlog.h>
+
+#define ROSEN_LOGD(...) spdlog::debug(fmt::sprintf(__VA_ARGS__))
+#define RS_LOGE(...) ROSEN_LOGD(__VA_ARGS__)
+#endif
 
 namespace OHOS::Rosen {
 
@@ -137,22 +147,22 @@ protected:
 
 // File archives
 
-template<bool reader = true>
+template<bool Reader = true>
 class FileArchive final : public Archive {
 public:
-    explicit FileArchive(FILE* file) : Archive(reader), file_(file), external_(true) {}
+    explicit FileArchive(FILE* file) : Archive(Reader), file_(file), external_(true) {}
 
-    explicit FileArchive(const std::string& path) : Archive(reader)
+    explicit FileArchive(const std::string& path) : Archive(Reader)
     {
         // NOTE: weakly_canonical does not throw an exception if path does not exsist
         const std::filesystem::path canonicalPath = std::filesystem::weakly_canonical(std::filesystem::path(path));
         if (std::filesystem::exists(canonicalPath)) {
-            file_ = fopen(canonicalPath.c_str(), reader ? "rb" : "wb");
+            file_ = fopen(canonicalPath.c_str(), Reader ? "rb" : "wb");
         }
 
         if (!file_) {
             RS_LOGE("FileArchive: File %{public}s cannot be opened for %{public}s", canonicalPath.c_str(),
-                (reader ? "reading" : "writing"));
+                (Reader ? "reading" : "writing"));
         }
     }
 
@@ -184,4 +194,4 @@ using FileWriter = FileArchive<false>;
 
 } // namespace OHOS::Rosen
 
-#endif // RENDER_SERVICE_PROFILER_ARCHIVE_H
+#endif // RS_PROFILER_ARCHIVE_H

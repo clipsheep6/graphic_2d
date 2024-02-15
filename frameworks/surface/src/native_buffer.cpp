@@ -222,3 +222,45 @@ int32_t OH_NativeBuffer_SetColorSpace(OH_NativeBuffer *buffer, OH_NativeBuffer_C
     }
     return ret;
 }
+
+int32_t OH_NativeBuffer_MapPlanes(OH_NativeBuffer *buffer, void **virAddr, OH_NativeBuffer_Planes *outPlanes)
+{
+    if (buffer == nullptr || virAddr == nullptr || outPlanes == nullptr) {
+        BLOGE("parameter error, please check input parameter");
+        return OHOS::GSERROR_INVALID_ARGUMENTS;
+    }
+    sptr<SurfaceBuffer> sbuffer = OH_NativeBufferToSurfaceBuffer(buffer);
+    int32_t ret = sbuffer->Map();
+    if (ret == OHOS::GSERROR_OK) {
+        *virAddr = sbuffer->GetVirAddr();
+    } else {
+        BLOGE("Surface Buffer Map failed, %{public}d", ret);
+        return ret;
+    }
+    OH_NativeBuffer_Planes *planes = static_cast<OH_NativeBuffer_Planes*>(sbuffer->GetPlanesInfo());
+    if (planes == nullptr) {
+        BLOGE("Get planesInfo failed");
+        return OHOS::GSERROR_NOT_SUPPORT;
+    }
+    outPlanes->planeCount = planes->planeCount;
+    for (uint32_t i = 0; i < planes->planeCount && i < 4; i++) {
+        outPlanes->planes[i].offset = planes->planes[i].offset;
+        outPlanes->planes[i].rowStride = planes->planes[i].rowStride;
+        outPlanes->planes[i].columnStride = planes->planes[i].columnStride;
+    }
+    return OHOS::GSERROR_OK;
+}
+
+int32_t OH_NativeBuffer_FromNativeWindowBuffer(OHNativeWindowBuffer *nativeWindowBuffer, OH_NativeBuffer **buffer)
+{
+    if (nativeWindowBuffer == nullptr || buffer == nullptr) {
+        BLOGE("parameter error, please check input parameter");
+        return OHOS::GSERROR_INVALID_ARGUMENTS;
+    }
+    *buffer = OH_NativeBufferFromSurfaceBuffer(nativeWindowBuffer->sfbuffer);
+    if (*buffer == nullptr) {
+        BLOGE("get sfbuffer is nullptr");
+        return OHOS::GSERROR_INVALID_OPERATING;
+    }
+    return OHOS::GSERROR_OK;
+}

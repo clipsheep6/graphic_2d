@@ -407,11 +407,65 @@ HWTEST_F(NativeBufferTest, NativeBufferFromNativeWindowBuffer002, Function | Med
     OH_NativeBuffer* nativeBuffer = OH_NativeBufferFromNativeWindowBuffer(nativeWindowBuffer);
     ASSERT_NE(nativeBuffer, nullptr);
 
+    int32_t ret = OH_NativeBuffer_FromNativeWindowBuffer(nativeWindowBuffer, nullptr);
+    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+    OH_NativeBuffer* nativeBufferTmp = nullptr;
+    ret = OH_NativeBuffer_FromNativeWindowBuffer(nativeWindowBuffer, &nativeBufferTmp);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    ASSERT_EQ(nativeBuffer, nativeBufferTmp);
+
+    void *virAddr = nullptr;
+    OH_NativeBuffer_Planes outPlanes;
+    ret = OH_NativeBuffer_MapPlanes(nativeBuffer, &virAddr, &outPlanes);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    ASSERT_NE(virAddr, nullptr);
+    ASSERT_NE(outPlanes.planeCount, 0);
+
     sBuffer = nullptr;
     cSurface = nullptr;
     producer = nullptr;
     pSurface = nullptr;
     nativeWindow = nullptr;
     nativeWindowBuffer = nullptr;
+}
+
+/*
+* Function: OH_NativeBuffer_FromNativeWindowBuffer
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call OH_NativeBuffer_FromNativeWindowBuffer by abnormal input
+*                  2. check ret
+*/
+HWTEST_F(NativeBufferTest, NativeBufferFromNativeWindowBuffer003, Function | MediumTest | Level2)
+{
+    int32_t ret = OH_NativeBuffer_FromNativeWindowBuffer(nullptr, nullptr);
+    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+
+    NativeWindowBuffer nativeWindowBuffer;
+    ret = OH_NativeBuffer_FromNativeWindowBuffer(&nativeWindowBuffer, nullptr);
+    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+}
+
+/*
+* Function: OH_NativeBuffer_MapPlanes
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call OH_NativeBuffer_MapPlanes by abnormal input
+*                  2. check ret
+*/
+HWTEST_F(NativeBufferTest, OHNativeBufferMapPlanes001, Function | MediumTest | Level2)
+{
+    int32_t ret = OH_NativeBuffer_MapPlanes(nullptr, nullptr, nullptr);
+    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+
+    OH_NativeBuffer *buffer = (OH_NativeBuffer *)0xFFFFFFFF;
+    ret = OH_NativeBuffer_MapPlanes(buffer, nullptr, nullptr);
+    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
+
+    void *virAddr = nullptr;
+    ret = OH_NativeBuffer_MapPlanes(buffer, &virAddr, nullptr);
+    ASSERT_EQ(ret, OHOS::GSERROR_INVALID_ARGUMENTS);
 }
 }

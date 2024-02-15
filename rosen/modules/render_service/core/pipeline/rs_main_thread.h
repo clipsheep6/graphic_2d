@@ -82,7 +82,7 @@ public:
     void Start();
     void ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
-    void RequestNextVSync();
+    void RequestNextVSync(const std::string& fromWhom = "unknown", int64_t lastVSyncTS = 0);
     void PostTask(RSTaskMessage::RSTask task);
     void PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime,
         AppExecFwk::EventQueue::Priority priority = AppExecFwk::EventQueue::Priority::IDLE);
@@ -258,6 +258,11 @@ public:
     bool IsMainLooping() const
     {
         return mainLooping_.load();
+    }
+
+    bool IsPCThreeFingerScenesListScene() const
+    {
+        return !threeFingerScenesList_.empty();
     }
 
     void SubscribeAppState();
@@ -523,9 +528,13 @@ private:
     std::shared_ptr<RSAppStateListener> rsAppStateListener_;
     int32_t subscribeFailCount_ = 0;
     SystemAnimatedScenes systemAnimatedScenes_ = SystemAnimatedScenes::OTHERS;
-    uint32_t LeashWindowCount_ = 0;
+    uint32_t leashWindowCount_ = 0;
+
+    // for dvsync (animate requestNextVSync after mark rsnotrendering)
+    bool needRequestNextVsyncAnimate_ = false;
 
     std::atomic_bool mainLooping_ = false;
+    bool forceUIFirstChanged_ = false;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

@@ -69,6 +69,17 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 static bool g_isUniRenderEnabled = false;
+static const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
+    {RSUINodeType::UNKNOW,              "UNKNOW"},
+    {RSUINodeType::DISPLAY_NODE,        "DisplayNode"},
+    {RSUINodeType::RS_NODE,             "RsNode"},
+    {RSUINodeType::SURFACE_NODE,        "SurfaceNode"},
+    {RSUINodeType::PROXY_NODE,          "ProxyNode"},
+    {RSUINodeType::CANVAS_NODE,         "CanvasNode"},
+    {RSUINodeType::ROOT_NODE,           "RootNode"},
+    {RSUINodeType::EFFECT_NODE,         "EffectNode"},
+    {RSUINodeType::CANVAS_DRAWING_NODE, "CanvasDrawingNode"},
+};
 std::once_flag flag_;
 bool IsPathAnimatableModifier(const RSModifierType& type)
 {
@@ -422,7 +433,7 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
     // Note: Animation cancellation logic is now handled by RSImplicitAnimator. The code below might cause Spring
     // Animations with a zero duration to not inherit velocity correctly, an issue slated for future resolution.
     // This code is retained to ensure backward compatibility with specific arkui component animations.
-    if (animation->GetDuration() <= 0) {
+    if (animation->GetDuration() <= 0 && id_ != 0) {
         FinishAnimationByProperty(animation->GetPropertyId());
     }
 
@@ -815,6 +826,56 @@ void RSNode::SetScaleY(float scaleY)
     scale.y_ = scaleY;
     property->Set(scale);
 }
+
+void RSNode::SetSkew(float skew)
+{
+    SetSkew({ skew, skew });
+}
+
+void RSNode::SetSkew(float skewX, float skewY)
+{
+    SetSkew({ skewX, skewY });
+}
+
+void RSNode::SetSkew(const Vector2f& skew)
+{
+    SetProperty<RSSkewModifier, RSAnimatableProperty<Vector2f>>(RSModifierType::SKEW, skew);
+}
+
+void RSNode::SetSkewX(float skewX)
+{
+    auto iter = propertyModifiers_.find(RSModifierType::SKEW);
+    if (iter == propertyModifiers_.end()) {
+        SetSkew(skewX, 0.f);
+        return;
+    }
+
+    auto property = std::static_pointer_cast<RSAnimatableProperty<Vector2f>>(iter->second->GetProperty());
+    if (property == nullptr) {
+        return;
+    }
+    auto skew = property->Get();
+    skew.x_ = skewX;
+    property->Set(skew);
+}
+
+void RSNode::SetSkewY(float skewY)
+{
+    auto iter = propertyModifiers_.find(RSModifierType::SKEW);
+    if (iter == propertyModifiers_.end()) {
+        SetSkew(0.f, skewY);
+        return;
+    }
+
+    auto property = std::static_pointer_cast<RSAnimatableProperty<Vector2f>>(iter->second->GetProperty());
+    if (property == nullptr) {
+        return;
+    }
+    auto skew = property->Get();
+    skew.y_ = skewY;
+    property->Set(skew);
+}
+
 // Set the foreground color of the control
 void RSNode::SetEnvForegroundColor(uint32_t colorValue)
 {

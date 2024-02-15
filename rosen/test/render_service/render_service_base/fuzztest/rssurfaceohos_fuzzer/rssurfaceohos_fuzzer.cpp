@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#include "rssurfaceohos_fuzzer.h"
-#include <securec.h>
 #include <memory>
+#include <securec.h>
 #include <vector>
+
+#include "rssurfaceohos_fuzzer.h"
+
 #include "iconsumer_surface.h"
 #include "platform/common/rs_system_properties.h"
 #include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
@@ -31,7 +33,6 @@ namespace {
     const uint8_t* g_data = nullptr;
     size_t g_size = 0;
     size_t g_pos = 0;
-    std::shared_ptr<RenderContext> renderContext = std::make_shared<RenderContext>();
 } // namespace
 
 template<class T>
@@ -64,7 +65,8 @@ bool RSSurfaceOhosFuzzTest(const uint8_t* data, size_t size)
 #if ACE_ENABLE_GL
     if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
         RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
-        rsSurfaceFrameOhosRaster.SetRenderContext(renderContext.get());
+        RenderContext renderContext;
+        rsSurfaceFrameOhosRaster.SetRenderContext(&renderContext);
     }
 #endif
     (void)rsSurfaceFrameOhosRaster.GetBufferAge();

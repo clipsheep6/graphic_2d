@@ -21,6 +21,7 @@
 #include "animation/rs_render_animation.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
+#include "common/rs_optional_trace.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
@@ -29,6 +30,24 @@
 namespace OHOS {
 namespace Rosen {
 class RSRootRenderNode;
+
+void RSAnimationManager::DumpAnimations(std::string& out) const
+{
+    if (animations_.empty()) {
+        return;
+    }
+    const auto lengthTwo = 2;
+    out += ", RSAnimationManager: [";
+    for (auto[id, animation]: animations_) {
+        if (!animation) {
+            continue;
+        }
+        animation->DumpAnimation(out);
+        out += ", ";
+    }
+    out = out.substr(0, out.length() - lengthTwo);
+    out += "]";
+}
 
 void RSAnimationManager::AddAnimation(const std::shared_ptr<RSRenderAnimation>& animation)
 {
@@ -108,7 +127,10 @@ std::tuple<bool, bool, bool> RSAnimationManager::Animate(int64_t time, bool node
             if (range.IsValid()) {
                 rsRange_.Merge(range);
             }
+            RS_OPTIONAL_TRACE_BEGIN("AddDecisionElement property id: [" + std::to_string(animation->GetPropertyId()) +
+                "], animation id: [" + std::to_string(animation->GetAnimationId()) + "]");
             rateDecider_.AddDecisionElement(animation->GetPropertyId(), animation->GetAnimateVelocity(), range);
+            RS_OPTIONAL_TRACE_END();
         }
         return isFinished;
     });

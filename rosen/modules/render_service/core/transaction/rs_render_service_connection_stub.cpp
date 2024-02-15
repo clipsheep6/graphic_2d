@@ -28,10 +28,6 @@
 #include "transaction/rs_ashmem_helper.h"
 #include "rs_trace.h"
 
-#if defined (ENABLE_DDGR_OPTIMIZE)
-#include "ddgr_renderer.h"
-#endif
-
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -128,9 +124,6 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
     switch (code) {
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::COMMIT_TRANSACTION): {
             RS_TRACE_NAME_FMT("Recv Parcel Size:%zu, fdCnt:%zu", data.GetDataSize(), data.GetOffsetsSize());
-#if defined (ENABLE_DDGR_OPTIMIZE)
-            DDGRRenderer::GetInstance().IntegrateSetIndex(++transDataIndex_);
-#endif
             static bool isUniRender = RSUniRenderJudgement::IsUniRender();
             std::shared_ptr<MessageParcel> parsedParcel;
             if (data.ReadInt32() == 0) { // indicate normal parcel
@@ -1243,7 +1236,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             std::vector<std::string> packageList;
-            for (auto i = 0; i < listSize; i++) {
+            for (uint32_t i = 0; i < listSize; i++) {
                 packageList.push_back(data.ReadString());
             }
             NotifyPackageEvent(listSize, packageList);
@@ -1320,6 +1313,22 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto isEnabled = data.ReadBool();
             SetCacheEnabledForRotation(isEnabled);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_CURRENT_DIRTY_REGION_INFO) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            GpuDirtyRegionInfo gpuDirtyRegionInfo = GetCurrentDirtyRegionInfo(id);
+            reply.WriteInt64(gpuDirtyRegionInfo.activeGpuDirtyRegionAreas);
+            reply.WriteInt64(gpuDirtyRegionInfo.globalGpuDirtyRegionAreas);
+            reply.WriteInt32(gpuDirtyRegionInfo.skipProcessFramesNumber);
+            reply.WriteInt32(gpuDirtyRegionInfo.activeFramesNumber);
+            reply.WriteInt32(gpuDirtyRegionInfo.globalFramesNumber);
+            reply.WriteString("");
             break;
         }
 #ifdef TP_FEATURE_ENABLE

@@ -24,12 +24,10 @@
 #include "window.h"
 
 
-#ifdef ENABLE_NATIVEBUFFER
 #include "SkColor.h"
 #include "native_buffer_inner.h"
 #include "native_window.h"
 #include "vulkan/vulkan_core.h"
-#endif
 
 #include "rs_vulkan_context.h"
 #include "include/gpu/GrBackendSemaphore.h"
@@ -37,11 +35,6 @@
 
 #ifdef USE_ROSEN_DRAWING
 #include "engine_adapter/skia_adapter/skia_surface.h"
-#ifdef ENABLE_DDGR_OPTIMIZE
-#include "engine_adapter/ddgr_adapter/ddgr_surface.h"
-#include "DDGRCanvasV2.h"
-#include "platform/common/rs_system_properties.h"
-#endif
 #endif
 
 namespace OHOS {

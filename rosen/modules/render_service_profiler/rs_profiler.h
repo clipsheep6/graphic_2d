@@ -54,6 +54,46 @@ public:
 
     static bool IsRecording();
     static bool IsPlaying();
+
+private:
+
+    static void ProcessCommands();
+    static void ProcessRecording();
+    static void ProbeNetwork();
+
+    static void AwakeRenderServiceThread();
+
+    static void Respond(const std::string& message);
+    static void DumpNodeModifiers(uint64_t id);
+    static void DumpConnections();
+    static void DumpNodeProperties(uint64_t id);
+    static void DumpTree(const std::string& node);
+    static void DumpSurfaces(uint32_t pid);
+    static void DumpNodeSurface(uint64_t id);
+    static void PatchNode(uint64_t id);
+    static void KillNode(uint64_t id);
+    static void AttachChild(uint64_t parentPid, uint64_t parentNodeId, uint64_t childPid, uint64_t childNodeId);
+    static void KillPid(uint32_t pid);
+    static void GetRoot();
+    static void GetDeviceInfo();
+
+    static void SaveRdc();
+    static void ProcessSendingRdc();
+
+    static void SendTelemetry(double startTime);
+
+    static void RecordStart();
+    static void RecordStop();
+
+    static void PlaybackStart(pid_t pid, double pauseTime = 0.0);
+    static void PlaybackStop();
+    static void PlaybackUpdate();
+
+    static void PlaybackPrepare(uint32_t pid);
+    static void PlaybackPause();
+    static void PlaybackPauseAt(double time);
+    static void PlaybackPauseClear();
+    static void PlaybackResume();
 };
 
 } // namespace OHOS::Rosen

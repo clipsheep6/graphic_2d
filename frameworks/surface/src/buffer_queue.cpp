@@ -823,6 +823,11 @@ GSError BufferQueue::AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerTyp
     }
     {
         std::lock_guard<std::mutex> lockGuard(mutex_);
+        uint32_t sequence = buffer->GetSeqNum();
+        if (bufferQueueCache_.find(sequence) != bufferQueueCache_.end()) {
+            BLOGN_FAILURE_ID(sequence, "buffer is already in cache");
+            return GSERROR_NO_ENTRY;
+        }
         BufferElement ele;
         if (invokerType == InvokerType::PRODUCER_INVOKER) {
             ele = {
@@ -841,7 +846,6 @@ GSError BufferQueue::AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerTyp
                 .fence = SyncFence::INVALID_FENCE,
             };
         }
-        uint32_t sequence = buffer->GetSeqNum();
         bufferQueueCache_[sequence] = ele;
         queueSize_++;
     }

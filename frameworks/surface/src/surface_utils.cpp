@@ -138,16 +138,16 @@ void* SurfaceUtils::GetNativeWindow(uint64_t uniqueId)
 
 SurfaceError SurfaceUtils::AddNativeWindow(uint64_t uniqueId, void *nativeWidow)
 {
-    std::lock_guard<std::mutex> lockGuard(mutex_);
     if (nativeWidow == nullptr) {
         BLOGE("nativeWidow is nullptr.");
         return GSERROR_INVALID_ARGUMENTS;
     }
+    std::lock_guard<std::mutex> lockGuard(mutex_);
     if (nativeWindowCache_.count(uniqueId) == 0) {
         nativeWindowCache_[uniqueId] = nativeWidow;
         return GSERROR_OK;
     }
-    BLOGW("the nativeWidow by uniqueId %" PRIu64 " already existed", uniqueId);
+    BLOGD("the nativeWidow by uniqueId %" PRIu64 " already existed", uniqueId);
     return GSERROR_OK;
 }
 

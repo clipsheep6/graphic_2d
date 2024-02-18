@@ -209,6 +209,18 @@ void OH_Drawing_PathAddRect(OH_Drawing_Path*, float left, float top, float right
 void OH_Drawing_PathAddRoundRect(OH_Drawing_Path*, const OH_Drawing_RoundRect* roundRect, OH_Drawing_PathDirection);
 
 /**
+ * @brief Adds a oval to the path, defined by the rect, and wound in the specified direction.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Path Indicates the pointer to an <b>OH_Drawing_Path</b> object.
+ * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @param OH_Drawing_PathDirection Indicates the path direction.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PathAddOval(OH_Drawing_Path*, const OH_Drawing_Rect*, OH_Drawing_PathDirection);
+
+/**
  * @brief Appends arc to path, as the start of new contour.Arc added is part of ellipse bounded by oval,
  * from startAngle through sweepAngle. Both startAngle and sweepAngle are measured in degrees, where zero degrees
  * is aligned with the positive x-axis, and positive sweeps extends arc clockwise.If sweepAngle <= -360, or
@@ -224,6 +236,20 @@ void OH_Drawing_PathAddRoundRect(OH_Drawing_Path*, const OH_Drawing_RoundRect* r
  * @version 1.0
  */
 void OH_Drawing_PathAddArc(OH_Drawing_Path*, const OH_Drawing_Rect*, float startAngle, float sweepAngle);
+
+/**
+ * @brief Add a circle with a point (x.y) at its center and radius r.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Path Indicates the pointer to an <b>OH_Drawing_Path</b> object.
+ * @param x Indicates the x-axis value of containment test.
+ * @param y Indicates the y-axis value of containment test.
+ * @param radius Indicates the radius to an <b>OH_Drawing_Path</b> object.
+ * @param OH_Drawing_PathDirection Indicates the path direction.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PathAddCircle(OH_Drawing_Path*, float x, float y, float radius, OH_Drawing_PathDirection);
 
 /**
  * @brief Appends src path to path, transformed by matrix. Transformed curves may have different verbs,
@@ -250,6 +276,17 @@ void OH_Drawing_PathAddPath(OH_Drawing_Path*, const OH_Drawing_Path* src, const 
  * @version 1.0
  */
 bool OH_Drawing_PathContains(OH_Drawing_Path*, float x, float y);
+
+/**
+ * @brief Get path boundary.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Path Indicates the pointer to an <b>OH_Drawing_Path</b> object.
+ * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PathGetBounds(OH_Drawing_Path*, OH_Drawing_Rect*);
 
 /**
  * @brief Transforms verb array, point array, and weight by matrix. transform may change verbs

@@ -58,6 +58,16 @@ extern "C" {
 OH_Drawing_Rect* OH_Drawing_RectCreate(float left, float top, float right, float bottom);
 
 /**
+ * @brief Get Height of <b>OH_Drawing_Rect</b> object.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @since 12
+ * @version 1.0
+ */
+float OH_Drawing_RectGetHeight(OH_Drawing_Rect* cRect);
+
+/**
  * @brief Destroys an <b>OH_Drawing_Rect</b> object and reclaims the memory occupied by the object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -66,6 +76,30 @@ OH_Drawing_Rect* OH_Drawing_RectCreate(float left, float top, float right, float
  * @version 1.0
  */
 void OH_Drawing_RectDestroy(OH_Drawing_Rect*);
+
+/**
+ * @brief If cRect intersects other, return true and sets cRect to intersection, otherwise returns false
+ * and cRect stay unchanged.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param cRect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @param other Indicates the pointer to the other <b>OH_Drawing_Rect</b> object.
+ * @return Returns <b>true</b> if cRect intersects other; otherwise returns <b>false</b>.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_RectIntersect(OH_Drawing_Rect* cRect, OH_Drawing_Rect* other);
+
+/**
+ * @brief Obtains the width of a rect.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Rect Indicates the pointer to an <b>OH_Drawing_Rect</b> object.
+ * @return Returns the width.
+ * @since 12
+ * @version 1.0
+ */
+float OH_Drawing_RectGetWidth(OH_Drawing_Rect*);
 
 #ifdef __cplusplus
 }

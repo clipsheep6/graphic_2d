@@ -782,9 +782,9 @@ int32_t RSScreenManager::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surf
             continue;
         }
         auto screenSurface = screen->GetProducerSurface();
-        if (screenSurface == nullptr) {
-            continue;
-        }
+        // if (screenSurface == nullptr) {
+        //     continue;
+        // }
         if (screenSurface->GetUniqueId() == surface->GetUniqueId()) {
             RS_LOGE("RSScreenManager %{public}s: surface %{public}" PRIu64 " is used, set surface failed!",
                 __func__, surfaceId);

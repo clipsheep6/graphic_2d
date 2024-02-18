@@ -381,10 +381,10 @@ ScreenId RSRenderServiceConnectionProxy::CreateVirtualScreen(
 
 int32_t RSRenderServiceConnectionProxy::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface)
 {
-    if (surface == nullptr) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::SetVirtualScreenSurface: Send surface is nullptr!");
-        return INVALID_ARGUMENTS;
-    }
+    // if (surface == nullptr) {
+    //     ROSEN_LOGE("RSRenderServiceConnectionProxy::SetVirtualScreenSurface: Send surface is nullptr!");
+    //     return INVALID_ARGUMENTS;
+    // }
 
     MessageParcel data;
     MessageParcel reply;

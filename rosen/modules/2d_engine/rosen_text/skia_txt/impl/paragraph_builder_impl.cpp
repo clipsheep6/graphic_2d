@@ -72,7 +72,6 @@ skt::TextShadow MakeTextShadow(const TextShadow& txtShadow)
 
 ParagraphBuilderImpl::ParagraphBuilderImpl(
     const ParagraphStyle& style, std::shared_ptr<txt::FontCollection> fontCollection)
-    : baseStyle_(style.ConvertToTextStyle())
 {
     builder_ = skt::ParagraphBuilder::make(TextStyleToSkStyle(style), fontCollection->CreateSktFontCollection());
 }
@@ -82,18 +81,11 @@ ParagraphBuilderImpl::~ParagraphBuilderImpl() = default;
 void ParagraphBuilderImpl::PushStyle(const TextStyle& style)
 {
     builder_->pushStyle(TextStyleToSkStyle(style));
-    styleStack_.push(style);
 }
 
 void ParagraphBuilderImpl::Pop()
 {
     builder_->pop();
-    styleStack_.pop();
-}
-
-const TextStyle& ParagraphBuilderImpl::PeekStyle()
-{
-    return styleStack_.empty() ? baseStyle_ : styleStack_.top();
 }
 
 void ParagraphBuilderImpl::AddText(const std::u16string& text)

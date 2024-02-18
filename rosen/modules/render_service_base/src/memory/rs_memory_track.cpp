@@ -57,14 +57,20 @@ void MemoryTrack::AddNodeRecord(const NodeId id, const MemoryInfo& info)
 
 bool MemoryTrack::RemoveNodeFromMap(const NodeId id, pid_t& pid, size_t& size)
 {
+    RS_LOGE("MemoryTrack::RemoveNodeFromMap xyj 60");
     auto itr = memNodeMap_.find(id);
+    RS_LOGE("MemoryTrack::RemoveNodeFromMap xyj 61");
     if (itr == memNodeMap_.end()) {
         RS_LOGD("MemoryTrack::RemoveNodeFromMap no this nodeId = %{public}" PRIu64, id);
+    RS_LOGE("MemoryTrack::RemoveNodeFromMap xyj 62");
         return false;
     }
-    pid = memNodeMap_[id].pid;
-    size = memNodeMap_[id].size;
+    RS_LOGE("MemoryTrack::RemoveNodeFromMap xyj 63");
+    pid = itr->second.pid;
+    size = itr->second.size;
+    RS_LOGE("MemoryTrack::RemoveNodeFromMap xyj 64");
     memNodeMap_.erase(itr);
+    RS_LOGE("MemoryTrack::RemoveNodeFromMap xyj 65");
     return true;
 }
 

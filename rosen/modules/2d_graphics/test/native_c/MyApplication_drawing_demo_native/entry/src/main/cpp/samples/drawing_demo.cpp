@@ -45,6 +45,21 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Test
 };
 } // namespace
 
+bool ConvertStringFromJsValue(napi_env env, napi_value jsValue, std::string &value)
+{
+    size_t len = 0;
+    if (napi_get_value_string_utf8(env, jsValue, nullptr, 0, &len) != napi_ok) {
+        return false;
+    }
+    auto buffer = std::make_unique<char[]>(len + 1);
+    size_t strLength = 0;
+    if (napi_get_value_string_utf8(env, jsValue, buffer.get(), len + 1, &strLength) == napi_ok) {
+        value = buffer.get();
+        return true;
+    }
+    return false;
+}
+
 static void OnSurfaceCreatedCB(OH_NativeXComponent *component, void *window)
 {
     DRAWING_LOGI("OnSurfaceCreatedCB");
@@ -268,15 +283,15 @@ void DrawingDemo::DiasplayToScreen()
     OH_Drawing_CanvasDrawBitmap(cCanvas_, bitmap, 100, 100); // offset 100*100
 }
 
-void DrawingDemo::Draw(napi_env env, void* data)
+void DrawingDemo::Draw(napi_env env, std::string caseName)
 {
-    std::string castName = static_cast<char *>(data);
-    if (TestCaseMap.find(castName) == TestCaseMap.end()) {
+//    std::string castName = static_cast<char *>(data);
+    if (TestCaseMap.find(caseName) == TestCaseMap.end()) {
         DRAWING_LOGE("castName error");
         return;
     }
     
-    std::shared_ptr<TestBase> testCase = TestCaseMap.find(castName)->second();
+    std::shared_ptr<TestBase> testCase = TestCaseMap.find(caseName)->second();
     testCase->GetSize(width, height);
     uint32_t color = 0;
     testCase->GetBackgroundColor(color);
@@ -284,12 +299,11 @@ void DrawingDemo::Draw(napi_env env, void* data)
     backgroundR_ = ((color >> 16) & 0xff);
     backgroundG_ = ((color >> 8) & 0xff);
     backgroundB_ = (color & 0xff);
-    fileName_ = castName;
+    fileName_ = caseName;
     
     CreateBitmapCanvas();
     testCase->Recording(canvas);
-
-
+    
     BitmapCanvasToFile(env);
     DiasplayToScreen();
 }
@@ -368,15 +382,18 @@ napi_value DrawingDemo::NapiExcuteTest(napi_env env, napi_callback_info info)
     }
 
     napi_value thisArg;
-    void* data;
-    if (napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data) != napi_ok) {
+    size_t argc = 1;
+    napi_value argv[1] = {nullptr};
+    if (napi_get_cb_info(env, info, &argc, argv, &thisArg, nullptr) != napi_ok) {
         DRAWING_LOGE("NapiDrawPattern: napi_get_cb_info fail");
         return nullptr;
     }
-    if (data == nullptr) {
-        DRAWING_LOGE("failed to get data");
+    std::string caseName = "";
+    if (!ConvertStringFromJsValue(env, argv[0], caseName)) {
+        DRAWING_LOGE("NapiDrawPattern: get caseName fail");
         return nullptr;
     }
+    DRAWING_LOGI("caseName = %{public}s", caseName.c_str());
 
     napi_value exportInstance;
     if (napi_get_named_property(env, thisArg, OH_NATIVE_XCOMPONENT_OBJ, &exportInstance) != napi_ok) {
@@ -402,7 +419,7 @@ napi_value DrawingDemo::NapiExcuteTest(napi_env env, napi_callback_info info)
     if (render != nullptr) {
         render->Prepare();
         render->Create();
-        render->Draw(env, data);
+        render->Draw(env, caseName);
         render->DisPlay();
         render->Destroy();
     } else {
@@ -456,8 +473,7 @@ void DrawingDemo::Export(napi_env env, napi_value exports)
 
     napi_property_descriptor desc[] = {
         {"drawAll", nullptr, DrawingDemo::NapiExcuteAllTest, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"drawRect", nullptr, DrawingDemo::NapiExcuteTest, nullptr, nullptr, nullptr, napi_default, static_cast<void*>(const_cast<char*>(DRAWRECT.c_str()))},
-        {"drawPath", nullptr, DrawingDemo::NapiExcuteTest, nullptr, nullptr, nullptr, napi_default, static_cast<void*>(const_cast<char*>(DRAWPATH.c_str()))},
+        {"drawCase", nullptr, DrawingDemo::NapiExcuteTest, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
     if (napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc) != napi_ok) {
         DRAWING_LOGE("Export: napi_define_properties failed");

@@ -22,6 +22,4 @@
         fileName_：生成图片的文件名，默认为用例名.jpg.文件保存于/data/app/el2/100/base/com.example.myapplication_0202sdk/files/目录下
     3）重写OnRecording接口，即为用例的绘制流程，可参考void DrawRectTest::OnRecording()
     4）补充用例映射表：entry\src\main\cpp\samples\drawing_demo.cpp：TestCaseMap
-    5）向外注册ts接口：entry\src\main\cpp\samples\drawing_demo.cpp：DrawingDemo::Export--desc[]
-    6）声明ts接口：entry\src\main\ets\interface\XComponentContext.ts：XComponentContext
-    7）界面增加buttom调用用例，如：entry\src\main\ets\pages\Index.ets：Button('drawpath')
+    5）界面增加buttom调用用例，如：entry\src\main\ets\pages\Index.ets：Button('drawpath')

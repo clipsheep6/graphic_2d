@@ -15,6 +15,5 @@
 
 export default interface XComponentContext {
   drawAll(): void;
-  drawRect(): void;
-  drawPath(): void;
+  drawCase(string): void;
 };

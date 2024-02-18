@@ -42,7 +42,7 @@ public:
     static napi_value NapiExcuteAllTest(napi_env env, napi_callback_info info);
     
 
-    void Draw(napi_env env, void* data);
+    void Draw(napi_env env, std::string caseName);
     void DrawAll(napi_env env);
 
     static void Release(std::string &id);

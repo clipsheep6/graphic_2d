@@ -37,18 +37,10 @@ struct Index {
           .fontWeight(500)
           .margin({ bottom: 24, right: 12 })
           .onClick(() => {
-            console.log(TAG, "Draw Path click");
+            console.log(TAG, "drawrect click");
             if (this.xComponentContext) {
-              console.log(TAG, "init image Path");
-              let height_ = 500;
-              let width_ = 500;
-              const color : ArrayBuffer = new ArrayBuffer(height_ * width_ * 4);  //需要创建的像素buffer大小，取值为：height * width *4
-              let opts : image.InitializationOptions = { editable: true, pixelFormat: 3, size: { height: height_, width: width_ } }
-              let opts1 :image.InitializationOptions = opts;
-              const pixel = image.createPixelMap(color, opts);
-
               console.log(TAG, "drawrect");
-              this.xComponentContext.drawRect();
+              this.xComponentContext.drawCase("drawrect");
             }
           })
           .width('30%')
@@ -59,10 +51,10 @@ struct Index {
           .fontWeight(500)
           .margin({ bottom: 24, left: 12 })
           .onClick(() => {
-            console.log(TAG, "draw text click");
+            console.log(TAG, "drawpath click");
             if (this.xComponentContext) {
               console.log(TAG, "drawpath");
-              this.xComponentContext.drawPath();
+              this.xComponentContext.drawCase("drawpath");
             }
           })
           .width('30%')

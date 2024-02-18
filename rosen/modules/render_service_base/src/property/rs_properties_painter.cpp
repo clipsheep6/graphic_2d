@@ -437,14 +437,14 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         Drawing::Rect spotRect = Drawing::Rect(ambientRect.GetLeft() * spotRatio, ambientRect.GetTop() * spotRatio,
             ambientRect.GetRight() * spotRatio, ambientRect.GetBottom() * spotRatio);
         spotRect.Offset(-transRatio * DEFAULT_LIGHT_POSITION_X, -transRatio * DEFAULT_LIGHT_POSITION_Y);
-        spotRect.MakeOutset(transRatio * DEFAULT_LIGHT_RADIUS, transRatio * DEFAULT_LIGHT_RADIUS);
+        spotRect.Outset(transRatio * DEFAULT_LIGHT_RADIUS, transRatio * DEFAULT_LIGHT_RADIUS);
 
         shadowRect = ambientRect;
         float ambientBlur = std::min(elevation * 0.5f, MAX_AMBIENT_RADIUS);
-        shadowRect.MakeOutset(ambientBlur, ambientBlur);
+        shadowRect.Outset(ambientBlur, ambientBlur);
 
         shadowRect.Join(spotRect);
-        shadowRect.MakeOutset(1, 1);
+        shadowRect.Outset(1, 1);
     } else {
         Drawing::Brush brush;
         brush.SetAntiAlias(true);
@@ -1145,7 +1145,7 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     auto clipIBounds = canvas.GetDeviceClipBounds();
     auto imageClipIBounds = clipIBounds;
     if (needSnapshotOutset) {
-        imageClipIBounds.MakeOutset(-1, -1);
+        imageClipIBounds.Outset(-1, -1);
     }
     auto imageSnapshot = surface->GetImageSnapshot(imageClipIBounds);
 #endif

@@ -1556,7 +1556,7 @@ void RSMainThread::Render()
     if (focusAppBundleName_.find(DESKTOP_NAME_FOR_ROTATION) != std::string::npos) {
         desktopPidForRotationScene_ = focusAppPid_;
     }
-    if (RSSystemProperties::GetDumpRSTreeCount()) {
+    if (RSSystemParameters::GetDumpRSTreeCount()) {
         std::string rsTreeStr;
         RenderServiceTreeDump(rsTreeStr);
         RS_TRACE_NAME("WriteDumpTree");
@@ -1567,7 +1567,7 @@ void RSMainThread::Render()
         }
         dumpFilePath += "/rsTree_" + std::to_string(frameCount_) + ".txt";
         OHOS::Rosen::Benchmarks::WriteStringToFile(rsTreeStr, dumpFilePath);
-        RSSystemProperties::SetDumpRSTreeCount(RSSystemProperties::GetDumpRSTreeCount() - 1);
+        RSSystemParameters::SetDumpRSTreeCount(RSSystemParameters::GetDumpRSTreeCount() - 1);
     }
     if (isUniRender_) {
         UniRender(rootNode);

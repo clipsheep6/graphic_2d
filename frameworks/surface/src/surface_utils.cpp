@@ -55,7 +55,7 @@ SurfaceError SurfaceUtils::Add(uint64_t uniqueId, const sptr<Surface> &surface)
         surfaceCache_[uniqueId] = surface;
         return GSERROR_OK;
     }
-    BLOGW("the surface by uniqueId %" PRIu64 " already existed", uniqueId);
+    BLOGD("the surface by uniqueId %" PRIu64 " already existed", uniqueId);
     return GSERROR_OK;
 }
 

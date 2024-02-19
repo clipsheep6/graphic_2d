@@ -2906,38 +2906,77 @@ void RSMainThread::CheckAndUpdateInstanceContentStaticStatus(std::shared_ptr<RSS
     }
 }
 
-void RSMainThread::ApplyModifiers()
+void RSMainThread::ApplyModifiersImpl(const std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>&& dirtyNodes)
 {
-    std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
-    if (context_->activeNodesInRoot_.empty()) {
-        return;
-    }
-    RS_TRACE_NAME_FMT("ApplyModifiers (PropertyDrawableEnable %s)",
-        RSSystemProperties::GetPropertyDrawableEnable() ? "TRUE" : "FALSE");
     std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> nodesThatNeedsRegenerateChildren;
-    for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
-        for (const auto& [id, nodePtr] : nodeSet) {
-            auto node = nodePtr.lock();
-            if (node == nullptr) {
-                continue;
-            }
+    {
+        RS_OPTIONAL_TRACE_NAME_FMT("ApplyModifiersImpl: Applying modifiers for %zu nodes", dirtyNodes.size());
+        for (const auto& [id, node] : dirtyNodes) {
+            // if node hierarchy changed, add it to regenerate list
             if (!node->isFullChildrenListValid_ || !node->isChildrenSorted_) {
                 nodesThatNeedsRegenerateChildren.emplace(node->id_, node);
             }
-            // apply modifiers, if z-order not changed, skip
-            if (!node->ApplyModifiers()) {
-                continue;
-            }
-            if (auto parent = node->GetParent().lock()) {
-                parent->isChildrenSorted_ = false;
-                nodesThatNeedsRegenerateChildren.emplace(parent->id_, parent);
+            bool isZOrderChanged = node->ApplyModifiers();
+            // if node z-order changed, add it's parent to regenerate list
+            if (isZOrderChanged) {
+                if (auto parent = node->GetParent().lock()) {
+                    parent->isChildrenSorted_ = false;
+                    nodesThatNeedsRegenerateChildren.emplace(parent->id_, parent);
+                }
             }
         }
     }
-    // Update the full children list of the nodes that need it
-    nodesThatNeedsRegenerateChildren.emplace(0, context_->globalRootRenderNode_);
-    for (auto& [id, node] : nodesThatNeedsRegenerateChildren) {
-        node->UpdateFullChildrenListIfNeeded();
+
+    {
+        RS_OPTIONAL_TRACE_NAME_FMT(
+            "ApplyModifiersImpl: Regenerating children for %zu nodes", nodesThatNeedsRegenerateChildren.size());
+        // global root should always be regenerated
+        nodesThatNeedsRegenerateChildren.emplace(0, context_->globalRootRenderNode_);
+        // update the children list
+        for (auto& [id, node] : nodesThatNeedsRegenerateChildren) {
+            node->UpdateFullChildrenListIfNeeded();
+        }
+    }
+}
+
+void RSMainThread::ApplyModifiers()
+{
+    RS_TRACE_NAME_FMT("ApplyModifiers (PropertyDrawableEnable %s)",
+        RSSystemProperties::GetPropertyDrawableEnable() ? "TRUE" : "FALSE");
+
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> onTreeDirtyNodes;
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> offTreeDirtyNodes;
+    {
+        RS_OPTIONAL_TRACE_NAME_FMT(
+            "ApplyModifiers: Generating node lists for %zu apps.", context_->activeNodesInRoot_.size());
+        std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
+        if (context_->activeNodesInRoot_.empty()) {
+            return;
+        }
+        for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
+            for (const auto& [id, nodePtr] : nodeSet) {
+                auto node = nodePtr.lock();
+                if (node == nullptr) {
+                    continue;
+                }
+                if (node->isOnTheTree_) {
+                    onTreeDirtyNodes.emplace(id, node);
+                } else {
+                    offTreeDirtyNodes.emplace(id, node);
+                }
+            }
+        }
+    }
+
+    if (!onTreeDirtyNodes.empty()) {
+        RS_OPTIONAL_TRACE_NAME("ApplyModifiers: Processing on-tree nodes");
+        ApplyModifiersImpl(std::move(onTreeDirtyNodes));
+    }
+    if (!offTreeDirtyNodes.empty()) {
+        PostTask([this, offTreeDirtyNodes = std::move(offTreeDirtyNodes)]() {
+            RS_OPTIONAL_TRACE_NAME("ApplyModifiers: Processing off-tree nodes");
+            ApplyModifiersImpl(std::move(offTreeDirtyNodes));
+        });
     }
 }
 

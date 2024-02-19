@@ -140,6 +140,7 @@ private:
     void ProcessCommands();
     void Animate(uint64_t timestamp);
     void ApplyModifiers();
+    void ApplyModifiersImpl(const std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>&& dirtyNodes);
     void Render();
     void SendCommands();
 

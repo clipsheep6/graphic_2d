@@ -270,6 +270,7 @@ public:
     const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetSelfDrawingNodes() const;
     bool GetParallelCompositionEnabled();
     std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
+
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -285,6 +286,7 @@ private:
     void ProcessCommand();
     void Animate(uint64_t timestamp);
     void ApplyModifiers();
+    void ApplyModifiersImpl(const std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>&& dirtyNodes);
     void ConsumeAndUpdateAllNodes();
     void CollectInfoForHardwareComposer();
     void CollectInfoForDrivenRender();

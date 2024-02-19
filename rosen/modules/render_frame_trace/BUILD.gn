@@ -21,12 +21,6 @@ ohos_source_set("render_frame_trace") {
     "src/render_frame_trace.cpp",
   ]
   cflags = [ "-fstack-protector-all" ]
-  if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
-    cflags += [ "-flto=thin" ]
-    if (enhanced_opt) {
-      cflags += [ "-fwhole-program-vtables" ]
-    }
-  }
   deps = [ "//third_party/jsoncpp:jsoncpp" ]
   if (!build_ohos_sdk) {
     external_deps = [

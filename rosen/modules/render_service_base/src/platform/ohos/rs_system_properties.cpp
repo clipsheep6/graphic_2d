@@ -762,7 +762,7 @@ bool RSSystemProperties::GetSubSurfaceEnabled()
 bool RSSystemProperties::GetSecurityPermissionCheckEnabled()
 {
     static bool openSecurityPermissionCheck =
-        std::atoi((system::GetParameter("persist.sys.graphic.openSecurityPermissionCheck", "0")).c_str()) != 0;
+        std::atoi((system::GetParameter("persist.sys.graphic.openSecurityPermissionCheck", "1")).c_str()) != 0;
     return openSecurityPermissionCheck;
 }
 

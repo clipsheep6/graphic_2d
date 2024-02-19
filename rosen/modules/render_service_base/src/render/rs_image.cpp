@@ -417,7 +417,7 @@ void RSImage::DrawImageRepeatRect(const Drawing::SamplingOptions& samplingOption
             if (image_) {
                 if (canvas.GetTotalMatrix().HasPerspective()) {
                     // In case of perspective transformation, make dstRect 1px outset to anti-alias
-                    dst_.MakeOutset(1, 1);
+                    dst_.Outset(1, 1);
                 }
                 canvas.DrawImageRect(*image_, src_, dst_, samplingOptions,
                     Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);

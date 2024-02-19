@@ -1021,7 +1021,7 @@ bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(
         return false;
     }
     bounds->Offset(x, y);
-    bounds->MakeOutset(TEXT_BLOB_CACHE_MARGIN, TEXT_BLOB_CACHE_MARGIN);
+    bounds->Outset(TEXT_BLOB_CACHE_MARGIN, TEXT_BLOB_CACHE_MARGIN);
     // create CPU raster surface
     Drawing::ImageInfo offscreenInfo { bounds->GetWidth(), bounds->GetHeight(),
         Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL, nullptr};

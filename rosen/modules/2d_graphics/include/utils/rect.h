@@ -62,7 +62,8 @@ public:
     inline void SetBottom(int pos);
 
     inline void Offset(int dx, int dy);
-    inline void MakeOutset(int dx, int dy);
+    inline void Outset(int dx, int dy);
+    inline RectI MakeOutset(int dx, int dy);
     inline bool Contains(const RectI& other) const;
     /*
      * @brief        If RectI intersects other, sets RectI to intersection.
@@ -172,12 +173,17 @@ inline void RectI::Offset(int dx, int dy)
     bottom_ += dy;
 }
 
-inline void RectI::MakeOutset(int dx, int dy)
+inline void RectI::Outset(int dx, int dy)
 {
     left_ -= dx;
     right_ += dx;
     top_ -= dy;
     bottom_ += dy;
+}
+
+inline RectI RectI::MakeOutset(int dx, int dy)
+{
+    return {left_ - dx, right_ + dx, top_ - dy, bottom_ + dy};
 }
 
 inline bool RectI::Intersect(const RectI& other)
@@ -248,7 +254,8 @@ public:
     inline void SetBottom(scalar pos);
 
     inline void Offset(scalar dx, scalar dy);
-    inline void MakeOutset(scalar dx, scalar dy);
+    inline void Outset(scalar dx, scalar dy);
+    inline RectF MakeOutset(scalar dx, scalar dy);
     inline void Round();
     inline RectI RoundOut();
 
@@ -357,12 +364,17 @@ inline void RectF::Offset(scalar dx, scalar dy)
     bottom_ += dy;
 }
 
-inline void RectF::MakeOutset(scalar dx, scalar dy)
+inline void RectF::Outset(scalar dx, scalar dy)
 {
     left_ -= dx;
     right_ += dx;
     top_ -= dy;
     bottom_ += dy;
+}
+
+inline RectF RectF::MakeOutset(scalar dx, scalar dy)
+{
+    return {left_ - dx, right_ + dx, top_ - dy, bottom_ + dy};
 }
 
 inline void RectF::Round()

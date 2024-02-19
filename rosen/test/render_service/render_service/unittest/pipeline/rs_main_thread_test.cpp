@@ -2464,5 +2464,6 @@ HWTEST_F(RSMainThreadTest, ReleaseSurface, TestSize.Level1)
     ASSERT_NE(mainThread, nullptr);
     mainThread->tmpSurfaces_.push(nullptr);
     mainThread->ReleaseSurface();
+    
 }
 } // namespace OHOS::Rosen

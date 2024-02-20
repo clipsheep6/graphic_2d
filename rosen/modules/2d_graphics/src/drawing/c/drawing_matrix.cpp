@@ -100,7 +100,7 @@ void OH_Drawing_MatrixRotate(OH_Drawing_Matrix* cMatrix, float degree, float px,
     if (matrix == nullptr) {
         return;
     }
-    matrix->Rotate(degree, px, py);
+    matrix->PreRotate(degree, px, py);
 }
 
 void OH_Drawing_MatrixTranslate(OH_Drawing_Matrix* cMatrix, float dx, float dy)
@@ -109,7 +109,7 @@ void OH_Drawing_MatrixTranslate(OH_Drawing_Matrix* cMatrix, float dx, float dy)
     if (matrix == nullptr) {
         return;
     }
-    matrix->Translate(dx, dy);
+    matrix->PreTranslate(dx, dy);
 }
 
 void OH_Drawing_MatrixScale(OH_Drawing_Matrix* cMatrix, float sx, float sy, float px, float py)
@@ -118,7 +118,7 @@ void OH_Drawing_MatrixScale(OH_Drawing_Matrix* cMatrix, float sx, float sy, floa
     if (matrix == nullptr) {
         return;
     }
-    matrix->Scale(sx, sy, px, py);
+    matrix->PreScale(sx, sy, px, py);
 }
 
 bool OH_Drawing_MatrixInvert(OH_Drawing_Matrix* cMatrix, OH_Drawing_Matrix* inverse)

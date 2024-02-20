@@ -22,6 +22,7 @@
 
 #include "rs_divided_render_util.h"
 #include "common/rs_optional_trace.h"
+#include "memory/rs_tag_tracker.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
@@ -362,6 +363,9 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
         return nullptr;
     }
     RS_OPTIONAL_TRACE_BEGIN("RSBaseRenderEngine::RequestFrame(RSSurface)");
+#ifdef RS_ENABLE_VK
+    RSTagTracker tagTracker(skContext_.get(), RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
+#endif
     rsSurface->SetColorSpace(config.colorGamut);
     rsSurface->SetSurfacePixelFormat(config.format);
 
@@ -817,8 +821,13 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
 #else
         auto surfaceOrigin = kBottomLeft_GrSurfaceOrigin;
 #endif
+        auto contextVk = canvas.recordingContext();
+        if (contextVk == nullptr) {
+            RS_LOGE("contextVk is nullptr.");
+            return;
+        }
         image = SkImage::MakeFromTexture(
-            canvas.recordingContext(), backendTexture, surfaceOrigin, colorType, kPremul_SkAlphaType,
+            contextVk, backendTexture, surfaceOrigin, colorType, kPremul_SkAlphaType,
             skColorSpace, NativeBufferUtils::DeleteVkImage, imageCache->RefCleanupHelper());
 
         canvas.drawImageRect(image, params.srcRect, params.dstRect,
@@ -843,7 +852,12 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
 #else
         auto surfaceOrigin = Drawing::TextureOrigin::BOTTOM_LEFT;
 #endif
-        if (!image->BuildFromTexture(*canvas.GetGPUContext(), backendTexture.GetTextureInfo(),
+        auto contextGL = canvas.GetGPUContext();
+        if (contextGl == nullptr) {
+            RS_LOGE("contextGL is nullptr.");
+            return;
+        }
+        if (!image->BuildFromTexture(*contextGL, backendTexture.GetTextureInfo(),
             surfaceOrigin, bitmapFormat, nullptr,
             NativeBufferUtils::DeleteVkImage, imageCache->RefCleanupHelper())) {
             ROSEN_LOGE("RSBaseRenderEngine::DrawImage: backendTexture is not valid!!!");

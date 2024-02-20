@@ -320,6 +320,22 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
     return isDrawTextAsBitmap_;
 }
 
+int RSSystemProperties::GetDumpRSTreeCount()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("debug.graphic.dumpRSTreeCount", "0");
+
+    int changed = 0;
+    const char *num = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(num, 0);
+}
+
+void RSSystemProperties::SetDumpRSTreeCount(int count)
+{
+    count = (count > 0) ? count : 0;
+    system::SetParameter("debug.graphic.dumpRSTreeCount", std::to_string(count));
+    RS_LOGD("RSSystemProperties::SetDumpRSTreeCount %{public}d", count);
+}
+
 void RSSystemProperties::SetCacheEnabledForRotation(bool flag)
 {
     cacheEnabledForRotation_ = flag;
@@ -436,7 +452,7 @@ bool RSSystemProperties::GetFilterPartialRenderEnabled()
     // Determine whether the filter partial render should be enabled. The default value is 0,
     // which means that it is unenabled.
     static bool enabled =
-        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "0")).c_str()) != 0;
+        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "1")).c_str()) != 0;
     return enabled;
 }
 

@@ -196,7 +196,7 @@ public:
 
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
-    void SetDirty();
+    void SetDirty(bool forceAddToActiveList = false);
 
     virtual void AddDirtyType(RSModifierType type)
     {
@@ -260,7 +260,7 @@ public:
     // update parent's children rect including childRect and itself
     void UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const;
     virtual void UpdateFilterCacheManagerWithCacheRegion(
-        RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect = std::nullopt) const;
+        RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect = std::nullopt);
 
     void SetStaticCached(bool isStaticCached);
     bool IsStaticCached() const;
@@ -358,6 +358,7 @@ public:
     RSDrawingCacheType GetDrawingCacheType() const;
     void ResetFilterRectsInCache(const std::unordered_set<NodeId>& curRects);
     void GetFilterRectsInCache(std::unordered_map<NodeId, std::unordered_set<NodeId>>& allRects) const;
+    bool IsFilterRectsInCache() const;
     void SetDrawingCacheChanged(bool cacheChanged);
     bool GetDrawingCacheChanged() const;
     void ResetDrawingCacheNeedUpdate();
@@ -434,7 +435,7 @@ public:
     void UpdateEffectRegion(std::optional<Drawing::RectI>& region);
 #endif
     bool IsBackgroundFilterCacheValid() const;
-    virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = true) const;
+    virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = true);
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
     bool IsForcedDrawInGroup() const;
@@ -505,6 +506,12 @@ protected:
 
     void DumpNodeType(std::string& out) const;
 
+    void DumpSubClassNode(std::string& out) const;
+    void DumpDrawCmdModifiers(std::string& out) const;
+    void DumpDrawCmdModifier(std::string& propertyDesc, RSModifierType type,
+        std::shared_ptr<RSRenderModifier>& modifier) const;
+
+
     const std::weak_ptr<RSContext> GetContext() const
     {
         return context_;
@@ -556,15 +563,19 @@ private:
     std::list<WeakPtr> children_;
     std::list<std::pair<SharedPtr, uint32_t>> disappearingChildren_;
 
-    ChildrenListSharedPtr fullChildrenList_;
-    bool isFullChildrenListValid_ = false;
-    bool isChildrenSorted_ = false;
+    // Note: Make sure that fullChildrenList_ is never nullptr. Otherwise, the caller using
+    // `for (auto child : *GetSortedChildren()) { ... }` will crash.
+    // When an empty list is needed, use EmptyChildrenList instead.
+    static const inline auto EmptyChildrenList = std::make_shared<const std::vector<std::shared_ptr<RSRenderNode>>>();
+    ChildrenListSharedPtr fullChildrenList_ = EmptyChildrenList ;
+    bool isFullChildrenListValid_ = true;
+    bool isChildrenSorted_ = true;
 
     void UpdateFullChildrenListIfNeeded();
     void GenerateFullChildrenList();
     void ResortChildren();
 
-    const std::weak_ptr<RSContext> context_;
+    std::weak_ptr<RSContext> context_ = {};
     NodeDirty dirtyStatus_ = NodeDirty::CLEAN;
     bool isContentDirty_ = false;
     bool isNewOnTree_ = false;
@@ -581,7 +592,6 @@ private:
     void InternalRemoveSelfFromDisappearingChildren();
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
-    inline void AddActiveNode();
 
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, std::optional<RectI> clipRect);
     void UpdateFullScreenFilterCacheRect(RSDirtyRegionManager& dirtyManager, bool isForeground) const;
@@ -695,10 +705,11 @@ private:
 
     const std::shared_ptr<RSRenderContent> renderContent_ = std::make_shared<RSRenderContent>();
 
-    void OnRegister();
+    void OnRegister(const std::weak_ptr<RSContext>& context);
 
     friend class DrawFuncOpItem;
     friend class RSAliasDrawable;
+    friend class RSContext;
     friend class RSMainThread;
     friend class RSModifierDrawable;
     friend class RSProxyRenderNode;

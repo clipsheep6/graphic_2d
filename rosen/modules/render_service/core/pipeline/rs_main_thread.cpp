@@ -35,6 +35,7 @@
 #include "rs_trace.h"
 
 #include "animation/rs_animation_fraction.h"
+#include "benchmarks/file_utils.h"
 #include "command/rs_message_processor.h"
 #include "common/rs_background_thread.h"
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
@@ -126,6 +127,8 @@ constexpr uint64_t MAX_SYSTEM_SCENE_STATUS_TIME = 800000000;
 constexpr uint64_t PERF_PERIOD_MULTI_WINDOW = 80000000;
 constexpr uint32_t MULTI_WINDOW_PERF_START_NUM = 2;
 constexpr uint32_t MULTI_WINDOW_PERF_END_NUM = 4;
+constexpr uint32_t TIME_OF_EIGHT_FRAMES = 8000;
+constexpr uint32_t TIME_OF_THE_FRAMES = 1000;
 constexpr uint32_t WAIT_FOR_RELEASED_BUFFER_TIMEOUT = 3000;
 constexpr uint32_t WAIT_FOR_HARDWARE_THREAD_TASK_TIMEOUT = 3000;
 constexpr uint32_t WATCHDOG_TIMEVAL = 5000;
@@ -244,6 +247,7 @@ RSMainThread* RSMainThread::Instance()
 RSMainThread::RSMainThread() : mainThreadId_(std::this_thread::get_id())
 {
     context_ = std::make_shared<RSContext>();
+    context_->Initialize();
 }
 
 RSMainThread::~RSMainThread() noexcept
@@ -1040,6 +1044,10 @@ void RSMainThread::CollectInfoForHardwareComposer()
             if (surfaceNode == nullptr || !surfaceNode->IsOnTheTree()) {
                 return;
             }
+            if (surfaceNode->IsLeashWindow() && surfaceNode->GetForceUIFirstChanged()) {
+                forceUIFirstChanged_ = true;
+                surfaceNode->SetForceUIFirstChanged(false);
+            }
             if (surfaceNode->GetBuffer() != nullptr) {
                 selfDrawingNodes_.emplace_back(surfaceNode);
             }
@@ -1081,9 +1089,9 @@ void RSMainThread::CollectInfoForHardwareComposer()
                     doDirectComposition_ = false;
                 }
             } else { // hwc -> hwc
-                // self-drawing node do not consume buffer when gpu -> hwc
-                // so first buffer updated in hwc -> hwc, should set content dirty
-                if (surfaceNode->IsCurrentFrameBufferConsumed() && surfaceNode->GetHwcDelayDirtyFlag()) {
+                // self-drawing node don't set content dirty when gpu -> hwc
+                // so first frame in hwc -> hwc, should set content dirty
+                if (surfaceNode->GetHwcDelayDirtyFlag()) {
                     surfaceNode->SetContentDirty();
                     surfaceNode->SetHwcDelayDirtyFlag(false);
                     doDirectComposition_ = false;
@@ -1229,49 +1237,51 @@ void RSMainThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply)
     this->clearMemoryFinished_ = false;
     this->clearMemDeeply_ = this->clearMemDeeply_ || deeply;
     this->SetClearMoment(moment);
-    PostTask([this, moment, deeply]() {
+    PostTask(
+        [this, moment, deeply]() {
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_RENDER_CONTEXT
-        auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
+            auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
 #else
-        auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
+            auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
 #endif
-        if (!grContext) {
-            return;
-        }
-        RS_LOGD("Clear memory cache %{public}d", this->GetClearMoment());
-        RS_TRACE_NAME_FMT("Clear memory cache, cause the moment [%d] happen", this->GetClearMoment());
-        SKResourceManager::Instance().ReleaseResource();
-        grContext->flush();
-        SkGraphics::PurgeAllCaches(); // clear cpu cache
-        if (deeply || this->deviceType_ != DeviceType::PHONE) {
-            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
-        } else {
-            MemoryManager::ReleaseUnlockGpuResource(grContext);
-        }
-        grContext->flushAndSubmit(true);
+            if (!grContext) {
+                return;
+            }
+            RS_LOGD("Clear memory cache %{public}d", this->GetClearMoment());
+            RS_TRACE_NAME_FMT("Clear memory cache, cause the moment [%d] happen", this->GetClearMoment());
+            SKResourceManager::Instance().ReleaseResource();
+            grContext->flush();
+            SkGraphics::PurgeAllCaches(); // clear cpu cache
+            if (deeply || this->deviceType_ != DeviceType::PHONE) {
+                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+            } else {
+                MemoryManager::ReleaseUnlockGpuResource(grContext);
+            }
+            grContext->flushAndSubmit(true);
 #else
-        auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
-        if (!grContext) {
-            return;
-        }
-        RS_LOGD("Clear memory cache %{public}d", this->GetClearMoment());
-        RS_TRACE_NAME_FMT("Clear memory cache, cause the moment [%d] happen", this->GetClearMoment());
-        SKResourceManager::Instance().ReleaseResource();
-        grContext->Flush();
-        SkGraphics::PurgeAllCaches(); // clear cpu cache
-        if (deeply || this->deviceType_ != DeviceType::PHONE) {
-            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
-        } else {
-            MemoryManager::ReleaseUnlockGpuResource(grContext);
-        }
-        grContext->FlushAndSubmit(true);
+            auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+            if (!grContext) {
+                return;
+            }
+            RS_LOGD("Clear memory cache %{public}d", this->GetClearMoment());
+            RS_TRACE_NAME_FMT("Clear memory cache, cause the moment [%d] happen", this->GetClearMoment());
+            SKResourceManager::Instance().ReleaseResource();
+            grContext->Flush();
+            SkGraphics::PurgeAllCaches(); // clear cpu cache
+            if (deeply || this->deviceType_ != DeviceType::PHONE) {
+                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+            } else {
+                MemoryManager::ReleaseUnlockGpuResource(grContext);
+            }
+            grContext->FlushAndSubmit(true);
 #endif
-        this->clearMemoryFinished_ = true;
-        this->clearMemDeeply_ = false;
-        this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);
-    },
-    CLEAR_GPU_CACHE, (this->deviceType_ == DeviceType::PHONE ? 8000 : 1000) / GetRefreshRate());
+            this->clearMemoryFinished_ = true;
+            this->clearMemDeeply_ = false;
+            this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);
+        },
+        CLEAR_GPU_CACHE, (this->deviceType_ == DeviceType::PHONE ? TIME_OF_EIGHT_FRAMES : TIME_OF_THE_FRAMES)
+            / GetRefreshRate());
 }
 
 void RSMainThread::WaitUtilUniRenderFinished()
@@ -1473,7 +1483,8 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     isCachedSurfaceUpdated_ = false;
     if (needTraverseNodeTree) {
         uniVisitor->SetAnimateState(doWindowAnimate_);
-        uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_);
+        uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_ || forceUIFirstChanged_);
+        forceUIFirstChanged_ = false;
         isAccessibilityConfigChanged_ = false;
         SetFocusLeashWindowId();
         uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
@@ -1539,7 +1550,19 @@ void RSMainThread::Render()
     if (focusAppBundleName_.find(DESKTOP_NAME_FOR_ROTATION) != std::string::npos) {
         desktopPidForRotationScene_ = focusAppPid_;
     }
-
+    if (RSSystemProperties::GetDumpRSTreeCount()) {
+        std::string rsTreeStr;
+        RenderServiceTreeDump(rsTreeStr);
+        RS_TRACE_NAME("WriteDumpTree");
+        std::string dumpFilePath = "/data/RSTree";
+        if (access(dumpFilePath.c_str(), F_OK) != 0) {
+            constexpr int directoryPermission = 0755; // drwxr-xr-x
+            mkdir(dumpFilePath.c_str(), directoryPermission);
+        }
+        dumpFilePath += "/rsTree_" + std::to_string(frameCount_) + ".txt";
+        OHOS::Rosen::Benchmarks::WriteStringToFile(rsTreeStr, dumpFilePath);
+        RSSystemProperties::SetDumpRSTreeCount(RSSystemProperties::GetDumpRSTreeCount() - 1);
+    }
     if (isUniRender_) {
         UniRender(rootNode);
     } else {
@@ -1826,7 +1849,7 @@ void RSMainThread::CalcOcclusion()
     SurfaceOcclusionCallback();
 }
 
-void RSMainThread::DeleteMultiInstancePid(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+void RSMainThread::SetMultiInstancePidVSyncRate(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
     std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
 {
     std::map<uint32_t, int> multiInstancePidMap;
@@ -1840,7 +1863,7 @@ void RSMainThread::DeleteMultiInstancePid(std::map<uint32_t, RSVisibleLevel>& pi
     }
     for (auto& iter : multiInstancePidMap) {
         if (iter.second > MAX_MULTI_INSTANCE_PID_COUNT) {
-            pidVisMap.erase(iter.first);
+            pidVisMap[iter.first] = RSVisibleLevel::RS_ALL_VISIBLE;
         }
     }
 }
@@ -1860,7 +1883,7 @@ bool RSMainThread::CheckSurfaceVisChanged(std::map<uint32_t, RSVisibleLevel>& pi
         }
         isReduceVSyncBySystemAnimatedScenes_ = true;
     } else {
-        DeleteMultiInstancePid(pidVisMap, curAllSurfaces);
+        SetMultiInstancePidVSyncRate(pidVisMap, curAllSurfaces);
     }
     bool isVisibleChanged = pidVisMap.size() != lastPidVisMap_.size();
     if (!isVisibleChanged) {
@@ -2087,6 +2110,7 @@ void RSMainThread::Animate(uint64_t timestamp)
             return true;
         }
         if (cacheCmdSkippedInfo_.count(ExtractPid(node->GetId())) > 0) {
+            rsCurrRange_.Merge(node->animationManager_.GetDecideFrameRateRange());
             RS_LOGD("RSMainThread::Animate skip the cached node");
             return false;
         }
@@ -2333,6 +2357,7 @@ void RSMainThread::QosStateDump(std::string& dumpString)
 
 void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
 {
+    RS_TRACE_NAME("GetDumpTree");
     dumpString.append("Animating Node: [");
     for (auto& [nodeId, _]: context_->animatingNodeList_) {
         dumpString.append(std::to_string(nodeId) + ", ");
@@ -3056,23 +3081,24 @@ void RSMainThread::GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize)
 
 void RSMainThread::SubscribeAppState()
 {
-    PostTask([this]() {
-        rsAppStateListener_ = std::make_shared<RSAppStateListener>();
-        if (Memory::MemMgrClient::GetInstance().SubscribeAppState(*rsAppStateListener_) != -1) {
-            RS_LOGD("Subscribe MemMgr Success");
-            subscribeFailCount_ = 0;
-            return;
-        } else {
-            RS_LOGE("Subscribe Failed, try again");
-            subscribeFailCount_++;
-            if (subscribeFailCount_ < 10) { // The maximum number of failures is 10
-                SubscribeAppState();
+    PostTask(
+        [this]() {
+            rsAppStateListener_ = std::make_shared<RSAppStateListener>();
+            if (Memory::MemMgrClient::GetInstance().SubscribeAppState(*rsAppStateListener_) != -1) {
+                RS_LOGD("Subscribe MemMgr Success");
+                subscribeFailCount_ = 0;
+                return;
             } else {
-                RS_LOGE("Subscribe Failed 10 times, exiting");
+                RS_LOGE("Subscribe Failed, try again");
+                subscribeFailCount_++;
+                if (subscribeFailCount_ < 10) { // The maximum number of failures is 10
+                    SubscribeAppState();
+                } else {
+                    RS_LOGE("Subscribe Failed 10 times, exiting");
+                }
             }
-        }
-    },
-    MEM_MGR, WAIT_FOR_MEM_MGR_SERVICE);
+        },
+        MEM_MGR, WAIT_FOR_MEM_MGR_SERVICE);
 }
 
 void RSMainThread::HandleOnTrim(Memory::SystemMemoryLevel level)

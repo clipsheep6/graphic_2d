@@ -173,6 +173,7 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
     auto screenManager = CreateOrGetScreenManager();
     visitor->SetScreenInfo(screenManager->QueryScreenInfo(screenManager->GetDefaultScreenId()));
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+    bool needRequestVsync = false;
     while (threadTask->GetTaskSize() > 0) {
         auto task = threadTask->GetNextRenderTask();
         if (!task || (task->GetIdx() == 0)) {
@@ -234,12 +235,15 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         });
         surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);
         surfaceNodePtr->SetCacheSurfaceNeedUpdated(true);
+        needRequestVsync = true;
 
         if (needNotify) {
             RSSubThreadManager::Instance()->NodeTaskNotify(node->GetId());
         }
     }
-    RSMainThread::Instance()->RequestNextVSync();
+    if (needRequestVsync) {
+        RSMainThread::Instance()->RequestNextVSync();
+    }
 #endif
 }
 
@@ -259,6 +263,8 @@ sk_sp<GrDirectContext> RSSubThread::CreateShareGrContext()
 
         GrContextOptions options = {};
         options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+        // fix svg antialiasing bug
+        options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
         options.fPreferExternalImagesOverES3 = true;
         options.fDisableDistanceFieldPaths = true;
 

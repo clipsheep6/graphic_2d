@@ -42,6 +42,11 @@ RSRenderSpringAnimation::RSRenderSpringAnimation(AnimationId id, const PropertyI
     // spring model is not initialized, so we can't calculate estimated duration
 }
 
+void RSRenderSpringAnimation::DumpAnimationType(std::string& out) const
+{
+    out += "Type:RSRenderSpringAnimation";
+}
+
 void RSRenderSpringAnimation::SetSpringParameters(float response, float dampingRatio, float blendDuration)
 {
     response_ = response;
@@ -147,8 +152,8 @@ void RSRenderSpringAnimation::OnAnimate(float fraction)
         calculateAnimationValue_ = false;
         return;
     } else if (ROSEN_EQ(fraction, 1.0f, FRACTION_THRESHOLD)) {
-        SetAnimationValue(endValue_);
         prevMappedTime_ = GetDuration() * MILLISECOND_TO_SECOND;
+        SetAnimationValue(endValue_);
         return;
     }
     auto mappedTime = fraction * GetDuration() * MILLISECOND_TO_SECOND;
@@ -289,8 +294,7 @@ RSRenderSpringAnimation::GetSpringStatus() const
     auto displacement = lastValue_ - endValue_;
 
     // use average velocity over a small time interval to estimate instantaneous velocity
-    constexpr double TIME_INTERVAL = 1e-6f; // 1e-6f : 1 microsecond to seconds
-    auto velocity = (CalculateDisplacement(prevMappedTime_ + TIME_INTERVAL) - displacement) * (1 / TIME_INTERVAL);
+    auto velocity = CalculateVelocity(prevMappedTime_);
 
     // return current position and velocity
     return { lastValue_, endValue_, velocity };

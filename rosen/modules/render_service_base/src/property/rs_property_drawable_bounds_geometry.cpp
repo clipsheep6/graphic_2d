@@ -39,6 +39,7 @@
 
 namespace {
 constexpr int PARAM_DOUBLE = 2;
+constexpr int16_t BORDER_TRANSPARENT = 255;
 } // namespace
 namespace OHOS::Rosen {
 // ============================================================================
@@ -72,7 +73,16 @@ void RSClipBoundsDrawable::Draw(const RSRenderContent& content, RSPaintFilterCan
     }
 #else
     if (properties.GetClipBounds() != nullptr) {
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+        if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::OPENGL) {
+            canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
+        } else if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+            OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+            canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, false);
+        }
+#else
         canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
+#endif
     } else if (properties.GetClipToRRect()) {
         canvas.ClipRoundRect(
             RSPropertiesPainter::RRect2DrawingRRect(properties.GetClipRRect()), Drawing::ClipOp::INTERSECT, false);
@@ -1130,12 +1140,17 @@ void RSBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCan
 {
     auto& properties = content.GetRenderProperties();
     bool antiAlias = RSPropertiesPainter::GetBgAntiAlias() || !properties.GetCornerRadius().IsZero();
+    auto borderColorAlpha = properties.GetBorderColor()[0].GetAlpha();
 #ifndef USE_ROSEN_DRAWING
     SkPaint paint = paint_;
     paint.setAntiAlias(antiAlias);
     // use drawrrect to avoid texture update in phone screen rotation scene.
     if (RSSystemProperties::IsPhoneType()) {
-        canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetRRect()), paint);
+        if (borderColorAlpha < BORDER_TRANSPARENT) {
+            canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetRRect()), paint);
+        } else {
+            canvas.drawRRect(RSPropertiesPainter::RRect2SkRRect(properties.GetInnerRRect()), paint);
+        }
     } else {
         canvas.drawRect(RSPropertiesPainter::Rect2SkRect(properties.GetBoundsRect()), paint);
     }
@@ -1145,7 +1160,11 @@ void RSBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCan
     canvas.AttachBrush(brush);
     // use drawrrect to avoid texture update in phone screen rotation scene
     if (RSSystemProperties::IsPhoneType()) {
-        canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect()));
+        if (borderColorAlpha < BORDER_TRANSPARENT) {
+            canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect()));
+        } else {
+            canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetInnerRRect()));
+        }
     } else {
         canvas.DrawRect(RSPropertiesPainter::Rect2DrawingRect(properties.GetBoundsRect()));
     }

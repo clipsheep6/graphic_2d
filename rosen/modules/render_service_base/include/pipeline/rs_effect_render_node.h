@@ -42,9 +42,11 @@ public:
 #ifndef USE_ROSEN_DRAWING
     std::optional<SkIRect> InitializeEffectRegion() const { return SkIRect::MakeEmpty(); }
     void SetEffectRegion(const std::optional<SkIRect>& effectRegion);
+    std::optional<SkIRect> GetEffectRegion() const { return effectRegion_; }
 #else
     std::optional<Drawing::RectI> InitializeEffectRegion() const { return Drawing::RectI(); }
     void SetEffectRegion(const std::optional<Drawing::RectI>& effectRegion);
+    std::optional<Drawing::RectI> GetEffectRegion() const { return effectRegion_; }
 #endif
     // record if there is filter cache for occlusion before this effect node
     void SetVisitedFilterCacheStatus(bool isEmpty)
@@ -57,14 +59,28 @@ public:
         return isVisitedOcclusionFilterCacheEmpty_;
     }
 
+    void SetRotationChanged(bool isRotationChanged);
+    bool GetRotationChanged() const;
+    void SetInvalidateTimesForRotation(int times);
+
 protected:
     RectI GetFilterRect() const override;
     void UpdateFilterCacheManagerWithCacheRegion(
-        RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect) const override;
-    void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) const override;
+        RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect) override;
+    void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) override;
 
 private:
+    bool NeedForceCache();
+
     bool isVisitedOcclusionFilterCacheEmpty_ = true;
+    bool isRotationChanged_ = false;
+    int invalidateTimes_ = 0;
+    static int cacheUpdateInterval_;
+#ifndef USE_ROSEN_DRAWING
+    std::optional<SkIRect> effectRegion_;
+#else
+    std::optional<Drawing::RectI> effectRegion_;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

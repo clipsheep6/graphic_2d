@@ -195,7 +195,7 @@ public:
     void CountMem(int pid, MemoryGraphic& mem);
     void CountMem(std::vector<MemoryGraphic>& mems);
     void SetAppWindowNum(uint32_t num);
-    void DeleteMultiInstancePid(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+    void SetMultiInstancePidVSyncRate(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
         std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes);
     SystemAnimatedScenes GetSystemAnimatedScenes();
@@ -258,6 +258,11 @@ public:
     bool IsMainLooping() const
     {
         return mainLooping_.load();
+    }
+
+    bool IsPCThreeFingerScenesListScene() const
+    {
+        return !threeFingerScenesList_.empty();
     }
 
     void SubscribeAppState();
@@ -526,6 +531,7 @@ private:
     uint32_t LeashWindowCount_ = 0;
 
     std::atomic_bool mainLooping_ = false;
+    bool forceUIFirstChanged_ = false;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

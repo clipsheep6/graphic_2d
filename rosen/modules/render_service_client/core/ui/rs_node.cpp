@@ -69,6 +69,17 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 static bool g_isUniRenderEnabled = false;
+static const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
+    {RSUINodeType::UNKNOW,              "UNKNOW"},
+    {RSUINodeType::DISPLAY_NODE,        "DisplayNode"},
+    {RSUINodeType::RS_NODE,             "RsNode"},
+    {RSUINodeType::SURFACE_NODE,        "SurfaceNode"},
+    {RSUINodeType::PROXY_NODE,          "ProxyNode"},
+    {RSUINodeType::CANVAS_NODE,         "CanvasNode"},
+    {RSUINodeType::ROOT_NODE,           "RootNode"},
+    {RSUINodeType::EFFECT_NODE,         "EffectNode"},
+    {RSUINodeType::CANVAS_DRAWING_NODE, "CanvasDrawingNode"},
+};
 std::once_flag flag_;
 bool IsPathAnimatableModifier(const RSModifierType& type)
 {
@@ -422,7 +433,7 @@ void RSNode::AddAnimation(const std::shared_ptr<RSAnimation>& animation)
     // Note: Animation cancellation logic is now handled by RSImplicitAnimator. The code below might cause Spring
     // Animations with a zero duration to not inherit velocity correctly, an issue slated for future resolution.
     // This code is retained to ensure backward compatibility with specific arkui component animations.
-    if (animation->GetDuration() <= 0) {
+    if (animation->GetDuration() <= 0 && id_ != 0) {
         FinishAnimationByProperty(animation->GetPropertyId());
     }
 

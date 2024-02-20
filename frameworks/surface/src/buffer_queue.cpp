@@ -20,11 +20,11 @@
 #include <sys/time.h>
 #include <cinttypes>
 #include <unistd.h>
+#include <parameters.h>
 #include <scoped_bytrace.h>
 
 #include "buffer_utils.h"
 #include "buffer_log.h"
-#include "buffer_manager.h"
 #include "hitrace_meter.h"
 #include "sandbox_utils.h"
 #include "surface_buffer_impl.h"
@@ -62,7 +62,6 @@ BufferQueue::BufferQueue(const std::string &name, bool isShared)
     : name_(name), uniqueId_(GetUniqueIdImpl()), isShared_(isShared), isLocalRender_(IsLocalRender())
 {
     BLOGND("ctor, Queue id: %{public}" PRIu64 " isShared: %{public}d", uniqueId_, isShared);
-    bufferManager_ = BufferManager::GetInstance();
     if (isShared_ == true) {
         queueSize_ = 1;
     }
@@ -467,7 +466,8 @@ GSError BufferQueue::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
 
 void BufferQueue::DumpToFile(uint32_t sequence)
 {
-    if (access("/data/bq_dump", F_OK) == -1) {
+    static bool dumpBufferEnabled = system::GetParameter("persist.dumpbuffer.enabled", "0") != "0";
+    if (!dumpBufferEnabled || access("/data/bq_dump", F_OK) == -1) {
         return;
     }
 
@@ -534,7 +534,9 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
         static SyncFenceTracker acquireFenceThread("Acquire Fence");
         acquireFenceThread.TrackFence(fence);
     }
-    // if you need dump SurfaceBuffer to file, you should call DumpToFile(sequence) here
+    // if you need dump SurfaceBuffer to file, you should execute hdc shell param set persist.dumpbuffer.enabled 1
+    // and reboot your device
+    DumpToFile(sequence);
     return GSERROR_OK;
 }
 
@@ -1092,11 +1094,16 @@ GraphicTransformType BufferQueue::GetTransform() const
 GSError BufferQueue::IsSupportedAlloc(const std::vector<BufferVerifyAllocInfo> &infos,
                                       std::vector<bool> &supporteds) const
 {
-    GSError ret = bufferManager_->IsSupportedAlloc(infos, supporteds);
-    if (ret != GSERROR_OK) {
-        BLOGN_FAILURE_API(IsSupportedAlloc, ret);
+    supporteds.clear();
+    for (uint32_t index = 0; index < infos.size(); index++) {
+        if (infos[index].format == GRAPHIC_PIXEL_FMT_RGBA_8888 ||
+            infos[index].format == GRAPHIC_PIXEL_FMT_YCRCB_420_SP) {
+            supporteds.push_back(true);
+        } else {
+            supporteds.push_back(false);
+        }
     }
-    return ret;
+    return GSERROR_OK;
 }
 
 GSError BufferQueue::SetScalingMode(uint32_t sequence, ScalingMode scalingMode)

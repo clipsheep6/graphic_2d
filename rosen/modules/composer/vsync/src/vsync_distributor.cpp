@@ -35,7 +35,7 @@ constexpr int32_t ERRNO_OTHER = -2;
 constexpr int32_t THREAD_PRIORTY = -6;
 constexpr int32_t SCHED_PRIORITY = 2;
 constexpr uint32_t SOCKET_CHANNEL_SIZE = 1024;
-constexpr uint32_t VSYNC_CONNECTION_MAX_SIZE = 128;
+constexpr int32_t VSYNC_CONNECTION_MAX_SIZE = 128;
 }
 
 VSyncConnection::VSyncConnectionDeathRecipient::VSyncConnectionDeathRecipient(
@@ -59,7 +59,7 @@ void VSyncConnection::VSyncConnectionDeathRecipient::OnRemoteDied(const wptr<IRe
         VLOGI("%{public}s: token doesn't match, ignore it.", __func__);
         return;
     }
-    VLOGW("%{public}s: clear socketPair, conn name:%{public}s.", __func__, vsyncConn->info_.name_.c_str());
+    VLOGD("%{public}s: clear socketPair, conn name:%{public}s.", __func__, vsyncConn->info_.name_.c_str());
     VsyncError ret = vsyncConn->Destroy();
     if (ret != VSYNC_ERROR_OK) {
         VLOGE("vsync connection clearAll failed!");
@@ -596,7 +596,7 @@ void VSyncDistributor::ChangeConnsRateLocked()
                 continue;
             }
             uint32_t refreshRate = connRefreshRate.second;
-            if ((generatorRefreshRate_ <= 0) || (refreshRate <= 0) ||
+            if ((generatorRefreshRate_ == 0) || (refreshRate == 0) ||
                 (VSYNC_MAX_REFRESHRATE % refreshRate != 0) || (generatorRefreshRate_ % refreshRate != 0)) {
                 conn->refreshRate_ = 0;
                 conn->vsyncPulseFreq_ = 1;

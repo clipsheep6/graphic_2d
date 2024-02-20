@@ -1129,6 +1129,9 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     // Optional use cacheManager to draw filter
     if (auto& cacheManager = properties.GetFilterCacheManager(filterType == FilterType::FOREGROUND_FILTER);
         cacheManager != nullptr && !canvas.GetDisableFilterCache()) {
+        if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
+            filter->SetBoundsGeometry(properties.GetFrameWidth(), properties.GetFrameHeight());
+        }
         cacheManager->DrawFilter(canvas, filter, needSnapshotOutset);
         return;
     }
@@ -1165,6 +1168,12 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
 
     filter->PreProcess(imageSnapshot);
 #ifndef USE_ROSEN_DRAWING
+    if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
+        SkMatrix mat = canvas.getTotalMatrix();
+        filter->SetCanvasChange(mat, skSurface->width(), skSurface->height());
+        filter->SetBoundsGeometry(properties.GetFrameWidth(), properties.GetFrameHeight());
+    }
+
     canvas.resetMatrix();
     auto visibleIRect = canvas.GetVisibleRect().round();
     if (!visibleIRect.isEmpty()) {
@@ -1173,6 +1182,12 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     filter->DrawImageRect(
         canvas, imageSnapshot, SkRect::Make(imageSnapshot->bounds()), SkRect::Make(clipIBounds));
 #else
+    if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
+        Drawing::Matrix mat = canvas.GetTotalMatrix();
+        filter->SetCanvasChange(mat, surface->Width(), surface->Height());
+        filter->SetBoundsGeometry(properties.GetFrameWidth(), properties.GetFrameHeight());
+    }
+
     canvas.ResetMatrix();
     auto visibleRect = canvas.GetVisibleRect();
     visibleRect.Round();
@@ -1273,7 +1288,18 @@ void RSPropertiesPainter::DrawBackgroundEffect(
     // Optional use cacheManager to draw filter
     if (auto& cacheManager = properties.GetFilterCacheManager(false);
         cacheManager != nullptr && !canvas.GetDisableFilterCache()) {
-        auto&& data = cacheManager->GeneratedCachedEffectData(canvas, filter, bounds, bounds);
+        auto node = properties.backref_.lock();
+        if (node == nullptr) {
+            ROSEN_LOGE("DrawBackgroundEffect::node is null");
+            return;
+        }
+        auto effectNode = node->ReinterpretCastTo<RSEffectRenderNode>();
+        if (effectNode == nullptr) {
+            ROSEN_LOGE("DrawBackgroundEffect::node reinterpret cast failed.");
+        }
+        // node is freeze or screen rotating, force cache filterred snapshot.
+        auto forceCacheFlags = std::make_tuple(false, effectNode->GetRotationChanged());
+        auto&& data = cacheManager->GeneratedCachedEffectData(canvas, filter, bounds, bounds, forceCacheFlags);
         canvas.SetEffectData(data);
         return;
     }

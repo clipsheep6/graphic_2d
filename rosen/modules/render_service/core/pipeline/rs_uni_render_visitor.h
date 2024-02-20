@@ -325,6 +325,8 @@ private:
     void UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node);
     bool IsFirstVisitedCacheForced() const;
     bool IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, int rotation) const;
+    bool ForceHardwareComposer(RSSurfaceRenderNode& node) const;
+    bool UpdateSrcRectForHwcNode(RSSurfaceRenderNode& node); // return if srcRect is allowed by dss restriction
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode);
 #else
@@ -434,6 +436,7 @@ private:
     // check each surface could be reused per frame
     // currently available to uiFirst
     bool isCachedSurfaceReuse_ = false;
+    bool isStaticDrawingCacheUsingEffect_ = false;
     uint32_t effectNodeNum_ = 0;
     bool isSurfaceDirtyNodeLimited_ = false;
 

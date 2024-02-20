@@ -12,12 +12,6 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/graphic/graphic_2d/graphic_config.gni")
-
-platform = current_os
-if (current_os == "mingw") {
-  platform = "windows"
-}
 
 config("hdr_capability_object_config") {
   visibility = [ ":*" ]
@@ -28,45 +22,26 @@ config("hdr_capability_object_config") {
   ]
 }
 
-template("hdr_capability_utils_source_set") {
-  forward_variables_from(invoker, "*")
+ohos_shared_library("hdr_capability_utils") {
+  sources = [
+    "hdr_capability_utils/js_hdr_format_utils.cpp",
+  ]
 
-  ohos_source_set(target_name) {
-    sources = [ "hdr_capability_utils/js_hdr_format_utils.cpp" ]
+  configs = [ ":hdr_capability_object_config" ]
 
-    include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
-    configs = [
-      ":hdr_capability_object_config",
-      "$arkui_root/napi:ace_napi_config",
-    ]
+  deps = [
+    "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
+  ]
 
-    cflags_cc = [ "-std=c++17" ]
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
-}
+  external_deps = [
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
 
-hdr_capability_utils_source_set("hdr_capability_utils_source") {
-}
+  cflags_cc = [ "-std=c++17" ]
 
-if (current_os == "ohos") {
-  ohos_shared_library("hdr_capability_utils") {
-    public_deps = [ ":hdr_capability_utils_source" ]
-    external_deps = [
-      "hilog:libhilog",
-      "napi:ace_napi",
-    ]
-    innerapi_tags = [ "platformsdk" ]
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
-} else {
-  ohos_source_set("hdr_capability_utils") {
-    public_deps = [ ":hdr_capability_utils_source" ]
-    deps = [ "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base" ]
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }
 
 config("hdr_capability_napi_config") {
@@ -79,52 +54,27 @@ config("hdr_capability_napi_config") {
   ]
 }
 
-template("hdr_capability_napi_source_set") {
-  forward_variables_from(invoker, "*")
+ohos_shared_library("hdr_capability_napi") {
+  sources = [
+    "hdr_capability_napi/hdr_capability_module.cpp",
+    "hdr_capability_napi/js_hdr_capability.cpp",
+  ]
 
-  ohos_source_set(target_name) {
-    sources = [
-      "hdr_capability_napi/hdr_capability_module.cpp",
-      "hdr_capability_napi/js_hdr_capability.cpp",
-    ]
+  configs = [ ":hdr_capability_napi_config" ]
 
-    include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
-    configs = [
-      ":hdr_capability_napi_config",
-      "$arkui_root/napi:ace_napi_config",
-    ]
-    cflags_cc = [ "-std=c++17" ]
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
-}
+  deps = [
+    "$graphic_2d_root/interfaces/kits/napi/graphic/hdr_capability:hdr_capability_utils",
+    "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
+  ]
 
-hdr_capability_napi_source_set("hdr_capability_napi_source") {
-}
+  external_deps = [
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
 
-if (current_os == "ohos") {
-  ohos_shared_library("hdr_capability_napi") {
-    public_deps = [ ":hdr_capability_napi_source" ]
-    external_deps = [
-      "hilog:libhilog",
-      "napi:ace_napi",
-    ]
-    deps = [
-      ":hdr_capability_utils",
-      "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
-    ]
-    relative_install_dir = "module/graphics"
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
-} else {
-  ohos_source_set("hdr_capability_napi") {
-    public_deps = [ ":hdr_capability_napi_source" ]
-    deps = [
-      ":hdr_capability_utils",
-      "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
-    ]
-    part_name = "graphic_2d"
-    subsystem_name = "graphic"
-  }
+  cflags_cc = [ "-std=c++17" ]
+
+  relative_install_dir = "module/graphics"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
 }

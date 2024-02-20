@@ -24,9 +24,7 @@ config("hdr_capability_object_config") {
 }
 
 ohos_shared_library("hdr_capability_utils") {
-  sources = [
-    "hdr_capability_utils/js_hdr_format_utils.cpp",
-  ]
+  sources = [ "hdr_capability_utils/js_hdr_format_utils.cpp" ]
 
   configs = [ ":hdr_capability_object_config" ]
 

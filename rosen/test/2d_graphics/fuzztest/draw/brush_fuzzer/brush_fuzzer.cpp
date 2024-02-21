@@ -44,6 +44,7 @@ void BrushFuzzTestInner01(Brush& brush)
     brush.SetColor(color4f, colorSpace);
     brush.SetAlpha(alpha1);
     brush.GetAlpha();
+    brush.GetAlphaF();
     scalar scalarG = GetObject<scalar>();
     brush.SetAlphaF(scalarG);
     brush.GetBlendMode();
@@ -56,9 +57,20 @@ void BrushFuzzTestInner02(Brush& brush)
     Filter filter;
     brush.SetFilter(filter);
     brush.GetFilter();
+    brush.HasFilter();
+    std::shared_ptr<ShaderEffect> e = GetObject<std::shared_ptr<ShaderEffect>>();
+    brush.SetShaderEffect(e);
+    brush.GetShaderEffect();
+    std::shared_ptr<Blender> blender = GetObject<std::shared_ptr<Blender>>();
+    brush.SetBlender(blender);
+    brush.GetBlender();
     brush.IsAntiAlias();
     bool isAntiAlias = GetObject<bool>();
-    brush.SetAntiAlias(isAntiAlias);
+    brush.CanComputeFastBounds();
+    Rect storage = GetObject<Rect>();
+    brush.ComputeFastBounds(GetObject<Rect>(), nullptr);
+    brush.ComputeFastBounds(GetObject<Rect>(), &storage);
+    brush.AsBlendMode();
     brush.Reset();
 }
 
@@ -73,17 +85,17 @@ bool BrushFuzzTest(const uint8_t* data, size_t size)
     g_pos = 0;
 
     Brush brush;
-    Color color;
-    int colorF = GetObject<int>();
+    Color color = GetObject<Color>();
+    uint32_t colorF = GetObject<uint32_t>();
     int red = GetObject<int>();
-    int gree = GetObject<int>();
+    int green = GetObject<int>();
     int blue = GetObject<int>();
     int alpha = GetObject<int>();
 
     brush.SetColor(color);
     brush.SetColor(colorF);
     brush.GetColor();
-    brush.SetARGB(red, gree, blue, alpha);
+    brush.SetARGB(red, green, blue, alpha);
 
     BrushFuzzTestInner01(brush);
 

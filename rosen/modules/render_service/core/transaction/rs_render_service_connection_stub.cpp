@@ -1305,6 +1305,27 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             reply.WriteInt32(status);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::TOUCH_ENABLE_CHANGE_CALLBACK) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIHgmConfigChangeCallback> callback =
+                iface_cast<RSIHgmConfigChangeCallback>(remoteObject);
+            if (callback == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            bool isTouchEnable = RegisterHgmTouchEnableChangeCallback(callback);
+            reply.WriteBool(isTouchEnable);
+            break;
+        }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_ROTATION_CACHE_ENABLED) : {
             auto token = data.ReadInterfaceToken();
             if (token != RSIRenderServiceConnection::GetDescriptor()) {

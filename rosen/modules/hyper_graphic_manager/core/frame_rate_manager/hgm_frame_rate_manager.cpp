@@ -93,6 +93,10 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
         HgmConfigCallbackManager::GetInstance()->SyncRefreshRateModeChangeCallback(mode);
     });
     controller_ = std::make_shared<HgmVSyncGeneratorController>(rsController, appController, vsyncGenerator);
+
+    hgmCore.RegisterTouchEnableChangeCallback([](bool touchEnable) {
+        HgmConfigCallbackManager::GetInstance()->SyncTouchEnableChangeCallback(touchEnable);
+    });
 }
 
 void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
@@ -139,6 +143,7 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
+            isForceFrame_ = true;
             FrameRateReport();
         }
     }
@@ -149,11 +154,21 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     RS_TRACE_FUNC();
     Reset();
 
-    if (idleTimerExpired) {
-        // idle in ltps
-        HandleIdleEvent(ADD_VOTE);
+    // force update
+    if (isForceFrame_) {
+        isForceFrame_ = false;
+        StopScreenTimer(curScreenId_);
+    } else { // frame
+        if (idleTimerExpired) {
+            // idle in ltps
+            HandleIdleEvent(ADD_VOTE);
+        } else {
+            StartScreenTimer(curScreenId_, IDLE_TIMER_EXPIRED, nullptr, [this]() {
+                forceUpdateCallback_(true, false);
+            });
+        }
     }
-
+    
     FrameRateRange finalRange;
     VoteRange voteResult = ProcessRefreshRateVote();
     auto& hgmCore = HgmCore::Instance();
@@ -170,6 +185,7 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
     if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
         forceUpdateCallback_(false, true);
+        isForceFrame_ = true;
         FrameRateReport();
     }
 }
@@ -226,6 +242,7 @@ void HgmFrameRateManager::HandleFrameRateChangeForLTPO(uint64_t timestamp)
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != HgmCore::Instance().GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
+            isForceFrame_ = true;
             FrameRateReport();
         }
     };
@@ -484,11 +501,17 @@ void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus)
         return;
     }
 
-    if (touchStatus == TOUCH_DOWN) {
-        DeliverRefreshRateVote(0, "VOTER_TOUCH", ADD_VOTE, touchFps_, touchFps_);
+    if (touchStatus == TOUCH_DOWN || touchStatus == TOUCH_MOVE) {
+        if (HgmCore::Instance().GetPendingScreenRefreshRate() == (uint32_t)touchFps_) {
+            HGM_LOGI("Fps now is: %{public}d, Already in touchFps, pass", HgmCore::Instance().GetPendingScreenRefreshRate());
+        } else {
+            HGM_LOGI("Fps now is: %{public}d, update to target %{public}d fps", HgmCore::Instance().GetPendingScreenRefreshRate(), touchFps_);
+            DeliverRefreshRateVote(0, "VOTER_TOUCH", ADD_VOTE, touchFps_, touchFps_);
+        }
         StopScreenTimer(curScreenId_);
     } else {
         // idle detect used in ltps
+        HGM_LOGD("touch idle detect in ltps");
         StartScreenTimer(curScreenId_, IDLE_AFTER_TOUCH_UP, nullptr, [this]() {
             forceUpdateCallback_(true, false);
         });
@@ -618,6 +641,7 @@ void HgmFrameRateManager::SyncAppVote()
         configData->strategyConfigs_[curXmlStrategy].min, configData->strategyConfigs_[curXmlStrategy].max);
 
     isTouchEnable_ = (configData->strategyConfigs_[curXmlStrategy].dynamicMode != 0);
+    HgmCore::Instance().SetTouchIsEnable(isTouchEnable_);
     touchFps_ = configData->strategyConfigs_[curXmlStrategy].max;
     idleFps_ = std::max(configData->strategyConfigs_[curXmlStrategy].min, static_cast<int32_t>(OLED_60_HZ));
 }
@@ -627,6 +651,7 @@ void HgmFrameRateManager::MarkVoteChange()
     isRefreshNeed_ = true;
     if (forceUpdateCallback_ != nullptr) {
         forceUpdateCallback_(false, true);
+        isForceFrame_ = true;
     }
 }
 

@@ -93,6 +93,22 @@ void HgmConfigCallbackManager::RegisterHgmRefreshRateModeChangeCallback(
     callback->OnHgmRefreshRateModeChanged(currentRefreshRateMode);
 }
 
+bool HgmConfigCallbackManager::RegisterHgmTouchEnableChangeCallback(
+    const sptr<RSIHgmConfigChangeCallback>& callback)
+{
+    if (callback == nullptr) {
+        HGM_LOGE("HgmTouchEnableCallbackManager %{public}s : callback is null.", __func__);
+        return true;
+    }
+    std::lock_guard<std::mutex> lock(mtx_);
+    touchEnableCallback_ = callback;
+    HGM_LOGD("HgmTouchEnableCallbackManager %{public}s : add a remote callback succeed.", __func__);
+
+    bool touchEnable = HgmCore::Instance().GetTouchIsEnable();
+    callback->OnHgmTouchEnableChanged(touchEnable);
+    return touchEnable;
+}
+
 void HgmConfigCallbackManager::SyncHgmConfigChangeCallback()
 {
     if (animDynamicCfgCallbacks_.empty()) {
@@ -134,6 +150,14 @@ void HgmConfigCallbackManager::SyncRefreshRateModeChangeCallback(int32_t refresh
         if (callback) {
             callback->OnHgmRefreshRateModeChanged(refreshRateMode);
         }
+    }
+}
+
+void HgmConfigCallbackManager::SyncTouchEnableChangeCallback(bool touchEnable)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    if (touchEnableCallback_) {
+        touchEnableCallback_->OnHgmTouchEnableChanged(touchEnable);
     }
 }
 

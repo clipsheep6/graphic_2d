@@ -191,6 +191,8 @@ public:
 
     int32_t RegisterHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback);
 
+    bool RegisterHgmTouchEnableChangeCallback(const HgmTouchEnableChangeCallback& callback);
+
     void SetAppWindowNum(uint32_t num);
 
     // Set the system overload Animated Scenes to RS for special load shedding

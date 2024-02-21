@@ -178,6 +178,8 @@ public:
 
     int32_t RegisterHgmRefreshRateModeChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
 
+    bool RegisterHgmTouchEnableChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
+
     void SetAppWindowNum(uint32_t num) override;
 
     bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes) override;

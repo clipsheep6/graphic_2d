@@ -203,6 +203,24 @@ int32_t HgmCore::SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate
     return modeToSwitch;
 }
 
+void HgmCore::RegisterTouchEnableChangeCallback(const TouchEnableChangeCallback& callback)
+{
+    touchEnableCallback_ = callback;
+    if (touchEnableCallback_ != nullptr) {
+        touchEnableCallback_(touchEnable_);
+    }
+}
+
+int32_t HgmCore::SetTouchIsEnable(bool touchEnable)
+{
+    touchEnable_ = touchEnable;
+    return EXEC_SUCCESS;
+}
+
+bool GetTouchIsEnable()
+{
+    return touchEnable_;
+}
 int32_t HgmCore::SetRateAndResolution(ScreenId id, int32_t sceneId, int32_t rate, int32_t width, int32_t height)
 {
     // reserved

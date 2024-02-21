@@ -192,6 +192,13 @@ enum NativeWindowOperation {
      * [in] uint64_t uiTimestamp.
      */
     SET_UI_TIMESTAMP,
+    /**
+     * get native window bufferqueue size,
+     * variable parameter in function is
+     * [out] int32_t *size.
+     * @since 12
+     */
+    GET_BUFFERQUEUE_SIZE,
 };
 
 /**
@@ -499,6 +506,30 @@ int32_t OH_NativeWindow_NativeWindowSetMetaDataSet(OHNativeWindow *window, uint3
  * @deprecated(since = "10")
  */
 int32_t OH_NativeWindow_NativeWindowSetTunnelHandle(OHNativeWindow *window, const OHExtDataHandle *handle);
+
+/**
+ * @brief Attach a buffer to an <b>OHNativeWindow</b> instance.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
+ * @param window Indicates the pointer to an <b>OHNativeWindow</b> instance.
+ * @param buffer Indicates the pointer to a <b>OHNativeWindowBuffer</b> instance.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 12
+ * @version 1.0
+ */
+int32_t OH_NativeWindow_NativeWindowAttachBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer);
+
+/**
+ * @brief Detach a buffer from an <b>OHNativeWindow</b> instance.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
+ * @param window Indicates the pointer to an <b>OHNativeWindow</b> instance.
+ * @param buffer Indicates the pointer to a <b>OHNativeWindowBuffer</b> instance.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 12
+ * @version 1.0
+ */
+int32_t OH_NativeWindow_NativeWindowDetachBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer);
 
 #ifdef __cplusplus
 }

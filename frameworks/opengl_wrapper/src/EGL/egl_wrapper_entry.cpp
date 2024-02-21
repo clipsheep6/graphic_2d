@@ -123,7 +123,6 @@ EGLSurface EglCreatePixmapSurfaceImpl(EGLDisplay dpy, EGLConfig config,
     EGLNativePixmapType pixmap, const EGLint* attribList)
 {
     clearError();
-    clearError();
     WLOGD("");
     EglWrapperDisplay *display = ValidateDisplay(dpy);
     if (!display) {

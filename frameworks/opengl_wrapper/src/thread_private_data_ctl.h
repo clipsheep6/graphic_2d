@@ -31,6 +31,7 @@ struct ThreadPrivateData {
 class ThreadPrivateDataCtl {
 public:
     static ThreadPrivateData* GetPrivateData();
+    static void clearError();
     static void ClearPrivateData();
     static EGLint GetError();
     static void SetError(EGLint error);

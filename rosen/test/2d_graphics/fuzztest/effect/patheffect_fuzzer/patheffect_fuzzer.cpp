@@ -39,11 +39,21 @@ bool PathEffectFuzzTest(const uint8_t* data, size_t size)
 
     scalar radius = GetObject<scalar>();
     PathEffect::CreateCornerPathEffect(radius);
-    Path path;
+    Path path = GetObject<Path>();
     scalar advance = GetObject<scalar>();
     scalar phase = GetObject<scalar>();
     uint32_t style = GetObject<uint32_t>();
     PathEffect::CreatePathDashEffect(path, advance, phase, static_cast<PathDashStyle>(style));
+    PathEffect::CreateDiscretePathEffect(GetObject<scalar>(), GetObject<scalar>(), GetObject<uint32_t>());
+    CreateSumPathEffect(GetObject<PathEffect>(), GetObject<PathEffect>());
+    CreateComposePathEffect(GetObject<PathEffect>(), GetObject<PathEffect>());
+    PathEffectType t = GetObject<PathEffectType>();
+    PathEffect(t, path, advance, phase, style);
+    PathEffect(t, radius);
+    PathEffect(t, GetObject<scalar>(), GetObject<scalar>(), GetObject<uint32_t>());
+    PathEffect(t, GetObject<PathEffect>(), GetObject<PathEffect>());
+    PathEffect(t);
+
     return true;
 }
 } // namespace Drawing

@@ -46,6 +46,49 @@ bool BitmapFuzzTest(const uint8_t* data, size_t size)
     bitmap.Free();
     return true;
 }
+
+bool BitmapFuzzTest01(const uint8_t* data, size_t size)
+{
+    if (data == nullptr) {
+        return false;
+    }
+    // initialize
+    g_data = data;
+    g_size = size;
+    g_pos = 0;
+
+    Bitmap bitmap;
+    BitmapFormat bitmapFormat = { COLORTYPE_ARGB_4444, ALPHATYPE_OPAQUE };
+    bitmap.Build(GetObject<ImageInfo>(), GetObject<int32_t>());
+    bitmap.GetWidth();
+    bitmap.GetHeight();
+    bitmap.GetRowBytes();
+    bitmap.GetColorType();
+    bitmap.GetAlphaType();
+    bitmap.ExtractSubset(GetObject<Bitmap>(), GetObject<Rect>());
+    bitmap.ReadPixels(GetObject<ImageInfo>(), nullptr, GetObject<size_t>(), GetObject<int32_t>(), GetObject<int32_t>());
+    bitmap.PeekPixels(GetObject<Pixmap>());
+    bitmap.ComputeByteSize();
+    bitmap.GetPixels();
+    bitmap.SetPixels(nullptr);
+    bitmap.CopyPixels(GetObject<Bitmap>(), GetObject<int>(), GetObject<int>());
+    bitmap.InstallPixels(GetObject<ImageInfo>(), nullptr, GetObject<size_t>());
+
+    bitmap.IsImmutable();
+    bitmap.SetImmutable();
+    bitmap.GetColorType();
+    bitmap.IsValid();
+    bitmap.GetColor(GetObject<int>(), GetObject<int>());
+    bitmap.GetFormat();
+    bitmap.SetFormat(GetObject<BitmapFormat>());
+    bitmap.SetInfo(GetObject<ImageInfo>());
+    bitmap.GetImageInfo();
+    bitmap.GetPixmap();
+    bitmap.MakeImage();
+    bitmap.Serialize();
+    bitmap.ClearWithColor(COLORTYPE_UNKNOWN);
+    bitmap.Free();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS
@@ -55,5 +98,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
     OHOS::Rosen::Drawing::BitmapFuzzTest(data, size);
+    OHOS::Rosen::Drawing::BitmapFuzzTest01(data, size);
     return 0;
 }

@@ -161,7 +161,6 @@ public:
     static HgmRefreshRateModes GetHgmRefreshRateModesEnabled();
 
     static float GetAnimationScale();
-    static bool GetProxyNodeDebugEnabled();
     static bool GetFilterCacheEnabled();
     static int GetFilterCacheUpdateInterval();
     static int GetFilterCacheSizeThreshold();
@@ -176,7 +175,6 @@ public:
     static const std::vector<float>& GetAiInvertCoef();
     static bool GetSkipForAlphaZeroEnabled();
     static bool GetSkipGeometryNotChangeEnabled();
-    static bool GetPropertyDrawableEnable();
 
     static bool GetAnimationCacheEnabled();
 

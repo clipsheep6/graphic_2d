@@ -66,6 +66,7 @@ public:
     void UpdateCacheStateWithFilterHash(const std::shared_ptr<RSFilter>& filter);
     void UpdateCacheStateWithFilterRegion(); // call when filter region out of cached region.
     void UpdateCacheStateWithDirtyRegion(); // call when dirty region intersects with cached region.
+    void UpdateCacheStateWithOnTreeState(); // call when node is detached from tree.
     const RectI& GetCachedImageRegion() const;
 
 #ifndef USE_ROSEN_DRAWING
@@ -114,9 +115,6 @@ public:
         CACHE_TYPE_BOTH              = CACHE_TYPE_SNAPSHOT | CACHE_TYPE_FILTERED_SNAPSHOT,
     };
 
-    // Call this function to manually invalidate the cache. The next time DrawFilter() is called, it will regenerate the
-    // cache.
-    void InvalidateCache(CacheType cacheType = CacheType::CACHE_TYPE_BOTH);
     void ReleaseCacheOffTree();
 
     inline bool IsCacheValid() const
@@ -125,6 +123,8 @@ public:
     }
 
 private:
+    void InvalidateCache(CacheType cacheType = CacheType::CACHE_TYPE_BOTH);
+
     class RSFilterCacheTask : public RSFilter::RSFilterTask {
     public:
         static const bool FilterPartialRenderEnabled;

@@ -80,14 +80,10 @@ public:
 
     void OnTreeStateChanged() override;
 private:
-    void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type);
     void InternalDrawContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [start]
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [end]
-
-    void PropertyDrawableRender(RSPaintFilterCanvas& canvas);
-    void DrawShadow(RSModifierContext& context, RSPaintFilterCanvas& canvas);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;

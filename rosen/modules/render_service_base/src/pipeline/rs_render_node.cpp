@@ -806,17 +806,9 @@ void RSRenderNode::SetContentDirty()
 
 void RSRenderNode::SetDirty(bool forceAddToActiveList)
 {
-#ifndef USE_ROSEN_DRAWING
-    bool dirtyEmpty = dirtyTypes_.empty();
-#else
     bool dirtyEmpty = dirtyTypes_.none();
-#endif
     // TO avoid redundant add, only add if both: 1. on-tree node 2. newly dirty node (or forceAddToActiveList = true)
-#ifdef DDGR_ENABLE_FEATURE_OPINC
-    if (dirtyStatus_ < NodeDirty::DIRTY || dirtyEmpty || forceAddToActiveList) {
-#else
     if (dirtyStatus_ == NodeDirty::CLEAN || dirtyEmpty || forceAddToActiveList) {
-#endif
         if (auto context = GetContext().lock()) {
             context->AddActiveNode(shared_from_this());
         }
@@ -827,11 +819,7 @@ void RSRenderNode::SetDirty(bool forceAddToActiveList)
 #ifdef DDGR_ENABLE_FEATURE_OPINC
 void RSRenderNode::SetDirtyByOnTree(bool forceAddToActiveList)
 {
-#ifndef USE_ROSEN_DRAWING
-    bool dirtyEmpty = dirtyTypes_.empty();
-#else
     bool dirtyEmpty = dirtyTypes_.none();
-#endif
     if (isOnTheTree_ && (dirtyStatus_ < NodeDirty::ON_TREE_DIRTY || dirtyEmpty || forceAddToActiveList)) {
         if (auto context = GetContext().lock()) {
             context->AddActiveNode(shared_from_this());
@@ -1234,59 +1222,17 @@ void RSRenderNode::RenderTraceDebug() const
 
 void RSRenderNode::ApplyBoundsGeometry(RSPaintFilterCanvas& canvas)
 {
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        DrawPropertyDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::BOUNDS_MATRIX, canvas);
-        return;
-    }
-#ifndef USE_ROSEN_DRAWING
-    renderNodeSaveCount_ = canvas.Save();
-#else
-    renderNodeSaveCount_ = canvas.SaveAllStatus();
-#endif
-    auto boundsGeo = (GetRenderProperties().GetBoundsGeometry());
-    if (boundsGeo && (!boundsGeo->IsEmpty() || boundsGeo->IsValidOffset())) {
-#ifndef USE_ROSEN_DRAWING
-        canvas.concat(boundsGeo->GetMatrix());
-#else
-        canvas.ConcatMatrix(boundsGeo->GetMatrix());
-#endif
-    }
+    DrawPropertyDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::BOUNDS_MATRIX, canvas);
 }
 
 void RSRenderNode::ApplyAlpha(RSPaintFilterCanvas& canvas)
 {
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        DrawPropertyDrawable(RSPropertyDrawableSlot::ALPHA, canvas);
-        return;
-    }
-    auto alpha = GetRenderProperties().GetAlpha();
-    if (alpha < 1.f) {
-        if (!(GetRenderProperties().GetAlphaOffscreen() || IsForcedDrawInGroup())) {
-            canvas.MultiplyAlpha(alpha);
-        } else {
-#ifndef USE_ROSEN_DRAWING
-            auto rect = RSPropertiesPainter::Rect2SkRect(GetRenderProperties().GetBoundsRect());
-            canvas.saveLayerAlpha(&rect, std::clamp(alpha, 0.f, 1.f) * UINT8_MAX);
-#else
-            auto rect = RSPropertiesPainter::Rect2DrawingRect(GetRenderProperties().GetBoundsRect());
-            Drawing::Brush brush;
-            brush.SetAlpha(std::clamp(alpha, 0.f, 1.f) * UINT8_MAX);
-            Drawing::SaveLayerOps slr(&rect, &brush);
-            canvas.SaveLayer(slr);
-#endif
-        }
-    }
+    DrawPropertyDrawable(RSPropertyDrawableSlot::ALPHA, canvas);
 }
 
 void RSRenderNode::ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas)
 {
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        DrawPropertyDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::MASK, canvas);
-        return;
-    }
-    ApplyBoundsGeometry(canvas);
-    ApplyAlpha(canvas);
-    RSPropertiesPainter::DrawMask(GetRenderProperties(), canvas);
+    DrawPropertyDrawableRange(RSPropertyDrawableSlot::SAVE_ALL, RSPropertyDrawableSlot::MASK, canvas);
 }
 
 void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
@@ -1296,20 +1242,12 @@ void RSRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
 
 void RSRenderNode::ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas)
 {
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        DrawPropertyDrawable(RSPropertyDrawableSlot::RESTORE_ALL, canvas);
-        return;
-    }
-    canvas.RestoreStatus(renderNodeSaveCount_);
+    DrawPropertyDrawable(RSPropertyDrawableSlot::RESTORE_ALL, canvas);
 }
 
 void RSRenderNode::ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas)
 {
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        DrawPropertyDrawable(RSPropertyDrawableSlot::RESTORE_ALL, canvas);
-        return;
-    }
-    canvas.RestoreStatus(renderNodeSaveCount_);
+    DrawPropertyDrawable(RSPropertyDrawableSlot::RESTORE_ALL, canvas);
 }
 
 void RSRenderNode::AddModifier(const std::shared_ptr<RSRenderModifier>& modifier, bool isSingleFrameComposer)
@@ -1393,11 +1331,7 @@ void RSRenderNode::DumpNodeInfo(DfxString& log)
 bool RSRenderNode::ApplyModifiers()
 {
     // quick reject test
-#ifndef USE_ROSEN_DRAWING
-    if (!RSRenderNode::IsDirty() || dirtyTypes_.empty()) {
-#else
     if (!RSRenderNode::IsDirty() || dirtyTypes_.none()) {
-#endif
         return false;
     }
     const auto prevPositionZ = GetRenderProperties().GetPositionZ();
@@ -1410,11 +1344,7 @@ bool RSRenderNode::ApplyModifiers()
 
     // Apply modifiers
     for (auto& [id, modifier] : modifiers_) {
-#ifndef USE_ROSEN_DRAWING
-        if (!dirtyTypes_.count(modifier->GetType())) {
-#else
         if (!dirtyTypes_.test(static_cast<size_t>(modifier->GetType()))) {
-#endif
             continue;
         }
         modifier->Apply(context);
@@ -1429,30 +1359,20 @@ bool RSRenderNode::ApplyModifiers()
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
         manager != nullptr &&
-#ifndef USE_ROSEN_DRAWING
-        (dirtyTypes_.count(RSModifierType::BACKGROUND_COLOR) || dirtyTypes_.count(RSModifierType::BG_IMAGE))) {
-#else
         (dirtyTypes_.test(static_cast<size_t>(RSModifierType::BACKGROUND_COLOR)) ||
         dirtyTypes_.test(static_cast<size_t>(RSModifierType::BG_IMAGE)))) {
-#endif
-        manager->InvalidateCache();
+        manager->UpdateCacheStateWithDirtyRegion();
     }
     if (auto& manager = GetRenderProperties().GetFilterCacheManager(true)) {
-        manager->InvalidateCache();
+        manager->UpdateCacheStateWithDirtyRegion();
     }
 
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // Generate drawable
-        UpdateDrawableVec();
-    }
+    // Generate drawable
+    UpdateDrawableVec();
 #endif
 
     // update state
-#ifndef USE_ROSEN_DRAWING
-    dirtyTypes_.clear();
-#else
     dirtyTypes_.reset();
-#endif
     UpdateShouldPaint();
 
     // update rate decider scale reference size.
@@ -1692,7 +1612,8 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
         cacheSurface_ = nullptr;
     }
     auto cacheType = GetCacheType();
-    float width = 0.0f, height = 0.0f;
+    float width = 0.0f;
+    float height = 0.0f;
     Vector2f size = GetOptionalBufferSize();
     boundsWidth_ = size.x_;
     boundsHeight_ = size.y_;

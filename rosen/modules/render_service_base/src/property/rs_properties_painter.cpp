@@ -1071,15 +1071,6 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     g_blurCnt++;
 #ifndef USE_ROSEN_DRAWING
     SkAutoCanvasRestore acr(&canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (rect.has_value()) {
-        canvas.clipRect((*rect), true);
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else { // we always do clip for DrawFilter, even if ClipToBounds is false
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
 
     auto filter = std::static_pointer_cast<RSSkiaFilter>(RSFilter);
     filter->SetGreyCoef(properties.GetGreyCoef1(), properties.GetGreyCoef2(), properties.IsGreyAdjustmentValid());
@@ -1094,15 +1085,6 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     }
 #else
     Drawing::AutoCanvasRestore acr(canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (rect.has_value()) {
-        canvas.ClipRect((*rect), Drawing::ClipOp::INTERSECT, true);
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else { // we always do clip for DrawFilter, even if ClipToBounds is false
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    }
 
     auto filter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
     filter->SetGreyCoef(properties.GetGreyCoef1(), properties.GetGreyCoef2(), properties.IsGreyAdjustmentValid());
@@ -1376,26 +1358,12 @@ void RSPropertiesPainter::ApplyBackgroundEffectFallback(const RSProperties& prop
 void RSPropertiesPainter::ClipVisibleCanvas(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
 #ifndef USE_ROSEN_DRAWING
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else { // we always do clip for ApplyBackgroundEffect, even if ClipToBounds is false
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
     canvas.resetMatrix();
     auto visibleIRect = canvas.GetVisibleRect().round();
     if (!visibleIRect.isEmpty()) {
         canvas.clipIRect(visibleIRect);
     }
 #else
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else { // we always do clip for ApplyBackgroundEffect, even if ClipToBounds is false
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    }
     canvas.ResetMatrix();
     auto visibleRect = canvas.GetVisibleRect();
     visibleRect.Round();
@@ -2670,62 +2638,6 @@ void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFi
 }
 #endif
 
-void RSPropertiesPainter::DrawColorFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
-{
-    // if useEffect defined, use color filter from parent EffectView.
-    auto& colorFilter = properties.GetColorFilter();
-    if (colorFilter == nullptr) {
-        return;
-    }
-#ifndef USE_ROSEN_DRAWING
-    SkAutoCanvasRestore acr(&canvas, true);
-    canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setColorFilter(colorFilter);
-    auto skSurface = canvas.GetSurface();
-    if (skSurface == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter skSurface is null");
-        return;
-    }
-    auto clipBounds = canvas.getDeviceClipBounds();
-    auto imageSnapshot = skSurface->makeImageSnapshot(clipBounds);
-    if (imageSnapshot == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter image is null");
-        return;
-    }
-    as_IB(imageSnapshot)->hintCacheGpuResource();
-    canvas.resetMatrix();
-    SkSamplingOptions options(SkFilterMode::kNearest, SkMipmapMode::kNone);
-    canvas.drawImageRect(imageSnapshot, SkRect::Make(clipBounds), options, &paint);
-#else
-    Drawing::AutoCanvasRestore acr(canvas, true);
-    canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    Drawing::Brush brush;
-    brush.SetAntiAlias(true);
-    Drawing::Filter filter;
-    filter.SetColorFilter(colorFilter);
-    brush.SetFilter(filter);
-    auto surface = canvas.GetSurface();
-    if (surface == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter surface is null");
-        return;
-    }
-    auto clipBounds = canvas.GetDeviceClipBounds();
-    auto imageSnapshot = surface->GetImageSnapshot(clipBounds);
-    if (imageSnapshot == nullptr) {
-        ROSEN_LOGE("RSPropertiesPainter::DrawColorFilter image is null");
-        return;
-    }
-    imageSnapshot->HintCacheGpuResource();
-    canvas.ResetMatrix();
-    Drawing::SamplingOptions options(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NONE);
-    canvas.AttachBrush(brush);
-    canvas.DrawImageRect(*imageSnapshot, clipBounds, options);
-    canvas.DetachBrush();
-#endif
-}
-
 #ifndef USE_ROSEN_DRAWING
 void RSPropertiesPainter::DrawBinarizationShader(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
@@ -2975,13 +2887,6 @@ void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSP
 {
 #ifndef USE_ROSEN_DRAWING
     SkAutoCanvasRestore acr(&canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.clipPath(properties.GetClipBounds()->GetSkiaPath(), true);
-    } else {
-        canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-    }
 
     auto blender = MakeDynamicLightUpBlender(properties.GetDynamicLightUpRate().value() * canvas.GetAlpha(),
         properties.GetDynamicLightUpDegree().value() * canvas.GetAlpha());
@@ -2995,13 +2900,6 @@ void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSP
         return;
     }
     Drawing::AutoCanvasRestore acr(canvas, true);
-    if (RSSystemProperties::GetPropertyDrawableEnable()) {
-        // do nothing
-    } else if (properties.GetClipBounds() != nullptr) {
-        canvas.ClipPath(properties.GetClipBounds()->GetDrawingPath(), Drawing::ClipOp::INTERSECT, true);
-    } else {
-        canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-    }
 
     auto blender = MakeDynamicLightUpBlender(properties.GetDynamicLightUpRate().value() * canvas.GetAlpha(),
         properties.GetDynamicLightUpDegree().value() * canvas.GetAlpha());
@@ -3153,86 +3051,6 @@ void RSPropertiesPainter::DrawParticle(const RSProperties& properties, RSPaintFi
             }
         }
     }
-}
-
-void RSPropertiesPainter::BeginBlendMode(RSPaintFilterCanvas& canvas, const RSProperties& properties)
-{
-    auto blendMode = properties.GetColorBlendMode();
-    int blendModeApplyType = properties.GetColorBlendApplyType();
-
-    if (blendMode == 0) {
-        // no blend
-        return;
-    }
-
-#ifndef USE_ROSEN_DRAWING
-    canvas.save();
-    canvas.clipRRect(RRect2SkRRect(properties.GetRRect()), true);
-#else
-    canvas.Save();
-    canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
-#endif
-
-    // fast blend mode
-    if (blendModeApplyType == static_cast<int>(RSColorBlendApplyType::FAST)) {
-        canvas.SaveBlendMode();
-        canvas.SetBlendMode({ blendMode - 1 }); // map blendMode to SkBlendMode
-        return;
-    }
-
-    // save layer mode
-#ifndef USE_ROSEN_DRAWING
-    auto matrix = canvas.getTotalMatrix();
-    matrix.setTranslateX(std::ceil(matrix.getTranslateX()));
-    matrix.setTranslateY(std::ceil(matrix.getTranslateY()));
-    canvas.setMatrix(matrix);
-    SkPaint blendPaint_;
-    blendPaint_.setAlphaf(canvas.GetAlpha());
-    blendPaint_.setBlendMode(static_cast<SkBlendMode>(blendMode - 1)); // map blendMode to SkBlendMode
-    canvas.saveLayer(nullptr, &blendPaint_);
-#else
-    auto matrix = canvas.GetTotalMatrix();
-    matrix.Set(Drawing::Matrix::TRANS_X, std::ceil(matrix.Get(Drawing::Matrix::TRANS_X)));
-    matrix.Set(Drawing::Matrix::TRANS_Y, std::ceil(matrix.Get(Drawing::Matrix::TRANS_Y)));
-    canvas.SetMatrix(matrix);
-    Drawing::Brush blendBrush_;
-    blendBrush_.SetAlphaF(canvas.GetAlpha());
-    blendBrush_.SetBlendMode(static_cast<Drawing::BlendMode>(blendMode - 1)); // map blendMode to Drawing::BlendMode
-    Drawing::SaveLayerOps maskLayerRec(nullptr, &blendBrush_, 0);
-    canvas.SaveLayer(maskLayerRec);
-#endif
-    canvas.SaveBlendMode();
-    canvas.SetBlendMode(std::nullopt);
-    canvas.SaveAlpha();
-    canvas.SetAlpha(1.0f);
-}
-
-void RSPropertiesPainter::EndBlendMode(RSPaintFilterCanvas& canvas, const RSProperties& properties)
-{
-    auto blendMode = properties.GetColorBlendMode();
-    int blendModeApplyType = properties.GetColorBlendApplyType();
-
-    if (blendMode == 0) {
-        // no blend
-        return;
-    }
-
-    if (blendModeApplyType == static_cast<int>(RSColorBlendApplyType::FAST)) {
-        canvas.RestoreBlendMode();
-    } else {
-        canvas.RestoreBlendMode();
-        canvas.RestoreAlpha();
-#ifndef USE_ROSEN_DRAWING
-        canvas.restore();
-#else
-        canvas.Restore();
-#endif
-    }
-#ifndef USE_ROSEN_DRAWING
-        canvas.restore();
-#else
-        canvas.Restore();
-#endif
 }
 } // namespace Rosen
 } // namespace OHOS

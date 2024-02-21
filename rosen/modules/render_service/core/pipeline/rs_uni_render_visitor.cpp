@@ -4561,27 +4561,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             return;
         }
     }
-    if (RSSystemProperties::GetProxyNodeDebugEnabled() && node.contextClipRect_.has_value() && canvas_ != nullptr) {
-        // draw transparent red rect to indicate valid clip area
-        {
-            RSAutoCanvasRestore acr(canvas_);
-#ifndef USE_ROSEN_DRAWING
-            canvas_->concat(node.contextMatrix_.value_or(SkMatrix::I()));
-            SkPaint paint;
-            paint.setARGB(0x80, 0xFF, 0, 0); // transparent red
-            canvas_->drawRect(node.contextClipRect_.value(), paint);
-#else
-            canvas_->ConcatMatrix(node.contextMatrix_.value_or(Drawing::Matrix()));
-            Drawing::Brush brush;
-            brush.SetARGB(0x80, 0xFF, 0, 0); // transparent red
-            canvas_->AttachBrush(brush);
-            canvas_->DrawRect(node.contextClipRect_.value());
-            canvas_->DetachBrush();
-#endif
-        }
-        // make this node context transparent
-        canvas_->MultiplyAlpha(0.5);
-    }
     RS_PROCESS_TRACE(isPhone_ || (!isSubThread_ && node.IsMainThreadNode()),
         "RSUniRender::Process:[" + node.GetName() + "] " +
         node.GetDstRect().ToString() + " Alpha: " + std::to_string(node.GetGlobalAlpha()));
@@ -4862,21 +4841,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSUniRenderVisitor::ProcessProxyRenderNode(RSProxyRenderNode& node)
 {
-    if (RSSystemProperties::GetProxyNodeDebugEnabled() && node.contextClipRect_.has_value() &&
-        node.target_.lock() != nullptr) {
-        // draw transparent green rect to indicate clip area of proxy node
-#ifndef USE_ROSEN_DRAWING
-        SkPaint paint;
-        paint.setARGB(0x80, 0, 0xFF, 0); // transparent green
-        canvas_->drawRect(node.contextClipRect_.value(), paint);
-#else
-        Drawing::Brush brush;
-        brush.SetARGB(0x80, 0, 0xFF, 0); // transparent green
-        canvas_->AttachBrush(brush);
-        canvas_->DrawRect(node.contextClipRect_.value());
-        canvas_->DetachBrush();
-#endif
-    }
     ProcessChildren(node);
 }
 

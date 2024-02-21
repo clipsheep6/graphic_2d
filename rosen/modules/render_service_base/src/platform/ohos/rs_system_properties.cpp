@@ -406,14 +406,6 @@ bool RSSystemProperties::GetAnimationCacheEnabled()
     return animationCacheEnabled;
 }
 
-bool RSSystemProperties::GetPropertyDrawableEnable()
-{
-    static bool propertyDrawableEnable =
-        std::atoi((system::GetParameter("persist.propertyDrawableGenerate.enabled", "1")).c_str()) != 0 &&
-        RSUniRenderJudgement::IsUniRender();
-    return propertyDrawableEnable;
-}
-
 float RSSystemProperties::GetAnimationScale()
 {
     static CachedHandle g_Handle = CachedParameterCreate("persist.sys.graphic.animationscale", "1.0");
@@ -538,12 +530,6 @@ const std::vector<float>& RSSystemProperties::GetAiInvertCoef()
             std::atof((system::GetParameter("persist.sys.graphic.aiInvertFilterRadius", "45")).c_str());
     }
     return aiInvertCoef;
-}
-
-bool RSSystemProperties::GetProxyNodeDebugEnabled()
-{
-    static bool proxyNodeDebugEnabled = system::GetParameter("persist.sys.graphic.proxyNodeDebugEnabled", "0") != "0";
-    return proxyNodeDebugEnabled;
 }
 
 bool RSSystemProperties::GetUIFirstEnabled()

@@ -192,19 +192,9 @@ bool RSSystemProperties::GetAnimationCacheEnabled()
     return {};
 }
 
-bool RSSystemProperties::GetPropertyDrawableEnable()
-{
-    return {};
-}
-
 float RSSystemProperties::GetAnimationScale()
 {
     return 1.f;
-}
-
-bool RSSystemProperties::GetProxyNodeDebugEnabled()
-{
-    return false;
 }
 
 bool RSSystemProperties::GetFilterCacheEnabled()

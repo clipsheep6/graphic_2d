@@ -357,7 +357,7 @@ private:
 
     bool isDirtyRegionAlignedEnable_ = false;
     std::shared_ptr<std::mutex> surfaceNodePrepareMutex_;
-    uint32_t parallelRenderVisitorIndex_ = 0;
+   // uint32_t parallelRenderVisitorIndex_ = 0;
     ParallelRenderingType parallelRenderType_;
 
     RectI prepareClipRect_{0, 0, 0, 0}; // renderNode clip rect used in Prepare
@@ -396,8 +396,8 @@ private:
     uint32_t appWindowNum_ = 0;
 
     bool isParallel_ = false;
-    bool doParallelComposition_ = false;
-    bool doParallelRender_ = false;
+    //bool doParallelComposition_ = false;
+    //bool doParallelRender_ = false;
     // displayNodeMatrix only used in offScreen render case to ensure correct composer layer info when with rotation,
     // displayNodeMatrix indicates display node's matrix info
 #ifndef USE_ROSEN_DRAWING

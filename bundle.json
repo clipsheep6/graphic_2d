@@ -92,8 +92,11 @@
         "group_type": {
           "base_group": [
             "//third_party/libpng:libpng",
+            "//third_party/libdrm/tests/util:util",
+            "//third_party/libdrm/tests/modetest:modetest",
             "//foundation/graphic/graphic_2d/interfaces/kits/napi:napi_packages",
             "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
+            "//foundation/graphic/graphic_2d/rosen/samples/composer:hello_composer",
             "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",
             "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/effectChain:libeffectchain",

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,10 +20,17 @@
 #include "draw/paint.h"
 #include "utils/point.h"
 
-
 namespace OHOS {
 namespace Rosen {
 static const Vector2f CENTER_NODE_COORDINATE = {0.5f, 0.5f}; //scale center node
+static const unsigned int UNIT_GROUP = 0;  // AnimationSubType is UNIT
+static const unsigned int UNIT_PERIOD = 0;  // AnimationSubType is UNIT
+static const unsigned int UNIT_NODE = 0;  // AnimationSubType is UNIT
+static const std::string SCALE_PROP_X = "sx";
+static const std::string SCALE_PROP_Y = "sy";
+static const unsigned int PROPERTIES = 2; // symbol animation property contains two values, change from one to the other
+static const unsigned int PROP_START = 0; // symbol animation property contains two values, change from START to the END
+static const unsigned int PROP_END = 1; // symbol animation property contains two values, change from START to the END
 
 RSSymbolAnimation::RSSymbolAnimation()
 {
@@ -69,19 +76,19 @@ bool RSSymbolAnimation::CreateOrSetModifierValue(std::shared_ptr<RSAnimatablePro
     return false;
 }
 
-bool RSSymbolAnimation::isEqual(const Vector2f val1, const Vector2f val2)
+bool RSSymbolAnimation::isEqual(const Vector2f& val1, const Vector2f& val2)
 {
     return(val1.x_ == val2.x_ && val1.y_ == val2.y_);
 }
 
 #ifndef USE_ROSEN_DRAWING
-Vector4f RSSymbolAnimation::CalculateOffset(const SkPath &path, const float &offsetX, const float &offsetY)
+Vector4f RSSymbolAnimation::CalculateOffset(const SkPath& path, const float& offsetX, const float& offsetY)
 {
     auto rect = path.getBounds();
     float left = rect.fLeft;
     float top = rect.fTop;
 #else
-Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path &path, const float &offsetX, const float &offsetY)
+Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path& path, const float& offsetX, const float& offsetY)
 {
     auto rect = path.GetBounds();
     float left = rect.GetLeft();
@@ -91,58 +98,144 @@ Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path &path, const flo
     // the newOffset is offset of path on new node;
     Vector2f nodeTranslation = {offsetX + left, offsetY + top};
     Vector2f newOffset = {-left, -top};
-
     return Vector4f(nodeTranslation[0], nodeTranslation[1], newOffset[0], newOffset[1]);
+}
+
+#ifndef USE_ROSEN_DRAWING
+void RSSymbolAnimation::DrawSymbolOnCanvas(SkCanvas* recordingCanvas,
+    TextEngine::SymbolNode& symbolNode, Vector4f offsets)
+{
+    SkPaint paint;
+    paint.setColor(symbolNode.color);
+    paint.setAntiAlias(true);
+    SkPoint offsetLocal = SkPoint::Make(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
+    recordingCanvas->drawSymbol(symbolNode.symbolData, offsetLocal, paint);
+}
+
+void RSSymbolAnimation::DrawPathOnCanvas(SkCanvas* recordingCanvas,
+    TextEngine::SymbolNode& symbolNode, Vector4f offsets)
+{
+    SkPaint paint;
+    paint.setColor(symbolNode.color);
+    paint.setAntiAlias(true);
+    symbolNode.path.offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
+    recordingCanvas->drawPath(symbolNode.path, paint);
+}
+#else
+void RSSymbolAnimation::DrawSymbolOnCanvas(ExtendRecordingCanvas* recordingCanvas,
+    TextEngine::SymbolNode& symbolNode, Vector4f offsets)
+{
+    Drawing::Brush brush;
+    Drawing::Pen pen;
+    SetIconProperty(brush, pen, symbolNode);
+    Drawing::Point offsetLocal = Drawing::Point{offsets[2], offsets[3]}; // index 2 offsetX 3 offsetY
+    recordingCanvas->AttachBrush(brush);
+    recordingCanvas->DrawSymbol(symbolNode.symbolData, offsetLocal);
+    recordingCanvas->DetachBrush();
+    recordingCanvas->AttachPen(pen);
+    recordingCanvas->DrawSymbol(symbolNode.symbolData, offsetLocal);
+    recordingCanvas->DetachPen();
+}
+
+void RSSymbolAnimation::DrawPathOnCanvas(ExtendRecordingCanvas* recordingCanvas,
+     TextEngine::SymbolNode& symbolNode, Vector4f offsets)
+{
+    Drawing::Brush brush;
+    Drawing::Pen pen;
+    SetIconProperty(brush, pen, symbolNode);
+    symbolNode.path.Offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
+    recordingCanvas->AttachBrush(brush);
+    recordingCanvas->AttachPen(pen);
+    recordingCanvas->DrawPath(symbolNode.path);
+    recordingCanvas->DetachBrush();
+    recordingCanvas->DetachPen();
+}
+#endif
+
+#ifndef USE_ROSEN_DRAWING
+bool RSSymbolAnimation::GetScaleUnitAnimationParas(PiecewiseParameter& scaleUnitParas,
+    Vector2f& scaleValueBegin, Vector2f& scaleValue)
+{
+    // AnimationType, AnimationSubType, animation_mode; animation_mode is 1 when AnimationSubTpe is Unit
+    HmSymbolConfig_OHOS* symbolConfig = HmSymbolConfig_OHOS::getInstance();
+    if (symbolConfig == nullptr) {
+        return false;
+    }
+    auto scaleParas = symbolConfig->getGroupParameters(SCALE_EFFECT, UNIT, 1);
+#else
+bool RSSymbolAnimation::GetScaleUnitAnimationParas(Drawing::DrawingPiecewiseParameter& scaleUnitParas,
+    Vector2f& scaleValueBegin, Vector2f& scaleValue)
+{
+    // AnimationType, AnimationSubType, animation_mode; animation_mode is 1 when AnimationSubTpe is Unit
+    auto scaleParas = Drawing::HmSymbolConfigOhos::GetGroupParameters(Drawing::SCALE_EFFECT, Drawing::UNIT, 1);
+#endif
+    if (scaleParas == nullptr || scaleParas->empty() || scaleParas->at(UNIT_GROUP).empty()) {
+        ROSEN_LOGD("[%{public}s] can not get scaleParas \n", __func__);
+        return false;
+    }
+    scaleUnitParas = (*scaleParas)[UNIT_GROUP][UNIT_PERIOD];
+
+    auto scaleProperties = scaleUnitParas.properties;
+    if (!ElementInMap(SCALE_PROP_X, scaleProperties) || !ElementInMap(SCALE_PROP_Y, scaleProperties)) {
+        ROSEN_LOGD("[%{public}s] scaleProperties is null \n", __func__);
+        return false;
+    }
+
+    if (scaleProperties[SCALE_PROP_X].size() != PROPERTIES || scaleProperties[SCALE_PROP_Y].size() != PROPERTIES) {
+        ROSEN_LOGD("[%{public}s] scaleProperties have wrong number \n", __func__);
+        return false;
+    }
+
+    scaleValueBegin = {scaleProperties[SCALE_PROP_X][PROP_START], scaleProperties[SCALE_PROP_Y][PROP_START]};
+    scaleValue = {scaleProperties[SCALE_PROP_X][PROP_END], scaleProperties[SCALE_PROP_Y][PROP_END]};
+    return true;
 }
 
 bool RSSymbolAnimation::SetScaleUnitAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&
     symbolAnimationConfig)
 {
+    if (rsNode_ == nullptr || symbolAnimationConfig == nullptr) {
+        ROSEN_LOGD("HmSymbol SetScaleUnitAnimation::getNode or get symbolAnimationConfig:failed");
+        return false;
+    }
     auto nodeNum = symbolAnimationConfig->numNodes;
     if (nodeNum <= 0) {
         return false;
     }
     auto symbolSpanId = symbolAnimationConfig->symbolSpanId;
     auto canvasNode = RSCanvasNode::Create();
+    if (canvasNode == nullptr) {
+        return false;
+    }
     if (rsNode_->canvasNodesListMap.count(symbolSpanId) > 0) {
         rsNode_->canvasNodesListMap[symbolSpanId].emplace_back(canvasNode);
     } else {
         rsNode_->canvasNodesListMap[symbolSpanId] = {canvasNode};
     }
 
-    auto& symbolNode = symbolAnimationConfig->SymbolNodes[0];
+    auto& symbolNode = symbolAnimationConfig->SymbolNodes[UNIT_NODE];
     Vector4f offsets = CalculateOffset(symbolNode.symbolData.path_,
         symbolNode.nodeBoundary[0], symbolNode.nodeBoundary[1]); // index 0 offsetX of layout, 1 offsetY of layout
     SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // index 0 offsetX of newNode, 1 offsetY of newNode
         symbolNode.nodeBoundary[2], symbolNode.nodeBoundary[3])); // index 2 width 3 height
-    const Vector2f scaleValueBegin = {1.0f, 1.0f}; // 1.0 scale
-    const Vector2f scaleValue = {1.15f, 1.15f}; // 1.5 scale
-    const Vector2f scaleValueEnd = scaleValueBegin;
-    auto animation = ScaleSymbolAnimation(canvasNode, scaleValueBegin, scaleValue, scaleValueEnd);
-    if (!animation) {
+#ifndef USE_ROSEN_DRAWING
+    PiecewiseParameter scaleUnitParas;
+#else
+    Drawing::DrawingPiecewiseParameter scaleUnitParas;
+#endif
+    Vector2f scaleValueBegin;
+    Vector2f scaleValue;
+    if (!GetScaleUnitAnimationParas(scaleUnitParas, scaleValueBegin, scaleValue)) {
+        return false;
+    }
+    Vector2f scaleValueEnd = scaleValueBegin;
+    auto animation = ScaleSymbolAnimation(canvasNode, scaleUnitParas, scaleValueBegin, scaleValue, scaleValueEnd);
+    if (animation == nullptr) {
         return false;
     }
     animation->Start(canvasNode);
     auto recordingCanvas = canvasNode->BeginRecording(symbolNode.nodeBoundary[2], symbolNode.nodeBoundary[3]);
-
-    #ifndef USE_ROSEN_DRAWING
-        SkPaint paint;
-        paint.setColor(symbolNode.color);
-        paint.setAntiAlias(true);
-        SkPoint offsetLocal = SkPoint::Make(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
-        recordingCanvas->drawSymbol(symbolNode.symbolData, offsetLocal, paint);
-    #else
-        Drawing::Brush brush;
-        Drawing::Pen pen;
-        SetIconProperty(brush, pen, symbolNode);
-        Drawing::Point offsetLocal = Drawing::Point{offsets[2], offsets[3]}; // index 2 offsetX 3 offsetY
-        recordingCanvas->AttachBrush(brush);
-        recordingCanvas->DrawSymbol(symbolNode.symbolData, offsetLocal);
-        recordingCanvas->DetachBrush();
-        recordingCanvas->AttachPen(pen);
-        recordingCanvas->DrawSymbol(symbolNode.symbolData, offsetLocal);
-        recordingCanvas->DetachPen();
-    #endif
+    DrawSymbolOnCanvas(recordingCanvas, symbolNode, offsets);
     canvasNode->FinishRecording();
     rsNode_->AddChild(canvasNode, -1);
     return true;
@@ -168,9 +261,15 @@ void RSSymbolAnimation::SetSymbolGeometry(const std::shared_ptr<RSNode>& rsNode,
     }
 }
 
+#ifndef USE_ROSEN_DRAWING
 std::shared_ptr<RSAnimation> RSSymbolAnimation::ScaleSymbolAnimation(
-    const std::shared_ptr<RSNode>& rsNode, const Vector2f& scaleValueBegin,
-    const Vector2f& scaleValue, const Vector2f& scaleValueEnd, int delay)
+    const std::shared_ptr<RSNode>& rsNode, const PiecewiseParameter& scaleUnitParas,
+    const Vector2f& scaleValueBegin, const Vector2f& scaleValue, const Vector2f& scaleValueEnd)
+#else
+std::shared_ptr<RSAnimation> RSSymbolAnimation::ScaleSymbolAnimation(
+    const std::shared_ptr<RSNode>& rsNode, const Drawing::DrawingPiecewiseParameter& scaleUnitParas,
+    const Vector2f& scaleValueBegin, const Vector2f& scaleValue, const Vector2f& scaleValueEnd)
+#endif
 {
     bool isCreate = CreateOrSetModifierValue(scaleStartProperty_, scaleValueBegin);
     if (isCreate) {
@@ -181,37 +280,73 @@ std::shared_ptr<RSAnimation> RSSymbolAnimation::ScaleSymbolAnimation(
     CreateOrSetModifierValue(scaleEndProperty_, scaleValueEnd);
     Vector2f curNodePivot = rsNode->GetStagingProperties().GetPivot();
     if (!isEqual(curNodePivot, CENTER_NODE_COORDINATE)) {
-        bool isCreate = CreateOrSetModifierValue(pivotProperty_, CENTER_NODE_COORDINATE);
+        isCreate = CreateOrSetModifierValue(pivotProperty_, CENTER_NODE_COORDINATE);
         if (isCreate) {
             auto pivotModifier = std::make_shared<RSPivotModifier>(pivotProperty_);
             rsNode->AddModifier(pivotModifier);
         }
     }
 
-    RSAnimationTimingCurve scaleCurve = SetScaleSpringTimingCurve();
+    RSAnimationTimingCurve scaleCurve = SetScaleSpringTimingCurve(scaleUnitParas.curveArgs);
 
     auto keyframeAnimation = std::make_shared<RSKeyframeAnimation>(scaleStartProperty_);
-    keyframeAnimation->SetDuration(2000); // duration is 2000ms
+    if (scaleUnitParas.delay != 0) {
+        keyframeAnimation->SetStartDelay(scaleUnitParas.delay);
+    }
+    if (scaleUnitParas.duration != 0) {
+        keyframeAnimation->SetDuration(scaleUnitParas.duration);
+    } else {
+        keyframeAnimation->SetDuration(2000); // default duration is 2000ms
+    }
     keyframeAnimation->AddKeyFrame(0.25f, scaleProperty_, scaleCurve);
     keyframeAnimation->AddKeyFrame(0.75f, scaleProperty_, scaleCurve);
     keyframeAnimation->AddKeyFrame(1.f, scaleEndProperty_, scaleCurve);
     return keyframeAnimation;
 }
 
-RSAnimationTimingCurve RSSymbolAnimation::SetScaleSpringTimingCurve()
+RSAnimationTimingCurve RSSymbolAnimation::SetScaleSpringTimingCurve(const std::map<std::string, double_t>& curveArgs)
 {
-    float velocity = 0;
-    float mass = 1;
-    float stiffness = 228;
-    float damping = 22;
-    RSAnimationTimingCurve scaleCurve = RSAnimationTimingCurve::CreateSpringCurve(
-        velocity, mass, stiffness, damping);
+    double scaleVelocity = 0;
+    double scaleMass = 0;
+    double scaleStiffness = 0;
+    double scaleDamping = 0;
+    if (ElementInMap("velocity", curveArgs)) {
+        scaleVelocity = curveArgs.at("velocity");
+    }
+    if (ElementInMap("mass", curveArgs)) {
+        scaleMass = curveArgs.at("mass");
+    }
+    if (ElementInMap("stiffness", curveArgs)) {
+        scaleStiffness = curveArgs.at("stiffness");
+    }
+    if (ElementInMap("damping", curveArgs)) {
+        scaleDamping = curveArgs.at("damping");
+    }
+    RSAnimationTimingCurve scaleCurve = RSAnimationTimingCurve::CreateSpringCurve(static_cast<float>(scaleVelocity),
+        static_cast<float>(scaleMass), static_cast<float>(scaleStiffness), static_cast<float>(scaleDamping));
     return scaleCurve;
+}
+
+template<typename T>
+bool RSSymbolAnimation::ElementInMap(std::string curElement, const std::map<std::string, T>& curMap)
+{
+    if (curMap.empty()) {
+        return false;
+    }
+    auto element = curMap.find(curElement);
+    if (element == curMap.end()) {
+        return false;
+    }
+    return true;
 }
 
 bool RSSymbolAnimation::SetVariableColorAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&
     symbolAnimationConfig)
 {
+    if (rsNode_ == nullptr || symbolAnimationConfig == nullptr) {
+        ROSEN_LOGD("HmSymbol SetScaleUnitAnimation::getNode or get symbolAnimationConfig:failed");
+        return false;
+    }
     auto nodeNum = symbolAnimationConfig->numNodes;
     if (nodeNum <= 0) {
         RS_LOGD("SetScaleUnitAnimation numNodes <= 0");
@@ -219,9 +354,9 @@ bool RSSymbolAnimation::SetVariableColorAnimation(const std::shared_ptr<TextEngi
     }
 
     auto symbolSpanId = symbolAnimationConfig->symbolSpanId;
-    auto& symbolFistNode = symbolAnimationConfig->SymbolNodes[0];
-    Vector4f offsets = CalculateOffset(symbolFistNode.symbolData.path_,
-        symbolFistNode.nodeBoundary[0], symbolFistNode.nodeBoundary[1]); //index 0 offsetX and 1 offsetY of layout
+    auto& symbolFirstNode = symbolAnimationConfig->SymbolNodes[0]; // calculate offset by the first node
+    Vector4f offsets = CalculateOffset(symbolFirstNode.symbolData.path_,
+        symbolFirstNode.nodeBoundary[0], symbolFirstNode.nodeBoundary[1]); // index 0 offsetX and 1 offsetY of layout
     for (uint32_t n = 0; n < nodeNum; n++) {
         auto& symbolNode = symbolAnimationConfig->SymbolNodes[n];
         auto canvasNode = RSCanvasNode::Create();
@@ -230,46 +365,86 @@ bool RSSymbolAnimation::SetVariableColorAnimation(const std::shared_ptr<TextEngi
         } else {
             rsNode_->canvasNodesListMap[symbolSpanId] = {canvasNode};
         }
-        SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], //0: offsetX and 1: offsetY of newNode
+        SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // 0: offsetX and 1: offsetY of newNode
             symbolNode.nodeBoundary[2], symbolNode.nodeBoundary[3])); // 2: width 3: height
-        CreateOrSetModifierValue(alphaPropertyPhase1_, 0.4f); // 0.4 means 40% alpha
-        CreateOrSetModifierValue(alphaPropertyPhase2_, 0.6f); // 0.6 means 60% alpha
-        CreateOrSetModifierValue(alphaPropertyPhase3_, 1.0f); // 1.0 means 100% alpha
 
-        std::shared_ptr<RSAnimation> animation;
-        auto alphaModifier = std::make_shared<RSAlphaModifier>(alphaPropertyPhase1_);
-        canvasNode->AddModifier(alphaModifier);
-        if (symbolNode.animationIndex == 0) { // 0 first layer
-            animation = VariableColorSymbolAnimationNodeThird(canvasNode);
-        } else if (symbolNode.animationIndex == 1) { // 1 second layer
-            animation = VariableColorSymbolAnimationNodeSecond(canvasNode);
-        } else if (symbolNode.animationIndex == 2) { // 2 first layer
-            animation = VariableColorSymbolAnimationNodeFirst(canvasNode);
+        std::shared_ptr<RSAnimation> animation = nullptr;
+        uint32_t duration = 0;
+        int delay = 0;
+        std::vector<float> timePercents;
+        if (!GetVariableColorAnimationParas(n, duration, delay, timePercents)) {
+            return false;
         }
+        auto alphaModifier = std::make_shared<RSAlphaModifier>(alphaPropertyPhases_[0]); // initial the alpha status
+        canvasNode->AddModifier(alphaModifier);
+        animation = VariableColorSymbolAnimation(canvasNode, duration, delay, timePercents);
         if (animation == nullptr) {
             return false;
         }
         animation->Start(canvasNode);
         auto recordingCanvas = canvasNode->BeginRecording(symbolNode.nodeBoundary[2], symbolNode.nodeBoundary[3]);
-        #ifndef USE_ROSEN_DRAWING
-            SkPaint paint;
-            paint.setColor(symbolNode.color);
-            paint.setAntiAlias(true);
-            symbolNode.path.offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
-            recordingCanvas->drawPath(symbolNode.path, paint);
-        #else
-            Drawing::Brush brush;
-            Drawing::Pen pen;
-            SetIconProperty(brush, pen, symbolNode);
-            symbolNode.path.Offset(offsets[2], offsets[3]); // index 2 offsetX 3 offsetY
-            recordingCanvas->AttachBrush(brush);
-            recordingCanvas->AttachPen(pen);
-            recordingCanvas->DrawPath(symbolNode.path);
-            recordingCanvas->DetachBrush();
-            recordingCanvas->DetachPen();
-        #endif
+        DrawPathOnCanvas(recordingCanvas, symbolNode, offsets);
         canvasNode->FinishRecording();
         rsNode_->AddChild(canvasNode, -1);
+    }
+    return true;
+}
+
+#ifndef USE_ROSEN_DRAWING
+bool RSSymbolAnimation::GetVariableColorAnimationParas(uint32_t& index, uint32_t& totalDuration, int& delay,
+    std::vector<float>& timePercents)
+{
+    HmSymbolConfig_OHOS* symbolConfig = HmSymbolConfig_OHOS::getInstance();
+    if (symbolConfig == nullptr) {
+        return false;
+    }
+    auto multiGroupParas = symbolConfig->getGroupParameters(VARIABLE_COLOR, VARIABLE_3_GROUP, 1);
+#else
+bool RSSymbolAnimation::GetVariableColorAnimationParas(uint32_t& index, uint32_t& totalDuration, int& delay,
+    std::vector<float>& timePercents)
+{
+    auto multiGroupParas = Drawing::HmSymbolConfigOhos::GetGroupParameters(Drawing::VARIABLE_COLOR,
+                                                                           Drawing::VARIABLE_3_GROUP, 1);
+#endif
+    if (multiGroupParas == nullptr || multiGroupParas->size() <= index || multiGroupParas->at(index).empty()) {
+        ROSEN_LOGD("[%{public}s] can not get scaleParas \n", __func__);
+        return false;
+    }
+    auto oneGroupParas = (*multiGroupParas)[index]; // index means the sequence number of node or animation layer
+    if (oneGroupParas.empty()) {
+        return false;
+    }
+    delay = oneGroupParas[0].delay; // 0 means the first phase of a node
+    totalDuration = 0;
+    // traverse all time phases
+    for (unsigned long i = 0; i < oneGroupParas.size(); i++) {
+        totalDuration = oneGroupParas[i].duration + totalDuration;
+        if (!ElementInMap("alpha", oneGroupParas[i].properties) ||
+            oneGroupParas[i].properties["alpha"].size() != PROPERTIES) {
+            return false;
+        }
+        // each node needs same alphaPropertyPhases
+        // desired result : alphaPropertyPhases_.size() = oneGroupParas.size() + 1
+        if (alphaPropertyPhases_.size() <= oneGroupParas.size()) {
+            if (i == 0) {
+                float alphaValue = oneGroupParas[i].properties.at("alpha")[PROP_START]; // the first value
+                std::shared_ptr<RSAnimatableProperty<float>> alphaPropertyPhase = nullptr;
+                CreateOrSetModifierValue(alphaPropertyPhase, alphaValue);
+                alphaPropertyPhases_.push_back(alphaPropertyPhase);
+            }
+            float alphaValue = oneGroupParas[i].properties.at("alpha")[PROP_END]; // the value of the key frame needs
+            std::shared_ptr<RSAnimatableProperty<float>> alphaPropertyPhase = nullptr;
+            CreateOrSetModifierValue(alphaPropertyPhase, alphaValue);
+            alphaPropertyPhases_.push_back(alphaPropertyPhase);
+        }
+    }
+    uint32_t duration = 0;
+    float timePercent = 0;
+    timePercents.push_back(timePercent); // the first property of timePercent
+    for (unsigned long i = 0; i < oneGroupParas.size(); i++) {
+        timePercent = static_cast<float>(oneGroupParas[i].duration + duration) / static_cast<float>(totalDuration);
+        timePercents.push_back(timePercent);
+        duration = duration + oneGroupParas[i].duration;
     }
     return true;
 }
@@ -289,59 +464,25 @@ void RSSymbolAnimation::SetIconProperty(Drawing::Brush& brush, Drawing::Pen& pen
     return;
 }
 
-std::shared_ptr<RSAnimation> RSSymbolAnimation::VariableColorSymbolAnimationNodeFirst(const std::shared_ptr<RSNode>&
-    rsNode)
+std::shared_ptr<RSAnimation> RSSymbolAnimation::VariableColorSymbolAnimation(const std::shared_ptr<RSNode>& rsNode,
+    uint32_t& duration, int& delay, std::vector<float>& timePercents)
 {
-    auto keyframeAnimation = std::make_shared<RSKeyframeAnimation>(alphaPropertyPhase1_);
-    if (!keyframeAnimation) {
-        RS_LOGD("VariableColorSymbolAnimationNodeFirst nullptr");
+    auto keyframeAnimation = std::make_shared<RSKeyframeAnimation>(alphaPropertyPhases_[0]); // initial the alpha status
+    if (keyframeAnimation == nullptr || rsNode == nullptr) {
         return nullptr;
     }
-    keyframeAnimation->SetDuration(1300); // duration is 100+150+200+250+600=1300ms
-    // at different moments, the alpha value is a different value
-    // e.g. 0.08 = 100/1300, at this moment of 100ms, the alpha value is the value of alphaPropertyPhase2_
-    // e.g. 0.19 = (100+150)/1300, at this moment of 250ms, the alpha value is the value of alphaPropertyPhase3_
-    keyframeAnimation->AddKeyFrame(0.08f, alphaPropertyPhase2_, RSAnimationTimingCurve::LINEAR); // 0.08 is 8% of time
-    keyframeAnimation->AddKeyFrame(0.19f, alphaPropertyPhase3_, RSAnimationTimingCurve::LINEAR); // 0.19 is 19% of time
-    keyframeAnimation->AddKeyFrame(0.35f, alphaPropertyPhase2_, RSAnimationTimingCurve::LINEAR); // 0.35 is 35% of time
-    keyframeAnimation->AddKeyFrame(0.54f, alphaPropertyPhase1_, RSAnimationTimingCurve::LINEAR); // 0.54 is 54% of time
-    keyframeAnimation->AddKeyFrame(1.f, alphaPropertyPhase1_, RSAnimationTimingCurve::LINEAR); // 1. is 100% of time
-    return keyframeAnimation;
-}
-
-std::shared_ptr<RSAnimation> RSSymbolAnimation::VariableColorSymbolAnimationNodeSecond(const std::shared_ptr<RSNode>&
-    rsNode)
-{
-    auto keyframeAnimation = std::make_shared<RSKeyframeAnimation>(alphaPropertyPhase1_);
-    if (!keyframeAnimation) {
-        RS_LOGD("VariableColorSymbolAnimationNodeSecond nullptr");
+    if (timePercents.size() != alphaPropertyPhases_.size()) {
         return nullptr;
     }
-    keyframeAnimation->SetStartDelay(100); // 100ms is the time gap between first layer and second layer
-    keyframeAnimation->SetDuration(1200); // duration is 150+200+250+200+400=1200ms
-    keyframeAnimation->AddKeyFrame(0.125f, alphaPropertyPhase2_, RSAnimationTimingCurve::LINEAR); // 0.125 time percent
-    keyframeAnimation->AddKeyFrame(0.29f, alphaPropertyPhase3_, RSAnimationTimingCurve::LINEAR); // 0.29 is 29% of time
-    keyframeAnimation->AddKeyFrame(0.5f, alphaPropertyPhase2_, RSAnimationTimingCurve::LINEAR); // 0.5 is 50% of time
-    keyframeAnimation->AddKeyFrame(0.67f, alphaPropertyPhase1_, RSAnimationTimingCurve::LINEAR); // 0.67 is 67% of time
-    keyframeAnimation->AddKeyFrame(1.f, alphaPropertyPhase1_, RSAnimationTimingCurve::LINEAR); // 1. is 100% of time
-    return keyframeAnimation;
-}
-
-std::shared_ptr<RSAnimation> RSSymbolAnimation::VariableColorSymbolAnimationNodeThird(const std::shared_ptr<RSNode>&
-    rsNode)
-{
-    auto keyframeAnimation = std::make_shared<RSKeyframeAnimation>(alphaPropertyPhase1_);
-    if (!keyframeAnimation) {
-        RS_LOGD("VariableColorSymbolAnimationNodeThird nullptr");
-        return nullptr;
+    if (delay != 0) {
+        keyframeAnimation->SetStartDelay(delay);
     }
-    keyframeAnimation->SetStartDelay(250); // 250ms is the time gap between first layer and third layer
-    keyframeAnimation->SetDuration(1050); // duration is 200+250+200+150+250=1050ms
-    keyframeAnimation->AddKeyFrame(0.19f, alphaPropertyPhase2_, RSAnimationTimingCurve::LINEAR); // 0.19 is 19% of time
-    keyframeAnimation->AddKeyFrame(0.43f, alphaPropertyPhase3_, RSAnimationTimingCurve::LINEAR); // 0.43 is 43% of time
-    keyframeAnimation->AddKeyFrame(0.62f, alphaPropertyPhase2_, RSAnimationTimingCurve::LINEAR); // 0.62 is 62% of time
-    keyframeAnimation->AddKeyFrame(0.76f, alphaPropertyPhase1_, RSAnimationTimingCurve::LINEAR); // 0.76 is 76% of time
-    keyframeAnimation->AddKeyFrame(1.f, alphaPropertyPhase1_, RSAnimationTimingCurve::LINEAR); // 1. is 100% of time
+    keyframeAnimation->SetDuration(duration);
+    std::vector<std::tuple<float, std::shared_ptr<RSPropertyBase>, RSAnimationTimingCurve>> keyframes;
+    for (unsigned long i = 1; i < alphaPropertyPhases_.size(); i++) {
+        keyframes.push_back(std::make_tuple(timePercents[i], alphaPropertyPhases_[i], RSAnimationTimingCurve::LINEAR));
+    }
+    keyframeAnimation->AddKeyFrames(keyframes);
     return keyframeAnimation;
 }
 } // namespace Rosen

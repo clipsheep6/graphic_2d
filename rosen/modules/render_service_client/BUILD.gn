@@ -29,6 +29,7 @@ config("render_service_client_config") {
     "//drivers/peripheral/base",
     "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/rosen/modules/2d_graphics",
+    "//third_party/skia/src/ports/skia_ohos",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
     "$graphic_2d_root/rosen/modules/2d_graphics/src",
     "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",

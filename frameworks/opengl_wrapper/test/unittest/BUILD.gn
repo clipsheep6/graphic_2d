@@ -25,6 +25,7 @@ ohos_unittest("opengl_wrapper_unit_test") {
   module_out_path = module_out_path
   sources = [
     "egl_core_test.cpp",
+    "egl_blob_test.cpp",
     "egl_wrapper_context_test.cpp",
     "egl_wrapper_display_test.cpp",
     "egl_wrapper_entry_test.cpp",

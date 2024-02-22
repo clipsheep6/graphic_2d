@@ -14,6 +14,7 @@
  */
 #include "thread_private_data_ctl.h"
 
+#include "EGL/egl_wrapper_entry.h"
 #include "wrapper_log.h"
 namespace OHOS {
 constexpr int32_t PTHREAD_KEY_T_NOT_INITIALIZED = -1;
@@ -43,6 +44,11 @@ ThreadPrivateData* ThreadPrivateDataCtl::GetPrivateData()
         pthread_setspecific(key_, data);
     }
     return data;
+}
+
+void ThreadPrivateDataCtl::ClearError()
+{
+    OHOS::EglGetErrorImpl();
 }
 
 void ThreadPrivateDataCtl::ClearPrivateData()

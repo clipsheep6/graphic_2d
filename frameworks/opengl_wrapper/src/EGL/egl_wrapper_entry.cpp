@@ -31,7 +31,7 @@ using namespace OHOS;
 namespace OHOS {
 static inline void ClearError()
 {
-    ThreadPrivateDataCtl::clearError();
+    ThreadPrivateDataCtl::ClearError();
 }
 
 static EglWrapperDisplay *ValidateDisplay(EGLDisplay dpy)

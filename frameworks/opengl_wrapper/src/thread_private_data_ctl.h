@@ -18,6 +18,7 @@
 
 #include <pthread.h>
 #include <EGL/egl.h>
+#include "EGL/egl_wrapper_entry.h"
 
 #include "hook.h"
 namespace OHOS {

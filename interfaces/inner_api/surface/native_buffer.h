@@ -38,6 +38,7 @@
  */
 
 #include <stdint.h>
+#include "external_window.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,6 +68,9 @@ enum OH_NativeBuffer_Usage {
  * @version 1.0
  */
 enum OH_NativeBuffer_Format {
+    NATIVEBUFFER_PIXEL_FMT_CLUT8 = 0,                 /// < CLUT8 format */
+    NATIVEBUFFER_PIXEL_FMT_CLUT1,                     /// < CLUT1 format */
+    NATIVEBUFFER_PIXEL_FMT_CLUT4,                     /// < CLUT4 format */
     NATIVEBUFFER_PIXEL_FMT_RGB_565 = 3,               /// < RGB565 format */
     NATIVEBUFFER_PIXEL_FMT_RGBA_5658,                 /// < RGBA5658 format */
     NATIVEBUFFER_PIXEL_FMT_RGBX_4444,                 /// < RGBX4444 format */
@@ -85,6 +89,21 @@ enum OH_NativeBuffer_Format {
     NATIVEBUFFER_PIXEL_FMT_BGRA_5551,                 /// < BGRA5551 format */
     NATIVEBUFFER_PIXEL_FMT_BGRX_8888,                 /// < BGRX8888 format */
     NATIVEBUFFER_PIXEL_FMT_BGRA_8888,                 /// < BGRA8888 format */
+    NATIVEBUFFER_PIXEL_FMT_YUV_422_T,                 /// < YUV422 interleaved format */
+    NATIVEBUFFER_PIXEL_FMT_YCBCR_422_SP,              /// < YCBCR422 semi-plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YCRCR_422_SP,              /// < YCRCR422 semi-plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YCBCR_420_SP,              /// < YCBCR420 semi-plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YCRCR_420_SP,              /// < YCRCR420 semi-plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YCBCR_422_P,               /// < YCBCR422 plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YCRCR_422_P,               /// < YCRCR422 plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YCBCR_420_P,               /// < YCBCR420 plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YCRCR_420_P,               /// < YCRCR420 plannar format */
+    NATIVEBUFFER_PIXEL_FMT_YUYV_422_PKG,              /// < YUYV422 packed format */
+    NATIVEBUFFER_PIXEL_FMT_UYVY_422_PKG,              /// < UYVY422 packed format */
+    NATIVEBUFFER_PIXEL_FMT_YVYU_422_PKG,              /// < YVYU422 packed format */
+    NATIVEBUFFER_PIXEL_FMT_VYUY_422_PKG,              /// < VYUY422 packed format */
+    NATIVEBUFFER_PIXEL_FMT_RGBA_1010102,              /// < RGBA_1010102 packed format */
+    NATIVEBUFFER_PIXEL_FMT_VENDER_MASK = 0X7FFF0000,  /// < vender mask format */
     NATIVEBUFFER_PIXEL_FMT_BUTT = 0X7FFFFFFF          /// < Invalid pixel format */
 };
 
@@ -163,6 +182,49 @@ enum OH_NativeBuffer_ColorSpace {
 };
 
 /**
+ * @brief Indicates the transform type of a native buffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 12
+ * @version 1.0
+ */
+enum OH_NativeBuffer_TransformType {
+    NATIVEBUFFER_ROTATE_NONE = 0,         /**< No rotation */
+    NATIVEBUFFER_ROTATE_90,               /**< Rotation by 90 degrees */
+    NATIVEBUFFER_ROTATE_180,              /**< Rotation by 180 degrees */
+    NATIVEBUFFER_ROTATE_270,              /**< Rotation by 270 degrees */
+    NATIVEBUFFER_FLIP_H,                  /**< Flip horizontally */
+    NATIVEBUFFER_FLIP_V,                  /**< Flip vertically */
+    NATIVEBUFFER_FLIP_H_ROT90,            /**< Flip horizontally and rotate 90 degrees */
+    NATIVEBUFFER_FLIP_V_ROT90,            /**< Flip vertically and rotate 90 degrees */
+    NATIVEBUFFER_FLIP_H_ROT180,           /**< Flip horizontally and rotate 180 degrees */
+    NATIVEBUFFER_FLIP_V_ROT180,           /**< Flip vertically and rotate 180 degrees */
+    NATIVEBUFFER_FLIP_H_ROT270,           /**< Flip horizontally and rotate 270 degrees */
+    NATIVEBUFFER_FLIP_V_ROT270,           /**< Flip vertically and rotate 270 degrees */
+};
+
+/**
+ * @brief Indicates the color gamut of a native buffer.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 12
+ * @version 1.0
+ */
+enum OH_NativeBuffer_ColorGamut {
+    NATIVEBUFFER_COLOR_GAMUT_NATIVE = 0,            /**< Native or default */
+    NATIVEBUFFER_COLOR_GAMUT_STANDARD_BT601 = 1,    /**< Standard BT601 */
+    NATIVEBUFFER_COLOR_GAMUT_STANDARD_BT709 = 2,    /**< Standard BT709 */
+    NATIVEBUFFER_COLOR_GAMUT_DCI_P3 = 3,            /**< DCI P3 */
+    NATIVEBUFFER_COLOR_GAMUT_SRGB = 4,              /**< SRGB */
+    NATIVEBUFFER_COLOR_GAMUT_ADOBE_RGB = 5,         /**< Adobe RGB */
+    NATIVEBUFFER_COLOR_GAMUT_DISPLAY_P3 = 6,        /**< Display P3 */
+    NATIVEBUFFER_COLOR_GAMUT_BT2020 = 7,            /**< BT2020 */
+    NATIVEBUFFER_COLOR_GAMUT_BT2100_PQ = 8,         /**< BT2100 PQ */
+    NATIVEBUFFER_COLOR_GAMUT_BT2100_HLG = 9,        /**< BT2100 HLG */
+    NATIVEBUFFER_COLOR_GAMUT_DISPLAY_BT2020 = 10,   /**< Display BT2020*/
+};
+
+/**
  * @brief <b>OH_NativeBuffer</b> config. \n
  * Used to allocating new <b>OH_NativeBuffer</b> andquery parameters if existing ones.
  *
@@ -177,6 +239,31 @@ typedef struct {
     int32_t usage;           ///< Combination of buffer usage
     int32_t stride;          ///< the stride of memory
 } OH_NativeBuffer_Config;
+
+/**
+ * @brief Holds info for a single image plane. \n 
+ * 
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 12
+ * @version 1.0
+ */
+typedef struct {
+    uint64_t offset;         ///< Offset in bytes of plane.
+    uint32_t rowStride;      ///< Distance in bytes from the first value of one row of the image to the first value of the next row.
+    uint32_t columnStride;   ///< Distance in bytes from the first value of one column of the image to the first value of the next column.
+} OH_NativeBuffer_Plane;
+
+/**
+ * @brief Holds all image plane. \n
+ *  
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @since 12
+ * @version 1.0
+ */
+typedef struct {
+    uint32_t planeCount;              ///< Number of distinct planes.
+    OH_NativeBuffer_Plane planes[4];  ///< Array of image planes.
+} OH_NativeBuffer_Planes;
 
 /**
  * @brief Alloc a <b>OH_NativeBuffer</b> that matches the passed BufferRequestConfig. \n
@@ -272,6 +359,31 @@ uint32_t OH_NativeBuffer_GetSeqNum(OH_NativeBuffer *buffer);
  * @version 1.0
  */
 int32_t OH_NativeBuffer_SetColorSpace(OH_NativeBuffer *buffer, OH_NativeBuffer_ColorSpace colorSpace);
+
+/**
+ * @brief Provide direct cpu access to the potentially multi-plannar OH_NativeBuffer in the process's address space.
+ * 
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> instance.
+ * @param virAddr Indicates the address of the <b>OH_NativeBuffer</b> in virtual memory.
+ * @param outPlanes Indicates all image planes that contain the pixel data.
+ * @return Returns an error code, 0 is sucess, otherwise, failed.
+ * @since 12
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_MapPlanes(OH_NativeBuffer *buffer, void **virAddr, OH_NativeBuffer_Planes *outPlanes);
+
+/**
+ * @brief Converts an <b>OHNativeWindowBuffer</b> instance to an <b>OH_NativeBuffer</b>.
+ * 
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
+ * @param nativeWindowBuffer Indicates the pointer to a <b>OHNativeWindowBuffer</b> instance.
+ * @param buffer Indicates the pointer to a <b>OH_NativeBuffer</b> pointer.
+ * @return Returns an error code, 0 is sucess, otherwise, failed.
+ * @since 12
+ * @version 1.0
+ */
+int32_t OH_NativeBuffer_FromNativeWindowBuffer(OHNativeWindowBuffer *nativeWindowBuffer, OH_NativeBuffer **buffer);
 #ifdef __cplusplus
 }
 #endif

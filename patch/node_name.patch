@@ -1,0 +1,134 @@
+diff --git a/rosen/modules/render_service_base/include/command/rs_node_command.h b/rosen/modules/render_service_base/include/command/rs_node_command.h
+index 867a14bf5..c3e3842a4 100644
+--- a/rosen/modules/render_service_base/include/command/rs_node_command.h
++++ b/rosen/modules/render_service_base/include/command/rs_node_command.h
+@@ -67,6 +67,8 @@ enum RSNodeCommandType : uint16_t {
+ 
+     MARK_NODE_GROUP,
+     MARK_NODE_SINGLE_FRAME_COMPOSER,
++
++    SET_NODE_NAME,
+ };
+ 
+ class RSB_EXPORT RSNodeCommandHelper {
+@@ -130,6 +132,7 @@ public:
+     }
+ 
+     static void SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze);
++    static void SetNodeName(RSContext& context, NodeId nodeId, std::string nodeName);
+     static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced);
+     static void MarkNodeSingleFrameComposer(RSContext& context, NodeId nodeId, bool isNodeFasterDraw, pid_t pid);
+ 
+@@ -222,6 +225,8 @@ ADD_COMMAND(RSUpdatePropertyDrawingMatrix,
+ 
+ ADD_COMMAND(RSSetFreeze,
+     ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))
++ADD_COMMAND(RSSetNodeName,
++    ARG(RS_NODE, SET_NODE_NAME, RSNodeCommandHelper::SetNodeName, NodeId, std::string))
+ ADD_COMMAND(RSMarkNodeGroup,
+     ARG(RS_NODE, MARK_NODE_GROUP, RSNodeCommandHelper::MarkNodeGroup, NodeId, bool, bool))
+ ADD_COMMAND(RSMarkNodeSingleFrameComposer,
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+index 26acc7bf9..5561363d6 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+@@ -262,6 +262,8 @@ public:
+ 
+     void SetStaticCached(bool isStaticCached);
+     bool IsStaticCached() const;
++    void SetNodeName(std::string nodeName);
++    std::string GetNodeName() const;
+     // store prev surface subtree's must-renewed info that need prepare
+     virtual void StoreMustRenewedInfo();
+     bool HasMustRenewedInfo() const;
+@@ -634,6 +636,7 @@ private:
+ #endif
+     std::atomic<bool> isCacheSurfaceNeedUpdate_ = false;
+     std::atomic<bool> isStaticCached_ = false;
++    std::string nodeName_ = "";
+     CacheType cacheType_ = CacheType::NONE;
+     // drawing group cache
+     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;
+diff --git a/rosen/modules/render_service_base/src/command/rs_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_node_command.cpp
+index 8a1886f05..3191724e4 100644
+--- a/rosen/modules/render_service_base/src/command/rs_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_node_command.cpp
+@@ -45,6 +45,15 @@ void RSNodeCommandHelper::SetFreeze(RSContext& context, NodeId nodeId, bool isFr
+     }
+ }
+ 
++void RSNodeCommandHelper::SetNodeName(RSContext& context, NodeId nodeId, std::string nodeName)
++{
++    auto& nodeMap = context.GetNodeMap();
++    auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
++    if (node) {
++        node->SetNodeName(nodeName);
++    }
++}
++
+ void RSNodeCommandHelper::MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced)
+ {
+     auto& nodeMap = context.GetNodeMap();
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp
+index a5fb35aff..d1d05c0a3 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_canvas_render_node.cpp
+@@ -111,6 +111,7 @@ void RSCanvasRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
+     if (!visitor) {
+         return;
+     }
++    RS_LOGE("liugan node_name: %{public}s", GetNodeName().c_str());
+     RSRenderNode::RenderTraceDebug();
+     visitor->ProcessCanvasRenderNode(*this);
+ }
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+index ba787aadf..351ca0f47 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+@@ -2463,6 +2463,14 @@ bool RSRenderNode::IsStaticCached() const
+ {
+     return isStaticCached_;
+ }
++void RSRenderNode::SetNodeName(std::string nodeName)
++{
++    nodeName_ = nodeName;
++}
++std::string RSRenderNode::GetNodeName() const
++{
++    return nodeName_;
++}
+ void RSRenderNode::UpdateCompletedCacheSurface()
+ {
+     std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
+diff --git a/rosen/modules/render_service_client/core/ui/rs_node.cpp b/rosen/modules/render_service_client/core/ui/rs_node.cpp
+index b62e01c80..fb1abfd0b 100755
+--- a/rosen/modules/render_service_client/core/ui/rs_node.cpp
++++ b/rosen/modules/render_service_client/core/ui/rs_node.cpp
+@@ -1232,6 +1232,15 @@ void RSNode::SetFreeze(bool isFreeze)
+     ROSEN_LOGE("SetFreeze only support RSSurfaceNode and RSCanvasNode in uniRender");
+ }
+ 
++void RSNode::SetNodeName(std::string nodeName)
++{
++    std::unique_ptr<RSCommand> command = std::make_unique<RSSetNodeName>(GetId(), nodeName);
++    auto transactionProxy = RSTransactionProxy::GetInstance();
++    if (transactionProxy != nullptr) {
++        transactionProxy->AddCommand(command, true);
++    }
++}
++
+ void RSNode::SetSpherizeDegree(float spherizeDegree)
+ {
+     SetProperty<RSSpherizeModifier, RSAnimatableProperty<float>>(RSModifierType::SPHERIZE, spherizeDegree);
+diff --git a/rosen/modules/render_service_client/core/ui/rs_node.h b/rosen/modules/render_service_client/core/ui/rs_node.h
+index 9b89b33f2..8c8f3b3e1 100755
+--- a/rosen/modules/render_service_client/core/ui/rs_node.h
++++ b/rosen/modules/render_service_client/core/ui/rs_node.h
+@@ -185,6 +185,7 @@ public:
+ 
+     // The property is valid only for CanvasNode and SurfaceNode in uniRender.
+     virtual void SetFreeze(bool isFreeze);
++    void SetNodeName(std::string nodeName);
+ 
+     void SetSandBox(std::optional<Vector2f> parentPosition);
+ 

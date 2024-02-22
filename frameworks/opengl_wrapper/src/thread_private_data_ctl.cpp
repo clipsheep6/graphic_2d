@@ -46,7 +46,7 @@ ThreadPrivateData* ThreadPrivateDataCtl::GetPrivateData()
     return data;
 }
 
-void ThreadPrivateDataCtl::clearError()
+void ThreadPrivateDataCtl::ClearError()
 {
     OHOS::EglGetErrorImpl();
 }

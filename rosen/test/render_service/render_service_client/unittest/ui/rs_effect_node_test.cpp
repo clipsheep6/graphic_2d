@@ -46,5 +46,18 @@ HWTEST_F(RSEffectNodeTest, Create001, TestSize.Level1)
     ASSERT_TRUE(effectNode != nullptr);
 }
 
+/**
+ * @tc.name: SetFreeze001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require: issueI5J8R1
+ */
+HWTEST_F(RSEffectNodeTest, SetFreeze001, TestSize.Level1)
+{
+    RSEffectNode::SharedPtr effectNode = RSEffectNode::Create(true);
+    ASSERT_TRUE(effectNode != nullptr);
+    effectNode->SetFreeze(true);
+}
+
 } // namespace Rosen
 } // namespace OHOS

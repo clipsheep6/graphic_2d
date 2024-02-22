@@ -26,6 +26,7 @@
 #include "egl_wrapper_loader.h"
 #include "../thread_private_data_ctl.h"
 #include "../wrapper_log.h"
+#include "egl_blob_cache.h"
 
 using namespace OHOS;
 namespace OHOS {
@@ -307,7 +308,6 @@ EGLBoolean EglInitializeImpl(EGLDisplay dpy, EGLint *major, EGLint *minor)
         ThreadPrivateDataCtl::SetError(EGL_BAD_DISPLAY);
         return EGL_FALSE;
     }
-
     return display->Init(major, minor);
 }
 
@@ -1189,6 +1189,8 @@ EGLint EglDupNativeFenceFDANDROIDImpl(EGLDisplay dpy, EGLSyncKHR sync)
     if (!display) {
         return EGL_FALSE;
     }
+
+    
     EGLint ret = -1;
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglDupNativeFenceFDANDROID) {
@@ -1197,6 +1199,22 @@ EGLint EglDupNativeFenceFDANDROIDImpl(EGLDisplay dpy, EGLSyncKHR sync)
         WLOGE("EglDupNativeFenceFDANDROID platform is not found.");
     }
     return ret;
+}
+
+void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
+{
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
+        table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(), BlobCache::setBlobFunc,  BlobCache::getBlobFunc);
+    } else {
+        WLOGE("EglSetBlobCacheFuncsANDROIDImpl platform is not found.");
+    }
 }
 
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
@@ -1293,6 +1311,7 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
 
     { "eglSwapBuffersWithDamageKHR", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageKHRImpl },
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
+    { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
 
 };
 

@@ -43,6 +43,7 @@ if (current_os != "ohos") {
       "src/EGL/egl.cpp",
       "src/EGL/egl_core.cpp",
       "src/EGL/egl_wrapper_context.cpp",
+      "src/EGL/egl_blob_cache.cpp",
       "src/EGL/egl_wrapper_display.cpp",
       "src/EGL/egl_wrapper_entry.cpp",
       "src/EGL/egl_wrapper_layer.cpp",

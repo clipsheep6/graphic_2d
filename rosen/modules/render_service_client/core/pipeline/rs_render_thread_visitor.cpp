@@ -588,13 +588,17 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     UpdateDirtyAndSetEGLDamageRegion(surfaceFrame);
 #endif
 
+    if (isEglSetDamageRegion_) {
 #ifndef USE_ROSEN_DRAWING
-    canvas_->clipRect(SkRect::MakeWH(bufferWidth, bufferHeight));
-    canvas_->clear(SK_ColorTRANSPARENT);
+        canvas_->clipRect(SkRect::MakeXYWH(curDirtyRegion_.left_, curDirtyRegion_.top_, curDirtyRegion_.width_,
+            curDirtyRegion_.height_));
+        canvas_->clear(SK_ColorTRANSPARENT);
 #else
-    canvas_->ClipRect(Drawing::Rect(0, 0, bufferWidth, bufferHeight), Drawing::ClipOp::INTERSECT, false);
-    canvas_->Clear(Drawing::Color::COLOR_TRANSPARENT);
+        canvas_->ClipRect(Drawing::Rect(curDirtyRegion_.left_, curDirtyRegion_.top_, curDirtyRegion_.width_,
+            curDirtyRegion_.height_), Drawing::ClipOp::INTERSECT, false);
+        canvas_->Clear(Drawing::Color::COLOR_TRANSPARENT);
 #endif // USE_ROSEN_DRAWING
+    }
     isIdle_ = false;
 
     // clear current children before traversal, we will re-add them again during traversal

@@ -217,7 +217,7 @@ int32_t HgmCore::SetTouchIsEnable(bool touchEnable)
     return EXEC_SUCCESS;
 }
 
-bool GetTouchIsEnable()
+bool HgmCore::GetTouchIsEnable()
 {
     return touchEnable_;
 }

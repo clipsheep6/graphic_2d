@@ -264,6 +264,9 @@ void RSMainThread::Init()
     mainLoop_ = [&]() {
         mainLooping_.store(true);
         RenderFrameStart(timestamp_);
+#if defined(RS_ENABLE_UNI_RENDER)
+        WaitUntilSurfaceCapProcFinished();
+#endif
         PerfMultiWindow();
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
@@ -1367,6 +1370,34 @@ void RSMainThread::NotifyDisplayNodeBufferReleased()
     std::lock_guard<std::mutex> lock(displayNodeBufferReleasedMutex_);
     displayNodeBufferReleased_ = true;
     displayNodeBufferReleasedCond_.notify_one();
+}
+
+void RSMainThread::NotifySurfaceCapProcFinish()
+{
+    RS_TRACE_NAME("RSMainThread::NotifySurfaceCapProcFinish");
+    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
+    surfaceCapProcFinished_ = true;
+    surfaceCapProcTaskCond_.notify_one();
+}
+
+void RSMainThread::WaitUntilSurfaceCapProcFinished()
+{
+    if (GetDeviceType() != DeviceType::PHONE) {
+        return;
+    }
+    std::unique_lock<std::mutex> lock(surfaceCapProcMutex_);
+    if (surfaceCapProcFinished_) {
+        return;
+    }
+    RS_OPTIONAL_TRACE_BEGIN("RSMainThread::WaitUntilSurfaceCapProcFinished");
+    surfaceCapProcTaskCond_.wait(lock, [this]() { return surfaceCapProcFinished_; });
+    RS_OPTIONAL_TRACE_END();
+}
+
+void RSMainThread::SetSurfaceCapProcFinished(bool flag)
+{
+    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
+    surfaceCapProcFinished_ = flag;
 }
 
 void RSMainThread::NotifyDrivenRenderFinish()

@@ -158,6 +158,7 @@ GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
         transform_ = static_cast<GraphicTransformType>(config.transform);
         surfaceBufferWidth_ = config.width;
         surfaceBufferHeight_ = config.height;
+        bufferRequestConfig_ = config;
         handle_ = handle;
         BLOGD("buffer handle w: %{public}d h: %{public}d t: %{public}d",
             handle_->width, handle_->height, config.transform);
@@ -617,5 +618,11 @@ GSError SurfaceBufferImpl::EraseMetadataKey(uint32_t key)
         return GSERROR_OK;
     }
     return GenerateError(GSERROR_API_FAILED, dret);
+}
+
+const BufferRequestConfig& SurfaceBufferImpl::GetBufferRequestConfig() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return bufferRequestConfig_;
 }
 } // namespace OHOS

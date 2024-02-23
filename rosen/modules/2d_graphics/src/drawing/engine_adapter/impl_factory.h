@@ -50,6 +50,8 @@
 #include "impl_interface/surface_impl.h"
 #include "impl_interface/text_blob_builder_impl.h"
 #include "impl_interface/memory_stream_impl.h"
+#include "impl_interface/path_measure_impl.h"
+#include "impl_interface/picture_recorder_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -105,6 +107,10 @@ public:
     static std::shared_ptr<MemoryStreamImpl> CreateMemoryStreamImpl();
     static std::shared_ptr<MemoryStreamImpl> CreateMemoryStreamImpl(const void* data, size_t length, bool copyData);
     static std::shared_ptr<ResourceHolderImpl> CreateResourceHolderImpl();
+    static std::unique_ptr<PathMeasureImpl> CreatePathMeasureImpl();
+    static std::unique_ptr<PathMeasureImpl> CreatePathMeasureImpl(const Path& path, bool forceClosed,
+        scalar resScale = 1);
+    static std::unique_ptr<PictureRecorderImpl> CreatePictureRecorderImpl();
 };
 } // namespace Drawing
 } // namespace Rosen

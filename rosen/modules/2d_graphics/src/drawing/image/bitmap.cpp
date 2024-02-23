@@ -193,6 +193,16 @@ bool Bitmap::Deserialize(std::shared_ptr<Data> data)
     return bmpImplPtr->Deserialize(data);
 }
 
+int Bitmap::RowBytesAsPixels() const
+{
+    return bmpImplPtr->RowBytesAsPixels();
+}
+
+int Bitmap::ComputeByteSize() const
+{
+    return bmpImplPtr->ComputeByteSize();
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

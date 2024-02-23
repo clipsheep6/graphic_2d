@@ -148,6 +148,17 @@ public:
         return fontImpl_->DowncastingTo<T>();
     }
 
+    bool IsForceAutoHinting() const;
+    bool IsEmbeddedBitmaps() const;
+    bool IsSubpixel() const;
+    bool IsLinearMetrics() const;
+    bool IsEmbolden() const;
+    void SetForceAutoHinting(bool forceAutoHinting);
+    void SetEmbeddedBitmaps(bool embeddedBitmaps);
+    FontHinting GetHinting() const;
+    scalar GetScaleX() const;
+    scalar GetSkewX() const;
+
 private:
     std::shared_ptr<FontImpl> fontImpl_;
 };

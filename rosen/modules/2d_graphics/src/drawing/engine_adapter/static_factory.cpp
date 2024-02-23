@@ -304,6 +304,11 @@ FontStyleSet* StaticFactory::CreateEmpty()
 #endif
     return EngineStaticFactory::CreateEmpty();
 }
+
+bool StaticFactory::GetFillPath(const Brush& brush, const Path& src, Path* dst, const Rect* cullRect, const Matrix& ctm)
+{
+    return EngineStaticFactory::GetFillPath(brush, src, dst, cullRect, ctm);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

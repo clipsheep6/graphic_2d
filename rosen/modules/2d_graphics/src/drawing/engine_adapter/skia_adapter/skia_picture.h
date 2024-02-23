@@ -39,6 +39,9 @@ public:
 
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
+    void SetSkPicture(const sk_sp<SkPicture>& skPicture);
+    std::shared_ptr<Picture> MakePlaceHolder(Rect cull) override;
+    void PlayBack(CoreCanvas* canvas) override;
 
 private:
     sk_sp<SkPicture> skiaPicture_;

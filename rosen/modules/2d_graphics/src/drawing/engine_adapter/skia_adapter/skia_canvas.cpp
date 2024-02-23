@@ -32,8 +32,9 @@
 #include "skia_image_info.h"
 #include "skia_data.h"
 #include "skia_text_blob.h"
+#include "skia_adapter/skia_convert_utils.h"
 
-#include "draw/core_canvas.h"
+#include "draw/canvas.h"
 #include "image/bitmap.h"
 #include "image/image.h"
 #include "utils/log.h"
@@ -1179,6 +1180,31 @@ bool SkiaCanvas::ConvertToHMSymbolData(const DrawingHMSymbolData& symbol, HMSymb
     }
     skSymbol.symbolInfo_.renderGroups = groups;
     return true;
+}
+
+Size SkiaCanvas::GetBaseLayerSize()
+{
+    if (!skCanvas_) {
+        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return Size();
+    }
+    auto size = skCanvas_->getBaseLayerSize();
+    return Size(size.width(), size.height());
+}
+
+int SkiaCanvas::SaveLaterAlpha(const Rect* bounds, U8CPU alpha)
+{
+    if (!skCanvas_) {
+        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return 0;
+    }
+    if (!bounds) {
+        LOGE("bounds is null, return on line %{public}d", __LINE__);
+        return 0;
+    }
+    SkRect skBounds;
+    SkiaConvertUtils::DrawingRectCastToSkRect(*bounds, skBounds);
+    return skCanvas_->saveLayerAlpha(&skBounds, alpha);
 }
 } // namespace Drawing
 } // namespace Rosen

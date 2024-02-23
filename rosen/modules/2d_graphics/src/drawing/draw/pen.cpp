@@ -204,6 +204,16 @@ bool operator!=(const Pen& p1, const Pen& p2)
 {
     return !(p1 == p2);
 }
+
+bool Pen::IsDither() const
+{
+    return brush_.IsDither();
+}
+
+void Pen::SetDither(bool dither)
+{
+    brush_.SetDither(dither);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

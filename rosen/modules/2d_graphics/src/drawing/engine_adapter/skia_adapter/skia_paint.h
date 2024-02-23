@@ -55,6 +55,7 @@ public:
     static const Rect& ComputeFastBounds(const Brush& brush, const Rect& orig, Rect* storage);
 
     static bool AsBlendMode(const Brush& brush);
+    static bool GetFillPath(const Brush& brush, const Path& src, Path* dst, const Rect* cullRect, const Matrix& ctm);
 
 private:
     static void ApplyFilter(SkPaint& paint, const Filter& filter);

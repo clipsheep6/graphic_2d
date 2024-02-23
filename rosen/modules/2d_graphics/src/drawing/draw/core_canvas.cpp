@@ -518,6 +518,24 @@ void CoreCanvas::AttachPaint()
         impl_->AttachPaint(paintPen_);
     }
 }
+
+Size CoreCanvas::GetBaseLayerSize()
+{
+    if (!impl_) {
+        LOGE("impl_ is null, return on line %{public}d", __LINE__);
+        return Size();
+    }
+    return impl_->GetBaseLayerSize();
+}
+
+int CoreCanvas::SaveLaterAlpha(const Rect* bounds, U8CPU alpha)
+{
+    if (!impl_) {
+        LOGE("impl_ is null, return on line %{public}d", __LINE__);
+        return 0;
+    }
+    return impl_->SaveLaterAlpha(bounds, alpha);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

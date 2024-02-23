@@ -66,6 +66,24 @@ struct FontMetrics {
     scalar fUnderlinePosition;
     scalar fStrikeoutThickness;
     scalar fStrikeoutPosition;
+
+    bool hasUnderlinePosition(scalar* position)
+    {
+        if (fFlags & UNDERLINE_POSITION_IS_VALID_FLAG) {
+            *position = fUnderlinePosition;
+            return true;
+        }
+        return false;
+    }
+
+    bool hasUnderlineThickness(scalar* thickness)
+    {
+        if (fFlags & UNDERLINE_THICKNESS_IS_VALID_FLAG) {
+            *thickness = fUnderlineThickness;
+            return true;
+        }
+        return false;
+    }
 };
 } // namespace Drawing
 } // namespace Rosen

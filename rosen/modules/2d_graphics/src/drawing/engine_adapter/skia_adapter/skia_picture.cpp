@@ -50,6 +50,38 @@ bool SkiaPicture::Deserialize(std::shared_ptr<Data> data)
     skiaPicture_ = SkPicture::MakeFromData(data->GetData(), data->GetSize());
     return skiaPicture_ != nullptr;
 }
+
+void SkiaPicture::SetSkPicture(const sk_sp<SkPicture>& skPicture)
+{
+    skiaPicture_ = skPicture;
+}
+
+std::shared_ptr<Picture> SkiaPicture::MakePlaceHolder(Rect cull)
+{
+    if (skiaPicture_ == nullptr) {
+        LOGE("SkiaPicture::MakePlaceHolder, skiaPicture_ is nullptr!");
+        return nullptr;
+    }
+    SkRect skCull = SkRect::MakeLTRB(cull.GetLeft(), cull.GetTop(), cull.GetRight(), cull.GetBottom());
+    sk_sp<SkPicture> skPicture = skiaPicture_->MakePlaceholder(skCull);
+    std::shared_ptr<Picture> pic = std::make_shared<Picture>();
+    pic->GetImpl<SkiaPicture>()->SetSkPicture(skPicture);
+    return pic;
+}
+
+void SkiaPicture::PlayBack(CoreCanvas* canvas)
+{
+    if (skiaPicture_ == nullptr) {
+        LOGE("SkiaPicture::PlayBack, skiaPicture_ is nullptr!");
+        return;
+    }
+    if (canvas == nullptr) {
+        LOGE("SkiaPicture::PlayBack, canvas is nullptr!");
+        return;
+    }
+    auto skCanvas = std::make_shared<SkCanvas>(canvas->GetWidth(), canvas->GetHeight());
+    skiaPicture_->playback(skCanvas);
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

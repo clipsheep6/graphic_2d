@@ -87,6 +87,7 @@ public:
 
     bool GetMinMaxScales(scalar scaleFactors[2]) override;
     bool HasPerspective() const override;
+    bool SetRectToRect(const Rect& src, const Rect& dst, int stf) override;
 
 private:
     SkMatrix skMatrix_;

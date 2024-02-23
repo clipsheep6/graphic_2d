@@ -255,6 +255,31 @@ bool Path::Deserialize(std::shared_ptr<Data> data)
     return impl_->Deserialize(data);
 }
 
+bool Path::operator==(const Path& p) const
+{
+    return impl_->Equals(*this, p);
+}
+
+bool Path::IsLine(Point line[2]) const
+{
+    return impl_->IsLine(line);
+}
+
+bool Path::IsRect(Rect* rect, bool* isClosed, PathDirection* direction) const
+{
+    return impl_->IsRect(rect, isClosed, direction);
+}
+
+bool Path::IsOval(Rect* bounds) const
+{
+    return impl_->IsOval(bounds);
+}
+
+bool Path::IsRRect(RoundRect* rrect) const
+{
+    return impl_->IsRRect(rrect);
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

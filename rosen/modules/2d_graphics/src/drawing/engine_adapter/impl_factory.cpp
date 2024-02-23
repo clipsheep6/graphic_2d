@@ -429,6 +429,21 @@ std::shared_ptr<ResourceHolderImpl> ImplFactory::CreateResourceHolderImpl()
 #endif
     return EngineImplFactory::CreateResourceHolder();
 }
+
+std::unique_ptr<PathMeasureImpl> ImplFactory::CreatePathMeasureImpl()
+{
+    return EngineImplFactory::CreatePathMeasure();
+}
+
+std::unique_ptr<PathMeasureImpl> ImplFactory::CreatePathMeasureImpl(const Path& path, bool forceClosed, scalar resScale)
+{
+    return EngineImplFactory::CreatePathMeasure(path, forceClosed, resScale);
+}
+
+std::unique_ptr<PictureRecorderImpl> ImplFactory::CreatePictureRecorderImpl()
+{
+    return EngineImplFactory::CreatePictureRecorder();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

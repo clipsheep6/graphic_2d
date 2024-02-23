@@ -105,6 +105,56 @@ int Font::CountText(const void* text, size_t byteLength, TextEncoding encoding) 
 {
     return fontImpl_->CountText(text, byteLength, encoding);
 }
+
+bool Font::IsForceAutoHinting() const
+{
+    return fontImpl_->IsForceAutoHinting();
+}
+
+bool Font::IsEmbeddedBitmaps() const
+{
+    return fontImpl_->IsEmbeddedBitmaps();
+}
+
+bool Font::IsSubpixel() const
+{
+    return fontImpl_->IsSubpixel();
+}
+
+bool Font::IsLinearMetrics() const
+{
+    return fontImpl_->IsLinearMetrics();
+}
+
+bool Font::IsEmbolden() const
+{
+    return fontImpl_->IsEmbolden();
+}
+
+void Font::SetForceAutoHinting(bool forceAutoHinting)
+{
+    fontImpl_->SetForceAutoHinting(forceAutoHinting);
+}
+
+void Font::SetEmbeddedBitmaps(bool embeddedBitmaps)
+{
+    fontImpl_->SetEmbeddedBitmaps(embeddedBitmaps);
+}
+
+FontHinting Font::GetHinting() const
+{
+    return fontImpl_->GetHinting();
+}
+
+scalar Font::GetScaleX() const
+{
+    return fontImpl_->GetScaleX();
+}
+
+scalar Font::GetSkewX() const
+{
+    return fontImpl_->GetSkewX();
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

@@ -47,6 +47,7 @@
 #include "utils/sampling_options.h"
 #include "utils/scalar.h"
 #include "utils/vertices.h"
+#include "utils/size.h"
 
 class SkSVGDOM;
 
@@ -170,6 +171,9 @@ public:
 
     // paint
     virtual void AttachPaint(const Paint& paint) = 0;
+
+    virtual Size GetBaseLayerSize() = 0;
+    virtual int SaveLaterAlpha(const Rect* bounds, U8CPU alpha) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

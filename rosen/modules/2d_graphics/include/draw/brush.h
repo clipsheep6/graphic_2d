@@ -23,6 +23,7 @@
 #include "effect/shader_effect.h"
 #include "utils/drawing_macros.h"
 #include "utils/rect.h"
+#include "utils/matrix.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -83,6 +84,12 @@ public:
     friend DRAWING_API bool operator==(const Brush& b1, const Brush& b2);
     friend DRAWING_API bool operator!=(const Brush& b1, const Brush& b2);
 
+    bool IsDither() const;
+    void SetDither(bool dither);
+    bool GetFillPath(const Path& src, Path* dst, const Rect* cullRect, scalar resScale = 1);
+    bool GetFillPath(const Path& src, Path* dst, const Rect* cullRect, const Matrix& ctm);
+    bool GetFillPath(const Path& src, Path* dst);
+
 private:
     Color color_;
     BlendMode blendMode_;
@@ -93,6 +100,7 @@ private:
 
     bool antiAlias_;
     bool hasFilter_ = false;
+    bool dither_;
 };
 } // namespace Drawing
 } // namespace Rosen

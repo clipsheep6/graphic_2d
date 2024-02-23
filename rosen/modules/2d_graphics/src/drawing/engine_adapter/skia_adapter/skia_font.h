@@ -58,6 +58,16 @@ public:
     int CountText(const void* text, size_t byteLength, TextEncoding encoding) const override;
 
     const SkFont& GetFont() const;
+    bool IsForceAutoHinting() const override;
+    bool IsEmbeddedBitmaps() const override;
+    bool IsSubpixel() const override;
+    bool IsLinearMetrics() const override;
+    bool IsEmbolden() const override;
+    void SetForceAutoHinting(bool forceAutoHinting) override;
+    void SetEmbeddedBitmaps(bool embeddedBitmaps) override;
+    FontHinting GetHinting() const override;
+    scalar GetScaleX() const override;
+    scalar GetSkewX() const override;
 
 private:
     SkFont skFont_;

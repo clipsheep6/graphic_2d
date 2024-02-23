@@ -24,6 +24,9 @@
 #include "skia_path.h"
 #include "skia_path_effect.h"
 #include "skia_shader_effect.h"
+#include "skia_matrix.h"
+
+#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -300,6 +303,33 @@ bool SkiaPaint::AsBlendMode(const Brush& brush)
     SkPaint skPaint;
     BrushToSkPaint(brush, skPaint);
     return skPaint.asBlendMode().has_value();
+}
+
+bool GetFillPath(const Brush& brush, const Path& src, Path* dst, const Rect* cullRect, const Matrix& ctm)
+{
+    if (dst == nullptr) {
+        LOGE("dst or cullRect is nullptr, return on line %{public}d", __LINE__);
+        return false;
+    }
+    SkPaint skPaint;
+    BrushToSkPaint(brush, skPaint);
+    auto skSrc = src.GetImpl<SkiaPath>();
+    auto skDst = dst->GetImpl<SkiaPath>();
+    if (skSrc == nullptr || skDst == nullptr) {
+        LOGE("skSrc or skDst is nullptr, return on line %{public}d", __LINE__);
+        return false;
+    }
+    auto m = ctm.GetImplPtr<SkiaMatrix>();
+    if (!m) {
+        LOGE("matrix is nullptr, return on line %{public}d", __LINE__);
+        return false;
+    }
+    if (cullRect == nullptr) {
+        return skPaint.getFillPath(skSrc->GetPath(), &skDst->GetPath(), nullptr, m->ExportSkiaMatrix());
+    }
+    SkRect skCullRect;
+    SkiaConvertUtils::DrawingRectCastToSkRect(*cullRect, skCullRect);
+    return skPaint.getFillPath(skSrc->GetPath(), &skDst->GetPath(), &skCullRect, m->ExportSkiaMatrix());
 }
 } // namespace Drawing
 } // namespace Rosen

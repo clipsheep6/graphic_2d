@@ -237,6 +237,8 @@ typedef struct OH_Drawing_SamplingOptions OH_Drawing_SamplingOptions;
  */
 typedef struct OH_Drawing_TextBlobBuilder OH_Drawing_TextBlobBuilder;
 
+typedef struct OH_Drawing_GpuContext OH_Drawing_GpuContext;
+
 /**
  * @brief Enumerates storage formats of bitmap pixels.
  *

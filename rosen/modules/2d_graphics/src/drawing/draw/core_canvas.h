@@ -21,6 +21,7 @@
 #include "common/rs_macros.h"
 #include "drawing/engine_adapter/impl_interface/core_canvas_impl.h"
 #include "utils/drawing_macros.h"
+#include "vulkan_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -376,6 +377,8 @@ public:
 
     virtual float GetAlpha() const;
     virtual int GetAlphaSaveCount() const;
+    void InitGpuContext();
+    std::shared_ptr<Drawing::GPUContext> GetGpuContext();
 
     template<typename T>
     T* GetImpl() const
@@ -395,6 +398,7 @@ private:
 #ifdef ACE_ENABLE_GPU
     std::shared_ptr<GPUContext> gpuContext_;
 #endif
+    std::shared_ptr<Drawing::GPUContext> CoreCanvas::GetGpuContext();
 };
 } // namespace Drawing
 } // namespace Rosen

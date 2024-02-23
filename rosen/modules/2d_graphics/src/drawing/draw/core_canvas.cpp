@@ -518,6 +518,35 @@ void CoreCanvas::AttachPaint()
         impl_->AttachPaint(paintPen_);
     }
 }
+
+void CoreCanvas::InitGpuContext()
+{
+#ifdef RS_ENABLE_GL
+    Drawing::GPUContextOptions options;
+    auto drGPUContext = std::make_shared<Drawing::GPUContext>();
+    if (!drGPUContext->BuildFromGL(options)) {
+        LOGE("SetUpGrContext drGPUContext is null");
+        return;
+    }
+    drGPUContext_ = std::move(drGPUContext);
+    return;
+
+#elif define(RS_ENABLE_VULKAN)
+    std::shared_ptr<Drawing::GPUContext> drawingContext = VulkanContext::GetSingleton().CreateDrawingContext();
+    std::shared_ptr<Drawing::GPUContext> drGPUContext(drawingContext);
+    drGPUContext_ = std::move(drGPUContext);
+#endif
+}
+
+std::shared_ptr<Drawing::GPUContext> CoreCanvas::GetGpuContext()
+{
+    if (drGPUContext_ == nullptr) {
+        this->InitGpuContext();
+    }
+
+    return drGPUContext_;
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

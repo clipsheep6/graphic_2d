@@ -22,6 +22,8 @@ const TAG = '[Sample_DrawingAPI]';
 @Component
 struct Index {
   private xComponentContext: XComponentContext | undefined = undefined;
+  //需要初始化加载image的so，否则native层在创建ImageSourceNapiCreate的时候会失败
+  imagePackerApi: image.ImagePacker = image.createImagePacker();
 
   build() {
     Column() {

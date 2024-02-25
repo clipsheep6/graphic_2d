@@ -143,14 +143,18 @@ skt::ParagraphStyle ParagraphBuilderImpl::TextStyleToSkStyle(const ParagraphStyl
 
     PaintRecord paint;
     paint.SetColor(textStyle.getColor());
-    textStyle.setForegroundPaintID(AllocPaintID(paint));
+    if (txt.customSpTextStyle) {
+        textStyle = this->TextStyleToSkStyle(txt.spTextStyle);
+    } else {
+        textStyle.setForegroundPaintID(AllocPaintID(paint));
+        textStyle.setFontStyle(MakeFontStyle(txt.fontWeight, txt.fontStyle));
+        textStyle.setFontSize(SkDoubleToScalar(txt.fontSize));
+        textStyle.setHeight(SkDoubleToScalar(txt.height));
+        textStyle.setHeightOverride(txt.heightOverride);
+        textStyle.setFontFamilies({ SkString(txt.fontFamily.c_str()) });
+        textStyle.setLocale(SkString(txt.locale.c_str()));
+    }
 
-    textStyle.setFontStyle(MakeFontStyle(txt.fontWeight, txt.fontStyle));
-    textStyle.setFontSize(SkDoubleToScalar(txt.fontSize));
-    textStyle.setHeight(SkDoubleToScalar(txt.height));
-    textStyle.setHeightOverride(txt.heightOverride);
-    textStyle.setFontFamilies({ SkString(txt.fontFamily.c_str()) });
-    textStyle.setLocale(SkString(txt.locale.c_str()));
     skStyle.setTextStyle(textStyle);
     skt::StrutStyle strutStyle;
     strutStyle.setFontStyle(MakeFontStyle(txt.strutFontWeight, txt.strutFontStyle));

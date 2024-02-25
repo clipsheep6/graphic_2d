@@ -87,6 +87,7 @@ bool TypographyStyle::IsEllipsized() const
 {
 #ifndef USE_GRAPHIC_TEXT_GINE
     return !ellipsis_.empty();
+
 #else
     return !ellipsis.empty();
 #endif

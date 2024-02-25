@@ -94,7 +94,11 @@ public:
 
     void CopyTextStylePaint(const TextStyle& txt, skia::textlayout::TextStyle& skStyle);
 
-    SkFontStyle MakeSkFontStyle(FontWeight fontWeight, FontStyle fontStyle);
+#ifndef USE_ROSEN_DRAWING
+    SkFontStyle MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle);
+#else
+    RSFontStyle MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle);
+#endif
 
     SkFontStyle::Weight ConvertToSkFontWeight(FontWeight fontWeight);
 

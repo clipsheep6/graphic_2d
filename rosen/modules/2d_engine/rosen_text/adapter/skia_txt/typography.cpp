@@ -237,8 +237,11 @@ bool Typography::GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespac
         return false;
     }
 
-    auto &skFontMetrics = sklineMetrics.fLineMetrics.at(sklineMetrics.fStartIndex).font_metrics;
-    Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, lineMetrics->firstCharMetrics);
+    // auto &skFontMetrics = sklineMetrics.fLineMetrics.at(sklineMetrics.fStartIndex).font_metrics;
+    // Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, lineMetrics->firstCharMetrics);
+    auto &fontMetrics = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics;
+    skLineMetrics.firstCharMetrics = fontMetrics;
+
 
     if (oneLine) {
         lineMetrics->ascender = sklineMetrics.fAscent;
@@ -247,17 +250,13 @@ bool Typography::GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespac
         lineMetrics->ascender = skFontMetrics.fAscent;
         lineMetrics->descender = skFontMetrics.fDescent;
     }
-
     lineMetrics->capHeight = skFontMetrics.fCapHeight;
     lineMetrics->xHeight = skFontMetrics.fXHeight;
-
-
     if (includeWhitespace) {
         lineMetrics->width = sklineMetrics.fWidthWithSpaces;
     } else {
         lineMetrics->width = sklineMetrics.fWidth;
     }
-
     lineMetrics->height = sklineMetrics.fHeight;
     lineMetrics->x = sklineMetrics.fLeft;
     lineMetrics->y = sklineMetrics.fTopHeight;
@@ -272,13 +271,13 @@ std::vector<LineMetrics> Typography::GetLineMetrics()
     std::vector<LineMetrics> lineMetrics;
     if (paragraph_ != nullptr) {
         auto metrics = paragraph_->GetLineMetrics();
-        
         for (SPText::LineMetrics& spLineMetrics : metrics) {
             LineMetrics& skLineMetrics = lineMetrics.emplace_back();
-
-            auto &skFontMetrics = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics;
-            Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, skLineMetrics.firstCharMetrics);
-
+            // auto &skFontMetrics = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics;
+            // Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics,
+            //     skLineMetrics.firstCharMetrics);
+            auto &fontMetrics = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics;
+            skLineMetrics.firstCharMetrics = fontMetrics;
             skLineMetrics.ascender = spLineMetrics.ascent;
             skLineMetrics.descender = spLineMetrics.descent;
             skLineMetrics.capHeight = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics.fCapHeight;
@@ -307,8 +306,12 @@ bool Typography::GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics)
         return false;
     }
 
-    auto &skFontMetrics = skLineMetrics.fLineMetrics.at(skLineMetrics.fStartIndex).font_metrics;
-    Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, lineMetrics->firstCharMetrics);
+    // auto &skFontMetrics = skLineMetrics.fLineMetrics.at(skLineMetrics.fStartIndex).font_metrics;
+    // Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, lineMetrics->firstCharMetrics);
+
+    auto &fontMetrics = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics;
+    skLineMetrics.firstCharMetrics = fontMetrics;
+
     lineMetrics->ascender = skFontMetrics.fAscent;
     lineMetrics->descender = skFontMetrics.fDescent;
     lineMetrics->capHeight = skFontMetrics.fCapHeight;

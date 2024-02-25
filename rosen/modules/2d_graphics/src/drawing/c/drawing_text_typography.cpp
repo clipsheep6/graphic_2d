@@ -1660,7 +1660,7 @@ void OH_Drawing_SetTypographyTextLocale(OH_Drawing_TypographyStyle* style, const
 #ifndef USE_GRAPHIC_TEXT_GINE
     ConvertToOriginalText<TypographyStyle>(style)->locale_ = locale;
 #else
-    ConvertToOriginalText<TypographyStyle>(style)->locale = locale; 
+    ConvertToOriginalText<TypographyStyle>(style)->locale = locale;
 #endif
 }
 

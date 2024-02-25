@@ -166,9 +166,13 @@ typedef struct {
     float avgCharWidth;
     /** Maximum character width, zero if unknown */
     float maxCharWidth;
-    /** Greatest extent to left of origin of any glyph bounding box, typically negative; deprecated with variable fonts */
+    /** Greatest extent to left of origin of any glyph bounding box, typically negative
+     * deprecated with variable fonts 
+     */
     float xMin;
-    /** Greatest extent to right of origin of any glyph bounding box, typically positive; deprecated with variable fonts */
+    /** Greatest extent to right of origin of any glyph bounding box, typically positive
+     * deprecated with variable fonts
+     */
     float xMax;
     /** Height of lower-case 'x', zero if unknown, typically negative */
     float xHeight;

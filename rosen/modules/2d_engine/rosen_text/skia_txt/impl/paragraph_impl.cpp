@@ -302,13 +302,23 @@ TextStyle ParagraphImpl::SkStyleToTextStyle(const skt::TextStyle& skStyle)
     return txt;
 }
 
-SkFontStyle ParagraphImpl::MakeSkFontStyle(FontWeight fontWeight, FontStyle fontStyle)
+#ifndef USE_ROSEN_DRAWING
+SkFontStyle ParagraphImpl::MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle)
 {
     auto weight = ConvertToSkFontWeight(fontWeight);
     auto slant = fontStyle == FontStyle::NORMAL ?
         SkFontStyle::Slant::kUpright_Slant : SkFontStyle::Slant::kItalic_Slant;
     return SkFontStyle(weight, SkFontStyle::Width::kNormal_Width, slant);
 }
+#else
+RSFontStyle ParagraphImpl::MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle)
+{
+    auto weight = ConvertToSkFontWeight(fontWeight);
+    auto slant = fontStyle == FontStyle::NORMAL ?
+        RSFontStyle::Slant::UPRIGHT_SLANT : RSFontStyle::Slant::ITALIC_SLANT;
+    return RSFontStyle(weight, SkFontStyle::Width::kNormal_Width, slant);
+}
+#endif
 
 SkFontStyle::Weight ParagraphImpl::ConvertToSkFontWeight(FontWeight fontWeight)
 {
@@ -369,7 +379,7 @@ SkFontArguments ParagraphImpl::MakeFontArguments(const FontVariations& fontVaria
 
 skia::textlayout::TextStyle ParagraphImpl::TXTTextStyleToSKStyle(const SPText::TextStyle& txt)
 {
-   skt::TextStyle skStyle;
+    skt::TextStyle skStyle;
     skStyle.setColor(txt.color);
     skStyle.setDecoration(static_cast<skt::TextDecoration>(txt.decoration));
     skStyle.setDecorationColor(txt.decorationColor);

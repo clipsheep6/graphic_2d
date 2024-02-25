@@ -147,7 +147,7 @@ skt::ParagraphStyle ParagraphBuilderImpl::TextStyleToSkStyle(const ParagraphStyl
         textStyle = this->TextStyleToSkStyle(txt.spTextStyle);
     } else {
         textStyle.setForegroundPaintID(AllocPaintID(paint));
-        textStyle.setFontStyle(MakeSkFontStyle(txt.fontWeight, txt.fontStyle));
+        textStyle.setFontStyle(MakeFontStyle(txt.fontWeight, txt.fontStyle));
         textStyle.setFontSize(SkDoubleToScalar(txt.fontSize));
         textStyle.setHeight(SkDoubleToScalar(txt.height));
         textStyle.setHeightOverride(txt.heightOverride);

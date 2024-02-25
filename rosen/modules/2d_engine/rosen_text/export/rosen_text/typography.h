@@ -29,7 +29,6 @@
 #include "typography_types.h"
 #include "symbol_animation_config.h"
 
-
 namespace OHOS {
 namespace Rosen {
 enum class TextRectWidthStyle {

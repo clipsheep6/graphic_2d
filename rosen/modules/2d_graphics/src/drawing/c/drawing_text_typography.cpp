@@ -1106,7 +1106,6 @@ static void ConvertLineMetrics(const LineMetrics &lineMetrics, OH_Drawing_LineMe
     drawingLineMetrics.y = lineMetrics.y;
     drawingLineMetrics.startIndex = lineMetrics.startIndex;
     drawingLineMetrics.endIndex = lineMetrics.endIndex;
-
     ConvertFontMetrics(lineMetrics.firstCharMetrics, drawingLineMetrics.firstCharMetrics);
 }
 
@@ -1633,15 +1632,15 @@ void OH_Drawing_SetTypographyTextLineStyleOnly(OH_Drawing_TypographyStyle* style
 bool OH_Drawing_TextStyleGetFontMetrics(OH_Drawing_Typography* typography, OH_Drawing_TextStyle* style,
     OH_Drawing_Font_Metrics* fontmetrics)
 {
-	bool startGetMetrics = false;
+    bool startGetMetrics = false;
     if (!typography || !style || !fontmetrics) {
         return false;
     }
     auto textstyle = ConvertToOriginalText<const OHOS::Rosen::TextStyle>(style);
     auto txtSKTypograph = ConvertToOriginalText<Typography>(typography);
     const OHOS::Rosen::Drawing::FontMetrics fontmetricsResult = txtSKTypograph->GetFontMetrics(*textstyle);
-	ConvertFontMetrics(fontmetricsResult, *fontmetrics);
-	startGetMetrics = true;
+    ConvertFontMetrics(fontmetricsResult, *fontmetrics);
+    startGetMetrics = true;
     return startGetMetrics;
 }
 

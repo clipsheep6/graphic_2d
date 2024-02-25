@@ -258,11 +258,6 @@ bool Typography::GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespac
         lineMetrics->width = sklineMetrics.fWidth;
     }
 
-    LOGE( " clp Typography::GetLineInfo includeWhitespace = %d lineMetrics->width = %f "
-        " sklineMetrics.fWidthWithSpaces = %f sklineMetrics.fWidth = %f ",
-        includeWhitespace, lineMetrics->width, 
-        sklineMetrics.fWidthWithSpaces, sklineMetrics.fWidth);
-
     lineMetrics->height = sklineMetrics.fHeight;
     lineMetrics->x = sklineMetrics.fLeft;
     lineMetrics->y = sklineMetrics.fTopHeight;
@@ -314,7 +309,6 @@ bool Typography::GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics)
 
     auto &skFontMetrics = skLineMetrics.fLineMetrics.at(skLineMetrics.fStartIndex).font_metrics;
     Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, lineMetrics->firstCharMetrics);
-
     lineMetrics->ascender = skFontMetrics.fAscent;
     lineMetrics->descender = skFontMetrics.fDescent;
     lineMetrics->capHeight = skFontMetrics.fCapHeight;

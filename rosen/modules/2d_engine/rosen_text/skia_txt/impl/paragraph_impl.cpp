@@ -312,7 +312,7 @@ SkFontStyle ParagraphImpl::MakeSkFontStyle(FontWeight fontWeight, FontStyle font
 
 SkFontStyle::Weight ParagraphImpl::ConvertToSkFontWeight(FontWeight fontWeight)
 {
-    constexpr int weightBase = 100;
+    constexpr int weightBase = 100; // fontWeight default value = 100
     return static_cast<SkFontStyle::Weight>(static_cast<int>(fontWeight) * weightBase + weightBase);
 }
 

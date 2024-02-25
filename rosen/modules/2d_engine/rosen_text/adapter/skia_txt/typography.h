@@ -61,7 +61,6 @@ public:
     bool GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespace, LineMetrics* lineMetrics) override;
     std::vector<LineMetrics> GetLineMetrics() override;
     bool GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics) override;
-
     Drawing::FontMetrics GetFontMetrics(const OHOS::Rosen::TextStyle& textStyle) override;
 private:
     std::unique_ptr<SPText::Paragraph> paragraph_ = nullptr;

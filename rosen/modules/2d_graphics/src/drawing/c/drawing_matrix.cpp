@@ -37,6 +37,7 @@ OH_Drawing_Matrix* OH_Drawing_MatrixCreateRotation(float deg, float x, float y)
     if (matrix == nullptr) {
         return nullptr;
     }
+    ////
     matrix->Rotate(deg, x, y);
     return (OH_Drawing_Matrix*)matrix;
 }

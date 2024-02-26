@@ -1,0 +1,49 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\xieyijun\\.ohos\\config\\auto_debug_MyApplication_js_perf_demo_com.example.myapplication_js_perf_demo_80086000022236642.cer",
+          "storePassword": "0000001BB50E11A87970DE9C0207F9F6C018150F8CCF9E720799CF09FDD2D9DA516015F796086C1E9050F9",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B33D663D3E8CDB165C0A7236400AA205F2B3B15BD580C38EC60679FF926872A2793C8CAC340A699",
+          "profile": "C:\\Users\\xieyijun\\.ohos\\config\\auto_debug_MyApplication_js_perf_demo_com.example.myapplication_js_perf_demo_80086000022236642.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\xieyijun\\.ohos\\config\\auto_debug_MyApplication_js_perf_demo_com.example.myapplication_js_perf_demo_80086000022236642.p12"
+        }
+      }
+    ],
+    "compileSdkVersion": 9,
+    "compatibleSdkVersion": 9,
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

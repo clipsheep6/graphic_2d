@@ -17,6 +17,7 @@
 
 #include "animation/rs_animation.h"
 #include "animation/rs_animation_callback.h"
+#include "animation/rs_animation_client_log_utils.h"
 #include "animation/rs_implicit_animation_param.h"
 #include "animation/rs_path_animation.h"
 #include "modifier/rs_property.h"
@@ -580,6 +581,12 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
         animation->SetRepeatCallback(std::move(repeatCallback));
         repeatCallback.reset();
     }
+
+    ROSEN_LOGE("liugan RSImplicitAnimator::CreateImplicitAnimation: node_id=%{public}s, animation=[id: %{public}s, delay: %{public}d, duration: %{public}d], property=[%{public}s]%{public}s, property_start=%{public}s, property_end=%{public}s",
+        std::to_string(target->GetId()).c_str(), std::to_string(animation->GetId()).c_str(), animation->GetStartDelay(), animation->GetDuration(),
+        target->GetPropertyModifierType(property).c_str(), RSAnimationClientLogUtils::ParsePropertyVaule(property).c_str(),
+        RSAnimationClientLogUtils::ParsePropertyVaule(startValue).c_str(), RSAnimationClientLogUtils::ParsePropertyVaule(endValue).c_str());
+
     target->AddAnimation(animation);
     implicitAnimations_.top().emplace_back(animation, target->GetId());
 

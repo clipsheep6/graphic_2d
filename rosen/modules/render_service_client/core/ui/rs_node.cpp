@@ -25,6 +25,7 @@
 #include "animation/rs_animation.h"
 #include "animation/rs_animation_group.h"
 #include "animation/rs_animation_callback.h"
+#include "animation/rs_animation_client_log_utils.h"
 #include "animation/rs_implicit_animator.h"
 #include "animation/rs_implicit_animator_map.h"
 #include "animation/rs_render_particle_animation.h"
@@ -502,6 +503,19 @@ void RSNode::SetProperty(RSModifierType modifierType, T value)
     auto propertyModifier = std::make_shared<ModifierName>(property);
     propertyModifiers_.emplace(modifierType, propertyModifier);
     AddModifier(propertyModifier);
+}
+
+std::string RSNode::GetPropertyModifierType(std::shared_ptr<RSPropertyBase> property)
+{
+    std::unique_lock<std::recursive_mutex> lock(propertyMutex_);
+    for (auto& it : propertyModifiers_)
+    {
+        auto storedProperty = it.second->GetProperty();
+        if (storedProperty != nullptr && storedProperty->GetId() == property->GetId()) {
+            return RSAnimationClientLogUtils::GetRSModifierTypeName(it.first);
+        }
+    }
+    return "NOT_FOUND";
 }
 
 // alpha

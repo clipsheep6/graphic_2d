@@ -178,6 +178,7 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
 
 void RSAnimationManager::OnAnimationFinished(const std::shared_ptr<RSRenderAnimation>& animation)
 {
+    ROSEN_LOGI("liugan RSAnimationManager::OnAnimationFinished, animation_id=%{public}s", std::to_string(animation->GetAnimationId()).c_str());
     NodeId targetId = animation->GetTargetId();
     AnimationId animationId = animation->GetAnimationId();
 

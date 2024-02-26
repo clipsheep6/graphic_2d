@@ -111,12 +111,16 @@ ohos_source_set("libtexgine_source") {
       platform = "windows"
     }
 
-    public_deps = [
-      "texgine_drawing:libtexgine_drawing",
-      "//third_party/jsoncpp:jsoncpp",
-    ]
+    public_deps = [ "texgine_drawing:libtexgine_drawing" ]
 
     defines = []
+    if (is_arkui_x) {
+      defines += [ "CROSS_PLATFORM" ]
+      public_deps += [ "//third_party/jsoncpp:jsoncpp_static" ]
+    } else {
+      public_deps += [ "//third_party/jsoncpp:jsoncpp" ]
+    }
+
     if (defined(use_rosen_drawing) && use_rosen_drawing) {
       defines += [ "USE_ROSEN_DRAWING" ]
       if (ace_enable_gpu) {
@@ -126,7 +130,10 @@ ohos_source_set("libtexgine_source") {
     if (enable_text_gine) {
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
     }
-    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
+    deps = [
+      "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/icu/icu4c/source/common:icu_font",
+    ]
     include_dirs = [ "//third_party/bounds_checking_function/include" ]
 
     if (platform == "ohos") {
@@ -159,6 +166,12 @@ ohos_source_set("libtexgine_source") {
         public_deps +=
             [ "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform" ]
       }
+    }
+    if (platform == "android") {
+      defines += [ "BUILD_SDK_ANDROID" ]
+    }
+    if (platform == "ios") {
+      defines += [ "BUILD_SDK_IOS" ]
     }
   }
   part_name = "graphic_2d"

@@ -40,6 +40,41 @@ TypographyCreate::TypographyCreate(const TypographyStyle& style,
 void TypographyCreate::PushStyle(const TextStyle& style)
 {
     auto txtTextStyle = Convert(style);
+    if (style.color == 0xFF00FF00) {
+        txtTextStyle.isSymbolGlyph=true;
+        builder_->PushStyle(txtTextStyle);
+        AppendSymbol(0xF0001);
+        PopStyle();
+        txtTextStyle.isSymbolGlyph=false;
+    }
+    if (style.color == 0xFFFF0000) {
+        txtTextStyle.isSymbolGlyph=true;
+        builder_->PushStyle(txtTextStyle);
+        AppendSymbol(0xF0002);
+        PopStyle();
+        txtTextStyle.isSymbolGlyph=false;
+    }
+    if (style.color == 0xFF0000FF) {
+        txtTextStyle.isSymbolGlyph=true;
+        builder_->PushStyle(txtTextStyle);
+        AppendSymbol(0xF0003);
+        PopStyle();
+        txtTextStyle.isSymbolGlyph=false;
+    }
+    if (style.color == 0xFF00FFFF) {
+        txtTextStyle.isSymbolGlyph=true;
+        builder_->PushStyle(txtTextStyle);
+        AppendSymbol(0xF0004);
+        PopStyle();
+        txtTextStyle.isSymbolGlyph=false;
+    }
+    if (style.color == 0xFFFF00FF) {
+        txtTextStyle.isSymbolGlyph=true;
+        builder_->PushStyle(txtTextStyle);
+        AppendSymbol(0xF0005);
+        PopStyle();
+        txtTextStyle.isSymbolGlyph=false;
+    }
     builder_->PushStyle(txtTextStyle);
 }
 

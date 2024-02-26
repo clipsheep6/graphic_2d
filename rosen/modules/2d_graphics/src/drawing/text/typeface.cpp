@@ -67,8 +67,8 @@ size_t Typeface::GetTableSize(uint32_t tag) const
     return 0;
 }
 
-size_t Typeface::GetTableData(uint32_t tag, size_t offset, size_t length, void* data) const
 {
+size_t Typeface::GetTableData(uint32_t tag, size_t offset, size_t length, void* data) const
     if (typefaceImpl_) {
         return typefaceImpl_->GetTableData(tag, offset, length, data);
     }

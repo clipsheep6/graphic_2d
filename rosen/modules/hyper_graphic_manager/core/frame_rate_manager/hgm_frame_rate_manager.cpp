@@ -104,10 +104,15 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
 
     auto& hgmCore = HgmCore::Instance();
     FrameRateRange finalRange;
+    FrameRatepVoteLTPOInfo frameRatepVoteLTPOInfo;
+    frameRatepVoteLTPOInfo.timestamp = timestamp;
     if (curRefreshRateMode_ == HGM_REFRESHRATE_MODE_AUTO) {
         finalRange = rsFrameRateLinker->GetExpectedRange();
+        frameRatepVoteLTPOInfo.SetInfo("ANIMATE", finalRange.preferred_);
         for (auto linker : appFrameRateLinkers) {
-            finalRange.Merge(linker.second->GetExpectedRange());
+            if (auto appExpectedRange = linker.second->GetExpectedRange(); finalRange.Merge(appExpectedRange)) {
+                frameRatepVoteLTPOInfo.SetInfo("APP_LINKER", appExpectedRange.preferred_);
+            };
         }
 
         if (finalRange.IsValid()) {
@@ -126,6 +131,8 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
             }
         }
     }
+    HGM_LOGE("ZSW FrameRatepVoteLTPOInfo  type:%s, timestamp: %llu, preferred_:%d",
+        frameRatepVoteLTPOInfo.type, frameRatepVoteLTPOInfo.timestamp, frameRatepVoteLTPOInfo.preferred);
 
     VoteRange voteResult = ProcessRefreshRateVote();
     // max used here
@@ -708,7 +715,7 @@ VoteRange HgmFrameRateManager::ProcessRefreshRateVote()
         // FORMAT voter(pid):[min，max]
         HGM_LOGI("Process: %{public}s(%{public}d):[%{public}d, %{public}d]",
             voter.c_str(), vec.back().first, minTemp, maxTemp);
-
+        
         if (minTemp > min) {
             min = minTemp;
             if (min >= max) {

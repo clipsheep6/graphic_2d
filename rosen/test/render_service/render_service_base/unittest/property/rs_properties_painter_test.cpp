@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include "image/image.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_skia_filter.h"
@@ -720,6 +721,52 @@ HWTEST_F(RSPropertiesPainterTest, DrawDynamicLightUp002, TestSize.Level1)
     RSPaintFilterCanvas canvas(&drawingCanvas);
 #endif
     RSPropertiesPainter::DrawDynamicLightUp(properties, canvas);
+}
+
+/**
+ * @tc.name: DrawGreyAdjustment001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSPropertiesPainterTest, DrawGreyAdjustment001, TestSize.Level1)
+{
+    RSProperties properties;
+    properties.SetGreyCoef1(38.0);
+    properties.SetGreyCoef2(25.0);
+#ifndef USE_ROSEN_DRAWING
+    SkCanvas skCanvas;
+    RSPaintFilterCanvas canvas(&skCanvas);
+    sk_sp<skImage> image;
+#else
+    Drawing::Canvas drawingCanvas;
+    RSPaintFilterCanvas canvas(&drawingCanvas);
+    std::shared_ptr<Drawing::Image> image;
+#endif
+    auto greyImage = RSPropertiesPainter::DrawGreyAdjustment(canvas, image,
+        properties.GetGreyCoef1(), properties.GetGreyCoef2());
+}
+
+/**
+ * @tc.name: DrawGreyAdjustment002
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSPropertiesPainterTest, DrawGreyAdjustment002, TestSize.Level1)
+{
+    RSProperties properties;
+    properties.SetGreyCoef1(110.0);
+    properties.SetGreyCoef2(40.0);
+#ifndef USE_ROSEN_DRAWING
+    SkCanvas skCanvas;
+    RSPaintFilterCanvas canvas(&skCanvas);
+    sk_sp<skImage> image;
+#else
+    Drawing::Canvas drawingCanvas;
+    RSPaintFilterCanvas canvas(&drawingCanvas);
+    std::shared_ptr<Drawing::Image> image;
+#endif
+    auto greyImage = RSPropertiesPainter::DrawGreyAdjustment(canvas, image,
+        properties.GetGreyCoef1(), properties.GetGreyCoef2());
 }
 } // namespace Rosen
 } // namespace OHOS

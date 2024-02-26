@@ -373,7 +373,7 @@ void RSParallelSubThread::Render()
             displayNode_->AddCrossParentChild(node);
         }
         displayNode_->Process(visitor_);
-        for (auto& child : displayNode_->GetChildren()) {
+        for (auto& child : *displayNode_->GetChildren()) {
             displayNode_->RemoveCrossParentChild(child, physicalDisplayNode);
         }
     }
@@ -557,6 +557,8 @@ sk_sp<GrContext> RSParallelSubThread::CreateShareGrContext()
 
     GrContextOptions options = {};
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    // fix svg antialiasing bug
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
 #ifdef NEW_SKIA

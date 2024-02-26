@@ -55,6 +55,8 @@ public:
     bool IsRunning() const;
     bool IsPaused() const;
     bool IsFinished() const;
+    void DumpAnimation(std::string& out) const;
+    virtual void DumpAnimationType(std::string& out) const;
 
     void SetAnimationId(AnimationId id)
     {
@@ -164,6 +166,8 @@ public:
     void SetStartTime(int64_t);
 
     const std::shared_ptr<RSRenderPropertyBase> GetAnimateVelocity() const;
+
+    static bool isCalcAnimateVelocity_;
 
 protected:
     explicit RSRenderAnimation(AnimationId id);

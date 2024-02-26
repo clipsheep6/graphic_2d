@@ -46,7 +46,7 @@ struct RSSurfaceNodeConfig {
     void* additionalData = nullptr;
     bool isTextureExportNode = false;
     SurfaceId surfaceId = 0;
-    bool isSync = false;
+    bool isSync = true;
 };
 
 class RSC_EXPORT RSSurfaceNode : public RSNode {
@@ -140,6 +140,8 @@ public:
     void SetSurfaceTextureUpdateCallBack(const RSSurfaceTextureUpdateCallBack& updateCallback);
 #endif
     void SetForeground(bool isForeground);
+    // Force enable UIFirst when set TRUE
+    void SetForceUIFirst(bool forceUIFirst);
 
 protected:
     bool NeedForcedSendToRemote() const override;

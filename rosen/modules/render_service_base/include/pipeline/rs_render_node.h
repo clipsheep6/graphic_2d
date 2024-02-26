@@ -121,15 +121,11 @@ public:
         return id_;
     }
 
-    inline const std::list<WeakPtr> &GetChildren() const noexcept
-    {
-        return children_;
-    }
-
-    inline const std::map<NodeId, std::vector<WeakPtr>> &GetSubSurfaceNodes() const
+    inline const std::map<NodeId, std::vector<WeakPtr>>& GetSubSurfaceNodes() const
     {
         return subSurfaceNodes_;
     }
+
     bool IsFirstLevelSurfaceNode();
     bool SubSurfaceNodeNeedDraw(PartialRenderType opDropType);
     void AddSubSurfaceNode(SharedPtr child, SharedPtr parent);
@@ -149,12 +145,13 @@ public:
 
     bool GetIsTextureExportNode() const;
 
+    using ChildrenListSharedPtr = std::shared_ptr<const std::vector<std::shared_ptr<RSRenderNode>>>;
     // return children and disappeared children, not guaranteed to be sorted by z-index
-    const std::list<SharedPtr>& GetChildren(bool inSubThread = false);
+    ChildrenListSharedPtr GetChildren() const;
     // return children and disappeared children, sorted by z-index
-    const std::list<SharedPtr>& GetSortedChildren(bool inSubThread = false);
+    ChildrenListSharedPtr GetSortedChildren() const;
     uint32_t GetChildrenCount() const;
-    void ClearFullChildrenListIfNeeded(bool inSubThread = false);
+    std::shared_ptr<RSRenderNode> GetFirstChild() const;
 
     void DumpTree(int32_t depth, std::string& ou) const;
     void DumpNodeInfo(DfxString& log);
@@ -199,7 +196,7 @@ public:
 
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
-    void SetDirty();
+    void SetDirty(bool forceAddToActiveList = false);
 
     virtual void AddDirtyType(RSModifierType type)
     {
@@ -252,9 +249,7 @@ public:
 
     void AddModifier(const std::shared_ptr<RSRenderModifier>& modifier, bool isSingleFrameComposer = false);
     void RemoveModifier(const PropertyId& id);
-    void RemoveModifierInternal(const PropertyId& id);
     std::shared_ptr<RSRenderModifier> GetModifier(const PropertyId& id);
-    void ApplyChildrenModifiers();
 
     bool IsShadowValidLastFrame() const;
     void SetShadowValidLastFrame(bool isShadowValidLastFrame)
@@ -265,7 +260,7 @@ public:
     // update parent's children rect including childRect and itself
     void UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const;
     virtual void UpdateFilterCacheManagerWithCacheRegion(
-        RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect = std::nullopt) const;
+        RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect = std::nullopt);
 
     void SetStaticCached(bool isStaticCached);
     bool IsStaticCached() const;
@@ -356,6 +351,16 @@ public:
         return isCacheSurfaceNeedUpdate_;
     }
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool IsOnTreeDirty();
+    void SetDirtyByOnTree(bool forceAddToActiveList = false);
+    Vector4f GetOptionBufferBound() const;
+    Vector2f GetOpincBufferSize() const;
+#ifdef USE_ROSEN_DRAWING
+    Drawing::Rect GetOpincBufferBound() const;
+#endif
+#endif
+
     int GetShadowRectOffsetX() const;
     int GetShadowRectOffsetY() const;
 
@@ -439,7 +444,7 @@ public:
     void UpdateEffectRegion(std::optional<Drawing::RectI>& region);
 #endif
     bool IsBackgroundFilterCacheValid() const;
-    virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = true) const;
+    virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = true);
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
     bool IsForcedDrawInGroup() const;
@@ -448,6 +453,9 @@ public:
     bool HasCacheableAnim() const { return hasCacheableAnim_; }
     enum NodeGroupType {
         NONE = 0,
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+        GROUPED_BY_AUTO,
+#endif
         GROUPED_BY_ANIM,
         GROUPED_BY_UI,
         GROUPED_BY_USER,
@@ -498,17 +506,31 @@ public:
         isTextureExportNode_ = isTextureExportNode;
     }
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    class RSAutoCache;
+    const std::shared_ptr<RSAutoCache>& GetAutoCache();
+    bool isOpincRectOutParent_ = false;
+#endif
+
     const std::shared_ptr<RSRenderContent> GetRenderContent() const;
 protected:
     virtual void OnApplyModifiers() {}
 
     enum class NodeDirty {
         CLEAN = 0,
+    #ifdef DDGR_ENABLE_FEATURE_OPINC
+        ON_TREE_DIRTY,
+    #endif
         DIRTY,
     };
     void SetClean();
 
     void DumpNodeType(std::string& out) const;
+
+    void DumpSubClassNode(std::string& out) const;
+    void DumpDrawCmdModifiers(std::string& out) const;
+    void DumpDrawCmdModifier(std::string& propertyDesc, RSModifierType type,
+        std::shared_ptr<RSRenderModifier>& modifier) const;
 
     const std::weak_ptr<RSContext> GetContext() const
     {
@@ -537,7 +559,6 @@ protected:
 #else
     std::bitset<static_cast<int>(RSModifierType::MAX_RS_MODIFIER_TYPE)> dirtyTypes_;
 #endif
-    bool isFullChildrenListValid_ = false;
     bool isBootAnimation_ = false;
     inline void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas)
     {
@@ -562,12 +583,19 @@ private:
     std::list<WeakPtr> children_;
     std::list<std::pair<SharedPtr, uint32_t>> disappearingChildren_;
 
-    std::list<SharedPtr> fullChildrenList_;
-    bool isChildrenSorted_ = false;
-    void GenerateFullChildrenList(bool inSubThread);
-    void SortChildren(bool inSubThread);
+    // Note: Make sure that fullChildrenList_ is never nullptr. Otherwise, the caller using
+    // `for (auto child : *GetSortedChildren()) { ... }` will crash.
+    // When an empty list is needed, use EmptyChildrenList instead.
+    static const inline auto EmptyChildrenList = std::make_shared<const std::vector<std::shared_ptr<RSRenderNode>>>();
+    ChildrenListSharedPtr fullChildrenList_ = EmptyChildrenList ;
+    bool isFullChildrenListValid_ = true;
+    bool isChildrenSorted_ = true;
 
-    const std::weak_ptr<RSContext> context_;
+    void UpdateFullChildrenListIfNeeded();
+    void GenerateFullChildrenList();
+    void ResortChildren();
+
+    std::weak_ptr<RSContext> context_ = {};
     NodeDirty dirtyStatus_ = NodeDirty::CLEAN;
     bool isContentDirty_ = false;
     bool isNewOnTree_ = false;
@@ -584,7 +612,6 @@ private:
     void InternalRemoveSelfFromDisappearingChildren();
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
-    inline void AddActiveNode();
 
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, std::optional<RectI> clipRect);
     void UpdateFullScreenFilterCacheRect(RSDirtyRegionManager& dirtyManager, bool isForeground) const;
@@ -604,6 +631,9 @@ private:
     // bounds and frame modifiers must be unique
     std::shared_ptr<RSRenderModifier> boundsModifier_;
     std::shared_ptr<RSRenderModifier> frameModifier_;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    std::shared_ptr<RSAutoCache> autoCache_;
+#endif
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> GetCompletedImage(RSPaintFilterCanvas& canvas, uint32_t threadIndex, bool isUIFirst);
@@ -647,7 +677,6 @@ private:
     uint32_t subSurfaceCnt_ = 0;
 
     mutable std::recursive_mutex surfaceMutex_;
-    std::mutex mutex_;
     ClearCacheSurfaceFunc clearCacheSurfaceFunc_ = nullptr;
     uint32_t cacheSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
     uint32_t completedSurfaceThreadIndex_ = UNI_MAIN_THREAD_INDEX;
@@ -699,15 +728,17 @@ private:
 
     const std::shared_ptr<RSRenderContent> renderContent_ = std::make_shared<RSRenderContent>();
 
-    void OnRegister();
+    void OnRegister(const std::weak_ptr<RSContext>& context);
 
+    friend class DrawFuncOpItem;
     friend class RSAliasDrawable;
+    friend class RSContext;
     friend class RSMainThread;
     friend class RSModifierDrawable;
     friend class RSProxyRenderNode;
     friend class RSRenderNodeMap;
+    friend class RSRenderThread;
     friend class RSRenderTransition;
-    friend class DrawFuncOpItem;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

@@ -17,7 +17,6 @@
 
 #include <iremote_stub.h>
 #include "buffer_log.h"
-#include "buffer_manager.h"
 #include "buffer_utils.h"
 #include "sync_fence.h"
 #include "message_option.h"
@@ -176,7 +175,7 @@ GSError BufferClientProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer)
 GSError BufferClientProducer::AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut)
 {
     DEFINE_MESSAGE_VARIABLES(arguments, reply, option, BLOGE);
-    int32_t sequence = buffer->GetSeqNum();
+    uint32_t sequence = buffer->GetSeqNum();
     WriteSurfaceBufferImpl(arguments, sequence, buffer);
     arguments.WriteInt32(timeOut);
     SEND_REQUEST_WITH_SEQ(BUFFER_PRODUCER_ATTACH_BUFFER, arguments, reply, option, sequence);

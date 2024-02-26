@@ -27,6 +27,11 @@ RSRenderPropertyAnimation::RSRenderPropertyAnimation(AnimationId id, const Prope
     originValue_(originValue->Clone()), lastValue_(originValue->Clone())
 {}
 
+void RSRenderPropertyAnimation::DumpAnimationType(std::string& out) const
+{
+    out += "Type:RSRenderPropertyAnimation";
+}
+
 PropertyId RSRenderPropertyAnimation::GetPropertyId() const
 {
     return propertyId_;
@@ -159,6 +164,9 @@ void RSRenderPropertyAnimation::OnRemoveOnCompletion()
 
 void RSRenderPropertyAnimation::RecordLastAnimateValue()
 {
+    if (!RSRenderAnimation::isCalcAnimateVelocity_) {
+        return;
+    }
     animateVelocity_.reset();
     lastAnimateValue_.reset();
     if (property_ != nullptr) {
@@ -168,7 +176,8 @@ void RSRenderPropertyAnimation::RecordLastAnimateValue()
 
 void RSRenderPropertyAnimation::UpdateAnimateVelocity(float frameInterval)
 {
-    if (!lastAnimateValue_ || !property_ || ROSEN_EQ<float>(frameInterval, 0)) {
+    if (!RSRenderAnimation::isCalcAnimateVelocity_ ||
+        !lastAnimateValue_ || !property_ || ROSEN_EQ<float>(frameInterval, 0)) {
         return;
     }
     if (property_->GetPropertyUnit() > RSPropertyUnit::UNKNOWN) {

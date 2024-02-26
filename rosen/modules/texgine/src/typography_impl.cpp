@@ -456,7 +456,7 @@ void TypographyImpl::ComputeRoundRect(VariantSpan& span, int& index, int& preInd
         double maxRoundRectRadius = MAX_INT_VALUE;
         double minTop = MAX_INT_VALUE;
         double maxBottom = 0;
-        for (auto &gSpan : groupSpans) {
+        for (const auto &gSpan : groupSpans) {
             maxRoundRectRadius = std::fmin(std::fmin(gSpan.GetWidth(), gSpan.GetHeight()), maxRoundRectRadius);
             minTop = std::fmin(minTop, gSpan.GetTop());
             maxBottom = std::fmax(maxBottom, gSpan.GetBottom());
@@ -797,13 +797,21 @@ std::vector<TextRect> TypographyImpl::MergeRects(const std::vector<TextRect> &bo
             std::fabs(*pre->rect.fRight_ - *rect.rect.fLeft_) < MINDEV) {
             *pre->rect.fRight_ = *rect.rect.fRight_;
         } else {
+#ifdef CROSS_PLATFORM
+            rects.push_back(pre.__get());
+#else
             rects.push_back(pre.value());
+#endif
             pre = rect;
         }
     }
 
     if (pre.has_value()) {
+#ifdef CROSS_PLATFORM
+        rects.push_back(pre.__get());
+#else
         rects.push_back(pre.value());
+#endif
     }
 
     return rects;

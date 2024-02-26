@@ -174,7 +174,7 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     }
 }
 
-void HgmFrameRateManager::FrameRateReport()
+void HgmFrameRateManager::FrameRateReport() const
 {
     std::unordered_map<pid_t, uint32_t> rates;
     rates[GetRealPid()] = currRefreshRate_;
@@ -384,14 +384,14 @@ int32_t HgmFrameRateManager::GetPreferredFps(const std::string& type, float velo
         return velocity >= pair.second.min && (velocity < pair.second.max || pair.second.max == -1);
     });
     if (iter != config.end()) {
-        RS_OPTIONAL_TRACE_NAME_FMT("GetPreferredFps: type: %d, speed: %f, rate: %d",
+        RS_OPTIONAL_TRACE_NAME_FMT("GetPreferredFps: type: %s, speed: %f, rate: %d",
             type.c_str(), velocity, iter->second.preferred_fps);
         return iter->second.preferred_fps;
     }
     return 0;
 }
 
-float HgmFrameRateManager::PixelToMM(float velocity) const
+float HgmFrameRateManager::PixelToMM(float velocity)
 {
     float velocityMM = 0.0f;
     auto& hgmCore = HgmCore::Instance();
@@ -783,11 +783,8 @@ void HgmFrameRateManager::UpdateVoteRule()
     // priority 3: VOTER_SCENE < VOTER_TOUCH
     auto srcPos = find(voters_.begin(), voters_.end(), srcScene);
     auto dstPos = find(voters_.begin(), voters_.end(), dstScene);
-    if (srcPos != voters_.end() || dstPos == voters_.end()) {
-        HGM_LOGW("HgmFrameRateManager:invalid scene");
-        return;
-    }
-    // sort
+    
+    // resort
     voters_.erase(srcPos);
     if (scenePriority == SCENE_AFTER_TOUCH) {
         voters_.insert(++dstPos, srcScene);

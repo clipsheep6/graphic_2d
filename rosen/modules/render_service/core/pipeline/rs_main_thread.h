@@ -82,7 +82,7 @@ public:
     void Start();
     void ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
-    void RequestNextVSync();
+    void RequestNextVSync(const std::string& fromWhom = "unknown", int64_t lastVSyncTS = 0);
     void PostTask(RSTaskMessage::RSTask task);
     void PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime,
         AppExecFwk::EventQueue::Priority priority = AppExecFwk::EventQueue::Priority::IDLE);
@@ -195,6 +195,8 @@ public:
     void CountMem(int pid, MemoryGraphic& mem);
     void CountMem(std::vector<MemoryGraphic>& mems);
     void SetAppWindowNum(uint32_t num);
+    void DeleteMultiInstancePid(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+        std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes);
     SystemAnimatedScenes GetSystemAnimatedScenes();
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow);
@@ -258,6 +260,11 @@ public:
         return mainLooping_.load();
     }
 
+    bool IsPCThreeFingerScenesListScene() const
+    {
+        return !threeFingerScenesList_.empty();
+    }
+
     void SubscribeAppState();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
     const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetSelfDrawingNodes() const;
@@ -287,7 +294,8 @@ private:
     void ColorPickerRequestVsyncIfNeed();
     void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
-    void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
+    void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces,
+        VisibleData& dstCurVisVec, std::map<uint32_t, RSVisibleLevel>& dstPidVisMap);
     void CalcOcclusion();
     bool CheckSurfaceVisChanged(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
         std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
@@ -520,9 +528,13 @@ private:
     std::shared_ptr<RSAppStateListener> rsAppStateListener_;
     int32_t subscribeFailCount_ = 0;
     SystemAnimatedScenes systemAnimatedScenes_ = SystemAnimatedScenes::OTHERS;
-    uint32_t LeashWindowCount_ = 0;
+    uint32_t leashWindowCount_ = 0;
+
+    // for dvsync (animate requestNextVSync after mark rsnotrendering)
+    bool needRequestNextVsyncAnimate_ = false;
 
     std::atomic_bool mainLooping_ = false;
+    bool forceUIFirstChanged_ = false;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

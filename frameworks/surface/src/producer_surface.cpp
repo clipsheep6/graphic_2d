@@ -18,7 +18,6 @@
 #include <cinttypes>
 
 #include "buffer_log.h"
-#include "buffer_manager.h"
 #include "buffer_extra_data_impl.h"
 #include "buffer_producer_listener.h"
 #include "sync_fence.h"
@@ -337,15 +336,33 @@ uint32_t ProducerSurface::GetDefaultUsage()
 
 GSError ProducerSurface::SetUserData(const std::string &key, const std::string &val)
 {
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
     if (userData_.size() >= SURFACE_MAX_USER_DATA_COUNT) {
+        BLOGE("SetUserData failed: userData_ size out");
         return GSERROR_OUT_OF_RANGE;
     }
+
+    auto iterUserData = userData_.find(key);
+    if (iterUserData != userData_.end() && iterUserData->second == val) {
+        BLOGE("SetUserData failed: key:%{public}s, val:%{public}s exist", key.c_str(), val.c_str());
+        return GSERROR_API_FAILED;
+    }
+    
     userData_[key] = val;
+    auto iter = onUserDataChange_.begin();
+    while (iter != onUserDataChange_.end()) {
+        if (iter->second != nullptr) {
+            iter->second(key, val);
+        }
+        iter++;
+    }
+
     return GSERROR_OK;
 }
 
 std::string ProducerSurface::GetUserData(const std::string &key)
 {
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
     if (userData_.find(key) != userData_.end()) {
         return userData_[key];
     }
@@ -400,6 +417,36 @@ GSError ProducerSurface::UnRegisterReleaseListener()
 GSError ProducerSurface::RegisterDeleteBufferListener(OnDeleteBufferFunc func, bool isForUniRedraw)
 {
     return GSERROR_NOT_SUPPORT;
+}
+
+GSError ProducerSurface::RegisterUserDataChangeListener(const std::string &funcName, OnUserDataChangeFunc func)
+{
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
+    if (onUserDataChange_.find(funcName) != onUserDataChange_.end()) {
+        BLOGND("func already register");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    
+    onUserDataChange_[funcName] = func;
+    return GSERROR_OK;
+}
+
+GSError ProducerSurface::UnRegisterUserDataChangeListener(const std::string &funcName)
+{
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
+    if (onUserDataChange_.erase(funcName) == 0) {
+        BLOGND("func doesn't register");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    return GSERROR_OK;
+}
+
+GSError ProducerSurface::ClearUserDataChangeListener()
+{
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
+    onUserDataChange_.clear();
+    return GSERROR_OK;
 }
 
 bool ProducerSurface::IsRemote()

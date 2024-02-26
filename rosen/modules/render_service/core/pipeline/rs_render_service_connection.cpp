@@ -299,7 +299,7 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
         return nullptr;
     }
     const std::string& surfaceName = surface->GetName();
-    RS_LOGD("RsDebug RSRenderService::CreateNodeAndSurface node" \
+    RS_LOGI("RsDebug RSRenderService::CreateNodeAndSurface node" \
         "id:%{public}" PRIu64 " name:%{public}s bundleName:%{public}s surface id:%{public}" PRIu64 " name:%{public}s",
         node->GetId(), node->GetName().c_str(), node->GetBundleName().c_str(),
         surface->GetUniqueId(), surfaceName.c_str());
@@ -1188,6 +1188,13 @@ void RSRenderServiceConnection::SetHardwareEnabled(NodeId id, bool isEnabled, Se
 void RSRenderServiceConnection::SetCacheEnabledForRotation(bool isEnabled)
 {
     RSSystemProperties::SetCacheEnabledForRotation(isEnabled);
+}
+
+GpuDirtyRegionInfo RSRenderServiceConnection::GetCurrentDirtyRegionInfo(ScreenId id)
+{
+    GpuDirtyRegionInfo gpuDirtyRegionInfo = GpuDirtyRegion::GetInstance().GetGpuDirtyRegionInfo(id);
+    GpuDirtyRegion::GetInstance().ResetDirtyRegionInfo();
+    return gpuDirtyRegionInfo;
 }
 
 #ifdef TP_FEATURE_ENABLE

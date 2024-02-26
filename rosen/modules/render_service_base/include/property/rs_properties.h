@@ -133,6 +133,9 @@ public:
     float GetTranslateX() const;
     float GetTranslateY() const;
     float GetTranslateZ() const;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool GetOpincPropDirty() const;
+#endif
 
     void SetScale(Vector2f scale);
     void SetScaleX(float sx);
@@ -140,6 +143,13 @@ public:
     Vector2f GetScale() const;
     float GetScaleX() const;
     float GetScaleY() const;
+
+    void SetSkew(Vector2f skew);
+    void SetSkewX(float skewX);
+    void SetSkewY(float skewY);
+    Vector2f GetSkew() const;
+    float GetSkewX() const;
+    float GetSkewY() const;
 
     void SetAlpha(float alpha);
     float GetAlpha() const;
@@ -385,6 +395,9 @@ private:
     bool isDrawn_ = false;
     bool alphaNeedApply_ = false;
     bool systemBarEffect_ = false;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool isOpincPropDirty_ = false;
+#endif
 
     bool hasBounds_ = false;
     bool useEffect_ = false;

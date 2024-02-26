@@ -108,8 +108,7 @@ void RSRenderThreadVisitor::SetPartialRenderStatus(PartialRenderType status, boo
 
 void RSRenderThreadVisitor::PrepareChildren(RSRenderNode& node)
 {
-    node.ApplyChildrenModifiers();
-    for (auto& child : node.GetSortedChildren()) {
+    for (auto& child : *node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
 }
@@ -191,6 +190,7 @@ void RSRenderThreadVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 
 void RSRenderThreadVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 {
+#ifndef CROSS_PLATFORM
     if (!node.ShouldPaint() || curDirtyManager_ == nullptr) {
         return;
     }
@@ -205,6 +205,7 @@ void RSRenderThreadVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
 
     effectRegion_ = effectRegion;
     dirtyFlag_ = dirtyFlag;
+#endif
 }
 
 #ifndef USE_ROSEN_DRAWING
@@ -394,8 +395,8 @@ void RSRenderThreadVisitor::ProcessShadowFirst(RSRenderNode& node)
 {
     if (RSSystemProperties::GetUseShadowBatchingEnabled()
         && (node.GetRenderProperties().GetUseShadowBatching())) {
-        auto& children = node.GetSortedChildren();
-        for (auto& child : children) {
+        auto children = node.GetSortedChildren();
+        for (auto& child : *children) {
             if (auto node = child->ReinterpretCastTo<RSCanvasRenderNode>()) {
                 node->ProcessShadowBatching(*canvas_);
             }
@@ -406,7 +407,7 @@ void RSRenderThreadVisitor::ProcessShadowFirst(RSRenderNode& node)
 void RSRenderThreadVisitor::ProcessChildren(RSRenderNode& node)
 {
     ProcessShadowFirst(node);
-    for (auto& child : node.GetSortedChildren()) {
+    for (auto& child : *node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
 }
@@ -1091,10 +1092,18 @@ void RSRenderThreadVisitor::ProcessTextureSurfaceRenderNode(RSSurfaceRenderNode&
     } else {
         auto backgroundColor = node.GetRenderProperties().GetBackgroundColor();
         if (backgroundColor != RgbPalette::Transparent()) {
+#ifndef USE_ROSEN_DRAWING
             canvas_->clear(backgroundColor.AsArgbInt());
+#else
+            canvas_->Clear(backgroundColor.AsArgbInt());
+#endif
         }
     }
+#ifndef USE_ROSEN_DRAWING
     canvas_->restore();
+#else
+    canvas_->Restore();
+#endif
 }
 #endif
 
@@ -1128,6 +1137,8 @@ void RSRenderThreadVisitor::ProcessOtherSurfaceRenderNode(RSSurfaceRenderNode& n
         return;
     }
     node.SetContextClipRegion(clipRect);
+    // temporary workaround since ContextAlpha/ContextClipRegion happens after ApplyModifiers
+    node.ApplyModifiers();
 
     // clip hole
     ClipHoleForSurfaceNode(node);

@@ -91,6 +91,7 @@ bool RSCanvasDrawingRenderNode::ResetSurfaceWithTexture(int width, int height, R
     }
     preThreadInfo_ = curThreadInfo_;
     canvas_->setMatrix(preMatrix);
+    canvas_->flush();
     return true;
 }
 #else
@@ -131,6 +132,7 @@ bool RSCanvasDrawingRenderNode::ResetSurfaceWithTexture(int width, int height, R
     }
     preThreadInfo_ = curThreadInfo_;
     canvas_->SetMatrix(preMatrix);
+    canvas_->Flush();
     return true;
 }
 #endif
@@ -285,7 +287,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     } else {
         auto cmds = recordingCanvas_->GetDrawCmdList();
         if (cmds && !cmds->IsEmpty()) {
-            recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height);
+            recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height, false);
             canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
             ProcessCPURenderInBackgroundThread(cmds);
         }
@@ -356,27 +358,15 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
     } else {
         skSurface_ = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kNo, info);
         if (!skSurface_) {
-            if (auto ctx = GetContext().lock()) {
-                auto node = ctx->GetNodeMap().GetRenderNode<RSRenderNode>(GetInstanceRootNodeId());
-                if (node) {
-                    SkImageInfo newInfo = SkImageInfo::Make(
-                        std::ceil(node->GetRenderProperties().GetBoundsWidth()),
-                        std::ceil(node->GetRenderProperties().GetBoundsHeight()), kRGBA_8888_SkColorType,
-                        kPremul_SkAlphaType);
-                    skSurface_ = SkSurface::MakeRenderTarget(grContext, SkBudgeted::kNo, newInfo);
-                }
-            }
+            isGpuSurface_ = false;
+            skSurface_ = SkSurface::MakeRaster(info);
             if (!skSurface_) {
-                isGpuSurface_ = false;
-                skSurface_ = SkSurface::MakeRaster(info);
-                if (!skSurface_) {
-                    RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface SkSurface is nullptr");
-                    return false;
-                }
-                recordingCanvas_ = std::make_shared<RSRecordingCanvas>(width, height);
-                canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
-                return true;
+                RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface SkSurface is nullptr");
+                return false;
             }
+            recordingCanvas_ = std::make_shared<RSRecordingCanvas>(width, height);
+            canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            return true;
         }
     }
 
@@ -406,27 +396,15 @@ bool RSCanvasDrawingRenderNode::ResetSurface(int width, int height, RSPaintFilte
     } else {
         surface_ = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, info);
         if (!surface_) {
-            if (auto ctx = GetContext().lock()) {
-                auto node = ctx->GetNodeMap().GetRenderNode<RSRenderNode>(GetInstanceRootNodeId());
-                if (node) {
-                    Drawing::ImageInfo newInfo =
-                        Drawing::ImageInfo{ std::ceil(node->GetRenderProperties().GetBoundsWidth()),
-                            std::ceil(node->GetRenderProperties().GetBoundsHeight()),
-                        Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
-                    surface_ = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, newInfo);
-                }
-            }
+            isGpuSurface_ = false;
+            surface_ = Drawing::Surface::MakeRaster(info);
             if (!surface_) {
-                isGpuSurface_ = false;
-                surface_ = Drawing::Surface::MakeRaster(info);
-                if (!surface_) {
-                    RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface surface is nullptr");
-                    return false;
-                }
-                recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height);
-                canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
-                return true;
+                RS_LOGE("RSCanvasDrawingRenderNode::ResetSurface surface is nullptr");
+                return false;
             }
+            recordingCanvas_ = std::make_shared<ExtendRecordingCanvas>(width, height, false);
+            canvas_ = std::make_unique<RSPaintFilterCanvas>(recordingCanvas_.get());
+            return true;
         }
     }
 #else

@@ -19,6 +19,7 @@
 #include "drawing/engine_adapter/impl_interface/image_impl.h"
 #include "include/core/SkImage.h"
 #include "utils/drawing_macros.h"
+#include "image/gpu_context.h"
 #ifdef RS_ENABLE_VK
 #include "vulkan/vulkan.h"
 #endif
@@ -376,6 +377,11 @@ public:
     bool IsTextureBacked() const;
 
     bool IsOpaque() const;
+
+    /*
+     * @brief Tell engine try to cache gpu resource when texture resource create.
+     */
+    void HintCacheGpuResource() const;
 
     template<typename T>
     T* GetImpl() const

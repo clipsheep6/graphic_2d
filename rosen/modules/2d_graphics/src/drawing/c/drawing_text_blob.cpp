@@ -22,7 +22,7 @@
 using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
-
+////
 static std::unordered_map<void*, std::shared_ptr<TextBlob>> g_textBlobMap;
 
 static TextBlobBuilder* CastToTextBlobBuilder(OH_Drawing_TextBlobBuilder* cTextBlobBuilder)

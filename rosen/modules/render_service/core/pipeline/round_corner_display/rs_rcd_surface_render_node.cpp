@@ -154,10 +154,7 @@ bool RSRcdSurfaceRenderNode::PrepareHardwareResourceBuffer(rs_rcd::RoundCornerLa
     uint32_t bitmapHeight = static_cast<uint32_t>(layerBitmap.GetHeight());
     uint32_t bitmapWidth = static_cast<uint32_t>(layerBitmap.GetWidth());
 #endif
-    if (bitmapHeight <= 0 || bitmapWidth <= 0 || layerInfo->layerHeight <= 0) {
-        RS_LOGE("bitmapHeight, bitmapWidth or layerHeight is wrong value");
-        return false;
-    }
+
     SetRcdBufferHeight(bitmapHeight);
     SetRcdBufferWidth(bitmapWidth);
     SetRcdBufferSize(cldLayerInfo.bufferSize);

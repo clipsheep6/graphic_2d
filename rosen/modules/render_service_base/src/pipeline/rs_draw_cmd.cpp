@@ -395,7 +395,7 @@ SymbolOpItem::SymbolOpItem(const HMSymbolData& symbol, SkPoint locate, const SkP
 {
 }
 
-static void MergePath(SkPath& multPath, RenderGroup& group, std::vector<SkPath>& pathLayers)
+static void MergePath(SkPath& multPath, const RenderGroup& group, std::vector<SkPath>& pathLayers)
 {
     for (auto groupInfo : group.groupInfos) {
         SkPath pathTemp;

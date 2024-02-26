@@ -92,6 +92,11 @@ public:
         }
     }
 
+    void SetParagraghId(const uint32_t& id) override
+    {
+        id_ = id;
+    }
+
     void CopyTextStylePaint(const TextStyle& txt, skia::textlayout::TextStyle& skStyle);
 
     SkFontStyle MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle);
@@ -118,6 +123,7 @@ private:
     std::vector<TextStyle> lineMetricsStyles_;
     std::function<bool(
         const std::shared_ptr<OHOS::Rosen::TextEngine::SymbolAnimationConfig>&)> animationFunc_ = nullptr;
+    uint32_t id_ = 0;
 };
 } // namespace SPText
 } // namespace Rosen

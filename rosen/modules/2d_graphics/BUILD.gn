@@ -432,6 +432,7 @@ if (enable_text_gine) {
     if (platform == "mingw") {
       platform = "windows"
     }
+    symlink_target_name = [ "libnative_drawing.so" ]
     deps = [
       ":2d_graphics_source_$platform",
       "$rosen_root/modules/texgine/texgine_drawing:libtexgine_drawing",

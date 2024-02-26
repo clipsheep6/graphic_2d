@@ -45,7 +45,7 @@ public:
         userData_ = cb->userData_;
     }
     bool PlayVideo();
-    void StopVideo();
+    void QuitPlayVideo();
     void SetVideoSound();
 private:
 #ifdef PLAYER_FRAMEWORK_ENABLE

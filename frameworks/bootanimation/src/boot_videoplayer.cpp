@@ -97,9 +97,11 @@ bool BootVideoPlayer::PlayVideo()
 #endif
 }
 
-void BootVideoPlayer::StopVideo()
+void BootVideoPlayer::QuitPlayVideo()
 {
-    LOGI("BootVideoPlayer StopVideo");
+    LOGI("BootVideoPlayer QuitPlayVideo");
+    mediaPlayer_->Release();
+    LOGI("MediaPlayer Release");
     vsyncCallbacks_(userData_);
 }
 
@@ -131,7 +133,7 @@ void BootVideoPlayer::SetVideoSound()
 void VideoPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     LOGE("PlayerCallbackError received, errorMsg:%{public}s", errorMsg.c_str());
-    boot_->StopVideo();
+    boot_->QuitPlayVideo();
 }
 #endif
 
@@ -150,7 +152,7 @@ void VideoPlayerCallback::OnInfo(Media::PlayerOnInfoType type, int32_t extra, co
             break;
         case Media::INFO_TYPE_EOS: {
             LOGI("PlayerCallback: OnEndOfStream isLooping is:%{public}d", extra);
-            boot_->StopVideo();
+            boot_->QuitPlayVideo();
             break;
         }
         case Media::INFO_TYPE_BUFFERING_UPDATE:

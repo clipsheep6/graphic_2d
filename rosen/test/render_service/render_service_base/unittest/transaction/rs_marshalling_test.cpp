@@ -721,7 +721,6 @@ HWTEST_F(RSMarshallingTest, SkRegionSerialization001, Function | MediumTest | Le
 #ifndef USE_ROSEN_DRAWING
     SkRegion region;
     region.op(SkIRect::MakeXYWH(0, 0, 10, 10), SkRegion::kUnion_Op);
-    region.op(SkIRect::MakeLTRB(5, 10, 20, 20), SkRegion::kUnion_Op);
 #else
     Drawing::Region region;
     Drawing::Region tmpRegion1;

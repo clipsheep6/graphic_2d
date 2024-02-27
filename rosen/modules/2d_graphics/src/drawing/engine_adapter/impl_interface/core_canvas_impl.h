@@ -15,17 +15,18 @@
 
 #ifndef CORECANVASIMPL_H
 #define CORECANVASIMPL_H
-
 #include "base_impl.h"
 #include "securec.h"
 
 #include "include/core/SkRefCnt.h"
 
-#include "draw/brush.h"
 #include "draw/clip.h"
 #include "draw/path.h"
-#include "draw/pen.h"
+#include "draw/paint.h"
 #include "draw/shadow.h"
+// opinc_begin
+#include "draw/OpListHandle.h"
+// opinc_end
 #include "effect/filter.h"
 #include "image/bitmap.h"
 #include "image/image_info.h"
@@ -34,6 +35,7 @@
 #endif
 #include "image/image.h"
 #include "image/picture.h"
+#include "text/hm_symbol.h"
 #include "text/text.h"
 #include "text/text_blob.h"
 #include "utils/matrix.h"
@@ -59,6 +61,7 @@ class SaveLayerOps;
 enum class PointMode;
 enum class QuadAAFlags;
 struct Lattice;
+class Canvas;
 
 class CoreCanvasImpl : public BaseImpl {
 public:
@@ -78,7 +81,7 @@ public:
     virtual ImageInfo GetImageInfo() = 0;
     virtual bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
         int srcX, int srcY) = 0;
-
+    virtual bool ReadPixels(const Bitmap& dstBitmap, int srcX, int srcY) = 0;
     // shapes
     virtual void DrawPoint(const Point& point) = 0;
     virtual void DrawPoints(PointMode mode, size_t count, const Point pts[]) = 0;
@@ -97,18 +100,27 @@ public:
     virtual void DrawRegion(const Region& region) = 0;
     virtual void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode) = 0;
-    virtual void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) = 0;
     virtual void DrawVertices(const Vertices& vertices, BlendMode mode) = 0;
 
     virtual void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) = 0;
-    virtual void DrawAnnotation(const Rect& rect, const char* key, const Data* data) = 0;
     virtual void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) = 0;
 
     // color
     virtual void DrawColor(ColorQuad color, BlendMode mode) = 0;
+
+    // opinc_begin
+    virtual bool BeginOpRecording(const Rect* bound = nullptr, bool isDynamic = false) = 0;
+    virtual Drawing::OpListHandle EndOpRecording() = 0;
+    virtual void DrawOpList(Drawing::OpListHandle handle) = 0;
+    virtual int CanDrawOpList(Drawing::OpListHandle handle) = 0;
+    virtual void PreOpListDrawArea(const Matrix& matrix) = 0;
+    virtual bool CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound = nullptr) = 0;
+    virtual Drawing::OpListHandle GetOpListDrawArea() = 0;
+    virtual void OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
+        const SamplingOptions& sampling, SrcRectConstraint constraint) = 0;
+    // opinc_end
 
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) = 0;
@@ -125,10 +137,14 @@ public:
     // text
     virtual void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y) = 0;
 
+    // symbol
+    virtual void DrawSymbol(const DrawingHMSymbolData& symbol, Point locate) = 0;
+
     // clip
     virtual void ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias = false) = 0;
     virtual void ClipIRect(const RectI& rect, ClipOp op = ClipOp::INTERSECT) = 0;
     virtual void ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAntiAlias = false) = 0;
+    virtual void ClipRoundRect(const Rect& rect, std::vector<Point>& pts, bool doAntiAlias = false) = 0;
     virtual void ClipPath(const Path& path, ClipOp op, bool doAntiAlias = false) = 0;
     virtual void ClipRegion(const Region& region, ClipOp op = ClipOp::INTERSECT) = 0;
     virtual bool IsClipEmpty() = 0;
@@ -147,17 +163,16 @@ public:
     // state
     virtual void Flush() = 0;
     virtual void Clear(ColorQuad color) = 0;
-    virtual void Save() = 0;
+    virtual uint32_t Save() = 0;
     virtual void SaveLayer(const SaveLayerOps& saveLayerOption) = 0;
     virtual void Restore() = 0;
     virtual uint32_t  GetSaveCount() const = 0;
     virtual void Discard() = 0;
 
     // paint
-    virtual void AttachPen(const Pen& pen) = 0;
-    virtual void AttachBrush(const Brush& brush) = 0;
-    virtual void DetachPen() = 0;
-    virtual void DetachBrush() = 0;
+    virtual void AttachPaint(const Paint& paint) = 0;
+
+    virtual void BuildOverDraw(std::shared_ptr<Canvas> canvas) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

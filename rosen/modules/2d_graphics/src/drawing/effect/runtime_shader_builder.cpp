@@ -51,9 +51,34 @@ void RuntimeShaderBuilder::SetUniform(const std::string& name, float x, float y)
     impl_->SetUniform(name, x, y);
 }
 
+void RuntimeShaderBuilder::SetUniform(const std::string& name, float x, float y, float z)
+{
+    impl_->SetUniform(name, x, y, z);
+}
+
 void RuntimeShaderBuilder::SetUniform(const std::string& name, float x, float y, float width, float height)
 {
     impl_->SetUniform(name, x, y, width, height);
+}
+
+void RuntimeShaderBuilder::SetUniform(const std::string& name, const float values[], size_t size)
+{
+    impl_->SetUniform(name, values, size);
+}
+
+void RuntimeShaderBuilder::SetUniform(const std::string& name, const Matrix& uniformMatrix33)
+{
+    impl_->SetUniform(name, uniformMatrix33);
+}
+
+void RuntimeShaderBuilder::SetUniform(const std::string& name, const Matrix44& uniformMatrix44)
+{
+    impl_->SetUniform(name, uniformMatrix44);
+}
+
+void RuntimeShaderBuilder::SetUniformVec4(const std::string& name, float x, float y, float z, float w)
+{
+    impl_->SetUniformVec4(name, x, y, z, w);
 }
 } // namespace Drawing
 } // namespace Rosen

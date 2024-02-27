@@ -15,16 +15,24 @@
       "syscap": [
         "SystemCapability.Graphic.Graphic2D.ColorManager.Core",
         "SystemCapability.Graphic.Graphic2D.EGL",
-        "SystemCapability.Graphic.Graphic2D.GLES2", 
+        "SystemCapability.Graphic.Graphic2D.GLES2",
         "SystemCapability.Graphic.Graphic2D.GLES3",
-        "SystemCapability.Graphic.Graphic2D.NativeWindow",
+        "SystemCapability.Graphic.Graphic2D.HyperGraphicManager",
+        "SystemCapability.Graphic.Graphic2D.NativeBuffer",
         "SystemCapability.Graphic.Graphic2D.NativeDrawing",
+        "SystemCapability.Graphic.Graphic2D.NativeImage",
+        "SystemCapability.Graphic.Graphic2D.NativeVsync",
+        "SystemCapability.Graphic.Graphic2D.NativeWindow",
         "SystemCapability.Graphic.Graphic2D.WebGL",
         "SystemCapability.Graphic.Graphic2D.WebGL2",
-        "SystemCapability.Graphic.Vulkan"
+        "SystemCapability.Graphic.Vulkan",
+        "SystemCapability.Graphics.Drawing"
       ],
       "adapted_system_type": [ "standard" ],
       "features": [
+        "graphic_2d_feature_product",
+        "graphic_2d_feature_enable_pgo",
+        "graphic_2d_feature_pgo_path",
         "graphic_2d_feature_bootanimation_enable",
         "graphic_2d_feature_ace_enable_gpu",
         "graphic_2d_feature_rs_enable_eglimage",
@@ -44,7 +52,6 @@
       ],
       "deps": {
         "components": [
-          "build_framework",
           "window_manager",
           "resource_management",
           "napi",
@@ -71,7 +78,9 @@
           "memmgr",
           "memmgr_plugin",
           "sensor",
-          "qos_manager"
+          "qos_manager",
+          "video_processing_engine",
+          "vulkan-headers"
         ],
         "third_party": [
           "flutter",
@@ -95,6 +104,7 @@
         "group_type": {
           "base_group": [
             "//third_party/libpng:libpng",
+            "//third_party/vulkan-loader:vulkan_loader",
             "//foundation/graphic/graphic_2d/interfaces/kits/napi:napi_packages",
             "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
             "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",
@@ -104,11 +114,11 @@
             "//foundation/graphic/graphic_2d/rosen/modules/effect/color_picker:color_picker",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/skia_effectChain:skeffectchain",
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
+            "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv2",
             "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:GLESv3",
             "//foundation/graphic/graphic_2d/rosen/modules/2d_engine/rosen_text:rosen_text",
             "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
             "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
-            "//third_party/vulkan-loader/openharmony:vulkan_loader",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json"
           ],
@@ -145,6 +155,16 @@
                 "window.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/interfaces/inner_api/surface"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/drawing:drawing_napi_impl",
+            "header": {
+              "header_files": [
+                "canvas_napi/js_canvas.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/drawing"
             }
           },
           {
@@ -361,6 +381,16 @@
                   "js_color_space_utils.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager/color_space_object_convertor"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/hdr_capability:hdr_capability_utils",
+            "header": {
+              "header_files": [
+                  "js_hdr_format_utils.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/hdr_capability/hdr_capability_utils"
             }
           },
           {

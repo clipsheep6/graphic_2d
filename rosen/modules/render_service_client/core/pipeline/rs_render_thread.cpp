@@ -37,7 +37,9 @@
 #include "ui/rs_surface_extractor.h"
 #include "ui/rs_surface_node.h"
 #include "ui/rs_ui_director.h"
-
+#ifdef RS_ENABLE_VK
+#include "platform/ohos/backend/rs_vulkan_context.h"
+#endif
 #ifdef OHOS_RSS_CLIENT
 #include "res_sched_client.h"
 #include "res_type.h"
@@ -52,7 +54,6 @@
 #include "frame_collector.h"
 #include "render_frame_trace.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
-
 #ifdef ACCESSIBILITY_ENABLE
 #include "accessibility_config.h"
 #include "platform/common/rs_accessibility.h"
@@ -106,6 +107,7 @@ RSRenderThread::RSRenderThread()
         ROSEN_LOGD("RSRenderThread DrawFrame(%{public}" PRIu64 ") in %{public}s",
             prevTimestamp_, renderContext_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
+        ApplyModifiers();
         Render();
         SendCommands();
         context_->activeNodesInRoot_.clear();
@@ -115,8 +117,8 @@ RSRenderThread::RSRenderThread()
         jankDetector_->CalculateSkippedFrame(renderStartTimeStamp, jankDetector_->GetSysTimeNs());
         RS_TRACE_END();
     };
-
     context_ = std::make_shared<RSContext>();
+    context_->Initialize();
     jankDetector_ = std::make_shared<RSJankDetector>();
 #ifdef ACCESSIBILITY_ENABLE
     RSAccessibility::GetInstance().ListenHighContrastChange([](bool newHighContrast) {
@@ -228,16 +230,26 @@ void RSRenderThread::CreateAndInitRenderContextIfNeed()
     }
 #endif
 #else
-#if defined(RS_ENABLE_GL) && !defined(ROSEN_PREVIEW)
+#if (defined(RS_ENABLE_GL) || defined (RS_ENABLE_VK)) && !defined(ROSEN_PREVIEW)
     if (renderContext_ == nullptr) {
         renderContext_ = new RenderContext();
         ROSEN_LOGD("Create RenderContext");
-        RS_TRACE_NAME("InitializeEglContext");
 #ifdef ROSEN_OHOS
-        renderContext_->InitializeEglContext(); // init egl context on RT
-        if (!cacheDir_.empty()) {
-            renderContext_->SetCacheDir(cacheDir_);
+#ifdef RS_ENABLE_GL
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+            RS_TRACE_NAME("InitializeEglContext");
+            renderContext_->InitializeEglContext(); // init egl context on RT
+            if (!cacheDir_.empty()) {
+                renderContext_->SetCacheDir(cacheDir_);
+            }
         }
+#endif
+#ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        renderContext_->SetUpGpuContext(nullptr);
+    }
+#endif
 #endif
     }
 #endif
@@ -253,7 +265,7 @@ void RSRenderThread::RenderLoop()
     payload["uid"] = std::to_string(getuid());
     payload["pid"] = std::to_string(GetRealPid());
     ResourceSchedule::ResSchedClient::GetInstance().ReportData(
-        ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_THREAD, gettid(), payload);
+        ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_THREAD, getproctid(), payload);
 #endif
 #ifdef ROSEN_OHOS
     tid_ = gettid();
@@ -425,6 +437,42 @@ void RSRenderThread::Animate(uint64_t timestamp)
 
     if (needRequestNextVsync) {
         RSRenderThread::Instance().RequestNextVSync();
+    }
+}
+
+void RSRenderThread::ApplyModifiers()
+{
+    std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
+    if (context_->activeNodesInRoot_.empty()) {
+        return;
+    }
+    RS_TRACE_NAME_FMT("ApplyModifiers (PropertyDrawableEnable %s)",
+        RSSystemProperties::GetPropertyDrawableEnable() ? "TRUE" : "FALSE");
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> nodesThatNeedsRegenerateChildren;
+    context_->globalRootRenderNode_->ApplyModifiers();
+    for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
+        for (const auto& [id, nodePtr] : nodeSet) {
+            auto node = nodePtr.lock();
+            if (node == nullptr) {
+                continue;
+            }
+            if (!node->isFullChildrenListValid_ || !node->isChildrenSorted_) {
+                nodesThatNeedsRegenerateChildren.emplace(node->id_, node);
+            }
+            // apply modifiers, if z-order not changed, skip
+            if (!node->ApplyModifiers()) {
+                continue;
+            }
+            if (auto parent = node->GetParent().lock()) {
+                parent->isChildrenSorted_ = false;
+                nodesThatNeedsRegenerateChildren.emplace(parent->id_, parent);
+            }
+        }
+    }
+    // Update the full children list of the nodes that need it
+    nodesThatNeedsRegenerateChildren.emplace(0, context_->globalRootRenderNode_);
+    for (auto& [id, node] : nodesThatNeedsRegenerateChildren) {
+        node->UpdateFullChildrenListIfNeeded();
     }
 }
 

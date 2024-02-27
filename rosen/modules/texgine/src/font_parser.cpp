@@ -18,6 +18,9 @@
 #include <codecvt>
 #include <iomanip>
 #include <securec.h>
+#ifdef BUILD_NON_SDK_VER
+#include <iconv.h>
+#endif
 
 #include "font_config.h"
 #include "texgine/utils/exlog.h"
@@ -34,7 +37,8 @@ namespace TextEngine {
 
 // "weight" and "italic" will assigned value 0 and 1, -1 used to exclude unassigned
 FontParser::FontDescriptor::FontDescriptor(): path(""), postScriptName(""), fullName(""),
-    fontFamily(""), fontSubfamily(""), weight(-1), width(0), italic(-1), monoSpace(0), symbolic(0)
+    fontFamily(""), fontSubfamily(""), postScriptNameLid(0), fullNameLid(0), fontFamilyLid(0),
+    fontSubfamilyLid(0), requestedLid(0), weight(-1), width(0), italic(-1), monoSpace(0), symbolic(0)
 {
 }
 
@@ -59,37 +63,51 @@ void FontParser::ProcessCmapTable(const struct CmapTables* cmapTable, FontParser
     }
 }
 
-void FontParser::GetStringFromNameId(FontParser::NameId nameId, const std::string& nameString,
+void FontParser::GetStringFromNameId(FontParser::NameId nameId, unsigned int languageId, const std::string& nameString,
     FontParser::FontDescriptor& fontDescriptor)
 {
     switch (nameId) {
         case FontParser::NameId::FONT_FAMILY: {
-            if (fontDescriptor.fontFamily.size() == 0) {
-                fontDescriptor.fontFamily = nameString;
-            }
+            SetNameString(fontDescriptor, fontDescriptor.fontFamily, fontDescriptor.fontFamilyLid,
+                languageId, nameString);
             break;
         }
         case FontParser::NameId::FONT_SUBFAMILY: {
-            if (fontDescriptor.fontSubfamily.size() == 0) {
-                fontDescriptor.fontSubfamily = nameString;
-            }
+            SetNameString(fontDescriptor, fontDescriptor.fontSubfamily, fontDescriptor.fontSubfamilyLid,
+                languageId, nameString);
             break;
         }
         case FontParser::NameId::FULL_NAME: {
-            if (fontDescriptor.fullName.size() == 0) {
-                fontDescriptor.fullName = nameString;
-            }
+            SetNameString(fontDescriptor, fontDescriptor.fullName, fontDescriptor.fullNameLid,
+                languageId, nameString);
             break;
         }
         case FontParser::NameId::POSTSCRIPT_NAME: {
-            if (fontDescriptor.postScriptName.size() == 0) {
-                fontDescriptor.postScriptName = nameString;
-            }
+            SetNameString(fontDescriptor, fontDescriptor.postScriptName, fontDescriptor.postScriptNameLid,
+                languageId, nameString);
             break;
         }
         default: {
             break;
         }
+    }
+}
+
+void FontParser::SetNameString(FontParser::FontDescriptor& fontDescriptor, std::string& field, unsigned int& fieldLid,
+    unsigned int languageId, const std::string& nameString)
+{
+    bool willSet = field.empty();
+    if (!willSet) {
+        if (languageId == fontDescriptor.requestedLid) {
+            willSet = true;
+        } else if (fieldLid != fontDescriptor.requestedLid && languageId == LANGUAGE_DEFAULT) {
+            willSet = true;
+        }
+    }
+
+    if (willSet) {
+        fieldLid = languageId;
+        field = nameString;
     }
 }
 
@@ -103,37 +121,25 @@ int FontParser::ProcessNameTable(const struct NameTable* nameTable, FontParser::
             continue;
         }
         FontParser::NameId nameId = static_cast<FontParser::NameId>(nameTable->nameRecord[i].nameId.Get());
+        unsigned int languageId = static_cast<unsigned int>(nameTable->nameRecord[i].languageId.Get());
         FontParser::PlatformId platformId =
             static_cast<FontParser::PlatformId>(nameTable->nameRecord[i].platformId.Get());
         auto len = nameTable->nameRecord[i].length.Get();
         auto stringOffset = nameTable->nameRecord[i].stringOffset.Get();
         const char* data = stringStorage + stringOffset;
         if (platformId == FontParser::PlatformId::MACINTOSH) {
-            std::string nameString(data, len);
-            GetStringFromNameId(nameId, nameString, fontDescriptor);
-        } else if (platformId == FontParser::PlatformId::WINDOWS) {
-            char* buffer = new (std::nothrow) char[len]();
-            if (buffer == nullptr) {
-                return FAILED;
-            }
 #ifdef BUILD_NON_SDK_VER
-            if (memcpy_s(buffer, len, data, len) != EOK) {
-                LOGSO_FUNC_LINE(ERROR) << "memcpy failed";
-                delete[] buffer;
-                return FAILED;
-            }
+            std::string nameString = ToUtf8(std::string(data, len));
 #else
-            memcpy(buffer, data, len);
+            std::string nameString(data, len);
 #endif
-            const char16_t *strPtr = reinterpret_cast<const char16_t *>(buffer);
-            const std::u16string u16str(strPtr, strPtr + HALF(len));
+            GetStringFromNameId(nameId, languageId, nameString, fontDescriptor);
+        } else if (platformId == FontParser::PlatformId::WINDOWS) {
             std::wstring_convert<std::codecvt_utf16<char16_t>, char16_t> converter;
-            const std::string name = converter.to_bytes(u16str);
-            std::vector<char> vec(name.begin(), name.end());
-            vec.erase(std::remove(vec.begin(), vec.end(), '\0'), vec.end());
-            std::string nameString = std::string(vec.begin(), vec.end());
-            GetStringFromNameId(nameId, nameString, fontDescriptor);
-            delete[] buffer;
+            std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converterUtf8;
+            const std::u16string u16str = converter.from_bytes(data, data + len);
+            std::string nameString = converterUtf8.to_bytes(u16str);
+            GetStringFromNameId(nameId, languageId, nameString, fontDescriptor);
         }
     }
 
@@ -152,17 +158,17 @@ void FontParser::ProcessPostTable(const struct PostTable* postTable, FontParser:
     }
 }
 
-int FontParser::ParseCmapTable(sk_sp<SkTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
+int FontParser::ParseCmapTable(std::shared_ptr<TexgineTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
 {
     auto tag = HB_TAG('c', 'm', 'a', 'p');
-    auto size = typeface->getTableSize(tag);
+    auto size = typeface->GetTableSize(tag);
     if (size <= 0) {
         LOGSO_FUNC_LINE(ERROR) << "haven't cmap";
         return FAILED;
     }
     std::unique_ptr<char[]> tableData = nullptr;
     tableData = std::make_unique<char[]>(size);
-    auto retTableData = typeface->getTableData(tag, 0, size, tableData.get());
+    auto retTableData = typeface->GetTableData(tag, 0, size, tableData.get());
     if (size != retTableData) {
         LOGSO_FUNC_LINE(ERROR) <<"get table data failed size: " << size << ", ret: " << retTableData;
         return FAILED;
@@ -183,17 +189,17 @@ int FontParser::ParseCmapTable(sk_sp<SkTypeface> typeface, FontParser::FontDescr
     return SUCCESSED;
 }
 
-int FontParser::ParseNameTable(sk_sp<SkTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
+int FontParser::ParseNameTable(std::shared_ptr<TexgineTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
 {
     auto tag = HB_TAG('n', 'a', 'm', 'e');
-    auto size = typeface->getTableSize(tag);
+    auto size = typeface->GetTableSize(tag);
     if (size <= 0) {
         LOGSO_FUNC_LINE(ERROR) << "haven't name";
         return FAILED;
     }
     std::unique_ptr<char[]> tableData = nullptr;
     tableData = std::make_unique<char[]>(size);
-    auto retTableData = typeface->getTableData(tag, 0, size, tableData.get());
+    auto retTableData = typeface->GetTableData(tag, 0, size, tableData.get());
     if (size != retTableData) {
         LOGSO_FUNC_LINE(ERROR) <<"get table data failed size: " << size << ", ret: " << retTableData;
         return FAILED;
@@ -218,17 +224,17 @@ int FontParser::ParseNameTable(sk_sp<SkTypeface> typeface, FontParser::FontDescr
     return SUCCESSED;
 }
 
-int FontParser::ParsePostTable(sk_sp<SkTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
+int FontParser::ParsePostTable(std::shared_ptr<TexgineTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
 {
     auto tag = HB_TAG('p', 'o', 's', 't');
-    auto size = typeface->getTableSize(tag);
+    auto size = typeface->GetTableSize(tag);
     if (size <= 0) {
         LOGSO_FUNC_LINE(ERROR) << "haven't post";
         return FAILED;
     }
     std::unique_ptr<char[]> tableData = nullptr;
     tableData = std::make_unique<char[]>(size);
-    auto retTableData = typeface->getTableData(tag, 0, size, tableData.get());
+    auto retTableData = typeface->GetTableData(tag, 0, size, tableData.get());
     if (size != retTableData) {
         LOGSO_FUNC_LINE(ERROR) <<"get table data failed size: " << size << ", ret: " << retTableData;
         return FAILED;
@@ -249,7 +255,7 @@ int FontParser::ParsePostTable(sk_sp<SkTypeface> typeface, FontParser::FontDescr
     return SUCCESSED;
 }
 
-int FontParser::ParseTable(sk_sp<SkTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
+int FontParser::ParseTable(std::shared_ptr<TexgineTypeface> typeface, FontParser::FontDescriptor& fontDescriptor)
 {
     if (ParseCmapTable(typeface, fontDescriptor) != SUCCESSED) {
         LOGSO_FUNC_LINE(ERROR) << "parse cmap failed";
@@ -267,20 +273,25 @@ int FontParser::ParseTable(sk_sp<SkTypeface> typeface, FontParser::FontDescripto
     return SUCCESSED;
 }
 
-int FontParser::SetFontDescriptor()
+int FontParser::SetFontDescriptor(const unsigned int languageId)
 {
     for (unsigned int i = 0; i < fontSet_.size(); ++i) {
         FontParser::FontDescriptor fontDescriptor;
+        fontDescriptor.requestedLid = languageId;
         fontDescriptor.path = fontSet_[i];
         const char* path = fontSet_[i].c_str();
-        auto typeface = SkTypeface::MakeFromFile(path);
+        auto typeface = TexgineTypeface::MakeFromFile(path);
         if (typeface == nullptr) {
             LOGSO_FUNC_LINE(ERROR) << "typeface is nullptr, can not parse: " << fontDescriptor.path;
             continue;
         }
-        auto fontStyle = typeface->fontStyle();
-        fontDescriptor.weight = fontStyle.weight();
-        fontDescriptor.width = fontStyle.width();
+        auto fontStyle = typeface->GetFontStyle();
+        if (fontStyle == nullptr) {
+            LOGSO_FUNC_LINE(ERROR) << "fontStyle is nullptr, can not parse: " << fontDescriptor.path;
+            continue;
+        }
+        fontDescriptor.weight = fontStyle->GetWeight();
+        fontDescriptor.width = fontStyle->GetWidth();
         if (ParseTable(typeface, fontDescriptor) !=  SUCCESSED) {
             LOGSO_FUNC_LINE(ERROR) << "parse table failed";
             return FAILED;
@@ -291,9 +302,33 @@ int FontParser::SetFontDescriptor()
     return SUCCESSED;
 }
 
-std::vector<FontParser::FontDescriptor> FontParser::GetVisibilityFonts()
+#ifdef BUILD_NON_SDK_VER
+std::string FontParser::ToUtf8(const std::string& str)
 {
-    if (SetFontDescriptor() != SUCCESSED) {
+    std::string utf8Str;
+    // UTF-8 and GB2312 is encoding format of string
+    iconv_t conv = iconv_open("UTF-8", "GB2312");
+    if (conv == (iconv_t)-1) {
+        return utf8Str;
+    }
+    char* inBuf = const_cast<char*>(str.c_str());
+    size_t inBytesLeft = str.length();
+    size_t outBytesLeft = inBytesLeft * 2;
+    char* outBuf = new char[outBytesLeft];
+    char* outBufStart = outBuf;
+    size_t res = iconv(conv, &inBuf, &inBytesLeft, &outBuf, &outBytesLeft);
+    if (res != (size_t)-1) {
+        utf8Str.assign(outBufStart, outBuf - outBufStart);
+    }
+    delete[] outBufStart;
+    iconv_close(conv);
+    return utf8Str;
+}
+#endif
+
+std::vector<FontParser::FontDescriptor> FontParser::GetVisibilityFonts(const std::string locale)
+{
+    if (SetFontDescriptor(GetLanguageId(locale)) != SUCCESSED) {
         LOGSO_FUNC_LINE(ERROR) << "set visibility font descriptor failed";
     }
 

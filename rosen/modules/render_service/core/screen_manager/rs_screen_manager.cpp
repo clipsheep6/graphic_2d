@@ -25,12 +25,9 @@
 #include <parameters.h>
 #include "param/sys_param.h"
 
-void SensorPostureDataCallback(SensorEvent *event)
-{
-    OHOS::Rosen::CreateOrGetScreenManager()->HandlePostureData(event);
-}
 namespace OHOS {
 namespace Rosen {
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
 namespace {
     constexpr float ANGLE_MIN_VAL = 0.0F;
     constexpr float ANGLE_MAX_VAL = 180.0F;
@@ -39,7 +36,13 @@ namespace {
     constexpr uint16_t SENSOR_EVENT_FIRST_DATA = 0;
     constexpr float HALF_FOLDED_MAX_THRESHOLD = 140.0F;
     constexpr float OPEN_HALF_FOLDED_MIN_THRESHOLD = 25.0F;
+    constexpr uint32_t WAIT_FOR_ACTIVE_SCREEN_ID_TIMEOUT = 1000;
+    void SensorPostureDataCallback(SensorEvent *event)
+    {
+        OHOS::Rosen::CreateOrGetScreenManager()->HandlePostureData(event);
+    }
 } // namespace
+#endif
 using namespace HiviewDFX;
 namespace impl {
 std::once_flag RSScreenManager::createFlag_;
@@ -65,7 +68,9 @@ RSScreenManager::~RSScreenManager() noexcept
 bool RSScreenManager::Init() noexcept
 {
     composer_ = HdiBackend::GetInstance();
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     isFoldScreenFlag_ = system::GetParameter("const.window.foldscreen.type", "") != "";
+#endif
     if (composer_ == nullptr) {
         RS_LOGE("RSScreenManager %{public}s: Failed to get composer.", __func__);
         return false;
@@ -83,13 +88,17 @@ bool RSScreenManager::Init() noexcept
 
     // call ProcessScreenHotPlugEvents() for primary screen immediately in main thread.
     ProcessScreenHotPlugEvents();
+
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     if (isFoldScreenFlag_) {
         RegisterSensorCallback();
     }
+#endif
     RS_LOGI("RSScreenManager Init succeed");
     return true;
 }
 
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
 void RSScreenManager::RegisterSensorCallback()
 {
     user.callback = SensorPostureDataCallback;
@@ -100,11 +109,11 @@ void RSScreenManager::RegisterSensorCallback()
     const int tryLimit = 5; // 5 times failure limit
     do {
         subscribeRet = SubscribeSensor(SENSOR_TYPE_ID_POSTURE, &user);
-        RS_LOGE("RSScreenManager RegisterSensorCallback, subscribeRet: %{public}d", subscribeRet);
+        RS_LOGI("RSScreenManager RegisterSensorCallback, subscribeRet: %{public}d", subscribeRet);
         setBatchRet = SetBatch(SENSOR_TYPE_ID_POSTURE, &user, POSTURE_INTERVAL, POSTURE_INTERVAL);
-        RS_LOGE("RSScreenManager RegisterSensorCallback, setBatchRet: %{public}d", setBatchRet);
+        RS_LOGI("RSScreenManager RegisterSensorCallback, setBatchRet: %{public}d", setBatchRet);
         activateRet = ActivateSensor(SENSOR_TYPE_ID_POSTURE, &user);
-        RS_LOGE("RSScreenManager RegisterSensorCallback, activateRet: %{public}d", activateRet);
+        RS_LOGI("RSScreenManager RegisterSensorCallback, activateRet: %{public}d", activateRet);
         if (subscribeRet != SENSOR_SUCCESS || setBatchRet != SENSOR_SUCCESS || activateRet != SENSOR_SUCCESS) {
             RS_LOGE("RSScreenManager RegisterSensorCallback failed.");
             usleep(1000); // wait 1000 us for next try
@@ -143,24 +152,25 @@ void RSScreenManager::HandlePostureData(const SensorEvent * const event)
     PostureData *postureData = reinterpret_cast<PostureData *>(event[SENSOR_EVENT_FIRST_DATA].data);
     float angle = (*postureData).angle;
     if (std::isless(angle, ANGLE_MIN_VAL) || std::isgreater(angle, ANGLE_MAX_VAL)) {
-        RS_LOGI("Invalid angle value, angle is %{public}f.", angle);
+        RS_LOGD("Invalid angle value, angle is %{public}f.", angle);
         return;
     }
-    RS_LOGI("angle vlaue in PostureData is: %{public}f.", angle);
+    RS_LOGD("angle vlaue in PostureData is: %{public}f.", angle);
     HandleSensorData(angle);
-    UnRegisterSensorCallback();
 }
 
 void RSScreenManager::HandleSensorData(float angle)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(activeScreenIdAssignedMutex_);
     FoldState foldState = TransferAngleToScreenState(angle);
     if (foldState == FoldState::FOLDED) {
         activeScreenId_ = externalScreenId_;
     } else {
         activeScreenId_ = innerScreenId_;
     }
-    RS_LOGI("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
+    isPostureSensorDataHandled_ = true;
+    HgmCore::Instance().SetActiveScreenId(activeScreenId_);
+    activeScreenIdAssignedCV_.notify_one();
 }
 
 FoldState RSScreenManager::TransferAngleToScreenState(float angle)
@@ -180,14 +190,63 @@ FoldState RSScreenManager::TransferAngleToScreenState(float angle)
     return state;
 }
 
-ScreenId RSScreenManager::GetActiveScreenId() const
+ScreenId RSScreenManager::GetActiveScreenId()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(activeScreenIdAssignedMutex_);
     if (!isFoldScreenFlag_) {
         return INVALID_SCREEN_ID;
     }
+    if (isPostureSensorDataHandled_) {
+        isFirstTimeToGetActiveScreenId_ = false;
+        UnRegisterSensorCallback();
+        RS_LOGI("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
+        return activeScreenId_;
+    }
+    activeScreenIdAssignedCV_.wait_until(lock, std::chrono::system_clock::now() +
+        std::chrono::milliseconds(WAIT_FOR_ACTIVE_SCREEN_ID_TIMEOUT), [this]() {
+            return isPostureSensorDataHandled_;
+        });
+    if (isFirstTimeToGetActiveScreenId_) {
+        isFirstTimeToGetActiveScreenId_ = false;
+        UnRegisterSensorCallback();
+    }
+    RS_LOGI("RSScreenManager activeScreenId: %{public}" PRIu64 " ", activeScreenId_);
     return activeScreenId_;
 }
+#else
+ScreenId RSScreenManager::GetActiveScreenId()
+{
+    return INVALID_SCREEN_ID;
+}
+#endif
+
+#ifdef USE_VIDEO_PROCESSING_ENGINE
+float RSScreenManager::GetScreenBrightnessNits(ScreenId id)
+{
+    constexpr float DEFAULT_SCREEN_LIGHT_NITS = 500.0;
+    constexpr float DEFAULT_SCREEN_LIGHT_MAX_NITS = 1200.0;
+    constexpr int32_t DEFAULT_SCREEN_LIGHT_MAX_LEVEL = 255;
+
+    float screenBrightnessNits = DEFAULT_SCREEN_LIGHT_NITS;
+
+    RSScreenType screenType;
+    if (GetScreenType(id, screenType) != SUCCESS) {
+        RS_LOGW("RSScreenManager::GetScreenBrightnessNits GetScreenType fail.");
+        return screenBrightnessNits;
+    }
+
+    if (screenType == VIRTUAL_TYPE_SCREEN) {
+        return screenBrightnessNits;
+    }
+
+    int32_t backLightLevel = GetScreenBacklight(id);
+    if (backLightLevel <= 0) {
+        return screenBrightnessNits;
+    }
+
+    return DEFAULT_SCREEN_LIGHT_MAX_NITS * backLightLevel / DEFAULT_SCREEN_LIGHT_MAX_LEVEL;
+}
+#endif
 
 void RSScreenManager::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data)
 {
@@ -253,7 +312,7 @@ void RSScreenManager::OnHwcDeadEvent()
             if (screen->IsVirtual()) {
                 continue;
             } else {
-                screen->GetOutput()->GetFrameBufferSurface()->CleanCache();
+                RSHardwareThread::Instance().ClearFrameBuffers(screen->GetOutput());
             }
         }
     }
@@ -319,7 +378,7 @@ void RSScreenManager::ProcessScreenHotPlugEvents()
                 continue;
             }
             if (screens_.count(id) != 0 && screenBacklight_.count(id) != 0 &&
-                screenPowerStatus_.count(id) != 0 && screenPowerStatus_[id] == ScreenPowerStatus::POWER_STATUS_ON) {
+                (screenPowerStatus_.count(id) == 0 || screenPowerStatus_[id] == ScreenPowerStatus::POWER_STATUS_ON)) {
                 screens_[id]->SetScreenBacklight(screenBacklight_[id]);
                 auto mainThread = RSMainThread::Instance();
                 mainThread->PostTask([mainThread]() {
@@ -375,7 +434,6 @@ void RSScreenManager::AddScreenToHgm(std::shared_ptr<HdiOutput> &output)
         }
         modeId++;
     }
-    hgmCore.SetModeBySettingConfig();
 }
 
 void RSScreenManager::RemoveScreenFromHgm(std::shared_ptr<HdiOutput> &output)
@@ -412,6 +470,7 @@ void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &o
             cb->OnScreenChanged(id, ScreenEvent::DISCONNECTED);
         }
         screens_.erase(id);
+        RS_LOGI("The screen for id %{public}" PRIu64 " already existed, remove the orignal one.", id);
     }
 
     screens_[id] = std::make_unique<RSScreen>(id, isVirtual, output, nullptr);
@@ -462,9 +521,11 @@ void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &o
 
     RS_LOGI("RSScreenManager %{public}s: A new screen(id %{public}" PRIu64 ") connected.", __func__, id);
     connectedIds_.emplace_back(id);
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
     if (isFoldScreenFlag_ && id != 0) {
         externalScreenId_ = id;
     }
+#endif
 }
 
 void RSScreenManager::ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output)
@@ -545,62 +606,6 @@ ScreenId RSScreenManager::GenerateVirtualScreenIdLocked()
 void RSScreenManager::ReuseVirtualScreenIdLocked(ScreenId id)
 {
     freeVirtualScreenIds_.push(id);
-}
-
-ScreenId RSScreenManager::GetMirrorScreenId(ScreenId id)
-{
-    ScreenId mirroredId = INVALID_SCREEN_ID;
-    auto mainThread = RSMainThread::Instance();
-    if (mainThread == nullptr) {
-        return mirroredId;
-    }
-
-    const auto& nodeMap = mainThread->GetContext().GetNodeMap();
-    nodeMap.TraversalNodes([&id, &mirroredId](const std::shared_ptr<RSBaseRenderNode>& node) {
-        if (node == nullptr || !node->IsInstanceOf<RSDisplayRenderNode>()) {
-            return;
-        }
-        RSDisplayRenderNode& displayNode = *(RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node));
-        if (displayNode.GetScreenId() != id) {
-            return;
-        }
-        std::shared_ptr<RSDisplayRenderNode> mirroredNode = displayNode.GetMirrorSource().lock();
-        if (mirroredNode != nullptr) {
-            mirroredId = mirroredNode->GetScreenId();
-        }
-    });
-    return mirroredId;
-}
-
-// The main screen resolution can be changed by the mirrored screen.
-void RSScreenManager::MirrorChangeDefaultScreenResolution(ScreenId id, uint32_t width, uint32_t height)
-{
-    if (screens_.count(id) == 0) {
-        RS_LOGD("RSScreenManager %{public}s: set fails because no screen access is currently available!", __func__);
-        return;
-    }
-
-    ScreenId mirroredId = GetMirrorScreenId(id);
-    if (mirroredId == INVALID_SCREEN_ID) {
-        RS_LOGD("RSScreenManager %{public}s: mirror screen is invalid.", __func__);
-        return;
-    }
-    ScreenId mainId = GetDefaultScreenId();
-    if (mirroredId == mainId) {
-        bool resolutionSetSuccess = false;
-        std::vector<GraphicDisplayModeInfo> mainMode = screens_.at(mainId)->GetSupportedModes();
-        for (uint32_t i = 0; i < mainMode.size(); i++) {
-            if (static_cast<uint32_t>(mainMode[i].width) == width &&
-                static_cast<uint32_t>(mainMode[i].height) == height) {
-                screens_.at(mainId)->SetActiveMode(i);
-                resolutionSetSuccess = true;
-                break;
-            }
-        }
-        if (!resolutionSetSuccess) {
-            RS_LOGD("RSScreenManager %{public}s: not support the current resolution!", __func__);
-        }
-    }
 }
 
 void RSScreenManager::GetVirtualScreenResolutionLocked(ScreenId id,
@@ -723,8 +728,8 @@ ScreenId RSScreenManager::CreateVirtualScreen(
     uint32_t height,
     sptr<Surface> surface,
     ScreenId mirrorId,
-    int32_t flags
-    )
+    int32_t flags,
+    std::vector<NodeId> filteredAppVector)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -748,6 +753,7 @@ ScreenId RSScreenManager::CreateVirtualScreen(
         RS_LOGD("RSScreenManager %{public}s: surface is nullptr.", __func__);
     }
 
+    std::unordered_set<NodeId> filteredAppSet(filteredAppVector.begin(), filteredAppVector.end());
     VirtualScreenConfigs configs;
     ScreenId newId = GenerateVirtualScreenIdLocked();
     configs.id = newId;
@@ -757,6 +763,7 @@ ScreenId RSScreenManager::CreateVirtualScreen(
     configs.height = height;
     configs.surface = surface;
     configs.flags = flags;
+    configs.filteredAppSet= filteredAppSet;
 
     screens_[newId] = std::make_unique<RSScreen>(configs);
     RS_LOGD("RSScreenManager %{public}s: create virtual screen(id %{public}" PRIu64 ").", __func__, newId);
@@ -786,10 +793,13 @@ int32_t RSScreenManager::SetVirtualScreenSurface(ScreenId id, sptr<Surface> surf
     }
     screens_.at(id)->SetProducerSurface(surface);
     RS_LOGD("RSScreenManager %{public}s: set virtual screen surface success!", __func__);
-    // if SetVirtualScreenSurface success, better to request the next vsync, avoiding prolong black screen
+    // if SetVirtualScreenSurface success, force a refresh of one frame, avoiding prolong black screen
     auto mainThread = RSMainThread::Instance();
     if (mainThread != nullptr) {
-        mainThread->RequestNextVSync();
+        mainThread->PostTask([mainThread]() {
+            mainThread->SetDirtyFlag();
+        });
+        mainThread->ForceRefreshForUni();
     }
     return SUCCESS;
 }
@@ -830,16 +840,6 @@ void RSScreenManager::SetScreenActiveMode(ScreenId id, uint32_t modeId)
         return;
     }
     screens_.at(id)->SetActiveMode(modeId);
-
-    // The main screen resolution can be changed on the mirrored physical screen.
-    auto supportedModes = screens_.at(id)->GetSupportedModes();
-    if (modeId >= supportedModes.size()) {
-        RS_LOGE("RSScreenManager %{public}s: set fails because the index is out of bounds.", __func__);
-        return;
-    }
-    uint32_t width = supportedModes[modeId].width;
-    uint32_t height = supportedModes[modeId].height;
-    MirrorChangeDefaultScreenResolution(id, width, height);
 }
 
 int32_t RSScreenManager::SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height)
@@ -852,10 +852,18 @@ int32_t RSScreenManager::SetVirtualScreenResolution(ScreenId id, uint32_t width,
     }
     screens_.at(id)->SetResolution(width, height);
     RS_LOGD("RSScreenManager %{public}s: set virtual screen resolution success", __func__);
+    return SUCCESS;
+}
 
-    // The main screen resolution can be changed by the mirrored virtual screen.
-    MirrorChangeDefaultScreenResolution(id, width, height);
+int32_t RSScreenManager::SetRogScreenResolution(ScreenId id, uint32_t width, uint32_t height)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
 
+    if (screens_.count(id) == 0 || !screens_.at(id)) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return SCREEN_NOT_FOUND;
+    }
+    screens_.at(id)->SetRogResolution(width, height);
     return SUCCESS;
 }
 
@@ -888,9 +896,23 @@ void RSScreenManager::SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status
             mainThread->RequestNextVSync();
         }
 
-        RS_LOGI("RSScreenManager %{public}s: Set system power on, request a frame", __func__);
+        RS_LOGD("RSScreenManager %{public}s: Set system power on, request a frame", __func__);
     }
     screenPowerStatus_[id] = status;
+}
+
+bool RSScreenManager::SetVirtualMirrorScreenCanvasRotation(ScreenId id, bool canvasRotation)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (screens_.count(id) == 0) {
+        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        return false;
+    }
+
+    RS_LOGD("RSScreenManager %{public}s: canvasRotation: %{public}d", __func__, canvasRotation);
+    
+    return screens_.at(id)->SetVirtualMirrorScreenCanvasRotation(canvasRotation);
 }
 
 void RSScreenManager::GetVirtualScreenResolution(ScreenId id, RSVirtualScreenResolution& virtualScreenResolution) const
@@ -1002,14 +1024,20 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
 
     ScreenInfo info;
     if (screens_.count(id) == 0) {
-        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+        RS_LOGD("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return info;
     }
 
     const auto &screen = screens_.at(id);
+    if (!screen) {
+        RS_LOGE("RSScreenManager::QueryScreenInfo screen %{public}" PRIu64 " has no info.", id);
+        return info;
+    }
     info.id = id;
     info.width = screen->Width();
     info.height = screen->Height();
+    info.phyWidth = screen->PhyWidth();
+    info.phyHeight = screen->PhyHeight();
     auto ret = screen->GetScreenColorGamut(info.colorGamut);
     if (ret != StatusCode::SUCCESS) {
         info.colorGamut = COLOR_GAMUT_SRGB;
@@ -1023,10 +1051,21 @@ ScreenInfo RSScreenManager::QueryScreenInfo(ScreenId id) const
         info.state = ScreenState::PRODUCER_SURFACE_ENABLE;
     }
     info.skipFrameInterval = screen->GetScreenSkipFrameInterval();
-    ret = screen->GetPixelFormat(info.pixelFormat);
-    ret = screen->GetScreenHDRFormat(info.hdrFormat);
-
+    screen->GetPixelFormat(info.pixelFormat);
+    screen->GetScreenHDRFormat(info.hdrFormat);
+    info.filteredAppSet = screen->GetFilteredAppSet();
     return info;
+}
+
+bool RSScreenManager::GetCanvasRotation(ScreenId id) const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (screens_.count(id) == 0 || !screens_.at(id)) {
+        RS_LOGW("RSScreenManager::GetCanvasRotation: There is no screen for id %{public}" PRIu64 ".", id);
+        return false;
+    }
+    return screens_.at(id)->GetCanvasRotation();
 }
 
 sptr<Surface> RSScreenManager::GetProducerSurface(ScreenId id) const
@@ -1144,7 +1183,7 @@ int32_t RSScreenManager::GetScreenSupportedMetaDataKeysLocked(
 
 int32_t RSScreenManager::GetScreenColorGamutLocked(ScreenId id, ScreenColorGamut& mode) const
 {
-    if (screens_.count(id) == 0) {
+    if (screens_.count(id) == 0 || !screens_.at(id)) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return StatusCode::SCREEN_NOT_FOUND;
     }
@@ -1210,8 +1249,8 @@ int32_t RSScreenManager::GetScreenHDRCapabilityLocked(ScreenId id, RSScreenHDRCa
 
 int32_t RSScreenManager::GetScreenTypeLocked(ScreenId id, RSScreenType& type) const
 {
-    if (screens_.count(id) == 0) {
-        RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
+    if (screens_.count(id) == 0 || !screens_.at(id)) {
+        RS_LOGD("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return StatusCode::SCREEN_NOT_FOUND;
     }
 
@@ -1238,9 +1277,9 @@ int32_t RSScreenManager::SetScreenSkipFrameIntervalLocked(ScreenId id, uint32_t 
     return StatusCode::SUCCESS;
 }
 
-int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& pixelFormat) const 
+int32_t RSScreenManager::GetPixelFormatLocked(ScreenId id, GraphicPixelFormat& pixelFormat) const
 {
-    if (screens_.count(id) == 0) {
+    if (screens_.count(id) == 0 || !screens_.at(id)) {
         RS_LOGW("RSScreenManager %{public}s: There is no screen for id %{public}" PRIu64 ".", __func__, id);
         return StatusCode::SCREEN_NOT_FOUND;
     }
@@ -1321,6 +1360,25 @@ int32_t RSScreenManager::GetScreenSupportedMetaDataKeys(ScreenId id, std::vector
 {
     std::lock_guard<std::mutex> lock(mutex_);
     return GetScreenSupportedMetaDataKeysLocked(id, keys);
+}
+
+uint32_t RSScreenManager::GetActualScreensNum() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    uint32_t num = 0;
+    for (const auto &[id, screen] : screens_) {
+        if (!screen) {
+            continue;
+        }
+        if (!screen->IsVirtual()) {
+            num += 1;
+        } else {
+            if (screen->GetProducerSurface()) {
+                num += 1;
+            }
+        }
+    }
+    return num;
 }
 
 int32_t RSScreenManager::GetScreenColorGamut(ScreenId id, ScreenColorGamut &mode) const

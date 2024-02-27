@@ -43,6 +43,7 @@ public:
     Vector2f GetTranslate() const;
     float GetTranslateZ() const;
     Vector2f GetScale() const;
+    Vector2f GetSkew() const;
 
     float GetAlpha() const;
     bool GetAlphaOffscreen() const;
@@ -62,10 +63,10 @@ public:
     Vector4<Color> GetBorderColor() const;
     Vector4f GetBorderWidth() const;
     Vector4<uint32_t> GetBorderStyle() const;
-    Vector4<Color> GetOuterBorderColor() const;
-    Vector4f GetOuterBorderWidth() const;
-    Vector4<uint32_t> GetOuterBorderStyle() const;
-    Vector4f GetOuterBorderRadius() const;
+    Vector4<Color> GetOutlineColor() const;
+    Vector4f GetOutlineWidth() const;
+    Vector4<uint32_t> GetOutlineStyle() const;
+    Vector4f GetOutlineRadius() const;
 
     std::shared_ptr<RSFilter> GetBackgroundFilter() const;
     std::shared_ptr<RSFilter> GetFilter() const;
@@ -79,7 +80,7 @@ public:
     std::shared_ptr<RSPath> GetShadowPath() const;
     bool GetShadowMask() const;
     bool GetShadowIsFilled() const;
-    bool GetShadowColorStrategy() const;
+    int GetShadowColorStrategy() const;
 
     Gravity GetFrameGravity() const;
 
@@ -94,6 +95,7 @@ public:
 
     float GetLightIntensity() const;
     Vector4f GetLightPosition() const;
+    float GetIlluminatedBorderWidth() const;
     int GetIlluminatedType() const;
     float GetBloom() const;
 

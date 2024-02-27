@@ -88,6 +88,24 @@ void OH_Drawing_BitmapDestroy(OH_Drawing_Bitmap* cBitmap)
     delete CastToBitmap(cBitmap);
 }
 
+OH_Drawing_Bitmap* OH_Drawing_BitmapCreateFromPixels(OH_Drawing_Image_Info* cImageInfo, void* pixels, uint32_t rowBytes)
+{
+    if (cImageInfo == nullptr || pixels == nullptr || rowBytes == 0) {
+        return nullptr;
+    }
+
+    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height,
+        static_cast<ColorType>(cImageInfo->colorType), static_cast<AlphaType>(cImageInfo->alphaType));
+
+    Bitmap* bitmap = new Bitmap;
+    bool ret = bitmap->InstallPixels(imageInfo, pixels, rowBytes);
+    if (!ret) {
+        delete bitmap;
+        return nullptr;
+    }
+    return (OH_Drawing_Bitmap*)bitmap;
+}
+
 void OH_Drawing_BitmapBuild(OH_Drawing_Bitmap* cBitmap, const uint32_t width, const uint32_t height,
     const OH_Drawing_BitmapFormat* cBitmapFormat)
 {
@@ -127,4 +145,17 @@ void* OH_Drawing_BitmapGetPixels(OH_Drawing_Bitmap* cBitmap)
         return nullptr;
     }
     return bitmap->GetPixels();
+}
+
+void OH_Drawing_BitmapGetImageInfo(OH_Drawing_Bitmap* cBitmap, OH_Drawing_Image_Info* cImageInfo)
+{
+    if (cBitmap == nullptr || cImageInfo == nullptr) {
+        return;
+    }
+    ImageInfo imageInfo = CastToBitmap(cBitmap)->GetImageInfo();
+
+    cImageInfo->width = imageInfo.GetWidth();
+    cImageInfo->height = imageInfo.GetHeight();
+    cImageInfo->colorType = static_cast<OH_Drawing_ColorFormat>(imageInfo.GetColorType());
+    cImageInfo->alphaType = static_cast<OH_Drawing_AlphaFormat>(imageInfo.GetAlphaType());
 }

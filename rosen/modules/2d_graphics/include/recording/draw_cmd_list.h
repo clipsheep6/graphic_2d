@@ -22,11 +22,37 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
+class DrawOpItem;
 class DRAWING_API DrawCmdList : public CmdList {
 public:
-    DrawCmdList() = default;
-    DrawCmdList(int32_t width, int32_t height);
-    ~DrawCmdList() override = default;
+    /*
+     * @brief   there are two mode for DrawCmdList to add new op
+     * @param   IMMEDIATE   add op to continouns buffer immediately, overload will benifit from this
+     * @param   DEFERRED    add op to vector and then add to contiguous buffer if needed
+     * @detail  playback can get all op from continouns buffer in IMMEDIATE mode or vector int DEFERRED mode
+     */
+    enum class UnmarshalMode {
+        IMMEDIATE,
+        DEFERRED
+    };
+
+    /*
+     * @brief   Creates a DrawCmdList with contiguous buffers.
+     * @param   data    A contiguous buffers.
+     * @detail  Called only by Unmarshalling-Thread, the default mode is DEFERRED since all DrawOp store in vector
+     */
+    static std::shared_ptr<DrawCmdList> CreateFromData(const CmdListData& data, bool isCopy = false);
+
+    /*
+     * @brief   Creates a DrawCmdList
+     */
+    DrawCmdList(UnmarshalMode mode = UnmarshalMode::IMMEDIATE);
+    DrawCmdList(int32_t width, int32_t height, UnmarshalMode mode = UnmarshalMode::IMMEDIATE);
+
+    /*
+     * @brief   Destroy a DrawCmdList
+     */
+    ~DrawCmdList() override;
 
     uint32_t GetType() const override
     {
@@ -34,18 +60,70 @@ public:
     }
 
     /*
-     * @brief       Creates a DrawCmdList with contiguous buffers.
-     * @param data  A contiguous buffers.
+     * @brief   Add DrawOpItem to DrawCmdList, only can be used in IMMEDIATE mode
+     * @param   T   The name of DrawOpItem class
+     * @param   Args    Constructs arguments to the DrawOpItem
+     * @return  true if add success, false if not in IMMEDIATE mode or create op in contiguous buffer failed
      */
-    static std::shared_ptr<DrawCmdList> CreateFromData(const CmdListData& data, bool isCopy = false);
+    template<typename T, typename... Args>
+    bool AddDrawOp(Args&&... args)
+    {
+        if (mode_ != UnmarshalMode::IMMEDIATE) {
+            return false;
+        }
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        T* op = opAllocator_.Allocate<T>(std::forward<Args>(args)...);
+        if (op == nullptr) {
+            return false;
+        }
+
+        uint32_t offset = opAllocator_.AddrToOffset(op);
+        if (lastOpItemOffset_.has_value()) {
+            auto* lastOpItem = static_cast<OpItem*>(opAllocator_.OffsetToAddr(lastOpItemOffset_.value()));
+            if (lastOpItem != nullptr) {
+                lastOpItem->SetNextOpItemOffset(offset);
+            }
+        }
+        lastOpItemOffset_.emplace(offset);
+        opCnt_++;
+        return true;
+    }
 
     /*
-     * @brief         Unmarshalling Draw Ops Param from contiguous buffers
+     * @brief   Add DrawOpItem to DrawCmdList, only can be used in DEFERRED mode
+     * @param   drawOpItem  A real DrawOpItem instance
+     * @return  true if add success, false if not in DEFERRED mode
      */
-    void UnmarshallingOps();
+    bool AddDrawOp(std::shared_ptr<DrawOpItem>&& drawOpItem);
 
     /*
-     * @brief         Draw cmd is empty or not.
+     * @brief   Clear DrawOpItem in contiguous buffer, draw op vector, and other resource associated with draw op
+     */
+    void ClearOp();
+
+    /*
+     * @brief   Get op vector size
+     */
+    size_t GetOpItemSize() const;
+
+    /*
+     * @brief   for each op in vector, combine there desc together
+     */
+    std::string GetOpsWithDesc() const;
+
+    /*
+     * @brief   Marshalling Draw Ops Param from vector to contiguous buffers.
+     */
+    void MarshallingDrawOps();
+
+    /*
+     * @brief   Unmarshalling Draw Ops from contiguous buffers to vector
+     *          it is only called by Unmarshalling-Thread, the mode should be set to DEFERRED when create.
+     */
+    void UnmarshallingDrawOps();
+
+    /*
+     * @brief   Draw cmd is empty or not.
      */
     bool IsEmpty() const;
 
@@ -75,11 +153,14 @@ public:
      */
     void SetHeight(int32_t height);
 
+    /*
+     * @brief   Convert Textblob Op to Image Op, it is different for difference mode
+     *          IMMEDIATE: the Image Op will add to the end of buffer, and the mapped offset will be recorded in
+     *          replacedOpListForBuffer.
+     *          DEFERRED: the image Op will replace the Textblob op in vector, and the index-op_ptr will be recorded
+     *          in replacedOpListForVector.
+     */
     void GenerateCache(Canvas* canvas = nullptr, const Rect* rect = nullptr);
-
-    void GenerateCacheInRenderService(Canvas* canvas, const Rect* rect);
-
-    void ClearCache();
 
     bool GetIsCache();
 
@@ -93,13 +174,26 @@ public:
 
     void SetReplacedOpList(std::vector<std::pair<uint32_t, uint32_t>> replacedOpList);
 
+    void UpdateNodeIdToPicture(NodeId nodeId);
+
 private:
-    MemAllocator largeObjectAllocator_;
-    std::vector<std::shared_ptr<OpItem>> unmarshalledOpItems_;
+    void ClearCache();
+    void GenerateCacheByVector(Canvas* canvas, const Rect* rect);
+    void GenerateCacheByBuffer(Canvas* canvas, const Rect* rect);
+
+    void PlaybackToDrawCmdList(std::shared_ptr<DrawCmdList> drawCmdList);
+    void PlaybackByVector(Canvas& canvas, const Rect* rect = nullptr);
+    void PlaybackByBuffer(Canvas& canvas, const Rect* rect = nullptr);
+
     int32_t width_;
     int32_t height_;
-    std::vector<std::pair<uint32_t, uint32_t>> replacedOpList_;
-    std::vector<std::pair<uint32_t, std::shared_ptr<OpItem>>> opReplacedByDrivenRender_;
+    const UnmarshalMode mode_;
+    const uint32_t offset_ = 2 * sizeof(int32_t); // 2 is width and height.Offset of first OpItem is behind the w and h
+    std::vector<std::shared_ptr<DrawOpItem>> drawOpItems_;
+
+    size_t lastOpGenSize_ = 0;
+    std::vector<std::pair<uint32_t, uint32_t>> replacedOpListForBuffer_;
+    std::vector<std::pair<int, std::shared_ptr<DrawOpItem>>> replacedOpListForVector_;
     bool isCached_ = false;
     bool cachedHighContrast_ = false;
 };

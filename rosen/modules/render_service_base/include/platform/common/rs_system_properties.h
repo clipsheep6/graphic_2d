@@ -43,6 +43,7 @@ enum class DirtyRegionDebugType {
     REMOVE_CHILD_RECT,
     RENDER_PROPERTIES_RECT,
     CANVAS_NODE_SKIP_RECT,
+    OUTLINE_RECT,
 };
 
 enum class SurfaceRegionDebugType {
@@ -64,6 +65,7 @@ enum class DumpSurfaceType {
     SINGLESURFACE,
     ALLSURFACES,
     PIXELMAP,
+    SURFACEBUFFER
 };
 
 enum class ParallelRenderingType {
@@ -88,6 +90,28 @@ enum class HgmRefreshRateModes {
     SET_RATE_MODE_HIGH = 3
 };
 
+enum class GpuApiType {
+    OPENGL = 0,
+    VULKAN,
+    DDGR,
+};
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+enum class DdgrOpincType {
+    DDGR_OPINC_NONE = 0,
+    DDGR_AUTOCACHE,
+    DDGR_AUTOCACHE_REALDRAW,
+    DDGR_RENDERCACHE,
+    DDGR_OPINCUPDATE,
+    DDGR_UNRESTRICTED_MODE,
+};
+
+enum class DdgrOpincDfxType {
+    DDGR_OPINC_DFX_NONE,
+    DDGR_OPINC_DFX_AUTO,
+};
+#endif
+
 using OnSystemPropertyChanged = void(*)(const char*, const char*, void*);
 
 class RSB_EXPORT RSSystemProperties final {
@@ -99,7 +123,9 @@ public:
     static bool IsSceneBoardEnabled();
     static int GetDumpFrameNum();
     static void SetRecordingDisenabled();
-    static bool GetRecordingEnabled();
+    static int GetRecordingEnabled();
+    static int GetDumpRSTreeCount();
+    static void SetDumpRSTreeCount(int count);
 
     static bool GetUniRenderEnabled();
     static bool GetRenderNodeTraceEnabled();
@@ -122,6 +148,7 @@ public:
     static bool GetHardwareComposerEnabled();
     static bool GetAFBCEnabled();
     static bool GetReleaseResourceEnabled();
+    static bool GetRSScreenRoundCornerEnable();
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();
@@ -146,6 +173,7 @@ public:
     static bool GetRandomColorEnabled();
     static bool GetKawaseOriginalEnabled();
     static bool GetBlurEnabled();
+    static const std::vector<float>& GetAiInvertCoef();
     static bool GetSkipForAlphaZeroEnabled();
     static bool GetSkipGeometryNotChangeEnabled();
     static bool GetPropertyDrawableEnable();
@@ -160,23 +188,48 @@ public:
     static bool IsFoldScreenFlag();
     static bool GetCacheCmdEnabled();
     static bool GetASTCEnabled();
+    static bool GetCachedBlurPartialRenderEnabled();
     static bool GetImageGpuResourceCacheEnable(int width, int height);
-#if defined (ENABLE_DDGR_OPTIMIZE)
-    static bool GetDDGRIntegrateEnable();
-#endif
     static bool GetSnapshotWithDMAEnabled();
     static bool IsPhoneType();
+    static bool IsPcType();
     static bool GetSyncTransactionEnabled();
     static int GetSyncTransactionWaitDelay();
     static bool GetUseShadowBatchingEnabled();
     static bool GetSingleFrameComposerEnabled();
     static bool GetSingleFrameComposerCanvasNodeEnabled();
+    static bool GetSubSurfaceEnabled();
+    static bool GetSecurityPermissionCheckEnabled();
+    static bool GetParallelUploadTexture();
+    static bool GetEffectMergeEnabled();
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static DdgrOpincType GetDdgrOpincType();
+    static bool IsDdgrOpincEnable();
+    static bool GetAutoCacheDebugEnabled();
+    static DdgrOpincDfxType GetDdgrOpincDfxType();
+    static bool IsOpincRealDrawCacheEnable();
+#endif
+
+    static bool GetDumpUICaptureEnabled();
+    static bool GetDumpUIPixelmapEnabled();
+
+    static inline GpuApiType GetGpuApiType()
+    {
+        return RSSystemProperties::systemGpuApiType_;
+    }
+
 private:
     RSSystemProperties() = default;
 
     static inline bool isUniRenderEnabled_ = false;
     inline static bool isDrawTextAsBitmap_ = false;
     inline static bool cacheEnabledForRotation_ = false;
+    static const GpuApiType systemGpuApiType_;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static const DdgrOpincType ddgrOpincType_;
+    static const DdgrOpincDfxType ddgrOpincDfxType_;
+#endif
 };
 
 } // namespace Rosen

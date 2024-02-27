@@ -121,6 +121,12 @@ public:
     virtual GSError FlushBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence,
                                 BufferFlushConfigWithDamages &config) = 0;
     virtual GSError SetWptrNativeWindowToPSurface(void* nativeWindow) = 0;
+    virtual GSError GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
+        sptr<SyncFence>& fence, float matrix[16]) = 0;
+    virtual GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) = 0;
+    virtual GSError RegisterSurfaceDelegator(sptr<IRemoteObject> client) = 0;
+    virtual GSError RegisterReleaseListener(OnReleaseFuncWithFence func) = 0;
+    virtual void ConsumerRequestCpuAccess(bool on) = 0;
 protected:
     IConsumerSurface() = default;
 };

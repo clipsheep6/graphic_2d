@@ -54,7 +54,11 @@ public:
     TypographyProperties::PositionAndAffinity GetGlyphPositionAtCoordinateWithCluster(double dx,
         double dy) override;
     TypographyProperties::Range<size_t> GetWordBoundary(size_t offset) override;
+    TypographyProperties::Range<size_t> GetActualTextRange(int lineNumber, bool includeSpaces) override;
     size_t GetLineCount() override;
+    double GetLineHeight(int lineNumber) override;
+    double GetLineWidth(int lineNumber) override;
+
 private:
     std::unique_ptr<txt::Paragraph> paragraphTxt_;
 };

@@ -69,6 +69,8 @@ public:
      */
     bool BuildUninitialized(size_t length);
 
+    bool BuildEmpty();
+
     /*
      * @brief   Gets a writable pointer to Data buffer.
      * @return  A writable pointer to Data buffer.
@@ -87,12 +89,19 @@ public:
      */
     const void* GetData() const;
 
+    /**
+     * @brief         Create a new data with the specified path.
+     * @param length  The specified path.
+     * @return        A shared pointer to Data.
+     */
+    static std::shared_ptr<Data> MakeFromFileName(const char path[]);
+
     /*
      * @brief   Get the adaptation layer instance, called in the adaptation layer.
      * @return  Adaptation Layer instance.
      */
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return impl_->DowncastingTo<T>();
     }

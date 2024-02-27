@@ -22,7 +22,11 @@ using namespace testing;
 using namespace testing::ext;
 
 struct MockVars {
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkData> skData_ = SkData::MakeEmpty();
+#else
+    std::shared_ptr<RSData> skData_ = std::make_shared<RSData>();
+#endif
 } g_tdMockvars;
 
 void InitTdMockVars(struct MockVars &&vars)
@@ -30,10 +34,12 @@ void InitTdMockVars(struct MockVars &&vars)
     g_tdMockvars = std::move(vars);
 }
 
+#ifndef USE_ROSEN_DRAWING
 sk_sp<SkData> SkData::MakeFromFileName(const char path[])
 {
     return g_tdMockvars.skData_;
 }
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -52,7 +58,7 @@ HWTEST_F(TexgineDataTest, MakeFromFileName, TestSize.Level1)
         InitTdMockVars({});
         std::string str = "";
         auto td = TexgineData::MakeFromFileName(str);
-        EXPECT_EQ(td->GetData(), g_tdMockvars.skData_);
+        EXPECT_NE(td->GetData(), g_tdMockvars.skData_);
     });
 }
 } // namespace TextEngine

@@ -18,6 +18,7 @@
 
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/HMSymbol.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
@@ -71,6 +72,7 @@ public:
     ImageInfo GetImageInfo() override;
     bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
         int srcX, int srcY) override;
+    bool ReadPixels(const Bitmap& dstBitmap, int srcX, int srcY) override;
 
     // shapes
     void DrawPoint(const Point& point) override;
@@ -90,18 +92,27 @@ public:
     void DrawRegion(const Region& region) override;
     void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode) override;
-    void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) override;
     void DrawVertices(const Vertices& vertices, BlendMode mode) override;
 
     void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) override;
-    void DrawAnnotation(const Rect& rect, const char* key, const Data* data) override;
     void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) override;
 
     // color
     void DrawColor(ColorQuad color, BlendMode mode) override;
+
+    // opinc_begin
+    bool BeginOpRecording(const Rect* bound = nullptr, bool isDynamic = false) override;
+    Drawing::OpListHandle EndOpRecording() override;
+    void DrawOpList(Drawing::OpListHandle handle) override;
+    int CanDrawOpList(Drawing::OpListHandle handle) override;
+    void PreOpListDrawArea(const Matrix& matrix) override;
+    bool CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound = nullptr) override;
+    Drawing::OpListHandle GetOpListDrawArea() override;
+    void OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
+        const SamplingOptions& sampling, SrcRectConstraint constraint) override;
+    // opinc_end
 
     // image
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) override;
@@ -117,10 +128,14 @@ public:
     // text
     void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y) override;
 
+    // symbol
+    void DrawSymbol(const DrawingHMSymbolData& symbol, Point locate) override;
+
     // clip
     void ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias) override;
     void ClipIRect(const RectI& rect, ClipOp op = ClipOp::INTERSECT) override;
     void ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAntiAlias) override;
+    void ClipRoundRect(const Rect& rect, std::vector<Point>& pts, bool doAntiAlias) override;
     void ClipPath(const Path& path, ClipOp op, bool doAntiAlias) override;
     void ClipRegion(const Region& region, ClipOp op = ClipOp::INTERSECT) override;
     bool IsClipEmpty() override;
@@ -139,23 +154,23 @@ public:
     // state
     void Flush() override;
     void Clear(ColorQuad color) override;
-    void Save() override;
+    uint32_t Save() override;
     void SaveLayer(const SaveLayerOps& saveLayerOps) override;
     void Restore() override;
     uint32_t GetSaveCount() const override;
     void Discard() override;
 
     // paint
-    void AttachPen(const Pen& pen) override;
-    void AttachBrush(const Brush& brush) override;
-    void DetachPen() override;
-    void DetachBrush() override;
+    void AttachPaint(const Paint& paint) override;
 
     SkCanvas* ExportSkCanvas() const;
     void ImportSkCanvas(SkCanvas* skCanvas);
 
+    void BuildOverDraw(std::shared_ptr<Canvas> canvas) override;
+
 private:
     void RoundRectCastToSkRRect(const RoundRect& roundRect, SkRRect& skRRect) const;
+    bool ConvertToHMSymbolData(const DrawingHMSymbolData& symbol, HMSymbolData& skSymbol);
     std::shared_ptr<SkCanvas> skiaCanvas_;
     SkCanvas* skCanvas_;
     SkiaPaint skiaPaint_;

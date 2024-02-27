@@ -14,6 +14,7 @@
  */
 
 #include <cassert>
+#include <cstdint>
 #include <cstdio>
 #include <limits>
 #include <thread>
@@ -28,6 +29,7 @@
 #include <cinttypes>
 #include <refbase.h>
 
+#include <vulkan/vulkan_core.h>
 #include <window.h>
 #include <graphic_common.h>
 #include <native_window.h>
@@ -40,6 +42,16 @@
 #define SWAPCHAIN_SURFACE_NAME "VK_LAYER_OHOS_surface"
 
 using namespace OHOS;
+
+enum Extension {
+    OHOS_SURFACE,
+    OHOS_NATIVE_BUFFER,
+    KHR_SURFACE,
+    KHR_SWAPCHAIN,
+    EXTENSION_COUNT,
+    EXTENSION_UNKNOWN,
+};
+
 struct LayerData {
     VkInstance instance = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
@@ -48,6 +60,7 @@ struct LayerData {
     std::unique_ptr<VkLayerInstanceDispatchTable> instanceDispatchTable;
     std::unordered_map<VkDebugUtilsMessengerEXT, VkDebugUtilsMessengerCreateInfoEXT> debugCallbacks;
     PFN_vkSetDeviceLoaderData fpSetDeviceLoaderData = nullptr;
+    std::bitset<Extension::EXTENSION_COUNT> enabledExtensions;
 };
 
 namespace {
@@ -453,7 +466,7 @@ GraphicPixelFormat GetPixelFormat(VkFormat format)
     return nativeFormat;
 }
 
-VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo, int32_t* numImages)
+VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo, uint32_t* numImages)
 {
     GraphicPixelFormat pixelFormat = GetPixelFormat(createInfo->imageFormat);
     Surface &surface = *SurfaceFromHandle(createInfo->surface);
@@ -483,7 +496,7 @@ VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKH
 }
 
 VkResult SetSwapchainCreateInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo,
-    int32_t* numImages)
+    uint32_t* numImages)
 {
     GraphicColorDataSpace colorDataSpace = GetColorDataspace(createInfo->imageColorSpace);
     if (colorDataSpace == GRAPHIC_COLOR_DATA_SPACE_UNKNOWN) {
@@ -538,7 +551,7 @@ void InitImageCreateInfo(const VkSwapchainCreateInfoKHR* createInfo, VkImageCrea
     imageCreate->pQueueFamilyIndices = createInfo->pQueueFamilyIndices;
 }
 
-VKAPI_ATTR VkResult CreateImages(int32_t &numImages, Swapchain* swapchain, const VkSwapchainCreateInfoKHR* createInfo,
+VKAPI_ATTR VkResult CreateImages(uint32_t &numImages, Swapchain* swapchain, const VkSwapchainCreateInfoKHR* createInfo,
     VkImageCreateInfo &imageCreate, VkDevice device)
 {
     VkLayerDispatchTable* pDisp =
@@ -550,7 +563,7 @@ VKAPI_ATTR VkResult CreateImages(int32_t &numImages, Swapchain* swapchain, const
         window->surface->CleanCache();
     }
     VkResult result = VK_SUCCESS;
-    for (int32_t i = 0; i < numImages; i++) {
+    for (uint32_t i = 0; i < numImages; i++) {
         Swapchain::Image &img = swapchain->images[i];
         NativeWindowBuffer* buffer = nullptr;
         int err = NativeWindowRequestBuffer(window, &buffer, &img.requestFence);
@@ -561,8 +574,8 @@ VKAPI_ATTR VkResult CreateImages(int32_t &numImages, Swapchain* swapchain, const
         }
         img.buffer = buffer;
         img.requested = true;
-        imageCreate.extent = VkExtent3D {static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferWidth()),
-                                          static_cast<uint32_t>(img.buffer->sfbuffer->GetSurfaceBufferHeight()), 1};
+        imageCreate.extent = VkExtent3D {static_cast<uint32_t>(img.buffer->sfbuffer->GetWidth()),
+                                          static_cast<uint32_t>(img.buffer->sfbuffer->GetHeight()), 1};
         ((VkNativeBufferOHOS*)(imageCreate.pNext))->handle =
             reinterpret_cast<struct OHBufferHandle *>(img.buffer->sfbuffer->GetBufferHandle());
         result = pDisp->CreateImage(device, &imageCreate, nullptr, &img.image);
@@ -573,7 +586,7 @@ VKAPI_ATTR VkResult CreateImages(int32_t &numImages, Swapchain* swapchain, const
     }
 
     SWLOGD("swapchain init shared %{public}d", swapchain->shared);
-    for (int32_t i = 0; i < numImages; i++) {
+    for (uint32_t i = 0; i < numImages; i++) {
         Swapchain::Image &img = swapchain->images[i];
         if (img.requested) {
             if (!swapchain->shared) {
@@ -619,10 +632,16 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(VkDevice device, const VkSwapc
         return VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
     }
 
-    int32_t numImages = static_cast<int32_t>(MIN_BUFFER_SIZE);
+    uint32_t numImages = surface.window->surface->GetQueueSize();
     VkResult result = SetSwapchainCreateInfo(device, createInfo, &numImages);
     if (result != VK_SUCCESS) {
         return result;
+    }
+
+    if (numImages < createInfo->minImageCount) {
+        SWLOGE("swapchain init minImageCount[%{public}u] can not be more than maxBufferCount[%{public}u]",
+            createInfo->minImageCount, numImages);
+        return VK_ERROR_INITIALIZATION_FAILED;
     }
 
     if (allocator == nullptr) {
@@ -717,17 +736,16 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImageKHR(VkDevice device, VkSwapchainK
     }
 
     uint32_t index = 0;
-    while (index < swapchain.numImages) {
+    for (; index < swapchain.numImages; index++) {
         if (swapchain.images[index].buffer->sfbuffer == nativeWindowBuffer->sfbuffer) {
             swapchain.images[index].requested = true;
             swapchain.images[index].requestFence = fence;
             break;
         }
-        index++;
     }
 
     if (index == swapchain.numImages) {
-        SWLOGE("RequestBuffer returned unrecognized buffer");
+        SWLOGD("RequestBuffer returned unrecognized buffer");
         if (NativeWindowCancelBuffer(nativeWindow, nativeWindowBuffer) != OHOS::GSERROR_OK) {
             SWLOGE("NativeWindowCancelBuffer failed: (%{public}d)", ret);
         }
@@ -745,6 +763,34 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImageKHR(VkDevice device, VkSwapchainK
     }
 
     *imageIndex = index;
+    return VK_SUCCESS;
+}
+
+VKAPI_ATTR
+VkResult GetPhysicalDevicePresentRectanglesKHR(VkPhysicalDevice physicalDevice,
+    VkSurfaceKHR surface, uint32_t* pRectCount, VkRect2D* pRects)
+{
+    if (pRects == nullptr) {
+        *pRectCount = 1;
+        return VK_SUCCESS;
+    }
+    bool incomplete = *pRectCount < 1;
+    *pRectCount = std::min(*pRectCount, 1u);
+    if (incomplete) {
+        return VK_INCOMPLETE;
+    }
+
+    NativeWindow* window = SurfaceFromHandle(surface)->window;
+
+    int width = 0;
+    int height = 0;
+    int err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY, &height, &width);
+    if (err != OHOS::GSERROR_OK) {
+        SWLOGE("NATIVE_WINDOW_DEFAULT_WIDTH GET BUFFER GEOMETRY failed: (%{public}d)", err);
+    }
+    pRects[0].offset.x = 0;
+    pRects[0].offset.y = 0;
+    pRects[0].extent = VkExtent2D{static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
     return VK_SUCCESS;
 }
 
@@ -909,6 +955,28 @@ VKAPI_ATTR VkResult VKAPI_CALL QueuePresentKHR(
     return ret;
 }
 
+VKAPI_ATTR VkResult GetDeviceGroupPresentCapabilitiesKHR(
+    VkDevice, VkDeviceGroupPresentCapabilitiesKHR* pDeviceGroupPresentCapabilities)
+{
+    if (pDeviceGroupPresentCapabilities == nullptr) {
+        return VK_ERROR_OUT_OF_HOST_MEMORY;
+    }
+
+    memset_s(pDeviceGroupPresentCapabilities->presentMask,
+        sizeof(pDeviceGroupPresentCapabilities->presentMask), 0, sizeof(pDeviceGroupPresentCapabilities->presentMask));
+    pDeviceGroupPresentCapabilities->presentMask[0] = 1u;
+    pDeviceGroupPresentCapabilities->modes = VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR;
+
+    return VK_SUCCESS;
+}
+
+VKAPI_ATTR VkResult GetDeviceGroupSurfacePresentModesKHR(
+    VkDevice, VkSurfaceKHR, VkDeviceGroupPresentModeFlagsKHR* pModes)
+{
+    *pModes = VK_DEVICE_GROUP_PRESENT_MODE_LOCAL_BIT_KHR;
+    return VK_SUCCESS;
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceSupportKHR(
     VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, const VkSurfaceKHR surface, VkBool32* pSupported)
 {
@@ -964,15 +1032,16 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilitiesKHR(
 {
     int width = 0;
     int height = 0;
-    uint32_t maxBufferCount = 10;
+    uint32_t maxBufferCount = MAX_BUFFER_SIZE;
     if (surface != VK_NULL_HANDLE) {
         NativeWindow* window = SurfaceFromHandle(surface)->window;
         int err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY, &height, &width);
         if (err != OHOS::GSERROR_OK) {
-            SWLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: (%{public}d)", err);
+            SWLOGE("NATIVE_WINDOW GET_BUFFER_GEOMETRY failed: (%{public}d)", err);
             return VK_ERROR_SURFACE_LOST_KHR;
         }
         maxBufferCount = window->surface->GetQueueSize();
+        SWLOGD("queue size : (%{public}d)", maxBufferCount);
     }
 
     capabilities->minImageCount = std::min(maxBufferCount, MIN_BUFFER_SIZE);
@@ -1032,6 +1101,8 @@ void QueryPresentationProperties(
         curLayerData->instanceDispatchTable->GetPhysicalDeviceProperties2(physicalDevice, &properties);
     } else if (curLayerData->instanceDispatchTable->GetPhysicalDeviceProperties2KHR) {
         curLayerData->instanceDispatchTable->GetPhysicalDeviceProperties2KHR(physicalDevice, &properties);
+    } else {
+        SWLOGE("Func vkGetPhysicalDeviceProperties2 and vkGetPhysicalDeviceProperties2KHR are both null.");
     }
 }
 
@@ -1064,6 +1135,26 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfacePresentModesKHR(
     return result;
 }
 
+Extension GetExtensionBitFromName(const char* name)
+{
+    if (name == nullptr) {
+        return Extension::EXTENSION_UNKNOWN;
+    }
+    if (strcmp(name, VK_OHOS_SURFACE_EXTENSION_NAME) == 0) {
+        return Extension::OHOS_SURFACE;
+    }
+    if (strcmp(name, VK_OHOS_NATIVE_BUFFER_EXTENSION_NAME) == 0) {
+        return Extension::OHOS_NATIVE_BUFFER;
+    }
+    if (strcmp(name, VK_KHR_SURFACE_EXTENSION_NAME) == 0) {
+        return Extension::KHR_SURFACE;
+    }
+    if (strcmp(name, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0) {
+        return Extension::KHR_SWAPCHAIN;
+    }
+    return Extension::EXTENSION_UNKNOWN;
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(
     const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance)
 {
@@ -1083,14 +1174,21 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateInstance(
     chainInfo->u.pLayerInfo = chainInfo->u.pLayerInfo->pNext;
 
     VkResult result = fpCreateInstance(pCreateInfo, pAllocator, pInstance);
-    if (result != VK_SUCCESS)
+    if (result != VK_SUCCESS) {
         return result;
+    }
 
     LayerData* instanceLayerData = GetLayerDataPtr(GetDispatchKey(*pInstance));
     instanceLayerData->instance = *pInstance;
     instanceLayerData->instanceDispatchTable = std::make_unique<VkLayerInstanceDispatchTable>();
     layer_init_instance_dispatch_table(*pInstance, instanceLayerData->instanceDispatchTable.get(),
                                        fpGetInstanceProcAddr);
+    for (uint32_t index = 0; index < pCreateInfo->enabledExtensionCount; index++) {
+        auto extBit = GetExtensionBitFromName(pCreateInfo->ppEnabledExtensionNames[index]);
+        if (extBit != Extension::EXTENSION_UNKNOWN) {
+            instanceLayerData->enabledExtensions.set(extBit);
+        }
+    }
     return result;
 }
 
@@ -1182,6 +1280,12 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(VkPhysicalDevice gpu,
     }
 
     LayerData* deviceLayerData = GetLayerDataPtr(GetDispatchKey(*pDevice));
+    for (uint32_t i = 0; i < createInfo.enabledExtensionCount; i++) {
+        auto extBit = GetExtensionBitFromName(createInfo.ppEnabledExtensionNames[i]);
+        if (extBit != Extension::EXTENSION_UNKNOWN) {
+            deviceLayerData->enabledExtensions.set(extBit);
+        }
+    }
 
     deviceLayerData->deviceDispatchTable = std::make_unique<VkLayerDispatchTable>();
     deviceLayerData->instance = gpuLayerData->instance;
@@ -1298,48 +1402,21 @@ static inline PFN_vkVoidFunction GetDebugUtilsProc(const char* name)
     return nullptr;
 }
 
-static inline PFN_vkVoidFunction GetBaseProc(const char* name)
+static inline PFN_vkVoidFunction GetGlobalProc(const char* name)
 {
     if (name == nullptr) {
         return nullptr;
-    }
-    if (strcmp("vkEnumerateInstanceExtensionProperties", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceExtensionProperties);
-    }
-    if (strcmp("vkEnumerateDeviceExtensionProperties", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceExtensionProperties);
-    }
-    if (strcmp("vkEnumerateInstanceLayerProperties", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceLayerProperties);
     }
     if (strcmp("vkEnumerateDeviceLayerProperties", name) == 0) {
         return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceLayerProperties);
     }
-    if (strcmp("vkGetInstanceProcAddr", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetInstanceProcAddr);
-    }
-    if (strcmp("vkGetDeviceProcAddr", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetDeviceProcAddr);
-    }
     return nullptr;
 }
 
-static inline PFN_vkVoidFunction LayerInterceptProc(const char* name)
+static inline PFN_vkVoidFunction GetSwapchainProc(const char* name)
 {
     if (name == nullptr) {
         return nullptr;
-    }
-    if (strcmp("vkCreateInstance", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateInstance);
-    }
-    if (strcmp("vkDestroyInstance", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyInstance);
-    }
-    if (strcmp("vkCreateDevice", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateDevice);
-    }
-    if (strcmp("vkDestroyDevice", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyDevice);
     }
     if (strcmp("vkCreateSwapchainKHR", name) == 0) {
         return reinterpret_cast<PFN_vkVoidFunction>(CreateSwapchainKHR);
@@ -1359,26 +1436,46 @@ static inline PFN_vkVoidFunction LayerInterceptProc(const char* name)
     if (strcmp("vkGetSwapchainImagesKHR", name) == 0) {
         return reinterpret_cast<PFN_vkVoidFunction>(GetSwapchainImagesKHR);
     }
-    PFN_vkVoidFunction func = GetDebugUtilsProc(name);
-    if (func != nullptr) {
-        return func;
+    if (strcmp("vkGetDeviceGroupPresentCapabilitiesKHR", name) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(GetDeviceGroupPresentCapabilitiesKHR);
     }
-    return GetBaseProc(name);
+    if (strcmp("vkGetDeviceGroupSurfacePresentModesKHR", name) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(GetDeviceGroupSurfacePresentModesKHR);
+    }
+    if (strcmp("vkGetPhysicalDevicePresentRectanglesKHR", name) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDevicePresentRectanglesKHR);
+    }
+    return nullptr;
 }
 
-static inline PFN_vkVoidFunction LayerInterceptInstanceProc(const char* name)
+static inline PFN_vkVoidFunction LayerInterceptDeviceProc(
+    std::bitset<Extension::EXTENSION_COUNT>& enabledExtensions, const char* name)
 {
     if (name == nullptr) {
         return nullptr;
     }
-    if (strcmp("vkCreateInstance", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateInstance);
+    if (strcmp("vkGetDeviceProcAddr", name) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(GetDeviceProcAddr);
     }
-    if (strcmp("vkDestroyInstance", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyInstance);
+    if (strcmp("vkDestroyDevice", name) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(DestroyDevice);
     }
-    if (strcmp("vkGetPhysicalDeviceSurfaceFormatsKHR", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfaceFormatsKHR);
+    if (enabledExtensions.test(Extension::KHR_SWAPCHAIN)) {
+        PFN_vkVoidFunction addr = GetSwapchainProc(name);
+        if (addr != nullptr) {
+            return addr;
+        }
+    }
+    return nullptr;
+}
+
+static inline PFN_vkVoidFunction GetSurfaceKHRProc(const char* name)
+{
+    if (name == nullptr) {
+        return nullptr;
+    }
+    if (strcmp("vkDestroySurfaceKHR", name) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(DestroySurfaceKHR);
     }
     if (strcmp("vkGetPhysicalDeviceSurfacePresentModesKHR", name) == 0) {
         return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfacePresentModesKHR);
@@ -1389,29 +1486,60 @@ static inline PFN_vkVoidFunction LayerInterceptInstanceProc(const char* name)
     if (strcmp("vkGetPhysicalDeviceSurfaceCapabilitiesKHR", name) == 0) {
         return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfaceCapabilitiesKHR);
     }
-    if (strcmp("vkCreateDebugUtilsMessengerEXT", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateDebugUtilsMessengerEXT);
+    if (strcmp("vkGetPhysicalDeviceSurfaceFormatsKHR", name) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(GetPhysicalDeviceSurfaceFormatsKHR);
     }
-    if (strcmp("vkDestroyDebugUtilsMessengerEXT", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyDebugUtilsMessengerEXT);
+    return nullptr;
+}
+
+static inline PFN_vkVoidFunction LayerInterceptInstanceProc(
+    std::bitset<Extension::EXTENSION_COUNT>& enabledExtensions, const char* name)
+{
+    if (name == nullptr) {
+        return nullptr;
     }
-    if (strcmp("vkCreateSurfaceOHOS", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateSurfaceOHOS);
+    if (enabledExtensions.test(Extension::OHOS_SURFACE)) {
+        if (strcmp("vkCreateSurfaceOHOS", name) == 0) {
+            return reinterpret_cast<PFN_vkVoidFunction>(CreateSurfaceOHOS);
+        }
     }
-    if (strcmp("vkDestroySurfaceKHR", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroySurfaceKHR);
+    if (enabledExtensions.test(Extension::KHR_SURFACE)) {
+        PFN_vkVoidFunction addr = GetSurfaceKHRProc(name);
+        if (addr != nullptr) {
+            return addr;
+        }
     }
-    return GetBaseProc(name);
+
+    if (enabledExtensions.test(Extension::KHR_SWAPCHAIN)) {
+        PFN_vkVoidFunction addr = GetSwapchainProc(name);
+        if (addr != nullptr) {
+            return addr;
+        }
+    }
+
+    PFN_vkVoidFunction addr = GetDebugUtilsProc(name);
+    if (addr != nullptr) {
+        return addr;
+    }
+    return GetGlobalProc(name);
 }
 
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetDeviceProcAddr(VkDevice device, const char* funcName)
 {
+    if (funcName == nullptr) {
+        return nullptr;
+    }
     if (device == VK_NULL_HANDLE) {
         SWLOGE("device is null.");
         return nullptr;
     }
+    LayerData* layerData = GetLayerDataPtr(GetDispatchKey(device));
+    if (layerData == nullptr) {
+        SWLOGE("libvulkan_swapchain GetInstanceProcAddr layerData is null");
+        return nullptr;
+    }
 
-    PFN_vkVoidFunction addr = LayerInterceptProc(funcName);
+    PFN_vkVoidFunction addr = LayerInterceptDeviceProc(layerData->enabledExtensions, funcName);
     if (addr != nullptr) {
         return addr;
     }
@@ -1425,21 +1553,46 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetDeviceProcAddr(VkDevice device, cons
 
 VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance, const char* funcName)
 {
-    PFN_vkVoidFunction addr = LayerInterceptInstanceProc(funcName);
-    if (addr == nullptr) {
-        addr = LayerInterceptProc(funcName);
-    }
-    if (addr != nullptr) {
-        return addr;
-    }
-    if (instance == VK_NULL_HANDLE) {
-        SWLOGE("libvulkan_swapchain GetInstanceProcAddr instance is null");
+    if (funcName == nullptr) {
         return nullptr;
     }
+
+    if (strcmp("vkGetInstanceProcAddr", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(GetInstanceProcAddr);
+    }
+    if (strcmp("vkCreateInstance", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(CreateInstance);
+    }
+    if (strcmp("vkEnumerateInstanceExtensionProperties", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceExtensionProperties);
+    }
+    if (strcmp("vkEnumerateInstanceLayerProperties", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceLayerProperties);
+    }
+    if (strcmp("vkDestroyInstance", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(DestroyInstance);
+    }
+    if (strcmp("vkCreateDevice", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(CreateDevice);
+    }
+    if (strcmp("vkEnumerateDeviceExtensionProperties", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceExtensionProperties);
+    }
+
+    if (instance == VK_NULL_HANDLE) {
+        SWLOGE("libvulkan_swapchain GetInstanceProcAddr(func name %{public}s) instance is null", funcName);
+        return nullptr;
+    }
+
     LayerData* layerData = GetLayerDataPtr(GetDispatchKey(instance));
     if (layerData == nullptr) {
         SWLOGE("libvulkan_swapchain GetInstanceProcAddr layerData is null");
         return nullptr;
+    }
+
+    PFN_vkVoidFunction addr = LayerInterceptInstanceProc(layerData->enabledExtensions, funcName);
+    if (addr != nullptr) {
+        return addr;
     }
 
     VkLayerInstanceDispatchTable* pTable = layerData->instanceDispatchTable.get();
@@ -1457,37 +1610,43 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance
 }
 }  // namespace SWAPCHAIN
 
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define SWAPCHAIN_EXPORT __attribute__((visibility("default")))
+#else
+#define SWAPCHAIN_EXPORT
+#endif
+
 extern "C" {
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionProperties(
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionProperties(
     const char* pLayerName, uint32_t* pCount, VkExtensionProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateInstanceExtensionProperties(pLayerName, pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL
 vkEnumerateInstanceLayerProperties(uint32_t* pCount, VkLayerProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateInstanceLayerProperties(pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceLayerProperties(
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceLayerProperties(
     VkPhysicalDevice physicalDevice, uint32_t* pCount, VkLayerProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateDeviceLayerProperties(VK_NULL_HANDLE, pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceExtensionProperties(
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceExtensionProperties(
     VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pCount, VkExtensionProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateDeviceExtensionProperties(VK_NULL_HANDLE, pLayerName, pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice dev, const char* funcName)
+SWAPCHAIN_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice dev, const char* funcName)
 {
     return SWAPCHAIN::GetDeviceProcAddr(dev, funcName);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
+SWAPCHAIN_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
 vkGetInstanceProcAddr(VkInstance instance, const char* funcName)
 {
     return SWAPCHAIN::GetInstanceProcAddr(instance, funcName);

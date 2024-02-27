@@ -20,8 +20,9 @@
 #include <iostream>
 
 #include "drawing/engine_adapter/impl_interface/matrix_impl.h"
-#include "utils/scalar.h"
 #include "utils/drawing_macros.h"
+#include "utils/matrix44.h"
+#include "utils/scalar.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -45,12 +46,23 @@ public:
     };
 
     Matrix();
+    Matrix(const Matrix& matrix);
+    Matrix& operator=(const Matrix& matrix);
     virtual ~Matrix() {}
+    static Matrix Skew(scalar kx, scalar ky)
+    {
+        Matrix m;
+        m.SetSkew(kx, ky);
+        return m;
+    }
+
     void Rotate(scalar degree, scalar px, scalar py);
     void Translate(scalar dx, scalar dy);
     void Scale(scalar sx, scalar sy, scalar px, scalar py);
     void SetScale(scalar sx, scalar sy);
-
+    void SetScaleTranslate(scalar sx, scalar sy, scalar dx, scalar dy);
+    void SetSkew(scalar kx, scalar ky);
+    void SetSkew(scalar kx, scalar ky, scalar px, scalar py);
     /*
      * @brief         Sets Matrix to Matrix multiplied by Matrix constructed
      *                from rotating by degrees about pivot point(0,0).
@@ -58,12 +70,25 @@ public:
      */
     void PreRotate(scalar degree);
 
+    void PostRotate(scalar degree);
+
+    /*
+     * @brief         Sets Matrix to Matrix constructed from rotating by degrees
+     *                about pivot point(px,py), multiplied by Matrix.
+     * @param degree  Angle of axes relative to upright axes.
+     * @param px      pivot on x-axis
+     * @param px      pivot on y-axis
+     */
+    void PostRotate(scalar degree, scalar px, scalar py);
+
     /*
      * @brief     Sets Matrix to Matrix constructed from translation (dx, dy) multiplied by Matrix.
      * @param dx  X-axis translation after applying Matrix.
      * @param dy  Y-axis translation after applying Matrix.
      */
     void PreTranslate(scalar dx, scalar dy);
+
+    void PostTranslate(scalar dx, scalar dy);
 
     /*
      * @brief     Sets Matrix to Matrix multiplied by Matrix constructed
@@ -76,12 +101,74 @@ public:
     void PostScale(scalar sx, scalar sy);
 
     /*
+     * @brief         Sets Matrix to Matrix constructed from scaling by (sx, sy)
+     *                about pivot point(px,py), multiplied by Matrix.
+     * @param sx      horizontal scale factor
+     * @param sy      vertical scale factor
+     * @param px      pivot on x-axis
+     * @param px      pivot on y-axis
+     */
+    void PostScale(scalar sx, scalar sy, scalar px, scalar py);
+
+    /*
+     * @brief     Sets Matrix to Matrix multiplied by Matrix constructed
+     *            from skewing by (kx, ky) about pivot point (0, 0).
+     * @param kx  Horizontal skew factor.
+     * @param ky  Vertical skew factor.
+     */
+    void PreSkew(scalar kx, scalar ky);
+
+    /*
+     * @brief     Sets Matrix to Matrix constructed from skewing by (kx, ky)
+     *            about pivot point(0, 0), multiplied by Matrix.
+     * @param kx  Horizontal skew factor.
+     * @param ky  Vertical skew factor.
+     */
+    void PostSkew(scalar kx, scalar ky);
+
+    /*
+     * @brief         Sets Matrix to Matrix multiplied by Matrix constructed
+     *                from skewing by (kx, ky) about pivot point (px, py).
+     * @param sx      horizontal skew factor
+     * @param sy      vertical skew factor
+     * @param kx      pivot on x-axis
+     * @param ky      pivot on y-axis
+     */
+    void PreSkew(scalar kx, scalar ky, scalar px, scalar py);
+
+    /*
+     * @brief         Sets Matrix to Matrix constructed from skewing by (kx, ky)
+     *                about pivot point(px,py), multiplied by Matrix.
+     * @param sx      horizontal skew factor
+     * @param sy      vertical skew factor
+     * @param kx      pivot on x-axis
+     * @param ky      pivot on y-axis
+     */
+    void PostSkew(scalar kx, scalar ky, scalar px, scalar py);
+
+    /*
      * @brief         Sets Matrix to Matrix other multiplied by Matrix.
      * @param other   Matrix on left side of multiply expression.
      */
     void PreConcat(const Matrix& other);
 
+    /*
+     * @brief         Sets Matrix to Matrix other multiplied by Matrix44.
+     * @param other   Matrix on left side of multiply expression.
+     */
+    void PreConcat(const Matrix44& matrix44);
+
+    /*
+     * @brief         Sets Matrix to Matrix other multiplied by Matrix.
+     * @param other   Matrix on right side of multiply expression.
+     */
     void PostConcat(const Matrix& other);
+
+    /*
+     * @brief         Sets Matrix to Matrix other multiplied by Matrix44.
+     * @param other   Matrix on right side of multiply expression.
+     */
+    void PostConcat(const Matrix44& matrix44);
 
     /*
      * @brief           Sets inverse to the inverse of Matrix.
@@ -110,6 +197,15 @@ public:
     bool MapRect(Rect& dst, const Rect& src) const;
 
     /*
+     * @brief       Sets Matrix to map src to dst. count must be zero or greater, and four or less.
+     * @param src   Point to map from
+     * @param dst   Point to map to
+     * @param count Number of Point in src and dst
+     * @return      True if Matrix was constructed successfully
+     */
+    bool SetPolyToPoly(const Point src[], const Point dst[], uint32_t count);
+
+    /*
      * @brief         Sets Matrix value.
      * @param index   One of Index.
      * @param value   Scalar to store in Matrix.
@@ -122,10 +218,23 @@ public:
      * @param buffer  Storage for nine scalar values
      */
     void GetAll(Buffer& buffer) const;
+
+    /*
+     * @brief         Copies nine scalar values contained by Matrix from buffer.
+     * @param buffer  Storage for nine scalar values
+     */
+    void SetAll(Buffer& buffer);
+
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return matrixImplPtr->DowncastingTo<T>();
+    }
+
+    template<typename T>
+    const T* GetImplPtr() const
+    {
+        return reinterpret_cast<const T*>(matrixImplPtr.get());
     }
 
     /*
@@ -139,7 +248,10 @@ public:
     void PreRotate(scalar degree, scalar px, scalar py);
     void PreScale(scalar sx, scalar sy, scalar px, scalar py);
     void Reset();
-    void DeepCopy(const Matrix& matrix);
+
+    bool GetMinMaxScales(scalar scaleFactors[2]);
+    bool HasPerspective() const;
+
 private:
     std::shared_ptr<MatrixImpl> matrixImplPtr;
 };

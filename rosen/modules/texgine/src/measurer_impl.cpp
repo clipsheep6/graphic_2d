@@ -28,9 +28,12 @@ namespace TextEngine {
 #define INVALID_TEXT_LENGTH (-1)
 #define SUCCESSED 0
 #define FAILED 1
+#define POLL_MECHANISM 4999
+#define POLL_NUM 1000
 constexpr static uint8_t FIRST_BYTE = 24;
 constexpr static uint8_t SECOND_BYTE = 16;
 constexpr static uint8_t THIRD_BYTE = 8;
+static std::string g_detectionName;
 
 namespace {
 void DumpCharGroup(int32_t index, const CharGroup &cg, double glyphEm,
@@ -102,35 +105,47 @@ const std::vector<Boundary> &MeasurerImpl::GetWordBoundary() const
     return boundaries_;
 }
 
+void MeasurerImpl::UpdateCache()
+{
+    auto iter = cache_.begin();
+    for (size_t index = 0; index < POLL_NUM; index++) {
+        cache_.erase(iter++);
+    }
+}
+
+void MeasurerImpl::GetInitKey(struct MeasurerCacheKey &key) const
+{
+    key.text = text_;
+    key.style = style_;
+    key.locale = locale_;
+    key.rtl = rtl_;
+    key.size = size_;
+    key.startIndex = startIndex_;
+    key.endIndex = endIndex_;
+    key.letterSpacing = letterSpacing_;
+    key.wordSpacing = wordSpacing_;
+}
+
 int MeasurerImpl::Measure(CharGroups &cgs)
 {
 #ifdef LOGGER_ENABLE_SCOPE
     ScopedTrace scope("MeasurerImpl::Measure");
 #endif
     LOGSCOPED(sl, LOGEX_FUNC_LINE_DEBUG(), "MeasurerImpl::Measure");
-    struct MeasurerCacheKey key = {
-        .text = text_,
-        .style = style_,
-        .locale = locale_,
-        .rtl = rtl_,
-        .size = size_,
-        .startIndex = startIndex_,
-        .endIndex = endIndex_,
-        .letterSpacing = letterSpacing_,
-        .wordSpacing = wordSpacing_,
-    };
-
+    MeasurerCacheKey key;
+    GetInitKey(key);
     if (fontFeatures_ == nullptr || fontFeatures_->GetFeatures().size() == 0) {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = cache_.find(key);
         if (it != cache_.end()) {
             cgs = it->second.cgs.Clone();
             boundaries_ = it->second.boundaries;
-            if (detectionName_ != cgs.GetTypefaceName()) {
-                cache_.clear();
-            } else {
-                return SUCCESSED;
+            if (g_detectionName != cgs.GetTypefaceName()) {
+                cache_.erase(key);
+            } else if (cache_.size() > POLL_MECHANISM) {
+                UpdateCache();
             }
+            return SUCCESSED;
         }
     }
 
@@ -149,7 +164,7 @@ int MeasurerImpl::Measure(CharGroups &cgs)
 
     if (fontFeatures_ == nullptr || fontFeatures_->GetFeatures().size() == 0) {
         if (cgs.CheckCodePoint()) {
-            detectionName_ = cgs.GetTypefaceName();
+            g_detectionName = cgs.GetTypefaceName();
             struct MeasurerCacheVal value = {cgs.Clone(), boundaries_};
             std::lock_guard<std::mutex> lock(mutex_);
             cache_[key] = value;
@@ -178,7 +193,7 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
                 LOGCEX_DEBUG() << " cached";
                 continue;
             }
-            if (lastTypeface && runsit->typeface) {
+            if (runsit->typeface) {
                 LOGCEX_DEBUG() << " new";
                 auto next = runsit;
                 struct MeasuringRun run = {.start = utf16Index - U16_LENGTH(cp), .end = runsit->end,
@@ -192,8 +207,7 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
                                  (char)(((runsit->script) >> SECOND_BYTE) & 0xFF),
                                  (char)(((runsit->script) >> THIRD_BYTE) & 0xFF),
                                  (char)((runsit->script) & 0xFF), '\0'};
-            bool fallbackTypeface = false;
-            lastTypeface = fontCollection_.GetTypefaceForChar(cp, style_, runScript, locale_, fallbackTypeface);
+            lastTypeface = fontCollection_.GetTypefaceForChar(cp, style_, runScript, locale_);
             if (lastTypeface == nullptr) {
                 LOGCEX_DEBUG() << " no typeface";
                 continue;
@@ -201,9 +215,6 @@ void MeasurerImpl::SeekTypeface(std::list<struct MeasuringRun> &runs)
 
             LOGCEX_DEBUG() << " found at " << lastTypeface->GetName();
             runsit->typeface = lastTypeface;
-            if (fallbackTypeface) {
-                lastTypeface = nullptr;
-            }
         }
     }
 }
@@ -332,7 +343,7 @@ int MeasurerImpl::DoShape(CharGroups &cgs, MeasuringRun &run, size_t &index)
         LOGEX_FUNC_LINE(ERROR) << "text is nullptr";
         return FAILED;
     }
-    hb_buffer_add_utf16(hbuffer, text_.data(), INVALID_TEXT_LENGTH, run.start, run.end - run.start);
+    hb_buffer_add_utf16(hbuffer, text_.data(), text_.size(), run.start, run.end - run.start);
     hb_buffer_set_direction(hbuffer, rtl_ ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
     auto icuGetUnicodeFuncs = hb_unicode_funcs_create(hb_icu_get_unicode_funcs());
     if (!icuGetUnicodeFuncs) {

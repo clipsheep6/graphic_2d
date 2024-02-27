@@ -50,6 +50,9 @@ sk_sp<SkSurface> DrawingContext::AcquireSurface(const std::shared_ptr<RSRenderSu
 bool DrawingContext::SetUpDrawingContext()
 {
 #if defined(RS_ENABLE_GL)
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::OPENGL) {
+        return false;
+    }
     if (grContext_ != nullptr) {
         LOGD("grContext has already initialized");
         return true;
@@ -63,6 +66,8 @@ bool DrawingContext::SetUpDrawingContext()
 
     GrContextOptions options;
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    // fix svg antialiasing bug
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
     options.fAllowPathMaskCaching = true;
@@ -108,6 +113,9 @@ GrContext* DrawingContext::GetDrawingContext() const
 bool DrawingContext::SetUpDrawingContext()
 {
 #if defined(RS_ENABLE_GL)
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::OPENGL) {
+        return false;
+    }
     if (gpuContext_ != nullptr) {
         LOGD("gpuContext_ has already initialized");
         return true;
@@ -170,9 +178,7 @@ sk_sp<SkSurface> DrawingContext::AcquireSurfaceInGLES(const std::shared_ptr<RSRe
 #endif
 
     sk_sp<SkColorSpace> skColorSpace = GetSkColorSpace(frame);
-#if !defined(NEW_SKIA)
     RSTagTracker tagTracker(grContext, RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
-#endif
     sk_sp<SkSurface> skSurface = SkSurface::MakeFromBackendRenderTarget(
         grContext, backendRenderTarget, kBottomLeft_GrSurfaceOrigin, colorType,
         skColorSpace, &surfaceProps);
@@ -212,6 +218,10 @@ sk_sp<SkSurface> DrawingContext::AcquireSurfaceInRaster(const std::shared_ptr<RS
 sk_sp<SkSurface> DrawingContext::AcquireSurfaceInVulkan(const std::shared_ptr<RSRenderSurfaceFrame>& frame)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     VulkanState* vulkanState = frame->vulkanState;
     if (vulkanState == nullptr) {
         LOGE("Failed to acquire surface in vulkan, vulkanState is nullptr");

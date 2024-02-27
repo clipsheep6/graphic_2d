@@ -56,7 +56,11 @@ static const bool IS_ADVANCED_FILTER_USABLE_CHECK_ONCE = IsAdvancedFilterUsable(
 KawaseBlurFilter::KawaseBlurFilter()
 {
 #ifndef USE_ROSEN_DRAWING
-    SkString blurString(R"(
+    SkString blurString(
+#else
+    std::string blurString(
+#endif
+        R"(
         uniform shader imageInput;
         uniform float2 in_blurOffset;
         uniform float2 in_maxSizeXY;
@@ -75,7 +79,12 @@ KawaseBlurFilter::KawaseBlurFilter()
         }
     )");
 
-    SkString mixString(R"(
+#ifndef USE_ROSEN_DRAWING
+    SkString mixString(
+#else
+    std::string mixString(
+#endif
+        R"(
         uniform shader blurredInput;
         uniform shader originalInput;
         uniform float mixFactor;
@@ -94,6 +103,7 @@ KawaseBlurFilter::KawaseBlurFilter()
         }
     )");
 
+#ifndef USE_ROSEN_DRAWING
     auto [blurEffect, error] = SkRuntimeEffect::MakeForShader(blurString);
     if (!blurEffect) {
         ROSEN_LOGE("KawaseBlurFilter::RuntimeShader blurEffect error: %{public}s\n", error.c_str());
@@ -101,50 +111,12 @@ KawaseBlurFilter::KawaseBlurFilter()
     }
     blurEffect_ = std::move(blurEffect);
 #else
-    std::string blurString(R"(
-        uniform shader imageInput;
-        uniform float2 in_blurOffset;
-        uniform float2 in_maxSizeXY;
-
-        half4 main(float2 xy) {
-            half4 c = imageInput.eval(xy);
-            c += imageInput.eval(float2(clamp(in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            c += imageInput.eval(float2(clamp(in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(-in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            c += imageInput.eval(float2(clamp(-in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            c += imageInput.eval(float2(clamp(-in_blurOffset.x + xy.x, 0, in_maxSizeXY.x),
-                                        clamp(-in_blurOffset.y + xy.y, 0, in_maxSizeXY.y)));
-            return half4(c.rgb * 0.2, 1.0);
-        }
-    )");
-
-    std::string mixString(R"(
-        uniform shader blurredInput;
-        uniform shader originalInput;
-        uniform float mixFactor;
-        uniform float inColorFactor;
-
-        highp float random(float2 xy) {
-            float t = dot(xy, float2(78.233, 12.9898));
-            return fract(sin(t) * 43758.5453);
-        }
-        half4 main(float2 xy) {
-            highp float noiseGranularity = inColorFactor / 255.0;
-            half4 finalColor = mix(originalInput.eval(xy), blurredInput.eval(xy), mixFactor);
-            float noise  = mix(-noiseGranularity, noiseGranularity, random(xy));
-            finalColor.rgb += noise;
-            return finalColor;
-        }
-    )");
-
     auto blurEffect = Drawing::RuntimeEffect::CreateForShader(blurString);
     if (!blurEffect) {
         ROSEN_LOGE("KawaseBlurFilter::RuntimeShader blurEffect create failed");
         return;
     }
-    blurEffect_ = blurEffect;
+    blurEffect_ = std::move(blurEffect);
 #endif
 
     // Advanced Filter
@@ -165,7 +137,7 @@ KawaseBlurFilter::KawaseBlurFilter()
         ROSEN_LOGE("KawaseBlurFilter::RuntimeShader mixEffect create failed");
         return;
     }
-    mixEffect_ = mixEffect;
+    mixEffect_ = std::move(mixEffect);
 #endif
 }
 
@@ -175,7 +147,11 @@ KawaseBlurFilter::~KawaseBlurFilter() = default;
 void KawaseBlurFilter::setupBlurEffectAdvancedFilter()
 {
 #ifndef USE_ROSEN_DRAWING
-    SkString blurStringAF(R"(
+    SkString blurStringAF(
+#else
+    std::string blurStringAF(
+#endif
+        R"(
         uniform shader imageInput;
         uniform float2 in_blurOffset[5];
 
@@ -188,6 +164,7 @@ void KawaseBlurFilter::setupBlurEffectAdvancedFilter()
         }
     )");
 
+#ifndef USE_ROSEN_DRAWING
     SkRuntimeEffect::Options ops;
     ops.useAF = true;
     auto [blurEffectAF, errorAF] = SkRuntimeEffect::MakeForShader(blurStringAF, ops);
@@ -197,19 +174,6 @@ void KawaseBlurFilter::setupBlurEffectAdvancedFilter()
     }
     blurEffectAF_ = std::move(blurEffectAF);
 #else
-    std::string blurStringAF(R"(
-        uniform shader imageInput;
-        uniform float2 in_blurOffset[5];
-
-        half4 main(float2 xy) {
-            half4 c = half4(0, 0, 0, 0);
-            for (int i = 0; i < 5; ++i) {
-                c += imageInput.eval(float2(xy.x + in_blurOffset[i].x, xy.y + in_blurOffset[i].y));
-            }
-            return half4(c.rgb * 0.2, 1.0);
-        }
-    )");
-
     Drawing::RuntimeEffectOptions ops;
     ops.useAF = true;
     auto blurEffectAF = Drawing::RuntimeEffect::CreateForShader(blurStringAF, ops);
@@ -217,7 +181,7 @@ void KawaseBlurFilter::setupBlurEffectAdvancedFilter()
         ROSEN_LOGE("%s: RuntimeShader blurEffectAF create failed", __func__);
         return;
     }
-    blurEffectAF_ = blurEffectAF;
+    blurEffectAF_ = std::move(blurEffectAF);
 #endif
 }
 
@@ -252,10 +216,10 @@ SkMatrix KawaseBlurFilter::GetShaderTransform(const SkCanvas* canvas, const SkRe
 }
 #else
 Drawing::Matrix KawaseBlurFilter::GetShaderTransform(const Drawing::Canvas* canvas, const Drawing::Rect& blurRect,
-    float scale)
+    float scaleW, float scaleH)
 {
     Drawing::Matrix matrix;
-    matrix.SetScale(scale, scale);
+    matrix.SetScale(scaleW, scaleH);
     Drawing::Matrix translateMatrix;
     translateMatrix.Translate(blurRect.GetLeft(), blurRect.GetTop());
     matrix.PostConcat(translateMatrix);
@@ -283,7 +247,7 @@ void KawaseBlurFilter::CheckInputImage(Drawing::Canvas& canvas, const std::share
     const KawaseParameter& param, std::shared_ptr<Drawing::Image>& checkedImage)
 {
     auto src = param.src;
-    auto srcRect = Drawing::RectI(src.GetLeft(), src.GetTop(), src.GetTop(), src.GetBottom());
+    auto srcRect = Drawing::RectI(src.GetLeft(), src.GetTop(), src.GetRight(), src.GetBottom());
     if (image->GetImageInfo().GetBound() != srcRect) {
         auto resizedImage = std::make_shared<Drawing::Image>();
         if (resizedImage->BuildSubset(image, srcRect, *canvas.GetGPUContext())) {
@@ -325,7 +289,10 @@ void KawaseBlurFilter::OutputOriginalImage(Drawing::Canvas& canvas, const std::s
         brush.SetFilter(filter);
     }
     Drawing::Matrix inputMatrix;
+    float scaleW = dst.GetWidth() / image->GetWidth();
+    float scaleH = dst.GetHeight() / image->GetHeight();
     inputMatrix.Translate(-src.GetLeft(), -src.GetTop());
+    inputMatrix.PostScale(scaleW, scaleH);
     Drawing::Matrix matrix;
     matrix.Translate(dst.GetLeft(), dst.GetTop());
     inputMatrix.PostConcat(matrix);
@@ -423,7 +390,9 @@ bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::share
         originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
     Drawing::Matrix blurMatrix;
     blurMatrix.Translate(-src.GetLeft(), -src.GetTop());
-    blurMatrix.PostScale(blurScale_, blurScale_);
+    float scaleW = static_cast<float>(scaledInfo.GetWidth()) / input->GetWidth();
+    float scaleH = static_cast<float>(scaledInfo.GetHeight()) / input->GetHeight();
+    blurMatrix.PostScale(scaleW, scaleH);
     Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
 
     // Advanced Filter: check is AF usable only the first time
@@ -481,11 +450,11 @@ bool KawaseBlurFilter::ApplyBlur(Drawing::Canvas& canvas, const std::shared_ptr<
 {
     auto src = param.src;
     auto dst = param.dst;
+#ifndef USE_ROSEN_DRAWING
     if (abs(blurScale_) <= 1e-6) {
         return false;
     }
     float invBlurScale = 1.0f / blurScale_;
-#ifndef USE_ROSEN_DRAWING
     SkSamplingOptions linear(SkFilterMode::kLinear, SkMipmapMode::kNone);
     const auto blurMatrix = GetShaderTransform(&canvas, dst, invBlurScale);
     const auto blurShader = blurImage->makeShader(SkTileMode::kClamp, SkTileMode::kClamp, linear, &blurMatrix);
@@ -514,7 +483,8 @@ bool KawaseBlurFilter::ApplyBlur(Drawing::Canvas& canvas, const std::shared_ptr<
     canvas.drawRect(dst, paint);
 #else
     Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
-    const auto blurMatrix = GetShaderTransform(&canvas, dst, invBlurScale);
+    const auto blurMatrix = GetShaderTransform(&canvas, dst, dst.GetWidth() / blurImage->GetWidth(),
+        dst.GetHeight() / blurImage->GetHeight());
     const auto blurShader = Drawing::ShaderEffect::CreateImageShader(*blurImage, Drawing::TileMode::CLAMP,
         Drawing::TileMode::CLAMP, linear, blurMatrix);
     Drawing::Brush brush;
@@ -528,6 +498,7 @@ bool KawaseBlurFilter::ApplyBlur(Drawing::Canvas& canvas, const std::shared_ptr<
     if (addRandomColor) {
         Drawing::Matrix inputMatrix;
         inputMatrix.Translate(-src.GetLeft(), -src.GetTop());
+        inputMatrix.PostScale(dst.GetWidth() / image->GetWidth(), dst.GetHeight() / image->GetHeight());
         Drawing::Matrix matrix;
         matrix.Translate(dst.GetLeft(), dst.GetTop());
         inputMatrix.PostConcat(matrix);
@@ -566,15 +537,16 @@ void KawaseBlurFilter::AdjustRadiusAndScale()
     static constexpr float scaleFactor1 = 0.25f; // 0.25 : downSample scale for step1
     static constexpr float scaleFactor2 = 0.125f; // 0.125 : downSample scale for step2
     static constexpr float scaleFactor3 = 0.0625f; // 0.0625 : downSample scale for step3
-    float scale = baseBlurScale;
-    if (blurRadius_ > radiusStep3) {
-        scale = scaleFactor3;
-    } else if (blurRadius_ > radiusStep2) {
-        scale = scaleFactor2;
-    } else if (blurRadius_ > radiusStep1) {
-        scale = scaleFactor1;
+    auto radius = static_cast<int>(blurRadius_);
+    if (radius > radiusStep3) {
+        blurScale_ = scaleFactor3;
+    } else if (radius > radiusStep2) {
+        blurScale_ = scaleFactor2;
+    } else if (radius > radiusStep1) {
+        blurScale_ = scaleFactor1;
+    } else {
+        blurScale_ = baseBlurScale;
     }
-    blurScale_ = scale;
 }
 
 std::string KawaseBlurFilter::GetDescription() const

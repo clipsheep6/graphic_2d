@@ -50,6 +50,7 @@ enum class QuadAAFlags {
 };
 
 const int DIVES_SIZE = 2;
+#undef TRANSPARENT
 struct Lattice {
     enum RectType : uint8_t {
         DEFAULT = 0,
@@ -88,18 +89,15 @@ public:
         INIT_WITH_PREVIOUS = 1 << 1,    // create with previous contents
     };
 
-    SaveLayerOps() : bounds_(nullptr), brush_(nullptr), imageFilter_(nullptr), saveLayerFlags_(0) {}
-    SaveLayerOps(const Rect* bounds, const Brush* brush, uint32_t saveLayerFlags = 0)
-        : SaveLayerOps(bounds, brush, nullptr, saveLayerFlags) {}
+    SaveLayerOps() : bounds_(nullptr), brush_(nullptr), saveLayerFlags_(0) {}
 
     /*
      * @param bounds          The bounds of layer, may be nullptr.
      * @param brush           When restoring the current layer, attach this brush, may be nullptr.
-     * @param imageFilter     Use this to filter the current layer as the new layer background, may be nullptr.
      * @param saveLayerFlags  How to allocate layer.
      */
-    SaveLayerOps(const Rect* bounds, const Brush* brush, const ImageFilter* imageFilter, uint32_t saveLayerFlags = 0)
-        : bounds_(bounds), brush_(brush), imageFilter_(imageFilter), saveLayerFlags_(saveLayerFlags) {}
+    SaveLayerOps(const Rect* bounds, const Brush* brush, uint32_t saveLayerFlags = 0)
+        : bounds_(bounds), brush_(brush), saveLayerFlags_(saveLayerFlags) {}
     ~SaveLayerOps() {}
 
     /*
@@ -119,14 +117,6 @@ public:
     }
 
     /*
-     * @brief  Gets the image filter of layer, may be nullptr.
-     */
-    const ImageFilter* GetImageFilter() const
-    {
-        return imageFilter_;
-    }
-
-    /*
      * @brief  Gets the options to modify layer.
      */
     uint32_t GetSaveLayerFlags() const
@@ -137,7 +127,6 @@ public:
 private:
     const Rect* bounds_;
     const Brush* brush_;
-    const ImageFilter* imageFilter_;
     uint32_t saveLayerFlags_;
 };
 
@@ -151,6 +140,8 @@ public:
     explicit CoreCanvas(void* rawCanvas);
     virtual ~CoreCanvas() {}
     void Bind(const Bitmap& bitmap);
+
+    void BuildOverDraw(std::shared_ptr<Canvas> canvas);
 
     virtual DrawingType GetDrawingType() const
     {
@@ -168,7 +159,7 @@ public:
     virtual Rect GetLocalClipBounds() const;
 
     /*
-     * @brief  Gets bounds of clip in device corrdinates.
+     * @brief  Gets bounds of clip in device coordinates.
      */
     virtual RectI GetDeviceClipBounds() const;
 
@@ -176,7 +167,7 @@ public:
      * @brief  Gets GPU context of the GPU surface associated with Canvas.
      */
 #ifdef ACE_ENABLE_GPU
-    virtual std::shared_ptr<GPUContext> GetGPUContext() const;
+    virtual std::shared_ptr<GPUContext> GetGPUContext();
 #endif
 
     /*
@@ -196,6 +187,8 @@ public:
 
     bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
         int srcX, int srcY);
+
+    bool ReadPixels(const Bitmap& dstBitmap, int srcX, int srcY);
 
     // shapes
     virtual void DrawPoint(const Point& point);
@@ -224,18 +217,29 @@ public:
 
     virtual void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode);
-    virtual void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode);
     virtual void DrawVertices(const Vertices& vertices, BlendMode mode);
 
     virtual void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
-    virtual void DrawAnnotation(const Rect& rect, const char* key, const Data* data);
     virtual void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
 
+    // opinc_begin
+    virtual bool BeginOpRecording(const Rect* bound = nullptr, bool isDynamic = false);
+    virtual Drawing::OpListHandle EndOpRecording();
+    virtual void DrawOpList(Drawing::OpListHandle handle);
+    virtual int CanDrawOpList(Drawing::OpListHandle handle);
+    virtual void PreOpListDrawArea(const Matrix& matrix);
+    virtual bool CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound = nullptr);
+    virtual Drawing::OpListHandle GetOpListDrawArea();
+    virtual void OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
+        const SamplingOptions& sampling, SrcRectConstraint constraint);
+    // opinc_end
+
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
+    void DrawBitmap(const Bitmap& bitmap, const Rect& src, const Rect& dst, const SamplingOptions& sampling);
+    void DrawBitmap(const Bitmap& bitmap, const Rect& dst, const SamplingOptions& sampling);
     virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
     virtual void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling);
     virtual void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
@@ -248,6 +252,9 @@ public:
 
     // text
     virtual void DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y);
+
+    // symbol
+    virtual void DrawSymbol(const DrawingHMSymbolData& symbol, Point locate);
 
     // clip
     /*
@@ -276,6 +283,8 @@ public:
      * @param doAntiAlias  true if clip is to be anti-aliased. The default value is false.
      */
     virtual void ClipRoundRect(const RoundRect& roundRect, ClipOp op = ClipOp::INTERSECT, bool doAntiAlias = false);
+
+    virtual void ClipRoundRect(const Rect& rect, std::vector<Point>& pts, bool doAntiAlias = false);
 
     /*
      * @brief              Replace the clipping area with the intersection or difference of the
@@ -331,7 +340,11 @@ public:
     // state
     virtual void Flush();
     virtual void Clear(ColorQuad color);
-    virtual void Save();
+
+    /*
+     * @brief               Saves Matrix and clipping area, return the number of saved states.
+     */
+    virtual uint32_t Save();
 
     /*
      * @brief               Saves Matrix and clipping area, and allocates Surface for subsequent drawing.
@@ -353,15 +366,21 @@ public:
     // paint
     virtual CoreCanvas& AttachPen(const Pen& pen);
     virtual CoreCanvas& AttachBrush(const Brush& brush);
+    virtual CoreCanvas& AttachPaint(const Paint& paint);
     virtual CoreCanvas& DetachPen();
     virtual CoreCanvas& DetachBrush();
+    virtual CoreCanvas& DetachPaint();
 
+    virtual ColorQuad GetEnvForegroundColor() const;
     virtual bool isHighContrastEnabled() const;
     virtual Drawing::CacheType GetCacheType() const;
     virtual Drawing::Surface* GetSurface() const;
 
+    virtual float GetAlpha() const;
+    virtual int GetAlphaSaveCount() const;
+
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return impl_->DowncastingTo<T>();
     }
@@ -369,9 +388,15 @@ public:
 
 protected:
     CoreCanvas(int32_t width, int32_t height);
+    Paint paintBrush_;
+    Paint paintPen_;
 
 private:
+    void AttachPaint();
     std::shared_ptr<CoreCanvasImpl> impl_;
+#ifdef ACE_ENABLE_GPU
+    std::shared_ptr<GPUContext> gpuContext_;
+#endif
 };
 } // namespace Drawing
 } // namespace Rosen

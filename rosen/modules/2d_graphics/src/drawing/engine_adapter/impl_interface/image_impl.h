@@ -33,12 +33,16 @@ namespace Drawing {
 class Data;
 #ifdef ACE_ENABLE_GPU
 class GPUContext;
-class TextureInfo;
-enum class TextureOrigin;
 enum class CompressedType;
 class BackendTexture;
+class TextureInfo;
+enum class TextureOrigin;
+#ifdef RS_ENABLE_VK
+struct VKTextureInfo;
+#endif
 #endif
 enum class BitDepth;
+class Surface;
 
 /** Caller data passed to RasterReleaseProc; may be nullptr.
 */
@@ -54,9 +58,7 @@ public:
     ImageImpl() noexcept {}
     ~ImageImpl() override {}
 
-    virtual void* BuildFromBitmap(const Bitmap& bitmap) = 0;
-    virtual void* BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix,
-        const Brush& brush, BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace) = 0;
+    virtual bool BuildFromBitmap(const Bitmap& bitmap) = 0;
 #ifdef ACE_ENABLE_GPU
     virtual bool BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap) = 0;
     virtual bool MakeFromEncoded(const std::shared_ptr<Data>& data) = 0;
@@ -64,6 +66,9 @@ public:
     virtual bool BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Data>& data, int width, int height,
         CompressedType type) = 0;
     virtual bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
+        BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
+        void (*deleteFunc)(void*) = nullptr, void* cleanupHelper = nullptr) = 0;
+    virtual bool BuildFromSurface(GPUContext& gpuContext, Surface& surface, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace) = 0;
     virtual BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) = 0;
     virtual bool IsValid(GPUContext* context) const = 0;
@@ -73,21 +78,23 @@ public:
     virtual int GetHeight() const = 0;
     virtual ColorType GetColorType() const = 0;
     virtual AlphaType GetAlphaType() const = 0;
+    virtual std::shared_ptr<ColorSpace> GetColorSpace() const = 0;
     virtual uint32_t GetUniqueID() const = 0;
     virtual ImageInfo GetImageInfo() = 0;
     virtual bool ReadPixels(Bitmap& bitmap, int x, int y) = 0;
+    virtual bool ReadPixels(Pixmap& pixmap, int x, int y) = 0;
     virtual bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
                             int32_t srcX, int32_t srcY) const = 0;
     virtual bool IsTextureBacked() const = 0;
     virtual bool ScalePixels(const Bitmap& bitmap, const SamplingOptions& sampling,
         bool allowCachingHint = true) const = 0;
-    virtual std::shared_ptr<Data> EncodeToData(EncodedImageFormat& encodedImageFormat, int quality) const = 0;
+    virtual std::shared_ptr<Data> EncodeToData(EncodedImageFormat encodedImageFormat, int quality) const = 0;
     virtual bool IsLazyGenerated() const = 0;
     virtual bool GetROPixels(Bitmap& bitmap) const = 0;
     virtual std::shared_ptr<Image> MakeRasterImage() const = 0;
     virtual bool CanPeekPixels() const = 0;
     virtual bool IsOpaque() const = 0;
-
+    virtual void HintCacheGpuResource() const = 0;
 
     // using for recording, should to remove after using shared memory
     virtual std::shared_ptr<Data> Serialize() const = 0;

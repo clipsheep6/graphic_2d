@@ -42,7 +42,8 @@ int32_t NativeWindowRequestBuffer(OHNativeWindow *window, /* [out] */ OHNativeWi
     /* [out] get release fence */ int *fenceFd);
 int32_t NativeWindowFlushBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer,
     int fenceFd, Region region);
-int32_t GetLastFlushedBuffer(OHNativeWindow *window, OHNativeWindowBuffer **buffer);
+int32_t GetLastFlushedBuffer(OHNativeWindow *window, OHNativeWindowBuffer **buffer,
+    int *fenceFd, float matrix[16]);
 int32_t NativeWindowCancelBuffer(OHNativeWindow *window, OHNativeWindowBuffer *buffer);
 
 // The meaning and quantity of parameters vary according to the code type.
@@ -61,6 +62,8 @@ int32_t NativeWindowSetMetaData(OHNativeWindow *window, uint32_t sequence, int32
 int32_t NativeWindowSetMetaDataSet(OHNativeWindow *window, uint32_t sequence, OHHDRMetadataKey key,
                                    int32_t size, const uint8_t *metaData);
 int32_t NativeWindowSetTunnelHandle(OHNativeWindow *window, const OHExtDataHandle *handle);
+int32_t GetSurfaceId(OHNativeWindow *window, uint64_t *surfaceId);
+int32_t CreateNativeWindowFromSurfaceId(uint64_t surfaceId, OHNativeWindow **window);
 
 #ifdef __cplusplus
 }

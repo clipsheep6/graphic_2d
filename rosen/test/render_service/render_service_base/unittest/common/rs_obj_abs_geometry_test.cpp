@@ -63,6 +63,8 @@ HWTEST_F(RSObjAbsGeometryTest, UpdateMatrix001, TestSize.Level1)
     float pivotZ = 0.5f;
     float scaleX = 0.5f;
     float scaleY = 0.5f;
+    float skewX = 0.5f;
+    float skewY = 0.5f;
     rsObjAbsGeometry.SetRect(x, y, w, h);
     rsObjAbsGeometry.SetQuaternion(quaternion);
     rsObjAbsGeometry.SetRotationY(rotationY);
@@ -79,11 +81,20 @@ HWTEST_F(RSObjAbsGeometryTest, UpdateMatrix001, TestSize.Level1)
     rsObjAbsGeometry.UpdateMatrix(parent, std::nullopt, std::nullopt);
     rsObjAbsGeometry.SetScaleX(scaleX);
     rsObjAbsGeometry.UpdateMatrix(parent, std::nullopt, std::nullopt);
+    rsObjAbsGeometry.SetSkewX(skewX);
+    rsObjAbsGeometry.UpdateMatrix(parent, std::nullopt, std::nullopt);
+    rsObjAbsGeometry.SetSkewY(skewY);
+    rsObjAbsGeometry.UpdateMatrix(parent, std::nullopt, std::nullopt);
     rsObjAbsGeometry.SetQuaternion(quaternion.Flip());
     rsObjAbsGeometry.UpdateMatrix(parent, std::nullopt, std::nullopt);
     scaleX = 1.f;
     scaleY = 1.f;
+    skewX = 0.5f;
+    skewY = 0.5f;
     rsObjAbsGeometry.SetScale(scaleX, scaleY);
+    rsObjAbsGeometry.SetScale(scaleX, scaleY);
+    rsObjAbsGeometry.SetSkew(skewX, skewY);
+    rsObjAbsGeometry.SetSkew(skewX, skewY);
     rsObjAbsGeometry.UpdateMatrix(parent, std::nullopt, std::nullopt);
     rsObjAbsGeometry.SetContextMatrix(contextMatrix);
     rsObjAbsGeometry.UpdateMatrix(parent, std::nullopt, std::nullopt);
@@ -112,8 +123,13 @@ HWTEST_F(RSObjAbsGeometryTest, UpdateMatrix002, TestSize.Level1)
     float y = 0.f;
     float w = 3.5f;
     float h = 3.5f;
+#ifndef USE_ROSEN_DRAWING
     SkPoint offset = SkPoint::Make(offsetX, offsetY);
     SkRect clipRect = SkRect::MakeLTRB(left, top, right, bottom);
+#else
+    Drawing::Point offset = Drawing::Point(offsetX, offsetY);
+    Drawing::Rect clipRect = Drawing::Rect(left, top, right, bottom);
+#endif
     rsObjAbsGeometry.SetRect(x, y, w, h);
     rsObjAbsGeometry.UpdateMatrix(parent, offset, clipRect);
     x = 0.5f;

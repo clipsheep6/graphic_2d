@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,21 @@ static Pen* CastToPen(OH_Drawing_Pen* cPen)
 static const Pen& CastToPen(const OH_Drawing_Pen& cPen)
 {
     return reinterpret_cast<const Pen&>(cPen);
+}
+
+static ShaderEffect* CastToShaderEffect(OH_Drawing_ShaderEffect* cShaderEffect)
+{
+    return reinterpret_cast<ShaderEffect*>(cShaderEffect);
+}
+
+static PathEffect* CastToPathEffect(OH_Drawing_PathEffect* cPathEffect)
+{
+    return reinterpret_cast<PathEffect*>(cPathEffect);
+}
+
+static const Filter& CastToFilter(const OH_Drawing_Filter& cFilter)
+{
+    return reinterpret_cast<const Filter&>(cFilter);
 }
 
 static OH_Drawing_PenLineCapStyle CapCastToCCap(Pen::CapStyle cap)
@@ -151,6 +166,23 @@ void OH_Drawing_PenSetColor(OH_Drawing_Pen* cPen, uint32_t color)
     pen->SetColor(color);
 }
 
+uint8_t OH_Drawing_PenGetAlpha(const OH_Drawing_Pen* cPen)
+{
+    if (cPen == nullptr) {
+        return 0;
+    }
+    return CastToPen(*cPen).GetAlpha();
+}
+
+void OH_Drawing_PenSetAlpha(OH_Drawing_Pen* cPen, uint8_t alpha)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+    pen->SetAlpha(alpha);
+}
+
 float OH_Drawing_PenGetWidth(const OH_Drawing_Pen* cPen)
 {
     if (cPen == nullptr) {
@@ -223,4 +255,46 @@ void OH_Drawing_PenSetJoin(OH_Drawing_Pen* cPen, OH_Drawing_PenLineJoinStyle cJo
     }
     Pen::JoinStyle join = CJoinCastToJoin(cJoin);
     pen->SetJoinStyle(join);
+}
+
+void OH_Drawing_PenSetShaderEffect(OH_Drawing_Pen* cPen, OH_Drawing_ShaderEffect* cShaderEffect)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+    pen->SetShaderEffect(std::shared_ptr<ShaderEffect>{CastToShaderEffect(cShaderEffect), [](auto p) {}});
+}
+
+void OH_Drawing_PenSetPathEffect(OH_Drawing_Pen* cPen, OH_Drawing_PathEffect* cPathEffect)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+    pen->SetPathEffect(std::shared_ptr<PathEffect>{CastToPathEffect(cPathEffect), [](auto p) {}});
+}
+
+void OH_Drawing_PenSetFilter(OH_Drawing_Pen* cPen, OH_Drawing_Filter* cFilter)
+{
+    if (cFilter == nullptr) {
+        return;
+    }
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+    pen->SetFilter(CastToFilter(*cFilter));
+}
+
+void OH_Drawing_PenSetBlendMode(OH_Drawing_Pen* cPen, OH_Drawing_BlendMode cBlendMode)
+{
+    if (cPen == nullptr) {
+        return;
+    }
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+    pen->SetBlendMode(static_cast<BlendMode>(cBlendMode));
 }

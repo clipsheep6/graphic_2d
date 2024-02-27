@@ -31,7 +31,8 @@ public:
         return Type;
     }
 
-    explicit RSEffectRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
+    explicit RSEffectRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {},
+        bool isTextureExportNode = false);
     ~RSEffectRenderNode() override;
 
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
@@ -39,21 +40,41 @@ public:
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 #ifndef USE_ROSEN_DRAWING
-    void SetEffectRegion(const std::optional<SkPath>& region);
+    std::optional<SkIRect> InitializeEffectRegion() const { return SkIRect::MakeEmpty(); }
+    void SetEffectRegion(const std::optional<SkIRect>& effectRegion);
 #else
-    void SetEffectRegion(const std::optional<Drawing::Path>& region);
+    std::optional<Drawing::RectI> InitializeEffectRegion() const { return Drawing::RectI(); }
+    void SetEffectRegion(const std::optional<Drawing::RectI>& effectRegion);
 #endif
+    // record if there is filter cache for occlusion before this effect node
+    void SetVisitedFilterCacheStatus(bool isEmpty)
+    {
+        isVisitedOcclusionFilterCacheEmpty_ = isEmpty;
+    }
+
+    bool IsVisitedFilterCacheEmpty() const
+    {
+        return isVisitedOcclusionFilterCacheEmpty_;
+    }
+
+    void SetRotationChanged(bool isRotationChanged);
+    bool GetRotationChanged() const;
+    void SetInvalidateTimesForRotation(int times);
 
 protected:
     RectI GetFilterRect() const override;
+    void UpdateFilterCacheManagerWithCacheRegion(
+        RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect) override;
+    void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) override;
 
 private:
-#ifndef USE_ROSEN_DRAWING
-    std::optional<SkPath> effectRegion_ = std::nullopt;
-#else
-    std::optional<Drawing::Path> effectRegion_ = std::nullopt;
-#endif
-    friend class RSEffectDataGenerateDrawable;
+    bool NeedForceCache();
+
+    bool isVisitedOcclusionFilterCacheEmpty_ = true;
+    bool isRotationChanged_ = false;
+    bool preRotationStatus_ = false;
+    int invalidateTimes_ = 0;
+    int cacheUpdateInterval_ = 1;
 };
 } // namespace Rosen
 } // namespace OHOS

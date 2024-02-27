@@ -56,8 +56,11 @@ RSParallelRenderManager::RSParallelRenderManager()
     }
     readyBufferNum_ = 0;
 #ifdef RS_ENABLE_VK
-    parallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
-    backParallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        parallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+        backParallelDisplayNodes_.assign(PARALLEL_THREAD_NUM, nullptr);
+    }
 #endif
 }
 
@@ -103,17 +106,20 @@ void RSParallelRenderManager::StartSubRenderThread(uint32_t threadNum, RenderCon
 #ifdef NEW_RENDER_CONTEXT
         drawingContext_ = drawingContext;
 #endif
-#ifdef RS_ENABLE_GL
-        if (context) {
+
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+        if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+            RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR || context) {
 #endif
             for (uint32_t i = 0; i < threadNum; ++i) {
                 auto curThread = std::make_unique<RSParallelSubThread>(context, renderType_, i);
                 curThread->StartSubThread();
                 threadList_.push_back(std::move(curThread));
             }
-#ifdef RS_ENABLE_GL
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         }
 #endif
+
         processTaskManager_.Initialize(threadNum);
         prepareTaskManager_.Initialize(threadNum);
         calcCostTaskManager_.Initialize(threadNum);
@@ -239,10 +245,10 @@ void RSParallelRenderManager::PackParallelCompositionTask(std::shared_ptr<RSNode
     baseNode_ = node;
     compositionTaskManager_.Reset();
     auto children = node->GetSortedChildren();
-    for (auto iter = children.rbegin(); iter != children.rend(); iter++) {
+    for (auto iter = children->rbegin(); iter != children->rend(); iter++) {
         std::shared_ptr<RSDisplayRenderNode> displayNode =
             RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(*iter);
-        if (*iter == *children.begin()) {
+        if (*iter == *children->begin()) {
             mainDisplayNode_ = displayNode;
             break;
         }
@@ -313,7 +319,11 @@ void RSParallelRenderManager::WaitCompositionEnd()
 bool RSParallelRenderManager::DrawImageMergeFuncForRosenDrawing(RSPaintFilterCanvas& canvas,
     std::shared_ptr<Drawing::Image> texture)
 {
-    Drawing::TextureOrigin origin = Drawing::TextureOrigin::TOP_LEFT;
+    if (canvas.GetGPUContext() == nullptr) {
+        return false;
+    }
+
+    Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
     auto sharedBackendTexture = texture->GetBackendTexture(false, &origin);
     if (!sharedBackendTexture.IsValid()) {
         RS_LOGE("Texture of subThread does not has GPU backend");
@@ -322,9 +332,6 @@ bool RSParallelRenderManager::DrawImageMergeFuncForRosenDrawing(RSPaintFilterCan
     auto newImage = std::make_shared<Drawing::Image>();
     if (newImage == nullptr) {
         RS_LOGE("Texture of subThread create Drawing image fail");
-        return false;
-    }
-    if (canvas.GetGPUContext() == nullptr) {
         return false;
     }
     Drawing::BitmapFormat fmt =
@@ -355,7 +362,6 @@ void RSParallelRenderManager::DrawImageMergeFunc(RSPaintFilterCanvas& canvas)
                 continue;
             }
 #ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
             if (renderContext_ == nullptr) {
                 RS_LOGE("RS main thread render context is nullptr");
                 continue;
@@ -381,9 +387,6 @@ void RSParallelRenderManager::DrawImageMergeFunc(RSPaintFilterCanvas& canvas)
             }
             canvas.drawImage(sharedTexture, 0, 0);
 #else
-            canvas.drawImage(texture, 0, 0);
-#endif
-#else
             if (!DrawImageMergeFuncForRosenDrawing(canvas, texture)) {
                 continue;
             }
@@ -394,12 +397,13 @@ void RSParallelRenderManager::DrawImageMergeFunc(RSPaintFilterCanvas& canvas)
             auto clearTransparentColorSurfaceIndex = i + 1;
             ClearSelfDrawingSurface(canvas, clearTransparentColorSurfaceIndex);
 #ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
             sharedTexture.reset();
             sharedTexture = nullptr;
             texture.reset();
             texture = nullptr;
-#endif
+#else
+            texture.reset();
+            texture = nullptr;
 #endif
         }
     }
@@ -686,6 +690,10 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
     const std::shared_ptr<RSBaseRenderEngine> renderEngine, const ScreenInfo screenInfo)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     auto& context = RSMainThread::Instance()->GetContext();
     parallelFrames_.clear();
     std::swap(parallelDisplayNodes_, backParallelDisplayNodes_);
@@ -720,6 +728,10 @@ void RSParallelRenderManager::InitDisplayNodeAndRequestFrame(
 void RSParallelRenderManager::ProcessParallelDisplaySurface(RSUniRenderVisitor &visitor)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     for (int i = 0; i < PARALLEL_THREAD_NUM; i++) {
         if (!parallelDisplayNodes_[i]) {
             continue;
@@ -732,6 +744,10 @@ void RSParallelRenderManager::ProcessParallelDisplaySurface(RSUniRenderVisitor &
 void RSParallelRenderManager::ReleaseBuffer()
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     for (int i = 0; i < PARALLEL_THREAD_NUM; i++) {
         if (!parallelDisplayNodes_[i]) {
             continue;
@@ -745,6 +761,10 @@ void RSParallelRenderManager::ReleaseBuffer()
 void RSParallelRenderManager::NotifyUniRenderFinish()
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
     readyBufferNum_++;
     if (readyBufferNum_ == PARALLEL_THREAD_NUM) {
         RS_TRACE_NAME("RSParallelRenderManager::NotifyUniRenderFinish");
@@ -758,6 +778,10 @@ std::shared_ptr<RSDisplayRenderNode> RSParallelRenderManager::GetParallelDisplay
     uint32_t subMainThreadIdx)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     return parallelDisplayNodes_[subMainThreadIdx];
 #else
     return nullptr;
@@ -768,6 +792,10 @@ std::unique_ptr<RSRenderFrame> RSParallelRenderManager::GetParallelFrame(
     uint32_t subMainThreadIdx)
 {
 #ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
     return std::move(parallelFrames_[subMainThreadIdx]);
 #else
     return nullptr;

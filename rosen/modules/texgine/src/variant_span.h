@@ -24,6 +24,7 @@
 #include "texgine/font_providers.h"
 #include "texgine/any_span.h"
 #include "text_span.h"
+#include "symbol_animation_config.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -50,7 +51,7 @@ public:
     std::shared_ptr<TextSpan> TryToTextSpan() const noexcept(false);
     std::shared_ptr<AnySpan> TryToAnySpan() const noexcept(false);
 
-    double GetWidth() const noexcept(false);
+    double GetWidth() const;
     double GetHeight() const noexcept(false);
     size_t GetNumberOfCharGroup() const noexcept(false);
     std::vector<double> GetGlyphWidths() const noexcept(false);
@@ -69,20 +70,50 @@ public:
 
     void Paint(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
     void PaintShadow(TexgineCanvas &canvas, double offsetX, double offsetY) noexcept(false);
+
     bool IsRTL() const noexcept(false);
     bool IsHardBreak() const noexcept(false);
 
     double GetJustifyGap() const noexcept(true);
     void SetJustifyGap(double justifyGap) noexcept(true);
 
+    bool HasBackgroundRect() const;
+    RoundRectType GetRoundRectType() const noexcept(true);
+    void SetRoundRectType(RoundRectType type) noexcept(true);
+
+    void SetTopInGroup(double top);
+    double GetTopInGroup() const;
+
+    void SetBottomInGroup(double bottom);
+    double GetBottomInGroup() const;
+
+    void SetMaxRoundRectRadius(double radius);
+    double GetMaxRoundRectRadius() const;
+
+    double GetTop() const noexcept(true);
+    double GetBottom() const noexcept(true);
+
     operator bool() const noexcept(false);
     bool operator ==(std::nullptr_t) const noexcept(false);
     bool operator ==(const VariantSpan &rhs) const noexcept(false);
     bool operator !=(std::nullptr_t) const noexcept(false);
     bool operator !=(const VariantSpan &rhs) const noexcept(false);
+    void SetAnimation(std::function<bool(
+        const std::shared_ptr<OHOS::Rosen::TextEngine::SymbolAnimationConfig>&)>& animationFunc)
+    {
+        if (animationFunc != nullptr && ts_ != nullptr) {
+            ts_->SetAnimation(animationFunc);
+        }
+    }
 
+    void SetSymbolId(const uint64_t& id)
+    {
+        if (ts_ != nullptr) {
+            ts_->SetSymbolId(id);
+        }
+    }
 private:
-    void CheckPointer(bool nullable = false) const noexcept(false);
+    void CheckPointer(bool nullable = false) const;
 
     std::shared_ptr<TextSpan> ts_ = nullptr;
     std::shared_ptr<AnySpan> as_ = nullptr;
@@ -91,6 +122,7 @@ private:
     double offsetY_ = 0;
     double justifyGap_ = 0;
     TextStyle xs_;
+    RoundRectType roundRectType_ = RoundRectType::NONE;
 };
 } // namespace TextEngine
 } // namespace Rosen

@@ -41,18 +41,13 @@ public:
     virtual ~RSImageBase();
 
 #ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
     virtual void DrawImage(RSPaintFilterCanvas& canvas, const SkSamplingOptions& samplingOptions, const SkPaint& paint);
-#else
-    virtual void DrawImage(RSPaintFilterCanvas& canvas, const SkPaint& paint);
-#endif
     void SetImage(const sk_sp<SkImage> image);
 #if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     void SetDmaImage(const sk_sp<SkImage> image);
 #endif
 #else
-    virtual void DrawImage(Drawing::Canvas& canvas, const Drawing::SamplingOptions& samplingOptions,
-        const Drawing::Brush& brush);
+    virtual void DrawImage(Drawing::Canvas& canvas, const Drawing::SamplingOptions& samplingOptions);
     void SetImage(const std::shared_ptr<Drawing::Image> image);
 #if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     void SetDmaImage(const std::shared_ptr<Drawing::Image> image);
@@ -72,9 +67,9 @@ public:
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-    void ConvertPixelMapToSkImage();
+    void ConvertPixelMapToSkImage(bool parallelUpload = false);
 #else
-    void ConvertPixelMapToDrawingImage();
+    void ConvertPixelMapToDrawingImage(bool parallelUpload = false);
 #endif
 
 protected:
@@ -104,16 +99,14 @@ protected:
     SkRect src_;
     SkRect dst_;
     SkRect lastRect_;
+#else
+    Drawing::Rect src_;
+    Drawing::Rect dst_;
+    Drawing::Rect lastRect_;
 #endif
     bool isDrawn_ = false;
     uint64_t uniqueId_ = 0;
     bool renderServiceImage_ = false;
-
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-    bool isPinImage_ = false;
-#endif
-#endif
 };
 } // namespace Rosen
 } // namespace OHOS

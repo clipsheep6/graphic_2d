@@ -34,6 +34,7 @@ constexpr uint32_t DEBUG_MODIFIER_SIZE = 20;
         if (!node) {                                                                                                \
             return defaultValue;                                                                                    \
         }                                                                                                           \
+        std::unique_lock<std::recursive_mutex> lock(node->GetPropertyMutex());                                      \
         auto iter = node->propertyModifiers_.find(RSModifierType::propertyType);                                    \
         if (iter != node->propertyModifiers_.end()) {                                                               \
             if (!iter->second || !iter->second->GetProperty()) {                                                    \
@@ -42,8 +43,8 @@ constexpr uint32_t DEBUG_MODIFIER_SIZE = 20;
             return std::static_pointer_cast<RSProperty<T>>(iter->second->GetProperty())->Get();                     \
         }                                                                                                           \
         T value = defaultValue;                                                                                     \
-        if (node->modifiers_.size() > DEBUG_MODIFIER_SIZE) {                                                          \
-            ROSEN_LOGD("RSModifierExtractor modifier size is %zu", node->modifiers_.size());                        \
+        if (node->modifiers_.size() > DEBUG_MODIFIER_SIZE) {                                                        \
+            ROSEN_LOGD("RSModifierExtractor modifier size is %{public}zu", node->modifiers_.size());                \
         }                                                                                                           \
         for (auto& [_, modifier] : node->modifiers_) {                                                              \
             if (modifier->GetModifierType() == RSModifierType::propertyType) {                                      \
@@ -116,6 +117,11 @@ float RSModifierExtractor::GetTranslateZ() const
 Vector2f RSModifierExtractor::GetScale() const
 {
     GET_PROPERTY_FROM_MODIFIERS(Vector2f, SCALE, Vector2f(1.f, 1.f), *=);
+}
+
+Vector2f RSModifierExtractor::GetSkew() const
+{
+    GET_PROPERTY_FROM_MODIFIERS(Vector2f, SKEW, Vector2f(0.f, 0.f), +=);
 }
 
 float RSModifierExtractor::GetAlpha() const
@@ -194,25 +200,25 @@ Vector4<uint32_t> RSModifierExtractor::GetBorderStyle() const
         Vector4<uint32_t>, BORDER_STYLE, Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE)), =);
 }
 
-Vector4<Color> RSModifierExtractor::GetOuterBorderColor() const
+Vector4<Color> RSModifierExtractor::GetOutlineColor() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(Vector4<Color>, OUTER_BORDER_COLOR, Vector4<Color>(RgbPalette::Transparent()), =);
+    GET_PROPERTY_FROM_MODIFIERS(Vector4<Color>, OUTLINE_COLOR, Vector4<Color>(RgbPalette::Transparent()), =);
 }
 
-Vector4f RSModifierExtractor::GetOuterBorderWidth() const
+Vector4f RSModifierExtractor::GetOutlineWidth() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(Vector4f, OUTER_BORDER_WIDTH, Vector4f(0.f), =);
+    GET_PROPERTY_FROM_MODIFIERS(Vector4f, OUTLINE_WIDTH, Vector4f(0.f), =);
 }
 
-Vector4<uint32_t> RSModifierExtractor::GetOuterBorderStyle() const
+Vector4<uint32_t> RSModifierExtractor::GetOutlineStyle() const
 {
     GET_PROPERTY_FROM_MODIFIERS(
-        Vector4<uint32_t>, OUTER_BORDER_STYLE, Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE)), =);
+        Vector4<uint32_t>, OUTLINE_STYLE, Vector4<uint32_t>(static_cast<uint32_t>(BorderStyle::NONE)), =);
 }
 
-Vector4f RSModifierExtractor::GetOuterBorderRadius() const
+Vector4f RSModifierExtractor::GetOutlineRadius() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(Vector4f, OUTER_BORDER_RADIUS, Vector4f(0.f), =);
+    GET_PROPERTY_FROM_MODIFIERS(Vector4f, OUTLINE_RADIUS, Vector4f(0.f), =);
 }
 
 std::shared_ptr<RSFilter> RSModifierExtractor::GetBackgroundFilter() const
@@ -270,9 +276,9 @@ bool RSModifierExtractor::GetShadowIsFilled() const
     GET_PROPERTY_FROM_MODIFIERS(bool, SHADOW_IS_FILLED, false, =);
 }
 
-bool RSModifierExtractor::GetShadowColorStrategy() const
+int RSModifierExtractor::GetShadowColorStrategy() const
 {
-    GET_PROPERTY_FROM_MODIFIERS(bool, SHADOW_COLOR_STRATEGY, false, =);
+    GET_PROPERTY_FROM_MODIFIERS(int, SHADOW_COLOR_STRATEGY, SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE, =);
 }
 
 Gravity RSModifierExtractor::GetFrameGravity() const
@@ -323,6 +329,11 @@ float RSModifierExtractor::GetLightIntensity() const
 Vector4f RSModifierExtractor::GetLightPosition() const
 {
     GET_PROPERTY_FROM_MODIFIERS(Vector4f, LIGHT_POSITION, Vector4f(0.f), =);
+}
+
+float RSModifierExtractor::GetIlluminatedBorderWidth() const
+{
+    GET_PROPERTY_FROM_MODIFIERS(float, ILLUMINATED_BORDER_WIDTH, 0.f, =);
 }
 
 int RSModifierExtractor::GetIlluminatedType() const

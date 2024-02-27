@@ -82,6 +82,46 @@ typedef struct OH_Drawing_TypographyStyle OH_Drawing_TypographyStyle;
  */
 typedef struct OH_Drawing_TypographyCreate OH_Drawing_TypographyCreate;
 
+/**
+ * @brief Defines an <b>OH_Drawing_TextBox</b>, which is used to create an <b>OH_Drawing_TextBox</b> object.
+ *
+ * @since 11
+ * @version 1.0
+ */
+typedef struct OH_Drawing_TextBox OH_Drawing_TextBox;
+
+/**
+ * @brief Defines an <b>OH_Drawing_PositionAndAffinity</b>,
+ * which is used to create an <b>OH_Drawing_PositionAndAffinity</b> object.
+ * @since 11
+ * @version 1.0
+ */
+typedef struct OH_Drawing_PositionAndAffinity OH_Drawing_PositionAndAffinity;
+
+/**
+ * @brief Defines an <b>OH_Drawing_Range</b>, which is used to create an <b>OH_Drawing_Range</b> object.
+ *
+ * @since 11
+ * @version 1.0
+ */
+typedef struct OH_Drawing_Range OH_Drawing_Range;
+
+/**
+ * @brief Defines an <b>OH_Drawing_FontParser</b>, which is used to parse system font files.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_FontParser OH_Drawing_FontParser;
+
+/**
+ * @brief Defines an <b>OH_Drawing_TextShadow</b>, which is used to create an <b>OH_Drawing_TextShadow</b> object.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_TextShadow OH_Drawing_TextShadow;
+
 #ifdef __cplusplus
 }
 #endif

@@ -51,7 +51,7 @@ RSTagTracker::RSTagTracker(Drawing::GPUContext* gpuContext, RSTagTracker::TAGTYP
     if (!g_releaseResourceEnabled_) {
         return;
     }
-#ifdef RS_ENABLE_GL
+#if defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)
     Drawing::GPUResourceTag tag(0, 0, 0, tagType);
     gpuContext_->SetCurrentGpuResourceTag(tag);
 #endif
@@ -94,6 +94,9 @@ std::string RSTagTracker::TagType2String(TAGTYPE type)
         case TAG_DRAW_SURFACENODE :
             tagType = "draw_surface_node";
             break;
+        case TAG_UNTAGGED :
+            tagType = "untagged";
+            break;
         default :
             tagType = "";
             break;
@@ -116,7 +119,7 @@ RSTagTracker::RSTagTracker(GrContext* grContext, NodeId nodeId, RSTagTracker::TA
     if (!g_releaseResourceEnabled_) {
         return;
     }
-#ifdef RS_ENABLE_GL
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     GrGpuResourceTag tag(ExtractPid(nodeId), 0, nodeId, tagType);
     grContext_->setCurrentGrResourceTag(tag);
 #endif
@@ -132,7 +135,7 @@ RSTagTracker::RSTagTracker(Drawing::GPUContext* gpuContext, NodeId nodeId, RSTag
     if (!g_releaseResourceEnabled_) {
         return;
     }
-#ifdef RS_ENABLE_GL
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     Drawing::GPUResourceTag tag(ExtractPid(nodeId), 0, nodeId, tagType);
     gpuContext_->SetCurrentGpuResourceTag(tag);
 #endif
@@ -168,7 +171,7 @@ RSTagTracker::RSTagTracker(Drawing::GPUContext* gpuContext, Drawing::GPUResource
     if (!g_releaseResourceEnabled_) {
         return;
     }
-#ifdef RS_ENABLE_GL
+#if defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)
     gpuContext_->SetCurrentGpuResourceTag(tag);
 #endif
 }
@@ -198,7 +201,7 @@ void RSTagTracker::SetTagEnd()
         return;
     }
     isSetTagEnd_ = true;
-#ifdef RS_ENABLE_GL
+#if defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)
     Drawing::GPUResourceTag tagEnd(0, 0, 0, 0);
     gpuContext_->SetCurrentGpuResourceTag(tagEnd);
 #endif
@@ -219,11 +222,13 @@ RSTagTracker::~RSTagTracker()
     }
 #endif
 #else
+#if defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)
     // Set empty tag to notify skia that the tag is complete
     if (!isSetTagEnd_ && gpuContext_) {
         Drawing::GPUResourceTag tagEnd(0, 0, 0, 0);
         gpuContext_->SetCurrentGpuResourceTag(tagEnd);
     }
+#endif
 #endif
 }
 } // namespace OHOS::Rosen

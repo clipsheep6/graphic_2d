@@ -51,6 +51,12 @@ enum ShowTopResourceType {
     TOP_HIDDEN
 };
 
+enum RoundCornerSurfaceType {
+    // choose type and then choose resource for harden or RS
+    TOP_SURFACE = 0,
+    BOTTOM_SURFACE
+};
+
 class RoundCornerDisplay {
 public:
     RoundCornerDisplay();
@@ -65,7 +71,16 @@ public:
     // update curOrientation_ and lastOrientation_
     void UpdateOrientationStatus(ScreenRotation orientation);
 
-    void DrawRoundCorner(std::shared_ptr<RSPaintFilterCanvas> canvas);
+    void DrawRoundCorner(RSPaintFilterCanvas* canvas);
+
+    void DrawTopRoundCorner(RSPaintFilterCanvas* canvas);
+
+    void DrawBottomRoundCorner(RSPaintFilterCanvas* canvas);
+
+    bool IsSupportHardware() const
+    {
+        return supportHardware_;
+    }
 
     void RunHardwareTask(const std::function<void()>& task)
     {
@@ -82,6 +97,11 @@ public:
         return hardInfo_;
     }
 
+    bool GetRcdEnable() const
+    {
+        return isRcdEnable_;
+    }
+
 private:
     // load config
     rs_rcd::LCDModel* lcdModel_ = nullptr;
@@ -94,6 +114,7 @@ private:
         {"orientation", false}
     };
 
+#ifndef USE_ROSEN_DRAWING
     // notch resources
     sk_sp<SkImage> imgTopPortrait_ = nullptr;
     sk_sp<SkImage> imgTopLadsOrit_ = nullptr;
@@ -105,17 +126,27 @@ private:
     SkBitmap bitmapTopLadsOrit_;
     SkBitmap bitmapTopHidden_;
     SkBitmap bitmapBottomPortrait_;
+#else
+    // notch resources
+    std::shared_ptr<Drawing::Image> imgTopPortrait_ = nullptr;
+    std::shared_ptr<Drawing::Image> imgTopLadsOrit_ = nullptr;
+    std::shared_ptr<Drawing::Image> imgTopHidden_ = nullptr;
+    std::shared_ptr<Drawing::Image> imgBottomPortrait_ = nullptr;
 
+    // notch resources for harden
+    Drawing::Bitmap bitmapTopPortrait_;
+    Drawing::Bitmap bitmapTopLadsOrit_;
+    Drawing::Bitmap bitmapTopHidden_;
+    Drawing::Bitmap bitmapBottomPortrait_;
+#endif
     // display resolution
     uint32_t displayWidth_ = 0;
     uint32_t displayHeight_ = 0;
 
-    // setting of the notch
-    int notchSetting_ = WINDOW_NOTCH_DEFAULT;
     // status of the notch
-    int notchStatus_ = notchSetting_;
+    int notchStatus_ = WINDOW_NOTCH_DEFAULT;
 
-    int showResourceType_ = (notchSetting_ == WINDOW_NOTCH_DEFAULT) ? TOP_PORTRAIT : TOP_HIDDEN;
+    int showResourceType_ = (notchStatus_ == WINDOW_NOTCH_DEFAULT) ? TOP_PORTRAIT : TOP_HIDDEN;
 
     // status of the rotation
     ScreenRotation curOrientation_ = ScreenRotation::ROTATION_0;
@@ -126,9 +157,17 @@ private:
     bool supportHardware_ = false;
     bool resourceChanged = false;
 
+    bool isRcdEnable_ = false;
+
+#ifndef USE_ROSEN_DRAWING
     // the resource to be drawn
     sk_sp<SkImage> curTop_ = nullptr;
     sk_sp<SkImage> curBottom_ = nullptr;
+#else
+    // the resource to be drawn
+    std::shared_ptr<Drawing::Image> curTop_ = nullptr;
+    std::shared_ptr<Drawing::Image> curBottom_ = nullptr;
+#endif
 
     std::mutex resourceMut_;
 
@@ -136,16 +175,22 @@ private:
 
     bool Init();
 
-    bool LoadConfigFile();
+    static bool LoadConfigFile();
 
     // choose LCD mode
     bool SeletedLcdModel(const char* lcdModelName);
 
+#ifndef USE_ROSEN_DRAWING
     // load single image as skimage
-    bool LoadImg(const char* path, sk_sp<SkImage>& img);
+    static bool LoadImg(const char* path, sk_sp<SkImage>& img);
 
-    bool DecodeBitmap(sk_sp<SkImage> skimage, SkBitmap &bitmap);
+    static bool DecodeBitmap(sk_sp<SkImage> image, SkBitmap &bitmap);
+#else
+    // load single image as Drawingimage
+    static bool LoadImg(const char* path, std::shared_ptr<Drawing::Image>& img);
 
+    static bool DecodeBitmap(std::shared_ptr<Drawing::Image> drImage, Drawing::Bitmap &bitmap);
+#endif
     bool SetHardwareLayerSize();
 
     // load all images according to the resolution
@@ -154,6 +199,8 @@ private:
     bool GetTopSurfaceSource();
 
     bool GetBottomSurfaceSource();
+
+    void DrawOneRoundCorner(RSPaintFilterCanvas* canvas, int surfaceType);
 
     // update resource
     void UpdateParameter(std::map<std::string, bool> &updateFlag);

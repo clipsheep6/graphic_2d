@@ -33,10 +33,27 @@ struct FrameBuffer {
     int height;
     int FBOID;
     int Format;
+    ColorType colorType = Drawing::COLORTYPE_RGBA_8888;
     std::shared_ptr<GPUContext> gpuContext;
     std::shared_ptr<ColorSpace> colorSpace;
 };
 #endif
+
+struct FlushInfo {
+    bool backendSurfaceAccess = false;
+    size_t numSemaphores = 0;
+    void* backendSemaphore = nullptr;
+    void (*finishedProc)(void* finishedContext) = nullptr;
+    void* finishedContext = nullptr;
+    void (*submittedProc)(void* finishedContext, bool success) = nullptr;
+    void* submittedContext = nullptr;
+};
+
+enum class BackendAccess {
+    FLUSH_READ,
+    FLUSH_WRITE,
+    DISCARD_WRITE
+};
 
 class DRAWING_API Surface {
 public:
@@ -61,7 +78,16 @@ public:
      * @param info  FrameBuffer object info.
      */
     bool Bind(const FrameBuffer& frameBuffer);
-    
+
+#ifdef RS_ENABLE_VK
+    static std::shared_ptr<Surface> MakeFromBackendRenderTarget(GPUContext* gpuContext, const TextureInfo& info,
+        TextureOrigin origin, ColorType colorType, std::shared_ptr<ColorSpace> colorSpace,
+        void (*deleteVkImage)(void *), void* cleanHelper);
+    static std::shared_ptr<Surface> MakeFromBackendTexture(GPUContext* gpuContext, const TextureInfo& info,
+        TextureOrigin origin, int sampleCnt, ColorType colorType,
+        std::shared_ptr<ColorSpace> colorSpace, void (*deleteVkImage)(void *), void* cleanHelper);
+#endif
+
     /*
      * @brief              Create Surface from gpuContext and imageInfo.
      * @param gpuContext   GPU texture.
@@ -127,6 +153,11 @@ public:
     ImageInfo GetImageInfo();
 
     /*
+     * @brief   Gets BackendTexture of Surface
+     */
+    BackendTexture GetBackendTexture(BackendAccess access = BackendAccess::FLUSH_READ) const;
+
+    /*
      * @brief   Call to ensure all reads/writes of surface have been issue to the underlying 3D API.
      */
     void FlushAndSubmit(bool syncCpu = false);
@@ -134,13 +165,22 @@ public:
     /*
      * @brief   Call to ensure all reads/writes of surface have been issue to the underlying 3D API.
      */
-    void Flush();
+    void Flush(FlushInfo *drawingflushInfo = nullptr);
+
+    int Width() const;
+    int Height() const;
 
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return impl_->DowncastingTo<T>();
     }
+
+#ifdef RS_ENABLE_VK
+    void Wait(int32_t time, const VkSemaphore& semaphore);
+    void SetDrawingArea(const std::vector<RectI>& rects);
+    void ClearDrawingArea();
+#endif
 
 private:
     std::shared_ptr<SurfaceImpl> impl_;

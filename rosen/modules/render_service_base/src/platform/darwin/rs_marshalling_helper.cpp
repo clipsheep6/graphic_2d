@@ -42,9 +42,7 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/image/SkImage_Base.h"
-#else
-#include "recording/recording_shader_effect.h"
-#include "recording/recording_path.h"
+#include "include/core/HMSymbol.h"
 #endif
 
 #include "animation/rs_render_curve_animation.h"
@@ -62,6 +60,8 @@
 #ifndef USE_ROSEN_DRAWING
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_draw_cmd_list.h"
+#else
+#include "property/rs_properties_def.h"
 #endif
 #include "pixel_map.h"
 #include "platform/common/rs_log.h"
@@ -111,6 +111,65 @@ static inline sk_sp<T> sk_reinterpret_cast(sk_sp<P> ptr)
     return sk_sp<T>(static_cast<T*>(SkSafeRef(ptr.get())));
 }
 } // namespace
+
+#ifndef USE_ROSEN_DRAWING
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const GroupInfo& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, GroupInfo& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RenderGroup& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderGroup& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayers& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayers& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SymbolLayersGroups& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayersGroups& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const HMSymbolData& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, HMSymbolData& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SkPoint& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SkPoint& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const SColor& val)
+{
+    return {};
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SColor& val)
+{
+    return {};
+}
+#endif
 
 #ifndef USE_ROSEN_DRAWING
 // SkData
@@ -700,6 +759,17 @@ bool RSMarshallingHelper::SkipFromParcel(Parcel& parcel, size_t size)
 }
 void RSMarshallingHelper::BeginNoSharedMem(std::thread::id tid) {}
 void RSMarshallingHelper::EndNoSharedMem() {}
-bool RSMarshallingHelper::GetUseSharedMem() { return true; }
+bool RSMarshallingHelper::GetUseSharedMem(std::thread::id tid)
+{
+    return true;
+}
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSRenderPropertyBase>& val)
+{
+    return true;
+}
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSRenderPropertyBase>& val)
+{
+    return true;
+}
 } // namespace Rosen
 } // namespace OHOS

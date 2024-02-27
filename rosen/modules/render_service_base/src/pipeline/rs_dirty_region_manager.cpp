@@ -78,13 +78,6 @@ RectI RSDirtyRegionManager::GetIntersectedVisitedDirtyRect(const RectI& absRect)
     return belowDirty;
 }
 
-bool RSDirtyRegionManager::HasIntersectionWithVisitedDirtyRect(const RectI& absRect) const
-{
-    return currentFrameDirtyRegion_.Intersect(absRect) ||
-           std::any_of(visitedDirtyRegions_.begin(), visitedDirtyRegions_.end(),
-               [&absRect](const RectI& rect) { return rect.Intersect(absRect); });
-}
-
 void RSDirtyRegionManager::UpdateCacheableFilterRect(const RectI& rect)
 {
     if (rect.IsEmpty()) {
@@ -136,20 +129,24 @@ RectI RSDirtyRegionManager::GetDirtyRegionFlipWithinSurface() const
     } else {
         glRect = dirtyRegion_;
     }
-#ifndef RS_ENABLE_VK
-    // left-top to left-bottom corner(in current surface)
-    glRect.top_ = surfaceRect_.height_ - glRect.top_ - glRect.height_;
-#endif
+
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        // left-top to left-bottom corner(in current surface)
+        glRect.top_ = surfaceRect_.height_ - glRect.top_ - glRect.height_;
+    }
     return glRect;
 }
 
 RectI RSDirtyRegionManager::GetRectFlipWithinSurface(const RectI& rect) const
 {
     RectI glRect = rect;
-#ifndef RS_ENABLE_VK
-    // left-top to left-bottom corner(in current surface)
-    glRect.top_ = surfaceRect_.height_ - rect.top_ - rect.height_;
-#endif
+
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        // left-top to left-bottom corner(in current surface)
+        glRect.top_ = surfaceRect_.height_ - rect.top_ - rect.height_;
+    }
     return glRect;
 }
 
@@ -186,7 +183,7 @@ void RSDirtyRegionManager::Clear()
     dirtySurfaceNodeInfo_.clear();
     dirtySurfaceNodeInfo_.resize(DirtyRegionType::TYPE_AMOUNT);
     isDfxTarget_ = false;
-    isSubNodeFilterCacheValid_ = true;
+    isFilterCacheRectValid_ = true;
 }
 
 bool RSDirtyRegionManager::IsCurrentFrameDirty() const

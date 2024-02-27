@@ -21,7 +21,7 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkImage.h"
-
+#include "recording/draw_cmd_list.h"
 #include "benchmark_result.h"
 
 namespace OHOS {
@@ -32,7 +32,7 @@ public:
     virtual ~BenchMark() {}
     virtual void Start() = 0;
     virtual void Stop() = 0;
-    virtual void Test(SkCanvas* canvas, int width, int height) = 0;
+    virtual void Test(Drawing::Canvas* canvas, int width, int height) = 0;
     virtual void Output() = 0;
 };
 }

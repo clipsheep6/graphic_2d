@@ -37,6 +37,7 @@ public:
     virtual int32_t GetScreenSupportedModes(uint32_t screenId, std::vector<GraphicDisplayModeInfo> &modes) = 0;
     virtual int32_t GetScreenMode(uint32_t screenId, uint32_t &modeId) = 0;
     virtual int32_t SetScreenMode(uint32_t screenId, uint32_t modeId) = 0;
+    virtual int32_t SetScreenOverlayResolution(uint32_t screenId, uint32_t width, uint32_t height) = 0;
     virtual int32_t GetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus &status) = 0;
     virtual int32_t SetScreenPowerStatus(uint32_t screenId, GraphicDispPowerStatus status) = 0;
     virtual int32_t GetScreenBacklight(uint32_t screenId, uint32_t &level) = 0;
@@ -76,6 +77,7 @@ public:
     virtual int32_t SetLayerCrop(uint32_t screenId, uint32_t layerId, const GraphicIRect &crop) = 0;
     virtual int32_t SetLayerZorder(uint32_t screenId, uint32_t layerId, uint32_t zorder) = 0;
     virtual int32_t SetLayerPreMulti(uint32_t screenId, uint32_t layerId, bool isPreMulti) = 0;
+    virtual int32_t SetLayerColor(uint32_t screenId, uint32_t layerId, GraphicLayerColor layerColor) = 0;
     virtual int32_t SetLayerColorTransform(uint32_t screenId, uint32_t layerId, const std::vector<float> &matrix) = 0;
     virtual int32_t SetLayerColorDataSpace(uint32_t screenId, uint32_t layerId, GraphicColorDataSpace colorSpace) = 0;
     virtual int32_t GetLayerColorDataSpace(uint32_t screenId, uint32_t layerId, GraphicColorDataSpace &colorSpace) = 0;

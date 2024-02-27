@@ -45,9 +45,7 @@
 #include "image/gpu_context.h"
 #endif
 #include "memory_handler.h"
-#ifndef ROSEN_CROSS_PLATFORM
 #include "surface_type.h"
-#endif
 
 #define GLES_VERSION 2
 namespace OHOS {
@@ -80,22 +78,27 @@ public:
     {
         return skSurface_;
     }
-#ifdef RS_ENABLE_VK
-    bool SetUpGrContext(sk_sp<GrDirectContext> skContext);
-#else
-    bool SetUpGrContext();
-#endif
+    bool SetUpGrContext(sk_sp<GrDirectContext> skContext = nullptr);
 #else
     Drawing::GPUContext* GetDrGPUContext() const
     {
         return drGPUContext_.get();
     }
 
+    std::shared_ptr<Drawing::GPUContext> GetSharedDrGPUContext() const
+    {
+        return drGPUContext_;
+    }
+
     std::shared_ptr<Drawing::Surface> GetSurface() const
     {
         return surface_;
     }
-    bool SetUpGpuContext();
+    bool SetUpGpuContext(std::shared_ptr<Drawing::GPUContext> drawingContext = nullptr);
+#endif
+
+#ifdef RS_ENABLE_VK
+    void AbandonContext();
 #endif
 
     EGLSurface CreateEGLSurface(EGLNativeWindowType eglNativeWindow);
@@ -127,11 +130,25 @@ public:
         return eglDisplay_;
     }
 
-#ifndef ROSEN_CROSS_PLATFORM
-    void SetColorSpace(GraphicColorGamut colorSpace);
+    void SetColorSpace(GraphicColorGamut colorSpace)
+    {
+        colorSpace_ = colorSpace;
+    }
+
     GraphicColorGamut GetColorSpace() const
     {
         return colorSpace_;
+    }
+
+#ifndef ROSEN_CROSS_PLATFORM
+    void SetPixelFormat(int32_t pixelFormat)
+    {
+        pixelFormat_ = pixelFormat;
+    }
+
+    int32_t GetPixelFormat() const
+    {
+        return pixelFormat_;
     }
 #endif
 
@@ -150,22 +167,17 @@ public:
         isUniRenderMode_ = isUni;
     }
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-    std::string GetShaderCacheSize() const
-    {
-        return mHandler_->QuerryShader();
-    }
+    std::string GetShaderCacheSize() const;
 
-    std::string CleanAllShaderCache() const
-    {
-        return mHandler_->ClearShader();
-    }
+    std::string CleanAllShaderCache() const;
 #endif
     EGLContext CreateShareContext();
-#ifdef ROSEN_IOS    
+#ifdef ROSEN_IOS
     sk_sp<SkColorSpace> ColorSpace() const { return color_space_; }
     bool UpdateStorageSizeIfNecessary();
     bool ResourceMakeCurrent();
-#endif    
+#endif
+    static sk_sp<SkColorSpace> ConvertColorGamutToSkColorSpace(GraphicColorGamut colorGamut);
 
 private:
 #ifndef USE_ROSEN_DRAWING
@@ -195,10 +207,11 @@ private:
     int32_t storage_width_ = 0;
     int32_t storage_height_ = 0;
     bool valid_ = false;
-#endif   
+#endif
     EGLConfig config_;
-#ifndef ROSEN_CROSS_PLATFORM
     GraphicColorGamut colorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+#ifndef ROSEN_CROSS_PLATFORM
+    int32_t pixelFormat_ = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
 #endif
 
     bool isUniRenderMode_ = false;
@@ -206,6 +219,16 @@ private:
     std::string cacheDir_;
     std::shared_ptr<MemoryHandler> mHandler_;
     std::mutex shareContextMutex_;
+
+#ifndef USE_ROSEN_DRAWING
+#ifdef RS_ENABLE_GL
+    void InitGrContextOptions(GrContextOptions &options);
+#endif
+#else
+#ifdef RS_ENABLE_GL
+    void InitGrContextOptions(Drawing::GPUContextOptions &options);
+#endif
+#endif
 };
 
 class RenderContextFactory {

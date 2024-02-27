@@ -110,6 +110,12 @@ GSError ConsumerSurface::FlushBuffer(sptr<SurfaceBuffer>& buffer, const sptr<Syn
     return GSERROR_NOT_SUPPORT;
 }
 
+GSError ConsumerSurface::GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer,
+    sptr<SyncFence>& fence, float matrix[16])
+{
+    return GSERROR_NOT_SUPPORT;
+}
+
 GSError ConsumerSurface::AcquireBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
                                        int64_t &timestamp, Rect &damage)
 {
@@ -175,12 +181,34 @@ GSError ConsumerSurface::ReleaseBuffer(sptr<SurfaceBuffer>& buffer, int32_t fenc
 
 GSError ConsumerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)
 {
+    if (consumer_ == nullptr) {
+        BLOGFE("AttachBuffer failed for nullptr consumer.");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
     return consumer_->AttachBuffer(buffer);
+}
+
+GSError ConsumerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut)
+{
+    if (consumer_ == nullptr) {
+        BLOGFE("AttachBuffer failed for nullptr consumer.");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return consumer_->AttachBuffer(buffer, timeOut);
 }
 
 GSError ConsumerSurface::DetachBuffer(sptr<SurfaceBuffer>& buffer)
 {
     return consumer_->DetachBuffer(buffer);
+}
+
+GSError ConsumerSurface::RegisterSurfaceDelegator(sptr<IRemoteObject> client)
+{
+    if (consumer_ == nullptr) {
+        BLOGFE("RegisterSurfaceDelegator failed for nullptr consumer.");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    return consumer_->RegisterSurfaceDelegator(client, this);
 }
 
 bool ConsumerSurface::QueryIfBufferAvailable()
@@ -230,15 +258,33 @@ uint32_t ConsumerSurface::GetDefaultUsage()
 
 GSError ConsumerSurface::SetUserData(const std::string &key, const std::string &val)
 {
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
     if (userData_.size() >= SURFACE_MAX_USER_DATA_COUNT) {
+        BLOGE("SetUserData failed: userData_ size out");
         return GSERROR_OUT_OF_RANGE;
     }
+
+    auto iterUserData = userData_.find(key);
+    if (iterUserData != userData_.end() && iterUserData->second == val) {
+        BLOGE("SetUserData failed: key:%{public}s, val:%{public}s exist", key.c_str(), val.c_str());
+        return GSERROR_API_FAILED;
+    }
+
     userData_[key] = val;
+    auto iter = onUserDataChange_.begin();
+    while (iter != onUserDataChange_.end()) {
+        if (iter->second != nullptr) {
+            iter->second(key, val);
+        }
+        iter++;
+    }
+
     return GSERROR_OK;
 }
 
 std::string ConsumerSurface::GetUserData(const std::string &key)
 {
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
     if (userData_.find(key) != userData_.end()) {
         return userData_[key];
     }
@@ -261,6 +307,11 @@ GSError ConsumerSurface::RegisterReleaseListener(OnReleaseFunc func)
     return consumer_->RegisterReleaseListener(func);
 }
 
+GSError ConsumerSurface::RegisterReleaseListener(OnReleaseFuncWithFence func)
+{
+    return GSERROR_NOT_SUPPORT;
+}
+
 GSError ConsumerSurface::UnRegisterReleaseListener()
 {
     return GSERROR_OK;
@@ -274,6 +325,36 @@ GSError ConsumerSurface::RegisterDeleteBufferListener(OnDeleteBufferFunc func, b
 GSError ConsumerSurface::UnregisterConsumerListener()
 {
     return consumer_->UnregisterConsumerListener();
+}
+
+GSError ConsumerSurface::RegisterUserDataChangeListener(const std::string &funcName, OnUserDataChangeFunc func)
+{
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
+    if (onUserDataChange_.find(funcName) != onUserDataChange_.end()) {
+        BLOGND("func already register");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+    
+    onUserDataChange_[funcName] = func;
+    return GSERROR_OK;
+}
+
+GSError ConsumerSurface::UnRegisterUserDataChangeListener(const std::string &funcName)
+{
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
+    if (onUserDataChange_.erase(funcName) == 0) {
+        BLOGND("func doesn't register");
+        return GSERROR_INVALID_ARGUMENTS;
+    }
+
+    return GSERROR_OK;
+}
+
+GSError ConsumerSurface::ClearUserDataChangeListener()
+{
+    std::lock_guard<std::mutex> lockGuard(lockMutex_);
+    onUserDataChange_.clear();
+    return GSERROR_OK;
 }
 
 GSError ConsumerSurface::CleanCache()
@@ -427,5 +508,10 @@ GSError ConsumerSurface::SetWptrNativeWindowToPSurface(void* nativeWindow)
 {
     BLOGND("ConsumerSurface::SetWptrNativeWindowToPSurface not support.");
     return GSERROR_NOT_SUPPORT;
+}
+
+void ConsumerSurface::ConsumerRequestCpuAccess(bool on)
+{
+    consumer_->ConsumerRequestCpuAccess(on);
 }
 } // namespace OHOS

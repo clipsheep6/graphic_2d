@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -178,6 +178,15 @@ public:
         isAstc_ = isAstc;
     }
 
+    NATIVEEXPORT void GetAstcRealSize(Size &size)
+    {
+        size = astcrealSize_;
+    }
+    NATIVEEXPORT void SetAstcRealSize(Size size)
+    {
+        astcrealSize_ = size;
+    }
+
     NATIVEEXPORT void GetTransformData(TransformData &transformData)
     {
         transformData = transformData_;
@@ -276,7 +285,8 @@ private:
     bool editable_ = false;
     bool useSourceAsResponse_ = false;
     bool isAstc_ = false;
-    TransformData transformData_ = {1, 1, 0, -1, -1, -1, -1, 0, 0, false, false};
+    TransformData transformData_ = {1, 1, 0, 0, 0, 0, 0, 0, 0, false, false};
+    Size astcrealSize_;
 
     // only used by rosen backend
     std::shared_ptr<RosenImageWrapper> rosenImageWrapper_;

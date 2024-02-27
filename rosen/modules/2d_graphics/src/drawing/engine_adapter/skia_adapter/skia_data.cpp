@@ -59,6 +59,12 @@ bool SkiaData::BuildUninitialized(size_t length)
     return skData_ != nullptr;
 }
 
+bool SkiaData::BuildEmpty()
+{
+    skData_ = SkData::MakeEmpty();
+    return skData_ != nullptr;
+}
+
 size_t SkiaData::GetSize() const
 {
     return (skData_ == nullptr) ? 0 : skData_->size();
@@ -67,6 +73,18 @@ size_t SkiaData::GetSize() const
 const void* SkiaData::GetData() const
 {
     return (skData_ == nullptr) ? nullptr : skData_->data();
+}
+
+std::shared_ptr<Data> SkiaData::MakeFromFileName(const char path[])
+{
+    sk_sp<SkData> skData = SkData::MakeFromFileName(path);
+    if (!skData) {
+        LOGD("SkiaData::MakeFromFileName, skData is nullptr!");
+        return nullptr;
+    }
+    std::shared_ptr<Data> data = std::make_shared<Data>();
+    data->GetImpl<SkiaData>()->SetSkData(skData);
+    return data;
 }
 
 void* SkiaData::WritableData()
@@ -88,7 +106,7 @@ std::shared_ptr<Data> SkiaData::Serialize() const
 {
 #ifdef ROSEN_OHOS
     if (skData_ == nullptr) {
-        LOGE("SkiaData::Serialize, skData_ is nullptr!");
+        LOGD("SkiaData::Serialize, skData_ is nullptr!");
         return nullptr;
     }
 

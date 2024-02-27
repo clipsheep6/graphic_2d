@@ -60,6 +60,9 @@ public:
     void BeginImplicitKeyFrameAnimation(float fraction);
     void EndImplicitKeyFrameAnimation();
 
+    void BeginImplicitDurationKeyFrameAnimation(int duration, const RSAnimationTimingCurve& timingCurve);
+    void EndImplicitDurationKeyFrameAnimation();
+
     void BeginImplicitTransition(const std::shared_ptr<const RSTransitionEffect>& effect, bool isTransitionIn);
     void EndImplicitTransition();
 
@@ -68,22 +71,27 @@ public:
 
     bool NeedImplicitAnimation();
 
-    void CreateImplicitAnimation(const std::shared_ptr<RSNode>& target,
-        std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
-        const std::shared_ptr<RSPropertyBase>& endValue);
-
-    void CreateImplicitTransition(RSNode& target);
+    void CreateImplicitAnimation(const std::shared_ptr<RSNode>& target, std::shared_ptr<RSPropertyBase> property,
+        const std::shared_ptr<RSPropertyBase>& startValue, const std::shared_ptr<RSPropertyBase>& endValue);
 
     void CreateImplicitAnimationWithInitialVelocity(const std::shared_ptr<RSNode>& target,
         const std::shared_ptr<RSPropertyBase>& property, const std::shared_ptr<RSPropertyBase>& startValue,
         const std::shared_ptr<RSPropertyBase>& endValue, const std::shared_ptr<RSPropertyBase>& velocity);
+
+    void CreateImplicitTransition(RSNode& target);
+    void CancelImplicitAnimation(
+        const std::shared_ptr<RSNode>& target, const std::shared_ptr<RSPropertyBase>& property);
 
 private:
     void EndImplicitAnimation();
     void BeginImplicitCurveAnimation();
     void BeginImplicitSpringAnimation();
     void BeginImplicitInterpolatingSpringAnimation();
-    
+    void BeginImplicitCancelAnimation();
+
+    void CloseImplicitAnimationInner();
+    bool ProcessEmptyAnimations(const std::shared_ptr<AnimationFinishCallback>& finishCallback);
+
     void PushImplicitParam(const std::shared_ptr<RSImplicitAnimationParam>& implicitParam);
     void PopImplicitParam();
     void CreateEmptyAnimation();
@@ -98,6 +106,7 @@ private:
     std::stack<std::shared_ptr<RSImplicitAnimationParam>> implicitAnimationParams_;
     std::stack<std::vector<std::pair<std::shared_ptr<RSAnimation>, NodeId>>> implicitAnimations_;
     std::stack<std::map<std::pair<NodeId, PropertyId>, std::shared_ptr<RSAnimation>>> keyframeAnimations_;
+    std::stack<std::tuple<bool, int, int>> durationKeyframeParams_;
 
     bool implicitAnimationDisabled_ { false };
     friend class RSNode;

@@ -18,6 +18,7 @@
 #include "impl_factory.h"
 #include "static_factory.h"
 #include "utils/log.h"
+#include "utils/system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -39,6 +40,32 @@ bool Surface::Bind(const FrameBuffer& frameBuffer)
 {
     return impl_->Bind(frameBuffer);
 }
+
+#ifdef RS_ENABLE_VK
+std::shared_ptr<Surface> Surface::MakeFromBackendRenderTarget(GPUContext* gpuContext, const TextureInfo& info,
+    TextureOrigin origin, ColorType colorType, std::shared_ptr<ColorSpace> colorSpace,
+    void (*deleteFunc)(void*), void* cleanupHelper)
+{
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
+    return StaticFactory::MakeFromBackendRenderTarget(gpuContext, info, origin,
+        colorType, colorSpace, deleteFunc, cleanupHelper);
+}
+
+std::shared_ptr<Surface> Surface::MakeFromBackendTexture(GPUContext* gpuContext, const TextureInfo& info,
+    TextureOrigin origin, int sampleCnt, ColorType colorType,
+    std::shared_ptr<ColorSpace> colorSpace, void (*deleteVkImage)(void *), void* cleanHelper)
+{
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return nullptr;
+    }
+    return StaticFactory::MakeFromBackendTexture(gpuContext, info, origin, sampleCnt, colorType,
+        colorSpace, deleteVkImage, cleanHelper);
+}
+#endif
 
 std::shared_ptr<Surface> Surface::MakeRenderTarget(GPUContext* gpuContext, bool budgeted, const ImageInfo& imageInfo)
 {
@@ -74,6 +101,11 @@ std::shared_ptr<Image> Surface::GetImageSnapshot() const
     return impl_->GetImageSnapshot();
 }
 
+BackendTexture Surface::GetBackendTexture(BackendAccess access) const
+{
+    return impl_->GetBackendTexture(access);
+}
+
 std::shared_ptr<Image> Surface::GetImageSnapshot(const RectI& bounds) const
 {
     return impl_->GetImageSnapshot(bounds);
@@ -88,7 +120,7 @@ ImageInfo Surface::GetImageInfo()
 {
     std::shared_ptr<Canvas> canvas = GetCanvas();
     if (!canvas) {
-        LOGE("canvas nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("canvas nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return ImageInfo{};
     }
     return canvas->GetImageInfo();
@@ -99,9 +131,63 @@ void Surface::FlushAndSubmit(bool syncCpu)
     impl_->FlushAndSubmit(syncCpu);
 }
 
-void Surface::Flush()
+void Surface::Flush(FlushInfo *drawingflushInfo)
 {
-    impl_->Flush();
+    if (!impl_) {
+        LOGD("surfaceImpl Flush failed impl nullptr");
+        return;
+    }
+    impl_->Flush(drawingflushInfo);
+}
+
+#ifdef RS_ENABLE_VK
+void Surface::Wait(int32_t time, const VkSemaphore& semaphore)
+{
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
+    if (!impl_) {
+        return;
+    }
+    impl_->Wait(time, semaphore);
+}
+
+void Surface::SetDrawingArea(const std::vector<RectI>& rects)
+{
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
+    if (!impl_) {
+        LOGD("surfaceImpl SetDrawingArea failed impl nullptr");
+        return;
+    }
+    impl_->SetDrawingArea(rects);
+}
+
+void Surface::ClearDrawingArea()
+{
+    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        return;
+    }
+    if (!impl_) {
+        LOGD("surfaceImpl ClearDrawingArea failed impl nullptr");
+        return;
+    }
+    impl_->ClearDrawingArea();
+}
+#endif
+
+int Surface::Width() const
+{
+    return impl_->Width();
+}
+
+int Surface::Height() const
+{
+    return impl_->Height();
 }
 
 } // namespace Drawing

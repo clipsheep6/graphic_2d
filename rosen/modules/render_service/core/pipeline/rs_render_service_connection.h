@@ -30,6 +30,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class HgmFrameRateManager;
 class RSRenderServiceConnection : public RSRenderServiceConnectionStub {
 public:
     RSRenderServiceConnection(
@@ -51,6 +52,11 @@ public:
 private:
     void CleanVirtualScreens() noexcept;
     void CleanRenderNodes() noexcept;
+    void MoveRenderNodeMap(
+        std::shared_ptr<std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>>> subRenderNodeMap) noexcept;
+    static void RemoveRenderNodeMap(
+        std::shared_ptr<std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>>> subRenderNodeMap) noexcept;
+    void CleanRenderNodeMap() noexcept;
     void CleanFrameRateLinkers() noexcept;
     void CleanAll(bool toDelete = false) noexcept;
 
@@ -85,7 +91,8 @@ private:
         uint32_t height,
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
-        int32_t flags = 0) override;
+        int32_t flags = 0,
+        std::vector<NodeId> filteredAppVector = {}) override;
 
     int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) override;
 
@@ -106,6 +113,10 @@ private:
     int32_t GetCurrentRefreshRateMode() override;
 
     std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id) override;
+
+    bool GetShowRefreshRateEnabled() override;
+
+    void SetShowRefreshRateEnabled(bool enable) override;
 
     int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) override;
 
@@ -139,7 +150,7 @@ private:
 
     void RegisterBufferAvailableListener(
         NodeId id, sptr<RSIBufferAvailableCallback> callback, bool isFromRenderThread) override;
-    
+
     void RegisterBufferClearListener(
         NodeId id, sptr<RSIBufferClearCallback> callback) override;
 
@@ -154,6 +165,8 @@ private:
     int32_t SetScreenGamutMap(ScreenId id, ScreenGamutMap mode) override;
 
     int32_t SetScreenCorrection(ScreenId id, ScreenRotation screenRotation) override;
+
+    bool SetVirtualMirrorScreenCanvasRotation(ScreenId id, bool canvasRotation) override;
 
     int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) override;
 
@@ -179,10 +192,12 @@ private:
 
 #ifndef USE_ROSEN_DRAWING
     bool GetBitmap(NodeId id, SkBitmap& bitmap) override;
-    bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect) override;
+    bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap,
+        const SkRect* rect, std::shared_ptr<DrawCmdList> drawCmdList) override;
 #else
     bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) override;
-    bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect) override;
+    bool GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
+        const Drawing::Rect* rect, std::shared_ptr<Drawing::DrawCmdList> drawCmdList) override;
 #endif
 
     int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) override;
@@ -196,7 +211,11 @@ private:
 
     int32_t RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
 
+    int32_t RegisterHgmRefreshRateModeChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) override;
+
     void SetAppWindowNum(uint32_t num) override;
+
+    bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes) override;
 
     void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow) override;
 
@@ -210,10 +229,21 @@ private:
 
     void ReportEventJankFrame(DataBaseRs info) override;
 
-    void SetHardwareEnabled(NodeId id, bool isEnabled) override;
+    void ReportGameStateData(GameStateData info) override;
+
+    void SetHardwareEnabled(NodeId id, bool isEnabled, SelfDrawingNodeType selfDrawingType) override;
+
+    void NotifyLightFactorStatus(bool isSafe) override;
+
+    void NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList) override;
+
+    void NotifyRefreshRateEvent(const EventInfo& eventInfo) override;
+
+    void NotifyTouchEvent(int32_t touchStatus) override;
 
     void SetCacheEnabledForRotation(bool isEnabled) override;
 
+    GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id) override;
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config) override;
 #endif

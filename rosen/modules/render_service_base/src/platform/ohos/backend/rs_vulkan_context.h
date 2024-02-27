@@ -16,21 +16,25 @@
 #ifndef RS_VULKAN_CONTEXT_H
 #define RS_VULKAN_CONTEXT_H
 
+#include <memory>
 #include <mutex>
+#include <string>
 #include "include/gpu/vk/GrVkExtensions.h"
 #include "vulkan/vulkan_core.h"
 
-#if !VULKAN_LINK_STATICALLY
 #define VK_NO_PROTOTYPES 1
-#endif
 
 #include "vulkan/vulkan.h"
 #include "include/gpu/vk/GrVkBackendContext.h"
 #include "include/gpu/GrDirectContext.h"
 
+#ifdef USE_ROSEN_DRAWING
+#include "image/gpu_context.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
-
+class MemoryHandler;
 class RsVulkanContext {
 public:
     template <class T>
@@ -69,6 +73,10 @@ public:
 
     bool IsValid() const;
     GrVkGetProc CreateSkiaGetProc() const;
+    const std::shared_ptr<MemoryHandler> GetMemoryHandler() const
+    {
+        return memHandler_;
+    }
 
 #define DEFINE_FUNC(name) Func<PFN_vk##name> vk##name
 
@@ -152,20 +160,34 @@ public:
         return backendContext_;
     }
 
+    inline const std::string GetVulkanVersion() const
+    {
+        return std::to_string(VK_API_VERSION_1_2);
+    }
+
+#ifndef USE_ROSEN_DRAWING
     sk_sp<GrDirectContext> CreateSkContext(bool independentContext = false);
     sk_sp<GrDirectContext> GetSkContext();
+#else
+    std::shared_ptr<Drawing::GPUContext> CreateDrawingContext(bool independentContext = false);
+    std::shared_ptr<Drawing::GPUContext> GetDrawingContext();
+#endif
 
     static VKAPI_ATTR VkResult HookedVkQueueSubmit(VkQueue queue, uint32_t submitCount,
         const VkSubmitInfo* pSubmits, VkFence fence);
 
     static VKAPI_ATTR VkResult HookedVkQueueSignalReleaseImageOHOS(VkQueue queue, uint32_t waitSemaphoreCount,
         const VkSemaphore* pWaitSemaphores, VkImage image, int32_t* pNativeFenceFd);
-    sk_sp<GrDirectContext> GetHardWareGrContext()
+#ifndef USE_ROSEN_DRAWING
+    sk_sp<GrDirectContext> GetHardWareGrContext() const
+#else
+    std::shared_ptr<Drawing::GPUContext> GetHardWareGrContext() const
+#endif
     {
         return hcontext_;
     }
 
-    VkQueue GetHardwareQueue()
+    VkQueue GetHardwareQueue() const
     {
         return hbackendContext_.fQueue;
     }
@@ -183,8 +205,13 @@ private:
     VkPhysicalDeviceFeatures2 physicalDeviceFeatures2_;
     VkPhysicalDeviceSamplerYcbcrConversionFeatures ycbcrFeature_;
     GrVkExtensions skVkExtensions_;
+#ifndef USE_ROSEN_DRAWING
     static thread_local sk_sp<GrDirectContext> skContext_;
     sk_sp<GrDirectContext> hcontext_ = nullptr;
+#else
+    static thread_local std::shared_ptr<Drawing::GPUContext> drawingContext_;
+    std::shared_ptr<Drawing::GPUContext> hcontext_ = nullptr;
+#endif
     // static thread_local GrVkBackendContext backendContext_;
     GrVkBackendContext backendContext_;
     GrVkBackendContext hbackendContext_;
@@ -203,7 +230,12 @@ private:
         const char* proc_name,
         const VkInstance& instance) const;
     PFN_vkVoidFunction AcquireProc(const char* proc_name, const VkDevice& device) const;
+#ifndef USE_ROSEN_DRAWING
     sk_sp<GrDirectContext> CreateNewSkContext();
+#else
+    std::shared_ptr<Drawing::GPUContext> CreateNewDrawingContext();
+#endif
+    std::shared_ptr<MemoryHandler> memHandler_;
 };
 
 } // namespace Rosen

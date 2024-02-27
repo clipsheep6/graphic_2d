@@ -29,6 +29,8 @@ class RSB_EXPORT RSRenderPropertyAnimation : public RSRenderAnimation {
 public:
     virtual ~RSRenderPropertyAnimation() = default;
 
+    void DumpAnimationType(std::string& out) const override;
+
     PropertyId GetPropertyId() const override;
 
     void SetAdditive(bool isAdditive);
@@ -60,6 +62,10 @@ protected:
 
     void OnRemoveOnCompletion() override;
 
+    void RecordLastAnimateValue() override;
+
+    void UpdateAnimateVelocity(float frameInterval) override;
+
     virtual void InitValueEstimator() {}
 
 protected:
@@ -67,6 +73,7 @@ protected:
     std::shared_ptr<RSRenderPropertyBase> originValue_;
     std::shared_ptr<RSRenderPropertyBase> lastValue_;
     std::shared_ptr<RSRenderPropertyBase> property_;
+    std::shared_ptr<RSRenderPropertyBase> lastAnimateValue_;
     std::shared_ptr<RSValueEstimator> valueEstimator_;
 
 private:

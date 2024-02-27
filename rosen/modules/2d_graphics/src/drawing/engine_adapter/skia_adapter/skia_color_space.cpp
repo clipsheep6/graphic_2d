@@ -93,10 +93,15 @@ sk_sp<SkColorSpace> SkiaColorSpace::GetColorSpace() const
     return colorSpace_;
 }
 
+sk_sp<SkColorSpace> SkiaColorSpace::GetSkColorSpace() const
+{
+    return colorSpace_;
+}
+
 std::shared_ptr<Data> SkiaColorSpace::Serialize() const
 {
     if (colorSpace_ == nullptr) {
-        LOGE("SkiaColorSpace::Serialize, colorSpace_ is nullptr!");
+        LOGD("SkiaColorSpace::Serialize, colorSpace_ is nullptr!");
         return nullptr;
     }
 
@@ -109,12 +114,12 @@ std::shared_ptr<Data> SkiaColorSpace::Serialize() const
 bool SkiaColorSpace::Deserialize(std::shared_ptr<Data> data)
 {
     if (data == nullptr) {
-        LOGE("SkiaColorSpace::Deserialize, data is invalid!");
+        LOGD("SkiaColorSpace::Deserialize, data is invalid!");
         return false;
     }
 
     colorSpace_ = SkColorSpace::Deserialize(data->GetData(), data->GetSize());
-    return colorSpace_ != nullptr;
+    return true;
 }
 
 } // namespace Drawing

@@ -23,7 +23,9 @@
 #include "command/rs_base_node_command.h"
 #include "command/rs_canvas_drawing_node_command.h"
 #include "command/rs_canvas_node_command.h"
+#ifndef ROSEN_ARKUI_X
 #include "command/rs_display_node_command.h"
+#endif
 #include "command/rs_effect_node_command.h"
 #include "command/rs_node_command.h"
 #include "command/rs_proxy_node_command.h"
@@ -59,7 +61,7 @@ void RSCommandFactory::Register(uint16_t type, uint16_t subtype, UnmarshallingFu
 {
     auto result = unmarshallingFuncLUT_.try_emplace(MakeKey(type, subtype), func);
     if (!result.second) {
-        ROSEN_LOGE("RSCommandFactory::Register, Duplicate command & sub_command detected!"
+        ROSEN_LOGD("RSCommandFactory::Register, Duplicate command & sub_command detected!"
             " type: %{public}d subtype: %{public}d", type, subtype);
     }
 }

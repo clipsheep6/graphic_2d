@@ -40,7 +40,8 @@ public:
     using SharedPtr = std::shared_ptr<RSCanvasRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::CANVAS_NODE;
 
-    explicit RSCanvasRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {});
+    explicit RSCanvasRenderNode(NodeId id,
+        const std::weak_ptr<RSContext>& context = {}, bool isTextureExportNode = false);
     virtual ~RSCanvasRenderNode();
 
 #ifndef USE_ROSEN_DRAWING
@@ -55,7 +56,7 @@ public:
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas) override;
-    void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) override;
+    void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas, bool includeProperty) override;
     void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
     void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) override;
@@ -84,6 +85,9 @@ private:
     // functions that are dedicated to driven render [start]
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [end]
+
+    void PropertyDrawableRender(RSPaintFilterCanvas& canvas, bool includeProperty);
+    void DrawShadow(RSModifierContext& context, RSPaintFilterCanvas& canvas);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
     mutable std::mutex canvasNodeProcessMutex_;

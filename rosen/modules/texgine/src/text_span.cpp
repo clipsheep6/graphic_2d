@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "text_span.h"
 
 #include <iomanip>
 #include <stack>
+#include <utility>
 
 #include <hb-icu.h>
 #include <unicode/ubidi.h>
@@ -35,6 +35,8 @@
 #endif
 #include "text_converter.h"
 #include "word_breaker.h"
+#include "symbol_engine/hm_symbol_run.h"
+#include "utils/system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -63,6 +65,12 @@ namespace TextEngine {
 #define POINTY2 2
 #define POINTY4 4
 #define POINTY6 6
+
+#ifdef BUILD_NON_SDK_VER
+const bool G_IS_HMSYMBOL_ENABLE = Drawing::SystemProperties::GetHMSymbolEnable();
+#else
+const bool G_IS_HMSYMBOL_ENABLE = true;
+#endif
 
 std::shared_ptr<TextSpan> TextSpan::MakeEmpty()
 {
@@ -137,7 +145,7 @@ std::shared_ptr<TextSpan> TextSpan::CloneWithCharGroups(const CharGroups &cgs)
 
 double TextSpan::GetHeight() const
 {
-    return *tmetrics_.fDescent_ - *tmetrics_.fAscent_;
+    return *tmetrics_->fDescent_ - *tmetrics_->fAscent_;
 }
 
 double TextSpan::GetWidth() const
@@ -160,7 +168,8 @@ bool TextSpan::IsRTL() const
     return rtl_;
 }
 
-void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs)
+void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs,
+    const RoundRectType &rType)
 {
     TexginePaint paint;
     paint.SetAntiAlias(true);
@@ -169,20 +178,67 @@ void TextSpan::Paint(TexgineCanvas &canvas, double offsetX, double offsetY, cons
 #else
     paint.SetAlpha(MAXALPHA);
 #endif
-    paint.SetColor(xs.color);
     if (xs.background.has_value()) {
-        auto rect = TexgineRect::MakeXYWH(offsetX, offsetY + *tmetrics_.fAscent_, width_,
-            *tmetrics_.fDescent_ - *tmetrics_.fAscent_);
+        auto rect = TexgineRect::MakeXYWH(offsetX, offsetY + *tmetrics_->fAscent_, width_,
+            *tmetrics_->fDescent_ - *tmetrics_->fAscent_);
         canvas.DrawRect(rect, xs.background.value());
     }
 
+    if (xs.backgroundRect.color != 0) {
+        paint.SetColor(xs.backgroundRect.color);
+        double ltRadius = 0.0;
+        double rtRadius = 0.0;
+        double rbRadius = 0.0;
+        double lbRadius = 0.0;
+        if (rType == RoundRectType::ALL || rType == RoundRectType::LEFT_ONLY) {
+            ltRadius = std::fmin(xs.backgroundRect.leftTopRadius, maxRoundRectRadius_);
+            lbRadius = std::fmin(xs.backgroundRect.leftBottomRadius, maxRoundRectRadius_);
+        }
+        if (rType == RoundRectType::ALL || rType == RoundRectType::RIGHT_ONLY) {
+            rtRadius = std::fmin(xs.backgroundRect.rightTopRadius, maxRoundRectRadius_);
+            rbRadius = std::fmin(xs.backgroundRect.rightBottomRadius, maxRoundRectRadius_);
+        }
+        const SkVector fRadii[4] = {{ltRadius, ltRadius}, {rtRadius, rtRadius}, {rbRadius, rbRadius},
+            {lbRadius, lbRadius}};
+        auto rect = TexgineRect::MakeRRect(offsetX, offsetY + topInGroup_, width_,
+            bottomInGroup_ - topInGroup_, fRadii);
+        paint.SetAntiAlias(false);
+        canvas.DrawRRect(rect, paint);
+    }
+
+    paint.SetAntiAlias(true);
+    paint.SetColor(xs.color);
     if (xs.foreground.has_value()) {
         paint = xs.foreground.value();
     }
 
     PaintShadow(canvas, offsetX, offsetY, xs.shadows);
-    canvas.DrawTextBlob(textBlob_, offsetX, offsetY, paint);
+    if (xs.isSymbolGlyph && G_IS_HMSYMBOL_ENABLE) {
+        std::pair<double, double> offset(offsetX, offsetY);
+        HMSymbolRun hmSymbolRun = HMSymbolRun();
+        hmSymbolRun.SetAnimation(animationFunc_);
+        hmSymbolRun.SetSymbolId(symbolId_);
+        hmSymbolRun.DrawSymbol(canvas, textBlob_, offset, paint, xs);
+    } else {
+        canvas.DrawTextBlob(textBlob_, offsetX, offsetY, paint);
+    }
     PaintDecoration(canvas, offsetX, offsetY, xs);
+}
+
+
+void TextSpan::SymbolAnimation(const TextStyle &xs)
+{
+    if (animationFunc_ == nullptr) {
+        return;
+    }
+    auto spanSymbolAnimationConfig = std::make_shared<SymbolAnimationConfig>();
+    if (spanSymbolAnimationConfig == nullptr) {
+        return;
+    }
+    spanSymbolAnimationConfig->effectStrategy = SymbolAnimationEffectStrategy(xs.symbol.GetEffectStrategy());
+    if (spanSymbolAnimationConfig->effectStrategy == SymbolAnimationEffectStrategy::SYMBOL_HIERARCHICAL) {
+        animationFunc_(spanSymbolAnimationConfig);
+    }
 }
 
 void TextSpan::PaintDecoration(TexgineCanvas &canvas, double offsetX, double offsetY, const TextStyle &xs)
@@ -191,15 +247,15 @@ void TextSpan::PaintDecoration(TexgineCanvas &canvas, double offsetX, double off
     double right = left + GetWidth();
 
     if ((xs.decoration & TextDecoration::UNDERLINE) == TextDecoration::UNDERLINE) {
-        double y = offsetY + *tmetrics_.fUnderlinePosition_;
+        double y = offsetY + *tmetrics_->fUnderlinePosition_;
         PaintDecorationStyle(canvas, left, right, y, xs);
     }
     if ((xs.decoration & TextDecoration::OVERLINE) == TextDecoration::OVERLINE) {
-        double y = offsetY - abs(*tmetrics_.fAscent_);
+        double y = offsetY - abs(*tmetrics_->fAscent_);
         PaintDecorationStyle(canvas, left, right, y, xs);
     }
     if ((xs.decoration & TextDecoration::LINE_THROUGH) == TextDecoration::LINE_THROUGH) {
-        double y = offsetY - (*tmetrics_.fCapHeight_ * HALF) +
+        double y = offsetY - (*tmetrics_->fCapHeight_ * HALF) +
             (xs.fontSize / DEFAULT_FONT_SIZE * xs.decorationThicknessScale * HALF);
         PaintDecorationStyle(canvas, left, right, y, xs);
     }

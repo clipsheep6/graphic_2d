@@ -22,9 +22,12 @@
 #include "common/rs_macros.h"
 #include "draw/canvas.h"
 #include "include/core/SkCanvas.h" // SKIA
+#include "text/font_metrics.h"
 #include "utils/rect.h"
 
+#include "text_style.h"
 #include "typography_types.h"
+#include "symbol_animation_config.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -43,15 +46,9 @@ enum class TextRectHeightStyle {
 };
 
 struct RS_EXPORT TextRect {
-#ifndef USE_GRAPHIC_TEXT_GINE
-    Drawing::RectF rect_;
-    TextDirection direction_;
-    TextRect(Drawing::RectF rect, TextDirection direction);
-#else
     Drawing::RectF rect;
     TextDirection direction;
     TextRect(Drawing::RectF rec, TextDirection dir);
-#endif
 };
 
 enum class Affinity {
@@ -60,28 +57,48 @@ enum class Affinity {
 };
 
 struct IndexAndAffinity {
-#ifndef USE_GRAPHIC_TEXT_GINE
-    size_t index_;
-    Affinity affinity_;
-    IndexAndAffinity(size_t index, Affinity affinity);
-#else
     size_t index;
     Affinity affinity;
     IndexAndAffinity(size_t charIndex, Affinity charAffinity);
-#endif
 };
 
 struct Boundary {
-#ifndef USE_GRAPHIC_TEXT_GINE
-    size_t leftIndex_; // include leftIndex_
-    size_t rightIndex_; // not include rightIndex_
-#else
     size_t leftIndex = 0; // include leftIndex_
     size_t rightIndex = 0; // not include rightIndex_
-#endif
 
     Boundary(size_t left, size_t right);
     bool operator ==(const Boundary& rhs) const;
+};
+
+struct LineMetrics {
+    /** Text ascender height */
+    double ascender;
+    /** Tex descender height */
+    double descender;
+    /** The height of a capital letter */
+    double capHeight;
+    /** The height of a lowercase letter */
+    double xHeight;
+    /** Text width */
+    double width;
+    /** Line height */
+    double height;
+    /**
+     * The distance from the left end of the text to the left end of the container,
+     * aligned to 0, is the width of the container minus the width of the line of text
+     */
+    double x;
+    /**
+     * The height from the top of the text to the top of the container, the first line is 0,
+     *  and the second line is the height of the first line
+     */
+    double y;
+    /** Start Index */
+    size_t startIndex;
+    /** End Index */
+    size_t endIndex;
+
+    Drawing::FontMetrics firstCharMetrics;
 };
 
 class Typography {
@@ -95,10 +112,15 @@ public:
     virtual double GetMaxIntrinsicWidth() = 0;
     virtual double GetAlphabeticBaseline() = 0;
     virtual double GetIdeographicBaseline() = 0;
+    virtual double GetGlyphsBoundsTop() = 0;
+    virtual double GetGlyphsBoundsBottom() = 0;
+    virtual double GetGlyphsBoundsLeft() = 0;
+    virtual double GetGlyphsBoundsRight() = 0;
     virtual bool DidExceedMaxLines() const = 0;
     virtual int GetLineCount() const = 0;
 
     virtual void SetIndents(const std::vector<float>& indents) = 0;
+    virtual float DetectIndents(size_t index) = 0;
     virtual void Layout(double width) = 0;
     virtual void Paint(SkCanvas *canvas, double x, double y) = 0; // SKIA
     virtual void Paint(Drawing::Canvas *canvas, double x, double y) = 0; // DRAWING
@@ -108,6 +130,16 @@ public:
     virtual std::vector<TextRect> GetTextRectsOfPlaceholders() = 0;
     virtual IndexAndAffinity GetGlyphIndexByCoordinate(double x, double y) = 0;
     virtual Boundary GetWordBoundaryByIndex(size_t index) = 0;
+    virtual Boundary GetActualTextRange(int lineNumber, bool includeSpaces) = 0;
+    virtual double GetLineHeight(int lineNumber) = 0;
+    virtual double GetLineWidth(int lineNumber) = 0;
+    virtual void SetAnimation(
+        std::function<bool(const std::shared_ptr<TextEngine::SymbolAnimationConfig>&)>& animationFunc)= 0;
+    virtual Drawing::FontMetrics MeasureText() = 0;
+    virtual bool GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespace, LineMetrics* lineMetrics) = 0;
+    virtual std::vector<LineMetrics> GetLineMetrics() = 0;
+    virtual bool GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics) = 0;
+    virtual Drawing::FontMetrics GetFontMetrics(const OHOS::Rosen::TextStyle& textStyle) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

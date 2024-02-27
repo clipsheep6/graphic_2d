@@ -92,7 +92,7 @@ private:
         FontStyles style;
         std::string locale = "";
         bool rtl = false;
-        uint32_t size = 16.0; // default TextStyle fontSize_
+        double size = 16.0; // default TextStyle fontSize_
         size_t startIndex = 0;
         size_t endIndex = 0;
         double letterSpacing = 0;
@@ -141,11 +141,11 @@ private:
         std::shared_ptr<TextEngine::Typeface> typeface);
     void DoCgsByCluster(std::map<uint32_t, TextEngine::CharGroup> &cgsByCluster);
     void HbDestroy(hb_buffer_t* hbuffer, hb_font_t* hfont, hb_face_t* hface, hb_unicode_funcs_t* icuGetUnicodeFuncs);
-
+    void UpdateCache();
+    void GetInitKey(struct MeasurerCacheKey &key) const;
     static inline std::mutex mutex_;
     static inline std::map<struct MeasurerCacheKey, struct MeasurerCacheVal> cache_;
     std::vector<Boundary> boundaries_ = {};
-    std::string detectionName_;
 };
 
 hb_blob_t* HbFaceReferenceTableTypeface(hb_face_t* face, hb_tag_t tag, void* context);

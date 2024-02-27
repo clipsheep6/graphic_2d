@@ -16,8 +16,10 @@
 #ifndef TEXT_BLOB_H
 #define TEXT_BLOB_H
 
+#include <cstdint>
 #include <memory>
 
+#include "draw/path.h"
 #include "impl_interface/text_blob_impl.h"
 #include "text/font.h"
 #include "text/font_types.h"
@@ -27,13 +29,15 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-class TextBlob {
+class DRAWING_API TextBlob {
 public:
     explicit TextBlob(std::shared_ptr<TextBlobImpl> textBlobImpl) noexcept;
     virtual ~TextBlob() = default;
 
     static std::shared_ptr<TextBlob> MakeFromText(const void* text, size_t byteLength,
         const Font& font, TextEncoding encoding = TextEncoding::UTF8);
+    static std::shared_ptr<TextBlob> MakeFromPosText(const void* text, size_t byteLength,
+        const Point pos[], const Font& font, TextEncoding encoding = TextEncoding::UTF8);
     static std::shared_ptr<TextBlob> MakeFromString(const char* str,
         const Font& font, TextEncoding encoding = TextEncoding::UTF8);
     static std::shared_ptr<TextBlob> MakeFromRSXform(const void* text, size_t byteLength,
@@ -52,9 +56,12 @@ public:
      * @return      A shared point to deserialized data.
      */
     static std::shared_ptr<TextBlob> Deserialize(const void* data, size_t size);
+    static void GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<uint16_t>& glyphIds);
+    static Path GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob);
+    static void GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points);
 
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         if (textBlobImpl_) {
             return textBlobImpl_->DowncastingTo<T>();

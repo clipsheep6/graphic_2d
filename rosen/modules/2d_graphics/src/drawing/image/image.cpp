@@ -15,18 +15,23 @@
 
 #include "image/image.h"
 
+#include "engine_adapter/skia_adapter/skia_gpu_context.h"
+#include "image/gpu_context.h"
 #include "impl_factory.h"
 #include "skia_adapter/skia_image.h"
 #include "static_factory.h"
+#include "src/core/SkImagePriv.h"
+#include "src/image/SkImage_Base.h"
+#include "utils/system_properties.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 BackendTexture::BackendTexture() noexcept
-    : isValid_(false), imageImplPtr(ImplFactory::CreateImageImpl()) {}
+    : isValid_(false) {}
 
 BackendTexture::BackendTexture(bool isValid) noexcept
-    : isValid_(isValid), imageImplPtr(ImplFactory::CreateImageImpl()) {}
+    : isValid_(isValid) {}
 
 bool BackendTexture::IsValid() const
 {
@@ -38,7 +43,7 @@ void BackendTexture::SetTextureInfo(const TextureInfo& textureInfo)
     textureInfo_ = textureInfo;
 }
 
-const TextureInfo BackendTexture::GetTextureInfo() const
+const TextureInfo& BackendTexture::GetTextureInfo() const
 {
     return textureInfo_;
 }
@@ -49,25 +54,18 @@ Image::Image(std::shared_ptr<ImageImpl> imageImpl) : imageImplPtr(imageImpl) {}
 
 Image::Image(void* rawImg) noexcept : imageImplPtr(ImplFactory::CreateImageImpl(rawImg)) {}
 
-Image* Image::BuildFromBitmap(const Bitmap& bitmap)
+bool Image::BuildFromBitmap(const Bitmap& bitmap)
 {
-    return static_cast<Image*>(imageImplPtr->BuildFromBitmap(bitmap));
+    return imageImplPtr->BuildFromBitmap(bitmap);
 }
 
-Image* Image::BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix,
-    const Brush& brush, BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace)
-{
-    return static_cast<Image*>(
-        imageImplPtr->BuildFromPicture(picture, dimensions, matrix, brush, bitDepth, colorSpace));
-}
-
-std::shared_ptr<Image> MakeFromRaster(const Pixmap& pixmap,
+std::shared_ptr<Image> Image::MakeFromRaster(const Pixmap& pixmap,
     RasterReleaseProc rasterReleaseProc, ReleaseContext releaseContext)
 {
     return StaticFactory::MakeFromRaster(pixmap, rasterReleaseProc, releaseContext);
 }
 
-std::shared_ptr<Image> MakeRasterData(const ImageInfo& info, std::shared_ptr<Data> pixels,
+std::shared_ptr<Image> Image::MakeRasterData(const ImageInfo& info, std::shared_ptr<Data> pixels,
     size_t rowBytes)
 {
     return StaticFactory::MakeRasterData(info, pixels, rowBytes);
@@ -90,10 +88,18 @@ bool Image::BuildFromCompressed(GPUContext& gpuContext, const std::shared_ptr<Da
     return imageImplPtr->BuildFromCompressed(gpuContext, data, width, height, type);
 }
 
-bool Image::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
+bool Image::BuildFromSurface(GPUContext& gpuContext, Surface& surface, TextureOrigin origin,
     BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace)
 {
-    return imageImplPtr->BuildFromTexture(gpuContext, info, origin, bitmapFormat, colorSpace);
+    return imageImplPtr->BuildFromSurface(gpuContext, surface, origin, bitmapFormat, colorSpace);
+}
+
+bool Image::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
+    BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
+    void (*deleteFunc)(void*), void* cleanupHelper)
+{
+    return imageImplPtr->BuildFromTexture(gpuContext, info, origin, bitmapFormat,
+        colorSpace, deleteFunc, cleanupHelper);
 }
 
 bool Image::BuildSubset(const std::shared_ptr<Image>& image, const RectI& rect, GPUContext& gpuContext)
@@ -109,6 +115,17 @@ BackendTexture Image::GetBackendTexture(bool flushPendingGrContextIO, TextureOri
 bool Image::IsValid(GPUContext* context) const
 {
     return imageImplPtr->IsValid(context);
+}
+
+bool Image::pinAsTexture(GPUContext& context)
+{
+    auto image = ExportSkImage().get();
+    auto skGpuContext = context.GetImpl<SkiaGPUContext>();
+    if (skGpuContext == nullptr) {
+        return false;
+    }
+    auto skContext = skGpuContext->GetGrContext().get();
+    return image != nullptr && skContext != nullptr && SkImage_pinAsTexture(image, skContext);
 }
 #endif
 
@@ -137,6 +154,11 @@ AlphaType Image::GetAlphaType() const
     return imageImplPtr->GetAlphaType();
 }
 
+std::shared_ptr<ColorSpace> Image::GetColorSpace() const
+{
+    return imageImplPtr->GetColorSpace();
+}
+
 uint32_t Image::GetUniqueID() const
 {
     return imageImplPtr->GetUniqueID();
@@ -150,6 +172,11 @@ ImageInfo Image::GetImageInfo()
 bool Image::ReadPixels(Bitmap& bitmap, int x, int y)
 {
     return imageImplPtr->ReadPixels(bitmap, x, y);
+}
+
+bool Image::ReadPixels(Pixmap& pixmap, int x, int y)
+{
+    return imageImplPtr->ReadPixels(pixmap, x, y);
 }
 
 bool Image::ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
@@ -168,7 +195,7 @@ bool Image::ScalePixels(const Bitmap& bitmap, const SamplingOptions& sampling, b
     return imageImplPtr->ScalePixels(bitmap, sampling, allowCachingHint);
 }
 
-std::shared_ptr<Data> Image::EncodeToData(EncodedImageFormat& encodedImageFormat, int quality) const
+std::shared_ptr<Data> Image::EncodeToData(EncodedImageFormat encodedImageFormat, int quality) const
 {
     return imageImplPtr->EncodeToData(encodedImageFormat, quality);
 }
@@ -198,6 +225,11 @@ bool Image::IsOpaque() const
     return imageImplPtr->IsOpaque();
 }
 
+void Image::HintCacheGpuResource() const
+{
+    imageImplPtr->HintCacheGpuResource();
+}
+
 std::shared_ptr<Data> Image::Serialize() const
 {
     return imageImplPtr->Serialize();
@@ -212,7 +244,6 @@ const sk_sp<SkImage> Image::ExportSkImage()
 {
     return GetImpl<SkiaImage>()->GetImage();
 }
-
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

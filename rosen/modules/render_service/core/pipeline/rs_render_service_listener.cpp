@@ -17,6 +17,7 @@
 
 #include "platform/common/rs_log.h"
 #include "pipeline/rs_main_thread.h"
+#include "frame_report.h"
 #include "sync_fence.h"
 
 namespace OHOS {
@@ -32,16 +33,28 @@ void RSRenderServiceListener::OnBufferAvailable()
 {
     auto node = surfaceRenderNode_.lock();
     if (node == nullptr) {
-        RS_LOGE("RSRenderServiceListener::OnBufferAvailable node is nullptr");
+        RS_LOGD("RSRenderServiceListener::OnBufferAvailable node is nullptr");
         return;
     }
     RS_LOGD("RsDebug RSRenderServiceListener::OnBufferAvailable node id:%{public}" PRIu64, node->GetId());
     node->IncreaseAvailableBuffer();
+
+    if (FrameReport::GetInstance().IsGameScene()) {
+        std::string name = node->GetName();
+        FrameReport::GetInstance().SetPendingBufferNum(name, node->GetAvailableBufferCount());
+        FrameReport::GetInstance().Report(name);
+    }
+
     if (!node->IsNotifyUIBufferAvailable()) {
         // Only ipc for one time.
         RS_LOGD("RsDebug RSRenderServiceListener::OnBufferAvailable id = %{public}" PRIu64 " Notify"
             " UI buffer available", node->GetId());
         node->NotifyUIBufferAvailable();
+    }
+    if (node->GetIsTextureExportNode()) {
+        RS_LOGD("RsDebug RSRenderServiceListener::OnBufferAvailable id = %{public}" PRIu64 " Notify"
+            " RT buffer available", node->GetId());
+        node->NotifyRTBufferAvailable(node->GetIsTextureExportNode());
     }
     RSMainThread::Instance()->RequestNextVSync();
 }
@@ -67,7 +80,7 @@ void RSRenderServiceListener::OnCleanCache()
 {
     auto node = surfaceRenderNode_.lock();
     if (node == nullptr) {
-        RS_LOGW("RSRenderServiceListener::OnBufferAvailable node is nullptr");
+        RS_LOGD("RSRenderServiceListener::OnBufferAvailable node is nullptr");
         return;
     }
     RS_LOGD("RsDebug RSRenderServiceListener::OnCleanCache node id:%{public}" PRIu64, node->GetId());
@@ -80,16 +93,14 @@ void RSRenderServiceListener::OnGoBackground()
     RSMainThread::Instance()->PostTask([surfaceNode]() {
         auto node = surfaceNode.lock();
         if (node == nullptr) {
-            RS_LOGW("RSRenderServiceListener::OnBufferAvailable node is nullptr");
+            RS_LOGD("RSRenderServiceListener::OnBufferAvailable node is nullptr");
             return;
         }
         RS_LOGD("RsDebug RSRenderServiceListener::OnGoBackground node id:%{public}" PRIu64, node->GetId());
         node->ResetBufferAvailableCount();
         node->CleanCache();
         node->SetNotifyRTBufferAvailable(false);
-        if (node->IsLastFrameHardwareEnabled()) {
-            node->SetContentDirty();
-        }
+        node->SetContentDirty();
         node->ResetHardwareEnabledStates();
     });
 }

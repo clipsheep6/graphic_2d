@@ -20,6 +20,8 @@
 #include <SkMatrix.h>
 #include <SkCanvas.h>
 #include <mutex>
+#include "platform/common/rs_system_properties.h"
+#include "common/rs_optional_trace.h"
 #include "common/rs_singleton.h"
 #include "rs_sub_thread_rcd.h"
 
@@ -41,6 +43,7 @@ bool RoundCornerDisplay::Init()
     LoadConfigFile();
     SeletedLcdModel(rs_rcd::ATTR_DEFAULT);
     LoadImgsbyResolution(displayWidth_, displayHeight_);
+    isRcdEnable_ = RSSystemProperties::GetRSScreenRoundCornerEnable();
     RS_LOGD("[%{public}s] RoundCornerDisplay init \n", __func__);
     return true;
 }
@@ -50,7 +53,7 @@ bool RoundCornerDisplay::SeletedLcdModel(const char* lcdModelName)
     auto& rcdCfg = RSSingleton<rs_rcd::RCDConfig>::GetInstance();
     lcdModel_ = rcdCfg.GetLcdModel(lcdModelName);
     if (lcdModel_ == nullptr) {
-        RS_LOGE("[%{public}s] No lcdModel found in config file with name %{public}s \n", __func__, lcdModelName);
+        RS_LOGD("[%{public}s] No lcdModel found in config file with name %{public}s \n", __func__, lcdModelName);
         return false;
     }
     supportTopSurface_ = lcdModel_->surfaceConfig.topSurface.support;
@@ -69,6 +72,7 @@ bool RoundCornerDisplay::LoadConfigFile()
     return rcdCfg.Load(rs_rcd::PATH_CONFIG_FILE);
 }
 
+#ifndef USE_ROSEN_DRAWING
 bool RoundCornerDisplay::LoadImg(const char* path, sk_sp<SkImage>& img)
 {
     std::string filePath = std::string(rs_rcd::PATH_CONFIG_DIR) + "/" + path;
@@ -98,6 +102,38 @@ bool RoundCornerDisplay::DecodeBitmap(sk_sp<SkImage> image, SkBitmap &bitmap)
     }
     return true;
 }
+#else
+bool RoundCornerDisplay::LoadImg(const char* path, std::shared_ptr<Drawing::Image>& img)
+{
+    std::string filePath = std::string(rs_rcd::PATH_CONFIG_DIR) + "/" + path;
+    RS_LOGD("[%{public}s] Read Img(%{public}s) \n", __func__, filePath.c_str());
+    std::shared_ptr<Drawing::Data> drData = Drawing::Data::MakeFromFileName(filePath.c_str());
+    if (drData == nullptr) {
+        RS_LOGE("[%{public}s] Open picture file failed! \n", __func__);
+        return false;
+    }
+    img = std::make_shared<Drawing::Image>();
+    if (!img->MakeFromEncoded(drData)) {
+        img = nullptr;
+        RS_LOGE("[%{public}s] Decode picture file failed! \n", __func__);
+        return false;
+    }
+    return true;
+}
+
+bool RoundCornerDisplay::DecodeBitmap(std::shared_ptr<Drawing::Image> image, Drawing::Bitmap &bitmap)
+{
+    if (image == nullptr) {
+        RS_LOGE("[%{public}s] No image found \n", __func__);
+        return false;
+    }
+    if (!image->AsLegacyBitmap(bitmap)) {
+        RS_LOGE("[%{public}s] Create bitmap from drImage failed \n", __func__);
+        return false;
+    }
+    return true;
+}
+#endif
 
 bool RoundCornerDisplay::SetHardwareLayerSize()
 {
@@ -171,7 +207,7 @@ bool RoundCornerDisplay::LoadImgsbyResolution(uint32_t width, uint32_t height)
     std::lock_guard<std::mutex> lock(resourceMut_);
 
     if (lcdModel_ == nullptr) {
-        RS_LOGE("[%{public}s] No lcdModel selected in config file \n", __func__);
+        RS_LOGD("[%{public}s] No lcdModel selected in config file \n", __func__);
         return false;
     }
     rog_ = lcdModel_->GetRog(width, height);
@@ -206,14 +242,16 @@ void RoundCornerDisplay::UpdateDisplayParameter(uint32_t width, uint32_t height)
     RS_LOGD("[%{public}s] displayWidth_ updated from %{public}u -> %{public}u,"
         "displayHeight_ updated from %{public}u -> %{public}u \n", __func__,
         displayWidth_, width, displayHeight_, height);
-
-    displayWidth_ = width;
-    displayHeight_ = height;
-
-    RSSingleton<RSSubThreadRCD>::GetInstance().PostTask([this]() {
-        LoadImgsbyResolution(displayWidth_, displayHeight_);
+    // the width, height do not use reference,which is local var
+    RSSingleton<RSSubThreadRCD>::GetInstance().PostTask([this, width, height]() {
+        bool isOk = LoadImgsbyResolution(width, height);
+        if (isOk) {
+            std::lock_guard<std::mutex> lock(resourceMut_);
+            updateFlag_["display"] = isOk;
+            displayWidth_ = width;
+            displayHeight_ = height;
+        }
     });
-    updateFlag_["display"] = true;
 }
 
 void RoundCornerDisplay::UpdateNotchStatus(int status)
@@ -224,7 +262,6 @@ void RoundCornerDisplay::UpdateNotchStatus(int status)
         RS_LOGE("[%{public}s] notchStatus won't be over 1 or below 0 \n", __func__);
         return;
     }
-    notchSetting_ = status;
     if (notchStatus_ == status) {
         RS_LOGD("[%{public}s] NotchStatus do not change \n", __func__);
         return;
@@ -241,47 +278,11 @@ void RoundCornerDisplay::UpdateOrientationStatus(ScreenRotation orientation)
         RS_LOGD("[%{public}s] OrientationStatus do not change \n", __func__);
         return;
     }
-    
-    const int ladsToPortrait = 0;
-    const int portraitToLads = 1;
-
     lastOrientation_ = curOrientation_;
     curOrientation_ = orientation;
     RS_LOGD("[%{public}s] curOrientation_ = %{public}d, lastOrientation_ = %{public}d \n",
         __func__, curOrientation_, lastOrientation_);
     updateFlag_["orientation"] = true;
-    int transitionFlag = -1; // default
-    switch (lastOrientation_) {
-        case ScreenRotation::ROTATION_0:
-            if (curOrientation_ == ScreenRotation::ROTATION_90 || curOrientation_ == ScreenRotation::ROTATION_270) {
-                transitionFlag = portraitToLads;
-            }
-            break;
-        case ScreenRotation::ROTATION_90:
-            if (curOrientation_ == ScreenRotation::ROTATION_0 || curOrientation_ == ScreenRotation::ROTATION_180) {
-                transitionFlag = ladsToPortrait;
-            }
-            break;
-        case ScreenRotation::ROTATION_180:
-            if (curOrientation_ == ScreenRotation::ROTATION_90 || curOrientation_ == ScreenRotation::ROTATION_270) {
-                transitionFlag = portraitToLads;
-            }
-            break;
-        case ScreenRotation::ROTATION_270:
-            if (curOrientation_ == ScreenRotation::ROTATION_0 || curOrientation_ == ScreenRotation::ROTATION_180) {
-                transitionFlag = ladsToPortrait;
-            }
-            break;
-        default:
-            break;
-    }
-    if (notchSetting_ == WINDOW_NOTCH_DEFAULT) {
-        if (transitionFlag == ladsToPortrait) {
-            notchStatus_ = WINDOW_NOTCH_DEFAULT;
-        } else if (transitionFlag == portraitToLads) {
-            notchStatus_ = WINDOW_NOTCH_HIDDEN;
-        }
-    }
 }
 
 void RoundCornerDisplay::UpdateParameter(std::map<std::string, bool>& updateFlag)
@@ -290,7 +291,7 @@ void RoundCornerDisplay::UpdateParameter(std::map<std::string, bool>& updateFlag
     for (auto item = updateFlag.begin(); item != updateFlag.end(); item++) {
         if (item->second == true) {
             resourceChanged = true;
-            item->second = false;  // reset
+            item->second = false; // reset
         }
     }
     if (resourceChanged) {
@@ -406,31 +407,61 @@ void RoundCornerDisplay::RcdChooseHardwareResource()
     hardInfo_.bottomLayer->curBitmap = &bitmapBottomPortrait_;
 }
 
-void RoundCornerDisplay::DrawRoundCorner(std::shared_ptr<RSPaintFilterCanvas> canvas)
+void RoundCornerDisplay::DrawOneRoundCorner(RSPaintFilterCanvas* canvas, int surfaceType)
 {
+    RS_TRACE_BEGIN("RCD::DrawOneRoundCorner : surfaceType" + std::to_string(surfaceType));
     std::lock_guard<std::mutex> lock(resourceMut_);
-    if (supportHardware_) {
-        return;
-    }
     if (canvas == nullptr) {
         RS_LOGE("[%{public}s] Canvas is null \n", __func__);
         return;
     }
     UpdateParameter(updateFlag_);
-    if (supportTopSurface_) {
-        RS_LOGD("[%{public}s] TopSurface supported \n", __func__);
+    if (surfaceType == TOP_SURFACE) {
+        RS_LOGD("[%{public}s] draw TopSurface start  \n", __func__);
         if (curTop_ != nullptr) {
+#ifndef USE_ROSEN_DRAWING
             canvas->drawImage(curTop_, 0, 0);
+#else
+            Drawing::Brush brush;
+            canvas->AttachBrush(brush);
+            canvas->DrawImage(*curTop_, 0, 0, Drawing::SamplingOptions());
+            canvas->DetachBrush();
+#endif
             RS_LOGD("[%{public}s] Draw top \n", __func__);
         }
-    }
-    if (supportBottomSurface_) {
+    } else if (surfaceType == BOTTOM_SURFACE) {
         RS_LOGD("[%{public}s] BottomSurface supported \n", __func__);
         if (curBottom_ != nullptr) {
+#ifndef USE_ROSEN_DRAWING
             canvas->drawImage(curBottom_, 0, displayHeight_ - curBottom_->height());
+#else
+            Drawing::Brush brush;
+            canvas->AttachBrush(brush);
+            canvas->DrawImage(*curBottom_, 0, displayHeight_ - curBottom_->GetHeight(), Drawing::SamplingOptions());
+            canvas->DetachBrush();
+#endif
             RS_LOGD("[%{public}s] Draw Bottom \n", __func__);
         }
+    } else {
+        RS_LOGD("[%{public}s] Surface Type is not valid \n", __func__);
     }
+    RS_TRACE_END();
+}
+
+void RoundCornerDisplay::DrawTopRoundCorner(RSPaintFilterCanvas* canvas)
+{
+    DrawOneRoundCorner(canvas, TOP_SURFACE);
+}
+
+void RoundCornerDisplay::DrawBottomRoundCorner(RSPaintFilterCanvas* canvas)
+{
+    DrawOneRoundCorner(canvas, BOTTOM_SURFACE);
+}
+
+void RoundCornerDisplay::DrawRoundCorner(RSPaintFilterCanvas* canvas)
+{
+    DrawTopRoundCorner(canvas);
+    DrawBottomRoundCorner(canvas);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -74,25 +74,6 @@ HWTEST_F(ImageTest, BuildFromBitmap001, TestSize.Level1)
 }
 
 /**
- * @tc.name: BuildFromPicture001
- * @tc.desc: test for creating Image from Picture.
- * @tc.type: FUNC
- * @tc.require: I70OWN
- */
-HWTEST_F(ImageTest, BuildFromPicture001, TestSize.Level1)
-{
-    std::unique_ptr<Image> image = std::make_unique<Image>();
-    ASSERT_TRUE(image != nullptr);
-    Picture picture;
-    SizeI dimensions;
-    Matrix matrix;
-    Brush brush;
-    BitDepth bitDepth = BitDepth::KU8;
-    auto colorSpace = std::make_shared<ColorSpace>(ColorSpace::ColorSpaceType::NO_TYPE);
-    image->BuildFromPicture(picture, dimensions, matrix, brush, bitDepth, colorSpace);
-}
-
-/**
  * @tc.name: ImageGetWidthTest001
  * @tc.desc:
  * @tc.type: FUNC
@@ -241,7 +222,7 @@ HWTEST_F(ImageTest, BuildFromCompressedTest001, TestSize.Level1)
     const std::shared_ptr<Data> data = nullptr;
     std::unique_ptr<Image> image = std::make_unique<Image>();
     ASSERT_TRUE(image != nullptr);
-    image->BuildFromCompressed(gpuContext, data, 15, 15, CompressedType::ASTC);
+    image->BuildFromCompressed(gpuContext, data, 15, 15, CompressedType::ASTC_RGBA8_4x4);
 }
 
 /**
@@ -257,7 +238,7 @@ HWTEST_F(ImageTest, BuildFromCompressedTest002, TestSize.Level1)
     ASSERT_TRUE(data != nullptr);
     std::unique_ptr<Image> image = std::make_unique<Image>();
     ASSERT_TRUE(image != nullptr);
-    image->BuildFromCompressed(gpuContext, data, 15, 15, CompressedType::ASTC);
+    image->BuildFromCompressed(gpuContext, data, 15, 15, CompressedType::ASTC_RGBA8_4x4);
 }
 
 /**
@@ -273,7 +254,7 @@ HWTEST_F(ImageTest, BuildFromCompressedTest003, TestSize.Level1)
     ASSERT_TRUE(data != nullptr);
     std::unique_ptr<Image> image = std::make_unique<Image>();
     ASSERT_TRUE(image != nullptr);
-    image->BuildFromCompressed(gpuContext, data, 15, 15, CompressedType::ETC1);
+    image->BuildFromCompressed(gpuContext, data, 15, 15, CompressedType::ETC2_RGB8_UNORM);
 }
 
 /**

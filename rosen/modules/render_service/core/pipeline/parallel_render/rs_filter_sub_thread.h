@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_FILTER_SUB_THREAD_H
 
 #include <cstdint>
+#include <queue>
 
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
@@ -42,14 +43,43 @@ public:
     void StartColorPicker();
     void PostTask(const std::function<void()>& task);
     void PostSyncTask(const std::function<void()>& task);
-    void RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filterTask);
+    void RenderCache(std::vector<std::weak_ptr<RSFilter::RSFilterTask>>& filterTaskList);
+    void FlushAndSubmit();
+    void SetFence(sptr<SyncFence> fence);
     void ColorPickerRenderCache(std::weak_ptr<RSColorPickerCacheTask> colorPickerTask);
+#ifndef USE_ROSEN_DRAWING
+#else
+#ifdef IS_OHOS
+    void AddToReleaseQueue(std::shared_ptr<Drawing::Image>&& cacheImage,
+        std::shared_ptr<Drawing::Surface>&& cacheSurface,
+        std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler);
+    void PreAddToReleaseQueue(std::shared_ptr<Drawing::Image>&& cacheImage,
+        std::shared_ptr<Drawing::Surface>&& cacheSurface,
+        std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler,
+        std::weak_ptr<std::mutex> grBackendTextureMutex);
+    void ResetWaitRelease(std::weak_ptr<std::atomic<bool>> waitRelease);
+    void ReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>& queue,
+        std::weak_ptr<std::atomic<bool>> waitRelease);
+    void PreReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>& queue,
+        std::weak_ptr<std::atomic<bool>> waitRelease,
+        std::weak_ptr<std::mutex> grBackendTextureMutex);
+    void ReleaseSurface(std::weak_ptr<std::atomic<bool>> waitRelease);
+    void ReleaseImageAndSurfaces(std::weak_ptr<std::atomic<bool>> waitRelease,
+        std::weak_ptr<std::mutex> grBackendTextureMutex);
+    void SaveAndReleaseCacheResource(std::shared_ptr<Drawing::Image>&& cacheImage,
+        std::shared_ptr<Drawing::Surface>&& cacheSurface,
+        std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler,
+        std::weak_ptr<std::atomic<bool>> waitRelease,
+        std::weak_ptr<std::mutex> grBackendTextureMutex);
+#endif
+#endif
 
     void ResetGrContext();
     void DumpMem(DfxString& log);
     float GetAppGpuMemoryInMB();
 
 private:
+    const uint32_t SYNC_TIME_OUT = 1000;
     void CreateShareEglContext();
     void DestroyShareEglContext();
 #ifndef USE_ROSEN_DRAWING
@@ -61,12 +91,18 @@ private:
 #else
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
 #endif
-
+    std::atomic<bool> isWorking_ = false;
+    sptr<SyncFence> fence_ = nullptr;
+    std::vector<std::weak_ptr<RSFilter::RSFilterTask>> filterTaskList_;
+    std::vector<std::weak_ptr<RSFilter::RSFilterTask>> filterReadyTaskList_;
     uint32_t threadIndex_ = 0;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RenderContext* renderContext_ = nullptr;
+    std::mutex mutex_;
+#ifdef RS_ENABLE_GL
     EGLContext eglShareContext_ = EGL_NO_CONTEXT;
+#endif
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_SKIA
     sk_sp<GrDirectContext> grContext_ = nullptr;
@@ -75,6 +111,11 @@ private:
 #endif
 #else
     std::shared_ptr<Drawing::GPUContext> grContext_ = nullptr;
+    std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaceResources_;
+    std::map<std::string, std::queue<std::shared_ptr<Drawing::Image>>> tmpImageResources_;
+#ifdef IS_OHOS
+    std::map<std::string, std::shared_ptr<OHOS::AppExecFwk::EventHandler>> handlerMap_;
+#endif
 #endif
 };
 } // namespace OHOS::Rosen

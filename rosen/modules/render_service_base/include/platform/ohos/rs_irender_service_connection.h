@@ -81,7 +81,8 @@ public:
         uint32_t height,
         sptr<Surface> surface,
         ScreenId mirrorId = 0,
-        int32_t flags = 0) = 0;
+        int32_t flags = 0,
+        std::vector<NodeId> filteredAppVector = {}) = 0;
 
     virtual int32_t SetVirtualScreenSurface(ScreenId id, sptr<Surface> surface) = 0;
 
@@ -102,6 +103,10 @@ public:
     virtual int32_t GetCurrentRefreshRateMode() = 0;
 
     virtual std::vector<int32_t> GetScreenSupportedRefreshRates(ScreenId id) = 0;
+
+    virtual bool GetShowRefreshRateEnabled() = 0;
+
+    virtual void SetShowRefreshRateEnabled(bool enable) = 0;
 
     virtual int32_t SetVirtualScreenResolution(ScreenId id, uint32_t width, uint32_t height) = 0;
 
@@ -152,6 +157,8 @@ public:
 
     virtual int32_t SetScreenCorrection(ScreenId id, ScreenRotation screenRotation) = 0;
 
+    virtual bool SetVirtualMirrorScreenCanvasRotation(ScreenId id, bool canvasRotation) = 0;
+
     virtual int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) = 0;
 
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) = 0;
@@ -176,11 +183,12 @@ public:
 
 #ifndef USE_ROSEN_DRAWING
     virtual bool GetBitmap(NodeId id, SkBitmap& bitmap) = 0;
-    virtual bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap, const SkRect* rect) = 0;
+    virtual bool GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
+        const SkRect* rect, std::shared_ptr<DrawCmdList> drawCmdList) = 0;
 #else
     virtual bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) = 0;
-    virtual bool GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap,
-        const Drawing::Rect* rect) = 0;
+    virtual bool GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
+        const Drawing::Rect* rect, std::shared_ptr<Drawing::DrawCmdList> drawCmdList) = 0;
 #endif
 
     virtual int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) = 0;
@@ -194,7 +202,11 @@ public:
 
     virtual int32_t RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) = 0;
 
+    virtual int32_t RegisterHgmRefreshRateModeChangeCallback(sptr<RSIHgmConfigChangeCallback> callback) = 0;
+
     virtual void SetAppWindowNum(uint32_t num) = 0;
+
+    virtual bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes) = 0;
 
     virtual void ShowWatermark(const std::shared_ptr<Media::PixelMap> &watermarkImg, bool isShow) = 0;
 
@@ -202,13 +214,23 @@ public:
 
     virtual void ReportJankStats() = 0;
 
+    virtual void NotifyLightFactorStatus(bool isSafe) = 0;
+
+    virtual void NotifyPackageEvent(uint32_t listSize, const std::vector<std::string>& packageList) = 0;
+
+    virtual void NotifyRefreshRateEvent(const EventInfo& eventInfo) = 0;
+
+    virtual void NotifyTouchEvent(int32_t touchStatus) = 0;
+
     virtual void ReportEventResponse(DataBaseRs info) = 0;
 
     virtual void ReportEventComplete(DataBaseRs info) = 0;
 
     virtual void ReportEventJankFrame(DataBaseRs info) = 0;
 
-    virtual void SetHardwareEnabled(NodeId id, bool isEnabled) = 0;
+    virtual void ReportGameStateData(GameStateData info) = 0;
+
+    virtual void SetHardwareEnabled(NodeId id, bool isEnabled, SelfDrawingNodeType selfDrawingType) = 0;
 
     virtual void SetCacheEnabledForRotation(bool isEnabled) = 0;
 
@@ -217,6 +239,8 @@ public:
     virtual void RunOnRemoteDiedCallback() = 0;
 
     virtual void SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus) = 0;
+
+    virtual GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id) = 0;
 
 #ifdef TP_FEATURE_ENABLE
     virtual void SetTpFeatureConfig(int32_t feature, const char* config) = 0;

@@ -25,7 +25,6 @@
 #include <unistd.h>
 
 #include "common/rs_macros.h"
-#include "modifier/rs_modifier_type.h"
 
 namespace OHOS {
 class Surface;
@@ -35,6 +34,7 @@ using AnimationId = uint64_t;
 using NodeId = uint64_t;
 using PropertyId = uint64_t;
 using FrameRateLinkerId = uint64_t;
+using SurfaceId = uint64_t;
 constexpr uint32_t UNI_MAIN_THREAD_INDEX = UINT32_MAX;
 constexpr uint64_t INVALID_NODEID = 0;
 
@@ -60,18 +60,6 @@ enum class FollowType : uint8_t {
 
 #define LIKELY(exp) (__builtin_expect((exp) != 0, true))
 #define UNLIKELY(exp) (__builtin_expect((exp) != 0, false))
-
-static inline const std::unordered_map<RSUINodeType, std::string> RSUINodeTypeStrs = {
-    {RSUINodeType::UNKNOW,              "UNKNOW"},
-    {RSUINodeType::DISPLAY_NODE,        "DisplayNode"},
-    {RSUINodeType::RS_NODE,             "RsNode"},
-    {RSUINodeType::SURFACE_NODE,        "SurfaceNode"},
-    {RSUINodeType::PROXY_NODE,          "ProxyNode"},
-    {RSUINodeType::CANVAS_NODE,         "CanvasNode"},
-    {RSUINodeType::ROOT_NODE,           "RootNode"},
-    {RSUINodeType::EFFECT_NODE,         "EffectNode"},
-    {RSUINodeType::CANVAS_DRAWING_NODE, "CanvasDrawingNode"},
-};
 
 // types for RenderNode
 enum class RSRenderNodeType : uint32_t {
@@ -106,6 +94,15 @@ enum class NodePriorityType : uint8_t {
     SUB_LOW_PRIORITY, // node render in sub thread with low priority
 };
 
+enum class RSVisibleLevel : uint32_t {
+    RS_ALL_VISIBLE = 0,
+    RS_SEMI_NONDEFAULT_VISIBLE,
+    RS_SEMI_DEFAULT_VISIBLE,
+    RS_INVISIBLE,
+    RS_SYSTEM_ANIMATE_SCENE,
+    RS_UNKNOW_VISIBLE_LEVEL,
+};
+
 // status for sub thread node
 enum class CacheProcessStatus : uint8_t {
     WAITING = 0, // waiting for process
@@ -126,6 +123,26 @@ enum class DeviceType : uint8_t {
     OTHERS,
 };
 
+// types for PC SystemAnimatedScenes
+enum class SystemAnimatedScenes : uint32_t {
+    ENTER_MISSION_CENTER, // Enter the mission center
+    EXIT_MISSION_CENTER, // Exit the mission center
+    ENTER_TFS_WINDOW, // Three-finger sliding window recovery
+    EXIT_TFU_WINDOW, // The three-finger up window disappears
+    ENTER_WINDOW_FULL_SCREEN, // Enter the window full screen
+    EXIT_WINDOW_FULL_SCREEN, // Exit the window full screen
+    ENTER_MAX_WINDOW, // Enter the window maximization state
+    EXIT_MAX_WINDOW, // Exit the window maximization state
+    ENTER_SPLIT_SCREEN, // Enter the split screen
+    EXIT_SPLIT_SCREEN, // Exit the split screen
+    ENTER_APP_CENTER, // Enter the app center
+    EXIT_APP_CENTER, // Exit the app center
+    APPEAR_MISSION_CENTER, // A special case scenario that displays the mission center
+    ENTER_WIND_CLEAR, // Enter win+D in clear screen mode
+    ENTER_WIND_RECOVER, // Enter win+D in recover mode
+    OTHERS, // 1.Default state 2.The state in which the animation ends
+};
+
 // types for RSSurfaceRenderNode
 enum class RSSurfaceNodeType : uint8_t {
     DEFAULT,
@@ -135,8 +152,14 @@ enum class RSSurfaceNodeType : uint8_t {
     STARTING_WINDOW_NODE,     // starting window, surfacenode created by wms
     LEASH_WINDOW_NODE,        // leashwindow
     SELF_DRAWING_WINDOW_NODE, // create by wms, such as pointer window and bootanimation
+    SURFACE_TEXTURE_NODE,      // create by video
     FOREGROUND_SURFACE,
     SCB_SCREEN_NODE,          // surfacenode created as sceneboard
+};
+
+enum class SelfDrawingNodeType : uint8_t {
+    DEFAULT,
+    VIDEO,
 };
 
 struct RSSurfaceRenderNodeConfig {
@@ -145,7 +168,23 @@ struct RSSurfaceRenderNodeConfig {
     std::string bundleName = "";
     RSSurfaceNodeType nodeType = RSSurfaceNodeType::DEFAULT;
     void* additionalData = nullptr;
+    bool isTextureExportNode = false;
+    bool isSync = false;
 };
+
+// types for RSSurfaceExt
+enum class RSSurfaceExtType : uint8_t {
+    NONE,
+    SURFACE_TEXTURE,
+};
+
+struct RSSurfaceExtConfig {
+    RSSurfaceExtType type = RSSurfaceExtType::NONE;
+    void* additionalData = nullptr;
+};
+using RSSurfaceTextureConfig = RSSurfaceExtConfig;
+using RSSurfaceTextureAttachCallBack = std::function<void(int64_t textureId, bool attach)>;
+using RSSurfaceTextureUpdateCallBack = std::function<void(std::vector<float>&)>;
 
 struct RSDisplayNodeConfig {
     uint64_t screenId = 0;
@@ -155,6 +194,8 @@ struct RSDisplayNodeConfig {
 
 constexpr int64_t NS_TO_S = 1000000000;
 constexpr int64_t NS_PER_MS = 1000000;
+constexpr uint32_t SIZE_UPPER_LIMIT = 1000;
+constexpr uint32_t PARTICLE_UPPER_LIMIT = 1000000;
 
 #if defined(M_PI)
 constexpr float PI = M_PI;

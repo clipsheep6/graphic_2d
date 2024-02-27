@@ -100,6 +100,19 @@ HWTEST_F(RSDrivenRenderManagerTest, GetUniRenderGlobalZOrder, TestSize.Level1)
 }
 
 /**
+ * @tc.name: GetUniRenderSurfaceClipHoleRect
+ * @tc.desc: Test RSDrivenRenderManagerTest.GetUniRenderSurfaceClipHoleRect
+ * @tc.type: FUNC
+ * @tc.require: issueI6J4IL
+ */
+HWTEST_F(RSDrivenRenderManagerTest, GetUniRenderSurfaceClipHoleRect, TestSize.Level1)
+{
+    (void)system::SetParameter("persist.rosen.drivenrender.enabled", "false");
+    RSDrivenRenderManager::InitInstance();
+    RSDrivenRenderManager::GetInstance().GetUniRenderSurfaceClipHoleRect();
+}
+
+/**
  * @tc.name: ClipHoleForDrivenNode
  * @tc.desc: Test RSDrivenRenderManagerTest.ClipHoleForDrivenNode
  * @tc.type: FUNC
@@ -110,8 +123,12 @@ HWTEST_F(RSDrivenRenderManagerTest, ClipHoleForDrivenNode, TestSize.Level1)
     (void)system::SetParameter("persist.rosen.drivenrender.enabled", "false");
     RSDrivenRenderManager::InitInstance();
     auto rsContext = std::make_shared<RSContext>();
-    SkCanvas skCanvas;
-    RSPaintFilterCanvas canvas(&skCanvas);
+#ifndef USE_ROSEN_DRAWING
+    SkCanvas tmpCanvas;
+#else
+    Drawing::Canvas tmpCanvas;
+#endif
+    RSPaintFilterCanvas canvas(&tmpCanvas);
     // canvas node id = 1
     auto rsCanvasRenderNode = std::make_shared<RSCanvasRenderNode>(1, rsContext->weak_from_this());
 
@@ -284,6 +301,24 @@ HWTEST_F(RSDrivenRenderManagerTest, DoProcessRenderTask, TestSize.Level1)
     uniGlobalZOrder = RSDrivenRenderManager::GetInstance().GetUniRenderGlobalZOrder();
     processInfo = { processor, GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB, uniGlobalZOrder };
     RSDrivenRenderManager::GetInstance().DoProcessRenderTask(processInfo);
+}
+
+/**
+ * @tc.name: RSDrivenRenderListener
+ * @tc.desc: Test RSDrivenRenderManagerTest.RSDrivenRenderListener
+ * @tc.type: FUNC
+ * @tc.require: issueI6J4IL
+ */
+HWTEST_F(RSDrivenRenderManagerTest, RSDrivenRenderListener, TestSize.Level1)
+{
+    auto contentSurfaceNodePtr = RSDrivenRenderManager::GetInstance().GetContentSurfaceNode();
+    sptr<IBufferConsumerListener> contentListener = new RSDrivenRenderListener(contentSurfaceNodePtr);
+    contentSurfaceNodePtr->CreateSurface(contentListener);
+    contentListener->OnBufferAvailable();
+    auto backgroundSurfaceNodePtr = RSDrivenRenderManager::GetInstance().GetBackgroundSurfaceNode();
+    sptr<IBufferConsumerListener> backgroundListener = new RSDrivenRenderListener(backgroundSurfaceNodePtr);
+    backgroundSurfaceNodePtr->CreateSurface(backgroundListener);
+    backgroundListener->OnGoBackground();
 }
 
 } // namespace OHOS::Rosen

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
-#include "rssurfaceohos_fuzzer.h"
-#include <securec.h>
 #include <memory>
+#include <securec.h>
 #include <vector>
+
+#include "rssurfaceohos_fuzzer.h"
+
 #include "iconsumer_surface.h"
+#include "platform/common/rs_system_properties.h"
 #include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
 #include "platform/ohos/backend/rs_surface_ohos_raster.h"
 #if ACE_ENABLE_GL
@@ -60,8 +63,11 @@ bool RSSurfaceOhosFuzzTest(const uint8_t* data, size_t size)
 
     auto rsSurfaceFrameOhosRaster = RSSurfaceFrameOhosRaster(GetData<int32_t>(), GetData<int32_t>());
 #if ACE_ENABLE_GL
-    RenderContext renderContext_;
-    rsSurfaceFrameOhosRaster.SetRenderContext(&renderContext_);
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
+        RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        RenderContext renderContext;
+        rsSurfaceFrameOhosRaster.SetRenderContext(&renderContext);
+    }
 #endif
     (void)rsSurfaceFrameOhosRaster.GetBufferAge();
     rsSurfaceFrameOhosRaster.SetReleaseFence(GetData<int32_t>());

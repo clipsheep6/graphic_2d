@@ -25,6 +25,11 @@
 #include "include/gpu/GrDirectContext.h"
 #include "include/gpu/GrBackendSemaphore.h"
 #include "include/core/SkSurface.h"
+#ifdef USE_ROSEN_DRAWING
+#include "draw/surface.h"
+#include "image/image.h"
+#include "drawing/engine_adapter/skia_adapater/skia_color_space.h"
+#endif
 
 namespace OHOS::Rosen {
 namespace NativeBufferUtils {
@@ -77,21 +82,44 @@ struct NativeSurfaceInfo {
     NativeWindowBuffer* nativeWindowBuffer = nullptr;
     VkImage image = VK_NULL_HANDLE; // skia will destroy image
     std::unique_ptr<SyncFence> fence = nullptr;
+#ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> skSurface = nullptr;
-    uint32_t lastPresentedCount = 0;
-
+#else
+    std::shared_ptr<Drawing::Surface> drawingSurface = nullptr;
+#endif
+    int32_t lastPresentedCount = -1;
+    GraphicColorGamut graphicColorGamut = GRAPHIC_COLOR_GAMUT_INVALID;
     ~NativeSurfaceInfo()
     {
+#ifndef USE_ROSEN_DRAWING
         skSurface = nullptr;
-        NativeWindowCancelBuffer(window, nativeWindowBuffer);
+#else
+        drawingSurface = nullptr;
+#endif
+        if (window != nullptr) {
+            NativeObjectUnreference(window);
+            window = nullptr;
+        }
+        if (nativeWindowBuffer != nullptr) {
+            NativeObjectUnreference(nativeWindowBuffer);
+            nativeWindowBuffer = nullptr;
+        }
     }
 };
 
+#ifndef USE_ROSEN_DRAWING
 bool MakeFromNativeWindowBuffer(sk_sp<GrDirectContext> skContext, NativeWindowBuffer* nativeWindowBuffer,
     NativeSurfaceInfo& nativeSurface, int width, int height);
 
 GrBackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
     int width, int height);
+#else
+bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, NativeWindowBuffer* nativeWindowBuffer,
+    NativeSurfaceInfo& nativeSurface, int width, int height);
+
+Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
+    int width, int height);
+#endif
 }
 } // OHOS::Rosen
 #endif

@@ -17,13 +17,13 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
-#include "common/rs_vector4.h"
 #include "pipeline/rs_render_node.h"
+#include "property/rs_properties_def.h"
+#include "screen_manager/screen_types.h"
 
-#define TWO 2
-#define THREE 3
 namespace OHOS {
 namespace Rosen {
+constexpr int TWO = 2;
 
 RSPointLightManager* RSPointLightManager::Instance()
 {
@@ -68,19 +68,21 @@ void RSPointLightManager::ClearDirtyList()
 }
 void RSPointLightManager::PrepareLight()
 {
-    auto& lightSourceMap = GetLightSourceMap();
-    auto& illuminatedMap = GetIlluminatedMap();
-    auto& dirtyLightSourceList = GetDirtyLightSourceList();
-    auto& dirtyIlluminatedList = GetDirtyIlluminatedList();
-    if (lightSourceMap.empty() || illuminatedMap.empty()) {
+    if (lightSourceNodeMap_.empty() || illuminatedNodeMap_.empty()) {
         ClearDirtyList();
         return;
     }
-    if ((dirtyIlluminatedList.empty() && dirtyLightSourceList.empty())) {
+    if ((dirtyIlluminatedList_.empty() && dirtyLightSourceList_.empty())) {
         return;
     }
-    PrepareLight(lightSourceMap, dirtyIlluminatedList, false);
-    PrepareLight(illuminatedMap, dirtyLightSourceList, true);
+    for (const auto& illuminatedWeakPtr : dirtyIlluminatedList_) {
+        auto illuminatedNodePtr = illuminatedWeakPtr.lock();
+        if (illuminatedNodePtr) {
+            illuminatedNodePtr->GetRenderProperties().GetIlluminated()->ClearLightSource();
+        }
+    }
+    PrepareLight(lightSourceNodeMap_, dirtyIlluminatedList_, false);
+    PrepareLight(illuminatedNodeMap_, dirtyLightSourceList_, true);
     ClearDirtyList();
 }
 void RSPointLightManager::PrepareLight(std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>& map,
@@ -91,40 +93,86 @@ void RSPointLightManager::PrepareLight(std::unordered_map<NodeId, std::weak_ptr<
         if (!mapElm) {
             return true;
         }
+        if (!mapElm->IsOnTheTree()) { // skip check when node is not on the tree
+            return false;
+        }
         for (const auto& weakPtr : dirtyList) {
             auto dirtyNodePtr = weakPtr.lock();
             if (!dirtyNodePtr) {
                 continue;
             }
-            Vector4f lightSourceAbsPosition;
-            std::shared_ptr<RSRenderNode> illuminatedNode = nullptr;
-            if (isLightSourceDirty) {
-                lightSourceAbsPosition = dirtyNodePtr->GetRenderProperties().GetLightSource()->GetAbsLightPosition();
-                illuminatedNode = mapElm;
-            } else {
-                lightSourceAbsPosition = mapElm->GetRenderProperties().GetLightSource()->GetAbsLightPosition();
-                illuminatedNode = dirtyNodePtr;
-            }
-            CheckIlluminated(lightSourceAbsPosition, illuminatedNode);
+            std::shared_ptr<RSRenderNode> lightSourceNode = isLightSourceDirty ? dirtyNodePtr : mapElm;
+            std::shared_ptr<RSRenderNode> illuminatedNode = isLightSourceDirty ? mapElm : dirtyNodePtr;
+            CheckIlluminated(lightSourceNode, illuminatedNode);
         }
         return false;
     });
 }
-void RSPointLightManager::CheckIlluminated(Vector4f lightSourceAbsPosition,
-    const std::shared_ptr<RSRenderNode>& illuminatedNode)
+void RSPointLightManager::CheckIlluminated(
+    const std::shared_ptr<RSRenderNode>& lightSourceNode, const std::shared_ptr<RSRenderNode>& illuminatedNode)
 {
-    RectI effectAbsRect = (illuminatedNode->GetRenderProperties().GetBoundsGeometry())->GetAbsRect();
-    int32_t radius = effectAbsRect.GetHeight() * THREE;
-    effectAbsRect.SetAll(effectAbsRect.left_ - radius, effectAbsRect.top_ - radius, effectAbsRect.width_ + TWO * radius,
-        effectAbsRect.height_ + TWO * radius);
+    const auto& geoPtr = (illuminatedNode->GetRenderProperties().GetBoundsGeometry());
+    if (!geoPtr || geoPtr->IsEmpty()) {
+        return;
+    }
+    auto lightSourcePtr = lightSourceNode->GetRenderProperties().GetLightSource();
+    RectI illuminatedAbsRect = geoPtr->GetAbsRect();
+    int radius = static_cast<int>(lightSourcePtr->GetLightRadius());
+    auto illuminatedRange = RectI(illuminatedAbsRect.left_ - radius, illuminatedAbsRect.top_ - radius,
+        illuminatedAbsRect.width_ + TWO * radius, illuminatedAbsRect.height_ + TWO * radius);
+    const auto& lightSourceAbsPosition = lightSourcePtr->GetAbsLightPosition();
     auto lightAbsPositionX = static_cast<int>(lightSourceAbsPosition[0]);
     auto lightAbsPositionY = static_cast<int>(lightSourceAbsPosition[1]);
-    if (effectAbsRect.Intersect(lightAbsPositionX, lightAbsPositionY)) {
-        illuminatedNode->GetRenderProperties().GetIlluminated()->SetIsIlluminated(true);
+    auto rotation = GetScreenRotation();
+    auto inIlluminatedRange = false;
+    if (rotation == ScreenRotation::ROTATION_0 || rotation == ScreenRotation::ROTATION_180) {
+        inIlluminatedRange = illuminatedRange.Intersect(lightAbsPositionX, lightAbsPositionY);
+    } else if (rotation == ScreenRotation::ROTATION_90 || rotation == ScreenRotation::ROTATION_270) {
+        inIlluminatedRange = illuminatedRange.Intersect(lightAbsPositionY, lightAbsPositionX);
+    }
+    auto illuminatedRootNodeId = illuminatedNode->GetInstanceRootNodeId();
+    auto lightSourceRootNodeId = lightSourceNode->GetInstanceRootNodeId();
+    if (inIlluminatedRange && illuminatedRootNodeId == lightSourceRootNodeId) {
+        illuminatedNode->GetRenderProperties().GetIlluminated()->AddLightSource(lightSourcePtr);
         illuminatedNode->SetDirty();
-    } else {
-        illuminatedNode->GetRenderProperties().GetIlluminated()->SetIsIlluminated(false);
     }
 }
+
+Vector4f RSPointLightManager::CalculateLightPosForIlluminated(
+    const std::shared_ptr<RSLightSource>& lightSourcePtr, const std::shared_ptr<RSObjAbsGeometry>& illuminatedGeoPtr)
+{
+    if (!illuminatedGeoPtr || !lightSourcePtr) {
+        return Vector4f();
+    }
+    Vector4f lightPos;
+    auto illuminatedAbsRect = illuminatedGeoPtr->GetAbsRect();
+    auto lightSourceAbsPosition = lightSourcePtr->GetAbsLightPosition();
+    auto lightPosition = lightSourcePtr->GetLightPosition();
+    auto rotation = GetScreenRotation();
+    switch (rotation) {
+        case ScreenRotation::ROTATION_0:
+            lightPos.x_ = lightSourceAbsPosition.x_ - illuminatedAbsRect.GetLeft();
+            lightPos.y_ = lightSourceAbsPosition.y_ - illuminatedAbsRect.GetTop();
+            break;
+        case ScreenRotation::ROTATION_90:
+            lightPos.x_ = illuminatedAbsRect.GetBottom() - lightSourceAbsPosition.x_;
+            lightPos.y_ = lightSourceAbsPosition.y_ - illuminatedAbsRect.GetLeft();
+            break;
+        case ScreenRotation::ROTATION_180:
+            lightPos.x_ = illuminatedAbsRect.GetRight() - lightSourceAbsPosition.x_;
+            lightPos.y_ = illuminatedAbsRect.GetBottom() - lightSourceAbsPosition.y_;
+            break;
+        case ScreenRotation::ROTATION_270:
+            lightPos.x_ = lightSourceAbsPosition.x_ - illuminatedAbsRect.GetTop();
+            lightPos.y_ = illuminatedAbsRect.GetRight() - lightSourceAbsPosition.y_;
+            break;
+        default:
+            break;
+    }
+    lightPos.z_ = lightPosition.z_;
+    lightPos.w_ = lightPosition.w_;
+    return lightPos;
+}
+
 } // namespace Rosen
 } // namespace OHOS

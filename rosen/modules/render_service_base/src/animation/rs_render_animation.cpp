@@ -48,6 +48,30 @@ bool RSRenderAnimation::Marshalling(Parcel& parcel) const
     return true;
 }
 
+void RSRenderAnimation::DumpAnimation(std::string& out) const
+{
+    out += "Animation: [id:" + std::to_string(id_) + ", ";
+    DumpAnimationType(out);
+    out += ", AnimationState:" + std::to_string(static_cast<int>(state_));
+    out += ", StartDelay:" + std::to_string(animationFraction_.GetDuration());
+    out += ", Duration:" + std::to_string(animationFraction_.GetStartDelay());
+    out += ", Speed:" + std::to_string(animationFraction_.GetSpeed());
+    out += ", RepeatCount:" + std::to_string(animationFraction_.GetRepeatCount());
+    out += ", AutoReverse:" + std::to_string(animationFraction_.GetAutoReverse());
+    out += ", Direction:" + std::to_string(animationFraction_.GetDirection());
+    out += ", FillMode:" + std::to_string(static_cast<int>(animationFraction_.GetFillMode()));
+    out += ", RepeatCallbackEnable:" + std::to_string(animationFraction_.GetRepeatCallbackEnable());
+    out += ", FrameRateRange_min:" + std::to_string(animationFraction_.GetFrameRateRange().min_);
+    out += ", FrameRateRange_max:" + std::to_string(animationFraction_.GetFrameRateRange().max_);
+    out += ", FrameRateRange_prefered:" + std::to_string(animationFraction_.GetFrameRateRange().preferred_);
+    out += "]";
+}
+
+void RSRenderAnimation::DumpAnimationType(std::string& out) const
+{
+    out += "Type:Unknown";
+}
+
 bool RSRenderAnimation::ParseParam(Parcel& parcel)
 {
     int32_t duration = 0;
@@ -155,7 +179,7 @@ void RSRenderAnimation::Start()
 void RSRenderAnimation::Finish()
 {
     if (!IsPaused() && !IsRunning()) {
-        ROSEN_LOGE("Failed to finish animation, animation is not running!");
+        ROSEN_LOGD("Failed to finish animation, animation is not running!");
         return;
     }
 
@@ -166,7 +190,7 @@ void RSRenderAnimation::Finish()
 void RSRenderAnimation::FinishOnCurrentPosition()
 {
     if (!IsPaused() && !IsRunning()) {
-        ROSEN_LOGE("Failed to finish animation, animation is not running!");
+        ROSEN_LOGD("Failed to finish animation, animation is not running!");
         return;
     }
 
@@ -280,6 +304,9 @@ bool RSRenderAnimation::Animate(int64_t time)
         OnInitialize(time);
     }
 
+    // calculate frame time interval in seconds
+    float frameInterval = (time - animationFraction_.GetLastFrameTime()) * 1.0f / NS_TO_S;
+
     // convert time to fraction
     auto [fraction, isInStartDelay, isFinished, isRepeatFinished] = animationFraction_.GetAnimationFraction(time);
     if (isInStartDelay) {
@@ -289,7 +316,10 @@ bool RSRenderAnimation::Animate(int64_t time)
         return false;
     }
 
+    RecordLastAnimateValue();
     OnAnimate(fraction);
+    UpdateAnimateVelocity(frameInterval);
+
     if (isRepeatFinished) {
         ProcessOnRepeatFinish();
     }
@@ -306,5 +336,12 @@ void RSRenderAnimation::SetStartTime(int64_t time)
     animationFraction_.SetLastFrameTime(time);
     needUpdateStartTime_ = false;
 }
+
+const std::shared_ptr<RSRenderPropertyBase> RSRenderAnimation::GetAnimateVelocity() const
+{
+    return animateVelocity_;
+}
+
+bool RSRenderAnimation::isCalcAnimateVelocity_ = true;
 } // namespace Rosen
 } // namespace OHOS

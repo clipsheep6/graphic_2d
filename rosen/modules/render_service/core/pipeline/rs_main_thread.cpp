@@ -31,19 +31,15 @@
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #endif
-#ifdef NEW_SKIA
 #include "include/gpu/GrDirectContext.h"
-#else
-#include "include/gpu/GrContext.h"
-#include "include/gpu/GrGpuResource.h"
-#endif
 #include "rs_trace.h"
 
 #include "animation/rs_animation_fraction.h"
+#include "benchmarks/file_utils.h"
 #include "command/rs_message_processor.h"
 #include "common/rs_background_thread.h"
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
-#include "common/rs_upload_texture_thread.h"
+#include "rs_upload_resource_thread.h"
 #endif
 #include "delegate/rs_functional_delegate.h"
 #include "memory/rs_memory_manager.h"
@@ -119,21 +115,32 @@ namespace {
 constexpr uint32_t REQUEST_VSYNC_NUMBER_LIMIT = 10;
 constexpr uint64_t REFRESH_PERIOD = 16666667;
 constexpr int32_t PERF_MULTI_WINDOW_REQUESTED_CODE = 10026;
+constexpr int32_t VISIBLEAREARATIO_FORQOS = 3;
 constexpr uint64_t PERF_PERIOD = 250000000;
 constexpr uint64_t CLEAN_CACHE_FREQ = 60;
 constexpr uint64_t SKIP_COMMAND_FREQ_LIMIT = 30;
-constexpr uint64_t PERF_PERIOD_BLUR = 80000000;
-constexpr uint64_t SK_RELEASE_RESOURCE_PERIOD = 5000000000;
+constexpr uint64_t PERF_PERIOD_BLUR = 1000000000;
+constexpr uint64_t PERF_PERIOD_BLUR_TIMEOUT = 80000000;
+constexpr uint64_t MAX_DYNAMIC_STATUS_TIME = 5000000000;
+constexpr uint64_t MAX_SYSTEM_SCENE_STATUS_TIME = 800000000;
 constexpr uint64_t PERF_PERIOD_MULTI_WINDOW = 80000000;
 constexpr uint32_t MULTI_WINDOW_PERF_START_NUM = 2;
 constexpr uint32_t MULTI_WINDOW_PERF_END_NUM = 4;
+constexpr uint32_t TIME_OF_EIGHT_FRAMES = 8000;
+constexpr uint32_t TIME_OF_THE_FRAMES = 1000;
 constexpr uint32_t WAIT_FOR_RELEASED_BUFFER_TIMEOUT = 3000;
 constexpr uint32_t WAIT_FOR_HARDWARE_THREAD_TASK_TIMEOUT = 3000;
+constexpr uint32_t WAIT_FOR_SURFACE_CAPTURE_PROCESS_TIMEOUT = 1000;
+constexpr uint32_t WATCHDOG_TIMEVAL = 5000;
 constexpr uint32_t HARDWARE_THREAD_TASK_NUM = 2;
+constexpr int32_t MAX_MULTI_INSTANCE_PID_COUNT = 1;
 constexpr uint32_t WAIT_FOR_MEM_MGR_SERVICE = 100;
+constexpr uint32_t CAL_NODE_PREFERRED_FPS_LIMIT = 50;
+constexpr uint32_t EVENT_SET_HARDWARE_UTIL = 100004;
 constexpr const char* WALLPAPER_VIEW = "WallpaperView";
 constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
 constexpr const char* MEM_MGR = "MemMgr";
+constexpr const char* DESKTOP_NAME_FOR_ROTATION = "SCBDesktop";
 #ifdef RS_ENABLE_GL
 constexpr size_t DEFAULT_SKIA_CACHE_SIZE        = 96 * (1 << 20);
 constexpr int DEFAULT_SKIA_CACHE_COUNT          = 2 * (1 << 12);
@@ -214,6 +221,18 @@ public:
     }
 };
 #endif
+static inline void WaitUntilUploadTextureTaskFinished(bool isUniRender)
+{
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+#if defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
+    if (isUniRender) {
+        RSUploadResourceThread::Instance().OnProcessBegin();
+    }
+    return;
+#endif
+#endif
+}
+
 RSMainThread* RSMainThread::Instance()
 {
     static RSMainThread instance;
@@ -224,19 +243,26 @@ RSMainThread* RSMainThread::Instance()
 RSMainThread::RSMainThread() : mainThreadId_(std::this_thread::get_id())
 {
     context_ = std::make_shared<RSContext>();
+    context_->Initialize();
 }
 
 RSMainThread::~RSMainThread() noexcept
 {
-    Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*rsAppStateListener_);
     RemoveRSEventDetector();
     RSInnovation::CloseInnovationSo();
+    if (rsAppStateListener_) {
+        Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*rsAppStateListener_);
+    }
 }
 
 void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
+        mainLooping_.store(true);
         RenderFrameStart(timestamp_);
+#if defined(RS_ENABLE_UNI_RENDER)
+        WaitUntilSurfaceCapProcFinished();
+#endif
         PerfMultiWindow();
         SetRSEventDetectorLoopStartTag();
         ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSMainThread::DoComposition");
@@ -245,30 +271,56 @@ void RSMainThread::Init()
         ProcessCommand();
         Animate(timestamp_);
         ApplyModifiers();
-        ProcessHgmFrameRate(timestamp_);
         CollectInfoForHardwareComposer();
+        ProcessHgmFrameRate(timestamp_);
 #if defined(RS_ENABLE_DRIVEN_RENDER)
         CollectInfoForDrivenRender();
 #endif
+        // may mark rsnotrendering
         Render();
+
+        // move rnv after mark rsnotrendring
+        if (needRequestNextVsyncAnimate_ && rsVSyncDistributor_->IsDVsyncOn()) {
+            RequestNextVSync("animate", timestamp_);
+        }
+
         InformHgmNodeInfo();
         ReleaseAllNodesBuffer();
+        auto subThreadManager = RSSubThreadManager::Instance();
+        subThreadManager->SubmitFilterSubThreadTask();
         SendCommands();
-        context_->activeNodesInRoot_.clear();
+        {
+            std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
+            context_->activeNodesInRoot_.clear();
+        }
         ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
-        if (timestamp_ - preSKReleaseResourceTimestamp_ > SK_RELEASE_RESOURCE_PERIOD) {
-            SKResourceManager::Instance().ReleaseResource();
-            preSKReleaseResourceTimestamp_ = timestamp_;
-        }
+        SKResourceManager::Instance().ReleaseResource();
+#ifdef RS_ENABLE_PARALLEL_UPLOAD
+        RSUploadResourceThread::Instance().OnRenderEnd();
+#endif
+        mainLooping_.store(false);
     };
+    static std::function<void (std::shared_ptr<Drawing::Image> image)> holdDrawingImagefunc =
+        [] (std::shared_ptr<Drawing::Image> image) -> void {
+            if (image) {
+                SKResourceManager::Instance().HoldResource(image);
+            }
+        };
+    Drawing::DrawOpItem::SetBaseCallback(holdDrawingImagefunc);
+
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();
+    isFoldScreenDevice_ = system::GetParameter("const.window.foldscreen.type", "") == "true";
     auto taskDispatchFunc = [](const RSTaskDispatcher::RSTask& task, bool isSyncTask = false) {
         RSMainThread::Instance()->PostTask(task);
     };
     context_->SetTaskRunner(taskDispatchFunc);
+    context_->SetVsyncRequestFunc([]() {
+        RSMainThread::Instance()->RequestNextVSync();
+        RSMainThread::Instance()->SetDirtyFlag();
+    });
     RSTaskDispatcher::GetInstance().RegisterTaskDispatchFunc(gettid(), taskDispatchFunc);
     RsFrameReport::GetInstance().Init();
     if (isUniRender_) {
@@ -279,12 +331,6 @@ void RSMainThread::Init()
                 std::lock_guard<std::mutex> lock(unmarshalMutex_);
                 ++unmarshalFinishedCount_;
             }
-
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-            RSUploadTextureThread::Instance().PostTask(uploadTextureBarrierTask_);
-#endif
-#endif
             unmarshalTaskCond_.notify_all();
         };
         RSUnmarshalThread::Instance().Start();
@@ -292,7 +338,7 @@ void RSMainThread::Init()
 
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-    int ret = HiviewDFX::Watchdog::GetInstance().AddThread("RenderService", handler_);
+    int ret = HiviewDFX::Watchdog::GetInstance().AddThread("RenderService", handler_, WATCHDOG_TIMEVAL);
     if (ret != 0) {
         RS_LOGW("Add watchdog thread failed");
     }
@@ -312,42 +358,49 @@ void RSMainThread::Init()
         renderEngine_->Init();
     }
 #ifdef RS_ENABLE_GL
-    int cacheLimitsTimes = 3;
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        int cacheLimitsTimes = 3;
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_RENDER_CONTEXT
-    auto grContext = isUniRender_? uniRenderEngine_->GetDrawingContext()->GetDrawingContext() :
-        renderEngine_->GetDrawingContext()->GetDrawingContext();
+        auto grContext = isUniRender_? uniRenderEngine_->GetDrawingContext()->GetDrawingContext() :
+            renderEngine_->GetDrawingContext()->GetDrawingContext();
 #else
-    auto grContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetGrContext() :
-        renderEngine_->GetRenderContext()->GetGrContext();
+        auto grContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetGrContext() :
+            renderEngine_->GetRenderContext()->GetGrContext();
 #endif
-    int maxResources = 0;
-    size_t maxResourcesSize = 0;
-    grContext->getResourceCacheLimits(&maxResources, &maxResourcesSize);
-    if (maxResourcesSize > 0) {
-        grContext->setResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
-            std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
-    } else {
-        grContext->setResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
-    }
+        int maxResources = 0;
+        size_t maxResourcesSize = 0;
+        grContext->getResourceCacheLimits(&maxResources, &maxResourcesSize);
+        if (maxResourcesSize > 0) {
+            grContext->setResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
+                std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
+        } else {
+            grContext->setResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
+        }
 #else
-    auto gpuContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetDrGPUContext() :
-        renderEngine_->GetRenderContext()->GetDrGPUContext();
-    if (gpuContext == nullptr) {
-        RS_LOGE("RSMainThread::Init gpuContext is nullptr!");
-        return;
-    }
-    int32_t maxResources = 0;
-    size_t maxResourcesSize = 0;
-    gpuContext->GetResourceCacheLimits(&maxResources, &maxResourcesSize);
-    if (maxResourcesSize > 0) {
-        gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
-            std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
-    } else {
-        gpuContext->SetResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
-    }
+#ifdef NEW_RENDER_CONTEXT
+        auto gpuContext = isUniRender_? uniRenderEngine_->GetDrawingContext()->GetDrawingContext() :
+            renderEngine_->GetDrawingContext()->GetDrawingContext();
+#else
+        auto gpuContext = isUniRender_? uniRenderEngine_->GetRenderContext()->GetDrGPUContext() :
+            renderEngine_->GetRenderContext()->GetDrGPUContext();
 #endif
-#endif
+        if (gpuContext == nullptr) {
+            RS_LOGE("RSMainThread::Init gpuContext is nullptr!");
+            return;
+        }
+        int32_t maxResources = 0;
+        size_t maxResourcesSize = 0;
+        gpuContext->GetResourceCacheLimits(&maxResources, &maxResourcesSize);
+        if (maxResourcesSize > 0) {
+            gpuContext->SetResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
+                std::fmin(maxResourcesSize, DEFAULT_SKIA_CACHE_SIZE));
+        } else {
+            gpuContext->SetResourceCacheLimits(DEFAULT_SKIA_CACHE_COUNT, DEFAULT_SKIA_CACHE_SIZE);
+        }
+#endif // USE_ROSEN_DRAWING
+    }
+#endif // RS_ENABLE_GL
     RSInnovation::OpenInnovationSo();
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     RSDrivenRenderManager::InitInstance();
@@ -356,19 +409,12 @@ void RSMainThread::Init()
 
     RSRcdRenderManager::InitInstance();
 
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-    uploadTextureBarrierTask_ = [this]() {
-        auto renderContext = GetRenderEngine()->GetRenderContext().get();
-        uploadTextureFence = eglCreateSyncKHR(renderContext->GetEGLDisplay(), EGL_SYNC_FENCE_KHR, nullptr);
-        {
-            std::lock_guard<std::mutex> lock(uploadTextureMutex_);
-            ++uploadTextureFinishedCount_;
-        }
-        uploadTextureTaskCond_.notify_all();
-    };
-    RSUploadTextureThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_PARALLEL_UPLOAD)
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+#if defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
+        RSUploadResourceThread::Instance().InitRenderContext(GetRenderEngine()->GetRenderContext().get());
 #endif
+    }
 #endif
 
 #if defined(ACCESSIBILITY_ENABLE)
@@ -386,16 +432,19 @@ void RSMainThread::Init()
     delegate->SetRepaintCallback([]() { RSMainThread::Instance()->RequestNextVSync(); });
     RSOverdrawController::GetInstance().SetDelegate(delegate);
 
-    frameRateMgr_ = std::make_unique<HgmFrameRateManager>();
-    frameRateMgr_->Init(rsVSyncController_, appVSyncController_, vsyncGenerator_);
-    frameRateMgr_->SetTimerExpiredCallback([]() {
-        RSMainThread::Instance()->PostTask([]() {
-            RS_OPTIONAL_TRACE_NAME("RSMainThread::TimerExpiredCallback Run");
-            RSMainThread::Instance()->SetForceUpdateUniRenderFlag(true);
+    frameRateMgr_ = OHOS::Rosen::HgmCore::Instance().GetFrameRateMgr();
+    frameRateMgr_->SetForceUpdateCallback([](bool idleTimerExpired, bool forceUpdate) {
+        RSMainThread::Instance()->PostTask([idleTimerExpired, forceUpdate]() {
+            RS_TRACE_NAME_FMT("RSMainThread::TimerExpiredCallback Run idleTimerExpiredFlag: %s  forceUpdateFlag: %s",
+                idleTimerExpired? "True":"False", forceUpdate? "True": "False");
+            RSMainThread::Instance()->SetForceUpdateUniRenderFlag(forceUpdate);
+            RSMainThread::Instance()->SetIdleTimerExpiredFlag(idleTimerExpired);
             RSMainThread::Instance()->RequestNextVSync();
         });
     });
+    frameRateMgr_->Init(rsVSyncController_, appVSyncController_, vsyncGenerator_);
     SubscribeAppState();
+    PrintCurrentStatus();
 }
 
 void RSMainThread::RsEventParamDump(std::string& dumpString)
@@ -423,7 +472,7 @@ void RSMainThread::InitRSEventDetector()
 void RSMainThread::SetDeviceType()
 {
     auto deviceTypeStr = system::GetParameter("const.product.devicetype", "pc");
-    if (deviceTypeStr == "pc") {
+    if (deviceTypeStr == "pc" || deviceTypeStr == "2in1") {
         deviceType_ = DeviceType::PC;
     } else if (deviceTypeStr == "tablet") {
         deviceType_ = DeviceType::TABLET;
@@ -497,11 +546,6 @@ void RSMainThread::SetFocusAppInfo(
     focusNodeId_ = focusNodeId;
 }
 
-std::string RSMainThread::GetFocusAppBundleName() const
-{
-    return focusAppBundleName_;
-}
-
 void RSMainThread::Start()
 {
     if (runner_) {
@@ -526,10 +570,10 @@ void RSMainThread::ProcessCommand()
     }
     switch(context_->purgeType_) {
         case RSContext::PurgeType::GENTLY:
-            ClearMemoryCache(false);
+            ClearMemoryCache(context_->clearMoment_, false);
             break;
         case RSContext::PurgeType::STRONGLY:
-            ClearMemoryCache(true);
+            ClearMemoryCache(context_->clearMoment_, true);
             break;
         default:
             break;
@@ -538,6 +582,30 @@ void RSMainThread::ProcessCommand()
     if (RsFrameReport::GetInstance().GetEnable()) {
         RsFrameReport::GetInstance().AnimateStart();
     }
+}
+
+void RSMainThread::PrintCurrentStatus()
+{
+#ifndef USE_ROSEN_DRAWING
+    RS_LOGE("RSMainThread::PrintCurrentStatus: drawing is closed");
+#else
+    std::string gpuType = "";
+    switch (OHOS::Rosen::RSSystemProperties::GetGpuApiType()) {
+        case OHOS::Rosen::GpuApiType::OPENGL:
+            gpuType = "opengl";
+            break;
+        case OHOS::Rosen::GpuApiType::VULKAN:
+            gpuType = "vulkan";
+            break;
+        case OHOS::Rosen::GpuApiType::DDGR:
+            gpuType = "ddgr";
+            break;
+        default:
+            break;
+    }
+    RS_LOGI("[Drawing] Version: Non-released");
+    RS_LOGE("RSMainThread::PrintCurrentStatus:  drawing is opened, gpu type is %{public}s", gpuType.c_str());
+#endif
 }
 
 void RSMainThread::CacheCommands()
@@ -582,24 +650,16 @@ std::unordered_map<NodeId, bool> RSMainThread::GetCacheCmdSkippedNodes() const
     return cacheCmdSkippedNodes_;
 }
 
-void RSMainThread::ResetSubThreadGrContext()
+bool RSMainThread::CheckParallelSubThreadNodesStatus()
 {
-#ifdef RS_ENABLE_VK
-    constexpr uint64_t delayNumOfFrameCount_ = 2;
-    if (!needResetSubThreadGrContext_) {
-        needResetSubThreadGrContext_ = true;
-        frameCountForResetSubThreadGrContext_ = frameCount_.load();
-    } else if (frameCount_.load() > frameCountForResetSubThreadGrContext_ + delayNumOfFrameCount_) {
-        needResetSubThreadGrContext_ = false;
+    RS_OPTIONAL_TRACE_FUNC();
+    cacheCmdSkippedInfo_.clear();
+    cacheCmdSkippedNodes_.clear();
+    if (subThreadNodes_.empty() &&
+        (deviceType_ == DeviceType::PHONE || (leashWindowCount_ > 0 && isUiFirstOn_ == false))) {
         RSSubThreadManager::Instance()->ResetSubThreadGrContext();
+        return false;
     }
-#else
-    RSSubThreadManager::Instance()->ResetSubThreadGrContext();
-#endif
-}
-
-void RSMainThread::CheckParallelSubThreadNodesStatusImplementation()
-{
     for (auto& node : subThreadNodes_) {
         if (node == nullptr) {
             RS_LOGE("RSMainThread::CheckParallelSubThreadNodesStatus sunThreadNode is nullptr!");
@@ -611,7 +671,7 @@ void RSMainThread::CheckParallelSubThreadNodesStatusImplementation()
             if (node->IsAppWindow()) {
                 pid = ExtractPid(node->GetId());
             } else if (node->IsLeashWindow()) {
-                for (auto& child : node->GetSortedChildren()) {
+                for (auto& child : *node->GetSortedChildren()) {
                     auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
                     if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
                         pid = ExtractPid(child->GetId());
@@ -643,22 +703,6 @@ void RSMainThread::CheckParallelSubThreadNodesStatusImplementation()
             }
         }
     }
-}
-
-bool RSMainThread::CheckParallelSubThreadNodesStatus()
-{
-    RS_OPTIONAL_TRACE_FUNC();
-    cacheCmdSkippedInfo_.clear();
-    cacheCmdSkippedNodes_.clear();
-    if (subThreadNodes_.empty()) {
-        ResetSubThreadGrContext();
-        return false;
-    } else {
-#ifdef RS_ENABLE_VK
-        needResetSubThreadGrContext_ = false;
-#endif
-    }
-    CheckParallelSubThreadNodesStatusImplementation();
     if (!cacheCmdSkippedNodes_.empty()) {
         return true;
     }
@@ -742,6 +786,10 @@ void RSMainThread::CheckAndUpdateTransactionIndex(std::shared_ptr<TransactionDat
             auto curIndex = (*iter)->GetIndex();
             if (curIndex == lastIndex + 1) {
                 if ((*iter)->GetTimestamp() >= timestamp_) {
+#ifdef ROSEN_EMULATOR
+                    transactionFlags += "cache [" + std::to_string(pid) + "," + std::to_string(curIndex) + "]";
+                    RequestNextVSync();
+#endif
                     break;
                 }
                 ++lastIndex;
@@ -937,6 +985,11 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         if (surfaceNode == nullptr) {
             return;
         }
+        surfaceNode->ResetAnimateState();
+        // Reset BasicGeoTrans info at the beginning of cmd process
+        if (surfaceNode->IsMainWindowType() || surfaceNode->IsLeashWindow()) {
+            surfaceNode->ResetIsOnlyBasicGeoTransform();
+        }
         if (surfaceNode->IsHardwareEnabledType()
             && CheckSubThreadNodeStatusIsDoing(surfaceNode->GetInstanceRootNodeId())) {
             RS_LOGD("SubThread is processing %{public}s, skip acquire buffer", surfaceNode->GetName().c_str());
@@ -950,6 +1003,13 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
                 surfaceNode->SetContentDirty();
                 doDirectComposition_ = false;
             }
+            if (deviceType_ == DeviceType::PC && isUiFirstOn_ && surfaceNode->IsCurrentFrameBufferConsumed()
+                && surfaceNode->IsHardwareEnabledType() && surfaceNode->IsHardwareForcedDisabledByFilter()) {
+                    RS_OPTIONAL_TRACE_NAME(surfaceNode->GetName() +
+                        " SetContentDirty for UIFirst assigning to subthread");
+                    surfaceNode->SetContentDirty();
+                    doDirectComposition_ = false;
+                }
         }
 
         // still have buffer(s) to consume.
@@ -973,7 +1033,7 @@ bool RSMainThread::CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const
         if (node->GetId() == appNodeId) {
             return true;
         }
-        for (auto& child : node->GetSortedChildren()) {
+        for (auto& child : *node->GetSortedChildren()) {
             auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
             if (surfaceNode && surfaceNode->GetId() == appNodeId) {
                 return true;
@@ -995,6 +1055,10 @@ void RSMainThread::CollectInfoForHardwareComposer()
             if (surfaceNode == nullptr || !surfaceNode->IsOnTheTree()) {
                 return;
             }
+            if (surfaceNode->IsLeashWindow() && surfaceNode->GetForceUIFirstChanged()) {
+                forceUIFirstChanged_ = true;
+                surfaceNode->SetForceUIFirstChanged(false);
+            }
             if (surfaceNode->GetBuffer() != nullptr) {
                 selfDrawingNodes_.emplace_back(surfaceNode);
             }
@@ -1002,11 +1066,15 @@ void RSMainThread::CollectInfoForHardwareComposer()
                 return;
             }
 
+            if (surfaceNode->GetName().find("RosenWeb") != std::string::npos) {
+                RS_TRACE_NAME_FMT("find RosenWeb");
+                rsCurrRange_ = {OLED_120_HZ, OLED_120_HZ, OLED_120_HZ};
+            }
+
             // if hwc node is set on the tree this frame, mark its parent app node to be prepared
             auto appNodeId = surfaceNode->GetInstanceRootNodeId();
             if (surfaceNode->IsNewOnTree()) {
                 context_->AddActiveNode(nodeMap.GetRenderNode(appNodeId));
-                surfaceNode->ResetIsNewOnTree();
             }
 
             if (surfaceNode->GetBuffer() != nullptr) {
@@ -1020,11 +1088,23 @@ void RSMainThread::CollectInfoForHardwareComposer()
                 if (surfaceNode->IsCurrentFrameBufferConsumed() || surfaceNode->IsLastFrameHardwareEnabled()) {
                     surfaceNode->SetContentDirty();
                 }
-            } else { // gpu -> hwc
-                if (!surfaceNode->IsLastFrameHardwareEnabled()) {
-                    if (!IsLastFrameUIFirstEnabled(appNodeId)) {
+            } else if (!surfaceNode->IsLastFrameHardwareEnabled()) { // gpu -> hwc
+                if (!IsLastFrameUIFirstEnabled(appNodeId)) {
+                    if (surfaceNode->IsCurrentFrameBufferConsumed()) {
                         surfaceNode->SetContentDirty();
+                        doDirectComposition_ = false;
+                    } else {
+                        surfaceNode->SetHwcDelayDirtyFlag(true);
                     }
+                } else {
+                    doDirectComposition_ = false;
+                }
+            } else { // hwc -> hwc
+                // self-drawing node don't set content dirty when gpu -> hwc
+                // so first frame in hwc -> hwc, should set content dirty
+                if (surfaceNode->GetHwcDelayDirtyFlag()) {
+                    surfaceNode->SetContentDirty();
+                    surfaceNode->SetHwcDelayDirtyFlag(false);
                     doDirectComposition_ = false;
                 }
             }
@@ -1043,7 +1123,7 @@ bool RSMainThread::IsLastFrameUIFirstEnabled(NodeId appNodeId) const
                 return true;
             }
         } else {
-            for (auto& child : node->GetSortedChildren()) {
+            for (auto& child : *node->GetSortedChildren()) {
                 auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
                 if (surfaceNode && surfaceNode->IsAppWindow() && surfaceNode->GetId() == appNodeId) {
                     return true;
@@ -1065,6 +1145,9 @@ void RSMainThread::CheckIfHardwareForcedDisabled()
     // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
     // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
     isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ || isMultiDisplay || hasColorFilter;
+    RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: CheckIfHardwareForcedDisabled isHardwareForcedDisabled_:%d "
+        "doWindowAnimate_:%d isMultiDisplay:%d hasColorFilter:%d",
+        isHardwareForcedDisabled_, doWindowAnimate_.load(), isMultiDisplay, hasColorFilter);
 }
 
 void RSMainThread::CollectInfoForDrivenRender()
@@ -1130,7 +1213,7 @@ void RSMainThread::ReleaseAllNodesBuffer()
                             fence = preBuffer.releaseFence]() mutable {
                             auto ret = consumer->ReleaseBuffer(buffer, fence);
                             if (ret != OHOS::SURFACE_ERROR_OK) {
-                                RS_LOGW("surfaceHandler ReleaseBuffer failed(ret: %{public}d)!", ret);
+                                RS_LOGD("surfaceHandler ReleaseBuffer failed(ret: %{public}d)!", ret);
                             }
                         };
                         preBuffer.Reset();
@@ -1152,47 +1235,64 @@ uint32_t RSMainThread::GetRefreshRate() const
     auto screenManager = CreateOrGetScreenManager();
     if (!screenManager) {
         RS_LOGE("RSMainThread::GetRefreshRate screenManager is nullptr");
-        return 0;
+        return 60; // The default refreshrate is 60
     }
     return OHOS::Rosen::HgmCore::Instance().GetScreenCurrentRefreshRate(screenManager->GetDefaultScreenId());
 }
 
-void RSMainThread::ClearMemoryCache(bool deeply)
+void RSMainThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply)
 {
     if (!RSSystemProperties::GetReleaseResourceEnabled()) {
         return;
     }
     this->clearMemoryFinished_ = false;
-    PostTask([this, deeply]() {
+    this->clearMemDeeply_ = this->clearMemDeeply_ || deeply;
+    this->SetClearMoment(moment);
+    PostTask(
+        [this, moment, deeply]() {
 #ifndef USE_ROSEN_DRAWING
 #ifdef NEW_RENDER_CONTEXT
-        auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
+            auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
 #else
-        auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
+            auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
 #endif
-        if (!grContext) {
-            return;
-        }
-        RS_LOGD("Clear memory cache");
-        RS_TRACE_NAME_FMT("Clear memory cache");
-        grContext->flush();
-        SkGraphics::PurgeAllCaches(); // clear cpu cache
-        if (deeply) {
-            MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
-        } else {
-            MemoryManager::ReleaseUnlockGpuResource(grContext);
-        }
+            if (!grContext) {
+                return;
+            }
+            RS_LOGD("Clear memory cache %{public}d", this->GetClearMoment());
+            RS_TRACE_NAME_FMT("Clear memory cache, cause the moment [%d] happen", this->GetClearMoment());
+            SKResourceManager::Instance().ReleaseResource();
+            grContext->flush();
+            SkGraphics::PurgeAllCaches(); // clear cpu cache
+            if (deeply || this->deviceType_ != DeviceType::PHONE) {
+                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+            } else {
+                MemoryManager::ReleaseUnlockGpuResource(grContext);
+            }
+            grContext->flushAndSubmit(true);
 #else
-        auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
-        if (grContext) {
-            RS_LOGD("clear gpu cache");
+            auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+            if (!grContext) {
+                return;
+            }
+            RS_LOGD("Clear memory cache %{public}d", this->GetClearMoment());
+            RS_TRACE_NAME_FMT("Clear memory cache, cause the moment [%d] happen", this->GetClearMoment());
+            SKResourceManager::Instance().ReleaseResource();
+            grContext->Flush();
+            SkGraphics::PurgeAllCaches(); // clear cpu cache
+            if (deeply || this->deviceType_ != DeviceType::PHONE) {
+                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+            } else {
+                MemoryManager::ReleaseUnlockGpuResource(grContext);
+            }
             grContext->FlushAndSubmit(true);
-            grContext->PurgeUnlockAndSafeCacheGpuResources();
-        }
 #endif
-        grContext->flushAndSubmit(true);
-        this->clearMemoryFinished_ = true;
-    }, CLEAR_GPU_CACHE, 3000 / GetRefreshRate()); // The unit is milliseconds
+            this->clearMemoryFinished_ = true;
+            this->clearMemDeeply_ = false;
+            this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);
+        },
+        CLEAR_GPU_CACHE, (this->deviceType_ == DeviceType::PHONE ? TIME_OF_EIGHT_FRAMES : TIME_OF_THE_FRAMES)
+            / GetRefreshRate());
 }
 
 void RSMainThread::WaitUtilUniRenderFinished()
@@ -1228,38 +1328,6 @@ void RSMainThread::WaitUtilDrivenRenderFinished()
     drivenRenderFinished_ = false;
 #endif
 }
-
-#if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
-void RSMainThread::WaitUntilUploadTextureTaskFinished()
-{
-    if (!isUniRender_) {
-        return;
-    }
-    RS_OPTIONAL_TRACE_BEGIN("RSMainThread::WaitUntilUploadTextureTaskFinished");
-    {
-        std::unique_lock<std::mutex> lock(uploadTextureMutex_);
-        //upload texture maximum waiting time is 100ms
-        //otherwise main thread upload texture
-        static const uint32_t WAIT_FOR_UPLOAD_FINISH_TIMEOUT = 100; 
-        uploadTextureTaskCond_.wait_until(lock, std::chrono::system_clock::now() +
-            std::chrono::milliseconds(WAIT_FOR_UPLOAD_FINISH_TIMEOUT), [this]() {
-                 return uploadTextureFinishedCount_ > 0; });
-        --uploadTextureFinishedCount_;
-    }
-    if (uploadTextureFence != EGL_NO_SYNC_KHR) {
-        auto diplayID = GetRenderEngine()->GetRenderContext().get()->GetEGLDisplay();
-        EGLint waitStatus = eglWaitSyncKHR(diplayID, uploadTextureFence, 0);
-        if (waitStatus == EGL_FALSE) {
-            ROSEN_LOGE("eglClientWaitSyncKHR error 0x%{public}x", eglGetError());
-        } else if (waitStatus == EGL_TIMEOUT_EXPIRED_KHR) {
-            ROSEN_LOGE("create eglClientWaitSyncKHR timeout");
-        }
-        eglDestroySyncKHR(diplayID, uploadTextureFence);
-    }
-    uploadTextureFence = EGL_NO_SYNC_KHR;
-    RS_OPTIONAL_TRACE_END();
-}
-#endif
 
 void RSMainThread::WaitUntilUnmarshallingTaskFinished()
 {
@@ -1306,6 +1374,36 @@ void RSMainThread::NotifyDisplayNodeBufferReleased()
     displayNodeBufferReleasedCond_.notify_one();
 }
 
+void RSMainThread::NotifySurfaceCapProcFinish()
+{
+    RS_TRACE_NAME("RSMainThread::NotifySurfaceCapProcFinish");
+    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
+    surfaceCapProcFinished_ = true;
+    surfaceCapProcTaskCond_.notify_one();
+}
+
+void RSMainThread::WaitUntilSurfaceCapProcFinished()
+{
+    if (GetDeviceType() != DeviceType::PHONE) {
+        return;
+    }
+    std::unique_lock<std::mutex> lock(surfaceCapProcMutex_);
+    if (surfaceCapProcFinished_) {
+        return;
+    }
+    RS_OPTIONAL_TRACE_BEGIN("RSMainThread::WaitUntilSurfaceCapProcFinished");
+    surfaceCapProcTaskCond_.wait_until(lock, std::chrono::system_clock::now() +
+        std::chrono::milliseconds(WAIT_FOR_SURFACE_CAPTURE_PROCESS_TIMEOUT),
+        [this]() { return surfaceCapProcFinished_; });
+    RS_OPTIONAL_TRACE_END();
+}
+
+void RSMainThread::SetSurfaceCapProcFinished(bool flag)
+{
+    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
+    surfaceCapProcFinished_ = flag;
+}
+
 void RSMainThread::NotifyDrivenRenderFinish()
 {
 #if defined(RS_ENABLE_DRIVEN_RENDER)
@@ -1321,6 +1419,11 @@ void RSMainThread::NotifyDrivenRenderFinish()
 
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
+    RS_TRACE_FUNC();
+    if (rsFrameRateLinker_ != nullptr) {
+        rsFrameRateLinker_->SetExpectedRange(rsCurrRange_);
+        RS_TRACE_NAME_FMT("rsCurrRange = (%d, %d, %d)", rsCurrRange_.min_, rsCurrRange_.max_, rsCurrRange_.preferred_);
+    }
     // Check and processing refresh rate task.
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     hgmCore.SetTimestamp(timestamp);
@@ -1328,12 +1431,16 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
     if (pendingRefreshRate != nullptr) {
         hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate);
         frameRateMgr_->ResetPendingRefreshRate();
-        currentRefreshRate_ = *pendingRefreshRate;
-        RS_TRACE_NAME("RSMainThread::ProcessHgmFrameRate pendingRefreshRate: " + std::to_string(*pendingRefreshRate));
+        RS_TRACE_NAME_FMT("RSMainThread::ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate);
     }
 
-    auto appFrameLinkers = GetContext().GetFrameRateLinkerMap().GetFrameRateLinkerMap();
-    frameRateMgr_->UniProcessData(0, timestamp, rsFrameRateLinker_, appFrameLinkers, forceUpdateUniRenderFlag_);
+    // hgm warning: use IsLtpo instead after GetDisplaySupportedModes ready
+    if (frameRateMgr_->GetCurScreenStrategyId().find("LTPO") == std::string::npos) {
+        frameRateMgr_->UniProcessDataForLtps(idleTimerExpiredFlag_);
+    } else {
+        auto appFrameLinkers = GetContext().GetFrameRateLinkerMap().Get();
+        frameRateMgr_->UniProcessDataForLtpo(timestamp, rsFrameRateLinker_, appFrameLinkers, idleTimerExpiredFlag_);
+    }
 }
 
 bool RSMainThread::GetParallelCompositionEnabled()
@@ -1341,9 +1448,39 @@ bool RSMainThread::GetParallelCompositionEnabled()
     return doParallelComposition_;
 }
 
+void RSMainThread::ColorPickerRequestVsyncIfNeed()
+{
+    if (colorPickerForceRequestVsync_) {
+        colorPickerRequestFrameNum_--;
+        if (colorPickerRequestFrameNum_ > 0) {
+            RSMainThread::Instance()->SetNoNeedToPostTask(false);
+            RSMainThread::Instance()->SetDirtyFlag();
+            RequestNextVSync();
+        } else {
+            // The last frame reset to 15, then to request next 15 frames if need
+            colorPickerRequestFrameNum_ = 15;
+            RSMainThread::Instance()->SetNoNeedToPostTask(true);
+            colorPickerForceRequestVsync_ = false;
+        }
+    } else {
+        RSMainThread::Instance()->SetNoNeedToPostTask(false);
+    }
+}
+
+void RSMainThread::WaitUntilUploadTextureTaskFinishedForGL()
+{
+    if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+        WaitUntilUploadTextureTaskFinished(isUniRender_);
+    }
+}
+
 void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 {
+    if (isAccessibilityConfigChanged_) {
+        RSUniRenderVisitor::ClearRenderGroupCache();
+    }
     UpdateUIFirstSwitch();
+    UpdateRogSizeIfNeeded();
     auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
 #if defined(RS_ENABLE_DRIVEN_RENDER)
     uniVisitor->SetDrivenRenderFlag(hasDrivenNodeOnUniTree_, hasDrivenNodeMarkRender_);
@@ -1359,34 +1496,43 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     }
     bool needTraverseNodeTree = true;
     if (doDirectComposition_ && !isDirty_ && !isAccessibilityConfigChanged_
-        && !isCachedSurfaceUpdated_ && !forceUpdateUniRenderFlag_) {
+        && !isCachedSurfaceUpdated_) {
         if (isHardwareEnabledBufferUpdated_) {
             needTraverseNodeTree = !uniVisitor->DoDirectComposition(rootNode);
+        } else if (forceUpdateUniRenderFlag_) {
+            RS_TRACE_NAME("RSMainThread::UniRender ForceUpdateUniRender");
+        } else if (colorPickerForceRequestVsync_) {
+            RS_TRACE_NAME("RSMainThread::UniRender ColorPickerForceRequestVsync");
+            RSMainThread::Instance()->SetNoNeedToPostTask(false);
+            RSMainThread::Instance()->SetDirtyFlag();
+            RequestNextVSync();
+            return;
         } else {
-            RS_LOGI("RSMainThread::Render nothing to update");
+            RS_LOGD("RSMainThread::Render nothing to update");
             for (auto& node: hardwareEnabledNodes_) {
                 if (!node->IsHardwareForcedDisabled()) {
                     node->MarkCurrentFrameHardwareEnabled();
                 }
             }
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-            WaitUntilUploadTextureTaskFinished();
-#endif
-#endif
+            WaitUntilUploadTextureTaskFinishedForGL();
             return;
         }
     }
+
+    ColorPickerRequestVsyncIfNeed();
+
     isCachedSurfaceUpdated_ = false;
     if (needTraverseNodeTree) {
         uniVisitor->SetAnimateState(doWindowAnimate_);
-        uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_);
+        uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_ || forceUIFirstChanged_);
+        forceUIFirstChanged_ = false;
         isAccessibilityConfigChanged_ = false;
         SetFocusLeashWindowId();
         uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
         rootNode->Prepare(uniVisitor);
-        uniVisitor->SetCurrentRefreshRate(currentRefreshRate_);
         RSPointLightManager::Instance()->PrepareLight();
+        vsyncControlEnabled_ = (deviceType_ == DeviceType::PC) && RSSystemParameters::GetVSyncControlEnabled();
+        systemAnimatedScenesEnabled_ = RSSystemParameters::GetSystemAnimatedScenesEnabled();
         CalcOcclusion();
         doParallelComposition_ = RSInnovation::GetParallelCompositionEnabled(isUniRender_) &&
                                  rootNode->GetChildrenCount() > 1;
@@ -1395,59 +1541,69 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             if (uniVisitor->ParallelComposition(rootNode)) {
                 RS_LOGD("RSMainThread::Render multi-threads parallel composition end.");
                 isDirty_ = false;
-                PerfForBlurIfNeeded();
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-                WaitUntilUploadTextureTaskFinished();
-#endif
-#endif
+                if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+                    WaitUntilUploadTextureTaskFinished(isUniRender_);
+                }
                 return;
             }
         }
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-        WaitUntilUploadTextureTaskFinished();
-#endif
-#endif
+        if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+            WaitUntilUploadTextureTaskFinished(isUniRender_);
+        }
         if (IsUIFirstOn()) {
             auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
-                rootNode->GetSortedChildren().front());
+                rootNode->GetFirstChild());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
             std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
-            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes, focusNodeId_, deviceType_);
+            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes);
             const auto& nodeMap = context_->GetNodeMap();
             RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
             uniVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
             RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
         }
         rootNode->Process(uniVisitor);
-    } else {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-        WaitUntilUploadTextureTaskFinished();
-#endif
-#endif
+    } else if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+            WaitUntilUploadTextureTaskFinished(isUniRender_);
     }
     isDirty_ = false;
     forceUpdateUniRenderFlag_ = false;
+    idleTimerExpiredFlag_ = false;
+}
+
+pid_t RSMainThread::GetDesktopPidForRotationScene() const
+{
+    return desktopPidForRotationScene_;
 }
 
 void RSMainThread::Render()
 {
     const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
     if (rootNode == nullptr) {
-#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL) && defined(RS_ENABLE_PARALLEL_UPLOAD)
-#if !defined(USE_ROSEN_DRAWING) && defined(NEW_SKIA) && defined(RS_ENABLE_UNI_RENDER)
-        WaitUntilUploadTextureTaskFinished();
-#endif
-#endif
+        if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+            WaitUntilUploadTextureTaskFinished(isUniRender_);
+        }
         RS_LOGE("RSMainThread::Render GetGlobalRootRenderNode fail");
         return;
     }
     if (RSSystemProperties::GetRenderNodeTraceEnabled()) {
         RSPropertyTrace::GetInstance().RefreshNodeTraceInfo();
     }
-
+    if (focusAppBundleName_.find(DESKTOP_NAME_FOR_ROTATION) != std::string::npos) {
+        desktopPidForRotationScene_ = focusAppPid_;
+    }
+    if (RSSystemProperties::GetDumpRSTreeCount()) {
+        std::string rsTreeStr;
+        RenderServiceTreeDump(rsTreeStr);
+        RS_TRACE_NAME("WriteDumpTree");
+        std::string dumpFilePath = "/data/RSTree";
+        if (access(dumpFilePath.c_str(), F_OK) != 0) {
+            constexpr int directoryPermission = 0755; // drwxr-xr-x
+            mkdir(dumpFilePath.c_str(), directoryPermission);
+        }
+        dumpFilePath += "/rsTree_" + std::to_string(frameCount_) + ".txt";
+        OHOS::Rosen::Benchmarks::WriteStringToFile(rsTreeStr, dumpFilePath);
+        RSSystemProperties::SetDumpRSTreeCount(RSSystemProperties::GetDumpRSTreeCount() - 1);
+    }
     if (isUniRender_) {
         UniRender(rootNode);
     } else {
@@ -1466,8 +1622,67 @@ void RSMainThread::Render()
         rootNode->Process(rsVisitor);
         renderEngine_->ShrinkCachesIfNeeded();
     }
-
+    CallbackDrawContextStatusToWMS();
+    CheckSystemSceneStatus();
     PerfForBlurIfNeeded();
+}
+
+void RSMainThread::CheckSystemSceneStatus()
+{
+    std::lock_guard<std::mutex> lock(systemAnimatedScenesMutex_);
+    uint64_t curTime = static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count());
+    while (!systemAnimatedScenesList_.empty()) {
+        if (curTime - systemAnimatedScenesList_.front().second > MAX_SYSTEM_SCENE_STATUS_TIME) {
+            systemAnimatedScenesList_.pop_front();
+        } else {
+            break;
+        }
+    }
+    while (!threeFingerScenesList_.empty()) {
+        if (curTime - threeFingerScenesList_.front().second > MAX_SYSTEM_SCENE_STATUS_TIME) {
+            threeFingerScenesList_.pop_front();
+        } else {
+            break;
+        }
+    }
+}
+
+void RSMainThread::CallbackDrawContextStatusToWMS()
+{
+    VisibleData drawStatusVec;
+    for (auto dynamicNodeId : curDrawStatusVec_) {
+        if (lastDrawStatusMap_.find(dynamicNodeId) == lastDrawStatusMap_.end()) {
+            drawStatusVec.emplace_back(std::make_pair(dynamicNodeId,
+                WINDOW_LAYER_INFO_TYPE::WINDOW_LAYER_DYNAMIC_STATUS));
+            RS_OPTIONAL_TRACE_NAME_FMT("%s nodeId[%" PRIu64 "] status[%d]",
+                __func__, dynamicNodeId, WINDOW_LAYER_INFO_TYPE::WINDOW_LAYER_DYNAMIC_STATUS);
+        }
+        lastDrawStatusMap_[dynamicNodeId] = timestamp_;
+    }
+    auto drawStatusIter = lastDrawStatusMap_.begin();
+    while (drawStatusIter != lastDrawStatusMap_.end()) {
+        if (timestamp_ - drawStatusIter->second > MAX_DYNAMIC_STATUS_TIME) {
+            drawStatusVec.emplace_back(std::make_pair(drawStatusIter->first,
+                WINDOW_LAYER_INFO_TYPE::WINDOW_LAYER_STATIC_STATUS));
+            RS_OPTIONAL_TRACE_NAME_FMT("%s nodeId[%" PRIu64 "] status[%d]",
+                __func__, drawStatusIter->first, WINDOW_LAYER_INFO_TYPE::WINDOW_LAYER_STATIC_STATUS);
+            auto tmpIter = drawStatusIter++;
+            lastDrawStatusMap_.erase(tmpIter);
+        } else {
+            drawStatusIter++;
+        }
+    }
+    curDrawStatusVec_.clear();
+    if (!drawStatusVec.empty()) {
+        std::lock_guard<std::mutex> lock(occlusionMutex_);
+        for (auto it = occlusionListeners_.begin(); it != occlusionListeners_.end(); it++) {
+            if (it->second) {
+                it->second->OnOcclusionVisibleChanged(std::make_shared<RSOcclusionData>(drawStatusVec));
+            }
+        }
+    }
 }
 
 bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
@@ -1477,6 +1692,7 @@ bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
     if (curSurface->IsFocusedNode(focusNodeId_)) {
         needProcess = true;
         if (!curSurface->HasContainerWindow() && !curSurface->IsTransparent() &&
+            !curSurface->HasWindowCorner() &&
             !curSurface->GetAnimateState() && // when node animating (i.e. 3d animation), the region cannot be trusted
             curSurface->GetName().find("hisearch") == std::string::npos) {
             occlusionSurfaces.insert(curSurface->GetDstRect());
@@ -1488,6 +1704,7 @@ bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
         if (insertSuccess) {
             needProcess = true;
             if (curSurface->IsTransparent() ||
+                curSurface->HasWindowCorner() ||
                 curSurface->GetAnimateState() || // when node animating(i.e. 3d animation), the region cannot be trusted
                 curSurface->GetName().find("hisearch") != std::string::npos) {
                 auto iter = std::find_if(occlusionSurfaces.begin(), occlusionSurfaces.end(),
@@ -1505,18 +1722,22 @@ bool RSMainThread::CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces,
     return needProcess;
 }
 
-RS_REGION_VISIBLE_LEVEL RSMainThread::GetRegionVisibleLevel(const Occlusion::Region& curRegion,
+RSVisibleLevel RSMainThread::GetRegionVisibleLevel(const Occlusion::Region& curRegion,
     const Occlusion::Region& visibleRegion)
 {
-    if (visibleRegion.GetSize() == 0) {
-        return RS_REGION_VISIBLE_LEVEL::INVISIBLE;
+    if (visibleRegion.IsEmpty()) {
+        return RSVisibleLevel::RS_INVISIBLE;
     } else if (visibleRegion.Area() == curRegion.Area()) {
-        return RS_REGION_VISIBLE_LEVEL::ALL_VISIBLE;
+        return RSVisibleLevel::RS_ALL_VISIBLE;
+    } else if (static_cast<uint>(visibleRegion.Area()) <
+        (static_cast<uint>(curRegion.Area()) >> VISIBLEAREARATIO_FORQOS)) {
+        return RSVisibleLevel::RS_SEMI_DEFAULT_VISIBLE;
     }
-    return RS_REGION_VISIBLE_LEVEL::SEMI_VISIBLE;
+    return RSVisibleLevel::RS_SEMI_NONDEFAULT_VISIBLE;
 }
 
-void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
+void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces,
+    VisibleData& dstCurVisVec)
 {
     Occlusion::Region accumulatedRegion;
     VisibleData curVisVec;
@@ -1525,21 +1746,25 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
     bool filterCacheOcclusionEnabled = RSSystemParameters::GetFilterCacheOcculusionEnabled();
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
         auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-        if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
+        if (curSurface == nullptr || curSurface->IsLeashWindow()) {
             continue;
         }
+        curSurface->SetOcclusionInSpecificScenes(deviceType_ == DeviceType::PC && !threeFingerScenesList_.empty());
         Occlusion::Rect occlusionRect = curSurface->GetSurfaceOcclusionRect(isUniRender_);
         if (CheckSurfaceNeedProcess(occlusionSurfaces, curSurface)) {
             Occlusion::Region curRegion { occlusionRect };
             Occlusion::Region subResult = curRegion.Sub(accumulatedRegion);
-            RS_REGION_VISIBLE_LEVEL visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
+            RSVisibleLevel visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
             RS_LOGD("%{public}s nodeId[%{public}" PRIu64 "] visibleLevel[%{public}d]",
                 __func__, curSurface->GetId(), visibleLevel);
-            curSurface->SetVisibleRegionRecursive(subResult, curVisVec, true, visibleLevel);
+            curSurface->SetVisibleRegionRecursive(subResult, curVisVec, true, visibleLevel,
+                !systemAnimatedScenesList_.empty());
             curSurface->AccumulateOcclusionRegion(accumulatedRegion, curRegion, hasFilterCacheOcclusion, isUniRender_,
                 filterCacheOcclusionEnabled);
         } else {
             curSurface->SetVisibleRegionRecursive({}, curVisVec);
+            RS_LOGD("%{public}s nodeId[%{public}" PRIu64 "] visibleLevel[%{public}d]",
+                __func__, curSurface->GetId(), RSVisibleLevel::RS_INVISIBLE);
         }
     }
 
@@ -1550,15 +1775,16 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
         accumulatedRegion = {};
         for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
             auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-            if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
+            if (curSurface == nullptr || curSurface->IsLeashWindow()) {
                 continue;
             }
             Occlusion::Rect occlusionRect = curSurface->GetSurfaceOcclusionRect(isUniRender_);
             if (CheckSurfaceNeedProcess(occlusionSurfaces, curSurface)) {
                 Occlusion::Region curRegion { occlusionRect };
                 Occlusion::Region subResult = curRegion.Sub(accumulatedRegion);
-                RS_REGION_VISIBLE_LEVEL visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
-                curSurface->SetVisibleRegionRecursive(subResult, curVisVec, false, visibleLevel);
+                RSVisibleLevel visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
+                curSurface->SetVisibleRegionRecursive(subResult, curVisVec, false, visibleLevel,
+                    !systemAnimatedScenesList_.empty());
                 curSurface->AccumulateOcclusionRegion(accumulatedRegion, curRegion, hasFilterCacheOcclusion,
                     isUniRender_, false);
             } else {
@@ -1567,10 +1793,7 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
         }
     }
 
-    // Callback to WMS
-    CallbackToWMS(curVisVec);
-    // Callback for registered self drawing surfacenode
-    SurfaceOcclusionCallback();
+    dstCurVisVec.insert(dstCurVisVec.end(), curVisVec.begin(), curVisVec.end());
 }
 
 void RSMainThread::CalcOcclusion()
@@ -1586,10 +1809,19 @@ void RSMainThread::CalcOcclusion()
         RS_LOGE("RSMainThread::CalcOcclusion GetGlobalRootRenderNode fail");
         return;
     }
+    std::map<NodeId, std::vector<RSBaseRenderNode::SharedPtr>> curAllSurfacesInDisplay;
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    for (const auto& child : *node->GetSortedChildren()) {
+        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(child);
+        if (displayNode) {
+            const auto& surfaces = displayNode->GetCurAllSurfaces();
+            curAllSurfacesInDisplay[displayNode->GetNodeId()] = surfaces;
+            curAllSurfaces.insert(curAllSurfaces.end(), surfaces.begin(), surfaces.end());
+        }
+    }
+
     if (node->GetChildrenCount()== 1) {
-        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
-            node->GetSortedChildren().front());
+        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(node->GetFirstChild());
         if (displayNode) {
             curAllSurfaces = displayNode->GetCurAllSurfaces();
         }
@@ -1633,13 +1865,41 @@ void RSMainThread::CalcOcclusion()
             surface->CleanDirtyRegionUpdated();
         }
     }
-    if (!winDirty) {
+    if (!winDirty && !(systemAnimatedScenesList_.empty() && isReduceVSyncBySystemAnimatedScenes_)) {
         if (SurfaceOcclusionCallBackIfOnTreeStateChanged()) {
             SurfaceOcclusionCallback();
         }
         return;
     }
-    CalcOcclusionImplementation(curAllSurfaces);
+    isReduceVSyncBySystemAnimatedScenes_ = false;
+    VisibleData dstCurVisVec;
+    for (auto& surfaces : curAllSurfacesInDisplay) {
+        CalcOcclusionImplementation(surfaces.second, dstCurVisVec);
+    }
+
+    // Callback to WMS
+    CallbackToWMS(dstCurVisVec);
+    // Callback for registered self drawing surfacenode
+    SurfaceOcclusionCallback();
+}
+
+void RSMainThread::SetMultiInstancePidVSyncRate(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+    std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
+{
+    std::map<uint32_t, int> multiInstancePidMap;
+    for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
+        auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
+        if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
+            continue;
+        }
+        uint32_t tmpPid = ExtractPid(curSurface->GetId());
+        multiInstancePidMap[tmpPid]++;
+    }
+    for (auto& iter : multiInstancePidMap) {
+        if (iter.second > MAX_MULTI_INSTANCE_PID_COUNT) {
+            pidVisMap[iter.first] = RSVisibleLevel::RS_ALL_VISIBLE;
+        }
+    }
 }
 
 
@@ -1714,7 +1974,7 @@ void RSMainThread::SurfaceOcclusionCallback()
             } else if (!vectorEmpty && ROSEN_EQ(visibleAreaRatio, 1.0f)) {
                 level = partitionVector.size();
             } else if (!vectorEmpty && (visibleAreaRatio > 0.0f)) {
-                for (auto &point : partitionVector) {
+                for (const auto &point : partitionVector) {
                     if (visibleAreaRatio > point) {
                         level += 1;
                         continue;
@@ -1749,7 +2009,7 @@ void RSMainThread::NotifyHardwareThreadCanExcuteTask()
     hardwareThreadTaskCond_.notify_one();
 }
 
-void RSMainThread::RequestNextVSync()
+void RSMainThread::RequestNextVSync(const std::string& fromWhom, int64_t lastVSyncTS)
 {
     RS_OPTIONAL_TRACE_FUNC();
     VSyncReceiver::FrameCallback fcb = {
@@ -1761,13 +2021,14 @@ void RSMainThread::RequestNextVSync()
         if (requestNextVsyncNum_ > REQUEST_VSYNC_NUMBER_LIMIT) {
             RS_LOGW("RSMainThread::RequestNextVSync too many times:%{public}d", requestNextVsyncNum_);
         }
-        receiver_->RequestNextVSync(fcb);
+        receiver_->RequestNextVSync(fcb, fromWhom, lastVSyncTS);
     }
 }
 
 void RSMainThread::OnVsync(uint64_t timestamp, void* data)
 {
     RSJankStats::GetInstance().SetStartTime();
+    SetDiscardJankFrames(false);
     timestamp_ = timestamp;
     curTime_ = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -1788,13 +2049,14 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
             PostTask([=]() { screenManager_->ProcessScreenHotPlugEvents(); });
         }
     }
-    RSJankStats::GetInstance().SetEndTime();
+    RSJankStats::GetInstance().SetEndTime(GetDiscardJankFrames());
 }
 
 void RSMainThread::Animate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
     lastAnimateTimestamp_ = timestamp;
+    rsCurrRange_.Reset();
 
     if (context_->animatingNodeList_.empty()) {
         doWindowAnimate_ = false;
@@ -1803,23 +2065,46 @@ void RSMainThread::Animate(uint64_t timestamp)
     doDirectComposition_ = false;
     bool curWinAnim = false;
     bool needRequestNextVsync = false;
+    needRequestNextVsyncAnimate_ = false;
     // isCalculateAnimationValue is embedded modify for stat animate frame drop
     bool isCalculateAnimationValue = false;
+    bool isRateDeciderEnabled = (context_->animatingNodeList_.size() <= CAL_NODE_PREFERRED_FPS_LIMIT);
+    bool isDisplaySyncEnabled =
+        HgmCore::Instance().GetCurrentRefreshRateMode() == HGM_REFRESHRATE_MODE_AUTO ? true : false;
+    int64_t period = 0;
+    if (receiver_) {
+        receiver_->GetVSyncPeriod(period);
+    }
+    RSRenderAnimation::isCalcAnimateVelocity_ = isRateDeciderEnabled;
+    uint32_t totalAnimationSize = 0;
+    uint32_t animatingNodeSize = context_->animatingNodeList_.size();
     // iterate and animate all animating nodes, remove if animation finished
     EraseIf(context_->animatingNodeList_,
-        [this, timestamp, &curWinAnim, &needRequestNextVsync, &isCalculateAnimationValue](const auto& iter) -> bool {
+        [this, timestamp, period, isDisplaySyncEnabled, isRateDeciderEnabled, &totalAnimationSize,
+        &curWinAnim, &needRequestNextVsync, &isCalculateAnimationValue](const auto& iter) -> bool {
         auto node = iter.second.lock();
         if (node == nullptr) {
             RS_LOGD("RSMainThread::Animate removing expired animating node");
             return true;
         }
         if (cacheCmdSkippedInfo_.count(ExtractPid(node->GetId())) > 0) {
+            rsCurrRange_.Merge(node->animationManager_.GetDecideFrameRateRange());
             RS_LOGD("RSMainThread::Animate skip the cached node");
             return false;
         }
-        auto [hasRunningAnimation, nodeNeedRequestNextVsync, nodeCalculateAnimationValue] = node->Animate(timestamp);
+        totalAnimationSize += node->animationManager_.GetAnimationsSize();
+        auto frameRateGetFunc = [this](const RSPropertyUnit unit, float velocity) -> int32_t {
+            return frameRateMgr_->GetExpectedFrameRate(unit, velocity);
+        };
+        node->animationManager_.SetRateDeciderEnable(isRateDeciderEnabled, frameRateGetFunc);
+        auto [hasRunningAnimation, nodeNeedRequestNextVsync, nodeCalculateAnimationValue] =
+            node->Animate(timestamp, period, isDisplaySyncEnabled);
         if (!hasRunningAnimation) {
+            node->InActivateDisplaySync();
             RS_LOGD("RSMainThread::Animate removing finished animating node %{public}" PRIu64, node->GetId());
+        } else {
+            node->UpdateDisplaySyncRange();
+            rsCurrRange_.Merge(node->animationManager_.GetDecideFrameRateRange());
         }
         // request vsync if: 1. node has running animation, or 2. transition animation just ended
         needRequestNextVsync = needRequestNextVsync || nodeNeedRequestNextVsync || (node.use_count() == 1);
@@ -1833,6 +2118,7 @@ void RSMainThread::Animate(uint64_t timestamp)
         }
         return !hasRunningAnimation;
     });
+    RS_TRACE_NAME_FMT("Animate [nodeSize, totalAnimationSize] is [%lu, %lu]", animatingNodeSize, totalAnimationSize);
     if (!isCalculateAnimationValue && needRequestNextVsync) {
         RS_TRACE_NAME("Animation running empty");
     }
@@ -1841,14 +2127,21 @@ void RSMainThread::Animate(uint64_t timestamp)
     RS_LOGD("RSMainThread::Animate end, animating nodes remains, has window animation: %{public}d", curWinAnim);
 
     if (needRequestNextVsync) {
-        RequestNextVSync();
+        // Call real RequestNextVsync Later for dvsync on
+        if (!rsVSyncDistributor_->IsDVsyncOn()) {
+            RequestNextVSync("animate", timestamp_);
+        }
+        RS_TRACE_NAME("rs_RequestNextVSync");
     }
+    needRequestNextVsyncAnimate_ = needRequestNextVsync;
+
     PerfAfterAnim(needRequestNextVsync);
 }
 
 void RSMainThread::ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
-    if (!rsTransactionData || !RSSystemProperties::GetSingleFrameComposerEnabled()) {
+    if (!rsTransactionData || !RSSystemProperties::GetSingleFrameComposerEnabled() ||
+        !RSSingleFrameComposer::IsShouldProcessByIpcThread(rsTransactionData->GetSendingPid())) {
         return;
     }
 
@@ -2021,7 +2314,7 @@ void RSMainThread::SendCommands()
         RSMessageProcessor::Instance().GetAllTransactions());
     RSMessageProcessor::Instance().ReInitializeMovedMap();
     PostTask([this, transactionMapPtr]() {
-        for (auto& transactionIter : *transactionMapPtr) {
+        for (const auto& transactionIter : *transactionMapPtr) {
             auto pid = transactionIter.first;
             auto appIter = applicationAgentMap_.find(pid);
             if (appIter == applicationAgentMap_.end()) {
@@ -2038,6 +2331,7 @@ void RSMainThread::SendCommands()
 
 void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
 {
+    RS_TRACE_NAME("GetDumpTree");
     dumpString.append("Animating Node: [");
     for (auto& [nodeId, _]: context_->animatingNodeList_) {
         dumpString.append(std::to_string(nodeId) + ", ");
@@ -2072,7 +2366,7 @@ bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootN
 
     (*RemoveStoppedThreads)();
 
-    auto children = rootNode->GetSortedChildren();
+    auto children = *rootNode->GetSortedChildren();
     bool animate_ = doWindowAnimate_;
     for (auto it = children.rbegin(); it != children.rend(); it++) {
         auto child = *it;
@@ -2112,28 +2406,17 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
     if ((timestamp_ - lastCleanCacheTimestamp_) / REFRESH_PERIOD > CLEAN_CACHE_FREQ) {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         RS_LOGD("RSMainThread: clear cpu cache pid:%{public}d", remotePid);
-        if (IsRenderedProcess(remotePid)) {
-            ClearMemoryCache(true);
+        if (!IsResidentProcess(remotePid)) {
+            ClearMemoryCache(ClearMemoryMoment::PROCESS_EXIT, true);
         }
         lastCleanCacheTimestamp_ = timestamp_;
 #endif
     }
 }
 
-bool RSMainThread::IsRenderedProcess(pid_t pid) const
+bool RSMainThread::IsResidentProcess(pid_t pid) const
 {
-    bool isRenderProcess = false;
-    auto task = [&isRenderProcess, pid](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) {
-        if (!surfaceNode) {
-            return;
-        }
-        if (ExtractPid(surfaceNode->GetId()) == pid) {
-            isRenderProcess = true;
-            return;
-        }
-    };
-    context_->GetNodeMap().TraverseSurfaceNodes(task);
-    return isRenderProcess;
+    return pid == ExtractPid(context_->GetNodeMap().GetEntryViewNodeId());
 }
 
 void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::string& dumpString)
@@ -2165,35 +2448,19 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         std::shared_ptr<RenderContext> rendercontext = std::make_shared<RenderContext>();
         rendercontext->CleanAllShaderCache();
 #endif
-#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
-#else
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
-#endif
     } else if (type == "cpu") {
         grContext->flush();
         SkGraphics::PurgeAllCaches();
-#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
-#else
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
-#endif
     } else if (type == "gpu") {
         grContext->flush();
         grContext->freeGpuResources();
-#ifdef NEW_SKIA
         grContext->flushAndSubmit(true);
-#else
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
-#endif
     } else if (type == "uihidden") {
         grContext->flush();
-        grContext->purgeUnlockedResources(true);
-#ifdef NEW_SKIA
+        grContext->purgeUnlockAndSafeCacheGpuResources();
         grContext->flushAndSubmit(true);
-#else
-        grContext->flush(kSyncCpu_GrFlushFlag, 0, nullptr);
-#endif
     } else if (type == "shader") {
 #ifdef NEW_RENDER_CONTEXT
         MemoryHandler::ClearShader();
@@ -2211,7 +2478,11 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
     }
     dumpString.append("trimMem: " + type + "\n");
 #else
+#ifdef NEW_RENDER_CONTEXT
+    auto gpuContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
+#else
     auto gpuContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
+#endif
     if (type.empty()) {
         gpuContext->Flush();
         SkGraphics::PurgeAllCaches();
@@ -2234,7 +2505,7 @@ void RSMainThread::TrimMem(std::unordered_set<std::u16string>& argSets, std::str
         gpuContext->FlushAndSubmit(true);
     } else if (type == "uihidden") {
         gpuContext->Flush();
-        gpuContext->PurgeUnlockedResources(true);
+        gpuContext->PurgeUnlockAndSafeCacheGpuResources();
         gpuContext->FlushAndSubmit(true);
     } else if (type == "shader") {
 #ifdef NEW_RENDER_CONTEXT
@@ -2370,6 +2641,21 @@ void RSMainThread::SetDirtyFlag()
     isDirty_ = true;
 }
 
+void RSMainThread::SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync)
+{
+    colorPickerForceRequestVsync_ = colorPickerForceRequestVsync;
+}
+
+void RSMainThread::SetNoNeedToPostTask(bool noNeedToPostTask)
+{
+    noNeedToPostTask_ = noNeedToPostTask;
+}
+
+bool RSMainThread::GetNoNeedToPostTask()
+{
+    return noNeedToPostTask_.load();
+}
+
 void RSMainThread::SetAccessibilityConfigChanged()
 {
     isAccessibilityConfigChanged_ = true;
@@ -2418,19 +2704,29 @@ void RSMainThread::ForceRefreshForUni()
 
 void RSMainThread::PerfForBlurIfNeeded()
 {
+    handler_->RemoveTask("PerfForBlurIfNeeded");
+    static uint64_t prePerfTimestamp = 0;
     static int preBlurCnt = 0;
+    auto task = [this]() {
+        if (timestamp_ - prePerfTimestamp > PERF_PERIOD_BLUR_TIMEOUT && preBlurCnt != 0) {
+            PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(preBlurCnt), false);
+            prePerfTimestamp = 0;
+            preBlurCnt = 0;
+        }
+    };
+    // delay 100ms
+    handler_->PostTask(task, "PerfForBlurIfNeeded", 100);
     int blurCnt = RSPropertiesPainter::GetAndResetBlurCnt();
     // clamp blurCnt to 0~3.
     blurCnt = std::clamp<int>(blurCnt, 0, 3);
-    if (blurCnt != preBlurCnt && preBlurCnt != 0) {
+    if ((blurCnt > preBlurCnt || blurCnt == 0) && preBlurCnt != 0) {
         PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(preBlurCnt), false);
         preBlurCnt = 0;
     }
     if (blurCnt == 0) {
         return;
     }
-    static uint64_t prePerfTimestamp = 0;
-    if (timestamp_ - prePerfTimestamp > PERF_PERIOD_BLUR || blurCnt != preBlurCnt) {
+    if (timestamp_ - prePerfTimestamp > PERF_PERIOD_BLUR || blurCnt > preBlurCnt) {
         PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(blurCnt), true);
         prePerfTimestamp = timestamp_;
         preBlurCnt = blurCnt;
@@ -2461,11 +2757,62 @@ void RSMainThread::RenderFrameStart(uint64_t timestamp)
         RsFrameReport::GetInstance().RenderStart(timestamp);
     }
     RenderFrameTrace::GetInstance().RenderStartFrameTrace(RS_INTERVAL_NAME);
+    int hardwareTid = RSHardwareThread::Instance().GetHardwareTid();
+    if (hardwareTid_ != hardwareTid) {
+        hardwareTid_ = hardwareTid;
+        RsFrameReport::GetInstance().SetFrameParam(EVENT_SET_HARDWARE_UTIL, 0, 0, hardwareTid_);
+    }
 }
 
 void RSMainThread::SetAppWindowNum(uint32_t num)
 {
     appWindowNum_ = num;
+}
+
+bool RSMainThread::SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes)
+{
+    RS_OPTIONAL_TRACE_NAME_FMT("%s systemAnimatedScenes[%u] systemAnimatedScenes_[%u] threeFingerScenesListSize[%d] "
+        "systemAnimatedScenesListSize_[%d]", __func__, systemAnimatedScenes,
+        systemAnimatedScenes_, threeFingerScenesList_.size(), systemAnimatedScenesList_.size());
+    if (systemAnimatedScenes < SystemAnimatedScenes::ENTER_MISSION_CENTER ||
+            systemAnimatedScenes > SystemAnimatedScenes::OTHERS) {
+        RS_LOGD("RSMainThread::SetSystemAnimatedScenes Out of range.");
+        return false;
+    }
+    systemAnimatedScenes_ = systemAnimatedScenes;
+    if (!systemAnimatedScenesEnabled_) {
+        return true;
+    }
+    {
+        std::lock_guard<std::mutex> lock(systemAnimatedScenesMutex_);
+        if (systemAnimatedScenes == SystemAnimatedScenes::OTHERS) {
+            if (!threeFingerScenesList_.empty()) {
+                threeFingerScenesList_.pop_front();
+            }
+            if (!systemAnimatedScenesList_.empty()) {
+                systemAnimatedScenesList_.pop_front();
+            }
+        } else {
+            uint64_t curTime = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch()).count());
+            if (systemAnimatedScenes == SystemAnimatedScenes::ENTER_TFS_WINDOW ||
+                systemAnimatedScenes == SystemAnimatedScenes::EXIT_TFU_WINDOW ||
+                systemAnimatedScenes == SystemAnimatedScenes::ENTER_WIND_CLEAR ||
+                systemAnimatedScenes == SystemAnimatedScenes::ENTER_WIND_RECOVER) {
+                threeFingerScenesList_.push_back(std::make_pair(systemAnimatedScenes, curTime));
+            }
+            if (systemAnimatedScenes != SystemAnimatedScenes::APPEAR_MISSION_CENTER) {
+                systemAnimatedScenesList_.push_back(std::make_pair(systemAnimatedScenes, curTime));
+            }
+        }
+    }
+    return true;
+}
+
+SystemAnimatedScenes RSMainThread::GetSystemAnimatedScenes()
+{
+    return systemAnimatedScenes_;
 }
 
 bool RSMainThread::CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyByRoot)
@@ -2479,6 +2826,7 @@ bool RSMainThread::CheckNodeHasToBePreparedByPid(NodeId nodeId, bool isClassifyB
         return std::any_of(context_->activeNodesInRoot_.begin(), context_->activeNodesInRoot_.end(),
             [pid](const auto& iter) { return ExtractPid(iter.first) == pid; });
     } else {
+        std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
         return context_->activeNodesInRoot_.count(nodeId);
     }
 }
@@ -2487,16 +2835,17 @@ bool RSMainThread::IsDrawingGroupChanged(RSRenderNode& cacheRootNode) const
 {
     auto iter = context_->activeNodesInRoot_.find(cacheRootNode.GetInstanceRootNodeId());
     if (iter != context_->activeNodesInRoot_.end()) {
-        const std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>>& activeNodeIds = iter->second;
+        const auto& activeNodeIds = iter->second;
         // do not need to check cacheroot node itself
         // in case of tree change, parent node would set content dirty and reject before
         auto cacheRootId = cacheRootNode.GetId();
         auto groupNodeIds = cacheRootNode.GetVisitedCacheRootIds();
         for (auto [id, subNode] : activeNodeIds) {
-            if (subNode == nullptr || id == cacheRootId) {
+            auto node = subNode.lock();
+            if (node == nullptr || id == cacheRootId) {
                 continue;
             }
-            if (groupNodeIds.find(subNode->GetDrawingCacheRootId()) != groupNodeIds.end()) {
+            if (groupNodeIds.find(node->GetDrawingCacheRootId()) != groupNodeIds.end()) {
                 return true;
             }
         }
@@ -2504,55 +2853,52 @@ bool RSMainThread::IsDrawingGroupChanged(RSRenderNode& cacheRootNode) const
     return false;
 }
 
-int32_t RSMainThread::GetNodePreferred(const std::vector<HgmModifierProfile>& hgmModifierProfileList) const
+void RSMainThread::CheckAndUpdateInstanceContentStaticStatus(std::shared_ptr<RSSurfaceRenderNode> instanceNode) const
 {
-    if (hgmModifierProfileList.size() == 0) {
-        return 0;
+    if (instanceNode == nullptr) {
+        RS_LOGE("CheckAndUpdateInstanceContentStaticStatus instanceNode invalid.");
+        return ;
     }
-    int32_t nodePreferred = 0;
-    for (auto &hgmModifierProfile : hgmModifierProfileList) {
-        auto modifierPreferred = frameRateMgr_->CalModifierPreferred(hgmModifierProfile);
-        nodePreferred = std::max(nodePreferred, modifierPreferred);
+    auto iter = context_->activeNodesInRoot_.find(instanceNode->GetId());
+    if (iter != context_->activeNodesInRoot_.end()) {
+        instanceNode->UpdateSurfaceCacheContentStatic(iter->second);
+    } else {
+        instanceNode->UpdateSurfaceCacheContentStatic({});
     }
-    return nodePreferred;
-}
-
-FrameRateRange RSMainThread::CalcRSFrameRateRange(std::shared_ptr<RSRenderNode> node)
-{
-    FrameRateRange rsRange;
-    auto preferred = GetNodePreferred(node->GetHgmModifierProfileList());
-    if (preferred > 0) {
-        rsRange = {0, RANGE_MAX_REFRESHRATE, preferred};
-    }
-    return rsRange;
 }
 
 void RSMainThread::ApplyModifiers()
 {
-    FrameRateRange rsCurrRange;
+    std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
     if (context_->activeNodesInRoot_.empty()) {
-        if (rsFrameRateLinker_ != nullptr) {
-            rsFrameRateLinker_->SetExpectedRange(rsCurrRange);
-        }
         return;
     }
     RS_TRACE_NAME_FMT("ApplyModifiers (PropertyDrawableEnable %s)",
         RSSystemProperties::GetPropertyDrawableEnable() ? "TRUE" : "FALSE");
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> nodesThatNeedsRegenerateChildren;
     for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
         for (const auto& [id, nodePtr] : nodeSet) {
-            bool isZOrderChanged = nodePtr->ApplyModifiers();
-            rsCurrRange.Merge(CalcRSFrameRateRange(nodePtr));
-            if (!isZOrderChanged) {
+            auto node = nodePtr.lock();
+            if (node == nullptr) {
                 continue;
             }
-            if (auto parent = nodePtr->GetParent().lock()) {
+            if (!node->isFullChildrenListValid_ || !node->isChildrenSorted_) {
+                nodesThatNeedsRegenerateChildren.emplace(node->id_, node);
+            }
+            // apply modifiers, if z-order not changed, skip
+            if (!node->ApplyModifiers()) {
+                continue;
+            }
+            if (auto parent = node->GetParent().lock()) {
                 parent->isChildrenSorted_ = false;
+                nodesThatNeedsRegenerateChildren.emplace(parent->id_, parent);
             }
         }
     }
-
-    if (rsFrameRateLinker_ != nullptr) {
-        rsFrameRateLinker_->SetExpectedRange(rsCurrRange);
+    // Update the full children list of the nodes that need it
+    nodesThatNeedsRegenerateChildren.emplace(0, context_->globalRootRenderNode_);
+    for (auto& [id, node] : nodesThatNeedsRegenerateChildren) {
+        node->UpdateFullChildrenListIfNeeded();
     }
 }
 
@@ -2611,30 +2957,58 @@ bool RSMainThread::IsSingleDisplay()
     return rootNode->GetChildrenCount() == 1;
 }
 
-const uint32_t UIFIRST_MINIMUM_NODE_NUMBER = 13; // minimum window number(13) for enabling UIFirst
+void RSMainThread::UpdateRogSizeIfNeeded()
+{
+    if (!RSSystemProperties::IsPhoneType() || RSSystemProperties::IsFoldScreenFlag()) {
+        return;
+    }
+    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    if (!rootNode) {
+        return;
+    }
+    auto child = rootNode->GetFirstChild();
+    if (child != nullptr && child->IsInstanceOf<RSDisplayRenderNode>()) {
+        auto displayNode = child->ReinterpretCastTo<RSDisplayRenderNode>();
+        if (displayNode) {
+            auto screenManager_ = CreateOrGetScreenManager();
+            screenManager_->SetRogScreenResolution(
+                displayNode->GetScreenId(), displayNode->GetRogWidth(), displayNode->GetRogHeight());
+        }
+    }
+}
+
+const uint32_t UIFIRST_MINIMUM_NODE_NUMBER = 4; // minimum window number(4) for enabling UIFirst
+const uint32_t FOLD_DEVICE_SCREEN_NUMBER = 2; // alt device has two screens
+
 void RSMainThread::UpdateUIFirstSwitch()
 {
+    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    if (!rootNode) {
+        return;
+    }
+    auto firstChildren = rootNode->GetFirstChild();
+    if (!firstChildren) {
+        return;
+    }
+    auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(firstChildren);
+    if (!displayNode) {
+        return;
+    }
+    auto screenManager_ = CreateOrGetScreenManager();
+    uint32_t actualScreensNum = screenManager_->GetActualScreensNum();
     if (deviceType_ == DeviceType::PHONE) {
-        isUiFirstOn_ = (RSSystemProperties::GetUIFirstEnabled() && IsSingleDisplay());
+        if (isFoldScreenDevice_) {
+            isUiFirstOn_ = (RSSystemProperties::GetUIFirstEnabled() && actualScreensNum == FOLD_DEVICE_SCREEN_NUMBER);
+        } else {
+            isUiFirstOn_ = (RSSystemProperties::GetUIFirstEnabled() && actualScreensNum == 1);
+        }
         return;
     }
     isUiFirstOn_ = false;
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
-    if (rootNode && IsSingleDisplay()) {
-        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
-            rootNode->GetSortedChildren().front());
-        if (displayNode) {
-            uint32_t childrenCount = 0;
-            if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-                std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
-                displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
-                childrenCount = curAllSurfacesVec.size();
-            } else {
-                childrenCount = displayNode->GetChildrenCount();
-            }
-            isUiFirstOn_ = RSSystemProperties::GetUIFirstEnabled() &&
-                (childrenCount >= UIFIRST_MINIMUM_NODE_NUMBER);
-        }
+    if (IsSingleDisplay()) {
+        uint32_t LeashWindowCount = 0;
+        displayNode->CollectSurfaceForUIFirstSwitch(LeashWindowCount, UIFIRST_MINIMUM_NODE_NUMBER);
+        isUiFirstOn_ = RSSystemProperties::GetUIFirstEnabled() && LeashWindowCount >=  UIFIRST_MINIMUM_NODE_NUMBER;
     }
 }
 
@@ -2681,23 +3055,24 @@ void RSMainThread::GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize)
 
 void RSMainThread::SubscribeAppState()
 {
-    PostTask([this]() {
-        int32_t subscribeFailCount = 0;
-        rsAppStateListener_ = std::make_shared<RSAppStateListener>();
-        if (Memory::MemMgrClient::GetInstance().SubscribeAppState(*rsAppStateListener_) != -1) {
-            RS_LOGD("Subscribe MemMgr Success");
-            subscribeFailCount = 0;
-            return;
-        } else {
-            RS_LOGE("Subscribe Failed, try again");
-            subscribeFailCount++;
-            if (subscribeFailCount < 10) { // The maximum number of failures is 10
-                SubscribeAppState();
+    PostTask(
+        [this]() {
+            rsAppStateListener_ = std::make_shared<RSAppStateListener>();
+            if (Memory::MemMgrClient::GetInstance().SubscribeAppState(*rsAppStateListener_) != -1) {
+                RS_LOGD("Subscribe MemMgr Success");
+                subscribeFailCount_ = 0;
+                return;
             } else {
-                RS_LOGE("Subscribe Failed 10 times, exiting");
+                RS_LOGE("Subscribe Failed, try again");
+                subscribeFailCount_++;
+                if (subscribeFailCount_ < 10) { // The maximum number of failures is 10
+                    SubscribeAppState();
+                } else {
+                    RS_LOGE("Subscribe Failed 10 times, exiting");
+                }
             }
-        }
-    }, MEM_MGR, WAIT_FOR_MEM_MGR_SERVICE);
+        },
+        MEM_MGR, WAIT_FOR_MEM_MGR_SERVICE);
 }
 
 void RSMainThread::HandleOnTrim(Memory::SystemMemoryLevel level)
@@ -2705,22 +3080,15 @@ void RSMainThread::HandleOnTrim(Memory::SystemMemoryLevel level)
     if (handler_) {
         handler_->PostTask(
             [level, this]() {
-#ifndef USE_ROSEN_DRAWING
-#ifdef NEW_RENDER_CONTEXT
-                auto grContext = GetRenderEngine()->GetDrawingContext()->GetDrawingContext();
-#else
-                auto grContext = GetRenderEngine()->GetRenderContext()->GetGrContext();
-#endif
-#else
-                auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
-#endif
                 RS_LOGD("Enter level:%{public}d, OnTrim Success", level);
+                RS_TRACE_NAME_FMT("System is low memory, HandleOnTrim Enter level:%d", level);
                 switch (level) {
                     case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
+                        ClearMemoryCache(ClearMemoryMoment::LOW_MEMORY, true);
+                        break;
                     case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
                     case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
                     case Memory::SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE:
-                        MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
                         break;
                     default:
                         break;

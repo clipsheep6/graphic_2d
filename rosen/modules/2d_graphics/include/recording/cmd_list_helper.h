@@ -16,14 +16,15 @@
 #ifndef CMD_LIST_HELPER_H
 #define CMD_LIST_HELPER_H
 
+#include <memory>
+#include <utility>
+
 #include "image/image.h"
-#include "utils/vertices.h"
 #include "recording/cmd_list.h"
+#include "text/hm_symbol.h"
 #include "text/text_blob.h"
 #include "utils/log.h"
-
-#include <utility>
-#include <memory>
+#include "utils/vertices.h"
 
 namespace OHOS {
 namespace Media {
@@ -31,41 +32,50 @@ class PixelMap;
 }
 namespace Rosen {
 namespace Drawing {
-class CmdListHelper {
+class DrawOpItem;
+class DRAWING_API CmdListHelper {
 public:
     CmdListHelper() = default;
     ~CmdListHelper() = default;
 
-    static ImageHandle AddImageToCmdList(CmdList& cmdList, const Image& image);
-    static ImageHandle AddImageToCmdList(CmdList& cmdList, const std::shared_ptr<Image>& image);
-    static std::shared_ptr<Image> GetImageFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
-    static VerticesHandle AddVerticesToCmdList(CmdList& cmdList, const Vertices& vertices);
+    static OpDataHandle AddImageToCmdList(CmdList& cmdList, const Image& image);
+    static OpDataHandle AddImageToCmdList(CmdList& cmdList, const std::shared_ptr<Image>& image);
+    static std::shared_ptr<Image> GetImageFromCmdList(const CmdList& cmdList, const OpDataHandle& imageHandle);
+    static OpDataHandle AddVerticesToCmdList(CmdList& cmdList, const Vertices& vertices);
     static std::shared_ptr<Vertices> GetVerticesFromCmdList(const CmdList& cmdList,
-        const VerticesHandle& verticesHandle);
+        const OpDataHandle& opDataHandle);
     static ImageHandle AddBitmapToCmdList(CmdList& cmdList, const Bitmap& bitmap);
     static std::shared_ptr<Bitmap> GetBitmapFromCmdList(const CmdList& cmdList, const ImageHandle& bitmapHandle);
-    static ImageHandle AddPixelMapToCmdList(CmdList& cmdList, const std::shared_ptr<Media::PixelMap>& pixelMap);
+    static OpDataHandle AddPixelMapToCmdList(CmdList& cmdList, const std::shared_ptr<Media::PixelMap>& pixelMap);
     static std::shared_ptr<Media::PixelMap> GetPixelMapFromCmdList(
-        const CmdList& cmdList, const ImageHandle& pixelMapHandle);
-    static ImageHandle AddImageObjectToCmdList(CmdList& cmdList, const std::shared_ptr<ExtendImageObject>& object);
+        const CmdList& cmdList, const OpDataHandle& pixelMapHandle);
+    static OpDataHandle DRAWING_API AddImageObjectToCmdList(
+        CmdList& cmdList, const std::shared_ptr<ExtendImageObject>& object);
     static std::shared_ptr<ExtendImageObject> GetImageObjectFromCmdList(
-        const CmdList& cmdList, const ImageHandle& objectHandle);
-    static ImageHandle AddPictureToCmdList(CmdList& cmdList, const Picture& picture);
-    static std::shared_ptr<Picture> GetPictureFromCmdList(const CmdList& cmdList, const ImageHandle& pictureHandle);
-    static ImageHandle AddCompressDataToCmdList(CmdList& cmdList, const std::shared_ptr<Data>& data);
-    static std::shared_ptr<Data> GetCompressDataFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
+        const CmdList& cmdList, const OpDataHandle& objectHandle);
+    static OpDataHandle DRAWING_API AddImageBaseObjToCmdList(
+        CmdList& cmdList, const std::shared_ptr<ExtendImageBaseObj>& object);
+    static std::shared_ptr<ExtendImageBaseObj> GetImageBaseObjFromCmdList(
+        const CmdList& cmdList, const OpDataHandle& objectHandle);
+    static OpDataHandle AddPictureToCmdList(CmdList& cmdList, const Picture& picture);
+    static std::shared_ptr<Picture> GetPictureFromCmdList(const CmdList& cmdList, const OpDataHandle& pictureHandle);
+    static OpDataHandle AddCompressDataToCmdList(CmdList& cmdList, const std::shared_ptr<Data>& data);
+    static std::shared_ptr<Data> GetCompressDataFromCmdList(const CmdList& cmdList, const OpDataHandle& imageHandle);
+
+    static OpDataHandle DRAWING_API AddDrawFuncObjToCmdList(
+        CmdList& cmdList, const std::shared_ptr<ExtendDrawFuncObj>& object);
+    static std::shared_ptr<ExtendDrawFuncObj> GetDrawFuncObjFromCmdList(
+        const CmdList& cmdList, const OpDataHandle& objectHandle);
 
     template<typename RecordingType, typename CommonType>
     static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const CommonType& recorded)
     {
         if (recorded.GetDrawingType() != DrawingType::RECORDING) {
-            LOGE("recorded is invalid!");
             return { 0 };
         }
 
         auto recording = static_cast<const RecordingType&>(recorded);
         if (recording.GetCmdList() == nullptr) {
-            LOGE("recorded cmdlist is invalid!");
             return { 0 };
         }
 
@@ -79,13 +89,11 @@ public:
             return { 0 };
         }
         if (recorded->GetDrawingType() != DrawingType::RECORDING) {
-            LOGE("recorded is invalid!");
             return { 0 };
         }
 
         auto recording = std::static_pointer_cast<RecordingType>(recorded);
         if (recording->GetCmdList() == nullptr) {
-            LOGE("recorded cmdlist is invalid!");
             return { 0 };
         }
 
@@ -99,13 +107,11 @@ public:
             return { 0 };
         }
         if (recorded->GetDrawingType() != DrawingType::RECORDING) {
-            LOGE("recorded is invalid!");
             return { 0 };
         }
 
         auto recording = static_cast<const RecordingType*>(recorded);
         if (recording->GetCmdList() == nullptr) {
-            LOGE("recorded cmdlist is invalid!");
             return { 0 };
         }
 
@@ -117,7 +123,6 @@ public:
     {
         auto childCmdList = GetChildFromCmdList<CmdListType>(cmdList, handler);
         if (childCmdList == nullptr) {
-            LOGE("child cmdlist is invalid!");
             return nullptr;
         }
 
@@ -164,33 +169,38 @@ public:
 
         const void* childData = cmdList.GetCmdListData(childHandle.offset);
         if (childData == nullptr) {
-            LOGE("child offset is invalid!");
             return nullptr;
         }
 
         auto childCmdList = CmdListType::CreateFromData({ childData, childHandle.size });
         if (childCmdList == nullptr) {
-            LOGE("create child CmdList failed!");
             return nullptr;
         }
 
         if (childHandle.imageSize > 0 && cmdList.GetImageData(childHandle.imageOffset) != nullptr) {
             if (!childCmdList->SetUpImageData(cmdList.GetImageData(childHandle.imageOffset), childHandle.imageSize)) {
-                LOGE("set up child image data failed!");
+                LOGD("set up child image data failed!");
             }
         }
 
         return childCmdList;
     }
 
-    static ImageHandle AddTextBlobToCmdList(CmdList& cmdList, const TextBlob* textBlob);
-    static std::shared_ptr<TextBlob> GetTextBlobFromCmdList(const CmdList& cmdList, const ImageHandle& textBlobHandle);
+    static OpDataHandle AddTextBlobToCmdList(CmdList& cmdList, const TextBlob* textBlob);
+    static std::shared_ptr<TextBlob> GetTextBlobFromCmdList(const CmdList& cmdList, const OpDataHandle& textBlobHandle);
 
-    static ImageHandle AddDataToCmdList(CmdList& cmdList, const Data* data);
-    static std::shared_ptr<Data> GetDataFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
+    static OpDataHandle AddDataToCmdList(CmdList& cmdList, const Data* data);
+    static std::shared_ptr<Data> GetDataFromCmdList(const CmdList& cmdList, const OpDataHandle& imageHandle);
 
-    static ImageHandle AddColorSpaceToCmdList(CmdList& cmdList, const std::shared_ptr<ColorSpace> colorSpace);
-    static std::shared_ptr<ColorSpace> GetColorSpaceFromCmdList(const CmdList& cmdList, const ImageHandle& imageHandle);
+    static OpDataHandle AddPathToCmdList(CmdList& cmdList, const Path& path);
+    static std::shared_ptr<Path> GetPathFromCmdList(const CmdList& cmdList, const OpDataHandle& pathHandle);
+
+    static OpDataHandle AddRegionToCmdList(CmdList& cmdList, const Region& region);
+    static std::shared_ptr<Region> GetRegionFromCmdList(const CmdList& cmdList, const OpDataHandle& regionHandle);
+
+    static OpDataHandle AddColorSpaceToCmdList(CmdList& cmdList, const std::shared_ptr<ColorSpace> colorSpace);
+    static std::shared_ptr<ColorSpace> GetColorSpaceFromCmdList(const CmdList& cmdList,
+        const OpDataHandle& imageHandle);
 
     static FlattenableHandle AddShaderEffectToCmdList(CmdList& cmdList, std::shared_ptr<ShaderEffect> shaderEffect);
     static std::shared_ptr<ShaderEffect> GetShaderEffectFromCmdList(const CmdList& cmdList,
@@ -208,9 +218,29 @@ public:
     static std::shared_ptr<ColorFilter> GetColorFilterFromCmdList(const CmdList& cmdList,
         const FlattenableHandle& colorFilterHandle);
 
+    static FlattenableHandle AddImageFilterToCmdList(CmdList& cmdList, const ImageFilter* imageFilter);
     static FlattenableHandle AddImageFilterToCmdList(CmdList& cmdList, std::shared_ptr<ImageFilter> imageFilter);
     static std::shared_ptr<ImageFilter> GetImageFilterFromCmdList(const CmdList& cmdList,
         const FlattenableHandle& imageFilterHandle);
+
+    static SymbolOpHandle AddSymbolToCmdList(CmdList& cmdList, const DrawingHMSymbolData& symbol);
+    static DrawingHMSymbolData GetSymbolFromCmdList(const CmdList& cmdList, const SymbolOpHandle& symbolHandle);
+
+    static SymbolLayersHandle AddSymbolLayersToCmdList(CmdList& cmdList, const DrawingSymbolLayers& symbolLayers);
+    static DrawingSymbolLayers GetSymbolLayersFromCmdList(const CmdList& cmdList,
+        const SymbolLayersHandle& symbolLayersHandle);
+
+    static RenderGroupHandle AddRenderGroupToCmdList(CmdList& cmdList, const DrawingRenderGroup& group);
+    static DrawingRenderGroup GetRenderGroupFromCmdList(const CmdList& cmdList,
+        const RenderGroupHandle& renderGroupHandle);
+
+    static GroupInfoHandle AddGroupInfoToCmdList(CmdList& cmdList, const DrawingGroupInfo& groupInfo);
+    static DrawingGroupInfo GetGroupInfoFromCmdList(const CmdList& cmdList, const GroupInfoHandle& groupInfoHandle);
+#ifdef ROSEN_OHOS
+    static uint32_t AddSurfaceBufferToCmdList(CmdList& cmdList, const sptr<SurfaceBuffer>& imageFilter);
+    static sptr<SurfaceBuffer> GetSurfaceBufferFromCmdList(
+        const CmdList& cmdList, uint32_t imageFilterHandle);
+#endif
 };
 } // namespace Drawing
 } // namespace Rosen

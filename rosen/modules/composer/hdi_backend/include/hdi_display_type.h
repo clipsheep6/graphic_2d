@@ -71,8 +71,8 @@ typedef struct {
  * @brief Defines output mode info.
  */
 typedef struct {
-    int32_t width;      /**< Width in pixel */
-    int32_t height;     /**< Height in pixel */
+    uint32_t width;      /**< Width in pixel */
+    uint32_t height;     /**< Height in pixel */
     uint32_t freshRate; /**< Fresh rate per second */
     int32_t id;         /**< ID of the mode */
 } GraphicDisplayModeInfo;
@@ -129,6 +129,13 @@ typedef struct {
     OHOS::sptr<OHOS::SyncFence> acquireFence;
     std::vector<uint32_t> deletingList;
 } GraphicLayerBuffer;
+
+typedef struct {
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
+} GraphicLayerColor;
 
 /*
  * @brief Called when a hot plug event occurs.

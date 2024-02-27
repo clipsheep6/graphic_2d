@@ -22,6 +22,8 @@
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_base_render_util.h"
 #include "platform/common/rs_log.h"
+#include "property/rs_properties.h"
+#include "render/rs_material_filter.h"
 #include "render/rs_path.h"
 #include "rs_trace.h"
 #include "common/rs_optional_trace.h"
@@ -31,14 +33,6 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-constexpr const char* ENTRY_VIEW = "EntryView";
-constexpr const char* WALLPAPER_VIEW = "WallpaperView";
-constexpr const char* SCREENLOCK_WINDOW = "ScreenLockWindow";
-constexpr const char* SYSUI_DROPDOWN = "SysUI_Dropdown";
-constexpr const char* SYSUI_STATUS_BAR = "SysUI_StatusBar";
-constexpr const char* PRIVACY_INDICATOR = "PrivacyIndicator";
-};
 void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& node, int32_t bufferAge,
     bool useAlignedDirtyRegion)
 {
@@ -50,7 +44,7 @@ void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& no
         }
         auto surfaceDirtyManager = surfaceNode->GetDirtyManager();
         if (!surfaceDirtyManager->SetBufferAge(bufferAge)) {
-            ROSEN_LOGE("RSUniRenderUtil::MergeVisibleDirtyRegion with invalid buffer age %{public}d", bufferAge);
+            ROSEN_LOGE("RSUniRenderUtil::MergeDirtyHistory with invalid buffer age %{public}d", bufferAge);
         }
         surfaceDirtyManager->IntersectDirtyRect(surfaceNode->GetOldDirtyInSurface());
         surfaceDirtyManager->UpdateDirty(useAlignedDirtyRegion);
@@ -60,7 +54,7 @@ void RSUniRenderUtil::MergeDirtyHistory(std::shared_ptr<RSDisplayRenderNode>& no
 }
 
 Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
-    bool useAlignedDirtyRegion)
+    std::vector<NodeId>& hasVisibleDirtyRegionSurfaceVec, bool useAlignedDirtyRegion)
 {
     Occlusion::Region allSurfaceVisibleDirtyRegion;
     for (auto it = node->GetCurAllSurfaces().rbegin(); it != node->GetCurAllSurfaces().rend(); ++it) {
@@ -76,6 +70,9 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDis
         Occlusion::Region surfaceDirtyRegion { dirtyRect };
         Occlusion::Region surfaceVisibleDirtyRegion = surfaceDirtyRegion.And(visibleRegion);
         surfaceNode->SetVisibleDirtyRegion(surfaceVisibleDirtyRegion);
+        if (!surfaceVisibleDirtyRegion.IsEmpty()) {
+            hasVisibleDirtyRegionSurfaceVec.emplace_back(surfaceNode->GetId());
+        }
         if (useAlignedDirtyRegion) {
             Occlusion::Region alignedRegion = AlignedDirtyRegion(surfaceVisibleDirtyRegion);
             surfaceNode->SetAlignedVisibleDirtyRegion(alignedRegion);
@@ -190,6 +187,7 @@ BufferDrawParam RSUniRenderUtil::CreateBufferDrawParam(const RSSurfaceRenderNode
 {
     BufferDrawParam params;
     params.threadIndex = threadIndex;
+    params.useBilinearInterpolation = node.NeedBilinearInterpolation();
 #ifdef RS_ENABLE_EGLIMAGE
     params.useCPU = forceCPU;
 #else // RS_ENABLE_EGLIMAGE
@@ -367,10 +365,13 @@ Occlusion::Region RSUniRenderUtil::AlignedDirtyRegion(const Occlusion::Region& d
     return alignedRegion;
 }
 
-bool RSUniRenderUtil::HandleSubThreadNode(RSRenderNode& node, RSPaintFilterCanvas& canvas)
+bool RSUniRenderUtil::HandleSubThreadNode(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas)
 {
     if (node.IsMainThreadNode()) {
         return false;
+    } else if (RSMainThread::Instance()->GetDeviceType() == DeviceType::PC &&
+        !node.QueryIfAllHwcChildrenForceDisabledByFilter()) {
+        return false; // this node should do DSS composition in mainThread although it is assigned to subThread
     }
     if (!node.HasCachedTexture()) {
         RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", node.GetId());
@@ -475,26 +476,87 @@ bool RSUniRenderUtil::Is3DRotation(Drawing::Matrix matrix)
 
 #endif
 
+void RSUniRenderUtil::ReleaseColorPickerFilter(std::shared_ptr<RSFilter> RSFilter)
+{
+    auto materialFilter = std::static_pointer_cast<RSMaterialFilter>(RSFilter);
+    if (materialFilter->GetColorPickerCacheTask() == nullptr) {
+        return;
+    }
+    materialFilter->ReleaseColorPickerFilter();
+}
+
+void RSUniRenderUtil::ReleaseColorPickerResource(std::shared_ptr<RSRenderNode>& node)
+{
+    if (node == nullptr) {
+        return;
+    }
+    auto& properties = node->GetRenderProperties();
+    if (properties.GetColorPickerCacheTaskShadow() != nullptr) {
+        properties.ReleaseColorPickerTaskShadow();
+    }
+    if ((properties.GetFilter() != nullptr &&
+        properties.GetFilter()->GetFilterType() == RSFilter::MATERIAL)) {
+        ReleaseColorPickerFilter(properties.GetFilter());
+    }
+    if (properties.GetBackgroundFilter() != nullptr &&
+        properties.GetBackgroundFilter()->GetFilterType() == RSFilter::MATERIAL) {
+        ReleaseColorPickerFilter(properties.GetBackgroundFilter());
+    }
+    // Recursive to release color picker resource
+    for (auto& child : *node->GetChildren()) {
+        if (auto canvasChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
+            ReleaseColorPickerResource(canvasChild);
+        }
+    }
+}
+
+bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode> node, bool isDisplayRotation)
+{
+    bool isPhoneType = RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE;
+    bool isNeedAssignToSubThread = false;
+    if (isPhoneType && node->IsLeashWindow()) {
+        isNeedAssignToSubThread = (node->IsScale() || ROSEN_EQ(node->GetGlobalAlpha(), 0.0f) ||
+            node->GetForceUIFirst()) && !node->HasFilter();
+        RS_TRACE_NAME_FMT("Assign info: name[%s] id[%lu]"
+            " status:%d filter:%d isScale:%d forceUIFirst:%d isNeedAssign:%d",
+            node->GetName().c_str(), node->GetId(), node->GetCacheSurfaceProcessedStatus(),
+            node->HasFilter(), node->IsScale(), node->GetForceUIFirst(), isNeedAssignToSubThread);
+    }
+    std::string surfaceName = node->GetName();
+    bool needFilterSCB = surfaceName.substr(0, 3) == "SCB" ||
+        surfaceName.substr(0, 13) == "BlurComponent"; // filter BlurComponent, 13 is string len
+    if (needFilterSCB || node->IsSelfDrawingType()) {
+        return false;
+    }
+    if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) { // node exceed one vsync
+        return true;
+    }
+    if (isPhoneType) {
+        return isNeedAssignToSubThread;
+    } else { // PC or TABLET
+        if ((node->IsFocusedNode(RSMainThread::Instance()->GetFocusNodeId()) ||
+            node->IsFocusedNode(RSMainThread::Instance()->GetFocusLeashWindowId())) &&
+            node->GetHasSharedTransitionNode()) {
+            return false;
+        }
+        return node->QuerySubAssignable(isDisplayRotation);
+    }
+}
+
 void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
     std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
-    std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes, uint64_t focusNodeId, DeviceType deviceType)
+    std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
 {
     if (displayNode == nullptr) {
         ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes display node is null");
         return;
     }
     bool isRotation = displayNode->IsRotationChanged();
-    bool rotationCache = RSSystemProperties::GetCacheEnabledForRotation();
-    bool isFocusNodeFound = false;
-    uint64_t realFocusNodeId = 0;
-    std::string logInfo = "";
-    std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-        std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
-        displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
-        std::copy(curAllSurfacesVec.begin(), curAllSurfacesVec.end(), std::back_inserter(curAllSurfaces));
+        displayNode->CollectSurface(displayNode, curAllSurfaces, true, true);
     } else {
-        curAllSurfaces = displayNode->GetSortedChildren();
+        curAllSurfaces = *displayNode->GetSortedChildren();
     }
     for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
         auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
@@ -502,78 +564,22 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
             ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes nullptr found in sortedChildren, this should not happen");
             continue;
         }
-        if (deviceType != DeviceType::PHONE) {
-            if (node->GetId() == focusNodeId) {
-                isFocusNodeFound = true;
-                realFocusNodeId = focusNodeId;
-            }
-            if (!isFocusNodeFound && node->IsLeashWindow()) {
-                for (auto& child : node->GetSortedChildren()) {
-                    if (child && child->GetId() == focusNodeId) {
-                        isFocusNodeFound = true;
-                        realFocusNodeId = node->GetId();
-                    }
-                }
-            }
+
+        // release color picker resource when thread-switching between RS and subthread
+        bool lastIsNeedAssignToSubThread = node->GetLastIsNeedAssignToSubThread();
+        bool isNodeAssignSubThread = IsNodeAssignSubThread(node, isRotation);
+        if (isNodeAssignSubThread != lastIsNeedAssignToSubThread) {
+            auto renderNode = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node);
+            ReleaseColorPickerResource(renderNode);
+            node->SetLastIsNeedAssignToSubThread(isNodeAssignSubThread);
         }
-    }
-    // trace info for assign window nodes
-    bool debugTraceEnable = Rosen::RSSystemProperties::GetDebugTraceEnabled();
-    if (debugTraceEnable) {
-        logInfo += "{ rotationCache: " + std::to_string(rotationCache) + ", " +
-            "isRotation: " + std::to_string(isRotation) + " }; " +
-            "realFocusNodeId: " + std::to_string(realFocusNodeId) + " ]";
-    }
-    for (auto iter = curAllSurfaces.begin(); iter != curAllSurfaces.end(); iter++) {
-        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*iter);
-        if (node == nullptr) {
-            ROSEN_LOGE("RSUniRenderUtil::AssignWindowNodes nullptr found in sortedChildren, this should not happen");
-            continue;
-        }
-        bool isNeedAssignToSubThread = !rotationCache && node->IsLeashWindow()
-            && (node->IsScale() || ROSEN_EQ(node->GetGlobalAlpha(), 0.0f))
-            && !node->HasFilter();
-        // trace info for assign window nodes
-        if (debugTraceEnable) {
-            logInfo += "node:[ " + node->GetName() + ", " + std::to_string(node->GetId()) + " ]" +
-                "( " + std::to_string(static_cast<uint32_t>(node->GetCacheSurfaceProcessedStatus())) + ", " +
-                std::to_string(node->HasFilter()) + ", " + std::to_string(node->HasAbilityComponent()) +
-                ", " + std::to_string(node->IsScale()) + ", " + std::to_string(isNeedAssignToSubThread) + " ); ";
-        }
-        std::string surfaceName = node->GetName();
-        bool needFilter = surfaceName == ENTRY_VIEW || surfaceName == WALLPAPER_VIEW ||
-            surfaceName == SYSUI_STATUS_BAR || surfaceName == SCREENLOCK_WINDOW ||
-            surfaceName == SYSUI_DROPDOWN || surfaceName == PRIVACY_INDICATOR;
-        bool needFilterSCB = surfaceName.substr(0, 3) == "SCB" ||
-            surfaceName.substr(0, 13) == "BlurComponent"; // filter BlurComponent, 13 is string len
-        if (needFilter || needFilterSCB || node->IsSelfDrawingType()) {
+        if (isNodeAssignSubThread) {
+            AssignSubThreadNode(subThreadNodes, node);
+        } else {
             AssignMainThreadNode(mainThreadNodes, node);
-            continue;
-        }
-        if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) { // node exceed one vsync
-            AssignSubThreadNode(subThreadNodes, node, deviceType, realFocusNodeId);
-            continue;
-        }
-        if (deviceType == DeviceType::PHONE) {
-            if (isNeedAssignToSubThread) { // app start or close scene
-                AssignSubThreadNode(subThreadNodes, node);
-            } else { // other scene
-                AssignMainThreadNode(mainThreadNodes, node);
-            }
-        } else { // PC or TABLET
-            if (node->GetId() == realFocusNodeId) {
-                AssignMainThreadNode(mainThreadNodes, node);
-                continue;
-            }
-            if (node->QuerySubAssignable(isRotation)) {
-                AssignSubThreadNode(subThreadNodes, node, deviceType, realFocusNodeId);
-            } else {
-                AssignMainThreadNode(mainThreadNodes, node);
-            }
         }
     }
     SortSubThreadNodes(subThreadNodes);
-    RS_OPTIONAL_TRACE_NAME("RSUniRenderUtil::AssignWindowNodes:" + logInfo);
 }
 
 void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& mainThreadNodes,
@@ -595,10 +601,17 @@ void RSUniRenderUtil::AssignMainThreadNode(std::list<std::shared_ptr<RSSurfaceRe
         node->SetIsMainThreadNode(true);
         node->SetTextureValidFlag(false);
     }
+    if (RSMainThread::Instance()->GetDeviceType() == DeviceType::PC) {
+        RS_TRACE_NAME_FMT("AssignMainThread: name: %s, id: %lu, [HasTransparentSurface: %d, ChildHasFilter: %d,"
+            "HasFilter: %d, HasAbilityComponent: %d, QueryIfAllHwcChildrenForceDisabledByFilter: %d]",
+            node->GetName().c_str(), node->GetId(), node->GetHasTransparentSurface(),
+            node->ChildHasFilter(), node->HasFilter(), node->HasAbilityComponent(),
+            node->QueryIfAllHwcChildrenForceDisabledByFilter());
+    }
 }
 
-void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
-    const std::shared_ptr<RSSurfaceRenderNode>& node, DeviceType deviceType, uint64_t focusNodeId)
+void RSUniRenderUtil::AssignSubThreadNode(
+    std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes, const std::shared_ptr<RSSurfaceRenderNode>& node)
 {
     if (node == nullptr) {
         ROSEN_LOGW("RSUniRenderUtil::AssignSubThreadNode node is nullptr");
@@ -607,15 +620,17 @@ void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRen
     node->SetNeedSubmitSubThread(true);
     node->SetCacheType(CacheType::CONTENT);
     node->SetIsMainThreadNode(false);
-
+    auto deviceType = RSMainThread::Instance()->GetDeviceType();
     // skip complete static window, DO NOT assign it to subthread.
     if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DONE &&
-        node->IsCurrentFrameStatic() && node->HasCachedTexture()) {
+        node->HasCachedTexture() && node->IsUIFirstSelfDrawCheck() &&
+        (node->IsCurFrameStatic(deviceType) || node->IsVisibleDirtyEmpty(deviceType))) {
         node->SetNeedSubmitSubThread(false);
         RS_OPTIONAL_TRACE_NAME_FMT("subThreadNodes : static skip %s", node->GetName().c_str());
     } else {
         node->UpdateCacheSurfaceDirtyManager(2); // 2 means buffer age
     }
+    node->SetLastFrameChildrenCnt(node->GetChildren()->size());
     subThreadNodes.emplace_back(node);
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DONE &&
@@ -625,7 +640,7 @@ void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRen
             !RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock())) {
             node->GetDirtyManager()->MergeDirtyRect(node->GetOldDirty());
         } else {
-            for (auto& child : node->GetSortedChildren()) {
+            for (auto& child : *node->GetSortedChildren()) {
                 auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
                 if (surfaceNode && surfaceNode->IsAppWindow()) {
                     surfaceNode->GetDirtyManager()->MergeDirtyRect(surfaceNode->GetOldDirty());
@@ -636,7 +651,9 @@ void RSUniRenderUtil::AssignSubThreadNode(std::list<std::shared_ptr<RSSurfaceRen
         node->SetCacheSurfaceNeedUpdated(false);
     }
 #endif
-    if ((deviceType == DeviceType::PC || deviceType == DeviceType::TABLET) && node->GetId() == focusNodeId) {
+    bool isFocus = node->IsFocusedNode(RSMainThread::Instance()->GetFocusNodeId()) ||
+        (node->IsFocusedNode(RSMainThread::Instance()->GetFocusLeashWindowId()));
+    if ((deviceType == DeviceType::PC || deviceType == DeviceType::TABLET) && isFocus) {
         node->SetPriority(NodePriorityType::SUB_FOCUSNODE_PRIORITY); // for resolving response latency
         return;
     }
@@ -690,7 +707,7 @@ void RSUniRenderUtil::HandleHardwareNode(const std::shared_ptr<RSSurfaceRenderNo
     }
     auto appWindow = node;
     if (node->IsLeashWindow()) {
-        for (auto& child : node->GetSortedChildren()) {
+        for (auto& child : *node->GetSortedChildren()) {
             auto surfaceNodePtr = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
             if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
                 appWindow = surfaceNodePtr;
@@ -715,19 +732,17 @@ void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
     if (displayNode == nullptr) {
         return;
     }
-    std::list<RSBaseRenderNode::SharedPtr> curAllSurfaces;
+    std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-        std::vector<RSBaseRenderNode::SharedPtr> curAllSurfacesVec;
-        displayNode->CollectSurface(displayNode, curAllSurfacesVec, true, true);
-        std::copy(curAllSurfacesVec.begin(), curAllSurfacesVec.end(), std::back_inserter(curAllSurfaces));
+        displayNode->CollectSurface(displayNode, curAllSurfaces, true, true);
     } else {
-        curAllSurfaces = displayNode->GetSortedChildren();
+        curAllSurfaces = *displayNode->GetSortedChildren();
     }
     std::set<std::shared_ptr<RSBaseRenderNode>> tmpSet(curAllSurfaces.begin(), curAllSurfaces.end());
     for (auto& child : oldChildren) {
         auto surface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
         if (tmpSet.count(surface) == 0) {
-            if (surface->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
+            if (surface && surface->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DOING) {
                 tmpSet.emplace(surface);
                 continue;
             }
@@ -739,7 +754,11 @@ void RSUniRenderUtil::ClearSurfaceIfNeed(const RSRenderNodeMap& map,
                     surface->SetIsMainThreadNode(true);
                     surface->SetTextureValidFlag(false);
                 } else {
-                    ClearCacheSurface(*surface, UNI_MAIN_THREAD_INDEX, false);
+                    if (RSMainThread::Instance()->IsPCThreeFingerScenesListScene()) {
+                        ClearCacheSurface(*surface, UNI_MAIN_THREAD_INDEX, false);
+                    } else {
+                        ClearCacheSurface(*surface, UNI_MAIN_THREAD_INDEX);
+                    }
                 }
             }
         }

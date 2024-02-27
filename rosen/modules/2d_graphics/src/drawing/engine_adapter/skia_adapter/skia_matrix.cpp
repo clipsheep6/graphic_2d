@@ -16,11 +16,14 @@
 #include "skia_matrix.h"
 
 #include "utils/matrix.h"
+#include "skia_matrix44.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 SkiaMatrix::SkiaMatrix() : skMatrix_() {}
+
+SkiaMatrix::SkiaMatrix(const Matrix& other) : skMatrix_(other.GetImplPtr<SkiaMatrix>()->ExportSkiaMatrix()) {}
 
 const SkMatrix& SkiaMatrix::ExportSkiaMatrix() const
 {
@@ -30,6 +33,11 @@ const SkMatrix& SkiaMatrix::ExportSkiaMatrix() const
 void SkiaMatrix::ImportMatrix(const SkMatrix& skMatrix)
 {
     skMatrix_ = skMatrix;
+}
+
+SkMatrix& SkiaMatrix::ExportMatrix()
+{
+    return skMatrix_;
 }
 
 void SkiaMatrix::Rotate(scalar degree, scalar px, scalar py)
@@ -52,14 +60,44 @@ void SkiaMatrix::SetScale(scalar sx, scalar sy)
     skMatrix_.setScale(sx, sy);
 }
 
+void SkiaMatrix::SetScaleTranslate(scalar sx, scalar sy, scalar dx, scalar dy)
+{
+    skMatrix_.setScaleTranslate(sx, sy, dx, dy);
+}
+
+void SkiaMatrix::SetSkew(scalar kx, scalar ky)
+{
+    skMatrix_.setSkew(kx, ky);
+}
+
+void SkiaMatrix::SetSkew(scalar kx, scalar ky, scalar px, scalar py)
+{
+    skMatrix_.setSkew(kx, ky, px, py);
+}
+
 void SkiaMatrix::PreRotate(scalar degree)
 {
     skMatrix_.preRotate(degree);
 }
 
+void SkiaMatrix::PostRotate(scalar degree)
+{
+    skMatrix_.postRotate(degree);
+}
+
+void SkiaMatrix::PostRotate(scalar degree, scalar px, scalar py)
+{
+    skMatrix_.postRotate(degree, px, py);
+}
+
 void SkiaMatrix::PreTranslate(scalar dx, scalar dy)
 {
     skMatrix_.preTranslate(dx, dy);
+}
+
+void SkiaMatrix::PostTranslate(scalar dx, scalar dy)
+{
+    skMatrix_.postTranslate(dx, dy);
 }
 
 void SkiaMatrix::PreScale(scalar sx, scalar sy)
@@ -72,14 +110,48 @@ void SkiaMatrix::PostScale(scalar sx, scalar sy)
     skMatrix_.postScale(sx, sy);
 }
 
+void SkiaMatrix::PostScale(scalar sx, scalar sy, scalar px, scalar py)
+{
+    skMatrix_.postScale(sx, sy, px, py);
+}
+
+void SkiaMatrix::PreSkew(scalar kx, scalar ky)
+{
+    skMatrix_.preSkew(kx, ky);
+}
+
+void SkiaMatrix::PreSkew(scalar kx, scalar ky, scalar px, scalar py)
+{
+    skMatrix_.preSkew(kx, ky, px, py);
+}
+void SkiaMatrix::PostSkew(scalar kx, scalar ky)
+{
+    skMatrix_.postSkew(kx, ky);
+}
+
+void SkiaMatrix::PostSkew(scalar kx, scalar ky, scalar px, scalar py)
+{
+    skMatrix_.postSkew(kx, ky, px, py);
+}
+
 void SkiaMatrix::PreConcat(const Matrix& other)
 {
-    skMatrix_.preConcat(other.GetImpl<SkiaMatrix>()->ExportSkiaMatrix());
+    skMatrix_.preConcat(other.GetImplPtr<SkiaMatrix>()->ExportSkiaMatrix());
+}
+
+void SkiaMatrix::PreConcat(const Matrix44& other)
+{
+    skMatrix_.preConcat(other.GetImpl<SkiaMatrix44>()->GetSkMatrix44().asM33());
 }
 
 void SkiaMatrix::PostConcat(const Matrix& other)
 {
-    skMatrix_.postConcat(other.GetImpl<SkiaMatrix>()->ExportSkiaMatrix());
+    skMatrix_.postConcat(other.GetImplPtr<SkiaMatrix>()->ExportSkiaMatrix());
+}
+
+void SkiaMatrix::PostConcat(const Matrix44& other)
+{
+    skMatrix_.postConcat(other.GetImpl<SkiaMatrix44>()->GetSkMatrix44().asM33());
 }
 
 bool SkiaMatrix::Invert(Matrix& inverse) const
@@ -123,7 +195,7 @@ void SkiaMatrix::MapPoints(std::vector<Point>& dst, const std::vector<Point>& sr
         return;
     }
     if (dst.size() > count) {
-        for (int i = dst.size(); i > count; --i) {
+        for (size_t i = dst.size(); i > count; --i) {
             dst.pop_back();
         }
     }
@@ -135,11 +207,15 @@ bool SkiaMatrix::MapRect(Rect& dst, const Rect& src) const
 {
     SkRect skSrc = SkRect::MakeXYWH(src.GetLeft(), src.GetTop(), src.GetWidth(), src.GetHeight());
     SkRect skDst;
-    if (skMatrix_.mapRect(&skDst, skSrc)) {
-        dst = Rect(skDst.fLeft, skDst.fTop, skDst.fRight, skDst.fBottom);
-        return true;
-    }
-    return false;
+    bool ret = skMatrix_.mapRect(&skDst, skSrc);
+    dst = Rect(skDst.fLeft, skDst.fTop, skDst.fRight, skDst.fBottom);
+    return ret;
+}
+
+bool SkiaMatrix::SetPolyToPoly(const Point src[], const Point dst[], uint32_t count)
+{
+    return skMatrix_.setPolyToPoly(
+        reinterpret_cast<const SkPoint*>(src), reinterpret_cast<const SkPoint*>(dst), count);
 }
 
 void SkiaMatrix::Set(int index, scalar value)
@@ -157,14 +233,19 @@ void SkiaMatrix::GetAll(std::array<scalar, MatrixImpl::MATRIX_SIZE>& buffer) con
     skMatrix_.get9(buffer.data());
 }
 
+void SkiaMatrix::SetAll(std::array<scalar, MatrixImpl::MATRIX_SIZE>& buffer)
+{
+    skMatrix_.set9(buffer.data());
+}
+
 bool SkiaMatrix::IsIdentity() const
 {
     return skMatrix_.isIdentity();
 }
 
-MatrixImpl* SkiaMatrix::Clone()
+void SkiaMatrix::Clone(const Matrix& other)
 {
-    return new SkiaMatrix(*this);
+    skMatrix_ = other.GetImplPtr<SkiaMatrix>()->ExportSkiaMatrix();
 }
 
 void SkiaMatrix::PreRotate(scalar degree, scalar px, scalar py)
@@ -180,6 +261,16 @@ void SkiaMatrix::PreScale(scalar sx, scalar sy, scalar px, scalar py)
 void SkiaMatrix::Reset()
 {
     skMatrix_.reset();
+}
+
+bool SkiaMatrix::GetMinMaxScales(scalar scaleFactors[2])
+{
+    return skMatrix_.getMinMaxScales(scaleFactors);
+}
+
+bool SkiaMatrix::HasPerspective() const
+{
+    return skMatrix_.hasPerspective();
 }
 } // namespace Drawing
 } // namespace Rosen

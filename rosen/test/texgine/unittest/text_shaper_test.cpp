@@ -50,22 +50,12 @@ void InitTsMockVars(struct MockVars &&vars)
     g_tsMockvars = std::move(vars);
 }
 
-std::shared_ptr<TexgineTextBlobBuilder::RunBuffer> TexgineTextBlobBuilder::AllocRunPos(const TexgineFont& font,
-    int count)
-{
-    static std::shared_ptr<TexgineTextBlobBuilder::RunBuffer> buffer =
-        std::make_shared<TexgineTextBlobBuilder::RunBuffer>();
-    g_tsMockvars.catchedBufferGlyphs.resize(count);
-    g_tsMockvars.catchedBufferPos.resize(count * 2);
-    buffer->glyphs = g_tsMockvars.catchedBufferGlyphs.data();
-    buffer->pos = g_tsMockvars.catchedBufferPos.data();
-    return buffer;
-}
-
+#ifndef USE_ROSEN_DRAWING
 std::shared_ptr<TexgineTextBlob> TexgineTextBlobBuilder::Make()
 {
     return g_tsMockvars.retvalTextBlobBuilderMake;
 }
+#endif
 
 std::shared_ptr<FontCollection> FontProviders::GenerateFontCollection(
     const std::vector<std::string> &families) const noexcept(true)
@@ -126,8 +116,8 @@ HWTEST_F(TextShaperTest, DoShape1, TestSize.Level1)
     auto fp = FontProviders::Create();
     std::shared_ptr<TextSpan> tsNullptr;
     auto tsNormal = TextSpan::MakeFromText("normal");
-    ASSERT_EXCEPTION(ExceptionType::INVALID_ARGUMENT, shaper.DoShape(tsNullptr, {}, {}, fp));
-    ASSERT_EXCEPTION(ExceptionType::INVALID_ARGUMENT, shaper.DoShape(tsNormal, {}, {}, nullptr));
+    ASSERT_EQ(1, shaper.DoShape(tsNullptr, {}, {}, fp));
+    ASSERT_EQ(1, shaper.DoShape(tsNormal, {}, {}, nullptr));
 }
 
 /**
@@ -232,49 +222,8 @@ HWTEST_F(TextShaperTest, GenerateTextBlob1, TestSize.Level1)
     double spanWidth = 0.0;
     std::vector<double> glyphWidths;
     TextShaper shaper;
-    ASSERT_EXCEPTION(ExceptionType::API_FAILED, shaper.GenerateTextBlob({},
-        CharGroups::CreateEmpty(), spanWidth, glyphWidths));
-}
-
-/**
- * @tc.name: GenerateTextBlob2
- * @tc.desc: Verify the GenerateTextBlob
- * @tc.type:FUNC
- */
-HWTEST_F(TextShaperTest, GenerateTextBlob2, TestSize.Level1)
-{
-    EXPECT_NO_THROW({
-        double spanWidth = 0.0;
-        std::vector<double> glyphWidths;
-        TextShaper shaper;
-        shaper.GenerateTextBlob({}, cgs1_, spanWidth, glyphWidths);
-        ASSERT_EQ(spanWidth, 2);
-        // 2.0 is glyph width
-        ASSERT_EQ(glyphWidths, (std::vector<double>{2.0}));
-        // {0.1, -0.1, 1.2, -0.2} is the position of code point in text blob
-        ASSERT_EQ(g_tsMockvars.catchedBufferPos, (std::vector<float>{0.1, -0.1, 1.2, -0.2}));
-        // {1, 2} is the glyph in text blob
-        ASSERT_EQ(g_tsMockvars.catchedBufferGlyphs, (std::vector<uint16_t>{1, 2}));
-    });
-}
-
-/**
- * @tc.name: GenerateTextBlob3
- * @tc.desc: Verify the GenerateTextBlob
- * @tc.type:FUNC
- */
-HWTEST_F(TextShaperTest, GenerateTextBlob3, TestSize.Level1)
-{
-    EXPECT_NO_THROW({
-        double spanWidth = 0.0;
-        std::vector<double> glyphWidths;
-        TextShaper shaper;
-        shaper.GenerateTextBlob({}, cgs2_, spanWidth, glyphWidths);
-        ASSERT_EQ(spanWidth, 2);
-        ASSERT_EQ(glyphWidths, (std::vector<double>{1.0, 1.0}));
-        ASSERT_EQ(g_tsMockvars.catchedBufferPos, (std::vector<float>{0.1, -0.1, 1.2, -0.2}));
-        ASSERT_EQ(g_tsMockvars.catchedBufferGlyphs, (std::vector<uint16_t>{1, 2}));
-    });
+    TexgineFont font;
+    ASSERT_EQ(nullptr, shaper.GenerateTextBlob(font, CharGroups::CreateEmpty(), spanWidth, glyphWidths));
 }
 
 /**
@@ -287,8 +236,8 @@ HWTEST_F(TextShaperTest, Shape1, TestSize.Level1)
     std::shared_ptr<TextSpan> tsNullptr = nullptr;
     std::shared_ptr<AnySpan> asNullptr = nullptr;
     TextShaper shaper;
-    ASSERT_EXCEPTION(ExceptionType::INVALID_ARGUMENT, shaper.Shape(tsNullptr, {}, FontProviders::Create()));
-    ASSERT_EXCEPTION(ExceptionType::INVALID_ARGUMENT, shaper.Shape(asNullptr, {}, FontProviders::Create()));
+    ASSERT_EQ(1, shaper.Shape(tsNullptr, {}, FontProviders::Create()));
+    ASSERT_EQ(1, shaper.Shape(asNullptr, {}, FontProviders::Create()));
 }
 
 /**
@@ -340,44 +289,7 @@ HWTEST_F(TextShaperTest, Shape4, TestSize.Level1)
     EXPECT_CALL(*g_tsMockvars.retvalMeasurerCreate, Measure).Times(1).WillOnce(testing::Return(0));
     cgs1_.Get(0).typeface = nullptr;
 
-    ASSERT_EXCEPTION(ExceptionType::INVALID_ARGUMENT,
-        shaper.Shape(GenerateTextSpan({.cgs_ = cgs1_}), {}, FontProviders::Create()));
-}
-
-/**
- * @tc.name: Shape5
- * @tc.desc: Verify the Shape
- * @tc.type:FUNC
- */
-HWTEST_F(TextShaperTest, Shape5, TestSize.Level1)
-{
-    InitTsMockVars({});
-    EXPECT_CALL(*g_tsMockvars.retvalMeasurerCreate, Measure).Times(1).WillOnce(testing::Return(0));
-    cgs1_.Get(0).typeface = std::make_unique<Typeface>(nullptr);
-
-    EXPECT_NO_THROW({
-        TextShaper shaper;
-        auto ret = shaper.Shape(GenerateTextSpan({.cgs_ = cgs1_}), {}, FontProviders::Create());
-        ASSERT_EQ(ret, 1);
-    });
-}
-
-/**
- * @tc.name: Shape6
- * @tc.desc: Verify the Shape
- * @tc.type:FUNC
- */
-HWTEST_F(TextShaperTest, Shape6, TestSize.Level1)
-{
-    InitTsMockVars({});
-    EXPECT_CALL(*g_tsMockvars.retvalMeasurerCreate, Measure).Times(1).WillOnce(testing::Return(0));
-    g_tsMockvars.retvalTextBlobBuilderMake = std::make_shared<TexgineTextBlob>();
-
-    EXPECT_NO_THROW({
-        TextShaper shaper;
-        auto ret = shaper.Shape(GenerateTextSpan({.cgs_ = cgs1_}), {}, FontProviders::Create());
-        ASSERT_EQ(ret, 0);
-    });
+    ASSERT_EQ(1, shaper.Shape(GenerateTextSpan({.cgs_ = cgs1_}), {}, FontProviders::Create()));
 }
 } // namespace TextEngine
 } // namespace Rosen

@@ -494,6 +494,48 @@ HWTEST_F(RSModifierTest, ScaleModifier002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: SkewModifier001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSModifierTest, SkewModifier001, TestSize.Level1)
+{
+    auto value = Vector2f(2.f, 2.f);
+    auto prop = std::make_shared<RSAnimatableProperty<Vector2f>>(value);
+    auto modifier = std::make_shared<RSSkewModifier>(prop);
+
+    auto node = RSCanvasNode::Create();
+    node->AddModifier(modifier);
+    ASSERT_TRUE(node != nullptr);
+    ASSERT_EQ(node->GetStagingProperties().GetSkew(), value);
+
+    node->RemoveModifier(modifier);
+    auto node1 = RSCanvasNode::Create();
+    ASSERT_EQ(node->GetStagingProperties().GetSkew(), node1->GetStagingProperties().GetSkew());
+}
+
+/**
+ * @tc.name: SkewModifier002
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSModifierTest, SkewModifier002, TestSize.Level1)
+{
+    auto value = Vector2f();
+    auto prop = std::make_shared<RSAnimatableProperty<Vector2f>>(value);
+    auto modifier = std::make_shared<RSSkewModifier>(prop);
+
+    auto node = RSCanvasNode::Create();
+    node->AddModifier(modifier);
+    ASSERT_TRUE(node != nullptr);
+    ASSERT_EQ(node->GetStagingProperties().GetSkew(), value);
+
+    value = Vector2f(0.5f, 0.5f);
+    prop->Set(value);
+    ASSERT_EQ(node->GetStagingProperties().GetSkew(), value);
+}
+
+/**
  * @tc.name: TranslateModifier001
  * @tc.desc:
  * @tc.type:FUNC
@@ -1767,7 +1809,11 @@ HWTEST_F(RSModifierTest, ShadowPathModifier002, TestSize.Level1)
  */
 HWTEST_F(RSModifierTest, MaskModifier001, TestSize.Level1)
 {
+#ifndef USE_ROSEN_DRAWING
     auto value = RSMask::CreateGradientMask(SkPaint());
+#else
+    auto value = RSMask::CreateGradientMask(Drawing::Brush());
+#endif
     auto prop = std::make_shared<RSProperty<std::shared_ptr<RSMask>>>(value);
     auto modifier = std::make_shared<RSMaskModifier>(prop);
 
@@ -1797,7 +1843,11 @@ HWTEST_F(RSModifierTest, MaskModifier002, TestSize.Level1)
     ASSERT_TRUE(node != nullptr);
     ASSERT_EQ(node->GetStagingProperties().GetMask(), value);
 
+#ifndef USE_ROSEN_DRAWING
     value = RSMask::CreateGradientMask(SkPaint());
+#else
+    value = RSMask::CreateGradientMask(Drawing::Brush());
+#endif
     prop->Set(value);
     ASSERT_EQ(node->GetStagingProperties().GetMask(), value);
 }

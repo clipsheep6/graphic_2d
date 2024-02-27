@@ -56,6 +56,7 @@ void RSRenderEngine::DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, RSSu
     // draw shadow(should before canvas.clipRect in DrawWithParams()).
     const auto& property = node.GetRenderProperties();
     RSPropertiesPainter::DrawShadow(property, canvas, &params.clipRRect);
+    RSPropertiesPainter::DrawOutline(property, canvas);
 
     DrawWithParams(canvas, params, nodePreProcessFunc, nodePostProcessFunc);
 }
@@ -185,13 +186,9 @@ void RSRenderEngine::RSSurfaceNodeCommonPostProcess(RSSurfaceRenderNode& node, R
 #ifndef USE_ROSEN_DRAWING
     RSPropertiesPainter::DrawFilter(property, canvas, FilterType::FOREGROUND_FILTER,
         SkRect::MakeWH(params.srcRect.width(), params.srcRect.height()));
-    RSPropertiesPainter::DrawLinearGradientBlurFilter(
-        property, canvas, SkRect::MakeWH(params.srcRect.width(), params.srcRect.height()));
 #else
     RSPropertiesPainter::DrawFilter(property, canvas, FilterType::FOREGROUND_FILTER,
         Drawing::Rect(0, 0, params.srcRect.GetWidth(), params.srcRect.GetHeight()));
-    RSPropertiesPainter::DrawLinearGradientBlurFilter(
-        property, canvas, Drawing::Rect(0, 0, params.srcRect.GetWidth(), params.srcRect.GetHeight()));
 #endif
 }
 

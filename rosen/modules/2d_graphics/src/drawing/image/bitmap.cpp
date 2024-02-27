@@ -21,22 +21,19 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 Bitmap::Bitmap()
-    : bmpImplPtr(ImplFactory::CreateBitmapImpl()),
-      format_({ COLORTYPE_UNKNOWN, ALPHATYPE_UNKNOWN })
+    : bmpImplPtr(ImplFactory::CreateBitmapImpl())
 {}
 
 Bitmap::~Bitmap() {}
 
 void Bitmap::Build(int32_t width, int32_t height, const BitmapFormat& format, int32_t stride)
 {
-    format_ = format;
     bmpImplPtr->Build(width, height, format, stride);
 }
 
 void Bitmap::Build(const ImageInfo& imageInfo, int32_t stride)
 {
-    imageInfo_ = imageInfo;
-    bmpImplPtr->Build(imageInfo_, stride);
+    bmpImplPtr->Build(imageInfo, stride);
 }
 
 int Bitmap::GetWidth() const
@@ -67,6 +64,11 @@ AlphaType Bitmap::GetAlphaType() const
 bool Bitmap::PeekPixels(Pixmap& pixmap) const
 {
     return bmpImplPtr->PeekPixels(pixmap);
+}
+
+size_t Bitmap::ComputeByteSize() const
+{
+    return bmpImplPtr->ComputeByteSize();
 }
 
 void Bitmap::SetPixels(void* pixel)
@@ -138,18 +140,41 @@ void Bitmap::Free()
 
 BitmapFormat Bitmap::GetFormat() const
 {
-    return format_;
+    ImageInfo imageInfo = GetImageInfo();
+    return {imageInfo.GetColorType(), imageInfo.GetAlphaType()};
 }
 
 void Bitmap::SetFormat(const BitmapFormat& format)
 {
-    format_.alphaType = format.alphaType;
-    format_.colorType = format.colorType;
+    ImageInfo imageinfo = GetImageInfo();
+    imageinfo.SetColorType(format.colorType);
+    imageinfo.SetAlphaType(format.alphaType);
+    SetInfo(imageinfo);
+}
+
+void Bitmap::SetInfo(const ImageInfo& info)
+{
+    bmpImplPtr->SetInfo(info);
 }
 
 ImageInfo Bitmap::GetImageInfo() const
 {
-    return imageInfo_;
+    return bmpImplPtr->GetImageInfo();
+}
+
+Pixmap Bitmap::GetPixmap() const
+{
+    return bmpImplPtr->GetPixmap();
+}
+
+std::shared_ptr<Image> Bitmap::MakeImage() const
+{
+    return bmpImplPtr->MakeImage();
+}
+
+bool Bitmap::TryAllocPixels(const ImageInfo& info)
+{
+    return bmpImplPtr->TryAllocPixels(info);
 }
 
 std::shared_ptr<Data> Bitmap::Serialize() const

@@ -21,7 +21,9 @@
 #include "skia_image_info.h"
 
 #include "image/bitmap.h"
-
+#include "image/image.h"
+#include "SkImagePriv.h"
+#include "skia_image.h"
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
@@ -115,6 +117,11 @@ bool SkiaBitmap::PeekPixels(Pixmap& pixmap) const
     return skiaBitmap_.peekPixels(const_cast<SkPixmap*>(&skiaPixmap));
 }
 
+size_t SkiaBitmap::ComputeByteSize() const
+{
+    return skiaBitmap_.computeByteSize();
+}
+
 const SkBitmap& SkiaBitmap::ExportSkiaBitmap() const
 {
     return skiaBitmap_;
@@ -168,6 +175,38 @@ bool SkiaBitmap::IsValid() const
 bool SkiaBitmap::IsEmpty() const
 {
     return skiaBitmap_.empty();
+}
+
+Pixmap SkiaBitmap::GetPixmap() const
+{
+    SkPixmap skPixmap = skiaBitmap_.pixmap();
+    Pixmap pixmap;
+    pixmap.GetImpl<SkiaPixmap>()->ImportSkiaPixmap(skPixmap);
+    return pixmap;
+}
+
+std::shared_ptr<Image> SkiaBitmap::MakeImage() const
+{
+    SkBitmap skiaBitmap(skiaBitmap_);
+    sk_sp<SkImage> skiaImage = SkMakeImageFromRasterBitmap(skiaBitmap, kNever_SkCopyPixelsMode);
+    if (!skiaImage) {
+        return nullptr;
+    }
+    std::shared_ptr<Image> image = std::make_shared<Image>();
+    image->GetImpl<SkiaImage>()->SetSkImage(skiaImage);
+    return image;
+}
+
+void SkiaBitmap::SetInfo(const ImageInfo& info)
+{
+    SkImageInfo skImageInfo = SkiaImageInfo::ConvertToSkImageInfo(info);
+    skiaBitmap_.setInfo(skImageInfo);
+}
+
+bool SkiaBitmap::TryAllocPixels(const ImageInfo& info)
+{
+    SkImageInfo skImageInfo = SkiaImageInfo::ConvertToSkImageInfo(info);
+    return skiaBitmap_.tryAllocPixels(skImageInfo);
 }
 
 void SkiaBitmap::SetSkBitmap(const SkBitmap& skBitmap)
@@ -255,6 +294,11 @@ bool SkiaBitmap::Deserialize(std::shared_ptr<Data> data)
     skiaBitmap_.allocPixels();
     skiaBitmap_.setPixels(const_cast<void*>(pixBuffer.get()));
     return true;
+}
+
+ImageInfo SkiaBitmap::GetImageInfo()
+{
+    return SkiaImageInfo::ConvertToRSImageInfo(skiaBitmap_.info());
 }
 
 } // namespace Drawing

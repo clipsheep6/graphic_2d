@@ -22,12 +22,14 @@ namespace Rosen {
 namespace Drawing {
 enum class AdapterType {
     SKIA_ADAPTER,
+    DDGR_ADAPTER,
     OTHER_ADAPTER,
 };
 
 enum class DrawingType {
     COMMON,
     RECORDING,
+    OVER_DRAW,
 };
 } // namespace Drawing
 } // namespace Rosen

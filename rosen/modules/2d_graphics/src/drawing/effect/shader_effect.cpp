@@ -18,7 +18,7 @@
 #include "impl_factory.h"
 
 #include "impl_interface/mask_filter_impl.h"
-
+#include "skia_adapter/skia_shader_effect.h"
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -68,11 +68,12 @@ ShaderEffect::ShaderEffect(ShaderEffectType t, const Point& centerPt, scalar rad
 }
 
 ShaderEffect::ShaderEffect(ShaderEffectType t, const Point& startPt, scalar startRadius, const Point& endPt,
-    scalar endRadius, const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode) noexcept
+    scalar endRadius, const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode,
+    const Matrix *matrix) noexcept
     : ShaderEffect()
 {
     type_ = t;
-    impl_->InitWithTwoPointConical(startPt, startRadius, endPt, endRadius, colors, pos, mode);
+    impl_->InitWithTwoPointConical(startPt, startRadius, endPt, endRadius, colors, pos, mode, matrix);
 }
 
 ShaderEffect::ShaderEffect(ShaderEffectType t, const Point& centerPt, const std::vector<ColorQuad>& colors,
@@ -81,6 +82,13 @@ ShaderEffect::ShaderEffect(ShaderEffectType t, const Point& centerPt, const std:
 {
     type_ = t;
     impl_->InitWithSweepGradient(centerPt, colors, pos, mode, startAngle, endAngle, matrix);
+}
+
+ShaderEffect::ShaderEffect(ShaderEffectType t, const float& lightUpDeg, ShaderEffect& imageShader) noexcept
+    : ShaderEffect()
+{
+    type_ = t;
+    impl_->InitWithLightUp(lightUpDeg, imageShader);
 }
 
 ShaderEffect::ShaderEffect() noexcept
@@ -98,7 +106,7 @@ ShaderEffect::ShaderEffectType ShaderEffect::GetType() const
 
 std::shared_ptr<ShaderEffect> ShaderEffect::CreateColorShader(ColorQuad color)
 {
-    return std::make_shared<ShaderEffect>(ShaderEffect::ShaderEffectType::COLOR, color);
+    return std::make_shared<ShaderEffect>(ShaderEffect::ShaderEffectType::COLOR_EFFECT, color);
 }
 
 std::shared_ptr<ShaderEffect> ShaderEffect::CreateBlendShader(ShaderEffect& dst, ShaderEffect& src, BlendMode mode)
@@ -135,10 +143,11 @@ std::shared_ptr<ShaderEffect> ShaderEffect::CreateRadialGradient(const Point& ce
 
 std::shared_ptr<ShaderEffect> ShaderEffect::CreateTwoPointConical(const Point& startPt, scalar startRadius,
     const Point& endPt, scalar endRadius, const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos,
-    TileMode mode)
+    TileMode mode, const Matrix *matrix)
 {
     return std::make_shared<ShaderEffect>(
-        ShaderEffect::ShaderEffectType::CONICAL_GRADIENT, startPt, startRadius, endPt, endRadius, colors, pos, mode);
+        ShaderEffect::ShaderEffectType::CONICAL_GRADIENT, startPt, startRadius, endPt, endRadius, colors, pos, mode,
+        matrix);
 }
 
 std::shared_ptr<ShaderEffect> ShaderEffect::CreateSweepGradient(const Point& centerPt,
@@ -149,6 +158,11 @@ std::shared_ptr<ShaderEffect> ShaderEffect::CreateSweepGradient(const Point& cen
         ShaderEffect::ShaderEffectType::SWEEP_GRADIENT, centerPt, colors, pos, mode, startAngle, endAngle, matrix);
 }
 
+std::shared_ptr<ShaderEffect> ShaderEffect::CreateLightUp(const float& lightUpDeg, ShaderEffect& imageShader)
+{
+    return std::make_shared<ShaderEffect>(ShaderEffect::ShaderEffectType::LIGHT_UP, lightUpDeg, imageShader);
+}
+
 std::shared_ptr<Data> ShaderEffect::Serialize() const
 {
     return impl_->Serialize();
@@ -157,6 +171,16 @@ std::shared_ptr<Data> ShaderEffect::Serialize() const
 bool ShaderEffect::Deserialize(std::shared_ptr<Data> data)
 {
     return impl_->Deserialize(data);
+}
+
+const sk_sp<SkShader> ShaderEffect::ExportSkShader()
+{
+    return GetImpl<SkiaShaderEffect>()->GetShader();
+}
+
+void ShaderEffect::SetSkShader(sk_sp<SkShader> shader)
+{
+    GetImpl<SkiaShaderEffect>()->SetSkShader(shader);
 }
 
 } // namespace Drawing

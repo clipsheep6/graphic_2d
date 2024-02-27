@@ -26,14 +26,12 @@
 #include "utils/point.h"
 #include "utils/rect.h"
 
-#ifdef USE_ROSEN_DRAWING
 #ifdef WINDOWS_PLATFORM
 #ifdef DIFFERENCE
 #undef DIFFERENCE
 #endif
 #ifdef WINDING
 #undef WINDING
-#endif
 #endif
 #endif
 
@@ -125,6 +123,7 @@ public:
     virtual void AddPath(const Path& src, scalar dx, scalar dy);
     virtual void AddPath(const Path& src);
     virtual void AddPath(const Path& src, const Matrix& matrix);
+    virtual bool Contains(scalar x, scalar y) const;
 
     /*
      * @brief       Adds the src from back forward to the Path.
@@ -171,8 +170,11 @@ public:
      */
     bool GetPositionAndTangent(scalar distance, Point& position, Point& tangent, bool forceClosed) const;
 
+    std::shared_ptr<Data> Serialize() const;
+    bool Deserialize(std::shared_ptr<Data> data);
+
     template<typename T>
-    const std::shared_ptr<T> GetImpl() const
+    T* GetImpl() const
     {
         return impl_->DowncastingTo<T>();
     }

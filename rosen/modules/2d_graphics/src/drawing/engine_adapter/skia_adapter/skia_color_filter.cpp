@@ -14,11 +14,11 @@
  */
 
 #include "skia_color_filter.h"
+#include "skia_helper.h"
 
 #include "include/effects/SkLumaColorFilter.h"
 #include "include/effects/SkOverdrawColorFilter.h"
-#include "src/core/SkReadBuffer.h"
-#include "src/core/SkWriteBuffer.h"
+#include "src/core/SkColorFilterBase.h"
 
 #include "effect/color_filter.h"
 #include "utils/data.h"
@@ -39,6 +39,11 @@ void SkiaColorFilter::InitWithColorMatrix(const ColorMatrix& m)
     scalar dst[ColorMatrix::MATRIX_SIZE];
     m.GetArray(dst);
     filter_ = SkColorFilters::Matrix(dst);
+}
+
+void SkiaColorFilter::InitWithColorFloat(const float f[20])
+{
+    filter_ = SkColorFilters::Matrix(f);
 }
 
 void SkiaColorFilter::InitWithLinearToSrgbGamma()
@@ -68,6 +73,16 @@ void SkiaColorFilter::Compose(const ColorFilter& f)
     }
 }
 
+void SkiaColorFilter::InitWithCompose(const float f1[MATRIX_SIZE], const float f2[MATRIX_SIZE])
+{
+    filter_ = SkColorFilters::Compose(SkColorFilters::Matrix(f1), SkColorFilters::Matrix(f2));
+}
+
+void SkiaColorFilter::InitWithOverDrawColor(const ColorQuad colors[OVER_DRAW_COLOR_NUM])
+{
+    filter_ = SkOverdrawColorFilter::MakeWithSkColors(colors);
+}
+
 void SkiaColorFilter::InitWithLuma()
 {
     filter_ = SkLumaColorFilter::Make();
@@ -85,38 +100,32 @@ void SkiaColorFilter::SetColorFilter(const sk_sp<SkColorFilter>& filter)
 
 std::shared_ptr<Data> SkiaColorFilter::Serialize() const
 {
-#ifdef ROSEN_OHOS
     if (filter_ == nullptr) {
-        LOGE("SkiaColorFilter::Serialize, filter_ is nullptr!");
+        LOGD("SkiaColorFilter::Serialize, filter_ is nullptr!");
         return nullptr;
     }
 
-    SkBinaryWriteBuffer writer;
-    writer.writeFlattenable(filter_.get());
-    size_t length = writer.bytesWritten();
-    std::shared_ptr<Data> data = std::make_shared<Data>();
-    data->BuildUninitialized(length);
-    writer.writeToMemory(data->WritableData());
-    return data;
-#else
-    return nullptr;
-#endif
+    return SkiaHelper::FlattenableSerialize(filter_.get());
 }
 
 bool SkiaColorFilter::Deserialize(std::shared_ptr<Data> data)
 {
-#ifdef ROSEN_OHOS
     if (data == nullptr) {
-        LOGE("SkiaColorFilter::Deserialize, data is invalid!");
+        LOGD("SkiaColorFilter::Deserialize, data is invalid!");
         return false;
     }
 
-    SkReadBuffer reader(data->GetData(), data->GetSize());
-    filter_ = reader.readColorFilter();
-    return filter_ != nullptr;
-#else
-    return false;
-#endif
+    filter_ = SkiaHelper::FlattenableDeserialize<SkColorFilterBase>(data);
+    return true;
+}
+
+bool SkiaColorFilter::AsAColorMatrix(scalar matrix[MATRIX_SIZE]) const
+{
+    if (filter_ == nullptr) {
+        LOGD("SkiaColorFilter::AsAColorMatrix filter_ is nullptr!");
+        return false;
+    }
+    return filter_->asAColorMatrix(matrix);
 }
 
 } // namespace Drawing

@@ -23,21 +23,35 @@
 
 namespace OHOS {
 namespace Rosen {
-RSEffectNode::SharedPtr RSEffectNode::Create(bool isRenderServiceNode)
+RSEffectNode::SharedPtr RSEffectNode::Create(bool isRenderServiceNode, bool isTextureExportNode)
 {
-    SharedPtr node(new RSEffectNode(isRenderServiceNode));
+    SharedPtr node(new RSEffectNode(isRenderServiceNode, isTextureExportNode));
     RSNodeMap::MutableInstance().RegisterNode(node);
 
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy == nullptr) {
         return node;
     }
-    std::unique_ptr<RSCommand> command = std::make_unique<RSEffectNodeCreate>(node->GetId());
+    std::unique_ptr<RSCommand> command = std::make_unique<RSEffectNodeCreate>(node->GetId(), isTextureExportNode);
     transactionProxy->AddCommand(command, node->IsRenderServiceNode());
     return node;
 }
 
-RSEffectNode::RSEffectNode(bool isRenderServiceNode) : RSNode(isRenderServiceNode) {}
+void RSEffectNode::SetFreeze(bool isFreeze)
+{
+    if (!IsUniRenderEnabled()) {
+        ROSEN_LOGE("SetFreeze is not supported in separate render");
+        return;
+    }
+    std::unique_ptr<RSCommand> command = std::make_unique<RSSetFreeze>(GetId(), isFreeze);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
+}
+
+RSEffectNode::RSEffectNode(bool isRenderServiceNode, bool isTextureExportNode)
+    : RSNode(isRenderServiceNode, isTextureExportNode) {}
 
 } // namespace Rosen
 } // namespace OHOS

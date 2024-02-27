@@ -26,11 +26,20 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+void WaitAcquireFence(const sptr<SyncFence>& acquireFence)
+{
+    if (acquireFence == nullptr) {
+        return;
+    }
+    acquireFence->Wait(3000); // 3000ms
+}
+}
 
 NativeVkImageRes::~NativeVkImageRes()
 {
     NativeBufferUtils::DeleteVkImage(mVulkanCleanupHelper);
-    DestoryNativeWindowBuffer(mNativeWindowBuffer);
+    DestroyNativeWindowBuffer(mNativeWindowBuffer);
 }
 
 std::shared_ptr<NativeVkImageRes> NativeVkImageRes::Create(sptr<OHOS::SurfaceBuffer> buffer)
@@ -40,7 +49,9 @@ std::shared_ptr<NativeVkImageRes> NativeVkImageRes::Create(sptr<OHOS::SurfaceBuf
     NativeWindowBuffer* nativeWindowBuffer = CreateNativeWindowBufferFromSurfaceBuffer(&buffer);
     auto backendTexture = NativeBufferUtils::MakeBackendTextureFromNativeBuffer(nativeWindowBuffer,
         width, height);
+#ifndef USE_ROSEN_DRAWING
     if (!backendTexture.isValid()) {
+        DestroyNativeWindowBuffer(nativeWindowBuffer);
         return nullptr;
     }
     GrVkImageInfo imageInfo;
@@ -51,6 +62,18 @@ std::shared_ptr<NativeVkImageRes> NativeVkImageRes::Create(sptr<OHOS::SurfaceBuf
         backendTexture,
         new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
             imageInfo.fImage, imageInfo.fAlloc.fMemory));
+#else
+    if (!backendTexture.IsValid()) {
+        DestroyNativeWindowBuffer(nativeWindowBuffer);
+        return nullptr;
+    }
+    return std::make_unique<NativeVkImageRes>(
+        nativeWindowBuffer,
+        backendTexture,
+        new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
+            backendTexture.GetTextureInfo().GetVKTextureInfo()->vkImage,
+            backendTexture.GetTextureInfo().GetVKTextureInfo()->vkAlloc.memory));
+#endif
 }
 
 std::shared_ptr<NativeVkImageRes> RSVkImageManager::MapVkImageFromSurfaceBuffer(
@@ -81,14 +104,6 @@ std::shared_ptr<NativeVkImageRes> RSVkImageManager::CreateImageCacheFromBuffer(s
         return nullptr;
     }
     return imageCache;
-}
-
-void RSVkImageManager::WaitAcquireFence(const sptr<SyncFence>& acquireFence)
-{
-    if (acquireFence == nullptr) {
-        return;
-    }
-    acquireFence->Wait(3000); // 3000ms
 }
 
 std::shared_ptr<NativeVkImageRes> RSVkImageManager::NewImageCacheFromBuffer(

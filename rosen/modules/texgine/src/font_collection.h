@@ -33,7 +33,7 @@ public:
     FontCollection(std::vector<std::shared_ptr<VariantFontStyleSet>> &&fontStyleSets);
 
     std::shared_ptr<Typeface> GetTypefaceForChar(const uint32_t &ch, FontStyles &style,
-        const std::string &script, const std::string &locale, bool &fallbackTypeface) const;
+        const std::string &script, const std::string &locale) const;
 
     std::shared_ptr<Typeface> GetTypefaceForFontStyles(const FontStyles &style, const std::string &script,
         const std::string &locale) const;
@@ -44,10 +44,12 @@ public:
         const std::string &script, const std::string &locale) const;
 
     void DisableFallback();
-
+    int DetectionScript(const std::string script) const;
+    int DetectChinesePointUnicode(uint32_t ch) const;
 private:
     void SortTypeface(FontStyles &style) const;
-
+    void FillDefaultItalicSupportFile();
+    void FillDefaultChinesePointUnicode();
 private:
     bool enableFallback_ = true;
     std::vector<std::shared_ptr<VariantFontStyleSet>> fontStyleSets_;
@@ -73,6 +75,8 @@ private:
             return script < rhs.script || locale < rhs.locale || fs < rhs.fs;
         }
     };
+    std::map<std::string, int> supportScript_;
+    std::map<uint32_t, int> chinesePointUnicode_;
     static inline std::map<struct FallbackCacheKey, std::shared_ptr<Typeface>> fallbackCache_;
 };
 } // namespace TextEngine

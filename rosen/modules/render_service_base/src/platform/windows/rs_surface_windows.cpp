@@ -113,6 +113,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceWindows::RequestFrame(
     bufferInfo.Format = 0x8058; // GL_RGBA8
     bufferInfo.gpuContext = grContext_;
     bufferInfo.colorSpace = drColorSpace_;
+    bufferInfo.colorType = Drawing::COLORTYPE_RGBA_8888;
     frame->surface_ = std::make_shared<Drawing::Surface>();
     if (!frame->surface_->Bind(bufferInfo)) {
         ROSEN_LOGE("RSSurfaceWindows::RequestFrame, surface bind failed");
@@ -237,6 +238,8 @@ bool RSSurfaceWindows::SetupGrContext()
     GrContextOptions options;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
+    // fix svg antialiasing bug
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
 #if !defined(NEW_SKIA)
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
     const auto &grContext = GrContext::MakeGL(glinterface, options);

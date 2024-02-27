@@ -23,6 +23,7 @@
 
 #include "napi/n_exporter.h"
 #include "securec.h"
+#include "util/log.h"
 #include "webgl_rendering_context_basic_base.h"
 #include "webgl/webgl_active_info.h"
 #include "webgl/webgl_arg.h"
@@ -398,12 +399,23 @@ private:
         GLboolean transpose, const UniformExtInfo* info, GLint location, GLsizei count, GLfloat* srcData);
     napi_value HandleFrameBufferAttachmentPname(
         napi_env env, GLenum target, GLenum attachment, GLenum pname, GLint type);
+#define SET_ERROR(error)                                \
+    do {                                                \
+        LOGE("WebGL set error code %{public}u", error); \
+        SetError(error);                                \
+    } while (0)
+
+#define SET_ERROR_WITH_LOG(error, info, ...)                                \
+    do {                                                                    \
+        LOGE("WebGL set error code %{public}u" info, error, ##__VA_ARGS__); \
+        SetError(error);                                                    \
+    } while (0)
 };
 
 template<class T>
 bool WebGLRenderingContextBaseImpl::AddObject(napi_env env, uint64_t key, napi_value obj)
 {
-    if (T::objectType > WebGLObject::WEBGL_OBJECT_MAX) {
+    if (T::objectType < 0 || T::objectType > WebGLObject::WEBGL_OBJECT_MAX) {
         return false;
     }
     if (objects_[T::objectType].find(key) != objects_[T::objectType].end()) {
@@ -424,7 +436,7 @@ bool WebGLRenderingContextBaseImpl::AddObject(napi_env env, uint64_t key, napi_v
 template<class T>
 napi_value WebGLRenderingContextBaseImpl::GetNapiValue(napi_env env, uint64_t key)
 {
-    if (T::objectType > WebGLObject::WEBGL_OBJECT_MAX) {
+    if (T::objectType < 0 || T::objectType > WebGLObject::WEBGL_OBJECT_MAX) {
         return nullptr;
     }
     auto it = objects_[T::objectType].find(key);
@@ -456,7 +468,7 @@ napi_value WebGLRenderingContextBaseImpl::GetObject(napi_env env, uint64_t key)
 template<class T>
 void WebGLRenderingContextBaseImpl::DeleteObject(napi_env env, uint64_t key)
 {
-    if (T::objectType > WebGLObject::WEBGL_OBJECT_MAX) {
+    if (T::objectType < 0 || T::objectType > WebGLObject::WEBGL_OBJECT_MAX) {
         return;
     }
     auto it = objects_[T::objectType].find(key);

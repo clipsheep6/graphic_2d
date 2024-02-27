@@ -45,11 +45,13 @@ public:
         const std::vector<scalar>& pos, TileMode mode) override;
     void InitWithRadialGradient(const Point& centerPt, scalar radius, const std::vector<ColorQuad>& colors,
         const std::vector<scalar>& pos, TileMode mode) override;
-    void InitWithTwoPointConical(const Point& startPt, scalar startRadius, const Point& endPt, scalar endRadius,
-        const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode) override;
+    void InitWithTwoPointConical(const Point& startPt, scalar startRadius, const Point& endPt,
+        scalar endRadius, const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode,
+        const Matrix *matrix) override;
     void InitWithSweepGradient(const Point& centerPt, const std::vector<ColorQuad>& colors,
         const std::vector<scalar>& pos, TileMode mode, scalar startAngle, scalar endAngle,
         const Matrix *matrix) override;
+    void InitWithLightUp(const float& lightUpDeg, const ShaderEffect& imageShader) override;
     sk_sp<SkShader> GetShader() const;
     /*
      * @brief  Update the member variable to skShader, adaptation layer calls.

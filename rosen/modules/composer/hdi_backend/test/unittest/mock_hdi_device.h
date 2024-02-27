@@ -38,6 +38,7 @@ public:
     MOCK_METHOD2(GetScreenSupportedModes, int32_t(uint32_t, std::vector<GraphicDisplayModeInfo>&));
     MOCK_METHOD2(GetScreenMode, int32_t(uint32_t, uint32_t&));
     MOCK_METHOD2(SetScreenMode, int32_t(uint32_t, uint32_t));
+    MOCK_METHOD3(SetScreenOverlayResolution, int32_t(uint32_t, uint32_t, uint32_t));
     MOCK_METHOD2(GetScreenPowerStatus, int32_t(uint32_t, GraphicDispPowerStatus&));
     MOCK_METHOD2(SetScreenPowerStatus, int32_t(uint32_t, GraphicDispPowerStatus));
     MOCK_METHOD2(GetScreenBacklight, int32_t(uint32_t, uint32_t&));
@@ -72,6 +73,7 @@ public:
     MOCK_METHOD3(SetLayerCrop, int32_t(uint32_t, uint32_t, const GraphicIRect&));
     MOCK_METHOD3(SetLayerZorder, int32_t(uint32_t, uint32_t, uint32_t));
     MOCK_METHOD3(SetLayerPreMulti, int32_t(uint32_t, uint32_t, bool));
+    MOCK_METHOD3(SetLayerColor, int32_t(uint32_t, uint32_t, GraphicLayerColor));
     MOCK_METHOD3(SetLayerColorTransform, int32_t(uint32_t, uint32_t, const std::vector<float> &matrix));
     MOCK_METHOD3(SetLayerColorDataSpace, int32_t(uint32_t, uint32_t, GraphicColorDataSpace));
     MOCK_METHOD3(GetLayerColorDataSpace, int32_t(uint32_t, uint32_t, GraphicColorDataSpace&));

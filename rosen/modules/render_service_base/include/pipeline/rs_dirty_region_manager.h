@@ -43,21 +43,12 @@ enum DirtyRegionType {
     REMOVE_CHILD_RECT,
     RENDER_PROPERTIES_RECT,
     CANVAS_NODE_SKIP_RECT,
+    OUTLINE_RECT,
     TYPE_AMOUNT
 };
 
-const std::map<DirtyRegionType, std::string> DIRTY_REGION_TYPE_MAP {
-    { DirtyRegionType::UPDATE_DIRTY_REGION, "UPDATE_DIRTY_REGION" },
-    { DirtyRegionType::OVERLAY_RECT, "OVERLAY_RECT" },
-    { DirtyRegionType::FILTER_RECT, "FILTER_RECT" },
-    { DirtyRegionType::SHADOW_RECT, "SHADOW_RECT" },
-    { DirtyRegionType::PREPARE_CLIP_RECT, "PREPARE_CLIP_RECT" },
-    { DirtyRegionType::REMOVE_CHILD_RECT, "REMOVE_CHILD_RECT" },
-    { DirtyRegionType::RENDER_PROPERTIES_RECT, "RENDER_PROPERTIES_RECT" },
-    { DirtyRegionType::CANVAS_NODE_SKIP_RECT, "CANVAS_NODE_SKIP_RECT" },
-};
-
 class RSB_EXPORT RSDirtyRegionManager final {
+    friend class RSFilterCacheManager;
 public:
     static constexpr int32_t ALIGNED_BITS = 32;
     RSDirtyRegionManager();
@@ -77,17 +68,21 @@ public:
     // update current frame's visited dirtyregion
     void UpdateVisitedDirtyRects(const std::vector<RectI>& rects);
     RectI GetIntersectedVisitedDirtyRect(const RectI& absRect) const;
-    bool HasIntersectionWithVisitedDirtyRect(const RectI& absRect) const;
     void UpdateCacheableFilterRect(const RectI& rect);
     bool IfCacheableFilterRectFullyCover(const RectI& targetRect);
-    void ResetSubNodeFilterCacheValid()
+    bool IsCacheableFilterRectEmpty() const
     {
-        isSubNodeFilterCacheValid_ = false;
+        return cacheableFilterRects_.empty();
     }
 
-    bool GetSubNodeFilterCacheValid()
+    void InvalidateFilterCacheRect()
     {
-        return isSubNodeFilterCacheValid_;
+        isFilterCacheRectValid_ = false;
+    }
+
+    bool IsFilterCacheRectValid()
+    {
+        return isFilterCacheRectValid_;
     }
 
     // return current frame dirtyregion, can be changed in prepare and process (displaynode) stage
@@ -179,11 +174,11 @@ private:
     std::vector<RectI> dirtyHistory_;
     int historyHead_ = -1;
     unsigned int historySize_ = 0;
-    const unsigned HISTORY_QUEUE_MAX_SIZE = 4;
+    const unsigned HISTORY_QUEUE_MAX_SIZE = 5;
     // may add new set function for bufferAge
     unsigned int bufferAge_ = HISTORY_QUEUE_MAX_SIZE;
     bool isDirtyRegionAlignedEnable_ = false;
-    bool isSubNodeFilterCacheValid_ = true;
+    bool isFilterCacheRectValid_ = true;
     bool isDisplayDirtyManager_ = false;
 
     // Used for coordinate switch, i.e. dirtyRegion = dirtyRegion + offset.

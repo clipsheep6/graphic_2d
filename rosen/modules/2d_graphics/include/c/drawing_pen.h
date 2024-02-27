@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,7 @@
  * @{
  *
  * @brief Provides functions such as 2D graphics rendering, text drawing, and image display.
- * 
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  *
  * @since 8
@@ -111,6 +111,28 @@ uint32_t OH_Drawing_PenGetColor(const OH_Drawing_Pen*);
 void OH_Drawing_PenSetColor(OH_Drawing_Pen*, uint32_t color);
 
 /**
+ * @brief Obtains the alpha of a pen. The alpha is used by the pen to outline a shape.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @return Returns a 8-bit variable that describes the alpha.
+ * @since 11
+ * @version 1.0
+ */
+uint8_t OH_Drawing_PenGetAlpha(const OH_Drawing_Pen*);
+
+/**
+ * @brief Sets the alpha for a pen. The alpha is used by the pen to outline a shape.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param alpha Indicates the alpha to set, which is a 8-bit variable.
+ * @since 11
+ * @version 1.0
+ */
+void OH_Drawing_PenSetAlpha(OH_Drawing_Pen*, uint8_t alpha);
+
+/**
  * @brief Obtains the thickness of a pen. This thickness determines the width of the outline of a shape.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -161,9 +183,9 @@ float OH_Drawing_PenGetMiterLimit(const OH_Drawing_Pen*);
 void OH_Drawing_PenSetMiterLimit(OH_Drawing_Pen*, float miter);
 
 /**
- * @brief Enumerates line cap styles of a pen. The line cap style defines 
+ * @brief Enumerates line cap styles of a pen. The line cap style defines
  * the style of both ends of a line segment drawn by the pen.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -209,7 +231,7 @@ void OH_Drawing_PenSetCap(OH_Drawing_Pen*, OH_Drawing_PenLineCapStyle);
 /**
  * @brief Enumerates pen line join styles. The line join style defines
  * the shape of the joints of a polyline segment drawn by the pen.
- * 
+ *
  * @since 8
  * @version 1.0
  */
@@ -246,6 +268,50 @@ OH_Drawing_PenLineJoinStyle OH_Drawing_PenGetJoin(const OH_Drawing_Pen*);
  * @version 1.0
  */
 void OH_Drawing_PenSetJoin(OH_Drawing_Pen*, OH_Drawing_PenLineJoinStyle);
+
+/**
+ * @brief Sets the shaderEffect for a pen.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_ShaderEffect Indicates the pointer to an <b>OH_Drawing_ShaderEffect</b> object.
+ * @since 11
+ * @version 1.0
+ */
+void OH_Drawing_PenSetShaderEffect(OH_Drawing_Pen*, OH_Drawing_ShaderEffect*);
+
+/**
+ * @brief Sets the pathEffect for a pen.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_PathEffect Indicates the pointer to an <b>OH_Drawing_PathEffect</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PenSetPathEffect(OH_Drawing_Pen*, OH_Drawing_PathEffect*);
+
+/**
+ * @brief Sets the filter for a pen.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_Filter Indicates the pointer to an <b>OH_Drawing_Filter</b> object.
+ * @since 11
+ * @version 1.0
+ */
+void OH_Drawing_PenSetFilter(OH_Drawing_Pen*, OH_Drawing_Filter*);
+
+/**
+ * @brief Sets a blender that implements the specified blendmode enum for a pen.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_BlendMode Indicates the blend mode.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PenSetBlendMode(OH_Drawing_Pen*, OH_Drawing_BlendMode);
 
 #ifdef __cplusplus
 }

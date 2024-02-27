@@ -80,6 +80,12 @@ std::string GetStringFromData(int strlen)
     return str;
 }
 
+struct DrawBuffer {
+    int32_t w;
+    int32_t h;
+};
+
+
 bool RSBaseRenderNodeFuzzTest(const uint8_t* data, size_t size)
 {
     if (data == nullptr) {
@@ -141,13 +147,13 @@ bool RSCanvasRenderNodeFuzzTest(const uint8_t* data, size_t size)
 
     // getdata
     NodeId id = GetData<NodeId>();
-    int w = GetData<int>();
-    int h = GetData<int>();
-    std::shared_ptr<DrawCmdList> drawCmds = std::make_shared<DrawCmdList>(w, h);
+    DrawBuffer drawBuffer = GetData<DrawBuffer>();
     RSModifierType type = GetData<RSModifierType>();
-    SkCanvas skCanvas;
+    std::shared_ptr<Drawing::DrawCmdList> drawCmds = Drawing::DrawCmdList::CreateFromData(
+        { &drawBuffer, sizeof(DrawBuffer) }, true);
+    Drawing::Canvas tmpCanvas;
     float alpha = GetData<float>();
-    RSPaintFilterCanvas canvas(&skCanvas, alpha);
+    RSPaintFilterCanvas canvas(&tmpCanvas, alpha);
     RSCanvasRenderNode node(id);
 
     // test
@@ -281,22 +287,21 @@ bool RSDrawCmdListFuzzTest(const uint8_t* data, size_t size)
     g_size = size;
     g_pos = 0;
 
-    int w = GetData<int>();
-    int h = GetData<int>();
-    SkCanvas skCanvas;
+    DrawBuffer drawBuffer = GetData<DrawBuffer>();
     float fLeft = GetData<float>();
     float fTop = GetData<float>();
     float fRight = GetData<float>();
     float fBottom = GetData<float>();
-    SkRect rect = { fLeft, fTop, fRight, fBottom };
+    Drawing::Canvas drCanvas;
+    Drawing::Rect rect = { fLeft, fTop, fRight, fBottom };
     float alpha = GetData<float>();
-    RSPaintFilterCanvas canvas(&skCanvas, alpha);
+    RSPaintFilterCanvas canvas(&drCanvas, alpha);
 
     // test
-    DrawCmdList* list = new DrawCmdList(w, h);
-    list->Playback(skCanvas, &rect);
+    std::shared_ptr<Drawing::DrawCmdList> list = Drawing::DrawCmdList::CreateFromData(
+        { &drawBuffer, sizeof(DrawBuffer) }, true);
+    list->Playback(drCanvas, &rect);
     list->Playback(canvas, &rect);
-
     return true;
 }
 

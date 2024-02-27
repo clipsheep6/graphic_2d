@@ -175,6 +175,11 @@ void Path::AddPath(const Path& src, const Matrix& matrix)
     impl_->AddPathWithMatrix(src, matrix);
 }
 
+bool Path::Contains(scalar x, scalar y) const
+{
+    return impl_->Contains(x, y);
+}
+
 void Path::ReverseAddPath(const Path& src)
 {
     impl_->ReverseAddPath(src);
@@ -238,6 +243,16 @@ scalar Path::GetLength(bool forceClosed) const
 bool Path::GetPositionAndTangent(scalar distance, Point& position, Point& tangent, bool forceClosed) const
 {
     return impl_->GetPositionAndTangent(distance, position, tangent, forceClosed);
+}
+
+std::shared_ptr<Data> Path::Serialize() const
+{
+    return impl_->Serialize();
+}
+
+bool Path::Deserialize(std::shared_ptr<Data> data)
+{
+    return impl_->Deserialize(data);
 }
 
 } // namespace Drawing

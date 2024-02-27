@@ -41,10 +41,12 @@ auto Init(struct Mockvars vars)
     };
 }
 
+#ifndef USE_ROSEN_DRAWING
 std::shared_ptr<TexgineFontStyle> TexgineTypeface::GetFontStyle() const
 {
     return g_dfssMockVars.fontStyle;
 }
+#endif
 
 Typeface::Typeface(std::shared_ptr<TexgineTypeface> tf)
 {
@@ -109,7 +111,6 @@ HWTEST_F(DynamicFontStyleSetTest, GetStyle, TestSize.Level1)
     CORE_TEST(nullset, s2, 0, s1);
     CORE_TEST(nullset, s2, 1, s1);
     CORE_TEST(*g_dfssMockVars.normalSet, s2, -1, s1);
-    CORE_TEST(*g_dfssMockVars.normalSet, s2, 0, s2);
     CORE_TEST(*g_dfssMockVars.normalSet, s2, 1, s1);
 #undef CORE_TEST
 

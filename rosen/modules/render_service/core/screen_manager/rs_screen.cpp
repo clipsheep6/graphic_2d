@@ -15,6 +15,7 @@
 
 #include "rs_screen.h"
 
+#include <algorithm>
 #include <cinttypes>
 
 #include "platform/common/rs_log.h"
@@ -94,7 +95,8 @@ RSScreen::RSScreen(const VirtualScreenConfigs &configs)
       isVirtual_(true),
       producerSurface_(configs.surface),
       pixelFormat_(configs.pixelFormat),
-      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN)
+      screenType_(RSScreenType::VIRTUAL_TYPE_SCREEN),
+      filteredAppSet_(configs.filteredAppSet)
 {
     VirtualScreenInit();
 }
@@ -131,9 +133,9 @@ void RSScreen::PhysicalScreenInit() noexcept
         RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to GetHDRCapabilityInfos.",
             __func__, id_);
     }
-    for (auto item : hdrCapability_.formats) {
-        supportedPhysicalHDRFormats_.emplace_back(HDI_HDR_FORMAT_TO_RS_MAP[item]);
-    }
+    std::transform(hdrCapability_.formats.begin(), hdrCapability_.formats.end(),
+                   back_inserter(supportedPhysicalHDRFormats_),
+                   [](GraphicHDRFormat item) -> ScreenHDRFormat {return HDI_HDR_FORMAT_TO_RS_MAP[item];});
     auto status = GraphicDispPowerStatus::GRAPHIC_POWER_STATUS_ON;
     if (hdiScreen_->SetScreenPowerStatus(status) < 0) {
         RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to SetScreenPowerStatus.",
@@ -141,8 +143,10 @@ void RSScreen::PhysicalScreenInit() noexcept
     }
     auto activeMode = GetActiveMode();
     if (activeMode) {
-        width_ = activeMode->width;
-        height_ = activeMode->height;
+        phyWidth_ = activeMode->width;
+        phyHeight_ = activeMode->height;
+        width_ = phyWidth_;
+        height_ = phyHeight_;
     }
     if (hdiScreen_->GetScreenPowerStatus(powerStatus_) < 0) {
         powerStatus_ = static_cast<GraphicDispPowerStatus>(INVALID_POWER_STATUS);
@@ -159,8 +163,13 @@ void RSScreen::PhysicalScreenInit() noexcept
         RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to GetScreenSupportedColorGamuts.",
             __func__, id_);
     } else {
+        int index = 0;
         for (auto item : supportedColorGamuts) {
             supportedPhysicalColorGamuts_.push_back(static_cast<ScreenColorGamut>(item));
+            if (item == GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB) {
+                currentPhysicalColorGamutIdx_ = index;
+            }
+            ++index;
         }
     }
 }
@@ -218,6 +227,16 @@ uint32_t RSScreen::Height() const
     return height_;
 }
 
+uint32_t RSScreen::PhyWidth() const
+{
+    return phyWidth_;
+}
+
+uint32_t RSScreen::PhyHeight() const
+{
+    return phyHeight_;
+}
+
 bool RSScreen::IsEnable() const
 {
     if (id_ == INVALID_SCREEN_ID) {
@@ -255,18 +274,37 @@ void RSScreen::SetActiveMode(uint32_t modeId)
     }
     auto activeMode = GetActiveMode();
     if (activeMode) {
-        width_ = activeMode->width;
-        height_ = activeMode->height;
+        phyWidth_ = activeMode->width;
+        phyHeight_ = activeMode->height;
         static GraphicDisplayModeInfo modeInfo;
         if ((modeInfo.freshRate != activeMode->freshRate)
             || modeInfo.width != activeMode->width || modeInfo.height != activeMode->height) {
             HiSysEventWrite(HiSysEvent::Domain::GRAPHIC, "EPS_LCD_FREQ",
                 HiSysEvent::EventType::STATISTIC, "SOURCERATE", modeInfo.freshRate,
-                "TARGETRATE", activeMode->freshRate, "WIDTH", width_, "HEIGHT", height_);
+                "TARGETRATE", activeMode->freshRate, "WIDTH", phyWidth_, "HEIGHT", phyHeight_);
             modeInfo = activeMode.value();
         }
     }
 }
+
+void RSScreen::SetRogResolution(uint32_t width, uint32_t height)
+{
+    if ((width == 0 || height == 0) ||
+        (width == width_ && height == height_) ||
+        (width > phyWidth_ || height > phyHeight_)) {
+        RS_LOGD("RSScreen:%{public}s: width: %{public}d, height: %{public}d.", __func__, width, height);
+        return;
+    }
+    if (hdiScreen_->SetScreenOverlayResolution(width, height) < 0) {
+        RS_LOGD("RSScreen:%{public}s: hdi set screen rog resolution failed.", __func__);
+    }
+    width_ = width;
+    height_ = height;
+    RS_LOGI("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 "), width: %{public}d,"
+        " height: %{public}d, phywidth: %{public}d, phyHeight: %{public}d.",
+	    __func__, id_, width_, height_, phyWidth_, phyHeight_);
+}
+
 
 void RSScreen::SetResolution(uint32_t width, uint32_t height)
 {
@@ -274,8 +312,8 @@ void RSScreen::SetResolution(uint32_t width, uint32_t height)
         RS_LOGW("RSScreen %{public}s: physical screen not support SetResolution.", __func__);
         return;
     }
-    width_ = static_cast<int32_t>(width);
-    height_ = static_cast<int32_t>(height);
+    width_ = width;
+    height_ = height;
 }
 
 int32_t RSScreen::GetActiveModePosByModeId(int32_t modeId) const
@@ -296,7 +334,7 @@ void RSScreen::SetPowerStatus(uint32_t powerStatus)
         return;
     }
 
-    RS_LOGI("RSScreen_%{public}" PRIu64 " SetPowerStatus, status is %{public}u", id_, powerStatus);
+    RS_LOGD("RSScreen_%{public}" PRIu64 " SetPowerStatus, status is %{public}u", id_, powerStatus);
     RS_TRACE_NAME_FMT("Screen_%llu SetPowerStatus %u", id_, powerStatus);
     if (hdiScreen_->SetScreenPowerStatus(static_cast<GraphicDispPowerStatus>(powerStatus)) < 0) {
         return;
@@ -490,7 +528,7 @@ void RSScreen::DisplayDump(int32_t screenIndex, std::string& dumpString)
         dumpString += "mirrorId=";
         dumpString += (mirrorId_ == INVALID_SCREEN_ID) ? "INVALID_SCREEN_ID" : std::to_string(mirrorId_);
         dumpString += ", ";
-        AppendFormat(dumpString, "%dx%d, isvirtual=true\n", width_, height_);
+        AppendFormat(dumpString, ", render size: %dx%d, isvirtual=true\n", width_, height_);
     } else {
         dumpString += "screen[" + std::to_string(screenIndex) + "]: ";
         dumpString += "id=";
@@ -501,6 +539,8 @@ void RSScreen::DisplayDump(int32_t screenIndex, std::string& dumpString)
         dumpString += "backlight=" + std::to_string(GetScreenBacklight());
         dumpString += ", ";
         ScreenTypeDump(dumpString);
+        AppendFormat(dumpString, ", render size: %dx%d, physical screen resolution: %dx%d, isvirtual=true\n",
+            width_, height_, phyWidth_, phyHeight_);
         dumpString += "\n";
         ModeInfoDump(dumpString);
         CapabilityDump(dumpString);
@@ -563,8 +603,8 @@ void RSScreen::ResizeVirtualScreen(uint32_t width, uint32_t height)
         RS_LOGW("RSScreen %{public}s: physical screen not support ResizeVirtualScreen.", __func__);
         return;
     }
-    width_ = static_cast<int32_t>(width);
-    height_ = static_cast<int32_t>(height);
+    width_ = width;
+    height_ = height;
 }
 
 void RSScreen::SetScreenBacklight(uint32_t level)
@@ -743,6 +783,20 @@ void RSScreen::SetScreenVsyncEnabled(bool enabled) const
     }
 }
 
+bool RSScreen::SetVirtualMirrorScreenCanvasRotation(bool canvasRotation)
+{
+    if (IsVirtual()) {
+        canvasRotation_ = canvasRotation;
+        return true;
+    }
+    return false;
+}
+
+bool RSScreen::GetCanvasRotation() const
+{
+    return canvasRotation_;
+}
+
 int32_t RSScreen::GetScreenSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats) const
 {
     hdrFormats.clear();
@@ -810,13 +864,17 @@ int32_t RSScreen::GetScreenSupportedColorSpaces(std::vector<GraphicCM_ColorSpace
 {
     colorSpaces.clear();
     if (IsVirtual()) {
-        for (auto item : supportedVirtualColorGamuts_) {
-            colorSpaces.emplace_back(RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[static_cast<GraphicColorGamut>(item)]);
-        }
+        std::transform(supportedVirtualColorGamuts_.begin(), supportedVirtualColorGamuts_.end(),
+                       back_inserter(colorSpaces),
+                       [](ScreenColorGamut item) -> GraphicCM_ColorSpaceType {
+                            return RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[static_cast<GraphicColorGamut>(item)];
+                        });
     } else {
-        for (auto item : supportedPhysicalColorGamuts_) {
-            colorSpaces.emplace_back(RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[static_cast<GraphicColorGamut>(item)]);
-        }
+        std::transform(supportedPhysicalColorGamuts_.begin(), supportedPhysicalColorGamuts_.end(),
+                       back_inserter(colorSpaces),
+                       [](ScreenColorGamut item) -> GraphicCM_ColorSpaceType {
+                            return RS_TO_COMMON_COLOR_SPACE_TYPE_MAP[static_cast<GraphicColorGamut>(item)];
+                        });
     }
     if (colorSpaces.size() == 0) {
         return StatusCode::HDI_ERROR;
@@ -832,20 +890,21 @@ int32_t RSScreen::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) cons
     return result;
 }
 
-int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace) 
+int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace)
 {
     auto iter = COMMON_COLOR_SPACE_TYPE_TO_RS_MAP.find(colorSpace);
     if (iter == COMMON_COLOR_SPACE_TYPE_TO_RS_MAP.end()) {
         return StatusCode::INVALID_ARGUMENTS;
     }
-    ScreenColorGamut dstColorGamut = static_cast<ScreenColorGamut>(iter->first);
-    int32_t curIdx = 0;
+    ScreenColorGamut dstColorGamut = static_cast<ScreenColorGamut>(iter->second);
+    int32_t curIdx;
     if (IsVirtual()) {
         auto it = std::find(supportedVirtualColorGamuts_.begin(), supportedVirtualColorGamuts_.end(), dstColorGamut);
         if (it == supportedVirtualColorGamuts_.end()) {
             return StatusCode::INVALID_ARGUMENTS;
         }
         curIdx = std::distance(supportedVirtualColorGamuts_.begin(), it);
+        currentVirtualColorGamutIdx_ = curIdx;
         return StatusCode::SUCCESS;
     }
     std::vector<GraphicColorGamut> hdiMode;
@@ -864,7 +923,10 @@ int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace)
     }
     return StatusCode::HDI_ERROR;
 }
-
+const std::unordered_set<uint64_t>& RSScreen::GetFilteredAppSet() const
+{
+    return filteredAppSet_;
+}
 } // namespace impl
 } // namespace Rosen
 } // namespace OHOS

@@ -29,11 +29,17 @@ public:
         const std::shared_ptr<RSRenderPropertyBase>& originValue);
     ~RSRenderKeyframeAnimation() {}
 
+    void DumpAnimationType(std::string& out) const override;
+
     void AddKeyframe(float fraction, const std::shared_ptr<RSRenderPropertyBase>& value,
         const std::shared_ptr<RSInterpolator>& interpolator);
 
     void AddKeyframes(const std::vector<std::tuple<float, std::shared_ptr<RSRenderPropertyBase>,
         std::shared_ptr<RSInterpolator>>>& keyframes);
+
+    void AddKeyframe(int startDuration, int endDuration, const std::shared_ptr<RSRenderPropertyBase>& value,
+        const std::shared_ptr<RSInterpolator>& interpolator);
+    void SetDurationKeyframe(bool isDuration);
     bool Marshalling(Parcel& parcel) const override;
     [[nodiscard]] static RSRenderKeyframeAnimation* Unmarshalling(Parcel& parcel);
 protected:
@@ -44,7 +50,11 @@ protected:
 private:
     RSRenderKeyframeAnimation() = default;
     bool ParseParam(Parcel& parcel) override;
+    bool ParseDurationKeyframesParam(Parcel& parcel, int keyframeSize);
     std::vector<std::tuple<float, std::shared_ptr<RSRenderPropertyBase>, std::shared_ptr<RSInterpolator>>> keyframes_;
+    std::vector<std::tuple<float, float, std::shared_ptr<RSRenderPropertyBase>,
+        std::shared_ptr<RSInterpolator>>> durationKeyframes_;
+    bool isDurationKeyframe_ { false };
 };
 } // namespace Rosen
 } // namespace OHOS

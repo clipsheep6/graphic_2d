@@ -36,6 +36,9 @@
 #include "system/rs_system_parameters.h"
 #include "visitor/rs_node_visitor.h"
 #include "pipeline/rs_recording_canvas.h"
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+#include "rs_auto_cache.h"
+#endif
 
 class SkPicture;
 namespace OHOS {
@@ -58,7 +61,7 @@ public:
     void PrepareEffectRenderNode(RSEffectRenderNode& node) override;
 
     void ProcessChildren(RSRenderNode& node) override;
-    void ProcessChildInner(RSRenderNode& node, const RSRenderNode::SharedPtr& child);
+    void ProcessChildInner(RSRenderNode& node, const RSRenderNode::SharedPtr child);
     void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
     void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override;
     void ProcessProxyRenderNode(RSProxyRenderNode& node) override;
@@ -73,6 +76,8 @@ public:
     bool GenerateNodeContentCache(RSRenderNode& node);
     bool InitNodeCache(RSRenderNode& node);
     void CopyVisitorInfos(std::shared_ptr<RSUniRenderVisitor> visitor);
+    void CheckSkipRepeatShadow(RSRenderNode& node, const bool resetStatus);
+    void SetNodeSkipShadow(std::shared_ptr<RSRenderNode> node, const bool resetStatus);
     void SetProcessorRenderEngine(std::shared_ptr<RSBaseRenderEngine> renderEngine)
     {
         renderEngine_ = renderEngine;
@@ -123,10 +128,13 @@ public:
         drivenInfo_->hasDrivenNodeMarkRender = hasDrivenNodeMarkRender;
     }
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    void OpincSetRectChangeState(RSCanvasRenderNode& node, RectI& boundsRect);
+#endif
     void UpdateHardwareEnabledInfoBeforeCreateLayer();
     void SetHardwareEnabledNodes(const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& hardwareEnabledNodes);
     void AssignGlobalZOrderAndCreateLayer(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodesInZOrder);
-    void ScaleMirrorIfNeed(RSDisplayRenderNode& node);
+    void ScaleMirrorIfNeed(RSDisplayRenderNode& node, bool canvasRotation = false);
 
     void CopyForParallelPrepare(std::shared_ptr<RSUniRenderVisitor> visitor);
     // Some properties defined before ProcessSurfaceRenderNode() may be used in
@@ -162,33 +170,43 @@ public:
         forceUpdateFlag_ = flag;
     }
 
-    void SetCurrentRefreshRate(uint32_t currentRefreshRate)
+    void SetScreenInfo(ScreenInfo screenInfo)
     {
-        currentRefreshRate_ = currentRefreshRate;
+        screenInfo_ = screenInfo;
     }
+
+    static void ClearRenderGroupCache();
 
     using RenderParam = std::tuple<std::shared_ptr<RSRenderNode>, RSPaintFilterCanvas::CanvasStatus>;
 private:
-    void DrawWatermarkIfNeed();
+    void PartialRenderOptionInit();
+    void CalcChildFilterNodeDirtyRegion(std::shared_ptr<RSSurfaceRenderNode>& currentSurfaceNode,
+        std::shared_ptr<RSDisplayRenderNode>& displayNode);
+    void CalcSurfaceFilterNodeDirtyRegion(std::shared_ptr<RSSurfaceRenderNode>& currentSurfaceNode,
+        std::shared_ptr<RSDisplayRenderNode>& displayNode);
+    void DrawWatermarkIfNeed(RSDisplayRenderNode& node, bool isMirror = false);
 #ifndef USE_ROSEN_DRAWING
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const SkColor color,
-        const SkPaint::Style fillType, float alpha, int edgeWidth);
+        const SkPaint::Style fillType, float alpha, int edgeWidth, std::string extra = "");
 #else
     enum class RSPaintStyle {
         FILL,
         STROKE
     };
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const Drawing::Color color,
-        const RSPaintStyle fillType, float alpha, int edgeWidth);
+        const RSPaintStyle fillType, float alpha, int edgeWidth, std::string extra = "");
 #endif
     void DrawDirtyRegionForDFX(std::vector<RectI> dirtyRects);
     void DrawCacheRegionForDFX(std::vector<RectI> cacheRects);
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    void DrawAutoCacheRegionForDFX(std::vector<RectI, std::string> cacheRegionInfo);
+#endif
     void DrawAllSurfaceDirtyRegionForDFX(RSDisplayRenderNode& node, const Occlusion::Region& region);
     void DrawTargetSurfaceDirtyRegionForDFX(RSDisplayRenderNode& node);
     void DrawAllSurfaceOpaqueRegionForDFX(RSDisplayRenderNode& node);
     void DrawSurfaceOpaqueRegionForDFX(RSSurfaceRenderNode& node);
     void DrawTargetSurfaceVisibleRegionForDFX(RSDisplayRenderNode& node);
-    void DrawCurrentRefreshRate(uint32_t currentRefreshRate);
+    void DrawCurrentRefreshRate(uint32_t currentRefreshRate, uint32_t realtimeRefreshRate);
     // check if surface name is in dfx target list
     inline bool CheckIfSurfaceTargetedForDFX(std::string nodeName)
     {
@@ -200,12 +218,7 @@ private:
     void DrawAndTraceSingleDirtyRegionTypeForDFX(RSSurfaceRenderNode& node,
         DirtyRegionType dirtyType, bool isDrawn = true);
 
-    bool IsHardwareEnabledNodeNeedCalcGlobalDirty(std::shared_ptr<RSSurfaceRenderNode>& node) const
-    {
-        return !node->IsHardwareEnabledTopSurface() ||
-            isHardwareForcedDisabled_ || node->HasSubNodeShouldPaint();
-    }
-
+    bool IsNotDirtyHardwareEnabledTopSurface(std::shared_ptr<RSSurfaceRenderNode>& node) const;
     std::vector<RectI> GetDirtyRects(const Occlusion::Region &region);
     /* calculate display/global (between windows) level dirty region, current include:
      * 1. window move/add/remove 2. transparent dirty region
@@ -216,6 +229,15 @@ private:
     void CalcDirtyRegionForFilterNode(const RectI& filterRect,
         std::shared_ptr<RSSurfaceRenderNode>& currentSurfaceNode,
         std::shared_ptr<RSDisplayRenderNode>& displayNode);
+
+    // remove functions below when dirty region is enabled for foldable device
+    void UpdateHardwareNodeStatusBasedOnFilterRegion(RSDisplayRenderNode& displayNode);
+    void UpdateHardwareNodeStatusBasedOnFilter(std::shared_ptr<RSSurfaceRenderNode>& node,
+        std::vector<std::shared_ptr<RSSurfaceRenderNode>>& prevHwcEnabledNodes);
+    void UpdateHardwareEnableList(std::vector<RectI>& filterRects,
+        std::vector<std::shared_ptr<RSSurfaceRenderNode>>& validHwcNodes);
+    // remove functions above when dirty region is enabled for foldable device
+
     void CalcDirtyFilterRegion(std::shared_ptr<RSDisplayRenderNode>& node);
     /* Disable visible hwc surface if it intersects with filter region
      * Save rest validNodes in prevHwcEnabledNodes
@@ -232,6 +254,10 @@ private:
     void MergeDirtyRectIfNeed(std::shared_ptr<RSSurfaceRenderNode> appNode,
         std::shared_ptr<RSSurfaceRenderNode> hwcNode);
     void AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDisplayRenderNode>& node) const;
+    // merge last childRect as dirty if any child has been removed
+    void MergeRemovedChildDirtyRegion(RSRenderNode& node);
+    // Reset curSurface info as upper surfaceParent in case surfaceParent has multi children
+    void ResetCurSurfaceInfoAsUpperSurfaceParent(RSSurfaceRenderNode& node);
 
     // set global dirty region to each surface node
     void SetSurfaceGlobalDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node);
@@ -245,8 +271,11 @@ private:
     void DrawChildRenderNode(RSRenderNode& node);
     void DrawChildCanvasRenderNode(RSRenderNode& node);
 
+    void RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node);
     void CheckColorSpace(RSSurfaceRenderNode& node);
     void HandleColorGamuts(RSDisplayRenderNode& node, const sptr<RSScreenManager>& screenManager);
+    void CheckPixelFormat(RSSurfaceRenderNode& node);
+    void HandlePixelFormat(RSDisplayRenderNode& node, const sptr<RSScreenManager>& screenManager);
     void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
         std::shared_ptr<RSCanvasListener>& overdrawListener);
     /* Judge if surface render node could skip preparation:
@@ -256,6 +285,14 @@ private:
      * If so, reset status flag and stop traversal
      */
     bool CheckIfSurfaceRenderNodeStatic(RSSurfaceRenderNode& node);
+    /* Judge if uifirst surface render node could skip subtree preparation:
+     * mainwindow check if it has leashwindow parent
+     * If so, check parent or check itself
+     */
+    bool CheckIfUIFirstSurfaceContentReusable(std::shared_ptr<RSSurfaceRenderNode>& node, bool& isAssigned);
+    // currently classify surface assigned subthread specific dirty case for preparation
+    void ClassifyUIFirstSurfaceDirtyStatus(RSSurfaceRenderNode& node);
+
     void PrepareTypesOfSurfaceRenderNodeBeforeUpdate(RSSurfaceRenderNode& node);
     void PrepareTypesOfSurfaceRenderNodeAfterUpdate(RSSurfaceRenderNode& node);
     // judge if node's cache changes
@@ -264,8 +301,8 @@ private:
     bool IsDrawingCacheStatic(RSRenderNode& node);
     // if cache root reuses, update its subtree
     // [attention] check curSurfaceDirtyManager_ before function calls
-    void UpdateStaticCacheSubTree(const std::shared_ptr<RSRenderNode>& cacheRootNode,
-        const std::list<RSRenderNode::SharedPtr>& children);
+    void UpdateSubTreeInCache(const std::shared_ptr<RSRenderNode>& cacheRootNode,
+        const std::vector<RSRenderNode::SharedPtr>& children);
     // set node cacheable animation after checking whold child tree
     void SetNodeCacheChangeStatus(RSRenderNode& node);
     void DisableNodeCacheInSetting(RSRenderNode& node);
@@ -274,12 +311,16 @@ private:
 
     bool IsHardwareComposerEnabled();
 
-    bool CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode& node);
+    // choose to keep filter cache if node is filter occluded
+    bool CheckIfSurfaceRenderNodeNeedProcess(RSSurfaceRenderNode& node, bool& keepFilterCache);
 
     void ClearTransparentBeforeSaveLayer();
     // mark surfaceNode's child surfaceView nodes hardware forced disabled
     void MarkSubHardwareEnableNodeState(RSSurfaceRenderNode& surfaceNode);
     void CollectAppNodeForHwc(std::shared_ptr<RSSurfaceRenderNode> surfaceNode);
+    void UpdateSecurityAndSkipLayerRecord(RSSurfaceRenderNode& node);
+    void PrepareEffectNodeIfCacheReuse(const std::shared_ptr<RSRenderNode>& cacheRootNode,
+        std::shared_ptr<RSEffectRenderNode> effectNode);
 
     // offscreen render related
     void PrepareOffscreenRender(RSRenderNode& node);
@@ -293,6 +334,8 @@ private:
     void UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node);
     bool IsFirstVisitedCacheForced() const;
     bool IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, int rotation) const;
+    bool ForceHardwareComposer(RSSurfaceRenderNode& node) const;
+    bool UpdateSrcRectForHwcNode(RSSurfaceRenderNode& node); // return if srcRect is allowed by dss restriction
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkImage> GetCacheImageFromMirrorNode(std::shared_ptr<RSDisplayRenderNode> mirrorNode);
 #else
@@ -301,6 +344,16 @@ private:
 
     void SwitchColorFilterDrawing(int currentSaveCount);
     void ProcessShadowFirst(RSRenderNode& node, bool inSubThread);
+    void SaveCurSurface(std::shared_ptr<RSDirtyRegionManager> dirtyManager,
+        std::shared_ptr<RSSurfaceRenderNode> surfaceNode);
+    void RestoreCurSurface(std::shared_ptr<RSDirtyRegionManager> &dirtyManager,
+        std::shared_ptr<RSSurfaceRenderNode> &surfaceNode);
+    void PrepareSubSurfaceNodes(RSSurfaceRenderNode& node);
+    void ProcessSubSurfaceNodes(RSSurfaceRenderNode& node);
+
+    // used to catch overdraw
+    void StartOverDraw();
+    void FinishOverDraw();
 
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> offscreenSurface_;                 // temporary holds offscreen surface
@@ -311,11 +364,19 @@ private:
 
     // Use in vulkan parallel rendering
     void ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node);
+    bool IsOutOfScreenRegion(RectI rect);
+
+    // used to catch overdraw
+    std::shared_ptr<Drawing::Surface> overdrawSurface_ = nullptr;
+    std::shared_ptr<Drawing::OverDrawCanvas> overdrawCanvas_ = nullptr;
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
     std::shared_ptr<RSSurfaceRenderNode> curSurfaceNode_;
+    std::stack<std::shared_ptr<RSDirtyRegionManager>> surfaceDirtyManager_;
+    std::stack<std::shared_ptr<RSSurfaceRenderNode>> surfaceNode_;
     float curAlpha_ = 1.f;
+    Vector4f curCornerRadius_{ 0.f, 0.f, 0.f, 0.f };
     bool dirtyFlag_ { false };
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
@@ -345,6 +406,7 @@ private:
     bool isSecurityDisplay_ = false;
 
     bool hasFingerprint_ = false;
+    bool mirrorAutoRotate_ = false;
 
     std::shared_ptr<RSBaseRenderEngine> renderEngine_;
 
@@ -362,8 +424,8 @@ private:
     bool isCanvasNodeSkipDfxEnabled_ = false;
     bool isQuickSkipPreparationEnabled_ = false;
     bool isOcclusionEnabled_ = false;
+    bool isSkipCanvasNodeOutOfScreen_ = false;
     bool isScreenRotationAnimating_ = false;
-    bool isTextNeedCached_ = false;
     std::vector<std::string> dfxTargetSurfaceNames_;
     PartialRenderType partialRenderType_;
     QuickSkipPrepareType quickSkipPrepareType_;
@@ -375,9 +437,24 @@ private:
     bool isDrawingCacheEnabled_ = false;
     std::stack<bool> isDrawingCacheChanged_ = {};
     std::vector<RectI> accumulatedDirtyRegions_ = {};
+    bool isSubSurfaceEnabled_ = false;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool autoCacheEnable_ = false;
+    bool autoCacheChildDisable_ = false;
+    bool autoCacheDrawingEnable_ = false;
+    RSRenderNode::RSAutoCache::NodeStragyType nodeCacheType_ = RSRenderNode::RSAutoCache::CACHE_NONE;
+    bool unchangeMark_ = false;
+    bool isDiscardSurface_ = true;
+    std::vector<std::pair<RectI, std::string>> autoCacheRenderNodeInfos_;
+    int opNodeDepth_ = 0;
+    bool opIncSubtreePropDirty_ = false;
+    Drawing::Rect opincRootRect_;
+    bool isOpincDropNodeExt_ = true;
+#endif
 
     bool needFilter_ = false;
     GraphicColorGamut newColorSpace_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    GraphicPixelFormat newPixelFormat_ = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
     std::vector<ScreenColorGamut> colorGamutModes_;
     uint64_t currentFocusedNodeId_ = 0;
     uint64_t focusedLeashWindowId_ = 0;
@@ -385,6 +462,10 @@ private:
     bool isSubThread_ = false;
     bool isUIFirst_ = false;
     uint32_t threadIndex_ = UNI_MAIN_THREAD_INDEX;
+    // check each surface could be reused per frame
+    // currently available to uiFirst
+    bool isCachedSurfaceReuse_ = false;
+    bool isSurfaceDirtyNodeLimited_ = false;
 
     bool isDirtyRegionAlignedEnable_ = false;
     std::shared_ptr<std::mutex> surfaceNodePrepareMutex_;
@@ -447,23 +528,33 @@ private:
     mutable std::mutex copyVisitorInfosMutex_;
     bool resetRotate_ = false;
 #ifndef USE_ROSEN_DRAWING
-    std::optional<SkPath> effectRegion_ = std::nullopt;
+    std::optional<SkIRect> effectRegion_ = std::nullopt;
 #else
-    std::optional<Drawing::Path> effectRegion_ = std::nullopt;
+    std::optional<Drawing::RectI> effectRegion_ = std::nullopt;
 #endif
     bool curDirty_ = false;
     bool curContentDirty_ = false;
     bool isPhone_ = false;
+    bool isPc_ = false;
+    bool isCacheBlurPartialRenderEnabled_ = false;
+    bool drawCacheWithBlur_ = false;
+    bool noNeedTodrawShadowAgain_ = false;
+    bool notRunCheckAndSetNodeCacheType_ = false;
+    int updateCacheProcessCnt_ = 0;
 
     NodeId firstVisitedCache_ = INVALID_NODEID;
     std::unordered_set<NodeId> visitedCacheNodeIds_ = {};
     std::unordered_map<NodeId, std::unordered_set<NodeId>> allCacheFilterRects_ = {};
     std::stack<std::unordered_set<NodeId>> curCacheFilterRects_ = {};
     bool forceUpdateFlag_ = false;
-#ifndef USE_ROSEN_DRAWING
+#ifdef ENABLE_RECORDING_DCL
     void tryCapture(float width, float height);
     void endCapture() const;
+#ifndef USE_ROSEN_DRAWING
     std::shared_ptr<RSRecordingCanvas> recordingCanvas_;
+#else
+    std::shared_ptr<ExtendRecordingCanvas> recordingCanvas_;
+#endif
 #endif
     bool isNodeSingleFrameComposer_ = false;
 
@@ -473,12 +564,26 @@ private:
 #else
     std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
 #endif
+
+    void SetHasSharedTransitionNode(RSSurfaceRenderNode& surfaceNode, bool hasSharedTransitionNode);
+
     // attention: please synchronize the change of RSUniRenderVisitor::ProcessChildren to this func
     void ProcessChildrenForScreenRecordingOptimization(RSDisplayRenderNode& node, NodeId rootIdOfCaptureWindow);
     NodeId FindInstanceChildOfDisplay(std::shared_ptr<RSRenderNode> node);
     bool CheckIfNeedResetRotate();
 
-    uint32_t currentRefreshRate_ = 0;
+    // use for virtual screen app/window filtering ability
+    NodeId virtualScreenFilterAppRootId_ = INVALID_NODEID;
+    void UpdateVirtualScreenFilterAppRootId(const RSRenderNode::SharedPtr& node);
+
+    void UpdateSurfaceRenderNodeScale(RSSurfaceRenderNode& node);
+    
+    // dfx for effect render node
+    void DrawEffectRenderNodeForDFX();
+    std::vector<RectI> nodesUseEffectFallbackForDfx_;
+    std::vector<RectI> nodesUseEffectForDfx_;
+    // pair<ApplyBackgroundEffectNodeList, ApplyBackgroundEffectFallbackNodeList>
+    std::unordered_map<NodeId, std::pair<std::vector<RectI>, std::vector<RectI>>> effectNodeMapForDfx_;
 };
 } // namespace Rosen
 } // namespace OHOS

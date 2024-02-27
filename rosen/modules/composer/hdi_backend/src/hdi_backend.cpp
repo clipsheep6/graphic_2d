@@ -18,6 +18,8 @@
 
 #include <scoped_bytrace.h>
 #include "surface_buffer.h"
+#include "hitrace_meter.h"
+#include "sync_fence_tracker.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -87,29 +89,21 @@ RosenError HdiBackend::RegHwcDeadListener(OnHwcDeadCallback func, void* data)
     return ROSEN_ERROR_OK;
 }
 
-void HdiBackend::SetPendingPeriod(const OutputPtr &output, int64_t period)
+void HdiBackend::SetPendingMode(const OutputPtr &output, int64_t period, int64_t timestamp)
 {
     if (output == nullptr) {
         HLOGE("output is nullptr.");
         return;
     }
-    output->SetPendingPeriod(period);
+    output->SetPendingMode(period, timestamp);
 }
 
 int32_t HdiBackend::PrepareCompleteIfNeed(const OutputPtr &output, bool needFlush)
 {
     std::vector<LayerPtr> compClientLayers;
+    output->GetComposeClientLayers(compClientLayers);
     std::vector<LayerInfoPtr> newLayerInfos;
-    const std::unordered_map<uint32_t, LayerPtr> &layersMap = output->GetLayers();
-    for (auto iter = layersMap.begin(); iter != layersMap.end(); ++iter) {
-        const LayerPtr &layer = iter->second;
-        newLayerInfos.emplace_back(layer->GetLayerInfo());
-        if (layer->GetLayerInfo()->GetCompositionType() == GraphicCompositionType::GRAPHIC_COMPOSITION_CLIENT ||
-            layer->GetLayerInfo()->GetCompositionType() == GraphicCompositionType::GRAPHIC_COMPOSITION_CLIENT_CLEAR ||
-            layer->GetLayerInfo()->GetCompositionType() == GraphicCompositionType::GRAPHIC_COMPOSITION_TUNNEL) {
-            compClientLayers.emplace_back(layer);
-        }
-    }
+    output->GetLayerInfos(newLayerInfos);
 
     if (compClientLayers.size() > 0) {
         needFlush = true;
@@ -150,6 +144,11 @@ void HdiBackend::Repaint(const OutputPtr &output)
         // return
     }
 
+    if (IsTagEnabled(HITRACE_TAG_GRAPHIC_AGP)) {
+        static SyncFenceTracker presentFenceThread("Present Fence");
+        presentFenceThread.TrackFence(fbFence);
+    }
+
     ret = output->UpdateInfosAfterCommit(fbFence);
     if (ret != GRAPHIC_DISPLAY_SUCCESS) {
         return;
@@ -168,7 +167,7 @@ void HdiBackend::StartSample(const OutputPtr &output)
         HLOGE("output is nullptr.");
         return;
     }
-    output->StartVSyncSampler();
+    output->StartVSyncSampler(true); // force resample
 }
 
 void HdiBackend::ResetDevice()

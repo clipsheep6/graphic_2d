@@ -32,7 +32,7 @@ RSDisplayNode::SharedPtr RSDisplayNode::Create(const RSDisplayNodeConfig& displa
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
-    ROSEN_LOGD("RSDisplayNode::Create, id:%{public}" PRIu64, node->GetId());
+    ROSEN_LOGI("RSDisplayNode::Create, id:%{public}" PRIu64, node->GetId());
     return node;
 }
 
@@ -82,6 +82,18 @@ void RSDisplayNode::SetScreenId(uint64_t screenId)
         transactionProxy->AddCommand(command, true);
     }
     ROSEN_LOGD("RSDisplayNode::SetScreenId, ScreenId:%{public}" PRIu64, screenId);
+}
+
+void RSDisplayNode::OnBoundsSizeChanged() const
+{
+    auto bounds = GetStagingProperties().GetBounds();
+    ROSEN_LOGD("RSDisplayNode::OnBoundsSizeChanged, w: %{public}d, h: %{public}d.",
+        (uint32_t)bounds.z_, (uint32_t)bounds.w_);
+    std::unique_ptr<RSCommand> command = std::make_unique<RSDisplayNodeSetRogSize>(GetId(), bounds.z_, bounds.w_);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
+    }
 }
 
 void RSDisplayNode::SetDisplayOffset(int32_t offsetX, int32_t offsetY)

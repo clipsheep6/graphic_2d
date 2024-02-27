@@ -32,10 +32,15 @@ std::shared_ptr<TextBlob> TextBlob::MakeFromText(const void* text, size_t byteLe
     return StaticFactory::MakeFromText(text, byteLength, font, encoding);
 }
 
+std::shared_ptr<TextBlob> TextBlob::MakeFromPosText(const void* text, size_t byteLength,
+    const Point pos[], const Font& font, TextEncoding encoding)
+{
+    return StaticFactory::MakeFromPosText(text, byteLength, pos, font, encoding);
+}
+
 std::shared_ptr<TextBlob> TextBlob::MakeFromString(const char* str, const Font& font, TextEncoding encoding)
 {
     if (!str) {
-        LOGE("str nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return nullptr;
     }
     return MakeFromText(str, strlen(str), font, encoding);
@@ -50,7 +55,6 @@ std::shared_ptr<TextBlob> TextBlob::MakeFromRSXform(const void* text, size_t byt
 std::shared_ptr<Data> TextBlob::Serialize() const
 {
     if (!textBlobImpl_) {
-        LOGE("textBlobImpl nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return nullptr;
     }
     return textBlobImpl_->Serialize();
@@ -59,6 +63,21 @@ std::shared_ptr<Data> TextBlob::Serialize() const
 std::shared_ptr<TextBlob> TextBlob::Deserialize(const void* data, size_t size)
 {
     return StaticFactory::DeserializeTextBlob(data, size);
+}
+
+void TextBlob::GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<uint16_t>& glyphIds)
+{
+    StaticFactory::GetDrawingGlyphIDforTextBlob(blob, glyphIds);
+}
+
+Path TextBlob::GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob)
+{
+    return StaticFactory::GetDrawingPathforTextBlob(glyphId, blob);
+}
+
+void TextBlob::GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points)
+{
+    return StaticFactory::GetDrawingPointsForTextBlob(blob, points);
 }
 
 std::shared_ptr<Rect> TextBlob::Bounds() const

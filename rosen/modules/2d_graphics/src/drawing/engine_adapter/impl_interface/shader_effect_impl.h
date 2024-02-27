@@ -25,6 +25,7 @@
 #include "image/picture.h"
 #include "utils/matrix.h"
 #include "utils/point.h"
+#include "utils/point3.h"
 #include "utils/rect.h"
 #include "utils/sampling_options.h"
 #include "utils/scalar.h"
@@ -51,9 +52,11 @@ public:
     virtual void InitWithRadialGradient(const Point& centerPt, scalar radius, const std::vector<ColorQuad>& colors,
         const std::vector<scalar>& pos, TileMode mode) = 0;
     virtual void InitWithTwoPointConical(const Point& startPt, scalar startRadius, const Point& endPtr,
-        scalar endRadius, const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode) = 0;
+        scalar endRadius, const std::vector<ColorQuad>& colors, const std::vector<scalar>& pos, TileMode mode,
+        const Matrix *matrix) = 0;
     virtual void InitWithSweepGradient(const Point& centerPt, const std::vector<ColorQuad>& colors,
         const std::vector<scalar>& pos, TileMode mode, scalar startAngle, scalar endAngle, const Matrix *matrix) = 0;
+    virtual void InitWithLightUp(const float& lightUpDeg, const ShaderEffect& imageShader) = 0;
     virtual std::shared_ptr<Data> Serialize() const = 0;
     virtual bool Deserialize(std::shared_ptr<Data> data) = 0;
 };

@@ -102,7 +102,7 @@ bool CharGroups::IsValid() const
 
     if (range_.start > range_.end || range_.start < 0 ||  range_.end < 0 ||
         range_.end > static_cast<int>(pcgs_->size()) || range_.start > static_cast<int>(pcgs_->size())) {
-        throw TEXGINE_EXCEPTION(ERROR_STATUS);
+        return false;
     }
 
     return true;
@@ -333,7 +333,8 @@ void CharGroups::Merge(const CharGroups &right)
     }
 
     if (range_.end != right.range_.start) {
-        throw CustomException("the right start not equal this end");
+        LOGEX_FUNC_LINE(ERROR) << "the right start not equal this end";
+        return;
     }
 
     range_.end += right.range_.end - right.range_.start;
@@ -366,7 +367,7 @@ void CharGroups::ReverseAll()
     std::reverse(pcgs_->begin(), pcgs_->end());
 }
 
-bool CharGroups::CheckCodePoint()
+bool CharGroups::CheckCodePoint() const
 {
     if (!GetSize()) {
         return false;
@@ -477,6 +478,58 @@ bool CharGroups::IsSingleWord() const
         }
     }
     return isSingleWord;
+}
+
+bool CharGroups::JudgeOnlyHardBreak() const
+{
+    if (!IsValid()) {
+        LOGEX_FUNC_LINE(ERROR) << "pcgs_ is null";
+        return false;
+    }
+    bool onlyHardBreak = true;
+    for (auto i = range_.start; i < range_.end; i++) {
+        onlyHardBreak = pcgs_->at(i).JudgeOnlyHardBreak();
+        if (!onlyHardBreak) {
+            break;
+        }
+    }
+    return onlyHardBreak;
+}
+
+int CharGroups::FindHardBreakPos() const
+{
+    if (!IsValid()) {
+        LOGEX_FUNC_LINE(ERROR) << "pcgs_ is null";
+        return -1;
+    }
+    int breakPos = -1;
+    for (auto i = range_.start; i < range_.end; i++) {
+        if (pcgs_->at(i).HasHardBreak()) {
+            breakPos = i;
+            break;
+        }
+    }
+    return breakPos;
+}
+
+std::vector<uint16_t> CharGroups::GetSubCharsToU16(const int start, const int end)
+{
+    if (!IsValid()) {
+        LOGEX_FUNC_LINE(ERROR) << "pcgs_ is null";
+        return {};
+    }
+    if ((start < range_.start) || (start >= range_.end) ||
+        (end < range_.start) || (end >= range_.end) || (start > end)) {
+        LOGEX_FUNC_LINE(ERROR) << "invalid parameter, start = " << start <<
+            " end = " << end << " range_.start = " << range_.start << " range_.end = " << range_.end;
+        return {};
+    }
+
+    std::vector<uint16_t> charData;
+    for (auto i = start; i <= end; i++) {
+        charData.insert(charData.end(), pcgs_->at(i).chars.begin(), pcgs_->at(i).chars.end());
+    }
+    return charData;
 }
 } // namespace TextEngine
 } // namespace Rosen

@@ -70,6 +70,7 @@ HWTEST_F(VSyncDistributorTest, AddConnection002, Function | MediumTest| Level3)
 {
     sptr<VSyncConnection> conn = new VSyncConnection(vsyncDistributor, "VSyncDistributorTest");
     ASSERT_EQ(VSyncDistributorTest::vsyncDistributor->AddConnection(conn), VSYNC_ERROR_OK);
+    ASSERT_EQ(VSyncDistributorTest::vsyncDistributor->AddConnection(conn), VSYNC_ERROR_INVALID_ARGUMENTS);
 }
 
 /*
@@ -148,6 +149,20 @@ HWTEST_F(VSyncDistributorTest, RequestNextVSync003, Function | MediumTest| Level
     sptr<VSyncConnection> conn = new VSyncConnection(vsyncDistributor, "VSyncDistributorTest");
     VSyncDistributorTest::vsyncDistributor->AddConnection(conn);
     ASSERT_EQ(VSyncDistributorTest::vsyncDistributor->RequestNextVSync(conn), VSYNC_ERROR_OK);
+}
+
+/*
+* Function: RequestNextVSync004
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call RequestNextVSync
+ */
+HWTEST_F(VSyncDistributorTest, RequestNextVSync004, Function | MediumTest| Level3)
+{
+    sptr<VSyncConnection> conn = new VSyncConnection(vsyncDistributor, "VSyncDistributorTest");
+    VSyncDistributorTest::vsyncDistributor->AddConnection(conn);
+    ASSERT_EQ(VSyncDistributorTest::vsyncDistributor->RequestNextVSync(conn, "unknown", 0), VSYNC_ERROR_OK);
 }
 
 /*
@@ -251,6 +266,30 @@ HWTEST_F(VSyncDistributorTest, GetVSyncConnectionInfos001, Function | MediumTest
     sptr<VSyncConnection> conn = new VSyncConnection(vsyncDistributor, "VSyncDistributorTest");
     VSyncDistributorTest::vsyncDistributor->AddConnection(conn);
     ASSERT_EQ(VSyncDistributorTest::vsyncDistributor->GetVSyncConnectionInfos(infos), VSYNC_ERROR_OK);
+}
+
+/*
+* Function: MarkRSNotRendering001
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call MarkRSNotRendering
+ */
+HWTEST_F(VSyncDistributorTest, MarkRSNotRendering001, Function | MediumTest| Level3)
+{
+    VSyncDistributorTest::vsyncDistributor->MarkRSNotRendering();
+}
+
+/*
+* Function: UnmarkRSNotRendering001
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call UnmarkRSNotRendering
+ */
+HWTEST_F(VSyncDistributorTest, UnmarkRSNotRendering001, Function | MediumTest| Level3)
+{
+    VSyncDistributorTest::vsyncDistributor->UnmarkRSNotRendering();
 }
 } // namespace
 } // namespace Rosen

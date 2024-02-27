@@ -15,8 +15,7 @@
 
 #include "pipeline/rs_render_node_map.h"
 #include "common/rs_common_def.h"
-#include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_canvas_render_node.h"
+#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
@@ -24,15 +23,20 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr const char* ENTRY_VIEW = "SCBDesktop2";
-constexpr const char* WALLPAPER_VIEW = "SCBWallpaper1";
-constexpr const char* SCREENLOCK_WINDOW = "SCBScreenLock11";
-constexpr const char* SYSUI_DROPDOWN = "SCBDropdownPanel12";
+constexpr const char* ENTRY_VIEW = "SCBDesktop";
+constexpr const char* WALLPAPER_VIEW = "SCBWallpaper";
+constexpr const char* SCREENLOCK_WINDOW = "SCBScreenLock";
+constexpr const char* SYSUI_DROPDOWN = "SCBDropdownPanel";
 };
 RSRenderNodeMap::RSRenderNodeMap()
 {
-    // add animation fallback node
-    renderNodeMap_.emplace(0, new RSCanvasRenderNode(0));
+    // add animation fallback node, NOTE: this is different from RSContext::globalRootRenderNode_
+    renderNodeMap_.emplace(0, new RSRenderNode(0));
+}
+
+void RSRenderNodeMap::Initialize(const std::weak_ptr<RSContext>& context)
+{
+    context_ = context;
 }
 
 void RSRenderNodeMap::ObtainLauncherNodeId(const std::shared_ptr<RSSurfaceRenderNode> surfaceNode)
@@ -40,10 +44,10 @@ void RSRenderNodeMap::ObtainLauncherNodeId(const std::shared_ptr<RSSurfaceRender
     if (surfaceNode == nullptr) {
         return;
     }
-    if (surfaceNode->GetName() == ENTRY_VIEW) {
+    if (surfaceNode->GetName().find(ENTRY_VIEW) != std::string::npos) {
         entryViewNodeId_ = surfaceNode->GetId();
     }
-    if (surfaceNode->GetName() == WALLPAPER_VIEW) {
+    if (surfaceNode->GetName().find(WALLPAPER_VIEW) != std::string::npos) {
         wallpaperViewNodeId_ = surfaceNode->GetId();
     }
 }
@@ -53,7 +57,7 @@ void RSRenderNodeMap::ObtainScreenLockWindowNodeId(const std::shared_ptr<RSSurfa
     if (surfaceNode == nullptr) {
         return;
     }
-    if (surfaceNode->GetName() == SCREENLOCK_WINDOW) {
+    if (surfaceNode->GetName().find(SCREENLOCK_WINDOW) != std::string::npos) {
         screenLockWindowNodeId_ = surfaceNode->GetId();
     }
 }
@@ -75,15 +79,14 @@ NodeId RSRenderNodeMap::GetScreenLockWindowNodeId() const
 
 static bool IsResidentProcess(const std::shared_ptr<RSSurfaceRenderNode> surfaceNode)
 {
-    return surfaceNode->GetName() == ENTRY_VIEW || surfaceNode->GetName() == SYSUI_DROPDOWN ||
-           surfaceNode->GetName() == SCREENLOCK_WINDOW || surfaceNode->GetName() == WALLPAPER_VIEW;
+    return surfaceNode->GetName().find(ENTRY_VIEW) != std::string::npos ||
+           surfaceNode->GetName().find(SYSUI_DROPDOWN) != std::string::npos ||
+           surfaceNode->GetName().find(SCREENLOCK_WINDOW) != std::string::npos ||
+           surfaceNode->GetName().find(WALLPAPER_VIEW) != std::string::npos;
 }
 
 bool RSRenderNodeMap::IsResidentProcessNode(NodeId id) const
 {
-    if (!RSSystemProperties::GetAnimationCacheEnabled()) {
-        return false;
-    }
     auto nodePid = ExtractPid(id);
     return std::any_of(residentSurfaceNodeMap_.begin(), residentSurfaceNodeMap_.end(),
         [nodePid](const auto& pair) -> bool { return ExtractPid(pair.first) == nodePid; });
@@ -96,8 +99,7 @@ bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>
         return false;
     }
     renderNodeMap_.emplace(id, nodePtr);
-    // setup node backref
-    nodePtr->renderProperties_.backref_ = nodePtr;
+    nodePtr->OnRegister(context_);
     if (nodePtr->GetType() == RSRenderNodeType::SURFACE_NODE) {
         auto surfaceNode = nodePtr->ReinterpretCastTo<RSSurfaceRenderNode>();
         surfaceNodeMap_.emplace(id, surfaceNode);
@@ -118,6 +120,7 @@ bool RSRenderNodeMap::RegisterDisplayRenderNode(const std::shared_ptr<RSDisplayR
     }
     renderNodeMap_.emplace(id, nodePtr);
     displayNodeMap_.emplace(id, nodePtr);
+    nodePtr->OnRegister(context_);
     return true;
 }
 
@@ -144,21 +147,29 @@ void RSRenderNodeMap::RemoveDrivenRenderNode(NodeId id)
     drivenRenderNodeMap_.erase(id);
 }
 
+void RSRenderNodeMap::MoveRenderNodeMap(
+    std::shared_ptr<std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>>> subRenderNodeMap, pid_t pid)
+{
+    std::unordered_map<NodeId, std::shared_ptr<RSBaseRenderNode>>::iterator iter = renderNodeMap_.begin();
+    for (; iter != renderNodeMap_.end();) {
+        if (ExtractPid(iter->first) != pid) {
+            ++iter;
+            continue;
+        }
+        // update node flag to avoid animation fallback
+        iter->second->fallbackAnimationOnDestroy_ = false;
+        // remove node from tree
+        iter->second->RemoveFromTree(false);
+        subRenderNodeMap->emplace(iter->first, iter->second);
+        iter = renderNodeMap_.erase(iter);
+    }
+}
+
 void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
 {
     ROSEN_LOGD("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %{public}llu",
         (unsigned long long)pid);
     // remove all nodes belong to given pid (by matching higher 32 bits of node id)
-    EraseIf(renderNodeMap_, [pid](const auto& pair) -> bool {
-        if (ExtractPid(pair.first) != pid) {
-            return false;
-        }
-        // update node flag to avoid animation fallback
-        pair.second->fallbackAnimationOnDestroy_ = false;
-        // remove node from tree
-        pair.second->RemoveFromTree(false);
-        return true;
-    });
 
     EraseIf(surfaceNodeMap_, [pid](const auto& pair) -> bool {
         return ExtractPid(pair.first) == pid;
@@ -173,6 +184,11 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
     });
 
     EraseIf(displayNodeMap_, [pid](const auto& pair) -> bool {
+        if (ExtractPid(pair.first) != pid && pair.second) {
+            ROSEN_LOGD("RSRenderNodeMap::FilterNodeByPid removing all nodes belong to pid %{public}llu",
+                (unsigned long long)pid);
+            pair.second->FilterModifiersByPid(pid);
+        }
         return ExtractPid(pair.first) == pid;
     });
 
@@ -239,6 +255,5 @@ const std::shared_ptr<RSRenderNode> RSRenderNodeMap::GetAnimationFallbackNode() 
     }
     return itr->second;
 }
-
 } // namespace Rosen
 } // namespace OHOS

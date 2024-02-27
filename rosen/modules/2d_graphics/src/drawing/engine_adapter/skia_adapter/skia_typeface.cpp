@@ -20,6 +20,7 @@
 #include "include/core/SkFontStyle.h"
 
 #include "skia_adapter/skia_convert_utils.h"
+#include "skia_adapter/skia_memory_stream.h"
 #include "utils/log.h"
 
 namespace OHOS {
@@ -36,7 +37,7 @@ std::string SkiaTypeface::GetFamilyName() const
 {
     std::string name;
     if (!skTypeface_) {
-        LOGE("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return name;
     }
     SkString skName;
@@ -49,7 +50,7 @@ FontStyle SkiaTypeface::GetFontStyle() const
 {
     FontStyle fontStyle;
     if (!skTypeface_) {
-        LOGE("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return fontStyle;
     }
     SkFontStyle skFontStyle = skTypeface_->fontStyle();
@@ -60,7 +61,7 @@ FontStyle SkiaTypeface::GetFontStyle() const
 size_t SkiaTypeface::GetTableSize(uint32_t tag) const
 {
     if (!skTypeface_) {
-        LOGE("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return 0;
     }
     return skTypeface_->getTableSize(tag);
@@ -69,7 +70,7 @@ size_t SkiaTypeface::GetTableSize(uint32_t tag) const
 size_t SkiaTypeface::GetTableData(uint32_t tag, size_t offset, size_t length, void* data) const
 {
     if (!skTypeface_) {
-        LOGE("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return 0;
     }
     return skTypeface_->getTableData(tag, offset, length, data);
@@ -78,7 +79,7 @@ size_t SkiaTypeface::GetTableData(uint32_t tag, size_t offset, size_t length, vo
 bool SkiaTypeface::GetItalic() const
 {
     if (!skTypeface_) {
-        LOGE("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return false;
     }
     return skTypeface_->isItalic();
@@ -87,17 +88,62 @@ bool SkiaTypeface::GetItalic() const
 uint32_t SkiaTypeface::GetUniqueID() const
 {
     if (!skTypeface_) {
-        LOGE("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return 0;
     }
     return skTypeface_->uniqueID();
 }
 
-std::shared_ptr<Typeface> SkiaTypeface::MakeFromFile(const char path[])
+int32_t SkiaTypeface::GetUnitsPerEm() const
 {
-    sk_sp<SkTypeface> skTypeface = SkTypeface::MakeFromFile(path);
+    if (!skTypeface_) {
+        LOGD("SkiaTypeface::GetUnitsPerEm, skTypeface nullptr");
+        return 0;
+    }
+    return skTypeface_->getUnitsPerEm();
+}
+
+std::shared_ptr<Typeface> SkiaTypeface::MakeDefault()
+{
+    sk_sp<SkTypeface> skTypeface = SkTypeface::MakeDefault();
     if (!skTypeface) {
-        LOGE("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        return nullptr;
+    }
+    std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(skTypeface);
+    return std::make_shared<Typeface>(typefaceImpl);
+}
+
+std::shared_ptr<Typeface> SkiaTypeface::MakeFromFile(const char path[], int index)
+{
+    sk_sp<SkTypeface> skTypeface = SkTypeface::MakeFromFile(path, index);
+    if (!skTypeface) {
+        LOGD("skTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        return nullptr;
+    }
+    std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(skTypeface);
+    return std::make_shared<Typeface>(typefaceImpl);
+}
+
+std::shared_ptr<Typeface> SkiaTypeface::MakeFromStream(std::unique_ptr<MemoryStream> memoryStream, int32_t index)
+{
+    std::unique_ptr<SkStreamAsset> skMemoryStream = memoryStream->GetImpl<SkiaMemoryStream>()->GetSkMemoryStream();
+    sk_sp<SkTypeface> skTypeface = SkTypeface::MakeFromStream(std::move(skMemoryStream), index);
+    if (!skTypeface) {
+        LOGD("SkiaTypeface::MakeFromStream, skTypeface nullptr");
+        return nullptr;
+    }
+    std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(skTypeface);
+    return std::make_shared<Typeface>(typefaceImpl);
+}
+
+std::shared_ptr<Typeface> SkiaTypeface::MakeFromName(const char familyName[], FontStyle fontStyle)
+{
+    SkFontStyle skFontStyle;
+    SkiaConvertUtils::DrawingFontStyleCastToSkFontStyle(fontStyle, skFontStyle);
+    sk_sp<SkTypeface> skTypeface = SkTypeface::MakeFromName(familyName, skFontStyle);
+    if (!skTypeface) {
+        LOGD("SkiaTypeface::MakeFromName, skTypeface nullptr");
         return nullptr;
     }
     std::shared_ptr<TypefaceImpl> typefaceImpl = std::make_shared<SkiaTypeface>(skTypeface);
@@ -107,7 +153,7 @@ std::shared_ptr<Typeface> SkiaTypeface::MakeFromFile(const char path[])
 sk_sp<SkData> SkiaTypeface::SerializeTypeface(SkTypeface* typeface, void* ctx)
 {
     if (!typeface) {
-        LOGE("typeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("typeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return nullptr;
     }
     return typeface->serialize();

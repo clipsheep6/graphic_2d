@@ -18,28 +18,14 @@
 
 #include "common/rs_vector4.h"
 #include "pipeline/rs_render_node.h"
+#include "property/rs_properties_def.h"
+#include "screen_manager/screen_types.h"
 
 namespace OHOS {
 namespace Rosen {
 class RSB_EXPORT RSPointLightManager {
 public:
     static RSPointLightManager* Instance();
-    std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>& GetLightSourceMap()
-    {
-        return lightSourceNodeMap_;
-    }
-    std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>& GetIlluminatedMap()
-    {
-        return illuminatedNodeMap_;
-    }
-    std::vector<std::weak_ptr<RSRenderNode>>& GetDirtyLightSourceList()
-    {
-        return dirtyLightSourceList_;
-    }
-    std::vector<std::weak_ptr<RSRenderNode>>& GetDirtyIlluminatedList()
-    {
-        return dirtyIlluminatedList_;
-    }
     void RegisterLightSource(const std::shared_ptr<RSRenderNode>& renderNode);
     void RegisterIlluminated(const std::shared_ptr<RSRenderNode>& renderNode);
     void UnRegisterLightSource(const std::shared_ptr<RSRenderNode>& renderNode);
@@ -47,6 +33,16 @@ public:
     void AddDirtyLightSource(std::weak_ptr<RSRenderNode> renderNode);
     void AddDirtyIlluminated(std::weak_ptr<RSRenderNode> renderNode);
     void PrepareLight();
+    Vector4f CalculateLightPosForIlluminated(const std::shared_ptr<RSLightSource>& lightSourcePtr,
+        const std::shared_ptr<RSObjAbsGeometry>& illuminatedGeoPtr);
+    void SetScreenRotation(ScreenRotation screenRotation)
+    {
+        screenRotation_ = screenRotation;
+    }
+    ScreenRotation GetScreenRotation() const
+    {
+        return screenRotation_;
+    }
 
 private:
     RSPointLightManager() = default;
@@ -57,13 +53,15 @@ private:
     RSPointLightManager& operator=(const RSPointLightManager&&) = delete;
 
     void ClearDirtyList();
-    void CheckIlluminated(Vector4f lightSourceAbsPosition, const std::shared_ptr<RSRenderNode>& illuminatedNode);
+    void CheckIlluminated(
+        const std::shared_ptr<RSRenderNode>& lightSourceNode, const std::shared_ptr<RSRenderNode>& illuminatedNode);
     void PrepareLight(std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>& map,
         std::vector<std::weak_ptr<RSRenderNode>>& dirtyList, bool isLightSourceDirty);
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> lightSourceNodeMap_;
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> illuminatedNodeMap_;
     std::vector<std::weak_ptr<RSRenderNode>> dirtyLightSourceList_;
     std::vector<std::weak_ptr<RSRenderNode>> dirtyIlluminatedList_;
+    ScreenRotation screenRotation_;
 };
 } // namespace Rosen
 } // namespace OHOS

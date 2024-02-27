@@ -55,6 +55,8 @@ public:
     bool IsRunning() const;
     bool IsPaused() const;
     bool IsFinished() const;
+    void DumpAnimation(std::string& out) const;
+    virtual void DumpAnimationType(std::string& out) const;
 
     void SetAnimationId(AnimationId id)
     {
@@ -146,6 +148,11 @@ public:
         return calculateAnimationValue_;
     }
 
+    bool GetNeedUpdateStartTime() const
+    {
+        return needUpdateStartTime_;
+    }
+
     void Attach(RSRenderNode* renderNode);
     void Detach(bool forceDetach = false);
     RSRenderNode* GetTarget() const;
@@ -157,6 +164,10 @@ public:
     virtual void AttachRenderProperty(const std::shared_ptr<RSRenderPropertyBase>& property) {};
 
     void SetStartTime(int64_t);
+
+    const std::shared_ptr<RSRenderPropertyBase> GetAnimateVelocity() const;
+
+    static bool isCalcAnimateVelocity_;
 
 protected:
     explicit RSRenderAnimation(AnimationId id);
@@ -179,12 +190,18 @@ protected:
 
     virtual void OnRemoveOnCompletion() {}
 
+    virtual void RecordLastAnimateValue() {}
+
+    virtual void UpdateAnimateVelocity(float frameInterval) {}
+
     void FinishOnCurrentPosition();
 
     RSAnimationFraction animationFraction_;
 
     // calculateAnimationValue_ is embedded modify for stat animate frame drop
     bool calculateAnimationValue_ { true };
+
+    std::shared_ptr<RSRenderPropertyBase> animateVelocity_;
 
 private:
     void ProcessFillModeOnStart(float startFraction);
@@ -211,6 +228,7 @@ private:
     RSRenderNode* target_ { nullptr };
 
     friend class RSAnimation;
+    friend class RSModifierManager;
 };
 } // namespace Rosen
 } // namespace OHOS

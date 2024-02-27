@@ -146,8 +146,24 @@ TypographyProperties::Range<size_t> TypographyTxt::GetWordBoundary(size_t offset
     return TxtConvertRange(range);
 }
 
+TypographyProperties::Range<size_t> TypographyTxt::GetActualTextRange(int lineNumber, bool includeSpaces)
+{
+    txt::Paragraph::Range<size_t> range = paragraphTxt_->GetActualTextRange(lineNumber, includeSpaces);
+    return TxtConvertRange(range);
+}
+
 size_t TypographyTxt::GetLineCount()
 {
     return paragraphTxt_->GetLineCount();
+}
+
+double TypographyTxt::GetLineHeight(int lineNumber)
+{
+    return paragraphTxt_->GetLineHeight();
+}
+
+double TypographyTxt::GetLineWidth(int lineNumber)
+{
+    return paragraphTxt_->GetLineWidth();
 }
 } // namespace rosen

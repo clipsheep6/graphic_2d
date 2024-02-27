@@ -33,6 +33,9 @@ if (rosen_cross_platform) {
     "ROSEN_DISABLE_DEBUGLOG",
     "ROSEN_TRACE_DISABLE",
   ]
+  if (runtime_mode == "release") {
+    rs_common_define += [ "RUNTIME_MODE_RELEASE" ]
+  }
 }
 
 if (is_emulator) {
@@ -49,10 +52,14 @@ if (rosen_is_ohos) {
 
 if (rosen_is_android) {
   rs_common_define += [ "ROSEN_ANDROID" ]
+  rs_common_define += [ "USE_SURFACE_TEXTURE" ]
+  rs_common_define += [ "ROSEN_ARKUI_X" ]
 }
 
 if (rosen_is_ios) {
   rs_common_define += [ "ROSEN_IOS" ]
+  rs_common_define += [ "USE_SURFACE_TEXTURE" ]
+  rs_common_define += [ "ROSEN_ARKUI_X" ]
 }
 
 if (rosen_is_mac) {

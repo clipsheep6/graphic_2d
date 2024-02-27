@@ -76,6 +76,8 @@ typedef enum : uint32_t {
     POWER_STATUS_OFF_FAKE,
     POWER_STATUS_BUTT,
     INVALID_POWER_STATUS,
+    POWER_STATUS_ON_ADVANCED,
+    POWER_STATUS_OFF_ADVANCED,
 } ScreenPowerStatus;
 
 typedef enum : uint32_t {

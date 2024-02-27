@@ -359,6 +359,48 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
     }
 }
 
+Occlusion::Rect RSSurfaceRenderNode::GetContainerInnerRect(const RectI& absRect,
+    const ScreenRotation screenRotation) const
+{
+    if (!HasContainerWindow()) {
+        return Occlusion::Rect();
+    }
+
+    switch (screenRotation) {
+        case ScreenRotation::ROTATION_0: {
+            return Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
+                absRect.top_ + containerConfig_.bt,
+                absRect.GetRight() - containerConfig_.bp,
+                absRect.GetBottom() - containerConfig_.bp};
+        }
+        case ScreenRotation::ROTATION_90: {
+            return Occlusion::Rect{ absRect.left_ + containerConfig_.bt,
+                absRect.top_ + containerConfig_.bp,
+                absRect.GetRight() - containerConfig_.bp,
+                absRect.GetBottom() - containerConfig_.bp};
+            break;
+        }
+        case ScreenRotation::ROTATION_180: {
+            return Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
+                absRect.top_ + containerConfig_.bp,
+                absRect.GetRight() - containerConfig_.bp,
+                absRect.GetBottom() - containerConfig_.bt};
+        }
+        case ScreenRotation::ROTATION_270: {
+            return Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
+                absRect.top_ + containerConfig_.bp,
+                absRect.GetRight() - containerConfig_.bt,
+                absRect.GetBottom() - containerConfig_.bp};
+        }
+        default: {
+            return Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
+                absRect.top_ + containerConfig_.bt,
+                absRect.GetRight() - containerConfig_.bp,
+                absRect.GetBottom() - containerConfig_.bp};
+        }
+    }
+}
+
 void RSSurfaceRenderNode::OnResetParent()
 {
     if (nodeType_ == RSSurfaceNodeType::LEASH_WINDOW_NODE) {
@@ -1418,49 +1460,36 @@ void RSSurfaceRenderNode::ResetSurfaceContainerRegion(const RectI& screeninfo, c
 {
     if (!HasContainerWindow()) {
         containerRegion_ = Occlusion::Region{};
+        containerInnerCornerRegion_ = Occlusion::Region{};
         return;
     }
+    auto innerRect = GetContainerInnerRect(absRect, screenRotation);
+
     Occlusion::Region absRegion{Occlusion::Rect{absRect}};
-    Occlusion::Rect innerRect;
-    switch (screenRotation) {
-        case ScreenRotation::ROTATION_0: {
-            innerRect = Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
-                absRect.top_ + containerConfig_.bt,
-                absRect.GetRight() - containerConfig_.bp,
-                absRect.GetBottom() - containerConfig_.bp};
-            break;
-        }
-        case ScreenRotation::ROTATION_90: {
-            innerRect = Occlusion::Rect{ absRect.left_ + containerConfig_.bt,
-                absRect.top_ + containerConfig_.bp,
-                absRect.GetRight() - containerConfig_.bp,
-                absRect.GetBottom() - containerConfig_.bp};
-            break;
-        }
-        case ScreenRotation::ROTATION_180: {
-            innerRect = Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
-                absRect.top_ + containerConfig_.bp,
-                absRect.GetRight() - containerConfig_.bp,
-                absRect.GetBottom() - containerConfig_.bt};
-            break;
-        }
-        case ScreenRotation::ROTATION_270: {
-            innerRect = Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
-                absRect.top_ + containerConfig_.bp,
-                absRect.GetRight() - containerConfig_.bt,
-                absRect.GetBottom() - containerConfig_.bp};
-            break;
-        }
-        default: {
-            innerRect = Occlusion::Rect{ absRect.left_ + containerConfig_.bp,
-                absRect.top_ + containerConfig_.bt,
-                absRect.GetRight() - containerConfig_.bp,
-                absRect.GetBottom() - containerConfig_.bp};
-            break;
-        }
-    }
     Occlusion::Region innerRectRegion{innerRect};
     containerRegion_ = absRegion.Sub(innerRectRegion);
+
+    Occlusion::Region first = Occlusion::Region(Occlusion::Rect(
+        innerRect.left_,
+        innerRect.top_,
+        innerRect.left_ + containerConfig_.inR,
+        innerRect.top_ + containerConfig_.inR));
+    Occlusion::Region second = Occlusion::Region(Occlusion::Rect(
+        innerRect.right_ - containerConfig_.inR,
+        innerRect.top_,
+        innerRect.right_,
+        innerRect.top_ + containerConfig_.inR));
+    Occlusion::Region third = Occlusion::Region(Occlusion::Rect(
+        innerRect.right_ - containerConfig_.inR,
+        innerRect.bottom_ - containerConfig_.inR,
+        innerRect.right_,
+        innerRect.bottom_));
+    Occlusion::Region fourth = Occlusion::Region(Occlusion::Rect(
+        innerRect.left_,
+        innerRect.bottom_ - containerConfig_.inR,
+        innerRect.left_ + containerConfig_.inR,
+        innerRect.bottom_));
+    containerInnerCornerRegion_ = first.Or(second).Or(third).Or(fourth);
 }
 
 bool RSSurfaceRenderNode::CheckOpaqueRegionBaseInfo(const RectI& screeninfo, const RectI& absRect,

@@ -4049,6 +4049,12 @@ void RSUniRenderVisitor::AddContainerDirtyToGlobalDirty(std::shared_ptr<RSDispla
                 displayDirtyManager->MergeDirtyRect(
                     RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
             }
+            for (const auto& rect : surfaceNode->GetContainerInnerCornerRegion().GetRegionRects()) {
+                if (rect.IsIntersect(Occlusion::Rect(surfaceDirtyRect))) {
+                    displayDirtyManager->MergeDirtyRect(
+                        RectI{ rect.left_, rect.top_, rect.right_ - rect.left_, rect.bottom_ - rect.top_ });
+                }
+            }
         } else {
             // warning: if a surfacenode has transparent region and opaque region, and its dirty pattern appears in
             // transparent region and opaque region in adjacent frame, may cause displaydirty region incomplete after

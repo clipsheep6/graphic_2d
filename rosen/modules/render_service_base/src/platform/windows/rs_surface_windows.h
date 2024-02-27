@@ -35,7 +35,7 @@
 namespace OHOS {
 namespace Rosen {
 class RenderContext;
-using OnRenderFunc = bool (*)(const void*, const size_t, const int32_t, const int32_t);
+using OnRenderFunc = bool (*)(const void*, const size_t, const int32_t, const int32_t, const uint64_t);
 class RSSurfaceWindows : public RSSurface {
 public:
     explicit RSSurfaceWindows(OnRenderFunc onRender);

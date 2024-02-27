@@ -422,6 +422,11 @@ public:
         return containerRegion_;
     }
 
+    const Occlusion::Region& GetContainerInnerCornerRegion() const
+    {
+        return containerInnerCornerRegion_;
+    }
+
     void OnAlphaChanged() override {
         alphaChanged_ = true;
     }
@@ -947,6 +952,9 @@ public:
         return !cornerRadius.IsZero();
     }
 
+protected:
+    Occlusion::Rect GetContainerInnerRect(const RectI& absRect, const ScreenRotation screenRotation) const;
+
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -1064,6 +1072,7 @@ private:
     Occlusion::Region transparentRegion_;
 
     Occlusion::Region containerRegion_;
+    Occlusion::Region containerInnerCornerRegion_;
     bool isFilterCacheFullyCovered_ = false;
     bool isFilterCacheValidForOcclusion_ = false;
     bool isFilterCacheStatusChanged_ = false;

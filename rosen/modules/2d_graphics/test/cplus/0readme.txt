@@ -45,3 +45,17 @@
    3）将要测试的用例名称填写入drawing_api_test/oh_drawing_api.xlsx，并填入yes
    4）drawing_api_test/main.py文件最下面run_all_test函数可以指定性能测试的次数等信息
    5）启动main.py，在drawing_api_test/report中查看结果
+
+   功耗的衡量主要依赖hiperf获取到进程使用的指令数，hiperf文件夹获取以及使用：
+        1、工程根目录下执行
+        ./developtools/hiperf/script/package.sh  rk3568
+        2、获取到hiperf文件夹
+        out\host\developtools\hiperf
+        3、抓取hiperf
+        设备上执行：
+        hiperf record -e hw-instructions,hw-cpu-cycles -f 1000 -s dwarf -p {pid} -d {test_time} -o /data/local/tmp/{data_name}_report.data
+        4、获取perf文件
+        hdc file recv /data/local/tmp/drawrect_report.data ./
+        5、Perf文件解析为html
+        Hiperf目录下打开cmd命令行执行：python.exe ./make_report.py -i drawrect_report.data
+        结果查看：hiperf_report.html

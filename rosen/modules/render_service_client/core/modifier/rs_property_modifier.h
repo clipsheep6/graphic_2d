@@ -146,6 +146,15 @@ protected:
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
 };
 
+class RSC_EXPORT RSSkewModifier : public RSGeometryModifier {
+public:
+    explicit RSSkewModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSSkewModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
 class RSC_EXPORT RSTranslateModifier : public RSGeometryModifier {
 public:
     explicit RSTranslateModifier(const std::shared_ptr<RSPropertyBase>& property);
@@ -706,6 +715,15 @@ protected:
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
 };
 
+class RSC_EXPORT RSSystemBarEffectModifier : public RSBackgroundModifier {
+public:
+    explicit RSSystemBarEffectModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSSystemBarEffectModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
 class RSC_EXPORT RSHueRotateModifier : public RSForegroundModifier {
 public:
     explicit RSHueRotateModifier(const std::shared_ptr<RSPropertyBase>& property);
@@ -737,6 +755,15 @@ class RSC_EXPORT RSColorBlendModeModifier : public RSBackgroundModifier {
 public:
     explicit RSColorBlendModeModifier(const std::shared_ptr<RSPropertyBase>& property);
     virtual ~RSColorBlendModeModifier() = default;
+protected:
+    RSModifierType GetModifierType() const override;
+    std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;
+};
+
+class RSC_EXPORT RSColorBlendApplyTypeModifier : public RSBackgroundModifier {
+public:
+    explicit RSColorBlendApplyTypeModifier(const std::shared_ptr<RSPropertyBase>& property);
+    virtual ~RSColorBlendApplyTypeModifier() = default;
 protected:
     RSModifierType GetModifierType() const override;
     std::shared_ptr<RSRenderModifier> CreateRenderModifier() const override;

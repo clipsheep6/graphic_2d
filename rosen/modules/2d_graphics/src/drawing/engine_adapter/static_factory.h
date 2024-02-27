@@ -36,6 +36,8 @@ class StaticFactory {
 public:
     static std::shared_ptr<TextBlob> MakeFromText(const void* text, size_t byteLength,
         const Font& font, TextEncoding encoding);
+    static std::shared_ptr<TextBlob> MakeFromPosText(const void* text, size_t byteLength,
+        const Point pos[], const Font& font, TextEncoding encoding);
     static std::shared_ptr<TextBlob> MakeFromRSXform(const void* text, size_t byteLength,
         const RSXform xform[], const Font& font, TextEncoding encoding);
     static std::shared_ptr<Typeface> MakeDefault();
@@ -70,6 +72,7 @@ public:
         const std::vector<Path>& paths, std::vector<Path>& multPaths);
     static void GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<uint16_t>& glyphIds);
     static Path GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob);
+    static void GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points);
     static std::shared_ptr<DrawingSymbolLayersGroups> GetSymbolLayersGroups(uint32_t glyphId);
     static FontStyleSet* CreateEmpty();
 };

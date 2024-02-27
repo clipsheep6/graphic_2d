@@ -26,6 +26,7 @@
 #include "egl_wrapper_loader.h"
 #include "../thread_private_data_ctl.h"
 #include "../wrapper_log.h"
+#include "egl_blob_cache.h"
 
 using namespace OHOS;
 namespace OHOS {
@@ -1182,6 +1183,40 @@ EGLBoolean EglSetDamageRegionKHRImpl(EGLDisplay dpy, EGLSurface surf,
     return display->SetDamageRegionKHR(surf, rects, nRects);
 }
 
+EGLint EglDupNativeFenceFDANDROIDImpl(EGLDisplay dpy, EGLSyncKHR sync)
+{
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    EGLint ret = -1;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglDupNativeFenceFDANDROID) {
+        ret = table->egl.eglDupNativeFenceFDANDROID(display->GetEglDisplay(), sync);
+    } else {
+        WLOGE("EglDupNativeFenceFDANDROID platform is not found.");
+    }
+    return ret;
+}
+
+void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
+{
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
+        table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(),
+                                               BlobCache::setBlobFunc, BlobCache::getBlobFunc);
+    } else {
+        WLOGE("EglSetBlobCacheFuncsANDROIDImpl platform is not found.");
+    }
+}
+
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     /* EGL_VERSION_1_0 */
     { "eglChooseConfig", (EglWrapperFuncPointer)&EglChooseConfigImpl },
@@ -1241,6 +1276,7 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     /* EGL_EXTENTIONS */
     { "eglLockSurfaceKHR", (EglWrapperFuncPointer)&EglLockSurfaceKHRImpl },
     { "eglUnlockSurfaceKHR", (EglWrapperFuncPointer)&EglUnlockSurfaceKHRImpl },
+    { "eglDupNativeFenceFDANDROID", (EglWrapperFuncPointer)&EglDupNativeFenceFDANDROIDImpl },
 
     { "eglCreateImageKHR", (EglWrapperFuncPointer)&EglCreateImageKHRImpl },
     { "eglDestroyImageKHR", (EglWrapperFuncPointer)&EglDestroyImageKHRImpl },
@@ -1275,6 +1311,7 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
 
     { "eglSwapBuffersWithDamageKHR", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageKHRImpl },
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
+    { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
 
 };
 

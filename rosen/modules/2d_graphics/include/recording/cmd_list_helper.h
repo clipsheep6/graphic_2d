@@ -33,7 +33,7 @@ class PixelMap;
 namespace Rosen {
 namespace Drawing {
 class DrawOpItem;
-class CmdListHelper {
+class DRAWING_API CmdListHelper {
 public:
     CmdListHelper() = default;
     ~CmdListHelper() = default;
@@ -62,17 +62,20 @@ public:
     static OpDataHandle AddCompressDataToCmdList(CmdList& cmdList, const std::shared_ptr<Data>& data);
     static std::shared_ptr<Data> GetCompressDataFromCmdList(const CmdList& cmdList, const OpDataHandle& imageHandle);
 
+    static OpDataHandle DRAWING_API AddDrawFuncObjToCmdList(
+        CmdList& cmdList, const std::shared_ptr<ExtendDrawFuncObj>& object);
+    static std::shared_ptr<ExtendDrawFuncObj> GetDrawFuncObjFromCmdList(
+        const CmdList& cmdList, const OpDataHandle& objectHandle);
+
     template<typename RecordingType, typename CommonType>
     static CmdListHandle AddRecordedToCmdList(CmdList& cmdList, const CommonType& recorded)
     {
         if (recorded.GetDrawingType() != DrawingType::RECORDING) {
-            LOGE("recorded is invalid!");
             return { 0 };
         }
 
         auto recording = static_cast<const RecordingType&>(recorded);
         if (recording.GetCmdList() == nullptr) {
-            LOGE("recorded cmdlist is invalid!");
             return { 0 };
         }
 
@@ -86,13 +89,11 @@ public:
             return { 0 };
         }
         if (recorded->GetDrawingType() != DrawingType::RECORDING) {
-            LOGE("recorded is invalid!");
             return { 0 };
         }
 
         auto recording = std::static_pointer_cast<RecordingType>(recorded);
         if (recording->GetCmdList() == nullptr) {
-            LOGE("recorded cmdlist is invalid!");
             return { 0 };
         }
 
@@ -106,13 +107,11 @@ public:
             return { 0 };
         }
         if (recorded->GetDrawingType() != DrawingType::RECORDING) {
-            LOGE("recorded is invalid!");
             return { 0 };
         }
 
         auto recording = static_cast<const RecordingType*>(recorded);
         if (recording->GetCmdList() == nullptr) {
-            LOGE("recorded cmdlist is invalid!");
             return { 0 };
         }
 
@@ -124,7 +123,6 @@ public:
     {
         auto childCmdList = GetChildFromCmdList<CmdListType>(cmdList, handler);
         if (childCmdList == nullptr) {
-            LOGE("child cmdlist is invalid!");
             return nullptr;
         }
 
@@ -171,19 +169,17 @@ public:
 
         const void* childData = cmdList.GetCmdListData(childHandle.offset);
         if (childData == nullptr) {
-            LOGE("child offset is invalid!");
             return nullptr;
         }
 
         auto childCmdList = CmdListType::CreateFromData({ childData, childHandle.size });
         if (childCmdList == nullptr) {
-            LOGE("create child CmdList failed!");
             return nullptr;
         }
 
         if (childHandle.imageSize > 0 && cmdList.GetImageData(childHandle.imageOffset) != nullptr) {
             if (!childCmdList->SetUpImageData(cmdList.GetImageData(childHandle.imageOffset), childHandle.imageSize)) {
-                LOGE("set up child image data failed!");
+                LOGD("set up child image data failed!");
             }
         }
 
@@ -198,6 +194,9 @@ public:
 
     static OpDataHandle AddPathToCmdList(CmdList& cmdList, const Path& path);
     static std::shared_ptr<Path> GetPathFromCmdList(const CmdList& cmdList, const OpDataHandle& pathHandle);
+
+    static OpDataHandle AddRegionToCmdList(CmdList& cmdList, const Region& region);
+    static std::shared_ptr<Region> GetRegionFromCmdList(const CmdList& cmdList, const OpDataHandle& regionHandle);
 
     static OpDataHandle AddColorSpaceToCmdList(CmdList& cmdList, const std::shared_ptr<ColorSpace> colorSpace);
     static std::shared_ptr<ColorSpace> GetColorSpaceFromCmdList(const CmdList& cmdList,
@@ -219,12 +218,10 @@ public:
     static std::shared_ptr<ColorFilter> GetColorFilterFromCmdList(const CmdList& cmdList,
         const FlattenableHandle& colorFilterHandle);
 
+    static FlattenableHandle AddImageFilterToCmdList(CmdList& cmdList, const ImageFilter* imageFilter);
     static FlattenableHandle AddImageFilterToCmdList(CmdList& cmdList, std::shared_ptr<ImageFilter> imageFilter);
     static std::shared_ptr<ImageFilter> GetImageFilterFromCmdList(const CmdList& cmdList,
         const FlattenableHandle& imageFilterHandle);
-
-    static std::vector<std::shared_ptr<DrawOpItem>> GetDrawOpItemsFromHandle(
-        const CmdList& cmdList, const CmdListHandle& handle);
 
     static SymbolOpHandle AddSymbolToCmdList(CmdList& cmdList, const DrawingHMSymbolData& symbol);
     static DrawingHMSymbolData GetSymbolFromCmdList(const CmdList& cmdList, const SymbolOpHandle& symbolHandle);

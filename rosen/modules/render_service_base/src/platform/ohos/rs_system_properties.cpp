@@ -26,8 +26,8 @@
 
 namespace OHOS {
 namespace Rosen {
-constexpr int DEFAULT_CACHE_WIDTH = 1344;
-constexpr int DEFAULT_CACHE_HEIGHT = 2772;
+constexpr int DEFAULT_CACHE_WIDTH = 1250;
+constexpr int DEFAULT_CACHE_HEIGHT = 2710;
 constexpr int DEFAULT_PARTIAL_RENDER_ENABLED_VALUE = 2;
 constexpr int DEFAULT_UNI_PARTIAL_RENDER_ENABLED_VALUE = 4;
 constexpr int DEFAULT_CORRECTION_MODE_VALUE = 999;
@@ -44,8 +44,11 @@ static GpuApiType SystemGpuApiType()
         "persist.sys.graphic.GpuApitype", "-1").c_str()) == (-1)) { // -1 is invalid type
         return GpuApiType::VULKAN;
     }
-    if (std::atoi(system::GetParameter("persist.sys.graphic.GpuApitype", "0").c_str()) == 0) {
+    if (std::atoi(system::GetParameter("persist.sys.graphic.GpuApitype", "-1").c_str()) == 0) {
         return GpuApiType::OPENGL;
+    }
+    if (std::atoi(system::GetParameter("persist.sys.graphic.GpuApitype", "-1").c_str()) == 2) { // 2 is ddgr type
+        return GpuApiType::DDGR;
     }
     return GpuApiType::VULKAN;
 }
@@ -129,7 +132,7 @@ bool RSSystemProperties::GetUniRenderEnabled()
     isUniRenderEnabled_ = std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient())
         ->GetUniRenderEnabled();
     inited = true;
-    ROSEN_LOGI("RSSystemProperties::GetUniRenderEnabled:%{public}d", isUniRenderEnabled_);
+    ROSEN_LOGD("RSSystemProperties::GetUniRenderEnabled:%{public}d", isUniRenderEnabled_);
     return isUniRenderEnabled_;
 }
 
@@ -320,6 +323,21 @@ bool RSSystemProperties::GetDrawTextAsBitmap()
     return isDrawTextAsBitmap_;
 }
 
+int RSSystemProperties::GetDumpRSTreeCount()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("debug.graphic.dumpRSTreeCount", "0");
+    int changed = 0;
+    const char *num = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(num, 0);
+}
+
+void RSSystemProperties::SetDumpRSTreeCount(int count)
+{
+    count = (count > 0) ? count : 0;
+    system::SetParameter("debug.graphic.dumpRSTreeCount", std::to_string(count));
+    RS_LOGD("RSSystemProperties::SetDumpRSTreeCount %{public}d", count);
+}
+
 void RSSystemProperties::SetCacheEnabledForRotation(bool flag)
 {
     cacheEnabledForRotation_ = flag;
@@ -436,7 +454,7 @@ bool RSSystemProperties::GetFilterPartialRenderEnabled()
     // Determine whether the filter partial render should be enabled. The default value is 0,
     // which means that it is unenabled.
     static bool enabled =
-        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "0")).c_str()) != 0;
+        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "1")).c_str()) != 0;
     return enabled;
 }
 
@@ -491,6 +509,35 @@ bool RSSystemProperties::GetBlurEnabled()
     static bool blurEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.blurEnabled", "1")).c_str()) != 0;
     return blurEnabled;
+}
+
+const std::vector<float>& RSSystemProperties::GetAiInvertCoef()
+{
+    // Configure AiInvertCoef: Low, High, Threshold, Opacity, Saturation, Filter Radius.
+    static std::vector<float> aiInvertCoef = {0.0, 1.0, 0.55, 0.4, 1.6, 45.0};
+    static bool initialized = false;
+    if (!initialized) {
+        initialized = true;
+        // Configure AiInvertCoef0: Low
+        aiInvertCoef[0] =
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertLow", "0")).c_str());
+        // Configure AiInvertCoef1: High.
+        aiInvertCoef[1] =
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertHigh", "1")).c_str());
+        // Configure AiInvertCoef2: Threshold.
+        aiInvertCoef[2] =
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertThreshold", "0.55")).c_str());
+        // Configure AiInvertCoef3: Opacity.
+        aiInvertCoef[3] =
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertOpacity", "0.4")).c_str());
+        // Configure AiInvertCoef4: Saturation.
+        aiInvertCoef[4] =
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertSaturation", "1.6")).c_str());
+        // Configure AiInvertCoef5: Filter Radius.
+        aiInvertCoef[5] =
+            std::atof((system::GetParameter("persist.sys.graphic.aiInvertFilterRadius", "45")).c_str());
+    }
+    return aiInvertCoef;
 }
 
 bool RSSystemProperties::GetProxyNodeDebugEnabled()
@@ -617,14 +664,6 @@ int RSSystemProperties::WatchSystemProperty(const char* name, OnSystemPropertyCh
 {
     return WatchParameter(name, func, context);
 }
-#if defined (ENABLE_DDGR_OPTIMIZE)
-bool RSSystemProperties::GetDDGRIntegrateEnable()
-{
-    static bool isDataStEnable =
-        std::atoi((system::GetParameter("ddgr.data.st.enable", "1")).c_str()) != 0;
-    return isDataStEnable;
-}
-#endif
 
 bool RSSystemProperties::GetSnapshotWithDMAEnabled()
 {
@@ -658,7 +697,7 @@ bool RSSystemProperties::GetSyncTransactionEnabled()
 int RSSystemProperties::GetSyncTransactionWaitDelay()
 {
     static int syncTransactionWaitDelay =
-        std::atoi((system::GetParameter("persist.sys.graphic.syncTransactionWaitDelay", "500")).c_str());
+        std::atoi((system::GetParameter("persist.sys.graphic.syncTransactionWaitDelay", "1500")).c_str());
     return syncTransactionWaitDelay;
 }
 
@@ -675,6 +714,44 @@ bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
         (std::atoi((system::GetParameter("persist.sys.graphic.singleFrameComposerCanvasNode", "0")).c_str()) != 0);
     return singleFrameComposerCanvasNodeEnabled;
 }
+
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+const DdgrOpincType RSSystemProperties::ddgrOpincType_ =
+    static_cast<DdgrOpincType>(std::atoi((system::GetParameter("persist.ddgr.opinctype", "2")).c_str()));
+const DdgrOpincDfxType RSSystemProperties::ddgrOpincDfxType_ =
+    static_cast<DdgrOpincDfxType>(std::atoi((
+        system::GetParameter("persist.ddgr.opinctype.debugtype", "0")).c_str()));
+
+DdgrOpincType RSSystemProperties::GetDdgrOpincType()
+{
+    return RSSystemProperties::ddgrOpincType_;
+}
+
+bool RSSystemProperties::IsDdgrOpincEnable()
+{
+    return ((GetDdgrOpincType() == DdgrOpincType::DDGR_AUTOCACHE ||
+        GetDdgrOpincType() == DdgrOpincType::DDGR_AUTOCACHE_REALDRAW ||
+        GetDdgrOpincType() == DdgrOpincType::DDGR_RENDERCACHE ||
+        GetDdgrOpincType() == DdgrOpincType::DDGR_OPINCUPDATE) &&
+        (RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR)) ||
+        (GetDdgrOpincType() == DdgrOpincType::DDGR_UNRESTRICTED_MODE);
+}
+
+bool RSSystemProperties::IsOpincRealDrawCacheEnable()
+{
+    return  GetDdgrOpincType() == DdgrOpincType::DDGR_AUTOCACHE_REALDRAW;
+}
+
+DdgrOpincDfxType RSSystemProperties::GetDdgrOpincDfxType()
+{
+    return ddgrOpincDfxType_;
+}
+
+bool RSSystemProperties::GetAutoCacheDebugEnabled()
+{
+    return GetDdgrOpincDfxType() == DdgrOpincDfxType::DDGR_OPINC_DFX_AUTO;
+}
+#endif
 
 bool RSSystemProperties::GetSubSurfaceEnabled()
 {
@@ -695,6 +772,20 @@ bool RSSystemProperties::GetEffectMergeEnabled()
     int changed = 0;
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(enable, 1) != 0;
+}
+
+bool RSSystemProperties::GetDumpUICaptureEnabled()
+{
+    bool dumpUICaptureEnabled =
+        std::atoi((system::GetParameter("rosen.dumpUICaptureEnabled.enabled", "0")).c_str()) != 0;
+    return dumpUICaptureEnabled;
+}
+
+bool RSSystemProperties::GetDumpUIPixelmapEnabled()
+{
+    bool dumpUIPixelmapEnabled =
+        std::atoi((system::GetParameter("rosen.dumpUIPixelmapEnabled.enabled", "0")).c_str()) != 0;
+    return dumpUIPixelmapEnabled;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -21,6 +21,7 @@
 #include "animation/rs_render_animation.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
+#include "common/rs_optional_trace.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
@@ -29,6 +30,24 @@
 namespace OHOS {
 namespace Rosen {
 class RSRootRenderNode;
+
+void RSAnimationManager::DumpAnimations(std::string& out) const
+{
+    if (animations_.empty()) {
+        return;
+    }
+    const auto lengthTwo = 2;
+    out += ", RSAnimationManager: [";
+    for (auto[id, animation]: animations_) {
+        if (!animation) {
+            continue;
+        }
+        animation->DumpAnimation(out);
+        out += ", ";
+    }
+    out = out.substr(0, out.length() - lengthTwo);
+    out += "]";
+}
 
 void RSAnimationManager::AddAnimation(const std::shared_ptr<RSRenderAnimation>& animation)
 {
@@ -54,9 +73,9 @@ void RSAnimationManager::RemoveAnimation(AnimationId keyId)
 
 void RSAnimationManager::CancelAnimationByPropertyId(PropertyId id)
 {
-    EraseIf(animations_, [id](const auto& pair) {
+    EraseIf(animations_, [id, this](const auto& pair) {
         if (pair.second && (pair.second->GetPropertyId() == id)) {
-            pair.second->Detach();
+            OnAnimationFinished(pair.second);
             return true;
         }
         return false;
@@ -65,7 +84,7 @@ void RSAnimationManager::CancelAnimationByPropertyId(PropertyId id)
 
 void RSAnimationManager::FilterAnimationByPid(pid_t pid)
 {
-    ROSEN_LOGI("RSAnimationManager::FilterAnimationByPid removing all animations belong to pid %{public}llu",
+    ROSEN_LOGD("RSAnimationManager::FilterAnimationByPid removing all animations belong to pid %{public}llu",
         (unsigned long long)pid);
     // remove all animations belong to given pid (by matching higher 32 bits of animation id)
     EraseIf(animations_, [pid, this](const auto& pair) -> bool {
@@ -78,6 +97,11 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
     });
 }
 
+uint32_t RSAnimationManager::GetAnimationsSize()
+{
+    return animations_.size();
+}
+
 std::tuple<bool, bool, bool> RSAnimationManager::Animate(int64_t time, bool nodeIsOnTheTree)
 {
     // process animation
@@ -86,6 +110,7 @@ std::tuple<bool, bool, bool> RSAnimationManager::Animate(int64_t time, bool node
     // isCalculateAnimationValue is embedded modify for stat animate frame drop
     bool isCalculateAnimationValue = false;
     rsRange_.Reset();
+    rateDecider_.Reset();
     // iterate and execute all animations, remove finished animations
     EraseIf(animations_, [this, &hasRunningAnimation, time,
         &needRequestNextVsync, nodeIsOnTheTree, &isCalculateAnimationValue](auto& iter) -> bool {
@@ -107,12 +132,33 @@ std::tuple<bool, bool, bool> RSAnimationManager::Animate(int64_t time, bool node
             if (range.IsValid()) {
                 rsRange_.Merge(range);
             }
+            RS_OPTIONAL_TRACE_BEGIN("AddDecisionElement property id: [" + std::to_string(animation->GetPropertyId()) +
+                "], animation id: [" + std::to_string(animation->GetAnimationId()) + "]");
+            rateDecider_.AddDecisionElement(animation->GetPropertyId(), animation->GetAnimateVelocity(), range);
+            RS_OPTIONAL_TRACE_END();
         }
         return isFinished;
     });
+    rateDecider_.MakeDecision(frameRateGetFunc_);
     isCalculateAnimationValue = isCalculateAnimationValue && nodeIsOnTheTree;
 
     return { hasRunningAnimation, needRequestNextVsync, isCalculateAnimationValue };
+}
+
+void RSAnimationManager::SetRateDeciderEnable(bool enabled, const FrameRateGetFunc& func)
+{
+    rateDecider_.SetEnable(enabled);
+    frameRateGetFunc_ = func;
+}
+
+void RSAnimationManager::SetRateDeciderScaleSize(float width, float height)
+{
+    rateDecider_.SetScaleReferenceSize(width, height);
+}
+
+const FrameRateRange& RSAnimationManager::GetDecideFrameRateRange() const
+{
+    return rateDecider_.GetFrameRateRange();
 }
 
 const FrameRateRange& RSAnimationManager::GetFrameRateRange() const
@@ -124,7 +170,7 @@ const std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetAnimation(Animat
 {
     auto animationItr = animations_.find(id);
     if (animationItr == animations_.end()) {
-        ROSEN_LOGE("RSAnimationManager::GetAnimation, animation [%{public}" PRIu64 "] not found", id);
+        ROSEN_LOGD("RSAnimationManager::GetAnimation, animation [%{public}" PRIu64 "] not found", id);
         return nullptr;
     }
     return animationItr->second;

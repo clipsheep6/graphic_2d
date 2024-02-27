@@ -89,18 +89,15 @@ public:
         INIT_WITH_PREVIOUS = 1 << 1,    // create with previous contents
     };
 
-    SaveLayerOps() : bounds_(nullptr), brush_(nullptr), imageFilter_(nullptr), saveLayerFlags_(0) {}
-    SaveLayerOps(const Rect* bounds, const Brush* brush, uint32_t saveLayerFlags = 0)
-        : SaveLayerOps(bounds, brush, nullptr, saveLayerFlags) {}
+    SaveLayerOps() : bounds_(nullptr), brush_(nullptr), saveLayerFlags_(0) {}
 
     /*
      * @param bounds          The bounds of layer, may be nullptr.
      * @param brush           When restoring the current layer, attach this brush, may be nullptr.
-     * @param imageFilter     Use this to filter the current layer as the new layer background, may be nullptr.
      * @param saveLayerFlags  How to allocate layer.
      */
-    SaveLayerOps(const Rect* bounds, const Brush* brush, const ImageFilter* imageFilter, uint32_t saveLayerFlags = 0)
-        : bounds_(bounds), brush_(brush), imageFilter_(imageFilter), saveLayerFlags_(saveLayerFlags) {}
+    SaveLayerOps(const Rect* bounds, const Brush* brush, uint32_t saveLayerFlags = 0)
+        : bounds_(bounds), brush_(brush), saveLayerFlags_(saveLayerFlags) {}
     ~SaveLayerOps() {}
 
     /*
@@ -120,14 +117,6 @@ public:
     }
 
     /*
-     * @brief  Gets the image filter of layer, may be nullptr.
-     */
-    const ImageFilter* GetImageFilter() const
-    {
-        return imageFilter_;
-    }
-
-    /*
      * @brief  Gets the options to modify layer.
      */
     uint32_t GetSaveLayerFlags() const
@@ -138,7 +127,6 @@ public:
 private:
     const Rect* bounds_;
     const Brush* brush_;
-    const ImageFilter* imageFilter_;
     uint32_t saveLayerFlags_;
 };
 
@@ -152,6 +140,8 @@ public:
     explicit CoreCanvas(void* rawCanvas);
     virtual ~CoreCanvas() {}
     void Bind(const Bitmap& bitmap);
+
+    void BuildOverDraw(std::shared_ptr<Canvas> canvas);
 
     virtual DrawingType GetDrawingType() const
     {
@@ -198,6 +188,8 @@ public:
     bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
         int srcX, int srcY);
 
+    bool ReadPixels(const Bitmap& dstBitmap, int srcX, int srcY);
+
     // shapes
     virtual void DrawPoint(const Point& point);
     virtual void DrawPoints(PointMode mode, size_t count, const Point pts[]);
@@ -225,18 +217,29 @@ public:
 
     virtual void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode);
-    virtual void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode);
     virtual void DrawVertices(const Vertices& vertices, BlendMode mode);
 
     virtual void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
-    virtual void DrawAnnotation(const Rect& rect, const char* key, const Data* data);
     virtual void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
 
+    // opinc_begin
+    virtual bool BeginOpRecording(const Rect* bound = nullptr, bool isDynamic = false);
+    virtual Drawing::OpListHandle EndOpRecording();
+    virtual void DrawOpList(Drawing::OpListHandle handle);
+    virtual int CanDrawOpList(Drawing::OpListHandle handle);
+    virtual void PreOpListDrawArea(const Matrix& matrix);
+    virtual bool CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound = nullptr);
+    virtual Drawing::OpListHandle GetOpListDrawArea();
+    virtual void OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
+        const SamplingOptions& sampling, SrcRectConstraint constraint);
+    // opinc_end
+
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
+    void DrawBitmap(const Bitmap& bitmap, const Rect& src, const Rect& dst, const SamplingOptions& sampling);
+    void DrawBitmap(const Bitmap& bitmap, const Rect& dst, const SamplingOptions& sampling);
     virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
     virtual void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling);
     virtual void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
@@ -372,6 +375,9 @@ public:
     virtual bool isHighContrastEnabled() const;
     virtual Drawing::CacheType GetCacheType() const;
     virtual Drawing::Surface* GetSurface() const;
+
+    virtual float GetAlpha() const;
+    virtual int GetAlphaSaveCount() const;
 
     template<typename T>
     T* GetImpl() const

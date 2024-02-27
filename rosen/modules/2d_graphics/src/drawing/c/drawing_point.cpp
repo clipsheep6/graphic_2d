@@ -16,6 +16,7 @@
 #include "c/drawing_point.h"
 
 #include "utils/point.h"
+#include "utils/point3.h"
 
 using namespace OHOS;
 using namespace Rosen;

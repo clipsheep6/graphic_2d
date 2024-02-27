@@ -28,14 +28,10 @@
 #include "transaction/rs_ashmem_helper.h"
 #include "rs_trace.h"
 
-#if defined (ENABLE_DDGR_OPTIMIZE)
-#include "ddgr_renderer.h"
-#endif
-
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr size_t MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE = 1024 * 30; // 30kB
+constexpr size_t MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE = 1024 * 15; // 15kB
 constexpr size_t FILE_DESCRIPTOR_LIMIT = 15;
 constexpr size_t MAX_OBJECTNUM = INT_MAX;
 constexpr size_t MAX_DATA_SIZE = INT_MAX;
@@ -67,8 +63,12 @@ void CopyFileDescriptor(MessageParcel& old, MessageParcel& copied)
     }
 }
 
-std::shared_ptr<MessageParcel> CopyParcelIfNeed(MessageParcel& old)
+std::shared_ptr<MessageParcel> CopyParcelIfNeed(MessageParcel& old, pid_t callingPid)
 {
+    if (RSSystemProperties::GetCacheEnabledForRotation() &&
+        RSMainThread::Instance()->GetDesktopPidForRotationScene() != callingPid) {
+        return nullptr;
+    }
     auto dataSize = old.GetDataSize();
     if (dataSize <= MAX_DATA_SIZE_FOR_UNMARSHALLING_IN_PLACE && old.GetOffsetsSize() < FILE_DESCRIPTOR_LIMIT) {
         return nullptr;
@@ -111,11 +111,12 @@ std::shared_ptr<MessageParcel> CopyParcelIfNeed(MessageParcel& old)
 int RSRenderServiceConnectionStub::OnRemoteRequest(
     uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
+    pid_t callingPid = GetCallingPid();
 #ifdef ENABLE_IPC_SECURITY_ACCESS_COUNTER
     auto accessCount = securityUtils_.GetCodeAccessCounter(code);
     if (!securityManager_.IsAccessTimesRestricted(code, accessCount)) {
         RS_LOGE("RSRenderServiceConnectionStub::OnRemoteRequest This Function[ID=%{public}u] invoke times:%{public}d"
-            "by pid[%{public}d]", code, accessCount, GetCallingPid());
+            "by pid[%{public}d]", code, accessCount, callingPid);
         return ERR_INVALID_STATE;
     }
 #endif
@@ -123,9 +124,6 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
     switch (code) {
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::COMMIT_TRANSACTION): {
             RS_TRACE_NAME_FMT("Recv Parcel Size:%zu, fdCnt:%zu", data.GetDataSize(), data.GetOffsetsSize());
-#if defined (ENABLE_DDGR_OPTIMIZE)
-            DDGRRenderer::GetInstance().IntegrateSetIndex(++transDataIndex_);
-#endif
             static bool isUniRender = RSUniRenderJudgement::IsUniRender();
             std::shared_ptr<MessageParcel> parsedParcel;
             if (data.ReadInt32() == 0) { // indicate normal parcel
@@ -133,7 +131,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                     // in uni render mode, if parcel size over threshold,
                     // Unmarshalling task will be post to RSUnmarshalThread,
                     // copy the origin parcel to maintain the parcel lifetime
-                    parsedParcel = CopyParcelIfNeed(data);
+                    parsedParcel = CopyParcelIfNeed(data, callingPid);
                 }
                 if (parsedParcel == nullptr) {
                     // no need to copy or copy failed, use original parcel
@@ -179,9 +177,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             auto type = static_cast<RSSurfaceNodeType>(data.ReadUint8());
             auto bundleName = data.ReadString();
             bool isTextureExportNode = data.ReadBool();
+            bool isSync = data.ReadBool();
             RSSurfaceRenderNodeConfig config = {
                 .id = nodeId, .name = surfaceName, .bundleName = bundleName, .nodeType = type,
-                .isTextureExportNode = isTextureExportNode};
+                .isTextureExportNode = isTextureExportNode, .isSync = isSync};
             sptr<Surface> surface = CreateNodeAndSurface(config);
             if (surface == nullptr) {
                 ret = ERR_NULL_OBJECT;
@@ -989,8 +988,13 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             Drawing::Rect rect;
 #endif
             RSMarshallingHelper::Unmarshalling(data, rect);
-            bool result = GetPixelmap(id, pixelmap, &rect);
+            std::shared_ptr<Drawing::DrawCmdList> drawCmdList;
+            RSMarshallingHelper::Unmarshalling(data, drawCmdList);
+            bool result = GetPixelmap(id, pixelmap, &rect, drawCmdList);
             reply.WriteBool(result);
+            if (result) {
+                RSMarshallingHelper::Marshalling(reply, pixelmap);
+            }
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_SCREEN_SKIP_FRAME_INTERVAL): {
@@ -1205,7 +1209,8 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto id = data.ReadUint64();
             auto isEnabled = data.ReadBool();
-            SetHardwareEnabled(id, isEnabled);
+            auto selfDrawingType = static_cast<SelfDrawingNodeType>(data.ReadUint8());
+            SetHardwareEnabled(id, isEnabled, selfDrawingType);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::NOTIFY_LIGHT_FACTOR_STATUS) : {
@@ -1225,8 +1230,13 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             auto listSize = data.ReadUint32();
+            const uint32_t MAX_LIST_SIZE = 30;
+            if (listSize > MAX_LIST_SIZE) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
             std::vector<std::string> packageList;
-            for (auto i = 0; i < listSize; i++) {
+            for (uint32_t i = 0; i < listSize; i++) {
                 packageList.push_back(data.ReadString());
             }
             NotifyPackageEvent(listSize, packageList);
@@ -1303,6 +1313,22 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             }
             auto isEnabled = data.ReadBool();
             SetCacheEnabledForRotation(isEnabled);
+            break;
+        }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_CURRENT_DIRTY_REGION_INFO) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            ScreenId id = data.ReadUint64();
+            GpuDirtyRegionInfo gpuDirtyRegionInfo = GetCurrentDirtyRegionInfo(id);
+            reply.WriteInt64(gpuDirtyRegionInfo.activeGpuDirtyRegionAreas);
+            reply.WriteInt64(gpuDirtyRegionInfo.globalGpuDirtyRegionAreas);
+            reply.WriteInt32(gpuDirtyRegionInfo.skipProcessFramesNumber);
+            reply.WriteInt32(gpuDirtyRegionInfo.activeFramesNumber);
+            reply.WriteInt32(gpuDirtyRegionInfo.globalFramesNumber);
+            reply.WriteString("");
             break;
         }
 #ifdef TP_FEATURE_ENABLE

@@ -14,11 +14,13 @@
  */
 
 #include "skia_font.h"
+#include <memory>
 
 #include "include/core/SkFontTypes.h"
 
 #include "skia_adapter/skia_convert_utils.h"
 #include "skia_adapter/skia_typeface.h"
+#include "skia_typeface.h"
 #include "text/font.h"
 #include "utils/log.h"
 
@@ -29,13 +31,13 @@ SkiaFont::SkiaFont(std::shared_ptr<Typeface> typeface, scalar size, scalar scale
 {
     if (!typeface) {
         skFont_ = SkFont(nullptr, size, scaleX, skewX);
-        LOGE("typeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("typeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return;
     }
     auto skiaTypeface = typeface->GetImpl<SkiaTypeface>();
     if (!skiaTypeface) {
         skFont_ = SkFont(nullptr, size, scaleX, skewX);
-        LOGE("skiaTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skiaTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return;
     }
     skFont_ = SkFont(skiaTypeface->GetTypeface(), size, scaleX, skewX);
@@ -59,12 +61,12 @@ void SkiaFont::SetHinting(FontHinting hintingLevel)
 void SkiaFont::SetTypeface(std::shared_ptr<Typeface> typeface)
 {
     if (!typeface) {
-        LOGE("typeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("typeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return;
     }
     auto skiaTypeface = typeface->GetImpl<SkiaTypeface>();
     if (!skiaTypeface) {
-        LOGE("skiaTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
+        LOGD("skiaTypeface nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return;
     }
     sk_sp<SkTypeface> skTypeface = skiaTypeface->GetTypeface();
@@ -129,10 +131,76 @@ void SkiaFont::GetWidths(const uint16_t glyphs[], int count, scalar widths[], Re
     }
 }
 
-scalar SkiaFont::MeasureText(const void* text, size_t byteLength, TextEncoding encoding)
+scalar SkiaFont::GetSize() const
+{
+    return skFont_.getSize();
+}
+
+std::shared_ptr<Typeface> SkiaFont::GetTypeface()
+{
+    sk_sp<SkTypeface> skTypeface = sk_ref_sp(skFont_.getTypeface());
+    auto skiaTypeface = std::make_shared<SkiaTypeface>(skTypeface);
+    typeface_ = std::make_shared<Typeface>(skiaTypeface);
+    return typeface_;
+}
+
+FontEdging SkiaFont::GetEdging() const
+{
+    return static_cast<FontEdging>(skFont_.getEdging());
+}
+
+FontHinting SkiaFont::GetHinting() const
+{
+    return static_cast<FontHinting>(skFont_.getHinting());
+}
+
+scalar SkiaFont::GetScaleX() const
+{
+    return skFont_.getScaleX();
+}
+
+scalar SkiaFont::GetSkewX() const
+{
+    return skFont_.getSkewX();
+}
+
+bool SkiaFont::IsSubpixel() const
+{
+    return skFont_.isSubpixel();
+}
+
+uint16_t SkiaFont::UnicharToGlyph(int32_t uni) const
+{
+    return skFont_.unicharToGlyph(uni);
+}
+
+int SkiaFont::TextToGlyphs(const void* text, size_t byteLength, TextEncoding encoding,
+    uint16_t glyphs[], int maxGlyphCount) const
 {
     SkTextEncoding skEncoding = static_cast<SkTextEncoding>(encoding);
-    return skFont_.measureText(text, byteLength, skEncoding);
+    return skFont_.textToGlyphs(text, byteLength, skEncoding, glyphs, maxGlyphCount);
+}
+
+scalar SkiaFont::MeasureText(const void* text, size_t byteLength, TextEncoding encoding, Rect* bounds)
+{
+    SkTextEncoding skEncoding = static_cast<SkTextEncoding>(encoding);
+    if (bounds) {
+        SkRect rect;
+        scalar width = skFont_.measureText(text, byteLength, skEncoding, &rect);
+        bounds->SetLeft(rect.fLeft);
+        bounds->SetTop(rect.fTop);
+        bounds->SetRight(rect.fRight);
+        bounds->SetBottom(rect.fBottom);
+        return width;
+    } else {
+        return skFont_.measureText(text, byteLength, skEncoding);
+    }
+}
+
+int SkiaFont::CountText(const void* text, size_t byteLength, TextEncoding encoding) const
+{
+    SkTextEncoding skEncoding = static_cast<SkTextEncoding>(encoding);
+    return skFont_.countText(text, byteLength, skEncoding);
 }
 
 const SkFont& SkiaFont::GetFont() const

@@ -34,6 +34,7 @@ constexpr uint32_t DEBUG_MODIFIER_SIZE = 20;
         if (!node) {                                                                                                \
             return defaultValue;                                                                                    \
         }                                                                                                           \
+        std::unique_lock<std::recursive_mutex> lock(node->GetPropertyMutex());                                      \
         auto iter = node->propertyModifiers_.find(RSModifierType::propertyType);                                    \
         if (iter != node->propertyModifiers_.end()) {                                                               \
             if (!iter->second || !iter->second->GetProperty()) {                                                    \
@@ -116,6 +117,11 @@ float RSModifierExtractor::GetTranslateZ() const
 Vector2f RSModifierExtractor::GetScale() const
 {
     GET_PROPERTY_FROM_MODIFIERS(Vector2f, SCALE, Vector2f(1.f, 1.f), *=);
+}
+
+Vector2f RSModifierExtractor::GetSkew() const
+{
+    GET_PROPERTY_FROM_MODIFIERS(Vector2f, SKEW, Vector2f(0.f, 0.f), +=);
 }
 
 float RSModifierExtractor::GetAlpha() const

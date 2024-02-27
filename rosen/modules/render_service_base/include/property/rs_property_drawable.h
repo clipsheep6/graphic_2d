@@ -43,11 +43,12 @@ enum class RSPropertyDrawableSlot : uint8_t {
     TRANSITION,
     ENV_FOREGROUND_COLOR,
     SHADOW,
+    OUTLINE,
 
     // BG properties in Bounds Clip
-    SAVE_LAYER_BACKGROUND,
     BG_SAVE_BOUNDS,
     CLIP_TO_BOUNDS,
+    BLEND_MODE,
     BACKGROUND_COLOR,
     BACKGROUND_SHADER,
     BACKGROUND_IMAGE,
@@ -59,7 +60,6 @@ enum class RSPropertyDrawableSlot : uint8_t {
     BG_RESTORE_BOUNDS,
 
     // Frame Geometry
-    SAVE_LAYER_CONTENT,
     SAVE_FRAME,
     FRAME_OFFSET,
     CLIP_TO_FRAME,
@@ -67,7 +67,6 @@ enum class RSPropertyDrawableSlot : uint8_t {
     CHILDREN,
     FOREGROUND_STYLE,
     RESTORE_FRAME,
-    RESTORE_CONTENT,
 
     // FG properties in Bounds clip
     FG_SAVE_BOUNDS,
@@ -76,19 +75,17 @@ enum class RSPropertyDrawableSlot : uint8_t {
     COLOR_FILTER,
     LIGHT_UP_EFFECT,
     FOREGROUND_FILTER,
-    LINEAR_GRADIENT_BLUR_FILTER,
     FOREGROUND_COLOR,
     FG_RESTORE_BOUNDS,
-    RESTORE_BACKGROUND,
 
     // No clip (unless ClipToBounds is set)
     POINT_LIGHT,
     BORDER,
-    OUTLINE,
     OVERLAY,
     PARTICLE_EFFECT,
     PIXEL_STRETCH,
 
+    RESTORE_BLEND_MODE,
     RESTORE_ALL,
 
     // Annotations: Please remember to update this when new slots are added.
@@ -99,8 +96,6 @@ enum class RSPropertyDrawableSlot : uint8_t {
     CONTENT_PROPERTIES_END   = FOREGROUND_STYLE + 1,
     FG_PROPERTIES_BEGIN      = BINARIZATION,
     FG_PROPERTIES_END        = FOREGROUND_COLOR + 1,
-    NO_CLIP_PROPERTY_BEGIN   = POINT_LIGHT,
-    NO_CLIP_PROPERTY_END     = PIXEL_STRETCH + 1,
     MAX                      = RESTORE_ALL + 1,
 };
 
@@ -139,9 +134,6 @@ public:
         std::unordered_set<RSPropertyDrawableSlot>& dirtySlots);
     static void UpdateSaveRestore(
         RSRenderContent& content, DrawableVec& drawableVec, uint8_t& drawableVecStatus);
-
-private:
-    static void UpdateSaveLayerSlots(const RSRenderContent& content, DrawableVec& drawableVec);
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PROPERTY_RS_PROPERTY_DRAWABLE_H

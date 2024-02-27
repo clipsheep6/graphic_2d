@@ -39,6 +39,9 @@ public:
     }
 private:
     void CanvasRotation(ScreenRotation screenRotation, float width, float height);
+    void ScaleMirrorIfNeed(RSDisplayRenderNode& node);
+    void RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node, bool canvasRotation);
+    void CanvasAdjustment(RSDisplayRenderNode& node, bool canvasRotation);
     sptr<Surface> producerSurface_;
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::unique_ptr<RSPaintFilterCanvas> canvas_;
@@ -47,6 +50,8 @@ private:
     bool isPhone_ = false;
     float mirrorWidth_ = 0.f;
     float mirrorHeight_ = 0.f;
+    float mainWidth_ = 0.f;
+    float mainHeight_ = 0.f;
     bool canvasRotation_ = false;
     ScreenRotation mainScreenRotation_ = ScreenRotation::ROTATION_0;
 };

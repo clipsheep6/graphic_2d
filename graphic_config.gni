@@ -19,7 +19,6 @@ declare_args() {
   graphic_2d_feature_ace_enable_gpu = true
   graphic_2d_feature_color_gamut_enable = false
   graphic_2d_feature_rs_enable_eglimage = false
-  graphic_2d_feature_use_video_processing_engine = false
   graphic_2d_feature_use_texgine = false
   graphic_2d_feature_rs_enable_uni_render = false
   graphic_2d_feature_wuji_enable = false
@@ -32,7 +31,8 @@ declare_args() {
   graphic_2d_feature_enable_filter_cache = true
   graphic_2d_feature_parallel_upload_enable = true
   enable_text_gine = true
-  use_texgine = true
+  use_texgine = false
+  use_skia_txt = true
   use_video_processing_engine = false
   logger_enable_scope = false
   texgine_enable_debug_log = false
@@ -40,6 +40,7 @@ declare_args() {
   graphic_2d_feature_drivers_interface_display_enable = true
   graphic_2d_feature_tp_switch_enbale = false
   graphic_2d_feature_enable_recording_dcl = true
+  graphic_2d_feature_enable_dvsync = false
 
   if (defined(is_arkui_x) && is_arkui_x) {
     use_new_render_context = false
@@ -50,8 +51,14 @@ declare_args() {
   }
 }
 
+declare_args() {
+  graphic_2d_feature_enable_ddgr = false
+  graphic_2d_feature_enable_ddgr_opinc = false
+}
+
 if (graphic_2d_feature_product == "phone") {
   graphic_2d_feature_enable_vulkan = true
+  graphic_2d_feature_enable_ddgr = false
 }
 
 gpu_defines = []
@@ -68,6 +75,14 @@ if (graphic_2d_feature_ace_enable_gpu) {
       "ACE_ENABLE_VK",
       "RS_ENABLE_VK",
     ]
+    if (graphic_2d_feature_enable_ddgr) {
+      graphic_2d_feature_enable_ddgr_opinc = true
+      gpu_defines += [ "ENABLE_DDGR_OPTIMIZE" ]
+      import("//foundation/graphic/graphic_2d_ext/ddgr/config.gni")
+      if (graphic_2d_feature_enable_ddgr_opinc) {
+        gpu_defines += [ "DDGR_ENABLE_FEATURE_OPINC" ]
+      }
+    }
   }
   if (graphic_2d_feature_enable_opengl) {
     gpu_defines += [
@@ -94,7 +109,7 @@ if (graphic_2d_feature_ace_enable_gpu) {
 
   libvulkan = []
   if (graphic_2d_feature_enable_vulkan) {
-    libvulkan += [ "//third_party/vulkan-loader/openharmony:vulkan_loader" ]
+    libvulkan += [ "//third_party/vulkan-loader:vulkan_loader" ]
   }
 } else {
   gpu_defines = [ "ACE_DISABLE_GL" ]
@@ -125,7 +140,6 @@ if (graphic_2d_feature_rs_enable_eglimage || current_os == "android") {
 }
 
 # use_texgine = graphic_2d_feature_use_texgine
-use_video_processing_engine = graphic_2d_feature_use_video_processing_engine
 
 if (graphic_2d_feature_rs_enable_uni_render) {
   rs_enable_driven_render = true
@@ -150,6 +164,10 @@ if (defined(use_new_render_context) && use_new_render_context) {
   gpu_defines -= [ "RS_ENABLE_PARALLEL_RENDER" ]
 }
 
+if (graphic_2d_feature_enable_dvsync) {
+  gpu_defines += [ "RS_ENABLE_DVSYNC" ]
+}
+
 tp_defines = []
 tp_feature_enable = false
 if (graphic_2d_feature_tp_switch_enbale) {
@@ -169,6 +187,10 @@ check_ddgr_ext_file_args = [
   "--filename",
   rebase_path("//foundation/graphic/graphic_2d_ext/ddgr/ddgr_config.gni"),
 ]
+check_delegator_ext_file_args = [
+  "--filename",
+  rebase_path("//foundation/graphic/graphic_2d_ext/delegator/config.gni"),
+]
 if (exec_script(check_graphic_ext_file_script,
                 check_graphic_ext_file_args,
                 "string") == "True" && "${product_name}" == "ohcore") {
@@ -176,6 +198,7 @@ if (exec_script(check_graphic_ext_file_script,
     import("//foundation/graphic/graphic_2d_ext/ohcore/build/config.gni")
   }
 }
+
 if (exec_script(check_graphic_ext_file_script,
                 check_ddgr_ext_file_args,
                 "string") == "True") {
@@ -184,9 +207,20 @@ if (exec_script(check_graphic_ext_file_script,
   }
 }
 
+graphic_2d_delegator_configs = {
+}
+if (exec_script(check_graphic_ext_file_script,
+                check_delegator_ext_file_args,
+                "string") == "True") {
+  graphic_2d_delegator_configs = {
+    import("//foundation/graphic/graphic_2d_ext/delegator/config.gni")
+  }
+}
+
 flutter_root = "//third_party/flutter"
 ace_flutter_engine_root = "$flutter_root/build"
 graphic_2d_root = "//foundation/graphic/graphic_2d"
+graphic_2d_ext_root = "//foundation/graphic/graphic_2d_ext"
 hilog_root = "//base/hiviewdfx/hilog"
 window_base_path = "//foundation/window/window_manager"
 safwk_base = "//foundation/systemabilitymgr/safwk"
@@ -207,6 +241,11 @@ if (defined(global_parts_info) &&
 if (defined(global_parts_info) &&
     !defined(global_parts_info.multimedia_player_framework)) {
   player_framework_enable = false
+}
+
+if (defined(global_parts_info) &&
+    defined(global_parts_info.multimedia_video_processing_engine)) {
+  use_video_processing_engine = true
 }
 
 if (defined(global_parts_info) &&

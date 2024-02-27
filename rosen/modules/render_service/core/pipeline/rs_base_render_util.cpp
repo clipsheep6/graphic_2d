@@ -1060,7 +1060,7 @@ bool RSBaseRenderUtil::ReleaseBuffer(RSSurfaceHandler& surfaceHandler)
     if (preBuffer.buffer != nullptr) {
         auto ret = consumer->ReleaseBuffer(preBuffer.buffer, preBuffer.releaseFence);
         if (ret != OHOS::SURFACE_ERROR_OK) {
-            RS_LOGE("RsDebug surfaceHandler(id: %{public}" PRIu64 ") ReleaseBuffer failed(ret: %{public}d)!",
+            RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") ReleaseBuffer failed(ret: %{public}d)!",
                 surfaceHandler.GetNodeId(), ret);
             return false;
         }
@@ -1512,7 +1512,7 @@ std::unique_ptr<RSTransactionData> RSBaseRenderUtil::ParseTransactionData(Messag
 bool RSBaseRenderUtil::WriteSurfaceRenderNodeToPng(const RSSurfaceRenderNode& node)
 {
     auto type = RSSystemProperties::GetDumpSurfaceType();
-    if (type == DumpSurfaceType::DISABLED || type == DumpSurfaceType::PIXELMAP) {
+    if (type != DumpSurfaceType::SINGLESURFACE && type != DumpSurfaceType::ALLSURFACES) {
         return false;
     }
     uint64_t id = static_cast<uint64_t>(RSSystemProperties::GetDumpSurfaceId());
@@ -1549,7 +1549,7 @@ bool RSBaseRenderUtil::WriteSurfaceRenderNodeToPng(const RSSurfaceRenderNode& no
 bool RSBaseRenderUtil::WriteCacheRenderNodeToPng(const RSRenderNode& node)
 {
     auto type = RSSystemProperties::GetDumpSurfaceType();
-    if (type == DumpSurfaceType::DISABLED || type == DumpSurfaceType::PIXELMAP) {
+    if (type != DumpSurfaceType::SINGLESURFACE && type != DumpSurfaceType::ALLSURFACES) {
         return false;
     }
     uint64_t id = static_cast<uint64_t>(RSSystemProperties::GetDumpSurfaceId());

@@ -59,7 +59,8 @@ RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY): RSSkiaFilter(S
 #endif
 #else
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY) : RSDrawingFilter(
-    Drawing::ImageFilter::CreateBlurImageFilter(blurRadiusX, blurRadiusY, Drawing::TileMode::CLAMP, nullptr)),
+    Drawing::ImageFilter::CreateBlurImageFilter(blurRadiusX, blurRadiusY, Drawing::TileMode::CLAMP, nullptr,
+        Drawing::ImageBlurType::KAWASE)),
     blurRadiusX_(blurRadiusX),
     blurRadiusY_(blurRadiusY)
 {
@@ -91,7 +92,7 @@ std::string RSBlurFilter::GetDescription()
 
 bool RSBlurFilter::IsValid() const
 {
-    constexpr float epsilon = 0.05f;
+    constexpr float epsilon = 0.999f;
     return blurRadiusX_ > epsilon || blurRadiusY_ > epsilon;
 }
 
@@ -195,8 +196,10 @@ void RSBlurFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<
         greyImage = image;
     }
     // if kawase blur failed, use gauss blur
+    static bool DDGR_ENABLED = RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR;
     KawaseParameter param = KawaseParameter(src, dst, blurRadiusX_, nullptr, brush.GetColor().GetAlphaF());
-    if (useKawase_ && KawaseBlurFilter::GetKawaseBlurFilter()->ApplyKawaseBlur(canvas, greyImage, param)) {
+    if (!DDGR_ENABLED && useKawase_ &&
+        KawaseBlurFilter::GetKawaseBlurFilter()->ApplyKawaseBlur(canvas, greyImage, param)) {
         return;
     }
     canvas.AttachBrush(brush);
@@ -207,6 +210,10 @@ void RSBlurFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<
 
 void RSBlurFilter::SetGreyCoef(float greyCoef1, float greyCoef2, bool isGreyCoefValid)
 {
+    if (!isGreyCoefValid) {
+        isGreyCoefValid_ = isGreyCoefValid;
+        return;
+    }
     greyCoef1_ = greyCoef1;
     greyCoef2_ = greyCoef2;
     isGreyCoefValid_ = isGreyCoefValid;

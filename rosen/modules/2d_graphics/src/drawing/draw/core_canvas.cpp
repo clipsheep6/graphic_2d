@@ -78,6 +78,11 @@ bool CoreCanvas::ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t ds
     return impl_->ReadPixels(dstInfo, dstPixels, dstRowBytes, srcX, srcY);
 }
 
+bool CoreCanvas::ReadPixels(const Bitmap& dstBitmap, int srcX, int srcY)
+{
+    return impl_->ReadPixels(dstBitmap, srcX, srcY);
+}
+
 void CoreCanvas::DrawPoint(const Point& point)
 {
     AttachPaint();
@@ -172,12 +177,6 @@ void CoreCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4], co
     impl_->DrawPatch(cubics, colors, texCoords, mode);
 }
 
-void CoreCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-    QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
-{
-    impl_->DrawEdgeAAQuad(rect, clip, aaFlags, color, mode);
-}
-
 void CoreCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
 {
     AttachPaint();
@@ -190,15 +189,26 @@ void CoreCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar 
     impl_->DrawBitmap(bitmap, px, py);
 }
 
+void CoreCanvas::DrawBitmap(const Bitmap& bitmap, const Rect& src, const Rect& dst, const SamplingOptions& sampling)
+{
+    AttachPaint();
+    Image img;
+    img.BuildFromBitmap(bitmap);
+    impl_->DrawImageRect(img, src, dst, sampling, SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
+}
+
+void CoreCanvas::DrawBitmap(const Bitmap& bitmap, const Rect& dst, const SamplingOptions& sampling)
+{
+    AttachPaint();
+    Image img;
+    img.BuildFromBitmap(bitmap);
+    impl_->DrawImageRect(img, dst, sampling);
+}
+
 void CoreCanvas::DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
     FilterMode filter, const Brush* brush)
 {
     impl_->DrawImageNine(image, center, dst, filter, brush);
-}
-
-void CoreCanvas::DrawAnnotation(const Rect& rect, const char* key, const Data* data)
-{
-    impl_->DrawAnnotation(rect, key, data);
 }
 
 void CoreCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
@@ -206,6 +216,49 @@ void CoreCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, co
 {
     impl_->DrawImageLattice(image, lattice, dst, filter, brush);
 }
+
+// opinc_begin
+bool CoreCanvas::BeginOpRecording(const Rect* bound, bool isDynamic)
+{
+    return impl_->BeginOpRecording(bound, isDynamic);
+}
+
+Drawing::OpListHandle CoreCanvas::EndOpRecording()
+{
+    return impl_->EndOpRecording();
+}
+
+void CoreCanvas::DrawOpList(Drawing::OpListHandle handle)
+{
+    impl_->DrawOpList(handle);
+}
+
+int CoreCanvas::CanDrawOpList(Drawing::OpListHandle handle)
+{
+    return impl_->CanDrawOpList(handle);
+}
+
+void CoreCanvas::PreOpListDrawArea(const Matrix& matrix)
+{
+    impl_->PreOpListDrawArea(matrix);
+}
+
+bool CoreCanvas::CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound)
+{
+    return impl_->CanUseOpListDrawArea(handle, bound);
+}
+
+Drawing::OpListHandle CoreCanvas::GetOpListDrawArea()
+{
+    return impl_->GetOpListDrawArea();
+}
+
+void CoreCanvas::OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
+    const SamplingOptions& sampling, SrcRectConstraint constraint)
+{
+    impl_->OpincDrawImageRect(image, drawAreas, sampling, constraint);
+}
+// opinc_end
 
 void CoreCanvas::DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py)
 {
@@ -431,12 +484,22 @@ Drawing::Surface* CoreCanvas::GetSurface() const
     return nullptr;
 }
 
+float CoreCanvas::GetAlpha() const
+{
+    return 1.0f;
+}
+
+int CoreCanvas::GetAlphaSaveCount() const
+{
+    return 0;
+}
+
 void CoreCanvas::AttachPaint()
 {
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        LOGE("Drawing CoreCanvas AttachPaint with Invalid Paint");
+        LOGD("Drawing CoreCanvas AttachPaint with Invalid Paint");
         return;
     }
 
@@ -453,6 +516,13 @@ void CoreCanvas::AttachPaint()
 
     if (penValid) {
         impl_->AttachPaint(paintPen_);
+    }
+}
+
+void CoreCanvas::BuildOverDraw(std::shared_ptr<Canvas> canvas)
+{
+    if (impl_ && canvas) {
+        impl_->BuildOverDraw(canvas);
     }
 }
 } // namespace Drawing

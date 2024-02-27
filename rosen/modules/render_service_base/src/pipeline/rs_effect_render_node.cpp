@@ -22,9 +22,11 @@
 #include "property/rs_properties_painter.h"
 #include "visitor/rs_node_visitor.h"
 #include "platform/common/rs_system_properties.h"
+#include "common/rs_optional_trace.h"
 
 namespace OHOS {
 namespace Rosen {
+
 RSEffectRenderNode::RSEffectRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
     : RSRenderNode(id, context, isTextureExportNode)
 {
@@ -132,24 +134,77 @@ void RSEffectRenderNode::SetEffectRegion(const std::optional<Drawing::RectI>& ef
 #endif
 
 void RSEffectRenderNode::UpdateFilterCacheManagerWithCacheRegion(
-    RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect) const
+    RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect)
 {
+    if (NeedForceCache()) {
+        return;
+    }
+
     // We need to check cache validity by comparing the cached image region with the filter rect
     // PLANNING: the last != condition should be reconsidered
-    if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
-        manager != nullptr && manager->IsCacheValid() && manager->GetCachedImageRegion() != GetFilterRect()) {
+    auto& manager = GetRenderProperties().GetFilterCacheManager(false);
+    if (!manager) {
+        return;
+    }
+    if (manager->IsCacheValid() &&
+        (manager->GetCachedImageRegion() != GetFilterRect() || preRotationStatus_ != isRotationChanged_)) {
         // If the cached image region is different from the filter rect, invalidate the cache
         manager->InvalidateCache();
     }
+    // If the effectnode filter cache is invalid and there is no visited filter cache for occlusion
+    // Invalid this surface's filter cache occlusion
+    if (!manager->IsCacheValid() && IsVisitedFilterCacheEmpty()) {
+        ROSEN_LOGD("RSEffectRenderNode::UpdateFilterCacheManagerWithCacheRegion: InvalidateFilterCacheRect.");
+        dirtyManager.InvalidateFilterCacheRect();
+    }
 }
 
-void RSEffectRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground) const
+void RSEffectRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground)
 {
     // No need to invalidate cache if background image is not null
-    if (GetRenderProperties().GetBgImage()) {
+    if (NeedForceCache()) {
         return;
     }
     RSRenderNode::UpdateFilterCacheWithDirty(dirtyManager, isForeground);
+}
+
+bool RSEffectRenderNode::NeedForceCache()
+{
+    // force update the first frame and last frame when rotating.
+    if (preRotationStatus_ != isRotationChanged_) {
+        return false;
+    }
+    // No need to invalidate cache if background image is not null or freezed
+    if (GetRenderProperties().GetBgImage() || (IsStaticCached() && !isRotationChanged_)) {
+        RS_OPTIONAL_TRACE_NAME("RSEffectRenderNode: background is not null or freezed");
+        return true;
+    }
+    if (isRotationChanged_ && invalidateTimes_ > 0) {
+        --invalidateTimes_;
+        return true;
+    }
+    if (isRotationChanged_ && invalidateTimes_ == 0 && cacheUpdateInterval_ > 0) {
+        --cacheUpdateInterval_;
+        return true;
+    }
+    cacheUpdateInterval_ = 1; // cache one frame
+    return false;
+}
+
+void RSEffectRenderNode::SetInvalidateTimesForRotation(int times)
+{
+    invalidateTimes_ = times;
+}
+
+void RSEffectRenderNode::SetRotationChanged(bool isRotationChanged)
+{
+    preRotationStatus_ = isRotationChanged_;
+    isRotationChanged_ = isRotationChanged;
+}
+
+bool RSEffectRenderNode::GetRotationChanged() const
+{
+    return isRotationChanged_;
 }
 } // namespace Rosen
 } // namespace OHOS

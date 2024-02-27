@@ -37,6 +37,16 @@ int RSSystemProperties::GetRecordingEnabled()
     return 0;
 }
 
+int RSSystemProperties::GetDumpRSTreeCount()
+{
+    return 0;
+}
+
+void RSSystemProperties::SetDumpRSTreeCount(int count)
+{
+    return;
+}
+
 bool RSSystemProperties::IsSceneBoardEnabled()
 {
     return false;
@@ -267,6 +277,13 @@ bool RSSystemProperties::GetBlurEnabled()
     return true;
 }
 
+const std::vector<float>& RSSystemProperties::GetAiInvertCoef()
+{
+    // Configure AiInvertCoef: Low, High, Threshold, Opacity, Saturation, Filter Radius.
+    std::vector<float> aiInvertCoef = {0.0, 1.0, 0.55, 0.4, 1.6, 45.0};
+    return aiInvertCoef;
+}
+
 bool RSSystemProperties::GetBoolSystemProperty(const char* name, bool defaultValue)
 {
     return {};
@@ -344,6 +361,16 @@ bool RSSystemProperties::GetSecurityPermissionCheckEnabled()
 bool RSSystemProperties::GetEffectMergeEnabled()
 {
     return true;
+}
+
+bool RSSystemProperties::GetDumpUICaptureEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetDumpUIPixelmapEnabled()
+{
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

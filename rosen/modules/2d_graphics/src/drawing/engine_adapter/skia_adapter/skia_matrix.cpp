@@ -65,6 +65,16 @@ void SkiaMatrix::SetScaleTranslate(scalar sx, scalar sy, scalar dx, scalar dy)
     skMatrix_.setScaleTranslate(sx, sy, dx, dy);
 }
 
+void SkiaMatrix::SetSkew(scalar kx, scalar ky)
+{
+    skMatrix_.setSkew(kx, ky);
+}
+
+void SkiaMatrix::SetSkew(scalar kx, scalar ky, scalar px, scalar py)
+{
+    skMatrix_.setSkew(kx, ky, px, py);
+}
+
 void SkiaMatrix::PreRotate(scalar degree)
 {
     skMatrix_.preRotate(degree);
@@ -103,6 +113,25 @@ void SkiaMatrix::PostScale(scalar sx, scalar sy)
 void SkiaMatrix::PostScale(scalar sx, scalar sy, scalar px, scalar py)
 {
     skMatrix_.postScale(sx, sy, px, py);
+}
+
+void SkiaMatrix::PreSkew(scalar kx, scalar ky)
+{
+    skMatrix_.preSkew(kx, ky);
+}
+
+void SkiaMatrix::PreSkew(scalar kx, scalar ky, scalar px, scalar py)
+{
+    skMatrix_.preSkew(kx, ky, px, py);
+}
+void SkiaMatrix::PostSkew(scalar kx, scalar ky)
+{
+    skMatrix_.postSkew(kx, ky);
+}
+
+void SkiaMatrix::PostSkew(scalar kx, scalar ky, scalar px, scalar py)
+{
+    skMatrix_.postSkew(kx, ky, px, py);
 }
 
 void SkiaMatrix::PreConcat(const Matrix& other)
@@ -178,11 +207,9 @@ bool SkiaMatrix::MapRect(Rect& dst, const Rect& src) const
 {
     SkRect skSrc = SkRect::MakeXYWH(src.GetLeft(), src.GetTop(), src.GetWidth(), src.GetHeight());
     SkRect skDst;
-    if (skMatrix_.mapRect(&skDst, skSrc)) {
-        dst = Rect(skDst.fLeft, skDst.fTop, skDst.fRight, skDst.fBottom);
-        return true;
-    }
-    return false;
+    bool ret = skMatrix_.mapRect(&skDst, skSrc);
+    dst = Rect(skDst.fLeft, skDst.fTop, skDst.fRight, skDst.fBottom);
+    return ret;
 }
 
 void SkiaMatrix::Set(int index, scalar value)
@@ -233,6 +260,11 @@ void SkiaMatrix::Reset()
 bool SkiaMatrix::GetMinMaxScales(scalar scaleFactors[2])
 {
     return skMatrix_.getMinMaxScales(scaleFactors);
+}
+
+bool SkiaMatrix::HasPerspective() const
+{
+    return skMatrix_.hasPerspective();
 }
 } // namespace Drawing
 } // namespace Rosen

@@ -21,21 +21,72 @@ group("unittest") {
 
   deps = [
     ":buffer_client_producer_remote_test",
-    ":buffer_manager_test",
     ":buffer_queue_consumer_test",
     ":buffer_queue_producer_remote_test",
     ":buffer_queue_producer_test",
     ":buffer_queue_test",
     ":buffer_shared_test",
+    ":consumer_surface_delegator_test",
     ":consumer_surface_test",
+    ":metadata_helper_test",
     ":native_buffer_test",
     ":native_image_test",
     ":native_window_test",
+    ":producer_surface_delegator_test",
     ":producer_surface_test",
     ":surface_buffer_impl_test",
     ":surface_utils_test",
+    ":transact_surface_delegator_stub_test",
   ]
 }
+
+## UnitTest producer_surface_delegator_test {{{
+ohos_unittest("producer_surface_delegator_test") {
+  module_out_path = module_out_path
+
+  sources = [ "producer_surface_delegator_test.cpp" ]
+
+  deps = [ ":surface_test_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+## UnitTest producer_surface_delegator_test }}}
+
+## UnitTest consumer_surface_delegator_test {{{
+ohos_unittest("consumer_surface_delegator_test") {
+  module_out_path = module_out_path
+
+  sources = [ "consumer_surface_delegator_test.cpp" ]
+
+  deps = [ ":surface_test_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+## UnitTest consumer_surface_delegator_test }}}
+
+## UnitTest transact_surface_delegator_stub_test {{{
+ohos_unittest("transact_surface_delegator_stub_test") {
+  module_out_path = module_out_path
+
+  sources = [ "transact_surface_delegator_stub_test.cpp" ]
+
+  deps = [ ":surface_test_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+## UnitTest transact_surface_delegator_stub_test }}}
 
 ## UnitTest buffer_client_producer_remote_test {{{
 ohos_unittest("buffer_client_producer_remote_test") {
@@ -52,22 +103,6 @@ ohos_unittest("buffer_client_producer_remote_test") {
 }
 
 ## UnitTest buffer_client_producer_remote_test }}}
-
-## UnitTest buffer_manager_test {{{
-ohos_unittest("buffer_manager_test") {
-  module_out_path = module_out_path
-
-  sources = [ "buffer_manager_test.cpp" ]
-
-  deps = [ ":surface_test_common" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-}
-
-## UnitTest buffer_manager_test }}}
 
 ## UnitTest buffer_queue_consumer_test {{{
 ohos_unittest("buffer_queue_consumer_test") {
@@ -159,6 +194,7 @@ ohos_unittest("consumer_surface_test") {
 
   external_deps = [
     "c_utils:utils",
+    "drivers_interface_display:display_commontype_idl_headers_1.1",
     "hilog:libhilog",
   ]
 }
@@ -193,7 +229,7 @@ ohos_unittest("surface_buffer_impl_test") {
 
   external_deps = [
     "c_utils:utils",
-    "drivers_interface_display:display_commontype_idl_headers",
+    "drivers_interface_display:display_commontype_idl_headers_1.1",
     "hilog:libhilog",
   ]
 }
@@ -230,6 +266,8 @@ ohos_unittest("native_window_test") {
   ]
 }
 
+## UnitTest native_window_test }}}
+
 ## UnitTest metadata_helper_test {{{
 ohos_unittest("metadata_helper_test") {
   module_out_path = module_out_path
@@ -245,9 +283,7 @@ ohos_unittest("metadata_helper_test") {
   ]
 }
 
-## UnitTest producer_surface_test }}}
-
-## UnitTest native_window_test }}}
+## UnitTest metadata_helper_test }}}
 
 ## UnitTest native_buffer_test {{{
 ohos_unittest("native_buffer_test") {

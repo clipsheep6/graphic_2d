@@ -18,14 +18,6 @@
 #include "recording/cmd_list_helper.h"
 #include "recording/draw_cmd.h"
 #include "recording/draw_cmd_list.h"
-#include "recording/recording_path.h"
-#include "recording/recording_color_filter.h"
-#include "recording/recording_color_space.h"
-#include "recording/recording_image_filter.h"
-#include "recording/recording_mask_filter.h"
-#include "recording/recording_path_effect.h"
-#include "recording/recording_shader_effect.h"
-#include "recording/recording_region.h"
 #include "draw/color.h"
 #include "effect/color_filter.h"
 #include "effect/color_space.h"
@@ -39,45 +31,12 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-void RecordingCanvas::GenerateHandleFromPaint(CmdList& cmdList, const Paint& paint, PaintHandle& paintHandle)
+RecordingCanvas::RecordingCanvas(int width, int height, bool addDrawOpImmediate)
+    : Canvas(width, height), addDrawOpImmediate_(addDrawOpImmediate)
 {
-    paintHandle.isAntiAlias = paint.IsAntiAlias();
-    paintHandle.style = paint.GetStyle();
-    paintHandle.color = paint.GetColor();
-    paintHandle.mode = paint.GetBlendMode();
-
-    if (paint.HasFilter()) {
-        const Filter& filter = paint.GetFilter();
-        paintHandle.filterQuality = filter.GetFilterQuality();
-        paintHandle.colorFilterHandle = CmdListHelper::AddColorFilterToCmdList(cmdList, filter.GetColorFilter());
-        paintHandle.imageFilterHandle = CmdListHelper::AddImageFilterToCmdList(cmdList, filter.GetImageFilter());
-        paintHandle.maskFilterHandle = CmdListHelper::AddMaskFilterToCmdList(cmdList, filter.GetMaskFilter());
-    }
-
-    if (paint.GetColorSpace()) {
-        paintHandle.colorSpaceHandle = CmdListHelper::AddColorSpaceToCmdList(cmdList, paint.GetColorSpace());
-    }
-
-    if (paint.GetShaderEffect()) {
-        paintHandle.shaderEffectHandle = CmdListHelper::AddShaderEffectToCmdList(cmdList, paint.GetShaderEffect());
-    }
-
-    if (!paint.HasStrokeStyle()) {
-        return;
-    }
-
-    paintHandle.width = paint.GetWidth();
-    paintHandle.miterLimit = paint.GetMiterLimit();
-    paintHandle.capStyle = paint.GetCapStyle();
-    paintHandle.joinStyle = paint.GetJoinStyle();
-    if (paint.GetPathEffect()) {
-        paintHandle.pathEffectHandle = CmdListHelper::AddPathEffectToCmdList(cmdList, paint.GetPathEffect());
-    }
-}
-
-RecordingCanvas::RecordingCanvas(int width, int height) : Canvas(width, height)
-{
-    cmdList_ = std::make_shared<DrawCmdList>(width, height);
+    DrawCmdList::UnmarshalMode mode =
+        addDrawOpImmediate ? DrawCmdList::UnmarshalMode::IMMEDIATE : DrawCmdList::UnmarshalMode::DEFERRED;
+    cmdList_ = std::make_shared<DrawCmdList>(width, height, mode);
 }
 
 std::shared_ptr<DrawCmdList> RecordingCanvas::GetDrawCmdList() const
@@ -95,242 +54,262 @@ void RecordingCanvas::Clear() const
 
 void RecordingCanvas::DrawPoint(const Point& point)
 {
-    AddOp<DrawPointOpItem::ConstructorHandle>(point);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawPointOpItem>(point);
+        return;
+    }
+    AddDrawOpImmediate<DrawPointOpItem::ConstructorHandle>(point);
 }
 
 void RecordingCanvas::DrawPoints(PointMode mode, size_t count, const Point pts[])
 {
     std::vector<Point> points(pts, pts + count);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawPointsOpItem>(mode, points);
+        return;
+    }
     auto pointsData = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, points);
-    AddOp<DrawPointsOpItem::ConstructorHandle>(mode, pointsData);
+    AddDrawOpImmediate<DrawPointsOpItem::ConstructorHandle>(mode, pointsData);
 }
 
 void RecordingCanvas::DrawLine(const Point& startPt, const Point& endPt)
 {
-    AddOp<DrawLineOpItem::ConstructorHandle>(startPt, endPt);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawLineOpItem>(startPt, endPt);
+        return;
+    }
+    AddDrawOpImmediate<DrawLineOpItem::ConstructorHandle>(startPt, endPt);
 }
 
 void RecordingCanvas::DrawRect(const Rect& rect)
 {
-    AddOp<DrawRectOpItem::ConstructorHandle>(rect);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawRectOpItem>(rect);
+        return;
+    }
+    AddDrawOpImmediate<DrawRectOpItem::ConstructorHandle>(rect);
 }
 
 void RecordingCanvas::DrawRoundRect(const RoundRect& roundRect)
 {
-    AddOp<DrawRoundRectOpItem::ConstructorHandle>(roundRect);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawRoundRectOpItem>(roundRect);
+        return;
+    }
+    AddDrawOpImmediate<DrawRoundRectOpItem::ConstructorHandle>(roundRect);
 }
 
 void RecordingCanvas::DrawNestedRoundRect(const RoundRect& outer, const RoundRect& inner)
 {
-    AddOp<DrawNestedRoundRectOpItem::ConstructorHandle>(outer, inner);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawNestedRoundRectOpItem>(outer, inner);
+        return;
+    }
+    AddDrawOpImmediate<DrawNestedRoundRectOpItem::ConstructorHandle>(outer, inner);
 }
 
 void RecordingCanvas::DrawArc(const Rect& oval, scalar startAngle, scalar sweepAngle)
 {
-    AddOp<DrawArcOpItem::ConstructorHandle>(oval, startAngle, sweepAngle);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawArcOpItem>(oval, startAngle, sweepAngle);
+        return;
+    }
+    AddDrawOpImmediate<DrawArcOpItem::ConstructorHandle>(oval, startAngle, sweepAngle);
 }
 
 void RecordingCanvas::DrawPie(const Rect& oval, scalar startAngle, scalar sweepAngle)
 {
-    AddOp<DrawPieOpItem::ConstructorHandle>(oval, startAngle, sweepAngle);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawPieOpItem>(oval, startAngle, sweepAngle);
+        return;
+    }
+    AddDrawOpImmediate<DrawPieOpItem::ConstructorHandle>(oval, startAngle, sweepAngle);
 }
 
 void RecordingCanvas::DrawOval(const Rect& oval)
 {
-    AddOp<DrawOvalOpItem::ConstructorHandle>(oval);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawOvalOpItem>(oval);
+        return;
+    }
+    AddDrawOpImmediate<DrawOvalOpItem::ConstructorHandle>(oval);
 }
 
 void RecordingCanvas::DrawCircle(const Point& centerPt, scalar radius)
 {
-    AddOp<DrawCircleOpItem::ConstructorHandle>(centerPt, radius);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawCircleOpItem>(centerPt, radius);
+        return;
+    }
+    AddDrawOpImmediate<DrawCircleOpItem::ConstructorHandle>(centerPt, radius);
 }
 
 void RecordingCanvas::DrawPath(const Path& path)
 {
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawPathOpItem>(path);
+        return;
+    }
     auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
-    AddOp<DrawPathOpItem::ConstructorHandle>(pathHandle);
+    AddDrawOpImmediate<DrawPathOpItem::ConstructorHandle>(pathHandle);
 }
 
 void RecordingCanvas::DrawBackground(const Brush& brush)
 {
-    Filter filter = brush.GetFilter();
-    BrushHandle brushHandle = {
-        brush.GetColor(),
-        brush.GetBlendMode(),
-        brush.IsAntiAlias(),
-        filter.GetFilterQuality(),
-        CmdListHelper::AddColorSpaceToCmdList(*cmdList_, brush.GetColorSpace()),
-        CmdListHelper::AddShaderEffectToCmdList(*cmdList_, brush.GetShaderEffect()),
-        CmdListHelper::AddColorFilterToCmdList(*cmdList_, filter.GetColorFilter()),
-        CmdListHelper::AddImageFilterToCmdList(*cmdList_, filter.GetImageFilter()),
-        CmdListHelper::AddMaskFilterToCmdList(*cmdList_, filter.GetMaskFilter()),
-    };
-    cmdList_->AddOp<DrawBackgroundOpItem::ConstructorHandle>(brushHandle);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DrawBackgroundOpItem>(brush));
+        return;
+    }
+    BrushHandle brushHandle;
+    DrawOpItem::BrushToBrushHandle(brush, *cmdList_, brushHandle);
+    cmdList_->AddDrawOp<DrawBackgroundOpItem::ConstructorHandle>(brushHandle);
 }
 
 void RecordingCanvas::DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos,
     scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag)
 {
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DrawShadowOpItem>(
+            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag));
+        return;
+    }
     auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
-    cmdList_->AddOp<DrawShadowOpItem::ConstructorHandle>(
+    cmdList_->AddDrawOp<DrawShadowOpItem::ConstructorHandle>(
         pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag);
 }
 
 void RecordingCanvas::DrawRegion(const Region& region)
 {
-    auto regionHandle = CmdListHelper::AddRecordedToCmdList<RecordingRegion>(*cmdList_, region);
-    AddOp<DrawRegionOpItem::ConstructorHandle>(regionHandle);
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawRegionOpItem>(region);
+        return;
+    }
+    auto regionHandle = CmdListHelper::AddRegionToCmdList(*cmdList_, region);
+    AddDrawOpImmediate<DrawRegionOpItem::ConstructorHandle>(regionHandle);
 }
 
 void RecordingCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4],
     const Point texCoords[4], BlendMode mode)
 {
-    const size_t cubicsCount = 12;
-    std::vector<Point> skiaCubics = {};
-    if (cubics != nullptr) {
-        skiaCubics = std::vector<Point>(cubics, cubics + cubicsCount);
-    }
-
-    const size_t colorsCount = 4;
-    std::vector<ColorQuad> skiaColors = {};
-    if (colors != nullptr) {
-        skiaColors = std::vector<ColorQuad>(colors, colors + colorsCount);
-    }
-
-    const size_t texCoordsCount = 4;
-    std::vector<Point> skiaTexCoords = {};
-    if (texCoords != nullptr) {
-        skiaTexCoords = std::vector<Point>(texCoords, texCoords + texCoordsCount);
-    }
-
-    auto cubicsData = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, skiaCubics);
-    auto colorsData = CmdListHelper::AddVectorToCmdList<ColorQuad>(*cmdList_, skiaColors);
-    auto texCoordsData = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, skiaTexCoords);
-    AddOp<DrawPatchOpItem::ConstructorHandle>(cubicsData, colorsData, texCoordsData, mode);
-}
-
-void RecordingCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-    QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
-{
-    const size_t clipCount = 4;
-    std::vector<Point> clipData = {};
-    if (clip != nullptr) {
-        clipData = std::vector<Point>(clip, clip + clipCount);
-    }
-
-    auto clipDataPtr = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, clipData);
-    cmdList_->AddOp<DrawEdgeAAQuadOpItem::ConstructorHandle>(rect, clipDataPtr, aaFlags, color, mode);
+    LOGD("RecordingCanvas::DrawPatch not support yet");
 }
 
 void RecordingCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
 {
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawVerticesOpItem>(vertices, mode);
+        return;
+    }
     auto opDataHandle = CmdListHelper::AddVerticesToCmdList(*cmdList_, vertices);
-    AddOp<DrawVerticesOpItem::ConstructorHandle>(opDataHandle, mode);
+    AddDrawOpImmediate<DrawVerticesOpItem::ConstructorHandle>(opDataHandle, mode);
 }
 
 void RecordingCanvas::DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
     FilterMode filterMode, const Brush* brush)
 {
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DrawImageNineOpItem>(image, center, dst, filterMode, brush));
+        return;
+    }
+
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, *image);
     BrushHandle brushHandle;
     bool hasBrush = false;
     if (brush != nullptr) {
         hasBrush = true;
-        Filter filter = brush->GetFilter();
-        brushHandle = {
-            brush->GetColor(),
-            brush->GetBlendMode(),
-            brush->IsAntiAlias(),
-            filter.GetFilterQuality(),
-            CmdListHelper::AddColorSpaceToCmdList(*cmdList_, brush->GetColorSpace()),
-            CmdListHelper::AddShaderEffectToCmdList(*cmdList_, brush->GetShaderEffect()),
-            CmdListHelper::AddColorFilterToCmdList(*cmdList_, filter.GetColorFilter()),
-            CmdListHelper::AddImageFilterToCmdList(*cmdList_, filter.GetImageFilter()),
-            CmdListHelper::AddMaskFilterToCmdList(*cmdList_, filter.GetMaskFilter()),
-        };
+        DrawOpItem::BrushToBrushHandle(*brush, *cmdList_, brushHandle);
     }
 
-    cmdList_->AddOp<DrawImageNineOpItem::ConstructorHandle>(
+    cmdList_->AddDrawOp<DrawImageNineOpItem::ConstructorHandle>(
         imageHandle, center, dst, filterMode, brushHandle, hasBrush);
-}
-
-void RecordingCanvas::DrawAnnotation(const Rect& rect, const char* key, const Data* data)
-{
-    auto dataHandle = CmdListHelper::AddDataToCmdList(*cmdList_, data);
-    cmdList_->AddOp<DrawAnnotationOpItem::ConstructorHandle>(rect, key, dataHandle);
 }
 
 void RecordingCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
     FilterMode filterMode, const Brush* brush)
 {
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DrawImageLatticeOpItem>(image, lattice, dst, filterMode, brush));
+        return;
+    }
+
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, *image);
     BrushHandle brushHandle;
     bool hasBrush = false;
     if (brush != nullptr) {
         hasBrush = true;
-        Filter filter = brush->GetFilter();
-        brushHandle = {
-            brush->GetColor(),
-            brush->GetBlendMode(),
-            brush->IsAntiAlias(),
-            filter.GetFilterQuality(),
-            CmdListHelper::AddColorSpaceToCmdList(*cmdList_, brush->GetColorSpace()),
-            CmdListHelper::AddShaderEffectToCmdList(*cmdList_, brush->GetShaderEffect()),
-            CmdListHelper::AddColorFilterToCmdList(*cmdList_, filter.GetColorFilter()),
-            CmdListHelper::AddImageFilterToCmdList(*cmdList_, filter.GetImageFilter()),
-            CmdListHelper::AddMaskFilterToCmdList(*cmdList_, filter.GetMaskFilter()),
-        };
+        DrawOpItem::BrushToBrushHandle(*brush, *cmdList_, brushHandle);
     }
 
-    cmdList_->AddOp<DrawImageLatticeOpItem::ConstructorHandle>(
+    cmdList_->AddDrawOp<DrawImageLatticeOpItem::ConstructorHandle>(
         imageHandle, lattice, dst, filterMode, brushHandle, hasBrush);
 }
 
 void RecordingCanvas::DrawColor(ColorQuad color, BlendMode mode)
 {
-    cmdList_->AddOp<DrawColorOpItem::ConstructorHandle>(color, mode);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DrawColorOpItem>(color, mode));
+        return;
+    }
+    cmdList_->AddDrawOp<DrawColorOpItem::ConstructorHandle>(color, mode);
 }
 
 void RecordingCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
-    auto bitmapHandle = CmdListHelper::AddBitmapToCmdList(*cmdList_, bitmap);
-    AddOp<DrawBitmapOpItem::ConstructorHandle>(bitmapHandle, px, py);
+    auto image = bitmap.MakeImage();
+    if (image) {
+        DrawImage(*image, px, py, SamplingOptions());
+    }
 }
 
 void RecordingCanvas::DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling)
 {
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawImageOpItem>(image, px, py, sampling);
+        return;
+    }
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
-    AddOp<DrawImageOpItem::ConstructorHandle>(imageHandle, px, py, sampling);
+    AddDrawOpImmediate<DrawImageOpItem::ConstructorHandle>(imageHandle, px, py, sampling);
 }
 
 void RecordingCanvas::DrawImageRect(
     const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling, SrcRectConstraint constraint)
 {
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawImageRectOpItem>(image, src, dst, sampling, constraint);
+        return;
+    }
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
-    AddOp<DrawImageRectOpItem::ConstructorHandle>(imageHandle, src, dst, sampling, constraint);
+    AddDrawOpImmediate<DrawImageRectOpItem::ConstructorHandle>(imageHandle, src, dst, sampling, constraint);
 }
 
 void RecordingCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)
 {
+    if (!addDrawOpImmediate_) {
+        Rect src(0, 0, image.GetWidth(), image.GetHeight());
+        AddDrawOpDeferred<DrawImageRectOpItem>(image, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
+        return;
+    }
     auto imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
     Rect src(0, 0, image.GetWidth(), image.GetHeight());
-    AddOp<DrawImageRectOpItem::ConstructorHandle>(
+    AddDrawOpImmediate<DrawImageRectOpItem::ConstructorHandle>(
         imageHandle, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
 }
 
 void RecordingCanvas::DrawPicture(const Picture& picture)
 {
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DrawPictureOpItem>(picture));
+        return;
+    }
     auto pictureHandle = CmdListHelper::AddPictureToCmdList(*cmdList_, picture);
-    cmdList_->AddOp<DrawPictureOpItem::ConstructorHandle>(pictureHandle);
+    cmdList_->AddDrawOp<DrawPictureOpItem::ConstructorHandle>(pictureHandle);
 }
 
 void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y)
 {
     if (!blob) {
-        LOGE("blob nullptr, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return;
     }
-
 #ifdef ROSEN_OHOS
     if (IsCustomTextType()) {
         LOGD("RecordingCanvas::DrawTextBlob replace drawOpItem with cached one");
@@ -338,95 +317,129 @@ void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const s
         return;
     }
 #endif
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawTextBlobOpItem>(blob, x, y);
+        return;
+    }
     auto textBlobHandle = CmdListHelper::AddTextBlobToCmdList(*cmdList_, blob);
-    AddOp<DrawTextBlobOpItem::ConstructorHandle>(textBlobHandle, x, y);
+    AddDrawOpImmediate<DrawTextBlobOpItem::ConstructorHandle>(textBlobHandle, x, y);
 }
 
 void RecordingCanvas::DrawSymbol(const DrawingHMSymbolData& symbol, Point locate)
 {
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawSymbolOpItem>(symbol, locate);
+        return;
+    }
     auto symbolHandle = CmdListHelper::AddSymbolToCmdList(*cmdList_, symbol);
-    AddOp<DrawSymbolOpItem::ConstructorHandle>(symbolHandle, locate);
+    AddDrawOpImmediate<DrawSymbolOpItem::ConstructorHandle>(symbolHandle, locate);
 }
-
-#ifdef ROSEN_OHOS
-void RecordingCanvas::DrawSurfaceBuffer(const DrawingSurfaceBufferInfo& surfaceBufferInfo)
-{
-    AddOp<DrawSurfaceBufferOpItem::ConstructorHandle>(
-        CmdListHelper::AddSurfaceBufferToCmdList(*cmdList_, surfaceBufferInfo.surfaceBuffer_),
-        surfaceBufferInfo.offSetX_, surfaceBufferInfo.offSetY_,
-        surfaceBufferInfo.width_, surfaceBufferInfo.height_);
-}
-#endif
 
 void RecordingCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)
 {
     CheckForLazySave();
-    cmdList_->AddOp<ClipRectOpItem::ConstructorHandle>(rect, op, doAntiAlias);
     Canvas::ClipRect(rect, op, doAntiAlias);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClipRectOpItem>(rect, op, doAntiAlias));
+        return;
+    }
+    cmdList_->AddDrawOp<ClipRectOpItem::ConstructorHandle>(rect, op, doAntiAlias);
 }
 
 void RecordingCanvas::ClipIRect(const RectI& rect, ClipOp op)
 {
     CheckForLazySave();
-    cmdList_->AddOp<ClipIRectOpItem::ConstructorHandle>(rect, op);
     Canvas::ClipIRect(rect, op);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClipIRectOpItem>(rect, op));
+        return;
+    }
+    cmdList_->AddDrawOp<ClipIRectOpItem::ConstructorHandle>(rect, op);
 }
 
 void RecordingCanvas::ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAntiAlias)
 {
     CheckForLazySave();
-    cmdList_->AddOp<ClipRoundRectOpItem::ConstructorHandle>(roundRect, op, doAntiAlias);
     Canvas::ClipRoundRect(roundRect, op, doAntiAlias);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClipRoundRectOpItem>(roundRect, op, doAntiAlias));
+        return;
+    }
+    cmdList_->AddDrawOp<ClipRoundRectOpItem::ConstructorHandle>(roundRect, op, doAntiAlias);
 }
 
 void RecordingCanvas::ClipRoundRect(const Rect& rect, std::vector<Point>& pts, bool doAntiAlias)
 {
     CheckForLazySave();
     RoundRect roundRect = RoundRect(rect, pts);
-    cmdList_->AddOp<ClipRoundRectOpItem::ConstructorHandle>(roundRect, ClipOp::INTERSECT, doAntiAlias);
     Canvas::ClipRoundRect(roundRect, ClipOp::INTERSECT, doAntiAlias);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClipRoundRectOpItem>(roundRect, ClipOp::INTERSECT, doAntiAlias));
+        return;
+    }
+    cmdList_->AddDrawOp<ClipRoundRectOpItem::ConstructorHandle>(roundRect, ClipOp::INTERSECT, doAntiAlias);
 }
 
 void RecordingCanvas::ClipPath(const Path& path, ClipOp op, bool doAntiAlias)
 {
     CheckForLazySave();
-    auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
-    cmdList_->AddOp<ClipPathOpItem::ConstructorHandle>(pathHandle, op, doAntiAlias);
     Canvas::ClipPath(path, op, doAntiAlias);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClipPathOpItem>(path, op, doAntiAlias));
+        return;
+    }
+    auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
+    cmdList_->AddDrawOp<ClipPathOpItem::ConstructorHandle>(pathHandle, op, doAntiAlias);
 }
 
 void RecordingCanvas::ClipRegion(const Region& region, ClipOp op)
 {
     CheckForLazySave();
-    auto regionHandle = CmdListHelper::AddRecordedToCmdList<RecordingRegion>(*cmdList_, region);
-    cmdList_->AddOp<ClipRegionOpItem::ConstructorHandle>(regionHandle, op);
     Canvas::ClipRegion(region, op);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClipRegionOpItem>(region, op));
+        return;
+    }
+    auto regionHandle = CmdListHelper::AddRegionToCmdList(*cmdList_, region);
+    cmdList_->AddDrawOp<ClipRegionOpItem::ConstructorHandle>(regionHandle, op);
 }
 
 void RecordingCanvas::SetMatrix(const Matrix& matrix)
 {
     CheckForLazySave();
+    Canvas::SetMatrix(matrix);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<SetMatrixOpItem>(matrix));
+        return;
+    }
     Matrix::Buffer matrixBuffer;
     matrix.GetAll(matrixBuffer);
-    cmdList_->AddOp<SetMatrixOpItem::ConstructorHandle>(matrixBuffer);
-    Canvas::SetMatrix(matrix);
+    cmdList_->AddDrawOp<SetMatrixOpItem::ConstructorHandle>(matrixBuffer);
 }
 
 void RecordingCanvas::ResetMatrix()
 {
     CheckForLazySave();
-    cmdList_->AddOp<ResetMatrixOpItem::ConstructorHandle>();
     Canvas::ResetMatrix();
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ResetMatrixOpItem>());
+        return;
+    }
+    cmdList_->AddDrawOp<ResetMatrixOpItem::ConstructorHandle>();
 }
 
 void RecordingCanvas::ConcatMatrix(const Matrix& matrix)
 {
     if (!matrix.IsIdentity()) {
         CheckForLazySave();
+        Canvas::ConcatMatrix(matrix);
+        if (!addDrawOpImmediate_) {
+            cmdList_->AddDrawOp(std::make_shared<ConcatMatrixOpItem>(matrix));
+            return;
+        }
         Matrix::Buffer matrixBuffer;
         matrix.GetAll(matrixBuffer);
-        cmdList_->AddOp<ConcatMatrixOpItem::ConstructorHandle>(matrixBuffer);
-        Canvas::ConcatMatrix(matrix);
+        cmdList_->AddDrawOp<ConcatMatrixOpItem::ConstructorHandle>(matrixBuffer);
     }
 }
 
@@ -434,8 +447,12 @@ void RecordingCanvas::Translate(scalar dx, scalar dy)
 {
     if (dx || dy) {
         CheckForLazySave();
-        cmdList_->AddOp<TranslateOpItem::ConstructorHandle>(dx, dy);
         Canvas::Translate(dx, dy);
+        if (!addDrawOpImmediate_) {
+            cmdList_->AddDrawOp(std::make_shared<TranslateOpItem>(dx, dy));
+            return;
+        }
+        cmdList_->AddDrawOp<TranslateOpItem::ConstructorHandle>(dx, dy);
     }
 }
 
@@ -443,8 +460,12 @@ void RecordingCanvas::Scale(scalar sx, scalar sy)
 {
     if (sx != 1 || sy != 1) {
         CheckForLazySave();
-        cmdList_->AddOp<ScaleOpItem::ConstructorHandle>(sx, sy);
         Canvas::Scale(sx, sy);
+        if (!addDrawOpImmediate_) {
+            cmdList_->AddDrawOp(std::make_shared<ScaleOpItem>(sx, sy));
+            return;
+        }
+        cmdList_->AddDrawOp<ScaleOpItem::ConstructorHandle>(sx, sy);
     }
 }
 
@@ -452,8 +473,12 @@ void RecordingCanvas::Rotate(scalar deg, scalar sx, scalar sy)
 {
     if (deg) {
         CheckForLazySave();
-        cmdList_->AddOp<RotateOpItem::ConstructorHandle>(deg, sx, sy);
         Canvas::Rotate(deg, sx, sy);
+        if (!addDrawOpImmediate_) {
+            cmdList_->AddDrawOp(std::make_shared<RotateOpItem>(deg, sx, sy));
+            return;
+        }
+        cmdList_->AddDrawOp<RotateOpItem::ConstructorHandle>(deg, sx, sy);
     }
 }
 
@@ -461,19 +486,31 @@ void RecordingCanvas::Shear(scalar sx, scalar sy)
 {
     if (sx || sy) {
         CheckForLazySave();
-        cmdList_->AddOp<ShearOpItem::ConstructorHandle>(sx, sy);
         Canvas::Shear(sx, sy);
+        if (!addDrawOpImmediate_) {
+            cmdList_->AddDrawOp(std::make_shared<ShearOpItem>(sx, sy));
+            return;
+        }
+        cmdList_->AddDrawOp<ShearOpItem::ConstructorHandle>(sx, sy);
     }
 }
 
 void RecordingCanvas::Flush()
 {
-    cmdList_->AddOp<FlushOpItem::ConstructorHandle>();
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<FlushOpItem>());
+        return;
+    }
+    cmdList_->AddDrawOp<FlushOpItem::ConstructorHandle>();
 }
 
 void RecordingCanvas::Clear(ColorQuad color)
 {
-    cmdList_->AddOp<ClearOpItem::ConstructorHandle>(color);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClearOpItem>(color));
+        return;
+    }
+    cmdList_->AddDrawOp<ClearOpItem::ConstructorHandle>(color);
 }
 
 uint32_t RecordingCanvas::Save()
@@ -485,6 +522,13 @@ uint32_t RecordingCanvas::Save()
 
 void RecordingCanvas::SaveLayer(const SaveLayerOps& saveLayerOps)
 {
+    Canvas::SaveLayer(saveLayerOps);
+    saveOpStateStack_.push(RealSaveOp);
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<SaveLayerOpItem>(saveLayerOps));
+        return;
+    }
+
     Rect rect;
     bool hasBrush = false;
     BrushHandle brushHandle;
@@ -495,26 +539,11 @@ void RecordingCanvas::SaveLayer(const SaveLayerOps& saveLayerOps)
     const Brush* brush = saveLayerOps.GetBrush();
     if (brush != nullptr) {
         hasBrush = true;
-        Filter filter = brush->GetFilter();
-        brushHandle = {
-            brush->GetColor(),
-            brush->GetBlendMode(),
-            brush->IsAntiAlias(),
-            filter.GetFilterQuality(),
-            CmdListHelper::AddColorSpaceToCmdList(*cmdList_, brush->GetColorSpace()),
-            CmdListHelper::AddShaderEffectToCmdList(*cmdList_, brush->GetShaderEffect()),
-            CmdListHelper::AddColorFilterToCmdList(*cmdList_, filter.GetColorFilter()),
-            CmdListHelper::AddImageFilterToCmdList(*cmdList_, filter.GetImageFilter()),
-            CmdListHelper::AddMaskFilterToCmdList(*cmdList_, filter.GetMaskFilter()),
-        };
+        DrawOpItem::BrushToBrushHandle(*brush, *cmdList_, brushHandle);
     }
-    CmdListHandle imageFilterHandle = CmdListHelper::AddRecordedToCmdList<RecordingImageFilter>(
-        *cmdList_, saveLayerOps.GetImageFilter());
 
-    cmdList_->AddOp<SaveLayerOpItem::ConstructorHandle>(rect, hasBrush, brushHandle,
-        imageFilterHandle, saveLayerOps.GetSaveLayerFlags());
-    saveOpStateStack_.push(RealSaveOp);
-    Canvas::SaveLayer(saveLayerOps);
+    cmdList_->AddDrawOp<SaveLayerOpItem::ConstructorHandle>(rect, hasBrush, brushHandle,
+        saveLayerOps.GetSaveLayerFlags());
 }
 
 void RecordingCanvas::Restore()
@@ -526,8 +555,12 @@ void RecordingCanvas::Restore()
     SaveOpState state = saveOpStateStack_.top();
     saveOpStateStack_.pop();
     if (state == RealSaveOp) {
-        cmdList_->AddOp<RestoreOpItem::ConstructorHandle>();
         Canvas::Restore();
+        if (!addDrawOpImmediate_) {
+            cmdList_->AddDrawOp(std::make_shared<RestoreOpItem>());
+            return;
+        }
+        cmdList_->AddDrawOp<RestoreOpItem::ConstructorHandle>();
     }
 }
 
@@ -538,35 +571,51 @@ uint32_t RecordingCanvas::GetSaveCount() const
 
 void RecordingCanvas::Discard()
 {
-    cmdList_->AddOp<DiscardOpItem::ConstructorHandle>();
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DiscardOpItem>());
+        return;
+    }
+    cmdList_->AddDrawOp<DiscardOpItem::ConstructorHandle>();
 }
 
 void RecordingCanvas::ClipAdaptiveRoundRect(const std::vector<Point>& radius)
 {
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<ClipAdaptiveRoundRectOpItem>(radius));
+        return;
+    }
     auto radiusData = CmdListHelper::AddVectorToCmdList<Point>(*cmdList_, radius);
-    cmdList_->AddOp<ClipAdaptiveRoundRectOpItem::ConstructorHandle>(radiusData);
+    cmdList_->AddDrawOp<ClipAdaptiveRoundRectOpItem::ConstructorHandle>(radiusData);
 }
 
 void RecordingCanvas::DrawImage(const std::shared_ptr<Image>& image, const std::shared_ptr<Data>& data,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
+    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
 {
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawAdaptiveImageOpItem>(image, data, rsImageInfo, sampling);
+        return;
+    }
     OpDataHandle imageHandle;
     if (data != nullptr) {
         imageHandle = CmdListHelper::AddCompressDataToCmdList(*cmdList_, data);
-        AddOp<DrawAdaptiveImageOpItem::ConstructorHandle>(imageHandle, rsImageInfo, smapling, false);
+        AddDrawOpImmediate<DrawAdaptiveImageOpItem::ConstructorHandle>(imageHandle, rsImageInfo, sampling, false);
         return;
     }
     if (image != nullptr) {
         imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
-        AddOp<DrawAdaptiveImageOpItem::ConstructorHandle>(imageHandle, rsImageInfo, smapling, true);
+        AddDrawOpImmediate<DrawAdaptiveImageOpItem::ConstructorHandle>(imageHandle, rsImageInfo, sampling, true);
     }
 }
 
 void RecordingCanvas::DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
+    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
 {
+    if (!addDrawOpImmediate_) {
+        AddDrawOpDeferred<DrawAdaptivePixelMapOpItem>(pixelMap, rsImageInfo, sampling);
+        return;
+    }
     auto pixelmapHandle = CmdListHelper::AddPixelMapToCmdList(*cmdList_, pixelMap);
-    AddOp<DrawAdaptivePixelMapOpItem::ConstructorHandle>(pixelmapHandle, rsImageInfo, smapling);
+    AddDrawOpImmediate<DrawAdaptivePixelMapOpItem::ConstructorHandle>(pixelmapHandle, rsImageInfo, sampling);
 }
 
 void RecordingCanvas::SetIsCustomTextType(bool isCustomTextType)
@@ -582,38 +631,71 @@ bool RecordingCanvas::IsCustomTextType() const
 void RecordingCanvas::CheckForLazySave()
 {
     if (!saveOpStateStack_.empty() && saveOpStateStack_.top() == LazySaveOp) {
-        cmdList_->AddOp<SaveOpItem::ConstructorHandle>();
-        saveOpStateStack_.top() = RealSaveOp;
         Canvas::Save();
+        if (!addDrawOpImmediate_) {
+            cmdList_->AddDrawOp(std::make_shared<SaveOpItem>());
+        } else {
+            cmdList_->AddDrawOp<SaveOpItem::ConstructorHandle>();
+        }
+        saveOpStateStack_.top() = RealSaveOp;
     }
 }
 
 template<typename T, typename... Args>
-void RecordingCanvas::AddOp(Args&&... args)
+void RecordingCanvas::AddDrawOpImmediate(Args&&... args)
 {
-    PaintHandle paintHandle;
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
+        PaintHandle paintHandle;
         paintHandle.isAntiAlias = true;
         paintHandle.style = Paint::PaintStyle::PAINT_FILL;
-        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+        cmdList_->AddDrawOp<T>(std::forward<Args>(args)..., paintHandle);
         return;
     }
     if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {
+        PaintHandle paintHandle;
         paintPen_.SetStyle(Paint::PaintStyle::PAINT_FILL_STROKE);
-        GenerateHandleFromPaint(*cmdList_, paintPen_, paintHandle);
-        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+        DrawOpItem::GenerateHandleFromPaint(*cmdList_, paintPen_, paintHandle);
+        cmdList_->AddDrawOp<T>(std::forward<Args>(args)..., paintHandle);
         paintPen_.SetStyle(Paint::PaintStyle::PAINT_STROKE);
         return;
     }
     if (brushValid) {
-        GenerateHandleFromPaint(*cmdList_, paintBrush_, paintHandle);
-        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+        PaintHandle paintHandle;
+        DrawOpItem::GenerateHandleFromPaint(*cmdList_, paintBrush_, paintHandle);
+        cmdList_->AddDrawOp<T>(std::forward<Args>(args)..., paintHandle);
     }
     if (penValid) {
-        GenerateHandleFromPaint(*cmdList_, paintPen_, paintHandle);
-        cmdList_->AddOp<T>(std::forward<Args>(args)..., paintHandle);
+        PaintHandle paintHandle;
+        DrawOpItem::GenerateHandleFromPaint(*cmdList_, paintPen_, paintHandle);
+        cmdList_->AddDrawOp<T>(std::forward<Args>(args)..., paintHandle);
+    }
+}
+
+template<typename T, typename... Args>
+void RecordingCanvas::AddDrawOpDeferred(Args&&... args)
+{
+    bool brushValid = paintBrush_.IsValid();
+    bool penValid = paintPen_.IsValid();
+    if (!brushValid && !penValid) {
+        Paint paint;
+        paint.SetAntiAlias(true);
+        paint.SetStyle(Paint::PaintStyle::PAINT_FILL);
+        cmdList_->AddDrawOp(std::make_shared<T>(std::forward<Args>(args)..., paint));
+        return;
+    }
+    if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {
+        paintPen_.SetStyle(Paint::PaintStyle::PAINT_FILL_STROKE);
+        cmdList_->AddDrawOp(std::make_shared<T>(std::forward<Args>(args)..., paintPen_));
+        paintPen_.SetStyle(Paint::PaintStyle::PAINT_STROKE);
+        return;
+    }
+    if (brushValid) {
+        cmdList_->AddDrawOp(std::make_shared<T>(std::forward<Args>(args)..., paintBrush_));
+    }
+    if (penValid) {
+        cmdList_->AddDrawOp(std::make_shared<T>(std::forward<Args>(args)..., paintPen_));
     }
 }
 
@@ -625,20 +707,30 @@ void RecordingCanvas::GenerateCachedOpForTextblob(const TextBlob* blob, const sc
         Paint paint;
         paint.SetAntiAlias(true);
         paint.SetStyle(Paint::PaintStyle::PAINT_FILL);
-        DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(*cmdList_, blob, x, y, paint);
+        GenerateCachedOpForTextblob(blob, x, y, paint);
         return;
     }
     if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {
         paintPen_.SetStyle(Paint::PaintStyle::PAINT_FILL_STROKE);
-        DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(*cmdList_, blob, x, y, paintPen_);
+        GenerateCachedOpForTextblob(blob, x, y, paintPen_);
         paintPen_.SetStyle(Paint::PaintStyle::PAINT_STROKE);
         return;
     }
     if (brushValid) {
-        DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(*cmdList_, blob, x, y, paintBrush_);
+        GenerateCachedOpForTextblob(blob, x, y, paintBrush_);
     }
     if (penValid) {
-        DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(*cmdList_, blob, x, y, paintPen_);
+        GenerateCachedOpForTextblob(blob, x, y, paintPen_);
+    }
+}
+
+void RecordingCanvas::GenerateCachedOpForTextblob(const TextBlob* blob, const scalar x, const scalar y, Paint& paint)
+{
+    if (!addDrawOpImmediate_) {
+        std::shared_ptr<DrawTextBlobOpItem> op = std::make_shared<DrawTextBlobOpItem>(blob, x, y, paint);
+        cmdList_->AddDrawOp(op->GenerateCachedOpItem(nullptr));
+    } else {
+        DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(*cmdList_, blob, x, y, paint);
     }
 }
 } // namespace Drawing

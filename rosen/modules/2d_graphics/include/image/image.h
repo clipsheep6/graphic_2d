@@ -188,20 +188,6 @@ public:
         return format_;
     }
 
-    TextureInfo& operator=(const TextureInfo& other)
-    {
-        width_ = other.width_;
-        height_ = other.height_;
-        isMipMapped_ = other.isMipMapped_;
-        target_ = other.target_;
-        id_ = other.id_;
-        format_ = other.format_;
-#ifdef RS_ENABLE_VK
-        vkTextureInfo_ = other.vkTextureInfo_;
-#endif
-        return *this;
-    }
-
 #ifdef RS_ENABLE_VK
     std::shared_ptr<VKTextureInfo> GetVKTextureInfo() const
     {
@@ -247,8 +233,6 @@ public:
     explicit Image(std::shared_ptr<ImageImpl> imageImpl);
     virtual ~Image() {};
     bool BuildFromBitmap(const Bitmap& bitmap);
-    bool BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix, const Brush& brush,
-        BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace);
 
     /*
      * @brief                        Create Image from Pixmap.
@@ -310,6 +294,8 @@ public:
     BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) const;
 
     bool IsValid(GPUContext* context) const;
+
+    bool pinAsTexture(GPUContext& context);
 #endif
 
     /*
@@ -391,6 +377,11 @@ public:
 
     bool IsOpaque() const;
 
+    /*
+     * @brief Tell engine try to cache gpu resource when texture resource create.
+     */
+    void HintCacheGpuResource() const;
+
     template<typename T>
     T* GetImpl() const
     {
@@ -403,7 +394,6 @@ public:
 
     const sk_sp<SkImage> ExportSkImage();
 
-    bool pinAsTexture(GPUContext& context);
 private:
     std::shared_ptr<ImageImpl> imageImplPtr;
 };

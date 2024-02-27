@@ -29,7 +29,7 @@ class DRAWING_API SkiaPath : public PathImpl {
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
 
-    SkiaPath() noexcept;
+    SkiaPath() noexcept {};
     ~SkiaPath() override {};
     SkiaPath(const SkiaPath& p) noexcept;
     SkiaPath &operator=(const SkiaPath& p) noexcept;
@@ -72,6 +72,7 @@ public:
 
     void AddPath(const Path& src, scalar dx, scalar dy) override;
     void AddPath(const Path& src) override;
+    bool Contains(scalar x, scalar y) const override;
     void AddPathWithMatrix(const Path& src, const Matrix& matrix) override;
     void ReverseAddPath(const Path& src) override;
 
@@ -97,20 +98,6 @@ public:
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
 private:
-    class SkPathSvgCacheManager {
-    public:
-        static SkPathSvgCacheManager& GetInstance();
-        ~SkPathSvgCacheManager() = default;
-        SkPathSvgCacheManager(SkPathSvgCacheManager&&) = delete;
-        SkPathSvgCacheManager(SkPathSvgCacheManager&) = delete;
-        SkPathSvgCacheManager& operator=(SkPathSvgCacheManager&&) = delete;
-        SkPathSvgCacheManager& operator=(SkPathSvgCacheManager&) = delete;
-
-        bool GetPathWithSvgString(const std::string& svgString, SkPath& path);
-    private:
-        SkPathSvgCacheManager() = default;
-        std::unordered_map<std::size_t, SkPath> pathCache_;
-    };
     SkPath path_;
 };
 } // namespace Drawing

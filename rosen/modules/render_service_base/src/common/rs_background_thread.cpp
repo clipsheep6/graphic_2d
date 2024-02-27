@@ -98,6 +98,8 @@ sk_sp<GrDirectContext> RSBackgroundThread::CreateShareGrContext()
 
         GrContextOptions options = {};
         options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+        // fix svg antialiasing bug
+        options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
         options.fPreferExternalImagesOverES3 = true;
         options.fDisableDistanceFieldPaths = true;
 
@@ -139,7 +141,7 @@ void RSBackgroundThread::CleanGrResource()
             return;
         }
         grContext_->freeGpuResources();
-        RS_LOGI("RSBackgroundThread::CleanGrResource() finished");
+        RS_LOGD("RSBackgroundThread::CleanGrResource() finished");
     });
 }
 #else
@@ -205,7 +207,7 @@ void RSBackgroundThread::CleanGrResource()
             return;
         }
         gpuContext_->FreeGpuResources();
-        RS_LOGI("RSBackgroundThread::CleanGrResource() finished");
+        RS_LOGD("RSBackgroundThread::CleanGrResource() finished");
     });
 }
 #endif

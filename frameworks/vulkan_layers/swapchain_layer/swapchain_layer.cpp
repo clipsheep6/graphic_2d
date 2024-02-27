@@ -466,7 +466,7 @@ GraphicPixelFormat GetPixelFormat(VkFormat format)
     return nativeFormat;
 }
 
-VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo, int32_t* numImages)
+VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo, uint32_t* numImages)
 {
     GraphicPixelFormat pixelFormat = GetPixelFormat(createInfo->imageFormat);
     Surface &surface = *SurfaceFromHandle(createInfo->surface);
@@ -496,7 +496,7 @@ VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKH
 }
 
 VkResult SetSwapchainCreateInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo,
-    int32_t* numImages)
+    uint32_t* numImages)
 {
     GraphicColorDataSpace colorDataSpace = GetColorDataspace(createInfo->imageColorSpace);
     if (colorDataSpace == GRAPHIC_COLOR_DATA_SPACE_UNKNOWN) {
@@ -551,7 +551,7 @@ void InitImageCreateInfo(const VkSwapchainCreateInfoKHR* createInfo, VkImageCrea
     imageCreate->pQueueFamilyIndices = createInfo->pQueueFamilyIndices;
 }
 
-VKAPI_ATTR VkResult CreateImages(int32_t &numImages, Swapchain* swapchain, const VkSwapchainCreateInfoKHR* createInfo,
+VKAPI_ATTR VkResult CreateImages(uint32_t &numImages, Swapchain* swapchain, const VkSwapchainCreateInfoKHR* createInfo,
     VkImageCreateInfo &imageCreate, VkDevice device)
 {
     VkLayerDispatchTable* pDisp =
@@ -563,7 +563,7 @@ VKAPI_ATTR VkResult CreateImages(int32_t &numImages, Swapchain* swapchain, const
         window->surface->CleanCache();
     }
     VkResult result = VK_SUCCESS;
-    for (int32_t i = 0; i < numImages; i++) {
+    for (uint32_t i = 0; i < numImages; i++) {
         Swapchain::Image &img = swapchain->images[i];
         NativeWindowBuffer* buffer = nullptr;
         int err = NativeWindowRequestBuffer(window, &buffer, &img.requestFence);
@@ -586,7 +586,7 @@ VKAPI_ATTR VkResult CreateImages(int32_t &numImages, Swapchain* swapchain, const
     }
 
     SWLOGD("swapchain init shared %{public}d", swapchain->shared);
-    for (int32_t i = 0; i < numImages; i++) {
+    for (uint32_t i = 0; i < numImages; i++) {
         Swapchain::Image &img = swapchain->images[i];
         if (img.requested) {
             if (!swapchain->shared) {
@@ -632,10 +632,16 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(VkDevice device, const VkSwapc
         return VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
     }
 
-    int32_t numImages = static_cast<int32_t>(MIN_BUFFER_SIZE);
+    uint32_t numImages = surface.window->surface->GetQueueSize();
     VkResult result = SetSwapchainCreateInfo(device, createInfo, &numImages);
     if (result != VK_SUCCESS) {
         return result;
+    }
+
+    if (numImages < createInfo->minImageCount) {
+        SWLOGE("swapchain init minImageCount[%{public}u] can not be more than maxBufferCount[%{public}u]",
+            createInfo->minImageCount, numImages);
+        return VK_ERROR_INITIALIZATION_FAILED;
     }
 
     if (allocator == nullptr) {
@@ -730,17 +736,16 @@ VKAPI_ATTR VkResult VKAPI_CALL AcquireNextImageKHR(VkDevice device, VkSwapchainK
     }
 
     uint32_t index = 0;
-    while (index < swapchain.numImages) {
+    for (; index < swapchain.numImages; index++) {
         if (swapchain.images[index].buffer->sfbuffer == nativeWindowBuffer->sfbuffer) {
             swapchain.images[index].requested = true;
             swapchain.images[index].requestFence = fence;
             break;
         }
-        index++;
     }
 
     if (index == swapchain.numImages) {
-        SWLOGE("RequestBuffer returned unrecognized buffer");
+        SWLOGD("RequestBuffer returned unrecognized buffer");
         if (NativeWindowCancelBuffer(nativeWindow, nativeWindowBuffer) != OHOS::GSERROR_OK) {
             SWLOGE("NativeWindowCancelBuffer failed: (%{public}d)", ret);
         }
@@ -1027,15 +1032,16 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilitiesKHR(
 {
     int width = 0;
     int height = 0;
-    uint32_t maxBufferCount = 10;
+    uint32_t maxBufferCount = MAX_BUFFER_SIZE;
     if (surface != VK_NULL_HANDLE) {
         NativeWindow* window = SurfaceFromHandle(surface)->window;
         int err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY, &height, &width);
         if (err != OHOS::GSERROR_OK) {
-            SWLOGE("NATIVE_WINDOW_DEFAULT_WIDTH query failed: (%{public}d)", err);
+            SWLOGE("NATIVE_WINDOW GET_BUFFER_GEOMETRY failed: (%{public}d)", err);
             return VK_ERROR_SURFACE_LOST_KHR;
         }
         maxBufferCount = window->surface->GetQueueSize();
+        SWLOGD("queue size : (%{public}d)", maxBufferCount);
     }
 
     capabilities->minImageCount = std::min(maxBufferCount, MIN_BUFFER_SIZE);
@@ -1275,7 +1281,6 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateDevice(VkPhysicalDevice gpu,
 
     LayerData* deviceLayerData = GetLayerDataPtr(GetDispatchKey(*pDevice));
     for (uint32_t i = 0; i < createInfo.enabledExtensionCount; i++) {
-        enabledExtensions.push_back(createInfo.ppEnabledExtensionNames[i]);
         auto extBit = GetExtensionBitFromName(createInfo.ppEnabledExtensionNames[i]);
         if (extBit != Extension::EXTENSION_UNKNOWN) {
             deviceLayerData->enabledExtensions.set(extBit);
@@ -1402,15 +1407,6 @@ static inline PFN_vkVoidFunction GetGlobalProc(const char* name)
     if (name == nullptr) {
         return nullptr;
     }
-    if (strcmp("vkCreateInstance", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateInstance);
-    }
-    if (strcmp("vkEnumerateInstanceExtensionProperties", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceExtensionProperties);
-    }
-    if (strcmp("vkEnumerateInstanceLayerProperties", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceLayerProperties);
-    }
     if (strcmp("vkEnumerateDeviceLayerProperties", name) == 0) {
         return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceLayerProperties);
     }
@@ -1502,18 +1498,6 @@ static inline PFN_vkVoidFunction LayerInterceptInstanceProc(
     if (name == nullptr) {
         return nullptr;
     }
-    if (strcmp("vkGetInstanceProcAddr", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(GetInstanceProcAddr);
-    }
-    if (strcmp("vkDestroyInstance", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(DestroyInstance);
-    }
-    if (strcmp("vkCreateDevice", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(CreateDevice);
-    }
-    if (strcmp("vkEnumerateDeviceExtensionProperties", name) == 0) {
-        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceExtensionProperties);
-    }
     if (enabledExtensions.test(Extension::OHOS_SURFACE)) {
         if (strcmp("vkCreateSurfaceOHOS", name) == 0) {
             return reinterpret_cast<PFN_vkVoidFunction>(CreateSurfaceOHOS);
@@ -1573,8 +1557,30 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance
         return nullptr;
     }
 
+    if (strcmp("vkGetInstanceProcAddr", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(GetInstanceProcAddr);
+    }
+    if (strcmp("vkCreateInstance", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(CreateInstance);
+    }
+    if (strcmp("vkEnumerateInstanceExtensionProperties", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceExtensionProperties);
+    }
+    if (strcmp("vkEnumerateInstanceLayerProperties", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceLayerProperties);
+    }
+    if (strcmp("vkDestroyInstance", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(DestroyInstance);
+    }
+    if (strcmp("vkCreateDevice", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(CreateDevice);
+    }
+    if (strcmp("vkEnumerateDeviceExtensionProperties", funcName) == 0) {
+        return reinterpret_cast<PFN_vkVoidFunction>(EnumerateDeviceExtensionProperties);
+    }
+
     if (instance == VK_NULL_HANDLE) {
-        SWLOGE("libvulkan_swapchain GetInstanceProcAddr instance is null");
+        SWLOGE("libvulkan_swapchain GetInstanceProcAddr(func name %{public}s) instance is null", funcName);
         return nullptr;
     }
 
@@ -1604,37 +1610,43 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL GetInstanceProcAddr(VkInstance instance
 }
 }  // namespace SWAPCHAIN
 
+#if defined(__GNUC__) && __GNUC__ >= 4
+#define SWAPCHAIN_EXPORT __attribute__((visibility("default")))
+#else
+#define SWAPCHAIN_EXPORT
+#endif
+
 extern "C" {
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionProperties(
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateInstanceExtensionProperties(
     const char* pLayerName, uint32_t* pCount, VkExtensionProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateInstanceExtensionProperties(pLayerName, pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL
 vkEnumerateInstanceLayerProperties(uint32_t* pCount, VkLayerProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateInstanceLayerProperties(pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceLayerProperties(
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceLayerProperties(
     VkPhysicalDevice physicalDevice, uint32_t* pCount, VkLayerProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateDeviceLayerProperties(VK_NULL_HANDLE, pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceExtensionProperties(
+SWAPCHAIN_EXPORT VKAPI_ATTR VkResult VKAPI_CALL vkEnumerateDeviceExtensionProperties(
     VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pCount, VkExtensionProperties* pProperties)
 {
     return SWAPCHAIN::EnumerateDeviceExtensionProperties(VK_NULL_HANDLE, pLayerName, pCount, pProperties);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice dev, const char* funcName)
+SWAPCHAIN_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice dev, const char* funcName)
 {
     return SWAPCHAIN::GetDeviceProcAddr(dev, funcName);
 }
 
-VK_LAYER_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
+SWAPCHAIN_EXPORT VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
 vkGetInstanceProcAddr(VkInstance instance, const char* funcName)
 {
     return SWAPCHAIN::GetInstanceProcAddr(instance, funcName);

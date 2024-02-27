@@ -129,13 +129,18 @@ VSyncReceiver::~VSyncReceiver()
 
 VsyncError VSyncReceiver::RequestNextVSync(FrameCallback callback)
 {
+    return RequestNextVSync(callback, "unknown", 0);
+}
+
+VsyncError VSyncReceiver::RequestNextVSync(FrameCallback callback, const std::string &fromWhom, int64_t lastVSyncTS)
+{
     std::lock_guard<std::mutex> locker(initMutex_);
     if (!init_) {
         return VSYNC_ERROR_API_FAILED;
     }
     listener_->SetCallback(callback);
     ScopedDebugTrace func("VSyncReceiver::RequestNextVSync:" + name_);
-    return connection_->RequestNextVSync();
+    return connection_->RequestNextVSync(fromWhom, lastVSyncTS);
 }
 
 VsyncError VSyncReceiver::SetVSyncRate(FrameCallback callback, int32_t rate)
@@ -177,6 +182,19 @@ VsyncError VSyncReceiver::GetVSyncPeriodAndLastTimeStamp(int64_t &period, int64_
     ScopedBytrace func("VSyncReceiver:period:" + std::to_string(period) + " timeStamp:" + std::to_string(timeStamp) +
         " isThreadShared:" + std::to_string(isThreadShared));
     return VSYNC_ERROR_OK;
+}
+
+void VSyncReceiver::CloseVsyncReceiverFd()
+{
+    if (looper_ != nullptr) {
+        looper_->RemoveFileDescriptorListener(fd_);
+        VLOGI("%{public}s looper remove fd listener, fd=%{public}d", __func__, fd_);
+    }
+
+    if (fd_ > 0) {
+        close(fd_);
+        fd_ = INVALID_FD;
+    }
 }
 
 VsyncError VSyncReceiver::Destroy()

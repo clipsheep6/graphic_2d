@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include "memory/rs_tag_tracker.h"
 #include "native_buffer_utils.h"
 #include "platform/common/rs_log.h"
-
+#include "render_context/render_context.h"
 namespace OHOS::Rosen {
 namespace NativeBufferUtils {
 void DeleteVkImage(void* context)
@@ -180,7 +181,7 @@ bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, 
         return false;
     }
 
-    auto& vkContext = RsVulkanContext::GetSingleton();
+    auto const& vkContext = RsVulkanContext::GetSingleton();
 
     VkDevice device = vkContext.GetDevice();
 
@@ -193,7 +194,7 @@ bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, 
     VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_SAMPLED_BIT;
     if (nbFormatProps.format != VK_FORMAT_UNDEFINED) {
         usageFlags = usageFlags | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
-            | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
     }
 
     VkImage image;
@@ -210,6 +211,7 @@ bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, 
         return false;
     }
 
+    auto skColorSpace = RenderContext::ConvertColorGamutToSkColorSpace(nativeSurface.graphicColorGamut);
 #ifndef USE_ROSEN_DRAWING
     GrVkImageInfo image_info;
     image_info.fImage = image;
@@ -229,9 +231,11 @@ bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, 
         colorType = kRGBA_1010102_SkColorType;
     }
 
+    RSTagTracker tagTracker(skContext.get(), RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
+
     nativeSurface.skSurface = SkSurface::MakeFromBackendRenderTarget(
         skContext.get(), backend_render_target, kTopLeft_GrSurfaceOrigin, colorType,
-        SkColorSpace::MakeSRGB(), &props, DeleteVkImage, new VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
+        skColorSpace, &props, DeleteVkImage, new VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
         image, memory));
 #else
     Drawing::TextureInfo texture_info;
@@ -246,24 +250,32 @@ bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, 
     vkTextureInfo->sampleCount = 1;
     vkTextureInfo->levelCount = 1;
     texture_info.SetVKTextureInfo(vkTextureInfo);
-    
+
     Drawing::ColorType colorType = Drawing::ColorType::COLORTYPE_RGBA_8888;
     if (nbFormatProps.format == VK_FORMAT_A2B10G10R10_UNORM_PACK32) {
         colorType = Drawing::ColorType::COLORTYPE_RGBA_1010102;
     }
 
-    nativeSurface.drawingSurface = Drawing::Surface::MakeFromBackendRenderTarget(
+    auto skiaColorSpace = std::make_shared<Drawing::SkiaColorSpace>();
+    skiaColorSpace->SetColorSpace(skColorSpace);
+    auto colorSpace = Drawing::ColorSpace::CreateFromImpl(skiaColorSpace);
+    nativeSurface.drawingSurface = Drawing::Surface::MakeFromBackendTexture(
         skContext.get(),
         texture_info,
         Drawing::TextureOrigin::TOP_LEFT,
+        1,
         colorType,
-        nullptr,
+        colorSpace,
         DeleteVkImage,
         new VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
             image, memory));
 #endif
 
     nativeSurface.image = image;
+    if (nativeSurface.nativeWindowBuffer != nullptr) {
+        NativeObjectUnreference(nativeSurface.nativeWindowBuffer);
+    }
+    NativeObjectReference(nativeWindowBuffer);
     nativeSurface.nativeWindowBuffer = nativeWindowBuffer;
 
     return true;
@@ -303,7 +315,7 @@ Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* n
         return {};
     }
 
-    auto& vkContext = RsVulkanContext::GetSingleton();
+    auto const& vkContext = RsVulkanContext::GetSingleton();
     VkDevice device = vkContext.GetDevice();
 
     VkNativeBufferFormatPropertiesOHOS nbFormatProps;

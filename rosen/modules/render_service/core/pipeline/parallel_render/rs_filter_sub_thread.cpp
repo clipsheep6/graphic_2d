@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <mutex>
 #define EGL_EGLEXT_PROTOTYPES
 #include "rs_filter_sub_thread.h"
 
@@ -24,6 +25,7 @@
 #include "memory/rs_tag_tracker.h"
 #include "rs_trace.h"
 
+#include "common/rs_optional_trace.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -75,8 +77,11 @@ void RSFilterSubThread::Start()
         grContext_ = CreateShareGrContext();
     });
     RSFilter::postTask = [this](std::weak_ptr<RSFilter::RSFilterTask> task) {
-        PostTask([this, task]() { RenderCache(task); });
+        filterTaskList_.emplace_back(task);
+        RS_TRACE_NAME_FMT("postTask:%zu", filterTaskList_.size());
     };
+
+    RSFilter::clearGpuContext = [this]() { ResetGrContext(); };
 }
 
 void RSFilterSubThread::StartColorPicker()
@@ -109,6 +114,19 @@ void RSFilterSubThread::StartColorPicker()
         }
         PostTask([this, task]() { ColorPickerRenderCache(task); });
     };
+#ifndef USE_ROSEN_DRAWING
+#else
+#ifdef IS_OHOS
+    RSColorPickerCacheTask::saveImgAndSurToRelease =
+        [this](std::shared_ptr<Drawing::Image>&& cacheImage, std::shared_ptr<Drawing::Surface>&& cacheSurface,
+            std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler,
+            std::weak_ptr<std::atomic<bool>> waitRelease,
+            std::weak_ptr<std::mutex> grBackendTextureMutex) {
+        SaveAndReleaseCacheResource(std::move(cacheImage), std::move(cacheSurface),
+            initHandler, waitRelease, grBackendTextureMutex);
+    };
+#endif
+#endif
 }
 
 void RSFilterSubThread::PostTask(const std::function<void()>& task)
@@ -117,6 +135,125 @@ void RSFilterSubThread::PostTask(const std::function<void()>& task)
         handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
 }
+
+#ifndef USE_ROSEN_DRAWING
+#else
+#ifdef IS_OHOS
+void RSFilterSubThread::AddToReleaseQueue(std::shared_ptr<Drawing::Image>&& cacheImage,
+    std::shared_ptr<Drawing::Surface>&& cacheSurface,
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler)
+{
+    if (initHandler != nullptr) {
+        auto runner = initHandler->GetEventRunner();
+        std::string handlerName = runner->GetRunnerThreadName();
+        handlerMap_[handlerName] = initHandler;
+        if (tmpImageResources_.find(handlerName) != tmpImageResources_.end()) {
+            tmpImageResources_[handlerName].push(std::move(cacheImage));
+        } else {
+            std::queue<std::shared_ptr<Drawing::Image>> imageQueue;
+            imageQueue.push(std::move(cacheImage));
+            tmpImageResources_[handlerName] = imageQueue;
+        }
+    }
+    tmpSurfaceResources_.push(std::move(cacheSurface));
+}
+
+void RSFilterSubThread::PreAddToReleaseQueue(std::shared_ptr<Drawing::Image>&& cacheImage,
+    std::shared_ptr<Drawing::Surface>&& cacheSurface,
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler,
+    std::weak_ptr<std::mutex> grBackendTextureMutex)
+{
+    ROSEN_LOGD("RSFilterSubThread::AddToReleaseQueue");
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto backendTextureMutex = grBackendTextureMutex.lock();
+    if (backendTextureMutex != nullptr) {
+        std::unique_lock<std::mutex> lock(*backendTextureMutex);
+        AddToReleaseQueue(std::move(cacheImage), std::move(cacheSurface), initHandler);
+    } else {
+        AddToReleaseQueue(std::move(cacheImage), std::move(cacheSurface), initHandler);
+    }
+}
+
+void RSFilterSubThread::ResetWaitRelease(std::weak_ptr<std::atomic<bool>> waitRelease)
+{
+    auto wait = waitRelease.lock();
+    if (wait != nullptr) {
+        wait->store(false);
+    }
+}
+
+void RSFilterSubThread::ReleaseSurface(std::weak_ptr<std::atomic<bool>> waitRelease)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    while (tmpSurfaceResources_.size() > 0) {
+        auto tmp = tmpSurfaceResources_.front();
+        tmpSurfaceResources_.pop();
+        if (tmp == nullptr) {
+            ResetWaitRelease(waitRelease);
+            return;
+        }
+        tmp = nullptr;
+    }
+    ResetWaitRelease(waitRelease);
+}
+
+void RSFilterSubThread::ReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>& queue,
+    std::weak_ptr<std::atomic<bool>> waitRelease)
+{
+    while (queue.size() > 0) {
+        auto tmp = queue.front();
+        queue.pop();
+        if (tmp == nullptr) {
+            ResetWaitRelease(waitRelease);
+            return;
+        }
+        tmp.reset();
+    }
+    PostTask([this, waitRelease]() { ReleaseSurface(waitRelease); });
+}
+
+void RSFilterSubThread::PreReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>& queue,
+    std::weak_ptr<std::atomic<bool>> waitRelease,
+    std::weak_ptr<std::mutex> grBackendTextureMutex)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto backendTextureMutex = grBackendTextureMutex.lock();
+    if (backendTextureMutex != nullptr) {
+        std::unique_lock<std::mutex> lock(*backendTextureMutex);
+        ReleaseImage(queue, waitRelease);
+    } else {
+        ReleaseImage(queue, waitRelease);
+    }
+}
+
+void RSFilterSubThread::ReleaseImageAndSurfaces(std::weak_ptr<std::atomic<bool>> waitRelease,
+    std::weak_ptr<std::mutex> grBackendTextureMutex)
+{
+    ROSEN_LOGD("ReleaseImageAndSurfaces tmpImageResources_.size %{public}d",
+        static_cast<int>(tmpImageResources_.size()));
+    for (auto& item : tmpImageResources_) {
+        auto& initHandler = handlerMap_[item.first];
+        auto& imageQueue = item.second;
+        if (imageQueue.size() != 0) {
+            initHandler->PostTask(
+                [this, &imageQueue, waitRelease, grBackendTextureMutex]() {
+                    PreReleaseImage(imageQueue, waitRelease, grBackendTextureMutex);
+                }, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        }
+    }
+}
+
+void RSFilterSubThread::SaveAndReleaseCacheResource(std::shared_ptr<Drawing::Image>&& cacheImage,
+    std::shared_ptr<Drawing::Surface>&& cacheSurface,
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler,
+    std::weak_ptr<std::atomic<bool>> waitRelease,
+    std::weak_ptr<std::mutex> grBackendTextureMutex)
+{
+    PreAddToReleaseQueue(std::move(cacheImage), std::move(cacheSurface), initHandler, grBackendTextureMutex);
+    ReleaseImageAndSurfaces(waitRelease, grBackendTextureMutex);
+}
+#endif
+#endif
 
 void RSFilterSubThread::PostSyncTask(const std::function<void()>& task)
 {
@@ -175,28 +312,92 @@ void RSFilterSubThread::DestroyShareEglContext()
 #endif
 }
 
-void RSFilterSubThread::RenderCache(std::weak_ptr<RSFilter::RSFilterTask> filterTask)
+void RSFilterSubThread::RenderCache(std::vector<std::weak_ptr<RSFilter::RSFilterTask>>& filterTaskList)
 {
-    RS_TRACE_NAME("RenderCache");
-    auto task = filterTask.lock();
-    if (!task) {
-        RS_LOGE("task is null");
-        return;
-    }
+    RS_TRACE_NAME_FMT("RSFilterSubThread::RenderCache:%zu", filterTaskList.size());
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
     }
+    if (fence_->Wait(SYNC_TIME_OUT) < 0) {
+        RS_LOGE("RSFilterSubThread::RenderCache: fence time out");
+        filterTaskList.clear();
+        isWorking_.store(false);
+        return;
+    }
     if (grContext_ == nullptr) {
-        RS_LOGE("grContext is null");
+        RS_LOGE("RSFilterSubThread::RenderCache: grContext is null");
+        filterTaskList.clear();
+        isWorking_.store(false);
         return;
     }
-    if (!task->InitSurface(grContext_.get())) {
-        RS_LOGE("InitSurface failed");
+    for (auto& task : filterTaskList) {
+        auto workTask = task.lock();
+        if (!workTask) {
+            RS_LOGE("RSFilterSubThread::RenderCache: Render task is null");
+            continue;
+        }
+        if (!workTask->InitSurface(grContext_.get())) {
+            RS_LOGE("RSFilterSubThread::RenderCache: InitSurface failed");
+            continue;
+        }
+        if (!workTask->Render()) {
+            RS_LOGE("RSFilterSubThread::RenderCache: Render failed");
+            continue;
+        }
+    }
+#ifndef USE_ROSEN_DRAWING
+    grContext_->flushAndSubmit(true);
+#else
+    grContext_->FlushAndSubmit(true);
+#endif
+    for (auto& task : filterTaskList) {
+        auto workTask = task.lock();
+        if (!workTask) {
+            RS_LOGE("RSFilterSubThread::RenderCache, SaveFilteredImage task is null");
+            continue;
+        }
+        if (!workTask->SaveFilteredImage()) {
+            RS_LOGE("RSFilterSubThread::RenderCache, SaveFilteredImage failed");
+            continue;
+        }
+        if (!workTask->SetDone()) {
+            RS_LOGE("RSFilterSubThread::RenderCache, SetDone failed");
+            continue;
+        }
+    }
+    filterTaskList.clear();
+    isWorking_.store(false);
+}
+
+void RSFilterSubThread::FlushAndSubmit()
+{
+    RS_TRACE_NAME_FMT("RSFilterSubThread::FlushAndSubmit():isWorking_:%d TaskList size:%zu",
+        isWorking_.load(), filterReadyTaskList_.size());
+
+    if (filterTaskList_.empty()) {
         return;
     }
-    if (!task->Render()) {
-        RS_LOGE("Render failed");
+
+    if (isWorking_.load()) {
+        return;
     }
+
+    filterTaskList_.swap(filterReadyTaskList_);
+    for (auto& task : filterReadyTaskList_) {
+        auto initTask = task.lock();
+        if (!initTask) {
+            RS_LOGE("RSFilterSubThread::FlushAndSubmit:SwapInit task is null");
+            continue;
+        }
+        initTask->SwapInit();
+    }
+    isWorking_.store(true);
+    PostTask([this]() { RenderCache(filterReadyTaskList_); });
+}
+
+void RSFilterSubThread::SetFence(sptr<SyncFence> fence)
+{
+    fence_ = fence;
 }
 
 void RSFilterSubThread::ColorPickerRenderCache(std::weak_ptr<RSColorPickerCacheTask> colorPickerTask)
@@ -245,6 +446,8 @@ sk_sp<GrContext> RSFilterSubThread::CreateShareGrContext()
 
         GrContextOptions options = {};
         options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+        // fix svg antialiasing bug
+        options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
         options.fPreferExternalImagesOverES3 = true;
         options.fDisableDistanceFieldPaths = true;
 
@@ -326,8 +529,10 @@ void RSFilterSubThread::ResetGrContext()
         return;
     }
 #ifndef USE_ROSEN_DRAWING
+    grContext_->flushAndSubmit(true);
     grContext_->freeGpuResources();
 #else
+    grContext_->FlushAndSubmit(true);
     grContext_->FreeGpuResources();
 #endif
 }

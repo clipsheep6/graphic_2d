@@ -30,6 +30,7 @@
 #include "modifier/rs_modifier_type.h"
 #include "property/rs_properties_def.h"
 #include "property/rs_color_picker_cache_task.h"
+#include "render/rs_aibar_filter.h"
 #include "render/rs_border.h"
 #include "render/rs_filter.h"
 #include "render/rs_gradient_blur_para.h"
@@ -132,6 +133,9 @@ public:
     float GetTranslateX() const;
     float GetTranslateY() const;
     float GetTranslateZ() const;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool GetOpincPropDirty() const;
+#endif
 
     void SetScale(Vector2f scale);
     void SetScaleX(float sx);
@@ -139,6 +143,13 @@ public:
     Vector2f GetScale() const;
     float GetScaleX() const;
     float GetScaleY() const;
+
+    void SetSkew(Vector2f skew);
+    void SetSkewX(float skewX);
+    void SetSkewY(float skewY);
+    Vector2f GetSkew() const;
+    float GetSkewX() const;
+    float GetSkewY() const;
 
     void SetAlpha(float alpha);
     float GetAlpha() const;
@@ -150,6 +161,8 @@ public:
 
     bool GetUseShadowBatching() const;
     void SetUseShadowBatching(bool useShadowBatching);
+    bool GetNeedSkipShadow() const;
+    void SetNeedSkipShadow(bool needSkipShadow);
 
     // particle properties
     void SetParticles(const RSRenderParticleVector& particles);
@@ -206,6 +219,9 @@ public:
     void IfLinearGradientBlurInvalid();
     const std::shared_ptr<RSFilter>& GetFilter() const;
     bool NeedFilter() const;
+    float GetGreyCoef1() const;
+    float GetGreyCoef2() const;
+    bool IsGreyAdjustmentValid() const;
 
     // shadow properties
     void SetShadowColor(Color color);
@@ -226,8 +242,6 @@ public:
     float GetShadowRadius() const;
     const std::optional<float>& GetDynamicLightUpRate() const;
     const std::optional<float>& GetDynamicLightUpDegree() const;
-    float GetGreyCoef1() const;
-    float GetGreyCoef2() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
     bool GetShadowMask() const;
     bool GetShadowIsFilled() const;
@@ -265,6 +279,8 @@ public:
     const std::optional<Vector4f>& GetPixelStretchPercent() const;
     void SetAiInvert(const std::optional<Vector4f>& aiInvert);
     const std::optional<Vector4f>& GetAiInvert() const;
+    void SetSystemBarEffect(bool systemBarEffect);
+    bool GetSystemBarEffect() const;
     RectI GetPixelStretchDirtyRect() const;
 
     const std::shared_ptr<RSObjAbsGeometry>& GetBoundsGeometry() const;
@@ -289,7 +305,6 @@ public:
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
     bool IsDynamicLightUpValid() const;
-    bool IsGreyAdjustmentValid() const;
 
     // Image effect properties
     void SetGrayScale(const std::optional<float>& grayScale);
@@ -334,10 +349,13 @@ public:
 
     void SetColorBlendMode(int colorBlendMode);
     int GetColorBlendMode() const;
+    void SetColorBlendApplyType(int colorBlendApplyType);
+    int GetColorBlendApplyType() const;
 
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     const std::unique_ptr<RSFilterCacheManager>& GetFilterCacheManager(bool isForeground) const;
     const std::shared_ptr<RSColorPickerCacheTask>& GetColorPickerCacheTaskShadow() const;
+    void ReleaseColorPickerTaskShadow() const;
     void ClearFilterCache();
 #endif
 
@@ -376,12 +394,18 @@ private:
     bool contentDirty_ = false;
     bool isDrawn_ = false;
     bool alphaNeedApply_ = false;
+    bool systemBarEffect_ = false;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    bool isOpincPropDirty_ = false;
+#endif
 
     bool hasBounds_ = false;
     bool useEffect_ = false;
     bool useShadowBatching_ = false;
+    bool needSkipShadow_ = false;
 
     int colorBlendMode_ = 0;
+    int colorBlendApplyType_ = 0;
 
     Gravity frameGravity_ = Gravity::DEFAULT;
 

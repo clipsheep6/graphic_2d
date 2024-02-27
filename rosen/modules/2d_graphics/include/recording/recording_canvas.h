@@ -29,20 +29,6 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifdef ROSEN_OHOS
-struct DrawingSurfaceBufferInfo {
-    DrawingSurfaceBufferInfo() = default;
-    DrawingSurfaceBufferInfo(
-        const sptr<SurfaceBuffer>& surfaceBuffer, int offSetX, int offSetY, int width, int height)
-        : surfaceBuffer_(surfaceBuffer), offSetX_(offSetX), offSetY_(offSetY), width_(width), height_(height)
-    {}
-    sptr<SurfaceBuffer> surfaceBuffer_ = nullptr;
-    int offSetX_ = 0;
-    int offSetY_ = 0;
-    int width_ = 0;
-    int height_ = 0;
-};
-#endif
 namespace Drawing {
 /*
  * @brief  RecordingCanvas is an empty canvas, which does not act on any surface,
@@ -51,7 +37,7 @@ namespace Drawing {
  */
 class DRAWING_API RecordingCanvas : public Canvas {
 public:
-    RecordingCanvas(int width, int height);
+    RecordingCanvas(int width, int height, bool addDrawOpImmediate = true);
     ~RecordingCanvas() override = default;
 
     std::shared_ptr<DrawCmdList> GetDrawCmdList() const;
@@ -90,13 +76,10 @@ public:
     void DrawRegion(const Region& region) override;
     void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode) override;
-    void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) override;
     void DrawVertices(const Vertices& vertices, BlendMode mode) override;
 
     void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filterMode, const Brush* brush = nullptr) override;
-    void DrawAnnotation(const Rect& rect, const char* key, const Data* data) override;
     void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filterMode, const Brush* brush = nullptr) override;
 
@@ -136,28 +119,28 @@ public:
 
     void ClipAdaptiveRoundRect(const std::vector<Point>& radius);
     void DrawImage(const std::shared_ptr<Image>& image, const std::shared_ptr<Data>& data,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling);
+        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
     void DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling);
+        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
 
     void SetIsCustomTextType(bool isCustomTextType);
     bool IsCustomTextType() const;
-#ifdef ROSEN_OHOS
-    void DrawSurfaceBuffer(const DrawingSurfaceBufferInfo& surfaceBufferInfo);
-#endif
+
+    using DrawFunc = std::function<void(Drawing::Canvas* canvas, const Drawing::Rect* rect)>;
 protected:
-    static void GenerateHandleFromPaint(CmdList& cmdList, const Paint& paint, PaintHandle& paintHandle);
+    bool addDrawOpImmediate_ = true;
     std::shared_ptr<DrawCmdList> cmdList_ = nullptr;
+
 private:
     template<typename T, typename... Args>
-    void AddOp(Args&&... args);
+    void AddDrawOpImmediate(Args&&... args);
+    template<typename T, typename... Args>
+    void AddDrawOpDeferred(Args&&... args);
 
-    enum SaveOpState {
-        LazySaveOp,
-        RealSaveOp
-    };
+    enum SaveOpState { LazySaveOp, RealSaveOp };
     void CheckForLazySave();
     void GenerateCachedOpForTextblob(const TextBlob* blob, const scalar x, const scalar y);
+    void GenerateCachedOpForTextblob(const TextBlob* blob, const scalar x, const scalar y, Paint& paint);
     bool isCustomTextType_ = false;
     std::optional<Brush> customTextBrush_ = std::nullopt;
     std::optional<Pen> customTextPen_ = std::nullopt;

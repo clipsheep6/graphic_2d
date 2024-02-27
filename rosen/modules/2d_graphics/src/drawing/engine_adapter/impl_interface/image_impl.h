@@ -59,8 +59,6 @@ public:
     ~ImageImpl() override {}
 
     virtual bool BuildFromBitmap(const Bitmap& bitmap) = 0;
-    virtual bool BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix,
-        const Brush& brush, BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace) = 0;
 #ifdef ACE_ENABLE_GPU
     virtual bool BuildFromBitmap(GPUContext& gpuContext, const Bitmap& bitmap) = 0;
     virtual bool MakeFromEncoded(const std::shared_ptr<Data>& data) = 0;
@@ -96,7 +94,7 @@ public:
     virtual std::shared_ptr<Image> MakeRasterImage() const = 0;
     virtual bool CanPeekPixels() const = 0;
     virtual bool IsOpaque() const = 0;
-
+    virtual void HintCacheGpuResource() const = 0;
 
     // using for recording, should to remove after using shared memory
     virtual std::shared_ptr<Data> Serialize() const = 0;

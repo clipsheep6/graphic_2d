@@ -47,8 +47,22 @@ public:
     virtual scalar GetMetrics(FontMetrics* metrics) const = 0;
     virtual void GetWidths(const uint16_t glyphs[], int count, scalar widths[]) const = 0;
     virtual void GetWidths(const uint16_t glyphs[], int count, scalar widths[], Rect bounds[]) const = 0;
+    virtual scalar GetSize() const = 0;
+    virtual std::shared_ptr<Typeface> GetTypeface() = 0;
 
-    virtual scalar MeasureText(const void* text, size_t byteLength, TextEncoding encoding) = 0;
+    virtual FontEdging GetEdging() const = 0;
+    virtual FontHinting GetHinting() const = 0;
+    virtual scalar GetScaleX() const = 0;
+    virtual scalar GetSkewX() const = 0;
+    virtual bool IsSubpixel() const = 0;
+
+    virtual uint16_t UnicharToGlyph(int32_t uni) const = 0;
+    virtual int TextToGlyphs(const void* text, size_t byteLength, TextEncoding encoding,
+        uint16_t glyphs[], int maxGlyphCount) const = 0;
+
+    virtual scalar MeasureText(const void* text, size_t byteLength, TextEncoding encoding,
+        Rect* bounds = nullptr) = 0;
+    virtual int CountText(const void* text, size_t byteLength, TextEncoding encoding) const = 0;
 
 protected:
     FontImpl() noexcept = default;

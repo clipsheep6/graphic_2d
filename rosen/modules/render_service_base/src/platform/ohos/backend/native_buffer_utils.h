@@ -28,6 +28,7 @@
 #ifdef USE_ROSEN_DRAWING
 #include "draw/surface.h"
 #include "image/image.h"
+#include "drawing/engine_adapter/skia_adapater/skia_color_space.h"
 #endif
 
 namespace OHOS::Rosen {
@@ -86,8 +87,8 @@ struct NativeSurfaceInfo {
 #else
     std::shared_ptr<Drawing::Surface> drawingSurface = nullptr;
 #endif
-    uint32_t lastPresentedCount = -1;
-
+    int32_t lastPresentedCount = -1;
+    GraphicColorGamut graphicColorGamut = GRAPHIC_COLOR_GAMUT_INVALID;
     ~NativeSurfaceInfo()
     {
 #ifndef USE_ROSEN_DRAWING
@@ -95,7 +96,14 @@ struct NativeSurfaceInfo {
 #else
         drawingSurface = nullptr;
 #endif
-        NativeWindowCancelBuffer(window, nativeWindowBuffer);
+        if (window != nullptr) {
+            NativeObjectUnreference(window);
+            window = nullptr;
+        }
+        if (nativeWindowBuffer != nullptr) {
+            NativeObjectUnreference(nativeWindowBuffer);
+            nativeWindowBuffer = nullptr;
+        }
     }
 };
 

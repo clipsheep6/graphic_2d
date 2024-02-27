@@ -78,22 +78,11 @@
 #include "buffer_utils.h"
 #endif
 #include "recording/mask_cmd_list.h"
-#include "recording/recording_path.h"
-#include "recording/recording_shader_effect.h"
 #include "property/rs_properties_def.h"
 #endif
 
 #ifdef RS_ENABLE_RECORDING
 #include "benchmarks/rs_recording_thread.h"
-#endif
-
-#if defined (ENABLE_DDGR_OPTIMIZE)
-#include <sys/mman.h>
-#include "securec.h"
-#include "platform/common/rs_system_properties.h"
-#include "ipc_file_descriptor.h"
-#include "src/core/SkTextBlobPriv.h"
-#include "ddgr_renderer.h"
 #endif
 
 namespace OHOS {
@@ -305,6 +294,10 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, SymbolLayersGroups& val)
 
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const HMSymbolData& val)
 {
+    if (!Marshalling(parcel, val.symbolId_)) {
+        RS_LOGE("[%{public}s] failed HMSymbolData symbolId_", __func__);
+        return false;
+    }
     if (!Marshalling(parcel, val.symbolInfo_)) {
         RS_LOGE("[%{public}s] failed HMSymbolData symbolInfo_", __func__);
         return false;
@@ -318,6 +311,10 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const HMSymbolData& val)
 
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, HMSymbolData& val)
 {
+    if (!Unmarshalling(parcel, val.symbolId_)) {
+        RS_LOGE("[%{public}s] failed HMSymbolData symbolId_", __func__);
+        return false;
+    }
     if (!Unmarshalling(parcel, val.symbolInfo_)) {
         RS_LOGE("[%{public}s] failed HMSymbolData symbolInfo_", __func__);
         return false;
@@ -586,66 +583,6 @@ sk_sp<SkTypeface> RSMarshallingHelper::DeserializeTypeface(const void* data, siz
     return SkTypeface::MakeDeserialize(&stream);
 }
 
-#if defined (ENABLE_DDGR_OPTIMIZE)
-int RSMarshallingHelper::IntegrateReadDescriptor(Parcel& parcel)
-{
-    sptr<IPCFileDescriptor> descriptor = parcel.ReadObject<IPCFileDescriptor>();
-    if (descriptor == nullptr) {
-        return -1;
-    }
-    return descriptor->GetFd();
-}
-
-bool RSMarshallingHelper::IntegrateWriteDescriptor(Parcel& parcel, int fId)
-{
-    sptr<IPCFileDescriptor> descriptor = new (std::nothrow) IPCFileDescriptor(fId);
-    if (descriptor == nullptr) {
-        return false;
-    }
-    return parcel.WriteObject<IPCFileDescriptor>(descriptor);
-}
-
-bool RSMarshallingHelper::SerializeInternal(Parcel& parcel, const sk_sp<SkTextBlob>& val, const SkSerialProcs& procs)
-{
-    SkBinaryWriteBuffer buffer;
-    buffer.setSerialProcs(procs);
-    val->TextBlobFlatten(buffer);
-    size_t total = buffer.bytesWritten();
-    int fId = -1;
-    sk_sp<SkData> data;
-
-    void* dataPtr = DDGRRenderer::GetInstance().IntegrateMemAlloc(fId, total);
-    if (dataPtr != nullptr) {
-        data = SkData::MakeUninitialized(1);
-        buffer.writeToMemory(dataPtr);
-        int fId2 = ::dup(fId);
-        val->TextBlobSetShareParas(fId2, total, dataPtr);
-    } else {
-        data = SkData::MakeUninitialized(total);
-        buffer.writeToMemory(data->writable_data());
-    }
-    bool ret = Marshalling(parcel, data);
-    IntegrateWriteDescriptor(parcel, fId);
-    return ret;
-}
-
-bool RSMarshallingHelper::DserializeInternal(Parcel& parcel, sk_sp<SkTextBlob>& val,
-    const SkDeserialProcs& procs, sk_sp<SkData>& data)
-{
-    int sizePtr = 0;
-    int fId = IntegrateReadDescriptor(parcel);
-    fId = ::dup(fId);
-    void* dataPtr = DDGRRenderer::GetInstance().IntegrateGetHandle(fId, sizePtr);
-    if (dataPtr != nullptr && sizePtr > 0) {
-        val = SkTextBlob::Deserialize(dataPtr, sizePtr, procs);
-        val->TextBlobSetShareParas(fId, sizePtr, dataPtr);
-        return val != nullptr;
-    }
-    val = SkTextBlob::Deserialize(data->data(), data->size(), procs);
-    return val != nullptr;
-}
-#endif
-
 // SkTextBlob
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkTextBlob>& val)
 {
@@ -656,12 +593,6 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const sk_sp<SkTextBlob>& v
     }
     SkSerialProcs serialProcs;
     serialProcs.fTypefaceProc = &RSMarshallingHelper::SerializeTypeface;
-#if defined (ENABLE_DDGR_OPTIMIZE)
-    if (RSSystemProperties::GetDDGRIntegrateEnable()) {
-        ROSEN_LOGD("Marshalling text Integrate");
-        return SerializeInternal(parcel, val, serialProcs);
-    }
-#endif
     data = val->serialize(serialProcs);
     return Marshalling(parcel, data);
 }
@@ -678,12 +609,6 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, sk_sp<SkTextBlob>& val)
     }
     SkDeserialProcs deserialProcs;
     deserialProcs.fTypefaceProc = &RSMarshallingHelper::DeserializeTypeface;
-#if defined (ENABLE_DDGR_OPTIMIZE)
-    if (RSSystemProperties::GetDDGRIntegrateEnable()) {
-        ROSEN_LOGD("Unmarshalling text Integrate");
-        return DserializeInternal(parcel, val, deserialProcs, data);
-    }
-#endif
     val = SkTextBlob::Deserialize(data->data(), data->size(), deserialProcs);
     return val != nullptr;
 }
@@ -1444,7 +1369,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<RSSh
     std::shared_ptr<Drawing::Data> data = shaderEffect->Serialize();
     if (!data) {
         ROSEN_LOGE("unirender: RSMarshallingHelper::Marshalling RSShader, data is nullptr");
-        return false;
+        return parcel.WriteInt32(-1);
     }
     return parcel.WriteInt32(type) && Marshalling(parcel, data);
 }
@@ -1521,6 +1446,9 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSLinear
     GradientDirection direction = GradientDirection::NONE;
     bool success = Unmarshalling(parcel, blurRadius);
     uint32_t fractionStopsSize = parcel.ReadUint32();
+    if (fractionStopsSize > SIZE_UPPER_LIMIT) {
+        return false;
+    }
     for (size_t i = 0; i < fractionStopsSize; i++) {
         std::pair<float, float> fractionStop;
         float first = 0.0;
@@ -1657,6 +1585,9 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleParaType<f
         success = success && Unmarshalling(parcel, randomStart) && Unmarshalling(parcel, randomEnd);
     } else if (updator == ParticleUpdator::CURVE) {
         uint32_t valChangeOverLifeSize = parcel.ReadUint32();
+        if (valChangeOverLifeSize > SIZE_UPPER_LIMIT) {
+            return false;
+        }
         for (size_t i = 0; i < valChangeOverLifeSize; i++) {
             float fromValue = 0.f;
             float toValue = 0.f;
@@ -1728,15 +1659,16 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleColorParaT
                   Unmarshalling(parcel, alphaRandomStart) && Unmarshalling(parcel, alphaRandomEnd);
     } else if (updator == ParticleUpdator::CURVE) {
         uint32_t valChangeOverLifeSize = parcel.ReadUint32();
+        if (valChangeOverLifeSize > SIZE_UPPER_LIMIT) {
+            return false;
+        }
         for (size_t i = 0; i < valChangeOverLifeSize; i++) {
             Color fromValue = RSColor(0, 0, 0);
             Color toValue = RSColor(0, 0, 0);
             int startMillis = 0;
             int endMillis = 0;
-            success = success && Unmarshalling(parcel, fromValue);
-            success = success && Unmarshalling(parcel, toValue);
-            success = success && Unmarshalling(parcel, startMillis);
-            success = success && Unmarshalling(parcel, endMillis);
+            success = success && Unmarshalling(parcel, fromValue) && Unmarshalling(parcel, toValue) &&
+                      Unmarshalling(parcel, startMillis) && Unmarshalling(parcel, endMillis);
             std::shared_ptr<RSInterpolator> interpolator(RSInterpolator::Unmarshalling(parcel));
             auto change = std::make_shared<ChangeInOverLife<Color>>(
                 fromValue, toValue, startMillis, endMillis, std::move(interpolator));
@@ -1808,6 +1740,9 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::vector<std::shared_
     uint32_t size = parcel.ReadUint32();
     bool success = true;
     std::vector<std::shared_ptr<ParticleRenderParams>> particlesRenderParams;
+    if (size > PARTICLE_UPPER_LIMIT) {
+        return false;
+    }
     for (size_t i = 0; i < size; i++) {
         std::shared_ptr<ParticleRenderParams> particleRenderParams;
         success = success && Unmarshalling(parcel, particleRenderParams);
@@ -2210,6 +2145,10 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Draw
     std::vector<std::shared_ptr<Drawing::ExtendImageBaseObj>> objectBaseVec;
     uint32_t objectBaseSize = val->GetAllBaseObj(objectBaseVec);
     ret &= parcel.WriteUint32(objectBaseSize);
+    if (!ret) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::DrawCmdList imageBase");
+        return ret;
+    }
     if (objectBaseSize > 0) {
         for (const auto& objectBase : objectBaseVec) {
             auto rsBaseObject = std::static_pointer_cast<RSExtendImageBaseObj>(objectBase);
@@ -2223,7 +2162,7 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Draw
 #ifdef ROSEN_OHOS
     std::vector<sptr<SurfaceBuffer>> surfaceBufferVec;
     uint32_t surfaceBufferSize = val->GetAllSurfaceBuffer(surfaceBufferVec);
-    ret &= parcel.WriteUint32(surfaceBufferSize);
+    ret = parcel.WriteUint32(surfaceBufferSize);
     if (surfaceBufferSize > 0) {
         for (const auto& object : surfaceBufferVec) {
             if (!object) {
@@ -2259,7 +2198,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
 
     uint32_t replacedOpListSize = parcel.ReadUint32();
     std::vector<std::pair<uint32_t, uint32_t>> replacedOpList;
-    for (auto i = 0; i < replacedOpListSize; ++i) {
+    for (uint32_t i = 0; i < replacedOpListSize; ++i) {
         auto regionPos = parcel.ReadUint32();
         auto replacePos = parcel.ReadUint32();
         replacedOpList.emplace_back(regionPos, replacePos);
@@ -2369,7 +2308,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
         val->SetupSurfaceBuffer(surfaceBufferVec);
     }
 #endif
-    val->UnmarshallingOps();
+    val->UnmarshallingDrawOps();
     return ret;
 }
 
@@ -2437,25 +2376,25 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Draw
     auto cmdListData = val->GetData();
     bool ret = parcel.WriteInt32(cmdListData.second);
 
-    if (cmdListData.second == 0) {
+    if (cmdListData.second == 0 || !ret) {
         ROSEN_LOGW("unirender: RSMarshallingHelper::Marshalling Drawing::MaskCmdList, size is 0");
         return ret;
     }
 
-    ret &= RSMarshallingHelper::WriteToParcel(parcel, cmdListData.first, cmdListData.second);
+    ret = RSMarshallingHelper::WriteToParcel(parcel, cmdListData.first, cmdListData.second);
     if (!ret) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::MaskCmdList");
         return ret;
     }
 
     auto imageData = val->GetAllImageData();
-    ret &= parcel.WriteInt32(imageData.second);
+    ret = parcel.WriteInt32(imageData.second);
     if (!ret) {
         ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::MaskCmdList image size");
         return ret;
     }
     if (imageData.second > 0) {
-        ret &= RSMarshallingHelper::WriteToParcel(parcel, imageData.first, imageData.second);
+        ret = RSMarshallingHelper::WriteToParcel(parcel, imageData.first, imageData.second);
         if (!ret) {
             ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::MaskCmdList image");
             return ret;

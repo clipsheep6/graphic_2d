@@ -17,6 +17,7 @@
 
 #include <memory>
 #include "common/rs_macros.h"
+#include "draw/pen.h"
 #ifndef USE_ROSEN_DRAWING
 #include "include/core/SkPaint.h"
 #include "include/core/SkPath.h"
@@ -24,7 +25,6 @@
 #else
 #include "draw/brush.h"
 #include "draw/path.h"
-#include "recording/recording_path.h"
 #include "image/picture.h"
 #endif
 #if defined(NEW_SKIA)
@@ -53,6 +53,8 @@ public:
 #else
     static std::shared_ptr<RSMask> CreateGradientMask(const Drawing::Brush& maskBrush);
     static std::shared_ptr<RSMask> CreatePathMask(const Drawing::Path& maskPath, const Drawing::Brush& maskBrush);
+    static std::shared_ptr<RSMask> CreatePathMask(
+        const Drawing::Path& maskPath, const Drawing::Pen&  maskPen, const Drawing::Brush& maskBrush);
 #endif
     static std::shared_ptr<RSMask> CreateSVGMask(double x, double y, double scaleX, double scaleY,
         const sk_sp<SkSVGDOM>& svgDom);
@@ -73,6 +75,8 @@ public:
 #else
     void SetMaskPath(const Drawing::Path& path);
     std::shared_ptr<Drawing::Path> GetMaskPath() const;
+    void SetMaskPen(const Drawing::Pen& pen);
+    Drawing::Pen GetMaskPen() const;
     void SetMaskBrush(const Drawing::Brush& brush);
     Drawing::Brush GetMaskBrush() const;
     bool MarshallingPathAndBrush(Parcel& parcel) const;
@@ -113,6 +117,7 @@ private:
     SkPath maskPath_;
 #else
     std::shared_ptr<Drawing::Picture> svgPicture_;
+    Drawing::Pen maskPen_;
     Drawing::Brush maskBrush_;
     std::shared_ptr<Drawing::Path> maskPath_;
 #endif

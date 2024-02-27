@@ -54,8 +54,10 @@ static inline SkTileMode ConvertToSkTileMode(const TileMode& mode)
     }
 }
 
-void SkiaImageFilter::InitWithBlur(scalar sigmaX, scalar sigmaY, TileMode mode, const std::shared_ptr<ImageFilter> f)
+void SkiaImageFilter::InitWithBlur(scalar sigmaX, scalar sigmaY, TileMode mode, const std::shared_ptr<ImageFilter> f,
+    ImageBlurType blurType)
 {
+    // SK only support gauss, ignore the input blurType
     sk_sp<SkImageFilter> input = nullptr;
     if (f != nullptr && f->GetImpl<SkiaImageFilter>() != nullptr) {
         input = f->GetImpl<SkiaImageFilter>()->GetImageFilter();
@@ -88,8 +90,10 @@ void SkiaImageFilter::InitWithOffset(scalar dx, scalar dy, const std::shared_ptr
     filter_ = SkImageFilters::Offset(dx, dy, input);
 }
 
-void SkiaImageFilter::InitWithColorBlur(const ColorFilter& colorFilter, scalar sigmaX, scalar sigmaY)
+void SkiaImageFilter::InitWithColorBlur(const ColorFilter& colorFilter, scalar sigmaX, scalar sigmaY,
+    ImageBlurType blurType)
 {
+    // SK only support gauss, ignore the input blurType
     auto skColorFilterImpl = colorFilter.GetImpl<SkiaColorFilter>();
     filter_ = SkImageFilters::ColorFilter(
         skColorFilterImpl->GetColorFilter(), SkImageFilters::Blur(sigmaX, sigmaY, SkTileMode::kClamp, nullptr));
@@ -99,7 +103,7 @@ void SkiaImageFilter::InitWithArithmetic(const std::vector<scalar>& coefficients
     bool enforcePMColor, const std::shared_ptr<ImageFilter> f1, const std::shared_ptr<ImageFilter> f2)
 {
     if (coefficients.size() != numberOfCoefficients) {
-        LOGE("SkiaImageFilter::InitWithArithmetic: the number of coefficients must be 4");
+        LOGD("SkiaImageFilter::InitWithArithmetic: the number of coefficients must be 4");
         return;
     }
 
@@ -128,6 +132,13 @@ void SkiaImageFilter::InitWithCompose(const std::shared_ptr<ImageFilter> f1, con
     filter_ = SkImageFilters::Compose(outer, inner);
 }
 
+void SkiaImageFilter::InitWithGradientBlur(float radius,
+    const std::vector<std::pair<float, float>>& fractionStops, GradientDir direction,
+    GradientBlurType blurType, const std::shared_ptr<ImageFilter> f)
+{
+    return;
+}
+
 sk_sp<SkImageFilter> SkiaImageFilter::GetImageFilter() const
 {
     return filter_;
@@ -140,31 +151,29 @@ void SkiaImageFilter::SetSkImageFilter(const sk_sp<SkImageFilter>& filter)
 
 std::shared_ptr<Data> SkiaImageFilter::Serialize() const
 {
-#ifdef ROSEN_OHOS
     if (filter_ == nullptr) {
-        LOGE("SkiaImageFilter::Serialize, filter_ is nullptr!");
         return nullptr;
     }
 
-    return SkiaHelper::FlattenableSerialize(filter_.get());
-#else
-    return nullptr;
-#endif
+    SkBinaryWriteBuffer writer;
+    writer.writeFlattenable(filter_.get());
+    size_t length = writer.bytesWritten();
+    std::shared_ptr<Data> data = std::make_shared<Data>();
+    data->BuildUninitialized(length);
+    writer.writeToMemory(data->WritableData());
+    return data;
 }
 
 bool SkiaImageFilter::Deserialize(std::shared_ptr<Data> data)
 {
-#ifdef ROSEN_OHOS
     if (data == nullptr) {
-        LOGE("SkiaImageFilter::Deserialize, data is invalid!");
+        LOGD("SkiaImageFilter::Deserialize, data is invalid!");
         return false;
     }
 
+    SkReadBuffer reader(data->GetData(), data->GetSize());
     filter_ = SkiaHelper::FlattenableDeserialize<SkImageFilter_Base>(data);
     return true;
-#else
-    return false;
-#endif
 }
 
 } // namespace Drawing

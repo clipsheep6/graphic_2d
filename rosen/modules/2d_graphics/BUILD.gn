@@ -47,6 +47,10 @@ config("export_config") {
   if (ace_enable_gpu) {
     defines = [ "ACE_ENABLE_GPU" ]
   }
+
+  if (graphic_2d_feature_enable_ddgr_opinc) {
+    defines += [ "DDGR_ENABLE_FEATURE_OPINC" ]
+  }
 }
 
 if (enable_text_gine) {
@@ -64,7 +68,7 @@ template("graphics2d_source_set") {
     }
 
     public_deps = []
-    external_deps = []
+    external_deps = [ "napi:ace_napi" ]
     sources = [
       "$drawing_src_dir/c/drawing_bitmap.cpp",
       "$drawing_src_dir/c/drawing_brush.cpp",
@@ -74,18 +78,23 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/c/drawing_filter.cpp",
       "$drawing_src_dir/c/drawing_font.cpp",
       "$drawing_src_dir/c/drawing_font_collection.cpp",
+      "$drawing_src_dir/c/drawing_image.cpp",
       "$drawing_src_dir/c/drawing_mask_filter.cpp",
       "$drawing_src_dir/c/drawing_matrix.cpp",
+      "$drawing_src_dir/c/drawing_memory_stream.cpp",
       "$drawing_src_dir/c/drawing_path.cpp",
+      "$drawing_src_dir/c/drawing_path_effect.cpp",
       "$drawing_src_dir/c/drawing_pen.cpp",
       "$drawing_src_dir/c/drawing_point.cpp",
       "$drawing_src_dir/c/drawing_rect.cpp",
       "$drawing_src_dir/c/drawing_register_font.cpp",
       "$drawing_src_dir/c/drawing_round_rect.cpp",
+      "$drawing_src_dir/c/drawing_sampling_options.cpp",
       "$drawing_src_dir/c/drawing_shader_effect.cpp",
       "$drawing_src_dir/c/drawing_text_blob.cpp",
       "$drawing_src_dir/c/drawing_text_typography.cpp",
       "$drawing_src_dir/c/drawing_typeface.cpp",
+      "$drawing_src_dir/draw/OpListHandle.cpp",
       "$drawing_src_dir/draw/brush.cpp",
       "$drawing_src_dir/draw/color.cpp",
       "$drawing_src_dir/draw/core_canvas.cpp",
@@ -155,27 +164,11 @@ template("graphics2d_source_set") {
       "$drawing_src_dir/recording/adaptive_image_helper.cpp",
       "$drawing_src_dir/recording/cmd_list.cpp",
       "$drawing_src_dir/recording/cmd_list_helper.cpp",
-      "$drawing_src_dir/recording/color_filter_cmd_list.cpp",
-      "$drawing_src_dir/recording/color_space_cmd_list.cpp",
       "$drawing_src_dir/recording/draw_cmd.cpp",
       "$drawing_src_dir/recording/draw_cmd_list.cpp",
-      "$drawing_src_dir/recording/image_filter_cmd_list.cpp",
       "$drawing_src_dir/recording/mask_cmd_list.cpp",
-      "$drawing_src_dir/recording/mask_filter_cmd_list.cpp",
       "$drawing_src_dir/recording/mem_allocator.cpp",
-      "$drawing_src_dir/recording/path_cmd_list.cpp",
-      "$drawing_src_dir/recording/path_effect_cmd_list.cpp",
       "$drawing_src_dir/recording/recording_canvas.cpp",
-      "$drawing_src_dir/recording/recording_color_filter.cpp",
-      "$drawing_src_dir/recording/recording_color_space.cpp",
-      "$drawing_src_dir/recording/recording_image_filter.cpp",
-      "$drawing_src_dir/recording/recording_mask_filter.cpp",
-      "$drawing_src_dir/recording/recording_path.cpp",
-      "$drawing_src_dir/recording/recording_path_effect.cpp",
-      "$drawing_src_dir/recording/recording_region.cpp",
-      "$drawing_src_dir/recording/recording_shader_effect.cpp",
-      "$drawing_src_dir/recording/region_cmd_list.cpp",
-      "$drawing_src_dir/recording/shader_effect_cmd_list.cpp",
       "$drawing_src_dir/text/font.cpp",
       "$drawing_src_dir/text/font_mgr.cpp",
       "$drawing_src_dir/text/font_style_set.cpp",
@@ -226,6 +219,13 @@ template("graphics2d_source_set") {
 
       defines += [ "ACE_ENABLE_GPU" ]
     }
+    if (is_emulator) {
+      defines += [ "ROSEN_EMULATOR" ]
+    }
+
+    if (graphic_2d_feature_enable_ddgr_opinc) {
+      defines += [ "DDGR_ENABLE_FEATURE_OPINC" ]
+    }
 
     include_dirs = [
       "include",
@@ -239,7 +239,9 @@ template("graphics2d_source_set") {
       "//third_party/skia/include/private",
       "//third_party/skia/src/core",
       "//third_party/skia/src/ports",
+      "$rosen_root/modules/texgine/src",
       "$rosen_root/modules/texgine/texgine_drawing/src",
+      "$rosen_root/../interfaces/kits/napi/graphic/drawing/common_napi",
     ]
 
     configs = [ "//third_party/jsoncpp:jsoncpp_public_config" ]
@@ -341,6 +343,10 @@ template("graphics2d_source_set") {
     if (enable_text_gine) {
       deps += [ "$rosen_root/modules/2d_engine/rosen_text:rosen_text_inner" ]
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
+      if (use_skia_txt) {
+        include_dirs +=
+            [ "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/skia_txt" ]
+      }
     }
     if (rosen_is_ohos) {
       defines += gpu_defines

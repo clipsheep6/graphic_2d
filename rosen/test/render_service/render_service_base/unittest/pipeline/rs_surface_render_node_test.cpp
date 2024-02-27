@@ -440,7 +440,7 @@ HWTEST_F(RSSurfaceRenderNodeTest, CollectSurfaceTest002, TestSize.Level1)
 HWTEST_F(RSSurfaceRenderNodeTest, ProcessAnimatePropertyBeforeChildrenTest, TestSize.Level1)
 {
     auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
-    node->ProcessAnimatePropertyBeforeChildren(*canvas_);
+    node->ProcessAnimatePropertyBeforeChildren(*canvas_, true);
 }
 
 /**
@@ -514,6 +514,48 @@ HWTEST_F(RSSurfaceRenderNodeTest, AncestorDisplayNodeTest, TestSize.Level1)
     auto displayNode = std::make_shared<RSBaseRenderNode>(0, context);
     node->SetAncestorDisplayNode(displayNode);
     ASSERT_EQ(node->GetAncestorDisplayNode().lock(), displayNode);
+}
+
+/**
+ * @tc.name: UpdateSurfaceCacheContentStatic
+ * @tc.desc: Set dirty subnode and check if surfacenode static
+ * @tc.type:FUNC
+ * @tc.require:I8W7ZS
+ */
+HWTEST_F(RSSurfaceRenderNodeTest, UpdateSurfaceCacheContentStatic, TestSize.Level1)
+{
+    auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
+    auto subnode = std::make_shared<RSRenderNode>(id + 1, context);
+    if (node == nullptr || subnode == nullptr) {
+        return;
+    }
+    node->AddChild(subnode, 0);
+    subnode->isContentDirty_ = true;
+    std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> activeNodeIds = {{subnode->GetId(), subnode}};
+    node->UpdateSurfaceCacheContentStatic(activeNodeIds);
+    ASSERT_EQ(node->GetSurfaceCacheContentStatic(), false);
+    ASSERT_EQ(node->IsContentDirtyNodeLimited(), true);
+}
+
+/**
+ * @tc.name: IsContentDirtyNodeLimited
+ * @tc.desc: Set content dirty subnode new on the tree and check if it is in count
+ * @tc.type:FUNC
+ * @tc.require:I8XIJH
+ */
+HWTEST_F(RSSurfaceRenderNodeTest, IsContentDirtyNodeLimited, TestSize.Level1)
+{
+    auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
+    auto subnode = std::make_shared<RSRenderNode>(id + 1, context);
+    if (node == nullptr || subnode == nullptr) {
+        return;
+    }
+    node->AddChild(subnode, 0);
+    subnode->isContentDirty_ = true;
+    subnode->isNewOnTree_ = true;
+    std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> activeNodeIds = {{subnode->GetId(), subnode}};
+    node->UpdateSurfaceCacheContentStatic(activeNodeIds);
+    ASSERT_EQ(node->IsContentDirtyNodeLimited(), false);
 }
 } // namespace Rosen
 } // namespace OHOS

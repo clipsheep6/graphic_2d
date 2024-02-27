@@ -27,6 +27,11 @@ RSRenderPropertyAnimation::RSRenderPropertyAnimation(AnimationId id, const Prope
     originValue_(originValue->Clone()), lastValue_(originValue->Clone())
 {}
 
+void RSRenderPropertyAnimation::DumpAnimationType(std::string& out) const
+{
+    out += "Type:RSRenderPropertyAnimation";
+}
+
 PropertyId RSRenderPropertyAnimation::GetPropertyId() const
 {
     return propertyId_;
@@ -91,6 +96,10 @@ bool RSRenderPropertyAnimation::ParseParam(Parcel& parcel)
     if (!RSRenderPropertyBase::Unmarshalling(parcel, originValue_)) {
         return false;
     }
+    if (originValue_ == nullptr) {
+        ROSEN_LOGE("RSRenderPropertyAnimation::ParseParam, originValue_ is nullptr!");
+        return false;
+    }
     lastValue_ = originValue_->Clone();
 
     return true;
@@ -151,6 +160,30 @@ void RSRenderPropertyAnimation::OnRemoveOnCompletion()
     }
 
     SetPropertyValue(backwardValue);
+}
+
+void RSRenderPropertyAnimation::RecordLastAnimateValue()
+{
+    if (!RSRenderAnimation::isCalcAnimateVelocity_) {
+        return;
+    }
+    animateVelocity_.reset();
+    lastAnimateValue_.reset();
+    if (property_ != nullptr) {
+        lastAnimateValue_ = property_->Clone();
+    }
+}
+
+void RSRenderPropertyAnimation::UpdateAnimateVelocity(float frameInterval)
+{
+    if (!RSRenderAnimation::isCalcAnimateVelocity_ ||
+        !lastAnimateValue_ || !property_ || ROSEN_EQ<float>(frameInterval, 0)) {
+        return;
+    }
+    if (property_->GetPropertyUnit() > RSPropertyUnit::UNKNOWN) {
+        auto currAnimateValue = property_->Clone();
+        animateVelocity_ = (currAnimateValue - lastAnimateValue_) * (1 / frameInterval);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -85,7 +85,6 @@ ohos_executable("bootanimation") {
 
   if (player_framework_enable) {
     external_deps += [ "player_framework:media_client" ]
-    external_deps += [ "audio_framework:audio_client" ]
   }
 
   if (is_standard_system) {
@@ -121,4 +120,14 @@ ohos_prebuilt_etc("bootanimation_video") {
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
+
 ## Install boot animation resource to /system/etc/graphic/ }}}
+
+## Install boot animation para to /system/etc/param/ {{{
+ohos_prebuilt_etc("bootanimation_para") {
+  source = "etc/bootanimation.para"
+  relative_install_dir = "param"
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+## Install boot animation para to /system/etc/param/ }}}

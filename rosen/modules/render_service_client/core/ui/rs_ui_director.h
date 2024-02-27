@@ -56,9 +56,10 @@ public:
     void SetTimeStamp(uint64_t timeStamp, const std::string& abilityName);
     void SetCacheDir(const std::string& cacheFilePath);
 
-    bool FlushAnimation(uint64_t timeStamp);
+    bool FlushAnimation(uint64_t timeStamp, int64_t vsyncPeriod = 0);
     void FlushModifier();
     bool HasUIAnimation();
+    void FlushAnimationStartTime(uint64_t timeStamp);
 
     void SetAppFreeze(bool isAppFreeze);
 
@@ -67,6 +68,7 @@ public:
     static void PostFrameRateTask(const std::function<void()>& task);
 
     int32_t GetCurrentRefreshRateMode();
+    int32_t GetAnimateExpectedRate() const;
 
 private:
     void AttachSurface();

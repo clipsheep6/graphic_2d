@@ -31,7 +31,7 @@
 
 #include "memory/rs_tag_tracker.h"
 
-#include "utils/log.h"
+#include "render_context_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -298,6 +298,8 @@ void RenderContext::InitGrContextOptions(GrContextOptions &options)
         return;
     }
     options.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
+    // fix svg antialiasing bug
+    options.fGpuPathRenderers &= ~GpuPathRenderers::kAtlas;
     options.fPreferExternalImagesOverES3 = true;
     options.fDisableDistanceFieldPaths = true;
 
@@ -674,7 +676,7 @@ std::string RenderContext::GetShaderCacheSize() const
         }
     }
 #endif
-    LOGE("GetShaderCacheSize no shader cache");
+    LOGD("GetShaderCacheSize no shader cache");
     return "";
 }
 
@@ -694,7 +696,7 @@ std::string RenderContext::CleanAllShaderCache() const
         }
     }
 #endif
-    LOGE("CleanAllShaderCache no shader cache");
+    LOGD("CleanAllShaderCache no shader cache");
     return "";
 }
 #endif

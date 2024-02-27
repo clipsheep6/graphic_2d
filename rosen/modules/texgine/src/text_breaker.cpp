@@ -51,7 +51,7 @@ void TextBreaker::SetIndents(const std::vector<float> &indents)
 static double GetIndent(const int index, const std::vector<float> &indents)
 {
     double indent = 0.0;
-    if (indents.size() > 0 && index < indents.size()) {
+    if (indents.size() > 0 && index < static_cast<int>(indents.size())) {
         indent = indents[index];
     } else {
         indent = indents.size() > 0 ? indents.back() : 0.0;
@@ -60,7 +60,7 @@ static double GetIndent(const int index, const std::vector<float> &indents)
     return indent;
 }
 
-void TextBreaker::CreateNewBoundary(CharGroups &cgs, std::vector<Boundary> &boundaries,
+void TextBreaker::CreateNewBoundary(const CharGroups &cgs, std::vector<Boundary> &boundaries,
     const TypographyStyle &ys, const double& originWidthLimit, int& index)
 {
     GenNewBoundryByHardBreak(cgs, boundaries);

@@ -42,11 +42,6 @@ HgmConfigCallbackManager::~HgmConfigCallbackManager() noexcept
     instance_ = nullptr;
 }
 
-PidToRefreshRateModeCallback HgmConfigCallbackManager::GetRefreshRateModeCallbacks() const
-{
-    return refreshRateModeCallbacks_;
-}
-
 void HgmConfigCallbackManager::RegisterHgmConfigChangeCallback(
     pid_t pid, const sptr<RSIHgmConfigChangeCallback>& callback)
 {
@@ -62,10 +57,10 @@ void HgmConfigCallbackManager::RegisterHgmConfigChangeCallback(
     auto data = std::make_shared<RSHgmConfigData>();
 
     auto screenType = hgmCore.GetFrameRateMgr()->GetCurScreenStrategyId();
-    auto screenSetting = std::to_string(hgmCore.GetCurrentRefreshRateMode());
+    auto settingMode = std::to_string(hgmCore.GetCurrentRefreshRateMode());
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
-        auto dynamicSettingMap = configData->GetAceSceneDynamicSettingMap(screenType, screenSetting);
+        auto dynamicSettingMap = configData->GetAceSceneDynamicSettingMap(screenType, settingMode);
         for (auto& [animType, dynamicSetting] : dynamicSettingMap) {
             for (auto& [animName, dynamicConfig] : dynamicSetting) {
                 data->AddAnimDynamicItem({
@@ -83,6 +78,21 @@ void HgmConfigCallbackManager::RegisterHgmConfigChangeCallback(
     callback->OnHgmConfigChanged(data);
 }
 
+void HgmConfigCallbackManager::RegisterHgmRefreshRateModeChangeCallback(
+    pid_t pid, const sptr<RSIHgmConfigChangeCallback>& callback)
+{
+    if (callback == nullptr) {
+        HGM_LOGE("HgmRefreshRateModeCallbackManager %{public}s : callback is null.", __func__);
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mtx_);
+    refreshRateModeCallbacks_[pid] = callback;
+    HGM_LOGD("HgmRefreshRateModeCallbackManager %{public}s : add a remote callback succeed.", __func__);
+
+    int32_t currentRefreshRateMode = HgmCore::Instance().GetCurrentRefreshRateMode();
+    callback->OnHgmRefreshRateModeChanged(currentRefreshRateMode);
+}
+
 void HgmConfigCallbackManager::SyncHgmConfigChangeCallback()
 {
     if (animDynamicCfgCallbacks_.empty()) {
@@ -93,10 +103,10 @@ void HgmConfigCallbackManager::SyncHgmConfigChangeCallback()
     auto data = std::make_shared<RSHgmConfigData>();
 
     auto screenType = hgmCore.GetFrameRateMgr()->GetCurScreenStrategyId();
-    auto screenSetting = std::to_string(hgmCore.GetCurrentRefreshRateMode());
+    auto settingMode = std::to_string(hgmCore.GetCurrentRefreshRateMode());
     auto configData = hgmCore.GetPolicyConfigData();
     if (configData != nullptr) {
-        auto dynamicSettingMap = configData->GetAceSceneDynamicSettingMap(screenType, screenSetting);
+        auto dynamicSettingMap = configData->GetAceSceneDynamicSettingMap(screenType, settingMode);
         for (auto& [animType, dynamicSetting] : dynamicSettingMap) {
             for (auto& [animName, dynamicConfig] : dynamicSetting) {
                 data->AddAnimDynamicItem({
@@ -117,19 +127,14 @@ void HgmConfigCallbackManager::SyncHgmConfigChangeCallback()
     }
 }
 
-void HgmConfigCallbackManager::RegisterHgmRefreshRateModeChangeCallback(
-    pid_t pid, const sptr<RSIHgmConfigChangeCallback>& callback)
+void HgmConfigCallbackManager::SyncRefreshRateModeChangeCallback(int32_t refreshRateMode)
 {
-    if (callback == nullptr) {
-        HGM_LOGE("HgmRefreshRateModeCallbackManager %{public}s : callback is null.", __func__);
-        return;
-    }
     std::lock_guard<std::mutex> lock(mtx_);
-    refreshRateModeCallbacks_[pid] = callback;
-    HGM_LOGD("HgmRefreshRateModeCallbackManager %{public}s : add a remote callback succeed.", __func__);
-
-    int32_t currentRefreshRateMode = HgmCore::Instance().GetCurrentRefreshRateMode();
-    callback->OnHgmRefreshRateModeChanged(currentRefreshRateMode);
+    for (const auto& [_, callback] : refreshRateModeCallbacks_) {
+        if (callback) {
+            callback->OnHgmRefreshRateModeChanged(refreshRateMode);
+        }
+    }
 }
 
 void HgmConfigCallbackManager::UnRegisterHgmConfigChangeCallback(pid_t pid)
@@ -138,17 +143,11 @@ void HgmConfigCallbackManager::UnRegisterHgmConfigChangeCallback(pid_t pid)
     if (animDynamicCfgCallbacks_.find(pid) != animDynamicCfgCallbacks_.end()) {
         animDynamicCfgCallbacks_.erase(pid);
         HGM_LOGD("HgmConfigCallbackManager %{public}s : remove a remote callback succeed.", __func__);
-        return;
     }
-    HGM_LOGD("HgmConfigCallbackManager %{public}s : initialization or do not find callback(pid = %d)",
-        __func__, static_cast<int>(pid));
 
     if (refreshRateModeCallbacks_.find(pid) != refreshRateModeCallbacks_.end()) {
         refreshRateModeCallbacks_.erase(pid);
         HGM_LOGD("HgmRefreshRateModeCallbackManager %{public}s : remove a remote callback succeed.", __func__);
-        return;
     }
-    HGM_LOGD("HgmRefreshRateModeCallbackManager %{public}s : initialization or do not find callback(pid = %d)",
-        __func__, static_cast<int>(pid));
 }
 } // namespace OHOS::Rosen

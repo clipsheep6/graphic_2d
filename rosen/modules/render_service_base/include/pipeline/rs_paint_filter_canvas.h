@@ -74,15 +74,24 @@ public:
     void DrawRegion(const Drawing::Region& region) override;
     void DrawPatch(const Drawing::Point cubics[12], const Drawing::ColorQuad colors[4],
         const Drawing::Point texCoords[4], Drawing::BlendMode mode) override;
-    void DrawEdgeAAQuad(const Drawing::Rect& rect, const Drawing::Point clip[4],
-        Drawing::QuadAAFlags aaFlags, Drawing::ColorQuad color, Drawing::BlendMode mode) override;
     void DrawVertices(const Drawing::Vertices& vertices, Drawing::BlendMode mode) override;
 
     void DrawImageNine(const Drawing::Image* image, const Drawing::RectI& center, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override;
-    void DrawAnnotation(const Drawing::Rect& rect, const char* key, const Drawing::Data* data) override;
     void DrawImageLattice(const Drawing::Image* image, const Drawing::Lattice& lattice, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override;
+
+    // opinc_begin
+    bool BeginOpRecording(const Drawing::Rect* bound = nullptr, bool isDynamic = false) override;
+    Drawing::OpListHandle EndOpRecording() override;
+    void DrawOpList(Drawing::OpListHandle handle) override;
+    int CanDrawOpList(Drawing::OpListHandle handle) override;
+    void PreOpListDrawArea(const Drawing::Matrix& matrix) override;
+    bool CanUseOpListDrawArea(Drawing::OpListHandle handle, const Drawing::Rect* bound = nullptr) override;
+    Drawing::OpListHandle GetOpListDrawArea() override;
+    void OpincDrawImageRect(const Drawing::Image& image, Drawing::OpListHandle drawAreas,
+        const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint) override;
+    // opinc_end
 
     void DrawBitmap(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py) override;
     void DrawBitmap(Media::PixelMap& pixelMap, const Drawing::scalar px, const Drawing::scalar py) override;
@@ -154,10 +163,18 @@ public:
     // alpha related
     void MultiplyAlpha(float alpha);
     void SetAlpha(float alpha);
+#ifndef USE_ROSEN_DRAWING
     float GetAlpha() const;
+#else
+    float GetAlpha() const override;
+#endif
     int SaveAlpha();
     void RestoreAlpha();
+#ifndef USE_ROSEN_DRAWING
     int GetAlphaSaveCount() const;
+#else
+    int GetAlphaSaveCount() const override;
+#endif
     void RestoreAlphaToCount(int count);
 
     // env related
@@ -171,6 +188,11 @@ public:
     void RestoreEnv();
     int GetEnvSaveCount() const;
     void RestoreEnvToCount(int count);
+
+    // blendmode related
+    int SaveBlendMode();
+    void SetBlendMode(std::optional<int> blendMode);
+    void RestoreBlendMode();
 
     // save/restore utils
     struct SaveStatus {
@@ -249,6 +271,9 @@ public:
     void SetDisableFilterCache(bool disable);
     bool GetDisableFilterCache() const;
 
+    void SetRecordDrawable(bool enable);
+    bool GetRecordDrawable() const;
+
 #ifndef USE_ROSEN_DRAWING
     // effect cache data relate
     struct CachedEffectData {
@@ -290,10 +315,10 @@ public:
     };
     CanvasStatus GetCanvasStatus() const;
     void SetCanvasStatus(const CanvasStatus& status);
-    Drawing::Canvas* GetRecordingCanvas() const;
+    Drawing::Canvas* GetRecordingCanvas() const override;
+    bool GetRecordingState() const override;
+    void SetRecordingState(bool flag) override;
 #endif
-    bool GetRecordingState() const;
-    void SetRecordingState(bool flag);
 
 protected:
     using Env = struct {
@@ -307,6 +332,7 @@ protected:
 #else
     const std::stack<float>& GetAlphaStack();
     const std::stack<Env>& GetEnvStack();
+
     bool OnFilter() const override;
     inline bool OnFilterWithBrush(Drawing::Brush& brush) const override
     {
@@ -332,6 +358,7 @@ private:
 #endif
     std::stack<float> alphaStack_;
     std::stack<Env> envStack_;
+    std::stack<std::optional<int>> blendModeStack_;
 
     std::atomic_bool isHighContrastEnabled_ { false };
     CacheType cacheType_ { RSPaintFilterCanvas::CacheType::UNDEFINED };
@@ -344,6 +371,7 @@ private:
     bool isParallelCanvas_ = false;
     bool disableFilterCache_ = false;
     bool recordingState_ = false;
+    bool recordDrawable_ = false;
 };
 
 // Helper class similar to SkAutoCanvasRestore, but also restores alpha and/or env
@@ -364,7 +392,7 @@ public:
 #else
     RSAutoCanvasRestore(
         RSPaintFilterCanvas* canvas, RSPaintFilterCanvas::SaveType type = RSPaintFilterCanvas::SaveType::kAll)
-        : canvas_(canvas), saveCount_(canvas ? canvas->SaveAllStatus() : RSPaintFilterCanvas::SaveStatus())
+        : canvas_(canvas), saveCount_(canvas ? canvas->SaveAllStatus(type) : RSPaintFilterCanvas::SaveStatus())
     {}
 #endif
 

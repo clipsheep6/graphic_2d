@@ -108,8 +108,7 @@ void RSRenderThreadVisitor::SetPartialRenderStatus(PartialRenderType status, boo
 
 void RSRenderThreadVisitor::PrepareChildren(RSRenderNode& node)
 {
-    node.ApplyChildrenModifiers();
-    for (auto& child : node.GetSortedChildren()) {
+    for (auto& child : *node.GetSortedChildren()) {
         child->Prepare(shared_from_this());
     }
 }
@@ -394,8 +393,8 @@ void RSRenderThreadVisitor::ProcessShadowFirst(RSRenderNode& node)
 {
     if (RSSystemProperties::GetUseShadowBatchingEnabled()
         && (node.GetRenderProperties().GetUseShadowBatching())) {
-        auto& children = node.GetSortedChildren();
-        for (auto& child : children) {
+        auto children = node.GetSortedChildren();
+        for (auto& child : *children) {
             if (auto node = child->ReinterpretCastTo<RSCanvasRenderNode>()) {
                 node->ProcessShadowBatching(*canvas_);
             }
@@ -406,7 +405,7 @@ void RSRenderThreadVisitor::ProcessShadowFirst(RSRenderNode& node)
 void RSRenderThreadVisitor::ProcessChildren(RSRenderNode& node)
 {
     ProcessShadowFirst(node);
-    for (auto& child : node.GetSortedChildren()) {
+    for (auto& child : *node.GetSortedChildren()) {
         child->Process(shared_from_this());
     }
 }
@@ -457,7 +456,7 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #ifdef ACE_ENABLE_VK
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
         RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
-        auto skContext = RsVulkanContext::GetSingleton().CreateDrawingContext(true);
+        auto skContext = RsVulkanContext::GetSingleton().CreateDrawingContext();
         if (skContext == nullptr) {
             ROSEN_LOGE("RSRenderThreadVisitor::ProcessRootRenderNode CreateDrawingContext is null");
             return;
@@ -760,6 +759,33 @@ void RSRenderThreadVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
+int RSRenderThreadVisitor::CacRotationFromTransformType(GraphicTransformType transform)
+{
+    GraphicTransformType rotation;
+    switch (transform) {
+        case GraphicTransformType::GRAPHIC_FLIP_H_ROT90:
+        case GraphicTransformType::GRAPHIC_FLIP_V_ROT90:
+            rotation = GraphicTransformType::GRAPHIC_ROTATE_90;
+            break;
+        case GraphicTransformType::GRAPHIC_FLIP_H_ROT180:
+        case GraphicTransformType::GRAPHIC_FLIP_V_ROT180:
+            rotation = GraphicTransformType::GRAPHIC_ROTATE_180;
+            break;
+        case GraphicTransformType::GRAPHIC_FLIP_H_ROT270:
+        case GraphicTransformType::GRAPHIC_FLIP_V_ROT270:
+            rotation = GraphicTransformType::GRAPHIC_ROTATE_270;
+            break;
+        default:
+            rotation = transform;
+            break;
+    }
+    static const std::map<GraphicTransformType, int> transformTypeEnumToIntMap = {
+        {GraphicTransformType::GRAPHIC_ROTATE_NONE, 0}, {GraphicTransformType::GRAPHIC_ROTATE_90, 270},
+        {GraphicTransformType::GRAPHIC_ROTATE_180, 180}, {GraphicTransformType::GRAPHIC_ROTATE_270, 90}};
+    auto iter = transformTypeEnumToIntMap.find(rotation);
+    return iter != transformTypeEnumToIntMap.end() ? iter->second : 0;
+}
+
 void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
 {
 #ifdef ROSEN_OHOS
@@ -787,12 +813,17 @@ void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
     if (fence != nullptr) {
         fence->Wait(3000); // wait at most 3000ms
     }
+    Drawing::Matrix transfromMatrix;
+    auto transform = surface->GetTransform();
+    int rotation = CacRotationFromTransformType(transform);
+    transfromMatrix.PreRotate(rotation, property.GetBoundsWidth() * 0.5f, property.GetBoundsHeight() * 0.5f);
+    canvas_->ConcatMatrix(transfromMatrix);
 #ifndef USE_ROSEN_DRAWING
     auto recordingCanvas = std::make_shared<RSRecordingCanvas>(property.GetBoundsWidth(), property.GetBoundsHeight());
     RSSurfaceBufferInfo rsSurfaceBufferInfo(surfaceBuffer, property.GetBoundsPositionX(), property.GetBoundsPositionY(),
         property.GetBoundsWidth(), property.GetBoundsHeight());
 #else
-    auto recordingCanvas = std::make_shared<Drawing::RecordingCanvas>(property.GetBoundsWidth(),
+    auto recordingCanvas = std::make_shared<ExtendRecordingCanvas>(property.GetBoundsWidth(),
         property.GetBoundsHeight());
     DrawingSurfaceBufferInfo rsSurfaceBufferInfo(surfaceBuffer, property.GetBoundsPositionX(),
         property.GetBoundsPositionY(), property.GetBoundsWidth(), property.GetBoundsHeight());
@@ -992,6 +1023,11 @@ void RSRenderThreadVisitor::ClipHoleForSurfaceNode(RSSurfaceRenderNode& node)
     canvas_->Save();
     Drawing::Rect originRect = Drawing::Rect(x, y, width + x, height + y);
     canvas_->ClipRect(originRect, Drawing::ClipOp::INTERSECT, false);
+    auto iter = surfaceCallbacks_.find(node.GetId());
+    if (iter != surfaceCallbacks_.end()) {
+        (iter->second)(canvas_->GetTotalMatrix().Get(Drawing::Matrix::TRANS_X),
+            canvas_->GetTotalMatrix().Get(Drawing::Matrix::TRANS_Y), width, height);
+    }
     if (node.IsNotifyRTBufferAvailable() == true) {
         ROSEN_LOGI("RSRenderThreadVisitor::ClipHoleForSurfaceNode node : %{public}" PRIu64 ","
             "clip [%{public}f, %{public}f, %{public}f, %{public}f]", node.GetId(), x, y, width, height);
@@ -1096,6 +1132,8 @@ void RSRenderThreadVisitor::ProcessOtherSurfaceRenderNode(RSSurfaceRenderNode& n
         return;
     }
     node.SetContextClipRegion(clipRect);
+    // temporary workaround since ContextAlpha/ContextClipRegion happens after ApplyModifiers
+    node.ApplyModifiers();
 
     // clip hole
     ClipHoleForSurfaceNode(node);

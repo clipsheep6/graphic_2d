@@ -34,9 +34,11 @@
 #include "skia_text_blob.h"
 
 #include "draw/core_canvas.h"
+#include "draw/canvas.h"
 #include "image/bitmap.h"
 #include "image/image.h"
 #include "utils/log.h"
+#include "SkOverdrawCanvas.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -79,7 +81,7 @@ void SkiaCanvas::Bind(const Bitmap& bitmap)
 Matrix SkiaCanvas::GetTotalMatrix() const
 {
     if (skCanvas_ == nullptr) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return Matrix();
     }
     auto skMatrix = skCanvas_->getTotalMatrix();
@@ -93,7 +95,7 @@ Matrix SkiaCanvas::GetTotalMatrix() const
 Rect SkiaCanvas::GetLocalClipBounds() const
 {
     if (skCanvas_ == nullptr) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return Rect();
     }
     auto rect = skCanvas_->getLocalClipBounds();
@@ -103,7 +105,7 @@ Rect SkiaCanvas::GetLocalClipBounds() const
 RectI SkiaCanvas::GetDeviceClipBounds() const
 {
     if (skCanvas_ == nullptr) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return RectI();
     }
     auto iRect = skCanvas_->getDeviceClipBounds();
@@ -115,7 +117,7 @@ std::shared_ptr<GPUContext> SkiaCanvas::GetGPUContext() const
 {
     if (skCanvas_ == nullptr || skCanvas_->recordingContext() == nullptr ||
         GrAsDirectContext(skCanvas_->recordingContext()) == nullptr) {
-        LOGE("skCanvas_ or grContext is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ or grContext is null, return on line %{public}d", __LINE__);
         return nullptr;
     }
     auto grContext = GrAsDirectContext(skCanvas_->recordingContext());
@@ -149,7 +151,7 @@ bool SkiaCanvas::ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t ds
     int srcX, int srcY)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return false;
     }
     SkImageInfo info;
@@ -166,15 +168,25 @@ bool SkiaCanvas::ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t ds
     return skCanvas_->readPixels(info, dstPixels, dstRowBytes, srcX, srcY);
 }
 
+bool SkiaCanvas::ReadPixels(const Bitmap& dstBitmap, int srcX, int srcY)
+{
+    if (!skCanvas_) {
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return false;
+    }
+    const SkBitmap& skBitmap = dstBitmap.GetImpl<SkiaBitmap>()->ExportSkiaBitmap();
+    return skCanvas_->readPixels(skBitmap, srcX, srcY);
+}
+
 void SkiaCanvas::DrawPoint(const Point& point)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawPoint(SkPoint::Make(point.GetX(), point.GetY()), *paint);
     }
 }
@@ -182,7 +194,7 @@ void SkiaCanvas::DrawPoint(const Point& point)
 void SkiaCanvas::DrawPoints(PointMode mode, size_t count, const Point pts[])
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
 
@@ -193,7 +205,7 @@ void SkiaCanvas::DrawPoints(PointMode mode, size_t count, const Point pts[])
 
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawPoints(static_cast<SkCanvas::PointMode>(mode), count, skPts, *paint);
     }
 }
@@ -201,7 +213,7 @@ void SkiaCanvas::DrawPoints(PointMode mode, size_t count, const Point pts[])
 void SkiaCanvas::DrawLine(const Point& startPt, const Point& endPt)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
@@ -215,13 +227,13 @@ void SkiaCanvas::DrawLine(const Point& startPt, const Point& endPt)
 void SkiaCanvas::DrawRect(const Rect& rect)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRect r = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawRect(r, *paint);
     }
 }
@@ -229,14 +241,14 @@ void SkiaCanvas::DrawRect(const Rect& rect)
 void SkiaCanvas::DrawRoundRect(const RoundRect& roundRect)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRRect rRect;
     RoundRectCastToSkRRect(roundRect, rRect);
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawRRect(rRect, *paint);
     }
 }
@@ -244,7 +256,7 @@ void SkiaCanvas::DrawRoundRect(const RoundRect& roundRect)
 void SkiaCanvas::DrawNestedRoundRect(const RoundRect& outer, const RoundRect& inner)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRRect outerRRect;
@@ -255,7 +267,7 @@ void SkiaCanvas::DrawNestedRoundRect(const RoundRect& outer, const RoundRect& in
 
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawDRRect(outerRRect, innerRRect, *paint);
     }
 }
@@ -263,13 +275,13 @@ void SkiaCanvas::DrawNestedRoundRect(const RoundRect& outer, const RoundRect& in
 void SkiaCanvas::DrawArc(const Rect& oval, scalar startAngle, scalar sweepAngle)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRect arcRect = SkRect::MakeLTRB(oval.GetLeft(), oval.GetTop(), oval.GetRight(), oval.GetBottom());
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawArc(arcRect, startAngle, sweepAngle, false, *paint);
     }
 }
@@ -277,13 +289,13 @@ void SkiaCanvas::DrawArc(const Rect& oval, scalar startAngle, scalar sweepAngle)
 void SkiaCanvas::DrawPie(const Rect& oval, scalar startAngle, scalar sweepAngle)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRect pieRect = SkRect::MakeLTRB(oval.GetLeft(), oval.GetTop(), oval.GetRight(), oval.GetBottom());
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawArc(pieRect, startAngle, sweepAngle, true, *paint);
     }
 }
@@ -291,13 +303,13 @@ void SkiaCanvas::DrawPie(const Rect& oval, scalar startAngle, scalar sweepAngle)
 void SkiaCanvas::DrawOval(const Rect& oval)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRect ovalRect = SkRect::MakeLTRB(oval.GetLeft(), oval.GetTop(), oval.GetRight(), oval.GetBottom());
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawOval(ovalRect, *paint);
     }
 }
@@ -305,12 +317,12 @@ void SkiaCanvas::DrawOval(const Rect& oval)
 void SkiaCanvas::DrawCircle(const Point& centerPt, scalar radius)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawCircle(centerPt.GetX(), centerPt.GetY(), radius, *paint);
     }
 }
@@ -318,7 +330,7 @@ void SkiaCanvas::DrawCircle(const Point& centerPt, scalar radius)
 void SkiaCanvas::DrawPath(const Path& path)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     auto skPathImpl = path.GetImpl<SkiaPath>();
@@ -327,7 +339,7 @@ void SkiaCanvas::DrawPath(const Path& path)
     }
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawPath(skPathImpl->GetPath(), *paint);
     }
 }
@@ -335,7 +347,7 @@ void SkiaCanvas::DrawPath(const Path& path)
 void SkiaCanvas::DrawBackground(const Brush& brush)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkPaint paint;
@@ -347,7 +359,7 @@ void SkiaCanvas::DrawShadow(const Path& path, const Point3& planeParams, const P
     Color ambientColor, Color spotColor, ShadowFlags flag)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     auto skPathImpl = path.GetImpl<SkiaPath>();
@@ -364,7 +376,7 @@ void SkiaCanvas::DrawShadow(const Path& path, const Point3& planeParams, const P
 void SkiaCanvas::DrawColor(ColorQuad color, BlendMode mode)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
 
@@ -374,13 +386,13 @@ void SkiaCanvas::DrawColor(ColorQuad color, BlendMode mode)
 void SkiaCanvas::DrawRegion(const Region& region)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
 
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawRegion(*region.GetImpl<SkiaRegion>()->GetSkRegion(), *paint);
     }
 }
@@ -389,7 +401,7 @@ void SkiaCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4],
     const Point texCoords[4], BlendMode mode)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
 
@@ -434,37 +446,10 @@ void SkiaCanvas::DrawPatch(const Point cubics[12], const ColorQuad colors[4],
     return;
 }
 
-void SkiaCanvas::DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-    QuadAAFlags aaFlags, ColorQuad color, BlendMode mode)
-{
-    if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
-        return;
-    }
-
-    SkRect skiaRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
-
-    const size_t clipPointCount = 4;
-    std::vector<SkPoint> skiaClip = {};
-    if (clip != nullptr) {
-        skiaClip.resize(clipPointCount);
-        for (size_t i = 0; i < clipPointCount; ++i) {
-            skiaClip[i].fX = clip[i].GetX();
-            skiaClip[i].fY = clip[i].GetY();
-        }
-    }
-
-    skCanvas_->experimental_DrawEdgeAAQuad(skiaRect,
-        skiaClip.empty() ? nullptr : skiaClip.data(),
-        static_cast<SkCanvas::QuadAAFlags>(aaFlags),
-        static_cast<SkColor>(color),
-        static_cast<SkBlendMode>(mode));
-}
-
 void SkiaCanvas::DrawVertices(const Vertices& vertices, BlendMode mode)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
 
@@ -489,7 +474,7 @@ void SkiaCanvas::DrawImageNine(const Image* image, const RectI& center, const Re
     if (skImageImpl != nullptr) {
         img = skImageImpl->GetImage();
         if (img == nullptr) {
-            LOGE("img is null, return on line %{public}d", __LINE__);
+            LOGD("img is null, return on line %{public}d", __LINE__);
             return;
         }
     }
@@ -508,22 +493,6 @@ void SkiaCanvas::DrawImageNine(const Image* image, const RectI& center, const Re
     skCanvas_->drawImageNine(img.get(), skCenter, skDst, skFilterMode, paint.get());
 }
 
-void SkiaCanvas::DrawAnnotation(const Rect& rect, const char* key, const Data* data)
-{
-    SkRect skRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
-    if (data == nullptr) {
-        LOGE("drawAnnotation:dataImp is null");
-        return;
-    }
-    auto dataImp = data->GetImpl<SkiaData>();
-    if (dataImp == nullptr) {
-        LOGE("drawAnnotation:dataImp is null");
-        return;
-    }
-    auto skData = dataImp->GetSkData();
-    skCanvas_->drawAnnotation(skRect, key, skData);
-}
-
 void SkiaCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
     FilterMode filter, const Brush* brush)
 {
@@ -532,7 +501,7 @@ void SkiaCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, co
     if (skImageImpl != nullptr) {
         img = skImageImpl->GetImage();
         if (img == nullptr) {
-            LOGE("img is null, return on line %{public}d", __LINE__);
+            LOGD("img is null, return on line %{public}d", __LINE__);
             return;
         }
     }
@@ -563,10 +532,61 @@ void SkiaCanvas::DrawImageLattice(const Image* image, const Lattice& lattice, co
     skCanvas_->drawImageLattice(img.get(), skLattice, skDst, skFilterMode, paint.get());
 }
 
+// opinc_begin
+bool SkiaCanvas::BeginOpRecording(const Rect* bound, bool isDynamic)
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return false;
+}
+
+Drawing::OpListHandle SkiaCanvas::EndOpRecording()
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return {};
+}
+
+void SkiaCanvas::DrawOpList(Drawing::OpListHandle handle)
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return;
+}
+
+int SkiaCanvas::CanDrawOpList(Drawing::OpListHandle handle)
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return -1;
+}
+
+void SkiaCanvas::PreOpListDrawArea(const Matrix& matrix)
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return;
+}
+
+bool SkiaCanvas::CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound)
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return false;
+}
+
+Drawing::OpListHandle SkiaCanvas::GetOpListDrawArea()
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return {};
+}
+
+void SkiaCanvas::OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
+    const SamplingOptions& sampling, SrcRectConstraint constraint)
+{
+    LOGD("SkiaCanvas! %{public}s, %{public}d", __FUNCTION__, __LINE__);
+    return;
+}
+// opinc_end
+
 void SkiaCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkBitmap bmp;
@@ -583,7 +603,7 @@ void SkiaCanvas::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar 
     }
 
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawImage(bmp.asImage(), px, py, SkSamplingOptions(), paint);
     }
 }
@@ -646,12 +666,12 @@ static SkImageInfo MakeSkImageInfoFromPixelMap(Media::PixelMap& pixelMap)
 void SkiaCanvas::DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
 #ifdef SUPPORT_OHOS_PIXMAP
     if (pixelMap.GetPixels() == nullptr) {
-        LOGE("PutPixelMap failed, pixelMap data invalid");
+        LOGD("PutPixelMap failed, pixelMap data invalid");
         return;
     }
     SkBitmap bitmap;
@@ -669,14 +689,14 @@ void SkiaCanvas::DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const sc
         skCanvas_->drawImage(bitmap.asImage(), px, py, SkSamplingOptions(), paint);
     }
 #else
-    LOGE("Not support drawing Media::PixelMap");
+    LOGD("Not support drawing Media::PixelMap");
 #endif
 }
 
 void SkiaCanvas::DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     sk_sp<SkImage> img;
@@ -685,7 +705,7 @@ void SkiaCanvas::DrawImage(const Image& image, const scalar px, const scalar py,
     if (skImageImpl != nullptr) {
         img = skImageImpl->GetImage();
         if (img == nullptr) {
-            LOGE("img is null, return on line %{public}d", __LINE__);
+            LOGD("img is null, return on line %{public}d", __LINE__);
             return;
         }
     }
@@ -704,7 +724,7 @@ void SkiaCanvas::DrawImage(const Image& image, const scalar px, const scalar py,
             static_cast<SkMipmapMode>(sampling.GetMipmapMode()));
     }
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawImage(img, px, py, samplingOptions, paint);
     }
 }
@@ -713,7 +733,7 @@ void SkiaCanvas::DrawImageRect(
     const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling, SrcRectConstraint constraint)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     sk_sp<SkImage> img;
@@ -721,7 +741,7 @@ void SkiaCanvas::DrawImageRect(
     if (skImageImpl != nullptr) {
         img = skImageImpl->GetImage();
         if (img == nullptr) {
-            LOGE("img is null, return on line %{public}d", __LINE__);
+            LOGD("img is null, return on line %{public}d", __LINE__);
             return;
         }
     }
@@ -753,7 +773,7 @@ void SkiaCanvas::DrawImageRect(
 void SkiaCanvas::DrawImageRect(const Image& image, const Rect& dst, const SamplingOptions& sampling)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     sk_sp<SkImage> img;
@@ -761,7 +781,7 @@ void SkiaCanvas::DrawImageRect(const Image& image, const Rect& dst, const Sampli
     if (skImageImpl != nullptr) {
         img = skImageImpl->GetImage();
         if (img == nullptr) {
-            LOGE("img is null, return on line %{public}d", __LINE__);
+            LOGD("img is null, return on line %{public}d", __LINE__);
             return;
         }
     }
@@ -790,7 +810,7 @@ void SkiaCanvas::DrawImageRect(const Image& image, const Rect& dst, const Sampli
 void SkiaCanvas::DrawPicture(const Picture& picture)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     sk_sp<SkPicture> p;
@@ -805,11 +825,11 @@ void SkiaCanvas::DrawPicture(const Picture& picture)
 void SkiaCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     if (!svgDom) {
-        LOGE("svgDom is null, return on line %{public}d", __LINE__);
+        LOGD("svgDom is null, return on line %{public}d", __LINE__);
         return;
     }
     svgDom->render(skCanvas_);
@@ -818,26 +838,26 @@ void SkiaCanvas::DrawSVGDOM(const sk_sp<SkSVGDOM>& svgDom)
 void SkiaCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const scalar y)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     if (!blob) {
-        LOGE("blob is null, return on line %{public}d", __LINE__);
+        LOGD("blob is null, return on line %{public}d", __LINE__);
         return;
     }
     auto skiaTextBlob = blob->GetImpl<SkiaTextBlob>();
     if (!skiaTextBlob) {
-        LOGE("skiaTextBlob is null, return on line %{public}d", __LINE__);
+        LOGD("skiaTextBlob is null, return on line %{public}d", __LINE__);
         return;
     }
     SkTextBlob* skTextBlob = skiaTextBlob->GetTextBlob().get();
     if (!skTextBlob) {
-        LOGE("skTextBlob is null, return on line %{public}d", __LINE__);
+        LOGD("skTextBlob is null, return on line %{public}d", __LINE__);
         return;
     }
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawTextBlob(skTextBlob, x, y, *paint);
     }
 }
@@ -845,13 +865,13 @@ void SkiaCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const scalar
 void SkiaCanvas::DrawSymbol(const DrawingHMSymbolData& symbol, Point locate)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
 
     HMSymbolData skSymbol;
     if (!ConvertToHMSymbolData(symbol, skSymbol)) {
-        LOGE("ConvertToHMSymbolData failed, return on line %{public}d", __LINE__);
+        LOGD("ConvertToHMSymbolData failed, return on line %{public}d", __LINE__);
         return;
     }
 
@@ -859,7 +879,7 @@ void SkiaCanvas::DrawSymbol(const DrawingHMSymbolData& symbol, Point locate)
 
     SortedPaints& paints = skiaPaint_.GetSortedPaints();
     for (int i = 0; i < paints.count_; i++) {
-        SkPaint* paint = paints.paints_[i];
+        const SkPaint* paint = paints.paints_[i];
         skCanvas_->drawSymbol(skSymbol, skLocate, *paint);
     }
 }
@@ -867,7 +887,7 @@ void SkiaCanvas::DrawSymbol(const DrawingHMSymbolData& symbol, Point locate)
 void SkiaCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRect clipRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
@@ -878,7 +898,7 @@ void SkiaCanvas::ClipRect(const Rect& rect, ClipOp op, bool doAntiAlias)
 void SkiaCanvas::ClipIRect(const RectI& rect, ClipOp op)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRect clipRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
@@ -889,7 +909,7 @@ void SkiaCanvas::ClipIRect(const RectI& rect, ClipOp op)
 void SkiaCanvas::ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAntiAlias)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRRect rRect;
@@ -901,7 +921,7 @@ void SkiaCanvas::ClipRoundRect(const RoundRect& roundRect, ClipOp op, bool doAnt
 void SkiaCanvas::ClipRoundRect(const Rect& rect, std::vector<Point>& pts, bool doAntiAlias)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     SkRRect rRect;
@@ -913,7 +933,7 @@ void SkiaCanvas::ClipRoundRect(const Rect& rect, std::vector<Point>& pts, bool d
 void SkiaCanvas::ClipPath(const Path& path, ClipOp op, bool doAntiAlias)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     auto skPathImpl = path.GetImpl<SkiaPath>();
@@ -926,7 +946,7 @@ void SkiaCanvas::ClipPath(const Path& path, ClipOp op, bool doAntiAlias)
 void SkiaCanvas::ClipRegion(const Region& region, ClipOp op)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     auto skRegionImpl = region.GetImpl<SkiaRegion>();
@@ -939,7 +959,7 @@ void SkiaCanvas::ClipRegion(const Region& region, ClipOp op)
 bool SkiaCanvas::IsClipEmpty()
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return false;
     }
     return skCanvas_->isClipEmpty();
@@ -948,7 +968,7 @@ bool SkiaCanvas::IsClipEmpty()
 bool SkiaCanvas::IsClipRect()
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return false;
     }
     return skCanvas_->isClipRect();
@@ -957,7 +977,7 @@ bool SkiaCanvas::IsClipRect()
 bool SkiaCanvas::QuickReject(const Rect& rect)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return false;
     }
     SkRect clipRect = SkRect::MakeLTRB(rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom());
@@ -967,7 +987,7 @@ bool SkiaCanvas::QuickReject(const Rect& rect)
 void SkiaCanvas::SetMatrix(const Matrix& matrix)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     auto m = matrix.GetImplPtr<SkiaMatrix>();
@@ -979,7 +999,7 @@ void SkiaCanvas::SetMatrix(const Matrix& matrix)
 void SkiaCanvas::ResetMatrix()
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->resetMatrix();
@@ -988,7 +1008,7 @@ void SkiaCanvas::ResetMatrix()
 void SkiaCanvas::ConcatMatrix(const Matrix& matrix)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     auto m = matrix.GetImplPtr<SkiaMatrix>();
@@ -1000,7 +1020,7 @@ void SkiaCanvas::ConcatMatrix(const Matrix& matrix)
 void SkiaCanvas::Translate(scalar dx, scalar dy)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->translate(dx, dy);
@@ -1009,7 +1029,7 @@ void SkiaCanvas::Translate(scalar dx, scalar dy)
 void SkiaCanvas::Scale(scalar sx, scalar sy)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->scale(sx, sy);
@@ -1018,7 +1038,7 @@ void SkiaCanvas::Scale(scalar sx, scalar sy)
 void SkiaCanvas::Rotate(scalar deg, scalar sx, scalar sy)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->rotate(deg, sx, sy);
@@ -1027,7 +1047,7 @@ void SkiaCanvas::Rotate(scalar deg, scalar sx, scalar sy)
 void SkiaCanvas::Shear(scalar sx, scalar sy)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->skew(sx, sy);
@@ -1036,7 +1056,7 @@ void SkiaCanvas::Shear(scalar sx, scalar sy)
 void SkiaCanvas::Flush()
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->flush();
@@ -1045,7 +1065,7 @@ void SkiaCanvas::Flush()
 void SkiaCanvas::Clear(ColorQuad color)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->clear(color);
@@ -1054,7 +1074,7 @@ void SkiaCanvas::Clear(ColorQuad color)
 uint32_t SkiaCanvas::Save()
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return 0;
     }
     return static_cast<uint32_t>(skCanvas_->save());
@@ -1063,7 +1083,7 @@ uint32_t SkiaCanvas::Save()
 void SkiaCanvas::SaveLayer(const SaveLayerOps& saveLayerOps)
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     std::unique_ptr<SkRect> skBounds = nullptr;
@@ -1078,14 +1098,8 @@ void SkiaCanvas::SaveLayer(const SaveLayerOps& saveLayerOps)
         paint = std::make_unique<SkPaint>();
         SkiaPaint::BrushToSkPaint(*brush, *paint);
     }
-    sk_sp<SkImageFilter> skImageFilter = nullptr;
-    auto imageFilter = saveLayerOps.GetImageFilter();
-    if (imageFilter != nullptr) {
-        auto skiaImageFilter = imageFilter->GetImpl<SkiaImageFilter>();
-        skImageFilter = skiaImageFilter->GetImageFilter();
-    }
 
-    SkCanvas::SaveLayerRec slr(skBounds.get(), paint.get(), skImageFilter.get(),
+    SkCanvas::SaveLayerRec slr(skBounds.get(), paint.get(), nullptr,
         static_cast<SkCanvas::SaveLayerFlags>(saveLayerOps.GetSaveLayerFlags() << 1));  // Offset 1 bit
     skCanvas_->saveLayer(slr);
 }
@@ -1093,7 +1107,7 @@ void SkiaCanvas::SaveLayer(const SaveLayerOps& saveLayerOps)
 void SkiaCanvas::Restore()
 {
     if (!skCanvas_) {
-        LOGE("skCanvas_ is null, return on line %{public}d", __LINE__);
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
         return;
     }
     skCanvas_->restore();
@@ -1167,6 +1181,13 @@ bool SkiaCanvas::ConvertToHMSymbolData(const DrawingHMSymbolData& symbol, HMSymb
     }
     skSymbol.symbolInfo_.renderGroups = groups;
     return true;
+}
+
+void SkiaCanvas::BuildOverDraw(std::shared_ptr<Canvas> canvas)
+{
+    auto skiaCanvas = canvas->GetImpl<SkiaCanvas>();
+    skiaCanvas_ = std::make_shared<SkOverdrawCanvas>(skiaCanvas->ExportSkCanvas());
+    skCanvas_ = skiaCanvas_.get();
 }
 } // namespace Drawing
 } // namespace Rosen

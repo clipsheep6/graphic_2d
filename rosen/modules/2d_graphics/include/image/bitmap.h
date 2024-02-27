@@ -52,6 +52,8 @@ public:
                     int32_t srcX, int32_t srcY) const;
     bool PeekPixels(Pixmap& pixmap) const;
 
+    size_t ComputeByteSize() const;
+
     /*
      * @brief  Gets the pointer to Bitmap buffer.
      */
@@ -69,8 +71,14 @@ public:
     void Free();
     BitmapFormat GetFormat() const;
     void SetFormat(const BitmapFormat& format);
+    void SetInfo(const ImageInfo& info);
     ImageInfo GetImageInfo() const;
     Pixmap GetPixmap() const;
+    /*
+     * @brief  Make new image from Bitmap but never copy Pixels
+     * @note the function never copy Pixels, make sure Pixels is available during using the image
+     */
+    std::shared_ptr<Image> MakeImage() const;
     bool TryAllocPixels(const ImageInfo& info);
     template<typename T>
     T* GetImpl() const
@@ -80,7 +88,7 @@ public:
 
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
-    
+
 private:
     std::shared_ptr<BitmapImpl> bmpImplPtr;
     BitmapFormat format_;

@@ -24,6 +24,7 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkRRect.h"
 #endif
+#include "common/rs_common_tools.h"
 #include "pipeline/rs_recording_canvas.h"
 #include "pipeline/sk_resource_manager.h"
 #include "platform/common/rs_log.h"
@@ -93,6 +94,9 @@ void RSImage::CanvasDrawImage(RSPaintFilterCanvas& canvas, const SkRect& rect, c
 void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect,
     const Drawing::SamplingOptions& samplingOptions, bool isBackground)
 {
+    if (canvas.GetRecordingState() && RSSystemProperties::GetDumpUICaptureEnabled() && pixelMap_) {
+        CommonTools::SavePixelmapToFile(pixelMap_, "/data/rsImage_");
+    }
     if (!isDrawn_ || rect != lastRect_) {
         UpdateNodeIdToPicture(nodeId_);
         Drawing::AutoCanvasRestore acr(canvas, HasRadius());
@@ -171,8 +175,12 @@ RectF ApplyImageFitSwitch(ImageParameter &imageParameter, ImageFit imageFit_, Re
             imageParameter.dstH = std::min(imageParameter.frameH, imageParameter.frameW / imageParameter.ratio);
             break;
     }
-    tempRectF.SetAll((imageParameter.frameW - imageParameter.dstW) / 2,
-        (imageParameter.frameH - imageParameter.dstH) / 2, imageParameter.dstW, imageParameter.dstH);
+    constexpr float horizontalAlignmentFactor = 2.f;
+    constexpr float verticalAlignmentFactor = 2.f;
+    tempRectF.SetAll(std::floor((imageParameter.frameW - imageParameter.dstW) / horizontalAlignmentFactor),
+                     std::floor((imageParameter.frameH - imageParameter.dstH) / verticalAlignmentFactor),
+                     std::ceil(imageParameter.dstW),
+                     std::ceil(imageParameter.dstH));
     return tempRectF;
 }
 
@@ -319,10 +327,10 @@ void RSImage::UploadGpu(Drawing::Canvas& canvas)
             Media::Size realSize;
             pixelMap_->GetAstcRealSize(realSize);
             auto image = std::make_shared<Drawing::Image>();
-            image->BuildFromCompressed(*canvas.GetGPUContext(), compressData_,
+            bool result = image->BuildFromCompressed(*canvas.GetGPUContext(), compressData_,
                 static_cast<int>(realSize.width), static_cast<int>(realSize.height),
                 PixelFormatToCompressedType(imageInfo.pixelFormat));
-            if (image) {
+            if (result) {
                 image_ = image;
                 SKResourceManager::Instance().HoldResource(image);
                 RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(uniqueId_, image, gettid());
@@ -411,6 +419,10 @@ void RSImage::DrawImageRepeatRect(const Drawing::SamplingOptions& samplingOption
                 RSPixelMapUtil::TransformDataSetForAstc(pixelMap_, src_, dst_, canvas);
             }
             if (image_) {
+                if (canvas.GetTotalMatrix().HasPerspective()) {
+                    // In case of perspective transformation, make dstRect 1px outset to anti-alias
+                    dst_.MakeOutset(1, 1);
+                }
                 canvas.DrawImageRect(*image_, src_, dst_, samplingOptions,
                     Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
             }

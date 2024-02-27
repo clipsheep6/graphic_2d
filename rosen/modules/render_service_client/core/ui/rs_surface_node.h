@@ -46,6 +46,7 @@ struct RSSurfaceNodeConfig {
     void* additionalData = nullptr;
     bool isTextureExportNode = false;
     SurfaceId surfaceId = 0;
+    bool isSync = true;
 };
 
 class RSC_EXPORT RSSurfaceNode : public RSNode {
@@ -102,7 +103,7 @@ public:
 
     void AttachToDisplay(uint64_t screenId);
     void DetachToDisplay(uint64_t screenId);
-    void SetHardwareEnabled(bool isEnabled);
+    void SetHardwareEnabled(bool isEnabled, SelfDrawingNodeType selfDrawingType = SelfDrawingNodeType::DEFAULT);
     void SetBootAnimation(bool isBootAnimation);
     bool GetBootAnimation() const;
     void SetTextureExport(bool isTextureExportNode);
@@ -139,6 +140,8 @@ public:
     void SetSurfaceTextureUpdateCallBack(const RSSurfaceTextureUpdateCallBack& updateCallback);
 #endif
     void SetForeground(bool isForeground);
+    // Force enable UIFirst when set TRUE
+    void SetForceUIFirst(bool forceUIFirst);
 
 protected:
     bool NeedForcedSendToRemote() const override;

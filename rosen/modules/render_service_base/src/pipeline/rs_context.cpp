@@ -39,12 +39,29 @@ void RSContext::AddActiveNode(const std::shared_ptr<RSRenderNode>& node)
         return;
     }
     auto rootNodeId = node->GetInstanceRootNodeId();
+    std::unique_lock<std::mutex> lock(activeNodesInRootMutex_);
     activeNodesInRoot_[rootNodeId].emplace(node->GetId(), node);
+}
+
+bool RSContext::HasActiveNode(const std::shared_ptr<RSRenderNode>& node)
+{
+    if (node == nullptr || node->GetId() == INVALID_NODEID) {
+        return false;
+    }
+    auto rootNodeId = node->GetInstanceRootNodeId();
+    std::unique_lock<std::mutex> lock(activeNodesInRootMutex_);
+    return activeNodesInRoot_[rootNodeId].count(node->GetId()) > 0;
 }
 
 void RSContext::MarkNeedPurge(ClearMemoryMoment moment, PurgeType purgeType)
 {
     clearMoment_ = moment;
     purgeType_ = purgeType;
+}
+
+void RSContext::Initialize()
+{
+    nodeMap.Initialize(weak_from_this());
+    globalRootRenderNode_->OnRegister(weak_from_this());
 }
 } // namespace OHOS::Rosen

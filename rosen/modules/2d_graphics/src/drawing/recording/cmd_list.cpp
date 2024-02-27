@@ -48,14 +48,14 @@ uint32_t CmdList::AddCmdListData(const CmdListData& data)
     if (!lastOpItemOffset_.has_value()) {
         void* op = opAllocator_.Allocate<OpItem>(OPITEM_HEAD);
         if (op == nullptr) {
-            LOGE("add OpItem head failed!");
+            LOGD("add OpItem head failed!");
             return 0;
         }
         lastOpItemOffset_.emplace(opAllocator_.AddrToOffset(op));
     }
     void* addr = opAllocator_.Add(data.first, data.second);
     if (addr == nullptr) {
-        LOGE("CmdList AddCmdListData failed!");
+        LOGD("CmdList AddCmdListData failed!");
         return 0;
     }
     return opAllocator_.AddrToOffset(addr);
@@ -81,7 +81,7 @@ uint32_t CmdList::AddImageData(const void* data, size_t size)
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     void* addr = imageAllocator_.Add(data, size);
     if (addr == nullptr) {
-        LOGE("CmdList AddImageData failed!");
+        LOGD("CmdList AddImageData failed!");
         return 0;
     }
     return imageAllocator_.AddrToOffset(addr);
@@ -111,12 +111,12 @@ OpDataHandle CmdList::AddImage(const Image& image)
 
     auto data = image.Serialize();
     if (data == nullptr || data->GetSize() == 0) {
-        LOGE("image is vaild");
+        LOGD("image is vaild");
         return ret;
     }
     void* addr = imageAllocator_.Add(data->GetData(), data->GetSize());
     if (addr == nullptr) {
-        LOGE("CmdList AddImageData failed!");
+        LOGD("CmdList AddImageData failed!");
         return ret;
     }
     uint32_t offset = imageAllocator_.AddrToOffset(addr);
@@ -134,13 +134,13 @@ std::shared_ptr<Image> CmdList::GetImage(const OpDataHandle& imageHandle)
     }
 
     if (imageHandle.size == 0) {
-        LOGE("image is vaild");
+        LOGD("image is vaild");
         return nullptr;
     }
 
     const void* ptr = imageAllocator_.OffsetToAddr(imageHandle.offset);
     if (ptr == nullptr) {
-        LOGE("get image data failed");
+        LOGD("get image data failed");
         return nullptr;
     }
 
@@ -148,7 +148,7 @@ std::shared_ptr<Image> CmdList::GetImage(const OpDataHandle& imageHandle)
     imageData->BuildWithoutCopy(ptr, imageHandle.size);
     auto image = std::make_shared<Image>();
     if (image->Deserialize(imageData) == false) {
-        LOGE("image deserialize failed!");
+        LOGD("image deserialize failed!");
         return nullptr;
     }
     imageMap_[imageHandle.offset] = image;
@@ -160,7 +160,7 @@ uint32_t CmdList::AddBitmapData(const void* data, size_t size)
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     void* addr = bitmapAllocator_.Add(data, size);
     if (addr == nullptr) {
-        LOGE("CmdList AddImageData failed!");
+        LOGD("CmdList AddImageData failed!");
         return 0;
     }
     return bitmapAllocator_.AddrToOffset(addr);
@@ -347,6 +347,22 @@ uint32_t CmdList::SetupSurfaceBuffer(const std::vector<sptr<SurfaceBuffer>>& obj
     return static_cast<uint32_t>(surfaceBufferVec_.size());
 }
 #endif
+
+uint32_t CmdList::AddDrawFuncOjb(const std::shared_ptr<ExtendDrawFuncObj> &object)
+{
+    std::lock_guard<std::mutex> lock(drawFuncObjMutex_);
+    drawFuncObjVec_.emplace_back(object);
+    return static_cast<uint32_t>(drawFuncObjVec_.size()) - 1;
+}
+
+std::shared_ptr<ExtendDrawFuncObj> CmdList::GetDrawFuncObj(uint32_t id)
+{
+    std::lock_guard<std::mutex> lock(drawFuncObjMutex_);
+    if (id >= drawFuncObjVec_.size()) {
+        return nullptr;
+    }
+    return drawFuncObjVec_[id];
+}
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

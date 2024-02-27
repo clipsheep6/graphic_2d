@@ -72,8 +72,8 @@ HWTEST_F(RSCanvasRenderNodeTest, UpdateRecording001, TestSize.Level1)
  */
 HWTEST_F(RSCanvasRenderNodeTest, UpdateRecording002, TestSize.Level1)
 {
-    int w;
-    int h;
+    int32_t w;
+    int32_t h;
     auto canvasRenderNode = std::make_shared<RSCanvasRenderNode>(id + 1);
 #ifndef USE_ROSEN_DRAWING
     auto drawCmds = std::make_shared<DrawCmdList>(w, h);
@@ -157,8 +157,8 @@ HWTEST_F(RSCanvasRenderNodeTest, ColorBlendModeTest, TestSize.Level1)
     int blendMode = 0;
     auto convertToSkBlendMode = [&blendMode]() {
         static const std::unordered_map<int, SkBlendMode> skBlendModeLUT = {
-            {static_cast<int>(RSColorBlendModeType::DST_IN), SkBlendMode::kDstIn},
-            {static_cast<int>(RSColorBlendModeType::SRC_IN), SkBlendMode::kSrcIn}
+            {static_cast<int>(RSColorBlendMode::DST_IN), SkBlendMode::kDstIn},
+            {static_cast<int>(RSColorBlendMode::SRC_IN), SkBlendMode::kSrcIn}
         };
 
         auto iter = skBlendModeLUT.find(blendMode);
@@ -183,8 +183,8 @@ HWTEST_F(RSCanvasRenderNodeTest, ColorBlendModeTest, TestSize.Level1)
     int blendMode = 0;
     auto convertToBlendMode = [&blendMode]() {
         static const std::unordered_map<int, Drawing::BlendMode> blendModeLUT = {
-            {static_cast<int>(RSColorBlendModeType::DST_IN), Drawing::BlendMode::DST_IN},
-            {static_cast<int>(RSColorBlendModeType::SRC_IN), Drawing::BlendMode::SRC_IN}
+            {static_cast<int>(RSColorBlendMode::DST_IN), Drawing::BlendMode::DST_IN},
+            {static_cast<int>(RSColorBlendMode::SRC_IN), Drawing::BlendMode::SRC_IN}
         };
 
         auto iter = blendModeLUT.find(blendMode);
@@ -198,7 +198,7 @@ HWTEST_F(RSCanvasRenderNodeTest, ColorBlendModeTest, TestSize.Level1)
     Drawing::BlendMode drawingBlendMode = convertToBlendMode();
     Drawing::Brush maskBrush;
     maskBrush.SetBlendMode(drawingBlendMode);
-    Drawing::SaveLayerOps maskLayerRec(nullptr, &maskBrush, nullptr, 0);
+    Drawing::SaveLayerOps maskLayerRec(nullptr, &maskBrush, 0);
     canvas_->SaveLayer(maskLayerRec);
 
     canvas_->Restore();

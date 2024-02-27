@@ -93,7 +93,7 @@ std::vector<struct ScoredSpan> LineBreaker::GenerateScoreSpans(const std::vector
 static double GetIndent(const double widthLimit, const int index, const std::vector<float> &indents)
 {
     double indent = 0.0;
-    if (indents.size() > 0 && index < indents.size()) {
+    if (indents.size() > 0 && index < static_cast<int>(indents.size())) {
         indent = indents[index];
     } else {
         indent = indents.size() > 0 ? indents.back() : 0.0;
@@ -205,6 +205,9 @@ std::vector<LineMetrics> LineBreaker::GenerateLineMetrics(const double widthLimi
         throw TEXGINE_EXCEPTION(OUT_OF_RANGE);
     }
 
+    if (breaks.empty()) {
+        return {};
+    }
     if (breaks.front() != 0) {
         breaks.insert(breaks.begin(), 0);
     }

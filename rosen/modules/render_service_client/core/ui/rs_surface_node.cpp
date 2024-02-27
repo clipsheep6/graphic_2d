@@ -68,8 +68,9 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         .id = node->GetId(),
         .name = node->name_,
         .bundleName = node->bundleName_,
-        .isTextureExportNode = surfaceNodeConfig.isTextureExportNode,
         .additionalData = surfaceNodeConfig.additionalData,
+        .isTextureExportNode = surfaceNodeConfig.isTextureExportNode,
+        .isSync = surfaceNodeConfig.isSync,
     };
     config.nodeType = type;
 
@@ -77,9 +78,15 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         "isWindow %{public}d %{public}d ", config.name.c_str(), config.bundleName.c_str(),
         config.nodeType, isWindow, node->IsRenderServiceNode());
 
-    if (!node->CreateNodeAndSurface(config, surfaceNodeConfig.surfaceId)) {
-        ROSEN_LOGE("RSSurfaceNode::Create, create node and surface failed");
-        return nullptr;
+    if (type == RSSurfaceNodeType::LEASH_WINDOW_NODE && node->IsUniRenderEnabled()) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSSurfaceNodeCreateWithConfig>(
+            config.id, config.name, static_cast<uint8_t>(config.nodeType), config.bundleName);
+        transactionProxy->AddCommand(command, isWindow);
+    } else {
+        if (!node->CreateNodeAndSurface(config, surfaceNodeConfig.surfaceId)) {
+            ROSEN_LOGE("RSSurfaceNode::Create, create node and surface failed");
+            return nullptr;
+        }
     }
 
     node->SetClipToFrame(true);
@@ -102,7 +109,6 @@ RSSurfaceNode::SharedPtr RSSurfaceNode::Create(const RSSurfaceNodeConfig& surfac
         command = std::make_unique<RSSurfaceNodeSetCallbackForRenderThreadRefresh>(node->GetId(), true);
         transactionProxy->AddCommand(command, isWindow);
         node->SetFrameGravity(Gravity::RESIZE);
-
 #if defined(USE_SURFACE_TEXTURE) && defined(ROSEN_ANDROID)
         if (type == RSSurfaceNodeType::SURFACE_TEXTURE_NODE) {
             RSSurfaceExtConfig config = {
@@ -238,7 +244,7 @@ void RSSurfaceNode::SetSecurityLayer(bool isSecurityLayer)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(command, true);
     }
-    ROSEN_LOGD("RSSurfaceNode::SetSecurityLayer, surfaceNodeId:[%{public}" PRIu64 "] isSecurityLayer:%{public}s",
+    ROSEN_LOGI("RSSurfaceNode::SetSecurityLayer, surfaceNodeId:[%{public}" PRIu64 "] isSecurityLayer:%{public}s",
         GetId(), isSecurityLayer ? "true" : "false");
 }
 
@@ -591,6 +597,13 @@ RSSurfaceNode::~RSSurfaceNode()
         return;
     }
 
+    // both divided and unirender need to unregister listener when surfaceNode destroy
+    auto renderServiceClient =
+        std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    if (renderServiceClient != nullptr) {
+        renderServiceClient->UnregisterBufferAvailableListener(GetId());
+    }
+
     // For abilityComponent and remote window, we should destroy the corresponding render node in RenderThread
     // The destructor of render node in RenderService should controlled by application
     // Command sent only in divided render
@@ -598,12 +611,6 @@ RSSurfaceNode::~RSSurfaceNode()
         std::unique_ptr<RSCommand> command = std::make_unique<RSBaseNodeDestroy>(GetId());
         transactionProxy->AddCommand(command, false, FollowType::FOLLOW_TO_PARENT, GetId());
         return;
-    }
-
-    auto renderServiceClient =
-        std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
-    if (renderServiceClient != nullptr) {
-        renderServiceClient->UnregisterBufferAvailableListener(GetId());
     }
 
     // For self-drawing surfaceNode, we should destroy the corresponding render node in RenderService
@@ -633,12 +640,12 @@ void RSSurfaceNode::DetachToDisplay(uint64_t screenId)
     }
 }
 
-void RSSurfaceNode::SetHardwareEnabled(bool isEnabled)
+void RSSurfaceNode::SetHardwareEnabled(bool isEnabled, SelfDrawingNodeType selfDrawingType)
 {
     auto renderServiceClient =
         std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
     if (renderServiceClient != nullptr) {
-        renderServiceClient->SetHardwareEnabled(GetId(), isEnabled);
+        renderServiceClient->SetHardwareEnabled(GetId(), isEnabled, selfDrawingType);
     }
 }
 
@@ -733,6 +740,16 @@ void RSSurfaceNode::SetForeground(bool isForeground)
     if (transactionProxy != nullptr) {
         transactionProxy->AddCommand(commandRS, true);
         transactionProxy->AddCommand(commandRT, false);
+    }
+}
+
+void RSSurfaceNode::SetForceUIFirst(bool forceUIFirst)
+{
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSSurfaceNodeSetForceUIFirst>(GetId(), forceUIFirst);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, true);
     }
 }
 } // namespace Rosen

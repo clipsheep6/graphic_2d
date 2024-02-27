@@ -163,8 +163,13 @@ void RSScreen::PhysicalScreenInit() noexcept
         RS_LOGE("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 ") failed to GetScreenSupportedColorGamuts.",
             __func__, id_);
     } else {
+        int index = 0;
         for (auto item : supportedColorGamuts) {
             supportedPhysicalColorGamuts_.push_back(static_cast<ScreenColorGamut>(item));
+            if (item == GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB) {
+                currentPhysicalColorGamutIdx_ = index;
+            }
+            ++index;
         }
     }
 }
@@ -290,6 +295,9 @@ void RSScreen::SetRogResolution(uint32_t width, uint32_t height)
         RS_LOGD("RSScreen:%{public}s: width: %{public}d, height: %{public}d.", __func__, width, height);
         return;
     }
+    if (hdiScreen_->SetScreenOverlayResolution(width, height) < 0) {
+        RS_LOGD("RSScreen:%{public}s: hdi set screen rog resolution failed.", __func__);
+    }
     width_ = width;
     height_ = height;
     RS_LOGI("RSScreen %{public}s: RSScreen(id %{public}" PRIu64 "), width: %{public}d,"
@@ -326,7 +334,7 @@ void RSScreen::SetPowerStatus(uint32_t powerStatus)
         return;
     }
 
-    RS_LOGI("RSScreen_%{public}" PRIu64 " SetPowerStatus, status is %{public}u", id_, powerStatus);
+    RS_LOGD("RSScreen_%{public}" PRIu64 " SetPowerStatus, status is %{public}u", id_, powerStatus);
     RS_TRACE_NAME_FMT("Screen_%llu SetPowerStatus %u", id_, powerStatus);
     if (hdiScreen_->SetScreenPowerStatus(static_cast<GraphicDispPowerStatus>(powerStatus)) < 0) {
         return;
@@ -896,6 +904,7 @@ int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace)
             return StatusCode::INVALID_ARGUMENTS;
         }
         curIdx = std::distance(supportedVirtualColorGamuts_.begin(), it);
+        currentVirtualColorGamutIdx_ = curIdx;
         return StatusCode::SUCCESS;
     }
     std::vector<GraphicColorGamut> hdiMode;

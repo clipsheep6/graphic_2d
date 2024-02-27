@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "sandbox_utils.h"
+
 #include "animation/rs_animation_common.h"
 #include "animation/rs_cubic_bezier_interpolator.h"
 #include "animation/rs_spring_interpolator.h"
@@ -29,13 +31,39 @@ namespace Rosen {
 const std::shared_ptr<RSInterpolator> RSInterpolator::DEFAULT =
     std::make_shared<RSCubicBezierInterpolator>(0.42f, 0.0f, 0.58f, 1.0f);
 
-RSInterpolator* RSInterpolator::Unmarshalling(Parcel& parcel)
+RSInterpolator::RSInterpolator() : id_(GenerateId()) {}
+
+uint64_t RSInterpolator::GenerateId()
+{
+    static pid_t pid_ = GetRealPid();
+    static std::atomic<uint32_t> currentId_ = 0;
+
+    auto currentId = currentId_.fetch_add(1, std::memory_order_relaxed);
+    if (currentId == UINT32_MAX) {
+        ROSEN_LOGE("RSInterpolator Id overflow");
+    }
+
+    // concat two 32-bit numbers to one 64-bit number
+    return ((AnimationId)pid_ << 32) | (currentId);
+}
+
+float RSInterpolator::Interpolate(float input)
+{
+    if (input == prevInput_) {
+        return prevOutput_;
+    }
+    prevInput_ = input;
+    prevOutput_ = InterpolateImpl(input);
+    return prevOutput_;
+}
+
+std::shared_ptr<RSInterpolator> RSInterpolator::Unmarshalling(Parcel& parcel)
 {
     uint16_t interpolatorType = parcel.ReadUint16();
     RSInterpolator* ret = nullptr;
     switch (interpolatorType) {
         case InterpolatorType::LINEAR:
-            ret = new LinearInterpolator();
+            ret = LinearInterpolator::Unmarshalling(parcel);
             break;
         case InterpolatorType::CUSTOM:
             ret = RSCustomInterpolator::Unmarshalling(parcel);
@@ -52,27 +80,95 @@ RSInterpolator* RSInterpolator::Unmarshalling(Parcel& parcel)
         default:
             break;
     }
-    return ret;
-}
-
-RSCustomInterpolator* RSCustomInterpolator::Unmarshalling(Parcel& parcel)
-{
-    std::vector<float> times, values;
-    if (!(parcel.ReadFloatVector(&times) && parcel.ReadFloatVector(&values))) {
-        ROSEN_LOGE("Unmarshalling CustomInterpolator failed");
+    if (ret == nullptr) {
         return nullptr;
     }
-    return new RSCustomInterpolator(std::move(times), std::move(values));
+
+    static std::mutex cachedInterpolatorsMutex_;
+    static std::unordered_map<uint32_t, std::weak_ptr<RSInterpolator>> cachedInterpolators_;
+    static const auto Destructor = [](RSInterpolator* ptr) {
+        std::unique_lock<std::mutex> lock(cachedInterpolatorsMutex_);
+        cachedInterpolators_.erase(ptr->id_); // Unregister interpolator from cache before destruction.
+        delete ptr;
+    };
+
+    {
+        // All cache operations should be performed under lock to prevent race conditions
+        std::unique_lock<std::mutex> lock(cachedInterpolatorsMutex_);
+        // Check if there is an existing valid interpolator in the cache, return it if found.
+        if (auto it = cachedInterpolators_.find(ret->id_); it != cachedInterpolators_.end()) {
+            if (auto sharedPtr = it->second.lock()) { // Check if weak pointer is valid
+                delete ret;                           // Destroy the newly created object
+                return sharedPtr;
+            } else { // If the weak pointer has expired, erase it from the cache. This should never happen.
+                ROSEN_LOGE("RSInterpolator::Unmarshalling, cached weak pointer expired.");
+                cachedInterpolators_.erase(it);
+            }
+        }
+        // No existing interpolator in the cache, create a new one and register it in the cache.
+        std::shared_ptr<RSInterpolator> sharedPtr(ret, Destructor);
+        cachedInterpolators_.emplace(ret->id_, sharedPtr);
+        return sharedPtr;
+    }
 }
 
-RSCustomInterpolator::RSCustomInterpolator(const std::vector<float>&& times, const std::vector<float>&& values)
-    : times_(times), values_(values)
+bool LinearInterpolator::Marshalling(Parcel& parcel) const
+{
+    if (!parcel.WriteUint16(InterpolatorType::LINEAR)) {
+        return false;
+    }
+    if (!parcel.WriteUint64(id_)) {
+        return false;
+    }
+    return true;
+}
+
+LinearInterpolator* LinearInterpolator::Unmarshalling(Parcel& parcel)
+{
+    uint64_t id = parcel.ReadUint64();
+    if (id == 0) {
+        ROSEN_LOGE("Unmarshalling LinearInterpolator failed");
+        return nullptr;
+    }
+    return new LinearInterpolator(id);
+}
+
+RSCustomInterpolator::RSCustomInterpolator(
+    uint64_t id, const std::vector<float>&& times, const std::vector<float>&& values)
+    : RSInterpolator(id), times_(times), values_(values)
 {}
 
 RSCustomInterpolator::RSCustomInterpolator(const std::function<float(float)>& func, int duration)
     : interpolateFunc_(func)
 {
     Convert(duration);
+}
+
+bool RSCustomInterpolator::Marshalling(Parcel& parcel) const
+{
+    if (!parcel.WriteUint16(InterpolatorType::CUSTOM)) {
+        ROSEN_LOGE("RSCustomInterpolator::Marshalling, Write type failed");
+    }
+    if (!parcel.WriteUint64(id_)) {
+        ROSEN_LOGE("RSCustomInterpolator::Marshalling, Write id failed");
+        return false;
+    }
+    if (!parcel.WriteFloatVector(times_) || !parcel.WriteFloatVector(values_)) {
+        ROSEN_LOGE("RSCustomInterpolator::Marshalling, Write value failed");
+        return false;
+    }
+    return true;
+}
+
+RSCustomInterpolator* RSCustomInterpolator::Unmarshalling(Parcel& parcel)
+{
+    uint64_t id = parcel.ReadUint64();
+    std::vector<float> times, values;
+    if (!(parcel.ReadFloatVector(&times) && parcel.ReadFloatVector(&values))) {
+        ROSEN_LOGE("Unmarshalling CustomInterpolator failed");
+        return nullptr;
+    }
+    return new RSCustomInterpolator(id, std::move(times), std::move(values));
 }
 
 void RSCustomInterpolator::Convert(int duration)
@@ -99,7 +195,7 @@ void RSCustomInterpolator::Convert(int duration)
     }
 }
 
-float RSCustomInterpolator::Interpolate(float input) const
+float RSCustomInterpolator::InterpolateImpl(float input) const
 {
     if (input < times_[0] + EPSILON) {
         return times_[0];

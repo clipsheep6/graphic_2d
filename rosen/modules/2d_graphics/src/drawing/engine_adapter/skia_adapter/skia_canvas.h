@@ -72,6 +72,7 @@ public:
     ImageInfo GetImageInfo() override;
     bool ReadPixels(const ImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
         int srcX, int srcY) override;
+    bool ReadPixels(const Bitmap& dstBitmap, int srcX, int srcY) override;
 
     // shapes
     void DrawPoint(const Point& point) override;
@@ -91,18 +92,27 @@ public:
     void DrawRegion(const Region& region) override;
     void DrawPatch(const Point cubics[12], const ColorQuad colors[4],
         const Point texCoords[4], BlendMode mode) override;
-    void DrawEdgeAAQuad(const Rect& rect, const Point clip[4],
-        QuadAAFlags aaFlags, ColorQuad color, BlendMode mode) override;
     void DrawVertices(const Vertices& vertices, BlendMode mode) override;
 
     void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) override;
-    void DrawAnnotation(const Rect& rect, const char* key, const Data* data) override;
     void DrawImageLattice(const Image* image, const Lattice& lattice, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr) override;
 
     // color
     void DrawColor(ColorQuad color, BlendMode mode) override;
+
+    // opinc_begin
+    bool BeginOpRecording(const Rect* bound = nullptr, bool isDynamic = false) override;
+    Drawing::OpListHandle EndOpRecording() override;
+    void DrawOpList(Drawing::OpListHandle handle) override;
+    int CanDrawOpList(Drawing::OpListHandle handle) override;
+    void PreOpListDrawArea(const Matrix& matrix) override;
+    bool CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound = nullptr) override;
+    Drawing::OpListHandle GetOpListDrawArea() override;
+    void OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
+        const SamplingOptions& sampling, SrcRectConstraint constraint) override;
+    // opinc_end
 
     // image
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) override;
@@ -155,6 +165,8 @@ public:
 
     SkCanvas* ExportSkCanvas() const;
     void ImportSkCanvas(SkCanvas* skCanvas);
+
+    void BuildOverDraw(std::shared_ptr<Canvas> canvas) override;
 
 private:
     void RoundRectCastToSkRRect(const RoundRect& roundRect, SkRRect& skRRect) const;

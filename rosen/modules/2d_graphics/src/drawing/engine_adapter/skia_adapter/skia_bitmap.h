@@ -50,6 +50,7 @@ public:
     bool InstallPixels(const ImageInfo& info, void* pixels, size_t rowBytes,
                        ReleaseProc releaseProc, void* context) override;
     bool PeekPixels(Pixmap& pixmap) const override;
+    size_t ComputeByteSize() const override;
     const SkBitmap& ExportSkiaBitmap() const;
     void CopyPixels(Bitmap& dst, int srcLeft, int srcTop) const override;
     bool IsImmutable() override;
@@ -60,6 +61,8 @@ public:
     bool IsValid() const override;
     bool IsEmpty() const override;
     Pixmap GetPixmap() const override;
+    std::shared_ptr<Image> MakeImage() const override;
+    void SetInfo(const ImageInfo& info) override;
     bool TryAllocPixels(const ImageInfo& info) override;
     void SetSkBitmap(const SkBitmap& skBitmap);
 

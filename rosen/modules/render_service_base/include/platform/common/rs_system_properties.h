@@ -96,6 +96,22 @@ enum class GpuApiType {
     DDGR,
 };
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+enum class DdgrOpincType {
+    DDGR_OPINC_NONE = 0,
+    DDGR_AUTOCACHE,
+    DDGR_AUTOCACHE_REALDRAW,
+    DDGR_RENDERCACHE,
+    DDGR_OPINCUPDATE,
+    DDGR_UNRESTRICTED_MODE,
+};
+
+enum class DdgrOpincDfxType {
+    DDGR_OPINC_DFX_NONE,
+    DDGR_OPINC_DFX_AUTO,
+};
+#endif
+
 using OnSystemPropertyChanged = void(*)(const char*, const char*, void*);
 
 class RSB_EXPORT RSSystemProperties final {
@@ -108,6 +124,8 @@ public:
     static int GetDumpFrameNum();
     static void SetRecordingDisenabled();
     static int GetRecordingEnabled();
+    static int GetDumpRSTreeCount();
+    static void SetDumpRSTreeCount(int count);
 
     static bool GetUniRenderEnabled();
     static bool GetRenderNodeTraceEnabled();
@@ -155,6 +173,7 @@ public:
     static bool GetRandomColorEnabled();
     static bool GetKawaseOriginalEnabled();
     static bool GetBlurEnabled();
+    static const std::vector<float>& GetAiInvertCoef();
     static bool GetSkipForAlphaZeroEnabled();
     static bool GetSkipGeometryNotChangeEnabled();
     static bool GetPropertyDrawableEnable();
@@ -171,9 +190,6 @@ public:
     static bool GetASTCEnabled();
     static bool GetCachedBlurPartialRenderEnabled();
     static bool GetImageGpuResourceCacheEnable(int width, int height);
-#if defined (ENABLE_DDGR_OPTIMIZE)
-    static bool GetDDGRIntegrateEnable();
-#endif
     static bool GetSnapshotWithDMAEnabled();
     static bool IsPhoneType();
     static bool IsPcType();
@@ -187,6 +203,17 @@ public:
     static bool GetParallelUploadTexture();
     static bool GetEffectMergeEnabled();
 
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static DdgrOpincType GetDdgrOpincType();
+    static bool IsDdgrOpincEnable();
+    static bool GetAutoCacheDebugEnabled();
+    static DdgrOpincDfxType GetDdgrOpincDfxType();
+    static bool IsOpincRealDrawCacheEnable();
+#endif
+
+    static bool GetDumpUICaptureEnabled();
+    static bool GetDumpUIPixelmapEnabled();
+
     static inline GpuApiType GetGpuApiType()
     {
         return RSSystemProperties::systemGpuApiType_;
@@ -199,6 +226,10 @@ private:
     inline static bool isDrawTextAsBitmap_ = false;
     inline static bool cacheEnabledForRotation_ = false;
     static const GpuApiType systemGpuApiType_;
+#ifdef DDGR_ENABLE_FEATURE_OPINC
+    static const DdgrOpincType ddgrOpincType_;
+    static const DdgrOpincDfxType ddgrOpincDfxType_;
+#endif
 };
 
 } // namespace Rosen

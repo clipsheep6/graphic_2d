@@ -30,6 +30,10 @@ public:
     Canvas() {}
     Canvas(int32_t width, int32_t height) : CoreCanvas(width, height) {}
 
+    virtual Canvas* GetRecordingCanvas() const
+    {
+        return nullptr;
+    }
 
     void AddCanvas(Canvas* canvas)
     {
@@ -58,8 +62,32 @@ public:
             this->Restore();
         }
     }
+
+    virtual bool GetRecordingState() const
+    {
+        return recordingState_;
+    }
+
+    virtual void SetRecordingState(bool flag)
+    {
+        recordingState_ = flag;
+    }
 protected:
     std::vector<Canvas*> pCanvasList_;
+    bool recordingState_ = false;
+};
+
+class DRAWING_API OverDrawCanvas : public Canvas {
+public:
+    OverDrawCanvas(std::shared_ptr<Drawing::Canvas> canvas)
+    {
+        BuildOverDraw(canvas);
+    }
+    virtual ~OverDrawCanvas() {}
+    virtual DrawingType GetDrawingType() const
+    {
+        return DrawingType::OVER_DRAW;
+    }
 };
 
 class AutoCanvasRestore {

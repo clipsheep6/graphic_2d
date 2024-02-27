@@ -123,7 +123,7 @@ void RSImplicitCancelAnimationParam::ExecuteSyncPropertiesTask(
             ROSEN_LOGE("RSImplicitCancelAnimationParam::ExecuteSyncPropertiesTask failed to get target property.");
             continue;
         }
-        node->CancelAnimationByProperty(propertyId);
+        node->CancelAnimationByProperty(propertyId, !property->GetIsCustom());
         if (value != nullptr) {
             // successfully canceled RS animation and extract value, update ui value
             property->SetValueFromRender(value);
@@ -132,6 +132,15 @@ void RSImplicitCancelAnimationParam::ExecuteSyncPropertiesTask(
             property->UpdateOnAllAnimationFinish();
         }
     }
+}
+
+std::shared_ptr<RSAnimation> RSImplicitCancelAnimationParam::CreateEmptyAnimation(
+    std::shared_ptr<RSPropertyBase> property, const std::shared_ptr<RSPropertyBase>& startValue,
+    const std::shared_ptr<RSPropertyBase>& endValue) const
+{
+    auto curveAnimation = std::make_shared<RSCurveAnimation>(property, endValue - startValue);
+    curveAnimation->SetDuration(0);
+    return curveAnimation;
 }
 
 RSImplicitCurveAnimationParam::RSImplicitCurveAnimationParam(

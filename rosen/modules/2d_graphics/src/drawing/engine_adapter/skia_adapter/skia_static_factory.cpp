@@ -34,6 +34,12 @@ std::shared_ptr<TextBlob> SkiaStaticFactory::MakeFromText(const void* text, size
     return SkiaTextBlob::MakeFromText(text, byteLength, font, encoding);
 }
 
+std::shared_ptr<TextBlob> SkiaStaticFactory::MakeFromPosText(const void* text, size_t byteLength,
+    const Point pos[], const Font& font, TextEncoding encoding)
+{
+    return SkiaTextBlob::MakeFromPosText(text, byteLength, pos, font, encoding);
+}
+
 std::shared_ptr<TextBlob> SkiaStaticFactory::MakeFromRSXform(const void* text, size_t byteLength,
     const RSXform xform[], const Font& font, TextEncoding encoding)
 {
@@ -163,6 +169,11 @@ void SkiaStaticFactory::GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::
 Path SkiaStaticFactory::GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob)
 {
     return SkiaTextBlob::GetDrawingPathforTextBlob(glyphId, blob);
+}
+
+void SkiaStaticFactory::GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points)
+{
+    return SkiaTextBlob::GetDrawingPointsForTextBlob(blob, points);
 }
 
 std::shared_ptr<DrawingSymbolLayersGroups> SkiaStaticFactory::GetSymbolLayersGroups(uint32_t glyphId)

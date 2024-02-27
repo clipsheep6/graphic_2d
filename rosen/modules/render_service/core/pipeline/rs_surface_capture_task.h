@@ -107,7 +107,7 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
         void CaptureSurfaceInDisplayWithoutUni(RSSurfaceRenderNode& node);
         void DrawWatermarkIfNeed(RSDisplayRenderNode& node);
         void FindHardwareEnabledNodes();
-        void AdjustZOrderAndDrawSurfaceNode();
+        void AdjustZOrderAndDrawSurfaceNode(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodes);
         // Reuse DrawSpherize function in RSUniRenderVisitor.
         // Since the surfaceCache has been updated by the main screen drawing,
         // the updated surfaceCache can be reused directly without reupdating.
@@ -136,12 +136,14 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
         std::shared_ptr<RSBaseRenderEngine> renderEngine_;
 
         std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledNodes_;
+        // vector of hardwareEnabled nodes above displayNodeSurface like pointer window
+        std::vector<std::shared_ptr<RSSurfaceRenderNode>> hardwareEnabledTopNodes_;
 };
 
 class RSSurfaceCaptureTask {
 public:
-    explicit RSSurfaceCaptureTask(NodeId nodeId, float scaleX, float scaleY)
-        : nodeId_(nodeId), scaleX_(scaleX), scaleY_(scaleY) {}
+    explicit RSSurfaceCaptureTask(NodeId nodeId, float scaleX, float scaleY, bool isProcOnBgThread = false)
+        : nodeId_(nodeId), scaleX_(scaleX), scaleY_(scaleY), isProcOnBgThread_(isProcOnBgThread) {}
     ~RSSurfaceCaptureTask() = default;
 
     bool Run(sptr<RSISurfaceCaptureCallback> callback);
@@ -173,6 +175,9 @@ private:
     float scaleY_;
 
     ScreenRotation screenCorrection_ = ScreenRotation::ROTATION_0;
+
+    // if true, do surfaceCapture on background thread
+    bool isProcOnBgThread_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

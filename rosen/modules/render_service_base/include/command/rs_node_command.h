@@ -66,7 +66,6 @@ enum RSNodeCommandType : uint16_t {
     UNREGISTER_GEOMETRY_TRANSITION,
 
     MARK_NODE_GROUP,
-    UPDATE_UI_FRAME_RATE_RANGE,
     MARK_NODE_SINGLE_FRAME_COMPOSER,
 };
 
@@ -126,16 +125,13 @@ public:
         }
         modifier->Update(prop, isDelta);
         if (value) {
-#ifndef USE_ROSEN_DRAWING
             value->UpdateNodeIdToPicture(nodeId);
-#else
-            // Drawing need to be adapted furture
-#endif
         }
     }
 
     static void SetFreeze(RSContext& context, NodeId nodeId, bool isFreeze);
-    static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced);
+    static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced,
+        bool includeProperty);
     static void MarkNodeSingleFrameComposer(RSContext& context, NodeId nodeId, bool isNodeFasterDraw, pid_t pid);
 
     static void MarkDrivenRender(RSContext& context, NodeId nodeId, bool flag);
@@ -147,7 +143,6 @@ public:
 
     static void RegisterGeometryTransitionPair(RSContext& context, NodeId inNodeId, NodeId outNodeId);
     static void UnregisterGeometryTransitionPair(RSContext& context, NodeId inNodeId, NodeId outNodeId);
-    static void UpdateUIFrameRateRange(RSContext& context, NodeId nodeId, FrameRateRange range);
 };
 
 ADD_COMMAND(RSAddModifier,
@@ -219,7 +214,7 @@ ADD_COMMAND(RSUpdatePropertySkMatrix,
         NodeId, SkMatrix, PropertyId, PropertyUpdateType))
 #else
 ADD_COMMAND(RSUpdatePropertyDrawCmdList,
-    ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifier<Drawing::DrawCmdListPtr>,
+    ARG(RS_NODE, UPDATE_MODIFIER_DRAW_CMD_LIST, RSNodeCommandHelper::UpdateModifierDrawCmdList,
         NodeId, Drawing::DrawCmdListPtr, PropertyId, PropertyUpdateType))
 ADD_COMMAND(RSUpdatePropertyDrawingMatrix,
     ARG(RS_NODE, UPDATE_MODIFIER_DRAWING_MATRIX, RSNodeCommandHelper::UpdateModifier<Drawing::Matrix>,
@@ -229,7 +224,7 @@ ADD_COMMAND(RSUpdatePropertyDrawingMatrix,
 ADD_COMMAND(RSSetFreeze,
     ARG(RS_NODE, SET_FREEZE, RSNodeCommandHelper::SetFreeze, NodeId, bool))
 ADD_COMMAND(RSMarkNodeGroup,
-    ARG(RS_NODE, MARK_NODE_GROUP, RSNodeCommandHelper::MarkNodeGroup, NodeId, bool, bool))
+    ARG(RS_NODE, MARK_NODE_GROUP, RSNodeCommandHelper::MarkNodeGroup, NodeId, bool, bool, bool))
 ADD_COMMAND(RSMarkNodeSingleFrameComposer,
     ARG(RS_NODE, MARK_NODE_SINGLE_FRAME_COMPOSER, RSNodeCommandHelper::MarkNodeSingleFrameComposer,
         NodeId, bool, pid_t))
@@ -255,8 +250,6 @@ ADD_COMMAND(RSRegisterGeometryTransitionNodePair,
     ARG(RS_NODE, REGISTER_GEOMETRY_TRANSITION, RSNodeCommandHelper::RegisterGeometryTransitionPair, NodeId, NodeId))
 ADD_COMMAND(RSUnregisterGeometryTransitionNodePair,
     ARG(RS_NODE, UNREGISTER_GEOMETRY_TRANSITION, RSNodeCommandHelper::UnregisterGeometryTransitionPair, NodeId, NodeId))
-ADD_COMMAND(RSUpdateUIFrameRateRange,
-    ARG(RS_NODE, UPDATE_UI_FRAME_RATE_RANGE, RSNodeCommandHelper::UpdateUIFrameRateRange, NodeId, FrameRateRange))
 } // namespace Rosen
 } // namespace OHOS
 

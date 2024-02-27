@@ -36,6 +36,8 @@ public:
 
     static std::shared_ptr<TextBlob> MakeFromText(const void* text, size_t byteLength,
         const Font& font, TextEncoding encoding = TextEncoding::UTF8);
+    static std::shared_ptr<TextBlob> MakeFromPosText(const void* text, size_t byteLength,
+        const Point pos[], const Font& font, TextEncoding encoding = TextEncoding::UTF8);
     static std::shared_ptr<TextBlob> MakeFromString(const char* str,
         const Font& font, TextEncoding encoding = TextEncoding::UTF8);
     static std::shared_ptr<TextBlob> MakeFromRSXform(const void* text, size_t byteLength,
@@ -56,6 +58,7 @@ public:
     static std::shared_ptr<TextBlob> Deserialize(const void* data, size_t size);
     static void GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<uint16_t>& glyphIds);
     static Path GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob);
+    static void GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points);
 
     template<typename T>
     T* GetImpl() const

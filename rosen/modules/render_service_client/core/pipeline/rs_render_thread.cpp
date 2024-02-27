@@ -54,10 +54,6 @@
 #include "frame_collector.h"
 #include "render_frame_trace.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
-#if defined(ROSEN_OHOS) && defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
-#include "include/recording/draw_cmd.h"
-#include "platform/ohos/backend/native_buffer_utils.h"
-#endif
 #ifdef ACCESSIBILITY_ENABLE
 #include "accessibility_config.h"
 #include "platform/common/rs_accessibility.h"
@@ -111,6 +107,7 @@ RSRenderThread::RSRenderThread()
         ROSEN_LOGD("RSRenderThread DrawFrame(%{public}" PRIu64 ") in %{public}s",
             prevTimestamp_, renderContext_ ? "GPU" : "CPU");
         Animate(prevTimestamp_);
+        ApplyModifiers();
         Render();
         SendCommands();
         context_->activeNodesInRoot_.clear();
@@ -120,20 +117,8 @@ RSRenderThread::RSRenderThread()
         jankDetector_->CalculateSkippedFrame(renderStartTimeStamp, jankDetector_->GetSysTimeNs());
         RS_TRACE_END();
     };
-#if defined(ROSEN_OHOS) && defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
-    if (RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
-        RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
-        std::function<void*(VkImage, VkDeviceMemory)> createCleanup =
-            [] (VkImage image, VkDeviceMemory memory) -> void* {
-            return new OHOS::Rosen::NativeBufferUtils::VulkanCleanupHelper(
-                RsVulkanContext::GetSingleton(), image, memory);
-        };
-        Drawing::DrawSurfaceBufferOpItem::SetBaseCallback(
-            OHOS::Rosen::NativeBufferUtils::MakeBackendTextureFromNativeBuffer,
-            OHOS::Rosen::NativeBufferUtils::DeleteVkImage, createCleanup);
-    }
-#endif
     context_ = std::make_shared<RSContext>();
+    context_->Initialize();
     jankDetector_ = std::make_shared<RSJankDetector>();
 #ifdef ACCESSIBILITY_ENABLE
     RSAccessibility::GetInstance().ListenHighContrastChange([](bool newHighContrast) {
@@ -280,7 +265,7 @@ void RSRenderThread::RenderLoop()
     payload["uid"] = std::to_string(getuid());
     payload["pid"] = std::to_string(GetRealPid());
     ResourceSchedule::ResSchedClient::GetInstance().ReportData(
-        ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_THREAD, gettid(), payload);
+        ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_THREAD, getproctid(), payload);
 #endif
 #ifdef ROSEN_OHOS
     tid_ = gettid();
@@ -452,6 +437,42 @@ void RSRenderThread::Animate(uint64_t timestamp)
 
     if (needRequestNextVsync) {
         RSRenderThread::Instance().RequestNextVSync();
+    }
+}
+
+void RSRenderThread::ApplyModifiers()
+{
+    std::lock_guard<std::mutex> lock(context_->activeNodesInRootMutex_);
+    if (context_->activeNodesInRoot_.empty()) {
+        return;
+    }
+    RS_TRACE_NAME_FMT("ApplyModifiers (PropertyDrawableEnable %s)",
+        RSSystemProperties::GetPropertyDrawableEnable() ? "TRUE" : "FALSE");
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> nodesThatNeedsRegenerateChildren;
+    context_->globalRootRenderNode_->ApplyModifiers();
+    for (const auto& [root, nodeSet] : context_->activeNodesInRoot_) {
+        for (const auto& [id, nodePtr] : nodeSet) {
+            auto node = nodePtr.lock();
+            if (node == nullptr) {
+                continue;
+            }
+            if (!node->isFullChildrenListValid_ || !node->isChildrenSorted_) {
+                nodesThatNeedsRegenerateChildren.emplace(node->id_, node);
+            }
+            // apply modifiers, if z-order not changed, skip
+            if (!node->ApplyModifiers()) {
+                continue;
+            }
+            if (auto parent = node->GetParent().lock()) {
+                parent->isChildrenSorted_ = false;
+                nodesThatNeedsRegenerateChildren.emplace(parent->id_, parent);
+            }
+        }
+    }
+    // Update the full children list of the nodes that need it
+    nodesThatNeedsRegenerateChildren.emplace(0, context_->globalRootRenderNode_);
+    for (auto& [id, node] : nodesThatNeedsRegenerateChildren) {
+        node->UpdateFullChildrenListIfNeeded();
     }
 }
 

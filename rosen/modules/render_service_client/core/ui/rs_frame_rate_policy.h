@@ -15,37 +15,43 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_UI_RS_FRAME_RATE_POLICY_H
 #define RENDER_SERVICE_CLIENT_CORE_UI_RS_FRAME_RATE_POLICY_H
 
+#include <mutex>
+#include <unordered_map>
 #include <memory>
 #include "transaction/rs_hgm_config_data.h"
 
 namespace OHOS {
 namespace Rosen {
+enum class RSPropertyUnit : int16_t;
+struct AnimDynamicAttribute {
+    int32_t minSpeed = 0;
+    int32_t maxSpeed = 0;
+    int32_t preferredFps = 0;
+};
+
 class RSFrameRatePolicy {
 public:
     static RSFrameRatePolicy* GetInstance();
 
     void RegisterHgmConfigChangeCallback();
 
-    int GetPreferredFps(const std::string& scene, float speed);
-
-    void SetRefreshRateMode(int32_t refreshRateMode);
-    int32_t GetRefreshRateMode();
+    int32_t GetPreferredFps(const std::string& scene, float speed);
+    int32_t GetRefreshRateMode() const;
+    int32_t GetExpectedFrameRate(const RSPropertyUnit unit, float velocity);
 
 private:
-    RSFrameRatePolicy();
+    RSFrameRatePolicy() = default;
     ~RSFrameRatePolicy();
-    RSFrameRatePolicy(const RSFrameRatePolicy&) = delete;
-    RSFrameRatePolicy(const RSFrameRatePolicy&&) = delete;
-    RSFrameRatePolicy &operator = (const RSFrameRatePolicy&) = delete;
-    RSFrameRatePolicy &operator = (const RSFrameRatePolicy&&) = delete;
 
     void HgmConfigChangeCallback(std::shared_ptr<RSHgmConfigData> configData);
+    void HgmRefreshRateModeChangeCallback(int32_t refreshRateMode);
+
     float ppi_ = 1.0f;
     float xDpi_ = 1.0f;
     float yDpi_ = 1.0f;
-
-    void HgmRefreshRateModeChangeCallback(int32_t refreshRateMode);
     int32_t currentRefreshRateMode_ = 0;
+    std::unordered_map<std::string, std::unordered_map<std::string, AnimDynamicAttribute>> animAttributes_;
+    std::mutex mutex_;
 };
 } // namespace Rosen
 } // namespace OHOS

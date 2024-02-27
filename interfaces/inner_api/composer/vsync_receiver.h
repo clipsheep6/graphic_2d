@@ -78,11 +78,18 @@ public:
 
     virtual VsyncError Init();
     virtual VsyncError RequestNextVSync(FrameCallback callback);
+    virtual VsyncError RequestNextVSync(FrameCallback callback, const std::string &fromWhom,
+                                        int64_t lastVSyncTS);
     virtual VsyncError SetVSyncRate(FrameCallback callback, int32_t rate);
     virtual VsyncError GetVSyncPeriod(int64_t &period);
     virtual VsyncError GetVSyncPeriodAndLastTimeStamp(int64_t &period, int64_t &timeStamp,
                                                         bool isThreadShared = false);
     int32_t GetFd() { return fd_; }
+
+    /* transfer the FD to other process(want to use the FD),
+      the current process does not use the FD, so close FD, but not close vsync connection
+    */
+    void CloseVsyncReceiverFd();
 private:
     VsyncError Destroy();
     sptr<IVSyncConnection> connection_;

@@ -15,8 +15,6 @@
 
 #include "skia_path.h"
 
-#include <functional>
-
 #include "include/core/SkMatrix.h"
 #include "include/pathops/SkPathOps.h"
 #include "include/utils/SkParsePath.h"
@@ -34,29 +32,6 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-SkiaPath::SkPathSvgCacheManager& SkiaPath::SkPathSvgCacheManager::GetInstance()
-{
-    static SkPathSvgCacheManager instance;
-    return instance;
-}
-
-bool SkiaPath::SkPathSvgCacheManager::GetPathWithSvgString(const std::string& svgString, SkPath& path)
-{
-    std::size_t h = std::hash<std::string>{}(svgString);
-    bool ret = true;
-    auto iter = pathCache_.find(h);
-    if (iter == pathCache_.end()) {
-        ret = SkParsePath::FromSVGString(svgString.c_str(), &path);
-        if (ret) {
-            pathCache_.emplace(h, path);
-        }
-    } else {
-        path = iter->second;
-    }
-    return ret;
-}
-
-SkiaPath::SkiaPath() noexcept : path_() {}
 
 SkiaPath::SkiaPath(const SkiaPath& other) noexcept
 {
@@ -76,7 +51,7 @@ PathImpl* SkiaPath::Clone()
 
 bool SkiaPath::InitWithSVGString(const std::string& str)
 {
-    return SkPathSvgCacheManager::GetInstance().GetPathWithSvgString(str, path_);
+    return SkParsePath::FromSVGString(str.c_str(), &path_);
 }
 
 std::string SkiaPath::ConvertToSVGString() const
@@ -257,6 +232,11 @@ void SkiaPath::AddPath(const Path& src)
     }
 }
 
+bool SkiaPath::Contains(scalar x, scalar y) const
+{
+    return path_.contains(x, y);
+}
+
 void SkiaPath::ReverseAddPath(const Path& src)
 {
     path_.reverseAddPath(src.GetImpl<SkiaPath>()->GetPath());
@@ -398,7 +378,7 @@ std::shared_ptr<Data> SkiaPath::Serialize() const
 bool SkiaPath::Deserialize(std::shared_ptr<Data> data)
 {
     if (data == nullptr) {
-        LOGE("SkiaPath::Deserialize, data is invalid!");
+        LOGD("SkiaPath::Deserialize, data is invalid!");
         return false;
     }
 

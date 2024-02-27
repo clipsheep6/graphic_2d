@@ -15,6 +15,7 @@
 
 #include "pipeline/rs_hardware_thread.h"
 #include <memory>
+#include <unistd.h>
 
 #ifdef RS_ENABLE_EGLIMAGE
 #include "src/gpu/gl/GrGLDefines.h"
@@ -53,6 +54,22 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr uint32_t HARDWARE_THREAD_TASK_NUM = 2;
+
+#if defined(USE_ROSEN_DRAWING) && defined(RS_ENABLE_VK)
+Drawing::ColorType GetColorTypeFromBufferFormat(int32_t pixelFmt)
+{
+    switch (pixelFmt) {
+        case GRAPHIC_PIXEL_FMT_RGBA_8888:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+        case GRAPHIC_PIXEL_FMT_BGRA_8888 :
+            return Drawing::ColorType::COLORTYPE_BGRA_8888;
+        case GRAPHIC_PIXEL_FMT_RGB_565:
+            return Drawing::ColorType::COLORTYPE_RGB_565;
+        default:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+    }
+}
+#endif
 }
 
 RSHardwareThread& RSHardwareThread::Instance()
@@ -79,6 +96,7 @@ void RSHardwareThread::Start()
                 }
                 uniRenderEngine_ = std::make_shared<RSUniRenderEngine>();
                 uniRenderEngine_->Init(true);
+                hardwareTid_ = gettid();
             }).wait();
     }
     auto onPrepareCompleteFunc = [this](auto& surface, const auto& param, void* data) {
@@ -87,6 +105,11 @@ void RSHardwareThread::Start()
     if (hdiBackend_ != nullptr) {
         hdiBackend_->RegPrepareComplete(onPrepareCompleteFunc, this);
     }
+}
+
+int RSHardwareThread::GetHardwareTid() const
+{
+    return hardwareTid_;
 }
 
 void RSHardwareThread::PostTask(const std::function<void()>& task)
@@ -106,27 +129,6 @@ void RSHardwareThread::PostDelayTask(const std::function<void()>& task, int64_t 
 uint32_t RSHardwareThread::GetunExcuteTaskNum()
 {
     return unExcuteTaskNum_;
-}
-
-void RSHardwareThread::ReleaseBuffer(sptr<SurfaceBuffer> buffer, sptr<SyncFence> releaseFence,
-    sptr<IConsumerSurface> cSurface)
-{
-    if (cSurface == nullptr) {
-        RS_LOGE("RsDebug RSHardwareThread:: ReleaseBuffer failed, no consumer!");
-        return;
-    }
-
-    if (buffer != nullptr) {
-        RS_TRACE_NAME("RSHardwareThread::ReleaseBuffer");
-        auto ret = cSurface->ReleaseBuffer(buffer, releaseFence);
-        if (ret != OHOS::SURFACE_ERROR_OK) {
-            return;
-        }
-        // reset prevBuffer if we release it successfully,
-        // to avoid releasing the same buffer next frame in some situations.
-        buffer = nullptr;
-        releaseFence = SyncFence::INVALID_FENCE;
-    }
 }
 
 void RSHardwareThread::RefreshRateCounts(std::string& dumpString)
@@ -152,48 +154,6 @@ void RSHardwareThread::ClearRefreshRateCounts(std::string& dumpString)
     RS_LOGD("RSHardwareThread::RefreshRateCounts refresh rate counts info is cleared");
 }
 
-void RSHardwareThread::ReleaseLayers(OutputPtr output, const std::unordered_map<uint32_t, LayerPtr>& layerMap)
-{
-    // get present timestamp from and set present timestamp to surface
-    for (const auto& [id, layer] : layerMap) {
-        if (layer == nullptr || layer->GetLayerInfo()->GetSurface() == nullptr) {
-            RS_LOGW("RSHardwareThread::ReleaseLayers: layer or layer's cSurface is nullptr");
-            continue;
-        }
-        LayerPresentTimestamp(layer->GetLayerInfo(), layer->GetLayerInfo()->GetSurface());
-    }
-
-    // set all layers' releaseFence.
-    if (output == nullptr) {
-        RS_LOGE("RSHardwareThread::ReleaseLayers: output is nullptr");
-        return;
-    }
-    const auto layersReleaseFence = output->GetLayersReleaseFence();
-    if (layersReleaseFence.size() == 0) {
-        // When release fence's size is 0, the output may invalid, release all buffer
-        // This situation may happen when killing composer_host
-        for (const auto& [id, layer] : layerMap) {
-            if (layer == nullptr || layer->GetLayerInfo()->GetSurface() == nullptr) {
-                RS_LOGW("RSHardwareThread::ReleaseLayers: layer or layer's cSurface is nullptr");
-                continue;
-            }
-            auto preBuffer = layer->GetLayerInfo()->GetPreBuffer();
-            auto consumer = layer->GetLayerInfo()->GetSurface();
-            ReleaseBuffer(preBuffer, SyncFence::INVALID_FENCE, consumer);
-        }
-        RS_LOGE("RSHardwareThread::ReleaseLayers: no layer needs to release");
-    }
-    for (const auto& [layer, fence] : layersReleaseFence) {
-        if (layer == nullptr) {
-            continue;
-        }
-        auto preBuffer = layer->GetPreBuffer();
-        auto consumer = layer->GetSurface();
-        ReleaseBuffer(preBuffer, fence, consumer);
-    }
-    RSMainThread::Instance()->NotifyDisplayNodeBufferReleased();
-}
-
 void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vector<LayerInfoPtr>& layers)
 {
     if (!handler_) {
@@ -216,14 +176,14 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
 
         RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers rate: %d, now: %lu", currentRate, timestamp);
         ExecuteSwitchRefreshRate(rate);
-        PerformSetActiveMode(output);
+        PerformSetActiveMode(output, timestamp);
         AddRefreshRateCount();
         output->SetLayerInfo(layers);
         if (output->IsDeviceValid()) {
             hdiBackend_->Repaint(output);
         }
-        auto layerMap = output->GetLayers();
-        ReleaseLayers(output, layerMap);
+        output->ReleaseLayers();
+        RSMainThread::Instance()->NotifyDisplayNodeBufferReleased();
 
         if (FrameReport::GetInstance().IsGameScene()) {
             endTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -270,7 +230,7 @@ void RSHardwareThread::ExecuteSwitchRefreshRate(uint32_t refreshRate)
 
     auto screenManager = CreateOrGetScreenManager();
     auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
-    ScreenId id = RSMainThread::Instance()->GetFrameRateMgr()->GetCurScreenId();
+    ScreenId id = hgmCore.GetFrameRateMgr()->GetCurScreenId();
     if (refreshRate != hgmCore.GetScreenCurrentRefreshRate(id)) {
         RS_LOGI("RSHardwareThread::CommitAndReleaseLayers screenId %{public}d refreshRate %{public}d",
             static_cast<int>(id), refreshRate);
@@ -281,7 +241,7 @@ void RSHardwareThread::ExecuteSwitchRefreshRate(uint32_t refreshRate)
     }
 }
 
-void RSHardwareThread::PerformSetActiveMode(OutputPtr output)
+void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp)
 {
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     auto screenManager = CreateOrGetScreenManager();
@@ -318,7 +278,9 @@ void RSHardwareThread::PerformSetActiveMode(OutputPtr output)
             hdiBackend_->StartSample(output);
         } else {
             auto pendingPeriod = hgmCore.GetIdealPeriod(hgmCore.GetScreenCurrentRefreshRate(id));
-            hdiBackend_->SetPendingPeriod(output, pendingPeriod);
+            int64_t pendingTimestamp = static_cast<int64_t>(timestamp);
+            hdiBackend_->SetPendingMode(output, pendingPeriod, pendingTimestamp);
+            hdiBackend_->StartSample(output);
         }
     }
 }
@@ -379,6 +341,9 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #else
     auto renderFrameConfig = RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo, true);
 #endif
+    // override redraw frame buffer with physical screen resolution.
+    renderFrameConfig.width = screenInfo.phyWidth;
+    renderFrameConfig.height = screenInfo.phyHeight;
     auto renderFrame = uniRenderEngine_->RequestFrame(surface, renderFrameConfig, forceCPU);
     if (renderFrame == nullptr) {
         RS_LOGE("RsDebug RSHardwareThread::Redraw failed to request frame.");
@@ -418,20 +383,16 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         }
 
         if (layer->GetSurface()->GetName() == "RCDTopSurfaceNode") {
-            RS_LOGE("RCD::HradDraw::RCDTopSurface failed. Start GPU draw");
             isTopGpuDraw = true;
             continue;
         }
         if (layer->GetSurface()->GetName() == "RCDBottomSurfaceNode") {
-            RS_LOGE("RCD::HradDraw::RCDTopSurface failed. Start GPU draw");
             isBottomGpuDraw = true;
             continue;
         }
 
 #ifndef USE_ROSEN_DRAWING
-        auto saveCount = canvas->getSaveCount();
-
-        canvas->save();
+        RSAutoCanvasRestore acr(canvas_);
         auto dstRect = layer->GetLayerSize();
         SkRect clipRect = SkRect::MakeXYWH(static_cast<float>(dstRect.x), static_cast<float>(dstRect.y),
             static_cast<float>(dstRect.w), static_cast<float>(dstRect.h));
@@ -441,7 +402,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         auto params = RSUniRenderUtil::CreateLayerBufferDrawParam(layer, forceCPU);
         canvas->concat(params.matrix);
 #else
-        auto saveCount = canvas->Save();
+        Drawing::AutoCanvasRestore acr(*canvas, true);
         auto dstRect = layer->GetLayerSize();
         Drawing::Rect clipRect = Drawing::Rect(static_cast<float>(dstRect.x), static_cast<float>(dstRect.y),
             static_cast<float>(dstRect.w) + static_cast<float>(dstRect.x),
@@ -584,10 +545,16 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #endif // USE_VIDEO_PROCESSING_ENGINE
 #else // USE_ROSEN_DRAWING
             std::shared_ptr<Drawing::Image> image = nullptr;
-            Drawing::ColorType colorType = (params.buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
-                Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
 #if defined(RS_ENABLE_GL) && defined(RS_ENABLE_EGLIMAGE)
             if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+                Drawing::ColorType colorType = Drawing::ColorType::COLORTYPE_RGBA_8888;
+                auto pixelFmt = params.buffer->GetFormat();
+                if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
+                    colorType = Drawing::ColorType::COLORTYPE_BGRA_8888;
+                } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
+                    colorType = Drawing::ColorType::COLORTYPE_RGBA_1010102;
+                }
+
                 Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
 
                 Drawing::TextureInfo externalTextureInfo;
@@ -596,7 +563,13 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 externalTextureInfo.SetIsMipMapped(false);
                 externalTextureInfo.SetTarget(GL_TEXTURE_EXTERNAL_OES);
                 externalTextureInfo.SetID(eglTextureId);
-                externalTextureInfo.SetFormat(GL_RGBA8);
+                auto glType = GR_GL_RGBA8;
+                if (pixelFmt == GRAPHIC_PIXEL_FMT_BGRA_8888) {
+                    glType = GR_GL_BGRA8;
+                } else if (pixelFmt == GRAPHIC_PIXEL_FMT_YCBCR_P010 || pixelFmt == GRAPHIC_PIXEL_FMT_YCRCB_P010) {
+                    glType = GL_RGB10_A2;
+                }
+                externalTextureInfo.SetFormat(glType);
 
                 image = std::make_shared<Drawing::Image>();
                 if (!image->BuildFromTexture(*canvas->GetGPUContext(), externalTextureInfo,
@@ -609,6 +582,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #ifdef RS_ENABLE_VK
             if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
                 RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+                Drawing::ColorType colorType = GetColorTypeFromBufferFormat(params.buffer->GetFormat());
                 auto imageCache = uniRenderEngine_->GetVkImageManager()->CreateImageCacheFromBuffer(
                     params.buffer, params.acquireFence);
                 if (!imageCache) {
@@ -646,8 +620,6 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
             } else {
                 params.paint.SetShaderEffect(imageShader);
                 params.targetColorGamut = colorGamut;
-
-                auto screenManager = CreateOrGetScreenManager();
                 params.screenBrightnessNits = screenManager->GetScreenBrightnessNits(screenId);
 
                 uniRenderEngine_->ColorSpaceConvertor(imageShader, params);
@@ -667,13 +639,6 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
         } else {
             uniRenderEngine_->DrawBuffer(*canvas, params);
         }
-#endif
-#ifndef USE_ROSEN_DRAWING
-        canvas->restore();
-        canvas->restoreToCount(saveCount);
-#else
-        canvas->Restore();
-        canvas->RestoreToCount(saveCount);
 #endif
     }
 
@@ -699,21 +664,6 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
 #endif
 #endif
     RS_LOGD("RsDebug RSHardwareThread::Redraw flush frame buffer end");
-}
-
-// private func, guarantee the layer and surface are valid
-void RSHardwareThread::LayerPresentTimestamp(const LayerInfoPtr& layer, const sptr<IConsumerSurface>& surface) const
-{
-    if (!layer->IsSupportedPresentTimestamp()) {
-        return;
-    }
-    const auto& buffer = layer->GetBuffer();
-    if (buffer == nullptr) {
-        return;
-    }
-    if (surface->SetPresentTimestamp(buffer->GetSeqNum(), layer->GetPresentTimestamp()) != GSERROR_OK) {
-        RS_LOGD("RsDebug RSUniRenderComposerAdapter::LayerPresentTimestamp: SetPresentTimestamp failed");
-    }
 }
 
 void RSHardwareThread::AddRefreshRateCount()
@@ -743,7 +693,7 @@ GraphicColorGamut RSHardwareThread::ComputeTargetColorGamut(const std::vector<La
 
         CM_ColorSpaceInfo colorSpaceInfo;
         if (MetadataHelper::GetColorSpaceInfo(buffer, colorSpaceInfo) != GSERROR_OK) {
-            RS_LOGW("RSHardwareThread::ComputeTargetColorGamut Get color space from surface buffer failed");
+            RS_LOGD("RSHardwareThread::ComputeTargetColorGamut Get color space failed");
             continue;
         }
 

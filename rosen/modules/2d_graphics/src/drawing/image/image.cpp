@@ -59,12 +59,6 @@ bool Image::BuildFromBitmap(const Bitmap& bitmap)
     return imageImplPtr->BuildFromBitmap(bitmap);
 }
 
-bool Image::BuildFromPicture(const Picture& picture, const SizeI& dimensions, const Matrix& matrix,
-    const Brush& brush, BitDepth bitDepth, std::shared_ptr<ColorSpace> colorSpace)
-{
-    return imageImplPtr->BuildFromPicture(picture, dimensions, matrix, brush, bitDepth, colorSpace);
-}
-
 std::shared_ptr<Image> Image::MakeFromRaster(const Pixmap& pixmap,
     RasterReleaseProc rasterReleaseProc, ReleaseContext releaseContext)
 {
@@ -121,6 +115,17 @@ BackendTexture Image::GetBackendTexture(bool flushPendingGrContextIO, TextureOri
 bool Image::IsValid(GPUContext* context) const
 {
     return imageImplPtr->IsValid(context);
+}
+
+bool Image::pinAsTexture(GPUContext& context)
+{
+    auto image = ExportSkImage().get();
+    auto skGpuContext = context.GetImpl<SkiaGPUContext>();
+    if (skGpuContext == nullptr) {
+        return false;
+    }
+    auto skContext = skGpuContext->GetGrContext().get();
+    return image != nullptr && skContext != nullptr && SkImage_pinAsTexture(image, skContext);
 }
 #endif
 
@@ -220,6 +225,11 @@ bool Image::IsOpaque() const
     return imageImplPtr->IsOpaque();
 }
 
+void Image::HintCacheGpuResource() const
+{
+    imageImplPtr->HintCacheGpuResource();
+}
+
 std::shared_ptr<Data> Image::Serialize() const
 {
     return imageImplPtr->Serialize();
@@ -233,17 +243,6 @@ bool Image::Deserialize(std::shared_ptr<Data> data)
 const sk_sp<SkImage> Image::ExportSkImage()
 {
     return GetImpl<SkiaImage>()->GetImage();
-}
-
-bool Image::pinAsTexture(GPUContext& context)
-{
-    auto image = ExportSkImage().get();
-    auto skGpuContext = context.GetImpl<SkiaGPUContext>();
-    if (skGpuContext == nullptr) {
-        return false;
-    }
-    auto skContext = skGpuContext->GetGrContext().get();
-    return image != nullptr && skContext != nullptr && SkImage_pinAsTexture(image, skContext);
 }
 } // namespace Drawing
 } // namespace Rosen

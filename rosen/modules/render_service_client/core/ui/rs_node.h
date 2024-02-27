@@ -20,7 +20,6 @@
 
 #include "animation/rs_animation_timing_curve.h"
 #include "animation/rs_animation_timing_protocol.h"
-#include "animation/rs_frame_rate_range.h"
 #include "animation/rs_motion_path_option.h"
 #include "animation/rs_particle_params.h"
 #include "animation/rs_transition_effect.h"
@@ -218,6 +217,12 @@ public:
     void SetScaleX(float scaleX);
     void SetScaleY(float scaleY);
 
+    void SetSkew(float skew);
+    void SetSkew(float skewX, float skewY);
+    void SetSkew(const Vector2f& skew);
+    void SetSkewX(float skewX);
+    void SetSkewY(float skewY);
+
     void SetAlpha(float alpha);
     void SetAlphaOffscreen(bool alphaOffscreen);
 
@@ -303,7 +308,9 @@ public:
 
     void SetUseShadowBatching(bool useShadowBatching);
 
-    void SetColorBlendMode(RSColorBlendModeType blendMode);
+    void SetColorBlendMode(RSColorBlendMode colorBlendMode);
+
+    void SetColorBlendApplyType(RSColorBlendApplyType colorBlendApplyType);
 
     // driven render
     void MarkDrivenRender(bool flag);
@@ -321,7 +328,7 @@ public:
     void SetDrawRegion(std::shared_ptr<RectF> rect);
 
     // Mark preferentially draw node and childrens
-    void MarkNodeGroup(bool isNodeGroup, bool isForced = true);
+    void MarkNodeGroup(bool isNodeGroup, bool isForced = true, bool includeProperty = false);
 
     void MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer);
 
@@ -351,23 +358,31 @@ public:
 
     void SetAiInvert(const Vector4f& aiInvert);
 
+    void SetSystemBarEffect();
+
     void SetHueRotate(float hueRotate);
 
     void SetColorBlend(uint32_t colorValue);
 
-    void AddFRCSceneInfo(const std::string& scene, float speed);
-
-    void UpdateUIFrameRateRange(const FrameRateRange& range);
-
     int32_t CalcExpectedFrameRate(const std::string& scene, float speed);
 
     void SetOutOfParent(OutOfParentType outOfParent);
+
+    void SetFrameNodeInfo(int32_t id, std::string tag);
+
+    int32_t GetFrameNodeId();
+
+    std::string GetFrameNodeTag();
+
     using BoundsChangedCallback = std::function<void (const Rosen::Vector4f&)>;
     virtual void SetBoundsChangedCallback(BoundsChangedCallback callback){};
     bool IsTextureExportNode() const
     {
         return isTextureExportNode_;
     }
+
+    // key: symbolSpanID, value:symbol animation node list
+    std::unordered_map<uint64_t, std::list<SharedPtr>> canvasNodesListMap;
 protected:
     explicit RSNode(bool isRenderServiceNode, bool isTextureExportNode = false);
     explicit RSNode(bool isRenderServiceNode, NodeId id, bool isTextureExportNode = false);
@@ -391,11 +406,17 @@ protected:
     std::vector<PropertyId> GetModifierIds() const;
     bool isCustomTextType_ = false;
 
+    std::recursive_mutex& GetPropertyMutex()
+    {
+        return propertyMutex_;
+    }
 private:
     static NodeId GenerateId();
     static void InitUniRenderEnabled();
     NodeId id_;
     NodeId parent_ = 0;
+    int32_t frameNodeId_ = -1;
+    std::string frameNodeTag_;
     std::vector<NodeId> children_;
     void SetParent(NodeId parent);
     void RemoveChildById(NodeId childId);
@@ -406,7 +427,7 @@ private:
     void AddAnimationInner(const std::shared_ptr<RSAnimation>& animation);
     void FinishAnimationByProperty(const PropertyId& id);
     void RemoveAnimationInner(const std::shared_ptr<RSAnimation>& animation);
-    void CancelAnimationByProperty(const PropertyId& id);
+    void CancelAnimationByProperty(const PropertyId& id, const bool needForceSync = false);
     const std::shared_ptr<RSModifier> GetModifier(const PropertyId& propertyId);
     virtual void OnBoundsSizeChanged() const {};
     void UpdateModifierMotionPathOption();
@@ -439,8 +460,8 @@ private:
     std::shared_ptr<RSImplicitAnimator> implicitAnimator_;
     std::shared_ptr<const RSTransitionEffect> transitionEffect_;
 
-    FrameRateRange nodeRange_ = { 0, 0, 0 };
     std::mutex animationMutex_;
+    std::recursive_mutex propertyMutex_;
 
     friend class RSUIDirector;
     friend class RSTransition;

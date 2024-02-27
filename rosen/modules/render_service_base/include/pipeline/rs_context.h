@@ -28,6 +28,7 @@ enum ClearMemoryMoment : uint32_t {
     PROCESS_EXIT,
     COMMON_SURFACE_NODE_HIDE,
     SCENEBOARD_SURFACE_NODE_HIDE,
+    LOW_MEMORY,
     NO_CLEAR,
 };
 
@@ -85,6 +86,7 @@ public:
     }
     // add node info after cmd data process
     void AddActiveNode(const std::shared_ptr<RSRenderNode>& node);
+    bool HasActiveNode(const std::shared_ptr<RSRenderNode>& node);
 
     void MarkNeedPurge(ClearMemoryMoment moment, PurgeType purgeType);
 
@@ -110,9 +112,13 @@ public:
     }
 
 private:
+    // This function is used for initialization, should be called once after constructor.
+    void Initialize();
     RSRenderNodeMap nodeMap;
     RSRenderFrameRateLinkerMap frameRateLinkerMap;
+    // The root of render node tree, Note: this node is not the animation fallback node.
     std::shared_ptr<RSBaseRenderNode> globalRootRenderNode_ = std::make_shared<RSRenderNode>(0, true);
+    // The list of animating nodes in this frame.
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> animatingNodeList_;
     PurgeType purgeType_ = PurgeType::NONE;
     ClearMemoryMoment clearMoment_ = ClearMemoryMoment::NO_CLEAR;
@@ -123,6 +129,7 @@ private:
     std::function<void()> vsyncRequestFunc_;
     // Collect all active Nodes sorted by root node id in this frame.
     std::unordered_map<NodeId, std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>> activeNodesInRoot_;
+    std::mutex activeNodesInRootMutex_;
 
     friend class RSRenderThread;
     friend class RSMainThread;

@@ -44,7 +44,6 @@ public:
 private:
     std::shared_ptr<txt::FontCollection> fontCollection_ = nullptr;
     sk_sp<txt::DynamicFontManager> dfmanager_ = nullptr;
-    bool disableSystemFont_ = false;
 };
 } // namespace AdapterTxt
 } // namespace Rosen

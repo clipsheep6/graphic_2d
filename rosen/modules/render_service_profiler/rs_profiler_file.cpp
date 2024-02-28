@@ -39,13 +39,13 @@ const std::string& RSFile::GetDefaultPath()
 
 void RSFile::Create(const std::string& fname)
 {
-    if (file_ != NULL) {
+    if (file_ != nullptr) {
         Close();
     }
     const std::lock_guard<std::mutex> lgMutex(writeMutex_);
 
     file_ = Utils::FileOpen(fname, "wbe");
-    if (file_ == NULL) {
+    if (file_ == nullptr) {
         return;
     }
 
@@ -62,12 +62,12 @@ void RSFile::Create(const std::string& fname)
 
 bool RSFile::Open(const std::string& fname)
 {
-    if (file_ != NULL) {
+    if (file_ != nullptr) {
         Close();
     }
 
     file_ = Utils::FileOpen(fname, "rbe");
-    if (file_ == NULL) {
+    if (file_ == nullptr) {
         return false;
     }
 
@@ -75,7 +75,7 @@ bool RSFile::Open(const std::string& fname)
     Utils::FileRead(&headerId, sizeof(headerId), 1, file_);
     if (headerId != 'RPLY') {
         Utils::FileClose(file_);
-        file_ = NULL;
+        file_ = nullptr;
         return false;
     }
 
@@ -515,7 +515,7 @@ void RSFile::Close()
     const std::lock_guard<std::mutex> lgMutex(writeMutex_);
 
     Utils::FileClose(file_);
-    file_ = NULL;
+    file_ = nullptr;
 
     headerOff_ = 0;
     headerPidList_.clear();

@@ -256,21 +256,25 @@ uint32_t RSProfilerBase::GenerateUniqueImageId()
     return uniqueImageId++;
 }
 
+std::shared_ptr<RSDisplayRenderNode> RSProfilerBase::GetDisplayNode(RSContext& context)
+{
+    const std::shared_ptr<RSBaseRenderNode>& root = context.GetGlobalRootRenderNode();
+    // without these checks device might get stuck on startup
+    if (!root || (root->GetChildrenCount() != 1)) {
+        return nullptr;
+    }
+
+    return RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(root->GetSortedChildren().front());
+}
+
 Vector4f RSProfilerBase::GetScreenRect(RSContext& context)
 {
-    const std::shared_ptr<RSBaseRenderNode>& rootNode = context.GetGlobalRootRenderNode();
-    // without these checks device might get stuck on startup
-    if (!rootNode || (rootNode->GetChildrenCount() != 1)) {
+    std::shared_ptr<RSDisplayRenderNode> node = GetDisplayNode(context);
+    if (!node) {
         return {};
     }
 
-    std::shared_ptr<RSDisplayRenderNode> displayNode =
-        RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(rootNode->GetSortedChildren().front());
-    if (!displayNode) {
-        return {};
-    }
-
-    const RectI rect = displayNode->GetDirtyManager()->GetSurfaceRect();
+    const RectI rect = node->GetDirtyManager()->GetSurfaceRect();
     return { rect.GetLeft(), rect.GetTop(), rect.GetRight(), rect.GetBottom() };
 }
 

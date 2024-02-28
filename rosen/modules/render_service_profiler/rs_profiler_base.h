@@ -36,6 +36,7 @@ class PixelMap;
 namespace OHOS::Rosen {
 
 class RSContext;
+class RSDisplayRenderNode;
 
 enum class SpecParseMode { NONE = 0, READ = 1, WRITE = 2 };
 
@@ -93,6 +94,7 @@ public:
 
     static uint32_t GenerateUniqueImageId();
     static OHOS::Media::PixelMap* PixelMapUnmarshalling(Parcel& parcel);
+    static std::shared_ptr<RSDisplayRenderNode> GetDisplayNode(RSContext& context);
     static Vector4f GetScreenRect(RSContext& context);
     static void TransactionDataOnProcess(RSContext& context);
 

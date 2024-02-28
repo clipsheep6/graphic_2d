@@ -559,7 +559,7 @@ void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::
     Drawing::RectI snapshotIBounds;
     snapshotIBounds = srcRect;
     if (needSnapshotOutset) {
-        snapshotIBounds.MakeOutset(-1, -1);
+        snapshotIBounds.Outset(-1, -1);
     }
 
     // Take a screenshot.

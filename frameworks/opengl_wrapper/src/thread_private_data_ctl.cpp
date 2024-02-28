@@ -47,7 +47,7 @@ ThreadPrivateData* ThreadPrivateDataCtl::GetPrivateData()
     return data;
 }
 
-#ifdef EGL_ERRROR_ENABLE
+#ifdef EGL_ERROR_ENABLE
 void ThreadPrivateDataCtl::ClearError()
 {
     OHOS::EglGetErrorImpl();

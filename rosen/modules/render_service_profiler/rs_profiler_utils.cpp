@@ -23,8 +23,6 @@
 #include "rs_profiler_base.h"
 
 #include "platform/common/rs_log.h"
-#else
-#include "../rs_adapt.h"
 #endif
 
 namespace OHOS::Rosen::Utils {
@@ -97,15 +95,11 @@ void FileSeek(FILE* stream, int64_t offset, int origin)
 FILE* FileOpen(const std::string& path, const std::string& openOptions)
 {
     const std::filesystem::path canonicalPath = std::filesystem::weakly_canonical(std::filesystem::path(path));
-    if (std::filesystem::exists(canonicalPath)) {
-        auto file = fopen(canonicalPath.c_str(), openOptions.c_str());
-        if (file == nullptr) {
-            RS_LOGE("Cant open file '%s'!", path.c_str()); // NOLINT
-        }
-        return file;
+    auto file = fopen(canonicalPath.string().c_str(), openOptions.c_str());
+    if (file == nullptr) {
+        RS_LOGE("Cant open file '%s'!", path.c_str()); // NOLINT
     }
-    RS_LOGE("File '%s' doesn't exists!", path.c_str()); // NOLINT
-    return nullptr;
+    return file;
 }
 
 void FileClose(FILE* file)

@@ -19,12 +19,12 @@
 
 #include "foundation/graphic/graphic_2d/utils/log/rs_trace.h"
 #include "rs_profiler_base.h"
+#include "rs_profiler_capture_recorder.h"
 #include "rs_profiler_capturedata.h"
 #include "rs_profiler_file.h"
 #include "rs_profiler_network.h"
 #include "rs_profiler_telemetry.h"
 #include "rs_profiler_utils.h"
-#include "rs_profiler_capture_recorder.h"
 
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_render_service_connection.h"
@@ -77,34 +77,21 @@ NodeId GetNodeId(const std::shared_ptr<RSRenderNode>& node)
 */
 static double GetDirtyRegionRelative(RSContext& context)
 {
-    const std::shared_ptr<RSBaseRenderNode>& rootNode = context.GetGlobalRootRenderNode();
-    // without these checks device might get stuck on startup
-    if (!rootNode || (rootNode->GetChildrenCount() != 1)) {
-        return -1.0;
-    }
-
-    std::shared_ptr<RSDisplayRenderNode> displayNode =
-        RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(rootNode->GetSortedChildren().front());
+    std::shared_ptr<RSDisplayRenderNode> displayNode = RSProfilerBase::GetDisplayNode(context);
     if (!displayNode) {
-        return -1.0;
+        return -1;
     }
 
-    std::shared_ptr<RSBaseRenderNode> nodePtr = displayNode->shared_from_this();
-    std::shared_ptr<RSDisplayRenderNode> displayNodePtr = nodePtr->ReinterpretCastTo<RSDisplayRenderNode>();
-    if (!displayNodePtr) {
-        return -1.0;
-    }
-
-    const RectI displayResolution = displayNodePtr->GetDirtyManager()->GetSurfaceRect();
+    const RectI displayResolution = displayNode->GetDirtyManager()->GetSurfaceRect();
     const double displayWidth = displayResolution.GetWidth();
     const double displayHeight = displayResolution.GetHeight();
     const uint32_t bufferAge = 3;
     // not to update the RSRenderFrame/DirtyManager and just calculate dirty region
     const bool isAlignedDirtyRegion = false;
-    RSUniRenderUtil::MergeDirtyHistory(displayNodePtr, bufferAge, isAlignedDirtyRegion);
+    RSUniRenderUtil::MergeDirtyHistory(displayNode, bufferAge, isAlignedDirtyRegion);
     std::vector<NodeId> hasVisibleDirtyRegionSurfaceVec;
     const Occlusion::Region dirtyRegion =
-        RSUniRenderUtil::MergeVisibleDirtyRegion(displayNodePtr, hasVisibleDirtyRegionSurfaceVec, isAlignedDirtyRegion);
+        RSUniRenderUtil::MergeVisibleDirtyRegion(displayNode, hasVisibleDirtyRegionSurfaceVec, isAlignedDirtyRegion);
 
     const std::vector<Occlusion::Rect>& visibleDirtyRects = dirtyRegion.GetRegionRects();
     double accumulatedArea = 0.0;
@@ -415,7 +402,7 @@ void RSProfiler::PatchNode(const ArgList& args)
         return;
     }
 
-    const Vector4f screenRect = RSProfilerBase::GetScreenRect();
+    const Vector4f screenRect = RSProfilerBase::GetScreenRect(*g_renderServiceContext);
 
     auto surfaceNode = static_cast<RSSurfaceRenderNode*>(node.get());
     {

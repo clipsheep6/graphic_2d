@@ -196,13 +196,34 @@ std::vector<NetworkStats> Network::GetStats(const std::string& interface)
     return results;
 }
 
-void Network::SendRdc(const std::string& path)
+void Network::SendRdcPath(const std::string& path)
 {
     if (!path.empty()) {
         std::string out;
         out += static_cast<char>(PackageID::RS_PROFILER_RDC_BINARY);
         out += path;
         SendBinary(out.data(), out.size());
+    }
+}
+
+void Network::SendDclPath(const std::string& path)
+{
+    if (!path.empty()) {
+        std::string out;
+        out += static_cast<char>(PackageID::RS_PROFILER_DCL_BINARY);
+        out += path;
+        SendBinary(out.data(), out.size());
+    }
+}
+
+void Network::SendSkp(const void* data, size_t size)
+{
+    if (data && (size > 0)) {
+        std::vector<char> buffer;
+        buffer.reserve(size + 1);
+        buffer.push_back(static_cast<char>(PackageID::RS_PROFILER_SKP_BINARY));
+        buffer.insert(buffer.end(), static_cast<const char*>(data), static_cast<const char*>(data) + size);
+        SendBinary(buffer.data(), buffer.size());
     }
 }
 
@@ -361,22 +382,14 @@ void Network::ProcessIncoming(Socket& socket)
         return;
     }
 
-    std::string data;
-    constexpr size_t extraSpace = 2;
-    data.resize(size + extraSpace);
-    socket.ReceiveWhenReady(data.data(), size);
-    data[size] = 0;
+    std::vector<char> data;
+    data.resize(size);
+    socket.ReceiveWhenReady(data.data(), data.size());
 
     if (packetIncoming.IsBinary()) {
-        ProcessBinary(data.data(), size);
+        ProcessBinary(data.data(), data.size());
     } else if (packetIncoming.IsCommand()) {
-        ProcessCommand(data.data(), size + 1);
-
-        errno = EWOULDBLOCK;
-        Packet acknowledgement { Packet::COMMAND_ACKNOWLEDGED };
-        acknowledgement.Write(std::string(" "));
-        const std::lock_guard<std::mutex> guard(outgoingMutex_);
-        outgoing_.emplace(acknowledgement.Release());
+        ProcessCommand(data.data(), data.size());
     }
 }
 

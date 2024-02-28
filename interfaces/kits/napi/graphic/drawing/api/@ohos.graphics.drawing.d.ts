@@ -301,6 +301,158 @@ declare namespace drawing {
   }
 
   /**
+   * Enumerates storage formats of bitmap pixels.
+   * @enum { number }
+   * @syscap SystemCapability.Graphics.Drawing
+   * @since 12
+   */
+  enum ColorFormat {
+    /**
+     * Unknown format.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    COLOR_FORMAT_UNKNOWN = 0,
+    /**
+     * Each pixel is represented by 8 bits, which together indicate alpha. 
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    COLOR_FORMAT_ALPHA_8,
+    /**
+     * Each pixel is represented by 16 bits. From the most significant bit to the least significant bit,
+     * the first 5 bits indicate red, the subsequent 6 bits indicate green, and the last 5 bits indicate blue.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    COLOR_FORMAT_RGB_565,
+    /**
+     * Each pixel is represented by 16 bits. From the most significant bit to the least significant bit,
+     * every 4 bits indicate alpha, red, green, and blue, respectively.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    COLOR_FORMAT_ARGB_4444,
+    /**
+     * Each pixel is represented by 32 bits. From the most significant bit to the least significant bit,
+     * every 8 bits indicate alpha, red, green, and blue, respectively.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    COLOR_FORMAT_RGBA_8888,
+    /**
+     * Each pixel is represented by 32 bits. From the most significant bit to the least significant bit,
+     * every 8 bits indicate blue, green, red, and alpha, respectively.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    COLOR_FORMAT_BGRA_8888
+  }
+
+  /**
+   * Enumerates alpha formats of bitmap pixels.
+   * @enum { number }
+   * @syscap SystemCapability.Graphics.Drawing
+   * @since 12
+   */
+  enum AlphaFormat {
+    /**
+     * Unknown format.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    ALPHA_FORMAT_UNKNOWN = 0,
+    /**
+     * The bitmap does not have the alpha component.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    ALPHA_FORMAT_OPAQUE,
+    /**
+     * The color component of each pixel is premultiplied by the alpha component.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    ALPHA_FORMAT_PREMUL,
+    /**
+     * The color component of each pixel is not premultiplied by the alpha component.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    ALPHA_FORMAT_UNPREMUL
+  }
+
+  /**
+   * Defines image info struct.
+   * @typedef ImageInfo
+   * @syscap SystemCapability.Graphics.Drawing
+   * @since 12
+   */
+  interface ImageInfo {
+    /**
+     * storage for width of image.
+     * @type { number }
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    width: number;
+    /**
+     * storage for height of image.
+     * @type { number }
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    height: number;
+    /**
+     * storage for color formats.
+     * @type { number }
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    colorType: ColorFormat;
+    /**
+     * storage for alpha formats.
+     * @type { number }
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    alphaType: AlphaFormat;
+  }
+
+  /**
+   * Enumerates of shadow flags.
+   * @enum { number }
+   * @syscap SystemCapability.Graphics.Drawing
+   * @since 12
+   */
+  enum ShadowFlag {
+    /**
+     * Use no shadow flags.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    SHADOW_FLAGS_NONE,
+    /**
+     * The occluding object is transparent.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    SHADOW_FLAGS_TRANSPARENT_OCCLUDER,
+    /**
+     * No need to analyze shadows.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    SHADOW_FLAGS_GEOMETRIC_ONLY,
+    /**
+     * Use all shadow falgs.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    SHADOW_FLAGS_ALL,
+  }
+
+  /**
    * Provides an interface to the drawing, and how to clip and transform the drawing.
    * @syscap SystemCapability.Graphics.Drawing
    * @since 11
@@ -431,6 +583,66 @@ declare namespace drawing {
      * @since 11
      */
     detachBrush(): void;
+
+    /**
+     * Read pixels data from canvas.
+     * @param { ImageInfo } imageInfo - Object.
+     * @param { ArrayBuffer } dst - dest buffer to which the image pixel map data stored.
+     * @param { number } dstRowSize - size of one row of pixels.
+     * @param { number } sx - offset into canvas writable pixels on x-axis.
+     * @param { number } sy - offset into canvas writable pixels on y-axis.
+     * @returns { boolean } return true if succeed.
+     * @throws { BusinessError } 401 - Parameter error.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 11
+     */
+    readPixels(imageInfo: ImageInfo, dst: ArrayBuffer, dstRowSize: number, sx: number, sy: number ): boolean;
+
+    /**
+     * Draw an offset spot shadow and outlining ambient shadow for the given path with circular light.
+     * @param { Path } path - Object, use to generate shadows.
+     * @param { common2D.Point3d } offsetZ - represents Z offset of the occluder from the canvas based on x and y.
+     * @param { common2D.Point3d } position - represents the position of the light relative to the canvas.
+     * @param { number } lightRadius - The radius of the circular light.
+     * @param { number } ambientColor - Ambient shadow's color.
+     * @param { number } spotColor - Spot shadow's color.
+     * @param { ShadowFlag } flag - shadow flag.
+     * @throws { BusinessError } 401 - Parameter error.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    drawShadow(path: Path, offsetZ: common2D.Point3d, position: common2D.Point3d, lightRadius: number,
+      ambientColor: number, spotColor: number, flag: ShadowFlag) : void;
+
+    /**
+     * Image shear transformation.
+     * @param { number } sx - the value shear transformation in x-axis.
+     * @param { number } sy - the value shear transformation in y-axis.
+     * @throws { BusinessError } 401 - Parameter error.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    shear(sx: number, sy: number) : void;
+
+    /**
+     * Rotates by degrees, Positive degrees rotates clockwise.
+     * @param { number } degrees - the value shear transformation in x-axis.
+     * @param { number } px - Indicates the x-axis value of the point to rotate about.
+     * @param { number } py - Indicates the y-axis value of the point to rotate about.
+     * @throws { BusinessError } 401 - Parameter error.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    rotate(degrees: number, sx: number, sy: number) : void;
+
+    /**
+     * Gets the number of the canvas status (canvas matrix) saved in the stack.
+     * @returns { number } Returns a 32-bit variable that describes the number of canvas status.
+     * @throws { BusinessError } 401 - Parameter error.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    getSaveCount() : number;
   }
 
   /**
@@ -865,6 +1077,62 @@ declare namespace drawing {
      * @since 11
      */
     setBlendMode(mode: BlendMode): void;    
+  }
+
+  /**
+   * Provides image for drawing.
+   * @syscap SystemCapability.Graphics.Drawing
+   * @since 12
+   */
+  class Image {
+    /**
+     * Constructor for the Image.
+     * @throws { BusinessError } 401 - Parameter error.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    constructor();
+
+    /**
+     * Rebuilds an image object, sharing or copying bitmap pixels.
+     * @param { image.PixelMap } pixelmap - PixelMap.
+     * @returns { boolean } true if succeed.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    buildFromBitmap(pixelmap: image.PixelMap) : boolean;
+
+    /**
+     * Gets pixel count in each row of image.
+     * @returns { number } the image width.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    getWidth() : number;
+
+    /**
+     * Gets pixel row count of image.
+     * @returns { number } the image height.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    getHeight() : number;
+
+    /**
+     * Gets pixel row count of image.
+     * @returns { boolean } true if image is opaque.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    isOpaque() : boolean;
+
+    /**
+     * Gets pixel info of iamge.
+     * @returns { ImageInfo } Object.
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    getImageInfo() : ImageInfo;
   }
 }
 

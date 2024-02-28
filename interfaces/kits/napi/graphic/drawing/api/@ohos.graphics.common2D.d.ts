@@ -98,6 +98,51 @@ declare namespace common2D {
      */
     bottom: number;
   }
+
+  /**
+   * Provides the definition of the point in 2D.
+   *
+   * @typedef Point
+   * @syscap SystemCapability.Graphics.Drawing
+   * @since 12
+   */
+  interface Point {
+    /**
+     * x co-ordinate
+     *
+     * @type { number }
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    x: number;
+
+    /**
+     * y co-ordinate
+     *
+     * @type { number }
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    y: number;
+  }
+
+  /**
+   * Provides the definition of the point in 3D.
+   *
+   * @typedef Point
+   * @syscap SystemCapability.Graphics.Drawing
+   * @since 12
+   */
+  interface Point3d extends Point {
+    /**
+     * z co-ordinate
+     *
+     * @type { number }
+     * @syscap SystemCapability.Graphics.Drawing
+     * @since 12
+     */
+    z: number;
+  }
 }
 
 export default common2D;

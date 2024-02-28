@@ -478,7 +478,6 @@ HWTEST_F(RSUniRenderVisitorTest, CalcDirtyDisplayRegion, TestSize.Level1)
     Occlusion::Rect rect{0, 80, 2560, 1600};
     Occlusion::Region region{rect};
     VisibleData vData;
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
 
     auto partialRenderType = RSSystemProperties::GetUniPartialRenderEnabled();
     auto isPartialRenderEnabled = (partialRenderType != PartialRenderType::DISABLED);
@@ -491,7 +490,7 @@ HWTEST_F(RSUniRenderVisitorTest, CalcDirtyDisplayRegion, TestSize.Level1)
     rsSurfaceRenderNode->AddChild(rsCanvasRenderNode, -1);
 
     rsUniRenderVisitor->PrepareDisplayRenderNode(*rsDisplayRenderNode);
-    rsSurfaceRenderNode->SetVisibleRegionRecursive(region, vData, pidVisMap);
+    rsSurfaceRenderNode->SetVisibleRegionRecursive(region, vData);
     rsUniRenderVisitor->ProcessDisplayRenderNode(*rsDisplayRenderNode);
 }
 
@@ -540,14 +539,13 @@ HWTEST_F(RSUniRenderVisitorTest, SetSurfafaceGlobalDirtyRegion, TestSize.Level1)
     Occlusion::Rect rect{0, 80, 2560, 1600};
     Occlusion::Region region{rect};
     VisibleData vData;
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    rsSurfaceRenderNode1->SetVisibleRegionRecursive(region, vData, pidVisMap);
+    rsSurfaceRenderNode1->SetVisibleRegionRecursive(region, vData);
 
     config.id = 11;
     auto rsSurfaceRenderNode2 = std::make_shared<RSSurfaceRenderNode>(config, rsContext->weak_from_this());
     Occlusion::Rect rect2{100, 100, 500, 1500};
     Occlusion::Region region2{rect2};
-    rsSurfaceRenderNode2->SetVisibleRegionRecursive(region2, vData, pidVisMap);
+    rsSurfaceRenderNode2->SetVisibleRegionRecursive(region2, vData);
 
     RSDisplayNodeConfig displayConfig;
     auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(9, displayConfig, rsContext->weak_from_this());

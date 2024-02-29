@@ -468,11 +468,6 @@ public:
         return abilityBgAlpha_;
     }
 
-    void setQosCal(bool qosPidCal)
-    {
-        qosPidCal_ = qosPidCal;
-    }
-
     bool IsSurfaceInStartingWindowStage() const;
 
     WINDOW_LAYER_INFO_TYPE GetVisibleLevelForWMS(RSVisibleLevel visibleLevel);
@@ -480,7 +475,6 @@ public:
     void SetVisibleRegionRecursive(
         const Occlusion::Region& region,
         VisibleData& visibleVec,
-        std::map<uint32_t, RSVisibleLevel>& pidVisMap,
         bool needSetVisibleRegion = true,
         RSVisibleLevel visibleLevel = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL,
         bool isSystemAnimatedScenes = false);
@@ -996,7 +990,6 @@ private:
     int32_t offsetY_ = 0;
     float positionZ_ = 0.0f;
     bool zOrderChanged_ = false;
-    bool qosPidCal_ = false;
     SurfaceId surfaceId_ = 0;
 
     std::string name_;
@@ -1020,7 +1013,7 @@ private:
     /*
         visibleRegion: appwindow visible region after occlusion, used for rs opdrop and other optimization.
         visibleRegionForCallBack: appwindow visible region after occlusion (no filtercache occlusion), used in
-    windowmanager, qos, and web surfacenode visibility callback.
+    windowmanager, and web surfacenode visibility callback.
         These two values are the same in most cases. If there are filter cache occlusion, this two values will be
     different under filter cache surfacenode layer.
     */

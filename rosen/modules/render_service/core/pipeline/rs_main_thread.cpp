@@ -80,7 +80,6 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_transaction_proxy.h"
 
-#include "rs_qos_thread.h"
 #include "xcollie/watchdog.h"
 
 #include "render_frame_trace.h"
@@ -134,10 +133,6 @@ constexpr uint32_t WAIT_FOR_HARDWARE_THREAD_TASK_TIMEOUT = 3000;
 constexpr uint32_t WAIT_FOR_SURFACE_CAPTURE_PROCESS_TIMEOUT = 1000;
 constexpr uint32_t WATCHDOG_TIMEVAL = 5000;
 constexpr uint32_t HARDWARE_THREAD_TASK_NUM = 2;
-constexpr int32_t SIMI_VISIBLE_RATE = 2;
-constexpr int32_t DEFAULT_RATE = 1;
-constexpr int32_t INVISBLE_WINDOW_RATE = 10;
-constexpr int32_t SYSTEM_ANIMATED_SECNES_RATE = 2;
 constexpr int32_t MAX_MULTI_INSTANCE_PID_COUNT = 1;
 constexpr uint32_t WAIT_FOR_MEM_MGR_SERVICE = 100;
 constexpr uint32_t CAL_NODE_PREFERRED_FPS_LIMIT = 50;
@@ -317,7 +312,6 @@ void RSMainThread::Init()
 
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();
-    qosPidCal_ = deviceType_ == DeviceType::PC;
     isFoldScreenDevice_ = system::GetParameter("const.window.foldscreen.type", "") == "true";
     auto taskDispatchFunc = [](const RSTaskDispatcher::RSTask& task, bool isSyncTask = false) {
         RSMainThread::Instance()->PostTask(task);
@@ -1747,12 +1741,11 @@ RSVisibleLevel RSMainThread::GetRegionVisibleLevel(const Occlusion::Region& curR
 }
 
 void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces,
-    VisibleData& dstCurVisVec, std::map<uint32_t, RSVisibleLevel>& dstPidVisMap)
+    VisibleData& dstCurVisVec)
 {
     Occlusion::Region accumulatedRegion;
     VisibleData curVisVec;
     OcclusionRectISet occlusionSurfaces;
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
     bool hasFilterCacheOcclusion = false;
     bool filterCacheOcclusionEnabled = RSSystemParameters::GetFilterCacheOcculusionEnabled();
     for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
@@ -1762,28 +1755,26 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
         }
         curSurface->SetOcclusionInSpecificScenes(deviceType_ == DeviceType::PC && !threeFingerScenesList_.empty());
         Occlusion::Rect occlusionRect = curSurface->GetSurfaceOcclusionRect(isUniRender_);
-        curSurface->setQosCal(vsyncControlEnabled_);
         if (CheckSurfaceNeedProcess(occlusionSurfaces, curSurface)) {
             Occlusion::Region curRegion { occlusionRect };
             Occlusion::Region subResult = curRegion.Sub(accumulatedRegion);
             RSVisibleLevel visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
             RS_LOGD("%{public}s nodeId[%{public}" PRIu64 "] visibleLevel[%{public}d]",
                 __func__, curSurface->GetId(), visibleLevel);
-            curSurface->SetVisibleRegionRecursive(subResult, curVisVec, pidVisMap, true, visibleLevel,
+            curSurface->SetVisibleRegionRecursive(subResult, curVisVec, true, visibleLevel,
                 !systemAnimatedScenesList_.empty());
             curSurface->AccumulateOcclusionRegion(accumulatedRegion, curRegion, hasFilterCacheOcclusion, isUniRender_,
                 filterCacheOcclusionEnabled);
         } else {
-            curSurface->SetVisibleRegionRecursive({}, curVisVec, pidVisMap);
+            curSurface->SetVisibleRegionRecursive({}, curVisVec);
             RS_LOGD("%{public}s nodeId[%{public}" PRIu64 "] visibleLevel[%{public}d]",
                 __func__, curSurface->GetId(), RSVisibleLevel::RS_INVISIBLE);
         }
     }
 
-    // if there are valid filter cache occlusion, recalculate surfacenode visibleregionforcallback for WMS/QOS callback
+    // if there are valid filter cache occlusion, recalculate surfacenode visibleregionforcallback for WMS callback
     if (hasFilterCacheOcclusion && isUniRender_) {
         curVisVec.clear();
-        pidVisMap.clear();
         occlusionSurfaces.clear();
         accumulatedRegion = {};
         for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
@@ -1792,23 +1783,21 @@ void RSMainThread::CalcOcclusionImplementation(std::vector<RSBaseRenderNode::Sha
                 continue;
             }
             Occlusion::Rect occlusionRect = curSurface->GetSurfaceOcclusionRect(isUniRender_);
-            curSurface->setQosCal(vsyncControlEnabled_);
             if (CheckSurfaceNeedProcess(occlusionSurfaces, curSurface)) {
                 Occlusion::Region curRegion { occlusionRect };
                 Occlusion::Region subResult = curRegion.Sub(accumulatedRegion);
                 RSVisibleLevel visibleLevel = GetRegionVisibleLevel(curRegion, subResult);
-                curSurface->SetVisibleRegionRecursive(subResult, curVisVec, pidVisMap, false, visibleLevel,
+                curSurface->SetVisibleRegionRecursive(subResult, curVisVec, false, visibleLevel,
                     !systemAnimatedScenesList_.empty());
                 curSurface->AccumulateOcclusionRegion(accumulatedRegion, curRegion, hasFilterCacheOcclusion,
                     isUniRender_, false);
             } else {
-                curSurface->SetVisibleRegionRecursive({}, curVisVec, pidVisMap, false);
+                curSurface->SetVisibleRegionRecursive({}, curVisVec, false);
             }
         }
     }
 
     dstCurVisVec.insert(dstCurVisVec.end(), curVisVec.begin(), curVisVec.end());
-    dstPidVisMap.insert(pidVisMap.begin(), pidVisMap.end());
 }
 
 void RSMainThread::CalcOcclusion()
@@ -1888,14 +1877,12 @@ void RSMainThread::CalcOcclusion()
     }
     isReduceVSyncBySystemAnimatedScenes_ = false;
     VisibleData dstCurVisVec;
-    std::map<uint32_t, RSVisibleLevel> dstPidVisMap;
     for (auto& surfaces : curAllSurfacesInDisplay) {
-        CalcOcclusionImplementation(surfaces.second, dstCurVisVec, dstPidVisMap);
+        CalcOcclusionImplementation(surfaces.second, dstCurVisVec);
     }
 
-    // Callback to WMS and QOS
+    // Callback to WMS
     CallbackToWMS(dstCurVisVec);
-    SetVSyncRateByVisibleLevel(dstPidVisMap, curAllSurfaces);
     // Callback for registered self drawing surfacenode
     SurfaceOcclusionCallback();
 }
@@ -1919,62 +1906,6 @@ void RSMainThread::SetMultiInstancePidVSyncRate(std::map<uint32_t, RSVisibleLeve
     }
 }
 
-bool RSMainThread::CheckSurfaceVisChanged(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
-    std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
-{
-    if (!systemAnimatedScenesList_.empty()) {
-        pidVisMap.clear();
-        for (auto it = curAllSurfaces.rbegin(); it != curAllSurfaces.rend(); ++it) {
-            auto curSurface = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
-            if (curSurface == nullptr || curSurface->GetDstRect().IsEmpty() || curSurface->IsLeashWindow()) {
-                continue;
-            }
-            uint32_t tmpPid = ExtractPid(curSurface->GetId());
-            pidVisMap[tmpPid] = RSVisibleLevel::RS_SYSTEM_ANIMATE_SCENE;
-        }
-        isReduceVSyncBySystemAnimatedScenes_ = true;
-    } else {
-        SetMultiInstancePidVSyncRate(pidVisMap, curAllSurfaces);
-    }
-    bool isVisibleChanged = pidVisMap.size() != lastPidVisMap_.size();
-    if (!isVisibleChanged) {
-        auto iterCur = pidVisMap.begin();
-        auto iterLast = lastPidVisMap_.begin();
-        for (; iterCur != pidVisMap.end(); iterCur++, iterLast++) {
-            if (iterCur->first != iterLast->first ||
-                iterCur->second != iterLast->second) {
-                isVisibleChanged = true;
-                break;
-            }
-        }
-    }
-
-    if (isVisibleChanged) {
-        lastPidVisMap_ = pidVisMap;
-    }
-    return isVisibleChanged;
-}
-
-void RSMainThread::SetVSyncRateByVisibleLevel(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
-    std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces)
-{
-    if (!vsyncControlEnabled_ || !CheckSurfaceVisChanged(pidVisMap, curAllSurfaces) ||
-        appVSyncDistributor_ == nullptr) {
-        return;
-    }
-    RS_TRACE_NAME_FMT("%s pidVisMapSize[%lu]", __func__, pidVisMap.size());
-    for (auto iter:pidVisMap) {
-        if (iter.second == RSVisibleLevel::RS_SEMI_DEFAULT_VISIBLE) {
-            appVSyncDistributor_->SetQosVSyncRate(iter.first, SIMI_VISIBLE_RATE);
-        } else if (iter.second == RSVisibleLevel::RS_SYSTEM_ANIMATE_SCENE) {
-            appVSyncDistributor_->SetQosVSyncRate(iter.first, SYSTEM_ANIMATED_SECNES_RATE);
-        } else if (iter.second == RSVisibleLevel::RS_INVISIBLE) {
-            appVSyncDistributor_->SetQosVSyncRate(iter.first, INVISBLE_WINDOW_RATE);
-        } else {
-            appVSyncDistributor_->SetQosVSyncRate(iter.first, DEFAULT_RATE);
-        }
-    }
-}
 
 void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
 {
@@ -2132,10 +2063,6 @@ void RSMainThread::Animate(uint64_t timestamp)
     rsCurrRange_.Reset();
 
     if (context_->animatingNodeList_.empty()) {
-        if (doWindowAnimate_ && RSInnovation::UpdateQosVsyncEnabled()) {
-            // Preventing Occlusion Calculation from Being Completed in Advance
-            RSQosThread::GetInstance()->OnRSVisibilityChangeCB(lastPidVisMap_);
-        }
         doWindowAnimate_ = false;
         return;
     }
@@ -2196,9 +2123,6 @@ void RSMainThread::Animate(uint64_t timestamp)
         return !hasRunningAnimation;
     });
     RS_TRACE_NAME_FMT("Animate [nodeSize, totalAnimationSize] is [%lu, %lu]", animatingNodeSize, totalAnimationSize);
-    if (!doWindowAnimate_ && curWinAnim && RSInnovation::UpdateQosVsyncEnabled()) {
-        RSQosThread::ResetQosPid();
-    }
     if (!isCalculateAnimationValue && needRequestNextVsync) {
         RS_TRACE_NAME("Animation running empty");
     }
@@ -2407,15 +2331,6 @@ void RSMainThread::SendCommands()
             app->OnTransaction(transactionPtr);
         }
     });
-}
-
-void RSMainThread::QosStateDump(std::string& dumpString)
-{
-    if (RSQosThread::GetInstance()->GetQosCal()) {
-        dumpString.append("QOS is enabled\n");
-    } else {
-        dumpString.append("QOS is disabled\n");
-    }
 }
 
 void RSMainThread::RenderServiceTreeDump(std::string& dumpString)

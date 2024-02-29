@@ -4900,19 +4900,21 @@ void RSUniRenderVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 bool RSUniRenderVisitor::GenerateNodeContentCache(RSRenderNode& node)
 {
     // Node cannot have cache.
-    uint32_t cacheRenderNodeMapCnt;
+    // uint32_t cacheRenderNodeMapCnt;
     if (node.GetDrawingCacheType() == RSDrawingCacheType::DISABLED_CACHE) {
-        {
-            std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-            cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
-        }
-        if (cacheRenderNodeMapCnt > 0) {
+        // {
+        //     std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+        //     cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
+        // }
+        // if (cacheRenderNodeMapCnt > 0) {
+        if (node.cacheCnt_ > 0) {
             node.SetCacheType(CacheType::NONE);
             RSUniRenderUtil::ClearCacheSurface(node, threadIndex_);
-            {
-                std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-                cacheRenderNodeMap.erase(node.GetId());
-            }
+            // {
+            //     std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+            //     cacheRenderNodeMap.erase(node.GetId());
+            // }
+            node.cacheCnt_ = -1;
             {
                 std::lock_guard<std::mutex> lock(groupedTransitionNodesMutex);
                 groupedTransitionNodes.erase(node.GetId());
@@ -4922,15 +4924,17 @@ bool RSUniRenderVisitor::GenerateNodeContentCache(RSRenderNode& node)
     }
 
     // The node goes down the tree to clear the cache.
-    {
-        std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-        cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
-    }
-    if (node.GetCacheType() == CacheType::NONE && cacheRenderNodeMapCnt > 0) {
-        {
-            std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-            cacheRenderNodeMap.erase(node.GetId());
-        }
+    // {
+    //     std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+    //     cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
+    // }
+    // if (node.GetCacheType() == CacheType::NONE && cacheRenderNodeMapCnt > 0) {
+    if (node.GetCacheType() == CacheType::NONE && node.cacheCnt_ > 0) {
+        // {
+        //     std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+        //     cacheRenderNodeMap.erase(node.GetId());
+        // }
+        node.cacheCnt_ = -1;
         {
             std::lock_guard<std::mutex> lock(groupedTransitionNodesMutex);
             groupedTransitionNodes.erase(node.GetId());
@@ -4949,12 +4953,13 @@ bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
 {
     if (node.GetDrawingCacheType() == RSDrawingCacheType::FORCED_CACHE ||
         node.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
-        uint32_t cacheRenderNodeMapCnt;
-        {
-            std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-            cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
-        }
-        if (cacheRenderNodeMapCnt == 0 || (!node.IsStaticCached() && node.NeedInitCacheCompletedSurface())) {
+        // uint32_t cacheRenderNodeMapCnt;
+        // {
+        //     std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+        //     cacheRenderNodeMapCnt = cacheRenderNodeMap.count(node.GetId());
+        // }
+        // if (cacheRenderNodeMapCnt == 0 || (!node.IsStaticCached() && node.NeedInitCacheCompletedSurface())) {
+        if (node.cacheCnt_ == -1 || (!node.IsStaticCached() && node.NeedInitCacheCompletedSurface())) {
             RenderParam val { node.shared_from_this(), canvas_->GetCanvasStatus() };
             curGroupedNodes_.push(val);
             {
@@ -4965,7 +4970,9 @@ bool RSUniRenderVisitor::InitNodeCache(RSRenderNode& node)
             RSUniRenderUtil::ClearCacheSurface(node, threadIndex_);
             if (UpdateCacheSurface(node)) {
                 node.UpdateCompletedCacheSurface();
-                ChangeCacheRenderNodeMap(node);
+                // ChangeCacheRenderNodeMap(node);
+                // node.cacheCnt_ = 0;
+                node.cacheCnt_++;
                 cacheReuseTimes = 0;
                 node.ResetDrawingCacheNeedUpdate();
             }
@@ -5015,7 +5022,7 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
             "time, NodeId: %" PRIu64 " ", node.GetId());
         return;
     }
-    uint32_t updateTimes = 0;
+    // uint32_t updateTimes = 0;
     if (node.GetDrawingCacheType() == RSDrawingCacheType::FORCED_CACHE) {
         // Regardless of the number of consecutive refreshes, the current cache is forced to be updated.
         if (node.GetDrawingCacheChanged()) {
@@ -5025,14 +5032,15 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
                 std::lock_guard<std::mutex> lock(groupedTransitionNodesMutex);
                 groupedTransitionNodes[node.GetId()] = { val, {} };
             }
-            {
-                std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-                updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
-            }
+            // {
+            //     std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+            //     updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+            // }
             node.SetCacheType(CacheType::CONTENT);
             if (UpdateCacheSurface(node)) {
                 node.UpdateCompletedCacheSurface();
-                ChangeCacheRenderNodeMap(node, updateTimes);
+                // ChangeCacheRenderNodeMap(node, updateTimes);
+                node.cacheCnt_++;
                 cacheReuseTimes = 0;
                 node.ResetDrawingCacheNeedUpdate();
             }
@@ -5044,16 +5052,19 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
         // If the number of consecutive refreshes exceeds CACHE_MAX_UPDATE_TIME times, the cache is cleaned,
         // otherwise the cache is updated.
         if (node.GetDrawingCacheChanged()) {
-            {
-                std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-                updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
-            }
-            if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
+            // {
+            //     std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+            //     updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+            // }
+            node.cacheCnt_++;
+            // if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
+            if (node.cacheCnt_ >= CACHE_MAX_UPDATE_TIME) {
                 node.SetCacheType(CacheType::NONE);
                 node.MarkNodeGroup(RSRenderNode::GROUPED_BY_UI, false, false);
                 node.MarkNodeGroup(RSRenderNode::GROUPED_BY_ANIM, false, false);
                 RSUniRenderUtil::ClearCacheSurface(node, threadIndex_);
-                cacheRenderNodeMap.erase(node.GetId());
+                // cacheRenderNodeMap.erase(node.GetId());
+                node.cacheCnt_ = -1;
                 groupedTransitionNodes.erase(node.GetId());
                 cacheReuseTimes = 0;
                 return;
@@ -5067,7 +5078,7 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
             node.SetCacheType(CacheType::CONTENT);
             if (UpdateCacheSurface(node)) {
                 node.UpdateCompletedCacheSurface();
-                ChangeCacheRenderNodeMap(node, updateTimes);
+                // ChangeCacheRenderNodeMap(node, updateTimes);
                 cacheReuseTimes = 0;
                 node.ResetDrawingCacheNeedUpdate();
             }
@@ -5076,7 +5087,8 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
         }
     }
     // The cache is not refreshed continuously.
-    ChangeCacheRenderNodeMap(node);
+    // ChangeCacheRenderNodeMap(node);
+    node.cacheCnt_ = 0;
     cacheReuseTimes++;
     RS_OPTIONAL_TRACE_NAME("RSUniRenderVisitor::UpdateCacheRenderNodeMap ,NodeId: " + std::to_string(node.GetId()) +
         " ,CacheRenderNodeMapCnt: " + std::to_string(cacheReuseTimes));

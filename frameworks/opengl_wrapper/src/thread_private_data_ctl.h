@@ -18,9 +18,8 @@
 
 #include <pthread.h>
 #include <EGL/egl.h>
-#ifdef EGL_ERROR_ENABLE
+
 #include "EGL/egl_wrapper_entry.h"
-#endif
 
 #include "hook.h"
 namespace OHOS {

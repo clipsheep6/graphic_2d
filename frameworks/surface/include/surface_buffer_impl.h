@@ -74,6 +74,8 @@ public:
     void SetBufferHandle(BufferHandle *handle) override;
     GSError WriteToMessageParcel(MessageParcel &parcel) override;
     GSError ReadFromMessageParcel(MessageParcel &parcel) override;
+    GSError WriteBufferRequestConfig(MessageParcel &parcel) override;
+    GSError ReadBufferRequestConfig(MessageParcel &parcel) override;
 
     OH_NativeBuffer* SurfaceBufferToNativeBuffer() override;
 
@@ -90,6 +92,7 @@ public:
     GSError EraseMetadataKey(uint32_t key) override;
 
     const BufferRequestConfig& GetBufferRequestConfig() const override;
+    void SetBufferRequestConfig(const BufferRequestConfig &config) override;
 
 private:
     void FreeBufferHandleLocked();

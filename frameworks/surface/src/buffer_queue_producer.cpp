@@ -205,6 +205,7 @@ int32_t BufferQueueProducer::GetLastFlushedBufferRemote(MessageParcel &arguments
     if (sret == GSERROR_OK) {
         uint32_t sequence = buffer->GetSeqNum();
         WriteSurfaceBufferImpl(reply, sequence, buffer);
+        buffer->WriteBufferRequestConfig(reply);
         fence->WriteToMessageParcel(reply);
         std::vector<float> writeMatrixVector(matrix, matrix + sizeof(matrix) / sizeof(float));
         reply.WriteFloatVector(writeMatrixVector);
@@ -220,6 +221,12 @@ int32_t BufferQueueProducer::AttachBufferToQueueRemote(MessageParcel &arguments,
     GSError ret = ReadSurfaceBufferImpl(arguments, sequence, buffer);
     if (ret != GSERROR_OK) {
         BLOGN_FAILURE("Read surface buffer impl failed, return %{public}d", ret);
+        reply.WriteInt32(ret);
+        return 0;
+    }
+    ret = buffer->ReadBufferRequestConfig(arguments);
+    if (ret != GSERROR_OK) {
+        BLOGN_FAILURE("ReadBufferRequestConfig failed, return %{public}d", ret);
         reply.WriteInt32(ret);
         return 0;
     }

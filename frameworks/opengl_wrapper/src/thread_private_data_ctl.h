@@ -19,6 +19,7 @@
 #include <pthread.h>
 #include <EGL/egl.h>
 
+#include "EGL/egl_wrapper_entry.h"
 #include "hook.h"
 namespace OHOS {
 struct ThreadPrivateData {
@@ -31,6 +32,7 @@ struct ThreadPrivateData {
 class ThreadPrivateDataCtl {
 public:
     static ThreadPrivateData* GetPrivateData();
+    static void ClearError();
     static void ClearPrivateData();
     static EGLint GetError();
     static void SetError(EGLint error);

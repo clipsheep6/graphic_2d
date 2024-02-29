@@ -39,10 +39,31 @@ bool ColorFuzzTest(const uint8_t* data, size_t size)
     uint32_t red = GetObject<uint32_t>();
     uint32_t blue = GetObject<uint32_t>();
     uint32_t green = GetObject<uint32_t>();
+    scalar alphaF = GetObject<uint32_t>();
+    scalar redF = GetObject<uint32_t>();
+    scalar blueF = GetObject<uint32_t>();
+    scalar greenF = GetObject<uint32_t>();
     bool isAntiAlias = GetObject<bool>();
+    ColorQuad c = GetObject<ColorQuad>();
+    Color::ColorQuadSetARGB(alpha, red, green, blue);
+    Color::ColorQuadGetA(c);
+    Color::ColorQuadGetR(c);
+    Color::ColorQuadGetG(c);
+    Color::ColorQuadGetB(c);
     Brush brush;
     brush.SetAntiAlias(isAntiAlias);
     Color color;
+    color = Color(red, green, blue, alpha);
+    color = Color(c);
+    color.SetRedF(redF);
+    color.SetGreenF(greenF);
+    color.SetBlueF(blueF);
+    color.SetAlphaF(alphaF);
+    color.SetRgbF(redF, greenF, blueF, alphaF);
+    color.SetRed(red);
+    color.SetGreen(green);
+    color.SetBlue(blue);
+    color.SetAlpha(alpha);
     color.SetRgb(red, green, blue, alpha);
     color.GetAlpha();
     color.GetRed();
@@ -52,6 +73,7 @@ bool ColorFuzzTest(const uint8_t* data, size_t size)
 
     uint32_t colorValue = GetObject<uint32_t>();
     color.SetColorQuad(colorValue);
+    color.CastToColorQuad();
     brush.SetColor(color);
     return true;
 }

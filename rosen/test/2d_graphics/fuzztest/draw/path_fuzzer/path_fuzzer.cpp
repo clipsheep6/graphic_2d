@@ -40,8 +40,8 @@ bool PathAddFuzzTest(const uint8_t* data, size_t size)
     Path path;
     Rect rect = GetObject<Rect>();
     Rect oval = GetObject<Rect>();
-    path.AddRect(rect, PathDirection::CCW_DIRECTION);
-    path.AddOval(oval, PathDirection::CCW_DIRECTION);
+    path.AddRect(rect, GetObject<PathDirection>());
+    path.AddOval(oval, GetObject<PathDirection>());
     path.Close();
     return true;
 }
@@ -58,11 +58,32 @@ bool PathOpFuzzTest(const uint8_t* data, size_t size)
     g_pos = 0;
 
     Path path1, path2, ending, out, op;
-    uint32_t weight = GetObject<uint32_t>();
-    uint32_t px = GetObject<uint32_t>();
-    uint32_t py = GetObject<uint32_t>();
+    scalar weight = GetObject<scalar>();
+    scalar px = GetObject<scalar>();
+    scalar py = GetObject<scalar>();
+    path1.GetDrawingType();
+    path1.BuildFromSVGString(GetObject<std::string>());
+    path1.ConvertToSVGString();
     path1.Interpolate(ending, weight, out);
     path1.LineTo(px, py);
+    path1.ArcTo(GetObject<scalar>(), GetObject<scalar>(),
+        GetObject<scalar>(), GetObject<scalar>(),
+        GetObject<scalar>(),GetObject<scalar>());
+    path1.ArcTo(GetObject<Point>(), GetObject<Point>(), GetObject<scalar>(), GetObject<scalar>());
+    path1.ArcTo(GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>(),
+        GetObject<PathDirection>(), GetObject<scalar>(), GetObject<scalar>());
+    path1.ArcTo(GetObject<scalar>(), GetObject<scalar>(),
+        GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>());
+    path1.CubicTo(px, py, GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>());
+    path1.CubicTo(GetObject<Point>(), GetObject<Point>(), GetObject<Point>());
+    path1.QuadTo(GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>());
+    path1.QuadTo(GetObject<Point>(), GetObject<Point>());
+
+    path2.RMoveTo(px, py);
+    path2.RLineTo(px, py);
+    path2.RArcTo(px, py, GetObject<scalar>(), GetObject<PathDirection>(), GetObject<scalar>(), GetObject<scalar>());
+    path2.RCubicTo(px, py, GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>(), GetObject<scalar>());
+    path2.RQuadTo(px, py, GetObject<scalar>(), GetObject<scalar>());
     op.MoveTo(px, py);
     path2.Op(op, path1, PathOp::DIFFERENCE);
     path1.Close();

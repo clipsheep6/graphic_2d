@@ -4796,7 +4796,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
                     Drawing::SaveLayerOps layerOps(&bounds, nullptr);
                     canvas_->SaveLayer(layerOps);
                     canvas_->SaveAlpha();
-                    canvas_->SetAlpha(1.0f);
                     Drawing::Brush brush;
                     brush.SetColor(Drawing::Color(bgColor.AsArgbInt()));
                     canvas_->AttachBrush(brush);

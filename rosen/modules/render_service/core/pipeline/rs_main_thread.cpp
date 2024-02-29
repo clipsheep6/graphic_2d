@@ -866,10 +866,12 @@ void RSMainThread::ProcessCommandForUniRender()
             }
         }
     }
-    RSBackgroundThread::Instance().PostTask([ transactionDataEffective ] () {
-        RS_TRACE_NAME("RSMainThread::ProcessCommandForUniRender transactionDataEffective clear");
-        transactionDataEffective->clear();
-    });
+    if (!transactionDataEffective->empty()) {
+        RSBackgroundThread::Instance().PostTask([ transactionDataEffective ] () {
+            RS_TRACE_NAME("RSMainThread::ProcessCommandForUniRender transactionDataEffective clear");
+            transactionDataEffective->clear();
+        });
+    }
 }
 
 void RSMainThread::ProcessCommandForDividedRender()
@@ -1564,13 +1566,16 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         if (IsUIFirstOn()) {
             auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
                 rootNode->GetFirstChild());
-            std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
-            std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
-            RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes);
-            const auto& nodeMap = context_->GetNodeMap();
-            RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
-            uniVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
-            RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
+            auto screenManager = CreateOrGetScreenManager();
+            if (screenManager != nullptr && !screenManager->IsScreenPowerOff(displayNode->GetScreenId())) {
+                std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
+                std::list<std::shared_ptr<RSSurfaceRenderNode>> subThreadNodes;
+                RSUniRenderUtil::AssignWindowNodes(displayNode, mainThreadNodes, subThreadNodes);
+                const auto& nodeMap = context_->GetNodeMap();
+                RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
+                uniVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
+                RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
+            }
         }
         rootNode->Process(uniVisitor);
     } else if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
@@ -2115,7 +2120,7 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
     }
     mainLoop_();
     auto screenManager_ = CreateOrGetScreenManager();
-    if (screenManager_ != nullptr) {
+    if (screenManager_ != nullptr && screenManager_->HasHotPlugEvent()) {
         auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
         if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
             RSHardwareThread::Instance().PostTask([=]() { screenManager_->ProcessScreenHotPlugEvents(); });

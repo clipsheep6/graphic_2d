@@ -361,6 +361,8 @@ private:
     // Use in vulkan parallel rendering
     void ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node);
     bool IsOutOfScreenRegion(RectI rect);
+    // process one frame when screen power off
+    bool CheckScreenNeedProcss(RSDisplayRenderNode& node);
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;

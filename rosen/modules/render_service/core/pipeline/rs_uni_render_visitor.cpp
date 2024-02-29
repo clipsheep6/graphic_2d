@@ -2559,6 +2559,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         node.GetDirtyManager()->GetDirtyRegion().ToString().c_str());
     RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode node: %{public}" PRIu64 ", child size:%{public}u",
         node.GetId(), node.GetChildrenCount());
+    if (!CheckScreenNeedProcss(node)) {
+        RS_TRACE_NAME("DisplayNode skip when screen power off");
+        return;
+    }
 #if defined(RS_ENABLE_PARALLEL_RENDER) && defined(RS_ENABLE_GL)
     bool isNeedCalcCost = false;
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
@@ -5912,6 +5916,25 @@ bool RSUniRenderVisitor::IsOutOfScreenRegion(RectI rect)
     }
 
     return false;
+}
+
+bool RSUniRenderVisitor::CheckScreenNeedProcss(RSDisplayRenderNode& node)
+{
+    auto screenManager = CreateOrGetScreenManager();
+    if (!screenManager) {
+        return false;
+    }
+    ScreenId id = node.GetScreenId();
+    if (!screenManager->IsScreenPowerOff(id)) {
+        return true;
+    }
+
+    uint32_t frame = screenManager->GetScreenProcessFrame(id);
+    if (frame > 0) {
+        return false;
+    }
+    screenManager->SetScreenProcessFrame(id, frame + 1);
+    return true;
 }
 } // namespace Rosen
 } // namespace OHOS

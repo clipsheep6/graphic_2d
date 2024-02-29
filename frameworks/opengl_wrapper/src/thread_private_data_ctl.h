@@ -21,6 +21,7 @@
 
 #include "EGL/egl_wrapper_entry.h"
 #include "hook.h"
+
 namespace OHOS {
 struct ThreadPrivateData {
     ThreadPrivateData() : error(EGL_SUCCESS), ctx(nullptr), table(nullptr) {}

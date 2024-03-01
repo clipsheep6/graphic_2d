@@ -54,9 +54,6 @@ public:
     uint32_t GetDefaultUsage() override;
     GSError SetTransform(GraphicTransformType transform) override;
 
-    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
-    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
-
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) override;
     GSError DetachBuffer(sptr<SurfaceBuffer>& buffer) override;
@@ -82,7 +79,8 @@ public:
     GSError SendDeathRecipientObject() override;
 
     GSError GetTransform(GraphicTransformType &transform) override;
-
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
 private:
     static inline BrokerDelegator<BufferClientProducer> delegator_;
     std::string name_ = "not init";

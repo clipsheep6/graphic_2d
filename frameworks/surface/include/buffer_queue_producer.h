@@ -48,8 +48,6 @@ public:
     GSError GetLastFlushedBuffer(sptr<SurfaceBuffer>& buffer, sptr<SyncFence>& fence,
         float matrix[16]) override;
 
-    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
-    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) override;
 
@@ -93,6 +91,8 @@ public:
 
     GSError SendDeathRecipientObject() override;
     void OnBufferProducerRemoteDied();
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
 
 private:
     GSError CheckConnectLocked();
@@ -101,8 +101,6 @@ private:
     int32_t RequestBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t CancelBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t FlushBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-    int32_t AttachBufferToQueueRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
-    int32_t DetachBufferFromQueueRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t AttachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t DetachBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetQueueSizeRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
@@ -128,6 +126,8 @@ private:
     int32_t GetLastFlushedBufferRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t RegisterDeathRecipient(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
     int32_t GetTransformRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t AttachBufferToQueueRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
+    int32_t DetachBufferFromQueueRemote(MessageParcel &arguments, MessageParcel &reply, MessageOption &option);
 
     using BufferQueueProducerFunc = int32_t (BufferQueueProducer::*)(MessageParcel &arguments,
         MessageParcel &reply, MessageOption &option);

@@ -52,8 +52,6 @@ public:
     virtual GSError FlushBuffer(uint32_t sequence, const sptr<BufferExtraData> &bedata,
                                 const sptr<SyncFence>& fence, BufferFlushConfigWithDamages &config) = 0;
 
-    virtual GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) = 0;
-    virtual GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) = 0;
     virtual GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
     virtual GSError DetachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
 
@@ -96,6 +94,8 @@ public:
 
     virtual GSError GetTransform(GraphicTransformType &transform) = 0;
 
+    virtual GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) = 0;
+    virtual GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) = 0;
     DECLARE_INTERFACE_DESCRIPTOR(u"surf.IBufferProducer");
 
 protected:

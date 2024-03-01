@@ -55,9 +55,6 @@ public:
                                   int64_t &timestamp, Rect &damage) = 0;
     virtual GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence) = 0;
 
-    virtual GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) = 0;
-    virtual GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) = 0;
-
     virtual GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
 
     virtual GSError DetachBuffer(sptr<SurfaceBuffer>& buffer) = 0;
@@ -129,6 +126,8 @@ public:
     virtual GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) = 0;
     virtual GSError RegisterSurfaceDelegator(sptr<IRemoteObject> client) = 0;
     virtual GSError RegisterReleaseListener(OnReleaseFuncWithFence func) = 0;
+    virtual GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) = 0;
+    virtual GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) = 0;
 protected:
     IConsumerSurface() = default;
 };

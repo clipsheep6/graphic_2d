@@ -64,9 +64,6 @@ public:
                           int64_t &timestamp, Rect &damage) override;
     GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence) override;
 
-    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
-    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
-
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut) override;
 
@@ -132,6 +129,8 @@ public:
     GSError RegisterUserDataChangeListener(const std::string &funcName, OnUserDataChangeFunc func) override;
     GSError UnRegisterUserDataChangeListener(const std::string &funcName) override;
     GSError ClearUserDataChangeListener() override;
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
 private:
     bool IsRemote();
     void CleanAllLocked();

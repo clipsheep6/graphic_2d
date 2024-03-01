@@ -87,9 +87,6 @@ public:
                           int64_t &timestamp, std::vector<Rect> &damages);
     GSError ReleaseBuffer(sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& fence);
 
-    GSError AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
-    GSError DetachBufferFromQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
-
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer, int32_t timeOut);
 
     GSError DetachBuffer(sptr<SurfaceBuffer>& buffer);
@@ -149,6 +146,9 @@ public:
     void SetStatus(bool status);
 
     GSError SetProducerCacheCleanFlag(bool flag);
+
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
 
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);

@@ -66,8 +66,6 @@ public:
     virtual GSError WriteToMessageParcel(MessageParcel &parcel) = 0;
     virtual GSError ReadFromMessageParcel(MessageParcel &parcel) = 0;
     virtual void SetBufferHandle(BufferHandle *handle) = 0;
-    virtual GSError WriteBufferRequestConfig(MessageParcel &parcel) = 0;
-    virtual GSError ReadBufferRequestConfig(MessageParcel &parcel) = 0;
 
     virtual BufferWrapper GetBufferWrapper() = 0;
     virtual void SetBufferWrapper(BufferWrapper wrapper) = 0;
@@ -99,6 +97,8 @@ public:
 
     static sptr<SurfaceBuffer> Create();
 
+    virtual GSError WriteBufferRequestConfig(MessageParcel &parcel) = 0;
+    virtual GSError ReadBufferRequestConfig(MessageParcel &parcel) = 0;
     virtual const BufferRequestConfig& GetBufferRequestConfig() const = 0;
     virtual void SetBufferRequestConfig(const BufferRequestConfig &config) = 0;
 

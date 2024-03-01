@@ -233,7 +233,16 @@ GSError ProducerSurface::AttachBufferToQueue(sptr<SurfaceBuffer>& buffer)
     if (buffer == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
-    return producer_->AttachBufferToQueue(buffer);
+    auto ret = producer_->AttachBufferToQueue(buffer);
+    if (ret == GSERROR_OK) {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        if (bufferProducerCache_.find(buffer->GetSeqNum()) != bufferProducerCache_.end()) {
+            BLOGNE("Attach already exist buffer %{public}d", buffer->GetSeqNum());
+            return GSERROR_API_FAILED;
+        }
+        bufferProducerCache_[buffer->GetSeqNum()] = buffer;
+    }
+    return ret;
 }
 
 GSError ProducerSurface::DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer)
@@ -241,7 +250,16 @@ GSError ProducerSurface::DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer)
     if (buffer == nullptr) {
         return GSERROR_INVALID_ARGUMENTS;
     }
-    return producer_->DetachBufferFromQueue(buffer);
+    auto ret = producer_->DetachBufferFromQueue(buffer);
+    if (ret == GSERROR_OK) {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        if (bufferProducerCache_.find(buffer->GetSeqNum()) == bufferProducerCache_.end()) {
+            BLOGNE("Detach not exist buffer %{public}d", buffer->GetSeqNum());
+            return GSERROR_API_FAILED;
+        }
+        bufferProducerCache_.erase(buffer->GetSeqNum());
+    }
+    return ret;
 }
 
 GSError ProducerSurface::AttachBuffer(sptr<SurfaceBuffer>& buffer)

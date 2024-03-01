@@ -81,10 +81,10 @@ protected:
 class RSBorderDRRectDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderDRRectDrawable(SkPaint&& paint, const RSProperties& properties, const bool& drawBorder);
+    explicit RSBorderDRRectDrawable(SkPaint &&paint, const RSProperties &properties, const bool &drawBorder);
 #else
-    explicit RSBorderDRRectDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen,
-        const RSProperties& properties, const bool& drawBorder);
+    explicit RSBorderDRRectDrawable(Drawing::Brush &&brush, Drawing::Pen &&pen,
+        const RSProperties &properties, const bool &drawBorder);
 #endif
     ~RSBorderDRRectDrawable() override = default;
     void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
@@ -104,10 +104,10 @@ private:
 class RSBorderFourLineDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderFourLineDrawable(SkPaint&& paint, const RSProperties& properties, const bool& drawBorder);
+    explicit RSBorderFourLineDrawable(SkPaint &&paint, const RSProperties &properties, const bool &drawBorder);
 #else
-    explicit RSBorderFourLineDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen,
-        const RSProperties& properties, const bool& drawBorder);
+    explicit RSBorderFourLineDrawable(Drawing::Brush &&brush, Drawing::Pen &&pen,
+        const RSProperties &properties, const bool &drawBorder);
 #endif
     ~RSBorderFourLineDrawable() override = default;
     void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
@@ -121,10 +121,10 @@ private:
 class RSBorderPathDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderPathDrawable(SkPaint&& paint, const RSProperties& properties, const bool& drawBorder);
+    explicit RSBorderPathDrawable(SkPaint &&paint, const RSProperties &properties, const bool &drawBorder);
 #else
-    explicit RSBorderPathDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen,
-        const RSProperties& properties, const bool& drawBorder);
+    explicit RSBorderPathDrawable(Drawing::Brush &&brush, Drawing::Pen &&pen,
+        const RSProperties &properties, const bool &drawBorder);
 #endif
     ~RSBorderPathDrawable() override = default;
     void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
@@ -142,11 +142,11 @@ private:
 class RSBorderFourLineRoundCornerDrawable : public RSBorderDrawable {
 public:
 #ifndef USE_ROSEN_DRAWING
-    explicit RSBorderFourLineRoundCornerDrawable(SkPaint&& paint, const RSProperties& properties,
-        const bool& drawBorder);
+    explicit RSBorderFourLineRoundCornerDrawable(SkPaint &&paint, const RSProperties &properties,
+        const bool &drawBorder);
 #else
-    explicit RSBorderFourLineRoundCornerDrawable(Drawing::Brush&& brush, Drawing::Pen&& pen,
-        const RSProperties& properties, const bool& drawBorder);
+    explicit RSBorderFourLineRoundCornerDrawable(Drawing::Brush &&brush, Drawing::Pen &&pen,
+        const RSProperties &properties, const bool &drawBorder);
 #endif
     ~RSBorderFourLineRoundCornerDrawable() override = default;
     void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;

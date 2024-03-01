@@ -1279,6 +1279,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
         node.ResetSubNodeShouldPaint();
         node.ResetChildHardwareEnabledNodes();
     }
+    UpdateSecurityAndSkipLayerRecord(node);
     curContentDirty_ = node.IsContentDirty();
     bool dirtyFlag = dirtyFlag_;
 

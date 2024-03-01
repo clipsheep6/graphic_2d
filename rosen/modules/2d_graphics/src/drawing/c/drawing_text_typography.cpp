@@ -1731,3 +1731,27 @@ void OH_Drawing_SetTypographyTextEllipsis(OH_Drawing_TypographyStyle* style, con
     ConvertToOriginalText<TypographyStyle>(style)->ellipsis = u16Ellipsis;
 #endif
 }
+
+void OH_Drawing_TypographyMarkDirty(OH_Drawing_Typography* typography)
+{
+    if(typography == nullptr){
+        return;
+    }
+    ConvertToOriginalText<Typography>(typography)->MarkDirty();
+}
+
+int32_t OH_Drawing_TypographyGetUnresolvedGlyphsCount(OH_Drawing_Typography* typography)
+{
+    if(typography == nullptr){
+        return 0;
+    }
+    return ConvertToOriginalText<Typography>(typography)->GetUnresolvedGlyphsCount();
+}
+
+void OH_Drawing_TypographyUpdateFontSize(OH_Drawing_Typography* typography, size_t from, size_t to, float fontSize)
+{
+    if(typography == nullptr){
+        return;
+    }
+    ConvertToOriginalText<Typography>(typography)->UpdateFontSize(from, to, fontSize);
+}

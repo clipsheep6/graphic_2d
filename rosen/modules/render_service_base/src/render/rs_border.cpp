@@ -159,6 +159,7 @@ Vector4<uint32_t> RSBorder::GetStyleFour() const
     }
 }
 
+// only be used by outline, innerBorder(border_) uses corner radius.
 Vector4f RSBorder::GetRadiusFour() const
 {
     return radius_;

@@ -341,7 +341,7 @@ void RSScreen::SetPowerStatus(uint32_t powerStatus)
     if (hdiScreen_->SetScreenPowerStatus(static_cast<GraphicDispPowerStatus>(powerStatus)) < 0) {
         return;
     }
-
+    processFrame_ = 0;
     if (powerStatus == GraphicDispPowerStatus::GRAPHIC_POWER_STATUS_ON) {
         RS_LOGD("RSScreen %{public}s Enable hardware vsync", __func__);
         if (hdiScreen_->SetScreenVsyncEnabled(true) != GRAPHIC_DISPLAY_SUCCESS) {
@@ -928,6 +928,16 @@ int32_t RSScreen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace)
 const std::unordered_set<uint64_t>& RSScreen::GetFilteredAppSet() const
 {
     return filteredAppSet_;
+}
+
+uint32_t RSScreen::GetProcessFrame() const
+{
+    return processFrame_;
+}
+
+void RSScreen::SetProcessFrame(uint32_t processFrame)
+{
+    processFrame_ = processFrame;
 }
 } // namespace impl
 } // namespace Rosen

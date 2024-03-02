@@ -232,6 +232,14 @@ public:
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     virtual float GetScreenBrightnessNits(ScreenId id) = 0;
 #endif
+
+    virtual bool HasHotPlugEvent() = 0;
+
+    virtual bool IsScreenPowerOff(ScreenId id) = 0;
+
+    virtual void SetScreenProcessFrame(ScreenId id, uint32_t processFrame);
+
+    virtual uint32_t GetScreenProcessFrame(ScreenId id);
 };
 
 sptr<RSScreenManager> CreateOrGetScreenManager();
@@ -390,6 +398,14 @@ public:
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     float GetScreenBrightnessNits(ScreenId id) override;
 #endif
+
+    bool HasHotPlugEvent() override;
+
+    bool IsScreenPowerOff(ScreenId id) override;
+
+    void SetScreenProcessFrame(ScreenId id, uint32_t processFrame) override;
+
+    uint32_t GetScreenProcessFrame(ScreenId id) override;
 
 private:
     RSScreenManager();

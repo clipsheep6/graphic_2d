@@ -1478,6 +1478,41 @@ int32_t RSScreenManager::SetScreenColorSpace(ScreenId id, GraphicCM_ColorSpaceTy
     return SetScreenColorSpaceLocked(id, colorSpace);
 }
 
+bool RSScreenManager::HasHotPlugEvent()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return pendingHotPlugEvents_.size() > 0 ||
+        connectedIds_.size() > 0;
+}
+
+bool RSScreenManager::IsScreenPowerOff(ScreenId id)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (screenPowerStatus_.count(id) == 0) {
+        return false;
+    }
+
+    return screenPowerStatus_[id] == GraphicDispPowerStatus::GRAPHIC_POWER_STATUS_SUSPEND;
+}
+
+void RSScreenManager::SetScreenProcessFrame(ScreenId id, uint32_t processFrame)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (screens_.count(id) == 0) {
+        return;
+    }
+    screens_.at(id)->SetProcessFrame(processFrame);
+}
+
+uint32_t RSScreenManager::GetScreenProcessFrame(ScreenId id)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (screens_.count(id) == 0) {
+        return 0;
+    }
+    return screens_.at(id)->GetProcessFrame();
+}
+
 } // namespace impl
 
 sptr<RSScreenManager> CreateOrGetScreenManager()

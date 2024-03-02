@@ -352,6 +352,8 @@ private:
     // Use in vulkan parallel rendering
     void ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node);
     bool IsOutOfScreenRegion(RectI rect);
+    // process one frame when screen power off
+    bool CheckScreenNeedProcss(RSDisplayRenderNode& node);
 
     // used to catch overdraw
     std::shared_ptr<Drawing::Surface> overdrawSurface_ = nullptr;

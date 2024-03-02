@@ -141,7 +141,7 @@ struct Index {
         }
         .width('80%')
         .height('7%')
-      } else {
+      } else if (this.drawingType == 'cpu') {
         Row(){
           Button("TestAll")
             .fontSize('16fp')
@@ -149,16 +149,13 @@ struct Index {
             .fontWeight(500)
               // .margin({ bottom: 24, right: 12 })
             .onClick(() => {
-                if (this.drawingType == 'gpu' ) {
-                  this.LogMsg('GPU does not support testall')
-                  return;
-                }
+                console.log(TAG, "TestAll click");
                 this.caseNameStr = 'All';
+                this.Draw();
             })
-            .width('60%')
+            .width('80%')
             .shadow(ShadowStyle.OUTER_DEFAULT_LG)
         }
-        .width('80%')
         .height('7%')
       }
       Row() {
@@ -221,6 +218,7 @@ struct Index {
           test.TestFunctionCpu(context.cacheDir);
         }
       });
+      this.LogMsg('TestFunctionalCpu All end');
     } else {
       let test:TestBase = CaseFactory.getFunctonCpuCase(this.caseNameStr);
       if (test == null || test == undefined) {

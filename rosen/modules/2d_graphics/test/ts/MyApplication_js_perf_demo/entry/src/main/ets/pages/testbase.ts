@@ -112,7 +112,7 @@ export class TestBase {
     console.log(TAG, 'TestFunctionCpu start');
     await this.CreateBitmapCanvas();
     if (this.canvas_ == null || this.canvas_ == undefined) {
-      console.error('canvas_ is invalid');
+      console.error(TAG, 'canvas_ is invalid');
       return;
     }
     this.OnTestFunctionCpu(this.canvas_);

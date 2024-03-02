@@ -291,7 +291,6 @@ uint32_t RSColorPicker::HSVtoRGB(HSV hsv) const
     */
     float rgb_min = rgb_max * (100 - hsv.s) / 100.0f;
 
-    int i = hsv.h / 60;
     int difs = hsv.h % 60;
     float rgb_Adj = (rgb_max - rgb_min) * difs / 60.0f;
 
@@ -300,7 +299,7 @@ uint32_t RSColorPicker::HSVtoRGB(HSV hsv) const
      * transformed (increased or decreased) between the minimum and maximum values that can be achieved
      * by RGB.
      */
-    switch (i) {
+    switch (hsv.h / 60) {
         case 0: // 0: when hue's range is [0, 60).
             r = rgb_max;
             g = rgb_min + rgb_Adj;

@@ -196,9 +196,14 @@ bool RSColorPicker::IsEquals(double val1, double val2) const
 // Transform RGB to HSV.
 HSV RSColorPicker::RGB2HSV(uint32_t rgb) const
 {
-    double r, g, b;
-    double h, s, v;
-    double minComponent, maxComponent;
+    double r;
+    double g;
+    double b;
+    double h;
+    double s;
+    double v;
+    double minComponent;
+    double maxComponent;
     double delta;
     HSV hsv;
     r = GetARGB32ColorR(rgb) / 255.0;  // 255.0 is used to normalize color to [0, 1].
@@ -271,7 +276,9 @@ void RSColorPicker::AdjustHSVToDefinedIterval(HSV& hsv) const
 // Transform HSV to RGB.
 uint32_t RSColorPicker::HSVtoRGB(HSV hsv) const
 {
-    uint32_t r, g, b;
+    uint32_t r;
+    uint32_t g;
+    uint32_t b;
     uint32_t rgb = 0;
     AdjustHSVToDefinedIterval(hsv);
 
@@ -284,7 +291,6 @@ uint32_t RSColorPicker::HSVtoRGB(HSV hsv) const
     */
     float rgb_min = rgb_max * (100 - hsv.s) / 100.0f;
 
-    int i = hsv.h / 60;
     int difs = hsv.h % 60;
     float rgb_Adj = (rgb_max - rgb_min) * difs / 60.0f;
 
@@ -293,7 +299,7 @@ uint32_t RSColorPicker::HSVtoRGB(HSV hsv) const
      * transformed (increased or decreased) between the minimum and maximum values that can be achieved
      * by RGB.
      */
-    switch (i) {
+    switch (hsv.h / 60) {
         case 0: // 0: when hue's range is [0, 60).
             r = rgb_max;
             g = rgb_min + rgb_Adj;

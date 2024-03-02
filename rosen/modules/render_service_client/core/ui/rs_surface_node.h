@@ -93,6 +93,8 @@ public:
     using BoundsChangedCallback = std::function<void(const Rosen::Vector4f&)>;
     void SetBoundsChangedCallback(BoundsChangedCallback callback) override;
     void SetAnimationFinished();
+    using UIFirstCacheFinishCallback = std::function<void()>;
+    bool SetUIFirstCacheFinishCallback(UIFirstCacheFinishCallback callback);
 
     bool Marshalling(Parcel& parcel) const;
     static SharedPtr Unmarshalling(Parcel& parcel);
@@ -181,6 +183,7 @@ private:
     bool hasFingerprint_ = false;
     bool isChildOperationDisallowed_ { false };
     bool isBootAnimation_ = false;
+    UIFirstCacheFinishCallback cacheFinishCallback_;
 
     uint32_t windowId_ = 0;
 #ifndef ROSEN_CROSS_PLATFORM

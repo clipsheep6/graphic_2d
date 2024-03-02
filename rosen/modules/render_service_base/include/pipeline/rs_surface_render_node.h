@@ -28,6 +28,7 @@
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/buffer_clear_callback.h"
+#include "ipc_callbacks/uifirst_cache_finish_callback.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
@@ -583,6 +584,8 @@ public:
 
     void RegisterBufferClearListener(sptr<RSIBufferClearCallback> callback);
 
+    void RegisterUIFirstCacheFinishListener(sptr<RSIUIFirstCacheFinishCallback> callback);
+
     // Only SurfaceNode in RT calls "ConnectToNodeInRenderService" to send callback method to RS
     void ConnectToNodeInRenderService();
 
@@ -839,6 +842,9 @@ public:
 
     void SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvailable);
 
+    void SetNotifyUIFirstCacheFinish(bool isNotifyUIFirstCacheFinish);
+    void ResetNotifyUIFirstCacheFinish();
+
     // whether the subtree has only one root node
     bool HasOnlyOneRootNode() const;
 
@@ -1013,6 +1019,8 @@ private:
     sptr<RSIBufferAvailableCallback> callbackFromRT_;
     sptr<RSIBufferAvailableCallback> callbackFromUI_;
     sptr<RSIBufferClearCallback> clearBufferCallback_;
+    sptr<RSIUIFirstCacheFinishCallback> uifirstCacheFinishCallback_;
+    std::atomic<bool> isNotifyUIFirstCacheFinish_ = false;
     bool isRefresh_ = false;
     std::vector<NodeId> childSurfaceNodeIds_;
     friend class RSRenderThreadVisitor;

@@ -1354,6 +1354,26 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             SetVirtualScreenUsingStatus(isVirtualScreenUsingStatus);
             break;
         }
+        case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_UIFIRST_CACHE_FINISH_CALLBACK) : {
+            auto token = data.ReadInterfaceToken();
+            if (token != RSIRenderServiceConnection::GetDescriptor()) {
+                ret = ERR_INVALID_STATE;
+                break;
+            }
+            NodeId id = data.ReadUint64();
+            auto remoteObject = data.ReadRemoteObject();
+            if (remoteObject == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            sptr<RSIUIFirstCacheFinishCallback> cb = iface_cast<RSIUIFirstCacheFinishCallback>(remoteObject);
+            if (cb == nullptr) {
+                ret = ERR_NULL_OBJECT;
+                break;
+            }
+            RegisterUIFirstCacheFinishListener(id, cb);
+            break;
+        }
         default: {
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }

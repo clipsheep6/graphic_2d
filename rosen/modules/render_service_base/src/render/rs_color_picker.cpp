@@ -228,9 +228,7 @@ HSV RSColorPicker::RGB2HSV(uint32_t rgb) const
     if (maxComponent == minComponent) {
         h = 0.0;
     } else {
-        if (delta == 0) {
-            return hsv;
-        }
+        if (delta == 0) { return hsv; }
         if (IsEquals(r, maxComponent) && g >= b) {
             h = 60 * (g - b) / delta + 0; // 60 is used to calculate color's hue, ranging between 0 and 360.
         } else if (IsEquals(r, maxComponent) && g < b) {
@@ -297,8 +295,7 @@ uint32_t RSColorPicker::HSVtoRGB(HSV hsv) const
 
     /**
      * According to the change of H, there are six cases. In each case, a parameter in RBG is linearly
-     * transformed (increased or decreased) between the minimum and maximum values that can be achieved
-     * by RGB.
+     * transformed (increased or decreased) between the minimum and maximum values that can be achieved by RGB.
      */
     switch (i) {
         case 0: // 0: when hue's range is [0, 60).

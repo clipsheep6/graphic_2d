@@ -10,35 +10,50 @@ export class DrawPath extends TestBase {
     this.fileName_ = "drawpath";
   }
 
-  public OnTestFunctionCpu() {
-    //离屏canvas绘制图案
+  public OnTestFunctionCpu(canvas: drawing.Canvas) {
+    //接口调用，功能测试.cpu/gpu调用接口一致
     const pen = new drawing.Pen();
     const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
     pen.setColor(penColor);
     pen.setStrokeWidth(10);
-    this.canvas_.attachPen(pen);
+    canvas.attachPen(pen);
 
     const path = new drawing.Path();
     path.moveTo(0, 0);
-    path.lineTo(500, 500);
+    path.lineTo(300, 300);
 
-    this.canvas_.drawPath(path);
+    canvas.drawPath(path);
   }
 
-  public OnTestPerformanceCpu() {
-    //离屏canvas绘制性能测试
+  public OnTestFunctionGpuUpScreen(canvas: drawing.Canvas) {
+    //接口调用，功能测试.cpu/gpu调用接口一致
+    const pen = new drawing.Pen();
+    const penColor: common2D.Color = { alpha: 255, red: 0, green: 255, blue: 0 }
+    pen.setColor(penColor);
+    pen.setStrokeWidth(10);
+    canvas.attachPen(pen);
+
+    const path = new drawing.Path();
+    path.moveTo(0, 0);
+    path.lineTo(400, 400);
+
+    canvas.drawPath(path);
+  }
+
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    //接口重复调用，性能功耗测试
     const pen = new drawing.Pen();
     const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
     pen.setColor(penColor);
     pen.setStrokeWidth(10);
-    this.canvas_.attachPen(pen);
+    canvas.attachPen(pen);
 
     const path = new drawing.Path();
     path.moveTo(0, 0);
     path.lineTo(300, 300);
 
     for (let index = 0; index < this.testCount_; index++) {
-      this.canvas_.drawPath(path);
+      canvas.drawPath(path);
     }
   }
 }

@@ -13,27 +13,27 @@ const TAG = '[DrawingTest]';
 export class TestBase {
   public constructor() {
     console.log(TAG, 'create TestBase');
-    this.width_ = 500;
-    this.height_ = 500;
+    this.width_ = 720;
+    this.height_ = 720;
     this.backgroundA_ = 0xFF;
     this.backgroundR_ = 0xFF;
     this.backgroundG_ = 0xFF;
     this.backgroundB_ = 0xFF;
     this.fileName_ = "undefined";
-    this.testCount_ = 1000;
+    this.testCount_ = 1;
   }
 
-  width_: number | 500;
-  height_: number | 500;
-  backgroundA_: number | 0xFF;
+  width_: number | 720;  //gpu离屏绘制默认创建的画布宽
+  height_: number | 720; //gpu离屏绘制默认创建的画布高
+  backgroundA_: number | 0xFF; //gpu离屏绘制默认创建的画布默认背景色，默认白色
   backgroundR_: number | 0xFF;
   backgroundG_: number | 0xFF;
   backgroundB_: number | 0xFF;
-  fileName_: string | "default";
-  pixelMap_: image.PixelMap | undefined;
-  canvas_: drawing.Canvas | undefined;
-  testCount_: number | 1;
-  time_: number | 0;
+  fileName_: string | "default"; //gpu离屏绘制后保存的图片名字
+  pixelMap_: image.PixelMap | undefined; //gpu离屏创建的pixmap
+  canvas_: drawing.Canvas | undefined; //gpu离屏绘制canvas
+  testCount_: number | 1; //性能功耗测试时候，关键接口的默认循环次数
+  time_: number | 0; //性能测试耗时
 
   public async CreateBitmapCanvas() {
     console.log(TAG, 'CreateBitmapCanvas'+ this.width_ + ' * ' + this.height_);
@@ -78,21 +78,44 @@ export class TestBase {
     })
   }
 
-  public OnTestFunctionCpu() {
-    //离屏canvas绘制图案
+  public OnTestFunction(canvas: drawing.Canvas) {
+    //接口调用，功能测试
+    console.log(TAG, 'TestBase OnTestFunction');
   }
-  public OnTestPerformanceCpu() {
+
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    //接口重复调用，性能功耗测试
+  }
+
+  public OnTestFunctionCpu(canvas: drawing.Canvas) {
+    //离屏canvas绘制图案
+    this.OnTestFunction(canvas)
+  }
+
+  public OnTestPerformanceCpu(canvas: drawing.Canvas) {
     //离屏canvas绘制接口重复调用
+    this.OnTestPerformance(canvas)
+  }
+
+  public OnTestFunctionGpuUpScreen(canvas: drawing.Canvas) {
+    //gpu上屏幕绘制图案
+    console.info(TAG, 'TestBase MyRenderNode TestFunctionGpuUpScreen');
+    this.OnTestFunction(canvas)
+  }
+
+  public OnTestPerformanceGpuUpScreen(canvas: drawing.Canvas) {
+    //gpu上屏幕绘制接口重复调用
+    this.OnTestPerformance(canvas)
   }
 
   public async TestFunctionCpu(dir: string) {
     console.log(TAG, 'TestFunctionCpu start');
     await this.CreateBitmapCanvas();
     if (this.canvas_ == null || this.canvas_ == undefined) {
-      console.error('xyj canvas_ is invalid');
+      console.error('canvas_ is invalid');
       return;
     }
-    this.OnTestFunctionCpu();
+    this.OnTestFunctionCpu(this.canvas_);
     this.BitmapCanvasToFile(dir);
     console.log(TAG, 'TestFunctionCpu end');
   }
@@ -112,13 +135,43 @@ export class TestBase {
     let startTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
     console.log(TAG, 'DrawingApiTest Started: [' + startTime + ']');
 
-    await this.OnTestPerformanceCpu();
+    await this.OnTestPerformanceCpu(this.canvas_);
 
     let endTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
-    console.log(TAG, 'DrawingApiTest Finished: [' + endTime + ']');
+    console.error(TAG, 'DrawingApiTest Finished: [' + endTime + ']');
     this.time_ = endTime - startTime;
-    console.log(TAG, 'DrawingApiTest TotalApiCallTime: [' + this.time_ + ']');
-    console.log(TAG, 'DrawingApiTest TotalApiCallCount: [' + this.testCount_ + ']');
-    console.log(TAG, 'TestPerformanceCpu end');
+    console.error(TAG, 'DrawingApiTest TotalApiCallTime: [' + this.time_ + ']');
+    console.error(TAG, 'DrawingApiTest TotalApiCallCount: [' + this.testCount_ + ']');
+    console.error(TAG, 'TestPerformanceCpu end');
+  }
+
+  public async TestFunctionGpuUpScreen(canvas: drawing.Canvas) {
+    console.log(TAG, 'TestFunctionGpu start');
+    if (canvas == null || canvas == undefined) {
+      console.error(TAG, 'canvas is invalid');
+      return;
+    }
+    this.OnTestFunctionGpuUpScreen(canvas);
+    console.log(TAG, 'TestFunctionGpu end');
+  }
+
+  public async TestPerformanceGpuUpScreen(canvas: drawing.Canvas) {
+    console.log(TAG, 'TestPerformanceGpuUpScreen start');
+    if (canvas == null || canvas == undefined) {
+      console.error(TAG, 'canvas is invalid');
+      return;
+    }
+
+    let startTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
+    console.log(TAG, 'DrawingApiTest Started: [' + startTime + ']');
+
+    await this.OnTestPerformanceGpuUpScreen(canvas);
+
+    let endTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
+    console.error(TAG, 'DrawingApiTest Finished: [' + endTime + ']');
+    this.time_ = endTime - startTime;
+    console.error(TAG, 'DrawingApiTest TotalApiCallTime: [' + this.time_ + ']');
+    console.error(TAG, 'DrawingApiTest TotalApiCallCount: [' + this.testCount_ + ']');
+    console.log(TAG, 'TestPerformanceGpuUpScreen end');
   }
 }

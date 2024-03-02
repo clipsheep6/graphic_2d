@@ -12,17 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import image from '@ohos.multimedia.image';
+
 import {TestBase} from './testbase';
-import {DrawRect} from './drawrect';
-import {DrawPath} from './drawpath';
-// import taskpool from '@ohos.taskpool';
+import {CaseFactory} from './casefactory';
+import {MyNodeController} from './myxnode';
 
 const TAG = '[DrawingTest]';
-
-const DRAWALL: string = 'drawALL';
-const DRAWRECT: string = 'drawrect';
-const DRAWPATH: string = 'drawpath';
 
 @Entry
 @Component
@@ -32,44 +27,45 @@ struct Index {
   //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
   @State testType: string = 'function';
-  @State drawingType: string = 'cpu';
+  @State drawingType: string = 'gpu';
   @State caseNameStr: string  = 'drawrect';
   @State information: string = '';
+  @State testAll: boolean = false;
   caseNameStrBefore: string  = '';
   scroller: Scroller = new Scroller();
   caseCountStr: string = '10';
-  testAll: boolean = false;
-
-
-  private FunctionalCpuMap: Map<string, Function> = new Map();
-  private PerformanceCpuMap: Map<string, Function> = new Map();
-  aboutToAppear() {
-    this.FunctionalCpuMap.set(DRAWRECT, () => { return new DrawRect(); });
-    this.FunctionalCpuMap.set(DRAWPATH, () => { return new DrawPath(); });
-
-    this.PerformanceCpuMap.set(DRAWRECT, () => { return new DrawRect(); });
-    this.PerformanceCpuMap.set(DRAWPATH, () => { return new DrawPath(); });
-  }
+  myNodeController = new MyNodeController();
 
   build() {
     Column() {
       Row() {
-        Canvas(this.context)
-          .width('100%')
-          .height('100%')
-          .backgroundColor('#000000')
-          .onReady(() => {
-            //启动后全部绘制
-            // this.DrawALL();
-          })
+        if (this.drawingType == 'cpu') {
+          Canvas(this.context)
+            .width('100%')
+            .height('100%')
+            .backgroundColor('#000000')
+            .onReady(() => {
+              //启动后全部绘制
+              // this.DrawALL();
+            })
+        } else {
+          NodeContainer(this.myNodeController)
+            .width('100%')
+            .height('100%')
+            .backgroundColor('#000000')
+            .onAppear(()=>{
+              console.warn(TAG, 'MyNodeController onAppear');
+            })
+        }
       }
-      .height('60%')
+      .height('65%')
 
       Row() {
         Select([
           { value: 'function' },
           { value: 'performance' },
         ])
+          .id('testType')
           .selected(0)
           .value(this.testType)
           .padding({left:5})
@@ -84,6 +80,7 @@ struct Index {
           { value: 'cpu' },
           { value: 'gpu' },
         ])
+          .id('drawingType')
           .selected(0)
           .value(this.drawingType)
           .padding({left:5})
@@ -94,7 +91,7 @@ struct Index {
             console.log(TAG, "select: " + this.drawingType);
           })
       }
-      .height('8%')
+      .height('7%')
       Row() {
         Text('TestCase')
           .fontSize(14)
@@ -103,6 +100,7 @@ struct Index {
           .margin({right:5})
         Column() {
           TextInput({ placeholder: 'ex:drawrect', text: this.caseNameStr})
+            .id('caseName')
             .enterKeyType(EnterKeyType.Send)
             .placeholderFont({size: 15})
             .height(38)
@@ -115,13 +113,14 @@ struct Index {
             })
         }
       }
-      .height('8%')
+      .height('7%')
       .width('80%')
       .margin({left:5})
 
       if(this.testType == 'performance') {
         Row() {
           Text('TestCount')
+            .id('testCount')
             .fontSize(14)
             .textAlign(TextAlign.End)
             .height(38)
@@ -141,35 +140,32 @@ struct Index {
           }
         }
         .width('80%')
-        .height('8%')
+        .height('7%')
       } else {
         Row(){
-          Text('TestAll')
-            .fontSize(14)
-            .textAlign(TextAlign.Start)
-            .height(38)
-            .margin({right:5})
-          Toggle({type:ToggleType.Switch, isOn:false})
-            .selectedColor('#007dff')
-            .switchPointColor('#ffffff')
-            .onChange((isOn:boolean)=>{
-              this.testAll = isOn;
-              if (this.testAll) {
-                this.caseNameStrBefore = this.caseNameStr;
+          Button("TestAll")
+            .fontSize('16fp')
+            .id('testAll')
+            .fontWeight(500)
+              // .margin({ bottom: 24, right: 12 })
+            .onClick(() => {
+                if (this.drawingType == 'gpu' ) {
+                  this.LogMsg('GPU does not support testall')
+                  return;
+                }
                 this.caseNameStr = 'All';
-              } else {
-                this.caseNameStr = this.caseNameStrBefore;
-              }
             })
+            .width('60%')
+            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
         }
         .width('80%')
-        .height('8%')
+        .height('7%')
       }
       Row() {
         Button("draw")
+          .id('draw')
           .fontSize('16fp')
           .fontWeight(500)
-            // .margin({ bottom: 24, right: 12 })
           .onClick(() => {
             console.log(TAG, "Draw click");
             this.Draw();
@@ -177,14 +173,14 @@ struct Index {
           .width('80%')
           .shadow(ShadowStyle.OUTER_DEFAULT_LG)
       }
-      .height('8%')
+      .height('7%')
       Row() {
         Text(this.information)
           .fontSize(20)
           .textAlign(TextAlign.Center)
           .height(38)
       }
-      .height('8%')
+      .height('7%')
     }
   }
   LogMsg(msg: string) {
@@ -198,14 +194,19 @@ struct Index {
       if (this.drawingType == 'cpu') {
         return this.TestFunctionalCpu();
       } else {
-        this.LogMsg('GPU drawing function test not yet provided!');
+        this.myNodeController.TestFunctionalGpuUpScreen(this.caseNameStr);
+        this.LogMsg('TestFunctionalGpuUpScreen end');
+        return;
       }
     }
     if (this.testType == 'performance') {
       if (this.drawingType == 'cpu') {
         return this.TestPerformanceCpu();
       } else {
-        this.LogMsg('GPU drawing performance test not yet provided!');
+        let testCount = Number.parseInt(this.caseCountStr, 10);
+        this.myNodeController.TestPerformanceGpuUpScreen(this.caseNameStr, testCount);
+        this.LogMsg('TestPerformanceGpuUpScreen end');
+        return;
       }
     }
   }
@@ -213,24 +214,22 @@ struct Index {
   async TestFunctionalCpu() {
     console.log(TAG, 'TestFunctionalCpu start');
     const context : Context = getContext(this);
-    if (this.testAll) {
-      this.FunctionalCpuMap.forEach((func: Function, key: string) => {
+    if (this.caseNameStr == 'All') {
+      CaseFactory.getFunctonCpuAllCase().forEach((func: Function, key: string) => {
         if (func) {
           let test:TestBase = func();
           test.TestFunctionCpu(context.cacheDir);
         }
       });
     } else {
-      let func:Function | undefined = this.PerformanceCpuMap.get(this.caseNameStr);
-      if (func == undefined || func == null) {
-        this.LogMsg('Testcase name is invalid');
+      let test:TestBase = CaseFactory.getFunctonCpuCase(this.caseNameStr);
+      if (test == null || test == undefined) {
+        console.log(TAG, 'Testcase name is invalid');
         return;
       }
-
-      let test:TestBase = func();
       // 异步处理 绘制到屏幕上
       await test.TestFunctionCpu(context.cacheDir).then(()=>{
-        this.context.drawImage(test.pixelMap_, 50, 50);
+        this.context.drawImage(test.pixelMap_, 0, 0);
       });
     }
     this.LogMsg('TestFunctionalCpu end');
@@ -238,19 +237,18 @@ struct Index {
 
   async TestPerformanceCpu() {
     console.log(TAG, 'TestPerformanceCpu start');
-    let func:Function | undefined = this.PerformanceCpuMap.get(this.caseNameStr);
-    if (func == undefined || func == null) {
-      this.LogMsg('Testcase name is invalid');
+
+    let test:TestBase = CaseFactory.getPerformanceCpuCase(this.caseNameStr);
+    if (test == null || test == undefined) {
+      console.log(TAG, 'Testcase name is invalid');
       return;
     }
-
-    let test:TestBase = func();
     let testCount = Number.parseInt(this.caseCountStr, 10)
     test.SetTestCount(testCount);
 
-    // 异步处理 绘制到屏幕上，todo  （执行1M次测试），
+    // 异步处理 绘制到屏幕上
     test.TestPerformanceCpu().then(()=>{
-      this.context.drawImage(test.pixelMap_, 50, 50);
+      this.context.drawImage(test.pixelMap_, 0, 0);
       this.LogMsg('TestCount: ' + testCount + ', used: ' + test.time_.toString() + 'ms');
     });
     console.log(TAG, 'TestPerformanceCpu end');

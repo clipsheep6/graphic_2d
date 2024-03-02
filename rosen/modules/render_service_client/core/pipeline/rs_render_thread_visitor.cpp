@@ -356,7 +356,7 @@ void RSRenderThreadVisitor::UpdateDirtyAndSetEGLDamageRegion(std::unique_ptr<RSS
         curDirtyManager_->UpdateDirty();
         curDirtyRegion_ = curDirtyManager_->GetDirtyRegion();
         // only set damage region if dirty region and buffer age is valid(>0)
-        if (bufferAge >= 0) {
+        if (bufferAge >= 0 && dfxDirtyType_ == DirtyRegionDebugType::DISABLED) {
             // get dirty rect coordinated from upper left to lower left corner in current surface
             RectI dirtyRectFlip = curDirtyManager_->GetRectFlipWithinSurface(curDirtyRegion_);
             // set dirty rect as eglSurfaceFrame's damage region
@@ -589,10 +589,20 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
 #endif
 
 #ifndef USE_ROSEN_DRAWING
-    canvas_->clipRect(SkRect::MakeWH(bufferWidth, bufferHeight));
+    if (isOpDropped_) {
+        canvas_->clipRect(SkRect::MakeXYWH(curDirtyRegion_.GetLeft(), curDirtyRegion_.GetTop(),
+            curDirtyRegion_.GetWidth(), curDirtyRegion_.GetHeight()));
+    } else {
+        canvas_->clipRect(SkRect::MakeWH(bufferWidth, bufferHeight));
+    }
     canvas_->clear(SK_ColorTRANSPARENT);
 #else
-    canvas_->ClipRect(Drawing::Rect(0, 0, bufferWidth, bufferHeight), Drawing::ClipOp::INTERSECT, false);
+    if (isOpDropped_) {
+        canvas_->ClipRect(Drawing::Rect(curDirtyRegion_.GetLeft(), curDirtyRegion_.GetTop(),
+            curDirtyRegion_.GetRight(), curDirtyRegion_.GetBottom()), Drawing::ClipOp::INTERSECT, false);
+    } else {
+        canvas_->ClipRect(Drawing::Rect(0, 0, bufferWidth, bufferHeight), Drawing::ClipOp::INTERSECT, false);
+    }
     canvas_->Clear(Drawing::Color::COLOR_TRANSPARENT);
 #endif // USE_ROSEN_DRAWING
     isIdle_ = false;
@@ -759,7 +769,7 @@ void RSRenderThreadVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)
     node.ProcessRenderAfterChildren(*canvas_);
 }
 
-int RSRenderThreadVisitor::CacRotationFromTransformType(GraphicTransformType transform)
+Drawing::Matrix RSRenderThreadVisitor::CacRotationFromTransformType(GraphicTransformType transform, RectF& bounds)
 {
     GraphicTransformType rotation;
     switch (transform) {
@@ -779,11 +789,32 @@ int RSRenderThreadVisitor::CacRotationFromTransformType(GraphicTransformType tra
             rotation = transform;
             break;
     }
-    static const std::map<GraphicTransformType, int> transformTypeEnumToIntMap = {
-        {GraphicTransformType::GRAPHIC_ROTATE_NONE, 0}, {GraphicTransformType::GRAPHIC_ROTATE_90, 270},
-        {GraphicTransformType::GRAPHIC_ROTATE_180, 180}, {GraphicTransformType::GRAPHIC_ROTATE_270, 90}};
-    auto iter = transformTypeEnumToIntMap.find(rotation);
-    return iter != transformTypeEnumToIntMap.end() ? iter->second : 0;
+    Drawing::Matrix matrix;
+    const float boundsWidth = bounds.GetWidth();
+    const float boundsHeight = bounds.GetHeight();
+    switch (rotation) {
+        case GraphicTransformType::GRAPHIC_ROTATE_90: {
+            matrix.PreTranslate(0, boundsHeight);
+            matrix.PreRotate(-90); // rotate 90 degrees anti-clockwise at last.
+            break;
+        }
+        case GraphicTransformType::GRAPHIC_ROTATE_180: {
+            matrix.PreTranslate(boundsWidth, boundsHeight);
+            matrix.PreRotate(-180); // rotate 180 degrees anti-clockwise at last.
+            break;
+        }
+        case GraphicTransformType::GRAPHIC_ROTATE_270: {
+            matrix.PreTranslate(boundsWidth, 0);
+            matrix.PreRotate(-270); // rotate 270 degrees anti-clockwise at last.
+            break;
+        }
+        default:
+            break;
+    }
+    if (rotation == GraphicTransformType::GRAPHIC_ROTATE_90 || rotation == GraphicTransformType::GRAPHIC_ROTATE_270) {
+        std::swap(bounds.width_, bounds.height_);
+    }
+    return matrix;
 }
 
 void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
@@ -813,20 +844,19 @@ void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
     if (fence != nullptr) {
         fence->Wait(3000); // wait at most 3000ms
     }
-    Drawing::Matrix transfromMatrix;
     auto transform = surface->GetTransform();
-    int rotation = CacRotationFromTransformType(transform);
-    transfromMatrix.PreRotate(rotation, property.GetBoundsWidth() * 0.5f, property.GetBoundsHeight() * 0.5f);
+    RectF bounds = {property.GetBoundsPositionX(), property.GetBoundsPositionY(),
+        property.GetBoundsWidth(), property.GetBoundsHeight()};
+    Drawing::Matrix transfromMatrix = CacRotationFromTransformType(transform, bounds);
     canvas_->ConcatMatrix(transfromMatrix);
 #ifndef USE_ROSEN_DRAWING
     auto recordingCanvas = std::make_shared<RSRecordingCanvas>(property.GetBoundsWidth(), property.GetBoundsHeight());
-    RSSurfaceBufferInfo rsSurfaceBufferInfo(surfaceBuffer, property.GetBoundsPositionX(), property.GetBoundsPositionY(),
-        property.GetBoundsWidth(), property.GetBoundsHeight());
+    RSSurfaceBufferInfo rsSurfaceBufferInfo(surfaceBuffer, bounds.left_, bounds.top_, bounds.width_, bounds.height_);
 #else
-    auto recordingCanvas = std::make_shared<ExtendRecordingCanvas>(property.GetBoundsWidth(),
-        property.GetBoundsHeight());
-    DrawingSurfaceBufferInfo rsSurfaceBufferInfo(surfaceBuffer, property.GetBoundsPositionX(),
-        property.GetBoundsPositionY(), property.GetBoundsWidth(), property.GetBoundsHeight());
+    auto recordingCanvas =
+        std::make_shared<ExtendRecordingCanvas>(property.GetBoundsWidth(), property.GetBoundsHeight());
+    DrawingSurfaceBufferInfo rsSurfaceBufferInfo(
+        surfaceBuffer, bounds.left_, bounds.top_, bounds.width_, bounds.height_);
 #endif //USE_ROSEN_DRAWING
     recordingCanvas->DrawSurfaceBuffer(rsSurfaceBufferInfo);
     auto drawCmdList = recordingCanvas->GetDrawCmdList();

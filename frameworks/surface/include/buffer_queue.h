@@ -146,6 +146,10 @@ public:
     void SetStatus(bool status);
 
     GSError SetProducerCacheCleanFlag(bool flag);
+    inline void ConsumerRequestCpuAccess(bool on)
+    {
+        isCpuAccessable_ = on;
+    }
 
     GSError AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
     GSError DetachBufferFromQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
@@ -172,6 +176,8 @@ private:
     void ListenerBufferReleasedCb(sptr<SurfaceBuffer> &buffer, const sptr<SyncFence> &fence);
     GSError CheckBufferQueueCache(uint32_t sequence);
     GSError ReallocBuffer(const BufferRequestConfig &config, struct IBufferProducer::RequestBufferReturnValue &retval);
+    void SetSurfaceBufferHebcMetaLocked(sptr<SurfaceBuffer> buffer);
+    GSError RequestBufferCheckStatus();
 
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;
@@ -206,6 +212,7 @@ private:
     uint32_t lastFlusedSequence_ = 0;
     sptr<SyncFence> lastFlusedFence_;
     wptr<ConsumerSurfaceDelegator> wpCSurfaceDelegator_;
+    bool isCpuAccessable_ = false;
 };
 }; // namespace OHOS
 

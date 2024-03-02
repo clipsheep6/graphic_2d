@@ -31,6 +31,7 @@
 #include "src/core/SkCanvasPriv.h"
 
 #include "common/rs_background_thread.h"
+#include "platform/ohos/overdraw/rs_overdraw_manager.h"
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_optional_trace.h"
@@ -2449,8 +2450,7 @@ void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& n
         RS_LOGE("RSUniRenderVisitor::ProcessParallelDisplayRenderNode renderFrame_ nullptr");
         return;
     }
-    std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
-    AddOverDrawListener(renderFrame_, overdrawListener);
+    CreateCanvas(renderFrame_);
 
     if (canvas_ == nullptr) {
         RS_LOGE("RSUniRenderVisitor::ProcessParallelDisplayRenderNode: failed to create canvas");
@@ -2487,10 +2487,6 @@ void RSUniRenderVisitor::ProcessParallelDisplayRenderNode(RSDisplayRenderNode& n
 #else
     canvas_->RestoreToCount(saveCount);
 #endif
-
-    if (overdrawListener != nullptr) {
-        overdrawListener->Draw();
-    }
     DrawWatermarkIfNeed(node);
     RS_TRACE_BEGIN("ProcessParallelDisplayRenderNode:FlushFrame");
     renderFrame_->Flush();
@@ -2672,8 +2668,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGE("RSUniRenderVisitor Request Frame Failed");
             return;
         }
-        std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
-        AddOverDrawListener(renderFrame_, overdrawListener);
+        CreateCanvas(renderFrame_);
 
         if (!canvas_) {
             RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: failed to create canvas");
@@ -2975,8 +2970,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_LOGE("RSUniRenderVisitor Request Frame Failed");
             return;
         }
-        std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
-        AddOverDrawListener(renderFrame_, overdrawListener);
+        CreateCanvas(renderFrame_);
 
         if (canvas_ == nullptr) {
             RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode: failed to create canvas");
@@ -2986,7 +2980,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #ifdef ENABLE_RECORDING_DCL
         tryCapture(node.GetRenderProperties().GetBoundsWidth(), node.GetRenderProperties().GetBoundsHeight());
 #endif
-        StartOverDraw();
+        auto &overdrawManager = RSOverdrawManager::GetInstance();
+        if (overdrawManager.IsEnabled()) {
+            overdrawManager.StartOverDraw(canvas_);
+        }
 
         int saveLayerCnt = 0;
 #ifndef USE_ROSEN_DRAWING
@@ -3014,9 +3011,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         if (isPartialRenderEnabled_) {
             // Early history buffer Merging will have impact on Overdraw display, so we need to
             // set the full screen dirty to avoid this impact.
-            if (RSOverdrawController::GetInstance().IsEnabled()) {
-                node.GetDirtyManager()->ResetDirtyAsSurfaceSize();
-            }
+            // if (RSOverdrawController::GetInstance().IsEnabled()) {
+            //     node.GetDirtyManager()->ResetDirtyAsSurfaceSize();
+            // }
             RS_OPTIONAL_TRACE_BEGIN("RSUniRender::GetBufferAge");
             int bufferAge = renderFrame_->GetBufferAge();
             RS_OPTIONAL_TRACE_END();
@@ -3311,7 +3308,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 #endif
         }
 #endif
-        FinishOverDraw();
+        if (overdrawManager.IsEnabled()) {
+            overdrawManager.FinishOverDraw(canvas_);
+        }
         RS_TRACE_BEGIN("RSUniRender:FlushFrame");
         renderFrame_->Flush();
         RS_TRACE_END();
@@ -3498,17 +3497,16 @@ void RSUniRenderVisitor::AssignGlobalZOrderAndCreateLayer(
     }
 }
 
-void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
-    std::shared_ptr<RSCanvasListener>& overdrawListener)
+void RSUniRenderVisitor::CreateCanvas(std::unique_ptr<RSRenderFrame>& renderFrame)
 {
 #if defined(NEW_RENDER_CONTEXT)
     if (renderFrame == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: renderFrame is nullptr");
+        RS_LOGE("RSUniRenderVisitor::CreateCanvas: renderFrame is nullptr");
         return;
     }
     auto renderSurface = renderFrame->GetSurface();
     if (renderSurface == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: renderSurface is nullptr");
+        RS_LOGE("RSUniRenderVisitor::CreateCanvas: renderSurface is nullptr");
         return;
     }
 #if !defined(USE_ROSEN_DRAWING)
@@ -3516,7 +3514,7 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
     auto skSurface = renderSurface->GetSurface();
     RS_OPTIONAL_TRACE_END();
     if (skSurface == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: skSurface is null");
+        RS_LOGE("RSUniRenderVisitor::CreateCanvas: skSurface is null");
         return;
     }
     if (skSurface->getCanvas() == nullptr) {
@@ -3528,7 +3526,7 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
     auto drSurface = renderSurface->GetSurface();
     RS_OPTIONAL_TRACE_END();
     if (drSurface == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: drSurface is null");
+        RS_LOGE("RSUniRenderVisitor::CreateCanvas: drSurface is null");
         return;
     }
     if (drSurface->GetCanvas() == nullptr) {
@@ -3538,7 +3536,7 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
 #endif
 #else
     if (renderFrame->GetFrame() == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: RSSurfaceFrame is nullptr");
+        RS_LOGE("RSUniRenderVisitor::CreateCanvas: RSSurfaceFrame is nullptr");
         return;
     }
 #if !defined(USE_ROSEN_DRAWING)
@@ -3546,7 +3544,7 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
     auto skSurface = renderFrame->GetFrame()->GetSurface();
     RS_TRACE_END();
     if (skSurface == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: skSurface is null");
+        RS_LOGE("RSUniRenderVisitor::CreateCanvas: skSurface is null");
         return;
     }
     if (skSurface->getCanvas() == nullptr) {
@@ -3558,7 +3556,7 @@ void RSUniRenderVisitor::AddOverDrawListener(std::unique_ptr<RSRenderFrame>& ren
     auto drSurface = renderFrame->GetFrame()->GetSurface();
     RS_OPTIONAL_TRACE_END();
     if (drSurface == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::AddOverDrawListener: drSurface is null");
+        RS_LOGE("RSUniRenderVisitor::CreateCanvas: drSurface is null");
         return;
     }
     if (drSurface->GetCanvas() == nullptr) {
@@ -5353,57 +5351,6 @@ void RSUniRenderVisitor::FinishOffscreenRender(bool isMirror)
     // restore current canvas and cleanup
     offscreenSurface_ = nullptr;
     canvas_ = std::move(canvasBackup_);
-}
-
-void RSUniRenderVisitor::StartOverDraw()
-{
-    if (!RSOverdrawController::GetInstance().IsEnabled()) {
-        return;
-    }
-    auto gpuContext = canvas_->GetGPUContext();
-    if (gpuContext == nullptr) {
-        RS_LOGE("RSUniRenderVisitor::StartOverDraw failed: need gpu canvas");
-        return;
-    }
-
-    auto width = canvas_->GetWidth();
-    auto height = canvas_->GetHeight();
-    Drawing::ImageInfo info =
-        Drawing::ImageInfo { width, height, Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
-    overdrawSurface_ = Drawing::Surface::MakeRenderTarget(gpuContext.get(), false, info);
-    if (!overdrawSurface_) {
-        RS_LOGE("RSUniRenderVisitor::StartOverDraw failed: surface is nullptr");
-        return;
-    }
-    overdrawCanvas_ = std::make_shared<Drawing::OverDrawCanvas>(overdrawSurface_->GetCanvas());
-    canvas_->AddCanvas(overdrawCanvas_.get());
-}
-
-void RSUniRenderVisitor::FinishOverDraw()
-{
-    if (!RSOverdrawController::GetInstance().IsEnabled()) {
-        return;
-    }
-    if (!overdrawSurface_) {
-        RS_LOGE("RSRenderThreadVisitor::FinishOverDraw overdrawSurface is nullptr");
-        return;
-    }
-    auto image = overdrawSurface_->GetImageSnapshot();
-    if (image == nullptr) {
-        RS_LOGE("RSRenderThreadVisitor::FinishOverDraw image is nullptr");
-        return;
-    }
-    Drawing::Brush brush;
-    auto overdrawColors = RSOverdrawController::GetInstance().GetColorArray();
-    auto colorFilter = Drawing::ColorFilter::CreateOverDrawColorFilter(overdrawColors.data());
-    Drawing::Filter filter;
-    filter.SetColorFilter(colorFilter);
-    brush.SetFilter(filter);
-    canvas_->AttachBrush(brush);
-    canvas_->DrawImage(*image, 0, 0, Drawing::SamplingOptions());
-    canvas_->DetachBrush();
-    overdrawSurface_ = nullptr;
-    overdrawCanvas_ = nullptr;
 }
 
 bool RSUniRenderVisitor::AdaptiveSubRenderThreadMode(bool doParallel)

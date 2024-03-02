@@ -19,10 +19,10 @@
 
 #include "rs_trace.h"
 #include "sandbox_utils.h"
+#include "platform/ohos/overdraw/rs_overdraw_manager.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_surface_node_command.h"
-#include "delegate/rs_functional_delegate.h"
 #include "pipeline/rs_draw_cmd_list.h"
 #include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_node_map.h"
@@ -53,7 +53,6 @@
 #include <unistd.h>
 #include "frame_collector.h"
 #include "render_frame_trace.h"
-#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #ifdef ACCESSIBILITY_ENABLE
 #include "accessibility_config.h"
 #include "platform/common/rs_accessibility.h"
@@ -297,9 +296,10 @@ void RSRenderThread::RenderLoop()
 #ifdef ROSEN_OHOS
     FrameCollector::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
 
-    auto delegate = RSFunctionalDelegate::Create();
-    delegate->SetRepaintCallback([this]() { this->RequestNextVSync(); });
-    RSOverdrawController::GetInstance().SetDelegate(delegate);
+    // auto delegate = RSFunctionalDelegate::Create();
+    // delegate->SetRepaintCallback([this]() { this->RequestNextVSync(); });
+    // RSOverdrawController::GetInstance().SetDelegate(delegate);
+    RSOverdrawManager::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
 #endif
 
     if (runner_) {

@@ -2367,10 +2367,9 @@ void RSMainThread::RenderServiceTreeDump(std::string& dumpString, bool forceDump
             return;
         }
         rootNode->DumpTree(0, dumpString);
-        } else {
-            dumpString += g_dumpStr;
-            g_dumpStr = "";
-        }
+    } else {
+        dumpString += g_dumpStr;
+        g_dumpStr = "";
     }
 }
 

@@ -16,7 +16,6 @@
 export default interface XComponentContext {
   setTestCount(number): void;
   getTime(): number;
-  // drawAll(): void;
   testFunctionCpu(string): void;
   testPerformanceCpu(string): void;
 };

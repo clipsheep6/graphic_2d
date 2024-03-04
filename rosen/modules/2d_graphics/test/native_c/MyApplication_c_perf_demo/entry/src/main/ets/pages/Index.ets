@@ -15,6 +15,7 @@
 
 import XComponentContext from "../interface/XComponentContext";
 import image from '@ohos.multimedia.image';
+import {MyNodeController} from './myxnode';
 
 const TAG = '[DrawingTest]';
 
@@ -24,7 +25,7 @@ struct Index {
   private xComponentContext: XComponentContext | undefined = undefined;
   // scroller: Scroller = new Scroller()
   @State testType: string = 'function';
-  @State drawingType: string = 'cpu';
+  @State drawingType: string = 'cpu-xnode';
   @State caseNameStr: string  = 'drawrect';
   @State information: string = '';
   imagePackerApi: image.ImagePacker = image.createImagePacker();
@@ -32,21 +33,36 @@ struct Index {
   scroller: Scroller = new Scroller();
   caseCountStr: string = '10';
   testAll: boolean = false;
+  isXnode: boolean = true;
+  myNodeController = new MyNodeController();
 
   build() {
     Column() {
-      Row() {
-        XComponent({ id: 'xcomponentId', type: 'surface', libraryname: 'entry' })
-          .onLoad((xComponentContext) => {
-            this.xComponentContext = xComponentContext as XComponentContext;
-          }).width('100%') // Multiples of 64
-      }.height('60%')
+      if (this.drawingType == 'cpu-xnode') {
+        Row() {
+          NodeContainer(this.myNodeController)
+            .width('100%')
+            .height('100%')
+            .backgroundColor('#000000')
+            .onAppear(()=>{
+              console.warn(TAG, 'MyNodeController onAppear');
+            })
+        }.height('65%')
+      } else {
+        Row() {
+          XComponent({ id: 'xcomponentId', type: 'surface', libraryname: 'entry' })
+            .onLoad((xComponentContext) => {
+              this.xComponentContext = xComponentContext as XComponentContext;
+            }).width('100%') // Multiples of 64
+        }.height('65%')
+      }
 
       Row() {
         Select([
           { value: 'function' },
           { value: 'performance' },
         ])
+          .id('testType')
           .selected(0)
           .value(this.testType)
           .padding({left:5})
@@ -58,9 +74,10 @@ struct Index {
           })
 
         Select([
-          { value: 'cpu' },
-          { value: 'gpu' },
+          { value: 'cpu-xcomponent' },
+          { value: 'cpu-xnode' },
         ])
+          .id('drawingType')
           .selected(0)
           .value(this.drawingType)
           .padding({left:5})
@@ -71,7 +88,7 @@ struct Index {
             console.log(TAG, "select: " + this.drawingType);
           })
       }
-      .height('8%')
+      .height('7%')
       Row() {
         Text('TestCase')
           .fontSize(14)
@@ -80,6 +97,7 @@ struct Index {
           .margin({right:5})
         Column() {
           TextInput({ placeholder: 'ex:drawrect', text: this.caseNameStr})
+            .id('caseName')
             .enterKeyType(EnterKeyType.Send)
             .placeholderFont({size: 15})
             .height(38)
@@ -92,7 +110,7 @@ struct Index {
             })
         }
       }
-      .height('8%')
+      .height('7%')
       .width('80%')
       .margin({left:5})
 
@@ -105,6 +123,7 @@ struct Index {
             .margin({right:5})
           Column() {
             TextInput({ placeholder: '10'})
+              .id('testCount')
               .enterKeyType(EnterKeyType.Send)
               .placeholderFont({size: 15})
               .height(38)
@@ -118,35 +137,29 @@ struct Index {
           }
         }
         .width('80%')
-        .height('8%')
-      } else {
+        .height('7%')
+      } else if (this.drawingType == 'cpu-xcomponent') {
         Row(){
-          Text('TestAll')
-            .fontSize(14)
-            .textAlign(TextAlign.Start)
-            .height(38)
-            .margin({right:5})
-          Toggle({type:ToggleType.Switch, isOn:false})
-            .selectedColor('#007dff')
-            .switchPointColor('#ffffff')
-            .onChange((isOn:boolean)=>{
-              this.testAll = isOn;
-              if (this.testAll) {
-                this.caseNameStrBefore = this.caseNameStr;
+          Button("TestAll")
+            .id('testAll')
+            .fontSize('16fp')
+            .id('testAll')
+            .fontWeight(500)
+              // .margin({ bottom: 24, right: 12 })
+            .onClick(() => {
+                console.log(TAG, "TestAll click");
                 this.caseNameStr = 'All';
-              } else {
-                this.caseNameStr = this.caseNameStrBefore;
-              }
+                this.Draw();
             })
+            .width('80%')
+            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
         }
-        .width('80%')
-        .height('8%')
+        .height('7%')
       }
       Row() {
         Button("draw")
           .fontSize('16fp')
           .fontWeight(500)
-            // .margin({ bottom: 24, right: 12 })
           .onClick(() => {
             console.log(TAG, "Draw click");
             this.Draw();
@@ -154,18 +167,18 @@ struct Index {
           .width('80%')
           .shadow(ShadowStyle.OUTER_DEFAULT_LG)
       }
-      .height('8%')
+      .height('7%')
       Row() {
         Text(this.information)
           .fontSize(20)
           .textAlign(TextAlign.Center)
       }
-      .height('8%')
+      .height('7%')
     }
   }
 
 
-  LogMsg(msg: string) {
+  LogMsg(msg: string): void {
     this.information = msg;
     console.log(TAG, msg);
   }
@@ -173,15 +186,23 @@ struct Index {
   async Draw():Promise<void> {
     console.log(TAG, 'Drawing test start!');
     if (this.testType == 'function') {
-      if (this.drawingType == 'cpu') {
+      if (this.drawingType == 'cpu-xcomponent') {
         return this.TestFunctionalCpu();
-      } else {
+      } else if (this.drawingType == 'cpu-xnode') {
+        return this.myNodeController.TestFunctionalCpu(this.caseNameStr);
+      }  else {
         this.LogMsg('GPU drawing function test not yet provided!');
       }
     }
     if (this.testType == 'performance') {
-      if (this.drawingType == 'cpu') {
+      if (this.drawingType == 'cpu-xcomponent') {
         return this.TestPerformanceCpu();
+      } else if (this.drawingType == 'cpu-xnode') {
+        let testCount = Number.parseInt(this.caseCountStr, 10);
+        this.myNodeController.SetPrintCallback((str:string)=>{
+          this.LogMsg(str);
+        })
+        return this.myNodeController.TestPerformanceCpu(this.caseNameStr, testCount);
       } else {
         this.LogMsg('GPU drawing performance test not yet provided!');
       }
@@ -199,8 +220,8 @@ struct Index {
   async TestPerformanceCpu() {
     console.log(TAG, 'TestPerformanceCpu start');
 
+    let testCount = Number.parseInt(this.caseCountStr, 10);
     if (this.xComponentContext) {
-      let testCount = Number.parseInt(this.caseCountStr, 10);
       this.xComponentContext.setTestCount(testCount);
       this.xComponentContext.testPerformanceCpu(this.caseNameStr);
       let time = this.xComponentContext.getTime();

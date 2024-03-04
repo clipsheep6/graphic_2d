@@ -20,7 +20,7 @@
 #include <js_native_api_types.h>
 #include <string>
 #include <unordered_map>
-#include "samples/drawing_demo.h"
+#include "my_xcomponent.h"
 
 class PluginManager {
 public:
@@ -29,11 +29,11 @@ public:
     static PluginManager *GetInstance();
 
     void SetNativeXComponent(std::string &id, OH_NativeXComponent *nativeXComponent);
-    DrawingDemo *GetRender(std::string &id);
+    MyXComponent *GetRender(std::string &id);
     void Export(napi_env env, napi_value exports);
 private:
 
     std::unordered_map<std::string, OH_NativeXComponent *> nativeXComponentMap_;
-    std::unordered_map<std::string, DrawingDemo *> pluginRenderMap_;
+    std::unordered_map<std::string, MyXComponent *> pluginRenderMap_;
 };
 #endif // PLUGIN_MANAGER_H

@@ -9,12 +9,22 @@ include_directories(${NATIVERENDER_ROOT_PATH}
 
 add_library(entry SHARED
     hello.cpp
-    samples/drawing_demo.cpp
     plugin/plugin_manager.cpp
-    samples/test_base.cpp
-    samples/draw_rect_test.cpp
-    samples/draw_path_test.cpp
+    my_xcomponent.cpp
+    testcasefactory.cpp
+    testcase/test_base.cpp
+    testcase/draw_rect_test.cpp
+    testcase/draw_path_test.cpp
 )
+
+add_library(myxnode SHARED
+    my_xnode.cpp
+    testcasefactory.cpp
+    testcase/test_base.cpp
+    testcase/draw_rect_test.cpp
+    testcase/draw_path_test.cpp
+)
+
 find_library(
     # Sets the name of the path variable.
     hilog-lib
@@ -29,3 +39,11 @@ target_link_libraries(entry PUBLIC libnative_window.so)
 target_link_libraries(entry PUBLIC libnative_drawing.so)
 target_link_libraries(entry PUBLIC libimage_packer_ndk.z.so)
 target_link_libraries(entry PUBLIC libpixelmap_ndk.z.so)
+
+target_link_libraries(myxnode PUBLIC ${hilog-lib})
+target_link_libraries(myxnode PUBLIC libace_napi.z.so)
+target_link_libraries(myxnode PUBLIC libace_ndk.z.so)
+target_link_libraries(myxnode PUBLIC libnative_window.so)
+target_link_libraries(myxnode PUBLIC libnative_drawing.so)
+target_link_libraries(myxnode PUBLIC libimage_packer_ndk.z.so)
+target_link_libraries(myxnode PUBLIC libpixelmap_ndk.z.so)

@@ -32,11 +32,7 @@
 namespace OHOS {
 namespace Rosen {
 
-#ifndef USE_ROSEN_DRAWING
-thread_local sk_sp<GrDirectContext> RsVulkanContext::skContext_ = nullptr;
-#else
 thread_local std::shared_ptr<Drawing::GPUContext> RsVulkanContext::drawingContext_ = nullptr;
-#endif
 
 static std::vector<const char*> gInstanceExtensions = {
     VK_KHR_SURFACE_EXTENSION_NAME,
@@ -416,32 +412,6 @@ GrVkGetProc RsVulkanContext::CreateSkiaGetProc() const
     };
 }
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<GrDirectContext> RsVulkanContext::CreateSkContext(bool independentContext)
-{
-    std::unique_lock<std::mutex> lock(vkMutex_);
-    if (independentContext) {
-        return CreateNewSkContext();
-    }
-    if (skContext_ != nullptr) {
-        return skContext_;
-    }
-
-    skContext_ = GrDirectContext::MakeVulkan(backendContext_);
-    int maxResources = 0;
-    size_t maxResourcesSize = 0;
-    int cacheLimitsTimes = CACHE_LIMITS_TIMES;
-    skContext_->getResourceCacheLimits(&maxResources, &maxResourcesSize);
-    if (maxResourcesSize > 0) {
-        skContext_->setResourceCacheLimits(cacheLimitsTimes * maxResources,
-            cacheLimitsTimes * std::fmin(maxResourcesSize, GR_CACHE_MAX_BYTE_SIZE));
-    } else {
-        skContext_->setResourceCacheLimits(GR_CACHE_MAX_COUNT, GR_CACHE_MAX_BYTE_SIZE);
-    }
-    RS_LOGE("skContext_:%{public}p %{public}p", skContext_.get(), backendContext_.fQueue);
-    return skContext_;
-}
-#else
 std::shared_ptr<Drawing::GPUContext> RsVulkanContext::CreateDrawingContext(bool independentContext)
 {
     std::unique_lock<std::mutex> lock(vkMutex_);
@@ -471,27 +441,6 @@ std::shared_ptr<Drawing::GPUContext> RsVulkanContext::CreateDrawingContext(bool 
     }
     return drawingContext_;
 }
-#endif
-#ifndef USE_ROSEN_DRAWING
-sk_sp<GrDirectContext> RsVulkanContext::CreateNewSkContext()
-{
-    CreateSkiaBackendContext(&hbackendContext_, true);
-    skContext_ = GrDirectContext::MakeVulkan(hbackendContext_);
-    int maxResources = 0;
-    size_t maxResourcesSize = 0;
-    int cacheLimitsTimes = 3;
-    skContext_->getResourceCacheLimits(&maxResources, &maxResourcesSize);
-    if (maxResourcesSize > 0) {
-        skContext_->setResourceCacheLimits(cacheLimitsTimes * maxResources, cacheLimitsTimes *
-            std::fmin(maxResourcesSize, GR_CACHE_MAX_BYTE_SIZE));
-    } else {
-        skContext_->setResourceCacheLimits(GR_CACHE_MAX_COUNT, GR_CACHE_MAX_BYTE_SIZE);
-    }
-    hcontext_ = skContext_;
-    RS_LOGD("new skContext_:%{public}p %{public}p", skContext_.get(), hbackendContext_.fQueue);
-    return skContext_;
-}
-#else
 std::shared_ptr<Drawing::GPUContext> RsVulkanContext::CreateNewDrawingContext()
 {
     CreateSkiaBackendContext(&hbackendContext_, true);
@@ -515,18 +464,7 @@ std::shared_ptr<Drawing::GPUContext> RsVulkanContext::CreateNewDrawingContext()
     hcontext_ = drawingContext_;
     return drawingContext_;
 }
-#endif
 
-#ifndef USE_ROSEN_DRAWING
-sk_sp<GrDirectContext> RsVulkanContext::GetSkContext()
-{
-    if (skContext_ != nullptr) {
-        return skContext_;
-    }
-    CreateSkContext();
-    return skContext_;
-}
-#else
 std::shared_ptr<Drawing::GPUContext> RsVulkanContext::GetDrawingContext()
 {
     if (drawingContext_ != nullptr) {
@@ -535,6 +473,5 @@ std::shared_ptr<Drawing::GPUContext> RsVulkanContext::GetDrawingContext()
     CreateDrawingContext();
     return drawingContext_;
 }
-#endif
 }
 }

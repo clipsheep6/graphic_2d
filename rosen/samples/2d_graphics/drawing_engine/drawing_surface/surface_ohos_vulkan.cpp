@@ -35,13 +35,11 @@
 #include "include/gpu/GrBackendSemaphore.h"
 
 
-#ifdef USE_ROSEN_DRAWING
 #include "engine_adapter/skia_adapter/skia_surface.h"
 #ifdef ENABLE_DDGR_OPTIMIZE
 #include "engine_adapter/ddgr_adapter/ddgr_surface.h"
 #include "DDGRCanvasV2.h"
 #include "platform/common/rs_system_properties.h"
-#endif
 #endif
 
 namespace OHOS {
@@ -191,11 +189,7 @@ std::unique_ptr<SurfaceFrame> SurfaceOhosVulkan::NativeRequestFrame(int32_t widt
     surfaceList_.emplace_back(nativeWindowBuffer);
     NativeBufferUtils::NativeSurfaceInfo& nativeSurface = surfaceMap_[nativeWindowBuffer];
 
-#ifndef USE_ROSEN_DRAWING
-    if (nativeSurface.skSurface == nullptr) {
-#else
     if (nativeSurface.drawingSurface == nullptr) {
-#endif
         nativeSurface.window = mNativeWindow_;
         nativeSurface.graphicColorGamut = colorSpace_;
         if (!NativeBufferUtils::MakeFromNativeWindowBuffer(
@@ -205,11 +199,7 @@ std::unique_ptr<SurfaceFrame> SurfaceOhosVulkan::NativeRequestFrame(int32_t widt
             return nullptr;
         }
 
-#ifndef USE_ROSEN_DRAWING
-        if (!nativeSurface.skSurface) {
-#else
         if (!nativeSurface.drawingSurface) {
-#endif
             LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
             surfaceList_.pop_back();
             return nullptr;
@@ -225,13 +215,7 @@ std::unique_ptr<SurfaceFrame> SurfaceOhosVulkan::NativeRequestFrame(int32_t widt
             const auto& vkContext = RsVulkanContext::GetSingleton();
             VkSemaphore semaphore;
             CreateVkSemaphore(&semaphore, vkContext, nativeSurface);
-#ifndef USE_ROSEN_DRAWING
-            GrBackendSemaphore backendSemaphore;
-            backendSemaphore.initVulkan(semaphore);
-            nativeSurface.skSurface->wait(1, &backendSemaphore);
-#else
             nativeSurface.drawingSurface->Wait(1, semaphore);
-#endif
         }
     }
     frame_ = std::make_unique<SurfaceFrameOhosVulkan>(nativeSurface.drawingSurface, width, height);
@@ -300,20 +284,12 @@ bool SurfaceOhosVulkan::NativeFlushFrame(std::unique_ptr<SurfaceFrame> &frame)
     flushInfo.fSignalSemaphores = &backendSemaphore;
 
     auto& surface = surfaceMap_[surfaceList_.front()];
-#ifndef USE_ROSEN_DRAWING
-    GrFlushInfo flushInfo;
-    flushInfo.fNumSemaphores = 1;
-    flushInfo.fSignalSemaphores = &backendSemaphore;
-    surface.skSurface->flush(SkSurface::BackendSurfaceAccess::kPresent, flushInfo);
-    mSkContext->submit();
-#else
     Drawing::FlushInfo drawingFlushInfo;
     drawingFlushInfo.backendSurfaceAccess = true;
     drawingFlushInfo.numSemaphores = 1;
     drawingFlushInfo.backendSemaphore = static_cast<void*>(&backendSemaphore);
     surface.drawingSurface->Flush(&drawingFlushInfo);
     drContext_->Submit();
-#endif
 
     int fenceFd = -1;
 

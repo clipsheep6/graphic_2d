@@ -117,7 +117,6 @@ HWTEST_F(RsSubThreadTest, ResetGrContext, TestSize.Level1)
     curThread->ResetGrContext();
 }
 
-#ifdef USE_ROSEN_DRAWING
 /**
  * @tc.name: AddToReleaseQueue
  * @tc.desc: Test RsSubThreadTest.AddToReleaseQueue
@@ -134,7 +133,6 @@ HWTEST_F(RsSubThreadTest, AddToReleaseQueue, TestSize.Level1)
     ASSERT_TRUE(curThread != nullptr);
     curThread->AddToReleaseQueue(std::move(surface));
 }
-#endif
 
 /**
  * @tc.name: RenderCache

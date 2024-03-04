@@ -26,6 +26,11 @@
 #endif
 #include "rs_trace.h"
 
+#ifdef RES_BASE_SCHED_ENABLE
+#include "res_type.h"
+#include "res_sched_client.h"
+#endif
+
 namespace OHOS::Rosen {
 RSBackgroundThread& RSBackgroundThread::Instance()
 {
@@ -37,6 +42,24 @@ RSBackgroundThread::RSBackgroundThread()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSBackgroundThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    #ifdef RES_BASE_SCHED_ENABLE
+        uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_SERVICE;
+        int64_t value = OHOS::ResourceSchedule::ResType::RenderServiceGroupType::Normal;
+        constexpr int64_t REPORT_RSBackgroundThread_DELAY = 3000;
+        handler_->PostTask(
+            [type, value] {
+                std::string strBundleName = "RSBackgroundThread";
+                std::string strPid = std::to_string(getpid());
+                std::string strTid = std::to_string(gettid());
+                RS_LOGI("RSBackgroundThread pid=%{public}d, tid=%{public}d.", getpid(), gettid());
+                std::unordered_map<std::string, std::string> mapPayload;
+                mapPayload["pid"] = strPid;
+                mapPayload["tid"] = strTid;
+                mapPayload["bundleName"] = strBundleName;
+                OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+            },
+        REPORT_RSBackgroundThread_DELAY);
+    #endif
 }
 
 void RSBackgroundThread::PostTask(const std::function<void()>& task)

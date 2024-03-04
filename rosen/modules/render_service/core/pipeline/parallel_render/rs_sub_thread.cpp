@@ -78,6 +78,25 @@ pid_t RSSubThread::Start()
 #endif
         grContext_ = CreateShareGrContext();
     });
+    
+#ifdef RES_SCHED_ENABLE
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_SERVICE;
+    int64_t value = OHOS::ResourceSchedule::ResType::RenderServiceGroupType::Normal;
+    constexpr int64_t REPORT_RSSubThread_DELAY = 3000;
+    handler_->PostTask(
+        [type, value, name] {
+            std::string strPid = std::to_string(getpid());
+            std::string strTid = std::to_string(gettid());
+            RS_LOGI("RSSubThread pid=%{public}d, tid=%{public}d.", getpid(), gettid());
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["pid"] = strPid;
+            mapPayload["tid"] = strTid;
+            mapPayload["bundleName"] = name;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+        },
+    REPORT_RSSubThread_DELAY);
+#endif
+
     return tid;
 }
 

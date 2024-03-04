@@ -23,7 +23,7 @@
 #include <vector>
 #include <thread>
 #include <condition_variable>
-
+#include "event_handler.h"
 #include "local_socketpair.h"
 #include "vsync_controller.h"
 #include "vsync_connection_stub.h"
@@ -141,6 +141,9 @@ private:
     /* std::pair<id, refresh rate> */
     void OnConnsRefreshRateChanged(const std::vector<std::pair<uint64_t, uint32_t>> &refreshRates);
     void WaitForVsyncOrRequest(std::unique_lock<std::mutex> &locker);
+
+    std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 
     std::thread threadLoop_;
     sptr<VSyncController> controller_;

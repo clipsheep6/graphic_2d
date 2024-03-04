@@ -109,6 +109,11 @@ static const std::string RS_INTERVAL_NAME = "renderservice";
 using namespace OHOS::AccessibilityConfig;
 #endif
 
+#ifdef RES_SCHED_ENABLE
+#include "res_type.h"
+#include "res_sched_client.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -343,6 +348,24 @@ void RSMainThread::Init()
 
     runner_ = AppExecFwk::EventRunner::Create(false);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+#ifdef RES_SCHED_ENABLE
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_SERVICE;
+    int64_t value = OHOS::ResourceSchedule::ResType::RenderServiceGroupType::High;
+    constexpr int64_t REPORT_RSMainThread_DELAY = 3000;
+    handler_->PostTask(
+        [type, value] {
+            std::string strBundleName = "RSMainThread";
+            std::string strPid = std::to_string(getpid());
+            std::string strTid = std::to_string(gettid());
+            RS_LOGI("RSMainThread pid=%{public}d, tid=%{public}d.", getpid(), gettid());
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["pid"] = strPid;
+            mapPayload["tid"] = strTid;
+            mapPayload["bundleName"] = strBundleName;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+        },
+    REPORT_RSMainThread_DELAY);
+#endif
     int ret = HiviewDFX::Watchdog::GetInstance().AddThread("RenderService", handler_, WATCHDOG_TIMEVAL);
     if (ret != 0) {
         RS_LOGW("Add watchdog thread failed");

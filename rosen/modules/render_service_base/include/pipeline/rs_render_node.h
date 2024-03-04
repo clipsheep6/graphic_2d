@@ -16,6 +16,7 @@
 #define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_H
 
 #include <atomic>
+#include <bitset>
 #include <cstdint>
 #include <functional>
 #include <list>
@@ -25,19 +26,19 @@
 #include <unordered_set>
 #include <variant>
 #include <vector>
-#include <bitset>
+
+#include "memory/rs_dfx_string.h"
 
 #include "animation/rs_animation_manager.h"
 #include "animation/rs_frame_rate_range.h"
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
 #include "common/rs_rect.h"
-#include "memory/rs_dfx_string.h"
 #include "modifier/rs_render_modifier.h"
 #include "pipeline/rs_dirty_region_manager.h"
-#include "pipeline/rs_render_display_sync.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_content.h"
+#include "pipeline/rs_render_display_sync.h"
 #include "pipeline/rs_single_frame_composer.h"
 #include "property/rs_properties.h"
 #include "property/rs_property_drawable.h"
@@ -64,9 +65,8 @@ class RSPropertyDrawable;
 namespace NativeBufferUtils {
 class VulkanCleanupHelper;
 }
-class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode>  {
+class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode> {
 public:
-
     using WeakPtr = std::weak_ptr<RSRenderNode>;
     using SharedPtr = std::shared_ptr<RSRenderNode>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::RS_NODE;
@@ -76,8 +76,8 @@ public:
     }
 
     explicit RSRenderNode(NodeId id, const std::weak_ptr<RSContext>& context = {}, bool isTextureExportNode = false);
-    explicit RSRenderNode(NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context = {},
-        bool isTextureExportNode = false);
+    explicit RSRenderNode(
+        NodeId id, bool isOnTheTree, const std::weak_ptr<RSContext>& context = {}, bool isTextureExportNode = false);
     RSRenderNode(const RSRenderNode&) = delete;
     RSRenderNode(const RSRenderNode&&) = delete;
     RSRenderNode& operator=(const RSRenderNode&) = delete;
@@ -99,10 +99,8 @@ public:
     void AddCrossParentChild(const SharedPtr& child, int32_t index = -1);
     void RemoveCrossParentChild(const SharedPtr& child, const WeakPtr& newParent);
 
-    virtual void CollectSurface(const std::shared_ptr<RSRenderNode>& node,
-                                std::vector<RSRenderNode::SharedPtr>& vec,
-                                bool isUniRender,
-                                bool onlyFirstLevel);
+    virtual void CollectSurface(const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec,
+        bool isUniRender, bool onlyFirstLevel);
     virtual void CollectSurfaceForUIFirstSwitch(uint32_t& leashWindowCount, uint32_t minNodeNum);
     virtual void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor);
     virtual void Process(const std::shared_ptr<RSNodeVisitor>& visitor);
@@ -214,9 +212,15 @@ public:
     bool Update(RSDirtyRegionManager& dirtyManager, const std::shared_ptr<RSRenderNode>& parent, bool parentDirty,
         std::optional<RectI> clipRect = std::nullopt);
 #ifndef USE_ROSEN_DRAWING
-    virtual std::optional<SkRect> GetContextClipRegion() const { return std::nullopt; }
+    virtual std::optional<SkRect> GetContextClipRegion() const
+    {
+        return std::nullopt;
+    }
 #else
-    virtual std::optional<Drawing::Rect> GetContextClipRegion() const { return std::nullopt; }
+    virtual std::optional<Drawing::Rect> GetContextClipRegion() const
+    {
+        return std::nullopt;
+    }
 #endif
 
     RSProperties& GetMutableRenderProperties();
@@ -241,6 +245,7 @@ public:
 
     void RenderTraceDebug() const;
     bool ShouldPaint() const;
+    bool IsVisibleChanged() const { return isVisibleChanged_ };
 
     RectI GetOldDirty() const;
     RectI GetOldDirtyInSurface() const;
@@ -288,13 +293,12 @@ public:
     void InitCacheSurface(GrRecordingContext* grContext, ClearCacheSurfaceFunc func = nullptr,
         uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #else
-    void InitCacheSurface(GrContext* grContext, ClearCacheSurfaceFunc func = nullptr,
-        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
+    void InitCacheSurface(
+        GrContext* grContext, ClearCacheSurfaceFunc func = nullptr, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
 #else
-    using ClearCacheSurfaceFunc =
-        std::function<void(std::shared_ptr<Drawing::Surface>&&,
-        std::shared_ptr<Drawing::Surface>&&, uint32_t, uint32_t)>;
+    using ClearCacheSurfaceFunc = std::function<void(
+        std::shared_ptr<Drawing::Surface>&&, std::shared_ptr<Drawing::Surface>&&, uint32_t, uint32_t)>;
     void InitCacheSurface(Drawing::GPUContext* grContext, ClearCacheSurfaceFunc func = nullptr,
         uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
 #endif
@@ -315,18 +319,18 @@ public:
 #ifndef USE_ROSEN_DRAWING
     sk_sp<SkSurface> GetCacheSurface(uint32_t threadIndex, bool needCheckThread, bool releaseAfterGet = false);
 #else
-    std::shared_ptr<Drawing::Surface> GetCacheSurface(uint32_t threadIndex, bool needCheckThread,
-        bool releaseAfterGet = false);
+    std::shared_ptr<Drawing::Surface> GetCacheSurface(
+        uint32_t threadIndex, bool needCheckThread, bool releaseAfterGet = false);
 #endif
 
     void UpdateCompletedCacheSurface();
     void SetTextureValidFlag(bool isValid);
 #ifndef USE_ROSEN_DRAWING
-    sk_sp<SkSurface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
-        bool needCheckThread = true, bool releaseAfterGet = false);
+    sk_sp<SkSurface> GetCompletedCacheSurface(
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX, bool needCheckThread = true, bool releaseAfterGet = false);
 #else
-    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
-        bool needCheckThread = true, bool releaseAfterGet = false);
+    std::shared_ptr<Drawing::Surface> GetCompletedCacheSurface(
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX, bool needCheckThread = true, bool releaseAfterGet = false);
 #endif
     void ClearCacheSurfaceInThread();
     void ClearCacheSurface(bool isClearCompletedCacheSurface = true);
@@ -336,8 +340,8 @@ public:
     void UpdateBackendTexture();
 #endif
 
-    void DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX,
-        bool isUIFirst = false);
+    void DrawCacheSurface(
+        RSPaintFilterCanvas& canvas, uint32_t threadIndex = UNI_MAIN_THREAD_INDEX, bool isUIFirst = false);
 
     void SetCacheType(CacheType cacheType);
     CacheType GetCacheType() const;
@@ -442,7 +446,10 @@ public:
     bool IsForcedDrawInGroup() const;
     bool IsSuggestedDrawInGroup() const;
     void CheckDrawingCacheType();
-    bool HasCacheableAnim() const { return hasCacheableAnim_; }
+    bool HasCacheableAnim() const
+    {
+        return hasCacheableAnim_;
+    }
     enum NodeGroupType {
         NONE = 0,
         GROUPED_BY_ANIM,
@@ -497,6 +504,7 @@ public:
     }
 
     const std::shared_ptr<RSRenderContent> GetRenderContent() const;
+
 protected:
     virtual void OnApplyModifiers() {}
 
@@ -510,9 +518,8 @@ protected:
 
     void DumpSubClassNode(std::string& out) const;
     void DumpDrawCmdModifiers(std::string& out) const;
-    void DumpDrawCmdModifier(std::string& propertyDesc, RSModifierType type,
-        std::shared_ptr<RSRenderModifier>& modifier) const;
-
+    void DumpDrawCmdModifier(
+        std::string& propertyDesc, RSModifierType type, std::shared_ptr<RSRenderModifier>& modifier) const;
 
     const std::weak_ptr<RSContext> GetContext() const
     {
@@ -569,7 +576,7 @@ private:
     // `for (auto child : *GetSortedChildren()) { ... }` will crash.
     // When an empty list is needed, use EmptyChildrenList instead.
     static const inline auto EmptyChildrenList = std::make_shared<const std::vector<std::shared_ptr<RSRenderNode>>>();
-    ChildrenListSharedPtr fullChildrenList_ = EmptyChildrenList ;
+    ChildrenListSharedPtr fullChildrenList_ = EmptyChildrenList;
     bool isFullChildrenListValid_ = true;
     bool isChildrenSorted_ = true;
 
@@ -589,7 +596,7 @@ private:
     bool hasRemovedChild_ = false;
     bool hasChildrenOutOfRect_ = false;
     RectI childrenRect_;
-    bool childHasFilter_ = false;  // only collect children filter status
+    bool childHasFilter_ = false; // only collect children filter status
 
     void InternalRemoveSelfFromDisappearingChildren();
     void FallbackAnimationsToRoot();
@@ -604,6 +611,7 @@ private:
     bool isDirtyRegionUpdated_ = false;
     bool isContainBootAnimation_ = false;
     bool isLastVisible_ = false;
+    bool isVisibleChanged_ = false;
     bool fallbackAnimationOnDestroy_ = true;
     uint32_t disappearingTransitionCount_ = 0;
     RectI oldDirty_;
@@ -678,7 +686,7 @@ private:
     bool isContentChanged_ = false;
     OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
     float globalAlpha_ = 1.0f;
-    Vector4f globalCornerRadius_{ 0.f, 0.f, 0.f, 0.f };
+    Vector4f globalCornerRadius_ { 0.f, 0.f, 0.f, 0.f };
     std::optional<SharedTransitionParam> sharedTransitionParam_;
 
     std::shared_ptr<RectF> drawRegion_ = nullptr;

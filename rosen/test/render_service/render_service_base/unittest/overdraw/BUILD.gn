@@ -22,12 +22,7 @@ ohos_unittest("overdraw_test") {
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
     defines = [ "USE_ROSEN_DRAWING" ]
   }
-  sources = [
-    "rs_cpu_overdraw_canvas_listener_test.cpp",
-    "rs_gpu_overdraw_canvas_listener_test.cpp",
-    "rs_listened_canvas_test.cpp",
-    "rs_overdraw_controller_test.cpp",
-  ]
+  sources = [ "rs_overdraw_manager_test.cpp" ]
 
   cflags = [
     "-Dprivate = public",

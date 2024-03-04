@@ -66,6 +66,7 @@ private:
     void InitRsSurfaceNode();
     void InitRsDisplayNode();
     void InitPicCoordinates();
+    void CheckTimeoutExit();
     int32_t windowWidth_;
     int32_t windowHeight_;
     Rosen::ScreenId defaultId_;

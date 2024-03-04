@@ -39,6 +39,7 @@ namespace OHOS {
 static const int READ_SIZE = 8192;
 static const int MAX_FILE_NAME = 512;
 static const int SLEEP_TIME_US = 30000;
+static const int SLEEP_TIME_MS = 30;
 static const std::string BOOT_PIC_CONFIGFILE = "config.json";
 using MemStruct = struct MemStruct {
 public:

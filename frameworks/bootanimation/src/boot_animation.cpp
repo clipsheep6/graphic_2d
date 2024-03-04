@@ -30,6 +30,7 @@
 using namespace OHOS;
 
 constexpr float MAX_ZORDER = 100000.0f;
+constexpr int64_t BOOT_ANIMATION_TIMEOUT_MS = 50 * 1000;
 
 void BootAnimation::OnDraw(Rosen::Drawing::CoreCanvas* canvas, int32_t curNo)
 {
@@ -171,6 +172,7 @@ void BootAnimation::Run(Rosen::ScreenId id, int screenWidth, int screenHeight)
 
     runner_ = AppExecFwk::EventRunner::Create(false);
     mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    mainHandler_->PostTask(std::bind(&BootAnimation::CheckTimeoutExit, this), BOOT_ANIMATION_TIMEOUT_MS);
     mainHandler_->PostTask(std::bind(&BootAnimation::Init, this, id, screenWidth, screenHeight));
     LOGI("PostTask Init");
 #ifdef PLAYER_FRAMEWORK_ENABLE
@@ -185,6 +187,23 @@ void BootAnimation::Run(Rosen::ScreenId id, int screenWidth, int screenHeight)
     LOGI("player_framework part is not enabled.");
 #endif
     runner_->Run();
+}
+
+void BootAnimation::CheckTimeoutExit()
+{
+    std::string bootEventStarted = system::GetParameter("bootevent.bootanimation.started", "false");
+    if (bootEventStarted != "true") {
+        system::SetParameter("bootevent.bootanimation.started", "true");
+    }
+    std::string bootEventFinished = system::GetParameter("bootevent.bootanimation.finished", "false");
+    if (bootEventFinished != "true") {
+        system::SetParameter("bootevent.bootanimation.finished", "true");
+    }
+    std::string bootEventCompleted = system::GetParameter("bootevent.boot.completed", "false");
+    if (bootEventCompleted == "true") {
+        mainHandler_->PostTask(std::bind(&AppExecFwk::EventRunner::Stop, runner_));
+    }
+    LOGI("Boot animation timeout exit: completed=%{public}s", bootEventCompleted.c_str());
 }
 
 void BootAnimation::InitRsSurfaceNode()
@@ -290,6 +309,10 @@ bool BootAnimation::CheckExitAnimation()
 {
     if (!isAnimationEnd_) {
         LOGI("Boot animation is end");
+        std::string bootEventStarted = system::GetParameter("bootevent.bootanimation.started", "false");
+        if (bootEventStarted != "true") {
+            system::SetParameter("bootevent.bootanimation.started", "true");
+        }
         system::SetParameter("bootevent.bootanimation.finished", "true");
         isAnimationEnd_ = true;
     }
@@ -357,8 +380,8 @@ void BootAnimation::PlayVideo()
 void BootAnimation::CloseVideoPlayer()
 {
     LOGI("Close video player.");
-    while (!CheckExitAnimation()) {
-        usleep(SLEEP_TIME_US);
+    if (!CheckExitAnimation()) {
+        mainHandler_->PostTask(std::bind(&BootAnimation::CloseVideoPlayer, this), SLEEP_TIME_MS);
     }
     LOGI("Check Exit Animation end.");
 }

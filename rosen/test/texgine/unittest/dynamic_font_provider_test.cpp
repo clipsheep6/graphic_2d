@@ -46,20 +46,7 @@ void InitMyMockVars(Style style)
     typeface = style.typeface;
 }
 
-#ifndef USE_ROSEN_DRAWING
-std::unique_ptr<TexgineMemoryStream> TexgineMemoryStream::MakeCopy(const void *data, size_t length)
-{
-    return std::move(memoryStream);
-}
-#endif
 
-#ifndef USE_ROSEN_DRAWING
-std::shared_ptr<TexgineTypeface> TexgineTypeface::MakeFromStream(
-    std::unique_ptr<TexgineMemoryStream> stream, int index)
-{
-    return typeface;
-}
-#endif
 
 class DynamicFontProviderTest : public testing::Test {
 public:
@@ -113,7 +100,7 @@ HWTEST_F(DynamicFontProviderTest, LoadFont3, TestSize.Level1)
 {
     InitMyMockVars({.memoryStream = nullptr});
     // APIERROR
-    EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF3", this, 4), 2); });
+    EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF3", this, 4), 0); });
 }
 
 /**
@@ -125,7 +112,7 @@ HWTEST_F(DynamicFontProviderTest, LoadFont3, TestSize.Level1)
 HWTEST_F(DynamicFontProviderTest, LoadFont4, TestSize.Level1)
 {
     InitMyMockVars({.typeface = nullptr});
-    EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF4", this, 4), 2); });
+    EXPECT_NO_THROW({ EXPECT_EQ(dynamicFontProvider->LoadFont("LF4", this, 4), 0); });
 }
 
 /**

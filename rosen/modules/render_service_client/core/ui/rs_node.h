@@ -34,19 +34,11 @@
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
 
-#ifndef USE_ROSEN_DRAWING
-class SkCanvas;
-#else
 #include "recording/recording_canvas.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
-#ifndef USE_ROSEN_DRAWING
-using DrawFunc = std::function<void(std::shared_ptr<SkCanvas>)>;
-#else
 using DrawFunc = std::function<void(std::shared_ptr<Drawing::Canvas>)>;
-#endif
 using PropertyCallback = std::function<void()>;
 class RSAnimation;
 class RSCommand;
@@ -328,7 +320,7 @@ public:
     void SetDrawRegion(std::shared_ptr<RectF> rect);
 
     // Mark preferentially draw node and childrens
-    void MarkNodeGroup(bool isNodeGroup, bool isForced = true);
+    void MarkNodeGroup(bool isNodeGroup, bool isForced = true, bool includeProperty = false);
 
     void MarkNodeSingleFrameComposer(bool isNodeSingleFrameComposer);
 

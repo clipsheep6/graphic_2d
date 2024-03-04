@@ -70,6 +70,7 @@
           "hicollie",
           "image_framework",
           "ipc",
+          "graphic_surface",
           "player_framework",
           "resource_schedule_service",
           "soc_perf",
@@ -381,6 +382,16 @@
                   "js_color_space_utils.h"
               ],
               "header_base": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/color_manager/color_space_object_convertor"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/hdr_capability:hdr_capability_utils",
+            "header": {
+              "header_files": [
+                  "js_hdr_format_utils.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/hdr_capability/hdr_capability_utils"
             }
           },
           {

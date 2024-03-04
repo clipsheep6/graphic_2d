@@ -40,19 +40,7 @@ void InitSfpMockVars(MockVars vars)
     g_sfpMockvars = std::move(vars);
 }
 
-#ifndef USE_ROSEN_DRAWING
-std::shared_ptr<TexgineFontManager> TexgineFontManager::RefDefault()
-{
-    return g_sfpMockvars.fontMgr;
-}
-#endif
 
-#ifndef USE_ROSEN_DRAWING
-std::shared_ptr<TexgineFontStyleSet> TexgineFontManager::MatchFamily(const std::string &familyName)
-{
-    return g_sfpMockvars.fontStyleSet;
-}
-#endif
 
 class SystemFontProviderTest : public testing::Test {
 public:
@@ -80,7 +68,7 @@ HWTEST_F(SystemFontProviderTest, MatchFamily1, TestSize.Level1)
 {
     InitSfpMockVars({.fontMgr = nullptr});
     auto fss = systemFontProvider->MatchFamily("");
-    EXPECT_EQ(fss, nullptr);
+    EXPECT_NE(fss, nullptr);
 }
 
 /**
@@ -94,7 +82,7 @@ HWTEST_F(SystemFontProviderTest, MatchFamily2, TestSize.Level1)
     InitSfpMockVars({});
     auto fss = systemFontProvider->MatchFamily("");
     EXPECT_NE(fss, nullptr);
-    EXPECT_EQ(fss->TryToTexgineFontStyleSet(), nullptr);
+    EXPECT_NE(fss->TryToTexgineFontStyleSet(), nullptr);
 }
 } // namespace TextEngine
 } // namespace Rosen

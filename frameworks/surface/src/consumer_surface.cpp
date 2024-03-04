@@ -273,7 +273,9 @@ GSError ConsumerSurface::SetUserData(const std::string &key, const std::string &
     userData_[key] = val;
     auto iter = onUserDataChange_.begin();
     while (iter != onUserDataChange_.end()) {
-        iter->second(key, val);
+        if (iter->second != nullptr) {
+            iter->second(key, val);
+        }
         iter++;
     }
 
@@ -506,5 +508,10 @@ GSError ConsumerSurface::SetWptrNativeWindowToPSurface(void* nativeWindow)
 {
     BLOGND("ConsumerSurface::SetWptrNativeWindowToPSurface not support.");
     return GSERROR_NOT_SUPPORT;
+}
+
+void ConsumerSurface::ConsumerRequestCpuAccess(bool on)
+{
+    consumer_->ConsumerRequestCpuAccess(on);
 }
 } // namespace OHOS

@@ -16,6 +16,7 @@
 #include "typography.h"
 
 #include "skia_adapter/skia_canvas.h"
+#include "skia_adapter/skia_convert_utils.h"
 #include "impl/paragraph_impl.h"
 
 #include "convert.h"
@@ -100,6 +101,11 @@ void Typography::SetIndents(const std::vector<float>& indents)
     paragraph_->SetIndents(indents);
 }
 
+float Typography::DetectIndents(size_t index)
+{
+    return paragraph_->DetectIndents(index);
+}
+
 void Typography::Layout(double width)
 {
     return paragraph_->Layout(width);
@@ -137,14 +143,7 @@ void Typography::Paint(SkCanvas *canvas, double x, double y)
 
 void Typography::Paint(Drawing::Canvas *drawCanvas, double x, double y)
 {
-#ifndef USE_ROSEN_DRAWING
-    std::shared_ptr<Drawing::CoreCanvasImpl> coreCanvas = drawCanvas->GetCanvasData();
-    auto drawingCanvas = static_cast<Drawing::SkiaCanvas *>(coreCanvas.get());
-    auto canvas = drawingCanvas->ExportSkCanvas();
-    paragraph_->Paint(canvas, x, y);
-#else
     paragraph_->Paint(drawCanvas, x, y);
-#endif
 }
 
 std::vector<TextRect> Typography::GetTextRectsByBoundary(size_t left, size_t right,
@@ -215,6 +214,112 @@ void Typography::SetAnimation(
     if (animationFunc != nullptr && paragraph_ != nullptr) {
         paragraph_->SetAnimation(animationFunc);
     }
+}
+
+void Typography::SetParagraghId(uint32_t id)
+{
+    if (paragraph_ != nullptr) {
+        paragraph_->SetParagraghId(id);
+    }
+}
+
+bool Typography::GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespace, LineMetrics* lineMetrics)
+{
+    if (paragraph_ == nullptr) {
+        return false;
+    }
+    if (lineNumber < 0 || lineNumber >= paragraph_->GetLineCount() || lineMetrics == nullptr) {
+        return false;
+    }
+
+    skia::textlayout::LineMetrics sklineMetrics;
+    if (!paragraph_->GetLineMetricsAt(lineNumber, &sklineMetrics)) {
+        return false;
+    }
+
+    auto &skFontMetrics = sklineMetrics.fLineMetrics.at(sklineMetrics.fStartIndex).font_metrics;
+    lineMetrics->firstCharMetrics = skFontMetrics;
+
+    if (oneLine) {
+        lineMetrics->ascender = sklineMetrics.fAscent;
+        lineMetrics->descender = sklineMetrics.fDescent;
+    } else {
+        lineMetrics->ascender = skFontMetrics.fAscent;
+        lineMetrics->descender = skFontMetrics.fDescent;
+    }
+    lineMetrics->capHeight = skFontMetrics.fCapHeight;
+    lineMetrics->xHeight = skFontMetrics.fXHeight;
+    if (includeWhitespace) {
+        lineMetrics->width = sklineMetrics.fWidthWithSpaces;
+    } else {
+        lineMetrics->width = sklineMetrics.fWidth;
+    }
+    lineMetrics->height = sklineMetrics.fHeight;
+    lineMetrics->x = sklineMetrics.fLeft;
+    lineMetrics->y = sklineMetrics.fTopHeight;
+    lineMetrics->startIndex = sklineMetrics.fStartIndex;
+    lineMetrics->endIndex = sklineMetrics.fEndIndex;
+
+    return true;
+}
+
+std::vector<LineMetrics> Typography::GetLineMetrics()
+{
+    std::vector<LineMetrics> lineMetrics;
+    if (paragraph_ != nullptr) {
+        auto metrics = paragraph_->GetLineMetrics();
+        for (SPText::LineMetrics& spLineMetrics : metrics) {
+            LineMetrics& skLineMetrics = lineMetrics.emplace_back();
+            auto &skFontMetrics = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics;
+            skLineMetrics.firstCharMetrics = skFontMetrics;
+            skLineMetrics.ascender = spLineMetrics.ascent;
+            skLineMetrics.descender = spLineMetrics.descent;
+            skLineMetrics.capHeight = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics.fCapHeight;
+            skLineMetrics.xHeight = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics.fXHeight;
+            skLineMetrics.width = spLineMetrics.width;
+            skLineMetrics.height = spLineMetrics.height;
+            skLineMetrics.x = spLineMetrics.left;
+            skLineMetrics.y = spLineMetrics.topHeight;
+            skLineMetrics.startIndex = spLineMetrics.startIndex;
+            skLineMetrics.endIndex = spLineMetrics.endIndex;
+        }
+    }
+    return lineMetrics;
+}
+
+bool Typography::GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics)
+{
+    if (paragraph_ == nullptr) {
+        return false;
+    }
+    if (lineNumber < 0 || lineNumber >= paragraph_->GetLineCount() || lineMetrics == nullptr) {
+        return false;
+    }
+    skia::textlayout::LineMetrics skLineMetrics;
+    if (!paragraph_->GetLineMetricsAt(lineNumber, &skLineMetrics)) {
+        return false;
+    }
+
+    auto &skFontMetrics = skLineMetrics.fLineMetrics.at(skLineMetrics.fStartIndex).font_metrics;
+    lineMetrics->firstCharMetrics = skFontMetrics;
+    lineMetrics->ascender = skFontMetrics.fAscent;
+    lineMetrics->descender = skFontMetrics.fDescent;
+    lineMetrics->capHeight = skFontMetrics.fCapHeight;
+    lineMetrics->xHeight = skFontMetrics.fXHeight;
+    lineMetrics->width = skLineMetrics.fWidth;
+    lineMetrics->height = skLineMetrics.fHeight;
+    lineMetrics->x = skLineMetrics.fLeft;
+    lineMetrics->y = skLineMetrics.fTopHeight;
+    lineMetrics->startIndex = skLineMetrics.fStartIndex;
+    lineMetrics->endIndex = skLineMetrics.fEndIndex;
+
+    return true;
+}
+
+Drawing::FontMetrics Typography::GetFontMetrics(const OHOS::Rosen::TextStyle& textStyle)
+{
+    auto spTextStyle = Convert(textStyle);
+    return paragraph_->GetFontMetricsResult(spTextStyle);
 }
 } // namespace AdapterTxt
 } // namespace Rosen

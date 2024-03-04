@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "include/core/SkFontMetrics.h"
+#include "text/font_metrics.h"
 #include "text_style.h"
 
 namespace OHOS {
@@ -28,10 +29,11 @@ class RunMetrics {
 public:
     explicit RunMetrics(const TextStyle* style) : textStyle(style) {}
 
-    RunMetrics(const TextStyle* style, const SkFontMetrics& metrics) : textStyle(style), fontMetrics(metrics) {}
+    RunMetrics(const TextStyle* style, const Drawing::FontMetrics& metrics)
+        : textStyle(style), fontMetrics(metrics) {}
 
     const TextStyle* textStyle;
-    SkFontMetrics fontMetrics;
+    Drawing::FontMetrics fontMetrics;
 };
 
 class LineMetrics {
@@ -52,6 +54,10 @@ public:
     double baseline = 0.0;
 
     size_t lineNumber = 0;
+   // Width include spaces
+    double widthWithSpaces = 0.0;
+    // Height from the top
+    double topHeight = 0.0;
 
     std::map<size_t, RunMetrics> runMetrics;
 };

@@ -114,6 +114,8 @@ GSError ProducerSurface::RequestBuffer(sptr<SurfaceBuffer>& buffer,
         return GSERROR_API_FAILED;
     } else {
         retval.buffer = bufferProducerCache_[retval.sequence];
+        retval.buffer->SetSurfaceBufferColorGamut(config.colorGamut);
+        retval.buffer->SetSurfaceBufferTransform(config.transform);
     }
     buffer = retval.buffer;
     fence = retval.fence;
@@ -351,7 +353,9 @@ GSError ProducerSurface::SetUserData(const std::string &key, const std::string &
     userData_[key] = val;
     auto iter = onUserDataChange_.begin();
     while (iter != onUserDataChange_.end()) {
-        iter->second(key, val);
+        if (iter->second != nullptr) {
+            iter->second(key, val);
+        }
         iter++;
     }
 

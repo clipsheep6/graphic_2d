@@ -91,6 +91,7 @@ public:
     bool IsIdle() const;
     void QosStateDump(std::string& dumpString);
     void RenderServiceTreeDump(std::string& dumpString, bool forceDumpSingleFrame = true);
+    void RenderServiceTreeDump(std::string& dumpString);
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
@@ -170,7 +171,6 @@ public:
     void SetFocusAppInfo(
         int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName, uint64_t focusNodeId);
     std::unordered_map<NodeId, bool> GetCacheCmdSkippedNodes() const;
-    std::string GetFocusAppBundleName() const;
 
     sptr<VSyncDistributor> rsVSyncDistributor_;
     sptr<VSyncController> rsVSyncController_;
@@ -178,11 +178,7 @@ public:
     sptr<VSyncGenerator> vsyncGenerator_;
 
     void ReleaseSurface();
-#ifndef USE_ROSEN_DRAWING
-    void AddToReleaseQueue(sk_sp<SkSurface>&& surface);
-#else
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
-#endif
 
     void SetDirtyFlag();
     void SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync);
@@ -195,7 +191,7 @@ public:
     void CountMem(int pid, MemoryGraphic& mem);
     void CountMem(std::vector<MemoryGraphic>& mems);
     void SetAppWindowNum(uint32_t num);
-    void DeleteMultiInstancePid(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
+    void SetMultiInstancePidVSyncRate(std::map<uint32_t, RSVisibleLevel>& pidVisMap,
         std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
     bool SetSystemAnimatedScenes(SystemAnimatedScenes systemAnimatedScenes);
     SystemAnimatedScenes GetSystemAnimatedScenes();
@@ -210,11 +206,7 @@ public:
     {
         idleTimerExpiredFlag_ = flag;
     }
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImage> GetWatermarkImg();
-#else
     std::shared_ptr<Drawing::Image> GetWatermarkImg();
-#endif
     bool GetWatermarkFlag();
     uint64_t GetFrameCount() const
     {
@@ -260,6 +252,16 @@ public:
         return mainLooping_.load();
     }
 
+    bool GetDiscardJankFrames() const
+    {
+        return discardJankFrames_.load();
+    }
+
+    void SetDiscardJankFrames(bool discardJankFrames)
+    {
+        discardJankFrames_.store(discardJankFrames);
+    }
+
     bool IsPCThreeFingerScenesListScene() const
     {
         return !threeFingerScenesList_.empty();
@@ -267,6 +269,10 @@ public:
 
     void SubscribeAppState();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
+    void NotifySurfaceCapProcFinish();
+    void WaitUntilSurfaceCapProcFinished();
+    void SetSurfaceCapProcFinished(bool flag);
+
     const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetSelfDrawingNodes() const;
     bool GetParallelCompositionEnabled();
     std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
@@ -369,6 +375,7 @@ private:
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> pendingEffectiveCommands_;
     std::unordered_map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> syncTransactionData_;
     int32_t syncTransactionCount_ { 0 };
+    int32_t syncTransactionCountExt_ { 0 };
 
     TransactionDataMap cachedTransactionDataMap_;
     TransactionDataIndexMap effectiveTransactionDataIndexMap_;
@@ -395,6 +402,10 @@ private:
     std::mutex unmarshalMutex_;
     int32_t unmarshalFinishedCount_ = 0;
     sptr<VSyncDistributor> appVSyncDistributor_ = nullptr;
+
+    std::condition_variable surfaceCapProcTaskCond_;
+    std::mutex surfaceCapProcMutex_;
+    bool surfaceCapProcFinished_ = true;
 
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
     RSTaskMessage::RSTask uploadTextureBarrierTask_;
@@ -472,11 +483,7 @@ private:
 
     // used for watermark
     std::mutex watermarkMutex_;
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImage> watermarkImg_ = nullptr;
-#else
     std::shared_ptr<Drawing::Image> watermarkImg_ = nullptr;
-#endif
     bool isShow_ = false;
     bool doParallelComposition_ = false;
 
@@ -506,11 +513,7 @@ private:
     bool idleTimerExpiredFlag_ = false;
     // for ui first
     std::mutex mutex_;
-#ifndef USE_ROSEN_DRAWING
-    std::queue<sk_sp<SkSurface>> tmpSurfaces_;
-#else
     std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
-#endif
 
     // for surface occlusion change callback
     std::mutex surfaceOcclusionMutex_;
@@ -534,6 +537,7 @@ private:
     bool needRequestNextVsyncAnimate_ = false;
 
     std::atomic_bool mainLooping_ = false;
+    std::atomic_bool discardJankFrames_ = false;
     bool forceUIFirstChanged_ = false;
 };
 } // namespace OHOS::Rosen

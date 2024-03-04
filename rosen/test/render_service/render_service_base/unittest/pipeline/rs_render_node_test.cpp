@@ -37,20 +37,12 @@ public:
     static inline NodeId id;
     static inline std::weak_ptr<RSContext> context = {};
     static inline RSPaintFilterCanvas* canvas_;
-#ifndef USE_ROSEN_DRAWING
-    static inline SkCanvas skCanvas_;
-#else
     static inline Drawing::Canvas drawingCanvas_;
-#endif
 };
 
 void RSRenderNodeTest::SetUpTestCase()
 {
-#ifndef USE_ROSEN_DRAWING
-    canvas_ = new RSPaintFilterCanvas(&skCanvas_);
-#else
     canvas_ = new RSPaintFilterCanvas(&drawingCanvas_);
-#endif
 }
 void RSRenderNodeTest::TearDownTestCase()
 {
@@ -140,15 +132,7 @@ HWTEST_F(RSRenderNodeTest, InitCacheSurfaceTest, TestSize.Level1)
     RSRenderNode node(id, context);
     CacheType type = CacheType::ANIMATE_PROPERTY;
     node.SetCacheType(type);
-#ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
-    node.InitCacheSurface(canvas_->recordingContext());
-#else
-    node.InitCacheSurface(canvas_->getGrContext());
-#endif
-#else
    node.InitCacheSurface(canvas_->GetGPUContext().get());
-#endif
 }
 
 /**
@@ -196,7 +180,7 @@ HWTEST_F(RSRenderNodeTest, MarkNodeGroupTest, TestSize.Level1)
     auto nodeGruopType = node.GetNodeGroupType();
     RSRenderNode::NodeGroupType type = RSRenderNode::NodeGroupType::GROUPED_BY_USER;
     if (type >= nodeGruopType) {
-        node.MarkNodeGroup(type, isNodeGruop);
+        node.MarkNodeGroup(type, isNodeGruop, false);
         ASSERT_EQ(node.GetNodeGroupType(), type);
     }
 }

@@ -21,6 +21,8 @@
 #include "include/core/SkMatrix.h"
 #include "drawing_painter_impl.h"
 #include "skia_adapter/skia_convert_utils.h"
+#include "text/font_metrics.h"
+#include "paragraph_builder_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -38,9 +40,9 @@ FontWeight GetTxtFontWeight(int fontWeight)
     return static_cast<FontWeight>(weight);
 }
 
-FontStyle GetTxtFontStyle(SkFontStyle::Slant slant)
+FontStyle GetTxtFontStyle(RSFontStyle::Slant slant)
 {
-    return slant == SkFontStyle::Slant::kUpright_Slant ?
+    return slant == RSFontStyle::Slant::UPRIGHT_SLANT ?
         FontStyle::NORMAL : FontStyle::ITALIC;
 }
 
@@ -108,6 +110,11 @@ void ParagraphImpl::SetIndents(const std::vector<float>& indents)
     paragraph_->setIndents(indents);
 }
 
+float ParagraphImpl::DetectIndents(size_t index)
+{
+    return paragraph_->detectIndents(index);
+}
+
 void ParagraphImpl::Layout(double width)
 {
     lineMetrics_.reset();
@@ -137,10 +144,7 @@ double ParagraphImpl::GetGlyphsBoundsRight()
 
 OHOS::Rosen::Drawing::FontMetrics ParagraphImpl::MeasureText()
 {
-    auto skFontMetrics = paragraph_->measureText();
-    OHOS::Rosen::Drawing::FontMetrics fontMetrics;
-    OHOS::Rosen::Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, fontMetrics);
-    return fontMetrics;
+    return paragraph_->measureText();
 }
 
 void ParagraphImpl::Paint(SkCanvas* canvas, double x, double y)
@@ -152,6 +156,7 @@ void ParagraphImpl::Paint(Drawing::Canvas* canvas, double x, double y)
 {
     RSCanvasParagraphPainter painter(canvas, paints_);
     painter.SetAnimation(animationFunc_);
+    painter.SetParagraphId(id_);
     paragraph_->paint(&painter, x, y);
 }
 
@@ -215,6 +220,8 @@ std::vector<LineMetrics>& ParagraphImpl::GetLineMetrics()
             txtm.left = skm.fLeft;
             txtm.baseline = skm.fBaseline;
             txtm.lineNumber = skm.fLineNumber;
+            txtm.widthWithSpaces = skm.fWidthWithSpaces;
+            txtm.topHeight = skm.fTopHeight;
 
             for (const auto& [index, styleMtrics] : skm.fLineMetrics) {
                 lineMetricsStyles_.push_back(SkStyleToTextStyle(*styleMtrics.text_style));
@@ -241,8 +248,8 @@ TextStyle ParagraphImpl::SkStyleToTextStyle(const skt::TextStyle& skStyle)
     txt.decorationColor = skStyle.getDecorationColor();
     txt.decorationStyle = static_cast<TextDecorationStyle>(skStyle.getDecorationStyle());
     txt.decorationThicknessMultiplier = SkScalarToDouble(skStyle.getDecorationThicknessMultiplier());
-    txt.fontWeight = GetTxtFontWeight(skStyle.getFontStyle().weight());
-    txt.fontStyle = GetTxtFontStyle(skStyle.getFontStyle().slant());
+    txt.fontWeight = GetTxtFontWeight(skStyle.getFontStyle().GetWeight());
+    txt.fontStyle = GetTxtFontStyle(skStyle.getFontStyle().GetSlant());
 
     txt.baseline = static_cast<TextBaseline>(skStyle.getTextBaseline());
 
@@ -275,6 +282,14 @@ TextStyle ParagraphImpl::SkStyleToTextStyle(const skt::TextStyle& skStyle)
     }
 
     return txt;
+}
+
+Drawing::FontMetrics ParagraphImpl::GetFontMetricsResult(const SPText::TextStyle& textStyle)
+{
+    auto skTextStyle = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle);
+    OHOS::Rosen::Drawing::FontMetrics fontMetrics;
+    skTextStyle.getFontMetrics(&fontMetrics);
+    return fontMetrics;
 }
 } // namespace SPText
 } // namespace Rosen

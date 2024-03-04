@@ -48,33 +48,33 @@ void FontCollection::SetupDefaultFontManager()
     sktFontCollection_.reset();
 }
 
-void FontCollection::SetDefaultFontManager(sk_sp<SkFontMgr> fontManager)
+void FontCollection::SetDefaultFontManager(std::shared_ptr<RSFontMgr> fontManager)
 {
     defaultFontManager_ = fontManager;
     sktFontCollection_.reset();
 }
 
-void FontCollection::SetAssetFontManager(sk_sp<SkFontMgr> fontManager)
+void FontCollection::SetAssetFontManager(std::shared_ptr<RSFontMgr> fontManager)
 {
     assetFontManager_ = fontManager;
     sktFontCollection_.reset();
 }
 
-void FontCollection::SetDynamicFontManager(sk_sp<SkFontMgr> fontManager)
+void FontCollection::SetDynamicFontManager(std::shared_ptr<RSFontMgr> fontManager)
 {
     dynamicFontManager_ = fontManager;
     sktFontCollection_.reset();
 }
 
-void FontCollection::SetTestFontManager(sk_sp<SkFontMgr> fontManager)
+void FontCollection::SetTestFontManager(std::shared_ptr<RSFontMgr> fontManager)
 {
     testFontManager_ = fontManager;
     sktFontCollection_.reset();
 }
 
-std::vector<sk_sp<SkFontMgr>> FontCollection::GetFontManagerOrder() const
+std::vector<std::shared_ptr<RSFontMgr>> FontCollection::GetFontManagerOrder() const
 {
-    std::vector<sk_sp<SkFontMgr>> order;
+    std::vector<std::shared_ptr<RSFontMgr>> order;
     if (dynamicFontManager_)
         order.push_back(dynamicFontManager_);
     if (assetFontManager_)

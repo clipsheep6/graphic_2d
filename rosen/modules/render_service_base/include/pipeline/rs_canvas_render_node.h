@@ -25,13 +25,9 @@
 
 namespace OHOS {
 namespace Rosen {
-#ifndef USE_ROSEN_DRAWING
-class DrawCmdList;
-#else
 namespace Drawing {
 class DrawCmdList;
 }
-#endif
 class RSModifierContext;
 
 class RSCanvasRenderNode : public RSRenderNode {
@@ -44,19 +40,14 @@ public:
         const std::weak_ptr<RSContext>& context = {}, bool isTextureExportNode = false);
     virtual ~RSCanvasRenderNode();
 
-#ifndef USE_ROSEN_DRAWING
-    void UpdateRecording(std::shared_ptr<DrawCmdList> drawCmds,
-        RSModifierType type, bool isSingleFrameComposer = false);
-#else
     void UpdateRecording(std::shared_ptr<Drawing::DrawCmdList> drawCmds,
         RSModifierType type, bool isSingleFrameComposer = false);
-#endif
     void ClearRecording();
 
     void ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessRenderAfterChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessTransitionBeforeChildren(RSPaintFilterCanvas& canvas) override;
-    void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas) override;
+    void ProcessAnimatePropertyBeforeChildren(RSPaintFilterCanvas& canvas, bool includeProperty) override;
     void ProcessRenderContents(RSPaintFilterCanvas& canvas) override;
     void ProcessAnimatePropertyAfterChildren(RSPaintFilterCanvas& canvas) override;
     void ProcessTransitionAfterChildren(RSPaintFilterCanvas& canvas) override;
@@ -86,7 +77,7 @@ private:
     void DrawDrivenContent(RSPaintFilterCanvas& canvas);
     // functions that are dedicated to driven render [end]
 
-    void PropertyDrawableRender(RSPaintFilterCanvas& canvas);
+    void PropertyDrawableRender(RSPaintFilterCanvas& canvas, bool includeProperty);
     void DrawShadow(RSModifierContext& context, RSPaintFilterCanvas& canvas);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;

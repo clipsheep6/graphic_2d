@@ -23,9 +23,7 @@
 #include "txt/asset_font_manager.h"
 #endif
 
-#ifdef USE_ROSEN_DRAWING
 #include "text/font_mgr.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -43,7 +41,7 @@ public:
 
 private:
     std::shared_ptr<txt::FontCollection> fontCollection_ = nullptr;
-    sk_sp<txt::DynamicFontManager> dfmanager_ = nullptr;
+    std::shared_ptr<Drawing::FontMgr> dfmanager_ = nullptr;
     bool disableSystemFont_ = false;
 };
 } // namespace AdapterTxt

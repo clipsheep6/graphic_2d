@@ -20,6 +20,7 @@
 #include <stack>
 
 #include "draw/canvas.h"
+#include "image/gpu_context.h"
 #include "recording/adaptive_image_helper.h"
 #include "recording/draw_cmd_list.h"
 #include "recording/recording_handle.h"
@@ -30,8 +31,8 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-/*
- * @brief  RecordingCanvas is an empty canvas, which does not act on any surface,
+/**
+ * @brief RecordingCanvas is an empty canvas, which does not act on any surface,
  * and is used to record the sequence of draw calls for the canvas.
  * Draw calls are kept in linear memory in DrawCmdList, Subsequent playback can be performed through DrawCmdList.
  */
@@ -52,10 +53,12 @@ public:
         gpuContext_ = gpuContext;
     }
 
+#ifdef ACE_ENABLE_GPU
     std::shared_ptr<GPUContext> GetGPUContext() override
     {
         return gpuContext_;
     }
+#endif
 
     void Clear() const;
 

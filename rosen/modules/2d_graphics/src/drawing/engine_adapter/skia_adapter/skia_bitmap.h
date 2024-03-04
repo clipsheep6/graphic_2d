@@ -61,13 +61,14 @@ public:
     bool IsValid() const override;
     bool IsEmpty() const override;
     Pixmap GetPixmap() const override;
+    std::shared_ptr<Image> MakeImage() const override;
     void SetInfo(const ImageInfo& info) override;
     bool TryAllocPixels(const ImageInfo& info) override;
     void SetSkBitmap(const SkBitmap& skBitmap);
 
     std::shared_ptr<Data> Serialize() const override;
     bool Deserialize(std::shared_ptr<Data> data) override;
-
+    ImageInfo GetImageInfo() override;
 private:
     SkBitmap skiaBitmap_;
 };

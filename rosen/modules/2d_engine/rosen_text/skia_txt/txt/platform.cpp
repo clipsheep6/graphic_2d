@@ -31,13 +31,9 @@ std::vector<std::string> GetDefaultFontFamilies()
 #endif
 }
 
-sk_sp<SkFontMgr> GetDefaultFontManager()
+std::shared_ptr<Drawing::FontMgr> GetDefaultFontManager()
 {
-#ifdef OHOS_STANDARD_SYSTEM
-    return SkFontMgr::RefDefault();
-#else
-    return SkFontMgr_New_OHOS();
-#endif
+    return Drawing::FontMgr::CreateDefaultFontMgr();
 }
 } // namespace SPText
 } // namespace Rosen

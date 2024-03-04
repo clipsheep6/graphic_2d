@@ -44,6 +44,7 @@
 
 namespace OHOS {
 namespace Rosen {
+constexpr int SLEEP_TIME_US = 1000;
 // we guarantee that when constructing this object,
 // all these pointers are valid, so will not check them.
 RSRenderServiceConnection::RSRenderServiceConnection(
@@ -230,7 +231,8 @@ void RSRenderServiceConnection::RSApplicationRenderThreadDeathRecipient::OnRemot
 
     auto rsConn = conn_.promote();
     if (rsConn == nullptr) {
-        RS_LOGW("RSApplicationRenderThreadDeathRecipient::OnRemoteDied: RSRenderServiceConnection was dead, do nothing.");
+        RS_LOGW("RSApplicationRenderThreadDeathRecipient::OnRemoteDied: "
+            "RSRenderServiceConnection was dead, do nothing.");
         return;
     }
 
@@ -285,7 +287,7 @@ sptr<Surface> RSRenderServiceConnection::CreateNodeAndSurface(const RSSurfaceRen
 {
     if (auto preNode = mainThread_->GetContext().GetNodeMap().GetRenderNode(config.id)) {
         RS_LOGE("CreateNodeAndSurface same id node:%{public}" PRIu64 ", type:%d", config.id, preNode->GetType());
-        usleep(1000);
+        usleep(SLEEP_TIME_US);
     }
     std::shared_ptr<RSSurfaceRenderNode> node =
         std::make_shared<RSSurfaceRenderNode>(config, mainThread_->GetContext().weak_from_this());
@@ -526,7 +528,7 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         RSHardwareThread::Instance().ScheduleTask(
             [=]() { screenManager_->SetScreenPowerStatus(id, status); }).wait();
-
+        mainThread_->SetDiscardJankFrames(true);
         OHOS::Rosen::HgmCore::Instance().NotifyScreenPowerStatus(id, status);
     } else {
         mainThread_->ScheduleTask(
@@ -538,16 +540,30 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
     float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType)
 {
     if (surfaceCaptureType == SurfaceCaptureType::DEFAULT_CAPTURE) {
-        std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
+        auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
+        if (node == nullptr) {
+            RS_LOGE("RSRenderServiceConnection::TakeSurfaceCapture: node is nullptr");
+            callback->OnSurfaceCapture(id, nullptr);
+            return;
+        }
+        auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+        auto isProcOnBgThread = (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL &&
+            mainThread_->GetDeviceType() == DeviceType::PHONE) ? !node->IsOnTheTree() : false;
+        std::function<void()> captureTask = [scaleY, scaleX, callback, id, isProcOnBgThread]() -> void {
             RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%{public}" PRIu64 "]", id);
             ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
-            RSSurfaceCaptureTask task(id, scaleX, scaleY);
+            RSSurfaceCaptureTask task(id, scaleX, scaleY, isProcOnBgThread);
             if (!task.Run(callback)) {
                 callback->OnSurfaceCapture(id, nullptr);
             }
             ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
         };
-        mainThread_->PostTask(captureTask);
+        std::function<void()> captureTaskOnBgThread = [=]() -> void {
+            mainThread_->SetSurfaceCapProcFinished(false);
+            RSBackgroundThread::Instance().PostTask(captureTask);
+        };
+        auto task = isProcOnBgThread ? captureTaskOnBgThread : captureTask;
+        mainThread_->PostTask(task);
     } else {
         TakeSurfaceCaptureForUIWithUni(id, callback, scaleX, scaleY);
     }
@@ -938,11 +954,7 @@ int32_t RSRenderServiceConnection::GetScreenType(ScreenId id, RSScreenType& scre
     return screenManager_->GetScreenType(id, screenType);
 }
 
-#ifndef USE_ROSEN_DRAWING
-bool RSRenderServiceConnection::GetBitmap(NodeId id, SkBitmap& bitmap)
-#else
 bool RSRenderServiceConnection::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
-#endif
 {
     if (!mainThread_->IsIdle()) {
         return false;
@@ -964,20 +976,11 @@ bool RSRenderServiceConnection::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
         RSTaskDispatcher::GetInstance().PostTask(
             RSSubThreadManager::Instance()->GetReThreadIndexMap()[tid], getBitmapTask, true);
     }
-#ifndef USE_ROSEN_DRAWING
-    return !bitmap.empty();
-#else
     return !bitmap.IsEmpty();
-#endif
 }
 
-#ifndef USE_ROSEN_DRAWING
-bool RSRenderServiceConnection::GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
-    const SkRect* rect, std::shared_ptr<DrawCmdList> drawCmdList)
-#else
 bool RSRenderServiceConnection::GetPixelmap(NodeId id, const std::shared_ptr<Media::PixelMap> pixelmap,
     const Drawing::Rect* rect, std::shared_ptr<Drawing::DrawCmdList> drawCmdList)
-#endif
 {
     auto node = mainThread_->GetContext().GetNodeMap().GetRenderNode<RSCanvasDrawingRenderNode>(id);
     if (node == nullptr) {

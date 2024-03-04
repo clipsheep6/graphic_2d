@@ -114,7 +114,7 @@ private:
     ~VSyncGenerator() noexcept override;
 
     int64_t ComputeNextVSyncTimeStamp(int64_t now, int64_t referenceTime);
-    std::vector<Listener> GetListenerTimeouted(int64_t now, int64_t referenceTime);
+    std::vector<Listener> GetListenerTimeouted(int64_t now, int64_t occurTimestamp, int64_t referenceTime);
     int64_t ComputeListenerNextVSyncTimeStamp(const Listener &listen, int64_t now, int64_t referenceTime);
     void ThreadLoop();
     void UpdateWakeupDelay(int64_t occurTimestamp, int64_t nextTimeStamp);
@@ -163,6 +163,8 @@ private:
     int64_t pendingPeriod_ = 0;
     int64_t pendingReferenceTime_ = 0;
     bool startRefresh_ = false;
+    int64_t phaseRecord_ = 0;
+    int64_t periodRecord_ = 0;
 };
 } // impl
 } // namespace Rosen

@@ -59,10 +59,12 @@ public:
     virtual bool IsValid() const = 0;
     virtual bool IsEmpty() const = 0;
     virtual Pixmap GetPixmap() const = 0;
+    virtual std::shared_ptr<Image> MakeImage() const = 0;
     virtual void SetInfo(const ImageInfo& info) = 0;
     virtual bool TryAllocPixels(const ImageInfo& info) = 0;
     virtual std::shared_ptr<Data> Serialize() const = 0;
     virtual bool Deserialize(std::shared_ptr<Data> data) = 0;
+    virtual ImageInfo GetImageInfo() = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

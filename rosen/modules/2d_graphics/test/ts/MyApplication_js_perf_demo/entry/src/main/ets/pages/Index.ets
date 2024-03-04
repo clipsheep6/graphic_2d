@@ -120,13 +120,13 @@ struct Index {
       if(this.testType == 'performance') {
         Row() {
           Text('TestCount')
-            .id('testCount')
             .fontSize(14)
             .textAlign(TextAlign.End)
             .height(38)
             .margin({right:5})
           Column() {
             TextInput({ placeholder: '10'})
+              .id('testCount')
               .enterKeyType(EnterKeyType.Send)
               .placeholderFont({size: 15})
               .height(38)

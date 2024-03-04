@@ -52,7 +52,7 @@ export class MyRenderNode extends RenderNode {
       console.log(TAG, 'Testcase name is invalid');
       return;
     }
-    test.OnTestFunctionGpuUpScreen(canvas);
+    test.TestFunctionGpuUpScreen(canvas);
   }
 
   async TestPerformanceGpuUpScreen(canvas: drawing.Canvas) {
@@ -64,7 +64,7 @@ export class MyRenderNode extends RenderNode {
     }
 
     test.SetTestCount(this.testCount);
-    test.OnTestPerformanceGpuUpScreen(canvas);
+    test.TestPerformanceGpuUpScreen(canvas);
   }
 }
 

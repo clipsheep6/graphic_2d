@@ -19,7 +19,7 @@ export class DrawRect extends TestBase {
     const brushColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
     brush.setColor(brushColor);
     canvas.attachBrush(brush);
-    canvas.drawRect({left:0,right:50,top:0,bottom:50});
+    canvas.drawRect({left:0,right:100,top:0,bottom:100});
   }
 
   public OnTestPerformance(canvas: drawing.Canvas) {

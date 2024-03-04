@@ -81,24 +81,15 @@ RSCanvasParagraphPainter::RSCanvasParagraphPainter(Drawing::Canvas* canvas, cons
     : canvas_(canvas), paints_(paints)
 {}
 
-#ifndef USE_ROSEN_DRAWING
-void RSCanvasParagraphPainter::drawTextBlob(const sk_sp<SkTextBlob>& blob, SkScalar x, SkScalar y,
-    const SkPaintOrID& paint)
-{
-}
-
-void RSCanvasParagraphPainter::drawTextShadow(const sk_sp<SkTextBlob>& blob, SkScalar x, SkScalar y,
-    SkColor color, SkScalar blurSigma)
-{
-}
-#else
 void RSCanvasParagraphPainter::DrawSymbolSkiaTxt(RSTextBlob* blob, const RSPoint& offset,
     const PaintRecord &pr)
 {
     HMSymbolRun hmSymbolRun = HMSymbolRun();
     symbolCount_++;
+    const uint32_t length32Bit = 32;
+    auto symbolSpanId = (static_cast<uint64_t>(paragraphId_) << length32Bit) + symbolCount_;
     hmSymbolRun.SetAnimation(animationFunc_);
-    hmSymbolRun.SetSymbolId(symbolCount_);
+    hmSymbolRun.SetSymbolId(symbolSpanId);
     if (pr.pen.has_value() && pr.brush.has_value()) {
         canvas_->AttachBrush(pr.brush.value());
         canvas_->AttachPen(pr.pen.value());
@@ -190,7 +181,6 @@ void RSCanvasParagraphPainter::drawTextShadow(const std::shared_ptr<RSTextBlob>&
     canvas_->DrawTextBlob(blob.get(), x, y);
     canvas_->DetachBrush();
 }
-#endif
 
 void RSCanvasParagraphPainter::drawRect(const SkRect& rect, const SkPaintOrID& paint)
 {
@@ -231,11 +221,6 @@ void RSCanvasParagraphPainter::drawFilledRect(const SkRect& rect, const Decorati
     canvas_->DetachPaint();
 }
 
-#ifndef USE_ROSEN_DRAWING
-void RSCanvasParagraphPainter::drawPath(const SkPath& path, const DecorationStyle& decorStyle)
-{
-}
-#else
 void RSCanvasParagraphPainter::drawPath(const RSPath& path, const DecorationStyle& decorStyle)
 {
     Drawing::Paint paint = ConvertDecorStyle(decorStyle);
@@ -244,7 +229,6 @@ void RSCanvasParagraphPainter::drawPath(const RSPath& path, const DecorationStyl
     canvas_->DrawPath(path);
     canvas_->DetachPaint();
 }
-#endif
 
 void RSCanvasParagraphPainter::drawLine(
     SkScalar x0, SkScalar y0, SkScalar x1, SkScalar y1, const DecorationStyle& decorStyle)

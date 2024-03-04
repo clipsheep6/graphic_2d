@@ -181,6 +181,9 @@ void PerfRequest(int32_t perfRequestCode, bool onOffTag)
     RS_LOGD("RSMainThread::soc perf info [%{public}d %{public}d]", perfRequestCode, onOffTag);
 #endif
 }
+std::string g_dumpStr = "";
+std::mutex g_dumpMutex;
+std::condition_variable g_dumpCond_;
 }
 
 #if defined(ACCESSIBILITY_ENABLE)
@@ -1556,18 +1559,11 @@ void RSMainThread::Render()
     if (focusAppBundleName_.find(DESKTOP_NAME_FOR_ROTATION) != std::string::npos) {
         desktopPidForRotationScene_ = focusAppPid_;
     }
-    if (RSSystemParameters::GetDumpRSTreeCount()) {
-        std::string rsTreeStr;
-        RenderServiceTreeDump(rsTreeStr);
-        RS_TRACE_NAME("WriteDumpTree");
-        std::string dumpFilePath = "/data/RSTree";
-        if (access(dumpFilePath.c_str(), F_OK) != 0) {
-            constexpr int directoryPermission = 0755; // drwxr-xr-x
-            mkdir(dumpFilePath.c_str(), directoryPermission);
-        }
-        dumpFilePath += "/rsTree_" + std::to_string(frameCount_) + ".txt";
-        OHOS::Rosen::Benchmarks::WriteStringToFile(rsTreeStr, dumpFilePath);
-        RSSystemParameters::SetDumpRSTreeCount(RSSystemParameters::GetDumpRSTreeCount() - 1);
+    int dumpTreeCount = RSSystemParameters::GetDumpRSTreeCount();
+    if (UNLIKELY(dumpTreeCount)) {
+        RS_TRACE_NAME("dump rstreeing!");
+        RenderServiceTreeDump(g_dumpStr);
+        RSSystemParameters::SetDumpRSTreeCount(dumpTreeCount - 1);
     }
     if (isUniRender_) {
         UniRender(rootNode);
@@ -2368,20 +2364,26 @@ void RSMainThread::QosStateDump(std::string& dumpString)
     }
 }
 
-void RSMainThread::RenderServiceTreeDump(std::string& dumpString)
+void RSMainThread::RenderServiceTreeDump(std::string& dumpString, bool forceDumpSingleFrame)
 {
-    RS_TRACE_NAME("GetDumpTree");
-    dumpString.append("Animating Node: [");
-    for (auto& [nodeId, _]: context_->animatingNodeList_) {
-        dumpString.append(std::to_string(nodeId) + ", ");
-    }
-    dumpString.append("];\n");
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
-    if (rootNode == nullptr) {
-        dumpString.append("rootNode is null\n");
-        return;
-    }
-    rootNode->DumpTree(0, dumpString);
+    if (LIKELY(forceDumpSingleFrame)) {
+        RS_TRACE_NAME("GetDumpTree");
+        dumpString.append("Animating Node: [");
+        for (auto& [nodeId, _]: context_->animatingNodeList_) {
+            dumpString.append(std::to_string(nodeId) + ", ");
+        }
+        dumpString.append("];\n");
+        const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+        if (rootNode == nullptr) {
+            dumpString.append("rootNode is null\n");
+            return;
+        }
+        rootNode->DumpTree(0, dumpString);
+        } else {
+            dumpString += g_dumpStr;
+            g_dumpStr = "";
+        }
+
 }
 
 bool RSMainThread::DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode)

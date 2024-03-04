@@ -32,10 +32,8 @@
 #include "platform/common/rs_log.h"
 #include "window.h"
 #include "platform/common/rs_system_properties.h"
-#ifdef USE_ROSEN_DRAWING
 #include "drawing/engine_adapter/skia_adapter/skia_gpu_context.h"
 #include "engine_adapter/skia_adapter/skia_surface.h"
-#endif
 namespace OHOS {
 namespace Rosen {
 [[maybe_unused]] static void DestroySemaphore(void *context)
@@ -157,11 +155,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
 
     mSurfaceList.emplace_back(nativeWindowBuffer);
     NativeBufferUtils::NativeSurfaceInfo& nativeSurface = mSurfaceMap[nativeWindowBuffer];
-#ifndef USE_ROSEN_DRAWING
-    if (nativeSurface.skSurface == nullptr) {
-#else
     if (nativeSurface.drawingSurface == nullptr) {
-#endif
         NativeObjectReference(mNativeWindow);
         nativeSurface.window = mNativeWindow;
         nativeSurface.graphicColorGamut = colorSpace_;
@@ -174,11 +168,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
             return nullptr;
         }
 
-#ifndef USE_ROSEN_DRAWING
-        if (!nativeSurface.skSurface) {
-#else
         if (!nativeSurface.drawingSurface) {
-#endif
             ROSEN_LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
             mSurfaceList.pop_back();
             NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
@@ -189,11 +179,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
         }
     }
 
-#ifndef USE_ROSEN_DRAWING
-    nativeSurface.skSurface->clearDrawingArea();
-#else
     nativeSurface.drawingSurface->ClearDrawingArea();
-#endif
 
     if (fenceFd >= 0) {
         nativeSurface.fence = std::make_unique<SyncFence>(fenceFd);
@@ -202,13 +188,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
             auto const& vkContext = RsVulkanContext::GetSingleton();
             VkSemaphore semaphore;
             CreateVkSemaphore(&semaphore, vkContext, nativeSurface);
-#ifndef USE_ROSEN_DRAWING
-            GrBackendSemaphore backendSemaphore;
-            backendSemaphore.initVulkan(semaphore);
-            nativeSurface.skSurface->wait(1, &backendSemaphore);
-#else
             nativeSurface.drawingSurface->Wait(1, semaphore);
-#endif
         }
     }
     int32_t bufferAge;
@@ -217,13 +197,8 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
     } else {
         bufferAge = mPresentCount - nativeSurface.lastPresentedCount;
     }
-#ifndef USE_ROSEN_DRAWING
-    std::unique_ptr<RSSurfaceFrameOhosVulkan> frame =
-        std::make_unique<RSSurfaceFrameOhosVulkan>(nativeSurface.skSurface, width, height, bufferAge);
-#else
     std::unique_ptr<RSSurfaceFrameOhosVulkan> frame =
         std::make_unique<RSSurfaceFrameOhosVulkan>(nativeSurface.drawingSurface, width, height, bufferAge);
-#endif
     std::unique_ptr<RSSurfaceFrame> ret(std::move(frame));
     return ret;
 }
@@ -310,13 +285,6 @@ bool RSSurfaceOhosVulkan::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uin
         new DestroySemaphoreInfo(vkContext.vkDestroySemaphore, vkContext.GetDevice(), semaphore);
     RSTagTracker tagTracker(mSkContext.get(), RSTagTracker::TAGTYPE::TAG_ACQUIRE_SURFACE);
 
-#ifndef USE_ROSEN_DRAWING
-    GrFlushInfo flushInfo;
-    flushInfo.fNumSemaphores = 1;
-    flushInfo.fSignalSemaphores = &backendSemaphore;
-    surface.skSurface->flush(SkSurface::BackendSurfaceAccess::kPresent, flushInfo);
-    mSkContext->submit();
-#else
     Drawing::FlushInfo drawingFlushInfo;
     drawingFlushInfo.backendSurfaceAccess = true;
     drawingFlushInfo.numSemaphores = 1;
@@ -325,7 +293,6 @@ bool RSSurfaceOhosVulkan::FlushFrame(std::unique_ptr<RSSurfaceFrame>& frame, uin
     drawingFlushInfo.finishedContext = destroyInfo;
     surface.drawingSurface->Flush(&drawingFlushInfo);
     mSkContext->Submit();
-#endif
     int fenceFd = -1;
 
     auto queue = vkContext.GetQueue();

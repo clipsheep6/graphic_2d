@@ -26,6 +26,7 @@ export class MyRenderNode extends RenderNode {
   drawingType: string = 'cpu';
   caseNameStr: string  = 'drawrect';
   testCount: number = 0;
+  clear:boolean = false;
 
   async draw(context: DrawContext) {
     // if (this.flag) {
@@ -35,6 +36,11 @@ export class MyRenderNode extends RenderNode {
     //   context.size.height = 200
     //   context.size.width = 200
     // }
+    if (this.clear) {
+      printCallback('Clear XNode');
+      return;
+    }
+
     console.log(TAG, 'MyRenderNode draw');
     // const canvas = context.canvas;
     if (this.testType == 'function') {
@@ -49,13 +55,13 @@ export class MyRenderNode extends RenderNode {
   async TestFunctionalCpu(context: DrawContext) {
     console.info(TAG, 'MyRenderNode TestFunctionalCpu', this.caseNameStr);
     nativeXNode.TestFunctionalCpu(context, this.caseNameStr);
+    printCallback('XNode TestFunctionalCpu ok');
   }
 
   async TestPerformanceCpu(context: DrawContext) {
     console.info(TAG, 'MyRenderNode TestPerformanceCpu', this.caseNameStr, this.testCount);
     let performanceTime = nativeXNode.TestPerformanceCpu(context, this.caseNameStr, this.testCount);
     printCallback('XNode TestCount: ' + this.testCount.toString() + ', used: ' + performanceTime.toString() + 'ms');
-    // console.info(TAG, 'XNode TestCount: ' + this.testCount.toString() + ', used: ' + performanceTime.toString() + 'ms');
   }
 }
 
@@ -86,6 +92,7 @@ export class MyNodeController extends NodeController {
   }
   TestFunctionalCpu(caseName: string) {
     console.info(TAG, "TestFunctionalCpu");
+    this.myRenderNode.clear = false;
     this.myRenderNode.testType = 'function';
     this.myRenderNode.drawingType = 'cpu';
     this.myRenderNode.caseNameStr = caseName;
@@ -94,6 +101,7 @@ export class MyNodeController extends NodeController {
 
   TestPerformanceCpu(caseName: string, count: number) {
     console.info(TAG, "TestPerformanceCpu");
+    this.myRenderNode.clear = false;
     this.myRenderNode.testType = 'performance';
     this.myRenderNode.drawingType = 'cpu';
     this.myRenderNode.caseNameStr = caseName;
@@ -101,6 +109,11 @@ export class MyNodeController extends NodeController {
     this.myRenderNode.invalidate();
   }
 
+  Clear() {
+    console.info(TAG, "Clear");
+    this.myRenderNode.clear = true;
+    this.myRenderNode.invalidate();
+  }
   SetPrintCallback(callback: PrintCallback){
     printCallback = callback;
   }

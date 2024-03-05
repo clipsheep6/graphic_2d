@@ -145,7 +145,7 @@ export class TestBase {
     console.error(TAG, 'TestPerformanceCpu end');
   }
 
-  public async TestFunctionGpuUpScreen(canvas: drawing.Canvas) {
+  public TestFunctionGpuUpScreen(canvas: drawing.Canvas) {
     console.log(TAG, 'TestFunctionGpu start');
     if (canvas == null || canvas == undefined) {
       console.error(TAG, 'canvas is invalid');
@@ -155,7 +155,7 @@ export class TestBase {
     console.log(TAG, 'TestFunctionGpu end');
   }
 
-  public async TestPerformanceGpuUpScreen(canvas: drawing.Canvas) {
+  public TestPerformanceGpuUpScreen(canvas: drawing.Canvas): number {
     console.log(TAG, 'TestPerformanceGpuUpScreen start');
     if (canvas == null || canvas == undefined) {
       console.error(TAG, 'canvas is invalid');
@@ -165,7 +165,7 @@ export class TestBase {
     let startTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
     console.log(TAG, 'DrawingApiTest Started: [' + startTime + ']');
 
-    await this.OnTestPerformanceGpuUpScreen(canvas);
+    this.OnTestPerformanceGpuUpScreen(canvas);
 
     let endTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
     console.error(TAG, 'DrawingApiTest Finished: [' + endTime + ']');
@@ -173,5 +173,6 @@ export class TestBase {
     console.error(TAG, 'DrawingApiTest TotalApiCallTime: [' + this.time_ + ']');
     console.error(TAG, 'DrawingApiTest TotalApiCallCount: [' + this.testCount_ + ']');
     console.log(TAG, 'TestPerformanceGpuUpScreen end');
+    return this.time_;
   }
 }

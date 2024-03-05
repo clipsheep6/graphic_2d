@@ -16,6 +16,7 @@
 import {TestBase} from './testbase';
 import {CaseFactory} from './casefactory';
 import {MyNodeController} from './myxnode';
+import {Global} from './global';
 
 const TAG = '[DrawingTest]';
 
@@ -33,7 +34,7 @@ struct Index {
   @State testAll: boolean = false;
   caseNameStrBefore: string  = '';
   scroller: Scroller = new Scroller();
-  caseCountStr: string = '10';
+  caseCountStr: string = '100000';
   myNodeController = new MyNodeController();
 
   build() {
@@ -125,7 +126,7 @@ struct Index {
             .height(38)
             .margin({right:5})
           Column() {
-            TextInput({ placeholder: '10'})
+            TextInput({ placeholder: '10', text: this.caseCountStr})
               .id('testCount')
               .enterKeyType(EnterKeyType.Send)
               .placeholderFont({size: 15})
@@ -138,26 +139,56 @@ struct Index {
                 }
               })
           }
+          if (this.drawingType == 'gpu') {
+            Button("Clear")
+              .fontSize('16fp')
+              .id('Clear')
+              .fontWeight(500)
+              .onClick(() => {
+                console.log(TAG, "Clear click");
+                this.myNodeController.Clear();
+              })
+              .width('20%')
+              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+          }
         }
         .width('80%')
         .height('7%')
-      } else if (this.drawingType == 'cpu') {
-        Row(){
-          Button("TestAll")
-            .fontSize('16fp')
-            .id('testAll')
-            .fontWeight(500)
-              // .margin({ bottom: 24, right: 12 })
-            .onClick(() => {
+      } else if (this.testType == 'function'){
+        if (this.drawingType == 'cpu') {
+          Row(){
+            Button("TestAll")
+              .fontSize('16fp')
+              .id('testAll')
+              .fontWeight(500)
+                // .margin({ bottom: 24, right: 12 })
+              .onClick(() => {
                 console.log(TAG, "TestAll click");
                 this.caseNameStr = 'All';
                 this.Draw();
-            })
-            .width('80%')
-            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+              })
+              .width('80%')
+              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+          }
+          .height('7%')
+        } else if (this.drawingType == 'gpu'){
+            Row(){
+            Button("SnapShort")
+              .fontSize('16fp')
+              .id('SnapShort')
+              .fontWeight(500)
+              .onClick(() => {
+                console.log(TAG, "SnapShort click");
+                const context : Context = getContext(this);
+                Global.windowSnapShort(context.cacheDir, this.caseNameStr);
+              })
+              .width('80%')
+              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+          }
+          .height('7%')
         }
-        .height('7%')
       }
+
       Row() {
         Button("draw")
           .id('draw')
@@ -184,7 +215,11 @@ struct Index {
     this.information = msg;
     console.log(TAG, msg);
   }
-
+  aboutToAppear() {
+    this.myNodeController.SetPrintCallback((str:string)=>{
+      this.LogMsg(str);
+    })
+  }
   async Draw():Promise<void> {
     console.log(TAG, 'Drawing test start!');
     if (this.testType == 'function') {
@@ -192,7 +227,6 @@ struct Index {
         return this.TestFunctionalCpu();
       } else {
         this.myNodeController.TestFunctionalGpuUpScreen(this.caseNameStr);
-        this.LogMsg('TestFunctionalGpuUpScreen end');
         return;
       }
     }
@@ -202,7 +236,6 @@ struct Index {
       } else {
         let testCount = Number.parseInt(this.caseCountStr, 10);
         this.myNodeController.TestPerformanceGpuUpScreen(this.caseNameStr, testCount);
-        this.LogMsg('TestPerformanceGpuUpScreen end');
         return;
       }
     }
@@ -222,15 +255,15 @@ struct Index {
     } else {
       let test:TestBase = CaseFactory.getFunctonCpuCase(this.caseNameStr);
       if (test == null || test == undefined) {
-        console.log(TAG, 'Testcase name is invalid');
+        this.LogMsg('Testcase name is invalid');
         return;
       }
       // 异步处理 绘制到屏幕上
       await test.TestFunctionCpu(context.cacheDir).then(()=>{
         this.context.drawImage(test.pixelMap_, 0, 0);
       });
+      this.LogMsg('TestFunctionalCpu end');
     }
-    this.LogMsg('TestFunctionalCpu end');
   }
 
   async TestPerformanceCpu() {
@@ -238,7 +271,7 @@ struct Index {
 
     let test:TestBase = CaseFactory.getPerformanceCpuCase(this.caseNameStr);
     if (test == null || test == undefined) {
-      console.log(TAG, 'Testcase name is invalid');
+      this.LogMsg('Testcase name is invalid');
       return;
     }
     let testCount = Number.parseInt(this.caseCountStr, 10)

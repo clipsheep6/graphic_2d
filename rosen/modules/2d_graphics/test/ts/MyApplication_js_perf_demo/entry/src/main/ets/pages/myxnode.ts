@@ -17,14 +17,17 @@ import {TestBase} from './testbase';
 import {CaseFactory} from './casefactory';
 import drawing from "@ohos.graphics.drawing";
 import { NodeController, FrameNode, RenderNode, DrawContext, Size } from "@ohos.arkui.node"
+import {PrintCallback} from "./printcallback";
 
 const TAG = '[DrawingTest]';
+let printCallback: PrintCallback;
 
 export class MyRenderNode extends RenderNode {
   testType: string = 'function';
   drawingType: string = 'cpu';
   caseNameStr: string  = 'drawrect';
   testCount: number = 0;
+  clear:boolean = false;
 
   async draw(context: DrawContext) {
     // if (this.flag) {
@@ -34,37 +37,44 @@ export class MyRenderNode extends RenderNode {
     //   context.size.height = 200
     //   context.size.width = 200
     // }
+    if (this.clear) {
+      printCallback('Clear XNode');
+      return;
+    }
+
     console.log(TAG, 'MyRenderNode draw');
     const canvas = context.canvas;
     if (this.testType == 'function') {
       console.log(TAG, 'MyRenderNode draw function');
       this.TestFunctionGpuUpScreen(canvas);
     } else {
-      console.log(TAG, 'MyRenderNode draw perf');
+      console.log(TAG, 'MyRenderNode draw performance');
       this.TestPerformanceGpuUpScreen(canvas);
     }
   }
 
-  async TestFunctionGpuUpScreen(canvas: drawing.Canvas) {
+  TestFunctionGpuUpScreen(canvas: drawing.Canvas) {
     console.info(TAG, 'MyRenderNode TestFunctionGpuUpScreen', this.caseNameStr);
     let test:TestBase = CaseFactory.getFunctonCpuCase(this.caseNameStr);
     if (test == null || test == undefined) {
-      console.log(TAG, 'Testcase name is invalid');
+      printCallback('Testcase name is invalid');
       return;
     }
     test.TestFunctionGpuUpScreen(canvas);
+    printCallback('TestFunctionGpuUpScreen end');
   }
 
-  async TestPerformanceGpuUpScreen(canvas: drawing.Canvas) {
+  TestPerformanceGpuUpScreen(canvas: drawing.Canvas) {
     console.info(TAG, 'MyRenderNode TestPerformanceGpuUpScreen');
     let test:TestBase = CaseFactory.getPerformanceCpuCase(this.caseNameStr);
     if (test == null || test == undefined) {
-      console.log(TAG, 'Testcase name is invalid');
+      printCallback('Testcase name is invalid');
       return;
     }
 
     test.SetTestCount(this.testCount);
-    test.TestPerformanceGpuUpScreen(canvas);
+    let time = test.TestPerformanceGpuUpScreen(canvas);
+    printCallback('GpuUpScreen TestCount: ' + this.testCount.toString() + ', used: ' + time.toString() + 'ms');
   }
 }
 
@@ -95,6 +105,7 @@ export class MyNodeController extends NodeController {
   }
   TestFunctionalGpuUpScreen(caseName: string) {
     console.info(TAG, "TestFunctionalGpuUpScreen");
+    this.myRenderNode.clear = false;
     this.myRenderNode.testType = 'function';
     this.myRenderNode.drawingType = 'gpu';
     this.myRenderNode.caseNameStr = caseName;
@@ -103,10 +114,21 @@ export class MyNodeController extends NodeController {
 
   TestPerformanceGpuUpScreen(caseName: string, count: number) {
     console.info(TAG, "TestPerformanceGpuUpScreen");
+    this.myRenderNode.clear = false;
     this.myRenderNode.testType = 'performance';
     this.myRenderNode.drawingType = 'gpu';
     this.myRenderNode.caseNameStr = caseName;
     this.myRenderNode.testCount = count;
     this.myRenderNode.invalidate();
+  }
+
+  Clear() {
+    console.info(TAG, "Clear");
+    this.myRenderNode.clear = true;
+    this.myRenderNode.invalidate();
+  }
+
+  SetPrintCallback(callback: PrintCallback){
+    printCallback = callback;
   }
 }

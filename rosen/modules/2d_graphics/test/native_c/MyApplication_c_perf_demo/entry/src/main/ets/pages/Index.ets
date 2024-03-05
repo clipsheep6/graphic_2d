@@ -16,7 +16,7 @@
 import XComponentContext from "../interface/XComponentContext";
 import image from '@ohos.multimedia.image';
 import {MyNodeController} from './myxnode';
-
+import {Global} from './global';
 const TAG = '[DrawingTest]';
 
 @Entry
@@ -31,7 +31,7 @@ struct Index {
   imagePackerApi: image.ImagePacker = image.createImagePacker();
   caseNameStrBefore: string  = '';
   scroller: Scroller = new Scroller();
-  caseCountStr: string = '10';
+  caseCountStr: string = '100000';
   testAll: boolean = false;
   isXnode: boolean = true;
   myNodeController = new MyNodeController();
@@ -122,7 +122,7 @@ struct Index {
             .height(38)
             .margin({right:5})
           Column() {
-            TextInput({ placeholder: '10'})
+            TextInput({ placeholder: '10', text:this.caseCountStr})
               .id('testCount')
               .enterKeyType(EnterKeyType.Send)
               .placeholderFont({size: 15})
@@ -135,26 +135,54 @@ struct Index {
                 }
               })
           }
+          Button("Clear")
+            .fontSize('16fp')
+            .id('Clear')
+            .fontWeight(500)
+            .onClick(() => {
+              console.log(TAG, "Clear click");
+              const context : Context = getContext(this);
+              this.myNodeController.Clear();
+            })
+            .width('20%')
+            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
         }
         .width('80%')
         .height('7%')
-      } else if (this.drawingType == 'cpu-xcomponent') {
-        Row(){
-          Button("TestAll")
-            .id('testAll')
-            .fontSize('16fp')
-            .id('testAll')
-            .fontWeight(500)
-              // .margin({ bottom: 24, right: 12 })
-            .onClick(() => {
-                console.log(TAG, "TestAll click");
-                this.caseNameStr = 'All';
-                this.Draw();
-            })
-            .width('80%')
-            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+      } else if (this.testType == 'function'){
+        if (this.drawingType == 'cpu-xcomponent') {
+          Row(){
+            Button("TestAll")
+              .id('testAll')
+              .fontSize('16fp')
+              .id('testAll')
+              .fontWeight(500)
+                // .margin({ bottom: 24, right: 12 })
+              .onClick(() => {
+                  console.log(TAG, "TestAll click");
+                  this.caseNameStr = 'All';
+                  this.Draw();
+              })
+              .width('80%')
+              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+          }
+          .height('7%')
+        } else if (this.drawingType == 'cpu-xnode'){
+          Row() {
+            Button("SnapShort")
+              .fontSize('16fp')
+              .id('SnapShort')
+              .fontWeight(500)
+              .onClick(() => {
+                console.log(TAG, "SnapShort click");
+                const context: Context = getContext(this);
+                Global.windowSnapShort(context.cacheDir, this.caseNameStr);
+              })
+              .height('7%')
+              .width('80%')
+              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+          }
         }
-        .height('7%')
       }
       Row() {
         Button("draw")

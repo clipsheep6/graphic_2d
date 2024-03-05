@@ -3,6 +3,8 @@ import hilog from '@ohos.hilog';
 import UIAbility from '@ohos.app.ability.UIAbility';
 import Want from '@ohos.app.ability.Want';
 import window from '@ohos.window';
+import {Global} from '../pages/global';
+import { BusinessError } from '@ohos.base';
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
@@ -23,6 +25,13 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content. Data: %{public}s', JSON.stringify(data) ?? '');
+    });
+
+    windowStage.getMainWindow().then((data) => {
+      Global.setWindow(data);
+      console.info('Succeeded in obtaining the main window. Data: ' + JSON.stringify(data));
+    }).catch((err: BusinessError) => {
+      console.error('Failed to obtain the main window. Cause: ' + JSON.stringify(err));
     });
   }
 

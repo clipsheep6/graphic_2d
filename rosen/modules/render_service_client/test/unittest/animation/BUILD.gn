@@ -37,6 +37,7 @@ ohos_unittest("RSAnimationTest") {
     "rs_path_animation_test.cpp",
     "rs_showing_properties_freezer_test.cpp",
     "rs_spring_animation_test.cpp",
+    "rs_symbol_animation_test.cpp",
     "rs_transition_effect_test.cpp",
     "rs_transition_test.cpp",
   ]

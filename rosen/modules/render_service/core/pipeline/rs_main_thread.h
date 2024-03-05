@@ -89,7 +89,6 @@ public:
     void RemoveTask(const std::string& name);
     void PostSyncTask(RSTaskMessage::RSTask task);
     bool IsIdle() const;
-    void QosStateDump(std::string& dumpString);
     void RenderServiceTreeDump(std::string& dumpString);
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
@@ -177,11 +176,7 @@ public:
     sptr<VSyncGenerator> vsyncGenerator_;
 
     void ReleaseSurface();
-#ifndef USE_ROSEN_DRAWING
-    void AddToReleaseQueue(sk_sp<SkSurface>&& surface);
-#else
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
-#endif
 
     void SetDirtyFlag();
     void SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync);
@@ -209,11 +204,7 @@ public:
     {
         idleTimerExpiredFlag_ = flag;
     }
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImage> GetWatermarkImg();
-#else
     std::shared_ptr<Drawing::Image> GetWatermarkImg();
-#endif
     bool GetWatermarkFlag();
     uint64_t GetFrameCount() const
     {
@@ -382,6 +373,7 @@ private:
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> pendingEffectiveCommands_;
     std::unordered_map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> syncTransactionData_;
     int32_t syncTransactionCount_ { 0 };
+    int32_t syncTransactionCountExt_ { 0 };
 
     TransactionDataMap cachedTransactionDataMap_;
     TransactionDataIndexMap effectiveTransactionDataIndexMap_;
@@ -489,11 +481,7 @@ private:
 
     // used for watermark
     std::mutex watermarkMutex_;
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImage> watermarkImg_ = nullptr;
-#else
     std::shared_ptr<Drawing::Image> watermarkImg_ = nullptr;
-#endif
     bool isShow_ = false;
     bool doParallelComposition_ = false;
 
@@ -523,11 +511,7 @@ private:
     bool idleTimerExpiredFlag_ = false;
     // for ui first
     std::mutex mutex_;
-#ifndef USE_ROSEN_DRAWING
-    std::queue<sk_sp<SkSurface>> tmpSurfaces_;
-#else
     std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
-#endif
 
     // for surface occlusion change callback
     std::mutex surfaceOcclusionMutex_;
@@ -553,6 +537,7 @@ private:
     std::atomic_bool mainLooping_ = false;
     std::atomic_bool discardJankFrames_ = false;
     bool forceUIFirstChanged_ = false;
+    bool hasRosenWebNode_ = false;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

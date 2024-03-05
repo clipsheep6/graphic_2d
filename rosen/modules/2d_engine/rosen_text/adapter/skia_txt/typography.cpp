@@ -238,12 +238,8 @@ bool Typography::GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespac
     }
 
     if (sklineMetrics.fLineMetrics.size() > 0) {
-        auto &skFontMetrics = sklineMetrics.fLineMetrics.at(sklineMetrics.fStartIndex).font_metrics;
-#ifndef USE_ROSEN_DRAWING
-        Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, lineMetrics->firstCharMetrics);
-#else
-        Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, lineMetrics->firstCharMetrics);
-#endif
+	    auto &skFontMetrics = sklineMetrics.fLineMetrics.at(sklineMetrics.fStartIndex).font_metrics;
+	    lineMetrics->firstCharMetrics = skFontMetrics;
 
         if (oneLine) {
             lineMetrics->ascender = sklineMetrics.fAscent;
@@ -288,13 +284,8 @@ std::vector<LineMetrics> Typography::GetLineMetrics()
             LineMetrics& line = lineMetrics.emplace_back();
             if (spLineMetrics.runMetrics.size() > 0) {
                 auto &spFontMetrics = spLineMetrics.runMetrics.at(spLineMetrics.startIndex).fontMetrics;
-#ifndef USE_ROSEN_DRAWING
-                Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(
-                    spFontMetrics, line.firstCharMetrics);
-#else
-                Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(
-                    spFontMetrics, line.firstCharMetrics);
-#endif
+				line.firstCharMetrics = spFontMetrics;
+
                 line.capHeight = spFontMetrics.fCapHeight;
                 line.xHeight = spFontMetrics.fXHeight;
                 
@@ -312,7 +303,6 @@ std::vector<LineMetrics> Typography::GetLineMetrics()
             line.endIndex = spLineMetrics.endIndex;
         }
     }
-
     return lineMetrics;
 }
 
@@ -331,9 +321,7 @@ bool Typography::GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics)
 
     if (skLineMetrics.fLineMetrics.size() > 0) {
         auto &skFontMetrics = skLineMetrics.fLineMetrics.at(skLineMetrics.fStartIndex).font_metrics;
-        Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(
-            skFontMetrics, lineMetrics->firstCharMetrics);
-
+		lineMetrics->firstCharMetrics = skFontMetrics;
         lineMetrics->capHeight = skFontMetrics.fCapHeight;
         lineMetrics->xHeight = skFontMetrics.fXHeight;
     } else {
@@ -350,7 +338,7 @@ bool Typography::GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics)
     lineMetrics->y = skLineMetrics.fTopHeight;
     lineMetrics->startIndex = skLineMetrics.fStartIndex;
     lineMetrics->endIndex = skLineMetrics.fEndIndex;
-    
+
     return true;
 }
 

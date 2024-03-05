@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,6 +107,31 @@ int32_t OH_Drawing_ImageGetHeight(OH_Drawing_Image*);
  * @version 1.0
  */
 void OH_Drawing_ImageGetImageInfo(OH_Drawing_Image*, OH_Drawing_Image_Info*);
+
+/**
+ * @brief Gets opaque property of image.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Image Indicates the pointer to an <b>OH_Drawing_Image</b> object.
+ * @return Returns true if image is opaque.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_ImageIsOpaque(const OH_Drawing_Image*);
+
+/**
+ * @brief Create an <b>OH_Drawing_Image</b> object from Pixmap.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param pixmap The pointer to memory address or pixel storage.
+ * @param rasterReleaseProc Function called when pixmap can be released; or nullptr.
+ * @param releaseContext State passed to rasterReleaseProc; or nullptr.
+ * @return Returns the pointer to the <b>OH_Drawing_Image</b> object created.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_Image* OH_Drawing_ImageCreateFromRaster(OH_Drawing_Pixmap* pixmap,
+    void (*rasterReleaseProc)(const OH_Drawing_Pixmap* pixmap, void* releaseContext), void* releaseContext);
 
 #ifdef __cplusplus
 }

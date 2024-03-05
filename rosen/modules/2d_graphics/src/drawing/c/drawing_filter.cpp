@@ -59,6 +59,18 @@ void OH_Drawing_FilterSetColorFilter(OH_Drawing_Filter* cFliter, OH_Drawing_Colo
     filter->SetColorFilter(std::shared_ptr<ColorFilter>{CastToColorFilter(cColorFilter), [](auto p) {}});
 }
 
+void OH_Drawing_FilterGetColorFilter(OH_Drawing_Filter* cFliter, OH_Drawing_ColorFilter* cColorFilter)
+{
+    Filter* filter = CastToFilter(cFliter);
+    if (filter == nullptr || cColorFilter == nullptr) {
+        return;
+    }
+
+    ColorFilter* colorFilter = CastToColorFilter(cColorFilter);
+    std::shared_ptr<ColorFilter> colorFilterPtr = filter->GetColorFilter();
+    *colorFilter = *colorFilterPtr.get();
+}
+
 void OH_Drawing_FilterDestroy(OH_Drawing_Filter* cFilter)
 {
     delete CastToFilter(cFilter);

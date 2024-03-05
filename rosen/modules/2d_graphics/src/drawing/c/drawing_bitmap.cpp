@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -158,4 +158,62 @@ void OH_Drawing_BitmapGetImageInfo(OH_Drawing_Bitmap* cBitmap, OH_Drawing_Image_
     cImageInfo->height = imageInfo.GetHeight();
     cImageInfo->colorType = static_cast<OH_Drawing_ColorFormat>(imageInfo.GetColorType());
     cImageInfo->alphaType = static_cast<OH_Drawing_AlphaFormat>(imageInfo.GetAlphaType());
+}
+
+bool OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo, void* pixels, size_t rowBytes,
+        void (*releaseProc)(void* addr, void* context), void* context)
+{
+    if (cBitmap == nullptr || cImageInfo == nullptr ) {
+        return false;
+    }
+
+    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height,
+        static_cast<ColorType>(cImageInfo->colorType), static_cast<AlphaType>(cImageInfo->alphaType));
+
+    return CastToBitmap(cBitmap)->InstallPixels(imageInfo, pixels, rowBytes, releaseProc, context);
+}
+
+bool OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap* cBitmap, OH_Drawing_Pixmap* cPixmap)
+{
+    if (cBitmap == nullptr || cPixmap == nullptr ) {
+        return false;
+    }
+
+    Pixmap* pirmap = reinterpret_cast<Pixmap*>(cPixmap);
+
+    return CastToBitmap(cBitmap)->PeekPixels(*pirmap);
+}
+
+bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* cImageInfo)
+{
+    if (cBitmap == nullptr || cImageInfo == nullptr ) {
+        return false;
+    }
+
+    ImageInfo imageInfo(cImageInfo->width, cImageInfo->height,
+        static_cast<ColorType>(cImageInfo->colorType), static_cast<AlphaType>(cImageInfo->alphaType));
+
+    return CastToBitmap(cBitmap)->TryAllocPixels(imageInfo);
+}
+
+bool OH_Drawing_BitmapReadPixels(OH_Drawing_Bitmap* cBitmap, const OH_Drawing_Image_Info* dstInfo,
+    void* dstPixels, size_t dstRowBytes, int32_t srcX, int32_t srcY)
+{
+    if (cBitmap == nullptr || dstInfo == nullptr  || dstPixels == nullptr) {
+        return false;
+    }
+
+    ImageInfo imageInfo(dstInfo->width, dstInfo->height,
+        static_cast<ColorType>(dstInfo->colorType), static_cast<AlphaType>(dstInfo->alphaType));
+
+    return CastToBitmap(cBitmap)->ReadPixels(imageInfo, dstPixels, dstRowBytes, srcX, srcY);
+}
+
+size_t OH_Drawing_BitmapComputeByteSize(OH_Drawing_Bitmap* cBitmap)
+{
+    if (cBitmap == nullptr) {
+        return 0;
+    }
+
+    return CastToBitmap(cBitmap)->ComputeByteSize();
 }

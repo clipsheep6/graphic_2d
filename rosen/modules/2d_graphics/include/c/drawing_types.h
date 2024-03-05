@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -60,6 +60,14 @@ typedef struct OH_Drawing_Canvas OH_Drawing_Canvas;
  * @version 1.0
  */
 typedef struct OH_Drawing_Pen OH_Drawing_Pen;
+
+/**
+ * @brief Defines a region,which is used to represent an enclosed area on the canvas layer.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_Region OH_Drawing_Region;
 
 /**
  * @brief Defines as a brush, which is used to describe the style and color to fill in a shape.
@@ -238,6 +246,22 @@ typedef struct OH_Drawing_SamplingOptions OH_Drawing_SamplingOptions;
 typedef struct OH_Drawing_TextBlobBuilder OH_Drawing_TextBlobBuilder;
 
 /**
+ * @brief Defines a ColorSpace, which is used to determine how Quartz interprets color information.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_ColorSpace OH_Drawing_ColorSpace;
+
+/**
+ * @brief Defines a Pixmap, which is used to build the Pixmap.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct OH_Drawing_Pixmap OH_Drawing_Pixmap;
+
+/**
  * @brief Enumerates storage formats of bitmap pixels.
  *
  * @since 8
@@ -399,6 +423,19 @@ typedef enum {
     /** uses two byte words to represent glyph indices */
     TEXT_ENCODING_GLYPH_ID,
 } OH_Drawing_TextEncoding;
+
+/**
+ * @brief Defines a RGBA color composed of 4 floats. Color and alpha components should be in the range of zero to one.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef struct {
+    float red;
+    float green;
+    float blue;
+    float alpha;
+} OH_Drawing_Color4f;
 
 #ifdef __cplusplus
 }

@@ -21,6 +21,8 @@
 #include <vector>
 #include <include/core/SkString.h>
 #include <map>
+#include <filesystem>
+#include <iostream>
 
 namespace OHOS {
 namespace Rosen {
@@ -110,6 +112,48 @@ private:
     void DumpAjdust(const AdjustSet &adjustSet) const;
 
     std::shared_ptr<FontConfigJsonInfo> fontPtr = nullptr;
+};
+
+class SystemFont {
+public:
+    SystemFont(const char* fPath = "/system/fonts")
+    {
+        ParseConfig(fPath);
+    }
+
+    ~SystemFont() = default;
+
+    std::shared_ptr<std::vector<std::string>> GetSystemFontSet() const
+    {
+        return systemFontSet_;
+    }
+
+private:
+    bool isPathValid(const std::string path)
+    {
+        if (path == "" ||
+            !std::filesystem::exists(path) ||
+            !std::filesystem::is_directory(path)) {
+            return false;
+        }
+        return true;
+    }
+
+    void ParseConfig(const char* fPath)
+    {
+        if (fPath == nullptr || !isPathValid(fPath)) {
+            return;
+        }
+        systemFontSet_ = std::make_shared<std::vector<std::string>>();
+        for (const auto& entry : std::filesystem::directory_iterator(fPath)) {
+            if (!entry.is_directory()) {
+                std::string temp = "/system/fonts/" + entry.path().filename().string();
+                systemFontSet_->push_back(temp);
+            }
+        }
+    }
+
+    std::shared_ptr<std::vector<std::string>> systemFontSet_;
 };
 } // namespace TextEngine
 } // namespace Rosen

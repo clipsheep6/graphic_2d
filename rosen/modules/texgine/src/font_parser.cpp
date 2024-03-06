@@ -32,6 +32,7 @@ namespace TextEngine {
 #define FAILED 1
 
 #define FONT_CONFIG_FILE  "/system/fonts/visibility_list.json"
+#define SYSTEM_FONT_PATH "/system/fonts/"
 
 #define HALF(a) ((a) / 2)
 
@@ -333,6 +334,63 @@ std::vector<FontParser::FontDescriptor> FontParser::GetVisibilityFonts(const std
     }
 
     return visibilityFonts_;
+}
+
+std::unique_ptr<FontParser::FontDescriptor> FontParser::ParseFontDescriptor(const std::string& fontName,
+    const unsigned int languageId)
+{
+    SystemFont sSystemFont;
+    std::shared_ptr<std::vector<std::string>> systemFontList = sSystemFont.GetSystemFontSet();
+    if (systemFontList == nullptr) {
+        return nullptr;
+    }
+
+    int systemFontSize = systemFontList->size();
+    for (auto font : fontSet_) {
+        for (int i = 0 && systemFontSize > 0; i < systemFontSize; i++) {
+            if ((*systemFontList)[i] == font) {
+                systemFontList->erase(systemFontList->begin() + i);
+                systemFontSize -= 1;
+                break;
+            }
+        }
+        systemFontList->push_back(font);
+    }
+
+    for (int i = systemFontList->size() - 1; i >= 0; --i) {
+        FontParser::FontDescriptor fontDescriptor;
+        fontDescriptor.requestedLid = languageId;
+        fontDescriptor.path = (*systemFontList)[i];
+        const char* path = (*systemFontList)[i].c_str();
+        auto typeface = TexgineTypeface::MakeFromFile(path);
+        if (typeface == nullptr) {
+            LOGSO_FUNC_LINE(ERROR) << "typeface is nullptr, can not parse: " << fontDescriptor.path;
+            continue;
+        }
+        auto fontStyle = typeface->GetFontStyle();
+        if (fontStyle == nullptr) {
+            LOGSO_FUNC_LINE(ERROR) << "fontStyle is nullptr, can not parse: " << fontDescriptor.path;
+            continue;
+        }
+        fontDescriptor.weight = fontStyle->GetWeight();
+        fontDescriptor.width = fontStyle->GetWidth();
+        if (ParseTable(typeface, fontDescriptor) !=  SUCCESSED) {
+            LOGSO_FUNC_LINE(ERROR) << "parse table failed";
+            return nullptr;
+        }
+        std::string name = "/system/fonts/" + fontName;
+        if (fontDescriptor.fullName == fontName || fontDescriptor.path == name) {
+            return std::make_unique<FontDescriptor>(fontDescriptor);
+        }
+    }
+
+    return nullptr;
+}
+
+std::unique_ptr<FontParser::FontDescriptor> FontParser::GetVisibilityFontsByName(const std::string& fontName,
+    const std::string locale)
+{
+    return ParseFontDescriptor(fontName, GetLanguageId(locale));
 }
 } // namespace TextEngine
 } // namespace Rosen

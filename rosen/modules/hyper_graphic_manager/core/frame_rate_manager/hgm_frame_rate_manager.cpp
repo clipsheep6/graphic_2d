@@ -501,7 +501,7 @@ void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus)
         return;
     }
 
-    if (touchStatus == TOUCH_DOWN || touchStatus == TOUCH_MOVE) {
+    if (touchStatus == TOUCH_DOWN) {
         if (HgmCore::Instance().GetPendingScreenRefreshRate() == (uint32_t)touchFps_) {
             HGM_LOGI("Fps now is: %{public}d, Already in touchFps, pass", HgmCore::Instance().GetPendingScreenRefreshRate());
         } else {

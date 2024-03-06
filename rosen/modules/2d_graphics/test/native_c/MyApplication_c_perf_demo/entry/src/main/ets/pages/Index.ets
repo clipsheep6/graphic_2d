@@ -135,17 +135,19 @@ struct Index {
                 }
               })
           }
-          Button("Clear")
-            .fontSize('16fp')
-            .id('Clear')
-            .fontWeight(500)
-            .onClick(() => {
-              console.log(TAG, "Clear click");
-              const context : Context = getContext(this);
-              this.myNodeController.Clear();
-            })
-            .width('20%')
-            .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+          if (this.drawingType == 'cpu-xnode') {
+            Button("Clear")
+              .fontSize('16fp')
+              .id('Clear')
+              .fontWeight(500)
+              .onClick(() => {
+                console.log(TAG, "Clear click");
+                const context: Context = getContext(this);
+                this.myNodeController.Clear();
+              })
+              .width('20%')
+              .shadow(ShadowStyle.OUTER_DEFAULT_LG)
+          }
         }
         .width('80%')
         .height('7%')
@@ -175,17 +177,20 @@ struct Index {
               .fontWeight(500)
               .onClick(() => {
                 console.log(TAG, "SnapShort click");
+                Global.windowDisableSystemBar()
                 const context: Context = getContext(this);
                 Global.windowSnapShort(context.cacheDir, this.caseNameStr);
+                Global.windowEnableSystemBar()
               })
-              .height('7%')
               .width('80%')
               .shadow(ShadowStyle.OUTER_DEFAULT_LG)
           }
+          .height('7%')
         }
       }
       Row() {
         Button("draw")
+          .id('draw')
           .fontSize('16fp')
           .fontWeight(500)
           .onClick(() => {

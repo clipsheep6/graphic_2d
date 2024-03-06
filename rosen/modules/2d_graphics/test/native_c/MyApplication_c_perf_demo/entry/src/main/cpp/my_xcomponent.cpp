@@ -222,7 +222,7 @@ void MyXComponent::TestFunctionCpu(napi_env env, std::string caseName)
                 DRAWING_LOGE("TestCase is null");
                 return;
             }
-            testCase->SetFileName(caseName);
+            testCase->SetFileName(map.first);
             testCase->TestFunctionCpu(env);
         }
     } else {

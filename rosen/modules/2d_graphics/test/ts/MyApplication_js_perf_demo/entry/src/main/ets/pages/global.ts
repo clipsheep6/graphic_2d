@@ -51,4 +51,25 @@ export class Global{
       console.error('Failed to snapshot window. Cause:' + JSON.stringify(err));
     });
   }
+
+  static windowEnableSystemBar() {
+    if (MyWindow == null || MyWindow == undefined) {
+      console.log(TAG, 'MyWindow is invalid');
+      return;
+    }
+
+    MyWindow.setWindowSystemBarEnable(['navigation', 'status']).then(()=>{
+      console.log('xyj setWindowColorSpace ', 'navigation', 'status')
+    })
+  }
+  static windowDisableSystemBar() {
+    if (MyWindow == null || MyWindow == undefined) {
+      console.log(TAG, 'MyWindow is invalid');
+      return;
+    }
+
+    MyWindow.setWindowSystemBarEnable(['navigation']).then(()=>{
+      console.log('xyj setWindowColorSpace ', 'navigation')
+    })
+  }
 }

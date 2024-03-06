@@ -172,15 +172,17 @@ struct Index {
           }
           .height('7%')
         } else if (this.drawingType == 'gpu'){
-            Row(){
+          Row(){
             Button("SnapShort")
               .fontSize('16fp')
               .id('SnapShort')
               .fontWeight(500)
               .onClick(() => {
                 console.log(TAG, "SnapShort click");
+                Global.windowDisableSystemBar()
                 const context : Context = getContext(this);
                 Global.windowSnapShort(context.cacheDir, this.caseNameStr);
+                Global.windowEnableSystemBar()
               })
               .width('80%')
               .shadow(ShadowStyle.OUTER_DEFAULT_LG)

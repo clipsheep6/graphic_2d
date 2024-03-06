@@ -26,6 +26,7 @@
 #include <thread>
 #include <condition_variable>
 #include "vsync_type.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -165,6 +166,9 @@ private:
     bool startRefresh_ = false;
     int64_t phaseRecord_ = 0;
     int64_t periodRecord_ = 0;
+    
+    std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 };
 } // impl
 } // namespace Rosen

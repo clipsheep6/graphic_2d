@@ -21,6 +21,11 @@
 #include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_data.h"
 
+#ifdef RES_SCHED_ENABLE
+#include "res_type.h"
+#include "res_sched_client.h"
+#endif
+
 namespace OHOS::Rosen {
 namespace {
     constexpr int REQUEST_FRAME_AWARE_ID = 100001;
@@ -38,6 +43,25 @@ void RSUnmarshalThread::Start()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSUnmarshalThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+#ifdef RES_SCHED_ENABLE
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_SERVICE;
+    int64_t value = OHOS::ResourceSchedule::ResType::RenderServiceGroupType::Normal;
+    constexpr int64_t REPORT_RSUnmarshalThread_DELAY = 3000;
+    handler_->PostTask(
+        [type, value] {
+            std::string strBundleName = "RSUnmarshalThread";
+            std::string strPid = std::to_string(getpid());
+            std::string strTid = std::to_string(gettid());
+            RS_LOGI("RSUnmarshalThread pid=%{public}d, tid=%{public}d.", getpid(), gettid());
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["pid"] = strPid;
+            mapPayload["tid"] = strTid;
+            mapPayload["bundleName"] = strBundleName;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+        },
+    REPORT_RSUnmarshalThread_DELAY);
+#endif
+
 }
 
 void RSUnmarshalThread::PostTask(const std::function<void()>& task)

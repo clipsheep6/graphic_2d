@@ -51,6 +51,11 @@
 #include "metadata_helper.h"
 #endif
 
+#ifdef RES_SCHED_ENABLE
+#include "res_type.h"
+#include "res_sched_client.h"
+#endif
+
 namespace OHOS::Rosen {
 namespace {
 constexpr uint32_t HARDWARE_THREAD_TASK_NUM = 2;
@@ -89,6 +94,24 @@ void RSHardwareThread::Start()
     if (handler_) {
         ScheduleTask(
             [this]() {
+                #ifdef RES_SCHED_ENABLE
+                std::string strBundleName = "RSHardwareThread";
+                std::string strPid = std::to_string(getpid());
+                std::string strTid = std::to_string(gettid());
+                uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_SERVICE;
+                int64_t value = OHOS::ResourceSchedule::ResType::RenderServiceGroupType::High;
+                constexpr int64_t REPORT_RSHardwareThread_DELAY = 3000;
+                handler_->PostTask(
+                    [type, value, strBundleName, strPid, strTid] {
+                        std::unordered_map<std::string, std::string> mapPayload;
+                        mapPayload["pid"] = strPid;
+                        mapPayload["tid"] = strTid;
+                        mapPayload["bundleName"] = strBundleName;
+                        RS_LOGI("RSHardwareThread pid=%{public}d, tid=%{public}d.", getpid(), gettid());
+                        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+                    },
+                REPORT_RSHardwareThread_DELAY);
+                #endif
                 auto screenManager = CreateOrGetScreenManager();
                 if (screenManager == nullptr || !screenManager->Init()) {
                     RS_LOGE("RSHardwareThread CreateOrGetScreenManager or init fail.");

@@ -22,6 +22,11 @@
 #include <string>
 #include "vsync_log.h"
 
+#ifdef COMPOSER_SCHED_ENABLE
+#include "res_sched_client.h"
+#include "res_type.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 namespace impl {
@@ -114,6 +119,27 @@ void VSyncGenerator::ListenerVsyncEventCB(int64_t occurTimestamp, int64_t nextTi
 
 void VSyncGenerator::ThreadLoop()
 {
+    runner_ = AppExecFwk::EventRunner::Create("VSyncGenerator");
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    #ifdef COMPOSER_SCHED_ENABLE
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_SERVICE;
+    int64_t value = OHOS::ResourceSchedule::ResType::RenderServiceGroupType::High;
+    constexpr int64_t REPORT_VSyncGenerator_DELAY = 3000;
+    handler_->PostTask(
+        [type, value] {
+            std::string strBundleName = "VSyncGenerator";
+            std::string strPid = std::to_string(getpid());
+            std::string strTid = std::to_string(gettid());
+            VLOGI("VSyncGenerator pid=%{public}d, tid=%{public}d.", getpid(), gettid());
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["pid"] = strPid;
+            mapPayload["tid"] = strTid;
+            mapPayload["bundleName"] = strBundleName;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+        },
+    REPORT_VSyncGenerator_DELAY);
+    #endif
+
     // set thread priorty
     SetThreadHighPriority();
 

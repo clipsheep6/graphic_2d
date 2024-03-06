@@ -26,6 +26,11 @@
 #include "vsync_type.h"
 #include "vsync_generator.h"
 
+#ifdef COMPOSER_SCHED_ENABLE
+#include "res_sched_client.h"
+#include "res_type.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -218,6 +223,27 @@ VSyncDistributor::VSyncDistributor(sptr<VSyncController> controller, std::string
     vsyncThreadRunning_ = true;
     threadLoop_ = std::thread(std::bind(&VSyncDistributor::ThreadMain, this));
     std::string threadName = "VSync-" + name;
+    
+    runner_ = AppExecFwk::EventRunner::Create(threadName);
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+    #ifdef COMPOSER_SCHED_ENABLE
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_REPORT_RENDER_SERVICE;
+    int64_t value = OHOS::ResourceSchedule::ResType::RenderServiceGroupType::High;
+    constexpr int64_t REPORT_VSyncDistributor_DELAY = 3000;
+    handler_->PostTask(
+        [type, value, threadName] {
+            std::string strPid = std::to_string(getpid());
+            std::string strTid = std::to_string(gettid());
+            VLOGI("VSyncDistributor pid=%{public}d, tid=%{public}d.", getpid(), gettid());
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["pid"] = strPid;
+            mapPayload["tid"] = strTid;
+            mapPayload["bundleName"] = threadName;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+        },
+    REPORT_VSyncDistributor_DELAY);
+    #endif
+
     pthread_setname_np(threadLoop_.native_handle(), threadName.c_str());
 }
 

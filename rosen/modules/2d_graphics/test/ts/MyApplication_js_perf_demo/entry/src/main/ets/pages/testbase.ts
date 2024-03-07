@@ -60,8 +60,6 @@ export class TestBase {
   }
 
   public BitmapCanvasToFile(dir: string) {
-    // const context : Context = getContext(this);
-    // const path : string = context.cacheDir + "/xyjrect.jpg";
     if (this.pixelMap_ == null || this.pixelMap_ == undefined) {
       console.log(TAG, 'this.pixelMap_ is invalid');
       return;

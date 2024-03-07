@@ -23,7 +23,6 @@ const TAG = '[DrawingTest]';
 @Component
 struct Index {
   private xComponentContext: XComponentContext | undefined = undefined;
-  // scroller: Scroller = new Scroller()
   @State testType: string = 'function';
   @State drawingType: string = 'cpu-xnode';
   @State caseNameStr: string  = 'drawrect';
@@ -127,7 +126,7 @@ struct Index {
               .enterKeyType(EnterKeyType.Send)
               .placeholderFont({size: 15})
               .height(38)
-              .width('60%')
+              .width('50%')
               .border({width: 1, radius:10, color: '#88000000'})
               .onChange((value) => {
                 if (value != "") {
@@ -139,13 +138,11 @@ struct Index {
             Button("Clear")
               .fontSize('16fp')
               .id('Clear')
-              .fontWeight(500)
               .onClick(() => {
                 console.log(TAG, "Clear click");
-                const context: Context = getContext(this);
                 this.myNodeController.Clear();
               })
-              .width('20%')
+              .width('30%')
               .shadow(ShadowStyle.OUTER_DEFAULT_LG)
           }
         }
@@ -159,7 +156,6 @@ struct Index {
               .fontSize('16fp')
               .id('testAll')
               .fontWeight(500)
-                // .margin({ bottom: 24, right: 12 })
               .onClick(() => {
                   console.log(TAG, "TestAll click");
                   this.caseNameStr = 'All';
@@ -177,10 +173,8 @@ struct Index {
               .fontWeight(500)
               .onClick(() => {
                 console.log(TAG, "SnapShort click");
-                Global.windowDisableSystemBar()
                 const context: Context = getContext(this);
                 Global.windowSnapShort(context.cacheDir, this.caseNameStr);
-                Global.windowEnableSystemBar()
               })
               .width('80%')
               .shadow(ShadowStyle.OUTER_DEFAULT_LG)
@@ -209,7 +203,6 @@ struct Index {
       .height('7%')
     }
   }
-
 
   LogMsg(msg: string): void {
     this.information = msg;

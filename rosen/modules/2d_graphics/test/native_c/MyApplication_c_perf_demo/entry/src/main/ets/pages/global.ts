@@ -27,15 +27,21 @@ export class Global{
     MyWindow = myWindow;
   }
 
-  static windowSnapShort(dir: string, fileName: string) {
+  static sleep(ms) {
+    return new Promise(resolve=>setTimeout(resolve, ms));
+  }
+
+  static async windowSnapShort(dir: string, fileName: string) {
     if (MyWindow == null || MyWindow == undefined) {
       console.log(TAG, 'MyWindow is invalid');
       return;
     }
 
-    let promise = MyWindow.snapshot();
-    promise.then((pixelMap: image.PixelMap) => {
-      console.info('Succeeded in snapshotting window. Pixel bytes number: ' + pixelMap.getPixelBytesNumber());
+    await this.windowDisableSystemBar();
+    await this.sleep(1000);
+
+    await MyWindow.snapshot().then((pixelMap: image.PixelMap) => {
+      console.info(TAG, 'Succeeded in snapshotting window. Pixel bytes number: ' + pixelMap.getPixelBytesNumber());
       const path : string = dir + "/" + fileName + ".jpg";
       let file = fs.openSync(path, fs.OpenMode.CREATE | fs.OpenMode.READ_WRITE);
       const imagePackerApi: image.ImagePacker = image.createImagePacker();
@@ -48,8 +54,9 @@ export class Global{
       })
       pixelMap.release(); // PixelMap使用完后及时释放内存
     }).catch((err: BusinessError) => {
-      console.error('Failed to snapshot window. Cause:' + JSON.stringify(err));
+      console.error(TAG, 'Failed to snapshot window. Cause:' + JSON.stringify(err));
     });
+    this.windowEnableSystemBar();
   }
 
   static windowEnableSystemBar() {
@@ -59,17 +66,18 @@ export class Global{
     }
 
     MyWindow.setWindowSystemBarEnable(['navigation', 'status']).then(()=>{
-      console.log('xyj setWindowColorSpace ', 'navigation', 'status')
+      console.log(TAG, 'setWindowColorSpace ', 'navigation', 'status')
     })
   }
-  static windowDisableSystemBar() {
+
+  static async windowDisableSystemBar() {
     if (MyWindow == null || MyWindow == undefined) {
       console.log(TAG, 'MyWindow is invalid');
       return;
     }
 
-    MyWindow.setWindowSystemBarEnable(['navigation']).then(()=>{
-      console.log('xyj setWindowColorSpace ', 'navigation')
+    await MyWindow.setWindowSystemBarEnable(['navigation']).then(()=>{
+      console.log(TAG, 'setWindowColorSpace ', 'navigation')
     })
   }
 }

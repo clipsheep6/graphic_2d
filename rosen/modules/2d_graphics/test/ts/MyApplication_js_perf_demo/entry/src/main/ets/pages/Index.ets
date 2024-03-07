@@ -131,7 +131,7 @@ struct Index {
               .enterKeyType(EnterKeyType.Send)
               .placeholderFont({size: 15})
               .height(38)
-              .width('60%')
+              .width('50%')
               .border({width: 1, radius:10, color: '#88000000'})
               .onChange((value) => {
                 if (value != "") {
@@ -148,7 +148,7 @@ struct Index {
                 console.log(TAG, "Clear click");
                 this.myNodeController.Clear();
               })
-              .width('20%')
+              .width('30%')
               .shadow(ShadowStyle.OUTER_DEFAULT_LG)
           }
         }
@@ -179,10 +179,8 @@ struct Index {
               .fontWeight(500)
               .onClick(() => {
                 console.log(TAG, "SnapShort click");
-                Global.windowDisableSystemBar()
                 const context : Context = getContext(this);
                 Global.windowSnapShort(context.cacheDir, this.caseNameStr);
-                Global.windowEnableSystemBar()
               })
               .width('80%')
               .shadow(ShadowStyle.OUTER_DEFAULT_LG)

@@ -123,7 +123,7 @@ void TestBase::CreateBitmapCanvas()
 
 void TestBase::BitmapCanvasToFile(napi_env env)
 {
-    DRAWING_LOGE("xyj  BitmapCanvasToFile");
+    DRAWING_LOGE("BitmapCanvasToFile");
     //创建pixmap
     napi_value pixelMap = nullptr;
     struct OhosPixelMapCreateOps createOps;
@@ -164,7 +164,7 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     std::string path = "/data/storage/el2/base/files/" + fileName_ + ".jpg";
     int fd = open(path.c_str(), O_RDWR | O_CREAT);  
     if (fd <= 0) {
-        DRAWING_LOGE("xyj failed to open fd = %{public}d", fd);
+        DRAWING_LOGE("failed to open fd = %{public}d", fd);
         return;
     }
 
@@ -180,5 +180,5 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     int32_t ret = OH_ImagePacker_Release(nativePacker);
     // 关闭输出文件
     close(fd);
-    DRAWING_LOGE("xyj  end");
+    DRAWING_LOGE("end");
 }

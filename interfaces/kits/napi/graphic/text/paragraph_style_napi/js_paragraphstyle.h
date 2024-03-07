@@ -19,24 +19,31 @@
 #include <memory>
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+#include "js_text_utils.h"
 
 #include "typography_style.h"
 
 namespace OHOS::Rosen {
 class JsParagraphStyle final {
 public:
-    explicit JsParagraphStyle(std::shared_ptr<TypographyStyle> paragraphStyle) : m_paragraphStyle(paragraphStyle) {};
-    ~JsParagraphStyle();
+    JsParagraphStyle();
 
     static napi_value Init(napi_env env, napi_value exportObj);
-    static napi_value CreateJsParagraphStyle(napi_env env, napi_callback_info info);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
+    static napi_value GetStrutStyle(napi_env env, napi_callback_info info);
+    static napi_value SetStrutStyle(napi_env env, napi_callback_info info);
+    static napi_value SetDirection(napi_env env, napi_callback_info info);
+    static napi_value SetTextAlign(napi_env env, napi_callback_info info);
 
     std::shared_ptr<TypographyStyle> GetParagraphStyle();
-
 private:
     static thread_local napi_ref constructor_;
+    napi_value OnSetTextAlign(napi_env env, napi_callback_info info);
+    napi_value OnGetStrutStyle(napi_env env, napi_callback_info info);
+    napi_value OnSetStrutStyle(napi_env env, napi_callback_info info);
+    napi_value OnSetTextDirection(napi_env env, napi_callback_info info);
+    void SetStrutStyleFontFamilies(napi_env env, napi_value fontFamiliesField);
     std::shared_ptr<TypographyStyle> m_paragraphStyle = nullptr;
 };
 } // namespace OHOS::Rosen

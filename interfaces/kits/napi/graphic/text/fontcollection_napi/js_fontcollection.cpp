@@ -20,6 +20,7 @@ thread_local napi_ref JsFontCollection::constructor_ = nullptr;
 const std::string CLASS_NAME = "FontCollection";
 napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
 {
+    LOGE("JsFontCollection begin Constructor");
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
@@ -41,6 +42,7 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
 
 napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
 {
+    LOGE("JsFontCollection begin Init");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("disableFallback", JsFontCollection::DisableFallback),
     };
@@ -96,7 +98,7 @@ napi_value JsFontCollection::OnDisableFallback(napi_env env, napi_callback_info 
 {
     if (m_fontCollection == nullptr) {
         LOGE("JsFontCollection::OnClose path is nullptr");
-        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 
     m_fontCollection->DisableFallback();

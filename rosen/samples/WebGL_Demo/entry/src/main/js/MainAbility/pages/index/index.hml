@@ -1,0 +1,14 @@
+<div class="container">
+    <canvas ref="canvas" style="width : 100%; height :100%; background-color : wheat;"></canvas>
+    <div class="spButton">
+        <button class="first" type="capsule" id="button1" value="sapmle1" @click='clickFunc("button1")'></button>
+        <button class="first" type="capsule" id="button2" value="sapmle2" @click='clickFunc("button2")'></button>
+        <button class="first" type="capsule" id="button3"value="sapmle3" @click='clickFunc("button3")'></button>
+    </div>
+    <div class="spButton">
+        <button class="first" type="capsule" id="button4" value="sapmle4" @click='clickFunc("button4")'></button>
+        <button class="first" type="capsule" id="button5" value="sapmle5" @click='clickFunc("button5")'></button>
+        <button class="first" type="capsule" id="button6" value="sapmle6" @click='clickFunc("button6")'></button>
+        <button class="first" type="capsule" id="button7" value="sapmle7" @click='clickFunc("button7")'></button>
+    </div>
+</div>

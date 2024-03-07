@@ -18,6 +18,7 @@
 #include "common/rs_macros.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_render_node.h"
+#include "screen_manager/screen_types.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -56,6 +57,10 @@ public:
     bool GetRotationChanged() const;
     void SetInvalidateTimesForRotation(int times);
 
+    void SetScreenId(uint64_t screenId);
+    uint64_t GetScreenId() const;
+    void SetFoldStatusChanged(bool foldStatusChanged);
+
 protected:
     RectI GetFilterRect() const override;
     void UpdateFilterCacheManagerWithCacheRegion(
@@ -71,6 +76,8 @@ private:
     bool preStaticStatus_ = false;
     int invalidateTimes_ = 0;
     int cacheUpdateInterval_ = 1;
+    uint64_t screenId_ = INVALID_SCREEN_ID; // the current screen this node attached.
+    bool foldStatusChanged_ = false; // fold or expand screen.
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -1088,6 +1088,7 @@ const std::shared_ptr<Drawing::RuntimeShaderBuilder>& RSPropertiesPainter::GetPh
     std::string lightString(R"(
         uniform mat4 lightPos;
         uniform mat4 viewPos;
+        uniform mat4 specularLightColor;
         uniform vec4 specularStrength;
 
         mediump vec4 main(vec2 drawing_coord) {
@@ -1095,7 +1096,6 @@ const std::shared_ptr<Drawing::RuntimeShaderBuilder>& RSPropertiesPainter::GetPh
             float ambientStrength = 0.0;
             vec4 diffuseColor = vec4(1.0, 1.0, 1.0, 1.0);
             float diffuseStrength = 0.0;
-            vec4 specularColor = vec4(1.0, 1.0, 1.0, 1.0);
             float shininess = 8.0;
             mediump vec4 fragColor;
             vec4 NormalMap = vec4(0.0, 0.0, 1.0, 0.0);
@@ -1113,6 +1113,7 @@ const std::shared_ptr<Drawing::RuntimeShaderBuilder>& RSPropertiesPainter::GetPh
                     float spec = pow(max(dot(norm, halfwayDir), 0.0), shininess); // exponential relationship of angle
                     vec4 specular = lightColor * spec; // multiply color of incident light
                     vec4 o = ambient + diffuse * diffuseStrength * diffuseColor; // diffuse reflection
+                    vec4 specularColor = specularLightColor[i];
                     fragColor = fragColor + o + specular * specularStrength[i] * specularColor;
                 }
             }
@@ -1156,19 +1157,23 @@ void RSPropertiesPainter::DrawLightInner(const RSProperties& properties, Drawing
     auto cnt = 0;
     Drawing::Matrix44 lightPositionMatrix;
     Drawing::Matrix44 viewPosMatrix;
+    Drawing::Matrix44 lightColorMatrix;
     Vector4f lightIntensityV4;
     constexpr int MAX_LIGHT_SOUCES = 4;
     while (iter != lightSources.end() && cnt < MAX_LIGHT_SOUCES) {
         auto lightPos = RSPointLightManager::Instance()->CalculateLightPosForIlluminated((*iter), geoPtr);
         auto lightIntensity = (*iter)->GetLightIntensity();
+        auto lightColor = (*iter)->GetLightColor();
         lightIntensityV4[cnt] = lightIntensity;
         lightPositionMatrix.SetCol(cnt, lightPos.x_, lightPos.y_, lightPos.z_, lightPos.w_);
         viewPosMatrix.SetCol(cnt, lightPos.x_, lightPos.y_, lightPos.z_, lightPos.w_);
+        lightColorMatrix.SetCol(cnt, lightColor.GetRed()/255.f, lightColor.GetGreen()/255.f, lightColor.GetBlue()/255.f, lightColor.GetAlpha()/255.f);
         iter++;
         cnt++;
     }
     lightBuilder->SetUniform("lightPos", lightPositionMatrix);
     lightBuilder->SetUniform("viewPos", viewPosMatrix);
+    lightBuilder->SetUniform("specularLightColor", lightColorMatrix);
     Drawing::Pen pen;
     Drawing::Brush brush;
     pen.SetAntiAlias(true);

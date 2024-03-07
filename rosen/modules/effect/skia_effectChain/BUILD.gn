@@ -43,10 +43,7 @@ config("effect_SKeffectChian_public_config") {
 }
 
 ohos_shared_library("skeffectchain") {
-  public_deps = [
-    "$graphic_2d_root:libsurface",
-    "$graphic_2d_root/rosen/modules/effect/egl:libegl_effect",
-  ]
+  public_deps = [ "$graphic_2d_root/rosen/modules/effect/egl:libegl_effect" ]
 
   if (ace_enable_gpu) {
     defines = gpu_defines
@@ -57,6 +54,7 @@ ohos_shared_library("skeffectchain") {
 
   external_deps = [
     "c_utils:utils",
+    "graphic_surface:surface",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "image_framework:image",

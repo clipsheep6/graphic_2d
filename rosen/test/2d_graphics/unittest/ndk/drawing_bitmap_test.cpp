@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 
 #include "c/drawing_bitmap.h"
 #include "c/drawing_types.h"
+#include "image/pixmap.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -159,6 +160,92 @@ HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_GetImageInfo001, TestS
     OH_Drawing_BitmapGetImageInfo(bitmap_, imageInfo);
     EXPECT_EQ(width, imageInfo->width);
     EXPECT_EQ(height, imageInfo->height);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_InstallPixels001
+ * @tc.desc: test for drawing_bitmapInstallPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_InstallPixels001, TestSize.Level1)
+{
+    const unsigned int width = 8;
+    const unsigned int height = 8;
+    OH_Drawing_Image_Info imageInfo {width, height, COLOR_FORMAT_ALPHA_8, ALPHA_FORMAT_PREMUL};
+    void* pixels = new uint32_t[8 * 8];
+    bool res = OH_Drawing_BitmapInstallPixels(bitmap_, &imageInfo, pixels, 16, nullptr, nullptr);
+    EXPECT_EQ(res, true);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_PeekPixels001
+ * @tc.desc: test for drawing_BitmapPeekPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_PeekPixels001, TestSize.Level1)
+{
+    const unsigned int width = 500;
+    const unsigned int height = 500;
+    OH_Drawing_BitmapFormat bitmapFormat { COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_UNPREMUL };
+    OH_Drawing_BitmapBuild(bitmap_, width, height, &bitmapFormat);
+    Pixmap pixmap;
+    OH_Drawing_Pixmap* p = (OH_Drawing_Pixmap*)&pixmap;
+    bool res = OH_Drawing_BitmapPeekPixels(bitmap_, p);
+    EXPECT_EQ(res, true);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_TryAllocPixels001
+ * @tc.desc: test for drawing_BitmapTryAllocPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_TryAllocPixels001, TestSize.Level1)
+{
+    const unsigned int width = 500;
+    const unsigned int height = 500;
+    OH_Drawing_BitmapFormat bitmapFormat { COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_UNPREMUL };
+    OH_Drawing_BitmapBuild(bitmap_, width, height, &bitmapFormat);
+    OH_Drawing_Image_Info imageInfo {300, 400, COLOR_FORMAT_ARGB_4444, ALPHA_FORMAT_PREMUL};
+    bool res = OH_Drawing_BitmapTryAllocPixels(bitmap_, &imageInfo);
+    EXPECT_EQ(res, true);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_ReadPixels001
+ * @tc.desc: test for drawing_BitmapReadPixels.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_ReadPixels001, TestSize.Level1)
+{
+    const unsigned int width = 500;
+    const unsigned int height = 500;
+    OH_Drawing_BitmapFormat bitmapFormat { COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_UNPREMUL };
+    OH_Drawing_BitmapBuild(bitmap_, width, height, &bitmapFormat);
+    OH_Drawing_Image_Info imageInfo {width, height, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_UNPREMUL};
+    void* pixels = new uint32_t[width * height];
+    bool res = OH_Drawing_BitmapReadPixels(bitmap_, &imageInfo, pixels, width * 4, 0, 0);
+    EXPECT_EQ(res, true);
+}
+
+/*
+ * @tc.name: NativeDrawingBitmapTest_ComputeByteSize001
+ * @tc.desc: test for drawing_BitmapComputeByteSize.
+ * @tc.type: FUNC
+ * @tc.require: AR20240104201189
+ */
+HWTEST_F(NativeDrawingBitmapTest, NativeDrawingBitmapTest_ComputeByteSize001, TestSize.Level1)
+{
+    const unsigned int width = 500;
+    const unsigned int height = 500;
+    OH_Drawing_BitmapFormat bitmapFormat { COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_UNPREMUL };
+    OH_Drawing_BitmapBuild(bitmap_, width, height, &bitmapFormat);
+    size_t size = 0;
+    size = OH_Drawing_BitmapComputeByteSize(bitmap_);
+    EXPECT_EQ(size > 0, true);
 }
 } // namespace Drawing
 } // namespace Rosen

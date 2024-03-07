@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 #include "c/drawing_bitmap.h"
 #include "c/drawing_image.h"
+#include "c/drawing_pixmap.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -130,6 +131,79 @@ HWTEST_F(NativeImageTest, NativeImageTest_GetImageInfo001, TestSize.Level1)
     OH_Drawing_BitmapDestroy(bitmap);
     OH_Drawing_ImageDestroy(image);
 }
+
+/*
+ * @tc.name: NativeImageTest_IsOpaque001
+ * @tc.desc: test for OH_Drawing_ImageIsOpaque.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeImageTest, NativeImageTest_IsOpaque001, TestSize.Level1)
+{
+    /**
+     * @tc.steps: step1. Create an image.
+     */
+    OH_Drawing_Image* image = OH_Drawing_ImageCreate();
+    ASSERT_NE(image, nullptr);
+    /**
+     * @tc.steps: step2. test OH_Drawing_ImageIsOpaque when image is nullptr.
+     * @tc.expected: function works well and return false.
+     */
+    bool isOpaque = OH_Drawing_ImageIsOpaque(nullptr);
+    EXPECT_FALSE(isOpaque);
+    /**
+     * @tc.steps: step3. test OH_Drawing_ImageIsOpaque when an image.
+     * @tc.expected: return false.
+     */
+    isOpaque = OH_Drawing_ImageIsOpaque(image);
+    EXPECT_FALSE(isOpaque);
+    /**
+     * @tc.steps: step4. test OH_Drawing_ImageIsOpaque when an image with alphaformat setted opaque.
+     * @tc.expected: return true.
+     */
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
+    ASSERT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat bitmapFormat {
+        .colorFormat = COLOR_FORMAT_ARGB_4444,
+        .alphaFormat = ALPHA_FORMAT_OPAQUE
+    };
+    constexpr uint32_t width = 200;
+    constexpr uint32_t height = 200;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &bitmapFormat);
+    bool succeed = OH_Drawing_ImageBuildFromBitmap(image, bitmap);
+    EXPECT_TRUE(succeed);
+    isOpaque = OH_Drawing_ImageIsOpaque(image);
+    EXPECT_TRUE(isOpaque);
+    /**
+     * @tc.steps: step5. destroy image&bitmap.
+     * @tc.expected: function exit normally.
+     */
+    OH_Drawing_BitmapDestroy(bitmap);
+    OH_Drawing_ImageDestroy(image);
+}
+
+/*
+ * @tc.name: NativeImageTest_CreateFromRaster
+ * @tc.desc: test CreateFromRaster
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeImageTest, NativeImageTest_CreateFromRaster, TestSize.Level1)
+{
+    OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
+    EXPECT_NE(bitmap, nullptr);
+    OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+    constexpr uint32_t width = 200;
+    constexpr uint32_t height = 200;
+    OH_Drawing_BitmapBuild(bitmap, width, height, &cFormat);
+    OH_Drawing_Pixmap* pixmap = OH_Drawing_PixmapCreate();
+    EXPECT_NE(pixmap, nullptr);
+    bool ret = OH_Drawing_BitmapPeekPixels(bitmap, pixmap);
+    EXPECT_NE(ret, false);
+    OH_Drawing_Image *image = OH_Drawing_ImageCreateFromRaster(pixmap, nullptr, nullptr);
+    EXPECT_NE(image, nullptr);
+}
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

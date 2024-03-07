@@ -229,6 +229,10 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         if (needNotify) {
             RSSubThreadManager::Instance()->NodeTaskNotify(node->GetId());
         }
+        if (!surfaceNodePtr->HasCachedTexture() && surfaceNodePtr->GetSortedChildren()->size() > 1) {
+            RS_TRACE_NAME("cache texture is null, need UpdateCompleteCacheSurface");
+            surfaceNodePtr->UpdateCompleteCacheSurface();
+        }
     }
     if (needRequestVsync) {
         RSMainThread::Instance()->RequestNextVSync();

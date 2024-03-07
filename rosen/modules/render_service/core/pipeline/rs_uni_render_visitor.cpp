@@ -2087,16 +2087,29 @@ void RSUniRenderVisitor::ProcessChildren(RSRenderNode& node)
     CheckSkipRepeatShadow(node, false);
     const auto children = node.GetSortedChildren();
 
+    auto curNodePtr = node.ReinterpretCastTo<RSSurfaceRenderNode>();
     if (isSubThread_) {
         node.SetIsUsedBySubThread(true);
         ProcessShadowFirst(node, isSubThread_);
         for (auto child : *children) {
-            ProcessChildInner(node, child);
+            auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
+            if (curNodePtr && curNodePtr->IsLeashWindow()) {
+                if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
+                    ProcessChildInner(node, child);
+                }
+            } else {
+                ProcessChildInner(node, child);
+            }
         }
         node.SetIsUsedBySubThread(false);
     } else {
         ProcessShadowFirst(node, isSubThread_);
         for (auto child : *children) {
+            auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
+            if (!node.IsMainThreadNode() && surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
+                RS_TRACE_NAME_FMT("app node skip %llu", surfaceNodePtr->GetId());
+                continue;
+            }
             SetNodeSkipShadow(child, false);
             ProcessChildInner(node, child);
             SetNodeSkipShadow(child, true);
@@ -3962,7 +3975,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             if (node.IsMainWindowType() || node.IsLeashWindow()) {
                 isSubNodeOfSurfaceInProcess_ = isSubNodeOfSurfaceInProcess;
             }
-            return;
         }
         if (node.GetBuffer() != nullptr) {
             int rotation = RSUniRenderUtil::GetRotationFromMatrix(node.GetTotalMatrix());

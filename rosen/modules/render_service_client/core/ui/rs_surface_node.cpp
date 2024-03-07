@@ -395,6 +395,27 @@ bool RSSurfaceNode::IsBufferAvailable() const
     return bufferAvailable_;
 }
 
+bool RSSurfaceNode::SetUIFirstCacheFinishCallback(UIFirstCacheFinishCallback callback)
+{
+    cacheFinishCallback_ = callback;
+    auto renderServiceClient =
+        std::static_pointer_cast<RSRenderServiceClient>(RSIRenderClient::CreateRenderServiceClient());
+    if (renderServiceClient == nullptr) {
+        return false;
+    }
+    return renderServiceClient->RegisterUIFirstCacheFinishListener(GetId(), [weakThis = weak_from_this()]() {
+        auto rsSurfaceNode = RSBaseNode::ReinterpretCast<RSSurfaceNode>(weakThis.lock());
+        if (rsSurfaceNode == nullptr) {
+            ROSEN_LOGE("RSSurfaceNode::SetUIFirstCacheFinishCallback this == null");
+            return;
+        }
+        UIFirstCacheFinishCallback actualCallback = rsSurfaceNode->cacheFinishCallback_;;
+        if (actualCallback) {
+            actualCallback();
+        }
+    });
+}
+
 void RSSurfaceNode::SetBoundsChangedCallback(BoundsChangedCallback callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -17,6 +17,7 @@
 #include <set>
 #include <dlfcn.h>
 #include <vector>
+#include <parameters.h>
 #include "platform/common/rs_log.h"
 #include "render_context/memory_handler.h"
 #include "include/gpu/vk/GrVkExtensions.h"
@@ -53,7 +54,7 @@ static std::vector<const char*> gDeviceExtensions = {
 
 static const int GR_CACHE_MAX_COUNT = 8192;
 static const size_t GR_CACHE_MAX_BYTE_SIZE = 96 * (1 << 20);
-static const int32_t CACHE_LIMITS_TIMES = 3;
+static const int32_t CACHE_LIMITS_TIMES = (system::GetParameter("const.window.foldscreen.type", "") == "true") ? 6 : 3;
 
 RsVulkanContext::RsVulkanContext()
     : handle_(nullptr), acquiredMandatoryProcAddresses_(false), memHandler_(nullptr)

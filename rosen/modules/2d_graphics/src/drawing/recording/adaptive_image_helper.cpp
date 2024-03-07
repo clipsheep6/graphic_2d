@@ -112,7 +112,7 @@ void AdaptiveImageHelper::ApplyCanvasClip(Canvas& canvas, const Rect& rect, cons
 }
 
 void AdaptiveImageHelper::DrawImage(Canvas& canvas, const Rect& rect, const std::shared_ptr<Image>& image,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
+    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
 {
     if (image == nullptr) {
         LOGE("AdaptiveImageHelper::DrawImage, image is nullptr.");
@@ -120,12 +120,12 @@ void AdaptiveImageHelper::DrawImage(Canvas& canvas, const Rect& rect, const std:
     }
     canvas.Save();
     ApplyCanvasClip(canvas, rect, rsImageInfo, image->GetWidth(), image->GetHeight());
-    DrawImageRepeatRect(canvas, rect, image, rsImageInfo, smapling);
+    DrawImageRepeatRect(canvas, rect, image, rsImageInfo, sampling);
     canvas.Restore();
 }
 
 void AdaptiveImageHelper::DrawImage(Canvas& canvas, const Rect& rect, const std::shared_ptr<Data>& data,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
+    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
 {
     if (data == nullptr) {
         LOGE("AdaptiveImageHelper::DrawImage, data is nullptr.");
@@ -134,13 +134,13 @@ void AdaptiveImageHelper::DrawImage(Canvas& canvas, const Rect& rect, const std:
     canvas.Save();
     ApplyCanvasClip(
         canvas, rect, rsImageInfo, static_cast<float>(rsImageInfo.width), static_cast<float>(rsImageInfo.height));
-    DrawImageRepeatRect(canvas, rect, data, rsImageInfo, smapling);
+    DrawImageRepeatRect(canvas, rect, data, rsImageInfo, sampling);
     canvas.Restore();
 }
 
 void AdaptiveImageHelper::DrawPixelMap(Canvas& canvas, const Rect& rect,
     const std::shared_ptr<Media::PixelMap>& pixelMap, const AdaptiveImageInfo& rsImageInfo,
-    const SamplingOptions& smapling)
+    const SamplingOptions& sampling)
 {
 #ifdef SUPPORT_OHOS_PIXMAP
     if (pixelMap == nullptr) {
@@ -149,7 +149,7 @@ void AdaptiveImageHelper::DrawPixelMap(Canvas& canvas, const Rect& rect,
     }
     canvas.Save();
     ApplyCanvasClip(canvas, rect, rsImageInfo, pixelMap->GetWidth(), pixelMap->GetHeight());
-    DrawPixelMapRepeatRect(canvas, rect, pixelMap, rsImageInfo, smapling);
+    DrawPixelMapRepeatRect(canvas, rect, pixelMap, rsImageInfo, sampling);
     canvas.Restore();
 #else
     LOGE("Not support drawing PixelMap");
@@ -203,7 +203,7 @@ void AdaptiveImageHelper::GetRectCropMultiple(
 }
 
 void AdaptiveImageHelper::DrawImageRepeatRect(Canvas& canvas, const Rect& rect, const std::shared_ptr<Image>& image,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
+    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
 {
     Rect dstRect = GetDstRect(rsImageInfo, image->GetWidth(), image->GetHeight(), rect.GetWidth(), rect.GetHeight());
     if (!dstRect.IsValid()) {
@@ -223,13 +223,13 @@ void AdaptiveImageHelper::DrawImageRepeatRect(Canvas& canvas, const Rect& rect, 
         for (int32_t j = minY; j <= maxY; ++j) {
             auto dst = Rect(dstRect.GetLeft() + i * dstRect.GetWidth(), dstRect.GetTop() + j * dstRect.GetHeight(),
                 dstRect.GetLeft() + (i + 1) * dstRect.GetWidth(), dstRect.GetTop() + (j + 1) * dstRect.GetHeight());
-            canvas.DrawImageRect(*image, src, dst, smapling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
+            canvas.DrawImageRect(*image, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
         }
     }
 }
 
 void AdaptiveImageHelper::DrawImageRepeatRect(Canvas& canvas, const Rect& rect, const std::shared_ptr<Data>& data,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling)
+    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
 {
 #ifdef ACE_ENABLE_GPU
     Rect dstRect = GetDstRect(rsImageInfo, static_cast<float>(rsImageInfo.width),
@@ -263,7 +263,7 @@ void AdaptiveImageHelper::DrawImageRepeatRect(Canvas& canvas, const Rect& rect, 
         for (int32_t j = minY; j <= maxY; ++j) {
             auto dst = Rect(dstRect.GetLeft() + i * dstRect.GetWidth(), dstRect.GetTop() + j * dstRect.GetHeight(),
                 dstRect.GetLeft() + (i + 1) * dstRect.GetWidth(), dstRect.GetTop() + (j + 1) * dstRect.GetHeight());
-            canvas.DrawImageRect(*image, src, dst, smapling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
+            canvas.DrawImageRect(*image, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
         }
     }
 #endif
@@ -312,7 +312,7 @@ static BitmapFormat MakeBitmapFormat(const Media::ImageInfo& imageInfo)
 
 void AdaptiveImageHelper::DrawPixelMapRepeatRect(Canvas& canvas, const Rect& rect,
     const std::shared_ptr<Media::PixelMap>& pixelMap, const AdaptiveImageInfo& rsImageInfo,
-    const SamplingOptions& smapling)
+    const SamplingOptions& sampling)
 {
 #ifdef SUPPORT_OHOS_PIXMAP
     Rect dstRect =
@@ -343,7 +343,7 @@ void AdaptiveImageHelper::DrawPixelMapRepeatRect(Canvas& canvas, const Rect& rec
         for (int32_t j = minY; j <= maxY; ++j) {
             auto dst = Rect(dstRect.GetLeft() + i * dstRect.GetWidth(), dstRect.GetTop() + j * dstRect.GetHeight(),
                 dstRect.GetLeft() + (i + 1) * dstRect.GetWidth(), dstRect.GetTop() + (j + 1) * dstRect.GetHeight());
-            canvas.DrawImageRect(*image, src, dst, smapling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
+            canvas.DrawImageRect(*image, src, dst, sampling, SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
         }
     }
 #else

@@ -454,7 +454,7 @@ typedef enum {
      */
     SHADOW_FLAGS_GEOMETRIC_ONLY,
     /**
-     * Use all shadow falgs.
+     * Use all shadow flags.
      */
     SHADOW_FLAGS_ALL,
 } OH_Drawing_CanvasShadowFlags;

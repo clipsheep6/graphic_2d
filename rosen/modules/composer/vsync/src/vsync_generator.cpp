@@ -34,7 +34,7 @@ static int64_t GetSysTimeNs()
 }
 
 // 1.5ms
-constexpr int64_t maxWaleupDelay = 1500000;
+constexpr int64_t maxWakeupDelay = 1500000;
 constexpr int32_t THREAD_PRIORTY = -6;
 constexpr int32_t SCHED_PRIORITY = 2;
 constexpr int64_t errorThreshold = 500000;
@@ -223,7 +223,7 @@ void VSyncGenerator::UpdateWakeupDelay(int64_t occurTimestamp, int64_t nextTimeS
 {
     // 63, 1 / 64
     wakeupDelay_ = ((wakeupDelay_ * 63) + (occurTimestamp - nextTimeStamp)) / 64;
-    wakeupDelay_ = wakeupDelay_ > maxWaleupDelay ? maxWaleupDelay : wakeupDelay_;
+    wakeupDelay_ = wakeupDelay_ > maxWakeupDelay ? maxWakeupDelay : wakeupDelay_;
 }
 
 int64_t VSyncGenerator::ComputeNextVSyncTimeStamp(int64_t now, int64_t referenceTime)

@@ -5,7 +5,7 @@
         目前deveco最新版本是api9，将下载的skd替换deveco的sdk。默认路径见deveco->tools->skdmanager->sdk->harmonyos/openharmony(最好两个都替换)->location.
         替换完成后需要修改skd的版本号。将Sdk\9\ets\oh-uni-package.json文件中的"apiVersion": "11"修改为"apiVersion": "9"（一共5个目录，都需要替换）
     3）创建默认native工程，安装到设备中会显示hello world。将本目录下工程的文件拷贝到默认工程中，文件：
-        MyApplication\entry\src\main\ets\pages
+        MyApplication\entry\src\main\ets
     4）核心代码，见entry/src/main/ets/pages/Index.ets
 
 

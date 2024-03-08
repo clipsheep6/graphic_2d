@@ -502,10 +502,11 @@ void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus)
     }
 
     if (touchStatus == TOUCH_DOWN) {
-        if (HgmCore::Instance().GetPendingScreenRefreshRate() == (uint32_t)touchFps_) {
-            HGM_LOGI("Fps now is: %{public}d, Already in touchFps, pass", HgmCore::Instance().GetPendingScreenRefreshRate());
+        uint32_t curFps = HgmCore::Instance().GetPendingScreenRefreshRate();
+        if (curFps == (uint32_t)touchFps_) {
+            HGM_LOGI("Fps now: %{public}d, no need to update pass", curFps);
         } else {
-            HGM_LOGI("Fps now is: %{public}d, update to target %{public}d fps", HgmCore::Instance().GetPendingScreenRefreshRate(), touchFps_);
+            HGM_LOGI("Fps now: %{public}d, update to target %{public}d fps", curFps, touchFps_);
             DeliverRefreshRateVote(0, "VOTER_TOUCH", ADD_VOTE, touchFps_, touchFps_);
         }
         StopScreenTimer(curScreenId_);

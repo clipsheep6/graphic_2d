@@ -33,8 +33,11 @@ const std::string Tag::Get() const
     char tagsWithZero[size];
     tagsWithZero[0] = tags[0];  // numbers means array subscripts
     tagsWithZero[1] = tags[1];
+    // 2 means array subscripts
     tagsWithZero[2] = tags[2];
+    // 3 means array subscripts
     tagsWithZero[3] = tags[3];
+    // 4 means array subscripts
     tagsWithZero[4] = 0;
     return tagsWithZero;
 }
@@ -61,10 +64,11 @@ uint16_t Uint16::Get() const
 int32_t Int32::Get() const
 {
     if (G_ENDIAN.big != '\0') {
+        // 24 means offset
         return ((static_cast<uint32_t>(data) & 0xff000000) >> 24) |
             ((static_cast<uint32_t>(data) & 0x00ff0000) >> 8) |         // 8 & 24 means offset
             ((static_cast<uint32_t>(data) & 0x0000ff00) << 8) |
-            ((static_cast<uint32_t>(data) & 0x000000ff) << 24);
+            ((static_cast<uint32_t>(data) & 0x000000ff) << 24); // 24 means offset
     } else {
         return data;
     }

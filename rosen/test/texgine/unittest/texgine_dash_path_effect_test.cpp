@@ -18,16 +18,15 @@
 #include <gmock/gmock.h>
 #include "texgine_dash_path_effect.h"
 
-using namespace testing;
-using namespace testing::ext;
 #else
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "texgine_path_effect.h"
 
+#endif
+
 using namespace testing;
 using namespace testing::ext;
-#endif
 
 #ifndef USE_GRAPHIC_TEXT_GINE
 namespace OHOS {

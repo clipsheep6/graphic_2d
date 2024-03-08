@@ -53,8 +53,8 @@ void FontCollection::SortTypeface(FontStyles &style) const
         }
     }
 
-    std::sort(typefaces.begin(), typefaces.end(),
-        [](std::shared_ptr<TexgineTypeface> &ty1, const std::shared_ptr<TexgineTypeface> &ty2) {
+    std::sort(typefaces.begin(), typefaces.end(), [](std::shared_ptr<TexgineTypeface> &ty1,
+        const std::shared_ptr<TexgineTypeface> &ty2) {
             auto fs1 = ty1->GetFontStyle()->GetFontStyle();
             auto fs2 = ty2->GetFontStyle()->GetFontStyle();
 #ifndef USE_ROSEN_DRAWING

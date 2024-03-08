@@ -89,6 +89,7 @@ public:
             builder->PushStyle(style);
             builder->AppendSpan("jhello hello hello JHELLO");
             auto typography = builder->Build();
+            // 300 means the width limit
             typography->Layout(300);
             typographies_.push_back({
                 .typography = typography,

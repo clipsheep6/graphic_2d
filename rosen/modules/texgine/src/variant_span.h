@@ -36,11 +36,11 @@ enum class DumpType {
 
 class VariantSpan {
 public:
-    VariantSpan() noexcept(true) = default;
-    VariantSpan(const std::shared_ptr<TextSpan> &ts) noexcept(true);
-    VariantSpan(const std::shared_ptr<AnySpan> &as) noexcept(true);
-    VariantSpan(std::shared_ptr<TextSpan> &&ts) noexcept(true);
-    VariantSpan(std::shared_ptr<AnySpan> &&as) noexcept(true);
+    explicit VariantSpan() noexcept(true) = default;
+    explicit VariantSpan(const std::shared_ptr<TextSpan> &ts) noexcept(true);
+    explicit VariantSpan(const std::shared_ptr<AnySpan> &as) noexcept(true);
+    explicit VariantSpan(std::shared_ptr<TextSpan> &&ts) noexcept(true);
+    explicit VariantSpan(std::shared_ptr<AnySpan> &&as) noexcept(true);
     VariantSpan(std::nullptr_t) noexcept(true);
 
     template<typename Type,

@@ -222,33 +222,33 @@ HWTEST_F(TextMergerTest, MergeSpan, TestSize.Level1)
     RUN_ALL_TESTINFO3(tm, {.arg1 = asNull, .arg2 = false, .arg3 = {}, .exception = ExceptionType::INVALID_ARGUMENT });
     // (0, 0): (width, height)
     RUN_ALL_TESTINFO3(tm, {.arg1 = std::make_shared<MyAnySpan>(0, 0), .arg2 = false, .arg3 = CharGroups::CreateEmpty(),
-     .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
+        .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
     RUN_ALL_TESTINFO3(tm, {.arg1 = std::make_shared<MyAnySpan>(0, 0), .arg2 = false, .arg3 = {},
-     .checkFunc = GetMergerResultChecker(MergeResult::IGNORE) });
+        .checkFunc = GetMergerResultChecker(MergeResult::IGNORE) });
     RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl = true, .cgs = {}}), .arg2 = false, .arg3 = {},
-     .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
+        .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
     RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl = false, .cgs = {}}), .arg2 = false, .arg3 = {},
-     .exception = ExceptionType::ERROR_STATUS });
+        .exception = ExceptionType::ERROR_STATUS });
     RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl = false, .cgs = CharGroups::CreateEmpty()}),
-     .arg2 = false, .arg3 = {}, .exception = ExceptionType::ERROR_STATUS });
+        .arg2 = false, .arg3 = {}, .exception = ExceptionType::ERROR_STATUS });
     RUN_ALL_TESTINFO3(tm, {.arg1 = GenTestSpan({.rtl = false, .cgs = cgs1_}),
-     .arg2 = false, .arg3 = CharGroups::CreateEmpty(), .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
+        .arg2 = false, .arg3 = CharGroups::CreateEmpty(), .checkFunc = GetMergerResultChecker(MergeResult::REJECTED) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({1}, {0}), .arg1 = tsCgs1_, .arg2 = false, .arg3 = {},
-     .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, ControllerForTest::GetCharGroups(tsCgs1_)) });
+        .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, ControllerForTest::GetCharGroups(tsCgs1_)) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {1}), .arg1 = tsCgs1_, .arg2 = false, .arg3 = {},
-     .checkFunc = GetMergerResultChecker(MergeResult::BREAKED, ControllerForTest::GetCharGroups(tsCgs1_)) });
+        .checkFunc = GetMergerResultChecker(MergeResult::BREAKED, ControllerForTest::GetCharGroups(tsCgs1_)) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {0}), .arg1 = tsCgs1_, .arg2 = false, .arg3 = {},
-     .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, ControllerForTest::GetCharGroups(tsCgs1_)) });
+        .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, ControllerForTest::GetCharGroups(tsCgs1_)) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({1}, {0}), .arg1 = tsSubCgs12_,
-     .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
-     // {0, 2}: check the IndexRange
-     .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, {}, true, {0, 2}) });
+        .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
+        // {0, 2}: check the IndexRange
+        .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, {}, true, {0, 2}) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {1}), .arg1 = tsSubCgs12_,
-     .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
-     .checkFunc = GetMergerResultChecker(MergeResult::BREAKED, {}, true, {0, 2}) });
+        .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
+        .checkFunc = GetMergerResultChecker(MergeResult::BREAKED, {}, true, {0, 2}) });
     RUN_ALL_TESTINFO3(tm, {.init = InitMockArgs({0}, {0}), .arg1 = tsSubCgs12_,
-     .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
-     .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, {}, true, {0, 2}) });
+        .arg2 = false, .arg3 = cgs1_.GetSub(0, 1),
+        .checkFunc = GetMergerResultChecker(MergeResult::ACCEPTED, {}, true, {0, 2}) });
 }
 #undef PARAMFUNC
 

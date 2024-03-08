@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_TEXT_UI_FONT_COLLECTION_H_
-#define ROSEN_TEXT_UI_FONT_COLLECTION_H_
+#ifndef ROSEN_TEXT_UI_FONT_COLLECTION_H
+#define ROSEN_TEXT_UI_FONT_COLLECTION_H
 
 #include <memory>
 
@@ -40,4 +40,4 @@ private:
     static std::shared_ptr<FontCollection> instance;
 };
 } // namespace rosen
-#endif // ROSEN_TEXT_UI_FONT_COLLECTION_H_
+#endif // ROSEN_TEXT_UI_FONT_COLLECTION_H

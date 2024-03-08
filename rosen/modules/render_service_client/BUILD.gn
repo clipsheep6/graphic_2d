@@ -169,7 +169,6 @@ template("render_service_client_source_set") {
     if (rosen_is_ohos) {
       public_deps += [
         "$graphic_2d_root/rosen/modules/frame_analyzer:libframe_analyzer",
-        "$graphic_2d_root/utils:libgraphic_utils",
         "$graphic_2d_root/utils/color_manager:color_manager",
       ]
 
@@ -262,10 +261,7 @@ ohos_shared_library("librender_service_client") {
 
   public_deps = [ ":render_service_client_src" ]
 
-  public_external_deps = [
-    "graphic_surface:surface",
-    "hilog:libhilog",
-  ]
+  external_deps = [ "hilog:libhilog" ]
 
   innerapi_tags = [ "platformsdk" ]
 

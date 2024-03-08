@@ -61,13 +61,14 @@ ohos_source_set("windows") {
     "//third_party/EGL:libEGL",
   ]
 
-  public_external_deps = [ "graphic_surface:surface" ]
-
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
     defines += [ "USE_ROSEN_DRAWING" ]
     public_deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
   }
-  external_deps = [ "hilog:libhilog" ]
+  external_deps = [
+    "graphic_surface:surface",
+    "hilog:libhilog",
+  ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

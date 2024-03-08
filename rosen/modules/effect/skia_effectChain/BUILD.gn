@@ -52,9 +52,10 @@ ohos_shared_library("skeffectchain") {
 
   public_deps += [ "//third_party/skia:skia_ohos" ]
 
+  public_external_deps = [ "graphic_surface:surface" ]
+
   external_deps = [
     "c_utils:utils",
-    "graphic_surface:surface",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "image_framework:image",

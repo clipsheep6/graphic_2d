@@ -359,7 +359,10 @@ template("graphics2d_source_set") {
         ]
       }
       public_deps += [ "$graphic_2d_root:libgl" ]
-      external_deps += [ "c_utils:utils" ]
+      external_deps += [
+        "c_utils:utils",
+        "graphic_surface:surface",
+      ]
     }
 
     part_name = "graphic_2d"

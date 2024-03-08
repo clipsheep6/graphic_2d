@@ -353,10 +353,7 @@ ohos_source_set("render_service_base_src") {
   ]
 
   public_configs = [ ":export_config" ]
-  public_deps = [
-    "$graphic_2d_root/utils:libgraphic_utils",
-    "src/platform:platform",
-  ]
+  public_deps = [ "src/platform:platform" ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     public_deps += [ "src/render_backend:librender_backend" ]
@@ -509,8 +506,6 @@ ohos_shared_library("librender_service_base") {
   ]
 
   external_deps = [ "hilog:libhilog" ]
-
-  public_external_deps = [ "graphic_surface:surface" ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     public_deps += [ "src/render_backend:librender_backend" ]

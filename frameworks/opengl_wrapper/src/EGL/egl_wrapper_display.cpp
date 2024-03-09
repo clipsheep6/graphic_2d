@@ -644,7 +644,11 @@ EGLBoolean EglWrapperDisplay::SwapBuffers(EGLSurface surf)
     EGLBoolean ret = EGL_FALSE;
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglSwapBuffers) {
+        if (surfPtr == nullptr) {
+            WLOGE("surfPtr is invalid");
+        } else {
         ret = table->egl.eglSwapBuffers(disp_, surfPtr->GetEglSurface());
+        }
     } else {
         WLOGE("eglSwapBuffers is invalid.");
     }

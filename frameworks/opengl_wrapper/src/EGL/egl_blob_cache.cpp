@@ -88,7 +88,8 @@ void BlobCache::Init(EglWrapperDisplay* display)
     }
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
-        table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(), BlobCache::setBlobFunc, BlobCache::getBlobFunc);
+        table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(),
+                                               BlobCache::setBlobFunc, BlobCache::getBlobFunc);
     } else {
         WLOGE("eglSetBlobCacheFuncsANDROID not found.");
     }
@@ -250,13 +251,11 @@ size_t BlobCache::GetCacheSize()
 void BlobCache::WriteToDisk()
 {
     std::lock_guard<std::mutex> lock(blobmutex_);
-
     struct stat dirstat;
     if (stat(cacheDir_.c_str(), &dirstat) != 0) {
         WLOGE("cacheDir_ not Create");
         return;
     }
-
     std::string storefile = cacheDir_ + fileName_;
     int fd = open(storefile.c_str(), O_CREAT | O_EXCL | O_RDWR, 0);
     if (fd == -1) {
@@ -272,7 +271,6 @@ void BlobCache::WriteToDisk()
             return;
         }
     }
-
     size_t filesize = GetCacheSize();
     size_t headsize = sizeof(CacheHeader);
     size_t bufsize = filesize + headsize;
@@ -280,25 +278,25 @@ void BlobCache::WriteToDisk()
     size_t offset = headsize;
     for (auto item = mBlobMap_.begin(); item != mBlobMap_.end(); ++item) {
         CacheHeader* eheader = reinterpret_cast<CacheHeader*>(&buf[offset]);
-        eheader->keySize = item->first->dataSize;
-        eheader->valueSize = item->second->dataSize;
-        memcpy_s(eheader->mData_, item->first->dataSize, item->first->data, item->first->dataSize);
-        memcpy_s(eheader->mData_ + item->first->dataSize, item->second->dataSize, item->second->data ,item->second->dataSize);
-        size_t innerSize = headsize + item->first->dataSize + item->second->dataSize;
+        size_t keysize = item->first->dataSize;
+        size_t valuesize = item->first->dataSize;
+        eheader->keySize = keysize;
+        eheader->valueSize = valuesize;
+        memcpy_s(eheader->mData_, keysize, item->first->data, keysize);
+        memcpy_s(eheader->mData_ + keysize, valuesize, item->second->data, valuesize);
+        size_t innerSize = headsize + keysize + valuesize;
         offset += Formatfile(innerSize);
     }
-
-    memcpy_s(buf, CACHE_MAGIC_HEAD, CACHE_MAGIC, CACHE_MAGIC_HEAD);
+    size_t cachehead = sizeof(CACHE_MAGIC);
+    memcpy_s(buf, cachehead, CACHE_MAGIC, cachehead);
     uint32_t *crc = reinterpret_cast<uint32_t*>(buf + CACHE_MAGIC_HEAD);
     *crc = crcGen(buf + CACHE_HEAD, filesize);
-
     if (write(fd, buf, bufsize) == -1) {
         WLOGE("write file failed");
         delete[] buf;
         close(fd);
         return;
     }
-
     delete[] buf;
     fchmod(fd, S_IRUSR);
     close(fd);
@@ -333,13 +331,11 @@ void BlobCache::ReadFromDisk()
         close(fd);
         return;
     }
-
     if (!validFile(buf, filesize)) {
         munmap(buf, filesize);
         close(fd);
         return;
     }
-
     size_t headsize = sizeof(CacheHeader);
     size_t byteoffset = headsize;
     while (byteoffset < filesize - headsize) {
@@ -358,7 +354,6 @@ void BlobCache::ReadFromDisk()
         size_t innerSize = headsize + keysize + valuesize;
         byteoffset += Formatfile(innerSize);
     }
-
     munmap(buf, filesize);
     close(fd);
 }
@@ -388,8 +383,8 @@ bool BlobCache::validFile(uint8_t *buf, size_t len)
         return false;
     }
 
-    uint32_t* crcfile = reinterpret_cast<uint32_t*>(buf + 4);
-    uint32_t crccur = crcGen(buf + 8, len -8);
+    uint32_t* crcfile = reinterpret_cast<uint32_t*>(buf + CACHE_MAGIC_HEAD);
+    uint32_t crccur = crcGen(buf + CACHE_HEAD, len - CACHE_HEAD);
     if (crccur != *crcfile) {
         WLOGE("crc check failed");
         return false;

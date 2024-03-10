@@ -288,7 +288,7 @@ void BlobCache::WriteToDisk()
         offset += Formatfile(innerSize);
     }
 
-    memcpy(buf, CACHE_MAGIC_HEAD, CACHE_MAGIC, CACHE_MAGIC_HEAD);
+    memcpy_s(buf, CACHE_MAGIC_HEAD, CACHE_MAGIC, CACHE_MAGIC_HEAD);
     uint32_t *crc = reinterpret_cast<uint32_t*>(buf + CACHE_MAGIC_HEAD);
     *crc = crcGen(buf + CACHE_HEAD, filesize);
 

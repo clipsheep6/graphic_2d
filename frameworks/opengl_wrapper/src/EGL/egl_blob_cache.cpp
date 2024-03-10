@@ -86,7 +86,7 @@ void BlobCache::Init(EglWrapperDisplay* display)
     if (!initStatus_) return;
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
-        table->egl.eglSetBlobCacheFuncsANDROID(disp_, BlobCache::setBlobFunc, BlobCache::getBlobFunc);
+        table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(), BlobCache::setBlobFunc, BlobCache::getBlobFunc);
     } else {
         WLOGE("eglSetBlobCacheFuncsANDROID not found.");
     }

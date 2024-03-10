@@ -36,6 +36,11 @@ const int MAX_SHADER_DELETE = 150;
 const int HASH_NUM = 31;
 const int MAX_SHADER_SIZE = 4 * 1024 * 1024;
 const int DEFER_SAVE_MIN = 4;
+const int FORMAT_OFFSET = 3;
+const int CACHE_HEAD = 8;
+const int CACHE_MAGIC_HEAD = 4;
+const int BYTE_SIZE = 8;
+const int CRC_NUM = 24;
 
 class BlobCache {
 public:
@@ -49,8 +54,8 @@ public:
     };
 
     struct CacheHeader {
-        size_t keySize_;
-        size_t valueSize_;
+        size_t keySize;
+        size_t valueSize;
         uint8_t mData_[];
     };
     
@@ -113,9 +118,9 @@ public:
 
     void ReadFromDisk();
 
-    void terminate();
+    void Terminate();
 
-    size_t getCacheSize();
+    size_t GetCacheSize();
 
     bool validFile(uint8_t *buf, size_t len);
 

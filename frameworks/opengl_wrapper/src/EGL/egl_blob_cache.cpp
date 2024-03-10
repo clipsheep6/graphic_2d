@@ -17,7 +17,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <errors.h>
-#include <inttypes.h>
+#include <cinttypes>
 #include <unistd.h>
 #include <fcntl.h>
 #include <thread>
@@ -73,7 +73,7 @@ BlobCache::~BlobCache()
     }
 }
 
-void BlobCache::terminate()
+void BlobCache::Terminate()
 {
     if (blobCache_) {
         blobCache_->WriteToDisk();
@@ -83,7 +83,9 @@ void BlobCache::terminate()
 
 void BlobCache::Init(EglWrapperDisplay* display)
 {
-    if (!initStatus_) return;
+    if (!initStatus_) {
+        return;
+    }
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
         table->egl.eglSetBlobCacheFuncsANDROID(display->GetEglDisplay(), BlobCache::setBlobFunc, BlobCache::getBlobFunc);
@@ -126,7 +128,6 @@ void BlobCache::setBlob(const void *key, EGLsizeiANDROID keySize, const void *va
         it->first->prev_ = head_;
         return;
     }
-
     if (blobSize_ >= blobSizeMax_) {
         int count = 0;
         while (count <= MAX_SHADER_DELETE) {
@@ -138,7 +139,6 @@ void BlobCache::setBlob(const void *key, EGLsizeiANDROID keySize, const void *va
             ++count;
         }
     }
-
     std::shared_ptr<Blob> valueBlob = std::make_shared<Blob>(value, (size_t)valueSize);
     mBlobMap_.emplace(keyBlob, valueBlob);
     head_->next_->prev_ = keyBlob;
@@ -150,7 +150,7 @@ void BlobCache::setBlob(const void *key, EGLsizeiANDROID keySize, const void *va
         saveStatus_ = true;
         std::thread deferSaveThread([this]() {
             sleep(DEFER_SAVE_MIN);
-            if(blobCache_) {
+            if (blobCache_) {
                 blobCache_->WriteToDisk();
             }
             saveStatus_ = false;
@@ -231,18 +231,18 @@ void BlobCache::SetCacheShaderSize(int shadermax)
     blobSizeMax_ = shadermax;
 }
 
-static inline size_t formatfile(size_t size)
+static inline size_t Formatfile(size_t size)
 {
-    return (size + 3) & ~3;
+    return (size + FORMAT_OFFSET) & ~FORMAT_OFFSET;
 }
 
-size_t BlobCache::getCacheSize()
+size_t BlobCache::GetCacheSize()
 {
     size_t headSize = sizeof(CacheHeader);
     size_t ret = 0;
     for (auto item = mBlobMap_.begin(); item != mBlobMap_.end(); ++item) {
         size_t innerSize = headSize + item->first->dataSize + item->second->dataSize;
-        ret += formatfile(innerSize);
+        ret += Formatfile(innerSize);
     }
     return ret;
 }
@@ -273,25 +273,24 @@ void BlobCache::WriteToDisk()
         }
     }
 
-    size_t filesize = getCacheSize();
+    size_t filesize = GetCacheSize();
     size_t headsize = sizeof(CacheHeader);
     size_t bufsize = filesize + headsize;
     uint8_t *buf = new uint8_t[bufsize];
     size_t offset = headsize;
     for (auto item = mBlobMap_.begin(); item != mBlobMap_.end(); ++item) {
         CacheHeader* eheader = reinterpret_cast<CacheHeader*>(&buf[offset]);
-        eheader->keySize_ = item->first->dataSize;
-        eheader->valueSize_ = item->second->dataSize;
-        memcpy(eheader->mData_, item->first->data ,item->first->dataSize);
-        memcpy(eheader->mData_ + item->first->dataSize, item->second->data ,item->second->dataSize);
+        eheader->keySize = item->first->dataSize;
+        eheader->valueSize = item->second->dataSize;
+        memcpy_s(eheader->mData_, item->first->dataSize, item->first->data, item->first->dataSize);
+        memcpy_s(eheader->mData_ + item->first->dataSize, item->second->dataSize, item->second->data ,item->second->dataSize);
         size_t innerSize = headsize + item->first->dataSize + item->second->dataSize;
-        offset += formatfile(innerSize);
+        offset += Formatfile(innerSize);
     }
 
-
-    memcpy(buf, CACHE_MAGIC, 4);
-    uint32_t *crc = reinterpret_cast<uint32_t*>(buf + 4);
-    *crc = crcGen(buf + 8, filesize);
+    memcpy(buf, CACHE_MAGIC_HEAD, CACHE_MAGIC, CACHE_MAGIC_HEAD);
+    uint32_t *crc = reinterpret_cast<uint32_t*>(buf + CACHE_MAGIC_HEAD);
+    *crc = crcGen(buf + CACHE_HEAD, filesize);
 
     if (write(fd, buf, bufsize) == -1) {
         WLOGE("write file failed");
@@ -317,20 +316,17 @@ void BlobCache::ReadFromDisk()
     if (fd == -1) {
         WLOGE("ReadFromDisk open fail");
     }
-
     struct stat bufstat;
     if (fstat(fd, &bufstat) == -1) {
         WLOGE("ReadFromDisk fstat fail");
         close(fd);
         return;
     }
-
     size_t filesize = bufstat.st_size;
-    if (filesize > maxShaderSize_ * 2) {
+    if (filesize > maxShaderSize_ + maxShaderSize_) {
         WLOGE("maxShaderSize_");
         close(fd);
     }
-
     uint8_t *buf = reinterpret_cast<uint8_t*>(mmap(nullptr, filesize, PROT_READ, MAP_PRIVATE, fd, 0));
     if (buf == MAP_FAILED) {
         WLOGE("MAP_FAILED");
@@ -348,8 +344,8 @@ void BlobCache::ReadFromDisk()
     size_t byteoffset = headsize;
     while (byteoffset < filesize - headsize) {
         const CacheHeader* eheader = reinterpret_cast<CacheHeader*>(&buf[byteoffset]);
-        size_t keysize = eheader->keySize_;
-        size_t valuesize = eheader->valueSize_;
+        size_t keysize = eheader->keySize;
+        size_t valuesize = eheader->valueSize;
         if (byteoffset + headsize + keysize > filesize) {
             break;
         }
@@ -360,7 +356,7 @@ void BlobCache::ReadFromDisk()
         const uint8_t *value = eheader->mData_ + keysize;
         setBlob(key, (EGLsizeiANDROID)keysize, value, (EGLsizeiANDROID)valuesize);
         size_t innerSize = headsize + keysize + valuesize;
-        byteoffset += formatfile(innerSize);
+        byteoffset += Formatfile(innerSize);
     }
 
     munmap(buf, filesize);
@@ -373,8 +369,8 @@ uint32_t BlobCache::crcGen(const uint8_t *buf, size_t len)
     uint32_t crc = 0xFFFFFFFF;
 
     for (size_t i = 0; i < len ; ++i) {
-        crc ^= (static_cast<uint32_t>(buf[i]) << 24);
-        for (size_t j = 0; j < 8; ++j) {
+        crc ^= (static_cast<uint32_t>(buf[i]) << CRC_NUM);
+        for (size_t j = 0; j < BYTE_SIZE; ++j) {
             if (crc & 0x80000000) {
                 crc = (crc << 1) ^ polynoimal;
             } else {
@@ -387,14 +383,14 @@ uint32_t BlobCache::crcGen(const uint8_t *buf, size_t len)
 
 bool BlobCache::validFile(uint8_t *buf, size_t len)
 {
-    if(memcmp(buf, CACHE_MAGIC, 4) != 0) {
+    if (memcmp(buf, CACHE_MAGIC, CACHE_MAGIC_HEAD) != 0) {
         WLOGE("CACHE_MAGIC failed");
         return false;
     }
 
     uint32_t* crcfile = reinterpret_cast<uint32_t*>(buf + 4);
     uint32_t crccur = crcGen(buf + 8, len -8);
-    if (crccur != * crcfile) {
+    if (crccur != *crcfile) {
         WLOGE("crc check failed");
         return false;
     }

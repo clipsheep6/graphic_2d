@@ -96,7 +96,7 @@ EGLBoolean EglWrapperDisplay::Terminate()
     EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad) {
         if (table->egl.eglTerminate) {
-            BlobCache::Get()->terminate();
+            BlobCache::Get()->Terminate();
             ClearObjects();
             return table->egl.eglTerminate(disp_);
         }

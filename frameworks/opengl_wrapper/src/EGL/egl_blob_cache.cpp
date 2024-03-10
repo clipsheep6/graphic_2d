@@ -81,10 +81,10 @@ void BlobCache::terminate()
     blobCache_ = nullptr;
 }
 
-void BlobCache::Init()
+void BlobCache::Init(EglWrapperDisplay* display)
 {
     if (!initStatus_) return;
-    EglWrapperDispatchTablePtr *table = &gWrapperHook;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
     if (table->isLoad && table->egl.eglSetBlobCacheFuncsANDROID) {
         table->egl.eglSetBlobCacheFuncsANDROID(disp_, BlobCache::setBlobFunc, BlobCache::getBlobFunc);
     } else {
@@ -202,7 +202,7 @@ void BlobCache::SetCacheDir(const std::string dir)
     cacheDir_ = dir + std::string("/blobShader");
     ddkCacheDir_ = dir + std::string("/ddkShader");
 
-    if (stat(cacheDir_.c_str(), &dirstat) != 0) {
+    if (stat(cacheDir_.c_str(), &cachedirstat) != 0) {
         initStatus_ = false;
         int ret = mkdir(cacheDir_.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH);
         if (ret == -1) {
@@ -258,14 +258,14 @@ void BlobCache::WriteToDisk()
     }
 
     std::string storefile = cacheDir_ + fileName_;
-    int fd = open(storefile.c_str(), O_CREATE | O_EXCL | O_RDWR, 0);
+    int fd = open(storefile.c_str(), O_CREAT | O_EXCL | O_RDWR, 0);
     if (fd == -1) {
         if (errno == EEXIST) {
             if (unlink(storefile.c_str()) == -1) {
                 WLOGE("unlink file failed");
                 return;
             }
-            fd = open(storefile.c_str(), O_CREATE | O_EXCL | O_RDWR, 0);
+            fd = open(storefile.c_str(), O_CREAT | O_EXCL | O_RDWR, 0);
         }
         if (fd == -1) {
             WLOGE("recreate file failed");
@@ -319,7 +319,7 @@ void BlobCache::ReadFromDisk()
     }
 
     struct stat bufstat;
-    if (fstat(storefile.c_str(), &bufstat) == -1) {
+    if (fstat(fd, &bufstat) == -1) {
         WLOGE("ReadFromDisk fstat fail");
         close(fd);
         return;

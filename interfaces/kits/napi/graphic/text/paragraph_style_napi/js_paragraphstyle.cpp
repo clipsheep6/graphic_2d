@@ -123,7 +123,7 @@ void JsParagraphStyle::SetStrutStyleFontFamilies(napi_env env, napi_value fontFa
     uint32_t arrayLength = 0;
     napi_status status = napi_get_array_length(env, fontFamiliesField, &arrayLength);
     if (status != napi_ok) {
-        LOGE("JsParagraphStyle::SetStrutStyleFontFamilies Invalid array napi_value");
+        LOGE("SetStrutStyleFontFamilies Invalid array napi_value");
         return;
     }
 
@@ -131,22 +131,26 @@ void JsParagraphStyle::SetStrutStyleFontFamilies(napi_env env, napi_value fontFa
         napi_value element;
         status = napi_get_element(env, fontFamiliesField, i, &element);
         if (status != napi_ok) {
-            LOGE("JsParagraphStyle::SetStrutStyleFontFamilies Invalid element");
+            LOGE("SetStrutStyleFontFamilies napi_get_element faild");
             return;
         }
 
         size_t bufferSize = 0;
         status = napi_get_value_string_utf8(env, element, nullptr, 0, &bufferSize);
         if (status != napi_ok) {
-            LOGE("JsParagraphStyle::SetStrutStyleFontFamilies Invalid bufferSize");
+            LOGE("JsParagraphStyle SetStrutStyleFontFamilies Invalid bufferSize");
             return;
         }
 
         size_t strLen = 0;
         auto buffer = std::make_unique<char[]>(bufferSize + 1);
+        if (buffer.get() == nullptr) {
+            LOGE("JsParagraphStyle Invalid buffer");
+            return;            
+        }
         status = napi_get_value_string_utf8(env, element, buffer.get(), bufferSize + 1, &strLen);
         if (status != napi_ok) {
-            LOGE("JsParagraphStyle::SetStrutStyleFontFamilies Invalid buffer");
+            LOGE("JsParagraphStyle SetStrutStyleFontFamilies Invalid buffer");
             return;
         }
         std::string value(buffer.get());
@@ -157,20 +161,23 @@ void JsParagraphStyle::SetStrutStyleFontFamilies(napi_env env, napi_value fontFa
 napi_value JsParagraphStyle::OnSetStrutStyle(napi_env env, napi_callback_info info)
 {
     if (m_paragraphStyle == nullptr) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetStrutStyle m_paragraphStyle is nullptr");
     }
 
     size_t argc = ARGC_ONE;
     napi_value argv[ARGC_ONE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < ARGC_ONE) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetStrutStyle napi_get_cb_info faild");
     }
 
     napi_value fontFamiliesField = nullptr;
     status = napi_get_named_property(env, argv[0], "fontFamilies", &fontFamiliesField);
     if (status != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid fontFamilies");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetStrutStyle napi_get_named_property faild");
     }
     SetStrutStyleFontFamilies(env, fontFamiliesField);
     return NapiGetUndefined(env);
@@ -185,19 +192,22 @@ napi_value JsParagraphStyle::SetDirection(napi_env env, napi_callback_info info)
 napi_value JsParagraphStyle::OnSetTextDirection(napi_env env, napi_callback_info info)
 {
     if (m_paragraphStyle == nullptr) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetTextDirection m_paragraphStyle is nullptr");
     }
 
     size_t argc = ARGC_ONE;
     napi_value argv[ARGC_ONE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < ARGC_ONE) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetTextDirection napi_get_cb_info faild");
     }
     uint32_t textDir = 0;
     status = napi_get_value_uint32(env, argv[0], &textDir);
     if (status != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid number param");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetTextDirection napi_get_value_uint32 faild");
     }
     // error deal default text direction ltr
     if (textDir != LTR && textDir != RTL) {
@@ -216,19 +226,22 @@ napi_value JsParagraphStyle::SetTextAlign(napi_env env, napi_callback_info info)
 napi_value JsParagraphStyle::OnSetTextAlign(napi_env env, napi_callback_info info)
 {
     if (m_paragraphStyle == nullptr) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid m_paragraphStyle.");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetTextAlign Invalid m_paragraphStyle");
     }
 
     size_t argc = ARGC_ONE;
     napi_value argv[ARGC_ONE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < ARGC_ONE) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetTextAlign Invalid napi_get_cb_info");
     }
     uint32_t textAlign = 0;
     status = napi_get_value_uint32(env, argv[0], &textAlign);
     if (status != napi_ok || argc < ARGC_ONE) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid napi_get_value_int32");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetTextAlign Invalid napi_get_value_int32");
     }
     m_paragraphStyle->textAlign = static_cast<TextAlign>(textAlign);
     return NapiGetUndefined(env);

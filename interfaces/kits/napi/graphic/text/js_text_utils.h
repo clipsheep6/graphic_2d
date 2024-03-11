@@ -221,14 +221,13 @@ inline napi_value NapiGetUndefined(napi_env env)
 
 inline napi_value CreateJsArrayString(napi_env env, std::vector<std::string>& fontFamily)
 {
-    LOGE("TraceJsParagraphStyle start CreateJsArrayString");
     napi_value jsArray;
-    napi_create_array_with_length(env, fontFamily.size(), &jsArray); // 创建一个长度为 fontFamily.size()的空数组
+    napi_create_array_with_length(env, fontFamily.size(), &jsArray);
 
     for (size_t i = 0; i < fontFamily.size(); i++) {
         napi_value jsValue;
-        napi_create_string_utf8(env, fontFamily[i].c_str(), NAPI_AUTO_LENGTH, &jsValue); //创建一个表示字符串的 napi_value
-        napi_set_element(env, jsArray, i, jsValue); // 将字符串 napi_value 添加到数组中
+        napi_create_string_utf8(env, fontFamily[i].c_str(), NAPI_AUTO_LENGTH, &jsValue);
+        napi_set_element(env, jsArray, i, jsValue);
     }
     return jsArray;
 }

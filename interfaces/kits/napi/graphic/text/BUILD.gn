@@ -57,6 +57,7 @@ ohos_shared_library("text_napi_impl") {
     "js_text_init.cpp",
     "js_text_utils.cpp",
     "paragraph_style_napi/js_paragraphstyle.cpp",
+    "text_style_napi/js_text_style.cpp",
   ]
 
   configs = [

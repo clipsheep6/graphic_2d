@@ -44,6 +44,7 @@ private:
     napi_value OnSetStrutStyle(napi_env env, napi_callback_info info);
     napi_value OnSetTextDirection(napi_env env, napi_callback_info info);
     void SetStrutStyleFontFamilies(napi_env env, napi_value fontFamiliesField);
+
     std::shared_ptr<TypographyStyle> m_paragraphStyle = nullptr;
 };
 } // namespace OHOS::Rosen

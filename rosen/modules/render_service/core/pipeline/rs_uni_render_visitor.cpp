@@ -2529,14 +2529,14 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
             rects = GetDirtyRects(dirtyRegion);
             if (!rects.empty()) {
-                GpuDirtyRegion::GetInstance().UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(node.GetScreenId(),
-                                                                                                  rects);
+                GpuDirtyRegion::GetInstance().UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(
+                    node.GetScreenId(), rects);
             }
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
-                GpuDirtyRegion::GetInstance().UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(node.GetScreenId(),
-                                                                                                  rect);
+                GpuDirtyRegion::GetInstance().UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(
+                    node.GetScreenId(), rect);
             }
             if (!isDirtyRegionAlignedEnable_) {
                 for (auto& r : rects) {

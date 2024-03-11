@@ -25,7 +25,6 @@ const std::string CLASS_NAME = "ParagraphStyle";
 #define RTL 0
 napi_value JsParagraphStyle::Constructor(napi_env env, napi_callback_info info)
 {
-    LOGE("SetTextAlign | SetTextAlign");
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
@@ -48,7 +47,6 @@ napi_value JsParagraphStyle::Constructor(napi_env env, napi_callback_info info)
 
 napi_value JsParagraphStyle::Init(napi_env env, napi_value exportObj)
 {
-    LOGE("SetTextAlign | begin JsParagraphStyle Init");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("getStrutStyle", JsParagraphStyle::GetStrutStyle),
         DECLARE_NAPI_FUNCTION("setStrutStyle", JsParagraphStyle::SetStrutStyle),
@@ -60,28 +58,23 @@ napi_value JsParagraphStyle::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        LOGE("JsParagraphStyle Failed to define ParagraphStyle class");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid number param");
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
-        LOGE("JsParagraphStyle Failed to create reference of constructor");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid napi create reference");
     }
 
     status = napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor);
     if (status != napi_ok) {
-        LOGE("JsParagraphStyle Failed to set constructor");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid set name");
     }
-    LOGE("JsParagraphStyle | Over JsParagraphStyle Init and OK");
     return exportObj;
 }
 
 void JsParagraphStyle::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
-    LOGE("JsParagraphStyle | begin JsParagraphStyle Destructor");
     (void)finalize;
     if (nativeObject != nullptr) {
         JsParagraphStyle *napi = reinterpret_cast<JsParagraphStyle *>(nativeObject);
@@ -91,7 +84,6 @@ void JsParagraphStyle::Destructor(napi_env env, void *nativeObject, void *finali
 
 JsParagraphStyle::JsParagraphStyle()
 {
-    LOGE("SetTextAlign | begin JsParagraphStyle()");
     m_paragraphStyle = std::make_shared<TypographyStyle>();
 }
 
@@ -109,7 +101,6 @@ napi_value JsParagraphStyle::GetStrutStyle(napi_env env, napi_callback_info info
 napi_value JsParagraphStyle::OnGetStrutStyle(napi_env env, napi_callback_info info)
 {
     if (m_paragraphStyle == nullptr) {
-        LOGE("JsParagraphStyle::m_paragraphStyle is nullptr");
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     std::vector<std::string> fontFamily(m_paragraphStyle->lineStyleFontFamilies);
@@ -165,9 +156,7 @@ void JsParagraphStyle::SetStrutStyleFontFamilies(napi_env env, napi_value fontFa
 
 napi_value JsParagraphStyle::OnSetStrutStyle(napi_env env, napi_callback_info info)
 {
-    LOGE("JsParagraphStyle::OnSetStrutStyle ");
     if (m_paragraphStyle == nullptr) {
-        LOGE("JsParagraphStyle::OnSetStrutStyle m_paragraphStyle is nullptr");
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 
@@ -175,14 +164,12 @@ napi_value JsParagraphStyle::OnSetStrutStyle(napi_env env, napi_callback_info in
     napi_value argv[ARGC_ONE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < ARGC_ONE) {
-        LOGE("JsParagraphStyle::OnSetStrutStyle Invalid params");
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params");
     }
 
     napi_value fontFamiliesField = nullptr;
     status = napi_get_named_property(env, argv[0], "fontFamilies", &fontFamiliesField);
     if (status != napi_ok) {
-        LOGE("JsParagraphStyle::OnSetStrutStyle Invalid fontFamilies");
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid fontFamilies");
     }
     SetStrutStyleFontFamilies(env, fontFamiliesField);
@@ -222,14 +209,12 @@ napi_value JsParagraphStyle::OnSetTextDirection(napi_env env, napi_callback_info
 
 napi_value JsParagraphStyle::SetTextAlign(napi_env env, napi_callback_info info)
 {
-    LOGE("SetTextAlign | into SetTextAlign");
     JsParagraphStyle* me = CheckParamsAndGetThis<JsParagraphStyle>(env, info);
     return (me != nullptr) ? me->OnSetTextAlign(env, info) : nullptr;
 }
 
 napi_value JsParagraphStyle::OnSetTextAlign(napi_env env, napi_callback_info info)
 {
-    LOGE("SetTextAlign | into OnSetTextAlign");
     if (m_paragraphStyle == nullptr) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid m_paragraphStyle.");
     }
@@ -245,7 +230,6 @@ napi_value JsParagraphStyle::OnSetTextAlign(napi_env env, napi_callback_info inf
     if (status != napi_ok || argc < ARGC_ONE) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid napi_get_value_int32");
     }
-    LOGE("SetTextAlign | value=%zu",textAlign);
     m_paragraphStyle->textAlign = static_cast<TextAlign>(textAlign);
     return NapiGetUndefined(env);
 }

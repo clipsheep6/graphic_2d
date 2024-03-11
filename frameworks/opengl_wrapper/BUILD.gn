@@ -82,6 +82,7 @@ if (current_os != "ohos") {
       "init:libbegetutil",
     ]
 
+    license_file = "//third_party/EGL/LICENSE"
     if (defined(graphic_2d_ext_configs.vendor_root)) {
       install_enable = false
     }

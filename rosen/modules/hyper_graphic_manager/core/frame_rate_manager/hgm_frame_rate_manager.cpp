@@ -143,7 +143,6 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
-            isForceFrame_ = true;
             FrameRateReport();
         }
     }
@@ -154,19 +153,13 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     RS_TRACE_FUNC();
     Reset();
 
-    // force update
-    if (isForceFrame_) {
-        isForceFrame_ = false;
-        StopScreenTimer(curScreenId_);
-    } else { // frame
-        if (idleTimerExpired) {
-            // idle in ltps
-            HandleIdleEvent(ADD_VOTE);
-        } else {
-            StartScreenTimer(curScreenId_, IDLE_TIMER_EXPIRED, nullptr, [this]() {
-                forceUpdateCallback_(true, false);
-            });
-        }
+    if (idleTimerExpired) {
+        // idle in ltps
+        HandleIdleEvent(ADD_VOTE);
+    } else {
+        StartScreenTimer(curScreenId_, IDLE_TIMER_EXPIRED, nullptr, [this]() {
+            forceUpdateCallback_(true, false);
+        });
     }
     
     FrameRateRange finalRange;
@@ -185,7 +178,6 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
     if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
         forceUpdateCallback_(false, true);
-        isForceFrame_ = true;
         FrameRateReport();
     }
 }
@@ -242,7 +234,6 @@ void HgmFrameRateManager::HandleFrameRateChangeForLTPO(uint64_t timestamp)
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != HgmCore::Instance().GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
-            isForceFrame_ = true;
             FrameRateReport();
         }
     };
@@ -502,13 +493,8 @@ void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus)
     }
 
     if (touchStatus == TOUCH_DOWN) {
-        uint32_t curFps = HgmCore::Instance().GetPendingScreenRefreshRate();
-        if (curFps == (uint32_t)touchFps_) {
-            HGM_LOGI("Fps now: %{public}d, no need to update pass", curFps);
-        } else {
-            HGM_LOGI("Fps now: %{public}d, update to target %{public}d fps", curFps, touchFps_);
-            DeliverRefreshRateVote(0, "VOTER_TOUCH", ADD_VOTE, touchFps_, touchFps_);
-        }
+        HGM_LOGD("Update to target %{public}d fps", touchFps_);
+        DeliverRefreshRateVote(0, "VOTER_TOUCH", ADD_VOTE, touchFps_, touchFps_);
         StopScreenTimer(curScreenId_);
     } else {
         // idle detect used in ltps
@@ -653,7 +639,6 @@ void HgmFrameRateManager::MarkVoteChange()
     isRefreshNeed_ = true;
     if (forceUpdateCallback_ != nullptr) {
         forceUpdateCallback_(false, true);
-        isForceFrame_ = true;
     }
 }
 

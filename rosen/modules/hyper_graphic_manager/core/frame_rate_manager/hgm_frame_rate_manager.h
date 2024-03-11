@@ -136,7 +136,6 @@ private:
     bool isReduceAllowed_ = true;
     bool isRefreshNeed_ = true;
     bool isTouchEnable_ = true;
-    bool isForceFrame_ = false;
     int32_t touchFps_ = 120;
     int32_t idleFps_ = 60;
 };

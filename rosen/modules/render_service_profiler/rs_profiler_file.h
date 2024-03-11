@@ -29,11 +29,13 @@
 
 namespace OHOS::Rosen {
 
-struct ReplayImageCacheRecordFile {
+struct FileImageCacheRecord {
     std::shared_ptr<void> image;
     uint32_t imageSize = 0u;
     uint32_t skipBytes = 0u;
 };
+
+using FileImageCache = std::map<uint64_t, FileImageCacheRecord>;
 
 struct RSFileLayer final {
     std::pair<uint32_t, uint32_t> layerHeader; // to put in GLOBAL HEADER
@@ -68,9 +70,12 @@ public:
     void SetWriteTime(double time);
     double GetWriteTime() const;
 
+    std::string& GetHeaderFirstFrame();
+    void AddHeaderFirstFrame(const std::string& dataFirstFrame);
+
     void AddHeaderPID(pid_t pid);
     const std::vector<pid_t>& GetHeaderPIDList() const;
-    void SetImageMapPtr(std::map<uint64_t, ReplayImageCacheRecordFile>* imageMapPtr);
+    void SetImageCache(FileImageCache* cache);
 
     uint32_t AddLayer();
     void LayerAddHeaderProperty(uint32_t layer, const std::string& name, const std::string& value);
@@ -164,7 +169,9 @@ private:
 
     uint32_t writeDataOff_ = 0u; // last byte of file where we can continue writing
 
-    std::map<uint64_t, ReplayImageCacheRecordFile>* imageMapPtr_ = nullptr;
+    FileImageCache* imageCache_ = nullptr;
+
+    std::string headerFirstFrame_;
 
     std::mutex writeMutex_;
 

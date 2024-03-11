@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
+#include "rs_profiler_file.h"
+
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
-
-#include "rs_profiler_file.h"
 
 #ifndef REPLAY_TOOL_CLIENT
 #include "platform/common/rs_log.h"
@@ -39,13 +40,13 @@ const std::string& RSFile::GetDefaultPath()
 
 void RSFile::Create(const std::string& fname)
 {
-    if (file_ != NULL) {
+    if (file_ != nullptr) {
         Close();
     }
     const std::lock_guard<std::mutex> lgMutex(writeMutex_);
 
     file_ = Utils::FileOpen(fname, "wbe");
-    if (file_ == NULL) {
+    if (file_ == nullptr) {
         return;
     }
 
@@ -62,12 +63,12 @@ void RSFile::Create(const std::string& fname)
 
 bool RSFile::Open(const std::string& fname)
 {
-    if (file_ != NULL) {
+    if (file_ != nullptr) {
         Close();
     }
 
     file_ = Utils::FileOpen(fname, "rbe");
-    if (file_ == NULL) {
+    if (file_ == nullptr) {
         return false;
     }
 
@@ -75,7 +76,7 @@ bool RSFile::Open(const std::string& fname)
     Utils::FileRead(&headerId, sizeof(headerId), 1, file_);
     if (headerId != 'RPLY') {
         Utils::FileClose(file_);
-        file_ = NULL;
+        file_ = nullptr;
         return false;
     }
 
@@ -120,9 +121,9 @@ void RSFile::AddHeaderPID(pid_t pid)
     wasChanged_ = true;
 }
 
-void RSFile::SetImageMapPtr(std::map<uint64_t, ReplayImageCacheRecordFile>* imageMapPtr)
+void RSFile::SetImageCache(FileImageCache* cache)
 {
-    imageMapPtr_ = imageMapPtr;
+    imageCache_ = cache;
 }
 
 const std::vector<pid_t>& RSFile::GetHeaderPIDList() const
@@ -148,14 +149,19 @@ void RSFile::WriteHeader()
     Utils::FileWrite(&recordSize, sizeof(recordSize), 1, file_);
     Utils::FileWrite(&headerPidList_[0], headerPidList_.size(), sizeof(pid_t), file_);
 
+    // SAVE FIRST SCREEN
+    uint32_t firstScrSize = headerFirstFrame_.size();
+    Utils::FileWrite(&firstScrSize, sizeof(firstScrSize), 1, file_);
+    Utils::FileWrite(&headerFirstFrame_[0], headerFirstFrame_.size(), 1, file_);
+
     // ALL TEXTURES
-    if (imageMapPtr_ == nullptr) {
+    if (imageCache_ == nullptr) {
         recordSize = 0;
         Utils::FileWrite(&recordSize, sizeof(recordSize), 1, file_);
     } else {
-        recordSize = imageMapPtr_->size();
+        recordSize = imageCache_->size();
         Utils::FileWrite(&recordSize, sizeof(recordSize), 1, file_);
-        for (auto item : *imageMapPtr_) {
+        for (auto item : *imageCache_) {
             Utils::FileWrite(&item.first, sizeof(item.first), 1, file_);                       // unique_id
             Utils::FileWrite(&item.second.skipBytes, sizeof(item.second.skipBytes), 1, file_); // skip bytes
             Utils::FileWrite(&item.second.imageSize, sizeof(item.second.imageSize), 1, file_); // image_size
@@ -192,10 +198,13 @@ void RSFile::ReadHeader()
     headerPidList_.resize(recordSize);
     Utils::FileRead(&headerPidList_[0], headerPidList_.size(), sizeof(pid_t), file_);
 
+    // READ FIRST SCREEN
+    uint32_t firstScrSize;
+    Utils::FileRead(&firstScrSize, sizeof(firstScrSize), 1, file_);
+    headerFirstFrame_.resize(firstScrSize);
+    Utils::FileRead(&headerFirstFrame_[0], headerFirstFrame_.size(), 1, file_);
+
     // ALL TEXTURES
-    if (imageMapPtr_ != nullptr) {
-        imageMapPtr_->clear();
-    }
     Utils::FileRead(&recordSize, sizeof(recordSize), 1, file_);
     for (size_t i = 0; i < recordSize; i++) {
         ReadTextureFromFile();
@@ -328,13 +337,14 @@ void RSFile::ReadTextureFromFile()
     }
 
     Utils::FileRead(data, dataSize, 1, file_);
-    const std::shared_ptr<void> ptr(data);
-    if (imageMapPtr_ != nullptr) {
-        ReplayImageCacheRecordFile record;
-        record.image = ptr;
+    if (imageCache_) {
+        const std::shared_ptr<void> image(data);
+
+        FileImageCacheRecord record;
+        record.image = image;
         record.imageSize = dataSize;
         record.skipBytes = skipBytes;
-        imageMapPtr_->insert({ key, record });
+        imageCache_->insert({ key, record });
     }
 }
 
@@ -515,7 +525,7 @@ void RSFile::Close()
     const std::lock_guard<std::mutex> lgMutex(writeMutex_);
 
     Utils::FileClose(file_);
-    file_ = NULL;
+    file_ = nullptr;
 
     headerOff_ = 0;
     headerPidList_.clear();
@@ -589,6 +599,17 @@ bool RSFile::TrackEOF(LayerTrackPtr track, uint32_t layer) const
 
     const RSFileLayer& layerData = layerData_[layer];
     return layerData.*track.index >= (layerData.*track.markup).size();
+}
+
+std::string& RSFile::GetHeaderFirstFrame()
+{
+    return headerFirstFrame_;
+}
+
+void RSFile::AddHeaderFirstFrame(const std::string& dataFirstFrame)
+{
+    headerFirstFrame_ = dataFirstFrame;
+    wasChanged_ = true;
 }
 
 } // namespace OHOS::Rosen

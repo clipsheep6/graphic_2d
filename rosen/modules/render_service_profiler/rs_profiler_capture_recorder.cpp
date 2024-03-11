@@ -18,7 +18,7 @@
 #include "rs_profiler_capture_recorder.h"
 
 #ifndef REPLAY_TOOL_CLIENT
-#include "rs_profiler_base.h"
+#include "rs_profiler.h"
 #include "platform/common/rs_log.h"
 #else
 #include "../rs_log.h"
@@ -39,7 +39,7 @@ Drawing::Canvas* RSCaptureRecorder::TryInstantCapture(float width, float height)
     return TryInstantCaptureSKP(width, height);
 }
 
-void RSCaptureRecorder::EndInstantCapture()
+void RSCaptureRecorder::EndInstantCapture() const
 {
     if (!RSSystemProperties::GetInstantRecording()) {
         return;
@@ -80,7 +80,7 @@ ExtendRecordingCanvas* RSCaptureRecorder::TryInstantCaptureDrawing(float width, 
     return recordingCanvas_.get();
 }
 
-void RSCaptureRecorder::EndInstantCaptureDrawing()
+void RSCaptureRecorder::EndInstantCaptureDrawing() const
 {
     auto drawCmdList = recordingCanvas_->GetDrawCmdList();
 
@@ -129,7 +129,7 @@ Drawing::Canvas* RSCaptureRecorder::TryInstantCaptureSKP(float width, float heig
     return recordingSkpCanvas_.get();
 }
 
-void RSCaptureRecorder::EndInstantCaptureSKP()
+void RSCaptureRecorder::EndInstantCaptureSKP() const
 {
     Network::SendMessage("Finishing .skp capturing");
 

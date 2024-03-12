@@ -14,7 +14,7 @@
  */
 
 #include "pipeline/rs_uni_render_visitor.h"
-
+6
 #ifdef RS_ENABLE_OLD_VK
 #include <vulkan_window.h>
 #endif
@@ -2415,7 +2415,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             && !curDisplayDirtyManager_->IsCurrentFrameDirty()) {
             RS_LOGD("DisplayNode skip");
             RS_TRACE_NAME("DisplayNode skip");
-            GpuDirtyRegion::GetInstance().AddSkipProcessFramesNumberForDFX(node.GetScreenId());
+            GpuDirtyRegionCollection::GetInstance().AddSkipProcessFramesNumberForDFX(node.GetScreenId());
 #ifdef OHOS_PLATFORM
             RSJankStats::GetInstance().SetSkipDisplayNode();
 #endif
@@ -2529,13 +2529,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             }
             rects = GetDirtyRects(dirtyRegion);
             if (!rects.empty()) {
-                GpuDirtyRegion::GetInstance().UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(
+                GpuDirtyRegionCollection::GetInstance().UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(
                     node.GetScreenId(), rects);
             }
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
-                GpuDirtyRegion::GetInstance().UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(
+                GpuDirtyRegionCollection::GetInstance().UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(
                     node.GetScreenId(), rect);
             }
             if (!isDirtyRegionAlignedEnable_) {

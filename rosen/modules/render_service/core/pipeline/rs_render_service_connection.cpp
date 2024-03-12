@@ -1195,8 +1195,8 @@ void RSRenderServiceConnection::SetCacheEnabledForRotation(bool isEnabled)
 
 GpuDirtyRegionInfo RSRenderServiceConnection::GetCurrentDirtyRegionInfo(ScreenId id)
 {
-    GpuDirtyRegionInfo gpuDirtyRegionInfo = GpuDirtyRegion::GetInstance().GetGpuDirtyRegionInfo(id);
-    GpuDirtyRegion::GetInstance().ResetDirtyRegionInfo();
+    GpuDirtyRegionInfo gpuDirtyRegionInfo = GpuDirtyRegionCollection::GetInstance().GetGpuDirtyRegionInfo(id);
+    GpuDirtyRegionCollection::GetInstance().ResetDirtyRegionInfo();
     return gpuDirtyRegionInfo;
 }
 

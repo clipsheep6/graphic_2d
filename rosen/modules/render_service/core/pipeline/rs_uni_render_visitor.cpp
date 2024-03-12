@@ -14,7 +14,7 @@
  */
 
 #include "pipeline/rs_uni_render_visitor.h"
-6
+
 #ifdef RS_ENABLE_OLD_VK
 #include <vulkan_window.h>
 #endif

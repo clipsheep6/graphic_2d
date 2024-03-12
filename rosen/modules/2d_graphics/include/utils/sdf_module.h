@@ -31,7 +31,7 @@ enum class SDF_TYPE
     SD_CIRCLE,
     SD_ELLIPSE,
     SD_SEGMENT,
-    SD_ARC,   
+    SD_ARC,
     SD_BOX,
     SD_EQUILATERAL_TRIANGLE,
     SD_RHOMBUS,

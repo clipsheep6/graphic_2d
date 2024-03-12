@@ -1,5 +1,20 @@
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <iostream>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include "draw/sdf_shaper.h"
 #include "utils/log.h"
@@ -8,6 +23,7 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 const int LEFT_NODE = 0;
+const int ADD_STR_LEN = 100;
 
 SDFShape::SDFShape() noexcept
 {}
@@ -24,9 +40,9 @@ float sdCircle(vec2 p, float r)
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_CIRCLE)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
 
@@ -37,13 +53,12 @@ float sdCircle(vec2 p, float r)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdCircle(p%d,  para%d);", m_shapeCount, m_transCount, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdCircle(p%d,  para%d);", m_shapeCount, m_transCount, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addEllipse(SDFModule* node)
@@ -53,7 +68,7 @@ void SDFShape::addEllipse(SDFModule* node)
         m_functionShader = m_functionShader + R"(
 float sdEllipse(vec2 p, vec2 ab)
 {
-    p = abs(p); if( p.x > p.y ) {p=p.yx;ab=ab.yx;}
+    p = abs(p); if(p.x > p.y) {p=p.yx;ab=ab.yx;}
     float l = ab.y*ab.y - ab.x*ab.x;
     float m = ab.x*p.x/l;      float m2 = m*m; 
     float n = ab.y*p.y/l;      float n2 = n*n; 
@@ -87,10 +102,10 @@ float sdEllipse(vec2 p, vec2 ab)
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_ELLIPSE)] = true;
     }
-    for (int i = 0; i < 2; i++) {
-        char buf1[30];
+    for (int i = 0; i < 2; i++) { //2 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -102,13 +117,12 @@ float sdEllipse(vec2 p, vec2 ab)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdEllipse(p%d,  vec2(para%d, para%d));", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdEllipse(p%d,  vec2(para%d, para%d));", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addArc(SDFModule* node)
@@ -125,10 +139,10 @@ float sdArc(vec2 p, float r, float a)
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_ARC)] = true;
     }
-    for (int i = 0; i < 2; i++) {
-        char buf1[30];
+    for (int i = 0; i < 2; i++) { //2 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -140,13 +154,12 @@ float sdArc(vec2 p, float r, float a)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdArc(p%d, para%d, para%d);", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdArc(p%d, para%d, para%d);", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addBox(SDFModule* node)
@@ -154,7 +167,7 @@ void SDFShape::addBox(SDFModule* node)
     LOGD("Drawing SDF BOX module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_BOX)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdBox(vec2 p, in vec2 b )
+float sdBox(vec2 p, in vec2 b)
 {
     vec2 d = abs(p)-b;
     return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
@@ -162,10 +175,10 @@ float sdBox(vec2 p, in vec2 b )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_BOX)] = true;
     }
-    for (int i = 0; i < 2; i++) {
-        char buf1[30];
+    for (int i = 0; i < 2; i++) {//2 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -177,13 +190,12 @@ float sdBox(vec2 p, in vec2 b )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdBox(p%d, vec2(para%d, para%d));", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdBox(p%d, vec2(para%d, para%d));", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addEquilateralTriangle(SDFModule* node)
@@ -191,7 +203,7 @@ void SDFShape::addEquilateralTriangle(SDFModule* node)
     LOGD("Drawing SDF EquilateralTriangle module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_EQUILATERAL_TRIANGLE)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdEquilateralTriangle(vec2 p, float r )
+float sdEquilateralTriangle(vec2 p, float r)
 {
     const float k = sqrt(3.0);
     p.x = abs(p.x) - r;
@@ -203,9 +215,9 @@ float sdEquilateralTriangle(vec2 p, float r )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_EQUILATERAL_TRIANGLE)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
 
@@ -216,9 +228,9 @@ float sdEquilateralTriangle(vec2 p, float r )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdEquilateralTriangle(p%d,  para%d);", m_shapeCount, m_transCount, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdEquilateralTriangle(p%d,  para%d);", m_shapeCount, m_transCount, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
@@ -229,11 +241,11 @@ void SDFShape::addRhombus(SDFModule* node)
     LOGD("Drawing SDF Rhombus module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_RHOMBUS)] == false) {
         m_functionShader = m_functionShader + R"(
-float ndot( in vec2 a, in vec2 b ) 
+float ndot(in vec2 a, in vec2 b) 
 { 
     return a.x*b.x - a.y*b.y; 
 }
-float sdRhombus(vec2 p, vec2 b ) 
+float sdRhombus(vec2 p, vec2 b) 
 {
     p = abs(p);
     float h = clamp( ndot(b-2.0*p,b)/dot(b,b), -1.0, 1.0 );
@@ -243,10 +255,10 @@ float sdRhombus(vec2 p, vec2 b )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_RHOMBUS)] = true;
     }
-    for (int i = 0; i < 2; i++) {
-        char buf1[30];
+    for (int i = 0; i < 2; i++) {//2 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -258,13 +270,12 @@ float sdRhombus(vec2 p, vec2 b )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdRhombus(p%d, vec2(para%d, para%d));", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdRhombus(p%d, vec2(para%d, para%d));", m_shapeCount, m_transCount, m_paraCount-1, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addParallelogram(SDFModule* node)
@@ -272,7 +283,7 @@ void SDFShape::addParallelogram(SDFModule* node)
     LOGD("Drawing SDF Parallelogram module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_PARALLELOGRAM)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdParallelogram(vec2 p, float wi, float he, float sk )
+float sdParallelogram(vec2 p, float wi, float he, float sk)
 {
     vec2 e = vec2(sk,he);
     p = (p.y<0.0)?-p:p;
@@ -287,10 +298,10 @@ float sdParallelogram(vec2 p, float wi, float he, float sk )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_PARALLELOGRAM)] = true;
     }
-    for (int i = 0; i < 3; i++) {
-        char buf1[30];
+    for (int i = 0; i < 3; i++) {//3 is para size
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -302,13 +313,12 @@ float sdParallelogram(vec2 p, float wi, float he, float sk )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdParallelogram(p%d, para%d, para%d, para%d);", m_shapeCount, m_transCount, m_paraCount-2, m_paraCount-1, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdParallelogram(p%d, para%d, para%d, para%d);", m_shapeCount, m_transCount, m_paraCount-2, m_paraCount-1, m_paraCount); //2 is para offset
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addPentagon(SDFModule* node)
@@ -316,7 +326,7 @@ void SDFShape::addPentagon(SDFModule* node)
     LOGD("Drawing SDF Pentagon module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_PENTAGON)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdPentagon(vec2 p, float r )
+float sdPentagon(vec2 p, float r)
 {
     const vec3 k = vec3(0.809016994,0.587785252,0.726542528);
     p.x = abs(p.x);
@@ -328,9 +338,9 @@ float sdPentagon(vec2 p, float r )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_PENTAGON)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
 
@@ -341,9 +351,9 @@ float sdPentagon(vec2 p, float r )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdPentagon(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdPentagon(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
@@ -354,7 +364,7 @@ void SDFShape::addHexagon(SDFModule* node)
     LOGD("Drawing SDF Hexagon module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_HEXAGON)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdHexagon( in vec2 p, in float r )
+float sdHexagon(in vec2 p, in float r)
 {
     const vec3 k = vec3(-0.866025404,0.5,0.577350269);
     p = abs(p);
@@ -365,9 +375,9 @@ float sdHexagon( in vec2 p, in float r )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_HEXAGON)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
 
@@ -378,9 +388,9 @@ float sdHexagon( in vec2 p, in float r )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdHexagon(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdHexagon(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
@@ -391,7 +401,7 @@ void SDFShape::addOctogon(SDFModule* node)
     LOGD("Drawing SDF Octogon module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_OCTOGON)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdOctogon( in vec2 p, in float r )
+float sdOctogon(in vec2 p, in float r)
 {
     const vec3 k = vec3(-0.9238795325, 0.3826834323, 0.4142135623 );
     p = abs(p);
@@ -403,9 +413,9 @@ float sdOctogon( in vec2 p, in float r )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_OCTOGON)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
 
@@ -416,13 +426,12 @@ float sdOctogon( in vec2 p, in float r )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdOctogon(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdOctogon(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addSegment(SDFModule* node)
@@ -430,7 +439,7 @@ void SDFShape::addSegment(SDFModule* node)
     LOGD("Drawing SDF segment module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_SEGMENT)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdSegment( in vec2 p, in vec2 a, in vec2 b )
+float sdSegment(in vec2 p, in vec2 a, in vec2 b)
 {
     vec2 pa = p-a, ba = b-a;
     float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
@@ -440,10 +449,10 @@ float sdSegment( in vec2 p, in vec2 a, in vec2 b )
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_SEGMENT)] = true;
     }
     
-    for (int i = 0; i < 4; i++) {
-        char buf1[30];
+    for (int i = 0; i < 4; i++) { //4 is para size
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -455,9 +464,9 @@ float sdSegment( in vec2 p, in vec2 a, in vec2 b )
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[90];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdSegment(p%d, vec2(para%d, para%d), vec2(para%d, para%d));", m_shapeCount, m_transCount, (m_paraCount-3), (m_paraCount-2), (m_paraCount-1), m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdSegment(p%d, vec2(para%d, para%d), vec2(para%d, para%d));", m_shapeCount, m_transCount, (m_paraCount-3), (m_paraCount-2), (m_paraCount-1), m_paraCount); //3 is para offset. 2 is para offset.
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
@@ -475,14 +484,13 @@ float opRound(float d, float r)
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_ROUND)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
-    
-    char buf[40];
-    sprintf(buf, "d%d = opRound(d%d, para%d);", m_shapeCount, m_shapeCount, m_paraCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opRound(d%d, para%d);", m_shapeCount, m_shapeCount, m_paraCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
 }
@@ -492,20 +500,20 @@ void SDFShape::opOnion(SDFModule* node)
     LOGD("Drawing SDF oponion module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_ONION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opOnion( float d, float r )
+float opOnion(float d, float r)
 {
     return abs(d) - r;
 }
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_ONION)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
-    char buf[40];
-    sprintf(buf, "d%d = opOnion(d%d, para%d);", m_shapeCount, m_shapeCount, m_paraCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opOnion(d%d, para%d);", m_shapeCount, m_shapeCount, m_paraCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
 }
@@ -515,18 +523,17 @@ void SDFShape::opUnion(SDFModule* node)
     LOGD("Drawing SDF opunion module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_UNION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opUnion( float d1, float d2 )
+float opUnion(float d1, float d2)
 {
     return min(d1,d2);
 }
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_UNION)] = true;
     }
-    char buf[40];
-    sprintf(buf, "d%d = opUnion(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opUnion(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::opSubtraction(SDFModule* node)
@@ -534,19 +541,17 @@ void SDFShape::opSubtraction(SDFModule* node)
     LOGD("Drawing SDF opSubstraction module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_SUBTRACTION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opSubtraction( float d1, float d2 )
+float opSubtraction(float d1, float d2)
 {
     return max(d1,-d2);
 }
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_SUBTRACTION)] = true;
     }
-    char buf[40];
-    sprintf(buf, "d%d = opSubtraction(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opSubtraction(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
-
-
 }
 
 void SDFShape::opIntersection(SDFModule* node)
@@ -554,18 +559,17 @@ void SDFShape::opIntersection(SDFModule* node)
     LOGD("Drawing SDF opIntersection module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_INTERSECTION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opIntersection( float d1, float d2 )
+float opIntersection(float d1, float d2)
 {
     return max(d1,d2);
 }
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_INTERSECTION)] = true;
     }
-    char buf[40];
-    sprintf(buf, "d%d = opIntersection(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opIntersection(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::opXor(SDFModule* node)
@@ -573,18 +577,17 @@ void SDFShape::opXor(SDFModule* node)
     LOGD("Drawing SDF opXor module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_XOR)] == false) {
         m_functionShader = m_functionShader + R"(
-float opXor(float d1, float d2 )
+float opXor(float d1, float d2)
 {
     return max(min(d1,d2),-max(d1,d2));
 }
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_XOR)] = true;
     }
-    char buf[40];
-    sprintf(buf, "d%d = opXor(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opXor(d%d, d%d);", m_shapeCount, m_shapeCount-1, m_shapeCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::opSmoothUnion(SDFModule* node)
@@ -592,7 +595,7 @@ void SDFShape::opSmoothUnion(SDFModule* node)
     LOGD("Drawing SDF opSmoothUnion module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_UNION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opSmoothUnion( float d1, float d2, float k )
+float opSmoothUnion(float d1, float d2, float k)
 {
     float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
     return mix( d2, d1, h ) - k*h*(1.0-h);
@@ -600,16 +603,15 @@ float opSmoothUnion( float d1, float d2, float k )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_UNION)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
-    char buf[40];
-    sprintf(buf, "d%d = opSmoothUnion(d%d, d%d, para%d);", m_shapeCount, m_shapeCount-1, m_shapeCount, m_paraCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opSmoothUnion(d%d, d%d, para%d);", m_shapeCount, m_shapeCount-1, m_shapeCount, m_paraCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::opSmoothSubstraction(SDFModule* node)
@@ -617,7 +619,7 @@ void SDFShape::opSmoothSubstraction(SDFModule* node)
     LOGD("Drawing SDF opSmoothSubstraction module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_SUBSTRACTION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opSmoothSubtraction( float d1, float d2, float k )
+float opSmoothSubtraction(float d1, float d2, float k)
 {
     float h = clamp( 0.5 - 0.5*(d2+d1)/k, 0.0, 1.0 );
     return mix( d2, -d1, h ) + k*h*(1.0-h);
@@ -625,13 +627,13 @@ float opSmoothSubtraction( float d1, float d2, float k )
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_SUBSTRACTION)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
-    char buf[60];
-    sprintf(buf, "d%d = opSmoothSubtraction(d%d, d%d, para%d);", m_shapeCount, m_shapeCount-1, m_shapeCount, m_paraCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opSmoothSubtraction(d%d, d%d, para%d);", m_shapeCount, m_shapeCount-1, m_shapeCount, m_paraCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
 }
@@ -641,24 +643,23 @@ void SDFShape::opSmoothIntersection(SDFModule* node)
     LOGD("Drawing SDF opSmoothIntersection module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_INTERSECTIOPN)] == false) {
         m_functionShader = m_functionShader + R"(
-float opSmoothIntersection( float d1, float d2, float k )
+float opSmoothIntersection(float d1, float d2, float k)
 {
-    float h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );
-    return mix( d2, d1, h ) + k*h*(1.0-h);
+    float h = clamp(0.5 - 0.5*(d2-d1)/k, 0.0, 1.0);
+    return mix(d2, d1, h) + k*h*(1.0-h);
 }
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_INTERSECTIOPN)] = true;
     }
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
-    char buf[60];
-    sprintf(buf, "d%d = opSmoothIntersection(d%d, d%d, para%d);", m_shapeCount, m_shapeCount-1, m_shapeCount, m_paraCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "d%d = opSmoothIntersection(d%d, d%d, para%d);", m_shapeCount, m_shapeCount-1, m_shapeCount, m_paraCount);
     std::string shape = buf;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addCapsule(SDFModule* node)
@@ -685,10 +686,10 @@ float sdCapsule(vec2 p, vec2 a, vec2 b, float r)
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_CAPSULE)] = true;
     }
     
-    for (int i = 0; i < 5; i++) {
-        char buf1[30];
+    for (int i = 0; i < 5; i++) { // 5 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -700,9 +701,9 @@ float sdCapsule(vec2 p, vec2 a, vec2 b, float r)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[80];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdCapsule(p%d, vec2(para%d, para%d), vec2(para%d, para%d), para%d);", m_shapeCount, m_transCount, (m_paraCount - 4), (m_paraCount - 3), (m_paraCount - 2), (m_paraCount - 1), m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdCapsule(p%d, vec2(para%d, para%d), vec2(para%d, para%d), para%d);", m_shapeCount, m_transCount, (m_paraCount - 4), (m_paraCount - 3), (m_paraCount - 2), (m_paraCount - 1), m_paraCount); // 4 is para offset, 3 is para offset, 2 is para offset.
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
@@ -713,7 +714,7 @@ void SDFShape::addArrow(SDFModule* node)
     LOGD("Drawing SDF addArrow module");
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_EQUILATERAL_TRIANGLE)] == false) {
         m_functionShader = m_functionShader + R"(
-float sdEquilateralTriangle(vec2 p, float r )
+float sdEquilateralTriangle(vec2 p, float r)
 {
     const float k = sqrt(3.0);
     p.x = abs(p.x) - r;
@@ -745,7 +746,7 @@ float sdCircle(vec2 p, float r)
     }
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_SUBSTRACTION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opSmoothSubtraction( float d1, float d2, float k )
+float opSmoothSubtraction(float d1, float d2, float k)
 {
     float h = clamp( 0.5 - 0.5*(d2+d1)/k, 0.0, 1.0 );
     return mix( d2, -d1, h ) + k*h*(1.0-h);
@@ -767,9 +768,9 @@ float sdArrow(vec2 p, float r)
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_ARROW)] = true;
     }
     
-    char buf1[30];
+    char buf1[ADD_STR_LEN];
     m_paraCount++;
-    sprintf(buf1, "uniform float para%d;", m_paraCount);
+    (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
     std::string para = buf1;
     m_paraShader = m_paraShader + para;
 
@@ -781,14 +782,13 @@ float sdArrow(vec2 p, float r)
         LOGE("Drawing SDF arrow add endTransString.");
         endTransString = transString + endTransString;
     }
-    char buf[80];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
     LOGE("Drawing SDF arrow endTransString is %{public}s size is %{public}lu", endTransString.c_str(), m_transfrom.size());
-    sprintf(buf, "float d%d = sdArrow(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdArrow(p%d, para%d);", m_shapeCount, m_transCount, m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addCross(SDFModule* node)
@@ -816,7 +816,7 @@ float sdCapsule(vec2 p, vec2 a, vec2 b, float r)
     }
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_UNION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opUnion( float d1, float d2 )
+float opUnion(float d1, float d2)
 {
     return min(d1,d2);
 }
@@ -836,10 +836,10 @@ float sdCross(vec2 p, float l, float w)
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_CROSS)] = true;
     }
 
-    for (int i = 0; i < 2; i++) {
-        char buf1[30];
+    for (int i = 0; i < 2; i++) { // 2 is para size
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -851,13 +851,12 @@ float sdCross(vec2 p, float l, float w)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[80];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdCross(p%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 1), m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdCross(p%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 1), m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addRing(SDFModule* node)
@@ -874,7 +873,7 @@ float sdCircle(vec2 p, float r)
     }
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_ONION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opOnion(float d, float thickness )
+float opOnion(float d, float thickness)
 {
     return abs(d)-thickness;
 }
@@ -891,10 +890,10 @@ float sdRing(vec2 p, float r, float w)
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_RING)] = true;
     }
 
-    for (int i = 0; i < 2; i++) {
-        char buf1[30];
+    for (int i = 0; i < 2; i++) { // 2 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -906,13 +905,12 @@ float sdRing(vec2 p, float r, float w)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[80];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdRing(p%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 1), m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdRing(p%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 1), m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addPartRingApprox(SDFModule* node)
@@ -929,7 +927,7 @@ float sdCircle(vec2 p, float r)
     }
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_ONION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opOnion(float d, float thickness )
+float opOnion(float d, float thickness)
 {
     return abs(d)-thickness;
 }
@@ -956,10 +954,10 @@ float sdPartRingApprox(vec2 p, float r, float w, float a)
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_PART_RING_APPROX)] = true;
     }
 
-    for (int i = 0; i < 3; i++) {
-        char buf1[30];
+    for (int i = 0; i < 3; i++) { // 3 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -971,13 +969,12 @@ float sdPartRingApprox(vec2 p, float r, float w, float a)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[80];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdPartRingApprox(p%d, para%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 2), (m_paraCount - 1), m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdPartRingApprox(p%d, para%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 2), (m_paraCount - 1), m_paraCount); // 2 is para offset.
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addPartRing(SDFModule* node)
@@ -998,10 +995,10 @@ float sdPartRing(vec2 p, float r, float a, float w)
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_PART_RING)] = true;
     }
 
-    for (int i = 0; i < 3; i++) {
-        char buf1[30];
+    for (int i = 0; i < 3; i++) { // 3 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -1013,13 +1010,12 @@ float sdPartRing(vec2 p, float r, float a, float w)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[80];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdPartRing(p%d, para%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 2), (m_paraCount - 1), m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdPartRing(p%d, para%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 2), (m_paraCount - 1), m_paraCount); // 2 is para offset.
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
-
 }
 
 void SDFShape::addQuestionMark(SDFModule* node)
@@ -1058,7 +1054,7 @@ float sdArc(vec2 p, float r, float a)
     }
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_ROUND)] == false) {
         m_functionShader = m_functionShader + R"(
-float opRound(float d, float r )
+float opRound(float d, float r)
 {
     return d - r;
 }
@@ -1076,17 +1072,17 @@ float sdCircle(vec2 p, float r)
     }
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_UNION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opSmoothUnion( float d1, float d2, float k )
+float opSmoothUnion(float d1, float d2, float k)
 {
-    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
-    return mix( d2, d1, h ) - k*h*(1.0-h);
+    float h = clamp(0.5 + 0.5*(d2-d1)/k, 0.0, 1.0);
+    return mix(d2, d1, h) - k*h*(1.0-h);
 }
         )";
         m_shapeSet[static_cast<int>(SDF_TYPE::OP_SMOOTH_UNION)] = true;
     }
     if (m_shapeSet[static_cast<int>(SDF_TYPE::OP_UNION)] == false) {
         m_functionShader = m_functionShader + R"(
-float opUnion( float d1, float d2 )
+float opUnion(float d1, float d2)
 {
     return min(d1,d2);
 }
@@ -1109,10 +1105,10 @@ float sdQuestionMark(vec2 p, float r, float w)
         m_shapeSet[static_cast<int>(SDF_TYPE::SD_QUESTION_MARK)] = true;
     }
 
-    for (int i = 0; i < 2; i++) {
-        char buf1[30];
+    for (int i = 0; i < 2; i++) { // 2 is para size.
+        char buf1[ADD_STR_LEN];
         m_paraCount++;
-        sprintf(buf1, "uniform float para%d;", m_paraCount);
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float para%d;", m_paraCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
@@ -1124,9 +1120,9 @@ float sdQuestionMark(vec2 p, float r, float w)
         m_transfrom.pop();
         endTransString = transString + endTransString;
     }
-    char buf[80];
+    char buf[ADD_STR_LEN];
     m_shapeCount++;
-    sprintf(buf, "float d%d = sdQuestionMark(p%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 1), m_paraCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdQuestionMark(p%d, para%d, para%d);", m_shapeCount, m_transCount, (m_paraCount - 1), m_paraCount);
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
@@ -1166,7 +1162,7 @@ void SDFShape::AddTransform(SDFModule* node)
                 m_transParams.push_back(node->trans_[i]);
             }
         } else {
-            if (node->animateTrans_.size() < 3) {
+            if (node->animateTrans_.size() < 3) { // tranlate para size must be 3.
                 return;
             } else {
                 m_transParaCount++;
@@ -1175,13 +1171,12 @@ void SDFShape::AddTransform(SDFModule* node)
                 m_transParams.push_back(para[0].second);
             }
         }
-        
-        char buf1[30];
-        sprintf(buf1, "uniform float transpara%d;", m_transParaCount);
+        char buf1[ADD_STR_LEN];
+        (void)sprintf_s(buf1, ADD_STR_LEN, "uniform float transpara%d;", m_transParaCount);
         std::string para = buf1;
         m_paraShader = m_paraShader + para;
     }
-    char buf[70];
+    char buf[ADD_STR_LEN];
     m_transCount++;
     int num;
     if (m_transfromNums.size() > 0) {
@@ -1189,8 +1184,7 @@ void SDFShape::AddTransform(SDFModule* node)
     } else {
         num = 0;
     }
-    
-    sprintf(buf, "vec2 p%d = transform(p%d, transpara%d, vec2(transpara%d, transpara%d));", m_transCount, num, m_transParaCount-2, m_transParaCount-1, m_transParaCount);
+    (void)sprintf_s(buf, ADD_STR_LEN, "vec2 p%d = transform(p%d, transpara%d, vec2(transpara%d, transpara%d));", m_transCount, num, m_transParaCount-2, m_transParaCount-1, m_transParaCount); // 2 is para offset.
     std::string trans = buf;
     m_transfrom.push(trans);
     LOGD("sdf m_trandfrom size is %{public}lu.", m_transfrom.size());
@@ -1200,7 +1194,7 @@ void SDFShape::AddTransform(SDFModule* node)
 
 void SDFShape::DeleteTransform(SDFModule* node)
 {
-    if (m_transfromNums.size() > 0 && (node->trans_.size() > 2 || node->animateTrans_.size() > 2)) {
+    if (m_transfromNums.size() > 0 && (node->trans_.size() > 2 || node->animateTrans_.size() > 2)) { // if tranlate para size high of 2, is ok.
         m_transfromNums.pop();
     }
     if (node->isAnimation_  == false) {
@@ -1218,7 +1212,7 @@ void SDFShape::DeleteTransform(SDFModule* node)
 
 void SDFShape::SetColor(std::string fillColor, std::string strokeColor)
 {
-    if (fillColor.size() != 7 || strokeColor.size() != 7 || fillColor[0] != '#' || strokeColor[0] != '#') {
+    if (fillColor.size() != 7 || strokeColor.size() != 7 || fillColor[0] != '#' || strokeColor[0] != '#') { // color string size must be 7.
         LOGE("sdf color string is error, please check");
         return;
     }
@@ -1227,18 +1221,17 @@ void SDFShape::SetColor(std::string fillColor, std::string strokeColor)
     int fillRed = fillNum>>16&0xFF;
     int fillGren = fillNum>>8&0xFF;
     int fillBlue = fillNum&0xFF;
-    m_color[0] = fillRed / (255.0);
-    m_color[1] = fillGren / (255.0);
-    m_color[2] = fillBlue / (255.0);
+    m_color[0] = fillRed / (255.0); // 255.0 is color maximum.
+    m_color[1] = fillGren / (255.0); // m_color[1] is fillcolor green channel.
+    m_color[2] = fillBlue / (255.0); // m_color[2] is fillcolor blue channel.
     strokeColor = strokeColor.substring(1);
     int strokeNum = std::stoi(strokeColor, NULL, 16);
     int strokeRed = strokeNum>>16&0xFF;
     int strokeGren = strokeNum>>8&0xFF;
     int strokeBlue = strokeNum&0xFF;
-    m_color[3] = strokeRed / (255.0);
-    m_color[4] = strokeGren / (255.0);
-    m_color[5] = strokeBlue / (255.0);
-
+    m_color[3] = strokeRed / (255.0); // m_color[3] is strokecolor red channel.
+    m_color[4] = strokeGren / (255.0); // m_color[4] is strokecolor green channel.
+    m_color[5] = strokeBlue / (255.0); // m_color[5] is strokecolor blue channel.
 }
 
 void SDFShape::UpdateTime(float time)
@@ -1261,7 +1254,7 @@ float SDFShape::UpdatePara(std::vector<std::pair<float, float>> para, float time
 {
     int n = para.size();
     float value = 0.0;
-    if (n < 2 || time < 0.0 || time > 1.0) {
+    if (n < 2 || time < 0.0 || time > 1.0) { // 2 means size of para is error.
         LOGE("sdf animatepara num is error, please check");
         return value;
     }
@@ -1308,11 +1301,10 @@ void SDFShape::BuildShader()
 {
     PostOrder(m_rootNode);
     DeletePostOrder(m_rootNode);
-    char buf[40];
-    sprintf(buf, "vec4 col = shading(d%d);", m_shapeCount);
+    char buf[ADD_STR_LEN];
+    (void)sprintf_s(buf, ADD_STR_LEN, "vec4 col = shading(d%d);", m_shapeCount);
     std::string str = buf;
     m_shader = m_paraShader + m_functionShader + FILL_STROKE_SHADER + BEGIN_SHADER + m_shapeShader + str + END_SHADER;
-
 }
 }
 } // namespace Rosen

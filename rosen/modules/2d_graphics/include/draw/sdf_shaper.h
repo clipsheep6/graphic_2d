@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef SDF_SHAPER_H
 #define SDF_SHAPER_H
 
@@ -129,23 +144,23 @@ private:
     {
         nullptr,
         &SDFShape::addCircle,
-        &SDFShape::addEllipse, 
+        &SDFShape::addEllipse,
         &SDFShape::addSegment,
-        &SDFShape::addArc,  
-        &SDFShape::addBox, 
-        &SDFShape::addEquilateralTriangle, 
-        &SDFShape::addRhombus, 
-        &SDFShape::addParallelogram, 
-        &SDFShape::addPentagon, 
-        &SDFShape::addHexagon, 
-        &SDFShape::addOctogon, 
-        &SDFShape::opRound, 
-        &SDFShape::opUnion, 
-        &SDFShape::opOnion, 
-        &SDFShape::opSubtraction, 
-        &SDFShape::opIntersection, 
-        &SDFShape::opXor, 
-        &SDFShape::opSmoothUnion, 
+        &SDFShape::addArc,
+        &SDFShape::addBox,
+        &SDFShape::addEquilateralTriangle,
+        &SDFShape::addRhombus,
+        &SDFShape::addParallelogram,
+        &SDFShape::addPentagon,
+        &SDFShape::addHexagon,
+        &SDFShape::addOctogon,
+        &SDFShape::opRound,
+        &SDFShape::opUnion,
+        &SDFShape::opOnion,
+        &SDFShape::opSubtraction,
+        &SDFShape::opIntersection,
+        &SDFShape::opXor,
+        &SDFShape::opSmoothUnion,
         &SDFShape::opSmoothSubstraction,
         &SDFShape::opSmoothIntersection,
         &SDFShape::addCapsule,
@@ -204,7 +219,6 @@ private:
     std::vector<std::vector<std::pair<float, float>>> m_animateParams;
     std::vector<float> m_transParams;
     std::vector<std::vector<std::pair<float, float>>> m_animateTransParams;
-    //Matrix4 m_transfrom;
     
     SDFModule* m_rootNode = nullptr;
     SDFModule** m_rootPtr = &m_rootNode;

@@ -88,6 +88,7 @@ private:
     bool GetUint32DataFromName(napi_env env, napi_value element, const char* name,uint32_t& target);
     bool GetDoubleDataFromName(napi_env env, napi_value element, const char* name, double& target);
     void ScanNapiValue(napi_env env, napi_value argv, uint32_t content);
+    std::shared_ptr<Drawing::Color> GetColorFromInt32(napi_env env, napi_value element, const char* name);
     std::shared_ptr<TextStyle> m_textStyle = nullptr;
 };
 } // namespace OHOS::Rosen

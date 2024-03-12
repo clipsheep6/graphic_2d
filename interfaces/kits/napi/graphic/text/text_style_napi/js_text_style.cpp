@@ -21,6 +21,7 @@
 #include <locale>
 
 namespace OHOS::Rosen {
+#define LEFT_lIMIT 0
 thread_local napi_ref JsTextStyle::constructor_ = nullptr;
 const std::string CLASS_NAME = "TextStyle";
 napi_value JsTextStyle::Constructor(napi_env env, napi_callback_info info)
@@ -43,7 +44,6 @@ napi_value JsTextStyle::Constructor(napi_env env, napi_callback_info info)
 
 napi_value JsTextStyle::Init(napi_env env, napi_value exportObj)
 {
-    LOGE("ParamTestfromTextStyle | Init");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("setColor", JsTextStyle::SetColor),
         DECLARE_NAPI_FUNCTION("setTextDecoration", JsTextStyle::SetTextDecoration),
@@ -100,7 +100,6 @@ void JsTextStyle::Destructor(napi_env env, void* nativeObject, void* finalize)
 
 JsTextStyle::JsTextStyle()
 {
-    LOGE("BeginJsTextStyle | JsTextStyle()");
     m_textStyle = std::make_shared<TextStyle>();
 }
 
@@ -130,7 +129,6 @@ bool JsTextStyle::GetUint32Data(napi_env env, napi_callback_info info, uint32_t&
 
 bool JsTextStyle::GetDoubleData(napi_env env, napi_callback_info info, double& target)
 {
-    //LOGE("ParamTestfromTextStyle | into GetDoubleData");
     if (m_textStyle == nullptr) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "JsTextStyle GetDoubleData Invalid params");
@@ -167,16 +165,33 @@ bool JsTextStyle::GetBoolData(napi_env env, napi_callback_info info, bool& targe
     return true;
 }
 
-bool JsTextStyle::GetUint32DataFromName(napi_env env, napi_value element, const char* name, uint32_t& target)
+std::shared_ptr<Drawing::Color> JsTextStyle::GetColorFromInt32(napi_env env, napi_value element, const char* name)
 {
     napi_value param = nullptr;
     if (napi_get_named_property(env, element, name, &param) != napi_ok) {
-        return false;
+        return nullptr;
     }
-    if (napi_get_value_uint32(env, param, &target) != napi_ok) {
-        return false;
+    napi_value tempValue = nullptr;
+    int32_t alpha = 0;
+    int32_t red = 0;
+    int32_t green = 0;
+    int32_t blue = 0;
+    napi_get_named_property(env, param, "alpha", &tempValue);
+    bool isAlphaOk = ConvertClampFromJsValue(env, tempValue, alpha, 0, Drawing::Color::RGB_MAX);
+    napi_get_named_property(env, param, "red", &tempValue);
+    bool isRedOk = ConvertClampFromJsValue(env, tempValue, red, 0, Drawing::Color::RGB_MAX);
+    napi_get_named_property(env, param, "green", &tempValue);
+    bool isGreenOk = ConvertClampFromJsValue(env, tempValue, green, 0, Drawing::Color::RGB_MAX);
+    napi_get_named_property(env, param, "blue", &tempValue);
+    bool isBlueOk = ConvertClampFromJsValue(env, tempValue, blue, 0, Drawing::Color::RGB_MAX);
+    if (!(isAlphaOk && isRedOk && isGreenOk && isBlueOk)) {
+        LOGE("JsTextStyle::OnDrawColor Argv[0] is invalid");
+        return nullptr;
     }
-    return true;
+    LOGE("ParamTestfromTextStyle | alpha =%zu, red=%zu, green=%zu, blue=%zu",alpha, red, green,blue);
+    std::shared_ptr<Drawing::Color> color =
+        std::make_shared<Drawing::Color>(Drawing::Color::ColorQuadSetARGB(alpha, red, green, blue));
+    return color;
 }
 
 bool JsTextStyle::GetDoubleDataFromName(napi_env env, napi_value element, const char* name, double& target)
@@ -207,7 +222,6 @@ void JsTextStyle::ScanNapiValue(napi_env env, napi_value argv, uint32_t content)
 {
     for (uint32_t i = 0; i < content; i++) {
         napi_value element;
-        uint32_t colorNumber = 0;
         double offsetX = 0;
         double offsetY = 0;
         double radius = false;
@@ -215,30 +229,29 @@ void JsTextStyle::ScanNapiValue(napi_env env, napi_value argv, uint32_t content)
             LOGE("OnSetFontFamilies napi_get_element Failed");
             return;
         }
-        if (!GetUint32DataFromName(env, element, "color", colorNumber)) {
+        std::shared_ptr<Drawing::Color> targeColor = GetColorFromInt32(env, element, "color");
+        if (targeColor == nullptr) {
             LOGE("OnSetStrutStyle GetUint32DataFromName faild");
             return;
         }
-        LOGE("ParamTestfromTextStyle Color =%zu",colorNumber);
+
         if (!GetDoubleDataFromName(env, element, "offsetPointX", offsetX)) {
-            LOGE("OnSetStrutStyle GetUint32DataFromName faild");
+            LOGE("OnSetStrutStyle GetDoubleDataFromName faild");
             return;
         }
-        LOGE("ParamTestfromTextStyle offsetPointX =%f", offsetX);
+
         if (!GetDoubleDataFromName(env, element, "offsetPointY", offsetY)) {
-            LOGE("OnSetStrutStyle GetUint32DataFromName faild");
+            LOGE("OnSetStrutStyle GetDoubleDataFromName faild");
             return;
         }
-        LOGE("ParamTestfromTextStyle offsetPointY =%f", offsetY);
+
         if (!GetDoubleDataFromName(env, element, "blurRadius", radius)) {
-            LOGE("OnSetStrutStyle GetUint32DataFromName faild");
+            LOGE("OnSetStrutStyle GetDoubleDataFromName faild");
             return;
         }
-        LOGE("ParamTestfromTextStyle GetBoolDataFromName =%f",radius);
-        Drawing::Color color(colorNumber);
+
         Drawing::Point offset(offsetX, offsetY);
-        TextShadow tempTextShadow(color, offset, radius);
-        LOGE("ParamTestfromTextStyle m_textStyle->shadows.size=%zu",m_textStyle->shadows.size());
+        TextShadow tempTextShadow(*targeColor, offset, radius);
         m_textStyle->shadows.push_back(tempTextShadow);
     }
     return;
@@ -372,7 +385,6 @@ napi_value JsTextStyle::SetTextShadow(napi_env env, napi_callback_info info)
 
 napi_value JsTextStyle::OnSetTextShadow(napi_env env, napi_callback_info info)
 {
-    LOGE("ParamTestfromTextStyle | into OnSetTextShadow");
     if (m_textStyle == nullptr) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "OnSetTextShadow Invalid params.");
@@ -381,7 +393,6 @@ napi_value JsTextStyle::OnSetTextShadow(napi_env env, napi_callback_info info)
     napi_value argv[ARGC_ONE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < ARGC_ONE) {
-        LOGE("ParamTestfromTextStyle Out1");
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "OnSetTextShadow napi_get_cb_info faild");
     }
@@ -389,7 +400,6 @@ napi_value JsTextStyle::OnSetTextShadow(napi_env env, napi_callback_info info)
     uint32_t arrayLength = 0;
     status = napi_get_array_length(env, argv[0], &arrayLength);
     if (status != napi_ok) {
-        LOGE("ParamTestfromTextStyle Out2 arrayLength=%zu",arrayLength);
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "OnSetTextShadow Invalid array");
     }
@@ -414,10 +424,8 @@ napi_value JsTextStyle::OnSetBackgroundPen(napi_env env, napi_callback_info info
     Drawing::JsPen* jsPen = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void**>(&jsPen));
     if (jsPen == nullptr) {
-        LOGE("JsTextStyle::OnSetBackgroundPen jsBrush is nullptr");
         return NapiGetUndefined(env);
     }
-    LOGE("ParamTestfromTextStyle | BackgroundPen Address = %p",jsPen->GetPen());
     m_textStyle->foregroundPen = *jsPen->GetPen();
     return NapiGetUndefined(env);
 }
@@ -439,10 +447,8 @@ napi_value JsTextStyle::OnSetForegroundPen(napi_env env, napi_callback_info info
     Drawing::JsPen* jsPen = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void**>(&jsPen));
     if (jsPen == nullptr) {
-        LOGE("JsTextStyle::OnSetForegroundPen jsBrush is nullptr");
         return NapiGetUndefined(env);
     }
-    LOGE("ParamTestfromTextStyle | ForegroundPen Address = %p",jsPen->GetPen());
     m_textStyle->foregroundPen = *jsPen->GetPen();
     return NapiGetUndefined(env);
 }
@@ -464,10 +470,9 @@ napi_value JsTextStyle::OnSetBackgroundBrush(napi_env env, napi_callback_info in
     Drawing::JsBrush* jsBrush = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void**>(&jsBrush));
     if (jsBrush == nullptr) {
-        LOGE("JsTextStyle::OnSetBackgroundBrush jsBrush is nullptr");
-        return NapiGetUndefined(env);
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetBackgroundBrush jsBrush is nullptr");
     }
-    LOGE("ParamTestfromTextStyle | BackgroundBrush Address = %p",jsBrush->GetBrush());
     m_textStyle->backgroundBrush = *jsBrush->GetBrush();
     return NapiGetUndefined(env);
 }
@@ -489,10 +494,9 @@ napi_value JsTextStyle::OnSetForegroundBrush(napi_env env, napi_callback_info in
     Drawing::JsBrush* jsBrush = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void**>(&jsBrush));
     if (jsBrush == nullptr) {
-        LOGE("JsTextStyle::jsBrush is nullptr");
-        return NapiGetUndefined(env);
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "OnSetForegroundBrush jsBrush is nullptr");
     }
-    LOGE("ParamTestfromTextStyle | ForegroundBrush Address = %p",jsBrush->GetBrush());
     m_textStyle->foregroundBrush = *jsBrush->GetBrush();
     return NapiGetUndefined(env);
 }
@@ -522,7 +526,6 @@ napi_value JsTextStyle::OnSetLocale(napi_env env, napi_callback_info info)
             "OnSetEllipsis buffer Faild");
     }
     m_textStyle->locale.assign(buffer.get());
-    LOGE("ParamTestfromTextStyle | locale= %s",m_textStyle->locale.c_str());
     return NapiGetUndefined(env);
 }
 
@@ -534,7 +537,10 @@ napi_value JsTextStyle::OnSetEllipsisModal(napi_env env, napi_callback_info info
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetEllipsisModal");
     }
-    LOGE("ParamTestfromTextStyle | ellipsisMode=%zu",ellipsisMode);
+    if (ellipsisMode < LEFT_lIMIT ||
+        ellipsisMode > static_cast<int32_t>(EllipsisModal::TAIL)) {
+            ellipsisMode = LEFT_lIMIT;
+    }
     m_textStyle->ellipsisModal = static_cast<EllipsisModal>(ellipsisMode);
     return NapiGetUndefined(env);
 }
@@ -547,9 +553,6 @@ napi_value JsTextStyle::OnSetEllipsis(napi_env env, napi_callback_info info)
     }
 
     m_textStyle->ellipsis = u"\u2026";
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> converter;
-    std::string utf8Str = converter.to_bytes(m_textStyle->ellipsis);
-    LOGE("ParamTestfromTextStyle | ellispsis = %s",utf8Str.c_str());
     return NapiGetUndefined(env);
 }
 
@@ -561,7 +564,6 @@ napi_value JsTextStyle::OnSetHeightOnly(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetHeightOnly");        
     }
-    LOGE("ParamTestfromTextStyle | heightOnly=%d",heightOnly);
     m_textStyle->heightOnly = heightOnly;
     return NapiGetUndefined(env);
 }
@@ -574,7 +576,6 @@ napi_value JsTextStyle::OnSetHalfLeading(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetHalfLeading");
     }
-    LOGE("ParamTestfromTextStyle | halfLeading=%d",halfLeading);
     m_textStyle->halfLeading = halfLeading;
     return NapiGetUndefined(env);
 }
@@ -587,7 +588,6 @@ napi_value JsTextStyle::OnSetHeightScale(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetHeightScale");
     }
-    LOGE("ParamTestfromTextStyle | heightScale=%f",heightScale);
     m_textStyle->heightScale = heightScale;
     return NapiGetUndefined(env);
 }
@@ -606,7 +606,6 @@ napi_value JsTextStyle::OnSetWordSpacing(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetWordSpacing");
     }
-    LOGE("ParamTestfromTextStyle | wordSpace=%f",wordSpace);
     m_textStyle->wordSpacing = wordSpace;
     return NapiGetUndefined(env);
 }
@@ -619,7 +618,6 @@ napi_value JsTextStyle::OnSetLetterSpacing(napi_env env, napi_callback_info info
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetLetterSpacing");
     }
-    LOGE("ParamTestfromTextStyle | letterSpacing=%f",letterSpacing);
     m_textStyle->letterSpacing = letterSpacing;
     return NapiGetUndefined(env);
 }
@@ -632,7 +630,6 @@ napi_value JsTextStyle::OnSetFontSize(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetFontSize");
     }
-    LOGE("ParamTestfromTextStyle | fontSize=%f",fontSize);
     m_textStyle->fontSize = fontSize;
     return NapiGetUndefined(env);
 }
@@ -694,7 +691,10 @@ napi_value JsTextStyle::OnSetTextBaseline(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed TextBaseline");
     }
-    LOGE("ParamTestfromTextStyle | TextBaseline=%zu",textBaseline);
+    if (textBaseline < LEFT_lIMIT ||
+        textBaseline > static_cast<int32_t>(TextBaseline::IDEOGRAPHIC)) {
+            textBaseline = LEFT_lIMIT;
+    }
     m_textStyle->baseline = static_cast<TextBaseline>(textBaseline);
     return NapiGetUndefined(env);
 }
@@ -707,7 +707,10 @@ napi_value JsTextStyle::OnSetFontWeight(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetFontWeight");
     }
-    LOGE("ParamTestfromTextStyle | fontWeight=%zu",fontWeight);
+    if (fontWeight < LEFT_lIMIT ||
+        fontWeight > static_cast<int32_t>(FontWeight::W900)) {
+            fontWeight = LEFT_lIMIT;
+    }
     m_textStyle->fontWeight = static_cast<FontWeight>(fontWeight);
     return NapiGetUndefined(env);
 }
@@ -720,7 +723,6 @@ napi_value JsTextStyle::OnSetDecorationThicknessScale(napi_env env, napi_callbac
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetDecorationThicknessScale");
     }
-    LOGE("ParamTestfromTextStyle | textThickness=%f",textThickness);
     m_textStyle->decorationThicknessScale = textThickness;
     return NapiGetUndefined(env);
 }
@@ -733,7 +735,10 @@ napi_value JsTextStyle::OnSetTextDecorationStyle(napi_env env, napi_callback_inf
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed setTextDecorationStyle");
     }
-    LOGE("ParamTestfromTextStyle | textDecorationStyle=%zu",textDecorationStyle);
+    if (textDecorationStyle < LEFT_lIMIT ||
+        textDecorationStyle > static_cast<uint32_t>(TextDecorationStyle::WAVY)) {
+            textDecorationStyle = LEFT_lIMIT;
+    }
     m_textStyle->decorationStyle = static_cast<TextDecorationStyle>(textDecorationStyle);;
     return NapiGetUndefined(env);
 }
@@ -746,7 +751,6 @@ napi_value JsTextStyle::OnSetDecorationColor(napi_env env, napi_callback_info in
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed textDecorationColor");
     }
-    LOGE("ParamTestfromTextStyle | textDecorationColor=%zu",textDecorationColor);
     m_textStyle->decorationColor = textDecorationColor;
     return NapiGetUndefined(env);
 }
@@ -759,22 +763,42 @@ napi_value JsTextStyle::OnSetTextDecoration(napi_env env, napi_callback_info inf
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed SetTextDecoration");
     }
-    LOGE("ParamTestfromTextStyle | textDecoration=%zu",textDecoration);
+    if (textDecoration < LEFT_lIMIT ||
+        textDecoration > static_cast<int32_t>(TextDecoration::LINE_THROUGH)) {
+            textDecoration = LEFT_lIMIT;
+    }
     m_textStyle->decoration = static_cast<TextDecoration>(textDecoration);
     return NapiGetUndefined(env);
 }
 
 napi_value JsTextStyle::OnSetColor(napi_env env, napi_callback_info info)
 {
-    LOGE("BeginJsTextStyle | OnSetColor");
-    uint32_t colorValue = 0;
-    bool result = GetUint32Data(env, info, colorValue);
-    LOGE("BeginJsTextStyle | Valut=%zu",colorValue);
-    if (!result) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
-            "Failed SetColor");
+    LOGE("ParamTestfromTextStyle | into SetColor");
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_ONE) {
+        LOGE("JsTextStyle::OnDrawColor Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    m_textStyle->color = colorValue;
+    napi_value tempValue = nullptr;
+    int32_t alpha = 0;
+    int32_t red = 0;
+    int32_t green = 0;
+    int32_t blue = 0;
+    napi_get_named_property(env, argv[0], "alpha", &tempValue);
+    bool isAlphaOk = ConvertClampFromJsValue(env, tempValue, alpha, 0, Drawing::Color::RGB_MAX);
+    napi_get_named_property(env, argv[0], "red", &tempValue);
+    bool isRedOk = ConvertClampFromJsValue(env, tempValue, red, 0, Drawing::Color::RGB_MAX);
+    napi_get_named_property(env, argv[0], "green", &tempValue);
+    bool isGreenOk = ConvertClampFromJsValue(env, tempValue, green, 0, Drawing::Color::RGB_MAX);
+    napi_get_named_property(env, argv[0], "blue", &tempValue);
+    bool isBlueOk = ConvertClampFromJsValue(env, tempValue, blue, 0, Drawing::Color::RGB_MAX);
+    if (!(isAlphaOk && isRedOk && isGreenOk && isBlueOk)) {
+        LOGE("JsTextStyle::OnDrawColor Argv[0] is invalid");
+        return NapiGetUndefined(env);
+    }
+    m_textStyle->color = Drawing::Color::ColorQuadSetARGB(alpha, red, green, blue);
     return NapiGetUndefined(env);
 }
 } // namespace OHOS::Rosen

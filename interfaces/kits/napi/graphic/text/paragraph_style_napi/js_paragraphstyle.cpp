@@ -103,11 +103,11 @@ napi_value JsParagraphStyle::OnGetStrutStyle(napi_env env, napi_callback_info in
     if (m_paragraphStyle == nullptr) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    std::vector<std::string> fontFamily(m_paragraphStyle->lineStyleFontFamilies);
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
-    if (fontFamily.size() && objValue != nullptr) {
-        napi_set_named_property(env, objValue, "fontFamilies", CreateJsArrayString(env, fontFamily));
+    if (m_paragraphStyle->lineStyleFontFamilies.size() && objValue != nullptr) {
+        napi_set_named_property(env, objValue, "fontFamilies", CreateJsArrayString(env,
+            m_paragraphStyle->lineStyleFontFamilies));
     }
     return objValue;
 }
@@ -242,6 +242,10 @@ napi_value JsParagraphStyle::OnSetTextAlign(napi_env env, napi_callback_info inf
     if (status != napi_ok || argc < ARGC_ONE) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "OnSetTextAlign Invalid napi_get_value_int32");
+    }
+    if (textAlign < 0 ||
+        textAlign > static_cast<int32_t>(TextAlign::END)) {
+        textAlign = 0;
     }
     m_paragraphStyle->textAlign = static_cast<TextAlign>(textAlign);
     return NapiGetUndefined(env);

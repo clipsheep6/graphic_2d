@@ -62,11 +62,11 @@ public:
     ~AdaptiveImageHelper() = default;
 
     static void DrawImage(Canvas& canvas, const Rect& rect, const std::shared_ptr<Image>& image,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling);
+        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
     static void DrawImage(Canvas& canvas, const Rect& rect, const std::shared_ptr<Data>& data,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling);
+        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
     static void DrawPixelMap(Canvas& canvas, const Rect& rect, const std::shared_ptr<Media::PixelMap>& pixelMap,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling);
+        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
 
 private:
     static Rect GetDstRect(const AdaptiveImageInfo& rsImageInfo, const float srcRectWidth, const float srcRectHeight,
@@ -76,12 +76,12 @@ private:
     static void GetRectCropMultiple(
         const Rect& rect, const int32_t repeatNum, const Rect& dstRect, BoundaryRect& boundaryRect);
     static void DrawImageRepeatRect(Canvas& canvas, const Rect& rect, const std::shared_ptr<Image>& image,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling);
+        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
     static void DrawImageRepeatRect(Canvas& canvas, const Rect& rect, const std::shared_ptr<Data>& data,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& smapling);
+        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
     static void DrawPixelMapRepeatRect(Canvas& canvas, const Rect& rect,
         const std::shared_ptr<Media::PixelMap>& pixelMap, const AdaptiveImageInfo& rsImageInfo,
-        const SamplingOptions& smapling);
+        const SamplingOptions& sampling);
 };
 } // namespace Drawing
 } // namespace Rosen

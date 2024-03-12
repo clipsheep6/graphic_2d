@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RENDER_SERVICE_CLIENT_CORE_COMMON_RS_GPU_DIRTY_REGION_H
-#define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_GPU_DIRTY_REGION_H
+#ifndef RS_GPU_DIRTY_REGION_COLLECTION_H
+#define RS_GPU_DIRTY_REGION_COLLECTION_H
 
 #include <unordered_map>
 
@@ -42,28 +42,28 @@ struct GpuDirtyRegionInfo {
           globalFramesNumber(globalFramesNumber_), windowName(windowName_) {}
 };
 
-class RSB_EXPORT GpuDirtyRegion {
+class RSB_EXPORT GpuDirtyRegionCollection {
 public:
-    static GpuDirtyRegion& GetInstance();
+    static GpuDirtyRegionCollection& GetInstance();
 
-    void UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(NodeId id, std::vector<RectI> rects);
-    void UpdateGlobalDirtyRegionAreasAndFrameNumberForXpower(NodeId id, RectI rect);
-    void AddSkipProcessFramesNumberForXpower(NodeId id);
-    void SetWindowNameForXpower(NodeId id, std::string& windowName);
+    void UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(NodeId id, std::vector<RectI> rects);
+    void UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(NodeId id, RectI rect);
+    void AddSkipProcessFramesNumberForDFX(NodeId id);
+    void SetWindowNameForDFX(NodeId id, std::string& windowName);
     GpuDirtyRegionInfo GetGpuDirtyRegionInfo(NodeId id);
     void ResetDirtyRegionInfo();
 
 private:
-    GpuDirtyRegion();
-    ~GpuDirtyRegion() noexcept;
-    GpuDirtyRegion(const GpuDirtyRegion&) = delete;
-    GpuDirtyRegion(const GpuDirtyRegion&&) = delete;
-    GpuDirtyRegion& operator=(const GpuDirtyRegion&) = delete;
-    GpuDirtyRegion& operator=(const GpuDirtyRegion&&) = delete;
+    GpuDirtyRegionCollection();
+    ~GpuDirtyRegionCollection() noexcept;
+    GpuDirtyRegionCollection(const GpuDirtyRegionCollection&) = delete;
+    GpuDirtyRegionCollection(const GpuDirtyRegionCollection&&) = delete;
+    GpuDirtyRegionCollection& operator=(const GpuDirtyRegionCollection&) = delete;
+    GpuDirtyRegionCollection& operator=(const GpuDirtyRegionCollection&&) = delete;
 
     std::unordered_map<NodeId, GpuDirtyRegionInfo> gpuDirtyRegionInfoMap_;
 };
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // RENDER_SERVICE_CLIENT_CORE_COMMON_RS_GPU_DIRTY_REGION_H
+#endif // RS_GPU_DIRTY_REGION_COLLECTION_H

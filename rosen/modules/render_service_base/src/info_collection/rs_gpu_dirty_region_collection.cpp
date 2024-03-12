@@ -13,25 +13,25 @@
  * limitations under the License.
  */
 
-#include "common/rs_gpu_dirty_region.h"
+#include "info_collection/rs_gpu_dirty_region_collection.h"
 
 namespace OHOS {
 namespace Rosen {
-GpuDirtyRegion& GpuDirtyRegion::GetInstance()
+GpuDirtyRegionCollection& GpuDirtyRegionCollection::GetInstance()
 {
-    static GpuDirtyRegion instance;
+    static GpuDirtyRegionCollection instance;
     return instance;
 }
 
-GpuDirtyRegion::GpuDirtyRegion()
+GpuDirtyRegionCollection::GpuDirtyRegionCollection()
 {
 }
 
-GpuDirtyRegion::~GpuDirtyRegion() noexcept
+GpuDirtyRegionCollection::~GpuDirtyRegionCollection() noexcept
 {
 }
 
-void GpuDirtyRegion::UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(NodeId id, std::vector<RectI> rects)
+void GpuDirtyRegionCollection::UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(NodeId id, std::vector<RectI> rects)
 {
     ++gpuDirtyRegionInfoMap_[id].activeFramesNumber;
     for (auto rect : rects) {
@@ -39,23 +39,23 @@ void GpuDirtyRegion::UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(NodeId 
     }
 }
 
-void GpuDirtyRegion::UpdateGlobalDirtyRegionAreasAndFrameNumberForXpower(NodeId id, RectI rect)
+void GpuDirtyRegionCollection::UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(NodeId id, RectI rect)
 {
     ++gpuDirtyRegionInfoMap_[id].globalFramesNumber;
     gpuDirtyRegionInfoMap_[id].globalGpuDirtyRegionAreas += rect.width_ * rect.height_;
 }
 
-void GpuDirtyRegion::AddSkipProcessFramesNumberForXpower(NodeId id)
+void GpuDirtyRegionCollection::AddSkipProcessFramesNumberForDFX(NodeId id)
 {
     ++gpuDirtyRegionInfoMap_[id].skipProcessFramesNumber;
 }
 
-void GpuDirtyRegion::SetWindowNameForXpower(NodeId id, std::string& windowName)
+void GpuDirtyRegionCollection::SetWindowNameForDFX(NodeId id, std::string& windowName)
 {
     gpuDirtyRegionInfoMap_[id].windowName = windowName;
 }
 
-GpuDirtyRegionInfo GpuDirtyRegion::GetGpuDirtyRegionInfo(NodeId id)
+GpuDirtyRegionInfo GpuDirtyRegionCollection::GetGpuDirtyRegionInfo(NodeId id)
 {
     if (gpuDirtyRegionInfoMap_.find(id) == gpuDirtyRegionInfoMap_.end()) {
         return GpuDirtyRegionInfo {};
@@ -66,7 +66,7 @@ GpuDirtyRegionInfo GpuDirtyRegion::GetGpuDirtyRegionInfo(NodeId id)
     }
 }
 
-void GpuDirtyRegion::ResetDirtyRegionInfo()
+void GpuDirtyRegionCollection::ResetDirtyRegionInfo()
 {
     gpuDirtyRegionInfoMap_.clear();
 }

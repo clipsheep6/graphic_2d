@@ -89,7 +89,7 @@ void RSLinearGradientBlurFilter::DrawImageRect(Drawing::Canvas& canvas, const st
         Drawing::Rect rect = clipIPadding;
         rect.Offset(-clipIPadding.GetLeft(), -clipIPadding.GetTop());
         canvas.DrawImageRect(
-            *image, rect, clipIPadding, Drawing::SamplingOptions(),
+            *image, src, clipIPadding, Drawing::SamplingOptions(),
             Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
         canvas.DetachBrush();
         return;
@@ -437,13 +437,22 @@ void RSLinearGradientBlurFilter::DrawMaskLinearGradientBlur(const std::shared_pt
     if (offscreenSurface == nullptr) {
         return;
     }
-    std::shared_ptr<Drawing::Image> filteredSnapshot = offscreenSurface->GetImageSnapshot();
+    Drawing::RectI dstRectI(dst.GetLeft() + srcRect.GetLeft(), dst.GetTop() + srcRect.GetTop(),
+        dst.GetLeft() + srcRect.GetRight(), dst.GetTop() + srcRect.GetBottom());
+    std::shared_ptr<Drawing::Image> filteredSnapshot = offscreenSurface->GetImageSnapshot(dstRectI);
     Drawing::Matrix matrix;
+    Drawing::Matrix matrix2;
     Drawing::Matrix inputMatrix;
-    inputMatrix.Translate(dst.GetLeft(), dst.GetTop());
+    matrix2.Translate(dst.GetLeft(), dst.GetTop());
+    inputMatrix.SetScale(dst.GetWidth() / srcRect.GetWidth(), dst.GetHeight() / srcRect.GetHeight());
+    inputMatrix.PostConcat(matrix2);
 
     auto srcImageShader = Drawing::ShaderEffect::CreateImageShader(*image, Drawing::TileMode::CLAMP,
         Drawing::TileMode::CLAMP, Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), inputMatrix);
+
+    matrix.SetScale(dst.GetWidth() / srcRect.GetWidth(), dst.GetHeight() / srcRect.GetHeight());
+    matrix.PostConcat(matrix2);
+
     auto blurImageShader = Drawing::ShaderEffect::CreateImageShader(*filteredSnapshot, Drawing::TileMode::CLAMP,
         Drawing::TileMode::CLAMP, Drawing::SamplingOptions(Drawing::FilterMode::LINEAR), matrix);
     auto shader = MakeMaskLinearGradientBlurShader(srcImageShader, blurImageShader, alphaGradientShader);

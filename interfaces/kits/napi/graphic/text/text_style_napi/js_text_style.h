@@ -21,6 +21,9 @@
 #include "js_text_utils.h"
 #include "text_style.h"
 #include "paragraph_style_napi/js_paragraphstyle.h"
+#include "pen_napi/js_pen.h"
+#include "brush_napi/js_brush.h"
+#include "enum_napi/text_enum_napi.h"
 
 namespace OHOS::Rosen {
 class JsTextStyle final {
@@ -40,6 +43,18 @@ public:
     static napi_value SetFontFamilies(napi_env env, napi_callback_info info);
     static napi_value SetFontSize(napi_env env, napi_callback_info info);
     static napi_value SetLetterSpacing(napi_env env, napi_callback_info info);
+    static napi_value SetWordSpacing(napi_env env, napi_callback_info info);
+    static napi_value SetHeightScale(napi_env env, napi_callback_info info);
+    static napi_value SetHalfLeading(napi_env env, napi_callback_info info);
+    static napi_value SetHeightOnly(napi_env env, napi_callback_info info);
+    static napi_value SetEllipsis(napi_env env, napi_callback_info info);
+    static napi_value SetEllipsisModal(napi_env env, napi_callback_info info);
+    static napi_value SetLocale(napi_env env, napi_callback_info info);
+    static napi_value SetForegroundBrush(napi_env env, napi_callback_info info);
+    static napi_value SetBackgroundBrush(napi_env env, napi_callback_info info);
+    static napi_value SetForegroundPen(napi_env env, napi_callback_info info);
+    static napi_value SetBackgroundPen(napi_env env, napi_callback_info info);
+    static napi_value SetTextShadow(napi_env env, napi_callback_info info);
     std::shared_ptr<TextStyle> GetTextStyle();
 private:
     static thread_local napi_ref constructor_;
@@ -53,8 +68,26 @@ private:
     napi_value OnSetFontFamilies(napi_env env, napi_callback_info info);
     napi_value OnSetFontSize(napi_env env, napi_callback_info info);
     napi_value OnSetLetterSpacing(napi_env env, napi_callback_info info);
+    napi_value OnSetWordSpacing(napi_env env, napi_callback_info info);
+    napi_value OnSetHeightScale(napi_env env, napi_callback_info info);
+    napi_value OnSetHalfLeading(napi_env env, napi_callback_info info);
+    napi_value OnSetHeightOnly(napi_env env, napi_callback_info info);
+    napi_value OnSetEllipsis(napi_env env, napi_callback_info info);
+    napi_value OnSetEllipsisModal(napi_env env, napi_callback_info info);
+    napi_value OnSetLocale(napi_env env, napi_callback_info info);
+    napi_value OnSetForegroundBrush(napi_env env, napi_callback_info info);
+    napi_value OnSetBackgroundBrush(napi_env env, napi_callback_info info);
+    napi_value OnSetForegroundPen(napi_env env, napi_callback_info info);
+    napi_value OnSetBackgroundPen(napi_env env, napi_callback_info info);
+    napi_value OnSetTextShadow(napi_env env, napi_callback_info info);
     bool GetDoubleData(napi_env env, napi_callback_info info, double& target);
     bool GetUint32Data(napi_env env, napi_callback_info info, uint32_t& target);
+    bool GetBoolData(napi_env env, napi_callback_info info, bool& target);
+    bool GetNameData(napi_env env, napi_callback_info info, bool& target);
+    bool GetBoolDataFromName(napi_env env, napi_value element, const char* name, bool& target);
+    bool GetUint32DataFromName(napi_env env, napi_value element, const char* name,uint32_t& target);
+    bool GetDoubleDataFromName(napi_env env, napi_value element, const char* name, double& target);
+    void ScanNapiValue(napi_env env, napi_value argv, uint32_t content);
     std::shared_ptr<TextStyle> m_textStyle = nullptr;
 };
 } // namespace OHOS::Rosen

@@ -86,6 +86,8 @@ ohos_shared_library("libvsync") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
@@ -94,6 +96,12 @@ ohos_shared_library("libvsync") {
     sources += graphic_2d_ext_configs.libvsync_ext_sources
 
     public_deps += [ "//foundation/graphic/graphic_2d_ext/ohcore/graphic_compat_layer:libgraphic_compat_layer" ]
+  }
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.resourceschedule_resource_schedule_service)) {
+    external_deps += ["resource_schedule_service:ressched_client"]
+    deps += [ "COMPOSER_SCHED_ENABLE" ]
   }
 
   innerapi_tags = [ "platformsdk" ]

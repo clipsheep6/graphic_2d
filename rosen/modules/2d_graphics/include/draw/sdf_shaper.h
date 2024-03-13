@@ -227,14 +227,11 @@ private:
     std::string FILL_STROKE_SHADER = R"(
 vec4 fillStroke(float d, float th, vec3 fillCol, vec3 strokeCol)
 {
-    
     float w = 2.0 / width;
     float a1 = step(0., -d);
     float a2 = smoothstep(-w-th, -th, d) * smoothstep(w+th, th, d);
-    
     vec3 col = mix(fillCol, strokeCol, a2);
     float a = max(a1, a2);
-
     return vec4(col, a);
 }
 

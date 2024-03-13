@@ -146,7 +146,7 @@ void JsParagraphStyle::SetStrutStyleFontFamilies(napi_env env, napi_value fontFa
         auto buffer = std::make_unique<char[]>(bufferSize + 1);
         if (buffer.get() == nullptr) {
             LOGE("JsParagraphStyle Invalid buffer");
-            return;            
+            return;
         }
         status = napi_get_value_string_utf8(env, element, buffer.get(), bufferSize + 1, &strLen);
         if (status != napi_ok) {

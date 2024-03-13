@@ -188,7 +188,6 @@ std::shared_ptr<Drawing::Color> JsTextStyle::GetColorFromInt32(napi_env env, nap
         LOGE("JsTextStyle::OnDrawColor Argv[0] is invalid");
         return nullptr;
     }
-    LOGE("ParamTestfromTextStyle | alpha =%zu, red=%zu, green=%zu, blue=%zu",alpha, red, green,blue);
     std::shared_ptr<Drawing::Color> color =
         std::make_shared<Drawing::Color>(Drawing::Color::ColorQuadSetARGB(alpha, red, green, blue));
     return color;
@@ -284,7 +283,7 @@ napi_value JsTextStyle::SetTextDecorationStyle(napi_env env, napi_callback_info 
 napi_value JsTextStyle::SetDecorationThicknessScale(napi_env env, napi_callback_info info)
 {
     JsTextStyle* me = CheckParamsAndGetThis<JsTextStyle>(env, info);
-    return (me != nullptr) ? me->OnSetDecorationThicknessScale(env, info) : nullptr;  
+    return (me != nullptr) ? me->OnSetDecorationThicknessScale(env, info) : nullptr;
 }
 
 napi_value JsTextStyle::SetFontWeight(napi_env env, napi_callback_info info)
@@ -562,7 +561,7 @@ napi_value JsTextStyle::OnSetHeightOnly(napi_env env, napi_callback_info info)
     bool result = GetBoolData(env, info, heightOnly);
     if (!result) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
-            "Failed OnSetHeightOnly");        
+            "Failed OnSetHeightOnly");
     }
     m_textStyle->heightOnly = heightOnly;
     return NapiGetUndefined(env);
@@ -678,7 +677,6 @@ napi_value JsTextStyle::OnSetFontFamilies(napi_env env, napi_callback_info info)
         }
         std::string value(buffer.get());
         m_textStyle->fontFamilies.push_back(value);
-        LOGE("ParamTestfromTextStyle | fontFamilies=%s",value.c_str());
     }
     return NapiGetUndefined(env);
 }
@@ -739,7 +737,7 @@ napi_value JsTextStyle::OnSetTextDecorationStyle(napi_env env, napi_callback_inf
         textDecorationStyle > static_cast<uint32_t>(TextDecorationStyle::WAVY)) {
             textDecorationStyle = LEFT_lIMIT;
     }
-    m_textStyle->decorationStyle = static_cast<TextDecorationStyle>(textDecorationStyle);;
+    m_textStyle->decorationStyle = static_cast<TextDecorationStyle>(textDecorationStyle);
     return NapiGetUndefined(env);
 }
 

@@ -66,9 +66,9 @@ ohos_shared_library("text_napi_impl") {
   ]
 
   deps = [
+    "$graphic_2d_root/interfaces/kits/napi/graphic/drawing:drawing_napi_impl",
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
     "$graphic_2d_root/rosen/modules/texgine:libtexgine_source",
-    "$graphic_2d_root/interfaces/kits/napi/graphic/drawing:drawing_napi_impl",
   ]
 
   external_deps = [

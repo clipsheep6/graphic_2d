@@ -225,33 +225,36 @@ void JsTextStyle::ScanNapiValue(napi_env env, napi_value argv, uint32_t content)
         double offsetY = 0;
         double radius = false;
         if (napi_get_element(env, argv, i, &element) != napi_ok) {
-            LOGE("OnSetFontFamilies napi_get_element Failed");
+            LOGE("JsTextStyle::ScanNapiValue napi_get_element Failed");
             return;
         }
         std::shared_ptr<Drawing::Color> targeColor = GetColorFromInt32(env, element, "color");
         if (targeColor == nullptr) {
-            LOGE("OnSetStrutStyle GetUint32DataFromName faild");
+            LOGE("JsTextStyle::ScanNapiValue targeColor faild");
             return;
         }
 
         if (!GetDoubleDataFromName(env, element, "offsetPointX", offsetX)) {
-            LOGE("OnSetStrutStyle GetDoubleDataFromName faild");
+            LOGE("JsTextStyle::ScanNapiValue offsetPointX faild");
             return;
         }
 
         if (!GetDoubleDataFromName(env, element, "offsetPointY", offsetY)) {
-            LOGE("OnSetStrutStyle GetDoubleDataFromName faild");
+            LOGE("JsTextStyle::ScanNapiValue  offsetPointY faild");
             return;
         }
 
         if (!GetDoubleDataFromName(env, element, "blurRadius", radius)) {
-            LOGE("OnSetStrutStyle GetDoubleDataFromName faild");
+            LOGE("JsTextStyle::ScanNapiValue blurRadius faild");
             return;
         }
 
         Drawing::Point offset(offsetX, offsetY);
         TextShadow tempTextShadow(*targeColor, offset, radius);
-        m_textStyle->shadows.push_back(tempTextShadow);
+        if (m_textStyle->shadows.size() != 0) {
+            m_textStyle->shadows.clear();
+        }
+        m_textStyle->shadows.emplace_back(tempTextShadow);
     }
     return;
 }
@@ -676,7 +679,10 @@ napi_value JsTextStyle::OnSetFontFamilies(napi_env env, napi_callback_info info)
                 "OnSetFontFamilies napi_get_value_string_utf8 Failed");
         }
         std::string value(buffer.get());
-        m_textStyle->fontFamilies.push_back(value);
+        if (m_textStyle->fontFamilies.size() != 0) {
+            m_textStyle->fontFamilies.clear();
+        }
+        m_textStyle->fontFamilies.emplace_back(value);
     }
     return NapiGetUndefined(env);
 }

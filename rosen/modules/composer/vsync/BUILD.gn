@@ -63,6 +63,8 @@ ohos_shared_library("libvsync") {
     "$graphic_2d_root/rosen/modules/composer/vsync/include",
   ]
 
+  defines = []
+
   configs = [ ":vsync_config" ]
 
   public_configs = [

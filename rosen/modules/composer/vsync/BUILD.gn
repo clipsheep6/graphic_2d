@@ -55,6 +55,7 @@ ohos_shared_library("libvsync") {
     "src/vsync_generator.cpp",
     "src/vsync_receiver.cpp",
     "src/vsync_sampler.cpp",
+    "src/vsync_system_ability_listener.cpp",
   ]
 
   include_dirs = [

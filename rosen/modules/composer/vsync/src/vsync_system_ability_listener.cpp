@@ -30,17 +30,17 @@ void VSyncSystemAbilityListener::OnAddSystemAbility(int32_t systemAbilityId, con
     if (systemAbilityId == RES_SCHED_SYS_ABILITY_ID) {
         VLOGD("%{public}s: threadName=%{public}s, pid=%{public}s, tid=%{public}s, uid=%{public}s.",
             __func__, threadName.c_str(), pid_.c_str(), tid_.c_str(), uid_.c_str());
-        std:unordered_map<std:string, std:string> mapPayload;
-        in32_t userInteraction = 0;
-        mayPayload["uid"] = uid_;
-        mayPayload["pid"] = pid_;
-        mayPayload["tid"] = tid_;
-        mayPayload["threadName"] = threadName_;
-        mayPayload["extType"] = "10003";
-        mayPayload["isSa"] = "1";
-        mayPayload["cgroupPrio"] = "1";
-        OHOS::ResourceSched::ResSchedClient::GetInstance().ReportData(
-            ResourceSched::ResType::RES_TYPE_KEY_PERF_SCENE, userInteraction, mapPayload);
+        std::unordered_map<std::string, std::string> mapPayload;
+        int32_t userInteraction = 0;
+        mapPayload["uid"] = uid_;
+        mapPayload["pid"] = pid_;
+        mapPayload["tid"] = tid_;
+        mapPayload["threadName"] = threadName_;
+        mapPayload["extType"] = "10003";
+        mapPayload["isSa"] = "1";
+        mapPayload["cgroupPrio"] = "1";
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(
+            ResourceSchedule::ResType::RES_TYPE_KEY_PERF_SCENE, userInteraction, mapPayload);
     }
 #endif
 }

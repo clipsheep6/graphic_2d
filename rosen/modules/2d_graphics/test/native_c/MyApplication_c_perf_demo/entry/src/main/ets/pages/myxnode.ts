@@ -45,22 +45,22 @@ export class MyRenderNode extends RenderNode {
     // const canvas = context.canvas;
     if (this.testType == 'function') {
       console.log(TAG, 'MyRenderNode draw function');
-      this.TestFunctionalCpu(context);
+      this.TestFunctional(context);
     } else {
       console.log(TAG, 'MyRenderNode draw perf');
-      this.TestPerformanceCpu(context);
+      this.TestPerformance(context);
     }
   }
 
-  async TestFunctionalCpu(context: DrawContext) {
-    console.info(TAG, 'MyRenderNode TestFunctionalCpu', this.caseNameStr);
-    nativeXNode.TestFunctionalCpu(context, this.caseNameStr);
-    printCallback('XNode TestFunctionalCpu ok');
+  async TestFunctional(context: DrawContext) {
+    console.info(TAG, 'MyRenderNode TestFunctional--', this.caseNameStr);
+    nativeXNode.TestFunctional(context, this.caseNameStr);
+    printCallback('XNode TestFunctional ok');
   }
 
-  async TestPerformanceCpu(context: DrawContext) {
-    console.info(TAG, 'MyRenderNode TestPerformanceCpu', this.caseNameStr, this.testCount);
-    let performanceTime = nativeXNode.TestPerformanceCpu(context, this.caseNameStr, this.testCount);
+  async TestPerformance(context: DrawContext) {
+    console.info(TAG, 'MyRenderNode TestPerformance', this.caseNameStr, this.testCount);
+    let performanceTime = nativeXNode.TestPerformance(context, this.caseNameStr, this.testCount);
     printCallback('XNode TestCount: ' + this.testCount.toString() + ', used: ' + performanceTime.toString() + 'ms');
   }
 }
@@ -90,8 +90,8 @@ export class MyNodeController extends NodeController {
     console.info(TAG, 'MyNodeController makeNode end');
     return this.rootNode;
   }
-  TestFunctionalCpu(caseName: string) {
-    console.info(TAG, "TestFunctionalCpu");
+  TestFunctional(caseName: string) {
+    console.info(TAG, "TestFunctional");
     this.myRenderNode.clear = false;
     this.myRenderNode.testType = 'function';
     this.myRenderNode.drawingType = 'cpu';
@@ -99,8 +99,8 @@ export class MyNodeController extends NodeController {
     this.myRenderNode.invalidate();
   }
 
-  TestPerformanceCpu(caseName: string, count: number) {
-    console.info(TAG, "TestPerformanceCpu");
+  TestPerformance(caseName: string, count: number) {
+    console.info(TAG, "TestPerformance");
     this.myRenderNode.clear = false;
     this.myRenderNode.testType = 'performance';
     this.myRenderNode.drawingType = 'cpu';

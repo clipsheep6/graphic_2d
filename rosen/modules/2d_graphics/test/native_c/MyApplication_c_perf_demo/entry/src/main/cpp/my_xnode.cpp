@@ -98,88 +98,88 @@ napi_value MyXNode::XNodeDraw(napi_env env, napi_callback_info info)
 }
 
 
-napi_value MyXNode::NapiFunctionCpu(napi_env env, napi_callback_info info)
+napi_value MyXNode::NapiFunction(napi_env env, napi_callback_info info)
 {
-    DRAWING_LOGE("MyXNode XNodeDraw::NapiFunctionCpu");
+    DRAWING_LOGE("MyXNode XNodeDraw::NapiFunction");
 
-    DRAWING_LOGI("NapiFunctionCpu");
+    DRAWING_LOGI("NapiFunction");
     if ((env == nullptr) || (info == nullptr)) {
-        DRAWING_LOGE("NapiFunctionCpu: env or info is null");
+        DRAWING_LOGE("NapiFunction: env or info is null");
         return nullptr;
     }
 
     size_t argc = 2;
     napi_value argv[2] = {nullptr};
     if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok) {
-        DRAWING_LOGE("NapiFunctionCpu: napi_get_cb_info fail");
+        DRAWING_LOGE("NapiFunction: napi_get_cb_info fail");
         return nullptr;
     }
     void* contex;
     napi_unwrap(env, argv[0], &contex);
     OH_Drawing_Canvas* canvas = reinterpret_cast<OH_Drawing_Canvas*>(contex);
     if (canvas == nullptr) {
-        DRAWING_LOGE("NapiFunctionCpu: XNodeDraw get canvas fail");
+        DRAWING_LOGE("NapiFunction: XNodeDraw get canvas fail");
         return nullptr;
     }
 
     std::string caseName = "";
     if (!ConvertStringFromJsValue(env, argv[1], caseName)) {
-        DRAWING_LOGE("NapiFunctionCpu: get caseName fail");
+        DRAWING_LOGE("NapiFunction: get caseName fail");
         return nullptr;
     }
-    DRAWING_LOGI("NapiFunctionCpu: caseName = %{public}s", caseName.c_str());
+    DRAWING_LOGI("NapiFunction: caseName = %{public}s", caseName.c_str());
     
-    TestFunctionCpu(canvas, caseName);
+    TestFunction(canvas, caseName);
     return nullptr;
 }
 
-napi_value MyXNode::NapiPerformanceCpu(napi_env env, napi_callback_info info)
+napi_value MyXNode::NapiPerformance(napi_env env, napi_callback_info info)
 {
-    DRAWING_LOGE("MyXNode XNodeDraw::NapiFunctionCpu");
+    DRAWING_LOGE("MyXNode XNodeDraw::NapiFunction");
 
-    DRAWING_LOGI("NapiFunctionCpu");
+    DRAWING_LOGI("NapiFunction");
     if ((env == nullptr) || (info == nullptr)) {
-        DRAWING_LOGE("NapiFunctionCpu: env or info is null");
+        DRAWING_LOGE("NapiFunction: env or info is null");
         return nullptr;
     }
 
     size_t argc = 3;
     napi_value argv[3] = {nullptr};
     if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok) {
-        DRAWING_LOGE("NapiFunctionCpu: napi_get_cb_info fail");
+        DRAWING_LOGE("NapiFunction: napi_get_cb_info fail");
         return nullptr;
     }
     void* contex;
     napi_unwrap(env, argv[0], &contex);
     OH_Drawing_Canvas* canvas = reinterpret_cast<OH_Drawing_Canvas*>(contex);
     if (canvas == nullptr) {
-        DRAWING_LOGE("NapiFunctionCpu: XNodeDraw get canvas fail");
+        DRAWING_LOGE("NapiFunction: XNodeDraw get canvas fail");
         return nullptr;
     }
 
     std::string caseName = "";
     if (!ConvertStringFromJsValue(env, argv[1], caseName)) {
-        DRAWING_LOGE("NapiFunctionCpu: get caseName fail");
+        DRAWING_LOGE("NapiFunction: get caseName fail");
         return nullptr;
     }
-    DRAWING_LOGI("NapiFunctionCpu: caseName = %{public}s", caseName.c_str());
+    DRAWING_LOGI("NapiFunction: caseName = %{public}s", caseName.c_str());
     
     uint32_t testCount;
     if (!ConvertStringFromIntValue(env, argv[2], testCount)) {
         DRAWING_LOGE("NapiDrawPattern: get caseName fail");
         return nullptr;
     }
-    DRAWING_LOGI("NapiFunctionCpu: testCount = %{public}u", testCount);
+    DRAWING_LOGI("NapiFunction: testCount = %{public}u", testCount);
     
-    uint32_t time = TestPerformanceCpu(canvas, caseName, testCount);
+    uint32_t time = TestPerformance(canvas, caseName, testCount);
     napi_value value = nullptr;
     (void)napi_create_int32(env, time, &value);
     return value;
 }
 
-void MyXNode::TestFunctionCpu(OH_Drawing_Canvas* canvas, std::string caseName)
+void MyXNode::TestFunction(OH_Drawing_Canvas* canvas, std::string caseName)
 {
-    DRAWING_LOGE("MyXNode TestFunctionCpu start");
+    DRAWING_LOGE("MyXNode TestFunction start");
     auto testCase = TestCaseFactory::GetFunctionCpuCase(caseName);
     if (testCase == nullptr) {
         DRAWING_LOGE("failed to get testcase");
@@ -188,9 +188,9 @@ void MyXNode::TestFunctionCpu(OH_Drawing_Canvas* canvas, std::string caseName)
     testCase->TestFunctionCpu(canvas);
 }
 
-uint32_t MyXNode::TestPerformanceCpu(OH_Drawing_Canvas* canvas, std::string caseName, uint32_t testCount)
+uint32_t MyXNode::TestPerformance(OH_Drawing_Canvas* canvas, std::string caseName, uint32_t testCount)
 {
-    DRAWING_LOGE("MyXNode TestPerformanceCpu start");
+    DRAWING_LOGE("MyXNode TestPerformance start");
     auto testCase = TestCaseFactory::GetPerformanceCpuCase(caseName);
     if (testCase == nullptr) {
         DRAWING_LOGE("failed to get testcase");
@@ -200,7 +200,7 @@ uint32_t MyXNode::TestPerformanceCpu(OH_Drawing_Canvas* canvas, std::string case
     testCase->SetTestCount(testCount);
     testCase->TestPerformanceCpu(canvas);
     // usedTime_ = testCase->GetTime();
-    DRAWING_LOGE("MyXNode TestPerformanceCpu end");
+    DRAWING_LOGE("MyXNode TestPerformance end");
     return testCase->GetTime();
 }
 
@@ -214,8 +214,8 @@ void MyXNode::Export(napi_env env, napi_value exports)
 
     napi_property_descriptor desc[] = {
         {"draw", nullptr, MyXNode::XNodeDraw, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"TestFunctionalCpu", nullptr, MyXNode::NapiFunctionCpu, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"TestPerformanceCpu", nullptr, MyXNode::NapiPerformanceCpu, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"TestFunctional", nullptr, MyXNode::NapiFunction, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"TestPerformance", nullptr, MyXNode::NapiPerformance, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
     if (napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc) != napi_ok) {
         DRAWING_LOGE("Export: napi_define_properties failed");

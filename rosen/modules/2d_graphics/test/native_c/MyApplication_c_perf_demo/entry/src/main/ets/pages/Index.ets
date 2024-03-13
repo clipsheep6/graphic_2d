@@ -24,8 +24,8 @@ const TAG = '[DrawingTest]';
 struct Index {
   private xComponentContext: XComponentContext | undefined = undefined;
   @State testType: string = 'function';
-  @State drawingType: string = 'cpu-xnode';
-  @State caseNameStr: string  = 'drawrect';
+  @State drawingType: string = 'gpu-xnode';
+  @State caseNameStr: string  = 'drawbitmap';
   @State information: string = '';
   imagePackerApi: image.ImagePacker = image.createImagePacker();
   caseNameStrBefore: string  = '';
@@ -37,7 +37,7 @@ struct Index {
 
   build() {
     Column() {
-      if (this.drawingType == 'cpu-xnode') {
+      if (this.drawingType == 'gpu-xnode') {
         Row() {
           NodeContainer(this.myNodeController)
             .width('100%')
@@ -74,7 +74,7 @@ struct Index {
 
         Select([
           { value: 'cpu-xcomponent' },
-          { value: 'cpu-xnode' },
+          { value: 'gpu-xnode' },
         ])
           .id('drawingType')
           .selected(0)
@@ -134,7 +134,7 @@ struct Index {
                 }
               })
           }
-          if (this.drawingType == 'cpu-xnode') {
+          if (this.drawingType == 'gpu-xnode') {
             Button("Clear")
               .fontSize('16fp')
               .id('Clear')
@@ -165,7 +165,7 @@ struct Index {
               .shadow(ShadowStyle.OUTER_DEFAULT_LG)
           }
           .height('7%')
-        } else if (this.drawingType == 'cpu-xnode'){
+        } else if (this.drawingType == 'gpu-xnode'){
           Row() {
             Button("SnapShort")
               .fontSize('16fp')
@@ -214,8 +214,8 @@ struct Index {
     if (this.testType == 'function') {
       if (this.drawingType == 'cpu-xcomponent') {
         return this.TestFunctionalCpu();
-      } else if (this.drawingType == 'cpu-xnode') {
-        return this.myNodeController.TestFunctionalCpu(this.caseNameStr);
+      } else if (this.drawingType == 'gpu-xnode') {
+        return this.myNodeController.TestFunctional(this.caseNameStr);
       }  else {
         this.LogMsg('GPU drawing function test not yet provided!');
       }
@@ -223,12 +223,12 @@ struct Index {
     if (this.testType == 'performance') {
       if (this.drawingType == 'cpu-xcomponent') {
         return this.TestPerformanceCpu();
-      } else if (this.drawingType == 'cpu-xnode') {
+      } else if (this.drawingType == 'gpu-xnode') {
         let testCount = Number.parseInt(this.caseCountStr, 10);
         this.myNodeController.SetPrintCallback((str:string)=>{
           this.LogMsg(str);
         })
-        return this.myNodeController.TestPerformanceCpu(this.caseNameStr, testCount);
+        return this.myNodeController.TestPerformance(this.caseNameStr, testCount);
       } else {
         this.LogMsg('GPU drawing performance test not yet provided!');
       }

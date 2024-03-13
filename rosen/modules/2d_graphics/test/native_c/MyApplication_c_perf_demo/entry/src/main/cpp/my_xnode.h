@@ -40,10 +40,10 @@ public:
    
     static void Export(napi_env env, napi_value exports);
     static napi_value XNodeDraw(napi_env env, napi_callback_info info);
-    static napi_value NapiFunctionCpu(napi_env env, napi_callback_info info);
-    static napi_value NapiPerformanceCpu(napi_env env, napi_callback_info info);
+    static napi_value NapiFunction(napi_env env, napi_callback_info info);
+    static napi_value NapiPerformance(napi_env env, napi_callback_info info);
     
-    static void TestFunctionCpu(OH_Drawing_Canvas* canvas, std::string caseName);
-    static uint32_t TestPerformanceCpu(OH_Drawing_Canvas* canvas, std::string caseName, uint32_t testCount);
+    static void TestFunction(OH_Drawing_Canvas* canvas, std::string caseName);
+    static uint32_t TestPerformance(OH_Drawing_Canvas* canvas, std::string caseName, uint32_t testCount);
 };
 #endif

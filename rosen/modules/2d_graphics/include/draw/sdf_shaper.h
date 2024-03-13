@@ -19,7 +19,6 @@
 #include "common/rs_macros.h"
 #include "utils/drawing_macros.h"
 #include "utils/sdf_module.h"
-
 #include <memory>
 #include <vector>
 #include <stack>
@@ -27,7 +26,6 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-
 
 class DRAWING_API SDFShape
 {

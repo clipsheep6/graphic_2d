@@ -1229,15 +1229,15 @@ void SDFShape::SetColor(std::string fillColor, std::string strokeColor)
         LOGE("sdf color string is error, please check");
         return;
     }
-    fillColor = fillColor.substr(1, 6);
-    int fillNum = std::stoi(fillColor, NULL, 16);
+    fillColor = fillColor.substr(1, 6); // 6 is the color input size.
+    int fillNum = std::stoi(fillColor, NULL, 16); // 16 means hexadecimal.
     int fillRed = (fillNum >> 16) & 0xFF;
     int fillGren = (fillNum >> 8) & 0xFF;
     int fillBlue = fillNum & 0xFF;
     color_[0] = fillRed / (255.0); // 255.0 is color maximum.
     color_[1] = fillGren / (255.0); // color_[1] is fillcolor green channel. 255.0 is color maximum.
     color_[2] = fillBlue / (255.0); // color_[2] is fillcolor blue channel. 255.0 is color maximum.
-    strokeColor = strokeColor.substr(1, 6);
+    strokeColor = strokeColor.substr(1, 6); // 6 is the color input size.
     int strokeNum = std::stoi(strokeColor, NULL, 16); // 16 is means hexadecimal.
     int strokeRed = (strokeNum >> 16) & 0xFF;
     int strokeGren = (strokeNum >> 8) & 0xFF;

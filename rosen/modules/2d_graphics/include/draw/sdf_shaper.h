@@ -140,7 +140,7 @@ private:
     void DeleteNode(SDFModule* node);
 
     float UpdatePara(std::vector<std::pair<float, float>> para, float time);
-    std::array<SDFPraseFunc, static_cast<int>(SDF_TYPE::END)> m_sdfPraseLUT = 
+    std::array<SDFPraseFunc, static_cast<int>(SDF_TYPE::END)> m_sdfPraseLUT =
     {
         nullptr,
         &SDFShape::addCircle,

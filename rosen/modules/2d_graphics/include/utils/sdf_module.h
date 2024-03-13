@@ -24,8 +24,7 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 
-enum class SDF_TYPE
-{
+enum class SDF_TYPE {
     // Basic SDF primitives
     BEGIN = 0,
     SD_CIRCLE,

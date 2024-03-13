@@ -687,7 +687,8 @@ void RSRenderNode::DumpSubClassNode(std::string& out) const
         std::string propertyAlpha = std::to_string(surfaceNode->GetRenderProperties().GetAlpha());
         out += ", Alpha: " + propertyAlpha + " (include ContextAlpha: " + contextAlpha + ")";
         out += ", Visible: " + std::to_string(surfaceNode->GetRenderProperties().GetVisible());
-        out += ", " + surfaceNode->GetVisibleRegion().GetRegionInfo();
+        out += ", Visible" + surfaceNode->GetVisibleRegion().GetRegionInfo();
+        out += ", Opaque" + surfaceNode->GetOpaqueRegion().GetRegionInfo();
         out += ", OcclusionBg: " + std::to_string(surfaceNode->GetAbilityBgAlpha());
         out += ", SecurityLayer: " + std::to_string(surfaceNode->GetSecurityLayer());
         out += ", skipLayer: " + std::to_string(surfaceNode->GetSkipLayer());
@@ -1674,6 +1675,11 @@ void RSRenderNode::DrawCacheSurface(RSPaintFilterCanvas& canvas, uint32_t thread
         if (cacheImage->IsTextureBacked()) {
             RS_LOGI("RSRenderNode::DrawCacheSurface convert cacheImage from texture to raster image");
             cacheImage = cacheImage->MakeRasterImage();
+            if (!cacheImage) {
+                RS_LOGE("RSRenderNode::DrawCacheSurface: MakeRasterImage failed");
+                canvas.Restore();
+                return;
+            }
         }
     }
     Drawing::Brush brush;

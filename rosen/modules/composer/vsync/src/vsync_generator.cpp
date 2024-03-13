@@ -412,7 +412,7 @@ void VSyncGenerator::SubScribeSystemAbility()
 {
     VLOGI("%{public}s", __func__);
     sptr<ISystemAbilityManager> systemAbilityManager =
-        systemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
         VLOGE("%{public}s failed to get system ability manager client", __func__);
         return;

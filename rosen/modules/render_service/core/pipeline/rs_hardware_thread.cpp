@@ -577,7 +577,7 @@ void RSHardwareThread::SubScribeSystemAbility()
 {
     RS_LOGI("%{public}s", __func__);
     sptr<ISystemAbilityManager> systemAbilityManager =
-        systemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
         RS_LOGE("%{public}s failed to get system ability manager client", __func__);
         return;

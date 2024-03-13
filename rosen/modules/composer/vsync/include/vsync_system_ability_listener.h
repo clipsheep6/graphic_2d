@@ -16,7 +16,7 @@
 #ifndef VSYNC_SYSTEM_ABILITY_LISTENER_H
 #define VSYNC_SYSTEM_ABILITY_LISTENER_H
 
-#inclue "system_ability_status_change_stub.h"
+#include "system_ability_status_change_stub.h"
 
 
 namespace OHOS {

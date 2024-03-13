@@ -219,6 +219,7 @@ bool JsTextStyle::GetBoolDataFromName(napi_env env, napi_value element, const ch
 
 void JsTextStyle::ScanNapiValue(napi_env env, napi_value argv, uint32_t content)
 {
+    m_textStyle->shadows.clear();
     for (uint32_t i = 0; i < content; i++) {
         napi_value element;
         double offsetX = 0;
@@ -251,9 +252,6 @@ void JsTextStyle::ScanNapiValue(napi_env env, napi_value argv, uint32_t content)
 
         Drawing::Point offset(offsetX, offsetY);
         TextShadow tempTextShadow(*targeColor, offset, radius);
-        if (m_textStyle->shadows.size() != 0) {
-            m_textStyle->shadows.clear();
-        }
         m_textStyle->shadows.emplace_back(tempTextShadow);
     }
     return;
@@ -322,7 +320,7 @@ napi_value JsTextStyle::SetLetterSpacing(napi_env env, napi_callback_info info)
 napi_value JsTextStyle::SetHeightScale(napi_env env, napi_callback_info info)
 {
     JsTextStyle* me = CheckParamsAndGetThis<JsTextStyle>(env, info);
-    return (me != nullptr) ? me->OnSetLetterSpacing(env, info) : nullptr;
+    return (me != nullptr) ? me->OnSetHeightScale(env, info) : nullptr;
 }
 
 napi_value JsTextStyle::SetHalfLeading(napi_env env, napi_callback_info info)
@@ -359,6 +357,12 @@ napi_value JsTextStyle::SetForegroundBrush(napi_env env, napi_callback_info info
 {
     JsTextStyle* me = CheckParamsAndGetThis<JsTextStyle>(env, info);
     return (me != nullptr) ? me->OnSetForegroundBrush(env, info) : nullptr;
+}
+
+napi_value JsTextStyle::SetWordSpacing(napi_env env, napi_callback_info info)
+{
+    JsTextStyle* me = CheckParamsAndGetThis<JsTextStyle>(env, info);
+    return (me != nullptr) ? me->OnSetWordSpacing(env, info) : nullptr;
 }
 
 napi_value JsTextStyle::SetBackgroundBrush(napi_env env, napi_callback_info info)
@@ -539,11 +543,11 @@ napi_value JsTextStyle::OnSetEllipsisModal(napi_env env, napi_callback_info info
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetEllipsisModal");
     }
-    if (ellipsisMode < LIMIT ||
-        ellipsisMode > static_cast<int32_t>(EllipsisModal::TAIL)) {
-            ellipsisMode = LIMIT;
+    if (ellipsisMode >= LIMIT && ellipsisMode <= static_cast<int32_t>(EllipsisModal::TAIL)) {
+        m_textStyle->ellipsisModal = static_cast<EllipsisModal>(ellipsisMode);
+    } else {
+        LOGE("JsTextStyle::OnSetEllipsisModal ellipsisMode is parameter of anomaly ");
     }
-    m_textStyle->ellipsisModal = static_cast<EllipsisModal>(ellipsisMode);
     return NapiGetUndefined(env);
 }
 
@@ -592,12 +596,6 @@ napi_value JsTextStyle::OnSetHeightScale(napi_env env, napi_callback_info info)
     }
     m_textStyle->heightScale = heightScale;
     return NapiGetUndefined(env);
-}
-
-napi_value JsTextStyle::SetWordSpacing(napi_env env, napi_callback_info info)
-{
-    JsTextStyle* me = CheckParamsAndGetThis<JsTextStyle>(env, info);
-    return (me != nullptr) ? me->OnSetLetterSpacing(env, info) : nullptr;
 }
 
 napi_value JsTextStyle::OnSetWordSpacing(napi_env env, napi_callback_info info)
@@ -657,6 +655,7 @@ napi_value JsTextStyle::OnSetFontFamilies(napi_env env, napi_callback_info info)
             "OnSetFontFamilies Invalid array napi_value");
     }
 
+    m_textStyle->fontFamilies.clear();
     for (uint32_t i = 0; i < arrayLength; i++) {
         napi_value element;
         status = napi_get_element(env, fontFamiliesField, i, &element);
@@ -679,9 +678,6 @@ napi_value JsTextStyle::OnSetFontFamilies(napi_env env, napi_callback_info info)
                 "OnSetFontFamilies napi_get_value_string_utf8 Failed");
         }
         std::string value(buffer.get());
-        if (m_textStyle->fontFamilies.size() != 0) {
-            m_textStyle->fontFamilies.clear();
-        }
         m_textStyle->fontFamilies.emplace_back(value);
     }
     return NapiGetUndefined(env);
@@ -695,11 +691,11 @@ napi_value JsTextStyle::OnSetTextBaseline(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed TextBaseline");
     }
-    if (textBaseline < LIMIT ||
-        textBaseline > static_cast<int32_t>(TextBaseline::IDEOGRAPHIC)) {
-            textBaseline = LIMIT;
+    if (textBaseline >= LIMIT && textBaseline <= static_cast<int32_t>(TextBaseline::IDEOGRAPHIC)) {
+        m_textStyle->baseline = static_cast<TextBaseline>(textBaseline);
+    } else {
+        LOGE("JsTextStyle::OnSetTextBaseline textBaseline is parameter of anomaly");
     }
-    m_textStyle->baseline = static_cast<TextBaseline>(textBaseline);
     return NapiGetUndefined(env);
 }
 
@@ -711,11 +707,11 @@ napi_value JsTextStyle::OnSetFontWeight(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetFontWeight");
     }
-    if (fontWeight < LIMIT ||
-        fontWeight > static_cast<int32_t>(FontWeight::W900)) {
-            fontWeight = LIMIT;
+    if (fontWeight >= LIMIT && fontWeight <= static_cast<int32_t>(FontWeight::W900)) {
+        m_textStyle->fontWeight = static_cast<FontWeight>(fontWeight);
+    } else {
+        LOGE("JsTextStyle::OnSetFontWeight fontWeight is parameter of anomaly ")
     }
-    m_textStyle->fontWeight = static_cast<FontWeight>(fontWeight);
     return NapiGetUndefined(env);
 }
 
@@ -739,11 +735,11 @@ napi_value JsTextStyle::OnSetTextDecorationStyle(napi_env env, napi_callback_inf
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed setTextDecorationStyle");
     }
-    if (textDecorationStyle < LIMIT ||
-        textDecorationStyle > static_cast<uint32_t>(TextDecorationStyle::WAVY)) {
-            textDecorationStyle = LIMIT;
+    if (textDecorationStyle >= LIMIT && textDecorationStyle <= static_cast<uint32_t>(TextDecorationStyle::WAVY)) {
+        m_textStyle->decorationStyle = static_cast<TextDecorationStyle>(textDecorationStyle);
+    } else {
+        LOGE("JsTextStyle::OnSetTextBaseline textDecorationStyle is parameter of anomaly");
     }
-    m_textStyle->decorationStyle = static_cast<TextDecorationStyle>(textDecorationStyle);
     return NapiGetUndefined(env);
 }
 
@@ -767,11 +763,11 @@ napi_value JsTextStyle::OnSetTextDecoration(napi_env env, napi_callback_info inf
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed SetTextDecoration");
     }
-    if (textDecoration < LIMIT ||
-        textDecoration > static_cast<int32_t>(TextDecoration::LINE_THROUGH)) {
-            textDecoration = LIMIT;
+    if (textDecoration >= LIMIT && textDecoration <= static_cast<int32_t>(TextDecoration::LINE_THROUGH)) {
+        m_textStyle->decoration = static_cast<TextDecoration>(textDecoration);
+    } else {
+        LOGE("JsTextStyle::OnSetTextDecoration textDecoration is parameter of anomaly");
     }
-    m_textStyle->decoration = static_cast<TextDecoration>(textDecoration);
     return NapiGetUndefined(env);
 }
 

@@ -209,11 +209,12 @@ napi_value JsParagraphStyle::OnSetTextDirection(napi_env env, napi_callback_info
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "OnSetTextDirection napi_get_value_uint32 faild");
     }
-    // error deal default text direction ltr
-    if (textDir != LTR && textDir != RTL) {
-        textDir = LTR;
+
+    if (textDir == LTR || textDir == RTL) {
+        m_paragraphStyle->textDirection = static_cast<TextDirection>(textDir);
+    } else {
+        LOGE("JsParagraphStyle::OnSetTextDirection textDir is parameter of anomaly");
     }
-    m_paragraphStyle->textDirection = static_cast<TextDirection>(textDir);
     return NapiGetUndefined(env);
 }
 

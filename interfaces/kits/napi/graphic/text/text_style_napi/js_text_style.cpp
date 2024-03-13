@@ -20,8 +20,8 @@
 #include <string>
 #include <locale>
 
+#define LIMIT 0
 namespace OHOS::Rosen {
-#define LEFT_lIMIT 0
 thread_local napi_ref JsTextStyle::constructor_ = nullptr;
 const std::string CLASS_NAME = "TextStyle";
 napi_value JsTextStyle::Constructor(napi_env env, napi_callback_info info)
@@ -539,9 +539,9 @@ napi_value JsTextStyle::OnSetEllipsisModal(napi_env env, napi_callback_info info
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetEllipsisModal");
     }
-    if (ellipsisMode < LEFT_lIMIT ||
+    if (ellipsisMode < LIMIT ||
         ellipsisMode > static_cast<int32_t>(EllipsisModal::TAIL)) {
-            ellipsisMode = LEFT_lIMIT;
+            ellipsisMode = LIMIT;
     }
     m_textStyle->ellipsisModal = static_cast<EllipsisModal>(ellipsisMode);
     return NapiGetUndefined(env);
@@ -695,9 +695,9 @@ napi_value JsTextStyle::OnSetTextBaseline(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed TextBaseline");
     }
-    if (textBaseline < LEFT_lIMIT ||
+    if (textBaseline < LIMIT ||
         textBaseline > static_cast<int32_t>(TextBaseline::IDEOGRAPHIC)) {
-            textBaseline = LEFT_lIMIT;
+            textBaseline = LIMIT;
     }
     m_textStyle->baseline = static_cast<TextBaseline>(textBaseline);
     return NapiGetUndefined(env);
@@ -711,9 +711,9 @@ napi_value JsTextStyle::OnSetFontWeight(napi_env env, napi_callback_info info)
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed OnSetFontWeight");
     }
-    if (fontWeight < LEFT_lIMIT ||
+    if (fontWeight < LIMIT ||
         fontWeight > static_cast<int32_t>(FontWeight::W900)) {
-            fontWeight = LEFT_lIMIT;
+            fontWeight = LIMIT;
     }
     m_textStyle->fontWeight = static_cast<FontWeight>(fontWeight);
     return NapiGetUndefined(env);
@@ -739,9 +739,9 @@ napi_value JsTextStyle::OnSetTextDecorationStyle(napi_env env, napi_callback_inf
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed setTextDecorationStyle");
     }
-    if (textDecorationStyle < LEFT_lIMIT ||
+    if (textDecorationStyle < LIMIT ||
         textDecorationStyle > static_cast<uint32_t>(TextDecorationStyle::WAVY)) {
-            textDecorationStyle = LEFT_lIMIT;
+            textDecorationStyle = LIMIT;
     }
     m_textStyle->decorationStyle = static_cast<TextDecorationStyle>(textDecorationStyle);
     return NapiGetUndefined(env);
@@ -767,9 +767,9 @@ napi_value JsTextStyle::OnSetTextDecoration(napi_env env, napi_callback_info inf
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
             "Failed SetTextDecoration");
     }
-    if (textDecoration < LEFT_lIMIT ||
+    if (textDecoration < LIMIT ||
         textDecoration > static_cast<int32_t>(TextDecoration::LINE_THROUGH)) {
-            textDecoration = LEFT_lIMIT;
+            textDecoration = LIMIT;
     }
     m_textStyle->decoration = static_cast<TextDecoration>(textDecoration);
     return NapiGetUndefined(env);

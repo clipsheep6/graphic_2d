@@ -15,6 +15,8 @@ add_library(entry SHARED
     testcase/test_base.cpp
     testcase/draw_rect_test.cpp
     testcase/draw_path_test.cpp
+    testcase/draw_textblob.cpp
+    testcase/draw_bitmap.cpp
 )
 
 add_library(myxnode SHARED
@@ -23,6 +25,8 @@ add_library(myxnode SHARED
     testcase/test_base.cpp
     testcase/draw_rect_test.cpp
     testcase/draw_path_test.cpp
+    testcase/draw_textblob.cpp
+    testcase/draw_bitmap.cpp
 )
 
 find_library(

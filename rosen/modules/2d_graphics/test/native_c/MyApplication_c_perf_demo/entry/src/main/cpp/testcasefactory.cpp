@@ -17,16 +17,22 @@
 #include "testcasefactory.h"
 #include "testcase/draw_rect_test.h"
 #include "testcase/draw_path_test.h"
+#include "testcase/draw_textblob.h"
+#include "testcase/draw_bitmap.h"
 
 namespace {
-std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap = {
-    {"drawrect", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawRectTest>();}},
-    {"drawpath", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawPathTest>();}},
-};
-std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
-    {"drawrect", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawRectTest>();}},
-    {"drawpath", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawPathTest>();}},
-};
+    std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap = {
+        {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRectTest>(); }},
+        {"drawpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathTest>(); }},
+        {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
+        {"drawbitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
+    };
+    std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
+        {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRectTest>(); }},
+        {"drawpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathTest>(); }},
+        {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
+        {"drawbitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
+    };
 } // namespace
 
 

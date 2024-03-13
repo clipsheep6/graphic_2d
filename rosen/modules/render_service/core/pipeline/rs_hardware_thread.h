@@ -23,7 +23,7 @@
 #include "hdi_backend.h"
 #include "rs_main_thread.h"
 #ifdef RES_SCHED_ENABLE
-#include "vsync_system_ability_listener.h""
+#include "vsync_system_ability_listener.h"
 #endif
 
 namespace OHOS::Rosen {

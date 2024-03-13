@@ -29,7 +29,7 @@
 #include "vsync_connection_stub.h"
 
 #ifdef COMPOSER_SCHED_ENABLE
-#include "vsync_system_ability_listener.h""
+#include "vsync_system_ability_listener.h"
 #endif
 
 #if defined(RS_ENABLE_DVSYNC)

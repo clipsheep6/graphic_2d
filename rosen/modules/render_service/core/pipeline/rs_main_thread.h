@@ -44,7 +44,7 @@
 #include "platform/common/rs_event_manager.h"
 #include "transaction/rs_transaction_data.h"
 #ifdef RES_SCHED_ENABLE
-#include "vsync_system_ability_listener.h""
+#include "vsync_system_ability_listener.h"
 #endif
 
 namespace OHOS::Rosen {

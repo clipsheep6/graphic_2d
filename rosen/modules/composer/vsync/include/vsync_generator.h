@@ -27,7 +27,7 @@
 #include <condition_variable>
 #include "vsync_type.h"
 #ifdef COMPOSER_SCHED_ENABLE
-#include "vsync_system_ability_listener.h""
+#include "vsync_system_ability_listener.h"
 #endif
 
 namespace OHOS {

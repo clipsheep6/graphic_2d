@@ -771,7 +771,6 @@ napi_value JsTextStyle::OnSetTextDecoration(napi_env env, napi_callback_info inf
 
 napi_value JsTextStyle::OnSetColor(napi_env env, napi_callback_info info)
 {
-    LOGE("ParamTestfromTextStyle | into SetColor");
     size_t argc = ARGC_ONE;
     napi_value argv[ARGC_ONE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);

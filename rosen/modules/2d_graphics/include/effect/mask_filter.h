@@ -33,17 +33,20 @@ enum class BlurType {
     INNER,
 };
 
-#ifndef USE_ROSEN_DRAWING
-class RS_EXPORT MaskFilter {
-#else
 class DRAWING_API MaskFilter {
-#endif
 public:
     enum class FilterType {
         NO_TYPE,
         BLUR,
     };
 
+    /**
+     * @brief Create a blur Maskfilter.
+     * @param style The Drawing::BlurStyle to use.
+     * @param sigma Standard deviation of the Gaussian blur to apply. Must be > 0.
+     * @param respectCTM if true the blur's sigma is modified by the CTM.
+     * @return A shared pointer to MaskFilter
+     */
     static std::shared_ptr<MaskFilter> CreateBlurMaskFilter(BlurType blurType, scalar sigma, bool respectCTM = true);
 
     virtual ~MaskFilter() = default;

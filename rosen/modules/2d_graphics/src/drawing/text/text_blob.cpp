@@ -52,17 +52,17 @@ std::shared_ptr<TextBlob> TextBlob::MakeFromRSXform(const void* text, size_t byt
     return StaticFactory::MakeFromRSXform(text, byteLength, xform, font, encoding);
 }
 
-std::shared_ptr<Data> TextBlob::Serialize() const
+std::shared_ptr<Data> TextBlob::Serialize(void* ctx) const
 {
     if (!textBlobImpl_) {
         return nullptr;
     }
-    return textBlobImpl_->Serialize();
+    return textBlobImpl_->Serialize(ctx);
 }
 
-std::shared_ptr<TextBlob> TextBlob::Deserialize(const void* data, size_t size)
+std::shared_ptr<TextBlob> TextBlob::Deserialize(const void* data, size_t size, void* ctx)
 {
-    return StaticFactory::DeserializeTextBlob(data, size);
+    return StaticFactory::DeserializeTextBlob(data, size, ctx);
 }
 
 void TextBlob::GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<uint16_t>& glyphIds)
@@ -73,6 +73,11 @@ void TextBlob::GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<ui
 Path TextBlob::GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob)
 {
     return StaticFactory::GetDrawingPathforTextBlob(glyphId, blob);
+}
+
+void TextBlob::GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points)
+{
+    return StaticFactory::GetDrawingPointsForTextBlob(blob, points);
 }
 
 std::shared_ptr<Rect> TextBlob::Bounds() const

@@ -20,6 +20,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <mutex>
 
 #include "modules/skparagraph/include/FontCollection.h"
 #include "txt/asset_font_manager.h"
@@ -36,10 +37,10 @@ public:
     size_t GetFontManagersCount() const;
 
     void SetupDefaultFontManager();
-    void SetDefaultFontManager(sk_sp<SkFontMgr> fontManager);
-    void SetAssetFontManager(sk_sp<SkFontMgr> fontManager);
-    void SetDynamicFontManager(sk_sp<SkFontMgr> fontManager);
-    void SetTestFontManager(sk_sp<SkFontMgr> fontManager);
+    void SetDefaultFontManager(std::shared_ptr<RSFontMgr> fontManager);
+    void SetAssetFontManager(std::shared_ptr<RSFontMgr> fontManager);
+    void SetDynamicFontManager(std::shared_ptr<RSFontMgr> fontManager);
+    void SetTestFontManager(std::shared_ptr<RSFontMgr> fontManager);
 
     void DisableFontFallback();
 
@@ -48,15 +49,16 @@ public:
     sk_sp<skia::textlayout::FontCollection> CreateSktFontCollection();
 
 private:
-    sk_sp<SkFontMgr> defaultFontManager_;
-    sk_sp<SkFontMgr> assetFontManager_;
-    sk_sp<SkFontMgr> dynamicFontManager_;
-    sk_sp<SkFontMgr> testFontManager_;
+    std::shared_ptr<RSFontMgr> defaultFontManager_;
+    std::shared_ptr<RSFontMgr> assetFontManager_;
+    std::shared_ptr<RSFontMgr> dynamicFontManager_;
+    std::shared_ptr<RSFontMgr> testFontManager_;
     bool enableFontFallback_;
 
     sk_sp<skia::textlayout::FontCollection> sktFontCollection_;
+    mutable std::mutex collectionMutex_;
 
-    std::vector<sk_sp<SkFontMgr>> GetFontManagerOrder() const;
+    std::vector<std::shared_ptr<RSFontMgr>> GetFontManagerOrder() const;
 
     DISALLOW_COPY_AND_ASSIGN(FontCollection);
 };

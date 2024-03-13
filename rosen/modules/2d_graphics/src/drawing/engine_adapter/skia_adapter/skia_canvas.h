@@ -41,11 +41,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-#ifndef USE_ROSEN_DRAWING
-class RS_EXPORT SkiaCanvas : public CoreCanvasImpl {
-#else
 class DRAWING_API SkiaCanvas : public CoreCanvasImpl {
-#endif
 public:
     static inline constexpr AdapterType TYPE = AdapterType::SKIA_ADAPTER;
 
@@ -116,7 +112,6 @@ public:
 
     // image
     void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py) override;
-    void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py) override;
     void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling) override;
     void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
         SrcRectConstraint constraint) override;

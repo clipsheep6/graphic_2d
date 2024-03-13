@@ -194,14 +194,25 @@ std::shared_ptr<Image> StaticFactory::MakeRasterData(const ImageInfo& info, std:
     return EngineStaticFactory::MakeRasterData(info, pixels, rowBytes);
 }
 
-std::shared_ptr<TextBlob> StaticFactory::DeserializeTextBlob(const void* data, size_t size)
+std::shared_ptr<TextBlob> StaticFactory::DeserializeTextBlob(const void* data, size_t size, void* ctx)
 {
 #ifdef ENABLE_DDGR_OPTIMIZE
     if (SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
         return DDGRStaticFactory::DeserializeTextBlob(data, size);
     }
 #endif
-    return EngineStaticFactory::DeserializeTextBlob(data, size);
+    return EngineStaticFactory::DeserializeTextBlob(data, size, ctx);
+}
+
+std::shared_ptr<Typeface> StaticFactory::DeserializeTypeface(const void* data, size_t size)
+{
+#ifdef ENABLE_DDGR_OPTIMIZE
+    if (SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        // DDGR need to be adapted
+        return nullptr;
+    }
+#endif
+    return EngineStaticFactory::DeserializeTypeface(data, size);
 }
 
 bool StaticFactory::CanComputeFastBounds(const Brush& brush)
@@ -285,6 +296,11 @@ Path StaticFactory::GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* 
     return EngineStaticFactory::GetDrawingPathforTextBlob(glyphId, blob);
 }
 
+void StaticFactory::GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points)
+{
+    return EngineStaticFactory::GetDrawingPointsForTextBlob(blob, points);
+}
+
 std::shared_ptr<DrawingSymbolLayersGroups> StaticFactory::GetSymbolLayersGroups(uint32_t glyphId)
 {
 #ifdef ENABLE_DDGR_OPTIMIZE
@@ -293,6 +309,12 @@ std::shared_ptr<DrawingSymbolLayersGroups> StaticFactory::GetSymbolLayersGroups(
     }
 #endif
     return EngineStaticFactory::GetSymbolLayersGroups(glyphId);
+}
+
+std::shared_ptr<std::vector<std::vector<DrawingPiecewiseParameter>>> StaticFactory::GetGroupParameters(
+    DrawingAnimationType type, DrawingAnimationSubType subType, int animationMode)
+{
+    return EngineStaticFactory::GetGroupParameters(type, subType, animationMode);
 }
 
 FontStyleSet* StaticFactory::CreateEmpty()

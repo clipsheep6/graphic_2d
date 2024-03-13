@@ -39,13 +39,8 @@ public:
 
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
-#ifndef USE_ROSEN_DRAWING
-    std::optional<SkIRect> InitializeEffectRegion() const { return SkIRect::MakeEmpty(); }
-    void SetEffectRegion(const std::optional<SkIRect>& effectRegion);
-#else
     std::optional<Drawing::RectI> InitializeEffectRegion() const { return Drawing::RectI(); }
     void SetEffectRegion(const std::optional<Drawing::RectI>& effectRegion);
-#endif
     // record if there is filter cache for occlusion before this effect node
     void SetVisitedFilterCacheStatus(bool isEmpty)
     {
@@ -73,6 +68,7 @@ private:
     bool isVisitedOcclusionFilterCacheEmpty_ = true;
     bool isRotationChanged_ = false;
     bool preRotationStatus_ = false;
+    bool preStaticStatus_ = false;
     int invalidateTimes_ = 0;
     int cacheUpdateInterval_ = 1;
 };

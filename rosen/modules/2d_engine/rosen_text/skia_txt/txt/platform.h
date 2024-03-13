@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "include/core/SkFontMgr.h"
+#include "text/font_mgr.h"
 #include "utils.h"
 
 namespace OHOS {
@@ -27,7 +28,7 @@ namespace Rosen {
 namespace SPText {
 std::vector<std::string> GetDefaultFontFamilies();
 
-sk_sp<SkFontMgr> GetDefaultFontManager();
+std::shared_ptr<Drawing::FontMgr> GetDefaultFontManager();
 } // namespace SPText
 } // namespace Rosen
 } // namespace OHOS

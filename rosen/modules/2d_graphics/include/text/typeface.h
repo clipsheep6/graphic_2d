@@ -20,8 +20,9 @@
 #include <cstdint>
 
 #include "impl_interface/typeface_impl.h"
-#include "utils/memory_stream.h"
 #include "text/font_style.h"
+#include "utils/data.h"
+#include "utils/memory_stream.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -36,26 +37,26 @@ public:
     static std::shared_ptr<Typeface> MakeFromStream(std::unique_ptr<MemoryStream> memoryStream, int32_t index = 0);
     static std::shared_ptr<Typeface> MakeFromName(const char familyName[], FontStyle fontStyle);
 
-    /*
+    /**
      * @brief   Get the familyName for this typeface.
      * @return  FamilyName.
      */
     std::string GetFamilyName() const;
 
-    /*
+    /**
      * @brief   Get the fontStyle for this typeface.
      * @return  FontStyle.
      */
     FontStyle GetFontStyle() const;
 
-    /*
+    /**
      * @brief      Get the size of its contents for the given tag.
      * @param tag  The given table tag.
      * @return     If not present, return 0.
      */
     size_t GetTableSize(uint32_t tag) const;
 
-    /*
+    /**
      * @brief         Get the size of its contents for the given tag.
      * @param tag     The given table tag.
      * @param offset  The offset in bytes into the table's contents where the copy should start from.
@@ -65,19 +66,22 @@ public:
      */
     size_t GetTableData(uint32_t tag, size_t offset, size_t length, void* data) const;
 
-    /*
+    /**
      * @brief   Get fontStyle is italic.
      * @return  If fontStyle is italic, return true.
      */
     bool GetItalic() const;
 
-    /*
+    /**
      * @brief   Get a 32bit value for this typeface, unique for the underlying font data.
      * @return  UniqueID.
      */
     uint32_t GetUniqueID() const;
 
     int32_t GetUnitsPerEm() const;
+
+    std::shared_ptr<Data> Serialize() const;
+    static std::shared_ptr<Typeface> Deserialize(const void* data, size_t size);
 
     template<typename T>
     T* GetImpl() const

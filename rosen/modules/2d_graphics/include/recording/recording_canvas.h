@@ -20,7 +20,7 @@
 #include <stack>
 
 #include "draw/canvas.h"
-#include "recording/adaptive_image_helper.h"
+#include "image/gpu_context.h"
 #include "recording/draw_cmd_list.h"
 #include "recording/recording_handle.h"
 #ifdef ROSEN_OHOS
@@ -30,8 +30,8 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-/*
- * @brief  RecordingCanvas is an empty canvas, which does not act on any surface,
+/**
+ * @brief RecordingCanvas is an empty canvas, which does not act on any surface,
  * and is used to record the sequence of draw calls for the canvas.
  * Draw calls are kept in linear memory in DrawCmdList, Subsequent playback can be performed through DrawCmdList.
  */
@@ -52,10 +52,12 @@ public:
         gpuContext_ = gpuContext;
     }
 
+#ifdef ACE_ENABLE_GPU
     std::shared_ptr<GPUContext> GetGPUContext() override
     {
         return gpuContext_;
     }
+#endif
 
     void Clear() const;
 
@@ -118,13 +120,12 @@ public:
     void Discard() override;
 
     void ClipAdaptiveRoundRect(const std::vector<Point>& radius);
-    void DrawImage(const std::shared_ptr<Image>& image, const std::shared_ptr<Data>& data,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
-    void DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
-        const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling);
 
     void SetIsCustomTextType(bool isCustomTextType);
     bool IsCustomTextType() const;
+
+    void SetIsCustomTypeface(bool isCustomTypeface);
+    bool IsCustomTypeface() const;
 
     using DrawFunc = std::function<void(Drawing::Canvas* canvas, const Drawing::Rect* rect)>;
 protected:
@@ -142,6 +143,7 @@ private:
     void GenerateCachedOpForTextblob(const TextBlob* blob, const scalar x, const scalar y);
     void GenerateCachedOpForTextblob(const TextBlob* blob, const scalar x, const scalar y, Paint& paint);
     bool isCustomTextType_ = false;
+    bool isCustomTypeface_ = false;
     std::optional<Brush> customTextBrush_ = std::nullopt;
     std::optional<Pen> customTextPen_ = std::nullopt;
     std::stack<SaveOpState> saveOpStateStack_;

@@ -38,6 +38,11 @@ enum BufferState {
     BUFFER_STATE_ATTACHED,
 };
 
+enum InvokerType {
+    PRODUCER_INVOKER,
+    CONSUMER_INVOKER,
+};
+
 using BufferElement = struct BufferElement {
     sptr<SurfaceBuffer> buffer;
     BufferState state;
@@ -146,6 +151,9 @@ public:
         isCpuAccessable_ = on;
     }
 
+    GSError AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
+    GSError DetachBufferFromQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType);
+
 private:
     GSError AllocBuffer(sptr<SurfaceBuffer>& buffer, const BufferRequestConfig &config);
     void DeleteBufferInCache(uint32_t sequence);
@@ -169,6 +177,7 @@ private:
     GSError CheckBufferQueueCache(uint32_t sequence);
     GSError ReallocBuffer(const BufferRequestConfig &config, struct IBufferProducer::RequestBufferReturnValue &retval);
     void SetSurfaceBufferHebcMetaLocked(sptr<SurfaceBuffer> buffer);
+    GSError RequestBufferCheckStatus();
 
     int32_t defaultWidth = 0;
     int32_t defaultHeight = 0;

@@ -16,7 +16,6 @@
 #include "rs_render_service.h"
 #include "hgm_core.h"
 #include "rs_main_thread.h"
-#include "rs_qos_thread.h"
 #include "rs_render_service_connection.h"
 #include "vsync_generator.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -27,6 +26,7 @@
 #include "touch_screen/touch_screen.h"
 #endif
 
+#include <malloc.h>
 #include <string>
 #include <unistd.h>
 
@@ -46,6 +46,12 @@ RSRenderService::~RSRenderService() noexcept {}
 
 bool RSRenderService::Init()
 {
+    // enable cache
+    mallopt(M_OHOS_CONFIG, M_TCACHE_NORMAL_MODE);
+    mallopt(M_OHOS_CONFIG, M_ENABLE_OPT_TCACHE);
+    mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_ENABLE);
+    mallopt(M_DELAYED_FREE, M_DELAYED_FREE_ENABLE);
+
     RSMainThread::Instance();
     RSUniRenderJudgement::InitUniRenderConfig();
 #ifdef TP_FEATURE_ENABLE
@@ -80,6 +86,8 @@ bool RSRenderService::Init()
     rsVSyncDistributor_ = new VSyncDistributor(rsVSyncController_, "rs");
     appVSyncDistributor_ = new VSyncDistributor(appVSyncController_, "app");
 
+    generator->SetRSDistributor(rsVSyncDistributor_);
+
     mainThread_ = RSMainThread::Instance();
     if (mainThread_ == nullptr) {
         return false;
@@ -90,9 +98,6 @@ bool RSRenderService::Init()
     mainThread_->vsyncGenerator_ = generator;
     mainThread_->Init();
     mainThread_->SetAppVSyncDistributor(appVSyncDistributor_);
- 
-    RSQosThread::GetInstance()->appVSyncDistributor_ = appVSyncDistributor_;
-    RSQosThread::ThreadStart();
 
     // Wait samgr ready for up to 5 second to ensure adding service to samgr.
     int status = WaitParameter("bootevent.samgr.ready", "true", 5);
@@ -303,15 +308,13 @@ void RSRenderService::DumpRSEvenParam(std::string& dumpString) const
     dumpString.append("\n");
     dumpString.append("-- EventParamListDump: \n");
     mainThread_->RsEventParamDump(dumpString);
-    dumpString.append("-- QosDump: \n");
-    mainThread_->QosStateDump(dumpString);
 }
 
-void RSRenderService::DumpRenderServiceTree(std::string& dumpString) const
+void RSRenderService::DumpRenderServiceTree(std::string& dumpString, bool forceDumpSingleFrame) const
 {
     dumpString.append("\n");
     dumpString.append("-- RenderServiceTreeDump: \n");
-    mainThread_->RenderServiceTreeDump(dumpString);
+    mainThread_->RenderServiceTreeDump(dumpString, forceDumpSingleFrame);
 }
 
 void RSRenderService::DumpRefreshRateCounts(std::string& dumpString) const
@@ -356,13 +359,8 @@ void RSRenderService::DumpSurfaceNode(std::string& dumpString, NodeId id) const
     dumpString += "Bounds: [" + std::to_string(node->GetRenderProperties().GetBoundsWidth()) + "," +
         std::to_string(node->GetRenderProperties().GetBoundsHeight()) + "]\n";
     if (auto& contextClipRegion = node->contextClipRect_) {
-#ifndef USE_ROSEN_DRAWING
-        dumpString += "ContextClipRegion: [" + std::to_string(contextClipRegion->width()) + "," +
-                      std::to_string(contextClipRegion->height()) + "]\n";
-#else
         dumpString += "ContextClipRegion: [" + std::to_string(contextClipRegion->GetWidth()) + "," +
                       std::to_string(contextClipRegion->GetHeight()) + "]\n";
-#endif
     } else {
         dumpString += "ContextClipRegion: [ empty ]\n";
     }
@@ -450,6 +448,7 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     std::u16string arg4(u"nodeNotOnTree");
     std::u16string arg5(u"allSurfacesMem");
     std::u16string arg6(u"RSTree");
+    std::u16string arg6_1(u"MultiRSTrees");
     std::u16string arg7(u"EventParamList");
     std::u16string arg8(u"h");
     std::u16string arg9(u"allInfo");
@@ -485,6 +484,10 @@ void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::s
     if (argSets.count(arg9) || argSets.count(arg6) != 0) {
         mainThread_->ScheduleTask(
             [this, &dumpString]() { DumpRenderServiceTree(dumpString); }).wait();
+    }
+    if (argSets.count(arg9) || argSets.count(arg6_1) != 0) {
+        mainThread_->ScheduleTask(
+            [this, &dumpString]() {DumpRenderServiceTree(dumpString, false); }).wait();
     }
     if (argSets.count(arg9) ||argSets.count(arg7) != 0) {
         mainThread_->ScheduleTask(

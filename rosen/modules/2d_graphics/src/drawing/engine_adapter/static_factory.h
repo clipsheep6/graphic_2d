@@ -62,7 +62,8 @@ public:
         RasterReleaseProc rasterReleaseProc, ReleaseContext releaseContext);
     static std::shared_ptr<Image> MakeRasterData(const ImageInfo& info, std::shared_ptr<Data> pixels,
         size_t rowBytes);
-    static std::shared_ptr<TextBlob> DeserializeTextBlob(const void* data, size_t size);
+    static std::shared_ptr<TextBlob> DeserializeTextBlob(const void* data, size_t size, void* ctx);
+    static std::shared_ptr<Typeface> DeserializeTypeface(const void* data, size_t size);
     static bool CanComputeFastBounds(const Brush& brush);
     static const Rect& ComputeFastBounds(const Brush& brush, const Rect& orig, Rect* storage);
     static bool AsBlendMode(const Brush& brush);
@@ -72,7 +73,10 @@ public:
         const std::vector<Path>& paths, std::vector<Path>& multPaths);
     static void GetDrawingGlyphIDforTextBlob(const TextBlob* blob, std::vector<uint16_t>& glyphIds);
     static Path GetDrawingPathforTextBlob(uint16_t glyphId, const TextBlob* blob);
+    static void GetDrawingPointsForTextBlob(const TextBlob* blob, std::vector<Point>& points);
     static std::shared_ptr<DrawingSymbolLayersGroups> GetSymbolLayersGroups(uint32_t glyphId);
+    static std::shared_ptr<std::vector<std::vector<DrawingPiecewiseParameter>>> GetGroupParameters(
+        DrawingAnimationType type, DrawingAnimationSubType subType, int animationMode);
     static FontStyleSet* CreateEmpty();
 };
 } // namespace Drawing

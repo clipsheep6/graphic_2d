@@ -29,7 +29,7 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
 
     JsFontCollection* jsFontCollection = new(std::nothrow) JsFontCollection();
     status = napi_wrap(env, jsThis, jsFontCollection,
-                       JsFontCollection::Destructor, nullptr, nullptr);
+        JsFontCollection::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsFontCollection;
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Failed to wrap native instance");
@@ -45,7 +45,7 @@ napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
 
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
-                                           sizeof(properties) / sizeof(properties[0]), properties, &constructor);
+        sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
         return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Init Failed");
     }

@@ -19,6 +19,7 @@
 
 #include "animation/rs_value_estimator.h"
 #include "command/rs_animation_command.h"
+#include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
 
@@ -37,6 +38,7 @@ void RSRenderParticleAnimation::DumpAnimationType(std::string& out) const
 
 bool RSRenderParticleAnimation::Animate(int64_t time)
 {
+    RS_OPTIONAL_TRACE_NAME("RSRenderParticleAnimation::Animate");
     int64_t deltaTime = time - animationFraction_.GetLastFrameTime();
     animationFraction_.SetLastFrameTime(time);
     if (particleSystem_ != nullptr) {
@@ -48,6 +50,12 @@ bool RSRenderParticleAnimation::Animate(int64_t time)
         property->Set(renderParticleVector_);
     }
     auto target = GetTarget();
+    if (!target) {
+        return true;
+    } else if (!target->IsOnTheTree() || !target->GetRenderProperties().GetVisible()) {
+        target->RemoveModifier(property_->GetId());
+        return true;
+    }
     if (particleSystem_ == nullptr || particleSystem_->IsFinish()) {
         if (target) {
             target->RemoveModifier(property_->GetId());

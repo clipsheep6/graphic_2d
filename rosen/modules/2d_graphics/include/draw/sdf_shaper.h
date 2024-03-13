@@ -94,12 +94,7 @@ public:
     SDFShape* BuildShape();
     void SetColor(std::string fillColor, std::string strokeColor);
     
-
-    
-
     SDFModule* createNewNode(SDFModule** node, int val, SDF_TYPE type) const;
-    
-
 private:
     
     void addCircle(SDFModule* node);
@@ -182,7 +177,7 @@ private:
     {
         float c = cos(a);
         float s = sin(a);
-        mat2 rot = mat2(c,s,-s,c);
+        mat2 rot = mat2(c, s, -s, c);
         return rot * p;
     }
 

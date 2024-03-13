@@ -70,8 +70,8 @@ float sdEllipse(vec2 p, vec2 ab)
 {
     p = abs(p); if (p.x > p.y) {p=p.yx; ab=ab.yx;}
     float l = ab.y*ab.y - ab.x*ab.x;
-    float m = ab.x*p.x/l;      float m2 = m*m; 
-    float n = ab.y*p.y/l;      float n2 = n*n; 
+    float m = ab.x*p.x/l;      float m2 = m*m;
+    float n = ab.y*p.y/l;      float n2 = n*n;
     float c = (m2 + n2 - 1.0) / 3.0; float c3 = c * c * c;
     float q = c3 + m2*n2*2.0;
     float d = c3 + m2*n2;
@@ -85,7 +85,7 @@ float sdEllipse(vec2 p, vec2 ab)
         float ry = sqrt(-c*(s - t + 2.0) + m2);
         co = (ry+sign(l)*rx+abs(g)/(rx*ry)- m)/2.0;
     } else {
-        float h = 2.0*m*n*sqrt( d );
+        float h = 2.0*m*n*sqrt(d);
         float s = sign(q+h)*pow(abs(q+h), 1.0/3.0);
         float u = sign(q-h)*pow(abs(q-h), 1.0/3.0);
         float rx = -s - u - c*4.0 + 2.0*m2;
@@ -243,8 +243,8 @@ void SDFShape::addRhombus(SDFModule* node)
     if (m_shapeSet[static_cast<int>(SDF_TYPE::SD_RHOMBUS)] == false) {
         m_functionShader = m_functionShader + R"(
 float ndot(in vec2 a, in vec2 b)
-{ 
-    return a.x*b.x - a.y*b.y; 
+{
+    return a.x*b.x - a.y*b.y;
 }
 float sdRhombus(vec2 p, vec2 b)
 {
@@ -288,13 +288,13 @@ void SDFShape::addParallelogram(SDFModule* node)
 float sdParallelogram(vec2 p, float wi, float he, float sk)
 {
     vec2 e = vec2(sk, he);
-    p = (p.y<0.0) ? -p : p;
+    p = (p.y < 0.0) ? -p : p;
     vec2  w = p - e; w.x -= clamp(w.x, -wi, wi);
-    vec2  d = vec2(dot(w,w), -w.y);
+    vec2  d = vec2(dot(w, w), -w.y);
     float s = p.x*e.y - p.y*e.x;
-    p = (s<0.0)?-p:p;
-    vec2  v = p - vec2(wi,0); v -= e*clamp(dot(v,e)/dot(e,e), -1.0, 1.0);
-    d = min( d, vec2(dot(v,v), wi*he-abs(s)));
+    p = (s < 0.0) ? -p : p;
+    vec2  v = p - vec2(wi, 0); v -= e*clamp(dot(v, e)/dot(e, e), -1.0, 1.0);
+    d = min( d, vec2(dot(v, v), wi*he-abs(s)));
     return sqrt(d.x)*sign(-d.y);
 }
         )";
@@ -331,11 +331,11 @@ void SDFShape::addPentagon(SDFModule* node)
         m_functionShader = m_functionShader + R"(
 float sdPentagon(vec2 p, float r)
 {
-    const vec3 k = vec3(0.809016994,0.587785252,0.726542528);
+    const vec3 k = vec3(0.809016994, 0.587785252, 0.726542528);
     p.x = abs(p.x);
     p -= 2.0*min(dot(vec2(-k.x, k.y), p), 0.0)*vec2(-k.x, k.y);
     p -= 2.0*min(dot(vec2(k.x, k.y), p), 0.0)*vec2(k.x, k.y);
-    p -= vec2(clamp(p.x, -r*k.z, r*k.z), r);    
+    p -= vec2(clamp(p.x, -r*k.z, r*k.z), r);
     return length(p)*sign(p.y);
 }
         )";
@@ -408,8 +408,8 @@ float sdOctogon(in vec2 p, in float r)
 {
     const vec3 k = vec3(-0.9238795325, 0.3826834323, 0.4142135623);
     p = abs(p);
-    p -= 2.0*min(dot(vec2( k.x,k.y), p), 0.0)*vec2( k.x, k.y);
-    p -= 2.0*min(dot(vec2(-k.x,k.y), p), 0.0)*vec2(-k.x, k.y);
+    p -= 2.0*min(dot(vec2(k.x, k.y), p), 0.0)*vec2(k.x, k.y);
+    p -= 2.0*min(dot(vec2(-k.x, k.y), p), 0.0)*vec2(-k.x, k.y);
     p -= vec2(clamp(p.x, -k.z*r, k.z*r), r);
     return length(p)*sign(p.y);
 }
@@ -470,7 +470,8 @@ float sdSegment(in vec2 p, in vec2 a, in vec2 b)
     char buf[ADD_STR_LEN];
     m_shapeCount++;
     (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdSegment(p%d, vec2(para%d, para%d), vec2(para%d, para%d));",
-                    m_shapeCount, m_transCount, (m_paraCount-3), (m_paraCount-2), (m_paraCount-1), m_paraCount); //3 is para offset. 2 is para offset.
+                    m_shapeCount, m_transCount, (m_paraCount-3), //3 is para offset.
+                    (m_paraCount-2), (m_paraCount-1), m_paraCount);  //2 is para offset.
     std::string shape = buf;
     shape = endTransString + shape;
     m_shapeShader = m_shapeShader + shape;
@@ -711,7 +712,7 @@ float sdCapsule(vec2 p, vec2 a, vec2 b, float r)
     char buf[ADD_STR_LEN];
     m_shapeCount++;
     (void)sprintf_s(buf, ADD_STR_LEN, "float d%d = sdCapsule(p%d, vec2(para%d, para%d), vec2(para%d, para%d), para%d);",
-                    m_shapeCount, m_transCount, (m_paraCount - 4), (m_paraCount - 3), // 4 is para offset, 3 is para offset, 
+                    m_shapeCount, m_transCount, (m_paraCount - 4), (m_paraCount - 3), // 4 is offset, 3 is offset.
                     (m_paraCount - 2), (m_paraCount - 1), m_paraCount); // 2 is para offset.
     std::string shape = buf;
     shape = endTransString + shape;
@@ -768,7 +769,7 @@ float opSmoothSubtraction(float d1, float d2, float k)
 float sdArrow(vec2 p, float r)
 {
     float d1 = sdEquilateralTriangle(p, r);
-    d1 = opRound(d1, 0.2 * r); 
+    d1 = opRound(d1, 0.2 * r);
     float d2 = sdCircle(p+vec2(0., 2.5 * r), 2. * r);
     float d = opSmoothSubtraction(d2, d1, 0.2 * r);
     return d;
@@ -1202,7 +1203,6 @@ void SDFShape::AddTransform(SDFModule* node)
     m_transfrom.push(trans);
     LOGD("sdf m_trandfrom size is %{public}lu.", m_transfrom.size());
     m_transfromNums.push(m_transCount);
-
 }
 
 void SDFShape::DeleteTransform(SDFModule* node)

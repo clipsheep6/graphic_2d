@@ -423,7 +423,7 @@ void VSyncGenerator::SubScribeSystemAbility()
     std::string strTid = std::to_string(gettid());
 
     saStatusChangeListener_ = new (std::nothrow)VSyncSystemAbilityListener(threadName, strUid, strPid, strTid);
-    int32_t ret = systemAbilityManager->SubScribeSystemAbility(RES_SCHED_SYS_ABILITY_ID, saStatusChangeListener_);
+    int32_t ret = systemAbilityManager->SubscribeSystemAbility(RES_SCHED_SYS_ABILITY_ID, saStatusChangeListener_);
     if (ret != ERR_OK) {
         VLOGE("%{public}s subscribe system ability %{public}d failed.", __func__, RES_SCHED_SYS_ABILITY_ID);
         saStatusChangeListener_ = nullptr;

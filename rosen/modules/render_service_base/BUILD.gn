@@ -161,6 +161,9 @@ ohos_source_set("render_service_base_src") {
     "src/ipc_callbacks/surface_capture_callback_ipc_interface_code_access_verifier.cpp",
     "src/ipc_callbacks/surface_capture_callback_proxy.cpp",
     "src/ipc_callbacks/surface_capture_callback_stub.cpp",
+    "src/ipc_callbacks/uifirst_cache_finish_callback_proxy.cpp",
+    "src/ipc_callbacks/uifirst_cache_finish_callback_stub.cpp",
+    "src/ipc_callbacks/uifirst_cache_finish_callback_ipc_interface_code_access_verifier.cpp",
 
     #ipc_security
     "src/ipc_security/rs_ipc_interface_code_access_verifier_base.cpp",

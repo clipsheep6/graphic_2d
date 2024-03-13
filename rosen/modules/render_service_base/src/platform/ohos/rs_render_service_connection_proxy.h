@@ -119,6 +119,9 @@ public:
     void RegisterBufferClearListener(
         NodeId id, sptr<RSIBufferClearCallback> callback) override;
 
+    void RegisterUIFirstCacheFinishListener(
+        NodeId id, sptr<RSIUIFirstCacheFinishCallback> callback) override;
+
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) override;
 
     int32_t GetScreenSupportedMetaDataKeys(ScreenId id, std::vector<ScreenHDRMetadataKey>& keys) override;

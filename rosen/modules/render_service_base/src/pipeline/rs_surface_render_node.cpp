@@ -683,6 +683,70 @@ void RSSurfaceRenderNode::RegisterBufferClearListener(
     clearBufferCallback_ = callback;
 }
 
+void RSSurfaceRenderNode::RegisterUIFirstCacheFinishListener(sptr<RSIUIFirstCacheFinishCallback> callback)
+{
+    if (callback) {
+        RS_TRACE_NAME_FMT("RSSurfaceRenderNode::RegisterUIFirstCacheFinishListener %lu", GetId());
+        uifirstCacheFinishCallback_ = callback;
+        isNotifyUIFirstCacheFinish_ = false;
+        isNeedNotifyUIFirstCacheFinish_ = false;
+    }
+}
+
+void RSSurfaceRenderNode::SetNotifyUIFirstCacheFinish(bool isNotifyUIFirstCacheFinish)
+{
+    isNotifyUIFirstCacheFinish_ = isNotifyUIFirstCacheFinish;
+    if (IsLeashWindow()) {
+        for (auto& child : *GetSortedChildren()) {
+            auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            if (node && node->IsAppWindow()) {
+                node->SetNotifyUIFirstCacheFinish(isNotifyUIFirstCacheFinish);
+                continue;
+            }
+        }
+    }
+}
+
+void RSSurfaceRenderNode::NotifyUIFirstCacheFinish()
+{
+    if (!isNeedNotifyUIFirstCacheFinish_) {
+        return;
+    }
+    if (!isNotifyUIFirstCacheFinish_) {
+        return;
+    }
+    if (IsLeashWindow()) {
+        for (auto& child : *GetSortedChildren()) {
+            auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            if (node && node->IsAppWindow()) {
+                node->NotifyUIFirstCacheFinish();
+                continue;
+            }
+        }
+    } else if (IsAppWindow()) {
+        if (uifirstCacheFinishCallback_) {
+            uifirstCacheFinishCallback_->OnCacheFinish();
+        } else {
+            ROSEN_LOGI("no uifirstCacheFinishCallback_ %{public}" PRIu64 "", GetId());
+        }
+    }
+}
+
+void RSSurfaceRenderNode::ResetNotifyUIFirstCacheFinish()
+{
+    isNotifyUIFirstCacheFinish_ = false;
+    isNeedNotifyUIFirstCacheFinish_ = false;
+    if (IsLeashWindow()) {
+        for (auto& child : *GetSortedChildren()) {
+            auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child);
+            if (node && node->IsAppWindow()) {
+                node->ResetNotifyUIFirstCacheFinish();
+                continue;
+            }
+        }
+    }
+}
+
 void RSSurfaceRenderNode::SetNotifyRTBufferAvailable(bool isNotifyRTBufferAvailable)
 {
     isNotifyRTBufferAvailable_ = isNotifyRTBufferAvailable;

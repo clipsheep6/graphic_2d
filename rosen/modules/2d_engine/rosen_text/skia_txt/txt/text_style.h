@@ -124,6 +124,7 @@ public:
     std::vector<std::string> fontFamilies;
     double fontSize = 14.0;
     double letterSpacing = 0.0;
+    double baselineOffset = 0.0;
     double wordSpacing = 0.0;
     double height = 1.0;
     bool heightOverride = false;

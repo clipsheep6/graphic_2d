@@ -77,6 +77,7 @@ struct TextStyle {
     std::vector<std::string> fontFamilies;
     double fontSize = 14.0; // default is libtxt text style font size
     double letterSpacing = 0.0;
+    double baselineOffset = 0.0;
     double wordSpacing = 0.0;
     double heightScale = 1.0;
     bool halfLeading = false;

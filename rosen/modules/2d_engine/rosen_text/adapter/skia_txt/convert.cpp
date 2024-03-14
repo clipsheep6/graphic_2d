@@ -113,6 +113,7 @@ SPText::TextStyle Convert(const TextStyle& style)
     textStyle.fontFamilies = style.fontFamilies;
     textStyle.fontSize = style.fontSize;
     textStyle.letterSpacing = style.letterSpacing;
+    textStyle.baselineOffset = style.baselineOffset;
     textStyle.wordSpacing = style.wordSpacing;
     textStyle.height = style.heightScale;
     textStyle.heightOverride = style.heightOnly;

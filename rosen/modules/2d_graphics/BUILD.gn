@@ -414,7 +414,7 @@ if (!is_arkui_x) {
       if (platform == "ohos") {
         version_script = "2d_graphics.versionscript"
         symlink_target_name = [ "libnative_drawing.so" ]
-        innerapi_tags = [ "platformsdk_indirect" ]
+        innerapi_tags = [ "ndk" ]
       }
 
       part_name = "graphic_2d"
@@ -426,7 +426,7 @@ if (!is_arkui_x) {
       symlink_target_name = [ "libnative_drawing.so" ]
       deps = [ ":2d_graphics_source_ohos" ]
       public_configs = [ ":export_config" ]
-      innerapi_tags = [ "platformsdk_indirect" ]
+      innerapi_tags = [ "ndk" ]
       part_name = "graphic_2d"
       subsystem_name = "graphic"
     }

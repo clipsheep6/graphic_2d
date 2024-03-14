@@ -3,7 +3,7 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
 
-void DrawPathTest::OnTestFunctionCpu(OH_Drawing_Canvas* canvas)
+void DrawPathTest::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
@@ -24,7 +24,7 @@ void DrawPathTest::OnTestFunctionCpu(OH_Drawing_Canvas* canvas)
     pen = nullptr;
 }
 
-void DrawPathTest::OnTestPerformanceCpu(OH_Drawing_Canvas* canvas)
+void DrawPathTest::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();

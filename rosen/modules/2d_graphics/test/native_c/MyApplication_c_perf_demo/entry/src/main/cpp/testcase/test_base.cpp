@@ -52,24 +52,20 @@ uint32_t TestBase::GetTime()
 void TestBase::TestFunctionCpu(napi_env env)
 {
     CreateBitmapCanvas();
-    OnTestFunctionCpu(bitmapCanvas_);
+    OnTestFunction(bitmapCanvas_);
     BitmapCanvasToFile(env);
 }
 
 
-void TestBase::TestFunctionCpu(OH_Drawing_Canvas* canvas)
-{
-    OnTestFunctionCpu(canvas);
-}
+void TestBase::TestFunctionGpu(OH_Drawing_Canvas *canvas) { OnTestFunction(canvas); }
 
-void TestBase::TestPerformanceCpu(OH_Drawing_Canvas* canvas)
-{
+void TestBase::TestPerformanceGpu(OH_Drawing_Canvas *canvas) {
     auto timeZero = std::chrono::high_resolution_clock::now();
     auto start = std::chrono::high_resolution_clock::now();
     DRAWING_LOGE("DrawingApiTest Started: [%{public}lld]",
                  std::chrono::duration_cast<std::chrono::milliseconds>(start - timeZero).count());
 
-    OnTestPerformanceCpu(canvas);
+    OnTestPerformance(canvas);
 
     auto end = std::chrono::high_resolution_clock::now();
     DRAWING_LOGE("DrawingApiTest Finished: [%{public}lld]",
@@ -87,7 +83,7 @@ void TestBase::TestPerformanceCpu(napi_env env)
     DRAWING_LOGE("DrawingApiTest Started: [%{public}lld]",
                  std::chrono::duration_cast<std::chrono::milliseconds>(start - timeZero).count());
 
-    OnTestPerformanceCpu(bitmapCanvas_);
+    OnTestPerformance(bitmapCanvas_);
 
     auto end = std::chrono::high_resolution_clock::now();
     DRAWING_LOGE("DrawingApiTest Finished: [%{public}lld]",
@@ -136,7 +132,7 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     void *bitmapAddr = OH_Drawing_BitmapGetPixels(bitmap_);
     int32_t res = OH_PixelMap_CreatePixelMap(env, createOps, (uint8_t *)bitmapAddr, bufferSize, &pixelMap);
     if (res != IMAGE_RESULT_SUCCESS || pixelMap == nullptr) {
-        DRAWING_LOGE("failed to OH_PixelMap_CreatePixelMap width = %{public}u, height = %{public}u", bitmapWidth_, bitmapHeight_);
+        DRAWING_LOGE(" failed to OH_PixelMap_CreatePixelMap width = %{public}u, height = %{public}u", bitmapWidth_, bitmapHeight_);
         return;
     }
 

@@ -41,13 +41,13 @@ public:
     uint32_t GetTime();
 
     void TestFunctionCpu(napi_env env);
-    void TestFunctionCpu(OH_Drawing_Canvas* canvas);
+    void TestFunctionGpu(OH_Drawing_Canvas* canvas);
     void TestPerformanceCpu(napi_env env);
-    void TestPerformanceCpu(OH_Drawing_Canvas* canvas);
+    void TestPerformanceGpu(OH_Drawing_Canvas* canvas);
     // CPU drawing function test, save drawing results to image (filename_)
-    virtual void OnTestFunctionCpu(OH_Drawing_Canvas* canvas) {};
+    virtual void OnTestFunction(OH_Drawing_Canvas* canvas) {};
     // CPU drawing performance test, execute critical interface testCount_ times repeatedly
-    virtual void OnTestPerformanceCpu(OH_Drawing_Canvas* canvas) {};
+    virtual void OnTestPerformance(OH_Drawing_Canvas* canvas) {};
 
 protected:
     // virtual void OnRecording(OH_Drawing_Canvas* canvas) = 0;

@@ -14,7 +14,7 @@
 #include "common/log_common.h"
 
 
-void DrawTextBlob::OnTestFunctionCpu(OH_Drawing_Canvas *canvas)
+void DrawTextBlob::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
     // 创建字体，并设置文字大小
     OH_Drawing_Font *font = OH_Drawing_FontCreate();
@@ -55,7 +55,7 @@ void DrawTextBlob::OnTestFunctionCpu(OH_Drawing_Canvas *canvas)
     OH_Drawing_FontDestroy(font);
 }
 
-void DrawTextBlob::OnTestPerformanceCpu(OH_Drawing_Canvas* canvas)
+void DrawTextBlob::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     // 创建字体，并设置文字大小
     OH_Drawing_Font *font = OH_Drawing_FontCreate();

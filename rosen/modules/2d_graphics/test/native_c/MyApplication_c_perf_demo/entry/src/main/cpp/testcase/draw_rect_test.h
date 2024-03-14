@@ -7,7 +7,7 @@ public:
     DrawRectTest() : TestBase() {}
     ~DrawRectTest() = default;
 protected:
-    void OnTestFunctionCpu(OH_Drawing_Canvas* canvas) override;
-    void OnTestPerformanceCpu(OH_Drawing_Canvas* canvas) override;
+    void OnTestFunction(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 #endif // DRAW_RECT_TEST_H

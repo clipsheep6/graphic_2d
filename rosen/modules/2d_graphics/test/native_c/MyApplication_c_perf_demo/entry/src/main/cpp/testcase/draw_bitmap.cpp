@@ -6,7 +6,7 @@
 #include "common/log_common.h"
 
 
-void DrawBitmap::OnTestFunctionCpu(OH_Drawing_Canvas *canvas)
+void DrawBitmap::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
     OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
     // 定义bitmap的像素格式
@@ -25,7 +25,7 @@ void DrawBitmap::OnTestFunctionCpu(OH_Drawing_Canvas *canvas)
     OH_Drawing_CanvasDrawBitmap(canvas, bitmap, 0, 0);
     }
 
-void DrawBitmap::OnTestPerformanceCpu(OH_Drawing_Canvas *canvas) {
+void DrawBitmap::OnTestPerformance(OH_Drawing_Canvas *canvas) {
 
     OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
     // 定义bitmap的像素格式

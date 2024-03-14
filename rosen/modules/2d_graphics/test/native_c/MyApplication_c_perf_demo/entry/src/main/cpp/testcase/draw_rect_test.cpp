@@ -3,7 +3,7 @@
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_rect.h>
 
-void DrawRectTest::OnTestFunctionCpu(OH_Drawing_Canvas* canvas)
+void DrawRectTest::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷Brush对象，Brush对象用于形状的填充
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
@@ -17,7 +17,7 @@ void DrawRectTest::OnTestFunctionCpu(OH_Drawing_Canvas* canvas)
 }
 
 
-void DrawRectTest::OnTestPerformanceCpu(OH_Drawing_Canvas* canvas)
+void DrawRectTest::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷Brush对象，Brush对象用于形状的填充
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();

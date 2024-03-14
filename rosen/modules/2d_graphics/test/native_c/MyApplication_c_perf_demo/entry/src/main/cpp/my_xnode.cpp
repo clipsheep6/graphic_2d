@@ -185,7 +185,7 @@ void MyXNode::TestFunction(OH_Drawing_Canvas* canvas, std::string caseName)
         DRAWING_LOGE("failed to get testcase");
         return;
     }
-    testCase->TestFunctionCpu(canvas);
+    testCase->TestFunctionGpu(canvas);
 }
 
 uint32_t MyXNode::TestPerformance(OH_Drawing_Canvas* canvas, std::string caseName, uint32_t testCount)
@@ -198,7 +198,7 @@ uint32_t MyXNode::TestPerformance(OH_Drawing_Canvas* canvas, std::string caseNam
     }
     
     testCase->SetTestCount(testCount);
-    testCase->TestPerformanceCpu(canvas);
+    testCase->TestPerformanceGpu(canvas);
     // usedTime_ = testCase->GetTime();
     DRAWING_LOGE("MyXNode TestPerformance end");
     return testCase->GetTime();

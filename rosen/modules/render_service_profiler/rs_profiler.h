@@ -151,8 +151,8 @@ public:
     RSB_EXPORT static Media::PixelMap* UnmarshalPixelMap(Parcel& parcel);
 
     RSB_EXPORT static bool IsParcelMock(const Parcel& parcel);
-
-public: // temporary
+// temporary
+public:
     RSB_EXPORT static ImageCache& GetImageCache();
     RSB_EXPORT static void ClearImageCache();
     RSB_EXPORT static void AddImage(uint64_t id, void* image, uint32_t size, uint32_t skipBytes);

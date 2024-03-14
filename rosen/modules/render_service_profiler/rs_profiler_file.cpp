@@ -270,7 +270,7 @@ void RSFile::LayerWriteHeader(uint32_t layer)
     }
     ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY WRITE Layer " // NOLINT
                "prop_data_size=%d foff=%d",
-        (int)recordSize, fileOffset);
+        static_cast<int>(recordSize), fileOffset);
     Utils::FileWrite(propertyData.data(), propertyData.size(), 1, file_);
 
     LayerWriteHeaderOfTrack(layerData.rsData);
@@ -281,7 +281,7 @@ void RSFile::LayerWriteHeader(uint32_t layer)
 
     const int layerLen = Utils::FileTell(file_) - layerHeaderOff;
     ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY WRITE Layer offset=%d len=%d", // NOLINT
-        (int)layerHeaderOff, layerLen);
+        static_cast<int>(layerHeaderOff), layerLen);
     layerData.layerHeader = { layerHeaderOff, Utils::FileTell(file_) - layerHeaderOff }; // position of layer table
 
     writeDataOff_ = Utils::FileTell(file_);
@@ -296,7 +296,7 @@ void RSFile::LayerReadHeader(uint32_t layer)
     RSFileLayer& layerData = layerData_[layer];
 
     Utils::FileSeek(file_, layerData.layerHeader.first, SEEK_SET);
-    ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY READ Layer offset=%d", (int)layerData.layerHeader.first); // NOLINT
+    ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY READ Layer offset=%d", static_cast<int>(layerData.layerHeader.first)); // NOLINT
 
     // READ LAYER PROPERTY
     uint32_t recordSize;
@@ -305,7 +305,7 @@ void RSFile::LayerReadHeader(uint32_t layer)
     propertyData.resize(recordSize);
     Utils::FileRead(propertyData.data(), recordSize, 1, file_);
     layerData.property.Deserialize(propertyData);
-    ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY READ Layer prop_data_size=%d", (int)recordSize); // NOLINT
+    ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY READ Layer prop_data_size=%d", static_cast<int>(recordSize)); // NOLINT
 
     LayerReadHeaderOfTrack(layerData.rsData);
     LayerReadHeaderOfTrack(layerData.oglData);
@@ -452,7 +452,7 @@ bool RSFile::ReadRSData(double untilTime, std::vector<uint8_t>& data, double& re
     }
 
     ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY READ RSData offset=%d len=%d read_time=%lf", // NOLINT
-        (int)layerData.rsData[layerData.readindexRsData].first, (int)layerData.rsData[layerData.readindexRsData].second,
+        static_cast<int>(layerData.rsData[layerData.readindexRsData].first), static_cast<int>(layerData.rsData[layerData.readindexRsData].second),
         readTime);
 
     const uint32_t dataLen = layerData.rsData[layerData.readindexRsData].second - sizeof(readTime);

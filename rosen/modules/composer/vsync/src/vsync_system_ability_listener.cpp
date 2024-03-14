@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +37,7 @@ void VSyncSystemAbilityListener::OnAddSystemAbility(int32_t systemAbilityId, con
         mapPayload["pid"] = pid_;
         mapPayload["tid"] = tid_;
         mapPayload["threadName"] = threadName_;
-        mapPayload["extType"] = "10003";
+        mapPayload["extType"] = threadName_ == "RSMainThread" ? "10003" : "10002";
         mapPayload["isSa"] = "1";
         mapPayload["cgroupPrio"] = "1";
         OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(

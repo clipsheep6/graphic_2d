@@ -26,9 +26,9 @@
 #include <thread>
 #include <condition_variable>
 #include "vsync_type.h"
-// #ifdef COMPOSER_SCHED_ENABLE
-// #include "vsync_system_ability_listener.h"
-// #endif
+#ifdef COMPOSER_SCHED_ENABLE
+#include "vsync_system_ability_listener.h"
+#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -139,10 +139,10 @@ private:
         int64_t occurReferenceTime, bool isWakeup);
     VsyncError UpdatePeriodLocked(int64_t period);
     VsyncError UpdateReferenceTimeLocked(int64_t referenceTime);
-// #ifdef COMPOSER_SCHED_ENABLE
-//     void SubScribeSystemAbility();
-//     sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
-// #endif
+#ifdef COMPOSER_SCHED_ENABLE
+    void SubScribeSystemAbility();
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
 
     int64_t period_;
     int64_t phase_;

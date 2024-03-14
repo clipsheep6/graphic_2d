@@ -26,11 +26,11 @@
 #include "vsync_type.h"
 #include "vsync_generator.h"
 
-#ifdef COMPOSER_SCHED_ENABLE
-#include "system_ability_definition.h"
-#include "if_system_ability_manager.h"
-#include <iservice_registry.h>
-#endif
+// #ifdef COMPOSER_SCHED_ENABLE
+// #include "system_ability_definition.h"
+// #include "if_system_ability_manager.h"
+// #include <iservice_registry.h>
+// #endif
 
 namespace OHOS {
 namespace Rosen {
@@ -350,10 +350,10 @@ void VSyncDistributor::ThreadMain()
     param.sched_priority = SCHED_PRIORITY;
     sched_setscheduler(0, SCHED_FIFO, &param);
 
-#ifdef COMPOSER_SCHED_ENABLE
-    std::string threadName = "VSync-" + name_;
-    SubScribeSystemAbility(threadName);
-#endif
+// #ifdef COMPOSER_SCHED_ENABLE
+//     std::string threadName = "VSync-" + name_;
+//     SubScribeSystemAbility(threadName);
+// #endif
 
     int64_t timestamp;
     int64_t vsyncCount;
@@ -498,26 +498,26 @@ void VSyncDistributor::OnConnsRefreshRateChanged(const std::vector<std::pair<uin
     changingConnsRefreshRates_ = refreshRates;
 }
 
-void VSyncDistributor::SubScribeSystemAbility(const std::string& threadName)
-{
-    VLOGI("%{public}s", __func__);
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (!systemAbilityManager) {
-        VLOGE("%{public}s failed to get system ability manager client", __func__);
-        return;
-    }
-    std::string strUid = std::to_string(getuid());
-    std::string strPid = std::to_string(getpid());
-    std::string strTid = std::to_string(gettid());
+// void VSyncDistributor::SubScribeSystemAbility(const std::string& threadName)
+// {
+//     VLOGI("%{public}s", __func__);
+//     sptr<ISystemAbilityManager> systemAbilityManager =
+//         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+//     if (!systemAbilityManager) {
+//         VLOGE("%{public}s failed to get system ability manager client", __func__);
+//         return;
+//     }
+//     std::string strUid = std::to_string(getuid());
+//     std::string strPid = std::to_string(getpid());
+//     std::string strTid = std::to_string(gettid());
 
-    saStatusChangeListener_ = new (std::nothrow)VSyncSystemAbilityListener(threadName, strUid, strPid, strTid);
-    int32_t ret = systemAbilityManager->SubscribeSystemAbility(RES_SCHED_SYS_ABILITY_ID, saStatusChangeListener_);
-    if (ret != ERR_OK) {
-        VLOGE("%{public}s subscribe system ability %{public}d failed.", __func__, RES_SCHED_SYS_ABILITY_ID);
-        saStatusChangeListener_ = nullptr;
-    }
-}
+//     saStatusChangeListener_ = new (std::nothrow)VSyncSystemAbilityListener(threadName, strUid, strPid, strTid);
+//     int32_t ret = systemAbilityManager->SubscribeSystemAbility(RES_SCHED_SYS_ABILITY_ID, saStatusChangeListener_);
+//     if (ret != ERR_OK) {
+//         VLOGE("%{public}s subscribe system ability %{public}d failed.", __func__, RES_SCHED_SYS_ABILITY_ID);
+//         saStatusChangeListener_ = nullptr;
+//     }
+// }
 
 void VSyncDistributor::CollectConnections(bool &waitForVSync, int64_t timestamp,
                                           std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount)

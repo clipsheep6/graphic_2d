@@ -101,6 +101,7 @@
 #include "vsync_iconnection_token.h"
 
 #include "mem_mgr_client.h"
+#include "rs_profiler.h"
 
 using namespace FRAME_TRACE;
 static const std::string RS_INTERVAL_NAME = "renderservice";
@@ -265,6 +266,7 @@ RSMainThread::~RSMainThread() noexcept
 void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
+        RS_PROFILER_ON_FRAME_BEGIN();
         mainLooping_.store(true);
         RenderFrameStart(timestamp_);
 #if defined(RS_ENABLE_UNI_RENDER)
@@ -283,8 +285,10 @@ void RSMainThread::Init()
 #if defined(RS_ENABLE_DRIVEN_RENDER)
         CollectInfoForDrivenRender();
 #endif
+        RS_PROFILER_ON_RENDER_BEGIN();
         // may mark rsnotrendering
         Render();
+        RS_PROFILER_ON_RENDER_END();
 
         // move rnv after mark rsnotrendring
         if (rsVSyncDistributor_->IsDVsyncOn() &&
@@ -312,6 +316,7 @@ void RSMainThread::Init()
         RSUploadResourceThread::Instance().OnRenderEnd();
 #endif
         mainLooping_.store(false);
+        RS_PROFILER_ON_FRAME_END();
     };
     static std::function<void (std::shared_ptr<Drawing::Image> image)> holdDrawingImagefunc =
         [] (std::shared_ptr<Drawing::Image> image) -> void {
@@ -559,6 +564,7 @@ void RSMainThread::ProcessCommand()
     } else {
         context_->currentTimestamp_ = lastAnimateTimestamp_;
     }
+    RS_PROFILER_ON_PROCESS_COMMAND();
     if (isUniRender_) {
         ProcessCommandForUniRender();
     } else {
@@ -2055,6 +2061,8 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
     curTime_ = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now().time_since_epoch()).count());
+    RS_PROFILER_PATCH_TIME(timestamp_);
+    RS_PROFILER_PATCH_TIME(curTime_);
     requestNextVsyncNum_ = 0;
     frameCount_++;
     if (isUniRender_) {
@@ -2631,6 +2639,7 @@ void RSMainThread::ForceRefreshForUni()
             RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
             auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();
+            RS_PROFILER_PATCH_TIME(now);
             timestamp_ = timestamp_ + (now - curTime_);
             curTime_ = now;
             RS_TRACE_NAME("RSMainThread::ForceRefreshForUni timestamp:" + std::to_string(timestamp_));

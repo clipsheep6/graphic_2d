@@ -81,7 +81,9 @@
           "sensor",
           "qos_manager",
           "video_processing_engine",
-          "vulkan-headers"
+          "vulkan-headers",
+          "hiview",
+          "battery_manager"
         ],
         "third_party": [
           "flutter",

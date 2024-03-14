@@ -1,9 +1,9 @@
-#include "draw_path_test.h"
+#include "draw_path.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
 
-void DrawPathTest::OnTestFunction(OH_Drawing_Canvas* canvas)
+void DrawPath::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
@@ -24,7 +24,7 @@ void DrawPathTest::OnTestFunction(OH_Drawing_Canvas* canvas)
     pen = nullptr;
 }
 
-void DrawPathTest::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void DrawPath::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();

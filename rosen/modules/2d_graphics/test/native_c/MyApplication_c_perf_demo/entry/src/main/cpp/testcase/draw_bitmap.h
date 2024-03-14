@@ -1,5 +1,5 @@
-#ifndef DRAW_BITMAP_TEST_H
-#define DRAW_BITMAP_TEST_H
+#ifndef DRAW_BITMAP_H
+#define DRAW_BITMAP_H
 #include "test_base.h"
 
 class DrawBitmap : public TestBase {
@@ -11,4 +11,4 @@ protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
     void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
 };
-#endif // DRAW_BITMAP_TEST_H
+#endif // DRAW_BITMAP_H

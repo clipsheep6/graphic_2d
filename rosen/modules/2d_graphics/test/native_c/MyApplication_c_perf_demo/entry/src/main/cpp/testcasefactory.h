@@ -21,7 +21,6 @@ class TestCaseFactory {
 public:
     TestCaseFactory() = default;
     ~TestCaseFactory(){};
-    // explicit MyXNode(std::string id) : id_(id) {}
    
     static std::shared_ptr<TestBase> GetFunctionCpuCase(std::string caseName);
     static std::shared_ptr<TestBase> GetPerformanceCpuCase(std::string caseName);

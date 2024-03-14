@@ -57,7 +57,7 @@ void DrawTextBlob::OnTestFunction(OH_Drawing_Canvas *canvas)
 
 void DrawTextBlob::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    // 创建字体，并设置文字大小
+    // TextBlobCachedBench
     OH_Drawing_Font *font = OH_Drawing_FontCreate();
     // 创建要显示的字符
     size_t size = 45;

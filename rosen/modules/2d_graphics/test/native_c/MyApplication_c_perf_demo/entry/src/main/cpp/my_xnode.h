@@ -36,7 +36,6 @@ class MyXNode {
 public:
     MyXNode() = default;
     ~MyXNode(){};
-    // explicit MyXNode(std::string id) : id_(id) {}
    
     static void Export(napi_env env, napi_value exports);
     static napi_value XNodeDraw(napi_env env, napi_callback_info info);

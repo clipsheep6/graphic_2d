@@ -15,23 +15,30 @@
 
 #include "common/log_common.h"
 #include "testcasefactory.h"
-#include "testcase/draw_rect_test.h"
-#include "testcase/draw_path_test.h"
+#include "testcase/draw_rect.h"
+#include "testcase/draw_path.h"
 #include "testcase/draw_textblob.h"
 #include "testcase/draw_bitmap.h"
+#include "testcase/draw_bitmaprect.h"
+#include "testcase/canvas_save_restore.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap = {
-        {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRectTest>(); }},
-        {"drawpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathTest>(); }},
-        {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
-        {"drawbitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
+        {"drawrect",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRect>(); }},
+        {"drawpath",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPath>(); }},
+        {"drawtextblob",   []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
+        {"drawbitmap",     []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
+        {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); }},
+        {"saverestore",    []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
     };
+
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
-        {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRectTest>(); }},
-        {"drawpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathTest>(); }},
-        {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
-        {"drawbitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
+        {"drawrect",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRect>(); }},
+        {"drawpath",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPath>(); }},
+        {"drawtextblob",   []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
+        {"drawbitmap",     []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
+        {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); }},
+        {"saverestore",    []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
     };
 } // namespace
 

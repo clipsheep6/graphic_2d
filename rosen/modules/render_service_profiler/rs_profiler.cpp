@@ -363,12 +363,10 @@ void RSProfiler::HiddenSpaceTurnOff()
 
 std::string RSProfiler::FirstFrameMarshalling()
 {
-    const auto& nodeMap = g_renderServiceContext->GetMutableNodeMap();
-
     std::stringstream stream;
     SetMode(Mode::WRITE_EMUL);
     RSMarshallingHelper::BeginNoSharedMem(std::this_thread::get_id());
-    MarshallingNodes(nodeMap, stream, *g_renderServiceContext);
+    MarshalNodes(*g_renderServiceContext, stream);
     RSMarshallingHelper::EndNoSharedMem();
     SetMode(Mode::NONE);
 
@@ -382,29 +380,27 @@ std::string RSProfiler::FirstFrameMarshalling()
     stream.write(reinterpret_cast<const char*>(&focusNodeId), sizeof(focusNodeId));
 
     const std::string bundleName = g_renderServiceThread->focusAppBundleName_;
-    int32_t strLen = bundleName.size();
-    stream.write(reinterpret_cast<const char*>(&strLen), sizeof(strLen));
-    stream.write(reinterpret_cast<const char*>(bundleName.data()), strLen);
+    int32_t size = bundleName.size();
+    stream.write(reinterpret_cast<const char*>(&size), sizeof(size));
+    stream.write(reinterpret_cast<const char*>(bundleName.data()), size);
 
     const std::string abilityName = g_renderServiceThread->focusAppAbilityName_;
-    strLen = abilityName.size();
-    stream.write(reinterpret_cast<const char*>(&strLen), sizeof(strLen));
-    stream.write(reinterpret_cast<const char*>(abilityName.data()), strLen);
+    size = abilityName.size();
+    stream.write(reinterpret_cast<const char*>(&size), sizeof(size));
+    stream.write(reinterpret_cast<const char*>(abilityName.data()), size);
 
     return stream.str();
 }
 
 void RSProfiler::FirstFrameUnmarshalling(const std::string& data)
 {
-    auto& nodeMap = g_renderServiceContext->GetMutableNodeMap();
-
     std::stringstream stream;
     stream.str(data);
 
     SetMode(Mode::READ_EMUL);
 
     RSMarshallingHelper::BeginNoSharedMem(std::this_thread::get_id());
-    UnmarshallingNodes(nodeMap, stream, *g_renderServiceContext);
+    UnmarshalNodes(*g_renderServiceContext, stream);
     RSMarshallingHelper::EndNoSharedMem();
 
     SetMode(Mode::NONE);
@@ -418,16 +414,16 @@ void RSProfiler::FirstFrameUnmarshalling(const std::string& data)
     uint64_t focusNodeId = 0;
     stream.read(reinterpret_cast<char*>(&focusNodeId), sizeof(focusNodeId));
 
-    int32_t strLen = 0;
-    stream.read(reinterpret_cast<char*>(&strLen), sizeof(strLen));
+    int32_t size = 0;
+    stream.read(reinterpret_cast<char*>(&size), sizeof(size));
     std::string bundleName;
-    bundleName.resize(strLen, ' ');
-    stream.read(reinterpret_cast<char*>(bundleName.data()), strLen);
+    bundleName.resize(size, ' ');
+    stream.read(reinterpret_cast<char*>(bundleName.data()), size);
 
-    stream.read(reinterpret_cast<char*>(&strLen), sizeof(strLen));
+    stream.read(reinterpret_cast<char*>(&size), sizeof(size));
     std::string abilityName;
-    abilityName.resize(strLen, ' ');
-    stream.read(reinterpret_cast<char*>(abilityName.data()), strLen);
+    abilityName.resize(size, ' ');
+    stream.read(reinterpret_cast<char*>(abilityName.data()), size);
 
     focusPid = Utils::GetMockPid(focusPid);
     focusNodeId = Utils::PatchNodeId(focusNodeId);

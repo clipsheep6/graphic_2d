@@ -195,13 +195,17 @@ private:
     RSB_EXPORT static size_t GetRenderNodeCount(const RSRenderNodeMap& map);
     RSB_EXPORT static NodeId GetRandomSurfaceNode(const RSRenderNodeMap& map);
 
-    RSB_EXPORT static void MarshallingNodes(const RSRenderNodeMap& map, std::stringstream& data, RSContext& context);
-    RSB_EXPORT static void UnmarshallingNodes(RSRenderNodeMap& map, std::stringstream& data, RSContext& context);
+    RSB_EXPORT static void MarshalNodes(const RSContext& context, std::stringstream& data);
+    RSB_EXPORT static void MarshalTree(const RSRenderNode* node, std::stringstream& data);
+    RSB_EXPORT static void MarshalNode(const RSRenderNode* node, std::stringstream& data);
+    RSB_EXPORT static void MarshalNode(const RSRenderNode& node, std::stringstream& data);
+
+    RSB_EXPORT static void UnmarshalNodes(RSContext& context, std::stringstream& data);
+    RSB_EXPORT static void UnmarshalTree(RSContext& context, std::stringstream& data);
+    RSB_EXPORT static void UnmarshalNode(RSContext& context, std::stringstream& data);
+    RSB_EXPORT static void UnmarshalNode(RSRenderNode& node, std::stringstream& data);
 
     // RSRenderNode
-    RSB_EXPORT static void MarshallingNode(const RSRenderNode& node, std::stringstream& data);
-    RSB_EXPORT static void UnmarshallingNode(RSRenderNode& node, std::stringstream& data);
-
     RSB_EXPORT static std::string DumpRenderProperties(const RSRenderNode& node);
     RSB_EXPORT static std::string DumpModifiers(const RSRenderNode& node);
     RSB_EXPORT static std::string DumpSurfaceNode(const RSRenderNode& node);
@@ -211,14 +215,6 @@ private:
 
     RSB_EXPORT static NodeId PatchPlainNodeId(const Parcel& parcel, NodeId id);
     RSB_EXPORT static pid_t PatchPlainPid(const Parcel& parcel, pid_t pid);
-
-    RSB_EXPORT static void MarshallingNode(const RSRenderNodeMap& map, std::stringstream& data, RSRenderNode* node);
-    RSB_EXPORT static void MarshallingNodeTree(const RSRenderNodeMap& map, std::stringstream& data, RSRenderNode* node);
-    RSB_EXPORT static std::shared_ptr<RSRenderNode> UnmarshallingNode(
-        RSRenderNodeMap& map, std::stringstream& data, RSContext& context);
-    RSB_EXPORT static void UnmarshallingNodeTree(RSRenderNodeMap& map, std::stringstream& data, RSContext& context);
-
-    using Command = void (*)(const ArgList&);
 
     static bool IsRecording();
     static bool IsPlaying();
@@ -242,6 +238,8 @@ private:
 
     static double GetDirtyRegionRelative(RSContext& context);
 
+    // Network interface
+    using Command = void (*)(const ArgList&);
     static Command GetCommand(const std::string& command);
     static void ProcessCommands();
     static void Respond(const std::string& message);

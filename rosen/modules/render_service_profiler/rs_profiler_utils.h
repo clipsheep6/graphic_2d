@@ -21,7 +21,7 @@
 #include <vector>
 
 #ifdef REPLAY_TOOL_CLIENT
-#include "../rs_adapt.h"
+#include "rs_adapt.h"
 #endif
 
 namespace OHOS::Rosen {
@@ -126,6 +126,7 @@ FILE* FileOpen(const std::string& path, const std::string& openOptions);
 void FileClose(FILE* file);
 bool IsFileValid(FILE* file);
 size_t FileSize(FILE* file);
+size_t FileTell(FILE* file);
 void FileSeek(FILE* file, int64_t offset, int origin);
 void FileRead(FILE* file, void* data, size_t size);
 void FileWrite(FILE* file, const void* data, size_t size);

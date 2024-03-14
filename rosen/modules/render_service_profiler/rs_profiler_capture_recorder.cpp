@@ -21,7 +21,7 @@
 #include "rs_profiler.h"
 #include "platform/common/rs_log.h"
 #else
-#include "../rs_log.h"
+#include "rs_log.h"
 #endif
 
 namespace OHOS::Rosen {
@@ -51,6 +51,14 @@ void RSCaptureRecorder::EndInstantCapture() const
     }
     // for saving .skp file
     EndInstantCaptureSKP();
+}
+
+std::pair<uint32_t, uint32_t> RSCaptureRecorder::GetDirtyRect(uint32_t displayWidth, uint32_t displayHeight)
+{
+    if (RSSystemProperties::GetInstantRecording()) {
+        return std::pair<uint32_t, uint32_t>(displayWidth, displayHeight);
+    }
+    return std::pair<uint32_t, uint32_t>(0, 0);
 }
 
 bool RSCaptureRecorder::PullAndSendRdc()

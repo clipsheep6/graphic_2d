@@ -48,6 +48,7 @@ public:
     
     // to check if .rdc is recorded and send the filename to client
     static bool PullAndSendRdc();
+    static std::pair<uint32_t, uint32_t> GetDirtyRect(uint32_t displayWidth, uint32_t displayHeight);
 private:
     ExtendRecordingCanvas* TryInstantCaptureDrawing(float width, float height);
     void EndInstantCaptureDrawing() const;

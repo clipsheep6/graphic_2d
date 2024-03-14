@@ -28,7 +28,7 @@
 #include <securec.h>
 #include "platform/common/rs_log.h"
 #else
-#include "../rs_adapt.h"
+#include "rs_adapt.h"
 #endif
 
 namespace OHOS::Rosen {

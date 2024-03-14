@@ -34,7 +34,7 @@ RSFile::RSFile() = default;
 
 const std::string& RSFile::GetDefaultPath()
 {
-    static const std::string PATH("/data/rsrecord.bin");
+    static const std::string PATH("RECORD_IN_MEMORY");
     return PATH;
 }
 
@@ -83,7 +83,7 @@ bool RSFile::Open(const std::string& fname)
     Utils::FileRead(&headerOff_, sizeof(headerOff_), 1, file_);
 
     Utils::FileSeek(file_, 0, SEEK_END);
-    writeDataOff_ = ftell(file_);
+    writeDataOff_ = Utils::FileTell(file_);
 
     Utils::FileSeek(file_, headerOff_, SEEK_SET);
     ReadHeaders();
@@ -264,7 +264,7 @@ void RSFile::LayerWriteHeader(uint32_t layer)
     // SAVE LAYER PROPERTY
     uint32_t recordSize = propertyData.size();
     Utils::FileWrite(&recordSize, sizeof(recordSize), 1, file_);
-    const int fileOffset = ftell(file_);
+    const int fileOffset = Utils::FileTell(file_);
     if (fileOffset < 0) {
         ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY WRITE Layer negative file offset"); // NOLINT
     }
@@ -279,12 +279,12 @@ void RSFile::LayerWriteHeader(uint32_t layer)
     LayerWriteHeaderOfTrack(layerData.oglMetrics);
     LayerWriteHeaderOfTrack(layerData.gfxMetrics);
 
-    const int layerLen = ftell(file_) - layerHeaderOff;
+    const int layerLen = Utils::FileTell(file_) - layerHeaderOff;
     ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY WRITE Layer offset=%d len=%d", // NOLINT
         (int)layerHeaderOff, layerLen);
-    layerData.layerHeader = { layerHeaderOff, ftell(file_) - layerHeaderOff }; // position of layer table
+    layerData.layerHeader = { layerHeaderOff, Utils::FileTell(file_) - layerHeaderOff }; // position of layer table
 
-    writeDataOff_ = ftell(file_);
+    writeDataOff_ = Utils::FileTell(file_);
 }
 
 void RSFile::LayerReadHeader(uint32_t layer)
@@ -549,7 +549,7 @@ void RSFile::WriteTrackData(LayerTrackMarkupPtr trackMarkup, uint32_t layer, dou
     Utils::FileSeek(file_, writeDataOff_, SEEK_SET);
     Utils::FileWrite(&time, sizeof(time), 1, file_);
     Utils::FileWrite(data, size, 1, file_);
-    writeDataOff_ = ftell(file_);
+    writeDataOff_ = Utils::FileTell(file_);
 }
 
 bool RSFile::ReadTrackData(

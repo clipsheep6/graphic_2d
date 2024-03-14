@@ -24,7 +24,7 @@
 #ifdef REPLAY_TOOL_CLIENT // adapt to windows on client side
 #include <memory>
 
-#include "../rs_adapt.h"
+#include "rs_adapt.h"
 #endif
 
 namespace OHOS::Rosen {

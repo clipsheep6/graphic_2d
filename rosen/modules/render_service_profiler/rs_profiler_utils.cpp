@@ -71,10 +71,20 @@ std::vector<std::string> Split(const std::string& input)
     return parts;
 }
 
+static std::stringstream g_recordInMemory(std::ios::in | std::ios::out | std::ios::binary);
+static FILE* g_recordInMemoryFile = reinterpret_cast<FILE*>(1);
+
 FILE* FileOpen(const std::string& path, const std::string& openOptions)
 {
-    const std::filesystem::path canonicalPath = std::filesystem::weakly_canonical(std::filesystem::path(path));
-    auto file = fopen(canonicalPath.string().c_str(), openOptions.c_str());
+    if (path == "RECORD_IN_MEMORY") {
+        if (openOptions == "wbe") {
+            g_recordInMemory.str("");
+        }
+        g_recordInMemory.seekg(0);
+        g_recordInMemory.seekp(0);
+        return g_recordInMemoryFile;
+    }
+    auto file = fopen(path.c_str(), openOptions.c_str());
     if (!IsFileValid(file)) {
         RS_LOGE("Cant open file '%s'!", path.c_str()); // NOLINT
     }
@@ -83,6 +93,9 @@ FILE* FileOpen(const std::string& path, const std::string& openOptions)
 
 void FileClose(FILE* file)
 {
+    if (file == g_recordInMemoryFile) {
+        return;
+    }
     if (fclose(file) != 0) {
         RS_LOGE("File close failed"); // NOLINT
     }
@@ -95,6 +108,13 @@ bool IsFileValid(FILE* file)
 
 size_t FileSize(FILE* file)
 {
+    if (file == g_recordInMemoryFile) {
+        int savedPos = g_recordInMemory.tellg();
+        g_recordInMemory.seekg(0, std::ios_base::end);
+        int size = g_recordInMemory.tellg();
+        g_recordInMemory.seekg(savedPos, std::ios_base::beg);
+        return size;
+    }
     if (!IsFileValid(file)) {
         return 0;
     }
@@ -106,8 +126,33 @@ size_t FileSize(FILE* file)
     return size;
 }
 
+size_t FileTell(FILE* file)
+{
+    if (file == g_recordInMemoryFile) {
+        return g_recordInMemory.tellg();
+    }
+    if (!IsFileValid(file)) {
+        return 0;
+    }
+
+    return ftell(file);
+}
+
 void FileSeek(FILE* file, int64_t offset, int origin)
 {
+    if (file == g_recordInMemoryFile) {
+        if (origin == SEEK_SET) {
+            g_recordInMemory.seekg(offset, std::ios_base::beg);
+            g_recordInMemory.seekp(offset, std::ios_base::beg);
+        } else if (origin == SEEK_CUR) {
+            g_recordInMemory.seekg(offset, std::ios_base::cur);
+            g_recordInMemory.seekp(offset, std::ios_base::cur);
+        } else if (origin == SEEK_END) {
+            g_recordInMemory.seekg(offset, std::ios_base::end);
+            g_recordInMemory.seekp(offset, std::ios_base::end);
+        }
+        return;
+    }
     if (fseek(file, offset, origin) != 0) {
         RS_LOGE("Failed fseek in file"); // NOLINT
     }
@@ -115,6 +160,11 @@ void FileSeek(FILE* file, int64_t offset, int origin)
 
 void FileRead(FILE* file, void* data, size_t size)
 {
+    if (file == g_recordInMemoryFile) {
+        g_recordInMemory.read(reinterpret_cast<char*>(data), size);
+        g_recordInMemory.seekp(g_recordInMemory.tellg());
+        return;
+    }
     if (fread(data, size, 1, file) < 1) {
         RS_LOGE("Error while reading from file"); // NOLINT
     }
@@ -122,6 +172,11 @@ void FileRead(FILE* file, void* data, size_t size)
 
 void FileWrite(FILE* file, const void* data, size_t size)
 {
+    if (file == g_recordInMemoryFile) {
+        g_recordInMemory.write(reinterpret_cast<const char*>(data), size);
+        g_recordInMemory.seekg(g_recordInMemory.tellp());
+        return;
+    }
     if (fwrite(data, size, 1, file) < 1) {
         RS_LOGE("Error while writing to file"); // NOLINT
     }
@@ -130,6 +185,11 @@ void FileWrite(FILE* file, const void* data, size_t size)
 // deprecated
 void FileRead(void* data, size_t size, size_t count, FILE* file)
 {
+    if (file == g_recordInMemoryFile) {
+        g_recordInMemory.read(reinterpret_cast<char*>(data), size * count);
+        g_recordInMemory.seekp(g_recordInMemory.tellg());
+        return;
+    }
     if (fread(data, size, count, file) < count) {
         RS_LOGE("Error while reading from file"); // NOLINT
     }
@@ -138,6 +198,11 @@ void FileRead(void* data, size_t size, size_t count, FILE* file)
 // deprecated
 void FileWrite(const void* data, size_t size, size_t count, FILE* file)
 {
+    if (file == g_recordInMemoryFile) {
+        g_recordInMemory.write(reinterpret_cast<const char*>(data), size * count);
+        g_recordInMemory.seekg(g_recordInMemory.tellp());
+        return;
+    }
     if (fwrite(data, size, count, file) < count) {
         RS_LOGE("Error while writing to file"); // NOLINT
     }

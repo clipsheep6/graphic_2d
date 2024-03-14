@@ -3,6 +3,7 @@
 #include <native_drawing/drawing_bitmap.h>
 #include <native_drawing/drawing_canvas.h>
 #include <native_drawing/drawing_matrix.h>
+//#include <native_drawing/drawing_sampling_options.h>
 #include "common/log_common.h"
 
 
@@ -22,11 +23,16 @@ void DrawBitmap::OnTestFunction(OH_Drawing_Canvas *canvas)
 
     OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreateTranslation(17.5, 17.5);
     OH_Drawing_CanvasConcatMatrix(canvas, matrix);
+
     OH_Drawing_CanvasDrawBitmap(canvas, bitmap, 0, 0);
-    }
+    
+    OH_Drawing_CanvasDestroy(bitmapCanvas);
+    OH_Drawing_BitmapDestroy(bitmap);
+    OH_Drawing_MatrixDestroy(matrix);
+}
 
 void DrawBitmap::OnTestPerformance(OH_Drawing_Canvas *canvas) {
-
+    // draw_bitmap_noaa_translate
     OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
     // 定义bitmap的像素格式
     OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE};
@@ -43,4 +49,7 @@ void DrawBitmap::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_CanvasDrawBitmap(canvas, bitmap, 0, 0);
     }
+    OH_Drawing_CanvasDestroy(bitmapCanvas);
+    OH_Drawing_BitmapDestroy(bitmap);
+    OH_Drawing_MatrixDestroy(matrix);
 }

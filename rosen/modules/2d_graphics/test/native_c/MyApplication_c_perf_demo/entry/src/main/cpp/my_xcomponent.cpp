@@ -20,7 +20,6 @@
 #include "common/log_common.h"
 #include "my_xcomponent.h"
 
-
 #include <sstream>
 #include <string>
 #include <sys/types.h>

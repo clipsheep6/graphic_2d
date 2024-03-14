@@ -13,20 +13,24 @@ add_library(entry SHARED
     my_xcomponent.cpp
     testcasefactory.cpp
     testcase/test_base.cpp
-    testcase/draw_rect_test.cpp
-    testcase/draw_path_test.cpp
+    testcase/draw_rect.cpp
+    testcase/draw_path.cpp
     testcase/draw_textblob.cpp
     testcase/draw_bitmap.cpp
+    testcase/draw_bitmaprect.cpp
+    testcase/canvas_save_restore.cpp
 )
 
 add_library(myxnode SHARED
     my_xnode.cpp
     testcasefactory.cpp
     testcase/test_base.cpp
-    testcase/draw_rect_test.cpp
-    testcase/draw_path_test.cpp
+    testcase/draw_rect.cpp
+    testcase/draw_path.cpp
     testcase/draw_textblob.cpp
     testcase/draw_bitmap.cpp
+    testcase/draw_bitmaprect.cpp
+    testcase/canvas_save_restore.cpp
 )
 
 find_library(

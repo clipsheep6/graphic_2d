@@ -166,6 +166,8 @@ void DoScreenRcdTask(std::shared_ptr<RSProcessor>& processor, std::unique_ptr<Rc
     }
 }
 
+std::shared_ptr<RSColorPickerCacheTask> RSUniRenderVisitor::pointerColorPickerTask_ = nullptr;
+
 RSUniRenderVisitor::RSUniRenderVisitor()
     : curSurfaceDirtyManager_(std::make_shared<RSDirtyRegionManager>())
 {
@@ -2748,6 +2750,35 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode: hardwareThread task has too many to excute");
     }
     processor_->PostProcess(&node);
+
+    bool hasPointer = false;
+    for (auto& it : node.GetCurAllSurfaces()) {
+        auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(it);
+        if (surfaceNode == nullptr || !surfaceNode->IsHardwareEnabledTopSurface()) {
+            continue;
+        }
+        hasPointer = true;
+    }
+
+    if (hasPointer) {
+        if (pointerColorPickerTask_ == nullptr) {
+            pointerColorPickerTask_ = std::make_shared<RSColorPickerCacheTask>();
+            pointerColorPickerTask_->SetIsPointer(true);
+        }
+
+        processor_->GetPointerIntersectImage(cacheImgForPointer_, canvas_, renderEngine_);
+
+        int16_t luminance;
+        if (pointerColorPickerTask_->GetWaitRelease()) {
+            pointerColorPickerTask_->GetLuminance(luminance);
+        } else if (RSColorPickerCacheTask::PostPartialColorPickerTask(pointerColorPickerTask_, cacheImgForPointer_)) {
+            pointerColorPickerTask_->GetLuminance(luminance);
+            pointerColorPickerTask_->SetStatus(CacheProcessStatus::WAITING);
+        } else {
+            pointerColorPickerTask_->GetLuminance(luminance);
+        }
+    }
+
     {
         std::lock_guard<std::mutex> lock(groupedTransitionNodesMutex);
         EraseIf(groupedTransitionNodes, [](auto& iter) -> bool {

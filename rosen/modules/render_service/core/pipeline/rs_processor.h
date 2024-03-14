@@ -52,6 +52,9 @@ public:
         return screenTransformMatrix_;
     }
 
+    virtual void GetPointerIntersectImage(std::shared_ptr<Drawing::Image>& image,
+        std::shared_ptr<RSPaintFilterCanvas>& canvas, std::shared_ptr<RSBaseRenderEngine>& renderEngine) {}
+
 protected:
     void CalculateMirrorAdaptiveCoefficient(float curWidth, float curHeight,
         float mirroredWidth, float mirroredHeight);

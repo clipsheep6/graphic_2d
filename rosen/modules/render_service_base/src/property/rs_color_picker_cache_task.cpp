@@ -179,20 +179,27 @@ bool RSColorPickerCacheTask::Render()
     }
     CHECK_CACHE_PROCESS_STATUS;
     Drawing::ColorQuad color;
+    int16_t luminance;
     std::shared_ptr<Drawing::Pixmap> dst;
     if (GpuScaleImage(cacheCanvas, threadImage, dst)) {
         uint32_t errorCode = 0;
         CHECK_CACHE_PROCESS_STATUS;
         std::shared_ptr<RSColorPicker> colorPicker = RSColorPicker::CreateColorPicker(dst, errorCode);
         if (errorCode == 0) {
-            if (isShadow_ && shadowColorStrategy_ == SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_MAIN) {
+            if (isPointer_) {
+                colorPicker->GetAverageLuminance(luminance);
+            } else if (isShadow_ && shadowColorStrategy_ == SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_MAIN) {
                 colorPicker->GetLargestProportionColor(color);
             } else {
                 colorPicker->GetAverageColor(color);
             }
             std::unique_lock<std::mutex> lock(colorMutex_);
-            color_ = RSColor(Drawing::Color::ColorQuadGetR(color), Drawing::Color::ColorQuadGetG(color),
-                Drawing::Color::ColorQuadGetB(color), Drawing::Color::ColorQuadGetA(color));
+            if (isPointer_) {
+                luminance_ = luminance;
+            } else {
+                color_ = RSColor(Drawing::Color::ColorQuadGetR(color), Drawing::Color::ColorQuadGetG(color),
+                    Drawing::Color::ColorQuadGetB(color), Drawing::Color::ColorQuadGetA(color));
+            }
             firstGetColorFinished_ = true;
             valid_ = true;
         } else {
@@ -270,6 +277,13 @@ void RSColorPickerCacheTask::CalculateColorAverage(RSColor& colorCur)
     }
 
     colorAverage_ = RSColor(R, G, B, colorCur.GetAlpha());
+}
+
+bool RSColorPickerCacheTask::GetLuminance(int16_t& luminance)
+{
+    std::unique_lock<std::mutex> lock(colorMutex_);
+    luminance = luminance_;
+    return valid_;
 }
 
 void RSColorPickerCacheTask::GetColorAverage(RSColor& color)
@@ -387,6 +401,10 @@ void RSColorPickerCacheTask::ReleaseColorPicker()
 #endif
 }
 
+void RSColorPickerCacheTask::SetIsPointer(bool isPointer)
+{
+    isPointer_ = isPointer;
+}
 } // namespace Rosen
 } // namespace OHOS
 

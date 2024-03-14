@@ -134,6 +134,27 @@ uint32_t RSColorPicker::GetAverageColor(Drawing::ColorQuad &color) const
     return RS_COLOR_PICKER_SUCCESS;
 }
 
+uint32_t RSColorPicker::GetAverageLuminance(int16_t &luminance) const
+{
+    int totalPixelNum = 0;
+    uint32_t luminanceSum = 0;
+    if (featureColors_.empty()) {
+        return RS_COLOR_PICKER_ERR_EFFECT_INVALID_VALUE;
+    }
+    for (size_t i = 0; i < featureColors_.size(); i++) {
+        totalPixelNum += featureColors_[i].second;
+        luminanceSum += round(featureColors_[i].second *
+            (((featureColors_[i].first >> ARGB_R_SHIFT) & ARGB_MASK) * 0.2126f +
+            ((featureColors_[i].first >> ARGB_G_SHIFT) & ARGB_MASK) * 0.7152f +
+            ((featureColors_[i].first >> ARGB_B_SHIFT) & ARGB_MASK) * 0.0722f));
+    }
+    if (totalPixelNum == 0) {
+        return RS_COLOR_PICKER_ERR_EFFECT_INVALID_VALUE;
+    }
+    luminance = round(luminanceSum / (float)totalPixelNum);
+    return RS_COLOR_PICKER_SUCCESS;
+}
+
 bool RSColorPicker::IsBlackOrWhiteOrGrayColor(uint32_t color) const
 {
     HSV hsv = RGB2HSV(color);

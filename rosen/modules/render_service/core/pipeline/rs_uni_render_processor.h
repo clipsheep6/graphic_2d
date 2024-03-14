@@ -34,7 +34,12 @@ public:
     void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) override;
     void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
     void PostProcess(RSDisplayRenderNode* node) override;
+    void GetPointerIntersectImage(std::shared_ptr<Drawing::Image>& image,
+        std::shared_ptr<RSPaintFilterCanvas>& canvas, std::shared_ptr<RSBaseRenderEngine>& renderEngine) override;
 private:
+    void GetPointerIntersectImageByLayer(LayerInfoPtr& layer, const RectI& pointerRect,
+        RectI& maxDstRect, std::shared_ptr<Drawing::Image>& image, std::shared_ptr<RSPaintFilterCanvas>& canvas,
+        std::shared_ptr<RSBaseRenderEngine>& renderEngine);
     std::unique_ptr<RSUniRenderComposerAdapter> uniComposerAdapter_;
     std::vector<LayerInfoPtr> layers_;
     size_t layerNum = 0;

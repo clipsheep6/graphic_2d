@@ -396,6 +396,11 @@ std::shared_ptr<FontMgrImpl> ImplFactory::CreateDefaultFontMgrImpl()
 #ifndef USE_TEXGINE
 std::shared_ptr<FontMgrImpl> ImplFactory::CreateDynamicFontMgrImpl()
 {
+#ifdef ENABLE_DDGR_OPTIMIZE
+    if (SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        return DDGRImplFactory::CreateDynamicFontMgr();
+    }
+#endif
     return EngineImplFactory::CreateDynamicFontMgr();
 }
 #endif
@@ -428,6 +433,16 @@ std::shared_ptr<ResourceHolderImpl> ImplFactory::CreateResourceHolderImpl()
     }
 #endif
     return EngineImplFactory::CreateResourceHolder();
+}
+
+std::unique_ptr<KawaseBlurImpl> ImplFactory::CreateKawaseBlurImpl()
+{
+#ifdef ENABLE_DDGR_OPTIMIZE
+    if (SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        return DDGRImplFactory::CreateKawaseBlur();
+    }
+#endif
+    return EngineImplFactory::CreateKawaseBlur();
 }
 } // namespace Drawing
 } // namespace Rosen

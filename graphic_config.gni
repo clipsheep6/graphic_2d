@@ -53,9 +53,14 @@ declare_args() {
   }
 }
 
+declare_args() {
+  graphic_2d_feature_enable_stack_culling = false
+}
+
 if (graphic_2d_feature_product == "phone") {
   graphic_2d_feature_enable_vulkan = true
   graphic_2d_feature_enable_ddgr = false
+  graphic_2d_feature_enable_stack_culling = true
 }
 
 gpu_defines = []
@@ -86,6 +91,9 @@ if (graphic_2d_feature_ace_enable_gpu) {
       "ACE_ENABLE_GL",
       "RS_ENABLE_GL",
     ]
+  }
+  if (graphic_2d_feature_enable_stack_culling) {
+    gpu_defines += [ "RS_ENABLE_STACK_CULLING" ]
   }
   if (graphic_2d_feature_enable_recording_dcl) {
     rs_enable_recording_dcl = true
@@ -195,6 +203,12 @@ check_delegator_ext_file_args = [
   "--filename",
   rebase_path("//foundation/graphic/graphic_2d_ext/delegator/config.gni"),
 ]
+check_broker_ext_file_args = [
+  "--filename",
+  rebase_path(
+      "//foundation/graphic/graphic_2d_ext/ohcore/build/broker_config.gni"),
+]
+
 if (exec_script(check_graphic_ext_file_script,
                 check_graphic_ext_file_args,
                 "string") == "True" && "${product_name}" == "ohcore") {
@@ -224,6 +238,30 @@ if (exec_script(check_graphic_ext_file_script,
                 "string") == "True") {
   graphic_2d_delegator_configs = {
     import("//foundation/graphic/graphic_2d_ext/delegator/config.gni")
+  }
+}
+
+graphic_2d_broker_configs = {
+}
+if (exec_script(check_graphic_ext_file_script,
+                check_broker_ext_file_args,
+                "string") == "True") {
+  graphic_2d_broker_configs = {
+    import("//foundation/graphic/graphic_2d_ext/ohcore/build/broker_config.gni")
+  }
+}
+
+check_platform_ext_file_args = [
+  "--filename",
+  rebase_path("//foundation/graphic/graphic_2d_ext/platform/config.gni"),
+]
+graphic_2d_platform_configs = {
+}
+if (exec_script(check_graphic_ext_file_script,
+                check_platform_ext_file_args,
+                "string") == "True") {
+  graphic_2d_platform_configs = {
+    import("//foundation/graphic/graphic_2d_ext/platform/config.gni")
   }
 }
 

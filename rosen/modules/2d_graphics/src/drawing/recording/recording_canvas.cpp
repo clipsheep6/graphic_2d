@@ -321,8 +321,13 @@ void RecordingCanvas::DrawTextBlob(const TextBlob* blob, const scalar x, const s
         AddDrawOpDeferred<DrawTextBlobOpItem>(blob, x, y);
         return;
     }
-    auto textBlobHandle = CmdListHelper::AddTextBlobToCmdList(*cmdList_, blob);
-    AddDrawOpImmediate<DrawTextBlobOpItem::ConstructorHandle>(textBlobHandle, x, y);
+    TextBlob::Context ctx {nullptr, IsCustomTypeface()};
+    auto textBlobHandle = CmdListHelper::AddTextBlobToCmdList(*cmdList_, blob, &ctx);
+    OpDataHandle typefaceHandle { 0 };
+    if (IsCustomTypeface()) {
+        typefaceHandle = CmdListHelper::AddTypefaceToCmdList(*cmdList_, ctx.GetTypeface());
+    }
+    AddDrawOpImmediate<DrawTextBlobOpItem::ConstructorHandle>(textBlobHandle, typefaceHandle, x, y);
 }
 
 void RecordingCanvas::DrawSymbol(const DrawingHMSymbolData& symbol, Point locate)
@@ -588,36 +593,6 @@ void RecordingCanvas::ClipAdaptiveRoundRect(const std::vector<Point>& radius)
     cmdList_->AddDrawOp<ClipAdaptiveRoundRectOpItem::ConstructorHandle>(radiusData);
 }
 
-void RecordingCanvas::DrawImage(const std::shared_ptr<Image>& image, const std::shared_ptr<Data>& data,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
-{
-    if (!addDrawOpImmediate_) {
-        AddDrawOpDeferred<DrawAdaptiveImageOpItem>(image, data, rsImageInfo, sampling);
-        return;
-    }
-    OpDataHandle imageHandle;
-    if (data != nullptr) {
-        imageHandle = CmdListHelper::AddCompressDataToCmdList(*cmdList_, data);
-        AddDrawOpImmediate<DrawAdaptiveImageOpItem::ConstructorHandle>(imageHandle, rsImageInfo, sampling, false);
-        return;
-    }
-    if (image != nullptr) {
-        imageHandle = CmdListHelper::AddImageToCmdList(*cmdList_, image);
-        AddDrawOpImmediate<DrawAdaptiveImageOpItem::ConstructorHandle>(imageHandle, rsImageInfo, sampling, true);
-    }
-}
-
-void RecordingCanvas::DrawPixelMap(const std::shared_ptr<Media::PixelMap>& pixelMap,
-    const AdaptiveImageInfo& rsImageInfo, const SamplingOptions& sampling)
-{
-    if (!addDrawOpImmediate_) {
-        AddDrawOpDeferred<DrawAdaptivePixelMapOpItem>(pixelMap, rsImageInfo, sampling);
-        return;
-    }
-    auto pixelmapHandle = CmdListHelper::AddPixelMapToCmdList(*cmdList_, pixelMap);
-    AddDrawOpImmediate<DrawAdaptivePixelMapOpItem::ConstructorHandle>(pixelmapHandle, rsImageInfo, sampling);
-}
-
 void RecordingCanvas::SetIsCustomTextType(bool isCustomTextType)
 {
     isCustomTextType_ = isCustomTextType;
@@ -626,6 +601,16 @@ void RecordingCanvas::SetIsCustomTextType(bool isCustomTextType)
 bool RecordingCanvas::IsCustomTextType() const
 {
     return isCustomTextType_;
+}
+
+void RecordingCanvas::SetIsCustomTypeface(bool isCustomTypeface)
+{
+    isCustomTypeface_ = isCustomTypeface;
+}
+
+bool RecordingCanvas::IsCustomTypeface() const
+{
+    return isCustomTypeface_;
 }
 
 void RecordingCanvas::CheckForLazySave()

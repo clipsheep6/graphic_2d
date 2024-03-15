@@ -11,17 +11,16 @@ void DrawPath::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_PenSetWidth(pen, 10);
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
-    // 创建一个path对象，然后使用接口连接成一个五角星形状
+    // 创建一个path对象
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
-    // 指定path的起始位置
     OH_Drawing_PathMoveTo(path, 0, 0);
     OH_Drawing_PathLineTo(path, 300, 300);
     
     // 在画布上画path的形状
     OH_Drawing_CanvasDrawPath(canvas, path);
 
+    OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
-    pen = nullptr;
 }
 
 void DrawPath::OnTestPerformance(OH_Drawing_Canvas* canvas)
@@ -32,18 +31,17 @@ void DrawPath::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_PenSetWidth(pen, 10);
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
-    // 创建一个path对象，然后使用接口连接成一个五角星形状
-    OH_Drawing_Path* path = OH_Drawing_PathCreate();
-    // 指定path的起始位置
+    // 创建一个path对象
+    OH_Drawing_Path *path = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path, 0, 0);
     OH_Drawing_PathLineTo(path, 300, 300);
-    
+
     // 在画布上画path的形状
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_CanvasDrawPath(canvas, path);
     }
 
+    OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
-    pen = nullptr;
 }
 

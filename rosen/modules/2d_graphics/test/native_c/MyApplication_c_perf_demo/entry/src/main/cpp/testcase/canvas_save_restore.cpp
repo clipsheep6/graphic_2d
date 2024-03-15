@@ -11,11 +11,13 @@
 
 void CanvasSaveRestore::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
-    OH_Drawing_CanvasSave(canvas);
     OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreateTranslation(17.5, 17.5);
     OH_Drawing_CanvasConcatMatrix(canvas, matrix);
+    
+    OH_Drawing_CanvasSave(canvas);
     OH_Drawing_CanvasClear(canvas, OH_Drawing_ColorSetArgb(0xff, 0x00, 0xff, 0xff));
     OH_Drawing_CanvasRestore(canvas);
+    
     OH_Drawing_MatrixDestroy(matrix);
 }
 

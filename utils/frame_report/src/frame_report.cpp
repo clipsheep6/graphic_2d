@@ -45,7 +45,7 @@ constexpr int32_t MAX_CACHE_COUNT = 5;
 
 constexpr int32_t FR_GAME_BACKGROUND = 0;
 constexpr int32_t FR_GAME_FOREGROUND = 1;
-constexpr int32_t FR_GAME_ACTIVITY = 2;
+constexpr int32_t FR_GAME_SCHED = 2;
 
 FrameReport& FrameReport::GetInstance()
 {
@@ -66,7 +66,6 @@ void FrameReport::SetGameScene(int32_t pid, int32_t state)
 {
     LOGI("FrameReport::SetGameScene pid = %{public}d state = %{public}d ", pid, state);
     switch (state) {
-        // game exit - clear cache
         case FR_GAME_BACKGROUND: {
             if (!IsGameScene(pid)) {
                 LOGW("FrameReport::SetGameScene Local Cache Did Not Contains The Value pid = %{public}d "
@@ -76,7 +75,6 @@ void FrameReport::SetGameScene(int32_t pid, int32_t state)
             DeletePidInfo(pid);
         }
         break;
-        // game enter - cache data
         case FR_GAME_FOREGROUND: {
             LoadLibrary();
             if (pid > FR_DEFAULT_PID) {
@@ -85,8 +83,7 @@ void FrameReport::SetGameScene(int32_t pid, int32_t state)
             }
         }
         break;
-        // set game FR_GAME_ACTIVITY
-        case FR_GAME_ACTIVITY: {
+        case FR_GAME_SCHED: {
             if (IsGameScene(pid)) {
                 activelyPid_ = pid;
             }
@@ -160,8 +157,7 @@ void FrameReport::SetPendingBufferNum(const std::string& layerName, int32_t pend
 
 bool FrameReport::IsReportBySurfaceName(const std::string& layerName)
 {
-    bool isSurface = layerName.find("Surface") != std::string::npos;
-    return isSurface;
+    return layerName.find("Surface") != std::string::npos;
 }
 
 void FrameReport::LoadLibrary()

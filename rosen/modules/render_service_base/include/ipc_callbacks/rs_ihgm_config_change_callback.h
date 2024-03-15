@@ -28,6 +28,7 @@ public:
     virtual ~RSIHgmConfigChangeCallback() noexcept = default;
     virtual void OnHgmConfigChanged(std::shared_ptr<RSHgmConfigData> configData) = 0;
     virtual void OnHgmRefreshRateModeChanged(int32_t refreshRateMode) = 0;
+    virtual void OnHgmTouchEnableChanged(bool touchEnable) = 0;
 };
 }
 }

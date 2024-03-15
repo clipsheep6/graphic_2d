@@ -61,6 +61,7 @@ using SurfaceOcclusionChangeCallback = std::function<void(float)>;
 using HgmConfigChangeCallback = std::function<void(std::shared_ptr<RSHgmConfigData>)>;
 using OnRemoteDiedCallback = std::function<void()>;
 using HgmRefreshRateModeChangeCallback = std::function<void(int32_t)>;
+using HgmTouchEnableChangeCallback = std::function<void(bool)>;
 
 struct DataBaseRs {
     int32_t appPid = -1;
@@ -254,6 +255,8 @@ public:
     int32_t RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback);
 
     int32_t RegisterHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback);
+
+    bool RegisterHgmTouchEnableChangeCallback(const HgmTouchEnableChangeCallback& callback);
 
     void SetAppWindowNum(uint32_t num);
 

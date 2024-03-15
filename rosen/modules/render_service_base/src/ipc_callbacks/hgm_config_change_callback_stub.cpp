@@ -45,6 +45,12 @@ int RSHgmConfigChangeCallbackStub::OnRemoteRequest(
             OnHgmRefreshRateModeChanged(refreshRateMode);
             break;
         }
+        case static_cast<uint32_t>(RSIHgmConfigChangeCallbackInterfaceCode::
+                                   ON_HGM_TOUCH_ENABLE_CHANGED): {
+            bool touchEnable = data.ReadBool();
+            OnHgmTouchEnableChanged(touchEnable);
+            break;
+        }
         default: {
             ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
             break;

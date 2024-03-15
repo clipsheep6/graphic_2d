@@ -30,6 +30,7 @@ public:
 
     void OnHgmConfigChanged(std::shared_ptr<RSHgmConfigData> configData) override;
     void OnHgmRefreshRateModeChanged(int32_t refreshRateMode) override;
+    void OnHgmTouchEnableChanged(bool touchEnable) override;
 
 private:
     static inline BrokerDelegator<RSHgmConfigChangeCallbackProxy> delegator_;

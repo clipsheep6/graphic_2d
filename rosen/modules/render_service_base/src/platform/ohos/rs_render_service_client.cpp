@@ -935,6 +935,10 @@ public:
     {
     }
 
+    void OnHgmTouchEnableChanged(bool touchEnable) override
+    {
+    }
+
 private:
     HgmConfigChangeCallback cb_;
 };
@@ -967,6 +971,10 @@ public:
     {
     }
 
+    void OnHgmTouchEnableChanged(bool touchEnable) override
+    {
+    }
+
 private:
     HgmRefreshRateModeChangeCallback cb_;
 };
@@ -981,6 +989,43 @@ int32_t RSRenderServiceClient::RegisterHgmRefreshRateModeChangeCallback(
     }
     sptr<CustomHgmRefreshRateModeChangeCallback> cb = new CustomHgmRefreshRateModeChangeCallback(callback);
     return renderService->RegisterHgmRefreshRateModeChangeCallback(cb);
+}
+
+class CustomHgmTouchEnableChangeCallback : public RSHgmConfigChangeCallbackStub
+{
+public:
+    explicit CustomHgmTouchEnableChangeCallback(const HgmTouchEnableChangeCallback& callback) : cb_(callback) {}
+    ~CustomHgmTouchEnableChangeCallback() override {};
+
+    void OnHgmTouchEnableChanged(bool touchEnable) override
+    {
+        if (cb_ != nullptr) {
+            cb_(touchEnable);
+        }
+    }
+
+    void OnHgmRefreshRateModeChanged(int32_t refreshRateMode) override
+    {
+    }
+
+    void OnHgmConfigChanged(std::shared_ptr<RSHgmConfigData> configData) override
+    {
+    }
+
+private:
+    HgmTouchEnableChangeCallback cb_;
+};
+
+bool RSRenderServiceClient::RegisterHgmTouchEnableChangeCallback(
+    const HgmTouchEnableChangeCallback& callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        ROSEN_LOGE("RSRenderServiceClient::RegisterHgmTouchEnableChangeCallback renderService == nullptr!");
+        return RENDER_SERVICE_NULL;
+    }
+    sptr<CustomHgmTouchEnableChangeCallback> cb = new CustomHgmTouchEnableChangeCallback(callback);
+    return renderService->RegisterHgmTouchEnableChangeCallback(cb);
 }
 
 void RSRenderServiceClient::SetAppWindowNum(uint32_t num)

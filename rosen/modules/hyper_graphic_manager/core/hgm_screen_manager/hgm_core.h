@@ -35,6 +35,7 @@
 namespace OHOS::Rosen {
 class HgmFrameRateManager;
 using RefreshRateModeChangeCallback = std::function<void(int32_t)>;
+using TouchEnableChangeCallback = std::function<void(bool)>;
 class HgmCore final {
 public:
     static HgmCore& Instance();
@@ -130,6 +131,8 @@ public:
     int32_t SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);
     static int32_t SetRateAndResolution(ScreenId id, int32_t sceneId, int32_t rate, int32_t width, int32_t height);
     int32_t SetRefreshRateMode(RefreshRateMode refreshRateMode);
+    int32_t SetTouchIsEnable(bool touchEnable);
+    bool GetTouchIsEnable();
 
     void NotifyScreenPowerStatus(ScreenId id, ScreenPowerStatus status);
 
@@ -152,6 +155,7 @@ public:
     void SetLtpoConfig();
     int64_t GetIdealPeriod(uint32_t rate);
     void RegisterRefreshRateModeChangeCallback(const RefreshRateModeChangeCallback& callback);
+    void RegisterTouchEnableChangeCallback(const TouchEnableChangeCallback& callback);
     RefreshRateModeChangeCallback GetRefreshRateModeChangeCallback() const
     {
         return refreshRateModeChangeCallback_;
@@ -175,6 +179,7 @@ private:
     std::shared_ptr<PolicyConfigData> mPolicyConfigData_ = nullptr;
 
     RefreshRateMode customFrameRateMode_ = HGM_REFRESHRATE_MODE_AUTO;
+    bool touchEnable_ = true;
     std::vector<ScreenId> screenIds_;
     std::vector<sptr<HgmScreen>> screenList_;
     mutable std::mutex listMutex_;
@@ -195,6 +200,7 @@ private:
     uint32_t alignRate_ = 0;
     int32_t pipelineOffsetPulseNum_ = 8;
     RefreshRateModeChangeCallback refreshRateModeChangeCallback_ = nullptr;
+    TouchEnableChangeCallback touchEnableCallback_ = nullptr;
 };
 } // namespace OHOS::Rosen
 #endif // HGM_CORE_H

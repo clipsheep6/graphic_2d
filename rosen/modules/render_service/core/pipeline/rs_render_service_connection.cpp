@@ -1078,6 +1078,18 @@ int32_t RSRenderServiceConnection::RegisterHgmRefreshRateModeChangeCallback(
     return StatusCode::SUCCESS;
 }
 
+bool RSRenderServiceConnection::RegisterHgmTouchEnableChangeCallback(
+    sptr<RSIHgmConfigChangeCallback> callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!callback) {
+        RS_LOGD("RSRenderServiceConnection::RegisterHgmTouchEnableChangeCallback: callback is nullptr");
+        return StatusCode::INVALID_ARGUMENTS;
+    }
+
+    return HgmConfigCallbackManager::GetInstance()->RegisterHgmTouchEnableChangeCallback(callback);
+}
+
 void RSRenderServiceConnection::SetAppWindowNum(uint32_t num)
 {
     auto task = [this, num]() -> void {

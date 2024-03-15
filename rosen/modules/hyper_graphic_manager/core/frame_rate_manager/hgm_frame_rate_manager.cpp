@@ -94,6 +94,10 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
         HgmConfigCallbackManager::GetInstance()->SyncRefreshRateModeChangeCallback(mode);
     });
     controller_ = std::make_shared<HgmVSyncGeneratorController>(rsController, appController, vsyncGenerator);
+
+    hgmCore.RegisterTouchEnableChangeCallback([](bool touchEnable) {
+        HgmConfigCallbackManager::GetInstance()->SyncTouchEnableChangeCallback(touchEnable);
+    });
 }
 
 void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
@@ -152,8 +156,12 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     if (idleTimerExpired) {
         // idle in ltps
         HandleIdleEvent(ADD_VOTE);
+    } else {
+        StartScreenTimer(curScreenId_, IDLE_TIMER_EXPIRED, nullptr, [this]() {
+            forceUpdateCallback_(true, false);
+        });
     }
-
+    
     FrameRateRange finalRange;
     VoteRange voteResult = ProcessRefreshRateVote();
     auto& hgmCore = HgmCore::Instance();
@@ -490,10 +498,12 @@ void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus)
     }
 
     if (touchStatus == TOUCH_DOWN) {
+        HGM_LOGD("Update to target %{public}d fps", touchFps_);
         DeliverRefreshRateVote(0, "VOTER_TOUCH", ADD_VOTE, touchFps_, touchFps_);
         StopScreenTimer(curScreenId_);
     } else {
         // idle detect used in ltps
+        HGM_LOGD("touch idle detect in ltps");
         StartScreenTimer(curScreenId_, IDLE_AFTER_TOUCH_UP, nullptr, [this]() {
             forceUpdateCallback_(true, false);
         });
@@ -623,6 +633,8 @@ void HgmFrameRateManager::SyncAppVote()
         configData->strategyConfigs_[curXmlStrategy].min, configData->strategyConfigs_[curXmlStrategy].max);
 
     isTouchEnable_ = (configData->strategyConfigs_[curXmlStrategy].dynamicMode != 0);
+    HgmCore::Instance().SetTouchIsEnable(isTouchEnable_);
+    HgmConfigCallbackManager::GetInstance()->SyncTouchEnableChangeCallback(isTouchEnable_);
     touchFps_ = configData->strategyConfigs_[curXmlStrategy].max;
     idleFps_ = std::max(configData->strategyConfigs_[curXmlStrategy].min, static_cast<int32_t>(OLED_60_HZ));
 }

@@ -159,6 +159,17 @@
           },
           {
             "type": "so",
+            "name": "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper:EGL",
+            "header": {
+              "header_files": [
+                "include/private/EGL/cache.h",
+                "egl_blob_cache.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/frameworks/opengl_wrapper/src/EGL"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/graphic/graphic_2d/interfaces/kits/napi/graphic/drawing:drawing_napi_impl",
             "header": {
               "header_files": [

@@ -148,7 +148,7 @@ private:
     void WaitForVsyncOrRequest(std::unique_lock<std::mutex> &locker);
 
 #ifdef COMPOSER_SCHED_ENABLE
-    void SubScribeSystemAbility();
+    void SubScribeSystemAbility(const std::string& threadName);
 #endif
 
     sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;

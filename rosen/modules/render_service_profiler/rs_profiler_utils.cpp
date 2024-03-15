@@ -120,6 +120,9 @@ size_t FileSize(FILE* file)
     }
 
     const int position = ftell(file);
+    if (position == -1) {
+        return 0;
+    }
     FileSeek(file, 0, SEEK_END);
     const size_t size = ftell(file);
     FileSeek(file, position, SEEK_SET);

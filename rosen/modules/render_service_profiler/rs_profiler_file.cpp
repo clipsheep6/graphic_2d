@@ -453,7 +453,7 @@ bool RSFile::ReadRSData(double untilTime, std::vector<uint8_t>& data, double& re
     }
 
     ROSEN_LOGD("RSMainThread::MainLoop Server REPLAY READ RSData offset=%d len=%d read_time=%lf", // NOLINT
-        static_cast<int>(layerData.rsData[layerData.readindexRsData].first), 
+        static_cast<int>(layerData.rsData[layerData.readindexRsData].first),
         static_cast<int>(layerData.rsData[layerData.readindexRsData].second),
         readTime);
 

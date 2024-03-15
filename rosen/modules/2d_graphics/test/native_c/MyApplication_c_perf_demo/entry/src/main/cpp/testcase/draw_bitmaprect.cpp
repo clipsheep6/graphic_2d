@@ -37,9 +37,14 @@ void DrawBitmapRect::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_CanvasDrawBitmapRect(canvas, bitmap, srcRect, dstRect, sampling);
     OH_Drawing_CanvasDrawBitmapRect(canvas, bitmap, srcRect, dstRect1, sampling);
 
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_RectDestroy(srcRect);
+    OH_Drawing_RectDestroy(dstRect);
+    OH_Drawing_RectDestroy(dstRect1);
+    OH_Drawing_SamplingOptionsDestroy(sampling);
     OH_Drawing_PenDestroy(pen);
     OH_Drawing_BrushDestroy(brush);
-    OH_Drawing_SamplingOptionsDestroy(sampling);
     OH_Drawing_CanvasDestroy(bitmapCanvas);
     OH_Drawing_BitmapDestroy(bitmap);
 }
@@ -82,13 +87,16 @@ void DrawBitmapRect::OnTestPerformance(OH_Drawing_Canvas *canvas)
         OH_Drawing_CanvasDrawBitmapRect(canvas, bitmap, srcRect, rectList[i % num], sampling);
     }
 
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    
     for (int j = 0; j < num; j++) {
         OH_Drawing_RectDestroy(rectList[j]);
     }
-
+    OH_Drawing_RectDestroy(srcRect);
+    OH_Drawing_SamplingOptionsDestroy(sampling);
     OH_Drawing_PenDestroy(pen);
     OH_Drawing_BrushDestroy(brush);
-    OH_Drawing_SamplingOptionsDestroy(sampling);
     OH_Drawing_CanvasDestroy(bitmapCanvas);
     OH_Drawing_BitmapDestroy(bitmap);
 }

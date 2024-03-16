@@ -1,0 +1,6 @@
+[
+    { "name": "OH_NativeHgm_SetRefreshRateMode" },
+    { "name": "OH_NativeHgm_GetScreenCurrentRefreshRate" },
+    { "name": "OH_NativeHgm_GetCurrentRefreshRateMode" },
+    { "name": "OH_NativeHgm_GetScreenSupportedRefreshRates" }
+]

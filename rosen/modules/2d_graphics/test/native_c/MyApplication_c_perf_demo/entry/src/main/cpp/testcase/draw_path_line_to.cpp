@@ -18,8 +18,9 @@ void DrawPathLineTo::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_Path *path = OH_Drawing_PathCreate();
     // 指定path的起始位置
     OH_Drawing_PathMoveTo(path, 100, 100);
-    OH_Drawing_PathLineTo(path, 150, 200);
-    OH_Drawing_PathLineTo(path, 200, 100);
+    OH_Drawing_PathLineTo(path, 150, 50);
+    OH_Drawing_PathLineTo(path, 200, 200);
+    OH_Drawing_PathClose(path);
 
     // 在画布上画path的形状
     OH_Drawing_CanvasDrawPath(canvas, path);
@@ -44,8 +45,9 @@ void DrawPathLineTo::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     for (int i = 0; i < testCount_; i++) {
         // 指定path的起始位置
         OH_Drawing_PathMoveTo(path, 100, 100);
-        OH_Drawing_PathLineTo(path, 150, 200);
-        OH_Drawing_PathLineTo(path, 200, 100);
+        OH_Drawing_PathLineTo(path, 150, 50);
+        OH_Drawing_PathLineTo(path, 200, 200);
+        OH_Drawing_PathClose(path);
         // 在画布上画path的形状
         OH_Drawing_CanvasDrawPath(canvas, path);
         

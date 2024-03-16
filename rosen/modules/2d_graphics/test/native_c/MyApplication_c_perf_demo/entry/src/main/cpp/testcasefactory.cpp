@@ -24,30 +24,33 @@
 #include "testcase/canvas_save_layer.h"
 #include "testcase/draw_line.h"
 #include "testcase/draw_path_arc_to.h"
+#include "testcase/draw_path_line_to.h"
 
 namespace {
-    std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap = {
-        {"drawrect",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRect>(); }},
-        {"drawpath",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPath>(); }},
-        {"drawtextblob",   []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
-        {"drawbitmap",     []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
-        {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); }},
-        {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
-        {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveLayer>(); }},
-        {"drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawLine>(); }},
-        {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); }},
-    };
+std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap = {
+    { "drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRect>(); } },
+    { "drawpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPath>(); } },
+    { "drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); } },
+    { "drawbitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); } },
+    { "drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); } },
+    { "saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); } },
+    { "savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveLayer>(); } },
+    { "drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawLine>(); } },
+    { "drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); } },
+    { "drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathLineTo>(); } },
+};
 
-    std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
-        {"drawrect",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRect>(); }},
-        {"drawpath",       []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPath>(); }},
-        {"drawtextblob",   []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
-        {"drawbitmap",     []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
-        {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); }},
-        {"saverestore",    []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
-        {"drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawLine>(); }},
-        {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); }},
-    };
+std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
+    { "drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRect>(); } },
+    { "drawpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPath>(); } },
+    { "drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); } },
+    { "drawbitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); } },
+    { "drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); } },
+    { "saverestore", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); } },
+    { "drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawLine>(); } },
+    { "drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); } },
+    { "drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathLineTo>(); } },
+};
 } // namespace
 
 

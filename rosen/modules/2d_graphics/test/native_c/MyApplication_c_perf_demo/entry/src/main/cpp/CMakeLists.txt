@@ -23,6 +23,7 @@ add_library(entry SHARED
     testcase/canvas_save_layer.cpp
     testcase/draw_line.cpp
     testcase/draw_path_arc_to.cpp
+    testcase/draw_path_line_to.cpp
 )
 
 add_library(myxnode SHARED
@@ -39,6 +40,7 @@ add_library(myxnode SHARED
     testcase/canvas_save_layer.cpp
     testcase/draw_line.cpp
     testcase/draw_path_arc_to.cpp
+    testcase/draw_path_line_to.cpp
 )
 
 find_library(

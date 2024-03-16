@@ -6,6 +6,7 @@
 
 class DrawRect : public TestBase {
 public:
+    DrawRect() : TestBase() {}
     DrawRect(int shift);
     ~DrawRect();
 protected:

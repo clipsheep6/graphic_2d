@@ -66,7 +66,7 @@ export class MyRenderNode extends RenderNode {
 
   TestPerformanceGpuUpScreen(canvas: drawing.Canvas) {
     console.info(TAG, 'MyRenderNode TestPerformanceGpuUpScreen');
-    let test:TestBase = CaseFactory.getPerformanceCpuCase(this.caseNameStr);
+    let test:TestBase = CaseFactory.getPerformanceGpuUpScreenCase(this.caseNameStr);
     if (test == null || test == undefined) {
       printCallback('Testcase name is invalid');
       return;

@@ -538,6 +538,10 @@ private:
     std::atomic_bool discardJankFrames_ = false;
     bool forceUIFirstChanged_ = false;
     bool hasRosenWebNode_ = false;
+
+#ifdef RS_PROFILER_ENABLED
+    friend class RSProfiler;
+#endif
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

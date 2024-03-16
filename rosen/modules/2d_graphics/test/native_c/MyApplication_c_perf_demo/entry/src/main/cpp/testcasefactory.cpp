@@ -53,7 +53,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
     { "drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); } },
     { "drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathLineTo>(); } },
     { "drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRect>(); }},
-
 };
 } // namespace
 

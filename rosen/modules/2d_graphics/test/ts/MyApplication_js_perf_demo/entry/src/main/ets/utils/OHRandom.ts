@@ -79,4 +79,27 @@ export class OHRandom {
     }
   }
 
+  public nextUFixed1(): number {
+    return this.nextU() >> 16
+  }
+
+  public nextUScalar1(): number {
+    return this.nextUFixed1() * 1.52587890625
+  }
+
+  public nextRangeU(min: number, max: number): number {
+    let a = this.nextU()
+    a = a < 0 ? -a : a
+    let range: number = max - min + 1;
+    if (0 == range) {
+      return a;
+    } else {
+      return min + a % range;
+    }
+  }
+
+  public nextULessThan(count: number) {
+    return this.nextRangeU(0, count -1)
+  }
+
 }

@@ -22,6 +22,18 @@ import { XfermodeBench } from './XfermodeBench';
 import { BlitMaskBench } from './BlitMaskBench';
 import { TextBlobFirstTimeBench } from './TextBlobFirstTimeBench';
 import { RectBench } from './rectBench';
+
+import {DrawLine} from './drawline';
+import {DrawImage} from './drawimage';
+import {DrawCircle} from './drawcircle'
+import {DrawTextBlob} from './drawtextblob'
+import {DrawColor} from './drawcolor'
+import {DrawPoint} from './drawpoint'
+import {DrawMoveTo} from './drawmoveto'
+import {DrawLineTo} from './drawlineto'
+import {DrawArcTo} from './drawarcto'
+import {DrawQuadTo} from './drawquadto'
+import {DrawCubicTo} from './drawcubicto'
 const TAG = '[DrawingTest]';
 
 export class CaseFactory {
@@ -29,18 +41,51 @@ export class CaseFactory {
     [
       ['drawrect', () => { return new DrawRect(); }],
       ['drawpath', () => { return new DrawPath(); }],
+      ['drawline', () => { return new DrawLine(1, false); }],
+      ['drawimage', () => { return new DrawImage(); }],
+      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawtextblob', () => { return new DrawTextBlob(); }],
+      ['drawcolor', () => { return new DrawColor(); }],
+      ['drawpoint', () => { return new DrawPoint(); }],
+      ['drawmoveto', () => { return new DrawMoveTo(); }],
+      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawarcto', () => { return new DrawArcTo(); }],
+      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['drawcubicto', () => { return new DrawCubicTo(); }],
     ]
   );
   static PerformanceCpuMap: Map<string, Function> = new Map(
     [
       ['drawrect', () => { return new DrawRect(); }],
       ['drawpath', () => { return new DrawPath(); }],
+      ['drawline', () => { return new DrawLine(1, false); }],
+      ['drawimage', () => { return new DrawImage(); }],
+      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawtextblob', () => { return new DrawTextBlob(); }],
+      ['drawcolor', () => { return new DrawColor(); }],
+      ['drawpoint', () => { return new DrawPoint(); }],
+      ['drawmoveto', () => { return new DrawMoveTo(); }],
+      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawarcto', () => { return new DrawArcTo(); }],
+      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['drawcubicto', () => { return new DrawCubicTo(); }],
     ]
   );
   static FunctionGpuUpScreenMap: Map<string, Function> = new Map(
     [
       ['drawrect', () => { return new DrawRect(); }],
       ['drawpath', () => { return new DrawPath(); }],
+      ['drawline', () => { return new DrawLine(1, false); }],
+      ['drawimage', () => { return new DrawImage(); }],
+      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawtextblob', () => { return new DrawTextBlob(); }],
+      ['drawcolor', () => { return new DrawColor(); }],
+      ['drawpoint', () => { return new DrawPoint(); }],
+      ['drawmoveto', () => { return new DrawMoveTo(); }],
+      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawarcto', () => { return new DrawArcTo(); }],
+      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['drawcubicto', () => { return new DrawCubicTo(); }],
     ]
   );
   static PerformanceGpuUpScreenMap: Map<string, Function> = new Map(
@@ -56,6 +101,17 @@ export class CaseFactory {
       ['xfermoderect', () => { return new XfermodeBench(0, 1); }],
       ['blitmask', () => { return new BlitMaskBench(); }],
       ['textblob', () => { return new TextBlobFirstTimeBench(); }],
+      ['drawline', () => { return new DrawLine(1, false); }],
+      ['drawimage', () => { return new DrawImage(); }],
+      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawtextblob', () => { return new DrawTextBlob(); }],
+      ['drawcolor', () => { return new DrawColor(); }],
+      ['drawpoint', () => { return new DrawPoint(); }],
+      ['drawmoveto', () => { return new DrawMoveTo(); }],
+      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawarcto', () => { return new DrawArcTo(); }],
+      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['drawcubicto', () => { return new DrawCubicTo(); }],
     ]
   );
 

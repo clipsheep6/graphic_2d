@@ -23,6 +23,11 @@
 #include "testcase/canvas_save_restore.h"
 #include "testcase/canvas_save_layer.h"
 #include "testcase/draw_line.h"
+#include "testcase/draw_circle.h"
+#include "testcase/draw_oval.h"
+#include "testcase/draw_round_rect.h"
+#include "testcase/aa_clip_bench.h"
+#include "testcase/draw_imagerect.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -35,6 +40,13 @@ namespace {
             {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
             {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveLayer>(); }},
             {"drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawLine>(); }},
+            {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawCircle>(); }},
+            {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawOval>(1); }},
+            {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRountRect>(1); }},
+            {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(true, true); }},
+            {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(false, true); }},
+            {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawImageRect>(); }},
+            
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -46,6 +58,12 @@ namespace {
             {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); }},
             {"saverestore", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
             {"drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawLine>(); }},
+            {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawCircle>(); }},
+            {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawOval>(1); }},
+            {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawRountRect>(1); }},
+            {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(true, true); }},
+            {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(false, true); }},
+            {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawImageRect>(); }},
     };
 } // namespace
 

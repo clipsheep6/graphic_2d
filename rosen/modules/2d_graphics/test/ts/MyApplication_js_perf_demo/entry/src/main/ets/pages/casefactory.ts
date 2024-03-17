@@ -29,89 +29,80 @@ import {DrawCircle} from './drawcircle'
 import {DrawTextBlob} from './drawtextblob'
 import {DrawColor} from './drawcolor'
 import {DrawPoint} from './drawpoint'
-import {DrawMoveTo} from './drawmoveto'
-import {DrawLineTo} from './drawlineto'
+import {PathLineTo} from './pathlineto'
 import {DrawArcTo} from './drawarcto'
-import {DrawQuadTo} from './drawquadto'
+import {PathQuadto} from './pathquadto'
 import {DrawCubicTo} from './drawcubicto'
+import  {PathReset} from './pathreset'
 const TAG = '[DrawingTest]';
 
 export class CaseFactory {
   static FunctionCpuMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(); }],
+      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawpath', () => { return new DrawPath(); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
-      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawcircle', () => { return new DrawCircle(10); }],
       ['drawtextblob', () => { return new DrawTextBlob(); }],
       ['drawcolor', () => { return new DrawColor(); }],
-      ['drawpoint', () => { return new DrawPoint(); }],
-      ['drawmoveto', () => { return new DrawMoveTo(); }],
-      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawpoint', () => { return new DrawPoint(1, true); }],
+      ['pathlineto', () => { return new PathLineTo(); }],
       ['drawarcto', () => { return new DrawArcTo(); }],
-      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
+      ['pathreset', () => { return new PathReset(); }],
     ]
   );
   static PerformanceCpuMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(); }],
+      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawpath', () => { return new DrawPath(); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
-      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawcircle', () => { return new DrawCircle(10); }],
       ['drawtextblob', () => { return new DrawTextBlob(); }],
       ['drawcolor', () => { return new DrawColor(); }],
-      ['drawpoint', () => { return new DrawPoint(); }],
-      ['drawmoveto', () => { return new DrawMoveTo(); }],
-      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawpoint', () => { return new DrawPoint(1, true); }],
+      ['pathlineto', () => { return new PathLineTo(); }],
       ['drawarcto', () => { return new DrawArcTo(); }],
-      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
+      ['pathreset', () => { return new PathReset(); }],
     ]
   );
   static FunctionGpuUpScreenMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(); }],
+      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawpath', () => { return new DrawPath(); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
-      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawcircle', () => { return new DrawCircle(10); }],
       ['drawtextblob', () => { return new DrawTextBlob(); }],
       ['drawcolor', () => { return new DrawColor(); }],
-      ['drawpoint', () => { return new DrawPoint(); }],
-      ['drawmoveto', () => { return new DrawMoveTo(); }],
-      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawpoint', () => { return new DrawPoint(1, true); }],
+      ['pathlineto', () => { return new PathLineTo(); }],
       ['drawarcto', () => { return new DrawArcTo(); }],
-      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
+      ['pathreset', () => { return new PathReset(); }],
     ]
   );
   static PerformanceGpuUpScreenMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(); }],
+      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawpath', () => { return new DrawPath(); }],
-      ['rectbenchtrue', () => { return new RectBench(0, 10, true, false); }],
-      ['rectbenchfalse', () => { return new RectBench(0, 10, false, false); }],
-      ['srcmoderect', () => { return new SrcModeRectBench(); }],
-      ['bezierquad', () => { return new BezierBench(10, 0); }],
-      ['beziercubic', () => { return new BezierBench(50, 1); }],
-      ['xfermodemask', () => { return new XfermodeBench(0, 0); }],
-      ['xfermoderect', () => { return new XfermodeBench(0, 1); }],
-      ['blitmask', () => { return new BlitMaskBench(); }],
-      ['textblob', () => { return new TextBlobFirstTimeBench(); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
-      ['drawcircle', () => { return new DrawCircle(); }],
+      ['drawcircle', () => { return new DrawCircle(10); }],
       ['drawtextblob', () => { return new DrawTextBlob(); }],
       ['drawcolor', () => { return new DrawColor(); }],
-      ['drawpoint', () => { return new DrawPoint(); }],
-      ['drawmoveto', () => { return new DrawMoveTo(); }],
-      ['drawlineto', () => { return new DrawLineTo(); }],
+      ['drawpoint', () => { return new DrawPoint(1, true); }],
+      ['pathlineto', () => { return new PathLineTo(); }],
       ['drawarcto', () => { return new DrawArcTo(); }],
-      ['drawquadto', () => { return new DrawQuadTo(); }],
+      ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
+      ['pathreset', () => { return new PathReset(); }],
     ]
   );
 

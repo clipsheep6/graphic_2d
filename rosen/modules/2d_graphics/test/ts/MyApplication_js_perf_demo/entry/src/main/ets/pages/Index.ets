@@ -29,7 +29,7 @@ struct Index {
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
   @State testType: string = 'function';
   @State drawingType: string = 'gpu';
-  @State caseNameStr: string  = 'drawrect';
+  @State caseNameStr: string  = 'pathreset';
   @State information: string = '';
   @State testAll: boolean = false;
   caseNameStrBefore: string  = '';

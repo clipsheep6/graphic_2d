@@ -18,55 +18,47 @@ export class DrawArcTo extends TestBase {
 
   public OnTestFunction(canvas: drawing.Canvas) {
     //接口调用，功能测试.cpu/gpu调用接口一致
-
-    console.log("www data on arc to");
-
     const pen = new drawing.Pen();
-    const penColor: common2D.Color = { alpha: 255, red: 0, green: 255, blue: 0 }
+    pen.setAntiAlias(true)
+    const penColor: common2D.Color = { alpha: 255, red: 255, green: 255, blue: 255 }
     pen.setColor(penColor);
-    pen.setStrokeWidth(5);
-    canvas.attachPen(pen);
-
     const path = new drawing.Path();
-
+    pen.setAntiAlias(true)
+    canvas.attachPen(pen);
     let radius = this.rand.nextUScalar1() * 3
     let fLeft = this.rand.nextUScalar1() * 300
     let fTop = this.rand.nextUScalar1() * 300
     let fRight = fLeft + 2 * radius
     let fBottom = fTop + 2 * radius
-    console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
-    path.arcTo(150, 150, 300, 300, 0, 180);
+    // console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
+    path.arcTo(fLeft, fTop, fRight, fBottom, 0, 180);
+    path.arcTo(fLeft, fTop, fRight, fBottom, 0, 360);
     path.close()
-
     canvas.drawPath(path);
     canvas.detachPen()
-    // canvas.drawRect({ left: 150, right: 300, top: 150, bottom: 300 })
-
   }
 
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();
-    const path = new drawing.Path();
-
+    pen.setStrokeWidth(5)
+    const penColor: common2D.Color = { alpha: 255, red: 255, green: 255, blue: 255 }
+    pen.setColor(penColor);
+    pen.setAntiAlias(true)
+    canvas.attachPen(pen);
     for (let index = 0; index < this.testCount_; index++) {
-      canvas.attachPen(pen);
+      const path = new drawing.Path();
       let radius = this.rand.nextUScalar1() * 3
       let fLeft = this.rand.nextUScalar1() * 300
       let fTop = this.rand.nextUScalar1() * 300
       let fRight = fLeft + 2 * radius
       let fBottom = fTop + 2 * radius
-      console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
-      path.arcTo(150, 150, 300, 300, 0, 180);
+      // console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
+      path.arcTo(fLeft, fTop, fRight, fBottom, 0, 180);
+      path.arcTo(fLeft, fTop, fRight, fBottom, 180, 360);
       path.close()
-
       canvas.drawPath(path);
-      canvas.detachPen()
-
-
-
-      // path.lineTo(400, 400);
     }
-    canvas.drawPath(path);
+    canvas.detachPen()
   }
 }

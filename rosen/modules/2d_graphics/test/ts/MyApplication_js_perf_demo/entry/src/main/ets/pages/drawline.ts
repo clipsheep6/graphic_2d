@@ -30,8 +30,10 @@ export class DrawLine extends TestBase {
     const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
     pen.setColor(penColor);
     pen.setStrokeWidth(10);
+    pen.setAntiAlias(true)
     canvas.attachPen(pen);
     canvas.drawLine(10 * SK_Scalar1, 10 * SK_Scalar1 , 640 * SK_Scalar1, 10 * SK_Scalar1);
+    canvas.detachPen()
   }
 
   public OnTestPerformance(canvas: drawing.Canvas) {
@@ -39,13 +41,12 @@ export class DrawLine extends TestBase {
     const pen = new drawing.Pen();
     const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
     pen.setColor(penColor);
+    pen.setAntiAlias(true)
     pen.setStrokeWidth(10);
     canvas.attachPen(pen);
-
     for (let index = 0; index < this.testCount_; index++) {
-      canvas.attachPen(pen);
       canvas.drawLine(10 * SK_Scalar1, 10 * SK_Scalar1 , 640 * SK_Scalar1, 10 * SK_Scalar1);
-      canvas.attachPen(pen);
     }
+    canvas.detachPen();
   }
 }

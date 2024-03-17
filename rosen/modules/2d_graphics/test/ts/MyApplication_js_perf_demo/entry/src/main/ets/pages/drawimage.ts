@@ -533,23 +533,30 @@ export class DrawImage extends TestBase {
     this.fileName_ = "drawimage";
   }
 
-  public async OnTestFunction(canvas: drawing.Canvas) {
+  public OnTestFunction(canvas: drawing.Canvas) {
 
     let imageSource = image.createImageSource(testPng.buffer)
-    let pix = await imageSource.createPixelMap()
-
-    //接口调用，功能测试.cpu/gpu调用接口一致
-    canvas.drawImage(pix, 0, 0);
+    imageSource.createPixelMap().then((pix) => {
+      // canvas->concat(fMatrix);这个接口缺失
+      canvas.drawImage(pix, 0, 0);
+    }).catch(err => {
+      console.log("www data create PixelMap Failed" + JSON.stringify(err))
+    })
   }
 
-  public async OnTestPerformance(canvas: drawing.Canvas) {
+  public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     let imageSource = image.createImageSource(testPng.buffer)
-    let pix = await imageSource.createPixelMap()
+    imageSource.createPixelMap().then((pix) => {
+      for (let index = 0; index < this.testCount_; index++) {
+        // canvas->concat(fMatrix);这个接口缺失
+        canvas.drawImage(pix, 0, 0);
+      }
+    }).catch(err => {
+      console.log("www data create PixelMap Failed" + JSON.stringify(err))
+    })
 
-    for (let index = 0; index < this.testCount_; index++) {
-      canvas.drawImage(pix, 0, 0);
-    }
+
   }
 }
 

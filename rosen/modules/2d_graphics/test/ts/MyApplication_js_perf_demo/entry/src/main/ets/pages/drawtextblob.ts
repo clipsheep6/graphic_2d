@@ -28,15 +28,15 @@ export class DrawTextBlob extends TestBase {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const brush = new drawing.Brush();
     brush.setColor({alpha: 255, red: 0, green: 255, blue: 255});
+    canvas.attachBrush(brush);
 
     let bigLoops = this.testCount_ * 100
     for (let index = 0; index < bigLoops; index++) {
       const font = new drawing.Font();
       font.setSize(10);
       const textBlob = drawing.TextBlob.makeFromString("Keep your sentences short, but not overly so.", font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
-      canvas.attachBrush(brush);
       canvas.drawTextBlob(textBlob, 20, 20);
-      canvas.detachBrush();
     }
+    canvas.detachBrush();
   }
 }

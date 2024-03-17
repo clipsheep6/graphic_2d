@@ -32,6 +32,7 @@ export class DrawCubicTo extends TestBase {
     //接口调用，功能测试.cpu/gpu调用接口一致
     const pen = new drawing.Pen();
     const path = new drawing.Path();
+    pen.setAntiAlias(true)
     canvas.attachPen(pen);
 
     // 该值与c++中的位运算得到的数字不同，此处仅模拟运算，不适用该值
@@ -58,7 +59,6 @@ export class DrawCubicTo extends TestBase {
         this.points[base4] + xTrans, this.points[base4+1] + yTrans,
       )
     }
-    path.close()
 
     canvas.drawPath(path);
     canvas.detachPen()
@@ -67,39 +67,39 @@ export class DrawCubicTo extends TestBase {
 
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
-    for (let index = 0; index < this.testCount_; index++) {
-      const pen = new drawing.Pen();
-      const path = new drawing.Path();
-      canvas.attachPen(pen);
+    const pen = new drawing.Pen();
+    const path = new drawing.Path();
+    pen.setAntiAlias(true)
+    canvas.attachPen(pen);
 
-      // 该值与c++中的位运算得到的数字不同，此处仅模拟运算，不适用该值
-      let size: number = this.points.length
-      let hsize: number = size / 2
-      for (let i = 0; i < this.kMaxPathSize; i++) {
-        let xTrans: number = 1 + 40 * (i%(this.kMaxPathSize/2))
-        let yTrans: number = 0
-        if (i > this.kMaxPathSize/2 - 1) {
-          yTrans = 40
-        }
-        let base1 = 2 * this.rand.nextULessThan(hsize)
-        let base2 = 2 * this.rand.nextULessThan(hsize)
-        let base3 = 2 * this.rand.nextULessThan(hsize)
-        let base4 = 2 * this.rand.nextULessThan(hsize)
-
-        console.log(`www data hsize${hsize} base1 ${base1} base1 ${base2} base1 ${base3}  base1 ${base4} `)
-        console.log(`www data x1${this.points[base2] + xTrans} ${this.points[base2+1] + yTrans}`)
-
-        path.moveTo(this.points[base1] + xTrans, this.points[base1+1] + yTrans)
-        path.cubicTo(
-          this.points[base2] + xTrans, this.points[base2+1] + yTrans,
-          this.points[base3] + xTrans, this.points[base3+1] + yTrans,
-          this.points[base4] + xTrans, this.points[base4+1] + yTrans,
-        )
+    let size: number = this.points.length
+    let hsize: number = size / 2
+    for (let i = 0; i < this.kMaxPathSize; i++) {
+      let xTrans: number = 1 + 40 * (i%(this.kMaxPathSize/2))
+      let yTrans: number = 0
+      if (i > this.kMaxPathSize/2 - 1) {
+        yTrans = 40
       }
-      path.close()
+      let base1 = 2 * this.rand.nextULessThan(hsize)
+      let base2 = 2 * this.rand.nextULessThan(hsize)
+      let base3 = 2 * this.rand.nextULessThan(hsize)
+      let base4 = 2 * this.rand.nextULessThan(hsize)
 
-      canvas.drawPath(path);
-      canvas.detachPen()
+      // console.log(`www data hsize${hsize} base1 ${base1} base1 ${base2} base1 ${base3}  base1 ${base4} `)
+      // console.log(`www data x1${this.points[base2] + xTrans} ${this.points[base2+1] + yTrans}`)
+      path.moveTo(this.points[base1] + xTrans, this.points[base1+1] + yTrans)
+      path.cubicTo(
+        this.points[base2] + xTrans, this.points[base2+1] + yTrans,
+        this.points[base3] + xTrans, this.points[base3+1] + yTrans,
+        this.points[base4] + xTrans, this.points[base4+1] + yTrans,
+      )
     }
+
+    for (let index = 0; index < this.testCount_; index++) {
+      for (let j = 0; j < 100; j++) {
+        canvas.drawPath(path);
+      }
+    }
+    canvas.detachPen()
   }
 }

@@ -28,6 +28,7 @@ void DrawPathTransform::OnTestFunction(OH_Drawing_Canvas* canvas)
     
     // 在画布上画path的形状
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
+    makePathCubic(path);
     OH_Drawing_Matrix* m = OH_Drawing_MatrixCreateScale(3,3,300,300);
     OH_Drawing_PathTransform(path, m);
     

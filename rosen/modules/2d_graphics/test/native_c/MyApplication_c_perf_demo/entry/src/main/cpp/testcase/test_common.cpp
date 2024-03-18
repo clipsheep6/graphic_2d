@@ -38,6 +38,7 @@ float_t TestRend::nextUScalar1()
 {
     return intToFloat(this->nextU()>>16);
 }
+
 uint32_t TestRend::nextULessThan(uint32_t count)
 {
     uint32_t min = 0;

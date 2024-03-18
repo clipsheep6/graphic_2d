@@ -61,6 +61,7 @@ void DrawPathAddRoundRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
         //recurse
         this->recurse(canvas, 0, offset);
     }
+    OH_Drawing_RectDestroy(fDrawRect);
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
 }

@@ -75,8 +75,8 @@ void DrawPathArcTo::OnTestPerformance(OH_Drawing_Canvas* canvas)
         OH_Drawing_CanvasDrawPath(canvas, path);
 //        DRAWING_LOGI("arcto rand value = %{public}f\n",rand.nextUScalar1());
         OH_Drawing_PathDestroy(path);
+        OH_Drawing_RectDestroy(rect);
     }
-    OH_Drawing_RectDestroy(rect);
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;

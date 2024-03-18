@@ -36,7 +36,7 @@ export class DrawRect extends TestBase {
   public Init() {
     for (let i = 0; i < 300; i++) {
       console.log(TAG, 'Init test math random is"' + Math.round(Math.random() * 255));
-      let rect : common2D.Rect = this.ohRandom.createRect(i + 1);
+      let rect : common2D.Rect; // = this.ohRandom.createRect(i + 1);
       let clour : common2D.Color = {alpha : Math.round(Math.random() * 255), red : Math.round(Math.random() * 255),
         green : Math.round(Math.random() * 255), blue : Math.round(Math.random() * 255)};
       this.canvasRects.add(rect);

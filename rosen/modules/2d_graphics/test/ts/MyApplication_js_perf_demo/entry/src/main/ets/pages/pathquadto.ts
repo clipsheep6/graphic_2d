@@ -41,6 +41,7 @@ export class PathQuadto extends TestBase {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();
     const path = new drawing.Path();
+    pen.setAntiAlias(true);
     canvas.attachPen(pen);
 
     for (let index = 0; index < 100; index++) {

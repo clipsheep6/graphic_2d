@@ -16,6 +16,10 @@ public:
     
     uint32_t nextU();
     float_t nextUScalar1();
+    uint32_t nextULessThan(uint32_t count);
+    float_t nextF();
+    float_t nextRangeF(float_t min,float_t max);
+    uint32_t nextBits(unsigned bitCount);
 protected:
     void init(uint32_t seed);
     uint32_t next(uint32_t seed);

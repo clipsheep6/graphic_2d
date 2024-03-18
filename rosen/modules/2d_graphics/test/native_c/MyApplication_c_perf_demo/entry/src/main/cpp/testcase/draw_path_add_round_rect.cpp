@@ -16,8 +16,22 @@ void DrawPathAddRoundRect::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_PenSetColor(pen, 0xFF000000);//OH_Drawing_ColorSetArgb(0xFF, 0x00, 0x00, 0x00));
     OH_Drawing_PenSetAntiAlias(pen,true);
     OH_Drawing_CanvasAttachPen(canvas, pen);
-    
 
+    fDrawRect = OH_Drawing_RectCreate(0,0,kImageSize,kImageSize);
+    fSize[0].x = (float)kImageSize;
+    fSize[0].y = (float)kImageSize;
+    for (int i = 1; i < kNestingDepth+1; ++i) {
+        fSize[i].x = fSize[i-1].x/2;
+        fSize[i].y = fSize[i-1].y/2;
+    }   
+    DRAWING_LOGI("DrawPathAddRoundRect::OnTestPerformance");
+    OH_Drawing_Point2D offset;
+    offset.x = 0;
+    offset.y = 0;
+    //recurse
+    this->recurse(canvas, 0, offset);
+
+    OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;
 }
@@ -25,14 +39,13 @@ void DrawPathAddRoundRect::OnTestFunction(OH_Drawing_Canvas* canvas)
 void DrawPathAddRoundRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     //当前用例名 drawpathroundrect 测试 OH_Drawing_PathAddRoundRect  迁移基于skia AAClipBench.cpp->NestedAAClipBench
-
+    // skia case name : nested_aaclip_AA
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetColor(pen, 0xFF00FF00);
     OH_Drawing_PenSetAntiAlias(pen,true);
     OH_Drawing_CanvasAttachPen(canvas, pen);
-
-    fRandom = TestRend(time(NULL));
+    
     fDrawRect = OH_Drawing_RectCreate(0,0,kImageSize,kImageSize);
     fSize[0].x = (float)kImageSize;
     fSize[0].y = (float)kImageSize;
@@ -69,6 +82,7 @@ void DrawPathAddRoundRect::recurse(OH_Drawing_Canvas* canvas,int depth,const OH_
         OH_Drawing_PenSetAntiAlias(pen,true);
         OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawRect(canvas, fDrawRect);
+        OH_Drawing_CanvasDetachPen(canvas);
 
     } else {
         OH_Drawing_Point2D childOffset = offset;

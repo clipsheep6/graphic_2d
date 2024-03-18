@@ -17,7 +17,7 @@ void DrawPathArcTo::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasAttachPen(canvas, pen);
     
     OH_Drawing_Rect* rect;// = OH_Drawing_RectCreate(0, 0, 100, 100);
-    TestRend rand = TestRend(time(NULL));
+    TestRend rand = TestRend();
     // 在画布上画path的形状
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
     float radius = rand.nextUScalar1()*3;
@@ -37,7 +37,8 @@ void DrawPathArcTo::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasDrawPath(canvas, path);
 
     OH_Drawing_PathDestroy(path);
-
+    OH_Drawing_RectDestroy(rect);
+    OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;
 }
@@ -45,6 +46,7 @@ void DrawPathArcTo::OnTestFunction(OH_Drawing_Canvas* canvas)
 void DrawPathArcTo::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {   
     //当前用例名drawpatharcto 测试OH_Drawing_PathArcTo  迁移基于skia PathBench.cpp->CirclesBench
+    // skia case name : circles_fill
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetColor(pen, 0xFF000000);
@@ -52,7 +54,7 @@ void DrawPathArcTo::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasAttachPen(canvas, pen);
     
     OH_Drawing_Rect* rect;
-    TestRend rand = TestRend(time(NULL));
+    TestRend rand = TestRend();
     for (int i = 0; i < testCount_; i++) {
         // 在画布上画path的形状
         OH_Drawing_Path* path = OH_Drawing_PathCreate();
@@ -74,7 +76,7 @@ void DrawPathArcTo::OnTestPerformance(OH_Drawing_Canvas* canvas)
 //        DRAWING_LOGI("arcto rand value = %{public}f\n",rand.nextUScalar1());
         OH_Drawing_PathDestroy(path);
     }
-
+    OH_Drawing_RectDestroy(rect);
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;

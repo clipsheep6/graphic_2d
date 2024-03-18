@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "c/drawing_matrix.h"
+#include "c/drawing_rect.h"
 #include "utils/scalar.h"
 
 using namespace testing;
@@ -53,6 +54,68 @@ HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_SetMatrix, TestSize.Le
         0, 0, 1);
     OH_Drawing_MatrixDestroy(matrix);
     OH_Drawing_MatrixDestroy(nullptr);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_SetRectToRect
+ * @tc.desc: test for SetRectToRect.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_SetRectToRect, TestSize.Level1)
+{
+    OH_Drawing_Rect *rectSrc = OH_Drawing_RectCreate(0, 0, 100, 100);
+    OH_Drawing_Rect *rectDst = OH_Drawing_RectCreate(0, 0, 200, 200);
+    OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetRectToRect(matrix, rectSrc, rectDst, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+    OH_Drawing_MatrixSetRectToRect(nullptr, nullptr, nullptr, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+    OH_Drawing_RectDestroy(rectDst);
+    OH_Drawing_RectDestroy(rectSrc);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_PreRotate
+ * @tc.desc: test for PreRotate.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_PreRotate, TestSize.Level1)
+{
+    OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetMatrix(matrix, 2, 0, 0, 0, 1, 2, 0, 0, 1);
+    OH_Drawing_MatrixPreRotate(matrix, 5, 10, 20);
+    OH_Drawing_MatrixPreRotate(nullptr, 5, 10, 20);
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_PostRotate
+ * @tc.desc: test for PostRotate.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_PostRotate, TestSize.Level1)
+{
+    OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetMatrix(matrix, 2, 0, 0, 0, 1, 2, 0, 0, 1);
+    OH_Drawing_MatrixPostRotate(matrix, 5, 10, 20);
+    OH_Drawing_MatrixPostRotate(nullptr, 5, 10, 20);
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_Reset
+ * @tc.desc: test for Reset.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_Reset, TestSize.Level1)
+{
+    OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetMatrix(matrix, 2, 0, 0, 0, 1, 2, 0, 0, 1);
+    OH_Drawing_MatrixReset(matrix);
+    OH_Drawing_MatrixReset(nullptr);
+    OH_Drawing_MatrixDestroy(matrix);
 }
 
 /*
@@ -308,6 +371,90 @@ HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_Scale, TestSize.Level1
     value = OH_Drawing_MatrixGetValue(matrix, 8);
     EXPECT_TRUE(IsScalarAlmostEqual(value, 1));
 
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_PreScale
+ * @tc.desc: test for PreScale.
+ * @tc.type: FUNC
+ * @tc.require:SR000S9F0C
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_PreScale, TestSize.Level1)
+{
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    /* The first 10 is horizontal scale factor.
+    The second 10 is vertical scale factor.
+    The third 10 is pivot on x-axis.
+    The fourth 10 is pivot on y-axis.
+    */
+    OH_Drawing_MatrixPreScale(nullptr, 10, 10, 10, 10);
+    OH_Drawing_MatrixPreScale(matrix, 10, 10, 10, 10);
+    float value;
+    value = OH_Drawing_MatrixGetValue(matrix, 0);
+    EXPECT_TRUE(IsScalarAlmostEqual(value, 10));
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_PostScale
+ * @tc.desc: test for PostScale.
+ * @tc.type: FUNC
+ * @tc.require:SR000S9F0C
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_PostScale, TestSize.Level1)
+{
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    /* The first 10 is horizontal scale factor.
+    The second 10 is vertical scale factor.
+    The third 10 is pivot on x-axis.
+    The fourth 10 is pivot on y-axis.
+    */
+    OH_Drawing_MatrixPostScale(nullptr, 10, 10, 10, 10);
+    OH_Drawing_MatrixPostScale(matrix, 10, 10, 10, 10);
+    float value;
+    value = OH_Drawing_MatrixGetValue(matrix, 0);
+    EXPECT_TRUE(IsScalarAlmostEqual(value, 10));
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_PreTranslate
+ * @tc.desc: test for PreTranslate.
+ * @tc.type: FUNC
+ * @tc.require:SR000S9F0C
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_PreTranslate, TestSize.Level1)
+{
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    /* The first 10 is horizontal translation.
+    The second 10 is vertical translation.
+    */
+    OH_Drawing_MatrixPreTranslate(nullptr, 10, 10);
+    OH_Drawing_MatrixPreTranslate(matrix, 10, 10);
+    float value;
+    value = OH_Drawing_MatrixGetValue(matrix, 0);
+    EXPECT_TRUE(IsScalarAlmostEqual(value, 1));
+    OH_Drawing_MatrixDestroy(matrix);
+}
+
+/*
+ * @tc.name: NativeDrawingMatrixTest_PostTranslate
+ * @tc.desc: test for PostTranslate.
+ * @tc.type: FUNC
+ * @tc.require:SR000S9F0C
+ */
+HWTEST_F(NativeDrawingMatrixTest, NativeDrawingMatrixTest_PostTranslate, TestSize.Level1)
+{
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    /* The first 10 is horizontal translation.
+    The second 10 is vertical translation.
+    */
+    OH_Drawing_MatrixPostTranslate(nullptr, 10, 10);
+    OH_Drawing_MatrixPostTranslate(matrix, 10, 10);
+    float value;
+    value = OH_Drawing_MatrixGetValue(matrix, 0);
+    EXPECT_TRUE(IsScalarAlmostEqual(value, 1));
     OH_Drawing_MatrixDestroy(matrix);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@
 #include "c/drawing_pen.h"
 #include "c/drawing_point.h"
 #include "c/drawing_rect.h"
+#include "c/drawing_region.h"
 #include "c/drawing_round_rect.h"
 #include "c/drawing_sampling_options.h"
 #include "c/drawing_shader_effect.h"
@@ -181,6 +182,62 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawPath, TestSize.Lev
 }
 
 /*
+ * @tc.name: NativeDrawingCanvasTest_DrawPoints
+ * @tc.desc: test for OH_Drawing_CanvasDrawPoints.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawPoints, TestSize.Level1)
+{
+
+    OH_Drawing_Point2D pointOne={250, 500};
+    OH_Drawing_Point2D pointTwo={200, 500};
+    OH_Drawing_Point2D pointThree={500, 700};
+    OH_Drawing_Point2D points[3] = {pointOne, pointTwo, pointThree};
+    OH_Drawing_CanvasDrawPoints(canvas_, POINT_MODE_POINTS, 3, nullptr);
+    OH_Drawing_CanvasDrawPoints(nullptr, POINT_MODE_POINTS, 3, nullptr);
+    OH_Drawing_CanvasDrawPoints(canvas_, POINT_MODE_POINTS, 3, points);
+}
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_DrawVertices
+ * @tc.desc: test for OH_Drawing_CanvasDrawVertices.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawVertices, TestSize.Level1)
+{
+   
+    OH_Drawing_Point2D point_one = {0, 0};
+    OH_Drawing_Point2D point_two = {100, 100};
+    OH_Drawing_Point2D point_three = {300, 100};
+    OH_Drawing_Point2D points_vertices[3] = {point_one, point_two, point_three};
+
+    OH_Drawing_Point2D texs_one = {0, 0};
+    OH_Drawing_Point2D texs_two = {1, 1};
+    OH_Drawing_Point2D texs_three = {2, 0};
+    OH_Drawing_Point2D texs_vertices[3] = {texs_one, texs_two, texs_three};
+    uint32_t colors[3] = {0xFFFF0000, 0xFFFF0000, 0xFFFF0000};
+
+    uint16_t indices[3] = {0,1,2};
+    OH_Drawing_CanvasDrawVertices(nullptr, VERTEX_MODE_TRIANGLES, 3, points_vertices, texs_vertices, colors, 3,
+                                    indices, BLEND_MODE_COLOR);
+    OH_Drawing_CanvasDrawVertices(canvas_, VERTEX_MODE_TRIANGLES, 3, nullptr, texs_vertices, colors, 3,
+    indices, BLEND_MODE_COLOR);
+    OH_Drawing_CanvasDrawVertices(canvas_, VERTEX_MODE_TRIANGLES, 3, points_vertices, nullptr, colors, 3,
+    indices, BLEND_MODE_COLOR);
+    OH_Drawing_CanvasDrawVertices(canvas_, VERTEX_MODE_TRIANGLES, 3, points_vertices, texs_vertices, nullptr, 3,
+    indices, BLEND_MODE_COLOR);
+    OH_Drawing_CanvasDrawVertices(canvas_, VERTEX_MODE_TRIANGLES, 3, points_vertices, texs_vertices, colors, 3,
+    nullptr, BLEND_MODE_COLOR);
+    OH_Drawing_CanvasDrawVertices(nullptr, VERTEX_MODE_TRIANGLES, 3, nullptr, nullptr, nullptr, 3,
+    nullptr, BLEND_MODE_COLOR);
+    OH_Drawing_CanvasDrawVertices(canvas_, VERTEX_MODE_TRIANGLES, 3, points_vertices, texs_vertices, colors, 3,
+        indices, BLEND_MODE_COLOR);    
+}
+
+
+/*
  * @tc.name: NativeDrawingCanvasTest_SaveAndRestore
  * @tc.desc: test for OH_Drawing_CanvasSave & OH_Drawing_CanvasRestore.
  * @tc.type: FUNC
@@ -273,6 +330,34 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_Scale, TestSize.Level1
     OH_Drawing_BrushSetColor(nullptr, 0xFF67C23A);
     OH_Drawing_BrushSetColor(brush_, 0xFF67C23A);
     OH_Drawing_CanvasDrawRect(canvas_, rect);
+}
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_Shear
+ * @tc.desc: test for OH_Drawing_CanvasShear.
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_Shear, TestSize.Level1)
+{
+    /**
+     * @tc.steps: step1. Create an Rect.
+     */
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(100, 100, 300, 300);
+    ASSERT_NE(rect, nullptr);
+    /**
+     * @tc.steps: step2. test OH_Drawing_CanvasShear with an nullptr.
+     * @tc.expected: function works well not crash.
+     */
+    OH_Drawing_CanvasShear(nullptr, 0, 0.3f);
+    OH_Drawing_BrushSetColor(brush_, 0xFF67C23A);
+    /**
+     * @tc.steps: step3. test OH_Drawing_CanvasShear with canvas.
+     * @tc.expected: function works well.
+     */
+    OH_Drawing_CanvasShear(canvas_, 0, 0.3f);
+    OH_Drawing_CanvasDrawRect(canvas_, rect);
+    OH_Drawing_RectDestroy(rect);
 }
 
 /*
@@ -380,6 +465,34 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_SweepGradient, TestSiz
 }
 
 /*
+ * @tc.name: NativeDrawingCanvasTest_ImageShader
+ * @tc.desc: test for image shader effect
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_ImageShader, TestSize.Level1)
+{
+    OH_Drawing_Image *image = OH_Drawing_ImageCreate();
+    OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
+    OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0xFF, 0x00));
+    OH_Drawing_SamplingOptions *options = OH_Drawing_SamplingOptionsCreate(FILTER_MODE_LINEAR, MIPMAP_MODE_LINEAR);
+    OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_ShaderEffect *effect = OH_Drawing_ShaderEffectCreateImageShader(nullptr, CLAMP, CLAMP, nullptr, nullptr);
+    EXPECT_EQ(effect, nullptr);
+    effect = OH_Drawing_ShaderEffectCreateImageShader(image, CLAMP, CLAMP, options, matrix);
+    OH_Drawing_BrushSetShaderEffect(brush, effect);
+    OH_Drawing_CanvasAttachBrush(canvas_, brush);
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(300, 400, 500, 500);
+    OH_Drawing_CanvasDrawRect(canvas_, rect);
+    OH_Drawing_RectDestroy(rect);
+    OH_Drawing_ShaderEffectDestroy(effect);
+    OH_Drawing_MatrixDestroy(matrix);
+    OH_Drawing_SamplingOptionsDestroy(options);
+    OH_Drawing_BrushDestroy(brush);
+    OH_Drawing_ImageDestroy(image);
+}
+
+/*
  * @tc.name: NativeDrawingCanvasTest_MaskFilter
  * @tc.desc: test for maskfilter
  * @tc.type: FUNC
@@ -416,6 +529,7 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_ColorFilterCreateBlend
     OH_Drawing_FilterSetColorFilter(nullptr, colorFilter);
     OH_Drawing_FilterSetColorFilter(filter, nullptr);
     OH_Drawing_FilterSetColorFilter(filter, colorFilter);
+    OH_Drawing_FilterGetColorFilter(filter, colorFilter);
     OH_Drawing_BrushSetFilter(brush_, nullptr);
     OH_Drawing_BrushSetFilter(brush_, filter);
     OH_Drawing_Rect *rect = OH_Drawing_RectCreate(0, 0, 100, 100);
@@ -549,6 +663,18 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_SetMatrix, TestSize.Le
 }
 
 /*
+ * @tc.name: NativeDrawingCanvasTest_ResetMatrix
+ * @tc.desc: test for ResetMatrix
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_ResetMatrix, TestSize.Level1)
+{
+    OH_Drawing_CanvasResetMatrix(nullptr);
+    OH_Drawing_CanvasResetMatrix(canvas_);
+}
+
+/*
  * @tc.name: NativeDrawingCanvasTest_DrawImageRect
  * @tc.desc: test for DrawImageRect
  * @tc.type: FUNC
@@ -575,6 +701,8 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawImageRect, TestSiz
     OH_Drawing_CanvasDrawImageRect(canvas_, image, nullptr, nullptr);
     OH_Drawing_CanvasDrawImageRect(canvas_, nullptr, nullptr, nullptr);
     OH_Drawing_CanvasDrawImageRect(nullptr, nullptr, nullptr, nullptr);
+    OH_Drawing_CanvasDrawImageRectWithSrc(canvas_, image, rect, rect, options, STRICT_SRC_RECT_CONSTRAINT);
+    OH_Drawing_CanvasDrawImageRectWithSrc(nullptr, nullptr, nullptr, nullptr, nullptr, STRICT_SRC_RECT_CONSTRAINT);
     OH_Drawing_SamplingOptionsDestroy(options);
     OH_Drawing_BitmapDestroy(bitmap);
     OH_Drawing_ImageDestroy(image);
@@ -891,6 +1019,33 @@ HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_SaveLayer, TestSize.Le
     OH_Drawing_CanvasSaveLayer(canvas_, rect, brush);
     OH_Drawing_CanvasRestore(canvas_);
     OH_Drawing_RectDestroy(rect);
+}
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_DrawRegion
+ * @tc.desc: test for DrawRegion
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawRegion, TestSize.Level1)
+{
+    OH_Drawing_Region* region=OH_Drawing_RegionCreate();
+    OH_Drawing_Rect* rect=OH_Drawing_RectCreate(0.0f, 0.0f, 256.0f, 256.0f);
+    OH_Drawing_RegionSetRect(region, rect);
+    OH_Drawing_CanvasDrawRegion(canvas_, region);
+}
+
+/*
+ * @tc.name: NativeDrawingCanvasTest_DrawBackground
+ * @tc.desc: test for DrawBackground
+ * @tc.type: FUNC
+ * @tc.require: AR000GTO5R
+ */
+HWTEST_F(NativeDrawingCanvasTest, NativeDrawingCanvasTest_DrawBackground, TestSize.Level1)
+{
+    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
+    OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+    OH_Drawing_CanvasDrawBackground(canvas_, brush);
 }
 } // namespace Drawing
 } // namespace Rosen

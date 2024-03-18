@@ -533,12 +533,12 @@ NativeWindow::~NativeWindow()
         auto utils = SurfaceUtils::GetInstance();
         utils->Remove(surface->GetUniqueId());
         utils->RemoveNativeWindow(surface->GetUniqueId());
+        surface = nullptr;
     }
 
     for (auto &[seqNum, buffer] : bufferCache_) {
         NativeObjectUnreference(buffer);
     }
-    surface = nullptr;
     bufferCache_.clear();
 }
 

@@ -24,11 +24,13 @@ add_library(entry SHARED
     testcase/canvas_save_restore.cpp
     testcase/canvas_save_layer.cpp
     testcase/draw_line.cpp
+    testcase/draw_path_arc_to.cpp
     testcase/draw_circle.cpp
     testcase/draw_oval.cpp
     testcase/draw_round_rect.cpp
     testcase/draw_imagerect.cpp
     testcase/draw_path_add_rect.cpp
+    testcase/draw_path_add_round_rect.cpp
 )
 
 add_library(myxnode SHARED
@@ -46,11 +48,13 @@ add_library(myxnode SHARED
     testcase/canvas_save_restore.cpp
     testcase/canvas_save_layer.cpp
     testcase/draw_line.cpp
+    testcase/draw_path_arc_to.cpp
     testcase/draw_circle.cpp
     testcase/draw_oval.cpp
     testcase/draw_round_rect.cpp
     testcase/draw_imagerect.cpp
     testcase/draw_path_add_rect.cpp
+    testcase/draw_path_add_round_rect.cpp
 )
 
 find_library(

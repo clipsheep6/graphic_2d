@@ -15,6 +15,7 @@ public:
     ~TestRend() = default;
     
     uint32_t nextU();
+    float_t nextUScalar1();
 protected:
     void init(uint32_t seed);
     uint32_t next(uint32_t seed);

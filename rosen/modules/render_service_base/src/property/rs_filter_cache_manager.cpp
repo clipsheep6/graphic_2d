@@ -463,6 +463,10 @@ void RSFilterCacheManager::FilterPartialRender(
 {
     RS_OPTIONAL_TRACE_FUNC();
     auto filteredSnapshot = std::make_shared<Drawing::Image>();
+    if (filteredSnapshot == nullptr) {
+        ROSEN_LOGE("RSFilterCacheManager::FilterPartialRender failed to make an Drawing::Image.");
+        return;
+    }
     Drawing::BitmapFormat bitmapFormat = { Drawing::ColorType::COLORTYPE_N32, Drawing::AlphaType::ALPHATYPE_PREMUL };
     filteredSnapshot->BuildFromTexture(*canvas.GetGPUContext(), task_->GetResultTexture().GetTextureInfo(),
         Drawing::TextureOrigin::BOTTOM_LEFT, bitmapFormat, nullptr);

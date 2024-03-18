@@ -162,7 +162,7 @@ void RSFilterSubThread::PreAddToReleaseQueue(std::shared_ptr<Drawing::Image>&& c
     std::lock_guard<std::mutex> lock(mutex_);
     auto backendTextureMutex = grBackendTextureMutex.lock();
     if (backendTextureMutex != nullptr) {
-        std::unique_lock<std::mutex> lock(*backendTextureMutex);
+        std::unique_lock<std::mutex> lockTexture(*backendTextureMutex);
         AddToReleaseQueue(std::move(cacheImage), std::move(cacheSurface), initHandler);
     } else {
         AddToReleaseQueue(std::move(cacheImage), std::move(cacheSurface), initHandler);
@@ -214,7 +214,7 @@ void RSFilterSubThread::PreReleaseImage(std::queue<std::shared_ptr<Drawing::Imag
     std::lock_guard<std::mutex> lock(mutex_);
     auto backendTextureMutex = grBackendTextureMutex.lock();
     if (backendTextureMutex != nullptr) {
-        std::unique_lock<std::mutex> lock(*backendTextureMutex);
+        std::unique_lock<std::mutex> lockTexture(*backendTextureMutex);
         ReleaseImage(queue, waitRelease);
     } else {
         ReleaseImage(queue, waitRelease);
@@ -227,9 +227,9 @@ void RSFilterSubThread::ReleaseImageAndSurfaces(std::weak_ptr<std::atomic<bool>>
     ROSEN_LOGD("ReleaseImageAndSurfaces tmpImageResources_.size %{public}d",
         static_cast<int>(tmpImageResources_.size()));
     for (auto& item : tmpImageResources_) {
-        auto& initHandler = handlerMap_[item.first];
         auto& imageQueue = item.second;
         if (imageQueue.size() != 0) {
+            auto& initHandler = handlerMap_[item.first];
             initHandler->PostTask(
                 [this, &imageQueue, waitRelease, grBackendTextureMutex]() {
                     PreReleaseImage(imageQueue, waitRelease, grBackendTextureMutex);

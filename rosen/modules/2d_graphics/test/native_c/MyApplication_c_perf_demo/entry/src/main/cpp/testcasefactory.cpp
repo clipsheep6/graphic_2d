@@ -28,6 +28,9 @@
 #include "testcase/draw_round_rect.h"
 #include "testcase/aa_clip_bench.h"
 #include "testcase/draw_imagerect.h"
+#include "testcase/draw_path_arc_to.h"
+#include "testcase/draw_path_add_rect.h"
+#include "testcase/draw_path_add_round_rect.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -46,6 +49,10 @@ namespace {
             {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(true, true); }},
             {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(false, true); }},
             {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawImageRect>(); }},
+            {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); }},
+            {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRect>(); }},
+            {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRoundRect>(); }},
+
             
     };
 
@@ -64,6 +71,9 @@ namespace {
             {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(true, true); }},
             {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AaClipBench>(false, true); }},
             {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawImageRect>(); }},
+            {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); }},
+            {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRect>(); }},
+            {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRoundRect>(); }},
     };
 } // namespace
 

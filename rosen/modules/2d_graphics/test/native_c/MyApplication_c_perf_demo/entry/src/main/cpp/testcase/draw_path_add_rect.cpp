@@ -37,6 +37,7 @@ void DrawPathAddRect::OnTestFunction(OH_Drawing_Canvas *canvas) {
     pen = nullptr;
 }
 
+//RectPathBench_AddRect
 void DrawPathAddRect::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     // 创建一个画刷pen对象
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
@@ -49,9 +50,9 @@ void DrawPathAddRect::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     OH_Drawing_Path *path = OH_Drawing_PathCreate();
     // 画一个矩形框
     SkRect r = {0, 0, 200, 200};
-    for (int i = 0; i < testCount_; i++) {
-        OH_Drawing_PathAddRect(path, r.fLeft, r.fTop, r.fRight, r.fBottom,
+    OH_Drawing_PathAddRect(path, r.fLeft, r.fTop, r.fRight, r.fBottom,
                                OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
+    for (int i = 0; i < testCount_; i++) {
         //        OH_Drawing_PathClose(path);
         OH_Drawing_CanvasDrawPath(canvas, path);
     }

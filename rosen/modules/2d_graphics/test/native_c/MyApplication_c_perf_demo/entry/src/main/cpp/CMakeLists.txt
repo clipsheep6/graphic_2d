@@ -29,6 +29,7 @@ add_library(entry SHARED
     testcase/draw_oval.cpp
     testcase/draw_round_rect.cpp
     testcase/draw_imagerect.cpp
+    testcase/draw_path_add_rect.cpp
 )
 
 add_library(myxnode SHARED
@@ -51,6 +52,7 @@ add_library(myxnode SHARED
     testcase/draw_oval.cpp
     testcase/draw_round_rect.cpp
     testcase/draw_imagerect.cpp
+    testcase/draw_path_add_rect.cpp
 )
 
 find_library(

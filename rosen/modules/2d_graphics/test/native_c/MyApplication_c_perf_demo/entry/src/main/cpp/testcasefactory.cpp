@@ -56,7 +56,6 @@ namespace {
             {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRoundRect>(); }},
             {"drawpathtransform", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathTransform>(); }},
             {"drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathLineTo>(); } },
-            
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -66,7 +65,8 @@ namespace {
             {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlob>(); }},
             {"drawbitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmap>(); }},
             {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect>(); }},
-            {"saverestore", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
+            {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},
+            {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveLayer>(); }},
             {"drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawLine>(); }},
             {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawCircle>(); }},
             {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawOval>(1); }},

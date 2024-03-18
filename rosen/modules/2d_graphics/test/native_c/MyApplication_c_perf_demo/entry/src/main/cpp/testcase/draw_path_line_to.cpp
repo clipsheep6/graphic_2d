@@ -9,6 +9,7 @@
 void DrawPathLineTo::OnTestFunction(OH_Drawing_Canvas *canvas) {
     // 创建一个画刷pen对象
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetAntiAlias(pen, true);
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
     // 创建一个path对象，然后使用接口连接成一个三角形形状

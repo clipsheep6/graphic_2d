@@ -38,6 +38,7 @@ void DrawPathAddRect::OnTestFunction(OH_Drawing_Canvas *canvas) {
 }
 
 //RectPathBench_AddRect
+//path_stroke_smallrect
 void DrawPathAddRect::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     // 创建一个画刷pen对象
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();

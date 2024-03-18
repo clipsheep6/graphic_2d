@@ -1,3 +1,6 @@
+/*
+ * CanvasSaveRestoreBench
+ */
 
 import drawing from "@ohos.graphics.drawing";
 import common2D from "@ohos.graphics.common2D";
@@ -5,19 +8,15 @@ import {TestBase} from './testbase';
 
 const TAG = '[DrawingTest]';
 
+
 export class DrawColor extends TestBase {
 
-  PTS: number = 500
-  fPts = [this.PTS]
+  fDepth: number = 8
 
   public constructor() {
     // 根据需求，如果与默认值不一样，请继承重写
     super();
     this.fileName_ = "drawcolor";
-
-    for (let i = 0; i < this.PTS; i++) {
-      this.fPts.push()
-    }
 
   }
 
@@ -32,6 +31,7 @@ export class DrawColor extends TestBase {
     canvas.drawColor(color);
   }
 
+  // canvas_save_restore_1
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     let color: common2D.Color = {
@@ -41,9 +41,11 @@ export class DrawColor extends TestBase {
       blue: 255
     }
 
-
     for (let index = 0; index < this.testCount_; index++) {
+      // canvas->save(); 该接口未实现
+      // canvas->concat(m); 该接口未实现
       canvas.drawColor(color);
+      // canvas->restore(); 该接口未实现
     }
   }
 }

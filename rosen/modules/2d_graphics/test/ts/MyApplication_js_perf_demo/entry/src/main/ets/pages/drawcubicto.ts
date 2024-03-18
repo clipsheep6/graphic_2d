@@ -65,6 +65,7 @@ export class DrawCubicTo extends TestBase {
 
   }
 
+  // "path_hairline_small_AA_cubic"
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();

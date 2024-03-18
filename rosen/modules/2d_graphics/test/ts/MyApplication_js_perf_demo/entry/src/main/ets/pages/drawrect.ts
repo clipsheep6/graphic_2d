@@ -61,6 +61,7 @@ export class DrawRect extends TestBase {
     canvas.detachBrush();
   }
 
+  // rects_0_stroke_1_aa
   public OnTestPerformance(canvas: drawing.Canvas) {
     console.log(TAG, 'start OnTestPerformance test');
     let paint = new drawing.Pen();

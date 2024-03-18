@@ -48,12 +48,15 @@ export class PathLineTo extends TestBase {
     canvas.drawPath(path);
   }
 
+  // path_stroke_small_triangle
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试
     const pen = new drawing.Pen();
-    const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
-    pen.setColor(penColor);
+    // const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
+    // pen.setColor(penColor);
+    // fPaint.setStyle(flags & kStroke_Flag ? SkPaint::kStroke_Style : SkPaint::kFill_Style); // 未开放
     pen.setStrokeWidth(5);
+    // fPaint.setStrokeJoin(SkPaint::kBevel_Join); // 未开放
     canvas.attachPen(pen);
 
     const path = new drawing.Path();

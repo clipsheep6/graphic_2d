@@ -112,6 +112,7 @@ export class PathReset extends TestBase {
     console.log(TAG + " end")
   }
 
+  // path_create
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试
     const path = new drawing.Path();
@@ -123,8 +124,10 @@ export class PathReset extends TestBase {
       this.restartMakingPaths()
     }
     const pen = new drawing.Pen();
-    pen.setStrokeWidth(5);
-    pen.setColor({alpha: 255, red: 255, green: 0, blue: 0});
+    // pen.setStrokeWidth(5);
+    pen.setColor({alpha: 255, red: 255, green: 255, blue: 255});
+    pen.setAntiAlias(true)
+    // paint.setStyle(SkPaint::kStroke_Style) // 未实现
     canvas.attachPen(pen);
     canvas.drawPath(path);
     canvas.detachPen();

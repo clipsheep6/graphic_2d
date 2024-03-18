@@ -30,7 +30,7 @@ export class DrawArcTo extends TestBase {
     let fTop = this.rand.nextUScalar1() * 300
     let fRight = fLeft + 2 * radius
     let fBottom = fTop + 2 * radius
-    // console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
+    console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
     path.arcTo(fLeft, fTop, fRight, fBottom, 0, 180);
     path.arcTo(fLeft, fTop, fRight, fBottom, 0, 360);
     path.close()
@@ -38,10 +38,10 @@ export class DrawArcTo extends TestBase {
     canvas.detachPen()
   }
 
+  // "circles_fill"
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();
-    pen.setStrokeWidth(5)
     const penColor: common2D.Color = { alpha: 255, red: 255, green: 255, blue: 255 }
     pen.setColor(penColor);
     pen.setAntiAlias(true)

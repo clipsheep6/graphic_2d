@@ -36,13 +36,13 @@ export class DrawLine extends TestBase {
     canvas.detachPen()
   }
 
+  // dashline_1_square
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();
-    const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
-    pen.setColor(penColor);
+    // pen.setStyle缺失
     pen.setAntiAlias(true)
-    pen.setStrokeWidth(10);
+    pen.setStrokeWidth(1);
     canvas.attachPen(pen);
     for (let index = 0; index < this.testCount_; index++) {
       canvas.drawLine(10 * SK_Scalar1, 10 * SK_Scalar1 , 640 * SK_Scalar1, 10 * SK_Scalar1);

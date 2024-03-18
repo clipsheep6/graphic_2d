@@ -15,7 +15,7 @@ export class DrawTextBlob extends TestBase {
   public OnTestFunction(canvas: drawing.Canvas) {
     //接口调用，功能测试.cpu/gpu调用接口一致
     const brush = new drawing.Brush();
-    brush.setColor({alpha: 255, red: 0, green: 255, blue: 255});
+    brush.setColor({alpha: 255, red: 255, green: 255, blue: 255});
     const font = new drawing.Font();
     font.setSize(10);
     const textBlob = drawing.TextBlob.makeFromString("Keep your sentences short, but not overly so.", font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
@@ -24,16 +24,17 @@ export class DrawTextBlob extends TestBase {
     canvas.detachBrush();
   }
 
+  // TextBlobFirstTimeBench
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const brush = new drawing.Brush();
-    brush.setColor({alpha: 255, red: 0, green: 255, blue: 255});
+    // brush.setColor({alpha: 255, red: 255, green: 255, blue: 255});
     canvas.attachBrush(brush);
 
     let bigLoops = this.testCount_ * 100
     for (let index = 0; index < bigLoops; index++) {
       const font = new drawing.Font();
-      font.setSize(10);
+      // font.setSize(10);
       const textBlob = drawing.TextBlob.makeFromString("Keep your sentences short, but not overly so.", font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(textBlob, 20, 20);
     }

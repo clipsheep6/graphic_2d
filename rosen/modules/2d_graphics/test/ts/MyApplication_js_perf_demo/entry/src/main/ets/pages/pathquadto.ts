@@ -36,6 +36,7 @@ export class PathQuadto extends TestBase {
 
   }
 
+  // path_stroke_small_long_curved
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();

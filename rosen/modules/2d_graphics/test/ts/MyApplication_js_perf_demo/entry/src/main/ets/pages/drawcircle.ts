@@ -5,6 +5,7 @@ import {TestBase} from './testbase';
 
 const TAG = '[DrawingTest]';
 
+// ClipStrategyBench
 export class DrawCircle extends TestBase {
 
   fCount: number = 100
@@ -34,17 +35,15 @@ export class DrawCircle extends TestBase {
     canvas.detachPen()
   }
 
+  // ClipStrategyBench_kMask_100
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();
     const brush = new drawing.Brush();
     const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
     brush.setColor(penColor)
-    brush.setBlendMode(drawing.BlendMode.SRC_IN)
-    pen.setColor(penColor);
     pen.setBlendMode(drawing.BlendMode.SRC_IN)
     pen.setAntiAlias(true)
-    pen.setStrokeWidth(2);
     canvas.attachPen(pen)
     canvas.attachBrush(brush)
 

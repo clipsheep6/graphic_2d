@@ -50,6 +50,15 @@ export class CaseFactory {
       ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
       ['pathreset', () => { return new PathReset(); }],
+      ['rectbenchtrue', () => { return new RectBench(0, 10, true, false); }],
+      ['rectbenchfalse', () => { return new RectBench(0, 10, false, false); }],
+      ['srcmoderect', () => { return new SrcModeRectBench(); }],
+      ['bezierquad', () => { return new BezierBench(10, 0); }],
+      ['beziercubic', () => { return new BezierBench(50, 1); }],
+      ['xfermodemask', () => { return new XfermodeBench(0, 0); }],
+      ['xfermoderect', () => { return new XfermodeBench(0, 1); }],
+      ['blitmask', () => { return new BlitMaskBench(); }],
+      ['textblob', () => { return new TextBlobFirstTimeBench(); }],
     ]
   );
   static PerformanceCpuMap: Map<string, Function> = new Map(
@@ -66,6 +75,15 @@ export class CaseFactory {
       ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
       ['pathreset', () => { return new PathReset(); }],
+      ['rectbenchtrue', () => { return new RectBench(0, 10, true, false); }],
+      ['rectbenchfalse', () => { return new RectBench(0, 10, false, false); }],
+      ['srcmoderect', () => { return new SrcModeRectBench(); }],
+      ['bezierquad', () => { return new BezierBench(10, 0); }],
+      ['beziercubic', () => { return new BezierBench(50, 1); }],
+      ['xfermodemask', () => { return new XfermodeBench(0, 0); }],
+      ['xfermoderect', () => { return new XfermodeBench(0, 1); }],
+      ['blitmask', () => { return new BlitMaskBench(); }],
+      ['textblob', () => { return new TextBlobFirstTimeBench(); }],
     ]
   );
   static FunctionGpuUpScreenMap: Map<string, Function> = new Map(
@@ -82,6 +100,15 @@ export class CaseFactory {
       ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
       ['pathreset', () => { return new PathReset(); }],
+      ['rectbenchtrue', () => { return new RectBench(0, 10, true, false); }],
+      ['rectbenchfalse', () => { return new RectBench(0, 10, false, false); }],
+      ['srcmoderect', () => { return new SrcModeRectBench(); }],
+      ['bezierquad', () => { return new BezierBench(10, 0); }],
+      ['beziercubic', () => { return new BezierBench(50, 1); }],
+      ['xfermodemask', () => { return new XfermodeBench(0, 0); }],
+      ['xfermoderect', () => { return new XfermodeBench(0, 1); }],
+      ['blitmask', () => { return new BlitMaskBench(); }],
+      ['textblob', () => { return new TextBlobFirstTimeBench(); }],
     ]
   );
   static PerformanceGpuUpScreenMap: Map<string, Function> = new Map(
@@ -98,6 +125,15 @@ export class CaseFactory {
       ['pathquadto', () => { return new PathQuadto(); }],
       ['drawcubicto', () => { return new DrawCubicTo(); }],
       ['pathreset', () => { return new PathReset(); }],
+      ['rectbenchtrue', () => { return new RectBench(0, 10, true, false); }],
+      ['rectbenchfalse', () => { return new RectBench(0, 10, false, false); }],
+      ['srcmoderect', () => { return new SrcModeRectBench(); }],
+      ['bezierquad', () => { return new BezierBench(10, 0); }],
+      ['beziercubic', () => { return new BezierBench(50, 1); }],
+      ['xfermodemask', () => { return new XfermodeBench(0, 0); }],
+      ['xfermoderect', () => { return new XfermodeBench(0, 1); }],
+      ['blitmask', () => { return new BlitMaskBench(); }],
+      ['textblob', () => { return new TextBlobFirstTimeBench(); }],
     ]
   );
 

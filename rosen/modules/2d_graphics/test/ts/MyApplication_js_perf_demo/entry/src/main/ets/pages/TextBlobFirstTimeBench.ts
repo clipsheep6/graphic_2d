@@ -20,10 +20,8 @@ export class TextBlobFirstTimeBench extends TestBase {
     font.setTypeface(new drawing.Typeface());
     font.enableSubpixel(true);
     for (let i = 0; i < this.testCount_; i++) {
-      for (let j = 0; j < 100; j++) {
         blob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
         canvas.drawTextBlob(blob, 100, 100);
-      }
     }
   }
 }

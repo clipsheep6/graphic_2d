@@ -56,6 +56,7 @@ export class PathLineTo extends TestBase {
     // pen.setColor(penColor);
     // fPaint.setStyle(flags & kStroke_Flag ? SkPaint::kStroke_Style : SkPaint::kFill_Style); // 未开放
     pen.setStrokeWidth(5);
+    pen.setAntiAlias(true);
     // fPaint.setStrokeJoin(SkPaint::kBevel_Join); // 未开放
     canvas.attachPen(pen);
 
@@ -64,7 +65,6 @@ export class PathLineTo extends TestBase {
     path.lineTo(this.gCoord[2], this.gCoord[3])
     path.lineTo(this.gCoord[4], this.gCoord[5])
     path.close()
-    canvas.attachPen(pen);
     for (let index = 0; index < this.testCount_; index++) {
       canvas.drawPath(path);
     }

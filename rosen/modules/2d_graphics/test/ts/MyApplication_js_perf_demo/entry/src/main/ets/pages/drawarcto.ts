@@ -20,7 +20,7 @@ export class DrawArcTo extends TestBase {
     //接口调用，功能测试.cpu/gpu调用接口一致
     const pen = new drawing.Pen();
     pen.setAntiAlias(true)
-    const penColor: common2D.Color = { alpha: 255, red: 255, green: 255, blue: 255 }
+    const penColor: common2D.Color = { alpha: 255, red: 0, green: 0, blue: 0 }
     pen.setColor(penColor);
     const path = new drawing.Path();
     pen.setAntiAlias(true)
@@ -42,7 +42,7 @@ export class DrawArcTo extends TestBase {
   public OnTestPerformance(canvas: drawing.Canvas) {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();
-    const penColor: common2D.Color = { alpha: 255, red: 255, green: 255, blue: 255 }
+    const penColor: common2D.Color = { alpha: 255, red: 0, green: 0, blue: 0 }
     pen.setColor(penColor);
     pen.setAntiAlias(true)
     canvas.attachPen(pen);

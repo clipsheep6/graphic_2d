@@ -31,6 +31,7 @@
 #include "testcase/draw_path_arc_to.h"
 #include "testcase/draw_path_add_rect.h"
 #include "testcase/draw_path_add_round_rect.h"
+#include "testcase/draw_path_transform.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -52,7 +53,7 @@ namespace {
             {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); }},
             {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRect>(); }},
             {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRoundRect>(); }},
-
+            {"drawpathtransform", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathTransform>(); }},
             
     };
 
@@ -74,6 +75,7 @@ namespace {
             {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathArcTo>(); }},
             {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRect>(); }},
             {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathAddRoundRect>(); }},
+            {"drawpathtransform", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathTransform>(); }},
     };
 } // namespace
 

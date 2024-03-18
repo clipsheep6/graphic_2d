@@ -508,11 +508,17 @@ ohos_shared_library("librender_service_base") {
     "graphic_surface:surface",
   ]
 
+  cflags_cc = [
+    "-Wno-implicit-function-declaration"
+  ]
+
+  cflags_c = [
+    "-Wno-implicit-function-declaration"
+  ]
   if (defined(use_new_render_context) && use_new_render_context) {
     public_deps += [ "src/render_backend:librender_backend" ]
   }
 
-  #external_deps = [ "graphic_surface:surface" ]
   innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"

@@ -12,6 +12,8 @@ add_library(entry SHARED
     plugin/plugin_manager.cpp
     my_xcomponent.cpp
     testcasefactory.cpp
+    testcase/rect_bench.cpp
+    testcase/aa_clip_bench.cpp
     testcase/test_common.cpp
     testcase/test_base.cpp
     testcase/draw_rect.cpp
@@ -23,11 +25,17 @@ add_library(entry SHARED
     testcase/canvas_save_layer.cpp
     testcase/draw_line.cpp
     testcase/draw_path_arc_to.cpp
+    testcase/draw_circle.cpp
+    testcase/draw_oval.cpp
+    testcase/draw_round_rect.cpp
+    testcase/draw_imagerect.cpp
 )
 
 add_library(myxnode SHARED
     my_xnode.cpp
     testcasefactory.cpp
+    testcase/rect_bench.cpp
+    testcase/aa_clip_bench.cpp
     testcase/test_common.cpp
     testcase/test_base.cpp
     testcase/draw_rect.cpp
@@ -39,6 +47,10 @@ add_library(myxnode SHARED
     testcase/canvas_save_layer.cpp
     testcase/draw_line.cpp
     testcase/draw_path_arc_to.cpp
+    testcase/draw_circle.cpp
+    testcase/draw_oval.cpp
+    testcase/draw_round_rect.cpp
+    testcase/draw_imagerect.cpp
 )
 
 find_library(

@@ -11,7 +11,7 @@
 class TestRend {
 public:
     TestRend() {init(0);}
-    TestRend(uint32_t seed) {init(seed);}
+    TestRend(uint32_t seed) { init(seed); }
     ~TestRend() = default;
     
     uint32_t nextU();

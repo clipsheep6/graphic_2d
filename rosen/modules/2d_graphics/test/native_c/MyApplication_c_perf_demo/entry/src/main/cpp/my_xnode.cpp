@@ -179,7 +179,7 @@ napi_value MyXNode::NapiPerformance(napi_env env, napi_callback_info info)
 
 void MyXNode::TestFunction(OH_Drawing_Canvas* canvas, std::string caseName)
 {
-    DRAWING_LOGE("MyXNode TestFunction start");
+    DRAWING_LOGE("MyXNode TestFunction start %{public}s", caseName.c_str());
     auto testCase = TestCaseFactory::GetFunctionCpuCase(caseName);
     if (testCase == nullptr) {
         DRAWING_LOGE("failed to get testcase");

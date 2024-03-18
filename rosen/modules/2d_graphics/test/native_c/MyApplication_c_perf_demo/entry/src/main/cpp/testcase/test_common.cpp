@@ -10,7 +10,7 @@ void TestRend::init(uint32_t seed) {
     if (0 == a) {
         a = next(a);
     }
-    b = next(b);
+    b = next(a);
     if (0 == b) {
         b = next(b);
     }

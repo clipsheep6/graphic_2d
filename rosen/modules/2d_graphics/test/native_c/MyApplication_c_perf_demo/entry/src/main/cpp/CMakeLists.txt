@@ -31,6 +31,7 @@ add_library(entry SHARED
     testcase/draw_imagerect.cpp
     testcase/draw_path_add_rect.cpp
     testcase/draw_path_add_round_rect.cpp
+    testcase/draw_path_line_to.cpp
 )
 
 add_library(myxnode SHARED
@@ -55,6 +56,7 @@ add_library(myxnode SHARED
     testcase/draw_imagerect.cpp
     testcase/draw_path_add_rect.cpp
     testcase/draw_path_add_round_rect.cpp
+    testcase/draw_path_line_to.cpp
 )
 
 find_library(

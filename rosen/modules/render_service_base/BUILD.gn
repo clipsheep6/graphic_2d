@@ -17,8 +17,16 @@ import(
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 config("export_config") {
-  cflags_cc = [ "-std=c++17" ]
+  cflags_cc = [  ]
   include_dirs = [ "include" ]
+  cflags_cc = [
+    "-std=c++17",
+    "-Wno-implicit-function-declaration",
+  ]
+
+  cflags_c = [
+    "-Wno-implicit-function-declaration"
+  ]
 
   defines = rs_common_define
 }
@@ -379,12 +387,12 @@ ohos_source_set("render_service_base_src") {
   }
 
   include_dirs = [
-   # "$graphic_2d_root/frameworks/surface/include",
+    "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/utils/color_manager/export",
     "$graphic_2d_root/utils/log",
-   # "$graphic_2d_root/interfaces/inner_api/surface",
+    "$graphic_2d_root/interfaces/inner_api/surface",
   ]
   include_dirs += [ "//third_party/skia/src" ]
   deps = [

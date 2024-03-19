@@ -84,7 +84,7 @@ void DrawPathAddRoundRect::recurse(OH_Drawing_Canvas* canvas,int depth,const OH_
         OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawRect(canvas, fDrawRect);
         OH_Drawing_CanvasDetachPen(canvas);
-
+        OH_Drawing_PenDestroy(pen);
     } else {
         OH_Drawing_Point2D childOffset = offset;
         this->recurse(canvas, depth+1, childOffset);
@@ -103,5 +103,7 @@ void DrawPathAddRoundRect::recurse(OH_Drawing_Canvas* canvas,int depth,const OH_
 
     }
     OH_Drawing_PathDestroy(path);
+    OH_Drawing_RectDestroy(temp);
+    OH_Drawing_RoundRectDestroy(roundRect);
     OH_Drawing_CanvasRestore(canvas);
 }

@@ -31,6 +31,7 @@ export class BezierBench extends TestBase {
     // draw_stroke_bezier_quad_round_round_10
     // draw_stroke_bezier_cubic_round_round_10
     let paint = new drawing.Pen();
+    paint.setAntiAlias(true);
     let path = new drawing.Path();
     if (this.mode === 0) {
       path.moveTo(20, 20);

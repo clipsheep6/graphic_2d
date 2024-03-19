@@ -46,7 +46,7 @@ void DrawPathArcTo::OnTestFunction(OH_Drawing_Canvas* canvas)
 void DrawPathArcTo::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {   
     //当前用例名drawpatharcto 测试OH_Drawing_PathArcTo  迁移基于skia PathBench.cpp->CirclesBench
-    // skia case name : circles_fill
+    // skia case name : circles_stroke
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetColor(pen, 0xFF000000);

@@ -97,7 +97,7 @@ void DrawTextBlobCreate::OnTestPerformance(OH_Drawing_Canvas* canvas)
                 blob = OH_Drawing_TextBlobCreateFromText(text, len , font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
                 break;
             case 2:
-                blob = OH_Drawing_TextBlobCreateFromText(text, len , font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
+                blob = OH_Drawing_TextBlobCreateFromPosText(text, len ,&p, font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
                 break;
             case 3:
                 blob = OH_Drawing_TextBlobCreateFromString(text,font,OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);

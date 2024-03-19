@@ -56,7 +56,7 @@ export class OHRandom {
   }
 
   public setColorAndRect(paintColors : ArrayList<common2D.Color>, canvasRects : ArrayList<common2D.Rect>,
-                          shiftValue: number) {
+                         shiftValue: number) {
     for (let i = 0; i < N; i++) {
       let canvasRect: common2D.Rect = {left: 0, top: 0, right: 0, bottom: 0};
       let paintColor: common2D.Color = {alpha : 0, red: 0, green : 0, blue : 0};

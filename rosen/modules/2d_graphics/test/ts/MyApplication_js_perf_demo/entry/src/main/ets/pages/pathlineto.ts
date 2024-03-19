@@ -15,6 +15,9 @@ export class PathLineTo extends TestBase {
 
   public OnTestFunctionCpu(canvas: drawing.Canvas) {
     //接口调用，功能测试.cpu/gpu调用接口一致
+
+    console.log("www data draw start")
+
     const pen = new drawing.Pen();
     const penColor: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 }
     pen.setColor(penColor);
@@ -26,8 +29,9 @@ export class PathLineTo extends TestBase {
     path.lineTo(this.gCoord[2], this.gCoord[3])
     path.lineTo(this.gCoord[4], this.gCoord[5])
     path.close()
-
     canvas.drawPath(path);
+
+    console.log("www data draw start")
   }
 
   public OnTestFunctionGpuUpScreen(canvas: drawing.Canvas) {
@@ -56,7 +60,6 @@ export class PathLineTo extends TestBase {
     // pen.setColor(penColor);
     // fPaint.setStyle(flags & kStroke_Flag ? SkPaint::kStroke_Style : SkPaint::kFill_Style); // 未开放
     pen.setStrokeWidth(5);
-    pen.setAntiAlias(true);
     // fPaint.setStrokeJoin(SkPaint::kBevel_Join); // 未开放
     canvas.attachPen(pen);
 
@@ -65,6 +68,7 @@ export class PathLineTo extends TestBase {
     path.lineTo(this.gCoord[2], this.gCoord[3])
     path.lineTo(this.gCoord[4], this.gCoord[5])
     path.close()
+    canvas.attachPen(pen);
     for (let index = 0; index < this.testCount_; index++) {
       canvas.drawPath(path);
     }

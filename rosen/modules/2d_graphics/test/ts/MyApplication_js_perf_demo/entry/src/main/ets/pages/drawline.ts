@@ -15,7 +15,7 @@ export class DrawLine extends TestBase {
   public constructor(width: number, doAA: boolean) {
     // 根据需求，如果与默认值不一样，请继承重写
     super();
-    this.fileName_ = "drawline";
+    this.fileName_ = "pathlineto";
 
     this.strokeWidth = width
     this.fDoAA = doAA

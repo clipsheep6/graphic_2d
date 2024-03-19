@@ -503,10 +503,9 @@ ohos_shared_library("librender_service_base") {
     "src/platform:platform",
   ]
 
-  external_deps = [
-    "hilog:libhilog",
-    "graphic_surface:surface",
-  ]
+  external_deps = [ "hilog:libhilog" ]
+
+  public_external_deps = [ "graphic_surface:surface" ]
 
   cflags_cc = [
     "-Wno-implicit-function-declaration"

@@ -62,6 +62,7 @@ void DrawPathTransform::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_PathTransform(path, m);
     
     for (int i = 0; i < testCount_; i++) {
+        for(int j=0;j<100;++j)
         OH_Drawing_CanvasDrawPath(canvas, path);
     }
     OH_Drawing_MatrixDestroy(m);

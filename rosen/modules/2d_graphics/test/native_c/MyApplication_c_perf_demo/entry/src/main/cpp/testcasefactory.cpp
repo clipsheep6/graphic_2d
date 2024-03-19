@@ -59,10 +59,10 @@ namespace {
             {"drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathLineTo>(); } },
             {"drawshaderlinear_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,0,2); }},
             {"drawshaderradial_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,1,2); }},
-            {"drawshaderseep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,2,2); }},
+            {"drawshadersweep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,2,2); }},
             {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,0,2); }},
             {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,1,2); }},
-            {"drawshaderseep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,2,2); }},
+            {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,2,2); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -88,10 +88,10 @@ namespace {
             {"drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathLineTo>(); } },
             {"drawshaderlinear_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,0,2); }},
             {"drawshaderradial_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,1,2); }},
-            {"drawshaderseep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,2,2); }},
+            {"drawshadersweep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(true,2,2); }},
             {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,0,2); }},
             {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,1,2); }},
-            {"drawshaderseep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,2,2); }},
+            {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,2,2); }},
     };
 } // namespace
 

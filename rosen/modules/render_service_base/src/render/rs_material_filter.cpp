@@ -118,6 +118,16 @@ std::string RSMaterialFilter::GetDescription()
     return "RSMaterialFilter blur radius is " + std::to_string(radius_) + " sigma";
 }
 
+std::string RSMaterialFilter::GetDetailedDescription()
+{
+    char maskColorStr[UINT8_MAX] = { 0 };
+    std::sprintf(maskColorStr, "%08X", maskColor_.AsArgbInt());
+    return "RSMaterialFilterBlur, radius: " + std::to_string(radius_) + " sigma" +
+           ", saturation: " + std::to_string(saturation_) + ", brightness: " + std::to_string(brightness_) +
+           ", greyCoef1: " + std::to_string(greyCoef1_) + ", greyCoef2: " + std::to_string(greyCoef2_) +
+           ", color: " + maskColorStr + ", colorMode: " + std::to_string(colorMode_);
+}
+
 std::shared_ptr<RSDrawingFilter> RSMaterialFilter::Compose(const std::shared_ptr<RSDrawingFilter>& other) const
 {
     if (other == nullptr) {

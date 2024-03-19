@@ -501,6 +501,9 @@ void RSShadowDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas&
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
         return;
     }
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(2,
+        "RSShadowDrawable::DrawShadow, Radius: %f, ShadowOffsetX: %f, ShadowOffsetY: %f, bounds: %s", radius_, offsetX_,
+        offsetY_, content.GetRenderProperties().GetBoundsGeometry()->GetAbsRect().ToString().c_str());
     auto deviceClipBounds = canvas.GetDeviceClipBounds();
     Drawing::AutoCanvasRestore acr(canvas, true);
     Drawing::Path path;
@@ -532,6 +535,11 @@ void RSHardwareAccelerationShadowDrawable::Draw(const RSRenderContent& content, 
     if (canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
         return;
     }
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(2,
+        "RSHardwareAccelerationShadowDrawable::DrawShadow, Elevation: %f, ShadowOffsetX: %f, "
+        "ShadowOffsetY: %f, bounds: %s",
+        shadowElevation_, offsetX_, offsetY_,
+        content.GetRenderProperties().GetBoundsGeometry()->GetAbsRect().ToString().c_str());
     Drawing::AutoCanvasRestore acr(canvas, true);
     Drawing::Path path;
     ClipShadowPath(content, canvas, path);

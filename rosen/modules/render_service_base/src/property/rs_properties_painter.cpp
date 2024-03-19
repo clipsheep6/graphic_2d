@@ -284,6 +284,11 @@ void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilt
         canvas.GetCacheType() == RSPaintFilterCanvas::CacheType::ENABLED) {
         return;
     }
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(2,
+        "RSPropertiesPainter::DrawShadow, ShadowElevation: %f, ShadowRadius: %f, ShadowOffsetX: "
+        "%f, ShadowOffsetY: %f, bounds: %s",
+        properties.GetShadowElevation(), properties.GetShadowRadius(), properties.GetShadowOffsetX(),
+        properties.GetShadowOffsetY(), properties.GetBoundsGeometry()->GetAbsRect().ToString().c_str());
     Drawing::AutoCanvasRestore acr(canvas, true);
     Drawing::Path path;
     if (properties.GetShadowPath() && properties.GetShadowPath()->GetDrawingPath().IsValid()) {
@@ -613,6 +618,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         needSnapshotOutset = (material->GetRadius() >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD);
     }
     RS_OPTIONAL_TRACE_NAME("DrawFilter " + RSFilter->GetDescription());
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(2, "DrawFilter, filterType: %d, %s, bounds: %s", filterType,
+        RSFilter->GetDetailedDescription().c_str(), properties.GetBoundsGeometry()->GetAbsRect().ToString().c_str());
     g_blurCnt++;
     Drawing::AutoCanvasRestore acr(canvas, true);
 
@@ -732,6 +739,8 @@ void RSPropertiesPainter::DrawBackgroundEffect(
     }
     g_blurCnt++;
     RS_TRACE_NAME("DrawBackgroundEffect " + RSFilter->GetDescription());
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(2, "EffectComponent, %s, bounds: %s", RSFilter->GetDetailedDescription().c_str(),
+        properties.GetBoundsGeometry()->GetAbsRect().ToString().c_str());
     auto surface = canvas.GetSurface();
     if (surface == nullptr) {
         ROSEN_LOGE("RSPropertiesPainter::DrawBackgroundEffect surface null");
@@ -873,6 +882,9 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
     Drawing::Rect clipBounds(
         tmpBounds.GetLeft(), tmpBounds.GetTop(), tmpBounds.GetRight() - 1, tmpBounds.GetBottom() - 1);
     canvas.Restore();
+
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(
+        2, "RSPropertiesPainter::DrawPixelStretch, right: %f, bottom: %f", tmpBounds.GetRight(), tmpBounds.GetBottom());
 
     /*  Calculates the relative coordinates of the clipbounds
         with respect to the origin of the current canvas coordinates */
@@ -1662,6 +1674,9 @@ std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeLightUpEffectSha
 
 void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
+    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(2, "DrawDynamicLightUp, rate: %f, degree: %f, bounds: %s",
+        properties.GetDynamicLightUpRate().value(), properties.GetDynamicLightUpDegree().value(),
+        properties.GetBoundsGeometry()->GetAbsRect().ToString().c_str());
     Drawing::Surface* surface = canvas.GetSurface();
     if (surface == nullptr) {
         ROSEN_LOGD("RSPropertiesPainter::DrawDynamicLightUp surface is null");

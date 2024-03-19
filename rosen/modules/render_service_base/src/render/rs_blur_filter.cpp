@@ -56,6 +56,12 @@ std::string RSBlurFilter::GetDescription()
     return "RSBlurFilter blur radius is " + std::to_string(blurRadiusX_) + " sigma";
 }
 
+std::string RSBlurFilter::GetDetailedDescription()
+{
+    return "RSBlurFilterBlur, radius: " + std::to_string(blurRadiusX_) + " sigma" +
+           ", greyCoef1: " + std::to_string(greyCoef1_) + ", greyCoef2: " + std::to_string(greyCoef2_);
+}
+
 bool RSBlurFilter::IsValid() const
 {
     constexpr float epsilon = 0.999f;

@@ -14,6 +14,9 @@
  */
 #ifndef SWAPCHAIN_LAYER_LOG_H
 #define SWAPCHAIN_LAYER_LOG_H
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD001405
+
 
 #include <hilog/log.h>
 namespace OHOS {

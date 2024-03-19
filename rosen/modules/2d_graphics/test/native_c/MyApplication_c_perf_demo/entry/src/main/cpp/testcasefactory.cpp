@@ -34,6 +34,7 @@
 #include "testcase/draw_path_transform.h"
 #include "testcase/draw_path_line_to.h"
 #include "testcase/draw_shader_effect.h"
+#include "testcase/draw_text_blob_create.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -63,6 +64,9 @@ namespace {
             {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,0,2); }},
             {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,1,2); }},
             {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,2,2); }},
+            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(1); }},
+            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(2); }},
+            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(3); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -92,6 +96,9 @@ namespace {
             {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,0,2); }},
             {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,1,2); }},
             {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,2,2); }},
+            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(1); }},
+            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(2); }},
+            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(3); }},
     };
 } // namespace
 

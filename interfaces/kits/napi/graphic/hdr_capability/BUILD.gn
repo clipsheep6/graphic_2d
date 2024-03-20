@@ -39,6 +39,7 @@ ohos_shared_library("hdr_capability_utils") {
 
   cflags_cc = [ "-std=c++17" ]
 
+  innerapi_tags = [ "platformsdk" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

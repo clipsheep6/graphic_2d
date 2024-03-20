@@ -67,7 +67,8 @@ public:
         CompressedType type) = 0;
     virtual bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
-        void (*deleteFunc)(void*) = nullptr, void* cleanupHelper = nullptr) = 0;
+        void (*deleteFunc)(void*) = nullptr, void* cleanupHelper = nullptr,
+        std::shared_ptr<bool> needManualDelete = nullptr) = 0;
     virtual bool BuildFromSurface(GPUContext& gpuContext, Surface& surface, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace) = 0;
     virtual BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) = 0;

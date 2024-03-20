@@ -26,6 +26,7 @@
 #include "common/rs_obj_abs_geometry.h"
 #include "benchmarks/file_utils.h"
 #include "common/rs_optional_trace.h"
+#include "memory/rs_resource_ref_holder.h"
 #include "modifier/rs_modifier_type.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_display_render_node.h"
@@ -1807,8 +1808,12 @@ std::shared_ptr<Drawing::Image> RSRenderNode::GetCompletedImage(
     auto cacheImage = std::make_shared<Drawing::Image>();
     Drawing::BitmapFormat info =
         Drawing::BitmapFormat{ completeImage->GetColorType(), completeImage->GetAlphaType() };
+    SharedResourceRefHolder<Drawing::Image> sharedTextureRefHolder(completeImage);
+    auto releaseHelper = sharedTextureRefHolder.GetReleaseHelper();
+    auto needManualDelete = std::make_shared<bool>(false);
     bool ret = cacheImage->BuildFromTexture(*canvas.GetGPUContext(), backendTexture.GetTextureInfo(),
-        origin, info, nullptr);
+        origin, info, nullptr, releaseHelper.releaseFunc_, releaseHelper.releaseContext_, needManualDelete);
+    sharedTextureRefHolder.ConditionalUnRef(needManualDelete);
     if (!ret) {
         RS_LOGE("RSRenderNode::GetCompletedImage image BuildFromTexture failed");
         return nullptr;

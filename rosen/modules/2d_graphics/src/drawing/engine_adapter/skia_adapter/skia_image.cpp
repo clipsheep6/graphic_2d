@@ -147,8 +147,11 @@ bool SkiaImage::BuildFromCompressed(GPUContext& gpuContext, const std::shared_pt
 
 bool SkiaImage::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
     BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
-    void (*deleteFunc)(void*), void* cleanupHelper)
+    void (*deleteFunc)(void*), void* cleanupHelper, std::shared_ptr<bool> needManualDelete)
 {
+    if (needManualDelete != nullptr) {
+        *needManualDelete = true;
+    }
     grContext_ = gpuContext.GetImpl<SkiaGPUContext>()->GetGrContext();
     if (!grContext_) {
         LOGD("SkiaImage BuildFromTexture grContext_ is null");
@@ -174,6 +177,9 @@ bool SkiaImage::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info
             SkiaTextureInfo::ConvertToGrSurfaceOrigin(origin),
             SkiaImageInfo::ConvertToSkColorType(bitmapFormat.colorType),
             SkiaImageInfo::ConvertToSkAlphaType(bitmapFormat.alphaType), skColorSpace, deleteFunc, cleanupHelper);
+        if (needManualDelete != nullptr) {
+            *needManualDelete = false;
+        }
     } else {
         skiaImage_ = SkImage::MakeFromTexture(grContext_.get(),  SkiaTextureInfo::ConvertToGrBackendTexture(info),
             SkiaTextureInfo::ConvertToGrSurfaceOrigin(origin),

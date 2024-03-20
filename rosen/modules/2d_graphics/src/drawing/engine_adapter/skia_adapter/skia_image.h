@@ -67,7 +67,8 @@ public:
         CompressedType type) override;
     bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
-        void (*deleteFunc)(void*) = nullptr, void* cleanupHelper = nullptr) override;
+        void (*deleteFunc)(void*) = nullptr, void* cleanupHelper = nullptr,
+        std::shared_ptr<bool> needManualDelete = nullptr) override;
     BackendTexture GetBackendTexture(bool flushPendingGrContextIO, TextureOrigin* origin) override;
     void SetGrBackendTexture(const GrBackendTexture& grBackendTexture);
     bool IsValid(GPUContext* context) const override;

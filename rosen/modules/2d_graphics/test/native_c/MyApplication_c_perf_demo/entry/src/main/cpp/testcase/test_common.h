@@ -20,6 +20,7 @@ public:
     float_t nextF();
     float_t nextRangeF(float_t min,float_t max);
     uint32_t nextBits(unsigned bitCount);
+    uint32_t nextRangeU(uint32_t min, uint32_t max);
 protected:
     void init(uint32_t seed);
     uint32_t next(uint32_t seed);

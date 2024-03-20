@@ -336,7 +336,7 @@ typedef struct {
 
 /**
  * @brief Holds all image plane. \n
- *  
+ *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeBuffer
  * @since 12
  * @version 1.0

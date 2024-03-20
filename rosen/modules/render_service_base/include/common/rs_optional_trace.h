@@ -19,6 +19,10 @@
 #include "rs_trace.h"
 #include "platform/common/rs_system_properties.h"
 
+#ifdef ROSEN_TRACE_DISABLE
+constexpr uint64_t HITRACE_TAG_GRAPHIC_AGP = (1ULL << 38);
+#endif
+
 #define RS_OPTIONAL_TRACE_BEGIN(name)                            \
     do {                                                         \
         if (Rosen::RSSystemProperties::GetDebugTraceEnabled()) { \
@@ -36,6 +40,13 @@
 #define RS_OPTIONAL_TRACE_NAME_FMT(fmt, ...)                                \
     do {                                                                    \
         if (Rosen::RSSystemProperties::GetDebugTraceEnabled()) {            \
+            HITRACE_METER_FMT(HITRACE_TAG_GRAPHIC_AGP, fmt, ##__VA_ARGS__); \
+        }                                                                   \
+    } while (0)
+
+#define RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(level, fmt, ...)                   \
+    do {                                                                    \
+        if (Rosen::RSSystemProperties::GetDebugTraceLevel() >= level ) {    \
             HITRACE_METER_FMT(HITRACE_TAG_GRAPHIC_AGP, fmt, ##__VA_ARGS__); \
         }                                                                   \
     } while (0)

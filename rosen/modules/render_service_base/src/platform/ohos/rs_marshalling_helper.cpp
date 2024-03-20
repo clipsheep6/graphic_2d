@@ -522,6 +522,38 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSLinear
     return success;
 }
 
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<EmitterUpdater>& val)
+{
+    bool success = Marshalling(parcel, val->emitterIndex_);
+    success = success && Marshalling(parcel, val->position_.x_);
+    success = success && Marshalling(parcel, val->position_.y_);
+    success = success && Marshalling(parcel, val->emitSize_.x_);
+    success = success && Marshalling(parcel, val->emitSize_.y_);
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<EmitterUpdater>& val)
+{
+    int emitterIndex = 0;
+    float positionX = 0.f;
+    float positionY = 0.f;
+    float emitSizeWidth = 0.f;
+    float emitSizeHeight = 0.f;
+
+    bool success = Unmarshalling(parcel, emitterIndex);
+    success = success && Unmarshalling(parcel, positionX);
+    success = success && Unmarshalling(parcel, positionY);
+    Vector2f position(positionX, positionY);
+    success = success && Unmarshalling(parcel, emitSizeWidth);
+    success = success && Unmarshalling(parcel, emitSizeHeight);
+    Vector2f emitSize(emitSizeWidth, emitSizeHeight);
+    if (success) {
+        val = std::make_shared<EmitterUpdater>(emitterIndex, position, emitSize);
+    }
+    return success;
+}
+
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const EmitterConfig& val)
 {
     bool success = Marshalling(parcel, val.emitRate_);
@@ -1561,6 +1593,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSPath>)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSShader>)                          \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSLinearGradientBlurPara>)          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<EmitterUpdater>)                    \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<ParticleRenderParams>>) \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleRenderParams>)              \
     EXPLICIT_INSTANTIATION(TEMPLATE, RSRenderParticleVector)                             \

@@ -124,6 +124,20 @@ public:
     ~EmitterConfig() = default;
 };
 
+class RSB_EXPORT EmitterUpdater {
+public:
+    int emitterIndex_;
+    Vector2f position_;
+    Vector2f emitSize_;
+
+    explicit EmitterUpdater(const int& emitterIndex, const Vector2f& position, const Vector2f& emitSize)
+        : emitterIndex_(emitterIndex), position_(position), emitSize_(emitSize)
+    {}
+    EmitterUpdater(const EmitterUpdater& config) = default;
+    EmitterUpdater& operator=(const EmitterUpdater& config) = default;
+    ~EmitterUpdater() = default;
+};
+
 class RSB_EXPORT ParticleVelocity {
 public:
     Range<float> velocityValue_;

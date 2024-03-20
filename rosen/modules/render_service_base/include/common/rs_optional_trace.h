@@ -40,6 +40,13 @@
         }                                                                   \
     } while (0)
 
+#define RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(level, fmt, ...)                   \
+    do {                                                                    \
+        if (Rosen::RSSystemProperties::GetDebugTraceLevel() >= level ) {    \
+            HITRACE_METER_FMT(HITRACE_TAG_GRAPHIC_AGP, fmt, ##__VA_ARGS__); \
+        }                                                                   \
+    } while (0)
+
 #define RS_APPOINTED_TRACE_BEGIN(node, name)                           \
     do {                                                             \
         if (Rosen::RSSystemProperties::GetDebugTraceEnabled() ||     \

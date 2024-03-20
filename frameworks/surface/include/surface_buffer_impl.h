@@ -95,6 +95,8 @@ public:
     const BufferRequestConfig* GetBufferRequestConfig() const override;
     void SetBufferRequestConfig(const BufferRequestConfig &config) override;
     GSError GetPlanesInfo(void **planesInfo) override;
+    void SetConsumerAttachBufferFlag(bool value) override;
+    bool GetConsumerAttachBufferFlag() override;
 
 private:
     void FreeBufferHandleLocked();
@@ -111,6 +113,7 @@ private:
     mutable std::mutex mutex_;
     OH_NativeBuffer_Planes planesInfo_ = {0, {}};
     BufferRequestConfig bufferRequestConfig_;
+    bool isConsumerAttachBufferFlag_ = false;
 };
 } // namespace OHOS
 

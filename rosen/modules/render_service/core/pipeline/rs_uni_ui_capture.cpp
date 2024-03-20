@@ -255,8 +255,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::SetCanvas(std::shared_ptr<ExtendReco
 void RSUniUICapture::RSUniUICaptureVisitor::ProcessChildren(RSRenderNode& node)
 {
     auto sortedChildren = node.GetSortedChildren();
-    if (RSSystemProperties::GetUseShadowBatchingEnabled()
-        && (node.GetRenderProperties().GetUseShadowBatching())) {
+    if (node.GetRenderProperties().GetUseShadowBatching()) {
         for (auto& child : *sortedChildren) {
             if (auto node = child->ReinterpretCastTo<RSCanvasRenderNode>()) {
                 node->ProcessShadowBatching(*canvas_);
@@ -459,7 +458,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         canvas_->RestoreToCount(saveCnt);
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
-            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
     } else {
@@ -469,7 +468,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessSurfaceViewWithoutUni(RSSurfa
         }
         if (node.GetBuffer() != nullptr) {
             // in node's local coordinate.
-            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, false, false);
+            auto params = RSDividedRenderUtil::CreateBufferDrawParam(node, true, false, true, false);
             renderEngine_->DrawSurfaceNodeWithParams(*canvas_, node, params);
         }
         canvas_->Restore();

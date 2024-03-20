@@ -120,12 +120,20 @@ public:
         (void)planesInfo;
         return GSERROR_OK;
     };
+    virtual void SetConsumerAttachBufferFlag(bool value)
+    {
+        (void)value;
+    };
+    virtual bool GetConsumerAttachBufferFlag()
+    {
+        return false;
+    };
 
 protected:
-    SurfaceBuffer(){}
+    SurfaceBuffer() {}
     SurfaceBuffer(const SurfaceBuffer&) = delete;
     SurfaceBuffer& operator=(const SurfaceBuffer&) = delete;
-    virtual ~SurfaceBuffer(){}
+    virtual ~SurfaceBuffer() {}
 };
 
 using OnReleaseFunc = std::function<GSError(sptr<SurfaceBuffer> &)>;

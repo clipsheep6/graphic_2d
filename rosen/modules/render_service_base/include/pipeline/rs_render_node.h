@@ -184,6 +184,7 @@ public:
     NodeId GetInstanceRootNodeId() const;
     const std::shared_ptr<RSRenderNode> GetInstanceRootNode() const;
     NodeId GetFirstLevelNodeId() const;
+    const std::shared_ptr<RSRenderNode> GetFirstLevelNode() const;
 
     // accumulate all valid children's area
     void UpdateChildrenRect(const RectI& subRect);
@@ -248,6 +249,8 @@ public:
 
     void SetStaticCached(bool isStaticCached);
     bool IsStaticCached() const;
+    void SetNodeName(const std::string& nodeName);
+    const std::string& GetNodeName() const;
     // store prev surface subtree's must-renewed info that need prepare
     virtual void StoreMustRenewedInfo();
     bool HasMustRenewedInfo() const;
@@ -256,8 +259,8 @@ public:
     bool HasUseEffectNodes() const;
     bool HasSubSurface() const;
 
-    bool NeedInitCacheSurface() const;
-    bool NeedInitCacheCompletedSurface() const;
+    bool NeedInitCacheSurface();
+    bool NeedInitCacheCompletedSurface();
     bool IsPureContainer() const;
     bool IsContentNode() const;
 
@@ -313,8 +316,6 @@ public:
     }
 
 #ifdef DDGR_ENABLE_FEATURE_OPINC
-    bool IsOnTreeDirty();
-    void SetDirtyByOnTree(bool forceAddToActiveList = false);
     Vector4f GetOptionBufferBound() const;
     Vector2f GetOpincBufferSize() const;
     Drawing::Rect GetOpincBufferBound() const;
@@ -470,6 +471,18 @@ public:
     class RSAutoCache;
     const std::shared_ptr<RSAutoCache>& GetAutoCache();
     bool isOpincRectOutParent_ = false;
+    bool isOpincPrepareDis_ = false;
+#endif
+
+#ifdef RS_ENABLE_STACK_CULLING
+    void SetFullSurfaceOpaqueMarks(const std::shared_ptr<RSRenderNode> curSurfaceNodeParam);
+    void SetSubNodesCovered();
+    void ResetSubNodesCovered();
+    bool isFullSurfaceOpaquCanvasNode_ = false;
+    bool hasChildFullSurfaceOpaquCanvasNode_ = false;
+    bool isCoveredByOtherNode_ = false;
+#define MAX_COLD_DOWN_NUM 20
+    int32_t coldDownCounter_ = 0;
 #endif
 
     const std::shared_ptr<RSRenderContent> GetRenderContent() const;
@@ -478,9 +491,6 @@ protected:
 
     enum class NodeDirty {
         CLEAN = 0,
-    #ifdef DDGR_ENABLE_FEATURE_OPINC
-        ON_TREE_DIRTY,
-    #endif
         DIRTY,
     };
     void SetClean();
@@ -607,6 +617,7 @@ private:
 #endif
     std::atomic<bool> isCacheSurfaceNeedUpdate_ = false;
     std::atomic<bool> isStaticCached_ = false;
+    std::string nodeName_ = "";
     CacheType cacheType_ = CacheType::NONE;
     // drawing group cache
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;

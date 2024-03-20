@@ -47,16 +47,6 @@ void RSSystemProperties::SetRecordingDisenabled()
     return;
 }
 
-int RSSystemProperties::GetDumpRSTreeCount()
-{
-    return 0;
-}
-
-void RSSystemProperties::SetDumpRSTreeCount(int count)
-{
-    return;
-}
-
 std::string RSSystemProperties::GetRecordingFile()
 {
     return "";
@@ -188,11 +178,6 @@ bool RSSystemProperties::GetSkipGeometryNotChangeEnabled()
 }
 
 bool RSSystemProperties::GetAnimationCacheEnabled()
-{
-    return {};
-}
-
-bool RSSystemProperties::GetPropertyDrawableEnable()
 {
     return {};
 }
@@ -332,11 +317,6 @@ bool RSSystemProperties::GetSyncTransactionEnabled()
 int RSSystemProperties::GetSyncTransactionWaitDelay()
 {
     return 0;
-}
-
-bool RSSystemProperties::GetUseShadowBatchingEnabled()
-{
-    return true;
 }
 
 bool RSSystemProperties::GetSingleFrameComposerEnabled()

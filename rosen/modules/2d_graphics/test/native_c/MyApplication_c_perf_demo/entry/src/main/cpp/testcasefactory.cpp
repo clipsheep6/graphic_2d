@@ -35,6 +35,7 @@
 #include "testcase/draw_path_line_to.h"
 #include "testcase/draw_shader_effect.h"
 #include "testcase/draw_text_blob_create.h"
+#include "testcase/draw_path_reset.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -67,6 +68,7 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(1); }},
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(2); }},
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(3); }},
+            {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathReset>(); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -98,7 +100,8 @@ namespace {
             {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawShaderEffect>(false,2,2); }},
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(1); }},
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(2); }},
-            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(3); }},
+            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawTextBlobCreate>(3); }},       
+            {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawPathReset>(); }},
     };
 } // namespace
 

@@ -126,5 +126,10 @@ std::string RSLinearGradientBlurFilter::GetDescription()
 {
     return "RSLinearGradientBlurFilter";
 }
+
+std::string RSLinearGradientBlurFilter::GetDetailedDescription()
+{
+    return "RSLinearGradientBlurFilterBlur, radius: " + std::to_string(linearGradientBlurPara_->blurRadius_);
+}
 } // namespace Rosen
 } // namespace OHOS

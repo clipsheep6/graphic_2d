@@ -17,16 +17,13 @@ export class DrawArcTo extends TestBase {
 
   public OnTestFunction(canvas: drawing.Canvas) {
     //接口调用，功能测试.cpu/gpu调用接口一致
-    const pen = new drawing.Brush();
-    pen.setAntiAlias(true)
-    canvas.attachBrush(pen);
+    const brush = new drawing.Brush();
+    brush.setAntiAlias(true)
+    canvas.attachBrush(brush);
     const path = new drawing.Path();
     let radius = this.rand.nextUScalar1() * 3
     let fLeft = this.rand.nextUScalar1() * 300
     let fTop = this.rand.nextUScalar1() * 300
-    fLeft = fLeft > 0 ? fLeft : -fLeft
-    fTop = fTop > 0 ? fTop : -fTop
-    radius = radius > 0 ? radius : -radius
     let fRight = fLeft + 2 * radius
     let fBottom = fTop + 2 * radius
     console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
@@ -34,7 +31,7 @@ export class DrawArcTo extends TestBase {
     path.arcTo(fLeft, fTop, fRight, fBottom, 180, 360);
     path.close()
     canvas.drawPath(path);
-    canvas.detachPen()
+    canvas.detachBrush()
   }
 
   // "circles_fill"
@@ -48,9 +45,6 @@ export class DrawArcTo extends TestBase {
       let radius = this.rand.nextUScalar1() * 3
       let fLeft = this.rand.nextUScalar1() * 300
       let fTop = this.rand.nextUScalar1() * 300
-      fLeft = fLeft > 0 ? fLeft : -fLeft
-      fTop = fTop > 0 ? fTop : -fTop
-      radius = radius > 0 ? radius : -radius
       let fRight = fLeft + 2 * radius
       let fBottom = fTop + 2 * radius
       console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
@@ -59,6 +53,6 @@ export class DrawArcTo extends TestBase {
       path.close()
       canvas.drawPath(path);
     }
-    canvas.detachPen()
+    canvas.detachBrush()
   }
 }

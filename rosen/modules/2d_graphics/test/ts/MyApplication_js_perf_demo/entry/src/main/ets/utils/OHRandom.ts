@@ -84,7 +84,8 @@ export class OHRandom {
   }
 
   public nextUScalar1(): number {
-    return this.nextUFixed1() * 0.0000152587890625
+    let a = this.nextUFixed1() * 0.0000152587890625
+    return a > 0 ? a : -a
   }
 
   public nextRangeU(min: number, max: number): number {

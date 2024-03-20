@@ -121,12 +121,18 @@ std::string RSMaterialFilter::GetDescription()
 std::string RSMaterialFilter::GetDetailedDescription()
 {
     char maskColorStr[UINT8_MAX] = { 0 };
-    sprintf_s(maskColorStr, UINT8_MAX, "%08X", maskColor_.AsArgbInt());
-    return "RSMaterialFilterBlur, radius: " + std::to_string(radius_) + " sigma" +
-           ", saturation: " + std::to_string(saturation_) + ", brightness: " + std::to_string(brightness_) +
-           ", greyCoef1: " + std::to_string(greyCoef_->GetData()[0]) +
-           ", greyCoef2: " + std::to_string(greyCoef_->GetData()[1]) + ", color: " + maskColorStr +
-           ", colorMode: " + std::to_string(colorMode_);
+    auto ret = memset_s(maskColorStr, UINT8_MAX, 0, UINT8_MAX);
+    if (ret != EOK) {
+        return "Failed to memset_s for maskColorStr, ret=" + std::to_string(ret);
+    }
+    if (sprintf_s(maskColorStr, UINT8_MAX, "%08X", maskColor_.AsArgbInt()) != -1) {
+        return "RSMaterialFilterBlur, radius: " + std::to_string(radius_) + " sigma" +
+               ", saturation: " + std::to_string(saturation_) + ", brightness: " + std::to_string(brightness_) +
+               ", greyCoef1: " + std::to_string(greyCoef_->GetData()[0]) +
+               ", greyCoef2: " + std::to_string(greyCoef_->GetData()[1]) + ", color: " + maskColorStr +
+               ", colorMode: " + std::to_string(colorMode_);
+    };
+    return "RSMaterialFilterBlur, maskColorStr failed";
 }
 
 std::shared_ptr<RSDrawingFilter> RSMaterialFilter::Compose(const std::shared_ptr<RSDrawingFilter>& other) const

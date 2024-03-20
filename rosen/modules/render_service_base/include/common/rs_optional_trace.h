@@ -43,7 +43,9 @@
 #define RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(level, fmt, ...)                   \
     do {                                                                    \
         if (Rosen::RSSystemProperties::GetDebugTraceLevel() >= level ) {    \
+#ifndef ROSEN_TRACE_DISABLE
             HITRACE_METER_FMT(HITRACE_TAG_GRAPHIC_AGP, fmt, ##__VA_ARGS__); \
+#endif
         }                                                                   \
     } while (0)
 

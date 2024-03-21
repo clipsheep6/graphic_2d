@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -109,6 +109,18 @@ uint32_t OH_Drawing_PenGetColor(const OH_Drawing_Pen*);
  * @version 1.0
  */
 void OH_Drawing_PenSetColor(OH_Drawing_Pen*, uint32_t color);
+
+/**
+ * @brief Sets the color for a Pen. The color is used by the pen to outline a shape.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_Color4f Indicates the pointer to an <b>OH_Drawing_Color4f</b> object.
+ * @param OH_Drawing_ColorSpace Indicates the pointer to an <b>OH_Drawing_ColorSpace</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PenSetColor4f(OH_Drawing_Pen*, OH_Drawing_Color4f*, OH_Drawing_ColorSpace*);
 
 /**
  * @brief Obtains the alpha of a pen. The alpha is used by the pen to outline a shape.
@@ -303,6 +315,17 @@ void OH_Drawing_PenSetPathEffect(OH_Drawing_Pen*, OH_Drawing_PathEffect*);
 void OH_Drawing_PenSetFilter(OH_Drawing_Pen*, OH_Drawing_Filter*);
 
 /**
+ * @brief Gets the filter from a pen.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @param OH_Drawing_Filter Indicates the pointer to an <b>OH_Drawing_Filter</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PenGetFilter(OH_Drawing_Pen*, OH_Drawing_Filter*);
+
+/**
  * @brief Sets a blender that implements the specified blendmode enum for a pen.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -312,6 +335,16 @@ void OH_Drawing_PenSetFilter(OH_Drawing_Pen*, OH_Drawing_Filter*);
  * @version 1.0
  */
 void OH_Drawing_PenSetBlendMode(OH_Drawing_Pen*, OH_Drawing_BlendMode);
+
+/**
+ * @brief Resets pen data.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Pen Indicates the pointer to an <b>OH_Drawing_Pen</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_PenReset(OH_Drawing_Pen*);
 
 #ifdef __cplusplus
 }

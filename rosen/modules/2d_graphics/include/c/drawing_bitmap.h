@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -172,6 +172,88 @@ void* OH_Drawing_BitmapGetPixels(OH_Drawing_Bitmap*);
  */
 void OH_Drawing_BitmapGetImageInfo(OH_Drawing_Bitmap*, OH_Drawing_Image_Info*);
 
+/**
+ * @brief Sets OH_Drawing_Image_Info to ImageInfo following the rules in setInfo(), and creates PixelRef
+ * containing pixels and rowBytes.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
+ * @param pixels Address or pixel storage; may be nullptr.
+ * @param rowBytes Size of pixel row or larger.
+ * @param releaseProc Function called when pixels can be deleted; may be nullptr.
+ * @param context Caller state passed to releaseProc; may be nullptr.
+ * @return Returns true if OH_Drawing_Image_Info is set to ImageInfo.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapInstallPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*, void* pixels, size_t rowBytes, 
+    void (*releaseProc)(void* addr, void* context), void* context);
+
+/**
+ * @brief Copies bitmap pixel address, row bytes, and ImageInfo to pixmap, if address
+ * is available, and returns true. If pixel address is not available, return
+ * false and leave pixmap unchanged.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Pixmap Indicates the pointer to an <b>OH_Drawing_Pixmap</b> object.
+ * @return Returns true if image has direct access to pixels.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapPeekPixels(OH_Drawing_Bitmap*, OH_Drawing_Pixmap*);
+
+/**
+ * @brief Sets OH_Drawing_Image_Info to ImageInfo following the rules in setInfo() and allocates pixel
+ * memory.
+ * Returns false and calls reset() if ImageInfo could not be set, or memory could
+ * not be allocated.
+ * On most platforms, allocating pixel memory may succeed even though there is
+ * not sufficient memory to hold pixels; allocation does not take place
+ * until the pixels are written to. The actual behavior depends on the platform
+ * implementation of malloc().
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param OH_Drawing_Image_Info Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
+ * @return Returns true if pixel storage is allocated.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_BitmapTryAllocPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info*);
+
+/** Copies a rect of pixels from bitmap to dstPixels. Copy starts at (srcX, srcY),
+ * and does not exceed bitmap (width(), height()).
+ * dstInfo specifies width, height, ColorType, AlphaType of
+ * destination. dstRowBytes specifics the gap from one destination row to the next.
+ * Returns true if pixels are copied. Returns false if:
+ * - dstInfo has no address
+ * - dstRowBytes is less than dstInfo.minRowBytes()
+ * - PixelRef is nullptr
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @param dstInfo Indicates the pointer to an <b>OH_Drawing_Image_Info</b> object.
+ * @param dstPixels Destination pixel storage.
+ * @param dstRowBytes Destination row length.
+ * @param srcX Column index whose absolute value is less than width().
+ * @param srcY Row index whose absolute value is less than height().
+ * @return Returns true if pixels are copied to dstPixels.
+*/
+bool OH_Drawing_BitmapReadPixels(OH_Drawing_Bitmap*, const OH_Drawing_Image_Info* dstInfo,
+    void* dstPixels, size_t dstRowBytes, int32_t srcX, int32_t srcY);
+
+/**
+ * @brief Returns the required size of the pixel array.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Bitmap Indicates the pointer to an <b>OH_Drawing_Bitmap</b> object.
+ * @return Returns the required size of the pixel array.
+ * @since 12
+ * @version 1.0
+ */
+size_t OH_Drawing_BitmapComputeByteSize(OH_Drawing_Bitmap*);
 #ifdef __cplusplus
 }
 #endif

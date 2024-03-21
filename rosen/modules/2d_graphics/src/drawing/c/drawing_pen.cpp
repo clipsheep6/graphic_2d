@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,11 @@ static PathEffect* CastToPathEffect(OH_Drawing_PathEffect* cPathEffect)
 static const Filter& CastToFilter(const OH_Drawing_Filter& cFilter)
 {
     return reinterpret_cast<const Filter&>(cFilter);
+}
+
+static const Filter* CastToFilter(const OH_Drawing_Filter* cFilter)
+{
+    return reinterpret_cast<const Filter*>(cFilter);
 }
 
 static OH_Drawing_PenLineCapStyle CapCastToCCap(Pen::CapStyle cap)
@@ -164,6 +169,17 @@ void OH_Drawing_PenSetColor(OH_Drawing_Pen* cPen, uint32_t color)
         return;
     }
     pen->SetColor(color);
+}
+
+void OH_Drawing_PenSetColor4f(OH_Drawing_Pen* cPen, OH_Drawing_Color4f* color4f, OH_Drawing_ColorSpace* colorSpace)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+
+    pen->SetColor(*(Color4f*)color4f,
+        std::shared_ptr<ColorSpace>{reinterpret_cast<ColorSpace*>(colorSpace), [](auto p) {}});
 }
 
 uint8_t OH_Drawing_PenGetAlpha(const OH_Drawing_Pen* cPen)
@@ -289,6 +305,17 @@ void OH_Drawing_PenSetFilter(OH_Drawing_Pen* cPen, OH_Drawing_Filter* cFilter)
     pen->SetFilter(CastToFilter(*cFilter));
 }
 
+void OH_Drawing_PenGetFilter(OH_Drawing_Pen* cPen, OH_Drawing_Filter* cFilter)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr || cFilter == nullptr) {
+        return;
+    }
+
+    Filter* filter = const_cast<Filter*>(CastToFilter(cFilter));
+    *filter = pen->GetFilter();
+}
+
 void OH_Drawing_PenSetBlendMode(OH_Drawing_Pen* cPen, OH_Drawing_BlendMode cBlendMode)
 {
     if (cPen == nullptr) {
@@ -299,4 +326,13 @@ void OH_Drawing_PenSetBlendMode(OH_Drawing_Pen* cPen, OH_Drawing_BlendMode cBlen
         return;
     }
     pen->SetBlendMode(static_cast<BlendMode>(cBlendMode));
+}
+
+void OH_Drawing_PenReset(OH_Drawing_Pen* cPen)
+{
+    Pen* pen = CastToPen(cPen);
+    if (pen == nullptr) {
+        return;
+    }
+    pen->Reset();
 }

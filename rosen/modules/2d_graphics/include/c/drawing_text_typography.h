@@ -1681,7 +1681,7 @@ bool  OH_Drawing_TypographyIsLineUnlimited(OH_Drawing_TypographyStyle*);
 bool  OH_Drawing_TypographyIsEllipsized(OH_Drawing_TypographyStyle*);
 
 /**
- * @brief Releases the memory occupied by vector with the text shadow object <b>OH_Drawing_TextShadow</b>.
+ * @brief Getting all font metrics from target row
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
  * @param OH_Drawing_Typography A pointer to a typesetting object

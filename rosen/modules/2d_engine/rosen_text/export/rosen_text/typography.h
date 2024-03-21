@@ -142,7 +142,7 @@ public:
     virtual bool GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics) = 0;
     virtual Drawing::FontMetrics GetFontMetrics(const OHOS::Rosen::TextStyle& textStyle) = 0;
     virtual std::vector<Drawing::FontMetrics> GetLineFontMetrics(const size_t lineNumber,
-        size_t* charNumber, bool* success) = 0;
+        size_t& charNumber, bool& success) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

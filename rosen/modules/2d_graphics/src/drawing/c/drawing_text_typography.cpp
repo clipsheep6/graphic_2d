@@ -1752,7 +1752,7 @@ OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typo
     }
     auto txtSKTypograph = ConvertToOriginalText<Typography>(typography);
     std::vector<Drawing::FontMetrics> fontMetrics = txtSKTypograph->GetLineFontMetrics(lineNumber,
-        charNumber, success);
+        *charNumber, *success);
     if (!fontMetrics.size()) {
         return nullptr;
     }
@@ -1764,7 +1764,7 @@ OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typo
     return result;
 }
 
-void OH_Drawing_DestroyFontMetrics(OH_Drawing_Font_Metrics* lineFontMetric)
+void OH_Drawing_DestroyLineFontMetrics(OH_Drawing_Font_Metrics* lineFontMetric)
 {
     if (!lineFontMetric) {
         return;

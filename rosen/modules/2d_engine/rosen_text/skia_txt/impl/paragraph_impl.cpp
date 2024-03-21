@@ -292,10 +292,10 @@ Drawing::FontMetrics ParagraphImpl::GetFontMetricsResult(const SPText::TextStyle
     return fontMetrics;
 }
 
-std::vector<OHOS::Rosen::Drawing::FontMetrics> ParagraphImpl::GetLineFontMetricsResult(const size_t lineNumber,
+std::vector<OHOS::Rosen::Drawing::FontMetrics> ParagraphImpl::GetLineFontMetrics(const size_t lineNumber,
     size_t* charNumber, bool* success)
 {
-    auto lineFontMetrics = paragraph_->GetLineFontMetricsResult(lineNumber,
+    auto lineFontMetrics = paragraph_->GetLineFontMetrics(lineNumber,
         charNumber, success);
     return lineFontMetrics;
 }

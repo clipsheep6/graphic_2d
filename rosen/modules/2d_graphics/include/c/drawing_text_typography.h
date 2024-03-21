@@ -1702,7 +1702,7 @@ OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typo
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_DestroyFontMetrics(OH_Drawing_Font_Metrics* lineFontMetric);
+void OH_Drawing_DestroyLineFontMetrics(OH_Drawing_Font_Metrics* lineFontMetric);
 #ifdef __cplusplus
 }
 #endif

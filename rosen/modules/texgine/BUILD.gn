@@ -183,7 +183,6 @@ ohos_shared_library("libtexgine") {
     }
     deps += [ "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client" ]
   }
-
   innerapi_tags = [ "platformsdk" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"

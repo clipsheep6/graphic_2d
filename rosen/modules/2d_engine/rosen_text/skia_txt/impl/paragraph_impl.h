@@ -101,7 +101,7 @@ public:
 
     Drawing::FontMetrics GetFontMetricsResult(const SPText::TextStyle& textStyle) override;
 
-    std::vector<OHOS::Rosen::Drawing::FontMetrics> GetLineFontMetricsResult(const size_t lineNumber,
+    std::vector<OHOS::Rosen::Drawing::FontMetrics> GetLineFontMetrics(const size_t lineNumber,
         size_t* charNumber, bool* success) override;
 
 private:

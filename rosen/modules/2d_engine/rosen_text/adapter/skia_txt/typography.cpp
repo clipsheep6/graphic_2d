@@ -353,9 +353,9 @@ Drawing::FontMetrics Typography::GetFontMetrics(const OHOS::Rosen::TextStyle& te
 }
 
 std::vector<Drawing::FontMetrics> Typography::GetLineFontMetrics(const size_t lineNumber,
-    size_t* charNumber, bool* success)
+    size_t& charNumber, bool& success)
 {
-    return paragraph_->GetLineFontMetricsResult(lineNumber, charNumber, success);
+    return paragraph_->GetLineFontMetrics(lineNumber, &charNumber, &success);
 }
 } // namespace AdapterTxt
 } // namespace Rosen

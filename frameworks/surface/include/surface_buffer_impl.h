@@ -94,9 +94,9 @@ public:
     GSError ReadBufferRequestConfig(MessageParcel &parcel) override;
     const BufferRequestConfig* GetBufferRequestConfig() const override;
     void SetBufferRequestConfig(const BufferRequestConfig &config) override;
-    GSError GetPlanesInfo(void **planesInfo) override;
     void SetConsumerAttachBufferFlag(bool value) override;
     bool GetConsumerAttachBufferFlag() override;
+    GSError GetPlanesInfo(void **planesInfo) override;
 
 private:
     void FreeBufferHandleLocked();

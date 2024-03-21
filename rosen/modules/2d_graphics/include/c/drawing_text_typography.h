@@ -1680,6 +1680,29 @@ bool  OH_Drawing_TypographyIsLineUnlimited(OH_Drawing_TypographyStyle*);
  */
 bool  OH_Drawing_TypographyIsEllipsized(OH_Drawing_TypographyStyle*);
 
+/**
+ * @brief Releases the memory occupied by vector with the text shadow object <b>OH_Drawing_TextShadow</b>.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Typography A pointer to a typesetting object
+ * @param lineNumber Specifies the number of rows
+ * @param charNumber Current line char number
+ * @param success Get information result
+ * @return Returns All OH_Drawing_Font_Metrics corresponding to the number of rows
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typography*, size_t,
+    size_t*, bool*);
+
+/**
+ * @brief Free up all the space taken up by the lineFontMetric
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param lineFontMetric The first address of the lineFontMetric gather to be destroyed
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_DestroyFontMetrics(OH_Drawing_Font_Metrics* lineFontMetric);
 #ifdef __cplusplus
 }
 #endif

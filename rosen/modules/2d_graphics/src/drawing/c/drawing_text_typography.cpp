@@ -1103,6 +1103,30 @@ static void ConvertFontMetrics(const Drawing::FontMetrics& fontMetrics, OH_Drawi
     drawingFontMetrics.strikeoutPosition = fontMetrics.fStrikeoutPosition;
 }
 
+static void ConvertLineFontMetrics(const std::vector<Drawing::FontMetrics>& fontMetrics, OH_Drawing_Font_Metrics* drawingFontMetrics)
+{
+    LOGE("StartLineFont | into ConvertLineFontMetrics  fontMetrics.size=%zu",fontMetrics.size());
+    for (size_t further = 0; further < fontMetrics.size(); further++) {
+        drawingFontMetrics[further].flags = fontMetrics[further].fFlags;
+        drawingFontMetrics[further].top = fontMetrics[further].fTop;
+        drawingFontMetrics[further].ascent = fontMetrics[further].fAscent;
+        drawingFontMetrics[further].descent = fontMetrics[further].fDescent;
+        drawingFontMetrics[further].bottom = fontMetrics[further].fBottom;
+        drawingFontMetrics[further].leading = fontMetrics[further].fLeading;
+        drawingFontMetrics[further].avgCharWidth = fontMetrics[further].fAvgCharWidth;
+        drawingFontMetrics[further].maxCharWidth = fontMetrics[further].fMaxCharWidth;
+        drawingFontMetrics[further].xMin = fontMetrics[further].fXMin;
+        drawingFontMetrics[further].xMax = fontMetrics[further].fXMax;
+        drawingFontMetrics[further].xHeight = fontMetrics[further].fXHeight;
+        drawingFontMetrics[further].capHeight = fontMetrics[further].fCapHeight;
+        drawingFontMetrics[further].underlineThickness = fontMetrics[further].fUnderlineThickness;
+        drawingFontMetrics[further].underlinePosition = fontMetrics[further].fUnderlinePosition;
+        drawingFontMetrics[further].strikeoutThickness = fontMetrics[further].fStrikeoutThickness;
+        drawingFontMetrics[further].strikeoutPosition = fontMetrics[further].fStrikeoutPosition;
+    }
+    LOGE("StartLineFont | Leave ConvertLineFontMetrics ");
+}
+
 static void ConvertLineMetrics(const LineMetrics &lineMetrics, OH_Drawing_LineMetrics& drawingLineMetrics)
 {
     drawingLineMetrics.ascender = lineMetrics.ascender;
@@ -1719,6 +1743,35 @@ bool OH_Drawing_TextStyleGetFontMetrics(OH_Drawing_Typography* typography, OH_Dr
     ConvertFontMetrics(fontmetricsResult, *fontmetrics);
     startGetMetrics = true;
     return startGetMetrics;
+}
+
+OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typography* typography, size_t lineNumber,
+    size_t* charNumber, bool* success)
+{
+    if (!typography || !charNumber || !success) {
+        return nullptr;
+    }
+    auto txtSKTypograph = ConvertToOriginalText<Typography>(typography);
+    std::vector<Drawing::FontMetrics> fontMetrics = txtSKTypograph->GetLineFontMetrics(lineNumber,
+        charNumber, success);
+    if (!fontMetrics.size()) {
+        return nullptr;
+    }
+    OH_Drawing_Font_Metrics* result = new OH_Drawing_Font_Metrics[fontMetrics.size()];
+    if (!result) {
+        return nullptr;
+    }
+    ConvertLineFontMetrics(fontMetrics, result);
+    return result;
+}
+
+void OH_Drawing_DestroyFontMetrics(OH_Drawing_Font_Metrics* lineFontMetric)
+{
+    if (!lineFontMetric) {
+        return;
+    }
+    delete[] lineFontMetric;
+    lineFontMetric = nullptr;
 }
 
 void OH_Drawing_SetTypographyTextStyle(OH_Drawing_TypographyStyle* handler, OH_Drawing_TextStyle* style)

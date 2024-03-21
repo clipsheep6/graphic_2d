@@ -16,7 +16,6 @@
 #include <string>
 #include "test_common.h"
 #include "image/image.h"
-#include "pixel_map.h"
 #include "utils/log.h"
 
 namespace OHOS {

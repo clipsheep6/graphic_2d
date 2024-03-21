@@ -22,23 +22,19 @@ using namespace OHOS::Rosen;
 
 namespace {
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap = {
-    {"drawrect", []() -> std::shared_ptr<TestBase> {
-        return std::static_pointer_cast<TestBase>(std::make_shared<DrawRectTest>());}},
+    {"drawrect", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawRectTest>();}},
     {"drawpath", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawPathTest>();}},
 };
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceCpuMap = {
-    {"drawrect", []() -> std::shared_ptr<TestBase> {
-        return std::static_pointer_cast<TestBase>(std::make_shared<DrawRectTest>());}},
+    {"drawrect", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawRectTest>();}},
     {"drawpath", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawPathTest>();}},
 };
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalGpuUpScreenMap = {
-    {"drawrect", []() -> std::shared_ptr<TestBase> {
-        return std::static_pointer_cast<TestBase>(std::make_shared<DrawRectTest>());}},
+    {"drawrect", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawRectTest>();}},
     {"drawpath", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawPathTest>();}},
 };
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> PerformanceGpuUpScreenMap = {
-    {"drawrect", []() -> std::shared_ptr<TestBase> {
-        return std::static_pointer_cast<TestBase>(std::make_shared<DrawRectTest>());}},
+    {"drawrect", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawRectTest>();}},
     {"drawpath", []() -> std::shared_ptr<TestBase> {return std::make_shared<DrawPathTest>();}},
 };
 } // namespace

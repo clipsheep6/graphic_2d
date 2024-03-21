@@ -14,6 +14,7 @@
  */
 #ifndef DRAWING_DEMO_TEST_BASE_H
 #define DRAWING_DEMO_TEST_BASE_H
+#include "pixel_map.h"
 #include "recording/recording_canvas.h"
 
 namespace OHOS {

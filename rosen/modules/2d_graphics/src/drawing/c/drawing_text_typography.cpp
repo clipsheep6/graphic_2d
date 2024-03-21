@@ -1103,7 +1103,8 @@ static void ConvertFontMetrics(const Drawing::FontMetrics& fontMetrics, OH_Drawi
     drawingFontMetrics.strikeoutPosition = fontMetrics.fStrikeoutPosition;
 }
 
-static void ConvertLineFontMetrics(const std::vector<Drawing::FontMetrics>& fontMetrics, OH_Drawing_Font_Metrics* drawingFontMetrics)
+static void ConvertLineFontMetrics(const std::vector<Drawing::FontMetrics>& fontMetrics,
+    OH_Drawing_Font_Metrics* drawingFontMetrics)
 {
     for (size_t further = 0; further < fontMetrics.size(); further++) {
         drawingFontMetrics[further].flags = fontMetrics[further].fFlags;

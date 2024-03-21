@@ -115,11 +115,6 @@ public:
     {
         (void)config;
     };
-    virtual GSError GetPlanesInfo(void **planesInfo)
-    {
-        (void)planesInfo;
-        return GSERROR_OK;
-    };
     virtual void SetConsumerAttachBufferFlag(bool value)
     {
         (void)value;
@@ -127,6 +122,11 @@ public:
     virtual bool GetConsumerAttachBufferFlag()
     {
         return false;
+    };
+    virtual GSError GetPlanesInfo(void **planesInfo)
+    {
+        (void)planesInfo;
+        return GSERROR_OK;
     };
 
 protected:

@@ -1105,7 +1105,6 @@ static void ConvertFontMetrics(const Drawing::FontMetrics& fontMetrics, OH_Drawi
 
 static void ConvertLineFontMetrics(const std::vector<Drawing::FontMetrics>& fontMetrics, OH_Drawing_Font_Metrics* drawingFontMetrics)
 {
-    LOGE("StartLineFont | into ConvertLineFontMetrics  fontMetrics.size=%zu",fontMetrics.size());
     for (size_t further = 0; further < fontMetrics.size(); further++) {
         drawingFontMetrics[further].flags = fontMetrics[further].fFlags;
         drawingFontMetrics[further].top = fontMetrics[further].fTop;
@@ -1124,7 +1123,6 @@ static void ConvertLineFontMetrics(const std::vector<Drawing::FontMetrics>& font
         drawingFontMetrics[further].strikeoutThickness = fontMetrics[further].fStrikeoutThickness;
         drawingFontMetrics[further].strikeoutPosition = fontMetrics[further].fStrikeoutPosition;
     }
-    LOGE("StartLineFont | Leave ConvertLineFontMetrics ");
 }
 
 static void ConvertLineMetrics(const LineMetrics &lineMetrics, OH_Drawing_LineMetrics& drawingLineMetrics)

@@ -511,9 +511,10 @@ ohos_shared_library("librender_service_base") {
   ]
 
   external_deps = [ "hilog:libhilog" ]
-
-  public_external_deps = [ "graphic_surface:surface" ]
-
+  
+  if (rosen_is_ohos) {
+    public_external_deps = [ "graphic_surface:surface" ]
+  }
   cflags_cc = [
     "-Wno-implicit-function-declaration"
   ]

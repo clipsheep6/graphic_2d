@@ -218,7 +218,7 @@ int main()
     SkiaFramework sf;
     sf.SetWindowWidth(720);     // 720 means the window width
     sf.SetWindowHeight(1280);   // 1280 means the window width
-    sf.SetWindowScale(720.0 / 900.0);   // 720 / 900 means tht window's scale
+    sf.SetWindowScale(720.0 / 900.0);   // 720.0 / 900.0 means tht window's scale
     sf.SetDrawFunc(OnDraw);
     sf.Run();
     return 0;

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ROSEN_TEXT_UI_TYPOGRAPHY_H_
-#define ROSEN_TEXT_UI_TYPOGRAPHY_H_
+#ifndef ROSEN_TEXT_UI_TYPOGRAPHY_H
+#define ROSEN_TEXT_UI_TYPOGRAPHY_H
 
 #include <vector>
 #include "rosen_text/properties/typography_base.h"
@@ -62,4 +62,4 @@ private:
     std::unique_ptr<TypographyBase> typography_;
 };
 } // namespace rosen
-#endif // ROSEN_TEXT_UI_TYPOGRAPHY_H_
+#endif // ROSEN_TEXT_UI_TYPOGRAPHY_H

@@ -43,7 +43,7 @@ void DumpCharGroup(int32_t index, const CharGroup &cg, double glyphEm,
     // 0xffffff is the default char when the cg is null or invalid
     auto ch = (cg.chars.size() > 0) ? cg.chars[0] : 0xffffff;
     // the follow numbers is to align log
-    // 2 & 4 means output width，0 means fill with 0
+    // 2 & 4 & 6 means output width，0 means fill with 0
     LOGEX_FUNC_LINE_DEBUG() << std::setw(2) << std::setfill('0') << index <<
         std::hex << std::uppercase <<
         ": " << std::right << std::setw(4) << std::setfill(' ') << "\033[40m" << "'" <<

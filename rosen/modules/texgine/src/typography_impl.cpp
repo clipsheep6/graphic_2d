@@ -394,11 +394,13 @@ void TypographyImpl::DoLayout()
     bool needMerge = false;
     int size = static_cast<int>(lineMetrics_.size());
     if (size > 1) {
+        // 2 means second to last lineMetrics subscripts
         needMerge = !lineMetrics_[size - 2].lineSpans.back().IsHardBreak() &&
             lineMetrics_[size - 1].lineSpans.front().IsHardBreak();
     }
 
     if (needMerge) {
+        // 2 means second to last lineMetrics subscripts
         lineMetrics_[size - 2].lineSpans.push_back(lineMetrics_[size - 1].lineSpans.front());
         lineMetrics_[size - 1].lineSpans.erase(lineMetrics_[size - 1].lineSpans.begin());
     }

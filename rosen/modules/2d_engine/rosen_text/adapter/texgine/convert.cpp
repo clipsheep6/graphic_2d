@@ -182,6 +182,8 @@ Affinity Convert(const TextEngine::Affinity &affinity)
             return Affinity::PREV;
         case TextEngine::Affinity::NEXT:
             return Affinity::NEXT;
+        default:
+            return Affinity::PREV;
     }
     return Affinity::PREV;
 }
@@ -193,6 +195,8 @@ TextDirection Convert(const TextEngine::TextDirection &direction)
             return TextDirection::LTR;
         case TextEngine::TextDirection::RTL:
             return TextDirection::RTL;
+        default:
+            return TextDirection::LTR;
     }
     return TextDirection::LTR;
 }
@@ -212,6 +216,8 @@ TextEngine::TextRectHeightStyle Convert(const TextRectHeightStyle &style)
             return TextEngine::TextRectHeightStyle::COVER_BOTTOM;
         case TextRectHeightStyle::FOLLOW_BY_STRUT:
             return TextEngine::TextRectHeightStyle::FOLLOW_BY_LINE_STYLE;
+        default:
+            return TextEngine::TextRectHeightStyle::TIGHT;
     }
     return TextEngine::TextRectHeightStyle::TIGHT;
 }
@@ -223,6 +229,8 @@ TextEngine::TextRectWidthStyle Convert(const TextRectWidthStyle &style)
             return TextEngine::TextRectWidthStyle::TIGHT;
         case TextRectWidthStyle::MAX:
             return TextEngine::TextRectWidthStyle::MAX_WIDTH;
+        default:
+            return TextEngine::TextRectWidthStyle::TIGHT;
     }
     return TextEngine::TextRectWidthStyle::TIGHT;
 }
@@ -236,6 +244,8 @@ TextEngine::WordBreakType Convert(const WordBreakType &style)
             return TextEngine::WordBreakType::BREAK_ALL;
         case WordBreakType::BREAK_WORD:
             return TextEngine::WordBreakType::BREAK_WORD;
+        default:
+            return TextEngine::WordBreakType::NORMAL;
     }
     return TextEngine::WordBreakType::NORMAL;
 }
@@ -249,6 +259,8 @@ TextEngine::BreakStrategy Convert(const BreakStrategy &style)
             return TextEngine::BreakStrategy::HIGH_QUALITY;
         case BreakStrategy::BALANCED:
             return TextEngine::BreakStrategy::BALANCED;
+        default:
+            return TextEngine::BreakStrategy::GREEDY;
     }
     return TextEngine::BreakStrategy::GREEDY;
 }
@@ -274,6 +286,8 @@ TextEngine::FontWeight Convert(const FontWeight &style)
             return TextEngine::FontWeight::W800;
         case FontWeight::W900:
             return TextEngine::FontWeight::W900;
+        default:
+            return TextEngine::FontWeight::W400;
     }
     return TextEngine::FontWeight::W400;
 }
@@ -285,6 +299,8 @@ TextEngine::FontStyle Convert(const FontStyle &style)
             return TextEngine::FontStyle::NORMAL;
         case FontStyle::ITALIC:
             return TextEngine::FontStyle::ITALIC;
+        default:
+            return TextEngine::FontStyle::NORMAL;
     }
     return TextEngine::FontStyle::NORMAL;
 }
@@ -304,6 +320,8 @@ TextEngine::TextAlign Convert(const TextAlign &align)
             return TextEngine::TextAlign::START;
         case TextAlign::END:
             return TextEngine::TextAlign::END;
+        default:
+            return TextEngine::TextAlign::START;
     }
     return TextEngine::TextAlign::START;
 }
@@ -315,6 +333,8 @@ TextEngine::TextBaseline Convert(const TextBaseline &baseline)
             return TextEngine::TextBaseline::ALPHABETIC;
         case TextBaseline::IDEOGRAPHIC:
             return TextEngine::TextBaseline::IDEOGRAPHIC;
+        default:
+            return TextEngine::TextBaseline::ALPHABETIC;
     }
     return TextEngine::TextBaseline::ALPHABETIC;
 }
@@ -326,6 +346,8 @@ TextEngine::TextDirection Convert(const TextDirection &direction)
             return TextEngine::TextDirection::LTR;
         case TextDirection::RTL:
             return TextEngine::TextDirection::RTL;
+        default:
+            return TextEngine::TextDirection::LTR;
     }
     return TextEngine::TextDirection::LTR;
 }
@@ -343,6 +365,8 @@ TextEngine::TextDecorationStyle Convert(const TextDecorationStyle &style)
             return TextEngine::TextDecorationStyle::DASHED;
         case TextDecorationStyle::WAVY:
             return TextEngine::TextDecorationStyle::WAVY;
+        default:
+            return TextEngine::TextDecorationStyle::SOLID;
     }
     return TextEngine::TextDecorationStyle::SOLID;
 }
@@ -377,6 +401,8 @@ TextEngine::AnySpanAlignment Convert(const PlaceholderVerticalAlignment &alignme
             return TextEngine::AnySpanAlignment::BOTTOM_OF_ROW_BOX;
         case PlaceholderVerticalAlignment::CENTER_OF_ROW_BOX:
             return TextEngine::AnySpanAlignment::CENTER_OF_ROW_BOX;
+        default:
+            return TextEngine::AnySpanAlignment::OFFSET_AT_BASELINE;
     }
     return TextEngine::AnySpanAlignment::OFFSET_AT_BASELINE;
 }

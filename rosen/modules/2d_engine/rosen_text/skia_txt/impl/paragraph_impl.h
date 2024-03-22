@@ -101,6 +101,9 @@ public:
 
     Drawing::FontMetrics GetFontMetricsResult(const SPText::TextStyle& textStyle) override;
 
+    std::vector<OHOS::Rosen::Drawing::FontMetrics> GetLineFontMetrics(const size_t lineNumber,
+        size_t& charNumber, bool& success) override;
+
 private:
     TextStyle SkStyleToTextStyle(const skia::textlayout::TextStyle& skStyle);
 

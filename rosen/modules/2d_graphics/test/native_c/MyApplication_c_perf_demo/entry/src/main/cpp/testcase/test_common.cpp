@@ -67,12 +67,3 @@ uint32_t TestRend::nextBits(unsigned bitCount)
 {
     return this->nextU() >> (32 - bitCount);
 }
-uint32_t TestRend::nextRangeU(uint32_t min, uint32_t max)
-{
-    uint32_t range = max - min + 1;
-    if (0 == range) {
-        return this->nextU();
-    } else {
-        return min + this->nextU() % range;
-    }
-}

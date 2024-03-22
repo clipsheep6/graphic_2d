@@ -651,6 +651,8 @@ bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::Surf
 
 Drawing::BitmapFormat GenerateDrawingBitmapFormat(const sptr<OHOS::SurfaceBuffer>& buffer)
 {
+    RS_LOGE("zhangchao %{public}d %{public}d %{public}d %{public}d", buffer->GetFormat(),
+        buffer->GetWidth(), buffer->GetHeight(), buffer->GetStride());
     Drawing::ColorType colorType = (buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
         Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
     Drawing::AlphaType alphaType = Drawing::AlphaType::ALPHATYPE_PREMUL;

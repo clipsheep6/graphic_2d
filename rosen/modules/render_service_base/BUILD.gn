@@ -17,8 +17,15 @@ import(
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 config("export_config") {
-  cflags_cc = [ "-std=c++17" ]
   include_dirs = [ "include" ]
+  cflags_cc = [
+    "-std=c++17",
+    "-Wno-implicit-function-declaration",
+  ]
+
+  cflags_c = [
+    "-Wno-implicit-function-declaration"
+  ]
 
   defines = rs_common_define
 }
@@ -508,8 +515,19 @@ ohos_shared_library("librender_service_base") {
     ":render_service_base_src",
     "src/platform:platform",
   ]
-  external_deps = [ "hilog:libhilog" ]
 
+  external_deps = [ "hilog:libhilog" ]
+  
+  if (rosen_is_ohos) {
+    public_external_deps = [ "graphic_surface:surface" ]
+  }
+  cflags_cc = [
+    "-Wno-implicit-function-declaration"
+  ]
+
+  cflags_c = [
+    "-Wno-implicit-function-declaration"
+  ]
   if (defined(use_new_render_context) && use_new_render_context) {
     public_deps += [ "src/render_backend:librender_backend" ]
   }

@@ -40,7 +40,6 @@ ohos_source_set("darwin") {
 
   include_dirs = [
     "$rosen_root/modules/render_service_base/include",
-    "$graphic_2d_root/interfaces/inner_api/surface",
   ]
 
   defines += [ "MODULE_RSB" ]
@@ -70,6 +69,7 @@ ohos_source_set("darwin") {
   }
 
   external_deps = [ "hilog:libhilog" ]
+  external_deps += ["graphic_surface:surface"]
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }

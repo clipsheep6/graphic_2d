@@ -130,7 +130,9 @@ void RSTransactionProxy::FlushImplicitTransaction(uint64_t timestamp, const std:
         implicitCommonTransactionData_->abilityName_ = abilityName;
         renderThreadClient_->CommitTransaction(implicitCommonTransactionData_);
         implicitCommonTransactionData_ = std::make_unique<RSTransactionData>();
-    }
+    } else {
+		ROSEN_LOGE("lihao endFlag = 1");
+	}
     if (renderServiceClient_ != nullptr && !implicitRemoteTransactionData_->IsEmpty()) {
         implicitRemoteTransactionData_->timestamp_ = timestamp_;
         renderServiceClient_->CommitTransaction(implicitRemoteTransactionData_);

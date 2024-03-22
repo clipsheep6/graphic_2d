@@ -24,7 +24,8 @@
 #include "buffer_extra_data_impl.h"
 #include "native_buffer.h"
 #include "v1_1/buffer_handle_meta_key_type.h"
-#include "v1_1/include/idisplay_buffer.h"
+#include "v1_2/display_buffer_type.h"
+#include "v1_2/include/idisplay_buffer.h"
 
 namespace OHOS {
 namespace {
@@ -50,8 +51,7 @@ inline GSError GenerateError(GSError err, int32_t code)
     return GenerateError(err, static_cast<GraphicDispErrCode>(code));
 }
 
-using namespace OHOS::HDI::Display::Buffer::V1_1;
-using IDisplayBufferSptr = std::shared_ptr<IDisplayBuffer>;
+using IDisplayBufferSptr = std::shared_ptr<OHOS::HDI::Display::Buffer::V1_2::IDisplayBuffer>;
 static IDisplayBufferSptr g_displayBuffer;
 static std::mutex g_DisplayBufferMutex;
 class DisplayBufferDiedRecipient : public OHOS::IRemoteObject::DeathRecipient {
@@ -72,7 +72,7 @@ IDisplayBufferSptr GetDisplayBuffer()
         return g_displayBuffer;
     }
 
-    g_displayBuffer.reset(IDisplayBuffer::Get());
+    g_displayBuffer.reset(OHOS::HDI::Display::Buffer::V1_2::IDisplayBuffer::Get());
     if (g_displayBuffer == nullptr) {
         BLOGE("IDisplayBuffer::Get return nullptr.");
         return nullptr;

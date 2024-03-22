@@ -1788,3 +1788,43 @@ void OH_Drawing_SetTypographyTextEllipsis(OH_Drawing_TypographyStyle* style, con
     ConvertToOriginalText<TypographyStyle>(style)->ellipsis = u16Ellipsis;
 #endif
 }
+
+void OH_Drawing_TypographyTextSetHeightMode(OH_Drawing_TypographyStyle* style, OH_Drawing_TextHeightBehavior heightMode)
+{
+    TypographyStyle* convertStyle = ConvertToOriginalText<TypographyStyle>(style);
+    if (style == nullptr || convertStyle == nullptr) {
+        return;
+    }
+    TextHeightBehavior rosenHeightBehavior;
+    switch (heightMode) {
+        case TEXT_HEIGHT_ALL: {
+            rosenHeightBehavior = TextHeightBehavior::ALL;
+            break;
+        }
+        case TEXT_HEIGHT_DISABLE_FIRST_ASCENT: {
+            rosenHeightBehavior = TextHeightBehavior::DISABLE_FIRST_ASCENT;
+            break;
+        }
+        case TEXT_HEIGHT_DISABLE_LAST_ASCENT: {
+            rosenHeightBehavior = TextHeightBehavior::DISABLE_LAST_ASCENT;
+            break;
+        }
+        case TEXT_HEIGHT_DISABLE_ALL: {
+            rosenHeightBehavior = TextHeightBehavior::DISABLE_ALL;
+            break;
+        }
+        default: {
+            rosenHeightBehavior = TextHeightBehavior::ALL;
+        }
+    }
+    convertStyle->textHeightBehavior = rosenHeightBehavior;
+}
+
+OH_Drawing_TextHeightBehavior OH_Drawing_TypographyTextGetHeightMode(OH_Drawing_TypographyStyle* style)
+{
+    TypographyStyle* convertStyle = ConvertToOriginalText<TypographyStyle>(style);
+    if (style == nullptr || convertStyle == nullptr) {
+        return TEXT_HEIGHT_ALL;
+    }
+    return static_cast<OH_Drawing_TextHeightBehavior>(ConvertToOriginalText<TypographyStyle>(style)->textHeightBehavior);
+}

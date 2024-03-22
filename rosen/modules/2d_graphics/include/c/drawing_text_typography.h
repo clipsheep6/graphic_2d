@@ -354,6 +354,23 @@ typedef enum {
 } OH_Drawing_RectWidthStyle;
 
 /**
+ * @brief Enumerates of heightmode of text.
+ *
+ * @since 12
+ * @version 1.0
+ */
+enum OH_Drawing_TextHeightBehavior {
+    /** both ascend of first row and last row style */
+    TEXT_HEIGHT_ALL = 0x0,
+    /** forbidding ascend of first row style*/
+    TEXT_HEIGHT_DISABLE_FIRST_ASCENT = 0x1,
+     /** forbidding ascend of last row style */
+    TEXT_HEIGHT_DISABLE_LAST_ASCENT = 0x2,
+      /** neither ascend of first row nor last row style */
+    TEXT_HEIGHT_DISABLE_ALL = 0x1 | 0x2,
+};
+
+/**
  * @brief Creates an <b>OH_Drawing_TypographyStyle</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -1679,6 +1696,28 @@ bool  OH_Drawing_TypographyIsLineUnlimited(OH_Drawing_TypographyStyle*);
  * @version 1.0
  */
 bool  OH_Drawing_TypographyIsEllipsized(OH_Drawing_TypographyStyle*);
+
+/**
+ * @brief Set mode of applying the leading over and under text.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @param heightMode Indicates the mode to set.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_TypographyTextSetHeightMode(OH_Drawing_TypographyStyle*, OH_Drawing_TextHeightBehavior heightMode);
+
+/**
+ * @brief Get mode of applying the leading over and under text.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @return Returns the mode.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_TextHeightBehavior OH_Drawing_TypographyTextGetHeightMode(OH_Drawing_TypographyStyle*);
 
 #ifdef __cplusplus
 }

@@ -290,5 +290,7 @@
     { "name": "OH_Drawing_TypographyGetTextStyle" },
     { "name": "OH_Drawing_TypographyGetEffectiveAlignment" },
     { "name": "OH_Drawing_TypographyIsLineUnlimited" },
-    { "name": "OH_Drawing_TypographyIsEllipsized" }
+    { "name": "OH_Drawing_TypographyIsEllipsized" },
+    { "name": "OH_Drawing_TypographyTextSetHeightMode" },
+    { "name": "OH_Drawing_TypographyTextGetHeightMode" }
 ]

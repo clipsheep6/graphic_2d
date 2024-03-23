@@ -56,6 +56,18 @@ enum class Affinity {
     NEXT,
 };
 
+enum class TextStyleType {
+    None,
+    AllAttributes,
+    Font,
+    Foreground,
+    Background,
+    Shadow,
+    Decorations,
+    LetterSpacing,
+    WordSpacing
+};
+
 struct IndexAndAffinity {
     size_t index;
     Affinity affinity;
@@ -144,6 +156,12 @@ public:
     virtual std::vector<LineMetrics> GetLineMetrics() = 0;
     virtual bool GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics) = 0;
     virtual Drawing::FontMetrics GetFontMetrics(const OHOS::Rosen::TextStyle& textStyle) = 0;
+    virtual bool IsTextStyleEquals(const OHOS::Rosen::TextStyle& textStyle1,
+        const OHOS::Rosen::TextStyle& textStyle2) = 0;
+    virtual bool IsTextStyleEqualsByFonts(const OHOS::Rosen::TextStyle& textStyle1,
+        const OHOS::Rosen::TextStyle& textStyle2) = 0;
+    virtual bool IsMatchOneAttribute(TextStyleType styleType, const OHOS::Rosen::TextStyle& textStyle1,
+        const OHOS::Rosen::TextStyle& textStyle2) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

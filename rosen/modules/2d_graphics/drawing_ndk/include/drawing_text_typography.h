@@ -367,6 +367,50 @@ typedef struct {
 } OH_Drawing_FontFeature;
 
 /**
+ * @brief Enumerates of heightmode of text.
+ *
+ * @since 12
+ * @version 1.0
+ */
+enum OH_Drawing_TextHeightBehavior {
+    /** both ascend of first row and last row style */
+    TEXT_HEIGHT_ALL = 0x0,
+    /** forbidding ascend of first row style*/
+    TEXT_HEIGHT_DISABLE_FIRST_ASCENT = 0x1,
+     /** forbidding ascend of last row style */
+    TEXT_HEIGHT_DISABLE_LAST_ASCENT = 0x2,
+      /** neither ascend of first row nor last row style */
+    TEXT_HEIGHT_DISABLE_ALL = 0x1 | 0x2,
+};
+
+/**
+ * @brief Enumerates text style type.
+ *
+ * @since 12
+ * @version 1.0
+ */
+typedef enum {
+    /** None style */
+    None,
+    /** All attributes style */
+    AllAttributes,
+    /** Font style */
+    Font,
+    /** Foreground style */
+    Foreground,
+    /** Background style */
+    Background,
+    /** Shadow style */
+    Shadow,
+    /** Decorations style */
+    Decorations,
+    /** Letter spacing style */
+    LetterSpacing,
+    /** Word spacing style */
+    WordSpacing
+}OH_Drawing_TextStyleType;
+
+/**
  * @brief Creates an <b>OH_Drawing_TypographyStyle</b> object.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -1781,7 +1825,7 @@ void OH_Drawing_TextStyleClearFontFeature(OH_Drawing_TextStyle*);
  * @since 12
  * @version 1.0
  */
-void OH_Drawing_TextStyleSetBaseLineShift(OH_Drawing_TextStyle*, double lineShift);
+void OH_Drawing_TextStyleSetBaselineShift(OH_Drawing_TextStyle*, double lineShift);
 
 /**
  * @brief Get baseline shift of text.
@@ -1792,7 +1836,7 @@ void OH_Drawing_TextStyleSetBaseLineShift(OH_Drawing_TextStyle*, double lineShif
  * @since 12
  * @version 1.0
  */
-double OH_Drawing_TextStyleGetBaseLineShift(OH_Drawing_TextStyle*);
+double OH_Drawing_TextStyleGetBaselineShift(OH_Drawing_TextStyle*);
 
 /**
  * @brief Gets the text color.
@@ -1847,7 +1891,7 @@ OH_Drawing_FontStyle OH_Drawing_TextStyleGetFontStyle(OH_Drawing_TextStyle*);
  * @since 12
  * @version 1.0
  */
-OH_Drawing_TextBaseline OH_Drawing_TextStyleGetBaseLine(OH_Drawing_TextStyle*);
+OH_Drawing_TextBaseline OH_Drawing_TextStyleGetBaseline(OH_Drawing_TextStyle*);
 
 /**
  * @brief Gets a list of font families.
@@ -2160,6 +2204,92 @@ void OH_Drawing_DestroyEllipsis(char* ellipsis);
  * @version 1.0
  */
 bool OH_Drawing_TypographyStyleEquals(OH_Drawing_TypographyStyle* from, OH_Drawing_TypographyStyle* to);
+
+/**
+ * @brief Gets whether two TextStyle objects are equal.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Typography Indicates the pointer to an <b>OH_Drawing_Typography</b> object.
+ * @param style1 Indicates source of comparison object.
+ * @param style2 Indicates comparison object.
+ * @return Compare result.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_TextStyleIsEquals(OH_Drawing_Typography* typography, const OH_Drawing_TextStyle* style1,
+    const OH_Drawing_TextStyle* style2);
+
+/**
+ * @brief Gets whether the font properties of two TextStyle objects are equal.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Typography Indicates the pointer to an <b>OH_Drawing_Typography</b> object.
+ * @param style1 Indicates source of comparison object.
+ * @param style2 Indicates comparison object.
+ * @return Compare result.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_TextStyleIsEqualsByFonts(OH_Drawing_Typography* typography, const OH_Drawing_TextStyle* style1,
+    const OH_Drawing_TextStyle* style2);
+
+/**
+ * @brief Gets whether two TextStyle objects match attributes
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Typography Indicates the pointer to an <b>OH_Drawing_Typography</b> object.
+ * @param textStyleType Indicates enumerates of text style type.
+ * @param style1 Indicates source of comparison object.
+ * @param style2 Indicates comparison object.
+ * @return Match attributes result.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_TextStyleIsMatchOneAttribute(OH_Drawing_Typography* typography, OH_Drawing_TextStyleType textStyleType,
+    const OH_Drawing_TextStyle* style1, const OH_Drawing_TextStyle* style2);
+
+/**
+ * @brief Set placeholder of TextStyle.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TextStyle Indicates the pointer to an <b>OH_Drawing_TextStyle</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_TextStyleSetPlaceholder(OH_Drawing_TextStyle* style);
+
+/**
+ * @brief Gets placeholder.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TextStyle Indicates the pointer to an <b>OH_Drawing_TextStyle</b> object.
+ * @return Returns placeholder.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_TextStyleIsPlaceholder(OH_Drawing_TextStyle* style);
+
+/**
+ * @brief Gets text alignment mode.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @return Returns text alignment mode.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_TextAlign OH_Drawing_TypographyStyleGetEffectiveAlignment(OH_Drawing_TypographyStyle* style);
+
+/**
+ * @brief Gets whether hinting is enabled.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @return True indicates that the hinting takes effect, false indicates that the hinting does not take effect.
+ * @since 12
+ * @version 1.0
+ */
+bool OH_Drawing_TypographyStyleIsHintingEnabled(OH_Drawing_TypographyStyle* style);
 
 #ifdef __cplusplus
 }

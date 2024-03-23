@@ -232,6 +232,10 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
         skStyle.addShadow(MakeTextShadow(txtShadow));
     }
 
+    if (txt.isPlaceholder == true) {
+        skStyle.setPlaceholder();
+    }
+
     return skStyle;
 }
 

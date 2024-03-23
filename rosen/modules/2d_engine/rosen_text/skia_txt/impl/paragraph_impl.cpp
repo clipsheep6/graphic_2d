@@ -315,6 +315,33 @@ Drawing::FontMetrics ParagraphImpl::GetFontMetricsResult(const SPText::TextStyle
     skTextStyle.getFontMetrics(&fontMetrics);
     return fontMetrics;
 }
+
+bool ParagraphImpl::IsSkTextStyleEquals(const OHOS::Rosen::SPText::TextStyle& textStyle1,
+    const OHOS::Rosen::SPText::TextStyle& textStyle2)
+{
+    auto skTextStyle1 = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle1);
+    auto skTextStyle2 = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle2);
+
+    return skTextStyle1.equals(skTextStyle2);
+}
+
+bool ParagraphImpl::IsSkTextStyleEqualsByFonts(const OHOS::Rosen::SPText::TextStyle& textStyle1,
+    const OHOS::Rosen::SPText::TextStyle& textStyle2)
+{
+    auto skTextStyle1 = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle1);
+    auto skTextStyle2 = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle2);
+
+    return skTextStyle1.equalsByFonts(skTextStyle2);
+}
+
+bool ParagraphImpl::IsSkTextStyleMatchOneAttribute(StyleType styleType, const OHOS::Rosen::SPText::TextStyle& textStyle1,
+    const OHOS::Rosen::SPText::TextStyle& textStyle2)
+{
+    auto skTextStyle1 = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle1);
+    auto skTextStyle2 = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle2);
+    auto skStyleType = static_cast<skt::StyleType>(styleType);
+    return skTextStyle1.matchOneAttribute(skStyleType, skTextStyle2);
+}
 } // namespace SPText
 } // namespace Rosen
 } // namespace OHOS

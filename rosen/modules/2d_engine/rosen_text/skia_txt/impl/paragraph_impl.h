@@ -107,6 +107,15 @@ public:
 
     Drawing::FontMetrics GetFontMetricsResult(const SPText::TextStyle& textStyle) override;
 
+    bool IsSkTextStyleEquals(const OHOS::Rosen::SPText::TextStyle& textStyle1,
+        const OHOS::Rosen::SPText::TextStyle& textStyle2) override;
+
+    bool IsSkTextStyleEqualsByFonts(const OHOS::Rosen::SPText::TextStyle& textStyle1,
+        const OHOS::Rosen::SPText::TextStyle& textStyle2) override;
+
+    bool IsSkTextStyleMatchOneAttribute(StyleType styleType, const OHOS::Rosen::SPText::TextStyle& textStyle1,
+        const OHOS::Rosen::SPText::TextStyle& textStyle2) override;
+
 private:
     TextStyle SkStyleToTextStyle(const skia::textlayout::TextStyle& skStyle);
 

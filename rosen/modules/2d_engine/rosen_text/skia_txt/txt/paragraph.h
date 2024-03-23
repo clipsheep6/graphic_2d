@@ -57,6 +57,18 @@ enum class Affinity {
     DOWNSTREAM,
 };
 
+enum class StyleType {
+    None,
+    AllAttributes,
+    Font,
+    Foreground,
+    Background,
+    Shadow,
+    Decorations,
+    LetterSpacing,
+    WordSpacing
+};
+
 struct PositionWithAffinity {
     PositionWithAffinity(size_t p, Affinity a) : position(p), affinity(a) {}
 
@@ -196,6 +208,13 @@ public:
 
     virtual OHOS::Rosen::Drawing::FontMetrics MeasureText() = 0;
     virtual OHOS::Rosen::Drawing::FontMetrics GetFontMetricsResult(const OHOS::Rosen::SPText::TextStyle& textStyle) = 0;
+
+    virtual bool IsSkTextStyleEquals(const OHOS::Rosen::SPText::TextStyle& textStyle1,
+        const OHOS::Rosen::SPText::TextStyle& textStyle2) = 0;
+    virtual bool IsSkTextStyleEqualsByFonts(const OHOS::Rosen::SPText::TextStyle& textStyle1,
+        const OHOS::Rosen::SPText::TextStyle& textStyle2) = 0;
+    virtual bool IsSkTextStyleMatchOneAttribute(StyleType styleType,
+        const OHOS::Rosen::SPText::TextStyle& textStyle1, const OHOS::Rosen::SPText::TextStyle& textStyle2) =0;
 };
 } // namespace SPText
 } // namespace Rosen

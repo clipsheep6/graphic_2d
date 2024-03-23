@@ -29,7 +29,6 @@
 
 namespace OHOS {
 namespace Rosen {
-
 using LayerPtr = std::shared_ptr<HdiLayer>;
 static constexpr uint32_t LAYER_COMPOSITION_CAPACITY_INVALID = 0;
 
@@ -95,7 +94,9 @@ public:
 private:
     HdiDevice *device_ = nullptr;
     sptr<VSyncSampler> sampler_ = nullptr;
-    sptr<SyncFence> lastPresentFence_ = SyncFence::INVALID_FENCE;
+    std::vector<sptr<SyncFence>> historicalPresentfences_;
+    sptr<SyncFence> thirdFrameAheadPresentFence_ = SyncFence::INVALID_FENCE;
+    int32_t presentFenceIndex_ = 0;
     sptr<SurfaceBuffer> currFrameBuffer_ = nullptr;
     sptr<SurfaceBuffer> lastFrameBuffer_ = nullptr;
 

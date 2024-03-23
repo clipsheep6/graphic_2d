@@ -33,7 +33,7 @@ using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
 
 namespace OHOS {
 namespace Rosen {
-
+static constexpr uint32_t NUMBER_OF_HISTORICAL_FRAMES = 4;
 std::shared_ptr<HdiOutput> HdiOutput::CreateHdiOutput(uint32_t screenId)
 {
     return std::make_shared<HdiOutput>(screenId);
@@ -488,7 +488,7 @@ int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
     if (sampler_ == nullptr) {
         sampler_ = CreateVSyncSampler();
     }
-    int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
+    int64_t timestamp = thirdFrameAheadPresentFence_->SyncFileReadTimestamp();
     bool startSample = false;
     if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
         startSample = sampler_->AddPresentFenceTime(timestamp);
@@ -514,7 +514,14 @@ int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
     if (startSample) {
         ret = StartVSyncSampler();
     }
-    lastPresentFence_ = fbFence;
+
+    if (historicalPresentfences_.size() == NUMBER_OF_HISTORICAL_FRAMES) {
+        thirdFrameAheadPresentFence_ = historicalPresentfences_[presentFenceIndex_];
+        historicalPresentfences_[presentFenceIndex_] = fbFence;
+        presentFenceIndex_ = (presentFenceIndex_ + 1) % NUMBER_OF_HISTORICAL_FRAMES;
+    } else {
+        historicalPresentfences_.push_back(fbFence);
+    }
     return ret;
 }
 

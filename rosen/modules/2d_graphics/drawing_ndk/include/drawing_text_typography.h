@@ -1984,6 +1984,28 @@ bool OH_Drawing_TextStyleGetHalfLeading(OH_Drawing_TextStyle*);
 const char* OH_Drawing_TextStyleGetLocale(OH_Drawing_TextStyle*);
 
 /**
+ * @brief Set mode of applying the leading over and under text.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @param heightMode Indicates the mode to set.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_TypographyTextSetHeightMode(OH_Drawing_TypographyStyle*, OH_Drawing_TextHeightBehavior heightMode);
+
+/**
+ * @brief Get mode of applying the leading over and under text.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @return Returns the mode.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_TextHeightBehavior OH_Drawing_TypographyTextGetHeightMode(OH_Drawing_TypographyStyle*);
+
+/**
  * @brief Mark the Typography as dirty, and initially state the Typography.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing

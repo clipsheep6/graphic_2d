@@ -1301,6 +1301,9 @@ void OH_Drawing_DestroySystemFontList(char** fontList, size_t num)
         return;
     }
     for (size_t i = 0; i < num; ++i) {
+        if (fontList[i] == nullptr) {
+            continue;
+        }
         delete[] fontList[i];
         fontList[i] = nullptr;
     }
@@ -2097,6 +2100,47 @@ const char* OH_Drawing_TextStyleGetLocale(OH_Drawing_TextStyle* style)
         return nullptr;
     }
     return textStyle->locale.c_str();
+}
+
+void OH_Drawing_TypographyTextSetHeightMode(OH_Drawing_TypographyStyle* style, OH_Drawing_TextHeightBehavior heightMode)
+{
+    TypographyStyle* convertStyle = ConvertToOriginalText<TypographyStyle>(style);
+    if (style == nullptr || convertStyle == nullptr) {
+        return;
+    }
+    TextHeightBehavior rosenHeightBehavior;
+    switch (heightMode) {
+        case TEXT_HEIGHT_ALL: {
+            rosenHeightBehavior = TextHeightBehavior::ALL;
+            break;
+        }
+        case TEXT_HEIGHT_DISABLE_FIRST_ASCENT: {
+            rosenHeightBehavior = TextHeightBehavior::DISABLE_FIRST_ASCENT;
+            break;
+        }
+        case TEXT_HEIGHT_DISABLE_LAST_ASCENT: {
+            rosenHeightBehavior = TextHeightBehavior::DISABLE_LAST_ASCENT;
+            break;
+        }
+        case TEXT_HEIGHT_DISABLE_ALL: {
+            rosenHeightBehavior = TextHeightBehavior::DISABLE_ALL;
+            break;
+        }
+        default: {
+            rosenHeightBehavior = TextHeightBehavior::ALL;
+        }
+    }
+    convertStyle->textHeightBehavior = rosenHeightBehavior;
+}
+
+OH_Drawing_TextHeightBehavior OH_Drawing_TypographyTextGetHeightMode(OH_Drawing_TypographyStyle* style)
+{
+    TypographyStyle* convertStyle = ConvertToOriginalText<TypographyStyle>(style);
+    if (style == nullptr || convertStyle == nullptr) {
+        return TEXT_HEIGHT_ALL;
+    }
+    TextHeightBehavior innerHeightBehavior = ConvertToOriginalText<TypographyStyle>(style)->textHeightBehavior;
+    return static_cast<OH_Drawing_TextHeightBehavior>(innerHeightBehavior);
 }
 
 void OH_Drawing_TypographyMarkDirty(OH_Drawing_Typography* typography)

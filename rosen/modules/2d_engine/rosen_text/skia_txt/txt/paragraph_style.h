@@ -65,6 +65,8 @@ public:
     bool textOverflower = false;
     TextStyle spTextStyle;
     bool customSpTextStyle = false;
+    TextHeightBehavior textHeightBehavior = TextHeightBehavior::ALL;
+    bool hintingIsOn = false;
 };
 } // namespace SPText
 } // namespace Rosen

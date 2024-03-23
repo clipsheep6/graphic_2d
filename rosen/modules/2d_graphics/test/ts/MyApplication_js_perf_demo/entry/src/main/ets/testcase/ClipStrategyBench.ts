@@ -29,7 +29,7 @@ export class ClipStrategyBench extends TestBase {
     pen.setAntiAlias(true)
     pen.setBlendMode(drawing.BlendMode.SRC_IN)
     canvas.attachPen(pen);
-    canvas.attachBrush(pen)
+    canvas.attachBrush(brush)
     canvas.drawCircle(150, 150, 150)
     canvas.detachPen()
     canvas.detachPen()

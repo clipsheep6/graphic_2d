@@ -26,7 +26,7 @@ export class PathCreateBench extends TestBase {
     }
     for (let i = 0; i < this.kNumVerbs; i++) {
       //   fVerbs[i] = static_cast<SkPath::Verb>(fRandom.nextULessThan(SkPath::kDone_Verb));
-      this.fVerbs.push(this.rand.nextULessThan(6))
+      this.fVerbs.push(this.rand.nextULessThan(5))
     }
     for (let i = 0; i < this.kNumPoints; i++) {
       this.fPoints.push({ x: this.rand.nextRangeU(minVerbs, maxVerbs + 1), y: this.rand.nextRangeU(minVerbs, maxVerbs + 1) })
@@ -48,7 +48,7 @@ export class PathCreateBench extends TestBase {
       console.log(TAG + ` before makePath v:${v} fCurrePoint: ${this.fCurrPoint}`)
       let verb: number = this.fVerbs[v]
       let point = this.fPoints[this.fCurrPoint++]
-      console.log(TAG + ` in makePath v:${v} verb: ${verb}`)
+      // console.log(TAG + ` in makePath v:${v} verb: ${verb}`)
       switch (verb) {
         case 0:
           path.moveTo(point.x, point.y)
@@ -74,7 +74,7 @@ export class PathCreateBench extends TestBase {
           path.close()
           break
         default:
-          console.log(TAG + ' Unexpected path verb')
+          // console.log(TAG + ' Unexpected path verb')
           break
       }
     }

@@ -46,7 +46,6 @@ export class CirclesBench extends TestBase {
       let fTop = this.rand.nextUScalar1() * 300
       let fRight = fLeft + 2 * radius
       let fBottom = fTop + 2 * radius
-      console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
       path.arcTo(fLeft, fTop, fRight, fBottom, 0, 180);
       path.arcTo(fLeft, fTop, fRight, fBottom, 180, 360);
       path.close()

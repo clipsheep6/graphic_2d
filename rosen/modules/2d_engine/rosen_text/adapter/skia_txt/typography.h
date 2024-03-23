@@ -66,6 +66,12 @@ public:
     std::vector<LineMetrics> GetLineMetrics() override;
     bool GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics) override;
     Drawing::FontMetrics GetFontMetrics(const OHOS::Rosen::TextStyle& textStyle) override;
+    bool IsTextStyleEquals(const OHOS::Rosen::TextStyle& textStyle1,
+        const OHOS::Rosen::TextStyle& textStyle2) override;
+    bool IsTextStyleEqualsByFonts(const OHOS::Rosen::TextStyle& textStyle1,
+        const OHOS::Rosen::TextStyle& textStyle2) override;
+    bool IsMatchOneAttribute(TextStyleType styleType, const OHOS::Rosen::TextStyle& textStyle1,
+        const OHOS::Rosen::TextStyle& textStyle2) override;
 private:
     std::unique_ptr<SPText::Paragraph> paragraph_ = nullptr;
 };

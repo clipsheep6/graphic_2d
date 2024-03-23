@@ -1975,7 +1975,7 @@ OH_Drawing_FontStyle OH_Drawing_TextStyleGetFontStyle(OH_Drawing_TextStyle* styl
     return static_cast<OH_Drawing_FontStyle>(textStyle->fontStyle);
 }
 
-OH_Drawing_TextBaseline OH_Drawing_TextStyleGetBaseLine(OH_Drawing_TextStyle* style)
+OH_Drawing_TextBaseline OH_Drawing_TextStyleGetBaseline(OH_Drawing_TextStyle* style)
 {
     if (style == nullptr) {
         return TEXT_BASELINE_ALPHABETIC;
@@ -2344,4 +2344,99 @@ bool OH_Drawing_TypographyStyleEquals(OH_Drawing_TypographyStyle* from, OH_Drawi
         return false;
     }
     return *ConvertToOriginalText<TypographyStyle>(from) == *ConvertToOriginalText<TypographyStyle>(to);
+}
+
+bool OH_Drawing_TextStyleIsEquals(OH_Drawing_Typography* typography, const OH_Drawing_TextStyle* style1,
+    const OH_Drawing_TextStyle* style2)
+{
+    if (typography == nullptr || style1 == nullptr || style2 == nullptr) {
+        return false;
+    }
+    auto firstStyle = ConvertToOriginalText<const OHOS::Rosen::TextStyle>(style1);
+    auto secondStyle = ConvertToOriginalText<const OHOS::Rosen::TextStyle>(style2);
+    auto typographyInner = ConvertToOriginalText<Typography>(typography);
+    if (firstStyle == nullptr || secondStyle == nullptr || typographyInner == nullptr) {
+        return false;
+    }
+    return typographyInner->IsTextStyleEquals(*firstStyle, *secondStyle);
+}
+
+bool OH_Drawing_TextStyleIsEqualsByFonts(OH_Drawing_Typography* typography, const OH_Drawing_TextStyle* style1,
+    const OH_Drawing_TextStyle* style2)
+{
+    if (typography == nullptr || style1 == nullptr || style2 == nullptr) {
+        return false;
+    }
+    const TextStyle* firstStyle = ConvertToOriginalText<const OHOS::Rosen::TextStyle>(style1);
+    const TextStyle* secondStyle = ConvertToOriginalText<const OHOS::Rosen::TextStyle>(style2);
+    auto typographyInner = ConvertToOriginalText<Typography>(typography);
+    if (firstStyle == nullptr || secondStyle == nullptr || typographyInner == nullptr) {
+        return false;
+    }
+    LOGE("yqf OH_Drawing_EqualsByFonts is ok");
+    return typographyInner->IsTextStyleEqualsByFonts(*firstStyle, *secondStyle);
+}
+
+bool OH_Drawing_TextStyleIsMatchOneAttribute(OH_Drawing_Typography* typography, OH_Drawing_TextStyleType textStyleType,
+    const OH_Drawing_TextStyle* style1, const OH_Drawing_TextStyle* style2)
+{
+    if (style1 == nullptr || style2 == nullptr || typography == nullptr) {
+        return false;
+    }
+    auto firstStyle = ConvertToOriginalText<const OHOS::Rosen::TextStyle>(style1);
+    auto secondStyle = ConvertToOriginalText<const OHOS::Rosen::TextStyle>(style2);
+    auto typographyInner = ConvertToOriginalText<Typography>(typography);
+    auto styleType = static_cast<OHOS::Rosen::TextStyleType>(textStyleType);
+    if (firstStyle == nullptr || secondStyle == nullptr || typographyInner == nullptr) {
+        return false;
+    }
+    return typographyInner->IsMatchOneAttribute(styleType, *firstStyle, *secondStyle);
+}
+
+void OH_Drawing_TextStyleSetPlaceholder(OH_Drawing_TextStyle* style)
+{
+    if (style == nullptr) {
+        return;
+    }
+    TextStyle* textStyle = ConvertToOriginalText<TextStyle>(style);
+    if (textStyle == nullptr) {
+        return;
+    }
+    textStyle->isPlaceholder = true;
+}
+
+bool OH_Drawing_TextStyleIsPlaceholder(OH_Drawing_TextStyle* style)
+{
+    if (style == nullptr) {
+        return false;
+    }
+    TextStyle* textStyle = ConvertToOriginalText<TextStyle>(style);
+    if (textStyle == nullptr) {
+        return false;
+    }
+    return textStyle->isPlaceholder;
+}
+
+OH_Drawing_TextAlign OH_Drawing_TypographyStyleGetEffectiveAlignment(OH_Drawing_TypographyStyle* style)
+{
+    if (style == nullptr) {
+        return TEXT_ALIGN_START;
+    }
+    TypographyStyle* typographyStyle = ConvertToOriginalText<TypographyStyle>(style);
+    if (typographyStyle == nullptr) {
+        return TEXT_ALIGN_START;
+    }
+    return static_cast<OH_Drawing_TextAlign>(typographyStyle->GetEffectiveAlign());
+}
+
+bool OH_Drawing_TypographyStyleIsHintingEnabled(OH_Drawing_TypographyStyle* style)
+{
+    if (style == nullptr) {
+        return false;
+    }
+    TypographyStyle* typographyStyle = ConvertToOriginalText<TypographyStyle>(style);
+    if (typographyStyle == nullptr) {
+        return false;
+    }
+    return typographyStyle->hintingIsOn;
 }

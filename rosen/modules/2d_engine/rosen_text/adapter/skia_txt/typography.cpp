@@ -375,6 +375,31 @@ Drawing::FontMetrics Typography::GetFontMetrics(const OHOS::Rosen::TextStyle& te
     auto spTextStyle = Convert(textStyle);
     return paragraph_->GetFontMetricsResult(spTextStyle);
 }
+
+bool Typography::IsTextStyleEquals(const OHOS::Rosen::TextStyle& textStyle1,
+    const OHOS::Rosen::TextStyle& textStyle2)
+{
+    auto spTextStyle1 = Convert(textStyle1);
+    auto spTextStyle2 = Convert(textStyle2);
+    return paragraph_->IsSkTextStyleEquals(spTextStyle1, spTextStyle2);
+}
+
+bool Typography::IsTextStyleEqualsByFonts(const OHOS::Rosen::TextStyle& textStyle1,
+    const OHOS::Rosen::TextStyle& textStyle2)
+{
+    auto spTextStyle1 = Convert(textStyle1);
+    auto spTextStyle2 = Convert(textStyle2);
+    return paragraph_->IsSkTextStyleEqualsByFonts(spTextStyle1, spTextStyle2);
+}
+
+bool Typography::IsMatchOneAttribute(TextStyleType styleType,
+    const OHOS::Rosen::TextStyle& textStyle1, const OHOS::Rosen::TextStyle& textStyle2)
+{
+    auto spTextStyle1 = Convert(textStyle1);
+    auto spTextStyle2 = Convert(textStyle2);
+    auto spStyleType = static_cast<SPText::StyleType>(styleType);
+    return paragraph_->IsSkTextStyleMatchOneAttribute(spStyleType, spTextStyle1, spTextStyle2);
+}
 } // namespace AdapterTxt
 } // namespace Rosen
 } // namespace OHOS

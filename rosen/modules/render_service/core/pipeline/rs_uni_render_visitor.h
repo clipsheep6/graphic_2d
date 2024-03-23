@@ -31,9 +31,6 @@
 #include "pipeline/round_corner_display/rs_rcd_render_manager.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
-#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
-#include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
-#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "system/rs_system_parameters.h"
 #include "visitor/rs_node_visitor.h"
@@ -265,8 +262,7 @@ private:
     void HandleColorGamuts(RSDisplayRenderNode& node, const sptr<RSScreenManager>& screenManager);
     void CheckPixelFormat(RSSurfaceRenderNode& node);
     void HandlePixelFormat(RSDisplayRenderNode& node, const sptr<RSScreenManager>& screenManager);
-    void AddOverDrawListener(std::unique_ptr<RSRenderFrame>& renderFrame,
-        std::shared_ptr<RSCanvasListener>& overdrawListener);
+    void CreateCanvas(std::unique_ptr<RSRenderFrame>& renderFrame);
     /* Judge if surface render node could skip preparation:
      * 1. not leash window
      * 2. parent not dirty
@@ -333,19 +329,11 @@ private:
     void PrepareSubSurfaceNodes(RSSurfaceRenderNode& node);
     void ProcessSubSurfaceNodes(RSSurfaceRenderNode& node);
 
-    // used to catch overdraw
-    void StartOverDraw();
-    void FinishOverDraw();
-
     std::shared_ptr<Drawing::Surface> offscreenSurface_;                 // temporary holds offscreen surface
     std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen render
 
     // Use in vulkan parallel rendering
     bool IsOutOfScreenRegion(RectI rect);
-
-    // used to catch overdraw
-    std::shared_ptr<Drawing::Surface> overdrawSurface_ = nullptr;
-    std::shared_ptr<Drawing::OverDrawCanvas> overdrawCanvas_ = nullptr;
 
     ScreenInfo screenInfo_;
     std::shared_ptr<RSDirtyRegionManager> curSurfaceDirtyManager_;
@@ -482,6 +470,7 @@ private:
     bool curContentDirty_ = false;
     bool isPhone_ = false;
     bool isPc_ = false;
+    bool isOverdrawDfxOn_ = false;
     bool isCacheBlurPartialRenderEnabled_ = false;
     bool drawCacheWithBlur_ = false;
     bool noNeedTodrawShadowAgain_ = false;

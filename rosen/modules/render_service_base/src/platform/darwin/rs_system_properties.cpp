@@ -343,6 +343,11 @@ bool RSSystemProperties::GetEffectMergeEnabled()
     return true;
 }
 
+bool RSSystemProperties::IsDeveloperModeOn()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetDumpUICaptureEnabled()
 {
     return false;

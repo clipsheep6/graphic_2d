@@ -41,7 +41,6 @@
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
 #include "rs_upload_resource_thread.h"
 #endif
-#include "delegate/rs_functional_delegate.h"
 #include "memory/rs_memory_manager.h"
 #include "memory/rs_memory_track.h"
 #include "common/rs_common_def.h"
@@ -49,7 +48,6 @@
 #include "hgm_core.h"
 #include "hgm_frame_rate_manager.h"
 #include "platform/ohos/rs_jank_stats.h"
-#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
@@ -71,6 +69,7 @@
 #include "platform/common/rs_innovation.h"
 #include "platform/common/rs_system_properties.h"
 #include "platform/drawing/rs_vsync_client.h"
+#include "platform/ohos/overdraw/rs_overdraw_manager.h"
 #include "property/rs_property_trace.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_point_light_manager.h"
@@ -435,9 +434,7 @@ void RSMainThread::Init()
     }
 #endif
 
-    auto delegate = RSFunctionalDelegate::Create();
-    delegate->SetRepaintCallback([]() { RSMainThread::Instance()->RequestNextVSync(); });
-    RSOverdrawController::GetInstance().SetDelegate(delegate);
+    RSOverdrawManager::GetInstance().SetRepaintCallback([this]() { this->RequestNextVSync(); });
 
     frameRateMgr_ = OHOS::Rosen::HgmCore::Instance().GetFrameRateMgr();
     frameRateMgr_->SetForceUpdateCallback([this](bool idleTimerExpired, bool forceUpdate) {

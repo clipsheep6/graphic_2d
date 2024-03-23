@@ -3850,6 +3850,10 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             return;
         }
     }
+    if (isPhone_ && !isSubThread_ && node.IsAppWindow() && !node.GetParent().lock()->IsMainThreadNode()) {
+        // if process app window in subthread, skip process in main thread
+        return;
+    }
     if (RSSystemProperties::GetProxyNodeDebugEnabled() && node.contextClipRect_.has_value() && canvas_ != nullptr) {
         // draw transparent red rect to indicate valid clip area
         {
@@ -3992,7 +3996,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
             return;
         }
         node.ProcessRenderBeforeChildren(*canvas_);
-        if (isUIFirst_ && RSUniRenderUtil::HandleSubThreadNode(node, *canvas_)) {
+        if (isUIFirst_ && RSUniRenderUtil::HandleSubThreadNode(node, *canvas_) && !isPhone_) {
             node.ProcessRenderAfterChildren(*canvas_);
             if (node.IsLeashOrMainWindow()) {
                 isSubNodeOfSurfaceInProcess_ = isSubNodeOfSurfaceInProcess;
@@ -4097,6 +4101,9 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (node.IsLeashOrMainWindow()) {
         isSubNodeOfSurfaceInProcess_ = isSubNodeOfSurfaceInProcess;
         // release full children list used by sub thread
+    }
+    if (isPhone_ && !isSubThread_ && node.IsLeashWindow()) {
+        node.NotifyUIFirstCacheFinish();
     }
 }
 

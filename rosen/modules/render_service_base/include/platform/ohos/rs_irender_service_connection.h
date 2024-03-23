@@ -28,6 +28,7 @@
 #include "ipc_callbacks/rs_isurface_occlusion_change_callback.h"
 #include "ipc_callbacks/screen_change_callback.h"
 #include "ipc_callbacks/surface_capture_callback.h"
+#include "ipc_callbacks/uifirst_cache_finish_callback.h"
 #include "memory/rs_memory_graphic.h"
 #include "screen_manager/rs_screen_capability.h"
 #include "screen_manager/rs_screen_data.h"
@@ -144,6 +145,9 @@ public:
 
     virtual void RegisterBufferClearListener(
         NodeId id, sptr<RSIBufferClearCallback> callback) = 0;
+    
+    virtual void RegisterUIFirstCacheFinishListener(
+        NodeId id, sptr<RSIUIFirstCacheFinishCallback> callback) = 0;
 
     virtual int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode) = 0;
 

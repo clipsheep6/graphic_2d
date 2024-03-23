@@ -61,6 +61,7 @@ using SurfaceOcclusionChangeCallback = std::function<void(float)>;
 using HgmConfigChangeCallback = std::function<void(std::shared_ptr<RSHgmConfigData>)>;
 using OnRemoteDiedCallback = std::function<void()>;
 using HgmRefreshRateModeChangeCallback = std::function<void(int32_t)>;
+using UIFirstCacheFinishCallback = std::function<void()>;
 
 struct DataBaseRs {
     int32_t appPid = -1;
@@ -201,6 +202,8 @@ public:
         NodeId id, const BufferClearCallback &callback);
 
     bool UnregisterBufferAvailableListener(NodeId id);
+
+    bool RegisterUIFirstCacheFinishListener(NodeId id, const UIFirstCacheFinishCallback &callback);
 
     int32_t GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode);
 

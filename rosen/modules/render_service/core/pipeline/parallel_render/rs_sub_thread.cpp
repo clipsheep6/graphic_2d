@@ -226,6 +226,7 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         surfaceNodePtr->SetCacheSurfaceNeedUpdated(true);
         needRequestVsync = true;
 
+        surfaceNodePtr->UpdateCompletedCacheSurface();
         if (needNotify) {
             RSSubThreadManager::Instance()->NodeTaskNotify(node->GetId());
         }

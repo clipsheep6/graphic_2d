@@ -30,6 +30,7 @@
 #include "ipc_callbacks/buffer_clear_callback_stub.h"
 #include "ipc_callbacks/hgm_config_change_callback_stub.h"
 #include "ipc_callbacks/rs_occlusion_change_callback_stub.h"
+#include "ipc_callbacks/uifirst_cache_finish_callback_stub.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #ifdef NEW_RENDER_CONTEXT
@@ -631,6 +632,33 @@ bool RSRenderServiceClient::RegisterBufferClearListener(NodeId id, const BufferC
     return true;
 }
 
+class CustomUIFirstCacheFinishCallback : public RSUIFirstCacheFinishCallbackStub
+{
+public:
+    explicit CustomUIFirstCacheFinishCallback(const UIFirstCacheFinishCallback &callback) : cb_(callback) {}
+    ~CustomUIFirstCacheFinishCallback() override {};
+
+    void OnCacheFinish() override
+    {
+        if (cb_ != nullptr) {
+            cb_();
+        }
+    }
+private:
+    UIFirstCacheFinishCallback cb_;
+};
+
+bool RSRenderServiceClient::RegisterUIFirstCacheFinishListener(
+    NodeId id, const UIFirstCacheFinishCallback &callback)
+{
+    auto renderService = RSRenderServiceConnectHub::GetRenderService();
+    if (renderService == nullptr) {
+        return false;
+    }
+    sptr<RSIUIFirstCacheFinishCallback> cacheFinishCallback = new CustomUIFirstCacheFinishCallback(callback);
+    renderService->RegisterUIFirstCacheFinishListener(id, cacheFinishCallback);
+    return true;
+}
 
 bool RSRenderServiceClient::UnregisterBufferAvailableListener(NodeId id)
 {

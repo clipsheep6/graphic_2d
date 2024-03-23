@@ -762,6 +762,27 @@ void RSRenderServiceConnection::RegisterBufferAvailableListener(
     }
 }
 
+void RSRenderServiceConnection::RegisterUIFirstCacheFinishListener(
+    NodeId id, sptr<RSIUIFirstCacheFinishCallback> callback)
+{
+    auto registerListener = [id, callback, this]() -> bool {
+        if (auto node = this->mainThread_->GetContext().GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+            if (!RSMainThread::Instance()->IsUIFirstOn()) {
+                RS_LOGI("uifirst is off, callback");
+                callback->OnCacheFinish();
+            } else {
+                node->RegisterUIFirstCacheFinishListener(callback);
+            }
+            return true;
+        }
+        return false;
+    };
+    if (!registerListener()) {
+        RS_LOGD("RegisterUIFirstCacheFinishListener: node not found, post task to retry");
+        mainThread_->PostTask(registerListener);
+    }
+}
+
 int32_t RSRenderServiceConnection::GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode)
 {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();

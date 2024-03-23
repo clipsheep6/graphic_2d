@@ -1070,6 +1070,32 @@ void RSRenderServiceConnectionProxy::RegisterBufferAvailableListener(
     }
 }
 
+void RSRenderServiceConnectionProxy::RegisterUIFirstCacheFinishListener(
+    NodeId id, sptr<RSIUIFirstCacheFinishCallback> callback)
+{
+    if (callback == nullptr) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterUIFirstCacheFinishListener: callback is nullptr.");
+        return;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return;
+    }
+
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(id);
+    data.WriteRemoteObject(callback->AsObject());
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SET_UIFIRST_CACHE_FINISH_CALLBACK);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::RegisterUIFirstCacheFinishListener: Send Request err.");
+    }
+}
+
 int32_t RSRenderServiceConnectionProxy::GetScreenSupportedColorGamuts(ScreenId id, std::vector<ScreenColorGamut>& mode)
 {
     MessageParcel data;

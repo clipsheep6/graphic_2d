@@ -314,12 +314,29 @@ bool RSUniRenderUtil::HandleSubThreadNode(RSSurfaceRenderNode& node, RSPaintFilt
         return false; // this node should do DSS composition in mainThread although it is assigned to subThread
     }
     if (!node.HasCachedTexture()) {
+        RS_TRACE_NAME("cache texture is null");
+        node.ResetNotifyUIFirstCacheFinish();
+        if (node.IsLeashWindow()) {
+            bool hasAppNode = false;
+            auto childList = node.GetSortedChildren();
+            for (auto& child : *childList) {
+                auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
+                if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
+                    hasAppNode = true;
+                    break;
+                }
+            }
+            if (hasAppNode && childList->size() > 1) {
+                // has app node and child node's num is more than 2
+                return false;
+            }
+        }
         RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", node.GetId());
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         RSSubThreadManager::Instance()->WaitNodeTask(node.GetId());
-        node.UpdateCompletedCacheSurface();
 #endif
     }
+    node.SetNotifyUIFirstCacheFinish(true);
     RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderUtil::HandleSubThreadNode %" PRIu64 "", node.GetId());
     node.DrawCacheSurface(canvas, UNI_MAIN_THREAD_INDEX, true);
     return true;
@@ -425,12 +442,20 @@ bool RSUniRenderUtil::IsNodeAssignSubThread(std::shared_ptr<RSSurfaceRenderNode>
     bool isPhoneType = RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE;
     bool isNeedAssignToSubThread = false;
     if (isPhoneType && node->IsLeashWindow()) {
+        bool hasAppNode = false;
+        for (auto& child : *node->GetSortedChildren()) {
+            auto surfaceNodePtr = child->ReinterpretCastTo<RSSurfaceRenderNode>();
+            if (surfaceNodePtr && surfaceNodePtr->IsAppWindow()) {
+                hasAppNode = true;
+                break;
+            }
+        }
         isNeedAssignToSubThread = (node->IsScale() || ROSEN_EQ(node->GetGlobalAlpha(), 0.0f) ||
-            node->GetForceUIFirst()) && !node->HasFilter();
+            node->GetForceUIFirst()) && !node->HasFilter() && hasAppNode;
         RS_TRACE_NAME_FMT("Assign info: name[%s] id[%lu]"
-            " status:%d filter:%d isScale:%d forceUIFirst:%d isNeedAssign:%d",
+            " status:%d filter:%d isScale:%d forceUIFirst:%d hasAppNode:%d, isNeedAssign:%d",
             node->GetName().c_str(), node->GetId(), node->GetCacheSurfaceProcessedStatus(),
-            node->HasFilter(), node->IsScale(), node->GetForceUIFirst(), isNeedAssignToSubThread);
+            node->HasFilter(), node->IsScale(), node->GetForceUIFirst(), hasAppNode, isNeedAssignToSubThread);
     }
     std::string surfaceName = node->GetName();
     bool needFilterSCB = surfaceName.substr(0, 3) == "SCB" ||
@@ -545,7 +570,6 @@ void RSUniRenderUtil::AssignSubThreadNode(
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     if (node->GetCacheSurfaceProcessedStatus() == CacheProcessStatus::DONE &&
         node->GetCacheSurface(UNI_MAIN_THREAD_INDEX, false) && node->GetCacheSurfaceNeedUpdated()) {
-        node->UpdateCompletedCacheSurface();
         if (node->IsAppWindow() &&
             !RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node->GetParent().lock())) {
             node->GetDirtyManager()->MergeDirtyRect(node->GetOldDirty());

@@ -50,7 +50,7 @@ export class CaseFactory {
       ['drawpointblitmask', () => { return new BlitMaskBench(); }], // drawpoint，随机位置，随机颜色，随机alpha
       ['pathcreate32', () => { return new PathCreateBench(); }], // 32次多种构建方式
       ['pathlineto', () => { return new TrianglePathBench(); }], // drawpath line
-      ['patharcto', () => { return new CirclesBench(); }], // drawpath arcto随机参数
+      ['patharcto', () => { return new CirclesBench(); }], // drawpath 2次arcto随机参数+1次close+drawpath
       ['pathquadto', () => { return new LongCurvedPathBench(); }], // drawpath quadto
       ['pathcubicto', () => { return new CubicPathBench(); }], // drawpath cubicto 随机参数
       ['pathquadpaint', () => { return new BezierBench(10, 0); }], // drawpath 可调整宽度，quadTo构造 其他pen配置未开放

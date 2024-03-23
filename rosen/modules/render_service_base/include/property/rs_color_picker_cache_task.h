@@ -92,6 +92,8 @@ public:
 
     void GetColorAverage(RSColor& color);
 
+    bool GetLuminance(int16_t& luminance);
+
     bool GetFirstGetColorFinished();
 
     void SetDeviceSize(int& deviceWidth, int& deviceHeight);
@@ -108,6 +110,7 @@ public:
 
     void ReleaseColorPicker();
 
+    void SetIsPointer(bool isPointer);
 private:
     std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
     Drawing::BackendTexture cacheBackendTexture_;
@@ -116,11 +119,13 @@ private:
     bool firstGetColorFinished_ = false;
     bool isShadow_ = false;
     int shadowColorStrategy_ = SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE;
+    bool isPointer_ = false;
     uint32_t* pixelPtr_ = nullptr;
     std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
     std::shared_ptr<std::atomic<bool>> waitRelease_ = std::make_shared<std::atomic<bool>>(false);
     std::shared_ptr<Drawing::Image> imageSnapshotCache_ = nullptr;
     RSColor color_;
+    int16_t luminance_;
     std::vector<RSColor> colorArray_;
     std::vector<bool> colorArrayValid_;
     RSColor colorAverage_;

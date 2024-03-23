@@ -524,6 +524,8 @@ private:
     std::vector<RectI> nodesUseEffectForDfx_;
     // pair<ApplyBackgroundEffectNodeList, ApplyBackgroundEffectFallbackNodeList>
     std::unordered_map<NodeId, std::pair<std::vector<RectI>, std::vector<RectI>>> effectNodeMapForDfx_;
+    static std::shared_ptr<RSColorPickerCacheTask> pointerColorPickerTask_;
+    std::shared_ptr<Drawing::Image> cacheImgForPointer_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

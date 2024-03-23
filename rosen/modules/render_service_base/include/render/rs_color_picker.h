@@ -42,6 +42,7 @@ public:
     NATIVEEXPORT uint32_t GetHighestSaturationColor(Drawing::ColorQuad &color) const;
     NATIVEEXPORT uint32_t GetAverageColor(Drawing::ColorQuad &color) const;
     NATIVEEXPORT bool IsBlackOrWhiteOrGrayColor(uint32_t color) const;
+    NATIVEEXPORT uint32_t GetAverageLuminance(int16_t &luminance) const;
 
 private:
     RSColorPicker(std::shared_ptr<Drawing::Pixmap> pixmap);

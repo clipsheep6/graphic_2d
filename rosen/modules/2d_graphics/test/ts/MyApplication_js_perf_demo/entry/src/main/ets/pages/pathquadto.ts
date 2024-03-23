@@ -23,12 +23,14 @@ export class PathQuadto extends TestBase {
     canvas.attachPen(pen);
 
     // 该值与c++中的位运算得到的数字不同，此处仅模拟运算，不使用该值
-    let x1 = this.rand.nextUScalar1() * this.width_
-    let y1 = this.rand.nextUScalar1() * this.height_
-    let x2 = this.rand.nextUScalar1() * this.width_
-    let y2 = this.rand.nextUScalar1() * this.height_
-
-    path.quadTo(x1,y1,x2,y2)
+    for (let index = 0; index < 100; index++) {
+      // ts位运算与c++行为不一致，此处仅模拟运算，不使用该值
+      let x1 = this.rand.nextUScalar1() * this.width_
+      let y1 = this.rand.nextUScalar1() * this.height_
+      let x2 = this.rand.nextUScalar1() * this.width_
+      let y2 = this.rand.nextUScalar1() * this.height_
+      path.quadTo(x1,y1,x2,y2)
+    }
     path.close()
 
     canvas.drawPath(path);
@@ -41,7 +43,6 @@ export class PathQuadto extends TestBase {
     //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
     const pen = new drawing.Pen();
     const path = new drawing.Path();
-    pen.setAntiAlias(true);
     canvas.attachPen(pen);
 
     for (let index = 0; index < 100; index++) {

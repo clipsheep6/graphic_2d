@@ -32,8 +32,8 @@ export class DrawTextBlob extends TestBase {
     canvas.attachBrush(brush);
 
     let bigLoops = this.testCount_ * 100
-    const font = new drawing.Font();
     for (let index = 0; index < bigLoops; index++) {
+      const font = new drawing.Font();
       // font.setSize(10);
       const textBlob = drawing.TextBlob.makeFromString("Keep your sentences short, but not overly so.", font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(textBlob, 20, 20);

@@ -14,7 +14,6 @@
  */
 
 import {TestBase} from './testbase';
-import {DrawRect} from './drawrect';
 import { SrcModeRectBench } from './SrcModeRectBench';
 import { BezierBench } from './BezierBench';
 import { XfermodeBench } from './XfermodeBench';
@@ -38,7 +37,6 @@ const TAG = '[DrawingTest]';
 export class CaseFactory {
   static FunctionCpuMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
       ['drawcircle', () => { return new DrawCircle(10); }],
@@ -63,7 +61,6 @@ export class CaseFactory {
   );
   static PerformanceCpuMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
       ['drawcircle', () => { return new DrawCircle(10); }],
@@ -88,7 +85,6 @@ export class CaseFactory {
   );
   static FunctionGpuUpScreenMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
       ['drawcircle', () => { return new DrawCircle(10); }],
@@ -113,7 +109,6 @@ export class CaseFactory {
   );
   static PerformanceGpuUpScreenMap: Map<string, Function> = new Map(
     [
-      ['drawrect', () => { return new DrawRect(0, 1, true, false); }],
       ['drawline', () => { return new DrawLine(1, false); }],
       ['drawimage', () => { return new DrawImage(); }],
       ['drawcircle', () => { return new DrawCircle(10); }],

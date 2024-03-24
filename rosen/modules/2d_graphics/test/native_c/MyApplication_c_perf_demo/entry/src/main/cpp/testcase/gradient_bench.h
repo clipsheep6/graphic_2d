@@ -2,19 +2,24 @@
 #define DRAW_SHADER_LINEAR_H
 #include "test_base.h"
 
-class DrawShaderEffect : public TestBase {
+class GradientBench : public TestBase {
+public:
     static const int kSize = 400;
     bool bOval_ = true;
     int effectType_ = 0;
     int gDataIndex_ = 0;
-public:
-    DrawShaderEffect(bool bOval,int effectType,int gDataIndex)
+    enum {
+        LINEAR = 0,
+        RADIAL,
+        SWEEP,
+    };
+    GradientBench(bool bOval,int effectType,int gDataIndex)
     {
         bOval_ = bOval;
         effectType_ = effectType;
         gDataIndex_ = gDataIndex;
     }
-    ~DrawShaderEffect() = default;
+    ~GradientBench() = default;
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;

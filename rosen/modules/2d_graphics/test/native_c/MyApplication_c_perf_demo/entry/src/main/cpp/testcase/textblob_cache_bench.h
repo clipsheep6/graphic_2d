@@ -2,10 +2,10 @@
 #define DRAW_TEXTBLOB_H
 #include "test_base.h"
 
-class DrawTextBlob : public TestBase {
+class TextBlobCachedBench : public TestBase {
 public:
-    DrawTextBlob() : TestBase() {}
-    ~DrawTextBlob() = default;
+    TextBlobCachedBench() : TestBase() {}
+    ~TextBlobCachedBench() = default;
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;

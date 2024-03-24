@@ -1,4 +1,4 @@
-#include "draw_bitmap.h"
+#include "draw_bitmap_aa_bench.h"
 #include <bits/alltypes.h>
 #include <native_drawing/drawing_bitmap.h>
 #include <native_drawing/drawing_canvas.h>
@@ -7,7 +7,7 @@
 #include "common/log_common.h"
 
 
-void DrawBitmap::OnTestFunction(OH_Drawing_Canvas *canvas)
+void DrawBitmapAABench::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
     OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
     OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE};
@@ -26,7 +26,7 @@ void DrawBitmap::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_BitmapDestroy(bitmap);
 }
 
-void DrawBitmap::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+void DrawBitmapAABench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     // draw_bitmap_noaa_translate
     OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
     OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE};

@@ -1,4 +1,4 @@
-#include "draw_path_arc_to.h"
+#include "circles_bench.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
@@ -8,7 +8,7 @@
 //#include "common/util.h"
 #include "test_common.h"
 
-void DrawPathArcTo::OnTestFunction(OH_Drawing_Canvas* canvas)
+void CirclesBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
@@ -43,7 +43,7 @@ void DrawPathArcTo::OnTestFunction(OH_Drawing_Canvas* canvas)
     pen = nullptr;
 }
 
-void DrawPathArcTo::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void CirclesBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {   
     //当前用例名 drawpatharcto 测试 OH_Drawing_PathArcTo  迁移基于skia PathBench.cpp->CirclesBench
     // skia case name : circles_fill

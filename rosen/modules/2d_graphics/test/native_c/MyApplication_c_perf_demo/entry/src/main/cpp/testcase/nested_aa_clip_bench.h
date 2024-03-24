@@ -3,7 +3,7 @@
 #include "test_base.h"
 #include "testcase/test_common.h"
 
-class DrawPathAddRoundRect : public TestBase {
+class NestedAAClipBench : public TestBase {
     OH_Drawing_Rect* fDrawRect;
     static const int kNestingDepth = 3;
     static const int kImageSize = 400;
@@ -12,8 +12,8 @@ class DrawPathAddRoundRect : public TestBase {
     TestRend fRandom;
     
 public:
-    DrawPathAddRoundRect() : TestBase() {}
-    ~DrawPathAddRoundRect() = default;
+    NestedAAClipBench() : TestBase() {}
+    ~NestedAAClipBench() = default;
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;

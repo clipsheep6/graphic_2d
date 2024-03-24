@@ -1,4 +1,4 @@
-#include "draw_circle.h"
+#include "clip_strategy_bench.h"
 #include <bits/alltypes.h>
 #include <native_drawing/drawing_bitmap.h>
 #include <native_drawing/drawing_canvas.h>
@@ -10,7 +10,7 @@
 #include "common/log_common.h"
 
 
-void DrawCircle::OnTestFunction(OH_Drawing_Canvas *canvas)
+void ClipStrategyBench::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);
@@ -38,7 +38,7 @@ void DrawCircle::OnTestFunction(OH_Drawing_Canvas *canvas)
     DRAWING_LOGE("DrawingApiTest Started:DrawRect");
 }
 
-void DrawCircle::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+void ClipStrategyBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     // clip_strategy_mask_5
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);
@@ -55,6 +55,7 @@ void DrawCircle::OnTestPerformance(OH_Drawing_Canvas *canvas) {
             OH_Drawing_CanvasDrawCircle(canvas, point, q / 2);
             OH_Drawing_PointDestroy(point);
         }
+        i = i + count_ - 1;
         OH_Drawing_CanvasSaveLayer(canvas, nullptr, brush);
         OH_Drawing_CanvasClear(canvas, 0xFF00FF00);
         OH_Drawing_CanvasRestore(canvas);

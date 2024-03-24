@@ -1,10 +1,10 @@
-#include "draw_line.h"
+#include "dash_line_bench.h"
 #include "test_common.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_pen.h>
 #include <native_drawing/drawing_path_effect.h>
 
-void DrawLine::OnTestFunction(OH_Drawing_Canvas* canvas)
+void DashLineBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
@@ -24,7 +24,7 @@ void DrawLine::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_PenDestroy(pen);
 }
 
-void DrawLine::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void DashLineBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     // dashline_2_circle
     // 创建一个画刷pen对象

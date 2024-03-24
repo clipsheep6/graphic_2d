@@ -3,11 +3,11 @@
 #include "test_base.h"
 
 
-class DrawTextBlobCreate : public TestBase {
+class XfermodeBench : public TestBase {
     int         index;
 public:
-    DrawTextBlobCreate(int idx):index(idx){};
-    ~DrawTextBlobCreate() = default;
+    XfermodeBench(int idx):index(idx){};
+    ~XfermodeBench() = default;
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;

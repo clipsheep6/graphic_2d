@@ -2,10 +2,10 @@
 #define DRAW_BITMAP_H
 #include "test_base.h"
 
-class DrawBitmap : public TestBase {
+class DrawBitmapAABench : public TestBase {
 public:
-    DrawBitmap() : TestBase() {}
-    ~DrawBitmap() = default;
+    DrawBitmapAABench() : TestBase() {}
+    ~DrawBitmapAABench() = default;
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;

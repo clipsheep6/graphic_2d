@@ -2,10 +2,11 @@
 #define DRAW_PATH_TRANSFORM_H
 #include "test_base.h"
 
-class DrawPathTransform : public TestBase {
+class HairlinePathBench : public TestBase {
 public:
-    DrawPathTransform() : TestBase() {}
-    ~DrawPathTransform() = default;
+    HairlinePathBench() : TestBase() {}
+    ~HairlinePathBench() = default;
+    virtual void MakePath(OH_Drawing_Path* path) = 0;
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
@@ -14,5 +15,12 @@ protected:
     void makePathQuad(OH_Drawing_Path *path);
     void makePathConic(OH_Drawing_Path *path);
     void makePathCubic(OH_Drawing_Path *path);
+};
+
+class CubicPathBench : public HairlinePathBench {
+public:
+    CubicPathBench() {}
+    ~CubicPathBench() = default;
+    void MakePath(OH_Drawing_Path* path) override;
 };
 #endif // DRAW_BITMAP_TEST_H

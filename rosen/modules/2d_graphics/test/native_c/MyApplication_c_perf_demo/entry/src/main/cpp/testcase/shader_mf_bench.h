@@ -2,10 +2,10 @@
 #define CANVAS_SAVE_LAYER_H
 #include "test_base.h"
 
-class CanvasSaveLayer : public TestBase {
+class ShaderMFBench : public TestBase {
 public:
-    CanvasSaveLayer() : TestBase() {}
-    ~CanvasSaveLayer() = default;
+    ShaderMFBench() : TestBase() {}
+    ~ShaderMFBench() = default;
     int depth_ = 8;
 
 protected:

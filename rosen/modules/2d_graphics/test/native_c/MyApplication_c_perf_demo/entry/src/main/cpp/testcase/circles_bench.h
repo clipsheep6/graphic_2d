@@ -2,10 +2,10 @@
 #define DRAW_PATH_ARC_TO_TEST_H
 #include "test_base.h"
 
-class DrawPathArcTo : public TestBase {
+class CirclesBench : public TestBase {
 public:
-    DrawPathArcTo() : TestBase() {}
-    ~DrawPathArcTo() = default;
+    CirclesBench() : TestBase() {}
+    ~CirclesBench() = default;
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;

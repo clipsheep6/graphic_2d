@@ -126,8 +126,14 @@ ohos_source_set("libtexgine_source") {
     if (enable_text_gine) {
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
     }
-    deps = [ "//third_party/bounds_checking_function:libsec_static" ]
-    include_dirs = [ "//third_party/bounds_checking_function/include" ]
+    deps = [
+      "//third_party/bounds_checking_function:libsec_static",
+      "//third_party/cJSON:cjson_static",
+    ]
+    include_dirs = [
+      "//third_party/bounds_checking_function/include",
+      "//third_party/cJSON",
+    ]
 
     if (platform == "ohos") {
       defines += [ "BUILD_NON_SDK_VER" ]

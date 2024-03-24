@@ -2,10 +2,10 @@
 #define DRAW_CIRCLE_H
 #include "test_base.h"
 
-class DrawCircle : public TestBase {
+class ClipStrategyBench : public TestBase {
 public:
-    DrawCircle() : TestBase() {}
-    ~DrawCircle() = default;
+    ClipStrategyBench() : TestBase() {}
+    ~ClipStrategyBench() = default;
 
 protected:
     int count_ = 5;

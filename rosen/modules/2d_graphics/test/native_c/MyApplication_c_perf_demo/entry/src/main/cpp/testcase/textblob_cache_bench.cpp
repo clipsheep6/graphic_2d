@@ -1,4 +1,4 @@
-#include "draw_textblob.h"
+#include "textblob_cache_bench.h"
 #include <bits/alltypes.h>
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_pen.h>
@@ -14,7 +14,7 @@
 #include "common/log_common.h"
 
 
-void DrawTextBlob::OnTestFunction(OH_Drawing_Canvas *canvas)
+void TextBlobCachedBench::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
     // 创建字体，并设置文字大小
     OH_Drawing_Font *font = OH_Drawing_FontCreate();
@@ -55,7 +55,7 @@ void DrawTextBlob::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_FontDestroy(font);
 }
 
-void DrawTextBlob::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void TextBlobCachedBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     // TextBlobCachedBench
     OH_Drawing_Font *font = OH_Drawing_FontCreate();

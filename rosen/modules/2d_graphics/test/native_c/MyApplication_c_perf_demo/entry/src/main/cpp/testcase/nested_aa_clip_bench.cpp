@@ -1,4 +1,4 @@
-#include "draw_path_add_round_rect.h"
+#include "nested_aa_clip_bench.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
@@ -9,7 +9,7 @@
 #include <time.h> 
 #include "common/log_common.h"
 
-void DrawPathAddRoundRect::OnTestFunction(OH_Drawing_Canvas* canvas)
+void NestedAAClipBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 创建一个画刷pen对象
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
@@ -24,7 +24,7 @@ void DrawPathAddRoundRect::OnTestFunction(OH_Drawing_Canvas* canvas)
         fSize[i].x = fSize[i-1].x/2;
         fSize[i].y = fSize[i-1].y/2;
     }   
-    DRAWING_LOGI("DrawPathAddRoundRect::OnTestPerformance");
+    DRAWING_LOGI("NestedAAClipBench::OnTestPerformance");
     OH_Drawing_Point2D offset;
     offset.x = 0;
     offset.y = 0;
@@ -36,7 +36,7 @@ void DrawPathAddRoundRect::OnTestFunction(OH_Drawing_Canvas* canvas)
     pen = nullptr;
 }
 
-void DrawPathAddRoundRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void NestedAAClipBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     //当前用例名 drawpathroundrect 测试 OH_Drawing_PathAddRoundRect  迁移基于skia AAClipBench.cpp->NestedAAClipBench
     // skia case name : nested_aaclip_AA
@@ -53,20 +53,25 @@ void DrawPathAddRoundRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
         fSize[i].x = fSize[i-1].x/2;
         fSize[i].y = fSize[i-1].y/2;
     }   
-    DRAWING_LOGI("DrawPathAddRoundRect::OnTestPerformance");
+    DRAWING_LOGI("NestedAAClipBench::OnTestPerformance");
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_Point2D offset;
         offset.x = 0;
         offset.y = 0;
         //recurse
         this->recurse(canvas, 0, offset);
+        int count = 1;
+        for (int j = 0; j < kNestingDepth; j++) {
+            count = count * 4; //recurse中每次调用递归*4
+        }
+        i += count;
     }
     OH_Drawing_RectDestroy(fDrawRect);
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
 }
 
-void DrawPathAddRoundRect::recurse(OH_Drawing_Canvas* canvas,int depth,const OH_Drawing_Point2D& offset)
+void NestedAAClipBench::recurse(OH_Drawing_Canvas* canvas,int depth,const OH_Drawing_Point2D& offset)
 {
     OH_Drawing_CanvasSave(canvas);
     OH_Drawing_Rect* temp = OH_Drawing_RectCreate(0,0,fSize[depth].x,fSize[depth].y);

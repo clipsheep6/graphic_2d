@@ -1,4 +1,4 @@
-#include "draw_shader_effect.h"
+#include "gradient_bench.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
@@ -39,7 +39,7 @@ static const GradData gGradData[] = {
     { 2, gColors, gPos, "_pos" },
 };
 
-void DrawShaderEffect::OnTestFunction(OH_Drawing_Canvas* canvas)
+void GradientBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     //当前用例名 drawshaderlinear_oval 测试 OH_Drawing_ShaderEffectCreateLinearGradient  迁移基于skia GradientBench.cpp->GradientBench
     // skia case name : gradient_linear_clamp
@@ -56,13 +56,13 @@ void DrawShaderEffect::OnTestFunction(OH_Drawing_Canvas* canvas)
     
     OH_Drawing_ShaderEffect* effect ;
     switch (effectType_) {
-        case 0:
+        case LINEAR:
             effect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, data.fColors, data.fPos, data.fCount, OH_Drawing_TileMode::CLAMP);
             break;
-        case 1:
+        case RADIAL:
             effect = OH_Drawing_ShaderEffectCreateRadialGradient(centerPt, kSize*0.5, data.fColors, data.fPos,data.fCount, OH_Drawing_TileMode::REPEAT);
             break;
-        case 2:
+        case SWEEP:
             effect = OH_Drawing_ShaderEffectCreateSweepGradient(centerPt, data.fColors, data.fPos, data.fCount, OH_Drawing_TileMode::DECAL);
             break;
         default:
@@ -91,7 +91,7 @@ void DrawShaderEffect::OnTestFunction(OH_Drawing_Canvas* canvas)
     pen = nullptr;
 }
 
-void DrawShaderEffect::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void GradientBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {   
     //当前用例名 drawshaderlinear_oval 测试 OH_Drawing_ShaderEffectCreateLinearGradient  迁移基于skia GradientBench.cpp->GradientBench
     // skia case name : gradient_linear_clamp
@@ -108,13 +108,13 @@ void DrawShaderEffect::OnTestPerformance(OH_Drawing_Canvas* canvas)
     
     OH_Drawing_ShaderEffect* effect ;
     switch (effectType_) {
-        case 0:
+        case LINEAR:
             effect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, data.fColors, data.fPos, data.fCount, OH_Drawing_TileMode::CLAMP);
             break;
-        case 1:
+        case RADIAL:
             effect = OH_Drawing_ShaderEffectCreateRadialGradient(centerPt, kSize*0.5, data.fColors, data.fPos,data.fCount, OH_Drawing_TileMode::REPEAT);
             break;
-        case 2:
+        case SWEEP:
             effect = OH_Drawing_ShaderEffectCreateSweepGradient(centerPt, data.fColors, data.fPos, data.fCount, OH_Drawing_TileMode::DECAL);
             break;
         default:

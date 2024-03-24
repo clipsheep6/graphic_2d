@@ -1,4 +1,4 @@
-#include "canvas_save_layer.h"
+#include "shader_mf_bench.h"
 #include <bits/alltypes.h>
 #include <native_drawing/drawing_bitmap.h>
 #include <native_drawing/drawing_canvas.h>
@@ -11,7 +11,7 @@
 //#include <native_drawing/drawing_sampling_options.h>
 #include "common/log_common.h"
 
-void CanvasSaveLayer::OnTestFunction(OH_Drawing_Canvas *canvas)
+void ShaderMFBench::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
     uint32_t color = 0x8000ff00;
     uint32_t colorBlack = 0xFF000000;
@@ -33,7 +33,7 @@ void CanvasSaveLayer::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_ShaderEffectDestroy(shaderEffect);
 }
 
-void CanvasSaveLayer::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+void ShaderMFBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     // shadermaskfilter_bitmap_80
     uint32_t color = 0x8000ff00;
     uint32_t colorBlack = 0xFF000000;

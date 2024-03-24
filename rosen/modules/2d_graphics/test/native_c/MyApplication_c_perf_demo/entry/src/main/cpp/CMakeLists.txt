@@ -16,26 +16,19 @@ add_library(entry SHARED
     testcase/aa_clip_bench.cpp
     testcase/test_common.cpp
     testcase/test_base.cpp
-    testcase/draw_rect.cpp
-    testcase/draw_path.cpp
-    testcase/draw_textblob.cpp
-    testcase/draw_bitmap.cpp
-    testcase/draw_bitmaprect.cpp
+    testcase/path_bench.cpp
+    testcase/textblob_cache_bench.cpp
+    testcase/draw_bitmap_aa_bench.cpp
+    testcase/bulk_rect_bench.cpp
     testcase/canvas_save_restore.cpp
-    testcase/canvas_save_layer.cpp
-    testcase/draw_line.cpp
-    testcase/draw_path_arc_to.cpp
-    testcase/draw_circle.cpp
-    testcase/draw_oval.cpp
-    testcase/draw_round_rect.cpp
-    testcase/draw_imagerect.cpp
-    testcase/draw_path_add_rect.cpp
-    testcase/draw_path_add_round_rect.cpp
-    testcase/draw_path_transform.cpp
-    testcase/draw_path_line_to.cpp
-    testcase/draw_shader_effect.cpp
-    testcase/draw_text_blob_create.cpp
-    testcase/draw_path_cubic_to.cpp
+    testcase/shader_mf_bench.cpp
+    testcase/dash_line_bench.cpp
+    testcase/circles_bench.cpp
+    testcase/clip_strategy_bench.cpp
+    testcase/nested_aa_clip_bench.cpp
+    testcase/hairline_path_bench.cpp
+    testcase/gradient_bench.cpp
+    testcase/xfermode_bench.cpp
 )
 
 add_library(myxnode SHARED
@@ -45,26 +38,19 @@ add_library(myxnode SHARED
     testcase/aa_clip_bench.cpp
     testcase/test_common.cpp
     testcase/test_base.cpp
-    testcase/draw_rect.cpp
-    testcase/draw_path.cpp
-    testcase/draw_textblob.cpp
-    testcase/draw_bitmap.cpp
-    testcase/draw_bitmaprect.cpp
+    testcase/path_bench.cpp
+    testcase/textblob_cache_bench.cpp
+    testcase/draw_bitmap_aa_bench.cpp
+    testcase/bulk_rect_bench.cpp
     testcase/canvas_save_restore.cpp
-    testcase/canvas_save_layer.cpp
-    testcase/draw_line.cpp
-    testcase/draw_path_arc_to.cpp
-    testcase/draw_circle.cpp
-    testcase/draw_oval.cpp
-    testcase/draw_round_rect.cpp
-    testcase/draw_imagerect.cpp
-    testcase/draw_path_add_rect.cpp
-    testcase/draw_path_add_round_rect.cpp
-    testcase/draw_path_transform.cpp
-    testcase/draw_path_line_to.cpp
-    testcase/draw_shader_effect.cpp
-    testcase/draw_text_blob_create.cpp
-    testcase/draw_path_cubic_to.cpp
+    testcase/shader_mf_bench.cpp
+    testcase/dash_line_bench.cpp
+    testcase/circles_bench.cpp
+    testcase/clip_strategy_bench.cpp
+    testcase/nested_aa_clip_bench.cpp
+    testcase/hairline_path_bench.cpp
+    testcase/gradient_bench.cpp
+    testcase/xfermode_bench.cpp
 )
 
 find_library(

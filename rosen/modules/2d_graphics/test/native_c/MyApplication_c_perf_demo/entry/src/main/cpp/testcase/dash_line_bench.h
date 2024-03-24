@@ -2,10 +2,10 @@
 #define DRAW_LINE_H
 #include "test_base.h"
 
-class DrawLine : public TestBase {
+class DashLineBench : public TestBase {
 public:
-    DrawLine() : TestBase() {};
-    ~DrawLine() = default;
+    DashLineBench() : TestBase() {};
+    ~DashLineBench() = default;
     
     protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;

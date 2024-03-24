@@ -1,4 +1,4 @@
-#include "draw_text_blob_create.h"
+#include "xfermode_bench.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_font.h>
 #include <native_drawing/drawing_path.h>
@@ -14,7 +14,7 @@ struct DrSize {
     float fHeight;
 };
 
-void DrawTextBlobCreate::OnTestFunction(OH_Drawing_Canvas* canvas)
+void XfermodeBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetColor(pen, 0xFF00FF00);
@@ -64,7 +64,7 @@ void DrawTextBlobCreate::OnTestFunction(OH_Drawing_Canvas* canvas)
         pen = nullptr;
 }
 
-void DrawTextBlobCreate::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void XfermodeBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {   
     //当前用例名 drawtextblobcreate 测试 OH_Drawing_TextBlobCreateFromString  迁移基于skia BlendmodeBench.cpp->XfermodeBench
     // skia case name : blendmicro_mask_Screen

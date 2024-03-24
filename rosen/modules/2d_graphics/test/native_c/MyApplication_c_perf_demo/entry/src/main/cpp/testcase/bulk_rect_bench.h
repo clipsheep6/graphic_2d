@@ -2,12 +2,17 @@
 #define DRAW_BITMAP_RECT_H
 #include "test_base.h"
 
-class DrawBitmapRect : public TestBase {
+class BulkRectBench : public TestBase {
 public:
-    DrawBitmapRect() : TestBase() {}
-    ~DrawBitmapRect() = default;
+    BulkRectBench(int type) : type_(type) {}
+    ~BulkRectBench() = default;
+    enum {
+        BITMAP_RECT = 0,
+        IMAGE_RECT,
+    };
 
 protected:
+    int type_ = BITMAP_RECT;
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
     void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
 };

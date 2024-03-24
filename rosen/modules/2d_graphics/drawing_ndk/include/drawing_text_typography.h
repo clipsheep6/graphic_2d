@@ -2200,6 +2200,29 @@ void OH_Drawing_DestroyEllipsis(char* ellipsis);
  */
 bool OH_Drawing_TypographyStyleEquals(OH_Drawing_TypographyStyle* from, OH_Drawing_TypographyStyle* to);
 
+/**
+ * @brief Getting all font metrics from target row
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_Typography Indicates a pointer to a typesetting object
+ * @param lineNumber Indicates specifies the number of rows
+ * @param charNumber Indicates current line char number
+ * @param success Indicates check whether this acquisition operation was successful
+ * @return Returns All OH_Drawing_Font_Metrics corresponding to the number of rows
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typography*, size_t lineNumber,
+    size_t* charNumber, bool* success);
+
+/**
+ * @brief Free up all the space taken up by the lineFontMetric
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param lineFontMetric Indicates the first address of the lineFontMetric gather to be destroyed
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_DestroyLineFontMetrics(OH_Drawing_Font_Metrics* lineFontMetric);
 #ifdef __cplusplus
 }
 #endif

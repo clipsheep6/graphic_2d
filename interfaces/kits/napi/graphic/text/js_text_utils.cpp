@@ -36,7 +36,7 @@ napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& messa
     return result;
 }
 
-napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message)
+napi_value NapiThrowError(napi_env env, TextErrorCode err, const std::string& message)
 {
     napi_throw(env, CreateJsError(env, static_cast<int32_t>(err), message));
     return NapiGetUndefined(env);

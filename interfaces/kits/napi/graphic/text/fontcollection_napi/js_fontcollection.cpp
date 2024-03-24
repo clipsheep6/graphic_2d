@@ -24,8 +24,7 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Constructor failed to napi_get_cb_info");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "FontCollection constructor failed");
     }
 
     JsFontCollection* jsFontCollection = new(std::nothrow) JsFontCollection();
@@ -33,8 +32,7 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
         JsFontCollection::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsFontCollection;
-        LOGE("JsFontCollection::Constructor Failed to wrap native instance");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Failed to wrap native instance");
     }
     return jsThis;
 }
@@ -49,20 +47,18 @@ napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Init Failed to define FontCollection class");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Init Failed");
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Init Failed to create reference of constructor");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
+            "Invalid Failed to create reference of constructor");
     }
 
     status = napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Init Failed to set constructor");
-        return nullptr;
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Failed to set constructor");
     }
     return exportObj;
 }
@@ -95,8 +91,7 @@ napi_value JsFontCollection::DisableFallback(napi_env env, napi_callback_info in
 napi_value JsFontCollection::OnDisableFallback(napi_env env, napi_callback_info info)
 {
     if (m_fontCollection == nullptr) {
-        LOGE("JsFontCollection::OnClose path is nullptr");
-        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Invalid params");
     }
 
     m_fontCollection->DisableFallback();

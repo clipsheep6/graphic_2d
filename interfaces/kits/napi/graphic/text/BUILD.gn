@@ -32,6 +32,7 @@ config("local_text") {
     "../text",
     "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/export/rosen_text",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
+    "$graphic_2d_root/rosen/modules/2d_graphics/interfaces/kits/graphic/drawing",
   ]
 }
 
@@ -43,7 +44,6 @@ ohos_shared_library("text_napi") {
   ]
 
   deps = [ ":text_napi_impl" ]
-
   external_deps = [ "napi:ace_napi" ]
   relative_install_dir = "module/graphics"
   part_name = "graphic_2d"
@@ -52,10 +52,12 @@ ohos_shared_library("text_napi") {
 
 ohos_shared_library("text_napi_impl") {
   sources = [
+    "enum_napi/text_enum_napi.cpp",
     "fontcollection_napi/js_fontcollection.cpp",
     "js_text_init.cpp",
     "js_text_utils.cpp",
     "paragraph_style_napi/js_paragraphstyle.cpp",
+    "text_style_napi/js_text_style.cpp",
   ]
 
   configs = [
@@ -64,6 +66,7 @@ ohos_shared_library("text_napi_impl") {
   ]
 
   deps = [
+    "$graphic_2d_root/interfaces/kits/napi/graphic/drawing:drawing_napi_impl",
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
     "$graphic_2d_root/rosen/modules/texgine:libtexgine_source",
   ]
@@ -86,6 +89,10 @@ ohos_shared_library("text_napi_impl") {
 
   if (current_os == "mingw") {
     defines += [ "WINDOWS_PLATFORM" ]
+  }
+
+  if (defined(use_rosen_drawing) && use_rosen_drawing) {
+    defines += [ "USE_ROSEN_DRAWING" ]
   }
 
   innerapi_tags = [ "platformsdk" ]

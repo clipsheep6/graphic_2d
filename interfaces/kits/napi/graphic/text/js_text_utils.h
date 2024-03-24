@@ -17,6 +17,7 @@
 #define OHOS_JS_TEXT_UTILS_H
 
 #include <map>
+#include "utils/log.h"
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 
@@ -28,7 +29,7 @@ constexpr size_t ARGC_FOUR = 4;
 constexpr size_t ARGC_FIVE = 5;
 constexpr size_t ARGC_SIX = 6;
 
-enum class DrawingErrorCode : int32_t {
+enum class TextErrorCode : int32_t {
     OK = 0,
     ERROR_NO_PERMISSION = 201, // the value do not change. It is defined on all system
     ERROR_INVALID_PARAM = 401, // the value do not change. It is defined on all system
@@ -218,9 +219,22 @@ inline napi_value NapiGetUndefined(napi_env env)
     return result;
 }
 
+inline napi_value CreateJsArrayString(napi_env env, std::vector<std::string>& fontFamily)
+{
+    napi_value jsArray;
+    napi_create_array_with_length(env, fontFamily.size(), &jsArray);
+
+    for (size_t i = 0; i < fontFamily.size(); i++) {
+        napi_value jsValue;
+        napi_create_string_utf8(env, fontFamily[i].c_str(), NAPI_AUTO_LENGTH, &jsValue);
+        napi_set_element(env, jsArray, i, jsValue);
+    }
+    return jsArray;
+}
+
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
 
-napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message);
+napi_value NapiThrowError(napi_env env, TextErrorCode err, const std::string& message);
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

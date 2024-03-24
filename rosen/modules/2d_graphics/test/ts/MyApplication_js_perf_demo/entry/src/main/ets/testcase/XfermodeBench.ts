@@ -43,6 +43,7 @@ export class XfermodeBench extends TestBase {
     canvas.attachBrush(brush);
     if (this.type === 0) {
       let font : drawing.Font = new drawing.Font();
+      // font.setSize(40);
       let blob : drawing.TextBlob = undefined;
       let text : string = 'Hamburgefons';
       blob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);

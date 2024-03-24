@@ -1684,21 +1684,21 @@ bool  OH_Drawing_TypographyIsEllipsized(OH_Drawing_TypographyStyle*);
  * @brief Getting all font metrics from target row
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param OH_Drawing_Typography A pointer to a typesetting object
- * @param lineNumber Specifies the number of rows
- * @param charNumber Current line char number
- * @param success Get information result
+ * @param OH_Drawing_Typography Indicates a pointer to a typesetting object
+ * @param lineNumber Indicates specifies the number of rows
+ * @param charNumber Indicates current line char number
+ * @param success Indicates check whether this acquisition operation was successful
  * @return Returns All OH_Drawing_Font_Metrics corresponding to the number of rows
  * @since 12
  * @version 1.0
  */
-OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typography*, size_t,
-    size_t*, bool*);
+OH_Drawing_Font_Metrics* OH_Drawing_TypographyGetLineFontMetrics(OH_Drawing_Typography*, size_t lineNumber,
+    size_t* charNumber, bool* success);
 
 /**
  * @brief Free up all the space taken up by the lineFontMetric
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
- * @param lineFontMetric The first address of the lineFontMetric gather to be destroyed
+ * @param lineFontMetric Indicates the first address of the lineFontMetric gather to be destroyed
  * @since 12
  * @version 1.0
  */

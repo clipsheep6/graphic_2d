@@ -38,6 +38,7 @@ config("libtexgine_public_config") {
     "export",
     "texgine_drawing",
     "//third_party/skia/third_party/externals/harfbuzz/src",
+    "//third_party/cJSON",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/rosen/modules/2d_graphics/src/drawing/engine_adapter",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
@@ -113,6 +114,7 @@ ohos_source_set("libtexgine_source") {
 
     public_deps = [
       "texgine_drawing:libtexgine_drawing",
+      "//third_party/cJSON:cjson_static",
       "//third_party/jsoncpp:jsoncpp",
     ]
 

@@ -8,8 +8,9 @@
 class RectBench : public TestBase {
 public:
     RectBench(int shift);
-    ~RectBench();
+    ~RectBench(){};
     virtual void onDraw(OH_Drawing_Canvas* canvas, uint32_t index);
+    virtual void onCleanUp();
 protected:
     enum {
         RAND_SIZE = 300, //skia benchmark:300

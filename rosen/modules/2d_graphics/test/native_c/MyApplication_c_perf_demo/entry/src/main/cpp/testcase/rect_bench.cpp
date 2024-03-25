@@ -25,14 +25,24 @@ RectBench::RectBench(int shift) {
     }
 }
 
-RectBench::~RectBench() {
+//it will cause crash when drawing
+//RectBench::~RectBench() {
+//    for (int i = 0; i < RAND_SIZE; i++) {
+//        OH_Drawing_RectDestroy(rects[i]);
+//    }
+//}
+
+void RectBench::onCleanUp()
+{
     for (int i = 0; i < RAND_SIZE; i++) {
         OH_Drawing_RectDestroy(rects[i]);
+        rects[i] = nullptr;
     }
 }
 
 void RectBench::onDraw(OH_Drawing_Canvas* canvas, uint32_t index) {
     // rects_stroke_0_aa
+//    DRAWING_LOGI("RectBench::onDraw %{public}d", index);
     OH_Drawing_CanvasDrawRect(canvas, rects[index]);
 }
 
@@ -48,6 +58,7 @@ void RectBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_BrushSetAntiAlias(brush, true);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     onDraw(canvas, 0);
+    onCleanUp();
     OH_Drawing_CanvasDetachBrush(canvas);
 
     OH_Drawing_MatrixDestroy(matrix);
@@ -70,7 +81,7 @@ void RectBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
         onDraw(canvas, i % RAND_SIZE);
         OH_Drawing_CanvasDetachBrush(canvas);
     }
-
+    onCleanUp();
     OH_Drawing_MatrixDestroy(matrix);
     OH_Drawing_BrushDestroy(brush);
 }

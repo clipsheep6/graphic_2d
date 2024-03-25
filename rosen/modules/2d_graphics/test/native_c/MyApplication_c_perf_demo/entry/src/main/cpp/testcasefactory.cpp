@@ -30,6 +30,11 @@
 #include "testcase/hairline_path_bench.h"
 #include "testcase/gradient_bench.h"
 #include "testcase/xfermode_bench.h"
+#include "testcase/canvas_matrix_bench.h"
+#include "testcase/shadow_bench.h"
+#include "testcase/read_pix_bench.h"
+#include "testcase/rect_bench_for_pen.h"
+#include "testcase/bezier_bench.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -61,6 +66,30 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+            {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
+            {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
+            {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
+            {"drawcanvasdrawshadow_t_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,true); }},
+            {"drawcanvasdrawshadow_o_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,false); }},
+            {"drawcanvasdrawshadow_t_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,false); }},
+            {"drawcanvasdrawshadow_o_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,true); }},
+            {"drawcanvasreadpixels", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(false); }},
+            {"drawcanvasreadpixels_tobitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(true); }},
+            {"drawpenrect_1_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,0,true); }},
+            {"drawpenrect_1_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,4,true); }},
+            {"drawpenrect_3_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,0,true); }},
+            {"drawpenrect_3_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,4,true); }},
+            {"drawpenrect_1_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,0,false); }},
+            {"drawpenrect_1_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,4,false); }},
+            {"drawpenrect_3_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,0,false); }},
+            {"drawpenrect_3_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,4,false); }},
+            {"drawpenrectsrcmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<SrcModeRectBench>(); }},
+            {"drawpenbeizer_quad_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kButt_Cap,BezierBench::JoinType::kRound_Join,2,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_quad_square_bevel_10", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kSquare_Cap,BezierBench::JoinType::kBevel_Join,10,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_quad_round_miter_50", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kRound_Cap,BezierBench::JoinType::kMiter_Join,50,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kButt_Cap,BezierBench::JoinType::kRound_Join,2,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kSquare_Cap,BezierBench::JoinType::kBevel_Join,10,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kRound_Cap,BezierBench::JoinType::kMiter_Join,50,BezierBench::DrawType::draw_quad); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -89,9 +118,33 @@ namespace {
             {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::LINEAR,2); }}, // 主循环drawrect, penseteffect（由linear构造）
             {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::RADIAL,2); }}, // 主循环drawrect, penseteffect（由radial构造）
             {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::SWEEP,2); }}, // 主循环drawrect, penseteffect（由sweep构造）
-            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建
-            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建
-            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建
+            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
+            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
+            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+            {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
+            {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
+            {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
+            {"drawcanvasdrawshadow_t_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,true); }},
+            {"drawcanvasdrawshadow_o_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,false); }},
+            {"drawcanvasdrawshadow_t_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,false); }},
+            {"drawcanvasdrawshadow_o_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,true); }},
+            {"drawcanvasreadpixels", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(false); }},
+            {"drawcanvasreadpixels_tobitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(true); }},
+            {"drawpenrect_1_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,0,true); }},
+            {"drawpenrect_1_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,4,true); }},
+            {"drawpenrect_3_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,0,true); }},
+            {"drawpenrect_3_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,4,true); }},
+            {"drawpenrect_1_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,0,false); }},
+            {"drawpenrect_1_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(1,4,false); }},
+            {"drawpenrect_3_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,0,false); }},
+            {"drawpenrect_3_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBenchForPen>(3,4,false); }},
+            {"drawpenrectsrcmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<SrcModeRectBench>(); }},
+            {"drawpenbeizer_quad_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kButt_Cap,BezierBench::JoinType::kRound_Join,2,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_quad_square_bevel_10", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kSquare_Cap,BezierBench::JoinType::kBevel_Join,10,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_quad_round_miter_50", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kRound_Cap,BezierBench::JoinType::kMiter_Join,50,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kButt_Cap,BezierBench::JoinType::kRound_Join,2,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kSquare_Cap,BezierBench::JoinType::kBevel_Join,10,BezierBench::DrawType::draw_quad); }},
+            {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(BezierBench::CapType::kRound_Cap,BezierBench::JoinType::kMiter_Join,50,BezierBench::DrawType::draw_quad); }},
     };
 } // namespace
 

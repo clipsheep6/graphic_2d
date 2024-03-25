@@ -21,6 +21,11 @@ add_library(entry SHARED
     testcase/draw_bitmap_aa_bench.cpp
     testcase/bulk_rect_bench.cpp
     testcase/canvas_save_restore.cpp
+    testcase/canvas_matrix_bench.cpp
+    testcase/shadow_bench.cpp
+    testcase/read_pix_bench.cpp
+    testcase/rect_bench_for_pen.cpp
+    testcase/bezier_bench.cpp
     testcase/shader_mf_bench.cpp
     testcase/dash_line_bench.cpp
     testcase/circles_bench.cpp
@@ -43,6 +48,11 @@ add_library(myxnode SHARED
     testcase/draw_bitmap_aa_bench.cpp
     testcase/bulk_rect_bench.cpp
     testcase/canvas_save_restore.cpp
+    testcase/canvas_matrix_bench.cpp
+    testcase/shadow_bench.cpp
+    testcase/read_pix_bench.cpp
+    testcase/rect_bench_for_pen.cpp
+    testcase/bezier_bench.cpp
     testcase/shader_mf_bench.cpp
     testcase/dash_line_bench.cpp
     testcase/circles_bench.cpp

@@ -46,21 +46,25 @@ void CanvasMatrixBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasAttachPen(canvas, pen);
     
     OH_Drawing_Matrix* m = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetMatrix(m, 1,0,0, 0,1,0, 0,0,1);
     OH_Drawing_MatrixRotate(m, 10.0, 300., 300.);
     
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_CanvasSave(canvas);
         switch (cType) {
-            case Translate:{
-                    OH_Drawing_CanvasTranslate(canvas, 0.0001, 0.0001);
-                }break;
-            case Scale:{
-                    OH_Drawing_CanvasScale(canvas, 1.0001, 0.9999);
-                }break;
-            case ConcatMatrix:{
-                    OH_Drawing_CanvasConcatMatrix(canvas, m);
-                }break;                
+            case Translate: {
+                OH_Drawing_CanvasTranslate(canvas, 0.0001, 0.0001);
+                break;
             }
+            case Scale:{
+                OH_Drawing_CanvasScale(canvas, 1.0001, 0.9999);
+                break;
+            }
+            case ConcatMatrix:{
+                OH_Drawing_CanvasConcatMatrix(canvas, m);
+                break;
+            }             
+        }
         OH_Drawing_CanvasRestore(canvas);
     }
     OH_Drawing_CanvasDetachPen(canvas);

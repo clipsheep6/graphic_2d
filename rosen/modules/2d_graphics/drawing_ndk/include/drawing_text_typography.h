@@ -1984,6 +1984,28 @@ bool OH_Drawing_TextStyleGetHalfLeading(OH_Drawing_TextStyle*);
 const char* OH_Drawing_TextStyleGetLocale(OH_Drawing_TextStyle*);
 
 /**
+ * @brief Set mode of applying the leading over and under text.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @param heightMode Indicates the mode to set.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_TypographyTextSetHeightMode(OH_Drawing_TypographyStyle*, OH_Drawing_TextHeightBehavior heightMode);
+
+/**
+ * @brief Get mode of applying the leading over and under text.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TypographyStyle Indicates the pointer to an <b>OH_Drawing_TypographyStyle</b> object.
+ * @return Returns the mode.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_TextHeightBehavior OH_Drawing_TypographyTextGetHeightMode(OH_Drawing_TypographyStyle*);
+
+/**
  * @brief Mark the Typography as dirty, and initially state the Typography.
  *
  * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
@@ -2290,6 +2312,30 @@ OH_Drawing_TextAlign OH_Drawing_TypographyStyleGetEffectiveAlignment(OH_Drawing_
  * @version 1.0
  */
 bool OH_Drawing_TypographyStyleIsHintingEnabled(OH_Drawing_TypographyStyle* style);
+
+/**
+ * @brief Gets system font configuration information.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_FontConfigInfoErrorCode Indicates error code returned, based on the error code to
+ * release the memory of system font configuration information.
+ * For details, see the enum <b>OH_Drawing_FontConfigInfoErrorCode</b>.
+ * @return Returns a pointer to system font configuration information.
+ * Indicates the pointer to an <b>OH_Drawing_FontConfigInfo</b> object.
+ * @since 12
+ * @version 1.0
+ */
+OH_Drawing_FontConfigInfo* OH_Drawing_GetSystemFontConfigInfo(OH_Drawing_FontConfigInfoErrorCode*);
+
+/**
+ * @brief Releases the memory occupied by system font configuration information.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_FontConfigInfo Indicates the pointer to an <b>OH_Drawing_FontConfigInfo</b> object.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_DestroySystemFontConfigInfo(OH_Drawing_FontConfigInfo*);
 
 #ifdef __cplusplus
 }

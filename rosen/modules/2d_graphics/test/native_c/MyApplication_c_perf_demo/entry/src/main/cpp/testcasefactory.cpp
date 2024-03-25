@@ -30,6 +30,7 @@
 #include "testcase/hairline_path_bench.h"
 #include "testcase/gradient_bench.h"
 #include "testcase/xfermode_bench.h"
+#include "testcase/clear_bench.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -61,6 +62,7 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+            {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -92,6 +94,7 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建
+            {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
     };
 } // namespace
 

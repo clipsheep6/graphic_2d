@@ -44,6 +44,8 @@ void SkBench_AddPathTest::cleanup() {
     DRAWING_LOGI("SkBench_AddPathTest::~SkBench_AddPathTest delete");
 }
 
+// 用例名：SkBench_AddPathTest_addPath
+// 测试 OH_Drawing_PathAddPath 迁移基于skia PathBench.cpp->SkBench_AddPathTest
 void SkBench_AddPathTest::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
@@ -131,7 +133,8 @@ void SkBench_AddPathTest::OnTestFunction(OH_Drawing_Canvas *canvas) {
     DRAWING_LOGI(" SkBench_AddPathTest::OnTestFunction end");
 }
 
-
+// 用例名：SkBench_AddPathTest_addPath
+// 测试 OH_Drawing_PathAddPath 迁移基于skia PathBench.cpp->SkBench_AddPathTest
 void SkBench_AddPathTest::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     // 创建一个画笔pen画刷brush对象
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();

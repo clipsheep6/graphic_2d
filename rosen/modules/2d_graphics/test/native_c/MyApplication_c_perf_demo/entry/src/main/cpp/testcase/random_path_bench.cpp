@@ -21,13 +21,15 @@ array<OH_Drawing_Point2D, kNumPoints> fPoints;
 array<int, kPathCnt> fVerbCnts;
 array<int, kNumVerbs> fVerbs;
 
-void RandomPathBench::restartMakingPaths() {
+void RandomPathBench::restartMakingPaths()
+{
     fCurrPath = 0;
     fCurrVerb = 0;
     fCurrPoint = 0;
 }
 
-void RandomPathBench::createData(int minVerbs, int maxVerbs, bool allowMoves, OH_Drawing_Rect *bounds) {
+void RandomPathBench::createData(int minVerbs, int maxVerbs, bool allowMoves, OH_Drawing_Rect *bounds)
+{
     OH_Drawing_Rect *tempBounds;
     TestRend rand = TestRend();
     fVerbCnts.empty();
@@ -49,45 +51,46 @@ void RandomPathBench::createData(int minVerbs, int maxVerbs, bool allowMoves, OH
     restartMakingPaths();
 }
 
-void RandomPathBench::makePath(OH_Drawing_Path *path) {
+void RandomPathBench::makePath(OH_Drawing_Path *path)
+{
     int vCount = fVerbCnts[(fCurrPath++) & (kNumVerbCnts - 1)];
     for (int v = 0; v < vCount; ++v) {
         int verb = fVerbs[(fCurrVerb++) & (kNumVerbs - 1)];
 
         switch (verb) {
-        case Verb::kMove_Verb:
-            OH_Drawing_PathMoveTo(path, fPoints[(fCurrPoint++) & (kNumPoints - 1)].x,
-                                  fPoints[(fCurrPoint++) & (kNumPoints - 1)].y);
-            break;
-        case Verb::kLine_Verb:
-            OH_Drawing_PathLineTo(path, fPoints[(fCurrPoint++) & (kNumPoints - 1)].x,
-                                  fPoints[(fCurrPoint++) & (kNumPoints - 1)].y);
-            break;
-        case Verb::kQuad_Verb:
-            OH_Drawing_PathQuadTo(
-                path, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].x, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].y,
-                fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].x, fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].y);
-            fCurrPoint += 2;
-            break;
-        case Verb::kConic_Verb:
-            OH_Drawing_PathQuadTo(
-                path, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].x, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].y,
-                fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].x, fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].y);
-            fCurrPoint += 2;
-            break;
-        case Verb::kCubic_Verb:
-            OH_Drawing_PathCubicTo(
-                path, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].x, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].y,
-                fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].x, fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].y,
-                fPoints[(fCurrPoint + 2) & (kNumPoints - 1)].x, fPoints[(fCurrPoint + 2) & (kNumPoints - 1)].y);
-            fCurrPoint += 3;
-            break;
-        case Verb::kClose_Verb:
-            OH_Drawing_PathClose(path);
-            break;
-        default:
-            OH_Drawing_PathClose(path);
-            break;
+            case Verb::kMove_Verb:
+                OH_Drawing_PathMoveTo(path, fPoints[(fCurrPoint++) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint++) & (kNumPoints - 1)].y);
+                break;
+            case Verb::kLine_Verb:
+                OH_Drawing_PathLineTo(path, fPoints[(fCurrPoint++) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint++) & (kNumPoints - 1)].y);
+                break;
+            case Verb::kQuad_Verb:
+                OH_Drawing_PathQuadTo(path, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].y, fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].y);
+                fCurrPoint += 2;
+                break;
+            case Verb::kConic_Verb:
+                OH_Drawing_PathQuadTo(path, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].y, fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].y);
+                fCurrPoint += 2;
+                break;
+            case Verb::kCubic_Verb:
+                OH_Drawing_PathCubicTo(path, fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint + 0) & (kNumPoints - 1)].y, fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint + 1) & (kNumPoints - 1)].y, fPoints[(fCurrPoint + 2) & (kNumPoints - 1)].x,
+                    fPoints[(fCurrPoint + 2) & (kNumPoints - 1)].y);
+                fCurrPoint += 3;
+                break;
+            case Verb::kClose_Verb:
+                OH_Drawing_PathClose(path);
+                break;
+            default:
+                OH_Drawing_PathClose(path);
+                break;
         }
     }
 }

@@ -21,19 +21,18 @@ enum AddType {
 };
 
 enum RushType {
-        PAINTBRUSH_RECT,
-        NO_BRUSH_RECT,
-    };
+    PAINTBRUSH_RECT,
+    NO_BRUSH_RECT,
+};
 
 class SkBench_AddPathTest : public RandomPathBench {
 public:
+    SkBench_AddPathTest(AddType type, RushType bType) : fType(type), bType(bType) {}
+    SkBench_AddPathTest() : RandomPathBench() {}
+    void SkBench_AddPathTests(int i, int kPathCnt);
 
-   SkBench_AddPathTest(AddType type, RushType bType) : fType(type), bType(bType) {}
-   SkBench_AddPathTest() : RandomPathBench() {}
-   void SkBench_AddPathTests(int i, int kPathCnt);
+    ~SkBench_AddPathTest() = default;
 
-   ~SkBench_AddPathTest() = default;
-    
 // 初始化变量
 #define SK_Scalar1 1.0f
     int width = 10;

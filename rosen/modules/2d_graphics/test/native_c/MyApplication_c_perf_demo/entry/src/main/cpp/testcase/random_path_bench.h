@@ -39,6 +39,5 @@ protected:
     void restartMakingPaths();
     void createData(int minVerbs, int maxVerbs, bool allowMoves, OH_Drawing_Rect *bounds);
     void makePath(OH_Drawing_Path *path);
-
 };
 #endif // RANDOM_PATH_BENCH_H

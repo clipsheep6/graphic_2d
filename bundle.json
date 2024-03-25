@@ -87,7 +87,15 @@
           "node",
           "vulkan-headers",
           "hiview",
-          "battery_manager"
+          "battery_manager",
+          "vulkan-headers",
+          "zlib",
+          "bounds_checking_function",
+          "skia",
+          "openssl",
+          "libpng",
+          "drivers_peripheral_display",
+          "cJSON"
         ],
         "third_party": [
           "flutter",
@@ -268,6 +276,7 @@
                 "render/rs_filter.h",
                 "render/rs_image_cache.h",
                 "render/rs_shadow.h",
+                "render/rs_typeface_cache.h",
                 "render/rs_mask.h",
                 "render/rs_path.h",
                 "render/rs_border.h",

@@ -127,7 +127,10 @@ ohos_source_set("libtexgine_source") {
       defines += [ "USE_GRAPHIC_TEXT_GINE" ]
     }
     deps = [ "//third_party/bounds_checking_function:libsec_static" ]
-    include_dirs = [ "//third_party/bounds_checking_function/include" ]
+    include_dirs = [
+      "//third_party/bounds_checking_function/include",
+      "$cjson_root",
+    ]
 
     if (platform == "ohos") {
       defines += [ "BUILD_NON_SDK_VER" ]
@@ -141,6 +144,7 @@ ohos_source_set("libtexgine_source") {
       }
 
       external_deps = [
+        "$cjson_root:cjson_static",
         "c_utils:utils",
         "hilog:libhilog",
         "hitrace:hitrace_meter",

@@ -135,9 +135,7 @@ void DrawCmdList::ClearOp()
     imageAllocator_.ClearData();
     bitmapAllocator_.ClearData();
     imageMap_.clear();
-    typefaceMap_.clear();
     imageHandleVec_.clear();
-    typefaceHandleVec_.clear();
     drawOpItems_.clear();
     lastOpGenSize_ = 0;
     lastOpItemOffset_ = std::nullopt;
@@ -191,7 +189,7 @@ std::string DrawCmdList::GetOpsWithDesc() const
         desc += typeOpDes[item->GetType()];
         desc += "\n";
     }
-    LOGI("DrawCmdList::GetOpsWithDesc %{public}s, opitem sz: %{public}u", desc.c_str(), drawOpItems_.size());
+    LOGI("DrawCmdList::GetOpsWithDesc %{public}s, opitem sz: %{public}zu", desc.c_str(), drawOpItems_.size());
     return desc;
 }
 

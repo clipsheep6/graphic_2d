@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,7 +35,7 @@ enum class BuilderFlags {
     HAS_COLORS_BUILDER_FLAG = 1 << 1,
 };
 
-class Vertices {
+class DRAWING_API Vertices {
 public:
     Vertices() noexcept;
     explicit Vertices(std::shared_ptr<VerticesImpl>) noexcept;
@@ -43,6 +43,7 @@ public:
 
     /**
      * @brief Make a copy from vertices data.
+     * @param mode         vertex mode.
      * @param vertexCount  Vertex count.
      * @param positions    Positions data pointer.
      * @param tex          Texture coordinate data pointer.
@@ -57,6 +58,7 @@ public:
 
     /**
      * @brief Make a copy from vertices data.
+     * @param mode         vertex mode.
      * @param vertexCount  Vertex count.
      * @param positions    Positions data pointer.
      * @param tex          Texture coordinate data pointer.
@@ -111,7 +113,7 @@ public:
         ColorQuad* Colors();
 
         /**
-         * @brief Detach the built vertices object. After yhe first call, this will always return null.
+         * @brief Detach the built vertices object. After the first call, this will always return null.
          * @return Return a shared pointer of Vertices object or nullptr.
          */
         std::shared_ptr<Vertices> Detach();

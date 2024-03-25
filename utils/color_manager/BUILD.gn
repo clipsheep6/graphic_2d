@@ -70,7 +70,7 @@ if (current_os == "ohos") {
     public_deps = [ ":color_manager_source" ]
     public_external_deps = [ "bounds_checking_function:libsec_shared" ]
     if (defined(use_new_skia) && use_new_skia) {
-      public_deps += [ "$skia_root_new:skia_ohos" ]
+      public_external_deps += [ "skia:skia_ohos" ]
     } else {
       public_deps += [ "$flutter_root/build/skia:ace_skia_ohos" ]
     }

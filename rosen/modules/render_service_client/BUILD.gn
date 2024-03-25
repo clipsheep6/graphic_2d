@@ -24,8 +24,6 @@ config("render_service_client_config") {
     "$graphic_2d_root/interfaces/inner_api/surface",
     "$graphic_2d_root/interfaces/inner_api/composer",
     "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/export/rosen_text/",
-
-    "//drivers/peripheral/display/interfaces/include",
     "//drivers/peripheral/base",
     "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/rosen/modules/2d_graphics",
@@ -234,6 +232,8 @@ template("render_service_client_source_set") {
     }
 
     public_configs = [ ":render_service_client_config" ]
+
+    public_external_deps = [ "drivers_peripheral_display:hdi_gralloc_client" ]
 
     part_name = "graphic_2d"
     subsystem_name = "graphic"

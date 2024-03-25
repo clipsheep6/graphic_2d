@@ -1279,9 +1279,13 @@ HWTEST_F(RSInterfacesTest, NotifyPackageEvent001, Function | SmallTest | Level2)
  */
 HWTEST_F(RSInterfacesTest, NotifyRefreshRateEvent001, Function | SmallTest | Level2)
 {
+    constexpr int32_t maxFps = 1000;
+    constexpr int32_t minFps = 1;
     ASSERT_NE(rsInterfaces, nullptr);
-    EventInfo eventInfo = { "VOTER_IDLE", true, 1, 1000 };
-    rsInterfaces->NotifyRefreshRateEvent(eventInfo);
+    EventInfo addVote = { "VOTER_VIDEO", true, minFps, maxFps };
+    EventInfo delVote = { "VOTER_VIDEO", false};
+    rsInterfaces->NotifyRefreshRateEvent(addVote);
+    rsInterfaces->NotifyRefreshRateEvent(delVote);
     ASSERT_NE(rsInterfaces, nullptr);
 }
 
@@ -1392,6 +1396,50 @@ HWTEST_F(RSInterfacesTest, ResizeVirtualScreen001, Function | SmallTest | Level2
     ASSERT_EQ(ret, 0);
 
     rsInterfaces->RemoveVirtualScreen(virtualScreenId);
+}
+
+/*
+ * @tc.name: SetCurtainScreenUsingStatus001
+ * @tc.desc: Test SetCurtainScreenUsingStatus interface while input is true.
+ * @tc.type: FUNC
+ * @tc.require: issueI9ABGS
+ */
+HWTEST_F(RSInterfacesTest, SetCurtainScreenUsingStatus001, Function | SmallTest | Level2)
+{
+    rsInterfaces->SetCurtainScreenUsingStatus(true);
+}
+
+/*
+ * @tc.name: SetCurtainScreenUsingStatus001
+ * @tc.desc: Test SetCurtainScreenUsingStatus interface while input is false.
+ * @tc.type: FUNC
+ * @tc.require: issueI9ABGS
+ */
+HWTEST_F(RSInterfacesTest, SetCurtainScreenUsingStatus002, Function | SmallTest | Level2)
+{
+    rsInterfaces->SetCurtainScreenUsingStatus(false);
+}
+
+/*
+ * @tc.name: SetVirtualScreenUsingStatus001
+ * @tc.desc: Test SetVirtualScreenUsingStatus interface while input is true.
+ * @tc.type: FUNC
+ * @tc.require: issueI9ABGS
+ */
+HWTEST_F(RSInterfacesTest, SetVirtualScreenUsingStatus001, Function | SmallTest | Level2)
+{
+    rsInterfaces->SetVirtualScreenUsingStatus(true);
+}
+
+/*
+ * @tc.name: SetVirtualScreenUsingStatus002
+ * @tc.desc: Test SetVirtualScreenUsingStatus interface while input is false.
+ * @tc.type: FUNC
+ * @tc.require: issueI9ABGS
+ */
+HWTEST_F(RSInterfacesTest, SetVirtualScreenUsingStatus002, Function | SmallTest | Level2)
+{
+    rsInterfaces->SetVirtualScreenUsingStatus(false);
 }
 } // namespace Rosen
 } // namespace OHOS

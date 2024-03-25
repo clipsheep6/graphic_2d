@@ -29,7 +29,6 @@ config("surface_config") {
 
 config("surface_public_config") {
   include_dirs = [
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "$graphic_2d_root/interfaces/inner_api/surface",
     "$graphic_2d_root/interfaces/inner_api/common",
     "$graphic_2d_root/utils/sandbox",
@@ -88,6 +87,7 @@ ohos_shared_library("surface") {
     ":surface_public_config",
     "//commonlibrary/c_utils/base:utils_config",
   ]
+  public_external_deps = [ "ipc:ipc_core" ]
 
   deps = [ "$graphic_2d_root/utils/sync_fence:sync_fence" ]
 
@@ -112,7 +112,7 @@ ohos_shared_library("surface") {
       "drivers_interface_display:display_buffer_idl_headers",
       "drivers_interface_display:display_commontype_idl_headers",
       "drivers_interface_display:display_commontype_idl_headers_1.1",
-      "drivers_interface_display:libdisplay_buffer_hdi_impl_v1_1",
+      "drivers_interface_display:libdisplay_buffer_hdi_impl_v1_2",
     ]
   }
 

@@ -39,7 +39,7 @@ template("color_space_object_convertor_source_set") {
       "color_space_object_convertor/js_color_space_utils.cpp",
     ]
 
-    include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
+    external_deps = [ "hilog:libhilog" ]
     configs = [
       ":color_space_object_config",
       "$arkui_root/napi:ace_napi_config",
@@ -95,7 +95,7 @@ template("colorspacemanager_napi_source_set") {
       "colorspacemanager_napi/js_color_space_manager.cpp",
     ]
 
-    include_dirs = [ "$hilog_root/interfaces/native/innerkits/include" ]
+    external_deps = [ "hilog:libhilog" ]
     configs = [
       ":color_manager_napi_config",
       "$arkui_root/napi:ace_napi_config",

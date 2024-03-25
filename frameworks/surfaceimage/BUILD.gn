@@ -27,7 +27,6 @@ config("native_image_config") {
 
 config("libnative_image_public_config") {
   include_dirs = [
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/utils/sandbox",
     "$graphic_2d_root/interfaces/inner_api/surface",
@@ -52,6 +51,7 @@ ohos_shared_library("libnative_image") {
   configs = [ ":native_image_config" ]
 
   public_configs = [ ":libnative_image_public_config" ]
+  public_external_deps = [ "ipc:ipc_core" ]
 
   deps = [
     "$graphic_2d_root:libgl",

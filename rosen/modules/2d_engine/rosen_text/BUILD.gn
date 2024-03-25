@@ -190,6 +190,9 @@ if (enable_text_gine) {
     ]
 
     external_deps = [ "hilog:libhilog" ]
+
+    external_deps += [ "hitrace:hitrace_meter" ]
+
     part_name = "graphic_2d"
     subsystem_name = "graphic"
   }

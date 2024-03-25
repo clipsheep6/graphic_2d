@@ -21,8 +21,6 @@
 #include <cstdint>
 #include <inttypes.h>
 #include <string>
-#include <cstdarg>
-#include <cstdio>
 
 #include "hilog/log.h"
 #undef LOG_DOMAIN

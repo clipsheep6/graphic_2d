@@ -100,7 +100,7 @@ std::tuple<GLenum, GLintptr> WebGLArg::ToGLintptr(napi_env env, napi_value dataO
 template<class T>
 void WebGLCommBuffer::DumpDataBuffer(const char* format) const
 {
-    LOGD("WebGL WebGLCommBuffer dataLen_ %{public}u ", static_cast<unsigned int>(dataLen_));
+    LOGD("WebGL WebGLCommBuffer dataLen_ %{public}lu ", dataLen_);
     size_t count = dataLen_ / sizeof(T);
     size_t i = 0;
     if (count <= MAX_DUMP) {
@@ -315,7 +315,7 @@ napi_status WebGLReadBufferArg::GenBufferData(napi_value data, BufferDataType de
 template<class dstT>
 napi_value WebGLWriteBufferArg::GenExternalArray()
 {
-    LOGD("GenExternalArray dataLen_[%{public}u  %{public}u]", static_cast<unsigned int>(dataLen_), type_);
+    LOGD("GenExternalArray dataLen_[%{public}lu  %{public}u]", dataLen_, type_);
     napi_value outputBuffer = nullptr;
     size_t count = dataLen_ / sizeof(dstT);
     napi_value outputArray = nullptr;
@@ -862,8 +862,8 @@ void PixelsArg::Dump(const std::string& info) const
 void VertexAttribArg::Dump(const std::string &info) const
 {
     LOGD("%{public}s vertexAttrib index %{public}u %{public}d type %{public}u %{public}d "
-        "stride [%{public}u %{public}u]",
-        info.c_str(), index, size, type, normalized, stride, static_cast<unsigned int>(offset));
+        "stride [%{public}u %{public}" PRIu64 "]",
+        info.c_str(), index, size, type, normalized, stride, offset);
 }
 
 bool UniformExtInfo::GetUniformExtInfo(napi_env env, const NFuncArg& funcArg, int32_t start)

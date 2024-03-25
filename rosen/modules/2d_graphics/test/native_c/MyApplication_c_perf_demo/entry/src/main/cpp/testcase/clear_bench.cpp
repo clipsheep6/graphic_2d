@@ -30,9 +30,8 @@ void ClearBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_PenSetShaderEffect(pen, shaderEffect);
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
-    // 画矩形、圆角矩形
+    // 画矩形
     OH_Drawing_CanvasDrawRect(canvas, kPartialClip);
-    OH_Drawing_CanvasDrawRoundRect(canvas, kComplexClip);
     OH_Drawing_CanvasDrawRect(canvas, kInterruptRect);
 
     OH_Drawing_Brush *Brush = OH_Drawing_BrushCreate();
@@ -55,7 +54,7 @@ void ClearBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_CanvasClear(canvas, 0xFF0000FF);
     OH_Drawing_CanvasRestore(canvas);
 
-    OH_Drawing_RectCreate(float(200), float(200), float(203), float(203));
+    OH_Drawing_CanvasDrawRect(canvas, kInterruptRect);
 
     OH_Drawing_RectDestroy(kPartialClip);
     OH_Drawing_RoundRectDestroy(kComplexClip);
@@ -89,9 +88,8 @@ void ClearBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     OH_Drawing_PenSetShaderEffect(pen, shaderEffect);
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
-    // 画矩形、圆角矩形
+    // 画矩形
     OH_Drawing_CanvasDrawRect(canvas, kPartialClip);
-    OH_Drawing_CanvasDrawRoundRect(canvas, kComplexClip);
     OH_Drawing_CanvasDrawRect(canvas, kInterruptRect);
 
     OH_Drawing_Brush *Brush = OH_Drawing_BrushCreate();
@@ -115,7 +113,7 @@ void ClearBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
         OH_Drawing_CanvasClear(canvas, 0xFF0000FF);
         OH_Drawing_CanvasRestore(canvas);
 
-        OH_Drawing_RectCreate(float(200), float(200), float(203), float(203));
+        OH_Drawing_CanvasDrawRect(canvas, kInterruptRect);
     }
 
     OH_Drawing_RectDestroy(kPartialClip);

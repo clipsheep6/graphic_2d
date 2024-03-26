@@ -141,6 +141,7 @@ ohos_source_set("libtexgine_source") {
       }
 
       external_deps = [
+        "cJSON:cjson_static",
         "c_utils:utils",
         "hilog:libhilog",
         "hitrace:hitrace_meter",
@@ -159,6 +160,7 @@ ohos_source_set("libtexgine_source") {
         public_deps +=
             [ "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform" ]
       }
+      external_deps = [ "cJSON:cjson_static" ]
     }
   }
 

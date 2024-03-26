@@ -30,6 +30,7 @@
 #include "testcase/hairline_path_bench.h"
 #include "testcase/gradient_bench.h"
 #include "testcase/xfermode_bench.h"
+#include "testcase/skbench_addpathtest.h"
 #include "testcase/canvas_matrix_bench.h"
 #include "testcase/shadow_bench.h"
 #include "testcase/read_pix_bench.h"

@@ -1,5 +1,6 @@
 #include "path_bench.h"
 #include <native_drawing/drawing_color.h>
+#include <native_drawing/drawing_matrix.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
 #include <string>
@@ -75,4 +76,16 @@ void TrianglePathBench::MakePath(OH_Drawing_Path* path) {
     OH_Drawing_PathLineTo(path, 150, 50);
     OH_Drawing_PathLineTo(path, 200, 200);
     OH_Drawing_PathClose(path);
+}
+
+void RotatedRectBench::MakePath(OH_Drawing_Path* path) {
+    //当前用例名 drawpathrotate 测试 OH_Drawing_MatrixRotate  迁移基于skia pathBench.cpp->RotatedRectBench
+    // skia case name : rotated_rect_aa_45
+    SkRect r = {0, 0, 200, 200};
+    OH_Drawing_PathAddRect(path, r.fLeft, r.fTop, r.fRight, r.fBottom,
+                               OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetMatrix(matrix, 1, 0, 0, 0, 1, 0, 0, 0, 1);
+    OH_Drawing_MatrixRotate(matrix, fDegrees, 0, 0);
+    OH_Drawing_PathTransform(path, matrix);
 }

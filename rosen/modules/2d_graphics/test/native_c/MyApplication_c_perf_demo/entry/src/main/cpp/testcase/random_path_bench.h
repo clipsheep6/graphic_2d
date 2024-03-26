@@ -5,6 +5,8 @@
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_canvas.h>
 
+#define DEFAULT_SCREEN_WIDTH 720
+
 enum Verb {
     kMove_Verb = 0,
     kLine_Verb,

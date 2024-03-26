@@ -47,6 +47,7 @@ void SkBench_AddPathTest::cleanup()
     DRAWING_LOGI("SkBench_AddPathTest::~SkBench_AddPathTest delete");
 }
 
+
 // 用例名：SkBench_AddPathTest_addPath
 // 测试 OH_Drawing_PathAddPath 迁移基于skia PathBench.cpp->SkBench_AddPathTest
 void SkBench_AddPathTest::OnTestFunction(OH_Drawing_Canvas *canvas)
@@ -80,13 +81,9 @@ void SkBench_AddPathTest::OnTestFunction(OH_Drawing_Canvas *canvas)
                     OH_Drawing_BrushSetColor(brush, colors[i % RAND_SIZE]);
                     OH_Drawing_BrushSetAntiAlias(brush, true);
                     OH_Drawing_CanvasAttachBrush(canvas, brush);
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
-                } else if (bType == NO_BRUSH_RECT) {
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
                 }
             }
+            OH_Drawing_CanvasDrawPath(canvas, fPaths0[i]);
             DRAWING_LOGI("SkBench_AddPathTest::OnTestFunction_kAdd = %{public}p,%{public}p", fPaths0[i], fPaths1[i]);
             break;
         case kAddTrans_AddType:
@@ -99,13 +96,9 @@ void SkBench_AddPathTest::OnTestFunction(OH_Drawing_Canvas *canvas)
                     OH_Drawing_BrushSetColor(brush, colors[i % RAND_SIZE]);
                     OH_Drawing_BrushSetAntiAlias(brush, true);
                     OH_Drawing_CanvasAttachBrush(canvas, brush);
-                    OH_Drawing_CanvasDrawPath(canvas, result);
-                    OH_Drawing_CanvasDetachBrush(canvas);
-                } else if (bType == NO_BRUSH_RECT) {
-                    OH_Drawing_CanvasDrawPath(canvas, result);
-                    OH_Drawing_CanvasDetachBrush(canvas);
                 }
             }
+            OH_Drawing_CanvasDrawPath(canvas, fPaths0[i]);
             DRAWING_LOGI("SkBench_AddPathTest::OnTestFunction_kAddTrans = %{public}p,%{public}p", fPaths0[i],
                 fPaths1[i]);
             break;
@@ -117,13 +110,9 @@ void SkBench_AddPathTest::OnTestFunction(OH_Drawing_Canvas *canvas)
                     OH_Drawing_BrushSetColor(brush, colors[i % RAND_SIZE]);
                     OH_Drawing_BrushSetAntiAlias(brush, true);
                     OH_Drawing_CanvasAttachBrush(canvas, brush);
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
-                } else if (bType == NO_BRUSH_RECT) {
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
                 }
             }
+            OH_Drawing_CanvasDrawPath(canvas, fPaths0[i]);
             DRAWING_LOGI("SkBench_AddPathTest::OnTestFunction_kAddMatrix = %{public}p,%{public}p", fPaths0[i],
                 fPaths1[i]);
             break;
@@ -132,12 +121,14 @@ void SkBench_AddPathTest::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_MatrixDestroy(m);
     OH_Drawing_MatrixDestroy(m_kAddMatrix);
     OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_BrushDestroy(brush);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;
 
     DRAWING_LOGI(" SkBench_AddPathTest::OnTestFunction end");
 }
+
 
 // 用例名：SkBench_AddPathTest_addPath
 // 测试 OH_Drawing_PathAddPath 迁移基于skia PathBench.cpp->SkBench_AddPathTest
@@ -178,13 +169,9 @@ void SkBench_AddPathTest::OnTestPerformance(OH_Drawing_Canvas *canvas)
                     OH_Drawing_BrushSetColor(brush, colors[i % RAND_SIZE]);
                     OH_Drawing_BrushSetAntiAlias(brush, true);
                     OH_Drawing_CanvasAttachBrush(canvas, brush);
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
-                } else if (bType == NO_BRUSH_RECT) {
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
                 }
             }
+            OH_Drawing_CanvasDrawPath(canvas, fPaths0[i]);
             DRAWING_LOGI("SkBench_AddPathTest::OnTestPerformance_kAdd = %{public}p,%{public}p", fPaths0[i], fPaths1[i]);
             break;
         case kAddTrans_AddType:
@@ -198,13 +185,9 @@ void SkBench_AddPathTest::OnTestPerformance(OH_Drawing_Canvas *canvas)
                     OH_Drawing_BrushSetColor(brush, colors[i % RAND_SIZE]);
                     OH_Drawing_BrushSetAntiAlias(brush, true);
                     OH_Drawing_CanvasAttachBrush(canvas, brush);
-                    OH_Drawing_CanvasDrawPath(canvas, result);
-                    OH_Drawing_CanvasDetachBrush(canvas);
-                } else if (bType == NO_BRUSH_RECT) {
-                    OH_Drawing_CanvasDrawPath(canvas, result);
-                    OH_Drawing_CanvasDetachBrush(canvas);
                 }
             }
+            OH_Drawing_CanvasDrawPath(canvas, fPaths0[i]);
             DRAWING_LOGI("SkBench_AddPathTest::OnTestPerformance_kAddTrans = %{public}p,%{public}p", fPaths0[i],
                 fPaths1[i]);
             break;
@@ -217,13 +200,9 @@ void SkBench_AddPathTest::OnTestPerformance(OH_Drawing_Canvas *canvas)
                     OH_Drawing_BrushSetColor(brush, colors[i % RAND_SIZE]);
                     OH_Drawing_BrushSetAntiAlias(brush, true);
                     OH_Drawing_CanvasAttachBrush(canvas, brush);
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
-                } else if (bType == NO_BRUSH_RECT) {
-                    OH_Drawing_CanvasDrawPath(canvas, fPaths0[idx]);
-                    OH_Drawing_CanvasDetachBrush(canvas);
                 }
             }
+            OH_Drawing_CanvasDrawPath(canvas, fPaths0[i]);
             DRAWING_LOGI("SkBench_AddPathTest::OnTestPerformance_kAddMatrix = %{public}p,%{public}p", fPaths0[i],
                 fPaths1[i]);
             break;
@@ -232,6 +211,7 @@ void SkBench_AddPathTest::OnTestPerformance(OH_Drawing_Canvas *canvas)
     OH_Drawing_MatrixDestroy(m);
     OH_Drawing_MatrixDestroy(m_kAddMatrix);
     OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_BrushDestroy(brush);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;

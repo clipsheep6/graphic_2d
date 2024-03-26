@@ -62,18 +62,12 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
-             //skbench_kaddbrush：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.PAINTBRUSH_RECT设置画刷给画布并随机画布颜色
-            {"skbench_kaddbrush", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType, PAINTBRUSH_RECT); }},
-             //skbench_kaddtransbrush：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.PAINTBRUSH_RECT设置画刷给画布并随机画布颜色
-            {"skbench_kaddtransbrush", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType, PAINTBRUSH_RECT); }},
-             //skbench_kaddmatrixbrush：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.PAINTBRUSH_RECT设置画刷给画布并随机画布颜色
-            {"skbench_kaddmatrixbrush", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType, PAINTBRUSH_RECT); }},
-             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.NO_BRUSH_RECT无画布使用画笔更清晰直观看路径变化
-            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType, NO_BRUSH_RECT); }},
-             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.NO_BRUSH_RECT无画布使用画笔更清晰直观看路径变化
-            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType, NO_BRUSH_RECT); }},
-             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.NO_BRUSH_RECT无画布使用画笔更清晰直观看路径变化
-            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType, NO_BRUSH_RECT); }},
+             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
+            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
+             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
+             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -105,18 +99,12 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建
-             //skbench_kaddbrush：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.PAINTBRUSH_RECT设置画刷给画布并随机画布颜色
-            {"skbench_kaddbrush", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType, PAINTBRUSH_RECT); }},
-             //skbench_kaddtransbrush：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.PAINTBRUSH_RECT设置画刷给画布并随机画布颜色
-            {"skbench_kaddtransbrush", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType, PAINTBRUSH_RECT); }},
-             //skbench_kaddmatrixbrush：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.PAINTBRUSH_RECT设置画刷给画布并随机画布颜色
-            {"skbench_kaddmatrixbrush", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType, PAINTBRUSH_RECT); }},
-             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.NO_BRUSH_RECT无画布使用画笔更清晰直观看路径变化
-            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType, NO_BRUSH_RECT); }},
-             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.NO_BRUSH_RECT无画布使用画笔更清晰直观看路径变化
-            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType, NO_BRUSH_RECT); }},
-             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.NO_BRUSH_RECT无画布使用画笔更清晰直观看路径变化
-            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType, NO_BRUSH_RECT); }},
+             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
+            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
+             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
+             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
     };
 } // namespace
 

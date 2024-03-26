@@ -185,6 +185,29 @@ const BufferHandle* OH_NativeBuffer_GetBufferHandle(const OH_NativeBuffer *buffe
     return sbuffer->GetBufferHandle();
 }
 
+int32_t OH_NativeBuffer_GetBufferHandleV2(const OH_NativeBuffer *buffer, BufferHandleV2* bufferHandleV2)
+{
+    if (buffer == nullptr || bufferHandleV2 == nullptr) {
+        BLOGE("parameter error, please check input parameter");
+        return OHOS::GSERROR_INVALID_ARGUMENTS;
+    }
+    const SurfaceBuffer* sbuffer = OH_NativeBufferToSurfaceBuffer(buffer);
+    BufferHandle *bufferHandle = sbuffer->GetBufferHandle();
+    if (bufferHandle == nullptr) {
+        BLOGE("GetBufferHandle nullptr");
+        return OHOS::GSERROR_API_FAILED;
+    }
+    bufferHandleV2->fd = dup(bufferHandle->fd);
+    bufferHandleV2->width = bufferHandle->width;
+    bufferHandleV2->stride = bufferHandle->stride;
+    bufferHandleV2->height = bufferHandle->height;
+    bufferHandleV2->size = bufferHandle->size;
+    bufferHandleV2->format = bufferHandle->format;
+    bufferHandleV2->usage = bufferHandle->usage;
+    bufferHandleV2->virAddr = bufferHandle->virAddr;
+    return OHOS::GSERROR_OK;
+}
+
 void OH_NativeBuffer_GetNativeBufferConfig(const OH_NativeBuffer *buffer, OH_NativeBuffer_Config* config)
 {
     if (buffer == nullptr || config == nullptr) {

@@ -16,6 +16,7 @@
 #ifndef NDK_INCLUDE_NATIVE_WINDOW_H_
 #define NDK_INCLUDE_NATIVE_WINDOW_H_
 
+#include "buffer_handle_v2.h"
 #include "external_window.h"
 
 #ifdef __cplusplus
@@ -50,6 +51,7 @@ int32_t NativeWindowCancelBuffer(OHNativeWindow *window, OHNativeWindowBuffer *b
 // For details, see the NativeWindowOperation comment.
 int32_t NativeWindowHandleOpt(OHNativeWindow *window, int code, ...);
 BufferHandle *GetBufferHandleFromNative(OHNativeWindowBuffer *buffer);
+int32_t GetBufferHandleV2FromNative(OHNativeWindowBuffer *buffer, BufferHandleV2 *bufferHandleV2);
 
 // NativeObject: NativeWindow, NativeWindowBuffer
 int32_t NativeObjectReference(void *obj);

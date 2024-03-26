@@ -30,10 +30,6 @@ void ClearBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_PenSetShaderEffect(pen, shaderEffect);
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
-    // 画矩形
-    OH_Drawing_CanvasDrawRect(canvas, kPartialClip);
-    OH_Drawing_CanvasDrawRect(canvas, kInterruptRect);
-
     OH_Drawing_Brush *Brush = OH_Drawing_BrushCreate();
     OH_Drawing_CanvasSaveLayer(canvas, kPartialClip, Brush);
 
@@ -87,10 +83,6 @@ void ClearBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, Color, nullptr, 2, OH_Drawing_TileMode::CLAMP);
     OH_Drawing_PenSetShaderEffect(pen, shaderEffect);
     OH_Drawing_CanvasAttachPen(canvas, pen);
-
-    // 画矩形
-    OH_Drawing_CanvasDrawRect(canvas, kPartialClip);
-    OH_Drawing_CanvasDrawRect(canvas, kInterruptRect);
 
     OH_Drawing_Brush *Brush = OH_Drawing_BrushCreate();
     OH_Drawing_CanvasSaveLayer(canvas, kPartialClip, Brush);

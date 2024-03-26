@@ -20,17 +20,10 @@ enum AddType {
     kAddMatrix_AddType,
 };
 
-enum RushType {
-    PAINTBRUSH_RECT,
-    NO_BRUSH_RECT,
-};
-
 class SkBench_AddPathTest : public RandomPathBench {
 public:
-    SkBench_AddPathTest(AddType type, RushType bType) : fType(type), bType(bType) {}
+    SkBench_AddPathTest(AddType type) : fType(type) {}
     SkBench_AddPathTest() : RandomPathBench() {}
-    void SkBench_AddPathTests(int i, int kPathCnt);
-
     ~SkBench_AddPathTest() = default;
 
 // 初始化变量
@@ -50,11 +43,11 @@ protected:
 
     };
     uint32_t colors[RAND_SIZE];
+    void CreateArray(int i, int kPathCnt);
     void cleanup();
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
     void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
     AddType fType;
-    RushType bType;
 };
 
 #endif // SKBENCH_ADDPATHTEST_TEST_H

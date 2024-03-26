@@ -207,6 +207,7 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
 
     skStyle.setFontSize(SkDoubleToScalar(txt.fontSize));
     skStyle.setLetterSpacing(SkDoubleToScalar(txt.letterSpacing));
+    skStyle.setBaselineShift(-SkDoubleToScalar(txt.baselineOffset));
     skStyle.setWordSpacing(SkDoubleToScalar(txt.wordSpacing));
     skStyle.setHeight(SkDoubleToScalar(txt.height));
     skStyle.setHeightOverride(txt.heightOverride);

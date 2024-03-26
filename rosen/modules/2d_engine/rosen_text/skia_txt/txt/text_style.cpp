@@ -96,6 +96,7 @@ bool TextStyle::operator==(TextStyle const& other) const
         fontWeight == other.fontWeight &&
         fontStyle == other.fontStyle &&
         letterSpacing == other.letterSpacing &&
+        baselineOffset == other.baselineOffset &&
         wordSpacing == other.wordSpacing &&
         height == other.height &&
         heightOverride == other.heightOverride &&

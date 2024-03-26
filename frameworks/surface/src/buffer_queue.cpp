@@ -23,6 +23,7 @@
 #include <parameters.h>
 #include <scoped_bytrace.h>
 
+#include "acquire_fence_manager.h"
 #include "buffer_utils.h"
 #include "buffer_log.h"
 #include "hitrace_meter.h"
@@ -90,6 +91,11 @@ uint32_t BufferQueue::GetUsedSize()
 {
     uint32_t used_size = bufferQueueCache_.size();
     return used_size;
+}
+
+uint32_t BufferQueue::GetCurrentBufferCount()
+{
+    return freeList_.size();
 }
 
 GSError BufferQueue::PopFromFreeList(sptr<SurfaceBuffer> &buffer,
@@ -611,9 +617,9 @@ GSError BufferQueue::DoFlushBuffer(uint32_t sequence, const sptr<BufferExtraData
 
     bufferQueueCache_[sequence].timestamp = config.timestamp;
 
-    if (IsTagEnabled(HITRACE_TAG_GRAPHIC_AGP) && isLocalRender_) {
-        static SyncFenceTracker acquireFenceThread("Acquire Fence");
-        acquireFenceThread.TrackFence(fence);
+    if (isLocalRender_) {
+        int32_t bufferCount = GetCurrentBufferCount();
+        AcquireFenceManager::TrackFence(fence, bufferCount);
     }
     // if you need dump SurfaceBuffer to file, you should execute hdc shell param set persist.dumpbuffer.enabled 1
     // and reboot your device

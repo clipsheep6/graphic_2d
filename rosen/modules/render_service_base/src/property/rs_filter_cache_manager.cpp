@@ -25,6 +25,7 @@
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "render/rs_skia_filter.h"
+#include "property/rs_properties_painter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -493,6 +494,7 @@ void RSFilterCacheManager::GenerateFilteredSnapshot(
     // them again.
     RS_OPTIONAL_TRACE_FUNC();
 
+    RSPropertiesPainter::AddSnapshotCnt();
     // Create an offscreen canvas with the same size as the filter region.
     auto offscreenRect = dstRect;
     auto offscreenSurface = surface->MakeSurface(offscreenRect.GetWidth(), offscreenRect.GetHeight());

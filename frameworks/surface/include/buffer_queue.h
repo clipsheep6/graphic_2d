@@ -146,6 +146,7 @@ public:
     void SetStatus(bool status);
 
     GSError SetProducerCacheCleanFlag(bool flag);
+    uint32_t GetCurrentBufferCount();
     inline void ConsumerRequestCpuAccess(bool on)
     {
         isCpuAccessable_ = on;

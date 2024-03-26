@@ -25,6 +25,7 @@
 
 #include "src/core/SkCanvasPriv.h"
 
+#include "acquire_fence_manager.h"
 #include "common/rs_background_thread.h"
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
@@ -37,6 +38,7 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_effect_render_node.h"
+#include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_processor_factory.h"
@@ -75,6 +77,7 @@ namespace Rosen {
 namespace {
 constexpr uint32_t PHONE_MAX_APP_WINDOW_NUM = 1;
 constexpr uint32_t CACHE_MAX_UPDATE_TIME = 2;
+constexpr int MAX_BLUR_CNT = 3;
 constexpr int ROTATION_90 = 90;
 constexpr int ROTATION_270 = 270;
 constexpr int MAX_ALPHA = 255;
@@ -2740,6 +2743,9 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
 #endif
         FinishOverDraw();
+        int blurCnt = RSPropertiesPainter::GetAndResetSnapshotCnt();
+        blurCnt = std::clamp<int>(blurCnt, 0, MAX_BLUR_CNT);
+        AcquireFenceManager::SetBlurCnt(blurCnt);
         RS_TRACE_BEGIN("RSUniRender:FlushFrame");
         renderFrame_->Flush();
         RS_TRACE_END();

@@ -40,6 +40,8 @@ public:
         const RRect* rrect = nullptr, bool isAbsCoordinate = true, bool radiusInclude = true);
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
     static int GetAndResetBlurCnt();
+    static int GetAndResetSnapshotCnt();
+    static void AddSnapshotCnt();
     static void GetOutlineDirtyRect(RectI& dirtyOutline,
         const RSProperties& properties, const bool& isAbsCoordinate = true);
     static bool PickColor(const RSProperties& properties, RSPaintFilterCanvas& canvas, Drawing::Path& drPath,
@@ -129,6 +131,7 @@ private:
     static std::shared_ptr<Drawing::RuntimeEffect> lightUpEffectShaderEffect_;
     static std::shared_ptr<Drawing::RuntimeEffect> dynamicLightUpBlenderEffect_;
     inline static int g_blurCnt = 0;
+    inline static int g_snapshotCnt = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

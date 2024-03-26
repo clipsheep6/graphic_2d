@@ -34,6 +34,7 @@
 #include "include/gpu/GrDirectContext.h"
 #include "rs_trace.h"
 
+#include "acquire_fence_manager.h"
 #include "animation/rs_animation_fraction.h"
 #include "benchmarks/file_utils.h"
 #include "command/rs_message_processor.h"

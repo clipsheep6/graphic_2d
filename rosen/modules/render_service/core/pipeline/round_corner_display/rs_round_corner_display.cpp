@@ -24,6 +24,7 @@
 #include "common/rs_optional_trace.h"
 #include "common/rs_singleton.h"
 #include "rs_sub_thread_rcd.h"
+#include "qos.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -45,6 +46,8 @@ bool RoundCornerDisplay::Init()
     LoadImgsbyResolution(displayWidth_, displayHeight_);
     isRcdEnable_ = RSSystemProperties::GetRSScreenRoundCornerEnable();
     RS_LOGD("[%{public}s] RoundCornerDisplay init \n", __func__);
+    auto ret = OHOS::QOS::SetThreadQos(OHOS::QOS::QosLevel::QOS_USER_INTERACTIVE);
+    RS_LOGI("lyly debug : SetThreadQos = %{public}d", ret);
     return true;
 }
 

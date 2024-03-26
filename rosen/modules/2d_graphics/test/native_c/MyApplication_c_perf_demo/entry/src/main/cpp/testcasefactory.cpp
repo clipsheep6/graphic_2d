@@ -34,6 +34,7 @@
 #include "testcase/shadow_bench.h"
 #include "testcase/read_pix_bench.h"
 #include "testcase/bezier_bench.h"
+#include "testcase/clear_bench.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -89,6 +90,7 @@ namespace {
             {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP,OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN,2,BezierBench::DrawType::draw_quad); }},
             {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP,OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN,10,BezierBench::DrawType::draw_quad); }},
             {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP,OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN,50,BezierBench::DrawType::draw_quad); }},
+            {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -144,6 +146,10 @@ namespace {
             {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP,OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN,2,BezierBench::DrawType::draw_quad); }},
             {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP,OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN,10,BezierBench::DrawType::draw_quad); }},
             {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP,OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN,50,BezierBench::DrawType::draw_quad); }},
+            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建
+            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建
+            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建
+            {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
     };
 } // namespace
 

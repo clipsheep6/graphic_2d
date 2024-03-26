@@ -50,6 +50,23 @@ enum TouchStatus : uint32_t {
     TOUCH_UP = 4
 };
 
+struct FrameRateVoteInfo {
+    std::string voterName;
+    uint32_t preferred;
+    uint64_t timestamp;
+};
+
+struct FrameRatepVoteLTPOInfo {
+    std::string type;
+    uint32_t preferred;
+    uint64_t timestamp;
+
+    void SetInfo(std::string type_, uint32_t preferred_) {
+        type = type_;
+        preferred = preferred_;
+    }
+};
+
 class HgmFrameRateManager {
 public:
     HgmFrameRateManager() = default;

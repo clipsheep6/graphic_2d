@@ -104,6 +104,8 @@ namespace {
             {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP,OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN,10,BezierBench::DrawType::draw_quad); }},
             {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP,OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN,50,BezierBench::DrawType::draw_quad); }},
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
+            {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
+            {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -175,6 +177,8 @@ namespace {
              //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.NO_BRUSH_RECT无画布使用画笔更清晰直观看路径变化
             {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType, NO_BRUSH_RECT); }},
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
+            {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
+            {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
     };
 } // namespace
 

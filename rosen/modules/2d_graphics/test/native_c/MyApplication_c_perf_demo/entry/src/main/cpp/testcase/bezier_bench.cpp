@@ -59,22 +59,16 @@ void BezierBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_PathCubicTo(pathCubic, 40, 60, 20, 80, 20, 100); 
     OH_Drawing_PenLineCapStyle cap;
     OH_Drawing_PenLineJoinStyle join;
-    OH_Drawing_Rect* rect;
-    TestRend rand = TestRend();
+    OH_Drawing_PenSetAntiAlias(pen,true);
+    OH_Drawing_PenSetCap(pen, getOhCapType(capType));
+    OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
+    OH_Drawing_PenSetWidth(pen, fWidth);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
     if(drawType == DrawType::draw_quad){
-        OH_Drawing_PenSetAntiAlias(pen,true);
-        OH_Drawing_PenSetCap(pen, getOhCapType(capType));
-        OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
-        OH_Drawing_PenSetWidth(pen, fWidth);
-        OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawPath(canvas, pathQuad);
     }
     else{
-        OH_Drawing_PenSetAntiAlias(pen,true);
-        OH_Drawing_PenSetCap(pen, getOhCapType(capType));
-        OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
-        OH_Drawing_PenSetWidth(pen, fWidth);
-        OH_Drawing_CanvasAttachPen(canvas, pen);
+        OH_Drawing_CanvasDrawPath(canvas, pathCubic);
     }
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
@@ -98,25 +92,18 @@ void BezierBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_PathCubicTo(pathCubic, 40, 60, 20, 80, 20, 100); 
     OH_Drawing_PenLineCapStyle cap;
     OH_Drawing_PenLineJoinStyle join;
-    OH_Drawing_Rect* rect;
-    TestRend rand = TestRend();
+    OH_Drawing_PenSetAntiAlias(pen,true);
+    OH_Drawing_PenSetCap(pen, getOhCapType(capType));
+    OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
+    OH_Drawing_PenSetWidth(pen, fWidth);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
     if(drawType == DrawType::draw_quad){
         for (int i = 0; i < testCount_; i++) {
-            OH_Drawing_PenSetAntiAlias(pen,true);
-            OH_Drawing_PenSetCap(pen, getOhCapType(capType));
-            OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
-            OH_Drawing_PenSetWidth(pen, fWidth);
-            OH_Drawing_CanvasAttachPen(canvas, pen);
             OH_Drawing_CanvasDrawPath(canvas, pathQuad);
         }    
     }
     else{
         for (int i = 0; i < testCount_; i++) {
-            OH_Drawing_PenSetAntiAlias(pen,true);
-            OH_Drawing_PenSetCap(pen, getOhCapType(capType));
-            OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
-            OH_Drawing_PenSetWidth(pen, fWidth);
-            OH_Drawing_CanvasAttachPen(canvas, pen);
             OH_Drawing_CanvasDrawPath(canvas, pathCubic);
         } 
     }

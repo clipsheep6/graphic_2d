@@ -33,7 +33,6 @@
 #include "testcase/canvas_matrix_bench.h"
 #include "testcase/shadow_bench.h"
 #include "testcase/read_pix_bench.h"
-#include "testcase/rect_bench_for_pen.h"
 #include "testcase/bezier_bench.h"
 
 namespace {

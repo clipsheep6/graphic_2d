@@ -24,7 +24,6 @@ add_library(entry SHARED
     testcase/canvas_matrix_bench.cpp
     testcase/shadow_bench.cpp
     testcase/read_pix_bench.cpp
-    testcase/rect_bench_for_pen.cpp
     testcase/bezier_bench.cpp
     testcase/shader_mf_bench.cpp
     testcase/dash_line_bench.cpp
@@ -51,7 +50,6 @@ add_library(myxnode SHARED
     testcase/canvas_matrix_bench.cpp
     testcase/shadow_bench.cpp
     testcase/read_pix_bench.cpp
-    testcase/rect_bench_for_pen.cpp
     testcase/bezier_bench.cpp
     testcase/shader_mf_bench.cpp
     testcase/dash_line_bench.cpp

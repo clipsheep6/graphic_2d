@@ -4,12 +4,15 @@
 #include <bits/alltypes.h>
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_canvas.h>
+#include <native_drawing/drawing_pen.h>
 
 class RectBench : public TestBase {
 public:
-    RectBench(int shift);
-    ~RectBench();
+    RectBench(int shift,bool bBrush = true,int stroke = 0,bool aa = true,bool perspective = true);
+    ~RectBench(){};
+    virtual void setupPaint(OH_Drawing_Canvas* canvas,OH_Drawing_Pen* pen){}
     virtual void onDraw(OH_Drawing_Canvas* canvas, uint32_t index);
+    virtual void onCleanUp();
 protected:
     enum {
         RAND_SIZE = 300, //skia benchmark:300
@@ -22,6 +25,10 @@ protected:
     uint32_t colors[RAND_SIZE];
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int     fStroke;
+    bool    fAA;
+    bool    fPerspective;
+    bool    fBrush;
 };
 
 class RRectBench : public RectBench {
@@ -39,4 +46,31 @@ public:
 protected:
     void onDraw(OH_Drawing_Canvas* canvas, uint32_t index) override;
 };
+
+//class RectBenchForPen : public RectBench {
+//    int     fStroke;
+//    bool    fAA;
+//    bool    fPerspective;
+//public:
+//    RectBenchForPen(int shift,int stroke = 0,bool aa = true,bool perspective = false)
+//    :RectBench::RectBench(shift),fStroke(stroke),fAA(aa),fPerspective(perspective){}
+//    ~RectBenchForPen(){};
+//    virtual void setupPaint(OH_Drawing_Canvas* canvas,OH_Drawing_Pen* pen, uint32_t index) {
+//        RectBench::onDraw(canvas, index);
+//    };
+//protected:
+//    void OnTestFunction(OH_Drawing_Canvas *canvas) override;
+//    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+//    
+//};
+
+class SrcModeRectBench : public RectBench {
+public:
+    SrcModeRectBench():RectBench(1,false,0,true,false){}
+    ~SrcModeRectBench() = default;
+
+protected:
+    void setupPaint(OH_Drawing_Canvas* canvas,OH_Drawing_Pen* pen) override;
+};
+
 #endif // RECT_BENCH_H

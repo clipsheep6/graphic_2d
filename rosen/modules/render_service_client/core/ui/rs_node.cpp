@@ -19,6 +19,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include "cJSON.h"
 
 #include "rs_trace.h"
 #include "sandbox_utils.h"

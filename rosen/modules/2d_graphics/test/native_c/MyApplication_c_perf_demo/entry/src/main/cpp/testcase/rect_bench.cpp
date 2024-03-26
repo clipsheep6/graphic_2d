@@ -1,7 +1,8 @@
-#include "draw_rect.h"
+#include "rect_bench.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_matrix.h>
+#include <native_drawing/drawing_round_rect.h>
 #include "test_common.h"
 #include "common/log_common.h"
 
@@ -28,6 +29,11 @@ RectBench::~RectBench() {
     for (int i = 0; i < RAND_SIZE; i++) {
         OH_Drawing_RectDestroy(rects[i]);
     }
+}
+
+void RectBench::onDraw(OH_Drawing_Canvas* canvas, uint32_t index) {
+    // rects_stroke_0_aa
+    OH_Drawing_CanvasDrawRect(canvas, rects[index]);
 }
 
 void RectBench::OnTestFunction(OH_Drawing_Canvas* canvas)
@@ -67,4 +73,16 @@ void RectBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 
     OH_Drawing_MatrixDestroy(matrix);
     OH_Drawing_BrushDestroy(brush);
+}
+
+void RRectBench::onDraw(OH_Drawing_Canvas* canvas, uint32_t index) {
+    // rrects_stroke_0_aa
+    OH_Drawing_RoundRect *rrect = OH_Drawing_RoundRectCreate(rects[index], widths[index]/4, heights[index]/4);
+    OH_Drawing_CanvasDrawRoundRect(canvas, rrect);
+    OH_Drawing_RoundRectDestroy(rrect);
+}
+
+void OvalBench::onDraw(OH_Drawing_Canvas* canvas, uint32_t index) {
+    // ovals_stroke_0_aa
+    OH_Drawing_CanvasDrawOval(canvas, rects[index]);
 }

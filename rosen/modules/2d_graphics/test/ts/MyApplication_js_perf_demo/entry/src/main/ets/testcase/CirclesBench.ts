@@ -1,0 +1,56 @@
+
+import drawing from "@ohos.graphics.drawing";
+import {TestBase} from '../pages/testbase';
+import { OHRandom } from '../utils/OHRandom'
+
+const TAG = '[DrawingTest]';
+
+export class CirclesBench extends TestBase {
+
+  public rand: OHRandom = new OHRandom()
+
+  public constructor() {
+    // 根据需求，如果与默认值不一样，请继承重写
+    super();
+    this.fileName_ = "patharcto";
+  }
+
+  public OnTestFunction(canvas: drawing.Canvas) {
+    //接口调用，功能测试.cpu/gpu调用接口一致
+    const brush = new drawing.Brush();
+    brush.setAntiAlias(true)
+    canvas.attachBrush(brush);
+    const path = new drawing.Path();
+    let radius = this.rand.nextUScalar1() * 3
+    let fLeft = this.rand.nextUScalar1() * 300
+    let fTop = this.rand.nextUScalar1() * 300
+    let fRight = fLeft + 2 * radius
+    let fBottom = fTop + 2 * radius
+    console.log(`www data left: ${fLeft} right: ${fRight} top: ${fTop} bottom: ${fBottom} radius: ${radius}`)
+    path.arcTo(fLeft, fTop, fRight, fBottom, 0, 180);
+    path.arcTo(fLeft, fTop, fRight, fBottom, 180, 360);
+    path.close()
+    canvas.drawPath(path);
+  }
+
+  // "circles_fill"
+  public OnTestPerformance(canvas: drawing.Canvas) {
+    //接口重复调用，性能功耗测试 cpu/gpu调用接口一致
+    const pen = new drawing.Brush();
+    pen.setAntiAlias(true)
+    canvas.attachBrush(pen);
+    for (let index = 0; index < this.testCount_; index++) {
+      const path = new drawing.Path();
+      let radius = this.rand.nextUScalar1() * 3
+      let fLeft = this.rand.nextUScalar1() * 300
+      let fTop = this.rand.nextUScalar1() * 300
+      let fRight = fLeft + 2 * radius
+      let fBottom = fTop + 2 * radius
+      path.arcTo(fLeft, fTop, fRight, fBottom, 0, 180);
+      path.arcTo(fLeft, fTop, fRight, fBottom, 180, 360);
+      path.close()
+      canvas.drawPath(path);
+    }
+    canvas.detachBrush()
+  }
+}

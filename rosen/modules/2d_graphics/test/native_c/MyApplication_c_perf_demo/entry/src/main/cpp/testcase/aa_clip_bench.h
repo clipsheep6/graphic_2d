@@ -5,10 +5,10 @@
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_canvas.h>
 
-class AaClipBench : public TestBase {
+class AAClipBench : public TestBase {
 public:
-    AaClipBench(bool isPath, bool isAa);
-    ~AaClipBench();
+    AAClipBench(bool isPath, bool isAa);
+    ~AAClipBench();
     virtual void onDraw(OH_Drawing_Canvas* canvas, uint32_t index) {};
 protected:
     bool isPath_;

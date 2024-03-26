@@ -17,6 +17,9 @@ import {TestBase} from './testbase';
 import {CaseFactory} from './casefactory';
 import {MyNodeController} from './myxnode';
 import {Global} from './global';
+import globalThis from '../utils/globalThis'
+import resourceManager from '@ohos.resourceManager';
+import image from '@ohos.multimedia.image';
 
 const TAG = '[DrawingTest]';
 
@@ -27,14 +30,14 @@ struct Index {
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  @State testType: string = 'function';
+  @State testType: string = 'performance';
   @State drawingType: string = 'gpu';
-  @State caseNameStr: string  = 'pathreset';
+  @State caseNameStr: string  = 'drawtextblobmode';
   @State information: string = '';
   @State testAll: boolean = false;
   caseNameStrBefore: string  = '';
   scroller: Scroller = new Scroller();
-  caseCountStr: string = '100000';
+  caseCountStr: string = '1000';
   myNodeController = new MyNodeController();
 
   build() {
@@ -215,7 +218,24 @@ struct Index {
     this.information = msg;
     console.log(TAG, msg);
   }
-  aboutToAppear() {
+  async aboutToAppear() {
+
+    console.log("www data 0 start readPixelMap")
+    try {
+      let resourceMgr: resourceManager.ResourceManager = getContext(this).resourceManager
+      let fileData = await resourceMgr.getRawFileContent("icon.png")
+      const buffer = fileData.buffer
+      const imageSource = image.createImageSource(buffer)
+      imageSource.createPixelMap((err: Error, PixelMap: image.PixelMap) => {
+        globalThis.getInstance().setPixelMap(PixelMap)
+        console.log("www data 0 in createPixelMap err is " + JSON.stringify(err));
+      })
+    } catch (e) {
+      console.log("www data 0" + JSON.stringify(e))
+    }
+    console.log("www data 0 success readPixelMap")
+
+
     this.myNodeController.SetPrintCallback((str:string)=>{
       this.LogMsg(str);
     })

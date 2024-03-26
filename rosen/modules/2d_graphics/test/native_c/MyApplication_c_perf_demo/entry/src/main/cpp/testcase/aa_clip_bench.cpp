@@ -9,7 +9,7 @@
 #include "test_common.h"
 #include "common/log_common.h"
 
-AaClipBench::AaClipBench(bool isPath, bool isAa): isPath_(isPath), isAa_(isAa) {
+AAClipBench::AAClipBench(bool isPath, bool isAa): isPath_(isPath), isAa_(isAa) {
     clipRect[0] = OH_Drawing_RectCreate(200.5, 100.5, 600.5, 500.5);
     clipRect[1] = OH_Drawing_RectCreate(0.5, 100.5, 400.5, 500.5);
     clipPath = OH_Drawing_PathCreate();
@@ -18,15 +18,15 @@ AaClipBench::AaClipBench(bool isPath, bool isAa): isPath_(isPath), isAa_(isAa) {
     OH_Drawing_RoundRectDestroy(rrect);
 }
 
-AaClipBench::~AaClipBench() {
+AAClipBench::~AAClipBench() {
     OH_Drawing_RectDestroy(clipRect[0]);
     OH_Drawing_RectDestroy(clipRect[1]);
     OH_Drawing_PathCopy(clipPath);
     }
 
-void AaClipBench::OnTestFunction(OH_Drawing_Canvas* canvas)
+void AAClipBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
-    DRAWING_LOGE("AaClipBench::OnTestFunction");
+    DRAWING_LOGE("AAClipBench::OnTestFunction");
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
@@ -55,11 +55,11 @@ void AaClipBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_PenDestroy(pen);
 }
 
-void AaClipBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
+void AAClipBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     // aaclip_path_AA
     // aaclip_rect_AA
-    DRAWING_LOGE("AaClipBench::OnTestPerformance");
+    DRAWING_LOGE("AAClipBench::OnTestPerformance");
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
     OH_Drawing_CanvasAttachBrush(canvas, brush);

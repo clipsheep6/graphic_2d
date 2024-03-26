@@ -51,7 +51,7 @@ void CanvasMatrixBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
     
     for (int i = 0; i < testCount_;) {
         OH_Drawing_CanvasSave(canvas);
-        for (int j = 0; j < 1000; j++) {
+        for (int j = 0; j < 10000; j++) {
             switch (cType) {
                 case Translate: {
                     OH_Drawing_CanvasTranslate(canvas, 0.0001, 0.0001);

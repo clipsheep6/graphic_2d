@@ -4,6 +4,7 @@
 
 class CanvasMatrixBench : public TestBase {
 public:
+    //对三种case进行分类，使用后就是三条测试用例 
     enum CanvasType{
         Translate,
         Scale,

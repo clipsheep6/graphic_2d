@@ -7,44 +7,6 @@
 #include "common/log_common.h"
 #include "test_common.h"
 
-OH_Drawing_PenLineCapStyle getOhCapType(BezierBench::CapType c)
-{
-    switch (c) {
-        case BezierBench::CapType::kButt_Cap:
-        {
-            return OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP;
-        }
-        case BezierBench::CapType::kSquare_Cap:
-        {
-            return OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP;
-        }
-        case BezierBench::CapType::kRound_Cap:
-        {
-            return OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP;
-        }        
-        default:
-            return OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP;
-    }    
-}
-
-OH_Drawing_PenLineJoinStyle getOhJoinType(BezierBench::JoinType j)
-{
-    switch (j) {
-        case BezierBench::JoinType::kRound_Join:
-        {
-            return OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN;
-        }
-        case BezierBench::JoinType::kBevel_Join:
-        {
-            return OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN;
-        }
-        case BezierBench::JoinType::kMiter_Join:
-        {
-            return OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN;
-        }
-    }
-}
-
 void BezierBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
@@ -60,8 +22,8 @@ void BezierBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_PenLineCapStyle cap;
     OH_Drawing_PenLineJoinStyle join;
     OH_Drawing_PenSetAntiAlias(pen,true);
-    OH_Drawing_PenSetCap(pen, getOhCapType(capType));
-    OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
+    OH_Drawing_PenSetCap(pen, (capType));
+    OH_Drawing_PenSetJoin(pen, (joinType));
     OH_Drawing_PenSetWidth(pen, fWidth);
     OH_Drawing_CanvasAttachPen(canvas, pen);
     if(drawType == DrawType::draw_quad){
@@ -89,12 +51,12 @@ void BezierBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_PathQuadTo(pathQuad, 20, 60, 20, 100);
     OH_Drawing_PathMoveTo(pathCubic, 20, 20);
     OH_Drawing_PathCubicTo(pathCubic, 40, 20, 60, 40, 60, 60);
-    OH_Drawing_PathCubicTo(pathCubic, 40, 60, 20, 80, 20, 100); 
+    OH_Drawing_PathCubicTo(pathCubic, 40, 60, 20, 80, 20, 100);
     OH_Drawing_PenLineCapStyle cap;
     OH_Drawing_PenLineJoinStyle join;
     OH_Drawing_PenSetAntiAlias(pen,true);
-    OH_Drawing_PenSetCap(pen, getOhCapType(capType));
-    OH_Drawing_PenSetJoin(pen, getOhJoinType(joinType));
+    OH_Drawing_PenSetCap(pen, (capType));
+    OH_Drawing_PenSetJoin(pen, (joinType));
     OH_Drawing_PenSetWidth(pen, fWidth);
     OH_Drawing_CanvasAttachPen(canvas, pen);
     if(drawType == DrawType::draw_quad){

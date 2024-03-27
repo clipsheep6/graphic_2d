@@ -901,6 +901,7 @@ public:
 #ifdef USE_SURFACE_TEXTURE
     std::shared_ptr<RSSurfaceTexture> GetSurfaceTexture() const { return surfaceTexture_; };
     void SetSurfaceTexture(const std::shared_ptr<RSSurfaceTexture> &texture) { surfaceTexture_ = texture; }
+    void ClearTextureCache();
 #endif
     
     void SetForeground(bool isForeground)

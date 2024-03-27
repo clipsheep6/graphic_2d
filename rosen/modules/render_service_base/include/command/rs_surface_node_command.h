@@ -57,6 +57,7 @@ enum RSSurfaceNodeCommandType : uint16_t {
     SURFACE_NODE_DETACH_TO_DISPLAY,
     SURFACE_NODE_SET_BOOT_ANIMATION,
     SURFACE_NODE_CREATE_SURFACE_EXT,
+    SURFACE_NODE_CLEAR_TEXTURE_CACHE,
     SURFACE_NODE_SET_FOREGROUND,
     SURFACE_NODE_SET_SURFACE_ID,
     SURFACE_NODE_SET_FORCE_UIFIRST,
@@ -97,6 +98,7 @@ public:
     static void SetBootAnimation(RSContext& context, NodeId nodeId, bool isBootAnimation);
 #ifdef USE_SURFACE_TEXTURE
     static void CreateSurfaceExt(RSContext& context, NodeId id, const std::shared_ptr<RSSurfaceTexture>& surfaceExt);
+    static void ClearTextureCache(RSContext& context, NodeId id);
 #endif
     static void SetForeground(RSContext& context, NodeId nodeId, bool isForeground);
     static void SetSurfaceId(RSContext& context, NodeId nodeId, SurfaceId surfaceId);
@@ -171,6 +173,9 @@ ADD_COMMAND(RSurfaceNodeSetSurfaceId,
 ADD_COMMAND(RSSurfaceNodeCreateSurfaceExt,
     ARG(SURFACE_NODE, SURFACE_NODE_CREATE_SURFACE_EXT,
     SurfaceNodeCommandHelper::CreateSurfaceExt, NodeId, std::shared_ptr<RSSurfaceTexture>))
+ADD_COMMAND(RSSurfaceNodeClearTextureCache,
+    ARG(SURFACE_NODE, SURFACE_NODE_CLEAR_TEXTURE_CACHE,
+    SurfaceNodeCommandHelper::ClearTextureCache, NodeId))  
 #endif
 ADD_COMMAND(RSSurfaceNodeSetForeground,
     ARG(SURFACE_NODE, SURFACE_NODE_SET_FOREGROUND, SurfaceNodeCommandHelper::SetForeground, NodeId, bool))

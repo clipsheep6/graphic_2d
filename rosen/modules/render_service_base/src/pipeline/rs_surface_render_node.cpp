@@ -384,6 +384,16 @@ void RSSurfaceRenderNode::SetIsNotifyUIBufferAvailable(bool available)
     isNotifyUIBufferAvailable_.store(available);
 }
 
+#ifdef USE_SURFACE_TEXTURE
+void RSSurfaceRenderNode::ClearTextureCache()
+{
+    auto texture = GetSurfaceTexture();
+    if (texture) {
+        texture->ClearCache();
+    }
+}
+#endif
+
 void RSSurfaceRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
 {
     if (!visitor) {

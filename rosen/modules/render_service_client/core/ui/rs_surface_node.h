@@ -136,6 +136,7 @@ public:
 #ifdef USE_SURFACE_TEXTURE
     void SetSurfaceTexture(const RSSurfaceExtConfig& config);
     void MarkUiFrameAvailable(bool available);
+    void ClearTextureCache();
     void SetSurfaceTextureAttachCallBack(const RSSurfaceTextureAttachCallBack& attachCallback);
     void SetSurfaceTextureUpdateCallBack(const RSSurfaceTextureUpdateCallBack& updateCallback);
 #endif

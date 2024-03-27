@@ -698,6 +698,16 @@ void RSSurfaceNode::MarkUiFrameAvailable(bool available)
     }
 }
 
+void RSSurfaceNode::ClearTextureCache()
+{
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSSurfaceNodeClearTextureCache>(GetId());
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, false);
+    }
+}
+
 void RSSurfaceNode::SetSurfaceTextureAttachCallBack(const RSSurfaceTextureAttachCallBack& attachCallback)
 {
     RSSurfaceTextureConfig config = {

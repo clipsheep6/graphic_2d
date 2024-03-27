@@ -16,6 +16,7 @@
 #ifndef GET_OBJECT_H
 #define GET_OBJECT_H
 
+#include <string>
 #include <securec.h>
 
 namespace OHOS {
@@ -39,6 +40,27 @@ T GetObject()
     }
     g_pos += objectSize;
     return object;
+}
+
+/*
+ * get a string from g_data
+ */
+std::string GetStringFromData(int strlen)
+{
+    if (strlen <= 0) {
+        return "fuzz";
+    }
+    char cstr[strlen];
+    cstr[strlen - 1] = '\0';
+    for (int i = 0; i < strlen - 1; i++) {
+        char tmp = GetObject<char>();
+        if (tmp == '\0') {
+            tmp = '1';
+        }
+        cstr[i] = tmp;
+    }
+    std::string str(cstr);
+    return str;
 }
 } // namespace Drawing
 } // namespace Rosen

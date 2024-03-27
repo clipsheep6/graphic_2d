@@ -1,6 +1,6 @@
 #ifndef SKBENCH_ADDPATHTEST_TEST_H
 #define SKBENCH_ADDPATHTEST_TEST_H
-#include "test_base.h"
+#include "../test_base.h"
 #include "random_path_bench.h"
 #include <linux/bpf.h>
 #include <linux/omapfb.h>

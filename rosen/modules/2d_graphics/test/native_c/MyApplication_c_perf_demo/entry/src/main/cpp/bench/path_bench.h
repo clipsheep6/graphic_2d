@@ -1,6 +1,6 @@
 #ifndef DRAW_PATH_H
 #define DRAW_PATH_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class PathBench : public TestBase {
 public:
@@ -36,8 +36,9 @@ private:
 };
 
 class LongCurvedPathBench :public PathBench {
+public:
     LongCurvedPathBench() {}
-    ~LongCurvedPathBench() {} = default;
+    ~LongCurvedPathBench() = default;
     void MakePath(OH_Drawing_Path* path) override;
 };
 #endif // DRAW_PATH_H

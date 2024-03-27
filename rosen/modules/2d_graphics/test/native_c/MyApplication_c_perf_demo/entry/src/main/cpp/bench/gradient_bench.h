@@ -1,6 +1,6 @@
 #ifndef DRAW_SHADER_LINEAR_H
 #define DRAW_SHADER_LINEAR_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class GradientBench : public TestBase {
 public:

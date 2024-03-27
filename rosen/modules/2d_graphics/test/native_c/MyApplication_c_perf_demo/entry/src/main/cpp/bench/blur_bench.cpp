@@ -1,11 +1,11 @@
-#include "testcase/blur_bench.h"
+#include "bench/blur_bench.h"
 #include <native_drawing/drawing_pen.h>
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_round_rect.h>
 #include <native_drawing/drawing_mask_filter.h>
 #include <native_drawing/drawing_filter.h>
 #include <native_drawing/drawing_canvas.h>
-#include "testcase/test_common.h"
+#include "..//test_common.h"
 
 void BlurBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();

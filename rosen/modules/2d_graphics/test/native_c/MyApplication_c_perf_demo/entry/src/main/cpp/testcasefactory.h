@@ -15,7 +15,7 @@
 
 #ifndef TEST_CASE_FACTORY_H
 #define TEST_CASE_FACTORY_H
-#include "testcase/test_base.h"
+#include "test_base.h"
 
 class TestCaseFactory {
 public:

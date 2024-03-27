@@ -1,6 +1,6 @@
 #ifndef DRAW_BITMAP_H
 #define DRAW_BITMAP_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class DrawBitmapAABench : public TestBase {
 public:

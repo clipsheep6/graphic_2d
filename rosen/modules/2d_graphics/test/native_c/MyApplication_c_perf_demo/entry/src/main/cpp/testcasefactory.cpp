@@ -15,30 +15,31 @@
 
 #include "common/log_common.h"
 #include "testcasefactory.h"
-#include "testcase/rect_bench.h"
-#include "testcase/path_bench.h"
-#include "testcase/textblob_cache_bench.h"
-#include "testcase/draw_bitmap_aa_bench.h"
-#include "testcase/bulk_rect_bench.h"
-#include "testcase/canvas_save_restore.h"
-#include "testcase/shader_mf_bench.h"
-#include "testcase/dash_line_bench.h"
-#include "testcase/clip_strategy_bench.h"
-#include "testcase/aa_clip_bench.h"
-#include "testcase/circles_bench.h"
-#include "testcase/nested_aa_clip_bench.h"
-#include "testcase/hairline_path_bench.h"
-#include "testcase/gradient_bench.h"
-#include "testcase/xfermode_bench.h"
-#include "testcase/blur_bench.h"
-#include "testcase/path_create_bench.h"
-#include "testcase/skbench_addpathtest.h"
-#include "testcase/canvas_matrix_bench.h"
-#include "testcase/shadow_bench.h"
-#include "testcase/read_pix_bench.h"
-#include "testcase/bezier_bench.h"
-#include "testcase/clear_bench.h"
-#include "testcase/big_path_bench.h"
+#include "bench/rect_bench.h"
+#include "bench/path_bench.h"
+#include "bench/textblob_cache_bench.h"
+#include "bench/draw_bitmap_aa_bench.h"
+#include "bench/bulk_rect_bench.h"
+#include "bench/canvas_save_restore.h"
+#include "bench/shader_mf_bench.h"
+#include "bench/dash_line_bench.h"
+#include "bench/clip_strategy_bench.h"
+#include "bench/aa_clip_bench.h"
+#include "bench/circles_bench.h"
+#include "bench/nested_aa_clip_bench.h"
+#include "bench/hairline_path_bench.h"
+#include "bench/gradient_bench.h"
+#include "bench/xfermode_bench.h"
+#include "bench/blur_bench.h"
+#include "bench/path_create_bench.h"
+#include "bench/skbench_addpathtest.h"
+#include "bench/canvas_matrix_bench.h"
+#include "bench/shadow_bench.h"
+#include "bench/read_pix_bench.h"
+#include "bench/bezier_bench.h"
+#include "bench/clear_bench.h"
+#include "bench/big_path_bench.h"
+#include "dm/aa_rect_modes.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -118,6 +119,11 @@ namespace {
             {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
             {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
             {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
+
+            //DM
+            {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},
+            
+
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

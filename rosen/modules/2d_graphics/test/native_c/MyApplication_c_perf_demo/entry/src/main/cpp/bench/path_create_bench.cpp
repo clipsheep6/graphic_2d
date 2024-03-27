@@ -1,9 +1,9 @@
-#include "testcase/path_create_bench.h"
+#include "bench/path_create_bench.h"
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_point.h>
-#include "testcase/random_path_bench.h"
+#include "bench/random_path_bench.h"
 
 void PathCreateBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_Path *path = OH_Drawing_PathCreate();

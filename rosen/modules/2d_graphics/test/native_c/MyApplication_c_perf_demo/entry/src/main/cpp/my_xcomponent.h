@@ -31,7 +31,7 @@
 #include <sys/mman.h>
 #include <string>
 #include "napi/native_api.h"
-#include "testcase/test_base.h"
+#include "test_base.h"
 
 class MyXComponent {
 public:

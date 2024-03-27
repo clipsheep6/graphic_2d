@@ -1,6 +1,6 @@
 #ifndef DRAW_TEXT_BLOB_CREATE_TEST_H
 #define DRAW_TEXT_BLOB_CREATE_TEST_H
-#include "test_base.h"
+#include "../test_base.h"
 #include <native_drawing/drawing_types.h>
 
 class XfermodeBench : public TestBase {

@@ -11,66 +11,68 @@ add_library(entry SHARED
     hello.cpp
     plugin/plugin_manager.cpp
     my_xcomponent.cpp
+    test_base.cpp
+    test_common.cpp
     testcasefactory.cpp
-    testcase/rect_bench.cpp
-    testcase/aa_clip_bench.cpp
-    testcase/test_common.cpp
-    testcase/test_base.cpp
-    testcase/path_bench.cpp
-    testcase/textblob_cache_bench.cpp
-    testcase/draw_bitmap_aa_bench.cpp
-    testcase/bulk_rect_bench.cpp
-    testcase/canvas_save_restore.cpp
-    testcase/canvas_matrix_bench.cpp
-    testcase/shadow_bench.cpp
-    testcase/read_pix_bench.cpp
-    testcase/bezier_bench.cpp
-    testcase/shader_mf_bench.cpp
-    testcase/dash_line_bench.cpp
-    testcase/circles_bench.cpp
-    testcase/clip_strategy_bench.cpp
-    testcase/nested_aa_clip_bench.cpp
-    testcase/hairline_path_bench.cpp
-    testcase/gradient_bench.cpp
-    testcase/xfermode_bench.cpp
-    testcase/random_path_bench.cpp
-    testcase/blur_bench.cpp
-    testcase/path_create_bench.cpp
-    testcase/skbench_addpathtest.cpp
-    testcase/clear_bench.cpp
-    testcase/big_path_bench.cpp
+    bench/rect_bench.cpp
+    bench/aa_clip_bench.cpp
+    bench/path_bench.cpp
+    bench/textblob_cache_bench.cpp
+    bench/draw_bitmap_aa_bench.cpp
+    bench/bulk_rect_bench.cpp
+    bench/canvas_save_restore.cpp
+    bench/canvas_matrix_bench.cpp
+    bench/shadow_bench.cpp
+    bench/read_pix_bench.cpp
+    bench/bezier_bench.cpp
+    bench/shader_mf_bench.cpp
+    bench/dash_line_bench.cpp
+    bench/circles_bench.cpp
+    bench/clip_strategy_bench.cpp
+    bench/nested_aa_clip_bench.cpp
+    bench/hairline_path_bench.cpp
+    bench/gradient_bench.cpp
+    bench/xfermode_bench.cpp
+    bench/random_path_bench.cpp
+    bench/blur_bench.cpp
+    bench/path_create_bench.cpp
+    bench/skbench_addpathtest.cpp
+    bench/clear_bench.cpp
+    bench/big_path_bench.cpp
+    dm/aa_rect_modes.cpp
 )
 
 add_library(myxnode SHARED
     my_xnode.cpp
+    test_base.cpp
     testcasefactory.cpp
-    testcase/rect_bench.cpp
-    testcase/aa_clip_bench.cpp
-    testcase/test_common.cpp
-    testcase/test_base.cpp
-    testcase/path_bench.cpp
-    testcase/textblob_cache_bench.cpp
-    testcase/draw_bitmap_aa_bench.cpp
-    testcase/bulk_rect_bench.cpp
-    testcase/canvas_save_restore.cpp
-    testcase/canvas_matrix_bench.cpp
-    testcase/shadow_bench.cpp
-    testcase/read_pix_bench.cpp
-    testcase/bezier_bench.cpp
-    testcase/shader_mf_bench.cpp
-    testcase/dash_line_bench.cpp
-    testcase/circles_bench.cpp
-    testcase/clip_strategy_bench.cpp
-    testcase/nested_aa_clip_bench.cpp
-    testcase/hairline_path_bench.cpp
-    testcase/gradient_bench.cpp
-    testcase/xfermode_bench.cpp
-    testcase/random_path_bench.cpp
-    testcase/blur_bench.cpp
-    testcase/path_create_bench.cpp
-    testcase/skbench_addpathtest.cpp
-    testcase/clear_bench.cpp
-    testcase/big_path_bench.cpp
+    test_common.cpp
+    bench/rect_bench.cpp
+    bench/aa_clip_bench.cpp
+    bench/path_bench.cpp
+    bench/textblob_cache_bench.cpp
+    bench/draw_bitmap_aa_bench.cpp
+    bench/bulk_rect_bench.cpp
+    bench/canvas_save_restore.cpp
+    bench/canvas_matrix_bench.cpp
+    bench/shadow_bench.cpp
+    bench/read_pix_bench.cpp
+    bench/bezier_bench.cpp
+    bench/shader_mf_bench.cpp
+    bench/dash_line_bench.cpp
+    bench/circles_bench.cpp
+    bench/clip_strategy_bench.cpp
+    bench/nested_aa_clip_bench.cpp
+    bench/hairline_path_bench.cpp
+    bench/gradient_bench.cpp
+    bench/xfermode_bench.cpp
+    bench/random_path_bench.cpp
+    bench/blur_bench.cpp
+    bench/path_create_bench.cpp
+    bench/skbench_addpathtest.cpp
+    bench/clear_bench.cpp
+    bench/big_path_bench.cpp
+    dm/aa_rect_modes.cpp
 )
 
 find_library(

@@ -1,6 +1,6 @@
 #ifndef DRAW_TEXTBLOB_H
 #define DRAW_TEXTBLOB_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class TextBlobCachedBench : public TestBase {
     bool flag_ = true;

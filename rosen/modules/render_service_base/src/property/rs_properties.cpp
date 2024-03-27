@@ -87,6 +87,7 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
     [](RSProperties* prop) { prop->SetFilter({}); },                     // FILTER
     [](RSProperties* prop) { prop->SetBackgroundFilter({}); },           // BACKGROUND_FILTER
     [](RSProperties* prop) { prop->SetLinearGradientBlurPara({}); },     // LINEAR_GRADIENT_BLUR_PARA
+    [](RSProperties* prop) { prop->SetEmitterUpdater({}); },             // PARTICLE_EMITTER_UPDATER
     [](RSProperties* prop) { prop->SetDynamicLightUpRate({}); },         // DYNAMIC_LIGHT_UP_RATE
     [](RSProperties* prop) { prop->SetDynamicLightUpDegree({}); },       // DYNAMIC_LIGHT_UP_DEGREE
     [](RSProperties* prop) { prop->SetFrameGravity(Gravity::DEFAULT); }, // FRAME_GRAVITY
@@ -1053,6 +1054,17 @@ void RSProperties::SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradi
     contentDirty_ = true;
 }
 
+void RSProperties::SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para)
+{
+    emitterUpdater_ = para;
+    if (emitterUpdater_) {
+        isDrawn_ = true;
+    }
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
 void RSProperties::SetDynamicLightUpRate(const std::optional<float>& rate)
 {
     dynamicLightUpRate_ = rate;
@@ -1102,6 +1114,11 @@ const std::shared_ptr<RSFilter>& RSProperties::GetBackgroundFilter() const
 const std::shared_ptr<RSLinearGradientBlurPara>& RSProperties::GetLinearGradientBlurPara() const
 {
     return linearGradientBlurPara_;
+}
+
+const std::shared_ptr<EmitterUpdater>& RSProperties::GetEmitterUpdater() const
+{
+    return emitterUpdater_;
 }
 
 void RSProperties::IfLinearGradientBlurInvalid()

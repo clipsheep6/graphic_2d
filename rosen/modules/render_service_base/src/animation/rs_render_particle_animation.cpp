@@ -46,6 +46,7 @@ bool RSRenderParticleAnimation::Animate(int64_t time)
         particleSystem_->Emit(deltaTime, renderParticleVector_.renderParticleVector_);
         particleSystem_->UpdateParticle(deltaTime, renderParticleVector_.renderParticleVector_);
     }
+
     auto property = std::static_pointer_cast<RSRenderProperty<RSRenderParticleVector>>(property_);
     if (property) {
         property->Set(renderParticleVector_);
@@ -57,6 +58,11 @@ bool RSRenderParticleAnimation::Animate(int64_t time)
         target->RemoveModifier(property_->GetId());
         return true;
     }
+
+    auto emitterUpdater = target->GetRenderProperties().GetEmitterUpdater();
+    particlesRenderParams_[emitterUpdater->emitterIndex_]->emitterConfig_.position_ = emitterUpdater->position_;
+    particlesRenderParams_[emitterUpdater->emitterIndex_]->emitterConfig_.emitSize_ = emitterUpdater->emitSize_;
+
     if (particleSystem_ == nullptr || particleSystem_->IsFinish(renderParticleVector_.renderParticleVector_)) {
         if (target) {
             target->RemoveModifier(property_->GetId());

@@ -1776,6 +1776,12 @@ std::shared_ptr<Drawing::Surface> RSRenderNode::GetCompletedCacheSurface(uint32_
     {
         std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
         if (releaseAfterGet) {
+#ifdef RS_ENABLE_VK
+            if (OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::VULKAN ||
+                OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
+                cacheCompletedCleanupHelper_ = nullptr;
+            }
+#endif
             return std::move(cacheCompletedSurface_);
         }
         if (!needCheckThread || completedSurfaceThreadIndex_ == threadIndex || !cacheCompletedSurface_) {

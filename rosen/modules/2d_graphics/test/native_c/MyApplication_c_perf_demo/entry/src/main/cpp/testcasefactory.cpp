@@ -49,7 +49,7 @@ namespace {
             {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }}, // drawbitmaprect 排列平铺到整个页面
             {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }}, //8*(save+concat+restore)+drawcolor
             {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShaderMFBench>(); }}, // savelayer+canvasclear+restore
-            {"drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }}, // drawline
+            {"drawdashline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }}, // drawline
             {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipStrategyBench>(); }}, // savelayer+createpoint+drawcircle
             {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<OvalBench>(1); }}, // drawOval
             {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RRectBench>(1); }}, // DrawRoundRect
@@ -113,6 +113,10 @@ namespace {
             {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
              //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
             {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
+            {"drawtextblobcreate_text_src", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_SRC); }},
+            {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
+            {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
+            {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -123,7 +127,7 @@ namespace {
             {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }}, // drawbitmaprect 排列平铺到整个页面
             {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }}, //8*(save+concat+restore)+drawcolor
             {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShaderMFBench>(); }}, // savelayer+canvasclear+restore
-            {"drawline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }}, // drawline
+            {"drawdashline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }}, // drawline
             {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipStrategyBench>(); }}, // savelayer+createpoint+drawcircle
             {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<OvalBench>(1); }}, // drawOval
             {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RRectBench>(1); }}, // DrawRoundRect
@@ -189,6 +193,11 @@ namespace {
             {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
              //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
             {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
+            {"drawtextblobcreate_text_src", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_SRC); }},
+            {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
+            {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
+            {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
+
     };
 } // namespace
 

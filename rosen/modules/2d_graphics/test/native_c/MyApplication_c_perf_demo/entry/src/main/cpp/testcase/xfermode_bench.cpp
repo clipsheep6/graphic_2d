@@ -28,7 +28,7 @@ void XfermodeBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     uint32_t thousand = 1000;
 
     // 在画布上画path的形状
-    OH_Drawing_PenSetBlendMode(pen, OH_Drawing_BlendMode::BLEND_MODE_SCREEN);
+    OH_Drawing_PenSetBlendMode(pen, mode);
     OH_Drawing_PenSetColor(pen, rand.nextU());
     OH_Drawing_CanvasAttachPen(canvas, pen);
     
@@ -82,7 +82,7 @@ void XfermodeBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 //    for (int i = 0; i < testCount_; i++) {
     while(testCount_ > 0){
         // 在画布上画path的形状
-        OH_Drawing_PenSetBlendMode(pen, OH_Drawing_BlendMode::BLEND_MODE_SCREEN);
+        OH_Drawing_PenSetBlendMode(pen, mode);
         OH_Drawing_PenSetColor(pen, 0xFF000000 | rand.nextU());
         OH_Drawing_CanvasAttachPen(canvas, pen);
         

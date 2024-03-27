@@ -58,8 +58,8 @@ void BigPathBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 
 void BigPathBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {   
-    //当前用例名 drawenbeizer 测试 OH_Drawing_PenSetWidth OH_Drawing_PenSetCap OH_Drawing_PenSetJoin 迁移基于skia BezierBench.cpp->BezierBench
-    // skia case name : draw_stroke_bezier_cubic_butt_miter_2
+    //当前用例名 drawbigpath 测试 OH_Drawing_CanvasTranslate 迁移基于skia BigPathBench.cpp->BigPathBench
+    // skia case name : bigpath_left_round
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetColor(pen, 0xFF00FF00);
     OH_Drawing_PenSetAntiAlias(pen,true);

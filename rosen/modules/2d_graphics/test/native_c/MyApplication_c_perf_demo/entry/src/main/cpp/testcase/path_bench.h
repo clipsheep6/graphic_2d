@@ -25,4 +25,13 @@ public:
     ~TrianglePathBench() = default;
     void MakePath(OH_Drawing_Path* path) override;
 };
+
+class RotatedRectBench : public PathBench {
+public:
+    RotatedRectBench(int degrees) :fDegrees(degrees){}
+    ~RotatedRectBench() = default;
+    void MakePath(OH_Drawing_Path* path) override;
+private:
+    int fDegrees;
+};
 #endif // DRAW_PATH_H

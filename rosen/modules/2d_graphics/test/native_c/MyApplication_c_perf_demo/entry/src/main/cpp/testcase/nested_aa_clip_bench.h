@@ -12,7 +12,7 @@ class NestedAAClipBench : public TestBase {
     TestRend fRandom;
     
 public:
-    NestedAAClipBench() : TestBase() {}
+    NestedAAClipBench() ;
     ~NestedAAClipBench() = default;
 
 protected:

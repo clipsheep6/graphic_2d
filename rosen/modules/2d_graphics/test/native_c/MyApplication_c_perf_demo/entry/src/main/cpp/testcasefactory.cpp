@@ -93,6 +93,7 @@ namespace {
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
             {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
             {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+            {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }},// drawpath, path由PathQuadTo构造
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -151,6 +152,7 @@ namespace {
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
             {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
             {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+            {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }},// drawpath, path由PathQuadTo构造
     };
 } // namespace
 

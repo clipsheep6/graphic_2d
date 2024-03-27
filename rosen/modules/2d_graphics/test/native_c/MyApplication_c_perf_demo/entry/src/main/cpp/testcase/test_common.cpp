@@ -60,7 +60,7 @@ float_t TestRend::nextF()
 
 float_t TestRend::nextRangeF(float_t min,float_t max)
 {
-    return min + this->nextF() * (max - min);
+    return this->nextUScalar1() * (max - min) + min;
 }
 
 uint32_t TestRend::nextBits(unsigned bitCount)

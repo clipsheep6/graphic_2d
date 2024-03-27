@@ -30,6 +30,9 @@
 #include "testcase/hairline_path_bench.h"
 #include "testcase/gradient_bench.h"
 #include "testcase/xfermode_bench.h"
+#include "testcase/blur_bench.h"
+#include "testcase/path_create_bench.h"
+#include "testcase/skbench_addpathtest.h"
 #include "testcase/canvas_matrix_bench.h"
 #include "testcase/shadow_bench.h"
 #include "testcase/read_pix_bench.h"
@@ -41,7 +44,7 @@ namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
         {
             {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1); }}, // drawrect 随机颜色，随机位置
-            {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(); }}, // drawtextblob
+            {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(true); }}, // drawtextblob
             {"drawbitmapnoaa", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapAABench>(); }}, // drawbitmap
             {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }}, // drawbitmaprect 排列平铺到整个页面
             {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }}, //8*(save+concat+restore)+drawcolor
@@ -67,6 +70,9 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromPosText); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromString); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+            {"maskfiltercreateblur_real_normal", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurBench>(BLUR_REAL,OH_Drawing_BlurType::NORMAL); }}, // blurbench,模糊偏差0.01，模糊类型normal
+            {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreateBench>();}}, // pathreset
+            {"drawtextblobbuildercreate", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(false); }}, // drawtextblob BuilderCreate
             {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
             {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
             {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
@@ -101,12 +107,18 @@ namespace {
             {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
             {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
 
+            //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
+            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
+             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
+             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         PerformanceCpuMap = {
             {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1); }}, // drawrect 随机颜色，随机位置
-            {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(); }}, // drawtextblob
+            {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(true); }}, // drawtextblob
             {"drawbitmapnoaa", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapAABench>(); }}, // drawbitmap
             {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }}, // drawbitmaprect 排列平铺到整个页面
             {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }}, //8*(save+concat+restore)+drawcolor
@@ -132,6 +144,12 @@ namespace {
             {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromPosText); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromString); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+            {"maskfiltercreateblur_real_normal", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurBench>(BLUR_REAL,OH_Drawing_BlurType::NORMAL); }}, // blurbench,模糊偏差0.01，模糊类型normal
+            {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreateBench>();}}, // pathreset
+            {"drawtextblobbuildercreate", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(false); }}, // drawtextblob BuilderCreate
+            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
+            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
+            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
             {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
             {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
             {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
@@ -165,6 +183,12 @@ namespace {
             {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
             {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
             {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
+            //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
+            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
+             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
+             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
+            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
     };
 } // namespace
 

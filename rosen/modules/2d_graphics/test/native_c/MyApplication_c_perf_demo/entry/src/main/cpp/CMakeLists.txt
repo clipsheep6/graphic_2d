@@ -33,7 +33,12 @@ add_library(entry SHARED
     testcase/hairline_path_bench.cpp
     testcase/gradient_bench.cpp
     testcase/xfermode_bench.cpp
+    testcase/random_path_bench.cpp
+    testcase/blur_bench.cpp
+    testcase/path_create_bench.cpp
+    testcase/skbench_addpathtest.cpp
     testcase/clear_bench.cpp
+    testcase/big_path_bench.cpp
 )
 
 add_library(myxnode SHARED
@@ -60,7 +65,12 @@ add_library(myxnode SHARED
     testcase/hairline_path_bench.cpp
     testcase/gradient_bench.cpp
     testcase/xfermode_bench.cpp
+    testcase/random_path_bench.cpp
+    testcase/blur_bench.cpp
+    testcase/path_create_bench.cpp
+    testcase/skbench_addpathtest.cpp
     testcase/clear_bench.cpp
+    testcase/big_path_bench.cpp
 )
 
 find_library(

@@ -228,6 +228,13 @@ void SurfaceNodeCommandHelper::CreateSurfaceExt(RSContext& context, NodeId id,
         node->SetSurfaceTexture(surfaceExt);
     }
 }
+
+void SurfaceNodeCommandHelper::ClearTextureCache(RSContext& context, NodeId id)
+{
+    if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+        node->ClearTextureCache();
+    }
+}
 #endif
 
 void SurfaceNodeCommandHelper::SetForeground(RSContext& context, NodeId nodeId, bool isForeground)

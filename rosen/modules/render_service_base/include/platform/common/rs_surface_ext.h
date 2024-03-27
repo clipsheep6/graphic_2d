@@ -55,6 +55,7 @@ public:
     virtual void SetAttachCallback(const RSSurfaceTextureAttachCallBack& attachCallback) = 0;
     virtual void SetUpdateCallback(const RSSurfaceTextureUpdateCallBack& updateCallback) = 0;
     virtual void MarkUiFrameAvailable(bool available) = 0;
+    virtual void ClearCache() = 0;
     virtual bool IsUiFrameAvailable() const = 0;
 #endif
 };

@@ -35,6 +35,7 @@
 #include "testcase/read_pix_bench.h"
 #include "testcase/bezier_bench.h"
 #include "testcase/clear_bench.h"
+#include "testcase/big_path_bench.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -93,6 +94,13 @@ namespace {
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
             {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
             {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+            {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,true); }},
+            {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,true); }},
+            {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,true); }},
+            {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
+            {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
+            {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
+
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -151,6 +159,12 @@ namespace {
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
             {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
             {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+            {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,true); }},
+            {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,true); }},
+            {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,true); }},
+            {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
+            {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
+            {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
     };
 } // namespace
 

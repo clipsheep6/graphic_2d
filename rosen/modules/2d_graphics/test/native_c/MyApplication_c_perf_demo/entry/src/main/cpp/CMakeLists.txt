@@ -34,6 +34,7 @@ add_library(entry SHARED
     testcase/gradient_bench.cpp
     testcase/xfermode_bench.cpp
     testcase/clear_bench.cpp
+    testcase/big_path_bench.cpp
 )
 
 add_library(myxnode SHARED
@@ -61,6 +62,7 @@ add_library(myxnode SHARED
     testcase/gradient_bench.cpp
     testcase/xfermode_bench.cpp
     testcase/clear_bench.cpp
+    testcase/big_path_bench.cpp
 )
 
 find_library(

@@ -148,6 +148,8 @@ ohos_source_set("libtexgine_source") {
 
       public_deps +=
           [ "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform" ]
+
+      public_external_deps = [ "cJSON:cjson_static" ]
     } else {
       sources -= [ "src/utils/trace_ohos.cpp" ]
       if (platform == "mac") {
@@ -159,6 +161,8 @@ ohos_source_set("libtexgine_source") {
         public_deps +=
             [ "$graphic_2d_root/rosen/build/icu:rosen_libicu_$platform" ]
       }
+      public_deps += [ "//third_party/cJSON:cjson_static" ]
+      include_dirs += [ "//third_party/cJSON" ]
     }
   }
 

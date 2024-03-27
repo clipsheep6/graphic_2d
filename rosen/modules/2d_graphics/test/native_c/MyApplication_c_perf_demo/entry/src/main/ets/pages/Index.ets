@@ -23,9 +23,9 @@ const TAG = '[DrawingTest]';
 @Component
 struct Index {
   private xComponentContext: XComponentContext | undefined = undefined;
-  @State testType: string = 'performance';
+  @State testType: string = 'function';
   @State drawingType: string = 'gpu-xnode';
-  @State caseNameStr: string  = 'drawtextblob';
+  @State caseNameStr: string  = 'aarectmodes';
   @State information: string = '';
   imagePackerApi: image.ImagePacker = image.createImagePacker();
   caseNameStrBefore: string  = '';

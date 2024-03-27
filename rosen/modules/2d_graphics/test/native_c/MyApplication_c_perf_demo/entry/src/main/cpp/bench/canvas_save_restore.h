@@ -1,6 +1,6 @@
 #ifndef CANVAS_SAVE_RESTORE_H
 #define CANVAS_SAVE_RESTORE_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class CanvasSaveRestore : public TestBase {
 public:

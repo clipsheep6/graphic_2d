@@ -1,8 +1,8 @@
 
 #ifndef BLUR_BENCH_H
 #define BLUR_BENCH_H
-#include "test_base.h"
-#include "testcase/test_common.h"
+#include "../test_base.h"
+#include "..//test_common.h"
 #include <native_drawing/drawing_mask_filter.h>
 
 #define BLUR_MINI 0.01f

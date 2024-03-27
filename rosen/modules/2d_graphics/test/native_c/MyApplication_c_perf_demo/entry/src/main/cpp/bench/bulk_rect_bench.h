@@ -1,6 +1,6 @@
 #ifndef DRAW_BITMAP_RECT_H
 #define DRAW_BITMAP_RECT_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class BulkRectBench : public TestBase {
 public:

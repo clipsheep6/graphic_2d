@@ -1,8 +1,8 @@
 
 #ifndef PATH_CREATE_BENCH_H
 #define PATH_CREATE_BENCH_H
-#include "test_base.h"
-#include "testcase/random_path_bench.h"
+#include "../test_base.h"
+#include "bench/random_path_bench.h"
 
 class PathCreateBench : public RandomPathBench {
   public:

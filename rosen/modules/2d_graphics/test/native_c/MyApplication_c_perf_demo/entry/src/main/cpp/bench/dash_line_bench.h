@@ -1,6 +1,6 @@
 #ifndef DRAW_LINE_H
 #define DRAW_LINE_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class DashLineBench : public TestBase {
 public:

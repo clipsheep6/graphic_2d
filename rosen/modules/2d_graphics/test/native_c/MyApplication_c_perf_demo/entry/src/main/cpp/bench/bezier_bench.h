@@ -1,6 +1,6 @@
 #ifndef DRAW_PEN_BEIZER_TEST_H
 #define DRAW_PEN_BEIZER_TEST_H
-#include "test_base.h"
+#include "../test_base.h"
 #include <native_drawing/drawing_typeface.h>
 #include <native_drawing/drawing_pen.h>
 

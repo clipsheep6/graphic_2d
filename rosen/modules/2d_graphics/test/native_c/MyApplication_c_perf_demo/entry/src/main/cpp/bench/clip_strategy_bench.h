@@ -1,6 +1,6 @@
 #ifndef DRAW_CIRCLE_H
 #define DRAW_CIRCLE_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class ClipStrategyBench : public TestBase {
 public:

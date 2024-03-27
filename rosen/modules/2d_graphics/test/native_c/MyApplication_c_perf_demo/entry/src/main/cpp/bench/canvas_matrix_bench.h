@@ -1,6 +1,6 @@
 #ifndef DRAW_CANVAS_SCALE_TEST_H
 #define DRAW_CANVAS_SCALE_TEST_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class CanvasMatrixBench : public TestBase {
 public:

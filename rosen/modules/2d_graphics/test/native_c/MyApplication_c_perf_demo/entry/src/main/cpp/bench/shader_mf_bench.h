@@ -1,6 +1,6 @@
 #ifndef CANVAS_SAVE_LAYER_H
 #define CANVAS_SAVE_LAYER_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class ShaderMFBench : public TestBase {
 public:

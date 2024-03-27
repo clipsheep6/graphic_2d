@@ -1,6 +1,6 @@
 #ifndef DRAW_CANVAS_READ_PIXELS_H
 #define DRAW_CANVAS_READ_PIXELS_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class ReadPixBench : public TestBase {
     bool bToBitmap_;

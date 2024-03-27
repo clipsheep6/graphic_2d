@@ -1,6 +1,6 @@
 #ifndef DRAW_CANVAS_DRAW_SHADOW_TEST_H
 #define DRAW_CANVAS_DRAW_SHADOW_TEST_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class ShadowBench : public TestBase {
     bool    fTransparent;

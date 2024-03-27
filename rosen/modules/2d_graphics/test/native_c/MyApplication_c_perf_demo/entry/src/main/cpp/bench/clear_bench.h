@@ -1,6 +1,6 @@
 #ifndef CLEAR_BENCH_TEST_H
 #define CLEAR_BENCH_TEST_H
-#include "test_base.h"
+#include "../test_base.h"
 enum ClearType {
     kFull_ClearType,
     kPartial_ClearType,

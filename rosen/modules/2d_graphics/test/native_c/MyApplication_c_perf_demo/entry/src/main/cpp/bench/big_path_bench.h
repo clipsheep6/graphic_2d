@@ -1,6 +1,6 @@
 #ifndef DRAW_BIG_PATH_TEST_H
 #define DRAW_BIG_PATH_TEST_H
-#include "test_base.h"
+#include "../test_base.h"
 #include <native_drawing/drawing_path.h>
 
 class BigPathBench : public TestBase {

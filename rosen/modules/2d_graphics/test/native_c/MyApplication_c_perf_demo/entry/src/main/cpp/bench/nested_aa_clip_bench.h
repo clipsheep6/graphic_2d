@@ -1,7 +1,7 @@
 #ifndef DRAW_PATH_ADD_ROUND_RECT_TEST_H
 #define DRAW_PATH_ADD_ROUND_RECT_TEST_H
-#include "test_base.h"
-#include "testcase/test_common.h"
+#include "../test_base.h"
+#include "..//test_common.h"
 
 class NestedAAClipBench : public TestBase {
     OH_Drawing_Rect* fDrawRect;

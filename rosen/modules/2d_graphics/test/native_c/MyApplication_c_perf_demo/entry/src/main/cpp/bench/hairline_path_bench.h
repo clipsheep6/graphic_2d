@@ -1,6 +1,6 @@
 #ifndef DRAW_PATH_TRANSFORM_H
 #define DRAW_PATH_TRANSFORM_H
-#include "test_base.h"
+#include "../test_base.h"
 
 class HairlinePathBench : public TestBase {
 public:

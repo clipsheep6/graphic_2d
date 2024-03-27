@@ -6,6 +6,11 @@
 class XfermodeBench : public TestBase {
     int         index;
 public:
+    enum {
+    FromText = 1,
+    FromPosText ,
+    FromString ,
+    };
     XfermodeBench(int idx):index(idx){};
     ~XfermodeBench() = default;
 

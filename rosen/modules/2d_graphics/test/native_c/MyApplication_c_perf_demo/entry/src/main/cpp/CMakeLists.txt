@@ -38,6 +38,7 @@ add_library(entry SHARED
     testcase/path_create_bench.cpp
     testcase/skbench_addpathtest.cpp
     testcase/clear_bench.cpp
+    testcase/big_path_bench.cpp
 )
 
 add_library(myxnode SHARED
@@ -69,6 +70,7 @@ add_library(myxnode SHARED
     testcase/path_create_bench.cpp
     testcase/skbench_addpathtest.cpp
     testcase/clear_bench.cpp
+    testcase/big_path_bench.cpp
 )
 
 find_library(

@@ -29,14 +29,12 @@ void PathCreateBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     OH_Drawing_CanvasAttachPen(canvas, pen);
     // 创建数据
     createData(10, 100, true, nullptr);
-    // 生成路径
-    makePath(path);
     // OH_Drawing_CanvasDrawPath(canvas, path);
     for(int i = 0; i< testCount_; i++) {
-        if(i % 10 == 0) {
+        if(i % 1000 == 0) {
             OH_Drawing_PathReset(path);
         }
-        OH_Drawing_CanvasDrawPath(canvas, path);
+        makePath(path);
     }
     restartMakingPaths();
     // 释放内存

@@ -13,7 +13,6 @@ struct DrawRect {
     float fTop;    //!< smaller y-axis bounds
     float fRight;  //!< larger x-axis bounds
     float fBottom; //!< larger y-axis bounds
-
     bool contains(float x, float y) const { return x >= fLeft && x < fRight && y >= fTop && y < fBottom; }
 };
 
@@ -52,7 +51,6 @@ void BigPathBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     }
     
     OH_Drawing_CanvasDrawPath(canvas, fPath);
-
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;
@@ -81,11 +79,9 @@ void BigPathBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
             OH_Drawing_CanvasTranslate(canvas, 640 - r.fRight, 0);
             break;
     }
-
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_CanvasDrawPath(canvas, fPath);
     }
-
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;

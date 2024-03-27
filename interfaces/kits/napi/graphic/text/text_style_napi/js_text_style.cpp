@@ -20,31 +20,32 @@
 #include <string>
 #include <locale>
 
-#define LIMIT 0
 namespace OHOS::Rosen {
 thread_local napi_ref JsTextStyle::constructor_ = nullptr;
 const std::string CLASS_NAME = "TextStyle";
 napi_value JsTextStyle::Constructor(napi_env env, napi_callback_info info)
 {
+    LOGE("UINT32Trace | into JsTextStyle::Constructor");
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     if (napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr) != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
-            "TextStyle constructor failed");
+        return nullptr;
     }
 
     JsTextStyle* jsTextStyle = new(std::nothrow) JsTextStyle();
     if (napi_wrap(env, jsThis, jsTextStyle, JsTextStyle::Destructor, nullptr, nullptr) != napi_ok) {
         delete jsTextStyle;
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
-            "TextStyle to wrap native instance");
+        return nullptr;
     }
     return jsThis;
 }
 
 napi_value JsTextStyle::Init(napi_env env, napi_value exportObj)
 {
+    LOGE("UINT32Trace | into JsTextStyle::Init");
     napi_property_descriptor properties[] = {
+        DECLARE_NAPI_GETTER_SETTER("fontWeight", JsTextStyle::JsGetFontWeight,
+            JsTextStyle::JsSetFontWeight),
     };
 
     napi_value constructor = nullptr;
@@ -55,12 +56,11 @@ napi_value JsTextStyle::Init(napi_env env, napi_value exportObj)
     }
 
     if (napi_create_reference(env, constructor, 1, &constructor_) != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
-            "Invalid Failed to create reference of constructor");
+        return nullptr;
     }
 
     if (napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor) != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Failed to set constructor");
+        return nullptr;
     }
     return exportObj;
 }
@@ -77,5 +77,44 @@ void JsTextStyle::Destructor(napi_env env, void* nativeObject, void* finalize)
 JsTextStyle::JsTextStyle()
 {
     m_textStyle = std::make_shared<TextStyle>();
+}
+
+napi_value JsTextStyle::JsGetFontWeight(napi_env env, napi_callback_info info)
+{
+    JsTextStyle* me = CheckParamsAndGetThis<JsTextStyle>(env, info);
+    return (me != nullptr) ? me->OnGetFontWeight(env, info) : nullptr;
+}
+
+napi_value JsTextStyle::JsSetFontWeight(napi_env env, napi_callback_info info)
+{
+    JsTextStyle* me = CheckParamsAndGetThis<JsTextStyle>(env, info);
+    return (me != nullptr) ? me->OnSetFontWeight(env, info) : nullptr;
+}
+
+napi_value JsTextStyle::OnGetFontWeight(napi_env env, napi_callback_info info)
+{
+    LOGE("UINT32Trace | into JsTextStyle::OnGetFontWeight");
+    if (m_textStyle == nullptr) {
+        return nullptr;
+    }
+    napi_value fontWeight = nullptr;
+    size_t currentFontWeight = static_cast<size_t>(m_textStyle->fontWeight);
+    napi_create_uint32(env, currentFontWeight, &fontWeight);
+    return fontWeight;
+}
+
+napi_value JsTextStyle::OnSetFontWeight(napi_env env, napi_callback_info info)
+{
+    LOGE("UINT32Trace | into JsTextStyle::OnSetFontWeight");
+    if (m_textStyle == nullptr) {
+        return nullptr;
+    }
+
+    size_t currentFontWeight = 0;
+    if (!GetUint32FromJS(env, info, currentFontWeight)) {
+        return nullptr;
+    }
+    m_textStyle->fontWeight = static_cast<FontWeight>(currentFontWeight);
+    return NapiGetUndefined(env);
 }
 } // namespace OHOS::Rosen

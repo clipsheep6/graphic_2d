@@ -19,6 +19,7 @@
 #include <map>
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
+#include "utils/log.h"
 
 namespace OHOS::Rosen {
 constexpr size_t ARGC_ONE = 1;
@@ -196,9 +197,24 @@ inline napi_value NapiGetUndefined(napi_env env)
     return result;
 }
 
+inline bool GetUint32FromJS(napi_env env, napi_callback_info info, size_t& object)
+{
+    LOGE("UINT32Trace | into GetUint32 object=%zu",object);
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok ||
+        argc < ARGC_ONE) {
+        return false;
+    }
+    if (napi_get_value_uint32(env, argv[0], &object) != napi_ok) {
+        return false;
+    }
+    LOGE("UINT32Trace | Over GetUint32 object=%zu",object);
+    return true;
+}
+
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
-
 napi_value NapiThrowError(napi_env env, TextErrorCode err, const std::string& message);
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

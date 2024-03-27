@@ -25,6 +25,7 @@ napi_value JsParagraphStyle::Constructor(napi_env env, napi_callback_info info)
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     if (napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr) != napi_ok) {
+        LOGE("ParagraphStyleTest| into Constructor return 1");
         return nullptr;
     }
 
@@ -32,6 +33,7 @@ napi_value JsParagraphStyle::Constructor(napi_env env, napi_callback_info info)
     if (napi_wrap(env, jsThis, jsParagraphStyle, JsParagraphStyle::Destructor,
         nullptr, nullptr) != napi_ok) {
         delete jsParagraphStyle;
+        LOGE("ParagraphStyleTest| into Constructor return 2");
         return nullptr;
     }
     return jsThis;
@@ -104,7 +106,6 @@ bool JsParagraphStyle::SetStrutStyleFontFamilies(napi_env env, napi_value fontFa
             return false;
         }
         std::string value(buffer.get());
-        LOGE("ParagraphStyleTest| set name = %s",value.c_str());
         m_paragraphStyle->lineStyleFontFamilies.push_back(value);
     }
     return true;
@@ -135,15 +136,19 @@ napi_value JsParagraphStyle::OnGetStructStyle(napi_env env, napi_callback_info i
     std::vector<std::string>& fontFamily = m_paragraphStyle->lineStyleFontFamilies;
     napi_value jsArray;
     napi_create_array_with_length(env, fontFamily.size(), &jsArray);
-    if (!fontFamily.size() || objValue==nullptr) {
+    if (!fontFamily.size() && objValue==nullptr) {
+        LOGE("ParagraphStyleTest| into OnGetStructStyle return 1");
+        LOGE("ParagraphStyleTest| into OnGetStructStyle ontFamily.size()=%zu",fontFamily.size());
         return nullptr;
     }
+    LOGE("ParagraphStyleTest| into OnGetStructStyle ontFamily.size()=%zu",fontFamily.size());
     for (size_t further = 0; further < fontFamily.size(); further++) {
         napi_value jsValue;
         napi_create_string_utf8(env, fontFamily[further].c_str(), NAPI_AUTO_LENGTH, &jsValue);
         napi_set_element(env, jsArray, further, jsValue);
     }
     napi_set_named_property(env, objValue, "fontFamilies", jsArray);
+    LOGE("ParagraphStyleTest| into OnGetStructStyle return success");
     return objValue;
 }
 
@@ -168,6 +173,7 @@ napi_value JsParagraphStyle::OnSetStructStyle(napi_env env, napi_callback_info i
     if (!SetStrutStyleFontFamilies(env, fontFamiliesField)) {
         return nullptr;
     }
+    LOGE("ParagraphStyleTest| OnSetStructStyle success");
     return NapiGetUndefined(env);
 }
 } // namespace OHOS::Rosen

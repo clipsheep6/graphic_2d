@@ -44,16 +44,15 @@ napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "fontCollection napi_define_class faild");
+        return nullptr;
     }
 
     if (napi_create_reference(env, constructor, 1, &constructor_) != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "fontCollection napi_create_reference faild");
+        return nullptr;
     }
 
     if (napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor) != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM,
-            "fontCollection napi_set_named_property faild");
+        return nullptr;
     }
     return exportObj;
 }
@@ -86,7 +85,7 @@ napi_value JsFontCollection::DisableFallback(napi_env env, napi_callback_info in
 napi_value JsFontCollection::OnDisableFallback(napi_env env, napi_callback_info info)
 {
     if (m_fontCollection == nullptr) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "fontCollection is nullptr");
+        return nullptr;
     }
 
     m_fontCollection->DisableFallback();

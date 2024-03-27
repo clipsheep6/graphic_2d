@@ -20,6 +20,7 @@
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
 
+#include "enum_napi/text_enum_napi.h"
 #include "typography_style.h"
 
 namespace OHOS::Rosen {

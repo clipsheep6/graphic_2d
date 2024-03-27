@@ -21,8 +21,6 @@
 #include "js_text_utils.h"
 #include "text_style.h"
 #include "paragraph_style_napi/js_paragraphstyle.h"
-#include "pen_napi/js_pen.h"
-#include "brush_napi/js_brush.h"
 
 namespace OHOS::Rosen {
 class JsTextStyle final {
@@ -32,7 +30,11 @@ public:
     static napi_value Init(napi_env env, napi_value exportObj);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void* nativeObject, void* finalize);
+    static napi_value JsGetFontWeight(napi_env env, napi_callback_info info);
+    static napi_value JsSetFontWeight(napi_env env, napi_callback_info info);
 private:
+    napi_value OnGetFontWeight(napi_env env, napi_callback_info info);
+    napi_value OnSetFontWeight(napi_env env, napi_callback_info info);
     static thread_local napi_ref constructor_;
     std::shared_ptr<TextStyle> m_textStyle = nullptr;
 };

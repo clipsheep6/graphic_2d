@@ -112,7 +112,8 @@ VsyncError VSyncReceiver::Init()
         runner->Run();
     }
 
-    looper_->AddFileDescriptorListener(fd_, OHOS::AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, listener_, "vSyncTask");
+    looper_->AddFileDescriptorListener(
+        fd_, OHOS::AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, listener_, "vSyncTask", EventQueue::Priority::VIP);
     init_ = true;
     return VSYNC_ERROR_OK;
 }

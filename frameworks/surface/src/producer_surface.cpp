@@ -22,6 +22,7 @@
 #include "buffer_producer_listener.h"
 #include "sync_fence.h"
 #include "native_window.h"
+#include "surface_utils.h"
 
 namespace OHOS {
 namespace {
@@ -41,6 +42,8 @@ sptr<Surface> Surface::CreateSurfaceAsProducer(sptr<IBufferProducer>& producer)
         BLOGE("Failure, Reason: producer surf init failed");
         return nullptr;
     }
+    SurfaceUtils* utils = SurfaceUtils::GetInstance();
+    utils->Add(surf->GetUniqueId(), surf);
     return surf;
 }
 
@@ -63,6 +66,8 @@ ProducerSurface::~ProducerSurface()
     if (ret != GSERROR_OK) {
         BLOGND("Disconnect failed, %{public}s", GSErrorStr(ret).c_str());
     }
+    SurfaceUtils* utils = SurfaceUtils::GetInstance();
+    utils->Remove(GetUniqueId());
 }
 
 GSError ProducerSurface::Init()

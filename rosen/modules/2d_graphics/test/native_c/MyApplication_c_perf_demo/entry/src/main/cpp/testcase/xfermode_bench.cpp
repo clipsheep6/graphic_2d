@@ -39,13 +39,13 @@ void XfermodeBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_TextBlob* blob =nullptr;
     OH_Drawing_Point2D p = {400,800};
     switch (index) {
-        case 1:
+        case FromText:
             blob = OH_Drawing_TextBlobCreateFromText(text, len , font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
             break;
-        case 2:
+        case FromPosText:
             blob = OH_Drawing_TextBlobCreateFromPosText(text, len ,&p, font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
             break;
-        case 3:
+        case FromString:
             blob = OH_Drawing_TextBlobCreateFromString(text,font,OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
             break;
         default:
@@ -59,9 +59,9 @@ void XfermodeBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_TextBlobDestroy(blob);
     OH_Drawing_FontDestroy(font);
 
-        OH_Drawing_CanvasDetachPen(canvas);
-        OH_Drawing_PenDestroy(pen);
-        pen = nullptr;
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_PenDestroy(pen);
+    pen = nullptr;
 }
 
 void XfermodeBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
@@ -78,12 +78,12 @@ void XfermodeBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
     const char* text = "Hamburgefons";
     size_t len = strlen(text);
     DrSize size = {400,400};
+    uint32_t thousand = 100;
 //    for (int i = 0; i < testCount_; i++) {
-    uint32_t thousand = 1000;
     while(testCount_ > 0){
         // 在画布上画path的形状
         OH_Drawing_PenSetBlendMode(pen, OH_Drawing_BlendMode::BLEND_MODE_SCREEN);
-        OH_Drawing_PenSetColor(pen, rand.nextU());
+        OH_Drawing_PenSetColor(pen, 0xFF000000 | rand.nextU());
         OH_Drawing_CanvasAttachPen(canvas, pen);
         
         OH_Drawing_Font* font = OH_Drawing_FontCreate();
@@ -93,13 +93,13 @@ void XfermodeBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
         OH_Drawing_TextBlob* blob =nullptr;
         OH_Drawing_Point2D p = {400,800};
         switch (index) {
-            case 1:
+            case FromText:
                 blob = OH_Drawing_TextBlobCreateFromText(text, len , font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
                 break;
-            case 2:
+            case FromPosText:
                 blob = OH_Drawing_TextBlobCreateFromPosText(text, len ,&p, font, OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
                 break;
-            case 3:
+            case FromString:
                 blob = OH_Drawing_TextBlobCreateFromString(text,font,OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
                 break;
             default:

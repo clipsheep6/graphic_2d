@@ -3,9 +3,15 @@
 #include "test_base.h"
 
 class TextBlobCachedBench : public TestBase {
+    bool flag_ = true;
+
 public:
-    TextBlobCachedBench() : TestBase() {}
+    TextBlobCachedBench(bool flag)
+    {
+        flag_ = flag;
+    }
     ~TextBlobCachedBench() = default;
+
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;

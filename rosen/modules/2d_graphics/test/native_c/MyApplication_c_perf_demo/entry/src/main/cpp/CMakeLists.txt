@@ -34,6 +34,8 @@ add_library(entry SHARED
     testcase/gradient_bench.cpp
     testcase/xfermode_bench.cpp
     testcase/random_path_bench.cpp
+    testcase/blur_bench.cpp
+    testcase/path_create_bench.cpp
     testcase/skbench_addpathtest.cpp
     testcase/clear_bench.cpp
 )
@@ -63,6 +65,8 @@ add_library(myxnode SHARED
     testcase/gradient_bench.cpp
     testcase/xfermode_bench.cpp
     testcase/random_path_bench.cpp
+    testcase/blur_bench.cpp
+    testcase/path_create_bench.cpp
     testcase/skbench_addpathtest.cpp
     testcase/clear_bench.cpp
 )

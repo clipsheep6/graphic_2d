@@ -96,10 +96,14 @@ void LongCurvedPathBench::MakePath(OH_Drawing_Path* path) {
     // skia case name : path_fill_small_long_curved
 
     TestRend rand = TestRend(12);
-    float base1 = rand.nextUScalar1() * 640;
-    float base2 = rand.nextUScalar1() * 480;
-    float base3 = rand.nextUScalar1() * 640;
-    float base4 = rand.nextUScalar1() * 480;
-    OH_Drawing_PathQuadTo(path, base1, base2, base3, base4);
+    int i;
+    for (i = 0; i < 100; i++) {
+        float base1 = rand.nextUScalar1() * 640;
+        float base2 = rand.nextUScalar1() * 480;
+        float base3 = rand.nextUScalar1() * 640;
+        float base4 = rand.nextUScalar1() * 480;
+        OH_Drawing_PathQuadTo(path, base1, base2, base3, base4);
+    }
+    
     OH_Drawing_PathClose(path);    
 }

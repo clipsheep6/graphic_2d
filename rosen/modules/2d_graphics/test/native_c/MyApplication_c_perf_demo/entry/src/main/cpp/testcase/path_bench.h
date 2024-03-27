@@ -34,4 +34,10 @@ public:
 private:
     int fDegrees;
 };
+
+class LongCurvedPathBench :public PathBench {
+    LongCurvedPathBench() {}
+    ~LongCurvedPathBench() {} = default;
+    void MakePath(OH_Drawing_Path* path) override;
+};
 #endif // DRAW_PATH_H

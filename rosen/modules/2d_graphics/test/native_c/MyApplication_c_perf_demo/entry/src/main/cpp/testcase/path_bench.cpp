@@ -8,6 +8,7 @@
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
+#include "test_common.h"
 
 typedef float SkScalar;
 struct SkRect {
@@ -88,4 +89,21 @@ void RotatedRectBench::MakePath(OH_Drawing_Path* path) {
     OH_Drawing_MatrixSetMatrix(matrix, 1, 0, 0, 0, 1, 0, 0, 0, 1);
     OH_Drawing_MatrixRotate(matrix, fDegrees, 0, 0);
     OH_Drawing_PathTransform(path, matrix);
+}
+
+void LongCurvedPathBench::MakePath(OH_Drawing_Path* path) {
+    // 当前用例 drawpathquadto 迁移基于skia pathBench.cpp ->LongCurvedPathBench
+    // skia case name : path_fill_small_long_curved
+
+    TestRend rand = TestRend(12);
+    int i;
+    for (i = 0; i < 100; i++) {
+        float base1 = rand.nextUScalar1() * 640;
+        float base2 = rand.nextUScalar1() * 480;
+        float base3 = rand.nextUScalar1() * 640;
+        float base4 = rand.nextUScalar1() * 480;
+        OH_Drawing_PathQuadTo(path, base1, base2, base3, base4);
+    }
+    
+    OH_Drawing_PathClose(path);    
 }

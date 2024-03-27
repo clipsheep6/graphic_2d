@@ -100,6 +100,7 @@ namespace {
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
             {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
             {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+            {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }},// drawpath, path由PathQuadTo构造
             {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,true); }},
             {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,true); }},
             {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,true); }},
@@ -177,6 +178,7 @@ namespace {
             {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
             {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
             {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+            {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }},// drawpath, path由PathQuadTo构造
             {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,true); }},
             {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,true); }},
             {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,true); }},

@@ -216,6 +216,7 @@ void HgmFrameRateManager::FrameRateReport() const
     auto alignRate = HgmCore::Instance().GetAlignRate();
     rates[UNI_APP_PID] = (alignRate == 0) ? currRefreshRate_ : alignRate;
     FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
+    FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRatesToRss(rates);
 }
 
 bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,

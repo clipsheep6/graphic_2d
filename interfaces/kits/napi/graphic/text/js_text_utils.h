@@ -28,7 +28,7 @@ constexpr size_t ARGC_FOUR = 4;
 constexpr size_t ARGC_FIVE = 5;
 constexpr size_t ARGC_SIX = 6;
 
-enum class DrawingErrorCode : int32_t {
+enum class TextErrorCode : int32_t {
     OK = 0,
     ERROR_NO_PERMISSION = 201, // the value do not change. It is defined on all system
     ERROR_INVALID_PARAM = 401, // the value do not change. It is defined on all system
@@ -127,30 +127,8 @@ napi_value CreateJsValue(napi_env env, const T& value)
     }
 }
 
-inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, int32_t& value)
-{
-    return napi_get_value_int32(env, jsValue, &value) == napi_ok;
-}
+int32_t GetInt32FromName(napi_env env, napi_callback_info info, const char* dataName);
 
-inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, uint32_t& value)
-{
-    return napi_get_value_uint32(env, jsValue, &value) == napi_ok;
-}
-
-inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, int64_t& value)
-{
-    return napi_get_value_int64(env, jsValue, &value) == napi_ok;
-}
-
-inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, double& value)
-{
-    return napi_get_value_double(env, jsValue, &value) == napi_ok;
-}
-
-inline bool ConvertFromJsNumber(napi_env env, napi_value jsValue, bool& value)
-{
-    return napi_get_value_bool(env, jsValue, &value) == napi_ok;
-}
 
 template<class T>
 bool ConvertFromJsValue(napi_env env, napi_value jsValue, T& value)
@@ -221,6 +199,6 @@ inline napi_value NapiGetUndefined(napi_env env)
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
 
-napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message);
+napi_value NapiThrowError(napi_env env, TextErrorCode err, const std::string& message);
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

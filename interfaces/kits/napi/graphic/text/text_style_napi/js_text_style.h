@@ -13,13 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_JS_TEXT_INIT_H
-#define OHOS_JS_TEXT_INIT_H
+#ifndef OHOS_ROSEN_JS_TEXT_STYLE_H
+#define OHOS_ROSEN_JS_TEXT_STYLE_H
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+#include "js_text_utils.h"
+#include "text_style.h"
+#include "paragraph_style_napi/js_paragraphstyle.h"
+#include "pen_napi/js_pen.h"
+#include "brush_napi/js_brush.h"
 
 namespace OHOS::Rosen {
-napi_value TextInit(napi_env env, napi_value exportObj);
+class JsTextStyle final {
+public:
+    JsTextStyle();
+
+    static napi_value Init(napi_env env, napi_value exportObj);
+    static napi_value Constructor(napi_env env, napi_callback_info info);
+    static void Destructor(napi_env env, void* nativeObject, void* finalize);
+private:
+    static thread_local napi_ref constructor_;
+    std::shared_ptr<TextStyle> m_textStyle = nullptr;
+};
 } // namespace OHOS::Rosen
-#endif // OHOS_JS_PARAGRAPH_INIT_H
+#endif // OHOS_ROSEN_JS_FONTCOLLECTION_H

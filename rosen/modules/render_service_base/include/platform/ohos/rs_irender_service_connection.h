@@ -113,7 +113,7 @@ public:
     virtual void SetScreenPowerStatus(ScreenId id, ScreenPowerStatus status) = 0;
 
     virtual void TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCaptureCallback> callback, float scaleX, float scaleY,
-        SurfaceCaptureType surfaceCaptureType) = 0;
+        SurfaceCaptureType surfaceCaptureType, bool isSync = false) = 0;
 
     virtual void RegisterApplicationAgent(uint32_t pid, sptr<IApplicationAgent> app) = 0;
 
@@ -159,6 +159,8 @@ public:
 
     virtual bool SetVirtualMirrorScreenCanvasRotation(ScreenId id, bool canvasRotation) = 0;
 
+    virtual bool SetVirtualMirrorScreenScaleMode(ScreenId id, ScreenScaleMode scaleMode) = 0;
+
     virtual int32_t GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode) = 0;
 
     virtual int32_t GetScreenHDRCapability(ScreenId id, RSScreenHDRCapability& screenHdrCapability) = 0;
@@ -181,15 +183,11 @@ public:
 
     virtual int32_t GetScreenType(ScreenId id, RSScreenType& screenType) = 0;
 
-#ifndef USE_ROSEN_DRAWING
-    virtual bool GetBitmap(NodeId id, SkBitmap& bitmap) = 0;
-    virtual bool GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
-        const SkRect* rect, std::shared_ptr<DrawCmdList> drawCmdList) = 0;
-#else
     virtual bool GetBitmap(NodeId id, Drawing::Bitmap& bitmap) = 0;
     virtual bool GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
         const Drawing::Rect* rect, std::shared_ptr<Drawing::DrawCmdList> drawCmdList) = 0;
-#endif
+    virtual bool RegisterTypeface(uint64_t globalUniqueId, std::shared_ptr<Drawing::Typeface>& typeface) = 0;
+    virtual bool UnRegisterTypeface(uint64_t globalUniqueId) = 0;
 
     virtual int32_t SetScreenSkipFrameInterval(ScreenId id, uint32_t skipFrameInterval) = 0;
 
@@ -239,6 +237,8 @@ public:
     virtual void RunOnRemoteDiedCallback() = 0;
 
     virtual void SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus) = 0;
+
+    virtual void SetCurtainScreenUsingStatus(bool isCurtainScreenOn) = 0;
 
     virtual GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id) = 0;
 

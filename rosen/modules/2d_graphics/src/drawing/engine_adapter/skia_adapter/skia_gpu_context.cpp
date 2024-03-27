@@ -104,8 +104,7 @@ bool SkiaGPUContext::BuildFromGL(const GPUContextOptions& options)
 #ifdef RS_ENABLE_VK
 bool SkiaGPUContext::BuildFromVK(const GrVkBackendContext& context)
 {
-    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
-        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+    if (!SystemProperties::IsUseVulkan()) {
         return false;
     }
     InitSkExecutor();
@@ -117,8 +116,7 @@ bool SkiaGPUContext::BuildFromVK(const GrVkBackendContext& context)
 
 bool SkiaGPUContext::BuildFromVK(const GrVkBackendContext& context, const GPUContextOptions& options)
 {
-    if (SystemProperties::GetGpuApiType() != GpuApiType::VULKAN &&
-        SystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+    if (!SystemProperties::IsUseVulkan()) {
         return false;
     }
     if (options.GetPersistentCache() != nullptr) {
@@ -248,6 +246,15 @@ void SkiaGPUContext::PurgeUnlockedResourcesByTag(bool scratchResourcesOnly, cons
     }
     GrGpuResourceTag grTag(tag.fPid, tag.fTid, tag.fWid, tag.fFid);
     grContext_->purgeUnlockedResourcesByTag(scratchResourcesOnly, grTag);
+}
+
+void SkiaGPUContext::PurgeUnlockedResourcesByPid(bool scratchResourcesOnly, const std::set<pid_t>& exitedPidSet)
+{
+    if (!grContext_) {
+        LOGD("SkiaGPUContext::PurgeUnlockedResourcesByPid, grContext_ is nullptr");
+        return;
+    }
+    grContext_->purgeUnlockedResourcesByPid(scratchResourcesOnly, exitedPidSet);
 }
 
 void SkiaGPUContext::PurgeUnlockAndSafeCacheGpuResources()

@@ -39,16 +39,6 @@
 #include "surface_type.h"
 #include "transaction/rs_occlusion_data.h"
 
-#ifndef USE_ROSEN_DRAWING
-#include "include/core/SkRect.h"
-#include "include/core/SkRefCnt.h"
-#ifdef NEW_SKIA
-#include "include/gpu/GrDirectContext.h"
-#else
-#include "include/gpu/GrContext.h"
-#include "refbase.h"
-#endif
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -220,14 +210,16 @@ public:
             GetDstRect().GetWidth() <= 1 || GetDstRect().GetHeight() <= 1; // avoid fallback by composer
     }
 
+    bool IsLeashOrMainWindow() const
+    {
+        return nodeType_ <= RSSurfaceNodeType::LEASH_WINDOW_NODE;
+    }
+
     bool IsMainWindowType() const
     {
         // a mainWindowType surfacenode will not mounted under another mainWindowType surfacenode
         // including app main window, starting window, and selfdrawing window
-        return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE ||
-               nodeType_ == RSSurfaceNodeType::DEFAULT ||
-               nodeType_ == RSSurfaceNodeType::STARTING_WINDOW_NODE ||
-               nodeType_ == RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
+        return nodeType_ <= RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
     }
 
     bool IsSelfDrawingType() const
@@ -323,19 +315,11 @@ public:
 
     void OnApplyModifiers() override;
 
-#ifndef USE_ROSEN_DRAWING
-    void SetTotalMatrix(const SkMatrix& totalMatrix)
-#else
     void SetTotalMatrix(const Drawing::Matrix& totalMatrix)
-#endif
     {
         totalMatrix_ = totalMatrix;
     }
-#ifndef USE_ROSEN_DRAWING
-    const SkMatrix& GetTotalMatrix() const
-#else
     const Drawing::Matrix& GetTotalMatrix() const
-#endif
     {
         return totalMatrix_;
     }
@@ -346,26 +330,27 @@ public:
     // - All three variables are relative to their parent node.
     // - Alpha can be processed as an absolute value, as its parent (surface) node's alpha should always be 1.0f.
     // - The matrix and clipRegion should be applied according to the parent node's matrix.
-#ifndef USE_ROSEN_DRAWING
-    void SetContextMatrix(const std::optional<SkMatrix>& transform, bool sendMsg = true);
-    void SetContextAlpha(float alpha, bool sendMsg = true);
-    void SetContextClipRegion(const std::optional<SkRect>& clipRegion, bool sendMsg = true);
-    std::optional<SkRect> GetContextClipRegion() const override;
-#else
     void SetContextMatrix(const std::optional<Drawing::Matrix>& transform, bool sendMsg = true);
     void SetContextAlpha(float alpha, bool sendMsg = true);
     void SetContextClipRegion(const std::optional<Drawing::Rect>& clipRegion, bool sendMsg = true);
     std::optional<Drawing::Rect> GetContextClipRegion() const override;
-#endif
 
     void SetBootAnimation(bool isBootAnimation) override;
     bool GetBootAnimation() const override;
 
     void SetSecurityLayer(bool isSecurityLayer);
-    bool GetSecurityLayer() const;
-
     void SetSkipLayer(bool isSkipLayer);
+
+    // get whether it is a security/skip layer itself
+    bool GetSecurityLayer() const;
     bool GetSkipLayer() const;
+
+    // get whether it and it's subtree contain security layer
+    bool GetHasSecurityLayer() const;
+    bool GetHasSkipLayer() const;
+
+    void SyncSecurityInfoToFirstLevelNode();
+    void SyncSkipInfoToFirstLevelNode();
 
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
@@ -376,7 +361,7 @@ public:
     void SetForceUIFirstChanged(bool forceUIFirstChanged);
     bool GetForceUIFirstChanged();
 
-    std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
+    const std::shared_ptr<RSDirtyRegionManager>& GetDirtyManager() const;
     std::shared_ptr<RSDirtyRegionManager> GetCacheSurfaceDirtyManager() const;
 
     void SetSrcRect(const RectI& rect)
@@ -666,8 +651,9 @@ public:
 
     void UpdatePositionZ()
     {
-        zOrderChanged_ = !ROSEN_EQ(GetRenderProperties().GetPositionZ(), positionZ_);
-        positionZ_ = GetRenderProperties().GetPositionZ();
+        const auto& zProperties = GetRenderProperties().GetPositionZ();
+        zOrderChanged_ = !ROSEN_EQ(zProperties, positionZ_);
+        positionZ_ = zProperties;
     }
 
     inline bool HasContainerWindow() const
@@ -732,11 +718,7 @@ public:
     // if surfacenode's buffer has been consumed, it should be set dirty
     bool UpdateDirtyIfFrameBufferConsumed();
 
-#ifndef USE_ROSEN_DRAWING
-    void UpdateSrcRect(const RSPaintFilterCanvas& canvas, const SkIRect& dstRect, bool hasRotation = false);
-#else
     void UpdateSrcRect(const RSPaintFilterCanvas& canvas, const Drawing::RectI& dstRect, bool hasRotation = false);
-#endif
 
     // if a surfacenode's dstrect is empty, its subnodes' prepare stage can be skipped
     bool ShouldPrepareSubnodes();
@@ -777,15 +759,7 @@ public:
 
     void OnTreeStateChanged() override;
 
-#ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
-    void SetGrContext(GrDirectContext* grContext)
-#else
-    void SetGrContext(GrContext* grContext)
-#endif
-#else
     void SetDrawingGPUContext(Drawing::GPUContext* grContext)
-#endif
     {
         grContext_ = grContext;
     }
@@ -842,25 +816,6 @@ public:
     // whether the subtree has only one root node
     bool HasOnlyOneRootNode() const;
 
-    bool GetHasSecurityLayer()
-    {
-        return hasSecurityLayer_;
-    }
-
-    void SetHasSecurityLayer(bool hasSecurityLayer)
-    {
-        hasSecurityLayer_ = hasSecurityLayer;
-    }
-    bool GetHasSkipLayer()
-    {
-        return hasSkipLayer_;
-    }
-
-    void SetHasSkipLayer(bool hasSkipLayer)
-    {
-        hasSkipLayer_ = hasSkipLayer;
-    }
-
     bool GetHwcDelayDirtyFlag() const noexcept
     {
         return hwcDelayDirtyFlag_;
@@ -875,6 +830,8 @@ public:
     {
         return surfaceCacheContentStatic_;
     }
+
+    void UpdateSurfaceCacheContentStatic();
 
     void UpdateSurfaceCacheContentStatic(
         const std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>>& activeNodeIds);
@@ -956,42 +913,31 @@ private:
     bool IsHistoryOccludedDirtyRegionNeedSubmit();
     void ClearHistoryUnSubmittedDirtyInfo();
     void UpdateHistoryUnsubmittedDirtyInfo();
-    bool IsHardwareDisabledBySrcRect() const;
+    inline bool IsHardwareDisabledBySrcRect() const
+    {
+        return isHardwareForcedDisabledBySrcRect_;
+    }
     bool IsYUVBufferFormat() const;
 
     std::mutex mutexRT_;
     std::mutex mutexUI_;
     std::mutex mutexClear_;
     std::mutex mutex_;
-#ifndef USE_ROSEN_DRAWING
-#ifdef NEW_SKIA
-    GrDirectContext* grContext_ = nullptr;
-#else
-    GrContext* grContext_ = nullptr;
-#endif
-#else
     Drawing::GPUContext* grContext_ = nullptr;
-#endif
     std::mutex parallelVisitMutex_;
 
     float contextAlpha_ = 1.0f;
-#ifndef USE_ROSEN_DRAWING
-    std::optional<SkMatrix> contextMatrix_;
-    std::optional<SkRect> contextClipRect_;
-#else
     std::optional<Drawing::Matrix> contextMatrix_;
     std::optional<Drawing::Rect> contextClipRect_;
-#endif
 
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
+    std::set<NodeId> skipLayerIds_= {};
+    std::set<NodeId> securityLayerIds_= {};
+
     bool hasFingerprint_ = false;
     RectI srcRect_;
-#ifndef USE_ROSEN_DRAWING
-    SkMatrix totalMatrix_;
-#else
     Drawing::Matrix totalMatrix_;
-#endif
     int32_t offsetX_ = 0;
     int32_t offsetY_ = 0;
     float positionZ_ = 0.0f;
@@ -1144,8 +1090,6 @@ private:
 
     bool needDrawAnimateProperty_ = false;
     bool prevVisible_ = false;
-    bool hasSecurityLayer_ = false;
-    bool hasSkipLayer_ = false;
 
     uint32_t processZOrder_ = -1;
 
@@ -1176,6 +1120,9 @@ private:
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;
     friend class RSRenderService;
+#ifdef RS_PROFILER_ENABLED
+    friend class RSProfiler;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

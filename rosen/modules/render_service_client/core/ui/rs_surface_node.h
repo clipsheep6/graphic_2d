@@ -35,9 +35,6 @@
 #include "transaction/rs_transaction_proxy.h"
 #include "ui/rs_node.h"
 
-#ifndef USE_ROSEN_DRAWING
-class SkCanvas;
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -106,7 +103,7 @@ public:
     void SetHardwareEnabled(bool isEnabled, SelfDrawingNodeType selfDrawingType = SelfDrawingNodeType::DEFAULT);
     void SetBootAnimation(bool isBootAnimation);
     bool GetBootAnimation() const;
-    void SetTextureExport(bool isTextureExportNode);
+    void SetTextureExport(bool isTextureExportNode) override;
 
 #ifndef ROSEN_CROSS_PLATFORM
     sptr<OHOS::Surface> GetSurface() const;
@@ -161,7 +158,7 @@ private:
     void OnBoundsSizeChanged() const override;
     // this function is only used in texture export
     void SetSurfaceIdToRenderNode();
-    void CreateTextExportRenderNodeInRT();
+    void CreateTextureExportRenderNodeInRT() override;
     void SetIsTextureExportNode(bool isTextureExportNode);
     std::pair<std::string, std::string> SplitSurfaceNodeName(std::string surfaceNodeName);
 #ifdef NEW_RENDER_CONTEXT

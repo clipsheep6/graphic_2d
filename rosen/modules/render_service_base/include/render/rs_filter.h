@@ -21,11 +21,7 @@
 
 #include "common/rs_color.h"
 #include "common/rs_macros.h"
-#ifndef USE_ROSEN_DRAWING
-#include "include/gpu/GrDirectContext.h"
-#else
 #include "image/gpu_context.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
@@ -40,11 +36,7 @@ class RSB_EXPORT RSFilter : public std::enable_shared_from_this<RSFilter> {
 public:
     class RSFilterTask {
     public:
-#ifndef USE_ROSEN_DRAWING
-        virtual bool InitSurface(GrRecordingContext* grContext);
-#else
         virtual bool InitSurface(Drawing::GPUContext* grContext);
-#endif
         virtual bool Render();
         virtual bool SaveFilteredImage();
         virtual void SwapInit();
@@ -59,6 +51,7 @@ public:
     RSFilter& operator=(const RSFilter&) = delete;
     RSFilter& operator=(const RSFilter&&) = delete;
     virtual std::string GetDescription();
+    virtual std::string GetDetailedDescription();
     static std::shared_ptr<RSFilter> CreateBlurFilter(float blurRadiusX, float blurRadiusY);
     static std::shared_ptr<RSFilter> CreateMaterialFilter(
         int style, float dipScale, BLUR_COLOR_MODE mode = DEFAULT, float ratio = 1.0);
@@ -82,6 +75,12 @@ public:
     virtual bool IsValid() const
     {
         return type_ != FilterType::NONE;
+    }
+
+    float DecreasePrecision(float value)
+    {
+        // preserve two digital precision when calculating hash, this can reuse filterCache as much as possible.
+        return 0.01 * round(value * 100);
     }
 
     uint32_t Hash() const

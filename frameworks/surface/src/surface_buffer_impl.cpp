@@ -22,9 +22,9 @@
 #include <sys/mman.h>
 #include "buffer_log.h"
 #include "buffer_extra_data_impl.h"
-#include "native_buffer.h"
 #include "v1_1/buffer_handle_meta_key_type.h"
-#include "v1_1/include/idisplay_buffer.h"
+#include "v1_2/display_buffer_type.h"
+#include "v1_2/include/idisplay_buffer.h"
 
 namespace OHOS {
 namespace {
@@ -50,8 +50,7 @@ inline GSError GenerateError(GSError err, int32_t code)
     return GenerateError(err, static_cast<GraphicDispErrCode>(code));
 }
 
-using namespace OHOS::HDI::Display::Buffer::V1_1;
-using IDisplayBufferSptr = std::shared_ptr<IDisplayBuffer>;
+using IDisplayBufferSptr = std::shared_ptr<OHOS::HDI::Display::Buffer::V1_2::IDisplayBuffer>;
 static IDisplayBufferSptr g_displayBuffer;
 static std::mutex g_DisplayBufferMutex;
 class DisplayBufferDiedRecipient : public OHOS::IRemoteObject::DeathRecipient {
@@ -72,7 +71,7 @@ IDisplayBufferSptr GetDisplayBuffer()
         return g_displayBuffer;
     }
 
-    g_displayBuffer.reset(IDisplayBuffer::Get());
+    g_displayBuffer.reset(OHOS::HDI::Display::Buffer::V1_2::IDisplayBuffer::Get());
     if (g_displayBuffer == nullptr) {
         BLOGE("IDisplayBuffer::Get return nullptr.");
         return nullptr;
@@ -158,6 +157,7 @@ GSError SurfaceBufferImpl::Alloc(const BufferRequestConfig &config)
         transform_ = static_cast<GraphicTransformType>(config.transform);
         surfaceBufferWidth_ = config.width;
         surfaceBufferHeight_ = config.height;
+        bufferRequestConfig_ = config;
         handle_ = handle;
         BLOGD("buffer handle w: %{public}d h: %{public}d t: %{public}d",
             handle_->width, handle_->height, config.transform);
@@ -255,6 +255,32 @@ GSError SurfaceBufferImpl::FlushCache()
     return GenerateError(GSERROR_API_FAILED, dret);
 }
 
+GSError SurfaceBufferImpl::GetImageLayout(void *layout)
+{
+    if (GetDisplayBuffer() == nullptr) {
+        BLOGE("GetDisplayBuffer failed!");
+        return GSERROR_INTERNAL;
+    }
+    BufferHandle *handle = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (handle_ == nullptr) {
+            BLOGE("handle is nullptr");
+            return GSERROR_INVALID_OPERATING;
+        } else if (planesInfo_.planeCount != 0) {
+            return GSERROR_OK;
+        }
+        handle = handle_;
+    }
+    auto dret = g_displayBuffer->GetImageLayout(*handle,
+        *(static_cast<OHOS::HDI::Display::Buffer::V1_2::ImageLayout*>(layout)));
+    if (dret == GRAPHIC_DISPLAY_SUCCESS) {
+        return GSERROR_OK;
+    }
+    BLOGE("Failed with %{public}d", dret);
+    return GenerateError(GSERROR_API_FAILED, dret);
+}
+
 GSError SurfaceBufferImpl::InvalidateCache()
 {
     if (GetDisplayBuffer() == nullptr) {
@@ -300,7 +326,9 @@ BufferHandle *SurfaceBufferImpl::GetBufferHandle() const
 void SurfaceBufferImpl::SetSurfaceBufferColorGamut(const GraphicColorGamut& colorGamut)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    surfaceBufferColorGamut_ = colorGamut;
+    if (surfaceBufferColorGamut_ != colorGamut) {
+        surfaceBufferColorGamut_ = colorGamut;
+    }
 }
 
 const GraphicColorGamut& SurfaceBufferImpl::GetSurfaceBufferColorGamut() const
@@ -312,7 +340,9 @@ const GraphicColorGamut& SurfaceBufferImpl::GetSurfaceBufferColorGamut() const
 void SurfaceBufferImpl::SetSurfaceBufferTransform(const GraphicTransformType& transform)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    transform_ = transform;
+    if (transform_ != transform) {
+        transform_ = transform;
+    }
 }
 
 const GraphicTransformType& SurfaceBufferImpl::GetSurfaceBufferTransform() const
@@ -405,7 +435,7 @@ uint64_t SurfaceBufferImpl::GetPhyAddr() const
     return handle_->phyAddr;
 }
 
-void *SurfaceBufferImpl::GetVirAddr()
+void* SurfaceBufferImpl::GetVirAddr()
 {
     GSError ret = this->Map();
     if (ret != GSERROR_OK) {
@@ -435,6 +465,31 @@ uint32_t SurfaceBufferImpl::GetSize() const
     return handle_->size;
 }
 
+GSError SurfaceBufferImpl::GetPlanesInfo(void **planesInfo)
+{
+    OHOS::HDI::Display::Buffer::V1_2::ImageLayout layout;
+    GSError ret = GetImageLayout(&layout);
+    if (ret != GSERROR_OK) {
+        BLOGW("GetImageLayout failed, ret:%d", ret);
+        return ret;
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (planesInfo_.planeCount != 0) {
+        *planesInfo = static_cast<void*>(&planesInfo_);
+        return GSERROR_OK;
+    }
+    planesInfo_.planeCount = layout.planes.size();
+    for (uint32_t i = 0; i < planesInfo_.planeCount && i < 4; i++) { // 4: max plane count
+        planesInfo_.planes[i].offset = layout.planes[i].offset;
+        planesInfo_.planes[i].rowStride = layout.planes[i].hStride;
+        planesInfo_.planes[i].columnStride = layout.planes[i].vStride;
+    }
+
+    *planesInfo = static_cast<void*>(&planesInfo_);
+    return GSERROR_OK;
+}
+
 void SurfaceBufferImpl::SetExtraData(const sptr<BufferExtraData> &bedata)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -454,6 +509,19 @@ void SurfaceBufferImpl::SetBufferHandle(BufferHandle *handle)
         FreeBufferHandleLocked();
     }
     handle_ = handle;
+}
+
+GSError SurfaceBufferImpl::WriteBufferRequestConfig(MessageParcel &parcel)
+{
+    if (!parcel.WriteInt32(bufferRequestConfig_.width) || !parcel.WriteInt32(bufferRequestConfig_.height) ||
+        !parcel.WriteInt32(bufferRequestConfig_.strideAlignment) || !parcel.WriteInt32(bufferRequestConfig_.format) ||
+        !parcel.WriteUint64(bufferRequestConfig_.usage) || !parcel.WriteInt32(bufferRequestConfig_.timeout) ||
+        !parcel.WriteUint32(static_cast<uint32_t>(bufferRequestConfig_.colorGamut)) ||
+        !parcel.WriteUint32(static_cast<uint32_t>(bufferRequestConfig_.transform))) {
+        BLOGE("%{public}s a lot failed", __func__);
+        return GSERROR_API_FAILED;
+    }
+    return GSERROR_OK;
 }
 
 GSError SurfaceBufferImpl::WriteToMessageParcel(MessageParcel &parcel)
@@ -477,6 +545,22 @@ GSError SurfaceBufferImpl::WriteToMessageParcel(MessageParcel &parcel)
     return GSERROR_OK;
 }
 
+GSError SurfaceBufferImpl::ReadBufferRequestConfig(MessageParcel &parcel)
+{
+    uint32_t colorGamut = 0;
+    uint32_t transform = 0;
+    if (!parcel.ReadInt32(bufferRequestConfig_.width) || !parcel.ReadInt32(bufferRequestConfig_.height) ||
+        !parcel.ReadInt32(bufferRequestConfig_.strideAlignment) || !parcel.ReadInt32(bufferRequestConfig_.format) ||
+        !parcel.ReadUint64(bufferRequestConfig_.usage) || !parcel.ReadInt32(bufferRequestConfig_.timeout) ||
+        !parcel.ReadUint32(colorGamut) || !parcel.ReadUint32(transform)) {
+        BLOGE("%{public}s a lot failed", __func__);
+        return GSERROR_API_FAILED;
+    }
+    bufferRequestConfig_.colorGamut = static_cast<GraphicColorGamut>(colorGamut);
+    bufferRequestConfig_.transform = static_cast<GraphicTransformType>(transform);
+    return GSERROR_OK;
+}
+
 GSError SurfaceBufferImpl::ReadFromMessageParcel(MessageParcel &parcel)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -485,7 +569,6 @@ GSError SurfaceBufferImpl::ReadFromMessageParcel(MessageParcel &parcel)
     if (handle_ == nullptr) {
         return GSERROR_API_FAILED;
     }
-
     return GSERROR_OK;
 }
 
@@ -617,5 +700,29 @@ GSError SurfaceBufferImpl::EraseMetadataKey(uint32_t key)
         return GSERROR_OK;
     }
     return GenerateError(GSERROR_API_FAILED, dret);
+}
+
+const BufferRequestConfig* SurfaceBufferImpl::GetBufferRequestConfig() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return &bufferRequestConfig_;
+}
+
+void SurfaceBufferImpl::SetBufferRequestConfig(const BufferRequestConfig &config)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bufferRequestConfig_ = config;
+}
+
+void SurfaceBufferImpl::SetConsumerAttachBufferFlag(bool value)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    isConsumerAttachBufferFlag_ = value;
+}
+
+bool SurfaceBufferImpl::GetConsumerAttachBufferFlag()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return isConsumerAttachBufferFlag_;
 }
 } // namespace OHOS

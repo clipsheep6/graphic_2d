@@ -108,7 +108,7 @@ GSError BufferQueue::PopFromFreeList(sptr<SurfaceBuffer> &buffer,
         }
     }
 
-    if (freeList_.empty()) {
+    if (freeList_.empty() || GetUsedSize() < GetQueueSize()) {
         buffer = nullptr;
         return GSERROR_NO_BUFFER;
     }
@@ -391,15 +391,17 @@ GSError BufferQueue::ReuseBuffer(const BufferRequestConfig &config, sptr<BufferE
     dbs.insert(dbs.end(), deletingList_.begin(), deletingList_.end());
     deletingList_.clear();
 
-    if (needRealloc || isShared_ || producerCacheClean_) {
+    if (needRealloc || isShared_ || producerCacheClean_ || retval.buffer->GetConsumerAttachBufferFlag()) {
         BLOGND("RequestBuffer Succ realloc Buffer[%{public}d %{public}d] with new config "\
-            "qid: %{public}d id: %{public}" PRIu64, config.width, config.height, retval.sequence, uniqueId_);
+            "qid: %{public}d attachFlag: %{public}d id: %{public}" PRIu64,
+            config.width, config.height, retval.sequence, retval.buffer->GetConsumerAttachBufferFlag(), uniqueId_);
         if (producerCacheClean_) {
             producerCacheList_.push_back(retval.sequence);
             if (CheckProducerCacheList()) {
                 SetProducerCacheCleanFlagLocked(false);
             }
         }
+        retval.buffer->SetConsumerAttachBufferFlag(false);
     } else {
         BLOGND("RequestBuffer Succ Buffer[%{public}d %{public}d] in seq id: %{public}d "\
             "qid: %{public}" PRIu64 " releaseFence: %{public}d",
@@ -843,6 +845,73 @@ void BufferQueue::AttachBufferUpdateBufferInfo(sptr<SurfaceBuffer>& buffer)
     buffer->Map();
     buffer->SetSurfaceBufferWidth(buffer->GetWidth());
     buffer->SetSurfaceBufferHeight(buffer->GetHeight());
+}
+
+GSError BufferQueue::AttachBufferToQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType)
+{
+    ScopedBytrace func(__func__);
+    if (buffer == nullptr) {
+        BLOGN_FAILURE_RET(GSERROR_INVALID_ARGUMENTS);
+    }
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        uint32_t sequence = buffer->GetSeqNum();
+        if (bufferQueueCache_.find(sequence) != bufferQueueCache_.end()) {
+            BLOGN_FAILURE_ID(sequence, "buffer is already in cache");
+            return GSERROR_API_FAILED;
+        }
+        BufferElement ele;
+        ele = {
+            .buffer = buffer,
+            .isDeleting = false,
+            .config = *(buffer->GetBufferRequestConfig()),
+            .fence = SyncFence::INVALID_FENCE,
+        };
+        if (invokerType == InvokerType::PRODUCER_INVOKER) {
+            ele.state = BUFFER_STATE_REQUESTED;
+        } else {
+            ele.state = BUFFER_STATE_ACQUIRED;
+        }
+        AttachBufferUpdateBufferInfo(buffer);
+        bufferQueueCache_[sequence] = ele;
+        queueSize_++;
+    }
+    return GSERROR_OK;
+}
+
+GSError BufferQueue::DetachBufferFromQueue(sptr<SurfaceBuffer> &buffer, InvokerType invokerType)
+{
+    ScopedBytrace func(__func__);
+    if (buffer == nullptr) {
+        BLOGN_FAILURE_RET(GSERROR_INVALID_ARGUMENTS);
+    }
+    {
+        std::lock_guard<std::mutex> lockGuard(mutex_);
+        uint32_t sequence = buffer->GetSeqNum();
+        if (bufferQueueCache_.find(sequence) == bufferQueueCache_.end()) {
+            BLOGN_FAILURE_ID(sequence, "not find in cache");
+            return GSERROR_NO_ENTRY;
+        }
+        if (invokerType == InvokerType::PRODUCER_INVOKER) {
+            if (bufferQueueCache_[sequence].state != BUFFER_STATE_REQUESTED) {
+                BLOGN_FAILURE_ID(sequence, "producer state is not requested");
+                return GSERROR_INVALID_OPERATING;
+            }
+        } else {
+            if (bufferQueueCache_[sequence].state != BUFFER_STATE_ACQUIRED) {
+                BLOGN_FAILURE_ID(sequence, "consumer state is not acquired");
+                return GSERROR_INVALID_OPERATING;
+            }
+        }
+        if (queueSize_ > 0) {
+            queueSize_--;
+            bufferQueueCache_.erase(sequence);
+        } else {
+            BLOGN_FAILURE_ID(sequence, "there has no buffer");
+            return GSERROR_INVALID_OPERATING;
+        }
+    }
+    return GSERROR_OK;
 }
 
 GSError BufferQueue::AttachBuffer(sptr<SurfaceBuffer> &buffer, int32_t timeOut)

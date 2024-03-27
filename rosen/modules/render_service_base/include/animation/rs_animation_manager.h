@@ -50,6 +50,7 @@ public:
     const std::shared_ptr<RSRenderAnimation> GetAnimation(AnimationId id) const;
     void FilterAnimationByPid(pid_t pid);
     uint32_t GetAnimationsSize();
+    pid_t GetAnimationPid() const;
 
     std::tuple<bool, bool, bool> Animate(int64_t time, bool nodeIsOnTheTree);
 
@@ -80,6 +81,9 @@ private:
     std::unordered_map<PropertyId, AnimationId> pathAnimations_;
     std::unordered_map<PropertyId, AnimationId> particleAnimations_;
     friend class RSRenderNode;
+#ifdef RS_PROFILER_ENABLED
+    friend class RSProfiler;
+#endif
 
     FrameRateRange rsRange_ = {0, 0, 0};
     RSAnimationRateDecider rateDecider_;

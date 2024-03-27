@@ -43,6 +43,9 @@
 #include "platform/drawing/rs_vsync_client.h"
 #include "platform/common/rs_event_manager.h"
 #include "transaction/rs_transaction_data.h"
+#ifdef RES_SCHED_ENABLE
+#include "vsync_system_ability_listener.h"
+#endif
 
 namespace OHOS::Rosen {
 #if defined(ACCESSIBILITY_ENABLE)
@@ -89,11 +92,11 @@ public:
     void RemoveTask(const std::string& name);
     void PostSyncTask(RSTaskMessage::RSTask task);
     bool IsIdle() const;
-    void RenderServiceTreeDump(std::string& dumpString);
+    void RenderServiceTreeDump(std::string& dumpString, bool forceDumpSingleFrame = true);
     void RsEventParamDump(std::string& dumpString);
     bool IsUIFirstOn() const;
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
-    void ClearMemoryCache(ClearMemoryMoment moment, bool deeply = false);
+    void ClearMemoryCache(ClearMemoryMoment moment, bool deeply = false, pid_t pid = -1);
 
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)
@@ -176,11 +179,7 @@ public:
     sptr<VSyncGenerator> vsyncGenerator_;
 
     void ReleaseSurface();
-#ifndef USE_ROSEN_DRAWING
-    void AddToReleaseQueue(sk_sp<SkSurface>&& surface);
-#else
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
-#endif
 
     void SetDirtyFlag();
     void SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync);
@@ -208,11 +207,7 @@ public:
     {
         idleTimerExpiredFlag_ = flag;
     }
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImage> GetWatermarkImg();
-#else
     std::shared_ptr<Drawing::Image> GetWatermarkImg();
-#endif
     bool GetWatermarkFlag();
     uint64_t GetFrameCount() const
     {
@@ -275,6 +270,8 @@ public:
 
     void SubscribeAppState();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
+    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
+    bool IsCurtainScreenOn() const;
     void NotifySurfaceCapProcFinish();
     void WaitUntilSurfaceCapProcFinished();
     void SetSurfaceCapProcFinished(bool flag);
@@ -325,7 +322,9 @@ private:
     void UpdateUIFirstSwitch();
     // ROG: Resolution Online Government
     void UpdateRogSizeIfNeeded();
+    void UpdateDisplayNodeScreenId();
     uint32_t GetRefreshRate() const;
+    uint32_t GetDynamicRefreshRate() const;
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
 
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
@@ -368,6 +367,10 @@ private:
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
     void WaitUntilUploadTextureTaskFinishedForGL();
+#ifdef RES_SCHED_ENABLE
+    void SubScribeSystemAbility();
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -393,6 +396,7 @@ private:
     uint64_t lastAnimateTimestamp_ = 0;
     uint64_t prePerfTimestamp_ = 0;
     uint64_t lastCleanCacheTimestamp_ = 0;
+    pid_t lastCleanCachePid_ = -1;
     int hardwareTid_ = -1;
     std::unordered_map<uint32_t, sptr<IApplicationAgent>> applicationAgentMap_;
 
@@ -489,11 +493,7 @@ private:
 
     // used for watermark
     std::mutex watermarkMutex_;
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkImage> watermarkImg_ = nullptr;
-#else
     std::shared_ptr<Drawing::Image> watermarkImg_ = nullptr;
-#endif
     bool isShow_ = false;
     bool doParallelComposition_ = false;
 
@@ -523,11 +523,7 @@ private:
     bool idleTimerExpiredFlag_ = false;
     // for ui first
     std::mutex mutex_;
-#ifndef USE_ROSEN_DRAWING
-    std::queue<sk_sp<SkSurface>> tmpSurfaces_;
-#else
     std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
-#endif
 
     // for surface occlusion change callback
     std::mutex surfaceOcclusionMutex_;
@@ -550,9 +546,20 @@ private:
     // for dvsync (animate requestNextVSync after mark rsnotrendering)
     bool needRequestNextVsyncAnimate_ = false;
 
+    // for statistic of jank frames
     std::atomic_bool mainLooping_ = false;
     std::atomic_bool discardJankFrames_ = false;
+    ScreenId displayNodeScreenId_ = 0;
+
     bool forceUIFirstChanged_ = false;
+    bool hasRosenWebNode_ = false;
+
+#ifdef RS_PROFILER_ENABLED
+    friend class RSProfiler;
+#endif
+    bool isCurtainScreenOn_ = false;
+    pid_t exitedPid_ = -1;
+    std::set<pid_t> exitedPidSet_;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

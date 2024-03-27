@@ -50,6 +50,11 @@ bool FontFeatures::operator ==(const FontFeatures& rhs) const
     return featureMap_ == rhs.featureMap_;
 }
 
+void FontFeatures::Clear()
+{
+    featureMap_.clear();
+}
+
 TextShadow::TextShadow()
 {
 }
@@ -107,15 +112,10 @@ bool TextStyle::operator ==(const TextStyle& rhs) const
         halfLeading == rhs.halfLeading &&
         heightOnly == rhs.heightOnly &&
         locale == rhs.locale &&
-#ifndef USE_ROSEN_DRAWING
-        background == rhs.background &&
-        foreground == rhs.foreground &&
-#else
         foregroundBrush == rhs.foregroundBrush &&
         foregroundPen == rhs.foregroundPen &&
         backgroundBrush == rhs.backgroundBrush &&
         backgroundPen == rhs.backgroundPen &&
-#endif
         backgroundRect == rhs.backgroundRect &&
         styleId == rhs.styleId &&
         shadows == rhs.shadows &&

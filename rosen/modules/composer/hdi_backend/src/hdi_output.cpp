@@ -33,6 +33,7 @@ using namespace OHOS::HDI::Display::Graphic::Common::V1_0;
 
 namespace OHOS {
 namespace Rosen {
+static constexpr uint32_t NUMBER_OF_HISTORICAL_FRAMES = 2;
 
 std::shared_ptr<HdiOutput> HdiOutput::CreateHdiOutput(uint32_t screenId)
 {
@@ -91,6 +92,7 @@ RosenError HdiOutput::Init()
     }
     bufferCache_.clear();
     bufferCache_.reserve(bufferCacheCountMax_);
+    historicalPresentfences_.clear();
 
     return ROSEN_ERROR_OK;
 }
@@ -488,15 +490,25 @@ int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
     if (sampler_ == nullptr) {
         sampler_ = CreateVSyncSampler();
     }
-    int64_t timestamp = lastPresentFence_->SyncFileReadTimestamp();
+    int64_t timestamp = thirdFrameAheadPresentFence_->SyncFileReadTimestamp();
     bool startSample = false;
     if (timestamp != SyncFence::FENCE_PENDING_TIMESTAMP) {
         startSample = sampler_->AddPresentFenceTime(timestamp);
         RecordCompositionTime(timestamp);
+        bool presentTimeUpdated = false;
+        LayerPtr uniRenderLayer = nullptr;
         std::unique_lock<std::mutex> lock(layerMutex_);
         for (auto iter = layerIdMap_.begin(); iter != layerIdMap_.end(); ++iter) {
             const LayerPtr &layer = iter->second;
-            layer->RecordPresentTime(timestamp);
+            if (layer->RecordPresentTime(timestamp)) {
+                presentTimeUpdated = true;
+            }
+            if (layer->GetLayerInfo() && layer->GetLayerInfo()->GetUniRenderFlag()) {
+                uniRenderLayer = layer;
+            }
+        }
+        if (presentTimeUpdated && uniRenderLayer) {
+            uniRenderLayer->RecordMergedPresentTime(timestamp);
         }
     }
 
@@ -504,7 +516,13 @@ int32_t HdiOutput::UpdateInfosAfterCommit(sptr<SyncFence> fbFence)
     if (startSample) {
         ret = StartVSyncSampler();
     }
-    lastPresentFence_ = fbFence;
+    if (historicalPresentfences_.size() == NUMBER_OF_HISTORICAL_FRAMES) {
+        thirdFrameAheadPresentFence_ = historicalPresentfences_[presentFenceIndex_];
+        historicalPresentfences_[presentFenceIndex_] = fbFence;
+        presentFenceIndex_ = (presentFenceIndex_ + 1) % NUMBER_OF_HISTORICAL_FRAMES;
+    } else {
+        historicalPresentfences_.push_back(fbFence);
+    }
     return ret;
 }
 
@@ -706,13 +724,42 @@ void HdiOutput::DumpFps(std::string &result, const std::string &arg) const
         }
         return;
     }
-
     for (const LayerDumpInfo &layerInfo : dumpLayerInfos) {
         const LayerPtr &layer = layerInfo.layer;
+        if (arg == "UniRender") {
+            if (layer->GetLayerInfo()->GetUniRenderFlag()) {
+                result += "\n surface [" + arg + "] Id[" + std::to_string(layerInfo.surfaceId) + "]:\n";
+                layer->DumpMergedResult(result);
+                break;
+            }
+            continue;
+        }
         const std::string& name = layer->GetLayerInfo()->GetSurface()->GetName();
         if (name == arg) {
             result += "\n surface [" + name + "] Id[" + std::to_string(layerInfo.surfaceId) + "]:\n";
             layer->Dump(result);
+        }
+        if (layer->GetLayerInfo()->GetUniRenderFlag()) {
+            auto windowsName = layer->GetLayerInfo()->GetWindowsName();
+            auto iter = std::find(windowsName.begin(), windowsName.end(), arg);
+            if (iter != windowsName.end()) {
+                result += "\n window [" + arg + "] Id[" + std::to_string(layerInfo.surfaceId) + "]:\n";
+                layer->DumpByName(arg, result);
+            }
+        }
+    }
+}
+
+void HdiOutput::DumpHitchs(std::string &result, const std::string &arg) const
+{
+    std::vector<LayerDumpInfo> dumpLayerInfos;
+    ReorderLayerInfo(dumpLayerInfos);
+    result.append("\n");
+    for (const LayerDumpInfo &layerInfo : dumpLayerInfos) {
+        const LayerPtr &layer = layerInfo.layer;
+        if (layer->GetLayerInfo()->GetUniRenderFlag()) {
+            result += "\n window [" + arg + "] Id[" + std::to_string(layerInfo.surfaceId) + "]:\n";
+            layer->SelectHitchsInfo(arg, result);
         }
     }
 }

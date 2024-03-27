@@ -19,6 +19,7 @@
 #include "sandbox_utils.h"
 
 #include "command/rs_message_processor.h"
+#include "hyper_graphic_manager/core/utils/hgm_command.h"
 #include "modifier/rs_modifier_manager.h"
 #include "modifier/rs_modifier_manager_map.h"
 #include "pipeline/rs_frame_report.h"
@@ -95,6 +96,14 @@ void RSUIDirector::Init(bool shouldCreateRenderThread)
     }
 
     GoForeground();
+}
+
+void RSUIDirector::SetFlushEmptyCallback(FlushEmptyCallback flushEmptyCallback)
+{
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->SetFlushEmptyCallback(flushEmptyCallback);
+    }
 }
 
 void RSUIDirector::StartTextureExport()
@@ -274,7 +283,7 @@ bool RSUIDirector::FlushAnimation(uint64_t timeStamp, int64_t vsyncPeriod)
     bool hasRunningAnimation = false;
     auto modifierManager = RSModifierManagerMap::Instance()->GetModifierManager(gettid());
     if (modifierManager != nullptr) {
-        modifierManager->SetDisplaySyncEnable(GetCurrentRefreshRateMode() == -1);
+        modifierManager->SetDisplaySyncEnable(GetCurrentRefreshRateMode() == HGM_REFRESHRATE_MODE_AUTO);
         modifierManager->SetFrameRateGetFunc([](const RSPropertyUnit unit, float velocity) -> int32_t {
             return RSFrameRatePolicy::GetInstance()->GetExpectedFrameRate(unit, velocity);
         });
@@ -413,7 +422,7 @@ void RSUIDirector::PostTask(const std::function<void()>& task)
 
 int32_t RSUIDirector::GetCurrentRefreshRateMode()
 {
-    return RSFrameRatePolicy::GetInstance()->GetRefreshRateMode();
+    return RSFrameRatePolicy::GetInstance()->GetRefreshRateModeName();
 }
 
 int32_t RSUIDirector::GetAnimateExpectedRate() const

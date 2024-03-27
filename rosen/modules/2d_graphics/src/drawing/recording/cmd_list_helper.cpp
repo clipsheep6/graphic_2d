@@ -15,9 +15,6 @@
 
 #include "recording/cmd_list_helper.h"
 
-#ifdef SUPPORT_OHOS_PIXMAP
-#include "pixel_map.h"
-#endif
 #include "recording/draw_cmd_list.h"
 #include "skia_adapter/skia_vertices.h"
 #include "skia_adapter/skia_image_filter.h"
@@ -141,28 +138,6 @@ std::shared_ptr<Bitmap> CmdListHelper::GetBitmapFromCmdList(const CmdList& cmdLi
     bitmap->SetPixels(const_cast<void*>(cmdList.GetBitmapData(bitmapHandle.offset)));
 
     return bitmap;
-}
-
-OpDataHandle CmdListHelper::AddPixelMapToCmdList(CmdList& cmdList, const std::shared_ptr<Media::PixelMap>& pixelMap)
-{
-#ifdef SUPPORT_OHOS_PIXMAP
-    auto index = cmdList.AddPixelMap(pixelMap);
-    return { index };
-#else
-    LOGD("Not support drawing Media::PixelMap");
-    return { 0 };
-#endif
-}
-
-std::shared_ptr<Media::PixelMap> CmdListHelper::GetPixelMapFromCmdList(
-    const CmdList& cmdList, const OpDataHandle& pixelMapHandle)
-{
-#ifdef SUPPORT_OHOS_PIXMAP
-    return (const_cast<CmdList&>(cmdList)).GetPixelMap(pixelMapHandle.offset);
-#else
-    LOGD("Not support drawing Media::PixelMap");
-    return nullptr;
-#endif
 }
 
 OpDataHandle CmdListHelper::AddImageObjectToCmdList(CmdList& cmdList, const std::shared_ptr<ExtendImageObject>& object)
@@ -324,7 +299,7 @@ SymbolLayersHandle CmdListHelper::AddSymbolLayersToCmdList(CmdList& cmdList, con
     }
     std::pair<uint32_t, size_t> groupsHandle = AddVectorToCmdList(cmdList, handleVector2);
 
-    return { symbolLayers.symbolGlyphId, layersHandle, groupsHandle, static_cast<int32_t>(symbolLayers.effect)};
+    return { symbolLayers.symbolGlyphId, layersHandle, groupsHandle};
 }
 
 DrawingSymbolLayers CmdListHelper::GetSymbolLayersFromCmdList(const CmdList& cmdList,
@@ -346,8 +321,6 @@ DrawingSymbolLayers CmdListHelper::GetSymbolLayersFromCmdList(const CmdList& cmd
         renderGroups.push_back(GetRenderGroupFromCmdList(cmdList, handleVector2.at(i)));
     }
     symbolLayers.renderGroups = renderGroups;
-
-    symbolLayers.effect = static_cast<DrawingEffectStrategy>(symbolLayersHandle.effect);
 
     return symbolLayers;
 }
@@ -394,12 +367,12 @@ DrawingGroupInfo CmdListHelper::GetGroupInfoFromCmdList(const CmdList& cmdList, 
     return groupInfo;
 }
 
-OpDataHandle CmdListHelper::AddTextBlobToCmdList(CmdList& cmdList, const TextBlob* textBlob)
+OpDataHandle CmdListHelper::AddTextBlobToCmdList(CmdList& cmdList, const TextBlob* textBlob, void* ctx)
 {
     if (!textBlob) {
         return { 0 };
     }
-    auto data = textBlob->Serialize();
+    auto data = textBlob->Serialize(ctx);
     if (!data || data->GetSize() == 0) {
         LOGD("textBlob serialize invalid, %{public}s, %{public}d", __FUNCTION__, __LINE__);
         return { 0 };
@@ -410,7 +383,7 @@ OpDataHandle CmdListHelper::AddTextBlobToCmdList(CmdList& cmdList, const TextBlo
 }
 
 std::shared_ptr<TextBlob> CmdListHelper::GetTextBlobFromCmdList(const CmdList& cmdList,
-    const OpDataHandle& textBlobHandle)
+    const OpDataHandle& textBlobHandle, void* ctx)
 {
     if (textBlobHandle.size == 0) {
         return nullptr;
@@ -424,7 +397,7 @@ std::shared_ptr<TextBlob> CmdListHelper::GetTextBlobFromCmdList(const CmdList& c
 
     auto textBlobData = std::make_shared<Data>();
     textBlobData->BuildWithoutCopy(data, textBlobHandle.size);
-    return TextBlob::Deserialize(textBlobData->GetData(), textBlobData->GetSize());
+    return TextBlob::Deserialize(textBlobData->GetData(), textBlobData->GetSize(), ctx);
 }
 
 OpDataHandle CmdListHelper::AddDataToCmdList(CmdList& cmdList, const Data* srcData)
@@ -785,16 +758,15 @@ sptr<SurfaceBuffer> CmdListHelper::GetSurfaceBufferFromCmdList(
 }
 #endif
 
-OpDataHandle CmdListHelper::AddDrawFuncObjToCmdList(CmdList &cmdList, const std::shared_ptr<ExtendDrawFuncObj> &object)
+uint32_t CmdListHelper::AddDrawFuncObjToCmdList(CmdList &cmdList, const std::shared_ptr<ExtendDrawFuncObj> &object)
 {
-    auto index = cmdList.AddDrawFuncOjb(object);
-    return { index };
+    return cmdList.AddDrawFuncOjb(object);
 }
 
 std::shared_ptr<ExtendDrawFuncObj> CmdListHelper::GetDrawFuncObjFromCmdList(
-    const CmdList& cmdList, const OpDataHandle& objectHandle)
+    const CmdList& cmdList, uint32_t objectHandle)
 {
-    return (const_cast<CmdList&>(cmdList)).GetDrawFuncObj(objectHandle.offset);
+    return (const_cast<CmdList&>(cmdList)).GetDrawFuncObj(objectHandle);
 }
 } // namespace Drawing
 } // namespace Rosen

@@ -110,7 +110,7 @@ std::shared_ptr<VSyncReceiver> RSRenderServiceClient::CreateVSyncReceiver(
 }
 
 bool RSRenderServiceClient::TakeSurfaceCapture(NodeId id, std::shared_ptr<SurfaceCaptureCallback> callback,
-    float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType)
+    float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType, bool isSync)
 {
     return false;
 }
@@ -285,6 +285,11 @@ bool RSRenderServiceClient::SetVirtualMirrorScreenCanvasRotation(ScreenId id, bo
     return {};
 }
 
+bool RSRenderServiceClient::SetVirtualMirrorScreenScaleMode(ScreenId id, ScreenScaleMode scaleMode)
+{
+    return {};
+}
+
 int32_t RSRenderServiceClient::GetScreenGamutMap(ScreenId id, ScreenGamutMap& mode)
 {
     return {};
@@ -341,22 +346,23 @@ int32_t RSRenderServiceClient::GetScreenType(ScreenId id, RSScreenType& screenTy
     return {};
 }
 
-#ifndef USE_ROSEN_DRAWING
-bool RSRenderServiceClient::GetBitmap(NodeId id, SkBitmap& bitmap)
-#else
 bool RSRenderServiceClient::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
-#endif
 {
     return {};
 }
 
-#ifndef USE_ROSEN_DRAWING
-bool RSRenderServiceClient::GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
-    const SkRect* rect, std::shared_ptr<DrawCmdList> drawCmdList)
-#else
 bool RSRenderServiceClient::GetPixelmap(NodeId id, std::shared_ptr<Media::PixelMap> pixelmap,
     const Drawing::Rect* rect, std::shared_ptr<Drawing::DrawCmdList> drawCmdList)
-#endif
+{
+    return {};
+}
+
+bool RSRenderServiceClient::RegisterTypeface(std::shared_ptr<Drawing::Typeface>& typeface)
+{
+    return {};
+}
+
+bool RSRenderServiceClient::UnRegisterTypeface(std::shared_ptr<Drawing::Typeface>& typeface)
 {
     return {};
 }
@@ -471,6 +477,10 @@ void RSRenderServiceClient::SetTpFeatureConfig(int32_t feature, const char* conf
 #endif
 
 void RSRenderServiceClient::SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus)
+{
+}
+
+void RSRenderServiceClient::SetCurtainScreenUsingStatus(bool isCurtainScreenOn)
 {
 }
 } // namespace Rosen

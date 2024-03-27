@@ -22,6 +22,7 @@
 #include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_marshalling_helper.h"
+#include "rs_profiler.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -42,15 +43,21 @@ bool RSRenderParticleAnimation::Animate(int64_t time)
     int64_t deltaTime = time - animationFraction_.GetLastFrameTime();
     animationFraction_.SetLastFrameTime(time);
     if (particleSystem_ != nullptr) {
-        auto renderParticle = particleSystem_->Simulation(deltaTime);
-        renderParticleVector_ = RSRenderParticleVector(std::move(renderParticle));
+        particleSystem_->Emit(deltaTime, renderParticleVector_.renderParticleVector_);
+        particleSystem_->UpdateParticle(deltaTime, renderParticleVector_.renderParticleVector_);
     }
     auto property = std::static_pointer_cast<RSRenderProperty<RSRenderParticleVector>>(property_);
     if (property) {
         property->Set(renderParticleVector_);
     }
     auto target = GetTarget();
-    if (particleSystem_ == nullptr || particleSystem_->IsFinish()) {
+    if (!target) {
+        return true;
+    } else if (!target->IsOnTheTree() || !target->GetRenderProperties().GetVisible()) {
+        target->RemoveModifier(property_->GetId());
+        return true;
+    }
+    if (particleSystem_ == nullptr || particleSystem_->IsFinish(renderParticleVector_.renderParticleVector_)) {
         if (target) {
             target->RemoveModifier(property_->GetId());
         }
@@ -129,11 +136,13 @@ bool RSRenderParticleAnimation::ParseParam(Parcel& parcel)
         ROSEN_LOGE("RSRenderParticleAnimation::ParseParam, Unmarshalling animationId failed");
         return false;
     }
+    RS_PROFILER_PATCH_NODE_ID(parcel, id);
     SetAnimationId(id);
     if (!(parcel.ReadUint64(propertyId_) && RSMarshallingHelper::Unmarshalling(parcel, particlesRenderParams_))) {
         ROSEN_LOGE("RSRenderParticleAnimation::ParseParam, Unmarshalling failed");
         return false;
     }
+    RS_PROFILER_PATCH_NODE_ID(parcel, propertyId_);
     particleSystem_ = std::make_shared<RSRenderParticleSystem>(particlesRenderParams_);
     return true;
 }

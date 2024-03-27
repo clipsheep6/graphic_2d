@@ -17,6 +17,7 @@
 #define HGM_FRAME_RATE_MANAGER_H
 
 #include <mutex>
+#include <sstream>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -50,6 +51,42 @@ enum TouchStatus : uint32_t {
     TOUCH_UP = 4
 };
 
+struct FrameRateVoteInfo {
+    std::string voterName = "";
+    uint32_t preferred = 0;
+    FrameRateLinkerId pid = 0;
+    std::string ltpoType = "";
+    uint64_t timestamp = 0;
+
+    void SetTimestamp(uint64_t timestamp_)
+    {
+        timestamp = timestamp_;
+    }
+
+    void SetVoteInfo(std::string voterName_, uint32_t preferred_)
+    {
+        voterName = voterName_;
+        preferred = preferred_;
+    }
+
+    void SetLtpoInfo(FrameRateLinkerId pid_, std::string ltpoType_)
+    {
+        pid = pid_;
+        ltpoType = ltpoType_;
+    }
+
+    std::string ToString()
+    {
+        std::stringstream str;
+        str << "VOTER_NAME:" << voterName << ";";
+        str << "PREFERRED:" << preferred << ";";
+        str << "LTPO_TYPE:" << ltpoType << ";";
+        str << "PID:" << pid << ";";
+        str << "TIMESTAMP:" << timestamp << ".";
+        return str.str();
+    }
+};
+
 class HgmFrameRateManager {
 public:
     HgmFrameRateManager() = default;
@@ -59,16 +96,17 @@ public:
     void HandlePackageEvent(uint32_t listSize, const std::vector<std::string>& packageList);
     void HandleRefreshRateEvent(pid_t pid, const EventInfo& eventInfo);
     void HandleTouchEvent(int32_t touchStatus);
+    void HandleTempEvent(const std::string& tempEventName, bool eventStatus, uint32_t min, uint32_t max);
 
     void CleanVote(pid_t pid);
-    RefreshRateMode GetCurRefreshRateMode() const { return curRefreshRateMode_; };
+    int32_t GetCurRefreshRateMode() const { return curRefreshRateMode_; };
     ScreenId GetCurScreenId() const { return curScreenId_; };
     std::string GetCurScreenStrategyId() const { return curScreenStrategyId_; };
-    void HandleRefreshRateMode(RefreshRateMode refreshRateMode);
+    void HandleRefreshRateMode(int32_t refreshRateMode);
     void HandleScreenPowerStatus(ScreenId id, ScreenPowerStatus status);
     bool IsLtpo() const { return isLtpo_; };
     void UniProcessDataForLtpo(uint64_t timestamp, std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker,
-        const FrameRateLinkerMap& appFrameRateLinkers, bool idleTimerExpired);
+        const FrameRateLinkerMap& appFrameRateLinkers, bool idleTimerExpired, bool isDvsyncOn);
     void UniProcessDataForLtps(bool idleTimerExpired);
 
     int32_t GetExpectedFrameRate(const RSPropertyUnit unit, float velocity) const;
@@ -90,7 +128,7 @@ private:
     void Reset();
     bool CollectFrameRateChange(FrameRateRange finalRange, std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker,
         const FrameRateLinkerMap& appFrameRateLinkers);
-    void HandleFrameRateChangeForLTPO(uint64_t timestamp);
+    void HandleFrameRateChangeForLTPO(uint64_t timestamp, bool isDvsyncOn);
     void FrameRateReport() const;
     void CalcRefreshRate(const ScreenId id, const FrameRateRange& range);
     uint32_t GetDrawingFrameRate(const uint32_t refreshRate, const FrameRateRange& range);
@@ -106,8 +144,9 @@ private:
         uint32_t min = OLED_NULL_HZ, uint32_t max = OLED_NULL_HZ);
     static std::string GetScreenType(ScreenId screenId);
     void MarkVoteChange();
-    VoteRange ProcessRefreshRateVote();
+    VoteRange ProcessRefreshRateVote(FrameRateVoteInfo& frameRateVoteInfo);
     void UpdateVoteRule();
+    void ReportHiSysEvent(const FrameRateVoteInfo& frameRateVoteInfo);
 
     uint32_t currRefreshRate_ = 0;
     uint32_t controllerRate_ = 0;
@@ -120,6 +159,7 @@ private:
 
     std::mutex pkgSceneMutex_;
     std::mutex voteMutex_;
+    std::mutex voteNameMutex_;
     std::vector<std::string> voters_;
     // FORMAT: <sceneName, pid>
     std::vector<std::pair<std::string, pid_t>> sceneStack_;
@@ -127,9 +167,10 @@ private:
     std::unordered_map<std::string, std::vector<std::pair<pid_t, VoteRange>>> voteRecord_;
     // Used to record your votes, and clear your votes after you die
     std::unordered_set<pid_t> pidRecord_;
+    std::vector<FrameRateVoteInfo> frameRateVoteInfoVec_;
 
     std::string curPkgName_ = "";
-    RefreshRateMode curRefreshRateMode_ = HGM_REFRESHRATE_MODE_AUTO;
+    int32_t curRefreshRateMode_ = HGM_REFRESHRATE_MODE_AUTO;
     ScreenId curScreenId_ = 0;
     std::string curScreenStrategyId_ = "LTPO-DEFAULT";
     bool isLtpo_ = true;

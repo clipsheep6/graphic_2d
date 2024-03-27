@@ -40,19 +40,11 @@ FontWeight GetTxtFontWeight(int fontWeight)
     return static_cast<FontWeight>(weight);
 }
 
-#ifndef USE_ROSEN_DRAWING
-FontStyle GetTxtFontStyle(SkFontStyle::Slant slant)
-{
-    return slant == SkFontStyle::Slant::kUpright_Slant ?
-        FontStyle::NORMAL : FontStyle::ITALIC;
-}
-#else
 FontStyle GetTxtFontStyle(RSFontStyle::Slant slant)
 {
     return slant == RSFontStyle::Slant::UPRIGHT_SLANT ?
         FontStyle::NORMAL : FontStyle::ITALIC;
 }
-#endif
 
 std::vector<TextBox> GetTxtTextBoxes(const std::vector<skt::TextBox>& skiaBoxes)
 {
@@ -113,6 +105,30 @@ size_t ParagraphImpl::GetLineCount() const
     return paragraph_->lineNumber();
 }
 
+void ParagraphImpl::MarkDirty()
+{
+    if (paragraph_ == nullptr) {
+        return;
+    }
+    paragraph_->markDirty();
+}
+
+int32_t ParagraphImpl::GetUnresolvedGlyphsCount()
+{
+    if (paragraph_ == nullptr) {
+        return 0;
+    }
+    return paragraph_->unresolvedGlyphs();
+}
+
+void ParagraphImpl::UpdateFontSize(size_t from, size_t to, float fontSize)
+{
+    if (paragraph_ == nullptr) {
+        return;
+    }
+    paragraph_->updateFontSize(from, to, fontSize);
+}
+
 void ParagraphImpl::SetIndents(const std::vector<float>& indents)
 {
     paragraph_->setIndents(indents);
@@ -152,14 +168,7 @@ double ParagraphImpl::GetGlyphsBoundsRight()
 
 OHOS::Rosen::Drawing::FontMetrics ParagraphImpl::MeasureText()
 {
-#ifndef USE_ROSEN_DRAWING
-    auto skFontMetrics = paragraph_->measureText();
-    OHOS::Rosen::Drawing::FontMetrics fontMetrics;
-    OHOS::Rosen::Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, fontMetrics);
-    return fontMetrics;
-#else
     return paragraph_->measureText();
-#endif
 }
 
 void ParagraphImpl::Paint(SkCanvas* canvas, double x, double y)
@@ -263,13 +272,8 @@ TextStyle ParagraphImpl::SkStyleToTextStyle(const skt::TextStyle& skStyle)
     txt.decorationColor = skStyle.getDecorationColor();
     txt.decorationStyle = static_cast<TextDecorationStyle>(skStyle.getDecorationStyle());
     txt.decorationThicknessMultiplier = SkScalarToDouble(skStyle.getDecorationThicknessMultiplier());
-#ifndef USE_ROSEN_DRAWING
-    txt.fontWeight = GetTxtFontWeight(skStyle.getFontStyle().weight());
-    txt.fontStyle = GetTxtFontStyle(skStyle.getFontStyle().slant());
-#else
     txt.fontWeight = GetTxtFontWeight(skStyle.getFontStyle().GetWeight());
     txt.fontStyle = GetTxtFontStyle(skStyle.getFontStyle().GetSlant());
-#endif
 
     txt.baseline = static_cast<TextBaseline>(skStyle.getTextBaseline());
 
@@ -308,14 +312,17 @@ Drawing::FontMetrics ParagraphImpl::GetFontMetricsResult(const SPText::TextStyle
 {
     auto skTextStyle = ParagraphBuilderImpl::ConvertTextStyleToSkStyle(textStyle);
     OHOS::Rosen::Drawing::FontMetrics fontMetrics;
-#ifndef USE_ROSEN_DRAWING
-    SkFontMetrics skfontMetrics;
-    skTextStyle.getFontMetrics(&skfontMetrics);
-    Drawing::SkiaConvertUtils::SkFontMetricsCastToDrawingFontMetrics(skFontMetrics, fontMetrics);
-#else
     skTextStyle.getFontMetrics(&fontMetrics);
-#endif
     return fontMetrics;
+}
+
+bool ParagraphImpl::GetLineFontMetrics(const size_t lineNumber, size_t& charNumber,
+    std::vector<Drawing::FontMetrics>& fontMetrics)
+{
+    if (!paragraph_) {
+        return false;
+    }
+    return paragraph_->GetLineFontMetrics(lineNumber, charNumber, fontMetrics);
 }
 } // namespace SPText
 } // namespace Rosen

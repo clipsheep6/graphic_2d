@@ -41,7 +41,7 @@ public:
     virtual int32_t GetFormat() const = 0;
     virtual uint64_t GetUsage() const = 0;
     virtual uint64_t GetPhyAddr() const = 0;
-    virtual void *GetVirAddr() = 0;
+    virtual void* GetVirAddr() = 0;
     virtual int32_t GetFileDescriptor() const = 0;
     virtual uint32_t GetSize() const = 0;
 
@@ -97,11 +97,43 @@ public:
 
     static sptr<SurfaceBuffer> Create();
 
+    virtual GSError WriteBufferRequestConfig(MessageParcel &parcel)
+    {
+        (void)parcel;
+        return GSERROR_OK;
+    };
+    virtual GSError ReadBufferRequestConfig(MessageParcel &parcel)
+    {
+        (void)parcel;
+        return GSERROR_OK;
+    };
+    virtual const BufferRequestConfig* GetBufferRequestConfig() const
+    {
+        return nullptr;
+    };
+    virtual void SetBufferRequestConfig(const BufferRequestConfig &config)
+    {
+        (void)config;
+    };
+    virtual void SetConsumerAttachBufferFlag(bool value)
+    {
+        (void)value;
+    };
+    virtual bool GetConsumerAttachBufferFlag()
+    {
+        return false;
+    };
+    virtual GSError GetPlanesInfo(void **planesInfo)
+    {
+        (void)planesInfo;
+        return GSERROR_OK;
+    };
+
 protected:
-    SurfaceBuffer(){}
+    SurfaceBuffer() {}
     SurfaceBuffer(const SurfaceBuffer&) = delete;
     SurfaceBuffer& operator=(const SurfaceBuffer&) = delete;
-    virtual ~SurfaceBuffer(){}
+    virtual ~SurfaceBuffer() {}
 };
 
 using OnReleaseFunc = std::function<GSError(sptr<SurfaceBuffer> &)>;

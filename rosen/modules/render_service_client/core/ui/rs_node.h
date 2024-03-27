@@ -34,19 +34,11 @@
 #include "render/rs_mask.h"
 #include "render/rs_path.h"
 
-#ifndef USE_ROSEN_DRAWING
-class SkCanvas;
-#else
 #include "recording/recording_canvas.h"
-#endif
 
 namespace OHOS {
 namespace Rosen {
-#ifndef USE_ROSEN_DRAWING
-using DrawFunc = std::function<void(std::shared_ptr<SkCanvas>)>;
-#else
 using DrawFunc = std::function<void(std::shared_ptr<Drawing::Canvas>)>;
-#endif
 using PropertyCallback = std::function<void()>;
 class RSAnimation;
 class RSCommand;
@@ -128,6 +120,7 @@ public:
 
     bool IsUniRenderEnabled() const;
     bool IsRenderServiceNode() const;
+    void SetTakeSurfaceForUIFlag();
 
     static std::vector<std::shared_ptr<RSAnimation>> Animate(const RSAnimationTimingProtocol& timingProtocol,
         const RSAnimationTimingCurve& timingCurve, const PropertyCallback& callback,
@@ -184,6 +177,7 @@ public:
 
     // The property is valid only for CanvasNode and SurfaceNode in uniRender.
     virtual void SetFreeze(bool isFreeze);
+    void SetNodeName(const std::string& nodeName);
 
     void SetSandBox(std::optional<Vector2f> parentPosition);
 
@@ -266,8 +260,7 @@ public:
     void SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlurPara>& para);
     void SetDynamicLightUpRate(const float rate);
     void SetDynamicLightUpDegree(const float lightUpDegree);
-    void SetGreyCoef1(const float greyCoef1);
-    void SetGreyCoef2(const float greyCoef2);
+    void SetGreyCoef(const Vector2f greyCoef);
     void SetCompositingFilter(const std::shared_ptr<RSFilter>& compositingFilter);
 
     void SetShadowColor(uint32_t colorValue);
@@ -370,6 +363,10 @@ public:
 
     void SetFrameNodeInfo(int32_t id, std::string tag);
 
+    virtual void SetTextureExport(bool isTextureExportNode);
+
+    void SyncTextureExport(bool isTextureExportNode);
+
     int32_t GetFrameNodeId();
 
     std::string GetFrameNodeTag();
@@ -406,7 +403,7 @@ protected:
     std::vector<PropertyId> GetModifierIds() const;
     bool isCustomTextType_ = false;
 
-    std::recursive_mutex& GetPropertyMutex()
+    std::recursive_mutex& GetPropertyMutex() const
     {
         return propertyMutex_;
     }
@@ -417,9 +414,11 @@ private:
     NodeId parent_ = 0;
     int32_t frameNodeId_ = -1;
     std::string frameNodeTag_;
+    std::string nodeName_ = "";
     std::vector<NodeId> children_;
     void SetParent(NodeId parent);
     void RemoveChildById(NodeId childId);
+    virtual void CreateTextureExportRenderNodeInRT() {};
 
     bool AnimationCallback(AnimationId animationId, AnimationCallbackEvent event);
     bool HasPropertyAnimation(const PropertyId& id);
@@ -449,8 +448,9 @@ private:
 
     RSModifierExtractor stagingPropertiesExtractor_;
     RSShowingPropertiesFreezer showingPropertiesFreezer_;
-    std::unordered_map<PropertyId, std::shared_ptr<RSModifier>> modifiers_;
-    std::unordered_map<RSModifierType, std::shared_ptr<RSModifier>> propertyModifiers_;
+    std::map<PropertyId, std::shared_ptr<RSModifier>> modifiers_;
+    std::shared_ptr<RSModifier> modifiersTypeMap_[(uint16_t)RSModifierType::MAX_RS_MODIFIER_TYPE] = { nullptr };
+    std::map<RSModifierType, std::shared_ptr<RSModifier>> propertyModifiers_;
     std::shared_ptr<RectF> drawRegion_;
     OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
 
@@ -461,7 +461,7 @@ private:
     std::shared_ptr<const RSTransitionEffect> transitionEffect_;
 
     std::mutex animationMutex_;
-    std::recursive_mutex propertyMutex_;
+    mutable std::recursive_mutex propertyMutex_;
 
     friend class RSUIDirector;
     friend class RSTransition;

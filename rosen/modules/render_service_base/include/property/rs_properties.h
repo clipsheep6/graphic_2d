@@ -16,9 +16,7 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_H
 #define RENDER_SERVICE_CLIENT_CORE_PROPERTY_RS_PROPERTIES_H
 
-#ifdef USE_ROSEN_DRAWING
 #include <bitset>
-#endif
 #include <optional>
 #include <tuple>
 #include <vector>
@@ -91,13 +89,8 @@ public:
     void SetSandBox(const std::optional<Vector2f>& parentPosition);
     std::optional<Vector2f> GetSandBox() const;
     void ResetSandBox();
-#ifndef USE_ROSEN_DRAWING
-    void UpdateSandBoxMatrix(const std::optional<SkMatrix>& rootMatrix);
-    std::optional<SkMatrix> GetSandBoxMatrix() const;
-#else
     void UpdateSandBoxMatrix(const std::optional<Drawing::Matrix>& rootMatrix);
     std::optional<Drawing::Matrix> GetSandBoxMatrix() const;
-#endif
 
     void SetPositionZ(float positionZ);
     float GetPositionZ() const;
@@ -133,9 +126,6 @@ public:
     float GetTranslateX() const;
     float GetTranslateY() const;
     float GetTranslateZ() const;
-#ifdef DDGR_ENABLE_FEATURE_OPINC
-    bool GetOpincPropDirty() const;
-#endif
 
     void SetScale(Vector2f scale);
     void SetScaleX(float sx);
@@ -159,10 +149,21 @@ public:
     void SetSublayerTransform(const std::optional<Matrix3f>& sublayerTransform);
     const std::optional<Matrix3f>& GetSublayerTransform() const;
 
-    bool GetUseShadowBatching() const;
+    inline bool GetUseShadowBatching() const
+    {
+        return useShadowBatching_;
+    }
+
     void SetUseShadowBatching(bool useShadowBatching);
-    bool GetNeedSkipShadow() const;
-    void SetNeedSkipShadow(bool needSkipShadow);
+    inline bool GetNeedSkipShadow() const
+    {
+        return needSkipShadow_;
+    }
+
+    inline void SetNeedSkipShadow(bool needSkipShadow)
+    {
+        needSkipShadow_ = needSkipShadow;
+    }
 
     // particle properties
     void SetParticles(const RSRenderParticleVector& particles);
@@ -211,17 +212,14 @@ public:
     void SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlurPara>& para);
     void SetDynamicLightUpRate(const std::optional<float>& rate);
     void SetDynamicLightUpDegree(const std::optional<float>& lightUpDegree);
-    void SetGreyCoef1(float greyCoef1);
-    void SetGreyCoef2(float greyCoef2);
     void SetFilter(const std::shared_ptr<RSFilter>& filter);
     const std::shared_ptr<RSFilter>& GetBackgroundFilter() const;
     const std::shared_ptr<RSLinearGradientBlurPara>& GetLinearGradientBlurPara() const;
     void IfLinearGradientBlurInvalid();
     const std::shared_ptr<RSFilter>& GetFilter() const;
     bool NeedFilter() const;
-    float GetGreyCoef1() const;
-    float GetGreyCoef2() const;
-    bool IsGreyAdjustmentValid() const;
+    void SetGreyCoef(const std::optional<Vector2f>& greyCoef);
+    const std::optional<Vector2f>& GetGreyCoef() const;
 
     // shadow properties
     void SetShadowColor(Color color);
@@ -274,9 +272,17 @@ public:
 
     // Pixel Stretch
     void SetPixelStretch(const std::optional<Vector4f>& stretchSize);
-    const std::optional<Vector4f>& GetPixelStretch() const;
+    inline const std::optional<Vector4f>& GetPixelStretch() const
+    {
+        return pixelStretch_;
+    }
+
     void SetPixelStretchPercent(const std::optional<Vector4f>& stretchPercent);
-    const std::optional<Vector4f>& GetPixelStretchPercent() const;
+    inline const std::optional<Vector4f>& GetPixelStretchPercent() const
+    {
+        return pixelStretchPercent_;
+    }
+
     void SetAiInvert(const std::optional<Vector4f>& aiInvert);
     const std::optional<Vector4f>& GetAiInvert() const;
     void SetSystemBarEffect(bool systemBarEffect);
@@ -285,13 +291,8 @@ public:
 
     const std::shared_ptr<RSObjAbsGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
-#ifndef USE_ROSEN_DRAWING
-    bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<SkPoint>& offset,
-        const std::optional<SkRect>& clipRect);
-#else
     bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<Drawing::Point>& offset,
         const std::optional<Drawing::Rect>& clipRect);
-#endif
     RectF GetBoundsRect() const;
 
     bool IsGeoDirty() const;
@@ -308,7 +309,11 @@ public:
 
     // Image effect properties
     void SetGrayScale(const std::optional<float>& grayScale);
-    const std::optional<float>& GetGrayScale() const;
+    inline const std::optional<float>& GetGrayScale() const
+    {
+        return grayScale_;
+    }
+
     void SetBrightness(const std::optional<float>& brightness);
     const std::optional<float>& GetBrightness() const;
     void SetContrast(const std::optional<float>& contrast);
@@ -324,11 +329,7 @@ public:
     void SetColorBlend(const std::optional<Color>& colorBlend);
     const std::optional<Color>& GetColorBlend() const;
 
-#ifndef USE_ROSEN_DRAWING
-    const sk_sp<SkColorFilter>& GetColorFilter() const;
-#else
     const std::shared_ptr<Drawing::ColorFilter>& GetColorFilter() const;
-#endif
 
     void SetLightIntensity(float lightIntensity);
     void SetLightPosition(const Vector4f& lightPosition);
@@ -337,12 +338,26 @@ public:
     void SetBloom(float bloomIntensity);
     float GetLightIntensity() const;
     Vector4f GetLightPosition() const;
-    float GetIlluminatedBorderWidth() const;
+    inline float GetIlluminatedBorderWidth() const
+    {
+        return illuminatedPtr_ ? illuminatedPtr_->GetIlluminatedBorderWidth() : 0.f;
+    }
+
     int GetIlluminatedType() const;
-    float GetBloom() const;
+    inline float GetBloom() const
+    {
+        return illuminatedPtr_ ? illuminatedPtr_->GetBloomIntensity() : 0.f;
+    }
+
     void CalculateAbsLightPosition();
-    const std::shared_ptr<RSLightSource>& GetLightSource() const;
-    const std::shared_ptr<RSIlluminated>& GetIlluminated() const;
+    inline const std::shared_ptr<RSLightSource>& GetLightSource() const
+    {
+        return lightSourcePtr_;
+    }
+    inline const std::shared_ptr<RSIlluminated>& GetIlluminated() const
+    {
+        return illuminatedPtr_;
+    }
 
     void SetUseEffect(bool useEffect);
     bool GetUseEffect() const;
@@ -369,11 +384,7 @@ public:
     void OnApplyModifiers();
 
 private:
-#ifndef USE_ROSEN_DRAWING
-    void ResetProperty(const std::unordered_set<RSModifierType>& dirtyTypes);
-#else
     void ResetProperty(const std::bitset<static_cast<int>(RSModifierType::MAX_RS_MODIFIER_TYPE)>& dirtyTypes);
-#endif
     void SetDirty();
     void ResetDirty();
     bool IsDirty() const;
@@ -395,9 +406,6 @@ private:
     bool isDrawn_ = false;
     bool alphaNeedApply_ = false;
     bool systemBarEffect_ = false;
-#ifdef DDGR_ENABLE_FEATURE_OPINC
-    bool isOpincPropDirty_ = false;
-#endif
 
     bool hasBounds_ = false;
     bool useEffect_ = false;
@@ -453,30 +461,28 @@ private:
     std::optional<float> dynamicLightUpDegree_;
     std::optional<Color> colorBlend_;
     std::optional<RectI> lastRect_;
-    float greyCoef1_ = 0.f;
-    float greyCoef2_ = 0.f;
+    std::optional<Vector2f> greyCoef_;
 
     // OnApplyModifiers hooks
     void CheckEmptyBounds();
     void GenerateColorFilter();
     void CalculatePixelStretch();
     void CalculateFrameOffset();
+    void CheckGreyCoef();
+    void ApplyGreyCoef();
 
     // partial update
     bool colorFilterNeedUpdate_ = false;
     bool pixelStretchNeedUpdate_ = false;
     bool filterNeedUpdate_ = false;
+    bool greyCoefNeedUpdate_ = false;
     float frameOffsetX_ = 0.f;
     float frameOffsetY_ = 0.f;
     bool needFilter_ = false;
     RRect rrect_ = RRect{};
 
     RSRenderParticleVector particles_;
-#ifndef USE_ROSEN_DRAWING
-    sk_sp<SkColorFilter> colorFilter_ = nullptr;
-#else
     std::shared_ptr<Drawing::ColorFilter> colorFilter_ = nullptr;
-#endif
     bool haveEffectRegion_ = false;
 
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))

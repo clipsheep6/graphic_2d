@@ -78,11 +78,7 @@ class Surface;
 /**
  * @brief Contains the option used to create the layer.
  */
-#ifndef USE_ROSEN_DRAWING
-class RS_EXPORT SaveLayerOps {
-#else
 class DRAWING_API SaveLayerOps {
-#endif
 public:
     // How to allocate layer
     enum Flags {
@@ -102,6 +98,7 @@ public:
 
     /**
      * @brief Gets the bounds of layer, may be nullptr.
+     * @return Returns the bounds of layer.
      */
     const Rect* GetBounds() const
     {
@@ -110,6 +107,7 @@ public:
 
     /**
      * @brief Gets the brush of layer, may be nullptr.
+     * @return Returns the brush of layer.
      */
     const Brush* GetBrush() const
     {
@@ -118,6 +116,7 @@ public:
 
     /**
      * @brief Gets the options to modify layer.
+     * @return Returns the options to modify layer.
      */
     uint32_t GetSaveLayerFlags() const
     {
@@ -130,11 +129,7 @@ private:
     uint32_t saveLayerFlags_;
 };
 
-#ifndef USE_ROSEN_DRAWING
-class RS_EXPORT CoreCanvas {
-#else
 class DRAWING_API CoreCanvas {
-#endif
 public:
     CoreCanvas();
     explicit CoreCanvas(void* rawCanvas);
@@ -150,38 +145,45 @@ public:
 
     /**
      * @brief Gets the total matrix of Canvas to device.
+     * @return Returns the total matrix of Canvas to device.
      */
     virtual Matrix GetTotalMatrix() const;
 
     /**
      * @brief Gets bounds of clip in local coordinates.
+     * @return Returns bounds of clip in local coordinates.
      */
     virtual Rect GetLocalClipBounds() const;
 
     /**
-     * @brief Gets bounds of clip in device corrdinates.
+     * @brief Gets bounds of clip in device coordinates.
+     * @return Returns bounds of clip in device coordinates.
      */
     virtual RectI GetDeviceClipBounds() const;
 
+#ifdef ACE_ENABLE_GPU
     /**
      * @brief Gets GPU context of the GPU surface associated with Canvas.
+     * @return Returns GPU context of the GPU surface associated with Canvas.
      */
-#ifdef ACE_ENABLE_GPU
     virtual std::shared_ptr<GPUContext> GetGPUContext();
 #endif
 
     /**
      * @brief Gets width of Canvas.
+     * @return Returns width of Canvas.
      */
     int32_t GetWidth() const;
 
     /**
      * @brief Gets height of Canvas.
+     * @return Returns height of Canvas.
      */
     int32_t GetHeight() const;
 
     /**
      * @brief Gets ImageInfo of Canvas.
+     * @return Returns ImageInfo of Canvas.
      */
     ImageInfo GetImageInfo();
 
@@ -198,6 +200,12 @@ public:
      * @param point top-left edge of circle or square
      */
     virtual void DrawPoint(const Point& point);
+
+    /**
+     * @brief Describing a graph by combining directed vector fields.
+     * @param shape describes the combination of a group of sdf entities.
+     */
+    virtual void DrawSdf(const SDFShapeBase& shape);
 
     /**
      * @brief If mode is LINES_POINTMODE, each pair of points draws a line segment. One line
@@ -350,6 +358,7 @@ public:
      * @param center IRect edge of image corners and sides
      * @param dst    destination Rect of image to draw to
      * @param filter what technique to use when sampling the image
+     * @param brush  brush containing MaskFilter; or nullptr
      */
     virtual void DrawImageNine(const Image* image, const RectI& center, const Rect& dst,
         FilterMode filter, const Brush* brush = nullptr);
@@ -381,18 +390,12 @@ public:
     virtual Drawing::OpListHandle EndOpRecording();
     virtual void DrawOpList(Drawing::OpListHandle handle);
     virtual int CanDrawOpList(Drawing::OpListHandle handle);
-    virtual void PreOpListDrawArea(const Matrix& matrix);
-    virtual bool CanUseOpListDrawArea(Drawing::OpListHandle handle, const Rect* bound = nullptr);
-    virtual Drawing::OpListHandle GetOpListDrawArea();
-    virtual void OpincDrawImageRect(const Image& image, Drawing::OpListHandle drawAreas,
-        const SamplingOptions& sampling, SrcRectConstraint constraint);
+    virtual bool OpCalculateBefore(const Matrix& matrix);
+    virtual std::shared_ptr<Drawing::OpListHandle> OpCalculateAfter(const Rect& bound);
     // opinc_end
 
     // image
     virtual void DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py);
-    void DrawBitmap(const Bitmap& bitmap, const Rect& src, const Rect& dst, const SamplingOptions& sampling);
-    void DrawBitmap(const Bitmap& bitmap, const Rect& dst, const SamplingOptions& sampling);
-    virtual void DrawBitmap(Media::PixelMap& pixelMap, const scalar px, const scalar py);
     virtual void DrawImage(const Image& image, const scalar px, const scalar py, const SamplingOptions& sampling);
     virtual void DrawImageRect(const Image& image, const Rect& src, const Rect& dst, const SamplingOptions& sampling,
         SrcRectConstraint constraint = SrcRectConstraint::STRICT_SRC_RECT_CONSTRAINT);
@@ -440,10 +443,9 @@ public:
 
     /**
      * @brief Replace the clipping area with the intersection or difference between the
-     * current clipping area and RectI, and use a clipping edge that is aliased or anti-aliased.
+     * current clipping area and RectI, and use a clipping edge.
      * @param rect        To combine with clipping area.
      * @param op          To apply to clip.
-     * @param doAntiAlias true if clip is to be anti-aliased. The default value is false.
      */
     virtual void ClipIRect(const RectI& rect, ClipOp op = ClipOp::INTERSECT);
 
@@ -547,7 +549,7 @@ public:
      * Mathematically, constructs a rotation matrix; premultiplies the rotation matrix by
      * a translation matrix; then replaces RSMatrix with the resulting matrix premultiplied with RSMatrix.
      * This has the effect of rotating the drawing about a given point before transforming the result with RSMatrix.
-     * @param degrees amount to rotate, in degrees
+     * @param deg amount to rotate, in degrees
      * @param sx      x-axis value of the point to rotate about
      * @param sy      y-axis value of the point to rotate about
      */
@@ -665,6 +667,8 @@ public:
 
 protected:
     CoreCanvas(int32_t width, int32_t height);
+    void BuildNoDraw(int32_t width, int32_t height);
+    void Reset(int32_t width, int32_t height);
     Paint paintBrush_;
     Paint paintPen_;
 

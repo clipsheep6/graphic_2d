@@ -16,12 +16,8 @@
 #ifndef ROSEN_TEXT_SYMBOL_ANIMATION_CONFIG_H
 #define ROSEN_TEXT_SYMBOL_ANIMATION_CONFIG_H
 
-#ifndef USE_ROSEN_DRAWING
-#include <include/core/HMSymbol.h>
-#else
 #include "draw/path.h"
 #include "text/hm_symbol.h"
-#endif
 #include "common/rs_vector4.h"
 
 
@@ -31,41 +27,31 @@ namespace TextEngine {
 
 
 enum SymbolAnimationEffectStrategy {
-    INVALID_EFFECT_STRATEGY = 0,
-    SYMBOL_NONE = 1,
-    SYMBOL_SCALE = 2,
-    SYMBOL_HIERARCHICAL = 3,
+    SYMBOL_NONE = 0,
+    SYMBOL_SCALE = 1,
+    SYMBOL_VARIABLE_COLOR = 2,
+    SYMBOL_APPEAR = 3,
+    SYMBOL_DISAPPEAR = 4,
+    SYMBOL_BOUNCE = 5
 };
 
-#ifndef USE_ROSEN_DRAWING
-using SymbolNode = struct SymbolNode {
-    SkPath path;
-    SColor color;
-    Vector4f nodeBoundary;
-    HMSymbolData symbolData;
-    uint32_t animationIndex = 0;
-};
-using SymbolAnimationConfig = struct SymbolAnimationConfig {
-    std::vector<SymbolNode> SymbolNodes;
-    uint32_t numNodes = 0;
-    SymbolAnimationEffectStrategy effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_NONE;
-    uint64_t symbolSpanId = 0;
-};
-#else
 using SymbolNode = struct SymbolNode {
     Drawing::Path path;
     Drawing::DrawingSColor color;
     Vector4f nodeBoundary;
     Drawing::DrawingHMSymbolData symbolData;
-    uint32_t animationIndex = 0;
+    int animationIndex = 0;
+    bool isMask = false;
 };
 using SymbolAnimationConfig = struct SymbolAnimationConfig {
     std::vector<SymbolNode> SymbolNodes;
     uint32_t numNodes = 0;
     SymbolAnimationEffectStrategy effectStrategy = SymbolAnimationEffectStrategy::SYMBOL_NONE;
     uint64_t symbolSpanId = 0;
+    uint16_t animationMode = 0;
+    int repeatCount = 1;
+    bool aminationStart = false;
 };
-#endif
 }
 }
 }

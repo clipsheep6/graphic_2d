@@ -14,6 +14,7 @@
  */
 
 #include "recording/draw_cmd.h"
+#include <cstdint>
 
 #include "platform/common/rs_system_properties.h"
 #include "recording/cmd_list_helper.h"
@@ -33,6 +34,7 @@
 #include "utils/log.h"
 #include "utils/scalar.h"
 #include "utils/system_properties.h"
+#include "sandbox_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -51,6 +53,7 @@ bool GetOffScreenSurfaceAndCanvas(const Canvas& canvas,
         return false;
     }
     offScreenCanvas = offScreenSurface->GetCanvas();
+    offScreenCanvas->SetMatrix(canvas.GetTotalMatrix());
     return true;
 }
 }
@@ -60,6 +63,13 @@ void DrawOpItem::SetBaseCallback(
     std::function<void (std::shared_ptr<Drawing::Image> image)> holdDrawingImagefunc)
 {
     holdDrawingImagefunc_ = holdDrawingImagefunc;
+}
+
+std::function<std::shared_ptr<Drawing::Typeface>(uint64_t)> DrawOpItem::customTypefaceQueryfunc_ = nullptr;
+void DrawOpItem::SetTypefaceQueryCallBack(
+    std::function<std::shared_ptr<Drawing::Typeface>(uint64_t)> customTypefaceQueryfunc)
+{
+    customTypefaceQueryfunc_ = customTypefaceQueryfunc;
 }
 
 void DrawOpItem::BrushHandleToBrush(const BrushHandle& brushHandle, const DrawCmdList& cmdList, Brush& brush)
@@ -958,7 +968,16 @@ void SimplifyPaint(ColorQuad colorQuad, Paint& paint)
 DrawTextBlobOpItem::DrawTextBlobOpItem(const DrawCmdList& cmdList, DrawTextBlobOpItem::ConstructorHandle* handle)
     : DrawWithPaintOpItem(cmdList, handle->paintHandle, TEXT_BLOB_OPITEM), x_(handle->x), y_(handle->y)
 {
-    textBlob_ = CmdListHelper::GetTextBlobFromCmdList(cmdList, handle->textBlob);
+    std::shared_ptr<Drawing::Typeface> typeface = nullptr;
+    if (DrawOpItem::customTypefaceQueryfunc_) {
+        typeface = DrawOpItem::customTypefaceQueryfunc_(handle->globalUniqueId);
+    }
+
+    TextBlob::Context ctx {typeface, false};
+    if (typeface != nullptr) {
+        ctx.SetIsCustomTypeface(true);
+    }
+    textBlob_ = CmdListHelper::GetTextBlobFromCmdList(cmdList, handle->textBlob, &ctx);
 }
 
 std::shared_ptr<DrawOpItem> DrawTextBlobOpItem::Unmarshalling(const DrawCmdList& cmdList, void* handle)
@@ -968,10 +987,19 @@ std::shared_ptr<DrawOpItem> DrawTextBlobOpItem::Unmarshalling(const DrawCmdList&
 
 void DrawTextBlobOpItem::Marshalling(DrawCmdList& cmdList)
 {
+    static uint64_t shiftedPid = static_cast<uint64_t>(GetRealPid()) << 32; // 32 for 64-bit unsignd number shift
     PaintHandle paintHandle;
     GenerateHandleFromPaint(cmdList, paint_, paintHandle);
-    auto textBlobHandle = CmdListHelper::AddTextBlobToCmdList(cmdList, textBlob_.get());
-    cmdList.AddOp<ConstructorHandle>(textBlobHandle, x_, y_, paintHandle);
+    TextBlob::Context ctx {nullptr, false};
+    auto textBlobHandle = CmdListHelper::AddTextBlobToCmdList(cmdList, textBlob_.get(), &ctx);
+    uint32_t typefaceId = 0;
+    uint64_t globalUniqueId = 0;
+    if (ctx.GetTypeface() != nullptr) {
+        typefaceId = ctx.GetTypeface()->GetUniqueID();
+        globalUniqueId = (shiftedPid | typefaceId);
+    }
+
+    cmdList.AddOp<ConstructorHandle>(textBlobHandle, globalUniqueId, x_, y_, paintHandle);
 }
 
 void DrawTextBlobOpItem::Playback(Canvas* canvas, const Rect* rect)
@@ -981,7 +1009,7 @@ void DrawTextBlobOpItem::Playback(Canvas* canvas, const Rect* rect)
         return;
     }
     Drawing::RectI globalClipBounds = canvas->GetDeviceClipBounds();
-    if (globalClipBounds.GetWidth() == 1 && !callFromCacheFunc_) {
+    if ((globalClipBounds.GetWidth() == 1 || globalClipBounds.GetHeight() == 1) && !callFromCacheFunc_) {
         // if the ClipBound's width == 1, the textblob will draw outside of the clip,
         // this is a workround for this case
         if (!cacheImage_) {
@@ -1011,8 +1039,11 @@ void DrawTextBlobOpItem::Playback(Canvas* canvas, const Rect* rect)
                 canvas->AttachBrush(paint);
                 Drawing::SamplingOptions sampling =
                     Drawing::SamplingOptions(Drawing::FilterMode::NEAREST, Drawing::MipmapMode::NEAREST);
+                canvas->Save();
+                canvas->ResetMatrix();
                 canvas->DrawImage(*offScreenSurface->GetImageSnapshot().get(), 0, 0, sampling);
                 canvas->DetachBrush();
+                canvas->Restore();
                 return;
             }
         }
@@ -1085,7 +1116,7 @@ bool DrawTextBlobOpItem::ConstructorHandle::GenerateCachedOpItem(
     Drawing::Rect src(0, 0, image->GetWidth(), image->GetHeight());
     Drawing::Rect dst(bounds->GetLeft(), bounds->GetTop(),
         bounds->GetLeft() + image->GetWidth(), bounds->GetTop() + image->GetHeight());
-    SamplingOptions sampling;
+    SamplingOptions sampling(FilterMode::LINEAR, MipmapMode::LINEAR);
     auto imageHandle = CmdListHelper::AddImageToCmdList(cmdList, image);
     PaintHandle fakePaintHandle;
     fakePaintHandle.isAntiAlias = true;
@@ -1213,153 +1244,6 @@ std::shared_ptr<DrawOpItem> DrawSymbolOpItem::Unmarshalling(const DrawCmdList& c
     return std::make_shared<DrawSymbolOpItem>(cmdList, static_cast<DrawSymbolOpItem::ConstructorHandle*>(handle));
 }
 
-void DrawSymbolOpItem::SetSymbol()
-{
-    if (symbol_.symbolInfo_.effect == DrawingEffectStrategy::HIERARCHICAL) {
-        if (!startAnimation_) {
-            InitialVariableColor();
-        }
-        for (size_t i = 0; i < animation_.size(); i++) {
-            SetVariableColor(i);
-        }
-    }
-}
-
-void DrawSymbolOpItem::InitialScale()
-{
-    DrawSymbolAnimation animation;
-    animation.startValue = 0; // 0 means scale start value
-    animation.curValue = 0; // 0 means scale current value
-    animation.endValue = 0.5; // 0.5 means scale end value
-    animation.speedValue = 0.05; // 0.05 means scale change step
-    animation.number = 0; // 0 means number of times that the animation to be played
-    animation.curTime = std::chrono::duration_cast<
-        std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()); //time ms
-    animation_.push_back(animation);
-    startAnimation_ = true;
-}
-
-void DrawSymbolOpItem::InitialVariableColor()
-{
-    LOGD("SetSymbol groups %{public}d", static_cast<int>(symbol_.symbolInfo_.renderGroups.size()));
-
-    long long standStartDuration = 299;
-    std::chrono::milliseconds standStartTime = std::chrono::duration_cast<
-        std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch());
-
-    for (size_t j = 0; j < symbol_.symbolInfo_.renderGroups.size(); j++) {
-        DrawSymbolAnimation animation;
-        animation.startValue = 0.4; // 0.4 means alpha start value
-        animation.curValue = 0.4; // 0.4 means alpha current value
-        animation.endValue = 1; // 1 means alpha end value
-        animation.speedValue = 0.08; // 0.08 means alpha change step
-        animation.number = 0; // 0 means number of times that the animation to be played
-        animation.startDuration = standStartDuration - static_cast<long long>(100 * j); //100 is start time duration
-        animation.curTime = standStartTime; // every group have same start timestamp
-        animation_.push_back(animation);
-        symbol_.symbolInfo_.renderGroups[j].color.a = animation.startValue;
-    }
-    startAnimation_ = true;
-}
-
-void DrawSymbolOpItem::SetScale(size_t index)
-{
-    if (animation_.size() < index || animation_[index].number >= number_) {
-        LOGD("SymbolOpItem::symbol scale animation is false!");
-        return;
-    }
-    DrawSymbolAnimation animation = animation_[index];
-    if (animation.number >= number_ || animation.startValue == animation.endValue) {
-        return;
-    }
-    if (animation.number == 0) {
-        LOGD("SymbolOpItem::symbol scale animation is start!");
-    }
-
-    if (abs(animation.curValue - animation.endValue) < animation.speedValue) {
-        double temp = animation.startValue;
-        animation.startValue = animation.endValue;
-        animation.endValue = temp;
-        animation.number++;
-    }
-    if (animation.number == number_) {
-        LOGD("SymbolOpItem::symbol scale animation is end!");
-        return;
-    }
-    if (animation.endValue > animation.startValue) {
-        animation.curValue = animation.curValue + animation.speedValue;
-    } else {
-        animation.curValue = animation.curValue - animation.speedValue;
-    }
-    animation_[index] = animation;
-}
-
-void DrawSymbolOpItem::SetVariableColor(size_t index)
-{
-    if (animation_.size() < index || animation_[index].number >= number_) {
-        return;
-    }
-
-    DrawSymbolAnimation animation = animation_[index];
-
-    auto curTime = std::chrono::duration_cast<
-        std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch());
-
-    long long duration = (curTime - animation.curTime).count(); // ms
-    animation.curTime = curTime;
-    animation.startDuration = animation.startDuration - duration;
-    if (animation.startValue == animation.endValue ||
-        animation.startDuration > 0) {
-        animation_[index] = animation;
-        return;
-    }
-    
-    // cal step
-    float calSpeed = 1.2 / 700 * duration; //700 and 1.2 is duration
-
-    if (abs(animation.curValue - animation.endValue) < calSpeed) {
-        double stemp = animation.startValue;
-        animation.startValue = animation.endValue;
-        animation.endValue = stemp;
-        animation.number++;
-    }
-
-    if (animation.endValue > animation.startValue) {
-        animation.curValue = animation.curValue + calSpeed;
-    } else {
-        animation.curValue = animation.curValue - calSpeed;
-    }
-
-    UpdataVariableColor(animation.curValue, index);
-    animation_[index] = animation;
-}
-
-void DrawSymbolOpItem::UpdateScale(const double cur, Path& path)
-{
-    LOGD("SymbolOpItem::animation cur %{public}f", static_cast<float>(cur));
-    //set symbol
-    Rect rect = path.GetBounds();
-    float y = static_cast<float>(rect.GetWidth()) / 2;
-    float x = static_cast<float>(rect.GetHeight()) / 2;
-    Matrix matrix;
-    matrix.Translate(-x, -y);
-    path.Transform(matrix);
-    Matrix matrix1;
-    matrix1.SetScale(1.0f + cur, 1.0f+ cur);
-    path.Transform(matrix1);
-    Matrix matrix2;
-    matrix2.Translate(x, y);
-    path.Transform(matrix2);
-}
-
-void DrawSymbolOpItem::UpdataVariableColor(const double cur, size_t index)
-{
-    symbol_.symbolInfo_.renderGroups[index].color.a = fmin(1, fmax(0, cur));
-}
-
 void DrawSymbolOpItem::Marshalling(DrawCmdList& cmdList)
 {
     PaintHandle paintHandle;
@@ -1374,7 +1258,6 @@ void DrawSymbolOpItem::Playback(Canvas* canvas, const Rect* rect)
         LOGD("SymbolOpItem::Playback failed cause by canvas is nullptr");
         return;
     }
-    SetSymbol();
     Path path(symbol_.path_);
 
     // 1.0 move path
@@ -1876,93 +1759,6 @@ void ClipAdaptiveRoundRectOpItem::Marshalling(DrawCmdList& cmdList)
 void ClipAdaptiveRoundRectOpItem::Playback(Canvas* canvas, const Rect* rect)
 {
     canvas->ClipRoundRect(*rect, radiusData_, true);
-}
-
-/* DrawAdaptiveImageOpItem */
-REGISTER_UNMARSHALLING_FUNC(
-    DrawAdaptiveImage, DrawOpItem::ADAPTIVE_IMAGE_OPITEM, DrawAdaptiveImageOpItem::Unmarshalling);
-
-DrawAdaptiveImageOpItem::DrawAdaptiveImageOpItem(
-    const DrawCmdList& cmdList, DrawAdaptiveImageOpItem::ConstructorHandle* handle)
-    : DrawWithPaintOpItem(cmdList, handle->paintHandle, ADAPTIVE_IMAGE_OPITEM),
-      rsImageInfo_(handle->rsImageInfo), sampling_(handle->sampling), isImage_(handle->isImage)
-{
-    if (isImage_) {
-        image_ = CmdListHelper::GetImageFromCmdList(cmdList, handle->image);
-        if (DrawOpItem::holdDrawingImagefunc_) {
-            DrawOpItem::holdDrawingImagefunc_(image_);
-        }
-    } else {
-        data_ = CmdListHelper::GetCompressDataFromCmdList(cmdList, handle->image);
-    }
-}
-
-std::shared_ptr<DrawOpItem> DrawAdaptiveImageOpItem::Unmarshalling(const DrawCmdList& cmdList, void* handle)
-{
-    return std::make_shared<DrawAdaptiveImageOpItem>(
-        cmdList, static_cast<DrawAdaptiveImageOpItem::ConstructorHandle*>(handle));
-}
-
-void DrawAdaptiveImageOpItem::Marshalling(DrawCmdList& cmdList)
-{
-    PaintHandle paintHandle;
-    GenerateHandleFromPaint(cmdList, paint_, paintHandle);
-    OpDataHandle imageHandle;
-    if (!isImage_) {
-        imageHandle = CmdListHelper::AddCompressDataToCmdList(cmdList, data_);
-    } else {
-        imageHandle = CmdListHelper::AddImageToCmdList(cmdList, image_);
-    }
-    cmdList.AddOp<ConstructorHandle>(imageHandle, rsImageInfo_, sampling_, isImage_, paintHandle);
-}
-
-void DrawAdaptiveImageOpItem::Playback(Canvas* canvas, const Rect* rect)
-{
-    if (isImage_ && image_ != nullptr) {
-        canvas->AttachPaint(paint_);
-        AdaptiveImageHelper::DrawImage(*canvas, *rect, image_, rsImageInfo_, sampling_);
-        return;
-    }
-    if (!isImage_ && data_ != nullptr) {
-        canvas->AttachPaint(paint_);
-        AdaptiveImageHelper::DrawImage(*canvas, *rect, data_, rsImageInfo_, sampling_);
-    }
-}
-
-/* DrawAdaptivePixelMapOpItem */
-REGISTER_UNMARSHALLING_FUNC(
-    DrawAdaptivePixelMap, DrawOpItem::ADAPTIVE_PIXELMAP_OPITEM, DrawAdaptivePixelMapOpItem::Unmarshalling);
-
-DrawAdaptivePixelMapOpItem::DrawAdaptivePixelMapOpItem(
-    const DrawCmdList& cmdList, DrawAdaptivePixelMapOpItem::ConstructorHandle* handle)
-    : DrawWithPaintOpItem(cmdList, handle->paintHandle, ADAPTIVE_PIXELMAP_OPITEM),
-      imageInfo_(handle->imageInfo), sampling_(handle->sampling)
-{
-    pixelMap_ = CmdListHelper::GetPixelMapFromCmdList(cmdList, handle->pixelMap);
-}
-
-std::shared_ptr<DrawOpItem> DrawAdaptivePixelMapOpItem::Unmarshalling(const DrawCmdList& cmdList, void* handle)
-{
-    return std::make_shared<DrawAdaptivePixelMapOpItem>(
-        cmdList, static_cast<DrawAdaptivePixelMapOpItem::ConstructorHandle*>(handle));
-}
-
-void DrawAdaptivePixelMapOpItem::Marshalling(DrawCmdList& cmdList)
-{
-    PaintHandle paintHandle;
-    GenerateHandleFromPaint(cmdList, paint_, paintHandle);
-    auto pixelmapHandle = CmdListHelper::AddPixelMapToCmdList(cmdList, pixelMap_);
-    cmdList.AddOp<ConstructorHandle>(pixelmapHandle, imageInfo_, sampling_, paintHandle);
-}
-
-void DrawAdaptivePixelMapOpItem::Playback(Canvas* canvas, const Rect* rect)
-{
-    if (pixelMap_ == nullptr) {
-        LOGD("DrawAdaptivePixelMapOpItem pixelMap is null!");
-        return;
-    }
-    canvas->AttachPaint(paint_);
-    AdaptiveImageHelper::DrawPixelMap(*canvas, *rect, pixelMap_, imageInfo_, sampling_);
 }
 } // namespace Drawing
 } // namespace Rosen

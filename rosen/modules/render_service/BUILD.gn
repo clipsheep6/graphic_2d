@@ -138,12 +138,6 @@ ohos_shared_library("librender_service") {
   if (rs_enable_parallel_render && rs_enable_gpu) {
     sources += [
       "core/pipeline/parallel_render/rs_filter_sub_thread.cpp",
-      "core/pipeline/parallel_render/rs_node_cost_manager.cpp",
-      "core/pipeline/parallel_render/rs_parallel_hardware_composer.cpp",
-      "core/pipeline/parallel_render/rs_parallel_pack_visitor.cpp",
-      "core/pipeline/parallel_render/rs_parallel_render_manager.cpp",
-      "core/pipeline/parallel_render/rs_parallel_sub_thread.cpp",
-      "core/pipeline/parallel_render/rs_parallel_task_manager.cpp",
       "core/pipeline/parallel_render/rs_render_task.cpp",
       "core/pipeline/parallel_render/rs_sub_thread.cpp",
       "core/pipeline/parallel_render/rs_sub_thread_manager.cpp",
@@ -174,7 +168,6 @@ ohos_shared_library("librender_service") {
     "//commonlibrary/c_utils/base/include",
     "//utils/system/safwk/native/include",
     "$graphic_2d_root/utils/log",
-    "$graphic_2d_root/utils/frame_report",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
     "$memmgr_root/interface/innerkits/include",
     "$memmgr_root/services/memmgrservice/include/memory_level_manager",
@@ -189,8 +182,8 @@ ohos_shared_library("librender_service") {
     include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
   }
 
-  if (graphic_2d_feature_enable_ddgr_opinc) {
-    include_dirs += ddgr_adapter_opt_set.ddgr_opinc_include_set
+  if (graphic_2d_feature_enable_opinc) {
+    include_dirs += opinc_adapter_opt_set.opinc_include_set
   }
 
   deps = [
@@ -199,14 +192,34 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_frame_trace:render_frame_trace",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
-    "$graphic_2d_root/utils:frame_report",
   ]
 
   if (rs_enable_recording_dcl && defined(use_rosen_drawing) &&
       use_rosen_drawing) {
-    deps +=
-        [ "$graphic_2d_root/rosen/samples/2d_graphics:drawing_engine_sample" ]
+    deps += [
+      "$graphic_2d_root/rosen/samples/2d_graphics:drawing_engine_sample",
+      "$graphic_2d_root/rosen/samples/2d_graphics:drawing_sample_replayer",
+    ]
   }
+
+  #profiler
+  if (rosen_is_ohos && graphic_2d_feature_rs_enable_profiler &&
+      player_framework_enable) {
+    defines += [ "RS_PROFILER_ENABLED" ]
+    sources += [
+      "$rosen_root/modules/render_service_profiler/rs_profiler.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_archive.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_capture_recorder.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_capturedata.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_file.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_network.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_packet.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_socket.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_telemetry.cpp",
+      "$rosen_root/modules/render_service_profiler/rs_profiler_utils.cpp",
+    ]
+  }
+  include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 
   public_deps = [
     "//third_party/libpng:libpng",
@@ -249,13 +262,16 @@ ohos_shared_library("librender_service") {
   }
 
   external_deps = [
+    "battery_manager:batterysrv_client",
     "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",
     "eventhandler:libeventhandler",
+    "graphic_surface:frame_report",
     "hicollie:libhicollie",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "hiview:libucollection_utility",
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",

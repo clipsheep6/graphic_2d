@@ -32,15 +32,6 @@ int ConvertToSkFontWeight(FontWeight fontWeight)
     return static_cast<int>(fontWeight) * weightBase + weightBase;
 }
 
-#ifndef USE_ROSEN_DRAWING
-SkFontStyle MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle)
-{
-    auto weight = ConvertToSkFontWeight(fontWeight);
-    auto slant = fontStyle == FontStyle::NORMAL ?
-        SkFontStyle::Slant::kUpright_Slant : SkFontStyle::Slant::kItalic_Slant;
-    return SkFontStyle(weight, SkFontStyle::Width::kNormal_Width, slant);
-}
-#else
 RSFontStyle MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle)
 {
     auto weight = ConvertToSkFontWeight(fontWeight);
@@ -48,7 +39,6 @@ RSFontStyle MakeFontStyle(FontWeight fontWeight, FontStyle fontStyle)
         RSFontStyle::Slant::UPRIGHT_SLANT : RSFontStyle::Slant::ITALIC_SLANT;
     return RSFontStyle(weight, SkFontStyle::Width::kNormal_Width, slant);
 }
-#endif
 
 SkFontArguments MakeFontArguments(const FontVariations& fontVariations)
 {
@@ -186,6 +176,7 @@ skt::ParagraphStyle ParagraphBuilderImpl::TextStyleToSkStyle(const ParagraphStyl
     skStyle.turnHintingOff();
     skStyle.setReplaceTabCharacters(true);
     skStyle.setTextSplitRatio(txt.textSplitRatio);
+    skStyle.setTextHeightBehavior(static_cast<skt::TextHeightBehavior>(txt.textHeightBehavior));
 
     return skStyle;
 }
@@ -220,6 +211,7 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
     skStyle.setHeight(SkDoubleToScalar(txt.height));
     skStyle.setHeightOverride(txt.heightOverride);
     skStyle.setHalfLeading(txt.halfLeading);
+    skStyle.setBaselineShift(txt.baseLineShift);
 
     skStyle.setLocale(SkString(txt.locale.c_str()));
     skStyle.setStyleId(txt.styleId);
@@ -258,6 +250,9 @@ void ParagraphBuilderImpl::CopyTextStylePaint(const TextStyle& txt, skia::textla
         paint.symbol.SetRenderColor(txt.symbol.GetRenderColor());
         paint.symbol.SetRenderMode(txt.symbol.GetRenderMode());
         paint.symbol.SetSymbolEffect(txt.symbol.GetEffectStrategy());
+        paint.symbol.SetAnimationMode(txt.symbol.GetAnimationMode());
+        paint.symbol.SetRepeatCount(txt.symbol.GetRepeatCount());
+        paint.symbol.SetAminationStart(txt.symbol.GetAminationStart());
         skStyle.setForegroundPaintID(AllocPaintID(paint));
     }
 }

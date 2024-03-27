@@ -26,7 +26,9 @@ void DashLineBench::OnTestFunction(OH_Drawing_Canvas* canvas)
 
 void DashLineBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    // dashline_2_circle
+    //当前用例名 drawdashline 测试 OH_Drawing_CreateDashPathEffect  迁移基于skia DashBench.cpp->DashLineBench
+    // skia case name : dashline_2_circle
+    
     // 创建一个画刷pen对象
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);

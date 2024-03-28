@@ -198,7 +198,9 @@ HWTEST_F(RSSurfaceOhosGlTest, ResetBufferAge002, TestSize.Level1)
  */
 HWTEST_F(RSSurfaceOhosGlTest, RequestFrame001, TestSize.Level1)
 {
-    sptr<Surface> producer = OHOS::IConsumerSurface::Create();
+    sptr<IConsumerSurface> cSurface = IConsumerSurface::Create("DisplayNode");
+    sptr<IBufferProducer> bufferProducer = cSurface->GetProducer();
+    sptr<Surface> producer = Surface::CreateSurfaceAsProducer(bufferProducer);
     RSSurfaceOhosGl rsSurface(producer);
     int32_t width = 1;
     int32_t height = 1;

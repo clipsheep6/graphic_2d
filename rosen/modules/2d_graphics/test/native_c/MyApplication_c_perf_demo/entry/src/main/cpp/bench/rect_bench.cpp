@@ -1,6 +1,8 @@
 #include "rect_bench.h"
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_brush.h>
+#include <native_drawing/drawing_point.h>
+#include <native_drawing/drawing_shader_effect.h>
 #include <native_drawing/drawing_matrix.h>
 #include <native_drawing/drawing_round_rect.h>
 #include "test_common.h"
@@ -151,4 +153,145 @@ void SrcModeRectBench::setupPaint(OH_Drawing_Canvas* canvas,OH_Drawing_Pen* pen)
     // skia case name : srcmode_rects_1_stroke_0_aa
     OH_Drawing_PenSetAlpha(pen, 0x80);
     OH_Drawing_PenSetBlendMode(pen, OH_Drawing_BlendMode::BLEND_MODE_SRC);
+}
+
+void BlitMaskBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
+    float gSizes[] = {float(13), float(24)};
+    int sizes = sizeof(gSizes) / sizeof(gSizes[0]);
+
+    if (FLAGS_strokeWidth >= 0) {
+        gSizes[0] = (float)FLAGS_strokeWidth;
+        sizes = 1;
+    }
+
+    TestRend rand = TestRend();
+    uint32_t color = 0xFF000000;
+    unsigned int alpha = 0xFF;
+
+    OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
+    OH_Drawing_BrushSetAntiAlias(brush, true);
+
+    if (_type == KMaskShader) {
+        // 位图
+        OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
+        OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE};
+        OH_Drawing_BitmapBuild(bitmap, 10, 1, &cFormat);
+        OH_Drawing_CanvasBind(canvas, bitmap);
+
+        // 着色器
+        OH_Drawing_Point *startPt = OH_Drawing_PointCreate(0, 0);
+        OH_Drawing_Point *endPt = OH_Drawing_PointCreate(10, 10);
+        const uint32_t Color[] = {
+            0xFF000000,
+            0xFF00FF00,
+        };
+        OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, Color, nullptr, 2, OH_Drawing_TileMode::CLAMP);
+        OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
+
+        OH_Drawing_BitmapDestroy(bitmap);
+        OH_Drawing_ShaderEffectDestroy(shaderEffect);
+        bitmap = nullptr;
+        startPt = nullptr;
+        endPt = nullptr;
+        shaderEffect = nullptr;
+    }
+    switch (_type) {
+    case kMaskOpaque:
+        color = colors[0];
+        alpha = 0xFF;
+        break;
+    case kMaskBlack:
+        alpha = 0xFF;
+        color = 0xFF000000;
+        break;
+    case kMaskColor:
+        color = colors[0];
+        alpha = rand.nextU() & 255;
+        break;
+    case KMaskShader:
+        break;
+    }
+
+    OH_Drawing_BrushSetAntiAlias(brush, true);
+    OH_Drawing_BrushSetColor(brush, color);
+    OH_Drawing_BrushSetAlpha(brush, alpha);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+
+    OH_Drawing_CanvasDrawRect(canvas, rects[0]);
+
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_BrushDestroy(brush);
+    brush = nullptr;
+}
+
+void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+    // maskcolor
+
+    float gSizes[] = {float(13), float(24)};
+    int sizes = sizeof(gSizes) / sizeof(gSizes[0]);
+
+    if (FLAGS_strokeWidth >= 0) {
+        gSizes[0] = (float)FLAGS_strokeWidth;
+        sizes = 1;
+    }
+
+    TestRend rand = TestRend();
+    uint32_t color = 0xFF000000;
+    unsigned int alpha = 0xFF;
+
+    for (int i = 0; i < testCount_; i++) {
+        OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
+        OH_Drawing_BrushSetAntiAlias(brush, true);
+
+        if (_type == KMaskShader) {
+            // 位图
+            OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
+            OH_Drawing_BitmapFormat cFormat{COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE};
+            OH_Drawing_BitmapBuild(bitmap, 10, 1, &cFormat);
+            OH_Drawing_CanvasBind(canvas, bitmap);
+
+            // 着色器
+            OH_Drawing_Point *startPt = OH_Drawing_PointCreate(0, 0);
+            OH_Drawing_Point *endPt = OH_Drawing_PointCreate(10, 10);
+            const uint32_t Color[] = {
+                0xFF000000,
+                0xFF00FF00,
+            };
+            OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, Color, nullptr, 2, OH_Drawing_TileMode::CLAMP);
+            OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
+
+            OH_Drawing_BitmapDestroy(bitmap);
+            OH_Drawing_ShaderEffectDestroy(shaderEffect);
+            bitmap = nullptr;
+            startPt = nullptr;
+            endPt = nullptr;
+            shaderEffect = nullptr;
+        }
+        switch (_type) {
+        case kMaskOpaque:
+            color = colors[i % RAND_SIZE];
+            alpha = 0xFF;
+            break;
+        case kMaskBlack:
+            alpha = 0xFF;
+            color = 0xFF000000;
+            break;
+        case kMaskColor:
+            color = colors[i % RAND_SIZE];
+            alpha = rand.nextU() & 255;
+            break;
+        case KMaskShader:
+            break;
+        }
+
+        OH_Drawing_BrushSetAntiAlias(brush, true);
+        OH_Drawing_BrushSetColor(brush, color);
+        OH_Drawing_BrushSetAlpha(brush, alpha);
+        OH_Drawing_CanvasAttachBrush(canvas, brush);
+        OH_Drawing_CanvasDrawRect(canvas, rects[i % RAND_SIZE]);
+
+        OH_Drawing_CanvasDetachBrush(canvas);
+        OH_Drawing_BrushDestroy(brush);
+        brush = nullptr;
+    }
 }

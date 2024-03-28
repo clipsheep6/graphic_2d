@@ -16,7 +16,6 @@
 #include "js_text_utils.h"
 
 namespace OHOS::Rosen {
-#define ERROR_DATA -1
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func)
 {
     std::string fullName;

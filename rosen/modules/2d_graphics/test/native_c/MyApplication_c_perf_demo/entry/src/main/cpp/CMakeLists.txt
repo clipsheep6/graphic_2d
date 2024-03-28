@@ -39,7 +39,6 @@ add_library(entry SHARED
     bench/skbench_addpathtest.cpp
     bench/clear_bench.cpp
     bench/big_path_bench.cpp
-    bench/hardstopgradientbench_scalenumcolors.cpp
     dm/aa_rect_modes.cpp
 )
 
@@ -73,7 +72,6 @@ add_library(myxnode SHARED
     bench/skbench_addpathtest.cpp
     bench/clear_bench.cpp
     bench/big_path_bench.cpp
-    bench/hardstopgradientbench_scalenumcolors.cpp
     dm/aa_rect_modes.cpp
 )
 

@@ -39,6 +39,7 @@
 #include "bench/bezier_bench.h"
 #include "bench/clear_bench.h"
 #include "bench/big_path_bench.h"
+#include "bench/hardstopgradientbench_scalenumcolors.h"
 #include "dm/aa_rect_modes.h"
 
 namespace {
@@ -119,7 +120,94 @@ namespace {
             {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
             {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
             {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
-
+            //HardStopGradientBench_ScaleNumColors_kClamp两个指定点之间生成线性渐变,如果着色器效果绘制在其原始边界之外,则复制边颜色,并根据第二个传入参决定颜色及位置.
+            { "HardStopGradientBench_ScaleNumColors_kClamp_3",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 3);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_4",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 4);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_5",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 5);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_10",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 10);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_25",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 25);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_50",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 50);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_100",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 100);
+            } },
+            //HardStopGradientBench_ScaleNumColors_kRepeat从起点到终点颜色从内到外进行圆形渐变,水平和垂直重复着色器效果图像,并根据第二个传入参决定颜色及位置.
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_3",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 3);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_4",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 4);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_5",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 5);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_10",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 10);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_25",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 25);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_50",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 50);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_100",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 100);
+            } },
+            //HardStopGradientBench_ScaleNumColors_kMirror生成扇形渐变水平和垂直重复着色器效果图像交替镜像,使得相邻图像总是接缝.并根据第二个传入参决定颜色及位置.
+            { "HardStopGradientBench_ScaleNumColors_kMirror_3",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 3);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_4",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 4);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_5",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 5);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_10",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 10);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_25",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 25);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_50",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 50);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_100",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 100);
+            } },
+            
             //DM
             {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},
             
@@ -205,6 +293,93 @@ namespace {
             {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
             {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
             {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
+            //HardStopGradientBench_ScaleNumColors_kClamp两个指定点之间生成线性渐变,如果着色器效果绘制在其原始边界之外,则复制边颜色,并根据第二个传入参决定颜色及位置.
+            { "HardStopGradientBench_ScaleNumColors_kClamp_3",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 3);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_4",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 4);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_5",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 5);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_10",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 10);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_25",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 25);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_50",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 50);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kClamp_100",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 100);
+            } },
+            //HardStopGradientBench_ScaleNumColors_kRepeat从起点到终点颜色从内到外进行圆形渐变,水平和垂直重复着色器效果图像,并根据第二个传入参决定颜色及位置.
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_3",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 3);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_4",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 4);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_5",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 5);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_10",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 10);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_25",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 25);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_50",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 50);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kRepeat_100",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 100);
+            } },
+            //HardStopGradientBench_ScaleNumColors_kMirror生成扇形渐变水平和垂直重复着色器效果图像交替镜像,使得相邻图像总是接缝.并根据第二个传入参决定颜色及位置.
+            { "HardStopGradientBench_ScaleNumColors_kMirror_3",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 3);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_4",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 4);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_5",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 5);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_10",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 10);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_25",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 25);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_50",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 50);
+            } },
+            { "HardStopGradientBench_ScaleNumColors_kMirror_100",
+              []() -> std::shared_ptr<TestBase> {
+                return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 100);
+            } },
 
     };
 } // namespace

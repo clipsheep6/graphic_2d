@@ -39,7 +39,6 @@
 #include "bench/bezier_bench.h"
 #include "bench/clear_bench.h"
 #include "bench/big_path_bench.h"
-#include "bench/hardstopgradientbench_scalenumcolors.h"
 #include "dm/aa_rect_modes.h"
 
 namespace {

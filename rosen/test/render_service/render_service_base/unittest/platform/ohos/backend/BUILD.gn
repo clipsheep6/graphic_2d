@@ -37,7 +37,7 @@ ohos_unittest("RSRenderServiceBaseBackendTest") {
 
   cflags = [
     "-Dprivate=public",
-    "-Dprotected=public"
+    "-Dprotected=public",
   ]
 
   include_dirs = [

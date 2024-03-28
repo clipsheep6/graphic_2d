@@ -39,7 +39,7 @@ void RSSurfaceFrameOhosRasterTest::TearDown() {}
 
 /**
  * @tc.name: SetDamageRegion001
- * @tc.desc: test
+ * @tc.desc: test results of SetDamageRegion
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -50,12 +50,13 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, SetDamageRegion001, TestSize.Level1)
     RSSurfaceFrameOhosRaster raster(width, height);
     std::unique_ptr<RenderContext> renderContext = std::make_unique<RenderContext>();
     raster.SetRenderContext(renderContext.get());
-    raster.SetDamageRegion(0, 0, 1, 1);
+    raster.SetDamageRegion(0, 0, 2, 1);
+    ASSERT_EQ(raster.flushConfig_.damage.w, 2);
 }
 
 /**
  * @tc.name: GetCanvas001
- * @tc.desc: test
+ * @tc.desc: test results of GetCanvas
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -64,12 +65,19 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetCanvas001, TestSize.Level1)
     int32_t width = 1;
     int32_t height = 1;
     RSSurfaceFrameOhosRaster raster(width, height);
-    raster.GetCanvas();
+    EXPECT_NE(raster.GetCanvas(), nullptr);
+    {
+        int32_t width = 0;
+        int32_t height = 0;
+        RSSurfaceFrameOhosRaster raster(width, height);
+        raster.buffer_ = nullptr;
+        EXPECT_EQ(raster.GetCanvas(), nullptr);
+    }
 }
 
 /**
  * @tc.name: GetSurface001
- * @tc.desc: test
+ * @tc.desc: test results of GetSurface
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -78,12 +86,21 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetSurface001, TestSize.Level1)
     int32_t width = 1;
     int32_t height = 1;
     RSSurfaceFrameOhosRaster raster(width, height);
-    raster.GetSurface();
+    EXPECT_NE(raster.GetSurface(), nullptr);
+
+    {
+        int32_t width = 1;
+        int32_t height = 1;
+        RSSurfaceFrameOhosRaster raster(width, height);
+        raster.buffer_ = nullptr;
+        raster.GetSurface();
+        EXPECT_EQ(raster.GetSurface(), nullptr);
+    }
 }
 
 /**
  * @tc.name: GetReleaseFence001
- * @tc.desc: test
+ * @tc.desc: test results of GetReleaseFence
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -92,12 +109,12 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetReleaseFence001, TestSize.Level1)
     int32_t width = 1;
     int32_t height = 1;
     RSSurfaceFrameOhosRaster raster(width, height);
-    raster.GetReleaseFence();
+    ASSERT_EQ(raster.GetReleaseFence(), -1);
 }
 
 /**
  * @tc.name: SetReleaseFence001
- * @tc.desc: test
+ * @tc.desc: test results of SetReleaseFence
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -108,10 +125,12 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, SetReleaseFence001, TestSize.Level1)
     int32_t fence = 1;
     RSSurfaceFrameOhosRaster raster(width, height);
     raster.SetReleaseFence(fence);
+    ASSERT_EQ(raster.GetReleaseFence(), 1);
 }
+
 /**
  * @tc.name: GetSurfaceTest
- * @tc.desc: test
+ * @tc.desc: test results of GetSurface
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -120,7 +139,22 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetSurfaceTest, TestSize.Level1)
     int32_t width = 0;
     int32_t height = 0;
     RSSurfaceFrameOhosRaster raster(width, height);
-    raster.GetSurface();
+    EXPECT_EQ(raster.GetSurface(), nullptr);
+
+    {
+        int32_t width = 1;
+        int32_t height = 0;
+        RSSurfaceFrameOhosRaster raster(width, height);
+        EXPECT_EQ(raster.GetSurface(), nullptr);
+    }
+
+    {
+        int32_t width = 1;
+        int32_t height = 1;
+        RSSurfaceFrameOhosRaster raster(width, height);
+        EXPECT_NE(raster.GetSurface(), nullptr);
+        ASSERT_NE(raster.GetSurface(), nullptr);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

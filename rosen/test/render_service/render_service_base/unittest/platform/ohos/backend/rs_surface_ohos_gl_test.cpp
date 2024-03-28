@@ -198,7 +198,7 @@ HWTEST_F(RSSurfaceOhosGlTest, ResetBufferAge002, TestSize.Level1)
  */
 HWTEST_F(RSSurfaceOhosGlTest, RequestFrame001, TestSize.Level1)
 {
-    sptr<Surface> producer = IConsumerSurface::Create();
+    sptr<Surface> producer = OHOS::IConsumerSurface::Create();
     RSSurfaceOhosGl rsSurface(producer);
     int32_t width = 1;
     int32_t height = 1;

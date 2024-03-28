@@ -23,12 +23,14 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     if (napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr) != napi_ok) {
+        LOGE("napi_get_cb_info failed");
         return nullptr;
     }
 
     JsFontCollection* jsFontCollection = new(std::nothrow) JsFontCollection();
     if (napi_wrap(env, jsThis, jsFontCollection, JsFontCollection::Destructor, nullptr, nullptr) != napi_ok) {
         delete jsFontCollection;
+        LOGE("napi_wrap failed");
         return nullptr;
     }
     return jsThis;
@@ -44,14 +46,17 @@ napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
+        LOGE("napi_define_class failed");
         return nullptr;
     }
 
     if (napi_create_reference(env, constructor, 1, &constructor_) != napi_ok) {
+        LOGE("napi_create_reference failed");
         return nullptr;
     }
 
     if (napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor) != napi_ok) {
+        LOGE("napi_set_named_property failed");
         return nullptr;
     }
     return exportObj;
@@ -85,6 +90,7 @@ napi_value JsFontCollection::DisableFallback(napi_env env, napi_callback_info in
 napi_value JsFontCollection::OnDisableFallback(napi_env env, napi_callback_info info)
 {
     if (m_fontCollection == nullptr) {
+        LOGE("m_fontCollection is nullptr");
         return nullptr;
     }
 

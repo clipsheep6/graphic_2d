@@ -134,11 +134,13 @@ napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)
         napi_status napiStatus = napi_define_class(env, enumClassName.data(), NAPI_AUTO_LENGTH, napiConstructor,
             nullptr, property.size(), property.data(), &result);
         if (napiStatus != napi_ok) {
+            LOGE("napi_define_class falied");
             return nullptr;
         }
 
         napiStatus = napi_set_named_property(env, exports, enumClassName.data(), result);
         if (napiStatus != napi_ok) {
+            LOGE("napi_set_named_property falied");
             return nullptr;
         }
     }

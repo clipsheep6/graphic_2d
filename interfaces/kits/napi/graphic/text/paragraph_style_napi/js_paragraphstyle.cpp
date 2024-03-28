@@ -24,12 +24,14 @@ napi_value JsParagraphStyle::Constructor(napi_env env, napi_callback_info info)
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     if (napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr) != napi_ok) {
+        LOGE("napi_get_cb_info falied");
         return nullptr;
     }
 
     JsParagraphStyle* jsParagraphStyle = new(std::nothrow) JsParagraphStyle();
     if (napi_wrap(env, jsThis, jsParagraphStyle, JsParagraphStyle::Destructor,
         nullptr, nullptr) != napi_ok) {
+        LOGE("napi_wrap falied");
         delete jsParagraphStyle;
         return nullptr;
     }
@@ -47,14 +49,17 @@ napi_value JsParagraphStyle::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
+        LOGE("napi_define_class falied");
         return nullptr;
     }
 
     if (napi_create_reference(env, constructor, 1, &constructor_) != napi_ok) {
+        LOGE("napi_create_reference falied");
         return nullptr;
     }
 
     if (napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor) != napi_ok) {
+        LOGE("napi_set_named_property falied");
         return nullptr;
     }
     return exportObj;
@@ -122,6 +127,7 @@ napi_value JsParagraphStyle::JsGetStructStyle(napi_env env, napi_callback_info i
 napi_value JsParagraphStyle::OnGetStructStyle(napi_env env, napi_callback_info info)
 {
     if (m_paragraphStyle == nullptr) {
+        LOGE("m_paragraphStyle is nullptr");
         return nullptr;
     }
 
@@ -131,7 +137,8 @@ napi_value JsParagraphStyle::OnGetStructStyle(napi_env env, napi_callback_info i
     std::vector<std::string>& fontFamily = m_paragraphStyle->lineStyleFontFamilies;
     napi_value jsArray;
     napi_create_array_with_length(env, fontFamily.size(), &jsArray);
-    if (objValue==nullptr) {
+    if (objValue == nullptr) {
+        LOGE("objValue is nullptr");
         return nullptr;
     }
     for (size_t further = 0; further < fontFamily.size(); further++) {
@@ -146,6 +153,7 @@ napi_value JsParagraphStyle::OnGetStructStyle(napi_env env, napi_callback_info i
 napi_value JsParagraphStyle::OnSetStructStyle(napi_env env, napi_callback_info info)
 {
     if (m_paragraphStyle == nullptr) {
+        LOGE("m_paragraphStyle is nullptr");
         return nullptr;
     }
 
@@ -153,14 +161,17 @@ napi_value JsParagraphStyle::OnSetStructStyle(napi_env env, napi_callback_info i
     napi_value argv[ARGC_ONE] = {nullptr};
     if (napi_get_cb_info(env, info, &argc, argv, nullptr,
         nullptr) != napi_ok || argc < ARGC_ONE) {
+        LOGE("napi_get_cb_info falied");
         return nullptr;
     }
     napi_value fontFamiliesField = nullptr;
     if (napi_get_named_property(env, argv[0], "fontFamilies",
         &fontFamiliesField) != napi_ok) {
+        LOGE("napi_get_named_property falied");
         return nullptr;
     }
     if (!SetStrutStyleFontFamilies(env, fontFamiliesField)) {
+        LOGE("SetStrutStyleFontFamilies falied");
         return nullptr;
     }
     return NapiGetUndefined(env);

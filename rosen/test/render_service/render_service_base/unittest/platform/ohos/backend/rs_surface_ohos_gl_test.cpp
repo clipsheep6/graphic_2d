@@ -16,9 +16,9 @@
 #include <gtest/gtest.h>
 
 #include "iconsumer_surface.h"
-#include "render_context/render_context.h"
 
 #include "platform/ohos/backend/rs_surface_ohos_gl.h"
+#include "render_context/render_context.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -40,7 +40,7 @@ void RSSurfaceOhosGlTest::TearDown() {}
 
 /**
  * @tc.name: FlushFrame001
- * @tc.desc: test
+ * @tc.desc: test results of FlushFrame
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -52,11 +52,15 @@ HWTEST_F(RSSurfaceOhosGlTest, FlushFrame001, TestSize.Level1)
     std::unique_ptr<RSSurfaceFrame> frame = nullptr;
     rsSurface.SetUiTimeStamp(frame, uiTimestamp);
     EXPECT_FALSE(rsSurface.FlushFrame(frame, uiTimestamp));
+
+    RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
+    rsSurface.SetRenderContext(renderContext);
+    ASSERT_TRUE(rsSurface.FlushFrame(frame, uiTimestamp));
 }
 
 /**
  * @tc.name: ClearBuffer001
- * @tc.desc: test
+ * @tc.desc: test results of ClearBuffer
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -65,11 +69,20 @@ HWTEST_F(RSSurfaceOhosGlTest, ClearBuffer001, TestSize.Level1)
     sptr<Surface> producer = nullptr;
     RSSurfaceOhosGl rsSurface(producer);
     rsSurface.ClearBuffer();
+
+    RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
+    rsSurface.SetRenderContext(renderContext);
+    rsSurface.ClearBuffer();
+
+    EGLSurface mEglSurface = EGL_NO_CONTEXT;
+    rsSurface.mEglSurface = mEglSurface;
+    rsSurface.ClearBuffer();
+    ASSERT_TRUE(true);
 }
 
 /**
  * @tc.name: ClearBuffer002
- * @tc.desc: test
+ * @tc.desc: test results of ClearBuffer
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -84,15 +97,36 @@ HWTEST_F(RSSurfaceOhosGlTest, ClearBuffer002, TestSize.Level1)
         int32_t width = 1;
         int32_t height = 1;
         uint64_t uiTimestamp = 1;
-        rsSurface.RequestFrame(width, height, uiTimestamp);
+        bool useAFBC = true;
+        rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC);
     }
 #endif
     rsSurface.ClearBuffer();
+
+    {
+        RSSurfaceOhosGl rsSurface(IConsumerSurface::Create());
+#ifdef ACE_ENABLE_GPU
+        RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
+        if (renderContext) {
+            renderContext->InitializeEglContext();
+            rsSurface.SetRenderContext(renderContext);
+            int32_t width = 1;
+            int32_t height = 1;
+            uint64_t uiTimestamp = 1;
+            bool useAFBC = true;
+            rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC);
+        }
+#endif
+        EGLSurface mEglSurface = EGL_NO_CONTEXT;
+        rsSurface.mEglSurface = mEglSurface;
+        rsSurface.ClearBuffer();
+    }
+    ASSERT_TRUE(true);
 }
 
 /**
  * @tc.name: ResetBufferAge001
- * @tc.desc: test
+ * @tc.desc: test results of ResetBufferAge
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -101,11 +135,20 @@ HWTEST_F(RSSurfaceOhosGlTest, ResetBufferAge001, TestSize.Level1)
     sptr<Surface> producer = nullptr;
     RSSurfaceOhosGl rsSurface(producer);
     rsSurface.ResetBufferAge();
+
+    RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
+    rsSurface.SetRenderContext(renderContext);
+    rsSurface.ResetBufferAge();
+
+    EGLSurface mEglSurface = EGL_NO_CONTEXT;
+    rsSurface.mEglSurface = mEglSurface;
+    rsSurface.ResetBufferAge();
+    ASSERT_TRUE(true);
 }
 
 /**
  * @tc.name: ResetBufferAge002
- * @tc.desc: test
+ * @tc.desc: test results of ResetBufferAge
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -120,10 +163,58 @@ HWTEST_F(RSSurfaceOhosGlTest, ResetBufferAge002, TestSize.Level1)
         int32_t width = 1;
         int32_t height = 1;
         uint64_t uiTimestamp = 1;
-        rsSurface.RequestFrame(width, height, uiTimestamp);
+        bool useAFBC = true;
+        rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC);
     }
 #endif
     rsSurface.ResetBufferAge();
+
+    {
+        RSSurfaceOhosGl rsSurface(IConsumerSurface::Create());
+#ifdef ACE_ENABLE_GPU
+        RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
+        if (renderContext) {
+            renderContext->InitializeEglContext();
+            rsSurface.SetRenderContext(renderContext);
+            int32_t width = 1;
+            int32_t height = 1;
+            uint64_t uiTimestamp = 1;
+            bool useAFBC = true;
+            rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC);
+        }
+#endif
+        EGLSurface mEglSurface = EGL_NO_CONTEXT;
+        rsSurface.mEglSurface = mEglSurface;
+        rsSurface.ResetBufferAge();
+    }
+    ASSERT_TRUE(true);
+}
+
+/**
+ * @tc.name: RequestFrame001
+ * @tc.desc: test results of RequestFrame
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSSurfaceOhosGlTest, RequestFrame001, TestSize.Level1)
+{
+    sptr<Surface> producer = IConsumerSurface::Create();
+    RSSurfaceOhosGl rsSurface(producer);
+    int32_t width = 1;
+    int32_t height = 1;
+    uint64_t uiTimestamp = 1;
+    bool useAFBC = true;
+    EXPECT_EQ(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
+
+    RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
+    rsSurface.SetRenderContext(renderContext);
+    EXPECT_EQ(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
+
+    rsSurface.mWindow = CreateNativeWindowFromSurface(&rsSurface.producer_);
+    EXPECT_EQ(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
+
+    rsSurface.mEglSurface = EGL_NO_CONTEXT;
+    ASSERT_NE(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -68,6 +68,8 @@ public:
     void ObtainLauncherNodeId(const std::shared_ptr<RSSurfaceRenderNode> surfaceNode);
 private:
     explicit RSRenderNodeMap();
+    bool IsWindowSceneSurfaceNode(std::shared_ptr<RSSurfaceRenderNode> surfaceNode) const;
+    bool IsSCBSurfaceNode(std::shared_ptr<RSSurfaceRenderNode> surfaceNode) const;
     ~RSRenderNodeMap() = default;
     RSRenderNodeMap(const RSRenderNodeMap&) = delete;
     RSRenderNodeMap(const RSRenderNodeMap&&) = delete;
@@ -81,6 +83,7 @@ private:
     std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> residentSurfaceNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSDisplayRenderNode>> displayNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSCanvasDrawingRenderNode>> canvasDrawingNodeMap_;
+    std::unordered_map<pid_t, int> surfaceNodeNumsInProcess_;
 
     NodeId entryViewNodeId_ = 0;
     NodeId wallpaperViewNodeId_ = 0;

@@ -105,7 +105,6 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "TextDecoration", g_textDecoration },
 };
 
-
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)
 {
     for (auto it = g_intEnumClassMap.begin(); it != g_intEnumClassMap.end(); it++) {
@@ -135,13 +134,12 @@ napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)
         napi_status napiStatus = napi_define_class(env, enumClassName.data(), NAPI_AUTO_LENGTH, napiConstructor,
             nullptr, property.size(), property.data(), &result);
         if (napiStatus != napi_ok) {
-            LOGE("[NAPI] Failed to define enum");
+
             return nullptr;
         }
 
         napiStatus = napi_set_named_property(env, exports, enumClassName.data(), result);
         if (napiStatus != napi_ok) {
-            LOGE("[NAPI] Failed to set result");
             return nullptr;
         }
     }

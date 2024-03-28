@@ -32,7 +32,7 @@ config("local_text") {
     "../text",
     "$graphic_2d_root/rosen/modules/2d_engine/rosen_text/export/rosen_text",
     "$graphic_2d_root/rosen/modules/2d_graphics/include",
-    "$graphic_2d_root/rosen/modules/2d_graphics/interfaces/kits/graphic/drawing",
+    "$graphic_2d_root/interfaces/kits/napi/graphic/drawing",
   ]
 }
 

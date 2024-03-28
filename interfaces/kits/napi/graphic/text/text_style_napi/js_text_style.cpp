@@ -25,7 +25,6 @@ thread_local napi_ref JsTextStyle::constructor_ = nullptr;
 const std::string CLASS_NAME = "TextStyle";
 napi_value JsTextStyle::Constructor(napi_env env, napi_callback_info info)
 {
-    LOGE("UINT32Trace | into JsTextStyle::Constructor");
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     if (napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr) != napi_ok) {
@@ -42,7 +41,6 @@ napi_value JsTextStyle::Constructor(napi_env env, napi_callback_info info)
 
 napi_value JsTextStyle::Init(napi_env env, napi_value exportObj)
 {
-    LOGE("UINT32Trace | into JsTextStyle::Init");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_GETTER_SETTER("fontWeight", JsTextStyle::JsGetFontWeight,
             JsTextStyle::JsSetFontWeight),
@@ -52,7 +50,7 @@ napi_value JsTextStyle::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
                                            sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        return NapiThrowError(env, TextErrorCode::ERROR_INVALID_PARAM, "Init Failed");
+        return nullptr;
     }
 
     if (napi_create_reference(env, constructor, 1, &constructor_) != napi_ok) {
@@ -93,7 +91,6 @@ napi_value JsTextStyle::JsSetFontWeight(napi_env env, napi_callback_info info)
 
 napi_value JsTextStyle::OnGetFontWeight(napi_env env, napi_callback_info info)
 {
-    LOGE("UINT32Trace | into JsTextStyle::OnGetFontWeight");
     if (m_textStyle == nullptr) {
         return nullptr;
     }
@@ -105,7 +102,6 @@ napi_value JsTextStyle::OnGetFontWeight(napi_env env, napi_callback_info info)
 
 napi_value JsTextStyle::OnSetFontWeight(napi_env env, napi_callback_info info)
 {
-    LOGE("UINT32Trace | into JsTextStyle::OnSetFontWeight");
     if (m_textStyle == nullptr) {
         return nullptr;
     }

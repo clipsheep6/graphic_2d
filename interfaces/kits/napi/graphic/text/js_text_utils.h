@@ -78,94 +78,6 @@ inline napi_value CreateJsNull(napi_env env)
     return result;
 }
 
-inline napi_value CreateJsNumber(napi_env env, int32_t value)
-{
-    napi_value result = nullptr;
-    napi_create_int32(env, value, &result);
-    return result;
-}
-
-inline napi_value CreateJsNumber(napi_env env, uint32_t value)
-{
-    napi_value result = nullptr;
-    napi_create_uint32(env, value, &result);
-    return result;
-}
-
-inline napi_value CreateJsNumber(napi_env env, int64_t value)
-{
-    napi_value result = nullptr;
-    napi_create_int64(env, value, &result);
-    return result;
-}
-
-inline napi_value CreateJsNumber(napi_env env, double value)
-{
-    napi_value result = nullptr;
-    napi_create_double(env, value, &result);
-    return result;
-}
-
-template<class T>
-napi_value CreateJsValue(napi_env env, const T& value)
-{
-    using ValueType = std::remove_cv_t<std::remove_reference_t<T>>;
-    napi_value result = nullptr;
-    if constexpr (std::is_same_v<ValueType, bool>) {
-        napi_get_boolean(env, value, &result);
-        return result;
-    } else if constexpr (std::is_arithmetic_v<ValueType>) {
-        return CreateJsNumber(env, value);
-    } else if constexpr (std::is_same_v<ValueType, std::string>) {
-        napi_create_string_utf8(env, value.c_str(), value.length(), &result);
-        return result;
-    } else if constexpr (std::is_enum_v<ValueType>) {
-        return CreateJsNumber(env, static_cast<std::make_signed_t<ValueType>>(value));
-    } else if constexpr (std::is_same_v<ValueType, const char*>) {
-        (value != nullptr) ? napi_create_string_utf8(env, value, strlen(value), &result) :
-            napi_get_undefined(env, &result);
-        return result;
-    }
-}
-
-int32_t GetInt32FromName(napi_env env, napi_callback_info info, const char* dataName);
-
-
-template<class T>
-bool ConvertFromJsValue(napi_env env, napi_value jsValue, T& value)
-{
-    if (jsValue == nullptr) {
-        return false;
-    }
-
-    using ValueType = std::remove_cv_t<std::remove_reference_t<T>>;
-    if constexpr (std::is_same_v<ValueType, bool>) {
-        return napi_get_value_bool(env, jsValue, &value) == napi_ok;
-    } else if constexpr (std::is_arithmetic_v<ValueType>) {
-        return ConvertFromJsNumber(env, jsValue, value);
-    } else if constexpr (std::is_same_v<ValueType, std::string>) {
-        size_t len = 0;
-        if (napi_get_value_string_utf8(env, jsValue, nullptr, 0, &len) != napi_ok) {
-            return false;
-        }
-        auto buffer = std::make_unique<char[]>(len + 1);
-        size_t strLength = 0;
-        if (napi_get_value_string_utf8(env, jsValue, buffer.get(), len + 1, &strLength) == napi_ok) {
-            value = buffer.get();
-            return true;
-        }
-        return false;
-    } else if constexpr (std::is_enum_v<ValueType>) {
-        std::make_signed_t<ValueType> numberValue = 0;
-        if (!ConvertFromJsNumber(env, jsValue, numberValue)) {
-            return false;
-        }
-        value = static_cast<ValueType>(numberValue);
-        return true;
-    }
-    return false;
-}
-
 inline bool ConvertClampFromJsValue(napi_env env, napi_value jsValue, int32_t& value, int32_t lo, int32_t hi)
 {
     if (jsValue == nullptr) {
@@ -174,20 +86,6 @@ inline bool ConvertClampFromJsValue(napi_env env, napi_value jsValue, int32_t& v
     bool ret = napi_get_value_int32(env, jsValue, &value) == napi_ok;
     value = std::clamp(value, lo, hi);
     return ret;
-}
-
-inline napi_value GetDoubleAndConvertToJsValue(napi_env env, double d)
-{
-    napi_value value = nullptr;
-    (void)napi_create_double(env, d, &value);
-    return value;
-}
-
-inline napi_value GetStringAndConvertToJsValue(napi_env env, std::string str)
-{
-    napi_value objValue = nullptr;
-    napi_create_string_utf8(env, str.c_str(), str.length(), &objValue);
-    return objValue;
 }
 
 inline napi_value NapiGetUndefined(napi_env env)
@@ -199,7 +97,6 @@ inline napi_value NapiGetUndefined(napi_env env)
 
 inline bool GetUint32FromJS(napi_env env, napi_callback_info info, size_t& object)
 {
-    LOGE("UINT32Trace | into GetUint32 object=%zu",object);
     size_t argc = ARGC_ONE;
     napi_value argv[ARGC_ONE] = {nullptr};
     if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok ||
@@ -209,12 +106,23 @@ inline bool GetUint32FromJS(napi_env env, napi_callback_info info, size_t& objec
     if (napi_get_value_uint32(env, argv[0], &object) != napi_ok) {
         return false;
     }
-    LOGE("UINT32Trace | Over GetUint32 object=%zu",object);
+    return true;
+}
+
+inline bool GetDoubleFromJS(napi_env env, napi_callback_info info, double& object)
+{
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok ||
+        argc < ARGC_ONE) {
+        return false;
+    }
+    if (napi_get_value_double(env, argv[0], &object) != napi_ok) {
+        return false;
+    }
     return true;
 }
 
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);
-napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
-napi_value NapiThrowError(napi_env env, TextErrorCode err, const std::string& message);
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

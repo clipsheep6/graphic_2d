@@ -28,6 +28,7 @@ void CirclesBench::OnTestFunction(OH_Drawing_Canvas* canvas)
     rect = OH_Drawing_RectCreate(left,top,right,bottom);
     OH_Drawing_PenSetWidth(pen, rand.nextUScalar1()*5.0f);
     OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_PathMoveTo(path, 0, 0);
     OH_Drawing_PathArcTo(path,left,top,right,bottom,0,0);
     //path.addOval 目前还没开放
 //    OH_Drawing_CanvasDrawOval(canvas,rect);  OH_Drawing_Path addOval 还未启用 先不测
@@ -66,6 +67,7 @@ void CirclesBench::OnTestPerformance(OH_Drawing_Canvas* canvas)
         rect = OH_Drawing_RectCreate(left,top,right,bottom);
         OH_Drawing_PenSetWidth(pen, rand.nextUScalar1()*5.0f);
         OH_Drawing_CanvasAttachPen(canvas, pen);
+        OH_Drawing_PathMoveTo(path, 0, 0);
         OH_Drawing_PathArcTo(path,left,top,right,bottom,0,0);
         //path.addOval 目前还没开放
 //        OH_Drawing_CanvasDrawOval(canvas,rect); OH_Drawing_Path addOval 还未启用 先不测

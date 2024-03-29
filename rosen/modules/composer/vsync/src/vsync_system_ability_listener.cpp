@@ -28,21 +28,42 @@ namespace Rosen {
 void VSyncSystemAbilityListener::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
 #ifdef COMPOSER_SCHED_ENABLE
-    if (systemAbilityId == RES_SCHED_SYS_ABILITY_ID) {
-        VLOGD("%{public}s: threadName=%{public}s, pid=%{public}s, tid=%{public}s, uid=%{public}s.",
-            __func__, threadName.c_str(), pid_.c_str(), tid_.c_str(), uid_.c_str());
-        std::unordered_map<std::string, std::string> mapPayload;
-        int32_t userInteraction = 0;
-        mapPayload["uid"] = uid_;
-        mapPayload["pid"] = pid_;
-        mapPayload["tid"] = tid_;
-        mapPayload["threadName"] = threadName_;
-        mapPayload["extType"] = threadName_ == "RSMainThread" ? "10003" : "10002";
-        mapPayload["isSa"] = "1";
-        mapPayload["cgroupPrio"] = "1";
-        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(
-            ResourceSchedule::ResType::RES_TYPE_KEY_PERF_SCENE, userInteraction, mapPayload);
+    switch(label_) {
+        case 1: {
+            if (systemAbilityId == RES_SCHED_SYS_ABILITY_ID) {
+                VLOGD("%{public}s: threadName=%{public}s, pid=%{public}s, tid=%{public}s, uid=%{public}s.",
+                    __func__, threadName.c_str(), pid_.c_str(), tid_.c_str(), uid_.c_str());
+                std::unordered_map<std::string, std::string> mapPayload;
+                int32_t userInteraction = 0;
+                mapPayload["uid"] = uid_;
+                mapPayload["pid"] = pid_;
+                mapPayload["tid"] = tid_;
+                mapPayload["threadName"] = threadName_;
+                mapPayload["extType"] = threadName_ == "RSMainThread" ? "10003" : "10002";
+                mapPayload["isSa"] = "1";
+                mapPayload["cgroupPrio"] = "1";
+                OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(
+                    ResourceSchedule::ResType::RES_TYPE_KEY_PERF_SCENE, userInteraction, mapPayload);
+            }
+            break;
+        }
+        case 2: {
+            const uint32_t RS_SUB_QOS_LEVEL = 7;
+            std::unordered_map<std::string, std::string> mapPayload;
+            mapPayload["pid"] = pid_;
+            mapPayload[tid_] = std::to_string(RS_SUB_QOS_LEVEL);
+            mapPayload["bundleName"] = threadName_;
+            uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
+            int64_t value = 0;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+            break;
+        }
+        default: {
+            VLOGE("label type error!");
+            break;
+        }
     }
+
 #endif
 }
 

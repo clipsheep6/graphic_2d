@@ -20,29 +20,16 @@
 #include "render_context/render_context.h"
 #endif
 
-namespace OHOS::Rosen {
-#ifndef ROSEN_CROSS_PLATFORM
-namespace {
-    constexpr int32_t SCHED_PRIORITY = 2;
-    void SetThreadPriority()
-    {
-        struct sched_param param = {0};
-        param.sched_priority = SCHED_PRIORITY;
-        if (sched_setscheduler(0, SCHED_FIFO, &param) != 0) {
-            RS_LOGE("RSOffscreenRender Couldn't set SCHED_FIFO.");
-        } else {
-            RS_LOGI("RSOffscreenRender set SCHED_FIFO succeed.");
-        }
-        return;
-    }
-}
+#ifdef RES_BASE_SCHED_ENABLE
+#include "system_ability_definition.h"
+#include "if_system_ability_manager.h"
+#include <iservice_registry.h>
 #endif
+
+namespace OHOS::Rosen {
 
 RSOffscreenRenderThread& RSOffscreenRenderThread::Instance()
 {
-#ifndef ROSEN_CROSS_PLATFORM
-    SetThreadPriority();
-#endif
     static RSOffscreenRenderThread instance;
     return instance;
 }
@@ -66,6 +53,34 @@ RSOffscreenRenderThread::RSOffscreenRenderThread()
         renderContext_->SetUpGpuContext(nullptr);
     });
 #endif
+
+#ifdef RES_BASE_SCHED_ENABLE
+    SubScribeSystemAbility();
+#endif
+
+}
+
+void RSOffscreenRenderThread::SubScribeSystemAbility()
+{
+    RS_LOGD("%{public}s", __func__);
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        RS_LOGE("%{public}s failed to get system ability manager client", __func__);
+        return;
+    }
+    std::string threadName = "RSOffscreenRenderThread";
+    std::string strUid = std::to_string(getuid());
+    std::string strPid = std::to_string(getpid());
+    std::string strTid = std::to_string(gettid());
+
+    int label_priority_schedule = 2;
+    saStatusChangeListener_ = new (std::nothrow)VSyncSystemAbilityListener(threadName, strUid, strPid, strTid, label_priority_schedule);
+    int32_t ret = systemAbilityManager->SubscribeSystemAbility(RES_SCHED_SYS_ABILITY_ID, saStatusChangeListener_);
+    if (ret != ERR_OK) {
+        RS_LOGE("%{public}s subscribe system ability %{public}d failed.", __func__, RES_SCHED_SYS_ABILITY_ID);
+        saStatusChangeListener_ = nullptr;
+    }
 }
 
 void RSOffscreenRenderThread::PostTask(const std::function<void()>& task)

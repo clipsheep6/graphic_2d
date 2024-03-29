@@ -32,6 +32,7 @@ struct RECT{
 
 
 AddArcMeas::AddArcMeas() {
+    //skia dm file gm/addarc.cpp
     bitmapWidth_ = 2*R + 40;
     bitmapHeight_ = 2*R + 40;
     fileName_ = "addarc_meas";

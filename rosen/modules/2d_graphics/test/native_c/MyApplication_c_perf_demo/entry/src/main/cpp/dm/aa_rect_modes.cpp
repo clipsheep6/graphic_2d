@@ -131,6 +131,7 @@ OH_Drawing_ShaderEffect *make_bg_shader()
 }
 
 AARectModes::AARectModes() {
+    //skia dm file gm/aarectmodes.cpp
     bitmapWidth_ = 640;
     bitmapHeight_ = 480;
     fileName_ = "aarectmodes";

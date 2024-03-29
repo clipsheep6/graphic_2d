@@ -56,7 +56,6 @@ void BlurLargeRrects::OnTestFunction(OH_Drawing_Canvas *canvas)
         // i = 3;黄色。3的二进制是11红色11与01相与结果01分量0xFF,绿色也是0xFF,蓝色是0x00,最终颜色是(0xFF, 0xFF, 0x00,
         // 0xFF),即一个完全不透明的黄色(红色和绿色).
         int Bitwise1 = 1, Bitwise2 = 2;
-        //   OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
         OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(0xFF, (i & Bitwise1) ? 0xFF : 0x00,
             (i & Bitwise2) ? 0xFF : 0x00, (i < Bitwise2) ? 0xFF : 0x00));
         DRAWING_LOGI("BlurLargeRrects::OnTestFunction The number of times i = %{public}d ,The value of i = %{public}u",

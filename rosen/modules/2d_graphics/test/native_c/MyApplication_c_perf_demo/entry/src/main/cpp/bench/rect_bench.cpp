@@ -158,7 +158,6 @@ void SrcModeRectBench::setupPaint(OH_Drawing_Canvas* canvas,OH_Drawing_Pen* pen)
 void BlitMaskBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);
-    OH_Drawing_CanvasAttachPen(canvas, pen);
 
     float gSizes[] = {float(13), float(24)};
     int sizes = sizeof(gSizes) / sizeof(gSizes[0]);
@@ -186,6 +185,8 @@ void BlitMaskBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
         OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, Color, nullptr, 2, OH_Drawing_TileMode::CLAMP);
         OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
 
+        OH_Drawing_PointDestroy(startPt);
+        OH_Drawing_PointDestroy(endPt);
         OH_Drawing_ShaderEffectDestroy(shaderEffect);
         startPt = nullptr;
         endPt = nullptr;
@@ -210,15 +211,17 @@ void BlitMaskBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
         }
 
         OH_Drawing_PenSetWidth(pen, gSizes[j]);
+        OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_BrushSetAntiAlias(brush, true);
         OH_Drawing_BrushSetColor(brush, color);
         OH_Drawing_BrushSetAlpha(brush, alpha);
         OH_Drawing_CanvasAttachBrush(canvas, brush);
         OH_Drawing_CanvasDrawRect(canvas, rects[j]);
+
+        OH_Drawing_CanvasDetachPen(canvas);
+        OH_Drawing_CanvasDetachBrush(canvas);
     }
 
-    OH_Drawing_CanvasDetachPen(canvas);
-    OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_PenDestroy(pen);
     OH_Drawing_BrushDestroy(brush);
     pen = nullptr;
@@ -230,7 +233,6 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
 
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);
-    OH_Drawing_CanvasAttachPen(canvas, pen);
 
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
@@ -259,6 +261,8 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
             OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, Color, nullptr, 2, OH_Drawing_TileMode::CLAMP);
             OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
 
+            OH_Drawing_PointDestroy(startPt);
+            OH_Drawing_PointDestroy(endPt);
             OH_Drawing_ShaderEffectDestroy(shaderEffect);
             startPt = nullptr;
             endPt = nullptr;
@@ -283,16 +287,18 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
             }
 
             OH_Drawing_PenSetWidth(pen, gSizes[j]);
+            OH_Drawing_CanvasAttachPen(canvas, pen);
             OH_Drawing_BrushSetAntiAlias(brush, true);
             OH_Drawing_BrushSetColor(brush, color);
             OH_Drawing_BrushSetAlpha(brush, alpha);
             OH_Drawing_CanvasAttachBrush(canvas, brush);
             OH_Drawing_CanvasDrawRect(canvas, rects[i % RAND_SIZE]);
+
+            OH_Drawing_CanvasDetachPen(canvas);
+            OH_Drawing_CanvasDetachBrush(canvas);
         }
     }
 
-    OH_Drawing_CanvasDetachPen(canvas);
-    OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_PenDestroy(pen);
     OH_Drawing_BrushDestroy(brush);
     pen = nullptr;

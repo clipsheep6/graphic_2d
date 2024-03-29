@@ -191,10 +191,10 @@ void BlitMaskBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
         endPt = nullptr;
         shaderEffect = nullptr;
     }
-    for (size_t loop = 0; loop < sizes; loop++) {
+    for (size_t j = 0; j < sizes; j++) {
         switch (_type) {
         case kMaskOpaque:
-            color = colors[0];
+            color = colors[j];
             alpha = 0xFF;
             break;
         case kMaskBlack:
@@ -202,26 +202,27 @@ void BlitMaskBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
             color = 0xFF000000;
             break;
         case kMaskColor:
-            color = colors[0];
+            color = colors[j];
             alpha = rand.nextU() & 255;
             break;
         case KMaskShader:
             break;
         }
 
-        OH_Drawing_PenSetWidth(pen, gSizes[loop]);
+        OH_Drawing_PenSetWidth(pen, gSizes[j]);
         OH_Drawing_BrushSetAntiAlias(brush, true);
         OH_Drawing_BrushSetColor(brush, color);
         OH_Drawing_BrushSetAlpha(brush, alpha);
         OH_Drawing_CanvasAttachBrush(canvas, brush);
-        OH_Drawing_CanvasDrawRect(canvas, rects[0]);
-
-        OH_Drawing_CanvasDetachBrush(canvas);
-        OH_Drawing_PenDestroy(pen);
-        OH_Drawing_BrushDestroy(brush);
-        pen = nullptr;
-        brush = nullptr;
+        OH_Drawing_CanvasDrawRect(canvas, rects[j]);
     }
+
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_PenDestroy(pen);
+    OH_Drawing_BrushDestroy(brush);
+    pen = nullptr;
+    brush = nullptr;
 }
 
 void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
@@ -230,6 +231,9 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);
     OH_Drawing_CanvasAttachPen(canvas, pen);
+
+    OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
+    OH_Drawing_BrushSetAntiAlias(brush, true);
 
     float gSizes[] = {float(13), float(24)};
     int sizes = sizeof(gSizes) / sizeof(gSizes[0]);
@@ -243,10 +247,7 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     uint32_t color = 0xFF000000;
     unsigned int alpha = 0xFF;
 
-    for (int i = 0; i < testCount_; i++) {
-        OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
-        OH_Drawing_BrushSetAntiAlias(brush, true);
-
+    for (int i = 0; i < testCount_; i = i + sizes) {
         if (_type == KMaskShader) {
             // 着色器
             OH_Drawing_Point *startPt = OH_Drawing_PointCreate(0, 0);
@@ -263,10 +264,10 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
             endPt = nullptr;
             shaderEffect = nullptr;
         }
-        for (size_t loop = 0; loop < sizes; loop++) {
+        for (size_t j = 0; j < sizes; j++) {
             switch (_type) {
             case kMaskOpaque:
-                color = colors[i % RAND_SIZE];
+                color = colors[j];
                 alpha = 0xFF;
                 break;
             case kMaskBlack:
@@ -274,25 +275,26 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
                 color = 0xFF000000;
                 break;
             case kMaskColor:
-                color = colors[i % RAND_SIZE];
+                color = colors[j];
                 alpha = rand.nextU() & 255;
                 break;
             case KMaskShader:
                 break;
             }
 
-            OH_Drawing_PenSetWidth(pen, gSizes[loop]);
+            OH_Drawing_PenSetWidth(pen, gSizes[j]);
             OH_Drawing_BrushSetAntiAlias(brush, true);
             OH_Drawing_BrushSetColor(brush, color);
             OH_Drawing_BrushSetAlpha(brush, alpha);
             OH_Drawing_CanvasAttachBrush(canvas, brush);
             OH_Drawing_CanvasDrawRect(canvas, rects[i % RAND_SIZE]);
-
-            OH_Drawing_CanvasDetachBrush(canvas);
-            OH_Drawing_PenDestroy(pen);
-            OH_Drawing_BrushDestroy(brush);
-            pen = nullptr;
-            brush = nullptr;
         }
     }
+
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_PenDestroy(pen);
+    OH_Drawing_BrushDestroy(brush);
+    pen = nullptr;
+    brush = nullptr;
 }

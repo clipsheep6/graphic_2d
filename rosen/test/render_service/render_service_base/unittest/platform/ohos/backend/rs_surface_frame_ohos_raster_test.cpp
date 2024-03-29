@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 
 #include "render_context/render_context.h"
-#include "surface_buffer.h"
 #include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
 
 using namespace testing;

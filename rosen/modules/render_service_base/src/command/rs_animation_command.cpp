@@ -54,6 +54,10 @@ void AnimationCommandHelper::CreateAnimation(
         RS_LOGE("AnimationCommandHelper::CreateAnimation, animation is nullptr");
         return;
     }
+    if (node->GetAnimationManager().RemoveCancelAnimations(animation->GetAnimationId())) {
+        RS_LOGE("AnimationCommandHelper::CreateAnimation, animation is need cancel");
+        return;
+    }
     node->GetAnimationManager().AddAnimation(animation);
     auto modifier = node->GetModifier(animation->GetPropertyId());
     if (modifier != nullptr) {

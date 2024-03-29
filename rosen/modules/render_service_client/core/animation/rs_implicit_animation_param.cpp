@@ -80,7 +80,8 @@ void RSImplicitCancelAnimationParam::SyncProperties()
             continue;
         }
         auto& propertiesMap = node->IsRenderServiceNode() ? RSpropertiesMap : RTpropertiesMap;
-        propertiesMap.emplace(std::make_pair<NodeId, PropertyId>(node->GetId(), rsProperty->GetId()), nullptr);
+        propertiesMap.emplace(std::make_tuple<NodeId, PropertyId, std::vector<AnimationId>>(node->GetId(),
+            rsProperty->GetId(), node->GetAnimationByPropertyId(rsProperty->GetId())), nullptr);
     }
     pendingSyncList_.clear();
 
@@ -107,7 +108,7 @@ void RSImplicitCancelAnimationParam::ExecuteSyncPropertiesTask(
 
     // Apply task result
     for (const auto& [key, value] : task->GetProperties()) {
-        const auto& [nodeId, propertyId] = key;
+        const auto& [nodeId, propertyId, animations] = key;
         auto node = RSNodeMap::Instance().GetNode(nodeId);
         if (node == nullptr) {
             ROSEN_LOGE("RSImplicitCancelAnimationParam::ExecuteSyncPropertiesTask failed to get target node.");

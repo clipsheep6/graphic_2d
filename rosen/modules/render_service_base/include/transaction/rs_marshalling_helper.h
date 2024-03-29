@@ -378,6 +378,19 @@ public:
         return Unmarshalling(parcel, val.first) && Unmarshalling(parcel, val.second);
     }
 
+    template<class T1, class T2, class T3>
+    static bool Marshalling(Parcel& parcel, const std::tuple<T1, T2, T3>& val)
+    {
+        auto& [first, second, third] = val;
+        return Marshalling(parcel, first) && Marshalling(parcel, second) && Marshalling(parcel, third);
+    }
+    template<class T1, class T2, class T3>
+    static bool Unmarshalling(Parcel& parcel, std::tuple<T1, T2, T3>& val)
+    {
+        auto& [first, second, third] = val;
+        return Unmarshalling(parcel, first) && Unmarshalling(parcel, second) && Unmarshalling(parcel, third);
+    }
+
     template<typename T, typename... Args>
     static bool Marshalling(Parcel& parcel, const T& first, const Args&... args)
     {

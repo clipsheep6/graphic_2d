@@ -102,6 +102,7 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
     const float inset = OH_Drawing_PenGetWidth(pen)+4;
     const float sweepAngle = 345;
     TestRend rand;
+    TestRend randRotate;
     float sign = 1;
     
     while (rc.w > OH_Drawing_PenGetWidth(pen)*3)
@@ -110,7 +111,7 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
         OH_Drawing_CanvasAttachPen(canvas, pen);
         float startAngle = rand.nextUScalar1()*360;
         float speed = sqrtf(16/rc.w)*0.5f;
-        fRotate = rand.nextRangeF(1, 360);//mock skia dm onAnimate behavior
+        fRotate = randRotate.nextRangeF(1, 360);//mock skia dm onAnimate behavior
         startAngle += fRotate * 360 * speed * sign;
         OH_Drawing_Path* path = OH_Drawing_PathCreate();
         OH_Drawing_Rect* r = OH_Drawing_RectCreate(rc.x,rc.y,rc.x+rc.w,rc.y+rc.h);

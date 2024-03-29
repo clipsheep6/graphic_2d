@@ -16,10 +16,8 @@
 #include <gtest/gtest.h>
 
 #include "render_context/render_context.h"
-
-#include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
-
 #include "surface_buffer.h"
+#include "platform/ohos/backend/rs_surface_frame_ohos_raster.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -72,7 +70,7 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetCanvas001, TestSize.Level1)
         int32_t width = 0;
         int32_t height = 0;
         RSSurfaceFrameOhosRaster raster(width, height);
-        SurfaceBuffer::Create();
+        raster.buffer_ = SurfaceBuffer::Create();
         EXPECT_EQ(raster.GetCanvas(), nullptr);
     }
 }

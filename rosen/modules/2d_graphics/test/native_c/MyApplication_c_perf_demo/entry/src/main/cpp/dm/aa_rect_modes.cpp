@@ -89,7 +89,7 @@ static float drawCell(OH_Drawing_Canvas* canvas, OH_Drawing_BlendMode mode, uint
     OH_Drawing_PenSetWidth(pen, 2.0);
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
-    OH_Drawing_Rect* r = OH_Drawing_RectCreate(W/10,H/10,W+W/10,H+H/10);
+    OH_Drawing_Rect* r = OH_Drawing_RectCreate(W/10,H/10,W-W/10,H-H/10);
     
     OH_Drawing_PenSetColor(pen, 0xFF0000FF);
     OH_Drawing_PenSetAlpha(pen, a0);

@@ -67,3 +67,8 @@ uint32_t TestRend::nextBits(unsigned bitCount)
 {
     return this->nextU() >> (32 - bitCount);
 }
+
+uint32_t color_to_565(uint32_t color)
+{//not realize , for later use
+    return color;
+}

@@ -12,4 +12,13 @@ public:
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
 };
+
+class AddArc : public TestBase {
+public:
+    AddArc();
+    ~AddArc() = default;
+protected:
+    void OnTestFunction(OH_Drawing_Canvas* canvas) override;
+    float fRotate;
+};
 #endif // AA_RECT_MODES_H

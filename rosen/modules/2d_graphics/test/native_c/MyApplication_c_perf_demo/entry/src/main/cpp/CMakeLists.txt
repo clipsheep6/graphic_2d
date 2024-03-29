@@ -40,6 +40,7 @@ add_library(entry SHARED
     bench/clear_bench.cpp
     bench/big_path_bench.cpp
     dm/aa_rect_modes.cpp
+    dm/blur_large_rrects.cpp
 )
 
 add_library(myxnode SHARED
@@ -73,6 +74,7 @@ add_library(myxnode SHARED
     bench/clear_bench.cpp
     bench/big_path_bench.cpp
     dm/aa_rect_modes.cpp
+    dm/blur_large_rrects.cpp
 )
 
 find_library(

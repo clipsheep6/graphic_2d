@@ -131,8 +131,8 @@ OH_Drawing_ShaderEffect *make_bg_shader()
 }
 
 AARectModes::AARectModes() {
-    bitmapWidth_ = W;
-    bitmapHeight_ = H;
+    bitmapWidth_ = 640;
+    bitmapHeight_ = 480;
     fileName_ = "aarectmodes";
 }
 

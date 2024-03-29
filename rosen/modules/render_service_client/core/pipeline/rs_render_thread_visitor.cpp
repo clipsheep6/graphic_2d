@@ -739,7 +739,7 @@ void RSRenderThreadVisitor::ProcessSurfaceViewInRT(RSSurfaceRenderNode& node)
 #ifdef ROSEN_OHOS
     sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(node.GetSurfaceId());
     if (surface == nullptr) {
-        RS_LOGE("RSRenderThreadVisitor::ProcessSurfaceViewInRT nodeId is %llu cannot find surface by surfaceId %llu",
+        RS_LOGE("RSRenderThreadVisitor::ProcessSurfaceViewInRT nodeId is %lu cannot find surface by surfaceId %lu",
             node.GetId(), node.GetSurfaceId());
         return;
     }

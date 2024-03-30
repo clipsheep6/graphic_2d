@@ -14,6 +14,8 @@
  */
 
 #include <cstddef>
+#include <string>
+#include <vector>
 #include "gtest/gtest.h"
 #include "skia_adapter/skia_canvas.h"
 #include "draw/core_canvas.h"
@@ -40,6 +42,65 @@ void SkiaCanvasTest::SetUpTestCase() {}
 void SkiaCanvasTest::TearDownTestCase() {}
 void SkiaCanvasTest::SetUp() {}
 void SkiaCanvasTest::TearDown() {}
+
+class SDFShapeTest : public SDFShapeBase {
+public:
+    SDFShapeTest();
+    ~SDFShapeTest() {};
+
+    std::string Getshader() const override
+    {
+        return str_;
+    }
+    float GetSize() const override
+    {
+        return 1.0;
+    }
+    void SetSize(float size) override;
+    int GetParaNum() const override
+    {
+        return 1;
+    }
+    std::vector<float> GetPara() const override
+    {
+        return para_;
+    }
+    std::vector<float> GetTransPara() const override
+    {
+        return para_;
+    }
+    std::vector<float> GetColorPara() const override
+    {
+        return para_;
+    }
+    void UpdateTime(float time) override;
+    void BuildShader() override;
+    void SetColor(std::string fillColor, std::string strokeColor, float alpha) override;
+private:
+    std::string str_ = "";
+    std::vector<float> para_ = {};
+};
+SDFShapeTest::SDFShapeTest() {}
+void SDFShapeTest::SetSize(float size) {}
+void SDFShapeTest::UpdateTime(float time) {}
+void SDFShapeTest::BuildShader() {}
+void SDFShapeTest::SetColor(std::string fillColor, std::string strokeColor, float alpha) {}
+
+/**
+ * @tc.name: DrawSdf001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.author:
+ */
+HWTEST_F(SkiaCanvasTest, DrawSdf001, TestSize.Level1)
+{
+    SDFShapeTest sdf;
+    Paint paint;
+    paint.SetStyle(Paint::PaintStyle::PAINT_FILL);
+    SkiaCanvas skiaCanvas;
+    skiaCanvas.AttachPaint(paint);
+    skiaCanvas.DrawSdf(sdf);
+}
 
 /**
  * @tc.name: Bind001

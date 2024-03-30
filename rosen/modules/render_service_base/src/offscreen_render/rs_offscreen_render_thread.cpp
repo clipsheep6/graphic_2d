@@ -20,29 +20,15 @@
 #include "render_context/render_context.h"
 #endif
 
-namespace OHOS::Rosen {
-#ifndef ROSEN_CROSS_PLATFORM
-namespace {
-    constexpr int32_t SCHED_PRIORITY = 2;
-    void SetThreadPriority()
-    {
-        struct sched_param param = {0};
-        param.sched_priority = SCHED_PRIORITY;
-        if (sched_setscheduler(0, SCHED_FIFO, &param) != 0) {
-            RS_LOGE("RSOffscreenRender Couldn't set SCHED_FIFO.");
-        } else {
-            RS_LOGI("RSOffscreenRender set SCHED_FIFO succeed.");
-        }
-        return;
-    }
-}
+#ifdef RES_BASE_SCHED_ENABLE
+#include "res_type.h"
+#include "res_sched_client.h"
 #endif
+
+namespace OHOS::Rosen {
 
 RSOffscreenRenderThread& RSOffscreenRenderThread::Instance()
 {
-#ifndef ROSEN_CROSS_PLATFORM
-    SetThreadPriority();
-#endif
     static RSOffscreenRenderThread instance;
     return instance;
 }
@@ -51,6 +37,23 @@ RSOffscreenRenderThread::RSOffscreenRenderThread()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSOffscreenRender");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+
+#ifdef RES_BASE_SCHED_ENABLE
+    PostTask([this]() {
+        std::string strPid = std::to_string(getpid());
+        std::string strTid = std::to_string(gettid());
+        const uint32_t RS_SUB_QOS_LEVEL = 7;
+        std::string strQos = std::to_string(RS_SUB_QOS_LEVEL);
+        std::unordered_map<std::string, std::string> mapPayload;
+        mapPayload["pid"] = strPid;
+        mapPayload[strTid] = strQos;
+        mapPayload["bundleName"] = "RSOffscreenRenderThread";
+        uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
+        int64_t value = 0;
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+    });
+#endif
+
     if (!RSSystemProperties::GetUniRenderEnabled()) {
         return;
     }

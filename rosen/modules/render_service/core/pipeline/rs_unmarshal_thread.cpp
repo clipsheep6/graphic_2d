@@ -22,6 +22,11 @@
 #include "transaction/rs_transaction_data.h"
 #include "rs_profiler.h"
 
+#ifdef RES_SCHED_ENABLE
+#include "res_type.h"
+#include "res_sched_client.h"
+#endif
+
 namespace OHOS::Rosen {
 namespace {
     constexpr int REQUEST_FRAME_AWARE_ID = 100001;
@@ -39,6 +44,21 @@ void RSUnmarshalThread::Start()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSUnmarshalThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+#ifdef RES_SCHED_ENABLE
+    PostTask([this]() {
+        std::string strPid = std::to_string(getpid());
+        std::string strTid = std::to_string(gettid());
+        const uint32_t RS_SUB_QOS_LEVEL = 7;
+        std::string strQos = std::to_string(RS_SUB_QOS_LEVEL);
+        std::unordered_map<std::string, std::string> mapPayload;
+        mapPayload["pid"] = strPid;
+        mapPayload[strTid] = strQos;
+        mapPayload["bundleName"] = "RSUnmarshalThread";
+        uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_THREAD_QOS_CHANGE;
+        int64_t value = 0;
+        OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, mapPayload);
+    });
+#endif
 }
 
 void RSUnmarshalThread::PostTask(const std::function<void()>& task)

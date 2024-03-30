@@ -131,7 +131,6 @@ public:
     int32_t SetScreenRefreshRate(ScreenId id, int32_t sceneId, int32_t rate);
     static int32_t SetRateAndResolution(ScreenId id, int32_t sceneId, int32_t rate, int32_t width, int32_t height);
     int32_t SetRefreshRateMode(RefreshRateMode refreshRateMode);
-    int32_t SetTouchIsEnable(bool touchEnable);
     bool GetTouchIsEnable();
 
     void NotifyScreenPowerStatus(ScreenId id, ScreenPowerStatus status);

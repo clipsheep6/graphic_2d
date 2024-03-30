@@ -35,7 +35,7 @@ public:
 
     void RegisterHgmConfigChangeCallback(pid_t pid, const sptr<RSIHgmConfigChangeCallback>& callback);
     void RegisterHgmRefreshRateModeChangeCallback(pid_t pid, const sptr<RSIHgmConfigChangeCallback>& callback);
-    bool RegisterHgmTouchEnableChangeCallback(const sptr<RSIHgmConfigChangeCallback>& callback);
+    void RegisterHgmTouchEnableChangeCallback(const sptr<RSIHgmConfigChangeCallback>& callback);
     void SyncHgmConfigChangeCallback();
     void SyncRefreshRateModeChangeCallback(int32_t refreshRateMode);
     void SyncTouchEnableChangeCallback(bool touchEnable);

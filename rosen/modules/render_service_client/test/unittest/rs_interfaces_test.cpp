@@ -1295,7 +1295,9 @@ HWTEST_F(RSInterfacesTest, NotifyTouchEvent001, Function | SmallTest | Level2)
 {
     ASSERT_NE(rsInterfaces, nullptr);
     int32_t touchStatus = 0;
-    rsInterfaces->NotifyTouchEvent(touchStatus);
+    std::string programName = " ";
+    int32_t pid = 0;
+    rsInterfaces->NotifyTouchEvent(touchStatus, programName, pid);
     ASSERT_NE(rsInterfaces, nullptr);
 }
 

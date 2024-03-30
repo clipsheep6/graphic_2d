@@ -32,6 +32,7 @@
 #include "hgm_screen.h"
 #include "hgm_task_handle_thread.h"
 #include "hgm_vsync_generator_controller.h"
+#include "hgm_touch_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -58,7 +59,7 @@ public:
     void HandleLightFactorStatus(bool isSafe);
     void HandlePackageEvent(uint32_t listSize, const std::vector<std::string>& packageList);
     void HandleRefreshRateEvent(pid_t pid, const EventInfo& eventInfo);
-    void HandleTouchEvent(int32_t touchStatus);
+    void HandleTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid);
 
     void CleanVote(pid_t pid);
     RefreshRateMode GetCurRefreshRateMode() const { return curRefreshRateMode_; };
@@ -86,6 +87,7 @@ public:
         sptr<VSyncController> appController, sptr<VSyncGenerator> vsyncGenerator);
     std::shared_ptr<uint32_t> GetPendingRefreshRate();
     void ResetPendingRefreshRate();
+    std::shared_ptr<HgmTouchManager> touchMgr_ = std::make_unique<HgmTouchManager>();
 private:
     void Reset();
     bool CollectFrameRateChange(FrameRateRange finalRange, std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker,

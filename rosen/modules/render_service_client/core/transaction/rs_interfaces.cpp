@@ -485,9 +485,9 @@ void RSInterfaces::NotifyRefreshRateEvent(const EventInfo& eventInfo)
     renderServiceClient_->NotifyRefreshRateEvent(eventInfo);
 }
 
-void RSInterfaces::NotifyTouchEvent(int32_t touchStatus)
+void RSInterfaces::NotifyTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid)
 {
-    renderServiceClient_->NotifyTouchEvent(touchStatus);
+    renderServiceClient_->NotifyTouchEvent(touchStatus, programName, pid);
 }
 
 void RSInterfaces::DisableCacheForRotation()

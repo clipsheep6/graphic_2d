@@ -1147,11 +1147,11 @@ void RSRenderServiceClient::NotifyRefreshRateEvent(const EventInfo& eventInfo)
     }
 }
 
-void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceClient::NotifyTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid)
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService != nullptr) {
-        renderService->NotifyTouchEvent(touchStatus);
+        renderService->NotifyTouchEvent(touchStatus, programName, pid);
     }
 }
 

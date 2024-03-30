@@ -211,16 +211,11 @@ void HgmCore::RegisterTouchEnableChangeCallback(const TouchEnableChangeCallback&
     }
 }
 
-int32_t HgmCore::SetTouchIsEnable(bool touchEnable)
-{
-    touchEnable_ = touchEnable;
-    return EXEC_SUCCESS;
-}
-
 bool HgmCore::GetTouchIsEnable()
 {
     return touchEnable_;
 }
+
 int32_t HgmCore::SetRateAndResolution(ScreenId id, int32_t sceneId, int32_t rate, int32_t width, int32_t height)
 {
     // reserved

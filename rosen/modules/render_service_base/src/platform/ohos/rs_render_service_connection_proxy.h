@@ -196,7 +196,7 @@ public:
 
     void NotifyRefreshRateEvent(const EventInfo& eventInfo) override;
 
-    void NotifyTouchEvent(int32_t touchStatus) override;
+    void NotifyTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid) override;
 
     void ReportEventResponse(DataBaseRs info) override;
 

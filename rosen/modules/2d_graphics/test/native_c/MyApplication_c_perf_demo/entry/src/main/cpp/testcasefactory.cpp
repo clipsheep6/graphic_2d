@@ -110,6 +110,10 @@ namespace {
             {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
             {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
             {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
+            {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskOpaque); }},
+            {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskBlack); }},
+            {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
+            {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
 
             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
             {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
@@ -202,6 +206,10 @@ namespace {
             {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
             {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
             {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
+            {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskOpaque); }},
+            {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskBlack); }},
+            {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
+            {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
             {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
              //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.

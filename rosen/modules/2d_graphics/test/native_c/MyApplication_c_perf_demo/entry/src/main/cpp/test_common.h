@@ -27,4 +27,6 @@ protected:
     uint32_t a;
     uint32_t b;
 };
+
+uint32_t color_to_565(uint32_t color);
 #endif // TEST_COMMON_H

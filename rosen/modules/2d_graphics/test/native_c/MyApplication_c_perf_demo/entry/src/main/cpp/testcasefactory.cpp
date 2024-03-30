@@ -124,6 +124,8 @@ namespace {
             //DM
             {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},
             {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
+            {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},
+
 
             
 

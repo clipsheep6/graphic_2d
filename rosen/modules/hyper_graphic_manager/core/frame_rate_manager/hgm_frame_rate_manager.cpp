@@ -53,8 +53,8 @@ namespace {
         "VOTER_MULTI_APP",
 
         "VOTER_XML",
-        "VOTER_LTPO",
         "VOTER_TOUCH",
+        "VOTER_LTPO",
         "VOTER_SCENE",
         "VOTER_TEMP",
         "VOTER_IDLE"
@@ -97,6 +97,11 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
         }
     });
     controller_ = std::make_shared<HgmVSyncGeneratorController>(rsController, appController, vsyncGenerator);
+
+    touchMgr_->touchMachine_.RegisterIdleEventCallback([this] () {
+        DeliverRefreshRateVote(0, "VOTER_TOUCH", REMOVE_VOTE);
+        touchMgr_->StopRSTimer(curScreenId_);
+    });
 }
 
 void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
@@ -149,6 +154,7 @@ void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
+            touchMgr_->rsIdleUpdateCallback_(false);
             FrameRateReport();
         }
     }
@@ -187,8 +193,12 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     if (idleTimerExpired) {
         // idle in ltps
         HandleIdleEvent(ADD_VOTE);
+    } else {
+        StartScreenTimer(curScreenId_, IDLE_TIMER_EXPIRED, nullptr, [this]() {
+            forceUpdateCallback_(true, false);
+        });
     }
-
+    
     FrameRateRange finalRange;
     FrameRateVoteInfo frameRateVoteInfo;
     VoteRange voteResult = ProcessRefreshRateVote(frameRateVoteInfo);
@@ -206,6 +216,7 @@ void HgmFrameRateManager::UniProcessDataForLtps(bool idleTimerExpired)
     pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
     if (currRefreshRate_ != hgmCore.GetPendingScreenRefreshRate()) {
         forceUpdateCallback_(false, true);
+        touchMgr_->rsIdleUpdateCallback_(false);
         FrameRateReport();
     }
     ReportHiSysEvent(frameRateVoteInfo);
@@ -263,6 +274,7 @@ void HgmFrameRateManager::HandleFrameRateChangeForLTPO(uint64_t timestamp, bool 
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
         if (currRefreshRate_ != HgmCore::Instance().GetPendingScreenRefreshRate()) {
             forceUpdateCallback_(false, true);
+            touchMgr_->rsIdleUpdateCallback_(false);
             FrameRateReport();
         }
     };
@@ -524,7 +536,7 @@ void HgmFrameRateManager::HandleRefreshRateEvent(pid_t pid, const EventInfo& eve
     }
 }
 
-void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus)
+void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid)
 {
     HGM_LOGD("HandleTouchEvent status:%{public}d", touchStatus);
     if (!isTouchEnable_) {
@@ -533,12 +545,17 @@ void HgmFrameRateManager::HandleTouchEvent(int32_t touchStatus)
 
     if (touchStatus == TOUCH_DOWN) {
         DeliverRefreshRateVote(0, "VOTER_TOUCH", ADD_VOTE, touchFps_, touchFps_);
+        HGM_LOGI("[touch manager] Update to target %{public}d fps", touchFps_);
         StopScreenTimer(curScreenId_);
+        touchMgr_->StopRSTimer(curScreenId_);
+        touchMgr_->touchMachine_.TouchEventHandle(TouchEvent::DOWN);
     } else {
-        // idle detect used in ltps
+        // detect touch up
+        HGM_LOGI("[touch manager] touch up detect");
         StartScreenTimer(curScreenId_, IDLE_AFTER_TOUCH_UP, nullptr, [this]() {
             forceUpdateCallback_(true, false);
         });
+        touchMgr_->touchMachine_.TouchEventHandle(TouchEvent::UP);
     }
 }
 
@@ -546,8 +563,10 @@ void HgmFrameRateManager::HandleIdleEvent(bool isIdle)
 {
     if (isIdle) {
         HGM_LOGI("HandleIdleEvent status:%{public}u", isIdle);
-        DeliverRefreshRateVote(0, "VOTER_TOUCH", REMOVE_VOTE);
-        DeliverRefreshRateVote(0, "VOTER_IDLE", ADD_VOTE, idleFps_, idleFps_);
+        // fix for down event but not refreshing frames condition
+        if (touchMgr_->touchMachine_.GetState() != TouchState::DOWN) {
+            DeliverRefreshRateVote(0, "VOTER_IDLE", ADD_VOTE, idleFps_, idleFps_);
+        }
     } else {
         DeliverRefreshRateVote(0, "VOTER_IDLE", REMOVE_VOTE);
     }
@@ -674,6 +693,7 @@ void HgmFrameRateManager::MarkVoteChange()
     isRefreshNeed_ = true;
     if (forceUpdateCallback_ != nullptr) {
         forceUpdateCallback_(false, true);
+        touchMgr_->rsIdleUpdateCallback_(false);
     }
 }
 

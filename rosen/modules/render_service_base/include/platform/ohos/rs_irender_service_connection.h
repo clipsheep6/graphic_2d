@@ -218,7 +218,7 @@ public:
 
     virtual void NotifyRefreshRateEvent(const EventInfo& eventInfo) = 0;
 
-    virtual void NotifyTouchEvent(int32_t touchStatus) = 0;
+    virtual void NotifyTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid) = 0;
 
     virtual void ReportEventResponse(DataBaseRs info) = 0;
 

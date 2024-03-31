@@ -213,7 +213,7 @@ public:
 
     void NotifyRefreshRateEvent(const EventInfo& eventInfo);
 
-    void NotifyTouchEvent(int32_t touchStatus);
+    void NotifyTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid);
 
     void ReportEventResponse(DataBaseRs info);
 

@@ -30,20 +30,20 @@ namespace {
 void TouchStateMachine::TouchEventHandle(TouchEvent event)
 {
     switch (event) {
-    case TouchEvent::DOWN:
-        TouchDown();
-        break;
-    case TouchEvent::UP:
-        TouchUp();
-        break;
-    case TouchEvent::THREE_SECONDS_TIMEOUT:
-        TouchUpTimeout();
-        break;
-    case TouchEvent::RS_TIMEOUT:
-        RSIdleTimeout();
-        break;
-    default:
-        break;
+        case TouchEvent::DOWN:
+            TouchDown();
+            break;
+        case TouchEvent::UP:
+            TouchUp();
+            break;
+        case TouchEvent::THREE_SECONDS_TIMEOUT:
+            TouchUpTimeout();
+            break;
+        case TouchEvent::RS_TIMEOUT:
+            RSIdleTimeout();
+            break;
+        default:
+            break;
     }
 }
 
@@ -85,7 +85,7 @@ void TouchStateMachine::TouchUpTimeout()
     }
 }
 
-void TouchStateMachine::RSIdleTimeout() 
+void TouchStateMachine::RSIdleTimeout()
 {
     if (currentState == TouchState::UP) {
         std::lock_guard<std::mutex> lock(touchStateMutex_);

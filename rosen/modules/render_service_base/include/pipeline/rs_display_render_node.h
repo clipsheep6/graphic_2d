@@ -281,6 +281,14 @@ public:
         std::unique_lock<std::mutex> lock(mtx_);
         cacheImgForCapture_ = cacheImgForCapture;
     }
+    std::shared_ptr<Drawing::Image> GetCacheImgForCapture2() {
+        std::unique_lock<std::mutex> lock(mtx_);
+        return cacheImgForCapture2_;
+    }
+    void SetCacheImgForCapture2(std::shared_ptr<Drawing::Image> cacheImgForCapture) {
+        std::unique_lock<std::mutex> lock(mtx_);
+        cacheImgForCapture2_ = cacheImgForCapture;
+    }
     NodeId GetRootIdOfCaptureWindow() {
         return rootIdOfCaptureWindow_;
     }
@@ -326,6 +334,7 @@ private:
 
     // Use in screen recording optimization
     std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
+    std::shared_ptr<Drawing::Image> cacheImgForCapture2_ = nullptr;
     NodeId rootIdOfCaptureWindow_ = INVALID_NODEID;
 
     // Use in vulkan parallel rendering

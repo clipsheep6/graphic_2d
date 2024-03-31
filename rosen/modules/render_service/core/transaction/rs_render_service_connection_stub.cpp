@@ -1295,7 +1295,9 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 break;
             }
             auto touchStatus = data.ReadInt32();
-            NotifyTouchEvent(touchStatus);
+            auto programName = data.ReadString();
+            auto pid = data.ReadUint32();
+            NotifyTouchEvent(touchStatus, programName, pid);
             break;
         }
         case static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::REGISTER_HGM_CFG_CALLBACK) : {

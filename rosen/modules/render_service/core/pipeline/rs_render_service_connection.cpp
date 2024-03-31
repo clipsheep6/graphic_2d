@@ -1169,9 +1169,9 @@ void RSRenderServiceConnection::NotifyRefreshRateEvent(const EventInfo& eventInf
     mainThread_->GetFrameRateMgr()->HandleRefreshRateEvent(remotePid_, eventInfo);
 }
 
-void RSRenderServiceConnection::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceConnection::NotifyTouchEvent(int32_t touchStatus, const std::string& programName, uint32_t pid)
 {
-    mainThread_->GetFrameRateMgr()->HandleTouchEvent(touchStatus);
+    mainThread_->GetFrameRateMgr()->HandleTouchEvent(touchStatus, programName, pid);
 }
 
 void RSRenderServiceConnection::ReportEventResponse(DataBaseRs info)

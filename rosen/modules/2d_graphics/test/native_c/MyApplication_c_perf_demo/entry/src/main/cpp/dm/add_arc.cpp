@@ -57,7 +57,7 @@ void AddArcMeas::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasDrawOval(canvas, oval);
     
     for (float deg = 0; deg < 360; deg += 10) {
-        const float rad = (deg)/182*M_PI;
+        const float rad = (deg)/180*M_PI;
         float rx = cos(rad) * R;
         float ry = sin(rad) * R;
         OH_Drawing_CanvasAttachPen(canvas, pen);
@@ -68,11 +68,8 @@ void AddArcMeas::OnTestFunction(OH_Drawing_Canvas* canvas)
         float arcLen = rad * R;
         
         OH_Drawing_CanvasAttachPen(canvas, measPen);
+        if(deg != 0)
         OH_Drawing_CanvasDrawLine(canvas, 0, 0, rx, ry);//没有getPosTan工具函数，先用已有的point替代
-//        SkPoint pos; 
-//        if (meas.getPosTan(arcLen, &pos, nullptr)) {
-//            canvas->drawLine({0, 0}, pos, measPaint);
-//        }
         OH_Drawing_PathDestroy(meas);
     }
     OH_Drawing_CanvasDetachPen(canvas);

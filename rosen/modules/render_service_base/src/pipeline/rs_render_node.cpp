@@ -775,8 +775,6 @@ void RSRenderNode::DumpDrawCmdModifier(std::string& propertyDesc, RSModifierType
     }
 }
 
-<<<<<<< HEAD
-=======
 void RSRenderNode::ResetIsOnlyBasicGeoTransform()
 {
     isOnlyBasicGeoTransform_ = true;
@@ -798,7 +796,6 @@ void RSRenderNode::SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool i
     SetGeoUpdateDelay(accumGeoDirty);
 }
 
->>>>>>> zhangpeng/master
 // attention: current all base node's dirty ops causing content dirty
 void RSRenderNode::SetContentDirty()
 {
@@ -820,8 +817,6 @@ void RSRenderNode::SetDirty(bool forceAddToActiveList)
     dirtyStatus_ = NodeDirty::DIRTY;
 }
 
-<<<<<<< HEAD
-=======
 #ifdef DDGR_ENABLE_FEATURE_OPINC
 void RSRenderNode::SetDirtyByOnTree(bool forceAddToActiveList)
 {
@@ -848,7 +843,6 @@ void RSRenderNode::SetClean()
     dirtyStatus_ = NodeDirty::CLEAN;
 }
 
->>>>>>> zhangpeng/master
 void RSRenderNode::CollectSurface(
     const std::shared_ptr<RSRenderNode>& node, std::vector<RSRenderNode::SharedPtr>& vec, bool isUniRender,
     bool onlyFirstLevel)
@@ -1092,11 +1086,6 @@ bool RSRenderNode::IsClipBound() const
     return GetRenderProperties().GetClipBounds() || GetRenderProperties().GetClipToFrame();
 }
 
-<<<<<<< HEAD
-bool RSRenderNode::Update(
-    RSDirtyRegionManager& dirtyManager, const std::shared_ptr<RSRenderNode>& parent, bool parentDirty,
-    std::optional<RectI> clipRect)
-=======
 const std::shared_ptr<RSRenderContent> RSRenderNode::GetRenderContent() const
 {
     return renderContent_;
@@ -1280,7 +1269,6 @@ void RSRenderNode::UpdateDirtyRegionInfoForDFX(RSDirtyRegionManager& dirtyManage
 
 bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager,
     const std::shared_ptr<RSRenderNode>& parent, bool parentDirty, std::optional<RectI> clipRect)
->>>>>>> zhangpeng/master
 {
     // no need to update invisible nodes
     if (!ShouldPaint() && !isLastVisible_) {
@@ -1845,23 +1833,7 @@ void RSRenderNode::ApplyModifiers()
     OnApplyModifiers();
     UpdateShouldPaint();
 
-<<<<<<< HEAD
-#if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    if (auto& manager = GetRenderProperties().GetFilterCacheManager(false);
-        manager != nullptr &&
-        (dirtyTypes_.test(static_cast<size_t>(RSModifierType::BACKGROUND_COLOR)) ||
-        dirtyTypes_.test(static_cast<size_t>(RSModifierType::BG_IMAGE)) ||
-        dirtyTypes_.test(static_cast<size_t>(RSModifierType::BACKGROUND_SHADER)))) {
-        manager->InvalidateCache();
-    }
-    if (auto& manager = GetRenderProperties().GetFilterCacheManager(true)) {
-        manager->InvalidateCache();
-    }
-
-    // Generate drawable
-=======
     // Temporary code, copy matrix into render params
->>>>>>> zhangpeng/master
     UpdateDrawableVec();
     UpdateDrawableVecV2();
 
@@ -2089,14 +2061,11 @@ void RSRenderNode::SetSharedTransitionParam(const std::shared_ptr<SharedTransiti
     }
 }
 
-<<<<<<< HEAD
-=======
 const std::shared_ptr<SharedTransitionParam>& RSRenderNode::GetSharedTransitionParam() const
 {
     return sharedTransitionParam_;
 }
 
->>>>>>> zhangpeng/master
 void RSRenderNode::SetGlobalAlpha(float alpha)
 {
     if (globalAlpha_ == alpha) {
@@ -3265,30 +3234,17 @@ bool RSRenderNode::HasMustRenewedInfo() const
     return mustRenewedInfo_;
 }
 
-<<<<<<< HEAD
-void RSRenderNode::SetUseEffectNodes(bool val)
-{
-    hasEffectNode_ = val;
-}
-
-bool RSRenderNode::HasUseEffectNodes() const
-{
-    return hasEffectNode_;
-}
-
-void RSRenderNode::ExcuteSurfaceCaptureCommand()
+void RSRenderNode::ExecuteSurfaceCaptureCommand()
 {
     auto task = RSOffscreenRenderThread::Instance().GetCaptureTask(GetId());
     if (task) {
         RSOffscreenRenderThread::Instance().PostTask(task);
-        commandExcuted_ = false;
+        commandExecuted_ = false;
     } else {
-        commandExcuted_ = true;
+        commandExecuted_ = true;
     }
 }
 
-=======
->>>>>>> zhangpeng/master
 void RSRenderNode::SetVisitedCacheRootIds(const std::unordered_set<NodeId>& visitedNodes)
 {
     visitedCacheRoots_ = visitedNodes;

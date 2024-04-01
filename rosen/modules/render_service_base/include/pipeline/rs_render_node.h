@@ -81,15 +81,8 @@ public:
 
     void AddChild(SharedPtr child, int index = -1);
     void SetContainBootAnimation(bool isContainBootAnimation);
-<<<<<<< HEAD
-    inline bool GetContainBootAnimation() const
-    {
-        return isContainBootAnimation_;
-    }
-=======
     bool GetContainBootAnimation() const;
 
->>>>>>> zhangpeng/master
     virtual void SetBootAnimation(bool isBootAnimation);
     virtual bool GetBootAnimation() const;
 
@@ -122,20 +115,9 @@ public:
     // if there is any new dirty op, check it
     bool IsContentDirty() const;
     void SetContentDirty();
-<<<<<<< HEAD
-    inline void ResetIsOnlyBasicGeoTransform()
-    {
-        isOnlyBasicGeoTransform_ = true;
-    }
-    inline bool IsOnlyBasicGeoTransform() const
-    {
-        return isOnlyBasicGeoTransform_;
-    }
-=======
     void ResetIsOnlyBasicGeoTransform();
     bool IsOnlyBasicGeoTransform() const;
     void SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool isDirty, bool accumGeoDirty);
->>>>>>> zhangpeng/master
 
     inline WeakPtr GetParent() const
     {
@@ -412,15 +394,15 @@ public:
 
     bool HasFilter() const;
     void SetHasFilter(bool hasFilter);
-    void ExcuteSurfaceCaptureCommand();
-    bool GetCommandExcuted() const
+    void ExecuteSurfaceCaptureCommand();
+    bool GetCommandExecuted() const
     {
-        return commandExcuted_;
+        return commandExecuted_;
     }
 
-    void SetCommandExcuted(bool commandExcuted)
+    void SetCommandExecuted(bool commandExecuted)
     {
-        commandExcuted_ = commandExcuted;
+        commandExecuted_ = commandExecuted;
     }
 
     std::recursive_mutex& GetSurfaceMutex() const;
@@ -499,18 +481,8 @@ public:
 
     /////////////////////////////////////////////
 
-<<<<<<< HEAD
-    // shared transition params, in format <InNodeId, target weakPtr>, nullopt means no transition
-    using SharedTransitionParam = std::pair<NodeId, std::weak_ptr<RSRenderNode>>;
-    void SetSharedTransitionParam(const std::optional<SharedTransitionParam>&& sharedTransitionParam);
-    inline const std::optional<SharedTransitionParam>& GetSharedTransitionParam() const
-    {
-        return sharedTransitionParam_;
-    }
-=======
     void SetSharedTransitionParam(const std::shared_ptr<SharedTransitionParam>& sharedTransitionParam);
     const std::shared_ptr<SharedTransitionParam>& GetSharedTransitionParam() const;
->>>>>>> zhangpeng/master
 
     void SetGlobalAlpha(float alpha);
     float GetGlobalAlpha() const;
@@ -571,12 +543,6 @@ public:
     int32_t coldDownCounter_ = 0;
 #endif
 
-<<<<<<< HEAD
-    inline const std::shared_ptr<RSRenderContent> GetRenderContent() const
-    {
-        return renderContent_;
-    }
-=======
     const std::shared_ptr<RSRenderContent> GetRenderContent() const;
 
     void MarkParentNeedRegenerateChildren() const;
@@ -627,7 +593,6 @@ public:
         return context_;
     }
 
->>>>>>> zhangpeng/master
 protected:
     virtual void OnApplyModifiers() {}
 
@@ -743,9 +708,7 @@ private:
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
-<<<<<<< HEAD
     void UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion);
-=======
     void CollectAndUpdateLocalShadowRect();
     void CollectAndUpdateLocalOutlineRect();
     void CollectAndUpdateLocalPixelStretchRect();
@@ -754,7 +717,6 @@ private:
     bool CheckAndUpdateGeoTrans(std::shared_ptr<RSObjAbsGeometry>& geoPtr);
     void UpdateAbsDirtyRegion(RSDirtyRegionManager& dirtyManager, std::optional<RectI> clipRect = std::nullopt);
 
->>>>>>> zhangpeng/master
     void UpdateDirtyRegion(RSDirtyRegionManager& dirtyManager, bool geoDirty, std::optional<RectI> clipRect);
     void UpdateFullScreenFilterCacheRect(RSDirtyRegionManager& dirtyManager, bool isForeground) const;
     void ValidateLightResources();
@@ -802,7 +764,7 @@ private:
     // it should be recorded and update if marked dirty again
     bool geoUpdateDelay_ = false;
 
-    std::atomic<bool> commandExcuted_ = false;
+    std::atomic<bool> commandExecuted_ = false;
     std::unordered_set<NodeId> curCacheFilterRects_ = {};
     std::unordered_set<NodeId> visitedCacheRoots_ = {};
     // collect subtree's surfaceNode including itself
@@ -913,14 +875,11 @@ private:
     friend class RSRenderNodeMap;
     friend class RSRenderThread;
     friend class RSRenderTransition;
-<<<<<<< HEAD
+    friend class DrawableV2::RSRenderNodeDrawableAdapter;
+    friend class DrawableV2::RSRenderNodeShadowDrawable;
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
 #endif
-=======
-    friend class DrawableV2::RSRenderNodeDrawableAdapter;
-    friend class DrawableV2::RSRenderNodeShadowDrawable;
->>>>>>> zhangpeng/master
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

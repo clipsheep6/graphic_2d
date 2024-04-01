@@ -340,11 +340,8 @@ private:
     std::map<NodeId, RectI> lastFrameSurfacePos_;
     std::map<NodeId, RectI> currentFrameSurfacePos_;
     std::shared_ptr<RSDirtyRegionManager> dirtyManager_ = nullptr;
-<<<<<<< HEAD
     std::vector<std::string> windowsName_;
-=======
     std::shared_ptr<RSDirtyRegionManager> syncDirtyManager_ = nullptr;
->>>>>>> zhangpeng/master
 
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
     std::mutex mtx_;

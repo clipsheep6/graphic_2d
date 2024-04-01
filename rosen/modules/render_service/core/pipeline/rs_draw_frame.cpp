@@ -16,23 +16,19 @@
 #include "pipeline/rs_draw_frame.h"
 
 #include "rs_trace.h"
-#include "pipeline/rs_uni_render_thread.h"
 
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uifirst_manager.h"
+#include "pipeline/rs_uni_render_thread.h"
+
 
 namespace OHOS {
 namespace Rosen {
-RSDrawFrame::RSDrawFrame() : unirenderInstance_(RSUniRenderThread::Instance())
-                           , rsParallelType_(RSSystemParameters::GetRsParallelType())
-{
+RSDrawFrame::RSDrawFrame()
+    : unirenderInstance_(RSUniRenderThread::Instance()), rsParallelType_(RSSystemParameters::GetRsParallelType())
+{}
 
-}
-
-RSDrawFrame::~RSDrawFrame() noexcept
-{
-
-}
+RSDrawFrame::~RSDrawFrame() noexcept {}
 
 void RSDrawFrame::SetRenderThreadParams(std::unique_ptr<RSRenderThreadParams>& stagingRenderThreadParams)
 {
@@ -60,9 +56,7 @@ void RSDrawFrame::PostAndWait()
     RS_TRACE_NAME_FMT("PostAndWait, parallel type %d", static_cast<int>(rsParallelType_));
     switch (rsParallelType_) {
         case RsParallelType::RS_PARALLEL_TYPE_SYNC: { // wait until render finish in render thread
-            unirenderInstance_.PostSyncTask([this]() {
-                RenderFrame();
-            });
+            unirenderInstance_.PostSyncTask([this]() { RenderFrame(); });
             break;
         }
         case RsParallelType::RS_PARALLEL_TYPE_SINGLE_THREAD: { // render in main thread
@@ -73,11 +67,9 @@ void RSDrawFrame::PostAndWait()
         default: {
             std::unique_lock<std::mutex> frameLock(frameMutex_);
             canUnblockMainThread = false;
-            unirenderInstance_.PostTask([this]() {
-                RenderFrame();
-            });
+            unirenderInstance_.PostTask([this]() { RenderFrame(); });
 
-            frameCV_.wait(frameLock, [this] {return canUnblockMainThread;});
+            frameCV_.wait(frameLock, [this] { return canUnblockMainThread; });
         }
     }
 }
@@ -118,4 +110,4 @@ void RSDrawFrame::Render()
 }
 
 } // namespace Rosen
-} // namespace OHOS 
+} // namespace OHOS

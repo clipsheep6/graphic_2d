@@ -24,15 +24,9 @@
 #include <set>
 
 #include "rs_base_render_engine.h"
-<<<<<<< HEAD
-#ifdef RS_PROFILER_ENABLED
-#include "rs_profiler_capture_recorder.h"
-#endif
-#include "pipeline/driven_render/rs_driven_render_manager.h"
-=======
+#include "system/rs_system_parameters.h"
 
 #include "params/rs_render_thread_params.h"
->>>>>>> zhangpeng/master
 #include "pipeline/round_corner_display/rs_rcd_render_manager.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
@@ -41,11 +35,13 @@
 #include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "screen_manager/rs_screen_manager.h"
-#include "system/rs_system_parameters.h"
 #include "visitor/rs_node_visitor.h"
-#include "pipeline/rs_recording_canvas.h"
+
 #ifdef DDGR_ENABLE_FEATURE_OPINC
 #include "rs_auto_cache.h"
+#endif
+#ifdef RS_PROFILER_ENABLED
+#include "rs_profiler_capture_recorder.h"
 #endif
 
 class SkPicture;

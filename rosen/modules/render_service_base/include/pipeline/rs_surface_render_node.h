@@ -420,12 +420,8 @@ public:
     void SetForceUIFirstChanged(bool forceUIFirstChanged);
     bool GetForceUIFirstChanged();
 
-<<<<<<< HEAD
     const std::shared_ptr<RSDirtyRegionManager>& GetDirtyManager() const;
-=======
-    std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
-    std::shared_ptr<RSDirtyRegionManager> GetSyncDirtyManager() const;
->>>>>>> zhangpeng/master
+    const std::shared_ptr<RSDirtyRegionManager>& GetSyncDirtyManager() const;
     std::shared_ptr<RSDirtyRegionManager> GetCacheSurfaceDirtyManager() const;
 
     void SetSrcRect(const RectI& rect)
@@ -1003,7 +999,6 @@ public:
         return !cornerRadius.IsZero();
     }
 
-<<<<<<< HEAD
     void SetBufferRelMatrix(Drawing::Matrix matrix)
     {
         bufferRelMatrix_ = matrix;
@@ -1014,10 +1009,8 @@ public:
         return bufferRelMatrix_;
     }
 
-=======
 protected:
     void OnSync() override;
->>>>>>> zhangpeng/master
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -1236,13 +1229,10 @@ private:
     std::atomic<bool> hasUnSubmittedOccludedDirtyRegion_ = false;
     RectI historyUnSubmittedOccludedDirtyRegion_;
     bool forceUIFirstChanged_ = false;
-<<<<<<< HEAD
     Drawing::Matrix bufferRelMatrix_ = Drawing::Matrix();
-=======
     bool forceUIFirst_ = false;
     bool hasTransparentSurface_ = false;
     bool lastFrameUifirstFlag_ = false;
->>>>>>> zhangpeng/master
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

@@ -106,13 +106,9 @@ enum class RSIRenderServiceConnectionInterfaceCode : CodeUnderlyingType {
     SET_VIRTUAL_SCREEN_USING_STATUS,
     REFRESH_RATE_MODE_CHANGE_CALLBACK,
     GET_CURRENT_DIRTY_REGION_INFO,
-<<<<<<< HEAD
     SET_CURTAIN_SCREEN_USING_STATUS,
     REGISTER_TYPEFACE,
     UNREGISTER_TYPEFACE,
-=======
-    SET_CURTAIN_SCREEN_USING_STATUS
->>>>>>> zhangpeng/master
 };
 } // namespace Rosen
 } // namespace OHOS

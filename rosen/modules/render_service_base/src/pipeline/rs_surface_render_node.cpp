@@ -157,8 +157,6 @@ void RSSurfaceRenderNode::UpdateSrcRect(const Drawing::Canvas& canvas, const Dra
     }
 }
 
-<<<<<<< HEAD
-=======
 void RSSurfaceRenderNode::UpdateHwcDisabledBySrcRect(bool hasRotation)
 {
 #ifndef ROSEN_CROSS_PLATFORM
@@ -183,7 +181,6 @@ bool RSSurfaceRenderNode::IsHardwareDisabledBySrcRect() const
     return isHardwareForcedDisabledBySrcRect_;
 }
 
->>>>>>> zhangpeng/master
 bool RSSurfaceRenderNode::IsYUVBufferFormat() const
 {
 #ifndef ROSEN_CROSS_PLATFORM
@@ -855,7 +852,7 @@ void RSSurfaceRenderNode::NotifyRTBufferAvailable(bool isTextureExportNode)
 
     if (isRefresh_) {
         ROSEN_LOGI("RSSurfaceRenderNode::NotifyRTBufferAvailable nodeId = %{public}" PRIu64 " RenderThread", GetId());
-        RSRTRefreshCallback::Instance().ExcuteRefresh();
+        RSRTRefreshCallback::Instance().ExecuteRefresh();
     }
 
     {

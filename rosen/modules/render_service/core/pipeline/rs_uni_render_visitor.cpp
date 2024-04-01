@@ -416,11 +416,7 @@ void RSUniRenderVisitor::PrepareChildren(RSRenderNode& node)
         SetNodeCacheChangeStatus(node);
     }
 
-<<<<<<< HEAD
-=======
     node.SetSubTreeDirty(false);
-    curCornerRadius_ = std::move(tempCornerRadius);
->>>>>>> zhangpeng/master
     curAlpha_ = alpha;
     // restore environment variables
 }
@@ -628,17 +624,11 @@ void RSUniRenderVisitor::ProcessSubSurfaceNodes(RSSurfaceRenderNode& node)
 
 void RSUniRenderVisitor::SetNodeCacheChangeStatus(RSRenderNode& node)
 {
-<<<<<<< HEAD
-    if (node.ChildHasFilter()) {
+    if (node.ChildHasVisibleFilter()) {
         auto directParent = node.GetParent().lock();
         if (directParent != nullptr) {
-            directParent->SetChildHasFilter(true);
+            directParent->SetChildHasVisibleFilter(true);
         }
-=======
-    auto directParent = node.GetParent().lock();
-    if (directParent != nullptr && node.ChildHasVisibleFilter()) {
-        directParent->SetChildHasVisibleFilter(true);
->>>>>>> zhangpeng/master
     }
     auto drawingCacheType = node.GetDrawingCacheType();
     if (!isDrawingCacheEnabled_ ||
@@ -892,14 +882,6 @@ void RSUniRenderVisitor::ResetCurSurfaceInfoAsUpperSurfaceParent(RSSurfaceRender
     if (curSurfaceNode_ == nullptr || curSurfaceNode_->GetId() != node.GetId()) {
         return;
     }
-<<<<<<< HEAD
-    if (auto parentInstance = directParent->GetInstanceRootNode()) {
-        // in case leashwindow is not directParent
-        auto surfaceParent = parentInstance->ReinterpretCastTo<RSSurfaceRenderNode>();
-        if (surfaceParent && surfaceParent->IsLeashOrMainWindow()) {
-            curSurfaceNode_ = surfaceParent;
-            curSurfaceDirtyManager_ = surfaceParent->GetDirtyManager();
-=======
     if (auto directParent = node.GetParent().lock()) {
         if (auto parentInstance = directParent->GetInstanceRootNode()) {
             // in case leashwindow is not directParent
@@ -913,7 +895,6 @@ void RSUniRenderVisitor::ResetCurSurfaceInfoAsUpperSurfaceParent(RSSurfaceRender
             curSurfaceNode_ = nullptr;
             curSurfaceDirtyManager_ = nullptr;
             filterInGlobal_ = true;
->>>>>>> zhangpeng/master
         }
     }
 }
@@ -2628,51 +2609,6 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
     auto& dirtyManager = isSubNodeOfSurfaceInPrepare_ ? curSurfaceDirtyManager_ : curDisplayDirtyManager_;
     dirtyFlag_ = node.Update(*dirtyManager, nodeParent, dirtyFlag_, prepareClipRect_);
 
-<<<<<<< HEAD
-#if defined(RS_ENABLE_DRIVEN_RENDER)
-    // driven render
-    bool isContentCanvasNode = false;
-    bool isBeforeContentNodeDirty = false;
-    if (drivenInfo_ && currentVisitDisplay_ == 0 && drivenInfo_->isPrepareLeashWinSubTree && node.IsMarkDriven()) {
-        auto drivenCanvasNode = RSDrivenRenderManager::GetInstance().GetContentSurfaceNode()->GetDrivenCanvasNode();
-        if (node.IsMarkDrivenRender() ||
-            (!drivenInfo_->hasDrivenNodeMarkRender &&
-            drivenCanvasNode != nullptr && node.GetId() == drivenCanvasNode->GetId())) {
-            drivenInfo_->prepareInfo.backgroundNode = drivenInfo_->currentRootNode;
-            drivenInfo_->prepareInfo.contentNode = node.shared_from_this();
-            drivenInfo_->drivenUniTreePrepareMode = DrivenUniTreePrepareMode::PREPARE_DRIVEN_NODE;
-            drivenInfo_->prepareInfo.dirtyInfo.contentDirty = false;
-            drivenInfo_->surfaceDirtyManager = curSurfaceDirtyManager_;
-            isContentCanvasNode = true;
-            isBeforeContentNodeDirty = drivenInfo_->prepareInfo.dirtyInfo.nonContentDirty;
-            if (node.IsMarkDrivenRender()) {
-                drivenInfo_->prepareInfo.dirtyInfo.type = DrivenDirtyType::MARK_DRIVEN_RENDER;
-            } else {
-                drivenInfo_->prepareInfo.dirtyInfo.type = DrivenDirtyType::MARK_DRIVEN;
-            }
-        }
-    }
-    if (LIKELY(drivenInfo_)) {
-        drivenInfo_->prepareInfo.dirtyInfo.nonContentDirty =
-            drivenInfo_->prepareInfo.dirtyInfo.nonContentDirty || dirtyFlag_;
-        if (drivenInfo_->drivenUniTreePrepareMode == DrivenUniTreePrepareMode::PREPARE_DRIVEN_NODE_BEFORE) {
-            drivenInfo_->prepareInfo.dirtyInfo.backgroundDirty =
-                drivenInfo_->prepareInfo.dirtyInfo.backgroundDirty || dirtyFlag_;
-        } else if (drivenInfo_->drivenUniTreePrepareMode == DrivenUniTreePrepareMode::PREPARE_DRIVEN_NODE_AFTER) {
-            drivenInfo_->prepareInfo.dirtyInfo.nonContentDirty =
-                drivenInfo_->prepareInfo.dirtyInfo.nonContentDirty || node.GetRenderProperties().NeedFilter();
-        } else {
-            if (node.IsContentChanged()) {
-                drivenInfo_->prepareInfo.dirtyInfo.contentDirty = true;
-            }
-        }
-        if (node.IsContentChanged()) {
-            node.SetIsContentChanged(false);
-        }
-    }
-#endif
-=======
->>>>>>> zhangpeng/master
     const auto& property = node.GetRenderProperties();
     auto& geoPtr = (property.GetBoundsGeometry());
     if (geoPtr == nullptr) {
@@ -3489,16 +3425,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         }
         ProcessChildren(node);
         DrawWatermarkIfNeed(node);
-<<<<<<< HEAD
         DrawCurtainScreen();
-#if defined(RS_ENABLE_DRIVEN_RENDER)
-    } else if (drivenInfo_ && drivenInfo_->currDrivenRenderMode == DrivenUniRenderMode::REUSE_WITH_CLIP_HOLE) {
-        RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode DrivenUniRenderMode is REUSE_WITH_CLIP_HOLE");
-        node.SetGlobalZOrder(globalZOrder_);
-        processor_->ProcessDisplaySurface(node);
-#endif
-=======
->>>>>>> zhangpeng/master
     } else {
         curDisplayDirtyManager_->SetSurfaceSize(screenInfo_.width, screenInfo_.height);
         if (isSurfaceRotationChanged_) {
@@ -3536,8 +3463,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 RSMainThread::Instance()->rsVSyncDistributor_->MarkRSNotRendering();
                 return;
             }
-            if (!RSMainThread::Instance()->WaitHardwareThreadTaskExcute()) {
-                RS_LOGW("RSUniRenderVisitor::ProcessDisplayRenderNode: hardwareThread task has too many to excute");
+            if (!RSMainThread::Instance()->WaitHardwareThreadTaskExecute()) {
+                RS_LOGW("RSUniRenderVisitor::ProcessDisplayRenderNode: hardwareThread task has too many to Execute");
             }
             if (!RSMainThread::Instance()->CheckIsHardwareEnabledBufferUpdated() && !forceUpdateFlag_) {
                 for (auto& surfaceNode: hardwareEnabledNodes_) {
@@ -3839,8 +3766,8 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
     }
     DoScreenRcdTask(processor_, rcdInfo_, screenInfo_);
 
-    if (!RSMainThread::Instance()->WaitHardwareThreadTaskExcute()) {
-        RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode: hardwareThread task has too many to excute");
+    if (!RSMainThread::Instance()->WaitHardwareThreadTaskExecute()) {
+        RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode: hardwareThread task has too many to Execute");
     }
     processor_->PostProcess();
     auto mainThread = RSMainThread::Instance();
@@ -5451,13 +5378,9 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
         RSUniRenderUtil::FloorTransXYInCanvasMatrix(*canvas_);
     }
-<<<<<<< HEAD
-    const auto& property = node.GetRenderProperties();
-    if (node.GetSharedTransitionParam().has_value()) {
-=======
 
+    const auto& property = node.GetRenderProperties();
     if (node.GetSharedTransitionParam()) {
->>>>>>> zhangpeng/master
         // draw self and children in sandbox which will not be affected by parent's transition
         const auto& sandboxMatrix = property.GetSandBoxMatrix();
         if (sandboxMatrix) {
@@ -5723,8 +5646,8 @@ bool RSUniRenderVisitor::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> r
         return false;
     }
 
-    if (!RSMainThread::Instance()->WaitHardwareThreadTaskExcute()) {
-        RS_LOGW("RSUniRenderVisitor::DoDirectComposition: hardwareThread task has too many to excute");
+    if (!RSMainThread::Instance()->WaitHardwareThreadTaskExecute()) {
+        RS_LOGW("RSUniRenderVisitor::DoDirectComposition: hardwareThread task has too many to Execute");
     }
     if (!RSMainThread::Instance()->CheckIsHardwareEnabledBufferUpdated()) {
         for (auto& surfaceNode: hardwareEnabledNodes_) {

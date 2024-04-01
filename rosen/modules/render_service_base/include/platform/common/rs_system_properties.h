@@ -226,12 +226,10 @@ public:
 
     static bool GetDumpUICaptureEnabled();
     static bool GetDumpUIPixelmapEnabled();
-<<<<<<< HEAD
+    static bool GetDumpImgEnabled();
+
     static uint32_t GetVirtualScreenScaleModeDFX();
 
-=======
-    static bool GetDumpImgEnabled();
->>>>>>> zhangpeng/master
     static inline GpuApiType GetGpuApiType()
     {
         return RSSystemProperties::systemGpuApiType_;

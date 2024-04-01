@@ -110,7 +110,6 @@ enum class RSModifierType : int16_t {
     ILLUMINATED_BORDER_WIDTH,      // 80
     ILLUMINATED_TYPE,              // 81
     BLOOM,                         // 82
-<<<<<<< HEAD
     DYNAMIC_DIM_DEGREE,            // 83
     CUSTOM,                        // 84
     EXTENDED,                      // 85
@@ -123,20 +122,7 @@ enum class RSModifierType : int16_t {
     ENV_FOREGROUND_COLOR,          // 92
     ENV_FOREGROUND_COLOR_STRATEGY, // 93
     GEOMETRYTRANS,                 // 94
-=======
-    CUSTOM,                        // 83
-    EXTENDED,                      // 84
-    TRANSITION,                    // 85
-    BACKGROUND_STYLE,              // 86
-    CONTENT_STYLE,                 // 87
-    FOREGROUND_STYLE,              // 88
-    OVERLAY_STYLE,                 // 89
-    NODE_MODIFIER,                 // 90
-    ENV_FOREGROUND_COLOR,          // 91
-    ENV_FOREGROUND_COLOR_STRATEGY, // 92
-    GEOMETRYTRANS,                 // 93
-    CHILDREN,                      // 94, PLACEHOLDER, no such modifier, but we need a dirty flag
->>>>>>> zhangpeng/master
+    CHILDREN,                      // 95, PLACEHOLDER, no such modifier, but we need a dirty flag
     MAX_RS_MODIFIER_TYPE,
 };
 using ModifierDirtyTypes = std::bitset<static_cast<int>(RSModifierType::MAX_RS_MODIFIER_TYPE)>;

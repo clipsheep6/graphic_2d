@@ -16,13 +16,14 @@
 #ifndef RENDER_SERVICE_PIPELINE_RS_DRAW_FRAME_H
 #define RENDER_SERVICE_PIPELINE_RS_DRAW_FRAME_H
 #include <condition_variable>
-#include <mutex>
 #include <list>
+#include <mutex>
 
+#include "system/rs_system_parameters.h"
+
+#include "params/rs_render_thread_params.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_uni_render_thread.h"
-#include "params/rs_render_thread_params.h"
-#include "system/rs_system_parameters.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -54,7 +55,7 @@ private:
     std::unique_ptr<RSRenderThreadParams> stagingRenderThreadParams_ = nullptr;
     RsParallelType rsParallelType_;
 };
-} // Rosen
-} // OHOS
+} // namespace Rosen
+} // namespace OHOS
 
 #endif // RENDER_SERVICE_PIPELINE_RS_DRAW_FRAME_H

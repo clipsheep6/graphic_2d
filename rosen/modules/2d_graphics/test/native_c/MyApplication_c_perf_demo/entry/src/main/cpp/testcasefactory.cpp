@@ -41,6 +41,7 @@
 #include "bench/big_path_bench.h"
 #include "dm/aa_rect_modes.h"
 #include "dm/add_arc.h"
+#include "dm/font_regen.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -125,6 +126,7 @@ namespace {
             {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},
             {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
             {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},
+            {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},
 
 
             

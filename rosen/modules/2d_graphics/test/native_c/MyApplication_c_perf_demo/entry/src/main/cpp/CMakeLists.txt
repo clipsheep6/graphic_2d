@@ -41,6 +41,7 @@ add_library(entry SHARED
     bench/big_path_bench.cpp
     dm/aa_rect_modes.cpp
     dm/add_arc.cpp
+    dm/font_regen.cpp
 )
 
 add_library(myxnode SHARED
@@ -75,6 +76,7 @@ add_library(myxnode SHARED
     bench/big_path_bench.cpp
     dm/aa_rect_modes.cpp
     dm/add_arc.cpp
+    dm/font_regen.cpp
 )
 
 find_library(

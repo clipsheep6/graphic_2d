@@ -76,6 +76,8 @@ public:
 #ifdef RS_ENABLE_VK
     virtual void StoreVkPipelineCacheData() = 0;
 #endif
+
+    virtual void RegisterPostFunc(const std::function<void(const std::function<void()>& task)>& func) = 0;
 };
 } // namespace Drawing
 } // namespace Rosen

@@ -47,6 +47,7 @@ public:
     }
     RectI MapAbsRectWithMatrix(const RectF& rect, const Drawing::Matrix& matrix) const;
     RectI MapAbsRect(const RectF& rect) const;
+    RectI MapRect(const RectF& rect, const Drawing::Matrix& matrix) const;
 
     // return transform matrix (context + self)
     const Drawing::Matrix& GetMatrix() const;
@@ -56,13 +57,6 @@ public:
     bool IsNeedClientCompose() const;
 
     void SetContextMatrix(const std::optional<Drawing::Matrix>& matrix);
-
-    void Reset() override
-    {
-        RSObjGeometry::Reset();
-        absMatrix_.reset();
-        contextMatrix_.reset();
-    }
 
 private:
     void UpdateAbsMatrix2D();

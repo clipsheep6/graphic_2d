@@ -41,11 +41,13 @@ public:
     static void DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect = nullptr);
     static int GetAndResetBlurCnt();
     static void GetOutlineDirtyRect(RectI& dirtyOutline,
-        const RSProperties& properties, const bool& isAbsCoordinate = true);
+        const RSProperties& properties, const bool isAbsCoordinate = true);
     static bool PickColor(const RSProperties& properties, RSPaintFilterCanvas& canvas, Drawing::Path& drPath,
     Drawing::Matrix& matrix, Drawing::RectI& deviceClipBounds, RSColor& colorPicked);
     static void GetDarkColor(RSColor& color);
-
+    // todo: doublecheck if calculate correct
+    static void GetPixelStretchDirtyRect(RectI& dirtyPixelStretch,
+        const RSProperties& properties, const bool isAbsCoordinate = true);
     static void DrawPixelStretch(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawForegroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void ApplyBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
@@ -79,11 +81,6 @@ public:
     static Drawing::RoundRect RRect2DrawingRRect(const RRect& rr);
     static Drawing::Rect Rect2DrawingRect(const RectF& r);
     static Drawing::ColorQuad CalcAverageColor(std::shared_ptr<Drawing::Image> imageSnapshot);
-    // functions that are dedicated to driven render [start]
-    static RectF GetCmdsClipRect(Drawing::DrawCmdListPtr& cmds);
-    static void DrawFrameForDriven(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-        Drawing::DrawCmdListPtr& cmds);
-    // functions that are dedicated to driven render [end]
     static void DrawSpherize(const RSProperties& properties, RSPaintFilterCanvas& canvas,
         const std::shared_ptr<Drawing::Surface>& spherizeSurface);
     static std::shared_ptr<Drawing::Blender> MakeDynamicLightUpBlender(
@@ -100,9 +97,9 @@ public:
 private:
     static void ApplyBackgroundEffectFallback(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static RRect GetRRectForDrawingBorder(const RSProperties& properties, const std::shared_ptr<RSBorder>& border,
-        const bool& isOutline);
+        const bool isOutline);
     static RRect GetInnerRRectForDrawingBorder(const RSProperties& properties, const std::shared_ptr<RSBorder>& border,
-        const bool& isOutline);
+        const bool isOutline);
     static void ClipVisibleCanvas(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawColorfulShadowInner(
         const RSProperties& properties, RSPaintFilterCanvas& canvas, Drawing::Path& path);
@@ -124,7 +121,7 @@ private:
     static std::shared_ptr<Drawing::RuntimeEffect> MakeGreyAdjustmentEffect();
 
     static void DrawBorderBase(const RSProperties& properties, Drawing::Canvas& canvas,
-        const std::shared_ptr<RSBorder>& border, const bool& isOutline);
+        const std::shared_ptr<RSBorder>& border, const bool isOutline);
     static const std::shared_ptr<Drawing::RuntimeShaderBuilder>& GetPhongShaderBuilder();
 
     static std::shared_ptr<Drawing::RuntimeEffect> greyAdjustEffect_;

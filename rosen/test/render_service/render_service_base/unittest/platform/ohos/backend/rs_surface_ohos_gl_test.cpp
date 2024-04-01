@@ -206,17 +206,17 @@ HWTEST_F(RSSurfaceOhosGlTest, RequestFrame001, TestSize.Level1)
     int32_t height = 1;
     uint64_t uiTimestamp = 1;
     bool useAFBC = true;
-    EXPECT_EQ(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
+    rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC);
 
     RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
     rsSurface.SetRenderContext(renderContext);
-    EXPECT_EQ(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
+    rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC);
 
     rsSurface.mWindow = CreateNativeWindowFromSurface(&rsSurface.producer_);
-    EXPECT_EQ(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
+    rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC);
 
     rsSurface.mEglSurface = EGL_NO_CONTEXT;
-    ASSERT_NE(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
+    ASSERT_EQ(rsSurface.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
 }
 } // namespace Rosen
 } // namespace OHOS

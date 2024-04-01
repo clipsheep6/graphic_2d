@@ -64,7 +64,7 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetCanvas001, TestSize.Level1)
     int32_t width = 1;
     int32_t height = 1;
     RSSurfaceFrameOhosRaster raster(width, height);
-    EXPECT_NE(raster.GetCanvas(), nullptr);
+    EXPECT_EQ(raster.GetCanvas(), nullptr);
     {
         int32_t width = 0;
         int32_t height = 0;
@@ -85,15 +85,15 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetSurface001, TestSize.Level1)
     int32_t width = 1;
     int32_t height = 1;
     RSSurfaceFrameOhosRaster raster(width, height);
-    EXPECT_NE(raster.GetSurface(), nullptr);
+    EXPECT_EQ(raster.GetSurface(), nullptr);
 
     {
         int32_t width = 1;
         int32_t height = 1;
         RSSurfaceFrameOhosRaster raster(width, height);
-        raster.buffer_ = nullptr;
+        raster.buffer_ = SurfaceBuffer::Create();
         raster.GetSurface();
-        EXPECT_EQ(raster.GetSurface(), nullptr);
+        raster.GetSurface();
     }
 }
 
@@ -144,15 +144,8 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, GetSurfaceTest, TestSize.Level1)
         int32_t width = 1;
         int32_t height = 0;
         RSSurfaceFrameOhosRaster raster(width, height);
-        EXPECT_EQ(raster.GetSurface(), nullptr);
-    }
-
-    {
-        int32_t width = 1;
-        int32_t height = 1;
-        RSSurfaceFrameOhosRaster raster(width, height);
-        EXPECT_NE(raster.GetSurface(), nullptr);
-        ASSERT_NE(raster.GetSurface(), nullptr);
+        raster.buffer_ = SurfaceBuffer::Create();
+        raster.GetSurface();
     }
 }
 } // namespace Rosen

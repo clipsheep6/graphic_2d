@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "gtest/gtest.h"
 
+#include "effect/color_space.h"
 #include "effect/shader_effect.h"
 #include "image/image.h"
 
@@ -62,6 +63,21 @@ HWTEST_F(ShaderEffectTest, CreateColorShader002, TestSize.Level1)
 {
     ColorQuad color = 24;
     auto newShaderEffect = ShaderEffect::CreateColorShader(color);
+    EXPECT_TRUE(newShaderEffect != nullptr);
+}
+
+/*
+ * @tc.name: CreateColorSpaceShader001
+ * @tc.desc:
+ * @tc.type: FUNC
+ * @tc.require: AR000GGNV3
+ * @tc.author:
+ */
+HWTEST_F(ShaderEffectTest, CreateColorSpaceShader001, TestSize.Level1)
+{
+    Color4f color = { 255.0f, 255.0f, 255.0f, 255.0f };
+    auto colorSpace = ColorSpace::CreateSRGB();
+    auto newShaderEffect = ShaderEffect::CreateColorSpaceShader(color, colorSpace);
     EXPECT_TRUE(newShaderEffect != nullptr);
 }
 

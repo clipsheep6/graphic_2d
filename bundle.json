@@ -88,6 +88,13 @@
           "vulkan-headers",
           "hiview",
           "battery_manager",
+          "vulkan-headers",
+          "zlib",
+          "bounds_checking_function",
+          "skia",
+          "openssl",
+          "libpng",
+          "drivers_peripheral_display",
           "cJSON"
         ],
         "third_party": [

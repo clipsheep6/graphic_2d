@@ -382,13 +382,15 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/utils/log",
     "$graphic_2d_root/interfaces/inner_api/surface",
   ]
-  include_dirs += [ "//third_party/skia/src" ]
+  external_deps = [
+    "hilog:libhilog",
+    "skia:skia_ohos",
+  ]
   deps = [
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
     "$rosen_root/modules/platform:hilog",
     "$rosen_root/modules/platform:ipc_core",
   ]
-  external_deps = [ "hilog:libhilog" ]
 
   if (graphic_2d_feature_enable_opinc) {
     include_dirs += opinc_adapter_opt_set.opinc_include_set

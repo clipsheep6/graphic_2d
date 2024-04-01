@@ -216,6 +216,7 @@ void BlitMaskBench::OnTestFunction(OH_Drawing_Canvas *canvas) {
         OH_Drawing_BrushSetColor(brush, color);
         OH_Drawing_BrushSetAlpha(brush, alpha);
         OH_Drawing_CanvasAttachBrush(canvas, brush);
+        // drawpoints接口未开放，暂时用drawrect替代
         OH_Drawing_CanvasDrawRect(canvas, rects[j]);
 
         OH_Drawing_CanvasDetachPen(canvas);
@@ -249,25 +250,26 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
     uint32_t color = 0xFF000000;
     unsigned int alpha = 0xFF;
 
-    for (int i = 0; i < testCount_; i = i + sizes) {
-        if (_type == KMaskShader) {
-            // 着色器
-            OH_Drawing_Point *startPt = OH_Drawing_PointCreate(0, 0);
-            OH_Drawing_Point *endPt = OH_Drawing_PointCreate(10, 10);
-            const uint32_t Color[] = {
-                0xFF000000,
-                0xFF00FF00,
-            };
-            OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, Color, nullptr, 2, OH_Drawing_TileMode::CLAMP);
-            OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
+    if (_type == KMaskShader) {
+        // 着色器
+        OH_Drawing_Point *startPt = OH_Drawing_PointCreate(0, 0);
+        OH_Drawing_Point *endPt = OH_Drawing_PointCreate(10, 10);
+        const uint32_t Color[] = {
+            0xFF000000,
+            0xFF00FF00,
+        };
+        OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, Color, nullptr, 2, OH_Drawing_TileMode::CLAMP);
+        OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
 
-            OH_Drawing_PointDestroy(startPt);
-            OH_Drawing_PointDestroy(endPt);
-            OH_Drawing_ShaderEffectDestroy(shaderEffect);
-            startPt = nullptr;
-            endPt = nullptr;
-            shaderEffect = nullptr;
-        }
+        OH_Drawing_PointDestroy(startPt);
+        OH_Drawing_PointDestroy(endPt);
+        OH_Drawing_ShaderEffectDestroy(shaderEffect);
+        startPt = nullptr;
+        endPt = nullptr;
+        shaderEffect = nullptr;
+    }
+
+    for (int i = 0; i < testCount_; i = i + sizes) {
         for (size_t j = 0; j < sizes; j++) {
             switch (_type) {
             case kMaskOpaque:
@@ -292,8 +294,9 @@ void BlitMaskBench::OnTestPerformance(OH_Drawing_Canvas *canvas) {
             OH_Drawing_BrushSetColor(brush, color);
             OH_Drawing_BrushSetAlpha(brush, alpha);
             OH_Drawing_CanvasAttachBrush(canvas, brush);
+            // drawpoints未开放，暂时用drawrect替代
             OH_Drawing_CanvasDrawRect(canvas, rects[i % RAND_SIZE]);
-
+            
             OH_Drawing_CanvasDetachPen(canvas);
             OH_Drawing_CanvasDetachBrush(canvas);
         }

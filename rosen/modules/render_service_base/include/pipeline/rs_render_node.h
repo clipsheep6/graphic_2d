@@ -456,7 +456,7 @@ public:
     virtual void UpdateFilterCacheManagerWithCacheRegion(RSDirtyRegionManager& dirtyManager,
         const std::optional<RectI>& clipRect = std::nullopt, bool isForeground = false);
     bool IsBackgroundInAppOrNodeSelfDirty() const;
-    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare();
+    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(bool dirtyBelowContainsFilterNode = false);
     bool IsBackgroundFilterCacheValid() const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
@@ -661,7 +661,8 @@ protected:
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
     const RectI GetFilterCachedRegion(bool isForeground) const;
-    virtual void MarkFilterCacheFlagsAfterPrepare(bool isForeground = false);
+    virtual void MarkFilterCacheFlagsAfterPrepare(
+        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false);
     std::atomic<bool> isStaticCached_ = false;
 
 private:

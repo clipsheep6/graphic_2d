@@ -19,6 +19,7 @@ public:
     ~AddArc() = default;
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
+    bool onAnimate();
     float fRotate;
 };
 #endif // AA_RECT_MODES_H

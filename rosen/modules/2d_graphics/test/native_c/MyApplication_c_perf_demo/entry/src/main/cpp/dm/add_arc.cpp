@@ -12,7 +12,7 @@
 #include "common/log_common.h"
 #include <math.h>
 #include <unistd.h>
-#include <math.h>
+
 
 #define R   400
 
@@ -99,7 +99,6 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
     const float inset = OH_Drawing_PenGetWidth(pen)+4;
     const float sweepAngle = 345;
     TestRend rand;
-    TestRend randRotate;
     float sign = 1;
     
     while (rc.w > OH_Drawing_PenGetWidth(pen)*3)
@@ -108,7 +107,7 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
         OH_Drawing_CanvasAttachPen(canvas, pen);
         float startAngle = rand.nextUScalar1()*360;
         float speed = sqrtf(16/rc.w)*0.5f;
-        fRotate = randRotate.nextRangeF(1, 360);//mock skia dm onAnimate behavior
+        onAnimate();
         startAngle += fRotate * 360 * speed * sign;
         OH_Drawing_Path* path = OH_Drawing_PathCreate();
         OH_Drawing_Rect* r = OH_Drawing_RectCreate(rc.x,rc.y,rc.x+rc.w,rc.y+rc.h);
@@ -121,4 +120,11 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
     }
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;
+}
+
+bool AddArc::onAnimate()
+{//dm中这个函数通过onIdle调用，目前drawing测试框架还没有提供这个接口，因此画出的图形在缺口方向上和dm的不同
+    static TestRend randRotate;
+    fRotate = randRotate.nextRangeF(1, 360);//mock skia dm onAnimate behavior
+    return true;
 }

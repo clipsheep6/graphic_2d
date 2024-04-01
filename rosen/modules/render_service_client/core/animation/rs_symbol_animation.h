@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ 
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_SYMBOL_ANIMATION_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_SYMBOL_ANIMATION_H
 
@@ -49,6 +50,38 @@ public:
     bool SetVariableColorAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
 
 private:
+    bool SetPublicAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
+    bool SetAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
+    void InitSupportAnimationTable();
+
+    void GroupAnimationStart(const std::shared_ptr<RSNode>& rsNode,
+    std::vector<std::shared_ptr<RSAnimation>>& animations);
+
+    void SetNodePivot(const std::shared_ptr<RSNode>& rsNode);
+
+    void SpliceAnimation(
+        const std::shared_ptr<RSNode>& rsNode,
+        std::vector<Drawing::DrawingPiecewiseParameter> parameters,
+        const TextEngine::SymbolAnimationEffectStrategy& effectStrategy);
+
+    void BounceAnimation(
+        const std::shared_ptr<RSNode>& rsNode,
+        std::vector<Drawing::DrawingPiecewiseParameter> parameters);
+    void AppearAnimation(
+        const std::shared_ptr<RSNode>& rsNode,
+        std::vector<Drawing::DrawingPiecewiseParameter> parameters);
+
+    // base animation construct
+    void scaleAnimationBase(const std::shared_ptr<RSNode>& rsNode,
+        Drawing::DrawingPiecewiseParameter& scaleParamter,
+        std::vector<std::shared_ptr<RSAnimation>>& animations);
+    void alphaAnimationBase(const std::shared_ptr<RSNode>& rsNode,
+        Drawing::DrawingPiecewiseParameter& alphaParamter,
+        std::vector<std::shared_ptr<RSAnimation>>& animations);
+
+    void GroupDrawing(const std::shared_ptr<RSCanvasNode>& canvasNode,
+        TextEngine::SymbolNode& symbolNode, const Vector4f& offsets, bool isMultiLayer);
+
     void SetIconProperty(Drawing::Brush& brush, Drawing::Pen& pen, TextEngine::SymbolNode& symbolNode);
 
     Vector4f CalculateOffset(const Drawing::Path& path, const float& offsetX, const float& offsetY);
@@ -83,6 +116,9 @@ private:
 
     // variableColor symbol animation
     std::vector<std::shared_ptr<RSAnimatableProperty<float>>> alphaPropertyPhases_;
+    // animation support splice base animation
+    std::vector<TextEngine::SymbolAnimationEffectStrategy> publicSupportAnimations = {};
+
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -152,7 +152,7 @@ bool RSSymbolAnimation::SetSymbolAnimation(
 }
 
 void RSSymbolAnimation::InitSupportAnimationTable()
- {
+{
     // Init public animation list
     publicSupportAnimations = {
         TextEngine::SymbolAnimationEffectStrategy::SYMBOL_BOUNCE,
@@ -306,7 +306,7 @@ void RSSymbolAnimation::AppearAnimation(const std::shared_ptr<RSNode>& rsNode,
     scaleAnimationBase(rsNode, parameters[0], groupAnimation);
     alphaAnimationBase(rsNode, parameters[1], groupAnimation);
     GroupAnimationStart(rsNode, groupAnimation);
- }
+}
  
 
 Vector4f RSSymbolAnimation::CalculateOffset(const Drawing::Path& path, const float& offsetX, const float& offsetY)

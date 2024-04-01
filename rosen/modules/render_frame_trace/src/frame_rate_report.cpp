@@ -51,7 +51,7 @@ void FrameRateReport::SendFrameRatesToRss(const std::unordered_map<int, uint32_t
         mapPayload[std::to_string(it->first)] = std::to_string(it->second);
     }
     OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(
-        OHOS::ResourceSchedule::ResType::RES_TYPE_KEY_PERF_SCENE, 0, mapPayload);
+        OHOS::ResourceSchedule::ResType::RES_TYPE_FRAME_RATE_REPORT, 0, mapPayload);
     #endif
 }
 

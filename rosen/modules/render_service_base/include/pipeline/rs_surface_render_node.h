@@ -1011,6 +1011,7 @@ public:
 
 protected:
     void OnSync() override;
+
 private:
     void OnResetParent() override;
     void ClearChildrenCache();

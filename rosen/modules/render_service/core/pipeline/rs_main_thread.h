@@ -282,9 +282,6 @@ public:
     bool GetParallelCompositionEnabled();
     std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
     
-    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
-    bool IsCurtainScreenOn() const;
-
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;

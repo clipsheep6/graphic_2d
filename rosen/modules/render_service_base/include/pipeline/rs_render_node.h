@@ -448,6 +448,7 @@ public:
     void UpdateEffectRegion(std::optional<Drawing::RectI>& region, bool isForced = false);
 
     // for blur filter cache
+    void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
     virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
     virtual void UpdateFilterCacheManagerWithCacheRegion(RSDirtyRegionManager& dirtyManager,
         const std::optional<RectI>& clipRect = std::nullopt, bool isForeground = false);
@@ -655,7 +656,6 @@ protected:
     bool isChildSupportUifirst_ = true;
     bool lastFrameSynced_ = true;
 
-    void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
     const RectI GetFilterCachedRegion(bool isForeground) const;
     virtual void MarkFilterCacheFlagsAfterPrepare(bool isForeground = false);

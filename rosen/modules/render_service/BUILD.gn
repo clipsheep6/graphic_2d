@@ -165,7 +165,6 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/modules/utils",
-    "//commonlibrary/c_utils/base/include",
     "//utils/system/safwk/native/include",
     "$graphic_2d_root/utils/log",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
@@ -177,6 +176,9 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/frame_rate_manager",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/hgm_screen_manager",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/utils",
+  ]
+  external_deps = [
+    "c_utils:utils"
   ]
   if (use_video_processing_engine) {
     include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
@@ -221,12 +223,11 @@ ohos_shared_library("librender_service") {
   }
   include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 
-  public_deps = [
-    "//third_party/libpng:libpng",
-    "//third_party/libxml2:libxml2",
-  ]
-
-  public_deps += [ "//third_party/skia:skia_ohos" ]
+  public_external_deps = [
+    "libpng:libpng",
+    "libxml2:libxml2",
+    "skia:skia_ohos",
+   ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     include_dirs += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
@@ -250,7 +251,7 @@ ohos_shared_library("librender_service") {
   }
 
   if (rs_enable_gpu) {
-    public_deps += [ "$graphic_2d_root:libvulkan" ]
+    public_deps = [ "$graphic_2d_root:libvulkan" ]
   }
 
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
@@ -261,7 +262,7 @@ ohos_shared_library("librender_service") {
     deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
   }
 
-  external_deps = [
+  external_deps += [
     "battery_manager:batterysrv_client",
     "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",
@@ -354,7 +355,6 @@ ohos_executable("render_service") {
 
   include_dirs = [
     "core",
-    "//commonlibrary/c_utils/base/include",
     "$graphic_2d_root/frameworks/surface/include",
     "$graphic_2d_root/utils/color_manager/export",
   ]
@@ -372,6 +372,7 @@ ohos_executable("render_service") {
     "drivers_interface_display:display_commontype_idl_headers",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "c_utils:utils",
   ]
 
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {

@@ -54,7 +54,7 @@ public:
     }
     float GetSize() const override
     {
-        return 1.0;
+        return 1.0f;
     }
     void SetSize(float size) override;
     int GetParaNum() const override
@@ -88,9 +88,9 @@ void SDFShapeTest::SetColor(std::string fillColor, std::string strokeColor, floa
 
 /**
  * @tc.name: DrawSdf001
- * @tc.desc:
+ * @tc.desc: Test DrawSdf
  * @tc.type: FUNC
- * @tc.author:
+ * @tc.require: issueI9CYEK
  */
 HWTEST_F(SkiaCanvasTest, DrawSdf001, TestSize.Level1)
 {

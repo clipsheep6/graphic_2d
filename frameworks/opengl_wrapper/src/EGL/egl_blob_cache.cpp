@@ -89,7 +89,7 @@ int BlobCache::GetMapSize() const
     return 0;
 }
 
-void BlobCache::Init(EglWrapperDisplay* display)
+const void BlobCache::Init(EglWrapperDisplay* display)
 {
     if (!initStatus_) {
         return;

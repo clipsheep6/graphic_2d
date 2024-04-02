@@ -45,20 +45,26 @@ public:
 
     // set symbol animation manager
     bool SetSymbolAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
-
     bool SetScaleUnitAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
     bool SetVariableColorAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
 
 private:
+    // SetPublicAnimation is interface for animation that can be spliced by atomizated animations
     bool SetPublicAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
-    bool SetAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
+    // choose the animation is a public animation or special animation
+    bool ChooseAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
+
+    // init the publicSupportAnimations, 
     void InitSupportAnimationTable();
 
+    // to start animations for one path group
     void GroupAnimationStart(const std::shared_ptr<RSNode>& rsNode,
     std::vector<std::shared_ptr<RSAnimation>>& animations);
 
+    // Set Node Center Offset
     void SetNodePivot(const std::shared_ptr<RSNode>& rsNode);
 
+    // splice atomizated animation construct
     void SpliceAnimation(
         const std::shared_ptr<RSNode>& rsNode,
         std::vector<Drawing::DrawingPiecewiseParameter> parameters,
@@ -71,14 +77,15 @@ private:
         const std::shared_ptr<RSNode>& rsNode,
         std::vector<Drawing::DrawingPiecewiseParameter> parameters);
 
-    // base animation construct
-    void scaleAnimationBase(const std::shared_ptr<RSNode>& rsNode,
+    // atomizated animation construct
+    void ScaleAnimationBase(const std::shared_ptr<RSNode>& rsNode,
         Drawing::DrawingPiecewiseParameter& scaleParamter,
         std::vector<std::shared_ptr<RSAnimation>>& animations);
-    void alphaAnimationBase(const std::shared_ptr<RSNode>& rsNode,
+    void AlphaAnimationBase(const std::shared_ptr<RSNode>& rsNode,
         Drawing::DrawingPiecewiseParameter& alphaParamter,
         std::vector<std::shared_ptr<RSAnimation>>& animations);
 
+    // drawing a path group : symbol drawing or path drawing
     void GroupDrawing(const std::shared_ptr<RSCanvasNode>& canvasNode,
         TextEngine::SymbolNode& symbolNode, const Vector4f& offsets, bool isMultiLayer);
 
@@ -117,7 +124,7 @@ private:
     // variableColor symbol animation
     std::vector<std::shared_ptr<RSAnimatableProperty<float>>> alphaPropertyPhases_;
     // animation support splice base animation
-    std::vector<TextEngine::SymbolAnimationEffectStrategy> publicSupportAnimations = {};
+    std::vector<TextEngine::SymbolAnimationEffectStrategy> publicSupportAnimations_ = {};
 
 };
 } // namespace Rosen

@@ -1044,6 +1044,12 @@ void RSRenderNode::UpdateDirtyRegion(
             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
         }
 
+        //Add node's foregroundEffect region to dirtyRect
+        if (properties.IsDynamicLightUpValid()) {
+            int radius = static_cast<int>(ceil(properties.GetDynamicLightUpRate().value()));
+            dirtyRect = dirtyRect.MakeOutset(Vector4<int>(radius)*10);
+        }
+
         if (clipRect.has_value()) {
             dirtyRect = dirtyRect.IntersectRect(*clipRect);
         }

@@ -25,6 +25,7 @@
 #include "property/rs_point_light_manager.h"
 #include "property/rs_properties_def.h"
 #include "render/rs_blur_filter.h"
+#include "render/rs_foreground_effect_filter.h"
 #include "render/rs_skia_filter.h"
 #include "render/rs_material_filter.h"
 #include "platform/common/rs_system_properties.h"
@@ -598,6 +599,20 @@ std::shared_ptr<Drawing::Image> RSPropertiesPainter::DrawGreyAdjustment(Drawing:
     builder->SetUniform("coefficient1", greyCoeff.x_);
     builder->SetUniform("coefficient2", greyCoeff.y_);
     return builder->MakeImage(canvas.GetGPUContext().get(), nullptr, image->GetImageInfo(), false);
+}
+
+void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
+{
+    RS_OPTIONAL_TRACE_NAME("DrawForegroundFilter");
+    std::shared_ptr<RSDrawingFilter> foregroundFilter = std::make_shared<RSForegroundEffectFilter>(properties.GetDynamicLightUpRate.value());
+
+    auto surface = canvas.GetSurface();
+    auto imageSnapshot = surface->GetImageSnapshot();
+
+    canvas.SwapBackCanvasList();
+    canvas.SwapBackMainScreenData();
+
+    foregroundFilter->DrawImageRect(canvas, imageSnapshot, Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()));
 }
 
 void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,

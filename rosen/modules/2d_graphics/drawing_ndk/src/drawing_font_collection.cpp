@@ -45,12 +45,14 @@ inline T1* ConvertToFontCollection(T2* ptr)
 OH_Drawing_FontCollection* OH_Drawing_CreateFontCollection(void)
 {
 #ifndef USE_GRAPHIC_TEXT_GINE
-    OH_Drawing_FontCollection* fc = (OH_Drawing_FontCollection*)new rosen::FontCollection;
+    OH_Drawing_FontCollection* fc = reinterpret_cast<OH_Drawing_FontCollection*>(new rosen::FontCollection);
 #else
 #ifndef USE_TEXGINE
-    OH_Drawing_FontCollection* fc = (OH_Drawing_FontCollection*)new OHOS::Rosen::AdapterTxt::FontCollection;
+    OH_Drawing_FontCollection* fc =
+        reinterpret_cast<OH_Drawing_FontCollection*>(new OHOS::Rosen::AdapterTxt::FontCollection);
 #else
-    OH_Drawing_FontCollection* fc = (OH_Drawing_FontCollection*)new OHOS::Rosen::AdapterTextEngine::FontCollection;
+    OH_Drawing_FontCollection* fc =
+        reinterpret_cast<OH_Drawing_FontCollection*>(new OHOS::Rosen::AdapterTextEngine::FontCollection);
 #endif
 #endif
     objectMgr->AddObject(fc);

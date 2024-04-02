@@ -1037,6 +1037,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
             return;
         }
         surfaceNode->ResetAnimateState();
+        surfaceNode->ResetRotateState();
         // Reset BasicGeoTrans info at the beginning of cmd process
         if (surfaceNode->IsLeashOrMainWindow()) {
             surfaceNode->ResetIsOnlyBasicGeoTransform();

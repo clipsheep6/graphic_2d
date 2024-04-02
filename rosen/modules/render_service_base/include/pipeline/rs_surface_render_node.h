@@ -183,6 +183,21 @@ public:
         isCurrentFrameHardwareEnabled_ = true;
     }
 
+    void SetIsRotating(bool isRotating)
+    {
+        isRotating_ = isRotating;
+    }
+
+    bool IsRotating() const
+    {
+        return isRotating_;
+    }
+
+    void ResetRotateState()
+    {
+        isRotating_ = false;
+    }
+
     void ResetCurrentFrameHardwareEnabledState()
     {
         isLastFrameHardwareEnabled_ = isCurrentFrameHardwareEnabled_;
@@ -938,7 +953,7 @@ public:
     std::shared_ptr<RSSurfaceTexture> GetSurfaceTexture() const { return surfaceTexture_; };
     void SetSurfaceTexture(const std::shared_ptr<RSSurfaceTexture> &texture) { surfaceTexture_ = texture; }
 #endif
-    
+
     void SetForeground(bool isForeground)
     {
         isForeground_ = isForeground;
@@ -968,7 +983,7 @@ public:
     void SetUifirstNodeEnableParam(bool b);
 
     void SetIsParentUifirstNodeEnableParam(bool b);
-    
+
     bool GetLastFrameUifirstFlag()
     {
         return lastFrameUifirstFlag_;
@@ -1140,7 +1155,7 @@ private:
         bool hasContainerWindow_;
         Vector4<int> cornerRadius_;
     };
-    
+
     //<screenRect, absRect, screenRotation, isFocusWindow, isTransparent, hasContainerWindow>
     OpaqueRegionBaseInfo opaqueRegionBaseInfo_;
 
@@ -1203,6 +1218,7 @@ private:
     int32_t nodeCost_ = 0;
 
     bool animateState_ = false;
+    bool isRotating_ = false;
 
     bool needDrawAnimateProperty_ = false;
     bool prevVisible_ = false;

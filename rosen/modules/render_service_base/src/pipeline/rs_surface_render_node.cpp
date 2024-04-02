@@ -1654,7 +1654,7 @@ bool RSSurfaceRenderNode::CheckParticipateInOcclusion() const
     if (nodeParent && nodeParent->IsScale()) {
         return false;
     }
-    if (IsTransparent() || GetAnimateState()) {
+    if (IsTransparent() || GetAnimateState() || IsRotating()) {
         return false;
     }
     return true;
@@ -1861,7 +1861,7 @@ void RSSurfaceRenderNode::SetHwcChildrenDisabledStateByUifirst()
             surfaceNode->SetHwcChildrenDisabledStateByUifirst();
         }
     }
-    
+
 }
 
 void RSSurfaceRenderNode::SetLocalZOrder(float localZOrder)

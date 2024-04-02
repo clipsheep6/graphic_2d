@@ -54,7 +54,6 @@ private:
     // choose the animation is a public animation or special animation
     bool ChooseAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
 
-    // add animation that can be spliced by atomizated animations to public animation vector
     void InitSupportAnimationTable();
 
     // to start animations for one path group

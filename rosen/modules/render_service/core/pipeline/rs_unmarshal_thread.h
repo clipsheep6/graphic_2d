@@ -23,6 +23,10 @@
 
 #include "transaction/rs_transaction_data.h"
 
+#ifdef RES_SCHED_ENABLE
+#include "vsync_system_ability_listener.h"
+#endif
+
 namespace OHOS::Rosen {
 class RSUnmarshalThread {
 public:
@@ -39,6 +43,11 @@ private:
     RSUnmarshalThread(const RSUnmarshalThread&&);
     RSUnmarshalThread& operator=(const RSUnmarshalThread&);
     RSUnmarshalThread& operator=(const RSUnmarshalThread&&);
+
+#ifdef RES_SCHED_ENABLE
+    void SubScribeSystemAbility();
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

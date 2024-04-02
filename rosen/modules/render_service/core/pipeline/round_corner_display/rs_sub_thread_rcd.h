@@ -25,6 +25,10 @@
 #include "render_context/render_context.h"
 #include "event_handler.h"
 
+#ifdef RES_SCHED_ENABLE
+#include "vsync_system_ability_listener.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 class RSSubThreadRCD {
@@ -34,6 +38,10 @@ public:
     void Start(RenderContext* context);
     void PostTask(const std::function<void()>& task);
 private:
+#ifdef RES_SCHED_ENABLE
+    void SubScribeSystemAbility();
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RenderContext *renderContext_ = nullptr;

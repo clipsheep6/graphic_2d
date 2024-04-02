@@ -26,6 +26,12 @@
 #endif
 #include "rs_trace.h"
 
+#ifdef RES_BASE_SCHED_ENABLE
+#include "system_ability_definition.h"
+#include "if_system_ability_manager.h"
+#include <iservice_registry.h>
+#endif
+
 namespace OHOS::Rosen {
 RSBackgroundThread& RSBackgroundThread::Instance()
 {
@@ -37,6 +43,32 @@ RSBackgroundThread::RSBackgroundThread()
 {
     runner_ = AppExecFwk::EventRunner::Create("RSBackgroundThread");
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
+#ifdef RES_BASE_SCHED_ENABLE
+    SubScribeSystemAbility();
+#endif
+}
+
+void RSBackgroundThread::SubScribeSystemAbility()
+{
+    RS_LOGD("%{public}s", __func__);
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        RS_LOGE("%{public}s failed to get system ability manager client", __func__);
+        return;
+    }
+    std::string threadName = "RSBackgroundThread";
+    std::string strUid = std::to_string(getuid());
+    std::string strPid = std::to_string(getpid());
+    std::string strTid = std::to_string(gettid());
+
+    int label_priority_schedule = 2;
+    saStatusChangeListener_ = new (std::nothrow)VSyncSystemAbilityListener(threadName, strUid, strPid, strTid, label_priority_schedule);
+    int32_t ret = systemAbilityManager->SubscribeSystemAbility(RES_SCHED_SYS_ABILITY_ID, saStatusChangeListener_);
+    if (ret != ERR_OK) {
+        RS_LOGE("%{public}s subscribe system ability %{public}d failed.", __func__, RES_SCHED_SYS_ABILITY_ID);
+        saStatusChangeListener_ = nullptr;
+    }
 }
 
 void RSBackgroundThread::PostTask(const std::function<void()>& task)

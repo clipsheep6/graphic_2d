@@ -23,7 +23,7 @@ namespace Rosen {
 class VSyncSystemAbilityListener : public SystemAbilityStatusChangeStub {
 public:
     VSyncSystemAbilityListener(const std::string& threadName, const std::string& uid, const std::string& pid,
-        const std::string& tid) : threadName_(threadName), uid_(uid), pid_(pid), tid_(tid) {}
+        const std::string& tid, const int& label) : threadName_(threadName), uid_(uid), pid_(pid), tid_(tid), label_(label) {}
     virtual ~VSyncSystemAbilityListener() = default;
     virtual void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     virtual void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -33,6 +33,7 @@ private:
     std::string uid_;
     std::string pid_;
     std::string tid_;
+    int label_;
 };
 } // namespace Rosen
 } // namespace OHOS

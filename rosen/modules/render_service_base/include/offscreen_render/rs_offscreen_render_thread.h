@@ -24,6 +24,10 @@
 
 #include "common/rs_common_def.h"
 
+#ifdef RES_BASE_SCHED_ENABLE
+#include "vsync_system_ability_listener.h"
+#endif
+
 namespace OHOS::Rosen {
 class RenderContext;
 class RSB_EXPORT RSOffscreenRenderThread {
@@ -46,6 +50,11 @@ private:
 
     std::mutex mutex_;
     int offscreenRenderNum_ = 0;
+
+#ifdef RES_BASE_SCHED_ENABLE
+    void SubScribeSystemAbility();
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

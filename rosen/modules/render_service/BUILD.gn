@@ -346,9 +346,12 @@ ohos_shared_library("librender_service") {
 ohos_executable("render_service") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
   sources = [ "core/main.cpp" ]
 

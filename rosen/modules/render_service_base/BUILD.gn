@@ -58,10 +58,13 @@ if (!is_mingw && !is_mac && !is_cross_platform) {
 ohos_source_set("render_service_base_src") {
   branch_protector_ret = "pac_ret"
   sanitize = {
+    boundary_sanitize = true
     cfi = false
     cfi_cross_dso = false
     debug = false
     blocklist = "./rs_base_blocklist.txt"
+    integer_overflow = true
+    ubsan = true
   }
   defines = []
   defines += gpu_defines

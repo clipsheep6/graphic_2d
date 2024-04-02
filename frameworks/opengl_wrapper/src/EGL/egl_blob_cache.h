@@ -117,7 +117,7 @@ public:
 
     void ReadFromDisk();
 
-    void Terminate();
+    static void Terminate();
 
     size_t GetCacheSize() const;
 

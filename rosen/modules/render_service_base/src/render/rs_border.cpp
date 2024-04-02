@@ -315,16 +315,7 @@ void RSBorder::PaintTopPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Dr
         canvas.ClipPath(topClipPath, Drawing::ClipOp::INTERSECT, true);
 
         canvas.AttachPen(pen);
-        if (style == BorderStyle::SOLID) {
-            Drawing::Brush brush;
-            brush.SetColor(pen.GetColor());
-            brush.SetAntiAlias(true);
-            canvas.AttachBrush(brush);
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-            canvas.DetachBrush();
-        } else {
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-        }
+        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
         canvas.DetachPen();
     }
 }
@@ -361,16 +352,7 @@ void RSBorder::PaintRightPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const 
         canvas.ClipPath(rightClipPath, Drawing::ClipOp::INTERSECT, true);
 
         canvas.AttachPen(pen);
-        if (style == BorderStyle::SOLID) {
-            Drawing::Brush brush;
-            brush.SetColor(pen.GetColor());
-            brush.SetAntiAlias(true);
-            canvas.AttachBrush(brush);
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-            canvas.DetachBrush();
-        } else {
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-        }
+        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
         canvas.DetachPen();
     }
 }
@@ -414,16 +396,7 @@ void RSBorder::PaintBottomPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const
         canvas.ClipPath(bottomClipPath, Drawing::ClipOp::INTERSECT, true);
 
         canvas.AttachPen(pen);
-        if (style == BorderStyle::SOLID) {
-            Drawing::Brush brush;
-            brush.SetColor(pen.GetColor());
-            brush.SetAntiAlias(true);
-            canvas.AttachBrush(brush);
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-            canvas.DetachBrush();
-        } else {
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-        }
+        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
         canvas.DetachPen();
     }
 }
@@ -459,16 +432,7 @@ void RSBorder::PaintLeftPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const D
         canvas.ClipPath(leftClipPath, Drawing::ClipOp::INTERSECT, true);
 
         canvas.AttachPen(pen);
-        if (style == BorderStyle::SOLID) {
-            Drawing::Brush brush;
-            brush.SetColor(pen.GetColor());
-            brush.SetAntiAlias(true);
-            canvas.AttachBrush(brush);
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-            canvas.DetachBrush();
-        } else {
-            canvas.DrawRoundRect(GetDrawingRRect(inrrect));
-        }
+        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
         canvas.DetachPen();
     }
 }
@@ -498,51 +462,53 @@ Drawing::Point RSBorder::getIntersectionPoint(Drawing::RoundRect::CornerPos corn
 {
     float x = rrect.GetRect().GetLeft() + rrect.GetRect().GetWidth() / 2.f;
     float y = rrect.GetRect().GetTop() + rrect.GetRect().GetHeight() / 2.f;
-
     float leftW = GetWidth(RSBorder::LEFT);
     float rightW = GetWidth(RSBorder::RIGHT);
-    float topW = GetWidth(RSBorder::TOP);
-    float bottomW = GetWidth(RSBorder::BOTTOM);
-    float width = rrect.GetRect().GetWidth();
-    float height = rrect.GetRect().GetHeight();
     float kc = y / x;
     float k = 1.f;
 
     switch (cornerPos) {
-        case Drawing::RoundRect::TOP_LEFT_POS:
-            k = topW / leftW;
-            if (k < kc) {
-                y = x * k;
-            } else {
-                x = y / k;
-            }
-        break;
         case Drawing::RoundRect::TOP_RIGHT_POS:
-            k = topW / rightW;
-            if (k < kc) {
-                y = x * k;
-            } else {
-                x = width - y / k;
+            if (rightW != 0) {
+                k = GetWidth(RSBorder::TOP) / rightW;
+                if (k < kc) {
+                    y = x * k;
+                } else {
+                    x = rrect.GetRect().GetWidth() - y / k;
+                }
             }
-        break;
+            break;
         case Drawing::RoundRect::BOTTOM_RIGHT_POS:
-            k = bottomW / rightW;
-            if (k < kc) {
-                y = height - x * k;
-            } else {
-                x = width - y / k;
+            if (rightW != 0) {
+                k = GetWidth(RSBorder::BOTTOM) / rightW;
+                if (k < kc) {
+                    y = rrect.GetRect().GetHeight() - x * k;
+                } else {
+                    x = rrect.GetRect().GetWidth() - y / k;
+                }
             }
-        break;
+             break;
         case Drawing::RoundRect::BOTTOM_LEFT_POS:
-            k = bottomW / leftW;
-            if (k < kc) {
-                y = height - x * k;
-            } else {
-                x = y / k;
+            if (leftW != 0) {
+                k = GetWidth(RSBorder::BOTTOM) / leftW;
+                if (k < kc) {
+                    y = rrect.GetRect().GetHeight() - x * k;
+                } else {
+                    x = y / k;
+                }
             }
-        break;
+            break;
+        // return left top pos by default
         default:
-        break;
+            if (leftW != 0) {
+                k = GetWidth(RSBorder::TOP) / leftW;
+                if (k < kc) {
+                    y = x * k;
+                } else {
+                    x = y / k;
+                }
+            }
+            break;
     }
     return Drawing::Point(x, y);
 }

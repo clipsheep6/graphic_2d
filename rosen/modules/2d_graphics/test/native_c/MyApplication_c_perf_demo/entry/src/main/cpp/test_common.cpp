@@ -1,4 +1,5 @@
 #include "test_common.h"
+#include "common/log_common.h"
 
 #define intToFloat(x) ((x) * 1.52587890625e-5f)
 
@@ -68,7 +69,34 @@ uint32_t TestRend::nextBits(unsigned bitCount)
     return this->nextU() >> (32 - bitCount);
 }
 
-uint32_t color_to_565(uint32_t color)
-{//not realize , for later use
-    return color;
+uint32_t color_to_565(uint32_t color) {
+    //这个接口按照32位图转565格式，再用32位来显示的方式运行，但是和dm的出图有色差 参见 addarc case
+    uint8_t r = (color >> 16) & 0xFF;  
+    uint8_t g = (color >> 8) & 0xFF;  
+    uint8_t b = color & 0xFF;  
+
+//    // 预乘 RGB 分量  由于目前代码中alpha为255 ，所以忽略此过程， dm中有此过程，代码不同
+//    r = (uint8_t)(((uint16_t)r * a) / 255);  
+//    g = (uint8_t)(((uint16_t)g * a) / 255);  
+//    b = (uint8_t)(((uint16_t)b * a) / 255);
+    
+    // 将RGB通道的值缩放到565格式  
+    r = (r >> 3) & 0x1F;  // 8位到5位  
+    g = (g >> 2) & 0x3F;  // 8位到6位  
+    b = (b >> 3) & 0x1F;  // 8位到5位  
+
+    // 组合成16位的值  
+    uint16_t rgb565 = (r << 11) | (g << 5) | b;
+    
+    //还原成32位用于api绘制，其中色彩信息在压缩过程中有所缺失
+    uint8_t r2 = (rgb565 >> 11) & 0x1F;  
+    uint8_t g2 = (rgb565 >> 5) & 0x3F;  
+    uint8_t b2 = rgb565 & 0x1F;  
+    
+    r2 = r2<<3;
+    g2 = g2<<2;
+    b2 = b2<<3;
+    
+    uint32_t argb = 0xFF000000 | r2<<16 | g2<<8 | b2;
+    return  argb;
 }

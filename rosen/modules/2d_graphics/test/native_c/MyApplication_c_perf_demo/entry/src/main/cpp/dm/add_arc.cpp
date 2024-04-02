@@ -12,7 +12,7 @@
 #include "common/log_common.h"
 #include <math.h>
 #include <unistd.h>
-#include <math.h>
+
 
 #define R   400
 
@@ -57,7 +57,7 @@ void AddArcMeas::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasDrawOval(canvas, oval);
     
     for (float deg = 0; deg < 360; deg += 10) {
-        const float rad = (deg)/182*M_PI;
+        const float rad = (deg)/180*M_PI;
         float rx = cos(rad) * R;
         float ry = sin(rad) * R;
         OH_Drawing_CanvasAttachPen(canvas, pen);
@@ -68,11 +68,8 @@ void AddArcMeas::OnTestFunction(OH_Drawing_Canvas* canvas)
         float arcLen = rad * R;
         
         OH_Drawing_CanvasAttachPen(canvas, measPen);
+        if(deg != 0)
         OH_Drawing_CanvasDrawLine(canvas, 0, 0, rx, ry);//没有getPosTan工具函数，先用已有的point替代
-//        SkPoint pos; 
-//        if (meas.getPosTan(arcLen, &pos, nullptr)) {
-//            canvas->drawLine({0, 0}, pos, measPaint);
-//        }
         OH_Drawing_PathDestroy(meas);
     }
     OH_Drawing_CanvasDetachPen(canvas);
@@ -102,7 +99,6 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
     const float inset = OH_Drawing_PenGetWidth(pen)+4;
     const float sweepAngle = 345;
     TestRend rand;
-    TestRend randRotate;
     float sign = 1;
     
     while (rc.w > OH_Drawing_PenGetWidth(pen)*3)
@@ -111,7 +107,7 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
         OH_Drawing_CanvasAttachPen(canvas, pen);
         float startAngle = rand.nextUScalar1()*360;
         float speed = sqrtf(16/rc.w)*0.5f;
-        fRotate = randRotate.nextRangeF(1, 360);//mock skia dm onAnimate behavior
+        onAnimate();
         startAngle += fRotate * 360 * speed * sign;
         OH_Drawing_Path* path = OH_Drawing_PathCreate();
         OH_Drawing_Rect* r = OH_Drawing_RectCreate(rc.x,rc.y,rc.x+rc.w,rc.y+rc.h);
@@ -124,4 +120,11 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
     }
     OH_Drawing_PenDestroy(pen);
     pen = nullptr;
+}
+
+bool AddArc::onAnimate()
+{//dm中这个函数通过onIdle调用，目前drawing测试框架还没有提供这个接口，因此画出的图形在缺口方向上和dm的不同
+    static TestRend randRotate;
+    fRotate = randRotate.nextRangeF(1, 360);//mock skia dm onAnimate behavior
+    return true;
 }

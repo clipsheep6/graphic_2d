@@ -106,7 +106,7 @@ public:
     EGLsizeiANDROID getBlob(const void *key, EGLsizeiANDROID keySize, void *value,
                             EGLsizeiANDROID valueSize);
     
-    void Init(EglWrapperDisplay* display);
+    const void Init(EglWrapperDisplay* display);
 
     //get cache dir from upper layer
     void SetCacheDir(const std::string dir);

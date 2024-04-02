@@ -480,7 +480,7 @@ Drawing::Point RSBorder::getIntersectionPoint(Drawing::RoundRect::CornerPos corn
                 k = GetWidth(RSBorder::BOTTOM) / rightW;
                 (k < kc) ? (y = rrect.GetRect().GetHeight() - x * k) : (x = rrect.GetRect().GetWidth() - y / k);
             }
-             break;
+            break;
         case Drawing::RoundRect::BOTTOM_LEFT_POS:
             if (leftW != 0) {
                 k = GetWidth(RSBorder::BOTTOM) / leftW;

@@ -81,13 +81,16 @@ public:
 
     void PaintFourLine(Drawing::Canvas& canvas, Drawing::Pen& pen, RectF rect) const;
     void PaintTopPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const Drawing::Point& innerRectCenter) const;
+        const RRect inrrect) const;
     void PaintRightPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const Drawing::Point& innerRectCenter) const;
+        const RRect inrrect) const;
     void PaintBottomPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const Drawing::Point& innerRectCenter) const;
+        const RRect inrrect) const;
     void PaintLeftPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const Drawing::Point& innerRectCenter) const;
+        const RRect inrrect) const;
+    Drawing::RoundRect GetDrawingRRect(const RRect& inrrect) const;
+    Drawing::Point getIntersectionPoint(Drawing::RoundRect::CornerPos cornerPos,
+        const Drawing::RoundRect& rrect) const;
 
 private:
     // Vectors containing uniform or four-sided border attributes.

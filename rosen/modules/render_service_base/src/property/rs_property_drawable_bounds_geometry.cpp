@@ -775,15 +775,20 @@ bool RSForegroundFilterDrawable::Update(const RSRenderContent& content)
 
 void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    auto bounds = contest.GetRenderProperties().GetBoundsRect();
+    auto surface = canvas.GetSurface();
+    if (!surface) {
+        return;
+    }
+    auto bounds = content.GetRenderProperties().GetBoundsRect();
     std::shared_ptr<Drawing::Surface> offscreenSurface = surface->MakeSurface(bounds.width_, bounds.height_);
-    if(!offscreenSurface) { //怎么保证save和restore是对应的，需要调研下blendmode的实现
+    if (!offscreenSurface) { //怎么保证save和restore是对应的，需要调研下blendmode的实现
         return;
     }
     auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface.get());
     RSPaintFilterCanvas::OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
-    canvas.StoreOffscreenData(OffscreenData);
-    offscreenCanvas.Clear(Drawing::Color::COLOR_TRANSPARENT);
+    canvas.StoreOffscreenData(offscreenData);
+    canvas.ReplaceMainScreenData(offscreenSurface.get(), offscreenCanvas.get());
+    offscreenCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
     canvas.StoreCanvasList();
     canvas.RemoveAll();
     canvas.AddCanvas(offscreenCanvas.get());

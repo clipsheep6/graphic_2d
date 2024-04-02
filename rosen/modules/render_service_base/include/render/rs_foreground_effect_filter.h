@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,13 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_LIGHT_UP_EFFECT_FILTER_H
-#define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_LIGHT_UP_EFFECT_FILTER_H
+#ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
+#define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
 
 #include <memory>
 #include "include/core/SkColorFilter.h"
 #include "include/effects/SkImageFilters.h"
 #include "render/rs_skia_filter.h"
+
+#include "effect/runtime_effect.h"
+#include "effect/runtime_shader_builder.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -43,6 +46,10 @@ public:
         const Drawing::Rect& src, const Drawing::Rect& dst) const override;
     //std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override;
     //std::string GetDescription() override;
+    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override
+    {
+        return nullptr;
+    }
 
 
 private:
@@ -59,7 +66,7 @@ private:
     void ComputeRadiusAndScale(int radius);
     void AdjustRadiusAndScale();
     static void CheckInputImage(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
-        const KawaseParameter& param, std::shared_ptr<Drawing::Image>& checkedImage);
+        const ForegroundEffectParam& param, std::shared_ptr<Drawing::Image>& checkedImage);
     void ApplyForegroundEffect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const ForegroundEffectParam& param) const;
 

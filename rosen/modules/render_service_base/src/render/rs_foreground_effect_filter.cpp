@@ -14,17 +14,18 @@
  */
 #include "render/rs_foreground_effect_filter.h"
 
+#include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 
 
 namespace OHOS {
 namespace Rosen {
 RSForegroundEffectFilter::RSForegroundEffectFilter(float blurRadius)
-    : RSDrawingFilter(nullptr), //这里应该写nullptr吗
+    : RSDrawingFilter(nullptr) //这里应该写nullptr吗
 {
     type_ = FilterType::FOREGROUND_EFFECT;
     MakeForegroundEffect();
-    ComputeRadiusAndScale(blurRadius)
+    ComputeRadiusAndScale(blurRadius);
     // 需要hash吗
     // hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
     // hash_ = SkOpts::hash(&lightUpDegree_, sizeof(lightUpDegree_), hash_);
@@ -32,7 +33,7 @@ RSForegroundEffectFilter::RSForegroundEffectFilter(float blurRadius)
 
 RSForegroundEffectFilter::~RSForegroundEffectFilter() = default;
 
-void RSForegroundEffectFilterMakeForegroundEffect()
+void RSForegroundEffectFilter::MakeForegroundEffect()
 {
     std::string blurString(
         R"(
@@ -89,7 +90,7 @@ void RSForegroundEffectFilter::AdjustRadiusAndScale()
 }
 
 void RSForegroundEffectFilter::CheckInputImage(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
-    const KawaseParameter& param, std::shared_ptr<Drawing::Image>& checkedImage)
+    const ForegroundEffectParam& param, std::shared_ptr<Drawing::Image>& checkedImage)
 {
     auto src = param.src;
     auto srcRect = Drawing::RectI(src.GetLeft(), src.GetTop(), src.GetRight(), src.GetBottom());
@@ -105,10 +106,11 @@ void RSForegroundEffectFilter::CheckInputImage(Drawing::Canvas& canvas, const st
 }
 
 void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
-        const ForegroundEffectParam& param) const;
+        const ForegroundEffectParam& param) const
 {
     if (!blurEffect_ || !image) {
         ROSEN_LOGE("RSForegroundEffectFilter::shader error");
+        return;
     }
     
     auto src = param.src;
@@ -119,7 +121,7 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
     int maxPasses = kMaxPassesLargeRadius;
     float dilatedConvolutionFactor = kDilatedConvolutionLargeRadius;
     if (abs(dilatedConvolutionFactor) <= 1e-6) {
-        return false;
+        return;
     }
     float tmpRadius = static_cast<float>(param.radius) / dilatedConvolutionFactor;
     int numberOfPasses = std::min(maxPasses, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
@@ -151,7 +153,7 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
     blurMatrixGeo.Translate(2 * unit, 2 * unit);
 
     std::shared_ptr<Drawing::Image> tmpBlur(blurBuilder.MakeImage(
-        canvas.GetGPUContext().get(), &blurMatrixGeo, scaledInfo, false));
+        canvas.GetGPUContext().get(), &blurMatrixGeo, scaledInfoGeo, false));
     // And now we'll build our chain of scaled blur stages
     for (auto i = 1; i < numberOfPasses; i++) {
         auto scaledInfoGeoExtended = Drawing::ImageInfo(tmpBlur->GetWidth() + 4 * unit, tmpBlur->GetHeight() + 4 * unit,
@@ -165,15 +167,15 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
         blurBuilder.SetUniform("in_blurOffset", radiusByPasses * stepScale, radiusByPasses * stepScale);
             
         
-        tmpBlur = blurBuilder.MakeImage(canvas.GetGPUContext().get(), &blurMatrixGeoExtended, scaledInfo, false);
+        tmpBlur = blurBuilder.MakeImage(canvas.GetGPUContext().get(), &blurMatrixGeoExtended, scaledInfoGeoExtended, false);
     }
 
     Drawing::Matrix blurMatrixInv;
-    blurMatrixInv.Translate(-2 * unit * numberOfPasses, 2 * unit * numberOfPasses);
-    blurMatrix.PostScale(1/scaleW, 1/scaleH);
+    blurMatrixInv.Translate(-2 * unit * numberOfPasses, -2 * unit * numberOfPasses);
+    blurMatrixInv.PostScale(1/scaleW, 1/scaleH);
     const auto blurShader = Drawing::ShaderEffect::CreateImageShader(*tmpBlur, Drawing::TileMode::DECAL,
             Drawing::TileMode::DECAL, linear, blurMatrixInv);
-    Drawing::brush;
+    Drawing::Brush brush;
     brush.SetShaderEffect(blurShader);
     canvas.DrawBackground(brush);
     canvas.DetachBrush(); 
@@ -181,7 +183,7 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
 }
 
 void RSForegroundEffectFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
-        const Drawing::Rect& src, const Drawing::Rect& dst) const override;
+        const Drawing::Rect& src, const Drawing::Rect& dst) const
 {
     auto brush = GetBrush();
     ForegroundEffectParam param = ForegroundEffectParam(src, dst, blurRadius_, blurScale_);

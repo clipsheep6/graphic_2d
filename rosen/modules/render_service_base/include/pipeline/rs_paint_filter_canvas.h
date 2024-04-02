@@ -304,7 +304,7 @@ private:
 
     // foregroundFilter related
     std::stack<OffscreenData> offscreenDataList_;
-    std::stack<Drawing::Surface> storeMainScreenSurface_;
+    std::stack<Drawing::Surface*> storeMainScreenSurface_;
     std::stack<Drawing::Canvas*> storeMainScreenCanvas_;
 
     std::atomic_bool isHighContrastEnabled_ { false };

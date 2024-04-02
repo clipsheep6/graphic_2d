@@ -15,11 +15,14 @@
 
 #ifndef GPU_CONTEXT_H
 #define GPU_CONTEXT_H
+#include <functional>
 #include <set>
-#include "impl_interface/gpu_context_impl.h"
-#include "utils/drawing_macros.h"
-#include "utils/data.h"
+
 #include "trace_memory_dump.h"
+
+#include "impl_interface/gpu_context_impl.h"
+#include "utils/data.h"
+#include "utils/drawing_macros.h"
 
 typedef void* EGLContext;
 namespace OHOS {

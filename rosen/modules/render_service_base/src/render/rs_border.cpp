@@ -450,9 +450,10 @@ Drawing::RoundRect RSBorder::GetDrawingRRect(const RRect& inrrect) const
     // set radius for all 4 corner of RRect
     constexpr uint32_t NUM_OF_CORNERS_IN_RECT = 4;
     std::vector<Drawing::Point> radiuses(NUM_OF_CORNERS_IN_RECT);
+    std::vector<Drawing::Point> drads {{leftW, topW}, {rightW, topW}, {leftW, bottomW}, {rightW, bottomW}};
     for (uint32_t i = 0; i < NUM_OF_CORNERS_IN_RECT; i++) {
-        radiuses.at(i).SetX(inrrect.radius_[i].x_);
-        radiuses.at(i).SetY(inrrect.radius_[i].y_);
+        radiuses.at(i).SetX(std::max(0.f, inrrect.radius_[i].x_ - drads[i].GetX()));
+        radiuses.at(i).SetY(std::max(0.f, inrrect.radius_[i].y_ - drads[i].GetY()));
     }
     return Drawing::RoundRect(drawingRect, radiuses);
 }
@@ -471,42 +472,26 @@ Drawing::Point RSBorder::getIntersectionPoint(Drawing::RoundRect::CornerPos corn
         case Drawing::RoundRect::TOP_RIGHT_POS:
             if (rightW != 0) {
                 k = GetWidth(RSBorder::TOP) / rightW;
-                if (k < kc) {
-                    y = x * k;
-                } else {
-                    x = rrect.GetRect().GetWidth() - y / k;
-                }
+                (k < kc) ? (y = x * k) : (x = rrect.GetRect().GetWidth() - y / k);
             }
             break;
         case Drawing::RoundRect::BOTTOM_RIGHT_POS:
             if (rightW != 0) {
                 k = GetWidth(RSBorder::BOTTOM) / rightW;
-                if (k < kc) {
-                    y = rrect.GetRect().GetHeight() - x * k;
-                } else {
-                    x = rrect.GetRect().GetWidth() - y / k;
-                }
+                (k < kc) ? (y = rrect.GetRect().GetHeight() - x * k) : (x = rrect.GetRect().GetWidth() - y / k);
             }
              break;
         case Drawing::RoundRect::BOTTOM_LEFT_POS:
             if (leftW != 0) {
                 k = GetWidth(RSBorder::BOTTOM) / leftW;
-                if (k < kc) {
-                    y = rrect.GetRect().GetHeight() - x * k;
-                } else {
-                    x = y / k;
-                }
+                (k < kc) ? (y = rrect.GetRect().GetHeight() - x * k) : (x = y / k);
             }
             break;
         // return left top pos by default
         default:
             if (leftW != 0) {
                 k = GetWidth(RSBorder::TOP) / leftW;
-                if (k < kc) {
-                    y = x * k;
-                } else {
-                    x = y / k;
-                }
+                (k < kc) ? (y = x * k) : (x = y / k);
             }
             break;
     }

@@ -29,9 +29,10 @@ enum class FillMode {
 };
 
 enum class FinishCallbackType {
-    TIME_SENSITIVE,
-    TIME_INSENSITIVE,
-    LOGICALLY,
+    TIME_SENSITIVE = 1 << 0,
+    TIME_INSENSITIVE = 1 << 1,
+    LOGICALLY = 1 << 2,
+    HYBRID_INSENSITIVE_LOGICALLY = FinishCallbackType::TIME_INSENSITIVE | FinishCallbackType::LOGICALLY,
 };
 
 class RSB_EXPORT RSAnimationTimingProtocol {

@@ -40,8 +40,8 @@ bool IsEqual(const Vector2f& val1, const Vector2f& val2)
     return (val1.x_ == val2.x_ && val1.y_ == val2.y_);
 }
 
-void CreateAnimationTimingCurve(
-    OHOS::Rosen::Drawing::DrawingCurveType type, std::map<std::string, double>& curveArgs, RSAnimationTimingCurve& curve)
+void CreateAnimationTimingCurve(OHOS::Rosen::Drawing::DrawingCurveType type, std::map<std::string, double>& curveArgs,
+    RSAnimationTimingCurve& curve)
 {
     if (!curve) {
         curve = RSAnimationTimingCurve();

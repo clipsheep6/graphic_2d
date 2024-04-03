@@ -18,13 +18,8 @@
 #include <memory>
 
 #include "include/core/SkCanvas.h"
-#include "src/image/SkImage_Base.h"
-#ifdef NEW_SKIA
-#include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrDirectContext.h"
-#endif
-
 #include "rs_trace.h"
+#include "src/image/SkImage_Base.h"
 
 #include "common/rs_background_thread.h"
 #include "common/rs_common_def.h"
@@ -37,6 +32,12 @@
 #include "platform/common/rs_log.h"
 #include "property/rs_properties_painter.h"
 #include "visitor/rs_node_visitor.h"
+
+#ifdef NEW_SKIA
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrDirectContext.h"
+#endif
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -83,8 +84,8 @@ bool RSCanvasDrawingRenderNode::ResetSurfaceWithTexture(int width, int height, R
 
     Drawing::BitmapFormat bitmapFormat = { image->GetColorType(), image->GetAlphaType() };
     auto sharedTexture = std::make_shared<Drawing::Image>();
-    if (!sharedTexture->BuildFromTexture(
-            *canvas.GetGPUContext(), sharedBackendTexture.GetTextureInfo(), origin, bitmapFormat, nullptr)) {
+    if (!sharedTexture->BuildFromTexture(*canvas.GetGPUContext(), sharedBackendTexture.GetTextureInfo(),
+        origin, bitmapFormat, nullptr)) {
         RS_LOGE("RSCanvasDrawingRenderNode::ResetSurfaceWithTexture sharedTexture is nullptr");
         return false;
     }

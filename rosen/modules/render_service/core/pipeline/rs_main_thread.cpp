@@ -262,8 +262,8 @@ RSMainThread* RSMainThread::Instance()
     return &instance;
 }
 
-RSMainThread::RSMainThread() : mainThreadId_(std::this_thread::get_id())
-                             , rsParallelType_(RSSystemParameters::GetRsParallelType())
+RSMainThread::RSMainThread() : mainThreadId_(std::this_thread::get_id()),
+    rsParallelType_(RSSystemParameters::GetRsParallelType())
 {
     context_ = std::make_shared<RSContext>();
     context_->Initialize();
@@ -2591,7 +2591,7 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
             if (isUniRender_) {
                 RSUniRenderThread::Instance().ClearMemoryCache(ClearMemoryMoment::PROCESS_EXIT, true);
             } else {
-                ClearMemoryCache(ClearMemoryMoment::PROCESS_EXIT, true, remotePid);
+                ClearMemoryCache(ClearMemoryMoment::PROCESS_EXIT, true);
             }
         }
 #endif

@@ -2900,7 +2900,6 @@ HWTEST_F(RSUniRenderVisitorTest, GetCacheImageFromMirrorNode001, TestSize.Level2
     ASSERT_EQ(rsUniRenderVisitor->GetCacheImageFromMirrorNode(rsDisplayRenderNode), nullptr);
 }
 
-#ifndef RS_PARALLEL
 /**
  * @tc.name: DrawSurfaceLayer001
  * @tc.desc: Test RSUniRenderVisitorTest.DrawSurfaceLayer while
@@ -2932,7 +2931,6 @@ HWTEST_F(RSUniRenderVisitorTest, DrawSurfaceLayer001, TestSize.Level2)
     rsUniRenderVisitor->renderEngine_->Init();
     rsUniRenderVisitor->DrawSurfaceLayer(displayNode, subThreadNodes);
 }
-#endif
 
 /**
  * @tc.name: SwitchColorFilterDrawing001

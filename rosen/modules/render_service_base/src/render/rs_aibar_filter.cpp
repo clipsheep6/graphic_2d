@@ -64,7 +64,7 @@ void RSAIBarFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr
     filter.SetImageFilter(Drawing::ImageFilter::CreateBlurImageFilter(radius, radius, Drawing::TileMode::CLAMP,
         nullptr, blurType));
     brush.SetFilter(filter);
-    auto param = Drawing::KawaseParameters{src, dst, radius, nullptr, 1.0};
+    KawaseParameter param = KawaseParameter(src, dst, radius, nullptr, 1.0);
     static bool DDGR_ENABLED = RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR;
     if (!DDGR_ENABLED && KAWASE_BLUR_ENABLED &&
         KawaseBlurFilter::GetKawaseBlurFilter()->ApplyKawaseBlur(canvas, invertedImage, param)) {

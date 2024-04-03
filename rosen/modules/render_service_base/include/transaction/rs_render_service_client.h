@@ -48,7 +48,7 @@
 #include "ipc_callbacks/rs_iocclusion_change_callback.h"
 #include "rs_hgm_config_data.h"
 #include "rs_occlusion_data.h"
-#include "common/rs_gpu_dirty_region.h"
+#include "info_collection/rs_gpu_dirty_region_collection.h"
 
 namespace OHOS {
 namespace Rosen {

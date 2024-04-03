@@ -52,7 +52,7 @@ void CreateAnimationTimingCurve(OHOS::Rosen::Drawing::DrawingCurveType type, std
         double scaleDamping = curveArgs.count("damping") > 0 ? curveArgs["damping"] : 0;
         curve = RSAnimationTimingCurve::CreateInterpolatingSpring(static_cast<float>(scaleMass),
             static_cast<float>(scaleStiffness), static_cast<float>(scaleDamping), static_cast<float>(scaleVelocity));
-    }else {
+    } else {
         return;
     }
 }
@@ -268,7 +268,8 @@ void RSSymbolAnimation::SpliceAnimation(const std::shared_ptr<RSNode>& rsNode,
 void RSSymbolAnimation::BounceAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2; // the count of atomizated animations 
+    // the count of atomizated animations
+    int animationStageNum = 2;
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -283,7 +284,8 @@ void RSSymbolAnimation::BounceAnimation(
 void RSSymbolAnimation::AppearAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2; // the count of atomizated animations 
+    // the count of atomizated animations
+    int animationStageNum = 2;
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;

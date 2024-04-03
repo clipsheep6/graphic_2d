@@ -88,7 +88,12 @@
           "vulkan-headers",
           "hiview",
           "battery_manager",
-          "cJSON"
+          "cJSON",
+          "zlib",
+          "skia",
+          "openssl",
+          "libpng",
+          "drivers_peripheral_display"
         ],
         "third_party": [
           "flutter",

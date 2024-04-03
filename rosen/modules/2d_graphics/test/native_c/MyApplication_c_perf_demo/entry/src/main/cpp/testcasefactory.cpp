@@ -45,6 +45,7 @@
 #include "dm/font_regen.h"
 #include "dm/circular_arcs.h"
 #include "dm/largeclippedpath.h"
+#include "dm/dashing.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -141,6 +142,7 @@ namespace {
 
 
             
+            {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
 
     };
 

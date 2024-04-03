@@ -40,9 +40,11 @@
 #include "bench/clear_bench.h"
 #include "bench/big_path_bench.h"
 #include "dm/aa_rect_modes.h"
+#include "dm/blur_large_rrects.h"
 #include "dm/add_arc.h"
 #include "dm/font_regen.h"
 #include "dm/circular_arcs.h"
+#include "dm/largeclippedpath.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -111,6 +113,10 @@ namespace {
             {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
             {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
             {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
+            {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskOpaque); }},
+            {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskBlack); }},
+            {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
+            {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
 
             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
             {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
@@ -122,13 +128,18 @@ namespace {
             {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
             {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
             {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
-
+            
             //DM
             {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},
+            {"blurlargerrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},
             {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
             {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},
             {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},
             {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
+            {"largeclippedpath_kwinding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
+            {"largeclippedpath_kevenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
+
+
             
 
     };
@@ -202,6 +213,10 @@ namespace {
             {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
             {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
             {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
+            {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskOpaque); }},
+            {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskBlack); }},
+            {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
+            {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
             //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
             {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
              //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.

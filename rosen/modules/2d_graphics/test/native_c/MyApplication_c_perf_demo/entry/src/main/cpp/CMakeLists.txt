@@ -40,9 +40,11 @@ add_library(entry SHARED
     bench/clear_bench.cpp
     bench/big_path_bench.cpp
     dm/aa_rect_modes.cpp
+    dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
     dm/circular_arcs.cpp
+    dm/largeclippedpath.cpp
 )
 
 add_library(myxnode SHARED
@@ -76,9 +78,11 @@ add_library(myxnode SHARED
     bench/clear_bench.cpp
     bench/big_path_bench.cpp
     dm/aa_rect_modes.cpp
+    dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
     dm/circular_arcs.cpp
+    dm/largeclippedpath.cpp
 )
 
 find_library(

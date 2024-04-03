@@ -74,3 +74,17 @@
         5、Perf文件解析为html
         Hiperf目录下打开cmd命令行执行：python.exe ./make_report.py -i drawrect_report.data
         结果查看：hiperf_report.html
+
+
+7、hap应用通过dlopen 打开drawing_demo,进行性能/功耗测试
+	./build.sh --product-name rk3568  --ccache --build-target graphic_2d_test --fast-rebuild
+	code_20240329/out/rk3568/graphic/graphic_2d
+	hdc file send libdrawing_demo.z.so /data/test
+	
+	mount -o rw,remount /
+	cd /data/test/
+	cp libdrawing_demo.z.so /system/lib/
+	chmod 777 /system/lib/libdrawing_demo.z.so
+	
+	下载hap后，执行性能功耗测试
+	

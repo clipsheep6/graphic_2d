@@ -47,6 +47,34 @@ protected:
     void onDraw(OH_Drawing_Canvas* canvas, uint32_t index) override;
 };
 
+class BlitMaskBench : public RectBench {
+  public:
+    double FLAGS_strokeWidth = -1.0;
+    enum {
+        W = 640,
+        H = 480,
+        N = 300,
+    };
+    enum PointMode {
+        kPoints_PointMode,
+        kLines_PointMode,
+        kPolygon_PointMode,
+    };
+    enum kMaskType { kMaskOpaque = 0,
+                     kMaskBlack,
+                     kMaskColor,
+                     KMaskShader };
+
+    PointMode fMode;
+    BlitMaskBench(PointMode mode, BlitMaskBench::kMaskType type) : RectBench(2), fMode(mode), _type(type) {};
+    ~BlitMaskBench(){};
+
+  protected:
+    kMaskType _type;
+    void OnTestFunction(OH_Drawing_Canvas *canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas *canvas) override;
+};
+
 //class RectBenchForPen : public RectBench {
 //    int     fStroke;
 //    bool    fAA;

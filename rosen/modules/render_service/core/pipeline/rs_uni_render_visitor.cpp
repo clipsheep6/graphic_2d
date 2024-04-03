@@ -3251,6 +3251,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
         RS_LOGE("RSUniRenderVisitor::ProcessDisplayRenderNode ScreenManager is nullptr");
         return;
     }
+    ScreenInfo curScreenInfo = screenManager->QueryScreenInfo(node.GetScreenId());
+    // skip frame according to skipFrameInterval value of SetScreenSkipFrameInterval interface
+    if (node.SkipFrame(curScreenInfo.skipFrameInterval)) {
+        RS_TRACE_NAME("SkipFrame, screenId:" + std::to_string(node.GetScreenId()));
+        return;
+    }
+
     constexpr int ROTATION_NUM = 4;
     auto screenRotation = node.GetScreenRotation();
     if (RSSystemProperties::IsFoldScreenFlag() && node.GetScreenId() == 0) {
@@ -3802,13 +3809,11 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
 void RSUniRenderVisitor::DrawSurfaceLayer(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
     const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes) const
 {
-#ifndef RS_PARALLEL
+#if !defined(RS_PARALLEL) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     RS_TRACE_NAME_FMT("RSUniRenderVisitor::DrawSurfaceLayer displayNode:%p subThreadNodes:%d", displayNode.get(), int(subThreadNodes.size()));
     auto subThreadManager = RSSubThreadManager::Instance();
-#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     subThreadManager->StartColorPickerThread(renderEngine_->GetRenderContext().get());
     subThreadManager->SubmitSubThreadTask(displayNode, subThreadNodes);
-#endif
 #endif
 }
 

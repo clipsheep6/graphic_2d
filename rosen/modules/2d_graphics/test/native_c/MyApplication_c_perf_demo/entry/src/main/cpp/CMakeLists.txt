@@ -42,6 +42,7 @@ add_library(entry SHARED
     dm/aa_rect_modes.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
+    dm/circular_arcs.cpp
 )
 
 add_library(myxnode SHARED
@@ -77,6 +78,7 @@ add_library(myxnode SHARED
     dm/aa_rect_modes.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
+    dm/circular_arcs.cpp
 )
 
 find_library(

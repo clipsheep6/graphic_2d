@@ -43,6 +43,8 @@
 #include "dm/blur_large_rrects.h"
 #include "dm/add_arc.h"
 #include "dm/font_regen.h"
+#include "dm/clipped_cubic.h"
+
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -133,6 +135,7 @@ namespace {
             {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
             {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},
             {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},
+            {"clippedcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClippedCubic>(); }},
 
 
             

@@ -23,7 +23,7 @@
 #include <map>
 #include <mutex>
 #include "EGL/egl.h"
-#include "pipeline/parallel_render/rs_render_task.h"
+#include "drawable/rs_surface_render_node_drawable.h"
 #include "pipeline/rs_base_render_node.h"
 #include "render_context/render_context.h"
 #include "rs_filter_sub_thread.h"
@@ -36,14 +36,11 @@ class RSSubThreadManager {
 public:
     static RSSubThreadManager *Instance();
     void Start(RenderContext *context);
-    void StartFilterThread(RenderContext* context);
     void StartColorPickerThread(RenderContext* context);
     void StartRCDThread(RenderContext* context);
     void PostTask(const std::function<void()>& task, uint32_t threadIndex, bool isSyncTask = false);
     void WaitNodeTask(uint64_t nodeId);
     void NodeTaskNotify(uint64_t nodeId);
-    void SubmitFilterSubThreadTask();
-    void SetFenceSubThread(sptr<SyncFence> fence);
     void SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
         const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     void ResetSubThreadGrContext();
@@ -56,6 +53,7 @@ public:
     void ReleaseSurface(uint32_t threadIndex) const;
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface, uint32_t threadIndex);
     std::unordered_map<uint32_t, pid_t> GetReThreadIndexMap() const;
+    void ScheduleRenderNodeDrawable(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
 private:
     RSSubThreadManager() = default;
     ~RSSubThreadManager() = default;
@@ -72,7 +70,6 @@ private:
     std::vector<std::shared_ptr<RSSubThread>> threadList_;
     std::unordered_map<pid_t, uint32_t> threadIndexMap_;
     std::unordered_map<uint32_t, pid_t> reThreadIndexMap_;
-    std::shared_ptr<RSFilterSubThread> filterThread = nullptr;
     std::shared_ptr<RSFilterSubThread> colorPickerThread_ = nullptr;
     bool needResetContext_ = false;
     bool needCancelTask_ = false;

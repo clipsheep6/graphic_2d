@@ -73,7 +73,7 @@ BlobCache::~BlobCache()
     }
 }
 
-void BlobCache::Terminate()
+static void BlobCache::Terminate()
 {
     if (blobCache_) {
         blobCache_->WriteToDisk();
@@ -358,7 +358,7 @@ void BlobCache::ReadFromDisk()
 }
 
 //CRC standard function
-uint32_t BlobCache::CrcGen(const uint8_t *buf, size_t len)
+static uint32_t BlobCache::CrcGen(const uint8_t *buf, size_t len)
 {
     const uint32_t polynoimal = 0xEDB88320;
     uint32_t crc = 0xFFFFFFFF;

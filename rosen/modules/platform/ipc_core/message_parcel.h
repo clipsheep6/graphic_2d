@@ -37,7 +37,7 @@ public:
     bool WriteRemoteObject(const sptr<IRemoteObject> &object);
     sptr<IRemoteObject> ReadRemoteObject();
     bool WriteFileDescriptor(int fd);
-    int ReadFileDescriptor();
+    int ReadFileDescriptor(bool needDup = true);
     bool ContainFileDescriptors() const;
     bool WriteInterfaceToken(std::u16string name);
     std::u16string ReadInterfaceToken();

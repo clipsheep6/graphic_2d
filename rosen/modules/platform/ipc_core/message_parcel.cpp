@@ -69,7 +69,7 @@ bool MessageParcel::WriteFileDescriptor(int fd)
     return false;
 }
 
-int MessageParcel::ReadFileDescriptor()
+int MessageParcel::ReadFileDescriptor(bool needDup)
 {
     return -1;
 }

@@ -1167,8 +1167,11 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
 
 void RSNode::SetForegroundEffectRadius(float blurRadius)
 {
-    SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>
-                                                        (RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
+    if (blurRadius != 0.0) {
+        ROSEN_LOGE("foregroundEffect node.cpp %{public}f", blurRadius);
+    }
+    SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
+        RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
 }
 
 void RSNode::SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter)

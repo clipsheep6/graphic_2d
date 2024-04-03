@@ -14,7 +14,6 @@
  */
 
 #include "animation/rs_symbol_animation.h"
-
 #include "animation/rs_keyframe_animation.h"
 #include "draw/paint.h"
 #include "platform/common/rs_log.h"
@@ -43,9 +42,7 @@ bool IsEqual(const Vector2f& val1, const Vector2f& val2)
 void CreateAnimationTimingCurve(OHOS::Rosen::Drawing::DrawingCurveType type, std::map<std::string, double>& curveArgs,
     RSAnimationTimingCurve& curve)
 {
-    if (!curve) {
-        curve = RSAnimationTimingCurve();
-    }
+    curve = RSAnimationTimingCurve();
     if (type == OHOS::Rosen::Drawing::DrawingCurveType::LINEAR) {
         curve = RSAnimationTimingCurve::LINEAR;
     } else if (type == OHOS::Rosen::Drawing::DrawingCurveType::SPRING) {
@@ -55,6 +52,8 @@ void CreateAnimationTimingCurve(OHOS::Rosen::Drawing::DrawingCurveType type, std
         double scaleDamping = curveArgs.count("damping") > 0 ? curveArgs["damping"] : 0;
         curve = RSAnimationTimingCurve::CreateInterpolatingSpring(static_cast<float>(scaleMass),
             static_cast<float>(scaleStiffness), static_cast<float>(scaleDamping), static_cast<float>(scaleVelocity));
+    } else {
+        return;
     }
 }
 
@@ -154,8 +153,8 @@ void RSSymbolAnimation::InitSupportAnimationTable()
 
 bool RSSymbolAnimation::ChooseAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig)
 {
-    if (std::count(
-            publicSupportAnimations_.begin(), publicSupportAnimations_.end(), symbolAnimationConfig->effectStrategy)) {
+    if (std::count(publicSupportAnimations_.begin(),
+        publicSupportAnimations_.end(), symbolAnimationConfig->effectStrategy)) {
         return SetPublicAnimation(symbolAnimationConfig);
     }
 
@@ -200,7 +199,7 @@ bool RSSymbolAnimation::SetPublicAnimation(
         Vector4f offsets =
             CalculateOffset(symbolNode.symbolData.path_, symbolNode.nodeBoundary[0], symbolNode.nodeBoundary[1]);
         if (!SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // 0: offsetX of newNode 1: offsetY
-                                               symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
+            symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
             return false;
         }
         rsNode_->AddChild(canvasNode, -1);
@@ -269,7 +268,7 @@ void RSSymbolAnimation::SpliceAnimation(const std::shared_ptr<RSNode>& rsNode,
 void RSSymbolAnimation::BounceAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2;
+    int animationStageNum = 2; // the count of atomizated animations 
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -284,7 +283,7 @@ void RSSymbolAnimation::BounceAnimation(
 void RSSymbolAnimation::AppearAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2;
+    int animationStageNum = 2; // the count of atomizated animations 
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -405,9 +404,8 @@ bool RSSymbolAnimation::SetScaleUnitAnimation(
     auto& symbolNode = symbolAnimationConfig->SymbolNodes[UNIT_NODE];
     Vector4f offsets = CalculateOffset(symbolNode.symbolData.path_, symbolNode.nodeBoundary[0],
         symbolNode.nodeBoundary[1]); // index 0 offsetX of layout, 1 offsetY of layout
-
     if (!SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // 0: offsetX of newNode; 1: offsetY
-                                           symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
+        symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
         return false;
     }
     Drawing::DrawingPiecewiseParameter scaleUnitParas;
@@ -530,7 +528,7 @@ bool RSSymbolAnimation::SetVariableColorAnimation(
             rsNode_->canvasNodesListMap[symbolSpanId] = { canvasNode };
         }
         if (!SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // 0: offsetX of newNode 1: offsetY
-                                               symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
+            symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
             return false;
         }
         auto recordingCanvas =
@@ -682,7 +680,7 @@ void RSSymbolAnimation::ScaleAnimationBase(const std::shared_ptr<RSNode>& rsNode
     rsNode->AddModifier(scaleModifier);
 
     // set animation curve and protocol
-    RSAnimationTimingCurve scaleCurve = RSAnimationTimingCurve();
+    RSAnimationTimingCurve scaleCurve;
     CreateAnimationTimingCurve(scaleParameter.curveType, scaleParameter.curveArgs, scaleCurve);
 
     RSAnimationTimingProtocol scaleprotocol;
@@ -729,7 +727,7 @@ void RSSymbolAnimation::AlphaAnimationBase(const std::shared_ptr<RSNode>& rsNode
     RSAnimationTimingProtocol alphaProtocol;
     alphaProtocol.SetStartDelay(alphaParameter.delay);
     alphaProtocol.SetDuration(alphaParameter.duration);
-    RSAnimationTimingCurve alphaCurve = RSAnimationTimingCurve();
+    RSAnimationTimingCurve alphaCurve;
     CreateAnimationTimingCurve(alphaParameter.curveType, alphaParameter.curveArgs, alphaCurve);
 
     std::vector<std::shared_ptr<RSAnimation>> animations1 = RSNode::Animate(

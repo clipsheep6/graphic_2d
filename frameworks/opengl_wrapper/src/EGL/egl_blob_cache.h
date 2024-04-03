@@ -125,7 +125,7 @@ public:
 
     bool ValidFile(uint8_t *buf, size_t len);
 
-    uint32_t CrcGen(const uint8_t *buf, size_t len);
+    static uint32_t CrcGen(const uint8_t *buf, size_t len);
 private:
     static BlobCache *blobCache_;
     size_t maxShaderSize_;

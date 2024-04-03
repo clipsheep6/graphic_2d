@@ -128,6 +128,8 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas* canvas)
                 OH_Drawing_CanvasDrawArc(canvas, bounds, kStart, kSweep-360.f);
             }
             OH_Drawing_CanvasRestore(canvas);
+            OH_Drawing_CanvasDetachPen(canvas);
+            OH_Drawing_PenDestroy(pen);
             ++x;
             if(x == baseMatrixCnt){
                 x = 0;
@@ -136,5 +138,9 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas* canvas)
         }
     }
     
+    for(auto m:matrices)
+    {
+        OH_Drawing_MatrixDestroy(m);
+    }
     
 }

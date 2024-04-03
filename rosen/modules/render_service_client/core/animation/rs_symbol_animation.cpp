@@ -268,8 +268,7 @@ void RSSymbolAnimation::SpliceAnimation(const std::shared_ptr<RSNode>& rsNode,
 void RSSymbolAnimation::BounceAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    // the count of atomizated animations
-    int animationStageNum = 2;
+    int animationStageNum = 2; // the count of atomizated animations
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -284,8 +283,7 @@ void RSSymbolAnimation::BounceAnimation(
 void RSSymbolAnimation::AppearAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    // the count of atomizated animations
-    int animationStageNum = 2;
+    int animationStageNum = 2; // the count of atomizated animations
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;

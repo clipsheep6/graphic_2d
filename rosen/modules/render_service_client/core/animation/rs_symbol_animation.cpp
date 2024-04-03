@@ -14,6 +14,7 @@
  */
 
 #include "animation/rs_symbol_animation.h"
+
 #include "animation/rs_keyframe_animation.h"
 #include "draw/paint.h"
 #include "platform/common/rs_log.h"
@@ -153,8 +154,8 @@ void RSSymbolAnimation::InitSupportAnimationTable()
 
 bool RSSymbolAnimation::ChooseAnimation(const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig)
 {
-    if (std::count(publicSupportAnimations_.begin(),
-        publicSupportAnimations_.end(), symbolAnimationConfig->effectStrategy)) {
+    if (std::count(
+            publicSupportAnimations_.begin(), publicSupportAnimations_.end(), symbolAnimationConfig->effectStrategy)) {
         return SetPublicAnimation(symbolAnimationConfig);
     }
 
@@ -199,7 +200,7 @@ bool RSSymbolAnimation::SetPublicAnimation(
         Vector4f offsets =
             CalculateOffset(symbolNode.symbolData.path_, symbolNode.nodeBoundary[0], symbolNode.nodeBoundary[1]);
         if (!SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // 0: offsetX of newNode 1: offsetY
-            symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
+                                               symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
             return false;
         }
         rsNode_->AddChild(canvasNode, -1);
@@ -268,7 +269,7 @@ void RSSymbolAnimation::SpliceAnimation(const std::shared_ptr<RSNode>& rsNode,
 void RSSymbolAnimation::BounceAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2; // the count of atomizated animations 
+    int animationStageNum = 2; // count of atomizated animations
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -283,7 +284,7 @@ void RSSymbolAnimation::BounceAnimation(
 void RSSymbolAnimation::AppearAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2; // the count of atomizated animations 
+    int animationStageNum = 2; // count of atomizated animations
     if (rsNode == nullptr && parameters.empty() && parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -405,7 +406,7 @@ bool RSSymbolAnimation::SetScaleUnitAnimation(
     Vector4f offsets = CalculateOffset(symbolNode.symbolData.path_, symbolNode.nodeBoundary[0],
         symbolNode.nodeBoundary[1]); // index 0 offsetX of layout, 1 offsetY of layout
     if (!SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // 0: offsetX of newNode; 1: offsetY
-        symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
+                                           symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
         return false;
     }
     Drawing::DrawingPiecewiseParameter scaleUnitParas;
@@ -528,7 +529,7 @@ bool RSSymbolAnimation::SetVariableColorAnimation(
             rsNode_->canvasNodesListMap[symbolSpanId] = { canvasNode };
         }
         if (!SetSymbolGeometry(canvasNode, Vector4f(offsets[0], offsets[1], // 0: offsetX of newNode 1: offsetY
-            symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
+                                               symbolNode.nodeBoundary[WIDTH], symbolNode.nodeBoundary[HEIGHT]))) {
             return false;
         }
         auto recordingCanvas =

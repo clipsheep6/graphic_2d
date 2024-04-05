@@ -160,6 +160,8 @@ void SurfaceNodeCommandHelper::SetSurfaceNodeType(RSContext& context, NodeId nod
 {
     auto type = static_cast<RSSurfaceNodeType>(surfaceNodeType);
     if (auto node = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(nodeId)) {
+        auto& nodeMap = context.GetMutableNodeMap();
+        nodeMap.CalCulateAbilityComponentNumsInProcess(nodeId);
         node->SetSurfaceNodeType(type);
     }
 }

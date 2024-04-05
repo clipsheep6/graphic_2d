@@ -60,6 +60,7 @@ public:
     void TraverseCanvasDrawingNodes(std::function<void (const std::shared_ptr<RSCanvasDrawingRenderNode>&)> func) const;
     std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> GetResidentSurfaceNodeMap() const;
     bool IsResidentProcessNode(NodeId id) const;
+    void CalCulateAbilityComponentNumsInProcess(NodeId id);
 
     NodeId GetEntryViewNodeId() const;
     NodeId GetWallPaperViewNodeId() const;
@@ -81,6 +82,7 @@ private:
     std::unordered_map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> residentSurfaceNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSDisplayRenderNode>> displayNodeMap_;
     std::unordered_map<NodeId, std::shared_ptr<RSCanvasDrawingRenderNode>> canvasDrawingNodeMap_;
+    std::unordered_map<pid_t, int> abilityComponentNumsInProcess_;
 
     NodeId entryViewNodeId_ = 0;
     NodeId wallpaperViewNodeId_ = 0;

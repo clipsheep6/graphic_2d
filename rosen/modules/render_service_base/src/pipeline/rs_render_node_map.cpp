@@ -28,6 +28,9 @@ constexpr const char* ENTRY_VIEW = "SCBDesktop";
 constexpr const char* WALLPAPER_VIEW = "SCBWallpaper";
 constexpr const char* SCREENLOCK_WINDOW = "SCBScreenLock";
 constexpr const char* SYSUI_DROPDOWN = "SCBDropdownPanel";
+constexpr const char* WINDOW_SCENE = "WindowScene";
+constexpr const char* SCB_WINDOW = "SCB";
+constexpr const int WINDOW_NUMS_LIMIT = 50;
 };
 RSRenderNodeMap::RSRenderNodeMap()
 {
@@ -78,6 +81,16 @@ NodeId RSRenderNodeMap::GetScreenLockWindowNodeId() const
     return screenLockWindowNodeId_;
 }
 
+bool RSRenderNodeMap::IsWindowSceneSurfaceNode(std::shared_ptr<RSSurfaceRenderNode> surfaceNode) const
+{
+    return surfaceNode->GetName().find(WINDOW_SCENE) != std::string::npos;
+}
+
+bool RSRenderNodeMap::IsSCBSurfaceNode(std::shared_ptr<RSSurfaceRenderNode> surfaceNode) const
+{
+    return surfaceNode->GetName().find(SCB_WINDOW) != std::string::npos;
+}
+
 static bool IsResidentProcess(const std::shared_ptr<RSSurfaceRenderNode> surfaceNode)
 {
     return surfaceNode->GetName().find(ENTRY_VIEW) != std::string::npos ||
@@ -98,6 +111,14 @@ bool RSRenderNodeMap::RegisterRenderNode(const std::shared_ptr<RSBaseRenderNode>
     NodeId id = nodePtr->GetId();
     if (renderNodeMap_.count(id)) {
         return false;
+    }
+    if (auto surfaceNode = nodePtr->ReinterpretCastTo<RSSurfaceRenderNode>()) {
+        if (!IsSCBSurfaceNode(surfaceNode) && !IsWindowSceneSurfaceNode(surfaceNode)) {
+            if (surfaceNodeNumsInProcess_[ExtractPid(id)] >= WINDOW_NUMS_LIMIT) {
+                return false;
+            }
+            surfaceNodeNumsInProcess_[ExtractPid(id)]++;
+        }
     }
     renderNodeMap_.emplace(id, nodePtr);
     nodePtr->OnRegister(context_);
@@ -130,6 +151,16 @@ bool RSRenderNodeMap::RegisterDisplayRenderNode(const std::shared_ptr<RSDisplayR
 
 void RSRenderNodeMap::UnregisterRenderNode(NodeId id)
 {
+    auto iter = renderNodeMap_.find(id);
+    if (iter != renderNodeMap_.end()) {
+        auto pid = ExtractPid(id);
+        auto surfaceNodeNumIter = surfaceNodeNumsInProcess_.find(pid);
+        if (surfaceNodeNumIter != surfaceNodeNumsInProcess_.end()) {
+            if (--surfaceNodeNumsInProcess_[pid] == 0) {
+                surfaceNodeNumsInProcess_.erase(pid);
+            }
+        }
+    }
     renderNodeMap_.erase(id);
     surfaceNodeMap_.erase(id);
     drivenRenderNodeMap_.erase(id);
@@ -190,6 +221,10 @@ void RSRenderNodeMap::FilterNodeByPid(pid_t pid)
 
     EraseIf(canvasDrawingNodeMap_, [pid](const auto& pair) -> bool {
         return ExtractPid(pair.first) == pid;
+    });
+
+    EraseIf(surfaceNodeNumsInProcess_, [pid](const auto& pair) -> bool {
+        return pair.first == pid;
     });
 
     EraseIf(displayNodeMap_, [pid](const auto& pair) -> bool {

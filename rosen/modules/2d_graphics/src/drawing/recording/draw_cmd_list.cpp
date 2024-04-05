@@ -294,10 +294,9 @@ void DrawCmdList::Playback(Canvas& canvas, const Rect* rect)
     if (isCached_ && canvas.isHighContrastEnabled() != cachedHighContrast_) {
         ClearCache();
     }
-    // Generate or clear cache if cache state changed
-    if (canvas.GetCacheType() == Drawing::CacheType::ENABLED && !isCached_) {
-        GenerateCache(&canvas, rect);
-    } else if (canvas.GetCacheType() == Drawing::CacheType::DISABLED && isCached_) {
+    // main thread generate text cache with gpu，may cause dipaly issues,
+    // clear cache if cache state changed.
+    if (canvas.GetCacheType() == Drawing::CacheType::DISABLED && isCached_) {
         ClearCache();
     }
 #endif

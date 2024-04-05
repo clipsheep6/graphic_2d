@@ -183,7 +183,7 @@ HWTEST_F(RSPointLightManagerTest, PrepareLight001, TestSize.Level1)
  */
 HWTEST_F(RSPointLightManagerTest, PrepareLight002, TestSize.Level1)
 {
-    auto instance = RSPointLightManager::Instance();	
+    auto instance = RSPointLightManager::Instance();
     std::unordered_map<NodeId, std::weak_ptr<RSRenderNode>> map;
     std::vector<std::weak_ptr<RSRenderNode>> dirtyList;
     instance->PrepareLight(map, dirtyList, true);

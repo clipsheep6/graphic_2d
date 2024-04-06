@@ -49,6 +49,7 @@ void RSEffectRenderNode::Prepare(const std::shared_ptr<RSNodeVisitor>& visitor)
         return;
     }
     visitor->PrepareEffectRenderNode(*this);
+    preStaticStatus_ = IsStaticCached();
 }
 
 void RSEffectRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
@@ -58,7 +59,6 @@ void RSEffectRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
     }
     RSRenderNode::RenderTraceDebug();
     visitor->ProcessEffectRenderNode(*this);
-    preStaticStatus_ = IsStaticCached();
 }
 
 void RSEffectRenderNode::ProcessRenderBeforeChildren(RSPaintFilterCanvas& canvas)
@@ -126,9 +126,8 @@ void RSEffectRenderNode::UpdateFilterCacheManagerWithCacheRegion(
     if (!manager) {
         return;
     }
-    if (manager->IsCacheValid() &&
-        (manager->GetCachedImageRegion() != GetFilterRect() ||
-            preRotationStatus_ != isRotationChanged_ || preStaticStatus_ != IsStaticCached())) {
+    if (manager->IsCacheValid() && (manager->GetCachedImageRegion() != GetFilterRect() ||
+        preRotationStatus_ != isRotationChanged_ || preStaticStatus_ != IsStaticCached()  || foldStatusChanged_)) {
         // If the cached image region is different from the filter rect, invalidate the cache
         manager->InvalidateCache();
     }
@@ -151,8 +150,8 @@ void RSEffectRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyM
 
 bool RSEffectRenderNode::NeedForceCache()
 {
-    // force update the first frame and last frame when rotating.
-    if (preRotationStatus_ != isRotationChanged_ || preStaticStatus_ != IsStaticCached()) {
+    // force update the first frame and last frame when rotating/switching screen or node is freezed.
+    if (preRotationStatus_ != isRotationChanged_ || preStaticStatus_ != IsStaticCached() || foldStatusChanged_) {
         return false;
     }
     // No need to invalidate cache if background image is not null or freezed
@@ -186,6 +185,21 @@ void RSEffectRenderNode::SetRotationChanged(bool isRotationChanged)
 bool RSEffectRenderNode::GetRotationChanged() const
 {
     return isRotationChanged_;
+}
+
+void RSEffectRenderNode::SetScreenId(uint64_t screenId)
+{
+    screenId_ = screenId;
+}
+
+uint64_t RSEffectRenderNode::GetScreenId() const
+{
+    return screenId_;
+}
+
+void RSEffectRenderNode::SetFoldStatusChanged(bool foldStatusChanged)
+{
+    foldStatusChanged_ = foldStatusChanged;
 }
 } // namespace Rosen
 } // namespace OHOS

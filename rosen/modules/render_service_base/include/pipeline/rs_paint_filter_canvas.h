@@ -136,7 +136,7 @@ class RSB_EXPORT RSPaintFilterCanvas : public RSPaintFilterCanvasBase {
 public:
     RSPaintFilterCanvas(Drawing::Canvas* canvas, float alpha = 1.0f);
     RSPaintFilterCanvas(Drawing::Surface* surface, float alpha = 1.0f);
-    ~RSPaintFilterCanvas() override {};
+    ~RSPaintFilterCanvas() override {};  //兜底restore？
 
     void CopyConfiguration(const RSPaintFilterCanvas& other);
 
@@ -255,6 +255,18 @@ public:
             offscreenDataList_.pop();
         }
     }
+
+    void SavePCanvasList()
+    {
+        storedPCanvasList_.push_back(pCanvasList_);
+    }
+
+    void RestorePCanvasList()
+    {
+        auto item = storedPCanvasList_.back();
+        pCanvasList_.swap(item);
+        storedPCanvasList_.pop_back();
+    }
     
     // canvas status relate
     struct CanvasStatus {
@@ -303,6 +315,7 @@ private:
     std::stack<bool> blendOffscreenStack_;
 
     // foregroundFilter related
+    std::vector<std::vector<Canvas*>> storedPCanvasList_; //store pCanvasList_
     std::stack<OffscreenData> offscreenDataList_;
     std::stack<Drawing::Surface*> storeMainScreenSurface_;
     std::stack<Drawing::Canvas*> storeMainScreenCanvas_;

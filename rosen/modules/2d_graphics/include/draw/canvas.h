@@ -47,22 +47,10 @@ public:
         pCanvasList_.clear();
     }
 
-    void StoreCanvasList()
-    {
-        storedPCanvasList_.push_back(pCanvasList_);
-    }
-
-    void SwapBackCanvasList()
-    {
-        auto item = storedPCanvasList_.back();
-        pCanvasList_.swap(item);
-        storedPCanvasList_.pop_back();
-    }
     // constructor adopt a raw canvas ptr, using for ArkUI, should remove after rosen modifier provide drawing Canvas.
     explicit Canvas(void* rawCanvas) : CoreCanvas(rawCanvas) {}
     virtual ~Canvas() {
         RemoveAll();
-        storedPCanvasList_.clear();
     }
 
     /*
@@ -87,7 +75,6 @@ public:
     }
 protected:
     std::vector<Canvas*> pCanvasList_;
-    std::vector<std::vector<Canvas*>> storedPCanvasList_;
     bool recordingState_ = false;
 };
 

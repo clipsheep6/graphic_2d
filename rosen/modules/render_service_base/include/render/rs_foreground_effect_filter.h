@@ -42,10 +42,13 @@ public:
     RSForegroundEffectFilter operator=(const RSForegroundEffectFilter&) = delete;
     ~RSForegroundEffectFilter() override;
 
+    bool IsValid() const override;
+    std::string GetDescription() override;
     void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const Drawing::Rect& src, const Drawing::Rect& dst) const override;
-    //std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override;
-    //std::string GetDescription() override;
+    void PreProcess(std::shared_ptr<Drawing::Image> image) override {};
+    void PostProcess(RSPaintFilterCanvas& canvas) override {};
+
     std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override
     {
         return nullptr;

@@ -13,29 +13,30 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_JS_FONTCOLLECTION_H
-#define OHOS_ROSEN_JS_FONTCOLLECTION_H
+#ifndef OHOS_ROSEN_JS_TEXT_STYLE_H
+#define OHOS_ROSEN_JS_TEXT_STYLE_H
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
-#include "font_collection.h"
 #include "js_text_utils.h"
+#include "text_style.h"
+#include "paragraph_style_napi/js_paragraphstyle.h"
 
 namespace OHOS::Rosen {
-class JsFontCollection final {
+class JsTextStyle final {
 public:
-    JsFontCollection();
+    JsTextStyle();
 
     static napi_value Init(napi_env env, napi_value exportObj);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void* nativeObject, void* finalize);
-    static napi_value DisableFallback(napi_env env, napi_callback_info info);
-
-    std::shared_ptr<FontCollection> GetFontCollection();
+    static napi_value JsGetFontWeight(napi_env env, napi_callback_info info);
+    static napi_value JsSetFontWeight(napi_env env, napi_callback_info info);
 private:
+    napi_value OnGetFontWeight(napi_env env, napi_callback_info info);
+    napi_value OnSetFontWeight(napi_env env, napi_callback_info info);
     static thread_local napi_ref constructor_;
-    napi_value OnDisableFallback(napi_env env, napi_callback_info info);
-    std::shared_ptr<FontCollection> m_fontCollection = nullptr;
+    std::shared_ptr<TextStyle> m_textStyle = nullptr;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_JS_FONTCOLLECTION_H

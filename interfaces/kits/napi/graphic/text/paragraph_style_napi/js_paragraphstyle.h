@@ -20,22 +20,23 @@
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
 
+#include "enum_napi/text_enum_napi.h"
 #include "typography_style.h"
 
 namespace OHOS::Rosen {
 class JsParagraphStyle final {
 public:
-    explicit JsParagraphStyle(std::shared_ptr<TypographyStyle> paragraphStyle) : m_paragraphStyle(paragraphStyle) {};
-    ~JsParagraphStyle();
+    JsParagraphStyle();
 
     static napi_value Init(napi_env env, napi_value exportObj);
-    static napi_value CreateJsParagraphStyle(napi_env env, napi_callback_info info);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
-
-    std::shared_ptr<TypographyStyle> GetParagraphStyle();
-
+    static napi_value JsGetStructStyle(napi_env env, napi_callback_info info);
+    static napi_value JsSetStructStyle(napi_env env, napi_callback_info info);
 private:
+    bool SetStrutStyleFontFamilies(napi_env env, napi_value fontFamiliesField);
+    napi_value OnGetStructStyle(napi_env env, napi_callback_info info);
+    napi_value OnSetStructStyle(napi_env env, napi_callback_info info);
     static thread_local napi_ref constructor_;
     std::shared_ptr<TypographyStyle> m_paragraphStyle = nullptr;
 };

@@ -20,6 +20,14 @@
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 
+#include "utils/log.h"
+#include "draw/color.h"
+#include "text_style.h"
+#include "typography_style.h"
+#include "rosen_text/typography_create.h"
+#include <codecvt>
+
+
 namespace OHOS::Rosen {
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
@@ -222,5 +230,7 @@ void BindNativeFunction(napi_env env, napi_value object, const char* name, const
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
 
 napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message);
+
+bool GetPlaceholderSpanFromJS(napi_env env, napi_value argValue, PlaceholderSpan& placeholderSpan);
 } // namespace OHOS::Rosen
 #endif // OHOS_JS_TEXT_UTILS_H

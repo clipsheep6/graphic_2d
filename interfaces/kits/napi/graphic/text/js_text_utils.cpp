@@ -41,4 +41,44 @@ napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string&
     napi_throw(env, CreateJsError(env, static_cast<int32_t>(err), message));
     return NapiGetUndefined(env);
 }
+
+inline bool GetPlaceholderSpanFromJS(napi_env env, napi_value argValue, PlaceholderSpan& placeholderSpan)
+{
+    if(argValue == nullptr) {
+        return false;
+    }
+    
+    napi_value tempValue = nullptr;
+
+    napi_get_named_property(env, argValue, "width", &tempValue);
+    double width = 0;
+    if (ConvertFromJsNumber(env, argValue, width)) {
+        placeholderSpan.width = width;
+    }
+
+    napi_get_named_property(env, argValue, "height", &tempValue);
+    double height = 0;
+    if (ConvertFromJsNumber(env, argValue, height)) {
+        placeholderSpan.height = height;
+    }
+
+    napi_get_named_property(env, argValue, "align", &tempValue);
+    uint32_t align = 0;
+    if (ConvertFromJsNumber(env, tempValue, align)== napi_ok) {
+        placeholderSpan.alignment = PlaceholderVerticalAlignment(align);
+    }
+
+    napi_get_named_property(env, argValue, "baseline", &tempValue);
+    uint32_t baseline = 0;
+    if (ConvertFromJsNumber(env, argValue, height)) {
+        placeholderSpan.baseline = TextBaseline(baseline);
+    }
+
+    napi_get_named_property(env, argValue, "baselineOffset", &tempValue);
+    double baselineOffset = 0;
+    if (ConvertFromJsNumber(env, argValue, baselineOffset)) {
+        placeholderSpan.baselineOffset = baselineOffset;
+    }
+    return true;
+}
 } // namespace OHOS::Rosen

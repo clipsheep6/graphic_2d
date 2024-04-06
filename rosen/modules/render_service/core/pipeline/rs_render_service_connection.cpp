@@ -1227,11 +1227,25 @@ void RSRenderServiceConnection::SetCacheEnabledForRotation(bool isEnabled)
     RSSystemProperties::SetCacheEnabledForRotation(isEnabled);
 }
 
-GpuDirtyRegionInfo RSRenderServiceConnection::GetCurrentDirtyRegionInfo(ScreenId id)
+std::vector<ActiveDirtyRegionInfo> RSRenderServiceConnection::GetActiveDirtyRegionInfo()
 {
-    GpuDirtyRegionInfo gpuDirtyRegionInfo = GpuDirtyRegion::GetInstance().GetGpuDirtyRegionInfo(id);
-    GpuDirtyRegion::GetInstance().ResetDirtyRegionInfo();
-    return gpuDirtyRegionInfo;
+    auto activeDirtyRegionInfos = GpuDirtyRegionCollection::GetInstance().GetActiveDirtyRegionInfo();
+    GpuDirtyRegionCollection::GetInstance().ResetActiveDirtyRegionInfo();
+    return activeDirtyRegionInfos;
+}
+
+GlobalDirtyRegionInfo RSRenderServiceConnection::GetGlobalDirtyRegionInfo()
+{
+    auto globalDirtyRegionInfo = GpuDirtyRegionCollection::GetInstance().GetGlobalDirtyRegionInfo();
+    GpuDirtyRegionCollection::GetInstance().ResetGlobalDirtyRegionInfo();
+    return globalDirtyRegionInfo;
+}
+
+LayerSynthesisModeInfo RSRenderServiceConnection::GetLayerSynthesisModeInfo()
+{
+    auto layerSynthesisModeInfo = LayerSynthesisModeCollection::GetInstance().GetLayerSynthesisModeInfo();
+    LayerSynthesisModeCollection::GetInstance().ResetLayerSynthesisModeInfo();
+    return layerSynthesisModeInfo;
 }
 
 #ifdef TP_FEATURE_ENABLE

@@ -28,6 +28,7 @@
 #include "rs_trace.h"
 #include "common/rs_optional_trace.h"
 #include "scene_board_judgement.h"
+#include "info_collection/rs_gpu_dirty_region_collection.h"
 #include <parameter.h>
 #include <parameters.h>
 
@@ -69,6 +70,12 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::shared_ptr<RSDis
         auto visibleRegion = surfaceNode->GetVisibleRegion();
         Occlusion::Region surfaceDirtyRegion { dirtyRect };
         Occlusion::Region surfaceVisibleDirtyRegion = surfaceDirtyRegion.And(visibleRegion);
+        GpuDirtyRegionCollection::GetInstance().UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(surfaceNode->GetId(),
+            surfaceVisibleDirtyRegion);
+        if (!GpuDirtyRegionCollection::GetInstance().IsPidSet(surfaceNode->GetId())) {
+            GpuDirtyRegionCollection::GetInstance().SetPidAndWindowNameForDFX(surfaceNode->GetId(),
+                surfaceNode->GetName());
+        }
         surfaceNode->SetVisibleDirtyRegion(surfaceVisibleDirtyRegion);
         if (!surfaceVisibleDirtyRegion.IsEmpty()) {
             hasVisibleDirtyRegionSurfaceVec.emplace_back(surfaceNode->GetId());

@@ -229,7 +229,11 @@ public:
 
     void SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback);
 
-    GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id);
+    std::vector<ActiveDirtyRegionInfo> GetActiveDirtyRegionInfo();
+
+    GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo();
+
+    LayerSynthesisModeInfo GetLayerSynthesisModeInfo();
 
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config);

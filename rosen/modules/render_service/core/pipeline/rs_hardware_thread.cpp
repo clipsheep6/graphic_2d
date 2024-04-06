@@ -35,6 +35,7 @@
 #include "rs_realtime_refresh_rate_manager.h"
 #include "rs_trace.h"
 #include "common/rs_optional_trace.h"
+#include "info_collection/rs_layer_synthesis_mode_collection.h"
 #include "frame_report.h"
 #include "hdi_backend.h"
 #include "vsync_sampler.h"
@@ -169,6 +170,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGE("RSHardwareThread::CommitAndReleaseLayers handler is nullptr");
         return;
     }
+    LayerSynthesisModeCollection::GetInstance().UpdateUniformOrOfflineComposeFrameNumberForDFX(layers.size());
     auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
     uint32_t rate = hgmCore.GetPendingScreenRefreshRate();
     uint32_t currentRate = hgmCore.GetScreenCurrentRefreshRate(hgmCore.GetActiveScreenId());
@@ -331,6 +333,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
     }
 
     RS_LOGD("RsDebug RSHardwareThread::Redraw flush frame buffer start");
+    LayerSynthesisModeCollection::GetInstance().UpdateRedrawFrameNumberForDFX();
     bool forceCPU = RSBaseRenderEngine::NeedForceCPU(layers);
     auto screenManager = CreateOrGetScreenManager();
     auto screenInfo = screenManager->QueryScreenInfo(screenId);

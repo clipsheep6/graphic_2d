@@ -55,6 +55,7 @@
 #include "render/rs_skia_filter.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
 #include "system/rs_system_parameters.h"
+#include "info_collection/rs_gpu_dirty_region_collection.h"
 #include "scene_board_judgement.h"
 #include "hgm_core.h"
 #include "benchmarks/rs_recording_thread.h"
@@ -2489,7 +2490,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             && !curDisplayDirtyManager_->IsCurrentFrameDirty()) {
             RS_LOGD("DisplayNode skip");
             RS_TRACE_NAME("DisplayNode skip");
-            GpuDirtyRegion::GetInstance().AddSkipProcessFramesNumberForXpower(node.GetScreenId());
+            GpuDirtyRegionCollection::GetInstance().AddSkipProcessFramesNumberForDFX();
 #ifdef OHOS_PLATFORM
             RSJankStats::GetInstance().SetSkipDisplayNode();
 #endif
@@ -2603,15 +2604,13 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 SetSurfaceGlobalDirtyRegion(displayNodePtr);
             }
             rects = GetDirtyRects(dirtyRegion);
-            if (!rects.empty()) {
-                GpuDirtyRegion::GetInstance().UpdateActiveDirtyRegionAreasAndFrameNumberForXpower(node.GetScreenId(),
-                                                                                                  rects);
-            }
             RectI rect = node.GetDirtyManager()->GetDirtyRegionFlipWithinSurface();
             if (!rect.IsEmpty()) {
                 rects.emplace_back(rect);
-                GpuDirtyRegion::GetInstance().UpdateGlobalDirtyRegionAreasAndFrameNumberForXpower(node.GetScreenId(),
-                                                                                                  rect);
+                RectI screenRectI(0, 0, static_cast<int32_t>(screenInfo_.phyWidth),
+                    static_cast<int32_t>(screenInfo_.phyHeight));
+                GpuDirtyRegionCollection::GetInstance().UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(
+                    rect.IntersectRect(screenRectI));
             }
             if (!isDirtyRegionAlignedEnable_) {
                 for (auto& r : rects) {

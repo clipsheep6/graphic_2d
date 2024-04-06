@@ -75,6 +75,7 @@
 #include "property/rs_property_trace.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_point_light_manager.h"
+#include "info_collection/rs_gpu_dirty_region_collection.h"
 #ifdef NEW_RENDER_CONTEXT
 #include "render_context/memory_handler.h"
 #endif
@@ -482,7 +483,7 @@ void RSMainThread::InitRSEventDetector()
     // default Threshold value of Timeout Event: 100ms
     rsCompositionTimeoutDetector_ = RSBaseEventDetector::CreateRSTimeOutDetector(100, "RS_COMPOSITION_TIMEOUT");
     if (rsCompositionTimeoutDetector_ != nullptr) {
-        rsEventManager_.AddEvent(rsCompositionTimeoutDetector_, 60000); // report Internal 1min:60sï¼š60000ms
+        rsEventManager_.AddEvent(rsCompositionTimeoutDetector_, 60000); // report Internal 1min:60sï¼?60000ms
         RS_LOGD("InitRSEventDetector finish");
     }
 }
@@ -1040,8 +1041,10 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         surfaceHandler.ResetCurrentFrameBufferConsumed();
         if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
             this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
+            GpuDirtyRegionCollection::GetInstance().SetSelfDrawingPidAndNameForDFX(surfaceNode);
             if (surfaceNode->IsCurrentFrameBufferConsumed() && !surfaceNode->IsHardwareEnabledType()) {
                 surfaceNode->SetContentDirty();
+                GpuDirtyRegionCollection::GetInstance().DeleteNotSelfDrawingFromMapForDFX(surfaceNode->GetId());
                 doDirectComposition_ = false;
             }
             if (deviceType_ == DeviceType::PC && isUiFirstOn_ && surfaceNode->IsCurrentFrameBufferConsumed()
@@ -2001,7 +2004,7 @@ void RSMainThread::SetVSyncRateByVisibleLevel(std::map<uint32_t, RSVisibleLevel>
 
 void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
 {
-    // if visible surfaces changed callback to WMSï¼š
+    // if visible surfaces changed callback to WMSï¼?
     // 1. curVisVec size changed
     // 2. curVisVec content changed
     bool visibleChanged = curVisVec.size() != lastVisVec_.size();

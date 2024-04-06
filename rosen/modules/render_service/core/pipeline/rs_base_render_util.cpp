@@ -28,6 +28,7 @@
 #include "png.h"
 #include "rs_trace.h"
 #include "transaction/rs_transaction_data.h"
+#include "info_collection/rs_gpu_dirty_region_collection.h"
 
 #include "draw/clip.h"
 #include "effect/color_filter.h"
@@ -929,6 +930,8 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
             surfaceHandler.GetNodeId(), ret);
         return false;
     }
+    GpuDirtyRegionCollection::GetInstance().UpdateSelfDrawingRegionAreasAndFrameNumberForDFX(
+        surfaceHandler.GetNodeId(), damages);
     // The damages of buffer will be merged here, only single damage is supported so far
     Rect damageAfterMerge = MergeBufferDamages(damages);
     if (damageAfterMerge.h <= 0 || damageAfterMerge.w <= 0) {

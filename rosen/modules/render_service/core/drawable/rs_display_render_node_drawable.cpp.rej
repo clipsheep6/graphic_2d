@@ -1,0 +1,10 @@
+diff a/rosen/modules/render_service/core/drawable/rs_display_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_display_render_node_drawable.cpp	(rejected hunks)
+@@ -317,7 +317,7 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(std::shared_ptr<RSDisplay
+         RS_LOGW("RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip: hardwareThread task has too many to excute");
+     }
+     processor->ProcessDisplaySurface(*displayNode);
+-    // TODO commit RCD layers
++    // planning: commit RCD layers
+     processor->PostProcess();
+     return true;
+ }

@@ -483,7 +483,7 @@ void RSMainThread::InitRSEventDetector()
     // default Threshold value of Timeout Event: 100ms
     rsCompositionTimeoutDetector_ = RSBaseEventDetector::CreateRSTimeOutDetector(100, "RS_COMPOSITION_TIMEOUT");
     if (rsCompositionTimeoutDetector_ != nullptr) {
-        rsEventManager_.AddEvent(rsCompositionTimeoutDetector_, 60000); // report Internal 1min:60s: 60000ms
+        rsEventManager_.AddEvent(rsCompositionTimeoutDetector_, 60000); // report Internal 1min:60s:60000ms
         RS_LOGD("InitRSEventDetector finish");
     }
 }
@@ -2004,7 +2004,7 @@ void RSMainThread::SetVSyncRateByVisibleLevel(std::map<uint32_t, RSVisibleLevel>
 
 void RSMainThread::CallbackToWMS(VisibleData& curVisVec)
 {
-    // if visible surfaces changed callback to WMS: 
+    // if visible surfaces changed callback to WMS:
     // 1. curVisVec size changed
     // 2. curVisVec content changed
     bool visibleChanged = curVisVec.size() != lastVisVec_.size();

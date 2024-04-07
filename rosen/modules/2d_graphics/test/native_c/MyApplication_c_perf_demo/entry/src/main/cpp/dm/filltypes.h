@@ -4,6 +4,7 @@
 #include <bits/alltypes.h>
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_canvas.h>
+#include <native_drawing/drawing_path.h>
 
 typedef float SkScalar;
 #define SK_Scalar1 1.0f
@@ -27,6 +28,8 @@ public:
 
 protected:
     SkPathFillType ft;
+    // 创建路径path对象
+    OH_Drawing_Path *path = OH_Drawing_PathCreate();
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
     void showPath(OH_Drawing_Canvas *canvas, int x, int y, SkPathFillType ft, SkScalar scale, OH_Drawing_Brush *brush);
     void showFour(OH_Drawing_Canvas *canvas, SkScalar scale, OH_Drawing_Brush *brush);

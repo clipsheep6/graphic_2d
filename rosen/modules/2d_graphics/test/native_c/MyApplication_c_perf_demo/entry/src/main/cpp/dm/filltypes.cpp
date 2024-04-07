@@ -16,8 +16,7 @@ FillTypeGM::FillTypeGM()
     bitmapHeight_ = 840;
     fileName_ = "filltypes";
 }
-// 创建路径path对象
-OH_Drawing_Path *path = OH_Drawing_PathCreate();
+
 
 // 用例名: filltypes
 // 测试OH_Drawing_PathSetFillType迁移基于skia gm\filltypes.cpp->dm\filltypes.cpp
@@ -26,7 +25,8 @@ void FillTypeGM::showPath(OH_Drawing_Canvas *canvas, int x, int y, SkPathFillTyp
 {
     DRAWING_LOGI("FillTypeGM::showPath start");
     // 创建一个矩形对象为图像画布
-    float right = 150, bottom = 150;
+    float right = 150;
+    float bottom = 150;
     OH_Drawing_Rect *rectAngLe = OH_Drawing_RectCreate(0, 0, right, bottom);
     OH_Drawing_CanvasSave(canvas);
     OH_Drawing_CanvasTranslate(canvas, x, y);
@@ -34,7 +34,7 @@ void FillTypeGM::showPath(OH_Drawing_Canvas *canvas, int x, int y, SkPathFillTyp
     DRAWING_LOGI("FillTypeGM::showPath rectAngLe=%{public}p", rectAngLe);
     // 使用指定白色清空画布底色
     OH_Drawing_CanvasClear(canvas, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0xFF, 0xFF));
-
+    
     if (ft == kWinding) {
         DRAWING_LOGI("FillTypeGM::showPath kWinding");
         OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING);
@@ -84,8 +84,8 @@ void FillTypeGM::OnTestFunction(OH_Drawing_Canvas *canvas)
     DRAWING_LOGI("FillTypeGM::OnTestFunction start");
     // 创建画刷brush对象
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
-    // 使用指定颜色设置清空画布底色
-    OH_Drawing_CanvasClear(canvas, 0xFFDDDDDD);
+    // 使用指定颜色设置清空画布底色: sk源代码0xFFDDDDDD为RGB221但图像是0xFFD9D9D9灰度RGB217，故测试功能代码设置xFFD9D9D9
+    OH_Drawing_CanvasClear(canvas, 0xFFD9D9D9);
     // 创建矩形对象并将弧添加到路径中
     float x = 50;
     float y = 50;

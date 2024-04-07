@@ -410,6 +410,7 @@ void RSRenderServiceConnection::RemoveVirtualScreen(ScreenId id)
 int32_t RSRenderServiceConnection::SetScreenChangeCallback(sptr<RSIScreenChangeCallback> callback)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    RS_LOGI("RSRenderServiceConnection::SetScreenChangeCallback enter");
     if (screenChangeCallback_ == callback) {
         return INVALID_ARGUMENTS;
     }
@@ -424,6 +425,7 @@ int32_t RSRenderServiceConnection::SetScreenChangeCallback(sptr<RSIScreenChangeC
     auto tmp = screenChangeCallback_;
     screenChangeCallback_ = callback;
     lock.unlock();
+    RS_LOGI("RSRenderServiceConnection::SetScreenChangeCallback mutex unlock");
     return status;
 }
 
@@ -1063,6 +1065,7 @@ int32_t RSRenderServiceConnection::UnRegisterSurfaceOcclusionChangeCallback(Node
 int32_t RSRenderServiceConnection::RegisterHgmConfigChangeCallback(sptr<RSIHgmConfigChangeCallback> callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    RS_LOGI("RSRenderServiceConnection::RegisterHgmConfigChangeCallback");
     if (!callback) {
         RS_LOGD("RSRenderServiceConnection::RegisterHgmConfigChangeCallback: callback is nullptr");
         return StatusCode::INVALID_ARGUMENTS;
@@ -1076,6 +1079,7 @@ int32_t RSRenderServiceConnection::RegisterHgmRefreshRateModeChangeCallback(
     sptr<RSIHgmConfigChangeCallback> callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    RS_LOGI("RSRenderServiceConnection::RegisterHgmRefreshRateModeChangeCallback");
     if (!callback) {
         RS_LOGD("RSRenderServiceConnection::RegisterHgmRefreshRateModeChangeCallback: callback is nullptr");
         return StatusCode::INVALID_ARGUMENTS;

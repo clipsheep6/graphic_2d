@@ -153,11 +153,11 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     // 编码参数
     ImagePacker_Opts opts;
     // 配置编码格式（必须）
-    opts.format = "image/jpeg";
+    opts.format = "image/png";
     // 配置编码质量（必须）
     opts.quality = 100;
     // 打开需要输出的文件（请确保应用有权限访问这个路径）
-    std::string path = "/data/storage/el2/base/files/" + fileName_ + ".jpg";
+    std::string path = "/data/storage/el2/base/files/" + fileName_ + ".png";
     int fd = open(path.c_str(), O_RDWR | O_CREAT);  
     if (fd <= 0) {
         DRAWING_LOGE("failed to open fd = %{public}d", fd);

@@ -64,10 +64,10 @@ export class TestBase {
       console.log(TAG, 'this.pixelMap_ is invalid');
       return;
     }
-    const path : string = dir + "/" + this.fileName_ + ".jpg";
+    const path : string = dir + "/" + this.fileName_ + ".png";
     let file = fs.openSync(path, fs.OpenMode.CREATE | fs.OpenMode.READ_WRITE);
     const imagePackerApi: image.ImagePacker = image.createImagePacker();
-    let packOpts : image.PackingOption = { format:"image/jpeg", quality:100};
+    let packOpts : image.PackingOption = { format:"image/png", quality:100};
     imagePackerApi.packToFile(this.pixelMap_, file.fd, packOpts).then(() => {
       // 直接打包进文件
       console.log(TAG, 'Successfully packaged images');

@@ -43,8 +43,10 @@ add_library(entry SHARED
     dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
+    dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
     dm/filltypes.cpp
+    dm/dashing.cpp
 )
 
 add_library(myxnode SHARED
@@ -81,8 +83,10 @@ add_library(myxnode SHARED
     dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
+    dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
     dm/filltypes.cpp
+    dm/dashing.cpp
 )
 
 find_library(

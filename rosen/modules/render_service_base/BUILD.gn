@@ -246,8 +246,8 @@ ohos_source_set("render_service_base_src") {
     "src/screen_manager/rs_virtual_screen_resolution.cpp",
 
     #info_collection
-    "info_collection/rs_gpu_dirty_region_collection.cpp",
-    "info_collection/rs_layer_systhesis_mode_collection.cpp",
+    "src/info_collection/rs_gpu_dirty_region_collection.cpp",
+    "src/info_collection/rs_layer_systhesis_mode_collection.cpp",
   ]
 
   if (is_cross_platform) {

@@ -523,17 +523,17 @@ void RSInterfaces::SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback)
 
 std::vector<ActiveDirtyRegionInfo> RSInterfaces::GetActiveDirtyRegionInfo()
 {
-    renderServiceClient_->GetActiveDirtyRegionInfo();
+    return renderServiceClient_->GetActiveDirtyRegionInfo();
 }
 
 GlobalDirtyRegionInfo RSInterfaces::GetGlobalDirtyRegionInfo()
 {
-    renderServiceClient_->GetGlobalDirtyRegionInfo();
+    return renderServiceClient_->GetGlobalDirtyRegionInfo();
 }
 
 LayerSynthesisModeInfo RSInterfaces::GetLayerSynthesisModeInfo()
 {
-    renderServiceClient_->GetLayerSynthesisModeInfo();
+    return renderServiceClient_->GetLayerSynthesisModeInfo();
 }
 
 #ifdef TP_FEATURE_ENABLE

@@ -712,7 +712,7 @@ bool RSMainThread::CheckParallelSubThreadNodesStatus()
     if (subThreadNodes_.empty() &&
         (deviceType_ == DeviceType::PHONE || (leashWindowCount_ > 0 && isUiFirstOn_ == false))) {
         if (!isUniRender_) {
-            RSSubThreadManager::Instance()->ResetSubThreadGrContext(); // TODO: move to prepare
+            RSSubThreadManager::Instance()->ResetSubThreadGrContext(); // planning: move to prepare
         }
         return false;
     }
@@ -1540,7 +1540,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         SetFocusLeashWindowId();
         uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
         if (RSSystemProperties::GetQuickPrepareEnabled()) {
-            //TODO:the QuickPrepare will be replaced by Prepare
+            //planning:the QuickPrepare will be replaced by Prepare
             rootNode->QuickPrepare(uniVisitor);
         } else {
             rootNode->Prepare(uniVisitor);
@@ -1554,7 +1554,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
             WaitUntilUploadTextureTaskFinished(isUniRender_);
         }
-        if (false) { // TODO: move to prepare
+        if (false) { // planning: move to prepare
             auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(
                 rootNode->GetFirstChild());
             std::list<std::shared_ptr<RSSurfaceRenderNode>> mainThreadNodes;
@@ -2616,16 +2616,15 @@ void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::str
 {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     DfxString log;
-    auto gpuContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
-    if (gpuContext != nullptr) {
-        if (pid != 0) {
-            MemoryManager::DumpPidMemory(log, pid, gpuContext);
-        } else {
-            MemoryManager::DumpMemoryUsage(log, gpuContext, type);
-        }
-    }
-    if (type.empty() || type == MEM_GPU_TYPE) {
-        RSUniRenderThread::Instance().DumpMem(log);
+    if (pid != 0) {
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+    RSUniRenderThread::Instance().PostSyncTask([&log, pid] {
+        MemoryManager::DumpPidMemory(log, pid,
+            RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
+    });
+#endif
+    } else {
+        MemoryManager::DumpMemoryUsage(log, type);
     }
     if (type.empty() || type == MEM_GPU_TYPE) {
         auto subThreadManager = RSSubThreadManager::Instance();

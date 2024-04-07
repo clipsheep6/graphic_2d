@@ -2098,7 +2098,7 @@ void RSUniRenderVisitor::PostPrepare(RSRenderNode& node, bool subTreeSkipped)
         node.GetStagingRenderParams()->SetAlpha(node.GetRenderProperties().GetAlpha());
     }
 
-    // TODO: only do this if node is dirty
+    // planning: only do this if node is dirty
     node.UpdateRenderParams();
 
     // add if node is dirty
@@ -2118,7 +2118,7 @@ void RSUniRenderVisitor::CheckSubFilterNodeNeedClearCache(RSRenderNode& node)
             UpdateRotationStatusForEffectNode(*effectNode);
         }
         filterNode->UpdateFilterCacheWithDirty(*dirtyManager);
-        // TODO merge dirty region
+        // planning: merge dirty region
         filterNode->MarkAndUpdateFilterNodeDirtySlotsAfterPrepare();
     }
 }

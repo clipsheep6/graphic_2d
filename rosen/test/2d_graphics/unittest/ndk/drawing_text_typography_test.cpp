@@ -2115,9 +2115,9 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest071, TestSize.Level
  */
 HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest072, TestSize.Level1)
 {
-    OH_Drawing_FontConfigInfoErrorCode code = ERROR_UNKNOWN;
+    OH_Drawing_FontConfigInfoErrorCode code = ERROR_FONT_CONFIG_INFO_UNKNOWN;
     OH_Drawing_FontConfigInfo* configJsonInfo = OH_Drawing_GetSystemFontConfigInfo(&code);
-    EXPECT_EQ(code, SUCCESS);
+    EXPECT_EQ(code, SUCCESS_FONT_CONFIG_INFO);
     EXPECT_EQ(configJsonInfo != nullptr, true);
     OH_Drawing_DestroySystemFontConfigInfo(configJsonInfo);
     configJsonInfo = nullptr;
@@ -2166,8 +2166,7 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest074, TestSize.Level
     normalStyle.slant = FONT_STYLE_NORMAL;
     OH_Drawing_SetTextStyleFontStyleStruct(txtStyle, normalStyle);
 
-    OH_Drawing_FontStyleStruct style;
-    OH_Drawing_TextStyleGetFontStyleStruct(txtStyle, &style);
+    OH_Drawing_FontStyleStruct style = OH_Drawing_TextStyleGetFontStyleStruct(txtStyle);
     EXPECT_EQ(style.weight, normalStyle.weight);
     EXPECT_EQ(style.width, normalStyle.width);
     EXPECT_EQ(style.slant, normalStyle.slant);
@@ -2189,11 +2188,11 @@ HWTEST_F(OH_Drawing_TypographyTest, OH_Drawing_TypographyTest075, TestSize.Level
     normalStyle.slant = FONT_STYLE_NORMAL;
     OH_Drawing_SetTypographyStyleFontStyleStruct(typoStyle, normalStyle);
 
-    OH_Drawing_FontStyleStruct style;
-    OH_Drawing_TypographyStyleGetFontStyleStruct(typoStyle, &style);
+    OH_Drawing_FontStyleStruct style = OH_Drawing_TypographyStyleGetFontStyleStruct(typoStyle);
     EXPECT_EQ(style.weight, normalStyle.weight);
     EXPECT_EQ(style.width, normalStyle.width);
     EXPECT_EQ(style.slant, normalStyle.slant);
+    OH_Drawing_DestroyTypographyStyle(typoStyle);
 }
 
 /*

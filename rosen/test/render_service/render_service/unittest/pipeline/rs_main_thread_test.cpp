@@ -1422,7 +1422,7 @@ HWTEST_F(RSMainThreadTest, CalcOcclusionImplementation, TestSize.Level1)
     curAllSurfaces.emplace_back(nullptr);
     curAllSurfaces.emplace_back(node);
     VisibleData dstCurVisVec;
-    std::map<uint32_t, RSVisibleLevel> dstPidVisMap;
+    std::map<NodeId, RSVisibleLevel> dstPidVisMap;
     mainThread->CalcOcclusionImplementation(curAllSurfaces, dstCurVisVec, dstPidVisMap);
 }
 
@@ -2240,10 +2240,10 @@ HWTEST_F(RSMainThreadTest, SetVSyncRateByVisibleLevel001, TestSize.Level1)
     uint32_t tmpPid = 0;
     if (vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid) == VSYNC_ERROR_OK) {
         vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-        std::map<uint32_t, RSVisibleLevel> pidVisMap;
-        pidVisMap[tmpPid] = RSVisibleLevel::RS_SEMI_DEFAULT_VISIBLE;
+        std::map<NodeId, RSVisibleLevel> pidVisMap;
+        pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_SEMI_DEFAULT_VISIBLE;
         std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-        mainThread->lastPidVisMap_.clear();
+        mainThread->lastVisMapForVsyncRate_.clear();
         mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
         ASSERT_NE(connection->highPriorityRate_, (int32_t)SIMI_VISIBLE_RATE);
     }
@@ -2271,10 +2271,10 @@ HWTEST_F(RSMainThreadTest, SetVSyncRateByVisibleLevel002, TestSize.Level1)
     uint32_t tmpPid = 0;
     if (vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid) == VSYNC_ERROR_OK) {
         vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-        std::map<uint32_t, RSVisibleLevel> pidVisMap;
-        pidVisMap[tmpPid] = RSVisibleLevel::RS_SYSTEM_ANIMATE_SCENE;
+        std::map<NodeId, RSVisibleLevel> pidVisMap;
+        pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_SYSTEM_ANIMATE_SCENE;
         std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-        mainThread->lastPidVisMap_.clear();
+        mainThread->lastVisMapForVsyncRate_.clear();
         mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
         ASSERT_NE(connection->highPriorityRate_, (int32_t)SYSTEM_ANIMATED_SECNES_RATE);
     }
@@ -2302,10 +2302,10 @@ HWTEST_F(RSMainThreadTest, SetVSyncRateByVisibleLevel003, TestSize.Level1)
     uint32_t tmpPid = 0;
     if (vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid) == VSYNC_ERROR_OK) {
         vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-        std::map<uint32_t, RSVisibleLevel> pidVisMap;
-        pidVisMap[tmpPid] = RSVisibleLevel::RS_INVISIBLE;
+        std::map<NodeId, RSVisibleLevel> pidVisMap;
+        pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_INVISIBLE;
         std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-        mainThread->lastPidVisMap_.clear();
+        mainThread->lastVisMapForVsyncRate_.clear();
         mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
         ASSERT_NE(connection->highPriorityRate_, (int32_t)INVISBLE_WINDOW_RATE);
     }
@@ -2333,10 +2333,10 @@ HWTEST_F(RSMainThreadTest, SetVSyncRateByVisibleLevel004, TestSize.Level1)
     uint32_t tmpPid = 0;
     if (vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid) == VSYNC_ERROR_OK) {
         vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-        std::map<uint32_t, RSVisibleLevel> pidVisMap;
-        pidVisMap[tmpPid] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
+        std::map<NodeId, RSVisibleLevel> pidVisMap;
+        pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
         std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-        mainThread->lastPidVisMap_.clear();
+        mainThread->lastVisMapForVsyncRate_.clear();
         mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
         ASSERT_NE(connection->highPriorityRate_, (int32_t)DEFAULT_RATE);
     }
@@ -2366,10 +2366,10 @@ HWTEST_F(RSMainThreadTest, SetSystemAnimatedScenes004, TestSize.Level1)
     uint32_t tmpPid = 0;
     ASSERT_EQ(vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid), VSYNC_ERROR_OK);
     vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    pidVisMap[tmpPid] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
+    pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    mainThread->lastPidVisMap_.clear();
+    mainThread->lastVisMapForVsyncRate_.clear();
     mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
     ASSERT_NE(connection->highPriorityRate_, (int32_t)SYSTEM_ANIMATED_SECNES_RATE);
 }
@@ -2398,10 +2398,10 @@ HWTEST_F(RSMainThreadTest, SetSystemAnimatedScenes005, TestSize.Level1)
     uint32_t tmpPid = 0;
     ASSERT_EQ(vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid), VSYNC_ERROR_OK);
     vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    pidVisMap[tmpPid] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
+    pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    mainThread->lastPidVisMap_.clear();
+    mainThread->lastVisMapForVsyncRate_.clear();
     mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
     ASSERT_NE(connection->highPriorityRate_, (int32_t)SYSTEM_ANIMATED_SECNES_RATE);
 }
@@ -2430,10 +2430,10 @@ HWTEST_F(RSMainThreadTest, SetSystemAnimatedScenes006, TestSize.Level1)
     uint32_t tmpPid = 0;
     ASSERT_EQ(vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid), VSYNC_ERROR_OK);
     vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    pidVisMap[tmpPid] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
+    pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    mainThread->lastPidVisMap_.clear();
+    mainThread->lastVisMapForVsyncRate_.clear();
     mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
     ASSERT_NE(connection->highPriorityRate_, (int32_t)SYSTEM_ANIMATED_SECNES_RATE);
 }
@@ -2462,10 +2462,10 @@ HWTEST_F(RSMainThreadTest, SetSystemAnimatedScenes007, TestSize.Level1)
     uint32_t tmpPid = 0;
     ASSERT_EQ(vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid), VSYNC_ERROR_OK);
     vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    pidVisMap[tmpPid] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
+    pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    mainThread->lastPidVisMap_.clear();
+    mainThread->lastVisMapForVsyncRate_.clear();
     mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
     ASSERT_NE(connection->highPriorityRate_, (int32_t)SYSTEM_ANIMATED_SECNES_RATE);
 }
@@ -2494,10 +2494,10 @@ HWTEST_F(RSMainThreadTest, SetSystemAnimatedScenes008, TestSize.Level1)
     uint32_t tmpPid = 0;
     ASSERT_EQ(vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid), VSYNC_ERROR_OK);
     vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    pidVisMap[tmpPid] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
+    pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    mainThread->lastPidVisMap_.clear();
+    mainThread->lastVisMapForVsyncRate_.clear();
     mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
     ASSERT_NE(connection->highPriorityRate_, (int32_t)SYSTEM_ANIMATED_SECNES_RATE);
 }
@@ -2526,10 +2526,10 @@ HWTEST_F(RSMainThreadTest, SetSystemAnimatedScenes009, TestSize.Level1)
     uint32_t tmpPid = 0;
     ASSERT_EQ(vsyncDistributor->QosGetPidByName(connection->info_.name_, tmpPid), VSYNC_ERROR_OK);
     vsyncDistributor->connectionsMap_[tmpPid].push_back(connection);
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
-    pidVisMap[tmpPid] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
+    pidVisMap[static_cast<NodeId>(tmpPid)] = RSVisibleLevel::RS_UNKNOW_VISIBLE_LEVEL;
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces;
-    mainThread->lastPidVisMap_.clear();
+    mainThread->lastVisMapForVsyncRate_.clear();
     mainThread->SetVSyncRateByVisibleLevel(pidVisMap, curAllSurfaces);
     ASSERT_NE(connection->highPriorityRate_, (int32_t)SYSTEM_ANIMATED_SECNES_RATE);
 }
@@ -2706,7 +2706,7 @@ HWTEST_F(RSMainThreadTest, CalcOcclusionImplementation001, TestSize.Level1)
     curAllSurfaces.emplace_back(nodeBottom);
     curAllSurfaces.emplace_back(nodeTop);
     VisibleData dstCurVisVec;
-    std::map<uint32_t, RSVisibleLevel> dstPidVisMap;
+    std::map<NodeId, RSVisibleLevel> dstPidVisMap;
     mainThread->CalcOcclusionImplementation(curAllSurfaces, dstCurVisVec, dstPidVisMap);
     ASSERT_EQ(nodeBottom->GetOcclusionVisible(), true);
     ASSERT_EQ(nodeTop->GetOcclusionVisible(), true);
@@ -2743,7 +2743,7 @@ HWTEST_F(RSMainThreadTest, CalcOcclusionImplementation002, TestSize.Level1)
     curAllSurfaces.emplace_back(nodeBottom);
     curAllSurfaces.emplace_back(nodeTop);
     VisibleData dstCurVisVec;
-    std::map<uint32_t, RSVisibleLevel> dstPidVisMap;
+    std::map<NodeId, RSVisibleLevel> dstPidVisMap;
     mainThread->CalcOcclusionImplementation(curAllSurfaces, dstCurVisVec, dstPidVisMap);
     ASSERT_EQ(nodeBottom->GetOcclusionVisible(), true);
     ASSERT_EQ(nodeTop->GetOcclusionVisible(), true);
@@ -2780,7 +2780,7 @@ HWTEST_F(RSMainThreadTest, CalcOcclusionImplementation003, TestSize.Level1)
     curAllSurfaces.emplace_back(nodeBottom);
     curAllSurfaces.emplace_back(nodeTop);
     VisibleData dstCurVisVec;
-    std::map<uint32_t, RSVisibleLevel> dstPidVisMap;
+    std::map<NodeId, RSVisibleLevel> dstPidVisMap;
     mainThread->CalcOcclusionImplementation(curAllSurfaces, dstCurVisVec, dstPidVisMap);
     ASSERT_EQ(nodeBottom->GetOcclusionVisible(), false);
     ASSERT_EQ(nodeTop->GetOcclusionVisible(), true);
@@ -2818,7 +2818,7 @@ HWTEST_F(RSMainThreadTest, CalcOcclusionImplementation004, TestSize.Level1)
     curAllSurfaces.emplace_back(nodeBottom);
     curAllSurfaces.emplace_back(nodeTop);
     VisibleData dstCurVisVec;
-    std::map<uint32_t, RSVisibleLevel> dstPidVisMap;
+    std::map<NodeId, RSVisibleLevel> dstPidVisMap;
     mainThread->CalcOcclusionImplementation(curAllSurfaces, dstCurVisVec, dstPidVisMap);
     ASSERT_EQ(nodeBottom->GetOcclusionVisible(), true);
     ASSERT_EQ(nodeTop->GetOcclusionVisible(), true);
@@ -2858,7 +2858,7 @@ HWTEST_F(RSMainThreadTest, CalcOcclusionImplementation005, TestSize.Level1)
     curAllSurfaces.emplace_back(nodeBottom);
     curAllSurfaces.emplace_back(nodeTop);
     VisibleData dstCurVisVec;
-    std::map<uint32_t, RSVisibleLevel> dstPidVisMap;
+    std::map<NodeId, RSVisibleLevel> dstPidVisMap;
     mainThread->CalcOcclusionImplementation(curAllSurfaces, dstCurVisVec, dstPidVisMap);
     ASSERT_EQ(nodeBottom->GetOcclusionVisible(), false);
     ASSERT_EQ(nodeTop->GetOcclusionVisible(), true);

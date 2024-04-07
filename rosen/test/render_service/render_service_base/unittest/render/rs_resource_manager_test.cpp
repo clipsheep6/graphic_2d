@@ -39,7 +39,7 @@ static bool g_uploadFunctionCalled = false;
 static void TestHookFunction(bool paraUpload, const std::shared_ptr<Drawing::Image>& image,
     const std::shared_ptr<Media::PixelMap>& pixelMap, uint64_t uniqueId)
 {
-    uploadFunctionCalled = true;
+    g_uploadFunctionCalled = true;
 }
 /**
  * @tc.name: InstanceTest001

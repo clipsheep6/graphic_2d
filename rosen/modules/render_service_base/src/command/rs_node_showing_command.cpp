@@ -144,20 +144,24 @@ void RSNodeGetShowingPropertiesAndCancelAnimation::Process(RSContext& context)
     auto& nodeMap = context.GetNodeMap();
     for (auto& [key, value]: propertiesMap_) {
         // value should already initialized as nullptr
-        auto& [nodeId, propertyId] = key;
+        auto& [nodeId, propertyId, animations] = key;
         auto node = nodeMap.GetRenderNode<RSRenderNode>(nodeId);
         if (!node) {
             continue;
         }
         auto modifier = node->GetModifier(propertyId);
         if (!modifier) {
+            node->GetAnimationManager().AddCancelAnimations(animations);
             continue;
         }
         value = modifier->GetProperty();
         if (!value) {
+            node->GetAnimationManager().AddCancelAnimations(animations);
             continue;
         }
-        node->GetAnimationManager().CancelAnimationByPropertyId(propertyId);
+        if (!node->GetAnimationManager().CancelAnimationByPropertyId(propertyId)) {
+            node->GetAnimationManager().AddCancelAnimations(animations);
+        }
     }
 }
 } // namespace Rosen

@@ -71,15 +71,30 @@ void RSAnimationManager::RemoveAnimation(AnimationId keyId)
     animations_.erase(animationItr);
 }
 
-void RSAnimationManager::CancelAnimationByPropertyId(PropertyId id)
+bool RSAnimationManager::CancelAnimationByPropertyId(PropertyId id)
 {
-    EraseIf(animations_, [id, this](const auto& pair) {
+    return EraseIf(animations_, [id, this](const auto& pair) {
         if (pair.second && (pair.second->GetPropertyId() == id)) {
             OnAnimationFinished(pair.second);
             return true;
         }
         return false;
     });
+}
+
+bool RSAnimationManager::RemoveCancelAnimations(const AnimationId& id)
+{
+    auto it = std::find(cancelAnimations_.begin(), cancelAnimations_.end(), id);
+    if (it != cancelAnimations_.end()) {
+        cancelAnimations_.erase(it);
+        return true;
+    }
+    return false;
+}
+
+void RSAnimationManager::AddCancelAnimations(const std::vector<AnimationId>& animations)
+{
+    cancelAnimations_.insert(cancelAnimations_.end(), animations.begin(), animations.end());
 }
 
 void RSAnimationManager::FilterAnimationByPid(pid_t pid)

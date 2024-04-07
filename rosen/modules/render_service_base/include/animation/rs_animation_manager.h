@@ -46,7 +46,7 @@ public:
     void DumpAnimations(std::string& out) const;
     void AddAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
     void RemoveAnimation(AnimationId keyId);
-    void CancelAnimationByPropertyId(PropertyId id);
+    bool CancelAnimationByPropertyId(PropertyId id);
     const std::shared_ptr<RSRenderAnimation> GetAnimation(AnimationId id) const;
     void FilterAnimationByPid(pid_t pid);
     uint32_t GetAnimationsSize();
@@ -73,6 +73,8 @@ public:
     void SetRateDeciderEnable(bool enabled, const FrameRateGetFunc& func);
     void SetRateDeciderScaleSize(float width, float height);
 
+    bool RemoveCancelAnimations(const AnimationId& id);
+    void AddCancelAnimations(const std::vector<AnimationId>& animations);
 private:
     void OnAnimationFinished(const std::shared_ptr<RSRenderAnimation>& animation);
 
@@ -80,6 +82,7 @@ private:
     std::unordered_map<PropertyId, AnimationId> springAnimations_;
     std::unordered_map<PropertyId, AnimationId> pathAnimations_;
     std::unordered_map<PropertyId, AnimationId> particleAnimations_;
+    std::vector<AnimationId> cancelAnimations_ {};
     friend class RSRenderNode;
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;

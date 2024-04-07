@@ -34,23 +34,30 @@ void FillTypeGM::showPath(OH_Drawing_Canvas *canvas, int x, int y, SkPathFillTyp
     DRAWING_LOGI("FillTypeGM::showPath rectAngLe=%{public}p", rectAngLe);
     // 使用指定白色清空画布底色
     OH_Drawing_CanvasClear(canvas, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0xFF, 0xFF));
-    
-    if (ft == kWinding) {
-        DRAWING_LOGI("FillTypeGM::showPath kWinding");
-        OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING);
-    } else if (ft == kEvenOdd) {
-        DRAWING_LOGI("FillTypeGM::showPath kEvenOdd");
-        OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_EVEN_ODD);
-    } else if (ft == kInverseWinding) {
-        DRAWING_LOGI("FillTypeGM::showPath kInverseWinding");
-        OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_INVERSE_WINDING);
-    } else if (ft == kInverseEvenOdd) {
-        DRAWING_LOGI("FillTypeGM::showPath kInverseEvenOdd");
-        OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_INVERSE_EVEN_ODD);
-    } else {
-        OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING);
-        DRAWING_LOGI("FillTypeGM::showPath a default rule");
+
+    switch (ft) {
+        case kWinding:
+            DRAWING_LOGI("FillTypeGM::showPath kWinding");
+            OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING);
+            break;
+        case kEvenOdd:
+            DRAWING_LOGI("FillTypeGM::showPath kEvenOdd");
+            OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_EVEN_ODD);
+            break;
+        case kInverseWinding:
+            DRAWING_LOGI("FillTypeGM::showPath kInverseWinding");
+            OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_INVERSE_WINDING);
+            break;
+        case kInverseEvenOdd:
+            DRAWING_LOGI("FillTypeGM::showPath kInverseEvenOdd");
+            OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_INVERSE_EVEN_ODD);
+            break;
+        default:
+            OH_Drawing_PathSetFillType(path, OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING);
+            DRAWING_LOGI("FillTypeGM::showPath a default rule");
+            break;
     }
+
     // 其中这里平移画布的x=rectAngLe.left + rectAngLe.right.y=rectAngLe.top + rectAngLe.bottom
     OH_Drawing_CanvasTranslate(canvas, right * SK_ScalarHalf, bottom * SK_ScalarHalf);
     DRAWING_LOGI("FillTypeGM::showPath right * SK_ScalarHalf=%{public}f bottom * SK_ScalarHalf=%{public}f",
@@ -84,7 +91,8 @@ void FillTypeGM::OnTestFunction(OH_Drawing_Canvas *canvas)
     DRAWING_LOGI("FillTypeGM::OnTestFunction start");
     // 创建画刷brush对象
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
-    // 使用指定颜色设置清空画布底色: sk源代码0xFFDDDDDD为RGB221但图像是0xFFD9D9D9灰度RGB217，故测试功能代码设置xFFD9D9D9
+    // 使用指定颜色设置清空画布底色:
+    // sk源代码色度是0xFFDDDDDD为RGB221图像出来0xFFD9D9D9灰度RGB217，测试功能代码设置xFFD9D9D9
     OH_Drawing_CanvasClear(canvas, 0xFFD9D9D9);
     // 创建矩形对象并将弧添加到路径中
     float x = 50;

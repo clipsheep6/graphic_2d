@@ -229,7 +229,7 @@ public:
     void UpdateChildrenRect(const RectI& subRect);
     void SetDirty(bool forceAddToActiveList = false);
 
-    inline void AddDirtyType(RSModifierType type)
+    virtual void AddDirtyType(RSModifierType type)
     {
         dirtyTypes_.set(static_cast<int>(type), true);
     }
@@ -448,11 +448,12 @@ public:
     void UpdateEffectRegion(std::optional<Drawing::RectI>& region, bool isForced = false);
 
     // for blur filter cache
+    void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
     virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
     virtual void UpdateFilterCacheManagerWithCacheRegion(RSDirtyRegionManager& dirtyManager,
         const std::optional<RectI>& clipRect = std::nullopt, bool isForeground = false);
     bool IsBackgroundInAppOrNodeSelfDirty() const;
-    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare();
+    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(bool dirtyBelowContainsFilterNode = false);
     bool IsBackgroundFilterCacheValid() const;
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
@@ -655,10 +656,10 @@ protected:
     bool isChildSupportUifirst_ = true;
     bool lastFrameSynced_ = true;
 
-    void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
     const RectI GetFilterCachedRegion(bool isForeground) const;
-    virtual void MarkFilterCacheFlagsAfterPrepare(bool isForeground = false);
+    virtual void MarkFilterCacheFlagsAfterPrepare(
+        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false);
     std::atomic<bool> isStaticCached_ = false;
 
 private:

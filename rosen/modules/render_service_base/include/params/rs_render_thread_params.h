@@ -25,17 +25,17 @@
 namespace OHOS::Rosen {
 struct CaptureParam {
     bool isInCaptureFlag_ = false;
-    bool isCaptureDisplay_ = false;
+    bool isSingleSurface_ = false;
     bool isMirror_ = false;
     float scaleX_ = 0.0f;
     float scaleY_ = 0.0f;
     CaptureParam() {}
-    CaptureParam(bool isInCaptureFlag, bool isCaptureDisplay, bool isMirror, float scaleX, float scaleY)
-        : isInCaptureFlag_(isInCaptureFlag)
-        , isCaptureDisplay_(isCaptureDisplay)
-        , isMirror_(isMirror)
-        , scaleX_(scaleX)
-        , scaleY_(scaleY) {}
+    CaptureParam(bool isInCaptureFlag, bool isSingleSurface, bool isMirror, float scaleX, float scaleY)
+        : isInCaptureFlag_(isInCaptureFlag),
+        isSingleSurface_(isSingleSurface),
+        isMirror_(isMirror),
+        scaleX_(scaleX),
+        scaleY_(scaleY) {}
 };
 class RSB_EXPORT RSRenderThreadParams {
 public:

@@ -548,7 +548,8 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
     float scaleX, float scaleY, SurfaceCaptureType surfaceCaptureType, bool isSync)
 {
     if (surfaceCaptureType == SurfaceCaptureType::DEFAULT_CAPTURE) {
-        if (RSSystemParameters::GetRsSurfaceCaptureType() == RsSurfaceCaptureType::RS_SURFACE_CAPTURE_TYPE_MAIN_THREAD) {
+        if (RSSystemParameters::GetRsSurfaceCaptureType() ==
+            RsSurfaceCaptureType::RS_SURFACE_CAPTURE_TYPE_MAIN_THREAD) {
             auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
             auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
             if (node == nullptr) {
@@ -558,7 +559,8 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
             auto isProcOnBgThread = (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) ?
                 !node->IsOnTheTree() : false;
             std::function<void()> captureTask = [scaleY, scaleX, callback, id, isProcOnBgThread]() -> void {
-                RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%{public}" PRIu64 "]", id);
+                RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%{public}" PRIu64 "]",
+                    id);
                 ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
                 RSSurfaceCaptureTask task(id, scaleX, scaleY, isProcOnBgThread);
                 if (!task.Run(callback)) {
@@ -573,7 +575,8 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
             }
         } else {
             std::function<void()> captureTask = [scaleY, scaleX, callback, id]() -> void {
-                RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%{public}" PRIu64 "]", id);
+                RS_LOGD("RSRenderService::TakeSurfaceCapture callback->OnSurfaceCapture nodeId:[%{public}" PRIu64 "]",
+                    id);
                 ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "RSRenderService::TakeSurfaceCapture");
                 RSSurfaceCaptureTaskParallel task(id, scaleX, scaleY);
                 if (!task.Run(callback)) {
@@ -1010,7 +1013,8 @@ bool RSRenderServiceConnection::GetBitmap(NodeId id, Drawing::Bitmap& bitmap)
     } else if (tid == UNI_RENDER_THREAD_INDEX) {
         auto getDrawableBitmapTask = [&node, &bitmap, tid]() {
             auto drawableNode = DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(node);
-            bitmap = static_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable*>(drawableNode.get())->GetBitmap(tid); };
+            bitmap = static_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable*>(drawableNode.get())->GetBitmap(tid);
+        };
         renderThread_.PostSyncTask(getDrawableBitmapTask);
     } else {
         RSTaskDispatcher::GetInstance().PostTask(
@@ -1048,7 +1052,8 @@ bool RSRenderServiceConnection::GetPixelmap(NodeId id, const std::shared_ptr<Med
         auto getDrawablePixelmapTask = [&node, &pixelmap, rect, &result, tid, drawCmdList]() {
             auto drawableNode = DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(node);
             result = static_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable*>(drawableNode.get())->
-                GetPixelmap(pixelmap, rect, tid, drawCmdList); };
+                GetPixelmap(pixelmap, rect, tid, drawCmdList);
+            };
         renderThread_.PostSyncTask(getDrawablePixelmapTask);
     } else {
         RSTaskDispatcher::GetInstance().PostTask(

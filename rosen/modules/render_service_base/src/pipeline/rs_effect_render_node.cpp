@@ -128,27 +128,23 @@ void RSEffectRenderNode::UpdateFilterCacheManagerWithCacheRegion(
 {
     if (!RSProperties::FilterCacheEnabled) {
         ROSEN_LOGE("RSEffectRenderNode::UpdateFilterCacheManagerWithCacheRegion filter cache is disabled.");
-         return;
+        return;
     }
     if (GetFilterRect() != GetFilterCachedRegion(isForeground)) {
         MarkFilterStatusChanged(isForeground, true);
     }
 }
 
-void RSEffectRenderNode::MarkFilterCacheFlagsAfterPrepare(bool isForeground)
+void RSEffectRenderNode::MarkFilterCacheFlagsAfterPrepare(
+    std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground)
 {
-    if (!RSProperties::FilterCacheEnabled) {
-        ROSEN_LOGE("RSEffectRenderNode::UpdateFilterCacheManagerWithCacheRegion filter cache is disabled.");
-        return;
-    }
-    auto filterDrawable = GetFilterDrawable(isForeground);
     if (filterDrawable == nullptr) {
         return;
     }
-    if (CheckFilterCacheNeedForceSave()) {
-        filterDrawable->MarkFilterForceUseCache();
-    } else if (CheckFilterCacheNeedForceClear()) {
+    if (!(filterDrawable->GetFilterForceClearCache()) && CheckFilterCacheNeedForceClear()) {
         filterDrawable->MarkFilterForceClearCache();
+    } else if (CheckFilterCacheNeedForceSave()) {
+        filterDrawable->MarkFilterForceUseCache();
     }
     if (isRotationChanged_) {
         filterDrawable->MarkRotationChanged();
@@ -156,7 +152,7 @@ void RSEffectRenderNode::MarkFilterCacheFlagsAfterPrepare(bool isForeground)
     if (ChildHasVisibleEffect()) {
         filterDrawable->MarkHasEffectChildren();
     }
-    RSRenderNode::MarkFilterCacheFlagsAfterPrepare(isForeground);
+    RSRenderNode::MarkFilterCacheFlagsAfterPrepare(filterDrawable, isForeground);
     preStaticStatus_ = IsStaticCached();
 }
 
@@ -172,8 +168,8 @@ bool RSEffectRenderNode::CheckFilterCacheNeedForceClear()
 {
     RS_OPTIONAL_TRACE_NAME_FMT("RSEffectRenderNode[%llu]::CheckFilterCacheNeedForceClear foldStatusChanged_:%d,"
         " preRotationStatus_:%d, isRotationChanged_:%d, preStaticStatus_:%d, isStaticCached:%d,"
-        " haveEffectRegion:%d", GetId(), foldStatusChanged_, preRotationStatus_, isRotationChanged_,
-        preStaticStatus_, IsStaticCached(), GetRenderProperties().GetHaveEffectRegion());
+        " hasVisibleEffect:%d", GetId(), foldStatusChanged_, preRotationStatus_, isRotationChanged_,
+        preStaticStatus_, IsStaticCached(), ChildHasVisibleEffect());
     return foldStatusChanged_ || (preRotationStatus_ != isRotationChanged_) ||
         (preStaticStatus_ != IsStaticCached()) || !ChildHasVisibleEffect();
 }
@@ -201,7 +197,7 @@ uint64_t RSEffectRenderNode::GetCurrentAttachedScreenId() const
 
 void RSEffectRenderNode::SetFoldStatusChanged(bool foldStatusChanged)
 {
-    foldStatusChanged_ = foldStatusChanged; 
+    foldStatusChanged_ = foldStatusChanged;
 }
 } // namespace Rosen
 } // namespace OHOS

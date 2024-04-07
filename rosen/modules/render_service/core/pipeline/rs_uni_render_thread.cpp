@@ -76,9 +76,7 @@ RSUniRenderThread& RSUniRenderThread::Instance()
 }
 
 RSUniRenderThread::RSUniRenderThread()
-{
-
-}
+{}
 
 RSUniRenderThread::~RSUniRenderThread() noexcept {}
 
@@ -91,9 +89,12 @@ void RSUniRenderThread::InitGrContext()
     }
     uniRenderEngine_->Init();
 #ifdef RS_ENABLE_VK
-    uniRenderEngine_->GetSkContext()->RegisterPostFunc([](const std::function<void()>& task) {
-        RSUniRenderThread::Instance().PostRTTask(task);
-    });
+    if (Drawing::SystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        Drawing::SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        uniRenderEngine_->GetSkContext()->RegisterPostFunc([](const std::function<void()>& task) {
+            RSUniRenderThread::Instance().PostRTTask(task);
+        });
+    }
 #endif
 }
 

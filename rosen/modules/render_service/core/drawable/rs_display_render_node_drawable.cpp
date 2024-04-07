@@ -40,6 +40,7 @@
 #include "screen_manager/rs_screen_manager.h"
 #include "system/rs_system_parameters.h"
 #include "common/rs_singleton.h"
+#include "common/rs_optional_trace.h"
 #include "pipeline/round_corner_display/rs_rcd_render_manager.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 // dfx
@@ -49,7 +50,7 @@
 namespace OHOS::Rosen::DrawableV2 {
 class RSOverDrawDfx {
 public:
-    RSOverDrawDfx(std::shared_ptr<RSPaintFilterCanvas> curCanvas)
+    explicit RSOverDrawDfx(std::shared_ptr<RSPaintFilterCanvas> curCanvas)
     {
         enable_ = RSOverdrawController::GetInstance().IsEnabled() && curCanvas != nullptr;
         curCanvas_ = curCanvas;
@@ -187,7 +188,7 @@ std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
     }
 
     if (!processor->Init(*displayNodeSp, params.GetDisplayOffsetX(), params.GetDisplayOffsetY(), INVALID_SCREEN_ID,
-            renderEngine, true)) {
+        renderEngine, true)) {
         RS_LOGE("RSDisplayRenderNodeDrawable::RequestFrame processor init failed!");
         return nullptr;
     }
@@ -209,7 +210,7 @@ std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
 
 #if 0 // TO-DO wait buffer
     if (!RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(
-            std::static_pointer_cast<RSSurfaceHandler>(displayNodeSp))) {
+        std::static_pointer_cast<RSSurfaceHandler>(displayNodeSp))) {
         RS_TRACE_NAME("RSDisplayRenderNodeDrawable::RequestFrame no released buffer");
     }
 #endif
@@ -239,7 +240,7 @@ static inline Drawing::Region GetFilpedRegion(std::vector<RectI>& rects, ScreenI
 #endif
         Drawing::Region tmpRegion;
         tmpRegion.SetRect(Drawing::RectI(r.left_, topAfterFilp, r.left_ + r.width_, topAfterFilp + r.height_));
-        RS_TRACE_NAME_FMT("GetFilpedRegion orig ltrb[%d %d %d %d] to fliped rect ltrb[%d %d %d %d]", r.left_, r.top_,
+        RS_OPTIONAL_TRACE_NAME_FMT("GetFilpedRegion orig ltrb[%d %d %d %d] to fliped rect ltrb[%d %d %d %d]", r.left_, r.top_,
             r.left_ + r.width_, r.top_ + r.height_, r.left_, topAfterFilp, r.left_ + r.width_,
             topAfterFilp + r.height_);
 
@@ -426,6 +427,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RSOverDrawDfx rsOverDrawDfx(curCanvas_);
         RSSkpCaptureDfx capture(curCanvas_);
         Drawing::AutoCanvasRestore acr(*curCanvas_, true);
+        curCanvas_->ConcatMatrix(params->GetMatrix());
         if (uniParam->IsOpDropped()) {
             auto region = GetFilpedRegion(damageRegionrects, screenInfo);
             ClipRegion(*curCanvas_, region);
@@ -498,7 +500,8 @@ void RSDisplayRenderNodeDrawable::ProcessVirtualScreen(RSDisplayRenderNode& disp
         if (hasSecSurface[mirroredNode->GetScreenId()]) {
             curCanvas_->Clear(Drawing::Color::COLOR_BLACK);
             processor->PostProcess();
-            RS_LOGI("RSDisplayRenderNodeDrawable::ProcessVirtualScreen, set canvas to black because of security layer.");
+            RS_LOGI("RSDisplayRenderNodeDrawable::ProcessVirtualScreen, "
+                "set canvas to black because of security layer.");
             curCanvas_->SetDisableFilterCache(false);
             return;
         }
@@ -516,7 +519,7 @@ void RSDisplayRenderNodeDrawable::ProcessVirtualScreen(RSDisplayRenderNode& disp
         RotateMirrorCanvasIfNeed(displayNodeSp, canvasRotation);
         auto mirroredNodeDrawable = std::make_shared<RSDisplayRenderNodeDrawable>(std::move(mirroredNode));
         // set mirror screen capture param
-        RSUniRenderThread::SetCaptureParam(CaptureParam(true, true, true, 0, 0));
+        RSUniRenderThread::SetCaptureParam(CaptureParam(true, false, true, 0, 0));
         mirroredNodeDrawable->OnCapture(*curCanvas_);
         RSUniRenderThread::ResetCaptureParam();
         curCanvas_->RestoreToCount(saveCount);
@@ -594,12 +597,13 @@ void RSDisplayRenderNodeDrawable::RotateMirrorCanvasIfNeed(RSDisplayRenderNode& 
     }
     if (rotation != ScreenRotation::ROTATION_0) {
         if (rotation == ScreenRotation::ROTATION_90) {
-            curCanvas_->Rotate(90, 0, 0);
+            curCanvas_->Rotate(90, 0, 0); // 90 is the rotate angle
             curCanvas_->Translate(0, -mainHeight);
         } else if (rotation == ScreenRotation::ROTATION_180) {
+            // 180 is the rotate angle, calculate half width and half height requires divide by 2
             curCanvas_->Rotate(180, mainWidth / 2, mainHeight / 2);
         } else if (rotation == ScreenRotation::ROTATION_270) {
-            curCanvas_->Rotate(270, 0, 0);
+            curCanvas_->Rotate(270, 0, 0); // 270 is the rotate angle
             curCanvas_->Translate(-mainWidth, 0);
         }
     }
@@ -629,7 +633,7 @@ void RSDisplayRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 
     Drawing::AutoCanvasRestore acr(canvas, true);
 
-    if (params->HasSecurityLayer() || params->HasSkipLayer()) {
+    if (params->HasSecurityLayer() || params->HasSkipLayer() || params->HasCaptureWindow()) {
         RS_LOGD("RSDisplayRenderNodeDrawable::OnCapture: params %{public}s \
             process RSDisplayRenderNode(id:[%{public}" PRIu64 "]) Not using UniRender buffer.",
             params->ToString().c_str(), params->GetId());
@@ -695,7 +699,7 @@ void RSDisplayRenderNodeDrawable::SwitchColorFilter(RSPaintFilterCanvas& canvas)
     auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
     ColorFilterMode colorFilterMode = renderEngine->GetColorFilterMode();
     if (colorFilterMode == ColorFilterMode::INVERT_COLOR_DISABLE_MODE ||
-        colorFilterMode >= ColorFilterMode::DALTONIZATION_NORMAL_MODE){
+        colorFilterMode >= ColorFilterMode::DALTONIZATION_NORMAL_MODE) {
         return;
     }
 

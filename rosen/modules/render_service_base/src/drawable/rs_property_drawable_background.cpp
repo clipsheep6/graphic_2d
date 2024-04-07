@@ -28,6 +28,7 @@ namespace OHOS::Rosen {
 namespace DrawableV2 {
 namespace {
 bool g_forceBgAntiAlias = true;
+constexpr int16_t BORDER_TRANSPARENT = 255;
 }
 
 RSDrawable::Ptr RSShadowDrawable::OnGenerate(const RSRenderNode& node)
@@ -280,7 +281,7 @@ bool RSMaskDrawable::OnUpdate(const RSRenderNode& node)
 RSDrawable::Ptr RSBackgroundColorDrawable::OnGenerate(const RSRenderNode& node)
 {
     if (node.IsInstanceOf<RSSurfaceRenderNode>()) {
-        return nullptr; 
+        return nullptr;
     }
     if (auto ret = std::make_shared<RSBackgroundColorDrawable>(); ret->OnUpdate(node)) {
         return std::move(ret);
@@ -335,7 +336,19 @@ bool RSBackgroundShaderDrawable::OnUpdate(const RSRenderNode& node)
     brush.SetAntiAlias(antiAlias);
     auto shaderEffect = bgShader->GetDrawingShader();
     brush.SetShaderEffect(shaderEffect);
-    canvas.DrawBackground(brush);
+    canvas.AttachBrush(brush);
+    auto borderColorAlpha = properties.GetBorderColor()[0].GetAlpha();
+    // use drawrrect to avoid texture update in phone screen rotation scene
+    if (RSSystemProperties::IsPhoneType()) {
+        if (borderColorAlpha < BORDER_TRANSPARENT) {
+            canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect()));
+        } else {
+            canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetInnerRRect()));
+        }
+    } else {
+        canvas.DrawRect(RSPropertiesPainter::Rect2DrawingRect(properties.GetBoundsRect()));
+    }
+    canvas.DetachBrush();
     return true;
 }
 
@@ -386,7 +399,7 @@ RSDrawable::Ptr RSBackgroundFilterDrawable::OnGenerate(const RSRenderNode& node)
     if (filterDrawable->OnUpdate(node)) {
         return filterDrawable;
     }
-    return nullptr; 
+    return nullptr;
 }
 
 bool RSBackgroundFilterDrawable::OnUpdate(const RSRenderNode& node)

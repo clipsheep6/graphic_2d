@@ -49,7 +49,7 @@
 #include "rs_hgm_config_data.h"
 #include "rs_occlusion_data.h"
 #include "info_collection/rs_gpu_dirty_region_collection.h"
-#include "info_collection/rs_layer_synthesis_mode_collection.h"
+#include "info_collection/rs_layer_compose_collection.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -296,7 +296,7 @@ public:
 
     GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo();
 
-    LayerSynthesisModeInfo GetLayerSynthesisModeInfo();
+    LayerComposeInfo GetLayerComposeInfo();
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config);
 #endif

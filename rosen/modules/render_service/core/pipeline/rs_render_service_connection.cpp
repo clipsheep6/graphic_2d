@@ -1241,11 +1241,11 @@ GlobalDirtyRegionInfo RSRenderServiceConnection::GetGlobalDirtyRegionInfo()
     return globalDirtyRegionInfo;
 }
 
-LayerSynthesisModeInfo RSRenderServiceConnection::GetLayerSynthesisModeInfo()
+LayerComposeInfo RSRenderServiceConnection::GetLayerComposeInfo()
 {
-    auto layerSynthesisModeInfo = LayerSynthesisModeCollection::GetInstance().GetLayerSynthesisModeInfo();
-    LayerSynthesisModeCollection::GetInstance().ResetLayerSynthesisModeInfo();
-    return layerSynthesisModeInfo;
+    auto layerComposeInfo = LayerComposeCollection::GetInstance().GetLayerComposeInfo();
+    LayerComposeCollection::GetInstance().ResetLayerComposeInfo();
+    return layerComposeInfo;
 }
 
 #ifdef TP_FEATURE_ENABLE

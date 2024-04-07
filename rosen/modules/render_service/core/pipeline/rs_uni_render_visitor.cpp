@@ -2609,8 +2609,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
                 rects.emplace_back(rect);
                 RectI screenRectI(0, 0, static_cast<int32_t>(screenInfo_.phyWidth),
                     static_cast<int32_t>(screenInfo_.phyHeight));
-                GpuDirtyRegionCollection::GetInstance().UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(
-                    rect.IntersectRect(screenRectI));
+                GpuDirtyRegionCollection::GetInstance().UpdateGlobalDirtyInfoForDFX(rect.IntersectRect(screenRectI));
             }
             if (!isDirtyRegionAlignedEnable_) {
                 for (auto& r : rects) {

@@ -531,9 +531,9 @@ GlobalDirtyRegionInfo RSInterfaces::GetGlobalDirtyRegionInfo()
     return renderServiceClient_->GetGlobalDirtyRegionInfo();
 }
 
-LayerSynthesisModeInfo RSInterfaces::GetLayerSynthesisModeInfo()
+LayerComposeInfo RSInterfaces::GetLayerComposeInfo()
 {
-    return renderServiceClient_->GetLayerSynthesisModeInfo();
+    return renderServiceClient_->GetLayerComposeInfo();
 }
 
 #ifdef TP_FEATURE_ENABLE

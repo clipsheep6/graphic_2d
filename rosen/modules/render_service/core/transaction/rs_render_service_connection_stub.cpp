@@ -1358,7 +1358,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
             std::vector<ActiveDirtyRegionInfo> activeDirtyRegionInfos = GetActiveDirtyRegionInfo();
             reply.WriteInt32(activeDirtyRegionInfos.size());
             for (auto activeDirtyRegionInfo : activeDirtyRegionInfos) {
-                reply.WriteInt64(activeDirtyRegionInfo.activeDirtyRegionAreas);
+                reply.WriteInt64(activeDirtyRegionInfo.activeDirtyRegionArea);
                 reply.WriteInt32(activeDirtyRegionInfo.activeFramesNumber);
                 reply.WriteInt32(activeDirtyRegionInfo.pidOfBelongsApp);
                 reply.WriteString(activeDirtyRegionInfo.windowName);
@@ -1371,7 +1371,7 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 ret = ERR_INVALID_STATE;
                 break;
             }
-            globalDirtyRegionInfo = GetGlobalDirtyRegionInfo();
+            GlobalDirtyRegionInfo globalDirtyRegionInfo = GetGlobalDirtyRegionInfo();
             reply.WriteInt64(globalDirtyRegionInfo.globalDirtyRegionAreas);
             reply.WriteInt32(globalDirtyRegionInfo.globalFramesNumber);
             reply.WriteInt32(globalDirtyRegionInfo.skipProcessFramesNumber);
@@ -1383,10 +1383,10 @@ int RSRenderServiceConnectionStub::OnRemoteRequest(
                 ret = ERR_INVALID_STATE;
                 break;
             }
-            LayerSynthesisModeInfo layerSynthesisModeInfo = GetLayerSynthesisModeInfo();
-            reply.WriteInt32(layerSynthesisModeInfo.uniformRenderFrameNumber);
-            reply.WriteInt32(layerSynthesisModeInfo.offlineComposeFrameNumber);
-            reply.WriteInt32(layerSynthesisModeInfo.redrawFrameNumber);
+            LayerComposeInfo LayerComposeInfo = GetLayerComposeInfo();
+            reply.WriteInt32(LayerComposeInfo.uniformRenderFrameNumber);
+            reply.WriteInt32(LayerComposeInfo.offlineComposeFrameNumber);
+            reply.WriteInt32(LayerComposeInfo.redrawFrameNumber);
             break;
         }
 #ifdef TP_FEATURE_ENABLE

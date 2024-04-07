@@ -244,7 +244,7 @@ public:
 
     virtual GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo() = 0;
 
-    virtual LayerSynthesisModeInfo GetLayerSynthesisModeInfo() = 0;
+    virtual LayerComposeInfo GetLayerComposeInfo() = 0;
 
 #ifdef TP_FEATURE_ENABLE
     virtual void SetTpFeatureConfig(int32_t feature, const char* config) = 0;

@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <vector>
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -117,10 +118,20 @@ public:
         buffer_.timestamp = timestamp;
     }
 
+    void SetBuffers(std::vector<Rect> damages)
+    {
+        damages_ = damages;
+    }
+
     const sptr<SurfaceBuffer>& GetBuffer() const
     {
         std::lock_guard<std::mutex> lock(bufMutex_);
         return buffer_.buffer;
+    }
+
+    std::vector<Rect> GetBuffers()
+    {
+        return damages_;
     }
 
     const sptr<SyncFence>& GetAcquireFence() const
@@ -145,6 +156,7 @@ public:
         // The fence which get from hdi is preBuffer's releaseFence now.
         preBuffer_.releaseFence = std::move(fence);
     }
+
 #endif
 
     SurfaceBufferEntry& GetPreBuffer()
@@ -223,6 +235,7 @@ private:
     SurfaceBufferEntry preBuffer_; // GUARDED BY bufMutex_
     float globalZOrder_ = 0.0f;
     std::atomic<int> bufferAvailableCount_ = 0;
+    std::vector<Rect> damages_;
 };
 }
 }

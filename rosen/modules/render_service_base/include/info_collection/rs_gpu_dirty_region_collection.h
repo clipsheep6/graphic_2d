@@ -20,22 +20,22 @@
 
 #include "common/rs_common_def.h"
 #include "common/rs_rect.h"
-#include "common/rs_occlusion_region.h"
-#include <surface_type.h>
+// #include "pipeline/rs_surface_render_node.h"
+#include "surface_type.h"
 
 namespace OHOS {
 namespace Rosen {
 
 struct ActiveDirtyRegionInfo {
-    int64_t activeDirtyRegionAreas;
+    int64_t activeDirtyRegionArea;
     int32_t activeFramesNumber;
     int32_t pidOfBelongsApp;
     std::string windowName;
     ActiveDirtyRegionInfo()
-        : activeDirtyRegionAreas(), activeFramesNumber(), pidOfBelongsApp(), windowName() {}
-    ActiveDirtyRegionInfo(int64_t activeDirtyRegionAreas_, int32_t activeFramesNumber_, int32_t pidOfBelongsApp_,
+        : activeDirtyRegionArea(), activeFramesNumber(), pidOfBelongsApp(), windowName() {}
+    ActiveDirtyRegionInfo(int64_t activeDirtyRegionArea_, int32_t activeFramesNumber_, int32_t pidOfBelongsApp_,
         std::string windowName_)
-        : activeDirtyRegionAreas(activeDirtyRegionAreas_), activeFramesNumber(activeFramesNumber_),
+        : activeDirtyRegionArea(activeDirtyRegionArea_), activeFramesNumber(activeFramesNumber_),
           pidOfBelongsApp(pidOfBelongsApp_), windowName(windowName_) {}
 };
 
@@ -55,18 +55,14 @@ class RSB_EXPORT GpuDirtyRegionCollection {
 public:
     static GpuDirtyRegionCollection& GetInstance();
 
-    void UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(NodeId id, Occlusion::Region region);
-    void UpdateSelfDrawingRegionAreasAndFrameNumberForDFX(NodeId id, std::vector<Rect> damages);
-    void UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(RectI rect);
-    void AddSkipProcessFramesNumberForDFX(NodeId id);
-    void SetPidAndWindowNameForDFX(NodeId id, const std::string& windowName);
-    void SetSelfDrawingPidAndNameForDFX(const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode);
-    void DeleteNotSelfDrawingFromMapForDFX(NodeId id);
+    // void UpdateActiveDirtyInfoForDFX(std::shared_ptr<RSSurfaceRenderNode> node, Occlusion::Region region);
+    // void UpdateActiveDirtyInfoForDFX(std::shared_ptr<RSSurfaceRenderNode> node, std::vector<Rect> damages);
+    void UpdateGlobalDirtyInfoForDFX(RectI rect);
+    void AddSkipProcessFramesNumberForDFX();
     std::vector<ActiveDirtyRegionInfo> GetActiveDirtyRegionInfo();
     GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo();
     void ResetActiveDirtyRegionInfo();
     void ResetGlobalDirtyRegionInfo();
-    bool IsPidSet(NodeId id);
 
 private:
     GpuDirtyRegionCollection();
@@ -77,7 +73,6 @@ private:
     GpuDirtyRegionCollection& operator=(const GpuDirtyRegionCollection&&) = delete;
 
     std::unordered_map<NodeId, ActiveDirtyRegionInfo> activeDirtyRegionInfoMap_;
-    std::unordered_map<NodeId, pid_t> selfDrawingNodeIdAndPidMap_;
     GlobalDirtyRegionInfo globalDirtyRegionInfo_;
 };
 } // namespace Rosen

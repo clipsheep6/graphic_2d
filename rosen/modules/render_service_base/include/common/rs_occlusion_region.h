@@ -87,9 +87,7 @@ public:
             hasAbnormalValue = true;
         }
         if (hasAbnormalValue) {
-            RS_LOGE("Occlusion::Rect initialized with invalid value, [%{public}d, %{public}d, %{public}d, %{public}d], \
-                should in range [%{public}d, %{public}d]",
-                left_, top_, right_, bottom_, MIN_REGION_VALUE, MAX_REGION_VALUE);
+            RS_LOGE("Occlusion:: [%{public}s], range: [%{public}s]", GetRectInfo().c_str(), GetRangeInfo().c_str());
         }
         return hasAbnormalValue;
     }
@@ -138,6 +136,13 @@ public:
             std::to_string(top_) + ", " +
             std::to_string(right_ - left_) + ", " +
             std::to_string(bottom_ - top_) + "]");
+    }
+
+    std::string GetRangeInfo() const
+    {
+        return std::string("[" +
+            std::to_string(MIN_REGION_VALUE) + ", " +
+            std::to_string(MAX_REGION_VALUE) + "]");
     }
 
     RectI ToRectI() const

@@ -233,7 +233,7 @@ public:
 
     GlobalDirtyRegionInfo GetGlobalDirtyRegionInfo();
 
-    LayerSynthesisModeInfo GetLayerSynthesisModeInfo();
+    LayerComposeInfo GetLayerComposeInfo();
 
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config);

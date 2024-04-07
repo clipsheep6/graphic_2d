@@ -475,9 +475,9 @@ GlobalDirtyRegionInfo RSRenderServiceClient::GetGlobalDirtyRegionInfo()
     return GlobalDirtyRegionInfo {};
 }
 
-LayerSynthesisModeInfo RSRenderServiceClient::GetLayerSynthesisModeInfo()
+LayerComposeInfo RSRenderServiceClient::GetLayerComposeInfo()
 {
-    return LayerSynthesisModeInfo {};
+    return LayerComposeInfo {};
 }
 
 #ifdef TP_FEATURE_ENABLE

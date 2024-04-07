@@ -2085,7 +2085,6 @@ std::vector<ActiveDirtyRegionInfo> RSRenderServiceConnectionProxy::GetActiveDirt
         return activeDirtyRegionInfos;
     }
     option.SetFlags(MessageOption::TF_SYNC);
-    data.WriteUint64(id);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_DIRTY_REGION_INFO);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
@@ -2110,7 +2109,6 @@ GlobalDirtyRegionInfo RSRenderServiceConnectionProxy::GetGlobalDirtyRegionInfo()
         return globalDirtyRegionInfo;
     }
     option.SetFlags(MessageOption::TF_SYNC);
-    data.WriteUint64(id);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_GLOBAL_DIRTY_REGION_INFO);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
@@ -2130,7 +2128,6 @@ LayerSynthesisModeInfo RSRenderServiceConnectionProxy::GetLayerSynthesisModeInfo
         return layerSynthesisModeInfo;
     }
     option.SetFlags(MessageOption::TF_SYNC);
-    data.WriteUint64(id);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_LAYER_SYNTHESIS_MODE_INFO);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {

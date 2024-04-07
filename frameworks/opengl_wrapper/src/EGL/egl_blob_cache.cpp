@@ -322,7 +322,7 @@ void BlobCache::ReadFromDisk()
         return;
     }
     size_t filesize = bufstat.st_size;
-    if (filesize > maxShaderSize_ + maxShaderSize_ || filesize <= 0) {
+    if (filesize > maxShaderSize_ + maxShaderSize_ || filesize == 0) {
         close(fd);
     }
     uint8_t *buf = reinterpret_cast<uint8_t*>(mmap(nullptr, filesize, PROT_READ, MAP_PRIVATE, fd, 0));

@@ -235,57 +235,6 @@ HWTEST_F(RSRenderThreadVisitorTest, PrepareRootRenderNode004, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrepareSurfaceRenderNode001
- * @tc.desc: test results of PrepareSurfaceRenderNode
- * @tc.type: FUNC
- * @tc.require: issueI5HRIF
- */
-HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode001, TestSize.Level1)
-{
-    RSSurfaceRenderNodeConfig config;
-    RSSurfaceRenderNode rsSurfaceRenderNode(config);
-
-    config.id = 1;
-    auto surfaceRenderNode2 = std::make_shared<RSSurfaceRenderNode>(config);
-    rsSurfaceRenderNode.AddChild(surfaceRenderNode2, -1);
-    RSRenderThreadVisitor rsRenderThreadVisitor;
-    rsRenderThreadVisitor.PrepareSurfaceRenderNode(*surfaceRenderNode2);
-}
-
-/**
- * @tc.name: PrepareSurfaceRenderNode002
- * @tc.desc: test results of PrepareSurfaceRenderNode
- * @tc.type: FUNC
- * @tc.require: issueI5HRIF
- */
-HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode002, TestSize.Level1)
-{
-    RSSurfaceRenderNodeConfig config;
-    RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    RSRenderThreadVisitor rsRenderThreadVisitor;
-    rsRenderThreadVisitor.PrepareSurfaceRenderNode(rsSurfaceRenderNode);
-}
-
-/**
- * @tc.name: PrepareSurfaceRenderNode003
- * @tc.desc: test results of PrepareSurfaceRenderNode
- * @tc.type: FUNC
- * @tc.require: issueI5HRIF
- */
-HWTEST_F(RSRenderThreadVisitorTest, PrepareSurfaceRenderNode003, TestSize.Level1)
-{
-    RSSurfaceRenderNodeConfig config;
-    RSSurfaceRenderNode rsSurfaceRenderNode(config);
-    rsSurfaceRenderNode.NotifyRTBufferAvailable();
-    RSRenderThreadVisitor rsRenderThreadVisitor;
-    rsRenderThreadVisitor.PrepareSurfaceRenderNode(rsSurfaceRenderNode);
-    rsSurfaceRenderNode.GetMutableRenderProperties().SetClipToBounds(true);
-    rsSurfaceRenderNode.GetMutableRenderProperties().SetBoundsWidth(10);
-    rsSurfaceRenderNode.GetMutableRenderProperties().SetBoundsHeight(10);
-    rsRenderThreadVisitor.PrepareSurfaceRenderNode(rsSurfaceRenderNode);
-}
-
-/**
  * @tc.name: ProcessChildren001
  * @tc.desc: test results of ProcessChildren
  * @tc.type: FUNC

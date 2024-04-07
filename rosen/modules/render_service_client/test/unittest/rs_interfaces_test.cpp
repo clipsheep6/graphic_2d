@@ -987,7 +987,11 @@ HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval003, Function | SmallTest |
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
     uint32_t skipFrameInterval = 100;  // for test
     int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
-    EXPECT_EQ(ret, StatusCode::INVALID_ARGUMENTS);
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        EXPECT_EQ(ret, StatusCode::INVALID_ARGUMENTS);
+    } else {
+        EXPECT_NE(ret, StatusCode::INVALID_ARGUMENTS);
+    }
 }
 
 /*

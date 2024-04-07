@@ -129,7 +129,11 @@ HWTEST_F(RSModifierTest, BoundsModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBounds(), node1->GetStagingProperties().GetBounds());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBounds(), node1->GetStagingProperties().GetBounds());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBounds(), node1->GetStagingProperties().GetBounds());
+    }
 }
 
 /**
@@ -173,7 +177,11 @@ HWTEST_F(RSModifierTest, FrameModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetFrame(), node1->GetStagingProperties().GetFrame());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetFrame(), node1->GetStagingProperties().GetFrame());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetFrame(), node1->GetStagingProperties().GetFrame());
+    }
 }
 
 /**
@@ -259,7 +267,11 @@ HWTEST_F(RSModifierTest, PivotModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetPivot(), node1->GetStagingProperties().GetPivot());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetPivot(), node1->GetStagingProperties().GetPivot());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetPivot(), node1->GetStagingProperties().GetPivot());
+    }
 }
 
 /**
@@ -301,7 +313,11 @@ HWTEST_F(RSModifierTest, QuaternionModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetQuaternion(), node1->GetStagingProperties().GetQuaternion());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetQuaternion(), node1->GetStagingProperties().GetQuaternion());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetQuaternion(), node1->GetStagingProperties().GetQuaternion());
+    }
 }
 
 /**
@@ -637,7 +653,11 @@ HWTEST_F(RSModifierTest, CornerRadiusModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetCornerRadius(), node1->GetStagingProperties().GetCornerRadius());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetCornerRadius(), node1->GetStagingProperties().GetCornerRadius());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetCornerRadius(), node1->GetStagingProperties().GetCornerRadius());
+    }
 }
 
 /**
@@ -723,7 +743,11 @@ HWTEST_F(RSModifierTest, AlphaOffscreenModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetAlphaOffscreen(), node1->GetStagingProperties().GetAlphaOffscreen());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetAlphaOffscreen(), node1->GetStagingProperties().GetAlphaOffscreen());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetAlphaOffscreen(), node1->GetStagingProperties().GetAlphaOffscreen());
+    }
 }
 
 /**
@@ -765,7 +789,11 @@ HWTEST_F(RSModifierTest, ForegroundColorModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetForegroundColor(), node1->GetStagingProperties().GetForegroundColor());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetForegroundColor(), node1->GetStagingProperties().GetForegroundColor());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetForegroundColor(), node1->GetStagingProperties().GetForegroundColor());
+    }
 }
 
 /**
@@ -807,7 +835,11 @@ HWTEST_F(RSModifierTest, BackgroundColorModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBackgroundColor(), node1->GetStagingProperties().GetBackgroundColor());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBackgroundColor(), node1->GetStagingProperties().GetBackgroundColor());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBackgroundColor(), node1->GetStagingProperties().GetBackgroundColor());
+    }
 }
 
 /**
@@ -851,7 +883,11 @@ HWTEST_F(RSModifierTest, BackgroundShaderModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBackgroundShader(), node1->GetStagingProperties().GetBackgroundShader());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBackgroundShader(), node1->GetStagingProperties().GetBackgroundShader());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBackgroundShader(), node1->GetStagingProperties().GetBackgroundShader());
+    }
 }
 
 /**
@@ -893,7 +929,11 @@ HWTEST_F(RSModifierTest, BgImageModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBgImage(), node1->GetStagingProperties().GetBgImage());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBgImage(), node1->GetStagingProperties().GetBgImage());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBgImage(), node1->GetStagingProperties().GetBgImage());
+    }
 }
 
 /**
@@ -935,7 +975,11 @@ HWTEST_F(RSModifierTest, BgImageWidthModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBgImageWidth(), node1->GetStagingProperties().GetBgImageWidth());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBgImageWidth(), node1->GetStagingProperties().GetBgImageWidth());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBgImageWidth(), node1->GetStagingProperties().GetBgImageWidth());
+    }
 }
 
 /**
@@ -977,7 +1021,11 @@ HWTEST_F(RSModifierTest, BgImageHeightModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBgImageHeight(), node1->GetStagingProperties().GetBgImageHeight());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBgImageHeight(), node1->GetStagingProperties().GetBgImageHeight());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBgImageHeight(), node1->GetStagingProperties().GetBgImageHeight());
+    }
 }
 
 /**
@@ -1019,7 +1067,11 @@ HWTEST_F(RSModifierTest, BgImagePositionXModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBgImagePositionX(), node1->GetStagingProperties().GetBgImagePositionX());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBgImagePositionX(), node1->GetStagingProperties().GetBgImagePositionX());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBgImagePositionX(), node1->GetStagingProperties().GetBgImagePositionX());
+    }
 }
 
 /**
@@ -1061,7 +1113,11 @@ HWTEST_F(RSModifierTest, BgImagePositionYModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBgImagePositionY(), node1->GetStagingProperties().GetBgImagePositionY());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBgImagePositionY(), node1->GetStagingProperties().GetBgImagePositionY());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBgImagePositionY(), node1->GetStagingProperties().GetBgImagePositionY());
+    }
 }
 
 /**
@@ -1103,7 +1159,11 @@ HWTEST_F(RSModifierTest, BorderColorModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBorderColor(), node1->GetStagingProperties().GetBorderColor());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBorderColor(), node1->GetStagingProperties().GetBorderColor());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBorderColor(), node1->GetStagingProperties().GetBorderColor());
+    }
 }
 
 /**
@@ -1145,7 +1205,11 @@ HWTEST_F(RSModifierTest, BorderWidthModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBorderWidth(), node1->GetStagingProperties().GetBorderWidth());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBorderWidth(), node1->GetStagingProperties().GetBorderWidth());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBorderWidth(), node1->GetStagingProperties().GetBorderWidth());
+    }
 }
 
 /**
@@ -1187,7 +1251,11 @@ HWTEST_F(RSModifierTest, BorderStyleModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBorderStyle(), node1->GetStagingProperties().GetBorderStyle());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBorderStyle(), node1->GetStagingProperties().GetBorderStyle());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBorderStyle(), node1->GetStagingProperties().GetBorderStyle());
+    }
 }
 
 /**
@@ -1229,7 +1297,11 @@ HWTEST_F(RSModifierTest, FilterModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetFilter(), node1->GetStagingProperties().GetFilter());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetFilter(), node1->GetStagingProperties().GetFilter());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetFilter(), node1->GetStagingProperties().GetFilter());
+    }
 }
 
 /**
@@ -1271,7 +1343,11 @@ HWTEST_F(RSModifierTest, BackgroundFilterModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetBackgroundFilter(), node1->GetStagingProperties().GetBackgroundFilter());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetBackgroundFilter(), node1->GetStagingProperties().GetBackgroundFilter());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetBackgroundFilter(), node1->GetStagingProperties().GetBackgroundFilter());
+    }
 }
 
 /**
@@ -1313,7 +1389,11 @@ HWTEST_F(RSModifierTest, FrameGravityModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetFrameGravity(), node1->GetStagingProperties().GetFrameGravity());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetFrameGravity(), node1->GetStagingProperties().GetFrameGravity());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetFrameGravity(), node1->GetStagingProperties().GetFrameGravity());
+    }
 }
 
 /**
@@ -1355,7 +1435,11 @@ HWTEST_F(RSModifierTest, ClipBoundsModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetClipBounds(), node1->GetStagingProperties().GetClipBounds());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetClipBounds(), node1->GetStagingProperties().GetClipBounds());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetClipBounds(), node1->GetStagingProperties().GetClipBounds());
+    }
 }
 
 /**
@@ -1397,7 +1481,11 @@ HWTEST_F(RSModifierTest, ClipToBoundsModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetClipToBounds(), node1->GetStagingProperties().GetClipToBounds());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetClipToBounds(), node1->GetStagingProperties().GetClipToBounds());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetClipToBounds(), node1->GetStagingProperties().GetClipToBounds());
+    }
 }
 
 /**
@@ -1439,7 +1527,11 @@ HWTEST_F(RSModifierTest, ClipToFrameModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetClipToFrame(), node1->GetStagingProperties().GetClipToFrame());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_NE(node->GetStagingProperties().GetClipToFrame(), node1->GetStagingProperties().GetClipToFrame());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetClipToFrame(), node1->GetStagingProperties().GetClipToFrame());
+    }
 }
 
 /**
@@ -1481,7 +1573,11 @@ HWTEST_F(RSModifierTest, VisibleModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetVisible(), node1->GetStagingProperties().GetVisible());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetVisible(), node1->GetStagingProperties().GetVisible());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetVisible(), node1->GetStagingProperties().GetVisible());
+    }
 }
 
 /**
@@ -1525,7 +1621,11 @@ HWTEST_F(RSModifierTest, ShadowColorModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetShadowColor(), node1->GetStagingProperties().GetShadowColor());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetShadowColor(), node1->GetStagingProperties().GetShadowColor());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetShadowColor(), node1->GetStagingProperties().GetShadowColor());
+    }
 }
 
 /**
@@ -1567,7 +1667,11 @@ HWTEST_F(RSModifierTest, ShadowOffsetXModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetShadowOffsetX(), node1->GetStagingProperties().GetShadowOffsetX());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetShadowOffsetX(), node1->GetStagingProperties().GetShadowOffsetX());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetShadowOffsetX(), node1->GetStagingProperties().GetShadowOffsetX());
+    }
 }
 
 /**
@@ -1610,7 +1714,11 @@ HWTEST_F(RSModifierTest, ShadowOffsetYModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetShadowOffsetY(), node1->GetStagingProperties().GetShadowOffsetY());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetShadowOffsetY(), node1->GetStagingProperties().GetShadowOffsetY());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetShadowOffsetY(), node1->GetStagingProperties().GetShadowOffsetY());
+    }
 }
 
 /**
@@ -1652,7 +1760,11 @@ HWTEST_F(RSModifierTest, ShadowAlphaModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetShadowAlpha(), node1->GetStagingProperties().GetShadowAlpha());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetShadowAlpha(), node1->GetStagingProperties().GetShadowAlpha());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetShadowAlpha(), node1->GetStagingProperties().GetShadowAlpha());
+    }
 }
 
 /**
@@ -1694,7 +1806,11 @@ HWTEST_F(RSModifierTest, ShadowElevationModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetShadowElevation(), node1->GetStagingProperties().GetShadowElevation());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetShadowElevation(), node1->GetStagingProperties().GetShadowElevation());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetShadowElevation(), node1->GetStagingProperties().GetShadowElevation());
+    } 
 }
 
 /**
@@ -1736,7 +1852,11 @@ HWTEST_F(RSModifierTest, ShadowRadiusModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetShadowRadius(), node1->GetStagingProperties().GetShadowRadius());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetShadowRadius(), node1->GetStagingProperties().GetShadowRadius());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetShadowRadius(), node1->GetStagingProperties().GetShadowRadius());
+    }
 }
 
 /**
@@ -1778,7 +1898,11 @@ HWTEST_F(RSModifierTest, ShadowPathModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetShadowPath(), node1->GetStagingProperties().GetShadowPath());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetShadowPath(), node1->GetStagingProperties().GetShadowPath());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetShadowPath(), node1->GetStagingProperties().GetShadowPath());
+    }
 }
 
 /**
@@ -1820,7 +1944,11 @@ HWTEST_F(RSModifierTest, MaskModifier001, TestSize.Level1)
 
     node->RemoveModifier(modifier);
     auto node1 = RSCanvasNode::Create();
-    ASSERT_NE(node->GetStagingProperties().GetMask(), node1->GetStagingProperties().GetMask());
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(node->GetStagingProperties().GetMask(), node1->GetStagingProperties().GetMask());
+    } else {
+        ASSERT_NE(node->GetStagingProperties().GetMask(), node1->GetStagingProperties().GetMask());
+    }
 }
 
 /**

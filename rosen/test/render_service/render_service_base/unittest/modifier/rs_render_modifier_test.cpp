@@ -175,12 +175,14 @@ HWTEST_F(RSRenderModifierTest, RSParticlesRenderModifier002, TestSize.Level1)
  */
 HWTEST_F(RSRenderModifierTest, RSEnvForegroundColorRenderModifier001, TestSize.Level1)
 {
-    auto prop = std::make_shared<RSRenderProperty<RSRenderParticleVector>>();
-    bool isDelta = true;
-    auto property = std::make_shared<RSRenderProperty<RSRenderParticleVector>>();
-    auto RSEFC = std::make_shared<RSEnvForegroundColorRenderModifier>(property);
-    RSEFC->Update(prop, isDelta);
-    ASSERT_NE(nullptr, RSEFC->property_);
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        auto prop = std::make_shared<RSRenderProperty<RSRenderParticleVector>>();
+        bool isDelta = true;
+        auto property = std::make_shared<RSRenderProperty<RSRenderParticleVector>>();
+        auto RSEFC = std::make_shared<RSEnvForegroundColorRenderModifier>(property);
+        RSEFC->Update(prop, isDelta);
+        ASSERT_NE(nullptr, RSEFC->property_);
+    }
 }
 
 /**

@@ -51,7 +51,8 @@ public:
 
     int32_t GetDefaultWidth() override;
     int32_t GetDefaultHeight() override;
-    uint32_t GetDefaultUsage() override;
+    GSError SetDefaultUsage(uint64_t usage) override;
+    uint64_t GetDefaultUsage() override;
     GSError SetTransform(GraphicTransformType transform) override;
 
     GSError AttachBuffer(sptr<SurfaceBuffer>& buffer) override;
@@ -76,11 +77,15 @@ public:
 
     sptr<NativeSurface> GetNativeSurface() override;
 
-    GSError SendDeathRecipientObject() override;
+    GSError SendAddDeathRecipientObject() override;
 
     GSError GetTransform(GraphicTransformType &transform) override;
     GSError AttachBufferToQueue(sptr<SurfaceBuffer>& buffer) override;
     GSError DetachBufferFromQueue(sptr<SurfaceBuffer>& buffer) override;
+
+    GSError GetTransformHint(GraphicTransformType &transformHint) override;
+    GSError SetTransformHint(GraphicTransformType transformHint) override;
+    GSError SendRemoveDeathRecipientObject() override;
 private:
     static inline BrokerDelegator<BufferClientProducer> delegator_;
     std::string name_ = "not init";

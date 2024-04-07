@@ -47,6 +47,8 @@ namespace {
     // CAUTION: with priority
     const std::string VOTER_NAME[] = {
         "VOTER_THERMAL",
+        "VOTER_GAMES",
+        "VOTER_VIDEO",
         "VOTER_VIRTUALDISPLAY",
         "VOTER_MULTI_APP",
 
@@ -94,6 +96,11 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
             CreateVSyncGenerator()->SetVSyncMode(VSYNC_MODE_LTPS);
         }
     });
+
+    hgmCore.RegisterRefreshRateUpdateCallback([](int32_t refreshRate) {
+        HgmConfigCallbackManager::GetInstance()->SyncRefreshRateUpdateCallback(refreshRate);
+    });
+
     controller_ = std::make_shared<HgmVSyncGeneratorController>(rsController, appController, vsyncGenerator);
 }
 

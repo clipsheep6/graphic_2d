@@ -22,6 +22,7 @@
 #include "buffer_producer_listener.h"
 #include "sync_fence.h"
 #include "native_window.h"
+#include "surface_utils.h"
 
 namespace OHOS {
 namespace {
@@ -48,13 +49,16 @@ ProducerSurface::ProducerSurface(sptr<IBufferProducer>& producer)
 {
     producer_ = producer;
     if (producer_) {
-        producer_->SendDeathRecipientObject();
+        producer_->SendAddDeathRecipientObject();
     }
     BLOGND("ctor");
 }
 
 ProducerSurface::~ProducerSurface()
 {
+    if (producer_) {
+        producer_->SendRemoveDeathRecipientObject();
+    }
     if (producer_->GetSptrRefCount() > PRODUCER_REF_COUNT_IN_PRODUCER_SURFACE) {
         BLOGND("Warning SptrRefCount! producer_:%{public}d", producer_->GetSptrRefCount());
     }
@@ -360,12 +364,27 @@ int32_t ProducerSurface::GetDefaultHeight()
     return producer_->GetDefaultHeight();
 }
 
-GSError ProducerSurface::SetDefaultUsage(uint32_t usage)
+GraphicTransformType ProducerSurface::GetTransformHint() const
 {
-    return GSERROR_NOT_SUPPORT;
+    GraphicTransformType transformHint = GraphicTransformType::GRAPHIC_ROTATE_BUTT;
+    if (producer_->GetTransformHint(transformHint) != GSERROR_OK) {
+        BLOGNE("Warning ProducerSurface GetTransformHint failed.");
+        return GraphicTransformType::GRAPHIC_ROTATE_BUTT;
+    }
+    return transformHint;
 }
 
-uint32_t ProducerSurface::GetDefaultUsage()
+GSError ProducerSurface::SetTransformHint(GraphicTransformType transformHint)
+{
+    return producer_->SetTransformHint(transformHint);
+}
+
+GSError ProducerSurface::SetDefaultUsage(uint64_t usage)
+{
+    return producer_->SetDefaultUsage(usage);
+}
+
+uint64_t ProducerSurface::GetDefaultUsage()
 {
     return producer_->GetDefaultUsage();
 }

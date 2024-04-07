@@ -1024,6 +1024,12 @@ void RSNode::SetBgImage(const std::shared_ptr<RSImage>& image)
     SetProperty<RSBgImageModifier, RSProperty<std::shared_ptr<RSImage>>>(RSModifierType::BG_IMAGE, image);
 }
 
+void RSNode::SetBgImageInnerRect(const Vector4f& rect)
+{
+    SetProperty<RSBgImageInnerRectModifier, RSAnimatableProperty<Vector4f>>(
+        RSModifierType::BG_IMAGE_INNER_RECT, rect);
+}
+
 void RSNode::SetBgImageSize(float width, float height)
 {
     SetBgImageWidth(width);
@@ -1191,6 +1197,12 @@ void RSNode::SetDynamicLightUpDegree(const float lightUpDegree)
 {
     SetProperty<RSDynamicLightUpDegreeModifier,
         RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, lightUpDegree);
+}
+
+void RSNode::SetDynamicDimDegree(const float dimDegree)
+{
+    SetProperty<RSDynamicDimDegreeModifier,
+        RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_DIM_DEGREE, dimDegree);
 }
 
 void RSNode::SetGreyCoef(const Vector2f greyCoef)
@@ -1568,7 +1580,6 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
             return;
         }
         auto deleteType = modifier->GetModifierType();
-        modifiers_.erase(iter);
         bool isExist = false;
         for (auto [id, value] : modifiers_) {
             if (value && value->GetModifierType() == deleteType) {
@@ -1577,6 +1588,7 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
                 break;
             }
         }
+        modifiers_.erase(iter);
         if (isExist) {
             modifiersTypeMap_[(int16_t)deleteType] = nullptr;
         }
@@ -2173,6 +2185,12 @@ template bool RSNode::IsInstanceOf<RSProxyNode>() const;
 template bool RSNode::IsInstanceOf<RSCanvasNode>() const;
 template bool RSNode::IsInstanceOf<RSRootNode>() const;
 template bool RSNode::IsInstanceOf<RSCanvasDrawingNode>() const;
+
+void RSNode::SetInstanceId(int32_t instanceId)
+{
+    instanceId_ = instanceId;
+    RSNodeMap::MutableInstance().RegisterNodeInstanceId(id_, instanceId_);
+}
 
 } // namespace Rosen
 } // namespace OHOS

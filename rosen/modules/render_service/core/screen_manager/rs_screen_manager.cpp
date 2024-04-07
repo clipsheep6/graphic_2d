@@ -769,7 +769,7 @@ ScreenId RSScreenManager::CreateVirtualScreen(
     if (surface != nullptr) {
         uint64_t surfaceId = surface->GetUniqueId();
         for (auto &[_, screen] : screens_) {
-            if (screen != nullptr && !screen->IsVirtual()) {
+            if (screen == nullptr || !screen->IsVirtual()) {
                 continue;
             }
             auto screenSurface = screen->GetProducerSurface();
@@ -1121,7 +1121,13 @@ ScreenScaleMode RSScreenManager::GetScaleMode(ScreenId id) const
         RS_LOGW("RSScreenManager::GetScaleMode: There is no screen for id %{public}" PRIu64 ".", id);
         return ScreenScaleMode::INVALID_MODE;
     }
-    return screens_.at(id)->GetScaleMode();
+    auto scaleModeDFX = static_cast<ScreenScaleMode>(
+        RSSystemProperties::GetVirtualScreenScaleModeDFX());
+    // Support mode can be configured for maintenance and testing before
+    // upper layer application adaptation
+    const auto& scaleMode = (scaleModeDFX == ScreenScaleMode::INVALID_MODE) ?
+        screens_.at(id)->GetScaleMode() : scaleModeDFX;
+    return scaleMode;
 }
 
 sptr<Surface> RSScreenManager::GetProducerSurface(ScreenId id) const
@@ -1184,6 +1190,9 @@ void RSScreenManager::DisplayDump(std::string& dumpString)
 {
     int32_t index = 0;
     for (const auto &[id, screen] : screens_) {
+        if (screen == nullptr) {
+            return;
+        }
         screen->DisplayDump(index, dumpString);
         index++;
     }

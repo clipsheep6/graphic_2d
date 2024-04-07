@@ -206,7 +206,7 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
     skStyle.setFontFamilies(fonts);
 
     skStyle.setFontSize(SkDoubleToScalar(txt.fontSize));
-    skStyle.setLetterSpacing(SkDoubleToScalar(txt.letterSpacing));
+    // skStyle.setLetterSpacing(SkDoubleToScalar(txt.letterSpacing));
     skStyle.setWordSpacing(SkDoubleToScalar(txt.wordSpacing));
     skStyle.setHeight(SkDoubleToScalar(txt.height));
     skStyle.setHeightOverride(txt.heightOverride);
@@ -224,9 +224,15 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
         skStyle.addFontFeature(SkString(ff.first.c_str()), ff.second);
     }
 
-    if (!txt.fontVariations.GetAxisValues().empty()) {
-        skStyle.setFontArguments(MakeFontArguments(txt.fontVariations));
-    }
+    // if (!txt.fontVariations.GetAxisValues().empty()) {
+    //     skStyle.setFontArguments(MakeFontArguments(txt.fontVariations));
+    // }
+
+    FontVariations fv;
+    fv.SetAxisValue("wght", txt.letterSpacing);
+    skStyle.setFontArguments(MakeFontArguments(fv));
+    // skStyle.setFontStyle(RSFontStyle(txt.letterSpacing, SkFontStyle::Width::kNormal_Width,
+    //     RSFontStyle::Slant::UPRIGHT_SLANT));
 
     skStyle.resetShadows();
     for (const TextShadow& txtShadow : txt.textShadows) {

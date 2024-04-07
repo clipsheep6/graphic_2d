@@ -44,6 +44,7 @@ add_library(entry SHARED
     dm/add_arc.cpp
     dm/font_regen.cpp
     dm/largeclippedpath.cpp
+    dm/filltypes.cpp
 )
 
 add_library(myxnode SHARED
@@ -81,6 +82,7 @@ add_library(myxnode SHARED
     dm/add_arc.cpp
     dm/font_regen.cpp
     dm/largeclippedpath.cpp
+    dm/filltypes.cpp
 )
 
 find_library(

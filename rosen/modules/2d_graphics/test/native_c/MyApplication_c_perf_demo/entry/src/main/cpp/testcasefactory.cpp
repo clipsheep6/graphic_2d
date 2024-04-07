@@ -44,6 +44,7 @@
 #include "dm/add_arc.h"
 #include "dm/font_regen.h"
 #include "dm/largeclippedpath.h"
+#include "dm/filltypes.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -136,6 +137,7 @@ namespace {
             {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},
             {"largeclippedpath_kwinding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
             {"largeclippedpath_kevenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
+            {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
 
 
             

@@ -21,7 +21,7 @@
 #include "common/rs_common_def.h"
 #include "common/rs_rect.h"
 #include "common/rs_occlusion_region.h"
-#include "surface_type.h"
+#include <surface_type.h>
 
 namespace OHOS {
 namespace Rosen {

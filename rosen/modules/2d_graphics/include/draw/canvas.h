@@ -46,7 +46,6 @@ public:
     {
         pCanvasList_.clear();
     }
-
     // constructor adopt a raw canvas ptr, using for ArkUI, should remove after rosen modifier provide drawing Canvas.
     explicit Canvas(void* rawCanvas) : CoreCanvas(rawCanvas) {}
     virtual ~Canvas() {

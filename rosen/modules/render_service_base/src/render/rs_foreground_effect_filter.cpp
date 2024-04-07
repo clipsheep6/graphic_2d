@@ -26,7 +26,7 @@ RSForegroundEffectFilter::RSForegroundEffectFilter(float blurRadius)
 {
     type_ = FilterType::FOREGROUND_EFFECT;
     MakeForegroundEffect();
-    ComputeRadiusAndScale(blurRadius);
+    ComputeParamter(blurRadius);
 
     hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
     hash_ = SkOpts::hash(&blurRadius_, sizeof(blurRadius_), hash_);
@@ -74,11 +74,13 @@ void RSForegroundEffectFilter::MakeForegroundEffect()
     blurEffect_ = std::move(blurEffect);
 }
 
-void RSForegroundEffectFilter::ComputeRadiusAndScale(int radius)
+void RSForegroundEffectFilter::ComputeParamter(int radius)
 {
     static constexpr int noiseFactor = 3; // 3 : smooth the radius change
     blurRadius_ = radius * 4 / noiseFactor * noiseFactor; // 4 : scale between gauss radius and kawase
+
     AdjustRadiusAndScale();
+    ComputePassesAndUnit();
 }
 
 void RSForegroundEffectFilter::AdjustRadiusAndScale()
@@ -89,6 +91,7 @@ void RSForegroundEffectFilter::AdjustRadiusAndScale()
     static constexpr float scaleFactor1 = 0.25f; // 0.25 : downSample scale for step1
     static constexpr float scaleFactor2 = 0.125f; // 0.125 : downSample scale for step2
     static constexpr float scaleFactor3 = 0.0625f; // 0.0625 : downSample scale for step3
+
     auto radius = static_cast<int>(blurRadius_);
     if (radius > radiusStep3) {
         blurScale_ = scaleFactor3;
@@ -101,6 +104,21 @@ void RSForegroundEffectFilter::AdjustRadiusAndScale()
     }
 }
 
+void RSForegroundEffectFilter::ComputePassesAndUnit()
+{
+    int maxPasses = kMaxPassesLargeRadius;
+    float dilatedConvolutionFactor = kDilatedConvolutionLargeRadius;
+    float tmpRadius = static_cast<float>(blurRadius_) / dilatedConvolutionFactor;
+    numberOfPasses_ = std::min(maxPasses, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
+    radiusByPasses_ = tmpRadius / numberOfPasses;
+    unit_ = std::ceil(radiusByPasses * blurScale_);
+}
+
+float RSForegroundEffectFilter::GetForegroundEffectDirtyExtension()
+{
+    return std::ceil(4 * unit_ * numberOfPasses_ * 1 / blurScale_);
+}
+
 void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const ForegroundEffectParam& param) const
 {
@@ -111,59 +129,51 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
 
     auto src = param.src;
     auto dst = param.dst;
-    auto blurScale = param.blurScale;
 
     RS_OPTIONAL_TRACE_BEGIN("ApplyForegroundEffect");
-    int maxPasses = kMaxPassesLargeRadius;
-    float dilatedConvolutionFactor = kDilatedConvolutionLargeRadius;
-
-    float tmpRadius = static_cast<float>(param.radius) / dilatedConvolutionFactor;
-    int numberOfPasses = std::min(maxPasses, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
-    float radiusByPasses = tmpRadius / numberOfPasses;
     ROSEN_LOGD("ForegroundEffect::kawase radius : %{public}f, scale : %{public}f, pass num : %{public}d",
-        param.radius, param.blurScale, numberOfPasses);
+        blurRadius_, blurScale_, numberOfPasses_);
 
     auto width = std::max(static_cast<int>(std::ceil(dst.GetWidth())), image->GetWidth());
     auto height = std::max(static_cast<int>(std::ceil(dst.GetHeight())), image->GetHeight());
     auto originImageInfo = image->GetImageInfo();
-    float unit = std::ceil(radiusByPasses * param.blurScale);
 
     Drawing::Matrix blurMatrix;
     //blurMatrix.Translate(-src.GetLeft(), -src.GetTop());
-    float scaleW = static_cast<float>(std::ceil(width * param.blurScale)) / image->GetWidth();
-    float scaleH = static_cast<float>(std::ceil(height * param.blurScale)) / image->GetHeight();
+    float scaleW = static_cast<float>(std::ceil(width * blurScale_)) / image->GetWidth();
+    float scaleH = static_cast<float>(std::ceil(height * blurScale_)) / image->GetHeight();
     blurMatrix.PostScale(scaleW, scaleH);
     Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
 
     Drawing::RuntimeShaderBuilder blurBuilder(blurEffect_);
     blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*image, Drawing::TileMode::DECAL,
         Drawing::TileMode::DECAL, linear, blurMatrix));
-    blurBuilder.SetUniform("in_blurOffset", radiusByPasses * param.blurScale, radiusByPasses * param.blurScale);
+    blurBuilder.SetUniform("in_blurOffset", radiusByPasses_ * blurScale_, radiusByPasses_ * blurScale_);
 
-    auto scaledInfoGeo = Drawing::ImageInfo(std::ceil(width * param.blurScale) + 4 * unit, std::ceil(height * param.blurScale) + 4 * unit,
+    auto scaledInfoGeo = Drawing::ImageInfo(std::ceil(width * blurScale_) + 4 * unit_, std::ceil(height * blurScale_) + 4 * unit_,
         originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
     Drawing::Matrix blurMatrixGeo;
-    blurMatrixGeo.Translate(2 * unit, 2 * unit);
+    blurMatrixGeo.Translate(2 * unit_, 2 * unit_);
 
     std::shared_ptr<Drawing::Image> tmpBlur(blurBuilder.MakeImage(
         canvas.GetGPUContext().get(), &blurMatrixGeo, scaledInfoGeo, false));
     // And now we'll build our chain of scaled blur stages
-    for (auto i = 1; i < numberOfPasses; i++) {
-        auto scaledInfoGeoExtended = Drawing::ImageInfo(tmpBlur->GetWidth() + 4 * unit, tmpBlur->GetHeight() + 4 * unit,
+    for (auto i = 1; i < numberOfPasses_; i++) {
+        auto scaledInfoGeoExtended = Drawing::ImageInfo(tmpBlur->GetWidth() + 4 * unit_, tmpBlur->GetHeight() + 4 * unit_,
         originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
         Drawing::Matrix blurMatrixGeoExtended;
-        blurMatrixGeoExtended.Translate(2 * unit, 2 * unit);
+        blurMatrixGeoExtended.Translate(2 * unit_, 2 * unit_);
 
         const float stepScale = static_cast<float>(i) * blurScale_;
         blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*tmpBlur, Drawing::TileMode::DECAL,
             Drawing::TileMode::DECAL, linear, Drawing::Matrix()));      
-        blurBuilder.SetUniform("in_blurOffset", radiusByPasses * stepScale, radiusByPasses * stepScale);
+        blurBuilder.SetUniform("in_blurOffset", radiusByPasses_ * stepScale, radiusByPasses_ * stepScale);
 
         tmpBlur = blurBuilder.MakeImage(canvas.GetGPUContext().get(), &blurMatrixGeoExtended, scaledInfoGeoExtended, false);
     }
 
     Drawing::Matrix blurMatrixInv;
-    blurMatrixInv.Translate(-2 * unit * numberOfPasses, -2 * unit * numberOfPasses);
+    blurMatrixInv.Translate(-2 * unit_ * numberOfPasses_, -2 * unit_ * numberOfPasses_);
     blurMatrixInv.PostScale(1/scaleW, 1/scaleH);
     const auto blurShader = Drawing::ShaderEffect::CreateImageShader(*tmpBlur, Drawing::TileMode::DECAL,
             Drawing::TileMode::DECAL, linear, blurMatrixInv);
@@ -178,7 +188,7 @@ void RSForegroundEffectFilter::DrawImageRect(Drawing::Canvas& canvas, const std:
         const Drawing::Rect& src, const Drawing::Rect& dst) const
 {
     auto brush = GetBrush();
-    ForegroundEffectParam param = ForegroundEffectParam(src, dst, blurRadius_, blurScale_);
+    ForegroundEffectParam param = ForegroundEffectParam(src, dst);
     ApplyForegroundEffect(canvas, image, param);
 }
 } // namespace Rosen

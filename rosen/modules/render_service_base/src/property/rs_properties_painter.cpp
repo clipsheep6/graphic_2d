@@ -604,13 +604,26 @@ std::shared_ptr<Drawing::Image> RSPropertiesPainter::DrawGreyAdjustment(Drawing:
 void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
     RS_OPTIONAL_TRACE_NAME("DrawForegroundFilter");
-    std::shared_ptr<RSDrawingFilter> foregroundFilter = std::make_shared<RSForegroundEffectFilter>(properties.GetDynamicLightUpRate().value());
-
     auto surface = canvas.GetSurface();
-    auto imageSnapshot = surface->GetImageSnapshot();
+    std::shared_ptr<Image> imageSnapshot = nullptr;
+    if (surface) {
+        imageSnapshot = surface->GetImageSnapshot();
+    } else {
+        ROSEN_LOGD("RSPropertiesPainter::DrawForegroundFilter surface null");
+    }
 
     canvas.SwapBackCanvasList();
     canvas.SwapBackMainScreenData();
+
+    std::shared_ptr<RSDrawingFilter> foregroundFilter = properties.GetForegroundFilter();
+    if (foregroundFilter = nullptr) {
+        return;
+    }
+
+    if (imageSnapshot == nullptr) {
+        ROSEN_LOGD("RSPropertiesPainter::DrawForegroundFilter image null");
+        return;
+    }
 
     foregroundFilter->DrawImageRect(canvas, imageSnapshot, Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()),
         Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()));

@@ -1164,6 +1164,11 @@ bool RSProperties::IsDynamicLightUpValid() const
            ROSEN_LE(*dynamicLightUpDegree_, 1.0);
 }
 
+const std::shared_ptr<RSFilter>& RSProperties::GetForegroundFilter() const
+{
+    return foregroundFilter_;
+}
+
 // shadow properties
 void RSProperties::SetShadowColor(Color color)
 {
@@ -2733,6 +2738,26 @@ void RSProperties::OnApplyModifiers()
                 frameGeo_->GetWidth(), frameGeo_->GetHeight());
             filter_ = linearBlurFilter;
         }
+        /*
+        if (IsForegroundEffectRadiusValid()) {
+            auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(foregroundEffectRadius_);
+            foregroundFilter_ = foregroundEffectFilter;
+        }
+
+        if (!IsForegroundEffectRadiusValid()) {
+            foregroundFilter_.reset();
+        } //if(前景valid){设置前景} if(运动模糊valid){设置运动模糊} if(都无效){reset}
+        */
+       if (IsDynamicLightUpValid()) {
+            auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(GetDynamicLightUpRate().value());
+            foregroundFilter_ = foregroundEffectFilter;
+        }
+        if(!IsDynamicLightUpValid()){
+            foregroundFilter_.reset();
+        }
+
+
+        //needFilter_要设置吗
         needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
                       IsDynamicLightUpValid() || greyCoef_.has_value() || linearGradientBlurPara_ != nullptr ||
                       IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE;

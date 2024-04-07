@@ -315,10 +315,10 @@ private:
     std::stack<bool> blendOffscreenStack_;
 
     // foregroundFilter related
-    std::vector<std::vector<Canvas*>> storedPCanvasList_; //store pCanvasList_
-    std::stack<OffscreenData> offscreenDataList_;
-    std::stack<Drawing::Surface*> storeMainScreenSurface_;
-    std::stack<Drawing::Canvas*> storeMainScreenCanvas_;
+    std::vector<std::vector<Canvas*>> storedPCanvasList_; // store pCanvasList_
+    std::stack<OffscreenData> offscreenDataList_; // store offscreen canvas & surface
+    std::stack<Drawing::Surface*> storeMainScreenSurface_; // store surface_
+    std::stack<Drawing::Canvas*> storeMainScreenCanvas_; // store canvas_
 
     std::atomic_bool isHighContrastEnabled_ { false };
     CacheType cacheType_ { RSPaintFilterCanvas::CacheType::UNDEFINED };

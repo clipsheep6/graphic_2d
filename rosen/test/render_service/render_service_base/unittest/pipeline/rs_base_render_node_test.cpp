@@ -382,18 +382,6 @@ HWTEST_F(RSBaseRenderNodeTest, ResetParent, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsFirstLevelSurfaceNode
- * @tc.desc: test results of IsFirstLevelSurfaceNode
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSBaseRenderNodeTest, IsFirstLevelSurfaceNode, TestSize.Level1)
-{
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    ASSERT_FALSE(node->IsFirstLevelSurfaceNode());
-}
-
-/**
  * @tc.name: SubSurfaceNodeNeedDraw
  * @tc.desc: test results of SubSurfaceNodeNeedDraw
  * @tc.type:FUNC
@@ -401,9 +389,9 @@ HWTEST_F(RSBaseRenderNodeTest, IsFirstLevelSurfaceNode, TestSize.Level1)
  */
 HWTEST_F(RSBaseRenderNodeTest, SubSurfaceNodeNeedDraw, TestSize.Level1)
 {
-    auto parent = std::make_shared<RSBaseRenderNode>(id, context);
-    auto child = std::make_shared<RSBaseRenderNode>(id + 1, context);
-    parent->AddSubSurfaceNode(child, parent);
+    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    auto parent = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    node->AddSubSurfaceNode(parent);
     PartialRenderType opDropType = PartialRenderType::SET_DAMAGE;
     ASSERT_FALSE(parent->SubSurfaceNodeNeedDraw(opDropType));
 }
@@ -416,9 +404,9 @@ HWTEST_F(RSBaseRenderNodeTest, SubSurfaceNodeNeedDraw, TestSize.Level1)
  */
 HWTEST_F(RSBaseRenderNodeTest, AddSubSurfaceNode, TestSize.Level1)
 {
-    auto parent = std::make_shared<RSBaseRenderNode>(id, context);
-    auto child = std::make_shared<RSBaseRenderNode>(id + 1, context);
-    parent->AddSubSurfaceNode(child, parent);
+    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    auto parent = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    node->AddSubSurfaceNode(parent);
     ASSERT_TRUE(true);
 }
 
@@ -430,9 +418,9 @@ HWTEST_F(RSBaseRenderNodeTest, AddSubSurfaceNode, TestSize.Level1)
  */
 HWTEST_F(RSBaseRenderNodeTest, RemoveSubSurfaceNode, TestSize.Level1)
 {
-    auto parent = std::make_shared<RSBaseRenderNode>(id, context);
-    auto child = std::make_shared<RSBaseRenderNode>(id + 1, context);
-    parent->RemoveSubSurfaceNode(child, parent);
+    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    auto parent = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    node->RemoveSubSurfaceNode(parent);
     ASSERT_TRUE(true);
 }
 
@@ -506,8 +494,10 @@ HWTEST_F(RSBaseRenderNodeTest, DumpDrawCmdModifier, TestSize.Level1)
     RSModifierType type;
     Drawing::Matrix matrix;
     PropertyId id = 1;
-    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property = std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
-    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast = std::make_shared<RSGeometryTransRenderModifier>(property);
+    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property =
+        std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
+    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast =
+        std::make_shared<RSGeometryTransRenderModifier>(property);
     std::shared_ptr<RSRenderModifier> modifier = modifierCast;
 
     type = RSModifierType::ENV_FOREGROUND_COLOR;
@@ -625,7 +615,8 @@ HWTEST_F(RSBaseRenderNodeTest, SendCommandFromRT, TestSize.Level1)
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
     uint64_t timeoutNS = 1;
     std::shared_ptr<RSRenderPropertyBase> property = std::make_shared<RSRenderPropertyBase>();
-    std::unique_ptr<RSCommand> command = std::make_unique<RSNodeGetShowingPropertyAndCancelAnimation>(id, property, timeoutNS);
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSNodeGetShowingPropertyAndCancelAnimation>(id, property, timeoutNS);
     NodeId nodeId = 0;
     node->SendCommandFromRT(command, nodeId);
     ASSERT_TRUE(true);
@@ -722,7 +713,7 @@ HWTEST_F(RSBaseRenderNodeTest, Update, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
     RSDirtyRegionManager dirtyManager;
-    std::shared_ptr<RSRenderNode> parent(new RSRenderNode(id + 1));
+    std::shared_ptr<RSRenderNode> parent = std::make_shared<RSRenderNode>(id + 1);
     bool parentDirty = true;
     std::optional<RectI> clipRect;
     node->Update(dirtyManager, parent, parentDirty, clipRect);
@@ -896,8 +887,10 @@ HWTEST_F(RSBaseRenderNodeTest, AddModifier, TestSize.Level1)
 
     Drawing::Matrix matrix;
     PropertyId id = 1;
-    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property = std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
-    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast = std::make_shared<RSGeometryTransRenderModifier>(property);
+    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property =
+        std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
+    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast =
+        std::make_shared<RSGeometryTransRenderModifier>(property);
     std::shared_ptr<RSRenderModifier> modifierTwo = modifierCast;
     node->AddModifier(modifierTwo, isSingleFrameComposer);
     ASSERT_TRUE(true);
@@ -915,8 +908,10 @@ HWTEST_F(RSBaseRenderNodeTest, AddGeometryModifier, TestSize.Level1)
         auto node = std::make_shared<RSBaseRenderNode>(id, context);
         Drawing::Matrix matrix;
         PropertyId id = 1;
-        std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property = std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
-        std::shared_ptr<RSGeometryTransRenderModifier> modifierCast = std::make_shared<RSGeometryTransRenderModifier>(property);
+        std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property =
+            std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
+        std::shared_ptr<RSGeometryTransRenderModifier> modifierCast =
+            std::make_shared<RSGeometryTransRenderModifier>(property);
         std::shared_ptr<RSRenderModifier> modifier = modifierCast;
         node->AddGeometryModifier(modifier);
 
@@ -932,8 +927,10 @@ HWTEST_F(RSBaseRenderNodeTest, AddGeometryModifier, TestSize.Level1)
         auto node = std::make_shared<RSBaseRenderNode>(id, context);
         Drawing::Matrix matrix;
         PropertyId id = 1;
-        std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property = std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
-        std::shared_ptr<RSGeometryTransRenderModifier> modifierCast = std::make_shared<RSGeometryTransRenderModifier>(property);
+        std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property =
+            std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
+        std::shared_ptr<RSGeometryTransRenderModifier> modifierCast =
+            std::make_shared<RSGeometryTransRenderModifier>(property);
         modifierCast->drawStyle_ = RSModifierType::FRAME;
         std::shared_ptr<RSRenderModifier> modifier = modifierCast;
         node->AddGeometryModifier(modifier);
@@ -955,8 +952,10 @@ HWTEST_F(RSBaseRenderNodeTest, RemoveModifier, TestSize.Level1)
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
     Drawing::Matrix matrix;
     PropertyId id = 1;
-    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property = std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
-    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast = std::make_shared<RSGeometryTransRenderModifier>(property);
+    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property =
+        std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
+    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast =
+        std::make_shared<RSGeometryTransRenderModifier>(property);
     std::shared_ptr<RSRenderModifier> modifier = modifierCast;
     node->AddGeometryModifier(modifier);
     node->RemoveModifier(id);
@@ -1043,8 +1042,10 @@ HWTEST_F(RSBaseRenderNodeTest, GetModifier, TestSize.Level1)
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
     Drawing::Matrix matrix;
     PropertyId id = 1;
-    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property = std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
-    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast = std::make_shared<RSGeometryTransRenderModifier>(property);
+    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property =
+        std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
+    std::shared_ptr<RSGeometryTransRenderModifier> modifierCast =
+        std::make_shared<RSGeometryTransRenderModifier>(property);
     std::shared_ptr<RSRenderModifier> modifier = modifierCast;
     node->GetModifier(modifier->GetPropertyId());
 
@@ -1168,14 +1169,18 @@ HWTEST_F(RSBaseRenderNodeTest, InitCacheSurface, TestSize.Level1)
  */
 HWTEST_F(RSBaseRenderNodeTest, GetOptionalBufferSize, TestSize.Level1)
 {
-    // auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    // std::shared_ptr<RSRenderModifier> frameModifier = std::make_shared<RSRenderModifier>();
-    // node->frameModifier_ = frameModifier;
-    // node->GetOptionalBufferSize();
+    auto node = std::make_shared<RSBaseRenderNode>(id, context);
+    Drawing::Matrix matrix;
+    PropertyId id = 1;
+    std::shared_ptr<RSRenderProperty<Drawing::Matrix>> property =
+        std::make_shared<RSRenderProperty<Drawing::Matrix>>(matrix, id);
+    std::shared_ptr<RSRenderModifier> frameModifier = std::make_shared<RSGeometryTransRenderModifier>(property);
+    node->frameModifier_ = frameModifier;
+    node->GetOptionalBufferSize();
 
-    // std::shared_ptr<RSRenderModifier> boundsModifier = std::make_shared<RSRenderModifier>();
-    // node->boundsModifier_ = boundsModifier;
-    // node->GetOptionalBufferSize();
+    std::shared_ptr<RSRenderModifier> boundsModifier = std::make_shared<RSGeometryTransRenderModifier>(property);
+    node->boundsModifier_ = boundsModifier;
+    node->GetOptionalBufferSize();
     ASSERT_TRUE(true);
 }
 
@@ -1326,7 +1331,7 @@ HWTEST_F(RSBaseRenderNodeTest, CheckGroupableAnimation, TestSize.Level1)
 HWTEST_F(RSBaseRenderNodeTest, MarkNodeGroup, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id + 1, context);
-    
+
     RSRenderNode::NodeGroupType type = RSRenderNode::NodeGroupType::GROUP_TYPE_BUTT;
     bool isNodeGroup = false;
     bool includeProperty = true;
@@ -1373,7 +1378,7 @@ HWTEST_F(RSBaseRenderNodeTest, GetFilterRectsInCache, TestSize.Level1)
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
     std::unordered_map<NodeId, std::unordered_set<NodeId>> allRects;
 
-    std::unordered_set<NodeId> curRects = {1, 2, 3};
+    std::unordered_set<NodeId> curRects = { 1, 2, 3 };
     node->curCacheFilterRects_ = curRects;
     node->GetFilterRectsInCache(allRects);
     ASSERT_TRUE(true);
@@ -1422,7 +1427,7 @@ HWTEST_F(RSBaseRenderNodeTest, HasDisappearingTransition, TestSize.Level1)
 
     node->disappearingTransitionCount_ = 1;
     ASSERT_TRUE(node->HasDisappearingTransition(recursive));
-    
+
     node->disappearingTransitionCount_ = 0;
     recursive = true;
     ASSERT_FALSE(node->HasDisappearingTransition(recursive));
@@ -1505,7 +1510,7 @@ HWTEST_F(RSBaseRenderNodeTest, GetInstanceRootNode, TestSize.Level1)
 HWTEST_F(RSBaseRenderNodeTest, GetFirstLevelNode, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    ASSERT_EQ(node->GetFirstLevelNode(),nullptr);
+    ASSERT_EQ(node->GetFirstLevelNode(), nullptr);
 }
 
 /**
@@ -1565,7 +1570,8 @@ HWTEST_F(RSBaseRenderNodeTest, ExcuteSurfaceCaptureCommand, TestSize.Level1)
 HWTEST_F(RSBaseRenderNodeTest, UpdateSubSurfaceCnt, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    auto preParent = std::make_shared<RSBaseRenderNode>(id + 1, context);;
+    auto preParent = std::make_shared<RSBaseRenderNode>(id + 1, context);
+    ;
     node->UpdateSubSurfaceCnt(node, preParent);
     ASSERT_TRUE(true);
 }

@@ -2118,23 +2118,23 @@ GlobalDirtyRegionInfo RSRenderServiceConnectionProxy::GetGlobalDirtyRegionInfo()
     return GlobalDirtyRegionInfo(reply.ReadInt64(), reply.ReadInt32(), reply.ReadInt32());
 }
 
-LayerSynthesisModeInfo RSRenderServiceConnectionProxy::GetLayerSynthesisModeInfo()
+LayerComposeInfo RSRenderServiceConnectionProxy::GetLayerComposeInfo()
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    LayerSynthesisModeInfo layerSynthesisModeInfo;
+    LayerComposeInfo layerComposeInfo;
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return layerSynthesisModeInfo;
+        return layerComposeInfo;
     }
     option.SetFlags(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_LAYER_SYNTHESIS_MODE_INFO);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetLayerSynthesisModeInfo: Send Request err.");
-        return layerSynthesisModeInfo;
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetLayerComposeInfo: Send Request err.");
+        return layerComposeInfo;
     }
-    return LayerSynthesisModeInfo(reply.ReadInt32(), reply.ReadInt32(), reply.ReadInt32());
+    return LayerComposeInfo(reply.ReadInt32(), reply.ReadInt32(), reply.ReadInt32());
 }
 
 #ifdef TP_FEATURE_ENABLE

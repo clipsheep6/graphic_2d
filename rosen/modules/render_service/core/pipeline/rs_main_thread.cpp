@@ -1041,10 +1041,10 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
         surfaceHandler.ResetCurrentFrameBufferConsumed();
         if (RSBaseRenderUtil::ConsumeAndUpdateBuffer(surfaceHandler)) {
             this->bufferTimestamps_[surfaceNode->GetId()] = static_cast<uint64_t>(surfaceNode->GetTimestamp());
-            GpuDirtyRegionCollection::GetInstance().SetSelfDrawingPidAndNameForDFX(surfaceNode);
+            // GpuDirtyRegionCollection::GetInstance().UpdateActiveDirtyInfoForDFX(surfaceNode,
+            //     surfaceHandler.GetBuffers());
             if (surfaceNode->IsCurrentFrameBufferConsumed() && !surfaceNode->IsHardwareEnabledType()) {
                 surfaceNode->SetContentDirty();
-                GpuDirtyRegionCollection::GetInstance().DeleteNotSelfDrawingFromMapForDFX(surfaceNode->GetId());
                 doDirectComposition_ = false;
             }
             if (deviceType_ == DeviceType::PC && isUiFirstOn_ && surfaceNode->IsCurrentFrameBufferConsumed()

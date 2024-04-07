@@ -111,6 +111,7 @@ enum class RSIRenderServiceConnectionInterfaceCode : CodeUnderlyingType {
     GET_ACTIVE_DIRTY_REGION_INFO,
     GET_GLOBAL_DIRTY_REGION_INFO,
     GET_LAYER_SYNTHESIS_MODE_INFO,
+    REFRESH_RATE_UPDATE_CALLBACK,
 };
 } // namespace Rosen
 } // namespace OHOS

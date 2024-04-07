@@ -14,12 +14,13 @@
  */
 
 #include "info_collection/rs_gpu_dirty_region_collection.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
 GpuDirtyRegionCollection& GpuDirtyRegionCollection::GetInstance()
 {
-    static GpuDirtyRegion instance;
+    static GpuDirtyRegionCollection instance;
     return instance;
 }
 
@@ -31,34 +32,27 @@ GpuDirtyRegionCollection::~GpuDirtyRegionCollection() noexcept
 {
 }
 
-void GpuDirtyRegionCollection::UpdateActiveDirtyRegionAreasAndFrameNumberForDFX(NodeId id, Occlusion::Region region)
-{
-    for (auto rect : region.GetRegionRects()) {
-        ++activeDirtyRegionInfoMap_[id].activeFramesNumber;
-        activeDirtyRegionInfoMap_[id].activeDirtyRegionAreas +=
-            (rect.right_ - rect.left_) * (rect.bottom_ - rect.top_);
-    }
-}
+// void GpuDirtyRegionCollection::UpdateActiveDirtyInfoForDFX(std::shared_ptr<RSSurfaceRenderNode> node,
+//     Occlusion::Region region)
+// {
+//     for (auto rect : region.GetRegionRects()) {
+//         ++activeDirtyRegionInfoMap_[id].activeFramesNumber;
+//         activeDirtyRegionInfoMap_[id].activeDirtyRegionArea += (rect.right_ - rect.left_) * (rect.bottom_ - rect.top_);
+//     }
+// }
 
-void GpuDirtyRegionCollection::UpdateSelfDrawingRegionAreasAndFrameNumberForDFX(NodeId id, std::vector<Rect> damages)
-{
-    for (auto selfDrawingNodeIdAndPid : selfDrawingNodeIdAndPidMap_) {
-        if (ExtractPid(id) == selfDrawingNodeIdAndPid.second) {
-            for (auto damage : damages) {
-                ++activeDirtyRegionInfoMap_[id].activeFramesNumber;
-                activeDirtyRegionInfoMap_[id].activeDirtyRegionAreas += damage.w * damage.h;
-            }
-            return;
-        }
-    }
-    for (auto damage : damages) {
-        ++activeDirtyRegionInfoMap_[id].activeFramesNumber;
-        activeDirtyRegionInfoMap_[id].activeDirtyRegionAreas += damage.w * damage.h;
-    }
-    selfDrawingNodeIdAndPidMap_.emplace(id, ConvertNodeIdAndPid(id));
-}
+// void GpuDirtyRegionCollection::UpdateActiveDirtyInfoForDFX(std::shared_ptr<RSSurfaceRenderNode> node,
+//     std::vector<Rect> damages)
+// {
+//     if (node->IsCurrentFrameBufferConsumed() && node->IsHardwareEnabledType()) {
+//         for (auto damage : damages) {
+//             ++activeDirtyRegionInfoMap_[id].activeFramesNumber;
+//             activeDirtyRegionInfoMap_[id].activeDirtyRegionArea += damage.w * damage.h;
+//         }
+//     }
+// }
 
-void GpuDirtyRegionCollection::UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(RectI rect)
+void GpuDirtyRegionCollection::UpdateGlobalDirtyInfoForDFX(RectI rect)
 {
     ++globalDirtyRegionInfo_.globalFramesNumber;
     globalDirtyRegionInfo_.globalDirtyRegionAreas += rect.width_ * rect.height_;
@@ -67,39 +61,15 @@ void GpuDirtyRegionCollection::UpdateGlobalDirtyRegionAreasAndFrameNumberForDFX(
 void GpuDirtyRegionCollection::AddSkipProcessFramesNumberForDFX()
 {
     ++globalDirtyRegionInfo_.skipProcessFramesNumber;
-}
-
-void GpuDirtyRegionCollection::SetPidAndWindowNameForDFX(NodeId id, const std::string& windowName)
-{
-    activeDirtyRegionInfoMap_[id].pidOfBelongsApp = ExtractPid(id);
-    activeDirtyRegionInfoMap_[id].windowName = windowName;
-}
-
-void GpuDirtyRegionCollection::SetSelfDrawingPidAndNameForDFX(const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode)
-{
-    if (surfaceNode->IsCurrentFrameBufferConsumed() && surfaceNode->IsHardwareEnabledType() &&
-        !activeDirtyRegionInfoMap_[surfaceNode->GetId()].pidOfBelongsApp) {
-        std::string selfDrawingWindowName = surfaceNode->GetName();
-        selfDrawingWindowName.push_back('*');
-        activeDirtyRegionInfoMap_[surfaceNode->GetId()].pidOfBelongsApp = ExtractPid(surfaceNode->GetId());
-        activeDirtyRegionInfoMap_[surfaceNode->GetId()].windowName = selfDrawingWindowName;
-    }
-}
-
-void GpuDirtyRegionCollection::DeleteNotSelfDrawingFromMapForDFX(NodeId id)
-{
-    auto surfaceNodeRegionInfo = activeDirtyRegionInfoMap_.find(id);
-    if (surfaceNodeRegionInfo != activeDirtyRegionInfoMap_.end()) {
-        activeDirtyRegionInfoMap_.erase(surfaceNodeRegionInfo->first);
-    }
+    RS_LOGE("Log Test %{public}d", globalDirtyRegionInfo_.skipProcessFramesNumber);
 }
 
 std::vector<ActiveDirtyRegionInfo> GpuDirtyRegionCollection::GetActiveDirtyRegionInfo()
 {
     std::vector<ActiveDirtyRegionInfo> activeDirtyRegionInfos;
-    for a(auto activeDirtyRegionInfo : activeDirtyRegionInfos) {
+    for (auto activeDirtyRegionInfo : activeDirtyRegionInfoMap_) {
         if (activeDirtyRegionInfo.second.pidOfBelongsApp && activeDirtyRegionInfo.second.activeFramesNumber > 0) {
-            activeDirtyRegionInfo.second.activeDirtyRegionAreas /= activeDirtyRegionInfo.second.activeFramesNumber;
+            activeDirtyRegionInfo.second.activeDirtyRegionArea /= activeDirtyRegionInfo.second.activeFramesNumber;
             activeDirtyRegionInfos.emplace_back(activeDirtyRegionInfo.second);
         }
     }
@@ -120,34 +90,12 @@ GlobalDirtyRegionInfo GpuDirtyRegionCollection::GetGlobalDirtyRegionInfo()
 
 void GpuDirtyRegionCollection::ResetActiveDirtyRegionInfo()
 {
-    std::unordered_map<NodeId, ActiveDirtyRegionInfo> aliveSelfDrawingDirtyRegionInfoMap;
-    for (auto selfDrawingNodeIdAndPid : selfDrawingNodeIdAndPidMap_) {
-        auto activeDirtyRegionInfo = activeDirtyRegionInfoMap_.find(selfDrawingNodeIdAndPid.first);
-        if (activeDirtyRegionInfo == activeDirtyRegionInfoMap_.find()) {
-            continue;
-        }
-        if (!activeDirtyRegionInfo->second.activeFramesNumber) {
-            selfDrawingNodeIdAndPidMap_.erase(activeDirtyRegionInfo->first);
-            continue;
-        }
-        activeDirtyRegionInfo->second.activeDirtyRegionAreas = 0;
-        activeDirtyRegionInfo->second.activeFramesNumber = 0;
-        aliveSelfDrawingDirtyRegionInfoMap.emplace(selfDrawingNodeIdAndPid.first, activeDirtyRegionInfo->second);
-    }
-    activeDirtyRegionInfoMap_ = aliveSelfDrawingDirtyRegionInfoMap;
+    activeDirtyRegionInfoMap_.clear();
 }
 
 void GpuDirtyRegionCollection::ResetGlobalDirtyRegionInfo()
 {
     globalDirtyRegionInfo_ = GlobalDirtyRegionInfo {};
-}
-
-bool GpuDirtyRegionCollection::IsPidSet(NodeId id)
-{
-    if (activeDirtyRegionInfoMap_[id].pidOfBelongsApp) {
-        return true;
-    }
-    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

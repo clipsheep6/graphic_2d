@@ -1171,13 +1171,13 @@ GlobalDirtyRegionInfo RSRenderServiceClient::GetGlobalDirtyRegionInfo()
     return renderService->GetGlobalDirtyRegionInfo();
 }
 
-LayerSynthesisModeInfo RSRenderServiceClient::GetLayerSynthesisModeInfo()
+LayerComposeInfo RSRenderServiceClient::GetLayerComposeInfo()
 {
     auto renderService = RSRenderServiceConnectHub::GetRenderService();
     if (renderService == nullptr) {
-        return LayerSynthesisModeInfo {};
+        return LayerComposeInfo {};
     }
-    return renderService->GetLayerSynthesisModeInfo();
+    return renderService->GetLayerComposeInfo();
 }
 
 #ifdef TP_FEATURE_ENABLE

@@ -13,46 +13,46 @@
  * limitations under the License.
  */
 
-#ifndef RS_LAYER_SYNTHESIS_MODE_COLLECTION_H
-#define RS_LAYER_SYNTHESIS_MODE_COLLECTION_H
+#ifndef RS_LAYER_COMPOSE_COLLECTION_H
+#define RS_LAYER_COMPOSE_COLLECTION_H
 
 #include "common/rs_common_def.h"
 
 namespace OHOS {
 namespace Rosen {
 
-struct LayerSynthesisModeInfo {
+struct LayerComposeInfo {
     int32_t uniformRenderFrameNumber;
     int32_t offlineComposeFrameNumber;
     int32_t redrawFrameNumber;
-    LayerSynthesisModeInfo()
+    LayerComposeInfo()
         : uniformRenderFrameNumber(), offlineComposeFrameNumber(), redrawFrameNumber() {}
-    LayerSynthesisModeInfo(int32_t uniformRenderFrameNumber_, int32_t offlineComposeFrameNumber_,
+    LayerComposeInfo(int32_t uniformRenderFrameNumber_, int32_t offlineComposeFrameNumber_,
         int32_t redrawFrameNumber_)
         : uniformRenderFrameNumber(uniformRenderFrameNumber_), offlineComposeFrameNumber(offlineComposeFrameNumber_),
           redrawFrameNumber(redrawFrameNumber_) {}
 };
 
-class RSB_EXPORT LayerSynthesisModeCollection {
+class RSB_EXPORT LayerComposeCollection {
 public:
-    static LayerSynthesisModeCollection& GetInstance();
+    static LayerComposeCollection& GetInstance();
 
     void UpdateUniformOrOfflineComposeFrameNumberForDFX(size_t layerSize);
     void UpdateRedrawFrameNumberForDFX();
-    LayerSynthesisModeInfo GetLayerSynthesisModeInfo();
-    void ResetLayerSynthesisModeInfo();
+    LayerComposeInfo GetLayerComposeInfo();
+    void ResetLayerComposeInfo();
 
 private:
-    LayerSynthesisModeCollection();
-    ~LayerSynthesisModeCollection() noexcept;
-    LayerSynthesisModeCollection(const LayerSynthesisModeCollection&) = delete;
-    LayerSynthesisModeCollection(const LayerSynthesisModeCollection&&) = delete;
-    LayerSynthesisModeCollection& operator=(const LayerSynthesisModeCollection&) = delete;
-    LayerSynthesisModeCollection& operator=(const LayerSynthesisModeCollection&&) = delete;
+    LayerComposeCollection();
+    ~LayerComposeCollection() noexcept;
+    LayerComposeCollection(const LayerComposeCollection&) = delete;
+    LayerComposeCollection(const LayerComposeCollection&&) = delete;
+    LayerComposeCollection& operator=(const LayerComposeCollection&) = delete;
+    LayerComposeCollection& operator=(const LayerComposeCollection&&) = delete;
 
-    LayerSynthesisModeInfo layerSynthesisModeInfo_;
+    LayerComposeInfo layerComposeInfo_;
 };
 } // namespace Rosen
 } // namespace OHOS
 
-#endif // RS_LAYER_SYNTHESIS_MODE_COLLECTION_H
+#endif // RS_LAYER_COMPOSE_COLLECTION_H

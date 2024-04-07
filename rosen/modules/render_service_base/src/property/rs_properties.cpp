@@ -28,6 +28,7 @@
 #include "render/rs_filter.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_linear_gradient_blur_filter.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -138,6 +139,7 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
     [](RSProperties* prop) { prop->SetIlluminatedType(-1); },            // ILLUMINATED_TYPE
     [](RSProperties* prop) { prop->SetBloom({}); },                      // BLOOM
     [](RSProperties* prop) { prop->SetDynamicDimDegree({}); },           // DYNAMIC_LIGHT_UP_DEGREE
+    [](RSProperties* prop) { prop->SetForegroundEffectRadius(0.f); },    // FOREGROUND_EFFECT_RADIUS
 };
 } // namespace
 
@@ -1046,6 +1048,27 @@ Vector4f RSProperties::GetOutlineRadius() const
 const std::shared_ptr<RSBorder>& RSProperties::GetOutline() const
 {
     return outline_;
+}
+
+void RSProperties::SetForegroundEffectRadius(float foregroundEffectRadius)
+{
+    foregroundEffectRadius_ = foregroundEffectRadius;
+    if (IsForegroundEffectRadiusValid()) {
+        isDrawn_ = true;
+    }
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+float RSProperties::GetForegroundEffectRadius() const
+{
+    return foregroundEffectRadius_;
+}
+
+bool RSProperties::IsForegroundEffectRadiusValid() const
+{
+    return ROSEN_GNE(GetForegroundEffectRadius(), 0.0);
 }
 
 void RSProperties::SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter)
@@ -2715,6 +2738,7 @@ void RSProperties::OnApplyModifiers()
             boundsGeo_->Round();
         }
     }
+    ROSEN_LOGE("foregroundEffectBlur: %{public}f", foregroundEffectRadius_);
     if (colorFilterNeedUpdate_) {
         GenerateColorFilter();
     }

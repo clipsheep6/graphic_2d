@@ -45,6 +45,7 @@
 #include "dm/font_regen.h"
 #include "dm/circular_arcs.h"
 #include "dm/largeclippedpath.h"
+#include "dm/filltypes.h"
 #include "dm/dashing.h"
 
 namespace {
@@ -139,6 +140,7 @@ namespace {
             {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
             {"largeclippedpath_winding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
             {"largeclippedpath_evenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
+            {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
 
 
             

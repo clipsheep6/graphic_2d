@@ -45,6 +45,7 @@ add_library(entry SHARED
     dm/font_regen.cpp
     dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
+    dm/filltypes.cpp
     dm/dashing.cpp
 )
 
@@ -84,6 +85,7 @@ add_library(myxnode SHARED
     dm/font_regen.cpp
     dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
+    dm/filltypes.cpp
     dm/dashing.cpp
 )
 

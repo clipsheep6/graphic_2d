@@ -35,7 +35,7 @@ void RSResourceManagerTest::TearDownTestCase() {}
 void RSResourceManagerTest::SetUp() {}
 void RSResourceManagerTest::TearDown() {}
 
-static bool uploadFunctionCalled = false;
+static bool g_uploadFunctionCalled = false;
 static void TestHookFunction(bool paraUpload, const std::shared_ptr<Drawing::Image>& image,
     const std::shared_ptr<Media::PixelMap>& pixelMap, uint64_t uniqueId)
 {
@@ -62,11 +62,11 @@ HWTEST_F(RSResourceManagerTest, UploadTextureTest001, TestSize.Level1)
     auto image = std::make_shared<Drawing::Image>();
     auto pixelMap = std::make_shared<Media::PixelMap>();
     resourceManager->UploadTexture(true, image, pixelMap, 1);
-    EXPECT_FALSE(uploadFunctionCalled);
+    EXPECT_FALSE(g_uploadFunctionCalled);
     resourceManager->SetUploadTextureFunction(TestHookFunction);
     resourceManager->UploadTexture(true, image, pixelMap, 1);
-    EXPECT_TRUE(uploadFunctionCalled);
-    uploadFunctionCalled = false;
+    EXPECT_TRUE(g_uploadFunctionCalled);
+    g_uploadFunctionCalled = false;
 }
 
 /**
@@ -81,10 +81,10 @@ HWTEST_F(RSResourceManagerTest, SetUploadTextureFunctionTest001, TestSize.Level1
     auto pixelMap = std::make_shared<Media::PixelMap>();
     resourceManager->SetUploadTextureFunction(nullptr);
     resourceManager->UploadTexture(true, image, pixelMap, 1);
-    EXPECT_FALSE(uploadFunctionCalled);
+    EXPECT_FALSE(g_uploadFunctionCalled);
     resourceManager->SetUploadTextureFunction(TestHookFunction);
     resourceManager->UploadTexture(true, image, pixelMap, 1);
-    EXPECT_TRUE(uploadFunctionCalled);
+    EXPECT_TRUE(g_uploadFunctionCalled);
 }
 
 } // namespace Rosen

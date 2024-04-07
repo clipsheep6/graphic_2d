@@ -40,7 +40,7 @@ ohos_unittest("RSRenderServiceBaseRenderTest") {
     "rs_typeface_cache_test.cpp",
   ]
 
- cflags = [
+  cflags = [
     "-Dprivate=public",
     "-Dprotected=public",
   ]

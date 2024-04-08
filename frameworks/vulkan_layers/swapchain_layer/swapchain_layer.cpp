@@ -805,12 +805,6 @@ VkResult AcquireNextImage2KHR(VkDevice device, const VkAcquireNextImageInfoKHR* 
                                pAcquireInfo->semaphore, pAcquireInfo->fence, pImageIndex);
 }
 
-const VkPresentRegionKHR* GetPresentRegion(
-    const VkPresentRegionKHR* regions, const Swapchain &swapchain, uint32_t index)
-{
-    return (regions && !swapchain.mailboxMode) ? &regions[index] : nullptr;
-}
-
 const VkPresentRegionKHR* GetPresentRegions(const VkPresentInfoKHR* presentInfo)
 {
     const VkPresentRegionsKHR* presentRegions = nullptr;
@@ -825,6 +819,9 @@ const VkPresentRegionKHR* GetPresentRegions(const VkPresentInfoKHR* presentInfo)
     if (presentRegions == nullptr) {
         return nullptr;
     } else {
+        if (presentRegions->swapchainCount != presentInfo->swapchainCount) {
+            SWLOGE("vkQueuePresentKHR VkPresentRegions::swapchainCount != VkPresentInfo::swapchainCount");
+        }
         return presentRegions->pRegions;
     }
 }
@@ -934,7 +931,7 @@ VKAPI_ATTR VkResult VKAPI_CALL QueuePresentKHR(
     for (uint32_t i = 0; i < presentInfo->swapchainCount; i++) {
         Swapchain &swapchain = *(reinterpret_cast<Swapchain*>(presentInfo->pSwapchains[i]));
         Swapchain::Image &img = swapchain.images[presentInfo->pImageIndices[i]];
-        const VkPresentRegionKHR* region = GetPresentRegion(regions, swapchain, i);
+        const VkPresentRegionKHR* region = (regions != nullptr) ? &regions[i] : nullptr;
         int32_t fence = -1;
         ret = ReleaseImage(queue, presentInfo, img, fence);
         if (swapchain.surface.swapchainHandle == presentInfo->pSwapchains[i]) {

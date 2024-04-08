@@ -362,5 +362,9 @@ bool RSSystemProperties::GetHwcRegionDfxEnabled()
 {
     return false;
 }
+bool RSSystemProperties::GetFineDownsampleEnabled()
+{
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

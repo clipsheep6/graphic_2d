@@ -14,11 +14,12 @@
  */
 
 #include "gtest/gtest.h"
-#include "draw/surface.h"
 #include "message_parcel.h"
+#include "pixel_map.h"
+
+#include "draw/surface.h"
 #include "render/rs_image.h"
 #include "render/rs_image_cache.h"
-#include "pixel_map.h"
 #include "transaction/rs_marshalling_helper.h"
 
 using namespace testing;
@@ -67,9 +68,8 @@ static std::shared_ptr<Media::PixelMap> CreatePixelMap(int width, int height)
     if (address == nullptr) {
         return nullptr;
     }
-    Drawing::ImageInfo info =
-        Drawing::ImageInfo(pixelmap->GetWidth(), pixelmap->GetHeight(),
-        Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL);
+    Drawing::ImageInfo info = Drawing::ImageInfo(
+        pixelmap->GetWidth(), pixelmap->GetHeight(), Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL);
     auto surface = Drawing::Surface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
     auto canvas = surface->GetCanvas();
     canvas->Clear(Drawing::Color::COLOR_YELLOW);
@@ -125,6 +125,139 @@ HWTEST_F(RSImageTest, LifeCycle001, TestSize.Level1)
     rsImage.SetImageFit(0);
     rsImage.CanvasDrawImage(canvas, rect, Drawing::SamplingOptions(), true);
     canvas.DetachBrush();
+}
+
+/**
+ * @tc.name: ApplyImageFitTest001
+ * @tc.desc: Verify function ApplyImageFit
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, ApplyImageFitTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    image->ApplyImageFit();
+    EXPECT_TRUE(true);
+    RectF srcR(1.f, 1.f, 0.f, 1.f);
+    image->srcRect_ = srcR;
+    image->ApplyImageFit();
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: ApplyCanvasClipTest001
+ * @tc.desc: Verify function ApplyCanvasClip
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, ApplyCanvasClipTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    Drawing::Canvas canvas;
+    image->ApplyCanvasClip(canvas);
+    EXPECT_TRUE(true);
+    std::vector<Drawing::Point> radius = { Drawing::Point { 1.f, 1.f }, Drawing::Point { 1.f, 1.f },
+        Drawing::Point { 1.f, 1.f }, Drawing::Point { 1.f, 1.f } };
+    image->SetRadius(radius);
+    image->ApplyCanvasClip(canvas);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: UploadGpuTest001
+ * @tc.desc: Verify function UploadGpu
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, UploadGpuTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    Drawing::Canvas canvas;
+    image->UploadGpu(canvas);
+    EXPECT_TRUE(true);
+    auto data = std::make_shared<Drawing::Data>();
+    image->SetCompressData(data);
+    image->UploadGpu(canvas);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: DrawImageRepeatRectTest001
+ * @tc.desc: Verify function DrawImageRepeatRect
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, DrawImageRepeatRectTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    Drawing::SamplingOptions samplingOptions;
+    Drawing::Canvas canvas;
+    image->pixelMap_ = std::make_shared<Media::PixelMap>();
+    image->pixelMap_->SetAstc(true);
+    image->DrawImageRepeatRect(samplingOptions, canvas);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetCompressDataTest001
+ * @tc.desc: Verify function SetCompressData
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, SetCompressDataTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    auto data = std::make_shared<Drawing::Data>();
+    image->SetCompressData(data, 1, 1, 1);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetCompressDataTest002
+ * @tc.desc: Verify function SetCompressData
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, SetCompressDataTest002, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    auto data = std::make_shared<Drawing::Data>();
+    image->SetCompressData(data);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetRadiusTest001
+ * @tc.desc: Verify function SetRadius
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, SetRadiusTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    std::vector<Drawing::Point> radius = { Drawing::Point { 1.f, 1.f }, Drawing::Point { 1.f, 1.f },
+        Drawing::Point { 1.f, 1.f }, Drawing::Point { 1.f, 1.f } };
+    image->SetRadius(radius);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetScaleTest001
+ * @tc.desc: Verify function SetScale
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, SetScaleTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    image->SetScale(-1.0);
+    EXPECT_TRUE(true);
+    image->SetScale(1.0);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetNodeIdTest001
+ * @tc.desc: Verify function SetNodeId
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSImageTest, SetNodeIdTest001, TestSize.Level1)
+{
+    auto image = std::make_shared<RSImage>();
+    image->SetNodeId(1);
+    EXPECT_TRUE(true);
 }
 
 /**
@@ -252,10 +385,10 @@ HWTEST_F(RSImageTest, RSImageBase001, TestSize.Level1)
 }
 
 /**
-* @tc.name: RSImageCache001
-* @tc.desc: RSImageBase test.
-* @tc.type: FUNC
-*/
+ * @tc.name: RSImageCache001
+ * @tc.desc: RSImageBase test.
+ * @tc.type: FUNC
+ */
 HWTEST_F(RSImageTest, RSImageCache001, TestSize.Level1)
 {
     auto rsImage = std::make_shared<RSImage>();

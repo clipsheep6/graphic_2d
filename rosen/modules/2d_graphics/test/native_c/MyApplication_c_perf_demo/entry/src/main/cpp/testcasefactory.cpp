@@ -45,8 +45,11 @@
 #include "dm/font_regen.h"
 #include "dm/alpha_image.h"
 #include "dm/shadowutils.h"
+#include "dm/clipped_cubic.h"
+
 #include "dm/circular_arcs.h"
 #include "dm/largeclippedpath.h"
+#include "dm/filltypes.h"
 #include "dm/dashing.h"
 #include "dm/path_interior.h"
 
@@ -146,6 +149,11 @@ namespace {
             {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
             {"largeclippedpath_kwinding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
             {"largeclippedpath_kevenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
+            {"clippedcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClippedCubic>(); }},
+            {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
+            {"largeclippedpath_winding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
+            {"largeclippedpath_evenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
+            {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
 

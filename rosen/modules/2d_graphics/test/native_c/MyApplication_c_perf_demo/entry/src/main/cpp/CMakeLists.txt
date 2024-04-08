@@ -45,8 +45,10 @@ add_library(entry SHARED
     dm/font_regen.cpp
     dm/alpha_image.cpp
     dm/shadowutils.cpp
+    dm/clipped_cubic.cpp
     dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
+    dm/filltypes.cpp
     dm/dashing.cpp
     dm/path_interior.cpp
 )
@@ -87,8 +89,10 @@ add_library(myxnode SHARED
     dm/font_regen.cpp
     dm/alpha_image.cpp
     dm/shadowutils.cpp
+    dm/clipped_cubic.cpp
     dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
+    dm/filltypes.cpp
     dm/dashing.cpp
     dm/path_interior.cpp
 )

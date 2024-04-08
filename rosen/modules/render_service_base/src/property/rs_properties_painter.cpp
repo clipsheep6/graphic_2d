@@ -616,7 +616,7 @@ void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, R
     canvas.SwapBackMainScreenData();
 
     auto& RSFilter = properties.GetForegroundFilter();
-    if (RSFilter = nullptr) {
+    if (RSFilter == nullptr) {
         return;
     }
     auto foregroundFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);

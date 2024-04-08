@@ -26,6 +26,7 @@
 #include "property/rs_point_light_manager.h"
 #include "property/rs_properties_def.h"
 #include "render/rs_filter.h"
+#include "render/rs_foreground_effect_filter.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_linear_gradient_blur_filter.h"
 

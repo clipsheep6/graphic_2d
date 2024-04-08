@@ -166,7 +166,7 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
 
         const float stepScale = static_cast<float>(i) * blurScale_;
         blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*tmpBlur, Drawing::TileMode::DECAL,
-            Drawing::TileMode::DECAL, linear, Drawing::Matrix()));      
+            Drawing::TileMode::DECAL, linear, Drawing::Matrix()));
         blurBuilder.SetUniform("in_blurOffset", radiusByPasses_ * stepScale, radiusByPasses_ * stepScale);
 
         tmpBlur = blurBuilder.MakeImage(canvas.GetGPUContext().get(), &blurMatrixGeoExtended, scaledInfoGeoExtended, false);
@@ -180,7 +180,7 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
     Drawing::Brush brush;
     brush.SetShaderEffect(blurShader);
     canvas.DrawBackground(brush);
-    canvas.DetachBrush(); 
+    canvas.DetachBrush();
     RS_OPTIONAL_TRACE_END();
 }
 

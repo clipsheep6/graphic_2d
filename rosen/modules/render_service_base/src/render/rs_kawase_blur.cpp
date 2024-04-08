@@ -211,6 +211,73 @@ void KawaseBlurFilter::OutputOriginalImage(Drawing::Canvas& canvas, const std::s
     canvas.DetachBrush();
 }
 
+bool DownSample(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& input,
+    std::shared_ptr<Drawing::Image>& finalImg, int width, int height,float scaleW, float scaleH)
+{
+    Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
+    std::string shaderString(R"(
+        uniform shader imageInput;
+
+        half4 main(float2 xy) {
+            half4 c = imageInput.eval(xy);
+            return half4(c.rgb, 1.0);
+        }
+    )");
+    auto effect = Drawing::RuntimeEffect::CreateForShader(shaderString);
+    if (!effect) {
+        ROSEN_LOGE("CreateForShader effect is null");
+        return false;
+    }
+    Drawing::RuntimeShaderBuilder effectBulider(effect);
+    Drawing::Matrix matrix;
+    matrix.PostScale(0.5, 0.5);
+    auto originImageInfo = input->GetImageInfo();
+    auto pcInfo = Drawing::ImageInfo(std::ceil(width * 0.5), std::ceil(height * 0.5),
+        originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
+    effectBulider.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input, Drawing::TileMode::CLAMP,
+        Drawing::TileMode::CLAMP, linear, matrix));
+    std::shared_ptr<Drawing::Image> halfImg = effectBulider.MakeImage(canvas.GetGPUContext().get(), nullptr, pcInfo, false);
+    if (scaleW > 0.4f) { // will downsample to 0.5*0.5, avoid float comparision error
+        finalImg = halfImg;
+        ROSEN_LOGD("kawaseBlur DownSample to 0.5 * 0.5");
+        return true;
+    }
+    auto effect2 = Drawing::RuntimeEffect::CreateForShader(shaderString);
+    Drawing::RuntimeShaderBuilder effectBulider2(effect2);
+    pcInfo = Drawing::ImageInfo(std::ceil(halfImg->GetWidth() * 0.5), std::ceil(halfImg->GetHeight() * 0.5),
+        originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
+    effectBulider2.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*halfImg, Drawing::TileMode::CLAMP,
+        Drawing::TileMode::CLAMP, linear, matrix));
+    std::shared_ptr<Drawing::Image> qualImg = effectBulider2.MakeImage(canvas.GetGPUContext().get(), nullptr, pcInfo, false);
+    if (scaleW > 0.2f) {
+        finalImg = qualImg;
+        ROSEN_LOGD("kawaseBlur DownSample to 0.25 * 0.25");
+        return true;
+    }
+    auto effect3 = Drawing::RuntimeEffect::CreateForShader(shaderString);
+    Drawing::RuntimeShaderBuilder effectBulider3(effect3);
+    pcInfo = Drawing::ImageInfo(std::ceil(qualImg->GetWidth() * 0.5), std::ceil(qualImg->GetHeight() * 0.5),
+        originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
+    effectBulider3.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*qualImg, Drawing::TileMode::CLAMP,
+        Drawing::TileMode::CLAMP, linear, matrix));
+    std::shared_ptr<Drawing::Image> octImg = effectBulider3.MakeImage(canvas.GetGPUContext().get(), nullptr, pcInfo, false);
+    if (scaleW > 0.1f) {
+        finalImg = octImg;
+        ROSEN_LOGD("kawaseBlur DownSample to 0.125 * 0.125");
+        return true;
+    }
+    auto effect4 = Drawing::RuntimeEffect::CreateForShader(shaderString);
+    Drawing::RuntimeShaderBuilder effectBulider4(effect4);
+    pcInfo = Drawing::ImageInfo(std::ceil(octImg->GetWidth() * 0.5), std::ceil(octImg->GetHeight() * 0.5),
+        originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
+    effectBulider4.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*octImg, Drawing::TileMode::CLAMP,
+        Drawing::TileMode::CLAMP, linear, matrix));
+    std::shared_ptr<Drawing::Image> dexImg = effectBulider4.MakeImage(canvas.GetGPUContext().get(), nullptr, pcInfo, false);
+    finalImg = dexImg;
+    ROSEN_LOGD("kawaseBlur DownSample to 0.0625 * 0.0625");
+    return true;
+}
+
 bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
     const KawaseParameter& param)
 {
@@ -250,7 +317,16 @@ bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::share
     blurMatrix.Translate(-src.GetLeft(), -src.GetTop());
     float scaleW = static_cast<float>(scaledInfo.GetWidth()) / input->GetWidth();
     float scaleH = static_cast<float>(scaledInfo.GetHeight()) / input->GetHeight();
-    blurMatrix.PostScale(scaleW, scaleH);
+    std::shared_ptr<Drawing::Image> finalImg;
+    if (RSSystemProperties::GetFineDownsampleEnabled()) {
+        if (!DownSample(canvas, input, finalImg, width, height,scaleW, scaleH)) {
+            ROSEN_LOGE("ApplyKawaseBlur Fine downSample error");
+            return false;
+        }
+    } else {
+        blurMatrix.PostScale(scaleW, scaleH);
+        finalImg = input;
+    }
     Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
 
     // Advanced Filter: check is AF usable only the first time

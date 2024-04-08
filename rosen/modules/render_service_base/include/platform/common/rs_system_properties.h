@@ -201,6 +201,7 @@ public:
     static bool GetSecurityPermissionCheckEnabled();
     static bool GetParallelUploadTexture();
     static bool GetEffectMergeEnabled();
+    static bool GetFineDownsampleEnabled();
 
 #ifdef DDGR_ENABLE_FEATURE_OPINC
     static DdgrOpincType GetDdgrOpincType();

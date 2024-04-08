@@ -17,7 +17,6 @@
 #include "rs_profiler_network.h"
 
 #include "common/rs_obj_geometry.h"
-#include "pipeline/rs_context.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_surface_render_node.h"
@@ -28,28 +27,6 @@
 #include "pipeline/rs_root_render_node.h"
 
 namespace OHOS::Rosen {
-
-static RSContext* g_renderServiceContext;
-
-void RSProfiler::RenderServiceTreeDump(nlohmann::json& out)
-{
-    RS_TRACE_NAME("GetDumpTreeJSON");
-
-    auto& animation = out["Animation Node"];
-    animation = nlohmann::json::array();
-    for (auto& [nodeId, _] : g_renderServiceContext->animatingNodeList_) {
-        animation.push_back(nodeId);
-    }
-
-    const auto rootNode = g_renderServiceContext->GetGlobalRootRenderNode();
-    auto& root = out["Root node"];
-    if (rootNode == nullptr) {
-        root = nlohmann::json {};
-        return;
-    }
-
-    DumpNode(*rootNode, root);
-}
 
 void RSProfiler::DumpNode(const RSRenderNode& node, nlohmann::json& out)
 {

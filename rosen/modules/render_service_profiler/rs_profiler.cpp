@@ -312,6 +312,26 @@ void RSProfiler::OnFrameEnd()
     RecordUpdate();
 }
 
+void RSProfiler::RenderServiceTreeDump(nlohmann::json& out)
+{
+    RS_TRACE_NAME("GetDumpTreeJSON");
+
+    auto& animation = out["Animation Node"];
+    animation = nlohmann::json::array();
+    for (auto& [nodeId, _] : g_renderServiceContext->animatingNodeList_) {
+        animation.push_back(nodeId);
+    }
+
+    const auto rootNode = g_renderServiceContext->GetGlobalRootRenderNode();
+    auto& root = out["Root node"];
+    if (rootNode == nullptr) {
+        root = nlohmann::json {};
+        return;
+    }
+
+    DumpNode(*rootNode, root);
+}
+
 bool RSProfiler::IsEnabled()
 {
     return g_renderService && g_renderServiceThread && g_renderServiceContext;

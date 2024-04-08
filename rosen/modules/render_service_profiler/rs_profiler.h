@@ -212,7 +212,7 @@ private:
     RSB_EXPORT static std::string DumpSurfaceNode(const RSRenderNode& node);
 
     // JSON
-    RSB_EXPORT static void RenderServiceTreeDump(nlohmann::json& out);
+    static void RenderServiceTreeDump(nlohmann::json& out);
     RSB_EXPORT static void DumpNode(const RSRenderNode& node, nlohmann::json& out);
     RSB_EXPORT static void DumpSubClassNode(const RSRenderNode& node, nlohmann::json& out);
     RSB_EXPORT static void DumpDrawCmdModifiers(const RSRenderNode& node, nlohmann::json& out);

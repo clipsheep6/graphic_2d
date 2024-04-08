@@ -21,6 +21,7 @@
 #include "modules/skparagraph/include/Paragraph.h"
 #include "paragraph_style.h"
 #include "line_metrics.h"
+#include "run.h"
 
 #include "rosen_text/symbol_animation_config.h"
 
@@ -199,6 +200,7 @@ public:
     virtual OHOS::Rosen::Drawing::FontMetrics GetFontMetricsResult(const OHOS::Rosen::SPText::TextStyle& textStyle) = 0;
     virtual bool GetLineFontMetrics(const size_t lineNumber,
         size_t& charNumber, std::vector<Drawing::FontMetrics>& fontMetrics) = 0;
+    virtual std::vector<std::unique_ptr<SPText::Run>> GetRuns() const = 0;
 };
 } // namespace SPText
 } // namespace Rosen

@@ -110,6 +110,8 @@ public:
 
     bool GetLineFontMetrics(const size_t lineNumber, size_t& charNumber,
         std::vector<Drawing::FontMetrics>& fontMetrics) override;
+    //const std::vector<TextLine>& GetTextLines() override;
+    std::vector<std::unique_ptr<SPText::Run>> GetRuns() const override;
 private:
     TextStyle SkStyleToTextStyle(const skia::textlayout::TextStyle& skStyle);
 

@@ -22,6 +22,7 @@
 #include "impl/paragraph_impl.h"
 
 #include "convert.h"
+#include "run_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -389,6 +390,21 @@ bool Typography::GetLineFontMetrics(const size_t lineNumber,
         return false;
     }
     return paragraph_->GetLineFontMetrics(lineNumber, charNumber, fontMetrics);
+}
+
+std::vector<std::unique_ptr<Run>> Typography::GetRuns() const
+{
+    if (!paragraph_) {
+        return {};
+    }
+    std::vector<std::unique_ptr<SPText::Run>> textRuns = paragraph_->GetRuns();
+    std::vector<std::unique_ptr<Run>> runs;
+
+    for (std::unique_ptr<SPText::Run>& textRun : textRuns) {
+        std::unique_ptr<RunImpl> runPtr = std::make_unique<RunImpl>(std::move(textRun));
+        runs.emplace_back(std::move(runPtr));
+    }
+    return runs;
 }
 } // namespace AdapterTxt
 } // namespace Rosen

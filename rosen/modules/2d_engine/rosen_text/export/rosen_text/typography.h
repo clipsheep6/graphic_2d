@@ -28,6 +28,7 @@
 #include "text_style.h"
 #include "typography_types.h"
 #include "symbol_animation_config.h"
+#include "run.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -146,6 +147,7 @@ public:
     virtual Drawing::FontMetrics GetFontMetrics(const OHOS::Rosen::TextStyle& textStyle) = 0;
     virtual bool GetLineFontMetrics(const size_t lineNumber,
         size_t& charNumber, std::vector<Drawing::FontMetrics>& fontMetrics) = 0;
+    virtual std::vector<std::unique_ptr<Run>> GetRuns() const = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

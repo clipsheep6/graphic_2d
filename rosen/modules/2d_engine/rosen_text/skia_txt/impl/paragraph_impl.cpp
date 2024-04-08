@@ -23,6 +23,7 @@
 #include "skia_adapter/skia_convert_utils.h"
 #include "text/font_metrics.h"
 #include "paragraph_builder_impl.h"
+#include "run_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -324,6 +325,22 @@ bool ParagraphImpl::GetLineFontMetrics(const size_t lineNumber, size_t& charNumb
     }
     return paragraph_->GetLineFontMetrics(lineNumber, charNumber, fontMetrics);
 }
+
+std::vector<std::unique_ptr<SPText::Run>> ParagraphImpl::GetRuns() const
+{
+    if (!paragraph_) {
+        return {};
+    }
+
+    std::vector<std::unique_ptr<skt::RunBase>> runBases = paragraph_->GetRuns();
+    std::vector<std::unique_ptr<SPText::Run>> runs;
+    for (std::unique_ptr<skt::RunBase>& runBase : runBases) {
+        std::unique_ptr<SPText::RunImpl> runImplPtr = std::make_unique<SPText::RunImpl>(std::move(runBase), paints_);
+        runs.emplace_back(std::move(runImplPtr));
+    }
+    return runs;
+}
+
 } // namespace SPText
 } // namespace Rosen
 } // namespace OHOS

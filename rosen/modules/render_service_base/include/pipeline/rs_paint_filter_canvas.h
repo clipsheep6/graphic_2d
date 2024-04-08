@@ -231,7 +231,7 @@ public:
         std::shared_ptr<Drawing::Surface> offscreenSurface_ = nullptr;
         std::shared_ptr<RSPaintFilterCanvas> offscreenCanvas_ = nullptr;
     };
-    
+
     void StoreOffscreenData(OffscreenData& offscreenData)
     {
         offscreenDataList_.push(offscreenData);
@@ -267,7 +267,7 @@ public:
         pCanvasList_.swap(item);
         storedPCanvasList_.pop_back();
     }
-    
+
     // canvas status relate
     struct CanvasStatus {
         float alpha_;

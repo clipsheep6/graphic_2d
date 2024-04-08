@@ -51,7 +51,7 @@ public:
     {
         return nullptr;
     }
-    
+
 private:
     float blurScale_ {};
     float blurRadius_ {}; //kawase blur's blur radius

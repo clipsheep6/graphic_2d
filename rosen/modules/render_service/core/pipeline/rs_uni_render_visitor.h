@@ -359,6 +359,7 @@ private:
     bool dirtyFlag_ { false };
     std::unique_ptr<RSRenderFrame> renderFrame_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
+    Drawing::Region clipRegion_;
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
     std::map<NodeId, RectI> cacheRenderNodeMapRects_;
     std::map<NodeId, bool> cacheRenderNodeIsUpdateMap_;
@@ -508,6 +509,7 @@ private:
     bool isNodeSingleFrameComposer_ = false;
     // use for screen recording optimization
     std::shared_ptr<Drawing::Image> cacheImgForCapture_ = nullptr;
+    std::shared_ptr<Drawing::Image> cacheImgForCapture2_ = nullptr;
 
     void SetHasSharedTransitionNode(RSSurfaceRenderNode& surfaceNode, bool hasSharedTransitionNode);
 

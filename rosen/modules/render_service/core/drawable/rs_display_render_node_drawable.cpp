@@ -14,40 +14,44 @@
  */
 
 #include "drawable/rs_display_render_node_drawable.h"
-#include "pipeline/rs_uni_render_virtual_processor.h"
 
 #include <memory>
 #include <string>
 
 #include "benchmarks/rs_recording_thread.h"
 #include "rs_trace.h"
+#include "system/rs_system_parameters.h"
 
+#include "common/rs_optional_trace.h"
+#include "common/rs_singleton.h"
 #include "drawable/rs_surface_render_node_drawable.h"
 #include "memory/rs_tag_tracker.h"
 #include "params/rs_display_render_params.h"
 #include "params/rs_surface_render_params.h"
+#include "pipeline/round_corner_display/rs_rcd_render_manager.h"
+#include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/rs_base_render_engine.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_processor_factory.h"
+#include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/rs_uni_render_listener.h"
 #include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
+#include "pipeline/rs_uni_render_virtual_processor.h"
 #include "platform/common/rs_log.h"
 #include "platform/ohos/rs_jank_stats.h"
 #include "property/rs_point_light_manager.h"
 #include "screen_manager/rs_screen_manager.h"
-#include "system/rs_system_parameters.h"
-#include "common/rs_singleton.h"
-#include "common/rs_optional_trace.h"
-#include "pipeline/round_corner_display/rs_rcd_render_manager.h"
-#include "pipeline/round_corner_display/rs_round_corner_display.h"
 // dfx
 #include "drawable/dfx/rs_dirty_rects_dfx.h"
 #include "drawable/dfx/rs_skp_capture_dfx.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 namespace OHOS::Rosen::DrawableV2 {
+namespace {
+constexpr const char* CLEAR_GPU_CACHE = "ClearGpuCache";
+}
 class RSOverDrawDfx {
 public:
     explicit RSOverDrawDfx(std::shared_ptr<RSPaintFilterCanvas> curCanvas)
@@ -280,7 +284,7 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(std::shared_ptr<RSDisplay
     RSDisplayRenderParams* params, std::shared_ptr<RSProcessor> processor)
 {
     if (!displayNode->GetSyncDirtyManager()->GetCurrentFrameDirtyRegion().IsEmpty() ||
-        params->GetMainAndLeashSurfaceDirty()) {
+        (params->GetMainAndLeashSurfaceDirty() || RSUifirstManager::Instance().HasDoneNode())) {
         return false;
     }
 
@@ -299,14 +303,14 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(std::shared_ptr<RSDisplay
 #ifdef OHOS_PLATFORM
     RSJankStats::GetInstance().SetSkipDisplayNode();
 #endif
-    auto& selfDrawingNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetSelfDrawingNodes();
+    auto& hardwareNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetHardwareEnabledTypeNodes();
     bool needCreateDisplayNodeLayer = false;
-    for (const auto& surfaceNode : selfDrawingNodes) {
+    for (const auto& surfaceNode : hardwareNodes) {
         if (surfaceNode == nullptr) {
             continue;
         }
         auto params = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
-        if (params->GetHardwareEnabled() && params->GetBuffer()) {
+        if (params->GetHardwareEnabled()) {
             needCreateDisplayNodeLayer = true;
             processor->CreateLayer(*surfaceNode, *params);
         }
@@ -322,6 +326,22 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(std::shared_ptr<RSDisplay
     // planning: commit RCD layers
     processor->PostProcess();
     return true;
+}
+
+void RSDisplayRenderNodeDrawable::RemoveClearMemoryTask() const
+{
+    auto& unirenderThread = RSUniRenderThread::Instance();
+    if (!unirenderThread.GetClearMemoryFinished()) {
+        unirenderThread.RemoveTask(CLEAR_GPU_CACHE);
+    }
+}
+
+void RSDisplayRenderNodeDrawable::PostClearMemoryTask() const
+{
+    auto& unirenderThread = RSUniRenderThread::Instance();
+    if (!unirenderThread.GetClearMemoryFinished()) {
+        unirenderThread.ClearMemoryCache(unirenderThread.GetClearMoment(), unirenderThread.GetClearMemDeeply());
+    }
 }
 
 void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
@@ -343,7 +363,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
     isDrawingCacheEnabled_ = RSSystemParameters::GetDrawingCacheEnabled();
     isDrawingCacheDfxEnabled_ = RSSystemParameters::GetDrawingCacheEnabledDfx();
-    drawingCacheRects_.clear();
+    drawingCacheInfos_.clear();
 
     // check rotation for point light
     constexpr int ROTATION_NUM = 4;
@@ -423,6 +443,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         return;
     }
 
+    RemoveClearMemoryTask();
     // canvas draw
     {
         RSOverDrawDfx rsOverDrawDfx(curCanvas_);
@@ -440,14 +461,16 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         DrawWatermarkIfNeed(*displayNodeSp, *curCanvas_);
         DrawCurtainScreen(*displayNodeSp, *curCanvas_);
     }
+    PostClearMemoryTask();
     rsDirtyRectsDfx.OnDraw(curCanvas_);
 
     // switch color filtering
     SwitchColorFilter(*curCanvas_);
 
     if (isDrawingCacheEnabled_ && isDrawingCacheDfxEnabled_) {
-        for (const auto& rect : drawingCacheRects_) {
-            RSUniRenderUtil::DrawRectForDfx(*curCanvas_, rect, Drawing::Color::COLOR_GREEN, 0.2f);
+        for (const auto& [rect, updateTimes] : drawingCacheInfos_) {
+            std::string extraInfo = ", updateTimes:" + std::to_string(updateTimes);
+            RSUniRenderUtil::DrawRectForDfx(*curCanvas_, rect, Drawing::Color::COLOR_GREEN, 0.2f, extraInfo);
         }
     }
 
@@ -460,14 +483,14 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     DoScreenRcdTask(processor, rcdInfo, screenInfo);
 
     RS_TRACE_BEGIN("RSDisplayRenderNodeDrawable CommitLayer");
-    auto& selfDrawingNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetSelfDrawingNodes();
+    auto& hardwareNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetHardwareEnabledTypeNodes();
     float globalZOrder = 0.f;
-    for (const auto& surfaceNode : selfDrawingNodes) {
+    for (const auto& surfaceNode : hardwareNodes) {
         if (surfaceNode == nullptr) {
             continue;
         }
         auto params = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
-        if (params->GetHardwareEnabled() && params->GetBuffer()) {
+        if (params->GetHardwareEnabled()) {
             processor->CreateLayer(*surfaceNode, *params);
             globalZOrder++;
         }
@@ -737,13 +760,13 @@ void RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes()
         RS_LOGE("RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes displayParams is null!");
         return;
     }
-    auto& selfDrawingNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetSelfDrawingNodes();
-    for (const auto& surfaceNode : selfDrawingNodes) {
+    auto& hardwareNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetHardwareEnabledTypeNodes();
+    for (const auto& surfaceNode : hardwareNodes) {
         if (surfaceNode == nullptr) {
             continue;
         }
         auto surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
-        if (!surfaceParams->GetHardwareEnabled() || !surfaceParams->GetBuffer()) {
+        if (!surfaceParams->GetHardwareEnabled()) {
             continue;
         }
         // To get dump image

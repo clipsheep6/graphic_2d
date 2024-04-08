@@ -64,6 +64,7 @@ class RSB_EXPORT RSRenderNode : public std::enable_shared_from_this<RSRenderNode
 public:
     using WeakPtr = std::weak_ptr<RSRenderNode>;
     using SharedPtr = std::shared_ptr<RSRenderNode>;
+    using ClearSurfaceTask = std::function<void()>;
     static inline constexpr RSRenderNodeType Type = RSRenderNodeType::RS_NODE;
     virtual RSRenderNodeType GetType() const
     {
@@ -120,12 +121,14 @@ public:
     void SetContentDirty();
     void ResetIsOnlyBasicGeoTransform();
     bool IsOnlyBasicGeoTransform() const;
-    void SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool isDirty, bool accumGeoDirty);
+    void SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool isDirty, bool accumGeoDirty,
+        std::optional<RectI> clipRect = std::nullopt);
 
     inline WeakPtr GetParent() const
     {
         return parent_;
     }
+    void RegisterClearSurfaceFunc(ClearSurfaceTask task);
 
     inline NodeId GetId() const
     {
@@ -453,6 +456,7 @@ public:
     void UpdateEffectRegion(std::optional<Drawing::RectI>& region, bool isForced = false);
 
     // for blur filter cache
+    void UpdateLastFilterCacheRegion(const std::optional<RectI>& clipRect = std::nullopt);
     void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
     virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
     virtual void UpdateFilterCacheManagerWithCacheRegion(RSDirtyRegionManager& dirtyManager,
@@ -516,7 +520,7 @@ public:
     void ApplyModifiers();
     void ApplyPositionZModifier();
     virtual void UpdateRenderParams();
-    void UpdateDrawingCacheInfoBeforeChildren();
+    void UpdateDrawingCacheInfoBeforeChildren(bool isScreenRotation);
     void UpdateDrawingCacheInfoAfterChildren();
 
     virtual RectI GetFilterRect() const;
@@ -599,6 +603,8 @@ public:
         return context_;
     }
 
+    void SetOccludedStatus(bool occluded);
+
 protected:
     virtual void OnApplyModifiers() {}
 
@@ -629,6 +635,7 @@ protected:
 
     virtual void InitRenderParams();
     virtual void OnSync();
+    virtual void ClearResource() {};
 
     std::unique_ptr<RSRenderParams> renderParams_;
     std::unique_ptr<RSRenderParams> stagingRenderParams_;
@@ -648,6 +655,7 @@ protected:
 
     ModifierDirtyTypes dirtyTypes_;
     bool isBootAnimation_ = false;
+    ClearSurfaceTask clearSurfaceTask_;
 
     inline void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas)
     {
@@ -662,7 +670,7 @@ protected:
     bool lastFrameSynced_ = true;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
-    const RectI GetFilterCachedRegion(bool isForeground) const;
+    const RectI GetFilterCachedRegion() const;
     virtual void MarkFilterCacheFlagsAfterPrepare(
         std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false);
     std::atomic<bool> isStaticCached_ = false;
@@ -871,6 +879,7 @@ private:
     bool backgroundFilterInteractWithDirty_ = false;
     bool foregroundFilterRegionChanged_ = false;
     bool foregroundFilterInteractWithDirty_ = false;
+    bool isOccluded_ = false;
 
     friend class DrawFuncOpItem;
     friend class RSAliasDrawable;

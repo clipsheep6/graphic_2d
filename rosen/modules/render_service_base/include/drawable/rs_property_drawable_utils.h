@@ -33,12 +33,15 @@ public:
     static void GetDarkColor(RSColor& color);
     static void CeilMatrixTrans(Drawing::Canvas* canvas);
     static void DrawFilter(Drawing::Canvas* canvas, const std::shared_ptr<RSFilter>& rsFilter,
-        const std::unique_ptr<RSFilterCacheManager>& cacheManager,
-        const bool isForegroundFilter, const bool forceCache = false);
+        const std::unique_ptr<RSFilterCacheManager>& cacheManager, const bool isForegroundFilter,
+        bool shouldClearFilteredCache);
     static void DrawBackgroundEffect(RSPaintFilterCanvas* canvas, const std::shared_ptr<RSFilter>& rsFilter,
-        const std::unique_ptr<RSFilterCacheManager>& cacheManager, const bool forceCache = false);
+        const std::unique_ptr<RSFilterCacheManager>& cacheManager, bool shouldClearFilteredCache);
     static void DrawColorFilter(Drawing::Canvas* canvas, const std::shared_ptr<Drawing::ColorFilter>& colorFilter);
     static void DrawLightUpEffect(Drawing::Canvas* canvas, const float lightUpEffectDegree);
+    static void DrawDynamicDim(Drawing::Canvas* canvas, const float dynamicDimDegree);
+    static std::shared_ptr<Drawing::ShaderEffect> MakeDynamicDimShader(float dynamicDimDeg,
+        std::shared_ptr<Drawing::ShaderEffect> imageShader);
     static std::shared_ptr<Drawing::ShaderEffect> MakeBinarizationShader(float low, float high, float thresholdLow,
         float thresholdHigh, std::shared_ptr<Drawing::ShaderEffect> imageShader);
     static void DrawBinarization(Drawing::Canvas* canvas, const std::optional<Vector4f>& aiInvert);
@@ -59,6 +62,7 @@ public:
 
 private:
     static std::shared_ptr<Drawing::RuntimeEffect> binarizationShaderEffect_;
+    static std::shared_ptr<Drawing::RuntimeEffect> dynamicDimShaderEffect_;
 };
 } // namespace Rosen
 } // namespace OHOS

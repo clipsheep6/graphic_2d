@@ -38,7 +38,10 @@ constexpr int32_t DRAWING_CACHE_MAX_UPDATE_TIME = 3;
 }
 RSRenderNodeDrawable::RSRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node)
     : RSRenderNodeDrawableAdapter(std::move(node))
-{}
+{
+    auto task = std::bind(&RSRenderNodeDrawable::ClearCachedSurface, this);
+    std::const_pointer_cast<RSRenderNode>(renderNode_)->RegisterClearSurfaceFunc(task);
+}
 
 RSRenderNodeDrawable::~RSRenderNodeDrawable()
 {
@@ -208,7 +211,14 @@ void RSRenderNodeDrawable::DrawDfxForCache(Drawing::Canvas& canvas, const Drawin
     canvas.GetTotalMatrix().MapRect(dst, rect);
     RectI dfxRect(static_cast<int>(dst.GetLeft()), static_cast<int>(dst.GetTop()), static_cast<int>(dst.GetWidth()),
         static_cast<int>(dst.GetHeight()));
-    drawingCacheRects_.emplace_back(dfxRect);
+    int32_t updateTimes = 0;
+    {
+        std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
+        if (drawingCacheUpdateTimeMap_.count(renderNode_->GetId()) > 0) {
+            updateTimes = drawingCacheUpdateTimeMap_.at(renderNode_->GetId());
+        }
+    }
+    drawingCacheInfos_.emplace_back(dfxRect, updateTimes);
 }
 
 void RSRenderNodeDrawable::SetCacheType(DrawableCacheType cacheType)
@@ -352,6 +362,7 @@ void RSRenderNodeDrawable::ClearCachedSurface()
 
     auto clearTask = [surface = cachedSurface_]() mutable { surface = nullptr; };
     cachedSurface_ = nullptr;
+    cachedImage_ = nullptr;
     RSTaskDispatcher::GetInstance().PostTask(cacheThreadId_.load(), clearTask);
 
 #ifdef RS_ENABLE_VK

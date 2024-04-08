@@ -1533,6 +1533,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     if (needTraverseNodeTree) {
         doDirectComposition_ = false;
         renderThreadParams_->selfDrawingNodes_ = std::move(selfDrawingNodes_);
+        renderThreadParams_->hardwareEnabledTypeNodes_ = std::move(hardwareEnabledNodes_);
         uniVisitor->SetAnimateState(doWindowAnimate_);
         uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_ || forceUIFirstChanged_);
         forceUIFirstChanged_ = false;
@@ -1626,7 +1627,7 @@ bool RSMainThread::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNod
         RS_LOGW("RSMainThread::DoDirectComposition: hardwareThread task has too many to Execute");
     }
     processor->ProcessDisplaySurface(*displayNode);
-    for (auto& surfaceNode: selfDrawingNodes_) {
+    for (auto& surfaceNode : hardwareEnabledNodes_) {
         if (!surfaceNode->IsHardwareForcedDisabled()) {
             auto params = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetStagingRenderParams().get());
             processor->CreateLayer(*surfaceNode, *params);
@@ -2617,12 +2618,10 @@ void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::str
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     DfxString log;
     if (pid != 0) {
-#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-    RSUniRenderThread::Instance().PostSyncTask([&log, pid] {
-        MemoryManager::DumpPidMemory(log, pid,
-            RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
-    });
-#endif
+        RSUniRenderThread::Instance().PostSyncTask([&log, pid] {
+            MemoryManager::DumpPidMemory(log, pid,
+                RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
+        });
     } else {
         MemoryManager::DumpMemoryUsage(log, type);
     }

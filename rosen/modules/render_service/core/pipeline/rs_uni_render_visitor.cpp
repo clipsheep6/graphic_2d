@@ -1165,7 +1165,8 @@ bool RSUniRenderVisitor::IsSubTreeOccluded(RSRenderNode& node) const
     if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
         auto& surfaceNode = static_cast<RSSurfaceRenderNode&>(node);
         if (surfaceNode.IsMainWindowType()) {
-            RS_TRACE_NAME_FMT("RSUniRenderVisitor::IsSubTreeOccluded node[%s]" "name:[%s] visibleRegionIsEmpty[%d]",
+            RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderVisitor::IsSubTreeOccluded node[%s]"
+                "name:[%s] visibleRegionIsEmpty[%d]",
                 std::to_string(node.GetId()).c_str(), surfaceNode.GetName().c_str(),
                 surfaceNode.GetVisibleRegion().IsEmpty());
             return surfaceNode.GetVisibleRegion().IsEmpty();
@@ -1192,7 +1193,7 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
     curAlpha_ = 1.0f;
     node.UpdateRotation();
 
-    if (node.IsSubTreeDirty()) {
+    if (node.IsSubTreeDirty() || node.IsRotationChanged()) {
         QuickPrepareChildren(node);
     }
     PostPrepare(node);
@@ -1211,7 +1212,8 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
 
 void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    RS_TRACE_NAME_FMT("RSUniRender::QuickPrepareSurfaceRenderNode: node[%llu] name[%s] pid[%d] nodeType[%d] "
+    RS_OPTIONAL_TRACE_NAME_FMT("RSUniRender::QuickPrepareSurfaceRenderNode: "
+        "node[%llu] name[%s] pid[%d] nodeType[%d] "
         "subTreeDirty[%d]", node.GetId(), node.GetName().c_str(), ExtractPid(node.GetId()),
         static_cast<int>(node.GetSurfaceNodeType()), node.IsSubTreeDirty());
     RS_LOGD("RSUniRender::QuickPrepareSurfaceRenderNode:[%{public}s] nodeid:[%{public}" PRIu64 "]"
@@ -1244,7 +1246,7 @@ void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node
     bool isSubTreeNeedPrepare = node.IsSubTreeNeedPrepare(filterInGlobal_, IsSubTreeOccluded(node)) ||
         ForcePrepareSubTree();
     isSubTreeNeedPrepare ? QuickPrepareChildren(node) :
-        node.SubTreeSkipPrepare(*curSurfaceDirtyManager_, curDirty_, dirtyFlag_);
+        node.SubTreeSkipPrepare(*curSurfaceDirtyManager_, curDirty_, dirtyFlag_, prepareClipRect_);
 
     node.SetGlobalAlpha(curAlpha_);
     PostPrepare(node, !isSubTreeNeedPrepare);
@@ -1319,7 +1321,7 @@ void RSUniRenderVisitor::QuickPrepareEffectRenderNode(RSEffectRenderNode& node)
     // 1. Recursively traverse child nodes
     bool isSubTreeNeedPrepare = node.IsSubTreeNeedPrepare(filterInGlobal_) || ForcePrepareSubTree();
     isSubTreeNeedPrepare ? QuickPrepareChildren(node) :
-        node.SubTreeSkipPrepare(*dirtyManager, curDirty_, dirtyFlag_);
+        node.SubTreeSkipPrepare(*dirtyManager, curDirty_, dirtyFlag_, prepareClipRect_);
 
     PostPrepare(node, !isSubTreeNeedPrepare);
     prepareClipRect_ = prepareClipRect;
@@ -1337,7 +1339,7 @@ void RSUniRenderVisitor::QuickPrepareCanvasRenderNode(RSCanvasRenderNode& node)
     curAlpha_ *= std::clamp(node.GetRenderProperties().GetAlpha(), 0.f, 1.f);
 
     if (isDrawingCacheEnabled_) {
-        node.UpdateDrawingCacheInfoBeforeChildren();
+        node.UpdateDrawingCacheInfoBeforeChildren(isScreenRotationAnimating_);
     }
 
     RectI prepareClipRect = prepareClipRect_;
@@ -1349,7 +1351,7 @@ void RSUniRenderVisitor::QuickPrepareCanvasRenderNode(RSCanvasRenderNode& node)
     bool isSubTreeNeedPrepare = !curSurfaceNode_ || node.IsSubTreeNeedPrepare(filterInGlobal_) ||
         ForcePrepareSubTree();
     isSubTreeNeedPrepare ? QuickPrepareChildren(node) :
-        node.SubTreeSkipPrepare(*dirtyManager, curDirty_, dirtyFlag_);
+        node.SubTreeSkipPrepare(*dirtyManager, curDirty_, dirtyFlag_, prepareClipRect_);
 
     PostPrepare(node, !isSubTreeNeedPrepare);
     prepareClipRect_ = prepareClipRect;
@@ -1531,7 +1533,7 @@ bool RSUniRenderVisitor::AfterUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node)
     // 2 Update Occlusion info before children preparation
     if (node.IsMainWindowType()) {
         CalculateOcclusion(node);
-        RS_TRACE_NAME_FMT("RSUniRenderVisitor::AfterUpdateSurfaceDirtyCalc visibleRegion:%s",
+        RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderVisitor::AfterUpdateSurfaceDirtyCalc visibleRegion:%s",
             node.GetVisibleRegion().GetRegionInfo().c_str());
     }
     return true;
@@ -1965,7 +1967,7 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
         RS_LOGD("RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay surface:%{public}s "
             "has transparentCleanFilter", surfaceNode->GetName().c_str());
         // check accumulatedDirtyRegion influence filter nodes which in the current surface
-        for (auto it = filterVecIter->second.begin(); it != filterVecIter->second.end(); ++it) {
+        for (auto it = filterVecIter->second.rbegin(); it != filterVecIter->second.rend(); ++it) {
             auto filterNode = nodeMap.GetRenderNode<RSRenderNode>(it->first);
             if (filterNode == nullptr) {
                 continue;
@@ -1989,7 +1991,7 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
                 globalFilter_.insert(it->second);
             }
             filterNode->MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(dirtyBelowContainsFilterNode);
-            if (!filterNode->IsBackgroundFilterCacheValid() &&
+            if (filterNode->ShouldPaint() && !filterNode->IsBackgroundFilterCacheValid() &&
                 (filterNode->GetRenderProperties().GetBackgroundFilter() ||
                 filterNode->GetRenderProperties().GetFilter())) {
                 dirtyBelowContainsFilterNode = true;
@@ -2003,6 +2005,26 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
     auto surfaceDirtyRegion = Occlusion::Region{
         Occlusion::Rect{ surfaceNode->GetDirtyManager()->GetCurrentFrameDirtyRegion() } };
     accumulatedDirtyRegion.OrSelf(surfaceDirtyRegion);
+}
+
+void RSUniRenderVisitor::UpdateOccludedStatusWithFilterNode(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const
+{
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
+    auto filterVecIter = transparentCleanFilter_.find(surfaceNode->GetId());
+    if (filterVecIter != transparentCleanFilter_.end()) {
+        for (auto it = filterVecIter->second.begin(); it != filterVecIter->second.end(); ++it) {
+            auto& filterNode = nodeMap.GetRenderNode<RSRenderNode>(it->first);
+            if (filterNode == nullptr) {
+                continue;
+            }
+            RS_TRACE_NAME_FMT("sunyang UpdateOccludedStatusWithFilterNode "
+                "surfaceNode:node: name %s,filterNode:[%lld],, IsOccludedByFilterCache:%d",
+                 surfaceNode->GetName().c_str(), filterNode->GetId(), surfaceNode->IsOccludedByFilterCache());
+            if (filterNode->GetRenderProperties().GetBackgroundFilter() || filterNode->GetRenderProperties().GetFilter()) {
+                filterNode->SetOccludedStatus(surfaceNode->IsOccludedByFilterCache());
+            }
+        }
+    }
 }
 
 void RSUniRenderVisitor::CheckAndUpdateFilterCacheOcclusion(
@@ -2021,6 +2043,7 @@ void RSUniRenderVisitor::CheckAndUpdateFilterCacheOcclusion(
         if (surfaceNode->IsMainWindowType()) {
             // reset occluded status for all mainwindow
             surfaceNode->UpdateOccludedByFilterCache(isScreenOccluded);
+            UpdateOccludedStatusWithFilterNode(surfaceNode);
         }
         isScreenOccluded = isScreenOccluded || surfaceNode->GetFilterCacheFullyCovered();
     });
@@ -2072,6 +2095,7 @@ void RSUniRenderVisitor::PostPrepare(RSRenderNode& node, bool subTreeSkipped)
     if (node.GetRenderProperties().NeedFilter()) {
         UpdateHwcNodeEnableByFilterRect(curSurfaceNode_, node.GetOldDirtyInSurface());
         CollectFilterInfoAndUpdateDirty(node);
+        node.UpdateLastFilterCacheRegion(prepareClipRect_);
     }
 
     if (auto nodeParent = node.GetParent().lock()) {
@@ -2565,7 +2589,7 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     if (RSSystemProperties::GetQuickPrepareEnabled()) {
         bool isSubTreeNeedPrepare = node.IsSubTreeNeedPrepare(filterInGlobal_) || ForcePrepareSubTree();
         isSubTreeNeedPrepare ? QuickPrepareChildren(node) :
-            node.SubTreeSkipPrepare(*curSurfaceDirtyManager_, curDirty_, dirtyFlag_);
+            node.SubTreeSkipPrepare(*curSurfaceDirtyManager_, curDirty_, dirtyFlag_, prepareClipRect_);
         PostPrepare(node);
     } else {
         node.UpdateChildrenOutOfRectFlag(false);

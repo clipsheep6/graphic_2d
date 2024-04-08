@@ -434,7 +434,7 @@ Drawing::RecordingCanvas::DrawFunc RSBackgroundEffectDrawable::CreateDrawFunc() 
         if (canvas && ptr->filter_ && ptr->hasEffectChildren_) {
             auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas);
             RSPropertyDrawableUtils::DrawBackgroundEffect(
-                paintFilterCanvas, ptr->filter_, ptr->cacheManager_, ptr->forceUseCache_);
+                paintFilterCanvas, ptr->filter_, ptr->cacheManager_, ptr->clearFilteredCacheAfterDrawing_);
         }
     };
 }

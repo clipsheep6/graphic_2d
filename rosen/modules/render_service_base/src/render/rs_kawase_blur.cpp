@@ -223,15 +223,19 @@ bool KawaseBlurFilter::DownSample(Drawing::Canvas& canvas, std::shared_ptr<Drawi
             return half4(c.rgb, 1.0);
         }
     )");
-    unsigned int downSampleTimes = 2;
+    constexpr unsigned int NUM_1 = 1;
+    constexpr unsigned int NUM_2 = 2;
+    constexpr unsigned int NUM_3 = 3;
+    constexpr unsigned int NUM_4 = 4;
+    unsigned int downSampleTimes = NUM_2;
     if (blurScale > baseBlurScale - scaleEpsilon) {
-        downSampleTimes = 1;
+        downSampleTimes = NUM_1;
     } else if (blurScale > scaleFactor1 - scaleEpsilon) {
-        downSampleTimes = 2;
+        downSampleTimes = NUM_2;
     } else if (blurScale > scaleFactor2 - scaleEpsilon) {
-        downSampleTimes = 3;
+        downSampleTimes = NUM_3;
     } else if (blurScale > scaleFactor3 - scaleEpsilon) {
-        downSampleTimes = 4;
+        downSampleTimes = NUM_4;
     }
     auto originImageInfo = input->GetImageInfo();
     for (unsigned int i = 0; i < downSampleTimes; i++) {
@@ -247,8 +251,8 @@ bool KawaseBlurFilter::DownSample(Drawing::Canvas& canvas, std::shared_ptr<Drawi
         Drawing::Matrix matrix;
         matrix.SetScale(static_cast<float>(pcInfo.GetWidth()) / input->GetWidth(),
             static_cast<float>(pcInfo.GetHeight()) / input->GetHeight());
-        effectBulider.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input,
-                Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, linear, matrix));
+        effectBulider.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input, Drawing::TileMode::CLAMP,
+            Drawing::TileMode::CLAMP, linear, matrix));
         input = effectBulider.MakeImage(canvas.GetGPUContext().get(), nullptr, pcInfo, false);
     }
     return true;

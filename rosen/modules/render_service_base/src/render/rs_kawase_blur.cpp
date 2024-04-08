@@ -332,7 +332,7 @@ bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::share
     // Advanced Filter: check is AF usable only the first time
     bool isUsingAF = IS_ADVANCED_FILTER_USABLE_CHECK_ONCE && blurEffectAF_ != nullptr;
     Drawing::RuntimeShaderBuilder blurBuilder(isUsingAF ? blurEffectAF_ : blurEffect_);
-    blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input, Drawing::TileMode::CLAMP,
+    blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*finalImg, Drawing::TileMode::CLAMP,
         Drawing::TileMode::CLAMP, linear, blurMatrix));
 
     if (isUsingAF) {

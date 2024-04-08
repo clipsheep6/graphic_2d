@@ -14,8 +14,8 @@
  */
 
 #include "gtest/gtest.h"
-#include "draw/surface.h"
 
+#include "draw/surface.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "render/rs_material_filter.h"
 
@@ -92,6 +92,94 @@ HWTEST_F(RSMaterialFilterTest, CreateMaterialStyle002, TestSize.Level1)
 }
 
 /**
+ * @tc.name: RadiusVp2SigmaTest001
+ * @tc.desc: Verify function RadiusVp2Sigma
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, RadiusVp2SigmaTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::DEFAULT);
+    EXPECT_EQ(rsMaterialFilter->RadiusVp2Sigma(0.f, 0.f), 0.0f);
+}
+
+/**
+ * @tc.name: GetDescriptionTest001
+ * @tc.desc: Verify function GetDescription
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, GetDescriptionTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::DEFAULT);
+    EXPECT_EQ(rsMaterialFilter->GetDescription(),
+        "RSMaterialFilter blur radius is " + std::to_string(rsMaterialFilter->radius_) + " sigma");
+}
+
+/**
+ * @tc.name: ComposeTest001
+ * @tc.desc: Verify function Compose
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, ComposeTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    std::shared_ptr<RSDrawingFilter> other = nullptr;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::DEFAULT);
+    EXPECT_EQ(rsMaterialFilter->Compose(other), nullptr);
+}
+
+/**
+ * @tc.name: GetColorFilterTest001
+ * @tc.desc: Verify function GetColorFilter
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, GetColorFilterTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::DEFAULT);
+    EXPECT_NE(rsMaterialFilter->GetColorFilter(1.f, 1.f), nullptr);
+}
+
+/**
+ * @tc.name: CreateMaterialFilterTest001
+ * @tc.desc: Verify function CreateMaterialFilter
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, CreateMaterialFilterTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::DEFAULT);
+    EXPECT_NE(rsMaterialFilter->CreateMaterialFilter(1.f, 1.f, 1.f), nullptr);
+}
+
+/**
+ * @tc.name: CreateMaterialStyleTest001
+ * @tc.desc: Verify function CreateMaterialStyle
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, CreateMaterialStyleTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::DEFAULT);
+    EXPECT_NE(rsMaterialFilter->CreateMaterialStyle(MATERIAL_BLUR_STYLE::STYLE_CARD_THIN_LIGHT, 1.f, 1.f), nullptr);
+}
+
+/**
+ * @tc.name: PreProcessTest001
+ * @tc.desc: Verify function PreProcess
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, PreProcessTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto imageSnapshot = std::make_shared<Drawing::Image>();
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    rsMaterialFilter->PreProcess(imageSnapshot);
+    EXPECT_TRUE(true);
+}
+
+/**
  * @tc.name: PostProcessTest
  * @tc.desc:
  * @tc.type:FUNC
@@ -107,6 +195,136 @@ HWTEST_F(RSMaterialFilterTest, PostProcessTest, TestSize.Level1)
     RSMaterialFilter rsMaterialFilter = RSMaterialFilter(style, dipScale, mode, ratio);
     rsMaterialFilter.PostProcess(*canvas);
     EXPECT_NE(canvas, nullptr);
+}
+
+/**
+ * @tc.name: TransformFilterTest001
+ * @tc.desc: Verify function TransformFilter
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, TransformFilterTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    EXPECT_NE(rsMaterialFilter->TransformFilter(1.0f), nullptr);
+}
+
+/**
+ * @tc.name: IsValidTest001
+ * @tc.desc: Verify function IsValid
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, IsValidTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    materialParam.radius = 1.0f;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    EXPECT_EQ(rsMaterialFilter->IsValid(), true);
+}
+
+/**
+ * @tc.name: AddTest001
+ * @tc.desc: Verify function Add
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, AddTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rhs = std::make_shared<RSFilter>();
+    rhs->type_ = RSDrawingFilter::FilterType::NONE;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    EXPECT_NE(rsMaterialFilter->Add(rhs), nullptr);
+    rhs->type_ = RSDrawingFilter::FilterType::MATERIAL;
+    EXPECT_NE(rsMaterialFilter->Add(rhs), nullptr);
+}
+
+/**
+ * @tc.name: SubTest001
+ * @tc.desc: Verify function Sub
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, SubTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rhs = std::make_shared<RSFilter>();
+    rhs->type_ = RSDrawingFilter::FilterType::NONE;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    EXPECT_NE(rsMaterialFilter->Sub(rhs), nullptr);
+    rhs->type_ = RSDrawingFilter::FilterType::MATERIAL;
+    EXPECT_NE(rsMaterialFilter->Sub(rhs), nullptr);
+}
+
+/**
+ * @tc.name: MultiplyTest001
+ * @tc.desc: Verify function Multiply
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, MultiplyTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    EXPECT_NE(rsMaterialFilter->Multiply(1.0f), nullptr);
+}
+
+/**
+ * @tc.name: NegateTest001
+ * @tc.desc: Verify function Negate
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, NegateTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    EXPECT_NE(rsMaterialFilter->Negate(), nullptr);
+}
+
+/**
+ * @tc.name: DrawImageRectTest001
+ * @tc.desc: Verify function DrawImageRect
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, DrawImageRectTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    Drawing::Canvas canvas(10, 10);
+    std::shared_ptr<Drawing::Image> image = nullptr;
+    auto imageS = std::make_shared<Drawing::Image>();
+    Drawing::Rect src(1.0f, 1.0f, 1.0f, 1.0f);
+    Drawing::Rect dst(1.0f, 1.0f, 1.0f, 1.0f);
+    Vector2 value(1.f, 1.f);
+    std::optional<Vector2f> greyCoef(value);
+    rsMaterialFilter->SetGreyCoef(greyCoef);
+    rsMaterialFilter->DrawImageRect(canvas, imageS, src, dst);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: SetGreyCoefTest001
+ * @tc.desc: Verify function SetGreyCoef
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, SetGreyCoefTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    Vector2 value(1.f, 1.f);
+    std::optional<Vector2f> greyCoef(value);
+    rsMaterialFilter->SetGreyCoef(greyCoef);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: GetRadiusfTest001
+ * @tc.desc: Verify function GetRadius
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, GetRadiusfTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    materialParam.radius = 1.0f;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    EXPECT_EQ(rsMaterialFilter->GetRadius(), 1.0f);
 }
 
 /**
@@ -172,5 +390,33 @@ HWTEST_F(RSMaterialFilterTest, IsNearZero001, TestSize.Level1)
 
     float threshold = 1.0f;
     EXPECT_TRUE(rsMaterialFilter->IsNearZero(threshold));
+}
+
+/**
+ * @tc.name: GetColorPickerCacheTaskFilterTest001
+ * @tc.desc: Verify function GetColorPickerCacheTask
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, GetColorPickerCacheTaskFilterTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::FASTAVERAGE);
+    EXPECT_NE(rsMaterialFilter->GetColorPickerCacheTask(), nullptr);
+}
+
+/**
+ * @tc.name: ReleaseColorPickerFilterTest001
+ * @tc.desc: Verify function ReleaseColorPickerFilter
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSMaterialFilterTest, ReleaseColorPickerFilterTest001, TestSize.Level1)
+{
+    MaterialParam materialParam;
+    auto rsMaterialFilter = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::FASTAVERAGE);
+    rsMaterialFilter->ReleaseColorPickerFilter();
+    EXPECT_TRUE(true);
+    auto rsMaterialFilterT = std::make_shared<RSMaterialFilter>(materialParam, BLUR_COLOR_MODE::AVERAGE);
+    rsMaterialFilterT->ReleaseColorPickerFilter();
+    EXPECT_TRUE(true);
 }
 } // namespace OHOS::Rosen

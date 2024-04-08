@@ -45,7 +45,7 @@ public:
         const Drawing::Rect& src, const Drawing::Rect& dst) const override;
     void PreProcess(std::shared_ptr<Drawing::Image> image) override {};
     void PostProcess(RSPaintFilterCanvas& canvas) override {};
-    float GetForegroundEffectDirtyExtension();
+    float GetDirtyExtension();
 
     std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override
     {

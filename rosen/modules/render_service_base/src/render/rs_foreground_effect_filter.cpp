@@ -114,7 +114,7 @@ void RSForegroundEffectFilter::ComputePassesAndUnit()
     unit_ = std::ceil(radiusByPasses * blurScale_);
 }
 
-float RSForegroundEffectFilter::GetForegroundEffectDirtyExtension()
+float RSForegroundEffectFilter::GetDirtyExtension()
 {
     return std::ceil(4 * unit_ * numberOfPasses_ * 1 / blurScale_);
 }

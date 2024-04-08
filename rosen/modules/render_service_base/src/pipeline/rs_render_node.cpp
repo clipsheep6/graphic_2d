@@ -40,6 +40,7 @@
 #include "property/rs_properties_painter.h"
 #include "property/rs_property_drawable.h"
 #include "property/rs_property_trace.h"
+#include "render/rs_foreground_effect_filter.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 #ifdef DDGR_ENABLE_FEATURE_OPINC
@@ -1047,7 +1048,7 @@ void RSRenderNode::UpdateDirtyRegion(
         // Add node's foregroundEffect region to dirtyRect
         auto foregroundFilter = properties.GetForegroundFilter();
         if (foregroundFilter && foregroundFilter->GetFilterType() == RSFilter::FOREGROUND_EFFECT) {
-            float dirtyExtension = std::static_pointer_cast<RSForegroundEffectFilter>(RSFilter)->GetDirtyExtension();
+            float dirtyExtension = std::static_pointer_cast<RSForegroundEffectFilter>(foregroundFilter)->GetDirtyExtension();
             dirtyRect = dirtyRect.MakeOutset(Vector4<int>(dirtyExtension));
         }
 

@@ -110,8 +110,8 @@ void RSForegroundEffectFilter::ComputePassesAndUnit()
     float dilatedConvolutionFactor = kDilatedConvolutionLargeRadius;
     float tmpRadius = static_cast<float>(blurRadius_) / dilatedConvolutionFactor;
     numberOfPasses_ = std::min(maxPasses, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
-    radiusByPasses_ = tmpRadius / numberOfPasses;
-    unit_ = std::ceil(radiusByPasses * blurScale_);
+    radiusByPasses_ = tmpRadius / numberOfPasses_;
+    unit_ = std::ceil(radiusByPasses_ * blurScale_);
 }
 
 float RSForegroundEffectFilter::GetDirtyExtension()

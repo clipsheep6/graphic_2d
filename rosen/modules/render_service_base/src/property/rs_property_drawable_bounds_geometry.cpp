@@ -789,7 +789,7 @@ void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFil
     canvas.StoreOffscreenData(offscreenData);
     canvas.ReplaceMainScreenData(offscreenSurface.get(), offscreenCanvas.get());
     offscreenCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
-    canvas.StoreCanvasList();
+    canvas.SavePCanvasList();
     canvas.RemoveAll();
     canvas.AddCanvas(offscreenCanvas.get());
 }

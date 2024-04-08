@@ -605,20 +605,21 @@ void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, R
 {
     RS_OPTIONAL_TRACE_NAME("DrawForegroundFilter");
     auto surface = canvas.GetSurface();
-    std::shared_ptr<Image> imageSnapshot = nullptr;
+    std::shared_ptr<Drawing::Image> imageSnapshot = nullptr;
     if (surface) {
         imageSnapshot = surface->GetImageSnapshot();
     } else {
         ROSEN_LOGD("RSPropertiesPainter::DrawForegroundFilter surface null");
     }
 
-    canvas.SwapBackCanvasList();
+    canvas.RestorePCanvasList();
     canvas.SwapBackMainScreenData();
 
-    std::shared_ptr<RSDrawingFilter> foregroundFilter = properties.GetForegroundFilter();
-    if (foregroundFilter = nullptr) {
+    auto& RSFilter = properties.GetForegroundFilter();
+    if (RSFilter = nullptr) {
         return;
     }
+    auto foregroundFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
 
     if (imageSnapshot == nullptr) {
         ROSEN_LOGD("RSPropertiesPainter::DrawForegroundFilter image null");

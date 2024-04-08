@@ -770,7 +770,7 @@ void RSPropertiesPainter::DrawBackgroundEffect(
             ROSEN_LOGE("DrawBackgroundEffect::node reinterpret cast failed.");
             return;
         }
-        // node is freeze or screen rotating, force cache filterred snapshot.
+        // node is freeze or screen rotating, force cache filtered snapshot.
         auto forceCacheFlags = std::make_tuple(effectNode->IsStaticCached(), effectNode->GetRotationChanged());
         auto&& data = cacheManager->GeneratedCachedEffectData(canvas, filter, bounds, bounds, forceCacheFlags);
         canvas.SetEffectData(data);
@@ -864,6 +864,27 @@ void RSPropertiesPainter::ApplyBackgroundEffect(const RSProperties& properties, 
     canvas.DrawImageRect(*effectData->cachedImage_, srcRect, dstRect,
                          Drawing::SamplingOptions(), Drawing::SrcRectConstraint::FAST_SRC_RECT_CONSTRAINT);
     canvas.DetachBrush();
+}
+
+void RSPropertiesPainter::GetPixelStretchDirtyRect(RectI& dirtyPixelStretch,
+    const RSProperties& properties, const bool isAbsCoordinate)
+{
+    auto& pixelStretch = properties.GetPixelStretch();
+    if (!pixelStretch.has_value()) {
+        return;
+    }
+    auto boundsRect = properties.GetBoundsRect();
+    auto scaledBounds = RectF(boundsRect.left_ - pixelStretch->x_, boundsRect.top_ - pixelStretch->y_,
+        boundsRect.width_ + pixelStretch->x_ + pixelStretch->z_,
+        boundsRect.height_ + pixelStretch->y_ + pixelStretch->w_);
+    auto geoPtr = properties.GetBoundsGeometry();
+    Drawing::Matrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
+    auto drawingRect = Rect2DrawingRect(scaledBounds);
+    matrix.MapRect(drawingRect, drawingRect);
+    dirtyPixelStretch.left_ = std::floor(drawingRect.GetLeft());
+    dirtyPixelStretch.top_ = std::floor(drawingRect.GetTop());
+    dirtyPixelStretch.width_ = std::ceil(drawingRect.GetWidth()) + PARAM_DOUBLE;
+    dirtyPixelStretch.height_ = std::ceil(drawingRect.GetHeight()) + PARAM_DOUBLE;
 }
 
 void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPaintFilterCanvas& canvas)
@@ -1072,7 +1093,7 @@ void RSPropertiesPainter::DrawFrame(
 }
 
 RRect RSPropertiesPainter::GetRRectForDrawingBorder(const RSProperties& properties,
-    const std::shared_ptr<RSBorder>& border, const bool& isOutline)
+    const std::shared_ptr<RSBorder>& border, const bool isOutline)
 {
     if (!border) {
         return RRect();
@@ -1084,7 +1105,7 @@ RRect RSPropertiesPainter::GetRRectForDrawingBorder(const RSProperties& properti
 }
 
 RRect RSPropertiesPainter::GetInnerRRectForDrawingBorder(const RSProperties& properties,
-    const std::shared_ptr<RSBorder>& border, const bool& isOutline)
+    const std::shared_ptr<RSBorder>& border, const bool isOutline)
 {
     if (!border) {
         return RRect();
@@ -1174,7 +1195,8 @@ void RSPropertiesPainter::DrawLightInner(const RSProperties& properties, Drawing
     Vector4f lightIntensityV4;
     constexpr int MAX_LIGHT_SOUCES = 4;
     while (iter != lightSources.end() && cnt < MAX_LIGHT_SOUCES) {
-        auto lightPos = RSPointLightManager::Instance()->CalculateLightPosForIlluminated((*iter), geoPtr);
+        auto lightPos = RSPointLightManager::Instance()->CalculateLightPosForIlluminated(*(*iter),
+            geoPtr->GetAbsRect());
         auto lightIntensity = (*iter)->GetLightIntensity();
         lightIntensityV4[cnt] = lightIntensity;
         lightPositionMatrix.SetCol(cnt, lightPos.x_, lightPos.y_, lightPos.z_, lightPos.w_);
@@ -1237,7 +1259,7 @@ void RSPropertiesPainter::DrawBorderLight(const RSProperties& properties, Drawin
 }
 
 void RSPropertiesPainter::DrawBorderBase(const RSProperties& properties, Drawing::Canvas& canvas,
-    const std::shared_ptr<RSBorder>& border, const bool& isOutline)
+    const std::shared_ptr<RSBorder>& border, const bool isOutline)
 {
     if (!border || !border->HasBorder()) {
         return;
@@ -1301,7 +1323,7 @@ void RSPropertiesPainter::DrawBorder(const RSProperties& properties, Drawing::Ca
 }
 
 void RSPropertiesPainter::GetOutlineDirtyRect(RectI& dirtyOutline,
-    const RSProperties& properties, const bool& isAbsCoordinate)
+    const RSProperties& properties, const bool isAbsCoordinate)
 {
     auto outline = properties.GetOutline();
     if (!outline || !outline->HasBorder()) {
@@ -1418,30 +1440,6 @@ void RSPropertiesPainter::DrawMask(const RSProperties& properties, Drawing::Canv
 {
     Drawing::Rect maskBounds = Rect2DrawingRect(properties.GetBoundsRect());
     DrawMask(properties, canvas, maskBounds);
-}
-
-RectF RSPropertiesPainter::GetCmdsClipRect(Drawing::DrawCmdListPtr& cmds)
-{
-    ROSEN_LOGE("Drawing Unsupport RSPropertiesPainter::GetCmdsClipRect");
-    return RectF { 0.0f, 0.0f, 0.0f, 0.0f };
-}
-
-void RSPropertiesPainter::DrawFrameForDriven(const RSProperties& properties, RSPaintFilterCanvas& canvas,
-                                             Drawing::DrawCmdListPtr& cmds)
-{
-#if defined(RS_ENABLE_DRIVEN_RENDER)
-    if (cmds == nullptr) {
-        return;
-    }
-    Rosen::Drawing::Matrix mat;
-    if (GetGravityMatrix(
-            properties.GetFrameGravity(), properties.GetFrameRect(), cmds->GetWidth(), cmds->GetHeight(), mat)) {
-        canvas.ConcatMatrix(mat);
-    }
-    auto frameRect = Rect2DrawingRect(properties.GetFrameRect());
-    // temporary solution for driven content clip
-    cmds->Playback(canvas, &frameRect);
-#endif
 }
 
 void RSPropertiesPainter::DrawSpherize(const RSProperties& properties, RSPaintFilterCanvas& canvas,
@@ -1898,21 +1896,15 @@ void RSPropertiesPainter::BeginBlendMode(RSPaintFilterCanvas& canvas, const RSPr
         // no blend
         return;
     }
-    RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(TRACE_LEVEL_TWO,
-        "RSPropertiesPainter::BlendMode, blendMode: %d, blendModeApplyType: %d", blendMode, blendModeApplyType);
 
     canvas.Save();
     canvas.ClipRoundRect(RRect2DrawingRRect(properties.GetRRect()), Drawing::ClipOp::INTERSECT, true);
 
-    if (canvas.GetBlendOffscreenLayerCnt() == 0 && IsDangerousBlendMode(blendMode - 1, blendModeApplyType)) {
-        Drawing::SaveLayerOps maskLayerRec(nullptr, nullptr, 0);
-        canvas.SaveLayer(maskLayerRec);
-        canvas.AddBlendOffscreenLayer(true);
-        ROSEN_LOGD("Dangerous fast blendmode may produce transparent pixels, add extra offscreen here.");
-    }
+    // planning: fix offscreen protector
+
     // fast blend mode
     if (blendModeApplyType == static_cast<int>(RSColorBlendApplyType::FAST)) {
-        canvas.SaveBlendMode();
+        canvas.SaveEnv();
         canvas.SetBlendMode({ blendMode - 1 }); // map blendMode to SkBlendMode
         return;
     }
@@ -1927,9 +1919,7 @@ void RSPropertiesPainter::BeginBlendMode(RSPaintFilterCanvas& canvas, const RSPr
     blendBrush_.SetBlendMode(static_cast<Drawing::BlendMode>(blendMode - 1)); // map blendMode to Drawing::BlendMode
     Drawing::SaveLayerOps maskLayerRec(nullptr, &blendBrush_, 0);
     canvas.SaveLayer(maskLayerRec);
-
-    canvas.AddBlendOffscreenLayer(false);
-    canvas.SaveBlendMode();
+    canvas.SaveEnv();
     canvas.SetBlendMode(std::nullopt);
     canvas.SaveAlpha();
     canvas.SetAlpha(1.0f);
@@ -1945,21 +1935,13 @@ void RSPropertiesPainter::EndBlendMode(RSPaintFilterCanvas& canvas, const RSProp
         return;
     }
 
+    // planning: fix offscreen protector
     if (blendModeApplyType == static_cast<int>(RSColorBlendApplyType::FAST)) {
-        canvas.RestoreBlendMode();
-        if (canvas.IsBlendOffscreenExtraLayer()) {
-            canvas.Restore();
-            canvas.MinusBlendOffscreenLayer();
-        }
+        canvas.RestoreEnv();
     } else {
-        canvas.RestoreBlendMode();
+        canvas.RestoreEnv();
         canvas.RestoreAlpha();
         canvas.Restore();
-        canvas.MinusBlendOffscreenLayer();
-        if (canvas.IsBlendOffscreenExtraLayer()) {
-            canvas.Restore();
-            canvas.MinusBlendOffscreenLayer();
-        }
     }
     canvas.Restore();
 }

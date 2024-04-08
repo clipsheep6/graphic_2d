@@ -670,6 +670,11 @@ bool RSSystemProperties::IsPhoneType()
     return isPhone;
 }
 
+bool RSSystemProperties::IsDeveloperModeOn()
+{
+    return (system::GetParameter("const.security.developermode.state", "false") == "true");
+}
+
 bool RSSystemProperties::IsPcType()
 {
     static bool isPc = (system::GetParameter("const.product.devicetype", "pc") == "pc") ||

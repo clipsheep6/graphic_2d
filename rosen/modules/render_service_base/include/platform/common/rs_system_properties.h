@@ -149,6 +149,7 @@ public:
     static bool GetAFBCEnabled();
     static bool GetReleaseResourceEnabled();
     static bool GetRSScreenRoundCornerEnable();
+    static bool IsDeveloperModeOn();
 
     static void SetDrawTextAsBitmap(bool flag);
     static bool GetDrawTextAsBitmap();

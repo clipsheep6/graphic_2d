@@ -46,9 +46,7 @@
 #include <frame_collector.h>
 #include <frame_painter.h>
 #include "common/rs_optional_trace.h"
-#include "platform/ohos/overdraw/rs_cpu_overdraw_canvas_listener.h"
-#include "platform/ohos/overdraw/rs_gpu_overdraw_canvas_listener.h"
-#include "platform/ohos/overdraw/rs_overdraw_controller.h"
+#include "platform/ohos/overdraw/rs_overdraw_manager.h"
 #include "surface_utils.h"
 #endif
 
@@ -60,7 +58,10 @@
 namespace OHOS {
 namespace Rosen {
 RSRenderThreadVisitor::RSRenderThreadVisitor()
-    : curDirtyManager_(std::make_shared<RSDirtyRegionManager>()), canvas_(nullptr) {}
+    : curDirtyManager_(std::make_shared<RSDirtyRegionManager>()), canvas_(nullptr) 
+{
+    isOverdrawDfxOn_ = RSOverdrawManager::GetInstance().IsEnabled() && RSSystemProperties::IsDeveloperModeOn();
+}
 
 RSRenderThreadVisitor::~RSRenderThreadVisitor() = default;
 
@@ -463,30 +464,10 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
 #ifdef ROSEN_OHOS
-    // if listenedCanvas is nullptr, that means disabled or listen failed
-    std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
-    std::shared_ptr<RSCanvasListener> overdrawListener = nullptr;
-
-    if (RSOverdrawController::GetInstance().IsEnabled()) {
-        auto &oc = RSOverdrawController::GetInstance();
-        listenedCanvas = std::make_shared<RSListenedCanvas>(*surface);
-        overdrawListener = oc.CreateListener<RSCPUOverdrawCanvasListener>(listenedCanvas.get());
-        if (overdrawListener == nullptr) {
-            overdrawListener = oc.CreateListener<RSGPUOverdrawCanvasListener>(listenedCanvas.get());
-        }
-
-        if (overdrawListener != nullptr) {
-            listenedCanvas->SetListener(overdrawListener);
-        } else {
-            // create listener failed
-            listenedCanvas = nullptr;
-        }
-    }
-
-    if (listenedCanvas != nullptr) {
-        canvas_ = listenedCanvas;
-    } else {
-        canvas_ = std::make_shared<RSPaintFilterCanvas>(surface.get());
+    canvas_ = std::make_shared<RSPaintFilterCanvas>(surface.get());
+    auto &overdrawManager = RSOverdrawManager::GetInstance();
+    if (isOverdrawDfxOn_) {
+        overdrawManager.StartOverDraw(canvas_);
     }
 #else
     canvas_ = std::make_shared<RSPaintFilterCanvas>(surface.get());
@@ -562,14 +543,14 @@ void RSRenderThreadVisitor::ProcessRootRenderNode(RSRootRenderNode& node)
     }
 
 #ifdef ROSEN_OHOS
-    if (overdrawListener != nullptr) {
-        overdrawListener->Draw();
-    }
 
     FramePainter fpainter(FrameCollector::GetInstance());
     fpainter.Draw(*canvas_);
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::ReleaseEnd);
     FrameCollector::GetInstance().MarkFrameEvent(FrameEventType::FlushStart);
+    if (isOverdrawDfxOn_) {
+        overdrawManager.FinishOverDraw(canvas_);
+    }
 #endif
 
     RS_TRACE_BEGIN(ptr->GetName() + " rsSurface->FlushFrame");

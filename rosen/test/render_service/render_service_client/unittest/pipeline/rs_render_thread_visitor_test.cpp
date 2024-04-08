@@ -18,7 +18,6 @@
 #include "gtest/gtest.h"
 #include "limit_number.h"
 
-#include "platform/ohos/overdraw/rs_overdraw_controller.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_context.h"
@@ -438,7 +437,6 @@ HWTEST_F(RSRenderThreadVisitorTest, ProcessRootRenderNode004, TestSize.Level1)
     node.UpdateSuggestedBufferSize(10, 10);
     RSRenderThreadVisitor rsRenderThreadVisitor;
     rsRenderThreadVisitor.ProcessRootRenderNode(node);
-    RSOverdrawController::GetInstance().SetEnable(false);
     rsRenderThreadVisitor.ProcessRootRenderNode(node);
     rsRenderThreadVisitor.SetPartialRenderStatus(PartialRenderType::DISABLED, true);
     rsRenderThreadVisitor.ProcessRootRenderNode(node);

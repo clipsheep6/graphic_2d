@@ -283,6 +283,10 @@ bool RSSystemProperties::GetAFBCEnabled()
 {
     return {};
 }
+bool RSSystemProperties::IsDeveloperModeOn()
+{
+    return false;
+}
 
 bool RSSystemProperties::GetASTCEnabled()
 {

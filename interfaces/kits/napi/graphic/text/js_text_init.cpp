@@ -14,10 +14,10 @@
  */
 
 #include "js_text_init.h"
+
+#include "enum_napi/text_enum_napi.h"
 #include "fontcollection_napi/js_fontcollection.h"
 #include "paragraph_style_napi/js_paragraphstyle.h"
-#include "enum_napi/text_enum_napi.h"
-#include "text_style_napi/js_text_style.h"
 #include "utils/log.h"
 
 namespace OHOS::Rosen {
@@ -25,9 +25,6 @@ napi_value TextInit(napi_env env, napi_value exportObj)
 {
     JsFontCollection::Init(env, exportObj);
     JsEnum::Init(env, exportObj);
-    JsFontCollection::Init(env, exportObj);
-    JsParagraphStyle::Init(env, exportObj);
-    JsTextStyle::Init(env, exportObj);
     return exportObj;
 }
 } // namespace OHOS::Rosen

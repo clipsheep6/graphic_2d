@@ -753,24 +753,34 @@ void RSCompositingFilterDrawable::Draw(const RSRenderContent& content, RSPaintFi
     RSPropertiesPainter::DrawFilter(content.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
 }
 
+bool IsForegroundFilterValid(const RSRenderContent& context)
+{
+    auto& rsFilter = content.GetRenderProperties().GetForegroundFilter();
+    auto boundsRect = content.GetRenderProperties().GetBoundsRect();
+    bool isBoundsValid = boundsRect && !boundsRect->IsEmpty();
+    if (rsFilter == nullptr || !isBoundsValid) {
+        return false;
+    }
+    return true;
+}
+
 // foreground filter
 RSPropertyDrawable::DrawablePtr RSForegroundFilterDrawable::Generate(const RSRenderContent& content)
 {
-    if (!RSPropertiesPainter::BLUR_ENABLED) { //关闭会影响restore吗
+    if (!RSPropertiesPainter::BLUR_ENABLED) {
         ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
         return nullptr;
     }
-    // auto& filter = content.GetRenderProperties().GetFilter();
-    // if (filter == nullptr) {
-    //     return nullptr;
-    // }
+
+    if (!IsForegroundFilterValid) {
+        return nullptr;
+    }
     return std::make_unique<RSForegroundFilterDrawable>();
 }
 
 bool RSForegroundFilterDrawable::Update(const RSRenderContent& content)
 {
-    //return content.GetRenderProperties().GetFilter() != nullptr;
-    return false;
+    return content.GetRenderProperties().GetForegroundFilter() != nullptr;
 }
 
 void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
@@ -797,14 +807,21 @@ void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFil
 // foreground filter restore
 RSPropertyDrawable::DrawablePtr RSForegroundFilterRestoreDrawable::Generate(const RSRenderContent& content)
 {
+    if (!RSPropertiesPainter::BLUR_ENABLED) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
+        return nullptr;
+    }
+
+    if (!IsForegroundFilterValid) {
+        return nullptr;
+    }
     // 需要一点保护机制， 如果save成功了，才restore
     return std::make_unique<RSForegroundFilterRestoreDrawable>();
 }
 
 bool RSForegroundFilterRestoreDrawable::Update(const RSRenderContent& content)
 {
-    //return content.GetRenderProperties().GetFilter() != nullptr;
-    return false;
+    return content.GetRenderProperties().GetForegroundFilter() != nullptr;
 }
 
 void RSForegroundFilterRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const

@@ -619,12 +619,12 @@ void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, R
     if (RSFilter == nullptr) {
         return;
     }
-    auto foregroundFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
 
     if (imageSnapshot == nullptr) {
         ROSEN_LOGD("RSPropertiesPainter::DrawForegroundFilter image null");
         return;
     }
+    auto foregroundFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
 
     foregroundFilter->DrawImageRect(canvas, imageSnapshot, Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()),
         Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()));

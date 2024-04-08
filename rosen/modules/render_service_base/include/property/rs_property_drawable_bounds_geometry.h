@@ -296,6 +296,8 @@ public:
     bool Update(const RSRenderContent& content) override;
 };
 
+bool IsForegroundFilterValid(const RSRenderContent& context);
+
 class RSForegroundFilterDrawable : public RSPropertyDrawable {
 public:
     explicit RSForegroundFilterDrawable() = default;

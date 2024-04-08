@@ -17,6 +17,7 @@
 #define RENDER_SERVICE_PROFILER_H
 
 #include <map>
+#include <nlohmann/json_fwd.hpp>
 #include <string>
 
 #include "common/rs_vector4.h"
@@ -85,7 +86,9 @@ class RSRenderServiceConnection;
 class RSTransactionData;
 class RSRenderNode;
 class RSContext;
-class RSRenderNode;
+class RSProperties;
+class RSRenderModifier;
+class RSRenderAnimation;
 class RSDisplayRenderNode;
 class RSRenderNodeMap;
 class RSAnimationManager;
@@ -208,6 +211,22 @@ private:
     RSB_EXPORT static std::string DumpModifiers(const RSRenderNode& node);
     RSB_EXPORT static std::string DumpSurfaceNode(const RSRenderNode& node);
 
+    // JSON
+    RSB_EXPORT static void RenderServiceTreeDump(nlohmann::json& out);
+    RSB_EXPORT static void DumpNode(const RSRenderNode& node, nlohmann::json& out);
+    RSB_EXPORT static void DumpSubClassNode(const RSRenderNode& node, nlohmann::json& out);
+    RSB_EXPORT static void DumpDrawCmdModifiers(const RSRenderNode& node, nlohmann::json& out);
+    RSB_EXPORT static void DumpDrawCmdModifier(
+        const RSRenderNode& node, nlohmann::json& out, int type, RSRenderModifier& modifier);
+    RSB_EXPORT static void DumpProperties(const RSProperties& properties, nlohmann::json& out);
+    RSB_EXPORT static void DumpPropertiesTransform(const RSProperties& properties, nlohmann::json& out);
+    RSB_EXPORT static void DumpPropertiesDecoration(const RSProperties& properties, nlohmann::json& out);
+    RSB_EXPORT static void DumpPropertiesEffects(const RSProperties& properties, nlohmann::json& out);
+    RSB_EXPORT static void DumpPropertiesShadow(const RSProperties& properties, nlohmann::json& out);
+    RSB_EXPORT static void DumpPropertiesColor(const RSProperties& properties, nlohmann::json& out);
+    RSB_EXPORT static void DumpAnimations(const RSAnimationManager& animationManager, nlohmann::json& out);
+    RSB_EXPORT static void DumpAnimation(const RSRenderAnimation& animation, nlohmann::json& out);
+
     // RSAnimationManager
     RSB_EXPORT static void FilterAnimationForPlayback(RSAnimationManager& manager);
 
@@ -245,6 +264,7 @@ private:
     static void DumpConnections(const ArgList& args);
     static void DumpNodeProperties(const ArgList& args);
     static void DumpTree(const ArgList& args);
+    static void DumpTreeToJson(const ArgList& args);
     static void DumpSurfaces(const ArgList& args);
     static void DumpNodeSurface(const ArgList& args);
     static void PatchNode(const ArgList& args);

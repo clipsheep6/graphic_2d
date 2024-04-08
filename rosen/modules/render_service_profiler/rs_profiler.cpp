@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-#include "rs_profiler.h"
 
+#include <nlohmann/json.hpp>
 #include <filesystem>
 #include <list>
 
 #include "foundation/graphic/graphic_2d/utils/log/rs_trace.h"
+#include "rs_profiler.h"
 #include "rs_profiler_capture_recorder.h"
 #include "rs_profiler_capturedata.h"
 #include "rs_profiler_file.h"
@@ -604,6 +605,27 @@ void RSProfiler::DumpTree(const ArgList& args)
     }
 
     Respond(out);
+}
+
+void RSProfiler::DumpTreeToJson(const ArgList& args)
+{
+    nlohmann::json tree;
+    if (!g_renderServiceThread) {
+        return;
+    }
+    RenderServiceTreeDump(tree);
+
+    tree["Display"] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    if (auto displayNode = GetDisplayNode(*g_renderServiceContext); displayNode) {
+        if (auto dirtyManager = displayNode->GetDirtyManager(); dirtyManager) {
+            const auto displayRect = dirtyManager->GetSurfaceRect();
+            tree["Display"] = { displayRect.GetLeft(), displayRect.GetTop(), displayRect.GetRight(),
+                displayRect.GetBottom() };
+        }
+    }
+
+    std::string dump = tree.dump();
+    Network::SendRSTreeDumpJSON(dump);
 }
 
 void RSProfiler::DumpSurfaces(const ArgList& args)

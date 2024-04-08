@@ -37,10 +37,13 @@ template("render_service_client_source_set") {
   ohos_source_set(target_name) {
     branch_protector_ret = "pac_ret"
     sanitize = {
+      boundary_sanitize = true
       cfi = false
       cfi_cross_dso = false
       debug = false
       blocklist = "./rs_client_blocklist.txt"
+      integer_overflow = true
+      ubsan = true
     }
     defines = []
     defines += gpu_defines

@@ -729,28 +729,87 @@ void RSBackgroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFil
     RSPropertiesPainter::DrawFilter(content.GetRenderProperties(), canvas, FilterType::BACKGROUND_FILTER);
 }
 
-// foreground filter
-RSPropertyDrawable::DrawablePtr RSForegroundFilterDrawable::Generate(const RSRenderContent& content)
+// compositing filter
+RSPropertyDrawable::DrawablePtr RSCompositingFilterDrawable::Generate(const RSRenderContent& content)
 {
     if (!RSPropertiesPainter::BLUR_ENABLED) {
-        ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
+        ROSEN_LOGD("RSCompositingFilterDrawable::Generate close blur.");
         return nullptr;
     }
     auto& filter = content.GetRenderProperties().GetFilter();
     if (filter == nullptr) {
         return nullptr;
     }
+    return std::make_unique<RSCompositingFilterDrawable>();
+}
+
+bool RSCompositingFilterDrawable::Update(const RSRenderContent& content)
+{
+    return content.GetRenderProperties().GetFilter() != nullptr;
+}
+
+void RSCompositingFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+{
+    RSPropertiesPainter::DrawFilter(content.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
+}
+
+// foreground filter
+RSPropertyDrawable::DrawablePtr RSForegroundFilterDrawable::Generate(const RSRenderContent& content)
+{
+    if (!RSPropertiesPainter::BLUR_ENABLED) { //关闭会影响restore吗
+        ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
+        return nullptr;
+    }
+    // auto& filter = content.GetRenderProperties().GetFilter();
+    // if (filter == nullptr) {
+    //     return nullptr;
+    // }
     return std::make_unique<RSForegroundFilterDrawable>();
 }
 
 bool RSForegroundFilterDrawable::Update(const RSRenderContent& content)
 {
-    return content.GetRenderProperties().GetFilter() != nullptr;
+    //return content.GetRenderProperties().GetFilter() != nullptr;
+    return false;
 }
 
 void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    RSPropertiesPainter::DrawFilter(content.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
+    auto surface = canvas.GetSurface();
+    if (!surface) {
+        return;
+    }
+    auto bounds = content.GetRenderProperties().GetBoundsRect();
+    std::shared_ptr<Drawing::Surface> offscreenSurface = surface->MakeSurface(bounds.width_, bounds.height_);
+    if (!offscreenSurface) { //怎么保证save和restore是对应的，需要调研下blendmode的实现
+        return;
+    }
+    auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface.get());
+    RSPaintFilterCanvas::OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
+    canvas.StoreOffscreenData(offscreenData);
+    canvas.ReplaceMainScreenData(offscreenSurface.get(), offscreenCanvas.get());
+    offscreenCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
+    canvas.SavePCanvasList();
+    canvas.RemoveAll();
+    canvas.AddCanvas(offscreenCanvas.get());
+}
+
+// foreground filter restore
+RSPropertyDrawable::DrawablePtr RSForegroundFilterRestoreDrawable::Generate(const RSRenderContent& content)
+{
+    // 需要一点保护机制， 如果save成功了，才restore
+    return std::make_unique<RSForegroundFilterRestoreDrawable>();
+}
+
+bool RSForegroundFilterRestoreDrawable::Update(const RSRenderContent& content)
+{
+    //return content.GetRenderProperties().GetFilter() != nullptr;
+    return false;
+}
+
+void RSForegroundFilterRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+{
+    RSPropertiesPainter::DrawForegroundFilter(content.GetRenderProperties(), canvas);
 }
 
 // effect data

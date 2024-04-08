@@ -90,11 +90,13 @@ static const std::unordered_map<RSModifierType, RSPropertyDrawableSlot> g_proper
     { RSModifierType::BORDER_COLOR, RSPropertyDrawableSlot::BORDER },
     { RSModifierType::BORDER_WIDTH, RSPropertyDrawableSlot::BORDER },
     { RSModifierType::BORDER_STYLE, RSPropertyDrawableSlot::BORDER },
-    { RSModifierType::FILTER, RSPropertyDrawableSlot::FOREGROUND_FILTER },
+    { RSModifierType::FILTER, RSPropertyDrawableSlot::COMPOSITING_FILTER },
     { RSModifierType::BACKGROUND_FILTER, RSPropertyDrawableSlot::BACKGROUND_FILTER },
-    { RSModifierType::LINEAR_GRADIENT_BLUR_PARA, RSPropertyDrawableSlot::FOREGROUND_FILTER },
-    { RSModifierType::DYNAMIC_LIGHT_UP_RATE, RSPropertyDrawableSlot::DYNAMIC_LIGHT_UP },
-    { RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, RSPropertyDrawableSlot::DYNAMIC_LIGHT_UP },
+    { RSModifierType::LINEAR_GRADIENT_BLUR_PARA, RSPropertyDrawableSlot::COMPOSITING_FILTER },
+    // { RSModifierType::DYNAMIC_LIGHT_UP_RATE, RSPropertyDrawableSlot::DYNAMIC_LIGHT_UP },
+    // { RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, RSPropertyDrawableSlot::DYNAMIC_LIGHT_UP },
+    { RSModifierType::DYNAMIC_LIGHT_UP_RATE, RSPropertyDrawableSlot::FOREGROUND_FILTER },
+    { RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, RSPropertyDrawableSlot::FOREGROUND_FILTER },
     { RSModifierType::FRAME_GRAVITY, RSPropertyDrawableSlot::FRAME_OFFSET },
     { RSModifierType::CLIP_RRECT, RSPropertyDrawableSlot::CLIP_TO_BOUNDS },
     { RSModifierType::CLIP_BOUNDS, RSPropertyDrawableSlot::CLIP_TO_BOUNDS },
@@ -167,6 +169,7 @@ static const std::array<RSPropertyDrawable::DrawableGenerator, LUT_SIZE> g_drawa
     CustomModifierAdapter<RSModifierType::TRANSITION>,           // TRANSITION
     CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR>, // ENV_FOREGROUND_COLOR
     RSShadowDrawable::Generate,                                  // SHADOW
+    RSForegroundFilterDrawable::Generate,                        // FOREGROUND_FILTER
     RSOutlineDrawable::Generate,                                 // OUTLINE
 
     // BG properties in Bounds Clip
@@ -199,7 +202,7 @@ static const std::array<RSPropertyDrawable::DrawableGenerator, LUT_SIZE> g_drawa
     RSColorFilterDrawable::Generate,              // COLOR_FILTER
     RSDynamicDimDrawable::Generate,               // DYNAMIC_DIM
     RSLightUpEffectDrawable::Generate,            // LIGHT_UP_EFFECT
-    RSForegroundFilterDrawable::Generate,         // FOREGROUND_FILTER
+    RSCompositingFilterDrawable::Generate,         // COMPOSITING_FILTER
     RSForegroundColorDrawable::Generate,          // FOREGROUND_COLOR
     nullptr,                                      // FG_RESTORE_BOUNDS
 
@@ -211,6 +214,7 @@ static const std::array<RSPropertyDrawable::DrawableGenerator, LUT_SIZE> g_drawa
     RSPixelStretchDrawable::Generate,                     // PIXEL_STRETCH
 
     BlendRestoreDrawableGenerate, // RESTORE_BLEND
+    RSForegroundFilterRestoreDrawable::Generate,          //RESTORE_FOREGROUND_FILTER
     nullptr,                      // RESTORE_ALL
 };
 
@@ -267,6 +271,10 @@ std::unordered_set<RSPropertyDrawableSlot> RSPropertyDrawable::GenerateDirtySlot
     if (dirtySlots.count(RSPropertyDrawableSlot::BLEND_MODE)) {
         // BlendMode Restore should be regenerated with BlendMode
         dirtySlots.emplace(RSPropertyDrawableSlot::RESTORE_BLEND_MODE);
+    }
+    if (dirtySlots.count(RSPropertyDrawableSlot::FOREGROUND_FILTER)) {
+        // ForegroundFilter Restore should be regenerated with ForegroundFilter
+        dirtySlots.emplace(RSPropertyDrawableSlot::RESTORE_FOREGROUND_FILTER);
     }
 
     return dirtySlots;

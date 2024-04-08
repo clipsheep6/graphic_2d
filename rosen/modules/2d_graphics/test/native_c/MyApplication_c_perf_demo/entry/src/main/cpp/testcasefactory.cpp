@@ -40,6 +40,7 @@
 #include "bench/clear_bench.h"
 #include "bench/big_path_bench.h"
 #include "dm/aa_rect_modes.h"
+#include "dm/blur_circles_gm.h"
 #include "dm/blur_large_rrects.h"
 #include "dm/add_arc.h"
 #include "dm/font_regen.h"
@@ -135,6 +136,7 @@ namespace {
             
             //DM
             {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},
+            {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},
             {"blurlargerrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},
             {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
             {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},

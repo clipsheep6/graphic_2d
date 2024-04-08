@@ -1,0 +1,49 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\xieyijun\\.ohos\\config\\auto_debug_MyApplication_cpp_demo_0401_com.example.myapplication_cpp_demo_0401_80086000022236642.cer",
+          "storePassword": "0000001BB16A4ABAD74A5DD4DDA7D551C6EBC21EA01245665ACFDCECD4D095D4585678FA97B0C3650FA854",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B37EB7BF75FA2A708362B7123680BDEA195B53EBD7659678D271A5778F7D1A08C663B8976178EBE",
+          "profile": "C:\\Users\\xieyijun\\.ohos\\config\\auto_debug_MyApplication_cpp_demo_0401_com.example.myapplication_cpp_demo_0401_80086000022236642.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\xieyijun\\.ohos\\config\\auto_debug_MyApplication_cpp_demo_0401_com.example.myapplication_cpp_demo_0401_80086000022236642.p12"
+        }
+      }
+    ],
+    "compileSdkVersion": 9,
+    "compatibleSdkVersion": 9,
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

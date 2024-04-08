@@ -46,7 +46,7 @@ void RandomPathBench::createData(int minVerbs, int maxVerbs, bool allowMoves, OH
     for (int i = 0; i < kNumPoints; ++i) {
         OH_Drawing_Point2D p;
         fPoints[i].x = rand.nextRangeF(0, DEFAULT_HEIGHT);
-        fPoints[i].y = rand.nextRangeF(0, DEFAULT_HEIGHT);
+        fPoints[i].y = rand.nextRangeF(0, DEFAULT_WIDTH);
     }
     restartMakingPaths();
 }

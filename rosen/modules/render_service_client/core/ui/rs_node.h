@@ -110,6 +110,12 @@ public:
     {
         return (IsInstanceOf<T>()) ? std::static_pointer_cast<T>(shared_from_this()) : nullptr;
     }
+    template<typename T>
+    std::shared_ptr<const T> ReinterpretCastTo() const
+    {
+        return (IsInstanceOf<T>()) ? std::static_pointer_cast<const T>(shared_from_this()) : nullptr;
+    }
+
     virtual std::string DumpNode(int depth) const;
     SharedPtr GetParent();
 
@@ -224,7 +230,7 @@ public:
     void SetEnvForegroundColorStrategy(ForegroundColorStrategyType colorType);
     void SetParticleParams(
         std::vector<ParticleParams>& particleParams, const std::function<void()>& finishCallback = nullptr);
-    void SetParticleDrawRegion(std::vector<ParticleParams>& particleParams);
+    void SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para);
     void SetForegroundColor(uint32_t colorValue);
     void SetBackgroundColor(uint32_t colorValue);
     void SetBackgroundShader(const std::shared_ptr<RSShader>& shader);
@@ -308,11 +314,12 @@ public:
 
     void SetColorBlendApplyType(RSColorBlendApplyType colorBlendApplyType);
 
-    // driven render
-    void MarkDrivenRender(bool flag);
-    void MarkDrivenRenderItemIndex(int index);
-    void MarkDrivenRenderFramePaintState(bool flag);
-    void MarkContentChanged(bool isChanged);
+    // driven render was shelved, functions will be deleted soon [start]
+    void MarkDrivenRender(bool flag) {}
+    void MarkDrivenRenderItemIndex(int index) {}
+    void MarkDrivenRenderFramePaintState(bool flag) {}
+    void MarkContentChanged(bool isChanged) {}
+    // driven render was shelved, functions will be deleted soon [end]
 
     void AddModifier(const std::shared_ptr<RSModifier> modifier);
     void RemoveModifier(const std::shared_ptr<RSModifier> modifier);
@@ -443,14 +450,13 @@ private:
     void MarkAllExtendModifierDirty();
     void ResetExtendModifierDirty();
     void UpdateImplicitAnimator();
+    void SetParticleDrawRegion(std::vector<ParticleParams>& particleParams);
 
     // Planning: refactor RSUIAnimationManager and remove this method
     void ClearAllModifiers();
 
     pid_t implicitAnimatorTid_ = 0;
     bool extendModifierIsDirty_ { false };
-    // driven render
-    bool drivenFlag_ = false;
 
     bool isNodeGroup_ = false;
 

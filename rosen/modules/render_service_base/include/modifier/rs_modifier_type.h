@@ -16,13 +16,16 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_MODIFIER_TYPE_H
 #define RENDER_SERVICE_CLIENT_CORE_ANIMATION_RS_MODIFIER_TYPE_H
 
+#include <bitset>
 #include <cstdint>
 
 namespace OHOS {
 namespace Rosen {
 // NOTE:
-// 1. MUST update g_propertyResetterLUT in rs_properties.cpp when new properties are added
-// 2. property modifier MUST be added before CUSTOM, else wise it will be treated as draw modifier
+// 1. Following LUTs must be updated according when this enum is updated :
+//    a. g_propertyResetterLUT in rs_properties.cpp
+//    b. g_propertyToDrawableLut in rs_drawable_content.cpp
+// 2. Property modifier(i.e. to be applied to RSProperties) MUST be added before CUSTOM enum, else wise it will not work
 enum class RSModifierType : int16_t {
     INVALID = 0,                   // 0
     BOUNDS,                        // 1
@@ -108,21 +111,24 @@ enum class RSModifierType : int16_t {
     ILLUMINATED_BORDER_WIDTH,      // 81
     ILLUMINATED_TYPE,              // 82
     BLOOM,                         // 83
-    FOREGROUND_EFFECT_RADIUS,      // 84
-    DYNAMIC_DIM_DEGREE,            // 85
-    CUSTOM,                        // 86
-    EXTENDED,                      // 87
-    TRANSITION,                    // 88
-    BACKGROUND_STYLE,              // 89
-    CONTENT_STYLE,                 // 90
-    FOREGROUND_STYLE,              // 91
-    OVERLAY_STYLE,                 // 92
-    NODE_MODIFIER,                 // 93
-    ENV_FOREGROUND_COLOR,          // 94
-    ENV_FOREGROUND_COLOR_STRATEGY, // 95
-    GEOMETRYTRANS,                 // 96
+    PARTICLE_EMITTER_UPDATER,      // 84
+    FOREGROUND_EFFECT_RADIUS,      // 85
+    DYNAMIC_DIM_DEGREE,            // 86
+    CUSTOM,                        // 87
+    EXTENDED,                      // 88
+    TRANSITION,                    // 89
+    BACKGROUND_STYLE,              // 90
+    CONTENT_STYLE,                 // 91
+    FOREGROUND_STYLE,              // 92
+    OVERLAY_STYLE,                 // 93
+    NODE_MODIFIER,                 // 94
+    ENV_FOREGROUND_COLOR,          // 95
+    ENV_FOREGROUND_COLOR_STRATEGY, // 96
+    GEOMETRYTRANS,                 // 98
+    CHILDREN,                      // 99, PLACEHOLDER, no such modifier, but we need a dirty flag
     MAX_RS_MODIFIER_TYPE,
 };
+using ModifierDirtyTypes = std::bitset<static_cast<int>(RSModifierType::MAX_RS_MODIFIER_TYPE)>;
 
 enum class RSRenderPropertyType : int16_t {
     INVALID = 0,

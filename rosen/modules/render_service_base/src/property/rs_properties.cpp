@@ -26,6 +26,7 @@
 #include "property/rs_point_light_manager.h"
 #include "property/rs_properties_def.h"
 #include "render/rs_filter.h"
+#include "render/rs_foreground_effect_filter.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_linear_gradient_blur_filter.h"
 
@@ -1200,6 +1201,11 @@ bool RSProperties::IsDynamicLightUpValid() const
     return dynamicLightUpRate_.has_value() && dynamicLightUpDegree_.has_value() &&
            ROSEN_GNE(*dynamicLightUpRate_, 0.0) && ROSEN_GE(*dynamicLightUpDegree_, -1.0) &&
            ROSEN_LE(*dynamicLightUpDegree_, 1.0);
+}
+
+const std::shared_ptr<RSFilter>& RSProperties::GetForegroundFilter() const
+{
+    return foregroundFilter_;
 }
 
 // shadow properties
@@ -2771,9 +2777,17 @@ void RSProperties::OnApplyModifiers()
                 frameGeo_->GetWidth(), frameGeo_->GetHeight());
             filter_ = linearBlurFilter;
         }
+        if (IsForegroundEffectRadiusValid()) {
+            auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(foregroundEffectRadius_);
+            foregroundFilter_ = foregroundEffectFilter;
+        }
+        if (!IsForegroundEffectRadiusValid()) {
+            foregroundFilter_.reset();
+        }
         needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
                       IsDynamicLightUpValid() || greyCoef_.has_value() || linearGradientBlurPara_ != nullptr ||
-                      IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE;
+                      IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE ||
+                      foregroundFilter_ != nullptr;
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
         CreateFilterCacheManagerIfNeed();
 #endif

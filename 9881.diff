@@ -1,0 +1,707 @@
+diff --git a/rosen/modules/render_service_base/BUILD.gn b/rosen/modules/render_service_base/BUILD.gn
+index 47a90448bf8fe5a2b33075f38a5d3243fb384195..39e17472e47a6a6bdbad7041cdff1183f949305e 100644
+--- a/rosen/modules/render_service_base/BUILD.gn
++++ b/rosen/modules/render_service_base/BUILD.gn
+@@ -229,6 +229,7 @@ ohos_source_set("render_service_base_src") {
+     "src/render/rs_linear_gradient_blur_filter.cpp",
+     "src/render/rs_mask.cpp",
+     "src/render/rs_material_filter.cpp",
++    "src/render/rs_foreground_effect_filter.cpp",
+     "src/render/rs_path.cpp",
+     "src/render/rs_pixel_map_util.cpp",
+     "src/render/rs_resource_manager.cpp",
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h b/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h
+index 5bd3cd7a96416f8777e291c9445a1b4bae6a1154..6c6a3e7a146025134a6005b4bbae0224e5af2f88 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_paint_filter_canvas.h
+@@ -226,6 +226,48 @@ public:
+     void SetEffectData(const std::shared_ptr<CachedEffectData>& effectData);
+     const std::shared_ptr<CachedEffectData>& GetEffectData() const;
+ 
++    // for foregroundFilter to store offscreen canvas & surface
++    struct OffscreenData {
++        std::shared_ptr<Drawing::Surface> offscreenSurface_ = nullptr;
++        std::shared_ptr<RSPaintFilterCanvas> offscreenCanvas_ = nullptr;
++    };
++
++    void ReplaceMainScreenData(std::shared_ptr<Drawing::Surface>& offscreenSurface,
++        std::shared_ptr<RSPaintFilterCanvas>& offscreenCanvas)
++    {
++        if (offscreenSurface != nullptr && offscreenCanvas != nullptr) {
++            storeMainScreenSurface_.push(surface_);
++            storeMainScreenCanvas_.push(canvas_);
++            surface_ = offscreenSurface.get();
++            canvas_ = offscreenCanvas.get();
++            OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
++            offscreenDataList_.push(offscreenData);
++        }
++    }
++
++    void SwapBackMainScreenData()
++    {
++        if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty()) {
++            surface_ = storeMainScreenSurface_.top();
++            canvas_ = storeMainScreenCanvas_.top();
++            storeMainScreenSurface_.pop();
++            storeMainScreenCanvas_.pop();
++            offscreenDataList_.pop();
++        }
++    }
++
++    void SavePCanvasList()
++    {
++        storedPCanvasList_.push_back(pCanvasList_);
++    }
++
++    void RestorePCanvasList()
++    {
++        auto item = storedPCanvasList_.back();
++        pCanvasList_.swap(item);
++        storedPCanvasList_.pop_back();
++    }
++
+     // canvas status relate
+     struct CanvasStatus {
+         float alpha_;
+@@ -272,6 +314,12 @@ private:
+     // greater than 0 indicates canvas currently is drawing on a new layer created offscreen blendmode
+     std::stack<bool> blendOffscreenStack_;
+ 
++    // foregroundFilter related
++    std::vector<std::vector<Canvas*>> storedPCanvasList_; // store pCanvasList_
++    std::stack<OffscreenData> offscreenDataList_; // store offscreen canvas & surface
++    std::stack<Drawing::Surface*> storeMainScreenSurface_; // store surface_
++    std::stack<Drawing::Canvas*> storeMainScreenCanvas_; // store canvas_
++
+     std::atomic_bool isHighContrastEnabled_ { false };
+     CacheType cacheType_ { RSPaintFilterCanvas::CacheType::UNDEFINED };
+     Drawing::Rect visibleRect_ = Drawing::Rect();
+diff --git a/rosen/modules/render_service_base/include/property/rs_properties.h b/rosen/modules/render_service_base/include/property/rs_properties.h
+index 61873787df24895e3835c697957484f8ceea0116..4dd8a5a12ea5784e8757f1baacb069412f37311d 100755
+--- a/rosen/modules/render_service_base/include/property/rs_properties.h
++++ b/rosen/modules/render_service_base/include/property/rs_properties.h
+@@ -227,6 +227,7 @@ public:
+     bool NeedFilter() const;
+     void SetGreyCoef(const std::optional<Vector2f>& greyCoef);
+     const std::optional<Vector2f>& GetGreyCoef() const;
++    const std::shared_ptr<RSFilter>& GetForegroundFilter() const;
+ 
+     // shadow properties
+     void SetShadowColor(Color color);
+@@ -452,6 +453,7 @@ private:
+     float spherizeDegree_ = 0.f;
+     bool isSpherizeValid_ = false;
+     float lightUpEffectDegree_ = 1.0f;
++    std::shared_ptr<RSFilter> foregroundFilter_ = nullptr; // view content filter
+ 
+     std::weak_ptr<RSRenderNode> backref_;
+ 
+diff --git a/rosen/modules/render_service_base/include/property/rs_properties_painter.h b/rosen/modules/render_service_base/include/property/rs_properties_painter.h
+index 43e58a7ffea29b6416785c09be098b41ff92f2c6..54127b4d494b0ad52b43eaa32d3239acb5117762 100755
+--- a/rosen/modules/render_service_base/include/property/rs_properties_painter.h
++++ b/rosen/modules/render_service_base/include/property/rs_properties_painter.h
+@@ -72,6 +72,7 @@ public:
+     static void DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas, FilterType filterType,
+         const std::optional<Drawing::Rect>& rect = std::nullopt,
+         const std::shared_ptr<RSFilter>& externalFilter = nullptr);
++    static void DrawForegroundFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas);
+     static void DrawForegroundColor(const RSProperties& properties, Drawing::Canvas& canvas);
+     static void DrawMask(const RSProperties& properties, Drawing::Canvas& canvas);
+     static void DrawMask(const RSProperties& properties, Drawing::Canvas& canvas, Drawing::Rect maskBounds);
+diff --git a/rosen/modules/render_service_base/include/property/rs_property_drawable.h b/rosen/modules/render_service_base/include/property/rs_property_drawable.h
+index 6930b99758cd3ebc4189055153c668e24c534c5a..59da81a06e61aa3784b862cde2a143a57dd74491 100644
+--- a/rosen/modules/render_service_base/include/property/rs_property_drawable.h
++++ b/rosen/modules/render_service_base/include/property/rs_property_drawable.h
+@@ -41,6 +41,7 @@ enum class RSPropertyDrawableSlot : uint8_t {
+     TRANSITION,
+     ENV_FOREGROUND_COLOR,
+     SHADOW,
++    FOREGROUND_FILTER,
+     OUTLINE,
+ 
+     // BG properties in Bounds Clip
+@@ -85,6 +86,7 @@ enum class RSPropertyDrawableSlot : uint8_t {
+     PIXEL_STRETCH,
+ 
+     RESTORE_BLEND_MODE,
++    RESTORE_FOREGROUND_FILTER,
+     RESTORE_ALL,
+ 
+     // Annotations: Please remember to update this when new slots are added.
+diff --git a/rosen/modules/render_service_base/include/property/rs_property_drawable_bounds_geometry.h b/rosen/modules/render_service_base/include/property/rs_property_drawable_bounds_geometry.h
+index a06f0b6b0c9a1003012a20577cc514d3f25dfb43..93206b46a62c4fe256af32354d5dbde365f3d61e 100644
+--- a/rosen/modules/render_service_base/include/property/rs_property_drawable_bounds_geometry.h
++++ b/rosen/modules/render_service_base/include/property/rs_property_drawable_bounds_geometry.h
+@@ -296,6 +296,26 @@ public:
+     bool Update(const RSRenderContent& content) override;
+ };
+ 
++bool IsForegroundFilterValid(const RSRenderContent& content);
++
++class RSForegroundFilterDrawable : public RSPropertyDrawable {
++public:
++    explicit RSForegroundFilterDrawable() = default;
++    ~RSForegroundFilterDrawable() override = default;
++    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderContent& content);
++    void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
++    bool Update(const RSRenderContent& content) override;
++};
++
++class RSForegroundFilterRestoreDrawable : public RSPropertyDrawable {
++public:
++    explicit RSForegroundFilterRestoreDrawable() = default;
++    ~RSForegroundFilterRestoreDrawable() override = default;
++    static RSPropertyDrawable::DrawablePtr Generate(const RSRenderContent& content);
++    void Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const override;
++    bool Update(const RSRenderContent& content) override;
++};
++
+ // EffectDataGenerate
+ class RSEffectDataGenerateDrawable : public RSPropertyDrawable {
+ public:
+diff --git a/rosen/modules/render_service_base/include/render/rs_filter.h b/rosen/modules/render_service_base/include/render/rs_filter.h
+index cfdb226eb89dd2a2e24dc8570b7b948021a8a563..98307a98fcd85af71708b843d925e499cdbdf658 100644
+--- a/rosen/modules/render_service_base/include/render/rs_filter.h
++++ b/rosen/modules/render_service_base/include/render/rs_filter.h
+@@ -67,6 +67,7 @@ public:
+         LIGHT_UP_EFFECT,
+         AIBAR,
+         LINEAR_GRADIENT_BLUR,
++        FOREGROUND_EFFECT,
+     };
+     FilterType GetFilterType() const
+     {
+diff --git a/rosen/modules/render_service_base/include/render/rs_foreground_effect_filter.h b/rosen/modules/render_service_base/include/render/rs_foreground_effect_filter.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..b3827cd55998c8da7c5b9d96a5c179ea6d3672ef
+--- /dev/null
++++ b/rosen/modules/render_service_base/include/render/rs_foreground_effect_filter.h
+@@ -0,0 +1,80 @@
++/*
++ * Copyright (c) 2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
++#define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
++
++#include <memory>
++#include "include/core/SkColorFilter.h"
++#include "include/effects/SkImageFilters.h"
++#include "render/rs_skia_filter.h"
++
++#include "effect/runtime_effect.h"
++#include "effect/runtime_shader_builder.h"
++
++namespace OHOS {
++namespace Rosen {
++struct ForegroundEffectParam {
++    Drawing::Rect src;
++    Drawing::Rect dst;
++
++    ForegroundEffectParam(const Drawing::Rect& src, const Drawing::Rect& dst)
++        : src(src), dst(dst) {}
++};
++class RSB_EXPORT RSForegroundEffectFilter : public RSDrawingFilter {
++public:
++    RSForegroundEffectFilter(float blurRadius);
++    RSForegroundEffectFilter(const RSForegroundEffectFilter&) = delete;
++    RSForegroundEffectFilter operator=(const RSForegroundEffectFilter&) = delete;
++    ~RSForegroundEffectFilter() override;
++
++    bool IsValid() const override;
++    std::string GetDescription() override;
++    void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
++        const Drawing::Rect& src, const Drawing::Rect& dst) const override;
++    void PreProcess(std::shared_ptr<Drawing::Image> image) override {};
++    void PostProcess(RSPaintFilterCanvas& canvas) override {};
++    float GetDirtyExtension();
++
++    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override
++    {
++        return nullptr;
++    }
++
++private:
++    float blurScale_ {};
++    float blurRadius_ {}; //kawase blur's blur radius
++    int numberOfPasses_{};
++    float radiusByPasses_{};
++    float unit_{};
++
++    std::shared_ptr<Drawing::RuntimeEffect> blurEffect_;
++
++    static constexpr float baseBlurScale = 0.5f; // base downSample radio
++    static constexpr uint32_t kMaxPassesLargeRadius = 7;
++    static constexpr float kDilatedConvolutionLargeRadius = 4.6f;
++
++    void MakeForegroundEffect();
++    void ComputeParamter(int radius);
++    void AdjustRadiusAndScale();
++    void ComputePassesAndUnit();
++    void ApplyForegroundEffect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
++        const ForegroundEffectParam& param) const;
++
++    friend class RSMarshallingHelper;
++};
++} // namespace Rosen
++} // namespace OHOS
++
++#endif // RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
+\ No newline at end of file
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+index 592d9cbd01ce0c040da0f3e969c897d05de65110..9d152d28e5a1ad2f520f4ccac27cada6f8dfd7c6 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+@@ -31,6 +31,7 @@
+ #include "pipeline/rs_context.h"
+ #include "pipeline/rs_display_render_node.h"
+ #include "pipeline/rs_effect_render_node.h"
++#include "render/rs_foreground_effect_filter.h"
+ #include "pipeline/rs_paint_filter_canvas.h"
+ #include "pipeline/rs_root_render_node.h"
+ #include "pipeline/rs_surface_render_node.h"
+@@ -1042,6 +1043,13 @@ void RSRenderNode::UpdateDirtyRegion(
+             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
+         }
+ 
++        // Add node's foregroundEffect region to dirtyRect
++        auto foregroundFilter = properties.GetForegroundFilter();
++        if (foregroundFilter && foregroundFilter->GetFilterType() == RSFilter::FOREGROUND_EFFECT) {
++            float dirtyExtension = std::static_pointer_cast<RSForegroundEffectFilter>(foregroundFilter)->GetDirtyExtension();
++            dirtyRect = dirtyRect.MakeOutset(Vector4<int>(dirtyExtension));
++        }
++
+         if (clipRect.has_value()) {
+             dirtyRect = dirtyRect.IntersectRect(*clipRect);
+         }
+diff --git a/rosen/modules/render_service_base/src/property/rs_properties.cpp b/rosen/modules/render_service_base/src/property/rs_properties.cpp
+index 375162d8234bde2d8ba67851431d18a1580da5a5..f2e41ea7ed9ac96370e21da5a8ff5b2c045402e4 100644
+--- a/rosen/modules/render_service_base/src/property/rs_properties.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_properties.cpp
+@@ -26,6 +26,7 @@
+ #include "property/rs_point_light_manager.h"
+ #include "property/rs_properties_def.h"
+ #include "render/rs_filter.h"
++#include "render/rs_foreground_effect_filter.h"
+ #include "render/rs_material_filter.h"
+ #include "render/rs_linear_gradient_blur_filter.h"
+ 
+@@ -1202,6 +1203,11 @@ bool RSProperties::IsDynamicLightUpValid() const
+            ROSEN_LE(*dynamicLightUpDegree_, 1.0);
+ }
+ 
++const std::shared_ptr<RSFilter>& RSProperties::GetForegroundFilter() const
++{
++    return foregroundFilter_;
++}
++
+ // shadow properties
+ void RSProperties::SetShadowColor(Color color)
+ {
+@@ -2771,9 +2777,17 @@ void RSProperties::OnApplyModifiers()
+                 frameGeo_->GetWidth(), frameGeo_->GetHeight());
+             filter_ = linearBlurFilter;
+         }
++        if (IsForegroundEffectRadiusValid()) {
++            auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(foregroundEffectRadius_);
++            foregroundFilter_ = foregroundEffectFilter;
++        }
++        if (!IsForegroundEffectRadiusValid()) {
++            foregroundFilter_.reset();
++        }
+         needFilter_ = backgroundFilter_ != nullptr || filter_ != nullptr || useEffect_ || IsLightUpEffectValid() ||
+                       IsDynamicLightUpValid() || greyCoef_.has_value() || linearGradientBlurPara_ != nullptr ||
+-                      IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE;
++                      IsDynamicDimValid() || GetShadowColorStrategy() != SHADOW_COLOR_STRATEGY::COLOR_STRATEGY_NONE ||
++                      foregroundFilter_ != nullptr;
+ #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+         CreateFilterCacheManagerIfNeed();
+ #endif
+diff --git a/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp b/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
+index 3867ef0c2db6bc69dc46bc3cd93700065b4ec623..898a74c8e7080a483e6266865c14964952417485 100644
+--- a/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_properties_painter.cpp
+@@ -25,6 +25,7 @@
+ #include "property/rs_point_light_manager.h"
+ #include "property/rs_properties_def.h"
+ #include "render/rs_blur_filter.h"
++#include "render/rs_foreground_effect_filter.h"
+ #include "render/rs_skia_filter.h"
+ #include "render/rs_material_filter.h"
+ #include "platform/common/rs_system_properties.h"
+@@ -600,6 +601,35 @@ std::shared_ptr<Drawing::Image> RSPropertiesPainter::DrawGreyAdjustment(Drawing:
+     return builder->MakeImage(canvas.GetGPUContext().get(), nullptr, image->GetImageInfo(), false);
+ }
+ 
++void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
++{
++    RS_OPTIONAL_TRACE_NAME("DrawForegroundFilter");
++    auto surface = canvas.GetSurface();
++    std::shared_ptr<Drawing::Image> imageSnapshot = nullptr;
++    if (surface) {
++        imageSnapshot = surface->GetImageSnapshot();
++    } else {
++        ROSEN_LOGD("RSPropertiesPainter::DrawForegroundFilter surface null");
++    }
++
++    canvas.RestorePCanvasList();
++    canvas.SwapBackMainScreenData();
++
++    auto& RSFilter = properties.GetForegroundFilter();
++    if (RSFilter == nullptr) {
++        return;
++    }
++
++    if (imageSnapshot == nullptr) {
++        ROSEN_LOGD("RSPropertiesPainter::DrawForegroundFilter image null");
++        return;
++    }
++    auto foregroundFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
++
++    foregroundFilter->DrawImageRect(canvas, imageSnapshot, Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()),
++        Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()));
++}
++
+ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas,
+     FilterType filterType, const std::optional<Drawing::Rect>& rect, const std::shared_ptr<RSFilter>& externalFilter)
+ {
+diff --git a/rosen/modules/render_service_base/src/property/rs_property_drawable.cpp b/rosen/modules/render_service_base/src/property/rs_property_drawable.cpp
+index 43fe6839721b56a8394e9a51f0fe77929fd5c7bc..3258222ce07ef25e7b012bc4fe2768635b5ad847 100644
+--- a/rosen/modules/render_service_base/src/property/rs_property_drawable.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_property_drawable.cpp
+@@ -93,6 +93,7 @@ static const std::unordered_map<RSModifierType, RSPropertyDrawableSlot> g_proper
+     { RSModifierType::FILTER, RSPropertyDrawableSlot::COMPOSITING_FILTER },
+     { RSModifierType::BACKGROUND_FILTER, RSPropertyDrawableSlot::BACKGROUND_FILTER },
+     { RSModifierType::LINEAR_GRADIENT_BLUR_PARA, RSPropertyDrawableSlot::COMPOSITING_FILTER },
++    { RSModifierType::FOREGROUND_EFFECT_RADIUS, RSPropertyDrawableSlot::FOREGROUND_FILTER },
+     { RSModifierType::DYNAMIC_LIGHT_UP_RATE, RSPropertyDrawableSlot::DYNAMIC_LIGHT_UP },
+     { RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, RSPropertyDrawableSlot::DYNAMIC_LIGHT_UP },
+     { RSModifierType::FRAME_GRAVITY, RSPropertyDrawableSlot::FRAME_OFFSET },
+@@ -167,6 +168,7 @@ static const std::array<RSPropertyDrawable::DrawableGenerator, LUT_SIZE> g_drawa
+     CustomModifierAdapter<RSModifierType::TRANSITION>,           // TRANSITION
+     CustomModifierAdapter<RSModifierType::ENV_FOREGROUND_COLOR>, // ENV_FOREGROUND_COLOR
+     RSShadowDrawable::Generate,                                  // SHADOW
++    RSForegroundFilterDrawable::Generate,                        // FOREGROUND_FILTER
+     RSOutlineDrawable::Generate,                                 // OUTLINE
+ 
+     // BG properties in Bounds Clip
+@@ -210,8 +212,9 @@ static const std::array<RSPropertyDrawable::DrawableGenerator, LUT_SIZE> g_drawa
+     RSParticleDrawable::Generate,                         // PARTICLE_EFFECT
+     RSPixelStretchDrawable::Generate,                     // PIXEL_STRETCH
+ 
+-    BlendRestoreDrawableGenerate, // RESTORE_BLEND
+-    nullptr,                      // RESTORE_ALL
++    BlendRestoreDrawableGenerate,                   // RESTORE_BLEND
++    RSForegroundFilterRestoreDrawable::Generate,    // RESTORE_FOREGROUND_FILTER
++    nullptr,                                        // RESTORE_ALL
+ };
+ 
+ enum DrawableVecStatus : uint8_t {
+@@ -268,6 +271,10 @@ std::unordered_set<RSPropertyDrawableSlot> RSPropertyDrawable::GenerateDirtySlot
+         // BlendMode Restore should be regenerated with BlendMode
+         dirtySlots.emplace(RSPropertyDrawableSlot::RESTORE_BLEND_MODE);
+     }
++    if (dirtySlots.count(RSPropertyDrawableSlot::FOREGROUND_FILTER)) {
++        // ForegroundFilter Restore should be regenerated with ForegroundFilter
++        dirtySlots.emplace(RSPropertyDrawableSlot::RESTORE_FOREGROUND_FILTER);
++    }
+ 
+     return dirtySlots;
+ }
+diff --git a/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp b/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp
+index bc6d7f22a84a65b34be8903243a82a464bb043e9..42ed53ed54c92ecd02d5b45724292fc1c14f49b2 100644
+--- a/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp
++++ b/rosen/modules/render_service_base/src/property/rs_property_drawable_bounds_geometry.cpp
+@@ -753,6 +753,82 @@ void RSCompositingFilterDrawable::Draw(const RSRenderContent& content, RSPaintFi
+     RSPropertiesPainter::DrawFilter(content.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
+ }
+ 
++bool IsForegroundFilterValid(const RSRenderContent& content)
++{
++    auto& rsFilter = content.GetRenderProperties().GetForegroundFilter();
++    auto boundsRect = content.GetRenderProperties().GetBoundsRect();
++    if (rsFilter == nullptr || boundsRect.IsEmpty()) {
++        return false;
++    }
++    return true;
++}
++
++// foreground filter
++RSPropertyDrawable::DrawablePtr RSForegroundFilterDrawable::Generate(const RSRenderContent& content)
++{
++    if (!RSPropertiesPainter::BLUR_ENABLED) {
++        ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
++        return nullptr;
++    }
++
++    if (!IsForegroundFilterValid(content)) {
++        return nullptr;
++    }
++    return std::make_unique<RSForegroundFilterDrawable>();
++}
++
++bool RSForegroundFilterDrawable::Update(const RSRenderContent& content)
++{
++    return content.GetRenderProperties().GetForegroundFilter() != nullptr;
++}
++
++void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
++{
++    auto surface = canvas.GetSurface();
++    if (!surface) {
++        return;
++    }
++    auto bounds = content.GetRenderProperties().GetBoundsRect();
++    std::shared_ptr<Drawing::Surface> offscreenSurface = surface->MakeSurface(bounds.width_, bounds.height_);
++    if (!offscreenSurface) {
++        return;
++    }
++    auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface.get());
++    if (!offscreenCanvas) {
++        return;
++    }
++    canvas.ReplaceMainScreenData(offscreenSurface, offscreenCanvas);
++    offscreenCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
++    canvas.SavePCanvasList();
++    canvas.RemoveAll();
++    canvas.AddCanvas(offscreenCanvas.get());
++}
++
++// foreground filter restore
++RSPropertyDrawable::DrawablePtr RSForegroundFilterRestoreDrawable::Generate(const RSRenderContent& content)
++{
++    if (!RSPropertiesPainter::BLUR_ENABLED) {
++        ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
++        return nullptr;
++    }
++
++    if (!IsForegroundFilterValid(content)) {
++        return nullptr;
++    }
++
++    return std::make_unique<RSForegroundFilterRestoreDrawable>();
++}
++
++bool RSForegroundFilterRestoreDrawable::Update(const RSRenderContent& content)
++{
++    return content.GetRenderProperties().GetForegroundFilter() != nullptr;
++}
++
++void RSForegroundFilterRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
++{
++    RSPropertiesPainter::DrawForegroundFilter(content.GetRenderProperties(), canvas);
++}
++
+ // effect data
+ bool RSEffectDataGenerateDrawable::Update(const RSRenderContent& content)
+ {
+diff --git a/rosen/modules/render_service_base/src/render/rs_foreground_effect_filter.cpp b/rosen/modules/render_service_base/src/render/rs_foreground_effect_filter.cpp
+new file mode 100644
+index 0000000000000000000000000000000000000000..a2feb99002b980fe4f0cb99c11236692f97da7b1
+--- /dev/null
++++ b/rosen/modules/render_service_base/src/render/rs_foreground_effect_filter.cpp
+@@ -0,0 +1,194 @@
++/*
++ * Copyright (c) 2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++#include "render/rs_foreground_effect_filter.h"
++
++#include "src/core/SkOpts.h"
++
++#include "common/rs_optional_trace.h"
++#include "platform/common/rs_log.h"
++
++namespace OHOS {
++namespace Rosen {
++RSForegroundEffectFilter::RSForegroundEffectFilter(float blurRadius)
++    : RSDrawingFilter(nullptr)
++{
++    type_ = FilterType::FOREGROUND_EFFECT;
++    MakeForegroundEffect();
++    ComputeParamter(blurRadius);
++
++    hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
++    hash_ = SkOpts::hash(&blurRadius_, sizeof(blurRadius_), hash_);
++}
++
++RSForegroundEffectFilter::~RSForegroundEffectFilter() = default;
++
++std::string RSForegroundEffectFilter::GetDescription()
++{
++    return "RSForegroundEffectFilter " + std::to_string(blurRadius_);
++}
++
++bool RSForegroundEffectFilter::IsValid() const
++{
++    constexpr float epsilon = 0.999f;
++    return blurRadius_ > epsilon;
++}
++
++void RSForegroundEffectFilter::MakeForegroundEffect()
++{
++    std::string blurString(
++        R"(
++        uniform shader imageInput;
++        uniform float2 in_blurOffset;
++
++        half4 main(float2 xy) {
++            half4 c = imageInput.eval(xy);
++            c += imageInput.eval(float2(in_blurOffset.x + xy.x,
++                                        in_blurOffset.y + xy.y));
++            c += imageInput.eval(float2(in_blurOffset.x + xy.x,
++                                        -in_blurOffset.y + xy.y));
++            c += imageInput.eval(float2(-in_blurOffset.x + xy.x,
++                                        in_blurOffset.y + xy.y));
++            c += imageInput.eval(float2(-in_blurOffset.x + xy.x,
++                                        -in_blurOffset.y + xy.y));
++            return half4(c.rgba * 0.2);
++        }
++    )");
++
++    auto blurEffect = Drawing::RuntimeEffect::CreateForShader(blurString);
++    if (!blurEffect) {
++        ROSEN_LOGE("RSForegroundEffect::RuntimeShader blurEffect create failed");
++        return;
++    }
++    blurEffect_ = std::move(blurEffect);
++}
++
++void RSForegroundEffectFilter::ComputeParamter(int radius)
++{
++    static constexpr int noiseFactor = 3; // 3 : smooth the radius change
++    blurRadius_ = radius * 4 / noiseFactor * noiseFactor; // 4 : scale between gauss radius and kawase
++
++    AdjustRadiusAndScale();
++    ComputePassesAndUnit();
++}
++
++void RSForegroundEffectFilter::AdjustRadiusAndScale()
++{
++    static constexpr int radiusStep1 = 50; // 50 : radius step1
++    static constexpr int radiusStep2 = 150; // 150 : radius step2
++    static constexpr int radiusStep3 = 400; // 400 : radius step3
++    static constexpr float scaleFactor1 = 0.25f; // 0.25 : downSample scale for step1
++    static constexpr float scaleFactor2 = 0.125f; // 0.125 : downSample scale for step2
++    static constexpr float scaleFactor3 = 0.0625f; // 0.0625 : downSample scale for step3
++
++    auto radius = static_cast<int>(blurRadius_);
++    if (radius > radiusStep3) {
++        blurScale_ = scaleFactor3;
++    } else if (radius > radiusStep2) {
++        blurScale_ = scaleFactor2;
++    } else if (radius > radiusStep1) {
++        blurScale_ = scaleFactor1;
++    } else {
++        blurScale_ = baseBlurScale;
++    }
++}
++
++void RSForegroundEffectFilter::ComputePassesAndUnit()
++{
++    int maxPasses = kMaxPassesLargeRadius;
++    float dilatedConvolutionFactor = kDilatedConvolutionLargeRadius;
++    float tmpRadius = static_cast<float>(blurRadius_) / dilatedConvolutionFactor;
++    numberOfPasses_ = std::min(maxPasses, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
++    radiusByPasses_ = tmpRadius / numberOfPasses_;
++    unit_ = std::ceil(radiusByPasses_ * blurScale_);
++}
++
++float RSForegroundEffectFilter::GetDirtyExtension()
++{
++    return std::ceil(4 * unit_ * numberOfPasses_ * 1 / blurScale_);
++}
++
++void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
++        const ForegroundEffectParam& param) const
++{
++    if (!blurEffect_ || !image) {
++        ROSEN_LOGE("RSForegroundEffectFilter::shader error");
++        return;
++    }
++
++    auto src = param.src;
++    auto dst = param.dst;
++
++    RS_OPTIONAL_TRACE_BEGIN("ApplyForegroundEffect");
++    ROSEN_LOGD("ForegroundEffect::kawase radius : %{public}f, scale : %{public}f, pass num : %{public}d",
++        blurRadius_, blurScale_, numberOfPasses_);
++
++    auto width = std::max(static_cast<int>(std::ceil(dst.GetWidth())), image->GetWidth());
++    auto height = std::max(static_cast<int>(std::ceil(dst.GetHeight())), image->GetHeight());
++    auto originImageInfo = image->GetImageInfo();
++
++    Drawing::Matrix blurMatrix;
++    float scaleW = static_cast<float>(std::ceil(width * blurScale_)) / image->GetWidth();
++    float scaleH = static_cast<float>(std::ceil(height * blurScale_)) / image->GetHeight();
++    blurMatrix.PostScale(scaleW, scaleH);
++    Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
++
++    Drawing::RuntimeShaderBuilder blurBuilder(blurEffect_);
++    blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*image, Drawing::TileMode::DECAL,
++        Drawing::TileMode::DECAL, linear, blurMatrix));
++    blurBuilder.SetUniform("in_blurOffset", radiusByPasses_ * blurScale_, radiusByPasses_ * blurScale_);
++
++    auto scaledInfoGeo = Drawing::ImageInfo(std::ceil(width * blurScale_) + 4 * unit_, std::ceil(height * blurScale_) + 4 * unit_,
++        originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
++    Drawing::Matrix blurMatrixGeo;
++    blurMatrixGeo.Translate(2 * unit_, 2 * unit_);
++
++    std::shared_ptr<Drawing::Image> tmpBlur(blurBuilder.MakeImage(
++        canvas.GetGPUContext().get(), &blurMatrixGeo, scaledInfoGeo, false));
++    // And now we'll build our chain of scaled blur stages
++    for (auto i = 1; i < numberOfPasses_; i++) {
++        auto scaledInfoGeoExtended = Drawing::ImageInfo(tmpBlur->GetWidth() + 4 * unit_, tmpBlur->GetHeight() + 4 * unit_,
++        originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
++        Drawing::Matrix blurMatrixGeoExtended;
++        blurMatrixGeoExtended.Translate(2 * unit_, 2 * unit_);
++
++        const float stepScale = static_cast<float>(i) * blurScale_;
++        blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*tmpBlur, Drawing::TileMode::DECAL,
++            Drawing::TileMode::DECAL, linear, Drawing::Matrix()));
++        blurBuilder.SetUniform("in_blurOffset", radiusByPasses_ * stepScale, radiusByPasses_ * stepScale);
++
++        tmpBlur = blurBuilder.MakeImage(canvas.GetGPUContext().get(), &blurMatrixGeoExtended, scaledInfoGeoExtended, false);
++    }
++
++    Drawing::Matrix blurMatrixInv;
++    blurMatrixInv.Translate(-2 * unit_ * numberOfPasses_, -2 * unit_ * numberOfPasses_);
++    blurMatrixInv.PostScale(1/scaleW, 1/scaleH);
++    const auto blurShader = Drawing::ShaderEffect::CreateImageShader(*tmpBlur, Drawing::TileMode::DECAL,
++            Drawing::TileMode::DECAL, linear, blurMatrixInv);
++    Drawing::Brush brush;
++    brush.SetShaderEffect(blurShader);
++    canvas.DrawBackground(brush);
++    canvas.DetachBrush();
++    RS_OPTIONAL_TRACE_END();
++}
++
++void RSForegroundEffectFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
++        const Drawing::Rect& src, const Drawing::Rect& dst) const
++{
++    auto brush = GetBrush();
++    ForegroundEffectParam param = ForegroundEffectParam(src, dst);
++    ApplyForegroundEffect(canvas, image, param);
++}
++} // namespace Rosen
++} // namespace OHOS

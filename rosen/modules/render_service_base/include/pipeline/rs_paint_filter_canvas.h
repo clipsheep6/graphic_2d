@@ -226,6 +226,48 @@ public:
     void SetEffectData(const std::shared_ptr<CachedEffectData>& effectData);
     const std::shared_ptr<CachedEffectData>& GetEffectData() const;
 
+    // for foregroundFilter to store offscreen canvas & surface
+    struct OffscreenData {
+        std::shared_ptr<Drawing::Surface> offscreenSurface_ = nullptr;
+        std::shared_ptr<RSPaintFilterCanvas> offscreenCanvas_ = nullptr;
+    };
+
+    void ReplaceMainScreenData(std::shared_ptr<Drawing::Surface>& offscreenSurface,
+        std::shared_ptr<RSPaintFilterCanvas>& offscreenCanvas)
+    {
+        if (offscreenSurface != nullptr && offscreenCanvas != nullptr) {
+            storeMainScreenSurface_.push(surface_);
+            storeMainScreenCanvas_.push(canvas_);
+            surface_ = offscreenSurface.get();
+            canvas_ = offscreenCanvas.get();
+            OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
+            offscreenDataList_.push(offscreenData);
+        }
+    }
+
+    void SwapBackMainScreenData()
+    {
+        if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty()) {
+            surface_ = storeMainScreenSurface_.top();
+            canvas_ = storeMainScreenCanvas_.top();
+            storeMainScreenSurface_.pop();
+            storeMainScreenCanvas_.pop();
+            offscreenDataList_.pop();
+        }
+    }
+
+    void SavePCanvasList()
+    {
+        storedPCanvasList_.push_back(pCanvasList_);
+    }
+
+    void RestorePCanvasList()
+    {
+        auto item = storedPCanvasList_.back();
+        pCanvasList_.swap(item);
+        storedPCanvasList_.pop_back();
+    }
+
     // canvas status relate
     struct CanvasStatus {
         float alpha_;
@@ -271,6 +313,12 @@ private:
     std::stack<std::optional<int>> blendModeStack_;
     // greater than 0 indicates canvas currently is drawing on a new layer created offscreen blendmode
     std::stack<bool> blendOffscreenStack_;
+
+    // foregroundFilter related
+    std::vector<std::vector<Canvas*>> storedPCanvasList_; // store pCanvasList_
+    std::stack<OffscreenData> offscreenDataList_; // store offscreen canvas & surface
+    std::stack<Drawing::Surface*> storeMainScreenSurface_; // store surface_
+    std::stack<Drawing::Canvas*> storeMainScreenCanvas_; // store canvas_
 
     std::atomic_bool isHighContrastEnabled_ { false };
     CacheType cacheType_ { RSPaintFilterCanvas::CacheType::UNDEFINED };

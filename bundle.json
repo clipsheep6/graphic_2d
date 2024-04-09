@@ -90,7 +90,8 @@
           "battery_manager",
           "cJSON",
           "jsoncpp",
-          "openssl"
+          "openssl",
+          "json"
         ],
         "third_party": [
           "flutter",

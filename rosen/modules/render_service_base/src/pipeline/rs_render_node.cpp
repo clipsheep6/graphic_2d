@@ -3430,6 +3430,12 @@ void RSRenderNode::ResetClipAbsDrawRectChangeState()
 
 void RSRenderNode::UpdateClipAbsDrawRectChangeState(const RectI& clipRect)
 {
+    if (RSSystemProperties::GetSkipGeometryNotChangeEnabled()) {
+        if (geometryChangeNotPerceived_) {
+            clipAbsDrawRectChange_ = false;
+            return;
+        }
+    }
     auto clipAbsDrawRect = absDrawRect_.IntersectRect(clipRect);
     clipAbsDrawRectChange_ = clipAbsDrawRect != oldDirtyInSurface_;
 }

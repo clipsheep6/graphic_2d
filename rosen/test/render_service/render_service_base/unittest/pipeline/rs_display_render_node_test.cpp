@@ -226,5 +226,21 @@ HWTEST_F(RSDisplayRenderNodeTest, ProcessTest, TestSize.Level1)
     visitor = std::make_shared<RSRenderThreadVisitor>();
     displayNode->Process(visitor);
     ASSERT_TRUE(true);
+ * @tc.name: SetRenderWindowsNames
+ * @tc.desc: Test SetRenderWindowsNames
+ * @tc.type:FUNC
+ * @tc.require:issueI981R9
+ */
+HWTEST_F(RSDisplayRenderNodeTest, SetRenderWindowsNames, TestSize.Level2)
+{
+    auto childNode = std::make_shared<RSRenderNode>(id, context);
+    auto displayNode = std::make_shared<RSDisplayRenderNode>(id + 1, config, context);
+    ASSERT_NE(childNode, nullptr);
+    ASSERT_NE(displayNode, nullptr);
+
+    std::vector<std::string> windowsName;
+    windowsName.push_back("aaa");
+    displayNode->SetRenderWindowsName(windowsName);
+    ASSERT_EQ(displayNode->GetRenderWindowName().empty(), false);
 }
 } // namespace OHOS::Rosen

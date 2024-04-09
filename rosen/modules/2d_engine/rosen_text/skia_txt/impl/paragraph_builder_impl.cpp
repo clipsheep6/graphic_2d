@@ -32,13 +32,34 @@ int ConvertToSkFontWeight(FontWeight fontWeight)
     return static_cast<int>(fontWeight) * weightBase + weightBase;
 }
 
+RSFontStyle::Slant ConvertToRSFontSlant(FontStyle fontStyle)
+{
+    RSFontStyle::Slant slant;
+    switch (fontStyle) {
+        case FontStyle::NORMAL: {
+            slant = RSFontStyle::Slant::UPRIGHT_SLANT;
+            break;
+        }
+        case FontStyle::ITALIC: {
+            slant = RSFontStyle::Slant::ITALIC_SLANT;
+            break;
+        }
+        case FontStyle::OBLIQUE: {
+            slant = RSFontStyle::Slant::OBLIQUE_SLANT;
+            break;
+        }
+        default: {
+            slant = RSFontStyle::Slant::UPRIGHT_SLANT;
+        }
+    }
+    return slant;
+}
+
 RSFontStyle MakeFontStyle(FontWeight fontWeight, FontWidth fontWidth, FontStyle fontStyle)
 {
     auto weight = ConvertToSkFontWeight(fontWeight);
     auto width = static_cast<RSFontStyle::Width>(fontWidth);
-    auto slant = fontStyle == FontStyle::NORMAL ? RSFontStyle::Slant::UPRIGHT_SLANT :
-        fontStyle == FontStyle::ITALIC ? RSFontStyle::Slant::ITALIC_SLANT :
-        RSFontStyle::Slant::OBLIQUE_SLANT;
+    auto slant = ConvertToRSFontSlant(fontStyle);
     return RSFontStyle(weight, width, slant);
 }
 
@@ -175,7 +196,9 @@ skt::ParagraphStyle ParagraphBuilderImpl::TextStyleToSkStyle(const ParagraphStyl
     skStyle.setEllipsis(txt.ellipsis);
     skStyle.setTextHeightBehavior(static_cast<skt::TextHeightBehavior>(txt.textHeightBehavior));
 
-    skStyle.turnHintingOff();
+    if (!txt.hintingIsOn) {
+        skStyle.turnHintingOff();
+    }
     skStyle.setReplaceTabCharacters(true);
     skStyle.setTextSplitRatio(txt.textSplitRatio);
     skStyle.setTextHeightBehavior(static_cast<skt::TextHeightBehavior>(txt.textHeightBehavior));
@@ -233,6 +256,10 @@ skt::TextStyle ParagraphBuilderImpl::ConvertTextStyleToSkStyle(const TextStyle& 
     skStyle.resetShadows();
     for (const TextShadow& txtShadow : txt.textShadows) {
         skStyle.addShadow(MakeTextShadow(txtShadow));
+    }
+
+    if (txt.isPlaceholder) {
+        skStyle.setPlaceholder();
     }
 
     return skStyle;

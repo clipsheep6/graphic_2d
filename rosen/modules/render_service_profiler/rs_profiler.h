@@ -21,7 +21,7 @@
 #include "common/rs_vector4.h"
 
 #ifdef RS_PROFILER_ENABLED
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 
 #define RS_PROFILER_INIT(renderSevice) RSProfiler::Init(renderSevice)
 #define RS_PROFILER_ON_FRAME_BEGIN() RSProfiler::OnFrameBegin()

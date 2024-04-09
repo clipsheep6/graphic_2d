@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include "js_fontcollection.h"
 #include "utils/log.h"
 namespace OHOS::Rosen {
@@ -100,6 +101,67 @@ napi_value JsFontCollection::OnDisableFallback(napi_env env, napi_callback_info 
     }
 
     m_fontCollection->DisableFallback();
+    return NapiGetUndefined(env);
+}
+
+napi_value JsFontCollection::LoadFont(napi_env env, napi_callback_info info)
+{
+    JsFontCollection* me = CheckParamsAndGetThis<JsFontCollection>(env, info);
+    return (me != nullptr) ? me->OnLoadFont(env, info) : nullptr;
+}
+
+napi_value JsFontCollection::OnLoadFont(napi_env env, napi_callback_info info)
+{
+    if (m_fontCollection == nullptr) {
+        LOGE("JsFontCollection::OnLoadFont m_paragraph is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    size_t argc = ARGC_TWO;
+    napi_value argv[ARGC_TWO] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_TWO) {
+        LOGE("JsFontCollection::OnLoadFont Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    std::string familyName;
+    std::string familySrc;
+    if (!(ConvertFromJsValue(env, argv[0], familyName) && !(ConvertFromJsValue(env, argv[1], familySrc)))) {
+        LOGE("JsFontCollection::OnLoadFont Argv is invalid");
+        return NapiGetUndefined(env);
+    }
+    std::ifstream ifs(familySrc, std::ios_base::in);
+    if (!ifs.is_open()) {
+        LOGE("JsFontCollection::OnLoadFont open file failed");
+        return NapiGetUndefined(env);
+    }
+    ifs.seekg(0, ifs.end);
+    if (!ifs.good()) {
+        ifs.close();
+        LOGE("JsFontCollection::OnLoadFont seek failed");
+        return NapiGetUndefined(env);
+    }
+    auto size = ifs.tellg();
+    if (ifs.fail()) {
+        ifs.close();
+        LOGE("JsFontCollection::OnLoadFont get size failed");
+        return NapiGetUndefined(env);
+    }
+    ifs.seekg(ifs.beg);
+    if (!ifs.good()) {
+        ifs.close();
+        LOGE("JsFontCollection::OnLoadFont seek failed");
+        return NapiGetUndefined(env);
+    }
+    std::unique_ptr<char[]> buffer = std::make_unique<char[]>(size);
+    ifs.read(buffer.get(), size);
+    if (!ifs.good()) {
+        ifs.close();
+        LOGE("JsFontCollection::OnLoadFont read file failed");
+        return NapiGetUndefined(env);
+    }
+    ifs.close();
+    const uint8_t* data = reinterpret_cast<uint8_t*>(buffer.get());
+    m_fontCollection->LoadFont(familyName, data, size);
     return NapiGetUndefined(env);
 }
 } // namespace OHOS::Rosen

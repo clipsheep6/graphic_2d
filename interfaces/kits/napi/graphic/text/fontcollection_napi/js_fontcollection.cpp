@@ -104,6 +104,29 @@ napi_value JsFontCollection::OnDisableFallback(napi_env env, napi_callback_info 
     return NapiGetUndefined(env);
 }
 
+/* static bool ParseFamilyNameOrSrc(napi_env env, napi_value familyNameOrSrcNApi, std::string& familyNameOrSrc,
+    napi_valuetype valueType, Ace::Napi::ResourceInfo& info)
+{
+    napi_typeof(env, familyNameOrSrcNApi, &valueType);
+    if (valueType == napi_string) {
+        size_t nameLen = 0;
+        napi_get_value_string_utf8(env, familyNameOrSrcNApi, nullptr, 0, &nameLen);
+        std::unique_ptr<char[]> name = std::make_unique<char[]>(nameLen + 1);
+        napi_get_value_string_utf8(env, familyNameOrSrcNApi, name.get(), nameLen + 1, &nameLen);
+        familyNameOrSrc = name.get();
+    } else if (valueType == napi_object) {
+        if (!Ace::Napi::ParseResourceParam(env, familyNameOrSrcNApi, info)) {
+            return false;
+        }
+        if (!Ace::Napi::ParseString(info, familyNameOrSrc)) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+    return true;
+} */
+
 napi_value JsFontCollection::LoadFont(napi_env env, napi_callback_info info)
 {
     JsFontCollection* me = CheckParamsAndGetThis<JsFontCollection>(env, info);
@@ -123,12 +146,19 @@ napi_value JsFontCollection::OnLoadFont(napi_env env, napi_callback_info info)
         LOGE("JsFontCollection::OnLoadFont Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
+    /* napi_value familySrcNApi = nullptr; */
     std::string familyName;
     std::string familySrc;
+    /* napi_valuetype valueType = napi_undefined; */
     if (!(ConvertFromJsValue(env, argv[0], familyName) && !(ConvertFromJsValue(env, argv[1], familySrc)))) {
         LOGE("JsFontCollection::OnLoadFont Argv is invalid");
         return NapiGetUndefined(env);
     }
+    /* napi_typeof(env, argv[1], &valueType);
+    Ace::Napi::ResourceInfo resourceInfo;
+    if (!ParseFamilyNameOrSrc(env, familySrcNApi, familySrc, valueType, resourceInfo)) {
+        return NapiGetUndefined(env);
+    } */
     std::ifstream ifs(familySrc, std::ios_base::in);
     if (!ifs.is_open()) {
         LOGE("JsFontCollection::OnLoadFont open file failed");

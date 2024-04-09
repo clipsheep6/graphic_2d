@@ -398,20 +398,14 @@ std::vector<std::unique_ptr<TextLineBase>> Typography::GetTextLines() const
     return lines;
 }
 
-// std::vector<std::unique_ptr<Run>> Typography::GetRuns() const
-// {
-//     if (!paragraph_) {
-//         return {};
-//     }
-//     std::vector<std::unique_ptr<SPText::Run>> textRuns = paragraph_->GetRuns();
-//     std::vector<std::unique_ptr<Run>> runs;
-
-//     for (std::unique_ptr<SPText::Run>& textRun : textRuns) {
-//         std::unique_ptr<RunImpl> runPtr = std::make_unique<RunImpl>(std::move(textRun));
-//         runs.emplace_back(std::move(runPtr));
-//     }
-//     return runs;
-// }
+std::unique_ptr<OHOS::Rosen::Typography> Typography::CloneSelf()
+{
+    if (!paragraph_) {
+        return nullptr;
+    }
+    return std::make_unique<Typography>(paragraph_->CloneSelf());
+    //return nullptr;
+}
 } // namespace AdapterTxt
 } // namespace Rosen
 } // namespace OHOS

@@ -327,21 +327,6 @@ bool ParagraphImpl::GetLineFontMetrics(const size_t lineNumber, size_t& charNumb
     return paragraph_->GetLineFontMetrics(lineNumber, charNumber, fontMetrics);
 }
 
-// std::vector<std::unique_ptr<SPText::Run>> ParagraphImpl::GetRuns() const
-// {
-//     if (!paragraph_) {
-//         return {};
-//     }
-
-//     std::vector<std::unique_ptr<skt::RunBase>> runBases = paragraph_->GetRuns();
-//     std::vector<std::unique_ptr<SPText::Run>> runs;
-//     for (std::unique_ptr<skt::RunBase>& runBase : runBases) {
-//         std::unique_ptr<SPText::RunImpl> runImplPtr = std::make_unique<SPText::RunImpl>(std::move(runBase), paints_);
-//         runs.emplace_back(std::move(runImplPtr));
-//     }
-//     return runs;
-// }
-
 std::vector<std::unique_ptr<SPText::TextLineBase>> ParagraphImpl::GetTextLines() const
 {
     if (!paragraph_) {
@@ -356,6 +341,18 @@ std::vector<std::unique_ptr<SPText::TextLineBase>> ParagraphImpl::GetTextLines()
     }
     return lines;
 }
+
+std::unique_ptr<Paragraph> ParagraphImpl::CloneSelf()
+{
+    if (!paragraph_) {
+        return nullptr;
+    }
+    std::vector<PaintRecord> paints = paints_;
+    std::unique_ptr<skt::Paragraph> sktParagraph = paragraph_->CloneSelf();
+    std::unique_ptr<ParagraphImpl> paragraph = std::make_unique<ParagraphImpl>(std::move(sktParagraph), std::move(paints));
+    return paragraph;
+}
+
 } // namespace SPText
 } // namespace Rosen
 } // namespace OHOS

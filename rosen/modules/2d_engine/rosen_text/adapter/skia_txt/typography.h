@@ -70,6 +70,7 @@ public:
         std::vector<Drawing::FontMetrics>& fontMetrics) override;
     //std::vector<std::unique_ptr<Run>> GetRuns() const override;
     std::vector<std::unique_ptr<TextLineBase>> GetTextLines() const override;
+    std::unique_ptr<OHOS::Rosen::Typography> CloneSelf() override;
 private:
     std::unique_ptr<SPText::Paragraph> paragraph_ = nullptr;
 };

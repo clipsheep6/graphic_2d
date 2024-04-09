@@ -141,6 +141,7 @@ public:
     virtual bool GetLineFontMetrics(const size_t lineNumber,
         size_t& charNumber, std::vector<Drawing::FontMetrics>& fontMetrics) = 0;
     virtual std::vector<std::unique_ptr<TextLineBase>> GetTextLines() const = 0;
+    virtual std::unique_ptr<Typography> CloneSelf() = 0;
     //virtual std::vector<std::unique_ptr<Run>> GetRuns() const = 0;
 };
 } // namespace Rosen

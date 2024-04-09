@@ -40,6 +40,7 @@
 #include "common/rs_common_def.h"
 #include "common/rs_optional_trace.h"
 #include "drawable/rs_canvas_drawing_render_node_drawable.h"
+#include "drawable/rs_property_drawable_utils.h"
 #include "memory/rs_memory_graphic.h"
 #include "memory/rs_memory_manager.h"
 #include "memory/rs_memory_track.h"
@@ -2782,15 +2783,20 @@ void RSMainThread::PerfForBlurIfNeeded()
     static uint64_t prePerfTimestamp = 0;
     static int preBlurCnt = 0;
     static int cnt = 0;
-    auto task = [this]() {
+    auto timestamp = timestamp_;
+    if (isUniRender_) {
+        if (!renderThreadParams_) {
+            return;
+        }
+        timestamp = renderThreadParams_->GetCurrentTimestamp();
+    }
+    auto task = [this, timestamp]() {
         if (preBlurCnt == 0) {
             return;
         }
-        auto now = std::chrono::steady_clock::now().time_since_epoch();
-        auto timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
         RS_OPTIONAL_TRACE_NAME_FMT("PerfForBlurIfNeeded now[%ld] timestamp[%ld] preBlurCnt[%d]",
-            now, timestamp, preBlurCnt);
-        if (timestamp - prePerfTimestamp > PERF_PERIOD_BLUR_TIMEOUT) {
+            std::chrono::steady_clock::now().time_since_epoch(), timestamp, preBlurCnt);
+        if (timestamp - prePerfTimestamp > PERF_PERIOD_BLUR_TIMEOUT && preBlurCnt != 0) {
             PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(preBlurCnt), false);
             prePerfTimestamp = 0;
             preBlurCnt = 0;
@@ -2798,7 +2804,8 @@ void RSMainThread::PerfForBlurIfNeeded()
     };
     // delay 100ms
     handler_->PostTask(task, "PerfForBlurIfNeeded", 100);
-    int blurCnt = RSPropertiesPainter::GetAndResetBlurCnt();
+    int blurCnt = isUniRender_ ? RSPropertyDrawableUtils::GetAndResetBlurCnt() :
+        RSPropertiesPainter::GetAndResetBlurCnt();
     // clamp blurCnt to 0~3.
     blurCnt = std::clamp<int>(blurCnt, 0, 3);
     if (blurCnt < preBlurCnt) {
@@ -2817,10 +2824,10 @@ void RSMainThread::PerfForBlurIfNeeded()
     if (blurCnt == 0) {
         return;
     }
-    if (timestamp_ - prePerfTimestamp > PERF_PERIOD_BLUR || cntIsMatch) {
+    if (timestamp - prePerfTimestamp > PERF_PERIOD_BLUR || cntIsMatch) {
         RS_OPTIONAL_TRACE_NAME_FMT("PerfForBlurIfNeeded PerfRequest, preBlurCnt[%d] blurCnt[%ld]", preBlurCnt, blurCnt);
         PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(blurCnt), true);
-        prePerfTimestamp = timestamp_;
+        prePerfTimestamp = timestamp;
         preBlurCnt = blurCnt;
     }
 }

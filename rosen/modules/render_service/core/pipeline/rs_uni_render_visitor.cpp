@@ -2018,9 +2018,9 @@ void RSUniRenderVisitor::UpdateOccludedStatusWithFilterNode(std::shared_ptr<RSSu
             if (filterNode == nullptr) {
                 continue;
             }
-            RS_TRACE_NAME_FMT("sunyang UpdateOccludedStatusWithFilterNode "
-                "surfaceNode:node: name %s,filterNode:[%lld],, IsOccludedByFilterCache:%d",
-                surfaceNode->GetName().c_str(), filterNode->GetId(), surfaceNode->IsOccludedByFilterCache());
+            RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderVisitor::UpdateOccludedStatusWithFilterNode "
+                "surfaceNode: %s, filterNode:[%lld], IsOccludedByFilterCache:%d", surfaceNode->GetName().c_str(),
+                filterNode->GetId(), surfaceNode->IsOccludedByFilterCache());
             if (filterNode->GetRenderProperties().GetBackgroundFilter() ||
                 filterNode->GetRenderProperties().GetFilter()) {
                 filterNode->SetOccludedStatus(surfaceNode->IsOccludedByFilterCache());
@@ -2593,7 +2593,7 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
         bool isSubTreeNeedPrepare = node.IsSubTreeNeedPrepare(filterInGlobal_) || ForcePrepareSubTree();
         isSubTreeNeedPrepare ? QuickPrepareChildren(node) :
             node.SubTreeSkipPrepare(*curSurfaceDirtyManager_, curDirty_, dirtyFlag_, prepareClipRect_);
-        PostPrepare(node);
+        PostPrepare(node, !isSubTreeNeedPrepare);
     } else {
         node.UpdateChildrenOutOfRectFlag(false);
         PrepareChildren(node);

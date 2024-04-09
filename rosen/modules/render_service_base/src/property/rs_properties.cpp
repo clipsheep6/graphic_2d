@@ -1552,6 +1552,15 @@ bool RSProperties::GetClipToFrame() const
     return clipToFrame_;
 }
 
+RectF RSProperties::GetLocalBoundsAndFramesRect() const
+{
+    auto rect = GetBoundsRect();
+    if (!clipToBounds_ && !std::isinf(GetFrameWidth()) && !std::isinf(GetFrameHeight())) {
+        rect = rect.JoinRect(RectF(GetFrameOffsetX(), GetFrameOffsetY(), GetFrameWidth(), GetFrameHeight()));
+    }
+    return rect;
+}
+
 RectF RSProperties::GetBoundsRect() const
 {
     if (boundsGeo_->IsEmpty()) {
@@ -1655,15 +1664,8 @@ bool RSProperties::IsContentDirty() const
 
 RectI RSProperties::GetDirtyRect() const
 {
-    RectI dirtyRect;
     auto boundsGeometry = (boundsGeo_);
-    if (clipToBounds_ || std::isinf(GetFrameWidth()) || std::isinf(GetFrameHeight())) {
-        dirtyRect = boundsGeometry->GetAbsRect();
-    } else {
-        auto frameRect =
-            boundsGeometry->MapAbsRect(RectF(GetFrameOffsetX(), GetFrameOffsetY(), GetFrameWidth(), GetFrameHeight()));
-        dirtyRect = boundsGeometry->GetAbsRect().JoinRect(frameRect);
-    }
+    RectI dirtyRect = boundsGeometry->MapAbsRect(GetLocalBoundsAndFramesRect());
     if (drawRegion_ == nullptr || drawRegion_->IsEmpty()) {
         return dirtyRect;
     } else {

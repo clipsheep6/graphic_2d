@@ -138,6 +138,12 @@ ohos_shared_library("librender_service") {
   if (rs_enable_parallel_render && rs_enable_gpu) {
     sources += [
       "core/pipeline/parallel_render/rs_filter_sub_thread.cpp",
+      "core/pipeline/parallel_render/rs_node_cost_manager.cpp",
+      "core/pipeline/parallel_render/rs_parallel_hardware_composer.cpp",
+      "core/pipeline/parallel_render/rs_parallel_pack_visitor.cpp",
+      "core/pipeline/parallel_render/rs_parallel_render_manager.cpp",
+      "core/pipeline/parallel_render/rs_parallel_sub_thread.cpp",
+      "core/pipeline/parallel_render/rs_parallel_task_manager.cpp",
       "core/pipeline/parallel_render/rs_render_task.cpp",
       "core/pipeline/parallel_render/rs_sub_thread.cpp",
       "core/pipeline/parallel_render/rs_sub_thread_manager.cpp",
@@ -162,17 +168,12 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/composer/vsync/include",
     "$graphic_2d_root/rosen/modules/composer/hdi_backend/include",
     "$graphic_2d_root/rosen/modules/render_frame_trace/include",
-    "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/modules/utils",
     "//commonlibrary/c_utils/base/include",
     "//utils/system/safwk/native/include",
     "$graphic_2d_root/utils/log",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
-    "$memmgr_root/interface/innerkits/include",
-    "$memmgr_root/services/memmgrservice/include/memory_level_manager",
-    "$memmgr_plugin_root/interface/innerkits/include",
-    "$memmgr_plugin_root/services/memmgrservice/include/memory_level_manager",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/config",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/frame_rate_manager",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/hgm_screen_manager",
@@ -219,7 +220,7 @@ ohos_shared_library("librender_service") {
       "$rosen_root/modules/render_service_profiler/rs_profiler_utils.cpp",
     ]
   }
-  include_dirs += [ 
+  include_dirs += [
     "$graphic_2d_root/rosen/modules/render_service_profiler",
     "//third_party/json/single_include",
   ]
@@ -236,31 +237,12 @@ ohos_shared_library("librender_service") {
     defines += [ "NEW_RENDER_CONTEXT" ]
   }
 
-  if (defined(rs_enable_parallel_upload) && rs_enable_parallel_upload) {
-    sources += [
-      "core/pipeline/parallel_render/resource/rs_upload_resource_thread.cpp",
-    ]
-    include_dirs += [ "$graphic_2d_root/rosen/modules/render_service/core/pipeline/parallel_render/resource" ]
-    if (defined(use_rosen_drawing) && use_rosen_drawing) {
-      sources += [
-        "core/pipeline/parallel_render/resource/rs_resource_helper_drawing.cpp",
-      ]
-    } else {
-      sources += [
-        "core/pipeline/parallel_render/resource/rs_resource_helper_skia.cpp",
-      ]
-    }
-  }
-
   if (rs_enable_gpu) {
     public_deps += [ "$graphic_2d_root:libvulkan" ]
   }
 
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
     defines += [ "USE_ROSEN_DRAWING" ]
-    if (ace_enable_gpu) {
-      defines += [ "ACE_ENABLE_GPU" ]
-    }
     deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
   }
 
@@ -286,13 +268,6 @@ ohos_shared_library("librender_service") {
     external_deps += [ "video_processing_engine:videoprocessingengine" ]
   }
 
-  if (defined(ddgr_ext_configs)) {
-    libs = ddgr_ext_configs.ddgr_libs
-    defines += ddgr_ext_configs.ddgr_defines
-    sources += ddgr_ext_configs.libddgr_ext_adaptor_sources
-    include_dirs += ddgr_ext_configs.libddgr_ext_adaptor_include_dirs
-  }
-
   if (rosen_is_ohos) {
     external_deps += [ "image_framework:image_native" ]
   }
@@ -311,7 +286,6 @@ ohos_shared_library("librender_service") {
 
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
     external_deps += [ "sensor:sensor_interface_native" ]
-    defines += [ "RS_SUBSCRIBE_SENSOR_ENABLE" ]
   }
 
   if (accessibility_enable) {
@@ -354,11 +328,6 @@ ohos_executable("render_service") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    if (rosen_is_ohos) {
-      boundary_sanitize = true
-      integer_overflow = true
-      ubsan = true
-    }
   }
   sources = [ "core/main.cpp" ]
 

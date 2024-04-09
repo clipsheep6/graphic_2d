@@ -1000,6 +1000,18 @@ int RSPropertiesPainter::GetAndResetBlurCnt()
     return blurCnt;
 }
 
+int RSPropertiesPainter::GetAndResetSnapshotCnt()
+{
+    auto snapshotCnt = g_snapshotCnt;
+    g_snapshotCnt = 0;
+    return snapshotCnt;
+}
+
+void RSPropertiesPainter::AddSnapshotCnt()
+{
+    g_snapshotCnt++;
+}
+
 void RSPropertiesPainter::DrawBackground(const RSProperties& properties, RSPaintFilterCanvas& canvas,
     bool isAntiAlias, bool isSurfaceView)
 {

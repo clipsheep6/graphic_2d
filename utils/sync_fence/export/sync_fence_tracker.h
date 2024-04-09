@@ -28,17 +28,21 @@ public:
     SyncFenceTracker() = delete;
     ~SyncFenceTracker() = default;
 
-    void TrackFence(const sptr<SyncFence>& fence);
+    void TrackFence(const sptr<SyncFence>& fence, uint32_t bufferCount = 0);
+    void SetBlurCnt(int blurCnt);
+    void SetCacheSurface();
 
 private:
     const uint32_t SYNC_TIME_OUT = 3000;
     const std::string threadName_;
+    bool isGpuFence_ = false;
     std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_ = nullptr;
     std::atomic<uint32_t> fencesQueued_;
     std::atomic<uint32_t> fencesSignaled_;
 
-    void Loop(const sptr<SyncFence>& fence);
+    void Loop(const sptr<SyncFence>& fence, uint32_t bufferCount, int flushEndTime = 0);
+    int GetTime();
 };
 }
 #endif // UTILS_INCLUDE_SYNC_FENCE_TRACKER_H

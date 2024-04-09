@@ -357,6 +357,7 @@ void RSSurfaceRenderNode::ClearChildrenCache()
 
 void RSSurfaceRenderNode::OnTreeStateChanged()
 {
+    NotifyTreeStateChange();
     RSRenderNode::OnTreeStateChanged();
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     if (grContext_ && !IsOnTheTree()) {
@@ -728,6 +729,18 @@ void RSSurfaceRenderNode::SetForceUIFirstChanged(bool forceUIFirstChanged)
 bool RSSurfaceRenderNode::GetForceUIFirstChanged()
 {
     return forceUIFirstChanged_;
+}
+
+void RSSurfaceRenderNode::RegisterTreeStateChangeCallback(TreeStateChangeCallback callback)
+{
+    treeStateChangeCallback_ = callback;
+}
+
+void RSSurfaceRenderNode::NotifyTreeStateChange()
+{
+    if (treeStateChangeCallback_) {
+        treeStateChangeCallback_(*this);
+    }
 }
 
 void RSSurfaceRenderNode::SetColorSpace(GraphicColorGamut colorSpace)
@@ -1288,8 +1301,8 @@ void RSSurfaceRenderNode::UpdateSurfaceCacheContentStaticFlag()
     if (stagingRenderParams_->NeedSync()) {
         AddToPendingSyncList();
     }
-    RS_OPTIONAL_TRACE_NAME_FMT("RSSurfaceRenderNode::UpdateSurfaceCacheContentStaticFlag: [%d] name [%s] Id:%" PRIu64 "",
-        contentStatic, GetName().c_str(), GetId());
+    RS_OPTIONAL_TRACE_NAME_FMT("RSSurfaceRenderNode::UpdateSurfaceCacheContentStaticFlag: "
+        "[%d] name [%s] Id:%" PRIu64 "", contentStatic, GetName().c_str(), GetId());
 }
 
 bool RSSurfaceRenderNode::IsOccludedByFilterCache() const

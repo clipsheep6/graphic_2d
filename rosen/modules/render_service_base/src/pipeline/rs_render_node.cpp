@@ -784,13 +784,13 @@ bool RSRenderNode::IsOnlyBasicGeoTransform() const
 }
 
 void RSRenderNode::SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool isDirty, bool accumGeoDirty,
-    std::optional<RectI> clipRect)
+    const RectI& clipRect)
 {
-    if (HasChildrenOutOfRect() && (isDirty || accumGeoDirty)) {
+    if (HasChildrenOutOfRect() && (isDirty || clipAbsDrawRectChange_)) {
         if (auto geoPtr = GetRenderProperties().GetBoundsGeometry()) {
             absChildrenRect_ = geoPtr->MapAbsRect(childrenRect_.ConvertTo<float>());
         }
-        dirtymanager.MergeDirtyRect(clipRect->IntersectRect(absChildrenRect_));
+        dirtymanager.MergeDirtyRect(clipRect.IntersectRect(absChildrenRect_));
     }
     SetGeoUpdateDelay(accumGeoDirty);
 }
@@ -948,8 +948,7 @@ void RSRenderNode::UpdateDrawingCacheInfoAfterChildren()
 {
     if (hasChildrenOutOfRect_ && GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
         RS_OPTIONAL_TRACE_NAME_FMT("DrawingCacheInfoAfter ChildrenOutOfRect id:%llu", GetId());
-        // [PLANNING] disable cache in this case
-        // SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
+        // [PLANNING] disable cache in this case: SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE)
     }
     stagingRenderParams_->SetDrawingCacheType(GetDrawingCacheType());
     if (GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
@@ -1190,7 +1189,7 @@ void RSRenderNode::UpdateAbsDirtyRegion(RSDirtyRegionManager& dirtyManager, std:
 }
 
 bool RSRenderNode::UpdateDrawRectAndDirtyRegion(RSDirtyRegionManager& dirtyManager,
-    const std::shared_ptr<RSRenderNode>& parent, bool accumGeoDirty, std::optional<RectI> clipRect)
+    const std::shared_ptr<RSRenderNode>& parent, bool accumGeoDirty, const RectI& clipRect)
 {
     // 1. update self drawrect if dirty
     if (IsDirty()) {
@@ -1198,7 +1197,7 @@ bool RSRenderNode::UpdateDrawRectAndDirtyRegion(RSDirtyRegionManager& dirtyManag
     }
     // 2. update geoMatrix by parent for dirty collection
     // update geoMatrix and accumGeoDirty if needed
-    if (parent && parent->GetGeoUpdateDelay()) {
+    if (!accumGeoDirty && parent && parent->GetGeoUpdateDelay()) {
         accumGeoDirty = true;
     }
     if (accumGeoDirty || GetRenderProperties().NeedClip() ||
@@ -1210,6 +1209,7 @@ bool RSRenderNode::UpdateDrawRectAndDirtyRegion(RSDirtyRegionManager& dirtyManag
         if (auto geoPtr = GetRenderProperties().boundsGeo_) {
             if (CheckAndUpdateGeoTrans(geoPtr) || accumGeoDirty) {
                 absDrawRect_ = geoPtr->MapAbsRect(selfDrawRect_.ConvertTo<float>());
+                UpdateClipAbsDrawRectChangeState(clipRect);
             }
         }
     }
@@ -1219,7 +1219,7 @@ bool RSRenderNode::UpdateDrawRectAndDirtyRegion(RSDirtyRegionManager& dirtyManag
     }
     ValidateLightResources();
     isDirtyRegionUpdated_ = false; // todo make sure why windowDirty use it
-    if ((IsDirty() || accumGeoDirty) && (shouldPaint_ || isLastVisible_)) {
+    if ((IsDirty() || clipAbsDrawRectChange_) && (shouldPaint_ || isLastVisible_)) {
         // update FrontgroundFilterCache
         UpdateAbsDirtyRegion(dirtyManager, clipRect);
         UpdateDirtyRegionInfoForDFX(dirtyManager);
@@ -3430,6 +3430,17 @@ bool RSRenderNode::UpdateLocalDrawRect()
 {
     auto drawRect = selfDrawRect_.JoinRect(childrenRect_);
     return stagingRenderParams_->SetLocalDrawRect(drawRect);
+}
+
+void RSRenderNode::ResetClipAbsDrawRectChangeState()
+{
+    clipAbsDrawRectChange_ = false;
+}
+
+void RSRenderNode::UpdateClipAbsDrawRectChangeState(const RectI& clipRect)
+{
+    auto clipAbsDrawRect = absDrawRect_.IntersectRect(clipRect);
+    clipAbsDrawRectChange_ = clipAbsDrawRect != oldDirtyInSurface_;
 }
 
 void RSRenderNode::OnSync()

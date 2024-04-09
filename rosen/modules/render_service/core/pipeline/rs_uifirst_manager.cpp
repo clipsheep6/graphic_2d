@@ -115,23 +115,29 @@ void RSUifirstManager::ProcessDoneNode()
     for (auto& id : tmp) {
         RS_OPTIONAL_TRACE_NAME_FMT("Done %lx", id);
         DrawableV2::RSSurfaceRenderNodeDrawable* drawable = GetSurfaceDrawableByID(id);
-        if (!drawable) {
-            continue;
-        }
-        if (drawable->GetCacheSurfaceNeedUpdated() && drawable->GetCacheSurface(UNI_MAIN_THREAD_INDEX, false)) {
-            SetHasDoneNodeFlag(true);
+        if (drawable && drawable->GetCacheSurfaceNeedUpdated() &&
+            drawable->GetCacheSurface(UNI_MAIN_THREAD_INDEX, false)) {
             drawable->UpdateCompletedCacheSurface();
             MergeOldDirty(drawable);
-        }
-
-        if (pendingResetNodes_.count(id) > 0) { // reset node
-            // reset uifirst
-            SetUifirstNodeEnableParam(*pendingResetNodes_[id], false);
-            RSMainThread::Instance()->GetContext().AddPendingSyncNode(pendingResetNodes_[id]);
-            drawable->ResetUifirst();
-            pendingResetNodes_.erase(id);
+            SetHasDoneNodeFlag(true);
         }
         subthreadProcessingNode_.erase(id);
+    }
+
+    // reset node when node is not doing
+    for (auto it = pendingResetNodes_.begin(); it != pendingResetNodes_.end();) {
+        if (subthreadProcessingNode_.find(it->first) == subthreadProcessingNode_.end()) {
+            // reset uifirst
+            SetUifirstNodeEnableParam(*it->second, false);
+            RSMainThread::Instance()->GetContext().AddPendingSyncNode(it->second);
+            DrawableV2::RSSurfaceRenderNodeDrawable* drawable = GetSurfaceDrawableByID(it->first);
+            if (drawable) {
+                drawable->ResetUifirst();
+            }
+            it = pendingResetNodes_.erase(it);
+        } else {
+            it++;
+        }
     }
 
     for (auto it = subthreadProcessingNode_.begin(); it != subthreadProcessingNode_.end(); it++) {
@@ -143,13 +149,13 @@ void RSUifirstManager::PurgePendingPostNodes()
 {
     RS_OPTIONAL_TRACE_NAME_FMT("PurgePendingPostNodes");
     auto deviceType = RSMainThread::Instance()->GetDeviceType();
-    for (auto it = pendingPostNodes_.begin(); it != pendingPostNodes_.end();)
-    {
+    for (auto it = pendingPostNodes_.begin(); it != pendingPostNodes_.end();) {
         auto id = it->first;
         DrawableV2::RSSurfaceRenderNodeDrawable* drawable = GetSurfaceDrawableByID(id);
         if (drawable) {
-            if (drawable->HasCachedTexture() && drawable->IsCurFrameStatic(deviceType) ) {
-                auto surfaceParams = static_cast<RSSurfaceRenderParams*>(drawable->GetRenderNode()->GetRenderParams().get());
+            if (drawable->HasCachedTexture() && drawable->IsCurFrameStatic(deviceType)) {
+                auto surfaceParams = static_cast<RSSurfaceRenderParams*>(
+                    drawable->GetRenderNode()->GetRenderParams().get());
                 if (!surfaceParams) {
                     RS_LOGE("PurgePendingPostNodes params is nullptr");
                     ++it;
@@ -171,7 +177,7 @@ void RSUifirstManager::UpdateUifirstNodes(RSSurfaceRenderNode& node, bool ancest
 {
     RS_OPTIONAL_TRACE_NAME_FMT("UpdateUifirstNodes: node[%llu] name[%s] FirstLevelNodeId[%llu] ",
         node.GetId(), node.GetName().c_str(), node.GetFirstLevelNodeId());
-    // UIFirst Enable state is signed only when node's firstLevelNode is itself 
+    // UIFirst Enable state is signed only when node's firstLevelNode is itself
     if (node.GetFirstLevelNodeId() == node.GetId() && node.GetUifirstSupportFlag()) {
         RSUifirstManager::Instance().PrepareUifirstNode(node, ancestorNodeHasAnimation);
     } else {
@@ -281,16 +287,25 @@ void RSUifirstManager::RestoreSkipSyncNode()
 void RSUifirstManager::ClearSubthreadRes()
 {
     RS_OPTIONAL_TRACE_NAME_FMT("ClearSubthreadRes");
-    if (noUifirstNodeFrameCount_ < CLEAR_RES_THRESHOLD && subthreadProcessingNode_.size() == 0 &&
-        pendingSyncForSkipBefore_.size() == 0 && reuseNodes_.size() == 0) {
-        ++noUifirstNodeFrameCount_;
-        if (noUifirstNodeFrameCount_ == CLEAR_RES_THRESHOLD) {
-            RSSubThreadManager::Instance()->ResetSubThreadGrContext();
+    if (subthreadProcessingNode_.size() == 0 &&
+        pendingSyncForSkipBefore_.size() == 0 &&
+        reuseNodes_.size() == 0) {
+        if (noUifirstNodeFrameCount_ < CLEAR_RES_THRESHOLD) {
+            ++noUifirstNodeFrameCount_;
+            if (noUifirstNodeFrameCount_ == CLEAR_RES_THRESHOLD) {
+                RSSubThreadManager::Instance()->ResetSubThreadGrContext();
+            }
         }
     } else {
         noUifirstNodeFrameCount_ = 0;
     }
     reuseNodes_.clear();
+}
+
+void RSUifirstManager::ForceClearSubthreadRes()
+{
+    noUifirstNodeFrameCount_ = 0;
+    RSSubThreadManager::Instance()->ForceReleaseResource();
 }
 
 void RSUifirstManager::SortSubThreadNodesPriority()
@@ -304,7 +319,7 @@ void RSUifirstManager::SortSubThreadNodesPriority()
             continue;
         }
         if (!isFocusNodeFound) {
-            bool isFocus = ( (id == RSMainThread::Instance()->GetFocusNodeId()) ||
+            bool isFocus = ((id == RSMainThread::Instance()->GetFocusNodeId()) ||
                 (id == RSMainThread::Instance()->GetFocusLeashWindowId()));
             if (isFocus) {
                 // for resolving response latency
@@ -449,6 +464,8 @@ void RSUifirstManager::UifirstStateChange(RSSurfaceRenderNode& node, bool curren
             SetUifirstNodeEnableParam(node, true);
             UpdateChildrenDirtyRect(*surfaceNode);
             node.SetHwcChildrenDisabledStateByUifirst();
+            auto func = std::bind(&RSUifirstManager::ProcessTreeStateChange, std::placeholders::_1);
+            node.RegisterTreeStateChangeCallback(func);
             AddPendingPostNode(node.GetId(), surfaceNode); // clear pending reset status
             RSMainThread::Instance()->GetContext().AddPendingSyncNode(surfaceNode);
         } else { // keep disable
@@ -487,6 +504,14 @@ void RSUifirstManager::UpdateChildrenDirtyRect(RSSurfaceRenderNode& node)
         }
     }
     node.SetUifirstChildrenDirtyRectParam(rect);
+}
+
+void RSUifirstManager::ProcessTreeStateChange(RSSurfaceRenderNode& node)
+{
+    if (!node.IsOnTheTree()) {
+        RSUifirstManager::Instance().UifirstStateChange(node, false);
+        RSUifirstManager::Instance().ForceClearSubthreadRes();
+    }
 }
 
 void RSUifirstManager::DisableUifirstNode(RSSurfaceRenderNode& node)

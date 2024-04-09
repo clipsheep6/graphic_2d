@@ -211,14 +211,6 @@ std::unique_ptr<RSRenderFrame> RSDisplayRenderNodeDrawable::RequestFrame(
         return nullptr;
     }
     auto bufferConfig = RSBaseRenderUtil::GetFrameBufferRequestConfig(params.GetScreenInfo(), true);
-
-#if 0 // TO-DO wait buffer
-    if (!RSUniRenderThread::Instance().WaitUntilDisplayNodeBufferReleased(
-        std::static_pointer_cast<RSSurfaceHandler>(displayNodeSp))) {
-        RS_TRACE_NAME("RSDisplayRenderNodeDrawable::RequestFrame no released buffer");
-    }
-#endif
-
     auto renderFrame = renderEngine->RequestFrame(std::static_pointer_cast<RSSurfaceOhos>(rsSurface), bufferConfig);
     if (!renderFrame) {
         RS_LOGE("RSDisplayRenderNodeDrawable::RequestFrame renderEngine requestFrame is null");
@@ -244,10 +236,9 @@ static inline Drawing::Region GetFilpedRegion(std::vector<RectI>& rects, ScreenI
 #endif
         Drawing::Region tmpRegion;
         tmpRegion.SetRect(Drawing::RectI(r.left_, topAfterFilp, r.left_ + r.width_, topAfterFilp + r.height_));
-        RS_OPTIONAL_TRACE_NAME_FMT("GetFilpedRegion orig ltrb[%d %d %d %d] to fliped rect ltrb[%d %d %d %d]", r.left_, r.top_,
-            r.left_ + r.width_, r.top_ + r.height_, r.left_, topAfterFilp, r.left_ + r.width_,
+        RS_OPTIONAL_TRACE_NAME_FMT("GetFilpedRegion orig ltrb[%d %d %d %d] to fliped rect ltrb[%d %d %d %d]",
+            r.left_, r.top_, r.left_ + r.width_, r.top_ + r.height_, r.left_, topAfterFilp, r.left_ + r.width_,
             topAfterFilp + r.height_);
-
         region.Op(tmpRegion, Drawing::RegionOp::UNION);
     }
     return region;
@@ -692,7 +683,7 @@ void RSDisplayRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
             std::to_string(params->GetScreenId()) + "] using UniRender buffer.");
 
         if (params->GetHardwareEnabledNodes().size() != 0) {
-            AdjustZOrderAndDrawSurfaceNode(params->GetHardwareEnabledNodes(), canvas);
+            AdjustZOrderAndDrawSurfaceNode(params->GetHardwareEnabledNodes(), canvas, *params);
         }
 
         auto renderEngine = RSUniRenderThread::Instance().GetRenderEngine();
@@ -713,7 +704,7 @@ void RSDisplayRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
         renderEngine->DrawDisplayNodeWithParams(*rscanvas, *displayNodeSp, drawParams);
 
         if (params->GetHardwareEnabledTopNodes().size() != 0) {
-            AdjustZOrderAndDrawSurfaceNode(params->GetHardwareEnabledTopNodes(), canvas);
+            AdjustZOrderAndDrawSurfaceNode(params->GetHardwareEnabledTopNodes(), canvas, *params);
         }
     }
 }
@@ -785,7 +776,8 @@ void RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes()
 
 
 void RSDisplayRenderNodeDrawable::AdjustZOrderAndDrawSurfaceNode(
-    std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodes, Drawing::Canvas& canvas) const
+    std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodes,
+    Drawing::Canvas& canvas, RSDisplayRenderParams& params) const
 {
     if (!RSSystemProperties::GetHardwareComposerEnabled()) {
         RS_LOGW("RSDisplayRenderNodeDrawable::AdjustZOrderAndDrawSurfaceNode: \
@@ -799,14 +791,14 @@ void RSDisplayRenderNodeDrawable::AdjustZOrderAndDrawSurfaceNode(
             return first->GetGlobalZOrder() < second->GetGlobalZOrder();
         });
 
+    Drawing::AutoCanvasRestore acr(canvas, true);
+    canvas.ConcatMatrix(params.GetMatrix());
     // draw hardware-composition nodes
     for (auto& surfaceNode : nodes) {
-        if (surfaceNode->IsLastFrameHardwareEnabled() && surfaceNode->GetBuffer() != nullptr) {
             Drawing::AutoCanvasRestore acr(canvas, true);
             std::unique_ptr<RSSurfaceRenderNodeDrawable> surfaceNodeDrawable =
                 std::make_unique<RSSurfaceRenderNodeDrawable>(surfaceNode);
             surfaceNodeDrawable->OnCapture(canvas);
-        }
     }
 }
 

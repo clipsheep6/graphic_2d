@@ -122,7 +122,7 @@ public:
     void ResetIsOnlyBasicGeoTransform();
     bool IsOnlyBasicGeoTransform() const;
     void SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool isDirty, bool accumGeoDirty,
-        std::optional<RectI> clipRect = std::nullopt);
+        const RectI& clipRect);
 
     inline WeakPtr GetParent() const
     {
@@ -249,8 +249,9 @@ public:
     const RectI& GetSelfDrawRect() const;
     const RectI& GetAbsDrawRect() const;
 
+    void ResetClipAbsDrawRectChangeState();
     bool UpdateDrawRectAndDirtyRegion(RSDirtyRegionManager& dirtyManager,
-        const std::shared_ptr<RSRenderNode>& parent, bool accumGeoDirty, std::optional<RectI> clipRect = std::nullopt);
+        const std::shared_ptr<RSRenderNode>& parent, bool accumGeoDirty, const RectI& clipRect);
     void UpdateDirtyRegionInfoForDFX(RSDirtyRegionManager& dirtyManager);
     // update node's local draw region (based on node itself, including childrenRect)
     bool UpdateLocalDrawRect();
@@ -668,6 +669,7 @@ protected:
     }
     bool isChildSupportUifirst_ = true;
     bool lastFrameSynced_ = true;
+    bool clipAbsDrawRectChange_ = false;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
     const RectI GetFilterCachedRegion() const;
@@ -683,6 +685,7 @@ private:
     WeakPtr parent_;
     void SetParent(WeakPtr parent);
     void ResetParent();
+    void UpdateClipAbsDrawRectChangeState(const RectI& clipRect);
     virtual void OnResetParent() {}
 
     std::list<WeakPtr> children_;

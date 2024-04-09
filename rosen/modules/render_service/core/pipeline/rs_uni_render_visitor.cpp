@@ -1212,10 +1212,10 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
 
 void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
 {
-    RS_OPTIONAL_TRACE_NAME_FMT("RSUniRender::QuickPrepareSurfaceRenderNode: "
-        "node[%llu] name[%s] pid[%d] nodeType[%d] "
-        "subTreeDirty[%d]", node.GetId(), node.GetName().c_str(), ExtractPid(node.GetId()),
-        static_cast<int>(node.GetSurfaceNodeType()), node.IsSubTreeDirty());
+    RS_OPTIONAL_TRACE_NAME("RSUniRender::QuickPrepare:[" + node.GetName() + "] nodeId[" +
+        std::to_string(node.GetId()) + "] pid[" + std::to_string(ExtractPid(node.GetId())) +
+        "] nodeType[" + std::to_string(static_cast<uint>(node.GetSurfaceNodeType())) +
+        "] subTreeDirty[" + std::to_string(node.IsSubTreeDirty()) + "]");
     RS_LOGD("RSUniRender::QuickPrepareSurfaceRenderNode:[%{public}s] nodeid:[%{public}" PRIu64 "]"
         "pid:[%{public}d] nodeType:[%{public}d] subTreeDirty[%{public}d]",
         node.GetName().c_str(), node.GetId(), ExtractPid(node.GetId()),
@@ -1681,7 +1681,8 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByRotateAndAlpha(std::shared_ptr<RSS
         return;
     }
     if (!hwcNode->GetCalcRectInPrepare() &&
-        !(hwcNode->GetTotalMatrix() == totalMatrix)) {
+        (!(hwcNode->GetTotalMatrix() == totalMatrix) ||
+        hwcNode->GetBufferSizeChanged())) {
         const auto& properties = hwcNode->GetRenderProperties();
         Drawing::Rect bounds = Drawing::Rect(0, 0, properties.GetBoundsWidth(), properties.GetBoundsHeight());
         Drawing::Rect absRect;
@@ -2019,8 +2020,9 @@ void RSUniRenderVisitor::UpdateOccludedStatusWithFilterNode(std::shared_ptr<RSSu
             }
             RS_TRACE_NAME_FMT("sunyang UpdateOccludedStatusWithFilterNode "
                 "surfaceNode:node: name %s,filterNode:[%lld],, IsOccludedByFilterCache:%d",
-                 surfaceNode->GetName().c_str(), filterNode->GetId(), surfaceNode->IsOccludedByFilterCache());
-            if (filterNode->GetRenderProperties().GetBackgroundFilter() || filterNode->GetRenderProperties().GetFilter()) {
+                surfaceNode->GetName().c_str(), filterNode->GetId(), surfaceNode->IsOccludedByFilterCache());
+            if (filterNode->GetRenderProperties().GetBackgroundFilter() ||
+                filterNode->GetRenderProperties().GetFilter()) {
                 filterNode->SetOccludedStatus(surfaceNode->IsOccludedByFilterCache());
             }
         }
@@ -2110,6 +2112,7 @@ void RSUniRenderVisitor::PostPrepare(RSRenderNode& node, bool subTreeSkipped)
     }
     node.MapAndUpdateChildrenRect();
     node.UpdateLocalDrawRect();
+    node.ResetClipAbsDrawRectChangeState();
     if (isDrawingCacheEnabled_) {
         node.UpdateDrawingCacheInfoAfterChildren();
     }

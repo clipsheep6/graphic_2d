@@ -1582,9 +1582,8 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         }
         // set params used in render thread
         uniVisitor->SetUniRenderThreadParam(renderThreadParams_);
-        //rootNode->Process(uniVisitor);
     } else if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
-            WaitUntilUploadTextureTaskFinished(isUniRender_);
+        WaitUntilUploadTextureTaskFinished(isUniRender_);
     }
     const auto& nodeMap = context_->GetNodeMap();
     nodeMap.TraverseCanvasDrawingNodes([](const std::shared_ptr<RSCanvasDrawingRenderNode>& canvasDrawingNode) {
@@ -2941,7 +2940,6 @@ void RSMainThread::CheckAndUpdateInstanceContentStaticStatus(std::shared_ptr<RSS
     } else {
         instanceNode->UpdateSurfaceCacheContentStatic();
     }
-    
 }
 
 void RSMainThread::ResetHardwareEnabledState()

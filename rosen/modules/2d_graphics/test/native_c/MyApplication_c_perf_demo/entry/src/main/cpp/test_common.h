@@ -29,4 +29,43 @@ protected:
 };
 
 uint32_t color_to_565(uint32_t color);
+
+struct DrawRect{
+    float fLeft;
+    float fTop;
+    float fRight;
+    float fBottom;
+    bool contains(float x, float y) const { return x >= fLeft && x < fRight && y >= fTop && y < fBottom; }
+    float width(){return (fRight - fLeft);}
+    float height(){return (fBottom - fTop);}
+    float centerX(){return (fRight - fLeft)/2;}
+    float centerY(){return (fBottom - fTop)/2;}
+    bool inset(float dx, float dy){
+        float l,t,r,b;
+        l = fLeft+dx;
+        t = fTop+dy;
+        r = fRight-dx;
+        b = fBottom-dy;
+        if(r<=l)return false;
+        if(b<=t)return false;
+        fLeft = l;
+        fTop = t;
+        fRight = r;
+        fBottom = b;
+        return true;
+    }
+    void offset(float dx, float dy){
+        fLeft += dx;
+        fTop += dy;
+        fRight += dx;
+        fBottom += dy;
+    }
+    void setXYWH(float x, float y , float width, float height  )
+    {
+        fLeft = x;
+        fTop = y;
+        fRight = x + width;
+        fBottom = y + height;
+    }
+};
 #endif // TEST_COMMON_H

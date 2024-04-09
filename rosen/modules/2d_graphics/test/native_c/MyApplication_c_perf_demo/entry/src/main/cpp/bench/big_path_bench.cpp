@@ -8,13 +8,13 @@
 #include "common/log_common.h"
 #include "test_common.h"
 
-struct DrawRect {
-    float fLeft;   //!< smaller x-axis bounds
-    float fTop;    //!< smaller y-axis bounds
-    float fRight;  //!< larger x-axis bounds
-    float fBottom; //!< larger y-axis bounds
-    bool contains(float x, float y) const { return x >= fLeft && x < fRight && y >= fTop && y < fBottom; }
-};
+//struct DrawRect {
+//    float fLeft;   //!< smaller x-axis bounds
+//    float fTop;    //!< smaller y-axis bounds
+//    float fRight;  //!< larger x-axis bounds
+//    float fBottom; //!< larger y-axis bounds
+//    bool contains(float x, float y) const { return x >= fLeft && x < fRight && y >= fTop && y < fBottom; }
+//};
 
 BigPathBench::BigPathBench(Align align,bool round) : fAlign(align),fRound(round)
 {

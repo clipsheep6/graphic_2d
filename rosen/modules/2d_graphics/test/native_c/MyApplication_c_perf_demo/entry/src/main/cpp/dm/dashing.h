@@ -12,4 +12,12 @@ public:
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
 };
+
+class Dashing2 : public TestBase {
+public:
+    Dashing2();
+    ~Dashing2()=default;
+protected:
+    void OnTestFunction(OH_Drawing_Canvas* canvas) override;
+};
 #endif // AA_RECT_MODES_H

@@ -44,11 +44,15 @@ add_library(entry SHARED
     dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
+    dm/alpha_image.cpp
+    dm/shadowutils.cpp
     dm/clipped_cubic.cpp
     dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
     dm/filltypes.cpp
     dm/dashing.cpp
+    dm/path_interior.cpp
+    dm/strokes.cpp
 )
 
 add_library(myxnode SHARED
@@ -86,11 +90,15 @@ add_library(myxnode SHARED
     dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
+    dm/alpha_image.cpp
+    dm/shadowutils.cpp
     dm/clipped_cubic.cpp
     dm/circular_arcs.cpp
     dm/largeclippedpath.cpp
     dm/filltypes.cpp
     dm/dashing.cpp
+    dm/path_interior.cpp
+    dm/strokes.cpp
 )
 
 find_library(

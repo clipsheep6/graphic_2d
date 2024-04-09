@@ -44,12 +44,16 @@
 #include "dm/blur_large_rrects.h"
 #include "dm/add_arc.h"
 #include "dm/font_regen.h"
+#include "dm/alpha_image.h"
+#include "dm/shadowutils.h"
 #include "dm/clipped_cubic.h"
-
 #include "dm/circular_arcs.h"
 #include "dm/largeclippedpath.h"
 #include "dm/filltypes.h"
 #include "dm/dashing.h"
+#include "dm/path_interior.h"
+#include "dm/strokes.h"
+
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -141,15 +145,22 @@ namespace {
             {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
             {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},
             {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},
+            {"alpha_image_alpha_tint", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},
+            {"shadowutils", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorNoOccluders); }},
+            {"shadowutils_occl", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorOccluders); }},
+            {"shadowutils_gray", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kGrayscale); }},
+            {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
+            {"largeclippedpath_kwinding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
+            {"largeclippedpath_kevenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
             {"clippedcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClippedCubic>(); }},
             {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
             {"largeclippedpath_winding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
             {"largeclippedpath_evenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
             {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
-
-
-            
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
+            {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
+            {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
+            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
 
     };
 

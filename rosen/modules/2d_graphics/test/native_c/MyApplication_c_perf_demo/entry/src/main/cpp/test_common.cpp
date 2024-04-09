@@ -93,9 +93,9 @@ uint32_t color_to_565(uint32_t color) {
     uint8_t g2 = (rgb565 >> 5) & 0x3F;  
     uint8_t b2 = rgb565 & 0x1F;  
     
-    r2 = r2<<3;
-    g2 = g2<<2;
-    b2 = b2<<3;
+    r2 = r2<<3 | r2>>3;
+    g2 = g2<<2 | g2>>2;
+    b2 = b2<<3 | b2>>3;
     
     uint32_t argb = 0xFF000000 | r2<<16 | g2<<8 | b2;
     return  argb;

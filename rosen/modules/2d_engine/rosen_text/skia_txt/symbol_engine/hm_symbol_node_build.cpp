@@ -51,14 +51,14 @@ static void MergePath(RSPath& multPath, const std::vector<RSGroupInfo>& groupInf
     }
 }
 
-SymbolNodeBuild::SymbolNodeBuild(const RSAnimationSetting animationSetting, const RSHMSymbolData symbolData,
-    const RSEffectStrategy effectStrategy,
-    const std::pair<double, double> offset) : animationSetting_(animationSetting),
+SymbolNodeBuild::SymbolNodeBuild(const RSAnimationSetting& animationSetting, const RSHMSymbolData& symbolData,
+    const RSEffectStrategy& effectStrategy,
+    const std::pair<double, double>& offset) : animationSetting_(animationSetting),
     symbolData_(symbolData), effectStrategy_(effectStrategy),
     offsetX_(offset.first), offsetY_(offset.second) {}
 
-void SymbolNodeBuild::AddWholeAnimation(const RSHMSymbolData &symbolData, const Vector4f &nodeBounds,
-    std::shared_ptr<TextEngine::SymbolAnimationConfig> symbolAnimationConfig)
+void SymbolNodeBuild::AddWholeAnimation(const RSHMSymbolData& symbolData, const Vector4f& nodeBounds,
+    std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig)
 {
     TextEngine::SymbolNode symbolNode;
     symbolNode.symbolData = symbolData;
@@ -67,9 +67,9 @@ void SymbolNodeBuild::AddWholeAnimation(const RSHMSymbolData &symbolData, const 
     symbolAnimationConfig->numNodes = symbolAnimationConfig->SymbolNodes.size();
 }
 
-void SymbolNodeBuild::AddHierarchicalAnimation(RSHMSymbolData &symbolData, const Vector4f &nodeBounds,
-    std::vector<RSGroupSetting> &groupSettings,
-    std::shared_ptr<TextEngine::SymbolAnimationConfig> symbolAnimationConfig)
+void SymbolNodeBuild::AddHierarchicalAnimation(RSHMSymbolData& symbolData, const Vector4f& nodeBounds,
+    std::vector<RSGroupSetting>& groupSettings,
+    std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig)
 {
     std::vector<RSPath> paths;
     RSHMSymbol::PathOutlineDecompose(symbolData.path_, paths);

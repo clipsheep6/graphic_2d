@@ -383,6 +383,7 @@ public:
 
     // key: symbolSpanID, value:symbol animation node list
     std::unordered_map<uint64_t, std::list<SharedPtr>> canvasNodesListMap;
+    std::mutex hmSymbolMutex_;
 
     void SetInstanceId(int32_t instanceId);
     int32_t GetInstanceId() const

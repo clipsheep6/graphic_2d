@@ -131,7 +131,7 @@ bool RSSymbolAnimation::SetSymbolAnimation(
         ROSEN_LOGD("HmSymbol RSSymbolAnimation::getNode or get symbolAnimationConfig:failed");
         return false;
     }
-
+    std::lock_guard<std::mutex> lockCanvasNode(rsNode_->hmSymbolMutex_);
     if (rsNode_->canvasNodesListMap.count(symbolAnimationConfig->symbolSpanId) > 0) {
         rsNode_->canvasNodesListMap.erase(symbolAnimationConfig->symbolSpanId);
     }
@@ -177,7 +177,7 @@ bool RSSymbolAnimation::SetPublicAnimation(
         ROSEN_LOGD("HmSymbol SetDisappearAnimation::getNode or get symbolAnimationConfig:failed");
         return false;
     }
-
+    std::lock_guard<std::mutex> lockCanvasNode(rsNode_->hmSymbolMutex_);
     auto symbolSpanId = symbolAnimationConfig->symbolSpanId;
     auto& symbolFirstNode = symbolAnimationConfig->SymbolNodes[0]; // calculate offset by the first node
 
@@ -393,6 +393,7 @@ bool RSSymbolAnimation::SetScaleUnitAnimation(
     if (nodeNum == 0) {
         return false;
     }
+    std::lock_guard<std::mutex> lockCanvasNode(rsNode_->hmSymbolMutex_);
     auto symbolSpanId = symbolAnimationConfig->symbolSpanId;
     auto canvasNode = RSCanvasNode::Create();
     if (rsNode_->canvasNodesListMap.count(symbolSpanId) > 0) {
@@ -507,14 +508,13 @@ bool RSSymbolAnimation::SetVariableColorAnimation(
     const std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig)
 {
     if (rsNode_ == nullptr || symbolAnimationConfig == nullptr) {
-        ROSEN_LOGD("HmSymbol SetVariableColorAnimation::getNode or get symbolAnimationConfig:failed");
         return false;
     }
     auto nodeNum = symbolAnimationConfig->numNodes;
     if (nodeNum == 0) {
         return false;
     }
-
+    std::lock_guard<std::mutex> lockCanvasNode(rsNode_->hmSymbolMutex_);
     auto symbolSpanId = symbolAnimationConfig->symbolSpanId;
     auto& symbolFirstNode = symbolAnimationConfig->SymbolNodes[0]; // calculate offset by the first node
     Vector4f offsets = CalculateOffset(symbolFirstNode.symbolData.path_, symbolFirstNode.nodeBoundary[0],

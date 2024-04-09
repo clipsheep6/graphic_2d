@@ -17,13 +17,13 @@ import(
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 config("export_config") {
-  cflags_cc = [ "-std=c++17" ]
   include_dirs = [ "include" ]
+  cflags_cc = [ "-std=c++17" ]
 
   defines = rs_common_define
 }
 
-if (!is_mingw && !is_mac) {
+if (!is_mingw && !is_mac && !is_cross_platform) {
   defines = [ "ENABLE_RUST" ]
   rust_cxx("particle_cxx_gen") {
     sources = [ "rust/src/lib.rs" ]
@@ -62,6 +62,11 @@ ohos_source_set("render_service_base_src") {
     cfi_cross_dso = false
     debug = false
     blocklist = "./rs_base_blocklist.txt"
+    if (rosen_is_ohos) {
+      boundary_sanitize = true
+      integer_overflow = true
+      ubsan = true
+    }
   }
   defines = []
   defines += gpu_defines
@@ -123,6 +128,8 @@ ohos_source_set("render_service_base_src") {
     "src/common/rs_background_thread.cpp",
     "src/common/rs_color.cpp",
     "src/common/rs_common_def.cpp",
+    "src/common/rs_common_tools.cpp",
+    "src/common/rs_gpu_dirty_region.cpp",
     "src/common/rs_obj_abs_geometry.cpp",
     "src/common/rs_occlusion_region.cpp",
     "src/common/rs_occlusion_region_helper.cpp",
@@ -224,6 +231,7 @@ ohos_source_set("render_service_base_src") {
     "src/render/rs_material_filter.cpp",
     "src/render/rs_path.cpp",
     "src/render/rs_pixel_map_util.cpp",
+    "src/render/rs_resource_manager.cpp",
     "src/render/rs_shader.cpp",
     "src/render/rs_shadow.cpp",
     "src/render/rs_skia_filter.cpp",
@@ -243,6 +251,70 @@ ohos_source_set("render_service_base_src") {
     "src/screen_manager/rs_screen_props.cpp",
     "src/screen_manager/rs_virtual_screen_resolution.cpp",
   ]
+
+  if (is_cross_platform) {
+    sources -= [
+      #command
+      "src/command/rs_display_node_command.cpp",
+
+      #common
+      "src/common/rs_occlusion_region.cpp",
+      "src/common/rs_occlusion_region_helper.cpp",
+      "src/common/rs_thread_handler_generic.cpp",
+      "src/common/rs_thread_looper_generic.cpp",
+      "src/common/rs_thread_looper_impl.cpp",
+
+      #ipc_callbacks
+      "src/ipc_callbacks/buffer_available_callback_ipc_interface_code_access_verifier.cpp",
+      "src/ipc_callbacks/buffer_available_callback_proxy.cpp",
+      "src/ipc_callbacks/buffer_available_callback_stub.cpp",
+      "src/ipc_callbacks/buffer_clear_callback_ipc_interface_code_access_verifier.cpp",
+      "src/ipc_callbacks/buffer_clear_callback_proxy.cpp",
+      "src/ipc_callbacks/buffer_clear_callback_stub.cpp",
+      "src/ipc_callbacks/hgm_config_change_callback_proxy.cpp",
+      "src/ipc_callbacks/hgm_config_change_callback_stub.cpp",
+      "src/ipc_callbacks/rs_ihgm_config_change_callback_ipc_interface_code_access_verifier.cpp",
+      "src/ipc_callbacks/rs_iocclusion_change_callback_ipc_interface_code_access_verifier.cpp",
+      "src/ipc_callbacks/rs_isurface_occlusion_change_callback_ipc_interface_code_access_verifier.cpp",
+      "src/ipc_callbacks/rs_occlusion_change_callback_proxy.cpp",
+      "src/ipc_callbacks/rs_occlusion_change_callback_stub.cpp",
+      "src/ipc_callbacks/rs_surface_occlusion_change_callback_proxy.cpp",
+      "src/ipc_callbacks/rs_surface_occlusion_change_callback_stub.cpp",
+      "src/ipc_callbacks/screen_change_callback_ipc_interface_code_access_verifier.cpp",
+      "src/ipc_callbacks/screen_change_callback_proxy.cpp",
+      "src/ipc_callbacks/screen_change_callback_stub.cpp",
+      "src/ipc_callbacks/surface_capture_callback_ipc_interface_code_access_verifier.cpp",
+      "src/ipc_callbacks/surface_capture_callback_proxy.cpp",
+      "src/ipc_callbacks/surface_capture_callback_stub.cpp",
+
+      #ipc_security
+      "src/ipc_security/rs_ipc_interface_code_access_verifier_base.cpp",
+
+      #memory
+      "src/memory/rs_memory_graphic.cpp",
+      "src/memory/rs_memory_track.cpp",
+      "src/memory/rs_tag_tracker.cpp",
+
+      #pipeline
+
+      "src/pipeline/rs_display_render_node.cpp",
+      "src/pipeline/rs_occlusion_config.cpp",
+      "src/pipeline/rs_uni_render_judgement.cpp",
+      "src/pipeline/sk_resource_manager.cpp",
+
+      #transaction
+      "src/transaction/rs_hgm_config_data.cpp",
+      "src/transaction/rs_occlusion_data.cpp",
+
+      #screen_manager
+      "src/screen_manager/rs_screen_capability.cpp",
+      "src/screen_manager/rs_screen_data.cpp",
+      "src/screen_manager/rs_screen_hdr_capability.cpp",
+      "src/screen_manager/rs_screen_mode_info.cpp",
+      "src/screen_manager/rs_screen_props.cpp",
+      "src/screen_manager/rs_virtual_screen_resolution.cpp",
+    ]
+  }
 
   cflags = [
     "-Wall",
@@ -303,34 +375,37 @@ ohos_source_set("render_service_base_src") {
     sources += [
       "src/benchmarks/file_utils.cpp",
       "src/benchmarks/rs_recording_thread.cpp",
-      "src/common/rs_common_tools.cpp",
     ]
   }
 
   include_dirs = [
     "$graphic_2d_root/rosen/modules/utils",
-    "$graphic_2d_root/frameworks/surface/include",
+    "$graphic_2d_root/interfaces/inner_api/common",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/utils/color_manager/export",
     "$graphic_2d_root/utils/log",
-    "$graphic_2d_root/interfaces/inner_api/surface",
   ]
+
   include_dirs += [ "//third_party/skia/src" ]
+
   deps = [
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
-    "$rosen_root/modules/platform:eventhandler",
     "$rosen_root/modules/platform:hilog",
     "$rosen_root/modules/platform:ipc_core",
   ]
-  external_deps = [ "hilog:libhilog" ]
+
+  external_deps = [
+    "graphic_surface:surface_headers",
+    "hilog:libhilog",
+  ]
 
   if (graphic_2d_feature_enable_opinc) {
     include_dirs += opinc_adapter_opt_set.opinc_include_set
     sources += opinc_adapter_opt_set.opinc_src_set
   }
 
-  if (!is_mingw && !is_mac) {
+  if (!is_mingw && !is_mac && !is_cross_platform) {
     defines += [ "ENABLE_RUST" ]
     sources += get_target_outputs(":particle_cxx_gen")
     include_dirs += [
@@ -380,20 +455,23 @@ ohos_source_set("render_service_base_src") {
     defines += [ "_USE_MATH_DEFINES" ]
   }
 
+  if (defined(ddgr_ext_configs)) {
+    libs = ddgr_ext_configs.ddgr_libs
+    defines += ddgr_ext_configs.ddgr_defines
+    sources += ddgr_ext_configs.libddgr_ext_adaptor_base_sources
+    include_dirs += ddgr_ext_configs.libddgr_ext_adaptor_include_dirs
+  }
+
   #profiler
   if (rosen_is_ohos && graphic_2d_feature_rs_enable_profiler &&
       player_framework_enable) {
     defines += [ "RS_PROFILER_ENABLED" ]
     sources += [
       "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_base.cpp",
-      "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_dump.cpp",
       "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_pixelmap.cpp",
     ]
   }
-  include_dirs += [
-    "$graphic_2d_root/rosen/modules/render_service_profiler",
-    "//third_party/json/single_include",
-  ]
+  include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     sources -= graphic_2d_ext_configs.librender_service_base_ext_sources_del
@@ -443,11 +521,37 @@ ohos_shared_library("librender_service_base") {
     configs = [ ":render_service_base_link_config" ]
   }
 
+  deps = [ "$rosen_root/modules/platform:eventhandler" ]
   public_deps = [
     ":render_service_base_src",
     "src/platform:platform",
   ]
+
   external_deps = [ "hilog:libhilog" ]
+
+  if (defined(use_new_render_context) && use_new_render_context) {
+    public_deps += [ "src/render_backend:librender_backend" ]
+  }
+
+  innerapi_tags = [ "platformsdk_indirect" ]
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
+
+ohos_source_set("librender_service_base_static") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = false
+    cfi_cross_dso = false
+    debug = false
+    blocklist = "./rs_base_blocklist.txt"
+  }
+  all_dependent_configs = [ ":render_service_base_all_deps_config" ]
+  deps = [ "$rosen_root/modules/platform:eventhandler" ]
+  public_deps = [
+    ":render_service_base_src",
+    "src/platform:platform",
+  ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     public_deps += [ "src/render_backend:librender_backend" ]

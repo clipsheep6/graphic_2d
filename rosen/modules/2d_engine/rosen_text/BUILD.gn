@@ -166,6 +166,7 @@ if (enable_text_gine) {
       "adapter/skia_txt/font_collection.cpp",
       "adapter/skia_txt/typography.cpp",
       "adapter/skia_txt/typography_create.cpp",
+      "adapter/skia_txt/text_line_base.cpp",
       "adapter/skia_txt/run_impl.cpp",
     ]
 

@@ -22,7 +22,8 @@
 #include "impl/paragraph_impl.h"
 
 #include "convert.h"
-#include "run_impl.h"
+#include "text_line_base.h"
+//#include "run_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -40,17 +41,6 @@ IndexAndAffinity::IndexAndAffinity(size_t charIndex, Affinity charAffinity)
 {
     index = charIndex;
     affinity = charAffinity;
-}
-
-Boundary::Boundary(size_t left, size_t right)
-{
-    leftIndex = left;
-    rightIndex = right;
-}
-
-bool Boundary::operator ==(const Boundary& rhs) const
-{
-    return leftIndex == rhs.leftIndex && rightIndex == rhs.rightIndex;
 }
 
 namespace AdapterTxt {
@@ -392,20 +382,36 @@ bool Typography::GetLineFontMetrics(const size_t lineNumber,
     return paragraph_->GetLineFontMetrics(lineNumber, charNumber, fontMetrics);
 }
 
-std::vector<std::unique_ptr<Run>> Typography::GetRuns() const
+
+std::vector<std::unique_ptr<TextLineBase>> Typography::GetTextLines() const
 {
     if (!paragraph_) {
         return {};
     }
-    std::vector<std::unique_ptr<SPText::Run>> textRuns = paragraph_->GetRuns();
-    std::vector<std::unique_ptr<Run>> runs;
+    std::vector<std::unique_ptr<SPText::TextLineBase>> textLines = paragraph_->GetTextLines();
+    std::vector<std::unique_ptr<TextLineBase>> lines;
 
-    for (std::unique_ptr<SPText::Run>& textRun : textRuns) {
-        std::unique_ptr<RunImpl> runPtr = std::make_unique<RunImpl>(std::move(textRun));
-        runs.emplace_back(std::move(runPtr));
+    for (std::unique_ptr<SPText::TextLineBase>& textLine : textLines) {
+        std::unique_ptr<TextLineBaseImpl> linePtr = std::make_unique<TextLineBaseImpl>(std::move(textLine));
+        lines.emplace_back(std::move(linePtr));
     }
-    return runs;
+    return lines;
 }
+
+// std::vector<std::unique_ptr<Run>> Typography::GetRuns() const
+// {
+//     if (!paragraph_) {
+//         return {};
+//     }
+//     std::vector<std::unique_ptr<SPText::Run>> textRuns = paragraph_->GetRuns();
+//     std::vector<std::unique_ptr<Run>> runs;
+
+//     for (std::unique_ptr<SPText::Run>& textRun : textRuns) {
+//         std::unique_ptr<RunImpl> runPtr = std::make_unique<RunImpl>(std::move(textRun));
+//         runs.emplace_back(std::move(runPtr));
+//     }
+//     return runs;
+// }
 } // namespace AdapterTxt
 } // namespace Rosen
 } // namespace OHOS

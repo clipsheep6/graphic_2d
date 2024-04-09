@@ -16,6 +16,8 @@
 #ifndef ROSEN_TEXT_EXPORT_ROSEN_TEXT_TYPOGRAPHY_TYPES_H
 #define ROSEN_TEXT_EXPORT_ROSEN_TEXT_TYPOGRAPHY_TYPES_H
 
+#include <cstddef>
+
 namespace OHOS {
 namespace Rosen {
 enum class TextDirection {

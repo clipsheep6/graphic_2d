@@ -28,6 +28,7 @@
 #include "render/rs_filter.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_linear_gradient_blur_filter.h"
+#include "platform/common/rs_log.h"
 
 namespace OHOS {
 namespace Rosen {

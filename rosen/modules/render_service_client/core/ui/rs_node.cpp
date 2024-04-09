@@ -1176,6 +1176,7 @@ void RSNode::SetForegroundEffectRadius(const float blurRadius)
     if (blurRadius != 0.0) {
         ROSEN_LOGE("foregroundEffect_node: %{public}f", blurRadius);
     }
+    ROSEN_LOGE("foregroundEffect_node2: %{public}f", blurRadius);
     SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
         RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
 }

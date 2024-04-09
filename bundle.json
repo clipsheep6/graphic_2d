@@ -104,7 +104,8 @@
           "egl",
           "opengles",
           "vulkan-headers",
-          "vulkan-loader"
+          "vulkan-loader",
+          "json"
         ]
       },
       "build": {

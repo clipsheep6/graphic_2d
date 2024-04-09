@@ -232,23 +232,21 @@ public:
         std::shared_ptr<RSPaintFilterCanvas> offscreenCanvas_ = nullptr;
     };
 
-    void StoreOffscreenData(OffscreenData& offscreenData)
+    void ReplaceMainScreenData(std::shared_ptr<Drawing::Surface>& offscreenSurface,
+        std::shared_ptr<RSPaintFilterCanvas>& offscreenCanvas)
     {
-        offscreenDataList_.push(offscreenData);
-    }
-
-    void ReplaceMainScreenData(Drawing::Surface* surface, RSPaintFilterCanvas* canvas)
-    {//surface_ canvas_ 此函数安全
-        if (surface != nullptr && canvas!=nullptr) {
+        if (offscreenSurface != nullptr && offscreenCanvas != nullptr) {
             storeMainScreenSurface_.push(surface_);
             storeMainScreenCanvas_.push(canvas_);
-            surface_ = surface;
-            canvas_ = canvas;
+            surface_ = offscreenSurface.get();
+            canvas_ = offscreenCanvas.get();
+            OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
+            offscreenDataList_.push(offscreenData);
         }
     }
 
     void SwapBackMainScreenData()
-    {//安全
+    {
         if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty()) {
             surface_ = storeMainScreenSurface_.top(); //这个top肯定不为null
             canvas_ = storeMainScreenCanvas_.top();//这个top肯定不为null

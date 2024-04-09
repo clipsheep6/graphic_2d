@@ -39,6 +39,7 @@
 #include "rs_main_thread.h"
 #include "rs_trace.h"
 #include "rs_profiler.h"
+#include "pixel_map_form_surface.h"
 
 #ifdef TP_FEATURE_ENABLE
 #include "touch_screen/touch_screen.h"
@@ -350,6 +351,22 @@ sptr<IVSyncConnection> RSRenderServiceConnection::CreateVSyncConnection(const st
         return nullptr;
     }
     return conn;
+}
+
+std::shared_ptr<Media::PixelMap> RSRenderServiceConnection::CreatePixelMapFromSurface(sptr<Surface> surface,
+    const Rect &srcRect)
+{
+    OHOS::Media::Rect rect = {
+        .left = srcRect.x,
+        .top = srcRect.y,
+        .width = srcRect.w,
+        .height = srcRect.h,
+    };
+    std::shared_ptr<Media::PixelMap> pixelmap = nullptr;
+    RSBackgroundThread::Instance().PostSycnTask([this, surface, rect, &pixelmap]() {
+        pixelmap = OHOS::Rosen::CreatePixelMapFromSurface(surface, rect);
+    });
+    return pixelmap;
 }
 
 int32_t RSRenderServiceConnection::SetFocusAppInfo(

@@ -26,6 +26,8 @@ extern "C" {
 
 const BufferHandle* OH_NativeBuffer_GetBufferHandle(const OH_NativeBuffer *buffer);
 
+int32_t OH_NativeBuffer_GetBufferHandleV2(const OH_NativeBuffer *buffer, BufferHandleV2* bufferHandleV2);
+
 void OH_NativeBuffer_GetNativeBufferConfig(const OH_NativeBuffer *buffer, OH_NativeBuffer_Config* config);
 
 OH_NativeBuffer* OH_NativeBufferFromNativeWindowBuffer(OHNativeWindowBuffer* nativeWindowBuffer);

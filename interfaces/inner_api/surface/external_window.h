@@ -39,6 +39,7 @@
 
 #include <stdint.h>
 #include "buffer_handle.h"
+#include "buffer_handle_v2.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -413,6 +414,19 @@ int32_t OH_NativeWindow_NativeWindowHandleOpt(OHNativeWindow *window, int code, 
  * @version 1.0
  */
 BufferHandle *OH_NativeWindow_GetBufferHandleFromNative(OHNativeWindowBuffer *buffer);
+
+/**
+ * @brief Obtains the pointer to a <b>BufferHandleV2</b> of an <b>OHNativeWindowBuffer</b> instance.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeWindow
+ * @param buffer Indicates the pointer to an <b>OHNativeWindowBuffer</b> instance.
+ * @param bufferHandleV2 Indicates the pointer to an <b>BufferHandleV2</b> instance.
+ * @return Returns an error code, 0 is success, otherwise, failed.
+ * @since 12
+ * @version 1.0
+ */
+int32_t OH_NativeWindow_GetBufferHandleV2FromNative(OHNativeWindowBuffer *buffer,
+                                                    BufferHandleV2 *bufferHandleV2);
 
 /**
  * @brief Adds the reference count of a native object.

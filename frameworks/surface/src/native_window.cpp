@@ -383,6 +383,28 @@ BufferHandle *GetBufferHandleFromNative(OHNativeWindowBuffer *buffer)
     return buffer->sfbuffer->GetBufferHandle();
 }
 
+int32_t GetBufferHandleV2FromNative(OHNativeWindowBuffer *buffer, BufferHandleV2 *bufferHandleV2)
+{
+    if (buffer == nullptr || buffer->sfbuffer == nullptr || bufferHandleV2 == nullptr) {
+        BLOGE("parameter error, please check input parameter");
+        return OHOS::GSERROR_INVALID_ARGUMENTS;
+    }
+    BufferHandle *bufferHandle = buffer->sfbuffer->GetBufferHandle();
+    if (bufferHandle == nullptr) {
+        BLOGE("GetBufferHandle nullptr");
+        return OHOS::GSERROR_API_FAILED;
+    }
+    bufferHandleV2->fd = dup(bufferHandle->fd);
+    bufferHandleV2->width = bufferHandle->width;
+    bufferHandleV2->stride = bufferHandle->stride;
+    bufferHandleV2->height = bufferHandle->height;
+    bufferHandleV2->size = bufferHandle->size;
+    bufferHandleV2->format = bufferHandle->format;
+    bufferHandleV2->usage = bufferHandle->usage;
+    bufferHandleV2->virAddr = bufferHandle->virAddr;
+    return OHOS::GSERROR_OK;
+}
+
 int32_t GetNativeObjectMagic(void *obj)
 {
     if (obj == nullptr) {
@@ -594,6 +616,7 @@ WEAK_ALIAS(NativeWindowDetachBuffer, OH_NativeWindow_NativeWindowDetachBuffer);
 WEAK_ALIAS(NativeWindowCancelBuffer, OH_NativeWindow_NativeWindowAbortBuffer);
 WEAK_ALIAS(NativeWindowHandleOpt, OH_NativeWindow_NativeWindowHandleOpt);
 WEAK_ALIAS(GetBufferHandleFromNative, OH_NativeWindow_GetBufferHandleFromNative);
+WEAK_ALIAS(GetBufferHandleV2FromNative, OH_NativeWindow_GetBufferHandleV2FromNative);
 WEAK_ALIAS(NativeObjectReference, OH_NativeWindow_NativeObjectReference);
 WEAK_ALIAS(NativeObjectUnreference, OH_NativeWindow_NativeObjectUnreference);
 WEAK_ALIAS(GetNativeObjectMagic, OH_NativeWindow_GetNativeObjectMagic);

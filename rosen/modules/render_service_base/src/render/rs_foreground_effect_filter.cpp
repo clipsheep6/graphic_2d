@@ -139,7 +139,6 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas, co
     auto originImageInfo = image->GetImageInfo();
 
     Drawing::Matrix blurMatrix;
-    //blurMatrix.Translate(-src.GetLeft(), -src.GetTop());
     float scaleW = static_cast<float>(std::ceil(width * blurScale_)) / image->GetWidth();
     float scaleH = static_cast<float>(std::ceil(height * blurScale_)) / image->GetHeight();
     blurMatrix.PostScale(scaleW, scaleH);

@@ -136,7 +136,7 @@ class RSB_EXPORT RSPaintFilterCanvas : public RSPaintFilterCanvasBase {
 public:
     RSPaintFilterCanvas(Drawing::Canvas* canvas, float alpha = 1.0f);
     RSPaintFilterCanvas(Drawing::Surface* surface, float alpha = 1.0f);
-    ~RSPaintFilterCanvas() override {};  //兜底restore？
+    ~RSPaintFilterCanvas() override {};
 
     void CopyConfiguration(const RSPaintFilterCanvas& other);
 
@@ -248,8 +248,8 @@ public:
     void SwapBackMainScreenData()
     {
         if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty()) {
-            surface_ = storeMainScreenSurface_.top(); //这个top肯定不为null
-            canvas_ = storeMainScreenCanvas_.top();//这个top肯定不为null
+            surface_ = storeMainScreenSurface_.top();
+            canvas_ = storeMainScreenCanvas_.top();
             storeMainScreenSurface_.pop();
             storeMainScreenCanvas_.pop();
             offscreenDataList_.pop();

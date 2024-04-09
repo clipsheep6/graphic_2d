@@ -815,7 +815,7 @@ RSPropertyDrawable::DrawablePtr RSForegroundFilterRestoreDrawable::Generate(cons
     if (!IsForegroundFilterValid(content)) {
         return nullptr;
     }
-    // 需要一点保护机制， 如果save成功了，才restore
+
     return std::make_unique<RSForegroundFilterRestoreDrawable>();
 }
 
@@ -826,7 +826,7 @@ bool RSForegroundFilterRestoreDrawable::Update(const RSRenderContent& content)
 
 void RSForegroundFilterRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    RSPropertiesPainter::DrawForegroundFilter(content.GetRenderProperties(), canvas);
+    RSPropertiesPainter::DrawForegrou]ndFilter(content.GetRenderProperties(), canvas);
 }
 
 // effect data

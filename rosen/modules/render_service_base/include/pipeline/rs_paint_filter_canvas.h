@@ -238,18 +238,20 @@ public:
     }
 
     void ReplaceMainScreenData(Drawing::Surface* surface, RSPaintFilterCanvas* canvas)
-    {
-        storeMainScreenSurface_.push(surface_);
-        storeMainScreenCanvas_.push(canvas_);
-        surface_ = surface;
-        canvas_ = canvas;
+    {//surface_ canvas_ 此函数安全
+        if (surface != nullptr && canvas!=nullptr) {
+            storeMainScreenSurface_.push(surface_);
+            storeMainScreenCanvas_.push(canvas_);
+            surface_ = surface;
+            canvas_ = canvas;
+        }
     }
 
     void SwapBackMainScreenData()
-    {
+    {//安全
         if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty()) {
-            surface_ = storeMainScreenSurface_.top();
-            canvas_ = storeMainScreenCanvas_.top();
+            surface_ = storeMainScreenSurface_.top(); //这个top肯定不为null
+            canvas_ = storeMainScreenCanvas_.top();//这个top肯定不为null
             storeMainScreenSurface_.pop();
             storeMainScreenCanvas_.pop();
             offscreenDataList_.pop();

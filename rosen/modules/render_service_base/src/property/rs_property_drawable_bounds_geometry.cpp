@@ -753,12 +753,11 @@ void RSCompositingFilterDrawable::Draw(const RSRenderContent& content, RSPaintFi
     RSPropertiesPainter::DrawFilter(content.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
 }
 
-bool IsForegroundFilterValid(const RSRenderContent& context)
+bool IsForegroundFilterValid(const RSRenderContent& content)
 {
     auto& rsFilter = content.GetRenderProperties().GetForegroundFilter();
     auto boundsRect = content.GetRenderProperties().GetBoundsRect();
-    bool isBoundsValid = boundsRect && !boundsRect->IsEmpty();
-    if (rsFilter == nullptr || !isBoundsValid) {
+    if (rsFilter == nullptr || boundsRect.IsEmpty()) {
         return false;
     }
     return true;
@@ -772,7 +771,7 @@ RSPropertyDrawable::DrawablePtr RSForegroundFilterDrawable::Generate(const RSRen
         return nullptr;
     }
 
-    if (!IsForegroundFilterValid) {
+    if (!IsForegroundFilterValid(content)) {
         return nullptr;
     }
     return std::make_unique<RSForegroundFilterDrawable>();
@@ -795,6 +794,9 @@ void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFil
         return;
     }
     auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface.get());
+    if (!offscreenCanvas) { //怎么保证save和restore是对应的，需要调研下blendmode的实现
+        return;
+    }
     RSPaintFilterCanvas::OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
     canvas.StoreOffscreenData(offscreenData);
     canvas.ReplaceMainScreenData(offscreenSurface.get(), offscreenCanvas.get());
@@ -812,7 +814,7 @@ RSPropertyDrawable::DrawablePtr RSForegroundFilterRestoreDrawable::Generate(cons
         return nullptr;
     }
 
-    if (!IsForegroundFilterValid) {
+    if (!IsForegroundFilterValid(content)) {
         return nullptr;
     }
     // 需要一点保护机制， 如果save成功了，才restore

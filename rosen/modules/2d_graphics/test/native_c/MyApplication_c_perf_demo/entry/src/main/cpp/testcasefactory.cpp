@@ -161,7 +161,7 @@ namespace {
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
             {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
             {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
-
+            {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},    
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

@@ -20,7 +20,7 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 
 #include "foundation/graphic/graphic_2d/utils/log/rs_trace.h"
 

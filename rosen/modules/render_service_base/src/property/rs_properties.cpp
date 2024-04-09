@@ -2737,6 +2737,7 @@ void RSProperties::OnApplyModifiers()
             boundsGeo_->Round();
         }
     }
+    ROSEN_LOGE("foregroundEffectBlur: %{public}f", foregroundEffectRadius_);
     if (colorFilterNeedUpdate_) {
         GenerateColorFilter();
     }

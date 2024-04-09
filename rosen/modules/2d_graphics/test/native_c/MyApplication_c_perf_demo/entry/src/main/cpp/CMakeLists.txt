@@ -51,6 +51,7 @@ add_library(entry SHARED
     dm/filltypes.cpp
     dm/dashing.cpp
     dm/path_interior.cpp
+    dm/strokes.cpp
 )
 
 add_library(myxnode SHARED
@@ -95,6 +96,7 @@ add_library(myxnode SHARED
     dm/filltypes.cpp
     dm/dashing.cpp
     dm/path_interior.cpp
+    dm/strokes.cpp
 )
 
 find_library(

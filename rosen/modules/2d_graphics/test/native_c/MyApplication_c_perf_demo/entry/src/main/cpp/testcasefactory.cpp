@@ -46,12 +46,13 @@
 #include "dm/alpha_image.h"
 #include "dm/shadowutils.h"
 #include "dm/clipped_cubic.h"
-
 #include "dm/circular_arcs.h"
 #include "dm/largeclippedpath.h"
 #include "dm/filltypes.h"
 #include "dm/dashing.h"
 #include "dm/path_interior.h"
+#include "dm/strokes.h"
+
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -156,6 +157,8 @@ namespace {
             {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
+            {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
+            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
 
     };
 

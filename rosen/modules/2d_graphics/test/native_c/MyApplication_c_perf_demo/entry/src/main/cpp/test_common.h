@@ -54,5 +54,18 @@ struct DrawRect{
         fBottom = b;
         return true;
     }
+    void offset(float dx, float dy){
+        fLeft += dx;
+        fTop += dy;
+        fRight += dx;
+        fBottom += dy;
+    }
+    void setXYWH(float x, float y , float width, float height  )
+    {
+        fLeft = x;
+        fTop = y;
+        fRight = x + width;
+        fBottom = y + height;
+    }
 };
 #endif // TEST_COMMON_H

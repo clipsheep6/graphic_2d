@@ -26,14 +26,16 @@ namespace  {
         OH_Drawing_BrushSetColor(brush, hasInterior?color_to_565(0xFF8888FF):0xFF888888);//gray
         OH_Drawing_CanvasAttachBrush(canvas, brush);
         OH_Drawing_CanvasDrawPath(canvas, path);
-        OH_Drawing_CanvasDetachBrush(canvas);
-        OH_Drawing_BrushDestroy(brush);
-
+    
         OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+        OH_Drawing_PenSetAntiAlias(pen, true);
         OH_Drawing_PenSetColor(pen, 0xFFFF0000);
         OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawPath(canvas, path);
+    
         OH_Drawing_CanvasDetachPen(canvas);
+        OH_Drawing_CanvasDetachBrush(canvas);
+        OH_Drawing_BrushDestroy(brush);
         OH_Drawing_PenDestroy(pen);
     }
 

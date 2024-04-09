@@ -84,22 +84,23 @@ const float H = 64;
 
 static float drawCell(OH_Drawing_Canvas* canvas, OH_Drawing_BlendMode mode, uint8_t a0, uint8_t a1) {
 
-    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
-    OH_Drawing_PenSetAntiAlias(pen, true);
-    OH_Drawing_PenSetWidth(pen, 2.0);
-    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_CanvasClear(canvas, 0xFFFFFFFF);
+    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
+    OH_Drawing_BrushSetAntiAlias(brush, true);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
 
     OH_Drawing_Rect* r = OH_Drawing_RectCreate(W/10,H/10,W-W/10,H-H/10);
     
-    OH_Drawing_PenSetColor(pen, 0xFF0000FF);
-    OH_Drawing_PenSetAlpha(pen, a0);
-    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_BrushSetColor(brush, 0xFF0000FF);
+    OH_Drawing_BrushSetAlpha(brush, a0);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, r);
+    
 
-    OH_Drawing_PenSetColor(pen, 0xFFFF0000);
-    OH_Drawing_PenSetAlpha(pen, a1);
-    OH_Drawing_PenSetBlendMode(pen, mode);
-    OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_BrushSetColor(brush, 0xFFFF0000);
+    OH_Drawing_BrushSetAlpha(brush, a1);
+    OH_Drawing_BrushSetBlendMode(brush, mode);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
 
     float offset = 1.0 / 3;
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(W / 4 + offset,
@@ -107,8 +108,8 @@ static float drawCell(OH_Drawing_Canvas* canvas, OH_Drawing_BlendMode mode, uint
                                                   W / 4 + offset+W / 2, 
                                                   H / 4 + offset+H / 2);
     OH_Drawing_CanvasDrawRect(canvas, rect);
-    OH_Drawing_CanvasDetachPen(canvas);
-    OH_Drawing_PenDestroy(pen);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_BrushDestroy(brush);
     OH_Drawing_RectDestroy(rect);
     OH_Drawing_RectDestroy(r);
     return H;
@@ -143,13 +144,11 @@ AARectModes::~AARectModes() {
 
 void AARectModes::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
-
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
-    OH_Drawing_BrushSetAntiAlias(brush,true);
-    OH_Drawing_ShaderEffect *shaderEffect = make_bg_shader();
-    OH_Drawing_BrushSetColor(brush, 0xFFFFFFFF);
-    OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
-    OH_Drawing_CanvasAttachBrush(canvas, brush);
+//    OH_Drawing_BrushSetAntiAlias(brush,true);
+//    OH_Drawing_ShaderEffect *shaderEffect = make_bg_shader();
+//    OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
+    
     if(false)
         test4(canvas);
     
@@ -167,21 +166,22 @@ void AARectModes::OnTestFunction(OH_Drawing_Canvas* canvas)
                 OH_Drawing_CanvasTranslate(canvas, W * 5.0, 0);
                 OH_Drawing_CanvasSave(canvas);
             }
-            
+            OH_Drawing_BrushSetColor(brush, 0xFFFFFFFF);
+            OH_Drawing_BrushSetAlpha(brush, gAlphaValue[alpha & 2]);
+            OH_Drawing_CanvasAttachBrush(canvas, brush);
             OH_Drawing_CanvasDrawRect(canvas, bounds);
             OH_Drawing_CanvasSaveLayer(canvas, bounds, brush);
             float dy = drawCell(canvas, gModes[i],
                                    gAlphaValue[alpha & 1],
                                    gAlphaValue[alpha & 2]);
             OH_Drawing_CanvasRestore(canvas);
-            OH_Drawing_CanvasTranslate(canvas, 0, dy * 5 / 4);
+            OH_Drawing_CanvasTranslate(canvas, 0, dy * 5.0f / 4.0f);
         }
         OH_Drawing_CanvasRestore(canvas);
         OH_Drawing_CanvasRestore(canvas);
-        OH_Drawing_CanvasTranslate(canvas, W * 5 / 4, 0);
+        OH_Drawing_CanvasTranslate(canvas, W * 5.0f / 4.0f, 0);
     }
     OH_Drawing_RectDestroy(bounds);
-    OH_Drawing_ShaderEffectDestroy(shaderEffect);
+//    OH_Drawing_ShaderEffectDestroy(shaderEffect);
     OH_Drawing_BrushDestroy(brush);
-    
 }

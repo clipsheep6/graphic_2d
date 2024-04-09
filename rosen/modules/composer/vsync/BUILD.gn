@@ -39,7 +39,6 @@ config("vsync_config") {
 
 config("vsync_public_config") {
   include_dirs = [
-    "//base/notification/eventhandler/interfaces/inner_api",
     "$graphic_2d_root/interfaces/inner_api/composer",
     "$graphic_2d_root/rosen/include/common",
     "$graphic_2d_root/rosen/modules/composer/vsync/include",
@@ -72,10 +71,7 @@ ohos_shared_library("libvsync") {
 
   configs = [ ":vsync_config" ]
 
-  public_configs = [
-    ":vsync_public_config",
-    "//commonlibrary/c_utils/base:utils_config",
-  ]
+  public_configs = [ ":vsync_public_config" ]
 
   deps = [
     "$graphic_2d_root/utils:sandbox_utils",
@@ -88,9 +84,9 @@ ohos_shared_library("libvsync") {
   }
 
   public_deps = [ "$graphic_2d_root/utils:scoped_bytrace" ]
+
   external_deps = [
     "c_utils:utils",
-    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
@@ -98,6 +94,7 @@ ohos_shared_library("libvsync") {
     "samgr:samgr_proxy",
   ]
 
+  public_external_deps = [ "eventhandler:libeventhandler" ]
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     include_dirs += graphic_2d_ext_configs.libvsync_ext_include_dirs
 

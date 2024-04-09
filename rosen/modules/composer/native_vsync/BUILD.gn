@@ -41,10 +41,7 @@ ohos_shared_library("libnative_vsync") {
 
   configs = [ ":native_vsync_config" ]
 
-  public_configs = [
-    ":native_vsync_public_config",
-    "//commonlibrary/c_utils/base:utils_config",
-  ]
+  public_configs = [ ":native_vsync_public_config" ]
 
   output_extension = "so"
 

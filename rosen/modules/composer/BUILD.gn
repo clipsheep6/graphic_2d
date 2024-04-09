@@ -32,7 +32,6 @@ config("composer_config") {
 config("composer_public_config") {
   include_dirs = [
     "$graphic_2d_root/rosen/include/common",
-    "//drivers/peripheral/display/interfaces/include",
     "$graphic_2d_root/interfaces/inner_api/common",
     "$graphic_2d_root/rosen/modules/composer/hdi_backend/include",
     "$graphic_2d_root/rosen/modules/composer/vsync/include",
@@ -64,12 +63,9 @@ ohos_shared_library("libcomposer") {
   defines = []
   defines += gpu_defines
 
-  public_configs = [
-    ":composer_public_config",
-    "//commonlibrary/c_utils/base:utils_config",
-  ]
+  public_configs = [ ":composer_public_config" ]
 
-  public_deps = [
+  deps = [
     "$graphic_2d_root/utils:scoped_bytrace",
     "vsync:libvsync",
   ]

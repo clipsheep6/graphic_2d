@@ -1180,8 +1180,8 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
 
 void RSNode::SetForegroundEffectRadius(const float blurRadius)
 {
-    SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
-        RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
+    // SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
+    //     RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
 }
 
 void RSNode::SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter)
@@ -1203,13 +1203,15 @@ void RSNode::SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlu
 
 void RSNode::SetDynamicLightUpRate(const float rate)
 {
-    SetProperty<RSDynamicLightUpRateModifier, RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_RATE, rate);
+    SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
+        RSModifierType::FOREGROUND_EFFECT_RADIUS, rate);
+    //SetProperty<RSDynamicLightUpRateModifier, RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_RATE, rate);
 }
 
 void RSNode::SetDynamicLightUpDegree(const float lightUpDegree)
 {
-    SetProperty<RSDynamicLightUpDegreeModifier,
-        RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, lightUpDegree);
+    // SetProperty<RSDynamicLightUpDegreeModifier,
+    //     RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, lightUpDegree);
 }
 
 void RSNode::SetDynamicDimDegree(const float dimDegree)

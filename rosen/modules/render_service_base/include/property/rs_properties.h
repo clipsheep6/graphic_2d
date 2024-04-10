@@ -229,6 +229,7 @@ public:
     bool NeedFilter() const;
     void SetGreyCoef(const std::optional<Vector2f>& greyCoef);
     const std::optional<Vector2f>& GetGreyCoef() const;
+    const std::shared_ptr<RSFilter>& GetForegroundFilter() const;
 
     // shadow properties
     void SetShadowColor(Color color);
@@ -457,6 +458,7 @@ private:
     float spherizeDegree_ = 0.f;
     bool isSpherizeValid_ = false;
     float lightUpEffectDegree_ = 1.0f;
+    std::shared_ptr<RSFilter> foregroundFilter_ = nullptr; // view content filter
 
     std::weak_ptr<RSRenderNode> backref_;
 

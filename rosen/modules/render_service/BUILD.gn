@@ -222,6 +222,8 @@ ohos_shared_library("librender_service") {
     "//third_party/json/single_include",
   ]
 
+  deps += [ "//third_party/json:nlohmann_json_static" ]
+
   public_deps = [
     "//third_party/libpng:libpng",
     "//third_party/libxml2:libxml2",

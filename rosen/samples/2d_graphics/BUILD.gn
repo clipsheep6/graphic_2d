@@ -90,8 +90,6 @@ ohos_executable("drawing_engine_sample") {
 
   deps = [ "$graphic_2d_root/rosen/modules/composer:libcomposer" ]
 
-  deps += [ "//third_party/skia:skia_ohos" ]
-
   public_deps = libgl
   defines = gpu_defines
 
@@ -114,6 +112,7 @@ ohos_executable("drawing_engine_sample") {
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "skia:skia_ohos",
   ]
   public_external_deps = [ "openssl:libcrypto_shared" ]
 
@@ -145,6 +144,7 @@ ohos_executable("drawing_sample_rs") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "window_manager:libwm",
   ]
 
   part_name = "graphic_2d"

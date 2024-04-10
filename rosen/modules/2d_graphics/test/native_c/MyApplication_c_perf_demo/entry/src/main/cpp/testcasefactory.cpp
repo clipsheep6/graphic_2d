@@ -53,6 +53,7 @@
 #include "dm/dashing.h"
 #include "dm/path_interior.h"
 #include "dm/strokes.h"
+#include "dm/alpha_gradients.h"
 
 
 namespace {
@@ -160,7 +161,8 @@ namespace {
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
             {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
-            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
+            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},    
+            {"alphagradients", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaGradients>(); }},           
 
     };
 

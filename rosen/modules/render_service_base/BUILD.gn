@@ -476,7 +476,6 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/rosen/modules/render_service_profiler",
     "//third_party/json/single_include",
   ]
-  deps += [ "//third_party/json:nlohmann_json_static" ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     sources -= graphic_2d_ext_configs.librender_service_base_ext_sources_del

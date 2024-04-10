@@ -15,16 +15,20 @@
 
 #include "js_fontcollection.h"
 #include "utils/log.h"
+
+#include "../drawing/js_drawing_utils.h"
+
 namespace OHOS::Rosen {
 thread_local napi_ref JsFontCollection::constructor_ = nullptr;
 const std::string CLASS_NAME = "FontCollection";
 napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
 {
+    ROSEN_LOGE(" clp-ark JsFontCollection::Constructor  000 ");
     size_t argCount = 0;
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Constructor failed to napi_get_cb_info");
+        ROSEN_LOGE(" clp-ark JsFontCollection::Constructor failed to napi_get_cb_info");
         return nullptr;
     }
 
@@ -33,14 +37,16 @@ napi_value JsFontCollection::Constructor(napi_env env, napi_callback_info info)
         JsFontCollection::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsFontCollection;
-        LOGE("JsFontCollection::Constructor Failed to wrap native instance");
+        ROSEN_LOGE(" clp-ark JsFontCollection::Constructor Failed to wrap native instance");
         return nullptr;
     }
+    ROSEN_LOGE(" clp-ark JsFontCollection::Constructor  900 ");
     return jsThis;
 }
 
 napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
 {
+    ROSEN_LOGE(" clp-ark JsFontCollection::Init  000 ");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("disableFallback", JsFontCollection::DisableFallback),
     };
@@ -49,21 +55,22 @@ napi_value JsFontCollection::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Init Failed to define FontCollection class");
+        ROSEN_LOGE(" clp-ark JsFontCollection::Init Failed to define FontCollection class");
         return nullptr;
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Init Failed to create reference of constructor");
+        ROSEN_LOGE(" clp-ark JsFontCollection::Init Failed to create reference of constructor");
         return nullptr;
     }
 
     status = napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor);
     if (status != napi_ok) {
-        LOGE("JsFontCollection::Init Failed to set constructor");
+        ROSEN_LOGE(" clp-ark JsFontCollection::Init Failed to set constructor");
         return nullptr;
     }
+    ROSEN_LOGE(" clp-ark JsFontCollection::Init  900 ");
     return exportObj;
 }
 
@@ -79,6 +86,8 @@ void JsFontCollection::Destructor(napi_env env, void* nativeObject, void* finali
 JsFontCollection::JsFontCollection()
 {
     m_fontCollection = OHOS::Rosen::FontCollection::Create();
+
+    ROSEN_LOGE(" clp-ark JsFontCollection::JsFontCollection m_fontCollection = %p ",  m_fontCollection.get());
 }
 
 std::shared_ptr<FontCollection> JsFontCollection::GetFontCollection()
@@ -95,7 +104,7 @@ napi_value JsFontCollection::DisableFallback(napi_env env, napi_callback_info in
 napi_value JsFontCollection::OnDisableFallback(napi_env env, napi_callback_info info)
 {
     if (m_fontCollection == nullptr) {
-        LOGE("JsFontCollection::OnClose path is nullptr");
+        ROSEN_LOGE(" clp-ark JsFontCollection::OnClose path is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 

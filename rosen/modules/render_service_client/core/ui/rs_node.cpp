@@ -1197,7 +1197,7 @@ void RSNode::SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlu
 void RSNode::SetDynamicLightUpRate(const float rate)
 {
     SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
-        RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
+        RSModifierType::FOREGROUND_EFFECT_RADIUS, rate);
     //SetProperty<RSDynamicLightUpRateModifier, RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_RATE, rate);
 }
 

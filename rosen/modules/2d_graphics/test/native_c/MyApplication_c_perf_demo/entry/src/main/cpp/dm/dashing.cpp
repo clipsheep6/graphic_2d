@@ -89,7 +89,6 @@ void Dashing::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_PenDestroy(pen);
 }
 
-
 void make_path_line(OH_Drawing_Path* path,DrawRect rect)
 {
     OH_Drawing_PathMoveTo(path, rect.fLeft, rect.fTop);
@@ -120,6 +119,7 @@ void make_path_star(OH_Drawing_Path* path,DrawRect rect)
 //matrix  rect to rect not realize
 //SkMatrix matrix = SkMatrix::RectToRect(path.getBounds(), bounds, SkMatrix::kCenter_ScaleToFit);
 }
+
 Dashing2::Dashing2() {
     //skia dm file gm/fontregen.cpp
     bitmapWidth_ = kW;
@@ -167,4 +167,93 @@ void Dashing2::OnTestFunction(OH_Drawing_Canvas* canvas)
             OH_Drawing_PathDestroy(path);   
         }
     }
+}
+
+Dashing4::Dashing4() {
+    //skia dm file gm/fontregen.cpp
+    bitmapWidth_ = 640;
+    bitmapHeight_ = 1100;
+    fileName_ = "dashing4";
+}
+
+void Dashing4::OnTestFunction(OH_Drawing_Canvas* canvas)
+{
+    struct Intervals {
+        int fOnInterval;
+        int fOffInterval;
+    };    
+    
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
+    OH_Drawing_CanvasTranslate(canvas, 20, 20);
+    OH_Drawing_CanvasTranslate(canvas, 0.5, 0.5);
+
+    for (int width = 0; width <= 2; ++width) {
+        for (const Intervals &data : {Intervals{1, 1},
+                                      Intervals{4, 2},
+                                      Intervals{0, 4}}) { // test for zero length on interval.
+                                                          // zero length intervals should draw
+                                                          // a line of squares or circles
+            for (bool aa : {false, true}) {
+                for (auto cap : {LINE_ROUND_CAP, LINE_SQUARE_CAP}) {
+                    int w = width * width * width;
+                    OH_Drawing_PenSetAntiAlias(pen, aa);
+                    OH_Drawing_PenSetWidth(pen, w);
+                    OH_Drawing_PenSetCap(pen, cap);
+                    int scale = w ? w : 1;
+                    
+                    drawline(canvas, data.fOnInterval * scale, data.fOffInterval * scale, pen);
+                    OH_Drawing_CanvasTranslate(canvas, 0, 20);
+                }
+            }
+        }
+    }
+    for (int aa = 0; aa <= 1; ++aa) {
+        OH_Drawing_PenSetAntiAlias(pen, aa);
+        OH_Drawing_PenSetWidth(pen, 8.f);
+        OH_Drawing_PenSetCap(pen, LINE_SQUARE_CAP);
+        // Single dash element that is cut off at start and end
+        drawline(canvas, 32, 16, pen, 20.f, 0, 5.f);
+        OH_Drawing_CanvasTranslate(canvas, 0, 20);
+
+        // Two dash elements where each one is cut off at beginning and end respectively
+        drawline(canvas, 32, 16, pen, 56.f, 0, 5.f);
+        OH_Drawing_CanvasTranslate(canvas, 0, 20);
+
+        // Many dash elements where first and last are cut off at beginning and end respectively
+        drawline(canvas, 32, 16, pen, 584.f, 0, 5.f);
+        OH_Drawing_CanvasTranslate(canvas, 0, 20);
+
+        // Diagonal dash line where src pnts are not axis aligned (as apposed to being diagonal from
+        // a canvas rotation)
+        drawline(canvas, 32, 16, pen, 600.f, 30.f);
+        OH_Drawing_CanvasTranslate(canvas, 0, 20);
+
+        // Case where only the off interval exists on the line. Thus nothing should be drawn
+        drawline(canvas, 32, 16, pen, 8.f, 0.f, 40.f);
+        OH_Drawing_CanvasTranslate(canvas, 0, 20);
+    }
+    
+    // Test overlapping circles.
+    OH_Drawing_CanvasTranslate(canvas, 5, 20);
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetCap(pen, LINE_ROUND_CAP);
+    OH_Drawing_PenSetColor(pen, 0x44000000);
+    OH_Drawing_PenSetWidth(pen, 40);
+    drawline(canvas, 0, 30, pen);
+    
+    OH_Drawing_CanvasTranslate(canvas, 0, 50);
+    OH_Drawing_PenSetCap(pen, LINE_SQUARE_CAP);
+    drawline(canvas, 0, 30, pen);
+    
+    // Test we draw the cap when the line length is zero.
+    OH_Drawing_CanvasTranslate(canvas, 0, 50);
+    OH_Drawing_PenSetCap(pen, LINE_ROUND_CAP);
+    OH_Drawing_PenSetColor(pen, 0xFF000000);
+    OH_Drawing_PenSetWidth(pen, 11);
+    drawline(canvas, 0, 30, pen, 0);
+    
+    OH_Drawing_CanvasTranslate(canvas, 100, 0);    
+    drawline(canvas, 1, 30, pen, 0);
+
+    OH_Drawing_PenDestroy(pen);
 }

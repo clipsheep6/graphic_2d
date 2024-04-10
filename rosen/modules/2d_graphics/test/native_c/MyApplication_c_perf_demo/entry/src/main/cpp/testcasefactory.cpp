@@ -162,6 +162,8 @@ namespace {
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
             {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
+            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
+            {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},    
             {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},
             {"convex_paths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},       

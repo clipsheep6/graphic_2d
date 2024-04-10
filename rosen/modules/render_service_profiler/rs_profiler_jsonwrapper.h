@@ -20,8 +20,7 @@
 
 namespace OHOS::Rosen
 {
-struct JsonWrapper
-{
+struct JsonWrapper {
     nlohmann::json& json;
 };
 } // namespace OHOS::Rosen

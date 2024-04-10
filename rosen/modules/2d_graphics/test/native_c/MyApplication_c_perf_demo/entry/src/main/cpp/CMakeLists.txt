@@ -53,6 +53,7 @@ add_library(entry SHARED
     dm/dashing.cpp
     dm/path_interior.cpp
     dm/strokes.cpp
+    dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
 )
 
@@ -100,6 +101,7 @@ add_library(myxnode SHARED
     dm/dashing.cpp
     dm/path_interior.cpp
     dm/strokes.cpp
+    dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
 )
 

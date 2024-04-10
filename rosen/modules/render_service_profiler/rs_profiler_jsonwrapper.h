@@ -16,11 +16,20 @@
 #ifndef RENDER_SERVICE_PROFILER_JSONWRAPPER_H
 #define RENDER_SERVICE_PROFILER_JSONWRAPPER_H
 
-#include "nlohmann/json.hpp"
+#include "json/json.h"
 
 namespace OHOS::Rosen {
 struct JsonWrapper {
-    nlohmann::json& json;
+    Json::Value& json;
+
+    template <typename T>
+    static void PushArray(Json::Value& json, std::initializer_list<T> values)
+    {
+        json = Json::arrayValue;
+        for (const auto& value : values) {
+            json.append(value);
+        }
+    }
 };
 } // namespace OHOS::Rosen
 

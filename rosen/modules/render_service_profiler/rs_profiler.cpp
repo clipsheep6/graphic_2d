@@ -318,15 +318,15 @@ void RSProfiler::RenderServiceTreeDump(JsonWrapper && outWrapper)
 
     auto& out = outWrapper.json;
     auto& animation = out["Animation Node"];
-    animation = nlohmann::json::array();
+    animation = Json::arrayValue;
     for (auto& [nodeId, _] : g_renderServiceContext->animatingNodeList_) {
-        animation.push_back(nodeId);
+        animation.append(nodeId);
     }
 
     const auto rootNode = g_renderServiceContext->GetGlobalRootRenderNode();
     auto& root = out["Root node"];
     if (rootNode == nullptr) {
-        root = nlohmann::json {};
+        root = Json::objectValue;
         return;
     }
 
@@ -630,23 +630,22 @@ void RSProfiler::DumpTree(const ArgList& args)
 
 void RSProfiler::DumpTreeToJson(const ArgList& args)
 {
-    nlohmann::json tree;
+    Json::Value tree;
     if (!g_renderServiceThread) {
         return;
     }
     RenderServiceTreeDump(JsonWrapper{tree});
 
-    tree["Display"] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    JsonWrapper::PushArray(tree["Display"], { 0.0f, 0.0f, 0.0f, 0.0f });
     if (auto displayNode = GetDisplayNode(*g_renderServiceContext); displayNode) {
         if (auto dirtyManager = displayNode->GetDirtyManager(); dirtyManager) {
             const auto displayRect = dirtyManager->GetSurfaceRect();
-            tree["Display"] = { displayRect.GetLeft(), displayRect.GetTop(), displayRect.GetRight(),
-                displayRect.GetBottom() };
+            JsonWrapper::PushArray(tree["Display"],
+                { displayRect.GetLeft(), displayRect.GetTop(), displayRect.GetRight(), displayRect.GetBottom() });
         }
     }
 
-    std::string dump = tree.dump();
-    Network::SendRSTreeDumpJSON(dump);
+    Network::SendRSTreeDumpJSON(Json::FastWriter{}.write(tree));
 }
 
 void RSProfiler::DumpSurfaces(const ArgList& args)

@@ -54,14 +54,14 @@ void RSProfiler::DumpNode(const RSRenderNode& node, JsonWrapper && outWrapper)
     DumpAnimations(node.animationManager_, JsonWrapper{out});
 
     for (auto& child : *node.GetSortedChildren()) {
-        nlohmann::json childJson;
+        Json::Value childJson;
         DumpNode(*child, JsonWrapper{childJson});
-        out["children"].push_back(std::move(childJson));
+        out["children"].append(std::move(childJson));
     }
     for (auto& [child, pos] : node.disappearingChildren_) {
-        nlohmann::json childJson;
+        Json::Value childJson;
         DumpNode(*child, JsonWrapper{childJson});
-        out["children"].push_back(std::move(childJson));
+        out["children"].append(std::move(childJson));
     }
 }
 
@@ -99,23 +99,23 @@ void RSProfiler::DumpSubClassNode(const RSRenderNode& node, JsonWrapper && outWr
 void RSProfiler::DumpDrawCmdModifiers(const RSRenderNode& node, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
-    nlohmann::json& modifiersJson = out["DrawCmdModifiers"];
+    auto& modifiersJson = out["DrawCmdModifiers"];
 
     for (auto& [type, modifiers] : node.renderContent_->drawCmdModifiers_) {
-        nlohmann::json modifierDesc;
+        Json::Value modifierDesc;
         modifierDesc["type"] = std::to_string(static_cast<int>(type));
-        modifierDesc["modifiers"] = nlohmann::json::array();
+        modifierDesc["modifiers"] = Json::arrayValue;
         for (auto& modifier : modifiers) {
             DumpDrawCmdModifier(node, JsonWrapper{modifierDesc["modifiers"]}, static_cast<int>(type), *modifier);
         }
-        modifiersJson.emplace_back(std::move(modifierDesc));
+        modifiersJson.append(std::move(modifierDesc));
     }
 }
 
 void RSProfiler::DumpDrawCmdModifier(
     const RSRenderNode& node, JsonWrapper && outWrapper, int type, RSRenderModifier& modifier)
 {
-    nlohmann::json property;
+    Json::Value property;
     auto modType = static_cast<RSModifierType>(type);
 
     if (modType < RSModifierType::ENV_FOREGROUND_COLOR) {
@@ -131,7 +131,9 @@ void RSProfiler::DumpDrawCmdModifier(
             oldpos = pos + 1;
         }
 
-        property["drawCmdList"] = properties;
+        for (const auto& prop : properties) {
+            property["drawCmdList"].append(prop);
+        }
     } else if (modType == RSModifierType::ENV_FOREGROUND_COLOR) {
         auto propertyValue = std::static_pointer_cast<RSRenderAnimatableProperty<Color>>(modifier.GetProperty())->Get();
         property["ENV_FOREGROUND_COLOR"] = std::to_string(propertyValue.AsRgbaInt());
@@ -147,7 +149,7 @@ void RSProfiler::DumpDrawCmdModifier(
     }
 
     if (!property.empty()) {
-        outWrapper.json.push_back(std::move(property));
+        outWrapper.json.append(std::move(property));
     }
 }
 
@@ -161,8 +163,10 @@ static std::string Hex(uint32_t value)
 void RSProfiler::DumpProperties(const RSProperties& p, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
-    out["Bounds"] = { p.GetBoundsPositionX(), p.GetBoundsPositionY(), p.GetBoundsWidth(), p.GetBoundsHeight() };
-    out["Frame"] = { p.GetFramePositionX(), p.GetFramePositionY(), p.GetFrameWidth(), p.GetFrameHeight() };
+    JsonWrapper::PushArray(
+        out["Bounds"], { p.GetBoundsPositionX(), p.GetBoundsPositionY(), p.GetBoundsWidth(), p.GetBoundsHeight() });
+    JsonWrapper::PushArray(
+        out["Frame"], { p.GetFramePositionX(), p.GetFramePositionY(), p.GetFrameWidth(), p.GetFrameHeight() });
 
     if (!p.GetVisible()) {
         out["IsVisible"] = false;
@@ -182,7 +186,7 @@ void RSProfiler::DumpPropertiesTransform(const RSProperties& p, JsonWrapper && o
     std::unique_ptr<Transform> defaultTrans = std::make_unique<Transform>();
     Vector2f pivot = p.GetPivot();
     if ((!ROSEN_EQ(pivot[0], defaultTrans->pivotX_) || !ROSEN_EQ(pivot[1], defaultTrans->pivotY_))) {
-        out["Pivot"] = { pivot[0], pivot[1] };
+        JsonWrapper::PushArray(out["Pivot"], { pivot[0], pivot[1]});
     }
 
     if (!ROSEN_EQ(p.GetRotation(), defaultTrans->rotation_)) {
@@ -227,8 +231,8 @@ void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, JsonWrapper && 
     auto& out = outWrapper.json;
 
     if (!p.GetCornerRadius().IsZero()) {
-        out["CornerRadius"] = { p.GetCornerRadius().x_, p.GetCornerRadius().y_, p.GetCornerRadius().z_,
-            p.GetCornerRadius().w_ };
+        JsonWrapper::PushArray(out["CornerRadius"],
+            { p.GetCornerRadius().x_, p.GetCornerRadius().y_, p.GetCornerRadius().z_, p.GetCornerRadius().w_ });
     }
 
     if (p.pixelStretch_.has_value()) {
@@ -259,8 +263,8 @@ void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, JsonWrapper && 
         !ROSEN_EQ(p.GetBgImagePositionY(), defaultDecoration->bgImageRect_.top_) ||
         !ROSEN_EQ(p.GetBgImageWidth(), defaultDecoration->bgImageRect_.width_) ||
         !ROSEN_EQ(p.GetBgImageHeight(), defaultDecoration->bgImageRect_.height_))) {
-        out["BgImage"] = { p.GetBgImagePositionX(), p.GetBgImagePositionY(), p.GetBgImageWidth(),
-            p.GetBgImageHeight() };
+        JsonWrapper::PushArray(out["BgImage"],
+            { p.GetBgImagePositionX(), p.GetBgImagePositionY(), p.GetBgImageWidth(), p.GetBgImageHeight() });
     }
 }
 
@@ -320,7 +324,7 @@ void RSProfiler::DumpPropertiesEffects(const RSProperties& p, JsonWrapper && out
     }
 
     if (!ROSEN_EQ(p.GetFrameGravity(), Gravity::DEFAULT)) {
-        out["FrameGravity"] = p.GetFrameGravity();
+        out["FrameGravity"] = static_cast<int>(p.GetFrameGravity());
     }
 
     if (p.GetUseEffect()) {
@@ -409,7 +413,7 @@ void RSProfiler::DumpAnimations(const RSAnimationManager& animationManager, Json
 
 void RSProfiler::DumpAnimation(const RSRenderAnimation& animation, JsonWrapper && outWrapper)
 {
-    nlohmann::json obj;
+    Json::Value obj;
     obj["id"] = animation.id_;
     obj["type"] = "unknown";
     obj["AnimationState"] = std::to_string(static_cast<int>(animation.state_));
@@ -424,7 +428,7 @@ void RSProfiler::DumpAnimation(const RSRenderAnimation& animation, JsonWrapper &
     obj["FrameRateRange_min"] = std::to_string(animation.animationFraction_.GetFrameRateRange().min_);
     obj["FrameRateRange_max"] = std::to_string(animation.animationFraction_.GetFrameRateRange().max_);
     obj["FrameRateRange_prefered"] = std::to_string(animation.animationFraction_.GetFrameRateRange().preferred_);
-    outWrapper.json.push_back(std::move(obj));
+    outWrapper.json.append(std::move(obj));
 }
 
 } // namespace OHOS::Rosen

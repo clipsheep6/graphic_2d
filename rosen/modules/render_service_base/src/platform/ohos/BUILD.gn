@@ -110,12 +110,16 @@ ohos_source_set("rosen_ohos_sources") {
   include_dirs = [
     "$graphic_2d_root/rosen/modules/render_service_base/include",
     "$graphic_2d_root/rosen/modules/render_service_base/src",
-    "//commonlibrary/c_utils/base/include",
     "//utils/system/safwk/native/include",
     "$graphic_2d_root/prebuilts/librarys/gpu/include",
-    "//drivers/peripheral/display/interfaces/include/",
     "$graphic_2d_root/rosen/modules/render_service_client/core",
     "$graphic_2d_root/utils/log",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
+    "image_framework:image_native",
   ]
 
   public_external_deps = [
@@ -142,25 +146,24 @@ ohos_source_set("rosen_ohos_sources") {
   }
 
   if (rs_enable_gpu) {
-    include_dirs += [
-      "//third_party/openssl/include",
-      "$graphic_2d_root/interfaces/inner_api/common",
-    ]
-    include_dirs += [ "//third_party/skia" ]
+    include_dirs += [ "$graphic_2d_root/interfaces/inner_api/common" ]
 
     public_deps += [
       "$graphic_2d_root:libgl",
       "$graphic_2d_root:libvulkan",
     ]
 
-    public_external_deps += [ "openssl:libcrypto_shared" ]
+    public_external_deps += [
+      "openssl:libcrypto_shared",
+      "skia:skia_ohos",
+    ]
   }
 
   if (graphic_2d_feature_enable_opinc) {
     include_dirs += opinc_adapter_opt_set.opinc_include_set
   }
 
-  external_deps = [
+  external_deps += [
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

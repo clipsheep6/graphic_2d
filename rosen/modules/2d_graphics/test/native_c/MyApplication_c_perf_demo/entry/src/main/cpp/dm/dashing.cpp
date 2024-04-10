@@ -254,4 +254,6 @@ void Dashing4::OnTestFunction(OH_Drawing_Canvas* canvas)
     
     OH_Drawing_CanvasTranslate(canvas, 100, 0);    
     drawline(canvas, 1, 30, pen, 0);
+
+    OH_Drawing_PenDestroy(pen);
 }

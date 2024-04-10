@@ -756,8 +756,7 @@ void RSCompositingFilterDrawable::Draw(const RSRenderContent& content, RSPaintFi
 bool IsForegroundFilterValid(const RSRenderContent& content)
 {
     auto& rsFilter = content.GetRenderProperties().GetForegroundFilter();
-    auto boundsRect = content.GetRenderProperties().GetBoundsRect();
-    if (rsFilter == nullptr || boundsRect.IsEmpty()) {
+    if (rsFilter == nullptr) {
         return false;
     }
     return true;
@@ -784,17 +783,21 @@ bool RSForegroundFilterDrawable::Update(const RSRenderContent& content)
 
 void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
+    RS_OPTIONAL_TRACE_NAME("RSForegroundFilterDrawable::Draw");
     auto surface = canvas.GetSurface();
     if (!surface) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Draw main screen canvas no surface.");
         return;
     }
     auto bounds = content.GetRenderProperties().GetBoundsRect();
     std::shared_ptr<Drawing::Surface> offscreenSurface = surface->MakeSurface(bounds.width_, bounds.height_);
     if (!offscreenSurface) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Draw create offscreenSurface fail.");
         return;
     }
     auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface.get());
     if (!offscreenCanvas) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Draw create offscreenCanvas fail.");
         return;
     }
     canvas.ReplaceMainScreenData(offscreenSurface, offscreenCanvas);

@@ -108,6 +108,9 @@ void RSForegroundEffectFilter::ComputePassesAndUnit()
     int maxPasses = MAX_PASSES_LARGE_RADIUS;
     float tmpRadius = static_cast<float>(blurRadius_) / DILATED_CONVOLUTION_LARGE_RADIUS;
     numberOfPasses_ = std::min(maxPasses, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
+    if (numberOfPasses_ == 0) {
+        numberOfPasses_ = 1;
+    }
     radiusByPasses_ = tmpRadius / numberOfPasses_;
     unit_ = std::ceil(radiusByPasses_ * blurScale_);
 }
@@ -173,15 +176,15 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas,
     }
 
     Drawing::Matrix blurMatrixInv;
-    blurMatrixInv.Translate(-IMAGE_MOVE_UNIT_NUM * unit_ * numberOfPasses_, -IMAGE_MOVE_UNIT_NUM * unit_ * numberOfPasses_);
+    blurMatrixInv.Translate(-IMAGE_MOVE_UNIT_NUM * unit_ * numberOfPasses_,
+        -IMAGE_MOVE_UNIT_NUM * unit_ * numberOfPasses_);
     blurMatrixInv.PostScale(1/scaleW, 1/scaleH);
     const auto blurShader = Drawing::ShaderEffect::CreateImageShader(*tmpBlur, Drawing::TileMode::DECAL,
-            Drawing::TileMode::DECAL, linear, blurMatrixInv);
+        Drawing::TileMode::DECAL, linear, blurMatrixInv);
     Drawing::Brush brush;
     brush.SetShaderEffect(blurShader);
     canvas.DrawBackground(brush);
     canvas.DetachBrush();
-    RS_OPTIONAL_TRACE_END();
 }
 
 void RSForegroundEffectFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,

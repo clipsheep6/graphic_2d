@@ -603,7 +603,7 @@ std::shared_ptr<Drawing::Image> RSPropertiesPainter::DrawGreyAdjustment(Drawing:
 
 void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
-    RS_OPTIONAL_TRACE_NAME("DrawForegroundFilter");
+    RS_OPTIONAL_TRACE_NAME("DrawForegroundFilter restore");
     auto surface = canvas.GetSurface();
     std::shared_ptr<Drawing::Image> imageSnapshot = nullptr;
     if (surface) {

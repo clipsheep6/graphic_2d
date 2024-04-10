@@ -72,6 +72,8 @@ template("skia_libtxt") {
       "$txt_root/txt/platform.cpp",
       "$txt_root/txt/text_style.cpp",
       "$txt_root/txt/typeface_font_asset_provider.cpp",
+      "$txt_root/impl/text_line_impl.cpp",
+      "$txt_root/impl/run_impl.cpp"
     ]
 
     external_deps = []
@@ -164,7 +166,9 @@ ohos_source_set("skia_paragraph") {
     "//third_party/skia/modules/skparagraph/src/ParagraphPainterImpl.cpp",
     "//third_party/skia/modules/skparagraph/src/ParagraphStyle.cpp",
     "//third_party/skia/modules/skparagraph/src/Run.cpp",
+    "//third_party/skia/modules/skparagraph/src/RunBaseImpl.cpp",
     "//third_party/skia/modules/skparagraph/src/TextLine.cpp",
+    "//third_party/skia/modules/skparagraph/src/TextLineBaseImpl.cpp",
     "//third_party/skia/modules/skparagraph/src/TextShadow.cpp",
     "//third_party/skia/modules/skparagraph/src/TextStyle.cpp",
     "//third_party/skia/modules/skparagraph/src/TextWrapper.cpp",

@@ -106,8 +106,8 @@ void RSForegroundEffectFilter::AdjustRadiusAndScale()
 void RSForegroundEffectFilter::ComputePassesAndUnit()
 {
     float tmpRadius = static_cast<float>(blurRadius_) / DILATED_CONVOLUTION_LARGE_RADIUS;
-    numberOfPasses_ = std::min(MAX_PASSES_LARGE_RADIUS, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num 
-    radiusByPasses_ = tmpRadius / numberOfPasses_; 
+    numberOfPasses_ = std::min(MAX_PASSES_LARGE_RADIUS, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
+    radiusByPasses_ = tmpRadius / numberOfPasses_;
     unit_ = std::ceil(radiusByPasses_ * blurScale_);
 }
 
@@ -145,7 +145,7 @@ void RSForegroundEffectFilter::ApplyForegroundEffect(Drawing::Canvas& canvas,
     blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*image, Drawing::TileMode::DECAL,
         Drawing::TileMode::DECAL, linear, blurMatrix));
     blurBuilder.SetUniform("in_blurOffset", radiusByPasses_ * blurScale_, radiusByPasses_ * blurScale_);
-    
+
     auto scaledInfoGeo = Drawing::ImageInfo(std::ceil(width * blurScale_) + IMAGE_EXPAND_UNIT_NUM * unit_,
         std::ceil(height * blurScale_) + IMAGE_EXPAND_UNIT_NUM * unit_,
         originImageInfo.GetColorType(), originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());

@@ -61,6 +61,7 @@
 #include "pipeline/rs_task_dispatcher.h"
 #include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/rs_uni_render_engine.h"
+#include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_uni_render_visitor.h"
 #include "pipeline/rs_unmarshal_thread.h"
@@ -2780,10 +2781,11 @@ void RSMainThread::PerfForBlurIfNeeded()
     static int cnt = 0;
     auto timestamp = timestamp_;
     if (isUniRender_) {
-        if (!renderThreadParams_) {
+        auto params = RSUniRenderThread::Instance().GetRSRenderThreadParams().get();
+        if (!params) {
             return;
         }
-        timestamp = renderThreadParams_->GetCurrentTimestamp();
+        timestamp = params->GetCurrentTimestamp();
     }
     auto task = [this, timestamp]() {
         if (preBlurCnt == 0) {

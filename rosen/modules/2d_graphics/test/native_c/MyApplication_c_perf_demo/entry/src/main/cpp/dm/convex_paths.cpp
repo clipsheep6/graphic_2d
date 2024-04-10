@@ -120,9 +120,13 @@ void ConvexPaths::MakePath() {
     // fPaths.push_back(SkPath::Polygon({{0,0}, {100,1}, {98,100}, {3,96}}, false));
     // Polygon 对应接口未知
     OH_Drawing_Path* path_Polygon = OH_Drawing_PathCreate();
-    OH_Drawing_PathAddRect(path_Polygon, r.fLeft, r.fTop, r.fRight, r.fBottom, OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
+    OH_Drawing_PathMoveTo(path_Polygon, 0, 0);
+    OH_Drawing_PathLineTo(path_Polygon, 100, 1);
+    OH_Drawing_PathLineTo(path_Polygon, 98, 100);
+    OH_Drawing_PathLineTo(path_Polygon, 3, 96);
+    OH_Drawing_PathClose(path_Polygon);
     fPaths.push_back(path_Polygon);
-    // Polygon接口缺失，用普通矩形作为占位符
+    // Polygon接口缺失,使用LineTo替换
 
     OH_Drawing_Path *rect_path3 = OH_Drawing_PathCreate();
     OH_Drawing_PathArcTo(rect_path3, 0, 0, kRadius, 2*kRadius, 25, 130);
@@ -226,11 +230,12 @@ void ConvexPaths::MakePath() {
 
     // point line
     // fPaths.push_back(SkPath::Line({50, 50}, {50, 50}));
-    // 该接口调用同上Ploygon，待确定
+    // 该接口调用Ploygon，同上，待确定
     OH_Drawing_Path* path_Polygon_2 = OH_Drawing_PathCreate();
-    OH_Drawing_PathAddRect(path_Polygon_2, r.fLeft, r.fTop, r.fRight, r.fBottom, OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
+    OH_Drawing_PathLineTo(path_Polygon_2, 50, 50);
+    OH_Drawing_PathLineTo(path_Polygon_2, 50, 50);
     fPaths.push_back(path_Polygon_2);
-    // Polygon接口缺失，用普通矩形作为占位符
+    // Polygon接口缺失，LineTo替换
 
     // point quad
     OH_Drawing_Path* path_16= OH_Drawing_PathCreate();

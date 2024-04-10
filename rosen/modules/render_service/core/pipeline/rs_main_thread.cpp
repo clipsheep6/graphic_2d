@@ -282,8 +282,7 @@ void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
         RS_PROFILER_ON_FRAME_BEGIN();
-        mainLooping_.store(true);
-        if (isUniRender_) {
+        if (isUniRender_ && !renderThreadParams_) {
             // fill the params, and sync to render thread later
             renderThreadParams_ = std::make_unique<RSRenderThreadParams>();
         }
@@ -340,7 +339,6 @@ void RSMainThread::Init()
         RSUploadResourceThread::Instance().OnRenderEnd();
 #endif
         RSTypefaceCache::Instance().HandleDelayDestroyQueue();
-        mainLooping_.store(false);
         RS_PROFILER_ON_FRAME_END();
     };
     static std::function<void (std::shared_ptr<Drawing::Image> image)> holdDrawingImagefunc =
@@ -1080,6 +1078,9 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
             if (isUniRender_ && surfaceNode->IsCurrentFrameBufferConsumed()) {
                 surfaceNode->UpdateBufferInfo(surfaceNode->GetBuffer(), surfaceNode->GetAcquireFence(),
                     surfaceNode->GetPreBuffer().buffer);
+                if (surfaceNode->GetBufferSizeChanged()) {
+                    doDirectComposition_ = false;
+                }
             }
             if (deviceType_ == DeviceType::PC && isUiFirstOn_ && surfaceNode->IsCurrentFrameBufferConsumed()
                 && surfaceNode->IsHardwareEnabledType() && surfaceNode->IsHardwareForcedDisabledByFilter()) {
@@ -1228,7 +1229,7 @@ void RSMainThread::CheckIfHardwareForcedDisabled()
     // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
     // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
     isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ || isMultiDisplay || hasColorFilter;
-    RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: CheckIfHardwareForcedDisabled isHardwareForcedDisabled_:%d "
+    RS_OPTIONAL_TRACE_NAME_FMT("hwc debug global: CheckIfHardwareForcedDisabled isHardwareForcedDisabled_:%d "
         "doWindowAnimate_:%d isMultiDisplay:%d hasColorFilter:%d",
         isHardwareForcedDisabled_, doWindowAnimate_.load(), isMultiDisplay, hasColorFilter);
 }
@@ -1280,16 +1281,6 @@ uint32_t RSMainThread::GetRefreshRate() const
         screenManager->GetDefaultScreenId());
     if (refreshRate == 0) {
         RS_LOGE("RSMainThread::GetRefreshRate refreshRate is invalid");
-        return STANDARD_REFRESH_RATE;
-    }
-    return refreshRate;
-}
-
-uint32_t RSMainThread::GetDynamicRefreshRate() const
-{
-    uint32_t refreshRate = OHOS::Rosen::HgmCore::Instance().GetScreenCurrentRefreshRate(displayNodeScreenId_);
-    if (refreshRate == 0) {
-        RS_LOGE("RSMainThread::GetDynamicRefreshRate refreshRate is invalid");
         return STANDARD_REFRESH_RATE;
     }
     return refreshRate;
@@ -1522,7 +1513,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     }
     UpdateUIFirstSwitch();
     UpdateRogSizeIfNeeded();
-    UpdateDisplayNodeScreenId();
     auto uniVisitor = std::make_shared<RSUniRenderVisitor>();
     uniVisitor->SetHardwareEnabledNodes(hardwareEnabledNodes_);
     uniVisitor->SetAppWindowNum(appWindowNum_);
@@ -2178,8 +2168,14 @@ void RSMainThread::RequestNextVSync(const std::string& fromWhom, int64_t lastVSy
 
 void RSMainThread::OnVsync(uint64_t timestamp, void* data)
 {
-    RSJankStats::GetInstance().SetStartTime();
-    SetDiscardJankFrames(false);
+    if (isUniRender_) {
+        if (!renderThreadParams_) {
+            // fill the params, and sync to render thread later
+            renderThreadParams_ = std::make_unique<RSRenderThreadParams>();
+        }
+        renderThreadParams_->SetOnVsyncStartTime(GetCurrentSystimeMs());
+        renderThreadParams_->SetOnVsyncStartTimeSteady(GetCurrentSteadyTimeMs());
+    }
     timestamp_ = timestamp;
     curTime_ = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -2202,7 +2198,6 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
             PostTask([=]() { screenManager_->ProcessScreenHotPlugEvents(); });
         }
     }
-    RSJankStats::GetInstance().SetEndTime(GetDiscardJankFrames(), GetDynamicRefreshRate());
 }
 
 void RSMainThread::Animate(uint64_t timestamp)
@@ -3031,21 +3026,6 @@ void RSMainThread::UpdateRogSizeIfNeeded()
     }
 }
 
-void RSMainThread::UpdateDisplayNodeScreenId()
-{
-    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
-    if (!rootNode) {
-        return;
-    }
-    auto child = rootNode->GetFirstChild();
-    if (child != nullptr && child->IsInstanceOf<RSDisplayRenderNode>()) {
-        auto displayNode = child->ReinterpretCastTo<RSDisplayRenderNode>();
-        if (displayNode) {
-            displayNodeScreenId_ = displayNode->GetScreenId();
-        }
-    }
-}
-
 const uint32_t UIFIRST_MINIMUM_NODE_NUMBER = 4; // minimum window number(4) for enabling UIFirst
 const uint32_t FOLD_DEVICE_SCREEN_NUMBER = 2; // alt device has two screens
 
@@ -3175,6 +3155,20 @@ void RSMainThread::SetCurtainScreenUsingStatus(bool isCurtainScreenOn)
 bool RSMainThread::IsCurtainScreenOn() const
 {
     return isCurtainScreenOn_;
+}
+
+int64_t RSMainThread::GetCurrentSystimeMs() const
+{
+    auto curTime = std::chrono::system_clock::now().time_since_epoch();
+    int64_t curSysTime = std::chrono::duration_cast<std::chrono::milliseconds>(curTime).count();
+    return curSysTime;
+}
+
+int64_t RSMainThread::GetCurrentSteadyTimeMs() const
+{
+    auto curTime = std::chrono::steady_clock::now().time_since_epoch();
+    int64_t curSteadyTime = std::chrono::duration_cast<std::chrono::milliseconds>(curTime).count();
+    return curSteadyTime;
 }
 } // namespace Rosen
 } // namespace OHOS

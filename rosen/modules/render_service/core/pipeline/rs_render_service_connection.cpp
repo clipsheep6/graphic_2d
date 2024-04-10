@@ -539,7 +539,7 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         RSHardwareThread::Instance().ScheduleTask(
             [=]() { screenManager_->SetScreenPowerStatus(id, status); }).wait();
-        mainThread_->SetDiscardJankFrames(true);
+        renderThread_.SetDiscardJankFrames(true);
         OHOS::Rosen::HgmCore::Instance().NotifyScreenPowerStatus(id, status);
     } else {
         mainThread_->ScheduleTask(
@@ -552,7 +552,8 @@ void RSRenderServiceConnection::TakeSurfaceCapture(NodeId id, sptr<RSISurfaceCap
 {
     if (surfaceCaptureType == SurfaceCaptureType::DEFAULT_CAPTURE) {
         if (RSSystemParameters::GetRsSurfaceCaptureType() ==
-            RsSurfaceCaptureType::RS_SURFACE_CAPTURE_TYPE_MAIN_THREAD) {
+            RsSurfaceCaptureType::RS_SURFACE_CAPTURE_TYPE_MAIN_THREAD ||
+            RSUniRenderJudgement::GetUniRenderEnabledType() == UniRenderEnabledType::UNI_RENDER_DISABLED) {
             auto node = RSMainThread::Instance()->GetContext().GetNodeMap().GetRenderNode(id);
             auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
             if (node == nullptr) {
@@ -1186,7 +1187,7 @@ int32_t RSRenderServiceConnection::ResizeVirtualScreen(ScreenId id, uint32_t wid
 void RSRenderServiceConnection::ReportJankStats()
 {
     auto task = [this]() -> void { RSJankStats::GetInstance().ReportJankStats(); };
-    mainThread_->PostTask(task);
+    renderThread_.PostTask(task);
 }
 
 void RSRenderServiceConnection::NotifyLightFactorStatus(bool isSafe)
@@ -1214,7 +1215,7 @@ void RSRenderServiceConnection::ReportEventResponse(DataBaseRs info)
     auto task = [this, info]() -> void {
         RSJankStats::GetInstance().SetReportEventResponse(info);
     };
-    mainThread_->PostTask(task);
+    renderThread_.PostTask(task);
 }
 
 void RSRenderServiceConnection::ReportEventComplete(DataBaseRs info)
@@ -1222,16 +1223,16 @@ void RSRenderServiceConnection::ReportEventComplete(DataBaseRs info)
     auto task = [this, info]() -> void {
         RSJankStats::GetInstance().SetReportEventComplete(info);
     };
-    mainThread_->PostTask(task);
+    renderThread_.PostTask(task);
 }
 
 void RSRenderServiceConnection::ReportEventJankFrame(DataBaseRs info)
 {
-    bool isReportTaskDelayed = mainThread_->IsMainLooping();
+    bool isReportTaskDelayed = renderThread_.IsMainLooping();
     auto task = [this, info, isReportTaskDelayed]() -> void {
         RSJankStats::GetInstance().SetReportEventJankFrame(info, isReportTaskDelayed);
     };
-    mainThread_->PostTask(task);
+    renderThread_.PostTask(task);
 }
 
 void RSRenderServiceConnection::ReportGameStateData(GameStateData info)

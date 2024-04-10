@@ -251,21 +251,6 @@ public:
         context_->clearMoment_ = moment;
     }
 
-    bool IsMainLooping() const
-    {
-        return mainLooping_.load();
-    }
-
-    bool GetDiscardJankFrames() const
-    {
-        return discardJankFrames_.load();
-    }
-
-    void SetDiscardJankFrames(bool discardJankFrames)
-    {
-        discardJankFrames_.store(discardJankFrames);
-    }
-
     bool IsPCThreeFingerScenesListScene() const
     {
         return !threeFingerScenesList_.empty();
@@ -326,9 +311,7 @@ private:
     void UpdateUIFirstSwitch();
     // ROG: Resolution Online Government
     void UpdateRogSizeIfNeeded();
-    void UpdateDisplayNodeScreenId();
     uint32_t GetRefreshRate() const;
-    uint32_t GetDynamicRefreshRate() const;
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
 
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
@@ -376,6 +359,9 @@ private:
 #endif
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, bool waitForRT);
+
+    int64_t GetCurrentSystimeMs() const;
+    int64_t GetCurrentSteadyTimeMs() const;
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -544,11 +530,6 @@ private:
     // for dvsync (animate requestNextVSync after mark rsnotrendering)
     bool needRequestNextVsyncAnimate_ = false;
     bool hasMark_ = false;
-
-    // for statistic of jank frames
-    std::atomic_bool mainLooping_ = false;
-    std::atomic_bool discardJankFrames_ = false;
-    ScreenId displayNodeScreenId_ = 0;
 
     bool forceUIFirstChanged_ = false;
     bool hasRosenWebNode_ = false;

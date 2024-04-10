@@ -3435,13 +3435,20 @@ bool RSRenderNode::UpdateLocalDrawRect()
     return stagingRenderParams_->SetLocalDrawRect(drawRect);
 }
 
-void RSRenderNode::ResetClipAbsDrawRectChangeState()
+void RSRenderNode::ResetChangeState()
 {
     clipAbsDrawRectChange_ = false;
+    geometryChangeNotPerceived_ = false;
 }
 
 void RSRenderNode::UpdateClipAbsDrawRectChangeState(const RectI& clipRect)
 {
+    if (RSSystemProperties::GetSkipGeometryNotChangeEnabled()) {
+        if (geometryChangeNotPerceived_) {
+            clipAbsDrawRectChange_ = false;
+            return;
+        }
+    }
     auto clipAbsDrawRect = absDrawRect_.IntersectRect(clipRect);
     clipAbsDrawRectChange_ = clipAbsDrawRect != oldDirtyInSurface_;
 }
@@ -3452,6 +3459,7 @@ void RSRenderNode::OnSync()
 
     if (drawCmdListNeedSync_) {
         std::swap(stagingDrawCmdList_, drawCmdList_);
+        isDrawCmdListEmpty_ = drawCmdList_.empty();
         stagingDrawCmdList_.clear();
         drawCmdIndex_ = stagingDrawCmdIndex_;
         drawCmdListNeedSync_ = false;

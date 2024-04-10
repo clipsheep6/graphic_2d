@@ -175,6 +175,9 @@ void RSSurfaceRenderNode::UpdateHwcDisabledBySrcRect(bool hasRotation)
         isHardwareForcedDisabledBySrcRect_ =  hasRotation ?
             srcRect_.width_ + 1 < width :
             srcRect_.height_ + 1 < height;
+        RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disableBySrc:%d src:[%d, %d]" \
+            " buffer:[%d, %d] hasRotation:%d", GetName().c_str(), GetId(),
+            isHardwareForcedDisabledBySrcRect_, srcRect_.width_, srcRect_.height_, width, height, hasRotation);
     }
 #endif
 }
@@ -777,6 +780,7 @@ void RSSurfaceRenderNode::UpdateBufferInfo(const sptr<SurfaceBuffer>& buffer, co
     surfaceParams->SetBuffer(buffer);
     surfaceParams->SetAcquireFence(acquireFence);
     surfaceParams->SetPreBuffer(preBuffer);
+    AddToPendingSyncList();
 }
 #endif
 
@@ -1103,7 +1107,7 @@ void RSSurfaceRenderNode::UpdateHwcNodeLayerInfo(GraphicTransformType transform)
         dstRect_.ToString().c_str(),
         layer.boundRect.w, layer.boundRect.h,
         transform, layer.zOrder, !IsHardwareForcedDisabled(), isLastFrameHwcEnabled_);
-    RS_OPTIONAL_TRACE_NAME_FMT("RSSurfaceRenderNode::UpdateHwcNodeLayerInfo: node: %s-%lu,"
+    RS_OPTIONAL_TRACE_NAME_FMT("hwc debug:UpdateHwcNodeLayerInfo: node: %s-%lu,"
         " src: %s, dst: %s, bounds: [%d, %d], transform: %d, zOrder: %d, cur: %d, last: %d",
         GetName().c_str(), GetId(),
         srcRect_.ToString().c_str(),

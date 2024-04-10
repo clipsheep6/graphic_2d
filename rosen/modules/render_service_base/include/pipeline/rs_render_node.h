@@ -249,7 +249,7 @@ public:
     const RectI& GetSelfDrawRect() const;
     const RectI& GetAbsDrawRect() const;
 
-    void ResetClipAbsDrawRectChangeState();
+    void ResetChangeState();
     bool UpdateDrawRectAndDirtyRegion(RSDirtyRegionManager& dirtyManager,
         const std::shared_ptr<RSRenderNode>& parent, bool accumGeoDirty, const RectI& clipRect);
     void UpdateDirtyRegionInfoForDFX(RSDirtyRegionManager& dirtyManager);
@@ -606,6 +606,11 @@ public:
 
     void SetOccludedStatus(bool occluded);
 
+    bool IsCmdListEmpty() const
+    {
+        return isDrawCmdListEmpty_;
+    }
+
 protected:
     virtual void OnApplyModifiers() {}
 
@@ -863,6 +868,7 @@ private:
     };
     bool addedToPendingSyncList_ = false;
     bool drawCmdListNeedSync_ = false;
+    bool isDrawCmdListEmpty_ = true; // access by render thread only
     bool uifirstNeedSync_ = false; // both cmdlist&param
     bool uifirstSkipPartialSync_ = false;
     DrawCmdIndex uifirstDrawCmdIndex_;

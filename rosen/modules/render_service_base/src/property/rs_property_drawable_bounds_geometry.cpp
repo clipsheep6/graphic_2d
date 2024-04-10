@@ -235,22 +235,21 @@ void RSBorderFourLineRoundCornerDrawable::Draw(const RSRenderContent& content, R
     auto& properties = content.GetRenderProperties();
     canvas.ClipRoundRect(rrect_,Drawing::ClipOp::INTERSECT, true);
     canvas.ClipRoundRect(innerRrect_, Drawing::ClipOp::DIFFERENCE, true);
-    Drawing::scalar centerX = innerRrect_.GetRect().GetLeft() + innerRrect_.GetRect().GetWidth() / 2;
-    Drawing::scalar centerY = innerRrect_.GetRect().GetTop() + innerRrect_.GetRect().GetHeight() / 2;
-    Drawing::Point center = { centerX, centerY };
     auto rect = rrect_.GetRect();
     Drawing::SaveLayerOps slr(&rect, nullptr);
     canvas.SaveLayer(slr);
+
+    const RRect inrrect = properties.GetRRect();
     if (drawBorder_) {
-        properties.GetBorder()->PaintTopPath(canvas, pen, rrect_, center);
-        properties.GetBorder()->PaintRightPath(canvas, pen, rrect_, center);
-        properties.GetBorder()->PaintBottomPath(canvas, pen, rrect_, center);
-        properties.GetBorder()->PaintLeftPath(canvas, pen, rrect_, center);
+        properties.GetBorder()->PaintTopPath(canvas, pen, rrect_, inrrect);
+        properties.GetBorder()->PaintRightPath(canvas, pen, rrect_, inrrect);
+        properties.GetBorder()->PaintBottomPath(canvas, pen, rrect_, inrrect);
+        properties.GetBorder()->PaintLeftPath(canvas, pen, rrect_, inrrect);
     } else {
-        properties.GetOutline()->PaintTopPath(canvas, pen, rrect_, center);
-        properties.GetOutline()->PaintRightPath(canvas, pen, rrect_, center);
-        properties.GetOutline()->PaintBottomPath(canvas, pen, rrect_, center);
-        properties.GetOutline()->PaintLeftPath(canvas, pen, rrect_, center);
+        properties.GetOutline()->PaintTopPath(canvas, pen, rrect_, inrrect);
+        properties.GetOutline()->PaintRightPath(canvas, pen, rrect_, inrrect);
+        properties.GetOutline()->PaintBottomPath(canvas, pen, rrect_, inrrect);
+        properties.GetOutline()->PaintLeftPath(canvas, pen, rrect_, inrrect);
     }
 }
 

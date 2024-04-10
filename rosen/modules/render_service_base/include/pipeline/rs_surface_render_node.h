@@ -1027,7 +1027,6 @@ public:
         Vector4f::Max(GetWindowCornerRadius(), GetGlobalCornerRadius(), cornerRadius);
         return !cornerRadius.IsZero();
     }
-
     void SetBufferRelMatrix(Drawing::Matrix matrix)
     {
         bufferRelMatrix_ = matrix;

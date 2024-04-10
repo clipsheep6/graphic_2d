@@ -15,13 +15,10 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
 
-#include <memory>
-#include "include/core/SkColorFilter.h"
-#include "include/effects/SkImageFilters.h"
-#include "render/rs_skia_filter.h"
-
 #include "effect/runtime_effect.h"
 #include "effect/runtime_shader_builder.h"
+#include <memory>
+#include "render/rs_skia_filter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -61,11 +58,11 @@ private:
 
     std::shared_ptr<Drawing::RuntimeEffect> blurEffect_;
 
-    static constexpr float baseBlurScale = 0.5f; // base downSample radio
-    static constexpr uint32_t kMaxPassesLargeRadius = 7;
-    static constexpr float kDilatedConvolutionLargeRadius = 4.6f;
-    static constexpr int ImageExpandUnitNum = 4;
-    static constexpr int ImageMoveUnitNum = 2;
+    static constexpr float BASE_BLUR_SCALE = 0.5f; // base downSample radio
+    static constexpr uint32_t MAX_PASSES_LARGE_RADIUS = 7;
+    static constexpr float DILATED_CONVOLUTION_LARGE_RADIUS = 4.6f;
+    static constexpr int IMAGE_EXPAND_UNIT_NUM = 4;
+    static constexpr int IMAGE_MOVE_UNIT_NUM = 2;
 
     void MakeForegroundEffect();
     void ComputeParamter(int radius);

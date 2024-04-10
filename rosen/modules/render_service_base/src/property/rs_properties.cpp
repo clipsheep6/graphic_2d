@@ -1208,6 +1208,17 @@ const std::shared_ptr<RSFilter>& RSProperties::GetForegroundFilter() const
     return foregroundFilter_;
 }
 
+void RSProperties::SetForegroundFilter(const std::shared_ptr<RSFilter>& foregroundFilter)
+{
+    foregroundFilter_ = foregroundFilter;
+    if (foregroundFilter) {
+        isDrawn_ = true;
+    }
+    SetDirty();
+    filterNeedUpdate_ = true;
+    contentDirty_ = true;
+}
+
 // shadow properties
 void RSProperties::SetShadowColor(Color color)
 {

@@ -247,7 +247,7 @@ public:
 
     void SwapBackMainScreenData()
     {
-        if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty()) {
+        if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty() && !offscreenDataList_.empty()) {
             surface_ = storeMainScreenSurface_.top();
             canvas_ = storeMainScreenCanvas_.top();
             storeMainScreenSurface_.pop();
@@ -263,9 +263,11 @@ public:
 
     void RestorePCanvasList()
     {
-        auto item = storedPCanvasList_.back();
-        pCanvasList_.swap(item);
-        storedPCanvasList_.pop_back();
+        if (!storedPCanvasList_.empty()) {
+            auto item = storedPCanvasList_.back();
+            pCanvasList_.swap(item);
+            storedPCanvasList_.pop_back();
+        }   
     }
 
     // canvas status relate

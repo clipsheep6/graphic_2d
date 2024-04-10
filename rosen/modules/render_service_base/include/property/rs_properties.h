@@ -228,6 +228,7 @@ public:
     void SetGreyCoef(const std::optional<Vector2f>& greyCoef);
     const std::optional<Vector2f>& GetGreyCoef() const;
     const std::shared_ptr<RSFilter>& GetForegroundFilter() const;
+    void SetForegroundFilter(const std::shared_ptr<RSFilter>& foregroundFilter);
 
     // shadow properties
     void SetShadowColor(Color color);

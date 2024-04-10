@@ -19,9 +19,9 @@ public:
         bitmapWidth_ = 1200;
         bitmapHeight_ = 1100;
         fileName_ = "convexpaths";
-    };
+    }
     ~ConvexPaths() = default;
-    void MakePath(OH_Drawing_Path* path);
+    void MakePath();
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
 };

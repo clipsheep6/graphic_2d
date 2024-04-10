@@ -22,17 +22,13 @@ constexpr static int kPtsPerSide = (1 << 12);
 
 std::vector<OH_Drawing_Path *> fPaths;
 
-void ConvexPaths::OnTestFunction(OH_Drawing_Canvas *canvas) {
-    DRAWING_LOGI("ConvexPaths::OnTestFunction: 6657upup");
-    OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
-    OH_Drawing_PenSetColor(pen, 0xFF000000);
-    OH_Drawing_PenSetAntiAlias(pen, true);
-    OH_Drawing_Path* path = OH_Drawing_PathCreate();
-    DRAWING_LOGD("ConvexPaths MakePath: 6657upup");
-    MakePath(path);
+void ConvexPaths::OnTestFunction(OH_Drawing_Canvas *canvas) {    
+    OH_Drawing_CanvasClear(canvas, 0xFF000000);
+    OH_Drawing_Brush * brush = OH_Drawing_BrushCreate();
+    OH_Drawing_BrushSetAntiAlias(brush, true);
+    MakePath();
 
     TestRend rand;
-    DRAWING_LOGE("ConvexPaths TestRend: 6657upup");
     OH_Drawing_CanvasTranslate(canvas, 20, 20);
     
     // As we've added more paths this has gotten pretty big. Scale the whole thing down.
@@ -44,28 +40,25 @@ void ConvexPaths::OnTestFunction(OH_Drawing_Canvas *canvas) {
         OH_Drawing_CanvasTranslate(canvas, 200.0f * (i % 5) + 1.0f/10, 200.0f * (i / 5) + 9.0f/10);
         uint32_t color = rand.nextU();
         color |= 0xff000000;
-        OH_Drawing_PenSetColor(pen, color);
-        OH_Drawing_CanvasAttachPen(canvas, pen);
-        
+        OH_Drawing_BrushSetColor(brush, color);
+        OH_Drawing_CanvasAttachBrush(canvas, brush);
         OH_Drawing_CanvasDrawPath(canvas, fPaths[i]);
-        DRAWING_LOGE("ConvexPaths zhangjing: [%{public}p]", fPaths[i]);
         OH_Drawing_CanvasRestore(canvas);
     }
-    DRAWING_LOGW("ConvexPaths overfor: 6657upup");
     OH_Drawing_CanvasDetachPen(canvas);
-    OH_Drawing_PenDestroy(pen);
+    OH_Drawing_BrushDestroy(brush);
+
     for (int f = 0; f < fPaths.size(); ++f) {
         OH_Drawing_PathDestroy(fPaths[f]);
     }
-    DRAWING_LOGE("ConvexPaths Destroy: 6657upup");
 }
 
-void ConvexPaths::MakePath(OH_Drawing_Path* path) {
-    
-    OH_Drawing_PathMoveTo(path, 0, 0);
-    OH_Drawing_PathQuadTo(path, 50, 100, 0, 100);
-    OH_Drawing_PathLineTo(path, 0, 0);
-    fPaths.push_back(path);
+void ConvexPaths::MakePath() {
+    OH_Drawing_Path* path_1 = OH_Drawing_PathCreate();
+    OH_Drawing_PathMoveTo(path_1, 0, 0);
+    OH_Drawing_PathQuadTo(path_1, 50, 100, 0, 100);
+    OH_Drawing_PathLineTo(path_1, 0, 0);
+    fPaths.push_back(path_1);
     
     OH_Drawing_Path* path_2 = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path_2, 0, 50);
@@ -85,11 +78,7 @@ void ConvexPaths::MakePath(OH_Drawing_Path* path) {
     fPaths.push_back(rect_path2);
 
     OH_Drawing_Path* Circle_path = OH_Drawing_PathCreate();
-    auto Circle_bound = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);                        // 矩形对象，边框
-    OH_Drawing_RoundRect* Round_rect = OH_Drawing_RoundRectCreate(Circle_bound, 2 * kRadius, 2 * kRadius); // 圆角矩形轮廓
-    OH_Drawing_PathAddRoundRect(Circle_path, Round_rect, OH_Drawing_PathDirection::PATH_DIRECTION_CW);
-    OH_Drawing_PathArcTo(Circle_path, r.fLeft, r.fTop, r.fRight, r.fBottom, 0, 360);
-    OH_Drawing_PathClose(Circle_path);
+    OH_Drawing_PathAddArc(Circle_path, OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom), 0, 360);
     fPaths.push_back(Circle_path);
 
     OH_Drawing_Path* Oval_path1 = OH_Drawing_PathCreate();
@@ -101,12 +90,9 @@ void ConvexPaths::MakePath(OH_Drawing_Path* path) {
     OH_Drawing_PathAddOvalWithInitialPoint(Oval_path1, Oval_bound1, 0, OH_Drawing_PathDirection::PATH_DIRECTION_CW);
     OH_Drawing_PathAddOvalWithInitialPoint(Oval_path2, Oval_bound2, 0, OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
     OH_Drawing_PathAddOvalWithInitialPoint(Oval_path3, Oval_bound3, 0, OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
-    OH_Drawing_PathClose(Oval_path1);
-    OH_Drawing_PathClose(Oval_path2);
-    OH_Drawing_PathClose(Oval_path3);
-    fPaths.push_back(OH_Drawing_PathCopy(Oval_path1));
-    fPaths.push_back(OH_Drawing_PathCopy(Oval_path2));
-    fPaths.push_back(OH_Drawing_PathCopy(Oval_path3));
+    fPaths.push_back(Oval_path1);
+    fPaths.push_back(Oval_path2);
+    fPaths.push_back(Oval_path3);
 
     OH_Drawing_Path* rrect_path = OH_Drawing_PathCreate();
     OH_Drawing_Rect* rrect = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);
@@ -117,7 +103,7 @@ void ConvexPaths::MakePath(OH_Drawing_Path* path) {
     OH_Drawing_Path* path_3 = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path_3, 0, 0);
     for (int i = 1; i < kPtsPerSide; ++i) { // skip the first point due to moveTo.
-        OH_Drawing_PathLineTo(path, kLength * (float)i / kPtsPerSide, 0);
+        OH_Drawing_PathLineTo(path_3, kLength * (float)i / kPtsPerSide, 0);
     }
     for (int i = 0; i < kPtsPerSide; ++i) {
         OH_Drawing_PathLineTo(path_3, kLength, kLength * (float)i / kPtsPerSide);
@@ -133,6 +119,10 @@ void ConvexPaths::MakePath(OH_Drawing_Path* path) {
     // shallow diagonals
     // fPaths.push_back(SkPath::Polygon({{0,0}, {100,1}, {98,100}, {3,96}}, false));
     // Polygon 对应接口未知
+    OH_Drawing_Path* path_Polygon = OH_Drawing_PathCreate();
+    OH_Drawing_PathAddRect(path_Polygon, r.fLeft, r.fTop, r.fRight, r.fBottom, OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
+    fPaths.push_back(path_Polygon);
+    // Polygon接口缺失，用普通矩形作为占位符
 
     OH_Drawing_Path *rect_path3 = OH_Drawing_PathCreate();
     OH_Drawing_PathArcTo(rect_path3, 0, 0, kRadius, 2*kRadius, 25, 130);
@@ -217,14 +207,14 @@ void ConvexPaths::MakePath(OH_Drawing_Path* path) {
     OH_Drawing_PathMoveTo(path_13, 0, 25);
     OH_Drawing_PathLineTo(path_13, 50, 0);
     OH_Drawing_PathQuadTo(path_13, 50, 49.95f, 50, 50);
-    fPaths.push_back(OH_Drawing_PathCopy(path_13));
+    fPaths.push_back(path_13);
 
     // triangle where one edge is a cubic with a 3x nearly repeated point
     OH_Drawing_Path* path_14= OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path_14, 0, 25);
     OH_Drawing_PathLineTo(path_14, 50, 0);
     OH_Drawing_PathCubicTo(path_14, 50, 49.95f, 50, 49.97f, 50, 50);
-    fPaths.push_back(OH_Drawing_PathCopy(path_14));
+    fPaths.push_back(path_14);
 
     // triangle where there is a point degenerate cubic at one corner
     OH_Drawing_Path* path_15= OH_Drawing_PathCreate();
@@ -237,6 +227,10 @@ void ConvexPaths::MakePath(OH_Drawing_Path* path) {
     // point line
     // fPaths.push_back(SkPath::Line({50, 50}, {50, 50}));
     // 该接口调用同上Ploygon，待确定
+    OH_Drawing_Path* path_Polygon_2 = OH_Drawing_PathCreate();
+    OH_Drawing_PathAddRect(path_Polygon_2, r.fLeft, r.fTop, r.fRight, r.fBottom, OH_Drawing_PathDirection::PATH_DIRECTION_CCW);
+    fPaths.push_back(path_Polygon_2);
+    // Polygon接口缺失，用普通矩形作为占位符
 
     // point quad
     OH_Drawing_Path* path_16= OH_Drawing_PathCreate();
@@ -268,43 +262,37 @@ void ConvexPaths::MakePath(OH_Drawing_Path* path) {
     OH_Drawing_Path* path_20= OH_Drawing_PathCreate();
     OH_Drawing_PathLineTo(path_20, 100, 100);
     fPaths.push_back(path_20);
-    OH_Drawing_PathQuadTo(path_20, 100, 100, 0, 0);
-    fPaths.push_back(path_20);
-    OH_Drawing_PathQuadTo(path, 100, 100, 50, 50);
-    fPaths.push_back(path_20);
-    OH_Drawing_PathQuadTo(path, 50, 50, 100, 100);
-    fPaths.push_back(path_20);
-    OH_Drawing_PathCubicTo(path, 0, 0, 0, 0, 100, 100);
-    fPaths.push_back(path_20);
-
-    // skbug.com/8928
     OH_Drawing_Path* path_21= OH_Drawing_PathCreate();
-    OH_Drawing_PathMoveTo(path_21, 16.875f, 192.594f);
+    OH_Drawing_PathQuadTo(path_21, 100, 100, 0, 0);
     fPaths.push_back(path_21);
     OH_Drawing_Path* path_22= OH_Drawing_PathCreate();
-    OH_Drawing_PathCubicTo(path_22, 45.625f, 192.594f, 74.375f, 192.594f, 103.125f, 192.594f);
+    OH_Drawing_PathQuadTo(path_22, 100, 100, 50, 50);
     fPaths.push_back(path_22);
     OH_Drawing_Path* path_23= OH_Drawing_PathCreate();
-    OH_Drawing_PathCubicTo(path_23, 88.75f, 167.708f, 74.375f, 142.823f, 60, 117.938f);
+    OH_Drawing_PathQuadTo(path_23, 50, 50, 100, 100);
     fPaths.push_back(path_23);
     OH_Drawing_Path* path_24= OH_Drawing_PathCreate();
-    OH_Drawing_PathCubicTo(path_24, 45.625f, 142.823f, 31.25f, 167.708f, 16.875f, 192.594f);
-    OH_Drawing_PathClose(path_24);
+    OH_Drawing_PathCubicTo(path_24, 0, 0, 0, 0, 100, 100);
     fPaths.push_back(path_24);
 
+    // skbug.com/8928
+    OH_Drawing_Path* path_25= OH_Drawing_PathCreate();
+    OH_Drawing_PathMoveTo(path_25, 16.875f, 192.594f);
+    OH_Drawing_PathCubicTo(path_25, 45.625f, 192.594f, 74.375f, 192.594f, 103.125f, 192.594f);
+    OH_Drawing_PathCubicTo(path_25, 88.75f, 167.708f, 74.375f, 142.823f, 60, 117.938f);
+    OH_Drawing_PathCubicTo(path_25, 45.625f, 142.823f, 31.25f, 167.708f, 16.875f, 192.594f);
+    fPaths.push_back(path_25);
 
-    OH_Drawing_Path* Matrix_path = OH_Drawing_PathCreate();
+
+    OH_Drawing_Path* Matrix_path = fPaths.back();
     OH_Drawing_Matrix* m1= OH_Drawing_MatrixCreate();
     OH_Drawing_MatrixSetMatrix(m1, 0.1f, 0, -1, 0, 0.115207f, -2.64977f, 0, 0, 1);
     OH_Drawing_PathTransform(Matrix_path, m1);
-    fPaths.push_back(Matrix_path);
-    fPaths.back();
 
     // small circle. This is listed last so that it has device coords far
     // from the origin (small area relative to x,y values).
     OH_Drawing_Path* Circle_path1 = OH_Drawing_PathCreate();
     auto Circle_bound1 = OH_Drawing_RectCreate(0, 0, 1.2, 1.2); //矩形对象，边框
     OH_Drawing_PathAddArc(Circle_path1, Circle_bound1, 0, 360);
-    OH_Drawing_PathClose(Circle_path1);
     fPaths.push_back(Circle_path1);
 }

@@ -40,6 +40,10 @@ void AlphaGradients::draw_grad(OH_Drawing_Canvas *canvas, DrawRect &r, uint32_t 
     OH_Drawing_CanvasAttachPen(canvas, pen);
     OH_Drawing_CanvasDrawRect(canvas, rect);
     OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_PointDestroy(startPt);
+    OH_Drawing_PointDestroy(endPt);
+    OH_Drawing_ShaderEffectDestroy(shaderEffect);
     OH_Drawing_BrushDestroy(brush);
     OH_Drawing_PenDestroy(pen);
     OH_Drawing_RectDestroy(rect);

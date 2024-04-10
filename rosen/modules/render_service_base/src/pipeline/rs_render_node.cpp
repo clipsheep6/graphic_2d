@@ -1046,7 +1046,8 @@ void RSRenderNode::UpdateDirtyRegion(
         // Add node's foregroundEffect region to dirtyRect
         auto foregroundFilter = properties.GetForegroundFilter();
         if (foregroundFilter && foregroundFilter->GetFilterType() == RSFilter::FOREGROUND_EFFECT) {
-            float dirtyExtension = std::static_pointer_cast<RSForegroundEffectFilter>(foregroundFilter)->GetDirtyExtension();
+            float dirtyExtension =
+                std::static_pointer_cast<RSForegroundEffectFilter>(foregroundFilter)->GetDirtyExtension();
             dirtyRect = dirtyRect.MakeOutset(Vector4<int>(dirtyExtension));
         }
 

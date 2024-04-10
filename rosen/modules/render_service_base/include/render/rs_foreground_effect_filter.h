@@ -64,6 +64,8 @@ private:
     static constexpr float baseBlurScale = 0.5f; // base downSample radio
     static constexpr uint32_t kMaxPassesLargeRadius = 7;
     static constexpr float kDilatedConvolutionLargeRadius = 4.6f;
+    static constexpr int ImageExpandUnitNum = 4;
+    static constexpr int ImageMoveUnitNum = 2;
 
     void MakeForegroundEffect();
     void ComputeParamter(int radius);

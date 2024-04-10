@@ -231,44 +231,12 @@ public:
         std::shared_ptr<Drawing::Surface> offscreenSurface_ = nullptr;
         std::shared_ptr<RSPaintFilterCanvas> offscreenCanvas_ = nullptr;
     };
-
+    // for foregroundFilter to store and restore offscreen canvas & surface
     void ReplaceMainScreenData(std::shared_ptr<Drawing::Surface>& offscreenSurface,
-        std::shared_ptr<RSPaintFilterCanvas>& offscreenCanvas)
-    {
-        if (offscreenSurface != nullptr && offscreenCanvas != nullptr) {
-            storeMainScreenSurface_.push(surface_);
-            storeMainScreenCanvas_.push(canvas_);
-            surface_ = offscreenSurface.get();
-            canvas_ = offscreenCanvas.get();
-            OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
-            offscreenDataList_.push(offscreenData);
-        }
-    }
-
-    void SwapBackMainScreenData()
-    {
-        if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty() && !offscreenDataList_.empty()) {
-            surface_ = storeMainScreenSurface_.top();
-            canvas_ = storeMainScreenCanvas_.top();
-            storeMainScreenSurface_.pop();
-            storeMainScreenCanvas_.pop();
-            offscreenDataList_.pop();
-        }
-    }
-
-    void SavePCanvasList()
-    {
-        storedPCanvasList_.push_back(pCanvasList_);
-    }
-
-    void RestorePCanvasList()
-    {
-        if (!storedPCanvasList_.empty()) {
-            auto item = storedPCanvasList_.back();
-            pCanvasList_.swap(item);
-            storedPCanvasList_.pop_back();
-        }   
-    }
+        std::shared_ptr<RSPaintFilterCanvas>& offscreenCanvas);
+    void SwapBackMainScreenData();
+    void SavePCanvasList();
+    void RestorePCanvasList();
 
     // canvas status relate
     struct CanvasStatus {

@@ -105,8 +105,9 @@ void RSForegroundEffectFilter::AdjustRadiusAndScale()
 
 void RSForegroundEffectFilter::ComputePassesAndUnit()
 {
+    int maxPasses = MAX_PASSES_LARGE_RADIUS;
     float tmpRadius = static_cast<float>(blurRadius_) / DILATED_CONVOLUTION_LARGE_RADIUS;
-    numberOfPasses_ = std::min(MAX_PASSES_LARGE_RADIUS, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
+    numberOfPasses_ = std::min(maxPasses, std::max(static_cast<int>(ceil(tmpRadius)), 1)); // 1 : min pass num
     radiusByPasses_ = tmpRadius / numberOfPasses_;
     unit_ = std::ceil(radiusByPasses_ * blurScale_);
 }

@@ -29,9 +29,10 @@
 namespace OHOS {
 namespace Rosen {
 bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int32_t offsetY, ScreenId mirroredId,
-                                       std::shared_ptr<RSBaseRenderEngine> renderEngine)
+                                       std::shared_ptr<RSBaseRenderEngine> renderEngine, bool isRenderThread)
 {
-    if (!RSProcessor::Init(node, offsetX, offsetY, mirroredId, renderEngine)) {
+    // TO-DO adapt isRenderThread
+    if (!RSProcessor::Init(node, offsetX, offsetY, mirroredId, renderEngine, isRenderThread)) {
         return false;
     }
 
@@ -193,7 +194,7 @@ void RSUniRenderVirtualProcessor::CanvasAdjustment(RSDisplayRenderNode& node, bo
     }
 }
 
-void RSUniRenderVirtualProcessor::PostProcess(RSDisplayRenderNode* node)
+void RSUniRenderVirtualProcessor::PostProcess()
 {
     if (producerSurface_ == nullptr) {
         RS_LOGE("RSUniRenderVirtualProcessor::PostProcess surface is null!");
@@ -272,11 +273,6 @@ void RSUniRenderVirtualProcessor::UniScale(RSPaintFilterCanvas& canvas,
         canvas.Translate(startX, startY);
         canvas.Scale(mirrorScale, mirrorScale);
     }
-}
-
-void RSUniRenderVirtualProcessor::ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node)
-{
-    RS_LOGI("RSUniRenderVirtualProcessor::ProcessDrivenSurface() is not supported.");
 }
 
 void RSUniRenderVirtualProcessor::ProcessRcdSurface(RSRcdSurfaceRenderNode& node)

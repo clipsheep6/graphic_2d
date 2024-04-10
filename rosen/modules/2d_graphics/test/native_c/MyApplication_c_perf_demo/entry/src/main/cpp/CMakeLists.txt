@@ -55,6 +55,7 @@ add_library(entry SHARED
     dm/strokes.cpp
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
+    dm/stroke_rect_shader.cpp
 )
 
 add_library(myxnode SHARED
@@ -103,6 +104,7 @@ add_library(myxnode SHARED
     dm/strokes.cpp
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
+    dm/stroke_rect_shader.cpp
 )
 
 find_library(

@@ -54,6 +54,7 @@
 #include "dm/path_interior.h"
 #include "dm/strokes.h"
 #include "dm/alpha_gradients.h"
+#include "dm/convex_paths.h"
 #include "dm/gradient_dirty_laundry.h"
 
 
@@ -165,6 +166,7 @@ namespace {
             {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},    
             {"alphagradients", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaGradients>(); }},           
             {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},
+            {"convex_paths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},       
 
     };

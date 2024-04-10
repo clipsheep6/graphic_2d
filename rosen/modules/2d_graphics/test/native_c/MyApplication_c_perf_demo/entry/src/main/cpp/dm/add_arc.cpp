@@ -124,7 +124,8 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas* canvas)
 
 bool AddArc::onAnimate()
 {//dm中这个函数通过onIdle调用，目前drawing测试框架还没有提供这个接口，因此画出的图形在缺口方向上和dm的不同
-    static TestRend randRotate;
-    fRotate = randRotate.nextRangeF(1, 360);//mock skia dm onAnimate behavior
+//    static TestRend randRotate;
+//    fRotate = randRotate.nextRangeF(1, 360);//mock skia dm onAnimate behavior
+    fRotate = 0;//通过对skia代码运行对这个值的打印，发现是0，经过运行结果对比，发现缺口方向是对的
     return true;
 }

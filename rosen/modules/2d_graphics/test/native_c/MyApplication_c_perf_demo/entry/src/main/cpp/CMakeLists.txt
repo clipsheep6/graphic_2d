@@ -53,6 +53,7 @@ add_library(entry SHARED
     dm/dashing.cpp
     dm/path_interior.cpp
     dm/strokes.cpp
+    dm/convex_paths.cpp
 )
 
 add_library(myxnode SHARED
@@ -99,6 +100,7 @@ add_library(myxnode SHARED
     dm/dashing.cpp
     dm/path_interior.cpp
     dm/strokes.cpp
+    dm/convex_paths.cpp
 )
 
 find_library(

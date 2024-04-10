@@ -18,8 +18,7 @@
 
 #include "nlohmann/json.hpp"
 
-namespace OHOS::Rosen
-{
+namespace OHOS::Rosen {
 struct JsonWrapper {
     nlohmann::json& json;
 };

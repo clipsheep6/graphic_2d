@@ -14,13 +14,14 @@
  */
 
 #include "rs_profiler.h"
+#include "rs_profiler_jsonwrapper.h"
 #include "rs_profiler_network.h"
 
 #include "common/rs_obj_geometry.h"
+#include "pipeline/rs_context.h"
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_surface_render_node.h"
-#include "json.hpp"
 
 #include "foundation/graphic/graphic_2d/utils/log/rs_trace.h"
 
@@ -28,40 +29,45 @@
 
 namespace OHOS::Rosen {
 
-void RSProfiler::DumpNode(const RSRenderNode& node, nlohmann::json& out)
+void RSProfiler::DumpNode(const RSRenderNode& node, JsonWrapper&& outWrapper)
 {
     std::string type;
     node.DumpNodeType(type);
+
+    auto& out = outWrapper.json;
     out["type"] = type;
     out["id"] = node.GetId();
     out["instanceRootNodeId"] = node.GetInstanceRootNodeId();
     if (node.IsSuggestedDrawInGroup()) {
         out["nodeGroup"] = true;
     }
-    DumpSubClassNode(node, out["subclass"]);
-    DumpProperties(node.GetRenderProperties(), out["Properties"]);
+
+    DumpSubClassNode(node, JsonWrapper{out["subclass"]});
+    DumpProperties(node.GetRenderProperties(), JsonWrapper{out["Properties"]});
+
     out["GetBootAnimation"] = std::to_string(node.GetBootAnimation());
     out["isContainBootAnimation_"] = std::to_string(node.isContainBootAnimation_);
     out["isNodeDirty"] = std::to_string(static_cast<int>(node.dirtyStatus_));
     out["isPropertyDirty"] = std::to_string(node.GetRenderProperties().IsDirty());
     out["IsPureContainer"] = std::to_string(node.IsPureContainer());
-    DumpDrawCmdModifiers(node, out);
-    DumpAnimations(node.animationManager_, out);
+    DumpDrawCmdModifiers(node, JsonWrapper{out});
+    DumpAnimations(node.animationManager_, JsonWrapper{out});
 
     for (auto& child : *node.GetSortedChildren()) {
         nlohmann::json childJson;
-        DumpNode(*child, childJson);
+        DumpNode(*child, JsonWrapper{childJson});
         out["children"].push_back(std::move(childJson));
     }
     for (auto& [child, pos] : node.disappearingChildren_) {
         nlohmann::json childJson;
-        DumpNode(*child, childJson);
+        DumpNode(*child, JsonWrapper{childJson});
         out["children"].push_back(std::move(childJson));
     }
 }
 
-void RSProfiler::DumpSubClassNode(const RSRenderNode& node, nlohmann::json& out)
+void RSProfiler::DumpSubClassNode(const RSRenderNode& node, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
     if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
         auto surfaceNode = (static_cast<const RSSurfaceRenderNode*>(&node));
         auto p = node.parent_.lock();
@@ -90,8 +96,9 @@ void RSProfiler::DumpSubClassNode(const RSRenderNode& node, nlohmann::json& out)
     }
 }
 
-void RSProfiler::DumpDrawCmdModifiers(const RSRenderNode& node, nlohmann::json& out)
+void RSProfiler::DumpDrawCmdModifiers(const RSRenderNode& node, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
     nlohmann::json& modifiersJson = out["DrawCmdModifiers"];
 
     for (auto& [type, modifiers] : node.renderContent_->drawCmdModifiers_) {
@@ -99,14 +106,14 @@ void RSProfiler::DumpDrawCmdModifiers(const RSRenderNode& node, nlohmann::json& 
         modifierDesc["type"] = std::to_string(static_cast<int>(type));
         modifierDesc["modifiers"] = nlohmann::json::array();
         for (auto& modifier : modifiers) {
-            DumpDrawCmdModifier(node, modifierDesc["modifiers"], static_cast<int>(type), *modifier);
+            DumpDrawCmdModifier(node, JsonWrapper{modifierDesc["modifiers"]}, static_cast<int>(type), *modifier);
         }
         modifiersJson.emplace_back(std::move(modifierDesc));
     }
 }
 
 void RSProfiler::DumpDrawCmdModifier(
-    const RSRenderNode& node, nlohmann::json& out, int type, RSRenderModifier& modifier)
+    const RSRenderNode& node, JsonWrapper&& outWrapper, int type, RSRenderModifier& modifier)
 {
     nlohmann::json property;
     auto modType = static_cast<RSModifierType>(type);
@@ -140,7 +147,7 @@ void RSProfiler::DumpDrawCmdModifier(
     }
 
     if (!property.empty()) {
-        out.push_back(std::move(property));
+        outWrapper.json.push_back(std::move(property));
     }
 }
 
@@ -151,8 +158,9 @@ static std::string Hex(uint32_t value)
     return sstream.str();
 }
 
-void RSProfiler::DumpProperties(const RSProperties& p, nlohmann::json& out)
+void RSProfiler::DumpProperties(const RSProperties& p, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
     out["Bounds"] = { p.GetBoundsPositionX(), p.GetBoundsPositionY(), p.GetBoundsWidth(), p.GetBoundsHeight() };
     out["Frame"] = { p.GetFramePositionX(), p.GetFramePositionY(), p.GetFrameWidth(), p.GetFrameHeight() };
 
@@ -160,15 +168,17 @@ void RSProfiler::DumpProperties(const RSProperties& p, nlohmann::json& out)
         out["IsVisible"] = false;
     }
 
-    DumpPropertiesTransform(p, out);
-    DumpPropertiesDecoration(p, out);
-    DumpPropertiesEffects(p, out);
-    DumpPropertiesShadow(p, out);
-    DumpPropertiesColor(p, out);
+    DumpPropertiesTransform(p, JsonWrapper{out});
+    DumpPropertiesDecoration(p, JsonWrapper{out});
+    DumpPropertiesEffects(p, JsonWrapper{out});
+    DumpPropertiesShadow(p, JsonWrapper{out});
+    DumpPropertiesColor(p, JsonWrapper{out});
 }
 
-void RSProfiler::DumpPropertiesTransform(const RSProperties& p, nlohmann::json& out)
+void RSProfiler::DumpPropertiesTransform(const RSProperties& p, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
+
     std::unique_ptr<Transform> defaultTrans = std::make_unique<Transform>();
     Vector2f pivot = p.GetPivot();
     if ((!ROSEN_EQ(pivot[0], defaultTrans->pivotX_) || !ROSEN_EQ(pivot[1], defaultTrans->pivotY_))) {
@@ -212,8 +222,10 @@ void RSProfiler::DumpPropertiesTransform(const RSProperties& p, nlohmann::json& 
     }
 }
 
-void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, nlohmann::json& out)
+void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
+
     if (!p.GetCornerRadius().IsZero()) {
         out["CornerRadius"] = { p.GetCornerRadius().x_, p.GetCornerRadius().y_, p.GetCornerRadius().z_,
             p.GetCornerRadius().w_ };
@@ -252,8 +264,10 @@ void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, nlohmann::json&
     }
 }
 
-void RSProfiler::DumpPropertiesShadow(const RSProperties& p, nlohmann::json& out)
+void RSProfiler::DumpPropertiesShadow(const RSProperties& p, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
+
     if (!ROSEN_EQ(p.GetShadowColor(), Color(DEFAULT_SPOT_COLOR))) {
         out["ShadowColor"] = "#" + Hex(p.GetShadowColor().AsArgbInt());
     }
@@ -283,8 +297,10 @@ void RSProfiler::DumpPropertiesShadow(const RSProperties& p, nlohmann::json& out
     }
 }
 
-void RSProfiler::DumpPropertiesEffects(const RSProperties& p, nlohmann::json& out)
+void RSProfiler::DumpPropertiesEffects(const RSProperties& p, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
+
     if (p.border_ && p.border_->HasBorder()) {
         out["Border"] = p.border_->ToString();
     }
@@ -331,8 +347,10 @@ void RSProfiler::DumpPropertiesEffects(const RSProperties& p, nlohmann::json& ou
     }
 }
 
-void RSProfiler::DumpPropertiesColor(const RSProperties& p, nlohmann::json& out)
+void RSProfiler::DumpPropertiesColor(const RSProperties& p, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
+
     auto brightness = p.GetBrightness();
     if (brightness.has_value() && !ROSEN_EQ(*brightness, 1.f)) {
         out["Brightness"] = *brightness;
@@ -374,8 +392,10 @@ void RSProfiler::DumpPropertiesColor(const RSProperties& p, nlohmann::json& out)
     }
 }
 
-void RSProfiler::DumpAnimations(const RSAnimationManager& animationManager, nlohmann::json& out)
+void RSProfiler::DumpAnimations(const RSAnimationManager& animationManager, JsonWrapper&& outWrapper)
 {
+    auto& out = outWrapper.json;
+
     if (animationManager.animations_.empty()) {
         return;
     }
@@ -383,11 +403,11 @@ void RSProfiler::DumpAnimations(const RSAnimationManager& animationManager, nloh
         if (!animation) {
             continue;
         }
-        DumpAnimation(*animation, out["RSAnimationManager"]);
+        DumpAnimation(*animation, JsonWrapper{out["RSAnimationManager"]});
     }
 }
 
-void RSProfiler::DumpAnimation(const RSRenderAnimation& animation, nlohmann::json& out)
+void RSProfiler::DumpAnimation(const RSRenderAnimation& animation, JsonWrapper&& outWrapper)
 {
     nlohmann::json obj;
     obj["id"] = animation.id_;
@@ -404,7 +424,7 @@ void RSProfiler::DumpAnimation(const RSRenderAnimation& animation, nlohmann::jso
     obj["FrameRateRange_min"] = std::to_string(animation.animationFraction_.GetFrameRateRange().min_);
     obj["FrameRateRange_max"] = std::to_string(animation.animationFraction_.GetFrameRateRange().max_);
     obj["FrameRateRange_prefered"] = std::to_string(animation.animationFraction_.GetFrameRateRange().preferred_);
-    out.push_back(std::move(obj));
+    outWrapper.json.push_back(std::move(obj));
 }
 
 } // namespace OHOS::Rosen

@@ -14,7 +14,6 @@
  */
 
 
-#include "nlohmann/json.hpp"
 #include <filesystem>
 #include <list>
 
@@ -23,6 +22,7 @@
 #include "rs_profiler_capture_recorder.h"
 #include "rs_profiler_capturedata.h"
 #include "rs_profiler_file.h"
+#include "rs_profiler_jsonwrapper.h"
 #include "rs_profiler_network.h"
 #include "rs_profiler_telemetry.h"
 #include "rs_profiler_utils.h"
@@ -312,10 +312,11 @@ void RSProfiler::OnFrameEnd()
     RecordUpdate();
 }
 
-void RSProfiler::RenderServiceTreeDump(nlohmann::json& out)
+void RSProfiler::RenderServiceTreeDump(JsonWrapper&& outWrapper)
 {
     RS_TRACE_NAME("GetDumpTreeJSON");
 
+    auto& out = outWrapper.json;
     auto& animation = out["Animation Node"];
     animation = nlohmann::json::array();
     for (auto& [nodeId, _] : g_renderServiceContext->animatingNodeList_) {
@@ -329,7 +330,7 @@ void RSProfiler::RenderServiceTreeDump(nlohmann::json& out)
         return;
     }
 
-    DumpNode(*rootNode, root);
+    DumpNode(*rootNode, JsonWrapper{root});
 }
 
 bool RSProfiler::IsEnabled()
@@ -633,7 +634,7 @@ void RSProfiler::DumpTreeToJson(const ArgList& args)
     if (!g_renderServiceThread) {
         return;
     }
-    RenderServiceTreeDump(tree);
+    RenderServiceTreeDump(JsonWrapper{tree});
 
     tree["Display"] = { 0.0f, 0.0f, 0.0f, 0.0f };
     if (auto displayNode = GetDisplayNode(*g_renderServiceContext); displayNode) {

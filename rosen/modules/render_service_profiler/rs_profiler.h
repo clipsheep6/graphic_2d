@@ -21,8 +21,6 @@
 #include "common/rs_vector4.h"
 
 #ifdef RS_PROFILER_ENABLED
-#include "json_fwd.hpp"
-
 #define RS_PROFILER_INIT(renderSevice) RSProfiler::Init(renderSevice)
 #define RS_PROFILER_ON_FRAME_BEGIN() RSProfiler::OnFrameBegin()
 #define RS_PROFILER_ON_FRAME_END() RSProfiler::OnFrameEnd()
@@ -94,6 +92,7 @@ class RSRenderNodeMap;
 class RSAnimationManager;
 class RSCommand;
 class ArgList;
+struct JsonWrapper;
 
 enum class Mode { NONE = 0, READ = 1, WRITE = 2, READ_EMUL = 3, WRITE_EMUL = 4 };
 
@@ -212,20 +211,20 @@ private:
     RSB_EXPORT static std::string DumpSurfaceNode(const RSRenderNode& node);
 
     // JSON
-    static void RenderServiceTreeDump(nlohmann::json& out);
-    RSB_EXPORT static void DumpNode(const RSRenderNode& node, nlohmann::json& out);
-    RSB_EXPORT static void DumpSubClassNode(const RSRenderNode& node, nlohmann::json& out);
-    RSB_EXPORT static void DumpDrawCmdModifiers(const RSRenderNode& node, nlohmann::json& out);
+    static void RenderServiceTreeDump(JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpNode(const RSRenderNode& node, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpSubClassNode(const RSRenderNode& node, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpDrawCmdModifiers(const RSRenderNode& node, JsonWrapper&& outWrapper);
     RSB_EXPORT static void DumpDrawCmdModifier(
-        const RSRenderNode& node, nlohmann::json& out, int type, RSRenderModifier& modifier);
-    RSB_EXPORT static void DumpProperties(const RSProperties& properties, nlohmann::json& out);
-    RSB_EXPORT static void DumpPropertiesTransform(const RSProperties& properties, nlohmann::json& out);
-    RSB_EXPORT static void DumpPropertiesDecoration(const RSProperties& properties, nlohmann::json& out);
-    RSB_EXPORT static void DumpPropertiesEffects(const RSProperties& properties, nlohmann::json& out);
-    RSB_EXPORT static void DumpPropertiesShadow(const RSProperties& properties, nlohmann::json& out);
-    RSB_EXPORT static void DumpPropertiesColor(const RSProperties& properties, nlohmann::json& out);
-    RSB_EXPORT static void DumpAnimations(const RSAnimationManager& animationManager, nlohmann::json& out);
-    RSB_EXPORT static void DumpAnimation(const RSRenderAnimation& animation, nlohmann::json& out);
+        const RSRenderNode& node, JsonWrapper&& outWrapper, int type, RSRenderModifier& modifier);
+    RSB_EXPORT static void DumpProperties(const RSProperties& properties, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpPropertiesTransform(const RSProperties& properties, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpPropertiesDecoration(const RSProperties& properties, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpPropertiesEffects(const RSProperties& properties, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpPropertiesShadow(const RSProperties& properties, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpPropertiesColor(const RSProperties& properties, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpAnimations(const RSAnimationManager& animationManager, JsonWrapper&& outWrapper);
+    RSB_EXPORT static void DumpAnimation(const RSRenderAnimation& animation, JsonWrapper&& outWrapper);
 
     // RSAnimationManager
     RSB_EXPORT static void FilterAnimationForPlayback(RSAnimationManager& manager);

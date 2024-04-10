@@ -29,7 +29,7 @@
 
 namespace OHOS::Rosen {
 
-void RSProfiler::DumpNode(const RSRenderNode& node, JsonWrapper&& outWrapper)
+void RSProfiler::DumpNode(const RSRenderNode& node, JsonWrapper && outWrapper)
 {
     std::string type;
     node.DumpNodeType(type);
@@ -65,7 +65,7 @@ void RSProfiler::DumpNode(const RSRenderNode& node, JsonWrapper&& outWrapper)
     }
 }
 
-void RSProfiler::DumpSubClassNode(const RSRenderNode& node, JsonWrapper&& outWrapper)
+void RSProfiler::DumpSubClassNode(const RSRenderNode& node, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
     if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
@@ -96,7 +96,7 @@ void RSProfiler::DumpSubClassNode(const RSRenderNode& node, JsonWrapper&& outWra
     }
 }
 
-void RSProfiler::DumpDrawCmdModifiers(const RSRenderNode& node, JsonWrapper&& outWrapper)
+void RSProfiler::DumpDrawCmdModifiers(const RSRenderNode& node, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
     nlohmann::json& modifiersJson = out["DrawCmdModifiers"];
@@ -113,7 +113,7 @@ void RSProfiler::DumpDrawCmdModifiers(const RSRenderNode& node, JsonWrapper&& ou
 }
 
 void RSProfiler::DumpDrawCmdModifier(
-    const RSRenderNode& node, JsonWrapper&& outWrapper, int type, RSRenderModifier& modifier)
+    const RSRenderNode& node, JsonWrapper && outWrapper, int type, RSRenderModifier& modifier)
 {
     nlohmann::json property;
     auto modType = static_cast<RSModifierType>(type);
@@ -158,7 +158,7 @@ static std::string Hex(uint32_t value)
     return sstream.str();
 }
 
-void RSProfiler::DumpProperties(const RSProperties& p, JsonWrapper&& outWrapper)
+void RSProfiler::DumpProperties(const RSProperties& p, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
     out["Bounds"] = { p.GetBoundsPositionX(), p.GetBoundsPositionY(), p.GetBoundsWidth(), p.GetBoundsHeight() };
@@ -175,7 +175,7 @@ void RSProfiler::DumpProperties(const RSProperties& p, JsonWrapper&& outWrapper)
     DumpPropertiesColor(p, JsonWrapper{out});
 }
 
-void RSProfiler::DumpPropertiesTransform(const RSProperties& p, JsonWrapper&& outWrapper)
+void RSProfiler::DumpPropertiesTransform(const RSProperties& p, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
 
@@ -222,7 +222,7 @@ void RSProfiler::DumpPropertiesTransform(const RSProperties& p, JsonWrapper&& ou
     }
 }
 
-void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, JsonWrapper&& outWrapper)
+void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
 
@@ -264,7 +264,7 @@ void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, JsonWrapper&& o
     }
 }
 
-void RSProfiler::DumpPropertiesShadow(const RSProperties& p, JsonWrapper&& outWrapper)
+void RSProfiler::DumpPropertiesShadow(const RSProperties& p, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
 
@@ -297,7 +297,7 @@ void RSProfiler::DumpPropertiesShadow(const RSProperties& p, JsonWrapper&& outWr
     }
 }
 
-void RSProfiler::DumpPropertiesEffects(const RSProperties& p, JsonWrapper&& outWrapper)
+void RSProfiler::DumpPropertiesEffects(const RSProperties& p, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
 
@@ -347,7 +347,7 @@ void RSProfiler::DumpPropertiesEffects(const RSProperties& p, JsonWrapper&& outW
     }
 }
 
-void RSProfiler::DumpPropertiesColor(const RSProperties& p, JsonWrapper&& outWrapper)
+void RSProfiler::DumpPropertiesColor(const RSProperties& p, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
 
@@ -392,7 +392,7 @@ void RSProfiler::DumpPropertiesColor(const RSProperties& p, JsonWrapper&& outWra
     }
 }
 
-void RSProfiler::DumpAnimations(const RSAnimationManager& animationManager, JsonWrapper&& outWrapper)
+void RSProfiler::DumpAnimations(const RSAnimationManager& animationManager, JsonWrapper && outWrapper)
 {
     auto& out = outWrapper.json;
 
@@ -407,7 +407,7 @@ void RSProfiler::DumpAnimations(const RSAnimationManager& animationManager, Json
     }
 }
 
-void RSProfiler::DumpAnimation(const RSRenderAnimation& animation, JsonWrapper&& outWrapper)
+void RSProfiler::DumpAnimation(const RSRenderAnimation& animation, JsonWrapper && outWrapper)
 {
     nlohmann::json obj;
     obj["id"] = animation.id_;

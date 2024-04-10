@@ -312,7 +312,7 @@ void RSProfiler::OnFrameEnd()
     RecordUpdate();
 }
 
-void RSProfiler::RenderServiceTreeDump(JsonWrapper&& outWrapper)
+void RSProfiler::RenderServiceTreeDump(JsonWrapper && outWrapper)
 {
     RS_TRACE_NAME("GetDumpTreeJSON");
 

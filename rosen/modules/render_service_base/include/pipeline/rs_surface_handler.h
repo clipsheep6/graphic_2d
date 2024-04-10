@@ -177,16 +177,16 @@ public:
         return bufferSizeChanged_;
     }
 
+#ifndef ROSEN_CROSS_PLATFORM
     void SetBufferSizeChanged(const sptr<SurfaceBuffer>& buffer)
     {
-#ifndef ROSEN_CROSS_PLATFORM
         if (preBuffer_.buffer == nullptr) {
             return;
         }
         bufferSizeChanged_ = buffer->GetWidth() != preBuffer_.buffer->GetWidth() ||
                              buffer->GetHeight() != preBuffer_.buffer->GetHeight();
-#endif
     }
+#endif
 
     bool HasConsumer() const
     {

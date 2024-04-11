@@ -27,7 +27,11 @@ struct JsonWrapper {
     {
         json = Json::arrayValue;
         for (const auto& value : values) {
-            json.append(value);
+            if (std::isinf(value) || std::isnan(value)) {
+                json.append(Json::nullValue);
+            } else {
+                json.append(value);
+            }
         }
     }
 };

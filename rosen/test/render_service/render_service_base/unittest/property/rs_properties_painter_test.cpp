@@ -969,50 +969,6 @@ HWTEST_F(RSPropertiesPainterTest, IsDangerousBlendMode001, TestSize.Level1)
 }
 
 /**
- * @tc.name: BeginBlendMode001
- * @tc.desc: test results of BeginBlendMode
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSPropertiesPainterTest, BeginBlendMode001, TestSize.Level1)
-{
-    RSProperties properties;
-    Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas drCanvas(&drawingCanvas);
-    RSPropertiesPainter::BeginBlendMode(drCanvas, properties);
-    EXPECT_TRUE(true);
-
-    properties.SetColorBlendMode(2);
-    RSPropertiesPainter::BeginBlendMode(drCanvas, properties);
-    EXPECT_TRUE(true);
-}
-
-/**
- * @tc.name: EndBlendMode001
- * @tc.desc: test results of EndBlendMode
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSPropertiesPainterTest, EndBlendMode001, TestSize.Level1)
-{
-    RSProperties properties;
-    Drawing::Canvas drawingCanvas;
-    RSPaintFilterCanvas drCanvas(&drawingCanvas);
-    RSPropertiesPainter::EndBlendMode(drCanvas, properties);
-    EXPECT_TRUE(true);
-
-    properties.SetColorBlendMode(2);
-    drCanvas.AddBlendOffscreenLayer(true);
-    RSPropertiesPainter::EndBlendMode(drCanvas, properties);
-    EXPECT_TRUE(true);
-
-    properties.SetColorBlendApplyType(1);
-    drCanvas.AddBlendOffscreenLayer(true);
-    RSPropertiesPainter::EndBlendMode(drCanvas, properties);
-    EXPECT_TRUE(true);
-}
-
-/**
  * @tc.name: DrawLinearGradientBlurFilter001
  * @tc.desc: test
  * @tc.type:FUNC
@@ -1247,6 +1203,20 @@ HWTEST_F(RSPropertiesPainterTest, DrawDynamicLightUp002, TestSize.Level1)
     Drawing::Canvas drawingCanvas;
     RSPaintFilterCanvas canvas(&drawingCanvas);
     RSPropertiesPainter::DrawDynamicLightUp(properties, canvas);
+}
+
+/**
+ * @tc.name: DrawDynamicDim001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSPropertiesPainterTest, DrawDynamicDim001, TestSize.Level1)
+{
+    RSProperties properties;
+    properties.SetDynamicDimDegree(0.5);
+    Drawing::Canvas drawingCanvas;
+    RSPaintFilterCanvas canvas(&drawingCanvas);
+    RSPropertiesPainter::DrawDynamicDim(properties, canvas);
 }
 } // namespace Rosen
 } // namespace OHOS

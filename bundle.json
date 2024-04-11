@@ -127,7 +127,8 @@
             "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
             "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
-            "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json"
+            "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json",
+            "//foundation/graphic/graphic_2d/rosen/modules/create_pixelmap_surface:create_pixelmap_surface",
           ],
           "fwk_group": [
             "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
@@ -364,6 +365,15 @@
               ],
               "header_base": "//foundation/graphic/graphic_2d/rosen/modules/texgine/export/texgine"
             }
+          },
+          {
+            "header":{
+              "header_files":[
+                "pixel_map_from_surface.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/create_pixelmap_surface/include"
+            },
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/create_pixelmap_surface:create_pixelmap_surface"
           },
           {
             "type": "so",

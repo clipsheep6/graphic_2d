@@ -15,9 +15,10 @@
 #ifndef RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
 #define RENDER_SERVICE_CLIENT_CORE_RENDER_RS_FOREGROUND_EFFECT_FILTER_H
 
+#include <memory>
+
 #include "effect/runtime_effect.h"
 #include "effect/runtime_shader_builder.h"
-#include <memory>
 #include "render/rs_skia_filter.h"
 
 namespace OHOS {

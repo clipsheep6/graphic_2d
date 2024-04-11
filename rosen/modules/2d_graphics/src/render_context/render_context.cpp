@@ -158,29 +158,40 @@ void RenderContext::InitializeEglContext()
     }
 
     LOGD("Creating EGLContext!!!");
+
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "eglGetDisplay in ROSENcontextcreate4.0");
     eglDisplay_ = GetPlatformEglDisplay(EGL_PLATFORM_OHOS_KHR, EGL_DEFAULT_DISPLAY, NULL);
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+
     if (eglDisplay_ == EGL_NO_DISPLAY) {
         LOGW("Failed to create EGLDisplay gl errno : %{public}x", eglGetError());
         return;
     }
 
     EGLint major, minor;
+
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "eglInitialize in ROSENcontextcreate4.0");
     if (eglInitialize(eglDisplay_, &major, &minor) == EGL_FALSE) {
         LOGE("Failed to initialize EGLDisplay");
         return;
     }
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "eglBindAPI in ROSENcontextcreate4.0");
     if (eglBindAPI(EGL_OPENGL_ES_API) == EGL_FALSE) {
         LOGE("Failed to bind OpenGL ES API");
         return;
     }
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 
     unsigned int ret;
     EGLint count;
     EGLint config_attribs[] = { EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT, EGL_NONE };
 
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "eglChooseConfig in ROSENcontextcreate4.0");
     ret = eglChooseConfig(eglDisplay_, config_attribs, &config_, 1, &count);
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     if (!(ret && static_cast<unsigned int>(count) >= 1)) {
         LOGE("Failed to eglChooseConfig");
         return;
@@ -188,16 +199,22 @@ void RenderContext::InitializeEglContext()
 
     static const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, EGL_CONTEXT_CLIENT_VERSION_NUM, EGL_NONE };
 
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "eglCreateContext in ROSENcontextcreate4.0");
     eglContext_ = eglCreateContext(eglDisplay_, config_, EGL_NO_CONTEXT, context_attribs);
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
     if (eglContext_ == EGL_NO_CONTEXT) {
         LOGE("Failed to create egl context %{public}x", eglGetError());
         return;
     }
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "eglCreatePbufferSurface in ROSENcontextcreate4.0");
     CreatePbufferSurface();
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
+    ROSEN_TRACE_BEGIN(HITRACE_TAG_GRAPHIC_AGP, "eglMakeCurrent in ROSENcontextcreate4.0");
     if (!eglMakeCurrent(eglDisplay_, pbufferSurface_, pbufferSurface_, eglContext_)) {
         LOGE("Failed to make current on surface, error is %{public}x", eglGetError());
         return;
     }
+    ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 
     LOGD("Create EGL context successfully, version %{public}d.%{public}d", major, minor);
 }

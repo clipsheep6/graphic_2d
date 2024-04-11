@@ -36,6 +36,7 @@ enum class PackageID {
     RS_PROFILER_SKP_BINARY,
     RS_PROFILER_RDC_BINARY,
     RS_PROFILER_DCL_BINARY,
+    RS_PROFILER_RSTREE_DUMP_JSON,
 };
 class BinaryHelper {
 public:

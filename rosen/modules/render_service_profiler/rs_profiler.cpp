@@ -13,15 +13,16 @@
  * limitations under the License.
  */
 
-#include "rs_profiler.h"
 
 #include <filesystem>
 #include <list>
 
 #include "foundation/graphic/graphic_2d/utils/log/rs_trace.h"
+#include "rs_profiler.h"
 #include "rs_profiler_capture_recorder.h"
 #include "rs_profiler_capturedata.h"
 #include "rs_profiler_file.h"
+#include "rs_profiler_jsonhelper.h"
 #include "rs_profiler_network.h"
 #include "rs_profiler_telemetry.h"
 #include "rs_profiler_utils.h"
@@ -309,6 +310,28 @@ void RSProfiler::OnFrameEnd()
     ProcessCommands();
     ProcessSendingRdc();
     RecordUpdate();
+}
+
+void RSProfiler::RenderServiceTreeDump(JsonWrapper && outWrapper)
+{
+    RS_TRACE_NAME("GetDumpTreeJSON");
+
+    if (!g_renderServiceContext) {
+        return;
+    }
+
+    auto& animation = out["Animation Node"];
+    animation = Json::arrayValue;
+    for (auto& [nodeId, _] : g_renderServiceContext->animatingNodeList_) {
+        animation.append(nodeId);
+    }
+
+    auto& root = out["Root node"];
+    root = Json::objectValue;
+    const auto rootNode = g_renderServiceContext->GetGlobalRootRenderNode();
+    if (rootNode) {
+        DumpNode(*rootNode, root);
+    }
 }
 
 bool RSProfiler::IsEnabled()
@@ -604,6 +627,27 @@ void RSProfiler::DumpTree(const ArgList& args)
     }
 
     Respond(out);
+}
+
+void RSProfiler::DumpTreeToJson(const ArgList& args)
+{
+    if (!g_renderServiceContext) {
+        return;
+    }
+
+    Json::Value tree;
+    RenderServiceTreeDump(tree);
+
+    JsonHelper::PushArray(tree["Display"], { 0.0f, 0.0f, 0.0f, 0.0f });
+    if (auto displayNode = GetDisplayNode(*g_renderServiceContext); displayNode) {
+        if (auto dirtyManager = displayNode->GetDirtyManager(); dirtyManager) {
+            const auto displayRect = dirtyManager->GetSurfaceRect();
+            JsonHelper::PushArray(tree["Display"],
+                { displayRect.GetLeft(), displayRect.GetTop(), displayRect.GetRight(), displayRect.GetBottom() });
+        }
+    }
+
+    Network::SendRSTreeDumpJSON(Json::FastWriter{}.write(tree));
 }
 
 void RSProfiler::DumpSurfaces(const ArgList& args)

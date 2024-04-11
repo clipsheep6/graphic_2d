@@ -205,6 +205,7 @@ ohos_shared_library("librender_service") {
   if (rosen_is_ohos && graphic_2d_feature_rs_enable_profiler &&
       player_framework_enable) {
     defines += [ "RS_PROFILER_ENABLED" ]
+
     sources += [
       "$rosen_root/modules/render_service_profiler/rs_profiler.cpp",
       "$rosen_root/modules/render_service_profiler/rs_profiler_archive.cpp",
@@ -218,6 +219,9 @@ ohos_shared_library("librender_service") {
       "$rosen_root/modules/render_service_profiler/rs_profiler_utils.cpp",
     ]
   }
+
+  deps += [ "//third_party/jsoncpp:jsoncpp" ]
+
   include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 
   public_deps = [

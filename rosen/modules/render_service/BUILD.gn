@@ -220,7 +220,7 @@ ohos_shared_library("librender_service") {
     ]
   }
 
-  deps += [ "//third_party/jsoncpp:jsoncpp" ]
+  external_deps += [ "//third_party/jsoncpp:jsoncpp" ]
 
   include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 

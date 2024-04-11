@@ -220,8 +220,6 @@ ohos_shared_library("librender_service") {
     ]
   }
 
-  external_deps += [ "//third_party/jsoncpp:jsoncpp" ]
-
   include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 
   public_deps = [
@@ -282,6 +280,7 @@ ohos_shared_library("librender_service") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "window_manager:libwsutils",
+    "//third_party/jsoncpp:jsoncpp",
   ]
   if (use_video_processing_engine) {
     external_deps += [ "video_processing_engine:videoprocessingengine" ]

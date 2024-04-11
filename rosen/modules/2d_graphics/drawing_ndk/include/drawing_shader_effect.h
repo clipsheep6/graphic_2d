@@ -95,7 +95,8 @@ OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreateLinearGradient(const OH_Dr
  * @param radius Indicates the radius of the circle for this gradient.
  * @param colors Indicates the colors to be distributed between the two points.
  * @param pos Indicates the relative position of each corresponding color in the colors array.
- * @param size Indicates the number of colors and pos.
+ *            If pos is nullptr, the colors are evenly distributed between the start and end point.
+ * @param size Indicates the number of colors and pos(if pos is not nullptr).
  * @param OH_Drawing_TileMode Indicates the tile mode.
  * @return Returns the pointer to the <b>OH_Drawing_ShaderEffect</b> object created.
  * @since 11
@@ -111,7 +112,8 @@ OH_Drawing_ShaderEffect* OH_Drawing_ShaderEffectCreateRadialGradient(const OH_Dr
  * @param centerPt Indicates the center of the circle for the gradient.
  * @param colors Indicates the colors to be distributed between the two points.
  * @param pos Indicates the relative position of each corresponding color in the colors array.
- * @param size Indicates the number of colors and pos.
+ *            If pos is nullptr, the colors are evenly distributed between the start and end point.
+ * @param size Indicates the number of colors and pos(if pos is not nullptr).
  * @param OH_Drawing_TileMode Indicates the tile mode.
  * @return Returns the pointer to the <b>OH_Drawing_ShaderEffect</b> object created.
  * @since 11

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,9 @@ void BrushFuzzTestInner01(Brush& brush)
 
     std::shared_ptr<ColorSpace> colorSpace = ColorSpace::CreateSRGB();
     brush.SetColor(color4f, colorSpace);
+    std::shared_ptr<ShaderEffect> shaderEffect = ShaderEffect::CreateColorSpaceShader(color4f, colorSpace);
+    brush.SetShaderEffect(shaderEffect);
+    brush.GetShaderEffect();
     brush.SetAlpha(alpha1);
     brush.GetAlpha();
     scalar scalarG = GetObject<scalar>();
@@ -59,6 +62,16 @@ void BrushFuzzTestInner02(Brush& brush)
     brush.IsAntiAlias();
     bool isAntiAlias = GetObject<bool>();
     brush.SetAntiAlias(isAntiAlias);
+    auto blender = std::make_shared<Blender>();
+    brush.SetBlender(blender);
+    Rect rectA = Rect(GetObject<float>(), GetObject<float>(), GetObject<float>(), GetObject<float>());
+    Rect rectB = Rect(GetObject<float>(), GetObject<float>(), GetObject<float>(), GetObject<float>());
+    if (brush.CanComputeFastBounds()) {
+        brush.ComputeFastBounds(rectA, &rectB);
+    }
+    brush.AsBlendMode();
+    brush.HasFilter();
+    brush.GetAlphaF();
     brush.Reset();
 }
 

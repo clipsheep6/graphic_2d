@@ -147,7 +147,6 @@ void RSProfiler::DumpDrawCmdModifier(const RSRenderNode& node, Json::Value& out,
         if (propertyPtr) {
             property["ENV_FOREGROUND_COLOR"] = "#" + Hex(propertyPtr->Get().AsRgbaInt()) + " (RGBA)";
         }
-
     } else if (modType == RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY) {
         auto propertyPtr =
             std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType>>(modifier.GetProperty());

@@ -214,20 +214,20 @@ private:
     RSB_EXPORT static std::string DumpSurfaceNode(const RSRenderNode& node);
 
     // JSON
-    static void RenderServiceTreeDump(Json::Value& outWrapper);
-    RSB_EXPORT static void DumpNode(const RSRenderNode& node, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpSubClassNode(const RSRenderNode& node, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpDrawCmdModifiers(const RSRenderNode& node, Json::Value& outWrapper);
+    static void RenderServiceTreeDump(Json::Value& out);
+    RSB_EXPORT static void DumpNode(const RSRenderNode& node, Json::Value& out);
+    RSB_EXPORT static void DumpSubClassNode(const RSRenderNode& node, Json::Value& out);
+    RSB_EXPORT static void DumpDrawCmdModifiers(const RSRenderNode& node, Json::Value& out);
     RSB_EXPORT static void DumpDrawCmdModifier(
-        const RSRenderNode& node, Json::Value& outWrapper, int type, RSRenderModifier& modifier);
-    RSB_EXPORT static void DumpProperties(const RSProperties& properties, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpPropertiesTransform(const RSProperties& properties, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpPropertiesDecoration(const RSProperties& properties, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpPropertiesEffects(const RSProperties& properties, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpPropertiesShadow(const RSProperties& properties, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpPropertiesColor(const RSProperties& properties, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpAnimations(const RSAnimationManager& animationManager, Json::Value& outWrapper);
-    RSB_EXPORT static void DumpAnimation(const RSRenderAnimation& animation, Json::Value& outWrapper);
+        const RSRenderNode& node, Json::Value& out, int type, RSRenderModifier& modifier);
+    RSB_EXPORT static void DumpProperties(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesTransform(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesDecoration(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesEffects(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesShadow(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesColor(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpAnimations(const RSAnimationManager& animationManager, Json::Value& out);
+    RSB_EXPORT static void DumpAnimation(const RSRenderAnimation& animation, Json::Value& out);
 
     // RSAnimationManager
     RSB_EXPORT static void FilterAnimationForPlayback(RSAnimationManager& manager);

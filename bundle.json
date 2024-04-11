@@ -102,6 +102,7 @@
           "zlib",
           "skia",
           "cJSON",
+          "jsoncpp",
           "egl",
           "opengles",
           "vulkan-headers",

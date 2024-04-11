@@ -18,9 +18,11 @@
 #include "canvas_napi/js_canvas.h"
 #include "run_napi/js_run.h"
 #include "utils/log.h"
-
+#include "../drawing/js_drawing_utils.h"
 
 namespace OHOS::Rosen {
+std::shared_ptr<TextLineBase> g_TextLineBase = nullptr;
+std::shared_ptr<Typography> g_TextLineBaseTypography = nullptr;
 thread_local napi_ref JsTextLine::constructor_ = nullptr;
 const std::string CLASS_NAME = "TextLine";
 napi_value JsTextLine::Init(napi_env env, napi_value exportObj)
@@ -36,19 +38,19 @@ napi_value JsTextLine::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
                                            sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        LOGE("Failed to define TextLine class");
+        ROSEN_LOGE("Failed to define TextLine class");
         return nullptr;
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
-        LOGE("Failed to create reference of constructor");
+        ROSEN_LOGE("Failed to create reference of constructor");
         return nullptr;
     }
 
     status = napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor);
     if (status != napi_ok) {
-        LOGE("Failed to set constructor");
+        ROSEN_LOGE("Failed to set constructor");
         return nullptr;
     }
 
@@ -61,18 +63,25 @@ napi_value JsTextLine::Constructor(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     if (status != napi_ok) {
-        LOGE("failed to napi_get_cb_info");
+        ROSEN_LOGE("failed to napi_get_cb_info");
         return nullptr;
     }
 
-    // TextLineBase *textLine = new TextLineBase();
-    JsTextLine *jsTextLineBase = new(std::nothrow) JsTextLine();
+    if (!g_TextLineBase || !g_TextLineBaseTypography) {
+        ROSEN_LOGE(" clp-ark JsTextLine::Constructor g_TextLineBase or g_TextLineBaseTypography is nullptr");
+        return nullptr;
+    }
 
+    JsTextLine *jsTextLineBase = new(std::nothrow) JsTextLine(g_TextLineBase, g_TextLineBaseTypography);
+    if (!jsTextLineBase) {
+        ROSEN_LOGE(" clp-ark JsTextLine::Constructor jsTextLineBase is nullptr");
+        return nullptr;
+    }
     status = napi_wrap(env, jsThis, jsTextLineBase,
                        JsTextLine::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsTextLineBase;
-        LOGE("JsTextLine::Constructor Failed to wrap native instance");
+        ROSEN_LOGE("JsTextLine::Constructor Failed to wrap native instance");
         return nullptr;
     }
     return jsThis;
@@ -87,14 +96,9 @@ void JsTextLine::Destructor(napi_env env, void *nativeObject, void *finalize)
     }
 }
 
-JsTextLine::JsTextLine()
+JsTextLine::JsTextLine(std::shared_ptr<TextLineBase> textLineBase, std::shared_ptr<Typography> paragraph)
+    : textLineBase_(textLineBase), paragraphCurrent_(paragraph)
 {
-    // textLine_ = nullptr;
-}
-
-void JsTextLine::SetTextLine(std::unique_ptr<TextLineBase> textLine)
-{
-    textLine_ = std::move(textLine);
 }
 
 napi_value JsTextLine::GetGlyphCount(napi_env env, napi_callback_info info)
@@ -123,56 +127,33 @@ napi_value JsTextLine::Paint(napi_env env, napi_callback_info info)
 
 napi_value JsTextLine::OnGetGlyphCount(napi_env env, napi_callback_info info)
 {
-    if (textLine_ == nullptr) {
-        LOGE("JsFont::OnGetGlyphCount font is nullptr");
+    if (textLineBase_ == nullptr) {
+        ROSEN_LOGE("JsFont::OnGetGlyphCount font is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 
-    uint32_t textSize = textLine_->GetGlyphCount();
+    uint32_t textSize = textLineBase_->GetGlyphCount();
     return CreateJsValue(env, textSize);
-}
-
-static void DestructorRun(napi_env env, void *nativeObject, void *finalize)
-{
-    (void)finalize;
-    if (nativeObject != nullptr) {
-        JsRun *napi = reinterpret_cast<JsRun *>(nativeObject);
-        delete napi;
-    }
 }
 
 napi_value JsTextLine::OnGetGlyphRuns(napi_env env, napi_callback_info info)
 {
-    if (textLine_ == nullptr) {
-        LOGE("JsTextLine::OnGetGlyphRuns TextLine is nullptr");
+    if (textLineBase_ == nullptr) {
+        ROSEN_LOGE("JsTextLine::OnGetGlyphRuns TextLine is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    std::vector<std::unique_ptr<Run>> runs = textLine_->GetGlyphRuns();
+    std::vector<std::unique_ptr<Run>>  runs = textLineBase_->GetGlyphRuns();
     if (runs.empty()) {
-        LOGE("JsTextLine::OnGetGlyphRuns runs is empty");
+        ROSEN_LOGE("JsTextLine::OnGetGlyphRuns runs is empty");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     napi_value array = nullptr;
     napi_create_array_with_length(env, runs.size(), &array);
     uint32_t index = 0;
     for (std::unique_ptr<Run>& item : runs) {
-        JsRun *jsRun = new(std::nothrow) JsRun();
-        if (jsRun == nullptr) {
-            LOGE("OnGetGlyphRuns jsRun is NULL!");
-            continue;
-        }
-        jsRun->SetRun(std::move(item));
-        napi_value itemObject = nullptr;
-        napi_create_object(env, &itemObject);
+        napi_value itemObject = JsRun::CreateJsRun(env, std::move(item), paragraphCurrent_);
         if (itemObject == nullptr) {
-            LOGE("OnGetGlyphRuns itemObject is NULL!");
-            delete jsRun;
-            continue;
-        }
-        napi_wrap(env, itemObject, jsRun, DestructorRun, nullptr, nullptr);
-        if (itemObject == nullptr) {
-            LOGE("OnGetGlyphRuns itemObject is null!");
-            delete jsRun;
+            ROSEN_LOGE("OnGetGlyphRuns itemObject is null!");
             continue;
         }
         napi_set_element(env, array, index++, itemObject);
@@ -182,12 +163,12 @@ napi_value JsTextLine::OnGetGlyphRuns(napi_env env, napi_callback_info info)
 
 napi_value JsTextLine::OnGetTextRange(napi_env env, napi_callback_info info)
 {
-    if (textLine_ == nullptr) {
-        LOGE("JsTextLine::OnGetTextRange TextLine is nullptr");
+    if (textLineBase_ == nullptr) {
+        ROSEN_LOGE("JsTextLine::OnGetTextRange TextLine is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
 
-    Boundary boundary = textLine_->GetTextRange();
+    Boundary boundary = textLineBase_->GetTextRange();
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
     if (objValue != nullptr) {
@@ -199,45 +180,61 @@ napi_value JsTextLine::OnGetTextRange(napi_env env, napi_callback_info info)
 
 napi_value JsTextLine::OnPaint(napi_env env, napi_callback_info info)
 {
-    if (textLine_ == nullptr) {
-        LOGE("JsTextLine::OnPaint TextLine is nullptr");
+    if (textLineBase_ == nullptr) {
+        ROSEN_LOGE("JsTextLine::OnPaint TextLine is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }    
     size_t argc = ARGC_THREE;
     napi_value argv[ARGC_THREE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < ARGC_THREE ) {
-        LOGE("JsTextLine::OnPaint Argc is invalid: %{public}zu", argc);
+        ROSEN_LOGE("JsTextLine::OnPaint Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     Drawing::JsCanvas* jsCanvas = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void**>(&jsCanvas));
     if (jsCanvas == nullptr) {
-        LOGE("JsTextLine::OnPaint jsCanvas is nullptr");
+        ROSEN_LOGE("JsTextLine::OnPaint jsCanvas is nullptr");
         return NapiGetUndefined(env);
     }
     if (jsCanvas->GetCanvas() == nullptr) {
-        LOGE("JsTextLine::OnPaint canvas is nullptr");
+        ROSEN_LOGE("JsTextLine::OnPaint canvas is nullptr");
         return NapiGetUndefined(env);
     }
     double x = 0.0;
     double y = 0.0;
     if (!(ConvertFromJsValue(env, argv[0], x) && ConvertFromJsValue(env, argv[ARGC_ONE], y))) {
-        LOGE("JsTextLine::OnPaint Argv0 or Argv 1 is invalid");
+        ROSEN_LOGE("JsTextLine::OnPaint Argv0 or Argv 1 is invalid");
         return NapiGetUndefined(env);
     }
-    textLine_->Paint(jsCanvas->GetCanvas(), x, y);
+    textLineBase_->Paint(jsCanvas->GetCanvas(), x, y);
     return NapiGetUndefined(env);
 }
 
-std::unique_ptr<TextLineBase> JsTextLine::GetTextLineBase()
+napi_value JsTextLine::CreateJsTextLine(napi_env env, std::shared_ptr<TextLineBase> textLineBase,
+    std::shared_ptr<Typography> paragraph)
 {
-    return std::move(textLine_);
-}
+    ROSEN_LOGE(" clp-ark JsTextLine::CreateJsTextLine 000 textLineBase.get() = %p constructor_ = %p ",
+        textLineBase.get(), constructor_);
 
-void JsTextLine::SetParagraph(std::shared_ptr<Typography> paragraph)
-{
-    paragraphCurrent_ = paragraph;
+
+    napi_value constructor = nullptr;
+    napi_value result = nullptr;
+    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+    if (status == napi_ok) {
+        g_TextLineBase = textLineBase;
+        g_TextLineBaseTypography = paragraph;
+        status = napi_new_instance(env, constructor, 0, nullptr, &result);
+        if (status == napi_ok) {
+            ROSEN_LOGE(" clp-ark JsTextLine::CreateJsTextLine OnCreateJsTypography 800   ");
+            return result;
+        } else {
+            ROSEN_LOGE(" clp-ark JsTextLine::CreateJsTextLine: New instance could not be obtained");
+        }
+    }
+
+    ROSEN_LOGE(" clp-ark JsTextLine::CreateJsTextLine OnCreateJsTypography 900   ");
+    return result;
 }
 
 } // namespace OHOS::Rosen

@@ -36,7 +36,6 @@ public:
     static napi_value PopStyle(napi_env env, napi_callback_info info);
     static napi_value AddPlaceholder(napi_env env, napi_callback_info info);
     static napi_value Build(napi_env env, napi_callback_info info);
-    //static napi_value CreateJsTypography(napi_env env, const std::unique_ptr<Typography> typography);
     std::unique_ptr<TypographyCreate> GetTypographyCreate();
 
     std::shared_ptr<FontCollection> GetFontCollection();

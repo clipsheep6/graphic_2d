@@ -23,9 +23,8 @@
 namespace OHOS::Rosen {
 class JsRun final {
 public:
-    JsRun();
+    JsRun(std::shared_ptr<Run> run, std::shared_ptr<Typography> paragraph);
 
-    void SetRun(std::unique_ptr<Run> run);
     static napi_value Init(napi_env env, napi_value exportObj);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void* nativeObject, void* finalize);
@@ -35,7 +34,9 @@ public:
     static napi_value GetOffsets(napi_env env, napi_callback_info info);
     static napi_value GetFont(napi_env env, napi_callback_info info);
     static napi_value Paint(napi_env env, napi_callback_info info);
-    void SetParagraph(std::shared_ptr<Typography> paragraph);
+
+    static napi_value CreateJsRun(napi_env env, std::shared_ptr<Run> run,
+        std::shared_ptr<Typography> paragraph);
 
 private:
     static thread_local napi_ref constructor_;
@@ -46,7 +47,7 @@ private:
     napi_value OnGetFont(napi_env env, napi_callback_info info);
     napi_value OnPaint(napi_env env, napi_callback_info info);
 
-    std::unique_ptr<Run> run_;
+    std::shared_ptr<Run> run_;
     std::shared_ptr<Typography> paragraphCurrent_ = nullptr;
 };
 } // namespace OHOS::Rosen

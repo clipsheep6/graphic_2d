@@ -26,7 +26,6 @@ std::unique_ptr<Typography> g_Typography = nullptr;
 thread_local napi_ref JsParagraph::constructor_ = nullptr;
 const std::string CLASS_NAME = "JsParagraph";
 
-
 napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
 {
     ROSEN_LOGE(" clp-ark JsParagraph::Constructor 000 ");
@@ -57,7 +56,6 @@ napi_value JsParagraph::Constructor(napi_env env, napi_callback_info info)
     ROSEN_LOGE(" clp-ark JsParagraph::Constructor 900 ");
     return jsThis;
 }
-
 
 napi_value JsParagraph::Init(napi_env env, napi_value exportObj)
 {
@@ -108,7 +106,6 @@ napi_value JsParagraph::Init(napi_env env, napi_value exportObj)
     return exportObj;
 }
 
-
 void JsParagraph::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
     (void)finalize;
@@ -117,11 +114,6 @@ void JsParagraph::Destructor(napi_env env, void *nativeObject, void *finalize)
         delete napi;
     }
 }
-
-// void JsParagraph::GetJsParagraph(std::shared_ptr<TypographyCreate> create)
-// {
-//     paragraphOld_ = create->CreateTypography();
-// }
 
 napi_value JsParagraph::Layout(napi_env env, napi_callback_info info)
 {
@@ -546,28 +538,7 @@ std::shared_ptr<Typography> JsParagraph::GetParagraph()
     return typography;
 }
 
-// napi_value JsParagraph::CreateJsTypography(napi_env env, napi_callback_info info,
-//     std::unique_ptr<Typography> typography)
-// {
-//     // napi_value constructor = nullptr;
-//     // napi_value result = nullptr;
-//     // napi_status status = napi_get_reference_value(env, constructor_, &constructor);
-//     // if (status == napi_ok) {
-//     //     paragraphCurrent_ = std::move(typography);
-//     //     //g_Typography = typography;
-//     //     status = napi_new_instance(env, constructor, 0, nullptr, &result);
-//     //     if (status == napi_ok) {
-//     //         return result;
-//     //     } else {
-//     //         ROSEN_LOGE(" clp-ark CreateJsTypography: New instance could not be obtained");
-//     //     }
-//     // }
-//     // return result;
-//     JsParagraph* me = CheckParamsAndGetThis<JsParagraph>(env, info);
-//     return (me != nullptr) ? me->OnCreateJsTypography(env, std::move(typography)) : nullptr;
-// }
-
-napi_value JsParagraph::OnCreateJsTypography(napi_env env, std::unique_ptr<Typography> typography)
+napi_value JsParagraph::CreateJsTypography(napi_env env, std::unique_ptr<Typography> typography)
 {
     ROSEN_LOGE(" clp-ark JsParagraph::OnCreateJsTypography OnCreateJsTypography 000 typography.get() = %p constructor_ = %p ",
         typography.get(), constructor_);
@@ -577,7 +548,6 @@ napi_value JsParagraph::OnCreateJsTypography(napi_env env, std::unique_ptr<Typog
     napi_value result = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &constructor);
     if (status == napi_ok) {
-        //paragraphCurrent_ = std::move(typography);
         g_Typography = std::move(typography);
         status = napi_new_instance(env, constructor, 0, nullptr, &result);
         if (status == napi_ok) {
@@ -588,15 +558,6 @@ napi_value JsParagraph::OnCreateJsTypography(napi_env env, std::unique_ptr<Typog
         }
     }
 
-    // napi_value& resObject = propertyNameValue ? propertyNameValue : object;
-    // if (resObject) {
-    //     return napi_unwrap(env, resObject, (void **)(&pointerValue)) == napi_ok ?
-    //         reinterpret_cast<T*>(pointerValue) : nullptr;
-    // }
-
-    // ROSEN_LOGE(" clp-ark JsParagraph::JsParagraph OnCreateJsTypography 900 paragraphCurrent_.get() = %p  ",
-    //     paragraphCurrent_.get());
-
     ROSEN_LOGE(" clp-ark JsParagraph::OnCreateJsTypography OnCreateJsTypography 900   ");
     return result;
 }
@@ -606,15 +567,6 @@ napi_value JsParagraph::GetTextLines(napi_env env, napi_callback_info info)
 {
     JsParagraph* me = CheckParamsAndGetThis<JsParagraph>(env, info);
     return (me != nullptr) ? me->OnGetTextLines(env, info) : nullptr;
-}
-
-static void DestructorTextLine(napi_env env, void *nativeObject, void *finalize)
-{
-    (void)finalize;
-    if (nativeObject != nullptr) {
-        JsTextLine *napi = reinterpret_cast<JsTextLine *>(nativeObject);
-        delete napi;
-    }
 }
 
 napi_value JsParagraph::OnGetTextLines(napi_env env, napi_callback_info info)
@@ -633,31 +585,13 @@ napi_value JsParagraph::OnGetTextLines(napi_env env, napi_callback_info info)
     napi_create_array_with_length(env, textlineArr.size(), &array);
     uint32_t index = 0;
     for (std::unique_ptr<TextLineBase>& item : textlineArr) {
-        JsTextLine *jsTextLine = new(std::nothrow) JsTextLine();
-        if (jsTextLine == nullptr) {
-            ROSEN_LOGE(" clp-ark JsParagraph::OnGetTextLines jsTextLine is NULL!");
-            continue;
-        }
-        jsTextLine->SetTextLine(std::move(item));
-        jsTextLine->SetParagraph(paragraphCurrent_);
-
-        napi_value itemObject = nullptr;
-        napi_create_object(env, &itemObject);
-        if (itemObject == nullptr) {
-            ROSEN_LOGE(" clp-ark JsParagraph::OnGetTextLines itemObject is NULL!");
-            delete jsTextLine;
-            continue;
-        }
-        napi_wrap(env, itemObject, jsTextLine, DestructorTextLine, nullptr, nullptr);
-        if (itemObject == nullptr) {
+        napi_value itemObject = JsTextLine::CreateJsTextLine(env, std::move(item), paragraphCurrent_);
+        if (!itemObject) {
             ROSEN_LOGE(" clp-ark JsParagraph::OnGetTextLines itemObject is null!");
-            delete jsTextLine;
             continue;
         }
         napi_set_element(env, array, index++, itemObject);
     }
     return array;
 }
-
-
 } // namespace OHOS::Rosen

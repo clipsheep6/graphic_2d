@@ -18,8 +18,11 @@
 #include "font_napi/js_font.h"
 #include "js_text_utils.h"
 #include "utils/log.h"
+#include "../drawing/js_drawing_utils.h"
 
 namespace OHOS::Rosen {
+std::shared_ptr<Run> g_Run = nullptr;
+std::shared_ptr<Typography> g_RunTypography = nullptr;
 thread_local napi_ref JsRun::constructor_ = nullptr;
 const std::string CLASS_NAME = "JsRun";
 napi_value JsRun::Constructor(napi_env env, napi_callback_info info)
@@ -32,7 +35,12 @@ napi_value JsRun::Constructor(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    JsRun* jsRun = new(std::nothrow) JsRun();
+    if (!g_Run || !g_RunTypography) {
+        ROSEN_LOGE(" clp-ark JsRun::Constructor g_Run or g_RunTypography is nullptr");
+        return nullptr;
+    }
+
+    JsRun* jsRun = new(std::nothrow) JsRun(g_Run, g_RunTypography);
     if (!jsRun) {
         LOGE("JsRun::Constructor failed to create JsRun");
         return nullptr;
@@ -88,13 +96,9 @@ void JsRun::Destructor(napi_env env, void* nativeObject, void* finalize)
     }
 }
 
-JsRun::JsRun()
+JsRun::JsRun(std::shared_ptr<Run> run, std::shared_ptr<Typography> paragraph)
+    : run_(run), paragraphCurrent_(paragraph)
 {
-}
-
-void JsRun::SetRun(std::unique_ptr<Run> run)
-{
-    run_ = std::move(run);
 }
 
 napi_value JsRun::GetGlyphCount(napi_env env, napi_callback_info info)
@@ -256,8 +260,28 @@ napi_value JsRun::OnPaint(napi_env env, napi_callback_info info)
     return NapiGetUndefined(env);
 }
 
-void JsRun::SetParagraph(std::shared_ptr<Typography> paragraph)
+napi_value JsRun::CreateJsRun(napi_env env, std::shared_ptr<Run> run,
+    std::shared_ptr<Typography> paragraph)
 {
-    paragraphCurrent_ = paragraph;
+    ROSEN_LOGE(" clp-ark JsRun::CreateJsRun 000 run.get() = %p constructor_ = %p ",
+        run.get(), constructor_);
+
+    napi_value constructor = nullptr;
+    napi_value result = nullptr;
+    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+    if (status == napi_ok) {
+        g_Run = run;
+        g_RunTypography = paragraph;
+        status = napi_new_instance(env, constructor, 0, nullptr, &result);
+        if (status == napi_ok) {
+            ROSEN_LOGE(" clp-ark JsRun::CreateJsRun OnCreateJsTypography 800   ");
+            return result;
+        } else {
+            ROSEN_LOGE(" clp-ark JsRun::CreateJsRun New instance could not be obtained");
+        }
+    }
+
+    ROSEN_LOGE(" clp-ark JsRun::CreateJsRun CreateJsRun 900   ");
+    return result;
 }
 } // namespace OHOS::Rosen

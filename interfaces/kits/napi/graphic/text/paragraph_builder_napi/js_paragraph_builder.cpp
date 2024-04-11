@@ -14,7 +14,6 @@
  */
 #include "js_paragraph_builder.h"
 #include "../text/js_text_utils.h"
-//#include "rosen_text/typography_create.h"
 #include "fontcollection_napi/js_fontcollection.h"
 #include "paragraph_napi/js_paragraph.h"
 #include "../drawing/js_drawing_utils.h"
@@ -248,71 +247,13 @@ napi_value JsParagraphBuilder::OnBuild(napi_env env, napi_callback_info info)
     std::unique_ptr<OHOS::Rosen::Typography> typography = typographyCreate_->CreateTypography();
     ROSEN_LOGE(" clp-ark | JsParagraphBuilder::OnBuild is end, typography.get() = %p ", typography.get());
 
-    return JsParagraph::OnCreateJsTypography(env, std::move(typography));
-
-
-    // JsParagraph *jsParagraph = new(std::nothrow) JsParagraph(std::move(typography));
-    // if (jsParagraph == nullptr) {
-    //     ROSEN_LOGE(" clp-ark  clp-ark JsParagraphBuilder::OnBuild jsTextLine is NULL!");
-    //     return NapiGetUndefined(env);
-    //     //jsParagraph;
-    // }
-    // // jsTextLine->SetTextLine(std::move(item));
-    // // jsTextLine->SetParagraph(paragraphCurrent_);
-
-    // napi_value retObject = nullptr;
-    // napi_create_object(env, &retObject);
-    // if (retObject == nullptr) {
-    //     ROSEN_LOGE(" clp-ark  clp-ark JsParagraphBuilder::OnBuild retObject is NULL!");
-    //     delete jsParagraph;
-    //     return NapiGetUndefined(env);
-    // }
-    // napi_wrap(env, retObject, jsParagraph, JsParagraph::Destructor, nullptr, nullptr);
-    // if (retObject == nullptr) {
-    //     ROSEN_LOGE(" clp-ark  clp-ark JsParagraphBuilder::OnBuild retObject is null!");
-    //     delete jsParagraph;
-    //     return NapiGetUndefined(env);
-    // }
-
-    // return retObject;
-
-    //return JsParagraph::CreateJsTypography(env, info, typographyCreate_->CreateTypography());
+    return JsParagraph::CreateJsTypography(env, std::move(typography));
 }
-
-// napi_value JsParagraphBuilder::CreateJsTypography(napi_env env, std::unique_ptr<Typography> typography)
-// {
-
-//     // JsParagraph* jsParagraph = new JsParagraph(std::move(typography));
-//     // napi_value jsThis = nullptr;
-
-//     // napi_value status = napi_wrap(env, jsThis, jsParagraph,
-//     //     JsParagraph::Destructor, nullptr, nullptr);
-//     // if (status != napi_ok) {
-//     //     delete jsParagraphBuilder;
-//     //     ROSEN_LOGE(" clp-ark JsParagraphBuilder::Constructor Failed to wrap native instance");
-//     //     return nullptr;
-//     // }
-
-//     napi_value constructor = nullptr;
-//     napi_value result = nullptr;
-//     napi_status status = napi_get_reference_value(env, constructor_, &constructor);
-//     if (status == napi_ok) {
-//         drawingTypography = std::move(typography);
-//         status = napi_new_instance(env, constructor, 0, nullptr, &result);
-//         if (status == napi_ok) {
-//             return result;
-//         } else {
-//             ROSEN_LOGE(" clp-ark CreateJsTypography: New instance could not be obtained");
-//         }
-//     }
-//     return result;
-// }
 
 std::unique_ptr<TypographyCreate> JsParagraphBuilder::GetTypographyCreate()
 {
 
     ROSEN_LOGE(" clp-ark | JsParagraphBuilder::GetTypographyCreate typographyCreate_.get() = %p ", typographyCreate_.get());
-
     return std::move(typographyCreate_);
 }
 

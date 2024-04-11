@@ -44,23 +44,28 @@ void StrokeRectShader::OnTestFunction(OH_Drawing_Canvas *canvas) {
         OH_Drawing_CanvasSave(canvas);
         OH_Drawing_PenSetWidth(pen, 10);
         OH_Drawing_PenSetJoin(pen, OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN);
+        OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawRect(canvas, kRect);
         OH_Drawing_CanvasTranslate(canvas, Rect.width() + kPad, 0);
         
         OH_Drawing_PenSetJoin(pen, OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN);
+        OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawRect(canvas, kRect);
         OH_Drawing_CanvasTranslate(canvas, Rect.width() + kPad, 0);
         
         // This miter limit should effectively produce a bevel join.
         OH_Drawing_PenSetMiterLimit(pen, 0.01f);
+        OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawRect(canvas, kRect);
         OH_Drawing_CanvasTranslate(canvas, Rect.width() + kPad, 0);
         
         OH_Drawing_PenSetJoin(pen, OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN);
+        OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawRect(canvas, kRect);
         OH_Drawing_CanvasTranslate(canvas, Rect.width() + kPad, 0);
         
         OH_Drawing_PenSetWidth(pen, 0);
+        OH_Drawing_CanvasAttachPen(canvas, pen);
         OH_Drawing_CanvasDrawRect(canvas, kRect);
 
         OH_Drawing_CanvasRestore(canvas);

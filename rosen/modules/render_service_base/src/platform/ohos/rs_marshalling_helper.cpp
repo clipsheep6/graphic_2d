@@ -496,6 +496,10 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const Drawing::Matrix& val
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, Drawing::Matrix& val)
 {
     int32_t size = parcel.ReadInt32();
+    if (size < sizeof(Drawing::scalar) * Drawing::Matrix::MATRIX_SIZE) {
+        ROSEN_LOGE("RSMarshallingHelper::Unmarshalling Drawing::Matrix failed size %{public}d", size);
+        return false;
+    }
     bool isMalloc = false;
     auto data = static_cast<const Drawing::scalar*>(RSMarshallingHelper::ReadFromParcel(parcel, size, isMalloc));
     if (data == nullptr) {
@@ -550,6 +554,36 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSLinear
     success = success && Unmarshalling(parcel, direction);
     if (success) {
         val = std::make_shared<RSLinearGradientBlurPara>(blurRadius, fractionStops, direction);
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<EmitterUpdater>& val)
+{
+    bool success = Marshalling(parcel, val->emitterIndex_);
+    success = success && Marshalling(parcel, val->position_.x_) && Marshalling(parcel, val->position_.y_);
+    success = success && Marshalling(parcel, val->emitSize_.x_) && Marshalling(parcel, val->emitSize_.y_);
+    success = success && Marshalling(parcel, val->emitRate_);
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<EmitterUpdater>& val)
+{
+    int emitterIndex = 0;
+    float positionX = 0.f;
+    float positionY = 0.f;
+    float emitSizeWidth = 0.f;
+    float emitSizeHeight = 0.f;
+    int emitRate = 0;
+
+    bool success = Unmarshalling(parcel, emitterIndex);
+    success = success && Unmarshalling(parcel, positionX) && Unmarshalling(parcel, positionY);
+    Vector2f position(positionX, positionY);
+    success = success && Unmarshalling(parcel, emitSizeWidth) && Unmarshalling(parcel, emitSizeHeight);
+    Vector2f emitSize(emitSizeWidth, emitSizeHeight);
+    success = success && Unmarshalling(parcel, emitRate);
+    if (success) {
+        val = std::make_shared<EmitterUpdater>(emitterIndex, position, emitSize, emitRate);
     }
     return success;
 }
@@ -1219,6 +1253,13 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
     bool cachedHighContrast = parcel.ReadBool();
 
     uint32_t replacedOpListSize = parcel.ReadUint32();
+    uint32_t readableSize = parcel.GetReadableBytes() / (sizeof(uint32_t) * 2);    // 增加IPC异常保护，读取2个uint_32_t
+    if (replacedOpListSize > readableSize) {
+        ROSEN_LOGE("RSMarshallingHelper::Unmarshalling Drawing readableSize %{public}d less than size %{public}d",
+            readableSize, replacedOpListSize);
+        val = nullptr;
+        return false;
+    }
     std::vector<std::pair<uint32_t, uint32_t>> replacedOpList;
     for (uint32_t i = 0; i < replacedOpListSize; ++i) {
         auto regionPos = parcel.ReadUint32();
@@ -1594,6 +1635,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSPath>)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSShader>)                          \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSLinearGradientBlurPara>)          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<EmitterUpdater>)                    \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<ParticleRenderParams>>) \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleRenderParams>)              \
     EXPLICIT_INSTANTIATION(TEMPLATE, RSRenderParticleVector)                             \

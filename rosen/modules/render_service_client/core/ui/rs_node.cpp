@@ -998,6 +998,13 @@ void RSNode::SetParticleDrawRegion(std::vector<ParticleParams>& particleParams)
     }
 }
 
+// Update Particle Emitter Position and Size
+void RSNode::SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para)
+{
+    SetProperty<RSEmitterUpdaterModifier, RSProperty<std::shared_ptr<EmitterUpdater>>>(
+        RSModifierType::PARTICLE_EMITTER_UPDATER, para);
+}
+
 // foreground
 void RSNode::SetForegroundColor(uint32_t colorValue)
 {
@@ -1022,6 +1029,12 @@ void RSNode::SetBgImage(const std::shared_ptr<RSImage>& image)
 {
     image->SetNodeId(GetId());
     SetProperty<RSBgImageModifier, RSProperty<std::shared_ptr<RSImage>>>(RSModifierType::BG_IMAGE, image);
+}
+
+void RSNode::SetBgImageInnerRect(const Vector4f& rect)
+{
+    SetProperty<RSBgImageInnerRectModifier, RSAnimatableProperty<Vector4f>>(
+        RSModifierType::BG_IMAGE_INNER_RECT, rect);
 }
 
 void RSNode::SetBgImageSize(float width, float height)
@@ -1165,6 +1178,12 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
         RSModifierType::OUTLINE_RADIUS, radius);
 }
 
+void RSNode::SetForegroundEffectRadius(const float blurRadius)
+{
+    SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
+        RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
+}
+
 void RSNode::SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter)
 {
     SetProperty<RSBackgroundFilterModifier, RSAnimatableProperty<std::shared_ptr<RSFilter>>>(
@@ -1191,6 +1210,12 @@ void RSNode::SetDynamicLightUpDegree(const float lightUpDegree)
 {
     SetProperty<RSDynamicLightUpDegreeModifier,
         RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_LIGHT_UP_DEGREE, lightUpDegree);
+}
+
+void RSNode::SetDynamicDimDegree(const float dimDegree)
+{
+    SetProperty<RSDynamicDimDegreeModifier,
+        RSAnimatableProperty<float>>(RSModifierType::DYNAMIC_DIM_DEGREE, dimDegree);
 }
 
 void RSNode::SetGreyCoef(const Vector2f greyCoef)
@@ -1568,7 +1593,6 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
             return;
         }
         auto deleteType = modifier->GetModifierType();
-        modifiers_.erase(iter);
         bool isExist = false;
         for (auto [id, value] : modifiers_) {
             if (value && value->GetModifierType() == deleteType) {
@@ -1577,6 +1601,7 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
                 break;
             }
         }
+        modifiers_.erase(iter);
         if (isExist) {
             modifiersTypeMap_[(int16_t)deleteType] = nullptr;
         }
@@ -1738,6 +1763,12 @@ void RSNode::SetGrayScale(float grayScale)
 void RSNode::SetLightIntensity(float lightIntensity)
 {
     SetProperty<RSLightIntensityModifier, RSAnimatableProperty<float>>(RSModifierType::LIGHT_INTENSITY, lightIntensity);
+}
+
+void RSNode::SetLightColor(uint32_t lightColorValue)
+{
+    auto lightColor = Color::FromArgbInt(lightColorValue);
+    SetProperty<RSLightColorModifier, RSAnimatableProperty<Color>>(RSModifierType::LIGHT_COLOR, lightColor);
 }
 
 void RSNode::SetLightPosition(float positionX, float positionY, float positionZ)
@@ -2173,6 +2204,12 @@ template bool RSNode::IsInstanceOf<RSProxyNode>() const;
 template bool RSNode::IsInstanceOf<RSCanvasNode>() const;
 template bool RSNode::IsInstanceOf<RSRootNode>() const;
 template bool RSNode::IsInstanceOf<RSCanvasDrawingNode>() const;
+
+void RSNode::SetInstanceId(int32_t instanceId)
+{
+    instanceId_ = instanceId;
+    RSNodeMap::MutableInstance().RegisterNodeInstanceId(id_, instanceId_);
+}
 
 } // namespace Rosen
 } // namespace OHOS

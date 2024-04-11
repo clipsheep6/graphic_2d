@@ -180,6 +180,8 @@ public:
     std::shared_ptr<RSShader> GetBackgroundShader() const;
     void SetBgImage(const std::shared_ptr<RSImage>& image);
     std::shared_ptr<RSImage> GetBgImage() const;
+    void SetBgImageInnerRect(const Vector4f& rect);
+    Vector4f GetBgImageInnerRect() const;
     void SetBgImageWidth(float width);
     void SetBgImageHeight(float height);
     void SetBgImagePositionX(float positionX);
@@ -207,14 +209,21 @@ public:
     Vector4f GetOutlineRadius() const;
     const std::shared_ptr<RSBorder>& GetOutline() const;
 
+    void SetForegroundEffectRadius(const float foregroundEffectRadius);
+    float GetForegroundEffectRadius() const;
+    bool IsForegroundEffectRadiusValid() const;
+
     // filter properties
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
     void SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlurPara>& para);
+    void SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para);
     void SetDynamicLightUpRate(const std::optional<float>& rate);
     void SetDynamicLightUpDegree(const std::optional<float>& lightUpDegree);
+    void SetDynamicDimDegree(const std::optional<float>& DimDegree);
     void SetFilter(const std::shared_ptr<RSFilter>& filter);
     const std::shared_ptr<RSFilter>& GetBackgroundFilter() const;
     const std::shared_ptr<RSLinearGradientBlurPara>& GetLinearGradientBlurPara() const;
+    const std::shared_ptr<EmitterUpdater>& GetEmitterUpdater() const;
     void IfLinearGradientBlurInvalid();
     const std::shared_ptr<RSFilter>& GetFilter() const;
     bool NeedFilter() const;
@@ -240,6 +249,7 @@ public:
     float GetShadowRadius() const;
     const std::optional<float>& GetDynamicLightUpRate() const;
     const std::optional<float>& GetDynamicLightUpDegree() const;
+    const std::optional<float>& GetDynamicDimDegree() const;
     std::shared_ptr<RSPath> GetShadowPath() const;
     bool GetShadowMask() const;
     bool GetShadowIsFilled() const;
@@ -306,6 +316,7 @@ public:
     float GetLightUpEffect() const;
     bool IsLightUpEffectValid() const;
     bool IsDynamicLightUpValid() const;
+    bool IsDynamicDimValid() const;
 
     // Image effect properties
     void SetGrayScale(const std::optional<float>& grayScale);
@@ -332,11 +343,13 @@ public:
     const std::shared_ptr<Drawing::ColorFilter>& GetColorFilter() const;
 
     void SetLightIntensity(float lightIntensity);
+    void SetLightColor(Color lightColor);
     void SetLightPosition(const Vector4f& lightPosition);
     void SetIlluminatedBorderWidth(float illuminatedBorderWidth);
     void SetIlluminatedType(int illuminatedType);
     void SetBloom(float bloomIntensity);
     float GetLightIntensity() const;
+    Color GetLightColor() const;
     Vector4f GetLightPosition() const;
     inline float GetIlluminatedBorderWidth() const
     {
@@ -428,8 +441,10 @@ private:
     std::shared_ptr<RSLightSource> lightSourcePtr_ = nullptr;
     std::shared_ptr<RSIlluminated> illuminatedPtr_ = nullptr;
 
+    float foregroundEffectRadius_ = 0.f;
     std::shared_ptr<RSFilter> backgroundFilter_ = nullptr;
     std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara_ = nullptr;
+    std::shared_ptr<EmitterUpdater> emitterUpdater_ = nullptr;
     std::shared_ptr<RSBorder> border_ = nullptr;
     std::shared_ptr<RSBorder> outline_ = nullptr;
     std::shared_ptr<RSPath> clipPath_ = nullptr;
@@ -459,6 +474,7 @@ private:
     std::optional<float> hueRotate_;
     std::optional<float> dynamicLightUpRate_;
     std::optional<float> dynamicLightUpDegree_;
+    std::optional<float> dynamicDimDegree_;
     std::optional<Color> colorBlend_;
     std::optional<RectI> lastRect_;
     std::optional<Vector2f> greyCoef_;

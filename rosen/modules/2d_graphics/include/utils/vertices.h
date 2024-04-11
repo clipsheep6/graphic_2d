@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,12 +30,12 @@ enum class VertexMode {
     LAST_VERTEXMODE = TRIANGLEFAN_VERTEXMODE,
 };
 
-enum class BuilderFlags {
+enum BuilderFlags {
     HAS_TEXCOORDS_BUILDER_FLAG = 1 << 0,
     HAS_COLORS_BUILDER_FLAG = 1 << 1,
 };
 
-class Vertices {
+class DRAWING_API Vertices {
 public:
     Vertices() noexcept;
     explicit Vertices(std::shared_ptr<VerticesImpl>) noexcept;
@@ -82,7 +82,7 @@ public:
     }
     std::shared_ptr<Data> Serialize() const;
     bool Deserialize(std::shared_ptr<Data> data);
-    class Builder {
+    class DRAWING_API Builder {
     public:
         Builder(VertexMode mode, int vertexCount, int indexCount, uint32_t flags);
         virtual ~Builder() {};

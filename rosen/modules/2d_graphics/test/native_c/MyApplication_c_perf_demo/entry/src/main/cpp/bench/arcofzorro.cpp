@@ -48,7 +48,7 @@ void ArcOfZorroGM::OnTestFunction(OH_Drawing_Canvas *canvas)
         DRAWING_LOGI("ArcOfZorroGM::arc");
         uint32_t color = rand.nextU();
         color |= 0xff000000;
-        OH_Drawing_PenSetColor(pen, color_to_565(color));
+        OH_Drawing_PenSetColor(pen, color);
         OH_Drawing_CanvasSave(canvas);
         OH_Drawing_CanvasTranslate(canvas, xOffset, yOffset);
         OH_Drawing_CanvasDrawArc(canvas, rect, 0, arc);

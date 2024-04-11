@@ -186,6 +186,7 @@ public:
     void SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync);
     void SetNoNeedToPostTask(bool noNeedToPostTask);
     void SetAccessibilityConfigChanged();
+    bool IsAccessibilityConfigChanged() const;
     void ForceRefreshForUni();
     void TrimMem(std::unordered_set<std::u16string>& argSets, std::string& result);
     void DumpMem(std::unordered_set<std::u16string>& argSets, std::string& result, std::string& type, int pid = 0);
@@ -270,6 +271,31 @@ public:
     void SetFrameIsRender(bool isRender);
     void PerfForBlurIfNeeded();
 
+    bool IsOnVsync() const
+    {
+        return isOnVsync_.load();
+    }
+
+    bool GetDiscardJankFrames() const
+    {
+        return discardJankFrames_.load();
+    }
+
+    void SetDiscardJankFrames(bool discardJankFrames)
+    {
+        discardJankFrames_.store(discardJankFrames);
+    }
+
+    bool GetSkipJankAnimatorFrame() const
+    {
+        return skipJankAnimatorFrame_.load();
+    }
+
+    void SetSkipJankAnimatorFrame(bool skipJankAnimatorFrame)
+    {
+        skipJankAnimatorFrame_.store(skipJankAnimatorFrame);
+    }
+
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -311,7 +337,9 @@ private:
     void UpdateUIFirstSwitch();
     // ROG: Resolution Online Government
     void UpdateRogSizeIfNeeded();
+    void UpdateDisplayNodeScreenId();
     uint32_t GetRefreshRate() const;
+    uint32_t GetDynamicRefreshRate() const;
     void SkipCommandByNodeId(std::vector<std::unique_ptr<RSTransactionData>>& transactionVec, pid_t pid);
 
     bool DoParallelComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
@@ -360,6 +388,8 @@ private:
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, bool waitForRT);
 
+    void RSJankStatsOnVsyncStart(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady);
+    void RSJankStatsOnVsyncEnd(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady);
     int64_t GetCurrentSystimeMs() const;
     int64_t GetCurrentSteadyTimeMs() const;
 
@@ -543,6 +573,13 @@ private:
     RSDrawFrame drawFrame_;
     std::unique_ptr<RSRenderThreadParams> renderThreadParams_ = nullptr; // sync to render thread
     RsParallelType rsParallelType_;
+    bool isCurtainScreenOn_ = false;
+
+    // for statistic of jank frames
+    std::atomic_bool isOnVsync_ = false;
+    std::atomic_bool discardJankFrames_ = false;
+    std::atomic_bool skipJankAnimatorFrame_ = false;
+    ScreenId displayNodeScreenId_ = 0;
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

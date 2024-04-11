@@ -34,7 +34,7 @@ struct RSLayerInfo {
     GraphicIRect srcRect;
     GraphicIRect dstRect;
     GraphicIRect boundRect;
-    GraphicMatrix matrix;
+    Drawing::Matrix matrix;
     int32_t gravity;
     int32_t zOrder;
     sptr<SurfaceBuffer> buffer;
@@ -193,7 +193,7 @@ public:
     bool GetOccludedByFilterCache() const;
 
     void SetLayerInfo(const RSLayerInfo& layerInfo);
-    RSLayerInfo& GetLayerInfo();
+    const RSLayerInfo& GetLayerInfo() const;
     void SetHardwareEnabled(bool enabled);
     bool GetHardwareEnabled() const;
     void SetLastFrameHardwareEnabled(bool enabled);
@@ -249,6 +249,7 @@ private:
     std::string name_= "";
 
     friend class RSSurfaceRenderNode;
+    friend class RSUniRenderProcessor;
 };
 } // namespace OHOS::Rosen
 #endif // RENDER_SERVICE_BASE_PARAMS_RS_SURFACE_RENDER_PARAMS_H

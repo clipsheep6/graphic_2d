@@ -63,7 +63,7 @@ public:
 protected:
     // Util functions
     std::string DumpDrawableVec() const;
-    bool QuickReject(Drawing::Canvas& canvas, RectI localDrawRect);
+    bool QuickReject(Drawing::Canvas& canvas, RectF localDrawRect);
     bool HasFilterOrEffect() const;
 
     // Draw functions
@@ -74,6 +74,7 @@ protected:
     void DrawChildren(Drawing::Canvas& canvas, const Drawing::Rect& rect) const;
     void DrawForeground(Drawing::Canvas& canvas, const Drawing::Rect& rect) const;
     void DrawBackgroundWithoutFilterAndEffect(Drawing::Canvas& canvas, const RSRenderParams& params) const;
+    // Note, the start is included, the end is excluded, so the range is [start, end)
     void DrawRangeImpl(Drawing::Canvas& canvas, const Drawing::Rect& rect, int8_t start, int8_t end) const;
 
     // Register utils

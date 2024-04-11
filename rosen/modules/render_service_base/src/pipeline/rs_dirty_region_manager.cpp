@@ -320,6 +320,7 @@ void RSDirtyRegionManager::MergeSurfaceRect()
 void RSDirtyRegionManager::ResetDirtyAsSurfaceSize()
 {
     dirtyRegion_ = surfaceRect_;
+    currentFrameDirtyRegion_ = surfaceRect_;
 }
 
 void RSDirtyRegionManager::UpdateDebugRegionTypeEnable(DirtyRegionDebugType dirtyDebugType)

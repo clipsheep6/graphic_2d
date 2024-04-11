@@ -209,6 +209,7 @@ void RSUniRenderThread::Render()
 
 void RSUniRenderThread::ReleaseSelfDrawingNodeBuffer()
 {
+    std::vector<std::function<void()>> releaseTasks;
     for (const auto& surfaceNode : renderThreadParams_->GetSelfDrawingNodes()) {
         auto params = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
         if (!params->GetHardwareEnabled()) {
@@ -216,20 +217,27 @@ void RSUniRenderThread::ReleaseSelfDrawingNodeBuffer()
             if (preBuffer == nullptr) {
                 continue;
             }
-            auto releaseTask = [buffer = preBuffer, consumer = surfaceNode->GetConsumer()]() mutable {
-                auto ret = consumer->ReleaseBuffer(buffer, SyncFence::INVALID_FENCE);
+            auto releaseTask = [buffer = preBuffer, consumer = surfaceNode->GetConsumer(),
+                useReleaseFence = params->GetLastFrameHardwareEnabled()]() mutable {
+                auto ret = consumer->ReleaseBuffer(buffer, useReleaseFence ?
+                    RSHardwareThread::Instance().releaseFence_ : SyncFence::INVALID_FENCE);
                 if (ret != OHOS::SURFACE_ERROR_OK) {
                     RS_LOGD("ReleaseSelfDrawingNodeBuffer failed ret:%{public}d", ret);
                 }
             };
             preBuffer = nullptr;
-            if (params->GetLastFrameHardwareEnabled()) {
-                RSHardwareThread::Instance().PostTask(releaseTask);
-            } else {
-                releaseTask();
-            }
+            releaseTasks.emplace_back(releaseTask);
         }
     }
+    if (releaseTasks.empty()) {
+        return;
+    }
+    auto releaseBufferTask = [releaseTasks]() {
+        for (const auto& task : releaseTasks) {
+            task();
+        }
+    };
+    RSHardwareThread::Instance().PostTask(releaseBufferTask);
 }
 
 void RSUniRenderThread::ReleaseSurface()
@@ -312,18 +320,12 @@ bool RSUniRenderThread::GetClearMemDeeply() const
 
 void RSUniRenderThread::SetClearMoment(ClearMemoryMoment moment)
 {
-    if (UNLIKELY(!context_)) {
-        return;
-    }
-    context_->SetClearMoment(moment);
+    clearMoment_ = moment;
 }
 
 ClearMemoryMoment RSUniRenderThread::GetClearMoment() const
 {
-    if (UNLIKELY(!context_)) {
-        return ClearMemoryMoment::NO_CLEAR;
-    }
-    return context_->GetClearMoment();
+    return clearMoment_;
 }
 
 uint32_t RSUniRenderThread::GetRefreshRate() const
@@ -407,7 +409,7 @@ void RSUniRenderThread::DumpMem(DfxString& log)
     });
 }
 
-void RSUniRenderThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply)
+void RSUniRenderThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t pid)
 {
     if (!RSSystemProperties::GetReleaseResourceEnabled()) {
         return;
@@ -415,6 +417,7 @@ void RSUniRenderThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply)
     this->clearMemoryFinished_ = false;
     this->clearMemDeeply_ = this->clearMemDeeply_ || deeply;
     this->SetClearMoment(moment);
+    this->exitedPidSet_.emplace(pid);
     auto task =
         [this, moment, deeply]() {
             auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
@@ -426,13 +429,19 @@ void RSUniRenderThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply)
             SKResourceManager::Instance().ReleaseResource();
             grContext->Flush();
             SkGraphics::PurgeAllCaches(); // clear cpu cache
-            if (deeply || this->deviceType_ != DeviceType::PHONE) {
-                MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+            auto pid = *(this->exitedPidSet_.begin());
+            if (this->exitedPidSet_.size() == 1 && pid == -1) {         // no exited app, just clear scratch resource
+                if (deeply || this->deviceType_ != DeviceType::PHONE) {
+                    MemoryManager::ReleaseUnlockAndSafeCacheGpuResource(grContext);
+                } else {
+                    MemoryManager::ReleaseUnlockGpuResource(grContext);
+                }
             } else {
-                MemoryManager::ReleaseUnlockGpuResource(grContext);
+                MemoryManager::ReleaseUnlockGpuResource(grContext, this->exitedPidSet_);
             }
             grContext->FlushAndSubmit(true);
             this->clearMemoryFinished_ = true;
+            this->exitedPidSet_.clear();
             this->clearMemDeeply_ = false;
             this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);
         };

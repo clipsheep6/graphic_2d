@@ -282,7 +282,7 @@ bool RSDisplayRenderNodeDrawable::CheckDisplayNodeSkip(std::shared_ptr<RSDisplay
     RS_LOGD("DisplayNode skip");
     RS_TRACE_NAME("DisplayNode skip");
 #ifdef OHOS_PLATFORM
-    RSJankStats::GetInstance().SetSkipDisplayNode();
+    RSUniRenderThread::Instance().SetSkipJankAnimatorFrame(true);
 #endif
     if (!RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetForceCommitLayer()) {
         RS_TRACE_NAME("DisplayNodeSkip skip commit");
@@ -535,7 +535,9 @@ void RSDisplayRenderNodeDrawable::ProcessVirtualScreen(RSDisplayRenderNode& disp
         RotateMirrorCanvasIfNeed(displayNodeSp, canvasRotation);
         auto mirroredNodeDrawable = std::make_shared<RSDisplayRenderNodeDrawable>(std::move(mirroredNode));
         // set mirror screen capture param
-        RSUniRenderThread::SetCaptureParam(CaptureParam(true, false, true, 0, 0));
+        float mirrorScaleX = mirroredProcessor->GetMirrorScaleX();
+        float mirrorScaleY = mirroredProcessor->GetMirrorScaleY();
+        RSUniRenderThread::SetCaptureParam(CaptureParam(true, false, true, mirrorScaleX, mirrorScaleY));
         mirroredNodeDrawable->OnCapture(*curCanvas_);
         RSUniRenderThread::ResetCaptureParam();
         curCanvas_->RestoreToCount(saveCount);

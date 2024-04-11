@@ -46,7 +46,8 @@ public:
     void SetMatrix(const Drawing::Matrix& matrix);
     const Drawing::Matrix& GetMatrix() const;
 
-    void ApplyAlphaAndMatrixToCanvas(RSPaintFilterCanvas& canvas) const;
+    void ApplyAlphaAndMatrixToCanvas(RSPaintFilterCanvas& canvas, bool needScale = false,
+        float scaleX = 1.0f, float scaleY = 1.0f) const;
 
     void SetBoundsRect(const Drawing::RectF& boundsRect);
     const Drawing::Rect& GetBounds() const;
@@ -55,14 +56,15 @@ public:
     const Drawing::Rect& GetFrameRect() const;
 
     // return to add some dirtynode does not mark pending
-    bool SetLocalDrawRect(const RectI& localDrawRect);
-    const RectI& GetLocalDrawRect() const;
+    bool SetLocalDrawRect(const RectF& localDrawRect);
+    const RectF& GetLocalDrawRect() const;
 
     void SetHasSandBox(bool hasSandBox);
     bool HasSandBox() const;
 
     bool GetShouldPaint() const;
     void SetShouldPaint(bool shouldPaint);
+    void SetContentEmpty(bool empty);
 
     bool NeedSync() const;
     void SetNeedSync(bool needSync);
@@ -130,7 +132,7 @@ private:
     Drawing::RectF frameRect_;
     float alpha_ = 1.0f;
     // this rect should map display coordination
-    RectI localDrawRect_;
+    RectF localDrawRect_;
     Vector2f cacheSize_;
     Gravity frameGravity_ = Gravity::CENTER;
 
@@ -141,6 +143,7 @@ private:
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
     bool shouldPaint_ = false;
+    bool contentEmpty_  = false;
     Drawing::Rect shadowRect_;
     RSDrawingCacheType drawingCacheType_ = RSDrawingCacheType::DISABLED_CACHE;
     DirtyRegionInfoForDFX dirtyRegionInfoForDFX_;

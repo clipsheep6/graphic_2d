@@ -18,7 +18,6 @@
 #include "common/rs_common_def.h"
 #include "common/rs_optional_trace.h"
 #include "pipeline/rs_paint_filter_canvas.h"
-#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_task_dispatcher.h"
 #include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
@@ -46,6 +45,7 @@ RSRenderNodeDrawable::RSRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&&
 RSRenderNodeDrawable::~RSRenderNodeDrawable()
 {
     ClearCachedSurface();
+    std::const_pointer_cast<RSRenderNode>(renderNode_)->ResetClearSurfaeFunc();
 }
 
 RSRenderNodeDrawable::Ptr RSRenderNodeDrawable::OnGenerate(std::shared_ptr<const RSRenderNode> node)
@@ -84,9 +84,6 @@ void RSRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRenderParams& params)
 {
     // check if drawing cache enabled
-    if (!isDrawingCacheEnabled_) {
-        return;
-    }
     if (params.GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
         RS_OPTIONAL_TRACE_NAME_FMT("RSCanvasRenderNodeDrawable::OnDraw id:%llu cacheType:%d cacheChanged:%d"
                                    " size:[%.2f, %.2f] ChildHasVisibleFilter:%d ChildHasVisibleEffect:%d"
@@ -137,11 +134,6 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
 
 void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const RSRenderParams& params)
 {
-    if (!isDrawingCacheEnabled_) {
-        RSRenderNodeDrawable::OnDraw(canvas);
-        return;
-    }
-
     bool hasFilter = params.ChildHasVisibleFilter() || params.ChildHasVisibleEffect();
     if (hasFilter && params.GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
         // traverse children to draw filter/shadow/effect
@@ -162,10 +154,6 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const 
     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     if (drawBlurForCache_ && !params.ChildHasVisibleFilter() && !params.ChildHasVisibleEffect() &&
         !curCanvas->GetIsParallelCanvas()) {
-        return;
-    }
-
-    if (drawBlurForCache_ && !params.ChildHasVisibleFilter() && !params.ChildHasVisibleEffect()) {
         RS_OPTIONAL_TRACE_NAME_FMT("CheckCacheTypeAndDraw id:%llu child without filter, skip", renderNode_->GetId());
         Drawing::AutoCanvasRestore arc(canvas, true);
         DrawBackground(canvas, params.GetBounds());
@@ -293,6 +281,24 @@ bool RSRenderNodeDrawable::NeedInitCachedSurface(const Vector2f& newSize)
     return cacheCanvas->GetWidth() != width || cacheCanvas->GetHeight() != height;
 }
 
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+struct SharedTextureContext {
+    SharedTextureContext(std::shared_ptr<Drawing::Image> sharedImage)
+        : sharedImage_(std::move(sharedImage)) {}
+
+private:
+    std::shared_ptr<Drawing::Image> sharedImage_;
+};
+
+static void DeleteSharedTextureContext(void* context)
+{
+    SharedTextureContext* cleanupHelper = static_cast<SharedTextureContext*>(context);
+    if (cleanupHelper != nullptr) {
+        delete cleanupHelper;
+    }
+}
+#endif
+
 std::shared_ptr<Drawing::Image> RSRenderNodeDrawable::GetCachedImage(RSPaintFilterCanvas& canvas)
 {
     std::scoped_lock<std::recursive_mutex> lock(cacheMutex_);
@@ -309,9 +315,10 @@ std::shared_ptr<Drawing::Image> RSRenderNodeDrawable::GetCachedImage(RSPaintFilt
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
     Drawing::BitmapFormat info = Drawing::BitmapFormat { cachedImage_->GetColorType(), cachedImage_->GetAlphaType() };
+    SharedTextureContext* sharedContext = new SharedTextureContext(cachedImage_); // will move image
     cachedImage_ = std::make_shared<Drawing::Image>();
-    bool ret = cachedImage_->BuildFromTexture(
-        *canvas.GetGPUContext(), cachedBackendTexture_.GetTextureInfo(), origin, info, nullptr);
+    bool ret = cachedImage_->BuildFromTexture(*canvas.GetGPUContext(), cachedBackendTexture_.GetTextureInfo(),
+        origin, info, nullptr, DeleteSharedTextureContext, sharedContext);
     if (!ret) {
         RS_LOGE("RSRenderNodeDrawable::GetCachedImage image BuildFromTexture failed");
         return nullptr;
@@ -340,7 +347,7 @@ void RSRenderNodeDrawable::DrawCachedImage(RSPaintFilterCanvas& canvas, const Ve
     canvas.Scale(scaleX, scaleY);
     Drawing::Brush brush;
     canvas.AttachBrush(brush);
-    auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR);
+    auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
     if (canvas.GetTotalMatrix().HasPerspective()) {
         // In case of perspective transformation, make dstRect 1px outset to anti-alias
         Drawing::Rect dst(

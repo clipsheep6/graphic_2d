@@ -103,8 +103,7 @@ Drawing::Region RSSurfaceRenderNodeDrawable::CalculateVisibleRegion(RSSurfaceRen
 
 void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 {
-    if (!renderNode_) {
-        RS_LOGE("There is no CanvasNode in RSSurfaceRenderNodeDrawable");
+    if (!ShouldPaint()) {
         return;
     }
 
@@ -117,10 +116,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
     auto surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
-    if (!surfaceParams) {
-        RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
-        return;
-    }
+
     bool isuifirstNode = rscanvas->GetIsParallelCanvas();
     if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
@@ -175,8 +171,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
     if (surfaceParams->IsMainWindowType()) {
         RSRenderNodeDrawable::ClearProcessedNodeCount();
-        rscanvas->UpdateDirtyRegion(curSurfaceDrawRegion);
-        rscanvas->SetDirtyFlag(true);
+        rscanvas->PushDirtyRegion(curSurfaceDrawRegion);
     }
 
     surfaceParams->ApplyAlphaAndMatrixToCanvas(*rscanvas);
@@ -195,8 +190,8 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
 
     RSRenderNodeDrawable::OnDraw(canvas);
     // Draw base pipeline end
-    rscanvas->SetDirtyFlag(false);
     if (surfaceParams->IsMainWindowType()) {
+        rscanvas->PopDirtyRegion();
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw SurfaceNode: [%s], NodeId: %llu, ProcessedNodes: %d",
             surfaceNode->GetName().c_str(), surfaceNode->GetId(), RSRenderNodeDrawable::GetProcessedNodeCount());
     }
@@ -240,18 +235,13 @@ void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(RSRenderThread
 
 void RSSurfaceRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 {
-    if (!renderNode_) {
-        RS_LOGE("There is no SurfaceRender in RSSurfaceRenderNodeDrawable");
+    if (!ShouldPaint()) {
         return;
     }
 
     auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
     auto surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
-    if (!surfaceParams) {
-        RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
-        return;
-    }
 
     auto rscanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     if (!rscanvas) {
@@ -289,11 +279,12 @@ void RSSurfaceRenderNodeDrawable::CaptureSingleSurfaceNode(RSSurfaceRenderNode& 
 
     // First node don't need to cancat matrix for application
     if (RSUniRenderThread::GetCaptureParam().isFirstNode_) {
-        // TODO: If node is a sandbox.
+        // Planning: If node is a sandbox.
         canvas.MultiplyAlpha(surfaceParams.GetAlpha());
         RSUniRenderThread::GetCaptureParam().isFirstNode_ = false;
     } else {
-        surfaceParams.ApplyAlphaAndMatrixToCanvas(canvas);
+        surfaceParams.ApplyAlphaAndMatrixToCanvas(canvas, true,
+            RSUniRenderThread::GetCaptureParam().scaleX_, RSUniRenderThread::GetCaptureParam().scaleY_);
     }
 
     if (isSelfDrawingSurface) {
@@ -360,7 +351,8 @@ void RSSurfaceRenderNodeDrawable::CaptureSurfaceInDisplay(RSSurfaceRenderNode& s
         canvas.Save();
     }
 
-    surfaceParams.ApplyAlphaAndMatrixToCanvas(canvas);
+    surfaceParams.ApplyAlphaAndMatrixToCanvas(canvas, true,
+        RSUniRenderThread::GetCaptureParam().scaleX_, RSUniRenderThread::GetCaptureParam().scaleY_);
 
     if (isSelfDrawingSurface) {
         RSUniRenderUtil::CeilTransXYInCanvasMatrix(canvas);
@@ -388,6 +380,16 @@ void RSSurfaceRenderNodeDrawable::DealWithSelfDrawingNodeBuffer(RSSurfaceRenderN
         }
         return;
     }
+
+    RSAutoCanvasRestore arc(&canvas);
+    // Hwc nodes need to use LayerMatrix(totalMatrix) when doing capturing
+    if (RSUniRenderThread::GetCaptureParam().isInCaptureFlag_ &&
+        surfaceParams.GetHardwareEnabled()) {
+        auto matrix = surfaceParams.GetLayerInfo().matrix;
+        matrix.PostScale(RSUniRenderThread::GetCaptureParam().scaleX_, RSUniRenderThread::GetCaptureParam().scaleY_);
+        canvas.SetMatrix(matrix);
+    }
+    
     surfaceNode.SetGlobalAlpha(1.0f); // TO-DO
     int threadIndex = 0;
     auto params = RSUniRenderUtil::CreateBufferDrawParam(surfaceNode, false, threadIndex, true);

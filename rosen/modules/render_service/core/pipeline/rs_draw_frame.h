@@ -24,6 +24,7 @@
 #include "params/rs_render_thread_params.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_uni_render_thread.h"
+#include "platform/ohos/rs_jank_stats.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -39,6 +40,7 @@ public:
 
     void SetRenderThreadParams(std::unique_ptr<RSRenderThreadParams>& stagingRenderThreadParams);
     void PostAndWait();
+    void PostDirectCompositionJankStats(const JankDurationParams& rsParams);
 
 private:
     void RenderFrame();
@@ -46,6 +48,10 @@ private:
     void Sync();
     void Render();
     void ReleaseSelfDrawingNodeBuffer();
+    void JankStatsRenderFrameStart();
+    bool IsUniRenderAndOnVsync() const;
+    void JankStatsRenderFrameAfterSync(bool doJankStats);
+    void JankStatsRenderFrameEnd(bool doJankStats);
 
     RSUniRenderThread& unirenderInstance_;
 

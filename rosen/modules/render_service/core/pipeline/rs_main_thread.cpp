@@ -308,6 +308,9 @@ void RSMainThread::Init()
             drawFrame_.SetRenderThreadParams(renderThreadParams_);
             drawFrame_.PostAndWait();
         }
+        if (isUniRender_ && doDirectComposition_) {
+            UpdateDisplayNodeScreenId();
+        }
 
         if (!hasMark_) {
             SetFrameIsRender(true);
@@ -1287,7 +1290,7 @@ uint32_t RSMainThread::GetRefreshRate() const
     return refreshRate;
 }
 
-void RSMainThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t pid)
+void RSMainThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply)
 {
     if (!RSSystemProperties::GetReleaseResourceEnabled()) {
         return;
@@ -1560,7 +1563,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         uniVisitor->SetAnimateState(doWindowAnimate_);
         uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_ || forceUIFirstChanged_);
         forceUIFirstChanged_ = false;
-        isAccessibilityConfigChanged_ = false;
         SetFocusLeashWindowId();
         uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
         if (RSSystemProperties::GetQuickPrepareEnabled()) {
@@ -1569,6 +1571,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
         } else {
             rootNode->Prepare(uniVisitor);
         }
+        isAccessibilityConfigChanged_ = false;
         RSPointLightManager::Instance()->PrepareLight();
         vsyncControlEnabled_ = (deviceType_ == DeviceType::PC) && RSSystemParameters::GetVSyncControlEnabled();
         systemAnimatedScenesEnabled_ = RSSystemParameters::GetSystemAnimatedScenesEnabled();
@@ -2169,14 +2172,10 @@ void RSMainThread::RequestNextVSync(const std::string& fromWhom, int64_t lastVSy
 
 void RSMainThread::OnVsync(uint64_t timestamp, void* data)
 {
-    if (isUniRender_) {
-        if (!renderThreadParams_) {
-            // fill the params, and sync to render thread later
-            renderThreadParams_ = std::make_unique<RSRenderThreadParams>();
-        }
-        renderThreadParams_->SetOnVsyncStartTime(GetCurrentSystimeMs());
-        renderThreadParams_->SetOnVsyncStartTimeSteady(GetCurrentSteadyTimeMs());
-    }
+    isOnVsync_.store(true);
+    const int64_t onVsyncStartTime = GetCurrentSystimeMs();
+    const int64_t onVsyncStartTimeSteady = GetCurrentSteadyTimeMs();
+    RSJankStatsOnVsyncStart(onVsyncStartTime, onVsyncStartTimeSteady);
     timestamp_ = timestamp;
     curTime_ = static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -2198,6 +2197,36 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
         } else {
             PostTask([=]() { screenManager_->ProcessScreenHotPlugEvents(); });
         }
+    }
+    RSJankStatsOnVsyncEnd(onVsyncStartTime, onVsyncStartTimeSteady);
+    isOnVsync_.store(false);
+}
+
+void RSMainThread::RSJankStatsOnVsyncStart(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady)
+{
+    if (isUniRender_) {
+        if (!renderThreadParams_) {
+            // fill the params, and sync to render thread later
+            renderThreadParams_ = std::make_unique<RSRenderThreadParams>();
+        }
+        renderThreadParams_->SetIsUniRenderAndOnVsync(true);
+        renderThreadParams_->SetOnVsyncStartTime(onVsyncStartTime);
+        renderThreadParams_->SetOnVsyncStartTimeSteady(onVsyncStartTimeSteady);
+        SetDiscardJankFrames(false);
+        SetSkipJankAnimatorFrame(false);
+    }
+}
+
+void RSMainThread::RSJankStatsOnVsyncEnd(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady)
+{
+    if (isUniRender_ && doDirectComposition_) {
+        const JankDurationParams rsParams = { .timeStart_ = onVsyncStartTime,
+                                              .timeStartSteady_ = onVsyncStartTimeSteady,
+                                              .timeEnd_ = GetCurrentSystimeMs(),
+                                              .timeEndSteady_ = GetCurrentSteadyTimeMs(),
+                                              .refreshRate_ = GetDynamicRefreshRate(),
+                                              .discardJankFrames_ = GetDiscardJankFrames() };
+        drawFrame_.PostDirectCompositionJankStats(rsParams);
     }
 }
 
@@ -2594,7 +2623,7 @@ void RSMainThread::ClearTransactionDataPidInfo(pid_t remotePid)
         RS_LOGD("RSMainThread: clear cpu cache pid:%{public}d", remotePid);
         if (!IsResidentProcess(remotePid)) {
             if (isUniRender_) {
-                RSUniRenderThread::Instance().ClearMemoryCache(ClearMemoryMoment::PROCESS_EXIT, true);
+                RSUniRenderThread::Instance().ClearMemoryCache(ClearMemoryMoment::PROCESS_EXIT, true, remotePid);
             } else {
                 ClearMemoryCache(ClearMemoryMoment::PROCESS_EXIT, true);
             }
@@ -2729,6 +2758,11 @@ bool RSMainThread::GetNoNeedToPostTask()
 void RSMainThread::SetAccessibilityConfigChanged()
 {
     isAccessibilityConfigChanged_ = true;
+}
+
+bool RSMainThread::IsAccessibilityConfigChanged() const
+{
+    return isAccessibilityConfigChanged_;
 }
 
 void RSMainThread::PerfAfterAnim(bool needRequestNextVsync)
@@ -3024,6 +3058,22 @@ void RSMainThread::UpdateRogSizeIfNeeded()
             auto screenManager_ = CreateOrGetScreenManager();
             screenManager_->SetRogScreenResolution(
                 displayNode->GetScreenId(), displayNode->GetRogWidth(), displayNode->GetRogHeight());
+        }
+    }
+}
+
+void RSMainThread::UpdateDisplayNodeScreenId()
+{
+    const std::shared_ptr<RSBaseRenderNode> rootNode = context_->GetGlobalRootRenderNode();
+    if (!rootNode) {
+        RS_LOGE("RSMainThread::UpdateDisplayNodeScreenId rootNode is nullptr");
+        return;
+    }
+    auto child = rootNode->GetFirstChild();
+    if (child != nullptr && child->IsInstanceOf<RSDisplayRenderNode>()) {
+        auto displayNode = child->ReinterpretCastTo<RSDisplayRenderNode>();
+        if (displayNode) {
+            displayNodeScreenId_ = displayNode->GetScreenId();
         }
     }
 }

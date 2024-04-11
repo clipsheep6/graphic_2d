@@ -135,6 +135,7 @@ void RSRenderNodeDrawableAdapter::DrawRangeImpl(
                 drawCmdList_[i](&canvas, &rect);
             }
         }
+        return;
     }
 
     for (auto i = start; i < end; i++) {
@@ -231,12 +232,17 @@ std::string RSRenderNodeDrawableAdapter::DumpDrawableVec() const
     return str;
 }
 
-bool RSRenderNodeDrawableAdapter::QuickReject(Drawing::Canvas& canvas, RectI localDrawRect)
+bool RSRenderNodeDrawableAdapter::QuickReject(Drawing::Canvas& canvas, RectF localDrawRect)
 {
+    auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+    if (paintFilterCanvas->IsDirtyRegionStackEmpty() || paintFilterCanvas->GetIsParallelCanvas()) {
+        return false;
+    }
+
     Drawing::Rect dst;
     canvas.GetTotalMatrix().MapRect(
         dst, { localDrawRect.GetLeft(), localDrawRect.GetTop(), localDrawRect.GetRight(), localDrawRect.GetBottom() });
-    auto deviceClipRegion = static_cast<RSPaintFilterCanvas*>(&canvas)->GetDirtyRegion();
+    auto deviceClipRegion = paintFilterCanvas->GetCurDirtyRegion();
     Drawing::Region dstRegion;
     dstRegion.SetRect(dst.RoundOut());
     return !(deviceClipRegion.IsIntersects(dstRegion));

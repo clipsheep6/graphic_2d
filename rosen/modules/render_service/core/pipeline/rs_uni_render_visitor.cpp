@@ -1771,8 +1771,7 @@ void RSUniRenderVisitor::PrevalidateHwcNode()
     }
     auto& curMainAndLeashSurfaces = curDisplayNode_->GetAllMainAndLeashSurfaces();
     std::vector<RequestLayerInfo> prevalidLayers;
-    uint32_t curFps = 
-        OHOS::Rosen::HgmCore::Instance().GetScreenCurrentRefreshRate(curDisplayNode_->GetScreenId());
+    uint32_t curFps = OHOS::Rosen::HgmCore::Instance().GetScreenCurrentRefreshRate(curDisplayNode_->GetScreenId());
     // add surfaceNode layer
     std::for_each(curMainAndLeashSurfaces.rbegin(), curMainAndLeashSurfaces.rend(),
         [this, &prevalidLayers, &curFps](RSBaseRenderNode::SharedPtr& nodePtr) {
@@ -1901,6 +1900,7 @@ void RSUniRenderVisitor::UpdateSurfaceDirtyAndGlobalDirty()
     curDisplayNode_->SetMainAndLeashSurfaceDirty(hasMainAndLeashSurfaceDirty);
     CheckAndUpdateFilterCacheOcclusion(curMainAndLeashSurfaces);
     CheckMergeGlobalFilterForDisplay(accumulatedDirtyRegion);
+    ResetDisplayDirtyRegionForColorFilterSwitch();
     curDisplayNode_->ClearCurrentSurfacePos();
     std::swap(preMainAndLeashWindowNodesIds_, curMainAndLeashWindowNodesIds_);
 }
@@ -3594,7 +3594,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             RS_TRACE_NAME("DisplayNode skip");
             GpuDirtyRegion::GetInstance().AddSkipProcessFramesNumberForXpower(node.GetScreenId());
 #ifdef OHOS_PLATFORM
-            RSJankStats::GetInstance().SetSkipDisplayNode();
+            RSMainThread::Instance()->SetSkipJankAnimatorFrame(true);
 #endif
             resetRotate_ = CheckIfNeedResetRotate();
             if (!IsHardwareComposerEnabled()) {
@@ -4894,8 +4894,8 @@ bool RSUniRenderVisitor::IsRosenWebHardwareDisabled(RSSurfaceRenderNode& node, i
     if (node.IsRosenWeb()) {
         return rotation == ROTATION_90 || rotation == ROTATION_270 ||
             RSUniRenderUtil::Is3DRotation(node.GetTotalMatrix()) ||
-            node.GetDstRect().width_ > node.GetBuffer()->GetWidth() ||
-            node.GetDstRect().height_ > node.GetBuffer()->GetHeight();
+            (node.GetBuffer() && (node.GetDstRect().width_ > node.GetBuffer()->GetWidth())) ||
+            (node.GetBuffer() && (node.GetDstRect().height_ > node.GetBuffer()->GetHeight()));
     }
     return false;
 }
@@ -6133,6 +6133,14 @@ void RSUniRenderVisitor::DrawCurtainScreen()
     canvas_->AttachBrush(brush);
     canvas_->DrawRect(Drawing::Rect(0, 0, screenWidth, screenHeight));
     canvas_->DetachBrush();
+}
+
+void RSUniRenderVisitor::ResetDisplayDirtyRegionForColorFilterSwitch()
+{
+    if (!RSMainThread::Instance()->IsAccessibilityConfigChanged()) {
+        return;
+    }
+    curDisplayDirtyManager_->ResetDirtyAsSurfaceSize();
 }
 } // namespace Rosen
 } // namespace OHOS

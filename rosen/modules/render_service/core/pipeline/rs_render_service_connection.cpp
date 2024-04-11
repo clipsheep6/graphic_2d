@@ -539,6 +539,7 @@ void RSRenderServiceConnection::SetScreenPowerStatus(ScreenId id, ScreenPowerSta
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         RSHardwareThread::Instance().ScheduleTask(
             [=]() { screenManager_->SetScreenPowerStatus(id, status); }).wait();
+        mainThread_->SetDiscardJankFrames(true);
         renderThread_.SetDiscardJankFrames(true);
         OHOS::Rosen::HgmCore::Instance().NotifyScreenPowerStatus(id, status);
     } else {
@@ -1067,7 +1068,6 @@ bool RSRenderServiceConnection::GetPixelmap(NodeId id, const std::shared_ptr<Med
         }
         mainThread_->PostSyncTask(getPixelmapTask);
     } else if (tid == UNI_RENDER_THREAD_INDEX) {
-
         renderThread_.PostSyncTask(getDrawablePixelmapTask);
     } else {
         RSTaskDispatcher::GetInstance().PostTask(

@@ -129,6 +129,7 @@ public:
         return parent_;
     }
     void RegisterClearSurfaceFunc(ClearSurfaceTask task);
+    void ResetClearSurfaeFunc();
 
     inline NodeId GetId() const
     {
@@ -246,7 +247,7 @@ public:
 
     bool IsClipBound() const;
     // clipRect has value in UniRender when calling PrepareCanvasRenderNode, else it is nullopt
-    const RectI& GetSelfDrawRect() const;
+    const RectF& GetSelfDrawRect() const;
     const RectI& GetAbsDrawRect() const;
 
     void ResetChangeState();
@@ -465,6 +466,7 @@ public:
     bool IsBackgroundInAppOrNodeSelfDirty() const;
     void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(bool dirtyBelowContainsFilterNode = false);
     bool IsBackgroundFilterCacheValid() const;
+    void MarkForceClearFilterCacheWhenWithInvisible();
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
     bool IsForcedDrawInGroup() const;
@@ -582,7 +584,6 @@ public:
     const std::unique_ptr<RSRenderParams>& GetRenderParams() const;
     const std::unique_ptr<RSRenderParams>& GetUifirstRenderParams() const;
 
-    void SetNeedSyncFlag(bool needSync);
     void UpdatePointLightDirtySlot();
     void SetUifirstSyncFlag(bool needSync);
     void SetUifirstSkipPartialSync(bool skip)
@@ -605,11 +606,6 @@ public:
     }
 
     void SetOccludedStatus(bool occluded);
-
-    bool IsCmdListEmpty() const
-    {
-        return isDrawCmdListEmpty_;
-    }
 
 protected:
     virtual void OnApplyModifiers() {}
@@ -658,10 +654,11 @@ protected:
     bool isOnTheTree_ = false;
     NodeId drawingCacheRootId_ = INVALID_NODEID;
     bool mustRenewedInfo_ = false;
+    bool needClearSurface_ = false;
 
     ModifierDirtyTypes dirtyTypes_;
     bool isBootAnimation_ = false;
-    ClearSurfaceTask clearSurfaceTask_;
+    ClearSurfaceTask clearSurfaceTask_ = nullptr;
 
     inline void DrawPropertyDrawable(RSPropertyDrawableSlot slot, RSPaintFilterCanvas& canvas)
     {
@@ -704,7 +701,6 @@ private:
     bool isFullChildrenListValid_ = true;
     bool isChildrenSorted_ = true;
 
-    void UpdateFullChildrenListIfNeeded();
     void GenerateFullChildrenList();
     void ResortChildren();
 
@@ -828,7 +824,7 @@ private:
     bool hasCacheableAnim_ = false;
     bool geometryChangeNotPerceived_ = false;
     // including enlarged draw region
-    RectI selfDrawRect_;
+    RectF selfDrawRect_;
     RectI localShadowRect_;
     RectI localOutlineRect_;
     RectI localPixelStretchRect_;
@@ -869,7 +865,6 @@ private:
     };
     bool addedToPendingSyncList_ = false;
     bool drawCmdListNeedSync_ = false;
-    bool isDrawCmdListEmpty_ = true; // access by render thread only
     bool uifirstNeedSync_ = false; // both cmdlist&param
     bool uifirstSkipPartialSync_ = false;
     DrawCmdIndex uifirstDrawCmdIndex_;

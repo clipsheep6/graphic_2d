@@ -23,7 +23,25 @@ namespace Rosen {
 namespace {
 constexpr int PARAM_DOUBLE = 2;
 constexpr int32_t DASHED_LINE_LENGTH = 3;
+constexpr float TOP_START = 225.0f;
+constexpr float TOP_END = 270.0f;
+constexpr float RIGHT_START = 315.0f;
+constexpr float RIGHT_END = 0.0f;
+constexpr float BOTTOM_START = 45.0f;
+constexpr float BOTTOM_END = 90.0f;
+constexpr float LEFT_START = 135.0f;
+constexpr float LEFT_END = 180.0f;
+constexpr float SWEEP_ANGLE = 45.0f;
 } // namespace
+
+#define LEFTW GetWidth(RSBorder::LEFT)
+#define LEFTW2 GetWidth(RSBorder::LEFT) / 2.f
+#define RIGHTW GetWidth(RSBorder::RIGHT)
+#define RIGHTW2 GetWidth(RSBorder::RIGHT) / 2.f
+#define TOPW GetWidth(RSBorder::TOP)
+#define TOPW2 GetWidth(RSBorder::TOP) / 2.f
+#define BOTTOMW GetWidth(RSBorder::BOTTOM)
+#define BOTTOMW2 GetWidth(RSBorder::BOTTOM) / 2.f
 
 RSBorder::RSBorder(const bool& isOutline)
 {
@@ -279,223 +297,363 @@ void RSBorder::PaintFourLine(Drawing::Canvas& canvas, Drawing::Pen& pen, RectF r
 }
 
 void RSBorder::PaintTopPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-    const RRect inrrect) const
+    const Drawing::Point& innerRectCenter) const
 {
-    float topW = GetWidth(RSBorder::TOP);
-    if (topW > 0.f) {
+    if (TOPW > 0.f) {
         float offsetX = rrect.GetRect().GetLeft();
         float offsetY = rrect.GetRect().GetTop();
         float width = rrect.GetRect().GetWidth();
-        float leftW = GetWidth(RSBorder::LEFT);
-        float rightW = GetWidth(RSBorder::RIGHT);
-        float bottomW = GetWidth(RSBorder::BOTTOM);
-
+        float x = offsetX + LEFTW2;
+        float y = offsetY + TOPW2;
+        Drawing::Point tlRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_LEFT_POS);
+        Drawing::Point trRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_RIGHT_POS);
         ApplyLineStyle(pen, RSBorder::TOP, width);
-        auto style = GetStyle(RSBorder::TOP);
-        if (style != BorderStyle::DOTTED) {
-            pen.SetWidth(std::max(std::max(leftW, topW), std::max(rightW, bottomW)));
+        if (GetStyle(RSBorder::TOP) != BorderStyle::DOTTED) {
+            pen.SetWidth(std::max(std::max(LEFTW, TOPW), std::max(RIGHTW, BOTTOMW)));
         }
         Drawing::AutoCanvasRestore acr(canvas, true);
-        Drawing::scalar centerY = rrect.GetRect().GetTop() + rrect.GetRect().GetHeight() / 2;
-        Drawing::Point tlip(offsetX, centerY);
-        if (leftW > 0.f) {
-            tlip = getIntersectionPoint(Drawing::RoundRect::TOP_LEFT_POS, rrect);
-        }
-        // top right intersection point with rrect center
-        Drawing::Point trip(offsetX + width, centerY);
-        if (rightW > 0.f) {
-            trip = getIntersectionPoint(Drawing::RoundRect::TOP_RIGHT_POS, rrect);
-        }
         Drawing::Path topClipPath;
+        // top left intersection point with innerRect center
+        Drawing::Point tlip = GetTLIP(rrect, innerRectCenter);
+        // top right intersection point with innerRect center
+        Drawing::Point trip = GetTRIP(rrect, innerRectCenter);
         topClipPath.MoveTo(offsetX, offsetY);
-        topClipPath.LineTo(offsetX + tlip.GetX(), offsetY + tlip.GetY());
-        topClipPath.LineTo(offsetX + trip.GetX(), offsetY + trip.GetY());
+        topClipPath.LineTo(tlip.GetX(), tlip.GetY());
+        topClipPath.LineTo(trip.GetX(), trip.GetY());
         topClipPath.LineTo(offsetX + width, offsetY);
         topClipPath.Close();
         canvas.ClipPath(topClipPath, Drawing::ClipOp::INTERSECT, true);
-
+        float startArcWidth = std::min(width - LEFTW, tlRad.GetX() * 2.f);
+        float endArcWidth = std::min(width - RIGHTW, trRad.GetX() * 2.f);
+        float startArcHeight = std::min(rrect.GetRect().GetHeight() - TOPW, tlRad.GetY() * 2.f);
+        float endArcHeight = std::min(rrect.GetRect().GetHeight() - TOPW, trRad.GetY() * 2.f);
+        auto rs = Drawing::Rect(x, y, x + startArcWidth, y + startArcHeight);
+        auto re = Drawing::Rect(offsetX + width - RIGHTW / 2.f - endArcWidth, y,
+                                offsetX + width - RIGHTW / 2.f, y + endArcHeight);
+        Drawing::Path topBorder;
+        topBorder.MoveTo(std::min(x, offsetX + tlRad.GetX() / 2.f), y + tlRad.GetY() / 2.f);
+        topBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), TOP_START, SWEEP_ANGLE);
+        topBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), TOP_END, SWEEP_ANGLE);
+        topBorder.LineTo(std::max(offsetX + width - RIGHTW2, offsetX + width - trRad.GetX() / 2.f),
+                         y + trRad.GetY() / 2.f);
         canvas.AttachPen(pen);
-        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
+        if (GetStyle(RSBorder::TOP) == BorderStyle::SOLID) {
+            Drawing::Brush brush;
+            brush.SetColor(pen.GetColor());
+            brush.SetAntiAlias(true);
+            canvas.AttachBrush(brush);
+            canvas.DrawRect(topBorder.GetBounds());
+            canvas.DetachBrush();
+        } else {
+            canvas.DrawPath(topBorder);
+        }
         canvas.DetachPen();
     }
 }
 
 void RSBorder::PaintRightPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-    const RRect inrrect) const
+    const Drawing::Point& innerRectCenter) const
 {
-    float rightW = GetWidth(RSBorder::RIGHT);
-    if (rightW > 0.f) {
+    if (RIGHTW > 0.f) {
         float offsetX = rrect.GetRect().GetLeft();
         float offsetY = rrect.GetRect().GetTop();
-        float width = rrect.GetRect().GetWidth();
         float height = rrect.GetRect().GetHeight();
-        float leftW = GetWidth(RSBorder::LEFT);
-        float topW = GetWidth(RSBorder::TOP);
-        float bottomW = GetWidth(RSBorder::BOTTOM);
-
+        float width = rrect.GetRect().GetWidth();
+        float x = offsetX + width - RIGHTW2;
+        float y = offsetY + TOPW2;
+        Drawing::Point trRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_RIGHT_POS);
+        Drawing::Point brRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_RIGHT_POS);
         ApplyLineStyle(pen, RSBorder::RIGHT, height);
-        auto style = GetStyle(RSBorder::RIGHT);
-        if (style != BorderStyle::DOTTED) {
-            pen.SetWidth(std::max(std::max(leftW, topW), std::max(rightW, bottomW)));
+        if (GetStyle(RSBorder::RIGHT) != BorderStyle::DOTTED) {
+            pen.SetWidth(std::max(std::max(LEFTW, TOPW), std::max(RIGHTW, BOTTOMW)));
         }
         Drawing::AutoCanvasRestore acr(canvas, true);
         Drawing::Path rightClipPath;
-        // top rigth intersection point with rrect center
-        Drawing::Point trip = getIntersectionPoint(Drawing::RoundRect::TOP_RIGHT_POS, rrect);
-        // bottom right intersection point with rrect center
-        Drawing::Point brip = getIntersectionPoint(Drawing::RoundRect::BOTTOM_RIGHT_POS, rrect);
+        // top rigth intersection point with innerRect center
+        Drawing::Point trip = GetTRIP(rrect, innerRectCenter);
+        // bottom right intersection point with innerRect center
+        Drawing::Point brip = GetBRIP(rrect, innerRectCenter);
         rightClipPath.MoveTo(offsetX + width, offsetY);
-        rightClipPath.LineTo(offsetX + trip.GetX(), offsetY + trip.GetY());
-        rightClipPath.LineTo(offsetX + brip.GetX(), offsetY + brip.GetY());
+        rightClipPath.LineTo(trip.GetX(), trip.GetY());
+        rightClipPath.LineTo(brip.GetX(), brip.GetY());
         rightClipPath.LineTo(offsetX + width, offsetY + height);
         rightClipPath.Close();
         canvas.ClipPath(rightClipPath, Drawing::ClipOp::INTERSECT, true);
-
+        float startArcWidth = std::min(width - RIGHTW, trRad.GetX() * 2.f);
+        float endArcWidth = std::min(width - RIGHTW, brRad.GetX() * 2.f);
+        float startArcHeight = std::min(height - TOPW, trRad.GetY() * 2.f);
+        float endArcHeight = std::min(height - BOTTOMW, brRad.GetY() * 2.f);
+        auto rs = Drawing::Rect(x - startArcWidth, y, x, y + startArcHeight);
+        auto re = Drawing::Rect(x - endArcWidth, height - BOTTOMW2 - endArcHeight, x, height - BOTTOMW2);
+        Drawing::Path rightBorder;
+        rightBorder.MoveTo(x - trRad.GetX() / 2.f, std::min(y, offsetY + trRad.GetY() / 2.f));
+        rightBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), RIGHT_START, SWEEP_ANGLE);
+        rightBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), RIGHT_END, SWEEP_ANGLE);
+        rightBorder.LineTo(x - brRad.GetX() / 2.f,
+                           std::max(offsetY + height - BOTTOMW2, offsetY + height - brRad.GetY() / 2.f));
         canvas.AttachPen(pen);
-        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
+        if (GetStyle(RSBorder::RIGHT) == BorderStyle::SOLID) {
+            Drawing::Brush brush;
+            brush.SetColor(pen.GetColor());
+            brush.SetAntiAlias(true);
+            canvas.AttachBrush(brush);
+            canvas.DrawRect(rightBorder.GetBounds());
+            canvas.DetachBrush();
+        } else {
+            canvas.DrawPath(rightBorder);
+        }
         canvas.DetachPen();
     }
 }
 
 void RSBorder::PaintBottomPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-    const RRect inrrect) const
+    const Drawing::Point& innerRectCenter) const
 {
-    float bottomW = GetWidth(RSBorder::BOTTOM);
-    if (bottomW > 0.f) {
+    if (BOTTOMW > 0.f) {
         float offsetX = rrect.GetRect().GetLeft();
         float offsetY = rrect.GetRect().GetTop();
         float width = rrect.GetRect().GetWidth();
-        float height = rrect.GetRect().GetHeight();
-        float leftW = GetWidth(RSBorder::LEFT);
-        float topW = GetWidth(RSBorder::TOP);
-        float rightW = GetWidth(RSBorder::RIGHT);
-
+        float x = offsetX + LEFTW2;
+        float y = offsetY + rrect.GetRect().GetHeight() - BOTTOMW2;
+        Drawing::Point brRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_RIGHT_POS);
+        Drawing::Point blRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_LEFT_POS);
         ApplyLineStyle(pen, RSBorder::BOTTOM, width);
-        auto style = GetStyle(RSBorder::BOTTOM);
-        if (style != BorderStyle::DOTTED) {
-            pen.SetWidth(std::max(std::max(leftW, topW), std::max(rightW, bottomW)));
+        if (GetStyle(RSBorder::BOTTOM) != BorderStyle::DOTTED) {
+            pen.SetWidth(std::max(std::max(LEFTW, TOPW), std::max(RIGHTW, BOTTOMW)));
         }
         Drawing::AutoCanvasRestore acr(canvas, true);
-        Drawing::scalar centerY = rrect.GetRect().GetTop() + rrect.GetRect().GetHeight() / 2;
-        // bottom left intersection point with rrect center
-        Drawing::Point blip(offsetX, centerY);
-        if (leftW > 0.f) {
-            blip = getIntersectionPoint(Drawing::RoundRect::BOTTOM_LEFT_POS, rrect);
-        }
-        // bottom right intersection point with rrect center
-        Drawing::Point brip(offsetX + width, centerY);
-        if (rightW > 0.f) {
-            brip = getIntersectionPoint(Drawing::RoundRect::BOTTOM_RIGHT_POS, rrect);
-        }
+        // bottom left intersection point with innerRect center
+        Drawing::Point blip = GetBLIP(rrect, innerRectCenter);
+        // bottom right intersection point with innerRect center
+        Drawing::Point brip = GetBRIP(rrect, innerRectCenter);
         Drawing::Path bottomClipPath;
-        bottomClipPath.MoveTo(offsetX, offsetY + height);
-        bottomClipPath.LineTo(offsetX + blip.GetX(), offsetY + blip.GetY());
-        bottomClipPath.LineTo(offsetX + brip.GetX(), offsetY + brip.GetY());
-        bottomClipPath.LineTo(offsetX + width, offsetY + height);
+        bottomClipPath.MoveTo(offsetX, offsetY + rrect.GetRect().GetHeight());
+        bottomClipPath.LineTo(blip.GetX(), blip.GetY());
+        bottomClipPath.LineTo(brip.GetX(), brip.GetY());
+        bottomClipPath.LineTo(offsetX + width, offsetY + rrect.GetRect().GetHeight());
         bottomClipPath.Close();
         canvas.ClipPath(bottomClipPath, Drawing::ClipOp::INTERSECT, true);
-
+        float startArcWidth = std::min(width - RIGHTW, brRad.GetX() * 2.f);
+        float endArcWidth = std::min(width - LEFTW, blRad.GetX() * 2.f);
+        float startArcHeight = std::min(rrect.GetRect().GetHeight() - BOTTOMW, brRad.GetY() * 2.f);
+        float endArcHeight = std::min(rrect.GetRect().GetHeight() - BOTTOMW, blRad.GetY() * 2.f);
+        auto rs = Drawing::Rect(offsetX + width - RIGHTW2 - startArcWidth, y - startArcHeight,
+                                offsetX + width - RIGHTW2, y);
+        auto re = Drawing::Rect(x, y - endArcHeight, x + endArcWidth, y);
+        Drawing::Path bottomBorder;
+        bottomBorder.MoveTo(std::max(offsetX + width - RIGHTW2,
+                            offsetY + width - brRad.GetX() / 2.f), y - brRad.GetY() / 2.f);
+        bottomBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), BOTTOM_START, SWEEP_ANGLE);
+        bottomBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), BOTTOM_END, SWEEP_ANGLE);
+        bottomBorder.LineTo(std::min(x, offsetX + blRad.GetX() / 2.f), y - blRad.GetY() / 2.f);
         canvas.AttachPen(pen);
-        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
+        if (GetStyle(RSBorder::BOTTOM) == BorderStyle::SOLID) {
+            Drawing::Brush brush;
+            brush.SetColor(pen.GetColor());
+            brush.SetAntiAlias(true);
+            canvas.AttachBrush(brush);
+            canvas.DrawRect(bottomBorder.GetBounds());
+            canvas.DetachBrush();
+        } else {
+            canvas.DrawPath(bottomBorder);
+        }
         canvas.DetachPen();
     }
 }
 
 void RSBorder::PaintLeftPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-    const RRect inrrect) const
+    const Drawing::Point& innerRectCenter) const
 {
-    float leftW = GetWidth(RSBorder::LEFT);
-    if (leftW > 0.f) {
+    if (LEFTW > 0.f) {
         float offsetX = rrect.GetRect().GetLeft();
         float offsetY = rrect.GetRect().GetTop();
         float height = rrect.GetRect().GetHeight();
-        float topW = GetWidth(RSBorder::TOP);
-        float rightW = GetWidth(RSBorder::RIGHT);
-        float bottomW = GetWidth(RSBorder::BOTTOM);
-
+        float x = offsetX + LEFTW2;
+        float y = offsetY + TOPW2;
+        Drawing::Point tlRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_LEFT_POS);
+        Drawing::Point blRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_LEFT_POS);
         ApplyLineStyle(pen, RSBorder::LEFT, height);
-        auto style = GetStyle(RSBorder::LEFT);
-        if (style != BorderStyle::DOTTED) {
-            pen.SetWidth(std::max(std::max(leftW, topW), std::max(rightW, bottomW)));
+        if (GetStyle(RSBorder::LEFT) != BorderStyle::DOTTED) {
+            pen.SetWidth(std::max(std::max(LEFTW, TOPW), std::max(RIGHTW, BOTTOMW)));
         }
         Drawing::AutoCanvasRestore acr(canvas, true);
         Drawing::Path leftClipPath;
-        // top left intersection point with rrect center
-        Drawing::Point tlip = getIntersectionPoint(Drawing::RoundRect::TOP_LEFT_POS, rrect);
-        // bottom left intersection point with rrect center
-        Drawing::Point blip = getIntersectionPoint(Drawing::RoundRect::BOTTOM_LEFT_POS, rrect);
+        // top left intersection point with innerRect center
+        Drawing::Point tlip = GetTLIP(rrect, innerRectCenter);
+        // bottom left intersection point with innerRect center
+        Drawing::Point blip = GetBLIP(rrect, innerRectCenter);
         leftClipPath.MoveTo(offsetX, offsetY);
-        leftClipPath.LineTo(offsetX + tlip.GetX(), offsetY + tlip.GetY());
-        leftClipPath.LineTo(offsetX + blip.GetX(), offsetY + blip.GetY());
+        leftClipPath.LineTo(tlip.GetX(), tlip.GetY());
+        leftClipPath.LineTo(blip.GetX(), blip.GetY());
         leftClipPath.LineTo(offsetX, offsetY + height);
         leftClipPath.Close();
         canvas.ClipPath(leftClipPath, Drawing::ClipOp::INTERSECT, true);
-
+        float startArcWidth = std::min(rrect.GetRect().GetWidth() - LEFTW, blRad.GetX() * 2.f);
+        float endArcWidth = std::min(rrect.GetRect().GetWidth() - LEFTW, tlRad.GetX() * 2.f);
+        float startArcHeight = std::min(height - BOTTOMW, blRad.GetY() * 2.f);
+        float endArcHeight = std::min(height - TOPW, tlRad.GetY() * 2.f);
+        auto rs = Drawing::Rect(x, offsetY + height - BOTTOMW2 - startArcHeight,
+                                x + startArcWidth , offsetY + height - BOTTOMW2);
+        auto re = Drawing::Rect(x, y, x + endArcWidth, y + endArcHeight);
+        Drawing::Path leftBorder;
+        leftBorder.MoveTo(x + blRad.GetX() / 2.f, std::max(offsetY + height - BOTTOMW2,
+                          offsetY + height - blRad.GetY() / 2.f));
+        leftBorder.ArcTo(rs.GetLeft(), rs.GetTop(), rs.GetRight(), rs.GetBottom(), LEFT_START, SWEEP_ANGLE);
+        leftBorder.ArcTo(re.GetLeft(), re.GetTop(), re.GetRight(), re.GetBottom(), LEFT_END, SWEEP_ANGLE);
+        leftBorder.LineTo(x + tlRad.GetX() / 2.f, std::min(y, offsetY + tlRad.GetY() / 2.f));
         canvas.AttachPen(pen);
-        canvas.DrawRoundRect(GetDrawingRRect(inrrect));
+        if (GetStyle(RSBorder::LEFT) == BorderStyle::SOLID) {
+            Drawing::Brush brush;
+            brush.SetColor(pen.GetColor());
+            brush.SetAntiAlias(true);
+            canvas.AttachBrush(brush);
+            canvas.DrawRect(leftBorder.GetBounds());
+            canvas.DetachBrush();
+        } else {
+            canvas.DrawPath(leftBorder);
+        }
         canvas.DetachPen();
     }
 }
 
-Drawing::RoundRect RSBorder::GetDrawingRRect(const RRect& inrrect) const
+// Return top left intersection pos for clipping
+Drawing::Point RSBorder::GetTLIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const
 {
-    // get Rect for drawing border path
-    float leftW = GetWidth(RSBorder::LEFT) / 2.f;
-    float rightW = GetWidth(RSBorder::RIGHT) / 2.f;
-    float topW = GetWidth(RSBorder::TOP) / 2.f;
-    float bottomW = GetWidth(RSBorder::BOTTOM) / 2.f;
-    Drawing::Rect drawingRect = Drawing::Rect(
-        leftW, topW,
-        inrrect.rect_.width_ - rightW, inrrect.rect_.height_ - bottomW);
-    // set radius for all 4 corner of RRect
-    constexpr uint32_t NUM_OF_CORNERS_IN_RECT = 4;
-    std::vector<Drawing::Point> radiuses(NUM_OF_CORNERS_IN_RECT);
-    std::vector<Drawing::Point> drads {{leftW, topW}, {rightW, topW}, {leftW, bottomW}, {rightW, bottomW}};
-    for (uint32_t i = 0; i < NUM_OF_CORNERS_IN_RECT; i++) {
-        radiuses.at(i).SetX(std::max(0.f, inrrect.radius_[i].x_ - drads[i].GetX()));
-        radiuses.at(i).SetY(std::max(0.f, inrrect.radius_[i].y_ - drads[i].GetY()));
+    float x = innerRectCenter.GetX();
+    float y = innerRectCenter.GetY();
+    float width = rrect.GetRect().GetWidth() - LEFTW - RIGHTW;
+    float height = rrect.GetRect().GetHeight() - TOPW - BOTTOMW;
+    if (width > 0) {
+        float kc = height / width;
+        if (LEFTW > 0) {
+            float k = TOPW / LEFTW;
+            Drawing::Point tlRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_LEFT_POS);
+            Drawing::Point trRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_RIGHT_POS);
+            Drawing::Point blRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_LEFT_POS);
+            if (k <= kc) {
+                float dlx = std::max(tlRad.GetX() - LEFTW, 0.f);
+                float drx = std::max(trRad.GetX() - RIGHTW, 0.f);
+                x = (dlx > 0) ? (x + std::min(dlx, width / 2.f - drx)) : (x - width / 2.f);
+                y = x * k;
+            } else {
+                float dty = std::max(tlRad.GetY() - TOPW, 0.f);
+                float dby = std::max(blRad.GetY() - BOTTOMW, 0.f);
+                y = (dty > 0) ? (y = y + std::min(dty, height / 2.f - dby)) : (y - height / 2.f);
+                x = y / k;
+            }
+        } else {
+            x = 0.f;
+            y = std::max(y - height / 2.f, rrect.GetRect().GetHeight() / 2.f);
+        }
+    } else {
+        y = TOPW;
     }
-    return Drawing::RoundRect(drawingRect, radiuses);
+    return Drawing::Point(rrect.GetRect().GetLeft() + x, rrect.GetRect().GetTop() + y);
 }
 
-Drawing::Point RSBorder::getIntersectionPoint(Drawing::RoundRect::CornerPos cornerPos,
-    const Drawing::RoundRect& rrect) const
+// Return top right intersection pos for clipping
+Drawing::Point RSBorder::GetTRIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const
 {
-    float x = rrect.GetRect().GetLeft() + rrect.GetRect().GetWidth() / 2.f;
-    float y = rrect.GetRect().GetTop() + rrect.GetRect().GetHeight() / 2.f;
-    float leftW = GetWidth(RSBorder::LEFT);
-    float rightW = GetWidth(RSBorder::RIGHT);
-    float kc = y / x;
-    float k = 1.f;
-
-    switch (cornerPos) {
-        case Drawing::RoundRect::TOP_RIGHT_POS:
-            if (rightW != 0) {
-                k = GetWidth(RSBorder::TOP) / rightW;
-                (k < kc) ? (y = x * k) : (x = rrect.GetRect().GetWidth() - y / k);
+    float x = innerRectCenter.GetX();
+    float y = innerRectCenter.GetY();
+    float width = rrect.GetRect().GetWidth() - LEFTW - RIGHTW;
+    float height = rrect.GetRect().GetHeight() - TOPW - BOTTOMW;
+    if (width > 0) {
+        float kc = height / width;
+        if (RIGHTW > 0) {
+            float k = TOPW / RIGHTW;
+            Drawing::Point trRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_RIGHT_POS);
+            Drawing::Point tlRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_LEFT_POS);
+            Drawing::Point brRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_RIGHT_POS);
+            if(k <= kc) {
+                float drx = std::max(trRad.GetX() - RIGHTW, 0.f);
+                float dlx = std::max(tlRad.GetX() - LEFTW, 0.f);
+                x = (drx > 0) ? (x - std::min(drx, width / 2.f - dlx)) : (x + width / 2.f);
+                y = (rrect.GetRect().GetWidth() - x ) * k;
+            } else {
+                float dty = std::max(trRad.GetY() - TOPW, 0.f);
+                float dby = std::max(brRad.GetY() - BOTTOMW, 0.f);
+                y = (dty > 0) ? (y = y + std::min(dty, height / 2.f - dby)) : (y - height / 2.f);
+                x = rrect.GetRect().GetWidth() - y / k;
             }
-            break;
-        case Drawing::RoundRect::BOTTOM_RIGHT_POS:
-            if (rightW != 0) {
-                k = GetWidth(RSBorder::BOTTOM) / rightW;
-                (k < kc) ? (y = rrect.GetRect().GetHeight() - x * k) : (x = rrect.GetRect().GetWidth() - y / k);
-            }
-            break;
-        case Drawing::RoundRect::BOTTOM_LEFT_POS:
-            if (leftW != 0) {
-                k = GetWidth(RSBorder::BOTTOM) / leftW;
-                (k < kc) ? (y = rrect.GetRect().GetHeight() - x * k) : (x = y / k);
-            }
-            break;
-        // return left top pos by default
-        default:
-            if (leftW != 0) {
-                k = GetWidth(RSBorder::TOP) / leftW;
-                (k < kc) ? (y = x * k) : (x = y / k);
-            }
-            break;
+        } else {
+            x = rrect.GetRect().GetWidth();
+            y = std::max(y - height / 2.f, rrect.GetRect().GetHeight() / 2.f);
+        }
+    } else {
+        y = TOPW;
     }
-    return Drawing::Point(x, y);
+    return Drawing::Point(rrect.GetRect().GetLeft() + x, rrect.GetRect().GetTop() + y);
+}
+
+// Return bottom left intersection pos for clipping
+Drawing::Point RSBorder::GetBLIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const
+{
+    float x = innerRectCenter.GetX();
+    float y = innerRectCenter.GetY();
+    float width = rrect.GetRect().GetWidth() - LEFTW - RIGHTW;
+    float height = rrect.GetRect().GetHeight() - TOPW - BOTTOMW;
+    if (width > 0) {
+        float kc = height / width;
+        if (LEFTW > 0) {
+            float k = BOTTOMW / LEFTW;
+            Drawing::Point blRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_LEFT_POS);
+            Drawing::Point tlRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_LEFT_POS);
+            Drawing::Point brRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_RIGHT_POS);
+            if (k <= kc) {
+                float dlx = std::max(blRad.GetX() - LEFTW, 0.f);
+                float drx = std::max(brRad.GetX() - RIGHTW, 0.f);
+                x = (dlx > 0) ? (x + std::min(dlx, width / 2.f - drx)) : (x - width / 2.f);
+                y = rrect.GetRect().GetHeight() - x * k;
+            } else {
+                float dby = std::max(blRad.GetY() - BOTTOMW, 0.f);
+                float dty = std::max(tlRad.GetY() - TOPW, 0.f);
+                y = (dby > 0) ? (y = y - std::min(dby, height / 2.f - dty)) : (y + height / 2.f);
+                x = (rrect.GetRect().GetHeight() - y) / k;
+            }
+        } else {
+            x = 0.f;
+            y = std::min(y + height / 2.f, std::max(rrect.GetRect().GetHeight() / 2.f, TOPW));
+        }
+    } else {
+        y = rrect.GetRect().GetHeight() - BOTTOMW;
+    }
+    return Drawing::Point(rrect.GetRect().GetLeft() + x, rrect.GetRect().GetTop() + y);
+}
+
+// Return bottom right intersection pos for clipping
+Drawing::Point RSBorder::GetBRIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const
+{
+    float x = innerRectCenter.GetX();
+    float y = innerRectCenter.GetY();
+    float width = rrect.GetRect().GetWidth() - LEFTW - RIGHTW;
+    float height = rrect.GetRect().GetHeight() - TOPW - BOTTOMW;
+    if (width > 0) {
+        float kc = height / width;
+        if (RIGHTW > 0) {
+            float k = BOTTOMW / RIGHTW;
+            Drawing::Point brRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_RIGHT_POS);
+            Drawing::Point blRad = rrect.GetCornerRadius(Drawing::RoundRect::BOTTOM_LEFT_POS);
+            Drawing::Point trRad = rrect.GetCornerRadius(Drawing::RoundRect::TOP_RIGHT_POS);
+            if (k <= kc) {
+                float drx = std::max(brRad.GetX() - RIGHTW, 0.f);
+                float dlx = std::max(blRad.GetX() - LEFTW, 0.f);
+                x = (drx > 0) ? (x - std::min(drx, width / 2.f - dlx)) : (x + width / 2.f);
+                y = rrect.GetRect().GetHeight() - (rrect.GetRect().GetWidth() - x) * k;
+            } else {
+                float dby = std::max(brRad.GetY() - BOTTOMW, 0.f);
+                float dty = std::max(trRad.GetY() - TOPW, 0.f);
+                y = (dby > 0) ? (y = y - std::min(dby, height / 2.f - dty)) : (y + height / 2.f);
+                x = rrect.GetRect().GetWidth() - (rrect.GetRect().GetHeight() - y) / k;
+            }
+        } else {
+            x = rrect.GetRect().GetWidth();
+            y = std::min(y + height / 2.f, std::max(rrect.GetRect().GetHeight() / 2.f, TOPW));
+        }
+    } else {
+        y = rrect.GetRect().GetHeight() - BOTTOMW;
+    }
+    return Drawing::Point(rrect.GetRect().GetLeft() + x, rrect.GetRect().GetTop() + y);
 }
 
 std::string RSBorder::ToString() const

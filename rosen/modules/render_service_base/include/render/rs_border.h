@@ -81,18 +81,19 @@ public:
 
     void PaintFourLine(Drawing::Canvas& canvas, Drawing::Pen& pen, RectF rect) const;
     void PaintTopPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const RRect inrrect) const;
+        const Drawing::Point& innerRectCenter) const;
     void PaintRightPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const RRect inrrect) const;
+        const Drawing::Point& innerRectCenter) const;
     void PaintBottomPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const RRect inrrect) const;
+        const Drawing::Point& innerRectCenter) const;
     void PaintLeftPath(Drawing::Canvas& canvas, Drawing::Pen& pen, const Drawing::RoundRect& rrect,
-        const RRect inrrect) const;
-    Drawing::RoundRect GetDrawingRRect(const RRect& inrrect) const;
-    Drawing::Point getIntersectionPoint(Drawing::RoundRect::CornerPos cornerPos,
-        const Drawing::RoundRect& rrect) const;
+        const Drawing::Point& innerRectCenter) const;
 
 private:
+    Drawing::Point GetTLIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const;
+    Drawing::Point GetTRIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const;
+    Drawing::Point GetBLIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const;
+    Drawing::Point GetBRIP(const Drawing::RoundRect& rrect, const Drawing::Point& innerRectCenter) const;
     // Vectors containing uniform or four-sided border attributes.
     // If four-sided, the order of contents is left, top, right, bottom.
     std::vector<Color> colors_;

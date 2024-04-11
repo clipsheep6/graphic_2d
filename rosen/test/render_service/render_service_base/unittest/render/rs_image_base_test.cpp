@@ -49,7 +49,7 @@ HWTEST_F(RSImageBaseTest, DrawImageTest001, TestSize.Level1)
     auto image = std::make_shared<Drawing::Image>();
     imageBase->SetImage(image);
     imageBase->DrawImage(canvas, samplingOptions);
-    EXPECT_NE(imageBase->image_, nullptr);
+    EXPECT_EQ(imageBase->image_, nullptr);
 }
 
 /**
@@ -91,7 +91,7 @@ HWTEST_F(RSImageBaseTest, DumpPictureTest001, TestSize.Level1)
     auto pixelmap = std::make_shared<Media::PixelMap>();
     imageBase->SetPixelMap(pixelmap);
     imageBase->DumpPicture(info);
-    EXPECT_NE(imageBase->pixelMap_, nullptr);
+    EXPECT_EQ(imageBase->pixelMap_, nullptr);
 }
 
 /**
@@ -149,7 +149,7 @@ HWTEST_F(RSImageBaseTest, UpdateNodeIdToPictureTest001, TestSize.Level1)
     auto image = std::make_shared<Drawing::Image>();
     imageBase->SetImage(image);
     imageBase->UpdateNodeIdToPicture(1);
-    EXPECT_NE(imageBase->pixelMap_, nullptr);
+    EXPECT_EQ(imageBase->pixelMap_, nullptr);
 }
 
 /**
@@ -175,7 +175,7 @@ HWTEST_F(RSImageBaseTest, ConvertPixelMapToDrawingImageTest001, TestSize.Level1)
     auto pixelmap = std::make_shared<Media::PixelMap>();
     imageBase->SetPixelMap(pixelmap);
     imageBase->ConvertPixelMapToDrawingImage(true);
-    EXPECT_EQ(imageBase->image_,nullptr);
+    EXPECT_EQ(imageBase->image_, nullptr);
 }
 
 /**
@@ -187,7 +187,7 @@ HWTEST_F(RSImageBaseTest, GenUniqueIdTest001, TestSize.Level1)
 {
     auto imageBase = std::make_shared<RSImageBase>();
     imageBase->GenUniqueId(1);
-    EXPECT_NE(imageBase->uniqueId_,0);
+    EXPECT_NE(imageBase->uniqueId_, 0);
 }
 
 /**

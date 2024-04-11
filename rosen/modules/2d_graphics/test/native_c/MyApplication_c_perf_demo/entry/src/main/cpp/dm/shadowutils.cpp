@@ -18,15 +18,6 @@ enum{
     N = 4
 };
 
-//struct DrawRect {
-//    float fLeft;   //!< smaller x-axis bounds
-//    float fTop;    //!< smaller y-axis bounds
-//    float fRight;  //!< larger x-axis bounds
-//    float fBottom; //!< larger y-axis bounds
-//    bool contains(float x, float y) const { return x >= fLeft && x < fRight && y >= fTop && y < fBottom; }
-//    float width(){return fRight-fLeft;}
-//    float height(){return fBottom-fTop;}
-//};
 
 DrawRect mapRect( OH_Drawing_Matrix* m, DrawRect& rect)  {  
     OH_Drawing_Point2D src[] = {{rect.fLeft, rect.fTop},
@@ -34,15 +25,15 @@ DrawRect mapRect( OH_Drawing_Matrix* m, DrawRect& rect)  {
                                 {rect.fLeft, rect.fBottom},
                                 {rect.fRight, rect.fBottom}};
     OH_Drawing_Point2D dst[N];
-    OH_Drawing_MatrixSetPolyToPoly(m,src,dst,4);
     
-//    for(int i= 0;i<4;i++)
-//    {
-//         DRAWING_LOGI("mapxy src id = %{public}d",i);
-//         DRAWING_LOGI("mapxy src  {(%{public}2f, %{public}2f),(%{public}2f, %{public}2f)}",src[i].x,src[i].y);
-//         DRAWING_LOGI("mapxy dst  {(%{public}2f, %{public}2f),(%{public}2f, %{public}2f)}",dst[i].x,dst[i].y);           
-//    }
+    //mapRect函数未能实现 设定src 等于 dst
+    for (int i = 0; i < N;i++) 
+        dst[i] = src[i];
     
+//    OH_Drawing_MatrixSetPolyToPoly(m,src,dst,4);
+//    OH_Drawing_Rect* srcRc = OH_Drawing_RectCreate(rect.fLeft, rect.fTop, rect.fRight, rect.fBottom);
+//    OH_Drawing_Rect* dstRc = OH_Drawing_RectCreate(0, 0, 0, 0);
+//    OH_Drawing_MatrixSetRectToRect(m, srcRc, dstRc, OH_Drawing_ScaleToFit::SCALE_TO_FIT_CENTER);
 
     // 计算新矩形的边界  
     float left = std::min({dst[0].x,dst[1].x,dst[2].x,dst[3].x});
@@ -78,7 +69,6 @@ ShadowUtils::ShadowUtils(ShadowMode m):sMode(m) {
     bitmapHeight_ = kH;
     fileName_ = "shadowutils";
 }
-
 
 void ShadowUtils::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
@@ -173,14 +163,6 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
     static constexpr float kHeight = 50.f;    
     
     // transform light position relative to canvas to handle tiling
-//    OH_Drawing_Matrix* m = OH_Drawing_MatrixCreate();
-//    OH_Drawing_CanvasGetTotalMatrix(canvas, m);
-//    OH_Drawing_Point2D lightXY = {250, 400};
-//    OH_Drawing_Point2D lightMapXY;
-//    OH_Drawing_MatrixSetPolyToPoly(m,&lightXY,&lightMapXY,1);
-//    OH_Drawing_Point3D lightPos = {lightMapXY.x,lightMapXY.y,500};
-//    DRAWING_LOGI("mapxy before  %{public}f, %{public}f",lightXY.x,lightXY.y);
-//    DRAWING_LOGI("mapxy after   %{public}f, %{public}f",lightMapXY.x,lightMapXY.y);    
     OH_Drawing_Point2D lightXY = {250,400};
     OH_Drawing_Point3D lightPos = {lightXY.x,lightXY.y,500};
     
@@ -190,11 +172,14 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
     float dy = 0;
     std::vector<OH_Drawing_Matrix*> matrices;
     OH_Drawing_Matrix* mI = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(mI,1,0,0 ,0,1,0, 0,0,1);
+    OH_Drawing_MatrixReset(mI);
     matrices.push_back(mI);
     
     OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreateRotation(33.0, 25.0, 25.0);
-    OH_Drawing_MatrixScale(matrix, 1.2, 0.8, 25.0, 25.0);
+//    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
+//    OH_Drawing_MatrixReset(matrix);
+//    OH_Drawing_MatrixRotate(matrix, 33.0, 25.0, 25.0);
+    OH_Drawing_MatrixPostScale(matrix, 1.2, 0.8, 25.0, 25.0);
     matrices.push_back(matrix);
     
     float N = 80;
@@ -206,7 +191,8 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
             for (const auto path: paths){
                 //计算各个path的bound，避免碰撞，并对其进行移动
                 DrawRect postMBounds = pathsBounds[pathCounter];
-//                DrawRect postMBounds = mapRect(m, pathsBounds[pathCounter]);
+                if(!OH_Drawing_MatrixIsIdentity(m))
+                   postMBounds = mapRect(m, pathsBounds[pathCounter]);
                 float w = postMBounds.width()+kHeight;
                 float dx = w+kPad;
                 if(x + dx > kW - 3 * kPad) {
@@ -279,7 +265,8 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
         ///防止碰撞
 
             DrawRect postMBounds = concavePathsBounds[pathCounter];            
-//            DrawRect postMBounds = mapRect(m, concavePathsBounds[pathCounter]);
+            if(!OH_Drawing_MatrixIsIdentity(m))
+                postMBounds = mapRect(m, concavePathsBounds[pathCounter]);
             float w = postMBounds.width() + kHeight;
             float dx = w + kPad;
           

@@ -50,9 +50,9 @@ ohos_shared_library("skeffectchain") {
     public_deps += [ "$graphic_2d_root:libgl" ]
   }
 
-  public_external_deps = [ 
+  public_external_deps = [
     "graphic_surface:surface",
-    "skia:skia_ohos" 
+    "skia:skia_ohos",
   ]
 
   external_deps = [

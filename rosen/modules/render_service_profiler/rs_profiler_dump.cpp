@@ -72,8 +72,8 @@ void RSProfiler::DumpSubClassNode(const RSRenderNode& node, Json::Value& out)
 {
     if (node.GetType() == RSRenderNodeType::SURFACE_NODE) {
         auto& surfaceNode = static_cast<const RSSurfaceRenderNode&>(node);
-        auto p = node.parent_.lock();
-        out["Parent"] = p ? p->GetId() : 0;
+        auto parent = node.parent_.lock();
+        out["Parent"] = parent ? parent->GetId() : 0;
         out["Name"] = surfaceNode.GetName();
         const auto& surfaceHandler = static_cast<const RSSurfaceHandler&>(surfaceNode);
         out["hasConsumer"] = surfaceHandler.HasConsumer();
@@ -147,6 +147,7 @@ void RSProfiler::DumpDrawCmdModifier(const RSRenderNode& node, Json::Value& out,
         if (propertyPtr) {
             property["ENV_FOREGROUND_COLOR"] = "#" + Hex(propertyPtr->Get().AsRgbaInt()) + " (RGBA)";
         }
+
     } else if (modType == RSModifierType::ENV_FOREGROUND_COLOR_STRATEGY) {
         auto propertyPtr =
             std::static_pointer_cast<RSRenderProperty<ForegroundColorStrategyType>>(modifier.GetProperty());
@@ -167,228 +168,229 @@ void RSProfiler::DumpDrawCmdModifier(const RSRenderNode& node, Json::Value& out,
     }
 }
 
-void RSProfiler::DumpProperties(const RSProperties& p, Json::Value& out)
+void RSProfiler::DumpProperties(const RSProperties& properties, Json::Value& out)
 {
-    JsonHelper::PushArray(
-        out["Bounds"], { p.GetBoundsPositionX(), p.GetBoundsPositionY(), p.GetBoundsWidth(), p.GetBoundsHeight() });
-    JsonHelper::PushArray(
-        out["Frame"], { p.GetFramePositionX(), p.GetFramePositionY(), p.GetFrameWidth(), p.GetFrameHeight() });
+    JsonHelper::PushArray(out["Bounds"], { properties.GetBoundsPositionX(), properties.GetBoundsPositionY(),
+                                             properties.GetBoundsWidth(), properties.GetBoundsHeight() });
+    JsonHelper::PushArray(out["Frame"], { properties.GetFramePositionX(), properties.GetFramePositionY(),
+                                            properties.GetFrameWidth(), properties.GetFrameHeight() });
 
-    if (!p.GetVisible()) {
+    if (!properties.GetVisible()) {
         out["IsVisible"] = false;
     }
 
-    DumpPropertiesTransform(p, out);
-    DumpPropertiesDecoration(p, out);
-    DumpPropertiesEffects(p, out);
-    DumpPropertiesShadow(p, out);
-    DumpPropertiesColor(p, out);
+    DumpPropertiesTransform(properties, out);
+    DumpPropertiesDecoration(properties, out);
+    DumpPropertiesEffects(properties, out);
+    DumpPropertiesShadow(properties, out);
+    DumpPropertiesColor(properties, out);
 }
 
-void RSProfiler::DumpPropertiesTransform(const RSProperties& p, Json::Value& out)
+void RSProfiler::DumpPropertiesTransform(const RSProperties& properties, Json::Value& out)
 {
     Transform defaultTransform;
-    Vector2f pivot = p.GetPivot();
+    Vector2f pivot = properties.GetPivot();
     if ((!ROSEN_EQ(pivot[0], defaultTransform.pivotX_) || !ROSEN_EQ(pivot[1], defaultTransform.pivotY_))) {
         JsonHelper::PushArray(out["Pivot"], { pivot[0], pivot[1] });
     }
 
-    if (!ROSEN_EQ(p.GetRotation(), defaultTransform.rotation_)) {
-        JsonHelper::PushValue(out["Rotation"], p.GetRotation());
+    if (!ROSEN_EQ(properties.GetRotation(), defaultTransform.rotation_)) {
+        JsonHelper::PushValue(out["Rotation"], properties.GetRotation());
     }
 
-    if (!ROSEN_EQ(p.GetRotationX(), defaultTransform.rotationX_)) {
-        JsonHelper::PushValue(out["RotationX"], p.GetRotationX());
+    if (!ROSEN_EQ(properties.GetRotationX(), defaultTransform.rotationX_)) {
+        JsonHelper::PushValue(out["RotationX"], properties.GetRotationX());
     }
 
-    if (!ROSEN_EQ(p.GetRotationY(), defaultTransform.rotationY_)) {
-        JsonHelper::PushValue(out["RotationY"], p.GetRotationY());
+    if (!ROSEN_EQ(properties.GetRotationY(), defaultTransform.rotationY_)) {
+        JsonHelper::PushValue(out["RotationY"], properties.GetRotationY());
     }
 
-    if (!ROSEN_EQ(p.GetTranslateX(), defaultTransform.translateX_)) {
-        JsonHelper::PushValue(out["TranslateX"], p.GetTranslateX());
+    if (!ROSEN_EQ(properties.GetTranslateX(), defaultTransform.translateX_)) {
+        JsonHelper::PushValue(out["TranslateX"], properties.GetTranslateX());
     }
 
-    if (!ROSEN_EQ(p.GetTranslateY(), defaultTransform.translateY_)) {
-        JsonHelper::PushValue(out["TranslateY"], p.GetTranslateY());
+    if (!ROSEN_EQ(properties.GetTranslateY(), defaultTransform.translateY_)) {
+        JsonHelper::PushValue(out["TranslateY"], properties.GetTranslateY());
     }
 
-    if (!ROSEN_EQ(p.GetTranslateZ(), defaultTransform.translateZ_)) {
-        JsonHelper::PushValue(out["TranslateZ"], p.GetTranslateZ());
+    if (!ROSEN_EQ(properties.GetTranslateZ(), defaultTransform.translateZ_)) {
+        JsonHelper::PushValue(out["TranslateZ"], properties.GetTranslateZ());
     }
 
-    if (!ROSEN_EQ(p.GetScaleX(), defaultTransform.scaleX_)) {
-        JsonHelper::PushValue(out["ScaleX"], p.GetScaleX());
+    if (!ROSEN_EQ(properties.GetScaleX(), defaultTransform.scaleX_)) {
+        JsonHelper::PushValue(out["ScaleX"], properties.GetScaleX());
     }
 
-    if (!ROSEN_EQ(p.GetScaleY(), defaultTransform.scaleY_)) {
-        JsonHelper::PushValue(out["ScaleY"], p.GetScaleY());
+    if (!ROSEN_EQ(properties.GetScaleY(), defaultTransform.scaleY_)) {
+        JsonHelper::PushValue(out["ScaleY"], properties.GetScaleY());
     }
 
-    if (!ROSEN_EQ(p.GetPositionZ(), 0.f)) {
-        JsonHelper::PushValue(out["PositionZ"], p.GetPositionZ());
+    if (!ROSEN_EQ(properties.GetPositionZ(), 0.f)) {
+        JsonHelper::PushValue(out["PositionZ"], properties.GetPositionZ());
     }
 }
 
-void RSProfiler::DumpPropertiesDecoration(const RSProperties& p, Json::Value& out)
+void RSProfiler::DumpPropertiesDecoration(const RSProperties& properties, Json::Value& out)
 {
-    if (!p.GetCornerRadius().IsZero()) {
-        JsonHelper::PushArray(out["CornerRadius"],
-            { p.GetCornerRadius().x_, p.GetCornerRadius().y_, p.GetCornerRadius().z_, p.GetCornerRadius().w_ });
+    if (!properties.GetCornerRadius().IsZero()) {
+        JsonHelper::PushArray(
+            out["CornerRadius"], { properties.GetCornerRadius().x_, properties.GetCornerRadius().y_,
+                                     properties.GetCornerRadius().z_, properties.GetCornerRadius().w_ });
     }
 
-    if (p.pixelStretch_.has_value()) {
-        JsonHelper::PushValue(out["PixelStretch"]["left"], p.pixelStretch_->z_);
-        JsonHelper::PushValue(out["PixelStretch"]["top"], p.pixelStretch_->y_);
-        JsonHelper::PushValue(out["PixelStretch"]["right"], p.pixelStretch_->z_);
-        JsonHelper::PushValue(out["PixelStretch"]["bottom"], p.pixelStretch_->w_);
+    if (properties.pixelStretch_.has_value()) {
+        JsonHelper::PushValue(out["PixelStretch"]["left"], properties.pixelStretch_->z_);
+        JsonHelper::PushValue(out["PixelStretch"]["top"], properties.pixelStretch_->y_);
+        JsonHelper::PushValue(out["PixelStretch"]["right"], properties.pixelStretch_->z_);
+        JsonHelper::PushValue(out["PixelStretch"]["bottom"], properties.pixelStretch_->w_);
     }
 
-    if (!ROSEN_EQ(p.GetAlpha(), 1.f)) {
-        JsonHelper::PushValue(out["Alpha"], p.GetAlpha());
+    if (!ROSEN_EQ(properties.GetAlpha(), 1.f)) {
+        JsonHelper::PushValue(out["Alpha"], properties.GetAlpha());
     }
 
-    if (!ROSEN_EQ(p.GetSpherize(), 0.f)) {
-        JsonHelper::PushValue(out["Spherize"], p.GetSpherize());
+    if (!ROSEN_EQ(properties.GetSpherize(), 0.f)) {
+        JsonHelper::PushValue(out["Spherize"], properties.GetSpherize());
     }
 
-    if (!ROSEN_EQ(p.GetForegroundColor(), RgbPalette::Transparent())) {
-        out["ForegroundColor"] = "#" + Hex(p.GetForegroundColor().AsArgbInt()) + " (ARGB)";
+    if (!ROSEN_EQ(properties.GetForegroundColor(), RgbPalette::Transparent())) {
+        out["ForegroundColor"] = "#" + Hex(properties.GetForegroundColor().AsArgbInt()) + " (ARGB)";
     }
 
-    if (!ROSEN_EQ(p.GetBackgroundColor(), RgbPalette::Transparent())) {
-        out["BackgroundColor"] = "#" + Hex(p.GetBackgroundColor().AsArgbInt()) + " (ARGB)";
+    if (!ROSEN_EQ(properties.GetBackgroundColor(), RgbPalette::Transparent())) {
+        out["BackgroundColor"] = "#" + Hex(properties.GetBackgroundColor().AsArgbInt()) + " (ARGB)";
     }
 
     Decoration defaultDecoration;
-    if ((!ROSEN_EQ(p.GetBgImagePositionX(), defaultDecoration.bgImageRect_.left_) ||
-        !ROSEN_EQ(p.GetBgImagePositionY(), defaultDecoration.bgImageRect_.top_) ||
-        !ROSEN_EQ(p.GetBgImageWidth(), defaultDecoration.bgImageRect_.width_) ||
-        !ROSEN_EQ(p.GetBgImageHeight(), defaultDecoration.bgImageRect_.height_))) {
-        JsonHelper::PushArray(out["BgImage"],
-            { p.GetBgImagePositionX(), p.GetBgImagePositionY(), p.GetBgImageWidth(), p.GetBgImageHeight() });
+    if ((!ROSEN_EQ(properties.GetBgImagePositionX(), defaultDecoration.bgImageRect_.left_) ||
+        !ROSEN_EQ(properties.GetBgImagePositionY(), defaultDecoration.bgImageRect_.top_) ||
+        !ROSEN_EQ(properties.GetBgImageWidth(), defaultDecoration.bgImageRect_.width_) ||
+        !ROSEN_EQ(properties.GetBgImageHeight(), defaultDecoration.bgImageRect_.height_))) {
+        JsonHelper::PushArray(out["BgImage"], { properties.GetBgImagePositionX(), properties.GetBgImagePositionY(),
+                                                  properties.GetBgImageWidth(), properties.GetBgImageHeight() });
     }
 }
 
-void RSProfiler::DumpPropertiesShadow(const RSProperties& p, Json::Value& out)
+void RSProfiler::DumpPropertiesShadow(const RSProperties& properties, Json::Value& out)
 {
-    if (!ROSEN_EQ(p.GetShadowColor(), Color(DEFAULT_SPOT_COLOR))) {
-        out["ShadowColor"] = "#" + Hex(p.GetShadowColor().AsArgbInt()) + " (ARGB)";
+    if (!ROSEN_EQ(properties.GetShadowColor(), Color(DEFAULT_SPOT_COLOR))) {
+        out["ShadowColor"] = "#" + Hex(properties.GetShadowColor().AsArgbInt()) + " (ARGB)";
     }
 
-    if (!ROSEN_EQ(p.GetShadowOffsetX(), DEFAULT_SHADOW_OFFSET_X)) {
-        JsonHelper::PushValue(out["ShadowOffsetX"], p.GetShadowOffsetX());
+    if (!ROSEN_EQ(properties.GetShadowOffsetX(), DEFAULT_SHADOW_OFFSET_X)) {
+        JsonHelper::PushValue(out["ShadowOffsetX"], properties.GetShadowOffsetX());
     }
 
-    if (!ROSEN_EQ(p.GetShadowOffsetY(), DEFAULT_SHADOW_OFFSET_Y)) {
-        JsonHelper::PushValue(out["ShadowOffsetY"], p.GetShadowOffsetY());
+    if (!ROSEN_EQ(properties.GetShadowOffsetY(), DEFAULT_SHADOW_OFFSET_Y)) {
+        JsonHelper::PushValue(out["ShadowOffsetY"], properties.GetShadowOffsetY());
     }
 
-    if (!ROSEN_EQ(p.GetShadowAlpha(), 0.f)) {
-        JsonHelper::PushValue(out["ShadowAlpha"], p.GetShadowAlpha());
+    if (!ROSEN_EQ(properties.GetShadowAlpha(), 0.f)) {
+        JsonHelper::PushValue(out["ShadowAlpha"], properties.GetShadowAlpha());
     }
 
-    if (!ROSEN_EQ(p.GetShadowElevation(), 0.f)) {
-        JsonHelper::PushValue(out["ShadowElevation"], p.GetShadowElevation());
+    if (!ROSEN_EQ(properties.GetShadowElevation(), 0.f)) {
+        JsonHelper::PushValue(out["ShadowElevation"], properties.GetShadowElevation());
     }
 
-    if (!ROSEN_EQ(p.GetShadowRadius(), 0.f)) {
-        JsonHelper::PushValue(out["ShadowRadius"], p.GetShadowRadius());
+    if (!ROSEN_EQ(properties.GetShadowRadius(), 0.f)) {
+        JsonHelper::PushValue(out["ShadowRadius"], properties.GetShadowRadius());
     }
 
-    if (!ROSEN_EQ(p.GetShadowIsFilled(), false)) {
-        out["ShadowIsFilled"] = p.GetShadowIsFilled();
+    if (!ROSEN_EQ(properties.GetShadowIsFilled(), false)) {
+        out["ShadowIsFilled"] = properties.GetShadowIsFilled();
     }
 }
 
-void RSProfiler::DumpPropertiesEffects(const RSProperties& p, Json::Value& out)
+void RSProfiler::DumpPropertiesEffects(const RSProperties& properties, Json::Value& out)
 {
-    if (p.border_ && p.border_->HasBorder()) {
-        out["Border"] = p.border_->ToString();
+    if (properties.border_ && properties.border_->HasBorder()) {
+        out["Border"] = properties.border_->ToString();
     }
 
-    auto filter = p.GetFilter();
+    auto filter = properties.GetFilter();
     if (filter && filter->IsValid()) {
         out["Filter"] = filter->GetDescription();
     }
 
-    auto backgroundFilter = p.GetBackgroundFilter();
+    auto backgroundFilter = properties.GetBackgroundFilter();
     if (backgroundFilter && backgroundFilter->IsValid()) {
         out["BackgroundFilter"] = backgroundFilter->GetDescription();
     }
 
-    if (p.outline_ && p.outline_->HasBorder()) {
-        out["Outline"] = p.outline_->ToString();
+    if (properties.outline_ && properties.outline_->HasBorder()) {
+        out["Outline"] = properties.outline_->ToString();
     }
 
-    if (!ROSEN_EQ(p.GetFrameGravity(), Gravity::DEFAULT)) {
-        out["FrameGravity"] = static_cast<int>(p.GetFrameGravity());
+    if (!ROSEN_EQ(properties.GetFrameGravity(), Gravity::DEFAULT)) {
+        out["FrameGravity"] = static_cast<int>(properties.GetFrameGravity());
     }
 
-    if (p.GetUseEffect()) {
+    if (properties.GetUseEffect()) {
         out["GetUseEffect"] = true;
     }
 
-    auto grayScale = p.GetGrayScale();
+    auto grayScale = properties.GetGrayScale();
     if (grayScale.has_value() && !ROSEN_EQ(*grayScale, 0.f)) {
         JsonHelper::PushValue(out["GrayScale"], *grayScale);
     }
 
-    if (!ROSEN_EQ(p.GetLightUpEffect(), 1.f)) {
-        JsonHelper::PushValue(out["LightUpEffect"], p.GetLightUpEffect());
+    if (!ROSEN_EQ(properties.GetLightUpEffect(), 1.f)) {
+        JsonHelper::PushValue(out["LightUpEffect"], properties.GetLightUpEffect());
     }
 
-    auto dynamicLightUpRate = p.GetDynamicLightUpRate();
+    auto dynamicLightUpRate = properties.GetDynamicLightUpRate();
     if (dynamicLightUpRate.has_value() && !ROSEN_EQ(*dynamicLightUpRate, 0.f)) {
         JsonHelper::PushValue(out["DynamicLightUpRate"], *dynamicLightUpRate);
     }
 
-    auto dynamicLightUpDegree = p.GetDynamicLightUpDegree();
+    auto dynamicLightUpDegree = properties.GetDynamicLightUpDegree();
     if (dynamicLightUpDegree.has_value() && !ROSEN_EQ(*dynamicLightUpDegree, 0.f)) {
         JsonHelper::PushValue(out["DynamicLightUpDegree"], *dynamicLightUpDegree);
     }
 }
 
-void RSProfiler::DumpPropertiesColor(const RSProperties& p, Json::Value& out)
+void RSProfiler::DumpPropertiesColor(const RSProperties& properties, Json::Value& out)
 {
-    auto brightness = p.GetBrightness();
+    auto brightness = properties.GetBrightness();
     if (brightness.has_value() && !ROSEN_EQ(*brightness, 1.f)) {
         JsonHelper::PushValue(out["Brightness"], *brightness);
     }
 
-    auto contrast = p.GetContrast();
+    auto contrast = properties.GetContrast();
     if (contrast.has_value() && !ROSEN_EQ(*contrast, 1.f)) {
         JsonHelper::PushValue(out["Contrast"], *contrast);
     }
 
-    auto saturate = p.GetSaturate();
+    auto saturate = properties.GetSaturate();
     if (saturate.has_value() && !ROSEN_EQ(*saturate, 1.f)) {
         JsonHelper::PushValue(out["Saturate"], *saturate);
     }
 
-    auto sepia = p.GetSepia();
+    auto sepia = properties.GetSepia();
     if (sepia.has_value() && !ROSEN_EQ(*sepia, 0.f)) {
         JsonHelper::PushValue(out["Sepia"], *sepia);
     }
 
-    auto invert = p.GetInvert();
+    auto invert = properties.GetInvert();
     if (invert.has_value() && !ROSEN_EQ(*invert, 0.f)) {
         JsonHelper::PushValue(out["Invert"], *invert);
     }
 
-    auto hueRotate = p.GetHueRotate();
+    auto hueRotate = properties.GetHueRotate();
     if (hueRotate.has_value() && !ROSEN_EQ(*hueRotate, 0.f)) {
         JsonHelper::PushValue(out["HueRotate"], *hueRotate);
     }
 
-    auto colorBlend = p.GetColorBlend();
+    auto colorBlend = properties.GetColorBlend();
     if (colorBlend.has_value() && !ROSEN_EQ(*colorBlend, RgbPalette::Transparent())) {
         out["ColorBlend"] = "#" + Hex(colorBlend->AsArgbInt()) + " (ARGB)";
     }
 
-    if (!ROSEN_EQ(p.GetColorBlendMode(), 0)) {
-        out["skblendmode"] = p.GetColorBlendMode() - 1;
-        out["blendType"] = p.GetColorBlendApplyType();
+    if (!ROSEN_EQ(properties.GetColorBlendMode(), 0)) {
+        out["skblendmode"] = properties.GetColorBlendMode() - 1;
+        out["blendType"] = properties.GetColorBlendApplyType();
     }
 }
 

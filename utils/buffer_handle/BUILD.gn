@@ -30,9 +30,6 @@ config("buffer_handle_public_config") {
   include_dirs = [
     "export",
     "../../../../../drivers/peripheral/base",
-    "../../../../../commonlibrary/c_utils/base/include",
-    "../../../../../base/hiviewdfx/hilog/interfaces/native/innerkits",
-    "../../../../../base/notification/eventhandler/interfaces/inner_api",
     "../../../../../foundation/graphic/graphic_2d/utils/log",
   ]
 }
@@ -52,7 +49,12 @@ ohos_static_library("buffer_handle") {
     "ipc:ipc_single",
   ]
 
-  public_external_deps = [ "hilog:libhilog" ]
+  public_external_deps = [
+    "c_utils:utils",
+    "eventhandler:eventhandler_native",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+  ]
   subsystem_name = "graphic"
   part_name = "graphic_2d"
 }

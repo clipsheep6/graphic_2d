@@ -91,7 +91,11 @@
           "battery_manager",
           "cJSON",
           "jsoncpp",
-          "openssl"
+          "openssl",
+          "zlib",
+          "skia",
+          "libpng",
+          "drivers_peripheral_display"
         ],
         "third_party": [
           "flutter",

@@ -412,6 +412,35 @@
               ],
               "header_base": "//foundation/graphic/graphic_2d/utils/buffer_handle/export"
             }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/platform:image_native",
+            "header": {
+              "header_files": [
+                "color_space.h",
+                "image_type.h",
+                "pixel_map.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/platform/image_native"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/platform:utils",
+            "header": {
+              "header_files": [
+                "directory_ex.h",
+                "errors.h",
+                "flat_obj.h",
+                "nocopyable.h",
+                "parcel.h",
+                "refbase.h",
+                "singleton.h",
+                "utils_log.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/platform/utils"
+            }
           }
         ],
         "test": [

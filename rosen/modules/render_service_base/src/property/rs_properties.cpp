@@ -133,11 +133,14 @@ const std::array<ResetPropertyFunc, static_cast<int>(RSModifierType::CUSTOM)> g_
     [](RSProperties* prop) { prop->SetUseShadowBatching(false); },       // USE_SHADOW_BATCHING
     [](RSProperties* prop) { prop->SetGreyCoef(std::nullopt); },         // GREY_COEF
     [](RSProperties* prop) { prop->SetLightIntensity(-1.f); },           // LIGHT_INTENSITY
+    [](RSProperties* prop) { prop->SetLightColor({}); },                 // LIGHT_COLOR
     [](RSProperties* prop) { prop->SetLightPosition({}); },              // LIGHT_POSITION
     [](RSProperties* prop) { prop->SetIlluminatedBorderWidth({}); },     // ILLUMINATED_BORDER_WIDTH
     [](RSProperties* prop) { prop->SetIlluminatedType(-1); },            // ILLUMINATED_TYPE
     [](RSProperties* prop) { prop->SetBloom({}); },                      // BLOOM
+    [](RSProperties* prop) { prop->SetEmitterUpdater({}); },             // PARTICLE_EMITTER_UPDATER
     [](RSProperties* prop) { prop->SetDynamicDimDegree({}); },           // DYNAMIC_LIGHT_UP_DEGREE
+    [](RSProperties* prop) { prop->SetForegroundEffectRadius(0.f); },    // FOREGROUND_EFFECT_RADIUS
 };
 } // namespace
 
@@ -1048,6 +1051,27 @@ const std::shared_ptr<RSBorder>& RSProperties::GetOutline() const
     return outline_;
 }
 
+void RSProperties::SetForegroundEffectRadius(const float foregroundEffectRadius)
+{
+    foregroundEffectRadius_ = foregroundEffectRadius;
+    if (IsForegroundEffectRadiusValid()) {
+        isDrawn_ = true;
+    }
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+float RSProperties::GetForegroundEffectRadius() const
+{
+    return foregroundEffectRadius_;
+}
+
+bool RSProperties::IsForegroundEffectRadiusValid() const
+{
+    return ROSEN_GNE(foregroundEffectRadius_, 0.0);
+}
+
 void RSProperties::SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter)
 {
     backgroundFilter_ = backgroundFilter;
@@ -1063,6 +1087,17 @@ void RSProperties::SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradi
 {
     linearGradientBlurPara_ = para;
     if (para && para->blurRadius_ > 0.f) {
+        isDrawn_ = true;
+    }
+    filterNeedUpdate_ = true;
+    SetDirty();
+    contentDirty_ = true;
+}
+
+void RSProperties::SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para)
+{
+    emitterUpdater_ = para;
+    if (emitterUpdater_) {
         isDrawn_ = true;
     }
     filterNeedUpdate_ = true;
@@ -1130,6 +1165,11 @@ const std::shared_ptr<RSFilter>& RSProperties::GetBackgroundFilter() const
 const std::shared_ptr<RSLinearGradientBlurPara>& RSProperties::GetLinearGradientBlurPara() const
 {
     return linearGradientBlurPara_;
+}
+
+const std::shared_ptr<EmitterUpdater>& RSProperties::GetEmitterUpdater() const
+{
+    return emitterUpdater_;
 }
 
 void RSProperties::IfLinearGradientBlurInvalid()
@@ -1778,6 +1818,16 @@ void RSProperties::SetLightIntensity(float lightIntensity)
     }
 }
 
+void RSProperties::SetLightColor(Color lightColor)
+{
+    if (!lightSourcePtr_) {
+        lightSourcePtr_ = std::make_shared<RSLightSource>();
+    }
+    lightSourcePtr_->SetLightColor(lightColor);
+    SetDirty();
+    contentDirty_ = true;
+}
+
 void RSProperties::SetLightPosition(const Vector4f& lightPosition)
 {
     if (!lightSourcePtr_) {
@@ -1837,6 +1887,11 @@ void RSProperties::SetBloom(float bloomIntensity)
 float RSProperties::GetLightIntensity() const
 {
     return lightSourcePtr_ ? lightSourcePtr_->GetLightIntensity() : 0.f;
+}
+
+Color RSProperties::GetLightColor() const
+{
+    return lightSourcePtr_ ? lightSourcePtr_->GetLightColor() : RgbPalette::White();
 }
 
 Vector4f RSProperties::GetLightPosition() const

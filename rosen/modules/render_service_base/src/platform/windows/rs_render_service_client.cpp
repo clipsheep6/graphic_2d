@@ -406,6 +406,12 @@ int32_t RSRenderServiceClient::RegisterHgmRefreshRateModeChangeCallback(
     return {};
 }
 
+int32_t RSRenderServiceClient::RegisterHgmRefreshRateUpdateCallback(
+    const HgmRefreshRateUpdateCallback& callback)
+{
+    return {};
+}
+
 void RSRenderServiceClient::SetAppWindowNum(uint32_t num)
 {
 }

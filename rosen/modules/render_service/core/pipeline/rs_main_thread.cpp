@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,7 +55,6 @@
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_divided_render_util.h"
-#include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_render_engine.h"
 #include "pipeline/rs_render_service_visitor.h"
 #include "pipeline/rs_root_render_node.h"
@@ -79,6 +78,7 @@
 #include "render_context/memory_handler.h"
 #endif
 #include "render/rs_pixel_map_util.h"
+#include "rs_frame_report.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_transaction_proxy.h"
 
@@ -298,6 +298,10 @@ void RSMainThread::Init()
         Render();
         RS_PROFILER_ON_RENDER_END();
 
+        if (!hasMark_) {
+            SetFrameIsRender(true);
+        }
+        hasMark_ = false;
         // move rnv after mark rsnotrendering
         if (needRequestNextVsyncAnimate_ || rsVSyncDistributor_->HasPendingUIRNV()) {
             rsVSyncDistributor_->MarkRSAnimate();
@@ -1114,10 +1118,6 @@ void RSMainThread::CollectInfoForHardwareComposer()
                 return;
             }
 
-            if (surfaceNode->IsRosenWeb()) {
-                hasRosenWebNode_ = true;
-            }
-
             // if hwc node is set on the tree this frame, mark its parent app node to be prepared
             auto appNodeId = surfaceNode->GetInstanceRootNodeId();
             if (surfaceNode->IsNewOnTree()) {
@@ -1478,7 +1478,6 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
         RS_TRACE_NAME_FMT("RSMainThread::ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate);
     }
 
-    frameRateMgr_-> HandleTempEvent("ROSEN_WEB", hasRosenWebNode_, OLED_120_HZ, OLED_120_HZ);
     // hgm warning: use IsLtpo instead after GetDisplaySupportedModes ready
     if (frameRateMgr_->GetCurScreenStrategyId().find("LTPO") == std::string::npos) {
         frameRateMgr_->UniProcessDataForLtps(idleTimerExpiredFlag_);
@@ -1491,11 +1490,25 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
     // if RS get here means it has frame coming in
     frameRateMgr_->touchMgr_->ResetRSTimer(frameRateMgr_->GetCurScreenId());
     frameRateMgr_->touchMgr_->HandleRSFrameUpdate(rsIdleTimerExpiredFlag_);
+
+    if (rsVSyncDistributor_->IsDVsyncOn()) {
+        auto pendingRefreshRate = frameRateMgr_->GetPendingRefreshRate();
+        if (pendingRefreshRate != nullptr) {
+            hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate);
+            frameRateMgr_->ResetPendingRefreshRate();
+        }
+    }
 }
 
 bool RSMainThread::GetParallelCompositionEnabled()
 {
     return doParallelComposition_;
+}
+
+void RSMainThread::SetFrameIsRender(bool isRender)
+{
+    hasMark_ = true;
+    rsVSyncDistributor_->SetFrameIsRender(isRender);
 }
 
 void RSMainThread::ColorPickerRequestVsyncIfNeed()
@@ -1560,6 +1573,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
             return;
         } else {
             RS_LOGD("RSMainThread::Render nothing to update");
+            RSMainThread::Instance()->SetFrameIsRender(false);
             for (auto& node: hardwareEnabledNodes_) {
                 if (!node->IsHardwareForcedDisabled()) {
                     node->MarkCurrentFrameHardwareEnabled();
@@ -1615,7 +1629,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     isDirty_ = false;
     forceUpdateUniRenderFlag_ = false;
     idleTimerExpiredFlag_ = false;
-    hasRosenWebNode_ = false;
 }
 
 pid_t RSMainThread::GetDesktopPidForRotationScene() const

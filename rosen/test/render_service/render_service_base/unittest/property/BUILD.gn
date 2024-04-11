@@ -34,8 +34,8 @@ ohos_unittest("RSRenderServiceBasePropertyTest") {
   ]
 
   cflags = [
-    "-Dprivate = public",
-    "-Dprotected = public",
+    "-Dprivate=public",
+    "-Dprotected=public",
   ]
 
   include_dirs = [
@@ -46,7 +46,7 @@ ohos_unittest("RSRenderServiceBasePropertyTest") {
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base_static",
     "//third_party/googletest:gtest_main",
   ]
   deps += [ "//third_party/skia:skia_ohos" ]

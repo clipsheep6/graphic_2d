@@ -387,8 +387,6 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/utils/log",
   ]
 
-  include_dirs += [ "//third_party/skia/src" ]
-
   deps = [
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
     "$rosen_root/modules/platform:hilog",
@@ -398,6 +396,7 @@ ohos_source_set("render_service_base_src") {
   external_deps = [
     "graphic_surface:surface_headers",
     "hilog:libhilog",
+    "skia:skia_ohos",
   ]
 
   if (graphic_2d_feature_enable_opinc) {

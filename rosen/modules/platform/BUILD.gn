@@ -74,19 +74,9 @@ ohos_source_set("hilog") {
 
 # hilog }}}
 
-# image_native {{{
-group("image_native") {
-  if (platform == "ohos") {
-    public_deps = image_deps
-  } else if (platform == "android" || platform == "ios") {
-    public_deps = [ "$image_framework_root/interfaces/innerkits:image_native" ]
-  } else {
-    public_deps = [ ":mock_image_native" ]
-  }
-}
-
 config("image_native_config") {
-  include_dirs = [ "image_native" ]
+  include_dirs =
+      [ "//foundation/graphic/graphic_2d/rosen/modules/platform/image_native" ]
 }
 
 ohos_source_set("mock_image_native") {
@@ -98,7 +88,20 @@ ohos_source_set("mock_image_native") {
   subsystem_name = "graphic"
 }
 
-# image_native }}}
+ohos_shared_library("image_native") {
+  if (platform == "ohos") {
+    public_external_deps = [ "image_framework:image_native" ]
+  } else if (platform == "android" || platform == "ios") {
+    public_deps = [ "$image_framework_root/interfaces/innerkits:image_native" ]
+  } else {
+    public_deps = [ ":mock_image_native" ]
+  }
+
+  public_configs = [ ":image_native_config" ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}
 
 # ipc_core {{{
 group("ipc_core") {
@@ -130,22 +133,8 @@ ohos_source_set("mock_ipc_core") {
 
 # ipc_core }}}
 
-# utils {{{
-group("utils") {
-  if (platform == "ohos") {
-    public_deps = utils_deps
-  } else if (platform == "android" || platform == "ios") {
-    public_deps = [ "$c_utils_root/base:utilsbase" ]
-  } else {
-    public_deps = [ ":mock_utils" ]
-  }
-  if (platform == "ios") {
-    public_configs = [ ":ios_utils_config" ]
-  }
-}
-
 config("utils_config") {
-  include_dirs = [ "utils" ]
+  include_dirs = [ "//commonlibrary/c_utils/base/include" ]
 }
 
 config("ios_utils_config") {
@@ -155,7 +144,7 @@ config("ios_utils_config") {
 ohos_source_set("mock_utils") {
   if (current_os == "ios") {
     public_configs = [ ":ios_utils_config" ]
-    public_deps = [ "$c_utils_root/base:utilsbase" ]
+    public_external_deps = [ "c_utils:utilsbase" ]
   } else {
     public_configs = [ ":utils_config" ]
     sources = [
@@ -165,7 +154,25 @@ ohos_source_set("mock_utils") {
     ]
     public_external_deps = [ "bounds_checking_function:libsec_shared" ]
   }
+
   part_name = "graphic_2d"
   subsystem_name = "graphic"
 }
-# utils }}}
+
+ohos_shared_library("utils") {
+  if (platform == "ohos") {
+    public_external_deps = [ "c_utils:utils" ]
+  } else if (platform == "android" || platform == "ios") {
+    public_deps = [ "$c_utils_root/base:utilsbase" ]
+  } else {
+    public_deps = [ ":mock_utils" ]
+  }
+  if (platform == "ios") {
+    public_configs = [ ":ios_utils_config" ]
+  }
+
+  public_configs = [ ":utils_config" ]
+
+  part_name = "graphic_2d"
+  subsystem_name = "graphic"
+}

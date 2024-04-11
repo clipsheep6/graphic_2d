@@ -32,7 +32,14 @@
 #include "hgm_frame_rate_manager.h"
 #include "include/core/SkGraphics.h"
 #include "include/gpu/GrDirectContext.h"
+#include "mem_mgr_client.h"
+#include "render_frame_trace.h"
+#include "rs_frame_report.h"
+#include "rs_profiler.h"
 #include "rs_trace.h"
+#include "scene_board_judgement.h"
+#include "vsync_iconnection_token.h"
+#include "xcollie/watchdog.h"
 
 #include "animation/rs_animation_fraction.h"
 #include "command/rs_message_processor.h"
@@ -46,11 +53,11 @@
 #include "memory/rs_memory_track.h"
 #include "params/rs_surface_render_params.h"
 #include "pipeline/parallel_render/rs_sub_thread_manager.h"
+#include "pipeline/round_corner_display/rs_rcd_render_manager.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
 #include "pipeline/rs_divided_render_util.h"
-#include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_hardware_thread.h"
 #include "pipeline/rs_occlusion_config.h"
 #include "pipeline/rs_processor_factory.h"
@@ -75,6 +82,10 @@
 #include "property/rs_point_light_manager.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_property_trace.h"
+#include "render/rs_pixel_map_util.h"
+#include "render/rs_typeface_cache.h"
+#include "screen_manager/rs_screen_manager.h"
+#include "transaction/rs_transaction_proxy.h"
 
 #ifdef RS_ENABLE_GL
 #include "GLES3/gl3.h"
@@ -89,15 +100,6 @@
 #ifdef NEW_RENDER_CONTEXT
 #include "render_context/memory_handler.h"
 #endif
-#include "render/rs_pixel_map_util.h"
-#include "rs_frame_report.h"
-#include "screen_manager/rs_screen_manager.h"
-#include "transaction/rs_transaction_proxy.h"
-
-#include "xcollie/watchdog.h"
-
-#include "render_frame_trace.h"
-#include "render/rs_typeface_cache.h"
 
 #if defined(ACCESSIBILITY_ENABLE)
 #include "accessibility_config.h"
@@ -106,13 +108,6 @@
 #ifdef SOC_PERF_ENABLE
 #include "socperf_client.h"
 #endif
-
-#include "pipeline/round_corner_display/rs_rcd_render_manager.h"
-#include "scene_board_judgement.h"
-#include "vsync_iconnection_token.h"
-
-#include "mem_mgr_client.h"
-#include "rs_profiler.h"
 
 #ifdef RES_SCHED_ENABLE
 #include "system_ability_definition.h"
@@ -1287,7 +1282,17 @@ uint32_t RSMainThread::GetRefreshRate() const
     return refreshRate;
 }
 
-void RSMainThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply)
+uint32_t RSMainThread::GetDynamicRefreshRate() const
+{
+    uint32_t refreshRate = OHOS::Rosen::HgmCore::Instance().GetScreenCurrentRefreshRate(displayNodeScreenId_);
+    if (refreshRate == 0) {
+        RS_LOGE("RSMainThread::GetDynamicRefreshRate refreshRate is invalid");
+        return STANDARD_REFRESH_RATE;
+    }
+    return refreshRate;
+}
+
+void RSMainThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t pid)
 {
     if (!RSSystemProperties::GetReleaseResourceEnabled()) {
         return;

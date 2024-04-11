@@ -390,8 +390,9 @@ bool RSPointLightDrawable::OnUpdate(const RSRenderNode& node)
 void RSPointLightDrawable::OnSync()
 {
     lightSourceList_.clear();
-    auto& lightSources = properties_.GetIlluminated()->GetLightSources();
-    for (auto &lightSource : lightSources) {
+    // PLANNING: adapt to color
+    const auto& lightSourcesAndPosMap = properties_.GetIlluminated()->GetLightSourcesAndPosMap();
+    for (const auto &[lightSource, unused] : lightSourcesAndPosMap) {
         lightSourceList_.push_back(*lightSource);
     }
     if (lightSourceList_.empty()) {

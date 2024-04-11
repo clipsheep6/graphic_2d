@@ -566,7 +566,6 @@ private:
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
 #endif
-    bool isCurtainScreenOn_ = false;
     pid_t exitedPid_ = -1;
     std::set<pid_t> exitedPidSet_;
     RSDrawFrame drawFrame_;

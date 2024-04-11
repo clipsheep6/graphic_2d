@@ -13,26 +13,29 @@
  * limitations under the License.
  */
 
-#include <mutex>
 #include "js_canvas.h"
-#include "../brush_napi/js_brush.h"
-#include "../pen_napi/js_pen.h"
-#include "../path_napi/js_path.h"
-#include "../text_blob_napi/js_text_blob.h"
-#include "../js_drawing_utils.h"
-#include "native_value.h"
+
+#include <mutex>
+
 #ifdef ROSEN_OHOS
 #include "pixel_map.h"
 #include "pixel_map_napi.h"
 #endif
+#include "native_value.h"
 #include "draw/canvas.h"
-#include "image/image.h"
 #include "draw/path.h"
+#include "image/image.h"
 #include "text/text.h"
 #include "text/text_blob.h"
 #include "utils/point.h"
-#include "utils/sampling_options.h"
 #include "utils/rect.h"
+#include "utils/sampling_options.h"
+
+#include "brush_napi/js_brush.h"
+#include "pen_napi/js_pen.h"
+#include "path_napi/js_path.h"
+#include "text_blob_napi/js_text_blob.h"
+#include "js_drawing_utils.h"
 
 namespace OHOS::Rosen {
 #ifdef ROSEN_OHOS
@@ -128,7 +131,7 @@ std::shared_ptr<Drawing::Image> ExtractDrawingImage(
         AlphaTypeToDrawingAlphaType(imageInfo.alphaType),
         ColorSpaceToDrawingColorSpace(imageInfo.colorSpace) };
     Drawing::Pixmap imagePixmap(drawingImageInfo,
-        reinterpret_cast<const void*>(pixelMap->GetPixels()), pixelMap->GetRowBytes());
+        reinterpret_cast<const void*>(pixelMap->GetPixels()), pixelMap->GetRowStride());
     PixelMapReleaseContext* releaseContext = new PixelMapReleaseContext(pixelMap);
     auto image = Drawing::Image::MakeFromRaster(imagePixmap, PixelMapReleaseProc, releaseContext);
     if (!image) {
@@ -252,7 +255,7 @@ bool JsCanvas::DeclareFuncAndCreateConstructor(napi_env env)
     return true;
 }
 
-napi_value JsCanvas::CreateJsCanvas(napi_env env, Canvas* canvas, float width, float height)
+napi_value JsCanvas::CreateJsCanvas(napi_env env, Canvas* canvas)
 {
     napi_value constructor = nullptr;
     napi_value result = nullptr;
@@ -273,8 +276,6 @@ napi_value JsCanvas::CreateJsCanvas(napi_env env, Canvas* canvas, float width, f
         return nullptr;
     }
     g_drawingCanvas = canvas;
-    Rect rect(0, 0, width, height);
-    canvas->ClipRect(rect);
     status = napi_new_instance(env, constructor, 0, nullptr, &result);
     if (status != napi_ok) {
         ROSEN_LOGE("Drawing_napi: New instance could not be obtained");
@@ -750,6 +751,28 @@ void JsCanvas::ResetCanvas()
 {
     g_drawingCanvas = nullptr;
     m_canvas = nullptr;
+}
+
+void JsCanvas::ClipCanvas(float width, float height)
+{
+    if (m_canvas) {
+        Rect rect(0, 0, width, height);
+        m_canvas->ClipRect(rect);
+    }
+}
+
+void JsCanvas::SaveCanvas()
+{
+    if (m_canvas) {
+        m_canvas->Save();
+    }
+}
+
+void JsCanvas::RestoreCanvas()
+{
+    if (m_canvas) {
+        m_canvas->Restore();
+    }
 }
 } // namespace Drawing
 } // namespace OHOS::Rosen

@@ -473,7 +473,7 @@ HWTEST_F(RSUniRenderVisitorTest, CalcDirtyDisplayRegion, TestSize.Level1)
     Occlusion::Rect rect{0, 80, 2560, 1600};
     Occlusion::Region region{rect};
     VisibleData vData;
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
 
     auto partialRenderType = RSSystemProperties::GetUniPartialRenderEnabled();
     auto isPartialRenderEnabled = (partialRenderType != PartialRenderType::DISABLED);
@@ -535,7 +535,7 @@ HWTEST_F(RSUniRenderVisitorTest, SetSurfafaceGlobalDirtyRegion, TestSize.Level1)
     Occlusion::Rect rect{0, 80, 2560, 1600};
     Occlusion::Region region{rect};
     VisibleData vData;
-    std::map<uint32_t, RSVisibleLevel> pidVisMap;
+    std::map<NodeId, RSVisibleLevel> pidVisMap;
     rsSurfaceRenderNode1->SetVisibleRegionRecursive(region, vData, pidVisMap);
 
     config.id = 11;
@@ -3052,9 +3052,14 @@ HWTEST_F(RSUniRenderVisitorTest, DrawCurrentRefreshRate001, TestSize.Level2)
     auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
     ASSERT_NE(rsUniRenderVisitor, nullptr);
 
+    RSDisplayNodeConfig displayConfig;
+    auto rsContext = std::make_shared<RSContext>();
+    auto rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(20, displayConfig, rsContext->weak_from_this());
+    ASSERT_NE(rsDisplayRenderNode, nullptr);
+
     ASSERT_NE(drawingCanvas, nullptr);
     rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas.get());
-    rsUniRenderVisitor->DrawCurrentRefreshRate(0, 0);
+    rsUniRenderVisitor->DrawCurrentRefreshRate(0, 0, *rsDisplayRenderNode);
 }
 
 
@@ -3308,40 +3313,6 @@ HWTEST_F(RSUniRenderVisitorTest, DrawEffectRenderNodeForDFX001, TestSize.Level2)
 {
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     ASSERT_NE(rsUniRenderVisitor, nullptr);
-    rsUniRenderVisitor->DrawEffectRenderNodeForDFX();
-}
- 
-/**
- * @tc.name: DrawEffectRenderNodeForDFX002
- * @tc.desc: Test RSUniRenderVisitorTest.DrawEffectRenderNodeForDFX while
- *           rect map is not empty.
- * @tc.type: FUNC
- * @tc.require: issueI8WJXC
- */
-HWTEST_F(RSUniRenderVisitorTest, DrawEffectRenderNodeForDFX002, TestSize.Level2)
-{
-    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
-    ASSERT_NE(rsUniRenderVisitor, nullptr);
-
-    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
-    ASSERT_NE(drawingCanvas, nullptr);
-    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas.get());
-
-    rsUniRenderVisitor->renderEngine_ = std::make_shared<RSUniRenderEngine>();
-    rsUniRenderVisitor->renderEngine_->Init();
- 
-    NodeId nodeId = 0;
-    std::weak_ptr<RSContext> context;
-    RSEffectRenderNode rsEffectRenderNode(nodeId, context);
- 
-    RectI rect1(0, 0, 1, 1);
-    rsUniRenderVisitor->nodesUseEffectForDfx_.emplace_back(rect1);
-    RectI rect2(2, 2, 3, 3);
-    rsUniRenderVisitor->nodesUseEffectFallbackForDfx_.emplace_back(rect2);
- 
-    rsUniRenderVisitor->effectNodeMapForDfx_[nodeId].first = rsUniRenderVisitor->nodesUseEffectForDfx_;
-    rsUniRenderVisitor->effectNodeMapForDfx_[nodeId].second = rsUniRenderVisitor->nodesUseEffectFallbackForDfx_;
- 
     rsUniRenderVisitor->DrawEffectRenderNodeForDFX();
 }
  
@@ -3953,5 +3924,41 @@ HWTEST_F(RSUniRenderVisitorTest, SetHasSharedTransitionNode004, TestSize.Level2)
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->SetHasSharedTransitionNode(*node, true);
     ASSERT_TRUE(parentNode->GetHasSharedTransitionNode());
+}
+
+/**
+ * @tc.name: DrawCurtainScreen001
+ * @tc.desc: Test DrawCurtainScreen while curtain screen is on
+ * @tc.type: FUNC
+ * @tc.require: issueI9ABGS
+ */
+HWTEST_F(RSUniRenderVisitorTest, DrawCurtainScreen001, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->isCurtainScreenOn_ = true;
+    rsUniRenderVisitor->DrawCurtainScreen();
+}
+
+/**
+ * @tc.name: DrawCurtainScreen002
+ * @tc.desc: Test DrawCurtainScreen while curtain screen is off
+ * @tc.type: FUNC
+ * @tc.require: issueI9ABGS
+ */
+HWTEST_F(RSUniRenderVisitorTest, DrawCurtainScreen002, TestSize.Level2)
+{
+    auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
+    ASSERT_NE(rsUniRenderVisitor, nullptr);
+    auto drawingCanvas = std::make_shared<Drawing::Canvas>(DEFAULT_CANVAS_WIDTH, DEFAULT_CANVAS_HEIGHT);
+    ASSERT_NE(drawingCanvas, nullptr);
+
+    rsUniRenderVisitor->canvas_ = std::make_unique<RSPaintFilterCanvas>(drawingCanvas.get());
+    rsUniRenderVisitor->isCurtainScreenOn_ = false;
+    rsUniRenderVisitor->DrawCurtainScreen();
 }
 } // OHOS::Rosen

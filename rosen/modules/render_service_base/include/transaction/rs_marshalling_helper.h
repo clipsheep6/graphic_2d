@@ -50,6 +50,7 @@ class RSImageBase;
 class RSMask;
 class RSPath;
 class RSLinearGradientBlurPara;
+class EmitterUpdater;
 template<typename T>
 class RenderParticleParaType;
 class EmitterConfig;
@@ -230,6 +231,7 @@ public:
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSShader>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSPath>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSLinearGradientBlurPara>)
+    DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<EmitterUpdater>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSFilter>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSMask>)
     DECLARE_FUNCTION_OVERLOAD(std::shared_ptr<RSImage>)
@@ -331,12 +333,14 @@ public:
         if (!Unmarshalling(parcel, size)) {
             return false;
         }
-        val.resize(size);
+        val.clear();
         for (uint32_t i = 0; i < size; ++i) {
             // in-place unmarshalling
-            if (!Unmarshalling(parcel, val[i])) {
+            T tmp;
+            if (!Unmarshalling(parcel, tmp)) {
                 return false;
             }
+            val.emplace_back(tmp);
         }
         return true;
     }

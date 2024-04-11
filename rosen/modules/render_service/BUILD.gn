@@ -223,7 +223,7 @@ ohos_shared_library("librender_service") {
     "//third_party/libxml2:libxml2",
   ]
 
-  public_deps += [ "//third_party/skia:skia_ohos" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     include_dirs += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]

@@ -211,6 +211,54 @@ void KawaseBlurFilter::OutputOriginalImage(Drawing::Canvas& canvas, const std::s
     canvas.DetachBrush();
 }
 
+bool KawaseBlurFilter::DownSample(Drawing::Canvas& canvas, std::shared_ptr<Drawing::Image>& input,
+    const float blurScale)
+{
+    Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
+    std::string shaderString(R"(
+        uniform shader imageInput;
+
+        half4 main(float2 xy) {
+            half4 c = imageInput.eval(xy);
+            return half4(c.rgb, 1.0);
+        }
+    )");
+    constexpr unsigned int NUM_1 = 1;
+    constexpr unsigned int NUM_2 = 2;
+    constexpr unsigned int NUM_3 = 3;
+    constexpr unsigned int NUM_4 = 4;
+    unsigned int downSampleTimes = NUM_2;
+    if (blurScale > baseBlurScale - scaleEpsilon) {
+        downSampleTimes = NUM_1;
+    } else if (blurScale > scaleFactor1 - scaleEpsilon) {
+        downSampleTimes = NUM_2;
+    } else if (blurScale > scaleFactor2 - scaleEpsilon) {
+        downSampleTimes = NUM_3;
+    } else if (blurScale > scaleFactor3 - scaleEpsilon) {
+        downSampleTimes = NUM_4;
+    }
+    auto originImageInfo = input->GetImageInfo();
+    for (unsigned int i = 0; i < downSampleTimes; i++) {
+        auto effect = Drawing::RuntimeEffect::CreateForShader(shaderString);
+        if (!effect) {
+            ROSEN_LOGE("CreateForShader effect is null");
+            return false;
+        }
+        Drawing::RuntimeShaderBuilder effectBulider(effect);
+        auto pcInfo = Drawing::ImageInfo(std::ceil(input->GetWidth() * baseBlurScale),
+            std::ceil(input->GetHeight() * baseBlurScale), originImageInfo.GetColorType(),
+            originImageInfo.GetAlphaType(), originImageInfo.GetColorSpace());
+        Drawing::Matrix matrix;
+        matrix.SetScale(static_cast<float>(pcInfo.GetWidth()) / input->GetWidth(),
+            static_cast<float>(pcInfo.GetHeight()) / input->GetHeight());
+        effectBulider.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input, Drawing::TileMode::CLAMP,
+            Drawing::TileMode::CLAMP, linear, matrix));
+        input = effectBulider.MakeImage(canvas.GetGPUContext().get(), nullptr, pcInfo, false);
+    }
+    return true;
+}
+
+
 bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
     const KawaseParameter& param)
 {
@@ -250,7 +298,14 @@ bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::share
     blurMatrix.Translate(-src.GetLeft(), -src.GetTop());
     float scaleW = static_cast<float>(scaledInfo.GetWidth()) / input->GetWidth();
     float scaleH = static_cast<float>(scaledInfo.GetHeight()) / input->GetHeight();
-    blurMatrix.PostScale(scaleW, scaleH);
+    if (RSSystemProperties::GetFineDownsampleEnabled()) {
+        if (!DownSample(canvas, input, blurScale_)) {
+            ROSEN_LOGE("ApplyKawaseBlur Fine downSample error");
+            return false;
+        }
+    } else {
+        blurMatrix.PostScale(scaleW, scaleH);
+    }
     Drawing::SamplingOptions linear(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::NONE);
 
     // Advanced Filter: check is AF usable only the first time
@@ -349,12 +404,6 @@ void KawaseBlurFilter::ComputeRadiusAndScale(int radius)
 
 void KawaseBlurFilter::AdjustRadiusAndScale()
 {
-    static constexpr int radiusStep1 = 50; // 50 : radius step1
-    static constexpr int radiusStep2 = 150; // 150 : radius step2
-    static constexpr int radiusStep3 = 400; // 400 : radius step3
-    static constexpr float scaleFactor1 = 0.25f; // 0.25 : downSample scale for step1
-    static constexpr float scaleFactor2 = 0.125f; // 0.125 : downSample scale for step2
-    static constexpr float scaleFactor3 = 0.0625f; // 0.0625 : downSample scale for step3
     auto radius = static_cast<int>(blurRadius_);
     if (radius > radiusStep3) {
         blurScale_ = scaleFactor3;

@@ -64,8 +64,16 @@ private:
     void ComputeRadiusAndScale(int radius);
     void AdjustRadiusAndScale();
     std::string GetDescription() const;
+    bool DownSample(Drawing::Canvas& canvas, std::shared_ptr<Drawing::Image>& input, const float blurScale);
 
     static constexpr float baseBlurScale = 0.5f; // base downSample radio
+    static constexpr float scaleEpsilon = 0.01f;
+    static constexpr int radiusStep1 = 50; // 50 : radius step1
+    static constexpr int radiusStep2 = 150; // 150 : radius step2
+    static constexpr int radiusStep3 = 400; // 400 : radius step3
+    static constexpr float scaleFactor1 = 0.25f; // 0.25 : downSample scale for step1
+    static constexpr float scaleFactor2 = 0.125f; // 0.125 : downSample scale for step2
+    static constexpr float scaleFactor3 = 0.0625f; // 0.0625 : downSample scale for step3
     static constexpr uint32_t kMaxPasses = 4; // Maximum number of render passes
     static constexpr uint32_t kMaxPassesLargeRadius = 7;
     static constexpr float kDilatedConvolution = 2.0f;

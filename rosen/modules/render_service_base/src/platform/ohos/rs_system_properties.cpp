@@ -794,5 +794,12 @@ uint32_t RSSystemProperties::GetVirtualScreenScaleModeDFX()
         std::atoi((system::GetParameter("persist.rosen.virtualScreenScaleMode.debugType", "2")).c_str());
     return (scaleModeDFX > DEFAULT_SCALE_MODE) ? DEFAULT_SCALE_MODE : scaleModeDFX;
 }
+
+bool RSSystemProperties::GetFineDownsampleEnabled()
+{
+    static bool fineDownsampleEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.fineDownsample", "1")).c_str());
+    return fineDownsampleEnabled;
+}
 } // namespace Rosen
 } // namespace OHOS

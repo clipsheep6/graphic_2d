@@ -110,6 +110,7 @@ static const std::array<RSDrawableSlot, DIRTY_LUT_SIZE> g_propertyToDrawableLut 
     RSDrawableSlot::CHILDREN,                      // USE_SHADOW_BATCHING
     RSDrawableSlot::INVALID,                       // GREY_COEF
     RSDrawableSlot::POINT_LIGHT,                   // LIGHT_INTENSITY
+    RSDrawableSlot::POINT_LIGHT,                   // LIGHT_COLOR
     RSDrawableSlot::POINT_LIGHT,                   // LIGHT_POSITION
     RSDrawableSlot::POINT_LIGHT,                   // ILLUMINATED_BORDER_WIDTH
     RSDrawableSlot::POINT_LIGHT,                   // ILLUMINATED_TYPE

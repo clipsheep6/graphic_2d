@@ -562,7 +562,6 @@ private:
     bool hasMark_ = false;
 
     bool forceUIFirstChanged_ = false;
-    bool hasRosenWebNode_ = false;
 
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;

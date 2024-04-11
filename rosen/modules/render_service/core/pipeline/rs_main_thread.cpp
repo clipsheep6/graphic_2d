@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -90,6 +90,7 @@
 #include "render_context/memory_handler.h"
 #endif
 #include "render/rs_pixel_map_util.h"
+#include "rs_frame_report.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_transaction_proxy.h"
 
@@ -1154,10 +1155,6 @@ void RSMainThread::CollectInfoForHardwareComposer()
                 return;
             }
 
-            if (surfaceNode->IsRosenWeb()) {
-                hasRosenWebNode_ = true;
-            }
-
             // if hwc node is set on the tree this frame, mark its parent app node to be prepared
             auto appNodeId = surfaceNode->GetInstanceRootNodeId();
             if (surfaceNode->IsNewOnTree()) {
@@ -1450,7 +1447,6 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
         RS_TRACE_NAME_FMT("RSMainThread::ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate);
     }
 
-    frameRateMgr_-> HandleTempEvent("ROSEN_WEB", hasRosenWebNode_, OLED_120_HZ, OLED_120_HZ);
     // hgm warning: use IsLtpo instead after GetDisplaySupportedModes ready
     if (frameRateMgr_->GetCurScreenStrategyId().find("LTPO") == std::string::npos) {
         frameRateMgr_->UniProcessDataForLtps(idleTimerExpiredFlag_);
@@ -1613,7 +1609,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     isDirty_ = false;
     forceUpdateUniRenderFlag_ = false;
     idleTimerExpiredFlag_ = false;
-    hasRosenWebNode_ = false;
 }
 
 bool RSMainThread::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, bool waitForRT)

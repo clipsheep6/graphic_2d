@@ -57,6 +57,7 @@
 #include "dm/convex_paths.h"
 #include "dm/gradient_dirty_laundry.h"
 #include "dm/arcofzorro.h"
+#include "dm/luma_filter.h"
 
 
 namespace {
@@ -172,6 +173,7 @@ namespace {
             {"convex_paths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},       
             {"arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorroGM>(); }},
+            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
 
     };
 

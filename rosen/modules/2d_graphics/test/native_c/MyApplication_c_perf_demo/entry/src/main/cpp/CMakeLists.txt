@@ -53,9 +53,11 @@ add_library(entry SHARED
     dm/dashing.cpp
     dm/path_interior.cpp
     dm/strokes.cpp
+    dm/alpha_gradients.cpp
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
     dm/stroke_rect_shader.cpp
+    dm/luma_filter.cpp
 )
 
 add_library(myxnode SHARED
@@ -102,9 +104,11 @@ add_library(myxnode SHARED
     dm/dashing.cpp
     dm/path_interior.cpp
     dm/strokes.cpp
+    dm/alpha_gradients.cpp
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
     dm/stroke_rect_shader.cpp
+    dm/luma_filter.cpp
 )
 
 find_library(

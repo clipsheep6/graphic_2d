@@ -82,5 +82,9 @@ struct DrawRect{
 };
 
 OH_Drawing_Rect* DrawCreateRect(DrawRect r);
+
 void DrawPathAddCircle(OH_Drawing_Path* path, float centerX, float centerY, float radius);
+uint8_t* DrawBitmapGetAddr8(OH_Drawing_Bitmap* bitmap, int x, int y);
+uint16_t* DrawBitmapGetAddr16(OH_Drawing_Bitmap* bitmap, int x, int y);
+uint32_t* DrawBitmapGetAddr32(OH_Drawing_Bitmap* bitmap, int x, int y);
 #endif // TEST_COMMON_H

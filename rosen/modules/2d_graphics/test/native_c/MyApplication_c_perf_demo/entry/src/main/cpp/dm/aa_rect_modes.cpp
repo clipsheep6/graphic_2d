@@ -5,9 +5,12 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
 #include <native_drawing/drawing_round_rect.h>
-#include <native_drawing/drawing_round_rect.h>
 #include <native_drawing/drawing_shader_effect.h>
 #include <native_drawing/drawing_point.h>
+#include <native_drawing/drawing_image.h>
+#include <native_drawing/drawing_filter.h>
+#include <native_drawing/drawing_sampling_options.h>
+
 #include "test_common.h"
 #include "common/log_common.h"
 
@@ -71,6 +74,7 @@ constexpr OH_Drawing_BlendMode gModes[] = {
     OH_Drawing_BlendMode::BLEND_MODE_SRC_OVER,
     OH_Drawing_BlendMode::BLEND_MODE_DST_OVER,
     OH_Drawing_BlendMode::BLEND_MODE_SRC_IN,
+
     OH_Drawing_BlendMode::BLEND_MODE_DST_IN,
     OH_Drawing_BlendMode::BLEND_MODE_SRC_OUT,
     OH_Drawing_BlendMode::BLEND_MODE_DST_OUT,
@@ -83,8 +87,7 @@ const float W = 64;
 const float H = 64;
 
 static float drawCell(OH_Drawing_Canvas* canvas, OH_Drawing_BlendMode mode, uint8_t a0, uint8_t a1) {
-
-    OH_Drawing_CanvasClear(canvas, 0xFFFFFFFF);
+    
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
@@ -117,17 +120,21 @@ static float drawCell(OH_Drawing_Canvas* canvas, OH_Drawing_BlendMode mode, uint
 
 OH_Drawing_ShaderEffect *make_bg_shader()
 {
-//    OH_Drawing_BitmapFormat format;
-//    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
-//    OH_Drawing_BitmapBuild(bitmap, W, H, &format);
-    //  OH没有 bitmap生成的shaderEffect 用OH_Drawing_ShaderEffectCreateLinearGradient 替代,但似乎没有效果
+    OH_Drawing_BitmapFormat format = {COLOR_FORMAT_ARGB_4444,ALPHA_FORMAT_PREMUL};
+    OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
+    OH_Drawing_BitmapBuild(bitmap, 2, 2, &format);
+    *DrawBitmapGetAddr32(bitmap, 0, 0) = 0xFFFFFFFF;
+    *DrawBitmapGetAddr32(bitmap, 1, 1) = 0xFFFFFFFF;
+    *DrawBitmapGetAddr32(bitmap, 1, 0) = 0xFFCECFCE;
+    *DrawBitmapGetAddr32(bitmap, 0, 1) = 0xFFCECFCE;
+
+    OH_Drawing_Image* image = OH_Drawing_ImageCreate();
+    OH_Drawing_ImageBuildFromBitmap(image, bitmap);
+    OH_Drawing_SamplingOptions* option = OH_Drawing_SamplingOptionsCreate(OH_Drawing_FilterMode::FILTER_MODE_NEAREST,OH_Drawing_MipmapMode::MIPMAP_MODE_NONE);
     
-    OH_Drawing_Point *startPt = OH_Drawing_PointCreate(0, 0);
-    OH_Drawing_Point *endPt = OH_Drawing_PointCreate(W, H);
-    static const uint32_t gColors[] = { 0xFF000000, 0xFFFFFFFF };
-    OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, gColors, nullptr, 2, OH_Drawing_TileMode::REPEAT);
-    OH_Drawing_PointDestroy(startPt);
-    OH_Drawing_PointDestroy(endPt);
+    OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreateScale(6, 6, 0, 0);
+    OH_Drawing_ShaderEffect *shaderEffect = OH_Drawing_ShaderEffectCreateImageShader(image,OH_Drawing_TileMode::REPEAT,OH_Drawing_TileMode::REPEAT,option,matrix);
+    
     return shaderEffect;
 }
 
@@ -144,11 +151,10 @@ AARectModes::~AARectModes() {
 
 void AARectModes::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
-    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
-//    OH_Drawing_BrushSetAntiAlias(brush,true);
-//    OH_Drawing_ShaderEffect *shaderEffect = make_bg_shader();
-//    OH_Drawing_BrushSetShaderEffect(brush, shaderEffect);
-    
+    OH_Drawing_Brush* bgBrush = OH_Drawing_BrushCreate();
+    OH_Drawing_ShaderEffect *shaderEffect = make_bg_shader();
+    OH_Drawing_BrushSetShaderEffect(bgBrush, shaderEffect);
+//    OH_Drawing_CanvasDrawBackground(canvas, brush);    
     if(false)
         test4(canvas);
     
@@ -160,17 +166,15 @@ void AARectModes::OnTestFunction(OH_Drawing_Canvas* canvas)
         OH_Drawing_CanvasSave(canvas);
         OH_Drawing_CanvasSave(canvas);
 
-        for (size_t i = 0; i < sizeof(gModes)/sizeof(gModes[0]); ++i) {
+        for (size_t i = 0; i < 12; ++i) {
             if (6 == i) {
                 OH_Drawing_CanvasRestore(canvas);
                 OH_Drawing_CanvasTranslate(canvas, W * 5.0, 0);
                 OH_Drawing_CanvasSave(canvas);
             }
-            OH_Drawing_BrushSetColor(brush, 0xFFFFFFFF);
-            OH_Drawing_BrushSetAlpha(brush, gAlphaValue[alpha & 2]);
-            OH_Drawing_CanvasAttachBrush(canvas, brush);
+            OH_Drawing_CanvasAttachBrush(canvas, bgBrush);
             OH_Drawing_CanvasDrawRect(canvas, bounds);
-            OH_Drawing_CanvasSaveLayer(canvas, bounds, brush);
+            OH_Drawing_CanvasSaveLayer(canvas, bounds, nullptr);
             float dy = drawCell(canvas, gModes[i],
                                    gAlphaValue[alpha & 1],
                                    gAlphaValue[alpha & 2]);
@@ -182,6 +186,6 @@ void AARectModes::OnTestFunction(OH_Drawing_Canvas* canvas)
         OH_Drawing_CanvasTranslate(canvas, W * 5.0f / 4.0f, 0);
     }
     OH_Drawing_RectDestroy(bounds);
-//    OH_Drawing_ShaderEffectDestroy(shaderEffect);
-    OH_Drawing_BrushDestroy(brush);
+    OH_Drawing_BrushDestroy(bgBrush);
+    OH_Drawing_ShaderEffectDestroy(shaderEffect);
 }

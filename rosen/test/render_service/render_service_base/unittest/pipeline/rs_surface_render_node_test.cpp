@@ -896,7 +896,7 @@ HWTEST_F(RSSurfaceRenderNodeTest, StoreMustRenewedInfo002, TestSize.Level2)
     auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
     ASSERT_NE(node, nullptr);
 
-    node->SetUseEffectNodes(true);
+    node->SetChildHasVisibleEffect(true);
     node->RSRenderNode::StoreMustRenewedInfo();
     node->StoreMustRenewedInfo();
     ASSERT_TRUE(node->HasMustRenewedInfo());
@@ -1058,7 +1058,7 @@ HWTEST_F(RSSurfaceRenderNodeTest, QuerySubAssignable003, TestSize.Level2)
     childNode->SetParent(parentNode);
     const uint8_t opacity = 255;
     parentNode->SetAbilityBGAlpha(opacity);
-    parentNode->SetChildHasFilter(true);
+    parentNode->SetChildHasVisibleFilter(true);
     
     ASSERT_EQ(parentNode->QuerySubAssignable(false), true);
 }
@@ -1078,7 +1078,7 @@ HWTEST_F(RSSurfaceRenderNodeTest, QuerySubAssignable004, TestSize.Level2)
 
     childNode->SetHasFilter(true);
     childNode->SetParent(parentNode);
-    parentNode->SetChildHasFilter(true);
+    parentNode->SetChildHasVisibleFilter(true);
     
     ASSERT_EQ(parentNode->QuerySubAssignable(false), false);
 }

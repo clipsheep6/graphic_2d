@@ -168,6 +168,7 @@ public:
     static bool GetFilterPartialRenderEnabled();
     static bool GetColorPickerPartialEnabled();
     static bool GetMaskLinearBlurEnabled();
+    static bool GetMotionBlurEnabled();
     static bool GetKawaseEnabled();
     static float GetKawaseRandomColorFactor();
     static bool GetRandomColorEnabled();

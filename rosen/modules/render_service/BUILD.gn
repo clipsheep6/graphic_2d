@@ -187,7 +187,6 @@ ohos_shared_library("librender_service") {
 
   deps = [
     "$graphic_2d_root/rosen/modules/composer:libcomposer",
-    "$graphic_2d_root/rosen/modules/frame_report:librs_frame_report",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager:libhyper_graphic_manager",
     "$graphic_2d_root/rosen/modules/render_frame_trace:render_frame_trace",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
@@ -225,7 +224,10 @@ ohos_shared_library("librender_service") {
     "//third_party/libxml2:libxml2",
   ]
 
-  public_deps += [ "//third_party/skia:skia_ohos" ]
+  public_deps += [
+    "//third_party/skia:skia_ohos",
+    "$graphic_2d_root/rosen/modules/frame_report:librs_frame_report",
+  ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     include_dirs += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]

@@ -358,16 +358,17 @@ bool RSSystemProperties::GetHwcRegionDfxEnabled()
     return false;
 }
 
-<<<<<<< HEAD
-bool RSSystemProperties::GetUIFirstForceEnabled()
-=======
 SubTreePrepareCheckType RSSystemProperties::GetSubTreePrepareCheckType()
 {
     return SubTreePrepareCheckType::ENABLED;
 }
 
 bool RSSystemProperties::GetRenderParallelEnabled()
->>>>>>> zhangpeng/master
+{
+    return false;
+}
+
+bool RSSystemProperties::GetUIFirstForceEnabled()
 {
     return false;
 }

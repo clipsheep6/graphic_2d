@@ -439,12 +439,8 @@ public:
     void SetForceUIFirstChanged(bool forceUIFirstChanged);
     bool GetForceUIFirstChanged();
 
-<<<<<<< HEAD
     const std::shared_ptr<RSDirtyRegionManager>& GetDirtyManager() const;
-=======
-    std::shared_ptr<RSDirtyRegionManager> GetDirtyManager() const;
-    std::shared_ptr<RSDirtyRegionManager> GetSyncDirtyManager() const;
->>>>>>> zhangpeng/master
+    const std::shared_ptr<RSDirtyRegionManager>& GetSyncDirtyManager() const;
     std::shared_ptr<RSDirtyRegionManager> GetCacheSurfaceDirtyManager() const;
 
     void SetSrcRect(const RectI& rect)
@@ -1036,24 +1032,14 @@ public:
         bufferRelMatrix_ = matrix;
     }
 
-<<<<<<< HEAD
-    void SetBufferRelMatrix(Drawing::Matrix matrix)
-    {
-        bufferRelMatrix_ = matrix;
-    }
-
-=======
->>>>>>> zhangpeng/master
     const Drawing::Matrix& GetBufferRelMatrix() const
     {
         return bufferRelMatrix_;
     }
 
-<<<<<<< HEAD
-=======
 protected:
     void OnSync() override;
->>>>>>> zhangpeng/master
+
 private:
     void OnResetParent() override;
     void ClearChildrenCache();
@@ -1274,13 +1260,10 @@ private:
     std::atomic<bool> hasUnSubmittedOccludedDirtyRegion_ = false;
     RectI historyUnSubmittedOccludedDirtyRegion_;
     bool forceUIFirstChanged_ = false;
-<<<<<<< HEAD
-=======
+    Drawing::Matrix bufferRelMatrix_ = Drawing::Matrix();
     bool forceUIFirst_ = false;
     bool hasTransparentSurface_ = false;
     bool lastFrameUifirstFlag_ = false;
->>>>>>> zhangpeng/master
-    Drawing::Matrix bufferRelMatrix_ = Drawing::Matrix();
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

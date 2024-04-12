@@ -12,4 +12,12 @@ public:
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
 };
+
+class AlphaImageAlphaTint : public TestBase {
+public:
+    AlphaImageAlphaTint();
+    ~AlphaImageAlphaTint()=default;
+protected:
+    void OnTestFunction(OH_Drawing_Canvas* canvas) override;
+};
 #endif // AA_RECT_MODES_H

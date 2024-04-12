@@ -18,6 +18,7 @@
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_point_light_manager.h"
+#include "render/rs_foreground_effect_filter.h"
 #include "render/rs_skia_filter.h"
 #include "render/rs_shadow.h"
 #include "pipeline/rs_render_node.h"
@@ -1206,17 +1207,39 @@ HWTEST_F(RSPropertiesPainterTest, DrawDynamicLightUp002, TestSize.Level1)
 }
 
 /**
- * @tc.name: DrawDynamicDim001
+ * @tc.name: DrawForegroundFilter001
  * @tc.desc:
  * @tc.type:FUNC
  */
-HWTEST_F(RSPropertiesPainterTest, DrawDynamicDim001, TestSize.Level1)
+HWTEST_F(RSPropertiesPainterTest, DrawForegroundFilter001, TestSize.Level1)
 {
+    float blurRadius = 10.f; // foreground effect blur radius
+    auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(blurRadius);
     RSProperties properties;
-    properties.SetDynamicDimDegree(0.5);
+    properties.SetForegroundFilter(foregroundEffectFilter);
+
     Drawing::Canvas drawingCanvas;
     RSPaintFilterCanvas canvas(&drawingCanvas);
-    RSPropertiesPainter::DrawDynamicDim(properties, canvas);
+
+    RSPropertiesPainter::DrawForegroundFilter(properties, canvas);
+}
+
+/**
+ * @tc.name: DrawForegroundFilter002
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSPropertiesPainterTest, DrawForegroundFilter002, TestSize.Level1)
+{
+    float blurRadius = 20.f; // foreground effect blur radius
+    auto foregroundEffectFilter = std::make_shared<RSForegroundEffectFilter>(blurRadius);
+    RSProperties properties;
+    properties.SetForegroundFilter(foregroundEffectFilter);
+
+    Drawing::Canvas drawingCanvas;
+    RSPaintFilterCanvas canvas(&drawingCanvas);
+
+    RSPropertiesPainter::DrawForegroundFilter(properties, canvas);
 }
 } // namespace Rosen
 } // namespace OHOS

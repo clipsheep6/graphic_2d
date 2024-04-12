@@ -44,6 +44,7 @@
 #include "property/rs_point_light_manager.h"
 #include "property/rs_properties_painter.h"
 #include "property/rs_property_trace.h"
+#include "render/rs_foreground_effect_filter.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 
@@ -1442,6 +1443,14 @@ void RSRenderNode::UpdateDirtyRegion(
         if (properties.pixelStretch_) {
             auto stretchDirtyRect = properties.GetPixelStretchDirtyRect();
             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
+        }
+
+        // Add node's foregroundEffect region to dirtyRect
+        auto foregroundFilter = properties.GetForegroundFilter();
+        if (foregroundFilter && foregroundFilter->GetFilterType() == RSFilter::FOREGROUND_EFFECT) {
+            float dirtyExtension =
+                std::static_pointer_cast<RSForegroundEffectFilter>(foregroundFilter)->GetDirtyExtension();
+            dirtyRect = dirtyRect.MakeOutset(Vector4<int>(dirtyExtension));
         }
 
         if (clipRect.has_value()) {

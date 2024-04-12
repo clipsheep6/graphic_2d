@@ -750,7 +750,7 @@ HWTEST_F(RSPropertiesPainterTest, DrawLightInner001, TestSize.Level1)
     std::vector<std::pair<std::shared_ptr<RSLightSource>, Vector4f>> lightSourcesAndPosVec;
     std::shared_ptr<RSObjAbsGeometry> geoPtr;
     auto instance = RSPointLightManager::Instance();
-    auto lightPos = instance->CalculateLightPosForIlluminated(newLightSource, geoPtr);
+    auto lightPos = instance->CalculateLightPosForIlluminated(*newLightSource, geoPtr->GetAbsRect());
     lightSourcesAndPosVec.push_back(std::make_pair(newLightSource, lightPos));
     RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec, geoPtr);
     EXPECT_TRUE(true);

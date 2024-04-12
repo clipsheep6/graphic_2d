@@ -89,10 +89,16 @@ config("image_native_config") {
   include_dirs = [ "image_native" ]
 }
 
-ohos_source_set("mock_image_native") {
-  public_configs = [ ":image_native_config" ]
+config("mock_image_native_config") {
+  include_dirs =
+      [ "//foundation/graphic/graphic_2d/rosen/modules/platform/image_native" ]
+}
+
+ohos_shared_library("mock_image_native") {
+  public_configs = [ ":mock_image_native_config" ]
   sources = [ "image_native/pixel_map.cpp" ]
   deps = [ ":utils" ]
+  external_deps = [ "image_framework:image_native" ]
   cflags = [ "-DIMAGE_COLORSPACE_FLAG" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"

@@ -412,6 +412,9 @@
               ],
               "header_base": "//foundation/graphic/graphic_2d/utils/buffer_handle/export"
             }
+          },
+          {
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/platform:mock_image_native"            
           }
         ],
         "test": [

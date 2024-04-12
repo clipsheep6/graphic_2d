@@ -568,7 +568,7 @@ public:
 
     virtual bool GetUifirstSupportFlag()
     {
-        return !GetSharedTransitionParam() && isChildSupportUifirst_;
+        return !GetRenderProperties().GetSandBox() && isChildSupportUifirst_;
     }
 
     virtual void MergeOldDirtyRect()

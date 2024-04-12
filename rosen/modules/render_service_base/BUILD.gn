@@ -467,11 +467,14 @@ ohos_source_set("render_service_base_src") {
   if (rosen_is_ohos && graphic_2d_feature_rs_enable_profiler &&
       player_framework_enable) {
     defines += [ "RS_PROFILER_ENABLED" ]
+
     sources += [
       "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_base.cpp",
+      "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_dump.cpp",
       "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_pixelmap.cpp",
     ]
   }
+
   include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 
   if (defined(graphic_2d_ext_configs.vendor_root)) {
@@ -522,7 +525,11 @@ ohos_shared_library("librender_service_base") {
     configs = [ ":render_service_base_link_config" ]
   }
 
-  deps = [ "$rosen_root/modules/platform:eventhandler" ]
+  deps = [ 
+    "$rosen_root/modules/platform:eventhandler",
+    "//third_party/jsoncpp:jsoncpp",
+  ]
+  
   public_deps = [
     ":render_service_base_src",
     "src/platform:platform",

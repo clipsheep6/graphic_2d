@@ -43,6 +43,7 @@ public:
     static void SendSkp(const void* data, size_t size);
     static void SendTelemetry(double startTime);
 
+    static void SendRSTreeDumpJSON(const std::string& jsonstr);
     static void SendBinary(const void* data, size_t size);
     static void SendMessage(const std::string& message);
 

@@ -133,6 +133,9 @@ private:
 
     friend class RSRenderThread;
     friend class RSMainThread;
+#ifdef RS_PROFILER_ENABLED
+    friend class RSProfiler;
+#endif
 };
 
 } // namespace Rosen

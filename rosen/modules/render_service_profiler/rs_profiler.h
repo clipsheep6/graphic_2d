@@ -18,7 +18,6 @@
 
 #include <map>
 #include <string>
-
 #include "common/rs_vector4.h"
 
 #ifdef RS_PROFILER_ENABLED
@@ -77,6 +76,10 @@ namespace OHOS::Media {
 class PixelMap;
 } // namespace OHOS::Media
 
+namespace Json {
+class Value;
+} // namespace Json
+
 namespace OHOS::Rosen {
 
 class RSRenderService;
@@ -85,7 +88,9 @@ class RSRenderServiceConnection;
 class RSTransactionData;
 class RSRenderNode;
 class RSContext;
-class RSRenderNode;
+class RSProperties;
+class RSRenderModifier;
+class RSRenderAnimation;
 class RSDisplayRenderNode;
 class RSRenderNodeMap;
 class RSAnimationManager;
@@ -208,6 +213,22 @@ private:
     RSB_EXPORT static std::string DumpModifiers(const RSRenderNode& node);
     RSB_EXPORT static std::string DumpSurfaceNode(const RSRenderNode& node);
 
+    // JSON
+    static void RenderServiceTreeDump(Json::Value& out);
+    RSB_EXPORT static void DumpNode(const RSRenderNode& node, Json::Value& out);
+    RSB_EXPORT static void DumpSubClassNode(const RSRenderNode& node, Json::Value& out);
+    RSB_EXPORT static void DumpDrawCmdModifiers(const RSRenderNode& node, Json::Value& out);
+    RSB_EXPORT static void DumpDrawCmdModifier(
+        const RSRenderNode& node, Json::Value& out, int type, RSRenderModifier& modifier);
+    RSB_EXPORT static void DumpProperties(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesTransform(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesDecoration(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesEffects(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesShadow(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpPropertiesColor(const RSProperties& properties, Json::Value& out);
+    RSB_EXPORT static void DumpAnimations(const RSAnimationManager& animationManager, Json::Value& out);
+    RSB_EXPORT static void DumpAnimation(const RSRenderAnimation& animation, Json::Value& out);
+
     // RSAnimationManager
     RSB_EXPORT static void FilterAnimationForPlayback(RSAnimationManager& manager);
 
@@ -245,6 +266,7 @@ private:
     static void DumpConnections(const ArgList& args);
     static void DumpNodeProperties(const ArgList& args);
     static void DumpTree(const ArgList& args);
+    static void DumpTreeToJson(const ArgList& args);
     static void DumpSurfaces(const ArgList& args);
     static void DumpNodeSurface(const ArgList& args);
     static void PatchNode(const ArgList& args);

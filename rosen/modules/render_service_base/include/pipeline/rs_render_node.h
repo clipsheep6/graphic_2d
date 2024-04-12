@@ -129,11 +129,13 @@ public:
         return subSurfaceNodes_;
     }
 
-    bool IsFirstLevelSurfaceNode();
+    bool IsFirstLevelNode();
+    bool IsSubSurfaceNode();
     bool SubSurfaceNodeNeedDraw(PartialRenderType opDropType);
-    void AddSubSurfaceNode(SharedPtr child, SharedPtr parent);
-    void RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent);
-    inline static const bool isSubSurfaceEnabled_ = RSSystemProperties::GetSubSurfaceEnabled();
+    void AddSubSurfaceNode(SharedPtr parent);
+    void RemoveSubSurfaceNode(SharedPtr parent);
+    inline static const bool isSubSurfaceEnabled_ =
+        RSSystemProperties::GetSubSurfaceEnabled() && RSSystemProperties::IsPhoneType();
 
     // flag: isOnTheTree; instanceRootNodeId: displaynode or leash/appnode attached to
     // firstLevelNodeId: surfacenode for uiFirst to assign task; cacheNodeId: drawing cache rootnode attached to
@@ -517,6 +519,7 @@ public:
     const std::shared_ptr<RSAutoCache>& GetAutoCache();
     bool isOpincRectOutParent_ = false;
     bool isOpincPrepareDis_ = false;
+    bool isOpincRootNode_ = false;
 #endif
 
 #ifdef RS_ENABLE_STACK_CULLING

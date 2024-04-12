@@ -40,6 +40,7 @@
 #include "property/rs_properties_painter.h"
 #include "property/rs_property_drawable.h"
 #include "property/rs_property_trace.h"
+#include "render/rs_foreground_effect_filter.h"
 #include "transaction/rs_transaction_proxy.h"
 #include "visitor/rs_node_visitor.h"
 #ifdef DDGR_ENABLE_FEATURE_OPINC
@@ -469,7 +470,7 @@ void RSRenderNode::SetParent(WeakPtr parent)
     UpdateSubSurfaceCnt(parent.lock(), parent_.lock());
     parent_ = parent;
     if (isSubSurfaceEnabled_) {
-        AddSubSurfaceNode(shared_from_this(), parent.lock());
+        AddSubSurfaceNode(parent.lock());
     }
 }
 
@@ -480,7 +481,7 @@ void RSRenderNode::ResetParent()
             auto it = std::find_if(parentNode->disappearingChildren_.begin(), parentNode->disappearingChildren_.end(),
                 [childPtr = shared_from_this()](const auto& pair) -> bool { return pair.first == childPtr; });
             if (it == parentNode->disappearingChildren_.end()) {
-                RemoveSubSurfaceNode(shared_from_this(), parentNode);
+                RemoveSubSurfaceNode(parentNode);
             }
         }
         parentNode->hasRemovedChild_ = true;
@@ -492,20 +493,16 @@ void RSRenderNode::ResetParent()
     OnResetParent();
 }
 
-bool RSRenderNode::IsFirstLevelSurfaceNode()
+bool RSRenderNode::IsFirstLevelNode()
 {
-    if (!this->IsInstanceOf<RSSurfaceRenderNode>()) {
-        return false;
-    }
-    auto parentNode = parent_.lock();
-    while (parentNode && !parentNode->IsInstanceOf<RSDisplayRenderNode>()) {
-        auto node = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(parentNode);
-        if (node != nullptr && (node->IsLeashOrMainWindow())) {
-            return false;
-        }
-        parentNode = parentNode->GetParent().lock();
-    }
-    return true;
+    return id_ == firstLevelNodeId_;
+}
+
+bool RSRenderNode::IsSubSurfaceNode()
+{
+    return IsInstanceOf<RSSurfaceRenderNode>() &&
+        (RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(shared_from_this())->IsMainWindowType() ||
+        RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(shared_from_this())->IsLeashWindow());
 }
 
 bool RSRenderNode::SubSurfaceNodeNeedDraw(PartialRenderType opDropType)
@@ -523,26 +520,24 @@ bool RSRenderNode::SubSurfaceNodeNeedDraw(PartialRenderType opDropType)
     return false;
 }
 
-void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
+void RSRenderNode::AddSubSurfaceNode(SharedPtr parent)
 {
-    if (parent->subSurfaceNodes_.find(child->GetId()) != parent->subSurfaceNodes_.end()) {
+    if (parent && parent->subSurfaceNodes_.find(GetId()) != parent->subSurfaceNodes_.end()) {
         return;
     }
     std::vector<WeakPtr> subSurfaceNodes;
-    if (child->IsInstanceOf<RSSurfaceRenderNode>() &&
-        (RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)->IsMainWindowType() ||
-        RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(child)->IsLeashWindow())) {
-        subSurfaceNodes.push_back(child);
+    if (IsSubSurfaceNode()) {
+        subSurfaceNodes.push_back(weak_from_this());
     } else {
-        for (auto &nodes : child->subSurfaceNodes_) {
-            subSurfaceNodes.insert(subSurfaceNodes.end(), nodes.second.begin(), nodes.second.end());
+        for (auto &node : subSurfaceNodes_) {
+            subSurfaceNodes.insert(subSurfaceNodes.end(), node.second.begin(), node.second.end());
         }
     }
     if (subSurfaceNodes.size() == 0) {
         return;
     }
 
-    auto childNode = child;
+    auto childNode = shared_from_this();
     auto parentNode = parent;
     while (parentNode && !parentNode->IsInstanceOf<RSDisplayRenderNode>()) {
         auto id = childNode->GetId();
@@ -558,7 +553,7 @@ void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
                 first.lock()->GetRenderProperties().GetPositionZ() <
                 second.lock()->GetRenderProperties().GetPositionZ();
         });
-        if (parentNode->IsInstanceOf<RSSurfaceRenderNode>()) {
+        if (parentNode->IsSubSurfaceNode()) {
             break;
         }
         childNode = parentNode;
@@ -566,34 +561,38 @@ void RSRenderNode::AddSubSurfaceNode(SharedPtr child, SharedPtr parent)
     }
 }
 
-void RSRenderNode::RemoveSubSurfaceNode(SharedPtr child, SharedPtr parent)
+void RSRenderNode::RemoveSubSurfaceNode(SharedPtr parent)
 {
-    if (parent->subSurfaceNodes_.find(child->GetId()) == parent->subSurfaceNodes_.end()) {
+    if (parent && parent->subSurfaceNodes_.find(GetId()) == parent->subSurfaceNodes_.end()) {
         return;
     }
-    auto subSurfaceNodes = parent->subSurfaceNodes_[child->GetId()];
-    parent->subSurfaceNodes_.erase(child->GetId());
-    auto childNode = parent;
-    auto parentNode = parent->GetParent().lock();
+    auto subSurfaceNodes = parent->subSurfaceNodes_[GetId()];
+    parent->subSurfaceNodes_.erase(GetId());
+    SharedPtr childNode;
+    SharedPtr parentNode = parent;
     while (parentNode && !parentNode->IsInstanceOf<RSDisplayRenderNode>()) {
-        auto id = childNode->GetId();
-        for (auto iter : subSurfaceNodes) {
-            parentNode->subSurfaceNodes_[id].erase(
-                remove_if(parentNode->subSurfaceNodes_[id].begin(), parentNode->subSurfaceNodes_[id].end(),
-                    [iter](WeakPtr it) {
-                        return iter.lock() && it.lock() && iter.lock()->GetId() == it.lock()->GetId();
-                    }),
-                parentNode->subSurfaceNodes_[id].end()
-            );
-        }
-        if (parentNode->subSurfaceNodes_[id].size() == 0) {
-            parentNode->subSurfaceNodes_.erase(id);
-        }
-        if (parentNode->IsInstanceOf<RSSurfaceRenderNode>()) {
+        if (parentNode->IsSubSurfaceNode()) {
             break;
         }
         childNode = parentNode;
         parentNode = parentNode->GetParent().lock();
+        if (!parentNode) {
+            break;
+        }
+        auto id = childNode->GetId();
+        // If sizes are equal means that parentNode having no other subSurface nodes.
+        if (parentNode->subSurfaceNodes_[id].size() == subSurfaceNodes.size()) {
+            parentNode->subSurfaceNodes_.erase(id);
+        }
+        for (auto &node : subSurfaceNodes) {
+            parentNode->subSurfaceNodes_[id].erase(
+                remove_if(parentNode->subSurfaceNodes_[id].begin(), parentNode->subSurfaceNodes_[id].end(),
+                    [node](WeakPtr iter) {
+                        return node.lock() && iter.lock() && node.lock()->GetId() == iter.lock()->GetId();
+                    }),
+                parentNode->subSurfaceNodes_[id].end()
+            );
+        }
     }
 }
 
@@ -1042,6 +1041,14 @@ void RSRenderNode::UpdateDirtyRegion(
         if (properties.pixelStretch_) {
             auto stretchDirtyRect = properties.GetPixelStretchDirtyRect();
             dirtyRect = dirtyRect.JoinRect(stretchDirtyRect);
+        }
+
+        // Add node's foregroundEffect region to dirtyRect
+        auto foregroundFilter = properties.GetForegroundFilter();
+        if (foregroundFilter && foregroundFilter->GetFilterType() == RSFilter::FOREGROUND_EFFECT) {
+            float dirtyExtension =
+                std::static_pointer_cast<RSForegroundEffectFilter>(foregroundFilter)->GetDirtyExtension();
+            dirtyRect = dirtyRect.MakeOutset(Vector4<int>(dirtyExtension));
         }
 
         if (clipRect.has_value()) {

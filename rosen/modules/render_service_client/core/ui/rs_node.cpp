@@ -998,6 +998,13 @@ void RSNode::SetParticleDrawRegion(std::vector<ParticleParams>& particleParams)
     }
 }
 
+// Update Particle Emitter Position and Size
+void RSNode::SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para)
+{
+    SetProperty<RSEmitterUpdaterModifier, RSProperty<std::shared_ptr<EmitterUpdater>>>(
+        RSModifierType::PARTICLE_EMITTER_UPDATER, para);
+}
+
 // foreground
 void RSNode::SetForegroundColor(uint32_t colorValue)
 {
@@ -1169,6 +1176,12 @@ void RSNode::SetOutlineRadius(const Vector4f& radius)
 {
     SetProperty<RSOutlineRadiusModifier, RSAnimatableProperty<Vector4f>>(
         RSModifierType::OUTLINE_RADIUS, radius);
+}
+
+void RSNode::SetForegroundEffectRadius(const float blurRadius)
+{
+    SetProperty<RSForegroundEffectRadiusModifier, RSAnimatableProperty<float>>(
+        RSModifierType::FOREGROUND_EFFECT_RADIUS, blurRadius);
 }
 
 void RSNode::SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter)
@@ -1580,7 +1593,6 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
             return;
         }
         auto deleteType = modifier->GetModifierType();
-        modifiers_.erase(iter);
         bool isExist = false;
         for (auto [id, value] : modifiers_) {
             if (value && value->GetModifierType() == deleteType) {
@@ -1589,6 +1601,7 @@ void RSNode::RemoveModifier(const std::shared_ptr<RSModifier> modifier)
                 break;
             }
         }
+        modifiers_.erase(iter);
         if (isExist) {
             modifiersTypeMap_[(int16_t)deleteType] = nullptr;
         }
@@ -1750,6 +1763,12 @@ void RSNode::SetGrayScale(float grayScale)
 void RSNode::SetLightIntensity(float lightIntensity)
 {
     SetProperty<RSLightIntensityModifier, RSAnimatableProperty<float>>(RSModifierType::LIGHT_INTENSITY, lightIntensity);
+}
+
+void RSNode::SetLightColor(uint32_t lightColorValue)
+{
+    auto lightColor = Color::FromArgbInt(lightColorValue);
+    SetProperty<RSLightColorModifier, RSAnimatableProperty<Color>>(RSModifierType::LIGHT_COLOR, lightColor);
 }
 
 void RSNode::SetLightPosition(float positionX, float positionY, float positionZ)

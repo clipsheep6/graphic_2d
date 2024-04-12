@@ -94,6 +94,8 @@ DECLARE_ANIMATABLE_MODIFIER(BackgroundFilter, std::shared_ptr<RSFilter>, BACKGRO
 
 DECLARE_NOANIMATABLE_MODIFIER(LinearGradientBlurPara, std::shared_ptr<RSLinearGradientBlurPara>, LINEAR_GRADIENT_BLUR_PARA, Foreground)
 
+DECLARE_NOANIMATABLE_MODIFIER(EmitterUpdater, std::shared_ptr<EmitterUpdater>, PARTICLE_EMITTER_UPDATER, Foreground)
+
 DECLARE_NOANIMATABLE_MODIFIER(FrameGravity, Gravity, FRAME_GRAVITY, Appearance)
 
 DECLARE_ANIMATABLE_MODIFIER(ClipRRect, RRect, CLIP_RRECT, Replace, Appearance, MEDIUM)
@@ -178,6 +180,10 @@ DECLARE_ANIMATABLE_MODIFIER(LightPosition, Vector4f, LIGHT_POSITION, Replace, Fo
 
 DECLARE_ANIMATABLE_MODIFIER(LightIntensity, float, LIGHT_INTENSITY, Replace, Foreground, COARSE)
 
+DECLARE_ANIMATABLE_MODIFIER(LightColor, Color, LIGHT_COLOR, Replace, Foreground, COARSE)
+
 DECLARE_ANIMATABLE_MODIFIER(IlluminatedBorderWidth, float, ILLUMINATED_BORDER_WIDTH, Replace, Foreground, COARSE)
 
 DECLARE_NOANIMATABLE_MODIFIER(IlluminatedType, int, ILLUMINATED_TYPE, Foreground)
+
+DECLARE_ANIMATABLE_MODIFIER(ForegroundEffectRadius, float, FOREGROUND_EFFECT_RADIUS, Replace, Foreground, COARSE)

@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_H
-#define GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_H
+#ifndef GRAPHICS_EFFECT_GE_VISUAL_EFFECT_H
+#define GRAPHICS_EFFECT_GE_VISUAL_EFFECT_H
 
 #include <memory>
 
@@ -68,4 +68,4 @@ private:
 }  // namespace Rosen
 }  // namespace OHOS
 
-#endif  // GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_H
+#endif  // GRAPHICS_EFFECT_GE_VISUAL_EFFECT_H

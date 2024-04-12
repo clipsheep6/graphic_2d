@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_IMPL_H
-#define GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_IMPL_H
+#ifndef GRAPHICS_EFFECT_GE_VISUAL_EFFECT_IMPL_H
+#define GRAPHICS_EFFECT_GE_VISUAL_EFFECT_IMPL_H
 
 #include <memory>
 
@@ -32,7 +32,6 @@ class GEVisualEffectImpl {
 public:
     enum class FilterType { NONE, KAWASE_BLUR, GREY, AIBAR, CHAINED_FILTER, MAX };
 
-public:
     GEVisualEffectImpl(const std::string &name);
 
     ~GEVisualEffectImpl();
@@ -76,8 +75,6 @@ public:
     }
 
 private:
-    static std::map<const std::string, std::function<void(GEVisualEffectImpl*)>> g_initialMap;
-
     FilterType filterType_ = GEVisualEffectImpl::FilterType::NONE;
     std::vector<std::shared_ptr<GEVisualEffectImpl>> filterVec_;
 
@@ -90,4 +87,4 @@ private:
 }  // namespace Rosen
 }  // namespace OHOS
 
-#endif  // GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_IMPL_H
+#endif  // GRAPHICS_EFFECT_GE_VISUAL_EFFECT_IMPL_H

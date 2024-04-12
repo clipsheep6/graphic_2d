@@ -57,6 +57,7 @@ add_library(entry SHARED
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
     dm/fill_types_persp.cpp
+    dm/arcofzorro.cpp
     dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
 )
@@ -109,6 +110,7 @@ add_library(myxnode SHARED
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
     dm/fill_types_persp.cpp
+    dm/arcofzorro.cpp
     dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
 )

@@ -35,8 +35,7 @@ public:
     RSObjAbsGeometry();
     ~RSObjAbsGeometry() override;
     void ConcatMatrix(const Drawing::Matrix& matrix);
-    void UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& parent, const std::optional<Drawing::Point>& offset,
-        const std::optional<Drawing::Rect>& clipRect);
+    void UpdateMatrix(const Drawing::Matrix* parentMatrix, const std::optional<Drawing::Point>& offset);
 
     // Using by RenderService
     void UpdateByMatrixFromSelf();
@@ -47,6 +46,7 @@ public:
     }
     RectI MapAbsRectWithMatrix(const RectF& rect, const Drawing::Matrix& matrix) const;
     RectI MapAbsRect(const RectF& rect) const;
+    RectI MapRect(const RectF& rect, const Drawing::Matrix& matrix) const;
 
     // return transform matrix (context + self)
     const Drawing::Matrix& GetMatrix() const;
@@ -57,13 +57,6 @@ public:
 
     void SetContextMatrix(const std::optional<Drawing::Matrix>& matrix);
 
-    void Reset() override
-    {
-        RSObjGeometry::Reset();
-        absMatrix_.reset();
-        contextMatrix_.reset();
-    }
-
 private:
     void UpdateAbsMatrix2D();
     void UpdateAbsMatrix3D();
@@ -73,7 +66,7 @@ private:
 
     RectI absRect_;
     Drawing::Matrix matrix_;
-    std::optional<Drawing::Matrix> absMatrix_;
+    Drawing::Matrix absMatrix_;
     std::optional<Drawing::Matrix> contextMatrix_;
 };
 } // namespace Rosen

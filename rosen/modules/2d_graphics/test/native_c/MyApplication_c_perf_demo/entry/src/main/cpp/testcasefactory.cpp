@@ -160,11 +160,11 @@ namespace {
             {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
-            {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
-            {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
+            {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }}, 
             {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }}, 
             {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
+            {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},  
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

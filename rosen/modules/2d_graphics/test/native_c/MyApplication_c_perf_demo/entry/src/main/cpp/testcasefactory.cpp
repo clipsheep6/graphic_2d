@@ -54,7 +54,7 @@
 #include "dm/path_interior.h"
 #include "dm/strokes.h"
 #include "dm/gradient_dirty_laundry.h"
-
+#include "dm/fill_types_persp.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -161,11 +161,10 @@ namespace {
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
             {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
-            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
-            {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},    
-            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},
-            {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},       
-
+            {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
+            {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},
+            {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }}, 
+            {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

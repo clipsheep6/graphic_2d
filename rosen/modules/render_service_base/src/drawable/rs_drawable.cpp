@@ -118,6 +118,20 @@ static const std::array<RSDrawableSlot, DIRTY_LUT_SIZE> g_propertyToDrawableLut 
     RSDrawableSlot::PARTICLE_EFFECT,               // PARTICLE_EMITTER_UPDATER
     RSDrawableSlot::INVALID,                       // FOREGROUND_EFFECT_RADIUS
     RSDrawableSlot::DYNAMIC_DIM,                   // DYNAMIC_DIM
+    RSDrawableSlot::BACKGROUND_FILTER,             // BACKGROUND_BLUR_RADIUS
+    RSDrawableSlot::BACKGROUND_FILTER,             // BACKGROUND_BLUR_SATURATION
+    RSDrawableSlot::BACKGROUND_FILTER,             // BACKGROUND_BLUR_BRIGHTNESS
+    RSDrawableSlot::BACKGROUND_FILTER,             // BACKGROUND_BLUR_MASK_COLOR
+    RSDrawableSlot::BACKGROUND_FILTER,             // BACKGROUND_BLUR_COLOR_MODE
+    RSDrawableSlot::BACKGROUND_FILTER,             // BACKGROUND_BLUR_RADIUS_X
+    RSDrawableSlot::BACKGROUND_FILTER,             // BACKGROUND_BLUR_RADIUS_Y
+    RSDrawableSlot::FOREGROUND_FILTER,             // FOREGROUND_BLUR_RADIUS
+    RSDrawableSlot::FOREGROUND_FILTER,             // FOREGROUND_BLUR_SATURATION
+    RSDrawableSlot::FOREGROUND_FILTER,             // FOREGROUND_BLUR_BRIGHTNESS
+    RSDrawableSlot::FOREGROUND_FILTER,             // FOREGROUND_BLUR_MASK_COLOR
+    RSDrawableSlot::FOREGROUND_FILTER,             // FOREGROUND_BLUR_COLOR_MODE
+    RSDrawableSlot::FOREGROUND_FILTER,             // FOREGROUND_BLUR_RADIUS_X
+    RSDrawableSlot::FOREGROUND_FILTER,             // FOREGROUND_BLUR_RADIUS_Y
     RSDrawableSlot::INVALID,                       // CUSTOM
     RSDrawableSlot::INVALID,                       // EXTENDED
     RSDrawableSlot::TRANSITION,                    // TRANSITION

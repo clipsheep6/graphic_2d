@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef GRAPHICS_EFFECT_CORE__SHADER_FILTER_H
-#define GRAPHICS_EFFECT_CORE__SHADER_FILTER_H
+#ifndef GRAPHICS_EFFECT_GE_SHADER_FILTER_H
+#define GRAPHICS_EFFECT_GE_SHADER_FILTER_H
 
 #include "draw/canvas.h"
-#include "effect/runtime_shader_builder.h"
+#include "image/image.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -27,6 +27,7 @@ public:
     GEShaderFilter(const GEShaderFilter &) = delete;
     GEShaderFilter operator=(const GEShaderFilter &) = delete;
     virtual ~GEShaderFilter() = default;
+
     virtual std::shared_ptr<Drawing::Image> ProcessImage(Drawing::Canvas &canvas,
         const std::shared_ptr<Drawing::Image> image, const Drawing::Rect &src, const Drawing::Rect &dst)
     {
@@ -44,4 +45,4 @@ protected:
 }  // namespace Rosen
 }  // namespace OHOS
 
-#endif  // GRAPHICS_EFFECT_CORE__SHADER_FILTER_H
+#endif  // GRAPHICS_EFFECT_GE_SHADER_FILTER_H

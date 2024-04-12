@@ -19,13 +19,8 @@ namespace OHOS {
 namespace Rosen {
 namespace Drawing {
 
-std::map<const std::string, std::function<void(GEVisualEffectImpl*)>> GEVisualEffectImpl::g_initialMap = {};
-
 GEVisualEffectImpl::GEVisualEffectImpl(const std::string &name)
 {
-    auto iter = g_initialMap.find(name);
-    if (iter != g_initialMap.end()) {
-    }
     if (name == "KAWASE_BLUR") {
         filterType_ = FilterType::KAWASE_BLUR;
         kawaseParams_ = std::make_shared<GEKawaseBlurShaderFilterParams>();

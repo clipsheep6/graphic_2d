@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "ge_visual_effect_container.h"
 
 #include "ge_log.h"

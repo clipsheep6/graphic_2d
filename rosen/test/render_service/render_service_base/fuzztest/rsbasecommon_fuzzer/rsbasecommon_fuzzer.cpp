@@ -134,7 +134,7 @@ bool RSObjAbsGeometryFuzzTest(const uint8_t* data, size_t size)
     // Test
     RSObjAbsGeometry rsobjabsgeometry;
     rsobjabsgeometry.ConcatMatrix(matrix);
-    rsobjabsgeometry.UpdateMatrix(parent, Drawing::Point(offsetX, offsetY), std::nullopt);
+    rsobjabsgeometry.UpdateMatrix(parent, Drawing::Point(offsetX, offsetY));
     (void)rsobjabsgeometry.MapAbsRect(rect);
 
     return true;

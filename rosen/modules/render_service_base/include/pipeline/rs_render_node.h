@@ -82,10 +82,6 @@ public:
 
     void AddChild(SharedPtr child, int index = -1);
     void SetContainBootAnimation(bool isContainBootAnimation);
-    inline bool GetContainBootAnimation() const
-    {
-        return isContainBootAnimation_;
-    }
 
     virtual void SetBootAnimation(bool isBootAnimation);
     virtual bool GetBootAnimation() const;
@@ -855,6 +851,7 @@ private:
     struct DrawCmdIndex {
         int8_t shadowIndex_           = -1;
         int8_t backgroundFilterIndex_ = -1;
+        int8_t backgroundColorIndex_  = -1;
         int8_t useEffectIndex_        = -1;
         int8_t backgroundEndIndex_    = -1;
         int8_t childrenIndex_         = -1;

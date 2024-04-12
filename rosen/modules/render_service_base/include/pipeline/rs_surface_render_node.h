@@ -21,30 +21,28 @@
 #include <memory>
 #include <tuple>
 
-#include "memory/rs_memory_track.h"
+#include "surface_type.h"
 
 #include "common/rs_macros.h"
 #include "common/rs_occlusion_region.h"
 #include "common/rs_vector4.h"
 #include "ipc_callbacks/buffer_available_callback.h"
 #include "ipc_callbacks/buffer_clear_callback.h"
+#include "memory/rs_memory_track.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"
-#include "platform/common/rs_system_properties.h"
 #include "platform/common/rs_surface_ext.h"
+#include "platform/common/rs_system_properties.h"
 #include "property/rs_properties_painter.h"
 #include "screen_manager/screen_types.h"
+#include "transaction/rs_occlusion_data.h"
 
 #ifndef ROSEN_CROSS_PLATFORM
 #include "surface_buffer.h"
 #include "sync_fence.h"
 #endif
-#include "surface_type.h"
-
-#include "transaction/rs_occlusion_data.h"
-
 
 namespace OHOS {
 namespace Rosen {

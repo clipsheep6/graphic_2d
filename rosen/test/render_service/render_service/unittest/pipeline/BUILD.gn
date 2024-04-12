@@ -577,7 +577,6 @@ ohos_unittest("RSEglImageManagerTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
-
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
     external_deps += [ "sensor:sensor_interface_native" ]
   }
@@ -604,6 +603,9 @@ ohos_unittest("RSRenderTaskTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+  }
   defines = []
   defines += gpu_defines
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
@@ -627,6 +629,9 @@ ohos_unittest("RSSubThreadManagerTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+  }
   defines = []
   defines += gpu_defines
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
@@ -650,6 +655,9 @@ ohos_unittest("RSSubThreadTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+  }
   defines = []
   defines += gpu_defines
   if (defined(use_rosen_drawing) && use_rosen_drawing) {
@@ -673,6 +681,9 @@ ohos_unittest("RSFilterSubThreadTest") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+  }
   defines = []
   defines += gpu_defines
   if (defined(use_rosen_drawing) && use_rosen_drawing) {

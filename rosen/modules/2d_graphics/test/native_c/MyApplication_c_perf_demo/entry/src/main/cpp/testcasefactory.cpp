@@ -60,7 +60,7 @@
 #include "dm/arcofzorro.h"
 #include "dm/stroke_rect_shader.h"
 #include "dm/luma_filter.h"
-
+#include "dm/points.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -178,7 +178,7 @@ namespace {
             {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
             {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
-
+            {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

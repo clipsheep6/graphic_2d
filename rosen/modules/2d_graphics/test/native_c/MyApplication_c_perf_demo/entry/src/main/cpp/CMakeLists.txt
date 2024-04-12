@@ -56,6 +56,7 @@ add_library(entry SHARED
     dm/alpha_gradients.cpp
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
+    dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
 )
 
@@ -106,6 +107,7 @@ add_library(myxnode SHARED
     dm/alpha_gradients.cpp
     dm/convex_paths.cpp
     dm/gradient_dirty_laundry.cpp
+    dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
 )
 

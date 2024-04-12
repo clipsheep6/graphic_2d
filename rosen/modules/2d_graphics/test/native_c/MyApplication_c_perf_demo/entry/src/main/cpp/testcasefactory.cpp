@@ -56,6 +56,7 @@
 #include "dm/alpha_gradients.h"
 #include "dm/convex_paths.h"
 #include "dm/gradient_dirty_laundry.h"
+#include "dm/stroke_rect_shader.h"
 #include "dm/luma_filter.h"
 
 
@@ -170,6 +171,8 @@ namespace {
             {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},    
             {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},
             {"convex_paths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},
+            {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},       
+            {"stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},  
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
 

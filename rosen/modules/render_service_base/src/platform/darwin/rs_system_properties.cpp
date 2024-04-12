@@ -207,11 +207,6 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
     return 0;
 }
 
-bool RSSystemProperties::GetFilterPartialRenderEnabled()
-{
-    return false;
-}
-
 bool RSSystemProperties::GetColorPickerPartialEnabled()
 {
     return false;
@@ -363,7 +358,16 @@ bool RSSystemProperties::GetHwcRegionDfxEnabled()
     return false;
 }
 
+<<<<<<< HEAD
 bool RSSystemProperties::GetUIFirstForceEnabled()
+=======
+SubTreePrepareCheckType RSSystemProperties::GetSubTreePrepareCheckType()
+{
+    return SubTreePrepareCheckType::ENABLED;
+}
+
+bool RSSystemProperties::GetRenderParallelEnabled()
+>>>>>>> zhangpeng/master
 {
     return false;
 }

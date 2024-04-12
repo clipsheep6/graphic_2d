@@ -34,7 +34,13 @@
 #include <platform/common/rs_log.h>
 #include <system_ability_definition.h>
 #include "parameter.h"
+<<<<<<< HEAD
 #include "rs_profiler.h"
+=======
+#include "common/rs_singleton.h"
+#include "pipeline/parallel_render/rs_sub_thread_manager.h"
+#include "pipeline/round_corner_display/rs_round_corner_display.h"
+>>>>>>> zhangpeng/master
 
 namespace OHOS {
 namespace Rosen {
@@ -66,7 +72,9 @@ bool RSRenderService::Init()
             return false;
         }
     } else {
+        RSUniRenderThread::Instance().Start();
         RSHardwareThread::Instance().Start();
+        StartRCDUpdateThread(RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext().get());
     }
 
     auto generator = CreateVSyncGenerator();
@@ -121,6 +129,14 @@ void RSRenderService::Run()
 {
     RS_LOGE("RSRenderService::Run");
     mainThread_->Start();
+}
+
+void RSRenderService::StartRCDUpdateThread(RenderContext* context) const
+{
+    auto subThreadManager = RSSubThreadManager::Instance();
+    if (RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable()) {
+        subThreadManager->StartRCDThread(context);
+    }
 }
 
 sptr<RSIRenderServiceConnection> RSRenderService::CreateConnection(const sptr<RSIConnectionToken>& token)

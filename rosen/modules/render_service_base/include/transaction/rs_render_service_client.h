@@ -301,6 +301,10 @@ public:
     void SetTpFeatureConfig(int32_t feature, const char* config);
 #endif
     void SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus);
+<<<<<<< HEAD
+=======
+
+>>>>>>> zhangpeng/master
     void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
 private:
     void TriggerSurfaceCaptureCallback(NodeId id, Media::PixelMap* pixelmap);

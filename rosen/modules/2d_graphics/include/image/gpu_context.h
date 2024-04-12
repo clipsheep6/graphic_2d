@@ -15,11 +15,21 @@
 
 #ifndef GPU_CONTEXT_H
 #define GPU_CONTEXT_H
+<<<<<<< HEAD
 #include <set>
 #include "impl_interface/gpu_context_impl.h"
 #include "utils/drawing_macros.h"
 #include "utils/data.h"
+=======
+
+#include <functional>
+
+>>>>>>> zhangpeng/master
 #include "trace_memory_dump.h"
+
+#include "impl_interface/gpu_context_impl.h"
+#include "utils/data.h"
+#include "utils/drawing_macros.h"
 
 typedef void* EGLContext;
 namespace OHOS {
@@ -201,7 +211,11 @@ public:
      */
     void PurgeUnlockedResourcesByPid(bool scratchResourcesOnly, const std::set<pid_t>& exitedPidSet);
 
+<<<<<<< HEAD
     /**
+=======
+    /*
+>>>>>>> zhangpeng/master
      * @brief                   Purge unlocked resources from the safe cache until
      *                          the provided byte count has been reached or we have purged all unlocked resources.
      */
@@ -249,6 +263,8 @@ public:
     {
         return impl_->DowncastingTo<T>();
     }
+
+    void RegisterPostFunc(const std::function<void(const std::function<void()>& task)>& func);
 private:
     std::shared_ptr<GPUContextImpl> impl_;
 };

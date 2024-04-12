@@ -59,13 +59,6 @@ group("unittest") {
       ":RSSubThreadTest",
     ]
   }
-  if (rs_enable_driven_render) {
-    deps += [
-      ":RSDrivenRenderExtTest",
-      ":RSDrivenRenderManagerTest",
-      ":RSDrivenRenderVisitorTest",
-    ]
-  }
 }
 
 ###############################################################################
@@ -835,6 +828,7 @@ ohos_unittest("RSRenderEngineTest") {
   }
 }
 
+<<<<<<< HEAD
 ## Build RSDrivenRenderManagerTest
 ohos_unittest("RSDrivenRenderManagerTest") {
   module_out_path = module_output_path
@@ -924,6 +918,8 @@ ohos_unittest("RSDrivenRenderExtTest") {
   }
 }
 
+=======
+>>>>>>> zhangpeng/master
 ## Build RSDividedRenderUtilTest
 ohos_unittest("RSDividedRenderUtilTest") {
   module_out_path = module_output_path

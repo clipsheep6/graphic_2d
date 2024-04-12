@@ -26,6 +26,7 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_uni_render_engine.h"
+#include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "hgm_frame_rate_manager.h"
 #include "platform/common/rs_log.h"
@@ -169,10 +170,12 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGE("RSHardwareThread::CommitAndReleaseLayers handler is nullptr");
         return;
     }
+    // need to sync the hgm data from main thread.
+    // Temporary sync the timestamp to fix the duplicate time stamp issue.
     auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
-    uint32_t rate = hgmCore.GetPendingScreenRefreshRate();
+    uint32_t rate = RSUniRenderThread::Instance().GetPendingScreenRefreshRate();
     uint32_t currentRate = hgmCore.GetScreenCurrentRefreshRate(hgmCore.GetActiveScreenId());
-    uint64_t currTimestamp = hgmCore.GetCurrentTimestamp();
+    uint64_t currTimestamp = RSUniRenderThread::Instance().GetCurrentTimestamp();
     RSTaskMessage::RSTask task = [this, output = output, layers = layers, rate = rate,
         currentRate = currentRate, timestamp = currTimestamp]() {
         int64_t startTimeNs = 0;
@@ -191,9 +194,10 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         if (output->IsDeviceValid()) {
             hdiBackend_->Repaint(output);
         }
-        output->ReleaseLayers();
+        output->ReleaseLayers(releaseFence_);
         RSMainThread::Instance()->NotifyDisplayNodeBufferReleased();
-
+        // TO-DO
+        RSUniRenderThread::Instance().NotifyDisplayNodeBufferReleased();
         if (hasGameScene) {
             endTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();

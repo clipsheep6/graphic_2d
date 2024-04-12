@@ -91,6 +91,12 @@ enum class HgmRefreshRateModes {
     SET_RATE_MODE_HIGH = 3
 };
 
+enum class SubTreePrepareCheckType {
+    DISABLED = 0,                       // 0, Disable the IsSubTreeNeedPrepare check, prepare the whole subtree
+    DISABLE_SUBTREE_DIRTY_CHECK = 1,    // 1, Disable the IsSubTreeDirty check
+    ENABLED = 2,                        // 2, Enable the IsSubTreeNeedPrepare check
+};
+
 #ifdef DDGR_ENABLE_FEATURE_OPINC
 enum class DdgrOpincType {
     DDGR_OPINC_NONE = 0,
@@ -165,7 +171,6 @@ public:
     static bool GetFilterCacheEnabled();
     static int GetFilterCacheUpdateInterval();
     static int GetFilterCacheSizeThreshold();
-    static bool GetFilterPartialRenderEnabled();
     static bool GetColorPickerPartialEnabled();
     static bool GetMaskLinearBlurEnabled();
     static bool GetKawaseEnabled();
@@ -176,13 +181,20 @@ public:
     static const std::vector<float>& GetAiInvertCoef();
     static bool GetSkipForAlphaZeroEnabled();
     static bool GetSkipGeometryNotChangeEnabled();
+    static bool GetQuickPrepareEnabled();
+    static bool GetRenderParallelEnabled();
+    static bool GetPropertyDrawableEnable();
 
     static bool GetAnimationCacheEnabled();
 
     static bool GetBoolSystemProperty(const char* name, bool defaultValue);
     static int WatchSystemProperty(const char* name, OnSystemPropertyChanged func, void* context);
     static bool GetUIFirstEnabled();
+<<<<<<< HEAD
     static bool GetUIFirstForceEnabled();
+=======
+    static bool GetUIFirstDebugEnabled();
+>>>>>>> zhangpeng/master
     static bool GetDebugTraceEnabled();
     static int GetDebugTraceLevel();
     static bool FindNodeInTargetList(std::string node);
@@ -202,6 +214,7 @@ public:
     static bool GetSecurityPermissionCheckEnabled();
     static bool GetParallelUploadTexture();
     static bool GetEffectMergeEnabled();
+    static SubTreePrepareCheckType GetSubTreePrepareCheckType();
 
 #ifdef DDGR_ENABLE_FEATURE_OPINC
     static DdgrOpincType GetDdgrOpincType();
@@ -217,8 +230,12 @@ public:
 
     static bool GetDumpUICaptureEnabled();
     static bool GetDumpUIPixelmapEnabled();
+<<<<<<< HEAD
     static uint32_t GetVirtualScreenScaleModeDFX();
 
+=======
+    static bool GetDumpImgEnabled();
+>>>>>>> zhangpeng/master
     static inline GpuApiType GetGpuApiType()
     {
         return RSSystemProperties::systemGpuApiType_;

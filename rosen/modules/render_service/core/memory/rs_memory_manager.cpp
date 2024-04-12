@@ -52,7 +52,7 @@ constexpr const char* MEM_GPU_TYPE = "gpu";
 constexpr const char* MEM_JEMALLOC_TYPE = "jemalloc";
 }
 
-void MemoryManager::DumpMemoryUsage(DfxString& log, const Drawing::GPUContext* gpuContext, std::string& type)
+void MemoryManager::DumpMemoryUsage(DfxString& log, std::string& type)
 {
     if (type.empty() || type == MEM_RS_TYPE) {
         DumpRenderServiceMemory(log);
@@ -61,7 +61,7 @@ void MemoryManager::DumpMemoryUsage(DfxString& log, const Drawing::GPUContext* g
         DumpDrawingCpuMemory(log);
     }
     if (type.empty() || type == MEM_GPU_TYPE) {
-        DumpDrawingGpuMemory(log, gpuContext);
+        RSUniRenderThread::Instance().DumpMem(log);
     }
     if (type.empty() || type == MEM_JEMALLOC_TYPE) {
         std::string out;
@@ -80,6 +80,18 @@ void MemoryManager::ReleaseAllGpuResource(Drawing::GPUContext* gpuContext, Drawi
     RS_TRACE_NAME_FMT("ReleaseAllGpuResource [Pid:%d Tid:%d Nid:%d Funcid:%d]",
         tag.fPid, tag.fTid, tag.fWid, tag.fFid);
     gpuContext->ReleaseByTag(tag);
+#endif
+}
+
+void MemoryManager::ReleaseUnlockGpuResource(Drawing::GPUContext* gpuContext, std::set<pid_t> exitedPidSet)
+{
+#if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+    if (!gpuContext) {
+        RS_LOGE("ReleaseGpuResByPid fail, gpuContext is nullptr");
+        return;
+    }
+    RS_TRACE_NAME_FMT("ReleaseUnlockGpuResource exitedPidSet size: %d", exitedPidSet.size());
+    gpuContext->PurgeUnlockedResourcesByPid(false, exitedPidSet);
 #endif
 }
 

@@ -17,9 +17,11 @@
 #define GPU_CONTEXT_IMPL_H
 
 #include <chrono>
-#include <set>
 #include <functional>
+#include <set>
+
 #include "base_impl.h"
+
 #include "image/trace_memory_dump.h"
 #ifdef RS_ENABLE_VK
 #include "include/gpu/vk/GrVkBackendContext.h"

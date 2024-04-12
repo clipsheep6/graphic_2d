@@ -1,5 +1,7 @@
 #include "test_common.h"
 #include "common/log_common.h"
+#include <native_drawing/drawing_rect.h>
+#include <native_drawing/drawing_path.h>
 
 #define intToFloat(x) ((x) * 1.52587890625e-5f)
 
@@ -99,4 +101,17 @@ uint32_t color_to_565(uint32_t color) {
     
     uint32_t argb = 0xFF000000 | r2<<16 | g2<<8 | b2;
     return  argb;
+}
+
+OH_Drawing_Rect* DrawCreateRect(DrawRect r)
+{
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);
+    return rect;
+}
+
+void DrawPathAddCircle(OH_Drawing_Path* path, float centerX, float centerY, float radius)
+{
+    OH_Drawing_Rect *rc = DrawCreateRect({centerX - radius, centerY - radius, centerX + radius, centerY + radius});
+    OH_Drawing_PathAddArc(path, rc, 0, 360);    
+    OH_Drawing_RectDestroy(rc);
 }

@@ -56,6 +56,7 @@
 #include "dm/alpha_gradients.h"
 #include "dm/convex_paths.h"
 #include "dm/gradient_dirty_laundry.h"
+#include "dm/fill_types_persp.h"
 #include "dm/arcofzorro.h"
 #include "dm/stroke_rect_shader.h"
 #include "dm/luma_filter.h"
@@ -166,15 +167,16 @@ namespace {
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
             {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
             {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
-            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},    
-            {"alphagradients", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaGradients>(); }},           
-            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},            
+            {"alphagradients", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaGradients>(); }},                    
             {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},    
-            {"strokes", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},
             {"convex_paths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},       
             {"arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorroGM>(); }},
             {"stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); }},
+            {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},  
+            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},    
+            {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
+            {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
 
     };

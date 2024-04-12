@@ -2,11 +2,23 @@
 #define TEST_COMMON_H
 
 #include "napi/native_api.h"
+#include <native_drawing/drawing_types.h>
 #include <string>
 #include <bits/alltypes.h>
 
 #define TMUL  1664525
 #define TADD 1013904223
+
+#define DRAW_ColorWHITE 0xFFFFFFFF
+#define DRAW_ColorBLACK 0xFF000000
+#define DRAW_ColorRED 0xFFFF0000
+#define DRAW_ColorGREEN 0xFF00FF00
+#define DRAW_ColorBLUE 0xFF0000FF
+#define DRAW_ColorYELLOW 0xFFFFFF00
+#define DRAW_ColorCYAN 0xFF00FFFF
+#define DRAW_ColorMAGENTA 0xFFFF00FF
+#define DRAW_ColorGRAY 0xFF808080
+#define DRAW_ColorTRANSPARENT 0x00000000
 
 class TestRend {
 public:
@@ -68,4 +80,7 @@ struct DrawRect{
         fBottom = y + height;
     }
 };
+
+OH_Drawing_Rect* DrawCreateRect(DrawRect r);
+void DrawPathAddCircle(OH_Drawing_Path* path, float centerX, float centerY, float radius);
 #endif // TEST_COMMON_H

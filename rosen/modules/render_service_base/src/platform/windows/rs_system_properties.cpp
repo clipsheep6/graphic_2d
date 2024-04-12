@@ -367,5 +367,10 @@ bool RSSystemProperties::GetRenderParallelEnabled()
 {
     return false;
 }
+
+bool RSSystemProperties::GetUIFirstForceEnabled()
+{
+    return false;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -60,6 +60,7 @@
 #include "dm/arcofzorro.h"
 #include "dm/stroke_rect_shader.h"
 #include "dm/luma_filter.h"
+#include "dm/bugfix7792.h"
 
 
 namespace {
@@ -178,6 +179,7 @@ namespace {
             {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
             {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
+            {"bug7792", []() -> std::shared_ptr<TestBase> { return std::make_shared<BugFix7792>(); }},
 
     };
 

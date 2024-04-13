@@ -62,6 +62,7 @@ add_library(entry SHARED
     dm/luma_filter.cpp
     dm/bugfix7792.cpp
     dm/points_mask_filter.cpp
+    dm/clip_cubic_gm.cpp
     dm/points.cpp
 )
 
@@ -118,6 +119,7 @@ add_library(myxnode SHARED
     dm/luma_filter.cpp
     dm/bugfix7792.cpp
     dm/points_mask_filter.cpp
+    dm/clip_cubic_gm.cpp
     dm/points.cpp
 )
 

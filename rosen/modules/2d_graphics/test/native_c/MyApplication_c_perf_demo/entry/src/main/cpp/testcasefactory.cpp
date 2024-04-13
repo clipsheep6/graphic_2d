@@ -63,6 +63,7 @@
 #include "dm/bugfix7792.h"
 
 #include "dm/points_mask_filter.h"
+#include "dm/clip_cubic_gm.h"
 #include "dm/points.h"
 
 namespace {
@@ -179,6 +180,7 @@ namespace {
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},  
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},  
             {"pointsmaskfilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<PointsMaskFilter>(); }}, // drawpoints argb参数存在部分偏差
+            {"clipcubicgm", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipCubicGm>(); }},
             {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
             {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     

@@ -60,6 +60,7 @@
 #include "dm/arcofzorro.h"
 #include "dm/stroke_rect_shader.h"
 #include "dm/luma_filter.h"
+#include "dm/points_mask_filter.h"
 #include "dm/points.h"
 
 namespace {
@@ -174,7 +175,8 @@ namespace {
             {"arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorroGM>(); }},
             {"stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},  
-            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},    
+            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},  
+            {"pointsmaskfilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<PointsMaskFilter>(); }}, // drawpoints argb参数存在部分偏差
             {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
             {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     

@@ -60,6 +60,7 @@ add_library(entry SHARED
     dm/arcofzorro.cpp
     dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
+    dm/points_mask_filter.cpp
     dm/points.cpp
 )
 
@@ -114,6 +115,7 @@ add_library(myxnode SHARED
     dm/arcofzorro.cpp
     dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
+    dm/points_mask_filter.cpp
     dm/points.cpp
 )
 

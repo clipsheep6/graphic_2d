@@ -179,6 +179,7 @@ namespace {
             {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
             {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
+            {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

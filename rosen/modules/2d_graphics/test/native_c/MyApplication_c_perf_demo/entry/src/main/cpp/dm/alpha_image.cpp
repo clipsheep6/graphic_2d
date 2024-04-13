@@ -3,7 +3,9 @@
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_color_filter.h>
+#include <native_drawing/drawing_filter.h>
 #include <native_drawing/drawing_image.h>
+#include <native_drawing/drawing_mask_filter.h>
 #include <native_drawing/drawing_matrix.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
@@ -29,14 +31,95 @@ OH_Drawing_ColorFilter* make_color_filter() {
     return OH_Drawing_ColorFilterCreateMatrix(colorMatrix);
 }
 
+
+OH_Drawing_Image* make_alpha_image(int w, int h) {
+    OH_Drawing_Bitmap* bm= OH_Drawing_BitmapCreate();
+    OH_Drawing_BitmapFormat format = {OH_Drawing_ColorFormat::COLOR_FORMAT_ALPHA_8,OH_Drawing_AlphaFormat::ALPHA_FORMAT_OPAQUE};
+    OH_Drawing_BitmapBuild(bm, w, h, &format);
+    OH_Drawing_Canvas* bmpCanvas = OH_Drawing_CanvasCreate();
+    OH_Drawing_CanvasBind(bmpCanvas, bm);
+    OH_Drawing_CanvasClear(bmpCanvas, OH_Drawing_ColorSetArgb(10, 0, 0, 0));    
+
+    for (int y = 0; y < h; ++y) {
+        for (int x = y; x < w; ++x) {
+            *DrawBitmapGetAddr8(bm,x,y) = 0xFF;
+        }
+    }
+    OH_Drawing_Image* image = OH_Drawing_ImageCreate();
+    OH_Drawing_ImageBuildFromBitmap(image, bm);
+    return image;
+}
+
 AlphaImage::AlphaImage() {
+    //skia dm file gm/fontregen.cpp
+    bitmapWidth_ = 256;
+    bitmapHeight_ = 256;
+    fileName_ = "alpha_image";
+}
+
+void AlphaImage::OnTestFunction(OH_Drawing_Canvas* canvas)
+{
+    float kSize = 96;
+    auto image =  make_alpha_image(kSize,kSize);
+    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
+    OH_Drawing_Filter* filter = OH_Drawing_FilterCreate();
+    
+    OH_Drawing_MaskFilter* maskFilter = OH_Drawing_MaskFilterCreateBlur(OH_Drawing_BlurType::NORMAL, 10.f, true);
+    OH_Drawing_SamplingOptions* option = OH_Drawing_SamplingOptionsCreate(OH_Drawing_FilterMode::FILTER_MODE_NEAREST,OH_Drawing_MipmapMode::MIPMAP_MODE_NONE);
+
+    OH_Drawing_FilterSetColorFilter(filter, make_color_filter());
+    OH_Drawing_BrushSetFilter(brush, filter);    
+    OH_Drawing_FilterSetMaskFilter(filter, maskFilter);
+    OH_Drawing_BrushSetFilter(brush, filter);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    OH_Drawing_Rect* dst = DrawCreateRect({16,16,16+kSize,16+kSize});
+    OH_Drawing_CanvasDrawImageRect(canvas,image, dst, option);
+    
+    OH_Drawing_FilterSetColorFilter(filter, nullptr);
+    OH_Drawing_BrushSetFilter(brush, filter);    
+    OH_Drawing_Point *startPt = OH_Drawing_PointCreate(144, 16);
+    OH_Drawing_Point *endPt = OH_Drawing_PointCreate(144+kSize, 16+kSize);
+    uint32_t colors[] = {DRAW_ColorCYAN,DRAW_ColorCYAN};
+    float pos[] = {0.f,1.f};
+    OH_Drawing_ShaderEffect* effect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, colors, pos, 2, OH_Drawing_TileMode::CLAMP);
+    OH_Drawing_BrushSetShaderEffect(brush, effect);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    dst = DrawCreateRect({144,16,144+kSize,16+kSize});
+    OH_Drawing_CanvasDrawImageRect(canvas,image, dst, option);
+    OH_Drawing_PointDestroy(startPt);
+    OH_Drawing_PointDestroy(endPt);
+    OH_Drawing_RectDestroy(dst);
+
+    OH_Drawing_FilterSetColorFilter(filter, make_color_filter());
+    OH_Drawing_BrushSetFilter(brush, filter);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    dst = DrawCreateRect({16,144,16+kSize,144+kSize});
+    OH_Drawing_CanvasDrawImageRect(canvas,image, dst, option);    
+    OH_Drawing_RectDestroy(dst);
+    
+    OH_Drawing_FilterSetMaskFilter(filter, nullptr);
+    OH_Drawing_BrushSetFilter(brush, filter);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    dst = DrawCreateRect({144,144,144+kSize,144+kSize});
+    OH_Drawing_CanvasDrawImageRect(canvas,image, dst, option);
+    OH_Drawing_RectDestroy(dst);
+
+    OH_Drawing_FilterDestroy(filter);
+    OH_Drawing_ImageDestroy(image);
+    OH_Drawing_SamplingOptionsDestroy(option);
+    OH_Drawing_MaskFilterDestroy(maskFilter);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_BrushDestroy(brush);
+}
+
+AlphaImageAlphaTint::AlphaImageAlphaTint() {
     //skia dm file gm/fontregen.cpp
     bitmapWidth_ = kW;
     bitmapHeight_ = kH;
     fileName_ = "alpha_image_alpha_tint";
 }
 
-void AlphaImage::OnTestFunction(OH_Drawing_Canvas* canvas)
+void AlphaImageAlphaTint::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
 //    DRAWING_LOGI("OnTestFunction path = %{public}s",__FILE_NAME__);
     uint32_t w = 64;

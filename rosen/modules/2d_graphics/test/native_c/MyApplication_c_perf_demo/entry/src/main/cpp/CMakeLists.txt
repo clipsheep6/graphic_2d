@@ -61,6 +61,8 @@ add_library(entry SHARED
     dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
     dm/bugfix7792.cpp
+    dm/points_mask_filter.cpp
+    dm/points.cpp
 )
 
 add_library(myxnode SHARED
@@ -115,6 +117,8 @@ add_library(myxnode SHARED
     dm/stroke_rect_shader.cpp
     dm/luma_filter.cpp
     dm/bugfix7792.cpp
+    dm/points_mask_filter.cpp
+    dm/points.cpp
 )
 
 find_library(

@@ -62,6 +62,8 @@
 #include "dm/luma_filter.h"
 #include "dm/bugfix7792.h"
 
+#include "dm/points_mask_filter.h"
+#include "dm/points.h"
 
 namespace {
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -175,12 +177,15 @@ namespace {
             {"arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorroGM>(); }},
             {"stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); }},
             {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},  
-            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},    
+            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},  
+            {"pointsmaskfilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<PointsMaskFilter>(); }}, // drawpoints argb参数存在部分偏差
             {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
             {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
             {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
             {"bug7792", []() -> std::shared_ptr<TestBase> { return std::make_shared<BugFix7792>(); }},
 
+            {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
+            {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

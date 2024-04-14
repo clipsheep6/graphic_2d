@@ -19,6 +19,7 @@
 #include "paragraph_builder_napi/js_paragraph_builder.h"
 #include "paragraph_style_napi/js_paragraphstyle.h"
 #include "paragraph_napi/js_paragraph.h"
+#include "text_line_napi/js_text_line.h"
 #include "utils/log.h"
 
 namespace OHOS::Rosen {
@@ -28,6 +29,7 @@ napi_value TextInit(napi_env env, napi_value exportObj)
     JsEnum::Init(env, exportObj);
     JsParagraphBuilder::Init(env, exportObj);
     JsParagraph::Init(env, exportObj);
+    JsTextLine::Init(env, exportObj);
     return exportObj;
 }
 } // namespace OHOS::Rosen

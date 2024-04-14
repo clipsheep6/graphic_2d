@@ -441,7 +441,9 @@ void RSUniRenderUtil::ReleaseColorPickerResource(std::shared_ptr<RSRenderNode>& 
     // Recursive to release color picker resource
     for (auto& child : *node->GetChildren()) {
         if (auto canvasChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
-            ReleaseColorPickerResource(canvasChild);
+            if (RSSystemParameters::GetColorPickerPartialEnabled()) {
+                ReleaseColorPickerResource(canvasChild);
+            }
         }
     }
 }
@@ -506,7 +508,9 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         bool isNodeAssignSubThread = IsNodeAssignSubThread(node, isRotation);
         if (isNodeAssignSubThread != lastIsNeedAssignToSubThread) {
             auto renderNode = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node);
-            ReleaseColorPickerResource(renderNode);
+            if (RSSystemParameters::GetColorPickerPartialEnabled()) {
+                ReleaseColorPickerResource(renderNode);
+            }
             node->SetLastIsNeedAssignToSubThread(isNodeAssignSubThread);
         }
         if (isNodeAssignSubThread) {

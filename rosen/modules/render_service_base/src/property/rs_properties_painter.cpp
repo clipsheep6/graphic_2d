@@ -702,7 +702,6 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
 #endif
 
     if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
-        if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
         for (const auto& item : filter->GetShaderFilters()) {
             if (item->GetShaderFilterType() == RSShaderFilter::LINEAR_GRADIENT_BLUR) {
                 auto tmpFilter = std::static_pointer_cast<RSLinearGradientBlurShaderFilter>(item);

@@ -2076,7 +2076,8 @@ void RSProperties::GenerateBackgroundBlurFilter()
         backgroundBlurRadiusX_, backgroundBlurRadiusY_, Drawing::TileMode::CLAMP, nullptr);
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
     if (greyCoef_.has_value()) {
-        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter = std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
+        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
+            std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
         originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
  
@@ -2104,13 +2105,15 @@ void RSProperties::GenerateBackgroundMaterialBlurFilter()
     if (backgroundColorMode_ == BLUR_COLOR_MODE::AVERAGE) {
         backgroundColorMode_ = BLUR_COLOR_MODE::FASTAVERAGE;
     }
-    std::shared_ptr<Drawing::ColorFilter> colorFilter = GetMaterialColorFilter(backgroundBlurSaturation_, backgroundBlurBrightness_);
+    std::shared_ptr<Drawing::ColorFilter> colorFilter = GetMaterialColorFilter(
+        backgroundBlurSaturation_, backgroundBlurBrightness_);
     std::shared_ptr<Drawing::ImageFilter> blurColorFilter =
         Drawing::ImageFilter::CreateColorBlurImageFilter(*colorFilter, backgroundBlurRadius_, backgroundBlurRadius_);
  
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
     if (greyCoef_.has_value()) {
-        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter = std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
+        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
+            std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
         originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
  
@@ -2118,10 +2121,12 @@ void RSProperties::GenerateBackgroundMaterialBlurFilter()
         std::shared_ptr<RSKawaseBlurShaderFilter> kawaseBlurFilter =
             std::make_shared<RSKawaseBlurShaderFilter>(backgroundBlurRadius_);
         auto colorImageFilter = Drawing::ImageFilter::CreateColorFilterImageFilter(*colorFilter, nullptr);
-        originalFilter = originalFilter? originalFilter->Compose(colorImageFilter) : std::make_shared<RSDrawingFilter>(colorImageFilter);
+        originalFilter = originalFilter?
+            originalFilter->Compose(colorImageFilter) : std::make_shared<RSDrawingFilter>(colorImageFilter);
         originalFilter = originalFilter->Compose(std::static_pointer_cast<RSShaderFilter>(kawaseBlurFilter));
     } else {
-        originalFilter = originalFilter? originalFilter->Compose(blurColorFilter) : std::make_shared<RSDrawingFilter>(blurColorFilter);
+        originalFilter = originalFilter?
+            originalFilter->Compose(blurColorFilter) : std::make_shared<RSDrawingFilter>(blurColorFilter);
     }
     originalFilter->SetColorMode(backgroundColorMode_);
     originalFilter->SetMaskCOlor(backgroundMaskColor_);
@@ -2136,7 +2141,8 @@ void RSProperties::GenerateForegroundBlurFilter()
         foregroundBlurRadiusX_, foregroundBlurRadiusY_, Drawing::TileMode::CLAMP, nullptr);
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
     if (greyCoef_.has_value()) {
-        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter = std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
+        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
+            std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
         std::shared_ptr<RSDrawingFilter> originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
     if (RSSystemProperties::GetKawaseEnabled()) {
@@ -2163,14 +2169,16 @@ void RSProperties::GenerateForegroundMaterialBlurFilter()
     if (backgroundColorMode_ == BLUR_COLOR_MODE::AVERAGE) {
         backgroundColorMode_ = BLUR_COLOR_MODE::FASTAVERAGE;
     }
-    std::shared_ptr<Drawing::ColorFilter> colorFilter = GetMaterialColorFilter(foregroundBlurSaturation_, foregroundBlurBrightness_);
+    std::shared_ptr<Drawing::ColorFilter> colorFilter = GetMaterialColorFilter(
+        foregroundBlurSaturation_, foregroundBlurBrightness_);
     std::shared_ptr<Drawing::ImageFilter> blurColorFilter =
         Drawing::ImageFilter::CreateColorBlurImageFilter(*colorFilter, foregroundBlurRadius_, foregroundBlurRadius_);
  
     std::shared_ptr<RSDrawingFilter> originalFilter = nullptr;
  
     if (greyCoef_.has_value()) {
-        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter = std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
+        std::shared_ptr<RSGreyShaderFilter> greyShaderFilter =
+            std::make_shared<RSGreyShaderFilter>(greyCoef_->x_, greyCoef_->y_);
         originalFilter = std::make_shared<RSDrawingFilter>(greyShaderFilter);
     }
  
@@ -2178,17 +2186,18 @@ void RSProperties::GenerateForegroundMaterialBlurFilter()
         std::shared_ptr<RSKawaseBlurShaderFilter> kawaseBlurFilter =
             std::make_shared<RSKawaseBlurShaderFilter>(foregroundBlurRadius_);
         auto colorImageFilter = Drawing::ImageFilter::CreateColorFilterImageFilter(*colorFilter, nullptr);
-        originalFilter = originalFilter? originalFilter->Compose(colorImageFilter) : std::make_shared<RSDrawingFilter>(colorImageFilter);
+        originalFilter = originalFilter?
+            originalFilter->Compose(colorImageFilter) : std::make_shared<RSDrawingFilter>(colorImageFilter);
         originalFilter = originalFilter->Compose(std::static_pointer_cast<RSShaderFilter>(kawaseBlurFilter));
     } else {
-        originalFilter = originalFilter? originalFilter->Compose(blurColorFilter) : std::make_shared<RSDrawingFilter>(blurColorFilter);
+        originalFilter = originalFilter?
+            originalFilter->Compose(blurColorFilter) : std::make_shared<RSDrawingFilter>(blurColorFilter);
     }
     originalFilter->SetColorMode(foregroundColorMode_);
     originalFilter->SetMaskCOlor(foregroundMaskColor_);
     originalFilter->SetNeedMaskCOlor(true);
     filter_ = originalFilter;
     filter_->SetFilterType(RSFilter::MATERIAL);
- 
 }
  
 void RSProperties::GenerateAIBarFilter()
@@ -2225,14 +2234,14 @@ void RSProperties::GenerateBackgroundFilter()
 {
     if (aiInvert_.has_value() || systemBarEffect_) {
         GenerateAIBarFilter();
-    } else if (IsBackgroundMaterialFilterValid()){
+    } else if (IsBackgroundMaterialFilterValid()) {
         GenerateBackgroundMaterialBlurFilter();
-    } else if (IsBackgroundBlurRadiusXValid() && IsBackgroundBlurRadiusYValid()){
+    } else if (IsBackgroundBlurRadiusXValid() && IsBackgroundBlurRadiusYValid()) {
         GenerateBackgroundBlurFilter();
     } else {
         backgroundFilter_ = nullptr;
     }
-    if (backgroundFilter_ == nullptr){
+    if (backgroundFilter_ == nullptr) {
         ROSEN_LOGD("RSProperties::GenerateBackgroundFilter failed");
     }
 }
@@ -2242,14 +2251,14 @@ void RSProperties::GenerateForegroundFilter()
     IfLinearGradientBlurInvalid();
     if (linearGradientBlurPara_) {
         GenerateLinearGradientBlurFilter();
-    } else if (IsForegroundMaterialFilterVaild()){
+    } else if (IsForegroundMaterialFilterVaild()) {
         GenerateForegroundMaterialBlurFilter();
-    } else if (IsForegroundBlurRadiusXValid() && IsForegroundBlurRadiusYValid()){
+    } else if (IsForegroundBlurRadiusXValid() && IsForegroundBlurRadiusYValid()) {
         GenerateForegroundBlurFilter();
     } else {
         filter_ = nullptr;
     }
-    if (filter_ == nullptr){
+    if (filter_ == nullptr) {
         ROSEN_LOGD("RSProperties::GenerateForegroundFilter failed");
     }
 }

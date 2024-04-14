@@ -77,7 +77,7 @@ private:
     static std::shared_ptr<Drawing::ShaderEffect> MakeAlphaGradientShader(const Drawing::Rect& clipBounds,
         const std::shared_ptr<RSLinearGradientBlurPara>& para, uint8_t directionBias);
     static void DrawMaskLinearGradientBlur(const std::shared_ptr<Drawing::Image>& image, Drawing::Canvas& canvas,
-        std::shared_ptr<RSDrawingFilterOriginal>& blurFilter, 
+        std::shared_ptr<RSDrawingFilterOriginal>& blurFilter,
         std::shared_ptr<Drawing::ShaderEffect> alphaGradientShader, const Drawing::Rect& dst);
     static std::shared_ptr<Drawing::ShaderEffect> MakeMaskLinearGradientBlurShader(
         std::shared_ptr<Drawing::ShaderEffect> srcImageShader, std::shared_ptr<Drawing::ShaderEffect> gradientShader);

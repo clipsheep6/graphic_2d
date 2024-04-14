@@ -1234,7 +1234,7 @@ void RSNode::SetFilter(const std::shared_ptr<RSFilter>& filter)
         float Saturation = materialFilter->GetSaturation();
         float Brightness = materialFilter->GetBrightness();
         Color MaskColor = materialFilter->GetMaskColor();
-        int ColorMode = materialFilter->GetColorMode(); 
+        int ColorMode = materialFilter->GetColorMode();
         SetForegroundBlurRadius(Radius);
         SetForegroundBlurSaturation(Saturation);
         SetForegroundBlurBrightness(Brightness);

@@ -57,7 +57,8 @@ std::string RSLightUpEffectFilter::GetDescription()
     return "RSLightUpEffectFilter light up degree is " + std::to_string(lightUpDegree_);
 }
 
-std::shared_ptr<RSDrawingFilterOriginal> RSLightUpEffectFilter::Compose(const std::shared_ptr<RSDrawingFilterOriginal>& other) const
+std::shared_ptr<RSDrawingFilterOriginal> RSLightUpEffectFilter::Compose(
+    const std::shared_ptr<RSDrawingFilterOriginal>& other) const
 {
     std::shared_ptr<RSLightUpEffectFilter> result = std::make_shared<RSLightUpEffectFilter>(lightUpDegree_);
     result->imageFilter_ = Drawing::ImageFilter::CreateComposeImageFilter(imageFilter_, other->GetImageFilter());

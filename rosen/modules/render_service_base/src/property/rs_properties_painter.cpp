@@ -1750,7 +1750,6 @@ std::shared_ptr<Drawing::ShaderEffect> RSPropertiesPainter::MakeLightUpEffectSha
     return Drawing::ShaderEffect::CreateLightUp(lightUpDeg, *imageShader);
 }
 
-
 void RSPropertiesPainter::DrawDynamicLightUp(const RSProperties& properties, RSPaintFilterCanvas& canvas)
 {
     RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(TRACE_LEVEL_TWO, "DrawDynamicLightUp, rate: %f, degree: %f, bounds: %s",

@@ -89,8 +89,8 @@ RSMaterialFilter::RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mo
 }
 
 RSMaterialFilter::RSMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode)
-    : RSDrawingFilterOriginal(nullptr), colorMode_(mode), radius_(materialParam.radius), saturation_(materialParam.saturation),
-      brightness_(materialParam.brightness), maskColor_(materialParam.maskColor)
+    : RSDrawingFilterOriginal(nullptr), colorMode_(mode), radius_(materialParam.radius),
+      saturation_(materialParam.saturation), brightness_(materialParam.brightness), maskColor_(materialParam.maskColor)
 {
     imageFilter_ = RSMaterialFilter::CreateMaterialFilter(
         materialParam.radius, materialParam.saturation, materialParam.brightness);
@@ -140,7 +140,8 @@ std::string RSMaterialFilter::GetDetailedDescription()
     return "RSMaterialFilterBlur, maskColorStr failed";
 }
 
-std::shared_ptr<RSDrawingFilterOriginal> RSMaterialFilter::Compose(const std::shared_ptr<RSDrawingFilterOriginal>& other) const
+std::shared_ptr<RSDrawingFilterOriginal> RSMaterialFilter::Compose(
+    const std::shared_ptr<RSDrawingFilterOriginal>& other) const
 {
     if (other == nullptr) {
         return nullptr;

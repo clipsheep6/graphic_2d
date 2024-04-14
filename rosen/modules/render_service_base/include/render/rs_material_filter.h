@@ -57,7 +57,7 @@ struct MaterialParam {
     float brightness;
     RSColor maskColor;
 };
-class RSB_EXPORT RSMaterialFilter : public RSDrawingFilter {
+class RSB_EXPORT RSMaterialFilter : public RSDrawingFilterOriginal {
 public:
     RSMaterialFilter(int style, float dipScale, BLUR_COLOR_MODE mode, float ratio);
     RSMaterialFilter(MaterialParam materialParam, BLUR_COLOR_MODE mode);
@@ -68,7 +68,8 @@ public:
     bool IsValid() const override;
     void PreProcess(std::shared_ptr<Drawing::Image> image) override;
     void PostProcess(RSPaintFilterCanvas& canvas) override;
-    std::shared_ptr<RSDrawingFilter> Compose(const std::shared_ptr<RSDrawingFilter>& other) const override;
+    std::shared_ptr<RSDrawingFilterOriginal> Compose(
+        const std::shared_ptr<RSDrawingFilterOriginal>& other) const override;
     std::string GetDescription() override;
     std::string GetDetailedDescription() override;
 

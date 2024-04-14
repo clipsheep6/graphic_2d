@@ -101,6 +101,8 @@ class RSSurfaceCaptureVisitor : public RSNodeVisitor {
         bool isUniRender_ = false;
         bool hasSecurityOrSkipLayer_ = false;
         bool isUIFirst_ = false;
+        // Fisrt node don't need to concat matrix in singleSurafce capturing.
+        bool isFirstNode_ = false;
         std::unordered_set<NodeId> curCacheFilterRects_ = {};
 
         Drawing::Matrix captureMatrix_ = Drawing::Matrix();

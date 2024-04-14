@@ -1600,7 +1600,7 @@ void RSRenderNode::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheS
         OHOS::Rosen::RSSystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
         auto initCacheBackendTexture = MakeBackendTexture(width, height);
         auto vkTextureInfo = initCacheBackendTexture.GetTextureInfo().GetVKTextureInfo();
-        if (!initCacheBackendTexture.isValid() || !vkTextureInfo) {
+        if (!initCacheBackendTexture.IsValid() || !vkTextureInfo) {
             if (func) {
                 std::scoped_lock<std::recursive_mutex> lock(surfaceMutex_);
                 func(std::move(cacheSurface_), std::move(cacheCompletedSurface_),

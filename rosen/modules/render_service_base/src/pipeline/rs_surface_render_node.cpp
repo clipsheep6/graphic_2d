@@ -30,6 +30,7 @@
 #include "pipeline/rs_root_render_node.h"
 #include "platform/common/rs_log.h"
 #include "platform/ohos/rs_jank_stats.h"
+#include "pipeline/rs_frame_report.h"
 #include "property/rs_properties_painter.h"
 #include "render/rs_skia_filter.h"
 #include "transaction/rs_render_service_client.h"
@@ -38,6 +39,7 @@
 
 namespace OHOS {
 namespace Rosen {
+constexpr int REQUEST_FRAME_SKIP_HISTORY = 100002;
 const int SCB_NODE_NAME_PREFIX_LENGTH = 3;
 RSSurfaceRenderNode::RSSurfaceRenderNode(
     const RSSurfaceRenderNodeConfig& config, const std::weak_ptr<RSContext>& context)
@@ -911,6 +913,9 @@ void RSSurfaceRenderNode::AccumulateOcclusionRegion(Occlusion::Region& accumulat
 
     // full surfacenode valid filter cache can be treated as opaque
     if (filterCacheOcclusionEnabled && IsTransparent() && GetFilterCacheValidForOcclusion()) {
+        if (RsFrameReport::GetInstance().GetEnable()) {
+            RsFrameReport::GetInstance().SetFrameParam(REQUEST_FRAME_SKIP_HISTORY, 0, 0, 0);
+        }
         accumulatedRegion.OrSelf(curRegion);
         hasFilterCacheOcclusion = true;
     } else {

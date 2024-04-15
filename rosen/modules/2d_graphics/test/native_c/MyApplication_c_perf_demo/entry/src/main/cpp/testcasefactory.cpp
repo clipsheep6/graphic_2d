@@ -191,6 +191,7 @@ namespace {
 
             {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
             {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  //第二个三角形虚化不对，
+            {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  //有部分线条多余画出
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

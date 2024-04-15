@@ -222,6 +222,11 @@ bool RSSystemProperties::GetMaskLinearBlurEnabled()
     return true;
 }
 
+bool RSSystemProperties::GetMotionBlurEnabled()
+{
+    return true;
+}
+
 bool RSSystemProperties::GetDebugTraceEnabled()
 {
     return false;

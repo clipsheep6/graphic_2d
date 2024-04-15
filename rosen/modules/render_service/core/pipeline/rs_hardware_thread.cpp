@@ -40,6 +40,11 @@
 #include "hdi_backend.h"
 #include "vsync_sampler.h"
 #include "parameters.h"
+
+#ifdef RS_ENABLE_EGLIMAGE
+#include "src/gpu/gl/GrGLDefines.h"
+#endif
+
 #ifdef RS_ENABLE_VK
 #include "rs_vk_image_manager.h"
 #endif
@@ -171,6 +176,8 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         return;
     }
     LayerComposeCollection::GetInstance().UpdateUniformOrOfflineComposeFrameNumberForDFX(layers.size());
+    // need to sync the hgm data from main thread.
+    // Temporary sync the timestamp to fix the duplicate time stamp issue.
     auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
     uint32_t rate = hgmCore.GetPendingScreenRefreshRate();
     uint32_t currentRate = hgmCore.GetScreenCurrentRefreshRate(hgmCore.GetActiveScreenId());

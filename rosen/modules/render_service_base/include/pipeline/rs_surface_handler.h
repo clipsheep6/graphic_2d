@@ -17,7 +17,6 @@
 
 #include <atomic>
 #include <mutex>
-#include <vector>
 
 #include "common/rs_common_def.h"
 #include "common/rs_macros.h"
@@ -157,7 +156,6 @@ public:
         // The fence which get from hdi is preBuffer's releaseFence now.
         preBuffer_.releaseFence = std::move(fence);
     }
-
 #endif
 
     SurfaceBufferEntry& GetPreBuffer()
@@ -237,6 +235,7 @@ private:
     float globalZOrder_ = 0.0f;
     std::atomic<int> bufferAvailableCount_ = 0;
     std::vector<Rect> damages_;
+    bool bufferSizeChanged_ = false;
 };
 }
 }

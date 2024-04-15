@@ -235,11 +235,13 @@ public:
 
     LayerComposeInfo GetLayerComposeInfo();
 
+    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
+
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config);
 #endif
     void SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus);
-    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
+
 private:
     RSInterfaces();
     ~RSInterfaces() noexcept;

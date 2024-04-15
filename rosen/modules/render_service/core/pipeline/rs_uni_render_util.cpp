@@ -29,6 +29,7 @@
 #include "common/rs_optional_trace.h"
 #include "scene_board_judgement.h"
 #include "info_collection/rs_gpu_dirty_region_collection.h"
+
 #include <parameter.h>
 #include <parameters.h>
 

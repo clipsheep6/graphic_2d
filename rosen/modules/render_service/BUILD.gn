@@ -32,6 +32,7 @@ ohos_shared_library("librender_service") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_no_nvcall = true
     debug = false
   }
   if (enhanced_opt) {

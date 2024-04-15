@@ -52,10 +52,13 @@ HWTEST_F(RSSurfaceOhosGlTest, FlushFrame001, TestSize.Level1)
     std::unique_ptr<RSSurfaceFrame> frame = nullptr;
     rsSurface.SetUiTimeStamp(frame, uiTimestamp);
     EXPECT_FALSE(rsSurface.FlushFrame(frame, uiTimestamp));
-
-    RenderContext* renderContext = RenderContextFactory::GetInstance().CreateEngine();
-    rsSurface.SetRenderContext(renderContext);
-    ASSERT_TRUE(rsSurface.FlushFrame(frame, uiTimestamp));
+    {
+        sptr<Surface> producer = nullptr;
+        RSSurfaceOhosGl rsSurface(producer);
+        RenderContext renderContext;
+        rsSurface.SetRenderContext(&renderContext);
+        ASSERT_TRUE(rsSurface.FlushFrame(frame, uiTimestamp));
+    }
 }
 
 /**
@@ -77,7 +80,6 @@ HWTEST_F(RSSurfaceOhosGlTest, ClearBuffer001, TestSize.Level1)
     EGLSurface mEglSurface = EGL_NO_CONTEXT;
     rsSurface.mEglSurface = mEglSurface;
     rsSurface.ClearBuffer();
-    ASSERT_TRUE(true);
 }
 
 /**
@@ -120,8 +122,8 @@ HWTEST_F(RSSurfaceOhosGlTest, ClearBuffer002, TestSize.Level1)
         EGLSurface mEglSurface = EGL_NO_CONTEXT;
         rsSurface.mEglSurface = mEglSurface;
         rsSurface.ClearBuffer();
+        ASSERT_TRUE(rsSurface.mWindow, nullptr);
     }
-    ASSERT_TRUE(true);
 }
 
 /**
@@ -143,7 +145,7 @@ HWTEST_F(RSSurfaceOhosGlTest, ResetBufferAge001, TestSize.Level1)
     EGLSurface mEglSurface = EGL_NO_CONTEXT;
     rsSurface.mEglSurface = mEglSurface;
     rsSurface.ResetBufferAge();
-    ASSERT_TRUE(true);
+    ASSERT_TRUE(rsSurface.mWindow, nullptr);
 }
 
 /**
@@ -187,7 +189,6 @@ HWTEST_F(RSSurfaceOhosGlTest, ResetBufferAge002, TestSize.Level1)
         rsSurface.mEglSurface = mEglSurface;
         rsSurface.ResetBufferAge();
     }
-    ASSERT_TRUE(true);
 }
 
 /**

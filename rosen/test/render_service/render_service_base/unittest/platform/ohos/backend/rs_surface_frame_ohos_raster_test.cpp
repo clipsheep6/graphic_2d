@@ -50,7 +50,6 @@ HWTEST_F(RSSurfaceFrameOhosRasterTest, SetDamageRegion001, TestSize.Level1)
     std::unique_ptr<RenderContext> renderContext = std::make_unique<RenderContext>();
     raster.SetRenderContext(renderContext.get());
     raster.SetDamageRegion(0, 0, 2, 1);
-    ASSERT_TRUE(true);
 }
 
 /**

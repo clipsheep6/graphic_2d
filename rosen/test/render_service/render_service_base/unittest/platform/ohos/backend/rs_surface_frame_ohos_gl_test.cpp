@@ -161,7 +161,7 @@ HWTEST_F(RSSurfaceFrameOhosGlTest, GetReleaseFence001, TestSize.Level1)
 
 /**
  * @tc.name: SetReleaseFence001
- * @tc.desc: test results of GetReleaseFence
+ * @tc.desc: test results of SetReleaseFence
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -176,7 +176,7 @@ HWTEST_F(RSSurfaceFrameOhosGlTest, SetReleaseFence001, TestSize.Level1)
 }
 
 /**
- * @tc.name: SetReleaseFence001
+ * @tc.name: GetBufferAge001
  * @tc.desc: test results of GetBufferAge
  * @tc.type:FUNC
  * @tc.require:
@@ -189,7 +189,7 @@ HWTEST_F(RSSurfaceFrameOhosGlTest, GetBufferAge001, TestSize.Level1)
     RenderContext* context = RenderContextFactory::GetInstance().CreateNewEngine();
     ASSERT_NE(context, nullptr);
     rsSurface.SetRenderContext(context);
-    rsSurface.GetBufferAge();
+    ASSERT_EQ(rsSurface.GetBufferAge(), -1);
 }
 } // namespace Rosen
 } // namespace OHOS

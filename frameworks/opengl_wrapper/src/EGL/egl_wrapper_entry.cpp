@@ -1307,6 +1307,273 @@ void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, 
     }
 }
 
+EGLBoolean EglQueryDmaBufFormatsEXTImpl(EGLDisplay dpy, EGLint maxFormats, EGLint *formats, EGLint *numFormats)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDmaBufFormatsEXT) {
+        ret = table->egl.eglQueryDmaBufFormatsEXT(display->GetEglDisplay(), maxFormats, formats, numFormats);
+    } else {
+        WLOGE("eglQueryDmaBufFormatsEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglQueryDmaBufModifiersEXTImpl(EGLDisplay dpy, EGLint format, EGLint maxModifiers,
+    EGLuint64KHR *modifiers, EGLBoolean *externalOnly, EGLint *numModifiers)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDmaBufModifiersEXT) {
+        ret = table->egl.eglQueryDmaBufModifiersEXT(display->GetEglDisplay(), format, maxModifiers,
+            modifiers, externalOnly, numModifiers);
+    } else {
+        WLOGE("eglQueryDmaBufModifiersEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglGetOutputLayersEXTImpl(EGLDisplay dpy, const EGLAttrib *attribList,
+    EGLOutputLayerEXT *layers, EGLint maxLayers, EGLint *numLayers)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglGetOutputLayersEXT) {
+        ret = table->egl.eglGetOutputLayersEXT(display->GetEglDisplay(), attribList, layers,
+            maxLayers, numLayers);
+    } else {
+        WLOGE("eglGetOutputLayersEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglGetOutputPortsEXTImpl(EGLDisplay dpy, const EGLAttrib *attribList,
+    EGLOutputPortEXT *ports, EGLint maxPorts, EGLint *numPorts)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglGetOutputPortsEXT) {
+        ret = table->egl.eglGetOutputPortsEXT(display->GetEglDisplay(), attribList, ports,
+            maxPorts, numPorts);
+    } else {
+        WLOGE("eglGetOutputPortsEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglOutputLayerAttribEXTImpl(EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib value)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglOutputLayerAttribEXT) {
+        ret = table->egl.eglOutputLayerAttribEXT(display->GetEglDisplay(), layer, attribute, value);
+    } else {
+        WLOGE("eglOutputLayerAttribEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglQueryOutputLayerAttribEXTImpl(EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib *value)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryOutputLayerAttribEXT) {
+        ret = table->egl.eglQueryOutputLayerAttribEXT(display->GetEglDisplay(), layer, attribute, value);
+    } else {
+        WLOGE("eglQueryOutputLayerAttribEXT is not found.");
+    }
+    return ret;
+}
+
+const char *EglQueryOutputLayerStringEXTImpl(EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint name)
+{
+    ClearError();
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return nullptr;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryOutputLayerStringEXT) {
+        return table->egl.eglQueryOutputLayerStringEXT(display->GetEglDisplay(), layer, name);
+    } else {
+        WLOGE("eglQueryOutputLayerStringEXT is not found.");
+    }
+
+    return nullptr;
+}
+
+EGLBoolean EglOutputPortAttribEXTImpl(EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib value)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglOutputPortAttribEXT) {
+        ret = table->egl.eglOutputPortAttribEXT(display->GetEglDisplay(), port, attribute, value);
+    } else {
+        WLOGE("eglOutputPortAttribEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglQueryOutputPortAttribEXTImpl(EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib *value)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryOutputPortAttribEXT) {
+        ret = table->egl.eglQueryOutputPortAttribEXT(display->GetEglDisplay(), port, attribute, value);
+    } else {
+        WLOGE("eglQueryOutputPortAttribEXT is not found.");
+    }
+    return ret;
+}
+
+const char *EglQueryOutputPortStringEXTImpl(EGLDisplay dpy, EGLOutputPortEXT port, EGLint name)
+{
+    ClearError();
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return nullptr;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryOutputPortStringEXT) {
+        return table->egl.eglQueryOutputPortStringEXT(display->GetEglDisplay(), port, name);
+    } else {
+        WLOGE("eglQueryOutputPortStringEXT is not found.");
+    }
+
+    return nullptr;
+}
+
+EGLBoolean EglStreamConsumerOutputEXTImpl(EGLDisplay dpy, EGLStreamKHR stream, EGLOutputLayerEXT layer)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglStreamConsumerOutputEXT) {
+        ret = table->egl.eglStreamConsumerOutputEXT(display->GetEglDisplay(), stream, layer);
+    } else {
+        WLOGE("eglStreamConsumerOutputEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglQuerySupportedCompressionRatesEXTImpl(EGLDisplay dpy, EGLConfig config, const EGLAttrib *attribList,
+    EGLint *rates, EGLint rateSize, EGLint *numRates)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQuerySupportedCompressionRatesEXT) {
+        ret = table->egl.eglQuerySupportedCompressionRatesEXT(display->GetEglDisplay(), config, attribList,
+            rates, rateSize, numRates);
+    } else {
+        WLOGE("eglQuerySupportedCompressionRatesEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglSwapBuffersWithDamageEXTImpl(EGLDisplay dpy, EGLSurface surface, const EGLint *rects, EGLint nRects)
+{
+    ClearError();
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+
+    return display->SwapBuffersWithDamageEXT(surface, rects, nRects);
+}
+
+EGLBoolean EglUnsignalSyncEXTImpl(EGLDisplay dpy, EGLSync sync, const EGLAttrib *attribList)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglUnsignalSyncEXT) {
+        ret = table->egl.eglUnsignalSyncEXT(display->GetEglDisplay(), sync, attribList);
+    } else {
+        WLOGE("eglUnsignalSyncEXT is not found.");
+    }
+    return ret;
+}
+
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     /* EGL_VERSION_1_0 */
     { "eglChooseConfig", (EglWrapperFuncPointer)&EglChooseConfigImpl },
@@ -1403,6 +1670,31 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
     { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
 
+    /* EGL_EXT_image_dma_buf_import_modifiers */
+    { "eglQueryDmaBufFormatsEXT", (EglWrapperFuncPointer)&EglQueryDmaBufFormatsEXTImpl },
+    { "eglQueryDmaBufModifiersEXT", (EglWrapperFuncPointer)&EglQueryDmaBufModifiersEXTImpl },
+
+    /* EGL_EXT_output_base */
+    { "eglGetOutputLayersEXT", (EglWrapperFuncPointer)&EglGetOutputLayersEXTImpl },
+    { "eglGetOutputPortsEXT", (EglWrapperFuncPointer)&EglGetOutputPortsEXTImpl },
+    { "eglOutputLayerAttribEXT", (EglWrapperFuncPointer)&EglOutputLayerAttribEXTImpl },
+    { "eglQueryOutputLayerAttribEXT", (EglWrapperFuncPointer)&EglQueryOutputLayerAttribEXTImpl },
+    { "eglQueryOutputLayerStringEXT", (EglWrapperFuncPointer)&EglQueryOutputLayerStringEXTImpl },
+    { "eglOutputPortAttribEXT", (EglWrapperFuncPointer)&EglOutputPortAttribEXTImpl },
+    { "eglQueryOutputPortAttribEXT", (EglWrapperFuncPointer)&EglQueryOutputPortAttribEXTImpl },
+    { "eglQueryOutputPortStringEXT", (EglWrapperFuncPointer)&EglQueryOutputPortStringEXTImpl },
+
+    /* EGL_EXT_stream_consumer_egloutput */
+    { "eglStreamConsumerOutputEXT", (EglWrapperFuncPointer)&EglStreamConsumerOutputEXTImpl },
+
+    /* EGL_EXT_surface_compression */
+    { "eglQuerySupportedCompressionRatesEXT", (EglWrapperFuncPointer)&EglQuerySupportedCompressionRatesEXTImpl },
+
+    /* EGL_EXT_swap_buffers_with_damage */
+    { "eglSwapBuffersWithDamageEXT", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageEXTImpl },
+
+    /* EGL_EXT_sync_reuse */
+    { "eglUnsignalSyncEXT", (EglWrapperFuncPointer)&EglUnsignalSyncEXTImpl },
 };
 
 EglWrapperFuncPointer FindEglWrapperApi(const std::string &name)

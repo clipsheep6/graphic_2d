@@ -232,3 +232,51 @@ CALL_HOOK_API_RET(eglDupNativeFenceFDANDROID, dpy, sync)
 /* EglSetBlobCacheFuncsANDROID */
 HOOK_API_ENTRY(void, eglSetBlobCacheFuncsANDROID, EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
 CALL_HOOK_API(eglSetBlobCacheFuncsANDROID, dpy, set, get)
+
+/* EGL_EXT_image_dma_buf_import_modifiers */
+HOOK_API_ENTRY(EGLBoolean, eglQueryDmaBufFormatsEXT, EGLDisplay dpy, EGLint max_formats, EGLint *formats, EGLint *num_formats)
+CALL_HOOK_API_RET(eglQueryDmaBufFormatsEXT, dpy, max_formats, formats, num_formats)
+
+HOOK_API_ENTRY(EGLBoolean, eglQueryDmaBufModifiersEXT, EGLDisplay dpy, EGLint format, EGLint max_modifiers, EGLuint64KHR *modifiers, EGLBoolean *external_only, EGLint *num_modifiers)
+CALL_HOOK_API_RET(eglQueryDmaBufModifiersEXT, dpy, format, max_modifiers, modifiers, external_only, num_modifiers)
+
+/* EGL_EXT_output_base */
+HOOK_API_ENTRY(EGLBoolean, eglGetOutputLayersEXT, EGLDisplay dpy, const EGLAttrib *attrib_list, EGLOutputLayerEXT *layers, EGLint max_layers, EGLint *num_layers)
+CALL_HOOK_API_RET(eglGetOutputLayersEXT, dpy, attrib_list, layers, max_layers, num_layers)
+
+HOOK_API_ENTRY(EGLBoolean, eglGetOutputPortsEXT, EGLDisplay dpy, const EGLAttrib *attrib_list, EGLOutputPortEXT *ports, EGLint max_ports, EGLint *num_ports)
+CALL_HOOK_API_RET(eglGetOutputPortsEXT, dpy, attrib_list, ports, max_ports, num_ports)
+
+HOOK_API_ENTRY(EGLBoolean, eglOutputLayerAttribEXT, EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib value)
+CALL_HOOK_API_RET(eglOutputLayerAttribEXT, dpy, layer, attribute, value)
+
+HOOK_API_ENTRY(EGLBoolean, eglQueryOutputLayerAttribEXT, EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint attribute, EGLAttrib *value)
+CALL_HOOK_API_RET(eglQueryOutputLayerAttribEXT, dpy, layer, attribute, value)
+
+HOOK_API_ENTRY(const char *, eglQueryOutputLayerStringEXT, EGLDisplay dpy, EGLOutputLayerEXT layer, EGLint name)
+CALL_HOOK_API_RET(eglQueryOutputLayerStringEXT, dpy, layer, name)
+
+HOOK_API_ENTRY(EGLBoolean, eglOutputPortAttribEXT, EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib value)
+CALL_HOOK_API_RET(eglOutputPortAttribEXT, dpy, port, attribute, value)
+
+HOOK_API_ENTRY(EGLBoolean, eglQueryOutputPortAttribEXT, EGLDisplay dpy, EGLOutputPortEXT port, EGLint attribute, EGLAttrib *value)
+CALL_HOOK_API_RET(eglQueryOutputPortAttribEXT, dpy, port, attribute, value)
+
+HOOK_API_ENTRY(const char *, eglQueryOutputPortStringEXT, EGLDisplay dpy, EGLOutputPortEXT port, EGLint name)
+CALL_HOOK_API_RET(eglQueryOutputPortStringEXT, dpy, port, name)
+
+/* EGL_EXT_stream_consumer_egloutput */
+HOOK_API_ENTRY(EGLBoolean, eglStreamConsumerOutputEXT, EGLDisplay dpy, EGLStreamKHR stream, EGLOutputLayerEXT layer)
+CALL_HOOK_API_RET(eglStreamConsumerOutputEXT, dpy, stream, layer)
+
+/* EGL_EXT_surface_compression */
+HOOK_API_ENTRY(EGLBoolean, eglQuerySupportedCompressionRatesEXT, EGLDisplay dpy, EGLConfig config, const EGLAttrib *attrib_list, EGLint *rates, EGLint rate_size, EGLint *num_rates)
+CALL_HOOK_API_RET(eglQuerySupportedCompressionRatesEXT, dpy, config, attrib_list, rates, rate_size, num_rates)
+
+/* EGL_EXT_swap_buffers_with_damage */
+HOOK_API_ENTRY(EGLBoolean, eglSwapBuffersWithDamageEXT, EGLDisplay dpy, EGLSurface surface, const EGLint *rects, EGLint n_rects)
+CALL_HOOK_API_RET(eglSwapBuffersWithDamageEXT, dpy, surface, rects, n_rects)
+
+/* EGL_EXT_sync_reuse */
+HOOK_API_ENTRY(EGLBoolean, eglUnsignalSyncEXT, EGLDisplay dpy, EGLSync sync, const EGLAttrib *attrib_list)
+CALL_HOOK_API_RET(eglUnsignalSyncEXT, dpy, sync, attrib_list)

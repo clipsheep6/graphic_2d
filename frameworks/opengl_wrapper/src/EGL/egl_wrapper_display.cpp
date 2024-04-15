@@ -1016,4 +1016,29 @@ EGLBoolean EglWrapperDisplay::SetDamageRegionKHR(EGLSurface surf, EGLint *rects,
 
     return ret;
 }
+
+EGLBoolean EglWrapperDisplay::QuerySurface64KHR(EGLSurface surface, EGLint attribute, EGLAttribKHR *value)
+{
+    WLOGD("");
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQuerySurface64KHR) {
+        ret = table->egl.eglQuerySurface64KHR(disp_,
+            surfPtr->GetEglSurface(), attribute, value);
+    } else {
+        WLOGE("eglQuerySurface64KHR is invalid.");
+    }
+
+    return ret;
+}
+
 } // namespace OHOS

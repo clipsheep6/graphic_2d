@@ -232,3 +232,41 @@ CALL_HOOK_API_RET(eglDupNativeFenceFDANDROID, dpy, sync)
 /* EglSetBlobCacheFuncsANDROID */
 HOOK_API_ENTRY(void, eglSetBlobCacheFuncsANDROID, EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
 CALL_HOOK_API(eglSetBlobCacheFuncsANDROID, dpy, set, get)
+
+/* EGL_KHR_cl_event2 */
+HOOK_API_ENTRY(EGLSyncKHR, eglCreateSync64KHR, EGLDisplay dpy, EGLenum type, const EGLAttribKHR *attrib_list)
+CALL_HOOK_API_RET(eglCreateSync64KHR, dpy, type, attrib_list)
+
+/* EGL_KHR_debug */
+HOOK_API_ENTRY(EGLint, eglDebugMessageControlKHR, EGLDEBUGPROCKHR callback, const EGLAttrib *attrib_list)
+CALL_HOOK_API_RET(eglDebugMessageControlKHR, callback, attrib_list)
+
+HOOK_API_ENTRY(EGLBoolean, eglQueryDebugKHR, EGLint attribute, EGLAttrib *value)
+CALL_HOOK_API_RET(eglQueryDebugKHR, attribute, value)
+
+HOOK_API_ENTRY(EGLint, eglLabelObjectKHR, EGLDisplay display, EGLenum objectType, EGLObjectKHR object, EGLLabelKHR label)
+CALL_HOOK_API_RET(eglLabelObjectKHR, display, objectType, object, label)
+
+/* EGL_KHR_display_reference */
+HOOK_API_ENTRY(EGLBoolean, eglQueryDisplayAttribKHR, EGLDisplay dpy, EGLint name, EGLAttrib *value)
+CALL_HOOK_API_RET(eglQueryDisplayAttribKHR, dpy, name, value)
+
+/* EGL_KHR_lock_surface3 */
+HOOK_API_ENTRY(EGLBoolean, eglQuerySurface64KHR, EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLAttribKHR *value)
+CALL_HOOK_API_RET(eglQuerySurface64KHR, dpy, surface, attribute, value)
+
+/* EGL_KHR_stream_attrib */
+HOOK_API_ENTRY(EGLStreamKHR, eglCreateStreamAttribKHR, EGLDisplay dpy, const EGLAttrib *attrib_list)
+CALL_HOOK_API_RET(eglCreateStreamAttribKHR, dpy, attrib_list)
+
+HOOK_API_ENTRY(EGLBoolean, eglSetStreamAttribKHR, EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib value)
+CALL_HOOK_API_RET(eglSetStreamAttribKHR, dpy, stream, attribute, value)
+
+HOOK_API_ENTRY(EGLBoolean, eglQueryStreamAttribKHR, EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib *value)
+CALL_HOOK_API_RET(eglQueryStreamAttribKHR, dpy, stream, attribute, value)
+
+HOOK_API_ENTRY(EGLBoolean, eglStreamConsumerAcquireAttribKHR, EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list)
+CALL_HOOK_API_RET(eglStreamConsumerAcquireAttribKHR, dpy, stream, attrib_list)
+
+HOOK_API_ENTRY(EGLBoolean, eglStreamConsumerReleaseAttribKHR, EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list)
+CALL_HOOK_API_RET(eglStreamConsumerReleaseAttribKHR, dpy, stream, attrib_list)

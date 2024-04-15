@@ -366,4 +366,18 @@ HWTEST_F(EglWrapperDisplayTest, SetDamageRegionKHR001, Level1)
     auto result = eglWrapperDisplay->SetDamageRegionKHR(nullptr, 0, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
+
+/**
+ * @tc.name: QuerySurface64KHR
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, QuerySurface64KHR001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->QuerySurface64KHR(nullptr, 0, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
 } // OHOS::Rosen

@@ -1307,6 +1307,210 @@ void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, 
     }
 }
 
+EGLSyncKHR EglCreateSync64KHRImpl(EGLDisplay dpy, EGLenum type, const EGLAttribKHR *attribList)
+{
+    ClearError();
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_NO_SYNC_KHR;
+    }
+
+    EGLSyncKHR ret = EGL_NO_SYNC_KHR;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCreateSync64KHR) {
+        ret = table->egl.eglCreateSync64KHR(display->GetEglDisplay(), type, attribList);
+    } else {
+        WLOGE("eglCreateSync64KHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLint EglDebugMessageControlKHRImpl(EGLDEBUGPROCKHR callback, const EGLAttrib *attribList)
+{
+    ClearError();
+    WLOGD("");
+
+    EGLint ret = -1;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglDebugMessageControlKHR) {
+        ret = table->egl.eglDebugMessageControlKHR(callback, attribList);
+    } else {
+        WLOGE("eglDebugMessageControlKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglQueryDebugKHRImpl(EGLint attribute, EGLAttrib *value)
+{
+    ClearError();
+    WLOGD("");
+
+    EGLBoolean ret = false;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDebugKHR) {
+        ret = table->egl.eglQueryDebugKHR(attribute, value);
+    } else {
+        WLOGE("eglQueryDebugKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLint EglLabelObjectKHRImpl(EGLDisplay dpy, EGLenum objectType, EGLObjectKHR object, EGLLabelKHR label)
+{
+    ClearError();
+    WLOGD("");
+    EGLint ret = -1;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglLabelObjectKHR) {
+        ret = table->egl.eglLabelObjectKHR(display->GetEglDisplay(), objectType, object, label);
+    } else {
+        WLOGE("eglLabelObjectKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglQueryDisplayAttribKHRImpl(EGLDisplay dpy, EGLint name, EGLAttrib *value)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = false;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDisplayAttribKHR) {
+        ret = table->egl.eglQueryDisplayAttribKHR(display->GetEglDisplay(), name, value);
+    } else {
+        WLOGE("eglQueryDisplayAttribKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglQuerySurface64KHRImpl(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLAttribKHR *value)
+{
+    ClearError();
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+
+    return display->QuerySurface64KHR(surface, attribute, value);
+}
+
+EGLStreamKHR EglCreateStreamAttribKHRImpl(EGLDisplay dpy, const EGLAttrib *attribList)
+{
+    ClearError();
+    WLOGD("");
+    EGLStreamKHR ret = EGL_NO_STREAM_KHR;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCreateStreamAttribKHR) {
+        ret = table->egl.eglCreateStreamAttribKHR(display->GetEglDisplay(), attribList);
+    } else {
+        WLOGE("eglCreateStreamAttribKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglSetStreamAttribKHRImpl(EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib value)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = false;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglSetStreamAttribKHR) {
+        ret = table->egl.eglSetStreamAttribKHR(display->GetEglDisplay(), stream, attribute, value);
+    } else {
+        WLOGE("eglSetStreamAttribKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglQueryStreamAttribKHRImpl(EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib *value)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = false;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryStreamAttribKHR) {
+        ret = table->egl.eglQueryStreamAttribKHR(display->GetEglDisplay(), stream, attribute, value);
+    } else {
+        WLOGE("eglQueryStreamAttribKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglStreamConsumerAcquireAttribKHRImpl(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attribList)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = false;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglStreamConsumerAcquireAttribKHR) {
+        ret = table->egl.eglStreamConsumerAcquireAttribKHR(display->GetEglDisplay(), stream, attribList);
+    } else {
+        WLOGE("eglStreamConsumerAcquireAttribKHR is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglStreamConsumerReleaseAttribKHRImpl(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attribList)
+{
+    ClearError();
+    WLOGD("");
+    EGLBoolean ret = false;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglStreamConsumerReleaseAttribKHR) {
+        ret = table->egl.eglStreamConsumerReleaseAttribKHR(display->GetEglDisplay(), stream, attribList);
+    } else {
+        WLOGE("eglStreamConsumerReleaseAttribKHR is not found.");
+    }
+
+    return ret;
+}
+
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     /* EGL_VERSION_1_0 */
     { "eglChooseConfig", (EglWrapperFuncPointer)&EglChooseConfigImpl },
@@ -1402,6 +1606,27 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     { "eglSwapBuffersWithDamageKHR", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageKHRImpl },
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
     { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
+
+    /* EGL_KHR_cl_event2 */
+    { "eglCreateSync64KHR", (EglWrapperFuncPointer)&EglCreateSync64KHRImpl },
+
+    /* EGL_KHR_debug */
+    { "eglDebugMessageControlKHR", (EglWrapperFuncPointer)&EglDebugMessageControlKHRImpl },
+    { "eglQueryDebugKHR", (EglWrapperFuncPointer)&EglQueryDebugKHRImpl },
+    { "eglLabelObjectKHR", (EglWrapperFuncPointer)&EglLabelObjectKHRImpl },
+
+    /* EGL_KHR_display_reference */
+    { "eglQueryDisplayAttribKHR", (EglWrapperFuncPointer)&EglQueryDisplayAttribKHRImpl },
+
+    /* EGL_KHR_lock_surface3 */
+    { "eglQuerySurface64KHR", (EglWrapperFuncPointer)&EglQuerySurface64KHRImpl },
+
+    /* EGL_KHR_stream_attrib */
+    { "eglCreateStreamAttribKHR", (EglWrapperFuncPointer)&EglCreateStreamAttribKHRImpl },
+    { "eglSetStreamAttribKHR", (EglWrapperFuncPointer)&EglSetStreamAttribKHRImpl },
+    { "eglQueryStreamAttribKHR", (EglWrapperFuncPointer)&EglQueryStreamAttribKHRImpl },
+    { "eglStreamConsumerAcquireAttribKHR", (EglWrapperFuncPointer)&EglStreamConsumerAcquireAttribKHRImpl },
+    { "eglStreamConsumerReleaseAttribKHR", (EglWrapperFuncPointer)&EglStreamConsumerReleaseAttribKHRImpl },
 
 };
 

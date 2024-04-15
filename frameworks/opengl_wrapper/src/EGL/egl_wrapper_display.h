@@ -88,6 +88,7 @@ public:
 
     EGLBoolean SwapBuffersWithDamageKHR(EGLSurface draw, EGLint *rects, EGLint nRects);
     EGLBoolean SetDamageRegionKHR(EGLSurface surf, EGLint *rects, EGLint nRects);
+    EGLBoolean QuerySurface64KHR(EGLSurface surface, EGLint attribute, EGLAttribKHR *value);
 
 private:
     EglWrapperDisplay() noexcept;

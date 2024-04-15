@@ -73,7 +73,7 @@ BlobCache::~BlobCache()
     }
 }
 
-void BlobCache::Terminate()
+static void BlobCache::Terminate()
 {
     if (blobCache_) {
         blobCache_->WriteToDisk();
@@ -89,7 +89,7 @@ int BlobCache::GetMapSize() const
     return 0;
 }
 
-void BlobCache::Init(EglWrapperDisplay* display)
+const void BlobCache::Init(EglWrapperDisplay* display)
 {
     if (!initStatus_) {
         return;
@@ -323,7 +323,7 @@ void BlobCache::ReadFromDisk()
         return;
     }
     size_t filesize = bufstat.st_size;
-    if (filesize > maxShaderSize_ + maxShaderSize_ || filesize <= 0) {
+    if (filesize > maxShaderSize_ + maxShaderSize_ || filesize == 0) {
         close(fd);
     }
     uint8_t *buf = reinterpret_cast<uint8_t*>(mmap(nullptr, filesize, PROT_READ, MAP_PRIVATE, fd, 0));
@@ -359,7 +359,7 @@ void BlobCache::ReadFromDisk()
 }
 
 //CRC standard function
-uint32_t BlobCache::CrcGen(const uint8_t *buf, size_t len)
+static uint32_t BlobCache::CrcGen(const uint8_t *buf, size_t len)
 {
     const uint32_t polynoimal = 0xEDB88320;
     uint32_t crc = 0xFFFFFFFF;

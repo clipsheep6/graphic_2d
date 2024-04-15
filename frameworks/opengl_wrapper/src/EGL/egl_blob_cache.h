@@ -106,7 +106,7 @@ public:
     EGLsizeiANDROID getBlob(const void *key, EGLsizeiANDROID keySize, void *value,
                             EGLsizeiANDROID valueSize);
     
-    void Init(EglWrapperDisplay* display);
+    const void Init(EglWrapperDisplay* display);
 
     //get cache dir from upper layer
     void SetCacheDir(const std::string dir);
@@ -117,7 +117,7 @@ public:
 
     void ReadFromDisk();
 
-    void Terminate();
+    static void Terminate();
 
     size_t GetCacheSize() const;
 
@@ -125,7 +125,7 @@ public:
 
     bool ValidFile(uint8_t *buf, size_t len);
 
-    uint32_t CrcGen(const uint8_t *buf, size_t len);
+    static uint32_t CrcGen(const uint8_t *buf, size_t len);
 private:
     static BlobCache *blobCache_;
     size_t maxShaderSize_;

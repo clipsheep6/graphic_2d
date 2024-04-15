@@ -182,8 +182,6 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
     OH_Drawing_MatrixPostScale(matrix, 1.2, 0.8, 25.0, 25.0);
     matrices.push_back(matrix);
     
-    OH_Drawing_Matrix* matrixCopy = OH_Drawing_MatrixCreateRotation(33.0, 25.0, 25.0);
-    OH_Drawing_MatrixPostScale(matrixCopy, 1.2, 0.8, 25.0, 25.0);
     
     float N = 80;
     for(auto m :matrices)

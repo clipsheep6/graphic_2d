@@ -32,6 +32,7 @@
 class TestBase {
 public:
     TestBase(){};
+    TestBase(int styleType):styleType_(styleType){};
     virtual ~TestBase() = default;
 
     // void Recording(OH_Drawing_Canvas* canvas);
@@ -49,6 +50,11 @@ public:
     // CPU drawing performance test, execute critical interface testCount_ times repeatedly
     virtual void OnTestPerformance(OH_Drawing_Canvas* canvas) {};
 
+    enum { //公共的pen，brush，filter等配置
+        DRAW_STYLE_COMPLEX = 0, //最复杂的配置，会将所有配置加上，得出近似最恶劣的性能数据
+    };
+    int styleType_ = 0;
+    void StyleSettings(OH_Drawing_Canvas* canvas, int32_t type);
 protected:
     // virtual void OnRecording(OH_Drawing_Canvas* canvas) = 0;
     // cpu bitmap canvas

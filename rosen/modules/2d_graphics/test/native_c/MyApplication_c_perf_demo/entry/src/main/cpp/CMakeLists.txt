@@ -64,6 +64,7 @@ add_library(entry SHARED
     dm/points_mask_filter.cpp
     dm/clip_cubic_gm.cpp
     dm/points.cpp
+    interface/canvas_test.cpp
 )
 
 add_library(myxnode SHARED
@@ -121,6 +122,7 @@ add_library(myxnode SHARED
     dm/points_mask_filter.cpp
     dm/clip_cubic_gm.cpp
     dm/points.cpp
+    interface/canvas_test.cpp
 )
 
 find_library(

@@ -280,7 +280,7 @@ namespace {
 
 
             
-            {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_1, 100, 200); }},
+            {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX, 1000, 1000); }},
 
     };
 } // namespace

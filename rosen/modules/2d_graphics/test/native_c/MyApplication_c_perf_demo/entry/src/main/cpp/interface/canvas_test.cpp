@@ -18,9 +18,14 @@ void CanvasDrawRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     StyleSettings(canvas, styleType_);
     
-    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, rectWidth_, rectHeight_);
     for (int i = 0; i < testCount_; i++) {
+        int x = i % rectWidth_;
+        int y = (i + 100) % rectHeight_;
+        int w = (100 > (rectWidth_ - x)) ? (rectWidth_ - x) : 100;
+        int h = (100 > (rectHeight_ - y)) ? (rectHeight_ - y) : 100;
+        //针对rect，每次的绘制起点位置，绘制的宽高大小需要不一致
+        OH_Drawing_Rect* rect = OH_Drawing_RectCreate(x, y, w, h);
         OH_Drawing_CanvasDrawRect(canvas, rect);
+        OH_Drawing_RectDestroy(rect);
     }
-    OH_Drawing_RectDestroy(rect);
 }

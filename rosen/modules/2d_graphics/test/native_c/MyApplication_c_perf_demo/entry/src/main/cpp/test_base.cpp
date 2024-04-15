@@ -197,7 +197,7 @@ void TestBase::BitmapCanvasToFile(napi_env env)
 
 void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
 {
-    if (type == DRAW_STYLE_1) {
+    if (type == DRAW_STYLE_COMPLEX) {
         OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
         OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
 
@@ -219,7 +219,6 @@ void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
         OH_Drawing_MaskFilterDestroy(mask);
         OH_Drawing_FilterDestroy(filter);
 
-
         OH_Drawing_Point *center = OH_Drawing_PointCreate(100, 100);
         uint32_t colors[] = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF};
         float pos[] = {0,0.5,1.0};
@@ -228,7 +227,6 @@ void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
         OH_Drawing_PenSetShaderEffect(pen, effect);
         OH_Drawing_ShaderEffectDestroy(effect);
         OH_Drawing_PointDestroy(center);
-
 
         OH_Drawing_PenSetMiterLimit(pen, 10.0);
         OH_Drawing_PenSetJoin(pen, LINE_ROUND_JOIN);

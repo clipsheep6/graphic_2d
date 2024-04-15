@@ -929,6 +929,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
             surfaceHandler.GetNodeId(), ret);
         return false;
     }
+
     // The damages of buffer will be merged here, only single damage is supported so far
     Rect damageAfterMerge = MergeBufferDamages(damages);
     if (damageAfterMerge.h <= 0 || damageAfterMerge.w <= 0) {
@@ -937,6 +938,7 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(RSSurfaceHandler& surfaceHandler)
     }
 
     surfaceHandler.SetBuffer(buffer, acquireFence, damageAfterMerge, timestamp);
+    surfaceHandler.SetBuffers(damages);
     surfaceHandler.SetCurrentFrameBufferConsumed();
     RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer success, timestamp = %{public}" PRId64 ".",
         surfaceHandler.GetNodeId(), timestamp);

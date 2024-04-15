@@ -19,7 +19,7 @@ AlphaGradients::AlphaGradients() {
 
 void AlphaGradients::draw_grad(OH_Drawing_Canvas *canvas, DrawRect &r, uint32_t c0, uint32_t c1, bool doPreMul) {
     if (doPreMul)
-        c1 = 0xFFFFFFFFF;
+        c1 = 0xFFFFFFFF;
     uint32_t colors[] = {c0, c1};
 
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();

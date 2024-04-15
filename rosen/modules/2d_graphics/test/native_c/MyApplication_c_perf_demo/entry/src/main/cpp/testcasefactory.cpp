@@ -153,16 +153,16 @@ namespace {
             {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
             
             //DM
-            {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},
+            {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},//缺少背景格子的渲染
             {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},
             {"blurlargerrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},
             {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
             {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},
             {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},
             {"alpha_image_alpha_tint", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},
-            {"shadowutils", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorNoOccluders); }},
-            {"shadowutils_occl", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorOccluders); }},
-            {"shadowutils_gray", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kGrayscale); }},
+            {"shadowutils", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorNoOccluders); }},//maprect 接口计算不对
+            {"shadowutils_occl", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorOccluders); }},//maprect 接口计算不对
+            {"shadowutils_gray", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kGrayscale); }},//maprect 接口计算不对
             {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
             {"largeclippedpath_kwinding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
             {"largeclippedpath_kevenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
@@ -172,8 +172,8 @@ namespace {
             {"largeclippedpath_evenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
             {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
             {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
-            {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
-            {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
+            {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},//部分格子填色不对
+            {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},//五角星没有画
             {"alphagradients", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaGradients>(); }},                    
             {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},    
             {"convex_paths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},
@@ -190,7 +190,7 @@ namespace {
             {"bug7792", []() -> std::shared_ptr<TestBase> { return std::make_shared<BugFix7792>(); }},
 
             {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
-            {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  
+            {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  //第二个三角形虚化不对，
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

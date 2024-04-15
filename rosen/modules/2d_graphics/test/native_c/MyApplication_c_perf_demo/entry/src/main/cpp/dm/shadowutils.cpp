@@ -19,32 +19,32 @@ enum{
 };
 
 
-DrawRect mapRect( OH_Drawing_Matrix* m, DrawRect& rect)  {  
-    OH_Drawing_Point2D src[] = {{rect.fLeft, rect.fTop},
-                                {rect.fRight, rect.fTop},
-                                {rect.fLeft, rect.fBottom},
-                                {rect.fRight, rect.fBottom}};
-    OH_Drawing_Point2D dst[N];
-    
-    //mapRect函数未能实现 设定src 等于 dst
-    for (int i = 0; i < N;i++) 
-        dst[i] = src[i];
-    
-//    OH_Drawing_MatrixSetPolyToPoly(m,src,dst,4);
-//    OH_Drawing_Rect* srcRc = OH_Drawing_RectCreate(rect.fLeft, rect.fTop, rect.fRight, rect.fBottom);
-//    OH_Drawing_Rect* dstRc = OH_Drawing_RectCreate(0, 0, 0, 0);
-//    OH_Drawing_MatrixSetRectToRect(m, srcRc, dstRc, OH_Drawing_ScaleToFit::SCALE_TO_FIT_CENTER);
-
-    // 计算新矩形的边界  
-    float left = std::min({dst[0].x,dst[1].x,dst[2].x,dst[3].x});
-    float top = std::min({dst[0].y,dst[1].y,dst[2].y,dst[3].y});
-    float right = std::max({dst[0].x,dst[1].x,dst[2].x,dst[3].x});
-    float bottom = std::max({dst[0].y,dst[1].y,dst[2].y,dst[3].y});
-    
-    DRAWING_LOGI("mapxy src  {(%{public}2f, %{public}2f,%{public}2f, %{public}2f)}",rect.fLeft,rect.fTop,rect.fRight,rect.fBottom);   
-    DRAWING_LOGI("mapxy dst  {(%{public}2f, %{public}2f,%{public}2f, %{public}2f)}",left,top,right,bottom);    
-    return {left,top,right,bottom};  
-}
+//DrawRect mapRect( OH_Drawing_Matrix* m, DrawRect& rect)  {  
+//    OH_Drawing_Point2D src[] = {{rect.fLeft, rect.fTop},
+//                                {rect.fRight, rect.fTop},
+//                                {rect.fLeft, rect.fBottom},
+//                                {rect.fRight, rect.fBottom}};
+//    OH_Drawing_Point2D dst[N];
+//    
+//    //mapRect函数未能实现 设定src 等于 dst
+//    for (int i = 0; i < N;i++) 
+//        dst[i] = src[i];
+//    
+////    OH_Drawing_MatrixSetPolyToPoly(m,src,dst,4);
+////    OH_Drawing_Rect* srcRc = OH_Drawing_RectCreate(rect.fLeft, rect.fTop, rect.fRight, rect.fBottom);
+////    OH_Drawing_Rect* dstRc = OH_Drawing_RectCreate(0, 0, 0, 0);
+////    OH_Drawing_MatrixSetRectToRect(m, srcRc, dstRc, OH_Drawing_ScaleToFit::SCALE_TO_FIT_CENTER);
+//
+//    // 计算新矩形的边界  
+//    float left = std::min({dst[0].x,dst[1].x,dst[2].x,dst[3].x});
+//    float top = std::min({dst[0].y,dst[1].y,dst[2].y,dst[3].y});
+//    float right = std::max({dst[0].x,dst[1].x,dst[2].x,dst[3].x});
+//    float bottom = std::max({dst[0].y,dst[1].y,dst[2].y,dst[3].y});
+//    
+//    DRAWING_LOGI("mapxy src  {(%{public}2f, %{public}2f,%{public}2f, %{public}2f)}",rect.fLeft,rect.fTop,rect.fRight,rect.fBottom);   
+//    DRAWING_LOGI("mapxy dst  {(%{public}2f, %{public}2f,%{public}2f, %{public}2f)}",left,top,right,bottom);    
+//    return {left,top,right,bottom};  
+//}
 
 void draw_shadow(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path, float height, uint32_t color,
                  OH_Drawing_Point3D lightPos, float lightR, bool isAmbient, OH_Drawing_CanvasShadowFlags flags) {
@@ -182,6 +182,7 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
     OH_Drawing_MatrixPostScale(matrix, 1.2, 0.8, 25.0, 25.0);
     matrices.push_back(matrix);
     
+    
     float N = 80;
     for(auto m :matrices)
     {
@@ -191,9 +192,20 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
             for (const auto path: paths){
                 //计算各个path的bound，避免碰撞，并对其进行移动
                 DrawRect postMBounds = pathsBounds[pathCounter];
-                if(!OH_Drawing_MatrixIsIdentity(m))
-                   postMBounds = mapRect(m, pathsBounds[pathCounter]);
-                float w = postMBounds.width()+kHeight;
+                float boundWidth = postMBounds.width();                
+                float boundHeight = postMBounds.height();
+//                if(!OH_Drawing_MatrixIsIdentity(m)){
+////                    postMBounds = mapRect(m, pathsBounds[pathCounter]);
+//                    OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
+//                    OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
+//                    OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+//                    boundWidth = OH_Drawing_RectGetWidth(dstRect);
+//                    boundHeight = OH_Drawing_RectGetHeight(dstRect);
+//                    OH_Drawing_RectDestroy(srcRect);
+//                    OH_Drawing_RectDestroy(dstRect);  
+//                    
+//                }
+                float w = boundWidth+kHeight;
                 float dx = w+kPad;
                 if(x + dx > kW - 3 * kPad) {
                     OH_Drawing_CanvasRestore(canvas);
@@ -248,7 +260,9 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
                 //同样需要移动
                 OH_Drawing_CanvasTranslate(canvas, dx, 0);
                 x += dx;
-                dy = std::max(dy, postMBounds.height() + kPad + kHeight);
+                
+                dy = std::max(dy, boundHeight + kPad + kHeight);
+//                dy = std::max(dy, postMBounds.height() + kPad + kHeight);
                 ++pathCounter;
             }
         }
@@ -265,9 +279,19 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
         ///防止碰撞
 
             DrawRect postMBounds = concavePathsBounds[pathCounter];            
-            if(!OH_Drawing_MatrixIsIdentity(m))
-                postMBounds = mapRect(m, concavePathsBounds[pathCounter]);
-            float w = postMBounds.width() + kHeight;
+            float boundWidth = postMBounds.width();            
+            float boundHeight = postMBounds.height();
+//            if(!OH_Drawing_MatrixIsIdentity(m)){
+////                postMBounds = mapRect(m, concavePathsBounds[pathCounter]);
+//                OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
+//                OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
+//                OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+//                boundWidth = OH_Drawing_RectGetWidth(dstRect);
+//                boundHeight = OH_Drawing_RectGetHeight(dstRect);
+//                OH_Drawing_RectDestroy(srcRect);
+//                OH_Drawing_RectDestroy(dstRect);
+//            }
+            float w = boundWidth + kHeight;
             float dx = w + kPad;
           
             OH_Drawing_CanvasSave(canvas);
@@ -302,7 +326,7 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
             OH_Drawing_CanvasRestore(canvas);
             OH_Drawing_CanvasTranslate(canvas, dx, 0);
             x+=dx;
-            dy = std::max(dy, postMBounds.height() + kPad + kHeight);
+            dy = std::max(dy, boundHeight + kPad + kHeight);
             pathCounter++;
         }
     }

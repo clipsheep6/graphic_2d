@@ -111,19 +111,24 @@ void make_path_star(OH_Drawing_Path* path,DrawRect rect)
     float rad = -M_PI_2;
     const float drad = (n >> 1) * M_PI * 2 / n;
 
+    DrawRect r={0,0,0,0};
     OH_Drawing_PathMoveTo(path, 0, -1.0);
+    DrawPathGetBound(r, 0, -1.0);
     for (int i = 1; i < n; i++) {
         rad += drad;
         OH_Drawing_PathLineTo(path,cos(rad), sin(rad));
-    }    
-//matrix  rect to rect not realize
-//SkMatrix matrix = SkMatrix::RectToRect(path.getBounds(), bounds, SkMatrix::kCenter_ScaleToFit);
+        DrawPathGetBound(r, cos(rad), sin(rad));
+    }
+    OH_Drawing_PathClose(path);
+    OH_Drawing_Matrix* m = OH_Drawing_MatrixCreate();
+    OH_Drawing_MatrixSetRectToRect(m, DrawCreateRect(r), DrawCreateRect(rect), OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+    OH_Drawing_PathTransform(path, m);
 }
 
 Dashing2::Dashing2() {
     //skia dm file gm/fontregen.cpp
-    bitmapWidth_ = kW;
-    bitmapHeight_ = kH;
+    bitmapWidth_ = 640;
+    bitmapHeight_ = 480;
     fileName_ = "dashing2";
 }
 
@@ -164,7 +169,7 @@ void Dashing2::OnTestFunction(OH_Drawing_Canvas* canvas)
             r.offset(x*dx, y*dy);
             gProc[x](path, r);
             OH_Drawing_CanvasDrawPath(canvas, path);
-            OH_Drawing_PathDestroy(path);   
+            OH_Drawing_PathDestroy(path);
         }
     }
 }

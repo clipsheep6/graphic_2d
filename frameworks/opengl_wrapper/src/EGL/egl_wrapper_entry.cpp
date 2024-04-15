@@ -28,6 +28,9 @@
 #include "thread_private_data_ctl.h"
 #include "wrapper_log.h"
 #include "egl_blob_cache.h"
+#if USE_IGAMESERVICE_EXTEND_FUNC
+#include "egl_slice_report.h"
+#endif
 
 using namespace OHOS;
 namespace OHOS {
@@ -340,6 +343,9 @@ __eglMustCastToProperFunctionPointerType EglGetProcAddressImpl(const char *procn
 EGLBoolean EglInitializeImpl(EGLDisplay dpy, EGLint *major, EGLint *minor)
 {
     WLOGD("");
+#if USE_IGAMESERVICE_EXTEND_FUNC
+    OHOS::GameService::EglSliceReport::GetInstance().InitSliceReport();
+#endif
     EglWrapperDisplay *display = EglWrapperDisplay::GetWrapperDisplay(dpy);
     if (!display) {
         WLOGE("EGLDislay is invalid.");
@@ -428,6 +434,9 @@ EGLBoolean EglSwapBuffersImpl(EGLDisplay dpy, EGLSurface surf)
 {
     ClearError();
     WLOGD("");
+#if USE_IGAMESERVICE_EXTEND_FUNC
+    OHOS::GameService::EglSliceReport::GetInstance().AddGraphicCount();
+#endif
     EglWrapperDisplay *display = ValidateDisplay(dpy);
     if (!display) {
         return EGL_FALSE;

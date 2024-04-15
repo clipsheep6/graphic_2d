@@ -14,65 +14,98 @@
  */
 #include "ge_render.h"
 
-#include "ge_visual_effect_impl.h"
+#include "ge_aibar_shader_filter.h"
+#include "ge_grey_shader_filter.h"
+#include "ge_kawase_blur_shader_filter.h"
+#include "ge_linear_gradient_blur_shader_filter.h"
 #include "ge_log.h"
+#include "ge_visual_effect_impl.h"
 
 namespace OHOS {
 namespace GraphicsEffectEngine {
 
-GERender::GERender()
-{}
+GERender::GERender() {}
 
-GERender::~GERender()
-{}
+GERender::~GERender() {}
 
-void GERender::DrawImageEffect(Drawing::Canvas &canvas, Drawing::GEVisualEffectContainer &veContainer,
-    const std::shared_ptr<Drawing::Image> &image, const Drawing::Rect &src, const Drawing::Rect &dst,
-    const Drawing::SamplingOptions &sampling)
+void GERender::DrawImageEffect(Drawing::Canvas& canvas, Drawing::GEVisualEffectContainer& veContainer,
+    const std::shared_ptr<Drawing::Image>& image, const Drawing::Rect& src, const Drawing::Rect& dst,
+    const Drawing::SamplingOptions& sampling)
 {
     std::vector<std::shared_ptr<GEShaderFilter>> geShaderFilters = GenerateShaderFilter(veContainer);
 
+    auto resImage = image;
     for (auto geShaderFilter : geShaderFilters) {
         if (geShaderFilter != nullptr) {
-            *image = *(geShaderFilter->ProcessImage(canvas, image, src, dst));
+            resImage = geShaderFilter->ProcessImage(canvas, resImage, src, dst);
         } else {
-            LOGE("GERender::DrawImageRect filter is null");
+            LOGD("GERender::DrawImageRect filter is null");
         }
     }
     Drawing::Brush brush;
     canvas.AttachBrush(brush);
-    canvas.DrawImageRect(*image, src, dst, Drawing::SamplingOptions());
+    canvas.DrawImageRect(*resImage, src, dst, Drawing::SamplingOptions());
     canvas.DetachBrush();
 }
 
-std::shared_ptr<Drawing::Image> GERender::ApplyImageEffect(Drawing::Canvas &canvas,
-    Drawing::GEVisualEffectContainer &veContainer, const std::shared_ptr<Drawing::Image> &image,
-    const Drawing::Rect &src, const Drawing::Rect &dst, const Drawing::SamplingOptions &sampling)
+std::shared_ptr<Drawing::Image> GERender::ApplyImageEffect(Drawing::Canvas& canvas,
+    Drawing::GEVisualEffectContainer& veContainer, const std::shared_ptr<Drawing::Image>& image,
+    const Drawing::Rect& src, const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling)
 {
     std::vector<std::shared_ptr<GEShaderFilter>> geShaderFilters = GenerateShaderFilter(veContainer);
 
+    auto resImage = image;
     for (auto geShaderFilter : geShaderFilters) {
         if (geShaderFilter != nullptr) {
-            *image = *(geShaderFilter->ProcessImage(canvas, image, src, dst));
+            resImage = geShaderFilter->ProcessImage(canvas, resImage, src, dst);
         } else {
-            LOGE("GERender::DrawImageRect filter is null");
+            LOGD("GERender::DrawImageRect filter is null");
         }
     }
 
-    return image;
+    return resImage;
 }
 
 std::vector<std::shared_ptr<GEShaderFilter>> GERender::GenerateShaderFilter(
-    Drawing::GEVisualEffectContainer &veContainer)
+    Drawing::GEVisualEffectContainer& veContainer)
 {
+    LOGD("GERender::shaderFilters %{public}d", (int)veContainer.GetFilters().size());
     std::vector<std::shared_ptr<GEShaderFilter>> shaderFilters;
     for (auto vef : veContainer.GetFilters()) {
         auto ve = vef->GetImpl();
-        std::shared_ptr<GEShaderFilter> shaderFilter = nullptr;
+        std::shared_ptr<GEShaderFilter> shaderFilter;
+        switch (ve->GetFilterType()) {
+            case Drawing::GEVisualEffectImpl::FilterType::KAWASE_BLUR: {
+                const auto& kawaseParams = ve->GetKawaseParams();
+                LOGD("GERender::KAWASE_BLUR %{public}d", kawaseParams->radius);
+                shaderFilter = std::make_shared<GEKawaseBlurShaderFilter>(*kawaseParams);
+                break;
+            }
+            case Drawing::GEVisualEffectImpl::FilterType::AIBAR: {
+                const auto& aiBarParams = ve->GetAIBarParams();
+                LOGD("GERender::AIBAR %{public}f,", aiBarParams->aiBarLow);
+                shaderFilter = std::make_shared<GEAIBarShaderFilter>(*aiBarParams);
+                break;
+            }
+            case Drawing::GEVisualEffectImpl::FilterType::GREY: {
+                const auto& greyParams = ve->GetGreyParams();
+                LOGD("GERender::GREY %{public}f,", greyParams->greyCoef1);
+                shaderFilter = std::make_shared<GEGreyShaderFilter>(*greyParams);
+                break;
+            }
+            case Drawing::GEVisualEffectImpl::FilterType::LINEAR_GRADIENT_BLUR: {
+                const auto& linearGradientBlurParams = ve->GetLinearGradientBlurParams();
+                LOGD("GERender::LINEAR_GRADIENT_BLUR %{public}f,", linearGradientBlurParams->blurRadius);
+                shaderFilter = std::make_shared<GELinearGradientBlurShaderFilter>(*linearGradientBlurParams);
+                break;
+            }
+            default:
+                break;
+        }
         shaderFilters.push_back(shaderFilter);
     }
     return shaderFilters;
 }
 
-}  // namespace GraphicsEffectEngine
-}  // namespace OHOS
+} // namespace GraphicsEffectEngine
+} // namespace OHOS

@@ -12,10 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_CONTAINER_H
-#define GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_CONTAINER_H
+#ifndef GRAPHICS_EFFECT_GE_VISUAL_EFFECT_CONTAINER_H
+#define GRAPHICS_EFFECT_GE_VISUAL_EFFECT_CONTAINER_H
 
 #include "ge_visual_effect.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
@@ -26,6 +27,7 @@ public:
     ~GEVisualEffectContainer() = default;
 
     void AddToChainedFilter(std::shared_ptr<Drawing::GEVisualEffect> visualEffect);
+
     const std::vector<std::shared_ptr<GEVisualEffect>> GetFilters() const
     {
         return filterVec_;
@@ -35,8 +37,8 @@ private:
     std::vector<std::shared_ptr<GEVisualEffect>> filterVec_;
 };
 
-}  // namespace Drawing
-}  // namespace Rosen
-}  // namespace OHOS
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS
 
-#endif // GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_CONTAINER_H
+#endif // GRAPHICS_EFFECT_GE_VISUAL_EFFECT_CONTAINER_H

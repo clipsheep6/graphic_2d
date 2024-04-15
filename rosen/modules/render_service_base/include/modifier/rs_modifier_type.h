@@ -113,17 +113,31 @@ enum class RSModifierType : int16_t {
     FOREGROUND_EFFECT_RADIUS,      // 86
     MOTION_BLUR_PARA,              // 87
     DYNAMIC_DIM_DEGREE,            // 88
-    CUSTOM,                        // 89
-    EXTENDED,                      // 90
-    TRANSITION,                    // 91
-    BACKGROUND_STYLE,              // 92
-    CONTENT_STYLE,                 // 93
-    FOREGROUND_STYLE,              // 94
-    OVERLAY_STYLE,                 // 95
-    NODE_MODIFIER,                 // 96
-    ENV_FOREGROUND_COLOR,          // 97
-    ENV_FOREGROUND_COLOR_STRATEGY, // 98
-    GEOMETRYTRANS,                 // 99
+    BACKGROUND_BLUR_RADIUS,        // 89
+    BACKGROUND_BLUR_SATURATION,    // 90
+    BACKGROUND_BLUR_BRIGHTNESS,    // 91
+    BACKGROUND_BLUR_MASK_COLOR,    // 92
+    BACKGROUND_BLUR_COLOR_MODE,    // 93
+    BACKGROUND_BLUR_RADIUS_X,      // 94
+    BACKGROUND_BLUR_RADIUS_Y,      // 95
+    FOREGROUND_BLUR_RADIUS,        // 96
+    FOREGROUND_BLUR_SATURATION,    // 97
+    FOREGROUND_BLUR_BRIGHTNESS,    // 98
+    FOREGROUND_BLUR_MASK_COLOR,    // 99
+    FOREGROUND_BLUR_COLOR_MODE,    // 100
+    FOREGROUND_BLUR_RADIUS_X,      // 101
+    FOREGROUND_BLUR_RADIUS_Y,      // 102
+    CUSTOM,                        // 103
+    EXTENDED,                      // 104
+    TRANSITION,                    // 105
+    BACKGROUND_STYLE,              // 106
+    CONTENT_STYLE,                 // 107
+    FOREGROUND_STYLE,              // 108
+    OVERLAY_STYLE,                 // 109
+    NODE_MODIFIER,                 // 110
+    ENV_FOREGROUND_COLOR,          // 111
+    ENV_FOREGROUND_COLOR_STRATEGY, // 112
+    GEOMETRYTRANS,                 // 113
     MAX_RS_MODIFIER_TYPE,
 };
 

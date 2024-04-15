@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_IMPL_H
-#define GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_IMPL_H
+#ifndef GRAPHICS_EFFECT_GE_VISUAL_EFFECT_IMPL_H
+#define GRAPHICS_EFFECT_GE_VISUAL_EFFECT_IMPL_H
 
 #include <memory>
 
@@ -30,25 +30,23 @@ namespace Drawing {
 
 class GEVisualEffectImpl {
 public:
-    enum class FilterType { NONE, KAWASE_BLUR, GREY, AIBAR, CHAINED_FILTER, MAX };
+    enum class FilterType { NONE, KAWASE_BLUR, GREY, AIBAR, LINEAR_GRADIENT_BLUR, MAX };
 
-public:
-    GEVisualEffectImpl(const std::string &name);
+    GEVisualEffectImpl(const std::string& name);
 
     ~GEVisualEffectImpl();
 
-    void SetParam(const std::string &tag, int32_t param);
-    void SetParam(const std::string &tag, int64_t param);
-    void SetParam(const std::string &tag, float param);
-    void SetParam(const std::string &tag, double param);
-    void SetParam(const std::string &tag, const char *const param);
-    void SetParam(const std::string &tag, const std::shared_ptr<Drawing::Image> param);
-    void SetParam(const std::string &tag, const std::shared_ptr<Drawing::ColorFilter> param);
+    void SetParam(const std::string& tag, int32_t param);
+    void SetParam(const std::string& tag, int64_t param);
+    void SetParam(const std::string& tag, float param);
+    void SetParam(const std::string& tag, double param);
+    void SetParam(const std::string& tag, const char* const param);
 
-    const std::vector<std::shared_ptr<GEVisualEffectImpl>> GetFilters() const
-    {
-        return filterVec_;
-    }
+    void SetParam(const std::string& tag, const std::shared_ptr<Drawing::Image> param);
+    void SetParam(const std::string& tag, const std::shared_ptr<Drawing::ColorFilter> param);
+    void SetParam(const std::string& tag, const Drawing::Matrix param);
+    void SetParam(const std::string& tag, const std::vector<std::pair<float, float>>);
+    void SetParam(const std::string& tag, bool param);
 
     void SetFilterType(FilterType type)
     {
@@ -60,34 +58,63 @@ public:
         return filterType_;
     }
 
-    const std::shared_ptr<GEKawaseBlurShaderFilterParams> &GetKawaseParams() const
+    void MakeKawaseParams()
+    {
+        kawaseParams_ = std::make_shared<GEKawaseBlurShaderFilterParams>();
+    }
+
+    const std::shared_ptr<GEKawaseBlurShaderFilterParams>& GetKawaseParams() const
     {
         return kawaseParams_;
     }
 
-    const std::shared_ptr<GEAIBarShaderFilterParams> &GetAIBarParams() const
+    void MakeAIBarParams()
+    {
+        aiBarParams_ = std::make_shared<GEAIBarShaderFilterParams>();
+    }
+
+    const std::shared_ptr<GEAIBarShaderFilterParams>& GetAIBarParams() const
     {
         return aiBarParams_;
     }
 
-    const std::shared_ptr<GEGreyShaderFilterParams> &GetGreyParams() const
+    void MakeGreyParams()
+    {
+        greyParams_ = std::make_shared<GEGreyShaderFilterParams>();
+    }
+
+    const std::shared_ptr<GEGreyShaderFilterParams>& GetGreyParams() const
     {
         return greyParams_;
+    }
+
+    void MakeLinearGradientBlurParams()
+    {
+        linearGradientBlurParams_ = std::make_shared<GELinearGradientBlurShaderFilterParams>();
+    }
+
+    const std::shared_ptr<GELinearGradientBlurShaderFilterParams>& GetLinearGradientBlurParams() const
+    {
+        return linearGradientBlurParams_;
     }
 
 private:
     static std::map<const std::string, std::function<void(GEVisualEffectImpl*)>> g_initialMap;
 
+    void SetAIBarParams(const std::string& tag, float param);
+    void SetGreyParams(const std::string& tag, float param);
+    void SetLinearGradientBlurParams(const std::string& tag, float param);
+
     FilterType filterType_ = GEVisualEffectImpl::FilterType::NONE;
-    std::vector<std::shared_ptr<GEVisualEffectImpl>> filterVec_;
 
     std::shared_ptr<GEKawaseBlurShaderFilterParams> kawaseParams_ = nullptr;
     std::shared_ptr<GEAIBarShaderFilterParams> aiBarParams_ = nullptr;
     std::shared_ptr<GEGreyShaderFilterParams> greyParams_ = nullptr;
+    std::shared_ptr<GELinearGradientBlurShaderFilterParams> linearGradientBlurParams_ = nullptr;
 };
 
-}  // namespace Drawing
-}  // namespace Rosen
-}  // namespace OHOS
+} // namespace Drawing
+} // namespace Rosen
+} // namespace OHOS
 
-#endif  // GRAPHICS_EFFECT_ENGINE_VISUAL_EFFECT_IMPL_H
+#endif // GRAPHICS_EFFECT_GE_VISUAL_EFFECT_IMPL_H

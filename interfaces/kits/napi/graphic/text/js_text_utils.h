@@ -19,6 +19,7 @@
 #include <map>
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
+#include "utils/point.h"
 
 #include "utils/log.h"
 #include "draw/color.h"
@@ -226,6 +227,17 @@ inline napi_value NapiGetUndefined(napi_env env)
     return result;
 }
 
+inline napi_value GetPointAndConvertToJsValue(napi_env env, Drawing::Point& ponit)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue != nullptr) {
+        napi_set_named_property(env, objValue, "x", CreateJsNumber(env, ponit.GetX()));
+        napi_set_named_property(env, objValue, "y", CreateJsNumber(env, ponit.GetY()));
+    }
+    return objValue;
+}
+
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func);
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
 
@@ -262,7 +274,7 @@ inline napi_value GetPositionWithAffinityAndConvertToJsValue(napi_env env,
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
     if (positionWithAffinity != nullptr && objValue != nullptr) {
-        napi_set_named_property(env, objValue, "pos", CreateJsNumber(env, positionWithAffinity->index));
+        napi_set_named_property(env, objValue, "position", CreateJsNumber(env, positionWithAffinity->index));
         napi_set_named_property(env, objValue, "affinity", CreateJsNumber(env, (int)positionWithAffinity->affinity));
     }
     return objValue;

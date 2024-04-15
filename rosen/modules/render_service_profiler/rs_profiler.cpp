@@ -51,6 +51,14 @@ static NodeId g_playbackParentNodeId = 0;
 static int g_playbackPid = 0;
 static bool g_playbackShouldBeTerminated = false;
 
+static std::unordered_set<NodeId> g_nodeSetPerf;
+static NodeId g_calcPerfNode = 0;
+static int g_calcPerfNodeTry = 0;
+constexpr int CALC_PERF_NODE_TIME_COUNT = 64;
+static uint64_t g_calcPerfNodeTime[CALC_PERF_NODE_TIME_COUNT];
+static NodeId g_calcPerfNodeParent = 0;
+static int g_calcPerfNodeIndex = 0;
+
 static std::string g_testDataFrame;
 static std::list<RSRenderNode::SharedPtr> g_childOfDisplayNodes;
 
@@ -309,6 +317,35 @@ void RSProfiler::OnFrameEnd()
     ProcessCommands();
     ProcessSendingRdc();
     RecordUpdate();
+
+    if (g_calcPerfNode == 0) {
+        return;
+    }
+        
+    g_calcPerfNodeTime[g_calcPerfNodeTry] = Utils::RawNowNano() - g_frameBeginTimestamp;
+    g_calcPerfNodeTry++;
+    if (g_calcPerfNodeTry < CALC_PERF_NODE_TIME_COUNT) {
+        AwakeRenderServiceThread();
+        return;
+    }
+
+    std::sort(std::begin(g_calcPerfNodeTime), std::end(g_calcPerfNodeTime));
+    constexpr int middle = CALC_PERF_NODE_TIME_COUNT / 2;
+    Respond("CALC_PERF_NODE_RESULT: " + std::to_string(g_calcPerfNode) + " " +
+            std::to_string(g_calcPerfNodeTime[middle]));
+    Network::SendRSTreeSingleNodePerf(g_calcPerfNode, g_calcPerfNodeTime[middle]);
+
+    auto parent = GetRenderNode(g_calcPerfNodeParent);
+    auto child = parent ? GetRenderNode(g_calcPerfNode) : nullptr;
+    if (child) {
+        parent->AddChild(child, g_calcPerfNodeIndex);
+    }
+
+    g_calcPerfNode = 0;
+    g_calcPerfNodeParent = 0;
+    g_calcPerfNodeIndex = 0;
+    g_calcPerfNodeTry = 0;
+    AwakeRenderServiceThread();
 }
 
 bool RSProfiler::IsEnabled()
@@ -743,6 +780,73 @@ void RSProfiler::GetRoot(const ArgList& args)
 void RSProfiler::GetDeviceInfo(const ArgList& args)
 {
     Respond(RSTelemetry::GetDeviceInfoString());
+}
+
+void RSProfiler::GetPerfTree(const ArgList& args)
+{
+    if (!g_renderServiceContext) {
+        return;
+    }
+
+    auto& rootNode = g_renderServiceContext->GetGlobalRootRenderNode();
+    if (rootNode == nullptr) {
+        g_nodeSetPerf.clear();
+        Respond("ERROR");
+        return;
+    }
+
+    PerfTreeFlatten(*rootNode, g_nodeSetPerf);
+
+    std::vector<NodeId> list;
+    list.reserve(g_nodeSetPerf.size());
+    for (auto curNodeId : g_nodeSetPerf) {
+        list.emplace_back(curNodeId);
+    }
+
+    for (auto curNodeId : list) {
+        auto node = GetRenderNode(curNodeId);
+        while (node != nullptr) {
+            const auto parent = node->GetParent().lock();
+            if (parent != nullptr) {
+                g_nodeSetPerf.insert(parent->GetId());
+            }
+            node = parent;
+        }
+    }
+
+    std::string outString;
+    for (auto it = g_nodeSetPerf.begin(); it != g_nodeSetPerf.end(); it++) {
+        outString += (it != g_nodeSetPerf.begin() ? ", " : "") + std::to_string(*it);
+    }
+
+    Network::SendRSTreePerfNodeList(g_nodeSetPerf);
+    Respond("OK: LIST=[" + outString + "]");
+}
+
+void RSProfiler::CalcPerfNode(const ArgList& args)
+{
+    g_calcPerfNode = args.Uint64();
+    auto node = GetRenderNode(g_calcPerfNode);
+    if (!node) {
+        return;
+    }
+
+    const auto parent = node->GetParent().lock();
+    if (!parent) {
+        return;
+    }
+
+    g_calcPerfNodeParent = parent->GetId();
+    int index = 0;
+    for (const auto& child : *parent->GetChildren()) {
+        if (child->GetId() == node->GetId()) {
+            g_calcPerfNodeIndex = index;
+        }
+    }
+
+    parent->RemoveChild(node);
+    Respond("CalcPerfNode: NodeRemoved index=" + std::to_string(index));
+    AwakeRenderServiceThread();
 }
 
 void RSProfiler::TestSaveFrame(const ArgList& args)

@@ -29,6 +29,7 @@
 #include <malloc.h>
 #include <string>
 #include <unistd.h>
+#include <malloc.h>
 
 #include <iservice_registry.h>
 #include <platform/common/rs_log.h>

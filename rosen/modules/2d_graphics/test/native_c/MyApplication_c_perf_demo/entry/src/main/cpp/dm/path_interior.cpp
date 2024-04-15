@@ -72,7 +72,7 @@ void PathInterior::OnTestFunction(OH_Drawing_Canvas* canvas)
                             OH_Drawing_Path *path = OH_Drawing_PathCreate();
                             OH_Drawing_PathSetFillType(path, doEvenOdd ? PATH_FILL_TYPE_EVEN_ODD : PATH_FILL_TYPE_WINDING);
                             OH_Drawing_PathDirection outerDir = outerCW ? PATH_DIRECTION_CW : PATH_DIRECTION_CCW;
-                            OH_Drawing_PathDirection innerDir = outerCW ? PATH_DIRECTION_CW : PATH_DIRECTION_CCW;
+                            OH_Drawing_PathDirection innerDir = innerCW ? PATH_DIRECTION_CW : PATH_DIRECTION_CCW;
                             
                             DrawRect rc = insetFirst ? inset(rect) : rect;
                             OH_Drawing_Rect* r = OH_Drawing_RectCreate(rc.fLeft, rc.fTop, rc.fRight, rc.fBottom);

@@ -7,7 +7,7 @@
 
 class CanvasDrawRect : public TestBase {
 public:
-    CanvasDrawRect(int type, int rectWidth, int rectHeight):TestBase(type), rectWidth_(rectWidth), rectHeight_(rectHeight) {};
+    CanvasDrawRect(int type):TestBase(type) {};
     ~CanvasDrawRect() = default;
 
 protected:

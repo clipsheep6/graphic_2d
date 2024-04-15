@@ -25,6 +25,7 @@
 #include "common/rs_background_thread.h"
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "memory/rs_resource_ref_holder.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_recording_canvas.h"
@@ -73,8 +74,13 @@ bool RSCanvasDrawingRenderNode::ResetSurfaceWithTexture(int width, int height, R
 
     Drawing::BitmapFormat bitmapFormat = { image->GetColorType(), image->GetAlphaType() };
     auto sharedTexture = std::make_shared<Drawing::Image>();
-    if (!sharedTexture->BuildFromTexture(*canvas.GetGPUContext(), sharedBackendTexture.GetTextureInfo(),
-        origin, bitmapFormat, nullptr)) {
+    SharedResourceRefHolder<Drawing::Image> sharedTextureRefHolder(image);
+    auto releaseHelper = sharedTextureRefHolder.GetReleaseHelper();
+    auto needManualDelete = std::make_shared<bool>(false);
+    bool ret = sharedTexture->BuildFromTexture(*canvas.GetGPUContext(), sharedBackendTexture.GetTextureInfo(),
+        origin, bitmapFormat, nullptr, releaseHelper.releaseFunc_, releaseHelper.releaseContext_, needManualDelete);
+    sharedTextureRefHolder.ConditionalUnRef(needManualDelete);
+    if (!ret) {
         RS_LOGE("RSCanvasDrawingRenderNode::ResetSurfaceWithTexture sharedTexture is nullptr");
         return false;
     }

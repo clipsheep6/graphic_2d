@@ -289,7 +289,8 @@ public:
      */
     bool BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
         BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
-        void (*deleteFunc)(void*) = nullptr, void* cleanupHelper = nullptr);
+        void (*deleteFunc)(void*) = nullptr, void* cleanupHelper = nullptr,
+        std::shared_ptr<bool> needManualDelete = nullptr);
 
     /**
      * @brief GetBackendTexture from surface, then create Image from GPU texture associated with context.

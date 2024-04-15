@@ -24,6 +24,7 @@
 
 #include "common/rs_background_thread.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "memory/rs_resource_ref_holder.h"
 #include "memory/rs_tag_tracker.h"
 #include "pipeline/rs_base_render_node.h"
 #include "pipeline/rs_canvas_drawing_render_node.h"
@@ -123,7 +124,7 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
         auto screenCorrection = ScreenCorrection(screenCorrection_)
         auto wrapperSf = std::make_shared<std::tuple<std::shared_ptr<Drawing::Surface>>>();
         std::get<0>(*wrapperSf) = std::move(surface);
-        std::function<void()> copytask = [wrapper, callback, backendTexture, wrapperSf,
+        std::function<void()> copytask = [surface, wrapper, callback, backendTexture, wrapperSf,
                                              ableRotation, rotation, id, screenCorrection]() -> void {
             RS_TRACE_NAME("copy and send capture");
             if (!backendTexture.IsValid()) {
@@ -159,8 +160,17 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
             Drawing::TextureOrigin origin = Drawing::TextureOrigin::BOTTOM_LEFT;
             Drawing::BitmapFormat bitmapFormat =
                 Drawing::BitmapFormat{ Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_PREMUL };
-            tmpImg->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
-                origin, bitmapFormat, nullptr);
+            SharedResourceRefHolder<Drawing::Surface> sharedTextureRefHolder(surface);
+            auto releaseHelper = sharedTextureRefHolder.GetReleaseHelper();
+            auto needManualDelete = std::make_shared<bool>(false);
+            bool ret = tmpImg->BuildFromTexture(*canvas->GetGPUContext(), backendTexture.GetTextureInfo(),
+                origin, bitmapFormat, nullptr,
+                releaseHelper.releaseFunc_, releaseHelper.releaseContext_, needManualDelete);
+            sharedTextureRefHolder.ConditionalUnRef(needManualDelete);
+            if (!ret) {
+                RS_LOGE("RSSurfaceCaptureTask::Run: image BuildFromTexture failed");
+                return;
+            }
             canvas->DrawImage(*tmpImg, 0.f, 0.f, Drawing::SamplingOptions());
             surface->FlushAndSubmit(true);
             if (!CopyDataToPixelMap(tmpImg, pixelmap)) {

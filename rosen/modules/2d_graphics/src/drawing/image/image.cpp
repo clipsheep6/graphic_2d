@@ -96,10 +96,10 @@ bool Image::BuildFromSurface(GPUContext& gpuContext, Surface& surface, TextureOr
 
 bool Image::BuildFromTexture(GPUContext& gpuContext, const TextureInfo& info, TextureOrigin origin,
     BitmapFormat bitmapFormat, const std::shared_ptr<ColorSpace>& colorSpace,
-    void (*deleteFunc)(void*), void* cleanupHelper)
+    void (*deleteFunc)(void*), void* cleanupHelper, std::shared_ptr<bool> needManualDelete)
 {
     return imageImplPtr->BuildFromTexture(gpuContext, info, origin, bitmapFormat,
-        colorSpace, deleteFunc, cleanupHelper);
+        colorSpace, deleteFunc, cleanupHelper, needManualDelete);
 }
 
 bool Image::BuildSubset(const std::shared_ptr<Image>& image, const RectI& rect, GPUContext& gpuContext)

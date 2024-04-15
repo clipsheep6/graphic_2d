@@ -175,9 +175,7 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/hgm_screen_manager",
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/utils",
   ]
-  external_deps = [
-    "c_utils:utils"
-  ]
+  external_deps = [ "c_utils:utils" ]
   if (use_video_processing_engine) {
     include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
   }
@@ -224,7 +222,7 @@ ohos_shared_library("librender_service") {
     "libpng:libpng",
     "libxml2:libxml2",
     "skia:skia_ohos",
-   ]
+  ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     include_dirs += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
@@ -373,10 +371,10 @@ ohos_executable("render_service") {
 
   external_deps = [
     "c_utils:utils",
+    "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",
     "hilog:libhilog",
     "ipc:ipc_core",
-    "c_utils:utils",
   ]
 
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {

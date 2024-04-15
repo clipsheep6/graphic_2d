@@ -25,7 +25,7 @@ struct Index {
   private xComponentContext: XComponentContext | undefined = undefined;
   @State testType: string = 'function';
   @State drawingType: string = 'gpu-xnode';
-  @State caseNameStr: string  = 'aarectmodes';
+  @State caseNameStr: string  = 'canvas_drawrect';
   @State information: string = '';
   imagePackerApi: image.ImagePacker = image.createImagePacker();
   caseNameStrBefore: string  = '';

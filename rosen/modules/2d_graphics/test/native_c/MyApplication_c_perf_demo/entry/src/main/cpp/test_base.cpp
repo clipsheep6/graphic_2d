@@ -30,6 +30,22 @@
 #include <multimedia/image_framework/image_pixel_map_mdk.h>
 #include <multimedia/image_framework/image_packer_mdk.h>
 
+
+#include <native_drawing/drawing_color.h>
+#include <native_drawing/drawing_brush.h>
+#include <native_drawing/drawing_matrix.h>
+#include <native_drawing/drawing_path.h>
+#include <native_drawing/drawing_pen.h>
+#include <native_drawing/drawing_round_rect.h>
+#include <native_drawing/drawing_shader_effect.h>
+#include <native_drawing/drawing_point.h>
+#include <native_drawing/drawing_image.h>
+#include <native_drawing/drawing_filter.h>
+#include <native_drawing/drawing_sampling_options.h>
+#include <native_drawing/drawing_path_effect.h>
+#include <native_drawing/drawing_filter.h>
+#include <native_drawing/drawing_mask_filter.h>
+
 void TestBase::SetFileName(std::string fileName)
 {
     fileName_ = fileName;
@@ -177,4 +193,54 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     // 关闭输出文件
     close(fd);
     DRAWING_LOGE("end");
+}
+
+void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
+{
+    if (type == DRAW_STYLE_1) {
+        OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
+        OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
+
+        OH_Drawing_BrushSetAntiAlias(brush, true);
+        OH_Drawing_BrushSetColor(brush, 0xFFFF0000);
+        OH_Drawing_BrushSetAlpha(brush, 0xF0);
+        OH_Drawing_BrushSetBlendMode(brush, BLEND_MODE_SRC);
+
+        OH_Drawing_PenSetAntiAlias(pen, true);
+        OH_Drawing_PenSetColor(pen, 0xFFFF0000);
+        OH_Drawing_PenSetAlpha(pen, 0xF0);
+        OH_Drawing_PenSetBlendMode(pen, BLEND_MODE_SRC);
+
+        OH_Drawing_MaskFilter* mask = OH_Drawing_MaskFilterCreateBlur(NORMAL, 10.0, true);
+        OH_Drawing_Filter* filter = OH_Drawing_FilterCreate();
+        OH_Drawing_FilterSetMaskFilter(filter, mask);
+        OH_Drawing_BrushSetFilter(brush, filter);
+        OH_Drawing_PenSetFilter(pen, filter);
+        OH_Drawing_MaskFilterDestroy(mask);
+        OH_Drawing_FilterDestroy(filter);
+
+
+        OH_Drawing_Point *center = OH_Drawing_PointCreate(100, 100);
+        uint32_t colors[] = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF};
+        float pos[] = {0,0.5,1.0};
+        OH_Drawing_ShaderEffect* effect = OH_Drawing_ShaderEffectCreateRadialGradient(center, 100, colors, pos, 3, OH_Drawing_TileMode::CLAMP);
+        OH_Drawing_BrushSetShaderEffect(brush, effect);
+        OH_Drawing_PenSetShaderEffect(pen, effect);
+        OH_Drawing_ShaderEffectDestroy(effect);
+        OH_Drawing_PointDestroy(center);
+
+
+        OH_Drawing_PenSetMiterLimit(pen, 10.0);
+        OH_Drawing_PenSetJoin(pen, LINE_ROUND_JOIN);
+        OH_Drawing_PenSetCap(pen, LINE_ROUND_CAP);
+        float vals[2] = {1, 1};
+        OH_Drawing_PathEffect *pathEffect = OH_Drawing_CreateDashPathEffect(vals, 2, 0);
+        OH_Drawing_PenSetPathEffect(pen, pathEffect);
+        OH_Drawing_PathEffectDestroy(pathEffect);
+
+        OH_Drawing_CanvasAttachPen(canvas, pen);
+        OH_Drawing_CanvasAttachBrush(canvas, brush);
+        OH_Drawing_BrushDestroy(brush);
+        OH_Drawing_PenDestroy(pen);
+    }
 }

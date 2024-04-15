@@ -196,16 +196,17 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
                 DrawRect postMBounds = pathsBounds[pathCounter];
                 float boundWidth = postMBounds.width();                
                 float boundHeight = postMBounds.height();
-                if(!OH_Drawing_MatrixIsIdentity(m)){
-//                    postMBounds = mapRect(m, pathsBounds[pathCounter]);
-                    OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
-                    OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
-                    OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
-                    boundWidth = OH_Drawing_RectGetWidth(dstRect);
-                    boundHeight = OH_Drawing_RectGetHeight(dstRect);
-                    OH_Drawing_RectDestroy(srcRect);
-                    OH_Drawing_RectDestroy(dstRect);  
-                }
+//                if(!OH_Drawing_MatrixIsIdentity(m)){
+////                    postMBounds = mapRect(m, pathsBounds[pathCounter]);
+//                    OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
+//                    OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
+//                    OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+//                    boundWidth = OH_Drawing_RectGetWidth(dstRect);
+//                    boundHeight = OH_Drawing_RectGetHeight(dstRect);
+//                    OH_Drawing_RectDestroy(srcRect);
+//                    OH_Drawing_RectDestroy(dstRect);  
+//                    
+//                }
                 float w = boundWidth+kHeight;
                 float dx = w+kPad;
                 if(x + dx > kW - 3 * kPad) {
@@ -282,16 +283,16 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
             DrawRect postMBounds = concavePathsBounds[pathCounter];            
             float boundWidth = postMBounds.width();            
             float boundHeight = postMBounds.height();
-            if(!OH_Drawing_MatrixIsIdentity(m)){
-//                postMBounds = mapRect(m, concavePathsBounds[pathCounter]);
-                OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
-                OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
-                OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
-                boundWidth = OH_Drawing_RectGetWidth(dstRect);
-                boundHeight = OH_Drawing_RectGetHeight(dstRect);
-                OH_Drawing_RectDestroy(srcRect);
-                OH_Drawing_RectDestroy(dstRect);               
-            }
+//            if(!OH_Drawing_MatrixIsIdentity(m)){
+////                postMBounds = mapRect(m, concavePathsBounds[pathCounter]);
+//                OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
+//                OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
+//                OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+//                boundWidth = OH_Drawing_RectGetWidth(dstRect);
+//                boundHeight = OH_Drawing_RectGetHeight(dstRect);
+//                OH_Drawing_RectDestroy(srcRect);
+//                OH_Drawing_RectDestroy(dstRect);
+//            }
             float w = boundWidth + kHeight;
             float dx = w + kPad;
           

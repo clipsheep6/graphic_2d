@@ -182,6 +182,9 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
     OH_Drawing_MatrixPostScale(matrix, 1.2, 0.8, 25.0, 25.0);
     matrices.push_back(matrix);
     
+    OH_Drawing_Matrix* matrixCopy = OH_Drawing_MatrixCreateRotation(33.0, 25.0, 25.0);
+    OH_Drawing_MatrixPostScale(matrixCopy, 1.2, 0.8, 25.0, 25.0);
+    
     float N = 80;
     for(auto m :matrices)
     {
@@ -197,7 +200,7 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
 //                    postMBounds = mapRect(m, pathsBounds[pathCounter]);
                     OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
                     OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
-                    OH_Drawing_MatrixSetRectToRect(m, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+                    OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
                     boundWidth = OH_Drawing_RectGetWidth(dstRect);
                     boundHeight = OH_Drawing_RectGetHeight(dstRect);
                     OH_Drawing_RectDestroy(srcRect);
@@ -283,7 +286,7 @@ void ShadowUtils::draw_paths(OH_Drawing_Canvas* canvas, ShadowMode mode)
 //                postMBounds = mapRect(m, concavePathsBounds[pathCounter]);
                 OH_Drawing_Rect* srcRect = DrawCreateRect(postMBounds);
                 OH_Drawing_Rect* dstRect = OH_Drawing_RectCreate(0, 0, 0, 0);
-                OH_Drawing_MatrixSetRectToRect(m, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
+                OH_Drawing_MatrixSetRectToRect(matrixCopy, srcRect, dstRect, OH_Drawing_ScaleToFit::SCALE_TO_FIT_FILL);
                 boundWidth = OH_Drawing_RectGetWidth(dstRect);
                 boundHeight = OH_Drawing_RectGetHeight(dstRect);
                 OH_Drawing_RectDestroy(srcRect);

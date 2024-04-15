@@ -81,11 +81,12 @@ public:
     RosenError InitDevice();
     /* only used for mock tests */
     RosenError SetHdiOutputDevice(HdiDevice* device);
-    int32_t PreProcessLayersComp(bool &needFlush);
+    int32_t PreProcessLayersComp();
     int32_t UpdateLayerCompType();
     int32_t FlushScreen(std::vector<LayerPtr> &compClientLayers);
     int32_t SetScreenClientInfo(const FrameBufferEntry &fbEntry);
     int32_t Commit(sptr<SyncFence> &fbFence);
+    int32_t CommitAndGetReleaseFence(sptr<SyncFence> &fbFence, int32_t &skipState, bool &needFlush);
     int32_t UpdateInfosAfterCommit(sptr<SyncFence> fbFence);
     int32_t ReleaseFramebuffer(const sptr<SyncFence>& releaseFence);
     std::map<LayerInfoPtr, sptr<SyncFence>> GetLayersReleaseFence();
@@ -130,6 +131,9 @@ private:
     inline bool CheckFbSurface();
     bool CheckAndUpdateClientBufferCahce(sptr<SurfaceBuffer> buffer, uint32_t& index);
     static void SetBufferColorSpace(sptr<SurfaceBuffer>& buffer, const std::vector<LayerPtr>& layers);
+
+    // DISPLAY ENGINE
+    bool CheckIfDoArsrPre(const LayerInfoPtr &layerInfo);
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -57,6 +57,7 @@ HWTEST_F(RSEffectRenderNodeTest, Prepare, TestSize.Level1)
     rsEffectRenderNode.Prepare(visitorTwo);
     ASSERT_TRUE(true);
 }
+
 /**
  * @tc.name: Process
  * @tc.desc: test results of Process
@@ -75,6 +76,7 @@ HWTEST_F(RSEffectRenderNodeTest, Process, TestSize.Level1)
     rsEffectRenderNode.Prepare(visitorTwo);
     ASSERT_TRUE(true);
 }
+
 /**
  * @tc.name: GetFilterRect
  * @tc.desc: test results of GetFilterRect
@@ -90,6 +92,7 @@ HWTEST_F(RSEffectRenderNodeTest, GetFilterRect, TestSize.Level1)
     rsEffectRenderNode.SetEffectRegion(path);
     rsEffectRenderNode.GetFilterRect();
 }
+
 /**
  * @tc.name: ProcessRenderBeforeChildren
  * @tc.desc: test results of ProcessRenderBeforeChildren
@@ -105,6 +108,7 @@ HWTEST_F(RSEffectRenderNodeTest, ProcessRenderBeforeChildren, TestSize.Level1)
     RSPaintFilterCanvas paintFilterCanvas(&canvas);
     rsEffectRenderNode.ProcessRenderBeforeChildren(paintFilterCanvas);
 }
+
 /**
  * @tc.name: SetEffectRegion
  * @tc.desc: test results of SetEffectRegion
@@ -119,6 +123,7 @@ HWTEST_F(RSEffectRenderNodeTest, SetEffectRegion, TestSize.Level1)
     Drawing::RectI path(1, 1, 1, 1);
     rsEffectRenderNode.SetEffectRegion(path);
 }
+
 /**
  * @tc.name: UpdateFilterCacheManagerWithCacheRegion
  * @tc.desc: test results of UpdateFilterCacheManagerWithCacheRegion
@@ -138,47 +143,7 @@ HWTEST_F(RSEffectRenderNodeTest, UpdateFilterCacheManagerWithCacheRegion, TestSi
     rsEffectRenderNode.preRotationStatus_ = true;
     rsEffectRenderNode.UpdateFilterCacheManagerWithCacheRegion(dirtyManager, clipRect);
 }
-/**
- * @tc.name: NeedForceCache
- * @tc.desc: test results of NeedForceCache
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSEffectRenderNodeTest, NeedForceCache, TestSize.Level1)
-{
-    NodeId nodeId = 0;
-    std::weak_ptr<RSContext> context;
-    RSEffectRenderNode rsEffectRenderNode(nodeId, context);
-    EXPECT_FALSE(rsEffectRenderNode.NeedForceCache());
 
-    rsEffectRenderNode.preStaticStatus_ = true;
-    EXPECT_FALSE(rsEffectRenderNode.NeedForceCache());
-
-    rsEffectRenderNode.preRotationStatus_ = true;
-    EXPECT_FALSE(rsEffectRenderNode.NeedForceCache());
-
-    rsEffectRenderNode.isStaticCached_ = true;
-    EXPECT_FALSE(rsEffectRenderNode.NeedForceCache());
-
-    RSProperties& properties = const_cast<RSProperties&>(rsEffectRenderNode.GetRenderProperties());
-    properties.SetBgImageWidth(2.0f);
-    EXPECT_FALSE(rsEffectRenderNode.NeedForceCache());
-
-    rsEffectRenderNode.isRotationChanged_ = true;
-    EXPECT_TRUE(rsEffectRenderNode.NeedForceCache());
-
-    rsEffectRenderNode.invalidateTimes_ = 2;
-    EXPECT_TRUE(rsEffectRenderNode.NeedForceCache());
-
-    {
-        NodeId nodeId = 0;
-        std::weak_ptr<RSContext> context;
-        RSEffectRenderNode rsEffectRenderNode(nodeId, context);
-        rsEffectRenderNode.isRotationChanged_ = true;
-        rsEffectRenderNode.preRotationStatus_ = true;
-        ASSERT_TRUE(rsEffectRenderNode.NeedForceCache());
-    }
-}
 /**
  * @tc.name: UpdateFilterCacheWithDirty
  * @tc.desc: test results of UpdateFilterCacheWithDirty

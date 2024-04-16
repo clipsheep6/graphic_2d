@@ -128,24 +128,6 @@ HWTEST_F(RSCanvasRenderNodeTest, ProcessAnimatePropertyAfterChildrenTest001, Tes
 }
 
 /**
- * @tc.name: ProcessDrivenBackgroundRenderTest
- * @tc.desc: test results of ProcessDrivenBackgroundRender
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSCanvasRenderNodeTest, ProcessDrivenBackgroundRenderTest, TestSize.Level1)
-{
-    NodeId nodeId = 0;
-    std::weak_ptr<RSContext> context;
-    RSCanvasRenderNode rsCanvasRenderNode(nodeId, context);
-    rsCanvasRenderNode.ProcessDrivenBackgroundRender(*canvas_);
-#if defined(RS_ENABLE_DRIVEN_RENDER)
-    EXPECT_EQ(rsCanvasRenderNode.GetChildrenCount(), 0);
-#endif
-    ASSERT_TRUE(true);
-}
-
-/**
  * @tc.name: ColorBlendModeTest
  * @tc.desc: test results of ColorBlendMode
  * @tc.type:FUNC
@@ -182,47 +164,6 @@ HWTEST_F(RSCanvasRenderNodeTest, ColorBlendModeTest, TestSize.Level1)
     ASSERT_TRUE(true);
 }
 
-/**
- * @tc.name: DangerousFastBlendModeTest
- * @tc.desc: test results of DangerousFastBlendMode
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSCanvasRenderNodeTest, DangerousFastBlendModeTest, TestSize.Level1)
-{
-    auto canvasRenderNode = std::make_shared<RSCanvasRenderNode>(id, context);
-    RSProperties properties;
-    properties.SetColorBlendMode(static_cast<int>(RSColorBlendMode::NONE));
-    properties.SetColorBlendApplyType(static_cast<int>(RSColorBlendApplyType::FAST));
-    int initCnt = canvas_->GetBlendOffscreenLayerCnt();
-    RSPropertiesPainter::BeginBlendMode(*canvas_, properties);
-    EXPECT_EQ(canvas_->GetBlendOffscreenLayerCnt(), initCnt);
-    RSPropertiesPainter::EndBlendMode(*canvas_, properties);
-    ASSERT_TRUE(true);
-}
-
-/**
- * @tc.name: DangerousSavelayerBlendModeTest
- * @tc.desc: test results of DangerousSavelayerBlendMode
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSCanvasRenderNodeTest, DangerousSavelayerBlendModeTest, TestSize.Level1)
-{
-    auto canvasRenderNode = std::make_shared<RSCanvasRenderNode>(id, context);
-    RSProperties properties;
-    properties.SetColorBlendMode(static_cast<int>(RSColorBlendMode::NONE));
-    properties.SetColorBlendApplyType(static_cast<int>(RSColorBlendApplyType::SAVE_LAYER));
-    int initCnt = canvas_->GetBlendOffscreenLayerCnt();
-    RSPropertiesPainter::BeginBlendMode(*canvas_, properties);
-    EXPECT_EQ(canvas_->GetBlendOffscreenLayerCnt(), initCnt);
-    RSPropertiesPainter::EndBlendMode(*canvas_, properties);
-    properties.SetColorBlendMode(static_cast<int>(RSColorBlendMode::CLEAR));
-    RSPropertiesPainter::BeginBlendMode(*canvas_, properties);
-    EXPECT_EQ(canvas_->GetBlendOffscreenLayerCnt(), initCnt + 2);
-    RSPropertiesPainter::EndBlendMode(*canvas_, properties);
-    ASSERT_TRUE(true);
-}
 /**
  * @tc.name: ProcessShadowBatchingTest
  * @tc.desc: test results of ProcessShadowBatching

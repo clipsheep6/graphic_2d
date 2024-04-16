@@ -73,6 +73,13 @@ Drawing::Brush RSDrawingFilter::GetBrush() const
     return brush;
 }
 
+void RSDrawingFilter::InitColorMod()
+{
+    if (colorMode_ == FASTAVERAGE && RSColorPickerCacheTask::ColorPickerPartialEnabled) {
+        colorPickerTask_ = std::make_shared<RSColorPickerCacheTask>();
+    }
+}
+
 bool RSDrawingFilter::CanSkipFrame(float radius) const
 {
     constexpr float HEAVY_BLUR_THRESHOLD = 25.0f;

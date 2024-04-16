@@ -227,6 +227,8 @@ public:
     bool IsForegroundEffectRadiusValid() const;
 
     // filter properties
+    void GenerateBackgroundFilter();
+    void GenerateForegroundFilter();
     void SetBackgroundFilter(const std::shared_ptr<RSFilter>& backgroundFilter);
     void SetLinearGradientBlurPara(const std::shared_ptr<RSLinearGradientBlurPara>& para);
     void SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para);
@@ -244,6 +246,13 @@ public:
     const std::optional<Vector2f>& GetGreyCoef() const;
     const std::shared_ptr<RSFilter>& GetForegroundFilter() const;
     void SetForegroundFilter(const std::shared_ptr<RSFilter>& foregroundFilter);
+    void GenerateBackgroundBlurFilter();
+    void GenerateForegroundBlurFilter();
+    void GenerateBackgroundMaterialBlurFilter();
+    void GenerateForegroundMaterialBlurFilter();
+    std::shared_ptr<Drawing::ColorFilter> GetMaterialColorFilter(float sat, float brightness);
+    void GenerateAIBarFilter();
+    void GenerateLinearGradientBlurFilter();
 
     void SetBackgroundBlurRadius(float backgroundBlurRadius);
     float GetBackgroundBlurRadius() const;
@@ -576,7 +585,6 @@ private:
     void CalculatePixelStretch();
     void CalculateFrameOffset();
     void CheckGreyCoef();
-    void ApplyGreyCoef();
 
     // partial update
     bool colorFilterNeedUpdate_ = false;

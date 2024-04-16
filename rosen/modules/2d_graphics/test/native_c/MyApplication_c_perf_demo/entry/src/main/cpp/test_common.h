@@ -87,4 +87,6 @@ void DrawPathAddCircle(OH_Drawing_Path* path, float centerX, float centerY, floa
 uint8_t* DrawBitmapGetAddr8(OH_Drawing_Bitmap* bitmap, int x, int y);
 uint16_t* DrawBitmapGetAddr16(OH_Drawing_Bitmap* bitmap, int x, int y);
 uint32_t* DrawBitmapGetAddr32(OH_Drawing_Bitmap* bitmap, int x, int y);
+
+void DrawPathGetBound(DrawRect& r,float x,float y);//针对path moveto和lineto之类的，每做一次调用一次
 #endif // TEST_COMMON_H

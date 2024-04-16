@@ -90,6 +90,7 @@ public:
             RS_LOGE("Occlusion::Rect initialized with invalid value, [%{public}d, %{public}d, %{public}d, %{public}d], \
                 should in range [%{public}d, %{public}d]",
                 left_, top_, right_, bottom_, MIN_REGION_VALUE, MAX_REGION_VALUE);
+            RS_LOGE("Test");
         }
         return hasAbnormalValue;
     }

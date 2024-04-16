@@ -27,7 +27,7 @@ constexpr int PID_SHIFT = 32;
 
 PropertyId GeneratePropertyId()
 {
-    static pid_t pid_ = GetRealPid();
+    pid_t pid_ = gettid();
     static std::atomic<uint32_t> currentId_ = 1;
 
     auto currentId = currentId_.fetch_add(1, std::memory_order_relaxed);

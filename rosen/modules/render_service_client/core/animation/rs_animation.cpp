@@ -31,7 +31,7 @@ namespace Rosen {
 
 AnimationId RSAnimation::GenerateId()
 {
-    static pid_t pid_ = GetRealPid();
+    pid_t tid_ = gettid();
     static std::atomic<uint32_t> currentId_ = 0;
 
     auto currentId = currentId_.fetch_add(1, std::memory_order_relaxed);
@@ -40,7 +40,7 @@ AnimationId RSAnimation::GenerateId()
     }
 
     // concat two 32-bit numbers to one 64-bit number
-    return ((AnimationId)pid_ << 32) | (currentId);
+    return ((AnimationId)tid_ << 32) | (currentId);
 }
 
 RSAnimation::RSAnimation() : id_(GenerateId()) {}

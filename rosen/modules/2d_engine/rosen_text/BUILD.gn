@@ -156,6 +156,7 @@ if (enable_text_gine) {
     defines += [
       "USE_GRAPHIC_TEXT_GINE",
       "WINDOWS_PLATFORM",
+      "TEST_FLAG",
     ]
     cflags = [ "-std=c++17" ]
 

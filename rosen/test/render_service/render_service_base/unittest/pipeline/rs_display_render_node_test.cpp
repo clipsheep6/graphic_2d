@@ -90,7 +90,7 @@ HWTEST_F(RSDisplayRenderNodeTest, SetMirrorSourceTest, TestSize.Level1)
 
     rsDisplayRenderNode = std::make_shared<RSDisplayRenderNode>(id + 1, config, context);
     node->SetMirrorSource(rsDisplayRenderNode);
-    ASSERT_NE(node->mirrorSource_, nullptr);
+    ASSERT_NE(node->mirrorSource_.lock(), nullptr);
 }
 
 /**

@@ -21,9 +21,6 @@
 #include <vector>
 #include "test_common.h"
 
-std::vector<OH_Drawing_Path *> fPaths;
-const float w = sqrt(2.0f) / 2;
-
 void ConicPaths::makepath() {
     OH_Drawing_Path *conicCircle = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(conicCircle, 0, 0);
@@ -103,11 +100,13 @@ void ConicPaths::OnTestFunction(OH_Drawing_Canvas *canvas) {
                     OH_Drawing_CanvasSave(canvas);
                     OH_Drawing_CanvasTranslate(canvas, -bounds.fLeft, -bounds.fTop);
                     if (fh != 0) {
+                        OH_Drawing_CanvasDetachBrush(canvas);
                         OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(kAlphaValue[a], 0, 0, 0));
                         OH_Drawing_CanvasAttachPen(canvas, pen);
                         OH_Drawing_PenSetAntiAlias(pen, (bool)aa);
                         OH_Drawing_CanvasDrawPath(canvas, fPaths[p]);
                     } else {
+                        OH_Drawing_CanvasDetachPen(canvas);
                         OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(kAlphaValue[a], 0, 0, 0));
                         OH_Drawing_CanvasAttachBrush(canvas, brush);
                         OH_Drawing_CanvasDrawPath(canvas, fPaths[p]);
@@ -124,7 +123,7 @@ void ConicPaths::OnTestFunction(OH_Drawing_Canvas *canvas) {
     }
     OH_Drawing_CanvasRestore(canvas);
     OH_Drawing_CanvasDetachBrush(canvas);
-    
+
     // draw fGiantCircle path
     OH_Drawing_Path* fGiantCircle = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(fGiantCircle, 2.1e+11f, -1.05e+11f);
@@ -132,6 +131,7 @@ void ConicPaths::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_PathConicTo(fGiantCircle, 0, 0, 0, -1.05e+11f, w);
     OH_Drawing_PathConicTo(fGiantCircle, 0, -2.1e+11f, 1.05e+11f, -2.1e+11f, w);
     OH_Drawing_PathConicTo(fGiantCircle, 2.1e+11f, -2.1e+11f, 2.1e+11f, -1.05e+11f, w);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
     OH_Drawing_CanvasDrawPath(canvas, fGiantCircle);
 
     OH_Drawing_CanvasDetachPen(canvas);

@@ -124,7 +124,7 @@ add_library(myxnode SHARED
     dm/clip_cubic_gm.cpp
     dm/points.cpp
     interface/canvas_test.cpp
-    dm/conic_path.cpp
+    dm/conic_paths.cpp
 )
 
 find_library(

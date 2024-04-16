@@ -16,8 +16,6 @@
 
 void CanvasDrawRect::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    StyleSettings(canvas, styleType_);
-    
     for (int i = 0; i < testCount_; i++) {
         int x = i % bitmapWidth_;
         int y = (i + 100) % bitmapHeight_;

@@ -50,11 +50,14 @@ public:
     // CPU drawing performance test, execute critical interface testCount_ times repeatedly
     virtual void OnTestPerformance(OH_Drawing_Canvas* canvas) {};
 
-    enum { //公共的pen，brush，filter等配置
-        DRAW_STYLE_COMPLEX = 0, //最复杂的配置，会将所有配置加上，得出近似最恶劣的性能数据
+    enum {                      // 公共的pen，brush，filter等配置,在执行性能用例前设置
+        DRAW_STYLE_NONE = 0, // 无配置
+        DRAW_STYLE_COMPLEX,  // 最复杂的配置，会将所有配置加上，得出近似最恶劣的性能数据
     };
-    int styleType_ = 0;
+    int styleType_ = DRAW_STYLE_NONE;
     void StyleSettings(OH_Drawing_Canvas* canvas, int32_t type);
+    void StyleSettingsDestroy(OH_Drawing_Canvas *canvas);
+    
 protected:
     // virtual void OnRecording(OH_Drawing_Canvas* canvas) = 0;
     // cpu bitmap canvas
@@ -76,6 +79,14 @@ protected:
     std::string fileName_ = "default";
     uint32_t testCount_ = DEFAULT_TESTCOUNT;
     uint32_t usedTime_ = 0;
+
+    OH_Drawing_Brush* styleBrush_ = nullptr;
+    OH_Drawing_Pen* stylePen_ = nullptr;
+    OH_Drawing_MaskFilter* styleMask_ = nullptr;
+    OH_Drawing_Filter* styleFilter_ = nullptr;
+    OH_Drawing_Point* styleCenter_ = nullptr;
+    OH_Drawing_ShaderEffect* styleEffect_ = nullptr;
+    OH_Drawing_PathEffect* stylePathEffect_ = nullptr;
 };
 
 #endif // TEST_BASE_H

@@ -17,6 +17,7 @@
 
 #include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
+#include "render/rs_drawing_filter.h"
 #include "render/rs_material_filter.h"
 #include "property/rs_properties_painter.h"
 

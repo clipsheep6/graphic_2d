@@ -84,7 +84,7 @@ public:
     bool CanSkipFrame(float radius) const;
     void CaclMaskColor(std::shared_ptr<Drawing::Image>& image);
     void PreProcess(std::shared_ptr<Drawing::Image>& image);
-    void PostProcess(RSPaintFilterCanvas& canvas);
+    void PostProcess(Drawing::Canvas& canvas);
     const std::shared_ptr<RSColorPickerCacheTask>& GetColorPickerCacheTask() const;
     void ReleaseColorPickerFilter();
     

@@ -196,7 +196,7 @@ void RSDrawingFilter::PreProcess(std::shared_ptr<Drawing::Image>& image)
     }
 }
 
-void RSDrawingFilter::PostProcess(RSPaintFilterCanvas& canvas)
+void RSDrawingFilter::PostProcess(Drawing::Canvas& canvas)
 {
     if (needMaskColor_) {
         Drawing::Brush brush;

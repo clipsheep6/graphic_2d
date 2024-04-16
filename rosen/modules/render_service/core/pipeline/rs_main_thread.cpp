@@ -478,7 +478,9 @@ void RSMainThread::Init()
             RSMainThread::Instance()->SetForceUpdateUniRenderFlag(forceUpdate);
             RSMainThread::Instance()->SetIdleTimerExpiredFlag(idleTimerExpired);
             RS_TRACE_NAME_FMT("DVSyncIsOn: %d", this->rsVSyncDistributor_->IsDVsyncOn());
-            if (!this->rsVSyncDistributor_->IsDVsyncOn()) {
+            if (forceUpdate) {
+                RSMainThread::Instance()->RequestNextVSync("ltpoForceUpdate");
+            } else {
                 RSMainThread::Instance()->RequestNextVSync();
             }
         });

@@ -650,6 +650,13 @@ VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection> &conne
         VLOGE("connection is nullptr");
         return VSYNC_ERROR_NULLPTR;
     }
+
+#if defined(RS_ENABLE_DVSYNC)
+    if (IsDVsyncOn() && fromWhom == "ltpoForceUpdate") {
+       return VSYNC_ERROR_OK;
+    }
+#endif
+
     ScopedBytrace func(connection->info_.name_ + "_RequestNextVSync");
     std::unique_lock<std::mutex> locker(mutex_);
 

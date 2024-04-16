@@ -653,7 +653,7 @@ VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection> &conne
 
 #if defined(RS_ENABLE_DVSYNC)
     if (IsDVsyncOn() && fromWhom == "ltpoForceUpdate") {
-       return VSYNC_ERROR_OK;
+        return VSYNC_ERROR_OK;
     }
 #endif
 

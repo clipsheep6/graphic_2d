@@ -19,7 +19,7 @@
 #include <memory>
 #include <thread>
 
-#include "rs_profiler.h"
+#include "rs_profiler_cache.h"
 #include "rs_profiler_file.h"
 #include "rs_profiler_packet.h"
 #include "rs_profiler_socket.h"
@@ -33,7 +33,7 @@ namespace OHOS::Rosen {
 bool Network::isRunning_ = false;
 
 std::mutex Network::incomingMutex_ {};
-std::vector<std::string> Network::incoming_ {};
+std::queue<std::vector<std::string>> Network::incoming_ {};
 
 std::mutex Network::outgoingMutex_ {};
 std::queue<std::vector<char>> Network::outgoing_ {};
@@ -82,24 +82,7 @@ static void OnBinaryHeader(RSFile& file, const char* data, size_t size)
     stream.read(reinterpret_cast<char*>(&dataFirstFrame[0]), sizeDataFirstFrame);
     file.AddHeaderFirstFrame(dataFirstFrame);
 
-    ImageCache& cache = RSProfiler::GetImageCache();
-    RSProfiler::ClearImageCache();
-
-    uint32_t imageCount = 0u;
-    stream.read(reinterpret_cast<char*>(&imageCount), sizeof(imageCount));
-    for (uint32_t i = 0; i < imageCount; i++) {
-        uint64_t key = 0u;
-        stream.read(reinterpret_cast<char*>(&key), sizeof(key));
-
-        ImageCacheRecord record;
-        stream.read(reinterpret_cast<char*>(&record.skipBytes), sizeof(record.skipBytes));
-        stream.read(reinterpret_cast<char*>(&record.imageSize), sizeof(record.imageSize));
-
-        std::shared_ptr<uint8_t[]> image = std::make_unique<uint8_t[]>(record.imageSize);
-        stream.read(reinterpret_cast<char*>(image.get()), record.imageSize);
-        record.image = image;
-        cache.insert({ key, record });
-    }
+    ImageCache::Deserialize(stream);
 }
 
 static void OnBinaryChunk(RSFile& file, const char* data, size_t size)
@@ -113,7 +96,6 @@ static void OnBinaryChunk(RSFile& file, const char* data, size_t size)
 
 static void OnBinaryFinish(RSFile& file, const char* data, size_t size)
 {
-    file.SetImageCache(reinterpret_cast<FileImageCache*>(&RSProfiler::GetImageCache()));
     file.Close();
 }
 
@@ -233,9 +215,9 @@ void Network::SendSkp(const void* data, size_t size)
     }
 }
 
-void Network::SendTelemetry(double startTime)
+void Network::SendTelemetry(double time)
 {
-    if (startTime < 0.0) {
+    if (time < 0.0) {
         return;
     }
 
@@ -244,30 +226,39 @@ void Network::SendTelemetry(double startTime)
     std::stringstream load;
     std::stringstream frequency;
     for (uint32_t i = 0; i < deviceInfo.cpu.cores; i++) {
-        load << deviceInfo.cpu.coreLoad[i];
+        load << deviceInfo.cpu.coreFrequencyLoad[i].load;
         if (i + 1 < deviceInfo.cpu.cores) {
             load << ";";
         }
-        frequency << deviceInfo.cpu.coreFrequency[i];
+        frequency << deviceInfo.cpu.coreFrequencyLoad[i].current;
         if (i + 1 < deviceInfo.cpu.cores) {
             frequency << ";";
         }
     }
 
     RSCaptureData captureData;
-    captureData.SetTime(Utils::Now() - startTime);
+    captureData.SetTime(time);
     captureData.SetProperty(RSCaptureData::KEY_CPU_TEMP, deviceInfo.cpu.temperature);
     captureData.SetProperty(RSCaptureData::KEY_CPU_CURRENT, deviceInfo.cpu.current);
     captureData.SetProperty(RSCaptureData::KEY_CPU_LOAD, load.str());
     captureData.SetProperty(RSCaptureData::KEY_CPU_FREQ, frequency.str());
-    captureData.SetProperty(RSCaptureData::KEY_GPU_LOAD, deviceInfo.gpu.load);
-    captureData.SetProperty(RSCaptureData::KEY_GPU_FREQ, deviceInfo.gpu.frequency);
+    captureData.SetProperty(RSCaptureData::KEY_GPU_LOAD, deviceInfo.gpu.frequencyLoad.load);
+    captureData.SetProperty(RSCaptureData::KEY_GPU_FREQ, deviceInfo.gpu.frequencyLoad.current);
 
     std::vector<char> out;
     captureData.Serialize(out);
     const char headerType = 3; // TYPE: GFX METRICS
     out.insert(out.begin(), headerType);
     SendBinary(out.data(), out.size());
+}
+
+void Network::SendRSTreeDumpJSON(const std::string& jsonstr)
+{
+    Packet packet { Packet::BINARY };
+    packet.Write(static_cast<char>(PackageID::RS_PROFILER_RSTREE_DUMP_JSON));
+    packet.Write(jsonstr);
+    const std::lock_guard<std::mutex> guard(outgoingMutex_);
+    outgoing_.emplace(packet.Release());
 }
 
 void Network::SendRSTreePerfNodeList(const std::unordered_set<uint64_t>& perfNodesList)
@@ -311,23 +302,24 @@ void Network::SendMessage(const std::string& message)
 
 void Network::PushCommand(const std::vector<std::string>& args)
 {
-    const std::lock_guard<std::mutex> guard(incomingMutex_);
-    incoming_ = args;
+    if (!args.empty()) {
+        const std::lock_guard<std::mutex> guard(incomingMutex_);
+        incoming_.emplace(args);
+    }
 }
 
-void Network::PopCommand(std::string& command, std::vector<std::string>& args)
+bool Network::PopCommand(std::vector<std::string>& args)
 {
-    command.clear();
     args.clear();
 
-    const std::lock_guard<std::mutex> guard(incomingMutex_);
+    incomingMutex_.lock();
     if (!incoming_.empty()) {
-        command = incoming_[0];
-        if (incoming_.size() > 1) {
-            args = std::vector<std::string>(incoming_.begin() + 1, incoming_.end());
-        }
-        incoming_.clear();
+        args.swap(incoming_.front());
+        incoming_.pop();
     }
+    incomingMutex_.unlock();
+
+    return !args.empty();
 }
 
 void Network::ProcessCommand(const char* data, size_t size)
@@ -347,14 +339,13 @@ void Network::ProcessOutgoing(Socket& socket)
 
     bool nothingToSend = false;
     while (!nothingToSend) {
-        {
-            const std::lock_guard<std::mutex> guard(outgoingMutex_);
-            nothingToSend = outgoing_.empty();
-            if (!nothingToSend) {
-                data.swap(outgoing_.front());
-                outgoing_.pop();
-            }
+        outgoingMutex_.lock();
+        nothingToSend = outgoing_.empty();
+        if (!nothingToSend) {
+            data.swap(outgoing_.front());
+            outgoing_.pop();
         }
+        outgoingMutex_.unlock();
 
         if (!nothingToSend) {
             socket.SendWhenReady(data.data(), data.size());

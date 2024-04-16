@@ -31,7 +31,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
-class RSDrawingFilter : public RSFilter {
+class RSB_EXPORT RSDrawingFilter : public RSFilter {
 public:
     RSDrawingFilter(std::shared_ptr<Drawing::ImageFilter> imageFilter);
     RSDrawingFilter(std::shared_ptr<RSShaderFilter> shaderFilter);
@@ -52,6 +52,8 @@ public:
     {
         colorMode_ = colorMode;
     }
+
+    void InitColorMod();
 
     int GetColorMode()
     {
@@ -82,7 +84,7 @@ public:
     bool CanSkipFrame(float radius) const;
     void CaclMaskColor(std::shared_ptr<Drawing::Image>& image);
     void PreProcess(std::shared_ptr<Drawing::Image>& image);
-    void PostProcess(RSPaintFilterCanvas& canvas);
+    void PostProcess(Drawing::Canvas& canvas);
     const std::shared_ptr<RSColorPickerCacheTask>& GetColorPickerCacheTask() const;
     void ReleaseColorPickerFilter();
     

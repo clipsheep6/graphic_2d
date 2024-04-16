@@ -17,6 +17,7 @@
 
 #include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
+#include "render/rs_drawing_filter.h"
 #include "render/rs_material_filter.h"
 #include "property/rs_properties_painter.h"
 
@@ -202,11 +203,17 @@ void RSPropertyDrawableUtils::DrawFilter(Drawing::Canvas* canvas,
         return;
     }
 
-    bool needSnapshotOutset = true;
     if (rsFilter->GetFilterType() == RSFilter::MATERIAL) {
-        auto material = std::static_pointer_cast<RSMaterialFilter>(rsFilter);
-        needSnapshotOutset = (material->GetRadius() >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD);
+        float radius = 0.f;
+        for (const auto& item : rsFilter->GetShaderFilters()) {
+            if (item->GetShaderFilterType() == RSShaderFilter::KAWASE) {
+                auto tmpFilter = std::static_pointer_cast<RSKawaseBlurShaderFilter>(item);
+                radius = tmpFilter->GetRadius();
+            }
+        }
+        rsFilter->SetSnapshotOutset(radius >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD);
     }
+
     RS_OPTIONAL_TRACE_NAME("DrawFilter " + rsFilter->GetDescription());
     g_blurCnt++;
 
@@ -225,7 +232,7 @@ void RSPropertyDrawableUtils::DrawFilter(Drawing::Canvas* canvas,
     // Optional use cacheManager to draw filter
     if (auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas);
         !paintFilterCanvas->GetDisableFilterCache() && cacheManager != nullptr && RSProperties::FilterCacheEnabled) {
-        cacheManager->DrawFilter(*paintFilterCanvas, filter, needSnapshotOutset);
+        cacheManager->DrawFilter(*paintFilterCanvas, filter, filter->NeedSnapshotOutset());
         cacheManager->CompactFilterCache(shouldClearFilteredCache); // flag for clear witch cache after drawing
         return;
     }
@@ -233,7 +240,7 @@ void RSPropertyDrawableUtils::DrawFilter(Drawing::Canvas* canvas,
 
     auto clipIBounds = canvas->GetDeviceClipBounds();
     auto imageClipIBounds = clipIBounds;
-    if (needSnapshotOutset) {
+    if (filter->NeedSnapshotOutset()) {
         imageClipIBounds.MakeOutset(-1, -1);
     }
     auto imageSnapshot = surface->GetImageSnapshot(imageClipIBounds);

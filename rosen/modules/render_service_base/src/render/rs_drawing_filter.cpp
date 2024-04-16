@@ -73,6 +73,13 @@ Drawing::Brush RSDrawingFilter::GetBrush() const
     return brush;
 }
 
+void RSDrawingFilter::InitColorMod()
+{
+    if (colorMode_ == FASTAVERAGE && RSColorPickerCacheTask::ColorPickerPartialEnabled) {
+        colorPickerTask_ = std::make_shared<RSColorPickerCacheTask>();
+    }
+}
+
 bool RSDrawingFilter::CanSkipFrame(float radius) const
 {
     constexpr float HEAVY_BLUR_THRESHOLD = 25.0f;
@@ -189,7 +196,7 @@ void RSDrawingFilter::PreProcess(std::shared_ptr<Drawing::Image>& image)
     }
 }
 
-void RSDrawingFilter::PostProcess(RSPaintFilterCanvas& canvas)
+void RSDrawingFilter::PostProcess(Drawing::Canvas& canvas)
 {
     if (needMaskColor_) {
         Drawing::Brush brush;

@@ -18,6 +18,7 @@
 #include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "render/rs_drawing_filter.h"
+#include "render/rs_kawase_blur_shader_filter.h"
 #include "render/rs_material_filter.h"
 #include "property/rs_properties_painter.h"
 
@@ -202,22 +203,20 @@ void RSPropertyDrawableUtils::DrawFilter(Drawing::Canvas* canvas,
         ROSEN_LOGE("RSPropertyDrawableUtils::DrawFilter null filter.");
         return;
     }
-
-    if (rsFilter->GetFilterType() == RSFilter::MATERIAL) {
+    auto filter = std::static_pointer_cast<RSDrawingFilter>(rsFilter);
+    if (filter->GetFilterType() == RSFilter::MATERIAL) {
         float radius = 0.f;
-        for (const auto& item : rsFilter->GetShaderFilters()) {
+        for (const auto& item : filter->GetShaderFilters()) {
             if (item->GetShaderFilterType() == RSShaderFilter::KAWASE) {
                 auto tmpFilter = std::static_pointer_cast<RSKawaseBlurShaderFilter>(item);
                 radius = tmpFilter->GetRadius();
             }
         }
-        rsFilter->SetSnapshotOutset(radius >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD);
+        filter->SetSnapshotOutset(radius >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD);
     }
 
-    RS_OPTIONAL_TRACE_NAME("DrawFilter " + rsFilter->GetDescription());
+    RS_OPTIONAL_TRACE_NAME("DrawFilter " + filter->GetDescription());
     g_blurCnt++;
-
-    auto filter = std::static_pointer_cast<RSDrawingFilter>(rsFilter);
     auto surface = canvas->GetSurface();
     if (surface == nullptr) {
         ROSEN_LOGE("RSPropertyDrawableUtils::DrawFilter surface null");

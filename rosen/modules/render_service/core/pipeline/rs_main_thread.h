@@ -269,10 +269,12 @@ public:
     bool GetParallelCompositionEnabled();
     std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
     void SetFrameIsRender(bool isRender);
-    bool HasMark() {
+    bool HasMark()
+    {
         return hasMark_;
     }
-    void ResetMark() {
+    void ResetMark()
+    {
         hasMark_ = false;
     }
 

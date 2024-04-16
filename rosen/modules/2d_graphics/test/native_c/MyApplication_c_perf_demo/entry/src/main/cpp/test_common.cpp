@@ -143,3 +143,10 @@ uint32_t* DrawBitmapGetAddr32(OH_Drawing_Bitmap* bitmap, int x, int y)
     uint32_t* ptr = (uint32_t*)pixel + (size_t)y*W +(x<<2);
     return ptr;    
 }
+void DrawPathGetBound(DrawRect& r,float x,float y)
+{//比最小的小，比最大的大就设置
+    if(x < r.fLeft)r.fLeft = x;
+    if(x > r.fRight)r.fRight = x;
+    if(y < r.fTop)r.fTop = y;
+    if(y > r.fBottom)r.fBottom = y;
+}

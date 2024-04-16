@@ -65,6 +65,7 @@ add_library(entry SHARED
     dm/clip_cubic_gm.cpp
     dm/points.cpp
     interface/canvas_test.cpp
+    dm/onebadarc.cpp
 )
 
 add_library(myxnode SHARED
@@ -123,6 +124,7 @@ add_library(myxnode SHARED
     dm/clip_cubic_gm.cpp
     dm/points.cpp
     interface/canvas_test.cpp
+    dm/onebadarc.cpp
 )
 
 find_library(

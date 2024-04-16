@@ -65,6 +65,7 @@
 #include "dm/points_mask_filter.h"
 #include "dm/clip_cubic_gm.h"
 #include "dm/points.h"
+#include "dm/skbug_8955.h"
 #include "dm/conic_paths.h"
 
 
@@ -194,6 +195,7 @@ namespace {
             {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
             {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  //第二个三角形虚化不对，
             {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
+            {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
             {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  //有部分线条多余画出
     };
 

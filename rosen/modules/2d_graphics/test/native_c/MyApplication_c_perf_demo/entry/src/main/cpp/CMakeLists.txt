@@ -66,6 +66,7 @@ add_library(entry SHARED
     dm/points.cpp
     interface/canvas_test.cpp
     dm/onebadarc.cpp
+    dm/skbug_8955.cpp
     dm/conic_paths.cpp
 )
 
@@ -126,6 +127,7 @@ add_library(myxnode SHARED
     dm/points.cpp
     interface/canvas_test.cpp
     dm/onebadarc.cpp
+    dm/skbug_8955.cpp
     dm/conic_paths.cpp
 )
 

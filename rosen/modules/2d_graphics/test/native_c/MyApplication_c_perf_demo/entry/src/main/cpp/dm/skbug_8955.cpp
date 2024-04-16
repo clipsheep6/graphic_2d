@@ -50,7 +50,6 @@ void SkBug_8955::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_CanvasRestore(canvas);
     OH_Drawing_CanvasDrawTextBlob(canvas, blob, 30, 60);
 
-    OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_FontDestroy(font);
     OH_Drawing_TextBlobBuilderDestroy(textBlobBuilder);

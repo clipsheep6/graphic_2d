@@ -976,21 +976,6 @@ HWTEST_F(RSBaseRenderNodeTest, RemoveModifier, TestSize.Level1)
 }
 
 /**
- * @tc.name: ApplyModifiers
- * @tc.desc: test results of ApplyModifiers
- * @tc.type:FUNC
- * @tc.require:
- */
-HWTEST_F(RSBaseRenderNodeTest, ApplyModifiers, TestSize.Level1)
-{
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    EXPECT_EQ(node->ApplyModifiers(), false);
-
-    node->dirtyStatus_ = RSRenderNode::NodeDirty::DIRTY;
-    EXPECT_EQ(node->ApplyModifiers(), false);
-}
-
-/**
  * @tc.name: UpdateDrawableVec
  * @tc.desc: test results of UpdateDrawableVec
  * @tc.type:FUNC

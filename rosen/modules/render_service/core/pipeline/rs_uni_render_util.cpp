@@ -34,6 +34,7 @@
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
+#include "info_collection/rs_gpu_dirty_region_collection.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties.h"
 #include "render/rs_material_filter.h"
@@ -107,8 +108,11 @@ Occlusion::Region RSUniRenderUtil::MergeVisibleDirtyRegion(std::vector<RSBaseRen
             Occlusion::Region alignedRegion = AlignedDirtyRegion(surfaceVisibleDirtyRegion);
             surfaceNode->SetAlignedVisibleDirtyRegion(alignedRegion);
             allSurfaceVisibleDirtyRegion.OrSelf(alignedRegion);
+            GpuDirtyRegionCollection::GetInstance().UpdateActiveDirtyInfoForDFX(surfaceNode->GetId(), alignedRegion);
         } else {
             allSurfaceVisibleDirtyRegion = allSurfaceVisibleDirtyRegion.Or(surfaceVisibleDirtyRegion);
+            GpuDirtyRegionCollection::GetInstance().UpdateActiveDirtyInfoForDFX(surfaceNode->GetId(),
+                surfaceVisibleDirtyRegion);
         }
     }
     return allSurfaceVisibleDirtyRegion;

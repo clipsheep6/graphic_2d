@@ -35,6 +35,7 @@
 #include "pipeline/rs_uni_render_engine.h"
 #include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
+#include "info_collection/rs_layer_compose_collection.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
 #include "screen_manager/rs_screen_manager.h"
@@ -173,6 +174,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGE("RSHardwareThread::CommitAndReleaseLayers handler is nullptr");
         return;
     }
+    LayerComposeCollection::GetInstance().UpdateUniformOrOfflineComposeFrameNumberForDFX(layers.size());
     // need to sync the hgm data from main thread.
     // Temporary sync the timestamp to fix the duplicate time stamp issue.
     auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
@@ -541,6 +543,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 layer->GetSurface()->GetName());
         }
     }
+    LayerComposeCollection::GetInstance().UpdateRedrawFrameNumberForDFX();
 
     if (isTopGpuDraw && RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable()) {
         RSSingleton<RoundCornerDisplay>::GetInstance().DrawTopRoundCorner(canvas.get());

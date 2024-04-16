@@ -40,8 +40,6 @@ ohos_shared_library("libgraphics_effect") {
     "$graphic_2d_root/rosen/modules/graphics_effect/include",
     "$graphic_2d_root/rosen/modules/graphics_effect/src",
     "$graphic_2d_root/rosen/modules/utils",
-    "$graphic_2d_root/frameworks/surface/include",
-    "$graphic_2d_root/utils/color_manager/export",
     "$graphic_2d_root/utils/log",
     "$graphic_2d_root/interfaces/inner_api/surface",
   ]

@@ -24,6 +24,7 @@
 #include "platform/common/rs_log.h"
 #include "property/rs_filter_cache_manager.h"
 #include "render/rs_drawing_filter.h"
+#include "render/rs_linear_gradient_blur_shader_filter.h"
 
 namespace OHOS::Rosen {
 constexpr int AIBAR_CACHE_UPDATE_INTERVAL = 5;

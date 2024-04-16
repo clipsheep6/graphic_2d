@@ -381,10 +381,6 @@ private:
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
     void WaitUntilUploadTextureTaskFinishedForGL();
-#ifdef RES_SCHED_ENABLE
-    void SubScribeSystemAbility();
-    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
-#endif
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, bool waitForRT);
 
@@ -566,6 +562,12 @@ private:
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
 #endif
+
+#ifdef RES_SCHED_ENABLE
+    void SubScribeSystemAbility();
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
+
     pid_t exitedPid_ = -1;
     std::set<pid_t> exitedPidSet_;
     RSDrawFrame drawFrame_;

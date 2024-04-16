@@ -250,11 +250,13 @@ void RSCanvasDrawingRenderNodeDrawable::ProcessCPURenderInBackgroundThread(std::
     std::shared_ptr<RSContext> ctx, NodeId nodeId)
 {
     auto surface = surface_;
-    RSBackgroundThread::Instance().PostTask([this, cmds, surface, ctx, nodeId]() {
-        if (!cmds || cmds->IsEmpty() || !surface || !ctx) {
+    auto drawable = RSRenderNodeDrawableAdapter::GetDrawableById(nodeId);
+    RSBackgroundThread::Instance().PostTask([drawable, cmds, surface, ctx, nodeId]() {
+        if (!cmds || cmds->IsEmpty() || !surface || !ctx || !drawble) {
             return;
         }
-        if (surface != this->surface_) {
+        auto canvasDrawingDrawble = static_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable*>(drawable.get());
+        if (surface != canvasDrawingDrawble->surface_) {
             return;
         }
         cmds->Playback(*surface->GetCanvas());
@@ -262,9 +264,9 @@ void RSCanvasDrawingRenderNodeDrawable::ProcessCPURenderInBackgroundThread(std::
         if (image) {
             SKResourceManager::Instance().HoldResource(image);
         }
-        std::lock_guard<std::mutex> lock(this->imageMutex_);
-        this->image_ = image;
-        auto task = [ctx, nodeId = renderNode_->GetId()] () {
+        std::lock_guard<std::mutex> lock(canvasDrawingDrawble->imageMutex_);
+        canvasDrawingDrawble->image_ = image;
+        auto task = [ctx, nodeId] () {
             if (UNLIKELY(!ctx)) {
                 return;
             }

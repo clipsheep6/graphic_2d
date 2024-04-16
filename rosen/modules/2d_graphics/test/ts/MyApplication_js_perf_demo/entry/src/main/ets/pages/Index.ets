@@ -31,8 +31,8 @@ struct Index {
   //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
   @State testType: string = 'performance';
-  @State drawingType: string = 'gpu';
-  @State caseNameStr: string  = 'drawtextblobmode';
+  @State drawingType: string = 'cpu';
+  @State caseNameStr: string  = 'canvas_drawrect';
   @State information: string = '';
   @State testAll: boolean = false;
   caseNameStrBefore: string  = '';

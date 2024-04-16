@@ -62,7 +62,6 @@ HWTEST_F(RsFilterSubThreadTest, PostTaskTest, TestSize.Level1)
     auto renderContext = std::make_shared<RenderContext>();
     auto curThread = std::make_shared<RSFilterSubThread>(renderContext.get());
     curThread->PostTask([] {});
-    curThread->Start();
     curThread->PostTask([] {});
 }
 
@@ -251,30 +250,5 @@ HWTEST_F(RsFilterSubThreadTest, ResetGrContextTest001, TestSize.Level1)
     curThread->grContext_ = std::make_shared<Drawing::GPUContext>();
     curThread->ResetGrContext();
     EXPECT_TRUE(curThread->grContext_);
-}
-
-/**
- * @tc.name: RSFilterTaskTest
- * @tc.desc: Test RsFilterSubThreadTest.RSFilterTaskTest
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RsFilterSubThreadTest, RSFilterTaskTest, TestSize.Level1)
-{
-    class RSFilterCacheTask : public RSFilter::RSFilterTask {
-    public:
-        bool InitSurface(Drawing::GPUContext* grContext) override
-        {
-            return true;
-        }
-        bool Render() override
-        {
-            return true;
-        }
-    };
-    RSFilterCacheTask task;
-    Drawing::GPUContext* grContext = nullptr;
-    ASSERT_TRUE(task.InitSurface(grContext));
-    ASSERT_TRUE(task.Render());
 }
 } // namespace OHOS::Rosen

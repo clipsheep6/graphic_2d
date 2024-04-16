@@ -65,6 +65,7 @@
 #include "dm/points_mask_filter.h"
 #include "dm/clip_cubic_gm.h"
 #include "dm/points.h"
+#include "dm/skbug_8955.h"
 
 
 #include "interface/canvas_test.h"
@@ -191,6 +192,7 @@ namespace {
 
             {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
             {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  //第二个三角形虚化不对，
+            {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

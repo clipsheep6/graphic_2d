@@ -308,16 +308,21 @@ void RSMainThread::Init()
             UpdateDisplayNodeScreenId();
         }
 
-        if (!hasMark_) {
-            SetFrameIsRender(true);
+        if (rsParallelType_ == RsParallelType::RS_PARALLEL_TYPE_SINGLE_THREAD ||
+            doDirectComposition_) {
+            if (!hasMark_) {
+                SetFrameIsRender(true);
+            }
+            hasMark_ = false;
         }
-        hasMark_ = false;
         // move rnv after mark rsnotrendering
-        if (needRequestNextVsyncAnimate_ || rsVSyncDistributor_->HasPendingUIRNV()) {
-            rsVSyncDistributor_->MarkRSAnimate();
-            RequestNextVSync("animate", timestamp_);
-        } else {
-            rsVSyncDistributor_->UnmarkRSAnimate();
+        if (rsParallelType_ == RsParallelType::RS_PARALLEL_TYPE_SINGLE_THREAD) {
+            if (needRequestNextVsyncAnimate_ || rsVSyncDistributor_->HasPendingUIRNV()) {
+                rsVSyncDistributor_->MarkRSAnimate();
+                RequestNextVSync("animate", timestamp_);
+            } else {
+                rsVSyncDistributor_->UnmarkRSAnimate();
+            }
         }
 
         InformHgmNodeInfo();
@@ -1692,6 +1697,7 @@ void RSMainThread::Render()
     if (isUniRender_) {
         auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
         renderThreadParams_->SetTimestamp(hgmCore.GetCurrentTimestamp());
+        renderThreadParams_->SetRequestNextVsyncFlag(needRequestNextVsyncAnimate_);
         renderThreadParams_->SetPendingScreenRefreshRate(hgmCore.GetPendingScreenRefreshRate());
         renderThreadParams_->SetForceCommitLayer(isHardwareEnabledBufferUpdated_ || forceUpdateUniRenderFlag_);
     }

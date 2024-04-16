@@ -342,7 +342,6 @@ void VSyncDistributor::WaitForVsyncOrRequest(std::unique_lock<std::mutex> &locke
                 ScopedBytrace func(name_ + "_EnableVsync");
                 EnableVSync();
             }
-            lockExecute_ = true;
         }
     }
 #endif
@@ -446,7 +445,6 @@ void VSyncDistributor::ThreadMain()
         {
             std::unique_lock<std::mutex> locker(mutex_);
             pendingRNVInVsync_ = false;
-            pendingRNVInDVsync_ = false;
         }
 #endif
         PostVSyncEvent(conns, timestamp);
@@ -652,6 +650,13 @@ VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection> &conne
         VLOGE("connection is nullptr");
         return VSYNC_ERROR_NULLPTR;
     }
+
+#if defined(RS_ENABLE_DVSYNC)
+    if (IsDVsyncOn() && fromWhom == "ltpoForceUpdate") {
+        return VSYNC_ERROR_OK;
+    }
+#endif
+
     ScopedBytrace func(connection->info_.name_ + "_RequestNextVSync");
     std::unique_lock<std::mutex> locker(mutex_);
 
@@ -683,20 +688,7 @@ VsyncError VSyncDistributor::RequestNextVSync(const sptr<VSyncConnection> &conne
         connection->rate_ = 0;
     }
     connection->triggerThisTime_ = true;
-#if defined(RS_ENABLE_DVSYNC)
-    if (IsDVsyncOn()) {
-        if (!lockExecute_) {
-            con_.notify_all();
-        } else {
-            pendingRNVInDVsync_ = true;
-            dvsync_->RNVNotify();
-        }
-    } else {
-        con_.notify_all();
-    }
-#else
     con_.notify_all();
-#endif
     VLOGD("conn name:%{public}s, rate:%{public}d", connection->info_.name_.c_str(), connection->rate_);
     return VSYNC_ERROR_OK;
 }
@@ -878,11 +870,6 @@ void VSyncDistributor::SetFrameIsRender(bool isRender)
         dvsync_->UnMarkRSNotRendering();
     } else {
         dvsync_->MarkRSNotRendering();
-    }
-    lockExecute_ = false;
-    if (IsDVsyncOn() && pendingRNVInDVsync_) {
-        ScopedBytrace func("pendingRNVInDVsync_ is true, notify");
-        con_.notify_all();
     }
 #endif
 }

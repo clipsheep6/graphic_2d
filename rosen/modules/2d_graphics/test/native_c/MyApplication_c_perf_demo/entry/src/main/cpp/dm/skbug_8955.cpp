@@ -24,11 +24,13 @@ OH_Drawing_TextBlob *makeFromText(const void *text, size_t byteLength, OH_Drawin
         return nullptr;
     };
     OH_Drawing_TextBlobBuilderAllocRunPos(textBlobBuilder, font, count, nullptr);
+
+    //  font.textToGlyphs、font.getPos接口缺失
+
     return OH_Drawing_TextBlobCreateFromText(text, byteLength, font, encoding);
 }
 
 void SkBug_8955::OnTestFunction(OH_Drawing_Canvas *canvas) {
-    OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
 
     OH_Drawing_Font *font = OH_Drawing_FontCreate();
@@ -42,7 +44,6 @@ void SkBug_8955::OnTestFunction(OH_Drawing_Canvas *canvas) {
 
     OH_Drawing_CanvasScale(canvas, 0, 0);
 
-    OH_Drawing_CanvasAttachPen(canvas, pen);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
 
     OH_Drawing_CanvasDrawTextBlob(canvas, blob, 30, 60);
@@ -53,6 +54,5 @@ void SkBug_8955::OnTestFunction(OH_Drawing_Canvas *canvas) {
     OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_FontDestroy(font);
     OH_Drawing_TextBlobBuilderDestroy(textBlobBuilder);
-    OH_Drawing_PenDestroy(pen);
     OH_Drawing_BrushDestroy(brush);
 }

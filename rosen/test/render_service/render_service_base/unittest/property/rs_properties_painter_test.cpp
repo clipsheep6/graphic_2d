@@ -752,24 +752,24 @@ HWTEST_F(RSPropertiesPainterTest, DrawLightInner001, TestSize.Level1)
     std::shared_ptr<RSObjAbsGeometry> geoPtr;
     Vector4f lightPos = {1.f, 1.f, 1.f, 1.f}; // for test
     lightSourcesAndPosVec.push_back(std::make_pair(newLightSource, lightPos));
-    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec, geoPtr);
+    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec);
     EXPECT_EQ(geoPtr, nullptr);
 
     properties.SetIlluminatedBorderWidth(0.f);
     IlluminatedType illuminatedType = IlluminatedType::CONTENT;
     RSIlluminated rsIlluminated;
     rsIlluminated.SetIlluminatedType(illuminatedType);
-    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec, geoPtr);
+    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec);
     EXPECT_NE(newLightSource, nullptr);
 
     illuminatedType = IlluminatedType::BORDER;
     rsIlluminated.SetIlluminatedType(illuminatedType);
-    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec, geoPtr);
+    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec);
     EXPECT_EQ(lightSourcesAndPosVec.empty(), false);
 
     illuminatedType = IlluminatedType::BORDER_CONTENT;
     rsIlluminated.SetIlluminatedType(illuminatedType);
-    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec, geoPtr);
+    RSPropertiesPainter::DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec);
     EXPECT_NE(lightSourcesAndPosVec.empty(), true);
 }
 

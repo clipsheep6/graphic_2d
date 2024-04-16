@@ -53,7 +53,6 @@ constexpr float MAX_TRANS_RATIO = 0.95f;
 constexpr float MIN_SPOT_RATIO = 1.0f;
 constexpr float MAX_SPOT_RATIO = 1.95f;
 constexpr float MAX_AMBIENT_RADIUS = 150.0f;
-constexpr int MAX_LIGHT_SOURCES = 12;
 // when the blur radius > SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD,
 // the snapshot should call outset before blur to shrink by 1px.
 constexpr static float SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD = 40.0f;
@@ -1156,7 +1155,7 @@ const std::shared_ptr<Drawing::RuntimeShaderBuilder>& RSPropertiesPainter::GetPh
         return phongShaderBuilder;
     }
     std::shared_ptr<Drawing::RuntimeEffect> lightEffect_;
-    std::string lightString(R"(
+    const static std::string lightString(R"(
         uniform vec4 lightPos[12];
         uniform vec4 viewPos[12];
         uniform vec4 specularLightColor[12];
@@ -1212,10 +1211,6 @@ void RSPropertiesPainter::DrawLight(const RSProperties& properties, Drawing::Can
         ROSEN_LOGD("RSPropertiesPainter::DrawLight lightSourceList is empty!");
         return;
     }
-    const auto& geoPtr = (properties.GetBoundsGeometry());
-    if (!geoPtr || geoPtr->IsEmpty()) {
-        return;
-    }
     std::vector<std::pair<std::shared_ptr<RSLightSource>, Vector4f>> lightSourcesAndPosVec(
         lightSourcesAndPosMap.begin(), lightSourcesAndPosMap.end());
     if (lightSourcesAndPosVec.size() > MAX_LIGHT_SOURCES) {
@@ -1224,20 +1219,19 @@ void RSPropertiesPainter::DrawLight(const RSProperties& properties, Drawing::Can
                    y.second.x_ * y.second.x_ + y.second.y_ * y.second.y_;
         });
     }
-    DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec, geoPtr);
+    DrawLightInner(properties, canvas, lightBuilder, lightSourcesAndPosVec);
 }
 
 void RSPropertiesPainter::DrawLightInner(const RSProperties& properties, Drawing::Canvas& canvas,
     std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder,
-    const std::vector<std::pair<std::shared_ptr<RSLightSource>, Vector4f>>& lightSourcesAndPosVec,
-    const std::shared_ptr<RSObjAbsGeometry>& geoPtr)
+    const std::vector<std::pair<std::shared_ptr<RSLightSource>, Vector4f>>& lightSourcesAndPosVec)
 {
     auto cnt = 0;
     constexpr int vectorLen = 4;
     float lightPosArray[vectorLen * MAX_LIGHT_SOURCES] = { 0 };
     float viewPosArray[vectorLen * MAX_LIGHT_SOURCES] = { 0 };
     float lightColorArray[vectorLen * MAX_LIGHT_SOURCES] = { 0 };
-    float lightIntensityArray[MAX_LIGHT_SOURCES] = { 0 };
+    std::array<float, MAX_LIGHT_SOURCES> lightIntensityArray = { 0 };
 
     auto iter = lightSourcesAndPosVec.begin();
     while (iter != lightSourcesAndPosVec.end() && cnt < MAX_LIGHT_SOURCES) {
@@ -1276,7 +1270,7 @@ void RSPropertiesPainter::DrawLightInner(const RSProperties& properties, Drawing
 
 void RSPropertiesPainter::DrawContentLight(const RSProperties& properties, Drawing::Canvas& canvas,
     std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Drawing::Brush& brush,
-    const float lightIntensityArray[])
+    const std::array<float, MAX_LIGHT_SOURCES>& lightIntensityArray)
 {
     // content light
     std::shared_ptr<Drawing::ShaderEffect> shader;
@@ -1295,11 +1289,15 @@ void RSPropertiesPainter::DrawContentLight(const RSProperties& properties, Drawi
 
 void RSPropertiesPainter::DrawBorderLight(const RSProperties& properties, Drawing::Canvas& canvas,
     std::shared_ptr<Drawing::RuntimeShaderBuilder>& lightBuilder, Drawing::Pen& pen,
-    const float lightIntensityArray[])
+    const std::array<float, MAX_LIGHT_SOURCES>& lightIntensityArray)
 {
     // border light
     std::shared_ptr<Drawing::ShaderEffect> shader;
-    lightBuilder->SetUniform("specularStrength", lightIntensityArray, MAX_LIGHT_SOURCES);
+    float specularStrengthArr[MAX_LIGHT_SOURCES] = { 0 };
+    for (int i = 0; i < MAX_LIGHT_SOURCES; i++) {
+        specularStrengthArr[i] = lightIntensityArray[i];
+    }
+    lightBuilder->SetUniform("specularStrength", specularStrengthArr, MAX_LIGHT_SOURCES);
     shader = lightBuilder->MakeShader(nullptr, false);
     pen.SetShaderEffect(shader);
     float borderWidth = std::ceil(properties.GetIlluminatedBorderWidth());

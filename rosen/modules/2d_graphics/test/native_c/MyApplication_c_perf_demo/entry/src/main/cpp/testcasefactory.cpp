@@ -65,6 +65,7 @@
 #include "dm/points_mask_filter.h"
 #include "dm/clip_cubic_gm.h"
 #include "dm/points.h"
+#include "dm/conic_paths.h"
 
 
 #include "interface/canvas_test.h"

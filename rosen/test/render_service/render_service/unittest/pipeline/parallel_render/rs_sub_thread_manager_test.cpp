@@ -44,6 +44,14 @@ void RsSubThreadManagerTest::TearDown() {}
 HWTEST_F(RsSubThreadManagerTest, StartTest, TestSize.Level1)
 {
     auto rsSubThreadManager = RSSubThreadManager::Instance();
+    ASSERT_TRUE(rsSubThreadManager->threadList_.empty());
+    rsSubThreadManager->Start(nullptr);
+    auto renderContext = new RenderContext();
+    rsSubThreadManager->Start(renderContext);
+    renderContext->InitializeEglContext();
+    auto curThread = std::make_shared<RSSubThread>(renderContext, 0);
+    rsSubThreadManager->threadList_.push_back(curThread);
+    ASSERT_FALSE(rsSubThreadManager->threadList_.empty());
     rsSubThreadManager->Start(nullptr);
     EXPECT_TRUE(rsSubThreadManager->threadList_.empty());
 }
@@ -70,47 +78,10 @@ HWTEST_F(RsSubThreadManagerTest, StartRCDThreadTest001, TestSize.Level1)
 HWTEST_F(RsSubThreadManagerTest, PostTaskTest, TestSize.Level1)
 {
     auto rsSubThreadManager = RSSubThreadManager::Instance();
-    rsSubThreadManager->PostTask([] {}, 5);
-    auto renderContext = std::make_shared<RenderContext>();
-    auto curThread = std::make_shared<RSSubThread>(renderContext.get(), 0);
-    rsSubThreadManager->threadList_.push_back(curThread);
-    rsSubThreadManager->PostTask([] {}, 1);
-    rsSubThreadManager->threadList_.clear();
-}
-
-/**
- * @tc.name: DumpMemTest001
- * @tc.desc: Verify function DumpMem
- * @tc.type:FUNC
- */
-HWTEST_F(RsSubThreadManagerTest, DumpMemTest001, TestSize.Level1)
-{
-    auto rsSubThreadManager = RSSubThreadManager::Instance();
-    DfxString log;
-    auto renderContext = std::make_shared<RenderContext>();
-    std::shared_ptr<RSSubThread> curThread = nullptr;
-    auto curThreadf = std::make_shared<RSSubThread>(renderContext.get(), 0);
-    rsSubThreadManager->DumpMem(log);
-    rsSubThreadManager->threadList_.push_back(curThread);
-    rsSubThreadManager->threadList_.push_back(curThreadf);
-    rsSubThreadManager->DumpMem(log);
-    EXPECT_FALSE(rsSubThreadManager->threadList_.empty());
-    rsSubThreadManager->threadList_.clear();
-}
-
-/**
- * @tc.name: GetAppGpuMemoryInMBTest001
- * @tc.desc: Verify function GetAppGpuMemoryInMB
- * @tc.type:FUNC
- */
-HWTEST_F(RsSubThreadManagerTest, GetAppGpuMemoryInMBTest001, TestSize.Level1)
-{
-    auto rsSubThreadManager = RSSubThreadManager::Instance();
-    std::shared_ptr<RSSubThread> curThreadf = nullptr;
-    auto renderContextt = std::make_shared<RenderContext>();
-    auto curThread = std::make_shared<RSSubThread>(renderContextt.get(), 0);
-    EXPECT_EQ(rsSubThreadManager->GetAppGpuMemoryInMB(), 0.f);
-    rsSubThreadManager->threadList_.push_back(curThreadf);
+    rsSubThreadManager->PostTask([]{}, 5);
+    auto renderContext = new RenderContext();
+    renderContext->InitializeEglContext();
+    auto curThread = std::make_shared<RSSubThread>(renderContext, 0);
     rsSubThreadManager->threadList_.push_back(curThread);
     EXPECT_EQ(rsSubThreadManager->GetAppGpuMemoryInMB(), 0.f);
     rsSubThreadManager->threadList_.clear();

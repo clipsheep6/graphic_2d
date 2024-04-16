@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {TestBase} from './testbase';
+import {TestBase, StyleType} from './testbase';
 import { SrcModeRectBench } from '../testcase/SrcModeRectBench';
 import { BezierBench } from '../testcase/BezierBench';
 import { XfermodeBench } from '../testcase/XfermodeBench';
@@ -32,6 +32,7 @@ import {CirclesBench} from '../testcase/CirclesBench'
 import {LongCurvedPathBench} from '../testcase/LongCurvedPathBench'
 import {CubicPathBench} from '../testcase/CubicPathBench'
 import  {PathCreateBench} from '../testcase/PathCreateBench'
+import  {CanvasDrawRect} from '../interface/canvastest'
 const TAG = '[DrawingTest]';
 
 export class CaseFactory {
@@ -57,6 +58,8 @@ export class CaseFactory {
       ['pathcubicpaint', () => { return new BezierBench(50, 1); }], // drawpath 可调整宽度，cubic构造 其他pen配置未开放
       ['drawtextblobmode', () => { return new XfermodeBench(0, 0); }], // drawTextBlob，可设置belendmode
       ['maketextblobdraw', () => { return new TextBlobFirstTimeBench(); }], // textblob构造+drawTextBlob
+
+      ['canvas_drawrect', () => { return new CanvasDrawRect(StyleType.DRAW_STYLE_COMPLEX); }],
     ]
   );
   static PerformanceCpuMap: Map<string, Function> = new Map(
@@ -81,6 +84,7 @@ export class CaseFactory {
       ['pathcubicpaint', () => { return new BezierBench(50, 1); }], // drawpath 可调整宽度，cubic构造 其他pen配置未开放
       ['drawtextblobmode', () => { return new XfermodeBench(0, 0); }], // drawTextBlob，可设置belendmode
       ['maketextblobdraw', () => { return new TextBlobFirstTimeBench(); }], // textblob构造+drawTextBlob
+      ['canvas_drawrect', () => { return new CanvasDrawRect(StyleType.DRAW_STYLE_COMPLEX); }],
     ]
   );
   static FunctionGpuUpScreenMap: Map<string, Function> = new Map(
@@ -105,6 +109,7 @@ export class CaseFactory {
       ['pathcubicpaint', () => { return new BezierBench(50, 1); }], // drawpath 可调整宽度，cubic构造 其他pen配置未开放
       ['drawtextblobmode', () => { return new XfermodeBench(0, 0); }], // drawTextBlob，可设置belendmode
       ['maketextblobdraw', () => { return new TextBlobFirstTimeBench(); }], // textblob构造+drawTextBlob
+      ['canvas_drawrect', () => { return new CanvasDrawRect(StyleType.DRAW_STYLE_COMPLEX); }],
     ]
   );
   static PerformanceGpuUpScreenMap: Map<string, Function> = new Map(
@@ -129,6 +134,7 @@ export class CaseFactory {
       ['pathcubicpaint', () => { return new BezierBench(50, 1); }], // drawpath 可调整宽度，cubic构造 其他pen配置未开放
       ['drawtextblobmode', () => { return new XfermodeBench(0, 0); }], // drawTextBlob，可设置belendmode
       ['maketextblobdraw', () => { return new TextBlobFirstTimeBench(); }], // textblob构造+drawTextBlob
+      ['canvas_drawrect', () => { return new CanvasDrawRect(StyleType.DRAW_STYLE_COMPLEX); }],
     ]
   );
 

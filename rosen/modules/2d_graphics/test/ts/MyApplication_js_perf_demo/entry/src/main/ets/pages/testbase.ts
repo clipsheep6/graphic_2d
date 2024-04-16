@@ -11,6 +11,7 @@ const TAG = '[DrawingTest]';
  * 测试基类
  */
 export class TestBase {
+
   public constructor() {
     console.log(TAG, 'create TestBase');
     this.width_ = 720;
@@ -21,6 +22,7 @@ export class TestBase {
     this.backgroundB_ = 0xFF;
     this.fileName_ = "undefined";
     this.testCount_ = 1;
+    this.styleType_ = StyleType.DRAW_STYLE_NONE;
   }
 
   width_: number | 720;  //gpu离屏绘制默认创建的画布宽
@@ -34,6 +36,8 @@ export class TestBase {
   canvas_: drawing.Canvas | undefined; //gpu离屏绘制canvas
   testCount_: number | 1; //性能功耗测试时候，关键接口的默认循环次数
   time_: number | 0; //性能测试耗时
+  styleType_: number | 0; //性能测试耗时
+
 
   public async CreateBitmapCanvas() {
     console.log(TAG, 'CreateBitmapCanvas'+ this.width_ + ' * ' + this.height_);
@@ -129,7 +133,7 @@ export class TestBase {
       console.log(TAG, 'canvas_ is invalid');
       return;
     }
-
+    this.StyleSettings(this.canvas_, this.styleType_);
     let startTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
     console.log(TAG, 'DrawingApiTest Started: [' + startTime + ']');
 
@@ -141,6 +145,7 @@ export class TestBase {
     console.error(TAG, 'DrawingApiTest TotalApiCallTime: [' + this.time_ + ']');
     console.error(TAG, 'DrawingApiTest TotalApiCallCount: [' + this.testCount_ + ']');
     console.error(TAG, 'TestPerformanceCpu end');
+    this.StyleSettingsDestroy(this.canvas_);
   }
 
   public TestFunctionGpuUpScreen(canvas: drawing.Canvas) {
@@ -160,6 +165,7 @@ export class TestBase {
       return;
     }
 
+    this.StyleSettings(canvas, this.styleType_);
     let startTime = systemDateTime.getUptime(systemDateTime.TimeType.STARTUP, false);
     console.log(TAG, 'DrawingApiTest Started: [' + startTime + ']');
 
@@ -171,6 +177,44 @@ export class TestBase {
     console.error(TAG, 'DrawingApiTest TotalApiCallTime: [' + this.time_ + ']');
     console.error(TAG, 'DrawingApiTest TotalApiCallCount: [' + this.testCount_ + ']');
     console.log(TAG, 'TestPerformanceGpuUpScreen end');
+    this.StyleSettingsDestroy(canvas);
     return this.time_;
   }
+  public StyleSettings(canvas: drawing.Canvas, styleType: StyleType) {
+    if (styleType == StyleType.DRAW_STYLE_COMPLEX) {
+
+      console.log(TAG, 'xyj DRAW_ STYLE_COMPLEX end');
+      let color: common2D.Color = { alpha: 255, red: 255, green: 0, blue: 0 };
+      let filter = drawing.ColorFilter.createLinearToSRGBGamma();
+
+      let brush = new drawing.Brush();
+      brush.setColor(color);
+      brush.setAntiAlias(true);
+      brush.setAlpha(0xF0);
+      brush.setColorFilter(filter);
+      brush.setBlendMode(1);
+      canvas.attachBrush(brush);
+
+      let pen = new drawing.Pen();
+      pen.setColor(color);
+      pen.setStrokeWidth(10);
+      pen.setAntiAlias(true);
+      pen.setAlpha(0xF0);
+      pen.setColorFilter(filter);
+      pen.setBlendMode(1);
+      pen.setDither(true);
+      canvas.attachPen(pen);
+    }
+  }
+  public StyleSettingsDestroy(canvas: drawing.Canvas) {
+    if (canvas) {
+      canvas.detachPen();
+      canvas.detachBrush();
+    }
+  }
+}
+
+export enum StyleType { //公共的pen，brush，filter等配置
+  DRAW_STYLE_NONE = 0,
+  DRAW_STYLE_COMPLEX, //最复杂的配置，会将所有配置加上，得出近似最恶劣的性能数据
 }

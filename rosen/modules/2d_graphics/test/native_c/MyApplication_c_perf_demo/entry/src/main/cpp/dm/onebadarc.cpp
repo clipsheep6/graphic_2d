@@ -27,6 +27,7 @@ static inline float Bits2Float(int32_t floatAsBits) {
 }
 
 void OneBadArc::OnTestFunction(OH_Drawing_Canvas *canvas) {
+    // 完全按照skia的逻辑所画出的图形和skia不一致
     OH_Drawing_Path *path = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path, Bits2Float(0x41a00000), Bits2Float(0x41a00000));
     OH_Drawing_PathLineTo(path, Bits2Float(0x4208918c), Bits2Float(0x4208918c));

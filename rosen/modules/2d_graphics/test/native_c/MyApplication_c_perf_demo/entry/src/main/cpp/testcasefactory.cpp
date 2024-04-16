@@ -192,7 +192,7 @@ namespace {
 
             {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
             {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  //第二个三角形虚化不对，
-            {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},
+            {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

@@ -36,6 +36,7 @@
 #include "pipeline/rs_surface_render_node.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties.h"
+#include "render/rs_drawing_filter.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_path.h"
 
@@ -472,11 +473,11 @@ bool RSUniRenderUtil::Is3DRotation(Drawing::Matrix matrix)
 
 void RSUniRenderUtil::ReleaseColorPickerFilter(std::shared_ptr<RSFilter> RSFilter)
 {
-    auto materialFilter = std::static_pointer_cast<RSMaterialFilter>(RSFilter);
-    if (materialFilter->GetColorPickerCacheTask() == nullptr) {
+    auto drawingFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
+    if (drawingFilter->GetColorPickerCacheTask() == nullptr) {
         return;
     }
-    materialFilter->ReleaseColorPickerFilter();
+    drawingFilter->ReleaseColorPickerFilter();
 }
 
 void RSUniRenderUtil::ReleaseColorPickerResource(std::shared_ptr<RSRenderNode>& node)
@@ -499,7 +500,9 @@ void RSUniRenderUtil::ReleaseColorPickerResource(std::shared_ptr<RSRenderNode>& 
     // Recursive to release color picker resource
     for (auto& child : *node->GetChildren()) {
         if (auto canvasChild = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(child)) {
-            ReleaseColorPickerResource(canvasChild);
+            if (RSSystemProperties::GetColorPickerPartialEnabled()) {
+                ReleaseColorPickerResource(canvasChild);
+            }
         }
     }
 }
@@ -566,7 +569,9 @@ void RSUniRenderUtil::AssignWindowNodes(const std::shared_ptr<RSDisplayRenderNod
         bool isNodeAssignSubThread = IsNodeAssignSubThread(node, isRotation);
         if (isNodeAssignSubThread != lastIsNeedAssignToSubThread) {
             auto renderNode = RSBaseRenderNode::ReinterpretCast<RSRenderNode>(node);
-            ReleaseColorPickerResource(renderNode);
+            if (RSSystemProperties::GetColorPickerPartialEnabled()) {
+                ReleaseColorPickerResource(renderNode);
+            }
             node->SetLastIsNeedAssignToSubThread(isNodeAssignSubThread);
         }
         if (isNodeAssignSubThread) {

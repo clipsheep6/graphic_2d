@@ -31,7 +31,7 @@
 namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
-class RSDrawingFilter : public RSFilter {
+class RSB_EXPORT RSDrawingFilter : public RSFilter {
 public:
     RSDrawingFilter(std::shared_ptr<Drawing::ImageFilter> imageFilter);
     RSDrawingFilter(std::shared_ptr<RSShaderFilter> shaderFilter);
@@ -53,6 +53,8 @@ public:
         colorMode_ = colorMode;
     }
 
+    void InitColorMod();
+    
     int GetColorMode()
     {
         return colorMode_;

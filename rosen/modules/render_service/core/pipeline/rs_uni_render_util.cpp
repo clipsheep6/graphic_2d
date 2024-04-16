@@ -23,6 +23,7 @@
 #include "pipeline/rs_base_render_util.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_properties.h"
+#include "render/rs_drawing_filter.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_path.h"
 #include "rs_trace.h"
@@ -414,11 +415,11 @@ bool RSUniRenderUtil::Is3DRotation(Drawing::Matrix matrix)
 
 void RSUniRenderUtil::ReleaseColorPickerFilter(std::shared_ptr<RSFilter> RSFilter)
 {
-    auto materialFilter = std::static_pointer_cast<RSMaterialFilter>(RSFilter);
-    if (materialFilter->GetColorPickerCacheTask() == nullptr) {
+    auto drawingFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
+    if (drawingFilter->GetColorPickerCacheTask() == nullptr) {
         return;
     }
-    materialFilter->ReleaseColorPickerFilter();
+    drawingFilter->ReleaseColorPickerFilter();
 }
 
 void RSUniRenderUtil::ReleaseColorPickerResource(std::shared_ptr<RSRenderNode>& node)

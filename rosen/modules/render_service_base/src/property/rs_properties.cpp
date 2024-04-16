@@ -2132,6 +2132,7 @@ void RSProperties::GenerateBackgroundMaterialBlurFilter()
     originalFilter->SetMaskCOlor(backgroundMaskColor_);
     originalFilter->SetNeedMaskCOlor(true);
     backgroundFilter_ = originalFilter;
+    std::static_pointer_cast<RSDrawingFilter>(backgroundFilter_)->InitColorMod();
     backgroundFilter_->SetFilterType(RSFilter::MATERIAL);
 }
  
@@ -2197,6 +2198,7 @@ void RSProperties::GenerateForegroundMaterialBlurFilter()
     originalFilter->SetMaskCOlor(foregroundMaskColor_);
     originalFilter->SetNeedMaskCOlor(true);
     filter_ = originalFilter;
+    std::static_pointer_cast<RSDrawingFilter>(filter_)->InitColorMod();
     filter_->SetFilterType(RSFilter::MATERIAL);
 }
  

@@ -61,7 +61,7 @@
 #include "dm/stroke_rect_shader.h"
 #include "dm/luma_filter.h"
 #include "dm/bugfix7792.h"
-
+#include "dm/bitmaprect.h"
 #include "dm/points_mask_filter.h"
 #include "dm/clip_cubic_gm.h"
 #include "dm/points.h"
@@ -193,6 +193,7 @@ namespace {
             {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
             {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  //第二个三角形虚化不对，
             {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  //有部分线条多余画出
+            {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(true); }},   //代码完成，有crash，rect roundout 接口缺失
     };
 
     std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

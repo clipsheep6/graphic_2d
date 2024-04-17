@@ -68,6 +68,7 @@ add_library(entry SHARED
     dm/onebadarc.cpp
     dm/skbug_8955.cpp
     dm/conic_paths.cpp
+    dm/bitmaprect.cpp
 )
 
 add_library(myxnode SHARED
@@ -129,6 +130,7 @@ add_library(myxnode SHARED
     dm/onebadarc.cpp
     dm/skbug_8955.cpp
     dm/conic_paths.cpp
+    dm/bitmaprect.cpp
 )
 
 find_library(

@@ -57,6 +57,7 @@ static const std::vector<struct JsEnumInt> g_fontWeight = {
 static const std::vector<struct JsEnumInt> g_fontStyle = {
     { "NORMAL", static_cast<size_t>(FontStyle::NORMAL) },
     { "ITALIC", static_cast<size_t>(FontStyle::ITALIC) },
+    { "OBLIQUE", static_cast<size_t>(FontStyle::OBLIQUE) },
 };
 
 static const std::vector<struct JsEnumInt> g_textBaseline = {

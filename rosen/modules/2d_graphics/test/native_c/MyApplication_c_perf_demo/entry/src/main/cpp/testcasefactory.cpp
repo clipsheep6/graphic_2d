@@ -61,7 +61,7 @@
 #include "dm/stroke_rect_shader.h"
 #include "dm/luma_filter.h"
 #include "dm/bugfix7792.h"
-
+#include "dm/bitmaprect.h"
 #include "dm/points_mask_filter.h"
 #include "dm/clip_cubic_gm.h"
 #include "dm/points.h"
@@ -192,6 +192,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // 有部分线条多余画出
         {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
         {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
+        {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(true); }},   //代码完成，有crash，rect roundout 接口缺失
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

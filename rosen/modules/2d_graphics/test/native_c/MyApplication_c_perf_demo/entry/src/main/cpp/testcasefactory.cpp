@@ -68,252 +68,240 @@
 #include "dm/skbug_8955.h"
 #include "dm/conic_paths.h"
 
-
 #include "interface/canvas_test.h"
 #include "dm/onebadarc.h"
 
 namespace {
-    std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
-        {
-            {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1); }}, // drawrect 随机颜色，随机位置
-            {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(true); }}, // drawtextblob
-            {"drawbitmapnoaa", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapAABench>(); }}, // drawbitmap
-            {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }}, // drawbitmaprect 排列平铺到整个页面
-            {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }}, //8*(save+concat+restore)+drawcolor
-            {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShaderMFBench>(); }}, // savelayer+canvasclear+restore
-            {"drawdashline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }}, // drawline
-            {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipStrategyBench>(); }}, // savelayer+createpoint+drawcircle
-            {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<OvalBench>(1); }}, // drawOval
-            {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RRectBench>(1); }}, // DrawRoundRect
-            {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(true, true); }}, // save clippath drawrect restore
-            {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(false, true); }}, // save cliprect drawrect restore
-            {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::IMAGE_RECT); }}, // drawimagerect
-            {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CirclesBench>(); }}, // patharcto*2 + pathclose + drawpath
-            {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectPathBench>(); }}, // drawpath, path由AddRect构造
-            {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<NestedAAClipBench>(); }},  // path由addrrrect构建，canvas clippath：在此背景上drawrect，随机alpha
-            {"drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<TrianglePathBench>(); } }, // drawpath, path由lineto构造
-            {"drawpathcubicto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CubicPathBench>(); }}, // drawpath, path先由Cubic构造再进行transform
-            {"drawshaderlinear_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true,GradientBench::LINEAR,2); }}, // 主循环drawoval, penseteffect（由linear构造）
-            {"drawshaderradial_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true,GradientBench::RADIAL,2); }}, // 主循环drawoval, penseteffect（由radial构造）
-            {"drawshadersweep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true,GradientBench::SWEEP,2); }}, // 主循环drawoval, penseteffect（由sweep构造）
-            {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::LINEAR,2); }}, // 主循环drawrect, penseteffect（由linear构造）
-            {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::RADIAL,2); }}, // 主循环drawrect, penseteffect（由radial构造）
-            {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::SWEEP,2); }}, // 主循环drawrect, penseteffect（由sweep构造）
-            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
-            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromPosText); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
-            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromString); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
-            {"maskfiltercreateblur_real_normal", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurBench>(BLUR_REAL,OH_Drawing_BlurType::NORMAL); }}, // blurbench,模糊偏差0.01，模糊类型normal
-            {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreateBench>();}}, // pathreset
-            {"drawtextblobbuildercreate", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(false); }}, // drawtextblob BuilderCreate
-            {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
-            {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
-            {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
-            {"drawcanvasdrawshadow_t_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,true); }},
-            {"drawcanvasdrawshadow_o_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,false); }},
-            {"drawcanvasdrawshadow_t_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,false); }},
-            {"drawcanvasdrawshadow_o_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,true); }},
-            {"drawcanvasreadpixels", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(false); }},
-            {"drawcanvasreadpixels_tobitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(true); }},
-            {"drawpenrect_1_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,0,true); }},
-            {"drawpenrect_1_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,4,true); }},
-            {"drawpenrect_3_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,0,true); }},
-            {"drawpenrect_3_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,4,true); }},
-            {"drawpenrect_1_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,0,false); }},
-            {"drawpenrect_1_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,4,false); }},
-            {"drawpenrect_3_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,0,false); }},
-            {"drawpenrect_3_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,4,false); }},
-            {"drawpenrectsrcmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<SrcModeRectBench>(); }},
-            {"drawpenbeizer_quad_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP,OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN,2,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_quad_square_bevel_10", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP,OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN,10,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_quad_round_miter_50", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP,OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN,50,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP,OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN,2,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP,OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN,10,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP,OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN,50,BezierBench::DrawType::draw_quad); }},
-            {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
-            {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
-            {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
-            {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }},// drawpath, path由PathQuadTo构造
-            {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,true); }},
-            {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,true); }},
-            {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,true); }},
-            {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
-            {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
-            {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
-            {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskOpaque); }},
-            {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskBlack); }},
-            {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
-            {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
+std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
+    {
+        {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1); }},                                                              // drawrect 随机颜色，随机位置
+        {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(true); }},                                             // drawtextblob
+        {"drawbitmapnoaa", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapAABench>(); }},                                                 // drawbitmap
+        {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }},                           // drawbitmaprect 排列平铺到整个页面
+        {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},                                                   // 8*(save+concat+restore)+drawcolor
+        {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShaderMFBench>(); }},                                                          // savelayer+canvasclear+restore
+        {"drawdashline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }},                                                       // drawline
+        {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipStrategyBench>(); }},                                                     // savelayer+createpoint+drawcircle
+        {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<OvalBench>(1); }},                                                              // drawOval
+        {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RRectBench>(1); }},                                                        // DrawRoundRect
+        {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(true, true); }},                                                   // save clippath drawrect restore
+        {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(false, true); }},                                                  // save cliprect drawrect restore
+        {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::IMAGE_RECT); }},                             // drawimagerect
+        {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CirclesBench>(); }},                                                       // patharcto*2 + pathclose + drawpath
+        {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectPathBench>(); }},                                                    // drawpath, path由AddRect构造
+        {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<NestedAAClipBench>(); }},                                           // path由addrrrect构建，canvas clippath：在此背景上drawrect，随机alpha
+        {"drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<TrianglePathBench>(); }},                                                 // drawpath, path由lineto构造
+        {"drawpathcubicto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CubicPathBench>(); }},                                                   // drawpath, path先由Cubic构造再进行transform
+        {"drawshaderlinear_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true, GradientBench::LINEAR, 2); }},                // 主循环drawoval, penseteffect（由linear构造）
+        {"drawshaderradial_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true, GradientBench::RADIAL, 2); }},                // 主循环drawoval, penseteffect（由radial构造）
+        {"drawshadersweep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true, GradientBench::SWEEP, 2); }},                  // 主循环drawoval, penseteffect（由sweep构造）
+        {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false, GradientBench::LINEAR, 2); }},               // 主循环drawrect, penseteffect（由linear构造）
+        {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false, GradientBench::RADIAL, 2); }},               // 主循环drawrect, penseteffect（由radial构造）
+        {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false, GradientBench::SWEEP, 2); }},                 // 主循环drawrect, penseteffect（由sweep构造）
+        {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText); }},                     // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
+        {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromPosText); }},                   // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
+        {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromString); }},                 // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+        {"maskfiltercreateblur_real_normal", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurBench>(BLUR_REAL, OH_Drawing_BlurType::NORMAL); }}, // blurbench,模糊偏差0.01，模糊类型normal
+        {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreateBench>(); }},                                                    // pathreset
+        {"drawtextblobbuildercreate", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(false); }},                               // drawtextblob BuilderCreate
+        {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
+        {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
+        {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
+        {"drawcanvasdrawshadow_t_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true, true); }},
+        {"drawcanvasdrawshadow_o_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false, false); }},
+        {"drawcanvasdrawshadow_t_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true, false); }},
+        {"drawcanvasdrawshadow_o_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false, true); }},
+        {"drawcanvasreadpixels", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(false); }},
+        {"drawcanvasreadpixels_tobitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(true); }},
+        {"drawpenrect_1_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 0, true); }},
+        {"drawpenrect_1_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 4, true); }},
+        {"drawpenrect_3_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 0, true); }},
+        {"drawpenrect_3_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 4, true); }},
+        {"drawpenrect_1_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 0, false); }},
+        {"drawpenrect_1_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 4, false); }},
+        {"drawpenrect_3_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 0, false); }},
+        {"drawpenrect_3_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 4, false); }},
+        {"drawpenrectsrcmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<SrcModeRectBench>(); }},
+        {"drawpenbeizer_quad_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP, OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN, 2, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_quad_square_bevel_10", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP, OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN, 10, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_quad_round_miter_50", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP, OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN, 50, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP, OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN, 2, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP, OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN, 10, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP, OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN, 50, BezierBench::DrawType::draw_quad); }},
+        {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
+        {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
+        {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+        {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }}, // drawpath, path由PathQuadTo构造
+        {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align, true); }},
+        {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align, true); }},
+        {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align, true); }},
+        {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align, false); }},
+        {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align, false); }},
+        {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align, false); }},
+        {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskOpaque); }},
+        {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskBlack); }},
+        {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskColor); }},
+        {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskColor); }},
 
-            //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
-            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
-             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
-            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
-             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
-            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
-            {"drawtextblobcreate_text_src", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_SRC); }},
-            {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
-            {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
-            {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
-            
-            //DM
-            {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},//缺少背景格子的渲染
-            {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},
-            {"blurlargerrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},
-            {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},
-            {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},
-            {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},//字体相关问题，函数缺失
-            {"alpha_image_alpha_tint", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},
-            {"shadowutils", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorNoOccluders); }},//maprect 接口计算不对
-            {"shadowutils_occl", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorOccluders); }},//maprect 接口计算不对
-            {"shadowutils_gray", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kGrayscale); }},//maprect 接口计算不对
-            {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
-            {"largeclippedpath_kwinding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
-            {"largeclippedpath_kevenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
-            {"clippedcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClippedCubic>(); }},
-            {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},
-            {"largeclippedpath_winding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }},
-            {"largeclippedpath_evenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }},
-            {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},
-            {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},
-            {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},
-            {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},
-            {"alphagradients", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaGradients>(); }},                    
-            {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},    
-            {"convex_paths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},
-            {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},       
-            {"arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorroGM>(); }},
-            {"stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); }},
-            {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},  
-            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},  
-            {"pointsmaskfilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<PointsMaskFilter>(); }}, // drawpoints argb参数存在部分偏差
-            {"clipcubicgm", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipCubicGm>(); }},
-            {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},       
-            {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},               
-            {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},     
-            {"bug7792", []() -> std::shared_ptr<TestBase> { return std::make_shared<BugFix7792>(); }},
-
-            {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},  
-            {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},  //第二个三角形虚化不对，
-            {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
-            {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
-            {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  //有部分线条多余画出
-            {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(true); }},   //代码完成，有crash，rect roundout 接口缺失
+        // skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
+        {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
+        // skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
+        {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
+        // skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
+        {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
+        {"drawtextblobcreate_text_src", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_SRC); }},
+        {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
+        {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
+        {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
     };
 
-    std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
-        PerformanceCpuMap = {
-            {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1); }}, // drawrect 随机颜色，随机位置
-            {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(true); }}, // drawtextblob
-            {"drawbitmapnoaa", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapAABench>(); }}, // drawbitmap
-            {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }}, // drawbitmaprect 排列平铺到整个页面
-            {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }}, //8*(save+concat+restore)+drawcolor
-            {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShaderMFBench>(); }}, // savelayer+canvasclear+restore
-            {"drawdashline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }}, // drawline
-            {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipStrategyBench>(); }}, // savelayer+createpoint+drawcircle
-            {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<OvalBench>(1); }}, // drawOval
-            {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RRectBench>(1); }}, // DrawRoundRect
-            {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(true, true); }}, // save clippath drawrect restore
-            {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(false, true); }}, // save cliprect drawrect restore
-            {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::IMAGE_RECT); }}, // drawimagerect
-            {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CirclesBench>(); }}, // patharcto*2 + pathclose + drawpath
-            {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectPathBench>(); }}, // drawpath, path由AddRect构造
-            {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<NestedAAClipBench>(); }},  // path由addrrrect构建，canvas clippath：在此背景上drawrect，随机alpha
-            {"drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<TrianglePathBench>(); } }, // drawpath, path由lineto构造
-            {"drawpathcubicto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CubicPathBench>(); }}, // drawpath, path先由Cubic构造再进行transform
-            {"drawshaderlinear_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true,GradientBench::LINEAR,2); }}, // 主循环drawoval, penseteffect（由linear构造）
-            {"drawshaderradial_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true,GradientBench::RADIAL,2); }}, // 主循环drawoval, penseteffect（由radial构造）
-            {"drawshadersweep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true,GradientBench::SWEEP,2); }}, // 主循环drawoval, penseteffect（由sweep构造）
-            {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::LINEAR,2); }}, // 主循环drawrect, penseteffect（由linear构造）
-            {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::RADIAL,2); }}, // 主循环drawrect, penseteffect（由radial构造）
-            {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false,GradientBench::SWEEP,2); }}, // 主循环drawrect, penseteffect（由sweep构造）
-            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
-            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromPosText); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
-            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromString); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
-            {"maskfiltercreateblur_real_normal", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurBench>(BLUR_REAL,OH_Drawing_BlurType::NORMAL); }}, // blurbench,模糊偏差0.01，模糊类型normal
-            {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreateBench>();}}, // pathreset
-            {"drawtextblobbuildercreate", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(false); }}, // drawtextblob BuilderCreate
-            {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }}, // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
-            {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }}, // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
-            {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }}, // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
-            {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
-            {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
-            {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
-            {"drawcanvasdrawshadow_t_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,true); }},
-            {"drawcanvasdrawshadow_o_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,false); }},
-            {"drawcanvasdrawshadow_t_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true,false); }},
-            {"drawcanvasdrawshadow_o_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false,true); }},
-            {"drawcanvasreadpixels", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(false); }},
-            {"drawcanvasreadpixels_tobitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(true); }},
-            {"drawpenrect_1_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,0,true); }},
-            {"drawpenrect_1_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,4,true); }},
-            {"drawpenrect_3_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,0,true); }},
-            {"drawpenrect_3_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,4,true); }},
-            {"drawpenrect_1_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,0,false); }},
-            {"drawpenrect_1_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1,false,4,false); }},
-            {"drawpenrect_3_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,0,false); }},
-            {"drawpenrect_3_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3,false,4,false); }},
-            {"drawpenrectsrcmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<SrcModeRectBench>(); }},
-            {"drawpenbeizer_quad_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP,OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN,2,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_quad_square_bevel_10", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP,OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN,10,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_quad_round_miter_50", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP,OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN,50,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP,OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN,2,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP,OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN,10,BezierBench::DrawType::draw_quad); }},
-            {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP,OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN,50,BezierBench::DrawType::draw_quad); }},
-            {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
-            {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
-            {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
-            {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }},// drawpath, path由PathQuadTo构造
-            {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,true); }},
-            {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,true); }},
-            {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,true); }},
-            {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align,false); }},
-            {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align,false); }},
-            {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align,false); }},
-            {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskOpaque); }},
-            {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskBlack); }},
-            {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
-            {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode,BlitMaskBench::kMaskType::kMaskColor); }},
-            //skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
-            {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
-             //skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
-            {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
-             //skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
-            {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
-            {"drawtextblobcreate_text_src", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_SRC); }},
-            {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_CLEAR); }},
-            {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_COLOR); }},
-            {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText,BLEND_MODE_DIFFERENCE); }},
+        // DM
+        {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // 缺少背景格子的渲染
+        {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},                                           // ok
+        {"blurlargerrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},                                     // dm中无图
+        {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},                                              // ok
+        {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},                                                       // ok
+        {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},                                                   // 字体相关问题，函数缺失
+        {"alpha_image_alpha_tint", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }},                                   //  不是同一个图
+        {"shadowutils", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorNoOccluders); }},          // maprect 接口计算不对
+        {"shadowutils_occl", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kDebugColorOccluders); }},       // maprect 接口计算不对
+        {"shadowutils_gray", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowUtils>(ShadowUtils::kGrayscale); }},                 // maprect 接口计算不对
+        {"circular_arc_stroke_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CircularArcStrokeMatrix>(); }},                  // ok
+        {"clippedcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClippedCubic>(); }},                                           // ok
+        {"largeclippedpath_winding", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kWinding); }}, // ok
+        {"largeclippedpath_evenodd", []() -> std::shared_ptr<TestBase> { return std::make_shared<LargeClippedPath>(LargeClippedPath::kEvenOdd); }}, // ok
+        {"filltypes", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypeGM>(); }},                                                // ok
+        {"dashing", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing>(); }},                                                     // ok
+        {"pathinterior", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathInterior>(); }},                                           // ok
+        {"dashing2", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing2>(); }},                                                   // ok
+        {"alphagradients", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaGradients>(); }},                                       // ok
+        {"dashing4", []() -> std::shared_ptr<TestBase> { return std::make_shared<Dashing4>(); }},                                                   // ok
+        {"convexpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConvexPaths>(); }},                                             // ok
+        {"gradient_dirty_laundry", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientsGM>(); }},                                  // 内部形状和颜色差异较大
+        {"arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorroGM>(); }},                                             // ok
+        {"stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); }},                                 // ok
+        {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},                                               // 字体粗细、位置有差异
+        {"pointsmaskfilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<PointsMaskFilter>(); }},                                   // drawpoints argb参数存在部分偏差
+        {"clipcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipCubicGm>(); }},                                               // ok
+        {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},                                       // ok
+        {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},                                               // ok
+        {"bug7792", []() -> std::shared_ptr<TestBase> { return std::make_shared<BugFix7792>(); }},                                                  // ok
 
+        {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},          // ok
+        {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }}, // 第二个三角形虚化不对，
+        {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // 有部分线条多余画出
+        {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
+        {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
+        {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(true); }},   //代码完成，有crash，rect roundout 接口缺失
+};
 
+std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
+    PerformanceCpuMap = {
+        {"drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1); }},                                                              // drawrect 随机颜色，随机位置
+        {"drawtextblob", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(true); }},                                             // drawtextblob
+        {"drawbitmapnoaa", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapAABench>(); }},                                                 // drawbitmap
+        {"drawbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::BITMAP_RECT); }},                           // drawbitmaprect 排列平铺到整个页面
+        {"saverestore8", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSaveRestore>(); }},                                                   // 8*(save+concat+restore)+drawcolor
+        {"savelayer", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShaderMFBench>(); }},                                                          // savelayer+canvasclear+restore
+        {"drawdashline", []() -> std::shared_ptr<TestBase> { return std::make_shared<DashLineBench>(); }},                                                       // drawline
+        {"drawcircle", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipStrategyBench>(); }},                                                     // savelayer+createpoint+drawcircle
+        {"drawoval", []() -> std::shared_ptr<TestBase> { return std::make_shared<OvalBench>(1); }},                                                              // drawOval
+        {"drawroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RRectBench>(1); }},                                                        // DrawRoundRect
+        {"clippath", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(true, true); }},                                                   // save clippath drawrect restore
+        {"cliprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<AAClipBench>(false, true); }},                                                  // save cliprect drawrect restore
+        {"drawimagerect", []() -> std::shared_ptr<TestBase> { return std::make_shared<BulkRectBench>(BulkRectBench::IMAGE_RECT); }},                             // drawimagerect
+        {"drawpatharcto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CirclesBench>(); }},                                                       // patharcto*2 + pathclose + drawpath
+        {"drawpathaddrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectPathBench>(); }},                                                    // drawpath, path由AddRect构造
+        {"drawpathaddroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<NestedAAClipBench>(); }},                                           // path由addrrrect构建，canvas clippath：在此背景上drawrect，随机alpha
+        {"drawpathlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<TrianglePathBench>(); }},                                                 // drawpath, path由lineto构造
+        {"drawpathcubicto", []() -> std::shared_ptr<TestBase> { return std::make_shared<CubicPathBench>(); }},                                                   // drawpath, path先由Cubic构造再进行transform
+        {"drawshaderlinear_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true, GradientBench::LINEAR, 2); }},                // 主循环drawoval, penseteffect（由linear构造）
+        {"drawshaderradial_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true, GradientBench::RADIAL, 2); }},                // 主循环drawoval, penseteffect（由radial构造）
+        {"drawshadersweep_oval", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(true, GradientBench::SWEEP, 2); }},                  // 主循环drawoval, penseteffect（由sweep构造）
+        {"drawshaderlinear_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false, GradientBench::LINEAR, 2); }},               // 主循环drawrect, penseteffect（由linear构造）
+        {"drawshaderradial_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false, GradientBench::RADIAL, 2); }},               // 主循环drawrect, penseteffect（由radial构造）
+        {"drawshadersweep_rect", []() -> std::shared_ptr<TestBase> { return std::make_shared<GradientBench>(false, GradientBench::SWEEP, 2); }},                 // 主循环drawrect, penseteffect（由sweep构造）
+        {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText); }},                     // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
+        {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromPosText); }},                   // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
+        {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromString); }},                 // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+        {"maskfiltercreateblur_real_normal", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurBench>(BLUR_REAL, OH_Drawing_BlurType::NORMAL); }}, // blurbench,模糊偏差0.01，模糊类型normal
+        {"drawpathreset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreateBench>(); }},                                                    // pathreset
+        {"drawtextblobbuildercreate", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCachedBench>(false); }},                               // drawtextblob BuilderCreate
+        {"drawtextblobcreate_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(1); }},                                           // DrawTextBlob, textblob由createformtext创建，每drawtextblob 1000次就重新创建一下textblob
+        {"drawtextblobcreate_pos", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(2); }},                                            // DrawTextBlob, textblob由createformtextpos创建，每drawtextblob 1000次就重新创建一下textblob
+        {"drawtextblobcreate_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(3); }},                                         // DrawTextBlob, textblob由createformstring创建，每drawtextblob 1000次就重新创建一下textblob
+        {"drawcanvasscale_translate", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Translate); }},
+        {"drawcanvasscale_scale", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::Scale); }},
+        {"drawcanvasscale_matrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasMatrixBench>(CanvasMatrixBench::CanvasType::ConcatMatrix); }},
+        {"drawcanvasdrawshadow_t_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true, true); }},
+        {"drawcanvasdrawshadow_o_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false, false); }},
+        {"drawcanvasdrawshadow_t_a", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(true, false); }},
+        {"drawcanvasdrawshadow_o_g", []() -> std::shared_ptr<TestBase> { return std::make_shared<ShadowBench>(false, true); }},
+        {"drawcanvasreadpixels", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(false); }},
+        {"drawcanvasreadpixels_tobitmap", []() -> std::shared_ptr<TestBase> { return std::make_shared<ReadPixBench>(true); }},
+        {"drawpenrect_1_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 0, true); }},
+        {"drawpenrect_1_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 4, true); }},
+        {"drawpenrect_3_0_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 0, true); }},
+        {"drawpenrect_3_4_aa", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 4, true); }},
+        {"drawpenrect_1_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 0, false); }},
+        {"drawpenrect_1_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(1, false, 4, false); }},
+        {"drawpenrect_3_0_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 0, false); }},
+        {"drawpenrect_3_4_bw", []() -> std::shared_ptr<TestBase> { return std::make_shared<RectBench>(3, false, 4, false); }},
+        {"drawpenrectsrcmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<SrcModeRectBench>(); }},
+        {"drawpenbeizer_quad_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP, OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN, 2, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_quad_square_bevel_10", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP, OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN, 10, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_quad_round_miter_50", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP, OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN, 50, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_cubic_butt_round_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_FLAT_CAP, OH_Drawing_PenLineJoinStyle::LINE_ROUND_JOIN, 2, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_cubic_square_bevel_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_SQUARE_CAP, OH_Drawing_PenLineJoinStyle::LINE_BEVEL_JOIN, 10, BezierBench::DrawType::draw_quad); }},
+        {"drawpenbeizer_cubic_round_miter_2", []() -> std::shared_ptr<TestBase> { return std::make_shared<BezierBench>(OH_Drawing_PenLineCapStyle::LINE_ROUND_CAP, OH_Drawing_PenLineJoinStyle::LINE_MITER_JOIN, 50, BezierBench::DrawType::draw_quad); }},
+        {"clearbench", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClearBench>(kPartial_ClearType); }},
+        {"drawpathrotate_45", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(45); }},
+        {"drawpathrotate_60", []() -> std::shared_ptr<TestBase> { return std::make_shared<RotatedRectBench>(60); }},
+        {"drawpathquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<LongCurvedPathBench>(); }}, // drawpath, path由PathQuadTo构造
+        {"drawbigpath_left_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align, true); }},
+        {"drawbigpath_middle_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align, true); }},
+        {"drawbigpath_right_round", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align, true); }},
+        {"drawbigpath_left_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kLeft_Align, false); }},
+        {"drawbigpath_middle_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kMiddle_Align, false); }},
+        {"drawbigpath_right_na", []() -> std::shared_ptr<TestBase> { return std::make_shared<BigPathBench>(BigPathBench::Align::kRight_Align, false); }},
+        {"blitmaskbench_maskopaque", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskOpaque); }},
+        {"blitmaskbench_maskblack", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskBlack); }},
+        {"blitmaskbench_maskcolor", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskColor); }},
+        {"blitmaskbench_maskshader", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlitMaskBench>(BlitMaskBench::PointMode::kPoints_PointMode, BlitMaskBench::kMaskType::kMaskColor); }},
+        // skbench_kadd：创建一个矩阵对象将原路径矩阵变换后添加到当前路径中.
+        {"skbench_kadd", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAdd_AddType); }},
+        // skbench_kaddtrans：设置矩阵为单位矩阵并平移(dx, dy)后将原路径矩阵变换添加到当前路径中.
+        {"skbench_kaddtrans", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddTrans_AddType); }},
+        // skbench_kaddmatrix：设置矩阵对象的参数后将原路径矩阵变换添加到当前路径中.
+        {"skbench_kaddmatrix", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBench_AddPathTest>(kAddMatrix_AddType); }},
+        {"drawtextblobcreate_text_src", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_SRC); }},
+        {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
+        {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
+        {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
 
-            
-            {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
 
-    };
+};
 } // namespace
 
-
-std::shared_ptr<TestBase> TestCaseFactory::GetFunctionCpuCase(std::string caseName)
-{
+std::shared_ptr<TestBase> TestCaseFactory::GetFunctionCpuCase(std::string caseName) {
     if (FunctionalCpuMap.find(caseName) == FunctionalCpuMap.end()) {
         DRAWING_LOGE("caseName error");
         return nullptr;
     }
-    
+
     return FunctionalCpuMap.find(caseName)->second();
 }
 
-std::shared_ptr<TestBase> TestCaseFactory::GetPerformanceCpuCase(std::string caseName)
-{
+std::shared_ptr<TestBase> TestCaseFactory::GetPerformanceCpuCase(std::string caseName) {
     if (PerformanceCpuMap.find(caseName) == PerformanceCpuMap.end()) {
         DRAWING_LOGE("caseName error");
         return nullptr;
     }
-    
+
     return PerformanceCpuMap.find(caseName)->second();
 }
 
-std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> TestCaseFactory::GetFunctionCpuCaseAll()
-{   
+std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> TestCaseFactory::GetFunctionCpuCaseAll() {
     return FunctionalCpuMap;
 }

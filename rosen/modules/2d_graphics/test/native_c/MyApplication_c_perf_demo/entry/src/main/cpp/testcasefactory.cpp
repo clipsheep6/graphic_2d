@@ -65,9 +65,11 @@
 #include "dm/points_mask_filter.h"
 #include "dm/clip_cubic_gm.h"
 #include "dm/points.h"
+#include "dm/skbug_8955.h"
 #include "dm/conic_paths.h"
 
 #include "interface/canvas_test.h"
+#include "dm/onebadarc.h"
 
 namespace {
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -151,6 +153,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
         {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
+    };
 
         // DM
         {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // 缺少背景格子的渲染
@@ -187,6 +190,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},          // ok
         {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }}, // 第二个三角形虚化不对，
         {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // 有部分线条多余画出
+        {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
+        {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

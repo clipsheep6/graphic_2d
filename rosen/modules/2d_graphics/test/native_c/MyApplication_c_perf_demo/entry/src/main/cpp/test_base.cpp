@@ -72,10 +72,10 @@ void TestBase::TestFunctionCpu(napi_env env)
     BitmapCanvasToFile(env);
 }
 
-
 void TestBase::TestFunctionGpu(OH_Drawing_Canvas *canvas) { OnTestFunction(canvas); }
 
 void TestBase::TestPerformanceGpu(OH_Drawing_Canvas *canvas) {
+    StyleSettings(canvas, styleType_);
     auto timeZero = std::chrono::high_resolution_clock::now();
     auto start = std::chrono::high_resolution_clock::now();
     DRAWING_LOGE("DrawingApiTest Started: [%{public}lld]",
@@ -89,11 +89,13 @@ void TestBase::TestPerformanceGpu(OH_Drawing_Canvas *canvas) {
     DRAWING_LOGE("DrawingApiTest TotalApiCallCount: [%{public}u]", testCount_);
     usedTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     DRAWING_LOGE("DrawingApiTest TotalApiCallTime: [%{public}u]", usedTime_);
+    StyleSettingsDestroy(canvas);
 }
 
 void TestBase::TestPerformanceCpu(napi_env env)
 {
     CreateBitmapCanvas();
+    StyleSettings(bitmapCanvas_, styleType_);
     auto timeZero = std::chrono::high_resolution_clock::now();
     auto start = std::chrono::high_resolution_clock::now();
     DRAWING_LOGE("DrawingApiTest Started: [%{public}lld]",
@@ -108,6 +110,7 @@ void TestBase::TestPerformanceCpu(napi_env env)
     usedTime_ = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     DRAWING_LOGE("DrawingApiTest TotalApiCallTime: [%{public}u]", usedTime_);
     BitmapCanvasToFile(env);
+    StyleSettingsDestroy(bitmapCanvas_);
 }
 
 void TestBase::CreateBitmapCanvas()
@@ -197,48 +200,81 @@ void TestBase::BitmapCanvasToFile(napi_env env)
 
 void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
 {
+    if (canvas == nullptr) {
+        return;
+    }
+    StyleSettingsDestroy(canvas);
     if (type == DRAW_STYLE_COMPLEX) {
-        OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
-        OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
+        DRAWING_LOGE("xyj DRAW_STYLE_COMPLEX");
+        styleBrush_ = OH_Drawing_BrushCreate();
+        stylePen_ = OH_Drawing_PenCreate();
 
-        OH_Drawing_BrushSetAntiAlias(brush, true);
-        OH_Drawing_BrushSetColor(brush, 0xFFFF0000);
-        OH_Drawing_BrushSetAlpha(brush, 0xF0);
-        OH_Drawing_BrushSetBlendMode(brush, BLEND_MODE_SRC);
+        OH_Drawing_BrushSetAntiAlias(styleBrush_, true);
+        OH_Drawing_BrushSetColor(styleBrush_, 0xFFFF0000);
+        OH_Drawing_BrushSetAlpha(styleBrush_, 0xF0);
+        OH_Drawing_BrushSetBlendMode(styleBrush_, BLEND_MODE_SRC);
 
-        OH_Drawing_PenSetAntiAlias(pen, true);
-        OH_Drawing_PenSetColor(pen, 0xFFFF0000);
-        OH_Drawing_PenSetAlpha(pen, 0xF0);
-        OH_Drawing_PenSetBlendMode(pen, BLEND_MODE_SRC);
+        OH_Drawing_PenSetAntiAlias(stylePen_, true);
+        OH_Drawing_PenSetColor(stylePen_, 0xFFFF0000);
+        OH_Drawing_PenSetAlpha(stylePen_, 0xF0);
+        OH_Drawing_PenSetBlendMode(stylePen_, BLEND_MODE_SRC);
 
-        OH_Drawing_MaskFilter* mask = OH_Drawing_MaskFilterCreateBlur(NORMAL, 10.0, true);
-        OH_Drawing_Filter* filter = OH_Drawing_FilterCreate();
-        OH_Drawing_FilterSetMaskFilter(filter, mask);
-        OH_Drawing_BrushSetFilter(brush, filter);
-        OH_Drawing_PenSetFilter(pen, filter);
-        OH_Drawing_MaskFilterDestroy(mask);
-        OH_Drawing_FilterDestroy(filter);
-
-        OH_Drawing_Point *center = OH_Drawing_PointCreate(100, 100);
+        styleMask_ = OH_Drawing_MaskFilterCreateBlur(NORMAL, 10.0, true);
+        styleFilter_ = OH_Drawing_FilterCreate();
+        OH_Drawing_FilterSetMaskFilter(styleFilter_, styleMask_);
+        OH_Drawing_BrushSetFilter(styleBrush_, styleFilter_);
+        OH_Drawing_PenSetFilter(stylePen_, styleFilter_);
+        
+        styleCenter_ = OH_Drawing_PointCreate(100, 100);
         uint32_t colors[] = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF};
         float pos[] = {0,0.5,1.0};
-        OH_Drawing_ShaderEffect* effect = OH_Drawing_ShaderEffectCreateRadialGradient(center, 100, colors, pos, 3, OH_Drawing_TileMode::CLAMP);
-        OH_Drawing_BrushSetShaderEffect(brush, effect);
-        OH_Drawing_PenSetShaderEffect(pen, effect);
-        OH_Drawing_ShaderEffectDestroy(effect);
-        OH_Drawing_PointDestroy(center);
+        OH_Drawing_ShaderEffect* effect = OH_Drawing_ShaderEffectCreateRadialGradient(styleCenter_, 100, colors,
+            pos, 3, OH_Drawing_TileMode::CLAMP); OH_Drawing_BrushSetShaderEffect(styleBrush_, effect);
+        OH_Drawing_PenSetShaderEffect(stylePen_, effect);
 
-        OH_Drawing_PenSetMiterLimit(pen, 10.0);
-        OH_Drawing_PenSetJoin(pen, LINE_ROUND_JOIN);
-        OH_Drawing_PenSetCap(pen, LINE_ROUND_CAP);
+        OH_Drawing_PenSetMiterLimit(stylePen_, 10.0);
+        OH_Drawing_PenSetJoin(stylePen_, LINE_ROUND_JOIN);
+        OH_Drawing_PenSetCap(stylePen_, LINE_ROUND_CAP);
         float vals[2] = {1, 1};
         OH_Drawing_PathEffect *pathEffect = OH_Drawing_CreateDashPathEffect(vals, 2, 0);
-        OH_Drawing_PenSetPathEffect(pen, pathEffect);
-        OH_Drawing_PathEffectDestroy(pathEffect);
+        OH_Drawing_PenSetPathEffect(stylePen_, pathEffect);
+        OH_Drawing_CanvasAttachPen(canvas, stylePen_);
+        OH_Drawing_CanvasAttachBrush(canvas, styleBrush_);
+    }
+}
 
-        OH_Drawing_CanvasAttachPen(canvas, pen);
-        OH_Drawing_CanvasAttachBrush(canvas, brush);
-        OH_Drawing_BrushDestroy(brush);
-        OH_Drawing_PenDestroy(pen);
+void TestBase::StyleSettingsDestroy(OH_Drawing_Canvas *canvas)
+{
+    if (canvas != nullptr) {
+        OH_Drawing_CanvasDetachPen(canvas);
+        OH_Drawing_CanvasDetachBrush(canvas);
+    }
+    if (stylePen_ != nullptr) {
+        OH_Drawing_PenDestroy(stylePen_);
+        stylePen_ = nullptr;
+    }
+    if (styleBrush_ != nullptr) {
+        OH_Drawing_BrushDestroy(styleBrush_);
+        styleBrush_ = nullptr;
+    }
+    if (styleMask_ != nullptr) {
+        OH_Drawing_MaskFilterDestroy(styleMask_);
+        styleMask_ = nullptr;
+    }
+    if (styleFilter_ != nullptr) {
+        OH_Drawing_FilterDestroy(styleFilter_);
+        styleFilter_ = nullptr;
+    }
+    if (styleCenter_ != nullptr) {
+        OH_Drawing_PointDestroy(styleCenter_);
+        styleCenter_ = nullptr;
+    }
+    if (styleEffect_ != nullptr) {
+        OH_Drawing_ShaderEffectDestroy(styleEffect_);
+        styleEffect_ = nullptr;
+    }
+    if (stylePathEffect_ != nullptr) {
+        OH_Drawing_PathEffectDestroy(stylePathEffect_);
+        stylePathEffect_ = nullptr;
     }
 }

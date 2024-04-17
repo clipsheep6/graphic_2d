@@ -502,7 +502,7 @@ napi_value JsParagraph::OnDidExceedMaxLines(napi_env env, napi_callback_info inf
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
     bool didExceedMaxLines = paragraph_->DidExceedMaxLines();
-    return CreateJsNumber(env, didExceedMaxLines);
+    return CreateJsValue(env, didExceedMaxLines);
 }
 
 JsParagraph::JsParagraph(std::shared_ptr<Typography> typography)
@@ -551,10 +551,6 @@ napi_value JsParagraph::OnGetTextLines(napi_env env, napi_callback_info info)
     }
 
     std::vector<std::unique_ptr<TextLineBase>> textlineArr = paragraph_->GetTextLines();
-    if (textlineArr.empty()) {
-        ROSEN_LOGE("JsParagraph::OnGetTextLines textlineArr is empty");
-        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
-    }
     napi_value array = nullptr;
     NAPI_CALL(env, napi_create_array(env, &array));
     uint32_t index = 0;

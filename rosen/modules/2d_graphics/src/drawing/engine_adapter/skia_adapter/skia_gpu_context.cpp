@@ -65,7 +65,7 @@ void SkiaPersistentCache::store(const SkData& key, const SkData& data)
 
 SkiaGPUContext::SkiaGPUContext() : grContext_(nullptr), skiaPersistentCache_(nullptr) {}
 
-class threadPoolExecutor : public SkExcetor {
+class ThreadPoolExecutor : public SkExcetor {
 public:
     void add(std::function<void(void)> func) override
     {

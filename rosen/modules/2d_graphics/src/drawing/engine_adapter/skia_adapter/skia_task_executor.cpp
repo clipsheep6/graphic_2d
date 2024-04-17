@@ -57,7 +57,7 @@ void TaskPoolExecutor::InitThreadPool()
 
 void TaskPoolExecutor::EnqueueTask(Task&& task)
 {
-    std::unique_lock lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     condition_.wait(lock);
     taskQueue_.Push(std::move(task));
 
@@ -70,7 +70,7 @@ void TaskPoolExecutor::EnqueueTask(Task&& task)
 void TaskPoolExecutor::PromoteThreadPriority()
 {
     if (RsFrameReport::GetInstance().GetEnable()) {
-        FrameReport::GetInstance().SetFrameParam(REQUEST_THREAD_PRIORITY_ID, REQUEST_THREAD_PRIORITY_LOAD,
+        RsFrameReport::GetInstance().SetFrameParam(REQUEST_THREAD_PRIORITY_ID, REQUEST_THREAD_PRIORITY_LOAD,
             REQUEST_THREAD_PRIORITY_NUM, gettid());
     }
 }
@@ -81,7 +81,7 @@ void TaskPoolExecutor::ThreadLoop()
 #ifdef RES_SCHED_ENABLE
     PromoteThreadPriority();
 #endif
-    std::unique_lock lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     while (running_) {
         if (!taskQueue_.HasTask()) {
             waitingThread_++;

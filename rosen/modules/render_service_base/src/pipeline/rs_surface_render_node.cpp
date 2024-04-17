@@ -147,8 +147,8 @@ void RSSurfaceRenderNode::UpdateSrcRect(const Drawing::Canvas& canvas, const Dra
     // We allow 1px error value to avoid disable dss by mistake [this flag only used for YUV buffer format]
     if (IsYUVBufferFormat()) {
         isHardwareForcedDisabledBySrcRect_ =  hasRotation ?
-            (width + 1 < static_cast<int>(properties.GetBoundsWidth())) :
-            (height + 1 < static_cast<int>(properties.GetBoundsHeight()));
+            (width + 1 <= static_cast<int>(properties.GetBoundsWidth())) :
+            (height + 1 <= static_cast<int>(properties.GetBoundsHeight()));
 #ifndef ROSEN_CROSS_PLATFORM
         RS_OPTIONAL_TRACE_NAME_FMT("UpdateSrcRect hwcDisableBySrc:%d localClip:[%.2f, %.2f, %.2f, %.2f]" \
             " bounds:[%.2f, %.2f] hasRotation:%d name:%s id:%llu",

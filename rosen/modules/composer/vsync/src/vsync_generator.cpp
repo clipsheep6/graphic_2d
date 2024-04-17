@@ -45,7 +45,7 @@ constexpr int32_t THREAD_PRIORTY = -6;
 constexpr int32_t SCHED_PRIORITY = 2;
 constexpr int64_t errorThreshold = 500000;
 constexpr int32_t MAX_REFRESHRATE_DEVIATION = 5; // ±5Hz
-constexpr int64_t MAX_TIMESTAMP_THRESHOLD = 1000000; // 1000000ns == 1.0ms
+constexpr int64_t MAX_TIMESTAMP_THRESHOLD = 16000000; // 16000000ns == 16ms
 
 static void SetThreadHighPriority()
 {
@@ -75,7 +75,7 @@ void VSyncGenerator::DeleteInstance() noexcept
 }
 
 VSyncGenerator::VSyncGenerator()
-    : period_(0), phase_(0), referenceTime_(0), wakeupDelay_(0),
+    : period_(MAX_TIMESTAMP_THRESHOLD), phase_(0), referenceTime_(0), wakeupDelay_(0),
       pulse_(0), currRefreshRate_(0), referenceTimeOffsetPulseNum_(0), defaultReferenceTimeOffsetPulseNum_(0)
 {
     vsyncThreadRunning_ = true;

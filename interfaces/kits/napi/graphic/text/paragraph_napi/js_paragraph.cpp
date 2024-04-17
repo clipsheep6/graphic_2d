@@ -14,9 +14,9 @@
  */
 #include "canvas_napi/js_canvas.h"
 #include "draw/canvas.h"
-#include "../drawing/js_drawing_utils.h"
+#include "js_drawing_utils.h"
 #include "js_paragraph.h"
-#include "../js_text_utils.h"
+#include "js_text_utils.h"
 #include "paragraph_builder_napi/js_paragraph_builder.h"
 #include "utils/log.h"
 #include "text_line_napi/js_text_line.h"

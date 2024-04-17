@@ -66,6 +66,7 @@ add_library(entry SHARED
     dm/points.cpp
     interface/canvas_test.cpp
     dm/conic_paths.cpp
+    dm/bitmaprect.cpp
 )
 
 add_library(myxnode SHARED
@@ -125,6 +126,7 @@ add_library(myxnode SHARED
     dm/points.cpp
     interface/canvas_test.cpp
     dm/conic_paths.cpp
+    dm/bitmaprect.cpp
 )
 
 find_library(

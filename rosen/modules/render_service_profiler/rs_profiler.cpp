@@ -51,6 +51,16 @@ static NodeId g_playbackParentNodeId = 0;
 static int g_playbackPid = 0;
 static bool g_playbackShouldBeTerminated = false;
 
+static std::unordered_set<NodeId> g_nodeSetPerf;
+static std::unordered_map<NodeId, int> g_mapNode2Count;
+static NodeId g_calcPerfNode = 0;
+static int g_calcPerfNodeTry = 0;
+constexpr int CALC_PERF_NODE_TIME_COUNT = 5;
+static uint64_t g_calcPerfNodeTime[CALC_PERF_NODE_TIME_COUNT];
+static NodeId g_calcPerfNodeParent = 0;
+static int g_calcPerfNodeIndex = 0;
+static int g_nodeSetPerfCalcIndex = -1;
+
 static std::string g_testDataFrame;
 static std::list<RSRenderNode::SharedPtr> g_childOfDisplayNodes;
 
@@ -303,6 +313,42 @@ void RSProfiler::OnFrameEnd()
     ProcessCommands();
     ProcessSendingRdc();
     RecordUpdate();
+
+    if (g_calcPerfNode == 0) {
+        return;
+    }
+        
+    g_calcPerfNodeTime[g_calcPerfNodeTry] = Utils::RawNowNano() - g_frameBeginTimestamp;
+    g_calcPerfNodeTry++;
+    if (g_calcPerfNodeTry < CALC_PERF_NODE_TIME_COUNT) {
+        AwakeRenderServiceThread();
+        return;
+    }
+
+    std::sort(std::begin(g_calcPerfNodeTime), std::end(g_calcPerfNodeTime));
+    constexpr int middle = CALC_PERF_NODE_TIME_COUNT / 2;
+    Respond("CALC_PERF_NODE_RESULT: " + std::to_string(g_calcPerfNode) + " " +
+            "cnt=" + std::to_string(g_mapNode2Count[g_calcPerfNode]) + " " + 
+            std::to_string(g_calcPerfNodeTime[middle]));
+    Network::SendRSTreeSingleNodePerf(g_calcPerfNode, g_calcPerfNodeTime[middle]);
+
+    if (g_calcPerfNode != 1) {
+        auto parent = GetRenderNode(g_calcPerfNodeParent);
+        auto child = parent ? GetRenderNode(g_calcPerfNode) : nullptr;
+        if (child) {
+            parent->AddChild(child, g_calcPerfNodeIndex);
+        }
+    }
+
+    g_calcPerfNode = 0;
+    g_calcPerfNodeParent = 0;
+    g_calcPerfNodeIndex = 0;
+    g_calcPerfNodeTry = 0;
+    if (g_nodeSetPerfCalcIndex >= 0) {
+        g_nodeSetPerfCalcIndex++;
+        CalcPerfNodeAllStep();
+    }
+    AwakeRenderServiceThread();
 }
 
 bool RSProfiler::IsEnabled()
@@ -739,6 +785,131 @@ void RSProfiler::GetDeviceInfo(const ArgList& args)
     Respond(RSTelemetry::GetDeviceInfoString());
 }
 
+void RSProfiler::GetPerfTree(const ArgList& args)
+{
+    if (!g_renderServiceContext) {
+        return;
+    }
+
+    g_nodeSetPerf.clear();
+    g_mapNode2Count.clear();
+
+    auto& rootNode = g_renderServiceContext->GetGlobalRootRenderNode();
+    if (rootNode == nullptr) {
+        Respond("ERROR");
+        return;
+    }
+
+    auto& nodeMap = g_renderServiceContext->GetMutableNodeMap();
+
+    for (const auto& child : *rootNode->GetSortedChildren()) {
+        auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(child);
+        if (displayNode) {
+            const auto& surfaces = displayNode->GetCurAllSurfaces();
+            for(auto& surface : surfaces) {
+                PerfTreeFlatten(*surface, g_nodeSetPerf, g_mapNode2Count);
+            }
+        }
+    }
+
+    std::string outString;
+    for (auto it = g_nodeSetPerf.begin(); it != g_nodeSetPerf.end(); it++) {
+        auto node = nodeMap.GetRenderNode(*it); 
+        std::string sNodeType;
+        node->DumpNodeType(sNodeType);
+        outString += (it != g_nodeSetPerf.begin() ? ", " : "") + std::to_string(*it) + ":" + 
+            std::to_string(g_mapNode2Count[*it]) + " [" + sNodeType + "]";
+    }
+
+    Network::SendRSTreePerfNodeList(g_nodeSetPerf);
+    Respond("OK: Count=" + std::to_string(g_nodeSetPerf.size()) + " LIST=[" + outString + "]");
+}
+
+void RSProfiler::CalcPerfNode(const ArgList& args)
+{
+    g_calcPerfNode = args.Uint64();
+    auto node = GetRenderNode(g_calcPerfNode);
+    if (!node) {
+        return;
+    }
+
+    const auto parent = node->GetParent().lock();
+    if (!parent) {
+        return;
+    }
+
+    g_calcPerfNodeParent = parent->GetId();
+    int index = 0;
+    for (const auto& child : *parent->GetChildren()) {
+        if (child->GetId() == node->GetId()) {
+            g_calcPerfNodeIndex = index;
+        }
+    }
+
+    parent->RemoveChild(node);
+    Respond("CalcPerfNode: NodeRemoved index=" + std::to_string(index));
+    AwakeRenderServiceThread();
+}
+
+
+void RSProfiler::CalcPerfNodeAll(const ArgList& args)
+{
+    if (g_nodeSetPerf.size() == 0) {
+        Respond("ERROR");
+        return;
+    }
+
+    g_nodeSetPerfCalcIndex = 0;
+    CalcPerfNodeAllStep();
+
+    AwakeRenderServiceThread();
+}
+
+void RSProfiler::CalcPerfNodeAllStep()
+{
+    if (g_nodeSetPerfCalcIndex < 0) {
+        return;
+    }
+
+    if (g_nodeSetPerfCalcIndex == 0) {
+        g_calcPerfNode = 1;
+        AwakeRenderServiceThread();
+        return;
+    }
+    else if (g_nodeSetPerfCalcIndex - 1 < g_nodeSetPerf.size()) {
+        auto it = g_nodeSetPerf.begin();
+        std::advance(it, g_nodeSetPerfCalcIndex - 1);
+        g_calcPerfNode = *it;
+    }
+    else {
+        g_nodeSetPerfCalcIndex = -1;
+        return;
+    }
+
+    auto node = GetRenderNode(g_calcPerfNode);
+    if (!node) {
+        g_nodeSetPerfCalcIndex = -1;
+        return;
+    }
+
+    const auto parent = node->GetParent().lock();
+    if (!parent) {
+        g_nodeSetPerfCalcIndex = -1;
+        return;
+    }
+
+    g_calcPerfNodeParent = parent->GetId();
+    int index = 0;
+    for (const auto& child : *parent->GetChildren()) {
+        if (child->GetId() == node->GetId()) {
+            g_calcPerfNodeIndex = index;
+        }
+    }
+
+    parent->RemoveChild(node);
+    AwakeRenderServiceThread();
+}
+
 void RSProfiler::TestSaveFrame(const ArgList& args)
 {
     g_testDataFrame = FirstFrameMarshalling();
@@ -1075,6 +1246,9 @@ RSProfiler::Command RSProfiler::GetCommand(const std::string& command)
         { "save_rdc", SaveRdc },
         { "save_skp", SaveSkp },
         { "info", GetDeviceInfo },
+        { "get_perf_tree", GetPerfTree },
+        { "calc_perf_node", CalcPerfNode },
+        { "calc_perf_node_all", CalcPerfNodeAll },
     };
 
     if (command.empty()) {

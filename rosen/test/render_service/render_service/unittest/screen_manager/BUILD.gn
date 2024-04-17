@@ -38,6 +38,7 @@ ohos_unittest("RSScreenManagerTest") {
     "//foundation/graphic/graphic_2d/rosen/include",
     "//foundation/graphic/graphic_2d/rosen/test/include",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
+    "//foundation/graphic/graphic_2d/rosen/test/render_service/render_service/unittest/pipeline/mock",
   ]
 
   deps = [
@@ -90,6 +91,7 @@ ohos_unittest("RSScreenTest") {
     "//foundation/graphic/graphic_2d/rosen/include",
     "//foundation/graphic/graphic_2d/rosen/test/include",
     "//foundation/barrierfree/accessibility/interfaces/innerkits/acfwk/include",
+    "//foundation/graphic/graphic_2d/rosen/test/render_service/render_service/unittest/pipeline/mock",
   ]
 
   deps = [

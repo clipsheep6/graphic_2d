@@ -15,12 +15,13 @@
 
 #include "gtest/gtest.h"
 #include "limit_number.h"
+
 #include "pipeline/parallel_render/rs_render_task.h"
-#include "pipeline/rs_render_node.h"
 #include "pipeline/rs_base_render_node.h"
-#include "pipeline/rs_surface_render_node.h"
-#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_context.h"
+#include "pipeline/rs_display_render_node.h"
+#include "pipeline/rs_render_node.h"
+#include "pipeline/rs_surface_render_node.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -48,7 +49,7 @@ void RSRenderTaskTest::SetUp()
     surfaceNodeConfig.id = 1;
     rsSurfRenderNode_ = std::make_shared<RSSurfaceRenderNode>(surfaceNodeConfig, rsContext->weak_from_this());
     ASSERT_NE(rsSurfRenderNode_, nullptr);
-    
+
     RSDisplayNodeConfig displayNodeConfig;
     rsDisplayRenderNode_ = std::make_shared<RSDisplayRenderNode>(0, displayNodeConfig, rsContext->weak_from_this());
     ASSERT_NE(rsDisplayRenderNode_, nullptr);
@@ -110,6 +111,8 @@ HWTEST_F(RSRenderTaskTest, AddTaskTest, TestSize.Level1)
     supRenderTask_->AddTask(std::move(renderTask1));
     auto taskSize = supRenderTask_->GetTaskSize();
     auto actualTaskSize = 2;
+    ASSERT_EQ(taskSize, actualTaskSize);
+    supRenderTask_->AddTask(nullptr);
     ASSERT_EQ(taskSize, actualTaskSize);
 }
 

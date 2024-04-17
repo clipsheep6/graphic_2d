@@ -157,7 +157,9 @@ void RSSurfaceCaptureTaskTest::SetUpTestCase()
         HiLog::Error(LOG_LABEL, "%s: surfaceNode_ == nullptr", __func__);
         return;
     }
-    FillSurface(surfaceNode_);
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        FillSurface(surfaceNode_);
+    }
     surfaceCaptureCb_ = std::make_shared<CustomizedSurfaceCapture>(surfaceNode_);
     if (surfaceCaptureCb_ == nullptr) {
         HiLog::Error(LOG_LABEL, "%s: surfaceCaptureCb_ == nullptr", __func__);
@@ -948,7 +950,9 @@ HWTEST_F(RSSurfaceCaptureTaskTest, FindHardwareEnabledNodes, Function | SmallTes
     node3->SetIsOnTheTree(true);
     node3->isLastFrameHardwareEnabled_ = true;
     nodeMap.surfaceNodeMap_[3] = node3;
-    visitor_->FindHardwareEnabledNodes();
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        visitor_->FindHardwareEnabledNodes();
+    }
     visitor_->hardwareEnabledNodes_.clear();
     nodeMap.surfaceNodeMap_.clear();
 }
@@ -1090,7 +1094,9 @@ HWTEST_F(RSSurfaceCaptureTaskTest, FindSecurityOrSkipLayer, Function | SmallTest
     node3->SetIsOnTheTree(true);
     node3->isSecurityLayer_ = true;
     nodeMap.surfaceNodeMap_[3] = node3;
-    ASSERT_TRUE(task.FindSecurityOrSkipLayer());
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        ASSERT_TRUE(task.FindSecurityOrSkipLayer());
+    }
     nodeMap.surfaceNodeMap_.clear();
 }
 

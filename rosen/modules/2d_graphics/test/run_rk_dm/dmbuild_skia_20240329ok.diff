@@ -1,0 +1,190 @@
+diff --git a/BUILD.gn b/BUILD.gn
+index b3d8a04d3f..7b6b07ed8c 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -44,7 +44,7 @@ config("skia_wno") {
+     "-Wno-c++17-extensions",
+   ]
+   if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
+-    cflags += [ "-flto=thin" ]
++#    cflags += [ "-flto=thin" ]
+     if (enhanced_opt) {
+       cflags += [ "-fwhole-program-vtables" ]
+       if (graphic_2d_feature_enable_pgo &&
+@@ -151,12 +151,12 @@ config("skia_private") {
+ 
+   cflags = [
+     "-Wno-format",
+-    "-fvisibility=hidden",
++#    "-fvisibility=hidden",
+   ]
+ 
+   cflags_cc = [
+     "-Wno-array-parameter",
+-    "-fvisibility-inlines-hidden",
++#    "-fvisibility-inlines-hidden",
+   ]
+ 
+   defines = [ "SK_GAMMA_APPLY_TO_A8" ]
+@@ -2602,7 +2602,9 @@ if (skia_enable_tools) {
+       sources += [ "gm/fiddle.cpp" ]
+       deps += [ ":skia.h" ]
+     }
++    include_dirs = [ "//third_party/vulkan-headers/include" ]
+     public_deps = [ ":gpu_tool_utils" ]
++    public_deps += [ "//third_party/vulkan-headers:vulkan_headers" ]
+ 
+     if (skia_use_ffmpeg) {
+       deps += [ "experimental/ffmpeg:video_decoder" ]
+@@ -2671,6 +2673,7 @@ if (skia_enable_tools) {
+       "modules/skshaper",
+       "modules/svg:tests",
+     ]
++    public_deps = [ "//third_party/vulkan-headers:vulkan_headers" ]
+     if (use_oh_skia) {
+       deps -= [
+         ":skia",
+diff --git a/bundle.json b/bundle.json
+index 16bb831d7f..d0dfdbf806 100644
+--- a/bundle.json
++++ b/bundle.json
+@@ -32,7 +32,7 @@
+                 "//third_party/skia:skia_canvaskit(//build/toolchain/ohos:ohos_clang_arm)"
+             ],
+             "inner_kits": [],
+-            "test": []
++            "test": [ "//third_party/skia:dm(//build/toolchain/ohos:ohos_clang_arm)" ]
+         }
+     }
+ }
+\ No newline at end of file
+diff --git a/experimental/sktext/BUILD.gn b/experimental/sktext/BUILD.gn
+index 34d2251b89..fcbb0f723c 100644
+--- a/experimental/sktext/BUILD.gn
++++ b/experimental/sktext/BUILD.gn
+@@ -108,7 +108,7 @@ if (skia_enable_sktext && skia_enable_skshaper && skia_use_icu &&
+         "editor/Mouse.cpp",
+         "editor/Selection.cpp",
+         "editor/Texts.cpp",
+-        "samples/Text.cpp",
++        #"samples/Text.cpp",
+       ]
+       deps = [
+         ":sktext",
+diff --git a/experimental/sktext/sktext.gni b/experimental/sktext/sktext.gni
+index c462588fc3..1f1eceedbb 100644
+--- a/experimental/sktext/sktext.gni
++++ b/experimental/sktext/sktext.gni
+@@ -13,6 +13,6 @@ sktext_sources = [
+   "$_src/Line.cpp",
+   "$_src/LogicalRun.cpp",
+   "$_src/Paint.cpp",
+-  "$_src/Text.cpp",
++  #"$_src/Text.cpp",
+   "$_src/VisualRun.cpp",
+ ]
+diff --git a/modules/skparagraph/BUILD.gn b/modules/skparagraph/BUILD.gn
+index 68ae1dfa0c..0c75ef665e 100644
+--- a/modules/skparagraph/BUILD.gn
++++ b/modules/skparagraph/BUILD.gn
+@@ -41,6 +41,9 @@ if (skia_enable_skparagraph && skia_enable_skshaper && skia_enable_skunicode &&
+         "../skunicode",
+       ]
+     }
++          include_dirs = [ "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
++          "//third_party/skia/modules/skparagraph",
++          "//third_party/skia", ]
+   }
+ 
+   config("utils_config") {
+@@ -84,9 +87,10 @@ if (skia_enable_skparagraph && skia_enable_skshaper && skia_enable_skunicode &&
+     skia_source_set("tests") {
+       if (paragraph_tests_enabled && skia_use_icu) {
+         testonly = true
+-        sources = skparagraph_tests
++        sources = []
+         if (is_ohos) {
+-          include_dirs = [ "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter" ]
++          include_dirs = [ "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
++          "//third_party/skia/modules/skparagraph" ]
+         }
+         if (use_oh_skia) {
+           deps = [
+diff --git a/modules/skparagraph/tests/SkShaperJSONWriter.cpp b/modules/skparagraph/tests/SkShaperJSONWriter.cpp
+index 5b6a848ec2..9f8a4050f6 100644
+--- a/modules/skparagraph/tests/SkShaperJSONWriter.cpp
++++ b/modules/skparagraph/tests/SkShaperJSONWriter.cpp
+@@ -11,8 +11,10 @@
+ #include "include/core/SkSpan.h"
+ #include "include/core/SkString.h"
+ #include "include/core/SkTypeface.h"
+-#include "include/private/base/SkTo.h"
+-#include "src/base/SkUTF.h"
++// #include "include/private/base/SkTo.h"
++#include "include/private/SkTo.h"
++// #include "src/base/SkUTF.h"
++#include "src/utils/SkUTF.h"
+ #include "src/utils/SkJSONWriter.h"
+ 
+ #include <algorithm>
+@@ -78,7 +80,7 @@ void SkShaperJSONWriter::commitRunBuffer(const SkShaper::RunHandler::RunInfo& in
+     // Font name
+     SkString fontName;
+     info.fFont.getTypeface()->getFamilyName(&fontName);
+-    fJSONWriter->appendString("font name", fontName);
++    // fJSONWriter->appendString("font name", fontName);
+ 
+     // Font size
+     fJSONWriter->appendFloat("font size", info.fFont.getSize());
+@@ -86,12 +88,12 @@ void SkShaperJSONWriter::commitRunBuffer(const SkShaper::RunHandler::RunInfo& in
+     if (info.fBidiLevel > 0) {
+         std::string bidiType = info.fBidiLevel % 2 == 0 ? "left-to-right" : "right-to-left";
+         std::string bidiOutput = bidiType + " lvl " + std::to_string(info.fBidiLevel);
+-        fJSONWriter->appendString("BiDi", bidiOutput);
++        // fJSONWriter->appendString("BiDi", bidiOutput);
+     }
+ 
+     if (is_one_to_one(fUTF8.c_str(), info.utf8Range.begin(), info.utf8Range.end(), fClusters)) {
+         std::string utf8{&fUTF8[info.utf8Range.begin()], info.utf8Range.size()};
+-        fJSONWriter->appendString("UTF8", utf8);
++        // fJSONWriter->appendString("UTF8", utf8);
+ 
+         fJSONWriter->beginArray("glyphs", false);
+         for (auto glyphID : fGlyphs) {
+@@ -233,7 +235,7 @@ void SkShaperJSONWriter::displayMToN(size_t codePointCount,
+     std::string clusterName = "cluster " + nString + " to " + mString;
+     fJSONWriter->beginObject(clusterName.c_str(), true);
+     std::string utf8String{utf8.data(), utf8.size()};
+-    fJSONWriter->appendString("UTF", utf8String);
++    // fJSONWriter->appendString("UTF", utf8String);
+     fJSONWriter->beginArray("glyphsIDs", false);
+     for (auto glyphID : glyphIDs) {
+         fJSONWriter->appendU32(glyphID);
+diff --git a/modules/skparagraph/tests/SkShaperJSONWriterTest.cpp b/modules/skparagraph/tests/SkShaperJSONWriterTest.cpp
+index d2e580d05e..9314e95f83 100644
+--- a/modules/skparagraph/tests/SkShaperJSONWriterTest.cpp
++++ b/modules/skparagraph/tests/SkShaperJSONWriterTest.cpp
+@@ -10,7 +10,8 @@
+ #include "tests/Test.h"
+ 
+ #include "include/core/SkSpan.h"
+-#include "src/base/SkUTF.h"
++// #include "src/base/SkUTF.h"
++#include "src/utils/SkUTF.h"
+ #include "src/utils/SkJSONWriter.h"
+ 
+ DEF_TEST(SkShaperTest_cluster, reporter) {
+diff --git a/modules/skparagraph/utils/TestFontCollection.cpp b/modules/skparagraph/utils/TestFontCollection.cpp
+index f39c044aaa..3b8f826347 100644
+--- a/modules/skparagraph/utils/TestFontCollection.cpp
++++ b/modules/skparagraph/utils/TestFontCollection.cpp
+@@ -1,7 +1,8 @@
+ // Copyright 2019 Google LLC.
+ #include "modules/skparagraph/src/ParagraphImpl.h"
+ #include "modules/skparagraph/utils/TestFontCollection.h"
+-#include "src/base/SkUTF.h"
++// #include "src/base/SkUTF.h"
++#include "src/utils/SkUTF.h"
+ #include "src/core/SkOSFile.h"
+ #include "tools/Resources.h"
+ 

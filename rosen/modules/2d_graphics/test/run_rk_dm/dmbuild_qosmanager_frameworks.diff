@@ -1,0 +1,13 @@
+diff --git a/frameworks/native/BUILD.gn b/frameworks/native/BUILD.gn
+index 77ad594..a5a9e7d 100644
+--- a/frameworks/native/BUILD.gn
++++ b/frameworks/native/BUILD.gn
+@@ -31,7 +31,7 @@ ohos_shared_library("qos_ndk") {
+ 
+   deps = [ "../../qos:qos" ]
+ 
+-  output_name = "qos"
++  output_name = "qos_ndk"
+   output_extension = "so"
+ 
+   innerapi_tags = [ "ndk" ]

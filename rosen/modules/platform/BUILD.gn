@@ -89,7 +89,7 @@ config("image_native_config") {
   include_dirs = [ "image_native" ]
 }
 
-ohos_source_set("mock_image_native") {
+ohos_shared_library("mock_image_native") {
   public_configs = [ ":image_native_config" ]
   sources = [ "image_native/pixel_map.cpp" ]
   deps = [ ":utils" ]

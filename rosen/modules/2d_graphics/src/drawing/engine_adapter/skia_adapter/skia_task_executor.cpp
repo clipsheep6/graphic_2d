@@ -70,7 +70,7 @@ void TaskPoolExecutor::EnqueueTask(Task&& task)
 void TaskPoolExecutor::PromoteThreadPriority()
 {
     if (RsFrameReport::GetInstance().GetEnable()) {
-        FrameReport::GetInstance().SetFrameParam(REQUEST_THREAD_PRIORITY_ID, REQUEST_THREAD_PRIORITY_LOAD,
+        RsFrameReport::GetInstance().SetFrameParam(REQUEST_THREAD_PRIORITY_ID, REQUEST_THREAD_PRIORITY_LOAD,
             REQUEST_THREAD_PRIORITY_NUM, gettid());
     }
 }

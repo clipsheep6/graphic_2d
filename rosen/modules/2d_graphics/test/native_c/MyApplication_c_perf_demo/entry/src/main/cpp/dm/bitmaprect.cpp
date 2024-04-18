@@ -24,25 +24,28 @@ OH_Drawing_Bitmap* make_big_bitmap() {
     int gBorderWidth = 10;
 
     OH_Drawing_Bitmap* bm= OH_Drawing_BitmapCreate();
-    OH_Drawing_BitmapFormat format = {OH_Drawing_ColorFormat::COLOR_FORMAT_ALPHA_8,OH_Drawing_AlphaFormat::ALPHA_FORMAT_OPAQUE};
+    OH_Drawing_BitmapFormat format = {OH_Drawing_ColorFormat::COLOR_FORMAT_RGBA_8888,OH_Drawing_AlphaFormat::ALPHA_FORMAT_OPAQUE};
     OH_Drawing_BitmapBuild(bm, gXSize, gXSize, &format);
   
     void* pixel = OH_Drawing_BitmapGetPixels(bm);
     uint32_t* ptr = (uint32_t*)pixel;
-    
+
     for(int y = 0;y<gYSize;++y){
         for(int x = 0; x<gYSize;++x){
             if (x <= gBorderWidth || x >= gXSize - gBorderWidth ||
                 y <= gBorderWidth || y >= gYSize - gBorderWidth) {
+//                    *DrawBitmapGetAddr32(bm, x, y) = 0xFFFFFF88;
                     ptr = (uint32_t*)pixel + (uint32_t)y*gYSize +(x);
-                    *ptr = 0x8800FFFF;
+                    *ptr = 0xFFFFFF88;
             }
             else{
+//                    *DrawBitmapGetAddr32(bm, x, y) = 0xFF000088;
                     ptr = (uint32_t*)pixel + (uint32_t)y*gYSize +(x);
-                    *ptr = 0x88FF0000;
+                    *ptr = 0xFF000088;
             }
         }
     }
+    
     return bm;
 }
 

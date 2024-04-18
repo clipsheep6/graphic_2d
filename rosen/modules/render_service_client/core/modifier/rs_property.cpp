@@ -58,7 +58,7 @@ void RSPropertyBase::UpdateExtendModifierForGeometry(const std::shared_ptr<RSNod
     }
 }
 
-float RSPropertyBase::GetThresholdByThresholdType(ThresholdType thresholdType) const
+float RSPropertyBase::GetLogicalThresholdByThresholdType(ThresholdType thresholdType) const
 {
     switch (thresholdType) {
         case ThresholdType::LAYOUT:

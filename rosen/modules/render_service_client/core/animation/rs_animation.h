@@ -104,6 +104,7 @@ protected:
 
     void StartCustomAnimation(const std::shared_ptr<RSRenderAnimation>& animation);
     virtual void SetInitialVelocity(const std::shared_ptr<RSPropertyBase>& velocity) {};
+    virtual void SetFinishThreshold(const std::shared_ptr<RSPropertyBase>& finishThreshold) {};
 
 private:
     static AnimationId GenerateId();
@@ -115,7 +116,7 @@ private:
     void CallFinishCallback();
     void CallRepeatCallback();
     void CallLogicallyFinishCallback();
-    virtual void SetZeroThreshold(const float zeroThreshold) {};
+    virtual void SetLogicalThreshold(const float logicalThreshold) {};
 
     bool isReversed_ { false };
     AnimationState state_ { AnimationState::INITIALIZED };

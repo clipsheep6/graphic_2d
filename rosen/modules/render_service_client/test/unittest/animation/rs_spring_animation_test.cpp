@@ -267,13 +267,13 @@ HWTEST_F(RSSpringAnimationTest, SetIsCustomTest002, TestSize.Level1)
 }
 
 /**
- * @tc.name: SetZeroThreshold001
- * @tc.desc: Verify the SetZeroThreshold of SpringAnimationTest
+ * @tc.name: SetLogicalThreshold001
+ * @tc.desc: Verify the SetLogicalThreshold of SpringAnimationTest
  * @tc.type: FUNC
  */
-HWTEST_F(RSSpringAnimationTest, SetZeroThreshold001, TestSize.Level1)
+HWTEST_F(RSSpringAnimationTest, SetLogicalThreshold001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetZeroThreshold001 start";
+    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetLogicalThreshold001 start";
     /**
      * @tc.steps: step1. init SetIsCustom
      */
@@ -285,7 +285,7 @@ HWTEST_F(RSSpringAnimationTest, SetZeroThreshold001, TestSize.Level1)
     auto startProperty = std::make_shared<RSAnimatableProperty<Vector4f>>(ANIMATION_START_BOUNDS);
     auto endProperty = std::make_shared<RSAnimatableProperty<Vector4f>>(ANIMATION_END_BOUNDS);
     auto springAnimation = std::make_shared<RSSpringAnimation>(property, startProperty, endProperty);
-    springAnimation->SetZeroThreshold(0.1f);
+    springAnimation->SetLogicalThreshold(0.1f);
     /**
      * @tc.steps: step2. start SetIsCustom test
      */
@@ -294,17 +294,17 @@ HWTEST_F(RSSpringAnimationTest, SetZeroThreshold001, TestSize.Level1)
     springAnimation->Start(canvasNode);
     EXPECT_TRUE(springAnimation->IsRunning());
     NotifyStartAnimation();
-    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetZeroThreshold001 end";
+    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetLogicalThreshold001 end";
 }
 
 /**
- * @tc.name: SetZeroThreshold002
- * @tc.desc: Verify the SetZeroThreshold of RSInterpolatingSpringAnimation
+ * @tc.name: SetLogicalThreshold002
+ * @tc.desc: Verify the SetLogicalThreshold of RSInterpolatingSpringAnimation
  * @tc.type: FUNC
  */
-HWTEST_F(RSSpringAnimationTest, SetZeroThreshold002, TestSize.Level1)
+HWTEST_F(RSSpringAnimationTest, SetLogicalThreshold002, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetZeroThreshold002 start";
+    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetLogicalThreshold002 start";
     /**
      * @tc.steps: step1. init SetIsCustom
      */
@@ -316,7 +316,7 @@ HWTEST_F(RSSpringAnimationTest, SetZeroThreshold002, TestSize.Level1)
     auto startProperty = std::make_shared<RSAnimatableProperty<Vector4f>>(ANIMATION_START_BOUNDS);
     auto endProperty = std::make_shared<RSAnimatableProperty<Vector4f>>(ANIMATION_END_BOUNDS);
     auto springAnimation = std::make_shared<RSInterpolatingSpringAnimation>(property, startProperty, endProperty);
-    springAnimation->SetZeroThreshold(0.1f);
+    springAnimation->SetLogicalThreshold(0.1f);
     /**
      * @tc.steps: step2. start SetIsCustom test
      */
@@ -325,7 +325,7 @@ HWTEST_F(RSSpringAnimationTest, SetZeroThreshold002, TestSize.Level1)
     springAnimation->Start(canvasNode);
     EXPECT_TRUE(springAnimation->IsRunning());
     NotifyStartAnimation();
-    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetZeroThreshold002 end";
+    GTEST_LOG_(INFO) << "RSSpringAnimationTest SetLogicalThreshold002 end";
 }
 } // namespace Rosen
 } // namespace OHOS

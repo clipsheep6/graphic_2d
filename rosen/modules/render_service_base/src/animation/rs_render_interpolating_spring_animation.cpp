@@ -52,15 +52,15 @@ void RSRenderInterpolatingSpringAnimation::SetSpringParameters(
     minimumAmplitudeRatio_ = minimumAmplitudeRatio;
 }
 
-void RSRenderInterpolatingSpringAnimation::SetZeroThreshold(float zeroThreshold)
+void RSRenderInterpolatingSpringAnimation::SetLogicalThreshold(float logicalThreshold)
 {
     constexpr float ZERO = 0.0f;
-    if (zeroThreshold < ZERO) {
-        ROSEN_LOGE("RSRenderInterpolatingSpringAnimation::SetZeroThreshold: invalid threshold value.");
+    if (logicalThreshold < ZERO) {
+        ROSEN_LOGE("RSRenderInterpolatingSpringAnimation::SetLogicalThreshold: invalid threshold value.");
         needLogicallyFinishCallback_ = false;
         return;
     }
-    zeroThreshold_ = zeroThreshold;
+    logicalThreshold_ = logicalThreshold;
     needLogicallyFinishCallback_ = true;
 }
 
@@ -82,7 +82,7 @@ bool RSRenderInterpolatingSpringAnimation::Marshalling(Parcel& parcel) const
             RSMarshallingHelper::Marshalling(parcel, normalizedInitialVelocity_) &&
             RSMarshallingHelper::Marshalling(parcel, minimumAmplitudeRatio_) &&
             RSMarshallingHelper::Marshalling(parcel, needLogicallyFinishCallback_) &&
-            RSMarshallingHelper::Marshalling(parcel, zeroThreshold_))) {
+            RSMarshallingHelper::Marshalling(parcel, logicalThreshold_))) {
         ROSEN_LOGE("RSRenderInterpolatingSpringAnimation::Marshalling, invalid parametter failed");
         return false;
     }
@@ -118,7 +118,7 @@ bool RSRenderInterpolatingSpringAnimation::ParseParam(Parcel& parcel)
             RSMarshallingHelper::Unmarshalling(parcel, normalizedInitialVelocity_) &&
             RSMarshallingHelper::Unmarshalling(parcel, minimumAmplitudeRatio_) &&
             RSMarshallingHelper::Unmarshalling(parcel, needLogicallyFinishCallback_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, zeroThreshold_))) {
+            RSMarshallingHelper::Unmarshalling(parcel, logicalThreshold_))) {
         return false;
     }
 
@@ -154,10 +154,10 @@ void RSRenderInterpolatingSpringAnimation::OnAnimate(float fraction)
         auto endValue = animationFraction_.GetCurrentIsReverseCycle() ? startValue_ : endValue_;
         auto velocity = CalculateVelocity(mappedTime);
         auto zeroValue = startValue_ - startValue_;
-        if (!interpolationValue->IsNearEqual(endValue, zeroThreshold_)) {
+        if (!interpolationValue->IsNearEqual(endValue, logicalThreshold_)) {
             return;
         }
-        if ((velocity * FRAME_TIME_INTERVAL)->IsNearEqual(zeroValue, zeroThreshold_)) {
+        if ((velocity * FRAME_TIME_INTERVAL)->IsNearEqual(zeroValue, logicalThreshold_)) {
             CallLogicallyFinishCallback();
             needLogicallyFinishCallback_ = false;
         }

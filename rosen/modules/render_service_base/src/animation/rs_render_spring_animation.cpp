@@ -52,15 +52,15 @@ void RSRenderSpringAnimation::SetSpringParameters(float response, float dampingR
     blendDuration_ = blendDuration * SECOND_TO_NANOSECOND; // convert to ns
 }
 
-void RSRenderSpringAnimation::SetZeroThreshold(float zeroThreshold)
+void RSRenderSpringAnimation::SetLogicalThreshold(float logicalThreshold)
 {
     constexpr float ZERO = 0.0f;
-    if (zeroThreshold < ZERO) {
-        ROSEN_LOGE("RSRenderSpringAnimation::SetZeroThreshold: invalid threshold value.");
+    if (logicalThreshold < ZERO) {
+        ROSEN_LOGE("RSRenderSpringAnimation::SetLogicalThreshold: invalid threshold value.");
         needLogicallyFinishCallback_ = false;
         return;
     }
-    zeroThreshold_ = zeroThreshold;
+    logicalThreshold_ = logicalThreshold;
     needLogicallyFinishCallback_ = true;
 }
 
@@ -72,7 +72,9 @@ bool RSRenderSpringAnimation::Marshalling(Parcel& parcel) const
         return false;
     }
     if (!(RSRenderPropertyBase::Marshalling(parcel, startValue_) &&
-            RSRenderPropertyBase::Marshalling(parcel, endValue_))) {
+            RSRenderPropertyBase::Marshalling(parcel, endValue_) &&
+            RSRenderPropertyBase::Marshalling(parcel, initialVelocity_) &&
+            RSRenderPropertyBase::Marshalling(parcel, finishThreshold_))) {
         ROSEN_LOGE("RSRenderSpringAnimation::Marshalling, MarshallingHelper failed");
         return false;
     }
@@ -81,16 +83,12 @@ bool RSRenderSpringAnimation::Marshalling(Parcel& parcel) const
             RSMarshallingHelper::Marshalling(parcel, dampingRatio_) &&
             RSMarshallingHelper::Marshalling(parcel, blendDuration_) &&
             RSMarshallingHelper::Marshalling(parcel, needLogicallyFinishCallback_) &&
-            RSMarshallingHelper::Marshalling(parcel, zeroThreshold_))) {
+            RSMarshallingHelper::Marshalling(parcel, logicalThreshold_))) {
+        ROSEN_LOGE("RSRenderSpringAnimation::Marshalling, Marshalling spring parameters failed");
         return false;
     }
 
-    if (initialVelocity_) {
-        return RSMarshallingHelper::Marshalling(parcel, true) &&
-               RSMarshallingHelper::Marshalling(parcel, initialVelocity_);
-    }
-
-    return RSMarshallingHelper::Marshalling(parcel, false);
+    return true;
 }
 
 RSRenderSpringAnimation* RSRenderSpringAnimation::Unmarshalling(Parcel& parcel)
@@ -112,23 +110,22 @@ bool RSRenderSpringAnimation::ParseParam(Parcel& parcel)
     }
 
     if (!(RSRenderPropertyBase::Unmarshalling(parcel, startValue_) &&
-            RSRenderPropertyBase::Unmarshalling(parcel, endValue_))) {
+            RSRenderPropertyBase::Unmarshalling(parcel, endValue_) &&
+            RSRenderPropertyBase::Unmarshalling(parcel, initialVelocity_) &&
+            RSRenderPropertyBase::Unmarshalling(parcel, finishThreshold_))) {
+        ROSEN_LOGE("RSRenderSpringAnimation::ParseParam failed");
         return false;
     }
 
-    auto haveInitialVelocity = false;
     if (!(RSMarshallingHelper::Unmarshalling(parcel, response_) &&
             RSMarshallingHelper::Unmarshalling(parcel, dampingRatio_) &&
             RSMarshallingHelper::Unmarshalling(parcel, blendDuration_) &&
             RSMarshallingHelper::Unmarshalling(parcel, needLogicallyFinishCallback_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, zeroThreshold_) &&
-            RSMarshallingHelper::Unmarshalling(parcel, haveInitialVelocity))) {
+            RSMarshallingHelper::Unmarshalling(parcel, logicalThreshold_))) {
+        ROSEN_LOGE("RSRenderSpringAnimation::ParseParam, parse spring parameters failed");
         return false;
     }
 
-    if (haveInitialVelocity) {
-        return RSMarshallingHelper::Unmarshalling(parcel, initialVelocity_);
-    }
     return true;
 }
 #endif
@@ -166,12 +163,12 @@ void RSRenderSpringAnimation::OnAnimate(float fraction)
             return;
         }
         auto targetValue = animationFraction_.GetCurrentIsReverseCycle() ? startValue_ : endValue_;
-        if (!currentValue->IsNearEqual(targetValue, zeroThreshold_)) {
+        if (!currentValue->IsNearEqual(targetValue, logicalThreshold_)) {
             return;
         }
         auto zeroValue = startValue_ - startValue_;
         auto velocity = springValueEstimator_->GetPropertyVelocity(prevMappedTime_);
-        if ((velocity * FRAME_TIME_INTERVAL)->IsNearEqual(zeroValue, zeroThreshold_)) {
+        if ((velocity * FRAME_TIME_INTERVAL)->IsNearEqual(zeroValue, logicalThreshold_)) {
             CallLogicallyFinishCallback();
             needLogicallyFinishCallback_ = false;
         }
@@ -294,6 +291,9 @@ void RSRenderSpringAnimation::OnInitialize(int64_t time)
         // blend is still in progress, no need to estimate duration, use 300ms as default
         SetDuration(300);
     } else {
+        if (finishThreshold_) {
+            springValueEstimator_->SetFinishThreshold(finishThreshold_);
+        }
         // blend finished, estimate duration until the spring system reaches rest
         SetDuration(std::lroundf(springValueEstimator_->UpdateDuration() * SECOND_TO_MILLISECOND));
         // this will set needInitialize_ to false
@@ -394,6 +394,15 @@ void RSRenderSpringAnimation::InitValueEstimator()
     springValueEstimator_->InitRSSpringValueEstimator(property_, startValue_, endValue_, lastValue_);
     springValueEstimator_->SetResponse(response_);
     springValueEstimator_->SetDampingRatio(dampingRatio_);
+}
+
+void RSRenderSpringAnimation::SetFinishThreshold(const std::shared_ptr<RSRenderPropertyBase>& finishThreshold)
+{
+    finishThreshold_ = finishThreshold;
+    if (springValueEstimator_) {
+        springValueEstimator_->SetFinishThreshold(finishThreshold);
+        SetDuration(std::lroundf(springValueEstimator_->UpdateDuration() * SECOND_TO_MILLISECOND));
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

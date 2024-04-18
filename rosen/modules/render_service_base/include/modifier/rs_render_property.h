@@ -105,7 +105,7 @@ protected:
         return nullptr;
     }
 
-    virtual bool IsNearEqual(const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    virtual bool IsNearEqual(const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
     {
         return true;
     }
@@ -269,7 +269,7 @@ protected:
         return 1.f;
     }
 
-    bool IsNearEqual(const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const override
+    bool IsNearEqual(const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const override
     {
         return IsEqual(value);
     }
@@ -347,31 +347,31 @@ RSB_EXPORT float RSRenderAnimatableProperty<Vector2f>::ToFloat() const;
 
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<float>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<Vector4f>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<Quaternion>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<Vector2f>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<Matrix3f>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<Color>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<Vector4<Color>>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<RRect>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const;
 
 #if defined(_WIN32)
 extern template class RSRenderAnimatableProperty<float>;

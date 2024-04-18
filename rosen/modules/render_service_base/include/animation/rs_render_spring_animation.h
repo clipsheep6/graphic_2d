@@ -31,7 +31,7 @@ public:
 
     void DumpAnimationType(std::string& out) const override;
     void SetSpringParameters(float response, float dampingRatio, float blendDuration = 0.0f);
-    void SetZeroThreshold(float zeroThreshold);
+    void SetLogicalThreshold(float logicalThreshold);
     void SetInitialVelocity(const std::shared_ptr<RSRenderPropertyBase>& velocity);
     void InheritSpringAnimation(const std::shared_ptr<RSRenderAnimation>& prevAnimation);
 
@@ -49,6 +49,7 @@ protected:
     void OnDetach() override;
     void OnInitialize(int64_t time) override;
     void InitValueEstimator() override;
+    void SetFinishThreshold(const std::shared_ptr<RSRenderPropertyBase>& finishThreshold) override;
 
 private:
 #ifdef ROSEN_OHOS
@@ -80,7 +81,8 @@ private:
     bool needLogicallyFinishCallback_ = false;
 
     // used to determine whether the animation is near finish
-    float zeroThreshold_ = 0.0f;
+    float logicalThreshold_ = 0.0f;
+    std::shared_ptr<RSRenderPropertyBase> finishThreshold_;
 
     friend class RSSpringAnimation;
 };

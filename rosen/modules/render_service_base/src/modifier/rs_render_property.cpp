@@ -349,11 +349,11 @@ bool operator!=(
 
 template<>
 bool RSRenderAnimatableProperty<float>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<float>>(value);
     if (animatableProperty != nullptr) {
-        return fabs(RSRenderProperty<float>::stagingValue_ - animatableProperty->stagingValue_) <= zeroThreshold;
+        return fabs(RSRenderProperty<float>::stagingValue_ - animatableProperty->stagingValue_) <= logicalThreshold;
     }
     ROSEN_LOGE("RSRenderAnimatableProperty<float>::IsNearEqual: the value of the comparison is a null pointer!");
     return true;
@@ -361,11 +361,11 @@ bool RSRenderAnimatableProperty<float>::IsNearEqual(
 
 template<>
 bool RSRenderAnimatableProperty<Vector2f>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<Vector2f>>(value);
     if (animatableProperty != nullptr) {
-        return RSRenderProperty<Vector2f>::stagingValue_.IsNearEqual(animatableProperty->Get(), zeroThreshold);
+        return RSRenderProperty<Vector2f>::stagingValue_.IsNearEqual(animatableProperty->Get(), logicalThreshold);
     }
     ROSEN_LOGE("RSRenderAnimatableProperty<Vector2f>::IsNearEqual: the value of the comparison is a null pointer!");
     return true;
@@ -373,11 +373,11 @@ bool RSRenderAnimatableProperty<Vector2f>::IsNearEqual(
 
 template<>
 bool RSRenderAnimatableProperty<Quaternion>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<Quaternion>>(value);
     if (animatableProperty != nullptr) {
-        return RSRenderProperty<Quaternion>::stagingValue_.IsNearEqual(animatableProperty->Get(), zeroThreshold);
+        return RSRenderProperty<Quaternion>::stagingValue_.IsNearEqual(animatableProperty->Get(), logicalThreshold);
     }
     ROSEN_LOGE("RSRenderAnimatableProperty<Quaternion>::IsNearEqual: the value of the comparison is a null pointer!");
     return true;
@@ -385,11 +385,11 @@ bool RSRenderAnimatableProperty<Quaternion>::IsNearEqual(
 
 template<>
 bool RSRenderAnimatableProperty<Vector4f>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<Vector4f>>(value);
     if (animatableProperty != nullptr) {
-        return RSRenderProperty<Vector4f>::stagingValue_.IsNearEqual(animatableProperty->Get(), zeroThreshold);
+        return RSRenderProperty<Vector4f>::stagingValue_.IsNearEqual(animatableProperty->Get(), logicalThreshold);
     }
     ROSEN_LOGE("RSRenderAnimatableProperty<Vector4f>::IsNearEqual: the value of the comparison is a null pointer!");
     return true;
@@ -397,11 +397,11 @@ bool RSRenderAnimatableProperty<Vector4f>::IsNearEqual(
 
 template<>
 bool RSRenderAnimatableProperty<Matrix3f>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<Matrix3f>>(value);
     if (animatableProperty != nullptr) {
-        return RSRenderProperty<Matrix3f>::stagingValue_.IsNearEqual(animatableProperty->Get(), zeroThreshold);
+        return RSRenderProperty<Matrix3f>::stagingValue_.IsNearEqual(animatableProperty->Get(), logicalThreshold);
     }
     ROSEN_LOGE("RSRenderAnimatableProperty<Matrix3f>::IsNearEqual: the value of the comparison is a null pointer!");
     return true;
@@ -409,12 +409,12 @@ bool RSRenderAnimatableProperty<Matrix3f>::IsNearEqual(
 
 template<>
 bool RSRenderAnimatableProperty<Color>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<Color>>(value);
     if (animatableProperty != nullptr) {
         return RSRenderProperty<Color>::stagingValue_.IsNearEqual(
-            animatableProperty->Get(), static_cast<int16_t>(zeroThreshold));
+            animatableProperty->Get(), static_cast<int16_t>(logicalThreshold));
     }
     ROSEN_LOGE("RSRenderAnimatableProperty<Color>::IsNearEqual: the value of the comparison is a null pointer!");
     return true;
@@ -422,7 +422,7 @@ bool RSRenderAnimatableProperty<Color>::IsNearEqual(
 
 template<>
 bool RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty =
         std::static_pointer_cast<const RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>>(value);
@@ -433,7 +433,7 @@ bool RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual(
     auto filter = RSRenderProperty<std::shared_ptr<RSFilter>>::stagingValue_;
     auto otherFilter = animatableProperty->Get();
     if ((filter != nullptr) && (otherFilter != nullptr)) {
-        return filter->IsNearEqual(otherFilter, zeroThreshold);
+        return filter->IsNearEqual(otherFilter, logicalThreshold);
     } else if ((filter == nullptr) && (otherFilter == nullptr)) {
         ROSEN_LOGE("RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual: "
             "both values compared are null Pointers!");
@@ -441,24 +441,24 @@ bool RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual(
     } else if (filter == nullptr) {
         ROSEN_LOGE(
             "RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual: the staging value is a null pointer!");
-        return otherFilter->IsNearZero(zeroThreshold);
+        return otherFilter->IsNearZero(logicalThreshold);
     } else {
         ROSEN_LOGE("RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsNearEqual: "
             "the value of the comparison is a null pointer!");
-        return filter->IsNearZero(zeroThreshold);
+        return filter->IsNearZero(logicalThreshold);
     }
 }
 
 template<>
 bool RSRenderAnimatableProperty<Vector4<Color>>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<Vector4<Color>>>(value);
     if (animatableProperty != nullptr) {
         auto thisData = RSRenderProperty<Vector4<Color>>::stagingValue_.data_;
         auto otherValue = animatableProperty->Get();
         auto& otherData = otherValue.data_;
-        int16_t threshold = static_cast<int16_t>(zeroThreshold);
+        int16_t threshold = static_cast<int16_t>(logicalThreshold);
         return thisData[0].IsNearEqual(otherData[0], threshold) && thisData[2].IsNearEqual(otherData[2], threshold) &&
                thisData[2].IsNearEqual(otherData[2], threshold) && thisData[3].IsNearEqual(otherData[3], threshold);
     }
@@ -469,11 +469,11 @@ bool RSRenderAnimatableProperty<Vector4<Color>>::IsNearEqual(
 
 template<>
 bool RSRenderAnimatableProperty<RRect>::IsNearEqual(
-    const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const
+    const std::shared_ptr<RSRenderPropertyBase>& value, float logicalThreshold) const
 {
     auto animatableProperty = std::static_pointer_cast<const RSRenderAnimatableProperty<RRect>>(value);
     if (animatableProperty != nullptr) {
-        return RSRenderProperty<RRect>::stagingValue_.IsNearEqual(animatableProperty->Get(), zeroThreshold);
+        return RSRenderProperty<RRect>::stagingValue_.IsNearEqual(animatableProperty->Get(), logicalThreshold);
     }
     ROSEN_LOGE("RSRenderAnimatableProperty<RRect>::IsNearEqual: the value of the comparison is a null pointer!");
     return true;

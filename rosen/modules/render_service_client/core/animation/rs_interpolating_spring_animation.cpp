@@ -56,14 +56,14 @@ const RSAnimationTimingCurve& RSInterpolatingSpringAnimation::GetTimingCurve() c
     return timingCurve_;
 }
 
-void RSInterpolatingSpringAnimation::SetZeroThreshold(const float zeroThreshold)
+void RSInterpolatingSpringAnimation::SetLogicalThreshold(const float logicalThreshold)
 {
     constexpr float ZERO = 0.0f;
-    if (zeroThreshold_ < ZERO) {
-        ROSEN_LOGE("RSInterpolatingSpringAnimation::SetZeroThreshold: invalid threshold.");
+    if (logicalThreshold_ < ZERO) {
+        ROSEN_LOGE("RSInterpolatingSpringAnimation::SetLogicalThreshold: invalid threshold.");
         return;
     }
-    zeroThreshold_ = zeroThreshold;
+    logicalThreshold_ = logicalThreshold;
     isLogicallyFinishCallback_ = true;
 }
 
@@ -78,7 +78,7 @@ void RSInterpolatingSpringAnimation::OnStart()
     animation->SetSpringParameters(timingCurve_.response_, timingCurve_.dampingRatio_, timingCurve_.initialVelocity_);
     animation->SetAdditive(GetAdditive());
     if (GetIsLogicallyFinishCallback()) {
-        animation->SetZeroThreshold(zeroThreshold_);
+        animation->SetLogicalThreshold(logicalThreshold_);
     }
     if (isCustom_) {
         animation->AttachRenderProperty(property_->GetRenderProperty());

@@ -114,12 +114,13 @@ public:
     }
 
     virtual void SetThresholdType(ThresholdType thresholdType) {}
-    virtual float GetThreshold() const
+    virtual float GetLogicalThreshold() const
     {
         return 0.0f;
     }
 
     virtual void SetValueFromRender(const std::shared_ptr<const RSRenderPropertyBase>& rsRenderPropertyBase) {};
+    virtual void SetFinishThreshold(const std::shared_ptr<RSPropertyBase>& finishThreshold) {}
 
 protected:
     virtual void SetIsCustom(bool isCustom) {}
@@ -143,7 +144,7 @@ protected:
         return RSRenderPropertyType::INVALID;
     }
 
-    float GetThresholdByModifierType() const;
+    float GetLogicalThresholdByModifierType() const;
 
     virtual void UpdateOnAllAnimationFinish() {}
     virtual void UpdateCustomAnimation() {}
@@ -173,7 +174,12 @@ protected:
         return false;
     }
 
-    float GetThresholdByThresholdType(ThresholdType thresholdType) const;
+    float GetLogicalThresholdByThresholdType(ThresholdType thresholdType) const;
+
+    virtual std::shared_ptr<RSPropertyBase> GetFinishThreshold()
+    {
+        return nullptr;
+    }
 
     PropertyId id_;
     RSModifierType type_ { RSModifierType::INVALID };
@@ -316,7 +322,6 @@ protected:
 
     T stagingValue_ {};
     bool isCustom_ { false };
-
     friend class RSPathAnimation;
     friend class RSImplicitAnimator;
     friend class RSExtendedModifier;
@@ -617,9 +622,31 @@ protected:
         thresholdType_ = thresholdType;
     }
 
-    float GetThreshold() const override
+    float GetLogicalThreshold() const override
     {
-        return RSProperty<T>::GetThresholdByThresholdType(thresholdType_);
+        return RSProperty<T>::GetLogicalThresholdByThresholdType(thresholdType_);
+    }
+
+    // this threshold determines the distance to final postion when the animation is ready to finish,
+    // the smaller the threshold, the longer the animation duration will be.
+    // take the translate property for example, when the threshold is greater than 1 px, it may cause
+    // a jump between the last two frames.
+    // todo: this function only works for RSAnimatableProperty<float> now, and planned to support more
+    // data types
+    void SetFinishThreshold(const std::shared_ptr<RSPropertyBase>& finishThreshold) override
+    {
+        auto property = std::static_pointer_cast<RSAnimatableProperty<T>>(finishThreshold);
+        if (property) {
+            finishThreshold_ = property->stagingValue_;
+        }
+    }
+    
+    std::shared_ptr<RSPropertyBase> GetFinishThreshold() override
+    {
+        if (finishThreshold_.has_value()) {
+            return std::make_shared<RSAnimatableProperty<T>>(finishThreshold_.value());
+        }
+        return nullptr;
     }
 
     T showingValue_ {};
@@ -669,6 +696,7 @@ private:
         return true;
     }
 
+    std::optional<T> finishThreshold_;
     friend class RSPropertyAnimation;
     friend class RSPathAnimation;
     friend class RSExtendedModifier;

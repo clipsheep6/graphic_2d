@@ -15,20 +15,20 @@ enum{
     kW=835,
     kH=840,
 };
-FillTypesPersp::FillTypesPersp() {
+FillTypePersp::FillTypePersp() {
     bitmapWidth_ = kW;
     bitmapHeight_ = kH;
     fileName_ = "filltypespersp";
 }
 
-void FillTypesPersp::makePath()
+void FillTypePersp::makePath()
 {
     fPath = OH_Drawing_PathCreate();
     DrawPathAddCircle(fPath, 50, 50, 45);
     DrawPathAddCircle(fPath, 100, 100, 45);
 }
 
-void FillTypesPersp::showPath(OH_Drawing_Canvas* canvas, int x, int y, OH_Drawing_PathFillType ft, float scale, OH_Drawing_Brush* brush)
+void FillTypePersp::showPath(OH_Drawing_Canvas* canvas, int x, int y, OH_Drawing_PathFillType ft, float scale, OH_Drawing_Brush* brush)
 {
     DrawRect r={0,0,150,150};
     OH_Drawing_Rect* rc = DrawCreateRect(r);
@@ -46,7 +46,7 @@ void FillTypesPersp::showPath(OH_Drawing_Canvas* canvas, int x, int y, OH_Drawin
     OH_Drawing_CanvasRestore(canvas);
 }
 
-void FillTypesPersp::showFour(OH_Drawing_Canvas* canvas, float scale, bool aa)
+void FillTypePersp::showFour(OH_Drawing_Canvas* canvas, float scale, bool aa)
 {
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_Point* center = OH_Drawing_PointCreate(100, 100);
@@ -65,7 +65,7 @@ void FillTypesPersp::showFour(OH_Drawing_Canvas* canvas, float scale, bool aa)
     OH_Drawing_BrushDestroy(brush);
  }
 
-void FillTypesPersp::OnTestFunction(OH_Drawing_Canvas* canvas)
+void FillTypePersp::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     makePath();
     OH_Drawing_Brush* bkgnrd = OH_Drawing_BrushCreate();;

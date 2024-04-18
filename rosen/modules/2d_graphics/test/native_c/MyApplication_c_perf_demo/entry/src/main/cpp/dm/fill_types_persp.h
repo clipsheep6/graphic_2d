@@ -6,10 +6,10 @@
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_canvas.h>
 
-class FillTypesPersp : public TestBase {
+class FillTypePersp : public TestBase {
 public:
-    FillTypesPersp();
-    ~FillTypesPersp()=default;
+    FillTypePersp();
+    ~FillTypePersp()=default;
     void makePath();
 protected:
     void showPath(OH_Drawing_Canvas* canvas, int x, int y, OH_Drawing_PathFillType ft, float scale, OH_Drawing_Brush* brush);

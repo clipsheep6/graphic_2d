@@ -13,7 +13,7 @@ PointsMaskFilter::PointsMaskFilter() {
     // skia dm file gm\points.cpp
     bitmapWidth_ = 512;
     bitmapHeight_ = 256;
-    fileName_ = "pointsmaskfilter";
+    fileName_ = "point_smaskfilter";
 }
 constexpr int N = 30;
 // 用例名: pointsmaskfilter 测试 OH_Drawing_MaskFilterCreateBlur

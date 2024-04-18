@@ -37,7 +37,8 @@ public:
     };
 
     CacheData(const size_t maxKeySize, const size_t maxValueSize,
-        const size_t maxTotalSize, const std::string& fileName);
+        const size_t maxTotalSize, const std::string& fileName,
+        const std::string& presetFile);
 
     ~CacheData();
 
@@ -178,6 +179,7 @@ private:
     size_t maxValueSize_;
     size_t maxTotalSize_;
     std::string cacheDir_;
+    std::string mPresetFile_;
 };
 }   // namespace Rosen
 }   // namespace OHOS

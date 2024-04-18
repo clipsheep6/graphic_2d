@@ -51,7 +51,7 @@ public:
         InitShaderCache(nullptr, 0, false);
     }
 
-    virtual void SetFilePath(const std::string& filename);
+    virtual void SetFilePath(const std::string& filename, const std::string& presetFile);
 
     std::shared_ptr<Drawing::Data> Load(const Drawing::Data &key) override;
     void Store(const Drawing::Data &key, const Drawing::Data &data) override;
@@ -78,6 +78,7 @@ private:
     bool initialized_ = false;
     std::unique_ptr<CacheData> cacheData_;
     std::string filePath_;
+    std::string mPresetFilePath_;
     std::vector<uint8_t> idHash_;
     mutable std::mutex mutex_;
 

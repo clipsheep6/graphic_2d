@@ -20,12 +20,12 @@
 
 namespace OHOS {
 namespace Rosen {
-void MemoryHandler::ConfigureContext(Drawing::GPUContextOptions* context, const char* identity,
-    const size_t size, const std::string& cacheFilePath, bool isUni)
+void MemoryHandler::ConfigureContext(Drawing::GPUContextOptions* context, const char* identity, const size_t size,
+    const FilePath& filePath, bool isUni)
 {
     context->SetAllowPathMaskCaching(true);
     auto& cache = ShaderCache::Instance();
-    cache.SetFilePath(cacheFilePath);
+    cache.SetFilePath(filePath.cacheFilePath, filePath.presetFilePath);
     cache.InitShaderCache(identity, size, isUni);
     context->SetPersistentCache(&cache);
 }

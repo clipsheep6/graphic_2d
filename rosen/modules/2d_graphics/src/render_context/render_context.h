@@ -170,7 +170,9 @@ private:
 
     bool isUniRenderMode_ = false;
     const std::string UNIRENDER_CACHE_DIR = "/data/service/el0/render_service";
+    const std::string UNIRENDER_PRESET_CACHE_DIR = "";
     std::string cacheDir_;
+    std::string mPresetCacheDir_;
     std::shared_ptr<MemoryHandler> mHandler_;
     std::mutex shareContextMutex_;
 

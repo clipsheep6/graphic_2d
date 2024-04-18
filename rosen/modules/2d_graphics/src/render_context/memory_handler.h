@@ -22,16 +22,21 @@
 
 namespace OHOS {
 namespace Rosen {
+struct FilePath {
+    std::string cacheFilePath = "";
+    std::string presetFilePath = "";
+};
 class MemoryHandler {
 public:
     static void ConfigureContext(Drawing::GPUContextOptions* context, const char* identity, const size_t size,
-        const std::string& cacheFilePath = mUniRenderCacheDir, bool isUni = true);
+        const FilePath& filePath = {mUniRenderCacheDir, mPresetCacheDir}, bool isUni = true);
     MemoryHandler() = default;
     static void ClearRedundantResources(Drawing::GPUContext* gpuContext);
     static std::string QuerryShader();
     static std::string ClearShader();
 private:
     inline static const std::string mUniRenderCacheDir = "/data/service/el0/render_service";
+    inline static const std::string mPresetCacheDir = "";
 };
 }   // namespace Rosen
 }   // namespace OHOS

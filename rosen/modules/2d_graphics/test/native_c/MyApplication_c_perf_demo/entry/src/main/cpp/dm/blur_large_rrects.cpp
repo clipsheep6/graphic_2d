@@ -16,7 +16,7 @@ BlurLargeRrects::BlurLargeRrects()
 {
     bitmapWidth_ = 300;
     bitmapHeight_ = 300;
-    fileName_ = "blurlargerrects";
+    fileName_ = "blur_large_rrects";
 }
 
 // 用例名: blurlargerrects 测试 OH_Drawing_CanvasDrawRoundRect

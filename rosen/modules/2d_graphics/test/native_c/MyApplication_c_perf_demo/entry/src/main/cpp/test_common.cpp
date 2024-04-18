@@ -131,7 +131,7 @@ uint16_t* DrawBitmapGetAddr16(OH_Drawing_Bitmap* bitmap, int x, int y)
     uint32_t H = OH_Drawing_BitmapGetHeight(bitmap);
     uint32_t W = OH_Drawing_BitmapGetWidth(bitmap);    
     void* pixel = OH_Drawing_BitmapGetPixels(bitmap);
-    uint16_t* ptr = (uint16_t*)pixel + (size_t)y*W +(x<<1);
+    uint16_t* ptr = (uint16_t*)pixel + (uint16_t)(y*W) +(x);
     return ptr;    
 }
 
@@ -140,7 +140,7 @@ uint32_t* DrawBitmapGetAddr32(OH_Drawing_Bitmap* bitmap, int x, int y)
     uint32_t H = OH_Drawing_BitmapGetHeight(bitmap);
     uint32_t W = OH_Drawing_BitmapGetWidth(bitmap);    
     void* pixel = OH_Drawing_BitmapGetPixels(bitmap);
-    uint32_t* ptr = (uint32_t*)pixel + (size_t)y*W +(x<<2);
+    uint32_t* ptr = (uint32_t*)pixel + (uint32_t)(y*W) +(x);
     return ptr;    
 }
 

@@ -26,11 +26,14 @@ constexpr static uint8_t DIRECTION_NUM = 4;
 
 static bool GetMaskLinearBlurEnabled()
 {
+#ifdef GE_OHOS
     // Determine whether the mask LinearBlur render should be enabled. The default value is 0,
     // which means that it is unenabled.
     static bool enabled =
         std::atoi((system::GetParameter("persist.sys.graphic.maskLinearBlurEnabled", "1")).c_str()) != 0;
     return enabled;
+#endif
+    return false;
 }
 } // namespace
 

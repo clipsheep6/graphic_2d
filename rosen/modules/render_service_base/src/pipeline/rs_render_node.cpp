@@ -1569,6 +1569,10 @@ void RSRenderNode::UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parent
 
 bool RSRenderNode::IsBackgroundFilterCacheValid() const
 {
+    if (!RSSystemProperties::GetBlurEnabled() || !RSProperties::FilterCacheEnabled) {
+        ROSEN_LOGD("IsBackgroundFilterCacheValid::blur is disabled or filter cache is disabled.");
+        return false;
+    }
     auto filterDrawable = GetFilterDrawable(false);
     if (filterDrawable == nullptr) {
         return false;
@@ -1657,7 +1661,6 @@ std::shared_ptr<DrawableV2::RSFilterDrawable> RSRenderNode::GetFilterDrawable(bo
 
 void RSRenderNode::UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyManager, bool isForeground)
 {
-#if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (!RSProperties::FilterCacheEnabled) {
         ROSEN_LOGE("RSRenderNode::UpdateFilterCacheWithBelowDirty filter cache is disabled.");
         return;
@@ -1669,13 +1672,11 @@ void RSRenderNode::UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyMa
         return;
     }
     MarkFilterStatusChanged(isForeground, false);
-#endif
 }
 
 void RSRenderNode::UpdateFilterCacheWithSelfDirty(const std::optional<RectI>& clipRect,
     bool isInSkippedSubTree, const std::optional<RectI>& filterRectForceUpdated)
 {
-#if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     if (!RSProperties::FilterCacheEnabled) {
         ROSEN_LOGE("RSRenderNode::UpdateFilterCacheWithSelfDirty filter cache is disabled.");
         return;
@@ -1695,7 +1696,6 @@ void RSRenderNode::UpdateFilterCacheWithSelfDirty(const std::optional<RectI>& cl
     if (GetRenderProperties().GetFilter()) {
         MarkFilterStatusChanged(true, true);
     }
-#endif
 }
 
 bool RSRenderNode::IsBackgroundInAppOrNodeSelfDirty() const

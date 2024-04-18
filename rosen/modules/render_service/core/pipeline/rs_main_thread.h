@@ -367,6 +367,9 @@ private:
 
     // UIFirst
     bool CheckParallelSubThreadNodesStatus();
+    bool ShouldResetSubThreadGrContext();
+    void UpdateCacheCmdSkippedInfo();
+    void ClearSubThreadNodesIfNeeded();
     void CacheCommands();
     bool CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const;
 

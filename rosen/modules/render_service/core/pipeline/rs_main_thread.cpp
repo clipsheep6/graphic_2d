@@ -714,19 +714,13 @@ std::unordered_map<NodeId, bool> RSMainThread::GetCacheCmdSkippedNodes() const
 {
     return cacheCmdSkippedNodes_;
 }
-
-bool RSMainThread::CheckParallelSubThreadNodesStatus()
+bool RSMainThread::ShouldResetSubThreadGrContext()
 {
-    RS_OPTIONAL_TRACE_FUNC();
-    cacheCmdSkippedInfo_.clear();
-    cacheCmdSkippedNodes_.clear();
-    if (subThreadNodes_.empty() &&
-        (deviceType_ != DeviceType::PC || (leashWindowCount_ > 0 && isUiFirstOn_ == false))) {
-        if (!isUniRender_) {
-            RSSubThreadManager::Instance()->ResetSubThreadGrContext(); // planning: move to prepare
-        }
-        return false;
-    }
+    return (subThreadNodes_.empty() && (deviceType_ != DeviceType::PC || (leashWindowCount_ > 0 && isUiFirstOn_ == false)) && (!isUniRender_));
+}
+
+void RSMainThread::UpdateCacheCmdSkippedInfo()
+{
     for (auto& node : subThreadNodes_) {
         if (node == nullptr) {
             RS_LOGE("RSMainThread::CheckParallelSubThreadNodesStatus sunThreadNode is nullptr!");
@@ -770,14 +764,37 @@ bool RSMainThread::CheckParallelSubThreadNodesStatus()
             }
         }
     }
+}
+
+bool RSMainThread::CheckParallelSubThreadNodesStatus()
+{
+    RS_OPTIONAL_TRACE_FUNC();
+    cacheCmdSkippedInfo_.clear();
+    cacheCmdSkippedNodes_.clear();
+
+    if(ShouldResetSubThreadGrContext())
+    {
+        RSSubThreadManager::Instance()->ResetSubThreadGrContext(); // planning: move to prepare
+        return false;
+    }
+
+    UpdateCacheCmdSkippedInfo();
+
     if (!cacheCmdSkippedNodes_.empty()) {
         return true;
     }
+
+    ClearSubThreadNodesIfNeeded();
+
+    return false;
+}
+
+void RSMainThread::ClearSubThreadNodesIfNeeded()
+{
     if (!isUiFirstOn_) {
         // clear subThreadNodes_ when UIFirst off and none of subThreadNodes_ is in the state of doing
         subThreadNodes_.clear();
     }
-    return false;
 }
 
 bool RSMainThread::IsNeedSkip(NodeId instanceRootNodeId, pid_t pid)

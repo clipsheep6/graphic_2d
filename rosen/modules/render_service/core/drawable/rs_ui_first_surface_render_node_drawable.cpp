@@ -292,8 +292,51 @@ bool RSSurfaceRenderNodeDrawable::DrawCacheSurface(RSPaintFilterCanvas& canvas, 
     return true;
 }
 
+void RSSurfaceRenderNodeDrawable::GetCacheSizeFromRenderParams(
+    const std::unique_ptr<RSRenderParams>& params, float& width, float& height)
+{
+    if (params == nullptr) {
+        RS_LOGE("uifirst cannot get cachesize");
+        return;
+    }
+    auto size = params->GetCacheSize();
+    boundsWidth_ = size.x_;
+    boundsHeight_ = size.y_;
+
+    width = boundsWidth_;
+    height = boundsHeight_;
+}
+
+void RSSurfaceRenderNodeDrawable::GetCacheSizeDirectly(const Vector2f cacheSize, float& width, float& height)
+{
+    boundsWidth_ = cacheSize.x_;
+    boundsHeight_ = cacheSize.y_;
+
+    width = boundsWidth_;
+    height = boundsHeight_;
+}
+
 void RSSurfaceRenderNodeDrawable::InitCacheSurface(Drawing::GPUContext* gpuContext, ClearCacheSurfaceFunc func,
     uint32_t threadIndex)
+{
+    float width = 0.0f;
+    float height = 0.0f;
+
+    ResetCacheSurface(func, threadIndex);
+    GetCacheSizeFromRenderParams(GetRenderNode()->GetRenderParams(), width, height);
+    InitCacheSurfaceInner(gpuContext, func, width, height);
+}
+void RSSurfaceRenderNodeDrawable::InitCacheSurface(
+    Drawing::GPUContext* gpuContext, const Vector2f cacheSize, ClearCacheSurfaceFunc func, uint32_t threadIndex)
+{
+    float width = 0.0f;
+    float height = 0.0f;
+
+    ResetCacheSurface(func, threadIndex);
+    GetCacheSizeDirectly(cacheSize, width, height);
+    InitCacheSurfaceInner(gpuContext, func, width, height);
+}
+void RSSurfaceRenderNodeDrawable::ResetCacheSurface(ClearCacheSurfaceFunc func, uint32_t threadIndex)
 {
     if (func) {
         cacheSurfaceThreadIndex_ = threadIndex;
@@ -308,20 +351,10 @@ void RSSurfaceRenderNodeDrawable::InitCacheSurface(Drawing::GPUContext* gpuConte
     } else {
         cacheSurface_ = nullptr;
     }
-
-    float width = 0.0f;
-    float height = 0.0f;
-    if (auto& params = GetRenderNode()->GetRenderParams()) {
-        auto size = params->GetCacheSize();
-        boundsWidth_ = size.x_;
-        boundsHeight_ = size.y_;
-    } else {
-        RS_LOGE("uifirst cannot get cachesize");
-    }
-
-    width = boundsWidth_;
-    height = boundsHeight_;
-
+}
+void RSSurfaceRenderNodeDrawable::InitCacheSurfaceInner(
+    Drawing::GPUContext* gpuContext, ClearCacheSurfaceFunc func, float width, float height)
+{
 #if (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK)) && (defined RS_ENABLE_EGLIMAGE)
     if (gpuContext == nullptr) {
         if (func) {

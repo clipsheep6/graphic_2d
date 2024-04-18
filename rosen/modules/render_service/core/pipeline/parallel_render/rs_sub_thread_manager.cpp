@@ -388,16 +388,8 @@ std::unordered_map<uint32_t, pid_t> RSSubThreadManager::GetReThreadIndexMap() co
     return reThreadIndexMap_;
 }
 
-void RSSubThreadManager::ScheduleRenderNodeDrawable(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+uint32_t RSSubThreadManager::GetOptimalThreadID(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
 {
-    if (!nodeDrawable) {
-        return;
-    }
-    auto& param = nodeDrawable->GetRenderNode()->GetRenderParams();
-    if (!param) {
-        return;
-    }
-
     auto minDoingCacheProcessNum = threadList_[0]->GetDoingCacheProcessNum();
     minLoadThreadIndex_ = 0;
     for (unsigned int j = 1; j < SUB_THREAD_NUM; j++) {
@@ -411,6 +403,19 @@ void RSSubThreadManager::ScheduleRenderNodeDrawable(DrawableV2::RSSurfaceRenderN
         nowIdx = threadIndexMap_[nodeDrawable->GetLastFrameUsedThreadIndex()];
     }
 
+    return nowIdx;
+}
+void RSSubThreadManager::ScheduleRenderNodeDrawable(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+{
+    if (!nodeDrawable) {
+        return;
+    }
+    auto& param = nodeDrawable->GetRenderNode()->GetRenderParams();
+    if (!param) {
+        return;
+    }
+
+    auto nowIdx = GetOptimalThreadID(nodeDrawable);
     auto subThread = threadList_[nowIdx];
     auto tid = reThreadIndexMap_[nowIdx];
     nodeTaskState_[param->GetId()] = 1;
@@ -420,5 +425,28 @@ void RSSubThreadManager::ScheduleRenderNodeDrawable(DrawableV2::RSSurfaceRenderN
         subThread->DrawableCache(nodeDrawable);
     });
     needResetContext_ = true;
+}
+void RSSubThreadManager::SchedulePreAlloc(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, Vector2f cacheSize)
+{
+    if (!nodeDrawable) {
+        return;
+    }
+
+    auto minCreatingSurfaceNum = threadList_[0]->GetSurfacePreAllocedNum();
+    auto minLoadThreadIndex = 0;
+    for (unsigned int j = 1; j < SUB_THREAD_NUM; j++) {
+        if (minCreatingSurfaceNum > threadList_[j]->GetSurfacePreAllocedNum()) {
+            minCreatingSurfaceNum = threadList_[j]->GetSurfacePreAllocedNum();
+            minLoadThreadIndex = j;
+        }
+    }
+    auto nowIdx = minLoadThreadIndex;
+    auto subThread = threadList_[nowIdx];
+    auto tid = reThreadIndexMap_[nowIdx];
+    subThread->SurfacePreAllocedNumInc();
+    subThread->PostTask([subThread, nodeDrawable, tid, cacheSize]() {
+        nodeDrawable->SetLastFrameUsedThreadIndex(tid);
+        subThread->PreAlloc(nodeDrawable, cacheSize);
+    });
 }
 } // namespace OHOS::Rosen

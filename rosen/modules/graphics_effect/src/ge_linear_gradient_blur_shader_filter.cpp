@@ -109,9 +109,6 @@ std::shared_ptr<Drawing::Image> GELinearGradientBlurShaderFilter::ProcessImage(D
         return image;
     }
 
-    if (Drawing::SystemProperties::GetGpuApiType() == OHOS::Rosen::GpuApiType::DDGR) {
-        return ProcessImageDDGR(canvas, image, directionBias);
-    }
     if (GetMaskLinearBlurEnabled() && para->useMaskAlgorithm_) {
         // use faster LinearGradientBlur if valid
         if (para->LinearGradientBlurFilter_ == nullptr) {

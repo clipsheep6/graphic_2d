@@ -40,7 +40,7 @@ void RSSurfaceOhosRasterTest::TearDown() {}
 
 /**
  * @tc.name: SetSurfaceBufferUsage001
- * @tc.desc: test
+ * @tc.desc: test results of SetSurfaceBufferUsage
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -51,11 +51,12 @@ HWTEST_F(RSSurfaceOhosRasterTest, SetSurfaceBufferUsage001, TestSize.Level1)
     uint64_t usage = 0;
     EXPECT_FALSE(raster.IsValid());
     raster.SetSurfaceBufferUsage(usage);
+    ASSERT_EQ(raster.bufferUsage_, 0);
 }
 
 /**
  * @tc.name: RequestFrame001
- * @tc.desc: test
+ * @tc.desc: test results of RequestFrame
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -66,14 +67,15 @@ HWTEST_F(RSSurfaceOhosRasterTest, RequestFrame001, TestSize.Level1)
     int32_t width = 1;
     int32_t height = 1;
     uint64_t uiTimestamp = 1;
+    bool useAFBC = true;
     EXPECT_FALSE(raster.IsValid());
-    EXPECT_EQ(raster.RequestFrame(width, height, uiTimestamp), nullptr);
+    EXPECT_EQ(raster.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
     raster.ClearBuffer();
 }
 
 /**
  * @tc.name: RequestFrame002
- * @tc.desc: test
+ * @tc.desc: test results of RequestFrame
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -86,14 +88,15 @@ HWTEST_F(RSSurfaceOhosRasterTest, RequestFrame002, TestSize.Level1)
     int32_t width = 1;
     int32_t height = 1;
     uint64_t uiTimestamp = 1;
+    bool useAFBC = true;
     EXPECT_TRUE(raster.IsValid());
-    EXPECT_EQ(raster.RequestFrame(width, height, uiTimestamp), nullptr);
+    EXPECT_EQ(raster.RequestFrame(width, height, uiTimestamp, useAFBC), nullptr);
     raster.ClearBuffer();
 }
 
 /**
  * @tc.name: FlushFrame001
- * @tc.desc: test
+ * @tc.desc: test results of FlushFrame
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -118,7 +121,7 @@ HWTEST_F(RSSurfaceOhosRasterTest, FlushFrame001, TestSize.Level1)
 
 /**
  * @tc.name: ResetBufferAge001
- * @tc.desc: test
+ * @tc.desc: test results of ResetBufferAge
  * @tc.type:FUNC
  * @tc.require:
  */
@@ -132,18 +135,40 @@ HWTEST_F(RSSurfaceOhosRasterTest, ResetBufferAge001, TestSize.Level1)
 
 /**
  * @tc.name: ResetBufferAge001
- * @tc.desc: test
+ * @tc.desc: test results of ClearBuffer
  * @tc.type:FUNC
  * @tc.require:
  */
 HWTEST_F(RSSurfaceOhosRasterTest, ClearBuffer001, TestSize.Level1)
 {
-    sptr<IConsumerSurface> cSurface = IConsumerSurface::Create("DisplayNode");
-    sptr<IBufferProducer> bp = cSurface->GetProducer();
-    sptr<Surface> pSurface = Surface::CreateSurfaceAsProducer(bp);
+    sptr<Surface> pSurface = nullptr;
     RSSurfaceOhosRaster raster(pSurface);
     raster.ClearBuffer();
-    ASSERT_TRUE(raster.IsValid());
+    EXPECT_EQ(raster.producer_, nullptr);
+
+    {
+        sptr<IConsumerSurface> cSurface = IConsumerSurface::Create("DisplayNode");
+        sptr<IBufferProducer> bp = cSurface->GetProducer();
+        sptr<Surface> pSurface = Surface::CreateSurfaceAsProducer(bp);
+        RSSurfaceOhosRaster raster(pSurface);
+        raster.ClearBuffer();
+        ASSERT_TRUE(raster.IsValid());
+    }
+}
+
+/**
+ * @tc.name: SetSurfacePixelFormat001
+ * @tc.desc: test results of SetSurfacePixelFormat
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSSurfaceOhosRasterTest, SetSurfacePixelFormat001, TestSize.Level1)
+{
+    sptr<Surface> pSurface = nullptr;
+    RSSurfaceOhosRaster raster(pSurface);
+    int32_t pixelFormat = 1;
+    raster.SetSurfacePixelFormat(pixelFormat);
+    ASSERT_EQ(raster.pixelFormat_, pixelFormat);
 }
 } // namespace Rosen
 } // namespace OHOS

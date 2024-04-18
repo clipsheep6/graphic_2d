@@ -155,7 +155,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
 
         // DM
-        {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // 缺少背景格子的渲染
+        {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // ok
         {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},                                           // ok
         {"blur_large_rrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},                                   // ok
         {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},                                              // ok
@@ -191,7 +191,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // 有部分线条多余画出
         {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
         {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
-        {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},   //代码完成，有crash，rect roundout 接口缺失
+        {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},                                  // ok
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

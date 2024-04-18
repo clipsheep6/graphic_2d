@@ -49,11 +49,10 @@ OH_Drawing_Bitmap* make_big_bitmap() {
     return bm;
 }
 
-DrawBitmapRect4::DrawBitmapRect4(bool useIRect) {
+DrawBitmapRect4::DrawBitmapRect4(bool useIRect):fUseIRect(useIRect) {
     bitmapWidth_ = kW;
     bitmapHeight_ = kH;
-    fileName_ = useIRect ? "bigbitmaprect_i":"bigbitmaprect_s";
-    fUseIRect = useIRect;
+    fileName_ = fUseIRect ? "bigbitmaprect_i":"bigbitmaprect_s";
     fBigBitmap = make_big_bitmap();
 }
 

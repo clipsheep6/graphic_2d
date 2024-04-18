@@ -153,12 +153,12 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
         {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
-    };
+//    };多余的
 
         // DM
         {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // 缺少背景格子的渲染
         {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},                                           // ok
-        {"blurlargerrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},                                     // dm中无图
+        {"blur_larger_rects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},                                     // dm中无图
         {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},                                              // ok
         {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},                                                       // ok
         {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},                                                   // 字体相关问题，函数缺失
@@ -181,9 +181,9 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"arcofzorro", []() -> std::shared_ptr<TestBase> { return std::make_shared<ArcOfZorroGM>(); }},                                             // ok
         {"stroke_rect_shader", []() -> std::shared_ptr<TestBase> { return std::make_shared<StrokeRectShader>(); }},                                 // ok
         {"lumafilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<LumaFilter>(); }},                                               // 字体粗细、位置有差异
-        {"pointsmaskfilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<PointsMaskFilter>(); }},                                   // drawpoints argb参数存在部分偏差
+        {"points_maskfilter", []() -> std::shared_ptr<TestBase> { return std::make_shared<PointsMaskFilter>(); }},                                   // drawpoints argb参数存在部分偏差
         {"clipcubic", []() -> std::shared_ptr<TestBase> { return std::make_shared<ClipCubicGm>(); }},                                               // ok
-        {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypesPersp>(); }},                                       // ok
+        {"filltypespersp", []() -> std::shared_ptr<TestBase> { return std::make_shared<FillTypePersp>(); }},                                       // ok
         {"strokes_poly", []() -> std::shared_ptr<TestBase> { return std::make_shared<Strokes2>(); }},                                               // ok
         {"bug7792", []() -> std::shared_ptr<TestBase> { return std::make_shared<BugFix7792>(); }},                                                  // ok
 
@@ -192,7 +192,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // 有部分线条多余画出
         {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
         {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
-        {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(true); }},   //代码完成，有crash，rect roundout 接口缺失
+        {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},   //代码完成，有crash，rect roundout 接口缺失
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

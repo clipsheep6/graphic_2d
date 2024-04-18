@@ -158,7 +158,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         // DM
         {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // 缺少背景格子的渲染
         {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},                                           // ok
-        {"blurlargerrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},                                     // dm中无图
+        {"blur_large_rrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},                                   // ok
         {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},                                              // ok
         {"addarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArc>(); }},                                                       // ok
         {"badapple", []() -> std::shared_ptr<TestBase> { return std::make_shared<BadApple>(); }},                                                   // 字体相关问题，函数缺失

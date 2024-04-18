@@ -43,6 +43,14 @@ void RSRoundCornerDisplayTest::TearDownTestCase() {}
 void RSRoundCornerDisplayTest::SetUp() {}
 void RSRoundCornerDisplayTest::TearDown() {}
 
+std::unordered_map<int, int> testResolutionMap = {
+    {1344, 2772}, // 40
+    {1260, 2720}, // 60
+    {500, 800}, // NG case
+    {-1, -2}, // NG case
+    {0, 0}, // NG case
+};
+
 /*
  * @tc.name: RSSubThreadRCDTest
  * @tc.desc: Test RSRoundCornerDisplayTest.RSSubThreadRCDTest
@@ -100,16 +108,17 @@ HWTEST_F(RSRoundCornerDisplayTest, UpdateParameterTest, TestSize.Level1)
     int notchStatus = WINDOW_NOTCH_DEFAULT;
     rcdInstance.UpdateNotchStatus(notchStatus);
 
-    uint32_t width = 1344;
-    uint32_t height = 2772;
-    rcdInstance.UpdateDisplayParameter(width, height);
-
     std::map<std::string, bool> updateFlag = {
         {"display", true},
         {"notch", true},
         {"orientation", true}
     };
-    rcdInstance.UpdateParameter(updateFlag);
+    for (auto& it : testResolutionMap) {
+        uint32_t width = static_cast<uint32_t>(it.first);
+        uint32_t height = static_cast<uint32_t>(it.second);
+        rcdInstance.UpdateDisplayParameter(width, height);
+        rcdInstance.UpdateParameter(updateFlag);
+    }
 }
 
 /*
@@ -129,14 +138,16 @@ HWTEST_F(RSRoundCornerDisplayTest, RSDrawRoundCornerTest, TestSize.Level1)
     int notchStatus = WINDOW_NOTCH_DEFAULT;
     rcdInstance.UpdateNotchStatus(notchStatus);
 
-    uint32_t width = 1344;
-    uint32_t height = 2772;
-    rcdInstance.UpdateDisplayParameter(width, height);
+    for (auto& it : testResolutionMap) {
+        uint32_t width = static_cast<uint32_t>(it.first);
+        uint32_t height = static_cast<uint32_t>(it.second);
+        rcdInstance.UpdateDisplayParameter(width, height);
 
-    std::unique_ptr<Drawing::Canvas> drawingCanvas = std::make_unique<Drawing::Canvas>(width, height);
-    std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
-    ASSERT_NE(canvas, nullptr);
-    rcdInstance.DrawRoundCorner(canvas.get());
+        std::unique_ptr<Drawing::Canvas> drawingCanvas = std::make_unique<Drawing::Canvas>(width, height);
+        std::shared_ptr<RSPaintFilterCanvas> canvas = std::make_shared<RSPaintFilterCanvas>(drawingCanvas.get());
+        ASSERT_NE(canvas, nullptr);
+        rcdInstance.DrawRoundCorner(canvas.get());
+    }
 }
 
 /*
@@ -173,12 +184,14 @@ HWTEST_F(RSRoundCornerDisplayTest, RSGetSurfaceSourceTest, TestSize.Level1)
     auto& rcdInstance = RSSingleton<RoundCornerDisplay>::GetInstance();
     rcdInstance.Init();
 
-    uint32_t width = 1344;
-    uint32_t height = 2772;
-    rcdInstance.UpdateDisplayParameter(width, height);
+    for (auto& it : testResolutionMap) {
+        uint32_t width = static_cast<uint32_t>(it.first);
+        uint32_t height = static_cast<uint32_t>(it.second);
+        rcdInstance.UpdateDisplayParameter(width, height);
 
-    rcdInstance.GetTopSurfaceSource();
-    rcdInstance.GetBottomSurfaceSource();
+        rcdInstance.GetTopSurfaceSource();
+        rcdInstance.GetBottomSurfaceSource();
+    }
 }
 
 /*
@@ -198,14 +211,16 @@ HWTEST_F(RSRoundCornerDisplayTest, RSChooseResourceTest, TestSize.Level1)
     int notchStatus = WINDOW_NOTCH_HIDDEN;
     rcdInstance.UpdateNotchStatus(notchStatus);
 
-    uint32_t width = 1344;
-    uint32_t height = 2772;
-    rcdInstance.UpdateDisplayParameter(width, height);
+    for (auto& it : testResolutionMap) {
+        uint32_t width = static_cast<uint32_t>(it.first);
+        uint32_t height = static_cast<uint32_t>(it.second);
+        rcdInstance.UpdateDisplayParameter(width, height);
 
-    rcdInstance.RcdChooseTopResourceType();
+        rcdInstance.RcdChooseTopResourceType();
 
-    rcdInstance.RcdChooseRSResource();
-    rcdInstance.RcdChooseHardwareResource();
+        rcdInstance.RcdChooseRSResource();
+        rcdInstance.RcdChooseHardwareResource();
+    }
 }
 
 /*
@@ -230,19 +245,17 @@ rs_rcd::ROGSetting* GetRogFromLcdModel(rs_rcd::LCDModel* lcdModel, int& width, i
     if (lcdModel == nullptr) {
         return nullptr;
     }
-    int widthMate40 = 1344;
-    int heightMate40 = 2772;
-    int widthMate60 = 1260;
-    int heightMate60 = 2720;
-    width = widthMate40;
-    height = heightMate40;
-    rs_rcd::ROGSetting* rog = lcdModel->GetRog(width, height);
-    if (rog == nullptr) {
-        rog = lcdModel->GetRog(widthMate60, heightMate60);
-        width = widthMate60;
-        height = heightMate60;
+    for (auto it : testResolutionMap) {
+        int w = it.first;
+        int h = it.second;
+        rs_rcd::ROGSetting* rog = lcdModel->GetRog(w, h);
+        if (rog != nullptr) {
+            width = w;
+            height = h;
+            return rog;
+        }
     }
-    return rog;
+    return nullptr;
 }
 
 /*
@@ -628,7 +641,7 @@ HWTEST_F(RSRoundCornerDisplayTest, XMLReader, TestSize.Level1)
     auto ngResult = reader.Init("nofiles");
     ASSERT_NE(ngResult, true);
     auto okResult = reader.Init(rs_rcd::PATH_CONFIG_FILE);
-    if (okResult == false) {
+    if (!okResult) {
         std::cout << "OS less roundcorner resource" << std::endl;
         return;
     }

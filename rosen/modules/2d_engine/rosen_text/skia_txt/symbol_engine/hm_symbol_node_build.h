@@ -32,15 +32,15 @@ namespace SPText {
 
 class SymbolNodeBuild {
 public:
-    SymbolNodeBuild(const RSAnimationSetting animationSetting, const RSHMSymbolData symbolData,
-    const RSEffectStrategy effectStrategy, const std::pair<double, double> offset);
+    SymbolNodeBuild(const RSAnimationSetting& animationSetting, const RSHMSymbolData& symbolData,
+    const RSEffectStrategy& effectStrategy, const std::pair<double, double>& offset);
 
-    void AddWholeAnimation(const RSHMSymbolData &symbolData, const Vector4f &nodeBounds,
-        std::shared_ptr<TextEngine::SymbolAnimationConfig> symbolAnimationConfig);
+    void AddWholeAnimation(const RSHMSymbolData& symbolData, const Vector4f& nodeBounds,
+        std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
 
-    static void AddHierarchicalAnimation(RSHMSymbolData &symbolData, const Vector4f &nodeBounds,
-        std::vector<RSGroupSetting> &groupSettings,
-        std::shared_ptr<TextEngine::SymbolAnimationConfig> symbolAnimationConfig);
+    static void AddHierarchicalAnimation(RSHMSymbolData& symbolData, const Vector4f& nodeBounds,
+        std::vector<RSGroupSetting>& groupSettings,
+        std::shared_ptr<TextEngine::SymbolAnimationConfig>& symbolAnimationConfig);
     ~SymbolNodeBuild() {}
     bool DecomposeSymbolAndDraw();
     void ClearAnimation();

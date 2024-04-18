@@ -39,6 +39,7 @@
 #include "bench/bezier_bench.h"
 #include "bench/clear_bench.h"
 #include "bench/big_path_bench.h"
+#include "bench/hardstopgradientbench_scalenumcolors.h"
 #include "dm/aa_rect_modes.h"
 #include "dm/blur_circles_gm.h"
 #include "dm/blur_large_rrects.h"
@@ -153,6 +154,16 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
         {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
+        //HardStopGradientBench：kClamp、kRepeat、kMirror着色器效果平铺模式；4、25、100次数
+        {"HardStopGradientBench_clamp_4", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 4);}}, 
+        {"HardStopGradientBench_clamp_25", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 25);}},
+        {"HardStopGradientBench_clamp_100", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 100);}},
+        {"HardStopGradientBench_repeat_4", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 4);}}, 
+        {"HardStopGradientBench_repeat_25", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 25);}},
+        {"HardStopGradientBench_repeat_100", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 100);}},
+        {"HardStopGradientBench_mirror_4", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 4);}}, 
+        {"HardStopGradientBench_mirror_25", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 25);}},
+        {"HardStopGradientBench_mirror_100", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 100);}},
 
         // DM
         {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // 缺少背景格子的渲染
@@ -277,7 +288,16 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
         {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
-
+        //HardStopGradientBench：kClamp、kRepeat、kMirror着色器效果平铺模式；4、25、100次数
+        {"HardStopGradientBench_clamp_4", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 4);}}, 
+        {"HardStopGradientBench_clamp_25", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 25);}},
+        {"HardStopGradientBench_clamp_100", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kClamp, 100);}},
+        {"HardStopGradientBench_repeat_4", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 4);}}, 
+        {"HardStopGradientBench_repeat_25", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 25);}},
+        {"HardStopGradientBench_repeat_100", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kRepeat, 100);}},
+        {"HardStopGradientBench_mirror_4", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 4);}}, 
+        {"HardStopGradientBench_mirror_25", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 25);}},
+        {"HardStopGradientBench_mirror_100", []() -> std::shared_ptr<TestBase> { return std::make_shared<HardStopGradientBench_ScaleNumColors>(HardStopGradientBench_ScaleNumColors::kMirror, 100);}},
         {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
 
 };

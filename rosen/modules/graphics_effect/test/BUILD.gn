@@ -22,10 +22,12 @@ group("test") {
 
 ohos_executable("graphics_effect_exe") {
   branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
+  if (!is_mingw && !is_win && !is_linux) {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
   }
 
   sources = [ "main.cpp" ]

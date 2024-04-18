@@ -40,8 +40,6 @@ ohos_shared_library("libgraphics_effect") {
     "$graphic_2d_root/rosen/modules/graphics_effect/include",
     "$graphic_2d_root/rosen/modules/graphics_effect/src",
     "$graphic_2d_root/rosen/modules/utils",
-    "$graphic_2d_root/frameworks/surface/include",
-    "$graphic_2d_root/utils/color_manager/export",
     "$graphic_2d_root/utils/log",
     "$graphic_2d_root/interfaces/inner_api/surface",
   ]
@@ -60,16 +58,11 @@ ohos_shared_library("libgraphics_effect") {
 
   deps = [
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
-    "$graphic_2d_root/rosen/modules/platform:eventhandler",
     "$graphic_2d_root/rosen/modules/platform:hilog",
-    "$graphic_2d_root/rosen/modules/platform:ipc_core",
-    "$graphic_2d_root/utils/sandbox:sandbox_utils",
   ]
 
   external_deps = [ "hilog:libhilog" ]
   external_deps += [
-    "c_utils:utils",
-    "hitrace:hitrace_meter",
     "init:libbeget_proxy",
     "init:libbegetutil",
   ]

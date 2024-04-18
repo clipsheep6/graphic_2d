@@ -1,0 +1,1642 @@
+diff --git a/rosen/modules/render_service/core/drawable/rs_canvas_drawing_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_canvas_drawing_render_node_drawable.cpp
+index 591d355ee..8ce3895e9 100644
+--- a/rosen/modules/render_service/core/drawable/rs_canvas_drawing_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_canvas_drawing_render_node_drawable.cpp
+@@ -31,7 +31,11 @@ RSCanvasDrawingRenderNodeDrawable::Registrar RSCanvasDrawingRenderNodeDrawable::
+ RSCanvasDrawingRenderNodeDrawable::RSCanvasDrawingRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node)
+     : RSRenderNodeDrawable(std::move(node))
+ {
+-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
++    auto renderNode = renderNode_.lock();
++    if (renderNode == nullptr) {
++        return;
++    }
++    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
+     auto canvasDrawingRenderNode = std::static_pointer_cast<RSCanvasDrawingRenderNode>(nodeSp);
+     canvasDrawingRenderNode->InitRenderContent();
+ }
+@@ -55,7 +59,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+     if (!ShouldPaint()) {
+         return;
+     }
+-    const auto& params = renderNode_->GetRenderParams();
++    const auto& params = GetRenderParams();
+     if (params->GetCanvasDrawingSurfaceChanged()) {
+         ResetSurface();
+         params->SetCanvasDrawingSurfaceChanged(false);
+@@ -98,7 +102,11 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+     DrawForeground(canvas, bounds);
+ 
+     // 5. Ready to clear resource.
+-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
++    auto renderNode = renderNode_.lock();
++    if (renderNode == nullptr) {
++        return;
++    }
++    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
+     auto canvasDrawingRenderNode = std::static_pointer_cast<RSCanvasDrawingRenderNode>(nodeSp);
+     canvasDrawingRenderNode->SetDrawCmdListsVisited(true);
+ }
+@@ -126,15 +134,15 @@ void RSCanvasDrawingRenderNodeDrawable::DrawRenderContent(Drawing::Canvas& canva
+     DrawContent(*canvas_, rect);
+ 
+     Rosen::Drawing::Matrix mat;
+-    const auto& params = renderNode_->GetRenderParams();
++    const auto& params = GetRenderParams();
+     auto& frameRect = params->GetFrameRect();
+     if (RSPropertiesPainter::GetGravityMatrix(params->GetFrameGravity(),
+         { frameRect.GetLeft(), frameRect.GetTop(), frameRect.GetWidth(), frameRect.GetHeight() },
+         params->GetBounds().GetWidth(), params->GetBounds().GetHeight(), mat)) {
+         canvas.ConcatMatrix(mat);
+     }
+-    auto ctx = renderNode_->GetContext().lock();
+-    Flush(rect.GetWidth(), rect.GetHeight(), ctx, renderNode_->GetId(),
++    auto ctx = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetContext();
++    Flush(rect.GetWidth(), rect.GetHeight(), ctx, nodeId_,
+         *static_cast<RSPaintFilterCanvas*>(&canvas)); // getimage
+     std::lock_guard<std::mutex> lock(imageMutex_);
+     if (image_ == nullptr) {
+@@ -163,9 +171,9 @@ void RSCanvasDrawingRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
+ 
+ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
+ {
+-    auto nodeId = renderNode_->GetId();
+-    auto ctx = renderNode_->GetContext().lock();
+-    auto rect = renderNode_->GetRenderParams()->GetBounds();
++    auto nodeId = nodeId_;
++    auto ctx = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetContext();
++    auto rect = GetRenderParams()->GetBounds();
+     auto task = [this, rect, nodeId, ctx]() {
+         std::lock_guard<std::mutex> lockTask(taskMutex_);
+         if (!surface_ || !canvas_) {
+diff --git a/rosen/modules/render_service/core/drawable/rs_canvas_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_canvas_render_node_drawable.cpp
+index 67fc797ce..6fa02e536 100644
+--- a/rosen/modules/render_service/core/drawable/rs_canvas_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_canvas_render_node_drawable.cpp
+@@ -45,7 +45,7 @@ void RSCanvasRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+     if (!ShouldPaint()) {
+         return;
+     }
+-    const auto& params = renderNode_->GetRenderParams();
++    const auto& params = GetRenderParams();
+     auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
+     params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
+@@ -73,7 +73,7 @@ void RSCanvasRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
+     if (!ShouldPaint()) {
+         return;
+     }
+-    const auto& params = renderNode_->GetRenderParams();
++    const auto& params = GetRenderParams();
+     auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
+     params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
+diff --git a/rosen/modules/render_service/core/drawable/rs_display_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_display_render_node_drawable.cpp
+index ea9fad514..6767e4e83 100644
+--- a/rosen/modules/render_service/core/drawable/rs_display_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_display_render_node_drawable.cpp
+@@ -341,12 +341,13 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+     // canvas will generate in every request frame
+     (void)canvas;
+ 
+-    if (!renderNode_) {
++    auto renderNode = renderNode_.lock();
++    if (renderNode == nullptr) {
+         RS_LOGE("RSDisplayRenderNodeDrawable::OnDraw render node is null!");
+         return;
+     }
+ 
+-    auto params = static_cast<RSDisplayRenderParams*>(renderNode_->GetRenderParams().get());
++    auto params = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
+     if (!params) {
+         RS_LOGE("RSDisplayRenderNodeDrawable::OnDraw params is null!");
+         return;
+@@ -365,7 +366,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+     }
+     RSPointLightManager::Instance()->SetScreenRotation(screenRotation);
+ 
+-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
++    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
+     auto displayNodeSp = std::static_pointer_cast<RSDisplayRenderNode>(nodeSp);
+     RS_TRACE_NAME("RSDisplayRenderNodeDrawable[" + std::to_string(params->GetScreenId()) + "]" +
+                   displayNodeSp->GetSyncDirtyManager()->GetCurrentFrameDirtyRegion().ToString().c_str());
+@@ -637,18 +638,19 @@ void RSDisplayRenderNodeDrawable::RotateMirrorCanvasIfNeed(RSDisplayRenderNode&
+ 
+ void RSDisplayRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
+ {
+-    if (!renderNode_) {
++    auto renderNode = renderNode_.lock();
++    if (renderNode == nullptr) {
+         RS_LOGE("RSDisplayRenderNodeDrawable::OnCapture render node is null!");
+         return;
+     }
+ 
+-    auto params = static_cast<RSDisplayRenderParams*>(renderNode_->GetRenderParams().get());
++    auto params = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
+     if (!params) {
+         RS_LOGE("RSDisplayRenderNodeDrawable::OnCapture params is null!");
+         return;
+     }
+ 
+-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
++    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
+     auto displayNodeSp = std::static_pointer_cast<RSDisplayRenderNode>(nodeSp);
+ 
+     auto rscanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+@@ -757,7 +759,7 @@ void RSDisplayRenderNodeDrawable::SetHighContrastIfEnabled(RSPaintFilterCanvas&
+ 
+ void RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes()
+ {
+-    auto displayParams = static_cast<RSDisplayRenderParams*>(renderNode_->GetRenderParams().get());
++    auto displayParams = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
+     if (!displayParams) {
+         RS_LOGE("RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes displayParams is null!");
+         return;
+diff --git a/rosen/modules/render_service/core/drawable/rs_effect_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_effect_render_node_drawable.cpp
+index fa97977f1..799ca5599 100644
+--- a/rosen/modules/render_service/core/drawable/rs_effect_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_effect_render_node_drawable.cpp
+@@ -37,8 +37,8 @@ void RSEffectRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+         return;
+     }
+ 
+-    RS_LOGD("RSEffectRenderNodeDrawable::OnDraw node: %{public}" PRIu64, renderNode_->GetId());
+-    const auto& params = renderNode_->GetRenderParams();
++    RS_LOGD("RSEffectRenderNodeDrawable::OnDraw node: %{public}" PRIu64, nodeId_);
++    const auto& params = GetRenderParams();
+     auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
+ 
+@@ -56,8 +56,8 @@ void RSEffectRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
+         return;
+     }
+ 
+-    RS_LOGD("RSEffectRenderNodeDrawable::OnCapture node: %{public}" PRIu64, renderNode_->GetId());
+-    const auto& params = renderNode_->GetRenderParams();
++    RS_LOGD("RSEffectRenderNodeDrawable::OnCapture node: %{public}" PRIu64, nodeId_);
++    const auto& params = GetRenderParams();
+     auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
+     params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
+diff --git a/rosen/modules/render_service/core/drawable/rs_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_render_node_drawable.cpp
+index 25347ab1a..b9c6863c8 100644
+--- a/rosen/modules/render_service/core/drawable/rs_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_render_node_drawable.cpp
+@@ -22,6 +22,7 @@
+ #include "pipeline/rs_uni_render_thread.h"
+ #include "pipeline/rs_uni_render_util.h"
+ #include "platform/common/rs_log.h"
++#include "rs_trace.h"
+ 
+ namespace OHOS::Rosen::DrawableV2 {
+ #ifdef RS_ENABLE_VK
+@@ -39,13 +40,15 @@ RSRenderNodeDrawable::RSRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&&
+     : RSRenderNodeDrawableAdapter(std::move(node))
+ {
+     auto task = std::bind(&RSRenderNodeDrawable::ClearCachedSurface, this);
+-    std::const_pointer_cast<RSRenderNode>(renderNode_)->RegisterClearSurfaceFunc(task);
++    std::const_pointer_cast<RSRenderNode>(node)->RegisterClearSurfaceFunc(task);
+ }
+ 
+ RSRenderNodeDrawable::~RSRenderNodeDrawable()
+ {
+     ClearCachedSurface();
+-    std::const_pointer_cast<RSRenderNode>(renderNode_)->ResetClearSurfaeFunc();
++    if (auto renderNode = renderNode_.lock()) {
++        std::const_pointer_cast<RSRenderNode>(renderNode)->ResetClearSurfaeFunc();
++    }
+ }
+ 
+ RSRenderNodeDrawable::Ptr RSRenderNodeDrawable::OnGenerate(std::shared_ptr<const RSRenderNode> node)
+@@ -67,8 +70,7 @@ void RSRenderNodeDrawable::Draw(Drawing::Canvas& canvas)
+  */
+ void RSRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+ {
+-    auto& renderParams = renderNode_->GetRenderParams();
+-    Drawing::Rect bounds = renderParams ? renderParams->GetFrameRect() : Drawing::Rect(0, 0, 0, 0);
++    Drawing::Rect bounds = GetRenderParams() ? GetRenderParams()->GetFrameRect() : Drawing::Rect(0, 0, 0, 0);
+ 
+     DrawAll(canvas, bounds);
+ }
+@@ -100,7 +102,7 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
+         ClearCachedSurface();
+         {
+             std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
+-            drawingCacheUpdateTimeMap_.erase(renderNode_->GetId());
++            drawingCacheUpdateTimeMap_.erase(nodeId_);
+         }
+         return;
+     }
+@@ -114,7 +116,7 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
+ 
+     // in case of no filter
+     if (needUpdateCache && !hasFilter) {
+-        RS_TRACE_NAME_FMT("UpdateCacheSurface id:%llu", renderNode_->GetId());
++        RS_TRACE_NAME_FMT("UpdateCacheSurface id:%llu", nodeId_);
+         UpdateCacheSurface(canvas, params);
+         return;
+     }
+@@ -126,7 +128,7 @@ void RSRenderNodeDrawable::GenerateCacheIfNeed(Drawing::Canvas& canvas, RSRender
+         auto canvasType = curCanvas->GetCacheType();
+         // set canvas type as OFFSCREEN to not draw filter/shadow/filter
+         curCanvas->SetCacheType(RSPaintFilterCanvas::CacheType::OFFSCREEN);
+-        RS_TRACE_NAME_FMT("UpdateCacheSurface with filter id:%llu", renderNode_->GetId());
++        RS_TRACE_NAME_FMT("UpdateCacheSurface with filter id:%llu", nodeId_);
+         UpdateCacheSurface(canvas, params);
+         curCanvas->SetCacheType(canvasType);
+     }
+@@ -143,7 +145,7 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const
+         drawBlurForCache_ = true;
+         auto drawableCacheType = GetCacheType();
+         SetCacheType(DrawableCacheType::NONE);
+-        RS_TRACE_NAME_FMT("DrawBlurForCache id:%llu", renderNode_->GetId());
++        RS_TRACE_NAME_FMT("DrawBlurForCache id:%llu", nodeId_);
+ 
+         RSRenderNodeDrawable::OnDraw(canvas);
+         SetCacheType(drawableCacheType);
+@@ -154,7 +156,7 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const
+     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+     if (drawBlurForCache_ && !params.ChildHasVisibleFilter() && !params.ChildHasVisibleEffect() &&
+         !curCanvas->GetIsParallelCanvas()) {
+-        RS_OPTIONAL_TRACE_NAME_FMT("CheckCacheTypeAndDraw id:%llu child without filter, skip", renderNode_->GetId());
++        RS_OPTIONAL_TRACE_NAME_FMT("CheckCacheTypeAndDraw id:%llu child without filter, skip", nodeId_);
+         Drawing::AutoCanvasRestore arc(canvas, true);
+         DrawBackground(canvas, params.GetBounds());
+         return;
+@@ -178,7 +180,7 @@ void RSRenderNodeDrawable::CheckCacheTypeAndDraw(Drawing::Canvas& canvas, const
+             break;
+         }
+         case DrawableCacheType::CONTENT: {
+-            RS_OPTIONAL_TRACE_NAME_FMT("DrawCachedImage id:%llu", renderNode_->GetId());
++            RS_OPTIONAL_TRACE_NAME_FMT("DrawCachedImage id:%llu", nodeId_);
+             if (LIKELY(!params.GetDrawingCacheIncludeProperty())) {
+                 DrawBackground(canvas, params.GetBounds());
+                 DrawCachedImage(*curCanvas, params.GetCacheSize());
+@@ -208,8 +210,8 @@ void RSRenderNodeDrawable::DrawDfxForCache(Drawing::Canvas& canvas, const Drawin
+     int32_t updateTimes = 0;
+     {
+         std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
+-        if (drawingCacheUpdateTimeMap_.count(renderNode_->GetId()) > 0) {
+-            updateTimes = drawingCacheUpdateTimeMap_.at(renderNode_->GetId());
++        if (drawingCacheUpdateTimeMap_.count(nodeId_) > 0) {
++            updateTimes = drawingCacheUpdateTimeMap_.at(nodeId_);
+         }
+     }
+     drawingCacheInfos_.emplace_back(dfxRect, updateTimes);
+@@ -391,15 +393,15 @@ bool RSRenderNodeDrawable::CheckIfNeedUpdateCache(RSRenderParams& params)
+     int32_t updateTimes = 0;
+     {
+         std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
+-        if (drawingCacheUpdateTimeMap_.count(renderNode_->GetId()) > 0) {
+-            updateTimes = drawingCacheUpdateTimeMap_.at(renderNode_->GetId());
++        if (drawingCacheUpdateTimeMap_.count(nodeId_) > 0) {
++            updateTimes = drawingCacheUpdateTimeMap_.at(nodeId_);
+         } else {
+-            drawingCacheUpdateTimeMap_.emplace(renderNode_->GetId(), 0);
++            drawingCacheUpdateTimeMap_.emplace(nodeId_, 0);
+         }
+     }
+ 
+     RS_OPTIONAL_TRACE_NAME_FMT("CheckUpdateCache id:%llu updateTimes:%d type:%d cacheChanged:%d size:[%.2f, %.2f]",
+-        renderNode_->GetId(), updateTimes, params.GetDrawingCacheType(), params.GetDrawingCacheChanged(),
++        nodeId_, updateTimes, params.GetDrawingCacheType(), params.GetDrawingCacheChanged(),
+         params.GetCacheSize().x_, params.GetCacheSize().y_);
+ 
+     if (params.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE &&
+@@ -481,7 +483,7 @@ void RSRenderNodeDrawable::UpdateCacheSurface(Drawing::Canvas& canvas, const RSR
+     // update cache updateTimes
+     {
+         std::lock_guard<std::mutex> lock(drawingCacheMapMutex_);
+-        drawingCacheUpdateTimeMap_[renderNode_->GetId()]++;
++        drawingCacheUpdateTimeMap_[nodeId_]++;
+     }
+ }
+ 
+diff --git a/rosen/modules/render_service/core/drawable/rs_render_node_drawable.h b/rosen/modules/render_service/core/drawable/rs_render_node_drawable.h
+index db4b38298..d284f88e9 100644
+--- a/rosen/modules/render_service/core/drawable/rs_render_node_drawable.h
++++ b/rosen/modules/render_service/core/drawable/rs_render_node_drawable.h
+@@ -51,9 +51,10 @@ public:
+     virtual void OnDraw(Drawing::Canvas& canvas);
+     virtual void OnCapture(Drawing::Canvas& canvas);
+ 
++    // deprecated
+     inline std::shared_ptr<const RSRenderNode> GetRenderNode()
+     {
+-        return renderNode_;
++        return renderNode_.lock();
+     }
+ 
+     inline bool GetOpDropped() const
+@@ -63,8 +64,7 @@ public:
+ 
+     inline bool ShouldPaint() const
+     {
+-        const auto& params = renderNode_->GetRenderParams();
+-        return LIKELY(params != nullptr) && params->GetShouldPaint();
++        return LIKELY(renderParams_ != nullptr) && renderParams_->GetShouldPaint();
+     }
+ 
+ protected:
+diff --git a/rosen/modules/render_service/core/drawable/rs_render_node_shadow_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_render_node_shadow_drawable.cpp
+index 961fa4d41..e5b6c6117 100644
+--- a/rosen/modules/render_service/core/drawable/rs_render_node_shadow_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_render_node_shadow_drawable.cpp
+@@ -32,12 +32,12 @@ void RSRenderNodeShadowDrawable::Draw(Drawing::Canvas& canvas)
+     // rect is not directly used, make a dummy rect
+     static Drawing::Rect rect;
+ 
+-    auto shadowIndex = renderNode_->drawCmdIndex_.shadowIndex_;
++    auto shadowIndex = drawCmdIndex_.shadowIndex_;
+     if (shadowIndex == -1) {
+         return;
+     }
+ 
+-    const auto& params = renderNode_->GetRenderParams();
++    const auto& params = GetRenderParams();
+     if (!params) {
+         RS_LOGE("params is nullptr");
+         return;
+@@ -62,7 +62,7 @@ void RSRenderNodeShadowDrawable::DumpDrawableTree(int32_t depth, std::string& ou
+     for (int32_t i = 0; i < depth; ++i) {
+         out += "  ";
+     }
+-    renderNode_->DumpNodeType(out);
+-    out += "[" + std::to_string(renderNode_->GetId()) + "] Draw Shadow Only\n";
++    RSRenderNode::DumpNodeType(nodeType, out);
++    out += "[" + std::to_string(nodeId_) + "] Draw Shadow Only\n";
+ }
+ } // namespace OHOS::Rosen::DrawableV2
+diff --git a/rosen/modules/render_service/core/drawable/rs_root_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_root_render_node_drawable.cpp
+index 92a6198bc..2a36324b1 100644
+--- a/rosen/modules/render_service/core/drawable/rs_root_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_root_render_node_drawable.cpp
+@@ -32,13 +32,13 @@ RSRenderNodeDrawable::Ptr RSRootRenderNodeDrawable::OnGenerate(std::shared_ptr<c
+ 
+ void RSRootRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+ {
+-    RS_LOGD("RSRootRenderNodeDrawable::OnDraw node: %{public}" PRIu64, renderNode_->GetId());
++    RS_LOGD("RSRootRenderNodeDrawable::OnDraw node: %{public}" PRIu64, nodeId_);
+     RSCanvasRenderNodeDrawable::OnDraw(canvas);
+ }
+ 
+ void RSRootRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
+ {
+-    RS_LOGD("RSRootRenderNodeDrawable::OnCapture node: %{public}" PRIu64, renderNode_->GetId());
++    RS_LOGD("RSRootRenderNodeDrawable::OnCapture node: %{public}" PRIu64, nodeId_);
+ 
+     RSCanvasRenderNodeDrawable::OnCapture(canvas);
+ }
+diff --git a/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.cpp
+index 2b674798d..ed1643429 100644
+--- a/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.cpp
+@@ -53,8 +53,13 @@ namespace OHOS::Rosen::DrawableV2 {
+ RSSurfaceRenderNodeDrawable::Registrar RSSurfaceRenderNodeDrawable::instance_;
+ 
+ RSSurfaceRenderNodeDrawable::RSSurfaceRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node)
+-    : RSRenderNodeDrawable(std::move(node)) {}
+- 
++    : RSRenderNodeDrawable(std::move(node))
++{
++    auto nodeSp = std::const_pointer_cast<RSRenderNode>(node);
++    auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
++    name_ = surfaceNode->GetName();
++}
++
+ RSSurfaceRenderNodeDrawable::~RSSurfaceRenderNodeDrawable()
+ {
+     ClearCacheSurfaceInThread();
+@@ -112,10 +117,13 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw, rscanvas us nullptr");
+         return;
+     }
+-
+-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
++    auto renderNode = renderNode_.lock();
++    if (renderNode ==nullptr) {
++        return;
++    }
++    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
+     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
+-    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
++    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(GetRenderParams().get());
+     if (!surfaceParams) {
+         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
+         return;
+@@ -129,7 +137,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+     bool isuifirstNode = rscanvas->GetIsParallelCanvas();
+     if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
+         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
+-            surfaceNode->GetName().c_str(), surfaceParams->GetId());
++            name_.c_str(), surfaceParams->GetId());
+         return;
+     }
+     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(surfaceParams, surfaceNode, isuifirstNode);
+@@ -145,15 +153,15 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
+     if (!isuifirstNode && uniParam->IsOpDropped() &&
+         surfaceParams->IsMainWindowType() && curSurfaceDrawRegion.IsEmpty()) {
+         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw occlusion skip SurfaceName:%s NodeId:%" PRIu64 "",
+-            surfaceNode->GetName().c_str(), surfaceParams->GetId());
++            name_.c_str(), surfaceParams->GetId());
+         return;
+     }
+-    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnDraw:[" + surfaceNode->GetName() + "] " +
++    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnDraw:[" + name_ + "] " +
+         surfaceParams->GetAbsDrawRect().ToString() + "Alpha: " + std::to_string(surfaceNode->GetGlobalAlpha()));
+ 
+     RS_LOGD("RSSurfaceRenderNodeDrawable::OnDraw node:%{public}" PRIu64 ",child size:%{public}u,"
+             "name:%{public}s,OcclusionVisible:%{public}d",
+-        surfaceParams->GetId(), surfaceNode->GetChildrenCount(), surfaceNode->GetName().c_str(),
++        surfaceParams->GetId(), surfaceNode->GetChildrenCount(), name_.c_str(),
+         surfaceParams->GetOcclusionVisible());
+ 
+     if (DealWithUIFirstCache(*surfaceNode, *rscanvas, *surfaceParams, *uniParam)) {
+@@ -260,13 +268,18 @@ void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(RSRenderThread
+ 
+ void RSSurfaceRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
+ {
+-    if (!ShouldPaint()) {
++    auto renderNode = renderNode_.lock();
++    if (!ShouldPaint() || renderNode == nullptr) {
+         return;
+     }
+ 
+-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
++    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
+     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
+-    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
++    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(GetRenderParams().get());
++    if (!surfaceParams) {
++        RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
++        return;
++    }
+ 
+     auto rscanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+     if (!rscanvas) {
+@@ -283,7 +296,7 @@ void RSSurfaceRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
+         return;
+     }
+ 
+-    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnCapture:[" + surfaceNode->GetName() + "] " +
++    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnCapture:[" + name_ + "] " +
+         surfaceParams->GetAbsDrawRect().ToString() + "Alpha: " + std::to_string(surfaceNode->GetGlobalAlpha()));
+     RSAutoCanvasRestore acr(rscanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
+     if (RSUniRenderThread::GetCaptureParam().isSingleSurface_) {
+@@ -493,8 +506,7 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(RSSurfaceRenderNode& surf
+     if (surfaceParams.GetUifirstNodeEnableParam()) {
+         RS_TRACE_NAME_FMT("DrawUIFirstCache [%s] %lx", surfaceNode.GetName().c_str(), surfaceParams.GetId());
+         RSUifirstManager::Instance().AddReuseNode(surfaceParams.GetId());
+-        auto& renderParams = renderNode_->GetRenderParams();
+-        Drawing::Rect bounds = renderParams ? renderParams->GetBounds() : Drawing::Rect(0, 0, 0, 0);
++        Drawing::Rect bounds = GetRenderParams() ? GetRenderParams()->GetBounds() : Drawing::Rect(0, 0, 0, 0);
+         RSAutoCanvasRestore acr(&canvas);
+         canvas.MultiplyAlpha(surfaceParams.GetAlpha());
+         if (!RSUniRenderThread::GetCaptureParam().isSingleSurface_) {
+diff --git a/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.h b/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.h
+index 41a1dc9b5..eac4e2c77 100644
+--- a/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.h
++++ b/rosen/modules/render_service/core/drawable/rs_surface_render_node_drawable.h
+@@ -69,7 +69,7 @@ public:
+     {
+         std::string res = "pid_";
+         res.append("_name_");
+-        res.append(std::static_pointer_cast<const RSSurfaceRenderNode>(renderNode_)->GetName());
++        res.append(name_);
+         return res;
+     }
+ 
+diff --git a/rosen/modules/render_service/core/drawable/rs_ui_first_surface_render_node_drawable.cpp b/rosen/modules/render_service/core/drawable/rs_ui_first_surface_render_node_drawable.cpp
+index 8234a9911..a5da5ae31 100644
+--- a/rosen/modules/render_service/core/drawable/rs_ui_first_surface_render_node_drawable.cpp
++++ b/rosen/modules/render_service/core/drawable/rs_ui_first_surface_render_node_drawable.cpp
+@@ -311,7 +311,7 @@ void RSSurfaceRenderNodeDrawable::InitCacheSurface(Drawing::GPUContext* gpuConte
+ 
+     float width = 0.0f;
+     float height = 0.0f;
+-    if (auto& params = GetRenderNode()->GetRenderParams()) {
++    if (const auto& params = GetRenderParams()) {
+         auto size = params->GetCacheSize();
+         boundsWidth_ = size.x_;
+         boundsHeight_ = size.y_;
+@@ -381,7 +381,7 @@ bool RSSurfaceRenderNodeDrawable::NeedInitCacheSurface()
+     int width = 0;
+     int height = 0;
+ 
+-    if (auto& params = GetRenderNode()->GetRenderParams()) {
++    if (const auto& params = GetRenderParams()) {
+         auto size = params->GetCacheSize();
+         width =  size.x_;
+         height = size.y_;
+@@ -460,7 +460,7 @@ void RSSurfaceRenderNodeDrawable::ClearCacheSurface(bool isClearCompletedCacheSu
+ 
+ bool RSSurfaceRenderNodeDrawable::IsCurFrameStatic(DeviceType deviceType)
+ {
+-    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(GetRenderNode()->GetRenderParams().get());
++    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(GetRenderParams().get());
+     if (!surfaceParams) {
+         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
+         return false;
+@@ -472,17 +472,15 @@ bool RSSurfaceRenderNodeDrawable::IsCurFrameStatic(DeviceType deviceType)
+ 
+ void RSSurfaceRenderNodeDrawable::SubDraw(Drawing::Canvas& canvas)
+ {
+-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
+-    auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
+-    RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::SubDraw [%s]", surfaceNode->GetName().c_str());
++    const auto& uifirstParams = GetUifirstRenderParams();
++    RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::SubDraw [%s]", name_.c_str());
+ 
+     auto rscanvas = reinterpret_cast<RSPaintFilterCanvas*>(&canvas);
+     if (!rscanvas) {
+         RS_LOGE("RSSurfaceRenderNodeDrawable::SubDraw, rscanvas us nullptr");
+         return;
+     }
+-    auto& renderParams = renderNode_->GetUifirstRenderParams();
+-    Drawing::Rect bounds = renderParams ? renderParams->GetBounds() : Drawing::Rect(0, 0, 0, 0);
++    Drawing::Rect bounds = uifirstParams ? uifirstParams->GetBounds() : Drawing::Rect(0, 0, 0, 0);
+ 
+     auto parentSurfaceMatrix = RSRenderParams::parentSurfaceMatrix_;
+     RSRenderParams::parentSurfaceMatrix_ = rscanvas->GetTotalMatrix();
+@@ -493,12 +491,16 @@ void RSSurfaceRenderNodeDrawable::SubDraw(Drawing::Canvas& canvas)
+ 
+ bool RSSurfaceRenderNodeDrawable::DrawUIFirstCache(RSPaintFilterCanvas& rscanvas)
+ {
+-    const auto& params = GetRenderNode()->GetRenderParams();
++    const auto& params = GetRenderParams();
++    if (!params) {
++        RS_LOGE("RSUniRenderUtil::HandleSubThreadNodeDrawable params is nullptr");
++        return false;
++    }
+ 
+     if (!HasCachedTexture()) {
+-        RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", params->GetId());
++        RS_TRACE_NAME_FMT("HandleSubThreadNode wait %" PRIu64 "", nodeId_);
+ #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
+-        RSSubThreadManager::Instance()->WaitNodeTask(params->GetId());
++        RSSubThreadManager::Instance()->WaitNodeTask(nodeId_);
+         UpdateCompletedCacheSurface();
+ #endif
+     }
+diff --git a/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread.cpp b/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread.cpp
+index c9ee55e60..1ebc4b2bb 100644
+--- a/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread.cpp
++++ b/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread.cpp
+@@ -264,7 +264,7 @@ void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDra
+         }
+     }
+ 
+-    auto& param = nodeDrawable->GetRenderNode()->GetRenderParams();
++    const auto& param = nodeDrawable->GetRenderParams();
+     if (!param) {
+         return;
+     }
+diff --git a/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread_manager.cpp b/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread_manager.cpp
+index cc424cb23..328d333fa 100644
+--- a/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread_manager.cpp
++++ b/rosen/modules/render_service/core/pipeline/parallel_render/rs_sub_thread_manager.cpp
+@@ -393,7 +393,7 @@ void RSSubThreadManager::ScheduleRenderNodeDrawable(DrawableV2::RSSurfaceRenderN
+     if (!nodeDrawable) {
+         return;
+     }
+-    auto& param = nodeDrawable->GetRenderNode()->GetRenderParams();
++    auto& param = nodeDrawable->GetRenderParams();
+     if (!param) {
+         return;
+     }
+diff --git a/rosen/modules/render_service/core/pipeline/rs_draw_frame.cpp b/rosen/modules/render_service/core/pipeline/rs_draw_frame.cpp
+index 66029a321..e1712d05f 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_draw_frame.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_draw_frame.cpp
+@@ -18,6 +18,7 @@
+ #include "rs_trace.h"
+ 
+ #include "pipeline/rs_main_thread.h"
++#include "pipeline/rs_render_node_gc.h"
+ #include "pipeline/rs_uifirst_manager.h"
+ #include "pipeline/rs_uni_render_thread.h"
+ #include "property/rs_filter_cache_manager.h"
+@@ -49,6 +50,7 @@ void RSDrawFrame::RenderFrame()
+     ReleaseSelfDrawingNodeBuffer();
+     NotifyClearGpuCache();
+     JankStatsRenderFrameEnd(doJankStats);
++    RSRenderNodeGc::Instance().ReleaseDrawableMemory();
+ }
+ 
+ void RSDrawFrame::NotifyClearGpuCache()
+diff --git a/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp b/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
+index d4e947f75..51e039201 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_main_thread.cpp
+@@ -73,6 +73,8 @@
+ #include "pipeline/rs_uni_render_visitor.h"
+ #include "pipeline/rs_unmarshal_thread.h"
+ #include "pipeline/sk_resource_manager.h"
++#include "pipeline/rs_uifirst_manager.h"
++#include "pipeline/rs_render_node_gc.h"
+ #include "platform/common/rs_innovation.h"
+ #include "platform/common/rs_log.h"
+ #include "platform/common/rs_system_properties.h"
+@@ -314,6 +316,7 @@ void RSMainThread::Init()
+         Render(); // now render is traverse tree to prepare
+         RS_PROFILER_ON_RENDER_END();
+         if (isUniRender_ && !doDirectComposition_) {
++            renderThreadParams_->SetContext(context_);
+             drawFrame_.SetRenderThreadParams(renderThreadParams_);
+             drawFrame_.PostAndWait();
+         }
+@@ -340,6 +343,13 @@ void RSMainThread::Init()
+         SetRSEventDetectorLoopFinishTag();
+         rsEventManager_.UpdateParam();
+         SKResourceManager::Instance().ReleaseResource();
++        // release node memory
++        if (RSRenderNodeGc::Instance().GetNodeSize() > 0) {
++            RSBackgroundThread::Instance().PostTask([] () {
++                RS_TRACE_NAME("ReleaseRSRenderNodeMemory");
++                RSRenderNodeGc::Instance().ReleaseNodeMemory();
++            });
++        }
+ #ifdef RS_ENABLE_PARALLEL_UPLOAD
+         RSUploadResourceThread::Instance().OnRenderEnd();
+ #endif
+diff --git a/rosen/modules/render_service/core/pipeline/rs_uifirst_manager.cpp b/rosen/modules/render_service/core/pipeline/rs_uifirst_manager.cpp
+index 5cdbdf8d1..2c267b2bd 100644
+--- a/rosen/modules/render_service/core/pipeline/rs_uifirst_manager.cpp
++++ b/rosen/modules/render_service/core/pipeline/rs_uifirst_manager.cpp
+@@ -152,7 +152,7 @@ void RSUifirstManager::PurgePendingPostNodes()
+             if (drawable->HasCachedTexture() && drawable->IsCurFrameStatic(deviceType) &&
+                 (subthreadProcessingNode_.find(id) == subthreadProcessingNode_.end())) {
+                 auto surfaceParams = static_cast<RSSurfaceRenderParams*>(
+-                    drawable->GetRenderNode()->GetRenderParams().get());
++                    drawable->GetRenderParams().get());
+                 if (!surfaceParams) {
+                     RS_LOGE("PurgePendingPostNodes params is nullptr");
+                     ++it;
+@@ -344,12 +344,12 @@ void RSUifirstManager::SortSubThreadNodesPriority()
+                 "this should not happen");
+             return false;
+         }
+-        auto surfaceParams1 = static_cast<RSSurfaceRenderParams*>(drawable1->GetRenderNode()->GetRenderParams().get());
++        auto surfaceParams1 = static_cast<RSSurfaceRenderParams*>(drawable1->GetRenderParams().get());
+         if (!surfaceParams1) {
+             RS_LOGE("RSSurfaceRenderNodeDrawable::sortsubthread params1 is nullptr");
+             return false;
+         }
+-        auto surfaceParams2 = static_cast<RSSurfaceRenderParams*>(drawable2->GetRenderNode()->GetRenderParams().get());
++        auto surfaceParams2 = static_cast<RSSurfaceRenderParams*>(drawable2->GetRenderParams().get());
+         if (!surfaceParams2) {
+             RS_LOGE("RSSurfaceRenderNodeDrawable::sortsubthread params2 is nullptr");
+             return false;
+diff --git a/rosen/modules/render_service_base/BUILD.gn b/rosen/modules/render_service_base/BUILD.gn
+index 18061e627..d51c93ca9 100644
+--- a/rosen/modules/render_service_base/BUILD.gn
++++ b/rosen/modules/render_service_base/BUILD.gn
+@@ -200,6 +200,7 @@ ohos_source_set("render_service_base_src") {
+     "src/pipeline/rs_render_frame_rate_linker.cpp",
+     "src/pipeline/rs_render_frame_rate_linker_map.cpp",
+     "src/pipeline/rs_render_node.cpp",
++    "src/pipeline/rs_render_node_gc.cpp",
+     "src/pipeline/rs_render_node_map.cpp",
+     "src/pipeline/rs_root_render_node.cpp",
+     "src/pipeline/rs_single_frame_composer.cpp",
+diff --git a/rosen/modules/render_service_base/include/drawable/rs_render_node_drawable_adapter.h b/rosen/modules/render_service_base/include/drawable/rs_render_node_drawable_adapter.h
+index 7949f4d3b..a8d382bb6 100644
+--- a/rosen/modules/render_service_base/include/drawable/rs_render_node_drawable_adapter.h
++++ b/rosen/modules/render_service_base/include/drawable/rs_render_node_drawable_adapter.h
+@@ -24,14 +24,31 @@
+ #include "common/rs_macros.h"
+ #include "common/rs_rect.h"
+ #include "utils/rect.h"
++#include "recording/recording_canvas.h"
++#include "pipeline/rs_render_content.h"
+ 
+ namespace OHOS::Rosen {
+ class RSRenderNode;
+ class RSRenderParams;
++class RSDisplayRenderNode;
++class RSSurfaceRenderNode;
+ namespace Drawing {
+ class Canvas;
+ }
+ 
++struct DrawCmdIndex {
++    int8_t shadowIndex_           = -1;
++    int8_t renderGroupBeginIndex_ = -1;
++    int8_t backgroundFilterIndex_ = -1;
++    int8_t backgroundColorIndex_  = -1;
++    int8_t useEffectIndex_        = -1;
++    int8_t backgroundEndIndex_    = -1;
++    int8_t childrenIndex_         = -1;
++    int8_t contentIndex_          = -1;
++    int8_t foregroundBeginIndex_  = -1;
++    int8_t renderGroupEndIndex_   = -1;
++    int8_t endIndex_              = -1;
++};
+ namespace DrawableV2 {
+ enum class SkipType : uint8_t {
+     NONE = 0,
+@@ -63,6 +80,15 @@ public:
+ 
+     void SetSkip(SkipType type);
+ 
++    const std::unique_ptr<RSRenderParams>& GetRenderParams() const
++    {
++        return renderParams_;
++    }
++
++    const std::unique_ptr<RSRenderParams>& GetUifirstRenderParams() const
++    {
++        return uifirstRenderParams_;
++    }
+ protected:
+     // Util functions
+     std::string DumpDrawableVec() const;
+@@ -105,14 +131,27 @@ protected:
+         }
+     };
+ 
+-    std::shared_ptr<const RSRenderNode> renderNode_;
+-
++    inline static RSRenderNodeType nodeType;
++    // deprecated
++    std::weak_ptr<const RSRenderNode> renderNode_;
++    NodeId nodeId_;
++
++    DrawCmdIndex uifirstDrawCmdIndex_;
++    DrawCmdIndex drawCmdIndex_;
++    std::unique_ptr<RSRenderParams> renderParams_;
++    std::unique_ptr<RSRenderParams> uifirstRenderParams_;
++    std::vector<Drawing::RecordingCanvas::DrawFunc> uifirstDrawCmdList_;
++    std::vector<Drawing::RecordingCanvas::DrawFunc> drawCmdList_;
+ private:
+     static std::map<RSRenderNodeType, Generator> GeneratorMap;
+     static Generator shadowGenerator_;
+     static std::map<NodeId, WeakPtr> RenderNodeDrawableCache;
+     static inline std::mutex cacheMapMutex_;
+     int8_t skipIndex_ = -1;
++
++    friend class OHOS::Rosen::RSRenderNode;
++    friend class OHOS::Rosen::RSDisplayRenderNode;
++    friend class OHOS::Rosen::RSSurfaceRenderNode;
+ };
+ 
+ } // namespace DrawableV2
+diff --git a/rosen/modules/render_service_base/include/params/rs_render_thread_params.h b/rosen/modules/render_service_base/include/params/rs_render_thread_params.h
+index b5c1f738e..2956a85d6 100644
+--- a/rosen/modules/render_service_base/include/params/rs_render_thread_params.h
++++ b/rosen/modules/render_service_base/include/params/rs_render_thread_params.h
+@@ -178,6 +178,15 @@ public:
+         return isUniRenderAndOnVsync_;
+     }
+ 
++    void SetContext(std::shared_ptr<RSContext> context)
++    {
++        context_ = context;
++    }
++
++    const std::shared_ptr<RSContext>& GetContext() const
++    {
++        return context_.lock();
++    }
+ private:
+     // Used by hardware thred
+     uint64_t timestamp_ = 0;
+@@ -207,6 +216,7 @@ private:
+     int64_t onVsyncStartTime_ = TIMESTAMP_INITIAL;
+     int64_t onVsyncStartTimeSteady_ = TIMESTAMP_INITIAL;
+     bool isUniRenderAndOnVsync_ = false;
++    std::weak_ptr<RSContext> context_;
+ 
+     friend class RSMainThread;
+     friend class RSUniRenderVisitor;
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+index c700befde..e89eb1c86 100644
+--- a/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
++++ b/rosen/modules/render_service_base/include/pipeline/rs_render_node.h
+@@ -45,6 +45,7 @@
+ #include "pipeline/rs_render_display_sync.h"
+ #include "pipeline/rs_single_frame_composer.h"
+ #include "property/rs_properties.h"
++#include "drawable/rs_render_node_drawable_adapter.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -582,7 +583,6 @@ public:
+ 
+     std::unique_ptr<RSRenderParams>& GetStagingRenderParams();
+     const std::unique_ptr<RSRenderParams>& GetRenderParams() const;
+-    const std::unique_ptr<RSRenderParams>& GetUifirstRenderParams() const;
+ 
+     void UpdatePointLightDirtySlot();
+     void SetUifirstSyncFlag(bool needSync);
+@@ -623,7 +623,7 @@ protected:
+         dirtyStatus_ = NodeDirty::CLEAN;
+     }
+ 
+-    void DumpNodeType(std::string& out) const;
++    static void DumpNodeType(RSRenderNodeType nodeType, std::string& out);
+ 
+     void DumpSubClassNode(std::string& out) const;
+     void DumpDrawCmdModifiers(std::string& out) const;
+@@ -641,9 +641,8 @@ protected:
+     virtual void OnSync();
+     virtual void ClearResource() {};
+ 
+-    std::unique_ptr<RSRenderParams> renderParams_;
+     std::unique_ptr<RSRenderParams> stagingRenderParams_;
+-    std::unique_ptr<RSRenderParams> uifirstRenderParams_;
++    mutable std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> renderDrawable_;
+ 
+     RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
+     std::shared_ptr<RSSingleFrameComposer> singleFrameComposer_ = nullptr;
+@@ -854,27 +853,10 @@ private:
+     void OnRegister(const std::weak_ptr<RSContext>& context);
+ 
+     // Test pipeline
+-    struct DrawCmdIndex {
+-        int8_t shadowIndex_           = -1;
+-        int8_t renderGroupBeginIndex_ = -1;
+-        int8_t backgroundFilterIndex_ = -1;
+-        int8_t backgroundColorIndex_  = -1;
+-        int8_t useEffectIndex_        = -1;
+-        int8_t backgroundEndIndex_    = -1;
+-        int8_t childrenIndex_         = -1;
+-        int8_t contentIndex_          = -1;
+-        int8_t foregroundBeginIndex_  = -1;
+-        int8_t renderGroupEndIndex_   = -1;
+-        int8_t endIndex_              = -1;
+-    };
+     bool addedToPendingSyncList_ = false;
+     bool drawCmdListNeedSync_ = false;
+     bool uifirstNeedSync_ = false; // both cmdlist&param
+     bool uifirstSkipPartialSync_ = false;
+-    DrawCmdIndex uifirstDrawCmdIndex_;
+-    std::vector<Drawing::RecordingCanvas::DrawFunc> uifirstDrawCmdList_;
+-    DrawCmdIndex drawCmdIndex_;
+-    std::vector<Drawing::RecordingCanvas::DrawFunc> drawCmdList_;
+     DrawCmdIndex stagingDrawCmdIndex_;
+     std::vector<Drawing::RecordingCanvas::DrawFunc> stagingDrawCmdList_;
+ 
+diff --git a/rosen/modules/render_service_base/include/pipeline/rs_render_node_gc.h b/rosen/modules/render_service_base/include/pipeline/rs_render_node_gc.h
+new file mode 100644
+index 000000000..c8e468650
+--- /dev/null
++++ b/rosen/modules/render_service_base/include/pipeline/rs_render_node_gc.h
+@@ -0,0 +1,51 @@
++/*
++ * Copyright (c) 2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#ifndef RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_GC_H
++#define RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_GC_H
++
++#include <cstdint>
++#include <mutex>
++#include <vector>
++
++#include "pipeline/rs_render_node.h"
++#include "drawable/rs_render_node_drawable_adapter.h"
++
++namespace OHOS {
++namespace Rosen {
++class RSB_EXPORT RSRenderNodeGc {
++public:
++    static RSRenderNodeGc& Instance();
++
++    static void NodeDestructor(RSRenderNode* ptr);
++    void NodeDestructorInner(RSRenderNode* ptr);
++    void ReleaseNodeMemory();
++    size_t GetNodeSize();
++
++    static void DrawableDestructor(DrawableV2::RSRenderNodeDrawableAdapter* ptr);
++    void DrawableDestructorInner(DrawableV2::RSRenderNodeDrawableAdapter* ptr);
++    void ReleaseDrawableMemory();
++    size_t GetDrawableSize();
++
++private:
++    std::vector<DrawableV2::RSRenderNodeDrawableAdapter*> drawable_;
++    std::mutex drawableMutex_;
++    std::vector<RSRenderNode*> node_;
++    std::mutex nodeMutex_;
++};
++} // namespace Rosen
++} // namespace OHOS
++
++#endif // RENDER_SERVICE_CLIENT_CORE_PIPELINE_RS_RENDER_NODE_GC_H
+diff --git a/rosen/modules/render_service_base/src/command/rs_canvas_drawing_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_canvas_drawing_node_command.cpp
+index 673e47a52..4da92ecee 100644
+--- a/rosen/modules/render_service_base/src/command/rs_canvas_drawing_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_canvas_drawing_node_command.cpp
+@@ -16,13 +16,15 @@
+ #include "command/rs_canvas_drawing_node_command.h"
+ 
+ #include "pipeline/rs_canvas_drawing_render_node.h"
++#include "pipeline/rs_render_node_gc.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+ 
+ void RSCanvasDrawingNodeCommandHelper::Create(RSContext& context, NodeId id, bool isTextureExportNode)
+ {
+-    auto node = std::make_shared<RSCanvasDrawingRenderNode>(id, context.weak_from_this(), isTextureExportNode);
++    auto node = std::shared_ptr<RSCanvasDrawingRenderNode>(new RSCanvasDrawingRenderNode(id,
++        context.weak_from_this(), isTextureExportNode), RSRenderNodeGc::NodeDestructor);
+     context.GetMutableNodeMap().RegisterRenderNode(node);
+ }
+ 
+diff --git a/rosen/modules/render_service_base/src/command/rs_canvas_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_canvas_node_command.cpp
+index 3aa3234da..d44790006 100644
+--- a/rosen/modules/render_service_base/src/command/rs_canvas_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_canvas_node_command.cpp
+@@ -16,13 +16,15 @@
+ #include "command/rs_canvas_node_command.h"
+ 
+ #include "pipeline/rs_canvas_render_node.h"
++#include "pipeline/rs_render_node_gc.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+ 
+ void RSCanvasNodeCommandHelper::Create(RSContext& context, NodeId id, bool isTextureExportNode)
+ {
+-    auto node = std::make_shared<RSCanvasRenderNode>(id, context.weak_from_this(), isTextureExportNode);
++    auto node = std::shared_ptr<RSCanvasRenderNode>(new RSCanvasRenderNode(id,
++        context.weak_from_this(), isTextureExportNode), RSRenderNodeGc::NodeDestructor);
+     context.GetMutableNodeMap().RegisterRenderNode(node);
+ }
+ 
+diff --git a/rosen/modules/render_service_base/src/command/rs_display_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_display_node_command.cpp
+index 060830590..697daae4c 100644
+--- a/rosen/modules/render_service_base/src/command/rs_display_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_display_node_command.cpp
+@@ -16,6 +16,7 @@
+ #include "command/rs_display_node_command.h"
+ 
+ #include "pipeline/rs_display_render_node.h"
++#include "pipeline/rs_render_node_gc.h"
+ #include "platform/common/rs_log.h"
+ 
+ namespace OHOS {
+@@ -23,8 +24,8 @@ namespace Rosen {
+ 
+ void DisplayNodeCommandHelper::Create(RSContext& context, NodeId id, const RSDisplayNodeConfig& config)
+ {
+-    std::shared_ptr<RSDisplayRenderNode> node =
+-        std::make_shared<RSDisplayRenderNode>(id, config, context.weak_from_this());
++    auto node = std::shared_ptr<RSDisplayRenderNode>(new RSDisplayRenderNode(id,
++        config, context.weak_from_this()), RSRenderNodeGc::NodeDestructor);
+     auto& nodeMap = context.GetMutableNodeMap();
+     nodeMap.RegisterDisplayRenderNode(node);
+     context.GetGlobalRootRenderNode()->AddChild(node);
+diff --git a/rosen/modules/render_service_base/src/command/rs_effect_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_effect_node_command.cpp
+index 1ec1b147e..a7c60e2a6 100644
+--- a/rosen/modules/render_service_base/src/command/rs_effect_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_effect_node_command.cpp
+@@ -16,6 +16,7 @@
+ #include "command/rs_effect_node_command.h"
+ 
+ #include "pipeline/rs_effect_render_node.h"
++#include "pipeline/rs_render_node_gc.h"
+ #include "platform/common/rs_log.h"
+ 
+ namespace OHOS {
+@@ -23,7 +24,8 @@ namespace Rosen {
+ 
+ void EffectNodeCommandHelper::Create(RSContext& context, NodeId id, bool isTextureExportNode)
+ {
+-    auto node = std::make_shared<RSEffectRenderNode>(id, context.weak_from_this(), isTextureExportNode);
++    auto node = std::shared_ptr<RSEffectRenderNode>(new RSEffectRenderNode(id,
++        context.weak_from_this(), isTextureExportNode), RSRenderNodeGc::NodeDestructor);
+     context.GetMutableNodeMap().RegisterRenderNode(node);
+ }
+ 
+diff --git a/rosen/modules/render_service_base/src/command/rs_proxy_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_proxy_node_command.cpp
+index 5885b8b1a..d25af00ce 100644
+--- a/rosen/modules/render_service_base/src/command/rs_proxy_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_proxy_node_command.cpp
+@@ -17,6 +17,7 @@
+ 
+ #include "pipeline/rs_proxy_render_node.h"
+ #include "pipeline/rs_surface_render_node.h"
++#include "pipeline/rs_render_node_gc.h"
+ #include "platform/common/rs_log.h"
+ 
+ namespace OHOS {
+@@ -25,7 +26,8 @@ void ProxyNodeCommandHelper::Create(RSContext& context, NodeId id, NodeId target
+ {
+     // PLANNING: if we run in RS and target not found, we should display a warning
+     auto targetNode = context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(targetId);
+-    auto node = std::make_shared<RSProxyRenderNode>(id, targetNode, targetId, context.weak_from_this());
++    auto node = std::shared_ptr<RSProxyRenderNode>(new RSProxyRenderNode(id,
++        targetNode, targetId, context.weak_from_this()), RSRenderNodeGc::NodeDestructor);
+     context.GetMutableNodeMap().RegisterRenderNode(node);
+ }
+ 
+diff --git a/rosen/modules/render_service_base/src/command/rs_root_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_root_node_command.cpp
+index 3bb59b089..a9d2d6b33 100644
+--- a/rosen/modules/render_service_base/src/command/rs_root_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_root_node_command.cpp
+@@ -24,13 +24,15 @@
+ #else
+ #include "platform/drawing/rs_surface.h"
+ #endif
++#include "pipeline/rs_render_node_gc.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+ 
+ void RootNodeCommandHelper::Create(RSContext& context, NodeId id, bool isTextureExportNode)
+ {
+-    auto node = std::make_shared<RSRootRenderNode>(id, context.weak_from_this(), isTextureExportNode);
++    auto node = std::shared_ptr<RSRootRenderNode>(new RSRootRenderNode(id,
++        context.weak_from_this(), isTextureExportNode), RSRenderNodeGc::NodeDestructor);
+     context.GetMutableNodeMap().RegisterRenderNode(node);
+ }
+ 
+diff --git a/rosen/modules/render_service_base/src/command/rs_surface_node_command.cpp b/rosen/modules/render_service_base/src/command/rs_surface_node_command.cpp
+index 0a658c4a1..636ba9435 100644
+--- a/rosen/modules/render_service_base/src/command/rs_surface_node_command.cpp
++++ b/rosen/modules/render_service_base/src/command/rs_surface_node_command.cpp
+@@ -18,6 +18,7 @@
+ #include "common/rs_vector4.h"
+ #include "pipeline/rs_surface_render_node.h"
+ #include "pipeline/rs_display_render_node.h"
++#include "pipeline/rs_render_node_gc.h"
+ #include "platform/common/rs_log.h"
+ #ifndef ROSEN_CROSS_PLATFORM
+ #include "surface_type.h"
+@@ -29,7 +30,8 @@ namespace Rosen {
+ void SurfaceNodeCommandHelper::Create(RSContext& context, NodeId id, RSSurfaceNodeType type, bool isTextureExportNode)
+ {
+     if (!context.GetNodeMap().GetRenderNode<RSSurfaceRenderNode>(id)) {
+-        auto node = std::make_shared<RSSurfaceRenderNode>(id, context.weak_from_this(), isTextureExportNode);
++        auto node = std::shared_ptr<RSSurfaceRenderNode>(new RSSurfaceRenderNode(id,
++            context.weak_from_this(), isTextureExportNode), RSRenderNodeGc::NodeDestructor);
+         node->SetSurfaceNodeType(type);
+         auto& nodeMap = context.GetMutableNodeMap();
+         nodeMap.RegisterRenderNode(node);   
+diff --git a/rosen/modules/render_service_base/src/drawable/rs_render_node_drawable_adapter.cpp b/rosen/modules/render_service_base/src/drawable/rs_render_node_drawable_adapter.cpp
+index 245e6afe9..b71accb83 100644
+--- a/rosen/modules/render_service_base/src/drawable/rs_render_node_drawable_adapter.cpp
++++ b/rosen/modules/render_service_base/src/drawable/rs_render_node_drawable_adapter.cpp
+@@ -20,7 +20,10 @@
+ 
+ #include "common/rs_optional_trace.h"
+ #include "drawable/rs_misc_drawable.h"
++#include "params/rs_display_render_params.h"
++#include "params/rs_surface_render_params.h"
+ #include "pipeline/rs_render_node.h"
++#include "pipeline/rs_render_node_gc.h"
+ #include "platform/common/rs_log.h"
+ 
+ namespace OHOS::Rosen::DrawableV2 {
+@@ -29,7 +32,10 @@ std::map<RSRenderNodeType, RSRenderNodeDrawableAdapter::Generator> RSRenderNodeD
+ std::map<NodeId, RSRenderNodeDrawableAdapter::WeakPtr> RSRenderNodeDrawableAdapter::RenderNodeDrawableCache;
+ 
+ RSRenderNodeDrawableAdapter::RSRenderNodeDrawableAdapter(std::shared_ptr<const RSRenderNode>&& node)
+-    : renderNode_(std::move(node)) {};
++    : renderNode_(std::move(node))
++{
++    nodeType = node->GetType();
++}
+ 
+ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::GetDrawableById(NodeId id)
+ {
+@@ -45,16 +51,19 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::GetDrawableB
+ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerate(
+     const std::shared_ptr<const RSRenderNode>& node)
+ {
++    if (node == nullptr) {
++        return nullptr;
++    }
++    if (node->renderDrawable_ != nullptr) {
++        return node->renderDrawable_;
++    }
+     static const auto Destructor = [](RSRenderNodeDrawableAdapter* ptr) {
+         {
+             std::lock_guard<std::mutex> lock(cacheMapMutex_);
+-            RenderNodeDrawableCache.erase(ptr->renderNode_->GetId()); // Remove from cache before deleting
++            RenderNodeDrawableCache.erase(ptr->nodeId_); // Remove from cache before deleting
+         }
+-        delete ptr;
++        RSRenderNodeGc::DrawableDestructor(ptr);
+     };
+-    if (node == nullptr) {
+-        return nullptr;
+-    }
+     auto id = node->GetId();
+     // Try to get a cached drawable if it exists.
+     {
+@@ -75,6 +84,23 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerate(
+     }
+     auto ptr = it->second(node);
+     auto sharedPtr = std::shared_ptr<RSRenderNodeDrawableAdapter>(ptr, Destructor);
++    node->renderDrawable_ = sharedPtr;
++    sharedPtr->nodeId_ = id;
++
++    switch (node->GetType()) {
++        case RSRenderNodeType::SURFACE_NODE:
++            sharedPtr->renderParams_ = std::make_unique<RSSurfaceRenderParams>(id);
++            sharedPtr->uifirstRenderParams_ = std::make_unique<RSSurfaceRenderParams>(id);
++            break;
++        case RSRenderNodeType::DISPLAY_NODE:
++            sharedPtr->renderParams_ = std::make_unique<RSDisplayRenderParams>(id);
++            sharedPtr->uifirstRenderParams_ = std::make_unique<RSDisplayRenderParams>(id);
++            break;
++        default:
++            sharedPtr->renderParams_ = std::make_unique<RSRenderParams>(id);
++            sharedPtr->uifirstRenderParams_ = std::make_unique<RSRenderParams>(id);
++            break;
++    }
+     {
+         std::lock_guard<std::mutex> lock(cacheMapMutex_);
+         RenderNodeDrawableCache.emplace(id, sharedPtr);
+@@ -90,9 +116,9 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerateSh
+     static const auto Destructor = [](RSRenderNodeDrawableAdapter* ptr) {
+         {
+             std::lock_guard<std::mutex> lock(cacheMapMutex);
+-            shadowDrawableCache.erase(ptr->renderNode_->GetId()); // Remove from cache before deleting
++            shadowDrawableCache.erase(ptr->nodeId_); // Remove from cache before deleting
+         }
+-        delete ptr;
++        RSRenderNodeGc::DrawableDestructor(ptr);
+     };
+ 
+     if (node == nullptr || shadowGenerator_ == nullptr) {
+@@ -123,12 +149,10 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerateSh
+ void RSRenderNodeDrawableAdapter::DrawRangeImpl(
+     Drawing::Canvas& canvas, const Drawing::Rect& rect, int8_t start, int8_t end) const
+ {
+-    if (renderNode_->drawCmdList_.empty() || start < 0 || end < 0 || start > end) {
++    if (drawCmdList_.empty() || start < 0 || end < 0 || start > end) {
+         return;
+     }
+ 
+-    const auto& drawCmdList_ = renderNode_->drawCmdList_;
+-
+     if (UNLIKELY(skipIndex_ != -1)) {
+         if (start <= skipIndex_ || end > skipIndex_) {
+             for (auto i = start; i < skipIndex_; i++) {
+@@ -148,63 +172,67 @@ void RSRenderNodeDrawableAdapter::DrawRangeImpl(
+ 
+ void RSRenderNodeDrawableAdapter::DrawBackground(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    if (renderNode_->drawCmdList_.empty()) {
++    if (drawCmdList_.empty()) {
+         return;
+     }
+-    DrawRangeImpl(canvas, rect, 0, renderNode_->drawCmdIndex_.backgroundEndIndex_);
++    DrawRangeImpl(canvas, rect, 0, drawCmdIndex_.backgroundEndIndex_);
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DrawContent(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    if (renderNode_->drawCmdList_.empty()) {
++    if (drawCmdList_.empty()) {
+         return;
+     }
+ 
+-    auto index = renderNode_->drawCmdIndex_.contentIndex_;
++    auto index = drawCmdIndex_.contentIndex_;
+     if (index == -1) {
+         return;
+     }
+-    renderNode_->drawCmdList_[index](&canvas, &rect);
++    drawCmdList_[index](&canvas, &rect);
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DrawChildren(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    if (renderNode_->drawCmdList_.empty()) {
++    if (drawCmdList_.empty()) {
+         return;
+     }
+ 
+-    auto index = renderNode_->drawCmdIndex_.childrenIndex_;
++    auto index = drawCmdIndex_.childrenIndex_;
+     if (index == -1) {
+         return;
+     }
+-    renderNode_->drawCmdList_[index](&canvas, &rect);
++    drawCmdList_[index](&canvas, &rect);
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DrawUifirstContentChildren(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    if (renderNode_->uifirstDrawCmdList_.empty()) {
++    if (uifirstDrawCmdList_.empty()) {
+         return;
+     }
+ 
+-    const auto& drawCmdList_ = renderNode_->uifirstDrawCmdList_;
+-    auto contentIdx = renderNode_->uifirstDrawCmdIndex_.contentIndex_;
+-    auto childrenIdx = renderNode_->uifirstDrawCmdIndex_.childrenIndex_;
++    const auto& drawCmdList = uifirstDrawCmdList_;
++    auto contentIdx = uifirstDrawCmdIndex_.contentIndex_;
++    auto childrenIdx = uifirstDrawCmdIndex_.childrenIndex_;
+     if (contentIdx != -1) {
+-        drawCmdList_[contentIdx](&canvas, &rect);
++        drawCmdList[contentIdx](&canvas, &rect);
+     }
+     if (childrenIdx != -1) {
+-        drawCmdList_[childrenIdx](&canvas, &rect);
++        drawCmdList[childrenIdx](&canvas, &rect);
+     }
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DrawForeground(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    DrawRangeImpl(canvas, rect, renderNode_->drawCmdIndex_.foregroundBeginIndex_, renderNode_->drawCmdIndex_.endIndex_);
++    DrawRangeImpl(canvas, rect, drawCmdIndex_.foregroundBeginIndex_, drawCmdIndex_.endIndex_);
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DrawAll(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    DrawRangeImpl(canvas, rect, 0, renderNode_->drawCmdIndex_.endIndex_);
++    const auto& drawCmdList = drawCmdList_;
++    if (drawCmdList.empty()) {
++        return;
++    }
++    DrawRangeImpl(canvas, rect, 0, drawCmdIndex_.endIndex_);
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DumpDrawableTree(int32_t depth, std::string& out) const
+@@ -212,15 +240,19 @@ void RSRenderNodeDrawableAdapter::DumpDrawableTree(int32_t depth, std::string& o
+     for (int32_t i = 0; i < depth; ++i) {
+         out += "  ";
+     }
+-    renderNode_->DumpNodeType(out);
+-    out += "[" + std::to_string(renderNode_->GetId()) + "]";
+-    renderNode_->DumpSubClassNode(out);
++    auto renderNode = renderNode_.lock();
++    if (renderNode == nullptr) {
++        return;
++    }
++    RSRenderNode::DumpNodeType(nodeType, out);
++    out += "[" + std::to_string(nodeId_) + "]";
++    renderNode->DumpSubClassNode(out);
+     out += ", DrawableVec:[" + DumpDrawableVec() + "]";
+-    out += ", " + renderNode_->GetRenderParams()->ToString();
++    out += ", " + renderNode->GetRenderParams()->ToString();
+     out += "\n";
+ 
+     auto childrenDrawable = std::static_pointer_cast<RSChildrenDrawable>(
+-        renderNode_->drawableVec_[static_cast<int32_t>(RSDrawableSlot::CHILDREN)]);
++        renderNode->drawableVec_[static_cast<int32_t>(RSDrawableSlot::CHILDREN)]);
+     if (childrenDrawable) {
+         for (const auto& renderNodeDrawable : childrenDrawable->childrenDrawableVec_) {
+             renderNodeDrawable->DumpDrawableTree(depth + 1, out);
+@@ -230,7 +262,11 @@ void RSRenderNodeDrawableAdapter::DumpDrawableTree(int32_t depth, std::string& o
+ 
+ std::string RSRenderNodeDrawableAdapter::DumpDrawableVec() const
+ {
+-    const auto& drawableVec = renderNode_->drawableVec_;
++    auto renderNode = renderNode_.lock();
++    if (renderNode == nullptr) {
++        return "";
++    }
++    const auto& drawableVec = renderNode->drawableVec_;
+     std::string str;
+     for (uint8_t i = 0; i < drawableVec.size(); ++i) {
+         if (drawableVec[i]) {
+@@ -265,16 +301,15 @@ bool RSRenderNodeDrawableAdapter::QuickReject(Drawing::Canvas& canvas, RectF loc
+ void RSRenderNodeDrawableAdapter::DrawBackgroundWithoutFilterAndEffect(
+     Drawing::Canvas& canvas, const RSRenderParams& params) const
+ {
+-    if (renderNode_->uifirstDrawCmdList_.empty()) {
++    if (uifirstDrawCmdList_.empty()) {
+         return;
+     }
+ 
+-    const auto& drawCmdList_ = renderNode_->drawCmdList_;
+-    auto backgroundIndex = renderNode_->drawCmdIndex_.backgroundEndIndex_;
++    auto backgroundIndex = drawCmdIndex_.backgroundEndIndex_;
+     auto bounds = params.GetBounds();
+     auto curCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
+     for (auto index = 0; index < backgroundIndex; ++index) {
+-        if (index == renderNode_->drawCmdIndex_.shadowIndex_) {
++        if (index == drawCmdIndex_.shadowIndex_) {
+             if (!params.GetShadowRect().IsEmpty()) {
+                 auto shadowRect = params.GetShadowRect();
+                 RS_OPTIONAL_TRACE_NAME_FMT("ClipHoleForBlur shadowRect:[%.2f, %.2f, %.2f, %.2f]", shadowRect.GetLeft(),
+@@ -290,8 +325,8 @@ void RSRenderNodeDrawableAdapter::DrawBackgroundWithoutFilterAndEffect(
+             }
+             continue;
+         }
+-        if (index != renderNode_->drawCmdIndex_.backgroundFilterIndex_ &&
+-            index != renderNode_->drawCmdIndex_.useEffectIndex_) {
++        if (index != drawCmdIndex_.backgroundFilterIndex_ &&
++            index != drawCmdIndex_.useEffectIndex_) {
+             drawCmdList_[index](&canvas, &bounds);
+         } else {
+             RS_OPTIONAL_TRACE_NAME_FMT(
+@@ -305,34 +340,34 @@ void RSRenderNodeDrawableAdapter::DrawBackgroundWithoutFilterAndEffect(
+ 
+ void RSRenderNodeDrawableAdapter::DrawCacheWithProperty(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    DrawRangeImpl(canvas, rect, renderNode_->drawCmdIndex_.renderGroupBeginIndex_,
+-        renderNode_->drawCmdIndex_.renderGroupEndIndex_);
++    DrawRangeImpl(canvas, rect, drawCmdIndex_.renderGroupBeginIndex_,
++        drawCmdIndex_.renderGroupEndIndex_);
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DrawBeforeCacheWithProperty(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    DrawRangeImpl(canvas, rect, 0, static_cast<int8_t>(renderNode_->drawCmdIndex_.renderGroupBeginIndex_ - 1));
++    DrawRangeImpl(canvas, rect, 0, static_cast<int8_t>(drawCmdIndex_.renderGroupBeginIndex_ - 1));
+ }
+ 
+ void RSRenderNodeDrawableAdapter::DrawAfterCacheWithProperty(Drawing::Canvas& canvas, const Drawing::Rect& rect) const
+ {
+-    DrawRangeImpl(canvas, rect, renderNode_->drawCmdIndex_.renderGroupEndIndex_,
+-        renderNode_->drawCmdIndex_.endIndex_);
++    DrawRangeImpl(canvas, rect, drawCmdIndex_.renderGroupEndIndex_,
++        drawCmdIndex_.endIndex_);
+ }
+ 
+ bool RSRenderNodeDrawableAdapter::HasFilterOrEffect() const
+ {
+-    return renderNode_->drawCmdIndex_.shadowIndex_ != -1 || renderNode_->drawCmdIndex_.backgroundFilterIndex_ != -1 ||
+-           renderNode_->drawCmdIndex_.useEffectIndex_ != -1;
++    return drawCmdIndex_.shadowIndex_ != -1 || drawCmdIndex_.backgroundFilterIndex_ != -1 ||
++           drawCmdIndex_.useEffectIndex_ != -1;
+ }
+ void RSRenderNodeDrawableAdapter::SetSkip(SkipType type)
+ {
+     switch (type) {
+         case SkipType::SKIP_BACKGROUND_COLOR:
+-            skipIndex_ = renderNode_->drawCmdIndex_.backgroundColorIndex_;
++            skipIndex_ = drawCmdIndex_.backgroundColorIndex_;
+             break;
+         case SkipType::SKIP_SHADOW:
+-            skipIndex_ = renderNode_->drawCmdIndex_.shadowIndex_;
++            skipIndex_ = drawCmdIndex_.shadowIndex_;
+             break;
+         case SkipType::NONE:
+         default:
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_display_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_display_render_node.cpp
+index f64806c21..fdcf98ed8 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_display_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_display_render_node.cpp
+@@ -165,8 +165,11 @@ bool RSDisplayRenderNode::GetBootAnimation() const
+ void RSDisplayRenderNode::InitRenderParams()
+ {
+     stagingRenderParams_ = std::make_unique<RSDisplayRenderParams>(GetId());
+-    renderParams_ = std::make_unique<RSDisplayRenderParams>(GetId());
+-    uifirstRenderParams_ = std::make_unique<RSDisplayRenderParams>(GetId());
++    DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(shared_from_this());
++    if (renderDrawable_ == nullptr) {
++        RS_LOGE("RSDisplayRenderNode::InitRenderParams failed");
++        return;
++    }
+ }
+ 
+ void RSDisplayRenderNode::OnSync()
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+index 453493031..0b983d656 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_render_node.cpp
+@@ -44,6 +44,7 @@
+ #include "property/rs_point_light_manager.h"
+ #include "property/rs_properties_painter.h"
+ #include "property/rs_property_trace.h"
++#include "rs_trace.h"
+ #include "render/rs_foreground_effect_filter.h"
+ #include "transaction/rs_transaction_proxy.h"
+ #include "visitor/rs_node_visitor.h"
+@@ -606,7 +607,7 @@ void RSRenderNode::DumpTree(int32_t depth, std::string& out) const
+         out += "  ";
+     }
+     out += "| ";
+-    DumpNodeType(out);
++    DumpNodeType(GetType(), out);
+     out += "[" + std::to_string(GetId()) + "], instanceRootNodeId" + "[" +
+         std::to_string(GetInstanceRootNodeId()) + "]";
+     if (sharedTransitionParam_) {
+@@ -653,9 +654,9 @@ void RSRenderNode::DumpTree(int32_t depth, std::string& out) const
+     }
+ }
+ 
+-void RSRenderNode::DumpNodeType(std::string& out) const
++void RSRenderNode::DumpNodeType(RSRenderNodeType nodeType, std::string& out)
+ {
+-    switch (GetType()) {
++    switch (nodeType) {
+         case RSRenderNodeType::DISPLAY_NODE: {
+             out += "DISPLAY_NODE";
+             break;
+@@ -1096,12 +1097,7 @@ std::unique_ptr<RSRenderParams>& RSRenderNode::GetStagingRenderParams()
+ 
+ const std::unique_ptr<RSRenderParams>& RSRenderNode::GetRenderParams() const
+ {
+-    return renderParams_;
+-}
+-
+-const std::unique_ptr<RSRenderParams>& RSRenderNode::GetUifirstRenderParams() const
+-{
+-    return uifirstRenderParams_;
++    return renderDrawable_->renderParams_;
+ }
+ 
+ void RSRenderNode::CollectAndUpdateLocalShadowRect()
+@@ -3566,8 +3562,11 @@ void RSRenderNode::SetLastIsNeedAssignToSubThread(bool lastIsNeedAssignToSubThre
+ void RSRenderNode::InitRenderParams()
+ {
+     stagingRenderParams_ = std::make_unique<RSRenderParams>(GetId());
+-    renderParams_ = std::make_unique<RSRenderParams>(GetId());
+-    uifirstRenderParams_ = std::make_unique<RSRenderParams>(GetId());
++    DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(shared_from_this());
++    if (renderDrawable_ == nullptr) {
++        RS_LOGE("RSRenderNode::InitRenderParams failed");
++        return;
++    }
+ }
+ 
+ void RSRenderNode::UpdateRenderParams()
+@@ -3627,23 +3626,27 @@ void RSRenderNode::OnSync()
+ {
+     addedToPendingSyncList_ = false;
+ 
++    if (renderDrawable_ == nullptr) {
++        return;
++    }
+     if (drawCmdListNeedSync_) {
+-        std::swap(stagingDrawCmdList_, drawCmdList_);
++        std::swap(stagingDrawCmdList_, renderDrawable_->drawCmdList_);
+         stagingDrawCmdList_.clear();
+-        drawCmdIndex_ = stagingDrawCmdIndex_;
++        renderDrawable_->drawCmdIndex_ = stagingDrawCmdIndex_;
+         drawCmdListNeedSync_ = false;
+     }
+ 
+     if (stagingRenderParams_->NeedSync()) {
+-        stagingRenderParams_->OnSync(renderParams_);
++        stagingRenderParams_->OnSync(renderDrawable_->renderParams_);
+     }
+ 
+     // copy newest for uifirst root node, now force sync done nodes
+     if (uifirstNeedSync_ && !uifirstSkipPartialSync_) {
+         RS_TRACE_NAME_FMT("uifirst_sync %lx", GetId());
+-        uifirstDrawCmdList_.assign(drawCmdList_.begin(), drawCmdList_.end());
+-        uifirstDrawCmdIndex_ = drawCmdIndex_;
+-        renderParams_->OnSync(uifirstRenderParams_);
++        renderDrawable_->uifirstDrawCmdList_.assign(renderDrawable_->drawCmdList_.begin(),
++                                                    renderDrawable_->drawCmdList_.end());
++        renderDrawable_->uifirstDrawCmdIndex_ = renderDrawable_->drawCmdIndex_;
++        renderDrawable_->renderParams_->OnSync(renderDrawable_->uifirstRenderParams_);
+         uifirstNeedSync_ = false;
+     }
+ 
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_render_node_gc.cpp b/rosen/modules/render_service_base/src/pipeline/rs_render_node_gc.cpp
+new file mode 100644
+index 000000000..23de9978f
+--- /dev/null
++++ b/rosen/modules/render_service_base/src/pipeline/rs_render_node_gc.cpp
+@@ -0,0 +1,109 @@
++/*
++ * Copyright (c) 2024 Huawei Device Co., Ltd.
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++#include "pipeline/rs_render_node_gc.h"
++#include "pipeline/rs_render_node.h"
++#include "rs_trace.h"
++
++namespace OHOS {
++namespace Rosen {
++RSRenderNodeGc& RSRenderNodeGc::Instance()
++{
++    static RSRenderNodeGc instance;
++    return instance;
++}
++
++void RSRenderNodeGc::NodeDestructor(RSRenderNode* ptr)
++{
++    RSRenderNodeGc::Instance().NodeDestructorInner(ptr);
++}
++
++void RSRenderNodeGc::NodeDestructorInner(RSRenderNode* ptr)
++{
++    std::lock_guard<std::mutex> lock(nodeMutex_);
++    node_.push_back(ptr);
++}
++
++void RSRenderNodeGc::ReleaseNodeMemory()
++{
++    std::vector<RSRenderNode*> toDele;
++    {
++        std::lock_guard<std::mutex> lock(nodeMutex_);
++        if (node_.size() == 0) {
++            return;
++        }
++        std::swap(toDele, node_);
++        node_.clear();
++    }
++    RS_TRACE_NAME_FMT("ReleaseNodeMemory %d", toDele.size());
++    for (auto ptr : toDele) {
++        if (ptr) {
++            delete ptr;
++        }
++    }
++}
++
++size_t RSRenderNodeGc::GetNodeSize()
++{
++    size_t size = 0;
++    {
++        std::lock_guard<std::mutex> lock(nodeMutex_);
++        size = node_.size();
++    }
++    return size;
++}
++
++void RSRenderNodeGc::DrawableDestructor(DrawableV2::RSRenderNodeDrawableAdapter* ptr)
++{
++    RSRenderNodeGc::Instance().DrawableDestructorInner(ptr);
++}
++
++void RSRenderNodeGc::DrawableDestructorInner(DrawableV2::RSRenderNodeDrawableAdapter* ptr)
++{
++    std::lock_guard<std::mutex> lock(drawableMutex_);
++    drawable_.push_back(ptr);
++}
++
++void RSRenderNodeGc::ReleaseDrawableMemory()
++{
++    std::vector<DrawableV2::RSRenderNodeDrawableAdapter*> toDele;
++    {
++        std::lock_guard<std::mutex> lock(drawableMutex_);
++        if (drawable_.size() == 0) {
++            return;
++        }
++        std::swap(toDele, drawable_);
++        drawable_.clear();
++    }
++    RS_TRACE_NAME_FMT("ReleaseDrawableMemory %d", toDele.size());
++    for (auto ptr : toDele) {
++        if (ptr) {
++            delete ptr;
++        }
++    }
++}
++
++size_t RSRenderNodeGc::GetDrawableSize()
++{
++    size_t size = 0;
++    {
++        std::lock_guard<std::mutex> lock(drawableMutex_);
++        size = drawable_.size();
++    }
++    return size;
++}
++
++} // namespace Rosen
++} // namespace OHOS
+diff --git a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+index c20be0b63..ccbf9e0d5 100644
+--- a/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
++++ b/rosen/modules/render_service_base/src/pipeline/rs_surface_render_node.cpp
+@@ -1902,7 +1902,7 @@ const std::vector<std::weak_ptr<RSSurfaceRenderNode>>& RSSurfaceRenderNode::GetC
+ void RSSurfaceRenderNode::SetGlobalDirtyRegion(const RectI& rect, bool renderParallel)
+ {
+     auto visibleRegion = renderParallel
+-        ? static_cast<RSSurfaceRenderParams*>(renderParams_.get())->GetVisibleRegion()
++        ? static_cast<RSSurfaceRenderParams*>(renderDrawable_->GetRenderParams().get())->GetVisibleRegion()
+         : visibleRegion_;
+     Occlusion::Rect tmpRect { rect.left_, rect.top_, rect.GetRight(), rect.GetBottom() };
+     Occlusion::Region region { tmpRect };
+@@ -2276,8 +2276,11 @@ void RSSurfaceRenderNode::UpdatePartialRenderParams()
+ void RSSurfaceRenderNode::InitRenderParams()
+ {
+     stagingRenderParams_ = std::make_unique<RSSurfaceRenderParams>(GetId());
+-    renderParams_ = std::make_unique<RSSurfaceRenderParams>(GetId());
+-    uifirstRenderParams_ = std::make_unique<RSSurfaceRenderParams>(GetId());
++    DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(shared_from_this());
++    if (renderDrawable_ == nullptr) {
++        RS_LOGE("RSSurfaceRenderNode::InitRenderParams failed");
++        return;
++    }
+ }
+ 
+ void RSSurfaceRenderNode::UpdateRenderParams()

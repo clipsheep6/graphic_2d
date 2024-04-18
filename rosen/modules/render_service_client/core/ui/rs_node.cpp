@@ -980,6 +980,30 @@ void RSNode::SetParticleParams(std::vector<ParticleParams>& particleParams, cons
     for (size_t i = 0; i < particleParams.size(); i++) {
         particlesRenderParams.push_back(particleParams[i].SetParamsToRenderParticle());
     }
+    ROSEN_LOGE("WMM RSNode::SetParticleParams");
+    if (particlesRenderParams.size() != 0) {
+        ROSEN_LOGE("WMM RSNode::SetParticleParams, startLifeTime = %{public}ld, endLifeTime = %{public}ld", 
+        particlesRenderParams[0]->emitterConfig_.lifeTime_.start_, particlesRenderParams[0]->emitterConfig_.lifeTime_.end_);
+    }
+
+    // uint32_t emitterIndex = 0;
+    // Vector2f position = { 200.f, 300.f };
+    // Vector2f emitSize = { 400.f, 500.f };
+    // int emitRate = 10;
+    // auto para = std::make_shared<EmitterUpdater>(emitterIndex, position, emitSize, emitRate);
+    // SetEmitterUpdater(para);
+
+    // int fieldStrength_  = 10;
+    // ShapeType fieldShape_ = ShapeType::RECT;
+    // Vector2f fieldSize_ = { 200.f, 300.f };
+    // Vector2f fieldCenter_ = { 40.f, 50.f };
+    // uint16_t fieldFeather_ = 50;
+    // float noiseScale_ = 8.f;
+    // float noiseFrequency_ = 2.f;
+    // float noiseAmplitude_ = 4.f;
+    // auto para1 = std::make_shared<ParticleNoiseField>(fieldStrength_, fieldShape_, fieldSize_, fieldCenter_, fieldFeather_, noiseScale_, noiseFrequency_, noiseAmplitude_);
+    // SetParticleNoiseField(para1);
+
     SetParticleDrawRegion(particleParams);
     auto property = std::make_shared<RSPropertyBase>();
     auto propertyId = property->GetId();
@@ -1057,9 +1081,9 @@ void RSNode::SetEmitterUpdater(const std::shared_ptr<EmitterUpdater>& para)
 }
 
 // Set Particle Noise Field
-void RSNode::SetParticleNoiseField(const std::shared_ptr<ParticleNoiseField>& para)
+void RSNode::SetParticleNoiseFields(const std::shared_ptr<ParticleNoiseFields>& para)
 {
-    SetProperty<RSParticleNoiseFieldModifier, RSProperty<std::shared_ptr<ParticleNoiseField>>>(
+    SetProperty<RSParticleNoiseFieldsModifier, RSProperty<std::shared_ptr<  >>>(
         RSModifierType::PARTICLE_NOISE_FIELD, para);
 }
 

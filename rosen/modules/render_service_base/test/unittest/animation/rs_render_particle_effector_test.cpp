@@ -333,9 +333,10 @@ HWTEST_F(RSRenderParticleEffectorTest, UpdateAccelerationRandom001, TestSize.Lev
     float noiseScale = 8.f;
     float noiseFrequency = 2.f;
     float noiseAmplitude = 4.f;
-    auto particleNoiseField = std::make_shared<ParticleNoiseField>(fieldStrength, fieldShape, fieldSize,
-        fieldCenter, fieldFeather, noiseScale, noiseFrequency, noiseAmplitude);
-    effector->Update(particle, particleNoiseField, activeTime);
+    auto noiseFiled = std::make_shared<ParticleNoiseField>(fieldStrength, fieldShape, fieldSize, fieldCenter, fieldFeather, noiseScale, noiseFrequency, noiseAmplitude);
+    auto noiseFileds = std::make_shared<ParticleNoiseFields>();
+    noiseFileds->AddField(noiseFiled);
+    effector->Update(particle, noiseFileds, activeTime);
     EXPECT_TRUE(particle->GetActiveTime() == 200000);
     GTEST_LOG_(INFO) << "RSRenderParticleEffectorTest UpdateAccelerationRandom001 end";
 }

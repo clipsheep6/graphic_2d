@@ -31,6 +31,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    const std::string UNIRENDER_PRESET_CACHE_DIR = "/chip_prod/etc/graphic";
 };
 
 void CacheDataTest::SetUpTestCase() {}
@@ -56,7 +57,8 @@ HWTEST_F(CacheDataTest, cachedata_init_test_001, TestSize.Level1)
     /**
      * @tc.steps: step1. initialize a cachedata
      */
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, "TestDir");
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        0, 0, 0, "TestDir", UNIRENDER_PRESET_CACHE_DIR);
     /**
      * @tc.steps: step2. test the result of initialization function
      */
@@ -82,7 +84,8 @@ HWTEST_F(CacheDataTest, serialized_size_test_001, TestSize.Level1)
     /**
      * @tc.steps: step1. initialize a cachedata
      */
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, "TestDir");
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        0, 0, 0, "TestDir", UNIRENDER_PRESET_CACHE_DIR);
     struct tempHeader {
         size_t numShaders_;
     };
@@ -113,7 +116,8 @@ HWTEST_F(CacheDataTest, get_data_test_001, TestSize.Level1)
      * @tc.steps: step1. initialize a cachedata
      */
     std::string testFileDir = "test file dir for cachedata";
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, testFileDir);
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        0, 0, 0, testFileDir, UNIRENDER_PRESET_CACHE_DIR);
     /**
      * @tc.steps: step2. test the data grabbing function
      */
@@ -141,7 +145,8 @@ HWTEST_F(CacheDataTest, serialization_test_001, TestSize.Level1)
      * @tc.steps: step1. initialize a cachedata
      */
     std::string testFileDir = "test file dir for cachedata";
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, testFileDir);
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        0, 0, 0, testFileDir, UNIRENDER_PRESET_CACHE_DIR);
     /**
      * @tc.steps: step2. test the serialization function
      */
@@ -171,7 +176,8 @@ HWTEST_F(CacheDataTest, deserialization_test_001, TestSize.Level1)
      * @tc.steps: step1. initialize a cachedata
      */
     std::string testFileDir = "test file dir for cachedata";
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(0, 0, 0, testFileDir);
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        0, 0, 0, testFileDir, UNIRENDER_PRESET_CACHE_DIR);
     /**
      * @tc.steps: step2. test the deserialization function
      */
@@ -201,7 +207,8 @@ HWTEST_F(CacheDataTest, write_data_test_001, TestSize.Level1)
      * @tc.steps: step1. initialize a cachedata
      */
     std::string testFileDir = "test file dir for cachedata";
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(2, 2, 4, testFileDir);
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        2, 2, 4, testFileDir, UNIRENDER_PRESET_CACHE_DIR);
     /**
      * @tc.steps: step2. test the rewrite and get function
      */
@@ -232,7 +239,8 @@ HWTEST_F(CacheDataTest, clean_data_test_001, TestSize.Level1)
      * @tc.steps: step1. initialize a cachedata
      */
     std::string testFileDir = "test file dir for cachedata";
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(8, 8, 15, testFileDir);
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        8, 8, 15, testFileDir, UNIRENDER_PRESET_CACHE_DIR);
     /**
      * @tc.steps: step2. test the clean function
      */
@@ -271,7 +279,8 @@ HWTEST_F(CacheDataTest, clean_data_test_002, TestSize.Level1)
      * @tc.steps: step1. initialize a cachedata
      */
     std::string testFileDir = "test file dir for cachedata";
-    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(4, 4, 6, testFileDir);
+    std::shared_ptr<CacheData> cacheData = std::make_shared<CacheData>(
+        4, 4, 6, testFileDir, UNIRENDER_PRESET_CACHE_DIR);
     /**
      * @tc.steps: step2. test the clean function that skips a vain clean
      */

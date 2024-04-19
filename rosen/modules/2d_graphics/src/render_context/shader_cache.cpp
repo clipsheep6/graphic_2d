@@ -48,7 +48,7 @@ void ShaderCache::InitShaderCache(const char* identity, const size_t size, bool 
     }
     cacheData_.reset();
     size_t totalSize = isUni ? MAX_UNIRENDER_SIZE : MAX_TOTAL_SIZE;
-    cacheData_ = std::make_unique<CacheData>(MAX_KEY_SIZE, MAX_VALUE_SIZE, totalSize, filePath_);
+    cacheData_ = std::make_unique<CacheData>(MAX_KEY_SIZE, MAX_VALUE_SIZE, totalSize, filePath_, mPresetFilePath_);
     cacheData_->ReadFromFile();
     if (identity == nullptr || size == 0) {
         LOGD("abandon, illegal cacheDir length");
@@ -73,7 +73,7 @@ void ShaderCache::InitShaderCache(const char* identity, const size_t size, bool 
     initialized_ = true;
 }
 
-void ShaderCache::SetFilePath(const std::string& filename)
+void ShaderCache::SetFilePath(const std::string& filename, const std::string& presetFile)
 {
     if (filename.size() == 0) {
         LOGD("abandon, empty filename");
@@ -81,11 +81,13 @@ void ShaderCache::SetFilePath(const std::string& filename)
     }
     std::lock_guard<std::mutex> lock(mutex_);
     filePath_ = filename + "/shader_cache";
+    mPresetFilePath_ = presetFile + "/shader_cache";
 }
 
 std::shared_ptr<Drawing::Data> ShaderCache::Load(const Drawing::Data& key)
 {
     RS_TRACE_NAME("Load shader");
+    LOGD("ShaderCache::Load QuerryShaderNum:%{public}d", static_cast<int>(this->QuerryShaderNum()));
     size_t keySize = key.GetSize();
     OptionalLockGuard lock(mutex_);
     if (!lock.status) {
@@ -168,6 +170,7 @@ void ShaderCache::WriteToDisk()
 void ShaderCache::Store(const Drawing::Data& key, const Drawing::Data& data)
 {
     RS_TRACE_NAME("Store shader");
+    LOGD("ShaderCache::Store QuerryShaderNum:%{public}d", static_cast<int>(this->QuerryShaderNum()));
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!initialized_) {
@@ -226,4 +229,5 @@ void ShaderCache::CleanAllShaders() const
     }
 }
 }   // namespace Rosen
+
 }   // namespace OHOS

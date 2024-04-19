@@ -25,11 +25,13 @@
 namespace OHOS {
 namespace Rosen {
 CacheData::CacheData (const size_t maxKeySize, const size_t maxValueSize,
-    const size_t maxTotalSize, const std::string& fileName)
+    const size_t maxTotalSize, const std::string& fileName,
+    const std::string& presetFile)
     : maxKeySize_(maxKeySize),
     maxValueSize_(maxValueSize),
     maxTotalSize_(maxTotalSize),
-    cacheDir_(fileName) {}
+    cacheDir_(fileName),
+    mPresetFile_(presetFile) {}
 
 CacheData::~CacheData() {}
 
@@ -42,10 +44,14 @@ void CacheData::ReadFromFile()
 
     int fd = open(cacheDir_.c_str(), O_RDONLY, 0);
     if (fd == ERR_NUMBER) {
-        if (errno != ENOENT) {
-            LOGD("abandon, because fail to open file");
+        LOGD("ShaderCache abandon, because fail to open file");
+        fd = open(mPresetFile_.c_str(), O_RDONLY, 0);  // read the preset file
+        if (fd == ERR_NUMBER) {
+            LOGD("ShaderCache CacheData abandon, because fail to open preset file");
+            return;
+        } else {
+            LOGD("[ShaderCache] CacheData succeeded to open preset file");
         }
-        return;
     }
     struct stat statBuf;
     if (fstat(fd, &statBuf) == ERR_NUMBER) {

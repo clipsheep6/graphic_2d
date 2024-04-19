@@ -290,12 +290,15 @@ bool RenderContext::SetUpGpuContext(std::shared_ptr<Drawing::GPUContext> drawing
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
         mHandler_ = std::make_shared<MemoryHandler>();
         auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        FilePath filePath;
         if (isUniRenderMode_) {
             cacheDir_ = UNIRENDER_CACHE_DIR;
+            mPresetCacheDir_ = UNIRENDER_PRESET_CACHE_DIR;
+            filePath = {cacheDir_, mPresetCacheDir_};
         }
         Drawing::GPUContextOptions options;
         auto size = glesVersion ? strlen(glesVersion) : 0;
-        mHandler_->ConfigureContext(&options, glesVersion, size, cacheDir_, isUniRenderMode_);
+        mHandler_->ConfigureContext(&options, glesVersion, size, filePath, isUniRenderMode_);
 
         auto drGPUContext = std::make_shared<Drawing::GPUContext>();
         if (!drGPUContext->BuildFromGL(options)) {

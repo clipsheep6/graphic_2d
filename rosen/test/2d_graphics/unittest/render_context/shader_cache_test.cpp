@@ -31,6 +31,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    const std::string UNIRENDER_PRESET_CACHE_DIR = "/chip_prod/etc/graphic";
 };
 
 void ShaderCacheTest::SetUpTestCase() {}
@@ -58,7 +59,7 @@ HWTEST_F(ShaderCacheTest, instance_test_001, TestSize.Level1)
      */
     auto &cache = ShaderCache::Instance();
     std::string testedFileDir = "";
-    cache.SetFilePath(testedFileDir);
+    cache.SetFilePath(testedFileDir, UNIRENDER_PRESET_CACHE_DIR);
     const char* identity = nullptr;
     std::shared_ptr<Drawing::Data> fakeData = std::make_shared<Drawing::Data>();
     /**
@@ -119,7 +120,7 @@ HWTEST_F(ShaderCacheTest, initialization_test_002, TestSize.Level1)
      */
     auto &cache = ShaderCache::Instance();
     std::string testedFileDir = "TemporalFilePath";
-    cache.SetFilePath(testedFileDir);
+    cache.SetFilePath(testedFileDir, UNIRENDER_PRESET_CACHE_DIR);
     const char* identity = nullptr;
     const char* fakeBuffer = "testStr";
     std::shared_ptr<Drawing::Data> fakeData = std::make_shared<Drawing::Data>();
@@ -152,7 +153,7 @@ HWTEST_F(ShaderCacheTest, store_test_001, TestSize.Level1)
      */
     auto &cache = ShaderCache::Instance();
     std::string testedFileDir = "TemporalFilePath";
-    cache.SetFilePath(testedFileDir);
+    cache.SetFilePath(testedFileDir, UNIRENDER_PRESET_CACHE_DIR);
     const char* identity = nullptr;
     std::shared_ptr<Drawing::Data> fakeKey = std::make_shared<Drawing::Data>();
     std::shared_ptr<Drawing::Data> fakeData = std::make_shared<Drawing::Data>();
@@ -185,7 +186,7 @@ HWTEST_F(ShaderCacheTest, store_test_002, TestSize.Level1)
      */
     auto &cache = ShaderCache::Instance();
     std::string testedFileDir = "";
-    cache.SetFilePath(testedFileDir);
+    cache.SetFilePath(testedFileDir, UNIRENDER_PRESET_CACHE_DIR);
     const char* identity = nullptr;
     std::shared_ptr<Drawing::Data> fakeKey = std::make_shared<Drawing::Data>();
     std::shared_ptr<Drawing::Data> fakeData = std::make_shared<Drawing::Data>();
@@ -218,7 +219,7 @@ HWTEST_F(ShaderCacheTest, writing_test_001, TestSize.Level1)
      */
     auto &cache = ShaderCache::Instance();
     std::string testedFileDir = "TemporalFilePath";
-    cache.SetFilePath(testedFileDir);
+    cache.SetFilePath(testedFileDir, UNIRENDER_PRESET_CACHE_DIR);
     const char* identity = nullptr;
     const char* fakeBuffer = "testStr";
     std::shared_ptr<Drawing::Data> fakeKey = std::make_shared<Drawing::Data>();
@@ -255,7 +256,7 @@ HWTEST_F(ShaderCacheTest, writing_test_002, TestSize.Level1)
      */
     auto &cache = ShaderCache::Instance();
     std::string testedFileDir = "TemporalFilePath";
-    cache.SetFilePath(testedFileDir);
+    cache.SetFilePath(testedFileDir, UNIRENDER_PRESET_CACHE_DIR);
     const char* identity = "testIdentity";
     const char* fakeBuffer = "testStr";
     std::shared_ptr<Drawing::Data> fakeKey = std::make_shared<Drawing::Data>();

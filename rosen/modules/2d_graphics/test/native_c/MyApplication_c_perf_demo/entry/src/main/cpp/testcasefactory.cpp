@@ -71,6 +71,8 @@
 #include "interface/canvas_test.h"
 #include "dm/onebadarc.h"
 #include "dm/anisotropic.h"
+#include "interface/text_blob_test.h"
+#include "interface/path_test.h"
 
 namespace {
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -281,7 +283,16 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
 
         {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-
+        {"textblob_createbuilder", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobBuilderCreate>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_createfrom_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromText>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_createfrom_postext", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromPosText>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_createfrom_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromString>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_getbounds", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobGetBounds>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"path_setfilltype", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathSetFillType>(TestBase::DRAW_STYLE_COMPLEX,OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING); }},
+        {"path_getlength", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathGetLength>(TestBase::DRAW_STYLE_COMPLEX,true); }},
+        {"path_close", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathClose>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"path_offset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathOffset>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"path_reset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathReset>(TestBase::DRAW_STYLE_COMPLEX); }},
 };
 } // namespace
 

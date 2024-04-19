@@ -218,6 +218,7 @@ void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
         OH_Drawing_PenSetColor(stylePen_, 0xFFFF0000);
         OH_Drawing_PenSetAlpha(stylePen_, 0xF0);
         OH_Drawing_PenSetBlendMode(stylePen_, BLEND_MODE_SRC);
+        OH_Drawing_PenSetWidth(stylePen_, 5);
 
         styleMask_ = OH_Drawing_MaskFilterCreateBlur(NORMAL, 10.0, true);
         styleFilter_ = OH_Drawing_FilterCreate();

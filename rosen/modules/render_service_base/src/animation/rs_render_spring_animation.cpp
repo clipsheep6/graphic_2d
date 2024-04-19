@@ -15,6 +15,7 @@
 
 #include "animation/rs_render_spring_animation.h"
 
+#include "animation/rs_animation_trace_utils.h"
 #include "command/rs_animation_command.h"
 #include "command/rs_message_processor.h"
 #include "pipeline/rs_render_node.h"
@@ -287,6 +288,8 @@ void RSRenderSpringAnimation::OnInitialize(int64_t time)
         initialVelocity_ = startValue_ * 0.f;
     }
 
+    RSAnimationTraceUtils::GetInstance().addSpringInitialVelocityTrace(
+        GetPropertyId(), GetAnimationId(), initialVelocity_, GetPropertyValue());
     springValueEstimator_->SetInitialVelocity(initialVelocity_);
     springValueEstimator_->UpdateSpringParameters();
 

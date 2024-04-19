@@ -70,6 +70,7 @@
 
 #include "interface/canvas_test.h"
 #include "dm/onebadarc.h"
+#include "dm/anisotropic.h"
 #include "interface/text_blob_test.h"
 #include "interface/path_test.h"
 
@@ -190,10 +191,11 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
 
         {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},          // ok
         {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }}, // 第二个三角形虚化不对，
-        {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // 有部分线条多余画出
+        {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // //有部分线条cpu出图部分缺失,gpu正常出图，颜色为黑色
         {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
         {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
         {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},                                  // ok
+        {"anisotropic_hq", []() -> std::shared_ptr<TestBase> { return std::make_shared<Anisotropic>(); }}, //该用例OH_Drawing_SamplingOptionsCreate接口mode对应内容未开放,无法实现
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

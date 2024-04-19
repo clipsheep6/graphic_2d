@@ -104,10 +104,12 @@ void ConicPaths::OnTestFunction(OH_Drawing_Canvas *canvas) {
                         OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(kAlphaValue[a], 0, 0, 0));
                         OH_Drawing_CanvasAttachPen(canvas, pen);
                         OH_Drawing_PenSetAntiAlias(pen, (bool)aa);
+                        OH_Drawing_CanvasAttachPen(canvas, pen);
                         OH_Drawing_CanvasDrawPath(canvas, fPaths[p]);
                     } else {
                         OH_Drawing_CanvasDetachPen(canvas);
                         OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(kAlphaValue[a], 0, 0, 0));
+                        OH_Drawing_BrushSetAntiAlias(brush, (bool)aa);
                         OH_Drawing_CanvasAttachBrush(canvas, brush);
                         OH_Drawing_CanvasDrawPath(canvas, fPaths[p]);
                         OH_Drawing_CanvasDetachBrush(canvas);

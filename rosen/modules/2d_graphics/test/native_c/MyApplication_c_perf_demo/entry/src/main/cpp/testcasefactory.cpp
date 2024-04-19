@@ -68,6 +68,8 @@
 #include "dm/points.h"
 #include "dm/skbug_8955.h"
 #include "dm/conic_paths.h"
+#include "dm/newsurface.h"
+#include "dm/drawbitmaprect.h"
 
 #include "interface/canvas_test.h"
 #include "dm/onebadarc.h"
@@ -203,6 +205,9 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
         {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
         {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},   //代码完成，有crash，rect roundout 接口缺失
+        {"surfacenew", []() -> std::shared_ptr<TestBase> { return std::make_shared<NewSurfaceGM>(); }},       //ok
+        {"bitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect2>(); }},     //OH_Drawing_CanvasDrawRect接口有问题内部逻辑并未用画笔而是用画刷
+
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>

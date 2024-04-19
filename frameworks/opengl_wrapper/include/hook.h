@@ -31,7 +31,7 @@ namespace OHOS {
 #undef CALL_HOOK_API_RET
 #define CALL_HOOK_API_RET CALL_HOOK_API
 #undef HOOK_API_ENTRY
-#define HOOK_API_ENTRY(r, api, ...) r (*(api))(__VA_ARGS__);
+#define HOOK_API_ENTRY(r, api, ...) r (*(api))(__VA_ARGS__)
 
 constexpr int32_t EGL_API_NUM = 100;
 constexpr int32_t GL_API_NUM = 1000;

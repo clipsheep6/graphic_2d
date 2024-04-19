@@ -115,6 +115,9 @@ public:
     }
     void UpdateDisplayNodeScreenId();
     uint32_t GetDynamicRefreshRate() const;
+    pid_t GetPid(){
+        return tid_;
+    }
 
 private:
     RSUniRenderThread();

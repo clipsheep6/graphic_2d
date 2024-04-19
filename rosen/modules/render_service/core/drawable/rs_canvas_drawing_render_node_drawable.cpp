@@ -29,7 +29,7 @@ static std::mutex drawingMutex;
 RSCanvasDrawingRenderNodeDrawable::Registrar RSCanvasDrawingRenderNodeDrawable::instance_;
 
 RSCanvasDrawingRenderNodeDrawable::RSCanvasDrawingRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node)
-    : RSRenderNodeDrawable(std::move(node))
+    : RSRenderNodeDrawable(std::move(node)), unirenderInstance_(RSUniRenderThread::Instance())
 {
     auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
     auto canvasDrawingRenderNode = std::static_pointer_cast<RSCanvasDrawingRenderNode>(nodeSp);
@@ -125,6 +125,9 @@ void RSCanvasDrawingRenderNodeDrawable::DrawRenderContent(Drawing::Canvas& canva
 {
     DrawContent(*canvas_, rect);
 
+    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
+    auto canvasDrawingNode = std::static_pointer_cast<RSCanvasDrawingRenderNode>(nodeSp);
+    canvasDrawingNode->SetNeedProcess(false);
     Rosen::Drawing::Matrix mat;
     const auto& params = renderNode_->GetRenderParams();
     auto& frameRect = params->GetFrameRect();
@@ -171,9 +174,12 @@ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
         if (!surface_ || !canvas_) {
             return;
         }
-        // planning: clear op
+        auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
+        auto canvasDrawingNode = std::static_pointer_cast<RSCanvasDrawingRenderNode>(nodeSp);
+        DrawContent(*canvas_, rect);
+        canvasDrawingNode->SetNeedProcess(false);
     };
-    RSTaskDispatcher::GetInstance().PostTask(threadId_, task, false);
+    RSTaskDispatcher::GetInstance().PostTask(unirenderInstance_.GetPid(), task, false);
 }
 
 bool RSCanvasDrawingRenderNodeDrawable::InitSurface(int width, int height, RSPaintFilterCanvas& canvas)

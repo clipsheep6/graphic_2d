@@ -275,10 +275,10 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
     Drawing::Matrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
     matrix.MapRect(shadowRect, shadowRect);
 
-    dirtyShadow.left_ = shadowRect.GetLeft();
-    dirtyShadow.top_ = shadowRect.GetTop();
-    dirtyShadow.width_ = shadowRect.GetWidth();
-    dirtyShadow.height_ = shadowRect.GetHeight();
+    dirtyShadow.left_ = std::floor(shadowRect.GetLeft());
+    dirtyShadow.top_ = std::floor(shadowRect.GetTop());
+    dirtyShadow.width_ = std::ceil(shadowRect.GetWidth()) + 1;
+    dirtyShadow.height_ = std::ceil(shadowRect.GetHeight()) + 1;
 }
 
 void RSPropertiesPainter::DrawShadow(const RSProperties& properties, RSPaintFilterCanvas& canvas, const RRect* rrect)

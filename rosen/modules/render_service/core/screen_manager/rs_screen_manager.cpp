@@ -25,6 +25,7 @@
 #include <parameters.h>
 #include "param/sys_param.h"
 #include "common/rs_optional_trace.h"
+#include "rs_trace.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -268,6 +269,18 @@ float RSScreenManager::GetScreenBrightnessNits(ScreenId id)
     return DEFAULT_SCREEN_LIGHT_MAX_NITS * backLightLevel / DEFAULT_SCREEN_LIGHT_MAX_LEVEL;
 }
 #endif
+
+void RSScreenManager::ForceRefreshOneFrameIfNoRNV()
+{
+    auto mainThread = RSMainThread::Instance();
+    if (mainThread != nullptr && !mainThread->IsRequestedNextVSync()) {
+        RS_TRACE_NAME("No RNV, ForceRefreshOneFrame");
+        mainThread->PostTask([mainThread]() {
+            mainThread->SetDirtyFlag();
+        });
+        mainThread->ForceRefreshForUni();
+    }
+}
 
 void RSScreenManager::OnHotPlug(std::shared_ptr<HdiOutput> &output, bool connected, void *data)
 {
@@ -1030,7 +1043,8 @@ int32_t RSScreenManager::ResizeVirtualScreen(ScreenId id, uint32_t width, uint32
         return SCREEN_NOT_FOUND;
     }
     screens_.at(id)->ResizeVirtualScreen(width, height);
-    RS_LOGD("RSScreenManager %{public}s: resize virtual screen success", __func__);
+    RS_LOGI("RSScreenManager %{public}s: resize virtual screen success, width:%{public}u, height:%{public}u",
+        __func__, width, height);
 
     return SUCCESS;
 }

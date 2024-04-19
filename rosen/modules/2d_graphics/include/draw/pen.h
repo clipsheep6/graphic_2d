@@ -18,6 +18,7 @@
 
 #include "draw/brush.h"
 #include "draw/color.h"
+#include "effect/blur_draw_looper.h"
 #include "effect/filter.h"
 #include "effect/path_effect.h"
 #include "utils/rect.h"
@@ -199,6 +200,19 @@ public:
     void SetBlendMode(BlendMode mode);
 
     /**
+     * @brief Sets the current blender, increasing its refcnt, and if a blender is already
+     *        present, decreasing that object's refcnt.
+     * @param blender  Blender used to set
+     */
+    void SetBlender(std::shared_ptr<Blender> blender);
+
+    /**
+     * @brief Returns the user-supplied blend function, if one has been set.
+     * @return the Blender assigned to this Brush, otherwise nullptr
+     */
+    std::shared_ptr<Blender> GetBlender() const;
+
+    /**
      * @brief Returns true if pixels on the active edges of Path may be drawn with partial transparency.
      * @return antialiasing state
      */
@@ -248,6 +262,16 @@ public:
      * Pen with the result of Pen().
      */
     void Reset();
+
+    /**
+     * @brief Sets BlurDrawLooper, it will generate two draw operations, which may affect performance.
+     */
+    void SetLooper(std::shared_ptr<BlurDrawLooper> blurDrawLooper);
+
+    /**
+     * @brief Gets BlurDrawLooper.
+     */
+    std::shared_ptr<BlurDrawLooper> GetLooper() const;;
 
     friend DRAWING_API bool operator==(const Pen& p1, const Pen& p2);
     friend DRAWING_API bool operator!=(const Pen& p1, const Pen& p2);

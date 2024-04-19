@@ -16,6 +16,7 @@ import("../../../../../../graphic_config.gni")
 
 ohos_shared_library("windowanimationmanager_napi") {
   include_dirs = [
+    "$graphic_2d_root/utils/log",
     "//foundation/window/window_manager/wm/include",
     "//foundation/window/window_manager/wmserver/include",
     "//foundation/window/window_manager/interfaces/innerkits/wm",

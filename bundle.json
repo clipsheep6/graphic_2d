@@ -43,7 +43,8 @@
         "graphic_2d_feature_enable_afbc",
         "graphic_2d_feature_freemem_enable",
         "graphic_2d_feature_parallel_render_enable",
-        "graphic_2d_feature_tp_switch_enbale"
+        "graphic_2d_feature_tp_switch_enbale",
+        "graphic_2d_feature_rs_enable_profiler"
       ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -61,6 +62,7 @@
           "hitrace",
           "ability_runtime",
           "drivers_interface_display",
+          "drivers_interface_camera_ext",
           "c_utils",
           "access_token",
           "safwk",
@@ -126,7 +128,8 @@
             "//foundation/graphic/graphic_2d/rosen/modules/effect/egl:libegl_effect",
             "//foundation/graphic/graphic_2d/rosen/modules/texgine:libtexgine",
             "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer",
-            "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json"
+            "//foundation/graphic/graphic_2d/frameworks/vulkan_layers:vulkan_swapchain_layer_json",
+            "//foundation/graphic/graphic_2d/rosen/modules/graphics_effect:libgraphics_effect"
           ],
           "fwk_group": [
             "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",

@@ -184,6 +184,7 @@ skt::ParagraphStyle ParagraphBuilderImpl::TextStyleToSkStyle(const ParagraphStyl
     strutStyle.setForceStrutHeight(txt.forceStrutHeight);
     strutStyle.setStrutEnabled(txt.strutEnabled);
     strutStyle.setWordBreakType(static_cast<skt::WordBreakType>(txt.wordBreakType));
+    strutStyle.setLineBreakStrategy(static_cast<skt::LineBreakStrategy>(txt.breakStrategy));
     skStyle.setStrutStyle(strutStyle);
 
     skStyle.setTextAlign(static_cast<skt::TextAlign>(txt.textAlign));
@@ -282,6 +283,7 @@ void ParagraphBuilderImpl::CopyTextStylePaint(const TextStyle& txt, skia::textla
         paint.symbol.SetAnimationMode(txt.symbol.GetAnimationMode());
         paint.symbol.SetRepeatCount(txt.symbol.GetRepeatCount());
         paint.symbol.SetAminationStart(txt.symbol.GetAminationStart());
+        paint.symbol.SetCommonSubType(txt.symbol.GetCommonSubType());
         skStyle.setForegroundPaintID(AllocPaintID(paint));
     }
 }

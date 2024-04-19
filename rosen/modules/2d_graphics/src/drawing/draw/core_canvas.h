@@ -665,6 +665,16 @@ public:
     }
     std::shared_ptr<CoreCanvasImpl> GetCanvasData() const;
 
+    Paint& GetMutableBrush()
+    {
+        return paintBrush_;
+    }
+
+    Paint& GetMutablePen()
+    {
+        return paintPen_;
+    }
+
 protected:
     CoreCanvas(int32_t width, int32_t height);
     void BuildNoDraw(int32_t width, int32_t height);
@@ -673,6 +683,10 @@ protected:
     Paint paintPen_;
 
 private:
+    void ApplyDrawProc(const Paint& paint, const std::function<void()>& proc);
+    void ApplyBlurDrawProc(const Paint& paint, const std::function<void()>& proc);
+    void ApplyDrawLooper(const std::function<void()> drawProc);
+
     void AttachPaint();
     std::shared_ptr<CoreCanvasImpl> impl_;
 #ifdef ACE_ENABLE_GPU

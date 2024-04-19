@@ -112,7 +112,7 @@ public:
 
     void SetRefreshRateMode(int32_t refreshRateMode);
 
-    void SyncFrameRateRange(const FrameRateRange& range);
+    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range);
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id);
 
@@ -197,6 +197,10 @@ public:
 
     int32_t RegisterHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback);
 
+    int32_t RegisterHgmRefreshRateUpdateCallback(const HgmRefreshRateUpdateCallback& callback);
+
+    int32_t UnRegisterHgmRefreshRateUpdateCallback();
+
     void SetAppWindowNum(uint32_t num);
 
     // Set the system overload Animated Scenes to RS for special load shedding
@@ -230,13 +234,15 @@ public:
 
     void SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback);
 
+    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
+
     GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id);
 
 #ifdef TP_FEATURE_ENABLE
     void SetTpFeatureConfig(int32_t feature, const char* config);
 #endif
     void SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus);
-    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
+
 private:
     RSInterfaces();
     ~RSInterfaces() noexcept;

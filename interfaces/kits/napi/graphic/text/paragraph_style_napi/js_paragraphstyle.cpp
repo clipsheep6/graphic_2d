@@ -12,12 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "js_drawing_utils.h"
+
 #include "js_paragraphstyle.h"
+#include "js_drawing_utils.h"
+
 
 namespace OHOS::Rosen {
-thread_local napi_ref JsParagraphStyle::constructor_ = nullptr;
+namespace {
 const std::string CLASS_NAME = "JsParagraphStyle";
+}
+
+thread_local napi_ref JsParagraphStyle::constructor_ = nullptr;
+
 napi_value JsParagraphStyle::Init(napi_env env, napi_value exportObj)
 {
     napi_property_descriptor properties[] = {
@@ -27,19 +33,19 @@ napi_value JsParagraphStyle::Init(napi_env env, napi_value exportObj)
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed to define ParagraphStyle class");
+        ROSEN_LOGE("Failed to define ParagraphStyle class");
         return nullptr;
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed to create reference of constructor");
+        ROSEN_LOGE("Failed to create reference of constructor");
         return nullptr;
     }
 
     status = napi_set_named_property(env, exportObj, CLASS_NAME.c_str(), constructor);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed to set constructor");
+        ROSEN_LOGE("Failed to set constructor");
         return nullptr;
     }
 
@@ -48,7 +54,7 @@ napi_value JsParagraphStyle::Init(napi_env env, napi_value exportObj)
     };
     status = napi_define_properties(env, exportObj, 1, staticProperty);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed to define static function");
+        ROSEN_LOGE("Failed to define static function");
         return nullptr;
     }
     return exportObj;
@@ -66,12 +72,15 @@ napi_value JsParagraphStyle::Constructor(napi_env env, napi_callback_info info)
 
     std::shared_ptr<TypographyStyle> paragraphStyle = std::make_shared<TypographyStyle>();
     JsParagraphStyle *jsParagraphStyle = new(std::nothrow) JsParagraphStyle(paragraphStyle);
-
+    if (jsParagraphStyle == nullptr) {
+        ROSEN_LOGE("Failed to new jsParagraphStyle");
+        return nullptr;
+    }
     status = napi_wrap(env, jsThis, jsParagraphStyle,
         JsParagraphStyle::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsParagraphStyle;
-        ROSEN_LOGE("failed to wrap native instance");
+        ROSEN_LOGE("Failed to wrap native instance");
         return nullptr;
     }
     return jsThis;
@@ -92,13 +101,13 @@ napi_value JsParagraphStyle::CreateJsParagraphStyle(napi_env env, napi_callback_
     napi_value constructor = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &constructor);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed to get the representation of constructor object");
+        ROSEN_LOGE("Failed to get the representation of constructor object");
         return nullptr;
     }
 
     status = napi_new_instance(env, constructor, 0, nullptr, &result);
     if (status != napi_ok) {
-        ROSEN_LOGE("failed to instantiate JavaScript JsParagraphStyle instance");
+        ROSEN_LOGE("Failed to instantiate JavaScript JsParagraphStyle instance");
         return nullptr;
     }
     return result;

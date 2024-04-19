@@ -70,6 +70,7 @@ add_library(entry SHARED
     dm/conic_paths.cpp
     dm/bitmaprect.cpp
     interface/text_blob_test.cpp
+    interface/path_test.cpp
 )
 
 add_library(myxnode SHARED
@@ -133,6 +134,7 @@ add_library(myxnode SHARED
     dm/conic_paths.cpp
     dm/bitmaprect.cpp
     interface/text_blob_test.cpp
+    interface/path_test.cpp
 )
 
 find_library(

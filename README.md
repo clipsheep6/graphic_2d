@@ -8,7 +8,7 @@
 
 **Graphic subsystem** provides graphical interface capabilities.
 
-Its main structure is shown in the following figure:
+<!-- Its main structure is shown in the following figure: -->
 
 ![Graphic subsystem architecture diagram](./figures/graphic_rosen_architecture.jpg)
 

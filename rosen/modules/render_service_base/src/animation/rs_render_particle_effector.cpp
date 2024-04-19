@@ -14,6 +14,7 @@
  */
 
 #include "animation/rs_render_particle_effector.h"
+#include "platform/common/rs_log.h"
 
 #include <cmath>
 #include <iostream>
@@ -213,9 +214,18 @@ void RSRenderParticleEffector::UpdatePosition(const std::shared_ptr<RSRenderPart
 {
     auto position = particle->GetPosition();
     auto fieldForce = Vector2f(0.f, 0.f);
-    if (particleNoiseField != nullptr) {
-        fieldForce += particleNoiseField->ApplyField(position);
-        fieldForce += particleNoiseField->ApplyCurlNoise(position);
+    if (particleNoiseFields != nullptr) {
+
+    // ROSEN_LOGE("WMM RSRenderParticleEffector::UpdatePosition, particleNoiseField: fieldStrength_ = %{public}d, "
+    //            "fieldShape_ = %{public}d, fieldSize_ = {%{public}f, %{public}f}, fieldCenter_ =  {%{public}f, %{public}f}, fieldFeather_ "
+    //            "= %{public}d, noiseScale_ = %{public}f, noiseFrequency_ = %{public}f, noiseAmplitude_ = %{public}f, ",
+    //     particleNoiseField->fieldStrength_, particleNoiseField->fieldShape_, particleNoiseField->fieldSize_.x_, particleNoiseField->fieldSize_.y_,
+    //     particleNoiseField->fieldCenter_.x_, particleNoiseField->fieldCenter_.y_, particleNoiseField->fieldFeather_, particleNoiseField->noiseScale_,
+    //     particleNoiseField->noiseFrequency_, particleNoiseField->noiseAmplitude_);
+
+    fieldForce += particleNoiseFields->ApplyAllFields(position);
+    // fieldForce += particleNoiseField->ApplyCurlNoise(position);
+    // ROSEN_LOGE("WMM RSRenderParticleEffector::UpdatePosition, particleNoiseField: fieldForce = {%{public}f, %{public}f} ", fieldForce.x_, fieldForce.y_);
     }
     auto accelerationValue = particle->GetAccelerationValue();
     auto accelerationAngle = particle->GetAccelerationAngle();
@@ -248,7 +258,7 @@ void RSRenderParticleEffector::UpdateActiveTime(const std::shared_ptr<RSRenderPa
 
 // Apply effector to particle
 void RSRenderParticleEffector::Update(const std::shared_ptr<RSRenderParticle>& particle,
-    const std::shared_ptr<ParticleNoiseField>& particleNoiseField, int64_t deltaTime)
+    const std::shared_ptr<ParticleNoiseFields>& particleNoiseFields, int64_t deltaTime)
 {
     float dt = static_cast<float>(deltaTime) / NS_TO_S;
     UpdateAccelerationValue(particle, dt);
@@ -257,7 +267,7 @@ void RSRenderParticleEffector::Update(const std::shared_ptr<RSRenderParticle>& p
     UpdateOpacity(particle, dt);
     UpdateScale(particle, dt);
     UpdateSpin(particle, dt);
-    UpdatePosition(particle, particleNoiseField, dt);
+    UpdatePosition(particle, particleNoiseFields, dt);
     UpdateActiveTime(particle, deltaTime);
 }
 

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "animation/rs_render_particle.h"
+#include "platform/common/rs_log.h"
 
 #include <algorithm>
 #include <cstdint>

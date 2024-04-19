@@ -1143,6 +1143,7 @@ void RSRenderNode::CollectAndUpdateLocalPixelStretchRect()
 void RSRenderNode::UpdateBufferDirtyRegion()
 {
 #ifndef ROSEN_CROSS_PLATFORM
+    isSelfDrawingNode_ = false;
     if (GetType() != RSRenderNodeType::SURFACE_NODE) {
         return;
     }
@@ -1152,6 +1153,8 @@ void RSRenderNode::UpdateBufferDirtyRegion()
     }
     auto buffer = surfaceNode->GetBuffer();
     if (buffer != nullptr) {
+        isSelfDrawingNode_ = true;
+        selfDrawingNodeRect_ = selfDrawRect_;
         // Use the matrix from buffer to relative coordinate and the absolute matrix
         // to calculate the buffer damageRegion's absolute rect
         auto rect = surfaceNode->GetDamageRegion();
@@ -1160,6 +1163,10 @@ void RSRenderNode::UpdateBufferDirtyRegion()
             RectF(rect.x, rect.y, rect.w, rect.h), matrix).ConvertTo<float>();
         // The buffer's dirtyRect should not be out of the scope of the node's dirtyRect
         selfDrawRect_ = bufferDirtyRect.IntersectRect(selfDrawRect_);
+        RS_OPTIONAL_TRACE_NAME_FMT("RSRenderNode id: %" PRIu64 ", buffer size [%d,%d], "
+            "buffer damageRegion [%d,%d,%d,%d], dirtyRect %s", GetId(),
+            buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(),
+            rect.x, rect.y, rect.w, rect.h, selfDrawRect_.ToString().c_str());
     }
 #endif
 }
@@ -1204,6 +1211,12 @@ bool RSRenderNode::CheckAndUpdateGeoTrans(std::shared_ptr<RSObjAbsGeometry>& geo
 void RSRenderNode::UpdateAbsDirtyRegion(RSDirtyRegionManager& dirtyManager, const RectI& clipRect)
 {
     dirtyManager.MergeDirtyRect(oldDirty_);
+    if (isSelfDrawingNode_ && selfDrawingNodeAbsRect_ != oldSelfDrawingNodeAbsRect_) {
+        // merge self drawing node last frame size and join current frame size to absDrawRect_ when changed
+        dirtyManager.MergeDirtyRect(oldSelfDrawingNodeAbsRect_);
+        absDrawRect_.JoinRect(selfDrawingNodeAbsRect_);
+        oldSelfDrawingNodeAbsRect_ = selfDrawingNodeAbsRect_;
+    }
     // easily merge oldDirty if switch to invisible
     if (!shouldPaint_ && isLastVisible_) {
         return;
@@ -1251,8 +1264,12 @@ bool RSRenderNode::UpdateDrawRectAndDirtyRegion(
         // planning: double check if it would be covered by updateself without geo update
         // currently CheckAndUpdateGeoTrans without dirty check
         if (auto geoPtr = properties.boundsGeo_) {
-            if (CheckAndUpdateGeoTrans(geoPtr) || accumGeoDirty) {
+            // selfdrawing node's geo may not dirty when its dirty region changes
+            if (CheckAndUpdateGeoTrans(geoPtr) || accumGeoDirty || isSelfDrawingNode_) {
                 absDrawRect_ = geoPtr->MapAbsRect(selfDrawRect_);
+                if (isSelfDrawingNode_) {
+                    selfDrawingNodeAbsRect_ = geoPtr->MapAbsRect(selfDrawingNodeRect_);
+                }
                 UpdateClipAbsDrawRectChangeState(clipRect);
             }
         }
@@ -1355,15 +1372,15 @@ RSProperties& RSRenderNode::GetMutableRenderProperties()
     return renderContent_->GetMutableRenderProperties();
 }
 
-void RSRenderNode::UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion)
+bool RSRenderNode::UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion)
 {
 #ifndef ROSEN_CROSS_PLATFORM
     if (GetType() != RSRenderNodeType::SURFACE_NODE) {
-        return;
+        return false;
     }
     auto surfaceNode = ReinterpretCastTo<RSSurfaceRenderNode>();
     if (surfaceNode == nullptr) {
-        return;
+        return false;
     }
     auto buffer = surfaceNode->GetBuffer();
     if (buffer != nullptr) {
@@ -1381,8 +1398,10 @@ void RSRenderNode::UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRe
             "buffer damageRegion [%d,%d,%d,%d], dirtyRect %s", GetId(),
             buffer->GetSurfaceBufferWidth(), buffer->GetSurfaceBufferHeight(),
             rect.x, rect.y, rect.w, rect.h, dirtyRect.ToString().c_str());
+        return true;
     }
 #endif
+    return false;
 }
 
 void RSRenderNode::UpdateDirtyRegion(
@@ -1411,7 +1430,14 @@ void RSRenderNode::UpdateDirtyRegion(
         auto dirtyRect = properties.GetDirtyRect(drawRegion);
         auto rectFromRenderProperties = dirtyRect;
         // When surface node with buffer has damageRegion, use this instead of the node size
-        UpdateBufferDirtyRegion(dirtyRect, drawRegion);
+        if (UpdateBufferDirtyRegion(dirtyRect, drawRegion)) {
+            // Add node's last and current frame absRect when the node size change
+            if (rectFromRenderProperties != oldRectFromRenderProperties_) {
+                dirtyManager.MergeDirtyRect(oldRectFromRenderProperties_);
+                dirtyRect.JoinRect(rectFromRenderProperties);
+                oldRectFromRenderProperties_ = rectFromRenderProperties;
+            }
+        }
 
         // Add node's shadow region to dirtyRect
         if (properties.IsShadowValid()) {
@@ -1425,6 +1451,8 @@ void RSRenderNode::UpdateDirtyRegion(
                 RSPropertiesPainter::GetShadowDirtyRect(shadowRect, properties);
             }
             if (!shadowRect.IsEmpty()) {
+                // Avoid deviation caused by converting float to int
+                shadowRect = shadowRect.MakeOutset({1, 1, 1, 1});
                 dirtyRect = dirtyRect.JoinRect(shadowRect);
             }
         }

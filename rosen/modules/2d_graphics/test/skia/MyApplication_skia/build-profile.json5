@@ -1,0 +1,40 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "material": {
+          "certpath": "C:\\Users\\Lenovo\\.ohos\\config\\openharmony\\auto_ohos_default_MyApplication_skia_com.example.myapplication_skia.cer",
+          "storePassword": "0000001BC18CD1795AD05F56DC04F89125EDBCF64B32E08EE023A3DE94236BCBBC04078CF2DEE9C3846E2A",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B01D1D95A5066FFE2F5135D1FE2D327F1A0FF592B57481538EE15399F057812CDF244C8B6B7396A",
+          "profile": "C:\\Users\\Lenovo\\.ohos\\config\\openharmony\\auto_ohos_default_MyApplication_skia_com.example.myapplication_skia.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\Lenovo\\.ohos\\config\\openharmony\\auto_ohos_default_MyApplication_skia_com.example.myapplication_skia.p12"
+        }
+      }
+    ],
+    "compileSdkVersion": 9,
+    "compatibleSdkVersion": 9,
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

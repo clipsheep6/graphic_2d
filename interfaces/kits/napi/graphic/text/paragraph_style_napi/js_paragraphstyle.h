@@ -16,9 +16,10 @@
 #ifndef OHOS_ROSEN_JS_PARAGRAPHSTYLE_H
 #define OHOS_ROSEN_JS_PARAGRAPHSTYLE_H
 
-#include <memory>
+
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+#include <memory>
 
 #include "typography_style.h"
 

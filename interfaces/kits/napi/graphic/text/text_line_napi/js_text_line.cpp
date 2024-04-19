@@ -21,8 +21,11 @@
 #include "utils/log.h"
 
 namespace OHOS::Rosen {
-thread_local napi_ref JsTextLine::constructor_ = nullptr;
+namespace {
 const std::string CLASS_NAME = "TextLine";
+}
+thread_local napi_ref JsTextLine::constructor_ = nullptr;
+
 napi_value JsTextLine::Constructor(napi_env env, napi_callback_info info)
 {
     size_t argCount = 0;
@@ -211,6 +214,10 @@ napi_value JsTextLine::OnPaint(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsTextLine::OnPaint Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
+    if (argv[0] == nullptr) {
+        ROSEN_LOGE("JsTextLine::OnPaint argv[0] is invalid");
+        return NapiGetUndefined(env);
+    }
     Drawing::JsCanvas* jsCanvas = nullptr;
     napi_unwrap(env, argv[0], reinterpret_cast<void**>(&jsCanvas));
     if (jsCanvas == nullptr) {
@@ -223,7 +230,8 @@ napi_value JsTextLine::OnPaint(napi_env env, napi_callback_info info)
     }
     double x = 0.0;
     double y = 0.0;
-    if (!(ConvertFromJsValue(env, argv[ARGC_ONE], x) && ConvertFromJsValue(env, argv[ARGC_TWO], y))) {
+    if (!(argv[ARGC_ONE] != nullptr && ConvertFromJsValue(env, argv[ARGC_ONE], x) &&
+        argv[ARGC_TWO] != nullptr && ConvertFromJsValue(env, argv[ARGC_TWO], y))) {
         return NapiGetUndefined(env);
     }
     if (jsCanvas->GetCanvas()->GetDrawingType() == Drawing::DrawingType::RECORDING) {

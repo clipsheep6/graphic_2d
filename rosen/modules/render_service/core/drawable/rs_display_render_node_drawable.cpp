@@ -407,8 +407,12 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
 
     if (uniParam->IsOpDropped() && CheckDisplayNodeSkip(displayNodeSp, params, processor)) {
+        RSMainThread::Instance()->SetFrameIsRender(false);
+        RSUniRenderThread::Instance().DvsyncRequestNextVsync();
         return;
     }
+    RSMainThread::Instance()->SetFrameIsRender(true);
+    RSUniRenderThread::Instance().DvsyncRequestNextVsync();
 
     // displayNodeSp to get  rsSurface witch only used in renderThread
     auto renderFrame = RequestFrame(displayNodeSp, *params, processor);
@@ -758,6 +762,9 @@ void RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes()
         RS_LOGE("RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes displayParams is null!");
         return;
     }
+    
+    displayParams->GetHardwareEnabledTopNodes().clear();
+    displayParams->GetHardwareEnabledNodes().clear();
     auto& hardwareNodes = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetHardwareEnabledTypeNodes();
     for (const auto& surfaceNode : hardwareNodes) {
         if (surfaceNode == nullptr) {

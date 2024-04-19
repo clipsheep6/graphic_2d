@@ -146,9 +146,9 @@ void RSSurfaceRenderNode::UpdateSrcRect(const Drawing::Canvas& canvas, const Dra
     SetSrcRect(srcRect);
     // We allow 1px error value to avoid disable dss by mistake [this flag only used for YUV buffer format]
     if (IsYUVBufferFormat()) {
-        isHardwareForcedDisabledBySrcRect_ =  hasRotation ?
-            (width + 1 < static_cast<int>(properties.GetBoundsWidth())) :
-            (height + 1 < static_cast<int>(properties.GetBoundsHeight()));
+        isHardwareForcedDisabledBySrcRect_ = !GetAncoForceDoDirect() &&
+            (hasRotation ? (width + 1 < static_cast<int>(properties.GetBoundsWidth())) :
+            (height + 1 < static_cast<int>(properties.GetBoundsHeight())));
 #ifndef ROSEN_CROSS_PLATFORM
         RS_OPTIONAL_TRACE_NAME_FMT("UpdateSrcRect hwcDisableBySrc:%d localClip:[%.2f, %.2f, %.2f, %.2f]" \
             " bounds:[%.2f, %.2f] hasRotation:%d name:%s id:%llu",
@@ -172,9 +172,8 @@ void RSSurfaceRenderNode::UpdateHwcDisabledBySrcRect(bool hasRotation)
     if (IsYUVBufferFormat()) {
         auto width = static_cast<int>(buffer->GetSurfaceBufferWidth());
         auto height = static_cast<int>(buffer->GetSurfaceBufferHeight());
-        isHardwareForcedDisabledBySrcRect_ =  hasRotation ?
-            srcRect_.width_ + 1 < width :
-            srcRect_.height_ + 1 < height;
+        isHardwareForcedDisabledBySrcRect_ =  !GetAncoForceDoDirect() &&
+            (hasRotation ? srcRect_.width_ + 1 < width : srcRect_.height_ + 1 < height);
         RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disableBySrc:%d src:[%d, %d]" \
             " buffer:[%d, %d] hasRotation:%d", GetName().c_str(), GetId(),
             isHardwareForcedDisabledBySrcRect_, srcRect_.width_, srcRect_.height_, width, height, hasRotation);
@@ -733,6 +732,15 @@ void RSSurfaceRenderNode::SetForceUIFirstChanged(bool forceUIFirstChanged)
 bool RSSurfaceRenderNode::GetForceUIFirstChanged()
 {
     return forceUIFirstChanged_;
+}
+
+void RSSurfaceRenderNode::SetAncoForceDoDirect(bool ancoForceDoDirect)
+{
+    ancoForceDoDirect_ = ancoForceDoDirect;
+}
+bool RSSurfaceRenderNode::GetAncoForceDoDirect() const
+{
+    return ancoForceDoDirect_;
 }
 
 void RSSurfaceRenderNode::RegisterTreeStateChangeCallback(TreeStateChangeCallback callback)

@@ -43,12 +43,14 @@
 #include "render/rs_blur_filter.h"
 #include "render/rs_filter.h"
 #include "render/rs_gradient_blur_para.h"
+#include "render/rs_motion_blur_filter.h"
 #include "render/rs_image.h"
 #include "render/rs_image_base.h"
 #include "render/rs_light_up_effect_filter.h"
 #include "render/rs_mask.h"
 #include "render/rs_material_filter.h"
 #include "render/rs_path.h"
+#include "render/rs_pixel_map_shader.h"
 #include "render/rs_shader.h"
 #include "transaction/rs_ashmem_helper.h"
 
@@ -97,10 +99,39 @@ MARSHALLING_AND_UNMARSHALLING(double, Double)
 #undef MARSHALLING_AND_UNMARSHALLING
 
 namespace {
-template<typename T, typename P>
-static inline sk_sp<T> sk_reinterpret_cast(sk_sp<P> ptr)
+bool MarshallingExtendObjectFromDrawCmdList(Parcel& parcel, const std::shared_ptr<Drawing::DrawCmdList>& val)
 {
-    return sk_sp<T>(static_cast<T*>(SkSafeRef(ptr.get())));
+    std::vector<std::shared_ptr<Drawing::ExtendObject>> objectVec;
+    uint32_t objectSize = val->GetAllExtendObject(objectVec);
+    if (!parcel.WriteUint32(objectSize)) {
+        return false;
+    }
+    if (objectSize == 0) {
+        return true;
+    }
+    for (const auto& object : objectVec) {
+        if (!object->Marshalling(parcel)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool UnmarshallingExtendObjectToDrawCmdList(Parcel& parcel, std::shared_ptr<Drawing::DrawCmdList>& val)
+{
+    uint32_t objectSize = parcel.ReadUint32();
+    if (objectSize == 0) {
+        return true;
+    }
+    std::vector<std::shared_ptr<Drawing::ExtendObject>> objectVec;
+    for (uint32_t i = 0; i < objectSize; i++) {
+        std::shared_ptr<RSPixelMapShader> object = std::make_shared<RSPixelMapShader>();
+        if (!object->Unmarshalling(parcel)) {
+            return false;
+        }
+        objectVec.emplace_back(object);
+    }
+    return val->SetupExtendObject(objectVec);
 }
 } // namespace
 
@@ -584,6 +615,32 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<EmitterU
     success = success && Unmarshalling(parcel, emitRate);
     if (success) {
         val = std::make_shared<EmitterUpdater>(emitterIndex, position, emitSize, emitRate);
+    }
+    return success;
+}
+
+// MotionBlurPara
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<MotionBlurParam>& val)
+{
+    bool success = Marshalling(parcel, val->radius);
+    success = success && Marshalling(parcel, val->scaleAnchor[0]);
+    success = success && Marshalling(parcel, val->scaleAnchor[1]);
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<MotionBlurParam>& val)
+{
+    float radius;
+    float anchorX = 0.f;
+    float anchorY = 0.f;
+
+    bool success = Unmarshalling(parcel, radius);
+    success = success && Unmarshalling(parcel, anchorX);
+    success = success && Unmarshalling(parcel, anchorY);
+    Vector2f anchor(anchorX, anchorY);
+
+    if (success) {
+        val = std::make_shared<MotionBlurParam>(radius, anchor);
     }
     return success;
 }
@@ -1215,6 +1272,12 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Draw
             }
         }
     }
+
+    ret &= MarshallingExtendObjectFromDrawCmdList(parcel, val);
+    if (!ret) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::DrawCmdList ExtendObject");
+        return ret;
+    }
 #ifdef ROSEN_OHOS
     std::vector<sptr<SurfaceBuffer>> surfaceBufferVec;
     uint32_t surfaceBufferSize = val->GetAllSurfaceBuffer(surfaceBufferVec);
@@ -1353,6 +1416,11 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<Drawing:
         val->SetupBaseObj(ObjectBaseVec);
     }
 
+    ret &= UnmarshallingExtendObjectToDrawCmdList(parcel, val);
+    if (!ret) {
+        ROSEN_LOGE("unirender: failed RSMarshallingHelper::Marshalling Drawing::DrawCmdList ExtendObject");
+        return ret;
+    }
 #ifdef ROSEN_OHOS
     uint32_t surfaceBufferSize = parcel.ReadUint32();
     if (surfaceBufferSize > 0) {
@@ -1635,6 +1703,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSPath>)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSShader>)                          \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSLinearGradientBlurPara>)          \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<MotionBlurParam>)                   \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<EmitterUpdater>)                    \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<ParticleRenderParams>>) \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleRenderParams>)              \

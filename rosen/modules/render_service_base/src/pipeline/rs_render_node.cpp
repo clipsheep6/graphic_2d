@@ -952,9 +952,9 @@ void RSRenderNode::UpdateDrawingCacheInfoBeforeChildren(bool isScreenRotation)
 
 void RSRenderNode::UpdateDrawingCacheInfoAfterChildren()
 {
-    if (hasChildrenOutOfRect_ && GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
+    if (HasChildrenOutOfRect() && GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
         RS_OPTIONAL_TRACE_NAME_FMT("DrawingCacheInfoAfter ChildrenOutOfRect id:%llu", GetId());
-        // [PLANNING] disable cache in this case: SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE)
+        SetDrawingCacheType(RSDrawingCacheType::DISABLED_CACHE);
     }
     stagingRenderParams_->SetDrawingCacheType(GetDrawingCacheType());
     if (GetDrawingCacheType() != RSDrawingCacheType::DISABLED_CACHE) {
@@ -1654,7 +1654,7 @@ void RSRenderNode::MarkFilterStatusChanged(bool isForeground, bool isFilterRegio
 
 std::shared_ptr<DrawableV2::RSFilterDrawable> RSRenderNode::GetFilterDrawable(bool isForeground) const
 {
-    auto slot = isForeground ? RSDrawableSlot::FOREGROUND_FILTER : RSDrawableSlot::BACKGROUND_FILTER;
+    auto slot = isForeground ? RSDrawableSlot::COMPOSITING_FILTER : RSDrawableSlot::BACKGROUND_FILTER;
     if (auto& drawable = drawableVec_[static_cast<uint32_t>(slot)]) {
         if (auto filterDrawable = std::static_pointer_cast<DrawableV2::RSFilterDrawable>(drawable)) {
             return filterDrawable;
@@ -1768,7 +1768,7 @@ void RSRenderNode::MarkFilterCacheFlagsAfterPrepare(
         filterDrawable->MarkFilterRegionIsLargeArea();
     }
     filterDrawable->CheckClearFilterCache();
-    auto slot = isForeground ? RSDrawableSlot::FOREGROUND_FILTER : RSDrawableSlot::BACKGROUND_FILTER;
+    auto slot = isForeground ? RSDrawableSlot::COMPOSITING_FILTER : RSDrawableSlot::BACKGROUND_FILTER;
     UpdateDirtySlotsAndPendingNodes(slot);
 }
 
@@ -1790,7 +1790,7 @@ void RSRenderNode::MarkForceClearFilterCacheWhenWithInvisible()
         }
         filterDrawable->MarkFilterForceClearCache();
         filterDrawable->CheckClearFilterCache();
-        UpdateDirtySlotsAndPendingNodes(RSDrawableSlot::FOREGROUND_FILTER);
+        UpdateDirtySlotsAndPendingNodes(RSDrawableSlot::COMPOSITING_FILTER);
     }
 }
 
@@ -2123,7 +2123,7 @@ void RSRenderNode::UpdateDisplayList()
     // Update index of SHADOW
     stagingDrawCmdIndex_.shadowIndex_ = AppendDrawFunc(RSDrawableSlot::SAVE_ALL, RSDrawableSlot::SHADOW);
 
-    AppendDrawFunc(RSDrawableSlot::OUTLINE, RSDrawableSlot::OUTLINE);
+    AppendDrawFunc(RSDrawableSlot::FOREGROUND_FILTER, RSDrawableSlot::OUTLINE);
     stagingDrawCmdIndex_.renderGroupBeginIndex_ = stagingDrawCmdList_.size();
 
     // Update index of BACKGROUND_COLOR

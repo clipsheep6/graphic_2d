@@ -69,6 +69,7 @@ add_library(entry SHARED
     dm/skbug_8955.cpp
     dm/conic_paths.cpp
     dm/bitmaprect.cpp
+    interface/text_blob_test.cpp
 )
 
 add_library(myxnode SHARED
@@ -131,6 +132,7 @@ add_library(myxnode SHARED
     dm/skbug_8955.cpp
     dm/conic_paths.cpp
     dm/bitmaprect.cpp
+    interface/text_blob_test.cpp
 )
 
 find_library(

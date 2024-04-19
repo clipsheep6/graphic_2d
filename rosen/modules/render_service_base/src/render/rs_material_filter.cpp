@@ -299,46 +299,35 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Negate()
 void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
     const Drawing::Rect& src, const Drawing::Rect& dst) const
 {
-    if (!image) {
-        return;
-    }
-
     auto brush = GetBrush();
     // if kawase blur failed, use gauss blur
-    auto visualEffectContainer = std::make_shared<Drawing::GEVisualEffectContainer>();
-    if (!visualEffectContainer) {
-        return;
-    }
+    std::shared_ptr<Drawing::Image> greyImage = image;
     if (greyCoef_.has_value()) {
+        // greyImage = RSPropertiesPainter::DrawGreyAdjustment(canvas, image, greyCoef_.value());
+        auto visualEffectContainer = std::make_shared<Drawing::GEVisualEffectContainer>();
+        if (!visualEffectContainer) {
+            return;
+        }
         auto greyFilter = std::make_shared<Drawing::GEVisualEffect>("GREY", Drawing::DrawingPaintType::BRUSH);
         greyFilter->SetParam("GREY_COEF_1", greyCoef_.value()[0]); // 模糊半径
         greyFilter->SetParam("GREY_COEF_2", greyCoef_.value()[1]); // 模糊半径
         visualEffectContainer->AddToChainedFilter(greyFilter);
+        auto geRender = std::make_shared<GraphicsEffectEngine::GERender>();
+        if (!geRender) {
+            return;
+        }
+        auto greyImage = geRender->ApplyImageEffect(canvas, *visualEffectContainer,
+            image, src, src, Drawing::SamplingOptions());
+    }
+    if (greyImage == nullptr) {
+        greyImage = image;
     }
     static bool DDGR_ENABLED = RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR;
-    auto geRender = std::make_shared<GraphicsEffectEngine::GERender>();
-    if (!geRender) {
+    KawaseParameter param = KawaseParameter(src, dst, radius_, colorFilter_, brush.GetColor().GetAlphaF());
+    if (!DDGR_ENABLED && KAWASE_BLUR_ENABLED &&
+        KawaseBlurFilter::GetKawaseBlurFilter()->ApplyKawaseBlur(canvas, greyImage, param)) {
         return;
     }
-    if (!DDGR_ENABLED && KAWASE_BLUR_ENABLED) {
-        auto kawaseFilter = std::make_shared<Drawing::GEVisualEffect>("KAWASE_BLUR", Drawing::DrawingPaintType::BRUSH);
-        kawaseFilter->SetParam("KAWASE_BLUR_RADIUS", (int)radius_); // 模糊半径
-        visualEffectContainer->AddToChainedFilter(kawaseFilter);
-
-        auto outImage = geRender->ApplyImageEffect(canvas, *visualEffectContainer,
-            image, src, src, Drawing::SamplingOptions());
-        Drawing::Brush brushKawas;
-        Drawing::Filter filter;
-        filter.SetColorFilter(colorFilter_);
-        brushKawas.SetAlphaF(brush.GetColor().GetAlphaF());
-        brushKawas.SetFilter(filter);
-        canvas.AttachBrush(brushKawas);
-        canvas.DrawImageRect(*outImage, src, dst, Drawing::SamplingOptions());
-        canvas.DetachBrush();
-        return;
-    }
-    auto greyImage = geRender->ApplyImageEffect(canvas, *visualEffectContainer,
-        image, src, src, Drawing::SamplingOptions());
     canvas.AttachBrush(brush);
     canvas.DrawImageRect(*greyImage, src, dst, Drawing::SamplingOptions());
     canvas.DetachBrush();

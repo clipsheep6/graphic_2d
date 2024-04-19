@@ -69,6 +69,8 @@ add_library(entry SHARED
     dm/skbug_8955.cpp
     dm/conic_paths.cpp
     dm/bitmaprect.cpp
+    dm/newsurface.cpp
+    dm/drawbitmaprect.cpp
     dm/anisotropic.cpp
     interface/text_blob_test.cpp
     interface/path_test.cpp
@@ -134,6 +136,8 @@ add_library(myxnode SHARED
     dm/skbug_8955.cpp
     dm/conic_paths.cpp
     dm/bitmaprect.cpp
+    dm/newsurface.cpp
+    dm/drawbitmaprect.cpp
     dm/anisotropic.cpp
     interface/text_blob_test.cpp
     interface/path_test.cpp

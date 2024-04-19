@@ -67,6 +67,8 @@
 #include "dm/points.h"
 #include "dm/skbug_8955.h"
 #include "dm/conic_paths.h"
+#include "dm/newsurface.h"
+#include "dm/drawbitmaprect.h"
 
 #include "interface/canvas_test.h"
 #include "dm/onebadarc.h"
@@ -194,6 +196,9 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // //有部分线条cpu出图部分缺失,gpu正常出图，颜色为黑色
         {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
         {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
+        {"surfacenew", []() -> std::shared_ptr<TestBase> { return std::make_shared<NewSurfaceGM>(); }},       //ok
+        {"bitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect2>(); }},     //OH_Drawing_CanvasDrawRect接口有问题内部逻辑并未用画笔而是用画刷
+
         {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},                                  // ok
         {"anisotropic_hq", []() -> std::shared_ptr<TestBase> { return std::make_shared<Anisotropic>(); }}, //该用例OH_Drawing_SamplingOptionsCreate接口mode对应内容未开放,无法实现
 };
@@ -281,7 +286,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
         {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
-
         {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"textblob_createbuilder", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobBuilderCreate>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"textblob_createfrom_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromText>(TestBase::DRAW_STYLE_COMPLEX); }},

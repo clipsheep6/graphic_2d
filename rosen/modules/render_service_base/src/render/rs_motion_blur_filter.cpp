@@ -29,6 +29,8 @@ std::shared_ptr<Drawing::RuntimeEffect> RSMotionBlurFilter::motionBlurShaderEffe
 RSMotionBlurFilter::RSMotionBlurFilter(const std::shared_ptr<MotionBlurParam>& para)
     : RSDrawingFilter(nullptr), motionBlurPara_(para)
 {
+    lastRect_ = Drawing::Rect(0.f, 0.f, 0.f, 0.f);
+    curRect_ = Drawing::Rect(0.f, 0.f, 0.f, 0.f);
     type_ = FilterType::MOTION_BLUR;
     hash_ = SkOpts::hash(&type_, sizeof(type_), 0);
     hash_ = SkOpts::hash(&motionBlurPara_, sizeof(motionBlurPara_), hash_);

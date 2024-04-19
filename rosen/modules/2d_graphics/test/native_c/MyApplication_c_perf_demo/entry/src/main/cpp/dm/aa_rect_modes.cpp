@@ -90,7 +90,7 @@ static float drawCell(OH_Drawing_Canvas* canvas, OH_Drawing_BlendMode mode, uint
     
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
-    OH_Drawing_CanvasAttachBrush(canvas, brush);
+//    OH_Drawing_CanvasAttachBrush(canvas, brush);
 
     OH_Drawing_Rect* r = OH_Drawing_RectCreate(W/10,H/10,W-W/10,H-H/10);
     
@@ -120,7 +120,7 @@ static float drawCell(OH_Drawing_Canvas* canvas, OH_Drawing_BlendMode mode, uint
 
 OH_Drawing_ShaderEffect *make_bg_shader()
 {
-    OH_Drawing_BitmapFormat format = {COLOR_FORMAT_ARGB_4444,ALPHA_FORMAT_PREMUL};
+    OH_Drawing_BitmapFormat format = {COLOR_FORMAT_RGBA_8888,ALPHA_FORMAT_OPAQUE};
     OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
     OH_Drawing_BitmapBuild(bitmap, 2, 2, &format);
     *DrawBitmapGetAddr32(bitmap, 0, 0) = 0xFFFFFFFF;
@@ -154,7 +154,7 @@ void AARectModes::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_Brush* bgBrush = OH_Drawing_BrushCreate();
     OH_Drawing_ShaderEffect *shaderEffect = make_bg_shader();
     OH_Drawing_BrushSetShaderEffect(bgBrush, shaderEffect);
-//    OH_Drawing_CanvasDrawBackground(canvas, brush);    
+//    OH_Drawing_CanvasDrawBackground(canvas, bgBrush);    
     if(false)
         test4(canvas);
     

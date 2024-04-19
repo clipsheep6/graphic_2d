@@ -71,6 +71,9 @@ add_library(entry SHARED
     dm/bitmaprect.cpp
     dm/newsurface.cpp
     dm/drawbitmaprect.cpp
+    dm/anisotropic.cpp
+    interface/text_blob_test.cpp
+    interface/path_test.cpp
 )
 
 add_library(myxnode SHARED
@@ -135,6 +138,9 @@ add_library(myxnode SHARED
     dm/bitmaprect.cpp
     dm/newsurface.cpp
     dm/drawbitmaprect.cpp
+    dm/anisotropic.cpp
+    interface/text_blob_test.cpp
+    interface/path_test.cpp
 )
 
 find_library(

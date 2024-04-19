@@ -72,6 +72,9 @@
 
 #include "interface/canvas_test.h"
 #include "dm/onebadarc.h"
+#include "dm/anisotropic.h"
+#include "interface/text_blob_test.h"
+#include "interface/path_test.h"
 
 namespace {
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> FunctionalCpuMap =
@@ -157,7 +160,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
 
         // DM
-        {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // 缺少背景格子的渲染
+        {"aarectmodes", []() -> std::shared_ptr<TestBase> { return std::make_shared<AARectModes>(); }},                                             // ok
         {"blurcircles", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurCirclesGM>(); }},                                           // ok
         {"blur_large_rrects", []() -> std::shared_ptr<TestBase> { return std::make_shared<BlurLargeRrects>(); }},                                   // ok
         {"addarc_meas", []() -> std::shared_ptr<TestBase> { return std::make_shared<AddArcMeas>(); }},                                              // ok
@@ -190,13 +193,15 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
 
         {"points", []() -> std::shared_ptr<TestBase> { return std::make_shared<Points>(); }},          // ok
         {"alpha_image", []() -> std::shared_ptr<TestBase> { return std::make_shared<AlphaImage>(); }}, // 第二个三角形虚化不对，
-        {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // 有部分线条多余画出
+        {"conicpaths", []() -> std::shared_ptr<TestBase> { return std::make_shared<ConicPaths>(); }},  // //有部分线条cpu出图部分缺失,gpu正常出图，颜色为黑色
         {"onebadarc", []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); }},  // 完全按照skia的逻辑所画出的图形和skia不一致
         {"skbug_8955", []() -> std::shared_ptr<TestBase> { return std::make_shared<SkBug_8955>(); }},   //  font.textToGlyphs、font.getPos接口缺失
         {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},   //代码完成，有crash，rect roundout 接口缺失
         {"surfacenew", []() -> std::shared_ptr<TestBase> { return std::make_shared<NewSurfaceGM>(); }},       //ok
         {"bitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect2>(); }},     //OH_Drawing_CanvasDrawRect接口有问题内部逻辑并未用画笔而是用画刷
 
+        {"bigbitmaprect", []() -> std::shared_ptr<TestBase> { return std::make_shared<DrawBitmapRect4>(false); }},                                  // ok
+        {"anisotropic_hq", []() -> std::shared_ptr<TestBase> { return std::make_shared<Anisotropic>(); }}, //该用例OH_Drawing_SamplingOptionsCreate接口mode对应内容未开放,无法实现
 };
 
 std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
@@ -283,7 +288,16 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
         {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-
+        {"textblob_createbuilder", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobBuilderCreate>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_createfrom_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromText>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_createfrom_postext", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromPosText>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_createfrom_string", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromString>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"textblob_getbounds", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobGetBounds>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"path_setfilltype", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathSetFillType>(TestBase::DRAW_STYLE_COMPLEX,OH_Drawing_PathFillType::PATH_FILL_TYPE_WINDING); }},
+        {"path_getlength", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathGetLength>(TestBase::DRAW_STYLE_COMPLEX,true); }},
+        {"path_close", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathClose>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"path_offset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathOffset>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"path_reset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathReset>(TestBase::DRAW_STYLE_COMPLEX); }},
 };
 } // namespace
 

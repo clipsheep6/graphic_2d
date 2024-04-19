@@ -18,6 +18,7 @@
 #include "rs_trace.h"
 
 #include "pipeline/rs_main_thread.h"
+#include "pipeline/rs_render_node_gc.h"
 #include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/rs_uni_render_thread.h"
 #include "property/rs_filter_cache_manager.h"
@@ -49,6 +50,7 @@ void RSDrawFrame::RenderFrame()
     ReleaseSelfDrawingNodeBuffer();
     NotifyClearGpuCache();
     JankStatsRenderFrameEnd(doJankStats);
+    RSRenderNodeGc::Instance().ReleaseDrawableMemory();
 }
 
 void RSDrawFrame::NotifyClearGpuCache()

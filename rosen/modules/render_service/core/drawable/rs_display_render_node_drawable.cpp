@@ -341,12 +341,13 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     // canvas will generate in every request frame
     (void)canvas;
 
-    if (!renderNode_) {
+    auto renderNode = renderNode_.lock();
+    if (renderNode == nullptr) {
         RS_LOGE("RSDisplayRenderNodeDrawable::OnDraw render node is null!");
         return;
     }
 
-    auto params = static_cast<RSDisplayRenderParams*>(renderNode_->GetRenderParams().get());
+    auto params = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
     if (!params) {
         RS_LOGE("RSDisplayRenderNodeDrawable::OnDraw params is null!");
         return;
@@ -365,7 +366,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     RSPointLightManager::Instance()->SetScreenRotation(screenRotation);
 
-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
+    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
     auto displayNodeSp = std::static_pointer_cast<RSDisplayRenderNode>(nodeSp);
     RS_TRACE_NAME("RSDisplayRenderNodeDrawable[" + std::to_string(params->GetScreenId()) + "]" +
                   displayNodeSp->GetSyncDirtyManager()->GetCurrentFrameDirtyRegion().ToString().c_str());
@@ -637,18 +638,19 @@ void RSDisplayRenderNodeDrawable::RotateMirrorCanvasIfNeed(RSDisplayRenderNode& 
 
 void RSDisplayRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 {
-    if (!renderNode_) {
+    auto renderNode = renderNode_.lock();
+    if (renderNode == nullptr) {
         RS_LOGE("RSDisplayRenderNodeDrawable::OnCapture render node is null!");
         return;
     }
 
-    auto params = static_cast<RSDisplayRenderParams*>(renderNode_->GetRenderParams().get());
+    auto params = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
     if (!params) {
         RS_LOGE("RSDisplayRenderNodeDrawable::OnCapture params is null!");
         return;
     }
 
-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
+    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
     auto displayNodeSp = std::static_pointer_cast<RSDisplayRenderNode>(nodeSp);
 
     auto rscanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
@@ -757,7 +759,7 @@ void RSDisplayRenderNodeDrawable::SetHighContrastIfEnabled(RSPaintFilterCanvas& 
 
 void RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes()
 {
-    auto displayParams = static_cast<RSDisplayRenderParams*>(renderNode_->GetRenderParams().get());
+    auto displayParams = static_cast<RSDisplayRenderParams*>(GetRenderParams().get());
     if (!displayParams) {
         RS_LOGE("RSDisplayRenderNodeDrawable::FindHardwareEnabledNodes displayParams is null!");
         return;

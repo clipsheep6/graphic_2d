@@ -45,6 +45,7 @@
 #include "pipeline/rs_render_display_sync.h"
 #include "pipeline/rs_single_frame_composer.h"
 #include "property/rs_properties.h"
+#include "drawable/rs_render_node_drawable_adapter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -582,7 +583,6 @@ public:
 
     std::unique_ptr<RSRenderParams>& GetStagingRenderParams();
     const std::unique_ptr<RSRenderParams>& GetRenderParams() const;
-    const std::unique_ptr<RSRenderParams>& GetUifirstRenderParams() const;
 
     void UpdatePointLightDirtySlot();
     void SetUifirstSyncFlag(bool needSync);
@@ -623,7 +623,7 @@ protected:
         dirtyStatus_ = NodeDirty::CLEAN;
     }
 
-    void DumpNodeType(std::string& out) const;
+    static void DumpNodeType(RSRenderNodeType nodeType, std::string& out);
 
     void DumpSubClassNode(std::string& out) const;
     void DumpDrawCmdModifiers(std::string& out) const;
@@ -641,9 +641,8 @@ protected:
     virtual void OnSync();
     virtual void ClearResource() {};
 
-    std::unique_ptr<RSRenderParams> renderParams_;
     std::unique_ptr<RSRenderParams> stagingRenderParams_;
-    std::unique_ptr<RSRenderParams> uifirstRenderParams_;
+    mutable std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> renderDrawable_;
 
     RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
     std::shared_ptr<RSSingleFrameComposer> singleFrameComposer_ = nullptr;
@@ -854,27 +853,10 @@ private:
     void OnRegister(const std::weak_ptr<RSContext>& context);
 
     // Test pipeline
-    struct DrawCmdIndex {
-        int8_t shadowIndex_           = -1;
-        int8_t renderGroupBeginIndex_ = -1;
-        int8_t backgroundFilterIndex_ = -1;
-        int8_t backgroundColorIndex_  = -1;
-        int8_t useEffectIndex_        = -1;
-        int8_t backgroundEndIndex_    = -1;
-        int8_t childrenIndex_         = -1;
-        int8_t contentIndex_          = -1;
-        int8_t foregroundBeginIndex_  = -1;
-        int8_t renderGroupEndIndex_   = -1;
-        int8_t endIndex_              = -1;
-    };
     bool addedToPendingSyncList_ = false;
     bool drawCmdListNeedSync_ = false;
     bool uifirstNeedSync_ = false; // both cmdlist&param
     bool uifirstSkipPartialSync_ = false;
-    DrawCmdIndex uifirstDrawCmdIndex_;
-    std::vector<Drawing::RecordingCanvas::DrawFunc> uifirstDrawCmdList_;
-    DrawCmdIndex drawCmdIndex_;
-    std::vector<Drawing::RecordingCanvas::DrawFunc> drawCmdList_;
     DrawCmdIndex stagingDrawCmdIndex_;
     std::vector<Drawing::RecordingCanvas::DrawFunc> stagingDrawCmdList_;
 

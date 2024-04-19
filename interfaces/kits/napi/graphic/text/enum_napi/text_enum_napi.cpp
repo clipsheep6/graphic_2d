@@ -81,7 +81,7 @@ static const std::vector<struct JsEnumInt> g_breakStrategy = {
     { "BALANCED", static_cast<size_t>(BreakStrategy::BALANCED) },
 };
 
-static const std::vector<struct JsEnumInt> g_ellipsisModal = {
+static const std::vector<struct JsEnumInt> ELLIPSIS_MODAL = {
     { "START", static_cast<size_t>(EllipsisModal::HEAD) },
     { "MIDDLE", static_cast<size_t>(EllipsisModal::MIDDLE) },
     { "END", static_cast<size_t>(EllipsisModal::TAIL) },

@@ -17,7 +17,10 @@ import(
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/config.gni")
 
 config("export_config") {
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "$rosen_root/modules/graphics_effect/include",
+  ]
   cflags_cc = [ "-std=c++17" ]
 
   defines = rs_common_define
@@ -410,6 +413,7 @@ ohos_source_set("render_service_base_src") {
 
   deps = [
     "$graphic_2d_root/utils/sandbox:sandbox_utils",
+    "$rosen_root/modules/graphics_effect:libgraphics_effect",
     "$rosen_root/modules/platform:hilog",
     "$rosen_root/modules/platform:ipc_core",
   ]

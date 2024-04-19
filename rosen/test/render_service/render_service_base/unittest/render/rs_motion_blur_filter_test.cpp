@@ -84,39 +84,5 @@ HWTEST_F(MotionBlurFilterTest, SetGeometryTest, TestSize.Level1)
     Drawing::Canvas canvas;
     filter->SetGeometry(canvas, 0.f, 0.f);
 }
-
-/**
- * @tc.name: RectValidTest
- * @tc.desc:
- * @tc.type:FUNC
- */
-HWTEST_F(MotionBlurFilterTest, RectValidTest, TestSize.Level1)
-{
-    Vector2f anchor = {0.f, 0.f};
-    std::shared_ptr<MotionBlurParam> para = std::make_shared<MotionBlurParam>(10.f, anchor);
-    auto filter = std::make_shared<RSMotionBlurFilter>(para);
-
-    Drawing::Rect rect1;
-    Drawing::Rect rect2;
-    filter->RectValid(rect1, rect2);
-}
-
-/**
- * @tc.name: OutputOriginalImageTest
- * @tc.desc:
- * @tc.type:FUNC
- */
-HWTEST_F(MotionBlurFilterTest, OutputOriginalImageTest, TestSize.Level1)
-{
-    Vector2f anchor = {0.f, 0.f};
-    std::shared_ptr<MotionBlurParam> para = std::make_shared<MotionBlurParam>(10.f, anchor);
-    auto filter = std::make_shared<RSMotionBlurFilter>(para);
-
-    Drawing::Canvas canvas;
-    Drawing::Rect src;
-    Drawing::Rect dst;
-    std::shared_ptr<Drawing::Image> image;
-    filter->OutputOriginalImage(canvas, image, src, dst);
-}
 } // namespace Rosen
 } // namespace OHOS

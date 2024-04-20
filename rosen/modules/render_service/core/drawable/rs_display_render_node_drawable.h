@@ -50,9 +50,12 @@ private:
         std::vector<std::shared_ptr<RSSurfaceRenderNode>>& nodes,
         Drawing::Canvas& canvas, RSDisplayRenderParams& params) const;
     void DrawWatermarkIfNeed(RSDisplayRenderNode& node, RSPaintFilterCanvas& canvas) const;
-    void ProcessVirtualScreen(RSDisplayRenderNode& displayNodeSp, RSDisplayRenderParams& params,
+    void DrawVirtualScreen(RSDisplayRenderParams& params, RSDisplayRenderNode& displayNodeSp,
         std::shared_ptr<RSProcessor> processor);
-    void ScaleMirrorIfNeed(RSDisplayRenderNode& node, std::shared_ptr<RSProcessor> processor);
+    void DrawMirrorScreen(RSDisplayRenderNode& displayNodeSp, RSDisplayRenderParams& params,
+        RSUniRenderVirtualProcessor& processor);
+    void DrawExpandScreen(RSUniRenderVirtualProcessor& processor);
+    void ScaleMirrorIfNeed(RSDisplayRenderNode& node, RSUniRenderVirtualProcessor& processor);
     void RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node);
     void DrawCurtainScreen(RSDisplayRenderNode& node, RSPaintFilterCanvas& canvas) const;
     void RemoveClearMemoryTask() const;
@@ -61,7 +64,8 @@ private:
         std::shared_ptr<RSDisplayRenderNode> mirrorNode);
     void processCacheImage(Drawing::Image& cacheImageProcessed,
         RSDisplayRenderNode& mirroredNode, RSUniRenderVirtualProcessor& mirroredProcessor);
-    void SetCanvasBlack(RSProcessor& processor);
+    void SetCanvasBlack(RSUniRenderVirtualProcessor& processor);
+    void SetVirtualScreenType(RSDisplayRenderNode& node, const ScreenInfo& screenInfo);
 
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::DISPLAY_NODE, OnGenerate>;
     static Registrar instance_;

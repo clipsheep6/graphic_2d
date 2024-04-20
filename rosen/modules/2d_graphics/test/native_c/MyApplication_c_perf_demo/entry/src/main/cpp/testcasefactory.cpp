@@ -308,7 +308,9 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         {"path_addrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRect>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"path_addrect_withcorner", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRectWithInitialCorner>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"path_addroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRoundRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-
+        {"path_addpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPath>(TestBase::DRAW_STYLE_COMPLEX); }},
+        {"path_addpathwithmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPathWithMode>(TestBase::DRAW_STYLE_COMPLEX,OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND); }},
+        {"path_addpathwithoffsetmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPathWithOffsetAndMode>(TestBase::DRAW_STYLE_COMPLEX,OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND); }},
 
 };
 } // namespace

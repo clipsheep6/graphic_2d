@@ -200,14 +200,15 @@ void PathAddRectWithInitialCorner::OnTestPerformance(OH_Drawing_Canvas *canvas) 
     float l,t,r,b;
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
     for (int i = 0; i < testCount_; i++) {
-        float l = rand.nextULessThan(bitmapWidth_);
-        float t = rand.nextULessThan( bitmapHeight_);
-        float r = l + rand.nextULessThan(bitmapWidth_);
-        float b = t + rand.nextULessThan(bitmapHeight_);
+        l = rand.nextULessThan(bitmapWidth_);
+        t = rand.nextULessThan( bitmapHeight_);
+        r = l + rand.nextULessThan(bitmapWidth_);
+        b = t + rand.nextULessThan(bitmapHeight_);
         OH_Drawing_Rect* rc= OH_Drawing_RectCreate(l, t, r, b);
         OH_Drawing_PathAddRectWithInitialCorner(path, rc, OH_Drawing_PathDirection::PATH_DIRECTION_CCW, 0);
         OH_Drawing_CanvasDrawPath(canvas, path);
         OH_Drawing_PathReset(path);
+        OH_Drawing_RectDestroy(rc);
     }
     OH_Drawing_PathDestroy(path);
 }
@@ -226,6 +227,66 @@ void PathAddRoundRect::OnTestPerformance(OH_Drawing_Canvas *canvas) {
         OH_Drawing_PathAddRoundRect(path, rrc, PATH_DIRECTION_CCW);
         OH_Drawing_CanvasDrawPath(canvas, path);
         OH_Drawing_PathReset(path);
+        OH_Drawing_RectDestroy(rc);
+        OH_Drawing_RoundRectDestroy(rrc);
     }
     OH_Drawing_PathDestroy(path);
+}
+
+void PathAddPath::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+    TestRend rand;
+    OH_Drawing_Path* path = OH_Drawing_PathCreate();
+    OH_Drawing_Path* srcPath = OH_Drawing_PathCreate();
+    
+    for (int i = 0; i < testCount_; i++) {
+        OH_Drawing_PathMoveTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathLineTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathMoveTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathLineTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));    
+        OH_Drawing_Matrix* metrix = OH_Drawing_MatrixCreateRotation(rand.nextULessThan(360),rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathAddPath(path, srcPath,metrix);
+        OH_Drawing_CanvasDrawPath(canvas, path);
+        OH_Drawing_PathReset(path);
+        OH_Drawing_PathReset(srcPath);
+        OH_Drawing_MatrixDestroy(metrix);
+    }
+    OH_Drawing_PathDestroy(path);
+    OH_Drawing_PathDestroy(srcPath);
+}
+
+void PathAddPathWithMode::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+    TestRend rand;
+    OH_Drawing_Path* path = OH_Drawing_PathCreate();
+    OH_Drawing_Path* srcPath = OH_Drawing_PathCreate();
+    for (int i = 0; i < testCount_; i++) {
+        OH_Drawing_PathMoveTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathLineTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathMoveTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathLineTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));        
+        OH_Drawing_PathAddPathWithMode(path, srcPath, addMode);
+        OH_Drawing_CanvasDrawPath(canvas, path);
+        OH_Drawing_PathReset(path);
+        OH_Drawing_PathReset(srcPath);
+    }
+    OH_Drawing_PathDestroy(path);
+    OH_Drawing_PathDestroy(srcPath);
+}
+
+void PathAddPathWithOffsetAndMode::OnTestPerformance(OH_Drawing_Canvas *canvas) {
+    TestRend rand;
+    float l,t,r,b;
+    OH_Drawing_Path* path = OH_Drawing_PathCreate();
+    OH_Drawing_Path* srcPath = OH_Drawing_PathCreate();
+    for (int i = 0; i < testCount_; i++) {
+        OH_Drawing_PathMoveTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathLineTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathMoveTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathLineTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));  
+        
+        OH_Drawing_PathAddPathWithOffsetAndMode(path, srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_), addMode);
+        OH_Drawing_CanvasDrawPath(canvas, path);
+        OH_Drawing_PathReset(path);
+    }
+    OH_Drawing_PathDestroy(path);
+    OH_Drawing_PathDestroy(srcPath);
 }

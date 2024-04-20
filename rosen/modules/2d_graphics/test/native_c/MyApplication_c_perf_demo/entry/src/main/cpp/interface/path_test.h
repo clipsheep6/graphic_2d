@@ -161,4 +161,38 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//783 ms 100次
 };
 
+class PathAddPath : public TestBase {
+public:
+    PathAddPath(int type):TestBase(type){
+        fileName_ = "PathAddPath";
+    }
+    ~PathAddPath() = default;
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//2348 ms 100次
+};
+
+class PathAddPathWithMode : public TestBase {
+public:
+    PathAddPathWithMode(int type,OH_Drawing_PathAddMode mode):TestBase(type),addMode(mode){
+        fileName_ = "PathAddPathWithMode";
+    }
+    ~PathAddPathWithMode() = default;
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//2133 ms 100次
+    OH_Drawing_PathAddMode addMode;
+};
+
+class PathAddPathWithOffsetAndMode : public TestBase {
+public:
+    PathAddPathWithOffsetAndMode(int type,OH_Drawing_PathAddMode mode):TestBase(type),addMode(mode){
+        fileName_ = "PathAddPathWithOffsetAndMode";
+    }
+    ~PathAddPathWithOffsetAndMode() = default;
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//3547 ms 100次
+    OH_Drawing_PathAddMode addMode;
+};
 #endif // CANVAS_TEST_H

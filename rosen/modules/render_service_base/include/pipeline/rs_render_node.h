@@ -738,7 +738,7 @@ private:
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
-    void UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion);
+    bool UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion);
     void CollectAndUpdateLocalShadowRect();
     void CollectAndUpdateLocalOutlineRect();
     void CollectAndUpdateLocalPixelStretchRect();
@@ -834,6 +834,12 @@ private:
     float boundsHeight_ = 0.0f;
     bool hasCacheableAnim_ = false;
     bool geometryChangeNotPerceived_ = false;
+    // node region
+    bool isSelfDrawingNode_ = false;
+    RectF selfDrawingNodeRect_;
+    RectI selfDrawingNodeAbsRect_;
+    RectI oldSelfDrawingNodeAbsRect_;
+    RectI oldRectFromRenderProperties_;
     // including enlarged draw region
     RectF selfDrawRect_;
     RectI localShadowRect_;

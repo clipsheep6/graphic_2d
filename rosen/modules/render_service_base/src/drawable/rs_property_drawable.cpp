@@ -261,8 +261,9 @@ void RSFilterDrawable::CheckClearFilterCache()
     stagingClearFilteredCacheAfterDrawing_ =
         filterType_ != RSFilter::AIBAR ? (filterHashChanged_ && !filterRegionChanged_) : false;
     RS_OPTIONAL_TRACE_NAME_FMT("RSFilterDrawable::MarkNeedClearFilterCache nodeId[%llu], forceUseCache_:%d, "
+        "forceClearCache_:%d, hashChanged:%d, regionChanged_:%d, belowDirty_:%d,  currentClearAfterDrawing:%d, "
         "lastCacheType:%d, cacheUpdateInterval_:%d, canSkip:%d, isLargeArea:%d, hasEffectChildren_:%d,"
-        "filterType_:%d, lastOccluded_:%d", nodeId_, stagingForceUseCache_, forceClearCache_, filterHashChanged_,
+        "filterType_:%d", nodeId_, stagingForceUseCache_, forceClearCache_, filterHashChanged_,
         filterRegionChanged_, filterInteractWithDirty_, stagingClearFilteredCacheAfterDrawing_, lastCacheType_,
         cacheUpdateInterval_, canSkipFrame_, isLargeArea_, stagingHasEffectChildren_, filterType_);
 

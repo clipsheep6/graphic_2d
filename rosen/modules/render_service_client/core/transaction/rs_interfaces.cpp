@@ -59,6 +59,7 @@ ScreenId RSInterfaces::GetDefaultScreenId()
 
 ScreenId RSInterfaces::GetActiveScreenId()
 {
+    RS_LOGI("RSInterfaces::GetActiveScreenId");
     return renderServiceClient_->GetActiveScreenId();
 }
 
@@ -93,6 +94,7 @@ void RSInterfaces::RemoveVirtualScreen(ScreenId id)
 
 int32_t RSInterfaces::SetScreenChangeCallback(const ScreenChangeCallback &callback)
 {
+    RS_LOGI("RSInterfaces::SetScreenChangeCallback");
     return renderServiceClient_->SetScreenChangeCallback(callback);
 }
 
@@ -260,6 +262,7 @@ bool RSInterfaces::TakeSurfaceCaptureForUIWithoutUni(NodeId id,
 #ifndef ROSEN_ARKUI_X
 RSScreenModeInfo RSInterfaces::GetScreenActiveMode(ScreenId id)
 {
+    RS_LOGI("RSInterfaces::GetScreenActiveMode %{public}" PRIu64 "",id);
     return renderServiceClient_->GetScreenActiveMode(id);
 }
 
@@ -428,11 +431,13 @@ int32_t RSInterfaces::UnRegisterSurfaceOcclusionChangeCallback(NodeId id)
 
 int32_t RSInterfaces::RegisterHgmConfigChangeCallback(const HgmConfigChangeCallback& callback)
 {
+    RS_LOGI("RSInterfaces::RegisterHgmConfigChangeCallback");
     return renderServiceClient_->RegisterHgmConfigChangeCallback(callback);
 }
 
 int32_t RSInterfaces::RegisterHgmRefreshRateModeChangeCallback(const HgmRefreshRateModeChangeCallback& callback)
 {
+    RS_LOGI("RSInterfaces::RegisterHgmRefreshRateModeChangeCallback");
     return renderServiceClient_->RegisterHgmRefreshRateModeChangeCallback(callback);
 }
 

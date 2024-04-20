@@ -985,9 +985,9 @@ HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval003, Function | SmallTest |
 {
     ScreenId screenId = rsInterfaces->GetDefaultScreenId();
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
-    uint32_t skipFrameInterval = 100;  // for test
+    uint32_t skipFrameInterval = 121;  // 121 skipFrameInterval for test
     int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
-    EXPECT_EQ(ret, StatusCode::SUCCESS);
+    EXPECT_EQ(ret, StatusCode::INVALID_ARGUMENTS);
 }
 
 /*
@@ -1020,6 +1020,84 @@ HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval005, Function | SmallTest |
     uint32_t skipFrameInterval = 1;
     int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
     ASSERT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+* Function: SetScreenSkipFrameInterval
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenSkipFrameInterval with invalid parameters and check ret
+*/
+HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval006, Function | SmallTest | Level2)
+{
+    ScreenId screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t skipFrameInterval = 99999;  // 99999 skipFrameInterval for test
+    int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
+    EXPECT_EQ(ret, StatusCode::INVALID_ARGUMENTS);
+}
+
+/*
+* Function: SetScreenSkipFrameInterval
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenSkipFrameInterval with invalid parameters and check ret
+*/
+HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval007, Function | SmallTest | Level2)
+{
+    ScreenId screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t skipFrameInterval = 1;
+    int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(0, skipFrameInterval);
+    if (screenId == 0) {
+        EXPECT_EQ(ret, StatusCode::SUCCESS);
+    } else {
+        EXPECT_EQ(ret, StatusCode::SCREEN_NOT_FOUND);
+    }
+}
+
+/*
+* Function: SetScreenSkipFrameInterval
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenSkipFrameInterval with invalid parameters and check ret
+*/
+HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval008, Function | SmallTest | Level2)
+{
+    ScreenId screenId = rsInterfaces->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t skipFrameInterval = 120;  // 120 skipFrameInterval for test
+    int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+* Function: SetScreenSkipFrameInterval
+* Type: Function
+* Rank: Important(2)
+* EnvConditions: N/A
+* CaseDescription: 1. call SetScreenSkipFrameInterval with invalid parameters and check ret
+*/
+HWTEST_F(RSInterfacesTest, SetScreenSkipFrameInterval009, Function | SmallTest | Level2)
+{
+    auto csurface = IConsumerSurface::Create();
+    EXPECT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    uint32_t defaultWidth = 720;
+    uint32_t defaultHeight = 1280;
+    EXPECT_NE(psurface, nullptr);
+ 
+    ScreenId virtualScreenId = rsInterfaces->CreateVirtualScreen(
+        "virtualScreen", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+    EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
+ 
+    uint32_t skipFrameInterval = 1;
+    int32_t ret = rsInterfaces->SetScreenSkipFrameInterval(virtualScreenId, skipFrameInterval);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
 }
 
 /*

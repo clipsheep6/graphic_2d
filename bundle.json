@@ -414,6 +414,15 @@
               ],
               "header_base": "//foundation/graphic/graphic_2d/utils/buffer_handle/export"
             }
+          },
+		  {
+            "name": "//foundation/graphic/graphic_2d/rosen/modules/platform:image_native",
+            "header": {
+              "header_files": [
+			      "pixel_map.h"
+              ],
+              "header_base": "//foundation/graphic/graphic_2d/rosen/modules/platform/image_native"
+            }
           }
         ],
         "test": [

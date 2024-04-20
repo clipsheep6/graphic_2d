@@ -136,7 +136,7 @@ private:
     void EnableVSync();
     void DisableVSync();
     void OnVSyncEvent(int64_t now, int64_t period, uint32_t refreshRate, VSyncMode vsyncMode);
-    void CollectConnections(bool &waitForVSync, int64_t timestamp,
+    void CollectConnectionsLTPS(bool &waitForVSync, int64_t timestamp,
                             std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount);
     VsyncError QosGetPidByName(const std::string& name, uint32_t& pid);
     constexpr pid_t ExtractPid(uint64_t id);
@@ -144,6 +144,8 @@ private:
     void ChangeConnsRateLocked();
     void CollectConnectionsLTPO(bool &waitForVSync, int64_t timestamp,
                                 std::vector<sptr<VSyncConnection>> &conns, int64_t vsyncCount);
+    void CollectConnections(bool &waitForVSync, int64_t &timestamp,
+        std::vector<sptr<VSyncConnection>> &conns);
     /* std::pair<id, refresh rate> */
     void OnConnsRefreshRateChanged(const std::vector<std::pair<uint64_t, uint32_t>> &refreshRates);
     void WaitForVsyncOrRequest(std::unique_lock<std::mutex> &locker);
@@ -152,6 +154,8 @@ private:
 #ifdef COMPOSER_SCHED_ENABLE
     void SubScribeSystemAbility(const std::string& threadName);
 #endif
+    bool PostVSyncEventPreProcess(int64_t &timestamp, std::vector<sptr<VSyncConnection>> &conns);
+    void CheckNeedDisableDvsync(int64_t now, int64_t period);
     void NotifyMainThread();
 
     sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;

@@ -35,6 +35,10 @@ public:
     void PrepareLight();
     Vector4f CalculateLightPosForIlluminated(const RSLightSource& lightSource,
         const RectI& illuminatedAbsRect);
+    /*-------------for ng files BEGIN ------------------*/
+    Vector4f CalculateLightPosForIlluminated(const std::shared_ptr<RSLightSource>& lightSourcePtr,
+        const std::shared_ptr<RSObjAbsGeometry>& illuminatedGeoPtr);
+    /*-------------for ng files END ------------------*/
     void SetScreenRotation(ScreenRotation screenRotation)
     {
         screenRotation_ = screenRotation;

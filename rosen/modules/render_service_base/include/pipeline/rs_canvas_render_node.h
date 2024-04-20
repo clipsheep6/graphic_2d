@@ -56,6 +56,15 @@ public:
     void Prepare(const std::shared_ptr<RSNodeVisitor>& visitor) override;
     void Process(const std::shared_ptr<RSNodeVisitor>& visitor) override;
 
+/*-------------for ng files BEGIN ------------------*/
+    // functions that are dedicated to driven render [start]
+    RSB_EXPORT void ProcessDrivenBackgroundRender(RSPaintFilterCanvas& canvas);
+    RSB_EXPORT void ProcessDrivenContentRender(RSPaintFilterCanvas& canvas);
+    RSB_EXPORT void ProcessDrivenContentRenderAfterChildren(RSPaintFilterCanvas& canvas);
+    RSB_EXPORT RectF GetDrivenContentClipFrameRect() const;
+    // functions that are dedicated to driven render [end]
+/*-------------for ng files END ------------------*/
+
     RSB_EXPORT void ProcessShadowBatching(RSPaintFilterCanvas& canvas);
 
     RSRenderNodeType GetType() const override
@@ -67,11 +76,19 @@ public:
 private:
     void ApplyDrawCmdModifier(RSModifierContext& context, RSModifierType type);
     void InternalDrawContent(RSPaintFilterCanvas& canvas);
+/*-------------for ng files BEGIN ------------------*/
+    // functions that are dedicated to driven render [start]
+    void DrawDrivenContent(RSPaintFilterCanvas& canvas);
+    // functions that are dedicated to driven render [end]
+/*-------------for ng files END ------------------*/
 
     void PropertyDrawableRender(RSPaintFilterCanvas& canvas, bool includeProperty);
     void DrawShadow(RSModifierContext& context, RSPaintFilterCanvas& canvas);
 
     RSPaintFilterCanvas::SaveStatus canvasNodeSaveCount_;
+/*-------------for ng files BEGIN ------------------*/
+    mutable std::mutex canvasNodeProcessMutex_;
+/*-------------for ng files END ------------------*/
 
     friend class RSColorfulShadowDrawable;
     friend class RSRenderTransition;

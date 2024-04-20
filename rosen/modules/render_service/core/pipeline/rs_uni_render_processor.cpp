@@ -50,8 +50,10 @@ bool RSUniRenderProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, int3
     isPhone_ = RSMainThread::Instance()->GetDeviceType() == DeviceType::PHONE;
     return uniComposerAdapter_->Init(screenInfo_, offsetX_, offsetY_, mirrorAdaptiveCoefficient_);
 }
-
-void RSUniRenderProcessor::PostProcess()
+/*-------------for ng files BEGIN ------------------*/
+// add arg
+void RSUniRenderProcessor::PostProcess(RSDisplayRenderNode* node)
+/*-------------for ng files END ------------------*/
 {
     uniComposerAdapter_->CommitLayers(layers_);
     if (!isPhone_) {
@@ -148,6 +150,10 @@ void RSUniRenderProcessor::ProcessRcdSurface(RSRcdSurfaceRenderNode& node)
     }
     layers_.emplace_back(layer);
 }
-
+/*-------------for ng files BEGIN ------------------*/
+void RSUniRenderProcessor::ProcessDrivenSurface(RSDrivenSurfaceRenderNode&)
+{
+}
+/*-------------for ng files END ------------------*/
 } // namespace Rosen
 } // namespace OHOS

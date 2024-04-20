@@ -136,9 +136,13 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
     DrawCachedFilteredSnapshot(canvas, dst);
 }
 
+/*-------------for ng files BEGIN ------------------*/
+// add last arg
 const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> RSFilterCacheManager::GeneratedCachedEffectData(
     RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
-    const std::optional<Drawing::RectI>& srcRect, const std::optional<Drawing::RectI>& dstRect)
+    const std::optional<Drawing::RectI>& srcRect, const std::optional<Drawing::RectI>& dstRect,
+    const std::tuple<bool, bool>& forceCacheFlags)
+/*-------------for ng files END ------------------*/
 {
     RS_OPTIONAL_TRACE_FUNC();
     if (canvas.GetDeviceClipBounds().IsEmpty()) {
@@ -353,8 +357,12 @@ void RSFilterCacheManager::CheckCachedImages(RSPaintFilterCanvas& canvas)
     }
 }
 
-std::tuple<Drawing::RectI, Drawing::RectI> RSFilterCacheManager::ValidateParams(RSPaintFilterCanvas& canvas,
-    const std::optional<Drawing::RectI>& srcRect, const std::optional<Drawing::RectI>& dstRect)
+/*-------------for ng files BEGIN ------------------*/
+// add last arg
+std::tuple<Drawing::RectI, Drawing::RectI> RSFilterCacheManager::ValidateParams(
+    RSPaintFilterCanvas& canvas, const std::optional<Drawing::RectI>& srcRect,
+    const std::optional<Drawing::RectI>& dstRect, const std::tuple<bool, bool>& forceCacheFlags)
+/*-------------for ng files END ------------------*/
 {
     Drawing::RectI src;
     Drawing::RectI dst;
@@ -381,6 +389,33 @@ void RSFilterCacheManager::CompactFilterCache(bool shouldClearFilteredCache)
     InvalidateFilterCache(shouldClearFilteredCache ?
         FilterCacheType::FILTERED_SNAPSHOT : FilterCacheType::SNAPSHOT);
 }
+
+/*-------------for ng files BEGIN ------------------*/
+bool RSFilterCacheManager::RSFilterCacheTask::InitSurface(Drawing::GPUContext* grContext)
+{
+    return false;
+}
+
+bool RSFilterCacheManager::RSFilterCacheTask::Render()
+{
+    return false;
+}
+
+bool RSFilterCacheManager::RSFilterCacheTask::SaveFilteredImage()
+{
+    return false;
+}
+
+void RSFilterCacheManager::RSFilterCacheTask::SwapInit()
+{
+    return;
+}
+
+bool RSFilterCacheManager::RSFilterCacheTask::SetDone()
+{
+    return false;
+}
+/*-------------for ng files END ------------------*/
 } // namespace Rosen
 } // namespace OHOS
 #endif

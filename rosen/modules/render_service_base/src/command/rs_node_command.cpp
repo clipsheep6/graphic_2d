@@ -73,7 +73,23 @@ void RSNodeCommandHelper::MarkNodeSingleFrameComposer(RSContext& context,
         node->MarkNodeSingleFrameComposer(isNodeSingleFrameComposer, pid);
     }
 }
+/*-------------for ng files BEGIN ------------------*/
+void RSNodeCommandHelper::MarkDrivenRender(RSContext& context, NodeId nodeId, bool flag)
+{
+}
 
+void RSNodeCommandHelper::MarkDrivenRenderItemIndex(RSContext& context, NodeId nodeId, int32_t index)
+{
+}
+
+void RSNodeCommandHelper::MarkDrivenRenderFramePaintState(RSContext& context, NodeId nodeId, bool flag)
+{
+}
+
+void RSNodeCommandHelper::MarkContentChanged(RSContext& context, NodeId nodeId, bool isChanged)
+{
+}
+/*-------------for ng files END ------------------*/
 void RSNodeCommandHelper::SetDrawRegion(RSContext& context, NodeId nodeId, std::shared_ptr<RectF> rect)
 {
     auto& nodeMap = context.GetNodeMap();

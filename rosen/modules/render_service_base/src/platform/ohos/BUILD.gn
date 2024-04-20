@@ -45,28 +45,34 @@ ohos_source_set("rosen_ohos_sources") {
   defines = [ "ROSEN_OHOS" ]
   defines += gpu_defines
 
+base_src_dir = "."
+if (!graphic_2d_feature_enable_rspipeline) {
+  #gpu_defines += [ "RS_PIPELINE" ]
+  base_src_dir = "//foundation/graphic/graphic_2d_ext/rosen_gn/modules/render_service_base/src/platform/ohos"
+}
+
   sources = [
     #backend
-    "rs_ashmem_helper.cpp",
+    "$base_src_dir/rs_ashmem_helper.cpp",
 
     #overdraw
-    "overdraw/rs_cpu_overdraw_canvas_listener.cpp",
-    "overdraw/rs_gpu_overdraw_canvas_listener.cpp",
-    "overdraw/rs_listened_canvas.cpp",
-    "overdraw/rs_overdraw_controller.cpp",
-    "rs_event_detector.cpp",
-    "rs_event_manager.cpp",
-    "rs_innovation.cpp",
-    "rs_jank_stats.cpp",
-    "rs_log.cpp",
-    "rs_marshalling_helper.cpp",
-    "rs_render_service_client.cpp",
-    "rs_render_service_connect_hub.cpp",
-    "rs_render_service_connection_proxy.cpp",
-    "rs_render_service_proxy.cpp",
-    "rs_surface_ohos_converter.cpp",
-    "rs_system_properties.cpp",
-    "rs_vsync_client_ohos.cpp",
+    "$base_src_dir/overdraw/rs_cpu_overdraw_canvas_listener.cpp",
+    "$base_src_dir/overdraw/rs_gpu_overdraw_canvas_listener.cpp",
+    "$base_src_dir/overdraw/rs_listened_canvas.cpp",
+    "$base_src_dir/overdraw/rs_overdraw_controller.cpp",
+    "$base_src_dir/rs_event_detector.cpp",
+    "$base_src_dir/rs_event_manager.cpp",
+    "$base_src_dir/rs_innovation.cpp",
+    "$base_src_dir/rs_jank_stats.cpp",
+    "$base_src_dir/rs_log.cpp",
+    "$base_src_dir/rs_marshalling_helper.cpp",
+    "$base_src_dir/rs_render_service_client.cpp",
+    "$base_src_dir/rs_render_service_connect_hub.cpp",
+    "$base_src_dir/rs_render_service_connection_proxy.cpp",
+    "$base_src_dir/rs_render_service_proxy.cpp",
+    "$base_src_dir/rs_surface_ohos_converter.cpp",
+    "$base_src_dir/rs_system_properties.cpp",
+    "$base_src_dir/rs_vsync_client_ohos.cpp",
   ]
 
   if (accessibility_enable) {
@@ -75,25 +81,25 @@ ohos_source_set("rosen_ohos_sources") {
 
   if (!defined(use_new_render_context) || !use_new_render_context) {
     sources += [
-      "backend/rs_surface_frame_ohos_raster.cpp",
-      "backend/rs_surface_ohos_raster.cpp",
-      "rs_surface_frame_ohos.cpp",
-      "rs_surface_ohos.cpp",
+      "$base_src_dir/backend/rs_surface_frame_ohos_raster.cpp",
+      "$base_src_dir/backend/rs_surface_ohos_raster.cpp",
+      "$base_src_dir/rs_surface_frame_ohos.cpp",
+      "$base_src_dir/rs_surface_ohos.cpp",
     ]
 
     if (ace_enable_gpu) {
       if (graphic_2d_feature_enable_vulkan) {
         sources += [
-          "backend/native_buffer_utils.cpp",
-          "backend/rs_surface_frame_ohos_vulkan.cpp",
-          "backend/rs_surface_ohos_vulkan.cpp",
-          "backend/rs_vulkan_context.cpp",
+          "$base_src_dir/backend/native_buffer_utils.cpp",
+          "$base_src_dir/backend/rs_surface_frame_ohos_vulkan.cpp",
+          "$base_src_dir/backend/rs_surface_ohos_vulkan.cpp",
+          "$base_src_dir/backend/rs_vulkan_context.cpp",
         ]
       }
       if (graphic_2d_feature_enable_opengl) {
         sources += [
-          "backend/rs_surface_frame_ohos_gl.cpp",
-          "backend/rs_surface_ohos_gl.cpp",
+          "$base_src_dir/backend/rs_surface_frame_ohos_gl.cpp",
+          "$base_src_dir/backend/rs_surface_ohos_gl.cpp",
         ]
       }
 
@@ -115,6 +121,8 @@ ohos_source_set("rosen_ohos_sources") {
     "//drivers/peripheral/display/interfaces/include/",
     "$graphic_2d_root/rosen/modules/render_service_client/core",
     "$graphic_2d_root/utils/log",
+    "$graphic_2d_root/rosen/modules/render_service_base/src/platform/ohos",
+    "$graphic_2d_root/rosen/modules/render_service_base/src/platform/ohos/backend/",
   ]
 
   public_external_deps = [

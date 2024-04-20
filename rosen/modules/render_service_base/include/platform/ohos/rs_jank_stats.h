@@ -115,7 +115,9 @@ public:
     void SetReportEventComplete(const DataBaseRs& info);
     void SetReportEventJankFrame(const DataBaseRs& info, bool isReportTaskDelayed);
     void SetAppFirstFrame(pid_t appPid);
-
+    /*-------------for ng files BEGIN ------------------*/
+    void SetSkipDisplayNode();
+    /*-------------for ng files END ------------------*/
 private:
     RSJankStats() = default;
     ~RSJankStats() = default;
@@ -145,6 +147,12 @@ private:
     int64_t GetEffectiveFrameTime(bool isConsiderRsStartTime) const;
     int64_t GetCurrentSystimeMs() const;
     int64_t GetCurrentSteadyTimeMs() const;
+
+    /*-------------for ng files BEGIN ------------------*/
+    void SetRSJankStats();
+    void RecordJankFrameInit();
+    void RecordJankFrame();
+    /*-------------for ng files END ------------------*/
 
     static constexpr uint16_t ANIMATION_TRACE_CHECK_FREQ = 20;
     static constexpr uint32_t JANK_RANGE_VERSION = 1;
@@ -181,6 +189,16 @@ private:
     std::map<int64_t, TraceIdRemainderStats> traceIdRemainder_;
     std::map<std::pair<int64_t, std::string>, JankFrames> animateJankFrames_;
     std::mutex mutex_;
+
+    /*-------------for ng files BEGIN ------------------*/
+    bool isSkipDisplayNode_ = false;
+    int64_t startTime_ = TIMESTAMP_INITIAL;
+    int64_t startTimeSteady_ = TIMESTAMP_INITIAL;
+    int64_t endTime_ = TIMESTAMP_INITIAL;
+    int64_t endTimeSteady_ = TIMESTAMP_INITIAL;
+    int64_t lastEndTime_ = TIMESTAMP_INITIAL;
+    int64_t lastEndTimeSteady_ = TIMESTAMP_INITIAL;
+    /*-------------for ng files END ------------------*/
 
     enum JankRangeType : size_t {
         JANK_FRAME_6_FREQ = 0,

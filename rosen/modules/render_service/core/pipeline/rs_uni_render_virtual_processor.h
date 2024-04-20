@@ -30,7 +30,11 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
-    void PostProcess() override;
+    /*-------------for ng files BEGIN ------------------*/
+    // add arg
+    void PostProcess(RSDisplayRenderNode* node) override;
+    void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) override;
+    /*-------------for ng files END ------------------*/
     void Fill(RSPaintFilterCanvas& canvas,
         float mainWidth, float mainHeight, float mirrorWidth, float mirrorHeight);
     void UniScale(RSPaintFilterCanvas& canvas,

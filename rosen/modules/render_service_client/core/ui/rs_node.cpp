@@ -2321,6 +2321,46 @@ void RSNode::SetInstanceId(int32_t instanceId)
     instanceId_ = instanceId;
     RSNodeMap::MutableInstance().RegisterNodeInstanceId(id_, instanceId_);
 }
+/*-------------for ng files BEGIN ------------------*/
+void RSNode::MarkDrivenRender(bool flag)
+{
+    if (drivenFlag_ != flag) {
+        std::unique_ptr<RSCommand> command = std::make_unique<RSMarkDrivenRender>(GetId(), flag);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->AddCommand(command, IsRenderServiceNode());
+        }
+        drivenFlag_ = flag;
+    }
+}
 
+void RSNode::MarkDrivenRenderItemIndex(int index)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSMarkDrivenRenderItemIndex>(GetId(), index);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
+void RSNode::MarkDrivenRenderFramePaintState(bool flag)
+{
+    std::unique_ptr<RSCommand> command =
+        std::make_unique<RSMarkDrivenRenderFramePaintState>(GetId(), flag);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+
+void RSNode::MarkContentChanged(bool isChanged)
+{
+    std::unique_ptr<RSCommand> command = std::make_unique<RSMarkContentChanged>(GetId(), isChanged);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->AddCommand(command, IsRenderServiceNode());
+    }
+}
+/*-------------for ng files END ------------------*/
 } // namespace Rosen
 } // namespace OHOS

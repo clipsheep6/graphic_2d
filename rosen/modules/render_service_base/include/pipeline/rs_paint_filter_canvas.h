@@ -171,6 +171,17 @@ public:
     void SaveLayer(const Drawing::SaveLayerOps& saveLayerOps) override;
     void SetBlendMode(std::optional<int> blendMode);
     bool HasOffscreenLayer() const;
+    /*-------------for ng files BEGIN ------------------*/
+    // blendmode related
+    int SaveBlendMode();
+    void RestoreBlendMode();
+    std::optional<int> GetBlendMode();
+    void AddBlendOffscreenLayer(bool isExtra);
+    void MinusBlendOffscreenLayer();
+    bool IsBlendOffscreenExtraLayer() const;
+    /*-------------for ng files END ------------------*/
+
+    int GetBlendOffscreenLayerCnt() const;
 
     // save/restore utils
     struct SaveStatus {
@@ -302,6 +313,11 @@ private:
     // save every dirty region of the current surface for quick reject
     std::stack<Drawing::Region> dirtyRegionStack_;
     
+/*-------------for ng files BEGIN ------------------*/
+    // blendmode related
+    std::stack<std::optional<int>> blendModeStack_;
+    std::stack<bool> blendOffscreenStack_;
+/*-------------for ng files END ------------------*/
     // greater than 0 indicates canvas currently is drawing on a new layer created offscreen blendmode
     // std::stack<bool> blendOffscreenStack_;
 

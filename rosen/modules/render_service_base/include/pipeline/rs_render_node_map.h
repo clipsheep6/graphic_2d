@@ -34,6 +34,12 @@ public:
     bool RegisterDisplayRenderNode(const std::shared_ptr<RSDisplayRenderNode>& nodePtr);
     void UnregisterRenderNode(NodeId id);
 
+    /*-------------for ng files BEGIN ------------------*/
+    void AddDrivenRenderNode(const std::shared_ptr<RSBaseRenderNode>& nodePtr);
+    void RemoveDrivenRenderNode(NodeId id);
+    void TraverseDrivenRenderNodes(std::function<void (const std::shared_ptr<RSRenderNode>&)> func) const;
+    /*-------------for ng files END ------------------*/
+
     // Get RenderNode with type T, return nullptr if not found or type mismatch
     template<typename T = RSBaseRenderNode>
     const std::shared_ptr<T> GetRenderNode(NodeId id) const
@@ -88,6 +94,9 @@ private:
 
     void Initialize(const std::weak_ptr<RSContext>& context);
     std::weak_ptr<RSContext> context_;
+    /*-------------for ng files BEGIN ------------------*/
+    std::unordered_map<NodeId, std::shared_ptr<RSRenderNode>> drivenRenderNodeMap_;
+    /*-------------for ng files END ------------------*/
 
     friend class RSContext;
     friend class RSMainThread;

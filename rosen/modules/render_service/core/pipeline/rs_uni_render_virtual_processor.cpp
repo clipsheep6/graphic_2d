@@ -193,8 +193,10 @@ void RSUniRenderVirtualProcessor::CanvasAdjustment(RSDisplayRenderNode& node, bo
         }
     }
 }
-
-void RSUniRenderVirtualProcessor::PostProcess()
+/*-------------for ng files BEGIN ------------------*/
+// add arg
+void RSUniRenderVirtualProcessor::PostProcess(RSDisplayRenderNode* node)
+/*-------------for ng files END ------------------*/
 {
     if (producerSurface_ == nullptr) {
         RS_LOGE("RSUniRenderVirtualProcessor::PostProcess surface is null!");
@@ -278,5 +280,10 @@ void RSUniRenderVirtualProcessor::ProcessRcdSurface(RSRcdSurfaceRenderNode& node
 {
     RS_LOGI("RSUniRenderVirtualProcessor::ProcessRcdSurface() is not supported.");
 }
+/*-------------for ng files BEGIN ------------------*/
+void RSUniRenderVirtualProcessor::ProcessDrivenSurface(RSDrivenSurfaceRenderNode&)
+{
+}
+/*-------------for ng files END ------------------*/
 } // namespace Rosen
 } // namespace OHOS

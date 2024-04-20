@@ -215,10 +215,15 @@ public:
     void ClearCurrentSurfacePos();
     void UpdateSurfaceNodePos(NodeId id, RectI rect)
     {
-// add: #if defined(RS_ENABLE_PARALLEL_RENDER) && (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK))
-// add:     std::unique_lock<std::mutex> lock(mtx_);
-// add: #endif
-        currentFrameSurfacePos_[id] = rect;
+        /*-------------for ng files BEGIN ------------------*/
+        // should change to         currentFrameSurfacePos_[id] = rect;
+        #if defined(RS_ENABLE_PARALLEL_RENDER) && (defined (RS_ENABLE_GL) || defined (RS_ENABLE_VK))
+                std::unique_lock<std::mutex> lock(mtx_);
+                currentFrameSurfacePos_[id] = rect;
+        #else
+                currentFrameSurfacePos_[id] = rect;
+        #endif
+        /*-------------for ng files END ------------------*/
     }
 
     RectI GetLastFrameSurfacePos(NodeId id)

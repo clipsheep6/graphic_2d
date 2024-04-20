@@ -57,6 +57,18 @@ public:
 
     void SetContextMatrix(const std::optional<Drawing::Matrix>& matrix);
 
+/*-------------for ng files BEGIN ------------------*/
+    void UpdateMatrix(const std::shared_ptr<RSObjAbsGeometry>& parent, const std::optional<Drawing::Point>& offset,
+        const std::optional<Drawing::Rect>& clipRect);
+    RectI MapAbsRectWithMatrix(const RectF& rect, const Drawing::Matrix& matrix) const;
+
+   void Reset() override
+    {
+        RSObjGeometry::Reset();
+        absMatrix_.reset();
+        contextMatrix_.reset();
+    }
+/*-------------for ng files END ------------------*/
 private:
     void UpdateAbsMatrix2D();
     void UpdateAbsMatrix3D();

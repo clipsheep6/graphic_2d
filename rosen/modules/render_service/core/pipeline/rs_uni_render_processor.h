@@ -33,7 +33,11 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
-    void PostProcess() override;
+    /*-------------for ng files BEGIN ------------------*/
+    // add arg
+    void PostProcess(RSDisplayRenderNode* node) override;
+    void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) override;
+    /*-------------for ng files END ------------------*/
 private:
     std::unique_ptr<RSUniRenderComposerAdapter> uniComposerAdapter_;
     std::vector<LayerInfoPtr> layers_;

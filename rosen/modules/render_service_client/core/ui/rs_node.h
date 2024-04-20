@@ -322,12 +322,14 @@ public:
 
     void SetColorBlendApplyType(RSColorBlendApplyType colorBlendApplyType);
 
+    /*-------------for ng files Begin ------------------*/
     // driven render was shelved, functions will be deleted soon [start]
-    void MarkDrivenRender(bool flag) {}
-    void MarkDrivenRenderItemIndex(int index) {}
-    void MarkDrivenRenderFramePaintState(bool flag) {}
-    void MarkContentChanged(bool isChanged) {}
+    void MarkDrivenRender(bool flag);
+    void MarkDrivenRenderItemIndex(int index);
+    void MarkDrivenRenderFramePaintState(bool flag);
+    void MarkContentChanged(bool isChanged);
     // driven render was shelved, functions will be deleted soon [end]
+    /*-------------for ng files END ------------------*/
 
     void AddModifier(const std::shared_ptr<RSModifier> modifier);
     void RemoveModifier(const std::shared_ptr<RSModifier> modifier);
@@ -483,6 +485,10 @@ private:
 
     pid_t implicitAnimatorTid_ = 0;
     bool extendModifierIsDirty_ { false };
+    /*-------------for ng files Begin ------------------*/
+    // driven render
+    bool drivenFlag_ = false;
+    /*-------------for ng files END ------------------*/
 
     bool isNodeGroup_ = false;
 

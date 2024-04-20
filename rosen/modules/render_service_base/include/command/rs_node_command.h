@@ -54,6 +54,12 @@ enum RSNodeCommandType : uint16_t {
     UPDATE_MODIFIER_DRAWING_MATRIX,
 
     SET_FREEZE,
+/*-------------for ng files BEGIN ------------------*/
+    MARK_DRIVEN_RENDER,
+    MARK_DRIVEN_RENDER_ITEM_INDEX,
+    MARK_DRIVEN_RENDER_FRAME_PAINT_STATE,
+    MARK_CONTENT_CHANGED,
+/*-------------for ng files END ------------------*/
     SET_DRAW_REGION,
     SET_OUT_OF_PARENT,
     SET_TAKE_SURFACE_CAPTURE_FOR_UI_FLAG,
@@ -125,7 +131,12 @@ public:
     static void MarkNodeGroup(RSContext& context, NodeId nodeId, bool isNodeGroup, bool isForced,
         bool includeProperty);
     static void MarkNodeSingleFrameComposer(RSContext& context, NodeId nodeId, bool isNodeFasterDraw, pid_t pid);
-
+    /*-------------for ng files BEGIN ------------------*/
+    static void MarkDrivenRender(RSContext& context, NodeId nodeId, bool flag);
+    static void MarkDrivenRenderItemIndex(RSContext& context, NodeId nodeId, int32_t index);
+    static void MarkDrivenRenderFramePaintState(RSContext& context, NodeId nodeId, bool flag);
+    static void MarkContentChanged(RSContext& context, NodeId nodeId, bool isChanged);
+    /*-------------for ng files END ------------------*/
     static void SetDrawRegion(RSContext& context, NodeId nodeId, std::shared_ptr<RectF> rect);
     static void SetOutOfParent(RSContext& context, NodeId nodeId, OutOfParentType outOfParent);
     static void SetTakeSurfaceForUIFlag(RSContext& context, NodeId nodeId);
@@ -222,7 +233,17 @@ ADD_COMMAND(RSMarkNodeGroup,
 ADD_COMMAND(RSMarkNodeSingleFrameComposer,
     ARG(RS_NODE, MARK_NODE_SINGLE_FRAME_COMPOSER, RSNodeCommandHelper::MarkNodeSingleFrameComposer,
         NodeId, bool, pid_t))
-
+/*-------------for ng files BEGIN ------------------*/
+ADD_COMMAND(RSMarkDrivenRender,
+    ARG(RS_NODE, MARK_DRIVEN_RENDER, RSNodeCommandHelper::MarkDrivenRender, NodeId, bool))
+ADD_COMMAND(RSMarkDrivenRenderItemIndex,
+    ARG(RS_NODE, MARK_DRIVEN_RENDER_ITEM_INDEX, RSNodeCommandHelper::MarkDrivenRenderItemIndex, NodeId, int32_t))
+ADD_COMMAND(RSMarkDrivenRenderFramePaintState,
+    ARG(RS_NODE, MARK_DRIVEN_RENDER_FRAME_PAINT_STATE,
+        RSNodeCommandHelper::MarkDrivenRenderFramePaintState, NodeId, bool))
+ADD_COMMAND(RSMarkContentChanged,
+    ARG(RS_NODE, MARK_CONTENT_CHANGED, RSNodeCommandHelper::MarkContentChanged, NodeId, bool))
+/*-------------for ng files END ------------------*/
 ADD_COMMAND(RSSetDrawRegion,
     ARG(RS_NODE, SET_DRAW_REGION, RSNodeCommandHelper::SetDrawRegion,
         NodeId, std::shared_ptr<RectF>))

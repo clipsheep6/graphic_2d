@@ -29,6 +29,9 @@
 
 namespace OHOS {
 namespace Rosen {
+/*-------------for ng files BEGIN ------------------*/
+class RSDrivenSurfaceRenderNode;
+/*-------------for ng files END ------------------*/
 class RSComposerAdapter;
 class RSRcdSurfaceRenderNode;
 class RSUniRenderComposerAdapter {
@@ -40,6 +43,9 @@ public:
 
     LayerInfoPtr CreateLayer(RSDisplayRenderNode& node);
     LayerInfoPtr CreateLayer(RSSurfaceRenderNode& node) const;
+    /*-------------for ng files BEGIN ------------------*/
+    LayerInfoPtr CreateLayer(RSDrivenSurfaceRenderNode& node);
+    /*-------------for ng files END ------------------*/
     LayerInfoPtr CreateLayer(RSRcdSurfaceRenderNode& node);
     void CommitLayers(const std::vector<LayerInfoPtr>& layers);
     void SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const sptr<SurfaceBuffer>& buffer,
@@ -49,6 +55,9 @@ private:
     static RectI SrcRectRotateTransform(RSSurfaceRenderNode& node);
     ComposeInfo BuildComposeInfo(RSSurfaceRenderNode& node) const;
     ComposeInfo BuildComposeInfo(RSDisplayRenderNode& node) const;
+    /*-------------for ng files BEGIN ------------------*/
+    ComposeInfo BuildComposeInfo(RSDrivenSurfaceRenderNode& node) const;
+    /*-------------for ng files END ------------------*/
     ComposeInfo BuildComposeInfo(RSRcdSurfaceRenderNode& node) const;
     void SetComposeInfoToLayer(
         const LayerInfoPtr& layer,
@@ -56,6 +65,10 @@ private:
         const sptr<IConsumerSurface>& surface,
         RSBaseRenderNode* node) const;
     static void SetBufferColorSpace(RSDisplayRenderNode& node);
+    /*-------------for ng files BEGIN ------------------*/
+    void SetMetaDataInfoToLayer(const LayerInfoPtr& layer, const ComposeInfo& info,
+                                const sptr<IConsumerSurface>& surface) const;
+    /*-------------for ng files END ------------------*/
     void LayerRotate(const LayerInfoPtr& layer, RSBaseRenderNode& node) const;
     void DealWithNodeGravity(const RSSurfaceRenderNode& node, ComposeInfo& info) const;
     LayerInfoPtr CreateBufferLayer(RSSurfaceRenderNode& node) const;

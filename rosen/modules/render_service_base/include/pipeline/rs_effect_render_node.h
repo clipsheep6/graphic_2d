@@ -74,7 +74,9 @@ public:
     {
         return isStaticCached_;
     }
-
+/*-------------for ng files BEGIN ------------------*/
+   void SetInvalidateTimesForRotation(int times);
+/*-------------for ng files END ------------------*/
 protected:
     RectI GetFilterRect() const override;
     void UpdateFilterCacheManagerWithCacheRegion(RSDirtyRegionManager& dirtyManager,
@@ -82,7 +84,14 @@ protected:
     void MarkFilterCacheFlagsAfterPrepare(
         std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false) override;
 
+/*-------------for ng files BEGIN ------------------*/
+    void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false) override;
+/*-------------for ng files END ------------------*/
 private:
+/*-------------for ng files BEGIN ------------------*/
+    bool NeedForceCache();
+/*-------------for ng files END ------------------*/
+
     bool isVisitedOcclusionFilterCacheEmpty_ = true;
     bool isRotationChanged_ = false;
     bool preRotationStatus_ = false;
@@ -90,6 +99,11 @@ private:
 
     uint64_t currentAttachedScreenId_ = INVALID_SCREEN_ID; // the current screen this node attached.
     bool foldStatusChanged_ = false; // fold or expand screen.
+
+/*-------------for ng files BEGIN ------------------*/
+    int invalidateTimes_ = 0;
+    int cacheUpdateInterval_ = 1;
+/*-------------for ng files END ------------------*/
 };
 } // namespace Rosen
 } // namespace OHOS

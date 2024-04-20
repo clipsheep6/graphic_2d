@@ -73,107 +73,205 @@ ohos_shared_library("librender_service") {
     }
   }
 
-  sources = [
-    "core/memory/rs_memory_manager.cpp",
-    "core/pipeline/round_corner_display/rs_rcd_render_listener.cpp",
-    "core/pipeline/round_corner_display/rs_rcd_render_manager.cpp",
-    "core/pipeline/round_corner_display/rs_rcd_render_visitor.cpp",
-    "core/pipeline/round_corner_display/rs_rcd_surface_render_node.cpp",
-    "core/pipeline/round_corner_display/rs_round_corner_config.cpp",
-    "core/pipeline/round_corner_display/rs_round_corner_display.cpp",
-    "core/pipeline/round_corner_display/rs_sub_thread_rcd.cpp",
-    "core/pipeline/rs_base_render_engine.cpp",
-    "core/pipeline/rs_base_render_util.cpp",
-    "core/pipeline/rs_composer_adapter.cpp",
-    "core/pipeline/rs_divided_render_util.cpp",
-    "core/pipeline/rs_draw_frame.cpp",
-    "core/pipeline/rs_hardware_thread.cpp",
-    "core/pipeline/rs_main_thread.cpp",
-    "core/pipeline/rs_physical_screen_processor.cpp",
-    "core/pipeline/rs_processor.cpp",
-    "core/pipeline/rs_processor_factory.cpp",
-    "core/pipeline/rs_realtime_refresh_rate_manager.cpp",
-    "core/pipeline/rs_render_engine.cpp",
-    "core/pipeline/rs_render_service.cpp",
-    "core/pipeline/rs_render_service_connection.cpp",
-    "core/pipeline/rs_render_service_listener.cpp",
-    "core/pipeline/rs_render_service_visitor.cpp",
-    "core/pipeline/rs_surface_capture_task.cpp",
-    "core/pipeline/rs_surface_capture_task_parallel.cpp",
-    "core/pipeline/rs_uifirst_manager.cpp",
-    "core/pipeline/rs_uni_hwc_prevalidate_util.cpp",
-    "core/pipeline/rs_uni_render_composer_adapter.cpp",
-    "core/pipeline/rs_uni_render_engine.cpp",
-    "core/pipeline/rs_uni_render_listener.cpp",
-    "core/pipeline/rs_uni_render_processor.cpp",
-    "core/pipeline/rs_uni_render_thread.cpp",
-    "core/pipeline/rs_uni_render_util.cpp",
-    "core/pipeline/rs_uni_render_virtual_processor.cpp",
-    "core/pipeline/rs_uni_render_visitor.cpp",
-    "core/pipeline/rs_uni_ui_capture.cpp",
-    "core/pipeline/rs_unmarshal_thread.cpp",
-    "core/pipeline/rs_virtual_screen_processor.cpp",
-    "core/screen_manager/rs_screen.cpp",
-    "core/screen_manager/rs_screen_manager.cpp",
-    "core/system/rs_system_parameters.cpp",
-    "core/transaction/rs_irender_service_connection_ipc_interface_code_access_verifier.cpp",
-    "core/transaction/rs_irender_service_ipc_interface_code_access_verifier.cpp",
-    "core/transaction/rs_render_service_connection_stub.cpp",
-    "core/transaction/rs_render_service_security_utils.cpp",
-    "core/transaction/rs_render_service_stub.cpp",
-  ]
-
-  #drawable
-  sources += [
-    "core/drawable/rs_canvas_drawing_render_node_drawable.cpp",
-    "core/drawable/rs_canvas_render_node_drawable.cpp",
-    "core/drawable/rs_display_render_node_drawable.cpp",
-    "core/drawable/rs_effect_render_node_drawable.cpp",
-    "core/drawable/rs_render_node_drawable.cpp",
-    "core/drawable/rs_render_node_shadow_drawable.cpp",
-    "core/drawable/rs_root_render_node_drawable.cpp",
-    "core/drawable/rs_surface_render_node_drawable.cpp",
-    "core/drawable/rs_ui_first_surface_render_node_drawable.cpp",
-  ]
-
-  #dfx
-  sources += [
-    "core/drawable/dfx/rs_dirty_rects_dfx.cpp",
-    "core/drawable/dfx/rs_skp_capture_dfx.cpp",
-  ]
-
-  if (rs_enable_eglimage) {
-    sources += [ "core/pipeline/rs_egl_image_manager.cpp" ]
-  }
-
-  if (graphic_2d_feature_enable_vulkan) {
-    sources += [ "core/pipeline/rs_vk_image_manager.cpp" ]
-  }
-
-  if (rs_enable_parallel_render && rs_enable_gpu) {
-    sources += [
-      "core/pipeline/parallel_render/rs_filter_sub_thread.cpp",
-      "core/pipeline/parallel_render/rs_render_task.cpp",
-      "core/pipeline/parallel_render/rs_sub_thread.cpp",
-      "core/pipeline/parallel_render/rs_sub_thread_manager.cpp",
+  if (graphic_2d_feature_enable_rspipeline) {
+    sources = [
+      "core/memory/rs_memory_manager.cpp",
+      "core/pipeline/round_corner_display/rs_rcd_render_listener.cpp",
+      "core/pipeline/round_corner_display/rs_rcd_render_manager.cpp",
+      "core/pipeline/round_corner_display/rs_rcd_render_visitor.cpp",
+      "core/pipeline/round_corner_display/rs_rcd_surface_render_node.cpp",
+      "core/pipeline/round_corner_display/rs_round_corner_config.cpp",
+      "core/pipeline/round_corner_display/rs_round_corner_display.cpp",
+      "core/pipeline/round_corner_display/rs_sub_thread_rcd.cpp",
+      "core/pipeline/rs_base_render_engine.cpp",
+      "core/pipeline/rs_base_render_util.cpp",
+      "core/pipeline/rs_composer_adapter.cpp",
+      "core/pipeline/rs_divided_render_util.cpp",
+      "core/pipeline/rs_draw_frame.cpp",
+      "core/pipeline/rs_hardware_thread.cpp",
+      "core/pipeline/rs_main_thread.cpp",
+      "core/pipeline/rs_physical_screen_processor.cpp",
+      "core/pipeline/rs_processor.cpp",
+      "core/pipeline/rs_processor_factory.cpp",
+      "core/pipeline/rs_realtime_refresh_rate_manager.cpp",
+      "core/pipeline/rs_render_engine.cpp",
+      "core/pipeline/rs_render_service.cpp",
+      "core/pipeline/rs_render_service_connection.cpp",
+      "core/pipeline/rs_render_service_listener.cpp",
+      "core/pipeline/rs_render_service_visitor.cpp",
+      "core/pipeline/rs_surface_capture_task.cpp",
+      "core/pipeline/rs_surface_capture_task_parallel.cpp",
+      "core/pipeline/rs_uifirst_manager.cpp",
+      "core/pipeline/rs_uni_hwc_prevalidate_util.cpp",
+      "core/pipeline/rs_uni_render_composer_adapter.cpp",
+      "core/pipeline/rs_uni_render_engine.cpp",
+      "core/pipeline/rs_uni_render_listener.cpp",
+      "core/pipeline/rs_uni_render_processor.cpp",
+      "core/pipeline/rs_uni_render_thread.cpp",
+      "core/pipeline/rs_uni_render_util.cpp",
+      "core/pipeline/rs_uni_render_virtual_processor.cpp",
+      "core/pipeline/rs_uni_render_visitor.cpp",
+      "core/pipeline/rs_uni_ui_capture.cpp",
+      "core/pipeline/rs_unmarshal_thread.cpp",
+      "core/pipeline/rs_virtual_screen_processor.cpp",
+      "core/screen_manager/rs_screen.cpp",
+      "core/screen_manager/rs_screen_manager.cpp",
+      "core/system/rs_system_parameters.cpp",
+      "core/transaction/rs_irender_service_connection_ipc_interface_code_access_verifier.cpp",
+      "core/transaction/rs_irender_service_ipc_interface_code_access_verifier.cpp",
+      "core/transaction/rs_render_service_connection_stub.cpp",
+      "core/transaction/rs_render_service_security_utils.cpp",
+      "core/transaction/rs_render_service_stub.cpp",
     ]
-  }
 
-  if (graphic_2d_feature_enable_chipset_vsync) {
-    sources += [ "$graphic_2d_ext_root/chipset_vsync/src/chipset_vsync.cpp" ]
-  }
+    #drawable
+    sources += [
+      "core/drawable/rs_canvas_drawing_render_node_drawable.cpp",
+      "core/drawable/rs_canvas_render_node_drawable.cpp",
+      "core/drawable/rs_display_render_node_drawable.cpp",
+      "core/drawable/rs_effect_render_node_drawable.cpp",
+      "core/drawable/rs_render_node_drawable.cpp",
+      "core/drawable/rs_render_node_shadow_drawable.cpp",
+      "core/drawable/rs_root_render_node_drawable.cpp",
+      "core/drawable/rs_surface_render_node_drawable.cpp",
+      "core/drawable/rs_ui_first_surface_render_node_drawable.cpp",
+    ]
 
-  if (use_memmgr_plugin || use_memmgr) {
-    sources += [ "core/memory/rs_app_state_listener.cpp" ]
-  }
+    #dfx
+    sources += [
+      "core/drawable/dfx/rs_dirty_rects_dfx.cpp",
+      "core/drawable/dfx/rs_skp_capture_dfx.cpp",
+    ]
 
-  if (tp_feature_enable) {
-    sources += [ "core/touch_screen/touch_screen.cpp" ]
-  }
+    if (rs_enable_eglimage) {
+      sources += [ "core/pipeline/rs_egl_image_manager.cpp" ]
+    }
 
+    if (graphic_2d_feature_enable_vulkan) {
+      sources += [ "core/pipeline/rs_vk_image_manager.cpp" ]
+    }
+
+    if (rs_enable_parallel_render && rs_enable_gpu) {
+      sources += [
+        "core/pipeline/parallel_render/rs_filter_sub_thread.cpp",
+        "core/pipeline/parallel_render/rs_render_task.cpp",
+        "core/pipeline/parallel_render/rs_sub_thread.cpp",
+        "core/pipeline/parallel_render/rs_sub_thread_manager.cpp",
+      ]
+    }
+
+    if (graphic_2d_feature_enable_chipset_vsync) {
+      sources += [ "$graphic_2d_ext_root/chipset_vsync/src/chipset_vsync.cpp" ]
+    }
+
+    if (use_memmgr_plugin || use_memmgr) {
+      sources += [ "core/memory/rs_app_state_listener.cpp" ]
+    }
+
+    if (tp_feature_enable) {
+      sources += [ "core/touch_screen/touch_screen.cpp" ]
+    }
+  } else {
+    rosen_gn_rs_root = "//foundation/graphic/graphic_2d_ext/rosen_gn/modules/render_service"
+    sources = [
+      "$rosen_gn_rs_root/core/memory/rs_memory_manager.cpp",
+      "$rosen_gn_rs_root/core/pipeline/round_corner_display/rs_rcd_render_listener.cpp",
+      "$rosen_gn_rs_root/core/pipeline/round_corner_display/rs_rcd_render_manager.cpp",
+      "$rosen_gn_rs_root/core/pipeline/round_corner_display/rs_rcd_render_visitor.cpp",
+      "$rosen_gn_rs_root/core/pipeline/round_corner_display/rs_rcd_surface_render_node.cpp",
+      "$rosen_gn_rs_root/core/pipeline/round_corner_display/rs_round_corner_config.cpp",
+      "$rosen_gn_rs_root/core/pipeline/round_corner_display/rs_round_corner_display.cpp",
+      "$rosen_gn_rs_root/core/pipeline/round_corner_display/rs_sub_thread_rcd.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_base_render_engine.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_base_render_util.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_composer_adapter.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_divided_render_util.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_hardware_thread.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_main_thread.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_physical_screen_processor.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_processor.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_processor_factory.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_realtime_refresh_rate_manager.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_render_engine.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_render_service.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_render_service_connection.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_render_service_listener.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_render_service_visitor.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_surface_capture_task.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_render_composer_adapter.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_render_engine.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_render_listener.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_render_processor.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_render_util.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_render_virtual_processor.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_render_visitor.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_uni_ui_capture.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_unmarshal_thread.cpp",
+      "$rosen_gn_rs_root/core/pipeline/rs_virtual_screen_processor.cpp",
+      "$rosen_gn_rs_root/core/screen_manager/rs_screen.cpp",
+      "$rosen_gn_rs_root/core/screen_manager/rs_screen_manager.cpp",
+      "$rosen_gn_rs_root/core/system/rs_system_parameters.cpp",
+      "$rosen_gn_rs_root/core/transaction/rs_irender_service_connection_ipc_interface_code_access_verifier.cpp",
+      "$rosen_gn_rs_root/core/transaction/rs_irender_service_ipc_interface_code_access_verifier.cpp",
+      "$rosen_gn_rs_root/core/transaction/rs_render_service_connection_stub.cpp",
+      "$rosen_gn_rs_root/core/transaction/rs_render_service_security_utils.cpp",
+      "$rosen_gn_rs_root/core/transaction/rs_render_service_stub.cpp",
+    ]
+
+    if (rs_enable_driven_render) {
+      sources += [
+        "$rosen_gn_rs_root/core/pipeline/driven_render/rs_driven_render_ext.cpp",
+        "$rosen_gn_rs_root/core/pipeline/driven_render/rs_driven_render_listener.cpp",
+        "$rosen_gn_rs_root/core/pipeline/driven_render/rs_driven_render_manager.cpp",
+        "$rosen_gn_rs_root/core/pipeline/driven_render/rs_driven_render_visitor.cpp",
+        "$rosen_gn_rs_root/core/pipeline/driven_render/rs_driven_surface_render_node.cpp",
+      ]
+    }
+
+    if (rs_enable_eglimage) {
+      sources += [ "$rosen_gn_rs_root/core/pipeline/rs_egl_image_manager.cpp" ]
+    }
+
+    if (graphic_2d_feature_enable_vulkan) {
+      sources += [ "$rosen_gn_rs_root/core/pipeline/rs_vk_image_manager.cpp" ]
+    }
+
+    if (rs_enable_parallel_render && rs_enable_gpu) {
+      sources += [
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_filter_sub_thread.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_node_cost_manager.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_parallel_hardware_composer.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_parallel_pack_visitor.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_parallel_render_manager.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_parallel_sub_thread.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_parallel_task_manager.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_render_task.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_sub_thread.cpp",
+        "$rosen_gn_rs_root/core/pipeline/parallel_render/rs_sub_thread_manager.cpp",
+      ]
+    }
+
+    if (use_memmgr_plugin || use_memmgr) {
+      sources += [ "$rosen_gn_rs_root/core/memory/rs_app_state_listener.cpp" ]
+    }
+
+    if (tp_feature_enable) {
+      sources += [ "$rosen_gn_rs_root/core/touch_screen/touch_screen.cpp" ]
+    }
+  }
   include_dirs = [
     "core",
+    "core/memory",
+    "core/pipeline/parallel_render",
+    "core/pipeline/round_corner_display",
+    "core/pipeline",
+    "core/screen_manager",
+    "core/system",
+    "core/touch_screen",
+    "core/transaction",
     "core/round_corner_display",
+    "core/pipeline/parallel_render",
+    "core/pipeline/driven_render",
     "$graphic_2d_root/rosen/include",
     "$graphic_2d_root/rosen/modules/2d_graphics",
     "$graphic_2d_root/rosen/modules/composer/vsync/include",

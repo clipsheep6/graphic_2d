@@ -23,18 +23,18 @@ namespace OHOS {
 namespace Rosen {
 RSUniRenderListener::~RSUniRenderListener() {}
 
-RSUniRenderListener::RSUniRenderListener(std::weak_ptr<RSSurfaceHandler> surfaceHandler)
-    : surfaceHandler_(surfaceHandler) {}
+RSUniRenderListener::RSUniRenderListener(std::weak_ptr<RSDisplayRenderNode> displayRenderNode)
+    : displayRenderNode_(displayRenderNode) {}
 
 void RSUniRenderListener::OnBufferAvailable()
 {
-    auto surfaceHandler = surfaceHandler_.lock();
-    if (surfaceHandler == nullptr) {
-        RS_LOGE("RSUniRenderListener::OnBufferAvailable surfaceHandler is nullptr");
+    auto node = displayRenderNode_.lock();
+    if (node == nullptr) {
+        RS_LOGE("RSUniRenderListener::OnBufferAvailable node is nullptr");
         return;
     }
-    RS_LOGD("RSUniRenderListener::OnBufferAvailable node id:%{public}" PRIu64, surfaceHandler->GetNodeId());
-    surfaceHandler->IncreaseAvailableBuffer();
+    RS_LOGD("RSUniRenderListener::OnBufferAvailable node id:%{public}" PRIu64, node->GetId());
+    node->IncreaseAvailableBuffer();
     RSMainThread::Instance()->NotifyUniRenderFinish();
 }
 }

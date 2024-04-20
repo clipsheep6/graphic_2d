@@ -14,6 +14,22 @@
 #include "test_common.h"
 #include "common/log_common.h"
 
+
+void PathTransformWithPerspectiveClip::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
+    TestRend rand;
+    OH_Drawing_Path* path = OH_Drawing_PathCreate();
+    for (int i = 0; i < testCount_; i++) {
+        OH_Drawing_PathMoveTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathLineTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_Matrix* metrix = OH_Drawing_MatrixCreateRotation(rand.nextULessThan(360),rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+        OH_Drawing_PathTransformWithPerspectiveClip(path, metrix, nullptr, applyPerspectiveClip);
+        OH_Drawing_CanvasDrawPath(canvas, path);
+        OH_Drawing_PathReset(path);
+    }
+    OH_Drawing_PathDestroy(path);
+}
+
 void PathSetFillType::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
     TestRend rand;
@@ -281,8 +297,7 @@ void PathAddPathWithOffsetAndMode::OnTestPerformance(OH_Drawing_Canvas *canvas) 
         OH_Drawing_PathMoveTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
         OH_Drawing_PathLineTo(srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
         OH_Drawing_PathMoveTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
-        OH_Drawing_PathLineTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));  
-        
+        OH_Drawing_PathLineTo(path, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
         OH_Drawing_PathAddPathWithOffsetAndMode(path, srcPath, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_), addMode);
         OH_Drawing_CanvasDrawPath(canvas, path);
         OH_Drawing_PathReset(path);

@@ -5,6 +5,18 @@
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_canvas.h>
 
+class PathTransformWithPerspectiveClip : public TestBase {
+public:
+    PathTransformWithPerspectiveClip(int type,bool bClip):TestBase(type),applyPerspectiveClip(bClip){
+        fileName_ = "PathTransformWithPerspectiveClip";
+    }
+    ~PathTransformWithPerspectiveClip() = default;
+
+protected:
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//358 ms 100次
+    bool applyPerspectiveClip;
+};
+
 class PathSetFillType : public TestBase {
 public:
     PathSetFillType(int type,OH_Drawing_PathFillType fillType):TestBase(type),fType(fillType){

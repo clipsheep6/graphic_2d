@@ -159,6 +159,12 @@ void RSSurfaceRenderNode::UpdateSrcRect(const Drawing::Canvas& canvas, const Dra
     }
 }
 
+/*-------------for ng files BEGIN ------------------*/
+void RSSurfaceRenderNode::UpdateSrcRect(const RSPaintFilterCanvas& canvas, const Drawing::RectI& dstRect,
+   bool hasRotation)
+{}
+/*-------------for ng files END ------------------*/
+
 void RSSurfaceRenderNode::UpdateHwcDisabledBySrcRect(bool hasRotation)
 {
 #ifndef ROSEN_CROSS_PLATFORM
@@ -2410,5 +2416,13 @@ void RSSurfaceRenderNode::SetIsParentUifirstNodeEnableParam(bool b)
     }
 }
 
+bool RSSurfaceRenderNode::IsHardwareForcedDisabled() const
+{
+    if (isForceHardwareByUser_) {
+        return false;
+    }
+    return isHardwareForcedDisabled_ ||
+        GetDstRect().GetWidth() <= 1 || GetDstRect().GetHeight() <= 1; // avoid fallback by composer
+}
 } // namespace Rosen
 } // namespace OHOS

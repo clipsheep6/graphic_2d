@@ -50,6 +50,10 @@ public:
     static Occlusion::Region MergeVisibleDirtyRegion(std::vector<RSRenderNode::SharedPtr>& allSurfaceNodes,
         std::vector<NodeId>& hasVisibleDirtyRegionSurfaceVec, bool useAlignedDirtyRegion = false,
         bool renderParallel = false);
+    /*-------------for ng files BEGIN ------------------*/
+    static Occlusion::Region MergeVisibleDirtyRegion(std::shared_ptr<RSDisplayRenderNode>& node,
+        std::vector<NodeId>& hasVisibleDirtyRegionSurfaceVec, bool useAlignedDirtyRegion = false);
+    /*-------------for ng files END ------------------*/
     static std::vector<RectI> ScreenIntersectDirtyRects(const Occlusion::Region &region, ScreenInfo& screenInfo);
     static bool HandleSubThreadNode(RSSurfaceRenderNode& node, RSPaintFilterCanvas& canvas);
     static bool HandleCaptureNode(RSRenderNode& node, RSPaintFilterCanvas& canvas);

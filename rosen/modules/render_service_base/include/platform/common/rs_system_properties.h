@@ -171,6 +171,10 @@ public:
     static bool GetFilterCacheEnabled();
     static int GetFilterCacheUpdateInterval();
     static int GetFilterCacheSizeThreshold();
+    /*-------------for ng files BEGIN ------------------*/
+    static bool GetFilterPartialRenderEnabled();
+    /*-------------for ng files END ------------------*/
+
     static bool GetColorPickerPartialEnabled();
     static bool GetMaskLinearBlurEnabled();
     static bool GetMotionBlurEnabled();

@@ -24,6 +24,9 @@
 #include <mutex>
 #include "EGL/egl.h"
 #include "drawable/rs_surface_render_node_drawable.h"
+/*-------------for ng files BEGIN ------------------*/
+#include "pipeline/parallel_render/rs_render_task.h"
+/*-------------for ng files END ------------------*/
 #include "pipeline/rs_base_render_node.h"
 #include "render_context/render_context.h"
 #include "rs_filter_sub_thread.h"
@@ -41,7 +44,11 @@ public:
     void PostTask(const std::function<void()>& task, uint32_t threadIndex, bool isSyncTask = false);
     void WaitNodeTask(uint64_t nodeId);
     void NodeTaskNotify(uint64_t nodeId);
+    /*-------------for ng files BEGIN ------------------*/
+    void StartFilterThread(RenderContext* context);
     void SubmitFilterSubThreadTask();
+    /*-------------for ng files END ------------------*/
+    void SetFenceSubThread(sptr<SyncFence> fence);
     void SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
         const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
     void ResetSubThreadGrContext();

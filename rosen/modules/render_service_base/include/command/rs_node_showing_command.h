@@ -63,6 +63,9 @@ private:
     bool isTimeout_ = true;
     using Registrar = RSCommandRegister<commandType, commandSubType, Unmarshalling>;
     static Registrar instance_;
+/*-------------for ng files BEGIN ------------------*/
+    static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
+/*-------------for ng files END ------------------*/
 };
 
 class RSB_EXPORT RSNodeGetShowingPropertiesAndCancelAnimation : public RSSyncTask {
@@ -94,6 +97,9 @@ private:
     PropertiesMap propertiesMap_;
     using Registrar = RSCommandRegister<commandType, commandSubType, Unmarshalling>;
     static Registrar instance_;
+    /*-------------for ng files BEGIN ------------------*/
+    static inline RSCommandRegister<commandType, commandSubType, Unmarshalling> registry;
+/*-------------for ng files END ------------------*/
 };
 
 } // namespace Rosen

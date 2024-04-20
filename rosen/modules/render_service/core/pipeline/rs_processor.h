@@ -27,6 +27,9 @@
 
 namespace OHOS {
 namespace Rosen {
+/*-------------for ng files BEGIN ------------------*/
+class RSDrivenSurfaceRenderNode;
+/*-------------for ng files END ------------------*/
 class RSRcdSurfaceRenderNode;
 class RSDisplayRenderParams;
 class RSSurfaceRenderParams;
@@ -42,7 +45,11 @@ public:
     virtual void CreateLayer(const RSSurfaceRenderNode& node, RSSurfaceRenderParams& params) {}
     virtual void ProcessSurface(RSSurfaceRenderNode& node) = 0;
     virtual void ProcessDisplaySurface(RSDisplayRenderNode& node) = 0;
-    virtual void PostProcess() = 0;
+    /*-------------for ng files BEGIN ------------------*/
+    // add arg
+    virtual void PostProcess(RSDisplayRenderNode* node = nullptr) = 0;
+    virtual void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) = 0;
+    /*-------------for ng files END ------------------*/
     virtual void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) = 0;
     void SetSecurityDisplay(bool isSecurityDisplay);
     void SetDisplayHasSecSurface(bool displayHasSecSurface);

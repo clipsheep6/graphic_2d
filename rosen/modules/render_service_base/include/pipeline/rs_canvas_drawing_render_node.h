@@ -52,7 +52,9 @@ public:
 
     Drawing::Bitmap GetBitmap();
     Drawing::Bitmap GetBitmap(const uint64_t tid);
-    std::shared_ptr<Drawing::Image> GetImage(const uint64_t tid);
+/*-------------for ng files BEGIN only add default args ------------------*/
+    std::shared_ptr<Drawing::Image> GetImage(const uint64_t tid = UINT32_MAX);
+/*-------------for ng files END ------------------*/
     bool GetPixelmap(const std::shared_ptr<Media::PixelMap> pixelmap, const Drawing::Rect* rect,
         const uint64_t tid = UINT32_MAX, std::shared_ptr<Drawing::DrawCmdList> drawCmdList = nullptr);
 

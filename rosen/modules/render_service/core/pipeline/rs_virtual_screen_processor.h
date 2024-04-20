@@ -31,8 +31,11 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
-    void PostProcess() override;
-
+    /*-------------for ng files BEGIN ------------------*/
+    // add arg
+    void PostProcess(RSDisplayRenderNode* node) override;
+    void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) override;
+    /*-------------for ng files END ------------------*/
 private:
     sptr<Surface> producerSurface_;
     std::unique_ptr<RSRenderFrame> renderFrame_;

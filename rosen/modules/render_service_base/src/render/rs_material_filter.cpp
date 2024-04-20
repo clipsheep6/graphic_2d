@@ -388,6 +388,5 @@ void RSMaterialFilter::ReleaseColorPickerFilter()
     }
     colorPickerTask_->ReleaseColorPicker();
 }
-
 } // namespace Rosen
 } // namespace OHOS

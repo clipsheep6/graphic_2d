@@ -202,5 +202,13 @@ void RSEffectRenderNode::SetFoldStatusChanged(bool foldStatusChanged)
 {
     foldStatusChanged_ = foldStatusChanged;
 }
+
+/*-------------for ng files BEGIN ------------------*/
+void RSEffectRenderNode::UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground)
+{
+    RSRenderNode::UpdateFilterCacheWithDirty(dirtyManager, isForeground);
+}
+/*-------------for ng files END ------------------*/
+
 } // namespace Rosen
 } // namespace OHOS

@@ -1421,5 +1421,13 @@ void RSPaintFilterCanvas::SaveLayer(const Drawing::SaveLayerOps& saveLayerOps)
     envStack_.top().hasOffscreenLayer_ = true;
     RSPaintFilterCanvasBase::SaveLayer(saveLayerOps);
 }
+
+/*-------------for ng files BEGIN ------------------*/
+int RSPaintFilterCanvas::GetBlendOffscreenLayerCnt() const
+{
+    return 0;
+}
+/*-------------for ng files END ------------------*/
+
 } // namespace Rosen
 } // namespace OHOS

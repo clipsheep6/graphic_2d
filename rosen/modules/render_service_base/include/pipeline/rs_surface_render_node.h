@@ -238,14 +238,7 @@ public:
         isHardwareForcedDisabledBySrcRect_ = false;
     }
 
-    bool IsHardwareForcedDisabled() const
-    {
-        if (isForceHardwareByUser_) {
-            return false;
-        }
-        return isHardwareForcedDisabled_ ||
-            GetDstRect().GetWidth() <= 1 || GetDstRect().GetHeight() <= 1; // avoid fallback by composer
-    }
+    bool IsHardwareForcedDisabled() const;
 
     bool IsLeashOrMainWindow() const
     {
@@ -817,6 +810,9 @@ public:
     bool UpdateDirtyIfFrameBufferConsumed();
 
     void UpdateSrcRect(const Drawing::Canvas& canvas, const Drawing::RectI& dstRect, bool hasRotation = false);
+    /*-------------for ng files BEGIN ------------------*/
+    void UpdateSrcRect(const RSPaintFilterCanvas& canvas, const Drawing::RectI& dstRect, bool hasRotation = false);
+    /*-------------for ng files END ------------------*/
     void UpdateHwcDisabledBySrcRect(bool hasRotation);
 
     // if a surfacenode's dstrect is empty, its subnodes' prepare stage can be skipped

@@ -114,8 +114,16 @@ public:
 
     const std::shared_ptr<RSBaseRenderEngine>& GetRenderEngine() const
     {
+/*-------------for ng files BEGIN ------------------*/
+#ifdef RS_PIPELINE
+/*-------------for ng files END ------------------*/
         RS_LOGD("You'd better to call GetRenderEngine from RSUniRenderThread directly");
         return isUniRender_ ? std::move(RSUniRenderThread::Instance().GetRenderEngine()) : renderEngine_;
+/*-------------for ng files BEGIN ------------------*/
+#else
+		return isUniRender_ ? uniRenderEngine_ : renderEngine_;
+#endif
+/*-------------for ng files END ------------------*/
     }
 
     bool GetClearMemoryFinished() const
@@ -309,6 +317,17 @@ public:
 
     bool IsRequestedNextVSync();
 
+/*-------------for ng files BEGIN ------------------*/
+    // driven render
+    void NotifyDrivenRenderFinish();
+    void WaitUtilDrivenRenderFinished();
+
+    bool IsMainLooping() const
+    {
+        return mainLooping_.load();
+    }
+    const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& GetSelfDrawingNodes() const;
+/*-------------for ng files END ------------------*/
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
         std::pair<uint64_t, std::vector<std::unique_ptr<RSTransactionData>>>>;
@@ -323,6 +342,12 @@ private:
     void OnVsync(uint64_t timestamp, void* data);
     void ProcessCommand();
     void Animate(uint64_t timestamp);
+    /*-------------for ng files BEGIN ------------------*/
+    void ApplyModifiers();
+    void CollectInfoForDrivenRender();
+    bool CheckSurfaceNeedProcess(OcclusionRectISetOld& occlusionSurfaces,
+        std::shared_ptr<RSSurfaceRenderNode> curSurface);
+    /*-------------for ng files END ------------------*/
     void ConsumeAndUpdateAllNodes();
     void CollectInfoForHardwareComposer();
     void ReleaseAllNodesBuffer();
@@ -599,6 +624,16 @@ private:
     std::atomic_bool discardJankFrames_ = false;
     std::atomic_bool skipJankAnimatorFrame_ = false;
     ScreenId displayNodeScreenId_ = 0;
+    /*-------------for ng files BEGIN ------------------*/
+    bool isShow_ = false;
+    // driven render
+    bool hasDrivenNodeOnUniTree_ = false;
+    bool hasDrivenNodeMarkRender_ = false;
+    mutable std::mutex drivenRenderMutex_;
+    bool drivenRenderFinished_ = false;
+    std::condition_variable drivenRenderCond_;
+    std::atomic_bool mainLooping_ = false;
+    /*-------------for ng files END ------------------*/
 };
 } // namespace OHOS::Rosen
 #endif // RS_MAIN_THREAD

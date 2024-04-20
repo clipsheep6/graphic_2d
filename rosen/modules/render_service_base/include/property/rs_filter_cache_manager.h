@@ -20,6 +20,10 @@
 #if defined(NEW_SKIA) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
 #include <condition_variable>
 
+/*-------------for ng files BEGIN ------------------*/
+#include <mutex>
+/*-------------for ng files END ------------------*/
+
 #include "event_handler.h"
 #include "draw/canvas.h"
 #include "draw/surface.h"
@@ -32,6 +36,10 @@
 #include "platform/common/rs_system_properties.h"
 #include "render/rs_filter.h"
 
+/*-------------for ng files BEGIN ------------------*/
+#include "pipeline/rs_uni_render_judgement.h"
+/*-------------for ng files END ------------------*/
+
 namespace OHOS {
 namespace Rosen {
 class RSDrawingFilter;
@@ -41,6 +49,9 @@ class RSDrawingFilter;
 // Warn: Using filter cache in multi-thread environment may cause GPU memory leak or invalid textures.
 class RSB_EXPORT RSFilterCacheManager final {
 public:
+/*-------------for ng files BEGIN ------------------*/
+    static bool SoloTaskPrepare;
+/*-------------for ng files END ------------------*/
     RSFilterCacheManager() = default;
     ~RSFilterCacheManager() = default;
     RSFilterCacheManager(const RSFilterCacheManager&) = delete;
@@ -67,10 +78,19 @@ public:
 
     // This function is similar to DrawFilter(), but instead of drawing anything on the canvas, it simply returns the
     // cache data. This is used with effect component in RSPropertiesPainter::DrawBackgroundEffect.
+    /*-------------for ng files BEGIN ------------------*/
+    // add last arg: forceCacheFlags
     const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> GeneratedCachedEffectData(RSPaintFilterCanvas& canvas,
         const std::shared_ptr<RSDrawingFilter>& filter, const std::optional<Drawing::RectI>& srcRect = std::nullopt,
-        const std::optional<Drawing::RectI>& dstRect = std::nullopt);
-
+        const std::optional<Drawing::RectI>& dstRect = std::nullopt,
+        const std::tuple<bool, bool>& forceCacheFlags = std::make_tuple(false, false));
+    /*-------------for ng files END ------------------*/
+    /*-------------for ng files BEGIN ------------------*/
+    static bool IsNearlyFullScreen(Drawing::RectI imageSize, int32_t canvasWidth, int32_t canvasHeight);
+    void PostPartialFilterRenderTask(const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect);
+    void PostPartialFilterRenderInit(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
+        const Drawing::RectI& dstRect, bool& shouldClearFilteredCache);
+    /*-------------for ng files END ------------------*/
     uint8_t CalcDirectionBias(const Drawing::Matrix& mat);
     enum CacheType : uint8_t {
         CACHE_TYPE_NONE              = 0,
@@ -97,6 +117,125 @@ public:
     static bool GetFilterInvalid();
     static void SetFilterInvalid(bool invalidFilter);
 
+    /*-------------for ng files BEGIN ------------------*/
+    void InvalidateCache(CacheType cacheType = CacheType::CACHE_TYPE_BOTH);
+    /*-------------for ng files END ------------------*/
+/*-------------for ng files BEGIN ------------------*/
+private:
+    class RSFilterCacheTask : public RSFilter::RSFilterTask {
+    public:
+        static const bool FilterPartialRenderEnabled;
+        bool isFirstInit_ = true;
+        bool needClearSurface_ = false;
+        bool isLastRender_ = false;
+        int surfaceFlag = -1;
+        std::atomic<bool> isTaskRelease_ = false;
+        std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedFirstFilter_ = nullptr;
+        std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshotInTask_ = nullptr;
+        std::mutex grBackendTextureMutex_;
+        RSFilterCacheTask() = default;
+        virtual ~RSFilterCacheTask() = default;
+        std::atomic<Drawing::ColorType> cacheBackendTextureColorType_;
+        bool InitSurface(Drawing::GPUContext* grContext) override;
+        bool Render() override;
+        bool SaveFilteredImage() override;
+        void SwapInit() override;
+        bool SetDone() override;
+        CacheProcessStatus GetStatus() const
+        {
+            return cacheProcessStatus_.load();
+        }
+
+        void SetStatus(CacheProcessStatus cacheProcessStatus)
+        {
+            cacheProcessStatus_.store(cacheProcessStatus);
+        }
+
+        void InitTask(std::shared_ptr<RSDrawingFilter> filter,
+            std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshot, const Drawing::RectI& dstRect)
+        {
+            needClearSurface_ = (dstRectBefore_.GetWidth() != dstRect.GetWidth() ||
+                dstRectBefore_.GetHeight() != dstRect.GetHeight());
+            filterBefore_ = filter;
+            cachedSnapshotBefore_ = cachedSnapshot;
+            snapshotSizeBefore_ = cachedSnapshot->cachedRect_;
+            dstRectBefore_ = dstRect;
+        }
+        Drawing::BackendTexture GetResultTexture() const
+        {
+            return cacheCompletedBackendTexture_;
+        }
+
+        Drawing::RectI GetDstRect() const
+        {
+            return dstRect_;
+        }
+
+        void Reset()
+        {
+            cachedSnapshotBefore_.reset();
+        }
+
+        void ResetInTask()
+        {
+            cachedSnapshotInTask_.reset();
+            dstRectBefore_ = { 0, 0, 0, 0 };
+            dstRect_ = { 0, 0, 0, 0 };
+        }
+
+        void ResetGrContext()
+        {
+            cacheSurface_ = nullptr;
+            cacheCompletedSurface_ = nullptr;
+            RSFilter::clearGpuContext();
+            isTaskRelease_.store(false);
+        }
+
+        void Notify()
+        {
+            cvParallelRender_.notify_one();
+        }
+
+        std::shared_ptr<OHOS::AppExecFwk::EventHandler> GetHandler()
+        {
+            return handler_;
+        }
+
+        bool IsCompleted()
+        {
+            return isCompleted_;
+        }
+
+        void SetCompleted(bool val)
+        {
+            isCompleted_ = val;
+        }
+
+        void SwapTexture()
+        {
+            std::swap(resultBackendTexture_, cacheCompletedBackendTexture_);
+            std::swap(cacheSurface_, cacheCompletedSurface_);
+        }
+
+    private:
+        Drawing::BackendTexture cacheBackendTexture_;
+        Drawing::BackendTexture resultBackendTexture_;
+        Drawing::BackendTexture cacheCompletedBackendTexture_;
+        std::shared_ptr<Drawing::Surface> cacheSurface_ = nullptr;
+        std::shared_ptr<Drawing::Surface> cacheCompletedSurface_ = nullptr;
+        Drawing::RectI snapshotSize_;
+        Drawing::RectI snapshotSizeBefore_;
+        Drawing::RectI dstRect_;
+        Drawing::RectI dstRectBefore_;
+        std::shared_ptr<RSDrawingFilter> filter_ = nullptr;
+        std::shared_ptr<RSDrawingFilter> filterBefore_ = nullptr;
+        std::atomic<CacheProcessStatus> cacheProcessStatus_ = CacheProcessStatus::WAITING;
+        std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> cachedSnapshotBefore_ = nullptr;
+        std::condition_variable cvParallelRender_;
+        std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_ = nullptr;
+        bool isCompleted_ = false;
+    };
+/*-------------for ng files END ------------------*/
 private:
     void TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
         const Drawing::RectI& srcRect, const bool needSnapshotOutset = true);
@@ -104,14 +243,27 @@ private:
         RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect);
     void DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas, const Drawing::RectI& dstRect) const;
     // Validate the input srcRect and dstRect, and return the validated rects.
+    /*-------------for ng files BEGIN ------------------*/
+    // add last arg: forceCacheFlags
     std::tuple<Drawing::RectI, Drawing::RectI> ValidateParams(RSPaintFilterCanvas& canvas,
-        const std::optional<Drawing::RectI>& srcRect, const std::optional<Drawing::RectI>& dstRect);
+        const std::optional<Drawing::RectI>& srcRect, const std::optional<Drawing::RectI>& dstRect,
+        const std::tuple<bool, bool>& forceCacheFlags = std::make_tuple(false, false));
+    /*-------------for ng files END ------------------*/
     inline static void ClipVisibleRect(RSPaintFilterCanvas& canvas);
     // Check if the cache is valid in current GrContext, since FilterCache will never be used in multi-thread
     // environment, we don't need to attempt to reattach SkImages.
     void CheckCachedImages(RSPaintFilterCanvas& canvas);
 
     const char* GetCacheState() const;
+
+    /*-------------for ng files BEGIN ------------------*/
+    inline bool IsClearFilteredCache(const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dst);
+    void FilterPartialRender(
+        RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect);
+
+    // To reduce memory usage, clear one of the cached images.
+    inline void CompactCache(bool shouldClearFilteredCache);
+    /*-------------for ng files END ------------------*/
 
     // We keep both the snapshot and filtered snapshot in the cache, and clear unneeded one in next frame.
     // Note: rect in cachedSnapshot_ and cachedFilteredSnapshot_ is in device coordinate.
@@ -129,6 +281,11 @@ private:
 
     // This flag is used to notify unirender_thread need to clear gpu memory.
     static inline std::atomic_bool filterInvalid_ = false;
+
+    /*-------------for ng files BEGIN ------------------*/
+    bool newCache_ = true;
+    std::shared_ptr<RSFilterCacheTask> task_ = std::make_shared<RSFilterCacheTask>();
+    /*-------------for ng files END ------------------*/
 };
 } // namespace Rosen
 } // namespace OHOS

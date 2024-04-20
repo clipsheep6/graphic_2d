@@ -135,9 +135,9 @@ public:
         return priority_;
     }
 #endif
-private:
     void DealWithSelfDrawingNodeBuffer(RSSurfaceRenderNode& surfaceNode,
         RSPaintFilterCanvas& canvas, const RSSurfaceRenderParams& surfaceParams);
+private:
     bool DealWithUIFirstCache(RSSurfaceRenderNode& surfaceNode, RSPaintFilterCanvas& canvas,
         RSSurfaceRenderParams& surfaceParams, RSRenderThreadParams& uniParams);
 

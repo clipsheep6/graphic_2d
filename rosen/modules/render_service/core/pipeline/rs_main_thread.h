@@ -269,6 +269,15 @@ public:
     bool GetParallelCompositionEnabled();
     std::shared_ptr<HgmFrameRateManager> GetFrameRateMgr() { return frameRateMgr_; };
     void SetFrameIsRender(bool isRender);
+    bool GetMarkRenderFlag() const
+    {
+        return markRenderFlag_;
+    }
+    void ResetMarkRenderFlag()
+    {
+        markRenderFlag_ = false;
+    }
+
     void PerfForBlurIfNeeded();
 
     bool IsOnVsync() const
@@ -295,6 +304,8 @@ public:
     {
         skipJankAnimatorFrame_.store(skipJankAnimatorFrame);
     }
+
+    bool IsRequestedNextVSync();
 
 private:
     using TransactionDataIndexMap = std::unordered_map<pid_t,
@@ -380,10 +391,15 @@ private:
     RSVisibleLevel GetRegionVisibleLevel(const Occlusion::Region& curRegion,
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
+    void TryCleanResourceInBackGroundThd();
     void WaitUntilUploadTextureTaskFinishedForGL();
 #ifdef RES_SCHED_ENABLE
     void SubScribeSystemAbility();
     sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+    void ConnectChipsetVsyncSer();
+    void SetVsyncInfo(uint64_t timestamp);
 #endif
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, bool waitForRT);
@@ -559,12 +575,15 @@ private:
 
     // for dvsync (animate requestNextVSync after mark rsnotrendering)
     bool needRequestNextVsyncAnimate_ = false;
-    bool hasMark_ = false;
+    bool markRenderFlag_ = false;
 
     bool forceUIFirstChanged_ = false;
 
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
+#endif
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+    bool initVsyncServiceFlag_ = true;
 #endif
     pid_t exitedPid_ = -1;
     std::set<pid_t> exitedPidSet_;

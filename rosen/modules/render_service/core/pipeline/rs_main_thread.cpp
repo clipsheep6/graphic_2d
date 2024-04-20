@@ -109,6 +109,9 @@
 #include "socperf_client.h"
 #endif
 
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+#include "chipset_vsync.h"
+#endif
 #ifdef RES_SCHED_ENABLE
 #include "system_ability_definition.h"
 #include "if_system_ability_manager.h"
@@ -275,6 +278,16 @@ RSMainThread::~RSMainThread() noexcept
     }
 }
 
+
+void RSMainThread::TryCleanResourceInBackGroundThd()
+{
+#if defined(RS_ENABLE_UNI_RENDER) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+    if (RSBackgroundThread::Instance().GetGrResourceFinishFlag()) {
+        RSBackgroundThread::Instance().CleanGrResource();
+    }
+#endif
+}
+
 void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
@@ -306,18 +319,10 @@ void RSMainThread::Init()
         }
         if (isUniRender_ && doDirectComposition_) {
             UpdateDisplayNodeScreenId();
-        }
-
-        if (!hasMark_) {
-            SetFrameIsRender(true);
-        }
-        hasMark_ = false;
-        // move rnv after mark rsnotrendering
-        if (needRequestNextVsyncAnimate_ || rsVSyncDistributor_->HasPendingUIRNV()) {
-            rsVSyncDistributor_->MarkRSAnimate();
-            RequestNextVSync("animate", timestamp_);
-        } else {
-            rsVSyncDistributor_->UnmarkRSAnimate();
+            if (!markRenderFlag_) {
+                SetFrameIsRender(true);
+            }
+            markRenderFlag_ = false;
         }
 
         InformHgmNodeInfo();
@@ -339,6 +344,10 @@ void RSMainThread::Init()
         RSUploadResourceThread::Instance().OnRenderEnd();
 #endif
         RSTypefaceCache::Instance().HandleDelayDestroyQueue();
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+        ConnectChipsetVsyncSer();
+#endif
+        TryCleanResourceInBackGroundThd();
         RS_PROFILER_ON_FRAME_END();
     };
     static std::function<void (std::shared_ptr<Drawing::Image> image)> holdDrawingImagefunc =
@@ -473,7 +482,9 @@ void RSMainThread::Init()
             RSMainThread::Instance()->SetForceUpdateUniRenderFlag(forceUpdate);
             RSMainThread::Instance()->SetIdleTimerExpiredFlag(idleTimerExpired);
             RS_TRACE_NAME_FMT("DVSyncIsOn: %d", this->rsVSyncDistributor_->IsDVsyncOn());
-            if (!this->rsVSyncDistributor_->IsDVsyncOn()) {
+            if (forceUpdate) {
+                RSMainThread::Instance()->RequestNextVSync("ltpoForceUpdate");
+            } else {
                 RSMainThread::Instance()->RequestNextVSync();
             }
         });
@@ -1138,6 +1149,10 @@ void RSMainThread::CollectInfoForHardwareComposer()
                 selfDrawingNodes_.emplace_back(surfaceNode);
             }
             if (!surfaceNode->IsOnTheTree()) {
+                if (surfaceNode->IsCurrentFrameBufferConsumed()) {
+                    surfaceNode->UpdateHardwareDisabledState(true);
+                    doDirectComposition_ = false;
+                }
                 return;
             }
 
@@ -1436,6 +1451,14 @@ void RSMainThread::SetSurfaceCapProcFinished(bool flag)
     surfaceCapProcFinished_ = flag;
 }
 
+bool RSMainThread::IsRequestedNextVSync()
+{
+    if (receiver_ != nullptr) {
+        return receiver_->IsRequestedNextVSync();
+    }
+    return false;
+}
+
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
@@ -1482,7 +1505,7 @@ bool RSMainThread::GetParallelCompositionEnabled()
 
 void RSMainThread::SetFrameIsRender(bool isRender)
 {
-    hasMark_ = true;
+    markRenderFlag_ = true;
     rsVSyncDistributor_->SetFrameIsRender(isRender);
 }
 
@@ -1692,6 +1715,7 @@ void RSMainThread::Render()
     if (isUniRender_) {
         auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
         renderThreadParams_->SetTimestamp(hgmCore.GetCurrentTimestamp());
+        renderThreadParams_->SetRequestNextVsyncFlag(needRequestNextVsyncAnimate_);
         renderThreadParams_->SetPendingScreenRefreshRate(hgmCore.GetPendingScreenRefreshRate());
         renderThreadParams_->SetForceCommitLayer(isHardwareEnabledBufferUpdated_ || forceUpdateUniRenderFlag_);
     }
@@ -2190,6 +2214,9 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
         RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
     }
     mainLoop_();
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+    SetVsyncInfo(timestamp);
+#endif
     auto screenManager_ = CreateOrGetScreenManager();
     if (screenManager_ != nullptr) {
         auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
@@ -2230,6 +2257,30 @@ void RSMainThread::RSJankStatsOnVsyncEnd(int64_t onVsyncStartTime, int64_t onVsy
         drawFrame_.PostDirectCompositionJankStats(rsParams);
     }
 }
+
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+void RSMainThread::ConnectChipsetVsyncSer()
+{
+    if (initVsyncServiceFlag_ && (OHOS::Camera::ChipsetVsyncClient::Instance().InitChipsetVsync() == -1)) {
+        initVsyncServiceFlag_ = true;
+    } else {
+        initVsyncServiceFlag_ = false;
+    }
+}
+#endif
+
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+void RSMainThread::SetVsyncInfo(uint64_t timestamp)
+{
+    int64_t vsyncPeriod = 0;
+    if (receiver_) {
+        receiver_->GetVSyncPeriod(vsyncPeriod);
+    }
+    OHOS::Camera::ChipsetVsyncHostCallback::GetInstance()->SetVsync(timestamp, vsyncPeriod);
+    RS_LOGD("UpdateVsyncTime = %{public}lld, period = %{public}lld",
+        static_cast<long long>(timestamp), static_cast<long long>(vsyncPeriod));
+}
+#endif
 
 void RSMainThread::Animate(uint64_t timestamp)
 {
@@ -2828,7 +2879,7 @@ void RSMainThread::PerfForBlurIfNeeded()
         }
         RS_OPTIONAL_TRACE_NAME_FMT("PerfForBlurIfNeeded now[%ld] timestamp[%ld] preBlurCnt[%d]",
             std::chrono::steady_clock::now().time_since_epoch(), timestamp, preBlurCnt);
-        if (timestamp - prePerfTimestamp > PERF_PERIOD_BLUR_TIMEOUT && preBlurCnt != 0) {
+        if (static_cast<uint64_t>(timestamp) - prePerfTimestamp > PERF_PERIOD_BLUR_TIMEOUT && preBlurCnt != 0) {
             PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(preBlurCnt), false);
             prePerfTimestamp = 0;
             preBlurCnt = 0;

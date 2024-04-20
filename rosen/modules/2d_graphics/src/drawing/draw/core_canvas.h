@@ -21,6 +21,7 @@
 #include "common/rs_macros.h"
 #include "drawing/engine_adapter/impl_interface/core_canvas_impl.h"
 #include "utils/drawing_macros.h"
+#include "utils/rect.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -28,6 +29,17 @@ namespace Drawing {
 enum class SrcRectConstraint {
     STRICT_SRC_RECT_CONSTRAINT,
     FAST_SRC_RECT_CONSTRAINT,
+};
+
+struct HpsBlurParameter {
+    Rect src;
+    Rect dst;
+    scalar sigma { 1E-6 };
+    float saturation { 1.0 };
+    float brightness { 1.0 };
+    HpsBlurParameter(const Rect& s, const Rect& d, const scalar& sgm,
+        float satura, float bright)
+        : src(s), dst(d), sigma(sgm), saturation(satura), brightness(bright) {}
 };
 
 /**
@@ -302,6 +314,9 @@ public:
 
     virtual void DrawShadow(const Path& path, const Point3& planeParams, const Point3& devLightPos, scalar lightRadius,
         Color ambientColor, Color spotColor, ShadowFlags flag);
+
+    virtual void DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
+        scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle);
 
     // color
     /**
@@ -675,6 +690,8 @@ public:
         return paintPen_;
     }
 
+    virtual bool DrawBlurImage(const Image& image, const HpsBlurParameter& blurParams);
+
 protected:
     CoreCanvas(int32_t width, int32_t height);
     void BuildNoDraw(int32_t width, int32_t height);
@@ -683,6 +700,10 @@ protected:
     Paint paintPen_;
 
 private:
+    void ApplyDrawProc(const Paint& paint, const std::function<void()>& proc);
+    void ApplyBlurDrawProc(const Paint& paint, const std::function<void()>& proc);
+    void ApplyDrawLooper(const std::function<void()> drawProc);
+
     void AttachPaint();
     std::shared_ptr<CoreCanvasImpl> impl_;
 #ifdef ACE_ENABLE_GPU

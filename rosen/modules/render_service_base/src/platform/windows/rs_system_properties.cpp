@@ -212,6 +212,11 @@ bool RSSystemProperties::GetMaskLinearBlurEnabled()
     return true;
 }
 
+bool RSSystemProperties::GetMotionBlurEnabled()
+{
+    return true;
+}
+
 bool RSSystemProperties::GetDebugTraceEnabled()
 {
     return false;
@@ -233,6 +238,11 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
 }
 
 bool RSSystemProperties::GetKawaseEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetHpsBlurEnabled()
 {
     return false;
 }

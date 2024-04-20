@@ -503,9 +503,9 @@ void RSPropertiesPainter::DrawShadowInner(
         Color ambientColor = Color::FromArgbInt(DEFAULT_AMBIENT_COLOR);
         ambientColor.MultiplyAlpha(canvas.GetAlpha());
         spotColor.MultiplyAlpha(canvas.GetAlpha());
-        canvas.DrawShadow(path, planeParams, lightPos, DEFAULT_LIGHT_RADIUS,
+        canvas.DrawShadowStyle(path, planeParams, lightPos, DEFAULT_LIGHT_RADIUS,
             Drawing::Color(ambientColor.AsArgbInt()), Drawing::Color(spotColor.AsArgbInt()),
-            Drawing::ShadowFlags::TRANSPARENT_OCCLUDER);
+            Drawing::ShadowFlags::TRANSPARENT_OCCLUDER, true);
     } else {
         Drawing::Brush brush;
         brush.SetColor(Drawing::Color::ColorQuadSetARGB(
@@ -626,6 +626,11 @@ void RSPropertiesPainter::DrawForegroundFilter(const RSProperties& properties, R
         return;
     }
     auto foregroundFilter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
+
+    if (foregroundFilter->GetFilterType() == RSFilter::MOTION_BLUR) {
+        auto canvasOriginal = canvas.GetOriginalCanvas();
+        foregroundFilter->SetGeometry(*canvasOriginal, 0.f, 0.f);
+    }
 
     foregroundFilter->DrawImageRect(canvas, imageSnapshot, Drawing::Rect(0, 0, imageSnapshot->GetWidth(),
         imageSnapshot->GetHeight()), Drawing::Rect(0, 0, imageSnapshot->GetWidth(), imageSnapshot->GetHeight()));

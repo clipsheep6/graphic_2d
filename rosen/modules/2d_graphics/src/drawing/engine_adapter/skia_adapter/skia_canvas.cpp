@@ -442,6 +442,25 @@ void SkiaCanvas::DrawShadow(const Path& path, const Point3& planeParams, const P
     }
 }
 
+void SkiaCanvas::DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
+    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle)
+{
+    if (!skCanvas_) {
+        LOGD("skCanvas_ is null, return on line %{public}d", __LINE__);
+        return;
+    }
+    auto skPathImpl = path.GetImpl<SkiaPath>();
+    SkPoint3 point1 = SkPoint3::Make(planeParams.GetX(), planeParams.GetY(), planeParams.GetZ());
+    SkPoint3 point2 = SkPoint3::Make(devLightPos.GetX(), devLightPos.GetY(), devLightPos.GetZ());
+    SkColor color1 = ambientColor.CastToColorQuad();
+    SkColor color2 = spotColor.CastToColorQuad();
+    SkShadowFlags flags = static_cast<SkShadowFlags>(flag);
+    if (skPathImpl != nullptr) {
+        SkShadowUtils::DrawShadowStyle(
+            skCanvas_, skPathImpl->GetPath(), point1, point2, lightRadius, color1, color2, flags, isShadowStyle);
+    }
+}
+
 void SkiaCanvas::DrawColor(ColorQuad color, BlendMode mode)
 {
     if (!skCanvas_) {
@@ -1237,6 +1256,29 @@ void SkiaCanvas::Reset(int32_t width, int32_t height)
 {
     SkNoDrawCanvas* noDraw = reinterpret_cast<SkNoDrawCanvas*>(skCanvas_);
     noDraw->resetCanvas(width, height);
+}
+
+bool SkiaCanvas::DrawBlurImage(const Image& image, const Drawing::HpsBlurParameter& blurParams)
+{
+    auto skImageImpl = image.GetImpl<SkiaImage>();
+    if (skImageImpl == nullptr) {
+        LOGE("skImageImpl is null, return on line %{public}d", __LINE__);
+        return false;
+    }
+
+    sk_sp<SkImage> img = skImageImpl->GetImage();
+    if (img == nullptr) {
+        LOGE("img is null, return on line %{public}d", __LINE__);
+        return false;
+    }
+
+    SkRect srcRect = SkRect::MakeLTRB(blurParams.src.GetLeft(), blurParams.src.GetTop(),
+        blurParams.src.GetRight(), blurParams.src.GetBottom());
+    SkRect dstRect = SkRect::MakeLTRB(blurParams.dst.GetLeft(), blurParams.dst.GetTop(),
+        blurParams.dst.GetRight(), blurParams.dst.GetBottom());
+
+    SkBlurArg blurArg(srcRect, dstRect, blurParams.sigma, blurParams.saturation, blurParams.brightness);
+    return skCanvas_->drawBlurImage(img.get(), blurArg);
 }
 } // namespace Drawing
 } // namespace Rosen

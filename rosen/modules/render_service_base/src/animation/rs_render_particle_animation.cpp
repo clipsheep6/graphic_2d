@@ -57,7 +57,7 @@ bool RSRenderParticleAnimation::Animate(int64_t time)
     int64_t deltaTime = time - animationFraction_.GetLastFrameTime();
     animationFraction_.SetLastFrameTime(time);
     if (particleSystem_ != nullptr) {
-        auto particleNoiseFields = target->GetRenderProperties().GetParticleNoiseFields();
+        auto& particleNoiseFields = target->GetRenderProperties().GetParticleNoiseFields();
         if (particleNoiseFields) {
             UpdateNoiseField(particleNoiseFields);
         }

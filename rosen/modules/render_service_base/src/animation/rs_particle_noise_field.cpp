@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,8 @@ bool ParticleNoiseField::isPointInField(
     } else {
         double normX = (point.x_ - fieldCenter_.x_) * (point.x_ - fieldCenter_.x_);
         double normY = (point.y_ - fieldCenter_.y_) * (point.y_ - fieldCenter_.y_);
-        return (normX / (width * HALF * width * HALF) + normY / (height * HALF * height * HALF) <= 1.0);
+        return ROSEN_EQ(width, 0.f) || ROSEN_EQ(height, 0.f) ? false :
+               (normX / (width * HALF * width * HALF) + normY / (height * HALF * height * HALF) <= 1.0);
     }
     return false;
 }
@@ -37,7 +38,8 @@ float ParticleNoiseField::calculateEllipseEdgeDistance(const Vector2f& direction
 {
     // direction is the direction vector from the center to the particle location.
     // Check whether the direction is zero vector.
-    if (direction.x_ == 0 && direction.y_ == 0) {
+    if ((ROSEN_EQ(direction.x_, 0.f) && ROSEN_EQ(direction.y_, 0.f)) ||
+        ROSEN_EQ(fieldSize_.x_, 0.f) || ROSEN_EQ(fieldSize_.y_, 0.f)) {
         return 0;
     }
     // Implicit equation of the ellipse edge: (x/a)^2 + (y/b)^2 = 1
@@ -54,7 +56,7 @@ float ParticleNoiseField::calculateEllipseEdgeDistance(const Vector2f& direction
 float ParticleNoiseField::calculateDistanceToRectangleEdge(
     const Vector2f& position, const Vector2f& direction, const Vector2f& center, const Vector2f& size)
 {
-    if (direction.x_ == 0 && direction.y_ == 0) {
+    if (ROSEN_EQ(direction.x_, 0.f) && ROSEN_EQ(direction.y_, 0.f)) {
         return 0.0f;
     }
     // Calculates the four boundaries of a rectangle.
@@ -70,14 +72,18 @@ float ParticleNoiseField::calculateDistanceToRectangleEdge(
 
     // Particles advance to the boundary only if t is a positive number.
     std::vector<float> times;
-    if (tLeft > 0)
+    if (tLeft > 0) {
         times.push_back(tLeft);
-    if (tRight > 0)
+    }
+    if (tRight > 0) {
         times.push_back(tRight);
-    if (tTop > 0)
+    }
+    if (tTop > 0) {
         times.push_back(tTop);
-    if (tBottom > 0)
+    }
+    if (tBottom > 0) {
         times.push_back(tBottom);
+    }
 
     if (times.empty()) {
         return 0.0f;
@@ -95,22 +101,24 @@ Vector2f ParticleNoiseField::ApplyField(const Vector2f& position)
     Vector2f direction = position - fieldCenter_;
     float distance = direction.GetLength();
     float forceMagnitude = fieldStrength_;
-    if (isPointInField(position, fieldShape_, fieldCenter_, fieldSize_.x_, fieldSize_.y_)) {
-        if (fieldFeather_ > 0) {
-            float edgeDistance = fieldSize_.x_ * HALF;
-            if (fieldShape_ == ShapeType::RECT) {
-                edgeDistance = calculateDistanceToRectangleEdge(position, direction, fieldCenter_, fieldSize_);
-            } else if (fieldShape_ == ShapeType::ELLIPSE) {
-                edgeDistance = calculateEllipseEdgeDistance(direction);
-            }
-            if (edgeDistance != 0) {
-                forceMagnitude *= (1.0f - ((float)fieldFeather_ / 100.0f) * (distance / edgeDistance));
-            }
-        }
+    if (!isPointInField(position, fieldShape_, fieldCenter_, fieldSize_.x_, fieldSize_.y_)) {
+        return Vector2f { 0.f, 0.f };
+    }
+    if (fieldFeather_ <= 0) {
         Vector2f force = direction.Normalized() * forceMagnitude;
         return force;
     }
-    return Vector2f { 0.f, 0.f };
+    float edgeDistance = fieldSize_.x_ * HALF;
+    if (fieldShape_ == ShapeType::RECT) {
+        edgeDistance = calculateDistanceToRectangleEdge(position, direction, fieldCenter_, fieldSize_);
+    } else if (fieldShape_ == ShapeType::ELLIPSE) {
+        edgeDistance = calculateEllipseEdgeDistance(direction);
+    }
+    if (edgeDistance != 0) {
+        forceMagnitude *= (1.0f - ((float)fieldFeather_ / 100.0f) * (distance / edgeDistance));
+    }
+    Vector2f force = direction.Normalized() * forceMagnitude;
+    return force;
 }
 
 Vector2f ParticleNoiseField::ApplyCurlNoise(const Vector2f& position)

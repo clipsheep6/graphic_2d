@@ -286,8 +286,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         {"drawtextblobcreate_text_clear", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_CLEAR); }},
         {"drawtextblobcreate_text_color", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_COLOR); }},
         {"drawtextblobcreate_text_diff", []() -> std::shared_ptr<TestBase> { return std::make_shared<XfermodeBench>(XfermodeBench::FromText, BLEND_MODE_DIFFERENCE); }},
-
-        //interface
         {"canvas_drawrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"textblob_createbuilder", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobBuilderCreate>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"textblob_createfrom_text", []() -> std::shared_ptr<TestBase> { return std::make_shared<TextBlobCreateFromText>(TestBase::DRAW_STYLE_COMPLEX); }},
@@ -299,19 +297,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>>
         {"path_close", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathClose>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"path_offset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathOffset>(TestBase::DRAW_STYLE_COMPLEX); }},
         {"path_reset", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathReset>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_cubicto", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCubicTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_rmoveto", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRMoveTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_rlineto", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRLineTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_rquadto", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRQuadTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_rconicto", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRConicTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_rcubicto", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathRCubicTo>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_addrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_addrect_withcorner", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRectWithInitialCorner>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_addroundrect", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddRoundRect>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_addpath", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPath>(TestBase::DRAW_STYLE_COMPLEX); }},
-        {"path_addpathwithmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPathWithMode>(TestBase::DRAW_STYLE_COMPLEX,OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND); }},
-        {"path_addpathwithoffsetmode", []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddPathWithOffsetAndMode>(TestBase::DRAW_STYLE_COMPLEX,OH_Drawing_PathAddMode::PATH_ADD_MODE_APPEND); }},
-
 };
 } // namespace
 

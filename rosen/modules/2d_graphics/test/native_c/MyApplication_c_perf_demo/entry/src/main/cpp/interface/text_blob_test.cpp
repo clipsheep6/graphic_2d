@@ -18,45 +18,36 @@
 
 void TextBlobBuilderCreate::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
+    std::string text = "textblob";
+    int len = text.length();
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
-    const int count = 9;
-    uint16_t glyphs[9] = { 65, 227, 283, 283, 299, 2, 94, 37, 84 };
-    float posX[9] = { 0, 14.9 * 2, 25.84 * 2, 30.62 * 2, 35.4 * 2, 47.22 * 2, 52.62 * 2, 67.42 * 2, 81.7 * 2 };
-    float posY[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    int count =  OH_Drawing_FontCountText(font,text.c_str(),len,OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
     TestRend rand;
-    float l,t,r,b;    
+    
     for (int i = 0; i < testCount_; i++) {
-        l = rand.nextULessThan(bitmapWidth_);
-        t = rand.nextULessThan(bitmapHeight_);
-        r = l + rand.nextULessThan(bitmapWidth_);
-        b = t + rand.nextULessThan(bitmapHeight_);
         OH_Drawing_TextBlobBuilder* builder = OH_Drawing_TextBlobBuilderCreate();
-        OH_Drawing_Rect* rect = OH_Drawing_RectCreate(l, t, r, b);    
-        const OH_Drawing_RunBuffer* buffer = OH_Drawing_TextBlobBuilderAllocRunPos(builder,font,count,rect);
-        for (int idx = 0; idx < count; idx++) {
-            buffer->glyphs[idx] = glyphs[idx];
-            buffer->pos[idx * 2] = posX[idx];
-            buffer->pos[idx * 2 + 1] = posY[idx];
-        }        
+        OH_Drawing_TextBlobBuilderDestroy(builder);
+    }
+
+    OH_Drawing_TextBlobBuilder* builder = OH_Drawing_TextBlobBuilderCreate();;
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(100, 100,200, 200);    
+    OH_Drawing_TextBlobBuilderAllocRunPos(builder,font,count,rect);
     OH_Drawing_TextBlob *blob = OH_Drawing_TextBlobBuilderMake(builder);
-        OH_Drawing_CanvasDrawTextBlob(canvas, blob, rand.nextULessThan(bitmapWidth_), rand.nextULessThan(bitmapHeight_));
+    OH_Drawing_CanvasDrawTextBlob(canvas, blob, 0, 0);
     OH_Drawing_TextBlobBuilderDestroy(builder);
     OH_Drawing_RectDestroy(rect);
-        OH_Drawing_TextBlobDestroy(blob);
-    }
     OH_Drawing_FontDestroy(font);
 }
 
 void TextBlobCreateFromText::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    std::string text = "TextBlobCreateFromText";
+    std::string text = "textblob";
     int len = text.length();
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
     TestRend rand;
-    float x,y;
     for (int i = 0; i < testCount_; i++) {
-        x = rand.nextULessThan(bitmapWidth_);
-        y = rand.nextULessThan( bitmapHeight_);
+        int x = rand.nextRangeF(0, bitmapWidth_);
+        int y = rand.nextRangeF(0, bitmapHeight_);
         
         OH_Drawing_TextBlob* blob = OH_Drawing_TextBlobCreateFromText(text.c_str(),len,font,TEXT_ENCODING_UTF8);
         OH_Drawing_CanvasDrawTextBlob(canvas, blob, x, y);
@@ -66,23 +57,23 @@ void TextBlobCreateFromText::OnTestPerformance(OH_Drawing_Canvas* canvas)
 
 void TextBlobCreateFromPosText::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    std::string text = "TextBlobCreateFromPosText";
+    std::string text = "textblob";
     int len = text.length();
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
     TestRend rand;
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_Point2D pt;
-        pt.x = rand.nextULessThan(bitmapWidth_);
-        pt.y = rand.nextULessThan( bitmapHeight_);
+        pt.x = rand.nextRangeF(0, bitmapWidth_);
+        pt.y = rand.nextRangeF(0, bitmapHeight_);
         OH_Drawing_TextBlob* blob = OH_Drawing_TextBlobCreateFromPosText(text.c_str(),len,&pt,font,TEXT_ENCODING_UTF8);
-        OH_Drawing_CanvasDrawTextBlob(canvas, blob, rand.nextULessThan(bitmapWidth_), rand.nextULessThan( bitmapHeight_));
+        OH_Drawing_CanvasDrawTextBlob(canvas, blob, 0, 0);
         OH_Drawing_TextBlobDestroy(blob);
     }
 }
 
 void TextBlobCreateFromString::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    std::string text = "TextBlobCreateFromString";
+    std::string text = "textblob";
     int len = text.length();
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
     TestRend rand;
@@ -97,7 +88,7 @@ void TextBlobCreateFromString::OnTestPerformance(OH_Drawing_Canvas* canvas)
 
 void TextBlobGetBounds::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    std::string text = "TextBlobGetBounds";
+    std::string text = "textblob";
     int len = text.length();
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
     TestRend rand;

@@ -13,7 +13,7 @@ public:
     ~TextBlobBuilderCreate() = default;
 
 protected:
-    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//614 ms 1000次
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//2ms
 };
 
 class TextBlobCreateFromText : public TestBase {
@@ -24,7 +24,7 @@ public:
     ~TextBlobCreateFromText() = default;
 
 protected:
-    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//440 ms 100次
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//1466ms
 };
 
 class TextBlobCreateFromPosText : public TestBase {
@@ -35,7 +35,7 @@ public:
     ~TextBlobCreateFromPosText() = default;
 
 protected:
-    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//230 ms 100次
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//325ms
 };
 
 class TextBlobCreateFromString : public TestBase {
@@ -46,7 +46,7 @@ public:
     ~TextBlobCreateFromString() = default;
 
 protected:
-    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//486 ms 100次
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//1533ms
 };
 
 class TextBlobGetBounds : public TestBase {
@@ -57,6 +57,6 @@ public:
     ~TextBlobGetBounds() = default;
 
 protected:
-    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//365 ms 100次
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;//1514ms
 };
 #endif // TEXT_BLOB_CREATE_FROM_TEXT_H

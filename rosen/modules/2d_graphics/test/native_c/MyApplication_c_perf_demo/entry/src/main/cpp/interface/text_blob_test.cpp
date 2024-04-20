@@ -18,10 +18,7 @@
 
 void TextBlobBuilderCreate::OnTestPerformance(OH_Drawing_Canvas* canvas)
 {
-    std::string text = "TextBlobBuilderCreate";
-    int len = text.length();
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
-//    int count =  OH_Drawing_FontCountText(font,text.c_str(),len,OH_Drawing_TextEncoding::TEXT_ENCODING_UTF8);
     const int count = 9;
     uint16_t glyphs[9] = { 65, 227, 283, 283, 299, 2, 94, 37, 84 };
     float posX[9] = { 0, 14.9 * 2, 25.84 * 2, 30.62 * 2, 35.4 * 2, 47.22 * 2, 52.62 * 2, 67.42 * 2, 81.7 * 2 };

@@ -28,12 +28,12 @@ namespace OHOS {
 namespace Rosen {
 class RSUniRenderListener : public IBufferConsumerListener {
 public:
-    RSUniRenderListener(std::weak_ptr<RSSurfaceHandler> surfaceHandler);
+    RSUniRenderListener(std::weak_ptr<RSDisplayRenderNode> displayRenderNode);
     ~RSUniRenderListener() override;
     void OnBufferAvailable() override;
 
 private:
-    std::weak_ptr<RSSurfaceHandler> surfaceHandler_;
+    std::weak_ptr<RSDisplayRenderNode> displayRenderNode_;
 };
 } // namespace Rosen
 } // namespace OHOS

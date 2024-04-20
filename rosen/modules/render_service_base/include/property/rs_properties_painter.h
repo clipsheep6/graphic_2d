@@ -92,6 +92,16 @@ public:
     static void DrawBackgroundImageAsEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
     static void DrawBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
 
+    /*-------------for ng files BEGIN ------------------*/
+    static void BeginBlendMode(RSPaintFilterCanvas& canvas, const RSProperties& properties);
+    static void EndBlendMode(RSPaintFilterCanvas& canvas, const RSProperties& properties);
+    // functions that are dedicated to driven render [start]
+    static RectF GetCmdsClipRect(Drawing::DrawCmdListPtr& cmds);
+    static void DrawFrameForDriven(const RSProperties& properties, RSPaintFilterCanvas& canvas,
+        Drawing::DrawCmdListPtr& cmds);
+    // functions that are dedicated to driven render [end]
+    /*-------------for ng files END ------------------*/
+
     static const bool BLUR_ENABLED;
 
 private:

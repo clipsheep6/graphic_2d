@@ -380,6 +380,11 @@ public:
     const std::shared_ptr<RSObjAbsGeometry>& GetBoundsGeometry() const;
     const std::shared_ptr<RSObjGeometry>& GetFrameGeometry() const;
     bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<Drawing::Point>& offset);
+
+    /*-------------for ng files BEGIN ------------------*/
+    bool UpdateGeometry(const RSProperties* parent, bool dirtyFlag, const std::optional<Drawing::Point>& offset,
+        const std::optional<Drawing::Rect>& clipRect);
+    /*-------------for ng files END ------------------*/
     bool UpdateGeometryByParent(const Drawing::Matrix* parentMatrix, const std::optional<Drawing::Point>& offset);
     RectF GetLocalBoundsAndFramesRect() const;
     RectF GetBoundsRect() const;
@@ -606,9 +611,16 @@ private:
     std::unique_ptr<RSFilterCacheManager> backgroundFilterCacheManager_;
     std::unique_ptr<RSFilterCacheManager> foregroundFilterCacheManager_;
     static const bool FilterCacheEnabled;
+    /*-------------for ng files BEGIN ------------------*/
+    void CreateColorPickerTaskForShadow();
+    /*-------------for ng files END ------------------*/
 #endif
 
     std::unique_ptr<Sandbox> sandbox_ = nullptr;
+
+    /*-------------for ng files BEGIN ------------------*/
+    std::shared_ptr<RSColorPickerCacheTask> colorPickerTaskShadow_ = nullptr;
+    /*-------------for ng files END ------------------*/
 
     friend class RSBackgroundImageDrawable;
     friend class RSCanvasRenderNode;

@@ -74,8 +74,10 @@ bool RSVirtualScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX, 
 
     return true;
 }
-
-void RSVirtualScreenProcessor::PostProcess()
+/*-------------for ng files BEGIN ------------------*/
+// add arg
+void RSVirtualScreenProcessor::PostProcess(RSDisplayRenderNode* node)
+/*-------------for ng files END ------------------*/
 {
     if (producerSurface_ == nullptr) {
         RS_LOGE("RSVirtualScreenProcessor::PostProcess surface is null!");
@@ -127,5 +129,10 @@ void RSVirtualScreenProcessor::ProcessRcdSurface(RSRcdSurfaceRenderNode& node)
 {
     RS_LOGI("RSVirtualScreenProcessor::ProcessRcdSurface() is not supported.");
 }
+/*-------------for ng files BEGIN ------------------*/
+void RSVirtualScreenProcessor::ProcessDrivenSurface(RSDrivenSurfaceRenderNode&)
+{
+}
+/*-------------for ng files END ------------------*/
 } // namespace Rosen
 } // namespace OHOS

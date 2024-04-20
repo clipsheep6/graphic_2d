@@ -46,8 +46,10 @@ bool RSPhysicalScreenProcessor::Init(RSDisplayRenderNode& node, int32_t offsetX,
     return composerAdapter_->Init(screenInfo_, offsetX, offsetY, mirrorAdaptiveCoefficient_,
         [this](const auto& surface, const auto& layers) { Redraw(surface, layers); });
 }
-
-void RSPhysicalScreenProcessor::PostProcess()
+/*-------------for ng files BEGIN ------------------*/
+// add arg
+void RSPhysicalScreenProcessor::PostProcess(RSDisplayRenderNode* node)
+/*-------------for ng files END ------------------*/
 {
     composerAdapter_->CommitLayers(layers_);
     MultiLayersPerf(layers_.size());
@@ -101,5 +103,12 @@ void RSPhysicalScreenProcessor::Redraw(const sptr<Surface>& surface, const std::
     renderFrame->Flush();
     RS_LOGD("RsDebug RSPhysicalScreenProcessor::Redraw flush frame buffer end");
 }
+
+/*-------------for ng files BEGIN ------------------*/
+void RSPhysicalScreenProcessor::ProcessDrivenSurface(RSDrivenSurfaceRenderNode&)
+{
+}
+/*-------------for ng files END ------------------*/
+
 } // namespace Rosen
 } // namespace OHOS

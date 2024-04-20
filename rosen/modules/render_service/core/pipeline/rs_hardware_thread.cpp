@@ -197,7 +197,15 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         if (output->IsDeviceValid()) {
             hdiBackend_->Repaint(output);
         }
+        /*-------------for ng files BEGIN ------------------*/
+        #ifdef RS_PIPELINE
+        /*-------------for ng files END ------------------*/
         output->ReleaseLayers(releaseFence_);
+        /*-------------for ng files BEGIN ------------------*/
+        #else
+        output->ReleaseLayers();
+        #endif
+        /*-------------for ng files END ------------------*/
         RSMainThread::Instance()->NotifyDisplayNodeBufferReleased();
         // TO-DO
         RSUniRenderThread::Instance().NotifyDisplayNodeBufferReleased();

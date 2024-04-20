@@ -46,7 +46,7 @@ declare_args() {
   graphic_2d_feature_use_igraphics_extend_hooks = false
   graphic_2d_feature_use_aps_igameservice_func = false
   graphic_2d_feature_enable_chipset_vsync = false
-  graphic_2d_feature_enable_rspipeline = false
+  graphic_2d_feature_enable_rspipeline = true
 
   if (defined(is_arkui_x) && is_arkui_x) {
     use_new_render_context = false
@@ -74,6 +74,11 @@ accessibility_defines = []
 if (enable_text_gine) {
   gpu_defines += [ "USE_GRAPHIC_TEXT_GINE" ]
 }
+
+if (graphic_2d_feature_enable_rspipeline) {
+  gpu_defines += [ "RS_PIPELINE" ]
+}
+
 if (graphic_2d_feature_ace_enable_gpu) {
   if (graphic_2d_feature_enable_flutter_vulkan) {
     gpu_defines += [ "RS_ENABLE_OLD_VK" ]

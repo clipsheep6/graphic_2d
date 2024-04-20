@@ -55,6 +55,11 @@ class RSRenderNodeShadowDrawable;
 class RSContext;
 class RSNodeVisitor;
 class RSCommand;
+/*-------------for ng files BEGIN ------------------*/
+class DrawCmdList;
+class RSPropertyDrawable;
+/*-------------for ng files END ------------------*/
+
 namespace NativeBufferUtils {
 class VulkanCleanupHelper;
 }
@@ -82,7 +87,12 @@ public:
 
     void AddChild(SharedPtr child, int index = -1);
     void SetContainBootAnimation(bool isContainBootAnimation);
-
+/*-------------for ng files BEGIN ------------------*/
+    inline bool GetContainBootAnimation() const
+    {
+        return isContainBootAnimation_;
+    }
+/*-------------for ng files END ------------------*/
     virtual void SetBootAnimation(bool isBootAnimation);
     virtual bool GetBootAnimation() const;
 
@@ -214,6 +224,11 @@ public:
     }
     RectI GetChildrenRect() const;
 
+/*-------------for ng files BEGIN ------------------*/
+    bool ChildHasFilter() const;
+    void SetChildHasFilter(bool childHasFilter);
+/*-------------for ng files END ------------------*/
+
     bool ChildHasVisibleFilter() const;
     void SetChildHasVisibleFilter(bool val);
     bool ChildHasVisibleEffect() const;
@@ -305,6 +320,11 @@ public:
     void MapAndUpdateChildrenRect();
     void UpdateParentChildrenRect(std::shared_ptr<RSRenderNode> parentNode) const;
 
+/*-------------for ng files BEGIN ------------------*/
+    //virtual void UpdateFilterCacheManagerWithCacheRegion(
+    //    RSDirtyRegionManager& dirtyManager, const std::optional<RectI>& clipRect = std::nullopt);
+/*-------------for ng files BEGIN ------------------*/
+
     void SetStaticCached(bool isStaticCached);
     virtual bool IsStaticCached() const;
     void SetNodeName(const std::string& nodeName);
@@ -312,7 +332,13 @@ public:
     // store prev surface subtree's must-renewed info that need prepare
     virtual void StoreMustRenewedInfo();
     bool HasMustRenewedInfo() const;
+
+/*-------------for ng files BEGIN ------------------*/
+    // collect all subnodes using effect
+    void SetUseEffectNodes(bool val);
+    bool HasUseEffectNodes() const;
     bool HasSubSurface() const;
+/*-------------for ng files END ------------------*/
 
     bool NeedInitCacheSurface();
     bool NeedInitCacheCompletedSurface();
@@ -396,6 +422,28 @@ public:
     void SetGeoUpdateDelay(bool val);
     void ResetGeoUpdateDelay();
     bool GetGeoUpdateDelay() const;
+
+/*-------------for ng files BEGIN ------------------*/
+    void SetCacheGeoPreparationDelay(bool val);
+    void ResetCacheGeoPreparationDelay();
+    bool GetCacheGeoPreparationDelay() const;
+
+    // driven render ///////////////////////////////////
+    void SetIsMarkDriven(bool isMarkDriven);
+    bool IsMarkDriven() const;
+    void SetIsMarkDrivenRender(bool isMarkDrivenRender);
+    bool IsMarkDrivenRender() const;
+
+    void SetItemIndex(int index);
+    int GetItemIndex() const;
+
+    void SetPaintState(bool paintState);
+    bool GetPaintState() const;
+
+    void SetIsContentChanged(bool isChanged);
+    bool IsContentChanged() const;
+/*-------------for ng files END ------------------*/
+
     bool HasAnimation() const;
 
     bool HasFilter() const;
@@ -410,6 +458,19 @@ public:
     {
         commandExecuted_ = commandExecuted;
     }
+
+/*-------------for ng files BEGIN ------------------*/
+    void ExcuteSurfaceCaptureCommand();
+    bool GetCommandExcuted() const
+    {
+        return commandExcuted_;
+    }
+
+    void SetCommandExcuted(bool commandExcuted)
+    {
+        commandExcuted_ = commandExcuted;
+    }
+/*-------------for ng files END ------------------*/
 
     std::recursive_mutex& GetSurfaceMutex() const;
 
@@ -496,6 +557,17 @@ public:
     void SetSharedTransitionParam(const std::shared_ptr<SharedTransitionParam>& sharedTransitionParam);
     const std::shared_ptr<SharedTransitionParam>& GetSharedTransitionParam() const;
 
+/*-------------for ng files BEGIN ------------------*/
+    // shared transition params, in format <InNodeId, target weakPtr>, nullopt means no transition
+    using SharedTransitionParamOld = std::pair<NodeId, std::weak_ptr<RSRenderNode>>;
+    void SetSharedTransitionParam(const std::optional<SharedTransitionParamOld>&& sharedTransitionParam);
+    inline const std::optional<SharedTransitionParamOld>& GetSharedTransitionParamOld() const
+    {
+        return sharedTransitionParamOld_;
+    }
+    bool ApplyModifiersOld();
+/*-------------for ng files END ------------------*/
+
     void SetGlobalAlpha(float alpha);
     float GetGlobalAlpha() const;
     virtual void OnAlphaChanged() {}
@@ -520,6 +592,7 @@ public:
     void MarkNonGeometryChanged();
 
     void ApplyModifiers();
+
     void ApplyPositionZModifier();
     virtual void UpdateRenderParams();
     void UpdateDrawingCacheInfoBeforeChildren(bool isScreenRotation);
@@ -703,6 +776,10 @@ private:
     bool isFullChildrenListValid_ = true;
     bool isChildrenSorted_ = true;
 
+/*-------------for ng files BEGIN ------------------*/
+    void UpdateFullChildrenListIfNeeded();
+/*-------------for ng files END ------------------*/
+
     void GenerateFullChildrenList();
     void ResortChildren();
 
@@ -784,6 +861,14 @@ private:
     // it should be recorded and update if marked dirty again
     bool geoUpdateDelay_ = false;
 
+/*-------------for ng files BEGIN ------------------*/
+    bool cacheGeoPreparationDelay_ = false;
+    // specify if any subnode uses effect, not including itself
+    bool hasEffectNode_ = false;
+
+    std::atomic<bool> commandExcuted_ = false;
+/*-------------for ng files END ------------------*/
+
     std::atomic<bool> commandExecuted_ = false;
     std::unordered_set<NodeId> curCacheFilterRects_ = {};
     std::unordered_set<NodeId> visitedCacheRoots_ = {};
@@ -804,6 +889,16 @@ private:
     bool isParentLeashWindow_ = false;
     bool isParentScbScreen_ = false;
     NodePriorityType priority_ = NodePriorityType::MAIN_PRIORITY;
+
+    /*-------------for ng files BEGIN ------------------*/
+    // driven render
+    int itemIndex_ = -1;
+    bool isMarkDriven_ = false;
+    bool isMarkDrivenRender_ = false;
+    bool paintState_ = false;
+    bool isContentChanged_ = false;
+    std::optional<SharedTransitionParamOld> sharedTransitionParamOld_;
+    /*-------------for ng files END ------------------*/
 
     OutOfParentType outOfParent_ = OutOfParentType::UNKNOWN;
     float globalAlpha_ = 1.0f;

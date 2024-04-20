@@ -31,7 +31,11 @@ public:
     void ProcessSurface(RSSurfaceRenderNode& node) override;
     void ProcessDisplaySurface(RSDisplayRenderNode& node) override;
     void ProcessRcdSurface(RSRcdSurfaceRenderNode& node) override;
-    void PostProcess() override;
+    /*-------------for ng files BEGIN ------------------*/
+    // add arg
+    void PostProcess(RSDisplayRenderNode* node) override;
+    void ProcessDrivenSurface(RSDrivenSurfaceRenderNode& node) override;
+    /*-------------for ng files END ------------------*/
 private:
     void Redraw(const sptr<Surface>& surface, const std::vector<LayerInfoPtr>& layers);
     uint32_t GetLayerLevel(uint32_t layerLevel) const;

@@ -27,6 +27,9 @@
 #include "system/rs_system_parameters.h"
 
 #include "params/rs_render_thread_params.h"
+/*-------------for ng files BEGIN ------------------*/
+#include "pipeline/driven_render/rs_driven_render_manager.h"
+/*-------------for ng files END ------------------*/
 #include "pipeline/round_corner_display/rs_rcd_render_manager.h"
 #include "pipeline/rs_dirty_region_manager.h"
 #include "pipeline/rs_processor.h"
@@ -89,6 +92,9 @@ public:
     void ProcessEffectRenderNode(RSEffectRenderNode& node) override;
 
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
+    /*-------------for ng files BEGIN ------------------*/
+    bool ParallelComposition(const std::shared_ptr<RSBaseRenderNode> rootNode);
+    /*-------------for ng files END ------------------*/
     void ChangeCacheRenderNodeMap(RSRenderNode& node, const uint32_t count = 0);
     void UpdateCacheRenderNodeMap(RSRenderNode& node);
     bool GenerateNodeContentCache(RSRenderNode& node);
@@ -133,6 +139,17 @@ public:
     {
         isHardwareForcedDisabled_ = true;
     }
+
+    /*-------------for ng files BEGIN ------------------*/
+    void SetDrivenRenderFlag(bool hasDrivenNodeOnUniTree, bool hasDrivenNodeMarkRender)
+    {
+        if (!drivenInfo_) {
+            return;
+        }
+        drivenInfo_->prepareInfo.hasDrivenNodeOnUniTree = hasDrivenNodeOnUniTree;
+        drivenInfo_->hasDrivenNodeMarkRender = hasDrivenNodeMarkRender;
+    }
+    /*-------------for ng files END ------------------*/
 
     void SetUniRenderThreadParam(std::unique_ptr<RSRenderThreadParams>& renderThreadParams);
     void SetHardwareEnabledNodes(const std::vector<std::shared_ptr<RSSurfaceRenderNode>>& hardwareEnabledNodes);
@@ -374,6 +391,11 @@ private:
     // offscreen render related
     void PrepareOffscreenRender(RSRenderNode& node);
     void FinishOffscreenRender(bool isMirror = false);
+    /*-------------for ng files BEGIN ------------------*/
+    void ParallelPrepareDisplayRenderNodeChildrens(RSDisplayRenderNode& node);
+    bool AdaptiveSubRenderThreadMode(bool doParallel);
+    void ParallelRenderEnableHardwareComposer(RSSurfaceRenderNode& node);
+    /*-------------for ng files END ------------------*/
     // close partialrender when perform window animation
     void ClosePartialRenderWhenAnimatingWindows(std::shared_ptr<RSDisplayRenderNode>& node);
     bool DrawBlurInCache(RSRenderNode& node);
@@ -410,6 +432,9 @@ private:
     std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen render
 
     // Use in vulkan parallel rendering
+    /*-------------for ng files BEGIN ------------------*/
+    void ProcessParallelDisplayRenderNode(RSDisplayRenderNode& node);
+    /*-------------for ng files END ------------------*/
     bool IsOutOfScreenRegion(RectI rect);
 
     // used to catch overdraw
@@ -511,6 +536,13 @@ private:
 
     bool isDirtyRegionAlignedEnable_ = false;
     bool isPrevalidateHwcNodeEnable_ = false;
+    /*-------------for ng files BEGIN ------------------*/
+    std::shared_ptr<std::mutex> surfaceNodePrepareMutex_;
+#if defined(RS_ENABLE_PARALLEL_RENDER)
+    uint32_t parallelRenderVisitorIndex_ = 0;
+#endif
+    ParallelRenderingType parallelRenderType_;
+    /*-------------for ng files END ------------------*/
 
     RectI prepareClipRect_{0, 0, 0, 0}; // renderNode clip rect used in Prepare
 
@@ -538,7 +570,25 @@ private:
     std::unique_ptr<RcdInfo> rcdInfo_ = nullptr;
     static void ProcessUnpairedSharedTransitionNode();
     std::stack<RenderParam> curGroupedNodes_;
+    /*-------------for ng files BEGIN ------------------*/
+        // driven render
+    std::unique_ptr<DrivenInfo> drivenInfo_ = nullptr;
 
+    std::unordered_map<NodeId, RenderParam> unpairedTransitionNodes_;
+    // return true if we should prepare/process, false if we should skip.
+    void PrepareSharedTransitionNode(RSBaseRenderNode& node);
+    bool ProcessSharedTransitionNode(RSBaseRenderNode& node);
+    void ProcessUnpairedSharedTransitionNodeDeprecated();
+
+    std::weak_ptr<RSBaseRenderNode> logicParentNode_;
+#if defined(RS_ENABLE_PARALLEL_RENDER)
+    bool isCalcCostEnable_ = false;
+#endif
+    bool isParallel_ = false;
+#if defined(RS_ENABLE_PARALLEL_RENDER)
+    bool doParallelRender_ = false;
+#endif
+    /*-------------for ng files END ------------------*/
     // adapt to sceneboard, mark if the canvasNode within the scope of surfaceNode
     bool isSubNodeOfSurfaceInPrepare_ = false;
     bool isSubNodeOfSurfaceInProcess_ = false;

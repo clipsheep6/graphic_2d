@@ -25,19 +25,28 @@ ohos_source_set("darwin") {
   }
   defines = rs_common_define
 
+  base_src_dir = "."
+  if (!graphic_2d_feature_enable_rspipeline) {
+    #gpu_defines += [ "RS_PIPELINE" ]
+    base_src_dir = "//foundation/graphic/graphic_2d_ext/rosen_gn/modules/render_service_base/src/platform/darwin"
+  }
+
   sources = [
     "../ohos/rs_log.cpp",
-    "rs_accessibility.cpp",
-    "rs_ashmem_helper.cpp",
-    "rs_marshalling_helper.cpp",
-    "rs_render_service_client.cpp",
-    "rs_surface_darwin.cpp",
-    "rs_surface_frame_darwin.cpp",
-    "rs_system_properties.cpp",
-    "rs_vsync_client_darwin.cpp",
+    "$base_src_dir/rs_accessibility.cpp",
+    "$base_src_dir/rs_ashmem_helper.cpp",
+    "$base_src_dir/rs_marshalling_helper.cpp",
+    "$base_src_dir/rs_render_service_client.cpp",
+    "$base_src_dir/rs_surface_darwin.cpp",
+    "$base_src_dir/rs_surface_frame_darwin.cpp",
+    "$base_src_dir/rs_system_properties.cpp",
+    "$base_src_dir/rs_vsync_client_darwin.cpp",
   ]
 
-  include_dirs = [ "$rosen_root/modules/render_service_base/include" ]
+  include_dirs = [
+    "$rosen_root/modules/render_service_base/include",
+    "$rosen_root/modules/render_service_base/src/platform/darwin",
+  ]
 
   defines += [ "MODULE_RSB" ]
   if (enable_glfw_window) {

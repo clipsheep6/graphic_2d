@@ -249,6 +249,12 @@ struct RectIComparator {
     {
         return p2.second.IsInsideOf(p1.second);
     }
+/*-------------for ng files BEGIN ------------------*/
+    bool operator()(const RectI& r1, const RectI& r2) const
+    {
+        return r2.IsInsideOf(r1);
+    }
+/*-------------for ng files END ------------------*/
 };
 
 struct RectI_Hash_Func {
@@ -258,9 +264,20 @@ struct RectI_Hash_Func {
         int hash_value = 0;
         return std::hash<int>()(hash_value);
     }
+/*-------------for ng files BEGIN ------------------*/
+    size_t operator()(const RectI& _r) const
+    {
+        // this is set for all rects can be compared
+        int hash_value = 0;
+        return std::hash<int>()(hash_value);
+    }
+/*-------------for ng files END ------------------*/
 };
 
 typedef std::unordered_set<std::pair<NodeId, RectI>, RectI_Hash_Func, RectIComparator> OcclusionRectISet;
+/*-------------for ng files BEGIN ------------------*/
+typedef std::unordered_set<RectI, RectI_Hash_Func, RectIComparator> OcclusionRectISetOld;
+/*-------------for ng files END ------------------*/
 
 template<typename T>
 class RRectT {

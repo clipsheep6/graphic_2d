@@ -53,8 +53,13 @@ namespace OHOS::Rosen::DrawableV2 {
 RSSurfaceRenderNodeDrawable::Registrar RSSurfaceRenderNodeDrawable::instance_;
 
 RSSurfaceRenderNodeDrawable::RSSurfaceRenderNodeDrawable(std::shared_ptr<const RSRenderNode>&& node)
-    : RSRenderNodeDrawable(std::move(node)) {}
- 
+   : RSRenderNodeDrawable(std::move(node))
+{
+    auto nodeSp = std::const_pointer_cast<RSRenderNode>(node);
+    auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
+    name_ = surfaceNode->GetName();
+}
+
 RSSurfaceRenderNodeDrawable::~RSSurfaceRenderNodeDrawable()
 {
     ClearCacheSurfaceInThread();
@@ -112,10 +117,13 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw, rscanvas us nullptr");
         return;
     }
-
-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
+    auto renderNode = renderNode_.lock();
+    if (renderNode ==nullptr) {
+        return;
+    }
+    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
-    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
+    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(GetRenderParams().get());
     if (!surfaceParams) {
         RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
         return;
@@ -129,7 +137,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     bool isuifirstNode = rscanvas->GetIsParallelCanvas();
     if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
-            surfaceNode->GetName().c_str(), surfaceParams->GetId());
+            name_.c_str(), surfaceParams->GetId());
         return;
     }
     Drawing::Region curSurfaceDrawRegion = CalculateVisibleRegion(surfaceParams, surfaceNode, isuifirstNode);
@@ -145,15 +153,15 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     if (!isuifirstNode && uniParam->IsOpDropped() &&
         surfaceParams->IsMainWindowType() && curSurfaceDrawRegion.IsEmpty()) {
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw occlusion skip SurfaceName:%s NodeId:%" PRIu64 "",
-            surfaceNode->GetName().c_str(), surfaceParams->GetId());
+            name_.c_str(), surfaceParams->GetId());
         return;
     }
-    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnDraw:[" + surfaceNode->GetName() + "] " +
+    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnDraw:[" + name_ + "] " +
         surfaceParams->GetAbsDrawRect().ToString() + "Alpha: " + std::to_string(surfaceNode->GetGlobalAlpha()));
 
     RS_LOGD("RSSurfaceRenderNodeDrawable::OnDraw node:%{public}" PRIu64 ",child size:%{public}u,"
             "name:%{public}s,OcclusionVisible:%{public}d",
-        surfaceParams->GetId(), surfaceNode->GetChildrenCount(), surfaceNode->GetName().c_str(),
+        surfaceParams->GetId(), surfaceNode->GetChildrenCount(), name_.c_str(),
         surfaceParams->GetOcclusionVisible());
 
     if (DealWithUIFirstCache(*surfaceNode, *rscanvas, *surfaceParams, *uniParam)) {
@@ -260,13 +268,18 @@ void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(RSRenderThread
 
 void RSSurfaceRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 {
-    if (!ShouldPaint()) {
+    auto renderNode = renderNode_.lock();
+    if (!ShouldPaint() || renderNode == nullptr) {
         return;
     }
 
-    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode_);
+    auto nodeSp = std::const_pointer_cast<RSRenderNode>(renderNode);
     auto surfaceNode = std::static_pointer_cast<RSSurfaceRenderNode>(nodeSp);
-    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(surfaceNode->GetRenderParams().get());
+    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(GetRenderParams().get());
+    if (!surfaceParams) {
+        RS_LOGE("RSSurfaceRenderNodeDrawable::OnDraw params is nullptr");
+        return;
+    }
 
     auto rscanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     if (!rscanvas) {
@@ -283,7 +296,7 @@ void RSSurfaceRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
         return;
     }
 
-    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnCapture:[" + surfaceNode->GetName() + "] " +
+    RS_TRACE_NAME("RSSurfaceRenderNodeDrawable::OnCapture:[" + name_ + "] " +
         surfaceParams->GetAbsDrawRect().ToString() + "Alpha: " + std::to_string(surfaceNode->GetGlobalAlpha()));
     RSAutoCanvasRestore acr(rscanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
     if (RSUniRenderThread::GetCaptureParam().isSingleSurface_) {
@@ -449,7 +462,7 @@ void RSSurfaceRenderNodeDrawable::DealWithSelfDrawingNodeBuffer(RSSurfaceRenderN
         matrix.PostScale(RSUniRenderThread::GetCaptureParam().scaleX_, RSUniRenderThread::GetCaptureParam().scaleY_);
         canvas.SetMatrix(matrix);
     }
-    
+
     surfaceNode.SetGlobalAlpha(1.0f); // TO-DO
     pid_t threadId = gettid();
     auto params = RSUniRenderUtil::CreateBufferDrawParam(surfaceNode, false, threadId, true);
@@ -493,8 +506,7 @@ bool RSSurfaceRenderNodeDrawable::DealWithUIFirstCache(RSSurfaceRenderNode& surf
     if (surfaceParams.GetUifirstNodeEnableParam()) {
         RS_TRACE_NAME_FMT("DrawUIFirstCache [%s] %lx", surfaceNode.GetName().c_str(), surfaceParams.GetId());
         RSUifirstManager::Instance().AddReuseNode(surfaceParams.GetId());
-        auto& renderParams = renderNode_->GetRenderParams();
-        Drawing::Rect bounds = renderParams ? renderParams->GetBounds() : Drawing::Rect(0, 0, 0, 0);
+        Drawing::Rect bounds = GetRenderParams() ? GetRenderParams()->GetBounds() : Drawing::Rect(0, 0, 0, 0);
         RSAutoCanvasRestore acr(&canvas);
         canvas.MultiplyAlpha(surfaceParams.GetAlpha());
         if (!RSUniRenderThread::GetCaptureParam().isSingleSurface_) {

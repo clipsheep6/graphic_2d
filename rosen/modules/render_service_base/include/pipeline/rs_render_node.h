@@ -608,6 +608,7 @@ public:
     void SetOccludedStatus(bool occluded);
     const RectI GetFilterCachedRegion() const;
     bool IsEffectNodeNeedTakeSnapShot() const;
+    virtual bool SkipFrame(uint32_t skipFrameInterval) { return false; };
 
 protected:
     virtual void OnApplyModifiers() {}

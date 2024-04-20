@@ -45,6 +45,7 @@ private:
     std::shared_ptr<RSDisplayRenderNode> targetNode_;
     std::shared_ptr<RSPaintFilterCanvas> canvas_;
 
+    void DrawCurrentRefreshRate(uint32_t currentRefreshRate, uint32_t realtimeRefreshRate);
     void DrawDirtyRectForDFX(const RectI& dirtyRect, const Drawing::Color color, const RSPaintStyle fillType,
         float alpha, int edgeWidth = 6) const;
     bool DrawDetailedTypesOfDirtyRegionForDFX(RSSurfaceRenderNode& node) const;

@@ -20,6 +20,10 @@
 #include "params/rs_surface_render_params.h"
 #include "platform/common/rs_log.h"
 
+// fresh rate
+#include "hgm_core.h"
+#include "pipeline/rs_realtime_refresh_rate_manager.h"
+
 namespace OHOS::Rosen {
 namespace {
 // DFX drawing alpha
@@ -74,6 +78,38 @@ void RSDirtyRectsDfx::OnDraw(std::shared_ptr<RSPaintFilterCanvas> canvas)
     if (renderThreadParams->isVisibleRegionDfxEnabled_) {
         DrawTargetSurfaceVisibleRegionForDFX();
     }
+
+    if (RSRealtimeRefreshRateManager::Instance().GetShowRefreshRateEnabled()) {
+        RS_TRACE_BEGIN("RSUniRender::DrawCurrentRefreshRate");
+        auto displayParams = static_cast<RSDisplayRenderParams*>(targetNode_->GetRenderParams().get());
+        uint32_t currentRefreshRate =
+            OHOS::Rosen::HgmCore::Instance().GetScreenCurrentRefreshRate(displayParams ? displayParams->GetScreenId() : 0);
+        uint32_t realtimeRefreshRate = RSRealtimeRefreshRateManager::Instance().GetRealtimeRefreshRate();
+        if (realtimeRefreshRate > currentRefreshRate) {
+            realtimeRefreshRate = currentRefreshRate;
+        }
+        DrawCurrentRefreshRate(currentRefreshRate, realtimeRefreshRate);
+        RS_TRACE_END();
+    }
+}
+
+void RSDirtyRectsDfx::DrawCurrentRefreshRate(uint32_t currentRefreshRate, uint32_t realtimeRefreshRate)
+{
+    std::string info = std::to_string(currentRefreshRate) + " " + std::to_string(realtimeRefreshRate);
+    auto color = currentRefreshRate <= 60 ? SK_ColorRED : SK_ColorGREEN;
+    std::shared_ptr<Drawing::Typeface> tf = Drawing::Typeface::MakeFromName("HarmonyOS Sans SC", Drawing::FontStyle());
+    Drawing::Font font;
+    font.SetSize(100);  // 100:Scalar of setting font size
+    font.SetTypeface(tf);
+    std::shared_ptr<Drawing::TextBlob> textBlob = Drawing::TextBlob::MakeFromString(info.c_str(), font);
+
+    Drawing::Brush brush;
+    brush.SetColor(color);
+    brush.SetAntiAlias(true);
+    canvas_->AttachBrush(brush);
+    canvas_->DrawTextBlob(
+        textBlob.get(), 100.f, 200.f);  // 100.f:Scalar x of drawing TextBlob; 200.f:Scalar y of drawing TextBlob
+    canvas_->DetachBrush();
 }
 
 void RSDirtyRectsDfx::DrawDirtyRectForDFX(

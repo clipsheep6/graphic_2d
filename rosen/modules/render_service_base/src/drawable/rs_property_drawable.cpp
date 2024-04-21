@@ -23,6 +23,8 @@
 #include "pipeline/rs_render_node.h"
 #include "platform/common/rs_log.h"
 #include "property/rs_filter_cache_manager.h"
+#include "render/rs_drawing_filter.h"
+#include "render/rs_linear_gradient_blur_shader_filter.h"
 
 namespace OHOS::Rosen {
 constexpr int AIBAR_CACHE_UPDATE_INTERVAL = 5;
@@ -191,7 +193,12 @@ Drawing::RecordingCanvas::DrawFunc RSFilterDrawable::CreateDrawFunc() const
             RS_OPTIONAL_TRACE_NAME_FMT("RSFilterDrawable::CreateDrawFunc node[%llu] ", ptr->nodeId_);
             if (ptr->filter_->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
                 auto filter = std::static_pointer_cast<RSDrawingFilter>(ptr->filter_);
-                filter->SetGeometry(*canvas, ptr->frameWidth_, ptr->frameHeight_);
+                for (const auto& item : filter->GetShaderFilters()) {
+                    if (item->GetShaderFilterType() == RSShaderFilter::LINEAR_GRADIENT_BLUR) {
+                        auto tmpFilter = std::static_pointer_cast<RSLinearGradientBlurShaderFilter>(item);
+                        tmpFilter->SetGeometry(*canvas, ptr->frameWidth_, ptr->frameHeight_);
+                    }
+                }
             }
             RSPropertyDrawableUtils::DrawFilter(canvas, ptr->filter_,
                 ptr->cacheManager_, ptr->IsForeground(), ptr->clearFilteredCacheAfterDrawing_);

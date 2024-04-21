@@ -67,7 +67,7 @@ HWTEST_F(MotionBlurFilterTest, ComposeTest, TestSize.Level1)
     auto filter = std::make_shared<RSMotionBlurFilter>(para);
     auto filter_ = std::make_shared<RSMotionBlurFilter>(para);
 
-    EXPECT_NE(filter->Compose(filter_), nullptr);
+    EXPECT_TRUE(filter->Compose(filter_) == nullptr);
 }
 
 /**

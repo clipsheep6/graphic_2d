@@ -93,7 +93,12 @@
           "battery_manager",
           "cJSON",
           "jsoncpp",
-          "openssl"
+          "openssl",
+          "icu",
+          "zlib",
+          "libpng",
+          "libxml2",
+          "ace_engine"
         ],
         "third_party": [
           "flutter",
@@ -107,7 +112,8 @@
           "egl",
           "opengles",
           "vulkan-headers",
-          "vulkan-loader"
+          "vulkan-loader",
+          "bounds_checking_function"
         ]
       },
       "build": {

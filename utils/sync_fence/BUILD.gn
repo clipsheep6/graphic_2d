@@ -44,9 +44,12 @@ ohos_shared_library("sync_fence") {
 
   public_configs = [ ":sync_fence_public_config" ]
 
-  external_deps = [
+  public_external_deps = [
     "c_utils:utils",
     "eventhandler:libeventhandler",
+  ]
+
+  external_deps = [
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",

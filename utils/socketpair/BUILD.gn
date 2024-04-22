@@ -42,11 +42,12 @@ ohos_shared_library("socketpair") {
 
   deps = [ "//foundation/graphic/graphic_2d/utils:scoped_bytrace" ]
 
-  external_deps = [
+  public_external_deps = [
     "c_utils:utils",
-    "hilog:libhilog",
     "ipc:ipc_core",
   ]
+
+  external_deps = [ "hilog:libhilog" ]
   innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"

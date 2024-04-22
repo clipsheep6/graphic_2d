@@ -145,7 +145,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> IN
 
 napi_value JsEnum::JsEnumIntInit(napi_env env, napi_value exports)
 {
-    for (auto it = g_intEnumClassMap.begin(); it != g_intEnumClassMap.end(); it++) {
+    for (auto it = INT_ENUM_CLASS_MAP.begin(); it != INT_ENUM_CLASS_MAP.end(); it++) {
         auto &enumClassName = it->first;
         auto &enumItemVec = it->second;
         auto vecSize = enumItemVec.size();

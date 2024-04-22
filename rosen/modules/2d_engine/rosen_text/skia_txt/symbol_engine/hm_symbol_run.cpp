@@ -26,20 +26,20 @@ RSSymbolLayers HMSymbolRun::GetSymbolLayers(const uint16_t& glyphId, const HMSym
     RSSymbolLayers symbolInfo;
     symbolInfo.symbolGlyphId = glyphId;
     uint32_t symbolId = static_cast<uint32_t>(glyphId);
-    std::shared_ptr<RSSymbolLayersGroups> symbolInfoOrign = RSHmSymbolConfig_OHOS::GetSymbolLayersGroups(symbolId);
-    if (symbolInfoOrign == nullptr || symbolInfoOrign->symbolGlyphId == 0) {
+    RSSymbolLayersGroups symbolInfoOrign = RSHmSymbolConfig_OHOS::GetSymbolLayersGroups(symbolId);
+    if (symbolInfoOrign.renderModeGroups.empty() || symbolInfoOrign.symbolGlyphId == 0) {
         return symbolInfo;
     }
 
     RSSymbolRenderingStrategy renderMode = symbolText.GetRenderMode();
-    if (symbolInfoOrign->renderModeGroups.find(renderMode) == symbolInfoOrign->renderModeGroups.end()) {
+    if (symbolInfoOrign.renderModeGroups.find(renderMode) == symbolInfoOrign.renderModeGroups.end()) {
         renderMode = RSSymbolRenderingStrategy::SINGLE;
     }
 
-    symbolInfo.layers = symbolInfoOrign->layers;
-    if (symbolInfoOrign->renderModeGroups.find(renderMode) != symbolInfoOrign->renderModeGroups.end()) {
-        symbolInfo.renderGroups = symbolInfoOrign->renderModeGroups[renderMode];
-        symbolInfo.symbolGlyphId = symbolInfoOrign->symbolGlyphId;
+    symbolInfo.layers = symbolInfoOrign.layers;
+    if (symbolInfoOrign.renderModeGroups.find(renderMode) != symbolInfoOrign.renderModeGroups.end()) {
+        symbolInfo.renderGroups = symbolInfoOrign.renderModeGroups[renderMode];
+        symbolInfo.symbolGlyphId = symbolInfoOrign.symbolGlyphId;
     }
 
     std::vector<RSSColor> colorList = symbolText.GetRenderColor();
@@ -127,7 +127,7 @@ void HMSymbolRun::DrawSymbol(RSCanvas* canvas, RSTextBlob* blob, const RSPoint& 
         RSEffectStrategy symbolEffect = symbolTxt.GetEffectStrategy();
         uint32_t symbolId = static_cast<uint32_t>(glyphId);
         std::pair<double, double> offsetXY(offset.GetX(), offset.GetY());
-        if (symbolEffect > 0) { // 0 > has animation
+        if (symbolEffect > 0 && symbolTxt.GetAnimationStart()) { // 0 > has animation
             if (!SymbolAnimation(symbolData, symbolId, offsetXY, symbolTxt)) {
                 ClearSymbolAnimation(symbolData, symbolId, offsetXY);
                 canvas->DrawSymbol(symbolData, offset);
@@ -160,7 +160,8 @@ bool HMSymbolRun::SymbolAnimation(const RSHMSymbolData symbol, const uint32_t gl
     symbolNode.SetSymbolId(symbolId_);
     symbolNode.SetAnimationMode(animationMode);
     symbolNode.SetRepeatCount(symbolTxt.GetRepeatCount());
-    symbolNode.SetAminationStart(symbolTxt.GetAminationStart());
+    symbolNode.SetAnimationStart(symbolTxt.GetAnimationStart());
+    symbolNode.SetCommonSubType(symbolTxt.GetCommonSubType());
     if (!symbolNode.DecomposeSymbolAndDraw()) {
         return false;
     }
@@ -183,10 +184,7 @@ bool HMSymbolRun::GetAnimationGroups(const uint32_t glyphid, const RSEffectStrat
     RSAnimationSetting& animationOut)
 {
     auto symbolInfoOrigin = RSHmSymbolConfig_OHOS::GetSymbolLayersGroups(glyphid);
-    if (symbolInfoOrigin == nullptr) {
-        return false;
-    }
-    std::vector<RSAnimationSetting> animationSettings = symbolInfoOrigin->animationSettings;
+    std::vector<RSAnimationSetting> animationSettings = symbolInfoOrigin.animationSettings;
     RSAnimationType animationType = static_cast<RSAnimationType>(effectStrategy);
 
     for (size_t i = 0; i < animationSettings.size(); i++) {

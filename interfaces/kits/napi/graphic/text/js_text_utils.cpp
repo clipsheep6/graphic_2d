@@ -142,7 +142,7 @@ bool GetTextStyleFromJS(napi_env env, napi_value argValue, TextStyle& textStyle)
 
     std::vector<std::string> fontFamilies;
     napi_get_named_property(env, argValue, "fontFamilies", &tempValue);
-    if (tempValue != nullptr && OnMakeFontFamilies(env, tempValue, fontFamilies) == napi_ok) {
+    if (tempValue != nullptr && OnMakeFontFamilies(env, tempValue, fontFamilies)) {
         textStyle.fontFamilies = fontFamilies;
     }
     GetDecorationFromJS(env, argValue, "decoration", textStyle);
@@ -157,7 +157,7 @@ bool GetTextStyleFromJS(napi_env env, napi_value argValue, TextStyle& textStyle)
     if (tempValue != nullptr && ConvertFromJsValue(env, tempValue, text)) {
         textStyle.ellipsis = Str8ToStr16(text);
     }
-    napi_get_named_property(env, argValue, "ellipsisModal", &tempValue);
+    napi_get_named_property(env, argValue, "ellipsisMode", &tempValue);
     uint32_t ellipsisModal = 0;
     if (tempValue != nullptr && napi_get_value_uint32(env, tempValue, &ellipsisModal)== napi_ok) {
         textStyle.ellipsisModal = EllipsisModal(ellipsisModal);
@@ -214,4 +214,51 @@ bool GetParagraphStyleFromJS(napi_env env, napi_value argValue, TypographyStyle&
     return true;
 }
 
+bool GetPlaceholderSpanFromJS(napi_env env, napi_value argValue, PlaceholderSpan& placeholderSpan)
+{
+    if (argValue == nullptr) {
+        return false;
+    }
+    napi_value tempValue = nullptr;
+    napi_get_named_property(env, argValue, "width", &tempValue);
+    double width = 0;
+    if (tempValue != nullptr && napi_get_value_double(env, tempValue, &width) == napi_ok) {
+        placeholderSpan.width = width;
+    }
+
+    napi_get_named_property(env, argValue, "height", &tempValue);
+    double height = 0;
+    if (tempValue != nullptr && napi_get_value_double(env, tempValue, &height) == napi_ok) {
+        placeholderSpan.height = height;
+    }
+
+    napi_get_named_property(env, argValue, "align", &tempValue);
+    uint32_t align = 0;
+    if (tempValue != nullptr && napi_get_value_uint32(env, tempValue, &align) == napi_ok) {
+        placeholderSpan.alignment = PlaceholderVerticalAlignment(align);
+    }
+
+    napi_get_named_property(env, argValue, "baseline", &tempValue);
+    uint32_t baseline = 0;
+    if (tempValue != nullptr && napi_get_value_uint32(env, tempValue, &baseline) == napi_ok) {
+        placeholderSpan.baseline = TextBaseline(baseline);
+    }
+
+    napi_get_named_property(env, argValue, "baselineOffset", &tempValue);
+    double baselineOffset = 0;
+    if (tempValue != nullptr && napi_get_value_double(env, tempValue, &baselineOffset) == napi_ok) {
+        placeholderSpan.baselineOffset = baselineOffset;
+    }
+    return true;
+}
+
+size_t GetParamLen(napi_env env, napi_value param)
+{
+    size_t buffSize = 0;
+    napi_status status = napi_get_value_string_utf8(env, param, nullptr, 0, &buffSize);
+    if (status != napi_ok || buffSize == 0) {
+        return 0;
+    }
+    return buffSize;
+}
 } // namespace OHOS::Rosen

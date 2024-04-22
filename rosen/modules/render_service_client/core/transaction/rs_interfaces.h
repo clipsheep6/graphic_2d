@@ -112,7 +112,7 @@ public:
 
     void SetRefreshRateMode(int32_t refreshRateMode);
 
-    void SyncFrameRateRange(const FrameRateRange& range);
+    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range);
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id);
 
@@ -186,6 +186,8 @@ public:
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler> &looper = nullptr,
         NodeId windowNodeId = 0);
 
+    std::shared_ptr<Media::PixelMap> CreatePixelMapFromSurfaceId(uint64_t surfaceId, const Rect &srcRect);
+
     int32_t RegisterOcclusionChangeCallback(const OcclusionChangeCallback& callback);
 
     int32_t RegisterSurfaceOcclusionChangeCallback(
@@ -227,12 +229,14 @@ public:
     void ReportEventJankFrame(DataBaseRs info);
 
     void ReportGameStateData(GameStateData info);
-    
+
     void EnableCacheForRotation();
 
     void DisableCacheForRotation();
 
     void SetOnRemoteDiedCallback(const OnRemoteDiedCallback& callback);
+
+    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
 
     GpuDirtyRegionInfo GetCurrentDirtyRegionInfo(ScreenId id);
 
@@ -240,7 +244,7 @@ public:
     void SetTpFeatureConfig(int32_t feature, const char* config);
 #endif
     void SetVirtualScreenUsingStatus(bool isVirtualScreenUsingStatus);
-    void SetCurtainScreenUsingStatus(bool isCurtainScreenOn);
+
 private:
     RSInterfaces();
     ~RSInterfaces() noexcept;

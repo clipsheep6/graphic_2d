@@ -57,6 +57,7 @@ public:
     static napi_value DrawPath(napi_env env, napi_callback_info info);
     static napi_value DrawLine(napi_env env, napi_callback_info info);
     static napi_value DrawText(napi_env env, napi_callback_info info);
+    static napi_value DrawPixelMapMesh(napi_env env, napi_callback_info info);
     static napi_value AttachPen(napi_env env, napi_callback_info info);
     static napi_value AttachBrush(napi_env env, napi_callback_info info);
     static napi_value DetachPen(napi_env env, napi_callback_info info);
@@ -77,6 +78,7 @@ private:
     napi_value OnDrawPath(napi_env env, napi_callback_info info);
     napi_value OnDrawLine(napi_env env, napi_callback_info info);
     napi_value OnDrawText(napi_env env, napi_callback_info info);
+    napi_value OnDrawPixelMapMesh(napi_env env, napi_callback_info info);
 
     static bool DeclareFuncAndCreateConstructor(napi_env env);
     static thread_local napi_ref constructor_;

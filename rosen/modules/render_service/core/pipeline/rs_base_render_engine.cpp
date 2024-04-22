@@ -111,6 +111,36 @@ void RSBaseRenderEngine::Init(bool independentContext)
 #endif
 }
 
+void RSBaseRenderEngine::InitCapture(bool independentContext)
+{
+    (void)independentContext;
+    if (captureRenderContext_) {
+        return;
+    }
+
+#if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
+    captureRenderContext_ = std::make_shared<RenderContext>();
+#ifdef RS_ENABLE_GL
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
+        captureRenderContext_->InitializeEglContext();
+    }
+#endif
+    if (RSUniRenderJudgement::IsUniRender()) {
+        captureRenderContext_->SetUniRenderMode(true);
+    }
+#if defined(RS_ENABLE_VK)
+    if (RSSystemProperties::IsUseVulkan()) {
+        captureSkContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext(independentContext);
+        captureRenderContext_->SetUpGpuContext(captureSkContext_);
+    } else {
+        captureRenderContext_->SetUpGpuContext();
+    }
+#else
+    captureRenderContext_->SetUpGpuContext();
+#endif
+#endif // RS_ENABLE_GL || RS_ENABLE_VK
+}
+
 void RSBaseRenderEngine::ResetCurrentContext()
 {
     if (renderContext_ == nullptr) {
@@ -120,12 +150,18 @@ void RSBaseRenderEngine::ResetCurrentContext()
 #if (defined RS_ENABLE_GL)
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
         renderContext_->ShareMakeCurrentNoSurface(EGL_NO_CONTEXT);
+        if (captureRenderContext_) {
+            captureRenderContext_->ShareMakeCurrentNoSurface(EGL_NO_CONTEXT);
+        }
     }
 #endif
 
 #if defined(RS_ENABLE_VK) // end RS_ENABLE_GL and enter RS_ENABLE_VK
     if (RSSystemProperties::IsUseVulkan()) {
         renderContext_->AbandonContext();
+        if (captureRenderContext_) {
+            captureRenderContext_->AbandonContext();
+        }
     }
 #endif // end RS_ENABLE_GL and RS_ENABLE_VK
 }
@@ -244,12 +280,16 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
 #ifdef NEW_RENDER_CONTEXT
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(
     const std::shared_ptr<RSRenderSurfaceOhos>& rsSurface,
-    const BufferRequestConfig& config, bool forceCPU, bool useAFBC)
+    const BufferRequestConfig& config, bool forceCPU, bool useAFBC, bool isProtected)
 #else
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
-    const BufferRequestConfig& config, bool forceCPU, bool useAFBC)
+    const BufferRequestConfig& config, bool forceCPU, bool useAFBC, bool isProtected)
 #endif
 {
+#ifdef RS_ENABLE_VK
+    skContext_ = RsVulkanContext::GetSingleton().CreateDrawingContext();
+    renderContext_->SetUpGpuContext(skContext_);
+#endif
     if (rsSurface == nullptr) {
         RS_LOGE("RSBaseRenderEngine::RequestFrame: surface is null!");
         return nullptr;
@@ -269,6 +309,9 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
 #else
     bufferUsage |= BUFFER_USAGE_CPU_WRITE;
 #endif
+    if (isProtected) {
+        bufferUsage |= BUFFER_USAGE_PROTECTED;
+    }
     rsSurface->SetSurfaceBufferUsage(bufferUsage);
 
     // check if we can use GPU context
@@ -304,7 +347,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
     }
 #endif
 #endif
-    auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height, 0, useAFBC);
+    auto surfaceFrame = rsSurface->RequestFrame(config.width, config.height, 0, useAFBC, isProtected);
     RS_OPTIONAL_TRACE_END();
     if (surfaceFrame == nullptr) {
         RS_LOGE("RSBaseRenderEngine::RequestFrame: request SurfaceFrame failed!");
@@ -318,7 +361,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const std::share
 }
 
 std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surface>& targetSurface,
-    const BufferRequestConfig& config, bool forceCPU, bool useAFBC)
+    const BufferRequestConfig& config, bool forceCPU, bool useAFBC, bool isProtected)
 {
     RS_OPTIONAL_TRACE_BEGIN("RSBaseRenderEngine::RequestFrame(targetSurface)");
     if (targetSurface == nullptr) {
@@ -353,7 +396,7 @@ std::unique_ptr<RSRenderFrame> RSBaseRenderEngine::RequestFrame(const sptr<Surfa
     }
 #endif
     RS_OPTIONAL_TRACE_END();
-    return RequestFrame(rsSurface, config, forceCPU, useAFBC);
+    return RequestFrame(rsSurface, config, forceCPU, useAFBC, isProtected);
 }
 
 #ifdef NEW_RENDER_CONTEXT
@@ -771,6 +814,28 @@ void RSBaseRenderEngine::ShrinkCachesIfNeeded(bool isForUniRedraw)
 #ifdef RS_ENABLE_EGLIMAGE
     if (eglImageManager_ != nullptr) {
         eglImageManager_->ShrinkCachesIfNeeded(isForUniRedraw);
+    }
+#endif // RS_ENABLE_EGLIMAGE
+}
+
+void RSBaseRenderEngine::ClearCacheSet(const std::set<int32_t> unmappedCache)
+{
+#ifdef RS_ENABLE_VK
+    if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
+        RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
+        if (vkImageManager_ != nullptr) {
+            for (auto id : unmappedCache) {
+                vkImageManager_->UnMapVkImageFromSurfaceBuffer(id);
+            }
+        }
+    }
+#endif // RS_ENABLE_VK
+
+#ifdef RS_ENABLE_EGLIMAGE
+    if (eglImageManager_ != nullptr) {
+        for (auto id : unmappedCache) {
+            eglImageManager_->UnMapEglImageFromSurfaceBuffer(id);
+        }
     }
 #endif // RS_ENABLE_EGLIMAGE
 }

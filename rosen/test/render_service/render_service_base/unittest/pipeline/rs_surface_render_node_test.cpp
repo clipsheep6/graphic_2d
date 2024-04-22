@@ -896,7 +896,7 @@ HWTEST_F(RSSurfaceRenderNodeTest, StoreMustRenewedInfo002, TestSize.Level2)
     auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
     ASSERT_NE(node, nullptr);
 
-    node->SetUseEffectNodes(true);
+    node->SetChildHasVisibleEffect(true);
     node->RSRenderNode::StoreMustRenewedInfo();
     node->StoreMustRenewedInfo();
     ASSERT_TRUE(node->HasMustRenewedInfo());
@@ -1042,45 +1042,33 @@ HWTEST_F(RSSurfaceRenderNodeTest, QuerySubAssignable002, TestSize.Level2)
 }
 
 /**
- * @tc.name: QuerySubAssignable003
- * @tc.desc: Test QuerySubAssignable while child has filter but isn't transparent
+ * @tc.name: SetForceHardwareAndFixRotation001
+ * @tc.desc: Test SetForceHardwareAndFixRotation true
  * @tc.type: FUNC
- * @tc.require: issueI98VTC
+ * @tc.require: issueI9HWLB
  */
-HWTEST_F(RSSurfaceRenderNodeTest, QuerySubAssignable003, TestSize.Level2)
+HWTEST_F(RSSurfaceRenderNodeTest, SetForceHardwareAndFixRotation001, TestSize.Level2)
 {
-    auto parentNode = std::make_shared<RSSurfaceRenderNode>(id, context);
-    auto childNode = std::make_shared<RSSurfaceRenderNode>(id + 1, context);
-    ASSERT_NE(parentNode, nullptr);
-    ASSERT_NE(childNode, nullptr);
+    auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
+    ASSERT_NE(node, nullptr);
 
-    childNode->SetHasFilter(true);
-    childNode->SetParent(parentNode);
-    const uint8_t opacity = 255;
-    parentNode->SetAbilityBGAlpha(opacity);
-    parentNode->SetChildHasFilter(true);
-    
-    ASSERT_EQ(parentNode->QuerySubAssignable(false), true);
+    node->SetForceHardwareAndFixRotation(true);
+    ASSERT_EQ(node->isForceHardwareByUser_, true);
 }
 
 /**
- * @tc.name: QuerySubAssignable004
- * @tc.desc: Test QuerySubAssignable while child has filter and it's transparent
+ * @tc.name: SetForceHardwareAndFixRotation002
+ * @tc.desc: Test SetForceHardwareAndFixRotation false
  * @tc.type: FUNC
- * @tc.require: issueI98VTC
+ * @tc.require: issueI9HWLB
  */
-HWTEST_F(RSSurfaceRenderNodeTest, QuerySubAssignable004, TestSize.Level2)
+HWTEST_F(RSSurfaceRenderNodeTest, SetForceHardwareAndFixRotation002, TestSize.Level2)
 {
-    auto parentNode = std::make_shared<RSSurfaceRenderNode>(id, context);
-    auto childNode = std::make_shared<RSSurfaceRenderNode>(id + 1, context);
-    ASSERT_NE(parentNode, nullptr);
-    ASSERT_NE(childNode, nullptr);
+    auto node = std::make_shared<RSSurfaceRenderNode>(id, context);
+    ASSERT_NE(node, nullptr);
 
-    childNode->SetHasFilter(true);
-    childNode->SetParent(parentNode);
-    parentNode->SetChildHasFilter(true);
-    
-    ASSERT_EQ(parentNode->QuerySubAssignable(false), false);
+    node->SetForceHardwareAndFixRotation(false);
+    ASSERT_EQ(node->isForceHardwareByUser_, false);
 }
 } // namespace Rosen
 } // namespace OHOS

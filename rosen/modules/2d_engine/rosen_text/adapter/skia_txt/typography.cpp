@@ -22,6 +22,7 @@
 #include "impl/paragraph_impl.h"
 
 #include "convert.h"
+#include "text_line_base.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -39,17 +40,6 @@ IndexAndAffinity::IndexAndAffinity(size_t charIndex, Affinity charAffinity)
 {
     index = charIndex;
     affinity = charAffinity;
-}
-
-Boundary::Boundary(size_t left, size_t right)
-{
-    leftIndex = left;
-    rightIndex = right;
-}
-
-bool Boundary::operator ==(const Boundary& rhs) const
-{
-    return leftIndex == rhs.leftIndex && rightIndex == rhs.rightIndex;
 }
 
 namespace AdapterTxt {
@@ -261,7 +251,7 @@ bool Typography::GetLineInfo(int lineNumber, bool oneLine, bool includeWhitespac
     if (paragraph_ == nullptr) {
         return false;
     }
-    if (lineNumber < 0 || lineNumber >= paragraph_->GetLineCount() || lineMetrics == nullptr) {
+    if (lineNumber < 0 || lineNumber >= static_cast<int>(paragraph_->GetLineCount()) || lineMetrics == nullptr) {
         return false;
     }
 
@@ -344,7 +334,7 @@ bool Typography::GetLineMetricsAt(int lineNumber, LineMetrics* lineMetrics)
     if (paragraph_ == nullptr) {
         return false;
     }
-    if (lineNumber < 0 || lineNumber >= paragraph_->GetLineCount() || lineMetrics == nullptr) {
+    if (lineNumber < 0 || lineNumber >= static_cast<int>(paragraph_->GetLineCount()) || lineMetrics == nullptr) {
         return false;
     }
     skia::textlayout::LineMetrics skLineMetrics;
@@ -389,6 +379,29 @@ bool Typography::GetLineFontMetrics(const size_t lineNumber,
         return false;
     }
     return paragraph_->GetLineFontMetrics(lineNumber, charNumber, fontMetrics);
+}
+
+std::vector<std::unique_ptr<TextLineBase>> Typography::GetTextLines() const
+{
+    if (!paragraph_) {
+        return {};
+    }
+    std::vector<std::unique_ptr<SPText::TextLineBase>> textLines = paragraph_->GetTextLines();
+    std::vector<std::unique_ptr<TextLineBase>> lines;
+
+    for (std::unique_ptr<SPText::TextLineBase>& textLine : textLines) {
+        std::unique_ptr<TextLineBaseImpl> linePtr = std::make_unique<TextLineBaseImpl>(std::move(textLine));
+        lines.emplace_back(std::move(linePtr));
+    }
+    return lines;
+}
+
+std::unique_ptr<OHOS::Rosen::Typography> Typography::CloneSelf()
+{
+    if (!paragraph_) {
+        return nullptr;
+    }
+    return std::make_unique<Typography>(paragraph_->CloneSelf());
 }
 } // namespace AdapterTxt
 } // namespace Rosen

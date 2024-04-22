@@ -94,6 +94,11 @@ std::shared_ptr<Surface> SkiaStaticFactory::MakeRenderTarget(GPUContext* gpuCont
 {
     return SkiaSurface::MakeRenderTarget(gpuContext, budgeted, imageInfo);
 }
+
+std::shared_ptr<Image> SkiaStaticFactory::MakeFromYUVAPixmaps(GPUContext& gpuContext, const YUVInfo& info, void* memory)
+{
+    return SkiaImage::MakeFromYUVAPixmaps(gpuContext, info, memory);
+}
 #endif
 
 std::shared_ptr<Surface> SkiaStaticFactory::MakeRaster(const ImageInfo& imageInfo)
@@ -179,15 +184,15 @@ void SkiaStaticFactory::GetDrawingPointsForTextBlob(const TextBlob* blob, std::v
     return SkiaTextBlob::GetDrawingPointsForTextBlob(blob, points);
 }
 
-std::shared_ptr<DrawingSymbolLayersGroups> SkiaStaticFactory::GetSymbolLayersGroups(uint32_t glyphId)
+DrawingSymbolLayersGroups SkiaStaticFactory::GetSymbolLayersGroups(uint32_t glyphId)
 {
     return SkiaHmSymbolConfigOhos::GetSymbolLayersGroups(glyphId);
 }
 
-std::shared_ptr<std::vector<std::vector<DrawingPiecewiseParameter>>> SkiaStaticFactory::GetGroupParameters(
-    DrawingAnimationType type, uint16_t groupSum, uint16_t animationMode)
+std::vector<std::vector<DrawingPiecewiseParameter>> SkiaStaticFactory::GetGroupParameters(
+    DrawingAnimationType type, uint16_t groupSum, uint16_t animationMode, DrawingCommonSubType commonSubType)
 {
-    return SkiaHmSymbolConfigOhos::GetGroupParameters(type, groupSum, animationMode);
+    return SkiaHmSymbolConfigOhos::GetGroupParameters(type, groupSum, animationMode, commonSubType);
 }
 
 FontStyleSet* SkiaStaticFactory::CreateEmpty()

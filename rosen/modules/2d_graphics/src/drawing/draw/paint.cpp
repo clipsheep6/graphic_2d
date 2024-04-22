@@ -18,7 +18,8 @@
 namespace OHOS {
 namespace Rosen {
 namespace Drawing {
-Paint::Paint() noexcept {}
+Paint::Paint() noexcept
+    : filter_() {}
 
 Paint::Paint(const Paint& other) noexcept
 {
@@ -34,15 +35,18 @@ Paint::Paint(const Paint& other) noexcept
         filter_ = other.filter_;
         hasFilter_ = true;
     } else {
+        filter_.Reset();
         hasFilter_ = false;
     }
     colorSpace_ = other.colorSpace_;
     shaderEffect_ = other.shaderEffect_;
     pathEffect_ = other.pathEffect_;
+    blender_ = other.blender_;
+    blurDrawLooper_ = other.blurDrawLooper_;
 }
 
 Paint::Paint(const Color& c, std::shared_ptr<ColorSpace> colorSpace) noexcept
-    : color_(c), colorSpace_(colorSpace) {}
+    : color_(c), filter_(), colorSpace_(colorSpace) {}
 
 Paint& Paint::operator=(const Paint& other)
 {
@@ -58,11 +62,14 @@ Paint& Paint::operator=(const Paint& other)
         filter_ = other.filter_;
         hasFilter_ = true;
     } else {
+        filter_.Reset();
         hasFilter_ = false;
     }
     colorSpace_ = other.colorSpace_;
     shaderEffect_ = other.shaderEffect_;
     pathEffect_ = other.pathEffect_;
+    blender_ = other.blender_;
+    blurDrawLooper_ = other.blurDrawLooper_;
     return *this;
 }
 
@@ -74,7 +81,9 @@ bool Paint::CanCombinePaint(const Paint& pen, const Paint& brush)
         pen.hasFilter_ == brush.hasFilter_ &&
         pen.filter_ == brush.filter_ &&
         pen.colorSpace_ == brush.colorSpace_ &&
-        pen.shaderEffect_ == brush.shaderEffect_;
+        pen.shaderEffect_ == brush.shaderEffect_ &&
+        pen.blender_ == brush.blender_ &&
+        pen.blurDrawLooper_ == brush.blurDrawLooper_;
 }
 
 void Paint::AttachBrush(const Brush& brush)
@@ -87,10 +96,13 @@ void Paint::AttachBrush(const Brush& brush)
         filter_ = brush.GetFilter();
         hasFilter_ = true;
     } else {
+        filter_.Reset();
         hasFilter_ = false;
     }
     colorSpace_ = brush.GetColorSpace();
     shaderEffect_ = brush.GetShaderEffect();
+    blender_ = brush.GetBlender();
+    blurDrawLooper_ = brush.GetLooper();
 }
 
 void Paint::AttachPen(const Pen& pen)
@@ -107,11 +119,14 @@ void Paint::AttachPen(const Pen& pen)
         filter_ = pen.GetFilter();
         hasFilter_ = true;
     } else {
+        filter_.Reset();
         hasFilter_ = false;
     }
     colorSpace_ = pen.GetColorSpace();
     shaderEffect_ = pen.GetShaderEffect();
     pathEffect_ = pen.GetPathEffect();
+    blender_ = pen.GetBlender();
+    blurDrawLooper_ = pen.GetLooper();
 }
 
 void Paint::SetStyle(const PaintStyle& style)
@@ -191,6 +206,21 @@ void Paint::SetPathEffect(std::shared_ptr<PathEffect> e)
     pathEffect_ = e;
 }
 
+void Paint::SetBlender(std::shared_ptr<Blender> blender)
+{
+    blender_ = blender;
+}
+
+void Paint::SetLooper(std::shared_ptr<BlurDrawLooper> blurDrawLooper)
+{
+    blurDrawLooper_ = blurDrawLooper;
+}
+
+std::shared_ptr<BlurDrawLooper> Paint::GetLooper() const
+{
+    return blurDrawLooper_;
+}
+
 void Paint::SetAntiAlias(bool aa)
 {
     antiAlias_ = aa;
@@ -213,6 +243,7 @@ void Paint::Reset()
     colorSpace_ = nullptr;
     shaderEffect_ = nullptr;
     pathEffect_ = nullptr;
+    blurDrawLooper_ = nullptr;
 }
 
 void Paint::Disable()
@@ -234,7 +265,9 @@ bool operator==(const Paint& p1, const Paint& p2)
         p1.filter_ == p2.filter_ &&
         p1.colorSpace_ == p2.colorSpace_ &&
         p1.shaderEffect_ == p2.shaderEffect_ &&
-        p1.pathEffect_ == p2.pathEffect_;
+        p1.pathEffect_ == p2.pathEffect_ &&
+        p1.blender_ == p2.blender_ &&
+        p1.blurDrawLooper_ == p2.blurDrawLooper_;
 }
 
 bool operator!=(const Paint& p1, const Paint& p2)
@@ -250,7 +283,9 @@ bool operator!=(const Paint& p1, const Paint& p2)
         p1.filter_ != p2.filter_ ||
         p1.colorSpace_ != p2.colorSpace_ ||
         p1.shaderEffect_ != p2.shaderEffect_ ||
-        p1.pathEffect_ != p2.pathEffect_;
+        p1.pathEffect_ != p2.pathEffect_ ||
+        p1.blender_ != p2.blender_ ||
+        p1.blurDrawLooper_ != p2.blurDrawLooper_;
 }
 } // namespace Drawing
 } // namespace Rosen

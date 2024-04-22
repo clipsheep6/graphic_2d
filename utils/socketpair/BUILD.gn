@@ -25,6 +25,7 @@ config("socketpair_config") {
 }
 
 config("socketpair_public_config") {
+  include_dirs = []
 }
 
 config("socketpair_all_dependent_config") {

@@ -154,6 +154,11 @@ void GPUContext::SetCurrentGpuResourceTag(const GPUResourceTag &tag)
     impl_->SetCurrentGpuResourceTag(tag);
 }
 
+void GPUContext::ResetContext()
+{
+    impl_->ResetContext();
+}
+
 #ifdef RS_ENABLE_VK
 void GPUContext::StoreVkPipelineCacheData()
 {
@@ -161,10 +166,16 @@ void GPUContext::StoreVkPipelineCacheData()
 }
 #endif
 
+void GPUContext::RegisterPostFunc(const std::function<void(const std::function<void()>& task)>& func)
+{
+    impl_->RegisterPostFunc(func);
+}
+
 GPUContextOptions::PersistentCache* GPUContextOptions::GetPersistentCache() const
 {
     return persistentCache_;
 }
+
 } // namespace Drawing
 } // namespace Rosen
 } // namespace OHOS

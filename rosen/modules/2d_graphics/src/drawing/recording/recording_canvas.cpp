@@ -59,6 +59,23 @@ void RecordingCanvas::ResetCanvas(int32_t width, int32_t height)
     Reset(width, height);
 }
 
+void RecordingCanvas::Reset(int32_t width, int32_t height, bool addDrawOpImmediate)
+{
+    DrawCmdList::UnmarshalMode mode =
+        addDrawOpImmediate ? DrawCmdList::UnmarshalMode::IMMEDIATE : DrawCmdList::UnmarshalMode::DEFERRED;
+    cmdList_ = std::make_shared<DrawCmdList>(width, height, mode);
+    addDrawOpImmediate_ = addDrawOpImmediate;
+    isCustomTextType_ = false;
+    customTextBrush_ = std::nullopt;
+    customTextPen_ = std::nullopt;
+    saveOpStateStack_ = std::stack<SaveOpState>();
+    gpuContext_ = nullptr;
+    RemoveAll();
+    DetachBrush();
+    DetachPen();
+    NoDrawCanvas::Reset(width, height);
+}
+
 void RecordingCanvas::DrawPoint(const Point& point)
 {
     if (!addDrawOpImmediate_) {
@@ -183,6 +200,19 @@ void RecordingCanvas::DrawShadow(const Path& path, const Point3& planeParams, co
     auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
     cmdList_->AddDrawOp<DrawShadowOpItem::ConstructorHandle>(
         pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag);
+}
+
+void RecordingCanvas::DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
+    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle)
+{
+    if (!addDrawOpImmediate_) {
+        cmdList_->AddDrawOp(std::make_shared<DrawShadowStyleOpItem>(
+            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle));
+        return;
+    }
+    auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
+    cmdList_->AddDrawOp<DrawShadowStyleOpItem::ConstructorHandle>(
+        pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
 }
 
 void RecordingCanvas::DrawRegion(const Region& region)

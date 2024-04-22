@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,10 +16,10 @@
 #include "pipeline/rs_unmarshal_thread.h"
 
 #include "pipeline/rs_base_render_util.h"
-#include "pipeline/rs_frame_report.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
 #include "transaction/rs_transaction_data.h"
+#include "rs_frame_report.h"
 #include "rs_profiler.h"
 
 #ifdef RES_SCHED_ENABLE
@@ -64,7 +64,8 @@ void RSUnmarshalThread::RecvParcel(std::shared_ptr<MessageParcel>& parcel)
         RS_LOGE("RSUnmarshalThread::RecvParcel handler_ is nullptr");
         return;
     }
-    RSTaskMessage::RSTask task = [this, parcel = parcel]() {
+    bool isPendingUnmarshal = (parcel->GetDataSize() > MIN_PENDING_REQUEST_SYNC_DATA_SIZE);
+    RSTaskMessage::RSTask task = [this, parcel = parcel, isPendingUnmarshal]() {
         if (RsFrameReport::GetInstance().GetEnable()) {
             RsFrameReport::GetInstance().SetFrameParam(
                 REQUEST_FRAME_AWARE_ID, REQUEST_FRAME_AWARE_LOAD, REQUEST_FRAME_AWARE_NUM, 0);
@@ -74,11 +75,18 @@ void RSUnmarshalThread::RecvParcel(std::shared_ptr<MessageParcel>& parcel)
             return;
         }
         RS_PROFILER_ON_PARCEL_RECEIVE(parcel.get(), transData.get());
-        std::lock_guard<std::mutex> lock(transactionDataMutex_);
-        cachedTransactionDataMap_[transData->GetSendingPid()].emplace_back(std::move(transData));
+        {
+            std::lock_guard<std::mutex> lock(transactionDataMutex_);
+            cachedTransactionDataMap_[transData->GetSendingPid()].emplace_back(std::move(transData));
+        }
+        if (isPendingUnmarshal) {
+            RSMainThread::Instance()->RequestNextVSync();
+        }
     };
     PostTask(task);
-    RSMainThread::Instance()->RequestNextVSync();
+    if (!isPendingUnmarshal) {
+        RSMainThread::Instance()->RequestNextVSync();
+    }
 }
 
 TransactionDataMap RSUnmarshalThread::GetCachedTransactionData()

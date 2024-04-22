@@ -24,6 +24,7 @@
 #include "ipc_callbacks/buffer_clear_callback.h"
 #include "pipeline/rs_render_service.h"
 #include "pipeline/rs_hardware_thread.h"
+#include "pipeline/rs_uni_render_thread.h"
 #include "screen_manager/rs_screen_manager.h"
 #include "transaction/rs_render_service_connection_stub.h"
 #include "vsync_distributor.h"
@@ -80,6 +81,8 @@ private:
                                                  uint64_t id,
                                                  NodeId windowNodeId = 0) override;
 
+    std::shared_ptr<Media::PixelMap> CreatePixelMapFromSurface(sptr<Surface> surface, const Rect &srcRect) override;
+
     int32_t SetFocusAppInfo(
         int32_t pid, int32_t uid, const std::string &bundleName, const std::string &abilityName,
         uint64_t focusNodeId) override;
@@ -111,7 +114,7 @@ private:
 
     void SetRefreshRateMode(int32_t refreshRateMode) override;
 
-    void SyncFrameRateRange(const FrameRateRange& range) override;
+    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range) override;
 
     uint32_t GetScreenCurrentRefreshRate(ScreenId id) override;
 
@@ -259,6 +262,7 @@ private:
     pid_t remotePid_;
     wptr<RSRenderService> renderService_;
     RSMainThread* mainThread_ = nullptr;
+    RSUniRenderThread& renderThread_;
     sptr<RSScreenManager> screenManager_;
     sptr<IRemoteObject> token_;
 
@@ -295,7 +299,7 @@ private:
     std::unordered_set<ScreenId> virtualScreenIds_;
     sptr<RSIScreenChangeCallback> screenChangeCallback_;
     sptr<VSyncDistributor> appVSyncDistributor_;
-    
+
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
 #endif

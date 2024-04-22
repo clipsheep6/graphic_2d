@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 
 #include <algorithm>
@@ -267,6 +268,24 @@ void RSPaintFilterCanvasBase::DrawShadow(const Path& path, const Point3& planePa
 #else
     if (canvas_ != nullptr && OnFilter()) {
         canvas_->DrawShadow(path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag);
+    }
+#endif
+}
+
+void RSPaintFilterCanvasBase::DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
+    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle)
+{
+#ifdef ENABLE_RECORDING_DCL
+    for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
+        if ((*iter) != nullptr && OnFilter()) {
+            (*iter)->DrawShadowStyle(
+                path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
+        }
+    }
+#else
+    if (canvas_ != nullptr && OnFilter()) {
+        canvas_->DrawShadowStyle(
+            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
     }
 #endif
 }
@@ -901,20 +920,36 @@ CoreCanvas& RSPaintFilterCanvasBase::DetachPaint()
     return *this;
 }
 
+bool RSPaintFilterCanvasBase::DrawBlurImage(const Drawing::Image& image, const Drawing::HpsBlurParameter& blurParams)
+{
+    bool result = false;
+#ifdef ENABLE_RECORDING_DCL
+    for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
+        if ((*iter) != nullptr) {
+            result |= (*iter)->DrawBlurImage(image, blurParams);
+        }
+    }
+#else
+    if (canvas_ != nullptr) {
+        result |= canvas_->DrawBlurImage(image, blurParams);
+    }
+#endif
+    return result;
+}
+
 RSPaintFilterCanvas::RSPaintFilterCanvas(Drawing::Canvas* canvas, float alpha)
-    : RSPaintFilterCanvasBase(canvas), alphaStack_({ std::clamp(alpha, 0.f, 1.f) }), // construct stack with given alpha
-      // Temporary fix, this default color should be 0x000000FF, fix this after foreground color refactor
-      envStack_({ Env({ RSColor(0xFF000000) }) }), // construct stack with default foreground color
-      blendModeStack_({std::nullopt})
-{}
+    : RSPaintFilterCanvasBase(canvas), alphaStack_({ 1.0f }),
+      envStack_({ Env { .envForegroundColor_ = RSColor(0xFF000000), .hasOffscreenLayer_ = false } })
+{
+    (void)alpha; // alpha is no longer used, but we keep it for backward compatibility
+}
 
 RSPaintFilterCanvas::RSPaintFilterCanvas(Drawing::Surface* surface, float alpha)
-    : RSPaintFilterCanvasBase(surface ? surface->GetCanvas().get() : nullptr), surface_(surface),
-      alphaStack_({ std::clamp(alpha, 0.f, 1.f) }), // construct stack with given alpha
-      // Temporary fix, this default color should be 0x000000FF, fix this after foreground color refactor
-      envStack_({ Env({ RSColor(0xFF000000) }) }), // construct stack with default foreground color
-      blendModeStack_({std::nullopt})
-{}
+    : RSPaintFilterCanvasBase(surface ? surface->GetCanvas().get() : nullptr), surface_(surface), alphaStack_({ 1.0f }),
+      envStack_({ Env { .envForegroundColor_ = RSColor(0xFF000000), .hasOffscreenLayer_ = false } })
+{
+    (void)alpha; // alpha is no longer used, but we keep it for backward compatibility
+}
 
 Drawing::Surface* RSPaintFilterCanvas::GetSurface() const
 {
@@ -938,8 +973,13 @@ CoreCanvas& RSPaintFilterCanvas::AttachPen(const Pen& pen)
     }
 
     // use blendModeStack_.top() to set blend mode
-    if (auto& blendMode = blendModeStack_.top()) {
+    if (auto& blendMode = envStack_.top().blendMode_) {
         p.SetBlendMode(static_cast<Drawing::BlendMode>(*blendMode));
+    }
+
+    // use blender_ to set blender
+    if (blender_) {
+        p.SetBlender(blender_.value());
     }
 
 #ifdef ENABLE_RECORDING_DCL
@@ -971,9 +1011,15 @@ CoreCanvas& RSPaintFilterCanvas::AttachBrush(const Brush& brush)
     }
 
     // use blendModeStack_.top() to set blend mode
-    if (auto& blendMode = blendModeStack_.top()) {
+    if (auto& blendMode = envStack_.top().blendMode_) {
         b.SetBlendMode(static_cast<Drawing::BlendMode>(*blendMode));
     }
+
+    // use blender_ to set blender
+    if (blender_) {
+        b.SetBlender(blender_.value());
+    }
+
 #ifdef ENABLE_RECORDING_DCL
     for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
         if ((*iter) != nullptr) {
@@ -1003,8 +1049,13 @@ CoreCanvas& RSPaintFilterCanvas::AttachPaint(const Drawing::Paint& paint)
     }
 
     // use blendModeStack_.top() to set blend mode
-    if (auto& blendMode = blendModeStack_.top()) {
+    if (auto& blendMode = envStack_.top().blendMode_) {
         p.SetBlendMode(static_cast<Drawing::BlendMode>(*blendMode));
+    }
+
+    // use blender_ to set blender
+    if (blender_) {
+        p.SetBlender(blender_.value());
     }
 
 #ifdef ENABLE_RECORDING_DCL
@@ -1094,51 +1145,24 @@ void RSPaintFilterCanvas::RestoreAlphaToCount(int count)
 
 void RSPaintFilterCanvas::SetBlendMode(std::optional<int> blendMode)
 {
-    blendModeStack_.top() = blendMode;
+    envStack_.top().blendMode_ = blendMode;
 }
 
-int RSPaintFilterCanvas::SaveBlendMode()
+void RSPaintFilterCanvas::SetBlender(std::optional<std::shared_ptr<Drawing::Blender>> blender)
 {
-    // make a copy of top of stack
-    blendModeStack_.push(blendModeStack_.top());
-    // return prev stack height
-    return blendModeStack_.size() - 1;
+    blenderSave_ = blender_;
+    blender_ = blender;
 }
 
-void RSPaintFilterCanvas::RestoreBlendMode()
+std::optional<std::shared_ptr<Drawing::Blender>> RSPaintFilterCanvas::GetBlender() const
 {
-    if (blendModeStack_.empty()) {
-        return;
-    }
-    blendModeStack_.pop();
+    return blender_;
 }
 
-std::optional<int> RSPaintFilterCanvas::GetBlendMode()
+void RSPaintFilterCanvas::RestoreBlender()
 {
-    return blendModeStack_.empty() ? std::nullopt : blendModeStack_.top();
-}
-
-void RSPaintFilterCanvas::AddBlendOffscreenLayer(bool isExtra)
-{
-    blendOffscreenStack_.push(isExtra);
-}
-
-void RSPaintFilterCanvas::MinusBlendOffscreenLayer()
-{
-    if (blendOffscreenStack_.empty()) {
-        return;
-    }
-    blendOffscreenStack_.pop();
-}
-
-bool RSPaintFilterCanvas::IsBlendOffscreenExtraLayer() const
-{
-    return blendOffscreenStack_.empty() ? false : blendOffscreenStack_.top();
-}
-
-int RSPaintFilterCanvas::GetBlendOffscreenLayerCnt() const
-{
-    return blendOffscreenStack_.size();
+    blender_ = blenderSave_;
+    blenderSave_ = std::nullopt;
 }
 
 int RSPaintFilterCanvas::SaveEnv()
@@ -1169,6 +1193,16 @@ void RSPaintFilterCanvas::RestoreEnvToCount(int count)
     for (int i = 0; i < n; ++i) {
         envStack_.pop();
     }
+}
+
+std::shared_ptr<RSDisplayRenderNode> RSPaintFilterCanvas::GetCurDisplayNode() const
+{
+    return curDisplayNode_;
+}
+
+void RSPaintFilterCanvas::SetCurDisplayNode(std::shared_ptr<RSDisplayRenderNode> curDisplayNode)
+{
+    curDisplayNode_ = curDisplayNode;
 }
 
 int RSPaintFilterCanvas::GetEnvSaveCount() const
@@ -1215,6 +1249,26 @@ void RSPaintFilterCanvas::RestoreStatus(const SaveStatus& status)
     RestoreEnvToCount(status.envSaveCount);
 }
 
+void RSPaintFilterCanvas::PushDirtyRegion(Drawing::Region& resultRegion)
+{
+    dirtyRegionStack_.push(std::move(resultRegion));
+}
+
+void RSPaintFilterCanvas::PopDirtyRegion()
+{
+    dirtyRegionStack_.pop();
+}
+
+Drawing::Region& RSPaintFilterCanvas::GetCurDirtyRegion()
+{
+    return dirtyRegionStack_.top();
+}
+
+bool RSPaintFilterCanvas::IsDirtyRegionStackEmpty()
+{
+    return dirtyRegionStack_.empty();
+}
+
 void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
 {
     // Note:
@@ -1233,6 +1287,7 @@ void RSPaintFilterCanvas::CopyConfiguration(const RSPaintFilterCanvas& other)
     }
     isParallelCanvas_ = other.isParallelCanvas_;
     disableFilterCache_ = other.disableFilterCache_;
+    threadIndex_ = other.threadIndex_;
 }
 
 void RSPaintFilterCanvas::SetHighContrast(bool enabled)
@@ -1295,6 +1350,44 @@ const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData>& RSPaintFilterCanva
     return envStack_.top().effectData_;
 }
 
+void RSPaintFilterCanvas::ReplaceMainScreenData(std::shared_ptr<Drawing::Surface>& offscreenSurface,
+    std::shared_ptr<RSPaintFilterCanvas>& offscreenCanvas)
+{
+    if (offscreenSurface != nullptr && offscreenCanvas != nullptr) {
+        storeMainScreenSurface_.push(surface_);
+        storeMainScreenCanvas_.push(canvas_);
+        surface_ = offscreenSurface.get();
+        canvas_ = offscreenCanvas.get();
+        OffscreenData offscreenData = {offscreenSurface, offscreenCanvas};
+        offscreenDataList_.push(offscreenData);
+    }
+}
+
+void RSPaintFilterCanvas::SwapBackMainScreenData()
+{
+    if (!storeMainScreenSurface_.empty() && !storeMainScreenCanvas_.empty() && !offscreenDataList_.empty()) {
+        surface_ = storeMainScreenSurface_.top();
+        canvas_ = storeMainScreenCanvas_.top();
+        storeMainScreenSurface_.pop();
+        storeMainScreenCanvas_.pop();
+        offscreenDataList_.pop();
+    }
+}
+
+void RSPaintFilterCanvas::SavePCanvasList()
+{
+    storedPCanvasList_.push_back(pCanvasList_);
+}
+
+void RSPaintFilterCanvas::RestorePCanvasList()
+{
+    if (!storedPCanvasList_.empty()) {
+        auto item = storedPCanvasList_.back();
+        pCanvasList_.swap(item);
+        storedPCanvasList_.pop_back();
+    }
+}
+
 void RSPaintFilterCanvas::SetCanvasStatus(const CanvasStatus& status)
 {
     SetAlpha(status.alpha_);
@@ -1322,6 +1415,17 @@ bool RSPaintFilterCanvas::GetIsParallelCanvas() const
     return isParallelCanvas_;
 }
 
+// UNI_MAIN_THREAD_INDEX, UNI_RENDER_THREAD_INDEX, subthread 0 1 2.
+void RSPaintFilterCanvas::SetParallelThreadIdx(uint32_t idx)
+{
+    threadIndex_ = idx;
+}
+
+uint32_t RSPaintFilterCanvas::GetParallelThreadIdx() const
+{
+    return threadIndex_;
+}
+
 void RSPaintFilterCanvas::SetDisableFilterCache(bool disable)
 {
     disableFilterCache_ = disable;
@@ -1340,6 +1444,15 @@ void RSPaintFilterCanvas::SetRecordDrawable(bool enable)
 bool RSPaintFilterCanvas::GetRecordDrawable() const
 {
     return recordDrawable_;
+}
+bool RSPaintFilterCanvas::HasOffscreenLayer() const
+{
+    return envStack_.top().hasOffscreenLayer_;
+}
+void RSPaintFilterCanvas::SaveLayer(const Drawing::SaveLayerOps& saveLayerOps)
+{
+    envStack_.top().hasOffscreenLayer_ = true;
+    RSPaintFilterCanvasBase::SaveLayer(saveLayerOps);
 }
 } // namespace Rosen
 } // namespace OHOS

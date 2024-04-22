@@ -25,7 +25,9 @@ static const std::map<RSEffectStrategy, TextEngine::SymbolAnimationEffectStrateg
     {RSEffectStrategy::VARIABLE_COLOR, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_VARIABLE_COLOR},
     {RSEffectStrategy::APPEAR, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_APPEAR},
     {RSEffectStrategy::DISAPPEAR, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_DISAPPEAR},
-    {RSEffectStrategy::BOUNCE, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_BOUNCE}};
+    {RSEffectStrategy::BOUNCE, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_BOUNCE},
+    {RSEffectStrategy::PULSE, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_PULSE},
+    {RSEffectStrategy::REPLACE_APPEAR, TextEngine::SymbolAnimationEffectStrategy::SYMBOL_REPLACE_APPEAR}};
 
 static void MergePath(RSPath& multPath, const std::vector<RSGroupInfo>& groupInfos, std::vector<RSPath>& pathLayers)
 {
@@ -134,8 +136,9 @@ bool SymbolNodeBuild::DecomposeSymbolAndDraw()
     }
     symbolAnimationConfig->repeatCount = repeatCount_;
     symbolAnimationConfig->animationMode = animationMode_;
-    symbolAnimationConfig->aminationStart = aminationStart_;
+    symbolAnimationConfig->animationStart = animationStart_;
     symbolAnimationConfig->symbolSpanId = symblSpanId_;
+    symbolAnimationConfig->commonSubType = commonSubType_;
     animationFunc_(symbolAnimationConfig);
     return true;
 }

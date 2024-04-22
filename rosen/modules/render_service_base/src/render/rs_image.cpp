@@ -53,7 +53,7 @@ void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect
     if (canvas.GetRecordingState() && RSSystemProperties::GetDumpUICaptureEnabled() && pixelMap_) {
         CommonTools::SavePixelmapToFile(pixelMap_, "/data/rsImage_");
     }
-    if (!isDrawn_ || rect != lastRect_) {
+    if (!isDrawn_ || rect != lastRect_ || RSPixelMapUtil::IsYUVFormat(pixelMap_)) {
         UpdateNodeIdToPicture(nodeId_);
         Drawing::AutoCanvasRestore acr(canvas, HasRadius());
         frameRect_.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
@@ -128,6 +128,11 @@ RectF ApplyImageFitSwitch(ImageParameter &imageParameter, ImageFit imageFit_, Re
                 imageParameter.dstH = std::min(imageParameter.frameH, imageParameter.frameW / imageParameter.ratio);
             }
             break;
+        case ImageFit::COVER_TOP_LEFT:
+            imageParameter.dstW = std::max(imageParameter.frameW, imageParameter.frameH * imageParameter.ratio);
+            imageParameter.dstH = std::max(imageParameter.frameH, imageParameter.frameW / imageParameter.ratio);
+            tempRectF.SetAll(0, 0, std::ceil(imageParameter.dstW), std::ceil(imageParameter.dstH));
+            return tempRectF;
         case ImageFit::CONTAIN:
         default:
             imageParameter.dstW = std::min(imageParameter.frameW, imageParameter.frameH * imageParameter.ratio);
@@ -235,6 +240,9 @@ void RSImage::UploadGpu(Drawing::Canvas& canvas)
             }
             compressData_ = nullptr;
         }
+    }
+    if (RSPixelMapUtil::IsYUVFormat(pixelMap_)) {
+        ProcessYUVImage(canvas.GetGPUContext());
     }
 #endif
 }

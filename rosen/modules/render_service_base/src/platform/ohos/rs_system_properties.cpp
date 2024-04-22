@@ -156,7 +156,7 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
 
 bool RSSystemProperties::GetRSScreenRoundCornerEnable()
 {
-    static bool isNeedScreenRCD = system::GetParameter("persist.rosen.screenroundcornerrcd.enabled", "1") != "0";
+    static bool isNeedScreenRCD = system::GetParameter("persist.rosen.screenroundcornerrcd.enabled", "0") != "0";
     return isNeedScreenRCD;
 }
 
@@ -246,6 +246,14 @@ bool RSSystemProperties::GetHighContrastStatus()
     int changed = 0;
     const char *status = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(status, 0) != 0;
+}
+
+bool RSSystemProperties::GetDrmEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.drm.enabled", "1");
+    int changed = 0;
+    const char *enabled = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enabled, 0) != 0;
 }
 
 bool RSSystemProperties::GetTargetDirtyRegionDfxEnabled(std::vector<std::string>& dfxTargetSurfaceNames_)
@@ -432,15 +440,6 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
     return filterCacheSizeThreshold;
 }
 
-bool RSSystemProperties::GetFilterPartialRenderEnabled()
-{
-    // Determine whether the filter partial render should be enabled. The default value is 0,
-    // which means that it is unenabled.
-    static bool enabled =
-        std::atoi((system::GetParameter("persist.sys.graphic.filterPartialRenderEnabled", "0")).c_str()) != 0;
-    return enabled;
-}
-
 bool RSSystemProperties::GetColorPickerPartialEnabled()
 {
     // Determine whether the color picker partial render should be enabled. The default value is 0,
@@ -459,11 +458,27 @@ bool RSSystemProperties::GetMaskLinearBlurEnabled()
     return enabled;
 }
 
+bool RSSystemProperties::GetMotionBlurEnabled()
+{
+    // Determine whether the motionBlur render should be enabled. The default value is 0,
+    // which means that it is unenabled.
+    static bool enabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.motionBlurEnabled", "1")).c_str()) != 0;
+    return enabled;
+}
+
 bool RSSystemProperties::GetKawaseEnabled()
 {
     static bool kawaseBlurEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.kawaseEnable", "1")).c_str()) != 0;
     return kawaseBlurEnabled;
+}
+
+bool RSSystemProperties::GetHpsBlurEnabled()
+{
+    static bool hpsBlurEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.HpsBlurEnable", "1")).c_str()) != 0;
+    return hpsBlurEnabled;
 }
 
 float RSSystemProperties::GetKawaseRandomColorFactor()
@@ -485,6 +500,21 @@ bool RSSystemProperties::GetKawaseOriginalEnabled()
     static bool kawaseOriginalEnabled =
         std::atoi((system::GetParameter("persist.sys.graphic.kawaseOriginalEnable", "0")).c_str()) != 0;
     return kawaseOriginalEnabled;
+}
+
+// this will migrate to rs_system_parameters.cpp
+bool RSSystemProperties::GetQuickPrepareEnabled()
+{
+    static bool quickPrepareEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.quickPrepareEnabled", "1")).c_str()) != 0;
+    return quickPrepareEnabled;
+}
+
+bool RSSystemProperties::GetRenderParallelEnabled()
+{
+    static bool enable =
+        std::atoi((system::GetParameter("persist.sys.graphic.renderParallel", "1")).c_str()) != 0;
+    return enable;
 }
 
 bool RSSystemProperties::GetBlurEnabled()
@@ -541,6 +571,20 @@ bool RSSystemProperties::GetUIFirstEnabled()
 #endif
 }
 
+bool RSSystemProperties::GetUIFirstDebugEnabled()
+{
+    static bool debugEnable = system::GetParameter("persist.sys.graphic.uifirstDebugEnabled", "0") != "0";
+    return debugEnable;
+}
+
+bool RSSystemProperties::GetUIFirstForceEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.ui.first.force.enabled", "0");
+    int changed = 0;
+    const char *enable = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enable, 1) != 0;
+}
+
 bool RSSystemProperties::GetDebugTraceEnabled()
 {
     static bool openDebugTrace =
@@ -553,6 +597,13 @@ int RSSystemProperties::GetDebugTraceLevel()
     static int openDebugTraceLevel =
         std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "0")).c_str());
     return openDebugTraceLevel;
+}
+
+bool RSSystemProperties::GetDumpImgEnabled()
+{
+    static bool dumpImgEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.dumpImgEnabled", "0")).c_str()) != 0;
+    return dumpImgEnabled;
 }
 
 bool RSSystemProperties::FindNodeInTargetList(std::string node)
@@ -759,6 +810,7 @@ bool RSSystemProperties::GetSubSurfaceEnabled()
         std::atoi((system::GetParameter("persist.sys.graphic.subSurface", "1")).c_str());
     return subSurfaceEnabled;
 }
+
 bool RSSystemProperties::GetSecurityPermissionCheckEnabled()
 {
     static bool openSecurityPermissionCheck =
@@ -793,6 +845,14 @@ uint32_t RSSystemProperties::GetVirtualScreenScaleModeDFX()
     static uint32_t scaleModeDFX =
         std::atoi((system::GetParameter("persist.rosen.virtualScreenScaleMode.debugType", "2")).c_str());
     return (scaleModeDFX > DEFAULT_SCALE_MODE) ? DEFAULT_SCALE_MODE : scaleModeDFX;
+}
+
+SubTreePrepareCheckType RSSystemProperties::GetSubTreePrepareCheckType()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("persist.sys.graphic.SubTreePrepareCheckType.type", "2");
+    int changed = 0;
+    const char *type = CachedParameterGetChanged(g_Handle, &changed);
+    return static_cast<SubTreePrepareCheckType>(ConvertToInt(type, 2)); // Default value 2
 }
 } // namespace Rosen
 } // namespace OHOS

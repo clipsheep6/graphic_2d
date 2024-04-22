@@ -213,9 +213,8 @@ bool RSExtendImageObject::GetDrawingImageFromSurfaceBuffer(Drawing::Canvas& canv
         RS_LOGE("GetDrawingImageFromSurfaceBuffer gpu context is nullptr");
         return false;
     }
-    if (!image_) {
-        image_ = std::make_shared<Drawing::Image>();
-    }
+
+    image_ = std::make_shared<Drawing::Image>();
 #ifndef ROSEN_EMULATOR
     auto surfaceOrigin = Drawing::TextureOrigin::TOP_LEFT;
 #else
@@ -249,9 +248,10 @@ bool RSExtendImageObject::MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceB
             return false;
         }
     }
-    if (!backendTexture_.IsValid()) {
+    bool isProtected = (surfaceBuffer->GetUsage() & BUFFER_USAGE_PROTECTED) != 0;
+    if (!backendTexture_.IsValid() || isProtected) {
         backendTexture_ = NativeBufferUtils::MakeBackendTextureFromNativeBuffer(nativeWindowBuffer_,
-            surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight());
+            surfaceBuffer->GetWidth(), surfaceBuffer->GetHeight(), isProtected);
         if (backendTexture_.IsValid()) {
             auto vkTextureInfo = backendTexture_.GetTextureInfo().GetVKTextureInfo();
             cleanUpHelper_ = new NativeBufferUtils::VulkanCleanupHelper(RsVulkanContext::GetSingleton(),
@@ -261,9 +261,7 @@ bool RSExtendImageObject::MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceB
         }
         tid_ = gettid();
     }
-    if (!image_) {
-        image_ = std::make_shared<Drawing::Image>();
-    }
+    image_ = std::make_shared<Drawing::Image>();
     auto vkTextureInfo = backendTexture_.GetTextureInfo().GetVKTextureInfo();
     Drawing::ColorType colorType = GetColorTypeFromVKFormat(vkTextureInfo->format);
     Drawing::BitmapFormat bitmapFormat = { colorType, Drawing::AlphaType::ALPHATYPE_PREMUL };
@@ -676,12 +674,11 @@ void DrawSurfaceBufferOpItem::DrawWithVulkan(Canvas* canvas)
         LOGE("DrawSurfaceBufferOpItem::Draw image BuildFromTexture failed");
         return;
     }
-    auto samplingOptions = Drawing::SamplingOptions(Drawing::FilterMode::LINEAR, Drawing::MipmapMode::LINEAR);
     canvas->DrawImageRect(*image, Rect{
         surfaceBufferInfo_.offSetX_, surfaceBufferInfo_.offSetY_,
         surfaceBufferInfo_.offSetX_ + surfaceBufferInfo_.width_,
         surfaceBufferInfo_.offSetY_ + surfaceBufferInfo_.height_},
-        samplingOptions);
+        Drawing::SamplingOptions());
 #endif
 }
 

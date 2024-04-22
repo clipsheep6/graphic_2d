@@ -321,7 +321,7 @@ void OH_Drawing_CanvasDrawVertices(OH_Drawing_Canvas* cCanvas, OH_Drawing_Vertex
     if (positionsPoint == nullptr) {
         return;
     }
-    for (uint32_t i = 0; i < vertexCount; ++i) {
+    for (int32_t i = 0; i < vertexCount; ++i) {
         positionsPoint[i] = CastToPoint(positions[i]);
     }
     Point* texsPoint = new Point[vertexCount];
@@ -329,7 +329,7 @@ void OH_Drawing_CanvasDrawVertices(OH_Drawing_Canvas* cCanvas, OH_Drawing_Vertex
         delete [] positionsPoint;
         return;
     }
-    for (uint32_t i = 0; i < vertexCount; ++i) {
+    for (int32_t i = 0; i < vertexCount; ++i) {
         texsPoint[i] = CastToPoint(texs[i]);
     }
     Vertices* vertices = new Vertices();
@@ -383,7 +383,8 @@ void OH_Drawing_CanvasDrawPixelMapRect(OH_Drawing_Canvas* cCanvas, OH_Drawing_Pi
 #ifdef OHOS_PLATFORM
     DrawingCanvasUtils::DrawPixelMapRect(CastToCanvas(cCanvas),
         Media::PixelMapNative_GetPixelMap(reinterpret_cast<NativePixelMap_*>(pixelMap)),
-        CastToRect(*src), CastToRect(*dst), CastToSamplingOptions(*cSampingOptions));
+        reinterpret_cast<const Drawing::Rect*>(src), reinterpret_cast<const Drawing::Rect*>(dst),
+        reinterpret_cast<const Drawing::SamplingOptions*>(cSampingOptions));
 #endif
 }
 

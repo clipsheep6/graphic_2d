@@ -30,10 +30,18 @@ public:
     void Emit(int64_t deltaTime, std::vector<std::shared_ptr<RSRenderParticle>>& activeParticles);
     void UpdateParticle(int64_t deltaTime, std::vector<std::shared_ptr<RSRenderParticle>>& activeParticles);
     bool IsFinish(const std::vector<std::shared_ptr<RSRenderParticle>>& activeParticles);
+    void UpdateEmitter(const uint32_t& emitterIndex, const std::optional<Vector2f>& position,
+        const std::optional<Vector2f>& emitSize, const std::optional<int>& emitRate);
+    void UpdateNoiseField(const std::shared_ptr<ParticleNoiseFields>& particleNoiseFields);
+    const std::vector<std::shared_ptr<RSRenderParticleEmitter>>& GetParticleEmitter()
+    {
+        return emitters_;
+    }
 
 private:
     std::vector<std::shared_ptr<ParticleRenderParams>> particlesRenderParams_ = {};
     std::vector<std::shared_ptr<RSRenderParticleEmitter>> emitters_ = {};
+    std::shared_ptr<ParticleNoiseFields> particleNoiseFields_;
 };
 } // namespace Rosen
 } // namespace OHOS

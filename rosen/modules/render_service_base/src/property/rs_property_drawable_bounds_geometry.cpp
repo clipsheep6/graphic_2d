@@ -17,25 +17,16 @@
 
 #include <utility>
 
-#include "include/core/SkMaskFilter.h"
-#include "include/core/SkPaint.h"
-#include "include/core/SkPoint3.h"
-#include "include/effects/SkImageFilters.h"
-#include "include/effects/SkLumaColorFilter.h"
-#include "include/utils/SkShadowUtils.h"
-#include "src/image/SkImage_Base.h"
-
 #include "common/rs_obj_abs_geometry.h"
 #include "common/rs_optional_trace.h"
 #include "pipeline/rs_canvas_render_node.h"
 #include "pipeline/rs_effect_render_node.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "property/rs_properties.h"
 #include "property/rs_properties_def.h"
 #include "property/rs_properties_painter.h"
-#include "render/rs_skia_filter.h"
-#include "platform/common/rs_system_properties.h"
 
 namespace {
 constexpr int PARAM_DOUBLE = 2;
@@ -585,8 +576,8 @@ void RSHardwareAccelerationShadowDrawable::Draw(const RSRenderContent& content, 
     ambientColor.MultiplyAlpha(canvas.GetAlpha());
     Color spotColor = color_;
     spotColor.MultiplyAlpha(canvas.GetAlpha());
-    canvas.DrawShadow(path, planeParams, lightPos, DEFAULT_LIGHT_RADIUS, Drawing::Color(ambientColor.AsArgbInt()),
-        Drawing::Color(spotColor.AsArgbInt()), Drawing::ShadowFlags::TRANSPARENT_OCCLUDER);
+    canvas.DrawShadowStyle(path, planeParams, lightPos, DEFAULT_LIGHT_RADIUS, Drawing::Color(ambientColor.AsArgbInt()),
+        Drawing::Color(spotColor.AsArgbInt()), Drawing::ShadowFlags::TRANSPARENT_OCCLUDER, true);
 }
 
 RSColorfulShadowDrawable::RSColorfulShadowDrawable(const RSProperties& properties) : RSShadowBaseDrawable(properties)
@@ -753,6 +744,86 @@ void RSCompositingFilterDrawable::Draw(const RSRenderContent& content, RSPaintFi
     RSPropertiesPainter::DrawFilter(content.GetRenderProperties(), canvas, FilterType::FOREGROUND_FILTER);
 }
 
+bool IsForegroundFilterValid(const RSRenderContent& content)
+{
+    auto& rsFilter = content.GetRenderProperties().GetForegroundFilter();
+    if (rsFilter == nullptr) {
+        return false;
+    }
+    return true;
+}
+
+// foreground filter
+RSPropertyDrawable::DrawablePtr RSForegroundFilterDrawable::Generate(const RSRenderContent& content)
+{
+    if (!RSPropertiesPainter::BLUR_ENABLED) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
+        return nullptr;
+    }
+
+    if (!IsForegroundFilterValid(content)) {
+        return nullptr;
+    }
+    return std::make_unique<RSForegroundFilterDrawable>();
+}
+
+bool RSForegroundFilterDrawable::Update(const RSRenderContent& content)
+{
+    return content.GetRenderProperties().GetForegroundFilter() != nullptr;
+}
+
+void RSForegroundFilterDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+{
+    RS_OPTIONAL_TRACE_NAME("RSForegroundFilterDrawable::Draw");
+    auto surface = canvas.GetSurface();
+    if (!surface) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Draw main screen canvas no surface.");
+        return;
+    }
+    auto bounds = content.GetRenderProperties().GetBoundsRect();
+    std::shared_ptr<Drawing::Surface> offscreenSurface = surface->MakeSurface(bounds.width_, bounds.height_);
+    if (!offscreenSurface) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Draw create offscreenSurface fail.");
+        return;
+    }
+    auto offscreenCanvas = std::make_shared<RSPaintFilterCanvas>(offscreenSurface.get());
+    if (!offscreenCanvas) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Draw create offscreenCanvas fail.");
+        return;
+    }
+    canvas.StoreCanvas();
+    canvas.ReplaceMainScreenData(offscreenSurface, offscreenCanvas);
+    offscreenCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
+    canvas.SavePCanvasList();
+    canvas.RemoveAll();
+    canvas.AddCanvas(offscreenCanvas.get());
+}
+
+// foreground filter restore
+RSPropertyDrawable::DrawablePtr RSForegroundFilterRestoreDrawable::Generate(const RSRenderContent& content)
+{
+    if (!RSPropertiesPainter::BLUR_ENABLED) {
+        ROSEN_LOGD("RSForegroundFilterDrawable::Generate close blur.");
+        return nullptr;
+    }
+
+    if (!IsForegroundFilterValid(content)) {
+        return nullptr;
+    }
+
+    return std::make_unique<RSForegroundFilterRestoreDrawable>();
+}
+
+bool RSForegroundFilterRestoreDrawable::Update(const RSRenderContent& content)
+{
+    return content.GetRenderProperties().GetForegroundFilter() != nullptr;
+}
+
+void RSForegroundFilterRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
+{
+    RSPropertiesPainter::DrawForegroundFilter(content.GetRenderProperties(), canvas);
+}
+
 // effect data
 bool RSEffectDataGenerateDrawable::Update(const RSRenderContent& content)
 {
@@ -874,19 +945,20 @@ RSPropertyDrawable::DrawablePtr RSPixelStretchDrawable::Generate(const RSRenderC
 void RSBackgroundDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
     auto& properties = content.GetRenderProperties();
-    bool antiAlias = RSPropertiesPainter::GetBgAntiAlias() || !properties.GetCornerRadius().IsZero();
     auto borderColorAlpha = properties.GetBorderColor()[0].GetAlpha();
     Drawing::Brush brush = brush_;
-    brush.SetAntiAlias(antiAlias);
-    canvas.AttachBrush(brush);
     // use drawrrect to avoid texture update in phone screen rotation scene
     if (RSSystemProperties::IsPhoneType() && RSSystemProperties::GetCacheEnabledForRotation()) {
+        bool antiAlias = RSPropertiesPainter::GetBgAntiAlias() || !properties.GetCornerRadius().IsZero();
+        brush.SetAntiAlias(antiAlias);
+        canvas.AttachBrush(brush);
         if (borderColorAlpha < BORDER_TRANSPARENT) {
             canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetRRect()));
         } else {
             canvas.DrawRoundRect(RSPropertiesPainter::RRect2DrawingRRect(properties.GetInnerRRect()));
         }
     } else {
+        canvas.AttachBrush(brush);
         if (borderColorAlpha < BORDER_TRANSPARENT) {
             canvas.DrawRect(RSPropertiesPainter::Rect2DrawingRect(properties.GetBoundsRect()));
         } else {
@@ -1015,12 +1087,11 @@ RSBlendSaveLayerDrawable::RSBlendSaveLayerDrawable(int blendMode)
 
 void RSBlendSaveLayerDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    if (canvas.GetBlendOffscreenLayerCnt() == 0 &&
-        RSPropertiesPainter::IsDangerousBlendMode(static_cast<int>(blendBrush_.GetBlendMode()),
-        static_cast<int>(RSColorBlendApplyType::SAVE_LAYER))) {
+    if (!canvas.HasOffscreenLayer() &&
+        RSPropertiesPainter::IsDangerousBlendMode(
+            static_cast<int>(blendBrush_.GetBlendMode()), static_cast<int>(RSColorBlendApplyType::SAVE_LAYER))) {
         Drawing::SaveLayerOps maskLayerRec(nullptr, nullptr, 0);
         canvas.SaveLayer(maskLayerRec);
-        canvas.AddBlendOffscreenLayer(true);
         ROSEN_LOGD("Dangerous offscreen blendmode may produce transparent pixels, add extra offscreen here.");
     }
     auto matrix = canvas.GetTotalMatrix();
@@ -1031,8 +1102,6 @@ void RSBlendSaveLayerDrawable::Draw(const RSRenderContent& content, RSPaintFilte
     brush.SetAlphaF(canvas.GetAlpha());
     Drawing::SaveLayerOps maskLayerRec(nullptr, &brush, 0);
     canvas.SaveLayer(maskLayerRec);
-    canvas.AddBlendOffscreenLayer(false);
-    canvas.SaveBlendMode();
     canvas.SetBlendMode(std::nullopt);
     canvas.SaveAlpha();
     canvas.SetAlpha(1.0f);
@@ -1040,37 +1109,23 @@ void RSBlendSaveLayerDrawable::Draw(const RSRenderContent& content, RSPaintFilte
 
 void RSBlendFastDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    if (canvas.GetBlendOffscreenLayerCnt() == 0 &&
+    if (!canvas.HasOffscreenLayer() &&
         RSPropertiesPainter::IsDangerousBlendMode(blendMode_ - 1, static_cast<int>(RSColorBlendApplyType::FAST))) {
         Drawing::SaveLayerOps maskLayerRec(nullptr, nullptr, 0);
         canvas.SaveLayer(maskLayerRec);
-        canvas.AddBlendOffscreenLayer(true);
         ROSEN_LOGD("Dangerous fast blendmode may produce transparent pixels, add extra offscreen here.");
     }
-    canvas.SaveBlendMode();
     canvas.SetBlendMode({ blendMode_ - 1 }); // map blendMode to SkBlendMode
 }
 
-
 void RSBlendSaveLayerRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    canvas.RestoreBlendMode();
-    canvas.RestoreAlpha();
-    canvas.Restore();
-    canvas.MinusBlendOffscreenLayer();
-    if (canvas.IsBlendOffscreenExtraLayer()) {
-        canvas.Restore();
-        canvas.MinusBlendOffscreenLayer();
-    }
+    // SAVE_ALL slot will do all necessary restore
 }
 
 void RSBlendFastRestoreDrawable::Draw(const RSRenderContent& content, RSPaintFilterCanvas& canvas) const
 {
-    canvas.RestoreBlendMode();
-    if (canvas.IsBlendOffscreenExtraLayer()) {
-        canvas.Restore();
-        canvas.MinusBlendOffscreenLayer();
-    }
+    // SAVE_ALL slot will do all necessary restore
 }
 
 } // namespace OHOS::Rosen

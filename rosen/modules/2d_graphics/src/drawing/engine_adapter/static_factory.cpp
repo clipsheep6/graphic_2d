@@ -138,6 +138,11 @@ std::shared_ptr<Surface> StaticFactory::MakeRenderTarget(GPUContext* gpuContext,
 #endif
     return EngineStaticFactory::MakeRenderTarget(gpuContext, budgeted, imageInfo);
 }
+
+std::shared_ptr<Image> StaticFactory::MakeFromYUVAPixmaps(GPUContext& gpuContext, const YUVInfo& info, void* memory)
+{
+    return EngineStaticFactory::MakeFromYUVAPixmaps(gpuContext, info, memory);
+}
 #endif
 
 std::shared_ptr<Surface> StaticFactory::MakeRaster(const ImageInfo& imageInfo)
@@ -196,7 +201,7 @@ std::shared_ptr<TextBlob> StaticFactory::DeserializeTextBlob(const void* data, s
 {
 #ifdef ENABLE_DDGR_OPTIMIZE
     if (SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
-        return DDGRStaticFactory::DeserializeTextBlob(data, size);
+        return DDGRStaticFactory::DeserializeTextBlob(data, size, ctx);
     }
 #endif
     return EngineStaticFactory::DeserializeTextBlob(data, size, ctx);
@@ -299,7 +304,7 @@ void StaticFactory::GetDrawingPointsForTextBlob(const TextBlob* blob, std::vecto
     return EngineStaticFactory::GetDrawingPointsForTextBlob(blob, points);
 }
 
-std::shared_ptr<DrawingSymbolLayersGroups> StaticFactory::GetSymbolLayersGroups(uint32_t glyphId)
+DrawingSymbolLayersGroups StaticFactory::GetSymbolLayersGroups(uint32_t glyphId)
 {
 #ifdef ENABLE_DDGR_OPTIMIZE
     if (SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
@@ -309,10 +314,10 @@ std::shared_ptr<DrawingSymbolLayersGroups> StaticFactory::GetSymbolLayersGroups(
     return EngineStaticFactory::GetSymbolLayersGroups(glyphId);
 }
 
-std::shared_ptr<std::vector<std::vector<DrawingPiecewiseParameter>>> StaticFactory::GetGroupParameters(
-    DrawingAnimationType type, uint16_t groupSum, uint16_t animationMode)
+std::vector<std::vector<DrawingPiecewiseParameter>> StaticFactory::GetGroupParameters(
+    DrawingAnimationType type, uint16_t groupSum, uint16_t animationMode, DrawingCommonSubType commonSubType)
 {
-    return EngineStaticFactory::GetGroupParameters(type, groupSum, animationMode);
+    return EngineStaticFactory::GetGroupParameters(type, groupSum, animationMode, commonSubType);
 }
 
 FontStyleSet* StaticFactory::CreateEmpty()

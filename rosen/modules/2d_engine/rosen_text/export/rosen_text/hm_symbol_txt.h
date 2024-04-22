@@ -35,7 +35,9 @@ static const std::map<uint32_t, Drawing::DrawingEffectStrategy> EFFECT_TYPES = {
     {2, Drawing::DrawingEffectStrategy::VARIABLE_COLOR},
     {3, Drawing::DrawingEffectStrategy::APPEAR},
     {4, Drawing::DrawingEffectStrategy::DISAPPEAR},
-    {5, Drawing::DrawingEffectStrategy::BOUNCE}};
+    {5, Drawing::DrawingEffectStrategy::BOUNCE},
+    {6, Drawing::DrawingEffectStrategy::PULSE},
+    {7, Drawing::DrawingEffectStrategy::REPLACE_APPEAR}};
 
 enum VisualMode {
     VISUAL_MEDIUM = 0,
@@ -123,9 +125,9 @@ public:
         repeatCount_ = repeatCount;
     }
 
-    void SetAminationStart(const bool aminationStart)
+    void SetAnimationStart(const bool animationStart)
     {
-        aminationStart_ = aminationStart;
+        animationStart_ = animationStart;
     }
 
     uint16_t GetAnimationMode() const
@@ -138,9 +140,9 @@ public:
         return repeatCount_;
     }
 
-    bool GetAminationStart() const
+    bool GetAnimationStart() const
     {
-        return aminationStart_;
+        return animationStart_;
     }
 
     void SetVisualMode(const VisualMode visual)
@@ -160,6 +162,16 @@ public:
         return visualMap_;
     }
 
+    void SetCommonSubType(Drawing::DrawingCommonSubType commonSubType)
+    {
+        commonSubType_ = commonSubType;
+    }
+
+    Drawing::DrawingCommonSubType GetCommonSubType() const
+    {
+        return commonSubType_;
+    }
+
 private:
     std::vector<Drawing::DrawingSColor> colorList_;
     Drawing::DrawingSymbolRenderingStrategy renderMode_ = Drawing::DrawingSymbolRenderingStrategy::SINGLE;
@@ -170,8 +182,9 @@ private:
     // variable_color : the 0 is the cumulative  effect and 1 is the iteratuve effect.
     uint16_t animationMode_ = 1;
     int repeatCount_ = 1;
-    bool aminationStart_ = true;
+    bool animationStart_ = true;
     std::map<std::string, int> visualMap_;
+    Drawing::DrawingCommonSubType commonSubType_ = Drawing::DrawingCommonSubType::UP;
 };
 }
 }

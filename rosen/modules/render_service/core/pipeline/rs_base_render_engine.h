@@ -153,6 +153,7 @@ public:
     RSBaseRenderEngine();
     virtual ~RSBaseRenderEngine() noexcept;
     void Init(bool independentContext = false);
+    void InitCapture(bool independentContext = false);
     RSBaseRenderEngine(const RSBaseRenderEngine&) = delete;
     void operator=(const RSBaseRenderEngine&) = delete;
 
@@ -163,17 +164,17 @@ public:
     // There would only one user(thread) to renderFrame(request frame) at one time.
     // for framebuffer surface
     std::unique_ptr<RSRenderFrame> RequestFrame(const sptr<Surface>& targetSurface,
-        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true);
+        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true, bool isProtected = false);
 
     // There would only one user(thread) to renderFrame(request frame) at one time.
 #ifdef NEW_RENDER_CONTEXT
     std::unique_ptr<RSRenderFrame> RequestFrame(const std::shared_ptr<RSRenderSurfaceOhos>& rsSurface,
-        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true);
+        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true, bool isProtected = false);
     void SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame,
         std::shared_ptr<RSRenderSurfaceOhos> surfaceOhos);
 #else
     std::unique_ptr<RSRenderFrame> RequestFrame(const std::shared_ptr<RSSurfaceOhos>& rsSurface,
-        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true);
+        const BufferRequestConfig& config, bool forceCPU = false, bool useAFBC = true, bool isProtected = false);
     void SetUiTimeStamp(const std::unique_ptr<RSRenderFrame>& renderFrame,
         std::shared_ptr<RSSurfaceOhos> surfaceOhos);
 #endif
@@ -190,6 +191,7 @@ public:
     static void DrawBuffer(RSPaintFilterCanvas& canvas, BufferDrawParam& params);
 
     void ShrinkCachesIfNeeded(bool isForUniRedraw = false);
+    void ClearCacheSet(const std::set<int32_t> unmappedCache);
     static void SetColorFilterMode(ColorFilterMode mode);
     static ColorFilterMode GetColorFilterMode();
     static void SetHighContrast(bool enabled)
@@ -215,6 +217,10 @@ public:
     {
         return renderContext_;
     }
+    const std::shared_ptr<RenderContext>& GetCaptureRenderContext()
+    {
+        return captureRenderContext_;
+    }
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 #endif
     void ResetCurrentContext();
@@ -233,6 +239,10 @@ public:
     const std::shared_ptr<Drawing::GPUContext> GetSkContext() const
     {
         return skContext_;
+    }
+    const std::shared_ptr<Drawing::GPUContext> GetCaptureSkContext() const
+    {
+        return captureSkContext_;
     }
 #endif
 #ifdef USE_VIDEO_PROCESSING_ENGINE
@@ -258,6 +268,7 @@ private:
 #else
 #if (defined RS_ENABLE_GL) || (defined RS_ENABLE_VK)
     std::shared_ptr<RenderContext> renderContext_ = nullptr;
+    std::shared_ptr<RenderContext> captureRenderContext_ = nullptr;
 #endif // RS_ENABLE_GL || RS_ENABLE_VK
 #endif
 #ifdef RS_ENABLE_EGLIMAGE
@@ -265,6 +276,7 @@ private:
 #endif // RS_ENABLE_EGLIMAGE
 #ifdef RS_ENABLE_VK
     std::shared_ptr<Drawing::GPUContext> skContext_ = nullptr;
+    std::shared_ptr<Drawing::GPUContext> captureSkContext_ = nullptr;
     std::shared_ptr<RSVkImageManager> vkImageManager_ = nullptr;
 #endif
     using SurfaceId = uint64_t;

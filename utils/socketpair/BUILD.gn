@@ -25,7 +25,7 @@ config("socketpair_config") {
 }
 
 config("socketpair_public_config") {
-  include_dirs = [ "//base/hiviewdfx/hilog/interfaces/native/innerkits" ]
+  include_dirs = []
 }
 
 config("socketpair_all_dependent_config") {

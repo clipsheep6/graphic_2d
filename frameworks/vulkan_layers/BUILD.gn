@@ -32,7 +32,6 @@ config("vulkan_public_config") {
   include_dirs = [
     "swapchain",
     "include",
-    "//third_party/vulkan-loader/loader/generated",
   ]
 }
 
@@ -49,6 +48,7 @@ ohos_shared_library("vulkan_swapchain_layer") {
     "graphic_surface:sync_fence",
     "hilog:libhilog",
     "vulkan-headers:vulkan_headers",
+    "vulkan-loader:vulkan_loader",
   ]
 
   output_name = "vulkan_swapchain"

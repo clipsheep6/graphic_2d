@@ -42,8 +42,6 @@ ohos_shared_library("effectkit") {
     "//foundation/graphic/graphic_2d/utils/color_manager/export",
   ]
 
-  include_dirs += [ "//third_party/skia" ]
-
   configs = [
     ":graphic_napi_effect_kit_config",
     "//commonlibrary/c_utils/base:utils_config",

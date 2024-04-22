@@ -36,15 +36,14 @@ config("effect_public_config") {
     "$graphic_2d_root/utils/log",
     "include",
   ]
-  if (effect_enable_gpu) {
-    include_dirs += [ "//third_party/openGLES/api" ]
-  }
 }
 
 ohos_shared_library("libeffectchain") {
   sources = [ "//third_party/cJSON/cJSON.c" ]
 
   external_deps = [
+    "cJSON:cjson",
+    "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "image_framework:image_native",

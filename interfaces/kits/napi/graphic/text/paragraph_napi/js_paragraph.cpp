@@ -154,16 +154,16 @@ napi_value JsParagraph::OnPaint(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsParagraph::OnPaint paragraph_ is nullptr");
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
     }
-    if (argv[0] == nullptr) {
-        ROSEN_LOGE("JsParagraph::OnPaint Argv is invalid");
-        return  NapiGetUndefined(env);
-    }
     size_t argc = ARGC_THREE;
     napi_value argv[ARGC_THREE] = {nullptr};
     napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (status != napi_ok || argc < ARGC_THREE) {
         ROSEN_LOGE("JsParagraph::OnPaint Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+    if (argv[0] == nullptr) {
+        ROSEN_LOGE("JsParagraph::OnPaint Argv is invalid");
+        return  NapiGetUndefined(env);
     }
     Drawing::JsCanvas* jsCanvas = nullptr;
     double x = 0.0;

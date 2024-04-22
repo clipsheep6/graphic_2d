@@ -321,6 +321,15 @@ public:
         return dirtySurfaceNodeMap_;
     }
 
+    std::vector<RectI>& GetDamageRegion()
+    {
+        return damageRegion_;
+    }
+    void SetDamageRegion(std::vector<RectI>& rects)
+    {
+        damageRegion_ = rects;
+    }
+
 protected:
     void OnSync() override;
 private:
@@ -373,6 +382,8 @@ private:
     bool isParallelDisplayNode_ = false;
 
     std::map<NodeId, std::shared_ptr<RSSurfaceRenderNode>> dirtySurfaceNodeMap_;
+
+    std::vector<RectI> damageRegion_;
 };
 } // namespace Rosen
 } // namespace OHOS

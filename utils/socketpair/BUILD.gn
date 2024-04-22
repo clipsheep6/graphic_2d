@@ -25,11 +25,7 @@ config("socketpair_config") {
 }
 
 config("socketpair_public_config") {
-  include_dirs = [
-    "//commonlibrary/c_utils/base/include",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include/message_parcel.h",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits",
-  ]
+  include_dirs = [ "//base/hiviewdfx/hilog/interfaces/native/innerkits" ]
 }
 
 config("socketpair_all_dependent_config") {
@@ -46,11 +42,12 @@ ohos_shared_library("socketpair") {
 
   deps = [ "//foundation/graphic/graphic_2d/utils:scoped_bytrace" ]
 
-  external_deps = [
+  public_external_deps = [
     "c_utils:utils",
-    "hilog:libhilog",
     "ipc:ipc_core",
   ]
+
+  external_deps = [ "hilog:libhilog" ]
   innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "graphic_2d"
   subsystem_name = "graphic"

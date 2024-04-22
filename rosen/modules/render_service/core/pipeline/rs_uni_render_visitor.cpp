@@ -1255,6 +1255,12 @@ void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node
 
     UpdateHwcNodeInfoForAppNode(node);
 
+    if (node.IsAppWindow()) {
+        const auto& property = node.GetRenderProperties();
+        boundsRect_ = Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight());
+        frameGravity_ = property.GetFrameGravity();
+    }
+
     bool isSubTreeNeedPrepare = node.IsSubTreeNeedPrepare(filterInGlobal_, IsSubTreeOccluded(node)) ||
         ForcePrepareSubTree();
     isSubTreeNeedPrepare ? QuickPrepareChildren(node) :

@@ -138,6 +138,16 @@ public:
         return isForceCommitLayer_;
     }
 
+    void SetRequestNextVsyncFlag(bool flag)
+    {
+        needRequestNextVsyncAnimate_ = flag;
+    }
+
+    bool GetRequestNextVsyncFlag() const
+    {
+        return needRequestNextVsyncAnimate_;
+    }
+
     void SetOnVsyncStartTime(int64_t time)
     {
         onVsyncStartTime_ = time;
@@ -168,7 +178,40 @@ public:
         return isUniRenderAndOnVsync_;
     }
 
+    void SetStartVisit(bool startVisit)
+    {
+        startVisit_ = startVisit;
+    }
+
+    bool GetStartVisit() const
+    {
+        return startVisit_;
+    }
+
+    void SetHasCaptureImg(bool hasCaptureImg)
+    {
+        hasCaptureImg_ = hasCaptureImg;
+    }
+
+    bool GetHasCaptureImg() const
+    {
+        return hasCaptureImg_;
+    }
+
+    void SetRootIdOfCaptureWindow(NodeId rootIdOfCaptureWindow)
+    {
+        rootIdOfCaptureWindow_ = rootIdOfCaptureWindow;
+    }
+
+    NodeId GetRootIdOfCaptureWindow() const
+    {
+        return rootIdOfCaptureWindow_;
+    }
+
 private:
+    bool startVisit_ = false;
+    bool hasCaptureImg_ = false;
+    NodeId rootIdOfCaptureWindow_ = INVALID_NODEID;
     // Used by hardware thred
     uint64_t timestamp_ = 0;
     uint32_t pendingScreenRefreshRate_ = 0;
@@ -191,6 +234,9 @@ private:
     Occlusion::Region accumulatedDirtyRegion_;
     bool watermarkFlag_ = false;
     std::shared_ptr<Drawing::Image> watermarkImg_ = nullptr;
+
+    bool needRequestNextVsyncAnimate_ = false;
+
     int64_t onVsyncStartTime_ = TIMESTAMP_INITIAL;
     int64_t onVsyncStartTimeSteady_ = TIMESTAMP_INITIAL;
     bool isUniRenderAndOnVsync_ = false;

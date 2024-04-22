@@ -109,6 +109,9 @@
 #include "socperf_client.h"
 #endif
 
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+#include "chipset_vsync.h"
+#endif
 #ifdef RES_SCHED_ENABLE
 #include "system_ability_definition.h"
 #include "if_system_ability_manager.h"
@@ -275,6 +278,16 @@ RSMainThread::~RSMainThread() noexcept
     }
 }
 
+
+void RSMainThread::TryCleanResourceInBackGroundThd()
+{
+#if defined(RS_ENABLE_UNI_RENDER) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+    if (RSBackgroundThread::Instance().GetGrResourceFinishFlag()) {
+        RSBackgroundThread::Instance().CleanGrResource();
+    }
+#endif
+}
+
 void RSMainThread::Init()
 {
     mainLoop_ = [&]() {
@@ -306,18 +319,10 @@ void RSMainThread::Init()
         }
         if (isUniRender_ && doDirectComposition_) {
             UpdateDisplayNodeScreenId();
-        }
-
-        if (!hasMark_) {
-            SetFrameIsRender(true);
-        }
-        hasMark_ = false;
-        // move rnv after mark rsnotrendering
-        if (needRequestNextVsyncAnimate_ || rsVSyncDistributor_->HasPendingUIRNV()) {
-            rsVSyncDistributor_->MarkRSAnimate();
-            RequestNextVSync("animate", timestamp_);
-        } else {
-            rsVSyncDistributor_->UnmarkRSAnimate();
+            if (!markRenderFlag_) {
+                SetFrameIsRender(true);
+            }
+            markRenderFlag_ = false;
         }
 
         InformHgmNodeInfo();
@@ -339,6 +344,10 @@ void RSMainThread::Init()
         RSUploadResourceThread::Instance().OnRenderEnd();
 #endif
         RSTypefaceCache::Instance().HandleDelayDestroyQueue();
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+        ConnectChipsetVsyncSer();
+#endif
+        TryCleanResourceInBackGroundThd();
         RS_PROFILER_ON_FRAME_END();
     };
     static std::function<void (std::shared_ptr<Drawing::Image> image)> holdDrawingImagefunc =
@@ -473,7 +482,9 @@ void RSMainThread::Init()
             RSMainThread::Instance()->SetForceUpdateUniRenderFlag(forceUpdate);
             RSMainThread::Instance()->SetIdleTimerExpiredFlag(idleTimerExpired);
             RS_TRACE_NAME_FMT("DVSyncIsOn: %d", this->rsVSyncDistributor_->IsDVsyncOn());
-            if (!this->rsVSyncDistributor_->IsDVsyncOn()) {
+            if (forceUpdate) {
+                RSMainThread::Instance()->RequestNextVSync("ltpoForceUpdate");
+            } else {
                 RSMainThread::Instance()->RequestNextVSync();
             }
         });
@@ -910,6 +921,20 @@ void RSMainThread::ProcessCommandForUniRender()
     if (!transactionDataEffective->empty()) {
         doDirectComposition_ = false;
     }
+    const auto& nodeMap = context_->GetNodeMap();
+    nodeMap.TraverseCanvasDrawingNodes([](const std::shared_ptr<RSCanvasDrawingRenderNode>& canvasDrawingNode) {
+        if (canvasDrawingNode == nullptr) {
+            return;
+        }
+        if (canvasDrawingNode->IsNeedProcess()) {
+            auto drawableNode = DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(canvasDrawingNode);
+            if (!drawableNode) {
+                return;
+            }
+            static_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable*>(drawableNode.get())->
+                PlaybackInCorrespondThread();
+        }
+    });
     RS_TRACE_NAME("RSMainThread::ProcessCommandUni" + transactionFlags);
     for (auto& rsTransactionElem: *transactionDataEffective) {
         for (auto& rsTransaction: rsTransactionElem.second) {
@@ -1046,6 +1071,7 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
 {
     if (isUniRender_) {
         ResetHardwareEnabledState();
+        hasProtectedLayer_ = false;
     }
     RS_OPTIONAL_TRACE_BEGIN("RSMainThread::ConsumeAndUpdateAllNodes");
     bool needRequestNextVsync = false;
@@ -1089,6 +1115,18 @@ void RSMainThread::ConsumeAndUpdateAllNodes()
                     surfaceNode->SetContentDirty();
                     doDirectComposition_ = false;
                 }
+        }
+
+        const auto& surfaceBuffer = surfaceNode->GetBuffer();
+        if (RSSystemProperties::GetDrmEnabled() && deviceType_ == DeviceType::PHONE && surfaceBuffer &&
+            (surfaceBuffer->GetUsage() & BUFFER_USAGE_PROTECTED)) {
+            if (!surfaceNode->GetProtectedLayer()) {
+                surfaceNode->SetProtectedLayer(true);
+            }
+            const auto& instanceNode = surfaceNode->GetInstanceRootNode();
+            if (instanceNode && instanceNode->IsOnTheTree()) {
+                hasProtectedLayer_ = true;
+            }
         }
 
         // still have buffer(s) to consume.
@@ -1138,6 +1176,10 @@ void RSMainThread::CollectInfoForHardwareComposer()
                 selfDrawingNodes_.emplace_back(surfaceNode);
             }
             if (!surfaceNode->IsOnTheTree()) {
+                if (surfaceNode->IsCurrentFrameBufferConsumed()) {
+                    surfaceNode->UpdateHardwareDisabledState(true);
+                    doDirectComposition_ = false;
+                }
                 return;
             }
 
@@ -1224,7 +1266,8 @@ void RSMainThread::CheckIfHardwareForcedDisabled()
 
     // [PLANNING] GetChildrenCount > 1 indicates multi display, only Mirror Mode need be marked here
     // Mirror Mode reuses display node's buffer, so mark it and disable hardware composer in this case
-    isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ || isMultiDisplay || hasColorFilter;
+    isHardwareForcedDisabled_ = isHardwareForcedDisabled_ || doWindowAnimate_ ||
+        (isMultiDisplay && !hasProtectedLayer_) || hasColorFilter;
     RS_OPTIONAL_TRACE_NAME_FMT("hwc debug global: CheckIfHardwareForcedDisabled isHardwareForcedDisabled_:%d "
         "doWindowAnimate_:%d isMultiDisplay:%d hasColorFilter:%d",
         isHardwareForcedDisabled_, doWindowAnimate_.load(), isMultiDisplay, hasColorFilter);
@@ -1436,6 +1479,14 @@ void RSMainThread::SetSurfaceCapProcFinished(bool flag)
     surfaceCapProcFinished_ = flag;
 }
 
+bool RSMainThread::IsRequestedNextVSync()
+{
+    if (receiver_ != nullptr) {
+        return receiver_->IsRequestedNextVSync();
+    }
+    return false;
+}
+
 void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
 {
     RS_TRACE_FUNC();
@@ -1482,7 +1533,7 @@ bool RSMainThread::GetParallelCompositionEnabled()
 
 void RSMainThread::SetFrameIsRender(bool isRender)
 {
-    hasMark_ = true;
+    markRenderFlag_ = true;
     rsVSyncDistributor_->SetFrameIsRender(isRender);
 }
 
@@ -1598,20 +1649,6 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
     } else if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         WaitUntilUploadTextureTaskFinished(isUniRender_);
     }
-    const auto& nodeMap = context_->GetNodeMap();
-    nodeMap.TraverseCanvasDrawingNodes([](const std::shared_ptr<RSCanvasDrawingRenderNode>& canvasDrawingNode) {
-        if (canvasDrawingNode == nullptr) {
-            return;
-        }
-        if (canvasDrawingNode->IsNeedProcess()) {
-            auto drawableNode = DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(canvasDrawingNode);
-            if (!drawableNode) {
-                return;
-            }
-            static_cast<DrawableV2::RSCanvasDrawingRenderNodeDrawable*>(drawableNode.get())->
-                PlaybackInCorrespondThread();
-        }
-    });
     isDirty_ = false;
     forceUpdateUniRenderFlag_ = false;
     idleTimerExpiredFlag_ = false;
@@ -1692,6 +1729,7 @@ void RSMainThread::Render()
     if (isUniRender_) {
         auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
         renderThreadParams_->SetTimestamp(hgmCore.GetCurrentTimestamp());
+        renderThreadParams_->SetRequestNextVsyncFlag(needRequestNextVsyncAnimate_);
         renderThreadParams_->SetPendingScreenRefreshRate(hgmCore.GetPendingScreenRefreshRate());
         renderThreadParams_->SetForceCommitLayer(isHardwareEnabledBufferUpdated_ || forceUpdateUniRenderFlag_);
     }
@@ -1740,14 +1778,14 @@ void RSMainThread::CheckSystemSceneStatus()
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             std::chrono::steady_clock::now().time_since_epoch()).count());
     while (!systemAnimatedScenesList_.empty()) {
-        if (curTime - systemAnimatedScenesList_.front().second > MAX_SYSTEM_SCENE_STATUS_TIME) {
+        if (curTime - static_cast<uint64_t>(systemAnimatedScenesList_.front().second) > MAX_SYSTEM_SCENE_STATUS_TIME) {
             systemAnimatedScenesList_.pop_front();
         } else {
             break;
         }
     }
     while (!threeFingerScenesList_.empty()) {
-        if (curTime - threeFingerScenesList_.front().second > MAX_SYSTEM_SCENE_STATUS_TIME) {
+        if (curTime - static_cast<uint64_t>(threeFingerScenesList_.front().second) > MAX_SYSTEM_SCENE_STATUS_TIME) {
             threeFingerScenesList_.pop_front();
         } else {
             break;
@@ -2190,6 +2228,9 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
         RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
     }
     mainLoop_();
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+    SetVsyncInfo(timestamp);
+#endif
     auto screenManager_ = CreateOrGetScreenManager();
     if (screenManager_ != nullptr) {
         auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
@@ -2230,6 +2271,30 @@ void RSMainThread::RSJankStatsOnVsyncEnd(int64_t onVsyncStartTime, int64_t onVsy
         drawFrame_.PostDirectCompositionJankStats(rsParams);
     }
 }
+
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+void RSMainThread::ConnectChipsetVsyncSer()
+{
+    if (initVsyncServiceFlag_ && (OHOS::Camera::ChipsetVsyncClient::Instance().InitChipsetVsync() == -1)) {
+        initVsyncServiceFlag_ = true;
+    } else {
+        initVsyncServiceFlag_ = false;
+    }
+}
+#endif
+
+#if defined(RS_ENABLE_CHIPSET_VSYNC)
+void RSMainThread::SetVsyncInfo(uint64_t timestamp)
+{
+    int64_t vsyncPeriod = 0;
+    if (receiver_) {
+        receiver_->GetVSyncPeriod(vsyncPeriod);
+    }
+    OHOS::Camera::ChipsetVsyncHostCallback::GetInstance()->SetVsync(timestamp, vsyncPeriod);
+    RS_LOGD("UpdateVsyncTime = %{public}lld, period = %{public}lld",
+        static_cast<long long>(timestamp), static_cast<long long>(vsyncPeriod));
+}
+#endif
 
 void RSMainThread::Animate(uint64_t timestamp)
 {
@@ -2335,18 +2400,57 @@ void RSMainThread::Animate(uint64_t timestamp)
     PerfAfterAnim(needRequestNextVsync);
 }
 
+bool RSMainThread::IsNeedProcessBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData)
+{
+    if (!isUniRender_ || !rsTransactionData) {
+        return false;
+    }
+
+    if (!RSSingleFrameComposer::IsShouldProcessByIpcThread(rsTransactionData->GetSendingPid()) &&
+        !RSSystemProperties::GetSingleFrameComposerEnabled()) {
+        return false;
+    }
+
+    // animation node will call RequestNextVsync() in mainLoop_, here we simply ignore animation scenario
+    if (!context_->animatingNodeList_.empty()) {
+        return false;
+    }
+
+    // ignore mult-window scenario
+    auto currentVisibleLeashWindowCount = context_->GetNodeMap().GetVisibleLeashWindowCount();
+    if (currentVisibleLeashWindowCount >= MULTI_WINDOW_PERF_START_NUM) {
+        return false;
+    }
+
+    return true;
+}
+
 void RSMainThread::ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData)
 {
-    if (!rsTransactionData || !RSSystemProperties::GetSingleFrameComposerEnabled() ||
-        !RSSingleFrameComposer::IsShouldProcessByIpcThread(rsTransactionData->GetSendingPid())) {
+    if (!rsTransactionData || !isUniRender_) {
         return;
     }
 
-    RSSingleFrameComposer::SetSingleFrameFlag(std::this_thread::get_id());
-    if (isUniRender_) {
+    if (RSSystemProperties::GetSingleFrameComposerEnabled()) {
+        RSSingleFrameComposer::SetSingleFrameFlag(std::this_thread::get_id());
         context_->transactionTimestamp_ = rsTransactionData->GetTimestamp();
         rsTransactionData->ProcessBySingleFrameComposer(*context_);
     }
+
+    RecvAndProcessRSTransactionDataImmediately(rsTransactionData);
+}
+
+void RSMainThread::RecvAndProcessRSTransactionDataImmediately(std::unique_ptr<RSTransactionData>& rsTransactionData)
+{
+    if (!rsTransactionData || !isUniRender_) {
+        return;
+    }
+    RS_TRACE_NAME("ProcessBySingleFrameComposer");
+    {
+        std::lock_guard<std::mutex> lock(transitionDataMutex_);
+        cachedTransactionDataMap_[rsTransactionData->GetSendingPid()].emplace_back(std::move(rsTransactionData));
+    }
+    ForceRefreshForUni();
 }
 
 void RSMainThread::RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData)
@@ -2676,6 +2780,7 @@ void RSMainThread::DumpMem(std::unordered_set<std::u16string>& argSets, std::str
     DfxString log;
     if (pid != 0) {
         RSUniRenderThread::Instance().PostSyncTask([&log, pid] {
+            RS_TRACE_NAME_FMT("Dumping memory of pid[%d]", pid);
             MemoryManager::DumpPidMemory(log, pid,
                 RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
         });
@@ -2699,6 +2804,7 @@ void RSMainThread::CountMem(int pid, MemoryGraphic& mem)
 {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     RSUniRenderThread::Instance().PostSyncTask([&mem, pid] {
+        RS_TRACE_NAME_FMT("Counting memory of pid[%d]", pid);
         mem = MemoryManager::CountPidMemory(pid,
             RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetDrGPUContext());
     });
@@ -2828,7 +2934,7 @@ void RSMainThread::PerfForBlurIfNeeded()
         }
         RS_OPTIONAL_TRACE_NAME_FMT("PerfForBlurIfNeeded now[%ld] timestamp[%ld] preBlurCnt[%d]",
             std::chrono::steady_clock::now().time_since_epoch(), timestamp, preBlurCnt);
-        if (timestamp - prePerfTimestamp > PERF_PERIOD_BLUR_TIMEOUT && preBlurCnt != 0) {
+        if (static_cast<uint64_t>(timestamp) - prePerfTimestamp > PERF_PERIOD_BLUR_TIMEOUT && preBlurCnt != 0) {
             PerfRequest(BLUR_CNT_TO_BLUR_CODE.at(preBlurCnt), false);
             prePerfTimestamp = 0;
             preBlurCnt = 0;
@@ -3107,7 +3213,9 @@ void RSMainThread::UpdateUIFirstSwitch()
     auto screenManager_ = CreateOrGetScreenManager();
     uint32_t actualScreensNum = screenManager_->GetActualScreensNum();
     if (deviceType_ != DeviceType::PC) {
-        if (isFoldScreenDevice_) {
+        if (deviceType_ == DeviceType::PHONE && hasProtectedLayer_) {
+            isUiFirstOn_ = false;
+        } else if (isFoldScreenDevice_) {
             isUiFirstOn_ = (RSSystemProperties::GetUIFirstEnabled() && actualScreensNum == FOLD_DEVICE_SCREEN_NUMBER);
         } else {
             isUiFirstOn_ = (RSSystemProperties::GetUIFirstEnabled() && actualScreensNum == 1);

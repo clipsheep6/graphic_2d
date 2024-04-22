@@ -40,12 +40,14 @@ enum class RSDrawableSlot : int8_t {
     TRANSITION,
     ENV_FOREGROUND_COLOR,
     SHADOW,
+    FOREGROUND_FILTER,
     OUTLINE,
 
     // BG properties in Bounds Clip
     BG_SAVE_BOUNDS,
     CLIP_TO_BOUNDS,
     BLEND_MODE,
+    CONTENT_BLENDER,
     BACKGROUND_COLOR,
     BACKGROUND_SHADER,
     BACKGROUND_IMAGE,
@@ -72,7 +74,7 @@ enum class RSDrawableSlot : int8_t {
     COLOR_FILTER,
     LIGHT_UP_EFFECT,
     DYNAMIC_DIM,
-    FOREGROUND_FILTER,
+    COMPOSITING_FILTER,
     FOREGROUND_COLOR,
     FG_RESTORE_BOUNDS,
 
@@ -85,6 +87,8 @@ enum class RSDrawableSlot : int8_t {
 
     // Restore state
     RESTORE_BLEND_MODE,
+    RESTORE_BLENDER,
+    RESTORE_FOREGROUND_FILTER,
     RESTORE_ALL,
 
     // Annotations: Please remember to update this when new slots are added.
@@ -130,7 +134,6 @@ public:
     // Call on thread sync
     virtual void OnSync() = 0;
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!! Important Note:
     // DrawFunc can only access the RT members variables, accessing staging members will cause a crash
     virtual Drawing::RecordingCanvas::DrawFunc CreateDrawFunc() const = 0;
 

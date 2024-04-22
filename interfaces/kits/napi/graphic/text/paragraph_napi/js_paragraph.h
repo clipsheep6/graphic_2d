@@ -53,7 +53,6 @@ public:
     std::shared_ptr<Typography> GetParagraph();
 
 private:
-    static thread_local napi_ref constructor_;
     napi_value OnLayout(napi_env env, napi_callback_info info);
     napi_value OnPaint(napi_env env, napi_callback_info info);
     napi_value OnGetMaxWidth(napi_env env, napi_callback_info info);
@@ -72,6 +71,9 @@ private:
     napi_value OnGetLineWidth(napi_env env, napi_callback_info info);
     napi_value OnDidExceedMaxLines(napi_env env, napi_callback_info info);
     napi_value OnGetTextLines(napi_env env, napi_callback_info info);
+
+    static thread_local napi_ref constructor_;
+    static std::unique_ptr<Typography> g_Typography;
     std::shared_ptr<Typography> paragraph_ = nullptr;
 };
 } // namespace OHOS::Rosen

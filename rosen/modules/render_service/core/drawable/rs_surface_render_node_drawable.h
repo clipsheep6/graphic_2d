@@ -159,7 +159,7 @@ private:
     static Registrar instance_;
 #ifdef RS_PARALLEL
     std::string name_;
-    bool DrawUIFirstCache(RSPaintFilterCanvas& rscanvas);
+    bool DrawUIFirstCache(RSPaintFilterCanvas& rscanvas, bool canSkipWait);
     bool CheckIfNeedResetRotate(RSPaintFilterCanvas& canvas);
     NodeId FindInstanceChildOfDisplay(std::shared_ptr<RSRenderNode> node);
 

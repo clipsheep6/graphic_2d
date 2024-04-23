@@ -39,6 +39,7 @@
 #include "pipeline/rs_task_dispatcher.h"
 #include "pipeline/rs_uni_render_judgement.h"
 #include "pipeline/rs_uni_ui_capture.h"
+#include "pipeline/rs_uifirst_manager.h"
 #include "pixel_map_from_surface.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
@@ -1261,6 +1262,7 @@ void RSRenderServiceConnection::ReportEventResponse(DataBaseRs info)
         RSJankStats::GetInstance().SetReportEventResponse(info);
     };
     renderThread_.PostTask(task);
+    RSUifirstManager::Instance().OnProcessEventResponse(info);
 }
 
 void RSRenderServiceConnection::ReportEventComplete(DataBaseRs info)
@@ -1269,6 +1271,7 @@ void RSRenderServiceConnection::ReportEventComplete(DataBaseRs info)
         RSJankStats::GetInstance().SetReportEventComplete(info);
     };
     renderThread_.PostTask(task);
+    RSUifirstManager::Instance().OnProcessEventComplete(info);
 }
 
 void RSRenderServiceConnection::ReportEventJankFrame(DataBaseRs info)

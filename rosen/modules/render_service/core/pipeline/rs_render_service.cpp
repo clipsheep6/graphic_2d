@@ -91,7 +91,6 @@ bool RSRenderService::Init()
         generator->SetVSyncMode(VSYNC_MODE_LTPO);
     }
     rsVSyncDistributor_ = new VSyncDistributor(rsVSyncController_, "rs");
-    appVSyncDistributor_ = new VSyncDistributor(appVSyncController_, "app");
 
     generator->SetRSDistributor(rsVSyncDistributor_);
 
@@ -144,7 +143,7 @@ sptr<RSIRenderServiceConnection> RSRenderService::CreateConnection(const sptr<RS
 
     auto tokenObj = token->AsObject();
     sptr<RSIRenderServiceConnection> newConn(
-        new RSRenderServiceConnection(remotePid, this, mainThread_, screenManager_, tokenObj, appVSyncDistributor_));
+        new RSRenderServiceConnection(remotePid, this, mainThread_, screenManager_, tokenObj, rsVSyncDistributor_));
 
     sptr<RSIRenderServiceConnection> tmp;
     std::unique_lock<std::mutex> lock(mutex_);
@@ -479,7 +478,7 @@ void RSRenderService::DumpNode(std::unordered_set<std::u16string>& argSets, std:
         [this, &dumpString, &nodeId]() {
             return mainThread_->DumpNode(dumpString, nodeId);
         }).wait();
-    
+
 }
 
 void RSRenderService::DoDump(std::unordered_set<std::u16string>& argSets, std::string& dumpString) const

@@ -2153,4 +2153,210 @@ HWTEST_F(EglWrapperEntryTest, EglSetDamageRegionKHRImpl002, Level2)
     auto result = gWrapperHook.wrapper.eglSetDamageRegionKHR(dpy, nullptr, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
+
+/**
+ * @tc.name: EglCompositorSetContextListEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCompositorSetContextListEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCompositorSetContextListEXT(nullptr, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCompositorSetContextAttributesEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCompositorSetContextAttributesEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCompositorSetContextAttributesEXT(1, nullptr, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCompositorSetWindowListEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCompositorSetWindowListEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCompositorSetWindowListEXT(1, nullptr, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCompositorSetWindowAttributesEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCompositorSetWindowAttributesEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCompositorSetWindowAttributesEXT(1, nullptr, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCompositorBindTexWindowEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCompositorBindTexWindowEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCompositorBindTexWindowEXT(1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCompositorSetSizeEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCompositorSetSizeEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCompositorSetSizeEXT(1, 1, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCompositorSwapPolicyEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCompositorSwapPolicyEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCompositorSwapPolicyEXT(1, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDeviceAttribEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDeviceAttribEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDeviceAttribEXT(nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDeviceStringEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDeviceStringEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDeviceStringEXT(nullptr, 1);
+    ASSERT_EQ(nullptr, result);
+}
+
+/**
+ * @tc.name: EglQueryDevicesEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDevicesEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDevicesEXT(1, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDisplayAttribEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDisplayAttribEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDisplayAttribEXT(nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDisplayAttribEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDisplayAttribEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryDisplayAttribEXT(dpy, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDeviceBinaryEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDeviceBinaryEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDeviceBinaryEXT(nullptr, 1, 1, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+
+/**
+ * @tc.name: EglCreatePlatformWindowSurfaceEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreatePlatformWindowSurfaceEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCreatePlatformWindowSurfaceEXT(nullptr, nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCreatePlatformWindowSurfaceEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreatePlatformWindowSurfaceEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglCreatePlatformWindowSurfaceEXT(dpy, nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCreatePlatformPixmapSurfaceEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreatePlatformPixmapSurfaceEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCreatePlatformPixmapSurfaceEXT(nullptr, nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCreatePlatformPixmapSurfaceEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreatePlatformPixmapSurfaceEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglCreatePlatformPixmapSurfaceEXT(dpy, nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
 } // OHOS::Rosen

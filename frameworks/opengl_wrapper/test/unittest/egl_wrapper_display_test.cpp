@@ -366,4 +366,30 @@ HWTEST_F(EglWrapperDisplayTest, SetDamageRegionKHR001, Level1)
     auto result = eglWrapperDisplay->SetDamageRegionKHR(nullptr, 0, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
+
+/**
+ * @tc.name: CreatePlatformWindowSurfaceEXT001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, CreatePlatformWindowSurfaceEXT001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->CreatePlatformWindowSurfaceEXT(nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: CreatePlatformPixmapSurfaceEXT001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, CreatePlatformPixmapSurfaceEXT001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->CreatePlatformPixmapSurfaceEXT(nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
 } // OHOS::Rosen

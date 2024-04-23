@@ -88,7 +88,8 @@ public:
 
     EGLBoolean SwapBuffersWithDamageKHR(EGLSurface draw, EGLint *rects, EGLint nRects);
     EGLBoolean SetDamageRegionKHR(EGLSurface surf, EGLint *rects, EGLint nRects);
-
+    EGLSurface CreatePlatformWindowSurfaceEXT(EGLConfig config, void *nativeWindow, const EGLint *attribList);
+    EGLSurface CreatePlatformPixmapSurfaceEXT(EGLConfig config, void *nativePixmap, const EGLint *attribList);
 private:
     EglWrapperDisplay() noexcept;
     ~EglWrapperDisplay();

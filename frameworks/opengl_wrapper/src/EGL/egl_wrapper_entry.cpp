@@ -1257,11 +1257,34 @@ EGLDisplay EglGetPlatformDisplayEXTImpl(EGLenum platform,
     return EglWrapperDisplay::GetEglDisplayExt(platform, nativeDisplay, attribList);
 }
 
+EGLSurface EglCreatePlatformWindowSurfaceEXTImpl(EGLDisplay dpy, EGLConfig config, void *nativeWindow,
+    const EGLint *attribList)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->CreatePlatformWindowSurfaceEXT(config, nativeWindow, attribList);
+}
+
+EGLSurface EglCreatePlatformPixmapSurfaceEXTImpl(EGLDisplay dpy, EGLConfig config, void *nativePixmap,
+    const EGLint *attribList)
+{
+    ClearError();
+    WLOGD("");
+
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->CreatePlatformPixmapSurfaceEXT(config, nativePixmap, attribList);
+}
+
 EGLBoolean EglSwapBuffersWithDamageKHRImpl(EGLDisplay dpy, EGLSurface draw,
     EGLint *rects, EGLint nRects)
 {
     ClearError();
-    WLOGD("");
     EglWrapperDisplay *display = ValidateDisplay(dpy);
     if (!display) {
         return EGL_FALSE;
@@ -1316,6 +1339,169 @@ void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, 
     } else {
         WLOGE("EglSetBlobCacheFuncsANDROIDImpl platform is not found.");
     }
+}
+
+EGLBoolean EglCompositorSetContextListEXTImpl(const EGLint *refIds, EGLint entriesNum)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCompositorSetContextListEXT) {
+        ret = table->egl.eglCompositorSetContextListEXT(refIds, entriesNum);
+    } else {
+        WLOGE("eglCompositorSetContextListEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglCompositorSetContextAttributesEXTImpl(EGLint refId, const EGLint *attributes, EGLint entriesNum)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCompositorSetContextAttributesEXT) {
+        ret = table->egl.eglCompositorSetContextAttributesEXT(refId, attributes, entriesNum);
+    } else {
+        WLOGE("eglCompositorSetContextAttributesEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglCompositorSetWindowListEXTImpl(EGLint refId, const EGLint *winIds, EGLint entriesNum)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCompositorSetWindowListEXT) {
+        ret = table->egl.eglCompositorSetWindowListEXT(refId, winIds, entriesNum);
+    } else {
+        WLOGE("eglCompositorSetWindowListEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglCompositorSetWindowAttributesEXTImpl(EGLint winId, const EGLint *attributes, EGLint entriesNum)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCompositorSetWindowAttributesEXT) {
+        ret = table->egl.eglCompositorSetWindowAttributesEXT(winId, attributes, entriesNum);
+    } else {
+        WLOGE("eglCompositorSetWindowAttributesEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglCompositorBindTexWindowEXTImpl(EGLint winId)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCompositorBindTexWindowEXT) {
+        ret = table->egl.eglCompositorBindTexWindowEXT(winId);
+    } else {
+        WLOGE("eglCompositorBindTexWindowEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglCompositorSetSizeEXTImpl(EGLint winId, EGLint width, EGLint height)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCompositorSetSizeEXT) {
+        ret = table->egl.eglCompositorSetSizeEXT(winId, width, height);
+    } else {
+        WLOGE("eglCompositorSetSizeEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglCompositorSwapPolicyEXTImpl(EGLint winId, EGLint policy)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCompositorSwapPolicyEXT) {
+        ret = table->egl.eglCompositorSwapPolicyEXT(winId, policy);
+    } else {
+        WLOGE("eglCompositorSwapPolicyEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglQueryDeviceAttribEXTImpl(EGLDeviceEXT device, EGLint attribute, EGLAttrib *value)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDeviceAttribEXT) {
+        ret = table->egl.eglQueryDeviceAttribEXT(device, attribute, value);
+    } else {
+        WLOGE("eglQueryDeviceAttribEXT is not found.");
+    }
+    return ret;
+}
+
+const char *EglQueryDeviceStringEXTImpl(EGLDeviceEXT device, EGLint name)
+{
+    ClearError();
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDeviceStringEXT) {
+        return table->egl.eglQueryDeviceStringEXT(device, name);
+    } else {
+        WLOGE("eglQueryDeviceStringEXT is not found.");
+    }
+    return nullptr;
+}
+
+EGLBoolean EglQueryDevicesEXTImpl(EGLint maxDevices, EGLDeviceEXT *devices, EGLint *devicesNum)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDevicesEXT) {
+        ret = table->egl.eglQueryDevicesEXT(maxDevices, devices, devicesNum);
+    } else {
+        WLOGE("eglQueryDevicesEXT is not found.");
+    }
+    return ret;
+}
+
+EGLBoolean EglQueryDisplayAttribEXTImpl(EGLDisplay dpy, EGLint attribute, EGLAttrib *value)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return ret;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDisplayAttribEXT) {
+        ret = table->egl.eglQueryDisplayAttribEXT(display->GetEglDisplay(), attribute, value);
+    } else {
+        WLOGE("eglQueryDisplayAttribEXT is not found.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglQueryDeviceBinaryEXTImpl(EGLDeviceEXT device, EGLint name, EGLint maxSize, void *value, EGLint *size)
+{
+    ClearError();
+    EGLBoolean ret = EGL_FALSE;
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglQueryDeviceBinaryEXT) {
+        ret = table->egl.eglQueryDeviceBinaryEXT(device, name, maxSize, value, size);
+    } else {
+        WLOGE("eglQueryDeviceBinaryEXT is not found.");
+    }
+    return ret;
 }
 
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
@@ -1408,12 +1594,32 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
 
     { "eglWaitSyncKHR", (EglWrapperFuncPointer)&EglWaitSyncKHRImpl },
 
+    /* EGL_EXT_platform_base */
     { "eglGetPlatformDisplayEXT", (EglWrapperFuncPointer)&EglGetPlatformDisplayEXTImpl },
+    { "eglCreatePlatformWindowSurfaceEXT", (EglWrapperFuncPointer)&EglCreatePlatformWindowSurfaceEXTImpl },
+    { "eglCreatePlatformPixmapSurfaceEXT", (EglWrapperFuncPointer)&EglCreatePlatformPixmapSurfaceEXTImpl },
 
     { "eglSwapBuffersWithDamageKHR", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageKHRImpl },
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
     { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
 
+    /* EGL_EXT_compositor */
+    { "eglCompositorSetContextListEXT", (EglWrapperFuncPointer)&EglCompositorSetContextListEXTImpl },
+    { "eglCompositorSetContextAttributesEXT", (EglWrapperFuncPointer)&EglCompositorSetContextAttributesEXTImpl },
+    { "eglCompositorSetWindowListEXT", (EglWrapperFuncPointer)&EglCompositorSetWindowListEXTImpl },
+    { "eglCompositorSetWindowAttributesEXT", (EglWrapperFuncPointer)&EglCompositorSetWindowAttributesEXTImpl },
+    { "eglCompositorBindTexWindowEXT", (EglWrapperFuncPointer)&EglCompositorBindTexWindowEXTImpl },
+    { "eglCompositorSetSizeEXT", (EglWrapperFuncPointer)&EglCompositorSetSizeEXTImpl },
+    { "eglCompositorSwapPolicyEXT", (EglWrapperFuncPointer)&EglCompositorSwapPolicyEXTImpl },
+
+    /* EGL_EXT_device_base */
+    { "eglQueryDeviceAttribEXT", (EglWrapperFuncPointer)&EglQueryDeviceAttribEXTImpl },
+    { "eglQueryDeviceStringEXT", (EglWrapperFuncPointer)&EglQueryDeviceStringEXTImpl },
+    { "eglQueryDevicesEXT", (EglWrapperFuncPointer)&EglQueryDevicesEXTImpl },
+    { "eglQueryDisplayAttribEXT", (EglWrapperFuncPointer)&EglQueryDisplayAttribEXTImpl },
+
+    /* EGL_EXT_device_persistent_id */
+    { "eglQueryDeviceBinaryEXT", (EglWrapperFuncPointer)&EglQueryDeviceBinaryEXTImpl },
 };
 
 EglWrapperFuncPointer FindEglWrapperApi(const std::string &name)

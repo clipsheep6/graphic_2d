@@ -1016,4 +1016,58 @@ EGLBoolean EglWrapperDisplay::SetDamageRegionKHR(EGLSurface surf, EGLint *rects,
 
     return ret;
 }
+
+EGLSurface EglWrapperDisplay::CreatePlatformWindowSurfaceEXT(EGLConfig config, void *nativeWindow,
+    const EGLint *attribList)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    if (nativeWindow == nullptr) {
+        WLOGE("CreatePlatformWindowSurfaceEXT nativeWindow is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_NATIVE_WINDOW);
+        return EGL_NO_SURFACE;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCreatePlatformWindowSurfaceEXT) {
+        EGLSurface surf = table->egl.eglCreatePlatformWindowSurfaceEXT(
+            disp_, config, nativeWindow, attribList);
+        if (surf != EGL_NO_SURFACE) {
+            return new EglWrapperSurface(this, surf);
+        } else {
+            WLOGE("egl.eglCreatePlatformWindowSurfaceEXT error.");
+        }
+    } else {
+        WLOGE("eglCreatePlatformWindowSurfaceEXT is invalid.");
+    }
+
+    return EGL_NO_SURFACE;
+}
+
+EGLSurface EglWrapperDisplay::CreatePlatformPixmapSurfaceEXT(EGLConfig config, void *nativePixmap,
+    const EGLint *attribList)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    if (nativePixmap == nullptr) {
+        WLOGE("CreatePlatformPixmapSurfaceEXT nativePixmap is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_NATIVE_WINDOW);
+        return EGL_NO_SURFACE;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCreatePlatformPixmapSurfaceEXT) {
+        EGLSurface surf = table->egl.eglCreatePlatformPixmapSurfaceEXT(
+            disp_, config, nativePixmap, attribList);
+        if (surf != EGL_NO_SURFACE) {
+            return new EglWrapperSurface(this, surf);
+        } else {
+            WLOGE("egl.eglCreatePlatformPixmapSurfaceEXT error.");
+        }
+    } else {
+        WLOGE("eglCreatePlatformPixmapSurfaceEXT is invalid.");
+    }
+
+    return EGL_NO_SURFACE;
+}
 } // namespace OHOS

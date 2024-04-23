@@ -139,10 +139,9 @@ Drawing::RecordingCanvas::DrawFunc RSChildrenDrawable::CreateDrawFunc() const
 // ==================== RSCustomModifierDrawable ===================
 RSDrawable::Ptr RSCustomModifierDrawable::OnGenerate(const RSRenderNode& node, RSModifierType type)
 {
-    if (auto ret = std::make_shared<RSCustomModifierDrawable>(type); ret->OnUpdate(node)) {
-        if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
-            ret->needClearOp_ = true;
-        }
+    // set needClearOp_ = true for RSCanvasDrawingRenderNode
+    if (auto ret = std::make_shared<RSCustomModifierDrawable>(type, node.IsInstanceOf<RSCanvasDrawingRenderNode>());
+        ret->OnUpdate(node)) {
         return std::move(ret);
     }
     return nullptr;
@@ -156,8 +155,10 @@ bool RSCustomModifierDrawable::OnUpdate(const RSRenderNode& node)
         return false;
     }
 
-    // regenerate stagingDrawCmdList_
     needSync_ = true;
+    stagingGravity_ = node.GetRenderProperties().GetFrameGravity();
+
+    // regenerate stagingDrawCmdList_
     stagingDrawCmdListVec_.clear();
     if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
         auto& drawingNode = static_cast<const RSCanvasDrawingRenderNode&>(node);
@@ -189,6 +190,7 @@ void RSCustomModifierDrawable::OnSync()
         return;
     }
     std::swap(stagingDrawCmdListVec_, drawCmdListVec_);
+    gravity_ = stagingGravity_;
     needSync_ = false;
 }
 
@@ -197,8 +199,17 @@ Drawing::RecordingCanvas::DrawFunc RSCustomModifierDrawable::CreateDrawFunc() co
     auto ptr = std::static_pointer_cast<const RSCustomModifierDrawable>(shared_from_this());
     return [ptr](Drawing::Canvas* canvas, const Drawing::Rect* rect) {
         for (const auto& drawCmdList : ptr->drawCmdListVec_) {
+            // Planning: maybe we should add save/restore for gravity matrix, but the original code (see
+            // RSPropertiesPainter::DrawFrame) doesn't have it
+            if (UNLIKELY(ptr->gravity_ != Gravity::DEFAULT) && rect != nullptr) {
+                auto gravityMatrix = RSPropertyDrawableUtils::GetGravityMatrix(
+                    ptr->gravity_, *rect, drawCmdList->GetWidth(), drawCmdList->GetHeight());
+                if (gravityMatrix.has_value()) {
+                    canvas->ConcatMatrix(gravityMatrix.value());
+                }
+            }
             drawCmdList->Playback(*canvas, rect);
-            if (ptr->needClearOp_) {
+            if (UNLIKELY(ptr->needClearOp_)) {
                 drawCmdList->ClearOp();
             }
         }

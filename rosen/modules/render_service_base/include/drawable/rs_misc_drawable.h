@@ -62,16 +62,19 @@ private:
 // RSCustomModifierDrawable, for drawing custom modifiers
 class RSCustomModifierDrawable : public RSDrawable {
 public:
-    RSCustomModifierDrawable(RSModifierType type) : type_(type) {}
+    RSCustomModifierDrawable(RSModifierType type, bool needClearOp) : type_(type), needClearOp_(needClearOp) {}
     static RSDrawable::Ptr OnGenerate(const RSRenderNode& content, RSModifierType type);
     bool OnUpdate(const RSRenderNode& node) override;
     void OnSync() override;
     Drawing::RecordingCanvas::DrawFunc CreateDrawFunc() const override;
 
 private:
-    RSModifierType type_;
-    bool needClearOp_ = false;
+    const RSModifierType type_;
+    const bool needClearOp_;
+
     bool needSync_ = false;
+    Gravity gravity_ = Gravity::DEFAULT;
+    Gravity stagingGravity_ = Gravity::DEFAULT;
     std::vector<std::shared_ptr<Drawing::DrawCmdList>> drawCmdListVec_;
     std::vector<std::shared_ptr<Drawing::DrawCmdList>> stagingDrawCmdListVec_;
 };

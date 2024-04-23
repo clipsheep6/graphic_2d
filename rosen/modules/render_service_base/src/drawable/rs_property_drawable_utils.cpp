@@ -943,5 +943,129 @@ Color RSPropertyDrawableUtils::GetInvertBackgroundColor(RSPaintFilterCanvas& can
         Drawing::Color::ColorQuadGetR(colorPicker), Drawing::Color::ColorQuadGetG(colorPicker),
         Drawing::Color::ColorQuadGetB(colorPicker), Drawing::Color::ColorQuadGetA(colorPicker)));
 }
+
+std::optional<Drawing::Matrix> RSPropertyDrawableUtils::GetGravityMatrix(
+    Gravity gravity, const Drawing::Rect& rect, int32_t w, int32_t h)
+{
+    constexpr int TWO = 2; // I don't want to do this, but code check rules need this.
+    if (gravity == Gravity::TOP_LEFT || (w == rect.GetWidth() && h == rect.GetHeight())) {
+        return std::nullopt;
+    }
+
+    auto mat = Drawing::Matrix();
+    switch (gravity) {
+        case Gravity::CENTER: {
+            mat.PreTranslate((rect.GetWidth() - w) / TWO, (rect.GetHeight() - h) / TWO);
+            break;
+        }
+        case Gravity::TOP: {
+            mat.PreTranslate((rect.GetWidth() - w) / TWO, 0);
+            break;
+        }
+        case Gravity::BOTTOM: {
+            mat.PreTranslate((rect.GetWidth() - w) / TWO, rect.GetHeight() - h);
+            break;
+        }
+        case Gravity::LEFT: {
+            mat.PreTranslate(0, (rect.GetHeight() - h) / TWO);
+            break;
+        }
+        case Gravity::RIGHT: {
+            mat.PreTranslate(rect.GetWidth() - w, (rect.GetHeight() - h) / TWO);
+            break;
+        }
+        case Gravity::TOP_LEFT: {
+            return std::nullopt;
+        }
+        case Gravity::TOP_RIGHT: {
+            mat.PreTranslate(rect.GetWidth() - w, 0);
+            break;
+        }
+        case Gravity::BOTTOM_LEFT: {
+            mat.PreTranslate(0, rect.GetHeight() - h);
+            break;
+        }
+        case Gravity::BOTTOM_RIGHT: {
+            mat.PreTranslate(rect.GetWidth() - w, rect.GetHeight() - h);
+            break;
+        }
+        case Gravity::RESIZE: {
+            if (w == 0 || h == 0) {
+                return std::nullopt;
+            }
+            mat.PreScale(rect.GetWidth() / w, rect.GetHeight() / h);
+            break;
+        }
+        case Gravity::RESIZE_ASPECT: {
+            if (w == 0 || h == 0) {
+                return std::nullopt;
+            }
+            float scale = std::min(rect.GetWidth() / w, rect.GetHeight() / h);
+            if (ROSEN_EQ(scale, 0.f)) {
+                return std::nullopt;
+            }
+            mat.PreScale(scale, scale);
+            mat.PreTranslate((rect.GetWidth() / scale - w) / TWO, (rect.GetHeight() / scale - h) / TWO);
+            break;
+        }
+        case Gravity::RESIZE_ASPECT_TOP_LEFT: {
+            if (w == 0 || h == 0) {
+                return std::nullopt;
+            }
+            float scale = std::min(rect.GetWidth() / w, rect.GetHeight() / h);
+            mat.PreScale(scale, scale);
+            break;
+        }
+        case Gravity::RESIZE_ASPECT_BOTTOM_RIGHT: {
+            if (w == 0 || h == 0) {
+                return std::nullopt;
+            }
+            float scale = std::min(rect.GetWidth() / w, rect.GetHeight() / h);
+            if (ROSEN_EQ(scale, 0.f)) {
+                return std::nullopt;
+            }
+            mat.PreScale(scale, scale);
+            mat.PreTranslate(rect.GetWidth() / scale - w, rect.GetHeight() / scale - h);
+            break;
+        }
+        case Gravity::RESIZE_ASPECT_FILL: {
+            if (w == 0 || h == 0) {
+                return std::nullopt;
+            }
+            float scale = std::max(rect.GetWidth() / w, rect.GetHeight() / h);
+            if (ROSEN_EQ(scale, 0.f)) {
+                return std::nullopt;
+            }
+            mat.PreScale(scale, scale);
+            mat.PreTranslate((rect.GetWidth() / scale - w) / TWO, (rect.GetHeight() / scale - h) / TWO);
+            break;
+        }
+        case Gravity::RESIZE_ASPECT_FILL_TOP_LEFT: {
+            if (w == 0 || h == 0) {
+                return std::nullopt;
+            }
+            float scale = std::max(rect.GetWidth() / w, rect.GetHeight() / h);
+            mat.PreScale(scale, scale);
+            break;
+        }
+        case Gravity::RESIZE_ASPECT_FILL_BOTTOM_RIGHT: {
+            if (w == 0 || h == 0) {
+                return std::nullopt;
+            }
+            float scale = std::max(rect.GetWidth() / w, rect.GetHeight() / h);
+            if (ROSEN_EQ(scale, 0.f)) {
+                return std::nullopt;
+            }
+            mat.PreScale(scale, scale);
+            mat.PreTranslate(rect.GetWidth() / scale - w, rect.GetHeight() / scale - h);
+            break;
+        }
+        default: {
+            ROSEN_LOGE("GetGravityMatrix unknow gravity=[%{public}d]", gravity);
+            return std::nullopt;
+        }
+    }
+    return mat;
+}
 } // namespace Rosen
 } // namespace OHOS

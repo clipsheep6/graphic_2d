@@ -66,12 +66,13 @@
 #include "pipeline/rs_root_render_node.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_task_dispatcher.h"
-#include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/rs_uni_render_engine.h"
 #include "pipeline/rs_uni_render_thread.h"
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/rs_uni_render_visitor.h"
 #include "pipeline/rs_unmarshal_thread.h"
+#include "pipeline/rs_render_node_gc.h"
+#include "pipeline/rs_uifirst_manager.h"
 #include "pipeline/sk_resource_manager.h"
 #include "platform/common/rs_innovation.h"
 #include "platform/common/rs_log.h"
@@ -308,12 +309,14 @@ void RSMainThread::Init()
         ProcessCommand();
         Animate(timestamp_);
         CollectInfoForHardwareComposer();
+        RSUifirstManager::Instance().PrepareCurrentFrameEvent();
         ProcessHgmFrameRate(timestamp_);
         RS_PROFILER_ON_RENDER_BEGIN();
         // may mark rsnotrendering
         Render(); // now render is traverse tree to prepare
         RS_PROFILER_ON_RENDER_END();
         if (isUniRender_ && !doDirectComposition_) {
+            renderThreadParams_->SetContext(context_);
             drawFrame_.SetRenderThreadParams(renderThreadParams_);
             drawFrame_.PostAndWait();
         }
@@ -340,6 +343,13 @@ void RSMainThread::Init()
         SetRSEventDetectorLoopFinishTag();
         rsEventManager_.UpdateParam();
         SKResourceManager::Instance().ReleaseResource();
+        // release node memory
+        if (RSRenderNodeGC::Instance().GetNodeSize() > 0) {
+            RSBackgroundThread::Instance().PostTask([] () {
+                RS_TRACE_NAME("ReleaseRSRenderNodeMemory");
+                RSRenderNodeGC::Instance().ReleaseNodeMemory();
+            });
+        }
 #ifdef RS_ENABLE_PARALLEL_UPLOAD
         RSUploadResourceThread::Instance().OnRenderEnd();
 #endif

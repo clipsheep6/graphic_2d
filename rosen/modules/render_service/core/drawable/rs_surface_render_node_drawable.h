@@ -70,7 +70,7 @@ public:
     {
         std::string res = "pid_";
         res.append("_name_");
-        res.append(std::static_pointer_cast<const RSSurfaceRenderNode>(renderNode_)->GetName());
+        res.append(name_);
         return res;
     }
 
@@ -159,7 +159,7 @@ private:
     static Registrar instance_;
 #ifdef RS_PARALLEL
     std::string name_;
-    bool DrawUIFirstCache(RSPaintFilterCanvas& rscanvas);
+    bool DrawUIFirstCache(RSPaintFilterCanvas& rscanvas, bool canSkipWait);
     bool CheckIfNeedResetRotate(RSPaintFilterCanvas& canvas);
     NodeId FindInstanceChildOfDisplay(std::shared_ptr<RSRenderNode> node);
 

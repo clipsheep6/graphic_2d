@@ -366,4 +366,83 @@ HWTEST_F(EglWrapperDisplayTest, SetDamageRegionKHR001, Level1)
     auto result = eglWrapperDisplay->SetDamageRegionKHR(nullptr, 0, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
+
+/**
+ * @tc.name: GetCompositorTimingSupportedANDROID001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, GetCompositorTimingSupportedANDROID001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->GetCompositorTimingSupportedANDROID(nullptr, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: GetCompositorTimingANDROID001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, GetCompositorTimingANDROID001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->GetCompositorTimingANDROID(nullptr, 0, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: GetCompositorTimingANDROID001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, GetNextFrameIdANDROID001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->GetNextFrameIdANDROID(nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: GetFrameTimestampSupportedANDROID001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, GetFrameTimestampSupportedANDROID001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->GetFrameTimestampSupportedANDROID(nullptr, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: GetFrameTimestampsANDROID001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, GetFrameTimestampsANDROID001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->GetFrameTimestampsANDROID(nullptr, 0, 0, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: PresentationTimeANDROID001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperDisplayTest, PresentationTimeANDROID001, Level1)
+{
+    auto eglWrapperDisplay = EglWrapperDisplay::GetWrapperDisplay((EGLDisplay)&EglWrapperDisplay::wrapperDisp_);
+
+    auto result = eglWrapperDisplay->PresentationTimeANDROID(nullptr, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
 } // OHOS::Rosen

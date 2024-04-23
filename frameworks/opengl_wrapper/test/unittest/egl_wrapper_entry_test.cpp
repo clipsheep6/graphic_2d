@@ -2153,4 +2153,221 @@ HWTEST_F(EglWrapperEntryTest, EglSetDamageRegionKHRImpl002, Level2)
     auto result = gWrapperHook.wrapper.eglSetDamageRegionKHR(dpy, nullptr, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
+
+/**
+ * @tc.name: EglCreateNativeClientBufferANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreateNativeClientBufferANDROIDImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglCreateNativeClientBufferANDROID(nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetCompositorTimingSupportedANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetCompositorTimingSupportedANDROIDImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglGetCompositorTimingSupportedANDROID(dpy, nullptr, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetCompositorTimingSupportedANDROIDImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetCompositorTimingSupportedANDROIDImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglGetCompositorTimingSupportedANDROID(dpy, nullptr, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetCompositorTimingANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetCompositorTimingANDROIDImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    EGLint names = 1;
+    EGLnsecsANDROID values = 1;
+    auto result = gWrapperHook.wrapper.eglGetCompositorTimingANDROID(dpy, nullptr, 0, &names, &values);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetCompositorTimingANDROIDImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetCompositorTimingANDROIDImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    EGLint names = 1;
+    EGLnsecsANDROID values = 1;
+    auto result = gWrapperHook.wrapper.eglGetCompositorTimingANDROID(dpy, nullptr, 0, &names, &values);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetNextFrameIdANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetNextFrameIdANDROIDImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    EGLuint64KHR frameId = 1;
+
+    auto result = gWrapperHook.wrapper.eglGetNextFrameIdANDROID(dpy, nullptr, &frameId);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetNextFrameIdANDROIDImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetNextFrameIdANDROIDImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    EGLuint64KHR frameId = 1;
+    auto result = gWrapperHook.wrapper.eglGetNextFrameIdANDROID(dpy, nullptr, &frameId);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetFrameTimestampSupportedANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetFrameTimestampSupportedANDROIDImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    EGLint timestamp = 1;
+    auto result = gWrapperHook.wrapper.eglGetFrameTimestampSupportedANDROID(dpy, nullptr, timestamp);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetFrameTimestampSupportedANDROIDImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetFrameTimestampSupportedANDROIDImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    EGLint timestamp = 1;
+    auto result = gWrapperHook.wrapper.eglGetFrameTimestampSupportedANDROID(dpy, nullptr, timestamp);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetFrameTimestampsANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetFrameTimestampsANDROIDImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    EGLuint64KHR frameId = 1;
+    EGLint numTimestamps = 1;
+    EGLint timestamps = 1;
+    EGLnsecsANDROID values = 1;
+    auto result = gWrapperHook.wrapper.eglGetFrameTimestampsANDROID(dpy, nullptr, frameId, numTimestamps, &timestamps, &values);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetFrameTimestampsANDROIDImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetFrameTimestampsANDROIDImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    EGLuint64KHR frameId = 1;
+    EGLint numTimestamps = 1;
+    EGLint timestamps = 1;
+    EGLnsecsANDROID values = 1;
+    auto result = gWrapperHook.wrapper.eglGetFrameTimestampsANDROID(dpy, nullptr, frameId,
+        numTimestamps, &timestamps, &values);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetNativeClientBufferANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetNativeClientBufferANDROIDImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglGetNativeClientBufferANDROID(nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglPresentationTimeANDROIDImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglPresentationTimeANDROIDImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    EGLnsecsANDROID time = 1;
+    auto result = gWrapperHook.wrapper.eglPresentationTimeANDROID(dpy, nullptr, time);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglPresentationTimeANDROIDImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglPresentationTimeANDROIDImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    EGLnsecsANDROID time = 1;
+    auto result = gWrapperHook.wrapper.eglPresentationTimeANDROID(dpy, nullptr, time);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
 } // OHOS::Rosen

@@ -26,6 +26,7 @@
 #include "egl_wrapper_display.h"
 #include "egl_wrapper_loader.h"
 #include "thread_private_data_ctl.h"
+#include "window.h"
 #include "wrapper_log.h"
 #include "egl_blob_cache.h"
 #if USE_APS_IGAMESERVICE_FUNC
@@ -1318,6 +1319,99 @@ void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, 
     }
 }
 
+EGLClientBuffer EglCreateNativeClientBufferANDROIDImpl(const EGLint *attribList)
+{
+    ClearError();
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCreateNativeClientBufferANDROID) {
+        return table->egl.eglCreateNativeClientBufferANDROID(attribList);
+    } else {
+        WLOGE("eglCreateNativeClientBufferANDROID is not found.");
+    }
+    return EGL_CAST(EGLClientBuffer, 0);
+}
+
+EGLBoolean EglGetCompositorTimingSupportedANDROIDImpl(EGLDisplay dpy, EGLSurface surface, EGLint name)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+
+    return display->GetCompositorTimingSupportedANDROID(surface, name);
+}
+
+EGLBoolean EglGetCompositorTimingANDROIDImpl(EGLDisplay dpy, EGLSurface surface, EGLint numTimestamps,
+    const EGLint *names, EGLnsecsANDROID *values)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->GetCompositorTimingANDROID(surface, numTimestamps, names, values);
+}
+
+EGLBoolean EglGetNextFrameIdANDROIDImpl(EGLDisplay dpy, EGLSurface surface, EGLuint64KHR *frameId)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->GetNextFrameIdANDROID(surface, frameId);
+}
+
+EGLBoolean EglGetFrameTimestampSupportedANDROIDImpl(EGLDisplay dpy, EGLSurface surface, EGLint timestamp)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->GetFrameTimestampSupportedANDROID(surface, timestamp);
+}
+
+EGLBoolean EglGetFrameTimestampsANDROIDImpl(EGLDisplay dpy, EGLSurface surface, EGLuint64KHR frameId,
+    EGLint numTimestamps, const EGLint *timestamps, EGLnsecsANDROID *values)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->GetFrameTimestampsANDROID(surface, frameId, numTimestamps, timestamps, values);
+}
+
+EGLClientBuffer EglGetNativeClientBufferANDROIDImpl(const struct AHardwareBuffer *buffer)
+{
+    ClearError();
+    if (buffer == nullptr) {
+        WLOGE("EGLDislay is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_PARAMETER);
+        return nullptr;
+    }
+
+    auto nativeWindowBuffer = CreateNativeWindowBufferFromNativeBuffer(reinterpret_cast<OH_NativeBuffer*>(
+        const_cast<AHardwareBuffer*>(buffer)));
+    if (nativeWindowBuffer == nullptr) {
+        WLOGE("EglGetNativeClientBufferANDROIDImpl nativeWindowBuffer is nullptr.");
+    }
+    return nativeWindowBuffer;
+}
+
+EGLBoolean EglPresentationTimeANDROIDImpl(EGLDisplay dpy, EGLSurface surface, EGLnsecsANDROID time)
+{
+    ClearError();
+    WLOGD("");
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->PresentationTimeANDROID(surface, time);
+}
+
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     /* EGL_VERSION_1_0 */
     { "eglChooseConfig", (EglWrapperFuncPointer)&EglChooseConfigImpl },
@@ -1413,6 +1507,15 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     { "eglSwapBuffersWithDamageKHR", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageKHRImpl },
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
     { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
+
+    { "eglCreateNativeClientBufferANDROID", (EglWrapperFuncPointer)&EglCreateNativeClientBufferANDROIDImpl },
+    { "eglGetCompositorTimingSupportedANDROID", (EglWrapperFuncPointer)&EglGetCompositorTimingSupportedANDROIDImpl },
+    { "eglGetCompositorTimingANDROID", (EglWrapperFuncPointer)&EglGetCompositorTimingANDROIDImpl },
+    { "eglGetNextFrameIdANDROID", (EglWrapperFuncPointer)&EglGetNextFrameIdANDROIDImpl },
+    { "eglGetFrameTimestampSupportedANDROID", (EglWrapperFuncPointer)&EglGetFrameTimestampSupportedANDROIDImpl },
+    { "eglGetFrameTimestampsANDROID", (EglWrapperFuncPointer)&EglGetFrameTimestampsANDROIDImpl },
+    { "eglGetNativeClientBufferANDROID", (EglWrapperFuncPointer)&EglGetNativeClientBufferANDROIDImpl },
+    { "eglPresentationTimeANDROID", (EglWrapperFuncPointer)&EglPresentationTimeANDROIDImpl },
 
 };
 

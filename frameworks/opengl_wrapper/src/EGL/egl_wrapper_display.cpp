@@ -24,6 +24,10 @@
 #include "thread_private_data_ctl.h"
 #include "wrapper_log.h"
 #include "egl_blob_cache.h"
+#include "external_window.h"
+#include "surface.h"
+#include "window.h"
+
 namespace OHOS {
 EglWrapperDisplay EglWrapperDisplay::wrapperDisp_;
 
@@ -448,7 +452,7 @@ EGLSurface EglWrapperDisplay::CreateEglSurface(EGLConfig config, NativeWindowTyp
     if (table->isLoad && table->egl.eglCreateWindowSurface) {
         EGLSurface surf = table->egl.eglCreateWindowSurface(disp_, config, window, attribList);
         if (surf != EGL_NO_SURFACE) {
-            return new EglWrapperSurface(this, surf);
+            return new EglWrapperSurface(this, surf, window);
         } else {
             WLOGE("egl.eglCreateWindowSurface error.");
         }
@@ -1015,5 +1019,162 @@ EGLBoolean EglWrapperDisplay::SetDamageRegionKHR(EGLSurface surf, EGLint *rects,
     }
 
     return ret;
+}
+
+EGLBoolean EglWrapperDisplay::GetCompositorTimingSupportedANDROID(EGLSurface surface, EGLint name)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    if (surfPtr->GetNativeWindow() == nullptr) {
+        WLOGE("EGLSurface native window is nullptr.");
+         ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+         return EGL_FALSE;
+    }
+
+    switch (name) {
+        case EGL_COMPOSITE_DEADLINE_ANDROID:
+        case EGL_COMPOSITE_INTERVAL_ANDROID:
+        case EGL_COMPOSITE_TO_PRESENT_LATENCY_ANDROID:
+            return EGL_TRUE;
+        default:
+            return EGL_FALSE;
+    }
+}
+
+EGLBoolean EglWrapperDisplay::GetCompositorTimingANDROID(EGLSurface surface, EGLint numTimestamps,
+    const EGLint *names, EGLnsecsANDROID *values)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglGetCompositorTimingANDROID) {
+        ret = table->egl.eglGetCompositorTimingANDROID(
+            disp_, surfPtr->GetEglSurface(), numTimestamps, names, values);
+    } else {
+        WLOGE("eglGetCompositorTimingANDROID is invalid.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglWrapperDisplay::GetNextFrameIdANDROID(EGLSurface surface, EGLuint64KHR *frameId)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglGetNextFrameIdANDROID) {
+        ret = table->egl.eglGetNextFrameIdANDROID(
+            disp_, surfPtr->GetEglSurface(), frameId);
+    } else {
+        WLOGE("eglGetNextFrameIdANDROID is invalid.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglWrapperDisplay::GetFrameTimestampSupportedANDROID(EGLSurface surface, EGLint timestamp)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    if (surfPtr->GetNativeWindow() == nullptr) {
+        WLOGE("EGLSurface createNativeWindowFromSurface failed.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+    switch (timestamp) {
+        case EGL_COMPOSITE_DEADLINE_ANDROID:
+        case EGL_COMPOSITE_INTERVAL_ANDROID:
+        case EGL_COMPOSITE_TO_PRESENT_LATENCY_ANDROID:
+        case EGL_REQUESTED_PRESENT_TIME_ANDROID:
+        case EGL_RENDERING_COMPLETE_TIME_ANDROID:
+        case EGL_COMPOSITION_LATCH_TIME_ANDROID:
+        case EGL_FIRST_COMPOSITION_START_TIME_ANDROID:
+        case EGL_LAST_COMPOSITION_START_TIME_ANDROID:
+        case EGL_FIRST_COMPOSITION_GPU_FINISHED_TIME_ANDROID:
+        case EGL_DEQUEUE_READY_TIME_ANDROID:
+        case EGL_READS_DONE_TIME_ANDROID:
+            return EGL_TRUE;
+        default:
+            return EGL_FALSE;
+    }
+}
+
+EGLBoolean EglWrapperDisplay::GetFrameTimestampsANDROID(EGLSurface surface, EGLuint64KHR frameId,
+    EGLint numTimestamps, const EGLint *timestamps, EGLnsecsANDROID *values)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglGetFrameTimestampsANDROID) {
+        ret = table->egl.eglGetFrameTimestampsANDROID(
+            disp_, surfPtr->GetEglSurface(), frameId, numTimestamps, timestamps, values);
+    } else {
+        WLOGE("eglGetFrameTimestampsANDROID is invalid.");
+    }
+
+    return ret;
+}
+
+EGLBoolean EglWrapperDisplay::PresentationTimeANDROID(EGLSurface surface, EGLnsecsANDROID time)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+    if (surfPtr->GetNativeWindow() == nullptr) {
+        WLOGE("EGLSurface createNativeWindowFromSurface failed.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    uint64_t duration = static_cast<uint64_t>(time) / 1000; // 1000 is convert nanoseconds to microseconds
+    if (NativeWindowHandleOpt(reinterpret_cast<OHNativeWindow*>(surfPtr->GetNativeWindow()),
+        SET_UI_TIMESTAMP, duration) != 0) {
+        WLOGE("EGLSurface NativeWindowHandleOpt SET_UI_TIMESTAMP failed.");
+        return EGL_FALSE;
+    }
+    return EGL_TRUE;
 }
 } // namespace OHOS

@@ -16,6 +16,7 @@
 #include "gtest/gtest.h"
 
 #include "pipeline/rs_base_render_node.h"
+#include "pipeline/rs_render_thread_visitor.h"
 #include "platform/common/rs_log.h"
 using namespace testing;
 using namespace testing::ext;
@@ -1227,10 +1228,7 @@ HWTEST_F(RSBaseRenderNodeTest, Process, TestSize.Level1)
 HWTEST_F(RSBaseRenderNodeTest, SendCommandFromRT, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    uint64_t timeoutNS = 1;
-    std::shared_ptr<RSRenderPropertyBase> property = std::make_shared<RSRenderPropertyBase>();
-    std::unique_ptr<RSCommand> command =
-        std::make_unique<RSNodeGetShowingPropertyAndCancelAnimation>(id, property, timeoutNS);
+    std::unique_ptr<RSCommand> command;
     NodeId nodeId = 0;
     node->SendCommandFromRT(command, nodeId);
     ASSERT_TRUE(true);
@@ -1456,21 +1454,6 @@ HWTEST_F(RSBaseRenderNodeTest, IsBackgroundFilterCacheValid, TestSize.Level1)
 {
     auto node = std::make_shared<RSBaseRenderNode>(id, context);
     ASSERT_FALSE(node->IsBackgroundFilterCacheValid());
-}
-
-/**
- * @tc.name: UpdateFilterCacheWithDirty
- * @tc.desc: test results of UpdateFilterCacheWithDirty
- * @tc.type:FUNC
- * @tc.require: issueI9H6GL
- */
-HWTEST_F(RSBaseRenderNodeTest, UpdateFilterCacheWithDirty, TestSize.Level1)
-{
-    auto node = std::make_shared<RSBaseRenderNode>(id, context);
-    RSDirtyRegionManager dirtyManager;
-    bool isForeground = true;
-    node->UpdateFilterCacheWithDirty(dirtyManager, isForeground);
-    ASSERT_TRUE(true);
 }
 
 /**

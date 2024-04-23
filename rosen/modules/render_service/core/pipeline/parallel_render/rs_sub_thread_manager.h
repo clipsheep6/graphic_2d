@@ -56,6 +56,9 @@ public:
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface, uint32_t threadIndex);
     std::unordered_map<uint32_t, pid_t> GetReThreadIndexMap() const;
     void ScheduleRenderNodeDrawable(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
+    void SchedulePreAlloc(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, Vector2f cacheSize);
+    uint32_t GetOptimalThreadID(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
+
 private:
     RSSubThreadManager() = default;
     ~RSSubThreadManager() = default;

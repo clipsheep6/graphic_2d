@@ -86,9 +86,14 @@ public:
     using ClearCacheSurfaceFunc =
         std::function<void(std::shared_ptr<Drawing::Surface>&&,
         std::shared_ptr<Drawing::Surface>&&, uint32_t, uint32_t)>;
+    void GetCacheSizeFromRenderParams(const std::unique_ptr<RSRenderParams>& params, float& width, float& height);
+    void GetCacheSizeDirectly(const Vector2f cacheSize, float& width, float& height);
     void InitCacheSurface(Drawing::GPUContext* grContext, ClearCacheSurfaceFunc func = nullptr,
         uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
-
+    void InitCacheSurface(Drawing::GPUContext* grContext, Vector2f cacheSize, ClearCacheSurfaceFunc func = nullptr,
+        uint32_t threadIndex = UNI_MAIN_THREAD_INDEX);
+    void InitCacheSurfaceInner(Drawing::GPUContext* gpuContext, ClearCacheSurfaceFunc func, float width, float height);
+    void ResetCacheSurface(ClearCacheSurfaceFunc func, uint32_t threadIndex);
     void ResetUifirst()
     {
         ClearCacheSurfaceInThread();

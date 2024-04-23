@@ -41,6 +41,13 @@ public:
     void RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask);
 #ifdef RS_PARALLEL
     void DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
+    bool CheckGrContext();
+    std::shared_ptr<Drawing::Surface> TryGetCacheSurface(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
+    void Subdraw(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, std::shared_ptr<Drawing::Surface> cacheSurface);
+    void SubmitToGPU(std::shared_ptr<Drawing::Surface> cacheSurface);
+    void PreAlloc(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, Vector2f cacheSize);
+    void DumpDebugImage(
+        DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, std::shared_ptr<Drawing::Surface> cacheSurface);
 #endif
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
@@ -62,6 +69,18 @@ public:
     {
         doingCacheProcessNum++;
     }
+    unsigned int GetSurfacePreAllocedNum()
+    {
+        return preAllocedSurfaceNum.load();
+    }
+    inline void SurfacePreAllocedNumInc()
+    {
+        preAllocedSurfaceNum++;
+    }
+    inline void SurfacePreAllocedNumDec()
+    {
+        preAllocedSurfaceNum--;
+    }
 #endif
 private:
     void CreateShareEglContext();
@@ -80,6 +99,7 @@ private:
     std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
 #ifdef RS_PARALLEL
     std::atomic<unsigned int> doingCacheProcessNum = 0;
+    std::atomic<unsigned int> preAllocedSurfaceNum = 0;
 #endif
 };
 }

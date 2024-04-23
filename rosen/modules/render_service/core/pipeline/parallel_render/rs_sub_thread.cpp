@@ -251,25 +251,20 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
     }
 #endif
 }
-
 #ifdef RS_PARALLEL
-void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+bool RSSubThread::CheckGrContext()
 {
-    RS_TRACE_NAME_FMT("RSSubThread::DrawableCache");
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
         if (grContext_ == nullptr) {
             RS_LOGE("RSSubThread::RenderCache DrawableCache grContext is null");
-            return;
+            return false;
         }
     }
-
-    auto& param = nodeDrawable->GetRenderNode()->GetRenderParams();
-    if (!param) {
-        return;
-    }
-    nodeDrawable->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
-
+    return true;
+}
+std::shared_ptr<Drawing::Surface> RSSubThread::TryGetCacheSurface(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+{
     auto cacheSurface = nodeDrawable->GetCacheSurface(threadIndex_, true);
     if (!cacheSurface || nodeDrawable->NeedInitCacheSurface()) {
         DrawableV2::RSSurfaceRenderNodeDrawable::ClearCacheSurfaceFunc func = std::bind(
@@ -277,13 +272,15 @@ void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDra
             std::placeholders::_3, std::placeholders::_4);
         nodeDrawable->InitCacheSurface(grContext_.get(), func, threadIndex_);
         cacheSurface = nodeDrawable->GetCacheSurface(threadIndex_, true);
+    } else if (GetSurfacePreAllocedNum() > 0) {
+        // Using pre alloced resource
+        SurfacePreAllocedNumDec();
     }
-
-    if (!cacheSurface) {
-        RS_LOGE("RSSubThread::DrawableCache cacheSurface is nullptr");
-        return;
-    }
-
+    return cacheSurface;
+}
+void RSSubThread::Subdraw(
+    DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, std::shared_ptr<Drawing::Surface> cacheSurface)
+{
     auto rscanvas = std::make_shared<RSPaintFilterCanvas>(cacheSurface.get());
     if (rscanvas == nullptr) {
         RS_LOGE("RSSubThread::DrawableCache canvas is nullptr");
@@ -320,8 +317,10 @@ void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDra
         rscanvas->DrawRect(Drawing::Rect(300, 500, 500, 700));
         rscanvas->DetachBrush();
     }
-    if (cacheSurface) {
-        RS_TRACE_NAME_FMT("Render cache skSurface flush and submit");
+}
+void RSSubThread::SubmitToGPU(std::shared_ptr<Drawing::Surface> cacheSurface)
+{
+    RS_TRACE_NAME_FMT("Render cache skSurface flush and submit");
 #ifdef RS_ENABLE_VK
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
         RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
@@ -338,7 +337,6 @@ void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDra
         semaphoreInfo.flags = 0;
         VkSemaphore semaphore;
         vkContext.vkCreateSemaphore(vkContext.GetDevice(), &semaphoreInfo, nullptr, &semaphore);
-        RS_TRACE_NAME_FMT("VkSemaphore %p", semaphore);
         GrBackendSemaphore backendSemaphore;
         backendSemaphore.initVulkan(semaphore);
 
@@ -362,6 +360,28 @@ void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDra
 #else
     cacheSurface->FlushAndSubmit(true);
 #endif
+}
+void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)
+{
+    RS_TRACE_NAME_FMT("RSSubThread::DrawableCache");
+    if (!CheckGrContext()) {
+        return;
+    }
+
+    auto& param = nodeDrawable->GetRenderNode()->GetRenderParams();
+    if (!param) {
+        return;
+    }
+    nodeDrawable->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
+
+    auto cacheSurface = TryGetCacheSurface(nodeDrawable);
+    if (!cacheSurface) {
+        RS_LOGE("RSSubThread::DrawableCache cacheSurface is nullptr");
+        return;
+    }
+    Subdraw(nodeDrawable, cacheSurface);
+    if (cacheSurface) {
+        SubmitToGPU(cacheSurface);
     }
     nodeDrawable->UpdateBackendTexture();
     RSMainThread::Instance()->PostTask([]() {
@@ -378,6 +398,21 @@ void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDra
     RSUifirstManager::Instance().AddProcessDoneNode(param->GetId());
     doingCacheProcessNum--;
 
+    DumpDebugImage(nodeDrawable, cacheSurface);
+}
+void RSSubThread::PreAlloc(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, Vector2f cacheSize)
+{
+    RS_TRACE_NAME("PreAlloc");
+    if (nodeDrawable->NeedInitCacheSurface()) {
+        DrawableV2::RSSurfaceRenderNodeDrawable::ClearCacheSurfaceFunc func =
+            std::bind(&RSUniRenderUtil::ClearNodeCacheSurface, std::placeholders::_1, std::placeholders::_2,
+                std::placeholders::_3, std::placeholders::_4);
+        nodeDrawable->InitCacheSurface(grContext_.get(), cacheSize, func, threadIndex_);
+    }
+}
+void RSSubThread::DumpDebugImage(
+    DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable, std::shared_ptr<Drawing::Surface> cacheSurface)
+{
     // uifirst_debug dump img
     std::string pidstring = nodeDrawable->GetDebugInfo();
     RSBaseRenderUtil::WriteCacheImageRenderNodeToPng(cacheSurface, pidstring);
@@ -462,4 +497,4 @@ MemoryGraphic RSSubThread::CountSubMem(int pid)
     });
     return memoryGraphic;
 }
-}
+} //namespace OHOS::Rosen

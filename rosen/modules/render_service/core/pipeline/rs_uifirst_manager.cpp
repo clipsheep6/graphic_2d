@@ -470,6 +470,12 @@ void RSUifirstManager::UifirstStateChange(RSSurfaceRenderNode& node, bool curren
             node.RegisterTreeStateChangeCallback(func);
             AddPendingPostNode(node.GetId(), surfaceNode); // clear pending reset status
             RSMainThread::Instance()->GetContext().AddPendingSyncNode(surfaceNode);
+            auto drawable = std::static_pointer_cast<DrawableV2::RSSurfaceRenderNodeDrawable>(
+                DrawableV2::RSRenderNodeDrawableAdapter::GetDrawableById(node.GetId()));
+            if (drawable != nullptr) {
+                Vector2f size = node.GetOptionalBufferSize();
+                RSSubThreadManager::Instance()->SchedulePreAlloc(drawable.get(), size);
+            }
         } else { // keep disable
             RS_TRACE_NAME_FMT("UIFirst_keep disable  %lx", node.GetId());
         }

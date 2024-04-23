@@ -110,7 +110,7 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         }
         PrepareChildren(*existingSource);
     } else {
-        auto boundsGeoPtr = (node.GetRenderProperties().GetBoundsGeometry());
+        auto& boundsGeoPtr = (node.GetRenderProperties().GetBoundsGeometry());
         RSBaseRenderUtil::SetNeedClient(boundsGeoPtr && boundsGeoPtr->IsNeedClientCompose());
         drawingCanvas_ = std::make_unique<Drawing::Canvas>(logicalScreenWidth, logicalScreenHeight);
         canvas_ = std::make_shared<RSPaintFilterCanvas>(drawingCanvas_.get());
@@ -119,8 +119,10 @@ void RSRenderServiceVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         PrepareChildren(node);
     }
 
-    node.GetCurAllSurfaces().clear();
-    node.CollectSurface(node.shared_from_this(), node.GetCurAllSurfaces(), false, false);
+    node.GetCurAllSurfaces(false).clear();
+    node.GetCurAllSurfaces(true).clear();
+    node.CollectSurface(node.shared_from_this(), node.GetCurAllSurfaces(false), true, false);
+    node.CollectSurface(node.shared_from_this(), node.GetCurAllSurfaces(true), true, true);
 }
 
 void RSRenderServiceVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)

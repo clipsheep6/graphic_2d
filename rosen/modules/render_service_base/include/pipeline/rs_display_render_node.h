@@ -265,6 +265,10 @@ public:
         std::map<ScreenId, bool>& hasCaptureWindow);
     void RecordMainAndLeashSurfaces(RSBaseRenderNode::SharedPtr surface);
     std::vector<RSBaseRenderNode::SharedPtr>& GetAllMainAndLeashSurfaces() { return curMainAndLeashSurfaceNodes_;}
+    std::vector<RSBaseRenderNode::SharedPtr>& GetCurAllSurfaces(bool onlyFirtstLevel)
+    {
+        return onlyFirtstLevel ? curAllFirstLevelSurfaces_ : curAllSurfaces_;
+    }
 
     void UpdateRotation();
     bool IsRotationChanged() const;
@@ -361,6 +365,7 @@ private:
     std::shared_ptr<RSDirtyRegionManager> syncDirtyManager_ = nullptr;
 
     std::vector<RSBaseRenderNode::SharedPtr> curAllSurfaces_;
+    std::vector<RSBaseRenderNode::SharedPtr> curAllFirstLevelSurfaces_;
     std::mutex mtx_;
 
     // Use in screen recording optimization

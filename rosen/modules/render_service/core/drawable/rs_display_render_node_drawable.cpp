@@ -23,6 +23,7 @@
 #include "system/rs_system_parameters.h"
 
 #include "common/rs_optional_trace.h"
+#include "common/rs_rect.h"
 #include "common/rs_singleton.h"
 #include "drawable/rs_surface_render_node_drawable.h"
 #include "memory/rs_tag_tracker.h"
@@ -46,6 +47,7 @@
 // dfx
 #include "drawable/dfx/rs_dirty_rects_dfx.h"
 #include "drawable/dfx/rs_skp_capture_dfx.h"
+#include "pipeline/rs_realtime_refresh_rate_manager.h"
 #include "platform/ohos/overdraw/rs_overdraw_controller.h"
 namespace OHOS::Rosen::DrawableV2 {
 namespace {
@@ -160,6 +162,13 @@ static inline std::vector<RectI> MergeDirtyHistory(std::shared_ptr<RSDisplayRend
     }
     auto& curAllSurfaces = params->GetAllMainAndLeashSurfaces();
     auto dirtyManager = displayNodeSp->GetSyncDirtyManager();
+
+    // DFX START
+    if (RSRealtimeRefreshRateManager::Instance().GetShowRefreshRateEnabled()) {
+        RectI tempRect = { 100, 100, 500, 200 }; // ltwh: 100, 100, 500, 200 for real time refresh rate draw
+        dirtyManager->MergeDirtyRect(tempRect, true);
+    }
+    // DFX END
 
     RSUniRenderUtil::MergeDirtyHistory(displayNodeSp, bufferAge, false, true);
     Occlusion::Region dirtyRegion = RSUniRenderUtil::MergeVisibleDirtyRegion(

@@ -61,7 +61,7 @@ float ParticleNoiseField::calculateDistanceToRectangleEdge(
     }
     // Calculates the four boundaries of a rectangle.
     float left = center.x_ - size.x_ * HALF;
-    float right = center.x_ + size.x_  * HALF;
+    float right = center.x_ + size.x_ * HALF;
     float top = center.y_ - size.y_ * HALF;
     float bottom = center.y_ + size.y_ * HALF;
     // Calculate the time required for reaching each boundary.
@@ -72,21 +72,21 @@ float ParticleNoiseField::calculateDistanceToRectangleEdge(
 
     // Particles advance to the boundary only if t is a positive number.
     std::vector<float> times;
-    if (tLeft > 0) {
+    if (tLeft > 0.f) {
         times.push_back(tLeft);
     }
-    if (tRight > 0) {
+    if (tRight > 0.f) {
         times.push_back(tRight);
     }
-    if (tTop > 0) {
+    if (tTop > 0.f) {
         times.push_back(tTop);
     }
-    if (tBottom > 0) {
+    if (tBottom > 0.f) {
         times.push_back(tBottom);
     }
 
     if (times.empty()) {
-        return 0.0f;
+        return 0.f;
     }
     // The smallest value of t, which is the first time the particle will reach the boundary.
     float tEdge = *std::min_element(times.begin(), times.end());
@@ -101,10 +101,18 @@ Vector2f ParticleNoiseField::ApplyField(const Vector2f& position)
     Vector2f direction = position - fieldCenter_;
     float distance = direction.GetLength();
     float forceMagnitude = fieldStrength_;
-    if (!isPointInField(position, fieldShape_, fieldCenter_, fieldSize_.x_, fieldSize_.y_)) {
-        return Vector2f { 0.f, 0.f };
-    }
-    if (fieldFeather_ <= 0) {
+    if (isPointInField(position, fieldShape_, fieldCenter_, fieldSize_.x_, fieldSize_.y_)) {
+        if (fieldFeather_ > 0) {
+            float edgeDistance = fieldSize_.x_ * HALF;
+            if (fieldShape_ == ShapeType::RECT) {
+                edgeDistance = calculateDistanceToRectangleEdge(position, direction, fieldCenter_, fieldSize_);
+            } else if (fieldShape_ == ShapeType::ELLIPSE) {
+                edgeDistance = calculateEllipseEdgeDistance(direction);
+            }
+            if (edgeDistance != 0) {
+                forceMagnitude *= (1.0f - ((float)fieldFeather_ / 100.0f) * (distance / fieldSize_.GetLength()));
+            }
+        }
         Vector2f force = direction.Normalized() * forceMagnitude;
         return force;
     }
@@ -125,7 +133,7 @@ Vector2f ParticleNoiseField::ApplyCurlNoise(const Vector2f& position)
 {
     if (isPointInField(position, fieldShape_, fieldCenter_, fieldSize_.x_, fieldSize_.y_)) {
         PerlinNoise2D noise(noiseScale_, noiseFrequency_, noiseAmplitude_);
-        return noise.curl(position.x_, position.y_);
+        return noise.curl(position.x_, position.y_) * noiseScale_;
     }
     return Vector2f { 0.f, 0.f };
 }
@@ -145,8 +153,13 @@ float PerlinNoise2D::lerp(float t, float a, float b)
 float PerlinNoise2D::grad(int hash, float x, float y)
 {
     // Convert low 4 bits of hash code into 12 gradient directions
-    int h = hash & 15;
+    int h = hash & 15; // Use a bitwise AND operation (&) to get the lowest 4 bits of the hash value
+    // The value of h determines whether the first component of the gradient vector is x or y.
+    // If the value of h is less than 8, u is assigned the value x, otherwise y
     double u = h < 8 ? x : y;
+    // Selects the second component of the gradient vector.
+    // If h is less than 4, v is assigned the value y; If h is equal to 12 or 14, v is assigned to x; Otherwise, v is 0.
+    // This allocation ensures diversity in the gradient vectors and helps to produce a more natural noise texture.
     double v = h < 4 ? y : h == 12 || h == 14 ? x : 0;
     return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v); // h & 2 check the h's second least bit
 }
@@ -170,8 +183,8 @@ PerlinNoise2D::PerlinNoise2D(float noiseScale, float noiseFrequency, float noise
 
 float PerlinNoise2D::noise(float x, float y)
 {
-    x *= (noiseFrequency_ / noiseScale_);
-    y *= (noiseFrequency_ / noiseScale_);
+    x *= noiseFrequency_;
+    y *= noiseFrequency_;
     // Find the unit square that contains the point
     int X = (int)floor(x) & 255;
     int Y = (int)floor(y) & 255;
@@ -196,7 +209,7 @@ float PerlinNoise2D::noise(float x, float y)
     float res = lerp(v, lerp(u, grad(p[AA], x, y), grad(p[BA], x - 1, y)),
         lerp(u, grad(p[AB], x, y - 1), grad(p[BB], x - 1, y - 1)));
 
-    return (noiseFrequency_ * noiseScale_) * (res + 1.f) / 2.f; // Normalize the result
+    return noiseAmplitude_ * (res + 1.f) / 2.f; // Normalize the result
 }
 
 // In the two-dimensional mode, curl actually returns a vector instead of a scalar.

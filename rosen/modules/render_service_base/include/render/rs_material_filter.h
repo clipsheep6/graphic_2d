@@ -77,6 +77,11 @@ public:
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
 
+    void ApplyColorFilter(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& greyImage,
+        const Drawing::Rect& src, const Drawing::Rect& dst);
+    bool ApplyGrayAdjust(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
+        const Drawing::Rect& src, const Drawing::Rect& dst, std::shared_ptr<Drawing::Image>& greyImage);
+
     void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const Drawing::Rect& src, const Drawing::Rect& dst) const override;
     float GetRadius() const;

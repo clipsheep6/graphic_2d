@@ -245,8 +245,8 @@ std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction) cons
 
 bool RSMaterialFilter::IsValid() const
 {
-    constexpr float epsilon = 0.999f;
-    return radius_ > epsilon;
+    static constexpr float epsilon = 0.999f;
+    return (radius_ > epsilon) || ((saturation_ != 1.0f && saturation_ >= 0.0f) || (brightness_ != 1.0f && brightness_ >= 0.0f));
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)
@@ -331,6 +331,20 @@ void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_
         return;
     }
 
+    static constexpr float epsilon = 0.999f;
+    if(radius_ <= epsilon){
+        Drawing::Brush brush;
+        if (colorFilter_) {
+            Drawing::Filter filter;
+            filter.SetColorFilter(colorFilter_);
+            brush.SetFilter(filter);
+        }
+        canvas.AttachBrush(brush);
+        canvas.DrawImageRect(*greyImage, src, dst, Drawing::SamplingOptions());
+        canvas.DetachBrush();
+        return;
+    }
+    
     static bool DDGR_ENABLED = RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR;
     KawaseParameter param = KawaseParameter(src, dst, radius_, colorFilter_, brush.GetColor().GetAlphaF());
     if (!DDGR_ENABLED && KAWASE_BLUR_ENABLED &&

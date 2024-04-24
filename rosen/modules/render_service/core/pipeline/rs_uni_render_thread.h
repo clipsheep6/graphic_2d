@@ -16,8 +16,11 @@
 #ifndef RENDER_SERVICE_PIPELINE_RS_UNI_RENDER_THREAD_H
 #define RENDER_SERVICE_PIPELINE_RS_UNI_RENDER_THREAD_H
 
+#include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <vector>
 
 #include "common/rs_thread_handler.h"
 #include "common/rs_thread_looper.h"
@@ -33,6 +36,7 @@ namespace OHOS {
 namespace Rosen {
 class RSUniRenderThread {
 public:
+    using Callback = std::function<void>();
     static RSUniRenderThread& Instance();
 
     // disable copy and move
@@ -48,6 +52,8 @@ public:
     void PostTask(const std::function<void()>& task);
     void RemoveTask(const std::string& name);
     void PostRTTask(const std::function<void()>& task);
+    void PostImageReleaseTask(const std::function<void()>& task);
+    void RunImageReleaseTask();
     void PostTask(RSTaskMessage::RSTask task, const std::string& name, int64_t delayTime,
         AppExecFwk::EventQueue::Priority priority = AppExecFwk::EventQueue::Priority::HIGH);
     void PostSyncTask(const std::function<void()>& task);
@@ -161,6 +167,11 @@ private:
     ScreenId displayNodeScreenId_ = 0;
     std::set<pid_t> exitedPidSet_;
     ClearMemoryMoment clearMoment_;
+
+    std::vector<Callback> imageReleaseTasks_;
+    std::mutex imageReleaseMutex_;
+    bool postImageReleaseTaskFlag_;
+    int imageReleaseCount_ = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

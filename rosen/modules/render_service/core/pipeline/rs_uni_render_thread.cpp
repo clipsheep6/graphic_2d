@@ -16,6 +16,9 @@
 #include <memory>
 
 #include <malloc.h>
+#include <mutex>
+#include <type_traits>
+#include <vector>
 #include "graphic_common_c.h"
 #include "rs_trace.h"
 #include "hgm_core.h"
@@ -35,6 +38,7 @@
 #include "pipeline/rs_uni_render_util.h"
 #include "pipeline/sk_resource_manager.h"
 #include "platform/common/rs_log.h"
+#include "platform/common/rs_system_properties.h"
 #include "platform/ohos/rs_jank_stats.h"
 #ifdef RES_SCHED_ENABLE
 #include "system_ability_definition.h"
@@ -78,6 +82,7 @@ RSUniRenderThread& RSUniRenderThread::Instance()
 }
 
 RSUniRenderThread::RSUniRenderThread()
+    :postImageReleaseTaskFlag_(Rosen::RSSystemProperties::GetImageReleaseUsingPostTask())
 {}
 
 RSUniRenderThread::~RSUniRenderThread() noexcept {}
@@ -94,7 +99,7 @@ void RSUniRenderThread::InitGrContext()
     if (Drawing::SystemProperties::GetGpuApiType() == GpuApiType::VULKAN ||
         Drawing::SystemProperties::GetGpuApiType() == GpuApiType::DDGR) {
         uniRenderEngine_->GetSkContext()->RegisterPostFunc([](const std::function<void()>& task) {
-            RSUniRenderThread::Instance().PostRTTask(task);
+            RSUniRenderThread::Instance().PostImageReleaseTask(task);
         });
     }
 #endif
@@ -165,6 +170,39 @@ void RSUniRenderThread::PostRTTask(const std::function<void()>& task)
         task();
     } else {
         PostTask(task);
+    }
+}
+
+void RSUniRenderThread::PostImageReleaseTask()
+{
+    imageReleaseCount_++;
+    if (postImageReleaseTaskFlag_) {
+        PostTask(task);
+        return;
+    }
+    std::unique_lock<std::mutex> releaseLock(imageReleaseMutex_);
+    imageReleaseTasks_.push_back(task);
+}
+
+void RSUniRenderThread::RunImageReleaseTask()
+{
+    if (postImageReleaseTaskFlag_) { // release using post task
+        RS_TRACE_NAME_FMT("RunImageReleaseTask using PostTask: count %d", imageReleaseCount_);
+        imageReleaseCount_ = 0;
+        return;
+    }
+    std::vector<Callback> tasks;
+    {
+        std::unique_ptr<std::mutex> releaseLock(imageReleaseMutex_);
+        std::swap(imageReleaseTasks_, tasks);
+    }
+    if (tasks.empty()) {
+        return;
+    }
+    RS_TRACE_NAME_FMT("RunImageReleaseTask: count %d", imageReleaseCount_);
+    imageReleaseCount_ = 0;
+    for (auto task : tasks) {
+        task();
     }
 }
 

@@ -94,7 +94,12 @@
           "cJSON",
           "jsoncpp",
           "openssl",
-          "zlib"
+          "zlib",
+          "icu",
+          "libpng",
+          "libxml2",
+          "ace_engine",
+          "libuv"
         ],
         "third_party": [
           "flutter",
@@ -108,7 +113,8 @@
           "egl",
           "opengles",
           "vulkan-headers",
-          "vulkan-loader"
+          "vulkan-loader",
+          "bounds_checking_function"
         ]
       },
       "build": {

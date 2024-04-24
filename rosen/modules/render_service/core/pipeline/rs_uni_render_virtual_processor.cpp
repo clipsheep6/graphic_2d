@@ -78,7 +78,7 @@ bool RSUniRenderVirtualProcessor::Init(RSDisplayRenderNode& node, int32_t offset
         if (isPhone_) {
             node.SetOriginScreenRotation(mainScreenRotation_);
         } else {
-            auto boundsGeoPtr = (mirrorNode->GetRenderProperties().GetBoundsGeometry());
+            auto& boundsGeoPtr = (mirrorNode->GetRenderProperties().GetBoundsGeometry());
             if (boundsGeoPtr != nullptr) {
                 boundsGeoPtr->UpdateByMatrixFromSelf();
                 node.SetInitMatrix(boundsGeoPtr->GetMatrix());
@@ -183,7 +183,7 @@ void RSUniRenderVirtualProcessor::JudgeResolution(RSDisplayRenderNode& node)
 void RSUniRenderVirtualProcessor::CanvasAdjustment(RSDisplayRenderNode& node, bool canvasRotation)
 {
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = property.GetBoundsGeometry();
+    auto& geoPtr = property.GetBoundsGeometry();
     if (geoPtr) {
         // if need rotation, canvas shouid be set to original absolute position
         if (canvasRotation) {

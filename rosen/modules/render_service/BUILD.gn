@@ -190,6 +190,13 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/utils",
     "$graphic_2d_root/rosen/modules/create_pixelmap_surface/include",
   ]
+
+  external_deps = [
+    "accessibility:accessibilityconfig",
+    "c_utils:utils",
+    "memmgr:memmgrclient",
+  ]
+
   if (use_video_processing_engine) {
     include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
   }
@@ -243,12 +250,12 @@ ohos_shared_library("librender_service") {
   }
   include_dirs += [ "$graphic_2d_root/rosen/modules/render_service_profiler" ]
 
-  public_deps = [
-    "//third_party/libpng:libpng",
-    "//third_party/libxml2:libxml2",
+  public_external_deps = [
+    "libpng:libpng",
+    "libxml2:libxml2",
   ]
 
-  public_deps += [ "//third_party/skia:skia_ohos" ]
+  public_deps = [ "//third_party/skia:skia_ohos" ]
 
   if (defined(use_new_render_context) && use_new_render_context) {
     include_dirs += [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
@@ -283,7 +290,7 @@ ohos_shared_library("librender_service") {
     deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
   }
 
-  external_deps = [
+  external_deps += [
     "battery_manager:batterysrv_client",
     "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",

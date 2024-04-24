@@ -1038,6 +1038,16 @@ public:
     void UpdatePartialRenderParams();
     void UpdateAncestorDisplayNodeInRenderParams();
 
+    void SetHasInvisibleDirty(bool hasInvisibleDirty)
+    {
+        hasInvisibleDirty_ = hasInvisibleDirty;
+    }
+
+    bool GetHasInvisibleDirty()
+    {
+        return hasInvisibleDirty_;
+    }
+
     bool HasWindowCorner()
     {
         Vector4f cornerRadius;
@@ -1287,6 +1297,7 @@ private:
     bool forceUIFirst_ = false;
     bool hasTransparentSurface_ = false;
     bool lastFrameUifirstFlag_ = false;
+    bool hasInvisibleDirty_ = false;
 
     bool ancoForceDoDirect_ = false;
 

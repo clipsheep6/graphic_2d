@@ -54,14 +54,23 @@ public:
     static napi_value DrawImage(napi_env env, napi_callback_info info);
     static napi_value DrawColor(napi_env env, napi_callback_info info);
     static napi_value DrawPoint(napi_env env, napi_callback_info info);
+    static napi_value DrawPoints(napi_env env, napi_callback_info info);
     static napi_value DrawPath(napi_env env, napi_callback_info info);
     static napi_value DrawLine(napi_env env, napi_callback_info info);
     static napi_value DrawText(napi_env env, napi_callback_info info);
+    static napi_value ConcatMatrix(napi_env env, napi_callback_info info);
+    static napi_value SetMatrix(napi_env env, napi_callback_info info);
     static napi_value DrawPixelMapMesh(napi_env env, napi_callback_info info);
+    static napi_value DrawOval(napi_env env, napi_callback_info info);
+    static napi_value DrawArc(napi_env env, napi_callback_info info);
     static napi_value AttachPen(napi_env env, napi_callback_info info);
     static napi_value AttachBrush(napi_env env, napi_callback_info info);
     static napi_value DetachPen(napi_env env, napi_callback_info info);
     static napi_value DetachBrush(napi_env env, napi_callback_info info);
+    static napi_value SaveLayer(napi_env env, napi_callback_info info);
+    static napi_value GetWidth(napi_env env, napi_callback_info info);
+    static napi_value GetHeight(napi_env env, napi_callback_info info);
+    static napi_value Clear(napi_env env, napi_callback_info info);
 
     Canvas* GetCanvas();
     DRAWING_API void ResetCanvas();
@@ -75,10 +84,16 @@ private:
     napi_value OnDrawImage(napi_env env, napi_callback_info info);
     napi_value OnDrawColor(napi_env env, napi_callback_info info);
     napi_value OnDrawPoint(napi_env env, napi_callback_info info);
+    napi_value OnDrawPoints(napi_env env, napi_callback_info info);
     napi_value OnDrawPath(napi_env env, napi_callback_info info);
     napi_value OnDrawLine(napi_env env, napi_callback_info info);
     napi_value OnDrawText(napi_env env, napi_callback_info info);
+    napi_value OnConcatMatrix(napi_env env, napi_callback_info info);
+    napi_value OnSetMatrix(napi_env env, napi_callback_info info);
+    napi_value OnSaveLayer(napi_env env, napi_callback_info info);
     napi_value OnDrawPixelMapMesh(napi_env env, napi_callback_info info);
+    napi_value OnDrawOval(napi_env env, napi_callback_info info);
+    napi_value OnDrawArc(napi_env env, napi_callback_info info);
 
     static bool DeclareFuncAndCreateConstructor(napi_env env);
     static thread_local napi_ref constructor_;

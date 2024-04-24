@@ -66,6 +66,86 @@ bool ConvertFromJsTextEncoding(napi_env env, TextEncoding& textEncoding, napi_va
     return true;
 }
 
+bool ConvertFromJsRect(napi_env env, napi_value src, Rect& drawingRect)
+{
+    if (src == nullptr) {
+        return false;
+    }
+    double left = 0.0;
+    double top = 0.0;
+    double right = 0.0;
+    double bottom = 0.0;
+    napi_value tempValue = nullptr;
+    napi_get_named_property(env, src, "left", &tempValue);
+    bool isLeftOk = ConvertFromJsValue(env, tempValue, left);
+    napi_get_named_property(env, src, "right", &tempValue);
+    bool isRightOk = ConvertFromJsValue(env, tempValue, right);
+    napi_get_named_property(env, src, "top", &tempValue);
+    bool isTopOk = ConvertFromJsValue(env, tempValue, top);
+    napi_get_named_property(env, src, "bottom", &tempValue);
+    bool isBottomOk = ConvertFromJsValue(env, tempValue, bottom);
+    if (!(isLeftOk && isRightOk && isTopOk && isBottomOk)) {
+        return false;
+    }
+    drawingRect = Drawing::Rect(left, top, right, bottom);
+    return true;
+}
+
+bool ConvertFromJsFontEdging(napi_env env, FontEdging& fontEdging, napi_value nativeType)
+{
+    napi_value type = nativeType;
+    if (type == nullptr) {
+        return false;
+    }
+    uint32_t resultValue = 0;
+    napi_get_value_uint32(env, type, &resultValue);
+
+    switch (resultValue) {
+        case 0:
+            fontEdging = FontEdging::ALIAS;
+            break;
+        case 1:
+            fontEdging = FontEdging::ANTI_ALIAS;
+            break;
+        case 2:
+            fontEdging = FontEdging::SUBPIXEL_ANTI_ALIAS;
+            break;
+        default:
+            fontEdging = FontEdging::ALIAS;
+            break;
+    }
+    return true;
+}
+
+bool ConvertFromJsFontHinting(napi_env env, FontHinting& fontHinting, napi_value nativeType)
+{
+    napi_value type = nativeType;
+    if (type == nullptr) {
+        return false;
+    }
+    uint32_t resultValue = 0;
+    napi_get_value_uint32(env, type, &resultValue);
+
+    switch (resultValue) {
+        case 0: 
+            fontHinting = FontHinting::NONE;
+            break;
+        case 1:
+            fontHinting = FontHinting::SLIGHT;
+            break;
+        case 2:
+            fontHinting = FontHinting::NORMAL;
+            break;
+        case 3:
+            fontHinting = FontHinting::FULL;
+            break;
+        default:
+            fontHinting = FontHinting::NORMAL;
+            break;
+    }
+    return true;
+}
+
 napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message)
 {
     napi_throw(env, CreateJsError(env, static_cast<int32_t>(err), message));

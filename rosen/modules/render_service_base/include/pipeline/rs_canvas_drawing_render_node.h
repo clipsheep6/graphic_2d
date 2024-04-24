@@ -67,10 +67,7 @@ public:
     void AddDirtyType(RSModifierType type) override;
     void ClearOp();
     void ResetSurface();
-    bool IsNeedProcess() const
-    {
-        return isNeedProcess_;
-    }
+    bool IsNeedProcess() const;
     void SetNeedProcess(bool needProcess);
     void PlaybackInCorrespondThread();
     const std::map<RSModifierType, std::list<Drawing::DrawCmdListPtr>>& GetDrawCmdLists() const;

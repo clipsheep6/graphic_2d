@@ -24,6 +24,7 @@
 #include "common/rs_background_thread.h"
 #include "common/rs_common_def.h"
 #include "common/rs_obj_abs_geometry.h"
+#include "params/rs_canvas_drawing_render_params.h"
 #include "pipeline/rs_context.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_recording_canvas.h"
@@ -187,8 +188,20 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     canvas.DetachPaint();
 }
 
+bool RSCanvasDrawingRenderNode::IsNeedProcess() const
+{
+    return renderParams_->IsNeedProcess();
+}
+
 void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)
 {
+    auto stagingCanvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(stagingRenderParams_.get());
+    if (stagingCanvasDrawingParams) {
+        stagingCanvasDrawingParams->SetNeedProcess(needProcess);
+        if(stagingRenderParams_->NeedSync()) {
+            AddToPendingSyncList();
+        }
+    }
     isNeedProcess_ = needProcess;
 }
 
@@ -463,7 +476,7 @@ void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType type)
                 continue;
             }
             drawCmdLists_[type].emplace_back(cmd);
-            isNeedProcess_ = true;
+            SetNeedProcess(true);
         }
         // If such nodes are not drawn, The drawcmdlists don't clearOp during recording, As a result, there are
         // too many drawOp, so we need to add the limit of drawcmdlists.

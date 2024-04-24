@@ -17,9 +17,7 @@ import("../../../../../../graphic_config.gni")
 ohos_shared_library("windowanimationmanager_napi") {
   include_dirs = [
     "//foundation/window/window_manager/wm/include",
-    "//foundation/window/window_manager/wmserver/include",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
-    "//foundation/window/window_manager/interfaces/innerkits/dm",
   ]
 
   sources = [
@@ -48,8 +46,10 @@ ohos_shared_library("windowanimationmanager_napi") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
+    "window_manager:libdm",
     "window_manager:libwm",
     "window_manager:libwmutil",
+    "window_manager:sms",
   ]
 
   defines = []

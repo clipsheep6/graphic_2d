@@ -1629,10 +1629,8 @@ static std::tuple<GLenum, GLsizei, T*> CheckUniformDataInfo(
 {
     GLuint count = static_cast<GLuint>(readData.GetBufferLength() / sizeof(T));
     T* srcData = reinterpret_cast<T*>(readData.GetBuffer());
-    LOGD("WebGL CheckUniformDataInfo count %{public}u length %{public}zu %{public}zu Offset %{public}zu %{public}zu",
-         static_cast<unsigned int>(count), static_cast<size_t>(readData.GetBufferLength()),
-         static_cast<size_t>(info->elemCount), static_cast<size_t>(info->srcOffset),
-         static_cast<size_t>(info->srcLength));
+    LOGD("WebGL CheckUniformDataInfo count %{public}u length %{public}lu %{public}u Offset %{public}u %{public}u",
+         count, readData.GetBufferLength(), info->elemCount, info->srcOffset, info->srcLength);
     if (isHighWebGL) {
         if (count <= info->srcOffset || count < info->srcLength) {
             return make_tuple(WebGLRenderingContextBase::INVALID_VALUE, 0, nullptr);
@@ -2774,7 +2772,7 @@ GLenum WebGLRenderingContextBaseImpl::CheckVertexAttribPointer(napi_env env, con
 
     // check offset
     if (vertexInfo.offset >= static_cast<GLintptr>(webGLBuffer->GetBufferSize())) {
-        LOGE("WebGL vertexAttribPointer invalid offset %{public}u", static_cast<unsigned int>(vertexInfo.offset));
+        LOGE("WebGL vertexAttribPointer invalid offset %{public}" PRIu64 "", vertexInfo.offset);
         return WebGLRenderingContextBase::INVALID_VALUE;
     }
 

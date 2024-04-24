@@ -238,12 +238,20 @@ void RSPropertyDrawableUtils::DrawFilter(Drawing::Canvas* canvas,
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     // Optional use cacheManager to draw filter
     if (!paintFilterCanvas->GetDisableFilterCache() && cacheManager != nullptr && RSProperties::FilterCacheEnabled) {
+        if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
+            filter->IsOffscreenCanvas(true);
+            needSnapshotOutset = false;
+        }
         cacheManager->DrawFilter(*paintFilterCanvas, filter, needSnapshotOutset);
         cacheManager->CompactFilterCache(shouldClearFilteredCache); // flag for clear witch cache after drawing
         return;
     }
 #endif
 
+    if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
+        filter->IsOffscreenCanvas(false);
+        needSnapshotOutset = false;
+    }
     auto imageClipIBounds = clipIBounds;
     if (needSnapshotOutset) {
         imageClipIBounds.MakeOutset(-1, -1);
@@ -315,7 +323,12 @@ void RSPropertyDrawableUtils::DrawForegroundFilter(RSPaintFilterCanvas& canvas,
 
     if (foregroundFilter->GetFilterType() == RSFilter::MOTION_BLUR) {
         auto canvasOriginal = canvas.GetOriginalCanvas();
-        foregroundFilter->SetGeometry(*canvasOriginal, 0.f, 0.f);
+        if (canvas.GetDisableFilterCache()) {
+            foregroundFilter->IsOffscreenCanvas(true);
+        } else {
+            foregroundFilter->IsOffscreenCanvas(false);
+            foregroundFilter->SetGeometry(*canvasOriginal, 0.f, 0.f);
+        }
     }
 
     foregroundFilter->DrawImageRect(canvas, imageSnapshot, Drawing::Rect(0, 0, imageSnapshot->GetWidth(),

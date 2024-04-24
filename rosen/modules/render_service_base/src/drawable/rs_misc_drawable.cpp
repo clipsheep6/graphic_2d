@@ -49,6 +49,7 @@ bool RSChildrenDrawable::OnUpdate(const RSRenderNode& node)
                 stagingChildrenDrawableVec_.push_back(std::move(childDrawable));
             }
         }
+        const_cast<RSRenderNode&>(node).SetChildrenHasSharedTransition(childrenHasSharedTransition_);
         return !stagingChildrenDrawableVec_.empty();
     }
 
@@ -122,6 +123,7 @@ void RSChildrenDrawable::OnSync()
         return;
     }
     std::swap(stagingChildrenDrawableVec_, childrenDrawableVec_);
+    stagingChildrenDrawableVec_.clear();
     needSync_ = false;
 }
 
@@ -188,6 +190,7 @@ void RSCustomModifierDrawable::OnSync()
         return;
     }
     std::swap(stagingDrawCmdListVec_, drawCmdListVec_);
+    stagingDrawCmdListVec_.clear();
     needSync_ = false;
 }
 

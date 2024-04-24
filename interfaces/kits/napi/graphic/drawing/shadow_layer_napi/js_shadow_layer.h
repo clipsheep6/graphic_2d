@@ -13,40 +13,35 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_JS_BRUSH_H
-#define OHOS_ROSEN_JS_BRUSH_H
+#ifndef OHOS_ROSEN_JS_SHADOW_LAYER_H
+#define OHOS_ROSEN_JS_SHADOW_LAYER_H
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
 
-#include "draw/brush.h"
+#include "effect/blur_draw_looper.h"
 
 namespace OHOS::Rosen {
 namespace Drawing {
-class JsBrush final {
+class JsShadowLayer final {
 public:
-    JsBrush();
-    ~JsBrush();
+    explicit JsShadowLayer(std::shared_ptr<BlurDrawLooper> blurDrawLooper = nullptr) :
+        m_blurDrawLooper(blurDrawLooper) {}
+    ~JsShadowLayer();
 
     static napi_value Init(napi_env env, napi_value exportObj);
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void* nativeObject, void* finalize);
+    static void Finalizer(napi_env env, void* data, void* hint);
 
-    static napi_value SetColor(napi_env env, napi_callback_info info);
-    static napi_value SetAntiAlias(napi_env env, napi_callback_info info);
-    static napi_value SetAlpha(napi_env env, napi_callback_info info);
-    static napi_value SetColorFilter(napi_env env, napi_callback_info info);
-    static napi_value SetMaskFilter(napi_env env, napi_callback_info info);
-    static napi_value SetBlendMode(napi_env env, napi_callback_info info);
-    static napi_value SetShadowLayer(napi_env env, napi_callback_info info);
-
-    Brush* GetBrush();
+    static napi_value Create(napi_env env, napi_callback_info info);
+    std::shared_ptr<BlurDrawLooper> GetBlurDrawLooper();
 
 private:
+    static napi_value CreateLooper(napi_env env, const std::shared_ptr<BlurDrawLooper> blurDrawLooper);
     static thread_local napi_ref constructor_;
-
-    Brush* brush_;
+    std::shared_ptr<BlurDrawLooper> m_blurDrawLooper = nullptr;
 };
 } // namespace Drawing
 } // namespace OHOS::Rosen
-#endif // OHOS_ROSEN_JS_BRUSH_H
+#endif // OHOS_ROSEN_JS_SHADOW_LAYER_H

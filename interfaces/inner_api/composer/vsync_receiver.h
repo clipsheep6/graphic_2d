@@ -87,7 +87,8 @@ public:
     VSyncReceiver(const sptr<IVSyncConnection>& conn,
         const sptr<IRemoteObject>& token = nullptr,
         const std::shared_ptr<OHOS::AppExecFwk::EventHandler>& looper = nullptr,
-        const std::string& name = "Uninitialized");
+        const std::string& name = "Uninitialized",
+        bool isVIP = true);
     ~VSyncReceiver();
     // nocopyable
     VSyncReceiver(const VSyncReceiver &) = delete;
@@ -119,6 +120,7 @@ private:
     bool init_;
     int32_t fd_;
     std::string name_;
+    bool isVIP_ = true;
 };
 #else
 class VSyncReceiver {

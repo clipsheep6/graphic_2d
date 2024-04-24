@@ -421,7 +421,7 @@ void RSMainThread::Init()
     rsFrameRateLinker_ = std::make_shared<RSRenderFrameRateLinker>();
     conn->id_ = rsFrameRateLinker_->GetId();
     rsVSyncDistributor_->AddConnection(conn);
-    receiver_ = std::make_shared<VSyncReceiver>(conn, token->AsObject(), handler_, "rs");
+    receiver_ = std::make_shared<VSyncReceiver>(conn, token->AsObject(), handler_, "rs", false);
     receiver_->Init();
     if (!isUniRender_) {
         renderEngine_ = std::make_shared<RSRenderEngine>();

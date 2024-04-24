@@ -89,12 +89,14 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
 VSyncReceiver::VSyncReceiver(const sptr<IVSyncConnection>& conn,
     const sptr<IRemoteObject>& token,
     const std::shared_ptr<OHOS::AppExecFwk::EventHandler>& looper,
-    const std::string& name)
+    const std::string& name,
+    bool isVIP)
     : connection_(conn), token_(token), looper_(looper),
     listener_(std::make_shared<VSyncCallBackListener>()),
     init_(false),
     fd_(INVALID_FD),
-    name_(name)
+    name_(name),
+    isVIP_(isVIP)
 {
 };
 
@@ -126,8 +128,14 @@ VsyncError VSyncReceiver::Init()
         runner->Run();
     }
 
-    looper_->AddFileDescriptorListener(
-        fd_, AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, listener_, "vSyncTask", AppExecFwk::EventQueue::Priority::VIP);
+    if (isVIP_) {
+        looper_->AddFileDescriptorListener(
+            fd_, AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, listener_,
+            "vSyncTask", AppExecFwk::EventQueue::Priority::VIP); // vSyncTask VIP priority
+    } else {
+        looper_->AddFileDescriptorListener(
+            fd_, AppExecFwk::FILE_DESCRIPTOR_INPUT_EVENT, listener_, "vSyncTask"); // vSyncTask default HIGH priority
+    }
     init_ = true;
     return VSYNC_ERROR_OK;
 }

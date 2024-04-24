@@ -94,8 +94,7 @@
           "cJSON",
           "jsoncpp",
           "openssl",
-          "zlib",
-          "libuv"
+          "zlib"
         ],
         "third_party": [
           "flutter",

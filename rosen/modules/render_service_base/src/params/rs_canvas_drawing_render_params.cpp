@@ -14,16 +14,18 @@
  */
 
 #include "params/rs_canvas_drawing_render_params.h"
+#include "platform/common/rs_log.h"
+namespace OHOS::Rosen {
+RSCanvasDrawingRenderParams::RSCanvasDrawingRenderParams(NodeId id) : RSRenderParams(id) {}
 
 void RSCanvasDrawingRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target)
 {
-    auto targetCanvasDrawingParam = static_cast<RSDisplayRenderParams*>(stagingRenderParams_.get());
+    auto targetCanvasDrawingParam = static_cast<RSCanvasDrawingRenderParams*>(target.get());
     if (targetCanvasDrawingParam == nullptr) {
         RS_LOGE("targetCanvasDrawingParam::OnSync targetCanvasDrawingParam is null");
         return;
     }
-    targetCanvasDrawingParam->isNeedProcess_ = isNeedProcess_;
+    targetCanvasDrawingParam->isNeedProcess_.store(isNeedProcess_);
     RSRenderParams::OnSync(target);
 }
-namespace OHOS::Rosen {
 } // namespace OHOS::Rosen

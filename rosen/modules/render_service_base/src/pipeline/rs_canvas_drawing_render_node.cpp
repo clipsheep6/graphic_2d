@@ -190,7 +190,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
 
 bool RSCanvasDrawingRenderNode::IsNeedProcess() const
 {
-    return renderParams_->IsNeedProcess();
+    return renderDrawable_->GetRenderParams()->IsNeedProcess();
 }
 
 void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)
@@ -453,6 +453,16 @@ bool RSCanvasDrawingRenderNode::IsNeedResetSurface() const
         return true;
     }
     return false;
+}
+
+void RSCanvasDrawingRenderNode::InitRenderParams()
+{
+    stagingRenderParams_ = std::make_unique<RSCanvasDrawingRenderParams>(GetId());
+    DrawableV2::RSRenderNodeDrawableAdapter::OnGenerate(shared_from_this());
+    if (renderDrawable_ == nullptr) {
+        RS_LOGE("RSCanvasDrawingRenderNode::InitRenderParams failed");
+        return;
+    }
 }
 
 void RSCanvasDrawingRenderNode::AddDirtyType(RSModifierType type)

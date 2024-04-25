@@ -62,7 +62,7 @@ HWTEST_F(SkiaHmSymbolConfigOhosTest, GetGroupParameters001, TestSize.Level1)
     auto parameters = SkiaHmSymbolConfigOhos::GetGroupParameters(DrawingAnimationType::SCALE_TYPE, 1, 1);
     if (!parameters.empty()) {
         EXPECT_EQ(parameters.size(), 1);
-    } else{
+    } else {
         EXPECT_EQ(parameters.empty(), true);
     }
 

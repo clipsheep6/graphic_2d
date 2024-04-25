@@ -112,6 +112,16 @@ const Drawing::DrawingPiecewiseParameter VARIABLECOLOR_SECOND_PHASE_PARAS = {
     {{"ctrlX1", 0.33}, {"ctrlY1", 0}, {"ctrlX2", 0.67}, {"ctrlY2", 1}},
     450, 250, {{"alpha", {1, 0.4}}}
 };
+const Drawing::DrawingPiecewiseParameter DISAPPEAR_FIRST_PHASE_PARAS = {
+    OHOS::Rosen::Drawing::DrawingCurveType::SPRING,
+    // -300: velocity, 1: mass,  328: stiffness, 16: damping is paramaters of animation
+    {{"velocity", 0}, {"mass", 1}, {"stiffness", 228}, {"damping", 22}},
+    16, 0, {{"sx", {1, 0.3}}, {"sy", {1, 0.3}}} // 16: duration, 0: delay, 1.01: scale
+};
+const Drawing::DrawingPiecewiseParameter DISAPPEAR_SECOND_PHASE_PARAS = {
+    // 100: duration, 0: delay, 0.0 and 1: alpha
+    OHOS::Rosen::Drawing::DrawingCurveType::LINEAR, {}, 100, 0, {{"alpha", {1.0, 0.0}}}
+};
 } // ANIMATIONTEST
 } // namespace Rosen
 } // namespace OHOS

@@ -29,6 +29,68 @@ class RSSymbolAnimationTest : public RSAnimationBaseTest {
 };
 
 /**
+ * @tc.name: InitSupportAnimationTableTest
+ * @tc.desc: Verify Init of SupportAnimationTable
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSSymbolAnimationTest, InitSupportAnimationTableTest, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest InitSupportAnimationTable start";
+    auto symbolAnimation = RSSymbolAnimation();
+    symbolAnimation.InitSupportAnimationTable();
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest InitSupportAnimationTable end";
+}
+
+/**
+ * @tc.name: ReplaceAnimationTest001
+ * @tc.desc: Verify the basic ability, ReplaceAnimation of ReplaceAnimationTest001
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSSymbolAnimationTest, ReplaceAnimationTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest ReplaceAnimationTest001 start";
+    /**
+     * @tc.steps: step1. init data
+     */
+    auto symbolAnimation = RSSymbolAnimation();
+    std::vector<Drawing::DrawingPiecewiseParameter> disappearGroupParas =
+        {DISAPPEAR_FIRST_PHASE_PARAS, DISAPPEAR_SECOND_PHASE_PARAS};
+    std::vector<Drawing::DrawingPiecewiseParameter> appearGroupParas =
+        {APPEAR_FIRST_PHASE_PARAS, APPEAR_SECOND_PHASE_PARAS};
+    std::shared_ptr<RSCanvasNode> appearCanvasNode = RSCanvasNode::Create();
+    canvasNode->SetBounds(ANIMATION_START_BOUNDS);
+    canvasNode->SetFrame(ANIMATION_START_BOUNDS);
+    
+    /**
+     * @tc.steps: step2. start BounceAnimation test
+     */
+    symbolAnimation.AppearAnimation(canvasNode, disappearGroupParas);
+    symbolAnimation.AppearAnimation(canvasNode, appearGroupParas);
+
+    NotifyStartAnimation();
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest ReplaceAnimationTest001 end";
+}
+
+/**
+ * @tc.name: PopNodeFromReplaceListTest001
+ * @tc.desc: Verify PopNode From Replace list map
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSSymbolAnimationTest, PopNodeFromReplaceListTest001, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest PopNodeFromReplaceListTest001 start";
+    /**
+     * @tc.steps: step1. init data
+     */
+    auto symbolAnimation = RSSymbolAnimation();
+    symbolAnimation.SetNode(rootNode);
+    uint64_t symbolSpanId = 1;
+    rootNode->canvasNodesListMap[symbolSpanId] = {{canvasNode->GetId(), canvasNode}};
+    symbolAnimation.PopNodeFromReplaceList(symbolSpanId);
+    GTEST_LOG_(INFO) << "RSSymbolAnimationTest PopNodeFromReplaceListTest001 end";
+}
+
+/**
  * @tc.name: BounceAnimationTest001
  * @tc.desc: Verify the basic ability, BounceAnimation of RSSymbolAnimationTest
  * @tc.type: FUNC

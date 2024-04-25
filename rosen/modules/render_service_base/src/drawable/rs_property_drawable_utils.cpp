@@ -333,7 +333,7 @@ void RSPropertyDrawableUtils::DrawForegroundFilter(RSPaintFilterCanvas& canvas,
         ROSEN_LOGD("RSPropertyDrawableUtils::DrawForegroundFilter image null");
         return;
     }
-    auto foregroundFilter = std::static_pointer_cast<RSDrawingFilter>(rsFilter);
+    auto foregroundFilter = std::static_pointer_cast<RSDrawingFilterOriginal>(rsFilter);
 
     if (foregroundFilter->GetFilterType() == RSFilter::MOTION_BLUR) {
         auto canvasOriginal = canvas.GetOriginalCanvas();

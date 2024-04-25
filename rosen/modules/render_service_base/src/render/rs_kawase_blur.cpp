@@ -103,6 +103,8 @@ KawaseBlurFilter::KawaseBlurFilter()
         return;
     }
     mixEffect_ = std::move(mixEffect);
+
+    SetupSimpleFilter();
 }
 
 KawaseBlurFilter::~KawaseBlurFilter() = default;

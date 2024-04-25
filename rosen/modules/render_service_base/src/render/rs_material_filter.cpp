@@ -229,6 +229,8 @@ void RSMaterialFilter::PostProcess(Drawing::Canvas& canvas)
 {
     Drawing::Brush brush;
     brush.SetColor(maskColor_.AsArgbInt());
+    if (RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled())
+        brush.SetAntiAlias(true);
     canvas.DrawBackground(brush);
 }
 

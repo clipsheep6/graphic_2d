@@ -689,7 +689,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
             filter->SetGeometry(canvas, properties.GetFrameWidth(), properties.GetFrameHeight());
             needSnapshotOutset = false;
         }
-        cacheManager->DrawFilter(canvas, filter, needSnapshotOutset);
+        
+        cacheManager->DrawFilter(canvas, filter, { needSnapshotOutset, false });
         return;
     }
 #endif

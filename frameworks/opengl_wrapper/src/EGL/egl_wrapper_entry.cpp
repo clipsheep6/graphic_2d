@@ -26,6 +26,7 @@
 #include "egl_wrapper_display.h"
 #include "egl_wrapper_loader.h"
 #include "thread_private_data_ctl.h"
+#include "window.h"
 #include "wrapper_log.h"
 #include "egl_blob_cache.h"
 #if USE_APS_IGAMESERVICE_FUNC
@@ -1318,6 +1319,34 @@ void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, 
     }
 }
 
+EGLBoolean EglPresentationTimeANDROIDImpl(EGLDisplay dpy, EGLSurface surface, EGLnsecsANDROID time)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->PresentationTimeANDROID(surface, time);
+}
+
+EGLClientBuffer EglGetNativeClientBufferANDROIDImpl(const struct AHardwareBuffer *buffer)
+{
+    ClearError();
+    if (buffer == nullptr) {
+        WLOGE("EGLDislay is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_PARAMETER);
+        return nullptr;
+    }
+
+    auto nativeWindowBuffer = CreateNativeWindowBufferFromNativeBuffer(reinterpret_cast<OH_NativeBuffer*>(
+        const_cast<AHardwareBuffer*>(buffer)));
+    if (nativeWindowBuffer == nullptr) {
+        WLOGE("EglGetNativeClientBufferANDROIDImpl nativeWindowBuffer is nullptr.");
+    }
+    return nativeWindowBuffer;
+}
+
+
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     /* EGL_VERSION_1_0 */
     { "eglChooseConfig", (EglWrapperFuncPointer)&EglChooseConfigImpl },
@@ -1414,6 +1443,10 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
     { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
 
+    { "eglPresentationTimeANDROID", (EglWrapperFuncPointer)&EglPresentationTimeANDROIDImpl },
+
+    /* EGL_ANDROID_get_native_client_buffer */
+    { "eglGetNativeClientBufferANDROID", (EglWrapperFuncPointer)&EglGetNativeClientBufferANDROIDImpl },
 };
 
 EglWrapperFuncPointer FindEglWrapperApi(const std::string &name)

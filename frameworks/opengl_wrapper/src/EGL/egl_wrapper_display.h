@@ -88,7 +88,7 @@ public:
 
     EGLBoolean SwapBuffersWithDamageKHR(EGLSurface draw, EGLint *rects, EGLint nRects);
     EGLBoolean SetDamageRegionKHR(EGLSurface surf, EGLint *rects, EGLint nRects);
-
+    EGLBoolean PresentationTimeANDROID(EGLSurface surface, EGLnsecsANDROID time);
 private:
     EglWrapperDisplay() noexcept;
     ~EglWrapperDisplay();

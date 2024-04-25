@@ -498,7 +498,7 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
             const auto& finishCallback =
                 std::get<const std::shared_ptr<AnimationFinishCallback>>(globalImplicitParams_.top());
             if (finishCallback && finishCallback->finishCallbackType_ == FinishCallbackType::LOGICALLY) {
-                animation->SetZeroThreshold(property->GetThreshold());
+                animation->SetLogicalThreshold(property->GetLogicalThreshold());
             }
             break;
         }
@@ -509,7 +509,7 @@ void RSImplicitAnimator::CreateImplicitAnimation(const std::shared_ptr<RSNode>& 
             const auto& finishCallback =
                 std::get<const std::shared_ptr<AnimationFinishCallback>>(globalImplicitParams_.top());
             if (finishCallback && finishCallback->finishCallbackType_ == FinishCallbackType::LOGICALLY) {
-                animation->SetZeroThreshold(property->GetThreshold());
+                animation->SetLogicalThreshold(property->GetLogicalThreshold());
             }
             break;
         }
@@ -635,9 +635,12 @@ void RSImplicitAnimator::CreateImplicitAnimationWithInitialVelocity(const std::s
     animation->SetInitialVelocity(velocity);
     const auto& finishCallback = std::get<const std::shared_ptr<AnimationFinishCallback>>(globalImplicitParams_.top());
     if (finishCallback && finishCallback->finishCallbackType_ == FinishCallbackType::LOGICALLY) {
-        animation->SetZeroThreshold(property->GetThreshold());
+        animation->SetLogicalThreshold(property->GetLogicalThreshold());
     }
-
+    auto finishThreshold = property->GetFinishThreshold();
+    if (finishThreshold) {
+        animation->SetFinishThreshold(finishThreshold);
+    }
     auto& repeatCallback = std::get<std::shared_ptr<AnimationRepeatCallback>>(globalImplicitParams_.top());
     if (repeatCallback) {
         animation->SetRepeatCallback(std::move(repeatCallback));

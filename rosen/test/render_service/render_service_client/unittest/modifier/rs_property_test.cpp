@@ -112,7 +112,7 @@ HWTEST_F(RSPropertyTest, Property004, TestSize.Level1)
     ASSERT_EQ(prop->Get(), UINT32_MAX);
 
     prop->SetThresholdType(ThresholdType::COARSE);
-    ASSERT_EQ(prop->GetThreshold(), 1.0f / 256.0f);
+    ASSERT_EQ(prop->GetLogicalThreshold(), 1.0f / 256.0f);
 }
 
 /**

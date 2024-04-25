@@ -202,8 +202,6 @@ float RSSpringModel<float>::EstimateDurationForUnderDampedModel() const
         return 0.0f;
     }
 
-    float threshold = fmax(toFloat(minimumAmplitudeRatio_ * initialOffset_),
-        SPRING_MIN_THRESHOLD); // avoiding 0 in logarithmic expressions
     double naturalAngularVelocity = 2.0 * FLOAT_PI / response_;
     double dampingAngularVelocity = sqrt(1.0 - dampingRatio_ * dampingRatio_) * naturalAngularVelocity;
     if (ROSEN_EQ(dampingAngularVelocity, 0.0)) {
@@ -219,7 +217,8 @@ float RSSpringModel<float>::EstimateDurationForUnderDampedModel() const
     if (ROSEN_EQ(tmpCoeffB, 0.0)) {
         return 0.0f;
     }
-    double tmpCoeffC = std::fabs(threshold / tmpCoeffB);
+    float finishThreshold = GetFinishThreshold();
+    double tmpCoeffC = std::fabs(finishThreshold / tmpCoeffB);
     if (ROSEN_EQ(tmpCoeffC, 0.0)) {
         return 0.0f;
     }
@@ -236,15 +235,16 @@ float RSSpringModel<float>::EstimateDurationForCriticalDampedModel() const
     }
 
     float estimatedDuration = 0.0f;
-    float threshold = fmax(toFloat(minimumAmplitudeRatio_ * initialOffset_), SPRING_MIN_THRESHOLD);
     double naturalAngularVelocity = 2.0 * FLOAT_PI / response_;
     double tmpCoeff = (initialVelocity_ + naturalAngularVelocity * initialOffset_);
+    float finishThreshold = GetFinishThreshold();
     if (ROSEN_EQ(tmpCoeff, 0.0, DOUBLE_NEAR_ZERO_THRESHOLD)) {
-        if (ROSEN_EQ(naturalAngularVelocity, 0.0) || ROSEN_EQ(initialOffset_ / threshold, 0.0f)) {
+        if (ROSEN_EQ(naturalAngularVelocity, 0.0) || ROSEN_EQ(finishThreshold, 0.0f) ||
+            ROSEN_EQ(initialOffset_ / finishThreshold, 0.0f)) {
             ROSEN_LOGE("RSSpringModel::EstimateDurationForCriticalDampedModel, invalid parameters.");
             return 0.0f;
         }
-        estimatedDuration = 1.0f / naturalAngularVelocity * log(std::fabs(initialOffset_ / threshold));
+        estimatedDuration = 1.0f / naturalAngularVelocity * log(std::fabs(initialOffset_ / finishThreshold));
         return estimatedDuration;
     }
     if (ROSEN_EQ(naturalAngularVelocity * tmpCoeff, 0.0)) {
@@ -254,7 +254,7 @@ float RSSpringModel<float>::EstimateDurationForCriticalDampedModel() const
     float extremumTime = initialVelocity_ / (naturalAngularVelocity * tmpCoeff);
     extremumTime = std::clamp(extremumTime, SPRING_MIN_DURATION, SPRING_MAX_DURATION);
     float extremumValue = CalculateDisplacement(extremumTime);
-    threshold = extremumValue > 0.0f ? threshold : -threshold;
+    auto threshold = extremumValue > 0.0f ? finishThreshold : -finishThreshold;
     if (std::fabs(extremumValue) < std::fabs(threshold)) {
         estimatedDuration = BinarySearchTime(SPRING_MIN_DURATION, extremumTime, threshold);
     } else {
@@ -271,7 +271,6 @@ float RSSpringModel<float>::EstimateDurationForOverDampedModel() const
         return 0.0f;
     }
     float estimatedDuration = 0.0f;
-    float threshold = fmax(toFloat(minimumAmplitudeRatio_ * initialOffset_), SPRING_MIN_THRESHOLD);
     double naturalAngularVelocity = 2.0 * FLOAT_PI / response_;
     double tmpCoeffA = dampingRatio_ + sqrt(pow(dampingRatio_, 2) - 1.0);
     double tmpCoeffB = dampingRatio_ - sqrt(pow(dampingRatio_, 2) - 1.0);
@@ -283,6 +282,7 @@ float RSSpringModel<float>::EstimateDurationForOverDampedModel() const
         return 0.0f;
     }
     double tmpCoeffF = 1.0 / tmpCoeffE;
+    float finishThreshold = GetFinishThreshold();
     if (ROSEN_EQ(tmpCoeffC, 0.0, DOUBLE_NEAR_ZERO_THRESHOLD)) {
         double tmpCoeff = initialOffset_ * naturalAngularVelocity * tmpCoeffA + initialVelocity_;
         if (ROSEN_EQ(-tmpCoeffB * naturalAngularVelocity, 0.0) || ROSEN_EQ(tmpCoeff, 0.0)) {
@@ -290,7 +290,7 @@ float RSSpringModel<float>::EstimateDurationForOverDampedModel() const
             return 0.0f;
         }
         estimatedDuration =
-            1.0f / (-tmpCoeffB * naturalAngularVelocity) * log(std::fabs(tmpCoeffF * threshold / tmpCoeff));
+            1.0f / (-tmpCoeffB * naturalAngularVelocity) * log(std::fabs(tmpCoeffF * finishThreshold / tmpCoeff));
         return estimatedDuration;
     }
     if (ROSEN_EQ(tmpCoeffD, 0.0, DOUBLE_NEAR_ZERO_THRESHOLD)) {
@@ -299,20 +299,29 @@ float RSSpringModel<float>::EstimateDurationForOverDampedModel() const
             return 0.0f;
         }
         estimatedDuration =
-            1.0f / (-tmpCoeffA * naturalAngularVelocity) * log(std::fabs(tmpCoeffF * threshold / tmpCoeff));
+            1.0f / (-tmpCoeffA * naturalAngularVelocity) * log(std::fabs(tmpCoeffF * finishThreshold / tmpCoeff));
         return estimatedDuration;
     }
     float extremumTime = (tmpCoeffC / tmpCoeffD > DOUBLE_NEAR_ZERO_THRESHOLD) ? tmpCoeffF * log(tmpCoeffC / tmpCoeffD)
                                                                               : SPRING_MIN_DURATION;
     extremumTime = std::clamp(extremumTime, SPRING_MIN_DURATION, SPRING_MAX_DURATION);
     float extremumValue = CalculateDisplacement(extremumTime);
-    threshold = extremumValue > 0.0f ? threshold : -threshold;
+    auto threshold = extremumValue > 0.0f ? finishThreshold : -finishThreshold;
     if (std::fabs(extremumValue) < std::fabs(threshold)) {
         estimatedDuration = BinarySearchTime(SPRING_MIN_DURATION, extremumTime, threshold);
     } else {
         estimatedDuration = BinarySearchTime(extremumTime, SPRING_MAX_DURATION, threshold);
     }
     return estimatedDuration;
+}
+
+template<>
+float RSSpringModel<float>::GetFinishThreshold() const
+{
+    if (finishThreshold_.has_value()) {
+        return fmax(finishThreshold_.value(), SPRING_MIN_THRESHOLD);
+    }
+    return fmax(toFloat(minimumAmplitudeRatio_ * initialOffset_), SPRING_MIN_THRESHOLD);
 }
 
 template class RSSpringModel<float>;

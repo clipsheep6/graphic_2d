@@ -40,7 +40,7 @@ public:
 
     const RSAnimationTimingCurve& GetTimingCurve() const;
 
-    void SetZeroThreshold(const float zeroThreshold) override;
+    void SetLogicalThreshold(const float logicalThreshold) override;
 
 protected:
     void OnStart() override;
@@ -53,7 +53,7 @@ private:
     bool GetIsLogicallyFinishCallback() const;
 
     RSAnimationTimingCurve timingCurve_;
-    float zeroThreshold_ { 0.0f };
+    float logicalThreshold_ { 0.0f };
     bool isLogicallyFinishCallback_ { false };
 };
 } // namespace Rosen

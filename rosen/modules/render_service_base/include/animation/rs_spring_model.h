@@ -16,6 +16,9 @@
 #ifndef ROSEN_ENGINE_CORE_ANIMATION_RS_SPRING_MODEL_H
 #define ROSEN_ENGINE_CORE_ANIMATION_RS_SPRING_MODEL_H
 
+#include <cmath>
+
+#include "common/rs_common_def.h"
 #include "common/rs_macros.h"
 #include "common/rs_vector2.h"
 #include "common/rs_vector4.h"
@@ -120,7 +123,7 @@ public:
             }
             double tempCoeffA = 1.0 / (dampingRatio * naturalAngularVelocity);
             double tempCoeffB = toFloat((initialVelocity_ + initialOffset_ * dampingRatio * naturalAngularVelocity) *
-                                       (1 / dampedAngularVelocity));
+                                        (1 / dampedAngularVelocity));
             double tempCoeffC = sqrt(initialOffset * initialOffset + tempCoeffB * tempCoeffB);
             if (ROSEN_EQ(tempCoeffC, 0.0)) {
                 return 0.0f;
@@ -138,6 +141,11 @@ public:
             estimatedDuration = fmax(durationMain, durationAlt);
         }
         return std::clamp(estimatedDuration, SPRING_MIN_DURATION, SPRING_MAX_DURATION);
+    }
+
+    void SetFinishThreshold(RSAnimatableType finishThreshold)
+    {
+        finishThreshold_ = finishThreshold;
     }
 
 protected:
@@ -206,12 +214,18 @@ private:
     {
         return 0.0f;
     }
+    RSAnimatableType GetFinishThreshold() const
+    {
+        return {};
+    }
+
     // calculated intermediate coefficient
     float coeffDecay_ { 0.0f };
     RSAnimatableType coeffScale_ {};
     float dampedAngularVelocity_ { 0.0f };
     RSAnimatableType coeffScaleAlt_ {};
     float coeffDecayAlt_ { 0.0f };
+    std::optional<RSAnimatableType> finishThreshold_;
 
     template<typename T>
     friend class RSSpringValueEstimator;
@@ -234,12 +248,13 @@ template<>
 RSB_EXPORT float RSSpringModel<float>::EstimateDurationForCriticalDampedModel() const;
 template<>
 RSB_EXPORT float RSSpringModel<float>::EstimateDurationForOverDampedModel() const;
-
 template<>
 void RSSpringModel<std::shared_ptr<RSRenderPropertyBase>>::CalculateSpringParameters();
 template<>
 std::shared_ptr<RSRenderPropertyBase> RSSpringModel<std::shared_ptr<RSRenderPropertyBase>>::CalculateDisplacement(
     double time) const;
+template<>
+float RSSpringModel<float>::GetFinishThreshold() const;
 } // namespace Rosen
 } // namespace OHOS
 

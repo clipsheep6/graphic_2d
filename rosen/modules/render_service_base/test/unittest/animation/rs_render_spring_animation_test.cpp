@@ -223,13 +223,13 @@ HWTEST_F(RSRenderSpringAnimationTest, Attach003, TestSize.Level1)
 }
 
 /**
- * @tc.name: SetZeroThreshold001
- * @tc.desc: Verify funciton SetZeroThreshold
+ * @tc.name: SetLogicalThreshold001
+ * @tc.desc: Verify funciton SetLogicalThreshold
  * @tc.type:FUNC
  */
-HWTEST_F(RSRenderSpringAnimationTest, SetZeroThreshold001, TestSize.Level1)
+HWTEST_F(RSRenderSpringAnimationTest, SetLogicalThreshold001, TestSize.Level1)
 {
-    GTEST_LOG_(INFO) << "RSRenderSpringAnimationTest SetZeroThreshold001 start";
+    GTEST_LOG_(INFO) << "RSRenderSpringAnimationTest SetLogicalThreshold001 start";
     auto property = std::make_shared<RSRenderAnimatableProperty<float>>(0.0f);
     auto property1 = std::make_shared<RSRenderAnimatableProperty<float>>(0.0f);
     auto property2 = std::make_shared<RSRenderAnimatableProperty<float>>(1.0f);
@@ -237,9 +237,9 @@ HWTEST_F(RSRenderSpringAnimationTest, SetZeroThreshold001, TestSize.Level1)
     auto renderSpringAnimation =
         std::make_shared<RSRenderSpringAnimation>(ANIMATION_ID, PROPERTY_ID, property, property1, property2);
     auto renderNode = std::make_shared<RSCanvasRenderNode>(ANIMATION_ID);
-    float zeroThreshold = 0.5f;
-    renderSpringAnimation->SetZeroThreshold(zeroThreshold);
-    GTEST_LOG_(INFO) << "RSRenderSpringAnimationTest SetZeroThreshold001 end";
+    float logicalThreshold = 0.5f;
+    renderSpringAnimation->SetLogicalThreshold(logicalThreshold);
+    GTEST_LOG_(INFO) << "RSRenderSpringAnimationTest SetLogicalThreshold001 end";
 }
 
 /**

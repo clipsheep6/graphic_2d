@@ -32,7 +32,7 @@ public:
 
     void SetSpringParameters(
         float response, float dampingRatio, float normalizedInitialVelocity, float minimumAmplitudeRatio = 0.00025f);
-    void SetZeroThreshold(float zeroThreshold);
+    void SetLogicalThreshold(float logicalThreshold);
 
     ~RSRenderInterpolatingSpringAnimation() override = default;
 
@@ -61,7 +61,7 @@ private:
     bool needLogicallyFinishCallback_ = false;
 
     // used to determine whether the animation is near finish
-    float zeroThreshold_ = 0.0f;
+    float logicalThreshold_ = 0.0f;
 
     friend class RSInterpolatingSpringAnimation;
 };

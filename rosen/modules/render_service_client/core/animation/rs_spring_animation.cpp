@@ -57,14 +57,14 @@ const RSAnimationTimingCurve& RSSpringAnimation::GetTimingCurve() const
     return timingCurve_;
 }
 
-void RSSpringAnimation::SetZeroThreshold(const float zeroThreshold)
+void RSSpringAnimation::SetLogicalThreshold(const float logicalThreshold)
 {
     constexpr float ZERO = 0.0f;
-    if (zeroThreshold_ < ZERO) {
-        ROSEN_LOGE("RSSpringAnimation::SetZeroThreshold: invalid threshold.");
+    if (logicalThreshold_ < ZERO) {
+        ROSEN_LOGE("RSSpringAnimation::SetLogicalThreshold: invalid threshold.");
         return;
     }
-    zeroThreshold_ = zeroThreshold;
+    logicalThreshold_ = logicalThreshold;
     isLogicallyFinishCallback_ = true;
 }
 
@@ -79,10 +79,13 @@ void RSSpringAnimation::OnStart()
     animation->SetSpringParameters(timingCurve_.response_, timingCurve_.dampingRatio_, timingCurve_.blendDuration_);
     animation->SetAdditive(GetAdditive());
     if (GetIsLogicallyFinishCallback()) {
-        animation->SetZeroThreshold(zeroThreshold_);
+        animation->SetLogicalThreshold(logicalThreshold_);
     }
     if (initialVelocity_) {
         animation->SetInitialVelocity(initialVelocity_->GetRenderProperty());
+    }
+    if (finishThreshold_) {
+        animation->SetFinishThreshold(finishThreshold_->GetRenderProperty());
     }
     if (isCustom_) {
         animation->AttachRenderProperty(property_->GetRenderProperty());
@@ -141,6 +144,15 @@ void RSSpringAnimation::SetInitialVelocity(const std::shared_ptr<RSPropertyBase>
         ROSEN_LOGE("RSSpringAnimation::SetInitialVelocity: velocity is a nullptr.");
     }
     initialVelocity_ = velocity;
+}
+
+void RSSpringAnimation::SetFinishThreshold(const std::shared_ptr<RSPropertyBase>& finishThreshold)
+{
+    if (!finishThreshold) {
+        ROSEN_LOGE("RSSpringAnimation::SetFinishThreshold: finishThreshold is a nullptr.");
+        return;
+    }
+    finishThreshold_ = finishThreshold;
 }
 } // namespace Rosen
 } // namespace OHOS

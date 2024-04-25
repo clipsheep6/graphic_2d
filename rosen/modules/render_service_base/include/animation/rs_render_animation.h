@@ -167,6 +167,8 @@ public:
 
     const std::shared_ptr<RSRenderPropertyBase> GetAnimateVelocity() const;
 
+    virtual void SetFinishThreshold(const std::shared_ptr<RSRenderPropertyBase>& finishThreshold) {};
+
     static bool isCalcAnimateVelocity_;
 
 protected:

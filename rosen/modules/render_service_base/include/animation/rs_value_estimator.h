@@ -311,6 +311,7 @@ public:
         return 0.0f;
     }
     virtual void UpdateSpringParameters() {}
+    virtual void SetFinishThreshold(const std::shared_ptr<RSRenderPropertyBase>& finishThreshold) {}
 };
 
 template<typename T>
@@ -455,6 +456,14 @@ public:
     {
         if (springModel_) {
             springModel_->CalculateSpringParameters();
+        }
+    }
+
+    void SetFinishThreshold(const std::shared_ptr<RSRenderPropertyBase>& finishThreshold) override
+    {
+        auto finishThresholdValue = std::static_pointer_cast<RSRenderAnimatableProperty<T>>(finishThreshold);
+        if (finishThresholdValue && springModel_) {
+            springModel_->SetFinishThreshold(finishThresholdValue->Get());
         }
     }
 

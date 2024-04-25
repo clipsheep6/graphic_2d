@@ -27,6 +27,7 @@
 #include "pipeline/parallel_render/rs_render_task.h"
 #include "render_context/render_context.h"
 #include "event_handler.h"
+#include "pipeline/rs_uni_render_visitor.h"
 
 namespace OHOS::Rosen {
 class RSSubThread {
@@ -39,7 +40,10 @@ public:
     void PostSyncTask(const std::function<void()>& task);
     void RemoveTask(const std::string& name);
     void RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask);
+    void RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask, const std::shared_ptr<RSUniRenderVisitor>& visitor);
+#ifdef RS_PARALLEL
     void DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
+#endif
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
     void ResetGrContext();
@@ -47,6 +51,11 @@ public:
     void DumpMem(DfxString& log);
     MemoryGraphic CountSubMem(int pid);
     float GetAppGpuMemoryInMB();
+#ifdef RS_PARALLEL
+    uint32_t getThreadIndex()
+    {
+        return threadIndex_;
+    }
     unsigned int GetDoingCacheProcessNum()
     {
         return doingCacheProcessNum.load();
@@ -55,7 +64,7 @@ public:
     {
         doingCacheProcessNum++;
     }
-
+#endif
 private:
     void CreateShareEglContext();
     void DestroyShareEglContext();
@@ -71,7 +80,9 @@ private:
     std::shared_ptr<Drawing::GPUContext> grContext_ = nullptr;
     std::mutex mutex_;
     std::queue<std::shared_ptr<Drawing::Surface>> tmpSurfaces_;
+#ifdef RS_PARALLEL
     std::atomic<unsigned int> doingCacheProcessNum = 0;
+#endif
 };
 }
 #endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_H

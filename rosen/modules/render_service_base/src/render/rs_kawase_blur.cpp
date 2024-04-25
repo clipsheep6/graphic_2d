@@ -136,6 +136,24 @@ void KawaseBlurFilter::setupBlurEffectAdvancedFilter()
     blurEffectAF_ = std::move(blurEffectAF);
 }
 
+void KawaseBlurFilter::SetupSimpleFilter()
+{
+    std::string simpleShader(
+        R"(
+        uniform shader imageInput;
+        half4 main(float2 xy) {
+            return imageInput.eval(xy);
+        }
+    )");
+ 
+    auto simpleFilter = Drawing::RuntimeEffect::CreateForShader(simpleShader);
+    if (!simpleFilter) {
+        ROSEN_LOGE("KawaseBlurFilter::RuntimeShader Failed to create simple filter");
+        return;
+    }
+    simpleFilter_ = std::move(simpleFilter);
+}
+
 static void getNormalizedOffset(SkV2* offsets, const uint32_t offsetCount, const OffsetInfo& offsetInfo)
 {
     if (offsets == nullptr || offsetCount != BLUR_SAMPLE_COUNT) {
@@ -213,6 +231,19 @@ void KawaseBlurFilter::OutputOriginalImage(Drawing::Canvas& canvas, const std::s
     canvas.DetachBrush();
 }
 
+std::shared_ptr<Drawing::ShaderEffect> KawaseBlurFilter::ApplySimpleFilter(Drawing::Canvas& canvas,
+    const std::shared_ptr<Drawing::Image>& input, const Drawing::Matrix& blurMatrix,
+    const Drawing::ImageInfo& scaledInfo, const Drawing::SamplingOptions& linear) const
+{
+    Drawing::RuntimeShaderBuilder simpleBlurBuilder(simpleFilter_);
+    simpleBlurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input, Drawing::TileMode::CLAMP,
+        Drawing::TileMode::CLAMP, linear, blurMatrix));
+    std::shared_ptr<Drawing::Image> tmpSimpleBlur(simpleBlurBuilder.MakeImage(
+        canvas.GetGPUContext().get(), nullptr, scaledInfo, false));
+    return Drawing::ShaderEffect::CreateImageShader(*tmpSimpleBlur, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
+        linear, Drawing::Matrix());
+}
+
 bool KawaseBlurFilter::ApplyKawaseBlur(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
     const KawaseParameter& param)
 {
@@ -267,8 +298,12 @@ std::shared_ptr<Drawing::Image> KawaseBlurFilter::ExecutePingPongBlur(Drawing::C
     // Advanced Filter: check is AF usable only the first time
     bool isUsingAF = IS_ADVANCED_FILTER_USABLE_CHECK_ONCE && blurEffectAF_ != nullptr;
     Drawing::RuntimeShaderBuilder blurBuilder(isUsingAF ? blurEffectAF_ : blurEffect_);
-    blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input, Drawing::TileMode::CLAMP,
-        Drawing::TileMode::CLAMP, linear, blurMatrix));
+    if (RSSystemProperties::GetBlurExtraFilterEnabled() && simpleFilter_) {
+        blurBuilder.SetChild("imageInput", ApplySimpleFilter(canvas, input, blurMatrix, scaledInfo, linear));
+    } else {
+        blurBuilder.SetChild("imageInput", Drawing::ShaderEffect::CreateImageShader(*input, Drawing::TileMode::CLAMP,
+            Drawing::TileMode::CLAMP, linear, blurMatrix));
+    }
 
     if (isUsingAF) {
         SkV2 firstPassOffsets[BLUR_SAMPLE_COUNT];

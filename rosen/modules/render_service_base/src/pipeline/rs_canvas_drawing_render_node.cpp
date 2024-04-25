@@ -198,7 +198,7 @@ void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)
     auto stagingCanvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(stagingRenderParams_.get());
     if (stagingCanvasDrawingParams) {
         stagingCanvasDrawingParams->SetNeedProcess(needProcess);
-        if(stagingRenderParams_->NeedSync()) {
+        if (stagingRenderParams_->NeedSync()) {
             AddToPendingSyncList();
         }
     }

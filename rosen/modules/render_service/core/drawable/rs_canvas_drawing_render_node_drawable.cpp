@@ -202,7 +202,8 @@ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
         if (canvasDrawingNode == nullptr) {
             return;
         }
-        auto canvasDrawingParams = static_cast<RSCanvasDrawingRenderParams*>(canvasDrawingNode->GetRenderParams().get());
+        auto canvasDrawingParams = 
+            static_cast<RSCanvasDrawingRenderParams*>(canvasDrawingNode->GetRenderParams().get());
         DrawContent(*canvas_, rect);
         canvasDrawingParams->SetNeedProcess(false);
     };

@@ -36,6 +36,10 @@ TextRect::TextRect(Drawing::RectF rec, TextDirection dir)
     direction = dir;
 }
 
+TextRect::TextRect()
+{
+}
+
 IndexAndAffinity::IndexAndAffinity(size_t charIndex, Affinity charAffinity)
 {
     index = charIndex;

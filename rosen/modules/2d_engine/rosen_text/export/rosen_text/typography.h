@@ -50,6 +50,7 @@ struct RS_EXPORT TextRect {
     Drawing::RectF rect;
     TextDirection direction;
     TextRect(Drawing::RectF rec, TextDirection dir);
+    TextRect();
 };
 
 enum class Affinity {

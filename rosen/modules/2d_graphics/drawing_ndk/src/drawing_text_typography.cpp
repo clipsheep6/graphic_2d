@@ -35,6 +35,7 @@
 #include <vector>
 #include <string>
 #include <unicode/brkiter.h>
+#include <shared_mutex>
 
 #ifndef USE_GRAPHIC_TEXT_GINE
 using namespace rosen;
@@ -54,6 +55,27 @@ __attribute__((constructor)) void init()
 #endif
 
 static std::shared_ptr<OHOS::Rosen::Drawing::ObjectMgr> objectMgr = OHOS::Rosen::Drawing::ObjectMgr::GetInstance();
+static std::map<int64_t, size_t> arrSizeMgr;
+static std::shared_mutex arrSizeMgrMutex;
+
+static size_t GetArrSizeFromMgr(int64_t arrPtr)
+{
+    std::shared_lock<std::shared_mutex> lock(arrSizeMgrMutex);
+    auto itr = arrSizeMgr.find(arrPtr);
+    return itr != arrSizeMgr.end() ? itr->second : 0;
+}
+
+static void MgrSetArrSize(int64_t arrPtr, size_t arrSize)
+{
+    std::unique_lock<std::shared_mutex> lock(arrSizeMgrMutex);
+    arrSizeMgr[arrPtr] = arrSize;
+}
+
+static void MgrRemoveSize(int64_t arrPtr)
+{
+    std::unique_lock<std::shared_mutex> lock(arrSizeMgrMutex);
+    arrSizeMgr.erase(arrPtr);
+}
 
 template<typename T1, typename T2>
 inline T1* ConvertToOriginalText(T2* ptr)
@@ -561,123 +583,173 @@ bool OH_Drawing_TypographyDidExceedMaxLines(OH_Drawing_Typography* typography)
 OH_Drawing_TextBox* OH_Drawing_TypographyGetRectsForRange(OH_Drawing_Typography* typography,
     size_t start, size_t end, OH_Drawing_RectHeightStyle heightStyle, OH_Drawing_RectWidthStyle widthStyle)
 {
+    Typography* innerTypography = ConvertToOriginalText<Typography>(typography);
+    if (!innerTypography) {
+        return nullptr;
+    }
+
 #ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* originalVector =
-        new std::vector<TypographyProperties::TextBox>;
     auto originalRectHeightStyle = ConvertToOriginalText<TypographyProperties::RectHeightStyle>(&heightStyle);
     auto originalRectWidthStyle = ConvertToOriginalText<TypographyProperties::RectWidthStyle>(&widthStyle);
-    *originalVector = ConvertToOriginalText<Typography>(typography)->GetRectsForRange(start, end,
+    auto textRects = innerTypography->GetRectsForRange(start, end,
         *originalRectHeightStyle, *originalRectWidthStyle);
+    const size_t textRectSize = textRects.size();
+    if (!textRectSize) {
+        return nullptr;
+    }
+    TypographyProperties::TextBox* textRectArr = new TypographyProperties::TextBox[textRectSize];
 #else
-    std::vector<TextRect>* originalVector = new std::vector<TextRect>;
     auto originalRectHeightStyle = ConvertToOriginalText<TextRectHeightStyle>(&heightStyle);
     auto originalRectWidthStyle = ConvertToOriginalText<TextRectWidthStyle>(&widthStyle);
-    *originalVector = ConvertToOriginalText<Typography>(typography)->GetTextRectsByBoundary(start, end,
+    auto textRects = innerTypography->GetTextRectsByBoundary(start, end,
         *originalRectHeightStyle, *originalRectWidthStyle);
+    const size_t textRectSize = textRects.size();
+    if (!textRectSize) {
+        return nullptr;
+    }
+    TextRect* textRectArr = new TextRect[textRectSize];
 #endif
-    return (OH_Drawing_TextBox*)originalVector;
+
+    if (!textRectArr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < textRectSize; ++i) {
+        textRectArr[i] = textRects[i];
+    }
+    MgrSetArrSize(int64_t(textRectArr), textRectSize);
+    return (OH_Drawing_TextBox*)textRectArr;
 }
 
 OH_Drawing_TextBox* OH_Drawing_TypographyGetRectsForPlaceholders(OH_Drawing_Typography* typography)
 {
+    Typography* innerTypography = ConvertToOriginalText<Typography>(typography);
+    if (!innerTypography) {
+        return nullptr;
+    }
+
 #ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* originalVector =
-        new std::vector<TypographyProperties::TextBox>;
-    *originalVector = ConvertToOriginalText<Typography>(typography)->GetRectsForPlaceholders();
+    auto textRects = innerTypography->GetRectsForPlaceholders();
+    const size_t textRectSize = textRects.size();
+    if (!textRectSize) {
+        return nullptr;
+    }
+    TypographyProperties::TextBox* textRectArr = new TypographyProperties::TextBox[textRectSize];
 #else
-    std::vector<TextRect>* originalVector = new std::vector<TextRect>;
-    *originalVector = ConvertToOriginalText<Typography>(typography)->GetTextRectsOfPlaceholders();
+    auto textRects = innerTypography->GetTextRectsOfPlaceholders();
+    const size_t textRectSize = textRects.size();
+    if (!textRectSize) {
+        return nullptr;
+    }
+    TextRect* textRectArr = new TextRect[textRectSize];
 #endif
-    return (OH_Drawing_TextBox*)originalVector;
+
+    if (!textRectArr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < textRectSize; ++i) {
+        textRectArr[i] = textRects[i];
+    }
+    MgrSetArrSize(int64_t(textRectArr), textRectSize);
+    return (OH_Drawing_TextBox*)textRectArr;
 }
 
-float OH_Drawing_GetLeftFromTextBox(OH_Drawing_TextBox* textbox, int index)
+float OH_Drawing_GetLeftFromTextBox(OH_Drawing_TextBox* textBox, int index)
 {
 #ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* textboxVector =
-        ConvertToOriginalText<std::vector<TypographyProperties::TextBox>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect_.left_;
-    } else {
+    TypographyProperties::TextBox* textRectArr = ConvertToOriginalText<TypographyProperties::TextBox>(textBox);
+    if (!textRectArr) {
         return 0.0;
+    }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect_.left_;
     }
 #else
-    std::vector<TextRect>* textboxVector = ConvertToOriginalText<std::vector<TextRect>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect.left_;
-    } else {
+    TextRect* textRectArr = ConvertToOriginalText<TextRect>(textBox);
+    if (!textRectArr) {
         return 0.0;
     }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect.left_;
+    }
 #endif
+    return 0.0;
 }
 
-float OH_Drawing_GetRightFromTextBox(OH_Drawing_TextBox* textbox, int index)
+float OH_Drawing_GetRightFromTextBox(OH_Drawing_TextBox* textBox, int index)
 {
 #ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* textboxVector =
-        ConvertToOriginalText<std::vector<TypographyProperties::TextBox>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect_.right_;
-    } else {
+    TypographyProperties::TextBox* textRectArr = ConvertToOriginalText<TypographyProperties::TextBox>(textBox);
+    if (!textRectArr) {
         return 0.0;
+    }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect_.right_;
     }
 #else
-    std::vector<TextRect>* textboxVector = ConvertToOriginalText<std::vector<TextRect>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect.right_;
-    } else {
+    TextRect* textRectArr = ConvertToOriginalText<TextRect>(textBox);
+    if (!textRectArr) {
         return 0.0;
     }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect.right_;
+    }
 #endif
+    return 0.0;
 }
 
-float OH_Drawing_GetTopFromTextBox(OH_Drawing_TextBox* textbox, int index)
+float OH_Drawing_GetTopFromTextBox(OH_Drawing_TextBox* textBox, int index)
 {
 #ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* textboxVector =
-        ConvertToOriginalText<std::vector<TypographyProperties::TextBox>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect_.top_;
-    } else {
+    TypographyProperties::TextBox* textRectArr = ConvertToOriginalText<TypographyProperties::TextBox>(textBox);
+    if (!textRectArr) {
         return 0.0;
+    }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect_.top_;
     }
 #else
-    std::vector<TextRect>* textboxVector = ConvertToOriginalText<std::vector<TextRect>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect.top_;
-    } else {
+    TextRect* textRectArr = ConvertToOriginalText<TextRect>(textBox);
+    if (!textRectArr) {
         return 0.0;
     }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect.top_;
+    }
 #endif
+    return 0.0;
 }
 
-float OH_Drawing_GetBottomFromTextBox(OH_Drawing_TextBox* textbox, int index)
+float OH_Drawing_GetBottomFromTextBox(OH_Drawing_TextBox* textBox, int index)
 {
 #ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* textboxVector =
-        ConvertToOriginalText<std::vector<TypographyProperties::TextBox>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect_.bottom_;
-    } else {
+    TypographyProperties::TextBox* textRectArr = ConvertToOriginalText<TypographyProperties::TextBox>(textBox);
+    if (!textRectArr) {
         return 0.0;
+    }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect_.bottom_;
     }
 #else
-    std::vector<TextRect>* textboxVector = ConvertToOriginalText<std::vector<TextRect>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        return (*textboxVector)[index].rect.bottom_;
-    } else {
+    TextRect* textRectArr = ConvertToOriginalText<TextRect>(textBox);
+    if (!textRectArr) {
         return 0.0;
     }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        return textRectArr[index].rect.bottom_;
+    }
 #endif
+    return 0.0;
 }
 
-int OH_Drawing_GetTextDirectionFromTextBox(OH_Drawing_TextBox* textbox, int index)
+int OH_Drawing_GetTextDirectionFromTextBox(OH_Drawing_TextBox* textBox, int index)
 {
 #ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* textboxVector =
-        ConvertToOriginalText<std::vector<TypographyProperties::TextBox>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        TextDirection textDirection = (*textboxVector)[index].direction_;
+    TypographyProperties::TextBox* textRectArr = ConvertToOriginalText<TypographyProperties::TextBox>(textBox);
+    if (!textRectArr) {
+        return 0;
+    }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        TextDirection textDirection = textRectArr[index].direction_;
         switch (textDirection) {
             case TextDirection::RTL: {
                 return 0;
@@ -689,13 +761,14 @@ int OH_Drawing_GetTextDirectionFromTextBox(OH_Drawing_TextBox* textbox, int inde
                 return 0;
             }
         }
-    } else {
-        return 0;
     }
 #else
-    std::vector<TextRect>* textboxVector = ConvertToOriginalText<std::vector<TextRect>>(textbox);
-    if (index >= 0 && index < static_cast<int>(textboxVector->size())) {
-        TextDirection textDirection = (*textboxVector)[index].direction;
+    TextRect* textRectArr = ConvertToOriginalText<TextRect>(textBox);
+    if (!textRectArr) {
+        return 0;
+    }
+    if (index >= 0 && index < static_cast<int>(GetArrSizeFromMgr(int64_t(textRectArr)))) {
+        TextDirection textDirection = textRectArr[index].direction;
         switch (textDirection) {
             case TextDirection::RTL: {
                 return 0;
@@ -707,22 +780,24 @@ int OH_Drawing_GetTextDirectionFromTextBox(OH_Drawing_TextBox* textbox, int inde
                 return 0;
             }
         }
+    }
+#endif
+    return 0;
+}
+
+size_t OH_Drawing_GetSizeOfTextBox(OH_Drawing_TextBox* textBox)
+{
+#ifndef USE_GRAPHIC_TEXT_GINE
+    TypographyProperties::TextBox* textRectArr = ConvertToOriginalText<TypographyProperties::TextBox>(textBox);
+#else
+    TextRect* textRectArr = ConvertToOriginalText<TextRect>(textBox);
+#endif
+
+    if (textRectArr) {
+        return GetArrSizeFromMgr(int64_t(textRectArr));
     } else {
         return 0;
     }
-#endif
-}
-
-size_t OH_Drawing_GetSizeOfTextBox(OH_Drawing_TextBox* textbox)
-{
-#ifndef USE_GRAPHIC_TEXT_GINE
-    std::vector<TypographyProperties::TextBox>* textboxVector =
-        ConvertToOriginalText<std::vector<TypographyProperties::TextBox>>(textbox);
-    return textboxVector->size();
-#else
-    std::vector<TextRect>* textboxVector = ConvertToOriginalText<std::vector<TextRect>>(textbox);
-    return textboxVector->size();
-#endif
 }
 
 OH_Drawing_PositionAndAffinity* OH_Drawing_TypographyGetGlyphPositionAtCoordinate(OH_Drawing_Typography* typography,
@@ -1357,12 +1432,19 @@ OH_Drawing_LineMetrics* OH_Drawing_TypographyGetLineMetrics(OH_Drawing_Typograph
     if (typography == nullptr) {
         return nullptr;
     }
-    std::vector<LineMetrics>* lineMetrics = new std::vector<LineMetrics>;
-    if (lineMetrics == nullptr) {
+    auto lineMetrics = ConvertToOriginalText<Typography>(typography)->GetLineMetrics();
+    if (lineMetrics.size() == 0) {
         return nullptr;
     }
-    *lineMetrics = ConvertToOriginalText<Typography>(typography)->GetLineMetrics();
-    return (OH_Drawing_LineMetrics*)lineMetrics;
+    LineMetrics* lineMetricsArr = new LineMetrics[lineMetrics.size()];
+    if (lineMetricsArr == nullptr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < lineMetrics.size(); ++i) {
+        lineMetricsArr[i] = lineMetrics[i];
+    }
+    MgrSetArrSize(int64_t(lineMetricsArr), lineMetrics.size());
+    return (OH_Drawing_LineMetrics*)lineMetricsArr;
 }
 
 size_t OH_Drawing_LineMetricsGetSize(OH_Drawing_LineMetrics* lineMetrics)
@@ -1370,14 +1452,14 @@ size_t OH_Drawing_LineMetricsGetSize(OH_Drawing_LineMetrics* lineMetrics)
     if (lineMetrics == nullptr) {
         return 0;
     }
-    std::vector<LineMetrics>* innerLineMetrics = ConvertToOriginalText<std::vector<LineMetrics>>(lineMetrics);
-    return innerLineMetrics->size();
+    return GetArrSizeFromMgr(int64_t(lineMetrics));
 }
 
 void OH_Drawing_DestroyLineMetrics(OH_Drawing_LineMetrics* lineMetrics)
 {
     if (lineMetrics) {
-        delete ConvertToOriginalText<std::vector<LineMetrics>>(lineMetrics);
+        MgrRemoveSize(int64_t(lineMetrics));
+        delete[] lineMetrics;
         lineMetrics = nullptr;
     }
 }
@@ -1443,12 +1525,24 @@ int OH_Drawing_TextStyleGetShadowCount(OH_Drawing_TextStyle* style)
 
 OH_Drawing_TextShadow* OH_Drawing_TextStyleGetShadows(OH_Drawing_TextStyle* style)
 {
-    if (style) {
-        std::vector<TextShadow>* originalShadows = new std::vector<TextShadow>;
-        *originalShadows = ConvertToOriginalText<TextStyle>(style)->shadows;
-        return (OH_Drawing_TextShadow*)originalShadows;
+    auto innerTextStyle = ConvertToOriginalText<TextStyle>(style);
+    if (!innerTextStyle) {
+        return nullptr;
     }
-    return nullptr;
+    auto shadows = innerTextStyle->shadows;
+    const size_t shadowSize = shadows.size();
+    if (!shadowSize) {
+        return nullptr;
+    }
+    TextShadow* textShadowArr = new TextShadow[shadowSize];
+    if (!textShadowArr) {
+        return nullptr;
+    }
+    for (size_t i = 0; i < shadowSize; ++i) {
+        textShadowArr[i] = shadows[i];
+    }
+    MgrSetArrSize(int64_t(textShadowArr), shadowSize);
+    return (OH_Drawing_TextShadow*)textShadowArr;
 }
 
 void OH_Drawing_TextStyleAddShadow(OH_Drawing_TextStyle* style, OH_Drawing_TextShadow* shadow)
@@ -1479,11 +1573,14 @@ OH_Drawing_TextShadow* OH_Drawing_TextStyleGetShadowWithIndex(OH_Drawing_TextSty
 
 void OH_Drawing_DestroyTextShadows(OH_Drawing_TextShadow* shadow)
 {
-    if (shadow == nullptr) {
+    TextShadow* textShadowArr = ConvertToOriginalText<TextShadow>(shadow);
+    if (!textShadowArr) {
         return;
     }
-    delete ConvertToOriginalText<std::vector<TextShadow>>(shadow);
-    shadow = NULL;
+
+    MgrRemoveSize(int64_t(textShadowArr));
+    delete[] textShadowArr;
+    textShadowArr = nullptr;
 }
 
 void OH_Drawing_SetTypographyTextFontWeight(OH_Drawing_TypographyStyle* style, int weight)
@@ -3402,4 +3499,24 @@ bool OH_Drawing_TypographyStyleIsHintEnabled(OH_Drawing_TypographyStyle* style)
         return false;
     }
     return typographyStyle->hintingIsOn;
+}
+
+void OH_Drawing_TypographyDestroyTextBox(OH_Drawing_TextBox* textBox)
+{
+    if (!textBox) {
+        return;
+    }
+
+#ifndef USE_GRAPHIC_TEXT_GINE
+    TypographyProperties::TextBox* textRectArr = ConvertToOriginalText<TypographyProperties::TextBox>(textBox);
+#else
+    TextRect* textRectArr = ConvertToOriginalText<TextRect>(textBox);
+#endif
+
+    if (!textRectArr) {
+        return;
+    }
+    MgrRemoveSize(int64_t(textRectArr));
+    delete[] textRectArr;
+    textRectArr = nullptr;
 }

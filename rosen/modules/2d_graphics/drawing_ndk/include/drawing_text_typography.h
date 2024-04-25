@@ -2649,6 +2649,16 @@ OH_Drawing_TextAlign OH_Drawing_TypographyStyleGetEffectiveAlignment(OH_Drawing_
  */
 bool OH_Drawing_TypographyStyleIsHintEnabled(OH_Drawing_TypographyStyle* style);
 
+/**
+ * @brief Releases the memory occupied by text box.
+ *
+ * @syscap SystemCapability.Graphic.Graphic2D.NativeDrawing
+ * @param OH_Drawing_TextBox Indicates the pointer to a text box object <b>OH_Drawing_TextBox</b>.
+ * @since 12
+ * @version 1.0
+ */
+void OH_Drawing_TypographyDestroyTextBox(OH_Drawing_TextBox*);
+
 #ifdef __cplusplus
 }
 #endif

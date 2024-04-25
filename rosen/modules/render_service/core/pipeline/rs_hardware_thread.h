@@ -39,6 +39,9 @@ public:
     void PostTask(const std::function<void()>& task);
     void PostDelayTask(const std::function<void()>& task, int64_t delayTime);
     void CommitAndReleaseLayers(OutputPtr output, const std::vector<LayerInfoPtr>& layers);
+    void ExecuteCommitAndReleaseLayersTask(OutputPtr output, const std::vector<LayerInfoPtr>& layers,
+                                                         uint32_t rate, uint64_t currTimestamp);
+    void HandleTaskPosting(const RSTaskMessage::RSTask& task, uint64_t currTimestamp);
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)
     {

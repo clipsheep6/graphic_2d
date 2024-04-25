@@ -172,6 +172,75 @@ void RSHardwareThread::ClearRefreshRateCounts(std::string& dumpString)
     RS_LOGD("RSHardwareThread::RefreshRateCounts refresh rate counts info is cleared");
 }
 
+void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vector<LayerInfoPtr>& layers) {
+	if (!handler_) {
+        RS_LOGE("RSHardwareThread::CommitAndReleaseLayers handler is nullptr");
+        return;
+    }
+    uint32_t rate = RSUniRenderThread::Instance().GetPendingScreenRefreshRate();
+    uint64_t currTimestamp = RSUniRenderThread::Instance().GetCurrentTimestamp();
+    auto task = [this, output, layers, rate, currTimestamp]() {
+        ExecuteCommitAndReleaseLayersTask(output, layers, rate, currTimestamp);
+    };
+
+    HandleTaskPosting(task, currTimestamp);
+}
+
+void RSHardwareThread::ExecuteCommitAndReleaseLayersTask(OutputPtr output, const std::vector<LayerInfoPtr>& layers,
+                                                         uint32_t rate, uint64_t currTimestamp) {
+    int64_t startTimeNs = FrameReport::GetInstance().HasGameScene()
+        ? std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count()
+        : 0;
+
+    RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers rate: %d, now: %lu", rate, currTimestamp);
+
+    ExecuteSwitchRefreshRate(rate);
+    PerformSetActiveMode(output, currTimestamp);
+    AddRefreshRateCount();
+    output->SetLayerInfo(layers);
+    if (output->IsDeviceValid()) {
+        hdiBackend_->Repaint(output);
+    }
+    output->ReleaseLayers(releaseFence_);
+    RSMainThread::Instance()->NotifyDisplayNodeBufferReleased();
+    RSUniRenderThread::Instance().NotifyDisplayNodeBufferReleased();
+
+    if (startTimeNs != 0) {
+        int64_t endTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        FrameReport::GetInstance().SetLastSwapBufferTime(endTimeNs - startTimeNs);
+    }
+
+    unExecuteTaskNum_--;
+    if (unExecuteTaskNum_ <= HARDWARE_THREAD_TASK_NUM) {
+        RSMainThread::Instance()->NotifyHardwareThreadCanExecuteTask();
+    }
+}
+
+void RSHardwareThread::HandleTaskPosting(const RSTaskMessage::RSTask& task, uint64_t currTimestamp) {
+    auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
+    if (!hgmCore.GetLtpoEnabled()) {
+        PostTask(task);
+    } else {
+        auto period = CreateVSyncSampler()->GetHardwarePeriod();
+        int64_t pipelineOffset = hgmCore.GetPipelineOffset();
+        uint64_t expectCommitTime = currTimestamp + static_cast<uint64_t>(pipelineOffset) - period;
+        uint64_t currTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        int64_t delayTime = std::round((static_cast<int64_t>(expectCommitTime) - currTime) / 1000000);
+
+        RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers "
+            "expectCommitTime: %lu, currTime: %lu, delayTime: %ld, pipelineOffset: %ld, period: %ld",
+            expectCommitTime, currTime, delayTime, pipelineOffset, period);
+
+        if (period == 0 || delayTime <= 0) {
+            PostTask(task);
+        } else {
+            PostDelayTask(task, delayTime);
+        }
+    }
+}
+
+
+/*
 void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vector<LayerInfoPtr>& layers)
 {
     if (!handler_) {
@@ -240,6 +309,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         }
     }
 }
+*/
 
 void RSHardwareThread::ExecuteSwitchRefreshRate(uint32_t refreshRate)
 {

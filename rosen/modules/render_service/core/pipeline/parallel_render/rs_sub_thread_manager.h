@@ -44,6 +44,11 @@ public:
     void SubmitFilterSubThreadTask();
     void SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
         const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes);
+    void PrepareRenderTasks(const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
+                                        std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList);
+    void AssignTasksToSuperRenderTasks(std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList,
+                            std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
+                            const std::shared_ptr<RSDisplayRenderNode>& node);
     void ResetSubThreadGrContext();
     void CancelReleaseResourceTask();
     void ReleaseTexture();
@@ -79,6 +84,7 @@ private:
     bool needCancelReleaseTextureTask_ = false;
 
     bool isRcdServiceRegister_ = false;
+    bool ifNeedRequestNextVsync = false;
 };
 }
 #endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_MANAGER_H

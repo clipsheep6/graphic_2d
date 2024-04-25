@@ -27,6 +27,7 @@
 #include "pipeline/parallel_render/rs_render_task.h"
 #include "render_context/render_context.h"
 #include "event_handler.h"
+#include "pipeline/rs_uni_render_visitor.h"
 
 namespace OHOS::Rosen {
 class RSSubThread {
@@ -39,6 +40,7 @@ public:
     void PostSyncTask(const std::function<void()>& task);
     void RemoveTask(const std::string& name);
     void RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask);
+    void RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask, const std::shared_ptr<RSUniRenderVisitor>& visitor);
 #ifdef RS_PARALLEL
     void DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
 #endif

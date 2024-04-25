@@ -147,7 +147,7 @@ void RSSymbolAnimation::PopNodeFromReplaceList(uint64_t symbolSpanId)
         std::unordered_map<NodeId,
             OHOS::Rosen::AnimationNodeConfig> invalidNodes = rsNode_->replaceNodesSwapMap[INVALID_STATUS];
         for (const auto& [id, config] : invalidNodes) {
-            if (rsNode_->canvasNodesListMap[symbolSpanId].count(id)>0) {
+            if (rsNode_->canvasNodesListMap[symbolSpanId].count(id) > 0) {
                 rsNode_->canvasNodesListMap[symbolSpanId].erase(id);
             }
         }
@@ -194,7 +194,7 @@ bool RSSymbolAnimation::SetReplaceDisappear(
         }
         auto canvasNode = rsNode_->canvasNodesListMap[symbolAnimationConfig->symbolSpanId][id];
 
-        if (parameters.size() <= symbolNode.animationIndex ||
+        if (parameters.size() <= static_cast<size_t>(symbolNode.animationIndex) ||
             parameters.at(symbolNode.animationIndex).empty()) {
             ROSEN_LOGD("[%{public}s] invalid parameter \n", __func__);
             continue;
@@ -247,7 +247,8 @@ bool RSSymbolAnimation::SetReplaceAppear(
         if (!isStartAnimation || !res || (symbolNode.animationIndex < 0)) {
             continue;
         }
-        if (parameters.size() <= symbolNode.animationIndex || parameters[symbolNode.animationIndex].empty()) {
+        if (parameters.size() <= static_cast<size_t>(symbolNode.animationIndex) ||
+            parameters[symbolNode.animationIndex].empty()) {
             ROSEN_LOGD("[%{public}s] invalid parameter \n", __func__);
             continue;
         }
@@ -369,7 +370,8 @@ bool RSSymbolAnimation::SetPublicAnimation(
             continue;
         }
 
-        if (parameters.size() <= symbolNode.animationIndex || parameters[symbolNode.animationIndex].empty()) {
+        if (parameters.size() <= static_cast<size_t>(symbolNode.animationIndex) ||
+            parameters[symbolNode.animationIndex].empty()) {
             ROSEN_LOGD("[%{public}s] invalid parameter \n", __func__);
             continue;
         }
@@ -429,7 +431,7 @@ void RSSymbolAnimation::SpliceAnimation(const std::shared_ptr<RSNode>& rsNode,
 void RSSymbolAnimation::BounceAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2; // the count of atomizated animations
+    size_t animationStageNum = 2; // the count of atomizated animations
     if (rsNode == nullptr || parameters.empty() || parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -444,7 +446,7 @@ void RSSymbolAnimation::BounceAnimation(
 void RSSymbolAnimation::AppearAnimation(
     const std::shared_ptr<RSNode>& rsNode, std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int animationStageNum = 2; // the count of atomizated animations
+    size_t animationStageNum = 2; // the count of atomizated animations
     if (rsNode == nullptr || parameters.empty() || parameters.size() < animationStageNum) {
         ROSEN_LOGD("[%{public}s] : invalid input\n", __func__);
         return;
@@ -525,7 +527,8 @@ bool RSSymbolAnimation::GetScaleUnitAnimationParas(
         return false;
     }
 
-    if (scaleProperties[SCALE_PROP_X].size() != PROPERTIES || scaleProperties[SCALE_PROP_Y].size() != PROPERTIES) {
+    if (scaleProperties[SCALE_PROP_X].size() != static_cast<size_t>(PROPERTIES) ||
+        scaleProperties[SCALE_PROP_Y].size() != static_cast<size_t>(PROPERTIES)) {
         ROSEN_LOGD("[%{public}s] scaleProperties have wrong number \n", __func__);
         return false;
     }
@@ -538,7 +541,7 @@ bool RSSymbolAnimation::GetScaleUnitAnimationParas(
 bool RSSymbolAnimation::SetScaleUnitAnimation(const std::shared_ptr<RSNode>& rsNode,
     std::vector<Drawing::DrawingPiecewiseParameter>& parameters)
 {
-    int validSize = 2; // 2 means this animation type has two animation stages
+    size_t validSize = 2; // 2 means this animation type has two animation stages
     if (rsNode_ == nullptr || parameters.size() != validSize) {
         ROSEN_LOGD("HmSymbol SetScaleUnitAnimation::getNode or get parameters:failed");
         return false;
@@ -669,7 +672,7 @@ bool RSSymbolAnimation::GetKeyframeAlphaAnimationParas(
         }
         totalDuration = oneGroupParas[i].duration + totalDuration + interval;
         if (!SymbolAnimation::ElementInMap(ALPHA_PROP, oneGroupParas[i].properties) ||
-            oneGroupParas[i].properties[ALPHA_PROP].size() != PROPERTIES) {
+            oneGroupParas[i].properties[ALPHA_PROP].size() != static_cast<size_t>(PROPERTIES)) {
             return false;
         }
         // the value of the key frame needs
@@ -757,7 +760,7 @@ void RSSymbolAnimation::ScaleAnimationBase(const std::shared_ptr<RSNode>& rsNode
         ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
         return;
     }
-    int validSize = 2;
+    size_t validSize = 2;
     if (scaleParameter.properties.count("sx") <= 0 || scaleParameter.properties.count("sy") <= 0 ||
         scaleParameter.properties["sx"].size() < validSize || scaleParameter.properties["sx"].size() < validSize) {
         ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
@@ -807,7 +810,7 @@ void RSSymbolAnimation::AlphaAnimationBase(const std::shared_ptr<RSNode>& rsNode
         ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
         return;
     }
-    int validSize = 2;
+    size_t validSize = 2;
     if (alphaParameter.properties.count("alpha") <= 0 || alphaParameter.properties["alpha"].size() < validSize) {
         ROSEN_LOGD("[%{public}s] : invalid input \n", __func__);
         return;

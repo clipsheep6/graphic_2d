@@ -110,16 +110,17 @@ xmlNodePtr XMLReader::ReadNode(std::vector<std::string> attribute)
 xmlChar* XMLReader::Read(std::vector<std::string> attribute)
 {
     const int attrSizeMin = 2;
-    if (attribute.size() < attrSizeMin) {
+    int size = static_cast<int>(attribute.size());
+    if (size < attrSizeMin) {
         RS_LOGE("[%{public}s] attribute size less than two! \n", __func__);
         return nullptr;
     }
     std::vector<std::string> nodeIndex(attribute.begin(), attribute.end() - 1);
     auto lastNode = ReadNode(nodeIndex);
     if (lastNode != nullptr) {
-        return xmlGetProp(lastNode, BAD_CAST(attribute[attribute.size() - 1].c_str()));
+        return xmlGetProp(lastNode, BAD_CAST(attribute[size - 1].c_str()));
     }
-    RS_LOGE("[%{public}s] can not found attribute %{public}s! \n", __func__, attribute[attribute.size() - 1].c_str());
+    RS_LOGE("[%{public}s] can not found attribute %{public}s! \n", __func__, attribute[size - 1].c_str());
     return nullptr;
 }
 

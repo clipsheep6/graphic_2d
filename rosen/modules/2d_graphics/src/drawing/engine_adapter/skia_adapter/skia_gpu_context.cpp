@@ -83,7 +83,7 @@ bool SkiaGPUContext::BuildFromGL(const GPUContextOptions& options)
         skiaPersistentCache_ = std::make_shared<SkiaPersistentCache>(options.GetPersistentCache());
     }
 
-    InitSkExecutor();
+    //InitSkExecutor();
     GrContextOptions grOptions;
     grOptions.fGpuPathRenderers &= ~GpuPathRenderers::kCoverageCounting;
     // fix svg antialiasing bug
@@ -92,7 +92,7 @@ bool SkiaGPUContext::BuildFromGL(const GPUContextOptions& options)
     grOptions.fDisableDistanceFieldPaths = true;
     grOptions.fAllowPathMaskCaching = options.GetAllowPathMaskCaching();
     grOptions.fPersistentCache = skiaPersistentCache_.get();
-    grOptions.fExecutor = threadPool.get();
+    //grOptions.fExecutor = threadPool.get();
 #ifdef NEW_SKIA
     grContext_ = GrDirectContext::MakeGL(std::move(glInterface), grOptions);
 #else

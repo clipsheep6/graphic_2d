@@ -339,7 +339,7 @@ void RSUniRenderVisitor::UpdateSubTreeInCache(const std::shared_ptr<RSRenderNode
             UpdateForegroundFilterCacheWithDirty(*child, *curSurfaceDirtyManager_);
             if (curSurfaceNode_ && curSurfaceNode_->GetId() == child->GetInstanceRootNodeId()) {
                 curSurfaceNode_->UpdateChildrenFilterRects(child, child->GetOldDirtyInSurface(),
-                    child->IsBackgroundFilterCacheValid());
+                    child->IsFilterCacheValid());
             }
         }
         UpdateSubTreeInCache(child, *child->GetSortedChildren());
@@ -366,7 +366,7 @@ void RSUniRenderVisitor::PrepareEffectNodeIfCacheReuse(const std::shared_ptr<RSR
         UpdateForegroundFilterCacheWithDirty(*effectNode, *curSurfaceDirtyManager_);
         if (curSurfaceNode_ && curSurfaceNode_->GetId() == effectNode->GetInstanceRootNodeId()) {
             curSurfaceNode_->UpdateChildrenFilterRects(effectNode, effectNode->GetOldDirtyInSurface(),
-                effectNode->IsBackgroundFilterCacheValid());
+                effectNode->IsFilterCacheValid());
         }
     }
 }
@@ -724,6 +724,11 @@ void RSUniRenderVisitor::HandleColorGamuts(RSDisplayRenderNode& node, const sptr
         }
         newColorSpace_ = static_cast<GraphicColorGamut>(screenColorGamut);
     }
+
+    auto stagingDisplayParams = static_cast<RSDisplayRenderParams*>(node.GetStagingRenderParams().get());
+    if (stagingDisplayParams) {
+        stagingDisplayParams->SetNewColorSpace(newColorSpace_);
+    }
 }
 
 void RSUniRenderVisitor::CheckPixelFormat(RSSurfaceRenderNode& node)
@@ -767,6 +772,10 @@ void RSUniRenderVisitor::HandlePixelFormat(RSDisplayRenderNode& node, const sptr
             RS_LOGD("RSUniRenderVisitor::HandlePixelFormat get screen color gamut failed.");
         }
     }
+    auto stagingDisplayParams = static_cast<RSDisplayRenderParams*>(node.GetStagingRenderParams().get());
+    if (stagingDisplayParams) {
+        stagingDisplayParams->SetNewPixelFormat(newPixelFormat_);
+    }
 }
 
 void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
@@ -798,7 +807,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     prepareClipRect_.SetAll(0, 0, screenInfo_.width, screenInfo_.height);
     SendRcdMessage(node);
     parentSurfaceNodeMatrix_ = Drawing::Matrix();
-    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
+    auto& geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr != nullptr) {
         geoPtr->UpdateByMatrixFromSelf();
         parentSurfaceNodeMatrix_ = geoPtr->GetAbsMatrix();
@@ -1242,6 +1251,9 @@ void RSUniRenderVisitor::QuickPrepareSurfaceRenderNode(RSSurfaceRenderNode& node
         return;
     }
 
+    CheckColorSpace(node);
+    CheckPixelFormat(node);
+
     // 1. Update matrix and collect dirty region
     if (node.GetBuffer() != nullptr) {
         node.SetBufferRelMatrix(RSUniRenderUtil::GetMatrixOfBufferToRelRect(node));
@@ -1504,7 +1516,7 @@ bool RSUniRenderVisitor::InitDisplayInfo(RSDisplayRenderNode& node)
     }
 
     // 4. check isHardwareForcedDisabled
-    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
+    auto& geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         RS_LOGE("RSUniRenderVisitor::InitDisplayInfo geoPtr is nullptr");
         return false;
@@ -1575,7 +1587,7 @@ bool RSUniRenderVisitor::BeforeUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node)
 bool RSUniRenderVisitor::AfterUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node)
 {
     // 1 update surface info
-    auto geoPtr = node.GetMutableRenderProperties().GetBoundsGeometry();
+    auto& geoPtr = node.GetMutableRenderProperties().GetBoundsGeometry();
     if (geoPtr == nullptr) {
         return false;
     }
@@ -1621,9 +1633,6 @@ void RSUniRenderVisitor::UpdateHwcNodeInfoForAppNode(RSSurfaceRenderNode& node)
         UpdateHwcNodeByTransform(node);
         UpdateHwcNodeEnableByBackgroundAlpha(node);
         UpdateHwcNodeEnableBySrcRect(node);
-        if (!node.IsHardwareForcedDisabled()) {
-            node.SetIntersectByFilterInApp(true);
-        }
     }
 }
 
@@ -1649,7 +1658,7 @@ void RSUniRenderVisitor::UpdateSrcRect(RSSurfaceRenderNode& node,
 
 void RSUniRenderVisitor::UpdateDstRect(RSSurfaceRenderNode& node, const RectI& absRect, const RectI& clipRect)
 {
-    auto geoPtr = node.GetRenderProperties().GetBoundsGeometry();
+    auto& geoPtr = node.GetRenderProperties().GetBoundsGeometry();
     if (geoPtr == nullptr) {
         return;
     }
@@ -1902,7 +1911,6 @@ void RSUniRenderVisitor::UpdateHwcNodeDirtyRegionAndCreateLayer(std::shared_ptr<
             continue;
         }
         UpdateHwcNodeDirtyRegionForApp(node, hwcNodePtr);
-        hwcNodePtr->SetIntersectByFilterInApp(false);
         hwcNodePtr->SetCalcRectInPrepare(false);
         auto transform = RSUniRenderUtil::GetLayerTransform(*hwcNodePtr, screenInfo_);
         hwcNodePtr->UpdateHwcNodeLayerInfo(transform);
@@ -2116,7 +2124,7 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
         RS_LOGD("RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay surface:%{public}s "
             "has transparentCleanFilter", surfaceNode->GetName().c_str());
         // check accumulatedDirtyRegion influence filter nodes which in the current surface
-        for (auto it = filterVecIter->second.rbegin(); it != filterVecIter->second.rend(); ++it) {
+        for (auto it = filterVecIter->second.begin(); it != filterVecIter->second.end(); ++it) {
             auto filterNode = nodeMap.GetRenderNode<RSRenderNode>(it->first);
             if (filterNode == nullptr) {
                 continue;
@@ -2141,7 +2149,7 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
                 globalFilter_.insert(*it);
             }
             filterNode->MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(dirtyBelowContainsFilterNode);
-            if (filterNode->ShouldPaint() && !filterNode->IsBackgroundFilterCacheValid() &&
+            if (filterNode->ShouldPaint() && !filterNode->IsFilterCacheValid() &&
                 (filterNode->GetRenderProperties().GetBackgroundFilter() ||
                 filterNode->GetRenderProperties().GetFilter())) {
                 dirtyBelowContainsFilterNode = true;
@@ -2333,7 +2341,7 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByFilterRect(
     // [planning]: Has opaque control exists between the filter and hwc.
     for (auto hwcNode : hwcNodes) {
         auto hwcNodePtr = hwcNode.lock();
-        if (!hwcNodePtr || !hwcNodePtr->GetIntersectByFilterInApp()) {
+        if (!hwcNodePtr) {
             continue;
         }
         auto dstRect = hwcNodePtr->GetDstRect();
@@ -2500,7 +2508,7 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     // update geoptr with ContextMatrix
     auto parentSurfaceNodeMatrix = parentSurfaceNodeMatrix_;
     auto& property = node.GetMutableRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     if (geoPtr == nullptr) {
         return;
     }
@@ -2646,7 +2654,7 @@ void RSUniRenderVisitor::UpdateSurfaceRenderNodeScale(RSSurfaceRenderNode& node)
         return;
     }
     auto& property = node.GetMutableRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     if (geoPtr == nullptr) {
         return;
     }
@@ -2697,7 +2705,7 @@ void RSUniRenderVisitor::PrepareProxyRenderNode(RSProxyRenderNode& node)
         return;
     }
     auto& property = rsParent->GetMutableRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
 
     // Context matrix should be relative to the parent surface node, so we need to revert the parentSurfaceNodeMatrix_.
     Drawing::Matrix invertMatrix;
@@ -2737,7 +2745,7 @@ void RSUniRenderVisitor::PrepareRootRenderNode(RSRootRenderNode& node)
     auto nodeParent = (node.GetParent().lock());
     const auto& property = node.GetRenderProperties();
     bool geoDirty = property.IsGeoDirty();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     auto prevAlpha = curAlpha_;
     curAlpha_ *= std::clamp(node.GetRenderProperties().GetAlpha(), 0.f, 1.f);
 
@@ -2881,7 +2889,7 @@ void RSUniRenderVisitor::PrepareCanvasRenderNode(RSCanvasRenderNode &node)
         }
         if (curSurfaceNode_) {
             curSurfaceNode_->UpdateChildrenFilterRects(node.shared_from_this(), node.GetOldDirtyInSurface(),
-                node.IsBackgroundFilterCacheValid());
+                node.IsFilterCacheValid());
             curSurfaceNode_->UpdateFilterNodes(node.shared_from_this());
         }
         UpdateForegroundFilterCacheWithDirty(node, *dirtyManager);
@@ -2939,7 +2947,7 @@ void RSUniRenderVisitor::PrepareEffectRenderNode(RSEffectRenderNode& node)
             RectI filterRect(effectRegion_->GetLeft(), effectRegion_->GetTop(),
                 effectRegion_->GetWidth(), effectRegion_->GetHeight());
             curSurfaceNode_->UpdateChildrenFilterRects(node.shared_from_this(), filterRect,
-                node.IsBackgroundFilterCacheValid());
+                node.IsFilterCacheValid());
             curSurfaceNode_->UpdateFilterNodes(node.shared_from_this());
         }
         UpdateForegroundFilterCacheWithDirty(node, *curSurfaceDirtyManager_);
@@ -3141,7 +3149,7 @@ void RSUniRenderVisitor::DrawEffectRenderNodeForDFX()
         if (!node) {
             continue;
         }
-        auto geoPtr = node->GetRenderProperties().GetBoundsGeometry();
+        auto& geoPtr = node->GetRenderProperties().GetBoundsGeometry();
         if (geoPtr == nullptr) {
             continue;
         }
@@ -3882,7 +3890,7 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             if (needOffscreen) {
                 ClearTransparentBeforeSaveLayer(); // clear transparent before concat display node's matrix
             }
-            auto geoPtr = node.GetRenderProperties().GetBoundsGeometry();
+            auto& geoPtr = node.GetRenderProperties().GetBoundsGeometry();
             if (geoPtr != nullptr) {
                 canvas_->ConcatMatrix(geoPtr->GetMatrix());
             }
@@ -4440,7 +4448,7 @@ void RSUniRenderVisitor::CalcChildFilterNodeDirtyRegion(std::shared_ptr<RSSurfac
     if (currentSurfaceNode->IsAppWindow() && !filterRects.empty()) {
         needFilter_ = needFilter_ || !currentSurfaceNode->IsStaticCached();
         for (size_t i = 0; i < filterNodes.size(); i++) {
-            auto filterRectsCacheValidNow = filterNodes[i]->IsBackgroundFilterCacheValid();
+            auto filterRectsCacheValidNow = filterNodes[i]->IsFilterCacheValid();
             // if child filter node has filter cache, no need to be added into dirtyregion
             // only support background filter cache valid and no pixelstretch node now
             if (isCacheBlurPartialRenderEnabled_ && filterRectsCacheValidNow &&
@@ -5134,7 +5142,7 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
         return;
     }
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     if (!geoPtr) {
         RS_LOGE("RSUniRenderVisitor::ProcessSurfaceRenderNode node:%{public}" PRIu64 ", get geoPtr failed",
             node.GetId());

@@ -19,8 +19,6 @@
 #include "sk_image_chain.h"
 #include "sk_image_filter_factory.h"
 
-#include "utils/log.h"
-
 using namespace OHOS;
 using namespace Rosen;
 

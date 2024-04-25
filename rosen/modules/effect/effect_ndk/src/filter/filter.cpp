@@ -16,10 +16,12 @@
 #include "filter.h"
 
 #include "sk_image_chain.h"
-#include "utils/log.h"
 
 namespace OHOS {
 namespace Rosen {
+
+
+
 Filter::Filter(std::shared_ptr<OHOS::Media::PixelMap> pixelMap) : srcPixelMap_(pixelMap)
 {}
 
@@ -41,7 +43,7 @@ void Filter::AddNextFilter(sk_sp<SkImageFilter> filter)
 
 std::shared_ptr<OHOS::Media::PixelMap> Filter::GetPixelMap()
 {
-    Render(true);
+    Render(false);
     return dstPixelMap_;
 }
 

@@ -273,7 +273,7 @@ void RSPropertiesPainter::GetShadowDirtyRect(RectI& dirtyShadow, const RSPropert
         }
     }
 
-    auto geoPtr = (properties.GetBoundsGeometry());
+    auto& geoPtr = (properties.GetBoundsGeometry());
     Drawing::Matrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
     matrix.MapRect(shadowRect, shadowRect);
 
@@ -928,7 +928,7 @@ void RSPropertiesPainter::GetPixelStretchDirtyRect(RectI& dirtyPixelStretch,
     auto scaledBounds = RectF(boundsRect.left_ - pixelStretch->x_, boundsRect.top_ - pixelStretch->y_,
         boundsRect.width_ + pixelStretch->x_ + pixelStretch->z_,
         boundsRect.height_ + pixelStretch->y_ + pixelStretch->w_);
-    auto geoPtr = properties.GetBoundsGeometry();
+    auto& geoPtr = properties.GetBoundsGeometry();
     Drawing::Matrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
     auto drawingRect = Rect2DrawingRect(scaledBounds);
     matrix.MapRect(drawingRect, drawingRect);
@@ -995,7 +995,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
 
     Drawing::Brush brush;
     Drawing::Matrix inverseMat, rotateMat;
-    auto boundsGeo = (properties.GetBoundsGeometry());
+    auto& boundsGeo = (properties.GetBoundsGeometry());
     if (boundsGeo && !boundsGeo->IsEmpty()) {
         auto transMat = canvas.GetTotalMatrix();
         /* transMat.getSkewY() is the sin of the rotation angle(sin0 = 0,sin90 =1 sin180 = 0,sin270 = -1),
@@ -1026,9 +1026,10 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
     canvas.Translate(bounds.GetLeft(), bounds.GetTop());
     Drawing::SamplingOptions samplingOptions;
     constexpr static float EPS = 1e-5f;
+    auto pixelStretchTileMode = static_cast<Drawing::TileMode>(properties.GetPixelStretchTileMode());
     if (pixelStretch->x_ > EPS || pixelStretch->y_ > EPS || pixelStretch->z_ > EPS || pixelStretch->w_ > EPS) {
         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(
-            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, inverseMat));
+            *image, pixelStretchTileMode, pixelStretchTileMode, samplingOptions, inverseMat));
         canvas.AttachBrush(brush);
         canvas.DrawRect(Drawing::Rect(-pixelStretch->x_, -pixelStretch->y_,
             -pixelStretch->x_ + scaledBounds.GetWidth(), -pixelStretch->y_ + scaledBounds.GetHeight()));
@@ -1036,7 +1037,7 @@ void RSPropertiesPainter::DrawPixelStretch(const RSProperties& properties, RSPai
     } else {
         inverseMat.PostScale(scaledBounds.GetWidth() / bounds.GetWidth(), scaledBounds.GetHeight() / bounds.GetHeight());
         brush.SetShaderEffect(Drawing::ShaderEffect::CreateImageShader(
-            *image, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP, samplingOptions, inverseMat));
+            *image, pixelStretchTileMode, pixelStretchTileMode, samplingOptions, inverseMat));
 
         canvas.Translate(-pixelStretch->x_, -pixelStretch->y_);
         canvas.AttachBrush(brush);
@@ -1402,7 +1403,7 @@ void RSPropertiesPainter::GetOutlineDirtyRect(RectI& dirtyOutline,
         return;
     }
 
-    auto geoPtr = properties.GetBoundsGeometry();
+    auto& geoPtr = properties.GetBoundsGeometry();
     Drawing::Matrix matrix = (geoPtr && isAbsCoordinate) ? geoPtr->GetAbsMatrix() : Drawing::Matrix();
     auto drawingRect = Rect2DrawingRect(GetRRectForDrawingBorder(properties, outline, true).rect_);
     matrix.MapRect(drawingRect, drawingRect);

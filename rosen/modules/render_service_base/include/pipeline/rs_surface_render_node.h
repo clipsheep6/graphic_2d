@@ -68,7 +68,8 @@ public:
     void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
     void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
-        NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID) override;
+        NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID,
+        NodeId uifirstRootNodeId = INVALID_NODEID) override;
     bool IsAppWindow() const
     {
         return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE;
@@ -294,16 +295,6 @@ public:
         calcRectInPrepare_ = calc;
     }
 
-    void SetIntersectByFilterInApp(bool intersect)
-    {
-        intersectByFilterInApp_ = intersect;
-    }
-
-    bool GetIntersectByFilterInApp() const
-    {
-        return intersectByFilterInApp_;
-    }
-
     bool IsSelfDrawingType() const
     {
         // self drawing surfacenode has its own buffer, and rendered in its own progress/thread
@@ -431,17 +422,21 @@ public:
 
     void SetSecurityLayer(bool isSecurityLayer);
     void SetSkipLayer(bool isSkipLayer);
+    void SetProtectedLayer(bool isProtectedLayer);
 
     // get whether it is a security/skip layer itself
     bool GetSecurityLayer() const;
     bool GetSkipLayer() const;
+    bool GetProtectedLayer() const;
 
     // get whether it and it's subtree contain security layer
     bool GetHasSecurityLayer() const;
     bool GetHasSkipLayer() const;
+    bool GetHasProtectedLayer() const;
 
     void SyncSecurityInfoToFirstLevelNode();
     void SyncSkipInfoToFirstLevelNode();
+    void SyncProtectedInfoToFirstLevelNode();
 
     void SetFingerprint(bool hasFingerprint);
     bool GetFingerprint() const;
@@ -1015,16 +1010,16 @@ public:
         ancestorDisplayNode_ = ancestorDisplayNode;
     }
 
-    void SetUifirstNodeEnableParam(bool b);
+    void SetUifirstNodeEnableParam(MultiThreadCacheType b);
 
     void SetIsParentUifirstNodeEnableParam(bool b);
 
-    bool GetLastFrameUifirstFlag()
+    MultiThreadCacheType GetLastFrameUifirstFlag()
     {
         return lastFrameUifirstFlag_;
     }
 
-    void SetLastFrameUifirstFlag(bool b)
+    void SetLastFrameUifirstFlag(MultiThreadCacheType b)
     {
         lastFrameUifirstFlag_ = b;
     }
@@ -1093,8 +1088,10 @@ private:
 
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
+    bool isProtectedLayer_ = false;
     std::set<NodeId> skipLayerIds_= {};
     std::set<NodeId> securityLayerIds_= {};
+    std::set<NodeId> protectedLayerIds_= {};
 
     bool hasFingerprint_ = false;
     RectI srcRect_;
@@ -1290,7 +1287,7 @@ private:
     Drawing::Matrix bufferRelMatrix_ = Drawing::Matrix();
     bool forceUIFirst_ = false;
     bool hasTransparentSurface_ = false;
-    bool lastFrameUifirstFlag_ = false;
+    MultiThreadCacheType lastFrameUifirstFlag_ = MultiThreadCacheType::NONE;
 
     bool ancoForceDoDirect_ = false;
 

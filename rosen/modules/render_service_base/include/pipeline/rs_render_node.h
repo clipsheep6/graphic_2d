@@ -45,6 +45,7 @@
 #include "pipeline/rs_render_display_sync.h"
 #include "pipeline/rs_single_frame_composer.h"
 #include "property/rs_properties.h"
+#include "drawable/rs_render_node_drawable_adapter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -149,7 +150,8 @@ public:
     // flag: isOnTheTree; instanceRootNodeId: displaynode or leash/appnode attached to
     // firstLevelNodeId: surfacenode for uiFirst to assign task; cacheNodeId: drawing cache rootnode attached to
     virtual void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
-        NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID);
+        NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID,
+        NodeId uifirstRootNodeId = INVALID_NODEID);
     inline bool IsOnTheTree() const
     {
         return isOnTheTree_;
@@ -228,6 +230,8 @@ public:
     const std::shared_ptr<RSRenderNode> GetInstanceRootNode() const;
     NodeId GetFirstLevelNodeId() const;
     const std::shared_ptr<RSRenderNode> GetFirstLevelNode() const;
+    NodeId GetUifirstRootNodeId() const;
+    void UpdateTreeUifirstRootNodeId(NodeId id);
 
     // reset accumulated vals before traverses children
     void ResetChildRelevantFlags();
@@ -460,9 +464,9 @@ public:
     void UpdateLastFilterCacheRegionInSkippedSubTree(const RectI& rect);
     void UpdateFilterRegionInSkippedSubTree(const RSRenderNode& subTreeRoot, RectI& filterRect);
     void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
-    virtual void UpdateFilterCacheWithDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
-    virtual void UpdateFilterCacheManagerWithCacheRegion(RSDirtyRegionManager& dirtyManager,
-        const std::optional<RectI>& clipRect = std::nullopt, bool isForeground = false);
+    virtual void UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
+    virtual void UpdateFilterCacheWithSelfDirty(const std::optional<RectI>& clipRect = std::nullopt,
+        bool isInSkippedSubTree = false, const std::optional<RectI>& filterRectForceUpdated = std::nullopt);
     bool IsBackgroundInAppOrNodeSelfDirty() const;
     void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(bool dirtyBelowContainsFilterNode = false);
     bool IsBackgroundFilterCacheValid() const;
@@ -583,7 +587,6 @@ public:
 
     std::unique_ptr<RSRenderParams>& GetStagingRenderParams();
     const std::unique_ptr<RSRenderParams>& GetRenderParams() const;
-    const std::unique_ptr<RSRenderParams>& GetUifirstRenderParams() const;
 
     void UpdatePointLightDirtySlot();
     void AccmulateDirtyInOcclusion(bool isOccluded);
@@ -602,6 +605,8 @@ public:
     void SkipSync()
     {
         lastFrameSynced_ = false;
+        // clear flag: after skips sync, node not in RSMainThread::Instance()->GetContext.pendingSyncNodes_
+        addedToPendingSyncList_ = false;
     }
     void Sync()
     {
@@ -631,7 +636,7 @@ protected:
         dirtyStatus_ = NodeDirty::CLEAN;
     }
 
-    void DumpNodeType(std::string& out) const;
+    static void DumpNodeType(RSRenderNodeType nodeType, std::string& out);
 
     void DumpSubClassNode(std::string& out) const;
     void DumpDrawCmdModifiers(std::string& out) const;
@@ -649,9 +654,8 @@ protected:
     virtual void OnSync();
     virtual void ClearResource() {};
 
-    std::unique_ptr<RSRenderParams> renderParams_;
     std::unique_ptr<RSRenderParams> stagingRenderParams_;
-    std::unique_ptr<RSRenderParams> uifirstRenderParams_;
+    mutable std::shared_ptr<DrawableV2::RSRenderNodeDrawableAdapter> renderDrawable_;
 
     RSPaintFilterCanvas::SaveStatus renderNodeSaveCount_;
     std::shared_ptr<RSSingleFrameComposer> singleFrameComposer_ = nullptr;
@@ -694,11 +698,13 @@ private:
     NodeId id_;
     NodeId instanceRootNodeId_ = INVALID_NODEID;
     NodeId firstLevelNodeId_ = INVALID_NODEID;
+    NodeId uifirstRootNodeId_ = INVALID_NODEID;
 
     WeakPtr parent_;
     void SetParent(WeakPtr parent);
     void ResetParent();
     void UpdateClipAbsDrawRectChangeState(const RectI& clipRect);
+    bool IsUifirstArkTsCardNode();
     virtual void OnResetParent() {}
 
     std::list<WeakPtr> children_;
@@ -738,7 +744,7 @@ private:
     void FallbackAnimationsToRoot();
     void FilterModifiersByPid(pid_t pid);
 
-    void UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion);
+    bool UpdateBufferDirtyRegion(RectI& dirtyRect, const RectI& drawRegion);
     void CollectAndUpdateLocalShadowRect();
     void CollectAndUpdateLocalOutlineRect();
     void CollectAndUpdateLocalPixelStretchRect();
@@ -834,6 +840,13 @@ private:
     float boundsHeight_ = 0.0f;
     bool hasCacheableAnim_ = false;
     bool geometryChangeNotPerceived_ = false;
+    // node region, only used in selfdrawing node dirty
+    bool isSelfDrawingNode_ = false;
+    RectF selfDrawingNodeDirtyRect_;
+    RectI selfDrawingNodeAbsDirtyRect_;
+    RectI oldAbsDrawRect_;
+    // used in old pipline
+    RectI oldRectFromRenderProperties_;
     // including enlarged draw region
     RectF selfDrawRect_;
     RectI localShadowRect_;
@@ -864,27 +877,10 @@ private:
     void OnRegister(const std::weak_ptr<RSContext>& context);
 
     // Test pipeline
-    struct DrawCmdIndex {
-        int8_t shadowIndex_           = -1;
-        int8_t renderGroupBeginIndex_ = -1;
-        int8_t backgroundFilterIndex_ = -1;
-        int8_t backgroundColorIndex_  = -1;
-        int8_t useEffectIndex_        = -1;
-        int8_t backgroundEndIndex_    = -1;
-        int8_t childrenIndex_         = -1;
-        int8_t contentIndex_          = -1;
-        int8_t foregroundBeginIndex_  = -1;
-        int8_t renderGroupEndIndex_   = -1;
-        int8_t endIndex_              = -1;
-    };
     bool addedToPendingSyncList_ = false;
     bool drawCmdListNeedSync_ = false;
     bool uifirstNeedSync_ = false; // both cmdlist&param
     bool uifirstSkipPartialSync_ = false;
-    DrawCmdIndex uifirstDrawCmdIndex_;
-    std::vector<Drawing::RecordingCanvas::DrawFunc> uifirstDrawCmdList_;
-    DrawCmdIndex drawCmdIndex_;
-    std::vector<Drawing::RecordingCanvas::DrawFunc> drawCmdList_;
     DrawCmdIndex stagingDrawCmdIndex_;
     std::vector<Drawing::RecordingCanvas::DrawFunc> stagingDrawCmdList_;
 

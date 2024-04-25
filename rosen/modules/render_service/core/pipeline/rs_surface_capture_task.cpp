@@ -64,9 +64,9 @@ bool RSSurfaceCaptureTask::Run(sptr<RSISurfaceCaptureCallback> callback)
         pixelmap = CreatePixelMapBySurfaceNode(surfaceNode, visitor_->IsUniRender());
         visitor_->IsDisplayNode(false);
     } else if (auto displayNode = node->ReinterpretCastTo<RSDisplayRenderNode>()) {
-        visitor_->SetHasingSecurityOrSkipLayer(FindSecurityOrSkipLayer());
+        visitor_->SetHasingSecurityOrSkipOrProtectedLayer(FindSecurityOrSkipOrProtectedLayer());
         pixelmap = CreatePixelMapByDisplayNode(displayNode, visitor_->IsUniRender(),
-            visitor_->GetHasingSecurityOrSkipLayer());
+            visitor_->GetHasingSecurityOrSkipOrProtectedLayer());
         visitor_->IsDisplayNode(true);
     } else {
         RS_LOGE("RSSurfaceCaptureTask::Run: Invalid RSRenderNodeType!");
@@ -285,7 +285,7 @@ std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapBySurfaceNo
 }
 
 std::unique_ptr<Media::PixelMap> RSSurfaceCaptureTask::CreatePixelMapByDisplayNode(
-    std::shared_ptr<RSDisplayRenderNode> node, bool isUniRender, bool hasSecurityOrSkipLayer)
+    std::shared_ptr<RSDisplayRenderNode> node, bool isUniRender, bool hasSecurityOrSkipOrProtectedLayer)
 {
     if (node == nullptr) {
         RS_LOGE("RSSurfaceCaptureTask::CreatePixelMapByDisplayNode: node is nullptr");
@@ -430,22 +430,22 @@ std::shared_ptr<Drawing::Surface> RSSurfaceCaptureTask::CreateSurface(const std:
     return Drawing::Surface::MakeRasterDirect(info, address, pixelmap->GetRowBytes());
 }
 
-bool RSSurfaceCaptureTask::FindSecurityOrSkipLayer()
+bool RSSurfaceCaptureTask::FindSecurityOrSkipOrProtectedLayer()
 {
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
-    bool hasSecurityOrSkipLayer = false;
+    bool hasSecurityOrSkipOrProtectedLayer = false;
     nodeMap.TraverseSurfaceNodes([this,
-        &hasSecurityOrSkipLayer](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode)
+        &hasSecurityOrSkipOrProtectedLayer](const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode)
         mutable {
         if (surfaceNode == nullptr || !surfaceNode->IsOnTheTree()) {
             return;
         }
-        if (surfaceNode->GetSecurityLayer() || surfaceNode->GetSkipLayer()) {
-            hasSecurityOrSkipLayer = true;
+        if (surfaceNode->GetSecurityLayer() || surfaceNode->GetSkipLayer() || surfaceNode->GetProtectedLayer()) {
+            hasSecurityOrSkipOrProtectedLayer = true;
             return;
         }
     });
-    return hasSecurityOrSkipLayer;
+    return hasSecurityOrSkipOrProtectedLayer;
 }
 
 RSSurfaceCaptureVisitor::RSSurfaceCaptureVisitor(float scaleX, float scaleY, bool isUniRender)
@@ -497,12 +497,12 @@ void RSSurfaceCaptureVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode &node
 
     if (IsUniRender()) {
         bool isCurtainScreenOn = RSMainThread::Instance()->IsCurtainScreenOn();
-        if (hasSecurityOrSkipLayer_ || isCurtainScreenOn) {
+        if (hasSecurityOrSkipOrProtectedLayer_ || isCurtainScreenOn) {
             RS_LOGD("RSSurfaceCaptureVisitor::ProcessDisplayRenderNode: \
                 process RSDisplayRenderNode(id:[%{public}" PRIu64 "]) Not using UniRender buffer.", node.GetId());
 
             // Adding matrix affine transformation logic
-            auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
+            auto& geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
             if (geoPtr != nullptr) {
                 canvas_->ConcatMatrix(geoPtr->GetMatrix());
             }
@@ -615,18 +615,17 @@ void RSSurfaceCaptureVisitor::AdjustZOrderAndDrawSurfaceNode(std::vector<std::sh
 
 void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
+    if (canvas_ == nullptr) {
+        RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: canvas_ is nullptr.");
+        return;
+    }
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     if (!geoPtr) {
         RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%{public}" PRIu64 ", get geoPtr failed",
             node.GetId());
         return;
     }
-    if (canvas_ == nullptr) {
-        RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: canvas_ is nullptr.");
-        return;
-    }
-
     bool isSelfDrawingSurface = node.GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (isSelfDrawingSurface) {
         canvas_->Save();
@@ -673,6 +672,20 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         return;
     }
 
+    if (node.GetProtectedLayer()) {
+        RS_LOGD("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: \
+            process RSSurfaceRenderNode(id:[%{public}" PRIu64 "]) clear black since it is protected layer.",
+            node.GetId());
+        Drawing::Brush rectBrush;
+        rectBrush.SetColor(Drawing::Color::COLOR_BLACK);
+        canvas_->AttachBrush(rectBrush);
+        canvas_->DrawRect(Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()));
+        canvas_->DetachBrush();
+        canvas_->Restore();
+        canvas_->Restore();
+        return;
+    }
+
     if (isSelfDrawingSurface) {
         RSPropertiesPainter::DrawBackground(property, *canvas_);
         RSPropertiesPainter::DrawMask(property, *canvas_);
@@ -696,7 +709,7 @@ void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNod
         canvas_->Restore();
     }
 
-    if (!node.GetHasSecurityLayer() && !node.GetHasSkipLayer() &&
+    if (!node.GetHasSecurityLayer() && !node.GetHasSkipLayer() && !node.GetProtectedLayer() &&
         isUIFirst_ && RSUniRenderUtil::HandleCaptureNode(node, *canvas_)) {
         RS_LOGD("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni: \
             process RSSurfaceRenderNode [%{public}s, %{public}" PRIu64 "] use cache texture.",
@@ -717,16 +730,28 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
     }
 
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto& geoPtr = (property.GetBoundsGeometry());
     if (geoPtr) {
         canvas_->SetMatrix(geoPtr->GetAbsMatrix());
     }
 
-    if (!node.GetHasSecurityLayer() && !node.GetHasSkipLayer() &&
+    if (!node.GetHasSecurityLayer() && !node.GetHasSkipLayer() && !node.GetProtectedLayer() &&
         isUIFirst_ && RSUniRenderUtil::HandleSubThreadNode(node, *canvas_)) {
         RS_LOGD("RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni: \
             process RSSurfaceRenderNode [%{public}s, %{public}" PRIu64 "] use cache texture.",
             node.GetName().c_str(), node.GetId());
+        return;
+    }
+
+    if (node.GetProtectedLayer()) {
+        RS_LOGD("RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni: \
+            process RSSurfaceRenderNode(id:[%{public}" PRIu64 "]) clear black since it is protected layer.",
+            node.GetId());
+        Drawing::Brush rectBrush;
+        rectBrush.SetColor(Drawing::Color::COLOR_BLACK);
+        canvas_->AttachBrush(rectBrush);
+        canvas_->DrawRect(Drawing::Rect(0, 0, property.GetBoundsWidth(), property.GetBoundsHeight()));
+        canvas_->DetachBrush();
         return;
     }
 
@@ -768,7 +793,7 @@ void RSSurfaceCaptureVisitor::CaptureSurfaceInDisplayWithUni(RSSurfaceRenderNode
 
 void RSSurfaceCaptureVisitor::ProcessSurfaceRenderNodeWithUni(RSSurfaceRenderNode &node)
 {
-    auto geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
+    auto& geoPtr = (node.GetRenderProperties().GetBoundsGeometry());
     if (geoPtr == nullptr) {
         RS_LOGW("RSSurfaceCaptureVisitor::ProcessSurfaceRenderNode node:%{public}" PRIu64 ", get geoPtr failed",
             node.GetId());

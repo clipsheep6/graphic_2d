@@ -393,6 +393,7 @@ private:
     RSVisibleLevel GetRegionVisibleLevel(const Occlusion::Region& curRegion,
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
+    void ProcessScreenHotPlugEvents();
     void TryCleanResourceInBackGroundThd();
     void WaitUntilUploadTextureTaskFinishedForGL();
 #ifdef RES_SCHED_ENABLE
@@ -450,6 +451,7 @@ private:
     std::condition_variable unmarshalTaskCond_;
     std::mutex unmarshalMutex_;
     int32_t unmarshalFinishedCount_ = 0;
+    bool needWaitUnmarshalFinished_ = true;
     sptr<VSyncDistributor> appVSyncDistributor_ = nullptr;
 
     std::condition_variable surfaceCapProcTaskCond_;
@@ -531,6 +533,7 @@ private:
     std::shared_ptr<Drawing::Image> watermarkImg_ = nullptr;
     bool watermarkFlag_ = false;
     bool doParallelComposition_ = false;
+    bool hasProtectedLayer_ = false;
 
     std::shared_ptr<HgmFrameRateManager> frameRateMgr_ = nullptr;
     std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker_ = nullptr;

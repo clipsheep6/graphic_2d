@@ -30,7 +30,7 @@ class VsyncReceiverTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
-    static inline void OnVSync(int64_t now, void* data);
+    static inline void OnVSync(int64_t now, int64_t frameCount, void* data);
 
     static inline sptr<VSyncController> vsyncController = nullptr;
     static inline sptr<VSyncDistributor> vsyncDistributor = nullptr;
@@ -40,7 +40,7 @@ public:
     static inline int32_t onVsyncCount = 0;
 };
 
-void VsyncReceiverTest::OnVSync(int64_t now, void* data)
+void VsyncReceiverTest::OnVSync(int64_t now, int64_t frameCount, void* data)
 {
     onVsyncCount ++;
 }

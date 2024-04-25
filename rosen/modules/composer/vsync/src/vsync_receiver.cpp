@@ -79,7 +79,8 @@ void VSyncCallBackListener::OnReadable(int32_t fileDescriptor)
     ScopedBytrace func("ReceiveVsync dataCount:" + std::to_string(dataCount) + "bytes now:" + std::to_string(now) +
         " expectedEnd:" + std::to_string(expectedEnd) + " vsyncId:" + std::to_string(data[2])); // data[2] is vsyncId
     if (dataCount > 0 && cb != nullptr) {
-        cb(now, userData_);
+        auto frameCount = data[2];
+        cb(now, frameCount, userData_);
     }
     if (OHOS::Rosen::RsFrameReportExt::GetInstance().GetEnable()) {
         OHOS::Rosen::RsFrameReportExt::GetInstance().ReceiveVSync();

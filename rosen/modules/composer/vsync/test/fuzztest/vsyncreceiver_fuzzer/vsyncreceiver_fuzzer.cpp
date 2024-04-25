@@ -29,7 +29,7 @@ namespace OHOS {
         size_t size_ = 0;
         size_t pos;
 
-        void OnVSync(int64_t now, void* data) {}
+        void OnVSync(int64_t now, int64_t frameCount, void* data) {}
     }
 
     /*

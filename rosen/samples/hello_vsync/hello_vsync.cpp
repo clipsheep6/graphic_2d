@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 static bool flag = false;
-static void OnVSync(long long timestamp, void* data)
+static void OnVSync(long long timestamp, long long frameCount, void* data)
 {
     flag = true;
     std::cout << "OnVSync: " << timestamp << std::endl;

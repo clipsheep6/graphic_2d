@@ -36,7 +36,7 @@ void NativeVsyncTest::TearDownTestCase()
 {
 }
 
-static void OnVSync(long long timestamp, void* data)
+static void OnVSync(long long timestamp, long long frameCount, void* data)
 {
 }
 

@@ -2215,7 +2215,9 @@ void RSMainThread::RequestNextVSync(const std::string& fromWhom, int64_t lastVSy
     RS_OPTIONAL_TRACE_FUNC();
     VSyncReceiver::FrameCallback fcb = {
         .userData_ = this,
-        .callback_ = [this](uint64_t timestamp, void* data) { OnVsync(timestamp, data); },
+        .callback_ = [this](uint64_t timestamp, uint64_t frameCount, void* data) {
+                OnVsync(timestamp, frameCount, data);
+            },
     };
     if (receiver_ != nullptr) {
         requestNextVsyncNum_++;
@@ -2243,7 +2245,7 @@ void RSMainThread::ProcessScreenHotPlugEvents()
     }
 }
 
-void RSMainThread::OnVsync(uint64_t timestamp, void* data)
+void RSMainThread::OnVsync(uint64_t timestamp, uint64_t frameCount, void* data)
 {
     isOnVsync_.store(true);
     const int64_t onVsyncStartTime = GetCurrentSystimeMs();

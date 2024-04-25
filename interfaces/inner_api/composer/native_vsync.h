@@ -43,7 +43,7 @@ extern "C" {
 
 struct OH_NativeVSync;
 typedef struct OH_NativeVSync OH_NativeVSync;
-typedef void (*OH_NativeVSync_FrameCallback)(long long timestamp, void *data);
+typedef void (*OH_NativeVSync_FrameCallback)(long long timestamp, long long frameCount, void *data);
 
 /**
  * @brief Creates a <b>NativeVsync</b> instance.\n

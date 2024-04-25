@@ -139,17 +139,18 @@ void DrawingEngineSample::Init()
     std::cout << "DrawingEngineSample::Init+" << std::endl;
     CreateDrawingSurface();
     InitContext();
-    Sync(0, nullptr);
+    Sync(0, 0, nullptr);
     Initilized = true;
     std::cout << "DrawingEngineSample::Init-" << std::endl;
 }
 
-void DrawingEngineSample::Sync(int64_t, void *data)
+void DrawingEngineSample::Sync(int64_t, int64_t, void *data)
 {
     std::cout << "Sync+" << std::endl;
     VSyncReceiver::FrameCallback fcb = {
         .userData_ = data,
-        .callback_ = std::bind(&DrawingEngineSample::Sync, this, ::std::placeholders::_1, ::std::placeholders::_2),
+        .callback_ = std::bind(&DrawingEngineSample::Sync, this, ::std::placeholders::_1,
+            ::std::placeholders::_2, ::std::placeholders::_3),
     };
 
     if (g_receiver != nullptr) {

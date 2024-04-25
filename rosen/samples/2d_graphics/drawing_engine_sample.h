@@ -69,7 +69,7 @@ private:
     void Init();
     void InitContext();
     void OutPutDisplay();
-    void Sync(int64_t, void *data);
+    void Sync(int64_t, int64_t, void *data);
     void CreatePhysicalScreen();
     void DoPrepareCompleted(sptr<Surface> surface, const struct PrepareCompleteParam &param);
     void OnBufferAvailable() override;

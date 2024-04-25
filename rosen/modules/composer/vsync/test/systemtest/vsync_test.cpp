@@ -37,7 +37,7 @@ namespace {
 int32_t appVSyncFlag = 0;
 constexpr int32_t SOFT_VSYNC_PERIOD = 16;
 constexpr int32_t SAMPLER_NUMBER = 6;
-static void OnVSyncApp(int64_t time, void *data)
+static void OnVSyncApp(int64_t time, int64_t frameCount, void *data)
 {
     std::cout << "OnVSyncApp in\n";
     appVSyncFlag = 1;

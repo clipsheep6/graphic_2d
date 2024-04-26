@@ -382,4 +382,72 @@ HWTEST_F(RSUIDirectorTest, GoGround, TestSize.Level1)
     director->GoForeground();
     director->GoBackground();
 }
+
+/**
+ * @tc.name: AttachSurface
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, AttachSurface, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    director->AttachSurface();
+}
+
+/**
+ * @tc.name: RecvMessages
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, RecvMessages, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    director->RecvMessages();
+}
+
+/**
+ * @tc.name: ProcessMessages
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, ProcessMessages, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    std::shared_ptr<RSTransactionData> cmds = std::make_shared<RSTransactionData>();
+    director->ProcessMessages(cmds);
+}
+
+/**
+ * @tc.name: AnimationCallbackProcessor
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, AnimationCallbackProcessor, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    // for test
+    NodeId nodeId = 0;
+    AnimationId animId = 0;
+    AnimationCallbackEvent event = REPEAT_FINISHED;
+    director->AnimationCallbackProcessor(nodeId, animId, event);
+}
+
+/**
+ * @tc.name: PostTask
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, PostTask, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    const std::function<void()>& task = []() {
+        std::cout << "for test" << std::endl;
+    };
+    director->PostTask(task);
+}
 } // namespace OHOS::Rosen

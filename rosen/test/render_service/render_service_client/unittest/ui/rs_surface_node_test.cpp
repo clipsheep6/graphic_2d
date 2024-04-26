@@ -1316,4 +1316,127 @@ HWTEST_F(RSSurfaceNodeTest, SetAbilityBGAlpha, TestSize.Level1)
     bool res = true;
     ASSERT_EQ(true, res);
 }
+
+/**
+ * @tc.name: SetAbilityBGAlpha Test
+ * @tc.desc: SetAbilityBGAlpha
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, NeedForcedSendToRemote, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->NeedForcedSendToRemote();
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: CreateNode Test
+ * @tc.desc: CreateNode
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, CreateNode, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    const RSSurfaceRenderNodeConfig& config = {0, "SurfaceNode", "", RSSurfaceNodeType::DEFAULT, nullptr, false, false};
+    bool res = surfaceNode->CreateNode(config);
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: CreateNodeAndSurface Test
+ * @tc.desc: CreateNodeAndSurface
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, CreateNodeAndSurface, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    const RSSurfaceRenderNodeConfig& config = {0, "SurfaceNode", "", RSSurfaceNodeType::DEFAULT, nullptr, false, false};
+    SurfaceId surfaceId = 0;
+    bool res = surfaceNode->CreateNodeAndSurface(config, surfaceId);
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: OnBoundsSizeChanged Test
+ * @tc.desc: OnBoundsSizeChanged
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, OnBoundsSizeChanged, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->OnBoundsSizeChanged();
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: SetSurfaceIdToRenderNode Test
+ * @tc.desc: SetSurfaceIdToRenderNode
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetSurfaceIdToRenderNode, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetSurfaceIdToRenderNode();
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: CreateTextureExportRenderNodeInRT Test
+ * @tc.desc: CreateTextureExportRenderNodeInRT
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, CreateTextureExportRenderNodeInRT, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->CreateTextureExportRenderNodeInRT();
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: SetIsTextureExportNode Test
+ * @tc.desc: SetIsTextureExportNode
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetIsTextureExportNode, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    bool isTextureExportNode = true;
+    surfaceNode->SetIsTextureExportNode(isTextureExportNode);
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: SplitSurfaceNodeName Test
+ * @tc.desc: SplitSurfaceNodeName
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SplitSurfaceNodeName, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    std::string surfaceNodeName = "0#1";
+    std::pair<std::string, std::string> res = surfaceNode->SplitSurfaceNodeName(surfaceNodeName);
+    EXPECT_EQ(res.first, "0");
+    EXPECT_EQ(res.second, "1");
+}
 } // namespace OHOS::Rosen

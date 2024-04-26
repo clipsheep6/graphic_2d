@@ -57,7 +57,7 @@ private:
     std::shared_ptr<Drawing::Image> ScaleAndAddRandomColor(Drawing::Canvas& canvas,
         const std::shared_ptr<Drawing::Image>& image, const std::shared_ptr<Drawing::Image>& blurImage,
         const Drawing::Rect& src, const Drawing::Rect& dst, int& width, int& height) const;
-    std::shared_ptr<Drawing::ShaderEfect> ApplySimpleFileter(Drawing::Canvas& canvas,
+    std::shared_ptr<Drawing::ShaderEffect> ApplySimpleFilter(Drawing::Canvas& canvas,
         const std::shared_ptr<Drawing::Image>& input, const std::shared_ptr<Drawing::ShaderEffect>& prevShader,
         const Drawing::ImageInfo& scaledInfo, const Drawing::SamplingOptions& linear) const;
     void ComputeRadiusAndScale(int radius);

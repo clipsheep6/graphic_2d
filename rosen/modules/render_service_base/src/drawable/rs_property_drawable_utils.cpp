@@ -238,6 +238,7 @@ void RSPropertyDrawableUtils::DrawFilter(Drawing::Canvas* canvas,
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     // Optional use cacheManager to draw filter
     if (!paintFilterCanvas->GetDisableFilterCache() && cacheManager != nullptr && RSProperties::FilterCacheEnabled) {
+        cacheManager->DrawFilter(*paintFilterCanvas, filter, { needSnapshotOutset, shouldClearFilteredCache });
         if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
             filter->IsOffscreenCanvas(true);
             needSnapshotOutset = false;

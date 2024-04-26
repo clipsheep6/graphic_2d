@@ -32,13 +32,12 @@ public:
     ~RSMaskColorShaderFilter() override;
 
     void InitColorMod();
-    Drawing::ColorQuad CalcAverageColor(std::shared_ptr<Drawing::Image> image);
     void CaclMaskColor(std::shared_ptr<Drawing::Image>& image);
     const std::shared_ptr<RSColorPickerCacheTask>& GetColorPickerCacheTask() const;
     virtual void PreProcess(std::shared_ptr<Drawing::Image>& image) override;
     virtual void PostProcess(Drawing::Canvas& canvas) override;
     void ReleaseColorPickerFilter();
-
+    static Drawing::ColorQuad CalcAverageColor(std::shared_ptr<Drawing::Image> image);
 private:
     int colorMode_;
     RSColor maskColor_ = RSColor();

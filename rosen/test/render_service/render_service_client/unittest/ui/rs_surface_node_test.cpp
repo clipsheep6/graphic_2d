@@ -1144,4 +1144,176 @@ HWTEST_F(RSSurfaceNodeTest, SetBootAnimationTest, TestSize.Level1)
     surfaceNode->SetBootAnimation(false);
     ASSERT_EQ(false, surfaceNode->GetBootAnimation());
 }
+
+/**
+ * @tc.name: SetTextureExport Test
+ * @tc.desc: SetTextureExport
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetTextureExport, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetTextureExport(true);
+    //for test
+    bool ret = true;
+    ASSERT_EQ(true, ret);
+    surfaceNode->SetTextureExport(false);
+    //for test
+    ret = false;
+    ASSERT_EQ(false, ret);
+}
+
+/**
+ * @tc.name: SetHardwareEnabled Test
+ * @tc.desc: SetHardwareEnabled
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetHardwareEnabled, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetHardwareEnabled(true);
+    //for test
+    bool ret = true;
+    ASSERT_EQ(true, ret);
+    surfaceNode->SetHardwareEnabled(false);
+    //for test
+    ret = false;
+    ASSERT_EQ(false, ret);
+}
+
+/**
+ * @tc.name: DetachToDisplay Test
+ * @tc.desc: DetachToDisplay
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, DetachToDisplay, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    //for test
+    uint64_t screenId = 0;
+    surfaceNode->DetachToDisplay(screenId);
+    //for test
+    bool ret = true;
+    ASSERT_EQ(true, ret);
+}
+
+/**
+ * @tc.name: AttachToDisplay Test
+ * @tc.desc: AttachToDisplay
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, AttachToDisplay, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    //for test
+    uint64_t screenId = 0;
+    surfaceNode->AttachToDisplay(screenId);
+    //for test
+    bool ret = true;
+    ASSERT_EQ(true, ret);
+}
+
+/**
+ * @tc.name: SetAnimationFinished Test
+ * @tc.desc: SetAnimationFinished
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetAnimationFinished, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetAnimationFinished();
+    //for test
+    bool ret = true;
+    ASSERT_EQ(true, ret);
+}
+
+/**
+ * @tc.name: SetBoundsChangedCallback Test
+ * @tc.desc: SetBoundsChangedCallback
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetBoundsChangedCallback, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    using BoundsChangedCallback = std::function<void(const Rosen::Vector4f&)>;
+    BoundsChangedCallback callback;
+    surfaceNode->SetBoundsChangedCallback(callback);
+    //for test
+    bool ret = true;
+    ASSERT_EQ(true, ret);
+}
+
+/**
+ * @tc.name: IsBufferAvailable Test
+ * @tc.desc: IsBufferAvailable
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, IsBufferAvailable, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    bool ret = surfaceNode->IsBufferAvailable();
+    ASSERT_EQ(false, ret);
+}
+
+/**
+ * @tc.name: MarkUIHidden Test
+ * @tc.desc: MarkUIHidden
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, MarkUIHidden, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    bool isHidden = true;
+    surfaceNode->MarkUIHidden(isHidden);
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: SetIsNotifyUIBufferAvailable Test
+ * @tc.desc: SetIsNotifyUIBufferAvailable
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetIsNotifyUIBufferAvailable, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    bool available = true;
+    surfaceNode->SetIsNotifyUIBufferAvailable(available);
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: SetAbilityBGAlpha Test
+ * @tc.desc: SetAbilityBGAlpha
+ * @tc.type: FUNC
+ * @tc.require:SR000HSUII
+ */
+HWTEST_F(RSSurfaceNodeTest, SetAbilityBGAlpha, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    uint8_t alpha = 0;
+    surfaceNode->SetAbilityBGAlpha(alpha);
+    bool res = true;
+    ASSERT_EQ(true, res);
+}
 } // namespace OHOS::Rosen

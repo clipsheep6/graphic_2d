@@ -279,5 +279,142 @@ HWTEST_F(RSUIDirectorTest, FlushAnimation, TestSize.Level1)
     bool hasRunningAnimation = director->FlushAnimation(g_normalUInt64_2, g_vsyncPeriod);
     director->PostFrameRateTask([](){return;});
     ASSERT_EQ(hasRunningAnimation, false);
+>>>>>>> merge
+}
+
+
+/**
+ * @tc.name: GetAnimateExpectedRate
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, GetAnimateExpectedRate, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    int32_t res = director->GetAnimateExpectedRate();
+    ASSERT_TRUE(res == 0);
+}
+
+/**
+ * @tc.name: GetCurrentRefreshRateMode
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, GetCurrentRefreshRateMode, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    int32_t res = director->GetCurrentRefreshRateMode();
+    ASSERT_TRUE(res == 0);
+}
+
+/**
+ * @tc.name: PostFrameRateTask
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, PostFrameRateTask, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    const std::function<void()>& task = []() {
+        std::cout << "for test" << std::endl;
+    };
+    director->PostFrameRateTask(task);
+}
+
+/**
+ * @tc.name: SetRequestVsyncCallback
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, SetRequestVsyncCallback, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    const std::function<void()>& callback = []() {
+        std::cout << "for test" << std::endl;
+    };
+    director->SetRequestVsyncCallback(callback);
+}
+
+/**
+ * @tc.name: FlushAnimationStartTime
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, FlushAnimationStartTime, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    uint64_t timeStamp = 0;
+    director->FlushAnimationStartTime(timeStamp);
+}
+
+/**
+ * @tc.name: HasUIAnimation
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, HasUIAnimation, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    bool res = director->HasUIAnimation();
+    ASSERT_TRUE(res == false);
+}
+
+/**
+ * @tc.name: SetCacheDir
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, SetCacheDir, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    // for test
+    const std::string& cacheFilePath = "1";
+    director->SetCacheDir(cacheFilePath);
+}
+
+/**
+ * @tc.name: SetRTRenderForced
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, SetRTRenderForced, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    // for test
+    bool isRenderForced = true;
+    director->SetRTRenderForced(isRenderForced);
+}
+
+/**
+ * @tc.name: StartTextureExport
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, StartTextureExport, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    director->StartTextureExport();
+}
+
+/**
+ * @tc.name: GoGround
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSUIDirectorTest, GoGround, TestSize.Level1)
+{
+    std::shared_ptr<RSUIDirector> director = RSUIDirector::Create();
+    ASSERT_TRUE(director != nullptr);
+    director->GoForeground();
+    director->GoBackground();
 }
 } // namespace OHOS::Rosen

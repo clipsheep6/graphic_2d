@@ -3788,9 +3788,17 @@ HWTEST_F(RSUniRenderVisitorTest, SaveCurSurface, TestSize.Level2)
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->isSubSurfaceEnabled_ = true;
+<<<<<<< HEAD
     rsUniRenderVisitor->curSurfaceDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
     rsUniRenderVisitor->curSurfaceNode_ = std::make_shared<RSSurfaceRenderNode>(1);
     rsUniRenderVisitor->SaveCurSurface();
+=======
+    auto manager = std::make_shared<RSDirtyRegionManager>();
+    NodeId id = 1;
+    auto node = std::make_shared<RSSurfaceRenderNode>(id);
+    node->InitRenderParams();
+    rsUniRenderVisitor->SaveCurSurface(manager, node);
+>>>>>>> e3592931e (修复rosen_engine 部分TDD用例crash问题)
 }
 
 /**
@@ -3804,10 +3812,19 @@ HWTEST_F(RSUniRenderVisitorTest, RestoreCurSurface, TestSize.Level2)
     auto rsUniRenderVisitor = std::make_shared<RSUniRenderVisitor>();
     ASSERT_NE(rsUniRenderVisitor, nullptr);
     rsUniRenderVisitor->isSubSurfaceEnabled_ = true;
+<<<<<<< HEAD
     rsUniRenderVisitor->curSurfaceDirtyManager_ = std::make_shared<RSDirtyRegionManager>();
     rsUniRenderVisitor->curSurfaceNode_ = std::make_shared<RSSurfaceRenderNode>(1);
     rsUniRenderVisitor->SaveCurSurface();
     rsUniRenderVisitor->RestoreCurSurface();
+=======
+    auto manager = std::make_shared<RSDirtyRegionManager>();
+    NodeId id = 1;
+    auto node = std::make_shared<RSSurfaceRenderNode>(id);
+    node->InitRenderParams();
+    rsUniRenderVisitor->SaveCurSurface(manager, node);
+    rsUniRenderVisitor->RestoreCurSurface(manager, node);
+>>>>>>> e3592931e (修复rosen_engine 部分TDD用例crash问题)
 }
 
 /**

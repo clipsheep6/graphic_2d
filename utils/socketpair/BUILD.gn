@@ -40,12 +40,6 @@ ohos_shared_library("socketpair") {
   public_configs = [ ":socketpair_public_config" ]
   all_dependent_configs = [ ":socketpair_all_dependent_config" ]
 
-  public_external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-  ]
-
   deps = [ "//foundation/graphic/graphic_2d/utils:scoped_bytrace" ]
 
   external_deps = [

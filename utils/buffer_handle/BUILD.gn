@@ -46,12 +46,7 @@ ohos_static_library("buffer_handle") {
     "ipc:ipc_single",
   ]
 
-  public_external_deps = [
-    "c_utils:utils",
-    "eventhandler:eventhandler_native",
-    "eventhandler:libeventhandler",
-    "hilog:libhilog",
-  ]
+  public_external_deps = [ "hilog:libhilog" ]
   subsystem_name = "graphic"
   part_name = "graphic_2d"
 }

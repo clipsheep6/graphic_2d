@@ -67,8 +67,8 @@ private:
     void OutputOriginalImage(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const KawaseParameter& param);
     std::shared_ptr<Drawing::ShaderEffect> ApplySimpleFilter(Drawing::Canvas& canvas,
-        const std::shared_ptr<Drawing::Image>& input, const Drawing::Matrix& blurMatix,
-        const Drawing::ImageInfo& scaledInfo, const Drawing::SamplingOptions& linear) cosnt;
+        const std::shared_ptr<Drawing::Image>& input, const Drawing::Matrix& blurMarix,
+        const Drawing::ImageInfo& scaledInfo, const Drawing::SamplingOptions& linear) const;
     std::shared_ptr<Drawing::Image> ExecutePingPongBlur(Drawing::Canvas& canvas,
         const std::shared_ptr<Drawing::Image>& input, const KawaseParameter& kParam, const BlurParams& bParam) const;
     bool ApplyBlur(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,

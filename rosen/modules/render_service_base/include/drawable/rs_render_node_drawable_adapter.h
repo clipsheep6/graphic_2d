@@ -111,7 +111,7 @@ protected:
 
     // Note, the start is included, the end is excluded, so the range is [start, end)
     void DrawRangeImpl(Drawing::Canvas& canvas, const Drawing::Rect& rect, int8_t start, int8_t end) const;
-    void SetSkip(SkipType type);
+    void SetSkip(SkipType type) { skipType_ = type; }
 
     // Register utils
     using Generator = Ptr (*)(std::shared_ptr<const RSRenderNode>);
@@ -142,7 +142,8 @@ private:
     static std::map<RSRenderNodeType, Generator> GeneratorMap;
     static std::map<NodeId, WeakPtr> RenderNodeDrawableCache_;
     static inline std::mutex cacheMapMutex_;
-    int8_t skipIndex_ = -1;
+    SkipType skipType_ = SkipType::NONE;
+    int8_t GetSkipIndex() const;
 
     friend class OHOS::Rosen::RSRenderNode;
     friend class OHOS::Rosen::RSDisplayRenderNode;

@@ -157,16 +157,19 @@ void RSRenderNodeDrawableAdapter::DrawRangeImpl(
         return;
     }
 
-    if (UNLIKELY(skipIndex_ != -1)) {
+    if (UNLIKELY(skipType_ != SkipType::NONE)) {
+        auto skipIndex_ = GetSkipIndex();
         if (start <= skipIndex_ || end > skipIndex_) {
+            // skip index is in the range
             for (auto i = start; i < skipIndex_; i++) {
                 drawCmdList_[i](&canvas, &rect);
             }
             for (auto i = skipIndex_ + 1; i < end; i++) {
                 drawCmdList_[i](&canvas, &rect);
             }
+            return;
         }
-        return;
+        // skip index is not in the range, fall back to normal drawing
     }
 
     for (auto i = start; i < end; i++) {
@@ -253,6 +256,10 @@ void RSRenderNodeDrawableAdapter::DumpDrawableTree(int32_t depth, std::string& o
     renderNode->DumpSubClassNode(out);
     out += ", DrawableVec:[" + DumpDrawableVec() + "]";
     out += ", " + renderNode->GetRenderParams()->ToString();
+    if (skipType_ != SkipType::NONE) {
+        out += ", SkipType:" + std::to_string(static_cast<int>(skipType_));
+        out += ", SkipIndex:" + std::to_string(GetSkipIndex());
+    }
     out += "\n";
 
     auto childrenDrawable = std::static_pointer_cast<RSChildrenDrawable>(
@@ -364,19 +371,16 @@ bool RSRenderNodeDrawableAdapter::HasFilterOrEffect() const
     return drawCmdIndex_.shadowIndex_ != -1 || drawCmdIndex_.backgroundFilterIndex_ != -1 ||
            drawCmdIndex_.useEffectIndex_ != -1;
 }
-void RSRenderNodeDrawableAdapter::SetSkip(SkipType type)
+int8_t RSRenderNodeDrawableAdapter::GetSkipIndex() const
 {
-    switch (type) {
+    switch (skipType_) {
         case SkipType::SKIP_BACKGROUND_COLOR:
-            skipIndex_ = drawCmdIndex_.backgroundColorIndex_;
-            break;
+            return drawCmdIndex_.backgroundColorIndex_;
         case SkipType::SKIP_SHADOW:
-            skipIndex_ = drawCmdIndex_.shadowIndex_;
-            break;
+            return drawCmdIndex_.shadowIndex_;
         case SkipType::NONE:
         default:
-            skipIndex_ = -1;
-            break;
+            return -1;
     }
 }
 } // namespace OHOS::Rosen::DrawableV2

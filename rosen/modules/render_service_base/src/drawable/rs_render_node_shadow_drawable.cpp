@@ -24,8 +24,9 @@ RSRenderNodeShadowDrawable::RSRenderNodeShadowDrawable(
     std::shared_ptr<const RSRenderNode> node, std::shared_ptr<RSRenderNodeDrawableAdapter> nodeDrawable)
     : RSRenderNodeDrawableAdapter(std::move(node)), nodeDrawable_(std::move(nodeDrawable))
 {
+    // tell associated RSRenderNodeDrawableAdapter to skip shadow, as we take care of drawing shadow
     // Planning: directly set skip type (a RT flag!) here may cause shadow display error in some cases
-    nodeDrawable_->SetSkip(SkipType::SKIP_SHADOW); // tell associated RSRenderNodeDrawableAdapter to skip shadow
+    nodeDrawable_->SetSkip(SkipType::SKIP_SHADOW);
 }
 
 void RSRenderNodeShadowDrawable::Draw(Drawing::Canvas& canvas)

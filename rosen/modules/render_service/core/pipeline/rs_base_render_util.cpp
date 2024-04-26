@@ -651,8 +651,7 @@ bool ConvertBufferColorGamut(std::vector<uint8_t>& dstBuf, const sptr<OHOS::Surf
 
 Drawing::BitmapFormat GenerateDrawingBitmapFormat(const sptr<OHOS::SurfaceBuffer>& buffer)
 {
-    Drawing::ColorType colorType = (buffer->GetFormat() == GRAPHIC_PIXEL_FMT_BGRA_8888) ?
-        Drawing::ColorType::COLORTYPE_BGRA_8888 : Drawing::ColorType::COLORTYPE_RGBA_8888;
+    Drawing::ColorType colorType = GetColorTypeFromBufferFormat(buffer->GetFormat());
     Drawing::AlphaType alphaType = Drawing::AlphaType::ALPHATYPE_PREMUL;
     Drawing::BitmapFormat format { colorType, alphaType };
     return format;
@@ -898,6 +897,24 @@ GSError RSBaseRenderUtil::DropFrameProcess(RSSurfaceHandler& node)
     }
 
     return OHOS::GSERROR_OK;
+}
+
+Drawing::ColorType RSBaseRenderUtil::GetColorTypeFromBufferFormat(int32_t pixelFmt)
+{
+    switch (pixelFmt) {
+        case GRAPHIC_PIXEL_FMT_RGBA_8888:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+        case GRAPHIC_PIXEL_FMT_BGRA_8888 :
+            return Drawing::ColorType::COLORTYPE_BGRA_8888;
+        case GRAPHIC_PIXEL_FMT_RGB_565:
+            return Drawing::ColorType::COLORTYPE_RGB_565;
+        case GRAPHIC_PIXEL_FMT_YCBCR_P010:
+        case GRAPHIC_PIXEL_FMT_YCRCB_P010:
+        case GRAPHIC_PIXEL_FMT_RGBA_1010102:
+            return Drawing::ColorType::COLORTYPE_RGBA_1010102;
+        default:
+            return Drawing::ColorType::COLORTYPE_RGBA_8888;
+    }
 }
 
 Rect RSBaseRenderUtil::MergeBufferDamages(const std::vector<Rect>& damages)

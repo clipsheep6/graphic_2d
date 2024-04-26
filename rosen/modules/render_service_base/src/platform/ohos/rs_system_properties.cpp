@@ -770,7 +770,7 @@ bool RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled()
 
 bool RSSystemProperties::GetBlurExtraFilterEnabled()
 {
-    static bool blurExtraFilterEnabled = 
+    static bool blurExtraFilterEnabled =
         (std::atoi(system::GetParameter("persist.sys.graphic.blurExtraFilter", "0").c_str()) != 0);
     return blurExtraFilterEnabled;
 }

@@ -78,6 +78,7 @@ ohos_source_set("render_service_base_src") {
     "src/animation/rs_animation_manager.cpp",
     "src/animation/rs_animation_rate_decider.cpp",
     "src/animation/rs_animation_timing_protocol.cpp",
+    "src/animation/rs_animation_trace_utils.cpp",
     "src/animation/rs_cubic_bezier_interpolator.cpp",
     "src/animation/rs_interpolator.cpp",
     "src/animation/rs_particle_noise_field.cpp",
@@ -407,6 +408,13 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/utils/log",
   ]
 
+  if (is_arkui_x) {
+    include_dirs += [
+      "$graphic_2d_root/utils/color_manager/export",
+      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    ]
+  }
+
   include_dirs += [ "//third_party/skia/src" ]
 
   deps = [
@@ -489,6 +497,7 @@ ohos_source_set("render_service_base_src") {
     defines += [ "RS_PROFILER_ENABLED" ]
     sources += [
       "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_base.cpp",
+      "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_dump.cpp",
       "$graphic_2d_root/rosen/modules/render_service_profiler/rs_profiler_pixelmap.cpp",
     ]
   }

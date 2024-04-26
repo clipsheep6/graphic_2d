@@ -44,6 +44,7 @@ public:
         OHOS::Rosen::Drawing::Rect rect_;
         TextDirection direction_;
         TextBox(OHOS::Rosen::Drawing::Rect rect, TextDirection direction) : rect_(rect), direction_(direction) {}
+        TextBox() {}
     };
 
     struct PositionAndAffinity {

@@ -28,6 +28,15 @@
 #include "utils/rect.h"
 
 namespace OHOS::Rosen {
+
+// used for test
+class JsDrawingTestUtils {
+public:
+    static bool GetDrawingTestDisabled() { return closeDrawingTest_; }
+private:
+    static bool closeDrawingTest_;
+};
+
 namespace Drawing {
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;

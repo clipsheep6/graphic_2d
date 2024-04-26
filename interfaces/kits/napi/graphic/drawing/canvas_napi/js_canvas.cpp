@@ -22,6 +22,7 @@
 #include "pixel_map_napi.h"
 #endif
 #include "native_value.h"
+#include "common/rs_common_def.h"
 #include "draw/canvas.h"
 #include "draw/path.h"
 #include "image/image.h"
@@ -464,9 +465,10 @@ napi_value JsCanvas::OnDrawRect(napi_env env, napi_callback_info info)
         ROSEN_LOGE("JsCanvas::OnDrawRect Argv[0] is invalid");
         return NapiGetUndefined(env);
     }
-
-    Drawing::Rect drawingRect = Drawing::Rect(left, top, right, bottom);
-    m_canvas->DrawRect(drawingRect);
+    if (LIKELY(JsDrawingTestUtils::GetDrawingTestDisabled())) {
+        Drawing::Rect drawingRect = Drawing::Rect(left, top, right, bottom);
+        m_canvas->DrawRect(drawingRect);
+    }
     return NapiGetUndefined(env);
 }
 

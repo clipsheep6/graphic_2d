@@ -31,4 +31,12 @@ public:
         const OHOS::Rosen::Drawing::Rect* src, const OHOS::Rosen::Drawing::Rect* dst,
         const OHOS::Rosen::Drawing::SamplingOptions* sampling);
 };
+
+// used for test
+class DrawingTestUtils {
+public:
+    static bool GetDrawingTestDisabled() { return closeDrawingTest_; }
+private:
+    static bool closeDrawingTest_;
+};
 #endif // DRAWING_CANVAS_H

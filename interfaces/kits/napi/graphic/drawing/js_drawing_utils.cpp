@@ -15,7 +15,14 @@
 
 #include "js_drawing_utils.h"
 
+#include "common/rs_common_def.h"
+#include <parameters.h>
+
 namespace OHOS::Rosen {
+
+bool JsDrawingTestUtils::closeDrawingTest_ =
+    std::atoi((OHOS::system::GetParameter("persist.sys.graphic.drawing.test", "0").c_str())) != 1;
+
 namespace Drawing {
 void BindNativeFunction(napi_env env, napi_value object, const char* name, const char* moduleName, napi_callback func)
 {

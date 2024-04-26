@@ -13,15 +13,20 @@
  * limitations under the License.
  */
 
+#include "common/rs_common_def.h"
 #include "drawing_canvas.h"
 #include "drawing_canvas_utils.h"
 #include "image_pixel_map_mdk.h"
 #include "native_pixel_map.h"
 #include "recording/recording_canvas.h"
+#include <parameters.h>
 
 using namespace OHOS;
 using namespace Rosen;
 using namespace Drawing;
+
+bool DrawingTestUtils::closeDrawingTest_ =
+    std::atoi((OHOS::system::GetParameter("persist.sys.graphic.drawing.test", "0").c_str())) != 1;
 
 static Canvas* CastToCanvas(OH_Drawing_Canvas* cCanvas)
 {
@@ -417,7 +422,9 @@ void OH_Drawing_CanvasDrawRect(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Rect
     if (canvas == nullptr) {
         return;
     }
-    canvas->DrawRect(CastToRect(*cRect));
+    if (LIKELY(DrawingTestUtils::GetDrawingTestDisabled())) {
+        canvas->DrawRect(CastToRect(*cRect));
+    }
 }
 
 void OH_Drawing_CanvasDrawCircle(OH_Drawing_Canvas* cCanvas, const OH_Drawing_Point* cPoint, float radius)

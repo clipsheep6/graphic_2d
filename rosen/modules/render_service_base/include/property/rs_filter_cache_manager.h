@@ -107,8 +107,8 @@ private:
         const Drawing::RectI& srcRect, const bool needSnapshotOutset = true);
     void GenerateFilteredSnapshot(
         RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter, const Drawing::RectI& dstRect);
-    bool DrawFilterWithoutSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSPaintFilter>& filter,
-        const Drawing::RectI$ src, const Drawing::RectI& dst, bool shouldClearfilteredCache);
+    bool DrawFilterWithoutSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
+        const Drawing::RectI& src, const Drawing::RectI& dst, bool shouldClearFilteredCache);
     void DrawCachedFilteredSnapshot(RSPaintFilterCanvas& canvas, const Drawing::RectI& dstRect) const;
     // Validate the input srcRect and dstRect, and return the validated rects.
     std::tuple<Drawing::RectI, Drawing::RectI> ValidateParams(RSPaintFilterCanvas& canvas,

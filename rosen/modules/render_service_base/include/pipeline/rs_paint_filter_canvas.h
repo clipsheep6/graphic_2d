@@ -274,6 +274,11 @@ public:
     bool GetRecordingState() const override;
     void SetRecordingState(bool flag) override;
 
+    const std::stack<OffscreenData>& GetOffscreenDataList() const
+    {
+        return offscreenDataList_;
+    }
+
 protected:
     using Env = struct {
         Color envForegroundColor_;

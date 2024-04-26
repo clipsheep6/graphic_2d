@@ -20,6 +20,7 @@
 
 #include "common/rs_optional_trace.h"
 #include "drawable/rs_misc_drawable.h"
+#include "drawable/rs_render_node_shadow_drawable.h"
 #include "params/rs_display_render_params.h"
 #include "params/rs_surface_render_params.h"
 #include "pipeline/rs_render_node.h"
@@ -27,9 +28,8 @@
 #include "platform/common/rs_log.h"
 
 namespace OHOS::Rosen::DrawableV2 {
-RSRenderNodeDrawableAdapter::Generator RSRenderNodeDrawableAdapter::shadowGenerator_ = nullptr;
 std::map<RSRenderNodeType, RSRenderNodeDrawableAdapter::Generator> RSRenderNodeDrawableAdapter::GeneratorMap;
-std::map<NodeId, RSRenderNodeDrawableAdapter::WeakPtr> RSRenderNodeDrawableAdapter::RenderNodeDrawableCache;
+std::map<NodeId, RSRenderNodeDrawableAdapter::WeakPtr> RSRenderNodeDrawableAdapter::RenderNodeDrawableCache_;
 
 RSRenderNodeDrawableAdapter::RSRenderNodeDrawableAdapter(std::shared_ptr<const RSRenderNode>&& node)
     : nodeType_(node->GetType()), renderNode_(std::move(node)) {}
@@ -37,7 +37,7 @@ RSRenderNodeDrawableAdapter::RSRenderNodeDrawableAdapter(std::shared_ptr<const R
 RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::GetDrawableById(NodeId id)
 {
     std::lock_guard<std::mutex> lock(cacheMapMutex_);
-    if (const auto cacheIt = RenderNodeDrawableCache.find(id); cacheIt != RenderNodeDrawableCache.end()) {
+    if (const auto cacheIt = RenderNodeDrawableCache_.find(id); cacheIt != RenderNodeDrawableCache_.end()) {
         if (const auto ptr = cacheIt->second.lock()) {
             return ptr;
         }
@@ -57,7 +57,7 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerate(
     static const auto Destructor = [](RSRenderNodeDrawableAdapter* ptr) {
         {
             std::lock_guard<std::mutex> lock(cacheMapMutex_);
-            RenderNodeDrawableCache.erase(ptr->nodeId_); // Remove from cache before deleting
+            RenderNodeDrawableCache_.erase(ptr->nodeId_); // Remove from cache before deleting
         }
         RSRenderNodeGC::DrawableDestructor(ptr);
     };
@@ -65,11 +65,11 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerate(
     // Try to get a cached drawable if it exists.
     {
         std::lock_guard<std::mutex> lock(cacheMapMutex_);
-        if (const auto cacheIt = RenderNodeDrawableCache.find(id); cacheIt != RenderNodeDrawableCache.end()) {
+        if (const auto cacheIt = RenderNodeDrawableCache_.find(id); cacheIt != RenderNodeDrawableCache_.end()) {
             if (const auto ptr = cacheIt->second.lock()) {
                 return ptr;
             } else {
-                RenderNodeDrawableCache.erase(cacheIt);
+                RenderNodeDrawableCache_.erase(cacheIt);
             }
         }
     }
@@ -87,7 +87,7 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerate(
 
     {
         std::lock_guard<std::mutex> lock(cacheMapMutex_);
-        RenderNodeDrawableCache.emplace(id, sharedPtr);
+        RenderNodeDrawableCache_.emplace(id, sharedPtr);
     }
     return sharedPtr;
 }
@@ -112,25 +112,26 @@ void RSRenderNodeDrawableAdapter::InitRenderParams(const std::shared_ptr<const R
 }
 
 RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerateShadowDrawable(
-    const std::shared_ptr<const RSRenderNode>& node)
+    const std::shared_ptr<const RSRenderNode>& node, const std::shared_ptr<RSRenderNodeDrawableAdapter>& drawable)
 {
     static std::map<NodeId, RSRenderNodeDrawableAdapter::WeakPtr> shadowDrawableCache;
-    static std::mutex cacheMapMutex;
+    static std::mutex shadowCacheMapMutex;
     static const auto Destructor = [](RSRenderNodeDrawableAdapter* ptr) {
         {
-            std::lock_guard<std::mutex> lock(cacheMapMutex);
+            std::lock_guard<std::mutex> lock(shadowCacheMapMutex);
             shadowDrawableCache.erase(ptr->nodeId_); // Remove from cache before deleting
         }
+        static_cast<RSRenderNodeShadowDrawable*>(ptr)->OnDetach(); // tell associated RenderNodeDrawable not to skip shadow
         RSRenderNodeGC::DrawableDestructor(ptr);
     };
 
-    if (node == nullptr || shadowGenerator_ == nullptr) {
+    if (node == nullptr) {
         return nullptr;
     }
     auto id = node->GetId();
     // Try to get a cached drawable if it exists.
     {
-        std::lock_guard<std::mutex> lock(cacheMapMutex);
+        std::lock_guard<std::mutex> lock(shadowCacheMapMutex);
         if (const auto cacheIt = shadowDrawableCache.find(id); cacheIt != shadowDrawableCache.end()) {
             if (const auto ptr = cacheIt->second.lock()) {
                 return ptr;
@@ -140,10 +141,10 @@ RSRenderNodeDrawableAdapter::SharedPtr RSRenderNodeDrawableAdapter::OnGenerateSh
         }
     }
 
-    auto ptr = shadowGenerator_(node);
+    auto ptr = new RSRenderNodeShadowDrawable(node, drawable);
     auto sharedPtr = std::shared_ptr<RSRenderNodeDrawableAdapter>(ptr, Destructor);
     {
-        std::lock_guard<std::mutex> lock(cacheMapMutex);
+        std::lock_guard<std::mutex> lock(shadowCacheMapMutex);
         shadowDrawableCache.emplace(id, sharedPtr);
     }
     return sharedPtr;

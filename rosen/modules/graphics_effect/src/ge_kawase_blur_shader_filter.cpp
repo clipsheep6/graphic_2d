@@ -67,7 +67,7 @@ static bool IsAdvancedFilterUsable()
 
 static bool GetBlurExtraFilterEnabled()
 {
-    static bool blurExtrafilterEnabled = 
+    static bool blurExtraFilterEnabled = 
         (std::atoi(GESystemProperties::GetEventProperty(PROPERTY_BLUR_EXTRA_FILER).c_str()) != 0);
     return blurExtraFilterEnabled;
 }
@@ -127,13 +127,13 @@ int GEKawaseBlurShaderFilter::GetRadius() const
 }
 
 std::shared_ptr<Drawing::ShaderEffect> GEKawaseBlurShaderFilter::ApplySimpleFilter(Drawing::Canvas& canvas,
-    const std::shared_ptr<Drawing::Imagge>& input, const std::shared_ptr<Drawing::ShaderEffect>& prevShader,
+    const std::shared_ptr<Drawing::Image>& input, const std::shared_ptr<Drawing::ShaderEffect>& prevShader,
     const Drawing::ImageInfo& scaledInfo, const Drawing::SamplingOptions& linear) const
 {
     Drawing::RuntimeShaderBuilder simpleBlurBuilder(SIMPLEFILTER);
     simpleBlurBuilder.SetChild("imageInput", prevShader);
     std::shared_ptr<Drawing::Image> tmpSimpleBlur(simpleBlurBuilder.MakeImage(
-        canvas.GetGPUContext().get(), unllptr, scaledInfo, false));
+        canvas.GetGPUContext().get(), nullptr, scaledInfo, false));
     return Drawing::ShaderEffect::CreateImageShader(*tmpSimpleBlur, Drawing::TileMode::CLAMP, Drawing::TileMode::CLAMP,
         linear, Drawing::Matrix());
 }
@@ -305,7 +305,7 @@ bool GEKawaseBlurShaderFilter::InitMixEffect()
     return true;
 }
 
-bool GEKawaseBlurShaderilter::InitSimpleFilter()
+bool GEKawaseBlurShaderFilter::InitSimpleFilter()
 {
     static std::string simpleShader(R"(
         uniform shader imageInput;
@@ -316,7 +316,7 @@ bool GEKawaseBlurShaderilter::InitSimpleFilter()
     if (SIMPLEFILTER == nullptr) {
         SIMPLEFILTER = Drawing::RuntimeEffect::CreateForShader(simpleShader);
         if (SIMPLEFILTER == nullptr) {
-            LOGE("GEKawaseBlurShaderilter::RuntimeShader failed to create simple filter");
+            LOGE("GEKawaseBlurShaderFilter::RuntimeShader failed to create simple filter");
             return false;
         }
     }

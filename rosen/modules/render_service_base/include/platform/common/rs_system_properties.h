@@ -188,8 +188,8 @@ public:
     static bool GetRenderParallelEnabled();
     static bool GetPropertyDrawableEnable();
 
-    static bool GetDrawFilterWithoutSnapshotEnalbed();
-    static bool GetBlurExtrafilterEnabled();
+    static bool GetDrawFilterWithoutSnapshotEnabled();
+    static bool GetBlurExtraFilterEnabled();
 
     static bool GetAnimationCacheEnabled();
 

@@ -389,10 +389,8 @@ private:
 
     void SwitchColorFilterDrawing(int currentSaveCount);
     void ProcessShadowFirst(RSRenderNode& node, bool inSubThread);
-    void SaveCurSurface(std::shared_ptr<RSDirtyRegionManager> dirtyManager,
-        std::shared_ptr<RSSurfaceRenderNode> surfaceNode);
-    void RestoreCurSurface(std::shared_ptr<RSDirtyRegionManager> &dirtyManager,
-        std::shared_ptr<RSSurfaceRenderNode> &surfaceNode);
+    void SaveCurSurface();
+    void RestoreCurSurface();
     void PrepareSubSurfaceNodes(RSSurfaceRenderNode& node);
     void ProcessSubSurfaceNodes(RSSurfaceRenderNode& node);
 
@@ -578,7 +576,7 @@ private:
     // record nodes in surface which has filter may influence golbalDirty
     OcclusionRectISet globalFilter_;
     // record container nodes which need filter
-    OcclusionRectISet containerFilter_;
+    FilterRectISet containerFilter_;
     // record nodes which has transparent clean filter
     std::unordered_map<NodeId, std::vector<std::pair<NodeId, RectI>>> transparentCleanFilter_;
     // record nodes which has transparent dirty filter

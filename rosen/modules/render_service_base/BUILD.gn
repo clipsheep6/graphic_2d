@@ -178,6 +178,7 @@ ohos_source_set("render_service_base_src") {
     "src/memory/rs_tag_tracker.cpp",
 
     #params
+    "src/params/rs_canvas_drawing_render_params.cpp",
     "src/params/rs_canvas_render_params.cpp",
     "src/params/rs_display_render_params.cpp",
     "src/params/rs_render_params.cpp",
@@ -407,6 +408,13 @@ ohos_source_set("render_service_base_src") {
     "$graphic_2d_root/utils/color_manager/export",
     "$graphic_2d_root/utils/log",
   ]
+
+  if (is_arkui_x) {
+    include_dirs += [
+      "$graphic_2d_root/utils/color_manager/export",
+      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    ]
+  }
 
   deps = [
     "$graphic_2d_root/utils/sandbox:sandbox_utils",

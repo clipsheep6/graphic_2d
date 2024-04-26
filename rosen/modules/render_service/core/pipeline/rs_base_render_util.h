@@ -99,6 +99,7 @@ public:
     static Drawing::Matrix GetSurfaceTransformMatrix(GraphicTransformType rotationTransform, const RectF& bounds);
     static Drawing::Matrix GetGravityMatrix(Gravity gravity, const sptr<SurfaceBuffer>& buffer, const RectF& bounds);
     static void SetPropertiesForCanvas(RSPaintFilterCanvas& canvas, const BufferDrawParam& params);
+    static Drawing::ColorType RSBaseRenderUtil::GetColorTypeFromBufferFormat(int32_t pixelFmt);
 
     static GSError DropFrameProcess(RSSurfaceHandler& node);
     static Rect MergeBufferDamages(const std::vector<Rect>& damages);

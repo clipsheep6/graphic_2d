@@ -245,8 +245,12 @@ std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction) cons
 
 bool RSMaterialFilter::IsValid() const
 {
-    constexpr float epsilon = 0.999f;
-    return radius_ > epsilon;
+    static constexpr float epsilon = 0.999f;
+    bool isApplyColorFilter =
+        (!ROSEN_EQ(saturation_, 1.0f) && ROSEN_GE(saturation_, 0.0f)) ||
+        (!ROSEN_EQ(brightness_, 1.0f) && ROSEN_GE(brightness_, 0.0f));
+
+    return ROSEN_GNE(radius_, epsilon) || isApplyColorFilter;
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)
@@ -298,30 +302,60 @@ std::shared_ptr<RSFilter> RSMaterialFilter::Negate()
     return std::make_shared<RSMaterialFilter>(materialParam, colorMode_);
 }
 
-void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
-    const Drawing::Rect& src, const Drawing::Rect& dst) const
+void RSMaterialFilter::ApplyColorFilter(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& greyImage,
+    const Drawing::Rect& src, const Drawing::Rect& dst)
 {
-    auto brush = GetBrush();
-    // if kawase blur failed, use gauss blur
-    std::shared_ptr<Drawing::Image> greyImage = image;
+    Drawing::Brush brush;
+    if (colorFilter_) {
+        Drawing::Filter filter;
+        filter.SetColorFilter(colorFilter_);
+        brush.SetFilter(filter);
+    }
+
+    canvas.AttachBrush(brush);
+    canvas.DrawImageRect(*greyImage, src, dst, Drawing::SamplingOptions());
+    canvas.DetachBrush();
+    return;
+}
+
+bool RSMaterialFilter::ApplyGrayAdjust(
+    Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
+    const Drawing::Rect& src, const Drawing::Rect& dst,
+    std::shared_ptr<Drawing::Image>& greyImage) 
+{
     if (greyCoef_.has_value()) {
         auto visualEffectContainer = std::make_shared<Drawing::GEVisualEffectContainer>();
         if (!visualEffectContainer) {
-            return;
+            return false;
         }
+
         auto greyFilter = std::make_shared<Drawing::GEVisualEffect>("GREY", Drawing::DrawingPaintType::BRUSH);
         greyFilter->SetParam("GREY_COEF_1", greyCoef_.value()[0]);
         greyFilter->SetParam("GREY_COEF_2", greyCoef_.value()[1]);
         visualEffectContainer->AddToChainedFilter(greyFilter);
         auto geRender = std::make_shared<GraphicsEffectEngine::GERender>();
         if (!geRender) {
-            return;
+            return false;
         }
         greyImage = geRender->ApplyImageEffect(canvas, *visualEffectContainer,
             image, src, src, Drawing::SamplingOptions());
     }
+
     if (greyImage == nullptr) {
         greyImage = image;
+    }
+
+    return true;
+}
+
+void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
+    const Drawing::Rect& src, const Drawing::Rect& dst) const
+{
+    auto brush = GetBrush();
+    // if kawase blur failed, use gauss blur
+    std::shared_ptr<Drawing::Image> greyImage = image;
+    if(!ApplyGrayAdjust(canvas, image, src, dst, greyImage)) {
+        return;
     }
 
     // if hps blur failed, use kawase blur
@@ -331,6 +365,12 @@ void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_
         return;
     }
 
+    static constexpr float epsilon = 0.999f;
+    if (ROSEN_LE(radius_, epsilon)) {
+        ApplyColorFilter(canvas, greyImage, src, dst);
+        return;
+    }
+    
     static bool DDGR_ENABLED = RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR;
     KawaseParameter param = KawaseParameter(src, dst, radius_, colorFilter_, brush.GetColor().GetAlphaF());
     if (!DDGR_ENABLED && KAWASE_BLUR_ENABLED &&

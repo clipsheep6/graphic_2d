@@ -764,15 +764,15 @@ bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
 bool RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled()
 {
     static bool drawFilterWithoutSnahpshotEnabled = 
-        (std::atoi(system::GetParameter("persist.sys.graphic.drawFilterWithoutSnahpshot",“0).c_str()) != 0);
+        (std::atoi(system::GetParameter("persist.sys.graphic.drawFilterWithoutSnahpshot","0").c_str()) != 0);
         return drawFilterWithoutSnahpshotEnabled;
 }
 
-bool RSSystemProperties::GetBlurExtraFfilterEnabled()
+bool RSSystemProperties::GetBlurExtraFilterEnabled()
 {
-    static bool blurExtraFfilterEnabled = 
-    (std::atoi((system::GetParameter("persist.sys.graphic.blurExtraFilter", "0")).c_str()) != 0);
-    return blurExtraFfilterEnabled;
+    static bool blurExtraFilterEnabled = 
+        (std::atoi(system::GetParameter("persist.sys.graphic.blurExtraFilter", "0")).c_str()) != 0);
+    return blurExtraFilterEnabled;
 }
 
 #ifdef DDGR_ENABLE_FEATURE_OPINC

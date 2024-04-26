@@ -190,7 +190,6 @@ ohos_shared_library("librender_service") {
     "$graphic_2d_root/rosen/modules/hyper_graphic_manager/core/utils",
     "$graphic_2d_root/rosen/modules/create_pixelmap_surface/include",
   ]
-  external_deps = [ "c_utils:utils" ]
   if (use_video_processing_engine) {
     include_dirs += [ "$video_processing_engine_root/interfaces/inner_api" ]
   }
@@ -283,7 +282,7 @@ ohos_shared_library("librender_service") {
     deps += [ "$rosen_root/modules/2d_graphics:2d_graphics" ]
   }
 
-  external_deps += [
+  external_deps = [
     "battery_manager:batterysrv_client",
     "c_utils:utils",
     "drivers_interface_display:display_commontype_idl_headers",

@@ -142,8 +142,6 @@ ohos_source_set("rosen_ohos_sources") {
   if (rs_enable_gpu) {
     include_dirs += [ "$graphic_2d_root/interfaces/inner_api/common" ]
 
-    include_dirs += [ "//third_party/skia" ]
-
     public_deps += [
       "$graphic_2d_root:libgl",
       "$graphic_2d_root:libvulkan",
@@ -159,12 +157,10 @@ ohos_source_set("rosen_ohos_sources") {
   }
 
   external_deps += [
-    "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "image_framework:image_native",
     "init:libbeget_proxy",
     "init:libbegetutil",
     "ipc:ipc_core",

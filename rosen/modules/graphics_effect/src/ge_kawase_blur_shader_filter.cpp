@@ -68,7 +68,7 @@ static bool IsAdvancedFilterUsable()
 static bool GetBlurExtraFilterEnabled()
 {
     static bool blurExtraFilterEnabled =
-        (std::atoi(GESystemProperties::GetEventProperty(PROPERTY_BLUR_EXTRA_FILER).c_str()) != 0);
+        (std::atoi(GESystemProperties::GetEventProperty(PROPERTY_BLUR_EXTRA_FILTER).c_str()) != 0);
     return blurExtraFilterEnabled;
 }
 

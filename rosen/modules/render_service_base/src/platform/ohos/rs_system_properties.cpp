@@ -870,7 +870,7 @@ bool RSSystemProperties::GetDumpUIPixelmapEnabled()
 
 uint32_t RSSystemProperties::GetVirtualScreenScaleModeDFX()
 {
-    static uint32_t scaleModeDFX =
+    static int scaleModeDFX =
         std::atoi((system::GetParameter("persist.rosen.virtualScreenScaleMode.debugType", "2")).c_str());
     return (scaleModeDFX > DEFAULT_SCALE_MODE) ? DEFAULT_SCALE_MODE : scaleModeDFX;
 }

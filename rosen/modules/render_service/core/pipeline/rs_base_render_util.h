@@ -60,7 +60,7 @@ struct BufferDrawParam {
     bool useBilinearInterpolation = false;
     std::vector<GraphicHDRMetaData> metaDatas = {}; // static meta datas for HDR10
     GraphicHDRMetaDataSet metaDataSet; // dynamic meta datas for HDR10+, HDR VIVID
-    uint32_t threadIndex = UNI_MAIN_THREAD_INDEX; // use to decide eglimage unmap thread index
+    pid_t threadIndex = UNI_MAIN_THREAD_INDEX; // use to decide eglimage unmap thread index
 #ifdef USE_VIDEO_PROCESSING_ENGINE
     float screenBrightnessNits = DEFAULT_SCREEN_LIGHT_NITS;
 #endif

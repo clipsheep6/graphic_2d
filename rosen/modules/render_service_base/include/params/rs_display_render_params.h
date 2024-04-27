@@ -125,7 +125,7 @@ private:
     uint64_t screenId_ = 0;
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
     ScreenInfo screenInfo_;
-    ScreenId mirroredId_;
+    ScreenId mirroredId_ = INVALID_SCREEN_ID;
     RSDisplayRenderNode::CompositeType compositeType_ = RSDisplayRenderNode::CompositeType::HARDWARE_COMPOSITE;
     bool isMainAndLeashSurfaceDirty_ = false;
     bool isRotationChanged_ = false;

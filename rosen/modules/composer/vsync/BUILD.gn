@@ -86,9 +86,9 @@ ohos_shared_library("libvsync") {
   }
 
   public_deps = [ "$graphic_2d_root/utils:scoped_bytrace" ]
+
   external_deps = [
     "c_utils:utils",
-    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
@@ -97,6 +97,7 @@ ohos_shared_library("libvsync") {
   ]
   public_external_deps = [ "c_utils:utils" ]
 
+  public_external_deps = [ "eventhandler:libeventhandler" ]
   if (defined(graphic_2d_ext_configs.vendor_root)) {
     include_dirs += graphic_2d_ext_configs.libvsync_ext_include_dirs
 

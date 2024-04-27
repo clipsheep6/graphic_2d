@@ -46,6 +46,7 @@
 #include "platform/common/rs_event_manager.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "transaction/rs_transaction_data.h"
+#include "pipeline/rs_uni_render_visitor.h"
 
 #ifdef RES_SCHED_ENABLE
 #include "vsync_system_ability_listener.h"
@@ -103,6 +104,8 @@ public:
     bool IsUIFirstOn() const;
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
     void ClearMemoryCache(ClearMemoryMoment moment, bool deeply = false, pid_t pid = -1);
+    void ClearMemoryCacheTask(pid_t pid, bool deeply);
+    uint32_t GetTaskDelay();
 
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)
@@ -330,6 +333,8 @@ private:
     void SetDeviceType();
     void ColorPickerRequestVsyncIfNeed();
     void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
+    bool CheckAndProcessDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, std::shared_ptr<RSUniRenderVisitor> uniVisitor);
+    void TraverseAndUpdateNodeTree(std::shared_ptr<RSBaseRenderNode> rootNode, std::shared_ptr<RSUniRenderVisitor> uniVisitor);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces,
         VisibleData& dstCurVisVec, std::map<NodeId, RSVisibleLevel>& dstPidVisMap);
@@ -380,6 +385,10 @@ private:
 
     // UIFirst
     bool CheckParallelSubThreadNodesStatus();
+    void ProcessNodeWithStatusDoing(std::shared_ptr<RSSurfaceRenderNode> node);
+    pid_t GetPidForNode(const std::shared_ptr<RSSurfaceRenderNode>& node);
+    void UpdateCacheCmdSkippedInfo(const std::shared_ptr<RSSurfaceRenderNode>& node, pid_t pid);
+    void UpdateCacheCmdSkippedInfoForAbilityNodes(const std::shared_ptr<RSSurfaceRenderNode>& node);
     void CacheCommands();
     bool CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const;
 
@@ -393,7 +402,6 @@ private:
     RSVisibleLevel GetRegionVisibleLevel(const Occlusion::Region& curRegion,
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
-    void ProcessScreenHotPlugEvents();
     void TryCleanResourceInBackGroundThd();
     void WaitUntilUploadTextureTaskFinishedForGL();
 #ifdef RES_SCHED_ENABLE
@@ -450,7 +458,6 @@ private:
     std::condition_variable unmarshalTaskCond_;
     std::mutex unmarshalMutex_;
     int32_t unmarshalFinishedCount_ = 0;
-    bool needWaitUnmarshalFinished_ = true;
     sptr<VSyncDistributor> appVSyncDistributor_ = nullptr;
 
     std::condition_variable surfaceCapProcTaskCond_;

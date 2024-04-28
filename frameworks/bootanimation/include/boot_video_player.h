@@ -13,48 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_BOOTANIMATION_INCLUDE_BOOT_VIDEOPLAYER_H
-#define FRAMEWORKS_BOOTANIMATION_INCLUDE_BOOT_VIDEOPLAYER_H
+#ifndef FRAMEWORKS_BOOTANIMATION_INCLUDE_BOOT_VIDEO_PLAYER_H
+#define FRAMEWORKS_BOOTANIMATION_INCLUDE_BOOT_VIDEO_PLAYER_H
 
-#ifdef PLAYER_FRAMEWORK_ENABLE
-#include <media_errors.h>
-#endif
-#include <parameters.h>
-
-#include "event_handler.h"
-#ifdef PLAYER_FRAMEWORK_ENABLE
-#include "player.h"
-#endif
+#include "boot_player.h"
 
 namespace OHOS {
-using VSyncCallback = std::function<void(void*)>;
-struct FrameCallback {
-    void *userData_;
-    VSyncCallback callback_;
-};
-class BootVideoPlayer : public std::enable_shared_from_this<BootVideoPlayer> {
+
+class BootVideoPlayer : public BootPlayer, public std::enable_shared_from_this<BootVideoPlayer> {
 public:
-    void SetVideoPath(const std::string& path);
-#ifdef PLAYER_FRAMEWORK_ENABLE
-    void SetPlayerSurface(const OHOS::sptr<OHOS::Surface>& surface);
-    std::shared_ptr<Media::Player> GetPlayer();
-#endif
-    void SetCallback(const FrameCallback* cb)
-    {
-        std::lock_guard<std::mutex> locker(mtx_);
-        vsyncCallbacks_ = cb->callback_;
-        userData_ = cb->userData_;
-    }
-    bool PlayVideo();
+    BootVideoPlayer(const PlayerParams& params);
+
+    virtual ~BootVideoPlayer() = default;
+
+    void Play() override;
+
+private:
+    void SetCallback(const BootAnimationCallback* cb);
+    bool SetVideoSound();
+    std::shared_ptr<Media::Player> GetMediaPlayer() const;
     void StopVideo();
-    void SetVideoSound();
 private:
 #ifdef PLAYER_FRAMEWORK_ENABLE
-    std::shared_ptr<Media::Player> mediaPlayer_;
     OHOS::sptr<OHOS::Surface> surface_;
 #endif
-    std::string videopath_;
-    VSyncCallback vsyncCallbacks_;
+
+    VSyncCallback vSyncCallback_;
     void *userData_;
     std::mutex mtx_;
 
@@ -80,4 +64,4 @@ private:
 #endif
 } // namespace OHOS
 
-#endif // FRAMEWORKS_BOOTANIMATION_INCLUDE_BOOT_VIDEOPLAYER_H
+#endif // FRAMEWORKS_BOOTANIMATION_INCLUDE_BOOT_VIDEO_PLAYER_H

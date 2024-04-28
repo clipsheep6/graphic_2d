@@ -45,6 +45,9 @@
 
 #ifdef RS_ENABLE_VK
 namespace {
+    constexpr int REQUEST_SET_ENABLE_LOAD_ID = 100006;
+    constexpr int REQUEST_SET_ENABLE_LOAD = 90;
+    constexpr int REQUEST_SET_DISABLE_LOAD = 50;
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     auto& vkContext = OHOS::Rosen::RsVulkanContext::GetSingleton().GetRsVulkanInterface();
@@ -506,11 +509,11 @@ bool RSSurfaceRenderNodeDrawable::DrawUIFirstCache(RSPaintFilterCanvas& rscanvas
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         bool frameParamEnable = RsFrameReport::GetInstance().GetEnable();
         if (frameParamEnable) {
-            RsFrameReport::GetInstance().SetFrameParam(100006, 90, 0, GetLastFrameUsedThreadIndex());
+            RsFrameReport::GetInstance().SetFrameParam(REQUEST_SET_ENABLE_LOAD_ID, REQUEST_SET_ENABLE_LOAD, 0, GetLastFrameUsedThreadIndex());
         }
         RSSubThreadManager::Instance()->WaitNodeTask(nodeId_);
         if (frameParamEnable) {
-            RsFrameReport::GetInstance().SetFrameParam(100006, 50, 0, GetLastFrameUsedThreadIndex());
+            RsFrameReport::GetInstance().SetFrameParam(REQUEST_SET_ENABLE_LOAD_ID, REQUEST_SET_DISABLE_LOAD, 0, GetLastFrameUsedThreadIndex());
         }
         UpdateCompletedCacheSurface();
 #endif

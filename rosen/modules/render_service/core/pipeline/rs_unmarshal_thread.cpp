@@ -70,9 +70,9 @@ void RSUnmarshalThread::RecvParcel(std::shared_ptr<MessageParcel>& parcel)
     bool isPendingUnmarshal = (parcel->GetDataSize() > MIN_PENDING_REQUEST_SYNC_DATA_SIZE);
     RSTaskMessage::RSTask task = [this, parcel = parcel, isPendingUnmarshal]() {
         SetFrameParam(REQUEST_FRAME_AWARE_ID, REQUEST_FRAME_AWARE_LOAD, REQUEST_FRAME_AWARE_NUM, 0);
-        SetFrameLoad(85);
+        SetFrameLoad(REQUEST_FRAME_AWARE_LOAD);
         auto transData = RSBaseRenderUtil::ParseTransactionData(*parcel);
-        SetFrameLoad(50);
+        SetFrameLoad(REQUEST_FRAME_STANDARD_LOAD);
         if (!transData) {
             return;
         }

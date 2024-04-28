@@ -35,6 +35,8 @@
 #include "platform/common/rs_log.h"
 #include "utils/rect.h"
 #include "utils/region.h"
+#include "rs_profiler.h"
+#include "rs_frame_report.h"
 #ifdef RS_ENABLE_VK
 #include "include/gpu/GrBackendSurface.h"
 #include "platform/ohos/backend/native_buffer_utils.h"
@@ -502,7 +504,14 @@ bool RSSurfaceRenderNodeDrawable::DrawUIFirstCache(RSPaintFilterCanvas& rscanvas
             return false; // draw nothing
         }
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
-        RSSubThreadManager::Instance()->WaitNodeTask(nodeId_);
+        bool frameParamEnable = RsFrameReport::GetInstance().GetEnable();
+        if (frameParamEnable) {
+            RsFrameReport::GetInstance().SetFrameParam(100006, 90, 0, GetLastFrameUsedThreadIndex());
+        }
+        RSSubThreadManager::Instance()->WaitNodeTask(params->GetId());
+        if (frameParamEnable) {
+            RsFrameReport::GetInstance().SetFrameParam(100006, 50, 0, GetLastFrameUsedThreadIndex());
+        }
         UpdateCompletedCacheSurface();
 #endif
     }

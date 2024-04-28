@@ -508,7 +508,7 @@ bool RSSurfaceRenderNodeDrawable::DrawUIFirstCache(RSPaintFilterCanvas& rscanvas
         if (frameParamEnable) {
             RsFrameReport::GetInstance().SetFrameParam(100006, 90, 0, GetLastFrameUsedThreadIndex());
         }
-        RSSubThreadManager::Instance()->WaitNodeTask(params->GetId());
+        RSSubThreadManager::Instance()->WaitNodeTask(nodeId_);
         if (frameParamEnable) {
             RsFrameReport::GetInstance().SetFrameParam(100006, 50, 0, GetLastFrameUsedThreadIndex());
         }

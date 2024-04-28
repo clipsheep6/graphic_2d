@@ -49,6 +49,7 @@ bool RSChildrenDrawable::OnUpdate(const RSRenderNode& node)
                 stagingChildrenDrawableVec_.push_back(std::move(childDrawable));
             }
         }
+        const_cast<RSRenderNode&>(node).SetChildrenHasSharedTransition(childrenHasSharedTransition_);
         return !stagingChildrenDrawableVec_.empty();
     }
 
@@ -70,6 +71,7 @@ bool RSChildrenDrawable::OnUpdate(const RSRenderNode& node)
     // merge pendingChildren into stagingChildrenDrawableVec_
     stagingChildrenDrawableVec_.insert(stagingChildrenDrawableVec_.end(), pendingChildren.begin(),
         pendingChildren.end());
+    const_cast<RSRenderNode&>(node).SetChildrenHasSharedTransition(childrenHasSharedTransition_);
     return !stagingChildrenDrawableVec_.empty();
 }
 
@@ -250,66 +252,67 @@ Drawing::RecordingCanvas::DrawFunc RSCustomRestoreDrawable::CreateDrawFunc() con
     };
 }
 
-RSDrawable::Ptr RSBeginBlendModeDrawable::OnGenerate(const RSRenderNode& node)
+RSDrawable::Ptr RSBeginBlenderDrawable::OnGenerate(const RSRenderNode& node)
 {
-    const RSProperties& properties = node.GetRenderProperties();
-    auto blendMode = properties.GetColorBlendMode();
-    if (blendMode == static_cast<int>(RSColorBlendMode::NONE)) {
-        // no blend
-        return nullptr;
+    if (auto ret = std::make_shared<RSBeginBlenderDrawable>(); ret->OnUpdate(node)) {
+        return std::move(ret);
     }
-
-    return std::make_shared<RSBeginBlendModeDrawable>(blendMode, properties.GetColorBlendApplyType());
+    return nullptr;
 }
 
-bool RSBeginBlendModeDrawable::OnUpdate(const RSRenderNode& node)
+bool RSBeginBlenderDrawable::OnUpdate(const RSRenderNode& node)
 {
+    // the order of blender and blendMode cannot be considered currently
     const RSProperties& properties = node.GetRenderProperties();
     auto blendMode = properties.GetColorBlendMode();
-    if (blendMode == static_cast<int>(RSColorBlendMode::NONE)) {
-        // no blend
+    stagingBlendApplyType_ = properties.GetColorBlendApplyType();
+    // NOTE: stagingIsDangerous_ should be set true when adding a blender that may generate transparent pixels
+    if (properties.IsFgBrightnessValid()) {
+        stagingBlender_ = RSPropertyDrawableUtils::MakeDynamicBrightnessBlender(
+            properties.GetFgBrightnessParams().value(), properties.GetFgBrightnessFract());
+        stagingIsDangerous_ = false;
+    } else if (blendMode && blendMode != static_cast<int>(RSColorBlendMode::NONE)) {
+        // map blendMode to Drawing::BlendMode and convert to Blender
+        stagingBlender_ = Drawing::Blender::CreateWithBlendMode(static_cast<Drawing::BlendMode>(blendMode - 1));
+        stagingIsDangerous_ = RSPropertyDrawableUtils::IsDangerousBlendMode(blendMode - 1, stagingBlendApplyType_);
+    } else {
         return false;
     }
 
-    stagingBlendMode_ = blendMode;
-    stagingBlendApplyType_ = properties.GetColorBlendApplyType();
     needSync_ = true;
 
     return true;
 }
 
-void RSBeginBlendModeDrawable::OnSync()
+void RSBeginBlenderDrawable::OnSync()
 {
     if (needSync_ == false) {
         return;
     }
-    blendMode_ = stagingBlendMode_;
+    blender_ = stagingBlender_;
     blendApplyType_ = stagingBlendApplyType_;
     needSync_ = false;
 }
 
-Drawing::RecordingCanvas::DrawFunc RSBeginBlendModeDrawable::CreateDrawFunc() const
+Drawing::RecordingCanvas::DrawFunc RSBeginBlenderDrawable::CreateDrawFunc() const
 {
-    auto ptr = std::static_pointer_cast<const RSBeginBlendModeDrawable>(shared_from_this());
+    auto ptr = std::static_pointer_cast<const RSBeginBlenderDrawable>(shared_from_this());
     return [ptr](Drawing::Canvas* canvas, const Drawing::Rect* rect) {
         auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas);
-        RSPropertyDrawableUtils::BeginBlendMode(*paintFilterCanvas, ptr->blendMode_, ptr->blendApplyType_);
+        RSPropertyDrawableUtils::BeginBlender(*paintFilterCanvas, ptr->blender_, ptr->blendApplyType_,
+            ptr->isDangerous_);
     };
 }
 
-RSDrawable::Ptr RSEndBlendModeDrawable::OnGenerate(const RSRenderNode& node)
+RSDrawable::Ptr RSEndBlenderDrawable::OnGenerate(const RSRenderNode& node)
 {
-    const RSProperties& properties = node.GetRenderProperties();
-    if (properties.GetColorBlendMode() == static_cast<int>(RSColorBlendMode::NONE) ||
-        properties.GetColorBlendApplyType() == static_cast<int>(RSColorBlendApplyType::FAST)) {
-        // no blend
-        return nullptr;
+    if (auto ret = std::make_shared<RSEndBlenderDrawable>(); ret->OnUpdate(node)) {
+        return std::move(ret);
     }
-
-    return std::make_shared<RSEndBlendModeDrawable>(properties.GetColorBlendApplyType());
+    return nullptr;
 };
 
-bool RSEndBlendModeDrawable::OnUpdate(const RSRenderNode& node)
+bool RSEndBlenderDrawable::OnUpdate(const RSRenderNode& node)
 {
     const RSProperties& properties = node.GetRenderProperties();
     if (properties.GetColorBlendMode() == static_cast<int>(RSColorBlendMode::NONE) ||
@@ -324,7 +327,7 @@ bool RSEndBlendModeDrawable::OnUpdate(const RSRenderNode& node)
     return true;
 }
 
-void RSEndBlendModeDrawable::OnSync()
+void RSEndBlenderDrawable::OnSync()
 {
     if (needSync_ == false) {
         return;
@@ -333,12 +336,12 @@ void RSEndBlendModeDrawable::OnSync()
     needSync_ = false;
 }
 
-Drawing::RecordingCanvas::DrawFunc RSEndBlendModeDrawable::CreateDrawFunc() const
+Drawing::RecordingCanvas::DrawFunc RSEndBlenderDrawable::CreateDrawFunc() const
 {
-    auto ptr = std::static_pointer_cast<const RSEndBlendModeDrawable>(shared_from_this());
+    auto ptr = std::static_pointer_cast<const RSEndBlenderDrawable>(shared_from_this());
     return [ptr](Drawing::Canvas* canvas, const Drawing::Rect* rect) {
         auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(canvas);
-        RSPropertyDrawableUtils::EndBlendMode(*paintFilterCanvas, ptr->blendApplyType_);
+        RSPropertyDrawableUtils::EndBlender(*paintFilterCanvas, ptr->blendApplyType_);
     };
 }
 

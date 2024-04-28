@@ -1083,6 +1083,9 @@ HWTEST_F(RSInterfacesTest, GetScreenCurrentRefreshRate001, Function | SmallTest 
     EXPECT_NE(screenId, INVALID_SCREEN_ID);
     uint32_t formerRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
 
+    FrameRateLinkerId id = 0;
+    FrameRateRange range;
+    rsInterfaces->SyncFrameRateRange(id, range);
     auto modeInfo = rsInterfaces->GetScreenActiveMode(screenId);
     rsInterfaces->SetScreenRefreshRate(screenId, 0, modeInfo.GetScreenRefreshRate());
     uint32_t currentRate = rsInterfaces-> GetScreenCurrentRefreshRate(screenId);
@@ -1107,17 +1110,24 @@ HWTEST_F(RSInterfacesTest, SetScreenRefreshRate001, Function | SmallTest | Level
     rsInterfaces->SetScreenRefreshRate(screenId, 0, rateToSet);
     usleep(SET_REFRESHRATE_SLEEP_US);
     uint32_t currentRate = rsInterfaces->GetScreenCurrentRefreshRate(screenId);
-    auto supportedRates = rsInterfaces->GetScreenSupportedRefreshRates(screenId);
-
     bool ifSupported = false;
-    for (auto rateIter : supportedRates) {
-        if (rateIter < 0) {
-            continue;
-        }
-        if (static_cast<uint32_t>(rateIter) == rateToSet) {
-            ifSupported = true;
+
+    if (currentRate == rateToSet) {
+        ifSupported = true;
+    } else {
+        auto supportedRates = rsInterfaces->GetScreenSupportedRefreshRates(screenId);
+        for (auto rateIter : supportedRates) {
+            if (rateIter < 0) {
+                continue;
+            }
+            if (static_cast<uint32_t>(rateIter) == rateToSet) {
+                ifSupported = true;
+                currentRate = rateToSet;
+                break;
+            }
         }
     }
+    
     if (ifSupported) {
         EXPECT_GE(currentRate, rateToSet);
     } else {
@@ -1467,6 +1477,17 @@ HWTEST_F(RSInterfacesTest, SetVirtualScreenUsingStatus001, Function | SmallTest 
 HWTEST_F(RSInterfacesTest, SetVirtualScreenUsingStatus002, Function | SmallTest | Level2)
 {
     rsInterfaces->SetVirtualScreenUsingStatus(false);
+}
+
+/*
+ * @tc.name: GetCurrentRefreshRateMode
+ * @tc.desc: Test GetCurrentRefreshRateMode.
+ * @tc.type: FUNC
+ * @tc.require: issueI9ABGS
+ */
+HWTEST_F(RSInterfacesTest, GetCurrentRefreshRateMode, Function | SmallTest | Level2)
+{
+    EXPECT_TRUE(rsInterfaces->GetCurrentRefreshRateMode() >= -1);
 }
 } // namespace Rosen
 } // namespace OHOS

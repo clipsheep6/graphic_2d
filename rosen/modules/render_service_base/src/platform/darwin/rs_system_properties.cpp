@@ -67,6 +67,11 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetAnimationTraceEnabled()
+{
+    return {};
+}
+
 DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
 {
     return {};
@@ -238,6 +243,11 @@ bool RSSystemProperties::IsFoldScreenFlag()
 }
 
 bool RSSystemProperties::GetKawaseEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetHpsBlurEnabled()
 {
     return false;
 }

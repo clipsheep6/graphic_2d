@@ -62,6 +62,11 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
     return {};
 }
 
+bool RSSystemProperties::GetAnimationTraceEnabled()
+{
+    return {};
+}
+
 bool RSSystemProperties::GetDrawOpTraceEnabled()
 {
     return false;
@@ -238,6 +243,11 @@ int RSSystemProperties::GetFilterCacheSizeThreshold()
 }
 
 bool RSSystemProperties::GetKawaseEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetHpsBlurEnabled()
 {
     return false;
 }

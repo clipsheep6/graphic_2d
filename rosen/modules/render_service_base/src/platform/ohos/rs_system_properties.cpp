@@ -66,7 +66,8 @@ static void ParseDfxSurfaceNamesString(const std::string& paramsStr,
 
 bool RSSystemProperties::IsSceneBoardEnabled()
 {
-    return SceneBoardJudgement::IsSceneBoardEnabled();
+    static bool isSCBEnabled =  SceneBoardJudgement::IsSceneBoardEnabled();
+    return isSCBEnabled;
 }
 
 // used by clients
@@ -154,6 +155,12 @@ bool RSSystemProperties::GetRenderNodeTraceEnabled()
     return isNeedTrace;
 }
 
+bool RSSystemProperties::GetAnimationTraceEnabled()
+{
+    static bool isNeedTrace = system::GetParameter("persist.rosen.animationtrace.enabled", "0") != "0";
+    return isNeedTrace;
+}
+
 bool RSSystemProperties::GetRSScreenRoundCornerEnable()
 {
     static bool isNeedScreenRCD = system::GetParameter("persist.rosen.screenroundcornerrcd.enabled", "0") != "0";
@@ -170,7 +177,7 @@ DirtyRegionDebugType RSSystemProperties::GetDirtyRegionDebugType()
 
 PartialRenderType RSSystemProperties::GetPartialRenderEnabled()
 {
-    static CachedHandle g_Handle = CachedParameterCreate("rosen.partialrender.enabled", "0");
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.partialrender.enabled", "2");
     int changed = 0;
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
     return static_cast<PartialRenderType>(ConvertToInt(enable, DEFAULT_PARTIAL_RENDER_ENABLED_VALUE));
@@ -217,10 +224,9 @@ bool RSSystemProperties::GetHwcRegionDfxEnabled()
 bool RSSystemProperties::GetAFBCEnabled()
 {
     static CachedHandle g_Handle = CachedParameterCreate("rosen.afbc.enabled", "1");
-    static const bool isBra = (system::GetParameter("const.build.product", "0").compare("BRA") == 0);
     int changed = 0;
     const char *enable = CachedParameterGetChanged(g_Handle, &changed);
-    return ConvertToInt(enable, 1) != 0 && !isBra;
+    return ConvertToInt(enable, 1) != 0;
 }
 
 std::string RSSystemProperties::GetRSEventProperty(const std::string &paraName)
@@ -246,6 +252,14 @@ bool RSSystemProperties::GetHighContrastStatus()
     int changed = 0;
     const char *status = CachedParameterGetChanged(g_Handle, &changed);
     return ConvertToInt(status, 0) != 0;
+}
+
+bool RSSystemProperties::GetDrmEnabled()
+{
+    static CachedHandle g_Handle = CachedParameterCreate("rosen.drm.enabled", "1");
+    int changed = 0;
+    const char *enabled = CachedParameterGetChanged(g_Handle, &changed);
+    return ConvertToInt(enabled, 0) != 0;
 }
 
 bool RSSystemProperties::GetTargetDirtyRegionDfxEnabled(std::vector<std::string>& dfxTargetSurfaceNames_)
@@ -466,6 +480,13 @@ bool RSSystemProperties::GetKawaseEnabled()
     return kawaseBlurEnabled;
 }
 
+bool RSSystemProperties::GetHpsBlurEnabled()
+{
+    static bool hpsBlurEnabled =
+        std::atoi((system::GetParameter("persist.sys.graphic.HpsBlurEnable", "1")).c_str()) != 0;
+    return hpsBlurEnabled;
+}
+
 float RSSystemProperties::GetKawaseRandomColorFactor()
 {
     static float randomFactor =
@@ -575,6 +596,13 @@ bool RSSystemProperties::GetDebugTraceEnabled()
     static bool openDebugTrace =
         std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "0")).c_str()) != 0;
     return openDebugTrace;
+}
+
+bool RSSystemProperties::GetImageReleaseUsingPostTask()
+{
+    static bool flag =
+        std::atoi((system::GetParameter("persist.sys.graphic.iamgeReleasePostTask", "0")).c_str()) != 0;
+    return flag;
 }
 
 int RSSystemProperties::GetDebugTraceLevel()
@@ -693,11 +721,12 @@ int RSSystemProperties::WatchSystemProperty(const char* name, OnSystemPropertyCh
 
 bool RSSystemProperties::GetSnapshotWithDMAEnabled()
 {
-    static bool isSupportDma = system::GetParameter("const.product.devicetype", "pc") == "phone" ||
+    static bool isSupportDma = (system::GetParameter("const.product.devicetype", "pc") == "phone" ||
         system::GetParameter("const.product.devicetype", "pc") == "tablet" ||
         system::GetParameter("const.product.devicetype", "pc") == "pc" ||
-        system::GetParameter("const.product.devicetype", "pc") == "2in1";
-    return isSupportDma && system::GetBoolParameter("rosen.snapshotDma.enabled", true);
+        system::GetParameter("const.product.devicetype", "pc") == "2in1") &&
+        system::GetBoolParameter("rosen.snapshotDma.enabled", true);
+    return isSupportDma;
 }
 
 bool RSSystemProperties::IsPhoneType()

@@ -29,6 +29,7 @@
 #include "animation/rs_render_interpolating_spring_animation.h"
 #include "animation/rs_render_keyframe_animation.h"
 #include "animation/rs_render_particle.h"
+#include "animation/rs_particle_noise_field.h"
 #include "animation/rs_render_particle_animation.h"
 #include "animation/rs_render_path_animation.h"
 #include "animation/rs_render_spring_animation.h"
@@ -592,8 +593,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<RSLinear
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<EmitterUpdater>& val)
 {
     bool success = Marshalling(parcel, val->emitterIndex_);
-    success = success && Marshalling(parcel, val->position_.x_) && Marshalling(parcel, val->position_.y_);
-    success = success && Marshalling(parcel, val->emitSize_.x_) && Marshalling(parcel, val->emitSize_.y_);
+    success = success && Marshalling(parcel, val->position_);
+    success = success && Marshalling(parcel, val->emitSize_) ;
     success = success && Marshalling(parcel, val->emitRate_);
     return success;
 }
@@ -601,20 +602,85 @@ bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<Emit
 bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<EmitterUpdater>& val)
 {
     int emitterIndex = 0;
-    float positionX = 0.f;
-    float positionY = 0.f;
-    float emitSizeWidth = 0.f;
-    float emitSizeHeight = 0.f;
-    int emitRate = 0;
+    std::optional<Vector2f> position = std::nullopt;
+    std::optional<Vector2f> emitSize = std::nullopt;
+    std::optional<int> emitRate = std::nullopt;
 
     bool success = Unmarshalling(parcel, emitterIndex);
-    success = success && Unmarshalling(parcel, positionX) && Unmarshalling(parcel, positionY);
-    Vector2f position(positionX, positionY);
-    success = success && Unmarshalling(parcel, emitSizeWidth) && Unmarshalling(parcel, emitSizeHeight);
-    Vector2f emitSize(emitSizeWidth, emitSizeHeight);
+    success = success && Unmarshalling(parcel, position);
+    success = success && Unmarshalling(parcel, emitSize);
     success = success && Unmarshalling(parcel, emitRate);
     if (success) {
         val = std::make_shared<EmitterUpdater>(emitterIndex, position, emitSize, emitRate);
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::vector<std::shared_ptr<EmitterUpdater>>& val)
+{
+    bool success = parcel.WriteUint32(static_cast<uint32_t>(val.size()));
+    for (size_t i = 0; i < val.size(); i++) {
+        success = success && Marshalling(parcel, val[i]);
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::vector<std::shared_ptr<EmitterUpdater>>& val)
+{
+    uint32_t size = parcel.ReadUint32();
+    bool success = true;
+    std::vector<std::shared_ptr<EmitterUpdater>> emitterUpdaters;
+    if (size > PARTICLE_UPPER_LIMIT) {
+        return false;
+    }
+    for (size_t i = 0; i < size; i++) {
+        std::shared_ptr<EmitterUpdater> emitterUpdater;
+        success = success && Unmarshalling(parcel, emitterUpdater);
+        emitterUpdaters.push_back(emitterUpdater);
+    }
+    if (success) {
+        val = emitterUpdaters;
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<ParticleNoiseField>& val)
+{
+    bool success = Marshalling(parcel, val->fieldStrength_);
+    success = success && Marshalling(parcel, val->fieldShape_);
+    success = success && Marshalling(parcel, val->fieldSize_.x_) && Marshalling(parcel, val->fieldSize_.y_);
+    success = success && Marshalling(parcel, val->fieldCenter_.x_) && Marshalling(parcel, val->fieldCenter_.y_);
+    success = success && Marshalling(parcel, val->fieldFeather_) &&  Marshalling(parcel, val->noiseScale_);
+    success = success && Marshalling(parcel, val->noiseFrequency_) &&  Marshalling(parcel, val->noiseAmplitude_);
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<ParticleNoiseField>& val)
+{
+    int fieldStrength = 0;
+    ShapeType fieldShape = ShapeType::RECT;
+    float fieldSizeX = 0.f;
+    float fieldSizeY = 0.f;
+    float fieldCenterX = 0.f;
+    float fieldCenterY = 0.f;
+    uint16_t fieldFeather = 0;
+    float noiseScale = 0.f;
+    float noiseFrequency = 0.f;
+    float noiseAmplitude = 0.f;
+
+    bool success = Unmarshalling(parcel, fieldStrength);
+    success = success && Unmarshalling(parcel, fieldShape);
+    success = success && Unmarshalling(parcel, fieldSizeX) && Unmarshalling(parcel, fieldSizeY);
+    Vector2f fieldSize(fieldSizeX, fieldSizeY);
+    success = success && Unmarshalling(parcel, fieldCenterX) && Unmarshalling(parcel, fieldCenterY);
+    Vector2f fieldCenter(fieldCenterX, fieldCenterY);
+    success = success && Unmarshalling(parcel, fieldFeather);
+    success = success && Unmarshalling(parcel, noiseScale);
+    success = success && Unmarshalling(parcel, noiseFrequency);
+    success = success && Unmarshalling(parcel, noiseAmplitude);
+    if (success) {
+        val = std::make_shared<ParticleNoiseField>(fieldStrength, fieldShape, fieldSize, fieldCenter, fieldFeather,
+            noiseScale, noiseFrequency, noiseAmplitude);
     }
     return success;
 }
@@ -641,6 +707,34 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<MotionBl
 
     if (success) {
         val = std::make_shared<MotionBlurParam>(radius, anchor);
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Marshalling(Parcel& parcel, const std::shared_ptr<ParticleNoiseFields>& val)
+{
+    bool success = parcel.WriteUint32(static_cast<uint32_t>(val->fields_.size()));
+    for (size_t i = 0; i < val->fields_.size(); i++) {
+        success = success && Marshalling(parcel, val->fields_[i]);
+    }
+    return success;
+}
+
+bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, std::shared_ptr<ParticleNoiseFields>& val)
+{
+    uint32_t size = parcel.ReadUint32();
+    bool success = true;
+    if (size > PARTICLE_UPPER_LIMIT) {
+        return false;
+    }
+    std::shared_ptr<ParticleNoiseFields> noiseFields = std::make_shared<ParticleNoiseFields>();
+    for (size_t i = 0; i < size; i++) {
+        std::shared_ptr<ParticleNoiseField> ParticleNoiseField;
+        success = success && Unmarshalling(parcel, ParticleNoiseField);
+        noiseFields->AddField(ParticleNoiseField);
+    }
+    if (success) {
+        val = noiseFields;
     }
     return success;
 }
@@ -791,7 +885,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleParaType<f
 bool RSMarshallingHelper::Marshalling(Parcel& parcel, const RenderParticleColorParaType& val)
 {
     bool success = Marshalling(parcel, val.colorVal_.start_) && Marshalling(parcel, val.colorVal_.end_) &&
-                   Marshalling(parcel, val.updator_);
+                   Marshalling(parcel, val.distribution_) && Marshalling(parcel, val.updator_);
     if (val.updator_ == ParticleUpdator::RANDOM) {
         success = success && Marshalling(parcel, val.redRandom_.start_) && Marshalling(parcel, val.redRandom_.end_);
         success =
@@ -817,6 +911,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleColorParaT
 {
     Color colorValStart = RSColor(0, 0, 0);
     Color colorValEnd = RSColor(0, 0, 0);
+    DistributionType distribution = DistributionType::UNIFORM;
     ParticleUpdator updator = ParticleUpdator::NONE;
     float redRandomStart = 0.f;
     float redRandomEnd = 0.f;
@@ -828,7 +923,7 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleColorParaT
     float alphaRandomEnd = 0.f;
     std::vector<std::shared_ptr<ChangeInOverLife<Color>>> valChangeOverLife;
     bool success = Unmarshalling(parcel, colorValStart) && Unmarshalling(parcel, colorValEnd) &&
-                   Unmarshalling(parcel, updator);
+                   Unmarshalling(parcel, distribution) && Unmarshalling(parcel, updator);
     if (updator == ParticleUpdator::RANDOM) {
         success = success && Unmarshalling(parcel, redRandomStart) && Unmarshalling(parcel, redRandomEnd) &&
                   Unmarshalling(parcel, greenRandomStart) && Unmarshalling(parcel, greenRandomEnd) &&
@@ -858,8 +953,8 @@ bool RSMarshallingHelper::Unmarshalling(Parcel& parcel, RenderParticleColorParaT
         Range<float> greenRandom(greenRandomStart, greenRandomEnd);
         Range<float> blueRandom(blueRandomStart, blueRandomEnd);
         Range<float> alphaRandom(alphaRandomStart, alphaRandomEnd);
-        val = RenderParticleColorParaType(
-            colorVal, updator, redRandom, greenRandom, blueRandom, alphaRandom, std::move(valChangeOverLife));
+        val = RenderParticleColorParaType(colorVal, distribution, updator, redRandom, greenRandom, blueRandom,
+            alphaRandom, std::move(valChangeOverLife));
     }
     return success;
 }
@@ -1692,6 +1787,7 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, float)                                              \
     EXPLICIT_INSTANTIATION(TEMPLATE, int)                                                \
     EXPLICIT_INSTANTIATION(TEMPLATE, Color)                                              \
+    EXPLICIT_INSTANTIATION(TEMPLATE, RSDynamicBrightnessPara)                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, Gravity)                                            \
     EXPLICIT_INSTANTIATION(TEMPLATE, GradientDirection)                                  \
     EXPLICIT_INSTANTIATION(TEMPLATE, ForegroundColorStrategyType)                        \
@@ -1705,6 +1801,9 @@ MARSHALLING_AND_UNMARSHALLING(RSRenderAnimatableProperty)
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<RSLinearGradientBlurPara>)          \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<MotionBlurParam>)                   \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<EmitterUpdater>)                    \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<EmitterUpdater>>)       \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleNoiseField>)                \
+    EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleNoiseFields>)               \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::vector<std::shared_ptr<ParticleRenderParams>>) \
     EXPLICIT_INSTANTIATION(TEMPLATE, std::shared_ptr<ParticleRenderParams>)              \
     EXPLICIT_INSTANTIATION(TEMPLATE, RSRenderParticleVector)                             \

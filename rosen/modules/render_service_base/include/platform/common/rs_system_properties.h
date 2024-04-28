@@ -135,6 +135,7 @@ public:
     static bool GetUniRenderEnabled();
     static bool GetRenderNodeTraceEnabled();
     static bool GetDrawOpTraceEnabled();
+    static bool GetAnimationTraceEnabled();
     static DirtyRegionDebugType GetDirtyRegionDebugType();
     static PartialRenderType GetPartialRenderEnabled();
     static PartialRenderType GetUniPartialRenderEnabled();
@@ -175,8 +176,10 @@ public:
     static bool GetMaskLinearBlurEnabled();
     static bool GetMotionBlurEnabled();
     static bool GetKawaseEnabled();
+    static bool GetHpsBlurEnabled();
     static float GetKawaseRandomColorFactor();
     static bool GetRandomColorEnabled();
+    static bool GetImageReleaseUsingPostTask();
     static bool GetKawaseOriginalEnabled();
     static bool GetBlurEnabled();
     static const std::vector<float>& GetAiInvertCoef();
@@ -202,6 +205,7 @@ public:
     static bool GetCachedBlurPartialRenderEnabled();
     static bool GetImageGpuResourceCacheEnable(int width, int height);
     static bool GetSnapshotWithDMAEnabled();
+    static bool GetDrmEnabled();
     static bool IsPhoneType();
     static bool IsPcType();
     static bool GetSyncTransactionEnabled();

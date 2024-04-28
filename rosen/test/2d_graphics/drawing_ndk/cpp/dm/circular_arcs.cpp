@@ -41,33 +41,33 @@ CircularArcStrokeMatrix::CircularArcStrokeMatrix()
 
 void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
-    static constexpr float K_RADIUS = 40.f;
+    static constexpr float coordinate = 40.f;
     static constexpr float kStrokeWidth = 5.f;
     static constexpr float kStart = 89.f;
     static constexpr float kSweep = 180.f / M_PI; // one radian
 
     std::vector<OH_Drawing_Matrix *> matrices;
 
-    matrices.push_back(OH_Drawing_MatrixCreateRotation(K_RADIUS, K_RADIUS, 45.f));
+    matrices.push_back(OH_Drawing_MatrixCreateRotation(coordinate, coordinate, 45.f));
 
     OH_Drawing_Matrix *mI = OH_Drawing_MatrixCreate();
     OH_Drawing_MatrixSetMatrix(mI, 1, 0, 0, 0, 1, 0, 0, 0, 1);
     matrices.push_back(mI);
 
     OH_Drawing_Matrix *m1 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m1, -1, 0, 2 * K_RADIUS, 0, 1, 0, 0, 0, 1);
+    OH_Drawing_MatrixSetMatrix(m1, -1, 0, 2 * coordinate, 0, 1, 0, 0, 0, 1);
     OH_Drawing_Matrix *m2 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m2, 1, 0, 0, 0, -1, 2 * K_RADIUS, 0, 0, 1);
+    OH_Drawing_MatrixSetMatrix(m2, 1, 0, 0, 0, -1, 2 * coordinate, 0, 0, 1);
     OH_Drawing_Matrix *m3 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m3, 1, 0, 0, 0, -1, 2 * K_RADIUS, 0, 0, 1);
+    OH_Drawing_MatrixSetMatrix(m3, 1, 0, 0, 0, -1, 2 * coordinate, 0, 0, 1);
     OH_Drawing_Matrix *m4 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m4, 0, -1, 2 * K_RADIUS, -1, 0, 2 * K_RADIUS, 0, 0, 1);
+    OH_Drawing_MatrixSetMatrix(m4, 0, -1, 2 * coordinate, -1, 0, 2 * coordinate, 0, 0, 1);
     OH_Drawing_Matrix *m5 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m5, 0, -1, 2 * K_RADIUS, 1, 0, 0, 0, 0, 1);
+    OH_Drawing_MatrixSetMatrix(m5, 0, -1, 2 * coordinate, 1, 0, 0, 0, 0, 1);
     OH_Drawing_Matrix *m6 = OH_Drawing_MatrixCreate();
     OH_Drawing_MatrixSetMatrix(m6, 0, 1, 0, 1, 0, 0, 0, 0, 1);
     OH_Drawing_Matrix *m7 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m7, 0, 1, 0, -1, 0, 2 * K_RADIUS, 0, 0, 1);
+    OH_Drawing_MatrixSetMatrix(m7, 0, 1, 0, -1, 0, 2 * coordinate, 0, 0, 1);
 
     matrices.push_back(m1);
     matrices.push_back(m2);
@@ -78,7 +78,7 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas *canvas)
     matrices.push_back(m7);
     int baseMatrixCnt = matrices.size();
 
-    OH_Drawing_Matrix *tinyCW = OH_Drawing_MatrixCreateRotation(0.001f, K_RADIUS, K_RADIUS);
+    OH_Drawing_Matrix *tinyCW = OH_Drawing_MatrixCreateRotation(0.001f, coordinate, coordinate);
     for (int i = 0; i < baseMatrixCnt; ++i) {
         OH_Drawing_Matrix *mTotal = OH_Drawing_MatrixCreate();
         OH_Drawing_MatrixConcat(mTotal, matrices[i], tinyCW);
@@ -86,7 +86,7 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas *canvas)
     }
     OH_Drawing_MatrixDestroy(tinyCW);
 
-    OH_Drawing_Matrix *tinyCCW = OH_Drawing_MatrixCreateRotation(-0.001f, K_RADIUS, K_RADIUS);
+    OH_Drawing_Matrix *tinyCCW = OH_Drawing_MatrixCreateRotation(-0.001f, coordinate, coordinate);
     for (int i = 0; i < baseMatrixCnt; ++i) {
         OH_Drawing_Matrix *mTotal = OH_Drawing_MatrixCreate();
         OH_Drawing_MatrixConcat(mTotal, matrices[i], tinyCCW);
@@ -94,7 +94,7 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas *canvas)
     }
     OH_Drawing_MatrixDestroy(tinyCCW);
 
-    OH_Drawing_Matrix *cw45 = OH_Drawing_MatrixCreateRotation(45.f, K_RADIUS, K_RADIUS);
+    OH_Drawing_Matrix *cw45 = OH_Drawing_MatrixCreateRotation(45.f, coordinate, coordinate);
     for (int i = 0; i < baseMatrixCnt; ++i) {
         OH_Drawing_Matrix *mTotal = OH_Drawing_MatrixCreate();
         OH_Drawing_MatrixConcat(mTotal, matrices[i], cw45);
@@ -106,7 +106,7 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas *canvas)
     int y = 0;
     static constexpr float kPad = 2 * kStrokeWidth;
     OH_Drawing_CanvasTranslate(canvas, kPad, kPad);
-    auto bounds = OH_Drawing_RectCreate(0, 0, 2 * K_RADIUS, 2 * K_RADIUS);
+    auto bounds = OH_Drawing_RectCreate(0, 0, 2 * coordinate, 2 * coordinate);
 
     for (auto cap : { LINE_ROUND_CAP, LINE_FLAT_CAP, LINE_SQUARE_CAP }) {
         for (const auto m : matrices) {
@@ -116,7 +116,7 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas *canvas)
             OH_Drawing_PenSetWidth(pen, kStrokeWidth);
             OH_Drawing_CanvasSave(canvas);
             {
-                OH_Drawing_CanvasTranslate(canvas, x * (2 * K_RADIUS + kPad), y * (2 * K_RADIUS + kPad));
+                OH_Drawing_CanvasTranslate(canvas, x * (2 * coordinate + kPad), y * (2 * coordinate + kPad));
                 OH_Drawing_CanvasConcatMatrix(canvas, m);
                 OH_Drawing_PenSetColor(pen, 0x80FF0000); // red
                 OH_Drawing_CanvasAttachPen(canvas, pen);

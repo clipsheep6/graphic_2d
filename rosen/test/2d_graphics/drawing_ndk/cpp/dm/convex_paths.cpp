@@ -30,7 +30,7 @@
 #include "test_common.h"
 
 constexpr static float K_RADIUS = 50.f;
-constexpr static int K_LENGTH= 100;
+constexpr static int K_LENGTH = 100;
 constexpr static int K_PTS_PER_SIDE = (1 << 12);
 
 std::vector<OH_Drawing_Path *> fPaths;
@@ -120,16 +120,16 @@ void ConvexPaths::MakePath()
     OH_Drawing_Path *path_3 = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path_3, 0, 0);
     for (int i = 1; i < K_PTS_PER_SIDE; ++i) { // skip the first point due to moveTo.
-        OH_Drawing_PathLineTo(path_3, K_LENGTH* (float)i / K_PTS_PER_SIDE, 0);
+        OH_Drawing_PathLineTo(path_3, K_LENGTH * (float)i / K_PTS_PER_SIDE, 0);
     }
     for (int i = 0; i < K_PTS_PER_SIDE; ++i) {
-        OH_Drawing_PathLineTo(path_3, kLength, K_LENGTH* (float)i / K_PTS_PER_SIDE);
+        OH_Drawing_PathLineTo(path_3, kLength, K_LENGTH * (float)i / K_PTS_PER_SIDE);
     }
     for (int i = K_PTS_PER_SIDE; i > 0; --i) {
-        OH_Drawing_PathLineTo(path_3, K_LENGTH* (float)i / K_PTS_PER_SIDE, kLength);
+        OH_Drawing_PathLineTo(path_3, K_LENGTH * (float)i / K_PTS_PER_SIDE, kLength);
     }
     for (int i = K_PTS_PER_SIDE; i > 0; --i) {
-        OH_Drawing_PathLineTo(path_3, 0, K_LENGTH* (float)i / K_PTS_PER_SIDE);
+        OH_Drawing_PathLineTo(path_3, 0, K_LENGTH * (float)i / K_PTS_PER_SIDE);
     }
     fPaths.push_back(path_3);
 

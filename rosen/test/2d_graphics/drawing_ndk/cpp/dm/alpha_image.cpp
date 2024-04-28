@@ -142,7 +142,6 @@ AlphaImageAlphaTint::AlphaImageAlphaTint()
 
 void AlphaImageAlphaTint::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
-    //    DRAWING_LOGI("OnTestFunction path = %{public}s",__FILE_NAME__);
     uint32_t w = 64;
     uint32_t h = 64;
     OH_Drawing_CanvasClear(canvas, DRAW_ColorGRAY);

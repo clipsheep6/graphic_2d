@@ -221,10 +221,10 @@ void Dashing4::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_CanvasTranslate(canvas, 0.5, 0.5);
 
     for (int width = 0; width <= 2; ++width) {
-        for (const Intervals &data :
-            { Intervals { 1, 1 }, Intervals { 4, 2 }, Intervals { 0, 4 } }) { // test for zero length on interval.
-                                                                              // zero length intervals should draw
-                                                                              // a line of squares or circles
+        for (const Intervals &data : { Intervals { 1, 1 }, Intervals { 4, 2 }, Intervals { 0, 4 } }) {
+            // test for zero length on interval.
+            // zero length intervals should draw
+            // a line of squares or circles
             for (bool aa : { false, true }) {
                 for (auto cap : { LINE_ROUND_CAP, LINE_SQUARE_CAP }) {
                     int w = width * width * width;

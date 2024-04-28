@@ -77,6 +77,8 @@ public:
     std::shared_ptr<RSFilter> Multiply(float rhs) override;
     std::shared_ptr<RSFilter> Negate() override;
 
+    void ApplyColorFilter(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& greyImage,
+        const Drawing::Rect& src, const Drawing::Rect& dst) const;
     void DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<Drawing::Image>& image,
         const Drawing::Rect& src, const Drawing::Rect& dst) const override;
     float GetRadius() const;
@@ -86,7 +88,7 @@ public:
         const std::shared_ptr<RSFilter>& other, float threshold = std::numeric_limits<float>::epsilon()) const override;
     bool IsNearZero(float threshold = std::numeric_limits<float>::epsilon()) const override;
     void SetGreyCoef(const std::optional<Vector2f>& greyCoef) override;
- 
+
     // color picker subthread
     const std::shared_ptr<RSColorPickerCacheTask>& GetColorPickerCacheTask() const;
     void ReleaseColorPickerFilter();

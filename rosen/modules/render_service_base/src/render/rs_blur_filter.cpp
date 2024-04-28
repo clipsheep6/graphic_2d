@@ -22,10 +22,12 @@
 #include "platform/common/rs_system_properties.h"
 #include "ge_render.h"
 #include "ge_visual_effect.h"
+#include "common/rs_optional_trace.h"
 
 namespace OHOS {
 namespace Rosen {
 const bool KAWASE_BLUR_ENABLED = RSSystemProperties::GetKawaseEnabled();
+static const bool HPS_BLUR_ENABLED = RSSystemProperties::GetHpsBlurEnabled();
 const auto BLUR_TYPE = KAWASE_BLUR_ENABLED ? Drawing::ImageBlurType::KAWASE : Drawing::ImageBlurType::GAUSS;
 RSBlurFilter::RSBlurFilter(float blurRadiusX, float blurRadiusY) : RSDrawingFilter(
     Drawing::ImageFilter::CreateBlurImageFilter(blurRadiusX, blurRadiusY, Drawing::TileMode::CLAMP, nullptr,
@@ -148,6 +150,18 @@ void RSBlurFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_ptr<
     if (!geRender) {
         return;
     }
+
+    // if hps blur failed, use kawase blur
+    if (HPS_BLUR_ENABLED) {
+        auto outImage =
+            geRender->ApplyImageEffect(canvas, *visualEffectContainer, image, src, src, Drawing::SamplingOptions());
+        bool isOK = canvas.DrawBlurImage(*outImage, Drawing::HpsBlurParameter(src, dst, blurRadiusX_, 1, 1));
+        if (isOK == true) {
+            RS_OPTIONAL_TRACE_NAME("RSBlurFilter ApplyHPSBlur " + std::to_string(blurRadiusX_));
+            return;
+        }
+    }
+
     // if kawase blur failed, use gauss blur
     static bool DDGR_ENABLED = RSSystemProperties::GetGpuApiType() == GpuApiType::DDGR;
     KawaseParameter param = KawaseParameter(src, dst, blurRadiusX_, nullptr, brush.GetColor().GetAlphaF());

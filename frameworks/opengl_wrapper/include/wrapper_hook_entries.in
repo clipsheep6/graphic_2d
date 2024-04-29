@@ -217,6 +217,12 @@ CALL_HOOK_API_RET(eglWaitSyncKHR, dpy, sync, flags)
 HOOK_API_ENTRY(EGLDisplay, eglGetPlatformDisplayEXT, EGLenum platform, void *native_display, const EGLint *attrib_list)
 CALL_HOOK_API_RET(eglGetPlatformDisplayEXT, platform, native_display, attrib_list)
 
+HOOK_API_ENTRY(EGLSurface, eglCreatePlatformWindowSurfaceEXT, EGLDisplay dpy, EGLConfig config, void *native_window, const EGLint *attrib_list)
+CALL_HOOK_API_RET(eglCreatePlatformWindowSurfaceEXT, dpy, config, native_window, attrib_list)
+
+HOOK_API_ENTRY(EGLSurface, eglCreatePlatformPixmapSurfaceEXT, EGLDisplay dpy, EGLConfig config, void *native_pixmap, const EGLint *attrib_list)
+CALL_HOOK_API_RET(eglCreatePlatformPixmapSurfaceEXT, dpy, config, native_pixmap, attrib_list)
+
 /* EGL_KHR_swap_buffers_with_damage */
 HOOK_API_ENTRY(EGLBoolean, eglSwapBuffersWithDamageKHR, EGLDisplay dpy, EGLSurface surface, const EGLint *rects, EGLint n_rects)
 CALL_HOOK_API_RET(eglSwapBuffersWithDamageKHR, dpy, surface, rects, n_rects)
@@ -232,3 +238,42 @@ CALL_HOOK_API_RET(eglDupNativeFenceFDANDROID, dpy, sync)
 /* EglSetBlobCacheFuncsANDROID */
 HOOK_API_ENTRY(void, eglSetBlobCacheFuncsANDROID, EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
 CALL_HOOK_API(eglSetBlobCacheFuncsANDROID, dpy, set, get)
+
+/* EGL_EXT_compositor */
+HOOK_API_ENTRY(EGLBoolean, eglCompositorSetContextListEXT, const EGLint *external_ref_ids, EGLint num_entries)
+CALL_HOOK_API_RET(eglCompositorSetContextListEXT, external_ref_ids, num_entries)
+
+HOOK_API_ENTRY(EGLBoolean, eglCompositorSetContextAttributesEXT, EGLint external_ref_id, const EGLint *context_attributes, EGLint num_entries)
+CALL_HOOK_API_RET(eglCompositorSetContextAttributesEXT, external_ref_id, context_attributes, num_entries)
+
+HOOK_API_ENTRY(EGLBoolean, eglCompositorSetWindowListEXT, EGLint external_ref_id, const EGLint *external_win_ids, EGLint num_entries)
+CALL_HOOK_API_RET(eglCompositorSetWindowListEXT, external_ref_id, external_win_ids, num_entries)
+
+HOOK_API_ENTRY(EGLBoolean, eglCompositorSetWindowAttributesEXT, EGLint external_win_id, const EGLint *window_attributes, EGLint num_entries)
+CALL_HOOK_API_RET(eglCompositorSetWindowAttributesEXT, external_win_id, window_attributes, num_entries)
+
+HOOK_API_ENTRY(EGLBoolean, eglCompositorBindTexWindowEXT, EGLint external_win_id)
+CALL_HOOK_API_RET(eglCompositorBindTexWindowEXT, external_win_id)
+
+HOOK_API_ENTRY(EGLBoolean, eglCompositorSetSizeEXT, EGLint external_win_id, EGLint width, EGLint height)
+CALL_HOOK_API_RET(eglCompositorSetSizeEXT, external_win_id, width, height)
+
+HOOK_API_ENTRY(EGLBoolean, eglCompositorSwapPolicyEXT, EGLint external_win_id, EGLint policy)
+CALL_HOOK_API_RET(eglCompositorSwapPolicyEXT, external_win_id, policy)
+
+/* EGL_EXT_device_base */
+HOOK_API_ENTRY(EGLBoolean, eglQueryDeviceAttribEXT, EGLDeviceEXT device, EGLint attribute, EGLAttrib *value)
+CALL_HOOK_API_RET(eglQueryDeviceAttribEXT, device, attribute, value)
+
+HOOK_API_ENTRY(const char *, eglQueryDeviceStringEXT, EGLDeviceEXT device, EGLint name)
+CALL_HOOK_API_RET(eglQueryDeviceStringEXT, device, name)
+
+HOOK_API_ENTRY(EGLBoolean, eglQueryDevicesEXT, EGLint max_devices, EGLDeviceEXT *devices, EGLint *num_devices)
+CALL_HOOK_API_RET(eglQueryDevicesEXT, max_devices, devices, num_devices)
+
+HOOK_API_ENTRY(EGLBoolean, eglQueryDisplayAttribEXT, EGLDisplay dpy, EGLint attribute, EGLAttrib *value)
+CALL_HOOK_API_RET(eglQueryDisplayAttribEXT, dpy, attribute, value)
+
+/* EGL_EXT_device_persistent_id */
+HOOK_API_ENTRY(EGLBoolean, eglQueryDeviceBinaryEXT, EGLDeviceEXT device, EGLint name, EGLint max_size, void *value, EGLint *size)
+CALL_HOOK_API_RET(eglQueryDeviceBinaryEXT, device, name, max_size, value, size)

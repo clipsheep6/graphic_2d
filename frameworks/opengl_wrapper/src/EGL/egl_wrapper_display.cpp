@@ -1016,4 +1016,28 @@ EGLBoolean EglWrapperDisplay::SetDamageRegionKHR(EGLSurface surf, EGLint *rects,
 
     return ret;
 }
+
+EGLBoolean EglWrapperDisplay::SwapBuffersWithDamageEXT(EGLSurface surface, const EGLint *rects, EGLint nRects)
+{
+    WLOGD("");
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglSwapBuffersWithDamageEXT) {
+        ret = table->egl.eglSwapBuffersWithDamageEXT(
+            disp_, surfPtr->GetEglSurface(), rects, nRects);
+    } else {
+        WLOGE("eglSwapBuffersWithDamageEXT is invalid.");
+    }
+
+    return ret;
+}
 } // namespace OHOS

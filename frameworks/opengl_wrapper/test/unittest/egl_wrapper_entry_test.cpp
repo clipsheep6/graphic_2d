@@ -2153,4 +2153,396 @@ HWTEST_F(EglWrapperEntryTest, EglSetDamageRegionKHRImpl002, Level2)
     auto result = gWrapperHook.wrapper.eglSetDamageRegionKHR(dpy, nullptr, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
+
+/**
+ * @tc.name: EglQueryDmaBufFormatsEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDmaBufFormatsEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDmaBufFormatsEXT(nullptr, 1, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDmaBufFormatsEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDmaBufFormatsEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryDmaBufFormatsEXT(dpy, 1, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDmaBufModifiersEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDmaBufModifiersEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDmaBufModifiersEXT(nullptr, 1, 1, nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDmaBufModifiersEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDmaBufModifiersEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryDmaBufModifiersEXT(dpy, 1, 1, nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetOutputLayersEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetOutputLayersEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglGetOutputLayersEXT(nullptr, nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetOutputLayersEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetOutputLayersEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglGetOutputLayersEXT(dpy, nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetOutputPortsEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetOutputPortsEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglGetOutputPortsEXT(nullptr, nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglGetOutputPortsEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglGetOutputPortsEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglGetOutputPortsEXT(dpy, nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglOutputLayerAttribEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglOutputLayerAttribEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglOutputLayerAttribEXT(nullptr, nullptr, 1, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglOutputLayerAttribEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglOutputLayerAttribEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglOutputLayerAttribEXT(dpy, nullptr, 1, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputLayerAttribEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputLayerAttribEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryOutputLayerAttribEXT(nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputLayerAttribEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputLayerAttribEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryOutputLayerAttribEXT(dpy, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputLayerStringEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputLayerStringEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryOutputLayerStringEXT(nullptr, nullptr, 1);
+    ASSERT_EQ(nullptr, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputLayerStringEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputLayerStringEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryOutputLayerStringEXT(dpy, nullptr, 1);
+    ASSERT_EQ(nullptr, result);
+}
+
+/**
+ * @tc.name: EglOutputPortAttribEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglOutputPortAttribEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglOutputPortAttribEXT(nullptr, nullptr, 1, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglOutputPortAttribEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglOutputPortAttribEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglOutputPortAttribEXT(dpy, nullptr, 1, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputPortAttribEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputPortAttribEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryOutputPortAttribEXT(nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputPortAttribEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputPortAttribEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryOutputPortAttribEXT(dpy, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputPortStringEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputPortStringEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryOutputPortStringEXT(nullptr, nullptr, 1);
+    ASSERT_EQ(nullptr, result);
+}
+
+/**
+ * @tc.name: EglQueryOutputPortStringEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryOutputPortStringEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryOutputPortStringEXT(dpy, nullptr, 1);
+    ASSERT_EQ(nullptr, result);
+}
+
+/**
+ * @tc.name: EglStreamConsumerOutputEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglStreamConsumerOutputEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglStreamConsumerOutputEXT(nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglStreamConsumerOutputEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglStreamConsumerOutputEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglStreamConsumerOutputEXT(dpy, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQuerySupportedCompressionRatesEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQuerySupportedCompressionRatesEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQuerySupportedCompressionRatesEXT(nullptr, nullptr, nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQuerySupportedCompressionRatesEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQuerySupportedCompressionRatesEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQuerySupportedCompressionRatesEXT(dpy, nullptr, nullptr, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglSwapBuffersWithDamageEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglSwapBuffersWithDamageEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglSwapBuffersWithDamageEXT(nullptr, nullptr, nullptr, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglSwapBuffersWithDamageEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglSwapBuffersWithDamageEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglSwapBuffersWithDamageEXT(dpy, nullptr, nullptr, 1);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglUnsignalSyncEXTImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglUnsignalSyncEXTImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglUnsignalSyncEXT(nullptr, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglUnsignalSyncEXTImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglUnsignalSyncEXTImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglUnsignalSyncEXT(dpy, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
 } // OHOS::Rosen

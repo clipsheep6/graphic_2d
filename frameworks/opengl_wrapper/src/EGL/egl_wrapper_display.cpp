@@ -59,6 +59,10 @@ EGLBoolean EglWrapperDisplay::Init(EGLint *major, EGLint *minor)
     table->major = -1;
     table->minor = -1;
     if (table->isLoad && table->egl.eglInitialize) {
+        if (disp_ == EGL_NO_DISPLAY) {
+            WLOGE("display is unavailable @@@@Wang.");
+            return EGL_FALSE;
+        }
         if (table->egl.eglInitialize(disp_, &table->major, &table->minor)) {
             WLOGI("initialized ver=%{public}d.%{public}d", table->major, table->minor);
             ret = EGL_TRUE;

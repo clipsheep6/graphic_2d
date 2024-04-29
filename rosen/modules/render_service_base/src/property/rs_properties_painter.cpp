@@ -54,9 +54,6 @@ constexpr float MIN_SPOT_RATIO = 1.0f;
 constexpr float MAX_SPOT_RATIO = 1.95f;
 constexpr float MAX_AMBIENT_RADIUS = 150.0f;
 constexpr int MAX_LIGHT_SOURCES = 12;
-// when the blur radius > SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD,
-// the snapshot should call outset before blur to shrink by 1px.
-constexpr static float SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD = 40.0f;
 } // namespace
 
 const bool RSPropertiesPainter::BLUR_ENABLED = RSSystemProperties::GetBlurEnabled();
@@ -650,11 +647,6 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         return;
     }
 
-    bool needSnapshotOutset = true;
-    if (RSFilter->GetFilterType() == RSFilter::MATERIAL) {
-        auto material = std::static_pointer_cast<RSMaterialFilter>(RSFilter);
-        needSnapshotOutset = (material->GetRadius() >= SNAPSHOT_OUTSET_BLUR_RADIUS_THRESHOLD);
-    }
     RS_OPTIONAL_TRACE_NAME("DrawFilter " + RSFilter->GetDescription());
     RS_OPTIONAL_TRACE_NAME_FMT_LEVEL(TRACE_LEVEL_TWO, "DrawFilter, filterType: %d, %s, bounds: %s", filterType,
         RSFilter->GetDetailedDescription().c_str(), properties.GetBoundsGeometry()->GetAbsRect().ToString().c_str());
@@ -687,9 +679,8 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
         if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
             filter->IsOffscreenCanvas(true);
             filter->SetGeometry(canvas, properties.GetFrameWidth(), properties.GetFrameHeight());
-            needSnapshotOutset = false;
         }
-        cacheManager->DrawFilter(canvas, filter, needSnapshotOutset);
+        cacheManager->DrawFilter(canvas, filter);
         return;
     }
 #endif
@@ -697,13 +688,9 @@ void RSPropertiesPainter::DrawFilter(const RSProperties& properties, RSPaintFilt
     if (filter->GetFilterType() == RSFilter::LINEAR_GRADIENT_BLUR) {
         filter->IsOffscreenCanvas(false);
         filter->SetGeometry(canvas, properties.GetFrameWidth(), properties.GetFrameHeight());
-        needSnapshotOutset = false;
     }
-    auto clipIBounds = canvas.GetDeviceClipBounds();
+    auto clipIBounds = canvas.GetRoundInDeviceClipBounds();
     auto imageClipIBounds = clipIBounds;
-    if (needSnapshotOutset) {
-        imageClipIBounds.MakeOutset(-1, -1);
-    }
     auto imageSnapshot = surface->GetImageSnapshot(imageClipIBounds);
     if (imageSnapshot == nullptr) {
         ROSEN_LOGD("RSPropertiesPainter::DrawFilter image null");
@@ -788,7 +775,7 @@ void RSPropertiesPainter::DrawBackgroundEffect(
 
     canvas.Save();
     canvas.ClipRect(Rect2DrawingRect(properties.GetBoundsRect()));
-    auto bounds = canvas.GetDeviceClipBounds();
+    auto bounds = canvas.GetRoundInDeviceClipBounds();
     canvas.Restore();
     auto filter = std::static_pointer_cast<RSDrawingFilter>(RSFilter);
 

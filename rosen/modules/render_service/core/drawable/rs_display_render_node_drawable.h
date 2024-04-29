@@ -61,14 +61,19 @@ private:
     void PostClearMemoryTask() const;
     std::shared_ptr<Drawing::Image> GetCacheImageFromMirrorNode(
         std::shared_ptr<RSDisplayRenderNode> mirrorNode);
-    void processCacheImage(Drawing::Image& cacheImageProcessed,
-        RSDisplayRenderNode& mirroredNode, RSUniRenderVirtualProcessor& mirroredProcessor);
+    void ResetRotateIfNeed(RSDisplayRenderNode& mirroredNode, RSUniRenderVirtualProcessor& mirroredProcessor,
+        Drawing::Region& clipRegion);
+    void ProcessCacheImage(Drawing::Image& cacheImageProcessed);
     void SetCanvasBlack(RSProcessor& processor);
+    // Prepare for off-screen render
+    void PrepareOffscreenRender(const RSRenderNode& node);
+    void FinishOffscreenRender(const Drawing::SamplingOptions& sampling);
 
     using Registrar = RenderNodeDrawableRegistrar<RSRenderNodeType::DISPLAY_NODE, OnGenerate>;
     static Registrar instance_;
     mutable std::shared_ptr<RSPaintFilterCanvas> curCanvas_;
-    Drawing::Region clipRegion_;
+    std::shared_ptr<Drawing::Surface> offscreenSurface_; // temporary holds offscreen surface
+    std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen rende
     bool canvasRotation_ = false;
 };
 } // namespace DrawableV2

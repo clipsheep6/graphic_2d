@@ -1,3 +1,17 @@
+/*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 import common2D from '@ohos.graphics.common2D';
 import drawing from '@ohos.graphics.drawing';
@@ -35,7 +49,7 @@ export class OHRandom {
     }
   }
 
-  public setXYWH(canvasRect: common2D.Rect, x: number, y:number, width: number, height: number) {
+  public SetXYWH(canvasRect: common2D.Rect, x: number, y:number, width: number, height: number) {
     canvasRect.left = x;
     canvasRect.top = y;
     canvasRect.right = x + width;
@@ -68,7 +82,7 @@ export class OHRandom {
       h >>= shiftValue;
       x -= w/2;
       y -= h/2;
-      this.setXYWH(canvasRect, x, y, w,h);
+      this.SetXYWH(canvasRect, x, y, w,h);
       this.offset(canvasRect, OFFSET, OFFSET);
       canvasRects.add(canvasRect);
       paintColor.alpha = this.nextU() | 0xFF;

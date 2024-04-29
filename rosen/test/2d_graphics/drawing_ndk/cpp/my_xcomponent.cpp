@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,12 +48,13 @@ bool ConvertStringFromJsValue(napi_env env, napi_value jsValue, std::string &val
     return false;
 }
 
-bool ConvertStringFromIntValue(napi_env env, napi_value jsValue, uint32_t &value) {
-
+bool ConvertStringFromIntValue(napi_env env, napi_value jsValue, uint32_t &value)
+{
     return napi_get_value_uint32(env, jsValue, &value) == napi_ok;
 }
 
-EGLConfig getConfig(int version, EGLDisplay eglDisplay) {
+EGLConfig getConfig(int version, EGLDisplay eglDisplay)
+{
     int attribList[] = {EGL_SURFACE_TYPE,
                         EGL_WINDOW_BIT,
                         EGL_RED_SIZE,
@@ -102,7 +103,6 @@ static void OnSurfaceCreatedCB(OH_NativeXComponent *component, void *window)
     if ((xSize == OH_NATIVEXCOMPONENT_RESULT_SUCCESS) && (render != nullptr)) {
         render->SetSceenHeight(height);
         render->SetScreenWidth(width);
-//        DRAWING_LOGI("xComponent width = %{public}lu, height = %{public}lu", width, height);
     }
 }
 
@@ -123,14 +123,16 @@ static void OnSurfaceDestroyedCB(OH_NativeXComponent *component, void *window)
     MyXComponent::Release(id);
 }
 
-int32_t MyXComponent::InitializeEglContext() {
+int32_t MyXComponent::InitializeEglContext()
+{
     mEGLDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (mEGLDisplay == EGL_NO_DISPLAY) {
         DRAWING_LOGE("unable to get EGL display.");
         return -1;
     }
 
-    EGLint eglMajVers, eglMinVers;
+    EGLint eglMajVers;
+    EGLint eglMinVers;
     if (!eglInitialize(mEGLDisplay, &eglMajVers, &eglMinVers)) {
         mEGLDisplay = EGL_NO_DISPLAY;
         DRAWING_LOGE("unable to initialize display");
@@ -145,9 +147,9 @@ int32_t MyXComponent::InitializeEglContext() {
     }
 
     /* Create EGLContext from */
-    int attrib3_list[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    int attribList[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE}; // 2 size
 
-    mEGLContext = eglCreateContext(mEGLDisplay, mEGLConfig, EGL_NO_CONTEXT, attrib3_list);
+    mEGLContext = eglCreateContext(mEGLDisplay, mEGLConfig, EGL_NO_CONTEXT, attribList);
 
     EGLint attribs[] = {EGL_WIDTH, 1, EGL_HEIGHT, 1, EGL_NONE};
     mEGLSurface = eglCreatePbufferSurface(mEGLDisplay, mEGLConfig, attribs);
@@ -230,7 +232,8 @@ void MyXComponent::DisplayScreenCanvas()
     }
 }
 
-void MyXComponent::DisplayScreenGpuCanvas() {
+void MyXComponent::DisplayScreenGpuCanvas()
+{
     uint32_t width = static_cast<uint32_t>(bufferHandle_->stride / 4);
     // 画完后获取像素地址，地址指向的内存包含画布画的像素数据
     void *dstPixels = malloc(width * screenHeight_ * 4);
@@ -295,7 +298,7 @@ void MyXComponent::CreateScreenGpuCanvas()
 {
     uint32_t width = static_cast<uint32_t>(bufferHandle_->stride / 4);
     OH_Drawing_GpuContextOptions gpuOptions{false};
-    screenImageInfo_ = {static_cast<int32_t>(width), static_cast<int32_t>(screenHeight_), 
+    screenImageInfo_ = {static_cast<int32_t>(width), static_cast<int32_t>(screenHeight_),
         COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
     screenGpuContext_ = OH_Drawing_GpuContextCreateFromGL(gpuOptions);
     screenSurface_ = OH_Drawing_SurfaceCreateFromGpuContext(screenGpuContext_, true, screenImageInfo_);
@@ -393,7 +396,7 @@ void MyXComponent::TestFunctionGpu(napi_env env, std::string caseName)
 }
 
 void MyXComponent::SetTestCount(uint32_t testCount)
-{ 
+{
     testCount_ = testCount;
 }
 
@@ -449,7 +452,7 @@ napi_value MyXComponent::NapiSetTestCount(napi_env env, napi_callback_info info)
 }
 
 uint32_t MyXComponent::GetTime()
-{ 
+{
     return usedTime_;
 }
 
@@ -501,7 +504,8 @@ napi_value MyXComponent::NapiGetTime(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
-napi_value MyXComponent::NapiFunctionCpu(napi_env env, napi_callback_info info) {
+napi_value MyXComponent::NapiFunctionCpu(napi_env env, napi_callback_info info)
+{
     DRAWING_LOGI("NapiFunctionCpu");
     if ((env == nullptr) || (info == nullptr)) {
         DRAWING_LOGE("NapiFunctionCpu: env or info is null");
@@ -556,7 +560,8 @@ napi_value MyXComponent::NapiFunctionCpu(napi_env env, napi_callback_info info) 
 }
 
 
-napi_value MyXComponent::NapiFunctionGpu(napi_env env, napi_callback_info info) {
+napi_value MyXComponent::NapiFunctionGpu(napi_env env, napi_callback_info info)
+{
     DRAWING_LOGI("NapiFunctionGpu");
     if ((env == nullptr) || (info == nullptr)) {
         DRAWING_LOGE("NapiFunctionGpu: env or info is null");
@@ -611,7 +616,8 @@ napi_value MyXComponent::NapiFunctionGpu(napi_env env, napi_callback_info info) 
     return nullptr;
 }
 
-napi_value MyXComponent::NapiPerformanceCpu(napi_env env, napi_callback_info info) {
+napi_value MyXComponent::NapiPerformanceCpu(napi_env env, napi_callback_info info)
+{
     DRAWING_LOGI("NapiPerformanceCpu");
     if ((env == nullptr) || (info == nullptr)) {
         DRAWING_LOGE("NapiDrawPattern: env or info is null");
@@ -667,7 +673,8 @@ napi_value MyXComponent::NapiPerformanceCpu(napi_env env, napi_callback_info inf
     return nullptr;
 }
 
-napi_value MyXComponent::NapiPerformanceGpu(napi_env env, napi_callback_info info) {
+napi_value MyXComponent::NapiPerformanceGpu(napi_env env, napi_callback_info info)
+{
     DRAWING_LOGI("NapiPerformanceGpu");
     if ((env == nullptr) || (info == nullptr)) {
         DRAWING_LOGE("NapiDrawPattern: env or info is null");
@@ -767,7 +774,8 @@ void MyXComponent::Destroy()
     }
 }
 
-void MyXComponent::DestroyGpu() {
+void MyXComponent::DestroyGpu()
+{
     // 销毁创建的对象
     // 销毁bitmap对象
     if (screenBitmap_) {
@@ -817,8 +825,10 @@ void MyXComponent::Export(napi_env env, napi_value exports)
         {"getTime", nullptr, MyXComponent::NapiGetTime, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"testFunctionCpu", nullptr, MyXComponent::NapiFunctionCpu, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"testFunctionGpu", nullptr, MyXComponent::NapiFunctionGpu, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"testPerformanceCpu", nullptr, MyXComponent::NapiPerformanceCpu, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"testPerformanceGpu", nullptr, MyXComponent::NapiPerformanceGpu, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"testPerformanceCpu", nullptr, MyXComponent::NapiPerformanceCpu,
+            nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"testPerformanceGpu", nullptr, MyXComponent::NapiPerformanceGpu,
+            nullptr, nullptr, nullptr, napi_default, nullptr},
     };
     if (napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc) != napi_ok) {
         DRAWING_LOGE("Export: napi_define_properties failed");

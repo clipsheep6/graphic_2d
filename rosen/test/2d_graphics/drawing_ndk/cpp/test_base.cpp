@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "test_base.h"
 #include <fcntl.h>
 #include "common/log_common.h"
@@ -51,7 +51,8 @@ void TestBase::SetFileName(std::string fileName)
     fileName_ = fileName;
 }
 
-void TestBase::SetTestCount(uint32_t testCount) {
+void TestBase::SetTestCount(uint32_t testCount)
+{
     testCount_ = testCount;
 }
 
@@ -82,7 +83,8 @@ void TestBase::TestFunctionGpu(napi_env env)
 
 void TestBase::TestFunctionGpu(OH_Drawing_Canvas *canvas) { OnTestFunction(canvas); }
 
-void TestBase::TestPerformanceGpu(OH_Drawing_Canvas *canvas) {
+void TestBase::TestPerformanceGpu(OH_Drawing_Canvas *canvas)
+{
     StyleSettings(canvas, styleType_);
     auto timeZero = std::chrono::high_resolution_clock::now();
     auto start = std::chrono::high_resolution_clock::now();
@@ -185,14 +187,15 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     struct OhosPixelMapCreateOps createOps;
     createOps.width = bitmapWidth_;
     createOps.height = bitmapHeight_;
-    createOps.pixelFormat = 3;
+    createOps.pixelFormat = 3; // 3 for png
     createOps.alphaType = 0;
     createOps.editable = 1;
     size_t bufferSize = createOps.width * createOps.height * 4;
     void *bitmapAddr = OH_Drawing_BitmapGetPixels(bitmap_);
     int32_t res = OH_PixelMap_CreatePixelMap(env, createOps, (uint8_t *)bitmapAddr, bufferSize, &pixelMap);
     if (res != IMAGE_RESULT_SUCCESS || pixelMap == nullptr) {
-        DRAWING_LOGE(" failed to OH_PixelMap_CreatePixelMap width = %{public}u, height = %{public}u", bitmapWidth_, bitmapHeight_);
+        DRAWING_LOGE(" failed to OH_PixelMap_CreatePixelMap width = %{public}u, height = %{public}u",
+            bitmapWidth_, bitmapHeight_);
         return;
     }
 
@@ -215,10 +218,10 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     // 配置编码格式（必须）
     opts.format = "image/png";
     // 配置编码质量（必须）
-    opts.quality = 100;
+    opts.quality = 100; // 100 quality
     // 打开需要输出的文件（请确保应用有权限访问这个路径）
     std::string path = "/data/storage/el2/base/files/" + fileName_ + ".png";
-    int fd = open(path.c_str(), O_RDWR | O_CREAT);  
+    int fd = open(path.c_str(), O_RDWR | O_CREAT);
     if (fd <= 0) {
         DRAWING_LOGE("failed to open fd = %{public}d", fd);
         return;
@@ -247,7 +250,7 @@ void TestBase::GpuCanvasToFile(napi_env env)
     struct OhosPixelMapCreateOps createOps;
     createOps.width = bitmapWidth_;
     createOps.height = bitmapHeight_;
-    createOps.pixelFormat = 3;
+    createOps.pixelFormat = 3; // 3 for png
     createOps.alphaType = 0;
     createOps.editable = 1;
     size_t bufferSize = createOps.width * createOps.height * 4;
@@ -264,10 +267,11 @@ void TestBase::GpuCanvasToFile(napi_env env)
     if (bitmap_) {
         OH_Drawing_BitmapDestroy(bitmap_);
     }
-    bitmap_ = OH_Drawing_BitmapCreateFromPixels(&imageInfo_, dstPixels, 4 * bitmapWidth_);
+    bitmap_ = OH_Drawing_BitmapCreateFromPixels(&imageInfo_, dstPixels, 4 * bitmapWidth_); // 4 for rgba
     int32_t res = OH_PixelMap_CreatePixelMap(env, createOps, (uint8_t *)dstPixels, bufferSize, &pixelMap);
     if (res != IMAGE_RESULT_SUCCESS || pixelMap == nullptr) {
-        DRAWING_LOGE(" failed to OH_PixelMap_CreatePixelMap width = %{public}u, height = %{public}u", bitmapWidth_, bitmapHeight_);
+        DRAWING_LOGE(" failed to OH_PixelMap_CreatePixelMap width = %{public}u, height = %{public}u",
+            bitmapWidth_, bitmapHeight_);
         return;
     }
 
@@ -290,10 +294,10 @@ void TestBase::GpuCanvasToFile(napi_env env)
     // 配置编码格式（必须）
     opts.format = "image/png";
     // 配置编码质量（必须）
-    opts.quality = 100;
+    opts.quality = 100; // 100 quality
     // 打开需要输出的文件（请确保应用有权限访问这个路径）
     std::string path = "/data/storage/el2/base/files/" + fileName_ + ".png";
-    int fd = open(path.c_str(), O_RDWR | O_CREAT);  
+    int fd = open(path.c_str(), O_RDWR | O_CREAT);
     if (fd <= 0) {
         DRAWING_LOGE("failed to open fd = %{public}d", fd);
         return;
@@ -348,22 +352,22 @@ void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
         OH_Drawing_PenSetColor(stylePen_, 0xFFFF0000);
         OH_Drawing_PenSetAlpha(stylePen_, 0xF0);
         OH_Drawing_PenSetBlendMode(stylePen_, BLEND_MODE_SRC);
-        OH_Drawing_PenSetWidth(stylePen_, 5);
+        OH_Drawing_PenSetWidth(stylePen_, 5); // width 5
 
-        styleMask_ = OH_Drawing_MaskFilterCreateBlur(NORMAL, 10.0, true);
+        styleMask_ = OH_Drawing_MaskFilterCreateBlur(NORMAL, 10.0, true); // 10.0 PARAM
         styleFilter_ = OH_Drawing_FilterCreate();
         OH_Drawing_FilterSetMaskFilter(styleFilter_, styleMask_);
         OH_Drawing_BrushSetFilter(styleBrush_, styleFilter_);
         OH_Drawing_PenSetFilter(stylePen_, styleFilter_);
         
-        styleCenter_ = OH_Drawing_PointCreate(100, 100);
+        styleCenter_ = OH_Drawing_PointCreate(100, 100); // point 100,100
         uint32_t colors[] = {0xFFFF0000, 0xFF00FF00, 0xFF0000FF};
-        float pos[] = {0,0.5,1.0};
+        float pos[] = {0, 0.5, 1.0};
         OH_Drawing_ShaderEffect* effect = OH_Drawing_ShaderEffectCreateRadialGradient(styleCenter_, 100, colors,
             pos, 3, OH_Drawing_TileMode::CLAMP); OH_Drawing_BrushSetShaderEffect(styleBrush_, effect);
         OH_Drawing_PenSetShaderEffect(stylePen_, effect);
 
-        OH_Drawing_PenSetMiterLimit(stylePen_, 10.0);
+        OH_Drawing_PenSetMiterLimit(stylePen_, 10.0); // 10: size
         OH_Drawing_PenSetJoin(stylePen_, LINE_ROUND_JOIN);
         OH_Drawing_PenSetCap(stylePen_, LINE_ROUND_CAP);
         float vals[2] = {1, 1};

@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,6 @@
 #include "my_xnode.h"
 #include "napi/native_api.h"
 #include "napi/native_api.h"
-
 #include <sstream>
 #include <string>
 #include <sys/types.h>
@@ -30,13 +29,9 @@
 #include <unistd.h>
 #include <memory>
 #include <unordered_map>
-
-
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_rect.h>
-
-
 #include "testcasefactory.h"
 
 
@@ -55,8 +50,8 @@ bool ConvertStringFromJsValue(napi_env env, napi_value jsValue, std::string &val
     return false;
 }
 
-bool ConvertStringFromIntValue(napi_env env, napi_value jsValue, uint32_t &value) {
-
+bool ConvertStringFromIntValue(napi_env env, napi_value jsValue, uint32_t &value)
+{
     return napi_get_value_uint32(env, jsValue, &value) == napi_ok;
 }
 
@@ -158,14 +153,14 @@ napi_value MyXNode::NapiPerformance(napi_env env, napi_callback_info info)
     }
 
     std::string caseName = "";
-    if (!ConvertStringFromJsValue(env, argv[1], caseName)) {
+    if (!ConvertStringFromJsValue(env, argv[1], caseName)) { // 2:cassname
         DRAWING_LOGE("NapiFunction: get caseName fail");
         return nullptr;
     }
     DRAWING_LOGI("NapiFunction: caseName = %{public}s", caseName.c_str());
     
     uint32_t testCount;
-    if (!ConvertStringFromIntValue(env, argv[2], testCount)) {
+    if (!ConvertStringFromIntValue(env, argv[2], testCount)) { // 2:count
         DRAWING_LOGE("NapiDrawPattern: get caseName fail");
         return nullptr;
     }
@@ -223,7 +218,8 @@ void MyXNode::Export(napi_env env, napi_value exports)
 }
 
 EXTERN_C_START
-static napi_value Init(napi_env env, napi_value exports) {
+static napi_value Init(napi_env env, napi_value exports)
+{
     DRAWING_LOGE("MyXNode myxnode napi init");
     MyXNode::Export(env, exports);
     return exports;

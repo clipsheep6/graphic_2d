@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,6 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef TEST_BASE_H
+#define TEST_BASE_H
 
 #include "napi/native_api.h"
 #include <string>
@@ -22,9 +25,6 @@
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_surface.h>
 
-#ifndef TEST_BASE_H
-#define TEST_BASE_H
-
 #define DEFAULT_WIDTH 720
 #define DEFAULT_HEIGHT 720
 #define DEFAULT_TESTCOUNT 1
@@ -34,10 +34,9 @@
 class TestBase {
 public:
     TestBase(){};
-    TestBase(int styleType):styleType_(styleType){};
+    explicit TestBase(int styleType):styleType_(styleType){};
     virtual ~TestBase() = default;
 
-    // void Recording(OH_Drawing_Canvas* canvas);
     void SetFileName(std::string fileName);
     void SetTestCount(uint32_t testCount);
     OH_Drawing_Bitmap* GetBitmap();
@@ -64,7 +63,6 @@ public:
     void StyleSettingsDestroy(OH_Drawing_Canvas *canvas);
     
 protected:
-    // virtual void OnRecording(OH_Drawing_Canvas* canvas) = 0;
     // cpu bitmap canvas
     void CreateBitmapCanvas();
     void CreateGpuCanvas();

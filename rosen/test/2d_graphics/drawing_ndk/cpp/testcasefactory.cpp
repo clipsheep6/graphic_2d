@@ -16,7 +16,6 @@
 #include "common/log_common.h"
 #include "testcasefactory.h"
 
-#include "bench/big_path_bench.h"
 #include "dm/aa_rect_modes.h"
 #include "dm/blur_circles.h"
 #include "dm/blur_large_rrects.h"

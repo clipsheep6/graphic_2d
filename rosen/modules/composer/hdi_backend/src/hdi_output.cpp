@@ -729,7 +729,7 @@ int32_t HdiOutput::StartVSyncSampler(bool forceReSample)
     return GRAPHIC_DISPLAY_SUCCESS;
 }
 
-void HdiOutput::SetPendingMode(int64_t period, int64_t timestamp)
+void HdiOutput::SetPendingMode(int64_t period, int64_t timestamp, bool directSwitch)
 {
     ScopedBytrace func("VSyncSampler::SetPendingMode period:" + std::to_string(period) +
                         ", timestamp:" + std::to_string(timestamp));
@@ -737,7 +737,7 @@ void HdiOutput::SetPendingMode(int64_t period, int64_t timestamp)
         sampler_ = CreateVSyncSampler();
     }
     sampler_->SetPendingPeriod(period);
-    CreateVSyncGenerator()->SetPendingMode(period, timestamp);
+    CreateVSyncGenerator()->SetPendingMode(period, timestamp, directSwitch);
 }
 
 void HdiOutput::Dump(std::string &result) const

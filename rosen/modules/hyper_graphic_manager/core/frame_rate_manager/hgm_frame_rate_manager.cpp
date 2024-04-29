@@ -115,6 +115,18 @@ void HgmFrameRateManager::Init(sptr<VSyncController> rsController,
     });
 }
 
+void HgmFrameRateManager::ProcessPendingRefreshRate(uint64_t timestamp)
+{
+    auto &hgmCore = HgmCore::Instance();
+    hgmCore.SetTimestamp(timestamp);
+    hgmCore.SetHandleRateDirect(false);
+    if (pendingRefreshRate_ != nullptr) {
+        hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate_);
+        RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate_);
+        pendingRefreshRate_.reset();
+    }
+}
+
 void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
                                                 std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker,
                                                 const FrameRateLinkerMap& appFrameRateLinkers, bool idleTimerExpired,
@@ -288,6 +300,12 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
 
 void HgmFrameRateManager::HandleFrameRateChangeForLTPO(uint64_t timestamp, bool isDvsyncOn)
 {
+    auto lastRefreshRate = HgmCore::Instance().GetPendingScreenRefreshRate();
+    if (lastRefreshRate < OLED_60_HZ && currRefreshRate_ > lastRefreshRate) {
+        HgmCore::Instance().SetPendingScreenRefreshRate(currRefreshRate_);
+        HgmCore::Instance().SetHandleRateDirect(true);
+    }
+
     RSTaskMessage::RSTask task = [this]() {
         controller_->ChangeGeneratorRate(controllerRate_, appChangeData_);
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);

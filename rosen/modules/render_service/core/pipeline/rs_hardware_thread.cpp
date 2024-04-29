@@ -166,8 +166,9 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
     uint32_t rate = RSUniRenderThread::Instance().GetPendingScreenRefreshRate();
     uint32_t currentRate = hgmCore.GetScreenCurrentRefreshRate(hgmCore.GetActiveScreenId());
     uint64_t currTimestamp = RSUniRenderThread::Instance().GetCurrentTimestamp();
+    bool isHandleRateDirect = RSUniRenderThread::Instance().GetHandleRateDirect();
     RSTaskMessage::RSTask task = [this, output = output, layers = layers, rate = rate,
-        currentRate = currentRate, timestamp = currTimestamp]() {
+        currentRate = currentRate, timestamp = currTimestamp, directSwitch = isHandleRateDirect]() {
         int64_t startTimeNs = 0;
         int64_t endTimeNs = 0;
         bool hasGameScene = FrameReport::GetInstance().HasGameScene();
@@ -178,7 +179,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
 
         RS_TRACE_NAME_FMT("RSHardwareThread::CommitAndReleaseLayers rate: %d, now: %lu", currentRate, timestamp);
         ExecuteSwitchRefreshRate(rate);
-        PerformSetActiveMode(output, timestamp);
+        PerformSetActiveMode(output, timestamp, directSwitch);
         AddRefreshRateCount();
         output->SetLayerInfo(layers);
         if (output->IsDeviceValid()) {
@@ -245,7 +246,7 @@ void RSHardwareThread::ExecuteSwitchRefreshRate(uint32_t refreshRate)
     }
 }
 
-void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp)
+void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp, bool directSwitch)
 {
     auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
     auto screenManager = CreateOrGetScreenManager();
@@ -283,7 +284,7 @@ void RSHardwareThread::PerformSetActiveMode(OutputPtr output, uint64_t timestamp
         } else {
             auto pendingPeriod = hgmCore.GetIdealPeriod(hgmCore.GetScreenCurrentRefreshRate(id));
             int64_t pendingTimestamp = static_cast<int64_t>(timestamp);
-            hdiBackend_->SetPendingMode(output, pendingPeriod, pendingTimestamp);
+            hdiBackend_->SetPendingMode(output, pendingPeriod, pendingTimestamp, directSwitch);
             hdiBackend_->StartSample(output);
         }
     }

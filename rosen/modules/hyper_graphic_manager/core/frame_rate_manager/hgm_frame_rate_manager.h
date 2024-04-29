@@ -125,6 +125,7 @@ public:
 
     void Init(sptr<VSyncController> rsController,
         sptr<VSyncController> appController, sptr<VSyncGenerator> vsyncGenerator);
+    void ProcessPendingRefreshRate(uint64_t timestamp);
     std::shared_ptr<uint32_t> GetPendingRefreshRate();
     void ResetPendingRefreshRate();
     HgmMultiAppStrategy& GetMultiAppStrategy() { return multiAppStrategy_; }

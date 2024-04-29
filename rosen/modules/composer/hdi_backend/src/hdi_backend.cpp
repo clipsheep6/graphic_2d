@@ -89,13 +89,13 @@ RosenError HdiBackend::RegHwcDeadListener(OnHwcDeadCallback func, void* data)
     return ROSEN_ERROR_OK;
 }
 
-void HdiBackend::SetPendingMode(const OutputPtr &output, int64_t period, int64_t timestamp)
+void HdiBackend::SetPendingMode(const OutputPtr &output, int64_t period, int64_t timestamp, bool directSwitch)
 {
     if (output == nullptr) {
         HLOGE("output is nullptr.");
         return;
     }
-    output->SetPendingMode(period, timestamp);
+    output->SetPendingMode(period, timestamp, directSwitch);
 }
 
 int32_t HdiBackend::PrepareCompleteIfNeed(const OutputPtr &output, bool needFlush)

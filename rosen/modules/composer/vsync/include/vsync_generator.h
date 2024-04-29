@@ -69,7 +69,7 @@ public:
     virtual bool GetFrameRateChaingStatus() = 0;
     virtual VsyncError SetReferenceTimeOffset(int32_t phaseByPulseNum) = 0;
     virtual VsyncError CheckAndUpdateReferenceTime(int64_t hardwareVsyncInterval, int64_t referenceTime) = 0;
-    virtual void SetPendingMode(int64_t period, int64_t timestamp) = 0;
+    virtual void SetPendingMode(int64_t period, int64_t timestamp, bool directSwitch) = 0;
     virtual VsyncError StartRefresh() = 0;
 
     virtual void SetRSDistributor(sptr<VSyncDistributor> &rsVSyncDistributor) = 0;
@@ -103,7 +103,7 @@ public:
     bool GetFrameRateChaingStatus() override;
     VsyncError SetReferenceTimeOffset(int32_t phaseByPulseNum) override;
     VsyncError CheckAndUpdateReferenceTime(int64_t hardwareVsyncInterval, int64_t referenceTime) override;
-    void SetPendingMode(int64_t period, int64_t timestamp) override;
+    void SetPendingMode(int64_t period, int64_t timestamp, bool directSwitch) override;
     VsyncError StartRefresh() override;
 
     void SetRSDistributor(sptr<VSyncDistributor> &rsVSyncDistributor) override;
@@ -175,6 +175,7 @@ private:
     bool frameRateChanging_ = false;
     int64_t pendingPeriod_ = 0;
     int64_t pendingReferenceTime_ = 0;
+    bool directSwitch_ = false;
     bool startRefresh_ = false;
     int64_t phaseRecord_ = 0;
     int64_t periodRecord_ = 0;

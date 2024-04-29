@@ -24,6 +24,8 @@
 #include "path_napi/js_path.h"
 #include "pen_napi/js_pen.h"
 #include "text_blob_napi/js_text_blob.h"
+#include "roundRect_napi/js_roundrect.h"
+#include "matrix_napi/js_matrix.h"
 
 namespace OHOS::Rosen {
 namespace Drawing {
@@ -38,6 +40,8 @@ napi_value DrawingInit(napi_env env, napi_value exportObj)
     JsTextBlob::Init(env, exportObj);
     JsPen::Init(env, exportObj);
     JsBrush::Init(env, exportObj);
+    JsRoundRect::Init(env, exportObj);
+    JsMatrix::Init(env, exportObj);
     return exportObj;
 }
 } // namespace Drawing

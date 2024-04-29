@@ -64,6 +64,7 @@ ohos_shared_library("drawing_napi_impl") {
     "color_filter_napi/js_color_filter.cpp",
     "enum_napi/js_enum.cpp",
     "font_napi/js_font.cpp",
+    "matrix_napi/js_matrix.cpp",
     "font_napi/js_typeface.cpp",
     "js_common.cpp",
     "js_drawing_init.cpp",
@@ -71,6 +72,7 @@ ohos_shared_library("drawing_napi_impl") {
     "path_napi/js_path.cpp",
     "pen_napi/js_pen.cpp",
     "text_blob_napi/js_text_blob.cpp",
+    "roundRect_napi/js_roundrect.cpp",
   ]
 
   defines = []

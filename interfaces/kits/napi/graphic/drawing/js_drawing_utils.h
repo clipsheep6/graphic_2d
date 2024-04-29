@@ -25,6 +25,7 @@
 #include "native_engine/native_value.h"
 #include "text/font_metrics.h"
 #include "text/font_types.h"
+#include "text/font.h"
 #include "utils/rect.h"
 
 namespace OHOS::Rosen {
@@ -260,6 +261,9 @@ void BindNativeFunction(napi_env env, napi_value object, const char* name, const
 napi_value CreateJsError(napi_env env, int32_t errCode, const std::string& message);
 
 bool ConvertFromJsTextEncoding(napi_env env, TextEncoding& textEncoding, napi_value nativeType);
+bool ConvertFromJsRect(napi_env env, napi_value src, Rect& rect);
+bool ConvertFromJsFontEdging(napi_env env, FontEdging& fontEdging, napi_value nativeType);
+bool ConvertFromJsFontHinting(napi_env env, FontHinting& fontHinting, napi_value nativeType);
 
 napi_value NapiThrowError(napi_env env, DrawingErrorCode err, const std::string& message);
 } // namespace Drawing

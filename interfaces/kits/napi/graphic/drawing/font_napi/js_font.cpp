@@ -35,6 +35,11 @@ napi_value JsFont::Init(napi_env env, napi_value exportObj)
         DECLARE_NAPI_FUNCTION("getTypeface", JsFont::GetTypeface),
         DECLARE_NAPI_FUNCTION("getSize", JsFont::GetSize),
         DECLARE_NAPI_FUNCTION("getMetrics", JsFont::GetMetrics),
+        DECLARE_NAPI_FUNCTION("setEdging", JsFont::SetEdging),
+        DECLARE_NAPI_FUNCTION("setHinting", JsFont::SetHinting),
+        DECLARE_NAPI_FUNCTION("setScaleX", JsFont::SetScaleX),
+        DECLARE_NAPI_FUNCTION("setSkewX", JsFont::SetSkewX),
+        DECLARE_NAPI_FUNCTION("countText", JsFont::CountText),
         DECLARE_NAPI_FUNCTION("measureText", JsFont::MeasureText),
     };
 
@@ -171,6 +176,36 @@ napi_value JsFont::GetMetrics(napi_env env, napi_callback_info info)
 {
     JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
     return (me != nullptr) ? me->OnGetMetrics(env, info) : nullptr;
+}
+
+napi_value JsFont::SetEdging(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnSetEdging(env, info) : nullptr;
+}
+
+napi_value JsFont::SetHinting(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnSetHinting(env, info) : nullptr;
+}
+
+napi_value JsFont::SetScaleX(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnSetScaleX(env, info) : nullptr;
+}
+
+napi_value JsFont::SetSkewX(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnSetSkewX(env, info) : nullptr;
+}
+
+napi_value JsFont::CountText(napi_env env, napi_callback_info info)
+{
+    JsFont* me = CheckParamsAndGetThis<JsFont>(env, info);
+    return (me != nullptr) ? me->OnCountText(env, info) : nullptr;
 }
 
 napi_value JsFont::MeasureText(napi_env env, napi_callback_info info)
@@ -335,6 +370,137 @@ napi_value JsFont::OnGetTypeface(napi_env env, napi_callback_info info)
 
     std::shared_ptr<Typeface> typeface = m_font->GetTypeface();
     return JsTypeface::CreateJsTypeface(env, typeface);
+}
+
+napi_value JsFont::OnSetEdging(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnSetEdging font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_ONE) {
+        ROSEN_LOGE("JsFont::OnSetEdging Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    FontEdging FontEdging = FontEdging::ALIAS;
+    if (!ConvertFromJsFontEdging(env, FontEdging, argv[0])) {
+        ROSEN_LOGE("JsFont::OnSetEdging ConvertFromJsFontEdging failed");
+        return NapiGetUndefined(env);
+    }
+
+    m_font->SetEdging(FontEdging);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsFont::OnSetHinting(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnSetHinting font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_ONE) {
+        ROSEN_LOGE("JsFont::OnSetHinting Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    FontHinting FontHinting = FontHinting::NONE;
+    if (!ConvertFromJsFontHinting(env, FontHinting, argv[0])) {
+        ROSEN_LOGE("JsFont::OnSetHinting ConvertFromJsFontHinting failed");
+        return NapiGetUndefined(env);
+    }
+
+    m_font->SetHinting(FontHinting);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsFont::OnSetScaleX(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnSetScaleX font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_ONE) {
+        ROSEN_LOGE("JsFont::OnSetScaleX Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double scaleX = 0.0;
+    if (!ConvertFromJsValue(env, argv[0], scaleX)) {
+        ROSEN_LOGE("JsFont::OnSetScaleX Argv[0] is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_font->SetScaleX((float)scaleX);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsFont::OnSetSkewX(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnSetSkewX font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_ONE;
+    napi_value argv[ARGC_ONE] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_ONE) {
+        ROSEN_LOGE("JsFont::OnSetSkewX Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    double skewX = 0.0;
+    if (!ConvertFromJsValue(env, argv[0], skewX)) {
+        ROSEN_LOGE("JsFont::OnSetSkewX Argv[0] is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    m_font->SetSkewX((float)skewX);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsFont::OnCountText(napi_env env, napi_callback_info info)
+{
+    if (m_font == nullptr) {
+        ROSEN_LOGE("JsFont::OnCountText font is nullptr");
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    size_t argc = ARGC_TWO;
+    napi_value argv[ARGC_TWO] = {nullptr};
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (status != napi_ok || argc < ARGC_TWO) {
+        ROSEN_LOGE("JsFont::OnCountText Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM, "Invalid params.");
+    }
+
+    std::string text = "";
+    if (!ConvertFromJsValue(env, argv[0], text)) {
+        ROSEN_LOGE("JsFont::OnCountText Argv[0] is invalid");
+        return NapiGetUndefined(env);
+    }
+
+    TextEncoding TextEncoding = TextEncoding::UTF8;
+    if (!ConvertFromJsTextEncoding(env, TextEncoding, argv[ARGC_ONE])) {
+        ROSEN_LOGE("JsFont::OnCountText ConvertFromJsTextEncoding failed");
+        return NapiGetUndefined(env);
+    }
+
+    double textSize = m_font->CountText(text.c_str(), text.length(), TextEncoding);
+    return GetDoubleAndConvertToJsValue(env, textSize);
 }
 
 napi_value JsFont::OnMeasureText(napi_env env, napi_callback_info info)

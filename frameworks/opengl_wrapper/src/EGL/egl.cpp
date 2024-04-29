@@ -96,5 +96,26 @@ const std::map<std::string, EglWrapperFuncPointer> gExtensionMap = {
     { "eglStreamConsumerReleaseKHR", (EglWrapperFuncPointer)&eglStreamConsumerReleaseKHR },
     { "eglGetStreamFileDescriptorKHR", (EglWrapperFuncPointer)&eglGetStreamFileDescriptorKHR },
     { "eglCreateStreamFromFileDescriptorKHR", (EglWrapperFuncPointer)&eglCreateStreamFromFileDescriptorKHR },
+
+    // EGL_KHR_cl_event2
+    { "eglCreateSync64KHR", (EglWrapperFuncPointer)&eglCreateSync64KHR },
+
+    // EGL_KHR_debug
+    { "eglDebugMessageControlKHR", (EglWrapperFuncPointer)&eglDebugMessageControlKHR },
+    { "eglQueryDebugKHR", (EglWrapperFuncPointer)&eglQueryDebugKHR },
+    { "eglLabelObjectKHR", (EglWrapperFuncPointer)&eglLabelObjectKHR },
+
+    // EGL_KHR_display_reference
+    { "eglQueryDisplayAttribKHR", (EglWrapperFuncPointer)&eglQueryDisplayAttribKHR },
+
+    // EGL_KHR_lock_surface3
+    { "eglQuerySurface64KHR", (EglWrapperFuncPointer)&eglQuerySurface64KHR },
+
+    // EGL_KHR_stream_attrib
+    { "eglCreateStreamAttribKHR", (EglWrapperFuncPointer)&eglCreateStreamAttribKHR },
+    { "eglSetStreamAttribKHR", (EglWrapperFuncPointer)&eglSetStreamAttribKHR },
+    { "eglQueryStreamAttribKHR", (EglWrapperFuncPointer)&eglQueryStreamAttribKHR },
+    { "eglStreamConsumerAcquireAttribKHR", (EglWrapperFuncPointer)&eglStreamConsumerAcquireAttribKHR },
+    { "eglStreamConsumerReleaseAttribKHR", (EglWrapperFuncPointer)&eglStreamConsumerReleaseAttribKHR },
 };
 }

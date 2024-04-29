@@ -2153,4 +2153,289 @@ HWTEST_F(EglWrapperEntryTest, EglSetDamageRegionKHRImpl002, Level2)
     auto result = gWrapperHook.wrapper.eglSetDamageRegionKHR(dpy, nullptr, nullptr, 0);
     ASSERT_EQ(EGL_FALSE, result);
 }
+
+/**
+ * @tc.name: EglCreateSync64KHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreateSync64KHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglCreateSync64KHR(dpy, 1, nullptr);
+    ASSERT_EQ(EGL_NO_SYNC_KHR, result);
+}
+
+/**
+ * @tc.name: EglCreateSync64KHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreateSync64KHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglCreateSync64KHR(dpy, 1, nullptr);
+    ASSERT_EQ(EGL_NO_SYNC_KHR, result);
+}
+
+/**
+ * @tc.name: EglDebugMessageControlKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglDebugMessageControlKHRImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglDebugMessageControlKHR(nullptr, nullptr);
+    ASSERT_EQ(-1, result);
+}
+
+/**
+ * @tc.name: EglQueryDebugKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDebugKHRImpl001, Level1)
+{
+    auto result = gWrapperHook.wrapper.eglQueryDebugKHR(1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglLabelObjectKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglLabelObjectKHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglLabelObjectKHR(dpy, 1, nullptr, nullptr);
+    ASSERT_EQ(-1, result);
+}
+
+/**
+ * @tc.name: EglLabelObjectKHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglLabelObjectKHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglLabelObjectKHR(dpy, 1, nullptr, nullptr);
+    ASSERT_EQ(-1, result);
+}
+
+/**
+ * @tc.name: EglQueryDisplayAttribKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDisplayAttribKHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglQueryDisplayAttribKHR(dpy, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryDisplayAttribKHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryDisplayAttribKHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryDisplayAttribKHR(dpy, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQuerySurface64KHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQuerySurface64KHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglQuerySurface64KHR(dpy, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQuerySurface64KHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQuerySurface64KHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQuerySurface64KHR(dpy, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglCreateStreamAttribKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreateStreamAttribKHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglCreateStreamAttribKHR(dpy, nullptr);
+    ASSERT_EQ(EGL_NO_STREAM_KHR, result);
+}
+
+/**
+ * @tc.name: EglCreateStreamAttribKHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglCreateStreamAttribKHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglCreateStreamAttribKHR(dpy, nullptr);
+    ASSERT_EQ(EGL_NO_STREAM_KHR, result);
+}
+
+/**
+ * @tc.name: EglSetStreamAttribKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglSetStreamAttribKHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglSetStreamAttribKHR(dpy, nullptr, 1, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglSetStreamAttribKHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglSetStreamAttribKHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglSetStreamAttribKHR(dpy, nullptr, 1, 0);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryStreamAttribKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryStreamAttribKHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglQueryStreamAttribKHR(dpy, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglQueryStreamAttribKHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglQueryStreamAttribKHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglQueryStreamAttribKHR(dpy, nullptr, 1, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglStreamConsumerAcquireAttribKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglStreamConsumerAcquireAttribKHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglStreamConsumerAcquireAttribKHR(dpy, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglStreamConsumerAcquireAttribKHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglStreamConsumerAcquireAttribKHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglStreamConsumerAcquireAttribKHR(dpy, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglStreamConsumerReleaseAttribKHRImpl001
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseAttribKHRImpl001, Level1)
+{
+    EGLDisplay dpy = nullptr;
+    auto result = gWrapperHook.wrapper.eglStreamConsumerReleaseAttribKHR(dpy, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+/**
+ * @tc.name: EglStreamConsumerReleaseAttribKHRImpl002
+ * @tc.desc:
+ * @tc.type: FUNC
+ */
+HWTEST_F(EglWrapperEntryTest, EglStreamConsumerReleaseAttribKHRImpl002, Level2)
+{
+    EGLint majorVersion;
+    EGLint minorVersion;
+    EGLDisplay dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    EGLBoolean ret = eglInitialize(dpy, &majorVersion, &minorVersion);
+    ASSERT_EQ(ret, EGL_TRUE);
+
+    auto result = gWrapperHook.wrapper.eglStreamConsumerReleaseAttribKHR(dpy, nullptr, nullptr);
+    ASSERT_EQ(EGL_FALSE, result);
+}
+
+
 } // OHOS::Rosen

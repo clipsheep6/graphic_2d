@@ -510,7 +510,7 @@ HWTEST_F(RSRenderEngineTest, CaptureSurfaceInDisplayWithoutUni001, Function | Sm
     ASSERT_NE(nullptr, visitor_);
     auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
     surfaceNode->SetSecurityLayer(false);
-    if (!isUnirender) {
+    if (isUnirender) {
         visitor_->CaptureSingleSurfaceNodeWithoutUni(*surfaceNode);
     }
 }
@@ -524,12 +524,12 @@ HWTEST_F(RSRenderEngineTest, CaptureSurfaceInDisplayWithoutUni001, Function | Sm
 HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode006, Function | SmallTest | Level2)
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    surfaceNode->GetMutableRenderProperties().SetVisible(true);
-    surfaceNode->GetMutableRenderProperties().SetAlpha(DEFAULT_BOUNDS_WIDTH);
-    if (!isUnirender) {
-        visitor_->ProcessSurfaceRenderNodeWithoutUni(*surfaceNode);
+    if (isUnirender) {
+        ASSERT_NE(nullptr, visitor_);
+        auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+        surfaceNode->GetMutableRenderProperties().SetVisible(true);
+        surfaceNode->GetMutableRenderProperties().SetAlpha(DEFAULT_BOUNDS_WIDTH);
+        visitor_->ProcessSurfaceRenderNode(*surfaceNode);
     }
 }
 
@@ -542,11 +542,11 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode006, Function | SmallTest |
 HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode007, Function | SmallTest | Level2)
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    surfaceNode->GetMutableRenderProperties().SetVisible(true);
-    surfaceNode->GetMutableRenderProperties().SetAlpha(.0f);
     if (isUnirender) {
+        ASSERT_NE(nullptr, visitor_);
+        auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+        surfaceNode->GetMutableRenderProperties().SetVisible(true);
+        surfaceNode->GetMutableRenderProperties().SetAlpha(.0f);
         visitor_->ProcessSurfaceRenderNode(*surfaceNode);
     }
 }
@@ -560,10 +560,10 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode007, Function | SmallTest |
 HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode008, Function | SmallTest | Level2)
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    visitor_->canvas_ = nullptr;
     if (isUnirender) {
+        ASSERT_NE(nullptr, visitor_);
+        auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+        visitor_->canvas_ = nullptr;
         visitor_->ProcessSurfaceRenderNode(*surfaceNode);
     }
 }
@@ -577,12 +577,12 @@ HWTEST_F(RSRenderEngineTest, ProcessSurfaceRenderNode008, Function | SmallTest |
 HWTEST_F(RSRenderEngineTest, CaptureSingleSurfaceNodeWithUni001, Function | SmallTest | Level2)
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    ASSERT_NE(nullptr, surfaceNode);
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
-    surfaceNode->SetSecurityLayer(true);
     if (isUnirender) {
+        ASSERT_NE(nullptr, visitor_);
+        auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+        ASSERT_NE(nullptr, surfaceNode);
+        surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
+        surfaceNode->SetSecurityLayer(true);
         visitor_->CaptureSingleSurfaceNodeWithUni(*surfaceNode);
     }
 }
@@ -596,16 +596,16 @@ HWTEST_F(RSRenderEngineTest, CaptureSingleSurfaceNodeWithUni001, Function | Smal
 HWTEST_F(RSRenderEngineTest, CaptureSingleSurfaceNodeWithUni002, Function | SmallTest | Level2)
 {
     bool isUnirender = RSUniRenderJudgement::IsUniRender();
-    ASSERT_NE(nullptr, visitor_);
-    auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
-    ASSERT_NE(nullptr, surfaceNode);
-    surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
-    surfaceNode->SetSecurityLayer(false);
-    Vector4f cornerRadius(1.f, 2.f, 0.f, 0.f);
-    surfaceNode->GetMutableRenderProperties().SetCornerRadius(cornerRadius);
-    std::shared_ptr<RSFilter> filter = RSFilter::CreateBlurFilter(5.0f, 5.0f);
-    surfaceNode->GetMutableRenderProperties().SetFilter(filter);
     if (isUnirender) {
+        ASSERT_NE(nullptr, visitor_);
+        auto surfaceNode = RSTestUtil::CreateSurfaceNodeWithBuffer();
+        ASSERT_NE(nullptr, surfaceNode);
+        surfaceNode->SetSurfaceNodeType(RSSurfaceNodeType::SELF_DRAWING_NODE);
+        surfaceNode->SetSecurityLayer(false);
+        Vector4f cornerRadius(1.f, 2.f, 0.f, 0.f);
+        surfaceNode->GetMutableRenderProperties().SetCornerRadius(cornerRadius);
+        std::shared_ptr<RSFilter> filter = RSFilter::CreateBlurFilter(5.0f, 5.0f);
+        surfaceNode->GetMutableRenderProperties().SetFilter(filter);
         visitor_->CaptureSingleSurfaceNodeWithUni(*surfaceNode);
     }
 }

@@ -232,3 +232,11 @@ CALL_HOOK_API_RET(eglDupNativeFenceFDANDROID, dpy, sync)
 /* EglSetBlobCacheFuncsANDROID */
 HOOK_API_ENTRY(void, eglSetBlobCacheFuncsANDROID, EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
 CALL_HOOK_API(eglSetBlobCacheFuncsANDROID, dpy, set, get)
+
+/* EGL_ANDROID_presentation_time */
+HOOK_API_ENTRY(EGLBoolean, eglPresentationTimeANDROID, EGLDisplay dpy, EGLSurface surface, EGLnsecsANDROID time)
+CALL_HOOK_API_RET(eglPresentationTimeANDROID, dpy, surface, time)
+
+/* EGL_ANDROID_get_native_client_buffer */
+HOOK_API_ENTRY(EGLClientBuffer, eglGetNativeClientBufferANDROID, const struct AHardwareBuffer *buffer)
+CALL_HOOK_API_RET(eglGetNativeClientBufferANDROID, buffer)

@@ -1318,6 +1318,39 @@ void EglSetBlobCacheFuncsANDROIDImpl(EGLDisplay dpy, EGLSetBlobFuncANDROID set, 
     }
 }
 
+EGLSurface EglCreatePlatformWindowSurfaceEXTImpl(EGLDisplay dpy, EGLConfig config, void *nativeWindow,
+    const EGLint *attribList)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->CreatePlatformWindowSurfaceEXT(config, nativeWindow, attribList);
+}
+
+EGLSurface EglCreatePlatformPixmapSurfaceEXTImpl(EGLDisplay dpy, EGLConfig config, void *nativePixmap,
+    const EGLint *attribList)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+    return display->CreatePlatformPixmapSurfaceEXT(config, nativePixmap, attribList);
+}
+
+EGLBoolean EglSwapBuffersWithDamageEXTImpl(EGLDisplay dpy, EGLSurface surface, const EGLint *rects, EGLint nRects)
+{
+    ClearError();
+    EglWrapperDisplay *display = ValidateDisplay(dpy);
+    if (!display) {
+        return EGL_FALSE;
+    }
+
+    return display->SwapBuffersWithDamageEXT(surface, rects, nRects);
+}
+
 static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
     /* EGL_VERSION_1_0 */
     { "eglChooseConfig", (EglWrapperFuncPointer)&EglChooseConfigImpl },
@@ -1408,12 +1441,17 @@ static const std::map<std::string, EglWrapperFuncPointer> gEglWrapperMap = {
 
     { "eglWaitSyncKHR", (EglWrapperFuncPointer)&EglWaitSyncKHRImpl },
 
+    /* EGL_EXT_platform_base */
     { "eglGetPlatformDisplayEXT", (EglWrapperFuncPointer)&EglGetPlatformDisplayEXTImpl },
+    { "eglCreatePlatformWindowSurfaceEXT", (EglWrapperFuncPointer)&EglCreatePlatformWindowSurfaceEXTImpl },
+    { "eglCreatePlatformPixmapSurfaceEXT", (EglWrapperFuncPointer)&EglCreatePlatformPixmapSurfaceEXTImpl },
 
     { "eglSwapBuffersWithDamageKHR", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageKHRImpl },
     { "eglSetDamageRegionKHR", (EglWrapperFuncPointer)&EglSetDamageRegionKHRImpl },
     { "eglSetBlobCacheFuncsANDROID", (EglWrapperFuncPointer)&EglSetBlobCacheFuncsANDROIDImpl },
 
+    /* EGL_EXT_swap_buffers_with_damage */
+    { "eglSwapBuffersWithDamageEXT", (EglWrapperFuncPointer)&EglSwapBuffersWithDamageEXTImpl },
 };
 
 EglWrapperFuncPointer FindEglWrapperApi(const std::string &name)

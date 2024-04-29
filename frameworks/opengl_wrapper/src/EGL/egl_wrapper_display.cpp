@@ -1016,4 +1016,85 @@ EGLBoolean EglWrapperDisplay::SetDamageRegionKHR(EGLSurface surf, EGLint *rects,
 
     return ret;
 }
+
+EGLSurface EglWrapperDisplay::CreatePlatformWindowSurfaceEXT(EGLConfig config, void *nativeWindow,
+    const EGLint *attribList)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    if (nativeWindow == nullptr) {
+        WLOGE("CreatePlatformWindowSurfaceEXT nativeWindow is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_NATIVE_WINDOW);
+        return EGL_NO_SURFACE;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCreatePlatformWindowSurfaceEXT) {
+        EGLSurface surf = table->egl.eglCreatePlatformWindowSurfaceEXT(
+            disp_, config, nativeWindow, attribList);
+        if (surf != EGL_NO_SURFACE) {
+            return new EglWrapperSurface(this, surf);
+        } else {
+            WLOGE("egl.eglCreatePlatformWindowSurfaceEXT error.");
+        }
+    } else {
+        WLOGE("eglCreatePlatformWindowSurfaceEXT is invalid.");
+    }
+
+    return EGL_NO_SURFACE;
+}
+
+EGLSurface EglWrapperDisplay::CreatePlatformPixmapSurfaceEXT(EGLConfig config, void *nativePixmap,
+    const EGLint *attribList)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    if (nativePixmap == nullptr) {
+        WLOGE("CreatePlatformPixmapSurfaceEXT nativePixmap is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_NATIVE_WINDOW);
+        return EGL_NO_SURFACE;
+    }
+
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglCreatePlatformPixmapSurfaceEXT) {
+        EGLSurface surf = table->egl.eglCreatePlatformPixmapSurfaceEXT(
+            disp_, config, nativePixmap, attribList);
+        if (surf != EGL_NO_SURFACE) {
+            return new EglWrapperSurface(this, surf);
+        } else {
+            WLOGE("egl.eglCreatePlatformPixmapSurfaceEXT error.");
+        }
+    } else {
+        WLOGE("eglCreatePlatformPixmapSurfaceEXT is invalid.");
+    }
+    return EGL_NO_SURFACE;
+}
+
+EGLBoolean EglWrapperDisplay::SwapBuffersWithDamageEXT(EGLSurface surface, const EGLint *rects, EGLint nRects)
+{
+    std::lock_guard<std::mutex> lock(refLockMutex_);
+
+    EglWrapperSurface *surfPtr = EglWrapperSurface::GetWrapperSurface(surface);
+    if (!CheckObject(surfPtr)) {
+        WLOGE("EGLSurface is invalid.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_SURFACE);
+        return EGL_FALSE;
+    }
+
+    if (nRects < 0 || (nRects > 0 && rects == nullptr)) {
+        WLOGE("Paramter error.");
+        ThreadPrivateDataCtl::SetError(EGL_BAD_PARAMETER);
+        return EGL_FALSE;
+    }
+
+    EGLBoolean ret = EGL_FALSE;
+    EglWrapperDispatchTablePtr table = &gWrapperHook;
+    if (table->isLoad && table->egl.eglSwapBuffersWithDamageEXT) {
+        ret = table->egl.eglSwapBuffersWithDamageEXT(
+            disp_, surfPtr->GetEglSurface(), rects, nRects);
+    } else {
+        WLOGE("eglSwapBuffersWithDamageEXT is invalid.");
+    }
+    return ret;
+}
 } // namespace OHOS

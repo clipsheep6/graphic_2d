@@ -15,7 +15,7 @@ add_library(entry SHARED
     test_common.cpp
     testcasefactory.cpp
     dm/aa_rect_modes.cpp
-    dm/blur_circles_gm.cpp
+    dm/blur_circles.cpp
     dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp
@@ -37,7 +37,7 @@ add_library(entry SHARED
     dm/luma_filter.cpp
     dm/bugfix7792.cpp
     dm/points_mask_filter.cpp
-    dm/clip_cubic_gm.cpp
+    dm/clip_cubic.cpp
     dm/points.cpp
     dm/onebadarc.cpp
     dm/skbug_8955.cpp
@@ -57,7 +57,7 @@ add_library(myxnode SHARED
     testcasefactory.cpp
     test_common.cpp
     dm/aa_rect_modes.cpp
-    dm/blur_circles_gm.cpp
+    dm/blur_circles.cpp
     dm/blur_large_rrects.cpp
     dm/add_arc.cpp
     dm/font_regen.cpp

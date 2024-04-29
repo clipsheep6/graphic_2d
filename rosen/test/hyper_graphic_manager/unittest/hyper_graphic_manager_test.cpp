@@ -278,6 +278,7 @@ HWTEST_F(HyperGraphicManagerTest, SetScreenRefreshRate, Function | MediumTest | 
     uint32_t rate0 = 60;
     int32_t mode0 = 0;
     int32_t timestamp = 1704038400; // 2024-01-01 00:00:00
+    bool isDirect = true;
 
     PART("CaseDescription") {
         STEP("1. add a new screen") {
@@ -307,6 +308,8 @@ HWTEST_F(HyperGraphicManagerTest, SetScreenRefreshRate, Function | MediumTest | 
             STEP_ASSERT_EQ(instance8.GetPendingScreenRefreshRate(), rate0);
             instance8.SetTimestamp(timestamp);
             STEP_ASSERT_EQ(instance8.GetCurrentTimestamp(), timestamp);
+            instance8.SetHandleRateDirect(isDirect);
+            STEP_ASSERT_EQ(instance8.IsHandleRateDirect(), true);
         }
     }
 }

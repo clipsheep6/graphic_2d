@@ -101,6 +101,16 @@ public:
         return pendingScreenRefreshRate_;
     }
 
+    void SetHandleRateDirect(bool direct)
+    {
+        isHandleRateDirect_ = direct;
+    }
+
+    bool GetHandleRateDirect() const
+    {
+        return isHandleRateDirect_;
+    }
+
     Occlusion::Region& GetAccumulatedDirtyRegion()
     {
         return accumulatedDirtyRegion_;
@@ -234,6 +244,7 @@ private:
     // Used by hardware thred
     uint64_t timestamp_ = 0;
     uint32_t pendingScreenRefreshRate_ = 0;
+    bool isHandleRateDirect_ = false;
     // RSDirtyRectsDfx dfx
     std::vector<std::string> dfxTargetSurfaceNames_;
     bool isRegionDebugEnabled_ = false;

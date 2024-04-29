@@ -90,6 +90,16 @@ public:
         return timestamp_;
     }
 
+    void SetHandleRateDirect(bool direct)
+    {
+        isHandleRateDirect_ = direct;
+    }
+
+    bool IsHandleRateDirect() const
+    {
+        return isHandleRateDirect_;
+    }
+
     bool GetLtpoEnabled() const
     {
         return ltpoEnabled_ && (customFrameRateMode_ == HGM_REFRESHRATE_MODE_AUTO) &&
@@ -198,6 +208,7 @@ private:
     // for LTPO
     uint32_t pendingScreenRefreshRate_ = 0;
     uint64_t timestamp_ = 0;
+    bool isHandleRateDirect_ = false;
     bool ltpoEnabled_ = false;
     uint32_t maxTE_ = 0;
     uint32_t alignRate_ = 0;

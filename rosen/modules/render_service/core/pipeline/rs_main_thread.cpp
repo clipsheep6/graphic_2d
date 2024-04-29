@@ -1497,14 +1497,11 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
         RS_TRACE_NAME_FMT("rsCurrRange = (%d, %d, %d)", rsCurrRange_.min_, rsCurrRange_.max_, rsCurrRange_.preferred_);
     }
     // Check and processing refresh rate task.
-    auto &hgmCore = OHOS::Rosen::HgmCore::Instance();
-    hgmCore.SetTimestamp(timestamp);
-    auto pendingRefreshRate = frameRateMgr_->GetPendingRefreshRate();
-    if (pendingRefreshRate != nullptr) {
-        hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate);
-        frameRateMgr_->ResetPendingRefreshRate();
-        RS_TRACE_NAME_FMT("RSMainThread::ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate);
+    if (!frameRateMgr_) {
+        return;
     }
+
+    frameRateMgr_->ProcessPendingRefreshRate(timestamp);
 
     // hgm warning: use IsLtpo instead after GetDisplaySupportedModes ready
     if (frameRateMgr_->GetCurScreenStrategyId().find("LTPO") == std::string::npos) {
@@ -1520,6 +1517,7 @@ void RSMainThread::ProcessHgmFrameRate(uint64_t timestamp)
     frameRateMgr_->touchMgr_->HandleRSFrameUpdate(rsIdleTimerExpiredFlag_);
 
     if (rsVSyncDistributor_->IsDVsyncOn()) {
+        auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
         auto pendingRefreshRate = frameRateMgr_->GetPendingRefreshRate();
         if (pendingRefreshRate != nullptr) {
             hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate);
@@ -1734,6 +1732,7 @@ void RSMainThread::Render()
         renderThreadParams_->SetRequestNextVsyncFlag(needRequestNextVsyncAnimate_);
         renderThreadParams_->SetPendingScreenRefreshRate(hgmCore.GetPendingScreenRefreshRate());
         renderThreadParams_->SetForceCommitLayer(isHardwareEnabledBufferUpdated_ || forceUpdateUniRenderFlag_);
+        renderThreadParams_->SetHandleRateDirect(hgmCore.IsHandleRateDirect());
         renderThreadParams_->SetOcclusionEnabled(RSSystemProperties::GetOcclusionEnabled());
     }
     if (RSSystemProperties::GetRenderNodeTraceEnabled()) {

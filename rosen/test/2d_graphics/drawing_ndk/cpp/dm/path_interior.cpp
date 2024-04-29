@@ -14,35 +14,38 @@
  */
 
 #include "path_interior.h"
-#include <native_drawing/drawing_color.h>
+
 #include <native_drawing/drawing_brush.h>
+#include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_matrix.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
-#include <native_drawing/drawing_round_rect.h>
+#include <native_drawing/drawing_point.h>
 #include <native_drawing/drawing_round_rect.h>
 #include <native_drawing/drawing_shader_effect.h>
-#include <native_drawing/drawing_point.h>
 #include <rdma/bnxt_re-abi.h>
+
 #include "test_common.h"
+
 #include "common/log_common.h"
 
 enum {
-    kW = 770,
-    kH = 770,
+    K_W = 770, // 770 是位图宽度
+    K_H = 770, // 770 是位图高度
 };
 
 namespace {
-void show(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path) {
-    OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
+void show(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path)
+{
+    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
     bool hasInterior = false;
     OH_Drawing_BrushSetColor(brush, hasInterior ? color_to_565(0xFF8888FF) : 0xFF888888); // gray
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawPath(canvas, path);
     OH_Drawing_CanvasDetachBrush(canvas);
-    
-    OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
+
+    OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);
     OH_Drawing_PenSetColor(pen, 0xFFFF0000);
     OH_Drawing_CanvasAttachPen(canvas, pen);
@@ -53,42 +56,44 @@ void show(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path) {
     OH_Drawing_PenDestroy(pen);
 }
 
-DrawRect inset(DrawRect &r) {
+DrawRect inset(DrawRect& r)
+{
     DrawRect rect = r;
-    rect.inset(r.width() / 8, r.height() / 8);
+    rect.inset(r.width() / 8, r.height() / 8); // 8  rect控制
     return rect;
 }
 } // namespace
 
-PathInterior::PathInterior() {
-    // skia dm file gm/fontregen.cpp
-    bitmapWidth_ = kW;
-    bitmapHeight_ = kH;
+PathInterior::PathInterior()
+{
+    bitmapWidth_ = K_W;
+    bitmapHeight_ = K_H;
     fileName_ = "pathinterior";
 }
 
-void PathInterior::OnTestFunction(OH_Drawing_Canvas *canvas) {
-    // DRAWING_LOGI("OnTestFunction path = %{public}s",fileName_);
-    OH_Drawing_CanvasClear(canvas, 0xFFDDDDDD); // gray
-    OH_Drawing_CanvasTranslate(canvas, 8.5f, 8.5f);
-    DrawRect rect = {0, 0, 80, 80};
-    const float RAD = rect.width() / 8;
+void PathInterior::OnTestFunction(OH_Drawing_Canvas* canvas)
+{
+    OH_Drawing_CanvasClear(canvas, 0xFFDDDDDD);     // gray
+    OH_Drawing_CanvasTranslate(canvas, 8.5f, 8.5f); // 8.5f 定义了画布的平移量
+    DrawRect rect = { 0, 0, 80, 80 };               // 0, 0, 80, 80 矩形参数
+    const float rad = rect.width() / 8;             // 8 用于计算矩形的内边距
 
-    int i = 0;
+    int i = 0; // 0 PathOffset
     for (int insetFirst = 0; insetFirst <= 1; ++insetFirst) {
         for (int doEvenOdd = 0; doEvenOdd <= 1; ++doEvenOdd) {
             for (int outerRR = 0; outerRR <= 1; ++outerRR) {
                 for (int innerRR = 0; innerRR <= 1; ++innerRR) {
                     for (int outerCW = 0; outerCW <= 1; ++outerCW) {
                         for (int innerCW = 0; innerCW <= 1; ++innerCW) {
-                            OH_Drawing_Path *path = OH_Drawing_PathCreate();
-                            OH_Drawing_PathSetFillType(path, doEvenOdd ? PATH_FILL_TYPE_EVEN_ODD : PATH_FILL_TYPE_WINDING);
+                            OH_Drawing_Path* path = OH_Drawing_PathCreate();
+                            OH_Drawing_PathSetFillType(
+                                path, doEvenOdd ? PATH_FILL_TYPE_EVEN_ODD : PATH_FILL_TYPE_WINDING);
                             OH_Drawing_PathDirection outerDir = outerCW ? PATH_DIRECTION_CW : PATH_DIRECTION_CCW;
                             OH_Drawing_PathDirection innerDir = innerCW ? PATH_DIRECTION_CW : PATH_DIRECTION_CCW;
 
                             DrawRect rc = insetFirst ? inset(rect) : rect;
-                            OH_Drawing_Rect *r = OH_Drawing_RectCreate(rc.fLeft, rc.fTop, rc.fRight, rc.fBottom);
-                            OH_Drawing_RoundRect *rr = OH_Drawing_RoundRectCreate(r, RAD, RAD);
+                            OH_Drawing_Rect* r = OH_Drawing_RectCreate(rc.fLeft, rc.fTop, rc.fRight, rc.fBottom);
+                            OH_Drawing_RoundRect* rr = OH_Drawing_RoundRectCreate(r, rad, rad);
                             if (outerRR) {
                                 OH_Drawing_PathAddRoundRect(path, rr, outerDir);
                             } else {
@@ -99,7 +104,7 @@ void PathInterior::OnTestFunction(OH_Drawing_Canvas *canvas) {
 
                             rc = insetFirst ? rect : inset(rect);
                             r = OH_Drawing_RectCreate(rc.fLeft, rc.fTop, rc.fRight, rc.fBottom);
-                            rr = OH_Drawing_RoundRectCreate(r, RAD, RAD);
+                            rr = OH_Drawing_RoundRectCreate(r, rad, rad);
                             if (innerRR) {
                                 OH_Drawing_PathAddRoundRect(path, rr, innerDir);
                             } else {
@@ -108,8 +113,10 @@ void PathInterior::OnTestFunction(OH_Drawing_Canvas *canvas) {
                             OH_Drawing_RoundRectDestroy(rr);
                             OH_Drawing_RectDestroy(r);
 
-                            float dx = (i / 8) * rect.width() * 6 / 5;
-                            float dy = (i % 8) * rect.height() * 6 / 5;
+                            float dx = (i / 8) * rect.width() * 6 /
+                                       5; //   (i / 8) * rect.width() * 6 / 5 用于计算路径在画布上的偏移量
+                            float dy = (i % 8) * rect.height() * 6 /
+                                       5; //   (i / 8) * rect.height() * 6 / 5 用于计算路径在画布上的偏移量
                             i++;
                             OH_Drawing_PathOffset(path, path, dx, dy);
                             show(canvas, path);

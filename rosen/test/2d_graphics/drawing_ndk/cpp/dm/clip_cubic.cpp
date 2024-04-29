@@ -28,8 +28,8 @@ const SkScalar H = 240;
 ClipCubic::ClipCubic()
 {
     // gm/clip_cubic_gm.cpp
-    bitmapWidth_ = 400;
-    bitmapHeight_ = 410;
+    bitmapWidth_ = 400;  // 400宽度
+    bitmapHeight_ = 410; // 410高度
     fileName_ = "clipcubic";
 }
 
@@ -59,7 +59,7 @@ void drawAndClip(OH_Drawing_Canvas *canvas, const OH_Drawing_Path *path, SkScala
     DRAWING_LOGI("get fSaveCount=%{public}d ", fSaveCount);
     OH_Drawing_CanvasSave(canvas);
 
-    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(0, H / 4, W, H / 4 + H / 2);
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(0, H / 4, W, H / 4 + H / 2); // 4,2正方形
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
     OH_Drawing_PenSetColor(pen, color_to_565(0xFF8888FF));
@@ -92,16 +92,16 @@ void ClipCubic::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_Path *fHPath = OH_Drawing_PathCreate();
 
     OH_Drawing_PathMoveTo(fVPath, W, 0);
-    OH_Drawing_PathCubicTo(fVPath, W, H - 10, 0, 10, 0, H);
+    OH_Drawing_PathCubicTo(fVPath, W, H - 10, 0, 10, 0, H); // 10坐标
     OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreate();
     OH_Drawing_MatrixRotate(matrix, 90, W / 2, H / 2);
 
     OH_Drawing_PathTransformWithPerspectiveClip(fVPath, matrix, fHPath, true);
 
-    OH_Drawing_CanvasTranslate(canvas, 80, 10);
-    drawAndClip(canvas, fVPath, 200, 0);
-    OH_Drawing_CanvasTranslate(canvas, 0, 200);
-    drawAndClip(canvas, fHPath, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 80, 10); // 80,10距离
+    drawAndClip(canvas, fVPath, 200, 0);        // 200坐标
+    OH_Drawing_CanvasTranslate(canvas, 0, 200); // 200距离
+    drawAndClip(canvas, fHPath, 200, 0);        // 200坐标
 
     OH_Drawing_PathDestroy(fVPath);
     OH_Drawing_PathDestroy(fHPath);

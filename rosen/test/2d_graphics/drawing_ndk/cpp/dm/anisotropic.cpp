@@ -30,10 +30,10 @@
 #include "common/log_common.h"
 
 enum SkAlphaType : int {
-    K_UNKNOWN_SK_ALPHA_TYPE,                          // !< uninitialized
-    K_OPAQUE_SK_ALPHA_TYPE,                           // !< pixel is opaque
-    K_PREMUL_SK_ALPHA_TYPE,                           // !< pixel components are premultiplied by alpha
-    K_UNPREMUL_SK_ALPHA_TYPE,                         // !< pixel components are independent of alpha
+    K_UNKNOWN_SK_ALPHA_TYPE,                              // !< uninitialized
+    K_OPAQUE_SK_ALPHA_TYPE,                               // !< pixel is opaque
+    K_PREMUL_SK_ALPHA_TYPE,                               // !< pixel components are premultiplied by alpha
+    K_UNPREMUL_SK_ALPHA_TYPE,                             // !< pixel components are independent of alpha
     K_LAST_ENUM_SK_ALPHA_TYPE = K_UNPREMUL_SK_ALPHA_TYPE, // !< last valid value
 };
 
@@ -56,12 +56,12 @@ void Anisotropic::OnTestFunction(OH_Drawing_Canvas *canvas)
     float angle = 0.0f;
     float sin;
     float cos;
-    OH_Drawing_CanvasTranslate(bimap_canvas, kImageSize / 2.0f, kImageSize / 2.0f);
+    OH_Drawing_CanvasTranslate(bimap_canvas, kImageSize / 2.0f, kImageSize / 2.0f); // 2.0f距离
     for (int i = 0; i < kNumLines; ++i, angle += kAngleStep) {
         sin = sinf(angle);
         cos = cosf(angle);
         OH_Drawing_CanvasDrawLine(bimap_canvas, cos * kInnerOffset, sin * kInnerOffset, cos * kImageSize / 2,
-            sin * kImageSize / 2);
+            sin * kImageSize / 2); // 2 cout
     }
 
     OH_Drawing_SamplingOptions *fsampling = OH_Drawing_SamplingOptionsCreate(OH_Drawing_FilterMode::FILTER_MODE_NEAREST,
@@ -73,7 +73,8 @@ void Anisotropic::OnTestFunction(OH_Drawing_Canvas *canvas)
         int height = (int)(OH_Drawing_BitmapGetHeight(bitmap) * gScales[i]);
 
         int yOff;
-        if (i <= (int)sizeof(gScales) / 2) {
+        int count = 2;
+        if (i <= (int)sizeof(gScales) / count) {
             yOff = kSpacer + i * (OH_Drawing_BitmapGetHeight(bitmap) + kSpacer);
         } else {
             yOff = (sizeof(gScales) - i) * (OH_Drawing_BitmapGetHeight(bitmap) + kSpacer) - height;
@@ -92,11 +93,12 @@ void Anisotropic::OnTestFunction(OH_Drawing_Canvas *canvas)
 
         int xOff;
         int yOff;
-        if (i <= (int)sizeof(gScales) / 2) {
-            xOff = OH_Drawing_BitmapGetWidth(bitmap) + 2 * kSpacer;
+        if (i <= (int)sizeof(gScales) / 2) {                        // 2被除数
+            xOff = OH_Drawing_BitmapGetWidth(bitmap) + 2 * kSpacer; // 2 cout
             yOff = kSpacer + i * (OH_Drawing_BitmapGetHeight(bitmap) + kSpacer);
         } else {
-            xOff = OH_Drawing_BitmapGetWidth(bitmap) + 2 * kSpacer + OH_Drawing_BitmapGetWidth(bitmap) - width;
+            xOff = OH_Drawing_BitmapGetWidth(bitmap) + 2 * kSpacer + OH_Drawing_BitmapGetWidth(bitmap) - width; // 2
+                                                                                                                // cout
             yOff = kSpacer + (sizeof(gScales) - i - 1) * (OH_Drawing_BitmapGetHeight(bitmap) + kSpacer);
         }
 

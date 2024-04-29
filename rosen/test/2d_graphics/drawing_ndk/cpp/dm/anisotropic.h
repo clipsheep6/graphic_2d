@@ -31,8 +31,8 @@ class Anisotropic : public TestBase {
 public:
     Anisotropic()
     {
-        bitmapWidth_ = 2 * kImageSize + 3 * kSpacer;
-        bitmapHeight_ = kNumVertImages * kImageSize + (kNumVertImages + 1) * kSpacer;
+        bitmapWidth_ = 2 * kImageSize + 3 * kSpacer;                                  // 2,3宽度
+        bitmapHeight_ = kNumVertImages * kImageSize + (kNumVertImages + 1) * kSpacer; // 1高度
         fileName_ = "anisotropic_hq";
     }
     ~Anisotropic() = default;

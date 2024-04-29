@@ -27,8 +27,8 @@ class ConicPaths : public TestBase {
 public:
     ConicPaths()
     {
-        bitmapWidth_ = 920;
-        bitmapHeight_ = 960;
+        bitmapWidth_ = 920;  // 920宽度
+        bitmapHeight_ = 960; // 960高度
         fileName_ = "conicpaths";
     }
     ~ConicPaths() = default;
@@ -38,7 +38,7 @@ protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
     std::vector<DrawRect> pathsBounds;
     std::vector<OH_Drawing_Path *> fPaths;
-    const float w = sqrt(2.0f) / 2;
+    const float w = sqrt(2.0f) / 2; // 2被除数
 };
 
 #endif // MyApplication_conic_paths_H

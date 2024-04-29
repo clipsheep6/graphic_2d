@@ -55,7 +55,7 @@ OH_Drawing_Image *make_alpha_image(int w, int h)
     OH_Drawing_BitmapBuild(bm, w, h, &format);
     OH_Drawing_Canvas *bmpCanvas = OH_Drawing_CanvasCreate();
     OH_Drawing_CanvasBind(bmpCanvas, bm);
-    OH_Drawing_CanvasClear(bmpCanvas, OH_Drawing_ColorSetArgb(10, 0, 0, 0));
+    OH_Drawing_CanvasClear(bmpCanvas, OH_Drawing_ColorSetArgb(10, 0, 0, 0)); // 10 color
 
     for (int y = 0; y < h; ++y) {
         for (int x = y; x < w; ++x) {
@@ -70,8 +70,8 @@ OH_Drawing_Image *make_alpha_image(int w, int h)
 AlphaImage::AlphaImage()
 {
     // file gm/fontregen.cpp
-    bitmapWidth_ = 256;
-    bitmapHeight_ = 256;
+    bitmapWidth_ = 256;  // 256宽度
+    bitmapHeight_ = 256; // 256高度
     fileName_ = "alpha_image";
 }
 
@@ -151,7 +151,7 @@ void AlphaImageAlphaTint::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_BitmapBuild(bm, w, h, &format);
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
-            *DrawBitmapGetAddr8(bm, x, y) = y * 4;
+            *DrawBitmapGetAddr8(bm, x, y) = y * 4; // 4 cout
         }
     }
 
@@ -161,13 +161,13 @@ void AlphaImageAlphaTint::OnTestFunction(OH_Drawing_Canvas *canvas)
 
     OH_Drawing_BrushSetColor(brush, 0x8000FF00);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
-    OH_Drawing_CanvasTranslate(canvas, 8, 8);
+    OH_Drawing_CanvasTranslate(canvas, 8, 8); // 8平移距离
     OH_Drawing_Rect *rect = OH_Drawing_RectCreate(0, 0, w, h);
     OH_Drawing_SamplingOptions *option = OH_Drawing_SamplingOptionsCreate(OH_Drawing_FilterMode::FILTER_MODE_NEAREST,
         OH_Drawing_MipmapMode::MIPMAP_MODE_NONE);
     OH_Drawing_CanvasDrawImageRect(canvas, image, rect, option);
 
-    OH_Drawing_CanvasTranslate(canvas, 72, 0);
+    OH_Drawing_CanvasTranslate(canvas, 72, 0); // 72平移距离
     OH_Drawing_ShaderEffect *effect = OH_Drawing_ShaderEffectCreateImageShader(image, OH_Drawing_TileMode::CLAMP,
         OH_Drawing_TileMode::CLAMP, option, nullptr);
     OH_Drawing_BrushSetShaderEffect(brush, effect);

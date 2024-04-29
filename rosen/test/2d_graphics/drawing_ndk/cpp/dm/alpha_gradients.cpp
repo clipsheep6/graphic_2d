@@ -86,16 +86,16 @@ void AlphaGradients::OnTestFunction(OH_Drawing_Canvas *canvas)
     };
 
     DrawRect r = { 0, 0, 300, 30 };
-    OH_Drawing_CanvasTranslate(canvas, 10, 10);
+    OH_Drawing_CanvasTranslate(canvas, 10, 10); // 10平移距离
     size_t gRec_size = sizeof(gRec) / sizeof(gRec[0]);
 
     for (int doPreMul = 0; doPreMul <= 1; ++doPreMul) {
         OH_Drawing_CanvasSave(canvas);
         for (size_t i = 0; i < gRec_size; ++i) {
             draw_grad(canvas, r, gRec[i].fColor0, gRec[i].fColor1, (doPreMul));
-            OH_Drawing_CanvasTranslate(canvas, 0, r.width() + 8);
+            OH_Drawing_CanvasTranslate(canvas, 0, r.width() + 8); // r.width() + 8距离
         }
         OH_Drawing_CanvasRestore(canvas);
-        OH_Drawing_CanvasTranslate(canvas, r.width() + 10, 0);
+        OH_Drawing_CanvasTranslate(canvas, r.width() + 10, 0); // r.width() + 10距离
     }
 }

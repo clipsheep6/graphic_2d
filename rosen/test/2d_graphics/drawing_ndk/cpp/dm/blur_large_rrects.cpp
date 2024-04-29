@@ -28,8 +28,8 @@
 
 BlurLargeRrects::BlurLargeRrects()
 {
-    bitmapWidth_ = 300;
-    bitmapHeight_ = 300;
+    bitmapWidth_ = 300;  // 300宽度
+    bitmapHeight_ = 300; // 300高度
     fileName_ = "blur_large_rrects";
 }
 

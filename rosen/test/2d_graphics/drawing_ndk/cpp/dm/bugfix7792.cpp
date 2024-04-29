@@ -27,8 +27,8 @@
 
 BugFix7792::BugFix7792()
 {
-    bitmapWidth_ = 800;
-    bitmapHeight_ = 800;
+    bitmapWidth_ = 800;  // 800宽度
+    bitmapHeight_ = 800; // 800高度
     fileName_ = "bug7792";
 }
 
@@ -49,177 +49,177 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     //        2 3 4 5
     //        3 4 5 6
     // 第一个图型坐标点:（0.0）
-    OH_Drawing_PathMoveTo(path, 10, 10);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
+    OH_Drawing_PathMoveTo(path, 10, 10);   // path, 10, 10坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // path, 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // path, 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // path, 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第二个图型坐标点:（0.1）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 50);
-    OH_Drawing_PathMoveTo(path, 100, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 50);
+    OH_Drawing_PathMoveTo(path, 75, 50);   // 75, 50坐标
+    OH_Drawing_PathMoveTo(path, 100, 75);  // 100, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 50);   // 75, 50坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第三个图型坐标点:（0.2）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 10, 10);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
+    OH_Drawing_PathMoveTo(path, 10, 10);   // 10, 10坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第四个图型坐标点:（0.4）
-    OH_Drawing_CanvasTranslate(canvas, -200 * 2, 200);
+    OH_Drawing_CanvasTranslate(canvas, -200 * 2, 200); // -200 * 2, 200坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathMoveTo(path, 75, 150);
+    OH_Drawing_PathMoveTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathMoveTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第五个图型坐标点:（1.1）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 250, 75);
-    OH_Drawing_PathMoveTo(path, 250, 75);
-    OH_Drawing_PathMoveTo(path, 250, 75);
-    OH_Drawing_PathMoveTo(path, 100, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 75);
+    OH_Drawing_PathMoveTo(path, 250, 75);  // 250, 75坐标
+    OH_Drawing_PathMoveTo(path, 250, 75);  // 250, 75坐标
+    OH_Drawing_PathMoveTo(path, 250, 75);  // 250, 75坐标
+    OH_Drawing_PathMoveTo(path, 100, 75);  // 100, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_PathLineTo(path, 0, 0);
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第六个图型坐标点:（1.2）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathMoveTo(path, 250, 75);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathMoveTo(path, 250, 75);  // 250, 75坐标
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第七个图型坐标点:（1.3）
-    OH_Drawing_CanvasTranslate(canvas, -200 * 2, 200);
+    OH_Drawing_CanvasTranslate(canvas, -200 * 2, 200); // -200 * 2, 200坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 10);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 10);
+    OH_Drawing_PathMoveTo(path, 75, 10);   // 75, 10坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 10);   // 75, 10坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第八个图型坐标点:（1.4）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_PathClose(path);
-    OH_Drawing_PathMoveTo(path, 10, 10);
-    OH_Drawing_PathLineTo(path, 30, 10);
-    OH_Drawing_PathLineTo(path, 10, 30);
+    OH_Drawing_PathMoveTo(path, 10, 10); // 10, 10坐标
+    OH_Drawing_PathLineTo(path, 30, 10); // 30, 10坐标
+    OH_Drawing_PathLineTo(path, 10, 30); // 10, 30坐标
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第九个图型坐标点:（2.2）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 75, 75);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第十个图型坐标点:（2.3）
-    OH_Drawing_CanvasTranslate(canvas, -200 * 2, 200);
+    OH_Drawing_CanvasTranslate(canvas, -200 * 2, 200); // -200 * 2, 200坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 250);
-    OH_Drawing_PathMoveTo(path, 75, 75);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 250);  // 75, 250坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第十一个图型坐标点:（2.4）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 10);
-    OH_Drawing_PathMoveTo(path, 75, 75);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 10);   // 75, 10坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第十二个图型坐标点:（2.5）
-    OH_Drawing_CanvasTranslate(canvas, 200, 0);
+    OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 10, 150);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 75, 75);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 10, 150);  // 10, 150坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第十三个图型坐标点:（3.3）
-    OH_Drawing_CanvasTranslate(canvas, 200, -200 * 3);
+    OH_Drawing_CanvasTranslate(canvas, 200, -200 * 3); //  200, -200 * 3坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 100);
+    OH_Drawing_PathMoveTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 100);  // 75, 100坐标
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第十四个图型坐标点:（3.4）
-    OH_Drawing_CanvasTranslate(canvas, 0, 200);
+    OH_Drawing_CanvasTranslate(canvas, 0, 200); // 0, 200坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 150, 100);
-    OH_Drawing_PathLineTo(path, 150, 100);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 75, 150);
-    OH_Drawing_PathLineTo(path, 75, 100);
-    OH_Drawing_PathLineTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
+    OH_Drawing_PathMoveTo(path, 150, 100); // 150, 100坐标
+    OH_Drawing_PathLineTo(path, 150, 100); // 150, 100坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
+    OH_Drawing_PathLineTo(path, 75, 100);  // 75, 100坐标
+    OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第十五个图型坐标点:（3.5）
-    OH_Drawing_CanvasTranslate(canvas, 0, 200);
+    OH_Drawing_CanvasTranslate(canvas, 0, 200); // 0, 200坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 140, 150);
-    OH_Drawing_PathLineTo(path, 140, 75);
-    OH_Drawing_PathMoveTo(path, 75, 75);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 140, 150); // 140, 150坐标
+    OH_Drawing_PathLineTo(path, 140, 75);  // 140, 75坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 第十六个图型坐标点:（3.6）
-    OH_Drawing_CanvasTranslate(canvas, 0, 200);
+    OH_Drawing_CanvasTranslate(canvas, 0, 200); // 0, 200坐标
     OH_Drawing_PathReset(path);
-    OH_Drawing_PathMoveTo(path, 75, 75);
-    OH_Drawing_PathLineTo(path, 150, 75);
-    OH_Drawing_PathLineTo(path, 150, 150);
-    OH_Drawing_PathLineTo(path, 140, 150);
-    OH_Drawing_PathLineTo(path, 140, 75);
-    OH_Drawing_PathMoveTo(path, 75, 75);
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
+    OH_Drawing_PathLineTo(path, 140, 150); // 140, 150坐标
+    OH_Drawing_PathLineTo(path, 140, 75);  // 140, 75坐标
+    OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
     // 释放内存

@@ -36,8 +36,8 @@
 
 DrawBitmapRect2::DrawBitmapRect2()
 {
-    bitmapWidth_ = 640;
-    bitmapHeight_ = 480;
+    bitmapWidth_ = 640;  // 640宽度
+    bitmapHeight_ = 480; // 480高度
     fileName_ = "bitmaprect";
 }
 
@@ -98,17 +98,17 @@ void DrawBitmapRect2::OnTestFunction(OH_Drawing_Canvas *canvas)
 
     // 其中OH_Drawing_CanvasDrawRect接口实现有问题并未用画笔画出而是用画刷，故这边备注了画笔的操作
     // 如果要验证原图的效果，可以把注释放开用画笔。这里注释掉保留源码逻辑
-    //        OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
-    //        OH_Drawing_PenSetAntiAlias(pen, true);
-    //        OH_Drawing_PenSetColor(pen, 0xFF000000);
-    //        OH_Drawing_CanvasAttachPen(canvas, pen);
+    OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
+    OH_Drawing_PenSetAntiAlias(pen, true);
+    OH_Drawing_PenSetColor(pen, 0xFF000000);
+    OH_Drawing_CanvasAttachPen(canvas, pen);
 
     // 创建矩形指针数组
     OH_Drawing_Rect *arrayRect[4];
-    arrayRect[0] = OH_Drawing_RectCreate(0, 0, 32, 32);
-    arrayRect[1] = OH_Drawing_RectCreate(0, 0, 80, 80);
-    arrayRect[2] = OH_Drawing_RectCreate(32, 32, 96, 96);
-    arrayRect[3] = OH_Drawing_RectCreate(-32, -32, 32, 32);
+    arrayRect[0] = OH_Drawing_RectCreate(0, 0, 32, 32);     // 0, 0, 32, 32指针数组
+    arrayRect[1] = OH_Drawing_RectCreate(0, 0, 80, 80);     // 0, 0, 80, 80指针数组
+    arrayRect[2] = OH_Drawing_RectCreate(32, 32, 96, 96);   // 32, 32, 96, 96指针数组
+    arrayRect[3] = OH_Drawing_RectCreate(-32, -32, 32, 32); // -32, -32, 32, 32指针数组
     const size_t ARRAY_SIZE = sizeof(arrayRect) / sizeof(arrayRect[0]);
     // 创建采样选项对象
     OH_Drawing_SamplingOptions *option = OH_Drawing_SamplingOptionsCreate(OH_Drawing_FilterMode::FILTER_MODE_NEAREST,
@@ -116,9 +116,9 @@ void DrawBitmapRect2::OnTestFunction(OH_Drawing_Canvas *canvas)
     // 调用PrecondItions()内返回的（image）对象
     auto image = PrecondItions();
     // 开始创建矩形对象并平移
-    OH_Drawing_Rect *dstR = OH_Drawing_RectCreate(0, 200, 128, 380);
-    OH_Drawing_CanvasTranslate(canvas, 16, 40);
-    OH_Drawing_Rect *dst = OH_Drawing_RectCreate(0, 0, 64, 64);
+    OH_Drawing_Rect *dstR = OH_Drawing_RectCreate(0, 200, 128, 380); // 200, 128, 380坐标
+    OH_Drawing_CanvasTranslate(canvas, 16, 40);                      // 16, 40平移距离
+    OH_Drawing_Rect *dst = OH_Drawing_RectCreate(0, 0, 64, 64);      // 64正方形
     for (size_t i = 0; i < ARRAY_SIZE; ++i) {
         OH_Drawing_Rect *srcR = arrayRect[i];
         OH_Drawing_CanvasDrawImageRect(canvas, image, dst, option);
@@ -127,19 +127,19 @@ void DrawBitmapRect2::OnTestFunction(OH_Drawing_Canvas *canvas)
         // 画矩形
         OH_Drawing_CanvasDrawRect(canvas, dstR);
         OH_Drawing_CanvasDrawRect(canvas, srcR);
-        OH_Drawing_CanvasTranslate(canvas, 160, 0);
+        OH_Drawing_CanvasTranslate(canvas, 160, 0); // 160, 0平移距离
     }
     // 释放内存
     OH_Drawing_RectDestroy(arrayRect[0]);
-    OH_Drawing_RectDestroy(arrayRect[1]);
-    OH_Drawing_RectDestroy(arrayRect[2]);
-    OH_Drawing_RectDestroy(arrayRect[3]);
+    OH_Drawing_RectDestroy(arrayRect[1]); // 1数组
+    OH_Drawing_RectDestroy(arrayRect[2]); // 2数组
+    OH_Drawing_RectDestroy(arrayRect[3]); // 3数组
     OH_Drawing_SamplingOptionsDestroy(option);
     OH_Drawing_RectDestroy(dst);
     OH_Drawing_RectDestroy(dstR);
     OH_Drawing_ImageDestroy(image);
     // 上方要放开注释，这里也需要放开，释放画笔内存
-    //    OH_Drawing_CanvasDetachPen(canvas);
-    //    OH_Drawing_PenDestroy(pen);
+    OH_Drawing_CanvasDetachPen(canvas);
+    OH_Drawing_PenDestroy(pen);
     DRAWING_LOGI("DrawBitmapRect2::OnTestFunction end");
 }

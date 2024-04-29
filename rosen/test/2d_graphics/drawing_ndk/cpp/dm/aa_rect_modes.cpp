@@ -75,7 +75,7 @@ static void test4(OH_Drawing_Canvas *canvas)
                 break;
         }
     }
-    OH_Drawing_Rect *clip = OH_Drawing_RectCreate(0, 130, 772, 531);
+    OH_Drawing_Rect *clip = OH_Drawing_RectCreate(0, 130, 772, 531); // 0, 130, 772, 531正方形
     OH_Drawing_CanvasClipRect(canvas, clip, OH_Drawing_CanvasClipOp::INTERSECT, true);
     OH_Drawing_CanvasDrawPath(canvas, path);
 
@@ -110,7 +110,7 @@ static float drawCell(OH_Drawing_Canvas *canvas, OH_Drawing_BlendMode mode, uint
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
 
-    OH_Drawing_Rect *r = OH_Drawing_RectCreate(W / 10, H / 10, W - W / 10, H - H / 10);
+    OH_Drawing_Rect *r = OH_Drawing_RectCreate(W / 10, H / 10, W - W / 10, H - H / 10); // 10正方形
 
     OH_Drawing_BrushSetColor(brush, 0xFF0000FF);
     OH_Drawing_BrushSetAlpha(brush, a0);
@@ -123,8 +123,8 @@ static float drawCell(OH_Drawing_Canvas *canvas, OH_Drawing_BlendMode mode, uint
     OH_Drawing_CanvasAttachBrush(canvas, brush);
 
     float offset = 1.0 / 3;
-    OH_Drawing_Rect *rect =
-        OH_Drawing_RectCreate(W / 4 + offset, H / 4 + offset, W / 4 + offset + W / 2, H / 4 + offset + H / 2);
+    OH_Drawing_Rect *rect = OH_Drawing_RectCreate(W / 4 + offset, H / 4 + offset, W / 4 + offset + W / 2,
+        H / 4 + offset + H / 2); // 4,2正方形
     OH_Drawing_CanvasDrawRect(canvas, rect);
     OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_BrushDestroy(brush);
@@ -137,7 +137,7 @@ OH_Drawing_ShaderEffect *make_bg_shader()
 {
     OH_Drawing_BitmapFormat format = { COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE };
     OH_Drawing_Bitmap *bitmap = OH_Drawing_BitmapCreate();
-    OH_Drawing_BitmapBuild(bitmap, 2, 2, &format);
+    OH_Drawing_BitmapBuild(bitmap, 2, 2, &format); // 2,2 width and height
     *DrawBitmapGetAddr32(bitmap, 0, 0) = 0xFFFFFFFF;
     *DrawBitmapGetAddr32(bitmap, 1, 1) = 0xFFFFFFFF;
     *DrawBitmapGetAddr32(bitmap, 1, 0) = 0xFFCECFCE;
@@ -160,8 +160,8 @@ OH_Drawing_ShaderEffect *make_bg_shader()
 
 AARectModes::AARectModes()
 {
-    bitmapWidth_ = 640;
-    bitmapHeight_ = 480;
+    bitmapWidth_ = 640;  // 640宽度
+    bitmapHeight_ = 480; // 480高度
     fileName_ = "aarectmodes";
 }
 
@@ -177,16 +177,16 @@ void AARectModes::OnTestFunction(OH_Drawing_Canvas *canvas)
 
     OH_Drawing_Rect *bounds = OH_Drawing_RectCreate(0, 0, W, H);
     uint8_t gAlphaValue[] = {0xFF, 0x88, 0x88};
-    OH_Drawing_CanvasTranslate(canvas, 4.0, 4.0);
+    OH_Drawing_CanvasTranslate(canvas, 4.0, 4.0); // 4.0距离
 
-    for (int alpha = 0; alpha < 4; ++alpha) {
+    for (int alpha = 0; alpha < 4; ++alpha) { // 4max
         OH_Drawing_CanvasSave(canvas);
         OH_Drawing_CanvasSave(canvas);
 
         for (size_t i = 0; i < 12; ++i) {
             if (6 == i) {
                 OH_Drawing_CanvasRestore(canvas);
-                OH_Drawing_CanvasTranslate(canvas, W * 5.0, 0);
+                OH_Drawing_CanvasTranslate(canvas, W * 5.0, 0); // 5.0距离
                 OH_Drawing_CanvasSave(canvas);
             }
             OH_Drawing_CanvasAttachBrush(canvas, bgBrush);
@@ -194,11 +194,11 @@ void AARectModes::OnTestFunction(OH_Drawing_Canvas *canvas)
             OH_Drawing_CanvasSaveLayer(canvas, bounds, nullptr);
             float dy = drawCell(canvas, gModes[i], gAlphaValue[alpha & 1], gAlphaValue[alpha & 2]);
             OH_Drawing_CanvasRestore(canvas);
-            OH_Drawing_CanvasTranslate(canvas, 0, dy * 5.0f / 4.0f);
+            OH_Drawing_CanvasTranslate(canvas, 0, dy * 5.0f / 4.0f); // dy * 5.0f / 4.0f距离
         }
         OH_Drawing_CanvasRestore(canvas);
         OH_Drawing_CanvasRestore(canvas);
-        OH_Drawing_CanvasTranslate(canvas, W * 5.0f / 4.0f, 0);
+        OH_Drawing_CanvasTranslate(canvas, W * 5.0f / 4.0f, 0); // W * 5.0f / 4.0f 距离
     }
     OH_Drawing_RectDestroy(bounds);
     OH_Drawing_BrushDestroy(bgBrush);

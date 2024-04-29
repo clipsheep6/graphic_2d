@@ -27,8 +27,8 @@ class ConvexPaths : public TestBase {
 public:
     ConvexPaths()
     {
-        bitmapWidth_ = 1200;
-        bitmapHeight_ = 1100;
+        bitmapWidth_ = 1200;  // 1200宽度
+        bitmapHeight_ = 1100; // 1100高度
         fileName_ = "convexpaths";
     }
     ~ConvexPaths() = default;

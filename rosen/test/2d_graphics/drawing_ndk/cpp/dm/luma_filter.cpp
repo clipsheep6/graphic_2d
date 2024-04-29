@@ -27,10 +27,7 @@
 #include <native_drawing/drawing_shader_effect.h>
 #include <native_drawing/drawing_text_blob.h>
 #include <native_drawing/drawing_typeface.h>
-
-#include "bench/random_path_bench.h"
 #include "test_common.h"
-
 #include "common/log_common.h"
 
 enum {

@@ -325,37 +325,35 @@ bool CopyDataToPixelMap(std::shared_ptr<Drawing::Image> img, const std::unique_p
 {
     auto size = pixelmap->GetRowBytes() * pixelmap->GetHeight();
 #ifdef ROSEN_OHOS
-    int fd = AshmemCreate("RSSurfaceCapture Data", size);
-    if (fd < 0) {
-        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap AshmemCreate fd < 0");
+    sptr<SurfaceBuffer> surfaceBuffer = SurfaceBuffer::Create();
+    BufferRequestConfig requestConfig = {
+        .width = size,
+        .height = 1,
+        .strideAlignment = 0x8, // set 0x8 as default value to alloc SurfaceBufferImpl
+        .format = GRAPHIC_PIXEL_FMT_BLOB, // PixelFormat
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_MEM_MMZ_CACHE,
+        .timeout = 0,
+    };
+    GSError ret = surfaceBuffer->Alloc(requestConfig);
+    if (ret != GSERROR_OK) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap surfaceBuffer alloc failed, %{public}s",
+            GSErrorStr(ret).c_str());
         return false;
     }
-    int result = AshmemSetProt(fd, PROT_READ | PROT_WRITE);
-    if (result < 0) {
-        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap AshmemSetProt error");
-        ::close(fd);
-        return false;
-    }
-    void* ptr = ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    auto data = static_cast<uint8_t*>(ptr);
-    if (ptr == MAP_FAILED || ptr == nullptr) {
-        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap data is nullptr");
-        ::close(fd);
-        return false;
-    }
+    void* nativeBuffer = surfaceBuffer.GetRefPtr();
+    OHOS::RefBase *ref = reinterpret_cast<OHOS::RefBase *>(nativeBuffer);
+    ref->IncStrongRef(ref);
 
     Drawing::BitmapFormat format { Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL };
     Drawing::Bitmap bitmap;
     bitmap.Build(pixelmap->GetWidth(), pixelmap->GetHeight(), format);
-    bitmap.SetPixels(data);
+    bitmap.SetPixels(static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()));
     if (!img->ReadPixels(bitmap, 0, 0)) {
         RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap readPixels failed");
-        ::close(fd);
+        ref->DecStrongRef(ref);
         return false;
     }
-    void* fdPtr = new int32_t();
-    *static_cast<int32_t*>(fdPtr) = fd;
-    pixelmap->SetPixelsAddr(data, fdPtr, size, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
+    pixelmap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), nativeBuffer, size, Media::AllocatorType::DMA_ALLOC, nullptr);
 
 #else
     auto data = (uint8_t *)malloc(size);

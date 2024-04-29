@@ -88,7 +88,14 @@ public:
 
     EGLBoolean SwapBuffersWithDamageKHR(EGLSurface draw, EGLint *rects, EGLint nRects);
     EGLBoolean SetDamageRegionKHR(EGLSurface surf, EGLint *rects, EGLint nRects);
-
+    EGLBoolean GetCompositorTimingSupportedANDROID(EGLSurface surface, EGLint name);
+    EGLBoolean GetCompositorTimingANDROID(EGLSurface surface, EGLint numTimestamps,
+        const EGLint *names, EGLnsecsANDROID *values);
+    EGLBoolean GetNextFrameIdANDROID(EGLSurface surface, EGLuint64KHR *frameId);
+    EGLBoolean GetFrameTimestampSupportedANDROID(EGLSurface surface, EGLint timestamp);
+    EGLBoolean GetFrameTimestampsANDROID(EGLSurface surface, EGLuint64KHR frameId,
+        EGLint numTimestamps, const EGLint *timestamps, EGLnsecsANDROID *values);
+    EGLBoolean PresentationTimeANDROID(EGLSurface surface, EGLnsecsANDROID time);
 private:
     EglWrapperDisplay() noexcept;
     ~EglWrapperDisplay();

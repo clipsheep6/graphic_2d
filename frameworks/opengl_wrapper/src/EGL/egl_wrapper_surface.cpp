@@ -17,8 +17,8 @@
 #include "wrapper_log.h"
 
 namespace OHOS {
-EglWrapperSurface::EglWrapperSurface(EglWrapperDisplay *disp, EGLSurface surf)
-    : EglWrapperObject(disp), surf_(surf)
+EglWrapperSurface::EglWrapperSurface(EglWrapperDisplay *disp, EGLSurface surf, NativeWindowType window)
+    : EglWrapperObject(disp), surf_(surf), window_(window)
 {
     WLOGD("");
 }

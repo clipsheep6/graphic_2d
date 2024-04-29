@@ -232,3 +232,31 @@ CALL_HOOK_API_RET(eglDupNativeFenceFDANDROID, dpy, sync)
 /* EglSetBlobCacheFuncsANDROID */
 HOOK_API_ENTRY(void, eglSetBlobCacheFuncsANDROID, EGLDisplay dpy, EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
 CALL_HOOK_API(eglSetBlobCacheFuncsANDROID, dpy, set, get)
+
+/* EGL_ANDROID_create_native_client_buffer */
+HOOK_API_ENTRY(EGLClientBuffer, eglCreateNativeClientBufferANDROID, const EGLint *attrib_list)
+CALL_HOOK_API_RET(eglCreateNativeClientBufferANDROID, attrib_list)
+
+/* EGL_ANDROID_get_frame_timestamps */
+HOOK_API_ENTRY(EGLBoolean, eglGetCompositorTimingSupportedANDROID, EGLDisplay dpy, EGLSurface surface, EGLint name)
+CALL_HOOK_API_RET(eglGetCompositorTimingSupportedANDROID, dpy, surface, name)
+
+HOOK_API_ENTRY(EGLBoolean, eglGetCompositorTimingANDROID, EGLDisplay dpy, EGLSurface surface, EGLint numTimestamps, const EGLint *names, EGLnsecsANDROID *values)
+CALL_HOOK_API_RET(eglGetCompositorTimingANDROID, dpy, surface, numTimestamps, names, values)
+
+HOOK_API_ENTRY(EGLBoolean, eglGetNextFrameIdANDROID, EGLDisplay dpy, EGLSurface surface, EGLuint64KHR *frameId)
+CALL_HOOK_API_RET(eglGetNextFrameIdANDROID, dpy, surface, frameId)
+
+HOOK_API_ENTRY(EGLBoolean, eglGetFrameTimestampSupportedANDROID, EGLDisplay dpy, EGLSurface surface, EGLint timestamp)
+CALL_HOOK_API_RET(eglGetFrameTimestampSupportedANDROID, dpy, surface, timestamp)
+
+HOOK_API_ENTRY(EGLBoolean, eglGetFrameTimestampsANDROID, EGLDisplay dpy, EGLSurface surface, EGLuint64KHR frameId, EGLint numTimestamps, const EGLint *timestamps, EGLnsecsANDROID *values)
+CALL_HOOK_API_RET(eglGetFrameTimestampsANDROID, dpy, surface, frameId, numTimestamps, timestamps, values)
+
+/* EGL_ANDROID_get_native_client_buffer */
+HOOK_API_ENTRY(EGLClientBuffer, eglGetNativeClientBufferANDROID, const struct AHardwareBuffer *buffer)
+CALL_HOOK_API_RET(eglGetNativeClientBufferANDROID, buffer)
+
+/* EGL_ANDROID_presentation_time */
+HOOK_API_ENTRY(EGLBoolean, eglPresentationTimeANDROID, EGLDisplay dpy, EGLSurface surface, EGLnsecsANDROID time)
+CALL_HOOK_API_RET(eglPresentationTimeANDROID, dpy, surface, time)

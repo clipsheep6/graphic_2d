@@ -23,13 +23,17 @@
 
 #include "screen_manager/screen_types.h"
 
+#define HDIDisplay HDI::Display::Graphic::Common::V1_0
+
 namespace OHOS {
 namespace Media {
 class PixelMap;
 }
 namespace Rosen {
 
-using VPE = Media::VideoProcessingEngine;
+using VPEConvert = Media::VideoProcessingEngine::ColorSpaceConverterDisplay;
+using VPEParameter = Media::VideoProcessingEngine::ColorSpaceConverterDisplayParameter;
+using VPEReturnOK = Media::VideoProcessingEngine::VPE_ALGO_ERR_OK;
 class RSB_EXPORT RSColorSpaceConvert {
 public:
     ~RSColorSpaceConvert();
@@ -39,14 +43,14 @@ public:
         const sptr<SurfaceBuffer>& surfaceBuffer, Drawing::Paint& paint,
         GraphicColorGamut targetColorSpace, ScreenId screenId, int dynamicRangeMode);
     bool SetColorSpaceConverterDisplayParameter(const sptr<SurfaceBuffer>& surfaceBuffer,
-        VPE::ColorSpaceConverterDisplayParameter& parameter, GraphicColorGamut targetColorSpace,
-        ScreenId screenId, int dynamicRangeMode);
+        VPEParameter& parameter, GraphicColorGamut targetColorSpace, ScreenId screenId,
+        int dynamicRangeMode);
     bool ConvertColorGamutToSpaceInfo(const GraphicColorGamut& colorGamut,
-        HDI::Display::Graphic::Common::V1_0::CM_ColorSpaceInfo& colorSpaceInfo);
+        HDIDisplay::CM_ColorSpaceInfo& colorSpaceInfo);
 
 private:
     RSColorSpaceConvert();
-    std::shared_ptr<VPE::ColorSpaceConverterDisplay> colorSpaceConverterDisplay_ = nullptr;
+    std::shared_ptr<VPEConvert> colorSpaceConverterDisplay_ = nullptr;
 };
 
 } // namespace Rosen

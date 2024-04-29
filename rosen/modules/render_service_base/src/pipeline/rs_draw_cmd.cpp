@@ -103,6 +103,13 @@ void RSExtendImageObject::SetPaint(Drawing::Paint paint)
     }
 }
 
+void RSExtendImageObject::SetPaint(Drawing::Paint paint)
+{
+    if (rsImage_) {
+        rsImage_->SetPaint(paint);
+    }
+}
+
 void RSExtendImageObject::Playback(Drawing::Canvas& canvas, const Drawing::Rect& rect,
     const Drawing::SamplingOptions& sampling, bool isBackground)
 {
@@ -469,6 +476,7 @@ void DrawPixelMapWithParmOpItem::Playback(Canvas* canvas, const Rect* rect)
         LOGE("DrawPixelMapWithParmOpItem objectHandle is nullptr!");
         return;
     }
+    objectHandle_->SetPaint(paint_);
     canvas->AttachPaint(paint_);
     objectHandle_->Playback(*canvas, *rect, sampling_, false);
 }

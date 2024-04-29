@@ -250,8 +250,11 @@ std::shared_ptr<RSFilter> RSMaterialFilter::TransformFilter(float fraction) cons
 
 bool RSMaterialFilter::IsValid() const
 {
-    constexpr float epsilon = 0.999f;
-    return radius_ > epsilon;
+    static constexpr float epsilon = 0.999f;
+    bool isApplyColorFilter = (!ROSEN_EQ(saturation_, 1.0f) && ROSEN_GE(saturation_, 0.0f)) ||
+                              (!ROSEN_EQ(brightness_, 1.0f) && ROSEN_GE(brightness_, 0.0f));
+
+    return ROSEN_GNE(radius_, epsilon) || isApplyColorFilter;
 }
 
 std::shared_ptr<RSFilter> RSMaterialFilter::Add(const std::shared_ptr<RSFilter>& rhs)
@@ -328,6 +331,12 @@ void RSMaterialFilter::DrawImageRect(Drawing::Canvas& canvas, const std::shared_
     }
     if (greyImage == nullptr) {
         greyImage = image;
+    }
+
+    static constexpr float epsilon = 0.999f;
+    if (ROSEN_LE(radius_, epsilon)) {
+        ApplyColorFilter(canvas, greyImage, src, dst);
+        return;
     }
 
     // if hps blur failed, use kawase blur

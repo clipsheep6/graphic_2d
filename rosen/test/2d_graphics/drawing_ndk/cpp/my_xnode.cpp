@@ -194,7 +194,6 @@ uint32_t MyXNode::TestPerformance(OH_Drawing_Canvas* canvas, std::string caseNam
     
     testCase->SetTestCount(testCount);
     testCase->TestPerformanceGpu(canvas);
-    // usedTime_ = testCase->GetTime();
     DRAWING_LOGE("MyXNode TestPerformance end");
     return testCase->GetTime();
 }

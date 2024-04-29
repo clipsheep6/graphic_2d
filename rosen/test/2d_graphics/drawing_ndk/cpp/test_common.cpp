@@ -18,8 +18,6 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_bitmap.h>
 
-#define INTTOFLOAT(x) ((x) * 1.52587890625e-5f) // 1.52587890625e-5f:int to float
-
 union drawFloatIntUnion {
     float   fFloat;
     int32_t fSignBitInt;
@@ -58,7 +56,7 @@ uint32_t TestRend::nextU()
 
 float_t TestRend::nextUScalar1()
 {
-    return INTTOFLOAT(this->nextU()>>16);
+    return (this->nextU()>>16) * 1.52587890625e-5f; // 1.52587890625e-5f:int to float
 }
 
 uint32_t TestRend::nextULessThan(uint32_t count)
@@ -66,7 +64,7 @@ uint32_t TestRend::nextULessThan(uint32_t count)
     uint32_t min = 0;
     uint32_t max = count-1;
     uint32_t range = max-min+1;
-    if(0 == range) {
+    if (0 == range) {
         return this->nextU();
     } else {
         return (min+this->nextU()%range);
@@ -75,7 +73,8 @@ uint32_t TestRend::nextULessThan(uint32_t count)
 
 float_t TestRend::nextF()
 {
-    int floatint = 0x3f800000 | (int)(this->nextU() >> 9);
+    int i = (this->nextU() >> 9);
+    int floatint = 0x3f800000 | i;
     float f = drawBits2Float(floatint) - 1.0f;
     return f;
 }
@@ -94,27 +93,27 @@ uint32_t color_to_565(uint32_t color)
 {
     //这个接口按照32位图转565格式，再用32位来显示的方式运行，但是和dm的出图有色差 参见 addarc case
     uint8_t r = (color >> 16) & 0xFF;  // 16 for r
-    uint8_t g = (color >> 8) & 0xFF;   // 8 for g 
+    uint8_t g = (color >> 8) & 0xFF; // 8 for g 
     uint8_t b = color & 0xFF;
 
-    // 预乘 RGB 分量  由于目前代码中alpha为255 ，所以忽略此过程， dm中有此过程，代码不同    
-    // 将RGB通道的值缩放到565格式  
-    r = (r >> 3) & 0x1F; // 3:8位到5位  
-    g = (g >> 2) & 0x3F; // 2:8位到6位  
-    b = (b >> 3) & 0x1F; // 3:8位到5位  
+    // 预乘 RGB 分量  由于目前代码中alpha为255 ，所以忽略此过程， dm中有此过程，代码不同
+    // 将RGB通道的值缩放到565格式
+    r = (r >> 3) & 0x1F; // 3:8位到5位
+    g = (g >> 2) & 0x3F; // 2:8位到6位
+    b = (b >> 3) & 0x1F; // 3:8位到5位
 
-    uint16_t rgb565 = (r << 11) | (g << 5) | b; // 11:r, 5:g 
+    uint16_t rgb565 = (r << 11) | (g << 5) | b; // 11:r, 5:g
     
     //还原成32位用于api绘制，其中色彩信息在压缩过程中有所缺失
     uint8_t r2 = (rgb565 >> 11) & 0x1F; // 11:r
-    uint8_t g2 = (rgb565 >> 5) & 0x3F; // 5:g 
-    uint8_t b2 = rgb565 & 0x1F;  
+    uint8_t g2 = (rgb565 >> 5) & 0x3F; // 5:g
+    uint8_t b2 = rgb565 & 0x1F;
     
     r2 = r2<<3 | r2>>3; // 3: 8 to 565
     g2 = g2<<2 | g2>>2; // 2: 8 to 565
     b2 = b2<<3 | b2>>3; // 3: 8 to 565
     
-    uint32_t argb = 0xFF000000 | r2<<16 | g2<<8 | b2; // 16, 8 : argb
+    uint32_t argb = 0xFF000000 | (r2<<16) | (g2<<8) | b2; // 16, 8 : argb
     return  argb;
 }
 
@@ -158,7 +157,7 @@ uint32_t* DrawBitmapGetAddr32(OH_Drawing_Bitmap* bitmap, int x, int y)
     return ptr;
 }
 
-void DrawPathGetBound(DrawRect& r,float x,float y)
+void DrawPathGetBound(DrawRect& r, float x, float y)
 {
     // 比最小的小，比最大的大就设置
     if (x < r.fLeft) {

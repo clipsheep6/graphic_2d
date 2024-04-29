@@ -693,7 +693,6 @@ napi_value MyXComponent::NapiPerformanceGpu(napi_env env, napi_callback_info inf
         DRAWING_LOGE("NapiDrawPattern: get caseName fail");
         return nullptr;
     }
-    DRAWING_LOGI("caseName = %{public}s", caseName.c_str());
 
     napi_value exportInstance;
     if (napi_get_named_property(env, thisArg, OH_NATIVE_XCOMPONENT_OBJ, &exportInstance) != napi_ok) {
@@ -713,7 +712,6 @@ napi_value MyXComponent::NapiPerformanceGpu(napi_env env, napi_callback_info inf
         DRAWING_LOGE("NapiDrawPattern: Unable to get XComponent id");
         return nullptr;
     }
-    DRAWING_LOGI("ID = %{public}s", idStr);
     std::string id(idStr);
     MyXComponent *render = MyXComponent().GetInstance(id);
     if (render != nullptr) {
@@ -726,7 +724,7 @@ napi_value MyXComponent::NapiPerformanceGpu(napi_env env, napi_callback_info inf
     } else {
         DRAWING_LOGE("render is nullptr");
     }
-    DRAWING_LOGE("DrawingTest NapiPerformanceGpu end");
+    DRAWING_LOGI("DrawingTest NapiPerformanceGpu, ID = %{public}s, caseName = %{public}s", idStr, caseName.c_str());
     
     return nullptr;
 }

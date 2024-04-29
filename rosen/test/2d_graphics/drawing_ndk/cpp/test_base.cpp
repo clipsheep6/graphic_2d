@@ -165,14 +165,15 @@ void TestBase::CreateBitmapCanvas()
     // 将画布与bitmap绑定，画布画的内容会输出到绑定的bitmap内存中
     OH_Drawing_CanvasBind(bitmapCanvas_, bitmap_);
     // 使用白色清除画布内容
-    OH_Drawing_CanvasClear(bitmapCanvas_, OH_Drawing_ColorSetArgb(backgroundA_, backgroundR_, backgroundG_, backgroundB_));
+    OH_Drawing_CanvasClear(bitmapCanvas_, OH_Drawing_ColorSetArgb(backgroundA_,
+        backgroundR_, backgroundG_, backgroundB_));
 }
 
 void TestBase::CreateGpuCanvas()
 {
     OH_Drawing_GpuContextOptions options{false};
     imageInfo_ = {static_cast<int32_t>(bitmapWidth_), static_cast<int32_t>(bitmapHeight_),
-        COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE};
+        COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE};
     gpuContext_ = OH_Drawing_GpuContextCreateFromGL(options);
     surface_ = OH_Drawing_SurfaceCreateFromGpuContext(gpuContext_, true, imageInfo_);
     gpuCanvas_ = OH_Drawing_SurfaceGetCanvas(surface_);
@@ -188,8 +189,8 @@ void TestBase::BitmapCanvasToFile(napi_env env)
     createOps.width = bitmapWidth_;
     createOps.height = bitmapHeight_;
     createOps.pixelFormat = 3; // 3 for png
-    createOps.alphaType = 0;
-    createOps.editable = 1;
+    createOps.alphaType = 0; // 0 for type
+    createOps.editable = 1; // 1 for editable
     size_t bufferSize = createOps.width * createOps.height * 4;
     void *bitmapAddr = OH_Drawing_BitmapGetPixels(bitmap_);
     int32_t res = OH_PixelMap_CreatePixelMap(env, createOps, (uint8_t *)bitmapAddr, bufferSize, &pixelMap);
@@ -367,7 +368,7 @@ void TestBase::StyleSettings(OH_Drawing_Canvas* canvas, int32_t type)
             pos, 3, OH_Drawing_TileMode::CLAMP); OH_Drawing_BrushSetShaderEffect(styleBrush_, effect);
         OH_Drawing_PenSetShaderEffect(stylePen_, effect);
 
-        OH_Drawing_PenSetMiterLimit(stylePen_, 10.0); // 10: size
+        OH_Drawing_PenSetMiterLimit(stylePen_, 10.0); // 10.0: size
         OH_Drawing_PenSetJoin(stylePen_, LINE_ROUND_JOIN);
         OH_Drawing_PenSetCap(stylePen_, LINE_ROUND_CAP);
         float vals[2] = {1, 1};

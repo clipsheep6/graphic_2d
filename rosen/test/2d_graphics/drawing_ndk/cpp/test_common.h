@@ -56,24 +56,23 @@ protected:
 
 uint32_t color_to_565(uint32_t color);
 
-struct DrawRect
-{
+struct DrawRect {
     float left;
     float top;
     float right;
     float bottom;
-    bool contains(float x, float y) const { return x >= left && x < right && y >= top && y < bottom; }
-    float width(){return (right - left);}
-    float height(){return (bottom - top);}
-    float centerX(){return (right - left)/2;} // 2 for mid
-    float centerY(){return (bottom - top)/2;} // 2 for mid
-    bool inset(float dx, float dy)
+    bool Contains(float x, float y) const { return x >= left && x < right && y >= top && y < bottom; }
+    float Width(){return (right - left);}
+    float Height(){return (bottom - top);}
+    float CenterX(){return (right - left) / 2;} // 2 for mid
+    float CenterY(){return (bottom - top) / 2;} // 2 for mid
+    bool Inset(float dx, float dy)
     {
         float l = left + dx;
         float t = top + dy;
         float r = right - dx;
         float b = bottom - dy;
-        if((r<=l) || (b<=t)) {
+        if((r <= l) || (b <= t)) {
             return false;
         }
         left = l;
@@ -82,14 +81,14 @@ struct DrawRect
         bottom = b;
         return true;
     }
-    void offset(float dx, float dy)
+    void Offset(float dx, float dy)
     {
         left += dx;
         top += dy;
         right += dx;
         bottom += dy;
     }
-    void SetXYWH(float x, float y , float width, float height)
+    void SetXYWH(float x, float y, float width, float height)
     {
         left = x;
         top = y;
@@ -105,5 +104,5 @@ uint8_t* DrawBitmapGetAddr8(OH_Drawing_Bitmap* bitmap, int x, int y);
 uint16_t* DrawBitmapGetAddr16(OH_Drawing_Bitmap* bitmap, int x, int y);
 uint32_t* DrawBitmapGetAddr32(OH_Drawing_Bitmap* bitmap, int x, int y);
 
-void DrawPathGetBound(DrawRect& r,float x,float y);
+void DrawPathGetBound(DrawRect& r, float x, float y);
 #endif // TEST_COMMON_H

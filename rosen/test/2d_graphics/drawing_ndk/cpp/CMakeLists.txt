@@ -79,7 +79,7 @@ add_library(myxnode SHARED
     dm/luma_filter.cpp
     dm/bugfix7792.cpp
     dm/points_mask_filter.cpp
-    dm/clip_cubic_gm.cpp
+    dm/clip_cubic.cpp
     dm/points.cpp
     dm/onebadarc.cpp
     dm/skbug_8955.cpp

@@ -302,7 +302,7 @@ void BlobCache::WriteToDisk()
             if (unlink(storefile.c_str()) == -1) {
                 return;
             }
-            if (storefile.c_str() == NULL){
+            if (storefile.c_str() == NULL) {
                 return;
             }
             fd = open(storefile.c_str(), O_CREAT | O_EXCL | O_RDWR, 0);

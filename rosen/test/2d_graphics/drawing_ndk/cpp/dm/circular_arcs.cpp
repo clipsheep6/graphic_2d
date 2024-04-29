@@ -24,7 +24,7 @@
 #include <native_drawing/drawing_point.h>
 #include "test_common.h"
 #include "common/log_common.h"
-#include <math.h>
+#include <cmath.h>
 #include <vector>
 
 enum {
@@ -51,29 +51,23 @@ void CircularArcStrokeMatrix::OnTestFunction(OH_Drawing_Canvas *canvas)
     matrices.push_back(OH_Drawing_MatrixCreateRotation(coordinate, coordinate, 45.f));
 
     OH_Drawing_Matrix *mI = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(mI, 1, 0, 0, 0, 1, 0, 0, 0, 1); // 1, 0, 0, 0, 1, 0, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(mI, 1, 0, 0, 0, 1, 0, 0, 0, 1); // 1矩阵
     matrices.push_back(mI);
 
     OH_Drawing_Matrix *m1 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m1, -1, 0, 2 * coordinate, 0, 1, 0, 0, 0,
-        1); // -1, 0, 2 * coordinate, 0, 1, 0, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(m1, -1, 0, 2 * coordinate, 0, 1, 0, 0, 0, 1); // -1, 2, 1矩阵
     OH_Drawing_Matrix *m2 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m2, 1, 0, 0, 0, -1, 2 * coordinate, 0, 0,
-        1); // 1, 0, 0, 0, -1, 2 * coordinate, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(m2, 1, 0, 0, 0, -1, 2 * coordinate, 0, 0, 1); // 1, -1, 2矩阵
     OH_Drawing_Matrix *m3 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m3, 1, 0, 0, 0, -1, 2 * coordinate, 0, 0,
-        1); // 1, 0, 0, 0, -1, 2 * coordinate, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(m3, 1, 0, 0, 0, -1, 2 * coordinate, 0, 0, 1); // -1, 1, 2矩阵
     OH_Drawing_Matrix *m4 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m4, 0, -1, 2 * coordinate, -1, 0, 2 * coordinate, 0, 0,
-        1); // 0, -1, 2 * coordinate, -1, 0, 2 * coordinate, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(m4, 0, -1, 2 * coordinate, -1, 0, 2 * coordinate, 0, 0, 1); // 1,-1,2矩阵
     OH_Drawing_Matrix *m5 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m5, 0, -1, 2 * coordinate, 1, 0, 0, 0, 0,
-        1); // 0, -1, 2 * coordinate, 1, 0, 0, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(m5, 0, -1, 2 * coordinate, 1, 0, 0, 0, 0, 1); // -1,1,2矩阵
     OH_Drawing_Matrix *m6 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m6, 0, 1, 0, 1, 0, 0, 0, 0, 1); // 0, 1, 0, 1, 0, 0, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(m6, 0, 1, 0, 1, 0, 0, 0, 0, 1); // 1矩阵
     OH_Drawing_Matrix *m7 = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixSetMatrix(m7, 0, 1, 0, -1, 0, 2 * coordinate, 0, 0,
-        1); // 0, 1, 0, -1, 0, 2 * coordinate, 0, 0, 1矩阵
+    OH_Drawing_MatrixSetMatrix(m7, 0, 1, 0, -1, 0, 2 * coordinate, 0, 0, 1); // -1, 1, 2矩阵
 
     matrices.push_back(m1);
     matrices.push_back(m2);

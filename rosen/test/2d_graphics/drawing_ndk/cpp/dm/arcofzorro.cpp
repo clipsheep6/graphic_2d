@@ -73,7 +73,7 @@ void ArcOfZorro::OnTestFunction(OH_Drawing_Canvas *canvas)
                     direction = 1;    // direction 1
                 }
                 break;
-            case 1:
+            case 1: // 1 case
                 DRAWING_LOGI("ArcOfZorroGM::OnTestFunction direction1");
                 xOffset -= 10;      // 10 cout
                 yOffset += 10;      // 10 cout
@@ -81,7 +81,7 @@ void ArcOfZorro::OnTestFunction(OH_Drawing_Canvas *canvas)
                     direction = 2;  // direction 2
                 }
                 break;
-            case 2:
+            case 2: // 2 case
                 DRAWING_LOGI("ArcOfZorroGM::OnTestFunction direction2");
                 xOffset += 10; // 10 cout
                 break;

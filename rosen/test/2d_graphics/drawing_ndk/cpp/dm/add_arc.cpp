@@ -69,7 +69,7 @@ void AddArcMeas::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_Rect *oval = OH_Drawing_RectCreate(-R, -R, R, R);
     OH_Drawing_CanvasDrawOval(canvas, oval);
 
-    for (float deg = 0; deg < 360; deg += 10) {
+    for (float deg = 0; deg < 360; deg += 10) { //360,10 cout 
         const float rad = (deg) / 180 * M_PI;
         float rx = cos(rad) * R;
         float ry = sin(rad) * R;
@@ -139,8 +139,6 @@ void AddArc::OnTestFunction(OH_Drawing_Canvas *canvas)
 bool AddArc::OnAnimate()
 {
     // dm中这个函数通过onIdle调用，目前drawing测试框架还没有提供这个接口，因此画出的图形在缺口方向上和dm的不同
-    //    static TestRend randRotate;
-    //    fRotate = randRotate.nextRangeF(1, 360);//mock dm OnAnimate behavior
     // 通过对源代码运行对这个值的打印，发现是0，经过运行结果对比，发现缺口方向是对的
     fRotate = 0;
     return true;

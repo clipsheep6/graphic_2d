@@ -77,15 +77,6 @@ void ConicPaths::Makepath()
     pathsBounds.push_back({ 0, 0, 100, 100 });
     fPaths.push_back(closedEllipse);
 
-    OH_Drawing_PathDestroy(conicCircle);
-    OH_Drawing_PathDestroy(hyperbola);
-    OH_Drawing_PathDestroy(thinHyperbola);
-    OH_Drawing_PathDestroy(veryThinHyperbola);
-    OH_Drawing_PathDestroy(closedHyperbola);
-    OH_Drawing_PathDestroy(nearParabola);
-    OH_Drawing_PathDestroy(thinEllipse);
-    OH_Drawing_PathDestroy(veryThinEllipse);
-    OH_Drawing_PathDestroy(closedEllipse);
 }
 
 void ConicPaths::OnTestFunction(OH_Drawing_Canvas *canvas)

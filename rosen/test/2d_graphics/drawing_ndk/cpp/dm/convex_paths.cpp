@@ -116,9 +116,9 @@ void ConvexPaths::MakePath()
 
     OH_Drawing_Path *rrect_path = OH_Drawing_PathCreate();
     OH_Drawing_Rect *rrect = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);
-    float x_rad = 40;
-    float y_rad = 20;
-    OH_Drawing_RoundRect *round_rect = OH_Drawing_RoundRectCreate(rrect, x_rad, y_rad);
+    float xRad = 40;
+    float yRad = 20;
+    OH_Drawing_RoundRect *round_rect = OH_Drawing_RoundRectCreate(rrect, xRad, yRad);
     OH_Drawing_PathAddRoundRect(rrect_path, round_rect, OH_Drawing_PathDirection::PATH_DIRECTION_CW);
     fPaths.push_back(rrect_path);
 
@@ -138,8 +138,6 @@ void ConvexPaths::MakePath()
     }
     fPaths.push_back(path_3);
 
-    // shallow diagonals
-    // fPaths.push_back(SkPath::Polygon({{0,0}, {100,1}, {98,100}, {3,96}}, false));
     // Polygon 对应接口未知
     OH_Drawing_Path *path_Polygon = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path_Polygon, 0, 0);

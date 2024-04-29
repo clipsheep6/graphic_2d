@@ -34,9 +34,10 @@ void ClippedCubic::OnTestFunction(OH_Drawing_Canvas *canvas)
 {
     OH_Drawing_Path *path = OH_Drawing_PathCreate();
     OH_Drawing_PathMoveTo(path, float(0), float(0));
-    OH_Drawing_PathCubicTo(path, float(140), float(150), float(40), float(10), float(170), float(150));
+    OH_Drawing_PathCubicTo(path, float(140), float(150), float(40), // 140 150 40坐标
+        float(10), float(170), float(150));                         // 10 170 150 坐标
 
-    OH_Drawing_Rect *bounds = OH_Drawing_RectCreate(float(0), float(0), float(170), float(150));
+    OH_Drawing_Rect *bounds = OH_Drawing_RectCreate(float(0), float(0), float(170), float(150)); // 170 150 坐标
 
     OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
     OH_Drawing_CanvasAttachBrush(canvas, brush);

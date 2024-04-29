@@ -64,11 +64,11 @@ static void test4(OH_Drawing_Canvas *canvas)
                 OH_Drawing_PathMoveTo(path, ptPtr->x, ptPtr->y);
                 ++ptPtr;
                 break;
-            case 1: // SkPath::kLine_Verb:
+            case 1: // 1 SkPath::kLine_Verb:
                 OH_Drawing_PathLineTo(path, ptPtr->x, ptPtr->y);
                 ++ptPtr;
                 break;
-            case 4: // SkPath::kClose_Verb:
+            case 4: // 4 SkPath::kClose_Verb:
                 OH_Drawing_PathClose(path);
                 break;
             default:
@@ -183,8 +183,8 @@ void AARectModes::OnTestFunction(OH_Drawing_Canvas *canvas)
         OH_Drawing_CanvasSave(canvas);
         OH_Drawing_CanvasSave(canvas);
 
-        for (size_t i = 0; i < 12; ++i) {
-            if (6 == i) {
+        for (size_t i = 0; i < 12; ++i) { //12 max
+            if (6 == i) { // 6 cout
                 OH_Drawing_CanvasRestore(canvas);
                 OH_Drawing_CanvasTranslate(canvas, W * 5.0, 0); // 5.0距离
                 OH_Drawing_CanvasSave(canvas);

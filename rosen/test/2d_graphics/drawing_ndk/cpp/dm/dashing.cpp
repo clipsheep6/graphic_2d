@@ -61,7 +61,7 @@ static void show_zero_len_dash(OH_Drawing_Canvas *canvas)
 static void show_giant_dash(OH_Drawing_Canvas *canvas)
 {
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
-    drawline(canvas, 1, 1, pen, (20 * 1000)); // 1, 1 int on, int off
+    drawline(canvas, 1, 1, pen, (20 * 1000)); // 1,20, 1000 int on, int off
     OH_Drawing_PenDestroy(pen);
 }
 
@@ -169,7 +169,7 @@ void Dashing2::OnTestFunction(OH_Drawing_Canvas *canvas)
     };
     OH_Drawing_Pen *pen = OH_Drawing_PenCreate();
     OH_Drawing_PenSetAntiAlias(pen, true);
-    OH_Drawing_PenSetWidth(pen, 6.0);
+    OH_Drawing_PenSetWidth(pen, 6.0); // 6.0 宽度
 
     DrawRect bounds = { 0, 0, 120, 120 };
     bounds.offset(20, 20); // 20 坐标

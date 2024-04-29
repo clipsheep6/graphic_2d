@@ -94,7 +94,7 @@ void ClipCubic::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_PathMoveTo(fVPath, W, 0);
     OH_Drawing_PathCubicTo(fVPath, W, H - 10, 0, 10, 0, H); // 10坐标
     OH_Drawing_Matrix *matrix = OH_Drawing_MatrixCreate();
-    OH_Drawing_MatrixRotate(matrix, 90, W / 2, H / 2);
+    OH_Drawing_MatrixRotate(matrix, 90, W / 2, H / 2); // 90 2 坐标
 
     OH_Drawing_PathTransformWithPerspectiveClip(fVPath, matrix, fHPath, true);
 

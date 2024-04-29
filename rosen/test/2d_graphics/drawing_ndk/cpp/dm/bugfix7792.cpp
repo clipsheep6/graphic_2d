@@ -81,7 +81,7 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_PathReset(path);
     OH_Drawing_PathMoveTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_PathLineTo(path, 75, 75);   // 75, 75坐标
-    OH_Drawing_PathLineTo(path, 150, 75);  // 75, 75坐标
+    OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
     OH_Drawing_PathLineTo(path, 150, 150); // 150, 150坐标
     OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_PathMoveTo(path, 75, 150);  // 75, 150坐标

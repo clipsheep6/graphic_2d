@@ -296,7 +296,7 @@ bool RSBackgroundColorDrawable::OnUpdate(const RSRenderNode& node)
     brush.SetColor(Drawing::Color(bgColor.AsArgbInt()));
     if (properties.IsBgBrightnessValid()) {
         auto blender = RSPropertyDrawableUtils::MakeDynamicBrightnessBlender(
-            properties.GetBgBrightnessParams().value(), properties.GetBgBrightnessFract());
+            properties.GetBgBrightnessParams().value(), properties.GetBgBrightnessFract(), false);
         brush.SetBlender(blender);
     }
 

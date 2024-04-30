@@ -34,7 +34,8 @@ constexpr int TRACE_LEVEL_TWO = 2;
 
 std::shared_ptr<Drawing::RuntimeEffect> RSPropertyDrawableUtils::binarizationShaderEffect_ = nullptr;
 std::shared_ptr<Drawing::RuntimeEffect> RSPropertyDrawableUtils::dynamicDimShaderEffect_ = nullptr;
-std::shared_ptr<Drawing::RuntimeEffect> RSPropertyDrawableUtils::dynamicBrightnessBlenderEffect_ = nullptr;
+std::shared_ptr<Drawing::RuntimeEffect> RSPropertyDrawableUtils::dynamicFgBrightnessBlenderEffect_ = nullptr;
+std::shared_ptr<Drawing::RuntimeEffect> RSPropertyDrawableUtils::dynamicBgBrightnessBlenderEffect_ = nullptr;
 
 Drawing::RoundRect RSPropertyDrawableUtils::RRect2DrawingRRect(const RRect& rr)
 {
@@ -590,13 +591,14 @@ std::shared_ptr<Drawing::ShaderEffect> RSPropertyDrawableUtils::MakeBinarization
 }
 
 std::shared_ptr<Drawing::Blender> RSPropertyDrawableUtils::MakeDynamicBrightnessBlender(
-    const RSDynamicBrightnessPara& params, const float fract)
+    const RSDynamicBrightnessPara& params, const float fract, bool foreground)
 {
     if (ROSEN_LNE(fract, 0.0) || ROSEN_GE(fract, 1.0)) {
         return nullptr;
     }
- 
-    auto builder = MakeDynamicBrightnessBuilder();
+
+    // the difference between the two results is how the opacity is determined
+    auto builder = foreground ? MakeDynamicFgBrightnessBuilder() : MakeDynamicBgBrightnessBuilder();
     if (!builder) {
         ROSEN_LOGE("RSPropertyDrawableUtils::MakeDynamicBrightnessBlender make builder fail");
         return nullptr;
@@ -609,6 +611,8 @@ std::shared_ptr<Drawing::Blender> RSPropertyDrawableUtils::MakeDynamicBrightness
     builder->SetUniform("ubo_fract", fract);
     builder->SetUniform("ubo_rate", params.rate_);
     builder->SetUniform("ubo_degree", params.lightUpDegree_);
+    builder->SetUniform("ubo_cubic", params.cubicCoeff_);
+    builder->SetUniform("ubo_quad", params.quadCoeff_);
     builder->SetUniform("ubo_baseSat", params.saturation_);
     builder->SetUniform("ubo_posr", params.posRGB_[IDNEX_ZERO]);
     builder->SetUniform("ubo_posg", params.posRGB_[IDNEX_ONE]);
@@ -619,13 +623,15 @@ std::shared_ptr<Drawing::Blender> RSPropertyDrawableUtils::MakeDynamicBrightness
     return builder->MakeBlender();
 }
 
-std::shared_ptr<Drawing::RuntimeBlenderBuilder> RSPropertyDrawableUtils::MakeDynamicBrightnessBuilder()
+std::shared_ptr<Drawing::RuntimeBlenderBuilder> RSPropertyDrawableUtils::MakeDynamicFgBrightnessBuilder()
 {
     RS_OPTIONAL_TRACE_NAME("RSPropertyDrawableUtils::MakeDynamicBrightnessBuilder");
     static constexpr char prog[] = R"(
         uniform half ubo_fract;
         uniform half ubo_rate;
         uniform half ubo_degree;
+        uniform half ubo_cubic;
+        uniform half ubo_quad;
         uniform half ubo_baseSat;
         uniform half ubo_posr;
         uniform half ubo_posg;
@@ -633,26 +639,26 @@ std::shared_ptr<Drawing::RuntimeBlenderBuilder> RSPropertyDrawableUtils::MakeDyn
         uniform half ubo_negr;
         uniform half ubo_negg;
         uniform half ubo_negb;
- 
+
+        half4 coeff = half4(ubo_cubic, ubo_quad, ubo_rate, ubo_degree);
+        half3 pos = half3(ubo_posr, ubo_posg, ubo_posb);
+        half3 neg = half3(ubo_negr, ubo_negg, ubo_negb);
         const vec3 baseVec = vec3(0.2412016, 0.6922296, 0.0665688);
- 
-        half3 gray(half3 x, half a, half b) { return a * x + b; }
- 
+
+        half3 gray(half3 x, half4 coeff) {
+            return coeff.x * pow(x, 3) + coeff.y * pow(x, 2) + coeff.z * x + coeff.w;
+        }
         half3 sat(half3 inColor, half n, half3 pos, half3 neg) {
             half base = dot(inColor, baseVec) * (1.0 - n);
-            half3 nColor = base + inColor * n;
-            half3 delta = nColor - inColor;
-            half3 grt = step(0, delta);
+            half3 delta = base + inColor * n - inColor;
             half3 posDelta = inColor + delta * pos;
             half3 negDelta = inColor + delta * neg;
-            half3 test = mix(negDelta, posDelta, grt);
+            half3 test = mix(negDelta, posDelta, step(0, delta));
             return test;
         }
- 
         half4 main(half4 src, half4 dst) {
+            half3 color = gray(dst.rgb, coeff);
             half3 color = gray(dst.rgb, ubo_rate, ubo_degree);
-            half3 pos = half3(ubo_posr, ubo_posg, ubo_posb);
-            half3 neg = half3(ubo_negr, ubo_negg, ubo_negb);
             color = sat(color, ubo_baseSat, pos, neg);
             color = clamp(color, 0.0, 1.0);
             color = mix(color, src.rgb, ubo_fract);
@@ -660,11 +666,61 @@ std::shared_ptr<Drawing::RuntimeBlenderBuilder> RSPropertyDrawableUtils::MakeDyn
             return res;
         }
     )";
-    if (dynamicBrightnessBlenderEffect_ == nullptr) {
-        dynamicBrightnessBlenderEffect_ = Drawing::RuntimeEffect::CreateForBlender(prog);
-        if (dynamicBrightnessBlenderEffect_ == nullptr) { return nullptr; }
+    if (dynamicFgBrightnessBlenderEffect_ == nullptr) {
+        dynamicFgBrightnessBlenderEffect_ = Drawing::RuntimeEffect::CreateForBlender(prog);
+        if (dynamicFgBrightnessBlenderEffect_ == nullptr) { return nullptr; }
     }
-    return std::make_shared<Drawing::RuntimeBlenderBuilder>(dynamicBrightnessBlenderEffect_);
+    return std::make_shared<Drawing::RuntimeBlenderBuilder>(dynamicFgBrightnessBlenderEffect_);
+}
+
+std::shared_ptr<Drawing::RuntimeBlenderBuilder> RSPropertyDrawableUtils::MakeDynamicBgBrightnessBuilder()
+{
+    RS_OPTIONAL_TRACE_NAME("RSPropertyDrawableUtils::MakeDynamicBrightnessBuilder");
+    static constexpr char prog[] = R"(
+        uniform half ubo_fract;
+        uniform half ubo_rate;
+        uniform half ubo_degree;
+        uniform half ubo_cubic;
+        uniform half ubo_quad;
+        uniform half ubo_baseSat;
+        uniform half ubo_posr;
+        uniform half ubo_posg;
+        uniform half ubo_posb;
+        uniform half ubo_negr;
+        uniform half ubo_negg;
+        uniform half ubo_negb;
+
+        half4 coeff = half4(ubo_cubic, ubo_quad, ubo_rate, ubo_degree);
+        half3 pos = half3(ubo_posr, ubo_posg, ubo_posb);
+        half3 neg = half3(ubo_negr, ubo_negg, ubo_negb);
+        const vec3 baseVec = vec3(0.2412016, 0.6922296, 0.0665688);
+
+        half3 gray(half3 x, half4 coeff) {
+            return coeff.x * pow(x, 3) + coeff.y * pow(x, 2) + coeff.z * x + coeff.w;
+        }
+        half3 sat(half3 inColor, half n, half3 pos, half3 neg) {
+            half base = dot(inColor, baseVec) * (1.0 - n);
+            half3 delta = base + inColor * n - inColor;
+            half3 posDelta = inColor + delta * pos;
+            half3 negDelta = inColor + delta * neg;
+            half3 test = mix(negDelta, posDelta, step(0, delta));
+            return test;
+        }
+        half4 main(half4 src, half4 dst) {
+            half3 color = gray(dst.rgb, coeff);
+            half3 color = gray(dst.rgb, ubo_rate, ubo_degree);
+            color = sat(color, ubo_baseSat, pos, neg);
+            color = clamp(color, 0.0, 1.0);
+            color = mix(color, src.rgb, ubo_fract);
+            half4 res = half4(dst.a) * half4(color, 1.0);
+            return res;
+        }
+    )";
+    if (dynamicBgBrightnessBlenderEffect_ == nullptr) {
+        dynamicBgBrightnessBlenderEffect_ = Drawing::RuntimeEffect::CreateForBlender(prog);
+        if (dynamicBgBrightnessBlenderEffect_ == nullptr) { return nullptr; }
+    }
+    return std::make_shared<Drawing::RuntimeBlenderBuilder>(dynamicBgBrightnessBlenderEffect_);
 }
 
 void RSPropertyDrawableUtils::DrawBinarization(Drawing::Canvas* canvas, const std::optional<Vector4f>& aiInvert)

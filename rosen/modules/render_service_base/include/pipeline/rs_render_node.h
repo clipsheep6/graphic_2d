@@ -777,6 +777,7 @@ private:
     void CollectAndUpdateLocalShadowRect();
     void CollectAndUpdateLocalOutlineRect();
     void CollectAndUpdateLocalPixelStretchRect();
+    void CollectAndUpdateLocalForegroundEffectRect();
     // update drawrect based on self's info
     void UpdateBufferDirtyRegion();
     void UpdateSelfDrawRect();
@@ -881,6 +882,7 @@ private:
     RectI localShadowRect_;
     RectI localOutlineRect_;
     RectI localPixelStretchRect_;
+    RectI localForegroundEffectRect_;
     // map parentMatrix
     RectI absDrawRect_;
 

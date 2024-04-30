@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,12 +20,11 @@
 class TestCaseFactory {
 public:
     TestCaseFactory() = default;
-    ~TestCaseFactory(){};
-   
+    ~TestCaseFactory() {};
+
     static std::shared_ptr<TestBase> GetFunctionCpuCase(std::string caseName);
     static std::shared_ptr<TestBase> GetPerformanceCpuCase(std::string caseName);
     static std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> GetFunctionCpuCaseAll();
 };
-
 
 #endif

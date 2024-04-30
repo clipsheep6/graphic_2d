@@ -118,7 +118,7 @@ HWTEST_F(FontParserTest, FontConfigTest1, TestSize.Level1)
 }
 
 /**
- * @tc.name: FontConfigTest1
+ * @tc.name: CmapTableParserTest1
  * @tc.desc: opentype parser test
  * @tc.type:FUNC
  */

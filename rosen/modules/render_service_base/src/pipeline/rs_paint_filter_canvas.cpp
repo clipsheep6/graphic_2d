@@ -951,7 +951,7 @@ bool RSPaintFilterCanvasBase::DrawBlurImage(const Drawing::Image& image, const D
     for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
         if ((*iter) != nullptr) {
             if ((*iter)->DrawBlurImage(image, blurParams) && !result) {
-                result = (*iter)->DrawBlurImage(image, blurParams);
+                result = true;
             }
         }
     }

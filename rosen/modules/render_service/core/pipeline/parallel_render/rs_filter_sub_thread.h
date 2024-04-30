@@ -55,7 +55,7 @@ public:
         std::shared_ptr<Drawing::Surface>&& cacheSurface,
         std::shared_ptr<OHOS::AppExecFwk::EventHandler> initHandler,
         std::weak_ptr<std::mutex> grBackendTextureMutex);
-    void ResetWaitRelease(std::weak_ptr<std::atomic<bool>> waitRelease);
+    static void ResetWaitRelease(std::weak_ptr<std::atomic<bool>> waitRelease);
     void ReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>& queue,
         std::weak_ptr<std::atomic<bool>> waitRelease);
     void PreReleaseImage(std::queue<std::shared_ptr<Drawing::Image>>& queue,
@@ -77,7 +77,6 @@ public:
 
 private:
     const uint32_t SYNC_TIME_OUT = 1000;
-    void CreateShareEglContext();
     void DestroyShareEglContext();
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
     std::atomic<bool> isWorking_ = false;
@@ -90,6 +89,7 @@ private:
     RenderContext* renderContext_ = nullptr;
     std::mutex mutex_;
 #ifdef RS_ENABLE_GL
+    void CreateShareEglContext();
     EGLContext eglShareContext_ = EGL_NO_CONTEXT;
 #endif
     std::shared_ptr<Drawing::GPUContext> grContext_ = nullptr;

@@ -263,7 +263,7 @@ std::shared_ptr<Drawing::ShaderEffect> RSLinearGradientBlurFilter::MakeAlphaGrad
         p.emplace_back(para->fractionStops_[i].second);
     }
     
-    if (para->fractionStops_.size() < 1) {
+    if (para->fractionStops_.empty()) {
         return nullptr;
     }
     if (para->fractionStops_.back().second < 0.99) { // 0.99 represents the fraction bias

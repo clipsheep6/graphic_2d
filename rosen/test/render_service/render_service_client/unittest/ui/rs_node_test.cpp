@@ -3904,4 +3904,15 @@ HWTEST_F(RSNodeTest, CalcExpectedFrameRate, TestSize.Level1)
     ASSERT_EQ(rsNode->CalcExpectedFrameRate(scene, speed), 0);
 }
 
+/**
+ * @tc.name: MarkNodeSingleFrameComposerTest001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSNodeTest, MarkNodeSingleFrameComposerTest001, TestSize.Level1)
+{
+    auto rsNode = RSCanvasNode::Create();
+    rsNode->MarkNodeSingleFrameComposer(false);
+    rsNode->MarkNodeSingleFrameComposer(true);
+}
 } // namespace OHOS::Rosen

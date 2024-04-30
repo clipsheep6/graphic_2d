@@ -100,6 +100,8 @@ find_library(
     # you want CMake to locate.
     hilog_ndk.z
 )
+target_link_libraries(entry PUBLIC EGL)
+target_link_libraries(entry PUBLIC GLESv3)
 target_link_libraries(entry PUBLIC ${hilog-lib})
 target_link_libraries(entry PUBLIC libace_napi.z.so)
 target_link_libraries(entry PUBLIC libace_ndk.z.so)

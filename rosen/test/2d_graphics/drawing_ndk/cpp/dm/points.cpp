@@ -61,10 +61,10 @@ void Points::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_Pen* pen2 = OH_Drawing_PenCreate();
     OH_Drawing_Brush* brush3 = OH_Drawing_BrushCreate();
 
-    OH_Drawing_PenSetColor(pen0, DRAW_ColorRED);
-    OH_Drawing_BrushSetColor(brush1, DRAW_ColorGREEN);
-    OH_Drawing_PenSetColor(pen2, DRAW_ColorBLUE);
-    OH_Drawing_BrushSetColor(brush3, DRAW_ColorWHITE);
+    OH_Drawing_PenSetColor(pen0, DRAW_COLORRED);
+    OH_Drawing_BrushSetColor(brush1, DRAW_COLORGREEN);
+    OH_Drawing_PenSetColor(pen2, DRAW_COLORBLUE);
+    OH_Drawing_BrushSetColor(brush3, DRAW_COLORWHITE);
 
     OH_Drawing_PenSetWidth(pen0, 4); // 4 画笔pen0的宽度
     OH_Drawing_PenSetCap(pen2, LINE_ROUND_CAP);

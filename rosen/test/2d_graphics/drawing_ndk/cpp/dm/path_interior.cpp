@@ -59,7 +59,7 @@ void show(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path)
 DrawRect inset(DrawRect& r)
 {
     DrawRect rect = r;
-    rect.inset(r.width() / 8, r.height() / 8); // 8  rect控制
+    rect.Inset(r.Width() / 8, r.Height() / 8); // 8  rect控制
     return rect;
 }
 } // namespace
@@ -76,7 +76,7 @@ void PathInterior::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_CanvasClear(canvas, 0xFFDDDDDD);     // gray
     OH_Drawing_CanvasTranslate(canvas, 8.5f, 8.5f); // 8.5f 定义了画布的平移量
     DrawRect rect = { 0, 0, 80, 80 };               // 0, 0, 80, 80 矩形参数
-    const float rad = rect.width() / 8;             // 8 用于计算矩形的内边距
+    const float rad = rect.Width() / 8;             // 8 用于计算矩形的内边距
 
     int i = 0; // 0 PathOffset
     for (int insetFirst = 0; insetFirst <= 1; ++insetFirst) {
@@ -92,31 +92,31 @@ void PathInterior::OnTestFunction(OH_Drawing_Canvas* canvas)
                             OH_Drawing_PathDirection innerDir = innerCW ? PATH_DIRECTION_CW : PATH_DIRECTION_CCW;
 
                             DrawRect rc = insetFirst ? inset(rect) : rect;
-                            OH_Drawing_Rect* r = OH_Drawing_RectCreate(rc.fLeft, rc.fTop, rc.fRight, rc.fBottom);
+                            OH_Drawing_Rect* r = OH_Drawing_RectCreate(rc.left, rc.top, rc.right, rc.bottom);
                             OH_Drawing_RoundRect* rr = OH_Drawing_RoundRectCreate(r, rad, rad);
                             if (outerRR) {
                                 OH_Drawing_PathAddRoundRect(path, rr, outerDir);
                             } else {
-                                OH_Drawing_PathAddRect(path, rc.fLeft, rc.fTop, rc.fRight, rc.fBottom, outerDir);
+                                OH_Drawing_PathAddRect(path, rc.left, rc.top, rc.right, rc.bottom, outerDir);
                             }
                             OH_Drawing_RoundRectDestroy(rr);
                             OH_Drawing_RectDestroy(r);
 
                             rc = insetFirst ? rect : inset(rect);
-                            r = OH_Drawing_RectCreate(rc.fLeft, rc.fTop, rc.fRight, rc.fBottom);
+                            r = OH_Drawing_RectCreate(rc.left, rc.top, rc.right, rc.bottom);
                             rr = OH_Drawing_RoundRectCreate(r, rad, rad);
                             if (innerRR) {
                                 OH_Drawing_PathAddRoundRect(path, rr, innerDir);
                             } else {
-                                OH_Drawing_PathAddRect(path, rc.fLeft, rc.fTop, rc.fRight, rc.fBottom, innerDir);
+                                OH_Drawing_PathAddRect(path, rc.left, rc.top, rc.right, rc.bottom, innerDir);
                             }
                             OH_Drawing_RoundRectDestroy(rr);
                             OH_Drawing_RectDestroy(r);
 
-                            float dx = (i / 8) * rect.width() * 6 /
-                                       5; //   (i / 8) * rect.width() * 6 / 5 用于计算路径在画布上的偏移量
-                            float dy = (i % 8) * rect.height() * 6 /
-                                       5; //   (i / 8) * rect.height() * 6 / 5 用于计算路径在画布上的偏移量
+                            float dx = (i / 8) * rect.Width() * 6 /
+                                       5; //   (i / 8) * rect.Width() * 6 / 5 用于计算路径在画布上的偏移量
+                            float dy = (i % 8) * rect.Height() * 6 /
+                                       5; //   (i / 8) * rect.Height() * 6 / 5 用于计算路径在画布上的偏移量
                             i++;
                             OH_Drawing_PathOffset(path, path, dx, dy);
                             show(canvas, path);

@@ -88,8 +88,8 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     DrawRect bounds = { 0, 0, g_kSize, g_kSize }; //  0, 0 bounds
     DrawRect r = bounds;
     DrawRect c = bounds;
-    c.fRight = bounds.centerX();
-    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);
+    c.right = bounds.CenterX();
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_BrushSetAntiAlias(brush, true);
     OH_Drawing_BrushSetColor(brush, 0x200000FF);
@@ -99,8 +99,8 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     OH_Drawing_RectDestroy(rect);
 
     r = bounds;
-    r.inset(g_kInset, 0); // 0 bounds
-    rect = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);
+    r.Inset(g_kInset, 0); // 0 bounds
+    rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
     OH_Drawing_BrushSetShaderEffect(brush, s1);
     OH_Drawing_BrushSetColor(brush, s1 ? 0xFF000000 : ColorSetA(kColor1, 0x80));
     OH_Drawing_BrushSetAntiAlias(brush, true);
@@ -109,7 +109,7 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
 
     if (!s1) {
         OH_Drawing_CanvasSave(canvas);
-        OH_Drawing_Rect* cRect = OH_Drawing_RectCreate(c.fLeft, c.fTop, c.fRight, c.fBottom);
+        OH_Drawing_Rect* cRect = OH_Drawing_RectCreate(c.left, c.top, c.right, c.bottom);
         OH_Drawing_CanvasClipRect(canvas, cRect, OH_Drawing_CanvasClipOp::INTERSECT, false);
         OH_Drawing_BrushSetColor(brush, kColor1);
         OH_Drawing_CanvasAttachBrush(canvas, brush);
@@ -121,13 +121,13 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
 
     OH_Drawing_Brush* xferBrush = OH_Drawing_BrushCreate();
     r = bounds;
-    rect = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);
+    rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
     OH_Drawing_BrushSetBlendMode(xferBrush, mode);
     OH_Drawing_CanvasSaveLayer(canvas, rect, xferBrush);
 
     r = bounds;
-    r.inset(0, g_kInset);
-    rect = OH_Drawing_RectCreate(r.fLeft, r.fTop, r.fRight, r.fBottom);
+    r.Inset(0, g_kInset);
+    rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
     OH_Drawing_BrushSetShaderEffect(brush, s2);
     OH_Drawing_BrushSetColor(brush, s2 ? 0xFF000000 : ColorSetA(kColor2, 0x80));
     OH_Drawing_Filter* filter = OH_Drawing_FilterCreate();
@@ -137,7 +137,7 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     OH_Drawing_CanvasDrawOval(canvas, rect);
     if (!s2) {
         OH_Drawing_CanvasSave(canvas);
-        OH_Drawing_Rect* cRect = OH_Drawing_RectCreate(c.fLeft, c.fTop, c.fRight, c.fBottom);
+        OH_Drawing_Rect* cRect = OH_Drawing_RectCreate(c.left, c.top, c.right, c.bottom);
         OH_Drawing_CanvasClipRect(canvas, cRect, OH_Drawing_CanvasClipOp::INTERSECT, false);
         OH_Drawing_BrushSetColor(brush, kColor2);
         OH_Drawing_CanvasAttachBrush(canvas, brush);

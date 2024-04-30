@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <ctime>
+#include <numeric>
 #include "common/rs_optional_trace.h"
 #include "common/rs_thread_handler.h"
 #include "pipeline/rs_uni_render_judgement.h"
@@ -189,10 +190,8 @@ void HgmFrameRateManager::ReportHiSysEvent(const FrameRateVoteInfo& frameRateVot
     if (frameRateVoteInfoVec_.back().voterName != frameRateVoteInfo.voterName ||
         frameRateVoteInfoVec_.back().preferred != frameRateVoteInfo.preferred) {
         if (frameRateVoteInfoVec_.size() >= REPORT_VOTER_INFO_LIMIT) {
-            std::string msg;
-            for (auto& info : frameRateVoteInfoVec_) {
-                msg += info.ToString();
-            }
+            std::string msg = std::accumulate(frameRateVoteInfoVec_.begin(), frameRateVoteInfoVec_.end(),
+                std::string(""), [](std::string tempMsg, FrameRateVoteInfo& info) {return tempMsg + info.ToString();});
             HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, "HGM_VOTER_INFO",
                 OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, "MSG", msg);
             frameRateVoteInfoVec_.clear();

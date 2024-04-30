@@ -4945,4 +4945,16 @@ HWTEST_F(RSNodeTest, SetNodeName, TestSize.Level1)
     rsNode->SetNodeName(nodeName);
     EXPECT_NE(RSTransactionProxy::instance_, nullptr);
 }
+
+/**
+ * @tc.name: MarkNodeSingleFrameComposerTest001
+ * @tc.desc:
+ * @tc.type:FUNC
+ */
+HWTEST_F(RSNodeTest, MarkNodeSingleFrameComposerTest001, TestSize.Level1)
+{
+    auto rsNode = RSCanvasNode::Create();
+    rsNode->MarkNodeSingleFrameComposer(false);
+    rsNode->MarkNodeSingleFrameComposer(true);
+}
 } // namespace OHOS::Rosen

@@ -246,6 +246,7 @@ RSUniRenderVisitor::RSUniRenderVisitor(const RSUniRenderVisitor& visitor) : RSUn
     displayHasSkipSurface_ = visitor.displayHasSkipSurface_;
     displayHasProtectedSurface_ = visitor.displayHasProtectedSurface_;
     hasCaptureWindow_ = visitor.hasCaptureWindow_;
+    hasFingerprint_ = visitor.hasFingerprint_;
     parentSurfaceNodeMatrix_ = visitor.parentSurfaceNodeMatrix_;
     curAlpha_ = visitor.curAlpha_;
     dirtyFlag_ = visitor.dirtyFlag_;
@@ -270,6 +271,7 @@ void RSUniRenderVisitor::CopyVisitorInfos(std::shared_ptr<RSUniRenderVisitor> vi
     displayHasSkipSurface_ = visitor->displayHasSkipSurface_;
     displayHasProtectedSurface_ = visitor->displayHasProtectedSurface_;
     hasCaptureWindow_ = visitor->hasCaptureWindow_;
+    hasFingerprint_ = visitor->hasFingerprint_;
     parentSurfaceNodeMatrix_ = visitor->parentSurfaceNodeMatrix_;
     curAlpha_ = visitor->curAlpha_;
     dirtyFlag_ = visitor->dirtyFlag_;
@@ -733,7 +735,7 @@ void RSUniRenderVisitor::HandleColorGamuts(RSDisplayRenderNode& node, const sptr
 
 void RSUniRenderVisitor::CheckPixelFormat(RSSurfaceRenderNode& node)
 {
-    if (hasFingerprint_) {
+    if (hasFingerprint_[currentVisitDisplay_]) {
         RS_LOGD("RSUniRenderVisitor::CheckPixelFormat hasFingerprint is true.");
         return;
     }
@@ -744,7 +746,7 @@ void RSUniRenderVisitor::CheckPixelFormat(RSSurfaceRenderNode& node)
     }
 
     if (node.GetFingerprint()) {
-        hasFingerprint_ = true;
+        hasFingerprint_[currentVisitDisplay_] = true;
         newPixelFormat_ = GRAPHIC_PIXEL_FMT_RGBA_1010102;
         RS_LOGD("RSUniRenderVisitor::CheckPixelFormat newPixelFormat_ is set 1010102 for fingerprint.");
         return;
@@ -785,6 +787,7 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
     displayHasSkipSurface_.emplace(currentVisitDisplay_, false);
     displayHasProtectedSurface_.emplace(currentVisitDisplay_, false);
     hasCaptureWindow_.emplace(currentVisitDisplay_, false);
+    hasFingerprint_.emplace(currentVisitDisplay_, false);
     node.GetDirtySurfaceNodeMap().clear();
 
     RS_TRACE_NAME("RSUniRender:PrepareDisplay " + std::to_string(currentVisitDisplay_));
@@ -823,9 +826,9 @@ void RSUniRenderVisitor::PrepareDisplayRenderNode(RSDisplayRenderNode& node)
         RS_TRACE_NAME("ClosePartialRender 1 RotationChanged");
     }
     node.UpdateRotation();
+    node.SetFingerprint(false);
     curAlpha_ = node.GetRenderProperties().GetAlpha();
     newColorSpace_ = GRAPHIC_COLOR_GAMUT_SRGB;
-    hasFingerprint_ = false;
     newPixelFormat_ = GRAPHIC_PIXEL_FMT_RGBA_8888;
     PrepareChildren(node);
     auto mirrorNode = node.GetMirrorSource().lock();
@@ -3774,7 +3777,10 @@ void RSUniRenderVisitor::ProcessDisplayRenderNode(RSDisplayRenderNode& node)
             false, newColorSpace_, newPixelFormat_);
         RS_LOGD("RSUniRenderVisitor::ProcessDisplayRenderNode, colorspace is %{public}d, pixelformat is %{public}d in "\
                 "RequestFrame.", newColorSpace_, newPixelFormat_);
-        node.SetFingerprint(hasFingerprint_);
+        if (!isSecurityDisplay_ && hasFingerprint_[node.GetScreenId()]) {
+            node.SetFingerprint(true);
+            bufferConfig.format = GRAPHIC_PIXEL_FMT_RGBA_1010102;
+        }
         RS_OPTIONAL_TRACE_BEGIN("RSUniRender::wait for bufferRequest cond");
         if (!RSMainThread::Instance()->WaitUntilDisplayNodeBufferReleased(node)) {
             RS_TRACE_NAME("RSUniRenderVisitor no released buffer");

@@ -446,10 +446,9 @@ private:
     std::map<ScreenId, bool> displayHasSkipSurface_;
     std::map<ScreenId, bool> displayHasProtectedSurface_;
     std::map<ScreenId, bool> hasCaptureWindow_;
+    std::map<ScreenId, bool> hasFingerprint_;
     std::set<ScreenId> mirroredDisplays_;
     bool isSecurityDisplay_ = false;
-
-    bool hasFingerprint_ = false;
     bool mirrorAutoRotate_ = false;
 
     std::shared_ptr<RSBaseRenderEngine> renderEngine_;

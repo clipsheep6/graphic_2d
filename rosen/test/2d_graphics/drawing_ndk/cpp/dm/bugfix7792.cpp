@@ -48,6 +48,20 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     //        1 2 3 4
     //        2 3 4 5
     //        3 4 5 6
+    CanvasDrawPath1(canvas, path);
+    CanvasDrawPath2(canvas, path);
+    CanvasDrawPath3(canvas, path);
+    CanvasDrawPath4(canvas, path);
+    CanvasDrawPath5(canvas, path);
+    // 释放内存
+    OH_Drawing_CanvasRestore(canvas);
+    OH_Drawing_PathDestroy(path);
+    OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_BrushDestroy(brush);
+}
+
+void BugFix7792::CanvasDrawPath1(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+{
     // 第一个图型坐标点:（0.0）
     OH_Drawing_PathMoveTo(path, 10, 10);   // path, 10, 10坐标
     OH_Drawing_PathMoveTo(path, 75, 75);   // path, 75, 75坐标
@@ -86,6 +100,10 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_PathLineTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_PathMoveTo(path, 75, 150);  // 75, 150坐标
     OH_Drawing_CanvasDrawPath(canvas, path);
+}
+
+void BugFix7792::CanvasDrawPath2(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+{
     // 第五个图型坐标点:（1.1）
     OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
@@ -121,6 +139,10 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_PathLineTo(path, 75, 10);   // 75, 10坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
+}
+
+void BugFix7792::CanvasDrawPath3(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+{
     // 第八个图型坐标点:（1.4）
     OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
@@ -159,6 +181,10 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
+}
+
+void BugFix7792::CanvasDrawPath4(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+{
     // 第十一个图型坐标点:（2.4）
     OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
     OH_Drawing_PathReset(path);
@@ -200,6 +226,10 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_PathLineTo(path, 150, 75);  // 150, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
+}
+
+void BugFix7792::CanvasDrawPath5(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+{
     // 第十五个图型坐标点:（3.5）
     OH_Drawing_CanvasTranslate(canvas, 0, 200); // 0, 200坐标
     OH_Drawing_PathReset(path);
@@ -222,9 +252,4 @@ void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
     OH_Drawing_PathMoveTo(path, 75, 75);   // 75, 75坐标
     OH_Drawing_PathClose(path);
     OH_Drawing_CanvasDrawPath(canvas, path);
-    // 释放内存
-    OH_Drawing_CanvasRestore(canvas);
-    OH_Drawing_PathDestroy(path);
-    OH_Drawing_CanvasDetachBrush(canvas);
-    OH_Drawing_BrushDestroy(brush);
 }

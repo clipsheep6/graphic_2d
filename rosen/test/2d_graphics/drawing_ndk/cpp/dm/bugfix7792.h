@@ -21,11 +21,16 @@
 
 // 源代码用例名bug7792位置gm\pathfill.cpp.这里用BugFix7792类
 class BugFix7792 : public TestBase {
-  public:
+public:
     BugFix7792();
     ~BugFix7792();
+    void CanvasDrawPath1(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);
+    void CanvasDrawPath2(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);
+    void CanvasDrawPath3(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);
+    void CanvasDrawPath4(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);
+    void CanvasDrawPath5(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);
 
-  protected:
+protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
 };
 #endif // BUGFIX7792_H

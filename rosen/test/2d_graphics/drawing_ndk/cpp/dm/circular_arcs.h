@@ -20,11 +20,13 @@
 #include <native_drawing/drawing_canvas.h>
 
 class CircularArcStrokeMatrix : public TestBase {
-  public:
+public:
     CircularArcStrokeMatrix();
     ~CircularArcStrokeMatrix() = default;
+    std::vector<OH_Drawing_Matrix *> CreateMatrices(float coordinate);
+    void ApplyRotations(std::vector<OH_Drawing_Matrix *> &matrices, int baseMatrixCnt, float coordinate);
 
-  protected:
+protected:
     void OnTestFunction(OH_Drawing_Canvas *canvas) override;
 };
 #endif // CIRCULAR_ARCS_H

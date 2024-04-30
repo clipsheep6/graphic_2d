@@ -1169,6 +1169,15 @@ void RSRenderNode::CollectAndUpdateLocalPixelStretchRect()
     selfDrawRect_ = selfDrawRect_.JoinRect(localPixelStretchRect_.ConvertTo<float>());
 }
 
+void RSRenderNode::CollectAndUpdateLocalForegroundEffectRect()
+{
+    // update foreground effect's dirty region if it changes
+    if (dirtySlots_.find(RSDrawableSlot::FOREGROUND_FILTER) != dirtySlots_.end()) {
+        RSPropertiesPainter::GetForegroundEffectDirtyRect(localForegroundEffectRect_, GetRenderProperties(), false);
+    }
+    selfDrawRect_ = selfDrawRect_.JoinRect(localForegroundEffectRect_.ConvertTo<float>());
+}
+
 void RSRenderNode::UpdateBufferDirtyRegion()
 {
 #ifndef ROSEN_CROSS_PLATFORM
@@ -1211,6 +1220,7 @@ void RSRenderNode::UpdateSelfDrawRect()
     CollectAndUpdateLocalShadowRect();
     CollectAndUpdateLocalOutlineRect();
     CollectAndUpdateLocalPixelStretchRect();
+    CollectAndUpdateLocalForegroundEffectRect();
 }
 
 const RectF& RSRenderNode::GetSelfDrawRect() const

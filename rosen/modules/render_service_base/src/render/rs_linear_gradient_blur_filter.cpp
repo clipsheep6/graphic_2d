@@ -263,13 +263,13 @@ std::shared_ptr<Drawing::ShaderEffect> RSLinearGradientBlurFilter::MakeAlphaGrad
         p.emplace_back(para->fractionStops_[i].second);
     }
     
-    if ((para->fractionStops_.size() < 1) || ((para->fractionStops_.size() - 1) >= para->fractionStops_.size())) {
+    if (para->fractionStops_.size() < 1) {
         return nullptr;
     }
-    if (para->fractionStops_[para->fractionStops_.size() - 1].second < 0.99) { // 0.99 represents the fraction bias
+    if (para->fractionStops_.back().second < 0.99) { // 0.99 represents the fraction bias
         c.emplace_back(Drawing::Color::ColorQuadSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
         // 0.01 represents the fraction bias
-        p.emplace_back(para->fractionStops_[para->fractionStops_.size() - 1].second + 0.01);
+        p.emplace_back(para->fractionStops_.back().second + 0.01);
     }
     return Drawing::ShaderEffect::CreateLinearGradient(pts[0], pts[1], c, p, Drawing::TileMode::CLAMP);
 }

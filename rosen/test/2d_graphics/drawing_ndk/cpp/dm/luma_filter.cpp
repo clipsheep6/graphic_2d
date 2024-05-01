@@ -27,7 +27,9 @@
 #include <native_drawing/drawing_shader_effect.h>
 #include <native_drawing/drawing_text_blob.h>
 #include <native_drawing/drawing_typeface.h>
+
 #include "test_common.h"
+
 #include "common/log_common.h"
 
 enum {
@@ -68,7 +70,6 @@ void draw_label(OH_Drawing_Canvas* canvas, const char* label, OH_Drawing_Point2D
 
     // 缺乏计算文本宽度的接口，OH_Drawing_FontCountText临时替代
     int width = OH_Drawing_FontCountText(font, label, len, TEXT_ENCODING_UTF8);
-    OH_Drawing_FontGetTypeface(font);
     OH_Drawing_TextBlob* blob = OH_Drawing_TextBlobCreateFromText(label, len, font, TEXT_ENCODING_UTF8);
 
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
@@ -82,6 +83,17 @@ void draw_label(OH_Drawing_Canvas* canvas, const char* label, OH_Drawing_Point2D
     OH_Drawing_PenDestroy(pen);
 }
 
+void draw_clip(OH_Drawing_Canvas* canvas, DrawRect& c, OH_Drawing_Rect* rect, uint32_t kColor, OH_Drawing_Brush* brush)
+{
+    OH_Drawing_CanvasSave(canvas);
+    OH_Drawing_Rect* cRect = OH_Drawing_RectCreate(c.left, c.top, c.right, c.bottom);
+    OH_Drawing_CanvasClipRect(canvas, cRect, OH_Drawing_CanvasClipOp::INTERSECT, false);
+    OH_Drawing_BrushSetColor(brush, kColor);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    OH_Drawing_CanvasDrawOval(canvas, rect);
+    OH_Drawing_CanvasRestore(canvas);
+    OH_Drawing_RectDestroy(cRect);
+}
 void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_Drawing_BlendMode mode,
     OH_Drawing_ShaderEffect* s1, OH_Drawing_ShaderEffect* s2)
 {
@@ -108,14 +120,7 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     OH_Drawing_CanvasDrawOval(canvas, rect);
 
     if (!s1) {
-        OH_Drawing_CanvasSave(canvas);
-        OH_Drawing_Rect* cRect = OH_Drawing_RectCreate(c.left, c.top, c.right, c.bottom);
-        OH_Drawing_CanvasClipRect(canvas, cRect, OH_Drawing_CanvasClipOp::INTERSECT, false);
-        OH_Drawing_BrushSetColor(brush, kColor1);
-        OH_Drawing_CanvasAttachBrush(canvas, brush);
-        OH_Drawing_CanvasDrawOval(canvas, rect);
-        OH_Drawing_CanvasRestore(canvas);
-        OH_Drawing_RectDestroy(cRect);
+        draw_clip(canvas, c, rect, kColor1, brush);
     }
     OH_Drawing_RectDestroy(rect);
 
@@ -136,14 +141,7 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, rect);
     if (!s2) {
-        OH_Drawing_CanvasSave(canvas);
-        OH_Drawing_Rect* cRect = OH_Drawing_RectCreate(c.left, c.top, c.right, c.bottom);
-        OH_Drawing_CanvasClipRect(canvas, cRect, OH_Drawing_CanvasClipOp::INTERSECT, false);
-        OH_Drawing_BrushSetColor(brush, kColor2);
-        OH_Drawing_CanvasAttachBrush(canvas, brush);
-        OH_Drawing_CanvasDrawOval(canvas, rect);
-        OH_Drawing_CanvasRestore(canvas);
-        OH_Drawing_RectDestroy(cRect);
+        draw_clip(canvas, c, rect, kColor2, brush);
     }
 
     OH_Drawing_CanvasDetachBrush(canvas);

@@ -115,7 +115,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Func
         []() -> std::shared_ptr<TestBase> { return std::make_shared<OneBadArc>(); } }, // 完全按照逻辑所画出的图形不一致
     { "skbug_8955",
         []() -> std::shared_ptr<TestBase> {
-            return std::make_shared<SkBug_8955>();
+            return std::make_shared<SkBug8955>();
         } }, // font.textToGlyphs、font.getPos接口缺失
     { "surfacenew", []() -> std::shared_ptr<TestBase> { return std::make_shared<NewSurfaceGM>(); } },
     { "bitmaprect",

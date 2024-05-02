@@ -257,5 +257,95 @@ HWTEST_F(RSListenedCanvasTest, RequestSplitToListener, Function | SmallTest | Le
     createListenedCanvas(mockRSPaintFilterCanvas, mockRSCanvasListener, listenedCanvas);
     callDrawMethods(listenedCanvas);
 }
+
+/**
+ * @tc.name: onDrawOval001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawOval001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Rect rect;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawOval(rect);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawOval(rect);
+}
+
+/**
+ * @tc.name: onDrawArc001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawArc001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Rect rect;
+    Drawing::scalar startAngle = 0.1;
+    Drawing::scalar sweepAngle = 0.2;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawArc(rect, startAngle, sweepAngle);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawArc(rect, startAngle, sweepAngle);
+}
+
+/**
+ * @tc.name: onDrawPath001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawPath001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Path path;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawPath(path);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawPath(path);
+}
+
+
+/**
+ * @tc.name: onDrawRegion001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawRegion001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::Region region;
+    RSListenedCanvas listenedCanvas(canvas);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.DrawRegion(region);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawRegion(region);
+}
+
+/**
+ * @tc.name: onDrawPoints001
+ * @tc.desc: test
+ * @tc.type:FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSListenedCanvasTest, onDrawPoints001, TestSize.Level1)
+{
+    MockDrawingCanvas canvas;
+    Drawing::scalar x = 0.1;
+    Drawing::scalar y = 0.2;
+    auto point = Rosen::Drawing::Point(x, y);
+    RSListenedCanvas listenedCanvas(canvas);
+    listenedCanvas.DrawPoint(point);
+    auto listener = std::make_shared<MockRSCanvasListener>(canvas);
+    listenedCanvas.SetListener(listener);
+    listenedCanvas.DrawPoint(point);
+}
 } // namespace Rosen
 } // namespace OHOS

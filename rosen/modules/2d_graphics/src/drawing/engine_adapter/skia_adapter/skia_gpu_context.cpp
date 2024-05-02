@@ -76,8 +76,6 @@ void SkiaGPUContext::InitSkExecutor()
     mtx.unlock();
 }
 
-static ThreadPoolExecutor g_threadExecutor;
-
 bool SkiaGPUContext::BuildFromGL(const GPUContextOptions& options)
 {
     sk_sp<const GrGLInterface> glInterface(GrGLCreateNativeInterface());

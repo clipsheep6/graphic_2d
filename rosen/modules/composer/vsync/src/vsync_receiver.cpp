@@ -150,7 +150,7 @@ VsyncError VSyncReceiver::RequestNextVSync(FrameCallback callback, const std::st
 {
     std::lock_guard<std::mutex> locker(initMutex_);
     if (!init_) {
-        VLOGE("not init");
+        VLOGE("%{public}s not init", __func__);
         return VSYNC_ERROR_NOT_INIT;
     }
     listener_->SetCallback(callback);

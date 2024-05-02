@@ -67,32 +67,109 @@ void RSGPUOverdrawCanvasListenerTest::TearDown() {}
 // };
 class MockOverDrawCanvas : public Drawing::Canvas {
 public:
-    MOCK_METHOD1(DrawPoint, void(const Drawing::Point& point));
     MOCK_METHOD2(DrawLine, void(const Drawing::Point& startPt, const Drawing::Point& endPt));
+    MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
+    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
+    MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
+    MOCK_METHOD3(DrawArc, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
+    MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
+    MOCK_METHOD1(DrawOval, void(const Drawing::Rect& oval));
+    MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, const Drawing::scalar radius));
+    MOCK_METHOD1(DrawPath, void(const Drawing::Path& path));
+    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py));
 };
 
-HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawPoint, Function | SmallTest | Level2)
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener, TestSize.Level1)
 {
     auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
 
-    Drawing::Point point(10, 10);
-    EXPECT_CALL(*mockOverDrawCanvas, DrawPoint(point)).Times(1);
+    EXPECT_CALL(*mockOverDrawCanvas, DrawRect(_)).Times(1);
+    EXPECT_CALL(*mockOverDrawCanvas, DrawRoundRect(_)).Times(1);
+    EXPECT_CALL(*mockOverDrawCanvas, DrawNestedRoundRect(_, _)).Times(1);
 
     RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
 
-    listener.DrawPoint(point);
+    listener.DrawRect(Drawing::Rect());
+    listener.DrawRoundRect(Drawing::RoundRect());
+    listener.DrawNestedRoundRect(Drawing::RoundRect(), Drawing::RoundRect());
 }
-HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawLine, Function | SmallTest | Level2)
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawLine, TestSize.Level1)
 {
     auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
 
-    Drawing::Point startPt(0, 0);
-    Drawing::Point endPt(100, 100);
-    EXPECT_CALL(*mockOverDrawCanvas, DrawLine(startPt, endPt)).Times(1);
+    EXPECT_CALL(*mockOverDrawCanvas, DrawPath(_)).Times(1);
 
     RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
 
-    listener.DrawLine(startPt, endPt);
+    listener.DrawLine(Drawing::Point(), Drawing::Point());
+}
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawArc, TestSize.Level1)
+{
+    auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
+
+    EXPECT_CALL(*mockOverDrawCanvas, DrawPath(_)).Times(1);
+
+    RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
+
+    listener.DrawArc(Drawing::Rect(), Drawing::scalar(), Drawing::scalar());
+}
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawPie, TestSize.Level1)
+{
+    auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
+
+    EXPECT_CALL(*mockOverDrawCanvas, DrawPath(_)).Times(1);
+
+    RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
+
+    listener.DrawPie(Drawing::Rect(), Drawing::scalar(), Drawing::scalar());
+}
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawOval, TestSize.Level1)
+{
+    auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
+
+    EXPECT_CALL(*mockOverDrawCanvas, DrawPath(_)).Times(1);
+
+    RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
+
+    listener.DrawOval(Drawing::Rect());
+}
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawCircle, TestSize.Level1)
+{
+    auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
+
+    EXPECT_CALL(*mockOverDrawCanvas, DrawPath(_)).Times(1);
+
+    RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
+
+    listener.DrawCircle(Drawing::Point(), Drawing::scalar());
+}
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawPath, TestSize.Level1)
+{
+    auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
+
+    EXPECT_CALL(*mockOverDrawCanvas, DrawPath(_)).Times(1);
+
+    RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
+
+    listener.DrawPath(Drawing::Path());
+}
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, RequestSplitToListener_DrawBitmap, TestSize.Level1)
+{
+    auto mockOverDrawCanvas = std::make_unique<MockOverDrawCanvas>();
+
+    EXPECT_CALL(*mockOverDrawCanvas, DrawRect(_)).Times(1);
+
+    RSGPUOverdrawCanvasListener listener(*mockOverDrawCanvas);
+
+    listener.DrawBitmap(Drawing::Bitmap(), Drawing::scalar(), Drawing::scalar());
 }
 
 /**

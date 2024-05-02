@@ -60,20 +60,23 @@ public:
     MOCK_METHOD1(DrawPoint, void(const Drawing::Point& point));
     MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
     MOCK_METHOD2(DrawLine, void(const Drawing::Point& startPt, const Drawing::Point& endPt));
-    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect)); 
+    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
     MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
     MOCK_METHOD3(DrawArc, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
     MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
-    MOCK_METHOD1(DrawOval, void(const Drawing::Rect& rect)); // Add DrawOval method
-    MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius)); // Add DrawCircle method
-    MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush)); // Add DrawBackground method
-    MOCK_METHOD1(DrawRegion, void(const Drawing::Region& region)); // Add DrawRegion method
-    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob, const Drawing::scalar x, const Drawing::scalar y)); // Add DrawTextBlob method
-    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py));
+    MOCK_METHOD1(DrawOval, void(const Drawing::Rect& rect));
+    MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius));
+    MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush));
+    MOCK_METHOD1(DrawRegion, void(const Drawing::Region& region));
+    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob,
+        const Drawing::scalar x, const Drawing::scalar y));
+    MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap,
+        const Drawing::scalar px, const Drawing::scalar py));
     MOCK_METHOD4(DrawImage, void(const Drawing::Image& image, const Drawing::scalar px, const Drawing::scalar py, const Drawing::SamplingOptions& sampling));
     MOCK_METHOD5(DrawImageRect,void(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
         const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint));
-    MOCK_METHOD3(DrawImageRect,void(const Drawing::Image& image, const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD3(DrawImageRect,void(const Drawing::Image& image, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling));
     MOCK_METHOD1(DrawPicture, void(const Drawing::Picture& picture));
     MOCK_METHOD1(Clear, void(const Drawing::ColorQuad color));
 };
@@ -84,21 +87,24 @@ public:
     MOCK_METHOD1(DrawPoint, void(const Drawing::Point& point));
     MOCK_METHOD1(DrawRect, void(const Drawing::Rect& rect));
     MOCK_METHOD2(DrawLine, void(const Drawing::Point& startPt, const Drawing::Point& endPt));
-    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect)); 
-    MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner)); 
+    MOCK_METHOD1(DrawRoundRect, void(const Drawing::RoundRect& roundRect));
+    MOCK_METHOD2(DrawNestedRoundRect, void(const Drawing::RoundRect& outer, const Drawing::RoundRect& inner));
     MOCK_METHOD3(DrawArc, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
     MOCK_METHOD3(DrawPie, void(const Drawing::Rect& oval, Drawing::scalar startAngle, Drawing::scalar sweepAngle));
     MOCK_METHOD1(DrawOval, void(const Drawing::Rect& rect));
     MOCK_METHOD2(DrawCircle, void(const Drawing::Point& centerPt, Drawing::scalar radius));
     MOCK_METHOD1(DrawPath, void(const Drawing::Path& path));
-    MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush)); // Add DrawBackground method
-    MOCK_METHOD1(DrawRegion, void(const Drawing::Region& region)); // Add DrawRegion method
-    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob, const Drawing::scalar x, const Drawing::scalar y)); // Add DrawTextBlob method
+    MOCK_METHOD1(DrawBackground, void(const Drawing::Brush& brush));
+    MOCK_METHOD1(DrawRegion, void(const Drawing::Region& region));
+    MOCK_METHOD3(DrawTextBlob, void(const Drawing::TextBlob* blob, const Drawing::scalar x,
+        const Drawing::scalar y));
     MOCK_METHOD3(DrawBitmap, void(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py));
-    MOCK_METHOD4(DrawImage, void(const Drawing::Image& image, const Drawing::scalar px, const Drawing::scalar py, const Drawing::SamplingOptions& sampling));
-    MOCK_METHOD5(DrawImageRect,void(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
+    MOCK_METHOD4(DrawImage, void(const Drawing::Image& image, const Drawing::scalar px,
+        const Drawing::scalar py, const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD5(DrawImageRect, void(const Drawing::Image& image, const Drawing::Rect& src, const Drawing::Rect& dst,
         const Drawing::SamplingOptions& sampling, Drawing::SrcRectConstraint constraint));
-    MOCK_METHOD3(DrawImageRect,void(const Drawing::Image& image, const Drawing::Rect& dst, const Drawing::SamplingOptions& sampling));
+    MOCK_METHOD3(DrawImageRect,void(const Drawing::Image& image, const Drawing::Rect& dst,
+        const Drawing::SamplingOptions& sampling));
     MOCK_METHOD1(DrawPicture, void(const Drawing::Picture& picture));
     MOCK_METHOD1(Clear, void(const Drawing::ColorQuad color));
 };
@@ -143,22 +149,20 @@ HWTEST_F(RSListenedCanvasTest, RequestPassThrough, Function | SmallTest | Level2
     }
 }
 
-void setupMocks(std::unique_ptr<MockDrawingCanvas>& mockDrawingCanvas, 
-                std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilterCanvas, 
-                std::shared_ptr<MockRSCanvasListener>& mockRSCanvasListener) 
+void setupMocks(std::unique_ptr<MockDrawingCanvas>& mockDrawingCanvas,
+                std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilterCanvas,
+                std::shared_ptr<MockRSCanvasListener>& mockRSCanvasListener)
 {
     mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
     mockRSCanvasListener = std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
 }
 
-void setExpectations(std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilterCanvas, 
+void setExpectations(std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilterCanvas,
                      std::shared_ptr<MockRSCanvasListener>& mockRSCanvasListener) 
 {
-    // Expectations for DrawPoint
     EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPoint(_)).Times(1);
     EXPECT_CALL(*mockRSCanvasListener, DrawPoint(_)).Times(1);
 
-    // Expectations for DrawRect
     EXPECT_CALL(*mockRSPaintFilterCanvas, DrawRect(_)).Times(1);
     EXPECT_CALL(*mockRSCanvasListener, DrawRect(_)).Times(1);
 
@@ -214,21 +218,21 @@ void setExpectations(std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilter
     EXPECT_CALL(*mockRSCanvasListener, Clear(_)).Times(1);
 }
 
-void createListenedCanvas(std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilterCanvas, 
-                          std::shared_ptr<MockRSCanvasListener>& mockRSCanvasListener, 
-                          std::shared_ptr<RSListenedCanvas>& listenedCanvas) 
+void createListenedCanvas(std::shared_ptr<MockRSPaintFilterCanvas>& mockRSPaintFilterCanvas,
+                          std::shared_ptr<MockRSCanvasListener>& mockRSCanvasListener,
+                          std::shared_ptr<RSListenedCanvas>& listenedCanvas)
 {
     listenedCanvas = std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
     listenedCanvas->SetListener(mockRSCanvasListener);
 }
 
-void callDrawMethods(std::shared_ptr<RSListenedCanvas>& listenedCanvas) 
+void callDrawMethods(std::shared_ptr<RSListenedCanvas>& listenedCanvas)
 {
-    listenedCanvas->DrawPoint(Drawing::Point()); // Passing an empty Point object
-    listenedCanvas->DrawRect(Drawing::Rect(1, 2, 4, 6));
-    listenedCanvas->DrawLine(Drawing::Point(), Drawing::Point(100, 100)); // Passing two empty Point objects
+    listenedCanvas->DrawPoint(Drawing::Point());
+    listenedCanvas->DrawRect(Drawing::Rect());
+    listenedCanvas->DrawLine(Drawing::Point(), Drawing::Point());
     listenedCanvas->DrawPie(Drawing::Rect(), 0.0f, 90.0f);
-    listenedCanvas->DrawArc(Drawing::Rect(0, 0, 100, 100), 0.0f, 90.0f);
+    listenedCanvas->DrawArc(Drawing::Rect(), 0.0f, 90.0f);
     listenedCanvas->DrawRoundRect(Drawing::RoundRect());
     listenedCanvas->DrawNestedRoundRect(Drawing::RoundRect(), Drawing::RoundRect());
     listenedCanvas->DrawOval(Drawing::Rect());
@@ -239,7 +243,8 @@ void callDrawMethods(std::shared_ptr<RSListenedCanvas>& listenedCanvas)
     listenedCanvas->DrawTextBlob(nullptr, 0.0f, 0.0f);
     listenedCanvas->DrawBitmap(Drawing::Bitmap(), 0.0f, 0.0f);
     listenedCanvas->DrawImage(Drawing::Image(), 0.0f, 0.0f, Drawing::SamplingOptions());
-    listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::Rect(), Drawing::SamplingOptions(), Drawing::SrcRectConstraint());
+    listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::Rect(),
+        Drawing::SamplingOptions(), Drawing::SrcRectConstraint());
     listenedCanvas->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::SamplingOptions());
     listenedCanvas->DrawPicture(Drawing::Picture());
     listenedCanvas->Clear(Drawing::ColorQuad());

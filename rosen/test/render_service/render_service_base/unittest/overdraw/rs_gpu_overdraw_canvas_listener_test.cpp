@@ -37,15 +37,15 @@ public:
     MOCK_METHOD(void, DrawRect, (const Drawing::Rect&), (override));
     MOCK_METHOD(void, DrawRoundRect, (const Drawing::RoundRect&), (override));
     MOCK_METHOD(void, DrawLine, (const Drawing::Point&, const Drawing::Point&), (override));
-    MOCK_METHOD(void, DrawPath, (const Drawing::Path&), (override)); 
-    MOCK_METHOD(void, DrawNestedRoundRect, (const Drawing::RoundRect&, const Drawing::RoundRect&), (override)); 
+    MOCK_METHOD(void, DrawPath, (const Drawing::Path&), (override));
+    MOCK_METHOD(void, DrawNestedRoundRect, (const Drawing::RoundRect&, const Drawing::RoundRect&), (override));
     MOCK_METHOD(void, DrawArc, (const Drawing::Rect&, Drawing::scalar, Drawing::scalar), (override));
     MOCK_METHOD(void, DrawPie, (const Drawing::Rect&, Drawing::scalar, Drawing::scalar), (override));
     MOCK_METHOD(void, DrawOval, (const Drawing::Rect&), (override));
     MOCK_METHOD(void, DrawCircle, (const Drawing::Point&, Drawing::scalar), (override));
     MOCK_METHOD(void, DrawBitmap, (const Drawing::Bitmap&, const Drawing::scalar, const Drawing::scalar), (override));
-    MOCK_METHOD(void, DrawImage, (const Drawing::Image&, Drawing::scalar, Drawing::scalar, const Drawing::SamplingOptions&), (override));
-    // Add more mock methods as needed
+    MOCK_METHOD(void, DrawImage, (const Drawing::Image&, Drawing::scalar, Drawing::scalar,
+        const Drawing::SamplingOptions&), (override));
 };
 class RSGPUOverdrawCanvasListenerTest : public testing::Test {
 public:
@@ -60,12 +60,12 @@ public:
 
 void RSGPUOverdrawCanvasListenerTest::SetUpTestCase() {}
 void RSGPUOverdrawCanvasListenerTest::TearDownTestCase() {}
-void RSGPUOverdrawCanvasListenerTest::SetUp() 
+void RSGPUOverdrawCanvasListenerTest::SetUp()
 {
     canvas_ = std::make_shared<Drawing::Canvas>();
-    overdrawCanvasMock_ = std::make_shared<MockOverDrawCanvas>(); // Create a mock object
+    overdrawCanvasMock_ = std::make_shared<MockOverDrawCanvas>();
     listener_ = std::make_shared<OHOS::Rosen::RSGPUOverdrawCanvasListener>(*canvas_);
-    listener_->SetOverdrawCanvas(overdrawCanvasMock_); // Set the mock object
+    listener_->SetOverdrawCanvas(overdrawCanvasMock_);
 }
 void RSGPUOverdrawCanvasListenerTest::TearDown() {}
 

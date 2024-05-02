@@ -94,6 +94,27 @@ void draw_clip(OH_Drawing_Canvas* canvas, DrawRect& c, OH_Drawing_Rect* rect, ui
     OH_Drawing_CanvasRestore(canvas);
     OH_Drawing_RectDestroy(cRect);
 }
+
+void draw_scene_oval(OH_Drawing_Canvas* canvas, OH_Drawing_Brush* brush, DrawRect bounds, OH_Drawing_ShaderEffect* s1)
+{
+    DrawRect r = bounds;
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
+    OH_Drawing_BrushSetAntiAlias(brush, true);
+    OH_Drawing_BrushSetColor(brush, 0x200000FF);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    OH_Drawing_CanvasDrawRect(canvas, rect);
+    OH_Drawing_CanvasSaveLayer(canvas, rect, nullptr);
+    OH_Drawing_RectDestroy(rect);
+    r = bounds;
+    r.Inset(g_kInset, 0); // 0 bounds
+    rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
+    OH_Drawing_BrushSetShaderEffect(brush, s1);
+    OH_Drawing_BrushSetColor(brush, s1 ? 0xFF000000 : ColorSetA(kColor1, 0x80));
+    OH_Drawing_BrushSetAntiAlias(brush, true);
+    OH_Drawing_CanvasAttachBrush(canvas, brush);
+    OH_Drawing_CanvasDrawOval(canvas, rect);
+}
+
 void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_Drawing_BlendMode mode,
     OH_Drawing_ShaderEffect* s1, OH_Drawing_ShaderEffect* s2)
 {
@@ -103,33 +124,16 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     c.right = bounds.CenterX();
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
-    OH_Drawing_BrushSetAntiAlias(brush, true);
-    OH_Drawing_BrushSetColor(brush, 0x200000FF);
-    OH_Drawing_CanvasAttachBrush(canvas, brush);
-    OH_Drawing_CanvasDrawRect(canvas, rect);
-    OH_Drawing_CanvasSaveLayer(canvas, rect, nullptr);
-    OH_Drawing_RectDestroy(rect);
-
-    r = bounds;
-    r.Inset(g_kInset, 0); // 0 bounds
-    rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
-    OH_Drawing_BrushSetShaderEffect(brush, s1);
-    OH_Drawing_BrushSetColor(brush, s1 ? 0xFF000000 : ColorSetA(kColor1, 0x80));
-    OH_Drawing_BrushSetAntiAlias(brush, true);
-    OH_Drawing_CanvasAttachBrush(canvas, brush);
-    OH_Drawing_CanvasDrawOval(canvas, rect);
-
+    draw_scene_oval(canvas, brush, bounds, s1);
     if (!s1) {
         draw_clip(canvas, c, rect, kColor1, brush);
     }
     OH_Drawing_RectDestroy(rect);
-
     OH_Drawing_Brush* xferBrush = OH_Drawing_BrushCreate();
     r = bounds;
     rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
     OH_Drawing_BrushSetBlendMode(xferBrush, mode);
     OH_Drawing_CanvasSaveLayer(canvas, rect, xferBrush);
-
     r = bounds;
     r.Inset(0, g_kInset);
     rect = OH_Drawing_RectCreate(r.left, r.top, r.right, r.bottom);
@@ -140,16 +144,15 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     OH_Drawing_BrushSetFilter(brush, filter);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, rect);
+
     if (!s2) {
         draw_clip(canvas, c, rect, kColor2, brush);
     }
-
     OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_BrushDestroy(brush);
     OH_Drawing_BrushDestroy(xferBrush);
     OH_Drawing_RectDestroy(rect);
     OH_Drawing_FilterDestroy(filter);
-
     OH_Drawing_CanvasRestore(canvas);
     OH_Drawing_CanvasRestore(canvas);
 }
@@ -162,16 +165,12 @@ void LumaFilter::OnTestFunction(OH_Drawing_Canvas* canvas)
         OH_Drawing_PointCreate(0, 100) }; // 0, 0 ， 0, 100 PointCreate
     OH_Drawing_Point* g2Points[] = { OH_Drawing_PointCreate(0, 0),
         OH_Drawing_PointCreate(g_kSize, 0) }; // 0 PointCreate
-
     float pos[] = { 0.2f, 1.0f }; // 0.2f, 1.0f 定义了渐变效果中每种颜色在渐变中的相对位置
-
     OH_Drawing_ColorFilter* fFilter = OH_Drawing_ColorFilterCreateLuma();
     OH_Drawing_ShaderEffect* fGr1 = OH_Drawing_ShaderEffectCreateLinearGradient(
         g1Points[0], g1Points[1], g1Colors, pos, 2, OH_Drawing_TileMode::CLAMP); // 2 定义渐变效果中颜色的数量。
     OH_Drawing_ShaderEffect* fGr2 = OH_Drawing_ShaderEffectCreateLinearGradient(
         g2Points[0], g2Points[1], g2Colors, pos, 2, OH_Drawing_TileMode::CLAMP); // 2 定义渐变效果中颜色的数量。
-
-    //////////////////////////////////////
     OH_Drawing_BlendMode modes[] = {
         OH_Drawing_BlendMode::BLEND_MODE_SRC_OVER,
         OH_Drawing_BlendMode::BLEND_MODE_DST_OVER,
@@ -180,7 +179,6 @@ void LumaFilter::OnTestFunction(OH_Drawing_Canvas* canvas)
         OH_Drawing_BlendMode::BLEND_MODE_SRC_IN,
         OH_Drawing_BlendMode::BLEND_MODE_DST_IN,
     };
-
     struct {
         OH_Drawing_ShaderEffect* fShader1;
         OH_Drawing_ShaderEffect* fShader2;
@@ -191,13 +189,11 @@ void LumaFilter::OnTestFunction(OH_Drawing_Canvas* canvas)
         { fGr1, fGr2 },
     };
     float gridStep = g_kSize + 2 * g_kInset;
-
     size_t modes_size = 6; // 6 定义了modes数组的大小
     for (size_t i = 0; i < modes_size; ++i) {
         OH_Drawing_Point2D offset = { gridStep * (0.5f + i), 20 }; // 20 offset
         draw_label(canvas, g_modeStrings[modes[i]], offset);
     }
-
     size_t shaders_size = 4; // 4 定义了shaders数组的大小
     for (size_t i = 0; i < shaders_size; ++i) {
         OH_Drawing_CanvasSave(canvas);
@@ -208,7 +204,6 @@ void LumaFilter::OnTestFunction(OH_Drawing_Canvas* canvas)
         }
         OH_Drawing_CanvasRestore(canvas);
     }
-
     OH_Drawing_ColorFilterDestroy(fFilter);
     OH_Drawing_ShaderEffectDestroy(fGr1);
     OH_Drawing_ShaderEffectDestroy(fGr2);

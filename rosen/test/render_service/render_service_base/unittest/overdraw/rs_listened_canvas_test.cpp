@@ -140,6 +140,9 @@ HWTEST_F(RSListenedCanvasTest, RequestSplitToListener, Function | SmallTest | Le
         Drawing::Rect rect(1, 2, 4, 6);
         Drawing::Point startPt(0, 0);
         Drawing::Point endPt(100, 100);
+        Drawing::Rect pieRect(0, 0, 100, 100);
+        Drawing::scalar startAngle = 0.0f;
+        Drawing::scalar sweepAngle = 90.0f;
 
         // Expectations for DrawPoint
         STEP("3. expect MockRSCanvasListener call drawPoint once")
@@ -162,23 +165,38 @@ HWTEST_F(RSListenedCanvasTest, RequestSplitToListener, Function | SmallTest | Le
             EXPECT_CALL(*mockRSCanvasListener, DrawLine(startPt, endPt)).Times(1);
         }
 
+        // Expectations for DrawPie
+        STEP("6. expect MockRSPaintFilterCanvas call drawPie once")
+        {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPie(pieRect, startAngle, sweepAngle)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawPie(pieRect, startAngle, sweepAngle)).Times(1);
+        }
+
+        // Expectations for DrawArc
+        STEP("7. expect MockRSPaintFilterCanvas call drawArc once")
+        {
+            EXPECT_CALL(*mockRSPaintFilterCanvas, DrawArc(_, _, _)).Times(1);
+            EXPECT_CALL(*mockRSCanvasListener, DrawArc(_, _, _)).Times(1);
+        }
+
         std::shared_ptr<RSListenedCanvas> listenedCanvas = nullptr;
-        STEP("6. create RSListenedCanvas from MockRSPaintFilterCanvas")
+        STEP("8. create RSListenedCanvas from MockRSPaintFilterCanvas")
         {
             listenedCanvas = std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
             listenedCanvas->SetListener(mockRSCanvasListener);
         }
 
         // Calls to Draw methods
-        STEP("7. call RSListenedCanvas's drawPoint, drawRect, and drawLine")
+        STEP("9. call RSListenedCanvas's drawPoint, drawRect, drawLine, drawPie, and drawArc")
         {
             listenedCanvas->DrawPoint(point);
             listenedCanvas->DrawRect(rect);
             listenedCanvas->DrawLine(startPt, endPt);
+            listenedCanvas->DrawPie(pieRect, startAngle, sweepAngle);
+            listenedCanvas->DrawArc(Drawing::Rect(0, 0, 100, 100), 0.0f, 90.0f);
         }
     }
 }
-
 
 
 
@@ -253,24 +271,6 @@ HWTEST_F(RSListenedCanvasTest, RequestSplitToListener_DrawArc, Function | SmallT
     listener.DrawArc(Drawing::Rect(0, 0, 100, 100), 0.0f, 90.0f);
 }
 
-HWTEST_F(RSListenedCanvasTest, RequestSplitToListener_DrawPie, Function | SmallTest | Level2)
-{
-    auto mockDrawingCanvas = std::make_unique<MockDrawingCanvas>();
-    auto mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
-    auto mockRSCanvasListener = std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
-
-    // 期望底层画布上的 DrawPie 方法被调用一次
-    EXPECT_CALL(*mockRSPaintFilterCanvas, DrawPie(_, _, _)).Times(1);
-
-    // 期望监听器上的 DrawPie 方法被调用一次
-    EXPECT_CALL(*mockRSCanvasListener, DrawPie(_, _, _)).Times(1);
-
-    RSListenedCanvas listener(*mockRSPaintFilterCanvas);
-    listener.SetListener(mockRSCanvasListener);
-
-    // 调用 DrawPie 方法
-    listener.DrawPie(Drawing::Rect(0, 0, 100, 100), 0.0f, 90.0f);
-}
 
 /**
  * @tc.name: onDrawOval001

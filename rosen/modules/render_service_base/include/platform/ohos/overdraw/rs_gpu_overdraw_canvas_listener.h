@@ -34,6 +34,7 @@ public:
     const char *Name() const override { return "RSGPUOverdrawCanvasListener"; }
 
     // shapes
+    void SetOverdrawCanvas(const std::shared_ptr<Drawing::OverDrawCanvas> &overdrawCanvas);
     void DrawPoint(const Drawing::Point& point) override;
     void DrawLine(const Drawing::Point& startPt, const Drawing::Point& endPt) override;
     void DrawRect(const Drawing::Rect& rect) override;

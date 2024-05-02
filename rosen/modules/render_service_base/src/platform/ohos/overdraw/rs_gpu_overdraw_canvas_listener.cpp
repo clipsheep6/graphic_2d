@@ -51,6 +51,11 @@ RSGPUOverdrawCanvasListener::~RSGPUOverdrawCanvasListener()
 {
 }
 
+void RSGPUOverdrawCanvasListener::SetOverdrawCanvas(const std::shared_ptr<Drawing::OverDrawCanvas> &overdrawCanvas)
+{
+    overdrawCanvas_ = overdrawCanvas;
+}
+
 void RSGPUOverdrawCanvasListener::Draw()
 {
     auto image = listenedSurface_->GetImageSnapshot();

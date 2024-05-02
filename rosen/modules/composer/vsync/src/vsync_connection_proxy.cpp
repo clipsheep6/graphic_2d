@@ -35,9 +35,10 @@ VsyncError VSyncConnectionProxy::RequestNextVSync(const std::string& fromWhom, i
     MessageParcel ret;
 
     arg.WriteInterfaceToken(GetDescriptor());
-    int res = Remote()->SendRequest(IVSYNC_CONNECTION_REQUEST_NEXT_VSYNC, arg, ret, opt);
-    if (res != NO_ERROR) {
-        return VSYNC_ERROR_BINDER_ERROR;
+    int ret = Remote()->SendRequest(IVSYNC_CONNECTION_REQUEST_NEXT_VSYNC, arg, ret, opt);
+    if (ret != NO_ERROR) {
+        VLOGE("ipc send fail, error:%{public}d", ret);
+        return VSYNC_ERROR_UNKOWN;
     }
     return VSYNC_ERROR_OK;
 }

@@ -80,14 +80,14 @@ HWTEST_F(VsyncReceiverTest, BeforeInit001, Function | MediumTest| Level3)
         .userData_ = this,
         .callback_ = OnVSync,
     };
-    ASSERT_EQ(VsyncReceiverTest::vsyncReceiver->RequestNextVSync(fcb), VSYNC_ERROR_API_FAILED);
+    ASSERT_EQ(VsyncReceiverTest::vsyncReceiver->RequestNextVSync(fcb), VSYNC_ERROR_NOT_INIT);
     ASSERT_EQ(VsyncReceiverTest::vsyncReceiver->SetVSyncRate(fcb, 0), VSYNC_ERROR_API_FAILED);
 
     int64_t period;
     int64_t timeStamp;
     auto& rsClient = RSInterfaces::GetInstance();
     auto rsReceiver = rsClient.CreateVSyncReceiver("VsyncReceiverTest");
-    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_API_FAILED);
+    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_NOT_INIT);
 }
 
 /*
@@ -220,7 +220,7 @@ HWTEST_F(VsyncReceiverTest, GetVSyncPeriodAndLastTimeStamp001, Function | Medium
     int64_t period;
     int64_t timeStamp;
     ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp), VSYNC_ERROR_OK);
-    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp, true), VSYNC_ERROR_API_FAILED);
+    ASSERT_EQ(rsReceiver->GetVSyncPeriodAndLastTimeStamp(period, timeStamp, true), VSYNC_ERROR_UNKOWN);
     ASSERT_NE(period, 0);
     ASSERT_NE(timeStamp, 0);
 }

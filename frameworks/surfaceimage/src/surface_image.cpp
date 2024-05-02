@@ -190,8 +190,8 @@ SurfaceError SurfaceImage::DetachContext()
     glBindTexture(textureTarget_, 0);
     int32_t error = glGetError();
     if (error != GL_NO_ERROR) {
-        BLOGE("glBindTexture failed, textureTarget:%{public}d, textureId_:%{public}d, error:%{public}d",
-            textureTarget_, error);
+        BLOGE("glBindTexture failed, textureTarget:%{public}d, textureId:%{public}d, error:%{public}d",
+            textureTarget_, textureId_, error);
         return SURFACE_ERROR_EGL_API_FAILED;
     }
     return SURFACE_ERROR_OK;
@@ -262,7 +262,7 @@ SurfaceError SurfaceImage::UpdateEGLImageAndTexture(EGLDisplay disp, const sptr<
     if (imageCacheSeqs_.count(seqNum) == 0) {
         EGLImageKHR eglImage = CreateEGLImage(eglDisplay_, buffer);
         if (eglImage == EGL_NO_IMAGE_KHR) {
-            return SURFACE_ERROR_INIT;
+            return SURFACE_ERROR_EGL_API_FAILED;
         }
         imageCacheSeqs_[seqNum].eglImage_ = eglImage;
     }
@@ -297,7 +297,7 @@ SurfaceError SurfaceImage::SetOnBufferAvailableListener(void *context, OnBufferA
     std::lock_guard<std::mutex> lockGuard(opMutex_);
     if (listener == nullptr) {
         BLOGE("listener is nullptr");
-        return SURFACE_ERROR_UNKOWN;
+        return SURFACE_ERROR_INVALID_PARAM;
     }
 
     listener_ = listener;

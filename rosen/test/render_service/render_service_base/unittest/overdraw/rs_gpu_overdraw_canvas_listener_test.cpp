@@ -46,6 +46,8 @@ public:
     MOCK_METHOD(void, DrawBitmap, (const Drawing::Bitmap&, const Drawing::scalar, const Drawing::scalar), (override));
     MOCK_METHOD(void, DrawImage, (const Drawing::Image&, Drawing::scalar, Drawing::scalar,
         const Drawing::SamplingOptions&), (override));
+    MOCK_METHOD(void, DrawImageRect, (const Drawing::Image&, const Drawing::Rect&, const Drawing::Rect&,
+        const Drawing::SamplingOptions&, Drawing::SrcRectConstraint), (override));
 };
 class RSGPUOverdrawCanvasListenerTest : public testing::Test {
 public:
@@ -132,7 +134,15 @@ HWTEST_F(RSGPUOverdrawCanvasListenerTest, listenerDrawBitmap, TestSize.Level1)
 HWTEST_F(RSGPUOverdrawCanvasListenerTest, listenerDrawImage, TestSize.Level1)
 {
     EXPECT_CALL(*overdrawCanvasMock_, DrawRect(_)).Times(1);
-    listener_->DrawImage(Drawing::Image(), Drawing::scalar(), Drawing::scalar(), Drawing::SamplingOptions());
+    listener_->DrawImage(Drawing::Image(), Drawing::scalar(), Drawing::scalar(),
+        Drawing::SamplingOptions());
+}
+
+HWTEST_F(RSGPUOverdrawCanvasListenerTest, listenerDrawImageRect, TestSize.Level1)
+{
+    EXPECT_CALL(*overdrawCanvasMock_, DrawRect(_)).Times(1);
+    listener_->DrawImageRect(Drawing::Image(), Drawing::Rect(), Drawing::Rect(),
+        Drawing::SamplingOptions(), Drawing::SrcRectConstraint());
 }
 /**
  * @tc.name: Create001

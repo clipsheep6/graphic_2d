@@ -68,7 +68,8 @@ public:
     void PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas);
 
     void SetIsOnTheTree(bool flag, NodeId instanceRootNodeId = INVALID_NODEID,
-        NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID) override;
+        NodeId firstLevelNodeId = INVALID_NODEID, NodeId cacheNodeId = INVALID_NODEID,
+        NodeId uifirstRootNodeId = INVALID_NODEID) override;
     bool IsAppWindow() const
     {
         return nodeType_ == RSSurfaceNodeType::APP_WINDOW_NODE;
@@ -449,6 +450,9 @@ public:
     void SetAncoForceDoDirect(bool ancoForceDoDirect);
     bool GetAncoForceDoDirect() const;
 
+    void SetHDRPresent(bool hasHdrPresent);
+    bool GetHDRPresent() const;
+
     const std::shared_ptr<RSDirtyRegionManager>& GetDirtyManager() const;
     const std::shared_ptr<RSDirtyRegionManager>& GetSyncDirtyManager() const;
     std::shared_ptr<RSDirtyRegionManager> GetCacheSurfaceDirtyManager() const;
@@ -777,6 +781,7 @@ public:
     const std::vector<RectI>& GetChildrenNeedFilterRects() const;
     const std::vector<bool>& GetChildrenNeedFilterRectsCacheValid() const;
     const std::vector<std::shared_ptr<RSRenderNode>>& GetChildrenFilterNodes() const;
+    std::vector<RectI> GetChildrenNeedFilterRectsWithoutCacheValid();
 
     // manage abilities' nodeid info
     void UpdateAbilityNodeIds(NodeId id, bool isAdded);
@@ -853,7 +858,7 @@ public:
         bool isUniRender,
         bool filterCacheOcclusionEnabled);
 
-    bool LeashWindowRelatedAppWindowOccluded(std::shared_ptr<RSSurfaceRenderNode>& appNode);
+    bool LeashWindowRelatedAppWindowOccluded(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appNode);
 
     void OnTreeStateChanged() override;
 
@@ -1009,19 +1014,9 @@ public:
         ancestorDisplayNode_ = ancestorDisplayNode;
     }
 
-    void SetUifirstNodeEnableParam(bool b);
+    void SetUifirstNodeEnableParam(MultiThreadCacheType b);
 
     void SetIsParentUifirstNodeEnableParam(bool b);
-
-    bool GetLastFrameUifirstFlag()
-    {
-        return lastFrameUifirstFlag_;
-    }
-
-    void SetLastFrameUifirstFlag(bool b)
-    {
-        lastFrameUifirstFlag_ = b;
-    }
 
     void SetUifirstChildrenDirtyRectParam(RectI rect);
 
@@ -1037,6 +1032,16 @@ public:
     bool GetHasTransparentSurface() const;
     void UpdatePartialRenderParams();
     void UpdateAncestorDisplayNodeInRenderParams();
+
+    void SetNeedDrawFocusChange(bool needDrawFocusChange)
+    {
+        needDrawFocusChange_ = needDrawFocusChange;
+    }
+
+    bool GetNeedDrawFocusChange() const
+    {
+        return needDrawFocusChange_;
+    }
 
     bool HasWindowCorner()
     {
@@ -1093,6 +1098,7 @@ private:
     std::set<NodeId> protectedLayerIds_= {};
 
     bool hasFingerprint_ = false;
+    bool hasHdrPresent_ = false;
     RectI srcRect_;
     Drawing::Matrix totalMatrix_;
     int32_t offsetX_ = 0;
@@ -1280,13 +1286,14 @@ private:
     // node only have translate and scale changes
     bool surfaceCacheContentStatic_ = false;
 
+    bool needDrawFocusChange_ = false;
+
     std::atomic<bool> hasUnSubmittedOccludedDirtyRegion_ = false;
     RectI historyUnSubmittedOccludedDirtyRegion_;
     bool forceUIFirstChanged_ = false;
     Drawing::Matrix bufferRelMatrix_ = Drawing::Matrix();
     bool forceUIFirst_ = false;
     bool hasTransparentSurface_ = false;
-    bool lastFrameUifirstFlag_ = false;
 
     bool ancoForceDoDirect_ = false;
 

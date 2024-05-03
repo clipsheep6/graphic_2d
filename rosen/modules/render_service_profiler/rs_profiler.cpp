@@ -414,6 +414,21 @@ double RSProfiler::Now()
     return Utils::ToSeconds(NowNano());
 }
 
+uint64_t RSProfiler::RawNowNano()
+{
+    return Utils::Now();
+}
+
+uint64_t RSProfiler::NowNano()
+{
+    return PatchTime(RawNowNano());
+}
+
+double RSProfiler::Now()
+{
+    return Utils::ToSeconds(NowNano());
+}
+
 bool RSProfiler::IsRecording()
 {
     return IsEnabled() && g_recordFile.IsOpen();
@@ -716,7 +731,7 @@ void RSProfiler::DumpTree(const ArgList& args)
     std::map<std::string, std::tuple<NodeId, std::string>> list;
     GetSurfacesTrees(*g_context, list);
 
-    std::string out = "Tree: count=" + std::to_string(static_cast<int>(GetRenderNodeCount(*g_context))) +
+    std::string out = "Tree: count=" + std::to_string(static_cast<int>(GetRenderNodeCount(nodeMap))) +
                       " time=" + std::to_string(Now()) + "\n";
 
     const std::string& node = args.String();
@@ -770,7 +785,7 @@ void RSProfiler::DumpSurfaces(const ArgList& args)
                " lowId=" + std::to_string(Utils::ExtractNodeId(item.first)) + "\n" + item.second + "\n";
     }
 
-    out += "TREE: count=" + std::to_string(static_cast<int32_t>(GetRenderNodeCount(*g_context))) +
+    out += "TREE: count=" + std::to_string(static_cast<int32_t>(GetRenderNodeCount(nodeMap))) +
            " time=" + std::to_string(Now()) + "\n";
 
     Respond(out);

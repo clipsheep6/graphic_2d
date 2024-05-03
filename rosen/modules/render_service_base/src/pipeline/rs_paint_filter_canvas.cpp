@@ -48,6 +48,11 @@ Drawing::RectI RSPaintFilterCanvasBase::GetDeviceClipBounds() const
     return canvas_->GetDeviceClipBounds();
 }
 
+Drawing::RectI RSPaintFilterCanvasBase::GetRoundInDeviceClipBounds() const
+{
+    return canvas_->GetRoundInDeviceClipBounds();
+}
+
 uint32_t RSPaintFilterCanvasBase::GetSaveCount() const
 {
     return canvas_->GetSaveCount();
@@ -421,12 +426,24 @@ void RSPaintFilterCanvasBase::DrawImageNine(const Drawing::Image* image, const D
 #ifdef ENABLE_RECORDING_DCL
     for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
         if ((*iter) != nullptr && OnFilter()) {
-            (*iter)->DrawImageNine(image, center, dst, filter, brush);
+            if (brush) {
+                Drawing::Brush b(*brush);
+                OnFilterWithBrush(b);
+                (*iter)->DrawImageNine(image, center, dst, filter, &b);
+            } else {
+                (*iter)->DrawImageNine(image, center, dst, filter, brush);
+            }
         }
     }
 #else
     if (canvas_ != nullptr && OnFilter()) {
-        canvas_->DrawImageNine(image, center, dst, filter, brush);
+        if (brush) {
+            Drawing::Brush b(*brush);
+            OnFilterWithBrush(b);
+            canvas_->DrawImageNine(image, center, dst, filter, &b);
+        } else {
+            canvas_->DrawImageNine(image, center, dst, filter, brush);
+        }
     }
 #endif
 }
@@ -437,12 +454,24 @@ void RSPaintFilterCanvasBase::DrawImageLattice(const Drawing::Image* image, cons
 #ifdef ENABLE_RECORDING_DCL
     for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
         if ((*iter) != nullptr && OnFilter()) {
-            (*iter)->DrawImageLattice(image, lattice, dst, filter, brush);
+            if (brush) {
+                Drawing::Brush b(*brush);
+                OnFilterWithBrush(b);
+                (*iter)->DrawImageLattice(image, lattice, dst, filter, &b);
+            } else {
+                (*iter)->DrawImageLattice(image, lattice, dst, filter, brush);
+            }
         }
     }
 #else
     if (canvas_ != nullptr && OnFilter()) {
-        canvas_->DrawImageLattice(image, lattice, dst, filter, brush);
+        if (brush) {
+            Drawing::Brush b(*brush);
+            OnFilterWithBrush(b);
+            canvas_->DrawImageLattice(image, lattice, dst, filter, &b);
+        } else {
+            canvas_->DrawImageLattice(image, lattice, dst, filter, brush);
+        }
     }
 #endif
 }
@@ -972,14 +1001,9 @@ CoreCanvas& RSPaintFilterCanvas::AttachPen(const Pen& pen)
         p.SetAlpha(p.GetAlpha() * alphaStack_.top());
     }
 
-    // use blendModeStack_.top() to set blend mode
-    if (auto& blendMode = envStack_.top().blendMode_) {
-        p.SetBlendMode(static_cast<Drawing::BlendMode>(*blendMode));
-    }
-
-    // use blender_ to set blender
-    if (blender_) {
-        p.SetBlender(blender_.value());
+    // use envStack_.top().blender_ to set blender
+    if (auto& blender = envStack_.top().blender_) {
+        p.SetBlender(blender);
     }
 
 #ifdef ENABLE_RECORDING_DCL
@@ -1010,14 +1034,9 @@ CoreCanvas& RSPaintFilterCanvas::AttachBrush(const Brush& brush)
         b.SetAlpha(b.GetAlpha() * alphaStack_.top());
     }
 
-    // use blendModeStack_.top() to set blend mode
-    if (auto& blendMode = envStack_.top().blendMode_) {
-        b.SetBlendMode(static_cast<Drawing::BlendMode>(*blendMode));
-    }
-
-    // use blender_ to set blender
-    if (blender_) {
-        b.SetBlender(blender_.value());
+    // use envStack_.top().blender_ to set blender
+    if (auto& blender = envStack_.top().blender_) {
+        b.SetBlender(blender);
     }
 
 #ifdef ENABLE_RECORDING_DCL
@@ -1048,14 +1067,9 @@ CoreCanvas& RSPaintFilterCanvas::AttachPaint(const Drawing::Paint& paint)
         p.SetAlpha(p.GetAlpha() * alphaStack_.top());
     }
 
-    // use blendModeStack_.top() to set blend mode
-    if (auto& blendMode = envStack_.top().blendMode_) {
-        p.SetBlendMode(static_cast<Drawing::BlendMode>(*blendMode));
-    }
-
-    // use blender_ to set blender
-    if (blender_) {
-        p.SetBlender(blender_.value());
+    // use envStack_.top().blender_ to set blender
+    if (auto& blender = envStack_.top().blender_) {
+        p.SetBlender(blender);
     }
 
 #ifdef ENABLE_RECORDING_DCL
@@ -1145,24 +1159,17 @@ void RSPaintFilterCanvas::RestoreAlphaToCount(int count)
 
 void RSPaintFilterCanvas::SetBlendMode(std::optional<int> blendMode)
 {
-    envStack_.top().blendMode_ = blendMode;
+    std::shared_ptr<Drawing::Blender> blender = nullptr;
+    if (blendMode) {
+        // map blendMode to Drawing::BlendMode and convert to Blender
+        blender = Drawing::Blender::CreateWithBlendMode(static_cast<Drawing::BlendMode>(*blendMode));
+    }
+    RSPaintFilterCanvas::SetBlender(blender);
 }
 
-void RSPaintFilterCanvas::SetBlender(std::optional<std::shared_ptr<Drawing::Blender>> blender)
+void RSPaintFilterCanvas::SetBlender(std::shared_ptr<Drawing::Blender> blender)
 {
-    blenderSave_ = blender_;
-    blender_ = blender;
-}
-
-std::optional<std::shared_ptr<Drawing::Blender>> RSPaintFilterCanvas::GetBlender() const
-{
-    return blender_;
-}
-
-void RSPaintFilterCanvas::RestoreBlender()
-{
-    blender_ = blenderSave_;
-    blenderSave_ = std::nullopt;
+    envStack_.top().blender_ = blender;
 }
 
 int RSPaintFilterCanvas::SaveEnv()
@@ -1453,6 +1460,45 @@ void RSPaintFilterCanvas::SaveLayer(const Drawing::SaveLayerOps& saveLayerOps)
 {
     envStack_.top().hasOffscreenLayer_ = true;
     RSPaintFilterCanvasBase::SaveLayer(saveLayerOps);
+}
+bool RSPaintFilterCanvas::GetHDRPresent() const
+{
+    return hasHdrPresent_;
+}
+
+void RSPaintFilterCanvas::SetHDRPresent(bool hasHdrPresent)
+{
+    hasHdrPresent_ = hasHdrPresent;
+}
+
+ScreenId RSPaintFilterCanvas::GetScreenId() const
+{
+    return screenId_;
+}
+
+void RSPaintFilterCanvas::SetScreenId(ScreenId screenId)
+{
+    screenId_ = screenId;
+}
+
+GraphicColorGamut RSPaintFilterCanvas::GetTargetColorGamut() const
+{
+    return targetColorGamut_;
+}
+
+void RSPaintFilterCanvas::SetTargetColorGamut(GraphicColorGamut colorGamut)
+{
+    targetColorGamut_ = colorGamut;
+}
+
+float RSPaintFilterCanvas::GetBrightnessRatio() const
+{
+    return brightnessRatio_;
+}
+
+void RSPaintFilterCanvas::SetBrightnessRatio(float brightnessRatio)
+{
+    brightnessRatio_ = brightnessRatio;
 }
 } // namespace Rosen
 } // namespace OHOS

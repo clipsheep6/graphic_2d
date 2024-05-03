@@ -25,6 +25,8 @@
 
 #include "common/rs_color.h"
 #include "common/rs_macros.h"
+#include "screen_manager/screen_types.h"
+#include "surface_type.h"
 #include "utils/region.h"
 
 namespace OHOS {
@@ -41,6 +43,8 @@ public:
     Drawing::Rect GetLocalClipBounds() const override;
 
     Drawing::RectI GetDeviceClipBounds() const override;
+
+    Drawing::RectI GetRoundInDeviceClipBounds() const override;
 
     uint32_t GetSaveCount() const override;
 
@@ -170,15 +174,11 @@ public:
     int GetEnvSaveCount() const;
     void RestoreEnvToCount(int count);
 
-    // blendmode related
+    // blendmode and blender related
     void SaveLayer(const Drawing::SaveLayerOps& saveLayerOps) override;
     void SetBlendMode(std::optional<int> blendMode);
+    void SetBlender(std::shared_ptr<Drawing::Blender>);
     bool HasOffscreenLayer() const;
-
-    // blender related
-    void SetBlender(std::optional<std::shared_ptr<Drawing::Blender>> blender);
-    std::optional<std::shared_ptr<Drawing::Blender>> GetBlender() const;
-    void RestoreBlender();
 
     // save/restore utils
     struct SaveStatus {
@@ -278,11 +278,24 @@ public:
     bool GetRecordingState() const override;
     void SetRecordingState(bool flag) override;
 
+    Drawing::DrawingType GetDrawingType() const override
+    {
+        return Drawing::DrawingType::PAINT_FILTER;
+    }
+    bool GetHDRPresent() const;
+    void SetHDRPresent(bool hasHdrPresent);
+    ScreenId GetScreenId() const;
+    void SetScreenId(ScreenId screenId);
+    GraphicColorGamut GetTargetColorGamut() const;
+    void SetTargetColorGamut(GraphicColorGamut colorGamut);
+    float GetBrightnessRatio() const;
+    void SetBrightnessRatio(float brightnessRatio);
+
 protected:
     using Env = struct {
         Color envForegroundColor_;
         std::shared_ptr<CachedEffectData> effectData_;
-        std::optional<int> blendMode_;
+        std::shared_ptr<Drawing::Blender> blender_;
         bool hasOffscreenLayer_;
     };
 
@@ -311,10 +324,6 @@ private:
     // save every dirty region of the current surface for quick reject
     std::stack<Drawing::Region> dirtyRegionStack_;
     
-    // blendmode related
-    std::stack<std::optional<int>> blendModeStack_;
-    std::optional<std::shared_ptr<Drawing::Blender>> blenderSave_ = std::nullopt;
-    std::optional<std::shared_ptr<Drawing::Blender>> blender_ = std::nullopt;
     // greater than 0 indicates canvas currently is drawing on a new layer created offscreen blendmode
     // std::stack<bool> blendOffscreenStack_;
 
@@ -329,11 +338,16 @@ private:
     CacheType cacheType_ { RSPaintFilterCanvas::CacheType::UNDEFINED };
     Drawing::Rect visibleRect_ = Drawing::Rect();
 
+    GraphicColorGamut targetColorGamut_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
+    float brightnessRatio_ = 0.0f;
+    ScreenId screenId_ = INVALID_SCREEN_ID;
+
     uint32_t threadIndex_ = UNI_RENDER_THREAD_INDEX; // default
     bool isParallelCanvas_ = false;
     bool disableFilterCache_ = false;
     bool recordingState_ = false;
     bool recordDrawable_ = false;
+    bool hasHdrPresent_ = false;
 };
 
 // Helper class similar to SkAutoCanvasRestore, but also restores alpha and/or env

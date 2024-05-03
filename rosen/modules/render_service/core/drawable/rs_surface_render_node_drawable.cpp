@@ -35,6 +35,7 @@
 #include "draw/brush.h"
 
 #include "platform/common/rs_log.h"
+#include "platform/ohos/rs_node_stats.h"
 #include "utils/rect.h"
 #include "utils/region.h"
 
@@ -220,7 +221,7 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     RSAutoCanvasRestore acr(rscanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
 
     // Draw base pipeline start
-    surfaceParams->ApplyAlphaAndMatrixToCanvas(*rscanvas, parentSurfaceMatrix_);
+    surfaceParams->ApplyAlphaAndMatrixToCanvas(*rscanvas);
 
     bool isSelfDrawingSurface = surfaceParams->GetSurfaceNodeType() == RSSurfaceNodeType::SELF_DRAWING_NODE;
     if (isSelfDrawingSurface && !surfaceParams->IsSpherizeValid()) {
@@ -233,8 +234,8 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         rscanvas->PushDirtyRegion(curSurfaceDrawRegion);
     }
 
-    auto parentSurfaceMatrix = parentSurfaceMatrix_;
-    parentSurfaceMatrix_ = rscanvas->GetTotalMatrix();
+    auto parentSurfaceMatrix = RSRenderParams::GetParentSurfaceMatrix();
+    RSRenderParams::SetParentSurfaceMatrix(rscanvas->GetTotalMatrix());
 
     auto bounds = surfaceParams->GetFrameRect();
 
@@ -268,9 +269,12 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         rscanvas->PopDirtyRegion();
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw SurfaceNode: [%s], NodeId: %llu, ProcessedNodes: %d",
             surfaceNode->GetName().c_str(), surfaceNode->GetId(), RSRenderNodeDrawable::GetProcessedNodeCount());
+        const RSNodeStatsType nodeStats = CreateRSNodeStatsItem(
+            RSRenderNodeDrawable::GetProcessedNodeCount(), surfaceNode->GetId(), surfaceNode->GetName());
+        RSNodeStats::GetInstance().AddNodeStats(nodeStats);
     }
 
-    parentSurfaceMatrix_ = parentSurfaceMatrix;
+    RSRenderParams::SetParentSurfaceMatrix(parentSurfaceMatrix);
 }
 
 void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(RSRenderThreadParams* uniParam,
@@ -345,7 +349,7 @@ void RSSurfaceRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
         rscanvas->MultiplyAlpha(surfaceParams->GetAlpha());
         RSUniRenderThread::GetCaptureParam().isFirstNode_ = false;
     } else {
-        surfaceParams->ApplyAlphaAndMatrixToCanvas(*rscanvas, parentSurfaceMatrix_);
+        surfaceParams->ApplyAlphaAndMatrixToCanvas(*rscanvas);
     }
 
     CaptureSurface(*surfaceNode, *rscanvas, *surfaceParams);
@@ -410,8 +414,8 @@ void RSSurfaceRenderNodeDrawable::CaptureSurface(RSSurfaceRenderNode& surfaceNod
         canvas.Save();
     }
 
-    auto parentSurfaceMatrix = parentSurfaceMatrix_;
-    parentSurfaceMatrix_ = canvas.GetTotalMatrix();
+    auto parentSurfaceMatrix = RSRenderParams::GetParentSurfaceMatrix();
+    RSRenderParams::SetParentSurfaceMatrix(canvas.GetTotalMatrix());
 
     auto bounds = surfaceParams.GetFrameRect();
 
@@ -440,7 +444,7 @@ void RSSurfaceRenderNodeDrawable::CaptureSurface(RSSurfaceRenderNode& surfaceNod
     // 5. Draw foreground of this node by the main canvas.
     DrawForeground(canvas, bounds);
 
-    parentSurfaceMatrix_ = parentSurfaceMatrix;
+    RSRenderParams::SetParentSurfaceMatrix(parentSurfaceMatrix);
 }
 
 void RSSurfaceRenderNodeDrawable::DealWithSelfDrawingNodeBuffer(RSSurfaceRenderNode& surfaceNode,

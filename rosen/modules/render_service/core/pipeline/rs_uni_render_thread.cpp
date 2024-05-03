@@ -313,6 +313,12 @@ uint32_t RSUniRenderThread::GetPendingScreenRefreshRate() const
 {
     return renderThreadParams_->GetPendingScreenRefreshRate();
 }
+
+bool RSUniRenderThread::GetHandleRateDirect() const
+{
+    return renderThreadParams_->GetHandleRateDirect();
+}
+
 #ifdef RES_SCHED_ENABLE
 void RSUniRenderThread::SubScribeSystemAbility()
 {

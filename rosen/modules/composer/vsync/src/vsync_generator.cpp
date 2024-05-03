@@ -659,12 +659,13 @@ VsyncError VSyncGenerator::CheckAndUpdateReferenceTime(int64_t hardwareVsyncInte
     PeriodCheckLocked(hardwareVsyncInterval);
 
     if (rsVSyncDistributor_->IsDVsyncOn() ||
-        ((abs(pendingReferenceTime_ - referenceTime_) < REFERENCETIME_CHECK_THRESHOLD) &&
+        ((abs(pendingReferenceTime_ - referenceTime_) < REFERENCETIME_CHECK_THRESHOLD || directSwitch_) &&
         (abs(hardwareVsyncInterval - pendingPeriod_) < PERIOD_CHECK_THRESHOLD))) {
         // framerate has changed
         frameRateChanging_ = false;
         ScopedBytrace changeEnd("frameRateChanging_ = false");
         pendingPeriod_ = 0;
+        directSwitch_ = false;
         int64_t actualOffset = referenceTime - pendingReferenceTime_;
         if (pulse_ == 0) {
             VLOGI("[%{public}s] pulse is not ready.", __func__);
@@ -740,13 +741,14 @@ bool VSyncGenerator::GetFrameRateChaingStatus()
     return frameRateChanging_;
 }
 
-void VSyncGenerator::SetPendingMode(int64_t period, int64_t timestamp)
+void VSyncGenerator::SetPendingMode(int64_t period, int64_t timestamp, bool directSwitch)
 {
     if (period <= 0) {
         return;
     }
     std::lock_guard<std::mutex> lock(mutex_);
     pendingPeriod_ = period;
+    directSwitch_ = directSwitch;
     pendingReferenceTime_ = timestamp;
 }
 

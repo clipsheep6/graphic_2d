@@ -1185,12 +1185,12 @@ private:
 
     struct OpaqueRegionBaseInfo
     {
-        RectI screenRect_;
-        RectI absRect_;
-        ScreenRotation screenRotation_;
-        bool isFocusWindow_;
-        bool isTransparent_;
-        bool hasContainerWindow_;
+        RectI screenRect_ = RectI();
+        RectI absRect_ = RectI();
+        ScreenRotation screenRotation_ = ScreenRotation::ROTATION_0;
+        bool isFocusWindow_ = false;
+        bool isTransparent_ = false;
+        bool hasContainerWindow_ = false;
         Vector4<int> cornerRadius_;
     };
 

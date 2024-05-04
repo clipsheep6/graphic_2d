@@ -25,6 +25,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+
 class MockRSPaintFilterCanvas : public RSPaintFilterCanvas {
 public:
     explicit MockRSPaintFilterCanvas(Drawing::Canvas *canvas) : RSPaintFilterCanvas(canvas) {}
@@ -37,16 +38,22 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-protected:
+private:
+    // 在测试类中添加成员变量用于管理 Mock 对象的生命周期
     std::shared_ptr<MockRSPaintFilterCanvas> mockCanvas_;
 };
 
 void RSOverdrawControllerTest::SetUpTestCase() {}
 void RSOverdrawControllerTest::TearDownTestCase() {}
 void RSOverdrawControllerTest::SetUp() {
-    mockCanvas_ = std::make_shared<MockRSPaintFilterCanvas>(std::make_unique<Drawing::Canvas>().get());
+    // 在 SetUp 中创建 Mock 对象并存储到成员变量中
+    auto tmpCanvas = std::make_unique<Drawing::Canvas>();
+    mockCanvas_ = std::make_shared<MockRSPaintFilterCanvas>(tmpCanvas.get());
 }
-void RSOverdrawControllerTest::TearDown() {}
+void RSOverdrawControllerTest::TearDown() {
+    // 在 TearDown 中显式释放临时资源
+    mockCanvas_.reset();
+}
 
 
 
@@ -136,6 +143,7 @@ public:
  *                  2. CreateListener<RSCanvasListener>(nullptr) == nullptr
  *                  3. CreateListener<RSValidCanvasListener>(MockRSPaintFilterCanvas) == nullptr
  */
+
 HWTEST_F(RSOverdrawControllerTest, CreateListenerDisable, Function | SmallTest | Level2)
 {
     auto &controller = RSOverdrawController::GetInstance();
@@ -144,23 +152,19 @@ HWTEST_F(RSOverdrawControllerTest, CreateListenerDisable, Function | SmallTest |
     }
 
     PART("CaseDescription") {
-        auto tmpCanvas = std::make_unique<Drawing::Canvas>();
-        std::shared_ptr<RSPaintFilterCanvas> canvas = nullptr;
         STEP("1. CreateListener<RSCanvasListener>(MockRSPaintFilterCanvas) == nullptr") {
-            canvas = mockCanvas_;
-            auto listener = controller.CreateListener<RSCanvasListener>(canvas.get());
+            auto listener = controller.CreateListener<RSCanvasListener>(mockCanvas_.get());
             STEP_ASSERT_EQ(listener, nullptr);
         }
 
         STEP("2. CreateListener<RSCanvasListener>(nullptr) == nullptr") {
-            canvas = nullptr;
-            auto listener = controller.CreateListener<RSCanvasListener>(canvas.get());
+            std::shared_ptr<RSPaintFilterCanvas> nullCanvas = nullptr;
+            auto listener = controller.CreateListener<RSCanvasListener>(nullCanvas.get());
             STEP_ASSERT_EQ(listener, nullptr);
         }
 
         STEP("3. CreateListener<RSValidCanvasListener>(MockRSPaintFilterCanvas) == nullptr") {
-            canvas = mockCanvas_;
-            auto listener = controller.CreateListener<RSValidCanvasListener>(canvas.get());
+            auto listener = controller.CreateListener<RSValidCanvasListener>(mockCanvas_.get());
             STEP_ASSERT_EQ(listener, nullptr);
         }
     }
@@ -206,6 +210,8 @@ HWTEST_F(RSOverdrawControllerTest, CreateListenerDisable, Function | SmallTest |
  *                  2. CreateListener<RSCanvasListener>(MockRSPaintFilterCanvas) == nullptr
  *                  3. CreateListener<RSValidCanvasListener>(MockRSPaintFilterCanvas) != nullptr
  */
+
+
 HWTEST_F(RSOverdrawControllerTest, CreateListenerEnable, Function | SmallTest | Level2)
 {
     auto &controller = RSOverdrawController::GetInstance();
@@ -214,28 +220,55 @@ HWTEST_F(RSOverdrawControllerTest, CreateListenerEnable, Function | SmallTest | 
     }
 
     PART("CaseDescription") {
-        auto tmpCanvas = std::make_unique<Drawing::Canvas>();
-        std::shared_ptr<RSPaintFilterCanvas> canvas = nullptr;
         STEP("1. CreateListener<RSCanvasListener>(nullptr) == nullptr") {
-            canvas = nullptr;
-            auto listener = controller.CreateListener<RSCanvasListener>(canvas.get());
+            std::shared_ptr<RSPaintFilterCanvas> nullCanvas = nullptr;
+            auto listener = controller.CreateListener<RSCanvasListener>(nullCanvas.get());
             STEP_ASSERT_EQ(listener, nullptr);
         }
 
         STEP("2. CreateListener<RSCanvasListener>(MockRSPaintFilterCanvas) == nullptr") {
-            auto mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(tmpCanvas.get());
-            canvas = mockRSPaintFilterCanvas;
-            auto listener = controller.CreateListener<RSCanvasListener>(canvas.get());
+            auto listener = controller.CreateListener<RSCanvasListener>(mockCanvas_.get());
             STEP_ASSERT_EQ(listener, nullptr);
         }
 
         STEP("3. CreateListener<RSValidCanvasListener>(MockRSPaintFilterCanvas) != nullptr") {
-            auto mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(tmpCanvas.get());
-            canvas = mockRSPaintFilterCanvas;
-            auto listener = controller.CreateListener<RSValidCanvasListener>(canvas.get());
+            auto listener = controller.CreateListener<RSValidCanvasListener>(mockCanvas_.get());
             STEP_ASSERT_NE(listener, nullptr);
         }
     }
 }
+
+
+// HWTEST_F(RSOverdrawControllerTest, CreateListenerEnable, Function | SmallTest | Level2)
+// {
+//     auto &controller = RSOverdrawController::GetInstance();
+//     PART("EnvConditions") {
+//         controller.SetEnable(true);
+//     }
+
+//     PART("CaseDescription") {
+//         auto tmpCanvas = std::make_unique<Drawing::Canvas>();
+//         std::shared_ptr<RSPaintFilterCanvas> canvas = nullptr;
+//         STEP("1. CreateListener<RSCanvasListener>(nullptr) == nullptr") {
+//             canvas = nullptr;
+//             auto listener = controller.CreateListener<RSCanvasListener>(canvas.get());
+//             STEP_ASSERT_EQ(listener, nullptr);
+//         }
+
+//         STEP("2. CreateListener<RSCanvasListener>(MockRSPaintFilterCanvas) == nullptr") {
+//             auto mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(tmpCanvas.get());
+//             canvas = mockRSPaintFilterCanvas;
+//             auto listener = controller.CreateListener<RSCanvasListener>(canvas.get());
+//             STEP_ASSERT_EQ(listener, nullptr);
+//         }
+
+//         STEP("3. CreateListener<RSValidCanvasListener>(MockRSPaintFilterCanvas) != nullptr") {
+//             auto mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(tmpCanvas.get());
+//             canvas = mockRSPaintFilterCanvas;
+//             auto listener = controller.CreateListener<RSValidCanvasListener>(canvas.get());
+//             STEP_ASSERT_NE(listener, nullptr);
+//         }
+//     }
+// }
 } // namespace Rosen
 } // namespace OHOS

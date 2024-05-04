@@ -44,7 +44,7 @@ public:
     std::map<int, Drawing::ColorQuad> GetColorMap() const;
 
     template<class RSCanvasListenerImpl>
-    std::shared_ptr<RSCanvasListenerImpl> CreateListener(const std::shared_ptr<RSPaintFilterCanvas>& canvas)
+    std::shared_ptr<RSCanvasListenerImpl> CreateListener(RSPaintFilterCanvas *canvas)
     {
         if (enabled_ == true && canvas != nullptr) {
             auto listener = std::make_shared<RSCanvasListenerImpl>(*canvas);
@@ -54,20 +54,8 @@ public:
             }
             return listener;
         }
-    return nullptr;
+        return nullptr;
     }
-    // std::shared_ptr<RSCanvasListenerImpl> CreateListener(RSPaintFilterCanvas *canvas)
-    // {
-    //     if (enabled_ == true && canvas != nullptr) {
-    //         auto listener = std::make_shared<RSCanvasListenerImpl>(*canvas);
-    //         if (listener->IsValid() == false) {
-    //             ROSEN_LOGD("CreateListener %{public}s failed", listener->Name());
-    //             return nullptr;
-    //         }
-    //         return listener;
-    //     }
-    //     return nullptr;
-    // }
 
 private:
     RSOverdrawController();

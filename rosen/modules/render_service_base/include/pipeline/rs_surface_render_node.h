@@ -133,7 +133,8 @@ public:
     }
 
     void SetForceHardwareAndFixRotation(bool flag);
-    bool GetForceHardwareByUser() const;
+    bool GetForceHardware() const;
+    void SetForceHardware(bool flag);
     int32_t GetFixedRotationDegree() const;
 
     SelfDrawingNodeType GetSelfDrawingNodeType() const
@@ -246,7 +247,7 @@ public:
 
     bool IsHardwareForcedDisabled() const
     {
-        if (isForceHardwareByUser_ && !isHardwareForcedDisabledByVisibility_) {
+        if (isForceHardware_ && !isHardwareForcedDisabledByVisibility_) {
             return false;
         }
         return isHardwareForcedDisabled_ || isHardwareForcedDisabledByVisibility_ ||
@@ -1236,9 +1237,10 @@ private:
     // used for hardware enabled nodes
     bool isHardwareEnabledNode_ = false;
     bool isForceHardwareByUser_ = false;
+    bool isForceHardware_ = false;
     bool isHardwareForcedDisabledByVisibility_ = false;
     RectI originalDstRect_;
-    int32_t fixedRotationDegree_ = -90;
+    int32_t fixedRotationDegree_;
     SelfDrawingNodeType selfDrawingType_ = SelfDrawingNodeType::DEFAULT;
     bool isCurrentFrameHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;

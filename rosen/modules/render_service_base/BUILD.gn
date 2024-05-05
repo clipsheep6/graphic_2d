@@ -436,6 +436,7 @@ ohos_source_set("render_service_base_src") {
   external_deps = [
     "graphic_surface:surface_headers",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 
   if (graphic_2d_feature_enable_opinc) {

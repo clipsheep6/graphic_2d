@@ -168,7 +168,11 @@ void ShaderCache::WriteToDisk()
 void ShaderCache::Store(const Drawing::Data& key, const Drawing::Data& data)
 {
     RS_TRACE_NAME("Store shader");
-    std::lock_guard<std::mutex> lock(mutex_);
+    OptionalLockGuard lock(mutex_);
+    if (!lock.status) {
+        LOGD("load: locked_ failed");
+        return nullptr;
+    }
 
     if (!initialized_) {
         LOGD("stored: failed because ShaderCache is not initialized");
@@ -194,7 +198,11 @@ void ShaderCache::Store(const Drawing::Data& key, const Drawing::Data& data)
         savePending_ = true;
         std::thread deferredSaveThread([this]() {
             sleep(saveDelaySeconds_);
-            std::lock_guard<std::mutex> lock(mutex_);
+            OptionalLockGuard lock(mutex_);
+            if (!lock.status) {
+                LOGD("load: locked_ failed");
+                return nullptr;
+            }
             WriteToDisk();
             cacheDirty_ = false;
         });

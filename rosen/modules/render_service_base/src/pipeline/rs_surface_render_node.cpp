@@ -15,6 +15,8 @@
 
 #include "pipeline/rs_surface_render_node.h"
 
+#include <parameters.h>
+
 #include "command/rs_surface_node_command.h"
 #include "common/rs_common_def.h"
 #include "rs_trace.h"
@@ -40,6 +42,7 @@ namespace OHOS {
 namespace Rosen {
 
 namespace {
+constexpr int32_t FIX_ROTATION_DEGREE_FOR_FOLD_SCREEN = -90;
 bool CheckRootNodeReadyToDraw(const std::shared_ptr<RSBaseRenderNode>& child)
 {
     if (child->IsInstanceOf<RSRootRenderNode>()) {
@@ -107,6 +110,8 @@ RSSurfaceRenderNode::RSSurfaceRenderNode(
         syncDirtyManager_ = RSSystemProperties::GetRenderParallelEnabled() ?
             std::make_shared<RSDirtyRegionManager>() : dirtyManager_;
     }
+    fixedRotationDegree_ = (system::GetParameter("const.build.product", "") == "ALT") ?
+        FIX_ROTATION_DEGREE_FOR_FOLD_SCREEN : 0;
 }
 
 RSSurfaceRenderNode::RSSurfaceRenderNode(NodeId id, const std::weak_ptr<RSContext>& context, bool isTextureExportNode)
@@ -639,9 +644,14 @@ void RSSurfaceRenderNode::SetForceHardwareAndFixRotation(bool flag)
     }
 }
 
-bool RSSurfaceRenderNode::GetForceHardwareByUser() const
+bool RSSurfaceRenderNode::GetForceHardware() const
 {
-    return isForceHardwareByUser_;
+    return isForceHardware_;
+}
+
+void RSSurfaceRenderNode::SetForceHardware(bool flag)
+{
+    isForceHardware_ = isForceHardwareByUser_ && flag;
 }
 
 int32_t RSSurfaceRenderNode::GetFixedRotationDegree() const

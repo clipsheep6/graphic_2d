@@ -48,6 +48,7 @@
 #include "common/rs_optional_trace.h"
 #include "drawable/rs_canvas_drawing_render_node_drawable.h"
 #include "drawable/rs_property_drawable_utils.h"
+#include "luminance/rs_luminance_control.h"
 #include "memory/rs_memory_graphic.h"
 #include "memory/rs_memory_manager.h"
 #include "memory/rs_memory_track.h"
@@ -1824,6 +1825,26 @@ void RSMainThread::Render()
         CheckSystemSceneStatus();
         PerfForBlurIfNeeded();
     }
+
+    if (auto screenManager = CreateOrGetScreenManager()) {
+        auto& rsLuminance = RSLuminanceControl::Get();
+        for (const auto& child : *rootNode->GetSortedChildren()) {
+            auto displayNode = RSBaseRenderNode::ReinterpretCast<RSDisplayRenderNode>(child);
+            if (displayNode == nullptr) {
+                continue;
+            }
+
+            auto screenId = displayNode->GetScreenId();
+            if (rsLuminance.IsDimmingOn(screenId)) {
+                rsLuminance.DimmingIncrease(screenId);
+            }
+            if (rsLuminance.IsNeedUpdateLuminance(screenId)) {
+                uint32_t newLevel = rsLuminance.GetNewHdrLuminance(screenId);
+                screenManager->SetScreenBacklight(screenId, newLevel);
+                rsLuminance.SetNowHdrLuminance(screenId, newLevel);
+            }
+        }
+    }
 }
 
 void RSMainThread::CheckSystemSceneStatus()
@@ -2463,6 +2484,8 @@ void RSMainThread::Animate(uint64_t timestamp)
             needRequestNextVsyncAnimate_ = true;  // set the member variable instead of directly calling rnv
             RS_TRACE_NAME("rs_RequestNextVSync");
         }
+    } else if (isUniRender_) {
+        renderThreadParams_->SetImplicitAnimationEnd(true);
     }
 
     PerfAfterAnim(needRequestNextVsync);

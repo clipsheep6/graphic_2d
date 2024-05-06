@@ -136,41 +136,41 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasDrawRect>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "canvas_rotate",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasRotate>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Canvas_DrawImageRect",
+    { "canvas_drawimagerect",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawImageRect>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Canvas_Translate",
+    { "canvas_translate",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasTranslate>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Canvas_Scale",
+    { "canvas_scale",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasScale>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Canvas_Clear",
+    { "canvas_clear",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasClear>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Canvas_SetMatrix",
+    { "canvas_setmatrix",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSetMatrix>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Canvas_ResetMatrix",
+    { "canvas_resetmatrix",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasResetMatrix>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Canvas_ReadPixels",
+    { "canvas_readpixels",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasReadPixels>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Canvas_ReadPixelsToBitmap",
+    { "canvas_readpixelstobitmap",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasReadPixelsToBitmap>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Canvas_DrawImageRectWithSrc",
+    { "canvas_drawimagerectwithsrc",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawImageRectWithSrc>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Canvas_DrawShadow",
+    { "canvas_drawshadow",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawShadow>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Canvas_Skew",
+    { "canvas_skew",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<CanvasSkew>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Canvas_DrawVertices",
+    { "canvas_drawvertices",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<CanvasDrawVertices>(TestBase::DRAW_STYLE_COMPLEX);
         } },
@@ -236,31 +236,31 @@ std::unordered_map<std::string, std::function<std::shared_ptr<TestBase>()>> Perf
         } }, // OH_PixelMap_CreatePixelMap传入参数napi_env env无法获取，无法实现
 
     // path
-    { "Path_Create",
+    { "path_create",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCreate>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Path_LineTo",
+    { "path_lineto",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PathLineTo>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Path_ArcTo",
+    { "path_arcto",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PathArcTo>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Path_QuadTo",
+    { "path_quadto",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PathQuadTo>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Path_Copy",
+    { "path_copy",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PathCopy>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Path_EffectCreateDashPathEffect",
+    { "path_effectcreatedashpatheffect",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<PathEffectCreateDashPathEffect>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Path_AddOvalWithInitialPoint",
+    { "path_addovalwithinitialpoint",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<PathAddOvalWithInitialPoint>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Path_AddArc",
+    { "path_addarc",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PathAddArc>(TestBase::DRAW_STYLE_COMPLEX); } },
-    { "Path_AddPathWithMatrixAndMode",
+    { "path_addpathwithmatrixandmode",
         []() -> std::shared_ptr<TestBase> {
             return std::make_shared<PathAddPathWithMatrixAndMode>(TestBase::DRAW_STYLE_COMPLEX);
         } },
-    { "Path_ConicTo",
+    { "path_conicto",
         []() -> std::shared_ptr<TestBase> { return std::make_shared<PathConicTo>(TestBase::DRAW_STYLE_COMPLEX); } },
     { "path_transformwithclip",
         []() -> std::shared_ptr<TestBase> {

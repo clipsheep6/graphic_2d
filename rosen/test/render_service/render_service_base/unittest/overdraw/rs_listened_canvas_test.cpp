@@ -35,18 +35,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-class RSListenedCanvasTest : public testing::Test {
-public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp() override;
-    void TearDown() override;
-};
 
-void RSListenedCanvasTest::SetUpTestCase() {}
-void RSListenedCanvasTest::TearDownTestCase() {}
-void RSListenedCanvasTest::SetUp() {}
-void RSListenedCanvasTest::TearDown() {}
 
 class MockDrawingCanvas : public Drawing::Canvas {
 public:
@@ -107,7 +96,36 @@ public:
     MOCK_METHOD1(DrawPicture, void(const Drawing::Picture& picture));
     MOCK_METHOD1(Clear, void(const Drawing::ColorQuad color));
 };
+class RSListenedCanvasTest : public testing::Test {
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp() override;
+    void TearDown() override;
+private:
+    std::unique_ptr<MockDrawingCanvas> mockDrawingCanvas;
+    std::shared_ptr<MockRSPaintFilterCanvas> mockRSPaintFilterCanvas;
+    std::shared_ptr<MockRSCanvasListener> mockRSCanvasListener;
+    std::shared_ptr<RSListenedCanvas> listenedCanvas;
+};
 
+void RSListenedCanvasTest::SetUpTestCase() {}
+void RSListenedCanvasTest::TearDownTestCase() {}
+void RSListenedCanvasTest::SetUp()
+{
+    mockDrawingCanvas = std::make_unique<MockDrawingCanvas>();
+    mockRSPaintFilterCanvas = std::make_shared<MockRSPaintFilterCanvas>(mockDrawingCanvas.get());
+    mockRSCanvasListener = std::make_shared<MockRSCanvasListener>(*mockRSPaintFilterCanvas);
+    listenedCanvas = std::make_shared<RSListenedCanvas>(*mockRSPaintFilterCanvas);
+    listenedCanvas->SetListener(mockRSCanvasListener);
+}
+void RSListenedCanvasTest::TearDown()
+{
+    mockDrawingCanvas.reset();
+    mockRSPaintFilterCanvas.reset();
+    mockRSCanvasListener.reset();
+    listenedCanvas.reset();
+}
 
 /*
  * Function: request will pass through listened canvas

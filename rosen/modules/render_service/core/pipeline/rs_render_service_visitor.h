@@ -35,6 +35,10 @@ public:
     void PrepareChildren(RSRenderNode &node) override;
     void PrepareCanvasRenderNode(RSCanvasRenderNode &node) override {}
     void PrepareDisplayRenderNode(RSDisplayRenderNode &node) override;
+    void SetDisplayProperties(RSDisplayRenderNode& node);
+    void SetCompositeTypeBasedOnScreenState(RSDisplayRenderNode& node);
+    void SetLogicalScreenSize(RSDisplayRenderNode& node);
+    void PrepareCanvasAndChildren(RSDisplayRenderNode& node);
     void PrepareProxyRenderNode(RSProxyRenderNode& node) override {}
     void PrepareRootRenderNode(RSRootRenderNode& node) override {}
     void PrepareSurfaceRenderNode(RSSurfaceRenderNode &node) override;

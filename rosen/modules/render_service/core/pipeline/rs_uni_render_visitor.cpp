@@ -4741,8 +4741,7 @@ void RSUniRenderVisitor::CheckAndSetNodeCacheType(RSRenderNode& node)
     }
 }
 
-bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
-{
+bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node) {
     RS_TRACE_NAME_FMT("UpdateCacheSurface: [%llu]", node.GetId());
     CacheType cacheType = node.GetCacheType();
     if (cacheType == CacheType::NONE) {
@@ -4754,38 +4753,49 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         node.InitCacheSurface(canvas_ ? canvas_->GetGPUContext().get() : nullptr, func, threadIndex_);
     }
+
     auto surface = node.GetCacheSurface(threadIndex_, true);
     if (!surface) {
         RS_LOGE("Get CacheSurface failed");
         return false;
     }
+
     auto cacheCanvas = std::make_shared<RSPaintFilterCanvas>(surface.get());
     if (!cacheCanvas) {
         return false;
     }
 
-    // copy current canvas properties into cacheCanvas
+    ConfigureCacheCanvas(cacheCanvas.get(), isSubThread_);
+
+    bool isOpDropped = isOpDropped_;
+    isOpDropped_ = false;
+    isUpdateCachedSurface_ = true;
+    cacheCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
+    swap(cacheCanvas, canvas_);
+
+    ProcessAnimatePropertyAndShadow(node, cacheType);
+    
+    RestoreAnimatePropertyAndShadow(node, cacheType);
+    
+    swap(cacheCanvas, canvas_);
+    isUpdateCachedSurface_ = false;
+    isOpDropped_ = isOpDropped;
+    RSBaseRenderUtil::WriteCacheRenderNodeToPng(node);
+    
+    return true;
+}
+
+void RSUniRenderVisitor::ConfigureCacheCanvas(RSPaintFilterCanvas* cacheCanvas, bool isSubThread) {
     if (renderEngine_) {
         cacheCanvas->SetHighContrast(renderEngine_->IsHighContrastEnabled());
     }
     if (canvas_) {
         cacheCanvas->CopyConfiguration(*canvas_);
     }
-    // Using filter cache in multi-thread environment may cause GPU memory leak or invalid textures, so we explicitly
-    // disable it in sub-thread.
     cacheCanvas->SetDisableFilterCache(isSubThread_);
+}
 
-    // When drawing CacheSurface, all child node should be drawn.
-    // So set isOpDropped_ = false here.
-    bool isOpDropped = isOpDropped_;
-    isOpDropped_ = false;
-    isUpdateCachedSurface_ = true;
-
-    cacheCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
-
-    swap(cacheCanvas, canvas_);
-    // When cacheType == CacheType::ANIMATE_PROPERTY,
-    // we should draw AnimateProperty on cacheCanvas
+void RSUniRenderVisitor::ProcessAnimatePropertyAndShadow(RSRenderNode& node, CacheType cacheType) {
     const auto& property = node.GetRenderProperties();
     if (cacheType == CacheType::ANIMATE_PROPERTY) {
         if (property.IsShadowValid()
@@ -4795,6 +4805,7 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
         }
         node.ProcessAnimatePropertyBeforeChildren(*canvas_);
     }
+
     if (node.IsNodeGroupIncludeProperty()) {
         node.ProcessAnimatePropertyBeforeChildren(*canvas_);
     }
@@ -4808,9 +4819,7 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
         canvas_->Translate(-unionRect.GetLeft(), -unionRect.GetTop());
     }
 #endif
-
     node.ProcessRenderContents(*canvas_);
-    // Set a count to label the ProcessChildren in updateCacheProcess
     updateCacheProcessCnt_++;
     ProcessChildren(node);
     updateCacheProcessCnt_--;
@@ -4821,7 +4830,9 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
         canvas_->Translate(unionRect.GetLeft(), unionRect.GetTop());
     }
 #endif
+}
 
+void RSUniRenderVisitor::RestoreAnimatePropertyAndShadow(RSRenderNode& node, CacheType cacheType) {
     if (cacheType == CacheType::ANIMATE_PROPERTY) {
         if (node.GetRenderProperties().IsShadowValid()
             && !node.GetRenderProperties().IsSpherizeValid()) {
@@ -4829,19 +4840,6 @@ bool RSUniRenderVisitor::UpdateCacheSurface(RSRenderNode& node)
         }
         node.ProcessAnimatePropertyAfterChildren(*canvas_);
     }
-    swap(cacheCanvas, canvas_);
-
-    isUpdateCachedSurface_ = false;
-    isOpDropped_ = isOpDropped;
-
-    // To get all FreezeNode
-    // execute: "param set rosen.dumpsurfacetype.enabled 2 && setenforce 0"
-    // To get specific FreezeNode
-    // execute: "param set rosen.dumpsurfacetype.enabled 1 && setenforce 0 && "
-    // "param set rosen.dumpsurfaceid "NodeId" "
-    // Png file could be found in /data
-    RSBaseRenderUtil::WriteCacheRenderNodeToPng(node);
-    return true;
 }
 
 void RSUniRenderVisitor::DrawSpherize(RSRenderNode& node)
@@ -5466,8 +5464,7 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMapWithBlur(RSRenderNode& node)
     curCacheFilterRects_.pop();
 }
 
-void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
-{
+void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node) {
     if (InitNodeCache(node)) {
         RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderVisitor::UpdateCacheRenderNodeMap, generate the node cache for the first"
             "time, NodeId: %" PRIu64 " ", node.GetId());
@@ -5475,59 +5472,67 @@ void RSUniRenderVisitor::UpdateCacheRenderNodeMap(RSRenderNode& node)
     }
     uint32_t updateTimes = 0;
     cacheRenderNodeIsUpdateMap_[node.GetId()] = node.GetDrawingCacheChanged();
-    if (node.GetDrawingCacheType() == RSDrawingCacheType::FORCED_CACHE) {
-        // Regardless of the number of consecutive refreshes, the current cache is forced to be updated.
-        if (node.GetDrawingCacheChanged()) {
-            RenderParam val { node.shared_from_this(), canvas_->GetCanvasStatus() };
-            curGroupedNodes_.push(val);
-            {
-                std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-                updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
-            }
-            node.SetCacheType(CacheType::CONTENT);
-            if (UpdateCacheSurface(node)) {
-                node.UpdateCompletedCacheSurface();
-                ChangeCacheRenderNodeMap(node, updateTimes);
-                cacheReuseTimes = 0;
-                node.ResetDrawingCacheNeedUpdate();
-            }
-            curGroupedNodes_.pop();
+
+    switch (node.GetDrawingCacheType()) {
+        case RSDrawingCacheType::FORCED_CACHE:
+            HandleForcedCacheType(node, updateTimes);
+            break;
+        case RSDrawingCacheType::TARGETED_CACHE:
+            HandleTargetedCacheType(node, updateTimes);
+            break;
+        default:
+            ChangeCacheRenderNodeMap(node);
+            cacheReuseTimes++;
+            RS_OPTIONAL_TRACE_NAME("RSUniRenderVisitor::UpdateCacheRenderNodeMap ,NodeId: " + std::to_string(node.GetId()) +
+                " ,CacheRenderNodeMapCnt: " + std::to_string(cacheReuseTimes));
+    }
+}
+
+void RSUniRenderVisitor::HandleForcedCacheType(RSRenderNode& node, uint32_t updateTimes) {
+     if (node.GetDrawingCacheChanged()) {
+        RenderParam val { node.shared_from_this(), canvas_->GetCanvasStatus() };
+        curGroupedNodes_.push(val);
+        {
+            std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+            updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+        }
+        node.SetCacheType(CacheType::CONTENT);
+        if (UpdateCacheSurface(node)) {
+            node.UpdateCompletedCacheSurface();
+            ChangeCacheRenderNodeMap(node, updateTimes);
+            cacheReuseTimes = 0;
+            node.ResetDrawingCacheNeedUpdate();
+        }
+        curGroupedNodes_.pop();
+        return;
+    }
+}
+
+void RSUniRenderVisitor::HandleTargetedCacheType(RSRenderNode& node, uint32_t updateTimes) {
+    if (node.GetDrawingCacheChanged()) {
+        {
+            std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
+            updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
+        }
+        if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
+            node.SetCacheType(CacheType::NONE);
+            node.MarkNodeGroup(RSRenderNode::GROUPED_BY_UI, false, false);
+            node.MarkNodeGroup(RSRenderNode::GROUPED_BY_ANIM, false, false);
+            RSUniRenderUtil::ClearCacheSurface(node, threadIndex_);
+            cacheRenderNodeMap.erase(node.GetId());
+            cacheReuseTimes = 0;
             return;
         }
-    }
-    if (node.GetDrawingCacheType() == RSDrawingCacheType::TARGETED_CACHE) {
-        // If the number of consecutive refreshes exceeds CACHE_MAX_UPDATE_TIME times, the cache is cleaned,
-        // otherwise the cache is updated.
-        if (node.GetDrawingCacheChanged()) {
-            {
-                std::lock_guard<std::mutex> lock(cacheRenderNodeMapMutex);
-                updateTimes = cacheRenderNodeMap[node.GetId()] + 1;
-            }
-            if (updateTimes >= CACHE_MAX_UPDATE_TIME) {
-                node.SetCacheType(CacheType::NONE);
-                node.MarkNodeGroup(RSRenderNode::GROUPED_BY_UI, false, false);
-                node.MarkNodeGroup(RSRenderNode::GROUPED_BY_ANIM, false, false);
-                RSUniRenderUtil::ClearCacheSurface(node, threadIndex_);
-                cacheRenderNodeMap.erase(node.GetId());
-                cacheReuseTimes = 0;
-                return;
-            }
-            node.SetCacheType(CacheType::CONTENT);
-            if (UpdateCacheSurface(node)) {
-                node.UpdateCompletedCacheSurface();
-                ChangeCacheRenderNodeMap(node, updateTimes);
-                cacheReuseTimes = 0;
-                node.ResetDrawingCacheNeedUpdate();
-            }
-            curGroupedNodes_.pop();
-            return;
+        node.SetCacheType(CacheType::CONTENT);
+        if (UpdateCacheSurface(node)) {
+            node.UpdateCompletedCacheSurface();
+            ChangeCacheRenderNodeMap(node, updateTimes);
+            cacheReuseTimes = 0;
+            node.ResetDrawingCacheNeedUpdate();
         }
+        curGroupedNodes_.pop();
+        return;
     }
-    // The cache is not refreshed continuously.
-    ChangeCacheRenderNodeMap(node);
-    cacheReuseTimes++;
-    RS_OPTIONAL_TRACE_NAME("RSUniRenderVisitor::UpdateCacheRenderNodeMap ,NodeId: " + std::to_string(node.GetId()) +
-        " ,CacheRenderNodeMapCnt: " + std::to_string(cacheReuseTimes));
 }
 
 void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)

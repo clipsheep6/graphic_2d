@@ -485,8 +485,7 @@ void RSScreenManager::RemoveScreenFromHgm(std::shared_ptr<HdiOutput> &output)
     }
 }
 
-void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output)
-{
+void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output) {
     if (output == nullptr) {
         RS_LOGE("RSScreenManager %{public}s: output is nullptr.", __func__);
         return;
@@ -508,9 +507,22 @@ void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &o
     }
 
     screens_[id] = std::make_unique<RSScreen>(id, isVirtual, output, nullptr);
+    
+    ConfigureVSyncSampler(/**this,*/ id);
+    UpdateDefaultScreenId(*this, id);
 
+    RS_LOGI("RSScreenManager %{public}s: A new screen(id %{public}" PRIu64 ") connected.", __func__, id);
+    connectedIds_.emplace_back(id);
+#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
+    if (isFoldScreenFlag_ && id != 0) {
+        externalScreenId_ = id;
+    }
+#endif
+}
+
+void RSScreenManager::ConfigureVSyncSampler(/*RSScreenManager& manager, */ScreenId id) {
     auto vsyncSampler = CreateVSyncSampler();
-    if (vsyncSampler != nullptr) {
+    if (vsyncSampler) {
         auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
         if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
             vsyncSampler->RegSetScreenVsyncEnabledCallback([this, id](bool enabled) {
@@ -543,7 +555,9 @@ void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &o
     } else {
         RS_LOGE("RegSetScreenVsyncEnabledCallback failed, vsyncSampler is null");
     }
+}
 
+void RSScreenManager::UpdateDefaultScreenId(RSScreenManager& manager, ScreenId id) {
     if (screens_[id]->GetCapability().type == GraphicInterfaceType::GRAPHIC_DISP_INTF_MIPI) {
         if (!mipiCheckInFirstHotPlugEvent_) {
             defaultScreenId_ = id;
@@ -552,14 +566,6 @@ void RSScreenManager::ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &o
     } else if (defaultScreenId_ == INVALID_SCREEN_ID) {
         defaultScreenId_ = id;
     }
-
-    RS_LOGI("RSScreenManager %{public}s: A new screen(id %{public}" PRIu64 ") connected.", __func__, id);
-    connectedIds_.emplace_back(id);
-#ifdef RS_SUBSCRIBE_SENSOR_ENABLE
-    if (isFoldScreenFlag_ && id != 0) {
-        externalScreenId_ = id;
-    }
-#endif
 }
 
 void RSScreenManager::ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output)

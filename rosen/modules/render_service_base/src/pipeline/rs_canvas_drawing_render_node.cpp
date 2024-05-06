@@ -110,8 +110,7 @@ bool RSCanvasDrawingRenderNode::ResetSurfaceWithTexture(int width, int height, R
 }
 #endif
 
-void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas)
-{
+void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canvas) {
     int width = 0;
     int height = 0;
     RS_TRACE_NAME_FMT("RSCanvasDrawingRenderNode::ProcessRenderContents %llu", GetId());
@@ -120,6 +119,15 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         return;
     }
 
+    if (!ResetSurfaceIfNeeded(canvas, width, height)) {
+        return;
+    }
+
+    CreateImageSnapshot();
+    DrawImage(canvas, image_);
+}
+
+bool RSCanvasDrawingRenderNode::ResetSurfaceIfNeeded(RSPaintFilterCanvas& canvas, int width, int height) {
     if (IsNeedResetSurface()) {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         if (preThreadInfo_.second && surface_) {
@@ -128,17 +136,21 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         preThreadInfo_ = curThreadInfo_;
 #endif
         if (!ResetSurface(width, height, canvas)) {
-            return;
+            return false;
         }
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     } else if ((isGpuSurface_) && (preThreadInfo_.first != curThreadInfo_.first)) {
         if (!ResetSurfaceWithTexture(width, height, canvas)) {
-            return;
+            return false;
         }
     }
 #else
     }
 #endif
+    return false;
+}
+
+void RSCanvasDrawingRenderNode::CreateImageSnapshot() {
     if (!surface_) {
         return;
     }
@@ -165,6 +177,9 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
             ProcessCPURenderInBackgroundThread(cmds);
         }
     }
+}
+
+void RSCanvasDrawingRenderNode::DrawImage(RSPaintFilterCanvas& canvas, const Rosen::Drawing::Image* image) {
     std::lock_guard<std::mutex> lock(imageMutex_);
     if (!image_) {
         return;
@@ -184,7 +199,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     } else {
         canvas.DrawImage(*image_, 0.f, 0.f, samplingOptions);
     }
-    canvas.DetachPaint();
+        canvas.DetachPaint();
 }
 
 void RSCanvasDrawingRenderNode::SetNeedProcess(bool needProcess)

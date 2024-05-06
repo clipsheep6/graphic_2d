@@ -615,7 +615,7 @@ void RSSurfaceCaptureVisitor::AdjustZOrderAndDrawSurfaceNode(std::vector<std::sh
 void RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni(RSSurfaceRenderNode& node)
 {
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = (property.GetBoundsGeometry());
+    auto geoPtr = (property.GetBoundsGeometry()); 
     if (!geoPtr) {
         RS_LOGE("RSSurfaceCaptureVisitor::CaptureSingleSurfaceNodeWithUni node:%{public}" PRIu64 ", get geoPtr failed",
             node.GetId());

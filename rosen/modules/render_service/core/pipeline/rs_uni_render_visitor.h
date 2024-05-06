@@ -91,6 +91,8 @@ public:
     bool DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode);
     void ChangeCacheRenderNodeMap(RSRenderNode& node, const uint32_t count = 0);
     void UpdateCacheRenderNodeMap(RSRenderNode& node);
+    void HandleForcedCacheType(RSRenderNode& node, uint32_t updateTimes);
+    void HandleTargetedCacheType(RSRenderNode& node, uint32_t updateTimes);
     bool GenerateNodeContentCache(RSRenderNode& node);
     bool InitNodeCache(RSRenderNode& node);
     void CopyVisitorInfos(std::shared_ptr<RSUniRenderVisitor> visitor);
@@ -318,6 +320,10 @@ private:
 
     void CheckAndSetNodeCacheType(RSRenderNode& node);
     bool UpdateCacheSurface(RSRenderNode& node);
+    std::shared_ptr<RSPaintFilterCanvas> CreateCacheCanvas(Surface* surface);
+    void ConfigureCacheCanvas(RSPaintFilterCanvas* cacheCanvas, bool isSubThread);
+    void ProcessAnimatePropertyAndShadow(RSRenderNode& node, CacheType cacheType);
+    void RestoreAnimatePropertyAndShadow(RSRenderNode& node, CacheType cacheType);
     void DrawSpherize(RSRenderNode& node);
     void DrawChildRenderNode(RSRenderNode& node);
     void DrawChildCanvasRenderNode(RSRenderNode& node);

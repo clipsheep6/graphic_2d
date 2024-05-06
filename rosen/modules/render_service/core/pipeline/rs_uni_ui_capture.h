@@ -52,6 +52,8 @@ private:
 
         void ProcessChildren(RSRenderNode& node) override;
         void ProcessCanvasRenderNode(RSCanvasRenderNode& node) override;
+        void SetTransformationMatrixIfNecessary(RSCanvasRenderNode& node);
+        void ProcessCanvasDrawingNode(RSCanvasRenderNode& node);
         void ProcessDisplayRenderNode(RSDisplayRenderNode& node) override {};
         void ProcessProxyRenderNode(RSProxyRenderNode& node) override {}
         void ProcessRootRenderNode(RSRootRenderNode& node) override;

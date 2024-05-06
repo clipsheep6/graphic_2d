@@ -286,8 +286,7 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessRootRenderNode(RSRootRenderNo
     canvas_->Restore();
 }
 
-void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
-{
+void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node) {
     if (!node.ShouldPaint()) {
         RS_LOGD("RSUniUICaptureVisitor::ProcessCanvasRenderNode, no need process");
         return;
@@ -296,6 +295,22 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
         RS_LOGE("RSUniUICaptureVisitor::ProcessCanvasRenderNode, canvas is nullptr");
         return;
     }
+
+    SetTransformationMatrixIfNecessary(node);
+
+    node.ProcessRenderBeforeChildren(*canvas_);
+
+    if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
+        ProcessCanvasDrawingNode(node);
+    } else {
+        node.ProcessRenderContents(*canvas_);
+    }
+
+    ProcessChildren(node);
+    node.ProcessRenderAfterChildren(*canvas_);
+}
+
+void RSUniUICapture::RSUniUICaptureVisitor::SetTransformationMatrixIfNecessary(RSCanvasRenderNode& node) {
     if (node.GetId() == nodeId_) {
         // When drawing nodes, canvas will offset the bounds value, so we will move in reverse here first
         const auto& property = node.GetRenderProperties();
@@ -309,7 +324,9 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
         }
         canvas_->SetMatrix(relativeMatrix);
     }
-    node.ProcessRenderBeforeChildren(*canvas_);
+}
+
+void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasDrawingNode(RSCanvasRenderNode& node) {
     if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
         auto canvasDrawingNode = node.ReinterpretCastTo<RSCanvasDrawingRenderNode>();
         if (!canvasDrawingNode->IsOnTheTree()) {
@@ -328,8 +345,6 @@ void RSUniUICapture::RSUniUICaptureVisitor::ProcessCanvasRenderNode(RSCanvasRend
     } else {
         node.ProcessRenderContents(*canvas_);
     }
-    ProcessChildren(node);
-    node.ProcessRenderAfterChildren(*canvas_);
 }
 
 void RSUniUICapture::RSUniUICaptureVisitor::ProcessEffectRenderNode(RSEffectRenderNode& node)

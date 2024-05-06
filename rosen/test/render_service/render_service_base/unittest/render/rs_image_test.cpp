@@ -425,4 +425,34 @@ HWTEST_F(RSImageTest, RSImageCache001, TestSize.Level1)
     RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(1, nullptr);
     RSImageCache::Instance().CacheRenderDrawingImageByPixelMapId(0, nullptr);
 }
+
+/**
+ * @tc.name: SetInnerRectTest
+ * @tc.desc: Verify function SetInnerRect
+ * @tc.type:FUNC
+ * @tc.require: issuesI9MO9U
+ */
+HWTEST_F(RSImageTest, SetInnerRectTest, TestSize.Level1)
+{
+    auto rsImage = std::make_shared<RSImage>();
+    auto innerRect = std::make_optional<Drawing::RectI>();
+    rsImage->SetInnerRect(innerRect);
+    EXPECT_NE(rsImage, nullptr);
+}
+
+/**
+ * @tc.name: dumpTest
+ * @tc.desc: Verify function dump
+ * @tc.type:FUNC
+ * @tc.require: issuesI9MO9U
+ */
+HWTEST_F(RSImageTest, dumpTest, TestSize.Level1)
+{
+    auto rsImage = std::make_shared<RSImage>();
+    auto innerRect = std::make_optional<Drawing::RectI>();
+    ASSERT_NE(rsImage, nullptr);
+    std::string desc = "dump ";
+    rsImage->dump(desc, 0);
+    EXPECT_NE(desc, "dump ");
+}
 } // namespace OHOS::Rosen

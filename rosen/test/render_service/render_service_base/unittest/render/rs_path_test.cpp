@@ -80,4 +80,16 @@ HWTEST_F(RSPathTest, SetSkiaPathTest, TestSize.Level1)
     RSPath rsPath;
     rsPath.SetDrawingPath(path);
 }
+
+/**
+ * @tc.name: ReverseTest
+ * @tc.desc: Verify function Reverse
+ * @tc.type: FUNC
+ * @tc.require: issuesI9MO9U
+ */
+HWTEST_F(RSPathTest, ReverseTest, TestSize.Level1)
+{
+    RSPath rsPath;
+    EXPECT_NE(rsPath.Reverse(), nullptr);
+}
 } // namespace OHOS::Rosen

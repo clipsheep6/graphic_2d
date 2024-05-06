@@ -150,6 +150,17 @@ private:
     bool isProcOnBgThread_ = false;
     RsParallelType rsParallelType_;
 };
+
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_VK)
+class DmaMem {
+public:
+    sptr<SurfaceBuffer> DmaMemAlloc(Drawing::ImageInfo &dstInfo, const std::unique_ptr<Media::PixelMap>& pixelMap);
+    std::shared_ptr<Drawing::Surface> GetSurfaceFromSurfaceBuffer(sptr<SurfaceBuffer> surfaceBuffer);
+    void ReleaseDmaMemory();
+private:
+    OHNativeWindowBuffer* nativeWindowBuffer_ = nullptr;
+};
+#endif
 } // namespace Rosen
 } // namespace OHOS
 

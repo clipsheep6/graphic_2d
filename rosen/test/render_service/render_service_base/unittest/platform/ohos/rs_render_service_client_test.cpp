@@ -741,5 +741,546 @@ HWTEST_F(RSClientTest, SetVirtualMirrorScreenScaleMode001, TestSize.Level1)
     EXPECT_EQ(rsClient->SetVirtualMirrorScreenScaleMode(virtualScreenId, ScreenScaleMode::UNISCALE_MODE), true);
 }
 
+/*
+ * @tc.name: GetScreenHDRCapability Test
+ * @tc.desc: GetScreenHDRCapability Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetScreenHDRCapability001, TestSize.Level1)
+{
+    auto screenId = rsClient->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    RSScreenHDRCapability hdrCapability;
+    int ret = rsClient->GetScreenHDRCapability(screenId, hdrCapability);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+ * @tc.name: GetPixelFormat Test
+ * @tc.desc: GetPixelFormat Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetPixelFormat001, TestSize.Level1)
+{
+    auto csurface = IConsumerSurface::Create();
+    EXPECT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    EXPECT_NE(psurface, nullptr);
+
+    uint32_t defaultWidth = 720;
+    uint32_t defaultHeight = 1280;
+    ScreenId virtualScreenId = rsClient->CreateVirtualScreen(
+        "virtualScreenTest", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+    EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
+
+    rsClient->SetPixelFormat(virtualScreenId, GRAPHIC_PIXEL_FMT_BGRA_8888);
+    GraphicPixelFormat curPixelFormat;
+    auto  ret = rsClient->GetPixelFormat(virtualScreenId, curPixelFormat);
+    EXPECT_NE(ret, StatusCode::SCREEN_NOT_FOUND);
+    EXPECT_EQ(curPixelFormat, GRAPHIC_PIXEL_FMT_BGRA_8888);
+}
+
+/*
+ * @tc.name: GetScreenSupportedHDRFormats Test
+ * @tc.desc: GetScreenSupportedHDRFormats Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetScreenSupportedHDRFormats001, TestSize.Level1)
+{
+    auto csurface = IConsumerSurface::Create();
+    EXPECT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    EXPECT_NE(psurface, nullptr);
+
+    uint32_t defaultWidth = 720;
+    uint32_t defaultHeight = 1280;
+    ScreenId virtualScreenId = rsClient->CreateVirtualScreen(
+        "virtualScreenTest", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+    EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
+
+    std::vector<ScreenHDRFormat> hdrFormats;
+    int ret = rsClient->GetScreenSupportedHDRFormats(virtualScreenId, hdrFormats);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+ * @tc.name: GetScreenHDRFormat Test
+ * @tc.desc: GetScreenHDRFormat Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetScreenHDRFormat001, TestSize.Level1)
+{
+    auto csurface = IConsumerSurface::Create();
+    EXPECT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    EXPECT_NE(psurface, nullptr);
+
+    uint32_t defaultWidth = 720;
+    uint32_t defaultHeight = 1280;
+    ScreenId virtualScreenId = rsClient->CreateVirtualScreen(
+        "virtualScreenTest", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+    EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
+
+    int ret = rsClient->SetScreenHDRFormat(virtualScreenId, ScreenHDRFormat::NOT_SUPPORT_HDR);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+    ScreenHDRFormat hdrFormat = ScreenHDRFormat::NOT_SUPPORT_HDR;
+    ret = rsClient->GetScreenHDRFormat(virtualScreenId, hdrFormat);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+ * @tc.name: GetScreenSupportedColorSpaces Test
+ * @tc.desc: GetScreenSupportedColorSpaces Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetScreenSupportedColorSpaces001, TestSize.Level1)
+{
+    auto csurface = IConsumerSurface::Create();
+    EXPECT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    EXPECT_NE(psurface, nullptr);
+    uint32_t defaultWidth = 480;
+    uint32_t defaultHeight = 320;
+    ScreenId virtualScreenId = rsClient->CreateVirtualScreen(
+        "virtualScreenTest", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+    EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
+
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
+    int ret = rsClient->GetScreenSupportedColorSpaces(virtualScreenId, colorSpaces);
+    EXPECT_NE(colorSpaces.size(), 0);
+
+    GraphicCM_ColorSpaceType setColorSpace = colorSpaces[0];
+    ret = rsClient->SetScreenColorSpace(virtualScreenId, setColorSpace);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+    usleep(SET_REFRESHRATE_SLEEP_US);
+
+    GraphicCM_ColorSpaceType curColorSpace;
+    ret = rsClient->GetScreenColorSpace(virtualScreenId, curColorSpace);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+    EXPECT_EQ(curColorSpace, setColorSpace);
+}
+
+/*
+ * @tc.name: GetScreenType Test
+ * @tc.desc: GetScreenType Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetScreenType001, TestSize.Level1)
+{
+    auto screenId = rsClient->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+
+    RSScreenType type;
+    int ret = rsClient->GetScreenType(screenId, type);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+ * @tc.name: GetBitmap Test
+ * @tc.desc: GetBitmap Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetBitmap001, TestSize.Level1)
+{
+    RSSurfaceRenderNodeConfig config;
+    bool ret = rsClient->CreateNode(config);
+    ASSERT_EQ(ret, true);
+
+    Drawing::Bitmap bitmap;
+    ret = rsClient->GetBitmap(config.id, bitmap);
+}
+
+/*
+ * @tc.name: GetPixelmap Test
+ * @tc.desc: GetPixelmap Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetPixelmap001, TestSize.Level1)
+{
+    RSSurfaceRenderNodeConfig config;
+    bool ret = rsClient->CreateNode(config);
+    ASSERT_EQ(ret, true);
+
+    std::shared_ptr<Media::PixelMap> pixelmap = std::make_shared<Media::PixelMap>();
+    Drawing::Rect rect = {0, 0, 100, 100};
+    std::shared_ptr<Drawing::DrawCmdList> drawCmdList = std::make_shared<Drawing::DrawCmdList>();
+    ret = rsClient->GetPixelmap(config.id, pixelmap, &rect, drawCmdList);
+}
+
+/*
+ * @tc.name: RegisterTypeface Test
+ * @tc.desc: RegisterTypeface Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, RegisterTypeface001, TestSize.Level1)
+{
+    std::shared_ptr<Drawing::Typeface> typeface = Drawing::Typeface::MakeDefault();
+    bool ret = rsClient->RegisterTypeface(typeface);
+    EXPECT_EQ(ret, true);
+    ret = rsClient->UnRegisterTypeface(typeface);
+    EXPECT_EQ(ret, true);
+}
+
+/*
+ * @tc.name: SetScreenSkipFrameInterval Test
+ * @tc.desc: SetScreenSkipFrameInterval Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, SetScreenSkipFrameInterval001, TestSize.Level1)
+{
+    ScreenId screenId = rsClient->GetDefaultScreenId();
+    EXPECT_NE(screenId, INVALID_SCREEN_ID);
+    uint32_t skipFrameInterval = 1;  // for test
+    int32_t ret = rsClient->SetScreenSkipFrameInterval(screenId, skipFrameInterval);
+    EXPECT_EQ(ret, StatusCode::SUCCESS);
+}
+
+/*
+ * @tc.name: RegisterOcclusionChangeCallback Test
+ * @tc.desc: RegisterOcclusionChangeCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, RegisterOcclusionChangeCallback001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    OcclusionChangeCallback cb = [](std::shared_ptr<RSOcclusionData> data){};
+    int32_t ret = rsClient->RegisterOcclusionChangeCallback(cb);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: RegisterSurfaceOcclusionChangeCallback Test
+ * @tc.desc: RegisterSurfaceOcclusionChangeCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, RegisterSurfaceOcclusionChangeCallback001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    NodeId id = 0;
+    SurfaceOcclusionChangeCallback cb = [](float) {};
+    std::vector<float> partitionPoints;
+    int32_t ret = rsClient->RegisterSurfaceOcclusionChangeCallback(id, cb, partitionPoints);
+    ASSERT_EQ(ret, 0);
+    ret = rsClient->UnRegisterSurfaceOcclusionChangeCallback(id);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: RegisterHgmConfigChangeCallback Test
+ * @tc.desc: RegisterHgmConfigChangeCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, RegisterHgmConfigChangeCallback001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    HgmConfigChangeCallback cb = [](std::shared_ptr<RSHgmConfigData> data){};
+    int32_t ret = rsClient->RegisterHgmConfigChangeCallback(cb);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: RegisterHgmRefreshRateModeChangeCallback Test
+ * @tc.desc: RegisterHgmRefreshRateModeChangeCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, RegisterHgmRefreshRateModeChangeCallback001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    HgmRefreshRateModeChangeCallback cb = [](int32_t refreshRateMode){};
+    int32_t ret = rsClient->RegisterHgmRefreshRateModeChangeCallback(cb);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: RegisterHgmRefreshRateUpdateCallback Test
+ * @tc.desc: RegisterHgmRefreshRateUpdateCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, RegisterHgmRefreshRateUpdateCallback001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    HgmRefreshRateUpdateCallback cb = [](int32_t refreshRate){};
+    int32_t ret = rsClient->RegisterHgmRefreshRateUpdateCallback(cb);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: SetAppWindowNum Test
+ * @tc.desc: SetAppWindowNum Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, SetAppWindowNum001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    uint32_t num = 2; // for test
+    rsClient->SetAppWindowNum(num);
+}
+
+/*
+ * @tc.name: SetSystemAnimatedScenes Test
+ * @tc.desc: SetSystemAnimatedScenes Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, SetSystemAnimatedScenes001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    bool ret = rsClient->SetSystemAnimatedScenes(SystemAnimatedScenes::ENTER_MISSION_CENTER);
+    ASSERT_EQ(ret, true);
+}
+
+/*
+ * @tc.name: ShowWatermark Test
+ * @tc.desc: ShowWatermark Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, ShowWatermark001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    std::shared_ptr<Media::PixelMap> watermarkImg = std::make_shared<Media::PixelMap>();
+    rsClient->ShowWatermark(watermarkImg, true);
+    
+}
+
+/*
+ * @tc.name: ResizeVirtualScreen Test
+ * @tc.desc: ResizeVirtualScreen Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, ResizeVirtualScreen001, TestSize.Level1)
+{
+    auto csurface = IConsumerSurface::Create();
+    EXPECT_NE(csurface, nullptr);
+    auto producer = csurface->GetProducer();
+    auto psurface = Surface::CreateSurfaceAsProducer(producer);
+    EXPECT_NE(psurface, nullptr);
+
+    uint32_t defaultWidth = 720;
+    uint32_t defaultHeight = 1280;
+    ScreenId virtualScreenId = rsClient->CreateVirtualScreen(
+        "virtualScreenTest", defaultWidth, defaultHeight, psurface, INVALID_SCREEN_ID, -1);
+    EXPECT_NE(virtualScreenId, INVALID_SCREEN_ID);
+
+    uint32_t newWidth = 1920;
+    uint32_t newHeight = 1080;
+    int32_t ret = rsClient->ResizeVirtualScreen(virtualScreenId, newWidth, newHeight);
+    ASSERT_EQ(ret, 0);
+}
+
+/*
+ * @tc.name: ReportJankStats Test
+ * @tc.desc: ReportJankStats Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, ReportJankStats001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    rsClient->ReportJankStats();
+}
+
+/*
+ * @tc.name: ReportEventResponse Test
+ * @tc.desc: ReportEventResponse Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, ReportEventResponse001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    DataBaseRs info;
+    rsClient->ReportEventResponse(info);
+}
+
+/*
+ * @tc.name: ReportEventComplete Test
+ * @tc.desc: ReportEventComplete Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, ReportEventComplete001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    DataBaseRs info;
+    rsClient->ReportEventComplete(info);
+}
+
+/*
+ * @tc.name: ReportEventJankFrame Test
+ * @tc.desc: ReportEventJankFrame Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, ReportEventJankFrame001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    DataBaseRs info;
+    rsClient->ReportEventJankFrame(info);
+}
+
+/*
+ * @tc.name: ReportGameStateData Test
+ * @tc.desc: ReportGameStateData Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, ReportGameStateData001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    GameStateData info;
+    rsClient->ReportGameStateData(info);
+}
+
+/*
+ * @tc.name: SetHardwareEnabled Test
+ * @tc.desc: SetHardwareEnabled Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, SetHardwareEnabled001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    rsClient->SetHardwareEnabled(0, true, SelfDrawingNodeType::DEFAULT);
+}
+
+/*
+ * @tc.name: NotifyLightFactorStatus Test
+ * @tc.desc: NotifyLightFactorStatus Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, NotifyLightFactorStatus001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    rsClient->NotifyLightFactorStatus(true);
+}
+
+/*
+ * @tc.name: NotifyPackageEvent Test
+ * @tc.desc: NotifyPackageEvent Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, NotifyPackageEvent001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    std::vector<std::string> packageList;
+    packageList.emplace_back("test");
+    rsClient->NotifyPackageEvent(packageList.size(), packageList);
+}
+
+/*
+ * @tc.name: NotifyRefreshRateEvent Test
+ * @tc.desc: NotifyRefreshRateEvent Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, NotifyRefreshRateEvent001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    EventInfo eventInfo;
+    rsClient->NotifyRefreshRateEvent(eventInfo);
+}
+
+/*
+ * @tc.name: NotifyTouchEvent Test
+ * @tc.desc: NotifyTouchEvent Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, NotifyTouchEvent001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    int32_t touchStatus = 1;
+    rsClient->NotifyTouchEvent(touchStatus);
+}
+
+/*
+ * @tc.name: SetCacheEnabledForRotation Test
+ * @tc.desc: SetCacheEnabledForRotation Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, SetCacheEnabledForRotation001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    bool isEnabled = true;
+    rsClient->SetCacheEnabledForRotation(isEnabled);
+}
+
+/*
+ * @tc.name: SetOnRemoteDiedCallback Test
+ * @tc.desc: SetOnRemoteDiedCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, SetOnRemoteDiedCallback001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    OnRemoteDiedCallback callback = [](){};
+    rsClient->SetOnRemoteDiedCallback(callback);
+}
+
+/*
+ * @tc.name: GetCurrentDirtyRegionInfo Test
+ * @tc.desc: GetCurrentDirtyRegionInfo Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, GetCurrentDirtyRegionInfo001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    ScreenId screenId = rsClient->GetDefaultScreenId();
+    rsClient->GetCurrentDirtyRegionInfo(screenId);
+}
+
+/*
+ * @tc.name: CreateVSyncReceiver Test
+ * @tc.desc: CreateVSyncReceiver Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, CreateVSyncReceiver001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    auto rsReceiver = rsClient->CreateVSyncReceiver("VsyncReceiverTest");
+    ASSERT_NE(rsReceiver, nullptr);
+}
+
+/*
+ * @tc.name: TriggerSurfaceCaptureCallback Test
+ * @tc.desc: TriggerSurfaceCaptureCallback Test
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+*/
+HWTEST_F(RSClientTest, TriggerSurfaceCaptureCallback001, TestSize.Level1)
+{
+    ASSERT_NE(rsClient, nullptr);
+    Media::PixelMap pixelmap;
+    rsClient->TriggerSurfaceCaptureCallback(0, &pixelmap);
+}
+
 } // namespace Rosen
 } // namespace OHOS

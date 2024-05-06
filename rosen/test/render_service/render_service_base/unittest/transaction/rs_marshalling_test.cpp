@@ -27,6 +27,7 @@
 #include "utils/region.h"
 #include "utils/vertices.h"
 #include "message_parcel.h"
+#include "rs_gradient_blur_para.h"
 
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_draw_cmd_list.h"
@@ -493,4 +494,112 @@ HWTEST_F(RSMarshallingTest, SkipSkImage001, Function | MediumTest | Level2)
     Parcel parcel;
     RSMarshallingHelper::SkipImage(parcel);
 }
+
+/**
+ * @tc.name: DrawingBitmap001
+ * @tc.desc: DrawingBitmap001
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+ */
+HWTEST_F(RSMarshallingTest, DrawingBitmap001, TestSize.Level1)
+{
+    Drawing::Bitmap bitmap;
+    Drawing::BitmapFormat format { Drawing::COLORTYPE_RGBA_8888, Drawing::ALPHATYPE_OPAQUE };
+    int32_t width = 100;
+    int32_t height = 100;
+    bitmap.Build(width, height, format);
+
+    MessageParcel parcel;
+    ASSERT_TRUE(RSMarshallingHelper::Marshalling(parcel, bitmap));
+    Drawing::Bitmap bitmapUnmarshal;
+    ASSERT_TRUE(RSMarshallingHelper::Unmarshalling(parcel, bitmapUnmarshal));
+    ASSERT_EQ(bitmapUnmarshal.GetWidth(), width);
+    ASSERT_EQ(bitmapUnmarshal.GetHeight(), height);
+}
+
+/**
+ * @tc.name: DrawingTypeface001
+ * @tc.desc: DrawingTypeface001
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+ */
+HWTEST_F(RSMarshallingTest, DrawingTypeface001, TestSize.Level1)
+{
+    std::shared_ptr<Drawing::Typeface> typeface = Drawing::Typeface::MakeDefault();
+    MessageParcel parcel;
+    ASSERT_TRUE(RSMarshallingHelper::Marshalling(parcel, typeface));
+    std::shared_ptr<Drawing::Typeface> typefaceUnmarshal;
+    ASSERT_TRUE(RSMarshallingHelper::Unmarshalling(parcel, typefaceUnmarshal));
+}
+
+/**
+ * @tc.name: RSShader001
+ * @tc.desc: RSShader001
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+ */
+HWTEST_F(RSMarshallingTest, RSShader001, TestSize.Level1)
+{
+    std::shared_ptr<RSShader> rsShader = std::make_shared<RSShader>();
+    MessageParcel parcel;
+    ASSERT_TRUE(RSMarshallingHelper::Marshalling(parcel, rsShader));
+    std::shared_ptr<RSShader> rsShaderUnmarshal;
+    ASSERT_TRUE(RSMarshallingHelper::Unmarshalling(parcel, rsShaderUnmarshal));
+    ASSERT_TRUE(rsShaderUnmarshal != nullptr);
+}
+
+/**
+ * @tc.name: DrawingMatrix001
+ * @tc.desc: DrawingMatrix001
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+ */
+HWTEST_F(RSMarshallingTest, DrawingMatrix001, TestSize.Level1)
+{
+    std::shared_ptr<Drawing::Matrix> matrix = std::make_shared<Drawing::Matrix>();
+    matrix->SetMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    MessageParcel parcel;
+    ASSERT_TRUE(RSMarshallingHelper::Marshalling(parcel, matrix));
+    std::shared_ptr<Drawing::Matrix> rsShaderUnmarshal;
+    ASSERT_TRUE(RSMarshallingHelper::Unmarshalling(parcel, rsShaderUnmarshal));
+    ASSERT_TRUE(rsShaderUnmarshal != nullptr);
+}
+
+/**
+ * @tc.name: RSLinearGradientBlurPara001
+ * @tc.desc: RSLinearGradientBlurPara001
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+ */
+HWTEST_F(RSMarshallingTest, RSLinearGradientBlurPara001, TestSize.Level1)
+{
+    std::vector<std::pair<float, float>> fractionStops;
+    fractionStops.push_back(std::make_pair(0.f, 0.f));
+    fractionStops.push_back(std::make_pair(1.f, 1.f));
+    std::shared_ptr<RSLinearGradientBlurPara> linearGradientBlurPara =
+        std::make_shared<RSLinearGradientBlurPara>(16, fractionStops, GradientDirection::BOTTOM);
+    MessageParcel parcel;
+    ASSERT_TRUE(RSMarshallingHelper::Marshalling(parcel, linearGradientBlurPara));
+    std::shared_ptr<RSLinearGradientBlurPara> dataUnmarshal;
+    ASSERT_TRUE(RSMarshallingHelper::Unmarshalling(parcel, dataUnmarshal));
+    ASSERT_TRUE(dataUnmarshal != nullptr);
+}
+
+/**
+ * @tc.name: EmitterUpdater001
+ * @tc.desc: EmitterUpdater001
+ * @tc.type:FUNC
+ * @tc.require: issuesI9K7SJ
+ */
+HWTEST_F(RSMarshallingTest, EmitterUpdater001, TestSize.Level1)
+{
+    std::shared_ptr<EmitterUpdater> emitterUpdater = std::make_shared<EmitterUpdater>();
+    matrix->SetMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1);
+    MessageParcel parcel;
+    ASSERT_TRUE(RSMarshallingHelper::Marshalling(parcel, matrix));
+    std::shared_ptr<EmitterUpdater> dataUnmarshal;
+    ASSERT_TRUE(RSMarshallingHelper::Unmarshalling(parcel, dataUnmarshal));
+    ASSERT_TRUE(dataUnmarshal != nullptr);
+}
+
 } // namespace OHOS::Rosen

@@ -494,9 +494,9 @@ export class CanvasDrawTextBlob extends TestBase {
       canvas.attachBrush(brush)
       let font : drawing.Font = new drawing.Font();
       let text : string = 'Hello World, This is test code!';
-      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);;
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(true);
+      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(blob, 500, 50);
       canvas.detachBrush()
     }
@@ -510,11 +510,11 @@ export class CanvasDrawTextBlob extends TestBase {
       canvas.attachBrush(brush)
       let font : drawing.Font = new drawing.Font();
       let text : string = '你好呀,这是测试代码!';
-      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(true)
       font.enableEmbolden(true)
       font.setSize(10)
+      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(blob, 100, 100);
       canvas.detachPen()
       canvas.detachBrush()
@@ -530,12 +530,12 @@ export class CanvasDrawTextBlob extends TestBase {
 
       let font : drawing.Font = new drawing.Font();
       let text : string = 'Hello World,这是测试代码!';
-      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(false)
       font.enableEmbolden(false)
       font.enableLinearMetrics(false)
       font.setSize(30)
+      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(blob, 183.15, 238);
 
       canvas.detachPen()
@@ -552,12 +552,12 @@ export class CanvasDrawTextBlob extends TestBase {
 
       let font : drawing.Font = new drawing.Font();
       let text : string = 'Hello World,这是测试代码!';
-      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       font.setTypeface(new drawing.Typeface());
       font.enableSubpixel(false)
       font.enableEmbolden(false)
       font.enableLinearMetrics(false)
       font.setSize(5)
+      let blob : drawing.TextBlob = drawing.TextBlob.makeFromString(text, font, drawing.TextEncoding.TEXT_ENCODING_UTF8);
       canvas.drawTextBlob(blob, 183.15, 379.4);
 
       canvas.detachPen()

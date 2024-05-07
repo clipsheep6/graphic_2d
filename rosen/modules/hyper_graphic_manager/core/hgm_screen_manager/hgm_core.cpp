@@ -118,8 +118,7 @@ void HgmCore::CheckCustomFrameRateModeValid()
     }
 
     auto &screenConfig = screenConfigs[curScreenStrategyId];
-    auto modeStr = std::to_string(customFrameRateMode_);
-    if (screenConfigs.find(modeStr) != screenConfigs.end() || screenConfigs.empty()) {
+    if (screenConfigs.find(std::to_string(customFrameRateMode_)) != screenConfigs.end() || screenConfigs.empty()) {
         return;
     }
 

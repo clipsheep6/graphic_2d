@@ -23,7 +23,7 @@
 class BugFix7792 : public TestBase {
 public:
     BugFix7792();
-    ~BugFix7792();
+    ~BugFix7792() override {};
     void CanvasDrawPath1(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);
     void CanvasDrawPath2(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);
     void CanvasDrawPath3(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path);

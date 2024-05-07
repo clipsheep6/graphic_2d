@@ -23,7 +23,7 @@
 class CircularArcStrokeMatrix : public TestBase {
 public:
     CircularArcStrokeMatrix();
-    ~CircularArcStrokeMatrix() = default;
+    ~CircularArcStrokeMatrix() override {};
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;

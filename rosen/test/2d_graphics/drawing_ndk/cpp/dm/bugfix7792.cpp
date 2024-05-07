@@ -34,8 +34,6 @@ BugFix7792::BugFix7792()
     fileName_ = "bug7792"; // 对标 pathfill.cpp
 }
 
-BugFix7792::~BugFix7792() {}
-
 void BugFix7792::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 用例名: bug7792 测试 OH_Drawing_PathReset

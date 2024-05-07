@@ -22,7 +22,7 @@
 class ClipCubic : public TestBase {
 public:
     ClipCubic();
-    ~ClipCubic()=default;
+    ~ClipCubic() override {};
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;
 };

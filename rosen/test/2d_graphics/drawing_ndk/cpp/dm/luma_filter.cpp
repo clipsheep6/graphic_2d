@@ -55,6 +55,20 @@ static float g_kInset = 10; // 10 用于控制内边距
 uint32_t kColor1 = 0xFFFFFF00; // 0xFFFFFF00 用于绘制图形
 uint32_t kColor2 = 0xFF82FF00; // 0xFF82FF00 用于绘制图形
 
+OH_Drawing_BlendMode g_modes[] = {
+    OH_Drawing_BlendMode::BLEND_MODE_SRC_OVER,
+    OH_Drawing_BlendMode::BLEND_MODE_DST_OVER,
+    OH_Drawing_BlendMode::BLEND_MODE_SRC_ATOP,
+    OH_Drawing_BlendMode::BLEND_MODE_DST_ATOP,
+    OH_Drawing_BlendMode::BLEND_MODE_SRC_IN,
+    OH_Drawing_BlendMode::BLEND_MODE_DST_IN,
+};
+
+typedef struct {
+    OH_Drawing_ShaderEffect* fShader1;
+    OH_Drawing_ShaderEffect* fShader2;
+} ST_SHADER;
+
 const char* g_modeStrings[] = { "Clear", "Src", "Dst", "SrcOver", "DstOver", "SrcIn", "DstIn", "SrcOut", "DstOut",
     "SrcATop", "DstATop", "Xor", "Plus", "Modulate", "Screen", "Overlay", "Darken", "Lighten", "ColorDodge",
     "ColorBurn", "HardLight", "SoftLight", "Difference", "Exclusion", "Multiply", "Hue", "Saturation", "Color",
@@ -91,6 +105,7 @@ void draw_clip(OH_Drawing_Canvas* canvas, DrawRect& c, OH_Drawing_Rect* rect, ui
     OH_Drawing_BrushSetColor(brush, kColor);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, rect);
+    OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_CanvasRestore(canvas);
     OH_Drawing_RectDestroy(cRect);
 }
@@ -103,6 +118,7 @@ void draw_scene_oval(OH_Drawing_Canvas* canvas, OH_Drawing_Brush* brush, DrawRec
     OH_Drawing_BrushSetColor(brush, 0x200000FF);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawRect(canvas, rect);
+    OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_CanvasSaveLayer(canvas, rect, nullptr);
     OH_Drawing_RectDestroy(rect);
     r = bounds;
@@ -113,6 +129,7 @@ void draw_scene_oval(OH_Drawing_Canvas* canvas, OH_Drawing_Brush* brush, DrawRec
     OH_Drawing_BrushSetAntiAlias(brush, true);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, rect);
+    OH_Drawing_CanvasDetachBrush(canvas);
 }
 
 void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_Drawing_BlendMode mode,
@@ -144,7 +161,7 @@ void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_D
     OH_Drawing_BrushSetFilter(brush, filter);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, rect);
-
+    OH_Drawing_CanvasDetachBrush(canvas);
     if (!s2) {
         draw_clip(canvas, c, rect, kColor2, brush);
     }
@@ -171,18 +188,8 @@ void LumaFilter::OnTestFunction(OH_Drawing_Canvas* canvas)
         g1Points[0], g1Points[1], g1Colors, pos, 2, OH_Drawing_TileMode::CLAMP); // 2 定义渐变效果中颜色的数量。
     OH_Drawing_ShaderEffect* fGr2 = OH_Drawing_ShaderEffectCreateLinearGradient(
         g2Points[0], g2Points[1], g2Colors, pos, 2, OH_Drawing_TileMode::CLAMP); // 2 定义渐变效果中颜色的数量。
-    OH_Drawing_BlendMode modes[] = {
-        OH_Drawing_BlendMode::BLEND_MODE_SRC_OVER,
-        OH_Drawing_BlendMode::BLEND_MODE_DST_OVER,
-        OH_Drawing_BlendMode::BLEND_MODE_SRC_ATOP,
-        OH_Drawing_BlendMode::BLEND_MODE_DST_ATOP,
-        OH_Drawing_BlendMode::BLEND_MODE_SRC_IN,
-        OH_Drawing_BlendMode::BLEND_MODE_DST_IN,
-    };
-    struct {
-        OH_Drawing_ShaderEffect* fShader1;
-        OH_Drawing_ShaderEffect* fShader2;
-    } shaders[] = {
+
+    ST_SHADER shaders[] = {
         { nullptr, nullptr },
         { nullptr, fGr2 },
         { fGr1, nullptr },
@@ -192,14 +199,14 @@ void LumaFilter::OnTestFunction(OH_Drawing_Canvas* canvas)
     size_t modes_size = 6; // 6 定义了modes数组的大小
     for (size_t i = 0; i < modes_size; ++i) {
         OH_Drawing_Point2D offset = { gridStep * (0.5f + i), 20 }; // 20 offset
-        draw_label(canvas, g_modeStrings[modes[i]], offset);
+        draw_label(canvas, g_modeStrings[g_modes[i]], offset);
     }
     size_t shaders_size = 4; // 4 定义了shaders数组的大小
     for (size_t i = 0; i < shaders_size; ++i) {
         OH_Drawing_CanvasSave(canvas);
         OH_Drawing_CanvasTranslate(canvas, g_kInset, gridStep * i + 30); // 30 用于控制画布垂直平移的距离
         for (size_t m = 0; m < modes_size; ++m) {
-            draw_scene(canvas, fFilter, modes[m], shaders[i].fShader1, shaders[i].fShader2);
+            draw_scene(canvas, fFilter, g_modes[m], shaders[i].fShader1, shaders[i].fShader2);
             OH_Drawing_CanvasTranslate(canvas, gridStep, 0); // 0   CanvasTranslate参数
         }
         OH_Drawing_CanvasRestore(canvas);
@@ -207,4 +214,8 @@ void LumaFilter::OnTestFunction(OH_Drawing_Canvas* canvas)
     OH_Drawing_ColorFilterDestroy(fFilter);
     OH_Drawing_ShaderEffectDestroy(fGr1);
     OH_Drawing_ShaderEffectDestroy(fGr2);
+    for (int i = 0; i < 2; i++) { // 2 point 数组长度
+        OH_Drawing_PointDestroy(g1Points[i]);
+        OH_Drawing_PointDestroy(g2Points[i]);
+    }
 }

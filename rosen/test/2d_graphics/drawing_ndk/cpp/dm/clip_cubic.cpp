@@ -44,10 +44,13 @@ void DoDraw(OH_Drawing_Canvas* canvas, const OH_Drawing_Path* path)
     OH_Drawing_BrushSetColor(brush, OH_Drawing_ColorSetArgb(0xFF, 0xCC, 0xCC, 0xCC));
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawPath(canvas, path);
+    OH_Drawing_CanvasDetachBrush(canvas);
 
     OH_Drawing_PenSetColor(pen, OH_Drawing_ColorSetArgb(0xFF, 0xFF, 0x00, 0x00));
+    OH_Drawing_PenSetAntiAlias(pen, true);
     OH_Drawing_CanvasAttachPen(canvas, pen);
     OH_Drawing_CanvasDrawPath(canvas, path);
+    OH_Drawing_CanvasDetachPen(canvas);
 
     OH_Drawing_PenDestroy(pen);
     OH_Drawing_BrushDestroy(brush);
@@ -69,6 +72,7 @@ void DrawAndClip(OH_Drawing_Canvas* canvas, const OH_Drawing_Path* path, float d
     OH_Drawing_CanvasAttachBrush(canvas, brush);
 
     OH_Drawing_CanvasDrawRect(canvas, rect);
+    OH_Drawing_CanvasDetachPen(canvas);
     DoDraw(canvas, path);
 
     OH_Drawing_CanvasTranslate(canvas, dx, dy);
@@ -77,6 +81,7 @@ void DrawAndClip(OH_Drawing_Canvas* canvas, const OH_Drawing_Path* path, float d
     OH_Drawing_CanvasAttachPen(canvas, pen);
     OH_Drawing_CanvasDrawRect(canvas, rect);
     OH_Drawing_CanvasClipRect(canvas, rect, OH_Drawing_CanvasClipOp::INTERSECT, false);
+    OH_Drawing_CanvasDetachBrush(canvas);
     DoDraw(canvas, path);
 
     OH_Drawing_CanvasRestoreToCount(canvas, fSaveCount);

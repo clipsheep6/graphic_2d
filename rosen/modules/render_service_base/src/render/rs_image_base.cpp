@@ -43,7 +43,7 @@ RSImageBase::~RSImageBase()
                 auto task = [uniqueId = uniqueId_]() {
                     RSImageCache::Instance().ReleasePixelMapCache(uniqueId);
                 };
-                RSBackgroundThread::Instance().PostTask(task);
+                RSBackgroundThread::Instance().PostIdleTask(task);
             } else {
                 RSImageCache::Instance().ReleasePixelMapCache(uniqueId_);
             }

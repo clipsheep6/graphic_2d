@@ -474,7 +474,8 @@ public:
     virtual void UpdateFilterCacheWithSelfDirty(const std::optional<RectI>& clipRect = std::nullopt,
         bool isInSkippedSubTree = false, const std::optional<RectI>& filterRectForceUpdated = std::nullopt);
     bool IsBackgroundInAppOrNodeSelfDirty() const;
-    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(bool dirtyBelowContainsFilterNode = false);
+    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(bool dirtyBelowContainsFilterNode = false,
+        bool rotationChanged = false);
     bool IsFilterCacheValid() const;
     void MarkForceClearFilterCacheWhenWithInvisible();
 

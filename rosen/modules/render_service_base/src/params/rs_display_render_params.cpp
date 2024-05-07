@@ -126,6 +126,7 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->newColorSpace_ = newColorSpace_;
     targetDisplayParams->newPixelFormat_ = newPixelFormat_;
     targetDisplayParams->hasHdrPresent_ = hasHdrPresent_;
+    targetDisplayParams->needOffscreen_ = needOffscreen_;
     RSRenderParams::OnSync(target);
 }
 
@@ -183,6 +184,20 @@ bool RSDisplayRenderParams::HasCaptureWindow()
         hasCaptureWindow = iter->second;
     }
     return hasCaptureWindow;
+}
+
+void RSDisplayRenderParams::SetNeedOffscreen(bool needOffscreen)
+{
+    if (needOffscreen_ == needOffscreen) {
+        return;
+    }
+    needOffscreen_ = needOffscreen;
+    needSync_ = true;
+}
+
+bool RSDisplayRenderParams::GetNeedOffscreen() const
+{
+    return needOffscreen_;
 }
 
 } // namespace OHOS::Rosen

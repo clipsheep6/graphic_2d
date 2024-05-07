@@ -805,7 +805,7 @@ void RSRenderNode::SubTreeSkipPrepare(
     // [planning] Prev and current dirty rect need to be joined only when accumGeoDirty is true.
     if (HasChildrenOutOfRect() && (isDirty || clipAbsDrawRectChange_)) {
         auto dirtyRect = absChildrenRect_;
-        if (auto geoPtr = GetRenderProperties().GetBoundsGeometry()) {
+        if (auto& geoPtr = GetRenderProperties().GetBoundsGeometry()) {
             absChildrenRect_ = geoPtr->MapAbsRect(childrenRect_.ConvertTo<float>());
             dirtyRect = dirtyRect.JoinRect(absChildrenRect_);
         }
@@ -1309,7 +1309,7 @@ bool RSRenderNode::UpdateDrawRectAndDirtyRegion(
         accumGeoDirty = properties.UpdateGeometryByParent(parentMatrix, offset) || accumGeoDirty;
         // planning: double check if it would be covered by updateself without geo update
         // currently CheckAndUpdateGeoTrans without dirty check
-        if (auto geoPtr = properties.boundsGeo_) {
+        if (auto& geoPtr = properties.boundsGeo_) {
             // selfdrawing node's geo may not dirty when its dirty region changes
             if (CheckAndUpdateGeoTrans(geoPtr) || accumGeoDirty || properties.geoDirty_ ||
                 isSelfDrawingNode_ || selfDrawRectChanged) {
@@ -1348,7 +1348,7 @@ void RSRenderNode::UpdateDirtyRegionInfoForDFX(RSDirtyRegionManager& dirtyManage
     // update OVERLAY_RECT
     auto& properties = GetRenderProperties();
     if (auto drawRegion = properties.GetDrawRegion()) {
-        if (auto geoPtr = GetRenderProperties().GetBoundsGeometry()) {
+        if (auto& geoPtr = GetRenderProperties().GetBoundsGeometry()) {
             dirtyManager.UpdateDirtyRegionInfoForDfx(
                 GetId(), GetType(), DirtyRegionType::OVERLAY_RECT, geoPtr->MapAbsRect(*drawRegion));
         }

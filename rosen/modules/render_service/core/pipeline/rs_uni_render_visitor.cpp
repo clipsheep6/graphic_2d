@@ -446,7 +446,7 @@ void RSUniRenderVisitor::MergeRemovedChildDirtyRegion(RSRenderNode& node, bool n
 
     // [planning] merge removed child's rect instead
     if (needMap && curSurfaceNode_) {
-        if (auto geoPtr = node.GetRenderProperties().GetBoundsGeometry()) {
+        if (auto& geoPtr = node.GetRenderProperties().GetBoundsGeometry()) {
             dirtyRect = geoPtr->MapAbsRect(dirtyRect.ConvertTo<float>());
         }
     } else {
@@ -1421,7 +1421,7 @@ void RSUniRenderVisitor::UpdateRotationStatusForEffectNode(RSEffectRenderNode& n
 void RSUniRenderVisitor::UpdatePrepareClip(RSRenderNode& node)
 {
     const auto& property = node.GetRenderProperties();
-    auto geoPtr = property.GetBoundsGeometry();
+    auto& geoPtr = property.GetBoundsGeometry();
     if (geoPtr == nullptr) {
         return;
     }
@@ -6341,7 +6341,7 @@ void RSUniRenderVisitor::CheckMergeDebugRectforRefreshRate()
     // Debug dirtyregion of show current refreshRation
     if (RSRealtimeRefreshRateManager::Instance().GetShowRefreshRateEnabled()) {
         RectI tempRect = {100, 100, 500, 200};   // setDirtyRegion for RealtimeRefreshRate
-        auto geoPtr = curDisplayNode_->GetRenderProperties().GetBoundsGeometry();
+        auto& geoPtr = curDisplayNode_->GetRenderProperties().GetBoundsGeometry();
         tempRect = geoPtr->MapAbsRect(tempRect.ConvertTo<float>());
         curDisplayNode_->GetDirtyManager()->MergeDirtyRect(tempRect, true);  // true：debugRect for dislplayNode skip
     }

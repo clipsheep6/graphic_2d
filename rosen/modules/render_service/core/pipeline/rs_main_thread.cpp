@@ -967,7 +967,7 @@ void RSMainThread::ProcessCommandForUniRender()
         }
     }
     if (!transactionDataEffective->empty()) {
-        RSBackgroundThread::Instance().PostTask([ transactionDataEffective ] () {
+        RSBackgroundThread::Instance().PostIdleTask([ transactionDataEffective ] () {
             RS_TRACE_NAME("RSMainThread::ProcessCommandForUniRender transactionDataEffective clear");
             transactionDataEffective->clear();
         });

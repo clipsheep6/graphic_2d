@@ -130,6 +130,7 @@ void draw_scene_oval(OH_Drawing_Canvas* canvas, OH_Drawing_Brush* brush, DrawRec
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, rect);
     OH_Drawing_CanvasDetachBrush(canvas);
+    OH_Drawing_RectDestroy(rect);
 }
 
 void draw_scene(OH_Drawing_Canvas* canvas, OH_Drawing_ColorFilter* cFilter, OH_Drawing_BlendMode mode,

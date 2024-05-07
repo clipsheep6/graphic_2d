@@ -185,10 +185,8 @@ void RSCanvasDrawingRenderNodeDrawable::OnCapture(Drawing::Canvas& canvas)
 
 void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
 {
-    auto nodeId = nodeId_;
-    auto ctx = RSUniRenderThread::Instance().GetRSRenderThreadParams()->GetContext();
     auto rect = GetRenderParams()->GetBounds();
-    auto task = [this, rect, nodeId, ctx]() {
+    auto task = [this, rect]() {
         std::lock_guard<std::mutex> lockTask(taskMutex_);
         if (!surface_ || !canvas_) {
             return;

@@ -56,6 +56,13 @@ void RSBackgroundThread::PostTask(const std::function<void()>& task)
     }
 }
 
+void RSBackgroundThread::PostIdleTask(const std::function<void()>& task)
+{
+    if (handler_) {
+        handler_->PostTask(task, AppExecFwk::EventQueue::Priority::IDLE);
+    }
+}
+
 void RSBackgroundThread::PostSyncTask(const std::function<void()>& task)
 {
     if (handler_) {

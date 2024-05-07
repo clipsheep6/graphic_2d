@@ -20,7 +20,7 @@
 class OneBadArc : public TestBase {
 public:
     OneBadArc();
-    ~OneBadArc() = default;
+    ~OneBadArc() override {};
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;

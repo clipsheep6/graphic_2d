@@ -24,7 +24,7 @@
 class PathInterior : public TestBase {
 public:
     PathInterior();
-    ~PathInterior() = default;
+    ~PathInterior() override {};
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;

@@ -24,7 +24,7 @@
 class NewSurfaceGM : public TestBase {
 public:
     NewSurfaceGM();
-    ~NewSurfaceGM() = default;
+    ~NewSurfaceGM() override {};
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;

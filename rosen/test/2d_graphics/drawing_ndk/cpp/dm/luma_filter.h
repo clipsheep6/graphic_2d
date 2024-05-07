@@ -25,7 +25,7 @@ typedef unsigned int U8CPU;
 class LumaFilter : public TestBase {
 public:
     LumaFilter();
-    ~LumaFilter() = default;
+    ~LumaFilter() override {};
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;

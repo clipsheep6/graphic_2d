@@ -26,7 +26,7 @@
 class Points : public TestBase {
 public:
     Points();
-    ~Points() = default;
+    ~Points() override {};
 
 protected:
     void OnTestFunction(OH_Drawing_Canvas* canvas) override;

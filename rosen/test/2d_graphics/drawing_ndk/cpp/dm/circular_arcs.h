@@ -14,19 +14,22 @@
  */
 #ifndef CIRCULAR_ARCS_H
 #define CIRCULAR_ARCS_H
-#include "../test_base.h"
 #include <bits/alltypes.h>
-#include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_canvas.h>
+#include <native_drawing/drawing_rect.h>
+
+#include "../test_base.h"
 
 class CircularArcStrokeMatrix : public TestBase {
 public:
     CircularArcStrokeMatrix();
     ~CircularArcStrokeMatrix() = default;
-    std::vector<OH_Drawing_Matrix *> CreateMatrices(float coordinate);
-    void ApplyRotations(std::vector<OH_Drawing_Matrix *> &matrices, int baseMatrixCnt, float coordinate);
 
 protected:
-    void OnTestFunction(OH_Drawing_Canvas *canvas) override;
+    void OnTestFunction(OH_Drawing_Canvas* canvas) override;
+
+private:
+    std::vector<OH_Drawing_Matrix*> CreateMatrices(float coordinate);
+    void ApplyRotations(std::vector<OH_Drawing_Matrix*>& matrices, int baseMatrixCnt, float coordinate);
 };
 #endif // CIRCULAR_ARCS_H

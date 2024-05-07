@@ -13,54 +13,48 @@
  * limitations under the License.
  */
 #include "bugfix7792.h"
-#include <native_drawing/drawing_color.h>
+
 #include <native_drawing/drawing_brush.h>
+#include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_matrix.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_pen.h>
-#include <native_drawing/drawing_round_rect.h>
+#include <native_drawing/drawing_point.h>
 #include <native_drawing/drawing_round_rect.h>
 #include <native_drawing/drawing_shader_effect.h>
-#include <native_drawing/drawing_point.h>
+
 #include "test_common.h"
+
 #include "common/log_common.h"
 
 BugFix7792::BugFix7792()
 {
-    bitmapWidth_ = 800;  // 800宽度
-    bitmapHeight_ = 800; // 800高度
-    fileName_ = "bug7792";
+    bitmapWidth_ = 800;    // 800宽度
+    bitmapHeight_ = 800;   // 800高度
+    fileName_ = "bug7792"; // 对标 pathfill.cpp
 }
 
 BugFix7792::~BugFix7792() {}
 
-void BugFix7792::OnTestFunction(OH_Drawing_Canvas *canvas)
+void BugFix7792::OnTestFunction(OH_Drawing_Canvas* canvas)
 {
     // 用例名: bug7792 测试 OH_Drawing_PathReset
-    // 迁移基于源代码 gm\pathfill.cpp->dm\bugfix7792.cpp
-    OH_Drawing_Path *path = OH_Drawing_PathCreate();
+    OH_Drawing_Path* path = OH_Drawing_PathCreate();
     // 创建一个brush对象
-    OH_Drawing_Brush *brush = OH_Drawing_BrushCreate();
-    OH_Drawing_BrushSetAntiAlias(brush, true);
+    OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_CanvasAttachBrush(canvas, brush);
-    //  图型坐标点： y
-    //   x    0 1 2 3
-    //        1 2 3 4
-    //        2 3 4 5
-    //        3 4 5 6
     CanvasDrawPath1(canvas, path);
     CanvasDrawPath2(canvas, path);
     CanvasDrawPath3(canvas, path);
     CanvasDrawPath4(canvas, path);
     CanvasDrawPath5(canvas, path);
     // 释放内存
-    OH_Drawing_CanvasRestore(canvas);
     OH_Drawing_PathDestroy(path);
     OH_Drawing_CanvasDetachBrush(canvas);
     OH_Drawing_BrushDestroy(brush);
 }
 
-void BugFix7792::CanvasDrawPath1(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+void BugFix7792::CanvasDrawPath1(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path)
 {
     // 第一个图型坐标点:（0.0）
     OH_Drawing_PathMoveTo(path, 10, 10);   // path, 10, 10坐标
@@ -102,7 +96,7 @@ void BugFix7792::CanvasDrawPath1(OH_Drawing_Canvas *canvas, OH_Drawing_Path *pat
     OH_Drawing_CanvasDrawPath(canvas, path);
 }
 
-void BugFix7792::CanvasDrawPath2(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+void BugFix7792::CanvasDrawPath2(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path)
 {
     // 第五个图型坐标点:（1.1）
     OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
@@ -141,7 +135,7 @@ void BugFix7792::CanvasDrawPath2(OH_Drawing_Canvas *canvas, OH_Drawing_Path *pat
     OH_Drawing_CanvasDrawPath(canvas, path);
 }
 
-void BugFix7792::CanvasDrawPath3(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+void BugFix7792::CanvasDrawPath3(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path)
 {
     // 第八个图型坐标点:（1.4）
     OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
@@ -183,7 +177,7 @@ void BugFix7792::CanvasDrawPath3(OH_Drawing_Canvas *canvas, OH_Drawing_Path *pat
     OH_Drawing_CanvasDrawPath(canvas, path);
 }
 
-void BugFix7792::CanvasDrawPath4(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+void BugFix7792::CanvasDrawPath4(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path)
 {
     // 第十一个图型坐标点:（2.4）
     OH_Drawing_CanvasTranslate(canvas, 200, 0); // 200, 0坐标
@@ -228,7 +222,7 @@ void BugFix7792::CanvasDrawPath4(OH_Drawing_Canvas *canvas, OH_Drawing_Path *pat
     OH_Drawing_CanvasDrawPath(canvas, path);
 }
 
-void BugFix7792::CanvasDrawPath5(OH_Drawing_Canvas *canvas, OH_Drawing_Path *path)
+void BugFix7792::CanvasDrawPath5(OH_Drawing_Canvas* canvas, OH_Drawing_Path* path)
 {
     // 第十五个图型坐标点:（3.5）
     OH_Drawing_CanvasTranslate(canvas, 0, 200); // 0, 200坐标

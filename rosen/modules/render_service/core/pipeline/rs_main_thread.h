@@ -461,7 +461,7 @@ private:
 
     std::condition_variable surfaceCapProcTaskCond_;
     std::mutex surfaceCapProcMutex_;
-    bool surfaceCapProcFinished_ = true;
+    std::atomic<bool> surfaceCapProcFinished_ = true;
 
 #if defined(RS_ENABLE_PARALLEL_UPLOAD) && defined(RS_ENABLE_GL)
     RSTaskMessage::RSTask uploadTextureBarrierTask_;

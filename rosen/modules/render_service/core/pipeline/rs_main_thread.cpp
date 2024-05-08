@@ -956,7 +956,7 @@ void RSMainThread::ProcessCommandForUniRender()
         }
     }
     if (!transactionDataEffective->empty()) {
-        RSBackgroundThread::Instance().PostTask([ transactionDataEffective ] () {
+        RSBackgroundThread::Instance().PostIdleTask([ transactionDataEffective ] () {
             RS_TRACE_NAME("RSMainThread::ProcessCommandForUniRender transactionDataEffective clear");
             transactionDataEffective->clear();
         });
@@ -1487,8 +1487,7 @@ void RSMainThread::NotifyDisplayNodeBufferReleased()
 void RSMainThread::NotifySurfaceCapProcFinish()
 {
     RS_TRACE_NAME("RSMainThread::NotifySurfaceCapProcFinish");
-    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
-    surfaceCapProcFinished_ = true;
+    surfaceCapProcFinished_.store(true);
     surfaceCapProcTaskCond_.notify_one();
 }
 
@@ -1497,21 +1496,20 @@ void RSMainThread::WaitUntilSurfaceCapProcFinished()
     if (GetDeviceType() != DeviceType::PHONE) {
         return;
     }
-    std::unique_lock<std::mutex> lock(surfaceCapProcMutex_);
     if (surfaceCapProcFinished_) {
         return;
     }
     RS_OPTIONAL_TRACE_BEGIN("RSMainThread::WaitUntilSurfaceCapProcFinished");
+    std::unique_lock<std::mutex> lock(surfaceCapProcMutex_);
     surfaceCapProcTaskCond_.wait_until(lock, std::chrono::system_clock::now() +
         std::chrono::milliseconds(WAIT_FOR_SURFACE_CAPTURE_PROCESS_TIMEOUT),
-        [this]() { return surfaceCapProcFinished_; });
+        [this]() { return surfaceCapProcFinished_.load(); });
     RS_OPTIONAL_TRACE_END();
 }
 
 void RSMainThread::SetSurfaceCapProcFinished(bool flag)
 {
-    std::lock_guard<std::mutex> lock(surfaceCapProcMutex_);
-    surfaceCapProcFinished_ = flag;
+    surfaceCapProcFinished_.store(flag);
 }
 
 bool RSMainThread::IsRequestedNextVSync()

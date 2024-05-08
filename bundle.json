@@ -99,7 +99,9 @@
           "libuv",
           "icu",
           "libpng",
-          "libxml2"
+          "libxml2",
+          "skia",
+          "drivers_peripheral_display"
         ],
         "third_party": [
           "flutter",

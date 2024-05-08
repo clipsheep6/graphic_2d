@@ -24,8 +24,6 @@ group("test") {
   ]
 }
 
-public_deps_skia = "//third_party/skia:skia_ohos"
-
 ohos_executable("render_service_client_rs_demo") {
   sources = [ "render_service_client_rs_demo.cpp" ]
 
@@ -43,11 +41,13 @@ ohos_executable("render_service_client_rs_demo") {
 
   external_deps = [
     "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
     "hilog:libhilog",
+    "image_framework:image_native",
     "zlib:libz",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -87,7 +87,7 @@ ohos_executable("render_service_client_app_demo") {
     "window_manager:sms",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -100,7 +100,6 @@ ohos_executable("render_service_client_node_demo") {
     "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics",
     "$graphic_2d_root/rosen/modules/render_service_base:librender_service_base",
     "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
-    "$window_base_path/wmserver:libwms",
   ]
 
   external_deps = [
@@ -108,11 +107,12 @@ ohos_executable("render_service_client_node_demo") {
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -127,7 +127,7 @@ ohos_executable("render_service_client_modifier_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
@@ -158,7 +158,7 @@ ohos_executable("render_service_client_transition_demo") {
     "window_manager:sms",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -168,13 +168,12 @@ ohos_executable("render_service_client_gesture_interrupt_animation_demo") {
   sources = [ "render_service_client_gesture_interrupt_animation_demo.cpp" ]
 
   deps = [
-    "./../../../../../../window/window_manager/wmserver:libwms",
     "./../../2d_graphics:2d_graphics",
     "./../../render_service_base:librender_service_base",
     "./../../render_service_client:librender_service_client",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
@@ -182,6 +181,7 @@ ohos_executable("render_service_client_gesture_interrupt_animation_demo") {
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
@@ -197,7 +197,6 @@ ohos_executable("render_service_client_gravity_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wmserver:libwms",
   ]
 
   external_deps = [
@@ -205,11 +204,12 @@ ohos_executable("render_service_client_gravity_demo") {
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -219,7 +219,6 @@ ohos_executable("render_service_client_ui_capture_demo") {
   sources = [ "render_service_client_ui_capture_demo.cpp" ]
 
   deps = [
-    "../../../../../../window/window_manager/wmserver:libwms",
     "../../render_service_base:librender_service_base",
     "../../render_service_client:librender_service_client",
   ]
@@ -229,13 +228,13 @@ ohos_executable("render_service_client_ui_capture_demo") {
     "hilog:libhilog",
     "init:libbegetutil",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
-
   public_external_deps = [
     "libpng:libpng",
+    "skia:skia_ohos",
     "zlib:libz",
   ]
 
@@ -250,7 +249,6 @@ ohos_executable("render_service_client_scale_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wmserver:libwms",
   ]
 
   external_deps = [
@@ -258,11 +256,12 @@ ohos_executable("render_service_client_scale_demo") {
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -275,10 +274,9 @@ ohos_executable("render_service_client_rs_animation_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wmserver:libwms",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
@@ -286,6 +284,7 @@ ohos_executable("render_service_client_rs_animation_demo") {
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "window_manager:libwm",
+    "window_manager:libwms",
     "zlib:libz",
   ]
 
@@ -309,7 +308,7 @@ ohos_executable("surface_capture_demo") {
     "zlib:libz",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -338,16 +337,16 @@ ohos_executable("render_service_client_surface_node_demo") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wmserver:libwms",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
@@ -362,16 +361,16 @@ ohos_executable("render_service_client_uni_render_demo") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wmserver:libwms",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "safwk:system_ability_fwk",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
@@ -385,7 +384,7 @@ ohos_executable("render_service_client_watermark_demo") {
 
   deps = [ "../../render_service_client:librender_service_client" ]
 
-  public_deps = [ "//third_party/skia:skia_ohos" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
@@ -452,8 +451,6 @@ ohos_executable("render_service_display_mode_demo") {
     # render_service_base include
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base/src",
     "//foundation/graphic/graphic_2d/rosen/include",
-    "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
   ]
 
   deps = [
@@ -464,11 +461,13 @@ ohos_executable("render_service_display_mode_demo") {
 
   external_deps = [
     "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
     "hilog:libhilog",
+    "image_framework:image_native",
     "zlib:libz",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"
@@ -486,7 +485,6 @@ ohos_executable("render_service_client_tunnel_handle_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wmserver:libwms",
   ]
 
   external_deps = [
@@ -494,6 +492,7 @@ ohos_executable("render_service_client_tunnel_handle_demo") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
@@ -515,13 +514,13 @@ ohos_executable("render_service_client_overlay_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wmserver:libwms",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "window_manager:libwm",
+    "window_manager:libwms",
     "window_manager:sms",
     "zlib:libz",
   ]
@@ -590,13 +589,14 @@ ohos_executable("render_service_client_pointer_window_demo") {
     "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "image_framework:image_native",
     "window_manager:libdm",
+    "window_manager:libwm",
     "window_manager:sms",
   ]
 
@@ -612,13 +612,14 @@ ohos_executable("render_service_client_subSurface_demo") {
     "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
     "image_framework:image_native",
     "window_manager:libdm",
+    "window_manager:libwm",
     "window_manager:sms",
   ]
 
@@ -634,7 +635,7 @@ ohos_executable("render_service_client_fingerprint_demo") {
     "$graphic_2d_root/rosen/modules/render_service_client:librender_service_client",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   external_deps = [
     "c_utils:utils",
@@ -683,7 +684,7 @@ ohos_executable("render_service_client_first_frame_callback_demo") {
     "window_manager:sms",
   ]
 
-  public_deps = [ "$public_deps_skia" ]
+  public_external_deps = [ "skia:skia_ohos" ]
 
   part_name = "graphic_2d"
   subsystem_name = "graphic"

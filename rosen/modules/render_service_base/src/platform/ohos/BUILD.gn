@@ -119,6 +119,8 @@ ohos_source_set("rosen_ohos_sources") {
     "image_framework:image_native",
   ]
 
+  external_deps = [ "drivers_peripheral_display:hdi_gralloc_client" ]
+
   # profiler
   if (rosen_is_ohos && graphic_2d_feature_rs_enable_profiler &&
       player_framework_enable) {
@@ -145,6 +147,8 @@ ohos_source_set("rosen_ohos_sources") {
       "$graphic_2d_root:libvulkan",
     ]
 
+    external_deps += [ "skia:skia_ohos" ]
+
     public_external_deps += [ "openssl:libcrypto_shared" ]
   }
 
@@ -152,13 +156,11 @@ ohos_source_set("rosen_ohos_sources") {
     include_dirs += opinc_adapter_opt_set.opinc_include_set
   }
 
-  external_deps = [
-    "c_utils:utils",
+  external_deps += [
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "image_framework:image_native",
     "init:libbeget_proxy",
     "init:libbegetutil",
     "ipc:ipc_core",

@@ -42,7 +42,6 @@ public:
     void RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask);
     void RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
                         const std::shared_ptr<RSUniRenderVisitor>& visitor);
-#ifdef RS_PARALLEL
     void DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);

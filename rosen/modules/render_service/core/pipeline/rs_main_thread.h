@@ -88,6 +88,8 @@ public:
     void Init();
     void Start();
     bool IsNeedProcessBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData);
+    void UpdateFocusNodeId(NodeId focusNodeId);
+    void UpdateNeedDrawFocusChange(NodeId id);
     void ProcessDataBySingleFrameComposer(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RecvAndProcessRSTransactionDataImmediately(std::unique_ptr<RSTransactionData>& rsTransactionData);
     void RecvRSTransactionData(std::unique_ptr<RSTransactionData>& rsTransactionData);
@@ -327,12 +329,17 @@ private:
     void CollectInfoForHardwareComposer();
     void ReleaseAllNodesBuffer();
     void Render();
+    void OnUniRenderDraw();
     void SetDeviceType();
     void ColorPickerRequestVsyncIfNeed();
     void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
-    void CalcOcclusionImplementation(std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces,
-        VisibleData& dstCurVisVec, std::map<NodeId, RSVisibleLevel>& dstPidVisMap);
+    RSVisibleLevel CalcSurfaceNodeVisibleRegion(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
+        const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode, Occlusion::Region& accumulatedRegion,
+        Occlusion::Region& curRegion, Occlusion::Region& totalRegion);
+    void CalcOcclusionImplementation(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
+        std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces, VisibleData& dstCurVisVec,
+        std::map<NodeId, RSVisibleLevel>& dstPidVisMap);
     void CalcOcclusion();
     bool CheckSurfaceVisChanged(std::map<NodeId, RSVisibleLevel>& pidVisMap,
         std::vector<RSBaseRenderNode::SharedPtr>& curAllSurfaces);
@@ -394,11 +401,9 @@ private:
         const Occlusion::Region& visibleRegion);
     void PrintCurrentStatus();
     void ProcessScreenHotPlugEvents();
-    void TryCleanResourceInBackGroundThd();
     void WaitUntilUploadTextureTaskFinishedForGL();
 #ifdef RES_SCHED_ENABLE
     void SubScribeSystemAbility();
-    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
 #endif
 #if defined(RS_ENABLE_CHIPSET_VSYNC)
     void ConnectChipsetVsyncSer();
@@ -424,7 +429,7 @@ private:
     std::map<uint64_t, std::vector<std::unique_ptr<RSCommand>>> pendingEffectiveCommands_;
     std::unordered_map<pid_t, std::vector<std::unique_ptr<RSTransactionData>>> syncTransactionData_;
     int32_t syncTransactionCount_ { 0 };
-    int32_t syncTransactionCountExt_ { 0 };
+    bool isNeedCloseSync_ = false;
 
     TransactionDataMap cachedTransactionDataMap_;
     TransactionDataIndexMap effectiveTransactionDataIndexMap_;
@@ -596,7 +601,9 @@ private:
     std::unique_ptr<RSRenderThreadParams> renderThreadParams_ = nullptr; // sync to render thread
     RsParallelType rsParallelType_;
     bool isCurtainScreenOn_ = false;
-
+#ifdef RES_SCHED_ENABLE
+    sptr<VSyncSystemAbilityListener> saStatusChangeListener_ = nullptr;
+#endif
     // for statistic of jank frames
     std::atomic_bool isOnVsync_ = false;
     std::atomic_bool discardJankFrames_ = false;

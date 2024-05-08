@@ -49,7 +49,6 @@ enum Extension {
     KHR_SWAPCHAIN,
     EXT_SWAPCHAIN_COLOR_SPACE,
     KHR_GET_SURFACE_CAPABILITIES_2,
-    KHR_SHARED_PRESENTABLE_IMAGE,
     EXT_HDR_METADATA,
     EXT_SWAPCHAIN_MAINTENANCE_1,
     EXTENSION_COUNT,
@@ -220,7 +219,7 @@ VkResult GetLayerProperties(const uint32_t count, const VkLayerProperties* layer
     return VK_SUCCESS;
 }
 
-static const VkExtensionProperties instanceExtensions[] = {
+static const VkExtensionProperties g_instanceExtensions[] = {
     {
         .extensionName = VK_KHR_SURFACE_EXTENSION_NAME,
         .specVersion = 25,
@@ -239,7 +238,7 @@ static const VkExtensionProperties instanceExtensions[] = {
     }
 };
 
-static const VkExtensionProperties deviceExtensions[] = {
+static const VkExtensionProperties g_deviceExtensions[] = {
     {
         .extensionName = VK_KHR_SWAPCHAIN_EXTENSION_NAME,
         .specVersion = 70,
@@ -534,9 +533,9 @@ OH_NativeBuffer_TransformType TranslateVulkanToNativeTransform(VkSurfaceTransfor
 {
     switch (transform) {
         case VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR:
-            return OH_NativeBuffer_TransformType::NATIVEBUFFER_ROTATE_NONE;
+            return NATIVEBUFFER_ROTATE_NONE;
         case VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR:
-            return OH_NativeBuffer_TransformType::NATIVEBUFFER_ROTATE_270;
+            return NATIVEBUFFER_ROTATE_270;
         case VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR:
             return NATIVEBUFFER_ROTATE_180;
         case VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR:
@@ -627,18 +626,44 @@ VKAPI_ATTR VkResult SetWindowBufferUsage(NativeWindow* window, const VkSwapchain
     return VK_SUCCESS;
 }
 
-VKAPI_ATTR VkResult SetWindowScalingMode(NativeWindow* window, OHScalingMode scalingMode)
+VKAPI_ATTR VkResult SetWindowScalingMode(NativeWindow* window, OHScalingModeV2 scalingMode)
 {
     if (window == nullptr) {
         return VK_ERROR_SURFACE_LOST_KHR;
     }
-    SWLOGD("NativeWindow Not Support Set ScalingMode now. Set OHScalingMode is [%{public}d]",
-        static_cast<int>(scalingMode));
+    SWLOGD("NativeWindow Set OHScalingMode is [%{public}d]", static_cast<int>(scalingMode));
+    int err = OH_NativeWindow_NativeWindowSetScalingModeV2(window, scalingMode);
+    if (err != OHOS::GSERROR_OK) {
+        SWLOGE("NativeWindow Set ScalingMode[%{public}d] failed, error: %{public}d",
+            static_cast<int>(scalingMode), err);
+        return VK_ERROR_SURFACE_LOST_KHR;
+    }
 
     return VK_SUCCESS;
 }
 
-VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo, uint32_t& numImages)
+VKAPI_ATTR VkResult SetWindowQueueSize(NativeWindow* window, const VkSwapchainCreateInfoKHR* createInfo)
+{
+    if (window == nullptr) {
+        return VK_ERROR_SURFACE_LOST_KHR;
+    }
+    uint32_t numImages = createInfo->minImageCount;
+    if (numImages > MAX_BUFFER_SIZE) {
+        SWLOGE("Swapchain init minImageCount[%{public}u] can not be more than maxBufferCount[%{public}u]",
+            numImages, MAX_BUFFER_SIZE);
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+    if (createInfo->presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
+        createInfo->presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {
+        numImages = 1;
+    }
+    SWLOGD("NativeWindow Set Queue Size [%{public}u], Swapchain has the same number of iamge", numImages);
+    window->surface->SetQueueSize(numImages);
+
+    return VK_SUCCESS;
+}
+
+VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo)
 {
     GraphicColorDataSpace colorDataSpace = GetColorDataspace(createInfo->imageColorSpace);
     if (colorDataSpace == GRAPHIC_COLOR_DATA_SPACE_UNKNOWN) {
@@ -668,18 +693,13 @@ VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKH
     }
 
     // Set Scaling mode
-    if (SetWindowScalingMode(window, OHScalingMode::OH_SCALING_MODE_SCALE_TO_WINDOW) != VK_SUCCESS) {
+    if (SetWindowScalingMode(window, OHScalingModeV2::OH_SCALING_MODE_SCALE_TO_WINDOW_V2) != VK_SUCCESS) {
         return VK_ERROR_SURFACE_LOST_KHR;
     }
 
-    if (createInfo->presentMode == VK_PRESENT_MODE_SHARED_DEMAND_REFRESH_KHR ||
-        createInfo->presentMode == VK_PRESENT_MODE_SHARED_CONTINUOUS_REFRESH_KHR) {
-        numImages = 1;
-    }
-    if (numImages < createInfo->minImageCount) {
-        SWLOGE("Swapchain init minImageCount[%{public}u] can not be more than maxBufferCount[%{public}u]",
-            createInfo->minImageCount, numImages);
-        return VK_ERROR_INITIALIZATION_FAILED;
+    // Set Bufferqueue Size
+    if (SetWindowQueueSize(window, createInfo) != VK_SUCCESS) {
+        return VK_ERROR_SURFACE_LOST_KHR;
     }
 
     // Set Buffer Usage
@@ -690,14 +710,13 @@ VKAPI_ATTR VkResult SetWindowInfo(VkDevice device, const VkSwapchainCreateInfoKH
     return VK_SUCCESS;
 }
 
-VkResult SetSwapchainCreateInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo,
-    uint32_t& numImages)
+VkResult SetSwapchainCreateInfo(VkDevice device, const VkSwapchainCreateInfoKHR* createInfo)
 {
     if (createInfo->oldSwapchain != VK_NULL_HANDLE) {
         ReleaseSwapchain(device, SwapchainFromHandle(createInfo->oldSwapchain));
     }
 
-    return SetWindowInfo(device, createInfo, numImages);
+    return SetWindowInfo(device, createInfo);
 }
 
 void InitImageCreateInfo(const VkSwapchainCreateInfoKHR* createInfo, VkImageCreateInfo* imageCreate)
@@ -801,11 +820,11 @@ VKAPI_ATTR VkResult VKAPI_CALL CreateSwapchainKHR(VkDevice device, const VkSwapc
         return VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
     }
 
-    uint32_t numImages = surface.window->surface->GetQueueSize();
-    VkResult result = SetSwapchainCreateInfo(device, createInfo, numImages);
+    VkResult result = SetSwapchainCreateInfo(device, createInfo);
     if (result != VK_SUCCESS) {
         return result;
     }
+    uint32_t numImages = surface.window->surface->GetQueueSize();
 
     if (allocator == nullptr) {
         allocator = &GetDefaultAllocator();
@@ -1196,8 +1215,8 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilitiesKHR(
 {
     int width = 0;
     int height = 0;
-    OH_NativeBuffer_TransformType transformHint = OH_NativeBuffer_TransformType::NATIVEBUFFER_ROTATE_NONE;
-    uint32_t maxBufferCount = MAX_BUFFER_SIZE;
+    OH_NativeBuffer_TransformType transformHint = NATIVEBUFFER_ROTATE_NONE;
+    uint32_t defaultQueueSize = MAX_BUFFER_SIZE;
     if (surface != VK_NULL_HANDLE) {
         NativeWindow* window = SurfaceFromHandle(surface)->window;
         int err = NativeWindowHandleOpt(window, GET_BUFFER_GEOMETRY, &height, &width);
@@ -1210,12 +1229,12 @@ VKAPI_ATTR VkResult VKAPI_CALL GetPhysicalDeviceSurfaceCapabilitiesKHR(
             SWLOGE("NativeWindow get TransformHint failed, error num : %{public}d", err);
             return VK_ERROR_SURFACE_LOST_KHR;
         }
-        maxBufferCount = window->surface->GetQueueSize();
-        SWLOGD("%{public}s bufferqueue queue size maxbuffercount : (%{public}d)", __func__, maxBufferCount);
+        defaultQueueSize = window->surface->GetQueueSize();
+        SWLOGD("NativeWindow default Queue Size : (%{public}d)", defaultQueueSize);
     }
 
-    capabilities->minImageCount = std::min(maxBufferCount, MIN_BUFFER_SIZE);
-    capabilities->maxImageCount = maxBufferCount;
+    capabilities->minImageCount = std::min(defaultQueueSize, MIN_BUFFER_SIZE);
+    capabilities->maxImageCount = std::max(defaultQueueSize, MAX_BUFFER_SIZE);
     capabilities->currentExtent = VkExtent2D {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
     capabilities->minImageExtent = VkExtent2D {1, 1};
     capabilities->maxImageExtent = VkExtent2D {4096, 4096};
@@ -1434,9 +1453,14 @@ Extension GetExtensionBitFromName(const char* name)
     if (strcmp(name, VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME) == 0) {
         return Extension::EXT_SWAPCHAIN_COLOR_SPACE;
     }
-
     if (strcmp(name, VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME) == 0) {
         return Extension::KHR_GET_SURFACE_CAPABILITIES_2;
+    }
+    if (strcmp(name, VK_EXT_HDR_METADATA_EXTENSION_NAME) == 0) {
+        return Extension::EXT_HDR_METADATA;
+    }
+    if (strcmp(name, VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION_NAME) == 0) {
+        return Extension::EXT_SWAPCHAIN_MAINTENANCE_1;
     }
     return Extension::EXTENSION_UNKNOWN;
 }
@@ -1623,11 +1647,12 @@ VKAPI_ATTR VkResult VKAPI_CALL EnumerateInstanceExtensionProperties(
     const char* pLayerName, uint32_t* pCount, VkExtensionProperties* pProperties)
 {
     if ((pLayerName != nullptr) && (strcmp(pLayerName, swapchainLayer.layerName) == 0)) {
-        return GetExtensionProperties(std::size(instanceExtensions), instanceExtensions, pCount, pProperties);
+        return GetExtensionProperties(std::size(g_instanceExtensions), g_instanceExtensions, pCount, pProperties);
     }
     return VK_ERROR_LAYER_NOT_PRESENT;
 }
 
+// Vulkan Loader will read json and call this func
 VKAPI_ATTR VkResult VKAPI_CALL EnumerateInstanceLayerProperties(uint32_t* pCount, VkLayerProperties* pProperties)
 {
     return GetLayerProperties(1, &swapchainLayer, pCount, pProperties);
@@ -1644,7 +1669,7 @@ VKAPI_ATTR VkResult VKAPI_CALL EnumerateDeviceExtensionProperties(
 {
     if ((pLayerName != nullptr) && (strcmp(pLayerName, swapchainLayer.layerName) == 0)) {
         return GetExtensionProperties(
-            std::size(deviceExtensions), deviceExtensions, pCount, pProperties);
+            std::size(g_deviceExtensions), g_deviceExtensions, pCount, pProperties);
     }
 
     if (physicalDevice == nullptr) {
@@ -1751,6 +1776,17 @@ static inline PFN_vkVoidFunction LayerInterceptDeviceProc(
         if (addr != nullptr) {
             return addr;
         }
+        // Extension EXT_SWAPCHAIN_MAINTENANCE_1 depends on KHR_SWAPCHAIN
+        if (enabledExtensions.test(Extension::EXT_SWAPCHAIN_MAINTENANCE_1)) {
+            if (strcmp("vkReleaseSwapchainImagesEXT", name) == 0) {
+                return reinterpret_cast<PFN_vkVoidFunction>(ReleaseSwapchainImagesEXT);
+            }
+        }
+    }
+    if (enabledExtensions.test(Extension::EXT_HDR_METADATA)) {
+        if (strcmp("vkSetHdrMetadataEXT", name) == 0) {
+            return reinterpret_cast<PFN_vkVoidFunction>(SetHdrMetadataEXT);
+        }
     }
     return nullptr;
 }
@@ -1820,12 +1856,6 @@ static inline PFN_vkVoidFunction LayerInterceptInstanceProc(
         PFN_vkVoidFunction addr = GetSwapchainProc(name);
         if (addr != nullptr) {
             return addr;
-        }
-    }
-
-    if (enabledExtensions.test(Extension::EXT_SWAPCHAIN_MAINTENANCE_1)) {
-        if (strcmp("vkReleaseSwapchainImagesEXT", name) == 0) {
-            return reinterpret_cast<PFN_vkVoidFunction>(ReleaseSwapchainImagesEXT);
         }
     }
 

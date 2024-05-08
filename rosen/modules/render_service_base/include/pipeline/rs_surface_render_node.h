@@ -133,8 +133,8 @@ public:
     }
 
     void SetForceHardwareAndFixRotation(bool flag);
-    bool GetForceHardwareByUser() const;
-    int32_t GetFixedRotationDegree() const;
+    bool GetForceHardware() const;
+    void SetForceHardware(bool flag);
 
     SelfDrawingNodeType GetSelfDrawingNodeType() const
     {
@@ -246,7 +246,7 @@ public:
 
     bool IsHardwareForcedDisabled() const
     {
-        if (isForceHardwareByUser_ && !isHardwareForcedDisabledByVisibility_) {
+        if (isForceHardware_ && !isHardwareForcedDisabledByVisibility_) {
             return false;
         }
         return isHardwareForcedDisabled_ || isHardwareForcedDisabledByVisibility_ ||
@@ -350,7 +350,7 @@ public:
         offsetX_ = offset;
     }
 
-    int32_t GetOffSetX()
+    int32_t GetOffSetX() const
     {
         return offsetX_;
     }
@@ -360,7 +360,7 @@ public:
         offsetY_ = offset;
     }
 
-    int32_t GetOffSetY()
+    int32_t GetOffSetY() const
     {
         return offsetY_;
     }
@@ -393,7 +393,7 @@ public:
     void SetHwcChildrenDisabledStateByUifirst();
 
     void SetContextBounds(const Vector4f bounds);
-    bool CheckParticipateInOcclusion() const;
+    bool CheckParticipateInOcclusion();
 
     void OnApplyModifiers() override;
 
@@ -449,6 +449,9 @@ public:
 
     void SetAncoForceDoDirect(bool ancoForceDoDirect);
     bool GetAncoForceDoDirect() const;
+
+    void SetHDRPresent(bool hasHdrPresent);
+    bool GetHDRPresent() const;
 
     const std::shared_ptr<RSDirtyRegionManager>& GetDirtyManager() const;
     const std::shared_ptr<RSDirtyRegionManager>& GetSyncDirtyManager() const;
@@ -778,6 +781,7 @@ public:
     const std::vector<RectI>& GetChildrenNeedFilterRects() const;
     const std::vector<bool>& GetChildrenNeedFilterRectsCacheValid() const;
     const std::vector<std::shared_ptr<RSRenderNode>>& GetChildrenFilterNodes() const;
+    std::vector<RectI> GetChildrenNeedFilterRectsWithoutCacheValid();
 
     // manage abilities' nodeid info
     void UpdateAbilityNodeIds(NodeId id, bool isAdded);
@@ -854,7 +858,7 @@ public:
         bool isUniRender,
         bool filterCacheOcclusionEnabled);
 
-    bool LeashWindowRelatedAppWindowOccluded(std::shared_ptr<RSSurfaceRenderNode>& appNode);
+    bool LeashWindowRelatedAppWindowOccluded(std::vector<std::shared_ptr<RSSurfaceRenderNode>>& appNode);
 
     void OnTreeStateChanged() override;
 
@@ -965,7 +969,9 @@ public:
 
     bool GetUifirstSupportFlag() override
     {
-        return RSRenderNode::GetUifirstSupportFlag();
+        return RSRenderNode::GetUifirstSupportFlag() &&
+            (GetSurfaceNodeType() != RSSurfaceNodeType::SELF_DRAWING_NODE ||
+            name_.find("SceneViewer Model") == std::string::npos);
     }
 
     void UpdateSurfaceCacheContentStaticFlag();
@@ -1014,16 +1020,6 @@ public:
 
     void SetIsParentUifirstNodeEnableParam(bool b);
 
-    MultiThreadCacheType GetLastFrameUifirstFlag()
-    {
-        return lastFrameUifirstFlag_;
-    }
-
-    void SetLastFrameUifirstFlag(MultiThreadCacheType b)
-    {
-        lastFrameUifirstFlag_ = b;
-    }
-
     void SetUifirstChildrenDirtyRectParam(RectI rect);
 
     RSBaseRenderNode::WeakPtr GetAncestorDisplayNode() const
@@ -1038,6 +1034,16 @@ public:
     bool GetHasTransparentSurface() const;
     void UpdatePartialRenderParams();
     void UpdateAncestorDisplayNodeInRenderParams();
+
+    void SetNeedDrawFocusChange(bool needDrawFocusChange)
+    {
+        needDrawFocusChange_ = needDrawFocusChange;
+    }
+
+    bool GetNeedDrawFocusChange() const
+    {
+        return needDrawFocusChange_;
+    }
 
     bool HasWindowCorner()
     {
@@ -1094,6 +1100,7 @@ private:
     std::set<NodeId> protectedLayerIds_= {};
 
     bool hasFingerprint_ = false;
+    bool hasHdrPresent_ = false;
     RectI srcRect_;
     Drawing::Matrix totalMatrix_;
     int32_t offsetX_ = 0;
@@ -1182,10 +1189,10 @@ private:
     {
         RectI screenRect_;
         RectI absRect_;
-        ScreenRotation screenRotation_;
-        bool isFocusWindow_;
-        bool isTransparent_;
-        bool hasContainerWindow_;
+        ScreenRotation screenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
+        bool isFocusWindow_ = false;
+        bool isTransparent_ = false;
+        bool hasContainerWindow_ = false;
         Vector4<int> cornerRadius_;
     };
 
@@ -1231,9 +1238,9 @@ private:
     // used for hardware enabled nodes
     bool isHardwareEnabledNode_ = false;
     bool isForceHardwareByUser_ = false;
+    bool isForceHardware_ = false;
     bool isHardwareForcedDisabledByVisibility_ = false;
     RectI originalDstRect_;
-    int32_t fixedRotationDegree_ = -90;
     SelfDrawingNodeType selfDrawingType_ = SelfDrawingNodeType::DEFAULT;
     bool isCurrentFrameHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;
@@ -1256,6 +1263,7 @@ private:
 
     bool animateState_ = false;
     bool isRotating_ = false;
+    bool isParentScaling_ = false;
 
     bool needDrawAnimateProperty_ = false;
     bool prevVisible_ = false;
@@ -1281,13 +1289,14 @@ private:
     // node only have translate and scale changes
     bool surfaceCacheContentStatic_ = false;
 
+    bool needDrawFocusChange_ = false;
+
     std::atomic<bool> hasUnSubmittedOccludedDirtyRegion_ = false;
     RectI historyUnSubmittedOccludedDirtyRegion_;
     bool forceUIFirstChanged_ = false;
     Drawing::Matrix bufferRelMatrix_ = Drawing::Matrix();
     bool forceUIFirst_ = false;
     bool hasTransparentSurface_ = false;
-    MultiThreadCacheType lastFrameUifirstFlag_ = MultiThreadCacheType::NONE;
 
     bool ancoForceDoDirect_ = false;
 

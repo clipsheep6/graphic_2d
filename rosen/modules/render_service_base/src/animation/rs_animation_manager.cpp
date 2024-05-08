@@ -114,6 +114,9 @@ void RSAnimationManager::FilterAnimationByPid(pid_t pid)
         if (ExtractPid(pair.first) != pid) {
             return false;
         }
+        if (!pair.second) {
+            return false;
+        }
         pair.second->Finish();
         pair.second->Detach();
         return true;
@@ -282,7 +285,7 @@ const std::unordered_map<PropertyId, AnimationId>& RSAnimationManager::GetPartic
     return particleAnimations_;
 }
 
-const std::shared_ptr<RSRenderAnimation>& RSAnimationManager::GetParticleAnimation()
+std::shared_ptr<RSRenderAnimation> RSAnimationManager::GetParticleAnimation()
 {
     if (particleAnimations_.empty()) {
         return nullptr;

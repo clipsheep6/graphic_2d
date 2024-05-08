@@ -272,6 +272,11 @@ bool RSSystemProperties::GetBlurEnabled()
     return true;
 }
 
+bool RSSystemProperties::GetForegroundFilterEnabled()
+{
+    return true;
+}
+
 const std::vector<float>& RSSystemProperties::GetAiInvertCoef()
 {
     // Configure AiInvertCoef: Low, High, Threshold, Opacity, Saturation, Filter Radius.
@@ -339,6 +344,16 @@ bool RSSystemProperties::GetSingleFrameComposerCanvasNodeEnabled()
     return false;
 }
 
+bool RSSystemProperties::GetDrawFilterWithoutSnapshotEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetBlurExtraFilterEnabled()
+{
+    return false;
+}
+
 bool RSSystemProperties::GetSubSurfaceEnabled()
 {
     return false;
@@ -363,7 +378,7 @@ bool RSSystemProperties::GetDumpUIPixelmapEnabled()
     return false;
 }
 
-uint32_t RSSystemProperties::GetVirtualScreenScaleModeDFX()
+int RSSystemProperties::GetVirtualScreenScaleModeDFX()
 {
     return {};
 }
@@ -384,6 +399,11 @@ bool RSSystemProperties::GetRenderParallelEnabled()
 }
 
 bool RSSystemProperties::GetUIFirstForceEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetAceDebugBoundaryEnabled()
 {
     return false;
 }

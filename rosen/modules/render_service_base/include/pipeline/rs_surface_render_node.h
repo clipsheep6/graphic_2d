@@ -974,6 +974,11 @@ public:
             name_.find("SceneViewer Model") == std::string::npos);
     }
 
+    bool OpincGetNodeSupportFlag() override
+    {
+        return false;
+    }
+
     void UpdateSurfaceCacheContentStaticFlag();
 
     void UpdateSurfaceSubTreeDirtyFlag();

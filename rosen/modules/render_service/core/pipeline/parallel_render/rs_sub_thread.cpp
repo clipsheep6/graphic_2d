@@ -30,7 +30,6 @@
 #include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_surface_render_node.h"
 #include "pipeline/rs_uni_render_util.h"
-#include "pipeline/rs_uni_render_visitor.h"
 
 #include "pipeline/rs_uifirst_manager.h"
 #include "drawable/rs_render_node_drawable.h"
@@ -172,23 +171,33 @@ void RSSubThread::DestroyShareEglContext()
 void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask)
 {
     RS_TRACE_NAME("RSSubThread::RenderCache");
+    
     if (threadTask == nullptr || threadTask->GetTaskSize() == 0) {
         RS_LOGE("RSSubThread::RenderCache threadTask == nullptr %p || threadTask->GetTaskSize() == 0 %d",
             threadTask.get(), int(threadTask->GetTaskSize()));
         return;
     }
+    
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
         if (grContext_ == nullptr) {
             return;
         }
     }
+    
     auto visitor = std::make_shared<RSUniRenderVisitor>();
     visitor->SetSubThreadConfig(threadIndex_);
     visitor->SetFocusedNodeId(RSMainThread::Instance()->GetFocusNodeId(),
         RSMainThread::Instance()->GetFocusLeashWindowId());
     auto screenManager = CreateOrGetScreenManager();
     visitor->SetScreenInfo(screenManager->QueryScreenInfo(screenManager->GetDefaultScreenId()));
+
+    RenderTasks(threadTask, visitor);
+}
+
+void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
+                                const std::shared_ptr<RSUniRenderVisitor>& visitor)
+{
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     bool needRequestVsync = false;
     while (threadTask->GetTaskSize() > 0) {

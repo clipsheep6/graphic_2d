@@ -196,7 +196,8 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
 }
 
 void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
-                                const std::shared_ptr<RSUniRenderVisitor>& visitor)
+                              const std::shared_ptr<RSUniRenderVisitor>& visitor
+                              )
 {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     bool needRequestVsync = false;

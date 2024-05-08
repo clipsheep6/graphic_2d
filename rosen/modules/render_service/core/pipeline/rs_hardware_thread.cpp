@@ -170,7 +170,8 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
 }
 
 void RSHardwareThread::ExecuteCommitAndReleaseLayersTask(OutputPtr output, const std::vector<LayerInfoPtr>& layers,
-                                                            uint32_t rate, uint64_t currTimestamp)
+                                                         uint32_t rate, uint64_t currTimestamp
+                                                         )
 {
     auto now = std::chrono::steady_clock::now();
     auto time_since_epoch = now.time_since_epoch();

@@ -783,7 +783,7 @@ void RSMainThread::ProcessNodeWithStatusDoing(std::shared_ptr<RSSurfaceRenderNod
                 break;
             }
 		}
-	}
+    }
 
     cacheCmdSkippedNodes_[node->GetId()] = false;
     
@@ -1405,7 +1405,7 @@ void RSMainThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply, pid_t
         PostTask(task, CLEAR_GPU_CACHE, GetTaskDelay(), AppExecFwk::EventQueue::Priority::HIGH);
     } else {
         RSUniRenderThread::Instance().PostTask(task, CLEAR_GPU_CACHE, GetTaskDelay(),
-                                                AppExecFwk::EventQueue::Priority::HIGH);
+                                               AppExecFwk::EventQueue::Priority::HIGH);
     }
 }
 
@@ -1655,7 +1655,8 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 }
 
 bool RSMainThread::CheckAndProcessDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode,
-                                                        std::shared_ptr<RSUniRenderVisitor> uniVisitor)
+                                                    std::shared_ptr<RSUniRenderVisitor> uniVisitor
+                                                    )
 {
     bool needTraverseNodeTree = true;
 

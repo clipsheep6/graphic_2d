@@ -81,7 +81,8 @@ void RSObjAbsGeometry::UpdateMatrix(const Drawing::Matrix* parentMatrix, const s
     SetAbsRect();
 }
 
-void RSObjAbsGeometry::InitializeAbsMatrix(const Drawing::Matrix* parentMatrix, const std::optional<Drawing::Point>& offset)
+void RSObjAbsGeometry::InitializeAbsMatrix(const Drawing::Matrix* parentMatrix,
+                                            const std::optional<Drawing::Point>& offset)
 {
     if (parentMatrix == nullptr) {
         absMatrix_.reset();
@@ -225,8 +226,7 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
 {
     if (!trans_->quaternion_.IsIdentity()) {
         UpdateAbsMatrix3DNonIdentity();
-    }
-    else {
+    } else {
         UpdateAbsMatrix3DIsIdentity();
     }
 }

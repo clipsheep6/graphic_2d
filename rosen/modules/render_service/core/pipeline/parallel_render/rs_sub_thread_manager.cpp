@@ -151,7 +151,8 @@ float RSSubThreadManager::GetAppGpuMemoryInMB()
 }
 
 void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRenderNode>& node,
-                                                const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
+                                             const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes
+                                             )
 {
     RS_TRACE_NAME("RSSubThreadManager::SubmitSubThreadTask");
 	
@@ -225,10 +226,10 @@ void RSSubThreadManager::PrepareRenderTasks(const std::list<std::shared_ptr<RSSu
     }
 }
 
-void RSSubThreadManager::AssignTasksToSuperRenderTasks(
-                std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList,
-                std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
-                const std::shared_ptr<RSDisplayRenderNode>& node)
+void RSSubThreadManager::AssignTasksToSuperRenderTasks(std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList,
+                                                       std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
+                                                       const std::shared_ptr<RSDisplayRenderNode>& node
+                                                       )
 {
     for (uint32_t i = 0; i < SUB_THREAD_NUM; i++) {
         superRenderTaskList.emplace_back(std::make_shared<RSSuperRenderTask>(node,

@@ -53,8 +53,8 @@ RSCanvasDrawingRenderNode::RSCanvasDrawingRenderNode(
 RSCanvasDrawingRenderNode::~RSCanvasDrawingRenderNode()
 {
 #if (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
-    if (preThreadInfo_.second && surface_) {
-        preThreadInfo_.second(std::move(surface_));
+    if (preThreadInfo_.second && surface_ ) {
+        preThreadInfo_.second(std::move(surface_ ));
     }
 #endif
 }
@@ -155,7 +155,7 @@ bool RSCanvasDrawingRenderNode::ResetSurfaceIfNeeded(RSPaintFilterCanvas& canvas
 
 void RSCanvasDrawingRenderNode::CreateImageSnapshot()
 {
-    if (!surface_) {
+    if (!surface_ ) {
         return;
     }
 
@@ -165,11 +165,11 @@ void RSCanvasDrawingRenderNode::CreateImageSnapshot()
 
     Rosen::Drawing::Matrix mat;
     if (RSPropertiesPainter::GetGravityMatrix(GetRenderProperties().GetFrameGravity(),
-                                                GetRenderProperties().GetFrameRect(), width, height, mat)) {
+                                              GetRenderProperties().GetFrameRect(), width, height, mat)) {
         canvas.ConcatMatrix(mat);
     }
     if (!recordingCanvas_) {
-        image_ = surface_->GetImageSnapshot();
+        image_ = (surface_)->GetImageSnapshot();
         if (image_) {
             SKResourceManager::Instance().HoldResource(image_);
         }
@@ -528,7 +528,7 @@ void RSCanvasDrawingRenderNode::ResetSurface()
 {
     std::lock_guard<std::mutex> lockTask(taskMutex_);
     if (preThreadInfo_.second && surface_) {
-        preThreadInfo_.second(std::move(surface_));
+        preThreadInfo_.second(std::move(surface_ ));
     }
     surface_ = nullptr;
     recordingCanvas_ = nullptr;

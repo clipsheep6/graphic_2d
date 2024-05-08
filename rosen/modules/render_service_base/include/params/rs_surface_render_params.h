@@ -108,11 +108,11 @@ public:
 
     bool GetIsSecurityLayer() const
     {
-        return isSecurityLayer_;
+        return instantSecurityLayerIds_.size() != 0;
     }
     bool GetIsSkipLayer() const
     {
-        return isSkipLayer_;
+        return instantSkipLayerIds_.size() != 0;
     }
     bool GetIsProtectedLayer() const
     {
@@ -276,12 +276,17 @@ private:
     bool isHardwareEnabled_ = false;
     bool isLastFrameHardwareEnabled_ = false;
     int32_t releaseInHardwareThreadTaskNum_ = 0;
-    bool isSecurityLayer_ = false;
-    bool isSkipLayer_ = false;
+
     bool isProtectedLayer_ = false;
-    std::set<NodeId> skipLayerIds_= {};
-    std::set<NodeId> securityLayerIds_= {};
     std::set<NodeId> protectedLayerIds_= {};
+    // skip layer & security layer
+    // XXXLayerIds_ : itself or it's child is XXXLayer
+    // instantXXXLayerIds_ : itself or leash Window's instant child is XXXLayer
+    std::set<NodeId> skipLayerIds_ = {};
+    std::set<NodeId> securityLayerIds_ = {};
+    std::set<NodeId> instantSkipLayerIds_ = {};
+    std::set<NodeId> instantSecurityIds_ = {};
+
     std::set<int32_t> bufferCacheSet_ = {};
     std::string name_= "";
 

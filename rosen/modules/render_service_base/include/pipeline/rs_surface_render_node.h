@@ -1090,12 +1090,15 @@ private:
     std::optional<Drawing::Matrix> contextMatrix_;
     std::optional<Drawing::Rect> contextClipRect_;
 
-    bool isSecurityLayer_ = false;
-    bool isSkipLayer_ = false;
     bool isProtectedLayer_ = false;
-    std::set<NodeId> skipLayerIds_= {};
-    std::set<NodeId> securityLayerIds_= {};
     std::set<NodeId> protectedLayerIds_= {};
+    // skip layer & security layer
+    // XXXLayerIds_ : itself or it's child is XXXLayer
+    // instantXXXLayerIds_ : itself or leash Window's instant child is XXXLayer
+    std::set<NodeId> skipLayerIds_ = {};
+    std::set<NodeId> securityLayerIds_ = {};
+    std::set<NodeId> instantSkipLayerIds_ = {};
+    std::set<NodeId> instantSecurityIds_ = {};
 
     bool hasFingerprint_ = false;
     bool hasHdrPresent_ = false;

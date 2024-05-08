@@ -651,11 +651,12 @@ void RSSurfaceRenderNode::SetForceHardware(bool flag)
 
 void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
 {
-    isSecurityLayer_ = isSecurityLayer;
     SetDirty();
     if (isSecurityLayer) {
+        instantSecurityLayerIds_.insert(GetId());
         securityLayerIds_.insert(GetId());
     } else {
+        instantSecurityLayerIds_.erase(GetId());
         securityLayerIds_.erase(GetId());
     }
     SyncSecurityInfoToFirstLevelNode();
@@ -663,11 +664,12 @@ void RSSurfaceRenderNode::SetSecurityLayer(bool isSecurityLayer)
 
 void RSSurfaceRenderNode::SetSkipLayer(bool isSkipLayer)
 {
-    isSkipLayer_ = isSkipLayer;
     SetDirty();
     if (isSkipLayer) {
+        instantSkipLayerIds_.insert(GetId());
         skipLayerIds_.insert(GetId());
     } else {
+        instantSkipLayerIds_.erase(GetId());
         skipLayerIds_.erase(GetId());
     }
     SyncSkipInfoToFirstLevelNode();
@@ -687,13 +689,13 @@ void RSSurfaceRenderNode::SetProtectedLayer(bool isProtectedLayer)
 
 bool RSSurfaceRenderNode::GetSecurityLayer() const
 {
-    return isSecurityLayer_;
+    return instantSecurityLayerIds_.size() != 0;
 }
 
 
 bool RSSurfaceRenderNode::GetSkipLayer() const
 {
-    return isSkipLayer_;
+    return instantSkipLayerIds_.size() != 0;
 }
 
 bool RSSurfaceRenderNode::GetProtectedLayer() const
@@ -721,17 +723,18 @@ void RSSurfaceRenderNode::SyncSecurityInfoToFirstLevelNode()
     auto firstLevelNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetFirstLevelNode());
     // firstLevelNode is the nearest app window / leash node
     if (firstLevelNode && GetFirstLevelNodeId() != GetId()) {
-        firstLevelNode->SetDirty();
         // should always sync securityLayerIds_ to firstLevelNode
         if (isSecurityLayer_ && IsOnTheTree()) {
             firstLevelNode->securityLayerIds_.insert(GetId());
         } else {
             firstLevelNode->securityLayerIds_.erase(GetId());
         }
-        // only sync isecurityLayer_ while firstLevelNode is parent
+        // only sync instantSecurityLayerIds_ while firstLevelNode is parent  (this equals parent is leash window)
         auto parent = GetParent().lock();
         if (parent && GetFirstLevelNodeId() == parent->GetId()) {
-            firstLevelNode->isSecurityLayer_ = isSecurityLayer_;
+            firstLevelNode->instantSecurityLayerIds_.insert(GetId());
+        } else {
+            firstLevelNode->instantSecurityLayerIds_.erase(GetId());
         }
     }
 }
@@ -741,17 +744,18 @@ void RSSurfaceRenderNode::SyncSkipInfoToFirstLevelNode()
     auto firstLevelNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetFirstLevelNode());
     // firstLevelNode is the nearest app window / leash node
     if (firstLevelNode && GetFirstLevelNodeId() != GetId()) {
-        firstLevelNode->SetDirty();
         // should always sync skipLayerIds_ to firstLevelNode
         if (isSkipLayer_ && IsOnTheTree()) {
             firstLevelNode->skipLayerIds_.insert(GetId());
         } else {
             firstLevelNode->skipLayerIds_.erase(GetId());
         }
-        // only sync isSkipLayer_ while firstLevelNode is parent
+        // only sync instantSkipLayerIds_ while firstLevelNode is parent  (this equals parent is leash window)
         auto parent = GetParent().lock();
         if (parent && GetFirstLevelNodeId() == parent->GetId()) {
-            firstLevelNode->isSkipLayer_ = isSkipLayer_;
+            firstLevelNode->instantSkipyLayerIds_.insert(GetId());
+        } else {
+            firstLevelNode->instantSkipLayerIds_.erase(GetId());
         }
     }
 }

@@ -348,9 +348,9 @@ void RSProfiler::CalcNodeWeigthOnFrameEnd()
     Respond(
         "CALC_PERF_NODE_RESULT: " + std::to_string(g_calcPerfNode) + " " +
         "cnt=" + std::to_string(g_mapNode2Count[g_calcPerfNode]) + " " +
-        std::to_string(g_calcPerfNodeTime[middle]) + ((g_calcPerfNode != renderEntireFrame) ? 
+        std::to_string(g_calcPerfNodeTime[middle]) + ((g_calcPerfNode != renderEntireFrame) ?
         " node_time=" + std::to_string(scale * (1.0f - (float)g_calcPerfNodeTime[middle] /
-        (float)g_mapNode2ComplementTime[renderEntireFrame])) : ""));        
+        (float)g_mapNode2ComplementTime[renderEntireFrame])) : ""));
     Network::SendRSTreeSingleNodePerf(g_calcPerfNode, g_calcPerfNodeTime[middle]);
 
     if (g_calcPerfNode != renderEntireFrame) {

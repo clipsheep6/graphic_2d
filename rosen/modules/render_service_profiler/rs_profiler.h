@@ -16,8 +16,6 @@
 #ifndef RENDER_SERVICE_PROFILER_H
 #define RENDER_SERVICE_PROFILER_H
 
-#ifdef RS_PROFILER_ENABLED
-
 #include <map>
 #include <string>
 

@@ -374,6 +374,10 @@ private:
     void OnHwcDeadEvent();
     void CleanAndReinit();
     void ProcessScreenConnectedLocked(std::shared_ptr<HdiOutput> &output);
+    void ConfigureVSyncSampler(ScreenId id);
+    std::shared_ptr<VSyncSampler> CreateAndCheckVSyncSampler();
+    void SetScreenVsyncEnabledCallback(vsyncSampler, ScreenId id, UniRenderEnabledType renderType);
+    void UpdateDefaultScreenId(RSScreenManager& manager, ScreenId id);
     void AddScreenToHgm(std::shared_ptr<HdiOutput> &output);
     void ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output);
     void RemoveScreenFromHgm(std::shared_ptr<HdiOutput> &output);

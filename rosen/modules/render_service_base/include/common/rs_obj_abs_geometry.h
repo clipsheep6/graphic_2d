@@ -36,6 +36,8 @@ public:
     ~RSObjAbsGeometry() override;
     void ConcatMatrix(const Drawing::Matrix& matrix);
     void UpdateMatrix(const Drawing::Matrix* parentMatrix, const std::optional<Drawing::Point>& offset);
+    void InitializeAbsMatrix(const Drawing::Matrix* parentMatrix, const std::optional<Drawing::Point>& offset);
+    void ApplyContextMatrix();
 
     // Using by RenderService
     void UpdateByMatrixFromSelf();
@@ -60,6 +62,9 @@ public:
 private:
     void UpdateAbsMatrix2D();
     void UpdateAbsMatrix3D();
+    void UpdateAbsMatrix3DNonIdentity();
+    void UpdateAbsMatrix3DIsIdentity();
+
     void SetAbsRect();
 
     Vector2f GetDataRange(float d0, float d1, float d2, float d3) const;

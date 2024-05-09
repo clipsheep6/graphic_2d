@@ -121,6 +121,16 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         return;
     }
 
+    if (!ResetSurfaceIfNeeded(canvas, width, height)) {
+        return;
+    }
+
+    CreateImageSnapshot();
+    DrawImage(canvas, image_);
+}
+
+bool RSCanvasDrawingRenderNode::ResetSurfaceIfNeeded(RSPaintFilterCanvas& canvas, int width, int height)
+{
     if (IsNeedResetSurface()) {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
         if (preThreadInfo_.second && surface_) {
@@ -129,17 +139,22 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
         preThreadInfo_ = curThreadInfo_;
 #endif
         if (!ResetSurface(width, height, canvas)) {
-            return;
+            return false;
         }
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     } else if ((isGpuSurface_) && (preThreadInfo_.first != curThreadInfo_.first)) {
         if (!ResetSurfaceWithTexture(width, height, canvas)) {
-            return;
+            return false;
         }
     }
 #else
     }
 #endif
+    return false;
+}
+
+void RSCanvasDrawingRenderNode::CreateImageSnapshot()
+{
     if (!surface_) {
         return;
     }
@@ -149,8 +164,8 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     isNeedProcess_ = false;
 
     Rosen::Drawing::Matrix mat;
-    if (RSPropertiesPainter::GetGravityMatrix(
-            GetRenderProperties().GetFrameGravity(), GetRenderProperties().GetFrameRect(), width, height, mat)) {
+    if (RSPropertiesPainter::GetGravityMatrix(GetRenderProperties().GetFrameGravity(),
+                                              GetRenderProperties().GetFrameRect(), width, height, mat)) {
         canvas.ConcatMatrix(mat);
     }
     if (!recordingCanvas_) {
@@ -166,6 +181,10 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
             ProcessCPURenderInBackgroundThread(cmds);
         }
     }
+}
+
+void RSCanvasDrawingRenderNode::DrawImage(RSPaintFilterCanvas& canvas, const Rosen::Drawing::Image* image)
+{
     std::lock_guard<std::mutex> lock(imageMutex_);
     if (!image_) {
         return;
@@ -185,7 +204,7 @@ void RSCanvasDrawingRenderNode::ProcessRenderContents(RSPaintFilterCanvas& canva
     } else {
         canvas.DrawImage(*image_, 0.f, 0.f, samplingOptions);
     }
-    canvas.DetachPaint();
+        canvas.DetachPaint();
 }
 
 bool RSCanvasDrawingRenderNode::IsNeedProcess() const

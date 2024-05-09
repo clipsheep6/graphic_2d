@@ -62,7 +62,11 @@ ohos_shared_library("libgraphics_effect") {
 
   deps = [ "$graphic_2d_root/rosen/modules/2d_graphics:2d_graphics" ]
 
-  external_deps = [ "hilog:libhilog" ]
+  if (is_arkui_x) {
+    include_dirs += [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include", ]
+  } else {
+    external_deps = [ "hilog:libhilog" ]
+  }
 
   if (current_os == "ohos") {
     defines = [ "GE_OHOS" ]

@@ -615,6 +615,8 @@ void RSRenderNode::DumpTree(int32_t depth, std::string& out) const
     DumpNodeType(GetType(), out);
     out += "[" + std::to_string(GetId()) + "], instanceRootNodeId" + "[" +
         std::to_string(GetInstanceRootNodeId()) + "]";
+    out += ", firstLevelNodeId" + "[" +
+        std::to_string(GetFirstLevelNodeId()) + "]";
     if (sharedTransitionParam_) {
         out += sharedTransitionParam_->Dump();
     }

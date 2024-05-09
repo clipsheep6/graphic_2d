@@ -266,8 +266,11 @@ std::shared_ptr<Drawing::ShaderEffect> RSLinearGradientBlurFilter::MakeAlphaGrad
             static_cast<uint8_t>(para->fractionStops_[i].first * ColorMax), ColorMax, ColorMax, ColorMax));
         p.emplace_back(para->fractionStops_[i].second);
     }
-    // 0.01 represents the fraction bias
-    if (para->fractionStops_.back().second < (1 - 0.01)) {
+    
+    if (para->fractionStops_.empty()) {
+        return nullptr;
+    }
+    if (para->fractionStops_.back().second < 0.99) { // 0.99 represents the fraction bias
         c.emplace_back(Drawing::Color::ColorQuadSetARGB(ColorMin, ColorMax, ColorMax, ColorMax));
         // 0.01 represents the fraction bias
         p.emplace_back(para->fractionStops_.back().second + 0.01);

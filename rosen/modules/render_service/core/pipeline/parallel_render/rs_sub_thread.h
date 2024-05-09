@@ -29,6 +29,7 @@
 #include "event_handler.h"
 
 namespace OHOS::Rosen {
+class RSUniRenderVisitor;
 class RSSubThread {
 public:
     RSSubThread(RenderContext* context, uint32_t threadIndex) : threadIndex_(threadIndex), renderContext_(context) {}
@@ -39,6 +40,8 @@ public:
     void PostSyncTask(const std::function<void()>& task);
     void RemoveTask(const std::string& name);
     void RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask);
+    void RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
+                        const std::shared_ptr<RSUniRenderVisitor>& visitor);
     void DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable);
     void ReleaseSurface();
     void AddToReleaseQueue(std::shared_ptr<Drawing::Surface>&& surface);
@@ -60,6 +63,8 @@ private:
     void CreateShareEglContext();
     void DestroyShareEglContext();
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
+    void RenderTasksNeedNotify(bool needNotify, NodeId nodeId);
+    void RenderTasksNeedRequestVsync(bool needRequestVsync);
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;

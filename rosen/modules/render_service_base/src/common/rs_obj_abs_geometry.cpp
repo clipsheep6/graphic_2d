@@ -53,20 +53,14 @@ void RSObjAbsGeometry::ConcatMatrix(const Drawing::Matrix& matrix)
 void RSObjAbsGeometry::UpdateMatrix(const Drawing::Matrix* parentMatrix, const std::optional<Drawing::Point>& offset)
 {
     // Initialize the absolute matrix with the absolute matrix of the parent view if the parent view exists
-    if (parentMatrix == nullptr) {
-        absMatrix_.reset();
-    } else {
-        absMatrix_ = *parentMatrix;
-        if (offset.has_value()) {
-            absMatrix_->PreTranslate(offset->GetX(), offset->GetY());
-        }
-    }
+    InitializeAbsMatrix(parentMatrix, offset);
     // Reset the matrix of the current view
     matrix_.Reset();
     // filter invalid width and height
     if (IsEmpty()) {
         return;
     }
+    
     // If the view has no transformations or only 2D transformations, update the absolute matrix with 2D
     // transformations
     if (!trans_ || (ROSEN_EQ(trans_->translateZ_, 0.f) && ROSEN_EQ(trans_->rotationX_, 0.f) &&
@@ -76,6 +70,32 @@ void RSObjAbsGeometry::UpdateMatrix(const Drawing::Matrix* parentMatrix, const s
         // Otherwise, update the absolute matrix with 3D transformations
         UpdateAbsMatrix3D();
     }
+    
+   // If the absolute matrix of the current view exists, update it with the context matrix and the current matrix
+    ApplyContextMatrix();
+    // If the context matrix of the current view exists, update the current matrix with it
+    if (contextMatrix_.has_value()) {
+        matrix_.PreConcat(*contextMatrix_);
+    }
+    // Update the absolute rectangle of the current view
+    SetAbsRect();
+}
+
+void RSObjAbsGeometry::InitializeAbsMatrix(const Drawing::Matrix* parentMatrix,
+    const std::optional<Drawing::Point>& offset)
+{
+    if (parentMatrix == nullptr) {
+        absMatrix_.reset();
+    } else {
+        absMatrix_ = *parentMatrix;
+        if (offset.has_value()) {
+            absMatrix_->PreTranslate(offset->GetX(), offset->GetY());
+        }
+    }
+}
+
+void RSObjAbsGeometry::ApplyContextMatrix()
+{
     // If the absolute matrix of the current view exists, update it with the context matrix and the current matrix
     if (absMatrix_.has_value()) {
         if (contextMatrix_.has_value()) {
@@ -83,12 +103,6 @@ void RSObjAbsGeometry::UpdateMatrix(const Drawing::Matrix* parentMatrix, const s
         }
         absMatrix_->PreConcat(matrix_);
     }
-    // If the context matrix of the current view exists, update the current matrix with it
-    if (contextMatrix_.has_value()) {
-        matrix_.PreConcat(*contextMatrix_);
-    }
-    // Update the absolute rectangle of the current view
-    SetAbsRect();
 }
 
 /**
@@ -210,9 +224,16 @@ void RSObjAbsGeometry::UpdateAbsMatrix2D()
  */
 void RSObjAbsGeometry::UpdateAbsMatrix3D()
 {
-    // If the view has a non-identity quaternion, apply 3D transformations
     if (!trans_->quaternion_.IsIdentity()) {
-        Drawing::Matrix44 matrix3D;
+        UpdateAbsMatrix3DNonIdentity();
+    } else {
+        UpdateAbsMatrix3DIsIdentity();
+    }
+}
+
+void RSObjAbsGeometry::UpdateAbsMatrix3DNonIdentity()
+{
+    Drawing::Matrix44 matrix3D;
         // Pivot
         matrix3D.Translate(trans_->pivotX_ * width_, trans_->pivotY_ * height_, 0);
         // Persp
@@ -243,8 +264,14 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
 
         // Concatenate the 3D matrix with the 2D matrix
         matrix_.PreConcat(matrix3D);
-    } else {
-        Drawing::Matrix matrix3D;
+}
+
+/**
+ * Update the absolute matrix in 3D space
+ */
+void RSObjAbsGeometry::UpdateAbsMatrix3DIsIdentity()
+{
+    Drawing::Matrix matrix3D;
         Drawing::Camera3D camera;
         // Z Position
         camera.Translate(0, 0, z_ + trans_->translateZ_);
@@ -287,7 +314,6 @@ void RSObjAbsGeometry::UpdateAbsMatrix3D()
 
         // Concatenate the 3D matrix with the 2D matrix
         matrix_.PreConcat(matrix3D);
-    }
 }
 
 void RSObjAbsGeometry::SetAbsRect()

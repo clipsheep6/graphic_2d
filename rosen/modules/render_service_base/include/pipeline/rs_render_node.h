@@ -184,6 +184,9 @@ public:
     void SetTunnelHandleChange(bool change);
     bool GetTunnelHandleChange() const;
 
+    void SetChildHasSharedTransition(bool val);
+    bool ChildHasSharedTransition() const;
+
     // type-safe reinterpret_cast
     template<typename T>
     bool IsInstanceOf() const
@@ -462,16 +465,15 @@ public:
     void MarkFilterHasEffectChildren();
 
     // for blur filter cache
-    void UpdateLastFilterCacheRegion(const std::optional<RectI>& clipRect = std::nullopt);
-    void UpdateLastFilterCacheRegionInSkippedSubTree(const RectI& rect);
+    void UpdateLastFilterCacheRegion();
     void UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirtyManager,
         const RSRenderNode& subTreeRoot, RectI& filterRect, const std::optional<RectI>& clipRect);
     void MarkFilterStatusChanged(bool isForeground, bool isFilterRegionChanged);
     virtual void UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
-    virtual void UpdateFilterCacheWithSelfDirty(const std::optional<RectI>& clipRect = std::nullopt,
-        bool isInSkippedSubTree = false, const std::optional<RectI>& filterRectForceUpdated = std::nullopt);
+    virtual void UpdateFilterCacheWithSelfDirty();
     bool IsBackgroundInAppOrNodeSelfDirty() const;
-    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(bool dirtyBelowContainsFilterNode = false);
+    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(
+        RSDirtyRegionManager& dirtyManager, bool dirtyBelowContainsFilterNode = false);
     bool IsFilterCacheValid() const;
     void MarkForceClearFilterCacheWhenWithInvisible();
 
@@ -535,6 +537,7 @@ public:
     void DisableDrawingCacheByHwcNode();
 
     virtual RectI GetFilterRect() const;
+    void CalVisibleFilterRect(const std::optional<RectI>& clipRect);
     void SetIsUsedBySubThread(bool isUsedBySubThread);
     bool GetIsUsedBySubThread() const;
 
@@ -634,6 +637,7 @@ public:
         lastFrameSynced_ = false;
         // clear flag: after skips sync, node not in RSMainThread::Instance()->GetContext.pendingSyncNodes_
         addedToPendingSyncList_ = false;
+        OnSkipSync();
     }
     void Sync()
     {
@@ -681,6 +685,7 @@ protected:
 
     virtual void InitRenderParams();
     virtual void OnSync();
+    virtual void OnSkipSync() {};
     virtual void ClearResource() {};
 
     std::unique_ptr<RSRenderParams> stagingRenderParams_;
@@ -714,6 +719,7 @@ protected:
         renderContent_->DrawPropertyDrawableRange(begin, end, canvas);
     }
     bool isChildSupportUifirst_ = true;
+    bool childHasSharedTransition_ = false;
     bool lastFrameSynced_ = true;
     bool clipAbsDrawRectChange_ = false;
 
@@ -722,6 +728,7 @@ protected:
         std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false);
     std::atomic<bool> isStaticCached_ = false;
     bool lastFrameHasVisibleEffect_ = false;
+    RectI filterRegion_;
 
 private:
     NodeId id_;
@@ -950,6 +957,7 @@ struct SharedTransitionParam {
 
     RSRenderNode::SharedPtr GetPairedNode(const NodeId nodeId) const;
     bool UpdateHierarchyAndReturnIsLower(const NodeId nodeId);
+    void InternalUnregisterSelf();
     RSB_EXPORT std::string Dump() const;
 
     std::weak_ptr<RSRenderNode> inNode_;

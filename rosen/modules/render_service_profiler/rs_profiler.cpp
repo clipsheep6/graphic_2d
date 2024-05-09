@@ -1013,7 +1013,9 @@ void RSProfiler::CalcPerfNodeAllStep()
         g_calcPerfNode = 1;
         AwakeRenderServiceThread();
         return;
-    } else if (g_nodeSetPerfCalcIndex - 1 < g_nodeSetPerf.size()) {
+    }
+    
+    if (g_nodeSetPerfCalcIndex - 1 < static_cast<int32_t>(g_nodeSetPerf.size())) {
         auto it = g_nodeSetPerf.begin();
         std::advance(it, g_nodeSetPerfCalcIndex - 1);
         g_calcPerfNode = *it;

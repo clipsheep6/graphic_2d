@@ -91,8 +91,13 @@ bool RSImage::HDRConvert(const Drawing::SamplingOptions& sampling, Drawing::Canv
 
     sptr<SurfaceBuffer> sfBuffer(surfaceBuffer);
     RSPaintFilterCanvas& rscanvas = static_cast<RSPaintFilterCanvas&>(canvas);
-    RSColorSpaceConvert::Instance().ColorSpaceConvertor(imageShader, sfBuffer, paint_,
-        rscanvas.GetTargetColorGamut(), rscanvas.GetScreenId(), dynamicRangeMode_);
+    if (LIKELY(!rscanvas.IsCapture())) {
+        RSColorSpaceConvert::Instance().ColorSpaceConvertor(imageShader, sfBuffer, paint_,
+            rscanvas.GetTargetColorGamut(), rscanvas.GetScreenId(), dynamicRangeMode_);
+    } else {
+        RSColorSpaceConvert::Instance().ColorSpaceConvertor(imageShader, sfBuffer, paint_,
+            rscanvas.GetTargetColorGamut(), rscanvas.GetScreenId(), DynamicRangeMode::STANDARD);
+    }
     paint_.SetHDRImage(true);
     canvas.AttachPaint(paint_);
     return true;
@@ -107,7 +112,7 @@ void RSImage::CanvasDrawImage(Drawing::Canvas& canvas, const Drawing::Rect& rect
     if (canvas.GetRecordingState() && RSSystemProperties::GetDumpUICaptureEnabled() && pixelMap_) {
         CommonTools::SavePixelmapToFile(pixelMap_, "/data/rsImage_");
     }
-    if (!isDrawn_ || rect != lastRect_ || RSPixelMapUtil::IsYUVFormat(pixelMap_)) {
+    if (!isDrawn_ || rect != lastRect_) {
         UpdateNodeIdToPicture(nodeId_);
         Drawing::AutoCanvasRestore acr(canvas, HasRadius());
         frameRect_.SetAll(rect.GetLeft(), rect.GetTop(), rect.GetWidth(), rect.GetHeight());
@@ -295,8 +300,9 @@ void RSImage::UploadGpu(Drawing::Canvas& canvas)
             }
             compressData_ = nullptr;
         }
+        return;
     }
-    if (RSPixelMapUtil::IsYUVFormat(pixelMap_)) {
+    if (isYUVImage_) {
         ProcessYUVImage(canvas.GetGPUContext());
     }
 #endif

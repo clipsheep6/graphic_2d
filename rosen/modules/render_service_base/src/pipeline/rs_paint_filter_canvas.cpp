@@ -20,6 +20,8 @@
 
 #include "draw/canvas.h"
 
+#include "platform/common/rs_log.h"
+
 namespace OHOS {
 namespace Rosen {
 
@@ -278,19 +280,19 @@ void RSPaintFilterCanvasBase::DrawShadow(const Path& path, const Point3& planePa
 }
 
 void RSPaintFilterCanvasBase::DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
-    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle)
+    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isLimitElevation)
 {
 #ifdef ENABLE_RECORDING_DCL
     for (auto iter = pCanvasList_.begin(); iter != pCanvasList_.end(); ++iter) {
         if ((*iter) != nullptr && OnFilter()) {
             (*iter)->DrawShadowStyle(
-                path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
+                path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isLimitElevation);
         }
     }
 #else
     if (canvas_ != nullptr && OnFilter()) {
         canvas_->DrawShadowStyle(
-            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
+            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isLimitElevation);
     }
 #endif
 }
@@ -356,38 +358,6 @@ void RSPaintFilterCanvasBase::DrawVertices(const Drawing::Vertices& vertices, Dr
 #endif
 }
 
-// opinc_begin
-bool RSPaintFilterCanvasBase::BeginOpRecording(const Drawing::Rect* bound, bool isDynamic)
-{
-    if (canvas_ != nullptr && OnFilter()) {
-        return canvas_->BeginOpRecording(bound, isDynamic);
-    }
-    return false;
-}
-
-Drawing::OpListHandle RSPaintFilterCanvasBase::EndOpRecording()
-{
-    if (canvas_ != nullptr && OnFilter()) {
-        return canvas_->EndOpRecording();
-    }
-    return {};
-}
-
-void RSPaintFilterCanvasBase::DrawOpList(Drawing::OpListHandle handle)
-{
-    if (canvas_ != nullptr && OnFilter()) {
-        canvas_->DrawOpList(handle);
-    }
-}
-
-int RSPaintFilterCanvasBase::CanDrawOpList(Drawing::OpListHandle handle)
-{
-    if (canvas_ != nullptr && OnFilter()) {
-        return canvas_->CanDrawOpList(handle);
-    }
-    return -1;
-}
-
 bool RSPaintFilterCanvasBase::OpCalculateBefore(const Matrix& matrix)
 {
     if (canvas_ != nullptr && OnFilter()) {
@@ -403,7 +373,6 @@ std::shared_ptr<Drawing::OpListHandle> RSPaintFilterCanvasBase::OpCalculateAfter
     }
     return nullptr;
 }
-// opinc_end
 
 void RSPaintFilterCanvasBase::DrawBitmap(const Bitmap& bitmap, const scalar px, const scalar py)
 {
@@ -992,6 +961,10 @@ CoreCanvas& RSPaintFilterCanvas::AttachPen(const Pen& pen)
     }
 
     Pen p(pen);
+    if (hasHdrPresent_ && !isCapture_) {
+        RS_LOGD("hdr PaintFilter %{public}d AttachPen", targetColorGamut_);
+        PaintFilter(p);
+    }
     if (p.GetColor() == 0x00000001) { // foreground color and foreground color strategy identification
         p.SetColor(envStack_.top().envForegroundColor_.AsArgbInt());
     }
@@ -1025,6 +998,10 @@ CoreCanvas& RSPaintFilterCanvas::AttachBrush(const Brush& brush)
     }
 
     Brush b(brush);
+    if (hasHdrPresent_ && !isCapture_) {
+        RS_LOGD("hdr PaintFilter %{public}d AttachBrush", targetColorGamut_);
+        PaintFilter(b);
+    }
     if (b.GetColor() == 0x00000001) { // foreground color and foreground color strategy identification
         b.SetColor(envStack_.top().envForegroundColor_.AsArgbInt());
     }
@@ -1051,6 +1028,25 @@ CoreCanvas& RSPaintFilterCanvas::AttachBrush(const Brush& brush)
     return *this;
 }
 
+template <typename T>
+void RSPaintFilterCanvas::PaintFilter(T& paint)
+{
+    Filter filter = paint.GetFilter();
+
+    ColorMatrix luminanceMatrix;
+    luminanceMatrix.SetScale(brightnessRatio_, brightnessRatio_, brightnessRatio_, 1.0f);
+    auto luminanceColorFilter = std::make_shared<ColorFilter>(ColorFilter::FilterType::MATRIX, luminanceMatrix);
+
+    auto colorFilter = filter.GetColorFilter();
+    if (colorFilter) {
+        RS_LOGE("hdr PaintFilter has colorFilter");
+        return;
+    }
+    filter.SetColorFilter(luminanceColorFilter);
+
+    paint.SetFilter(filter);
+}
+
 CoreCanvas& RSPaintFilterCanvas::AttachPaint(const Drawing::Paint& paint)
 {
     if (canvas_ == nullptr) {
@@ -1058,6 +1054,10 @@ CoreCanvas& RSPaintFilterCanvas::AttachPaint(const Drawing::Paint& paint)
     }
 
     Paint p(paint);
+    if (hasHdrPresent_ && !isCapture_ && !paint.IsHDRImage()) {
+        RS_LOGD("hdr AttachPaint %{public}d AttachPaint", targetColorGamut_);
+        PaintFilter(p);
+    }
     if (p.GetColor() == 0x00000001) { // foreground color and foreground color strategy identification
         p.SetColor(envStack_.top().envForegroundColor_.AsArgbInt());
     }
@@ -1200,16 +1200,6 @@ void RSPaintFilterCanvas::RestoreEnvToCount(int count)
     for (int i = 0; i < n; ++i) {
         envStack_.pop();
     }
-}
-
-std::shared_ptr<RSDisplayRenderNode> RSPaintFilterCanvas::GetCurDisplayNode() const
-{
-    return curDisplayNode_;
-}
-
-void RSPaintFilterCanvas::SetCurDisplayNode(std::shared_ptr<RSDisplayRenderNode> curDisplayNode)
-{
-    curDisplayNode_ = curDisplayNode;
 }
 
 int RSPaintFilterCanvas::GetEnvSaveCount() const
@@ -1469,6 +1459,15 @@ bool RSPaintFilterCanvas::GetHDRPresent() const
 void RSPaintFilterCanvas::SetHDRPresent(bool hasHdrPresent)
 {
     hasHdrPresent_ = hasHdrPresent;
+}
+
+bool RSPaintFilterCanvas::IsCapture() const
+{
+    return isCapture_;
+}
+void RSPaintFilterCanvas::SetCapture(bool isCapture)
+{
+    isCapture_ = isCapture;
 }
 
 ScreenId RSPaintFilterCanvas::GetScreenId() const

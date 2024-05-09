@@ -31,7 +31,6 @@
 
 namespace OHOS {
 namespace Rosen {
-class RSDisplayRenderNode;
 
 class RSB_EXPORT RSPaintFilterCanvasBase : public Drawing::Canvas {
 public:
@@ -69,8 +68,8 @@ public:
         const Drawing::Point3& devLightPos, Drawing::scalar lightRadius,
         Drawing::Color ambientColor, Drawing::Color spotColor, Drawing::ShadowFlags flag) override;
     void DrawShadowStyle(const Drawing::Path& path, const Drawing::Point3& planeParams,
-        const Drawing::Point3& devLightPos, Drawing::scalar lightRadius,
-        Drawing::Color ambientColor, Drawing::Color spotColor, Drawing::ShadowFlags flag, bool isShadowStyle) override;
+        const Drawing::Point3& devLightPos, Drawing::scalar lightRadius, Drawing::Color ambientColor,
+        Drawing::Color spotColor, Drawing::ShadowFlags flag, bool isLimitElevation) override;
     void DrawColor(Drawing::ColorQuad color, Drawing::BlendMode mode = Drawing::BlendMode::SRC_OVER) override;
     void DrawRegion(const Drawing::Region& region) override;
     void DrawPatch(const Drawing::Point cubics[12], const Drawing::ColorQuad colors[4],
@@ -82,14 +81,8 @@ public:
     void DrawImageLattice(const Drawing::Image* image, const Drawing::Lattice& lattice, const Drawing::Rect& dst,
         Drawing::FilterMode filter, const Drawing::Brush* brush = nullptr) override;
 
-    // opinc_begin
-    bool BeginOpRecording(const Drawing::Rect* bound = nullptr, bool isDynamic = false) override;
-    Drawing::OpListHandle EndOpRecording() override;
-    void DrawOpList(Drawing::OpListHandle handle) override;
-    int CanDrawOpList(Drawing::OpListHandle handle) override;
     bool OpCalculateBefore(const Drawing::Matrix& matrix) override;
     std::shared_ptr<Drawing::OpListHandle> OpCalculateAfter(const Drawing::Rect& bound) override;
-    // opinc_end
 
     void DrawBitmap(const Drawing::Bitmap& bitmap, const Drawing::scalar px, const Drawing::scalar py) override;
     void DrawImage(const Drawing::Image& image,
@@ -154,8 +147,6 @@ public:
     void PopDirtyRegion();
     bool IsDirtyRegionStackEmpty();
     Drawing::Region& GetCurDirtyRegion();
-    std::shared_ptr<RSDisplayRenderNode> GetCurDisplayNode() const;
-    void SetCurDisplayNode(std::shared_ptr<RSDisplayRenderNode> curDisplayNode);
 
     // alpha related
     void MultiplyAlpha(float alpha);
@@ -278,18 +269,26 @@ public:
     bool GetRecordingState() const override;
     void SetRecordingState(bool flag) override;
 
+    const std::stack<OffscreenData>& GetOffscreenDataList() const
+    {
+        return offscreenDataList_;
+    }
     Drawing::DrawingType GetDrawingType() const override
     {
         return Drawing::DrawingType::PAINT_FILTER;
     }
     bool GetHDRPresent() const;
     void SetHDRPresent(bool hasHdrPresent);
+    bool IsCapture() const;
+    void SetCapture(bool isCapture);
     ScreenId GetScreenId() const;
     void SetScreenId(ScreenId screenId);
     GraphicColorGamut GetTargetColorGamut() const;
     void SetTargetColorGamut(GraphicColorGamut colorGamut);
     float GetBrightnessRatio() const;
     void SetBrightnessRatio(float brightnessRatio);
+    template <typename T>
+    void PaintFilter(T& paint);
 
 protected:
     using Env = struct {
@@ -316,7 +315,6 @@ protected:
     }
 
 private:
-    std::shared_ptr<RSDisplayRenderNode> curDisplayNode_ = nullptr;
     Drawing::Surface* surface_ = nullptr;
     std::stack<float> alphaStack_;
     std::stack<Env> envStack_;
@@ -339,7 +337,7 @@ private:
     Drawing::Rect visibleRect_ = Drawing::Rect();
 
     GraphicColorGamut targetColorGamut_ = GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
-    float brightnessRatio_ = 0.0f;
+    float brightnessRatio_ = 1.0f; // Default 1.0f means no discount
     ScreenId screenId_ = INVALID_SCREEN_ID;
 
     uint32_t threadIndex_ = UNI_RENDER_THREAD_INDEX; // default
@@ -348,6 +346,7 @@ private:
     bool recordingState_ = false;
     bool recordDrawable_ = false;
     bool hasHdrPresent_ = false;
+    bool isCapture_ = false;
 };
 
 // Helper class similar to SkAutoCanvasRestore, but also restores alpha and/or env

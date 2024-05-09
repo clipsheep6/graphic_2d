@@ -56,7 +56,7 @@ static std::unordered_map<NodeId, int> g_mapNode2Count;
 static std::unordered_map<NodeId, int> g_mapNode2ComplementTime;
 static NodeId g_calcPerfNode = 0;
 static int g_calcPerfNodeTry = 0;
-constexpr int CALC_PERF_NODE_TIME_COUNT = 5;//64;
+constexpr int CALC_PERF_NODE_TIME_COUNT = 5; // 64;
 static uint64_t g_calcPerfNodeTime[CALC_PERF_NODE_TIME_COUNT];
 static NodeId g_calcPerfNodeParent = 0;
 static int g_calcPerfNodeIndex = 0;
@@ -326,7 +326,6 @@ void RSProfiler::OnFrameEnd()
 
     CalcNodeWeigthOnFrameEnd();
     g_renderServiceCpuId = Utils::GetCpuId();
-        
 }
 
 void RSProfiler::CalcNodeWeigthOnFrameEnd()
@@ -346,10 +345,12 @@ void RSProfiler::CalcNodeWeigthOnFrameEnd()
 
     std::sort(std::begin(g_calcPerfNodeTime), std::end(g_calcPerfNodeTime));
     constexpr int middle = CALC_PERF_NODE_TIME_COUNT / 2;
-    Respond("CALC_PERF_NODE_RESULT: " + std::to_string(g_calcPerfNode) + " " +
-            "cnt=" + std::to_string(g_mapNode2Count[g_calcPerfNode]) + " " + 
-            std::to_string(g_calcPerfNodeTime[middle]) + ((g_calcPerfNode != renderEntireFrame) ? " node_time=" + 
-            std::to_string(100 * (1.0f - (float)g_calcPerfNodeTime[middle] / (float)g_mapNode2ComplementTime[renderEntireFrame])) : "") );        
+    Respond(
+        "CALC_PERF_NODE_RESULT: " + std::to_string(g_calcPerfNode) + " " +
+        "cnt=" + std::to_string(g_mapNode2Count[g_calcPerfNode]) + " " +
+        std::to_string(g_calcPerfNodeTime[middle]) + ((g_calcPerfNode != renderEntireFrame) ? 
+        " node_time=" + std::to_string(scale * (1.0f - (float)g_calcPerfNodeTime[middle] /
+        (float)g_mapNode2ComplementTime[renderEntireFrame])) : ""));        
     Network::SendRSTreeSingleNodePerf(g_calcPerfNode, g_calcPerfNodeTime[middle]);
 
     if (g_calcPerfNode != renderEntireFrame) {
@@ -943,7 +944,7 @@ void RSProfiler::GetPerfTree(const ArgList& args)
             continue;
         }
         const auto& nodes = displayNode->GetCurAllSurfaces();
-        for(auto& node : nodes) {
+        for (auto& node : nodes) {
             if (node) {
                 PerfTreeFlatten(*node, g_nodeSetPerf, g_mapNode2Count);
             }

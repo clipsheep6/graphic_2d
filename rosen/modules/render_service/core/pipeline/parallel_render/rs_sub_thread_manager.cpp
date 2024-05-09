@@ -227,9 +227,8 @@ void RSSubThreadManager::PrepareRenderTasks(const std::list<std::shared_ptr<RSSu
 }
 
 void RSSubThreadManager::AssignTasksToSuperRenderTasks(std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList,
-                                                       std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
-                                                       const std::shared_ptr<RSDisplayRenderNode>& node
-                                                       )
+    std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
+    const std::shared_ptr<RSDisplayRenderNode>& node)
 {
     for (uint32_t i = 0; i < SUB_THREAD_NUM; i++) {
         superRenderTaskList.emplace_back(std::make_shared<RSSuperRenderTask>(node,

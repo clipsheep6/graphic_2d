@@ -782,7 +782,7 @@ void RSMainThread::ProcessNodeWithStatusDoing(std::shared_ptr<RSSurfaceRenderNod
                 pid = ExtractPid(child->GetId());
                 break;
             }
-		}
+        }
     }
 
     cacheCmdSkippedNodes_[node->GetId()] = false;
@@ -1655,8 +1655,7 @@ void RSMainThread::UniRender(std::shared_ptr<RSBaseRenderNode> rootNode)
 }
 
 bool RSMainThread::CheckAndProcessDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode,
-                                                    std::shared_ptr<RSUniRenderVisitor> uniVisitor
-                                                    )
+    std::shared_ptr<RSUniRenderVisitor> uniVisitor)
 {
     bool needTraverseNodeTree = true;
 
@@ -1689,7 +1688,7 @@ bool RSMainThread::CheckAndProcessDirectComposition(std::shared_ptr<RSBaseRender
 }
 
 void RSMainThread::TraverseAndUpdateNodeTree(std::shared_ptr<RSBaseRenderNode> rootNode,
-                                                std::shared_ptr<RSUniRenderVisitor> uniVisitor)
+    std::shared_ptr<RSUniRenderVisitor> uniVisitor)
 {
     doDirectComposition_ = false;
     renderThreadParams_->selfDrawingNodes_ = std::move(selfDrawingNodes_);
@@ -1710,7 +1709,7 @@ void RSMainThread::TraverseAndUpdateNodeTree(std::shared_ptr<RSBaseRenderNode> r
     systemAnimatedScenesEnabled_ = RSSystemParameters::GetSystemAnimatedScenesEnabled();
     if (!RSSystemProperties::GetQuickPrepareEnabled()) {
         CalcOcclusion();
-	}
+    }
     if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
         WaitUntilUploadTextureTaskFinished(isUniRender_);
     }

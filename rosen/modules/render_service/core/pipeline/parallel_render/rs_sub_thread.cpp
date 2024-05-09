@@ -196,24 +196,18 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
 }
 
 void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
-                              const std::shared_ptr<RSUniRenderVisitor>& visitor
-                              )
+    const std::shared_ptr<RSUniRenderVisitor>& visitor)
 {
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     bool needRequestVsync = false;
     while (threadTask->GetTaskSize() > 0) {
         auto task = threadTask->GetNextRenderTask();
-        if (!task || (task->GetIdx() == 0)) {
-            continue;
-        }
         auto nodeDrawable = task->GetNode();
-        if (!nodeDrawable) {
-            continue;
-        }
         auto surfaceNodePtr = std::static_pointer_cast<RSSurfaceRenderNode>(nodeDrawable);
-        if (!surfaceNodePtr) {
+        if ((!task || (task->GetIdx() == 0)) || !nodeDrawable || !surfaceNodePtr) {
             continue;
         }
+
         // flag CacheSurfaceProcessed is used for cacheCmdskippedNodes collection in rs_mainThread
         surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
         if (RSMainThread::Instance()->GetFrameCount() != threadTask->GetFrameCount()) {
@@ -250,14 +244,24 @@ void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTa
         surfaceNodePtr->SetCacheSurfaceNeedUpdated(true);
         needRequestVsync = true;
 
-        if (needNotify) {
-            RSSubThreadManager::Instance()->NodeTaskNotify(nodeDrawable->GetId());
-        }
+        RenderTasksNeedNotify(needNotify);
     }
+    RenderTasksNeedRequestVsync(needRequestVsync);
+#endif
+}
+
+void RSSubThread::RenderTasksNeedNotify(bool needNotify)
+{
+    if (needNotify) {
+        RSSubThreadManager::Instance()->NodeTaskNotify(nodeDrawable->GetId());
+    }
+}
+
+void RSSubThread::RenderTasksNeedRequestVsync(bool needRequestVsync)
+{
     if (needRequestVsync) {
         RSMainThread::Instance()->RequestNextVSync();
     }
-#endif
 }
 
 void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)

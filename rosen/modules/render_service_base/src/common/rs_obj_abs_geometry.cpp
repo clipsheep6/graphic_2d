@@ -82,7 +82,7 @@ void RSObjAbsGeometry::UpdateMatrix(const Drawing::Matrix* parentMatrix, const s
 }
 
 void RSObjAbsGeometry::InitializeAbsMatrix(const Drawing::Matrix* parentMatrix,
-                                            const std::optional<Drawing::Point>& offset)
+    const std::optional<Drawing::Point>& offset)
 {
     if (parentMatrix == nullptr) {
         absMatrix_.reset();

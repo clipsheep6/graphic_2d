@@ -541,11 +541,11 @@ void RSScreenManager::PostVsyncEnabledTask(ScreenId id, bool enabled)
     screens_[id]->SetScreenVsyncEnabled(enabled);
 }
 
-void RSScreenManager::ScreenVsyncEnabledLog(RSMainThread* mainThread, ScreenId id, bool enabled)
+void RSScreenManager::SetScreenVsyncEnabledCallback(ScreenId id, bool enabled)
 {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
-    if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL)
-    {
+    if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        auto mainThread = RSMainThread::Instance();
         if (mainThread == nullptr) {
             RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, get RSMainThread failed", enabled);
         } else {
@@ -554,39 +554,14 @@ void RSScreenManager::ScreenVsyncEnabledLog(RSMainThread* mainThread, ScreenId i
         });
         }
     } else {
-        if (screens_[id] == nullptr) {
-            RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, screen %{public}" PRIu64 " not found",
-                enabled, id);
-        } else {
-            screens_[id]->SetScreenVsyncEnabled(enabled);
-        }
-    }
-}
-
-void RSScreenManager::ScreenVsyncTask()
-{
-    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
-    if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
-        vsyncSampler->RegSetScreenVsyncEnabledCallback([this, id](bool enabled) {
-            auto mainThread = RSMainThread::Instance();
-            ScreenVsyncEnabledLog(mainThread, id, enabled);
-        });
-    } else {
         RSHardwareThread::Instance().PostTask([this, id, enabled]() {
-            auto mainThread = RSMainThread::Instance();
-            ScreenVsyncEnabledLog(mainThread, id, enabled);
-        });
-    }
-}
-
-void RSScreenManager::SetScreenVsyncEnabledCallback(sptr<OHOS::Rosen::VSyncSampler> &vsyncSampler, ScreenId id)
-{
-    auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
-    if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
-        ScreenVsyncTask();
-    } else {
-        vsyncSampler->RegSetScreenVsyncEnabledCallback([this, id](bool enabled) {
-            ScreenVsyncTask();
+            if (screens_[id] == nullptr) {
+                RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, screen %{public}" PRIu64 " not found",
+                    enabled, id);
+            }
+            else {
+                screens_[id]->SetScreenVsyncEnabled(enabled);
+            }
         });
     }
 }
@@ -595,7 +570,9 @@ void RSScreenManager::ConfigureVSyncSampler(ScreenId id)
 {
     auto vsyncSampler = CreateAndCheckVSyncSampler();
     if (vsyncSampler) {
-        SetScreenVsyncEnabledCallback(vsyncSampler, id);
+        vsyncSampler->RegSetScreenVsyncEnabledCallback([this, id](bool enabled) {
+            SetScreenVsyncEnabledCallback(id, enabled);
+        });
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -104,6 +104,97 @@ HWTEST_F(RSModifierManagerTest, JudgeAnimateWhetherSkip, TestSize.Level1)
 }
 
 /**
+ * @tc.name: AddModifier
+ * @tc.desc: Test AddModifier and Draw and Animate
+ * @tc.type: FUNC
+ * @tc.require: AAA
+ */
+HWTEST_F(RSModifierManagerTest, AddModifier, TestSize.Level1)
+{
+    RSModifierManager rsModifierManager;
+    auto prop = std::make_shared<RSPropertyBase>();
+    std::shared_ptr<RSModifier> modifier = std::make_shared<RSAlphaModifier>(prop);
+    rsModifierManager.AddModifier(modifier);
+    rsModifierManager.Draw();
+    ASSERT_TRUE(rsModifierManager.modifiers_.empty());
+    rsModifierManager.Animate(1, 1);
+    ASSERT_FALSE(rsModifierManager.isDisplaySyncEnabled_);
+}
+
+/**
+ * @tc.name: FlushStartAnimation
+ * @tc.desc: Test FlushStartAnimation and JudgeAnimateWhetherSkip and GetFrameRateRange
+ * @tc.type: FUNC
+ * @tc.require: AAA
+ */
+HWTEST_F(RSModifierManagerTest, FlushStartAnimation, TestSize.Level1)
+{
+    RSModifierManager rsModifierManager;
+    AnimationId id = 1;
+    std::shared_ptr<RSRenderAnimation> animation = std::make_shared<RSRenderAnimation>(id);
+    rsModifierManager.animations_.emplace(animation->GetAnimationId(), animation);
+    rsModifierManager.FlushStartAnimation(1);
+    ASSERT_TRUE(rsModifierManager.modifiers_.empty());
+
+    uint64_t ANIMATION_ID = 100;
+    uint64_t PROPERTY_ID = 101;
+    auto property = std::make_shared<RSRenderAnimatableProperty<float>>(0.0f);
+    auto property1 = std::make_shared<RSRenderAnimatableProperty<float>>(0.0f);
+    auto property2 = std::make_shared<RSRenderAnimatableProperty<float>>(1.0f);
+    auto renderCurveAnimation =
+        std::make_shared<RSRenderCurveAnimation>(ANIMATION_ID, PROPERTY_ID, property, property1, property2);
+    AnimationId key = renderCurveAnimation->GetAnimationId();
+    rsModifierManager.AddAnimation(renderCurveAnimation);
+    rsModifierManager.JudgeAnimateWhetherSkip(key, 1, 1);
+    ASSERT_TRUE(rsModifierManager.displaySyncs_.count(renderCurveAnimation->GetAnimationId()));
+
+    ASSERT_EQ(rsModifierManager.GetFrameRateRange().min_, 0);
+}
+
+/**
+ * @tc.name: OnAnimationFinished
+ * @tc.desc: Test OnAnimationFinished and RegisterSpringAnimation and UnregisterSpringAnimation
+ * @tc.type: FUNC
+ * @tc.require: AAA
+ */
+HWTEST_F(RSModifierManagerTest, OnAnimationFinished, TestSize.Level1)
+{
+    RSModifierManager rsModifierManager;
+    AnimationId id = 1;
+    std::shared_ptr<RSRenderAnimation> animation = std::make_shared<RSRenderAnimation>(id);
+    rsModifierManager.OnAnimationFinished(animation);
+
+    PropertyId propertyId = 1;
+    rsModifierManager.RegisterSpringAnimation(propertyId, id);
+    ASSERT_FALSE(rsModifierManager.springAnimations_.empty());
+
+    rsModifierManager.UnregisterSpringAnimation(propertyId, id);
+    ASSERT_TRUE(rsModifierManager.springAnimations_.empty());
+}
+
+
+/**
+ * @tc.name: QuerySpringAnimation
+ * @tc.desc: Test QuerySpringAnimation and GetAnimation
+ * @tc.type: FUNC
+ * @tc.require: AAA
+ */
+HWTEST_F(RSModifierManagerTest, QuerySpringAnimation, TestSize.Level1)
+{
+    RSModifierManager rsModifierManager;
+    PropertyId propertyId = 1;
+    rsModifierManager.QuerySpringAnimation(propertyId);
+    AnimationId id = 1;
+    rsModifierManager.RegisterSpringAnimation(propertyId, id);
+    ASSERT_EQ(rsModifierManager.QuerySpringAnimation(propertyId), nullptr);
+
+    id = 0;
+    rsModifierManager.RegisterSpringAnimation(propertyId, id);
+    ASSERT_EQ(rsModifierManager.QuerySpringAnimation(propertyId), nullptr);
+
+    std::shared_ptr<RSRenderAnimation> animation = std::make_shared<RSRenderAnimation>(id);
+    rsModifierManager.animations_.emplace(animation->GetAnimationId(), animation);
+    ASSERT_NE(rsModifierManager.GetAnimation(animation->GetAnimationId()), nullptr);
  * @tc.name: UnregisterSpringAnimationTest001
  * @tc.desc: test results of UnregisterSpringAnimation
  * @tc.type: FUNC

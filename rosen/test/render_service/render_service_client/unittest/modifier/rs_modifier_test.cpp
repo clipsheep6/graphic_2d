@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2017,5 +2017,32 @@ HWTEST_F(RSModifierTest, ModifierManager007, TestSize.Level1)
     manager.Animate(time);
     manager.AddModifier(modifier);
     manager.Draw();
+}
+
+/**
+ * @tc.name: AttachProperty
+ * @tc.desc: Test AttachProperty and SetDirty and ResetRSNodeExtendModifierDirty
+ * @tc.type: FUNC
+ * @tc.require: AAA
+ */
+HWTEST_F(RSModifierTest, AttachProperty, TestSize.Level1)
+{
+    auto prop = std::make_shared<RSAnimatableProperty<float>>(floatData[0]);
+    auto modifier = std::make_shared<RSAlphaModifier>(prop);
+    std::shared_ptr<RSPropertyBase> property;
+    modifier->AttachProperty(property);
+    property = std::make_shared<RSPropertyBase>();
+    modifier->AttachProperty(property);
+    ASSERT_EQ(property->target_.lock(), nullptr);
+
+    modifier->SetDirty(true);
+    modifier->SetDirty(false);
+    ASSERT_FALSE(modifier->isDirty_);
+
+    modifier->ResetRSNodeExtendModifierDirty();
+    modifier->property_->target_ = std::make_shared<RSNode>(true);
+    ASSERT_NE(modifier->property_->target_.lock(), nullptr);
+    modifier->ResetRSNodeExtendModifierDirty();
+    ASSERT_FALSE(modifier->isDirty_);
 }
 } // namespace OHOS::Rosen

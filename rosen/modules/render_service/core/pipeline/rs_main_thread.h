@@ -52,6 +52,7 @@
 #endif
 
 namespace OHOS::Rosen {
+class RSUniRenderVisitor;
 #if defined(ACCESSIBILITY_ENABLE)
 class AccessibilityObserver;
 #endif
@@ -107,6 +108,8 @@ public:
     void ResetAnimateNodeFlag();
     void GetAppMemoryInMB(float& cpuMemSize, float& gpuMemSize);
     void ClearMemoryCache(ClearMemoryMoment moment, bool deeply = false, pid_t pid = -1);
+    void ClearMemoryCacheTask(pid_t pid, bool deeply);
+    uint32_t GetTaskDelay();
 
     template<typename Task, typename Return = std::invoke_result_t<Task>>
     std::future<Return> ScheduleTask(Task&& task)
@@ -336,6 +339,11 @@ private:
     void SetDeviceType();
     void ColorPickerRequestVsyncIfNeed();
     void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
+    bool CheckAndProcessDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode,
+                                            std::shared_ptr<RSUniRenderVisitor> uniVisitor);
+    void RenderNothingToUpdate();
+    void TraverseAndUpdateNodeTree(std::shared_ptr<RSBaseRenderNode> rootNode,
+                                    std::shared_ptr<RSUniRenderVisitor> uniVisitor);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     RSVisibleLevel CalcSurfaceNodeVisibleRegion(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
         const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode, Occlusion::Region& accumulatedRegion,
@@ -390,6 +398,9 @@ private:
 
     // UIFirst
     bool CheckParallelSubThreadNodesStatus();
+    void ProcessNodeWithStatusDoing(std::shared_ptr<RSSurfaceRenderNode> node);
+    void UpdateCacheCmdSkippedInfo(const std::shared_ptr<RSSurfaceRenderNode>& node, pid_t pid);
+    void UpdateCacheCmdSkippedInfoForAbilityNodes(const std::shared_ptr<RSSurfaceRenderNode>& node);
     void CacheCommands();
     bool CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const;
 
@@ -617,4 +628,4 @@ private:
     ScreenId displayNodeScreenId_ = 0;
 };
 } // namespace OHOS::Rosen
-#endif // RS_MAIN_THREAD
+#endif // RS_MAIN_THREA

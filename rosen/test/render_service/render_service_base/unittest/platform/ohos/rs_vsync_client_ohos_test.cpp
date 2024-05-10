@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 
+#include "platform/ohos/rs_vsync_client_ohos.h"
 #include "platform/drawing/rs_vsync_client.h"
 #include "platform/ohos/rs_render_service_connect_hub.h"
 

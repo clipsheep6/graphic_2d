@@ -60,7 +60,7 @@ public:
     void ReleaseSelfDrawingNodeBuffer();
     std::shared_ptr<RSBaseRenderEngine> GetRenderEngine() const;
     void NotifyDisplayNodeBufferReleased();
-    bool WaitUntilDisplayNodeBufferReleased(std::shared_ptr<RSSurfaceHandler> surfaceHandler);
+    bool WaitUntilDisplayNodeBufferReleased(std::shared_ptr<RSDisplayRenderNode> displayNode);
 
     uint64_t GetCurrentTimestamp() const;
     uint32_t GetPendingScreenRefreshRate() const;
@@ -76,6 +76,8 @@ public:
     std::shared_ptr<Drawing::Image> GetWatermarkImg();
     bool GetWatermarkFlag();
     
+    bool IsCurtainScreenOn() const;
+
     static void SetCaptureParam(const CaptureParam& param);
     static CaptureParam& GetCaptureParam();
     static void ResetCaptureParam();
@@ -125,10 +127,13 @@ public:
         return tid_;
     }
 
+    void SetAcquireFence(sptr<SyncFence> acquireFence);
+
 private:
     RSUniRenderThread();
     ~RSUniRenderThread() noexcept;
     void Inittcache();
+    void ReleaseSkipSyncBuffer(std::vector<std::function<void()>>& tasks);
 
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
@@ -148,8 +153,6 @@ private:
     // used for stalling renderThread before displayNode has no freed buffer to request
     std::condition_variable displayNodeBufferReleasedCond_;
 
-    // Those variable is used to manage memory.
-    bool clearMemoryFinished_ = true;
     bool clearMemDeeply_ = false;
     DeviceType deviceType_ = DeviceType::PHONE;
     std::mutex mutex_;
@@ -170,6 +173,8 @@ private:
     std::mutex imageReleaseMutex_;
     bool postImageReleaseTaskFlag_;
     int imageReleaseCount_ = 0;
+
+    sptr<SyncFence> acquireFence_ = SyncFence::INVALID_FENCE;
 };
 } // namespace Rosen
 } // namespace OHOS

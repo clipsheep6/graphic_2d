@@ -309,6 +309,10 @@ bool RSRenderNodeDrawableAdapter::QuickReject(Drawing::Canvas& canvas, RectF loc
     Drawing::Rect dst;
     canvas.GetTotalMatrix().MapRect(
         dst, { localDrawRect.GetLeft(), localDrawRect.GetTop(), localDrawRect.GetRight(), localDrawRect.GetBottom() });
+    auto originalCanvas = paintFilterCanvas->GetOriginalCanvas();
+    if (originalCanvas && !paintFilterCanvas->GetOffscreenDataList().empty()) {
+        originalCanvas->GetTotalMatrix().MapRect(dst, dst);
+    }
     auto deviceClipRegion = paintFilterCanvas->GetCurDirtyRegion();
     Drawing::Region dstRegion;
     dstRegion.SetRect(dst.RoundOut());
@@ -342,15 +346,14 @@ void RSRenderNodeDrawableAdapter::DrawBackgroundWithoutFilterAndEffect(
             }
             continue;
         }
-        if (index != drawCmdIndex_.backgroundFilterIndex_ &&
-            index != drawCmdIndex_.useEffectIndex_) {
-            drawCmdList_[index](&canvas, &bounds);
-        } else {
+        if (index != drawCmdIndex_.useEffectIndex_ || index != drawCmdIndex_.backgroundFilterIndex_) {
             RS_OPTIONAL_TRACE_NAME_FMT(
                 "ClipHoleForBlur filterRect:[%.2f, %.2f]", bounds.GetWidth(), bounds.GetHeight());
             Drawing::AutoCanvasRestore arc(*curCanvas, true);
             curCanvas->ClipRect(bounds, Drawing::ClipOp::INTERSECT, false);
             curCanvas->Clear(Drawing::Color::COLOR_TRANSPARENT);
+        } else {
+            drawCmdList_[index](&canvas, &bounds);
         }
     }
 }

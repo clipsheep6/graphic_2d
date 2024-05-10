@@ -237,10 +237,10 @@ sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(con
     }
 
     sptr<IRemoteObject> rObj = reply.ReadRemoteObject();
-    if (rObj == nullptr) {
+    sptr<IVSyncConnection> conn = iface_cast<IVSyncConnection>(rObj);
+    if (conn == nullptr) {
         return nullptr;
     }
-    sptr<IVSyncConnection> conn = iface_cast<IVSyncConnection>(rObj);
     return conn;
 }
 
@@ -2097,7 +2097,7 @@ void RSRenderServiceConnectionProxy::NotifyRefreshRateEvent(const EventInfo& eve
     }
 }
 
-void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -2106,6 +2106,9 @@ void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus)
         return;
     }
     if (!data.WriteUint32(touchStatus)) {
+        return;
+    }
+    if (!data.WriteUint32(touchCnt)) {
         return;
     }
     option.SetFlags(MessageOption::TF_ASYNC);

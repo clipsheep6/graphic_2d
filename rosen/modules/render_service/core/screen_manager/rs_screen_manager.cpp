@@ -558,8 +558,7 @@ void RSScreenManager::SetScreenVsyncEnabledCallback(ScreenId id, bool enabled)
             if (screens_[id] == nullptr) {
                 RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, screen %{public}" PRIu64 " not found",
                     enabled, id);
-            }
-            else {
+            } else {
                 screens_[id]->SetScreenVsyncEnabled(enabled);
             }
         });

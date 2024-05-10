@@ -49,7 +49,7 @@ public:
     const FrameRateRange& GetExpectedRange() const;
     void SetFrameRate(uint32_t rate);
     uint32_t GetFrameRate() const;
-    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range, bool isAnimatorStopped = true);
+    void SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range, bool isAnimatorStopped);
 private:
     static FrameRateLinkerId GenerateId();
     FrameRateLinkerId id_ = 0;

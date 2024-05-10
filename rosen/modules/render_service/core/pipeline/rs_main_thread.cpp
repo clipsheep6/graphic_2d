@@ -1672,7 +1672,7 @@ bool RSMainThread::CheckAndProcessDirectComposition(std::shared_ptr<RSBaseRender
             RSMainThread::Instance()->SetDirtyFlag();
             RequestNextVSync();
         } else {
-           RenderNothingToUpdate();
+            RenderNothingToUpdate();
         }
     }
 
@@ -1728,7 +1728,7 @@ void RSMainThread::TraverseAndUpdateNodeTree(std::shared_ptr<RSBaseRenderNode> r
         const auto& nodeMap = context_->GetNodeMap();
         RSUniRenderUtil::ClearSurfaceIfNeed(nodeMap, displayNode, oldDisplayChildren_, deviceType_);
         RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
-    } 
+    }
     uniVisitor->SetUniRenderThreadParam(renderThreadParams_);
 }
 

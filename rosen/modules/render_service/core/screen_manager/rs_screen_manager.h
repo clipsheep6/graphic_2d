@@ -45,6 +45,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class RSMainThread;
 class RSScreenManager : public RefBase {
 public:
     RSScreenManager() = default;
@@ -377,6 +378,7 @@ private:
     void ConfigureVSyncSampler(ScreenId id);
     sptr<OHOS::Rosen::VSyncSampler> CreateAndCheckVSyncSampler();
     void SetScreenVsyncEnabledCallback(sptr<OHOS::Rosen::VSyncSampler> &vsyncSampler, ScreenId id);
+    bool ScreenVsyncEnabledLog(RSMainThread* mainThread, ScreenId id, bool enabled);
     void UpdateDefaultScreenId(RSScreenManager& manager, ScreenId id);
     void AddScreenToHgm(std::shared_ptr<HdiOutput> &output);
     void ProcessScreenDisConnectedLocked(std::shared_ptr<HdiOutput> &output);

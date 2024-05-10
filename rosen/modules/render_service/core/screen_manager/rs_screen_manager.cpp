@@ -541,29 +541,50 @@ void RSScreenManager::PostVsyncEnabledTask(ScreenId id, bool enabled)
     screens_[id]->SetScreenVsyncEnabled(enabled);
 }
 
-void RSScreenManager::SetScreenVsyncEnabledCallback(sptr<OHOS::Rosen::VSyncSampler> &vsyncSampler, ScreenId id)
+bool RSScreenManager::ScreenVsyncEnabledLog(RSMainThread* mainThread, ScreenId id, bool enabled)
 {
+     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
+     if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL)
+     {
+         if (mainThread == nullptr) {
+             RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, get RSMainThread failed", enabled);
+             return false;
+         } else {
+             mainThread->PostTask([this, id, enabled]() {
+                PostVsyncEnabledTask(id, enabled);
+             });
+         }
+     } else {
+         if (screens_[id] == nullptr) {
+             RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, screen %{public}" PRIu64 " not found",
+                 enabled, id);
+             return false;
+         } else {
+             screens_[id]->SetScreenVsyncEnabled(enabled);
+         }
+     }
+     return true;
+ }
+
+ void RSScreenManager::SetScreenVsyncEnabledCallback(sptr<OHOS::Rosen::VSyncSampler> &vsyncSampler, ScreenId id)
+ {
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         vsyncSampler->RegSetScreenVsyncEnabledCallback([this, id](bool enabled) {
             auto mainThread = RSMainThread::Instance();
-            if (mainThread == nullptr) {
-                RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, get RSMainThread failed", enabled);
+            bool enabledLog = ScreenVsyncEnabledLog(mainThread, id, enabled);
+            if (!enabledLog) {
                 return;
             }
-            mainThread->PostTask([this, id, enabled]() {
-               PostVsyncEnabledTask(id, enabled);
-            });
         });
     } else {
         vsyncSampler->RegSetScreenVsyncEnabledCallback([this, id](bool enabled) {
             RSHardwareThread::Instance().PostTask([this, id, enabled]() {
-                if (screens_[id] == nullptr) {
-                    RS_LOGE("SetScreenVsyncEnabled:%{public}d failed, screen %{public}" PRIu64 " not found",
-                        enabled, id);
+                auto mainThread = RSMainThread::Instance();
+                bool enabledLog = ScreenVsyncEnabledLog(mainThread, id, enabled);
+                if (!enabledLog) {
                     return;
                 }
-                screens_[id]->SetScreenVsyncEnabled(enabled);
             });
         });
     }

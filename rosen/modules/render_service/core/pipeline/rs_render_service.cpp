@@ -51,6 +51,96 @@ RSRenderService::~RSRenderService() noexcept {}
 
 bool RSRenderService::Init()
 {
+    EnableMemoryCache();
+    InitializeScreenManager();
+    InitializeVSyncControllers();
+    RegisterWithSystemAbilityManager();
+    RS_PROFILER_INIT(this);
+    return true;
+}
+
+void RSRenderService::EnableMemoryCache()
+{
+    mallopt(M_OHOS_CONFIG, M_TCACHE_NORMAL_MODE);
+    mallopt(M_OHOS_CONFIG, M_ENABLE_OPT_TCACHE);
+    mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_ENABLE);
+    mallopt(M_DELAYED_FREE, M_DELAYED_FREE_ENABLE);
+}
+
+bool RSRenderService::InitializeScreenManager()
+{
+    RSMainThread::Instance();
+    RSUniRenderJudgement::InitUniRenderConfig();
+#ifdef TP_FEATURE_ENABLE
+    TOUCH_SCREEN->InitTouchScreen();
+#endif
+    screenManager_ = CreateOrGetScreenManager();
+    if (RSUniRenderJudgement::GetUniRenderEnabledType() != UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+        if (screenManager_ == nullptr || !screenManager_->Init()) {
+            RS_LOGE("RSRenderService CreateOrGetScreenManager fail.");
+            return false;
+        }
+    } else {
+        RSUniRenderThread::Instance().Start();
+        RSHardwareThread::Instance().Start();
+        StartRCDUpdateThread(RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext().get());
+    }
+    return true;
+}
+
+bool RSRenderService::InitializeVSyncControllers()
+{
+    auto generator = CreateVSyncGenerator();
+    int64_t offset = 0;
+    if (!HgmCore::Instance().GetLtpoEnabled()) {
+        if (RSUniRenderJudgement::GetUniRenderEnabledType() == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
+            offset = UNI_RENDER_VSYNC_OFFSET;
+        }
+        rsVSyncController_ = new VSyncController(generator, offset);
+        appVSyncController_ = new VSyncController(generator, offset);
+    } else {
+        rsVSyncController_ = new VSyncController(generator, 0);
+        appVSyncController_ = new VSyncController(generator, 0);
+        generator->SetVSyncMode(VSYNC_MODE_LTPO);
+    }
+    rsVSyncDistributor_ = new VSyncDistributor(rsVSyncController_, "rs");
+    appVSyncDistributor_ = new VSyncDistributor(appVSyncController_, "app");
+	
+    generator->SetRSDistributor(rsVSyncDistributor_);
+	
+    mainThread_ = RSMainThread::Instance();
+    if (mainThread_ == nullptr) {
+        return false;
+    }
+    mainThread_->rsVSyncDistributor_ = rsVSyncDistributor_;
+    mainThread_->rsVSyncController_ = rsVSyncController_;
+    mainThread_->appVSyncController_ = appVSyncController_;
+    mainThread_->vsyncGenerator_ = generator;
+    mainThread_->Init();
+    mainThread_->SetAppVSyncDistributor(appVSyncDistributor_);
+
+    int status = WaitParameter("bootevent.samgr.ready", "true", 5);
+    if (status != 0) {
+        RS_LOGE("RSRenderService wait SAMGR error, return value [%d].", status);
+    }
+
+    return true;
+}
+
+bool RSRenderService::RegisterWithSystemAbilityManager()
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        RS_LOGE("RSRenderService GetSystemAbilityManager fail.");
+        return false;
+    }
+    samgr->AddSystemAbility(RENDER_SERVICE, this);
+    return true;
+}
+
+/*
+bool RSRenderService::Init()
+{
     // enable cache
     mallopt(M_OHOS_CONFIG, M_TCACHE_NORMAL_MODE);
     mallopt(M_OHOS_CONFIG, M_ENABLE_OPT_TCACHE);
@@ -122,6 +212,7 @@ bool RSRenderService::Init()
     RS_PROFILER_INIT(this);
     return true;
 }
+*/
 
 void RSRenderService::Run()
 {

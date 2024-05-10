@@ -72,8 +72,6 @@ public:
     float GetAppGpuMemoryInMB();
 
 private:
-    const uint32_t SYNC_TIME_OUT = 1000;
-    void DestroyShareEglContext();
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
     uint32_t threadIndex_ = 0;
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;

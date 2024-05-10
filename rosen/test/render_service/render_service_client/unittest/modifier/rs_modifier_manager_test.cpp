@@ -195,5 +195,16 @@ HWTEST_F(RSModifierManagerTest, QuerySpringAnimation, TestSize.Level1)
     std::shared_ptr<RSRenderAnimation> animation = std::make_shared<RSRenderAnimation>(id);
     rsModifierManager.animations_.emplace(animation->GetAnimationId(), animation);
     ASSERT_NE(rsModifierManager.GetAnimation(animation->GetAnimationId()), nullptr);
+ * @tc.name: UnregisterSpringAnimationTest001
+ * @tc.desc: test results of UnregisterSpringAnimation
+ * @tc.type: FUNC
+ */
+HWTEST_F(RSModifierManagerTest, UnregisterSpringAnimationTest001, TestSize.Level1)
+{
+    RSModifierManager rsModifierManager;
+    PropertyId propertyId = 0;
+    AnimationId animId = 0;
+    rsModifierManager.UnregisterSpringAnimation(propertyId, animId);
+    ASSERT_NE(propertyId, 10);
 }
 } // namespace OHOS::Rosen

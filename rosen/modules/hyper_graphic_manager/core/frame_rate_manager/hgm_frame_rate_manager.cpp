@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -131,6 +131,17 @@ void HgmFrameRateManager::InitTouchManager()
     });
 }
 
+void HgmFrameRateManager::ProcessPendingRefreshRate(uint64_t timestamp)
+{
+    auto &hgmCore = HgmCore::Instance();
+    hgmCore.SetTimestamp(timestamp);
+    if (pendingRefreshRate_ != nullptr) {
+        hgmCore.SetPendingScreenRefreshRate(*pendingRefreshRate_);
+        RS_TRACE_NAME_FMT("ProcessHgmFrameRate pendingRefreshRate: %d", *pendingRefreshRate_);
+        pendingRefreshRate_.reset();
+    }
+}
+
 void HgmFrameRateManager::UniProcessDataForLtpo(uint64_t timestamp,
                                                 std::shared_ptr<RSRenderFrameRateLinker> rsFrameRateLinker,
                                                 const FrameRateLinkerMap& appFrameRateLinkers, bool idleTimerExpired,
@@ -259,6 +270,7 @@ void HgmFrameRateManager::FrameRateReport() const
     auto alignRate = HgmCore::Instance().GetAlignRate();
     rates[UNI_APP_PID] = (alignRate == 0) ? currRefreshRate_ : alignRate;
     FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRates(rates);
+    FRAME_TRACE::FrameRateReport::GetInstance().SendFrameRatesToRss(rates);
 }
 
 bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
@@ -302,10 +314,16 @@ bool HgmFrameRateManager::CollectFrameRateChange(FrameRateRange finalRange,
 
 void HgmFrameRateManager::HandleFrameRateChangeForLTPO(uint64_t timestamp, bool isDvsyncOn)
 {
-    RSTaskMessage::RSTask task = [this]() {
+    auto lastRefreshRate = HgmCore::Instance().GetPendingScreenRefreshRate();
+    // low refresh rate switch to high refresh rate immediately.
+    if (lastRefreshRate < OLED_60_HZ && currRefreshRate_ > lastRefreshRate) {
+        HgmCore::Instance().SetPendingScreenRefreshRate(currRefreshRate_);
+    }
+
+    RSTaskMessage::RSTask task = [this, lastRefreshRate]() {
         controller_->ChangeGeneratorRate(controllerRate_, appChangeData_);
         pendingRefreshRate_ = std::make_shared<uint32_t>(currRefreshRate_);
-        if (currRefreshRate_ != HgmCore::Instance().GetPendingScreenRefreshRate()) {
+        if (currRefreshRate_ != lastRefreshRate) {
             forceUpdateCallback_(false, true);
             FrameRateReport();
         }

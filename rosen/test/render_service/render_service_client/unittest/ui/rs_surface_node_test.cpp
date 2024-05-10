@@ -1146,6 +1146,34 @@ HWTEST_F(RSSurfaceNodeTest, SetBootAnimationTest, TestSize.Level1)
 }
 
 /**
+ * @tc.name: IsBufferAvailableTest Test
+ * @tc.desc: test results of IsBufferAvailable
+ * @tc.type: FUNC
+ * @tc.require:issueI9MWJR
+ */
+HWTEST_F(RSSurfaceNodeTest, IsBufferAvailableTest, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    ASSERT_FALSE(surfaceNode->IsBufferAvailable());
+}
+
+/**
+ * @tc.name: SetBoundsChangedCallbacktest Test
+ * @tc.desc: test results of SetBoundsChangedCallback
+ * @tc.type: FUNC
+ * @tc.require:issueI9MWJR
+ */
+HWTEST_F(RSSurfaceNodeTest, SetBoundsChangedCallbackTest, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    RSSurfaceNode::BoundsChangedCallback callback = [](const Rosen::Vector4f& bounds) {};
+    surfaceNode->SetBoundsChangedCallback(callback);
+    ASSERT_NE(surfaceNode->boundsChangedCallback_, nullptr);
+}
+
+/**
  * @tc.name: SetTextureExport Test
  * @tc.desc: SetTextureExport
  * @tc.type: FUNC
@@ -1232,6 +1260,72 @@ HWTEST_F(RSSurfaceNodeTest, SetAnimationFinished, TestSize.Level1)
     RSSurfaceNodeConfig c;
     RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
     surfaceNode->SetAnimationFinished();
+    ASSERT_FALSE(surfaceNode->isSkipLayer_);
+}
+
+/**
+ * @tc.name: SetForceHardwareAndFixRotation Test
+ * @tc.desc: SetForceHardwareAndFixRotation and SetTextureExport
+ * @tc.type: FUNC
+ * @tc.require:issueI9MWJR
+ */
+HWTEST_F(RSSurfaceNodeTest, SetForceHardwareAndFixRotation, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetForceHardwareAndFixRotation(true);
+    ASSERT_FALSE(surfaceNode->isSkipLayer_);
+    surfaceNode->SetTextureExport(true);
+    ASSERT_TRUE(surfaceNode->isTextureExportNode_);
+    surfaceNode->SetTextureExport(false);
+    ASSERT_FALSE(surfaceNode->isTextureExportNode_);
+    surfaceNode->SetTextureExport(false);
+    ASSERT_FALSE(surfaceNode->isTextureExportNode_);
+}
+
+/**
+ * @tc.name: GetColorSpace Test
+ * @tc.desc: test results of GetColorSpace
+ * @tc.type: FUNC
+ * @tc.require:issueI9MWJR
+ */
+HWTEST_F(RSSurfaceNodeTest, GetColorSpace, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    ASSERT_TRUE(surfaceNode->GetColorSpace() == GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB);
+}
+
+/**
+ * @tc.name: ResetContextAlpha Test
+ * @tc.desc: GetBundleName and ResetContextAlpha
+ * @tc.type: FUNC
+ * @tc.require:issueI9MWJR
+ */
+HWTEST_F(RSSurfaceNodeTest, ResetContextAlpha, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    ASSERT_EQ(surfaceNode->GetBundleName(), std::string(""));
+    surfaceNode->ResetContextAlpha();
+    ASSERT_NE(RSTransactionProxy::GetInstance()->implicitRemoteTransactionData_, nullptr);
+}
+
+/**
+ * @tc.name: SetForeground Test
+ * @tc.desc: SetForeground and SetForceUIFirst and SetAncoForceDoDirect and SetHDRPresent
+ * @tc.type: FUNC
+ * @tc.require:issueI9MWJR
+ */
+HWTEST_F(RSSurfaceNodeTest, SetForeground, TestSize.Level1)
+{
+    RSSurfaceNodeConfig c;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(c);
+    surfaceNode->SetForeground(true);
+    surfaceNode->SetForceUIFirst(true);
+    surfaceNode->SetAncoForceDoDirect(true);
+    surfaceNode->SetHDRPresent(true, 0);
+    ASSERT_NE(RSTransactionProxy::GetInstance()->implicitRemoteTransactionData_, nullptr);
     //for test
     bool ret = true;
     ASSERT_EQ(true, ret);
@@ -1438,5 +1532,19 @@ HWTEST_F(RSSurfaceNodeTest, SplitSurfaceNodeName, TestSize.Level1)
     std::pair<std::string, std::string> res = surfaceNode->SplitSurfaceNodeName(surfaceNodeName);
     EXPECT_EQ(res.first, "0");
     EXPECT_EQ(res.second, "1");
+}
+
+/**
+ * @tc.name: SetColorSpace Test
+ * @tc.desc: Test
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RSSurfaceNodeTest, SetColorSpace, TestSize.Level1)
+{
+    RSSurfaceNodeConfig config;
+    RSSurfaceNode::SharedPtr surfaceNode = RSSurfaceNode::Create(config);
+    surfaceNode->SetColorSpace(GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB);
+    ASSERT_EQ(surfaceNode->colorSpace_, GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB);
 }
 } // namespace OHOS::Rosen

@@ -171,6 +171,7 @@ void RSFilterDrawable::OnSync()
     rotationChanged_ = false;
     forceClearCache_ = false;
     stagingForceUseCache_ = false;
+    forceClearCacheWitoutNextVsync_ = false;
     stagingClearFilteredCacheAfterDrawing_ = false;
     isOccluded_ = false;
 
@@ -246,6 +247,11 @@ void RSFilterDrawable::MarkNodeIsOccluded(bool isOccluded)
     isOccluded_ = isOccluded;
 }
 
+void RSFilterDrawable::ForceClearCacheWitoutNextVsync()
+{
+    forceClearCacheWitoutNextVsync_ = true;
+}
+
 void RSFilterDrawable::CheckClearFilterCache()
 {
     if (cacheManager_ == nullptr) {
@@ -259,6 +265,14 @@ void RSFilterDrawable::CheckClearFilterCache()
         "filterType_:%d, pendingPurge_:%d", nodeId_, stagingForceUseCache_, forceClearCache_, filterHashChanged_,
         filterRegionChanged_, filterInteractWithDirty_, stagingClearFilteredCacheAfterDrawing_, lastCacheType_,
         cacheUpdateInterval_, canSkipFrame_, isLargeArea_, stagingHasEffectChildren_, filterType_, pendingPurge_);
+
+    // force clear 
+    if (forceClearCacheWitoutNextVsync_) {
+        cacheUpdateInterval_ = 0;
+        clearType_ = pendingPurge_ = false;
+        FilterCacheType::BOTH;
+        isFilterCacheValid_ = false;
+    }
 
     // no valid cache
     if (lastCacheType_ == FilterCacheType::NONE) {
@@ -295,9 +309,19 @@ bool RSFilterDrawable::IsFilterCacheValid() const
     return isFilterCacheValid_;
 }
 
-bool RSFilterDrawable::GetFilterForceClearCache() const
+bool RSFilterDrawable::IsSkippingFrame() const
+{
+    return (filterInteractWithDirty_ || rotationChanged_) && cacheUpdateInterval_ > 0;
+}
+
+bool RSFilterDrawable::IsForceClearFilterCache() const
 {
     return forceClearCache_;
+}
+
+bool RSFilterDrawable::IsForceUseFilterCache() const
+{
+    return forceUseCache_;
 }
 
 bool RSFilterDrawable::NeedPendingPurge() const

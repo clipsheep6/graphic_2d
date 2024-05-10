@@ -126,10 +126,13 @@ public:
     void MarkHasEffectChildren();
     void MarkNodeIsOccluded(bool isOccluded);
     void CheckClearFilterCache();
+    void ForceClearCacheWitoutNextVsync();
 
     bool IsFilterCacheValid() const;
-    bool GetFilterForceClearCache() const;
+    bool IsForceClearFilterCache() const;
+    bool IsForceUseFilterCache() const;
     bool NeedPendingPurge() const;
+    bool IsSkippingFrame() const;
  
     void OnSync() override;
     Drawing::RecordingCanvas::DrawFunc CreateDrawFunc() const override;
@@ -156,6 +159,7 @@ protected:
     bool rotationChanged_ = false;
     bool hasEffectChildren_ = false;
     bool clearFilteredCacheAfterDrawing_ = false;
+    bool forceClearCacheWitoutNextVsync_ = false;
  
     // clear one of snapshot cache and filtered cache after drawing
     bool stagingForceUseCache_ = false;

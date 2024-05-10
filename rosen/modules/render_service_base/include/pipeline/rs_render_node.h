@@ -473,6 +473,7 @@ public:
     void MarkFilterHasEffectChildren();
 
     // for blur filter cache
+    virtual void CheckBlurFilterCacheNeedForceClearOrSave();
     void UpdateLastFilterCacheRegion();
     void UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirtyManager,
         const RSRenderNode& subTreeRoot, RectI& filterRect, const std::optional<RectI>& clipRect);
@@ -480,8 +481,9 @@ public:
     virtual void UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
     virtual void UpdateFilterCacheWithSelfDirty();
     bool IsBackgroundInAppOrNodeSelfDirty() const;
-    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(RSDirtyRegionManager& dirtyManager,
+    void PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager, bool needRequestNextVsync,
         bool dirtyBelowContainsFilterNode = false, bool rotationChanged = false);
+    void CheckFilterCacheAndUpdateDirtySlots();
     bool IsFilterCacheValid() const;
     void MarkForceClearFilterCacheWhenWithInvisible();
 
@@ -660,6 +662,8 @@ public:
     void SetOccludedStatus(bool occluded);
     const RectI GetFilterCachedRegion() const;
     bool IsEffectNodeNeedTakeSnapShot() const;
+    bool IsEffectNodeShouldNotPaint() const;
+    bool HasBlurFilter() const;
     void SetChildrenHasSharedTransition(bool hasSharedTransition);
     virtual bool SkipFrame(uint32_t skipFrameInterval) { return false; }
 
@@ -732,8 +736,10 @@ protected:
     bool clipAbsDrawRectChange_ = false;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
-    virtual void MarkFilterCacheFlagsAfterPrepare(
-        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false);
+    virtual void MarkFilterCacheFlags(
+        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, RSDirtyRegionManager& dirtyManager,
+        bool needRequestNextVsync, bool dirtyBelowContainsFilterNode, bool isForeground = false);
+    bool IsForceClearOrUseFilterCache(bool isForeground);
     std::atomic<bool> isStaticCached_ = false;
     bool lastFrameHasVisibleEffect_ = false;
     RectI filterRegion_;

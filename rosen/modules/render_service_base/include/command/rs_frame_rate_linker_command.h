@@ -31,7 +31,7 @@ enum RSFrameRateLinkerCommandType : uint16_t {
 class RSB_EXPORT RSFrameRateLinkerCommandHelper {
 public:
     static void Destroy(RSContext& context, FrameRateLinkerId id);
-    static void UpdateRange(RSContext& context, FrameRateLinkerId id, FrameRateRange range, bool isAnimatorStopped = true);
+    static void UpdateRange(RSContext& context, FrameRateLinkerId id, FrameRateRange range, bool isAnimatorStopped);
 };
 
 ADD_COMMAND(RSFrameRateLinkerDestroy,

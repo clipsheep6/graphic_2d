@@ -21,11 +21,18 @@
 
 #include "surface_utils.h"
 #include "transaction/rs_interfaces.h"
+#include "ibuffer_consumer_listener.h"
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+class BufferConsumerTestListener : public ::OHOS::IBufferConsumerListener {
+public:
+    void OnBufferAvailable() override
+    {
+    }
+};
 class RSInterfacesTest : public testing::Test {
 public:
     static constexpr HiviewDFX::HiLogLabel LOG_LABEL = { LOG_CORE, 0, "RSInterfacesTest" };
@@ -1424,6 +1431,30 @@ HWTEST_F(RSInterfacesTest, CreatePixelMapFromSurfaceId001, Function | SmallTest 
     ASSERT_NE(rsInterfaces, nullptr);
     auto cSurface = IConsumerSurface::Create();
     ASSERT_NE(cSurface, nullptr);
+    sptr<IBufferConsumerListener> listener = new BufferConsumerTestListener();
+    cSurface->RegisterConsumerListener(listener);
+    sptr<IBufferProducer> producer = cSurface->GetProducer();
+    sptr<Surface> pSurface = Surface::CreateSurfaceAsProducer(producer);
+
+    int releaseFence = -1;
+    sptr<SurfaceBuffer> buffer;
+    BufferRequestConfig requestConfig = {
+        .width = 300,
+        .height = 300,
+        .strideAlignment = 0x0,
+    };
+    BufferFlushConfig flushConfig = {
+        .damage = {
+            .w = 300,
+            .h = 300,
+        }
+    };
+    GSError ret = pSurface->RequestBuffer(buffer, releaseFence, requestConfig);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+    ASSERT_NQ(buffer, nullptr);
+    ret = pSurface->FlushBuffer(buffer, releaseFence, flushConfig);
+    ASSERT_EQ(ret, OHOS::GSERROR_OK);
+
     OHOS::Rect rect = {
         .x = 0,
         .y = 0,
@@ -1433,7 +1464,8 @@ HWTEST_F(RSInterfacesTest, CreatePixelMapFromSurfaceId001, Function | SmallTest 
     uint64_t surfaceId = static_cast<uint64_t>(cSurface->GetUniqueId());
     auto utils = SurfaceUtils::GetInstance();
     utils->Add(surfaceId, cSurface);
-    rsInterfaces->CreatePixelMapFromSurfaceId(surfaceId, rect);
+    auto pixcelMap = rsInterfaces->CreatePixelMapFromSurfaceId(surfaceId, rect);
+    ASSERT_EQ(pixcelMap, nullptr);
 }
 
 /*

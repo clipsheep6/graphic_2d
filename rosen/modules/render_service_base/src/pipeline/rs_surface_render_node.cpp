@@ -861,6 +861,24 @@ void RSSurfaceRenderNode::UpdateSurfaceDefaultSize(float width, float height)
 #endif
 }
 
+void RSSurfaceRenderNode::OnSkipSync()
+{
+#ifndef ROSEN_CROSS_PLATFORM
+    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(stagingRenderParams_.get());
+    if (surfaceParams && surfaceParams->IsLayerDirty()) {
+        auto& preBuffer = surfaceParams->GetPreBuffer();
+        if (!preBuffer) {
+            return;
+        }
+        auto context = GetContext().lock();
+        if (context && !surfaceParams->GetHardwareEnabled()) {
+            context->GetMutableSkipSyncBuffer().push_back(
+                { preBuffer, GetConsumer(), surfaceParams->GetLastFrameHardwareEnabled() });
+        }
+    }
+#endif
+}
+
 #ifndef ROSEN_CROSS_PLATFORM
 void RSSurfaceRenderNode::UpdateBufferInfo(const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence,
     const sptr<SurfaceBuffer>& preBuffer)
@@ -1488,7 +1506,7 @@ void RSSurfaceRenderNode::UpdateFilterCacheStatusIfNodeStatic(const RectI& clipR
         if (node->GetRenderProperties().GetFilter()) {
             node->UpdateFilterCacheWithBelowDirty(*dirtyManager_);
         }
-        node->UpdateFilterCacheWithSelfDirty(clipRect);
+        node->UpdateFilterCacheWithSelfDirty();
     }
     SetFilterCacheFullyCovered(false);
     if (IsTransparent() && dirtyManager_->IfCacheableFilterRectFullyCover(GetOldDirtyInSurface())) {

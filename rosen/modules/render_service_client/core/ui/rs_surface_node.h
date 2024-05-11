@@ -115,7 +115,7 @@ public:
         return colorSpace_;
     }
 
-    std::string GetName() const
+    inline std::string GetName() const
     {
         return name_;
     }
@@ -141,6 +141,7 @@ public:
     // Force enable UIFirst when set TRUE
     void SetForceUIFirst(bool forceUIFirst);
     void SetAncoForceDoDirect(bool ancoForceDoDirect);
+    static void SetHDRPresent(bool hdrPresent, NodeId id);
 
 protected:
     bool NeedForcedSendToRemote() const override;

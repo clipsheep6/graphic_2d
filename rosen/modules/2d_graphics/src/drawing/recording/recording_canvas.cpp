@@ -203,16 +203,16 @@ void RecordingCanvas::DrawShadow(const Path& path, const Point3& planeParams, co
 }
 
 void RecordingCanvas::DrawShadowStyle(const Path& path, const Point3& planeParams, const Point3& devLightPos,
-    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isShadowStyle)
+    scalar lightRadius, Color ambientColor, Color spotColor, ShadowFlags flag, bool isLimitElevation)
 {
     if (!addDrawOpImmediate_) {
         cmdList_->AddDrawOp(std::make_shared<DrawShadowStyleOpItem>(
-            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle));
+            path, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isLimitElevation));
         return;
     }
     auto pathHandle = CmdListHelper::AddPathToCmdList(*cmdList_, path);
     cmdList_->AddDrawOp<DrawShadowStyleOpItem::ConstructorHandle>(
-        pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isShadowStyle);
+        pathHandle, planeParams, devLightPos, lightRadius, ambientColor, spotColor, flag, isLimitElevation);
 }
 
 void RecordingCanvas::DrawRegion(const Region& region)
@@ -671,10 +671,6 @@ void RecordingCanvas::AddDrawOpImmediate(Args&&... args)
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        PaintHandle paintHandle;
-        paintHandle.isAntiAlias = true;
-        paintHandle.style = Paint::PaintStyle::PAINT_FILL;
-        cmdList_->AddDrawOp<T>(std::forward<Args>(args)..., paintHandle);
         return;
     }
     if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {
@@ -703,10 +699,6 @@ void RecordingCanvas::AddDrawOpDeferred(Args&&... args)
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        Paint paint;
-        paint.SetAntiAlias(true);
-        paint.SetStyle(Paint::PaintStyle::PAINT_FILL);
-        cmdList_->AddDrawOp(std::make_shared<T>(std::forward<Args>(args)..., paint));
         return;
     }
     if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {
@@ -728,10 +720,6 @@ void RecordingCanvas::GenerateCachedOpForTextblob(const TextBlob* blob, const sc
     bool brushValid = paintBrush_.IsValid();
     bool penValid = paintPen_.IsValid();
     if (!brushValid && !penValid) {
-        Paint paint;
-        paint.SetAntiAlias(true);
-        paint.SetStyle(Paint::PaintStyle::PAINT_FILL);
-        GenerateCachedOpForTextblob(blob, x, y, paint);
         return;
     }
     if (brushValid && penValid && Paint::CanCombinePaint(paintBrush_, paintPen_)) {

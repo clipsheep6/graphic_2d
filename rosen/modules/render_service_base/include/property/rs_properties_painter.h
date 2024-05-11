@@ -26,6 +26,7 @@ namespace OHOS {
 namespace Rosen {
 class RSPaintFilterCanvas;
 class RSDrawingFilter;
+class RSDrawingFilterOriginal;
 enum class FilterType {
     BACKGROUND_FILTER,
     FOREGROUND_FILTER,
@@ -93,6 +94,7 @@ public:
     static void DrawBackgroundEffect(const RSProperties& properties, RSPaintFilterCanvas& canvas);
 
     static const bool BLUR_ENABLED;
+    static const bool FOREGROUND_FILTER_ENABLED;
 
 private:
     static void ApplyBackgroundEffectFallback(const RSProperties& properties, RSPaintFilterCanvas& canvas);

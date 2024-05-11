@@ -22,6 +22,7 @@
 #include "draw/brush.h"
 #include "draw/path.h"
 #include "draw/surface.h"
+#include "effect/blender.h"
 #include "image/pixmap.h"
 #include "image/yuv_info.h"
 #include "text/font_style_set.h"
@@ -66,6 +67,7 @@ public:
         size_t rowBytes);
     static std::shared_ptr<TextBlob> DeserializeTextBlob(const void* data, size_t size, void* ctx);
     static std::shared_ptr<Typeface> DeserializeTypeface(const void* data, size_t size);
+    static bool GetFillPath(const Pen& pen, const Path& src, Path& dst, const Rect* rect, const Matrix& matrix);
     static bool CanComputeFastBounds(const Brush& brush);
     static const Rect& ComputeFastBounds(const Brush& brush, const Rect& orig, Rect* storage);
     static bool AsBlendMode(const Brush& brush);
@@ -81,6 +83,7 @@ public:
         DrawingAnimationType type, uint16_t groupSum, uint16_t animationMode = 0,
         DrawingCommonSubType commonSubType = DrawingCommonSubType::DOWN);
     static FontStyleSet* CreateEmpty();
+    static std::shared_ptr<Blender> CreateWithBlendMode(BlendMode mode);
 };
 } // namespace Drawing
 } // namespace Rosen

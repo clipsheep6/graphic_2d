@@ -80,11 +80,11 @@ void RSDisplayRenderNode::Process(const std::shared_ptr<RSNodeVisitor>& visitor)
 }
 
 void RSDisplayRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, NodeId firstLevelNodeId,
-    NodeId cacheNodeId)
+    NodeId cacheNodeId, NodeId uifirstRootNodeId)
 {
     // if node is marked as cacheRoot, update subtree status when update surface
     // in case prepare stage upper cacheRoot cannot specify dirty subnode
-    RSRenderNode::SetIsOnTheTree(flag, GetId(), firstLevelNodeId, cacheNodeId);
+    RSRenderNode::SetIsOnTheTree(flag, GetId(), firstLevelNodeId, cacheNodeId, uifirstRootNodeId);
 }
 
 RSDisplayRenderNode::CompositeType RSDisplayRenderNode::GetCompositeType() const
@@ -224,6 +224,7 @@ void RSDisplayRenderNode::UpdateScreenRenderParams(ScreenInfo& screenInfo,
     displayParams->displayHasSkipSurface_ = std::move(displayHasSkipSurface);
     displayParams->displayHasProtectedSurface_ = std::move(displayHasProtectedSurface);
     displayParams->hasCaptureWindow_ = std::move(hasCaptureWindow);
+    displayParams->SetNeedOffscreen(IsRotationChanged());
 }
 
 void RSDisplayRenderNode::UpdatePartialRenderParams()
@@ -280,7 +281,7 @@ bool RSDisplayRenderNode::SkipFrame(uint32_t skipFrameInterval)
 
 ScreenRotation RSDisplayRenderNode::GetRotation() const
 {
-    auto boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
+    auto& boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
     if (boundsGeoPtr == nullptr) {
         return ScreenRotation::ROTATION_0;
     }
@@ -290,7 +291,7 @@ ScreenRotation RSDisplayRenderNode::GetRotation() const
 
 bool RSDisplayRenderNode::IsRotationChanged() const
 {
-    auto boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
+    auto& boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
     if (boundsGeoPtr == nullptr) {
         return false;
     }
@@ -306,10 +307,11 @@ void RSDisplayRenderNode::UpdateRotation()
     displayParams->SetRotationChanged(IsRotationChanged());
     AddToPendingSyncList();
 
-    auto boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
+    auto& boundsGeoPtr = (GetRenderProperties().GetBoundsGeometry());
     if (boundsGeoPtr == nullptr) {
         return;
     }
+    lastRotationChanged_ = IsRotationChanged();
     lastRotation_ = boundsGeoPtr->GetRotation();
 }
 
@@ -335,5 +337,13 @@ void RSDisplayRenderNode::SetMainAndLeashSurfaceDirty(bool isDirty)
     }
 }
 
+void RSDisplayRenderNode::SetHDRPresent(bool hdrPresent)
+{
+    auto displayParams = static_cast<RSDisplayRenderParams*>(stagingRenderParams_.get());
+    displayParams->SetHDRPresent(hdrPresent);
+    if (stagingRenderParams_->NeedSync()) {
+        AddToPendingSyncList();
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

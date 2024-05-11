@@ -358,5 +358,10 @@ void RSFilterDrawable::UpdateFlags(FilterCacheType type, bool cacheValid)
         pendingPurge_ = true;
     }
 }
+
+bool RSFilterDrawable::IsCacheUpdateInInterval() const
+{
+    return cacheUpdateInterval_>0;
+}
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

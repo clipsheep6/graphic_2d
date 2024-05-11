@@ -2446,6 +2446,7 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByGlobalFilter(std::shared_ptr<RSSur
     auto cleanFilter = transparentCleanFilter_.find(node->GetId());
     auto dirtyFilter = transparentDirtyFilter_.find(node->GetId());
     auto& curMainAndLeashSurfaces = curDisplayNode_->GetAllMainAndLeashSurfaces();
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     for (auto it = curMainAndLeashSurfaces.rbegin(); it != curMainAndLeashSurfaces.rend(); ++it) {
         auto surfaceNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(*it);
         if (surfaceNode == nullptr) {
@@ -2465,6 +2466,11 @@ void RSUniRenderVisitor::UpdateHwcNodeEnableByGlobalFilter(std::shared_ptr<RSSur
             }
             if (cleanFilter != transparentCleanFilter_.end()) {
                 for (auto filter = cleanFilter->second.begin(); filter != cleanFilter->second.end(); ++filter) {
+                    auto& rendernode = nodeMap.GetRenderNode<RSRenderNode>(filter->first);
+                    if (rendernode->IsFilterCacheUpdateInInterval()) {
+                        ROSEN_LOGD("RSUniRenderVisitor::UpdateHwcNodeByFilter: skip intersection for using cache");
+                        continue;
+                    }
                     if (hwcNodePtr->GetDstRect().Intersect(filter->second)) {
                         RS_OPTIONAL_TRACE_NAME_FMT("hwc debug: name:%s id:%llu disabled by transparentCleanFilter",
                             hwcNodePtr->GetName().c_str(), hwcNodePtr->GetId());

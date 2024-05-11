@@ -1985,7 +1985,7 @@ void RSRenderNode::AddGeometryModifier(const std::shared_ptr<RSRenderModifier>& 
     }
 }
 
-void RSRenderNode::RemoveModifier(const PropertyId& id)
+void RSRenderNode::RemoveModifierInternal(const PropertyId& id)
 {
     SetDirty();
     auto it = modifiers_.find(id);
@@ -2005,6 +2005,24 @@ void RSRenderNode::RemoveModifier(const PropertyId& id)
         AddDirtyType(type);
         modifiers.erase(it);
         return;
+    }
+}
+
+void RSRenderNode::RemoveModifier(const PropertyId& id)
+{
+    SetDirty();
+    if (!GetIsUsedBySubThread()) {
+        RemoveModifierInternal(id);
+    } else if (auto context = context_.lock()) {
+        context->PostTask([weakThis = weak_from_this(), id]() {
+            if (auto node = weakThis.lock()) {
+                node->RemoveModifierInternal(id);
+            }
+        });
+    } else {
+        ROSEN_LOGE("%{public}s GetIsUsedBySubThread[%{public}d] nodeId[%{public}" PRIu64 "]"
+            "PropertyId[%{public}" PRIu64 "]", __func__, GetIsUsedBySubThread(), GetId(), id);
+        RemoveModifierInternal(id);
     }
 }
 

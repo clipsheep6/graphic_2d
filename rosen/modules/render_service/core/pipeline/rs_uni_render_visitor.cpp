@@ -2151,9 +2151,7 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
             "which is occluded don't need to process filter", surfaceNode->GetName().c_str());
         return;
     }
-    surfaceNode->SetFilterCacheFullyCovered(false);
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
-    bool dirtyBelowContainsFilterNode = false;
     auto filterVecIter = transparentCleanFilter_.find(surfaceNode->GetId());
     if (filterVecIter != transparentCleanFilter_.end()) {
         RS_LOGD("RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay surface:%{public}s "
@@ -2182,21 +2180,33 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
             } else {
                 globalFilter_.insert(*it);
             }
-            filterNode->PostPrepareForBlurFilterNode(
-                *(curDisplayNode_->GetDirtyManager()), dirtyBelowContainsFilterNode);
-            if (filterNode->ShouldPaint() && !filterNode->IsFilterCacheValid() &&
-                !filterNode->IsEffectNodeShouldNotPaint() && filterNode->HasBlurFilter()) {
-                dirtyBelowContainsFilterNode = true;
-            }
-            // [attention] make sure filter valid check useful
-            if (ROSEN_EQ(filterNode->GetGlobalAlpha(), 1.f)) {
-                surfaceNode->CheckValidFilterCacheFullyCoverTarget(*filterNode, screenRect_);
-            }
+            filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()));
         }
     }
+    CheckFilterCacheFullyCovered(surfaceNode);
     auto surfaceDirtyRegion = Occlusion::Region{
         Occlusion::Rect{ surfaceNode->GetDirtyManager()->GetCurrentFrameDirtyRegion() } };
     accumulatedDirtyRegion.OrSelf(surfaceDirtyRegion);
+}
+
+void RSUniRenderVisitor::CheckFilterCacheFullyCovered(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const
+{
+    surfaceNode->SetFilterCacheFullyCovered(false);
+    bool dirtyBelowContainsFilterNode = false;
+    const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
+    for (auto& child : surfaceNode->GetVisibleFilterChild()) {
+        auto& filterNode = nodeMap.GetRenderNode<RSRenderNode>(child);
+        if (filterNode == nullptr || (filterNode && !filterNode->HasBlurFilter())) {
+            continue;
+        }
+        if (ROSEN_EQ(filterNode->GetGlobalAlpha(), 1.f) && !dirtyBelowContainsFilterNode) {
+            surfaceNode->CheckValidFilterCacheFullyCoverTarget(*filterNode, screenRect_);
+        }
+        if (filterNode->ShouldPaint() && !filterNode->IsFilterCacheValid() &&
+            !filterNode->IsEffecctNodeShouldNotPaint()) {
+            dirtyBelowContainsFilterNode = true;
+        }
+    }
 }
 
 void RSUniRenderVisitor::UpdateOccludedStatusWithFilterNode(std::shared_ptr<RSSurfaceRenderNode>& surfaceNode) const
@@ -2210,15 +2220,13 @@ void RSUniRenderVisitor::UpdateOccludedStatusWithFilterNode(std::shared_ptr<RSSu
     const auto& nodeMap = RSMainThread::Instance()->GetContext().GetNodeMap();
     for (auto& child : surfaceNode->GetVisibleFilterChild()) {
         auto& filterNode = nodeMap.GetRenderNode<RSRenderNode>(child);
-        if (filterNode == nullptr) {
+        if (filterNode == nullptr || (filterNode && !filterNode->HasBlurFilter())) {
             continue;
         }
         RS_OPTIONAL_TRACE_NAME_FMT("RSUniRenderVisitor::UpdateOccludedStatusWithFilterNode "
             "surfaceNode: %s, filterNode:[%lld], IsOccludedByFilterCache:%d", surfaceNode->GetName().c_str(),
             filterNode->GetId(), surfaceNode->IsOccludedByFilterCache());
-        if (filterNode->HasBlurFilter()) {
             filterNode->SetOccludedStatus(surfaceNode->IsOccludedByFilterCache());
-        }
     }
 }
 
@@ -2548,7 +2556,7 @@ void RSUniRenderVisitor::CollectFilterInfoAndUpdateDirty(RSRenderNode& node,
     if (curSurfaceNode_ && !isNodeAddedToTransparentCleanFilters) {
         bool rotationChanged = curDisplayNode_ ?
             curDisplayNode_->IsRotationChanged() || curDisplayNode_->IsLastRotationChanged() : false;
-        node.PostPrepareForBlurFilterNode(dirtyManager, false, rotationChanged);
+        node.PostPrepareForBlurFilterNode(dirtyManager, rotationChanged);
     }
 }
 

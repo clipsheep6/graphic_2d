@@ -1803,8 +1803,7 @@ inline static bool IsLargeArea(int width, int height)
     return width > threshold && height > threshold;
 }
 
-void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager,
-    bool dirtyBelowContainsFilterNode, bool rotationChanged)
+void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager, bool rotationChanged)
 {
     if (IsInstanceOf<RSEffectRenderNode>() && ChildHasVisibleEffect()) {
         MarkFilterHasEffectChildren();
@@ -1825,7 +1824,7 @@ void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManag
         auto bgDirty = dirtySlots_.count(RSDrawableSlot::BACKGROUND_COLOR) ||
             dirtySlots_.count(RSDrawableSlot::BACKGROUND_SHADER) ||
             dirtySlots_.count(RSDrawableSlot::BACKGROUND_IMAGE);
-        if (dirtyBelowContainsFilterNode || bgDirty || rotationClear) {
+        if (bgDirty || rotationClear) {
             filterDrawable->MarkFilterForceClearCache();
         }
         if (filterDrawable->NeedPendingPurge()) {
@@ -1839,7 +1838,7 @@ void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManag
         if (filterDrawable == nullptr) {
             return;
         }
-        if (dirtyBelowContainsFilterNode || !dirtySlots_.empty()) {
+        if (!dirtySlots_.empty()) {
             filterDrawable->MarkFilterForceClearCache();
         }
         if (filterDrawable->NeedPendingPurge()) {

@@ -15,6 +15,7 @@
 
 #include "skia_static_factory.h"
 
+#include "skia_adapter/skia_blender.h"
 #include "skia_adapter/skia_data.h"
 #include "skia_adapter/skia_font_style_set.h"
 #include "skia_adapter/skia_hm_symbol.h"
@@ -138,6 +139,11 @@ std::shared_ptr<Typeface> SkiaStaticFactory::DeserializeTypeface(const void* dat
     return SkiaTypeface::Deserialize(data, size);
 }
 
+bool SkiaStaticFactory::GetFillPath(const Pen& pen, const Path& src, Path& dst, const Rect* rect, const Matrix& matrix)
+{
+    return SkiaPaint::GetFillPath(pen, src, dst, rect, matrix);
+}
+
 bool SkiaStaticFactory::CanComputeFastBounds(const Brush& brush)
 {
     return SkiaPaint::CanComputeFastBounds(brush);
@@ -198,6 +204,11 @@ std::vector<std::vector<DrawingPiecewiseParameter>> SkiaStaticFactory::GetGroupP
 FontStyleSet* SkiaStaticFactory::CreateEmpty()
 {
     return SkiaFontStyleSet::CreateEmpty();
+}
+
+std::shared_ptr<Blender> SkiaStaticFactory::CreateWithBlendMode(BlendMode mode)
+{
+    return SkiaBlender::CreateWithBlendMode(mode);
 }
 } // namespace Drawing
 } // namespace Rosen

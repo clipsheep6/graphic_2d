@@ -25,6 +25,7 @@
 namespace OHOS::Rosen {
 
 class Socket;
+struct DeviceInfo;
 
 struct NetworkStats {
     std::string interface;
@@ -38,10 +39,12 @@ public:
     static void Stop();
 
     static std::vector<NetworkStats> GetStats(const std::string& interface);
+    static std::pair<std::string, std::string> ParseDeviceInfo(const DeviceInfo& deviceInfo);
 
     static void SendRdcPath(const std::string& path);
     static void SendDclPath(const std::string& path);
     static void SendMskpPath(const std::string& path);
+    static void SendBetarecPath(const std::string& path);
     static void SendSkp(const void* data, size_t size);
     static void SendTelemetry(double time);
     static void SendRSTreeDumpJSON(const std::string& jsonstr);

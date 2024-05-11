@@ -356,13 +356,12 @@ FILE* Utils::FileOpen(const std::string& path, const std::string& options)
         g_recordInMemory.seekp(0);
         return g_recordInMemoryFile;
     }
-    const std::string realPath = GetRealPath(path);
-    if (realPath.empty()) {
+    if (path.empty()) {
         return nullptr;
     }
-    auto file = fopen(realPath.data(), options.data());
+    auto file = fopen(path.data(), options.data());
     if (!IsFileValid(file)) {
-        RS_LOGE("Cant open file '%s'!", realPath.data()); // NOLINT
+        RS_LOGE("Cant open file '%s'!", path.data()); // NOLINT
     }
     return file;
 }

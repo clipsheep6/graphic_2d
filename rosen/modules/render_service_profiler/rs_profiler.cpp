@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
+#include "rs_profiler.h"
+
+#include <cstdio>
 #include <filesystem>
 
 #include "foundation/graphic/graphic_2d/utils/log/rs_trace.h"
-#include "rs_profiler.h"
 #include "rs_profiler_cache.h"
 #include "rs_profiler_capture_recorder.h"
 #include "rs_profiler_capturedata.h"
@@ -43,8 +45,23 @@ static uint64_t g_frameBeginTimestamp = 0u;
 static double g_dirtyRegionPercentage = 0.0;
 static bool g_rdcSent = true;
 
+// used for beta-recording
+constexpr unsigned int INACTIVITY_THRESHOLD = 5; // seconds
+constexpr unsigned int MIN_BETAREC_LENGTH = 90;  // seconds
+static DeviceInfo g_betaDeviceInfo;
+static std::string g_betaLoad;
+static std::string g_betaFreq;
+static std::mutex g_betaTelemetryMutex;
+static bool g_betaRecStarted = false;
+static uint64_t g_betaInactiveTimestamp = 0u;
+static uint64_t g_betaLastRecStartedTimestamp = 0u;
+// make sure REC_NUM is less than ring buffer with paths
+constexpr unsigned int REC_NUM = 4;
+static std::vector<std::string> g_betaLastRec;
+
 static RSFile g_recordFile {};
 static double g_recordStartTime = 0.0;
+static std::atomic<uint32_t> g_lastImageCacheCount = 0;
 
 static RSFile g_playbackFile {};
 static double g_playbackStartTime = 0.0;
@@ -323,6 +340,8 @@ void RSProfiler::OnFrameBegin()
 
     g_frameBeginTimestamp = RawNowNano();
     g_renderServiceCpuId = Utils::GetCpuId();
+
+    BetaRecBegin();
 }
 
 void RSProfiler::OnFrameEnd()
@@ -335,6 +354,8 @@ void RSProfiler::OnFrameEnd()
     ProcessCommands();
     ProcessSendingRdc();
     RecordUpdate();
+
+    BetaRecCheck();
 
     CalcNodeWeigthOnFrameEnd();
     g_renderServiceCpuId = Utils::GetCpuId();
@@ -614,10 +635,9 @@ void RSProfiler::ProcessSendingRdc()
 
 static uint32_t GetImagesAdded()
 {
-    static std::atomic<uint32_t> lastCount = 0;
     const size_t count = ImageCache::Size();
-    const uint32_t added = count - lastCount;
-    lastCount = count;
+    const uint32_t added = count - g_lastImageCacheCount;
+    g_lastImageCacheCount = count;
     return added;
 }
 
@@ -651,6 +671,26 @@ void RSProfiler::RecordUpdate()
 
         Network::SendBinary(out.data(), out.size());
         g_recordFile.WriteRSMetrics(0, timeSinceRecordStart, out.data(), out.size());
+
+        if (g_betaRecStarted) {
+            RSCaptureData captureDataGfx;
+            captureDataGfx.SetTime(timeSinceRecordStart);
+
+            std::unique_lock lock(g_betaTelemetryMutex);
+            captureDataGfx.SetProperty(RSCaptureData::KEY_CPU_TEMP, g_betaDeviceInfo.cpu.temperature);
+            captureDataGfx.SetProperty(RSCaptureData::KEY_CPU_CURRENT, g_betaDeviceInfo.cpu.current);
+            captureDataGfx.SetProperty(RSCaptureData::KEY_CPU_LOAD, g_betaLoad);
+            captureDataGfx.SetProperty(RSCaptureData::KEY_CPU_FREQ, g_betaFreq);
+            captureDataGfx.SetProperty(RSCaptureData::KEY_GPU_LOAD, g_betaDeviceInfo.gpu.frequencyLoad.load);
+            captureDataGfx.SetProperty(RSCaptureData::KEY_GPU_FREQ, g_betaDeviceInfo.gpu.frequencyLoad.current);
+            lock.unlock();
+
+            std::vector<char> outGfx;
+            const char headerTypeGfx = 3; // TYPE: GFX METRICS
+            captureDataGfx.Serialize(outGfx);
+            outGfx.insert(outGfx.begin(), headerTypeGfx);
+            g_recordFile.WriteGFXMetrics(0, timeSinceRecordStart, 0, outGfx.data(), outGfx.size());
+        }
     }
 }
 
@@ -1069,8 +1109,21 @@ void RSProfiler::RecordStart(const ArgList& args)
     g_recordStartTime = 0.0;
 
     ImageCache::Reset();
+    g_lastImageCacheCount = 0;
 
-    g_recordFile.Create(RSFile::GetDefaultPath());
+    if (g_betaRecStarted) {
+        const std::string currentPath = RSFile::GetDefaultPathBeta();
+        g_recordFile.Create(currentPath);
+        g_betaLastRecStartedTimestamp = Now();
+        if (g_betaLastRec.size() < REC_NUM) {
+            g_betaLastRec.push_back(currentPath);
+        } else {
+            std::rotate(g_betaLastRec.begin(), g_betaLastRec.begin() + 1, g_betaLastRec.end());
+            g_betaLastRec[g_betaLastRec.size() - 1] = currentPath;
+        }
+    } else {
+        g_recordFile.Create(RSFile::GetDefaultPath());
+    }
     g_recordFile.AddLayer(); // add 0 layer
 
     FilterMockNode(*g_context);
@@ -1110,28 +1163,30 @@ void RSProfiler::RecordStop(const ArgList& args)
 
     std::stringstream stream(std::ios::in | std::ios::out | std::ios::binary);
 
-    // DOUBLE WORK - send header of file
-    const char headerType = 0;
-    stream.write(reinterpret_cast<const char*>(&headerType), sizeof(headerType));
-    stream.write(reinterpret_cast<const char*>(&g_recordStartTime), sizeof(g_recordStartTime));
+    if (!g_betaRecStarted) {
+        // DOUBLE WORK - send header of file
+        const char headerType = 0;
+        stream.write(reinterpret_cast<const char*>(&headerType), sizeof(headerType));
+        stream.write(reinterpret_cast<const char*>(&g_recordStartTime), sizeof(g_recordStartTime));
 
-    const int32_t pidCount = g_recordFile.GetHeaderPids().size();
-    stream.write(reinterpret_cast<const char*>(&pidCount), sizeof(pidCount));
-    for (auto item : g_recordFile.GetHeaderPids()) {
-        stream.write(reinterpret_cast<const char*>(&item), sizeof(item));
+        const int32_t pidCount = g_recordFile.GetHeaderPids().size();
+        stream.write(reinterpret_cast<const char*>(&pidCount), sizeof(pidCount));
+        for (auto item : g_recordFile.GetHeaderPids()) {
+            stream.write(reinterpret_cast<const char*>(&item), sizeof(item));
+        }
+
+        int sizeFirstFrame = g_recordFile.GetHeaderFirstFrame().size();
+        stream.write(reinterpret_cast<const char*>(&sizeFirstFrame), sizeof(sizeFirstFrame));
+        stream.write(reinterpret_cast<const char*>(&g_recordFile.GetHeaderFirstFrame()[0]), sizeFirstFrame);
+
+        ImageCache::Serialize(stream);
+        Network::SendBinary(stream.str().data(), stream.str().size());
     }
-
-    int sizeFirstFrame = g_recordFile.GetHeaderFirstFrame().size();
-    stream.write(reinterpret_cast<const char*>(&sizeFirstFrame), sizeof(sizeFirstFrame));
-    stream.write(reinterpret_cast<const char*>(&g_recordFile.GetHeaderFirstFrame()[0]), sizeFirstFrame);
-
-    ImageCache::Serialize(stream);
-    Network::SendBinary(stream.str().data(), stream.str().size());
-
     g_recordFile.Close();
     g_recordStartTime = 0.0;
 
     ImageCache::Reset();
+    g_lastImageCacheCount = 0;
 
     Respond("Network: Record stop (" + std::to_string(stream.str().size()) + ")");
 }
@@ -1389,6 +1444,109 @@ void RSProfiler::ProcessCommands()
         delegate(args);
     } else if (!command.empty()) {
         Respond("Command has not been found: " + command);
+    }
+}
+
+void RSProfiler::StartNotificationThread()
+{
+    std::thread thread([]() {
+        while (g_betaRecStarted) {
+            double diff = Now() - g_betaInactiveTimestamp;
+            if (diff > INACTIVITY_THRESHOLD) {
+                if (g_mainThread) {
+                    g_mainThread->PostTask([]() { g_mainThread->RequestNextVSync(); });
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::seconds(INACTIVITY_THRESHOLD));
+        }
+    });
+    thread.detach();
+}
+
+void RSProfiler::StartTelemetryUpdateThread()
+{
+    std::thread threadTelemetry([]() {
+        while (g_betaRecStarted) {
+            DeviceInfo localDeviceInfo = RSTelemetry::GetDeviceInfo();
+            auto loadFreq = Network::ParseDeviceInfo(localDeviceInfo);
+
+            std::unique_lock lock(g_betaTelemetryMutex);
+            g_betaDeviceInfo = localDeviceInfo;
+            g_betaLoad = loadFreq.first;
+            g_betaFreq = loadFreq.second;
+            lock.unlock();
+            static constexpr int32_t GFX_METRICS_SEND_INTERVAL = 8;
+            std::this_thread::sleep_for(std::chrono::milliseconds(GFX_METRICS_SEND_INTERVAL));
+        }
+    });
+    threadTelemetry.detach();
+}
+
+void RSProfiler::BetaRecBegin()
+{
+    static int initIdx = 0;
+    const int initThreshold = 100;
+    initIdx++;
+
+    if (initIdx == initThreshold) { // to make sure all the initialization is done
+        if ((Rosen::RSSystemProperties::GetProfilerBetaRecEnabled() == "1") && !g_betaRecStarted) {
+            g_betaRecStarted = true;
+            g_betaInactiveTimestamp = Now();
+
+            StartNotificationThread();
+            StartTelemetryUpdateThread();
+
+            // Starting recording for the first file
+            RSProfiler::RecordStart(ArgList());
+        }
+    }
+}
+
+void RSProfiler::BetaRecCheck()
+{
+    // to turn off the recording with "hdc shell param set persist.graphic.profiler.betarecording 0"
+    if ((Rosen::RSSystemProperties::GetProfilerBetaRecEnabled() == "0") && g_betaRecStarted) {
+        RSProfiler::RecordStop(ArgList());
+        g_betaRecStarted = false;
+    }
+
+    if (IsRecording() && g_betaRecStarted) {
+        if ((Rosen::RSSystemProperties::GetProfilerBetaRecEnabled() == "2")) {
+            RSProfiler::RecordStop(ArgList());
+
+            std::string recordingDir;
+            const size_t slashPos = g_betaLastRec[0].rfind('/');
+            if (std::string::npos != slashPos) {
+                recordingDir = g_betaLastRec[0].substr(0, slashPos);
+            }
+
+            std::string pathConcatenated;
+            bool renameFailure = false;
+            for (size_t idx = 0; idx < g_betaLastRec.size(); ++idx) {
+                auto& recordingPath = g_betaLastRec[idx];
+                std::string newFilename =
+                    recordingDir + "/rec_" + std::to_string(g_betaLastRec.size() - idx - 1) + ".ohr";
+                Network::SendMessage("Original rec: " + recordingPath + ", Renamed rec: " + newFilename);
+                if (std::rename(recordingPath.c_str(), newFilename.c_str())) {
+                    renameFailure = true;
+                }
+                pathConcatenated += newFilename + ";";
+            }
+            if (!renameFailure) {
+                Network::SendBetarecPath(pathConcatenated);
+            }
+            Rosen::RSSystemProperties::SetProfilerBetaRecEnabled("1");
+            g_betaLastRec.clear();
+            RSProfiler::RecordStart(ArgList());
+        } else {
+            double diff = Now() - g_betaInactiveTimestamp;
+            double currentRecordLength = Now() - g_betaLastRecStartedTimestamp;
+            if ((diff > INACTIVITY_THRESHOLD) && (currentRecordLength > MIN_BETAREC_LENGTH)) {
+                RSProfiler::RecordStop(ArgList());
+                RSProfiler::RecordStart(ArgList());
+            }
+        }
+        g_betaInactiveTimestamp = Now(); // the last time any rendering is done
     }
 }
 

@@ -36,6 +36,23 @@ const std::string& RSFile::GetDefaultPath()
     return PATH;
 }
 
+const std::string& RSFile::GetDefaultPathBeta()
+{
+    static uint32_t current_idx = -1;
+    static const std::vector<std::string> RING_PATH = {
+        "/data/service/el0/render_service/file00.ohr", 
+        "/data/service/el0/render_service/file01.ohr",
+        "/data/service/el0/render_service/file02.ohr",
+        "/data/service/el0/render_service/file03.ohr",
+        "/data/service/el0/render_service/file04.ohr",
+        "/data/service/el0/render_service/file05.ohr"
+    };
+    if (++current_idx > (RING_PATH.size() - 1)) {
+        current_idx = 0;
+    }
+    return RING_PATH[current_idx];
+}
+
 void RSFile::Create(const std::string& fname)
 {
     if (file_ != nullptr) {

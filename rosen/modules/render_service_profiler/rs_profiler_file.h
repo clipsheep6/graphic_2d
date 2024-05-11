@@ -103,6 +103,7 @@ public:
     void Close();
 
     static const std::string& GetDefaultPath();
+    static const std::string& GetDefaultPathBeta();
 
 private:
     void WriteHeaders();

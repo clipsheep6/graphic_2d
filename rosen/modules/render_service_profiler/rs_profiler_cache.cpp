@@ -15,6 +15,8 @@
 
 #include "rs_profiler_cache.h"
 
+#include <string>
+
 #include "rs_profiler_archive.h"
 #include "rs_profiler_utils.h"
 
@@ -24,25 +26,81 @@ std::mutex ImageCache::mutex_;
 std::map<uint64_t, Image> ImageCache::cache_;
 
 // Image
-Image::Image(const uint8_t* data, size_t size, size_t skipBytes) : skipBytes(skipBytes)
+Image::Image(const uint8_t* data, size_t size, size_t skipBytes, size_t placeholder, size_t bufferOffset)
+    : skipBytes(skipBytes), size(size)
 {
-    if (data && (size > 0)) {
-        this->data.insert(this->data.end(), data, data + size);
+    std::unique_ptr<uint8_t[]> imageData;
+    if (placeholder > 0) {
+        imageData.reset(GeneratePlaceholder(data, size, skipBytes, placeholder, bufferOffset).release());
+        this->placeholder = bufferOffset + placeholder;
+    } else {
+        imageData.reset(new uint8_t[size]);
+        if (!Utils::Move(imageData.get(), size, data, size)) {
+            return;
+        }
+        this->placeholder = 0;
+    }
+    if (imageData != nullptr) {
+        this->data = std::move(imageData);
     }
 }
 
-Image::Image(std::vector<uint8_t>&& data, size_t skipBytes) : data(std::move(data)), skipBytes(skipBytes) {}
+std::unique_ptr<uint8_t[]> Image::GeneratePlaceholder(
+    const uint8_t* data, size_t size, size_t skipBytes, size_t placeholder, size_t bufferOffset)
+{
+    std::unique_ptr<uint8_t[]> imageData;
+    uint32_t placeholderTotal = bufferOffset + placeholder;
+    if (placeholder == 16) { // astc
+        imageData.reset(new uint8_t[placeholderTotal]);
+        Utils::Move(imageData.get(), placeholderTotal, data, placeholderTotal);
+    } else {
+        imageData.reset(new uint8_t[placeholderTotal]);
+        // copy BufferHandle struct
+        Utils::Move(imageData.get(), placeholderTotal, data, bufferOffset);
+
+        const uint8_t* data_byte = static_cast<const uint8_t*>(data) + bufferOffset;
+
+        uint64_t accumulatedValues[placeholder];
+        memset_s(accumulatedValues, sizeof(accumulatedValues), 0, sizeof(accumulatedValues));
+
+        uint32_t imageSize = size - bufferOffset;
+        uint32_t pixelCount = static_cast<uint32_t>(imageSize / placeholder);
+        const uint32_t avgSampleCount = 100;
+
+        for (uint32_t i = 0; i < avgSampleCount; i++) {
+            for (uint32_t channelIdx = 0; channelIdx < placeholder; ++channelIdx) {
+                accumulatedValues[channelIdx] +=
+                    data_byte[(i * pixelCount / avgSampleCount) * placeholder + channelIdx];
+            }
+        }
+
+        for (uint32_t channelIdx = 0; channelIdx < placeholder; ++channelIdx) {
+            imageData[bufferOffset + channelIdx] = static_cast<uint8_t>(accumulatedValues[channelIdx] / avgSampleCount);
+        }
+    }
+    return imageData;
+}
 
 bool Image::IsValid() const
 {
-    return !data.empty() && (data.size() < maxSize);
+    return (data != nullptr) && (size < maxSize) && (size > 0);
 }
 
 void Image::Serialize(Archive& archive)
 {
     // cast due to backward compatibility
-    archive.Serialize(reinterpret_cast<uint32_t&>(skipBytes));
-    archive.Serialize(data);
+    archive.Serialize(skipBytes);
+    archive.Serialize(size);
+    archive.Serialize(placeholder);
+
+    uint64_t bufferSize = placeholder > 0 ? placeholder : size;
+    if (data == nullptr) {
+        std::unique_ptr<uint8_t[]> imageBuffer(new uint8_t[bufferSize]);
+        archive.Serialize(imageBuffer.get(), bufferSize);
+        data = std::move(imageBuffer);
+    } else {
+        archive.Serialize(data.get(), bufferSize);
+    }
 }
 
 // ImageCache
@@ -66,6 +124,13 @@ bool ImageCache::Add(uint64_t id, Image&& image)
         return true;
     }
     return false;
+}
+
+bool ImageCache::Add(
+    uint64_t id, const uint8_t* data, size_t size, size_t skipBytes, size_t placeholder, size_t bufferOffset)
+{
+    Image image(data, size, skipBytes, placeholder, bufferOffset);
+    return Add(id, std::move(image));
 }
 
 Image* ImageCache::Get(uint64_t id)

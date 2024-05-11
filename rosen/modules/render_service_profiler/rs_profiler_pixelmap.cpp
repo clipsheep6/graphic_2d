@@ -25,6 +25,7 @@
 #include "rs_profiler_utils.h"
 
 #include "transaction/rs_marshalling_helper.h"
+#include "platform/common/rs_system_properties.h"
 
 namespace OHOS::Media {
 
@@ -46,10 +47,30 @@ public:
             return false;
         }
 
-        if (!Rosen::Utils::Move(base, size, image->data.data(), size)) {
-            delete base;
-            base = nullptr;
-            return false;
+        if (image->placeholder > 0) {
+            uint8_t* fillingColor = new uint8_t[image->placeholder];
+            if (!fillingColor) {
+                return false;
+            }
+            if (!Rosen::Utils::Move(fillingColor, image->placeholder, image->data.get(), image->placeholder)) {
+                delete [] fillingColor;
+                delete base;
+                base = nullptr;
+                return false;
+            }
+            for (uint32_t idx = 0; idx < size; idx += image->placeholder) {
+                for (uint32_t ch = 0; ch < image->placeholder; ++ch) {
+                    base[idx + ch] = fillingColor[ch];
+                }
+            }
+            delete [] fillingColor;
+        }
+        else {            
+            if (!Rosen::Utils::Move(base, size, image->data.get(), size)) {
+                delete base;
+                base = nullptr;
+                return false;
+            }
         }
 
         context = nullptr;
@@ -62,7 +83,7 @@ public:
             return false;
         }
 
-        auto* buffer = reinterpret_cast<const BufferHandle*>(image->data.data());
+        auto* buffer = reinterpret_cast<const BufferHandle*>(image->data.get());
         if (!buffer || (buffer->width == 0) || (buffer->height == 0)) {
             base = nullptr;
             context = nullptr;
@@ -80,7 +101,40 @@ public:
         surfaceBuffer->Alloc(config);
 
         base = static_cast<uint8_t*>(surfaceBuffer->GetVirAddr());
-        Rosen::Utils::Move(base, buffer->size, image->data.data() + sizeof(BufferHandle), buffer->size);
+        
+        if (image->placeholder > 0) {
+            uint32_t imageSize = image->placeholder - sizeof(BufferHandle);
+            if (imageSize <= 0) {
+                base = nullptr;
+                return false;
+            }
+            uint8_t* fillingColor = new uint8_t[imageSize];
+            if (!fillingColor) {
+                base = nullptr;
+                return false;
+            }
+            if (!Rosen::Utils::Move(fillingColor, imageSize,
+                static_cast<uint8_t*>(image->data.get()) + sizeof(BufferHandle), imageSize)) {
+                delete [] fillingColor;
+                base = nullptr;
+                return false;
+            }
+            
+            for (uint32_t idx = 0; idx < buffer->size; idx += imageSize) {
+                for (uint32_t ch = 0; ch < imageSize; ++ch) {
+                    base[idx + ch] = fillingColor[ch];
+                }
+            }
+            delete [] fillingColor;
+        }
+        else {
+            if (!Rosen::Utils::Move(base, buffer->size, 
+                static_cast<uint8_t*>(image->data.get()) + sizeof(BufferHandle), buffer->size)) {
+                delete base;
+                base = nullptr;
+                return false;
+            }
+        }
 
         void* nativeBuffer = surfaceBuffer.GetRefPtr();
         auto* ref = reinterpret_cast<OHOS::RefBase*>(nativeBuffer);
@@ -111,8 +165,9 @@ public:
 
 private:
     static uint64_t NewImageId();
-    static bool CacheImage(uint64_t id, const void* data, size_t size, size_t skipBytes);
-    static bool CacheImage(uint64_t id, std::vector<uint8_t> && data, size_t skipBytes);
+    static bool CacheImage(uint64_t id, const void* data, size_t size, size_t skipBytes,
+        size_t placeholder, size_t bufferOffset);
+
     static Rosen::Image* GetCachedImage(uint64_t id);
 
     static uint8_t* MapImage(int32_t file, size_t size, int32_t flags);
@@ -136,16 +191,24 @@ uint64_t ImageSource::NewImageId()
     return Rosen::ImageCache::New();
 }
 
-bool ImageSource::CacheImage(uint64_t id, const void* data, size_t size, size_t skipBytes)
+uint32_t GetPlaceholderBytes(bool isAstc, uint32_t pixelytes)
 {
-    Rosen::Image image(reinterpret_cast<const uint8_t*>(data), size, skipBytes);
-    return Rosen::ImageCache::Add(id, std::move(image));
+    uint32_t placeholder = 0;
+    if (Rosen::RSSystemProperties::GetProfilerBetaRecEnabled() == "1") {
+        if (!isAstc) {
+            placeholder = pixelytes <= 0 ? 4 : pixelytes;
+        }
+        else {
+            placeholder = 16;
+        }
+    }
+    return placeholder;
 }
 
-bool ImageSource::CacheImage(uint64_t id, std::vector<uint8_t>&& data, size_t skipBytes)
+bool ImageSource::CacheImage(uint64_t id, const void* data, size_t size, size_t skipBytes,
+    size_t placeholder, size_t bufferOffset)
 {
-    Rosen::Image image(std::move(data), skipBytes);
-    return Rosen::ImageCache::Add(id, std::move(image));
+    return Rosen::ImageCache::Add(id, reinterpret_cast<const uint8_t*>(data), size, skipBytes, placeholder, bufferOffset);
 }
 
 Rosen::Image* ImageSource::GetCachedImage(uint64_t id)
@@ -214,7 +277,7 @@ bool ImageSource::UnmarshalFromSharedMemory(UnmarshallingContext& context, uint6
         Rosen::RSProfiler::IsParcelMock(context.parcel) ? invalidFile : context.map->ReadFileDescriptor(context.parcel);
     if (file < 0) {
         auto image = GetCachedImage(id);
-        if (image && (static_cast<uint32_t>(context.size) == image->data.size())) {
+        if (image && (static_cast<uint32_t>(context.size) == image->size)) {
             if (context.GatherImageFromFile(image)) {
                 context.parcel.SkipBytes(UnmarshallingContext::headerLength);
                 return true;
@@ -232,7 +295,8 @@ bool ImageSource::UnmarshalFromSharedMemory(UnmarshallingContext& context, uint6
         }
     }
 
-    CacheImage(id, image, context.size, UnmarshallingContext::headerLength);
+    uint32_t placeholder = GetPlaceholderBytes(context.map->IsAstc(), context.map->GetPixelBytes());
+    CacheImage(id, image, context.size, UnmarshallingContext::headerLength, placeholder, 0);
 
     context.context = new int32_t();
     if (!context.context) {
@@ -264,11 +328,14 @@ bool ImageSource::UnmarshalFromDMA(UnmarshallingContext& context, uint64_t id)
     context.context = nativeBuffer;
 
     if (auto buffer = surfaceBuffer->GetBufferHandle()) {
+        const size_t totalSize = sizeof(BufferHandle) + buffer->size;
         std::vector<uint8_t> data;
-        data.resize(sizeof(BufferHandle) + buffer->size);
+        data.resize(totalSize);
         Rosen::Utils::Move(data.data(), sizeof(BufferHandle), buffer, sizeof(BufferHandle));
         Rosen::Utils::Move(data.data() + sizeof(BufferHandle), buffer->size, virAddr, buffer->size);
-        CacheImage(id, std::move(data), context.parcel.GetReadPosition() - readPosition);
+        uint32_t placeholder = GetPlaceholderBytes(context.map->IsAstc(), context.map->GetPixelBytes());
+        CacheImage(id, data.data(), totalSize, context.parcel.GetReadPosition() - readPosition,
+            placeholder, sizeof(BufferHandle));
     }
 
     return true;
@@ -345,7 +412,8 @@ void ImageSource::OnClientMarshalling(Media::PixelMap& map, uint64_t id)
     if (auto file = static_cast<const int32_t*>(map.GetFd())) {
         const size_t size = map.isAstc_ ? map.pixelsSize_ : map.rowDataSize_ * map.imageInfo_.size.height;
         if (auto image = MapImage(*file, size, PROT_READ)) {
-            CacheImage(id, image, size, UnmarshallingContext::headerLength);
+            uint32_t placeholder = GetPlaceholderBytes(map.IsAstc(), map.GetPixelBytes());
+            CacheImage(id, image, size, UnmarshallingContext::headerLength, placeholder, 0);
             UnmapImage(image, size);
         }
     }
@@ -388,6 +456,11 @@ bool RSProfiler::MarshalPixelMap(Parcel& parcel, const std::shared_ptr<Media::Pi
     }
 
     return PixelMapHelper::Marshal(parcel, *map);
+}
+
+bool RSProfiler::MarshalDrawingImageNeedSkip()
+{
+    return Rosen::RSMarshallingHelper::GetUseSharedMem(std::this_thread::get_id()) ? false : true;
 }
 
 } // namespace OHOS::Rosen

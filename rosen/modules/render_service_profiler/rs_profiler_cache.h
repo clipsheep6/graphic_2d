@@ -36,21 +36,27 @@ public:
 
 public:
     explicit Image() = default;
-    explicit Image(const uint8_t* data, size_t size, size_t skipBytes);
-    explicit Image(std::vector<uint8_t> && data, size_t skipBytes);
+    explicit Image(const uint8_t* data, size_t size, size_t skipBytes, size_t placeholder, size_t bufferOffset);
+
+    std::unique_ptr<uint8_t[]> GeneratePlaceholder(
+        const uint8_t* data, size_t size, size_t skipBytes, size_t placeholder, size_t bufferOffset);
 
     void Serialize(Archive& archive);
     bool IsValid() const;
 
 public:
-    std::vector<uint8_t> data;
-    size_t skipBytes = 0u;
+    std::shared_ptr<void> data;
+    uint64_t skipBytes = 0u;
+    uint64_t size = 0u;
+    uint64_t placeholder = 0u;
 };
 
 class RSB_EXPORT ImageCache final {
 public:
     static uint64_t New();
     static bool Add(uint64_t id, Image&& image);
+    static bool Add(
+        uint64_t id, const uint8_t* data, size_t size, size_t skipBytes, size_t placeholder, size_t bufferOffset);
     static bool Exists(uint64_t id);
     static Image* Get(uint64_t id);
     static size_t Size();

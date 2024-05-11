@@ -184,6 +184,23 @@ std::vector<NetworkStats> Network::GetStats(const std::string& interface)
     return results;
 }
 
+std::pair<std::string, std::string> Network::ParseDeviceInfo(const DeviceInfo& deviceInfo)
+{
+    std::stringstream load;
+    std::stringstream freq;
+    for (uint32_t i = 0; i < deviceInfo.cpu.cores; i++) {
+        load << deviceInfo.cpu.coreFrequencyLoad[i].load;
+        if (i + 1 < deviceInfo.cpu.cores) {
+            load << ";";
+        }
+        freq << deviceInfo.cpu.coreFrequencyLoad[i].current;
+        if (i + 1 < deviceInfo.cpu.cores) {
+            freq << ";";
+        }
+    }
+    return std::pair<std::string, std::string>(load.str(), freq.str());
+}
+
 void Network::SendRdcPath(const std::string& path)
 {
     if (!path.empty()) {
@@ -214,6 +231,16 @@ void Network::SendMskpPath(const std::string& path)
     }
 }
 
+void Network::SendBetarecPath(const std::string& path)
+{
+    if (!path.empty()) {
+        std::string out;
+        out += static_cast<char>(PackageID::RS_PROFILER_BETAREC_FILEPATH);
+        out += path;
+        SendBinary(out.data(), out.size());
+    }
+}
+
 void Network::SendSkp(const void* data, size_t size)
 {
     if (data && (size > 0)) {
@@ -232,26 +259,14 @@ void Network::SendTelemetry(double time)
     }
 
     const DeviceInfo deviceInfo = RSTelemetry::GetDeviceInfo();
-
-    std::stringstream load;
-    std::stringstream frequency;
-    for (uint32_t i = 0; i < deviceInfo.cpu.cores; i++) {
-        load << deviceInfo.cpu.coreFrequencyLoad[i].load;
-        if (i + 1 < deviceInfo.cpu.cores) {
-            load << ";";
-        }
-        frequency << deviceInfo.cpu.coreFrequencyLoad[i].current;
-        if (i + 1 < deviceInfo.cpu.cores) {
-            frequency << ";";
-        }
-    }
+    const auto loadFreq = ParseDeviceInfo(deviceInfo);
 
     RSCaptureData captureData;
     captureData.SetTime(time);
     captureData.SetProperty(RSCaptureData::KEY_CPU_TEMP, deviceInfo.cpu.temperature);
     captureData.SetProperty(RSCaptureData::KEY_CPU_CURRENT, deviceInfo.cpu.current);
-    captureData.SetProperty(RSCaptureData::KEY_CPU_LOAD, load.str());
-    captureData.SetProperty(RSCaptureData::KEY_CPU_FREQ, frequency.str());
+    captureData.SetProperty(RSCaptureData::KEY_CPU_LOAD, loadFreq.first);
+    captureData.SetProperty(RSCaptureData::KEY_CPU_FREQ, loadFreq.second);
     captureData.SetProperty(RSCaptureData::KEY_GPU_LOAD, deviceInfo.gpu.frequencyLoad.load);
     captureData.SetProperty(RSCaptureData::KEY_GPU_FREQ, deviceInfo.gpu.frequencyLoad.current);
 

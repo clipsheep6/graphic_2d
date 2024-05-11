@@ -78,8 +78,9 @@ public:
 protected:
     RectI GetFilterRect() const override;
     void UpdateFilterCacheWithSelfDirty() override;
-    void MarkFilterCacheFlagsAfterPrepare(
-        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false) override;
+    void MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
+        RSDirtyRegionManager& dirtyManager, bool dirtyBelowContainsFilterNode, bool isForeground = false) override;
+    void CheckBlurFilterCacheNeedForceClearOrSave() override;
 
 private:
     bool isVisitedOcclusionFilterCacheEmpty_ = true;

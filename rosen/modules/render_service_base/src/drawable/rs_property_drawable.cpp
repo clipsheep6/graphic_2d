@@ -361,7 +361,7 @@ void RSFilterDrawable::UpdateFlags(FilterCacheType type, bool cacheValid)
 
 bool RSFilterDrawable::IsCacheUpdateInInterval() const
 {
-    return cacheUpdateInterval_>0;
+    return cacheUpdateInterval_ > 0;
 }
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

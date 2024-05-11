@@ -916,6 +916,13 @@ bool RSSystemProperties::IsForceClient()
     return ConvertToInt(num, 0);
 }
 
+bool RSSystemProperties::GetTextBlobAsPixelMap()
+{
+    static bool pixelMapEnabled =
+        std::atoi((system::GetParameter("persist.rosen.textBlobAsPixelMapEnable.enable", "1")).c_str()) != 0;
+    return pixelMapEnabled;
+}
+
 bool RSSystemProperties::GetUnmarshParallelFlag()
 {
     static bool flag = system::GetParameter("rosen.graphic.UnmashParallelEnabled", "1") != "0";
@@ -928,6 +935,7 @@ uint32_t RSSystemProperties::GetUnMarshParallelSize()
         static_cast<uint32_t>(std::atoi(
             (system::GetParameter("rosen.graphic.UnmashParallelSize", "102400")).c_str())); // 100K
     return size;
+
 }
 } // namespace Rosen
 } // namespace OHOS

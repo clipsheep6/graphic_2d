@@ -112,7 +112,17 @@ Vector2f ParticleNoiseField::ApplyField(const Vector2f& position, float deltaTim
         Vector2f force = direction.Normalized() * forceMagnitude;
         return force;
     }
-    return Vector2f { 0.f, 0.f };
+    float edgeDistance = fieldSize_.x_ * HALF;
+    if (fieldShape_ == ShapeType::RECT) {
+        edgeDistance = calculateDistanceToRectangleEdge(position, direction, fieldCenter_, fieldSize_);
+    } else if (fieldShape_ == ShapeType::ELLIPSE) {
+        edgeDistance = calculateEllipseEdgeDistance(direction);
+    }
+    if (edgeDistance != 0) {
+        forceMagnitude *= (1.0f - ((float)fieldFeather_ / 100.0f) * (distance / edgeDistance));
+    }
+    Vector2f force = direction.Normalized() * forceMagnitude;
+    return force;
 }
 
 Vector2f ParticleNoiseField::ApplyCurlNoise(const Vector2f& position)

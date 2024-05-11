@@ -113,7 +113,7 @@ public:
 
     Vector2f ApplyAllFields(const Vector2f& position, float deltaTime)
     {
-        Vector2f totalEffect = {0.0f, 0.0f};
+        Vector2f totalEffect = {0.f, 0.f};
         for (auto& field : fields_) {
             totalEffect += (field->ApplyField(position, deltaTime) + field->ApplyCurlNoise(position));
         }

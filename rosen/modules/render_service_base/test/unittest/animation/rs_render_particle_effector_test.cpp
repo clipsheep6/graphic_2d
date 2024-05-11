@@ -40,6 +40,14 @@ public:
     void TearDown() override;
     static constexpr uint64_t ANIMATION_ID = 12345;
     static constexpr uint64_t PROPERTY_ID = 54321;
+    static constexpr int FIELD_STRENGTH = 10;
+    static constexpr float FIELD_SIZE = 200.f;
+    static constexpr float FIELD_CENTER_X = 40.f;
+    static constexpr float FIELD_CENTER_Y = 50.f;
+    static constexpr uint16_t FIELD_FATHER = 50;
+    static constexpr float NOISE_SCALE = 8.f;
+    static constexpr float NOISE_FREQUENCY = 2.f;
+    static constexpr float NOISE_AMPLITUDE = 4.f;
     EmitterConfig emitterConfig_;
     ParticleVelocity velocity_;
     RenderParticleAcceleration acceleration_;
@@ -325,16 +333,11 @@ HWTEST_F(RSRenderParticleEffectorTest, UpdateAccelerationRandom001, TestSize.Lev
     std::vector<std::shared_ptr<RSRenderParticle>> particles;
     particles.push_back(particle);
     effector = std::make_shared<RSRenderParticleEffector>();
-    int fieldStrength = 10;
     ShapeType fieldShape = ShapeType::RECT;
-    Vector2f fieldSize = { 200.f, 200.f };
-    Vector2f fieldCenter = { 40.f, 50.f };
-    uint16_t fieldFeather = 50;
-    float noiseScale = 8.f;
-    float noiseFrequency = 2.f;
-    float noiseAmplitude = 4.f;
+    Vector2f fieldSize = {FIELD_SIZE, FIELD_SIZE};
+    Vector2f fieldCenter = {FIELD_CENTER_X, FIELD_CENTER_Y};
     auto noiseFiled = std::make_shared<ParticleNoiseField>(
-        fieldStrength, fieldShape, fieldSize, fieldCenter, fieldFeather, noiseScale, noiseFrequency, noiseAmplitude);
+        FIELD_STRENGTH, fieldShape, fieldSize, fieldCenter, FIELD_FATHER, NOISE_SCALE, NOISE_FREQUENCY, NOISE_AMPLITUDE);
     auto noiseFileds = std::make_shared<ParticleNoiseFields>();
     noiseFileds->AddField(noiseFiled);
     effector->Update(particle, noiseFileds, activeTime);

@@ -16,5 +16,5 @@
 #define RSPROPERTYDRAWABLEFRAMEGEOMETRY_FUZZER_H
 
 #define FUZZ_PROJECT_NAME "rspropertydrawableframegeometry_fuzzer"
-
+  
 #endif // RSPROPERTYDRAWABLEFRAMEGEOMETRY_FUZZER_H

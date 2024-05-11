@@ -243,7 +243,7 @@ bool DoRSModifierDrawable(const uint8_t* data, size_t size)
     RSPaintFilterCanvas cacheCanvas(&canvas);
     RSRenderContent content;
     rsModifierDrawable->Draw(content, cacheCanvas);
-    return true;
+    return true;  
 }
 
 } // namespace Rosen

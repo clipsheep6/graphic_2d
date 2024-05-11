@@ -18,5 +18,3 @@
 #define FUZZ_PROJECT_NAME "rspropertydrawableutilities_fuzzer"
 
 #endif // RSPROPERTYDRAWABLEUTILITIES_FUZZER_H
-
-

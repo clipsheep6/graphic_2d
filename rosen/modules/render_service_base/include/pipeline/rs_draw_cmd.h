@@ -47,6 +47,7 @@ struct AdaptiveImageInfo {
     uint32_t uniqueId = 0;
     int32_t width = 0;
     int32_t height = 0;
+    uint32_t dynamicRangeMode = 0;
 };
 }
 
@@ -83,10 +84,12 @@ public:
     bool MakeFromTextureForVK(Drawing::Canvas& canvas, SurfaceBuffer *surfaceBuffer);
 #endif
     void SetNodeId(NodeId id) override;
+    void SetPaint(Drawing::Paint paint) override;
 protected:
     std::shared_ptr<RSImage> rsImage_;
 private:
 #if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
+    void PreProcessPixelMap(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap);
 #ifdef RS_ENABLE_GL
     mutable EGLImageKHR eglImage_ = EGL_NO_IMAGE_KHR;
     mutable GLuint texId_ = 0;

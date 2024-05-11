@@ -15,6 +15,7 @@
 
 #include "pipeline/rs_unmarshal_thread.h"
 
+#include "ffrt.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
 #include "platform/common/rs_log.h"
@@ -29,8 +30,10 @@
 namespace OHOS::Rosen {
 namespace {
     constexpr int REQUEST_FRAME_AWARE_ID = 100001;
-    constexpr int REQUEST_FRAME_AWARE_LOAD = 80;
-    constexpr int REQUEST_FRAME_AWARE_NUM = 2;
+    constexpr int REQUEST_SET_FRAME_LOAD_ID = 100006;
+    constexpr int REQUEST_FRAME_AWARE_LOAD = 85;
+    constexpr int REQUEST_FRAME_AWARE_NUM = 4;
+    constexpr int REQUEST_FRAME_STANDARD_LOAD = 50;
 }
 
 RSUnmarshalThread& RSUnmarshalThread::Instance()
@@ -46,6 +49,7 @@ void RSUnmarshalThread::Start()
 #ifdef RES_SCHED_ENABLE
     PostTask([this]() {
         auto ret = OHOS::QOS::SetThreadQos(OHOS::QOS::QosLevel::QOS_USER_INTERACTIVE);
+        unmarshalTid_ = gettid();
         RS_LOGI("RSUnmarshalThread: SetThreadQos retcode = %{public}d", ret);
     });
 #endif
@@ -66,11 +70,10 @@ void RSUnmarshalThread::RecvParcel(std::shared_ptr<MessageParcel>& parcel)
     }
     bool isPendingUnmarshal = (parcel->GetDataSize() > MIN_PENDING_REQUEST_SYNC_DATA_SIZE);
     RSTaskMessage::RSTask task = [this, parcel = parcel, isPendingUnmarshal]() {
-        if (RsFrameReport::GetInstance().GetEnable()) {
-            RsFrameReport::GetInstance().SetFrameParam(
-                REQUEST_FRAME_AWARE_ID, REQUEST_FRAME_AWARE_LOAD, REQUEST_FRAME_AWARE_NUM, 0);
-        }
+        SetFrameParam(REQUEST_FRAME_AWARE_ID, REQUEST_FRAME_AWARE_LOAD, REQUEST_FRAME_AWARE_NUM, 0);
+        SetFrameLoad(REQUEST_FRAME_AWARE_LOAD);
         auto transData = RSBaseRenderUtil::ParseTransactionData(*parcel);
+        SetFrameLoad(REQUEST_FRAME_STANDARD_LOAD);
         if (!transData) {
             return;
         }
@@ -83,7 +86,19 @@ void RSUnmarshalThread::RecvParcel(std::shared_ptr<MessageParcel>& parcel)
             RSMainThread::Instance()->RequestNextVSync();
         }
     };
-    PostTask(task);
+    {
+        if (RSSystemProperties::GetUnmarshParallelFlag()) {
+            ffrt::task_handle handle = ffrt::submit_h(task, {}, {}, ffrt::task_attr().qos(ffrt::qos_user_initiated));
+        } else {
+            PostTask(task);
+        }
+        /* a task has been posted, it means cachedTransactionDataMap_ will not been empty.
+         * so set willHaveCachedData_ to true
+         */
+        std::lock_guard<std::mutex> lock(transactionDataMutex_);
+        willHaveCachedData_ = true;
+    }
+
     if (!isPendingUnmarshal) {
         RSMainThread::Instance()->RequestNextVSync();
     }
@@ -95,7 +110,33 @@ TransactionDataMap RSUnmarshalThread::GetCachedTransactionData()
     {
         std::lock_guard<std::mutex> lock(transactionDataMutex_);
         std::swap(transactionData, cachedTransactionDataMap_);
+        willHaveCachedData_ = false;
     }
     return transactionData;
+}
+
+bool RSUnmarshalThread::CachedTransactionDataEmpty()
+{
+    std::lock_guard<std::mutex> lock(transactionDataMutex_);
+    /* we need consider both whether cachedTransactionDataMap_ is empty now
+     * and whether cachedTransactionDataMap_ will be empty later
+     */
+    return cachedTransactionDataMap_.empty() && !willHaveCachedData_;
+}
+void RSUnmarshalThread::SetFrameParam(int requestId, int load, int frameNum, int value)
+{
+    if (RsFrameReport::GetInstance().GetEnable()) {
+        RsFrameReport::GetInstance().SetFrameParam(requestId, load, frameNum, value);
+    }
+}
+void RSUnmarshalThread::SetFrameLoad(int load)
+{
+    if (load == REQUEST_FRAME_STANDARD_LOAD && unmarshalLoad_ > REQUEST_FRAME_STANDARD_LOAD) {
+        unmarshalLoad_ = load;
+        SetFrameParam(REQUEST_SET_FRAME_LOAD_ID, load, 0, unmarshalTid_);
+        return;
+    }
+    SetFrameParam(REQUEST_SET_FRAME_LOAD_ID, load, 0, unmarshalTid_);
+    unmarshalLoad_ = load;
 }
 }

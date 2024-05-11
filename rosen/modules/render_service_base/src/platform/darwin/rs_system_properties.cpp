@@ -272,6 +272,11 @@ bool RSSystemProperties::GetBlurEnabled()
     return true;
 }
 
+bool RSSystemProperties::GetForegroundFilterEnabled()
+{
+    return true;
+}
+
 const std::vector<float>& RSSystemProperties::GetAiInvertCoef()
 {
     // Configure AiInvertCoef: Low, High, Threshold, Opacity, Saturation, Filter Radius.
@@ -373,7 +378,7 @@ bool RSSystemProperties::GetDumpUIPixelmapEnabled()
     return false;
 }
 
-uint32_t RSSystemProperties::GetVirtualScreenScaleModeDFX()
+int RSSystemProperties::GetVirtualScreenScaleModeDFX()
 {
     return {};
 }
@@ -396,6 +401,26 @@ bool RSSystemProperties::GetRenderParallelEnabled()
 bool RSSystemProperties::GetUIFirstForceEnabled()
 {
     return false;
+}
+
+bool RSSystemProperties::GetAceDebugBoundaryEnabled()
+{
+    return false;
+}
+
+bool RSSystemProperties::IsForceClient()
+{
+    return false;
+}
+
+bool RSSystemProperties::GetUnmarshParallelFlag()
+{
+    return false;
+}
+
+uint32_t RSSystemProperties::GetUnMarshParallelSize()
+{
+    return UINT32_MAX;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -43,11 +43,20 @@ RSJankStats& RSJankStats::GetInstance()
     return instance;
 }
 
-void RSJankStats::SetOnVsyncStartTime(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady)
+void RSJankStats::SetOnVsyncStartTime(int64_t onVsyncStartTime, int64_t onVsyncStartTimeSteady,
+                                      float onVsyncStartTimeSteadyFloat)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     rsStartTime_ = onVsyncStartTime;
     rsStartTimeSteady_ = onVsyncStartTimeSteady;
+    if (IS_CALCULATE_PRECISE_HITCH_TIME) {
+        rsStartTimeSteadyFloat_ = onVsyncStartTimeSteadyFloat;
+    }
+}
+
+void RSJankStats::SetAccumulatedBufferCount(int accumulatedBufferCount)
+{
+    accumulatedBufferCount_ = accumulatedBufferCount;
 }
 
 void RSJankStats::SetStartTime(bool doDirectComposition)
@@ -92,10 +101,10 @@ void RSJankStats::SetEndTime(bool skipJankAnimatorFrame, bool discardJankFrames,
             ReportEventResponse(jankFrames);
             jankFrames.isUpdateJankFrame_ = true;
         }
-        // skip jank frame statistics at the first frame of animation && at the end frame of implicit animation
         if (jankFrames.isUpdateJankFrame_ && !jankFrames.isFirstFrame_ && !(!jankFrames.isDisplayAnimator_ &&
             (jankFrames.isReportEventComplete_ || jankFrames.isReportEventJankFrame_)) &&
-            !(jankFrames.isDisplayAnimator_ && skipJankAnimatorFrame)) {
+            !(jankFrames.isDisplayAnimator_ && skipJankAnimatorFrame) &&
+            !(!jankFrames.isDisplayAnimator_ && jankFrames.isImplicitAnimationEnd_)) {
             UpdateJankFrame(jankFrames, dynamicRefreshRate);
         }
         if (jankFrames.isReportEventComplete_) {
@@ -116,7 +125,8 @@ void RSJankStats::SetEndTime(bool skipJankAnimatorFrame, bool discardJankFrames,
             jankFrames.isUpdateJankFrame_ = false;
             jankFrames.isAnimationEnded_ = true;
         }
-        jankFrames.isFirstFrame_ = false;
+        jankFrames.isFirstFrame_ = jankFrames.isFirstFrameTemp_;
+        jankFrames.isFirstFrameTemp_ = false;
     }
     ReportEventFirstFrame();
     CheckAnimationTraceTimeout();
@@ -131,12 +141,20 @@ void RSJankStats::UpdateEndTime()
         rtEndTime_ = rtLastEndTime_;
         rtLastEndTimeSteady_ = GetCurrentSteadyTimeMs();
         rtEndTimeSteady_ = rtLastEndTimeSteady_;
+        if (IS_CALCULATE_PRECISE_HITCH_TIME) {
+            rtLastEndTimeSteadyFloat_ = GetCurrentSteadyTimeMsFloat();
+            rtEndTimeSteadyFloat_ = rtLastEndTimeSteadyFloat_;
+        }
         return;
     }
     rtLastEndTime_ = rtEndTime_;
     rtEndTime_ = GetCurrentSystimeMs();
     rtLastEndTimeSteady_ = rtEndTimeSteady_;
     rtEndTimeSteady_ = GetCurrentSteadyTimeMs();
+    if (IS_CALCULATE_PRECISE_HITCH_TIME) {
+        rtLastEndTimeSteadyFloat_ = rtEndTimeSteadyFloat_;
+        rtEndTimeSteadyFloat_ = GetCurrentSteadyTimeMsFloat();
+    }
 }
 
 void RSJankStats::HandleDirectComposition(const JankDurationParams& rsParams, bool isReportTaskDelayed)
@@ -151,6 +169,11 @@ void RSJankStats::HandleDirectComposition(const JankDurationParams& rsParams, bo
         rtEndTime_ = rsParams.timeEnd_;
         rtLastEndTimeSteady_ = rtEndTimeSteady_;
         rtEndTimeSteady_ = rsParams.timeEndSteady_;
+        if (IS_CALCULATE_PRECISE_HITCH_TIME) {
+            rsStartTimeSteadyFloat_ = rsParams.timeStartSteadyFloat_;
+            rtLastEndTimeSteadyFloat_ = rtEndTimeSteadyFloat_;
+            rtEndTimeSteadyFloat_ = rsParams.timeEndSteadyFloat_;
+        }
     }
     SetStartTime(true);
     SetEndTime(rsParams.skipJankAnimatorFrame_, rsParams.discardJankFrames_,
@@ -166,7 +189,7 @@ void RSJankStats::SetRSJankStats(uint32_t /* dynamicRefreshRate */)
         return;
     }
     if (missedVsync >= VSYNC_JANK_LOG_THRESHOLED) {
-        ROSEN_LOGI("RSJankStats::SetJankStats jank frames %{public} " PRId64 "", missedVsync);
+        ROSEN_LOGW("RSJankStats::SetJankStats jank frames %{public} " PRId64 "", missedVsync);
     }
     size_t type = JANK_FRAME_INVALID;
     if (missedVsync < 6) {                                       // JANK_FRAME_6_FREQ   : (0,6)
@@ -228,7 +251,8 @@ void RSJankStats::UpdateJankFrame(JankFrames& jankFrames, uint32_t dynamicRefres
     const float standardFrameTime = S_TO_MS / dynamicRefreshRate;
     const bool isConsiderRsStartTime =
         jankFrames.isDisplayAnimator_ || jankFrames.isFirstFrame_ || isFirstSetEnd_;
-    const int64_t frameDuration = GetEffectiveFrameTime(isConsiderRsStartTime);
+    const float accumulatedTime = accumulatedBufferCount_ * standardFrameTime;
+    const int64_t frameDuration = std::max<int64_t>(0, GetEffectiveFrameTime(isConsiderRsStartTime) - accumulatedTime);
     const int32_t missedFramesToReport = static_cast<int32_t>(frameDuration / VSYNC_PERIOD);
     jankFrames.totalFrames_++;
     jankFrames.totalFrameTimeSteady_ += frameDuration;
@@ -246,7 +270,8 @@ void RSJankStats::UpdateJankFrame(JankFrames& jankFrames, uint32_t dynamicRefres
     jankFrames.lastMaxHitchTime_ = jankFrames.maxHitchTime_;
     jankFrames.lastTotalHitchTimeSteady_ = jankFrames.totalHitchTimeSteady_;
     jankFrames.lastTotalFrameTimeSteadyForHTR_ = jankFrames.totalFrameTimeSteadyForHTR_;
-    const int64_t frameTimeForHTR = GetEffectiveFrameTime(true);
+    const float frameTimeForHTR = (IS_CALCULATE_PRECISE_HITCH_TIME ? GetEffectiveFrameTimeFloat(true) :
+                                  static_cast<float>(GetEffectiveFrameTime(true)));
     const float frameHitchTime = std::max<float>(0.f, frameTimeForHTR - standardFrameTime);
     const bool isConsiderRsStartTimeForHTR = jankFrames.isFirstFrame_ || isFirstSetEnd_;
     const int64_t frameDurationForHTR = (isConsiderRsStartTimeForHTR ?
@@ -308,6 +333,7 @@ void RSJankStats::SetReportEventResponse(const DataBaseRs& info)
         jankFrames.isSetReportEventResponse_ = true;
         jankFrames.setTimeSteady_ = setTimeSteady;
         jankFrames.isFirstFrame_ = true;
+        jankFrames.isFirstFrameTemp_ = true;
         jankFrames.traceId_ = GetTraceIdInit(info, setTimeSteady);
         jankFrames.isDisplayAnimator_ = info.isDisplayAnimator;
         animateJankFrames_.emplace(animationId, jankFrames);
@@ -382,6 +408,21 @@ void RSJankStats::SetAppFirstFrame(pid_t appPid)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     firstFrameAppPids_.push(appPid);
+}
+
+void RSJankStats::SetImplicitAnimationEnd(bool needReport)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!needReport) {
+        return;
+    }
+
+    for (auto &[animationId, jankFrames] : animateJankFrames_) {
+        if (jankFrames.isDisplayAnimator_) {
+            continue;
+        }
+        animateJankFrames_[animationId].isImplicitAnimationEnd_ = true;
+    }
 }
 
 void RSJankStats::ReportEventResponse(const JankFrames& jankFrames) const
@@ -523,13 +564,17 @@ void RSJankStats::ReportEventFirstFrameByPid(pid_t appPid) const
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "APP_PID", static_cast<int32_t>(appPid));
 }
 
-// dynamicRefreshRate is retained for future algorithm adjustment, keep it unused currently
-void RSJankStats::RecordJankFrame(uint32_t /* dynamicRefreshRate */)
+void RSJankStats::RecordJankFrame(uint32_t dynamicRefreshRate)
 {
+    if (dynamicRefreshRate == 0) {
+        dynamicRefreshRate = STANDARD_REFRESH_RATE;
+    }
+    const float accumulatedTime = accumulatedBufferCount_ * S_TO_MS / dynamicRefreshRate;
     for (auto& recordStats : jankExplicitAnimatorFrameRecorder_) {
         recordStats.isRecorded_ = false;
     }
-    const int64_t missedFramesByDuration = static_cast<int64_t>(GetEffectiveFrameTime(true) / VSYNC_PERIOD);
+    const int64_t missedFramesByDuration = static_cast<int64_t>(
+        std::max<float>(0.f, GetEffectiveFrameTime(true) - accumulatedTime) / VSYNC_PERIOD);
     if (missedFramesByDuration > 0 && explicitAnimationTotal_ > 0) {
         for (auto& recordStats : jankExplicitAnimatorFrameRecorder_) {
             RecordJankFrameSingle(missedFramesByDuration, recordStats);
@@ -538,7 +583,8 @@ void RSJankStats::RecordJankFrame(uint32_t /* dynamicRefreshRate */)
     for (auto& recordStats : jankImplicitAnimatorFrameRecorder_) {
         recordStats.isRecorded_ = false;
     }
-    const int64_t missedFramesByInterval = static_cast<int64_t>(GetEffectiveFrameTime(isFirstSetEnd_) / VSYNC_PERIOD);
+    const int64_t missedFramesByInterval = static_cast<int64_t>(
+        std::max<float>(0.f, GetEffectiveFrameTime(isFirstSetEnd_) - accumulatedTime) / VSYNC_PERIOD);
     if (missedFramesByInterval > 0 && implicitAnimationTotal_ > 0) {
         for (auto& recordStats : jankImplicitAnimatorFrameRecorder_) {
             RecordJankFrameSingle(missedFramesByInterval, recordStats);
@@ -715,6 +761,18 @@ int64_t RSJankStats::GetEffectiveFrameTime(bool isConsiderRsStartTime) const
     return rtEndTimeSteady_ - rtLastEndTimeSteady_;
 }
 
+float RSJankStats::GetEffectiveFrameTimeFloat(bool isConsiderRsStartTime) const
+{
+    if (isConsiderRsStartTime) {
+        return std::min<float>(rtEndTimeSteadyFloat_ - rtLastEndTimeSteadyFloat_,
+                               rtEndTimeSteadyFloat_ - rsStartTimeSteadyFloat_);
+    }
+    if (isCurrentFrameSwitchToNotDoDirectComposition_) {
+        return rtEndTimeSteadyFloat_ - rsStartTimeSteadyFloat_;
+    }
+    return rtEndTimeSteadyFloat_ - rtLastEndTimeSteadyFloat_;
+}
+
 int64_t RSJankStats::ConvertTimeToSystime(int64_t time) const
 {
     if (time <= 0) {
@@ -745,5 +803,12 @@ int64_t RSJankStats::GetCurrentSteadyTimeMs() const
     return curSteadyTime;
 }
 
+float RSJankStats::GetCurrentSteadyTimeMsFloat() const
+{
+    auto curTime = std::chrono::steady_clock::now().time_since_epoch();
+    int64_t curSteadyTimeUs = std::chrono::duration_cast<std::chrono::microseconds>(curTime).count();
+    float curSteadyTime = curSteadyTimeUs / MS_TO_US;
+    return curSteadyTime;
+}
 } // namespace Rosen
 } // namespace OHOS

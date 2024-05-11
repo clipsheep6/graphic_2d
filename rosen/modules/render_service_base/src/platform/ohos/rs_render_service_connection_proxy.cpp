@@ -205,6 +205,9 @@ sptr<Surface> RSRenderServiceConnectionProxy::CreateNodeAndSurface(const RSSurfa
     }
     sptr<IRemoteObject> surfaceObject = reply.ReadRemoteObject();
     sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
+    if (bp == nullptr) {
+        return nullptr;
+    }
     sptr<Surface> surface = Surface::CreateSurfaceAsProducer(bp);
     return surface;
 }
@@ -235,6 +238,9 @@ sptr<IVSyncConnection> RSRenderServiceConnectionProxy::CreateVSyncConnection(con
 
     sptr<IRemoteObject> rObj = reply.ReadRemoteObject();
     sptr<IVSyncConnection> conn = iface_cast<IVSyncConnection>(rObj);
+    if (conn == nullptr) {
+        return nullptr;
+    }
     return conn;
 }
 
@@ -553,7 +559,8 @@ void RSRenderServiceConnectionProxy::SetRefreshRateMode(int32_t refreshRateMode)
     }
 }
 
-void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range)
+void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range,
+    bool isAnimatorStopped)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -568,6 +575,7 @@ void RSRenderServiceConnectionProxy::SyncFrameRateRange(FrameRateLinkerId id, co
     data.WriteUint32(range.min_);
     data.WriteUint32(range.max_);
     data.WriteUint32(range.preferred_);
+    data.WriteBool(isAnimatorStopped);
     uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::SYNC_FRAME_RATE_RANGE);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
@@ -2091,7 +2099,7 @@ void RSRenderServiceConnectionProxy::NotifyRefreshRateEvent(const EventInfo& eve
     }
 }
 
-void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -2100,6 +2108,9 @@ void RSRenderServiceConnectionProxy::NotifyTouchEvent(int32_t touchStatus)
         return;
     }
     if (!data.WriteUint32(touchStatus)) {
+        return;
+    }
+    if (!data.WriteUint32(touchCnt)) {
         return;
     }
     option.SetFlags(MessageOption::TF_ASYNC);
@@ -2141,30 +2152,66 @@ void RSRenderServiceConnectionProxy::RunOnRemoteDiedCallback()
     }
 }
 
-GpuDirtyRegionInfo RSRenderServiceConnectionProxy::GetCurrentDirtyRegionInfo(ScreenId id)
+std::vector<ActiveDirtyRegionInfo> RSRenderServiceConnectionProxy::GetActiveDirtyRegionInfo()
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    GpuDirtyRegionInfo gpuDirtyRegionInfo;
+    std::vector<ActiveDirtyRegionInfo> activeDirtyRegionInfos;
     if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
-        return gpuDirtyRegionInfo;
+        return activeDirtyRegionInfos;
     }
     option.SetFlags(MessageOption::TF_SYNC);
-    data.WriteUint64(id);
-    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_CURRENT_DIRTY_REGION_INFO);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_ACTIVE_DIRTY_REGION_INFO);
     int32_t err = Remote()->SendRequest(code, data, reply, option);
     if (err != NO_ERROR) {
-        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetCurrentDirtyRegionInfo: Send Request err.");
-        return gpuDirtyRegionInfo;
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetActiveDirtyRegionInfo: Send Request err.");
+        return activeDirtyRegionInfos;
     }
-    gpuDirtyRegionInfo.activeGpuDirtyRegionAreas = reply.ReadInt64();
-    gpuDirtyRegionInfo.globalGpuDirtyRegionAreas = reply.ReadInt64();
-    gpuDirtyRegionInfo.skipProcessFramesNumber = reply.ReadInt32();
-    gpuDirtyRegionInfo.activeFramesNumber = reply.ReadInt32();
-    gpuDirtyRegionInfo.globalFramesNumber = reply.ReadInt32();
-    gpuDirtyRegionInfo.windowName = reply.ReadString();
-    return gpuDirtyRegionInfo;
+    int32_t activeDirtyRegionInfosSize = reply.ReadInt32();
+    while (activeDirtyRegionInfosSize--) {
+        activeDirtyRegionInfos.emplace_back(ActiveDirtyRegionInfo(reply.ReadInt64(), reply.ReadInt32(),
+            reply.ReadInt32(), reply.ReadString()));
+    }
+    return activeDirtyRegionInfos;
+}
+
+GlobalDirtyRegionInfo RSRenderServiceConnectionProxy::GetGlobalDirtyRegionInfo()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    GlobalDirtyRegionInfo globalDirtyRegionInfo;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return globalDirtyRegionInfo;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_GLOBAL_DIRTY_REGION_INFO);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetGlobalDirtyRegionInfo: Send Request err.");
+        return globalDirtyRegionInfo;
+    }
+    return GlobalDirtyRegionInfo(reply.ReadInt64(), reply.ReadInt32(), reply.ReadInt32());
+}
+
+LayerComposeInfo RSRenderServiceConnectionProxy::GetLayerComposeInfo()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    LayerComposeInfo layerComposeInfo;
+    if (!data.WriteInterfaceToken(RSIRenderServiceConnection::GetDescriptor())) {
+        return layerComposeInfo;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(RSIRenderServiceConnectionInterfaceCode::GET_LAYER_SYNTHESIS_MODE_INFO);
+    int32_t err = Remote()->SendRequest(code, data, reply, option);
+    if (err != NO_ERROR) {
+        ROSEN_LOGE("RSRenderServiceConnectionProxy::GetLayerComposeInfo: Send Request err.");
+        return layerComposeInfo;
+    }
+    return LayerComposeInfo(reply.ReadInt32(), reply.ReadInt32(), reply.ReadInt32());
 }
 
 #ifdef TP_FEATURE_ENABLE

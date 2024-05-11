@@ -34,11 +34,11 @@ public:
 
     std::vector<RSBaseRenderNode::SharedPtr>& GetAllMainAndLeashSurfaces();
     void SetAllMainAndLeashSurfaces(std::vector<RSBaseRenderNode::SharedPtr>& allMainAndLeashSurfaces);
-    uint64_t GetDisplayOffsetX() const
+    int32_t GetDisplayOffsetX() const
     {
         return offsetX_;
     }
-    uint64_t GetDisplayOffsetY() const
+    int32_t GetDisplayOffsetY() const
     {
         return offsetY_;
     }
@@ -100,9 +100,14 @@ public:
     bool HasSkipLayer();
     bool HasProtectedLayer();
     bool HasCaptureWindow();
+    void SetNeedOffscreen(bool needOffscreen);
+    bool GetNeedOffscreen() const;
 
     void SetRotationChanged(bool changed);
     bool IsRotationChanged() const;
+
+    void SetHDRPresent(bool hasHdrPresent);
+    bool GetHDRPresent() const;
 
     void SetNewColorSpace(const GraphicColorGamut& newColorSpace);
     GraphicColorGamut GetNewColorSpace() const;
@@ -125,10 +130,12 @@ private:
     uint64_t screenId_ = 0;
     std::weak_ptr<RSDisplayRenderNode> mirrorSource_;
     ScreenInfo screenInfo_;
-    ScreenId mirroredId_;
+    ScreenId mirroredId_ = INVALID_SCREEN_ID;
     RSDisplayRenderNode::CompositeType compositeType_ = RSDisplayRenderNode::CompositeType::HARDWARE_COMPOSITE;
     bool isMainAndLeashSurfaceDirty_ = false;
+    bool needOffscreen_ = false;
     bool isRotationChanged_ = false;
+    bool hasHdrPresent_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSDisplayRenderNode;

@@ -152,6 +152,7 @@ public:
     static SurfaceRegionDebugType GetSurfaceRegionDfxType();
     static bool GetDumpLayersEnabled();
     static bool GetHardwareComposerEnabled();
+    static bool GetHardwareComposerEnabledForMirrorMode();
     static bool GetHwcRegionDfxEnabled();
     static bool GetAFBCEnabled();
     static bool GetReleaseResourceEnabled();
@@ -182,6 +183,7 @@ public:
     static bool GetImageReleaseUsingPostTask();
     static bool GetKawaseOriginalEnabled();
     static bool GetBlurEnabled();
+    static bool GetForegroundFilterEnabled();
     static const std::vector<float>& GetAiInvertCoef();
     static bool GetSkipForAlphaZeroEnabled();
     static bool GetSkipGeometryNotChangeEnabled();
@@ -216,10 +218,15 @@ public:
     static bool GetSingleFrameComposerEnabled();
     static bool GetSingleFrameComposerCanvasNodeEnabled();
     static bool GetSubSurfaceEnabled();
+    static bool GetAceDebugBoundaryEnabled();
     static bool GetSecurityPermissionCheckEnabled();
     static bool GetParallelUploadTexture();
     static bool GetEffectMergeEnabled();
     static SubTreePrepareCheckType GetSubTreePrepareCheckType();
+    static bool GetHDRImageEnable();
+    static bool IsForceClient();
+    static bool GetUnmarshParallelFlag();
+    static uint32_t GetUnMarshParallelSize();
 
 #ifdef DDGR_ENABLE_FEATURE_OPINC
     static DdgrOpincType GetDdgrOpincType();
@@ -237,7 +244,7 @@ public:
     static bool GetDumpUIPixelmapEnabled();
     static bool GetDumpImgEnabled();
 
-    static uint32_t GetVirtualScreenScaleModeDFX();
+    static int GetVirtualScreenScaleModeDFX();
 
     static inline GpuApiType GetGpuApiType()
     {

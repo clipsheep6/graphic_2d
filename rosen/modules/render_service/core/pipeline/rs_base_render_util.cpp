@@ -504,7 +504,7 @@ SimpleColorSpace& GetColorSpaceOfCertainGamut(GraphicColorGamut colorGamut,
     }
 }
 
-const uint16_t maxUint10 = 1023;
+const uint16_t MAX_UINT10 = 1023;
 float RGBUint8ToFloat(uint8_t val)
 {
     return val * 1.0f / 255.0f; // 255.0f is the max value.
@@ -513,7 +513,7 @@ float RGBUint8ToFloat(uint8_t val)
 // Used to transfer integers of pictures with color depth of 10 bits to float
 float RGBUint10ToFloat(uint16_t val)
 {
-    return val * 1.0f / maxUint10; // 1023.0f is the max value
+    return val * 1.0f / MAX_UINT10; // 1023.0f is the max value
 }
 
 uint8_t RGBFloatToUint8(float val)
@@ -525,7 +525,7 @@ uint8_t RGBFloatToUint8(float val)
 uint16_t RGBFloatToUint10(float val)
 {
     // 1023.0 is the max value, + 0.5f to avoid negative.
-    return static_cast<uint16_t>(Saturate(val) * maxUint10 + 0.5f);
+    return static_cast<uint16_t>(Saturate(val) * MAX_UINT10 + 0.5f);
 }
 
 Offset RGBUintToFloat(uint8_t* dst, uint8_t* src, int32_t pixelFormat, Vector3f &srcColor,
@@ -786,7 +786,7 @@ void RSBaseRenderUtil::SetNeedClient(bool flag)
 
 bool RSBaseRenderUtil::IsNeedClient(RSRenderNode& node, const ComposeInfo& info)
 {
-    if (IsForceClient()) {
+    if (RSSystemProperties::IsForceClient()) {
         RS_LOGD("RsDebug RSBaseRenderUtil::IsNeedClient: client composition is force enabled.");
         return true;
     }
@@ -826,13 +826,6 @@ bool RSBaseRenderUtil::IsNeedClient(RSRenderNode& node, const ComposeInfo& info)
         return true;
     }
     return false;
-}
-
-bool RSBaseRenderUtil::IsForceClient()
-{
-    static bool forceClient =
-        std::atoi((system::GetParameter("rosen.client_composition.enabled", "0")).c_str()) != 0;
-    return forceClient;
 }
 
 BufferRequestConfig RSBaseRenderUtil::GetFrameBufferRequestConfig(const ScreenInfo& screenInfo, bool isPhysical,
@@ -934,35 +927,52 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
     if (consumer == nullptr) {
         return false;
     }
-
     DropFrameProcess(surfaceHandler);
-
-    RSSurfaceHandler::SurfaceBufferEntry buffer;
-    std::vector<Rect> damages;
-    auto ret = consumer->AcquireBuffer(buffer.buffer, buffer.acquireFence, buffer.timestamp, damages);
-    if (buffer.buffer == nullptr || ret != SURFACE_ERROR_OK) {
-        RS_LOGE("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer failed(ret: %{public}d)!",
-            surfaceHandler.GetNodeId(), ret);
-        return false;
+    std::shared_ptr<RSSurfaceHandler::SurfaceBufferEntry> surfaceBuffer;
+    if (surfaceHandler.GetHoldBuffer() == nullptr) {
+        std::vector<Rect> damages;
+        surfaceBuffer = std::make_shared<RSSurfaceHandler::SurfaceBufferEntry>();
+        int32_t ret = consumer->AcquireBuffer(surfaceBuffer->buffer, surfaceBuffer->acquireFence,
+            surfaceBuffer->timestamp, damages);
+        if (surfaceBuffer->buffer == nullptr || ret != SURFACE_ERROR_OK) {
+            RS_LOGE("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer failed(ret: %{public}d)!",
+                surfaceHandler.GetNodeId(), ret);
+            surfaceBuffer = nullptr;
+            return false;
+        }
+        // The damages of buffer will be merged here, only single damage is supported so far
+        Rect damageAfterMerge = MergeBufferDamages(damages);
+        if (damageAfterMerge.h <= 0 || damageAfterMerge.w <= 0) {
+            RS_LOGW("RsDebug surfaceHandler(id: %{public}" PRIu64 ") buffer damage is invalid",
+                surfaceHandler.GetNodeId());
+        }
+        surfaceBuffer->damageRect = damageAfterMerge;
+        if (consumer->IsBufferHold()) {
+            surfaceHandler.SetHoldBuffer(surfaceBuffer);
+            surfaceBuffer = nullptr;
+            RS_LOGW("RsDebug surfaceHandler(id: %{public}" PRIu64 ") set hold buffer",
+                surfaceHandler.GetNodeId());
+            return true;
+        }
     }
-    // The damages of buffer will be merged here, only single damage is supported so far
-    buffer.damageRect = MergeBufferDamages(damages);
-    if (buffer.damageRect.h <= 0 || buffer.damageRect.w <= 0) {
-        RS_LOGW("RsDebug surfaceHandler(id: %{public}" PRIu64 ") buffer damage is invalid",
-            surfaceHandler.GetNodeId());
+    if (consumer->IsBufferHold()) {
+        surfaceBuffer = surfaceHandler.GetHoldBuffer();
+        surfaceHandler.SetHoldBuffer(nullptr);
+        consumer->SetBufferHold(false);
+        RS_LOGW("RsDebug surfaceHandler(id: %{public}" PRIu64 ") consume hold buffer", surfaceHandler.GetNodeId());
     }
-    
     RS_LOGD("RsDebug surfaceHandler(id: %{public}" PRIu64 ") AcquireBuffer success, "
         "vysnc timestamp = %{public}" PRIu64 ", buffer timestamp = %{public}" PRIu64 " .",
-        surfaceHandler.GetNodeId(), vsyncTimestamp, static_cast<uint64_t>(buffer.timestamp));
+        surfaceHandler.GetNodeId(), vsyncTimestamp, static_cast<uint64_t>(surfaceBuffer->timestamp));
     
     if (isDisplaySurface) {
-        surfaceHandler.ConsumeAndUpdateBuffer(buffer);
+        surfaceHandler.ConsumeAndUpdateBuffer(*(surfaceBuffer.get()));
     } else {
-        surfaceHandler.CacheBuffer(buffer);
+        surfaceHandler.CacheBuffer(*(surfaceBuffer.get()));
         surfaceHandler.ConsumeAndUpdateBuffer(surfaceHandler.GetBufferFromCache(vsyncTimestamp));
     }
     surfaceHandler.ReduceAvailableBuffer();
+    surfaceBuffer = nullptr;
     return true;
 }
 
@@ -1613,5 +1623,23 @@ GraphicTransformType RSBaseRenderUtil::RotateEnumToInt(int angle, GraphicTransfo
         return iter != pairToEnumMap.end() ? iter->second : GraphicTransformType::GRAPHIC_ROTATE_NONE;
     }
 }
+
+int RSBaseRenderUtil::GetAccumulatedBufferCount()
+{
+    return std::max(acquiredBufferCount_ -  1, 0);
+}
+
+void RSBaseRenderUtil::IncAcquiredBufferCount()
+{
+    ++acquiredBufferCount_;
+    RS_TRACE_NAME_FMT("Inc Acq BufferCount %d", acquiredBufferCount_.load());
+}
+
+void RSBaseRenderUtil::DecAcquiredBufferCount()
+{
+    --acquiredBufferCount_;
+    RS_TRACE_NAME_FMT("Dec Acq BufferCount %d", acquiredBufferCount_.load());
+}
+
 } // namespace Rosen
 } // namespace OHOS

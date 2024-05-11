@@ -29,6 +29,7 @@
 
 #include "common/rs_optional_trace.h"
 #include "common/rs_singleton.h"
+#include "info_collection/rs_layer_compose_collection.h"
 #include "pipeline/round_corner_display/rs_round_corner_display.h"
 #include "pipeline/rs_base_render_util.h"
 #include "pipeline/rs_main_thread.h"
@@ -160,6 +161,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
         RS_LOGE("RSHardwareThread::CommitAndReleaseLayers handler is nullptr");
         return;
     }
+    LayerComposeCollection::GetInstance().UpdateUniformOrOfflineComposeFrameNumberForDFX(layers.size());
     // need to sync the hgm data from main thread.
     // Temporary sync the timestamp to fix the duplicate time stamp issue.
     auto& hgmCore = OHOS::Rosen::HgmCore::Instance();
@@ -185,8 +187,7 @@ void RSHardwareThread::CommitAndReleaseLayers(OutputPtr output, const std::vecto
             hdiBackend_->Repaint(output);
         }
         output->ReleaseLayers(releaseFence_);
-        RSMainThread::Instance()->NotifyDisplayNodeBufferReleased();
-        // TO-DO
+        RSBaseRenderUtil::DecAcquiredBufferCount();
         RSUniRenderThread::Instance().NotifyDisplayNodeBufferReleased();
         if (hasGameScene) {
             endTimeNs = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -310,6 +311,7 @@ GSError RSHardwareThread::ClearFrameBuffers(OutputPtr output)
         RS_LOGE("Clear frame buffers failed for the output is nullptr");
         return GSERROR_INVALID_ARGUMENTS;
     }
+    RS_TRACE_NAME("RSHardwareThread::ClearFrameBuffers");
     if (uniRenderEngine_ != nullptr) {
         uniRenderEngine_->ResetCurrentContext();
     }
@@ -355,8 +357,8 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
     auto renderFrameConfig = RSBaseRenderUtil::GetFrameBufferRequestConfig(screenInfo, true, isProtected);
 #endif
     // override redraw frame buffer with physical screen resolution.
-    renderFrameConfig.width = screenInfo.phyWidth;
-    renderFrameConfig.height = screenInfo.phyHeight;
+    renderFrameConfig.width = static_cast<int32_t>(screenInfo.phyWidth);
+    renderFrameConfig.height = static_cast<int32_t>(screenInfo.phyHeight);
     auto renderFrame = uniRenderEngine_->RequestFrame(surface, renderFrameConfig, forceCPU, true, isProtected);
     if (renderFrame == nullptr) {
         RS_LOGE("RsDebug RSHardwareThread::Redraw failed to request frame.");
@@ -535,6 +537,7 @@ void RSHardwareThread::Redraw(const sptr<Surface>& surface, const std::vector<La
                 layer->GetSurface()->GetName());
         }
     }
+    LayerComposeCollection::GetInstance().UpdateRedrawFrameNumberForDFX();
 
     if (isTopGpuDraw && RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable()) {
         RSSingleton<RoundCornerDisplay>::GetInstance().DrawTopRoundCorner(canvas.get());
@@ -570,6 +573,12 @@ void RSHardwareThread::AddRefreshRateCount()
         iter->second++;
     }
     RSRealtimeRefreshRateManager::Instance().CountRealtimeFrame();
+
+    auto frameRateMgr = hgmCore.GetFrameRateMgr();
+    if (frameRateMgr == nullptr) {
+        return;
+    }
+    frameRateMgr->GetTouchManager().HandleRsFrame();
 }
 
 void RSHardwareThread::SubScribeSystemAbility()

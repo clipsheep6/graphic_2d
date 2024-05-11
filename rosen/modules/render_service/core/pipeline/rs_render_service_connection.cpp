@@ -19,9 +19,9 @@
 #include "hgm_command.h"
 #include "hgm_core.h"
 #include "hgm_frame_rate_manager.h"
+#include "luminance/rs_luminance_control.h"
 #include "offscreen_render/rs_offscreen_render_thread.h"
 #include "rs_main_thread.h"
-#include "rs_profiler.h"
 #include "rs_trace.h"
 #include "system/rs_system_parameters.h"
 
@@ -496,7 +496,8 @@ void RSRenderServiceConnection::SetRefreshRateMode(int32_t refreshRateMode)
     ROSEN_TRACE_END(HITRACE_TAG_GRAPHIC_AGP);
 }
 
-void RSRenderServiceConnection::SyncFrameRateRange(FrameRateLinkerId id, const FrameRateRange& range)
+void RSRenderServiceConnection::SyncFrameRateRange(FrameRateLinkerId id,
+    const FrameRateRange& range, bool isAnimatorStopped)
 {
     mainThread_->ScheduleTask([=]() {
         auto& context = mainThread_->GetContext();
@@ -507,6 +508,7 @@ void RSRenderServiceConnection::SyncFrameRateRange(FrameRateLinkerId id, const F
             return;
         }
         linker->SetExpectedRange(range);
+        linker->SetAnimationIdle(isAnimatorStopped);
     }).wait();
 }
 
@@ -781,6 +783,11 @@ int32_t RSRenderServiceConnection::GetScreenBacklight(ScreenId id)
 
 void RSRenderServiceConnection::SetScreenBacklight(ScreenId id, uint32_t level)
 {
+    RSLuminanceControl::Get().SetSdrLuminance(id, level);
+    if (RSLuminanceControl::Get().IsHdrOn(id) && level > 0) {
+        return;
+    }
+
     auto renderType = RSUniRenderJudgement::GetUniRenderEnabledType();
     if (renderType == UniRenderEnabledType::UNI_RENDER_ENABLED_FOR_ALL) {
         RSHardwareThread::Instance().ScheduleTask(
@@ -1251,9 +1258,13 @@ void RSRenderServiceConnection::NotifyRefreshRateEvent(const EventInfo& eventInf
     mainThread_->GetFrameRateMgr()->HandleRefreshRateEvent(remotePid_, eventInfo);
 }
 
-void RSRenderServiceConnection::NotifyTouchEvent(int32_t touchStatus)
+void RSRenderServiceConnection::NotifyTouchEvent(int32_t touchStatus, int32_t touchCnt)
 {
-    mainThread_->GetFrameRateMgr()->HandleTouchEvent(touchStatus);
+    if (mainThread_->GetFrameRateMgr() == nullptr) {
+        RS_LOGW("RSRenderServiceConnection::NotifyTouchEvent: frameRateMgr is nullptr.");
+        return;
+    }
+    mainThread_->GetFrameRateMgr()->HandleTouchEvent(touchStatus, touchCnt);
 }
 
 void RSRenderServiceConnection::ReportEventResponse(DataBaseRs info)
@@ -1309,11 +1320,25 @@ void RSRenderServiceConnection::SetCacheEnabledForRotation(bool isEnabled)
     RSSystemProperties::SetCacheEnabledForRotation(isEnabled);
 }
 
-GpuDirtyRegionInfo RSRenderServiceConnection::GetCurrentDirtyRegionInfo(ScreenId id)
+std::vector<ActiveDirtyRegionInfo> RSRenderServiceConnection::GetActiveDirtyRegionInfo()
 {
-    GpuDirtyRegionInfo gpuDirtyRegionInfo = GpuDirtyRegion::GetInstance().GetGpuDirtyRegionInfo(id);
-    GpuDirtyRegion::GetInstance().ResetDirtyRegionInfo();
-    return gpuDirtyRegionInfo;
+    const auto& activeDirtyRegionInfos = GpuDirtyRegionCollection::GetInstance().GetActiveDirtyRegionInfo();
+    GpuDirtyRegionCollection::GetInstance().ResetActiveDirtyRegionInfo();
+    return activeDirtyRegionInfos;
+}
+
+GlobalDirtyRegionInfo RSRenderServiceConnection::GetGlobalDirtyRegionInfo()
+{
+    const auto& globalDirtyRegionInfo = GpuDirtyRegionCollection::GetInstance().GetGlobalDirtyRegionInfo();
+    GpuDirtyRegionCollection::GetInstance().ResetGlobalDirtyRegionInfo();
+    return globalDirtyRegionInfo;
+}
+
+LayerComposeInfo RSRenderServiceConnection::GetLayerComposeInfo()
+{
+    const auto& layerComposeInfo = LayerComposeCollection::GetInstance().GetLayerComposeInfo();
+    LayerComposeCollection::GetInstance().ResetLayerComposeInfo();
+    return layerComposeInfo;
 }
 
 #ifdef TP_FEATURE_ENABLE
@@ -1341,15 +1366,6 @@ void RSRenderServiceConnection::SetVirtualScreenUsingStatus(bool isVirtualScreen
     }
     return;
 }
-
-#ifdef RS_PROFILER_ENABLED
-int RSRenderServiceConnection::OnRemoteRequest(
-    uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
-{
-    RS_PROFILER_ON_REMOTE_REQUEST(this, code, data, reply, option);
-    return RSRenderServiceConnectionStub::OnRemoteRequest(code, data, reply, option);
-}
-#endif
 
 void RSRenderServiceConnection::SetCurtainScreenUsingStatus(bool isCurtainScreenOn)
 {

@@ -58,6 +58,20 @@ bool RSDisplayRenderParams::IsRotationChanged() const
     return isRotationChanged_;
 }
 
+void RSDisplayRenderParams::SetHDRPresent(bool hasHdrPresent)
+{
+    if (hasHdrPresent_ == hasHdrPresent) {
+        return;
+    }
+    hasHdrPresent_ = hasHdrPresent;
+    needSync_ = true;
+}
+
+bool RSDisplayRenderParams::GetHDRPresent() const
+{
+    return hasHdrPresent_;
+}
+
 void RSDisplayRenderParams::SetNewColorSpace(const GraphicColorGamut& newColorSpace)
 {
     if (newColorSpace_ == newColorSpace) {
@@ -108,9 +122,11 @@ void RSDisplayRenderParams::OnSync(const std::unique_ptr<RSRenderParams>& target
     targetDisplayParams->mirrorSource_ = mirrorSource_;
     targetDisplayParams->screenInfo_ = std::move(screenInfo_);
     targetDisplayParams->isMainAndLeashSurfaceDirty_ = isMainAndLeashSurfaceDirty_;
+    targetDisplayParams->needOffscreen_ = needOffscreen_;
     targetDisplayParams->isRotationChanged_ = isRotationChanged_;
     targetDisplayParams->newColorSpace_ = newColorSpace_;
     targetDisplayParams->newPixelFormat_ = newPixelFormat_;
+    targetDisplayParams->hasHdrPresent_ = hasHdrPresent_;
     RSRenderParams::OnSync(target);
 }
 
@@ -168,6 +184,20 @@ bool RSDisplayRenderParams::HasCaptureWindow()
         hasCaptureWindow = iter->second;
     }
     return hasCaptureWindow;
+}
+
+void RSDisplayRenderParams::SetNeedOffscreen(bool needOffscreen)
+{
+    if (needOffscreen_ == needOffscreen) {
+        return;
+    }
+    needOffscreen_ = needOffscreen;
+    needSync_ = true;
+}
+
+bool RSDisplayRenderParams::GetNeedOffscreen() const
+{
+    return needOffscreen_;
 }
 
 } // namespace OHOS::Rosen

@@ -67,7 +67,7 @@ void RSCanvasDrawingRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     }
     auto paintFilterCanvas = static_cast<RSPaintFilterCanvas*>(&canvas);
     RSAutoCanvasRestore acr(paintFilterCanvas, RSPaintFilterCanvas::SaveType::kCanvasAndAlpha);
-    params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas, parentSurfaceMatrix_);
+    params->ApplyAlphaAndMatrixToCanvas(*paintFilterCanvas);
 
     auto uniParam = RSUniRenderThread::Instance().GetRSRenderThreadParams().get();
     if ((!uniParam || uniParam->IsOpDropped()) && QuickReject(canvas, params->GetLocalDrawRect())) {
@@ -208,6 +208,14 @@ void RSCanvasDrawingRenderNodeDrawable::PlaybackInCorrespondThread()
         canvasDrawingParams->SetNeedProcess(false);
         canvasDrawingNode->SetDrawCmdListsVisited(true);
     };
+
+    {
+        // check params, if params is invalid, do not post the task
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
+        if (!surface_ || !canvas_) {
+            return;
+        }
+    }
     RSTaskDispatcher::GetInstance().PostTask(threadId_, task, false);
 }
 
@@ -332,10 +340,6 @@ Drawing::Bitmap RSCanvasDrawingRenderNodeDrawable::GetBitmap(const uint64_t tid)
     std::lock_guard<std::mutex> lock(drawingMutex);
     if (!image_) {
         RS_LOGE("Failed to get bitmap, image is null!");
-        return bitmap;
-    }
-    if (GetTid() != tid) {
-        RS_LOGE("Failed to get bitmap: image is used by multi threads");
         return bitmap;
     }
     if (!image_->AsLegacyBitmap(bitmap)) {

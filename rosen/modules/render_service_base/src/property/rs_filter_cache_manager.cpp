@@ -24,6 +24,7 @@
 #include "common/rs_optional_trace.h"
 #include "platform/common/rs_log.h"
 #include "platform/common/rs_system_properties.h"
+#include "render/rs_drawing_filter.h"
 #include "render/rs_skia_filter.h"
 
 namespace OHOS {
@@ -155,7 +156,7 @@ void RSFilterCacheManager::DrawFilter(RSPaintFilterCanvas& canvas, const std::sh
     }
     RS_TRACE_NAME_FMT("RSFilterCacheManager::DrawFilter status: %s", GetCacheState());
     if (!IsCacheValid()) {
-        TakeSnapshot(canvas, filter, src, params.needSnapshotOutset);
+        TakeSnapshot(canvas, filter, src);
     }
 
     if (cachedFilteredSnapshot_ == nullptr || cachedFilteredSnapshot_->cachedImage_ == nullptr) {
@@ -194,7 +195,7 @@ const std::shared_ptr<RSPaintFilterCanvas::CachedEffectData> RSFilterCacheManage
 }
 
 void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::shared_ptr<RSDrawingFilter>& filter,
-    const Drawing::RectI& srcRect, const bool needSnapshotOutset)
+    const Drawing::RectI& srcRect)
 {
     auto drawingSurface = canvas.GetSurface();
     if (drawingSurface == nullptr) {
@@ -205,9 +206,6 @@ void RSFilterCacheManager::TakeSnapshot(RSPaintFilterCanvas& canvas, const std::
     // shrink the srcRect by 1px to avoid edge artifacts.
     Drawing::RectI snapshotIBounds;
     snapshotIBounds = srcRect;
-    if (needSnapshotOutset) {
-        snapshotIBounds.MakeOutset(-1, -1);
-    }
 
     // Take a screenshot.
     auto snapshot = drawingSurface->GetImageSnapshot(snapshotIBounds);
@@ -342,7 +340,7 @@ FilterCacheType RSFilterCacheManager::GetCachedType() const
     if (cachedSnapshot_ != nullptr) {
         return FilterCacheType::SNAPSHOT;
     }
- 
+
     if (cachedFilteredSnapshot_ != nullptr) {
         return FilterCacheType::FILTERED_SNAPSHOT;
     }
@@ -391,7 +389,7 @@ std::tuple<Drawing::RectI, Drawing::RectI> RSFilterCacheManager::ValidateParams(
     Drawing::RectI dst;
     auto deviceRect = Drawing::RectI(0, 0, canvas.GetImageInfo().GetWidth(), canvas.GetImageInfo().GetHeight());
     if (!srcRect.has_value()) {
-        src = canvas.GetDeviceClipBounds();
+        src = canvas.GetRoundInDeviceClipBounds();
     } else {
         src = srcRect.value();
         src.Intersect(deviceRect);

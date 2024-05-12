@@ -33,8 +33,10 @@ void RSUniRenderEngine::DrawSurfaceNodeWithParams(RSPaintFilterCanvas& canvas, R
     canvas.Restore();
 }
 
-void RSUniRenderEngine::DrawLayers(RSPaintFilterCanvas& canvas, const std::vector<LayerInfoPtr>& layers, bool forceCPU)
+void RSUniRenderEngine::DrawLayers(RSPaintFilterCanvas& canvas, const std::vector<LayerInfoPtr>& layers, bool forceCPU, const ScreenInfo& screenInfo)
 {
+    bool isTopGpuDraw = false;
+    bool isBottomGpuDraw = false;
     for (const auto& layer : layers) {
         if (layer == nullptr) {
             continue;
@@ -43,7 +45,15 @@ void RSUniRenderEngine::DrawLayers(RSPaintFilterCanvas& canvas, const std::vecto
             layer->GetCompositionType() == GraphicCompositionType::GRAPHIC_COMPOSITION_DEVICE_CLEAR) {
             continue;
         }
-        auto saveCount = canvas.Save();
+        if (layer->GetSurface()->GetName() == "RCDTopSurfaceNode") {
+            isTopGpuDraw = true;
+            continue;
+        }
+        if (layer->GetSurface()->GetName() == "RCDBottomSurfaceNode") {
+            isBottomGpuDraw = true;
+            continue;
+        }
+        Drawing::AutoCanvasRestore acr(*canvas, true);
         auto dstRect = layer->GetLayerSize();
         Drawing::Rect clipRect = Drawing::Rect(static_cast<float>(dstRect.x), static_cast<float>(dstRect.y),
             static_cast<float>(dstRect.w) + static_cast<float>(dstRect.x),
@@ -51,16 +61,30 @@ void RSUniRenderEngine::DrawLayers(RSPaintFilterCanvas& canvas, const std::vecto
         canvas.ClipRect(clipRect, Drawing::ClipOp::INTERSECT, false);
         // prepare BufferDrawParam
         auto params = RSUniRenderUtil::CreateLayerBufferDrawParam(layer, forceCPU);
+        params.matrix.PostScale(screenInfo.GetRogWidthRatio(), screenInfo.GetRogHeightRatio());
+        params.screenId = screenInfo.id;
         DrawHdiLayerWithParams(canvas, layer, params);
-        canvas.Restore();
-        canvas.RestoreToCount(saveCount);
+        // Dfx for redraw region
+        if (RSSystemProperties::GetHwcRegionDfxEnabled()) {
+            RectI dst(dstRect.x, dstRect.y, dstRect.w, dstRect.h);
+            RSUniRenderUtil::DrawRectForDfx(*canvas, dst, Drawing::Color::COLOR_YELLOW, 0.4f,
+                layer->GetSurface()->GetName());
+        }
+    }
+    LayerComposeCollection::GetInstance().UpdateRedrawFrameNumberForDFX();
+
+    if (isTopGpuDraw && RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable()) {
+        RSSingleton<RoundCornerDisplay>::GetInstance().DrawTopRoundCorner(canvas.get());
+    }
+
+    if (isBottomGpuDraw && RSSingleton<RoundCornerDisplay>::GetInstance().GetRcdEnable()) {
+        RSSingleton<RoundCornerDisplay>::GetInstance().DrawBottomRoundCorner(canvas.get());
     }
 }
 
 void RSUniRenderEngine::DrawHdiLayerWithParams(RSPaintFilterCanvas& canvas, const LayerInfoPtr& layer,
     BufferDrawParam& params)
 {
-    canvas.Save();
     canvas.ConcatMatrix(params.matrix);
     if (!params.useCPU) {
         RegisterDeleteBufferListener(layer->GetSurface(), true);
@@ -68,7 +92,6 @@ void RSUniRenderEngine::DrawHdiLayerWithParams(RSPaintFilterCanvas& canvas, cons
     } else {
         DrawBuffer(canvas, params);
     }
-    canvas.Restore();
 }
 } // namespace Rosen
 } // namespace OHOS

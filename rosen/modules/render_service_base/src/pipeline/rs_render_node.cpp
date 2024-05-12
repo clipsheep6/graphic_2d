@@ -1298,7 +1298,6 @@ bool RSRenderNode::UpdateDrawRectAndDirtyRegion(
             }
         }
     }
-    CalVisibleFilterRect(clipRect);
     // 3. update dirtyRegion if needed
     if (properties.GetBackgroundFilter()) {
         UpdateFilterCacheWithBelowDirty(dirtyManager);
@@ -1378,7 +1377,6 @@ bool RSRenderNode::Update(RSDirtyRegionManager& dirtyManager, const std::shared_
     // 'dirty region of all the nodes drawn before this node', and foreground filter cache manager should use 'dirty
     // region of all the nodes drawn before this node, this node, and the children of this node'
     // 2. Filter must be valid when filter cache manager is valid, we make sure that in RSRenderNode::ApplyModifiers().
-    CalVisibleFilterRect(clipRect);
     if (GetRenderProperties().GetBackgroundFilter()) {
         UpdateFilterCacheWithBelowDirty(dirtyManager);
     }
@@ -1647,6 +1645,16 @@ bool RSRenderNode::IsEffectNodeNeedTakeSnapShot() const
         !lastFrameHasVisibleEffect_ && ChildHasVisibleEffect();
 }
 
+bool RSRenderNode::IsEffectNodeShouldNotPaint() const
+{
+    return IsInstanceOf<RSEffectRenderNode>() && !ChildHasVisibleEffect();
+}
+
+bool RSRenderNode::HasBlurFilter() const
+{
+    return GetRenderProperties().GetBackgroundFilter() || GetRenderProperties().GetFilter();
+}
+
 void RSRenderNode::UpdateLastFilterCacheRegion()
 {
     lastFilterRegion_ = filterRegion_;
@@ -1772,14 +1780,13 @@ inline static bool IsLargeArea(int width, int height)
     return width > threshold && height > threshold;
 }
 
-void RSRenderNode::MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(RSDirtyRegionManager& dirtyManager,
-    bool dirtyBelowContainsFilterNode, bool rotationChanged)
+void RSRenderNode::PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager, bool rotationChanged)
 {
     if (IsInstanceOf<RSEffectRenderNode>() && ChildHasVisibleEffect()) {
         MarkFilterHasEffectChildren();
     }
     if (!RSProperties::FilterCacheEnabled) {
-        ROSEN_LOGE("RSRenderNode::MarkAndUpdateFilterNodeDirtySlotsAfterPrepare filter cache is disabled.");
+        ROSEN_LOGE("RSRenderNode::PostPrepareForBlurFilterNode filter cache is disabled.");
         return;
     }
     bool rotationClear = false;
@@ -1794,7 +1801,7 @@ void RSRenderNode::MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(RSDirtyRegionMa
         auto bgDirty = dirtySlots_.count(RSDrawableSlot::BACKGROUND_COLOR) ||
             dirtySlots_.count(RSDrawableSlot::BACKGROUND_SHADER) ||
             dirtySlots_.count(RSDrawableSlot::BACKGROUND_IMAGE);
-        if (dirtyBelowContainsFilterNode || bgDirty || rotationClear) {
+        if (bgDirty || rotationClear) {
             filterDrawable->MarkFilterForceClearCache();
         }
         if (filterDrawable->NeedPendingPurge()) {
@@ -1808,7 +1815,7 @@ void RSRenderNode::MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(RSDirtyRegionMa
         if (filterDrawable == nullptr) {
             return;
         }
-        if (dirtyBelowContainsFilterNode || !dirtySlots_.empty()) {
+        if (!dirtySlots_.empty()) {
             filterDrawable->MarkFilterForceClearCache();
         }
         if (filterDrawable->NeedPendingPurge()) {
@@ -2360,7 +2367,8 @@ void RSRenderNode::UpdateShouldPaint()
     // alpha is not zero
     shouldPaint_ = (GetRenderProperties().GetAlpha() > 0.0f) &&
                    (GetRenderProperties().GetVisible() || HasDisappearingTransition(false));
-    if (!shouldPaint_) { // force clear blur cache
+    if (!shouldPaint_ && HasBlurFilter()) { // force clear blur cache
+        RS_OPTIONAL_TRACE_NAME_FMT("node[%llu] is invisible", GetId());
         MarkForceClearFilterCacheWhenWithInvisible();
     }
 }
@@ -2997,7 +3005,8 @@ void RSRenderNode::OnTreeStateChanged()
             pairedNode->SetDirty(true);
         }
     }
-    if (!isOnTheTree_) { // force clear blur cache
+    if (!isOnTheTree_ && HasBlurFilter()) { // force clear blur cache
+        RS_OPTIONAL_TRACE_NAME_FMT("node[%llu] off the tree", GetId());
         MarkForceClearFilterCacheWhenWithInvisible();
     }
 }

@@ -478,6 +478,7 @@ public:
     void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(RSDirtyRegionManager& dirtyManager,
         bool dirtyBelowContainsFilterNode = false, bool rotationChanged = false);
     bool IsFilterCacheValid() const;
+    bool IsFilterCacheUpdateInInterval() const;
     void MarkForceClearFilterCacheWhenWithInvisible();
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);

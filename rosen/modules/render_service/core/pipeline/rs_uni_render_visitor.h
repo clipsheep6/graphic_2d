@@ -309,6 +309,10 @@ private:
 
     void CheckAndSetNodeCacheType(RSRenderNode& node);
     bool UpdateCacheSurface(RSRenderNode& node);
+    std::shared_ptr<RSPaintFilterCanvas> CreateCacheCanvas(Surface* surface);
+    void ConfigureCacheCanvas(RSPaintFilterCanvas* cacheCanvas, bool isSubThread);
+    void ProcessAnimatePropertyAndShadow(RSRenderNode& node, CacheType cacheType);
+    void RestoreAnimatePropertyAndShadow(RSRenderNode& node, CacheType cacheType);
     void DrawSpherize(RSRenderNode& node);
     void DrawChildRenderNode(RSRenderNode& node);
     void DrawChildCanvasRenderNode(RSRenderNode& node);

@@ -586,6 +586,7 @@ private:
     // visible filter in transparent surface or display must prepare
     bool filterInGlobal_ = true;
 
+    bool needRequestNextVsync_ = true;
     bool forceUpdateFlag_ = false;
 #ifdef ENABLE_RECORDING_DCL
     void tryCapture(float width, float height);

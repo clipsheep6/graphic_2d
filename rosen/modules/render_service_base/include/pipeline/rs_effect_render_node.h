@@ -83,10 +83,14 @@ public:
 protected:
     RectI GetFilterRect() const override;
     void UpdateFilterCacheWithSelfDirty() override;
-    void MarkFilterCacheFlagsAfterPrepare(
-        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false) override;
+    void MarkFilterCacheFlags(
+        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, RSDirtyRegionManager& dirtyManager,
+        bool needRequestNextVsync, bool dirtyBelowContainsFilterNode, bool isForeground = false) override;
+    void CheckBlurFilterCacheNeedForceClearOrSave() override;
 
 private:
+    void UpdateLastStaticAndVisibleStatus();
+
     bool isVisitedOcclusionFilterCacheEmpty_ = true;
     bool isRotationChanged_ = false;
     bool preRotationStatus_ = false;

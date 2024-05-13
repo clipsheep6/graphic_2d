@@ -149,6 +149,7 @@ std::shared_ptr<Drawing::ShaderEffect> GEKawaseBlurShaderFilter::ApplySimpleFilt
 std::shared_ptr<Drawing::Image> GEKawaseBlurShaderFilter::ProcessImage(Drawing::Canvas& canvas,
     const std::shared_ptr<Drawing::Image> image, const Drawing::Rect& src, const Drawing::Rect& dst)
 {
+    LOGE("GEKawaseBlurShaderFilter::ProcessImage");
     if (!IsInputValid(canvas, image, src, dst)) {
         return image;
     }

@@ -82,6 +82,7 @@ config("VkLayer_Trace3DCaptureLoader_config") {
 ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
   sources = [
     "trace3d/loader/trace3d_loader.cpp",
+    "trace3d/loader/trace3d_loader_helper.cpp",
     "trace3d/loader/trace3d_loader_layer.cpp",
     "trace3d/loader/trace3d_loader_shm.cpp",
   ]

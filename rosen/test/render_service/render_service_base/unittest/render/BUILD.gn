@@ -70,6 +70,7 @@ ohos_unittest("RSRenderServiceBaseRenderTest") {
   deps += [ "//third_party/skia:skia_ohos" ]
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 

@@ -57,6 +57,7 @@ ohos_unittest("RSProfilerArchiveTest") {
 
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 

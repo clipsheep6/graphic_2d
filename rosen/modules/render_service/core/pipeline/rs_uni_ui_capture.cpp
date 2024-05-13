@@ -107,32 +107,31 @@ bool RSUniUICapture::CopyDataToPixelMap(std::shared_ptr<Drawing::Image> img,
     Drawing::ImageInfo info = Drawing::ImageInfo(pixelmap->GetWidth(), pixelmap->GetHeight(),
         Drawing::ColorType::COLORTYPE_RGBA_8888, Drawing::AlphaType::ALPHATYPE_PREMUL);
 #ifdef ROSEN_OHOS
-    int fd = AshmemCreate("RSUniUICapture Data", size);
-    if (fd < 0) {
-        RS_LOGE("RSUniUICapture::CopyDataToPixelMap AshmemCreate fd < 0");
+    sptr<SurfaceBuffer> surfaceBuffer = SurfaceBuffer::Create();
+    BufferRequestConfig requestConfig = {
+        .width = size,
+        .height = 1,
+        .strideAlignment = 0x8, // set 0x8 as default value to alloc SurfaceBufferImpl
+        .format = GRAPHIC_PIXEL_FMT_BLOB, // PixelFormat
+        .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA | BUFFER_USAGE_MEM_MMZ_CACHE,
+        .timeout = 0,
+    };
+    GSError ret = surfaceBuffer->Alloc(requestConfig);
+    if (ret != GSERROR_OK) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap surfaceBuffer alloc failed, %{public}s",
+            GSErrorStr(ret).c_str());
         return false;
     }
-    int result = AshmemSetProt(fd, PROT_READ | PROT_WRITE);
-    if (result < 0) {
-        RS_LOGE("RSUniUICapture::CopyDataToPixelMap AshmemSetProt error");
-        ::close(fd);
+    void* nativeBuffer = surfaceBuffer.GetRefPtr();
+    OHOS::RefBase *ref = reinterpret_cast<OHOS::RefBase *>(nativeBuffer);
+    ref->IncStrongRef(ref);
+
+    if (!img->ReadPixels(info, surfaceBuffer->GetVirAddr(), pixelmap->GetRowBytes(), 0, 0)) {
+        RS_LOGE("RSSurfaceCaptureTask::CopyDataToPixelMap readPixels failed");
+        ref->DecStrongRef(ref);
         return false;
     }
-    void* ptr = ::mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    auto data = static_cast<uint8_t*>(ptr);
-    if (ptr == MAP_FAILED || ptr == nullptr) {
-        RS_LOGE("RSUniUICapture::CopyDataToPixelMap data is nullptr");
-        ::close(fd);
-        return false;
-    }
-    if (!img->ReadPixels(info, data, pixelmap->GetRowBytes(), 0, 0)) {
-        RS_LOGE("RSUniUICapture::CopyDataToPixelMap readPixels failed");
-        ::close(fd);
-        return false;
-    }
-    void* fdPtr = new int32_t();
-    *static_cast<int32_t*>(fdPtr) = fd;
-    pixelmap->SetPixelsAddr(data, fdPtr, size, Media::AllocatorType::SHARE_MEM_ALLOC, nullptr);
+    pixelmap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), nativeBuffer, size, Media::AllocatorType::DMA_ALLOC, nullptr);
 #else
     auto data = static_cast<uint8_t *>(size);
     if (data == nullptr) {

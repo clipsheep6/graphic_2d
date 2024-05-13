@@ -124,6 +124,8 @@ public:
     static bool GetProfilerEnabled();
     static bool GetInstantRecording();
     static void SetInstantRecording(bool flag);
+    static std::string GetProfilerBetaRecEnabled();
+    static void SetProfilerBetaRecEnabled(const std::string &param);
     static bool GetSaveRDC();
     static void SetSaveRDC(bool flag);
 

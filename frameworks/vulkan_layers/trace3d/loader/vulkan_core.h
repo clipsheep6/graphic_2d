@@ -13,5 +13,10 @@
  * limitations under the License.
  */
 
+#ifndef TRACE3D_LOADER_VULKAN_CORE_H
+#define TRACE3D_LOADER_VULKAN_CORE_H
+
 // redirect to SDK vulkan header
 #include <vulkan/vulkan_core.h>
+
+#endif // TRACE3D_LOADER_VULKAN_CORE_H

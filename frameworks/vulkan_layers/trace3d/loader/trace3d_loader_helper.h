@@ -17,9 +17,10 @@
 // Desc: This file is a part of the Trace3D Capture Gles/Vk Layer Loader
 //
 
-#pragma once
+#ifndef TRACE3D_LOADER_HELPER_H
+#define TRACE3D_LOADER_HELPER_H
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include <map>
 #include <cstdarg>
@@ -99,3 +100,5 @@ void *DlopenBundledSharedLibrary(const char *libName);
 size_t TestBundledSharedLibrary(const char *libName);
 
 } // namespace trace3d
+
+#endif // TRACE3D_LOADER_HELPER_H

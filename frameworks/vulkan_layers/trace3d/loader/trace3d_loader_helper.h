@@ -32,6 +32,7 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #if defined(TRACE3D_LOADER_HOS)
 #include <android/log.h>

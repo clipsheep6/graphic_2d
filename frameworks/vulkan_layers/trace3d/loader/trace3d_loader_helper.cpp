@@ -157,7 +157,7 @@ size_t StoreSharedLibrary(const char *libName, const std::vector<uint8_t> &blob)
 }
 
 void *DlopenSharedLibrary(const char *libFullName) {
-    void *handle = 0;
+    void *handle = nullptr;
     handle = dlopen(libFullName, RTLD_LAZY);
 
     size_t sizeBytes = GetFileSize(libFullName);

@@ -571,7 +571,7 @@ void* DebugLayerGetProcAddr(const char *funcName, __eglMustCastToProperFunctionP
 
     if (trace3dLayerGetProcAddr)
         trace3dPtr = trace3dLayerGetProcAddr(funcName, next);
-    return (void *)trace3dPtr;
+    return static_cast<void *>(trace3dPtr);
 }
 
 } // extern "C"

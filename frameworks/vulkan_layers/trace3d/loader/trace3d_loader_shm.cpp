@@ -33,11 +33,11 @@ static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib) {
         if (sizeBytes > 0 && blob.size() == sizeBytes) {
             size_t len = sizeBytes;
 
-            lib.shmFd = shm_open(lib.shmName, O_CREAT | O_RDWR, 0644);
+            lib.shmFd = shm_open(lib.shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
             if (lib.shmFd >= 0) {
                 ftruncate(lib.shmFd, len);
 
-                void *mem = mmap(NULL, len, PROT_WRITE, MAP_SHARED, lib.shmFd, 0);
+                void *mem = mmap(nullptr, len, PROT_WRITE, MAP_SHARED, lib.shmFd, 0);
                 if (mem) {
                     memcpy(mem, blob.data(), len);
                     munmap(mem, len);

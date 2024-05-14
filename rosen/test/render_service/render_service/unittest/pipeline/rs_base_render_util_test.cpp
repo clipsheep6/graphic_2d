@@ -1229,4 +1229,106 @@ HWTEST_F(RSBaseRenderUtilTest, ConvertBufferToBitmapTest, TestSize.Level2)
     Drawing::Bitmap bitmap;
     ASSERT_EQ(true, RSBaseRenderUtil::ConvertBufferToBitmap(buffer, newBuffer, dstGamut, bitmap));
 }
+
+/*
+ * @tc.name: IsForceClient
+ * @tc.desc: Test IsForceClient and GetColorTypeFromBufferFormat
+ * @tc.type: FUNC
+ * @tc.require: issueI9NVXP
+ */
+HWTEST_F(RSBaseRenderUtilTest, IsForceClient, TestSize.Level2)
+{
+    ASSERT_EQ(Drawing::ColorType::COLORTYPE_RGBA_8888,
+        RSBaseRenderUtil::GetColorTypeFromBufferFormat(GRAPHIC_PIXEL_FMT_RGBA_8888));
+    ASSERT_EQ(Drawing::ColorType::COLORTYPE_BGRA_8888,
+        RSBaseRenderUtil::GetColorTypeFromBufferFormat(GRAPHIC_PIXEL_FMT_BGRA_8888));
+    ASSERT_EQ(Drawing::ColorType::COLORTYPE_RGB_565,
+        RSBaseRenderUtil::GetColorTypeFromBufferFormat(GRAPHIC_PIXEL_FMT_RGB_565));
+    ASSERT_EQ(Drawing::ColorType::COLORTYPE_RGBA_1010102,
+        RSBaseRenderUtil::GetColorTypeFromBufferFormat(GRAPHIC_PIXEL_FMT_YCBCR_P010));
+    ASSERT_EQ(Drawing::ColorType::COLORTYPE_RGBA_1010102,
+        RSBaseRenderUtil::GetColorTypeFromBufferFormat(GRAPHIC_PIXEL_FMT_YCRCB_P010));
+    ASSERT_EQ(Drawing::ColorType::COLORTYPE_RGBA_1010102,
+        RSBaseRenderUtil::GetColorTypeFromBufferFormat(GRAPHIC_PIXEL_FMT_RGBA_1010102));
+    ASSERT_EQ(Drawing::ColorType::COLORTYPE_RGBA_8888,
+        RSBaseRenderUtil::GetColorTypeFromBufferFormat(GRAPHIC_PIXEL_FMT_YCRCB_420_SP));
+    ASSERT_EQ(false, RSBaseRenderUtil::IsForceClient());
+}
+
+/*
+ * @tc.name: GetGravityMatrix
+ * @tc.desc: Test GetGravityMatrix
+ * @tc.type: FUNC
+ * @tc.require: issueI9NVXP
+ */
+HWTEST_F(RSBaseRenderUtilTest, GetGravityMatrix, TestSize.Level2)
+{
+    sptr<SurfaceBuffer> buffer;
+    RectF bounds;
+    RSBaseRenderUtil::GetGravityMatrix(Gravity::TOP_LEFT, buffer, bounds);
+    buffer = new SurfaceBufferImpl();
+    RSBaseRenderUtil::GetGravityMatrix(Gravity::TOP_LEFT, buffer, bounds);
+    RectF boundsTwo(1, 1, 1, 1);
+    ASSERT_EQ(9, RSBaseRenderUtil::GetGravityMatrix(Gravity::TOP_LEFT, buffer, boundsTwo).MATRIX_SIZE);
+
+}
+
+/*
+ * @tc.name: GenerateDrawingBitmapFormat
+ * @tc.desc: Test GenerateDrawingBitmapFormat
+ * @tc.type: FUNC
+ * @tc.require: issueI9NVXP
+ */
+HWTEST_F(RSBaseRenderUtilTest, GenerateDrawingBitmapFormat, TestSize.Level2)
+{
+    sptr<SurfaceBuffer> buffer;
+    RSBaseRenderUtil::GenerateDrawingBitmapFormat(buffer);
+    buffer = new SurfaceBufferImpl();
+    ASSERT_EQ(RSBaseRenderUtil::GenerateDrawingBitmapFormat(buffer).alphaType, Drawing::AlphaType::ALPHATYPE_PREMUL);
+}
+
+/*
+ * @tc.name: ParseTransactionData
+ * @tc.desc: Test ParseTransactionData and WriteCacheImageRenderNodeToPng
+ * @tc.type: FUNC
+ * @tc.require: issueI9NVXP
+ */
+HWTEST_F(RSBaseRenderUtilTest, ParseTransactionData, TestSize.Level2)
+{
+    MessageParcel parcel;
+    ASSERT_EQ(RSBaseRenderUtil::ParseTransactionData(parcel), nullptr);
+    ASSERT_FALSE(RSSystemProperties::GetDumpImgEnabled());
+    std::shared_ptr<Drawing::Surface> surface;
+    ASSERT_FALSE(RSBaseRenderUtil::WriteCacheImageRenderNodeToPng(surface, std::string("debugInfo")));
+    std::shared_ptr<Drawing::Image> image;
+    ASSERT_FALSE(RSBaseRenderUtil::WriteCacheImageRenderNodeToPng(image, std::string("debugInfo")));
+}
+
+/*
+ * @tc.name: WritePixelMapToPng
+ * @tc.desc: Test WritePixelMapToPng
+ * @tc.type: FUNC
+ * @tc.require: issueI9NVXP
+ */
+HWTEST_F(RSBaseRenderUtilTest, WritePixelMapToPng, TestSize.Level2)
+{
+    ASSERT_TRUE(RSSystemProperties::GetDumpSurfaceType() != DumpSurfaceType::PIXELMAP);
+    Media::PixelMap pixelMap;
+    ASSERT_FALSE(RSBaseRenderUtil::WritePixelMapToPng(pixelMap));
+    sptr<SurfaceBuffer> buffer;
+    ASSERT_FALSE(RSBaseRenderUtil::WriteSurfaceBufferToPng(buffer, 1));
+}
+
+/*
+ * @tc.name: WritePixelMapToPng
+ * @tc.desc: Test IncAcquiredBufferCount and DecAcquiredBufferCount and GetAccumulatedBufferCount
+ * @tc.type: FUNC
+ * @tc.require: issueI9NVXP
+ */
+HWTEST_F(RSBaseRenderUtilTest, IncAcquiredBufferCount, TestSize.Level2)
+{
+    RSBaseRenderUtil::IncAcquiredBufferCount();
+    RSBaseRenderUtil::DecAcquiredBufferCount();
+    ASSERT_EQ(RSBaseRenderUtil::GetAccumulatedBufferCount(), 0);
+}
 } // namespace OHOS::Rosen

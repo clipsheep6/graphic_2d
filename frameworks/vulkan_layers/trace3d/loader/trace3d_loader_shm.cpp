@@ -24,35 +24,37 @@ namespace trace3d {
 
 static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib)
 {
-    if (lib.shmFd < 0) {
-        std::string libFullName = libPath + lib.name;
-        std::vector<uint8_t> blob;
+    if (lib.shmFd >= 0) {
+        return true;
+    }
+    std::string libFullName = libPath + lib.name;
+    std::vector<uint8_t> blob;
 
-        size_t sizeBytes = GetFileSize(libFullName.c_str());
-        sizeBytes = sizeBytes > 0 ? ReadFileData(libFullName.c_str(), blob) : 0;
-        if (sizeBytes > 0 && blob.size() == sizeBytes) {
-            size_t len = sizeBytes;
+    size_t sizeBytes = GetFileSize(libFullName.c_str());
+    sizeBytes = sizeBytes > 0 ? ReadFileData(libFullName.c_str(), blob) : 0;
+    if (sizeBytes > 0 && blob.size() == sizeBytes) {
+        size_t len = sizeBytes;
 
-            lib.shmFd = shm_open(lib.shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-            if (lib.shmFd >= 0) {
-                ftruncate(lib.shmFd, len);
+        lib.shmFd = shm_open(lib.shmName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+        if (lib.shmFd < 0) {
+            TRACE3D_LOGE("%s:%d ERROR: shm_open '%s'\n", __FUNCTION__, __LINE__, lib.shmName);
+            return false;
+        }
+        
+        ftruncate(lib.shmFd, len);
 
-                void *mem = mmap(nullptr, len, PROT_WRITE, MAP_SHARED, lib.shmFd, 0);
-                if (mem) {
-                    memcpy(mem, blob.data(), len);
-                    munmap(mem, len);
+        void *mem = mmap(nullptr, len, PROT_WRITE, MAP_SHARED, lib.shmFd, 0);
+        if (mem) {
+            memcpy(mem, blob.data(), len);
+            munmap(mem, len);
 
-                    TRACE3D_LOGI("%s:%d shm_open '%s' fd:%d\n", __FUNCTION__, __LINE__, lib.shmName, lib.shmFd);
-                } else {
-                    shm_unlink(lib.shmName);
-                    close(lib.shmFd);
-                    lib.shmFd = -1;
+            TRACE3D_LOGI("%s:%d shm_open '%s' fd:%d\n", __FUNCTION__, __LINE__, lib.shmName, lib.shmFd);
+        } else {
+            shm_unlink(lib.shmName);
+            close(lib.shmFd);
+            lib.shmFd = -1;
 
-                    TRACE3D_LOGE("%s:%d ERROR: mmap\n", __FUNCTION__, __LINE__);
-                }
-            } else {
-                TRACE3D_LOGE("%s:%d ERROR: shm_open '%s'\n", __FUNCTION__, __LINE__, lib.shmName);
-            }
+            TRACE3D_LOGE("%s:%d ERROR: mmap\n", __FUNCTION__, __LINE__);
         }
     }
     return lib.shmFd >= 0;

@@ -37,43 +37,44 @@ void* CaptureInit()
     ShmCaptureInit();
 
     void *libHandle = GetCaptureEntryLibHandle();
-    if (!libHandle) {
-        for (auto &lib : g_captureLibs) {
-            if (lib.handle) {
-                continue;
+    if (libHandle) {
+        return libHandle;
+    }
+    for (auto &lib : g_captureLibs) {
+        if (lib.handle) {
+            continue;
+        }
+        size_t foundSize = TestBundledSharedLibrary(lib.name);
+        if (foundSize > 0) {
+            TRACE3D_LOGI("%s:%d found bundle:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
+
+            if (!lib.handle && lib.mainEntry) {
+                libHandle = lib.handle = DlopenBundledSharedLibrary(lib.name);
             }
-            size_t foundSize = TestBundledSharedLibrary(lib.name);
-
-            if (foundSize > 0) {
-                TRACE3D_LOGI("%s:%d found bundle:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
-
-                if (!lib.handle && lib.mainEntry) {
-                    libHandle = lib.handle = DlopenBundledSharedLibrary(lib.name);
-                }
-            } else {
-                foundSize = TestStoredSharedLibrary(lib.name);
-                if (foundSize > 0) {
-                    TRACE3D_LOGI("%s:%d found stored:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
-                }
-
-                const std::string shmFullName = std::string(TRACE3D_SHM_URI) + lib.shmName;
-                const size_t shmSize = GetFileSize(shmFullName.c_str());
-                if (shmSize > 0 && foundSize != shmSize) {
-                    std::vector<uint8_t> blob;
+            continue;
+        }
         
-                    if (ReadFileData(shmFullName.c_str(), blob) > 0) {
-                        StoreSharedLibrary(lib.name, blob);
-                    }
-                    foundSize = TestStoredSharedLibrary(lib.name);
-                    if (foundSize > 0) {
-                        TRACE3D_LOGI("%s:%d found stored:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
-                    }
-                }
-                if (foundSize > 0) {
-                    if (!lib.handle && lib.mainEntry) {
-                        libHandle = lib.handle = DlopenStoredSharedLibrary(lib.name);
-                    }
-                }
+        foundSize = TestStoredSharedLibrary(lib.name);
+        if (foundSize > 0) {
+            TRACE3D_LOGI("%s:%d found stored:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
+        }
+
+        const std::string shmFullName = std::string(TRACE3D_SHM_URI) + lib.shmName;
+        const size_t shmSize = GetFileSize(shmFullName.c_str());
+        if (shmSize > 0 && foundSize != shmSize) {
+            std::vector<uint8_t> blob;
+    
+            if (ReadFileData(shmFullName.c_str(), blob) > 0) {
+                StoreSharedLibrary(lib.name, blob);
+            }
+            foundSize = TestStoredSharedLibrary(lib.name);
+            if (foundSize > 0) {
+                TRACE3D_LOGI("%s:%d found stored:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
+            }
+        }
+        if (foundSize > 0) {
+            if (!lib.handle && lib.mainEntry) {
+                libHandle = lib.handle = DlopenStoredSharedLibrary(lib.name);
             }
         }
     }

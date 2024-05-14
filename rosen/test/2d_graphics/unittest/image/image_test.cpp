@@ -394,21 +394,16 @@ HWTEST_F(ImageTest, MakeFromYUVAPixmapsTest003, TestSize.Level1)
     auto gpuContext = renderContext->GetSharedDrGPUContext();
     ASSERT_NE(gpuContext, nullptr);
 
-    uint32_t errorCode = 0;
-    Media::SourceOptions opts;
-    std::string hw_jpg_path = "/data/local/tmp/getScreenSize.jpeg";
-    std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(hw_jpg_path,
-        opts, errorCode);
-    ASSERT_NE(imageSource.get(), nullptr);
-    Media::DecodeOptions decodeOpts;
-    decodeOpts.desiredPixelFormat = Media::PixelFormat::NV21;
-    std::unique_ptr<Media::PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
-    ASSERT_NE(pixelMap.get(), nullptr);
+    Bitmap bitmap;
+    BitmapFormat bitmapFormat = { ColorType::COLORTYPE_BGRA_8888,
+        AlphaType::ALPHATYPE_PREMUL};
+    bitmap.Build(300, 300, bitmapFormat, 0); // 300:width,height
+    bitmap.ClearWithColor(0xFF000000);
 
     YUVInfo info(300, 300, YUVInfo::PlaneConfig::Y_VU, YUVInfo::SubSampling::K420,
         YUVInfo::YUVColorSpace::JPEG_FULL_YUVCOLORSPACE);
     auto image = Image::MakeFromYUVAPixmaps(*gpuContext, info,
-        const_cast<void *>(reinterpret_cast<const void*>(pixelMap->GetPixels())));
+        const_cast<void *>(reinterpret_cast<const void*>(bitmap.GetPixels())));
     EXPECT_TRUE(image != nullptr);
     gpuContext = nullptr;
 }
@@ -427,21 +422,16 @@ HWTEST_F(ImageTest, MakeFromYUVAPixmapsTest004, TestSize.Level1)
     auto gpuContext = renderContext->GetSharedDrGPUContext();
     ASSERT_NE(gpuContext, nullptr);
 
-    uint32_t errorCode = 0;
-    Media::SourceOptions opts;
-    std::string hw_jpg_path = "/data/local/tmp/getScreenSize.jpeg";
-    std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(hw_jpg_path,
-        opts, errorCode);
-    ASSERT_NE(imageSource.get(), nullptr);
-    Media::DecodeOptions decodeOpts;
-    decodeOpts.desiredPixelFormat = Media::PixelFormat::NV12;
-    std::unique_ptr<Media::PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
-    ASSERT_NE(pixelMap.get(), nullptr);
+    Bitmap bitmap;
+    BitmapFormat bitmapFormat = { ColorType::COLORTYPE_BGRA_8888,
+        AlphaType::ALPHATYPE_PREMUL};
+    bitmap.Build(300, 300, bitmapFormat, 0); // 300:width,height
+    bitmap.ClearWithColor(0xFF000000);
 
     YUVInfo info(300, 300, YUVInfo::PlaneConfig::Y_UV, YUVInfo::SubSampling::K420,
         YUVInfo::YUVColorSpace::JPEG_FULL_YUVCOLORSPACE);
     auto image = Image::MakeFromYUVAPixmaps(*gpuContext, info,
-        const_cast<void *>(reinterpret_cast<const void*>(pixelMap->GetPixels())));
+        const_cast<void *>(reinterpret_cast<const void*>(bitmap.GetPixels())));
     EXPECT_TRUE(image != nullptr);
     gpuContext = nullptr;
 }

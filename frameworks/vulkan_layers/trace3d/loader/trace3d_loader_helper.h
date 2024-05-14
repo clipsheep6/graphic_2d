@@ -55,10 +55,10 @@
 #define TRACE3D_SYSTEM_LIB_URI "/system/lib64/"
 #define TRACE3D_SHM_URI "/dev/shm/"
 
-#define TRACE3D_LOGI(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::INFO, __format, __VA_ARGS__);
-#define TRACE3D_LOGW(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::WARN, __format, __VA_ARGS__);
-#define TRACE3D_LOGE(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::ERR, __format, __VA_ARGS__);
-#define TRACE3D_LOGD(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::DEBUG, __format, __VA_ARGS__);
+#define TRACE3D_LOGI(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::INFO, __format, __VA_ARGS__)
+#define TRACE3D_LOGW(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::WARN, __format, __VA_ARGS__)
+#define TRACE3D_LOGE(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::ERR, __format, __VA_ARGS__)
+#define TRACE3D_LOGD(__format, ...) trace3d::LogOutput(trace3d::LOG_LEVEL::DEBUG, __format, __VA_ARGS__)
 
 namespace trace3d {
 
@@ -70,7 +70,7 @@ struct CaptureLib {
     void *handle{nullptr};
 };
 
-inline CaptureLib captureLibs[] = {
+inline CaptureLib g_captureLibs[] = {
     {"libVkLayer_gfxreconstruct.so", "trace3d.GfxRecon"},
     {"libAPITrace.so",               "trace3d.ApiTrace"},
     {"libPATrace.so",                "trace3d.PaTrace"},

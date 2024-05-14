@@ -22,22 +22,26 @@
 
 namespace trace3d {
 
-void* GetCaptureEntryLibHandle() {
-    for (auto &lib : captureLibs) {
-        if (lib.handle && lib.mainEntry)
+void* GetCaptureEntryLibHandle()
+{
+    for (auto &lib : g_captureLibs) {
+        if (lib.handle && lib.mainEntry) {
             return lib.handle;
+        }
     }
     return nullptr;
 }
 
-void* CaptureInit() {
+void* CaptureInit()
+{
     ShmCaptureInit();
 
     void *libHandle = GetCaptureEntryLibHandle();
     if (!libHandle) {
-        for (auto &lib : captureLibs) { 
-            if (lib.handle)
+        for (auto &lib : g_captureLibs) {
+            if (lib.handle) {
                 continue;
+            }
             size_t foundSize = TestBundledSharedLibrary(lib.name);
 
             if (foundSize > 0) {
@@ -48,14 +52,12 @@ void* CaptureInit() {
                 }
             } else {
                 foundSize = TestStoredSharedLibrary(lib.name);
-
                 if (foundSize > 0) {
                     TRACE3D_LOGI("%s:%d found stored:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
                 }
 
                 const std::string shmFullName = std::string(TRACE3D_SHM_URI) + lib.shmName;
                 const size_t shmSize = GetFileSize(shmFullName.c_str());
-
                 if (shmSize > 0 && foundSize != shmSize) {
                     std::vector<uint8_t> blob;
         
@@ -63,7 +65,6 @@ void* CaptureInit() {
                         StoreSharedLibrary(lib.name, blob);
                     }
                     foundSize = TestStoredSharedLibrary(lib.name);
-
                     if (foundSize > 0) {
                         TRACE3D_LOGI("%s:%d found stored:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
                     }
@@ -80,8 +81,9 @@ void* CaptureInit() {
     return libHandle;
 }
 
-void CaptureCleanup() {
-    for (auto &lib : captureLibs) {
+void CaptureCleanup()
+{
+    for (auto &lib : g_captureLibs) {
         if (lib.handle) {
             dlclose(lib.handle);
             lib.handle = nullptr;
@@ -92,6 +94,7 @@ void CaptureCleanup() {
 
 } // namespace trace3d
 
-__attribute__((destructor)) static void CleanupCaptureLoaderLib() {
+__attribute__((destructor)) static void CleanupCaptureLoaderLib()
+{
     trace3d::CaptureCleanup();
 }

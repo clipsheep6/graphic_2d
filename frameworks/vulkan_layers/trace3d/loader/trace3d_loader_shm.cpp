@@ -22,14 +22,14 @@
 
 namespace trace3d {
 
-static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib) {
+static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib)
+{
     if (lib.shmFd < 0) {
         std::string libFullName = libPath + lib.name;
         std::vector<uint8_t> blob;
 
         size_t sizeBytes = GetFileSize(libFullName.c_str());
         sizeBytes = sizeBytes > 0 ? ReadFileData(libFullName.c_str(), blob) : 0;
-
         if (sizeBytes > 0 && blob.size() == sizeBytes) {
             size_t len = sizeBytes;
 
@@ -58,10 +58,10 @@ static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib) {
     return lib.shmFd >= 0;
 }
 
-void ShmCaptureInit() {
-    for (auto &lib : captureLibs) {
+void ShmCaptureInit()
+{
+    for (auto &lib : g_captureLibs) {
         size_t foundSize = TestBundledSharedLibrary(lib.name);
-
         if (foundSize > 0) {
             TRACE3D_LOGI("%s:%d found bundle:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
 
@@ -71,8 +71,9 @@ void ShmCaptureInit() {
     }
 }
 
-void ShmCaptureCleanup() {
-    for (auto &lib : captureLibs) {
+void ShmCaptureCleanup()
+{
+    for (auto &lib : g_captureLibs) {
         if (lib.shmFd >= 0) {
             shm_unlink(lib.shmName);
             close(lib.shmFd);

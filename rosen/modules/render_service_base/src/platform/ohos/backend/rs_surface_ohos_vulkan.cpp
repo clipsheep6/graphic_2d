@@ -116,6 +116,57 @@ int32_t RSSurfaceOhosVulkan::RequestNativeWindowBuffer(NativeWindowBuffer** nati
     return res;
 }
 
+bool RSSurfaceOhosVulkan::RequestFramePost(int32_t& width, int32_t& height, bool& useAFBC, bool& isProtected)
+{
+    NativeWindowBuffer* nativeWindowBuffer = nullptr;
+    int fenceFd = -1;
+    if (RequestNativeWindowBuffer(&nativeWindowBuffer, width, height,
+        fenceFd, useAFBC, isProtected) != OHOS::GSERROR_OK) {
+        return false;
+    }
+
+    mSurfaceList.emplace_back(nativeWindowBuffer);
+    NativeBufferUtils::NativeSurfaceInfo& nativeSurface = mSurfaceMap[nativeWindowBuffer];
+    if (nativeSurface.drawingSurface == nullptr) {
+        NativeObjectReference(mNativeWindow);
+        nativeSurface.window = mNativeWindow;
+        nativeSurface.graphicColorGamut = colorSpace_;
+        if (!NativeBufferUtils::MakeFromNativeWindowBuffer(
+            mSkContext, nativeWindowBuffer, nativeSurface, width, height, isProtected)) {
+            ROSEN_LOGE("RSSurfaceOhosVulkan: MakeFromeNativeWindow failed");
+            mSurfaceList.pop_back();
+            NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
+            mSurfaceMap.erase(nativeWindowBuffer);
+            return false;
+        }
+
+        if (!nativeSurface.drawingSurface) {
+            ROSEN_LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
+            mSurfaceList.pop_back();
+            NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
+            mSurfaceMap.erase(nativeWindowBuffer);
+            return false;
+        } else {
+            ROSEN_LOGD("RSSurfaceOhosVulkan: skSurface create success %{public}zu", mSurfaceMap.size());
+        }
+    }
+
+    nativeSurface.drawingSurface->ClearDrawingArea();
+
+    if (fenceFd >= 0) {
+        nativeSurface.fence = std::make_unique<SyncFence>(fenceFd);
+        auto status = nativeSurface.fence->GetStatus();
+        if (status != SIGNALED) {
+            auto& vkContext = RsVulkanContext::GetSingleton();
+            VkSemaphore semaphore;
+            CreateVkSemaphore(&semaphore, vkContext, nativeSurface);
+            nativeSurface.drawingSurface->Wait(1, semaphore);
+        }
+    }
+
+    return true;
+}
+
 std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
     int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC, bool isProtected)
 {
@@ -136,62 +187,23 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
         return nullptr;
     }
 
-    NativeWindowBuffer* nativeWindowBuffer = nullptr;
-    int fenceFd = -1;
-    if (RequestNativeWindowBuffer(&nativeWindowBuffer, width, height,
-        fenceFd, useAFBC, isProtected) != OHOS::GSERROR_OK) {
+    if(!RequestFramePost(width, height, useAFBC, isProtected)) {
         return nullptr;
     }
 
-    mSurfaceList.emplace_back(nativeWindowBuffer);
-    NativeBufferUtils::NativeSurfaceInfo& nativeSurface = mSurfaceMap[nativeWindowBuffer];
-    if (nativeSurface.drawingSurface == nullptr) {
-        NativeObjectReference(mNativeWindow);
-        nativeSurface.window = mNativeWindow;
-        nativeSurface.graphicColorGamut = colorSpace_;
-        if (!NativeBufferUtils::MakeFromNativeWindowBuffer(
-            mSkContext, nativeWindowBuffer, nativeSurface, width, height, isProtected)) {
-            ROSEN_LOGE("RSSurfaceOhosVulkan: MakeFromeNativeWindow failed");
-            mSurfaceList.pop_back();
-            NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
-            mSurfaceMap.erase(nativeWindowBuffer);
-            return nullptr;
-        }
-
-        if (!nativeSurface.drawingSurface) {
-            ROSEN_LOGE("RSSurfaceOhosVulkan: skSurface is null, return");
-            mSurfaceList.pop_back();
-            NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
-            mSurfaceMap.erase(nativeWindowBuffer);
-            return nullptr;
-        } else {
-            ROSEN_LOGD("RSSurfaceOhosVulkan: skSurface create success %{public}zu", mSurfaceMap.size());
-        }
-    }
-
-    nativeSurface.drawingSurface->ClearDrawingArea();
-
-    if (fenceFd >= 0) {
-        nativeSurface.fence = std::make_unique<SyncFence>(fenceFd);
-        auto status = nativeSurface.fence->GetStatus();
-        if (status != SIGNALED) {
-            auto& vkContext = RsVulkanContext::GetSingleton();
-            VkSemaphore semaphore;
-            CreateVkSemaphore(&semaphore, vkContext, nativeSurface);
-            nativeSurface.drawingSurface->Wait(1, semaphore);
-        }
-    }
     int32_t bufferAge;
     if (nativeSurface.lastPresentedCount == -1) {
         bufferAge = 0;
     } else {
         bufferAge = mPresentCount - nativeSurface.lastPresentedCount;
     }
+
     std::unique_ptr<RSSurfaceFrameOhosVulkan> frame =
         std::make_unique<RSSurfaceFrameOhosVulkan>(nativeSurface.drawingSurface, width, height, bufferAge);
     std::unique_ptr<RSSurfaceFrame> ret(std::move(frame));
     return ret;
 }
+
 
 void RSSurfaceOhosVulkan::SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp)
 {

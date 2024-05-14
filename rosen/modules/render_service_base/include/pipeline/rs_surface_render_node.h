@@ -1064,6 +1064,8 @@ protected:
     void OnSkipSync() override;
 
 private:
+    void CollectSurfaceForSubSurface(const std::shared_ptr<RSBaseRenderNode>& node,
+        std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool onlyFirstLevel);
     void OnResetParent() override;
     void ClearChildrenCache();
     bool SubNodeIntersectWithExtraDirtyRegion(const RectI& r) const;

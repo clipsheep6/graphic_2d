@@ -210,6 +210,16 @@ bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, 
         return false;
     }
 
+    CreateDrawingSurface(nativeSurface, nativeWindowBuffer, width, height, image, isProtected, usageFlags,
+        nbFormatProps, memory);
+
+    return true;
+}
+
+void CreateDrawingSurface(NativeSurfaceInfo& nativeSurface,  NativeWindowBuffer* nativeWindowBuffer, 
+    int& width, int& height, VkImage& image, bool& isProtected, VkImageUsageFlags& usageFlags,
+    VkNativeBufferFormatPropertiesOHOS& nbFormatProps, VkDeviceMemory& memory)
+{
     auto skColorSpace = RenderContext::ConvertColorGamutToSkColorSpace(nativeSurface.graphicColorGamut);
     Drawing::TextureInfo texture_info;
     texture_info.SetWidth(width);
@@ -253,8 +263,6 @@ bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, 
     }
     NativeObjectReference(nativeWindowBuffer);
     nativeSurface.nativeWindowBuffer = nativeWindowBuffer;
-
-    return true;
 }
 
 GrVkYcbcrConversionInfo GetYcbcrInfo(VkNativeBufferFormatPropertiesOHOS& nbFormatProps)
@@ -319,6 +327,17 @@ Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* n
     textureInfo.SetWidth(width);
     textureInfo.SetHeight(height);
 
+    CreateVkImage(isProtected, image, memory, nbProps, nbFormatProps, usageFlags, textureInfo);
+
+    backendTexture.SetTextureInfo(textureInfo);
+   
+    return backendTexture;
+}
+
+void CreateVkImage(bool& isProtected, VkImage& image, VkDeviceMemory& memory,
+    VkNativeBufferPropertiesOHOS& nbProps, VkNativeBufferFormatPropertiesOHOS& nbFormatProps,
+    VkImageUsageFlags& usageFlags, Drawing::TextureInfo& textureInfo)
+{
     std::shared_ptr<Drawing::VKTextureInfo> imageInfo = std::make_shared<Drawing::VKTextureInfo>();
     imageInfo->vkImage = image;
     imageInfo->vkAlloc.memory = memory;
@@ -343,10 +362,7 @@ Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* n
         imageInfo->ycbcrConversionInfo.chromaFilter = VK_FILTER_LINEAR;
     }
     imageInfo->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
     textureInfo.SetVKTextureInfo(imageInfo);
-    backendTexture.SetTextureInfo(textureInfo);
-    return backendTexture;
 }
 } // namespace NativeBufferUtils
 } // namespace OHOS::Rosen

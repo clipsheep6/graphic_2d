@@ -197,6 +197,56 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
     RenderTasks(threadTask, visitor);
 }
 
+bool RSSubThread::RenderTasksMid(const std::shared_ptr<RSSuperRenderTask>& threadTask,
+    const std::shared_ptr<RSUniRenderVisitor>& visitor, std::shared_ptr<RSBaseRenderNode>& nodeDrawable)
+{
+    auto surfaceNodePtr = std::static_pointer_cast<RSSurfaceRenderNode>(nodeDrawable);
+    if(!surfaceNodePtr) {
+        return false;
+    }
+
+    // flag CacheSurfaceProcessed is used for cacheCmdskippedNodes collection in rs_mainThread
+    surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
+    if (RSMainThread::Instance()->GetFrameCount() != threadTask->GetFrameCount()) {
+        surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING);
+        return false;
+    }
+
+    RS_TRACE_NAME_FMT("draw cache render nodeDrawable: [%s, %llu]", surfaceNodePtr->GetName().c_str(),
+        surfaceNodePtr->GetId());
+    if (surfaceNodePtr->GetCacheSurface(threadIndex_, true) == nullptr || surfaceNodePtr->NeedInitCacheSurface()) {
+        RSRenderNode::ClearCacheSurfaceFunc func = std::bind(&RSUniRenderUtil::ClearNodeCacheSurface,
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        surfaceNodePtr->InitCacheSurface(grContext_.get(), func, threadIndex_);
+    }
+
+    RSTagTracker nodeProcessTracker(grContext_.get(), surfaceNodePtr->GetId(),
+        RSTagTracker::TAGTYPE::TAG_SUB_THREAD);
+    bool needNotify = !surfaceNodePtr->HasCachedTexture();
+    nodeDrawable->Process(visitor);
+    nodeProcessTracker.SetTagEnd();
+    auto cacheSurface = surfaceNodePtr->GetCacheSurface(threadIndex_, true);
+    if (cacheSurface) {
+        RS_TRACE_NAME_FMT("Rendercache skSurface flush and submit");
+        RSTagTracker nodeFlushTracker(grContext_.get(), surfaceNodePtr->GetId(),
+            RSTagTracker::TAGTYPE::TAG_SUB_THREAD);
+        cacheSurface->FlushAndSubmit(true);
+        nodeFlushTracker.SetTagEnd();
+    }
+    surfaceNodePtr->UpdateBackendTexture();
+    RSMainThread::Instance()->PostTask([]() {
+        RSMainThread::Instance()->SetIsCachedSurfaceUpdated(true);
+    });
+    surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);
+    surfaceNodePtr->SetCacheSurfaceNeedUpdated(true);
+
+    if (needNotify) {
+        RSSubThreadManager::Instance()->NodeTaskNotify(nodeDrawable->GetId());
+    }
+
+    return true;
+}
+
 void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
     const std::shared_ptr<RSUniRenderVisitor>& visitor)
 {
@@ -204,66 +254,26 @@ void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTa
     bool needRequestVsync = false;
     while (threadTask->GetTaskSize() > 0) {
         auto task = threadTask->GetNextRenderTask();
+        if (!task) {
+            continue;
+        }
+
         auto nodeDrawable = task->GetNode();
-        auto surfaceNodePtr = std::static_pointer_cast<RSSurfaceRenderNode>(nodeDrawable);
-        if ((!task || (task->GetIdx() == 0)) || !nodeDrawable || !surfaceNodePtr) {
+        if(!nodeDrawable) {
+            continue;
+        }
+    
+        if(!RenderTasksMid(threadTask, visitor, nodeDrawable))
+        {
             continue;
         }
 
-        // flag CacheSurfaceProcessed is used for cacheCmdskippedNodes collection in rs_mainThread
-        surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
-        if (RSMainThread::Instance()->GetFrameCount() != threadTask->GetFrameCount()) {
-            surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::WAITING);
-            continue;
-        }
-
-        RS_TRACE_NAME_FMT("draw cache render nodeDrawable: [%s, %llu]", surfaceNodePtr->GetName().c_str(),
-            surfaceNodePtr->GetId());
-        if (surfaceNodePtr->GetCacheSurface(threadIndex_, true) == nullptr || surfaceNodePtr->NeedInitCacheSurface()) {
-            RSRenderNode::ClearCacheSurfaceFunc func = std::bind(&RSUniRenderUtil::ClearNodeCacheSurface,
-                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
-            surfaceNodePtr->InitCacheSurface(grContext_.get(), func, threadIndex_);
-        }
-
-        RSTagTracker nodeProcessTracker(grContext_.get(), surfaceNodePtr->GetId(),
-            RSTagTracker::TAGTYPE::TAG_SUB_THREAD);
-        bool needNotify = !surfaceNodePtr->HasCachedTexture();
-        nodeDrawable->Process(visitor);
-        nodeProcessTracker.SetTagEnd();
-        auto cacheSurface = surfaceNodePtr->GetCacheSurface(threadIndex_, true);
-        if (cacheSurface) {
-            RS_TRACE_NAME_FMT("Rendercache skSurface flush and submit");
-            RSTagTracker nodeFlushTracker(grContext_.get(), surfaceNodePtr->GetId(),
-                RSTagTracker::TAGTYPE::TAG_SUB_THREAD);
-            cacheSurface->FlushAndSubmit(true);
-            nodeFlushTracker.SetTagEnd();
-        }
-        surfaceNodePtr->UpdateBackendTexture();
-        RSMainThread::Instance()->PostTask([]() {
-            RSMainThread::Instance()->SetIsCachedSurfaceUpdated(true);
-        });
-        surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DONE);
-        surfaceNodePtr->SetCacheSurfaceNeedUpdated(true);
         needRequestVsync = true;
-
-        RenderTasksNeedNotify(needNotify, nodeDrawable->GetId());
     }
-    RenderTasksNeedRequestVsync(needRequestVsync);
-#endif
-}
-
-void RSSubThread::RenderTasksNeedNotify(bool needNotify, NodeId nodeId)
-{
-    if (needNotify) {
-        RSSubThreadManager::Instance()->NodeTaskNotify(nodeId);
-    }
-}
-
-void RSSubThread::RenderTasksNeedRequestVsync(bool needRequestVsync)
-{
     if (needRequestVsync) {
         RSMainThread::Instance()->RequestNextVSync();
     }
+#endif
 }
 
 void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)

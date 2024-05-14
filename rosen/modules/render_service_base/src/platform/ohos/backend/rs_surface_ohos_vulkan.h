@@ -92,6 +92,7 @@ private:
         int32_t width, int32_t height, int& fenceFd, bool useAFBC, bool isProtected = false);
     void CreateVkSemaphore(VkSemaphore* semaphore,
         RsVulkanContext& vkContext, NativeBufferUtils::NativeSurfaceInfo& nativeSurface);
+    bool RequestFramePost(int32_t& width, int32_t& height, bool& useAFBC, bool& isProtected);
 };
 
 } // namespace Rosen

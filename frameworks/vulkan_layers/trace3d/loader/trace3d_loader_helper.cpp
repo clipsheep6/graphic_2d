@@ -26,7 +26,8 @@
 
 namespace trace3d {
 
-void LogOutputRaw(LOG_LEVEL level, const char *message) {
+void LogOutputRaw(LOG_LEVEL level, const char *message)
+{
 #if defined(TRACE3D_LOADER_HOS)
     int prio = ANDROID_LOG_UNKNOWN;
     switch (level) {
@@ -69,14 +70,16 @@ void LogOutputRaw(LOG_LEVEL level, const char *message) {
 #endif
 }
 
-void LogOutput(LOG_LEVEL level, const char *format, ...) {
+void LogOutput(LOG_LEVEL level, const char *format, ...)
+{
     TRACE3D_FORMAT_MSG(format, msg);
     msg = std::string("LOADER") + " : " + msg;
 
     LogOutputRaw(level, msg.c_str());
 }
 
-int FormatString(std::string &outStr, const char *format, va_list ap) {
+int FormatString(std::string &outStr, const char *format, va_list ap)
+{
     int size = 0;
     size = vsnprintf(NULL, 0, format, ap) + 1;
 
@@ -86,7 +89,8 @@ int FormatString(std::string &outStr, const char *format, va_list ap) {
     return size;
 }
 
-int FormatString(std::string &outStr, const char *format, ...) {
+int FormatString(std::string &outStr, const char *format, ...)
+{
     va_list ap;
     va_start(ap, format);
 
@@ -97,7 +101,8 @@ int FormatString(std::string &outStr, const char *format, ...) {
 }
 
 
-size_t GetFileSize(const char *fileName) {
+size_t GetFileSize(const char *fileName)
+{
     size_t size = 0;
     FILE *f = fopen(fileName, "rb");
     if (f) {
@@ -108,7 +113,8 @@ size_t GetFileSize(const char *fileName) {
     return size;
 }
 
-size_t ReadFileData(const char *fileName, std::vector<uint8_t> &blob) {
+size_t ReadFileData(const char *fileName, std::vector<uint8_t> &blob)
+{
     FILE *f = fopen(fileName, "rb");
     if (f) {
         fseek(f, 0L, SEEK_END);
@@ -125,28 +131,33 @@ size_t ReadFileData(const char *fileName, std::vector<uint8_t> &blob) {
             return readLen;
         }
         TRACE3D_LOGE("%s:%d ERROR: read file '%s' len:%d/%d Bytes\n", __FUNCTION__, __LINE__, fileName, len, readLen);
-    } else
+    } else {
         TRACE3D_LOGE("%s:%d ERROR: open read file '%s'\n", __FUNCTION__, __LINE__, fileName);
+    }
     return 0;
 }
 
-size_t WriteFileData(const char *fileName, const std::vector<uint8_t> &blob) {
+size_t WriteFileData(const char *fileName, const std::vector<uint8_t> &blob)
+{
     FILE *f = fopen(fileName, "wb");
     if (f) {
         size_t writeLen = fwrite(blob.data(), 1, blob.size(), f);
 
         fflush(f);
         fclose(f);
-        if (writeLen == blob.size())
+        if (writeLen == blob.size()) {
             return writeLen;
-        TRACE3D_LOGE("%s:%d ERROR: write file '%s' len:%d/%d Bytes\n", __FUNCTION__, __LINE__, fileName, blob.size(), writeLen);
+        }
+        TRACE3D_LOGE("%s:%d ERROR: write file '%s' len:%d/%d Bytes\n",
+            __FUNCTION__, __LINE__, fileName, blob.size(), writeLen);
     } else {
         TRACE3D_LOGE("%s:%d ERROR: open write file '%s'\n", __FUNCTION__, __LINE__, fileName);
     }
     return -1;
 }
 
-size_t StoreSharedLibrary(const char *libName, const std::vector<uint8_t> &blob) {
+size_t StoreSharedLibrary(const char *libName, const std::vector<uint8_t> &blob)
+{
     size_t ret = 0;
     std::string libFullName = std::string(TRACE3D_APP_DATA_URI) + libName;
     ret = WriteFileData(libFullName.c_str(), blob);
@@ -156,7 +167,8 @@ size_t StoreSharedLibrary(const char *libName, const std::vector<uint8_t> &blob)
     return ret;
 }
 
-void *DlopenSharedLibrary(const char *libFullName) {
+void *DlopenSharedLibrary(const char *libFullName)
+{
     void *handle = nullptr;
     handle = dlopen(libFullName, RTLD_LAZY);
 
@@ -164,25 +176,27 @@ void *DlopenSharedLibrary(const char *libFullName) {
     if (sizeBytes > 0) {
         if (handle) {
             TRACE3D_LOGI("%s:%d dlopen '%s' handle:%p\n", __FUNCTION__, __LINE__, libFullName, handle);
-        }
-        else {
+        } else {
             TRACE3D_LOGE("%s:%d ERROR: dlopen '%s' err: '%s'\n", __FUNCTION__, __LINE__, libFullName, dlerror());
         }
     }
     return handle;
 }
 
-void *DlopenStoredSharedLibrary(const char *libName) {
+void *DlopenStoredSharedLibrary(const char *libName)
+{
     const std::string libFullName = std::string(TRACE3D_APP_DATA_URI) + libName;
     return DlopenSharedLibrary(libFullName.c_str());
 }
 
-size_t TestStoredSharedLibrary(const char *libName) {
+size_t TestStoredSharedLibrary(const char *libName)
+{
     const std::string libFullName = std::string(TRACE3D_APP_DATA_URI) + libName;
     return GetFileSize(libFullName.c_str());
 }
 
-void *DlopenBundledSharedLibrary(const char *libName) {
+void *DlopenBundledSharedLibrary(const char *libName)
+{
     void *libHandle = DlopenSharedLibrary((std::string(TRACE3D_APP_LIB_URI) + libName).c_str());
     if (!libHandle) {
         libHandle = DlopenSharedLibrary((std::string(TRACE3D_DATA_LOCAL_URI) + libName).c_str());
@@ -193,7 +207,8 @@ void *DlopenBundledSharedLibrary(const char *libName) {
     return libHandle;
 }
 
-size_t TestBundledSharedLibrary(const char *libName) {
+size_t TestBundledSharedLibrary(const char *libName)
+{
     size_t sizeBytes = GetFileSize((std::string(TRACE3D_APP_LIB_URI) + libName).c_str());
     if (!sizeBytes) {
         sizeBytes = GetFileSize((std::string(TRACE3D_DATA_LOCAL_URI) + libName).c_str());

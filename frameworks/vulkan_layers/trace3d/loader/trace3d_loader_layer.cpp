@@ -46,18 +46,18 @@ namespace trace3d {
 
 VkResult EnumerateInstanceLayerProperties(uint32_t* pPropertyCount, VkLayerProperties* pProperties)
 {
-    VkResult vkresult = VK_SUCCESS;
+    VkResult Result = VK_SUCCESS;
     if (pProperties == nullptr) {
-        if (pPropertyCount != nullptr)
+        if (pPropertyCount != nullptr) {
             *pPropertyCount = 1;
-    }
-    else if ((pPropertyCount != nullptr) && (*pPropertyCount >= 1)) {
+        }
+    } else if ((pPropertyCount != nullptr) && (*pPropertyCount >= 1)) {
         memcpy(pProperties, &layerProps, sizeof(layerProps));
         *pPropertyCount = 1;
+    } else {
+        Result = VK_INCOMPLETE;
     }
-    else
-        vkresult = VK_INCOMPLETE;
-    return vkresult;
+    return Result;
 }
 
 VkResult EnumerateDeviceLayerProperties(
@@ -70,18 +70,19 @@ VkResult EnumerateDeviceLayerProperties(
 VkResult EnumerateInstanceExtensionProperties(const char* pLayerName, uint32_t* pPropertyCount,
     VkExtensionProperties* pProperties)
 {
-    VkResult vkresult = VK_SUCCESS;
+    VkResult Result = VK_SUCCESS;
     if (pLayerName && strcmp(pLayerName, layerProps.layerName) == 0) {
         if (pPropertyCount != nullptr)
             *pPropertyCount = 0;
+    } else {
+        Result = VK_ERROR_LAYER_NOT_PRESENT;
     }
-    else
-        vkresult = VK_ERROR_LAYER_NOT_PRESENT;
-    return vkresult;
+    return Result;
 }
 
 VkResult FillPropertyCountAndList(const VkExtensionProperties *src, uint32_t numExts, uint32_t *dstCount,
-                                  VkExtensionProperties *dstProps) {
+                                  VkExtensionProperties *dstProps)
+{
     if (dstCount && !dstProps) {
         // just returning the number of extensions
         *dstCount = numExts;
@@ -93,12 +94,14 @@ VkResult FillPropertyCountAndList(const VkExtensionProperties *src, uint32_t num
         *dstCount = (numExts < dstSpace) ? numExts : dstSpace;
 
         // copy as much as there's space for, up to how many there are
-        if (src)
+        if (src) {
             memcpy(dstProps, src, sizeof(VkExtensionProperties) * ((numExts < dstSpace) ? numExts : dstSpace));
+        }
 
         // if there was enough space, return success, else incomplete
-        if (dstSpace >= numExts)
+        if (dstSpace >= numExts) {
             return VK_SUCCESS;
+        }
     }
     // both parameters were NULL, return incomplete
     return VK_INCOMPLETE;
@@ -106,35 +109,36 @@ VkResult FillPropertyCountAndList(const VkExtensionProperties *src, uint32_t num
 
 VkResult EnumerateInstanceExtensionProperties(const VkEnumerateInstanceExtensionPropertiesChain *pChain,
                                               const char *pLayerName, uint32_t *pPropertyCount,
-                                              VkExtensionProperties *pProperties) {
-    VkResult vkresult = VK_ERROR_LAYER_NOT_PRESENT;
+                                              VkExtensionProperties *pProperties)
+{
+    VkResult Result = VK_ERROR_LAYER_NOT_PRESENT;
 
     if (pChain && !pLayerName) {
         // first fetch the list of extensions ourselves
         uint32_t numExts = 0;
 
-        vkresult = pChain->CallDown(pLayerName, &numExts, NULL);
-
-        if (vkresult == VK_SUCCESS) {
+        Result = pChain->CallDown(pLayerName, &numExts, NULL);
+        if (Result == VK_SUCCESS) {
             std::vector<VkExtensionProperties> exts;
             exts.resize(numExts);
-            vkresult = pChain->CallDown(pLayerName, &numExts, exts.data());
-
-            if (vkresult == VK_SUCCESS) {
-                vkresult = FillPropertyCountAndList(exts.data(), exts.size(), pPropertyCount, pProperties);
+            Result = pChain->CallDown(pLayerName, &numExts, exts.data());
+            if (Result == VK_SUCCESS) {
+                Result = FillPropertyCountAndList(exts.data(), exts.size(), pPropertyCount, pProperties);
             }
         }
-    } else
-        vkresult = EnumerateInstanceExtensionProperties(pLayerName, pPropertyCount, pProperties);
+    } else {
+        Result = EnumerateInstanceExtensionProperties(pLayerName, pPropertyCount, pProperties);
+    }
 
-    return vkresult;
+    return Result;
 }
 
 typedef const void *DispatchKey;
 
-static inline DispatchKey GetDispatchKey(const void *handle) {
-    const DispatchKey *dispatch_key = reinterpret_cast<const DispatchKey *>(handle);
-    return (*dispatch_key);
+static inline DispatchKey GetDispatchKey(const void *handle)
+{
+    const DispatchKey *dispatchKey = reinterpret_cast<const DispatchKey *>(handle);
+    return (*dispatchKey);
 }
 
 struct InstanceInfo {
@@ -157,15 +161,14 @@ VkResult EnumerateDeviceExtensionProperties(
     VkPhysicalDevice physicalDevice, const char *pLayerName,
     uint32_t *pPropertyCount, VkExtensionProperties *pProperties)
 {
-    VkResult vkresult = VK_ERROR_LAYER_NOT_PRESENT;
+    VkResult Result = VK_ERROR_LAYER_NOT_PRESENT;
 
     if (pLayerName && strcmp(pLayerName, layerProps.layerName) == 0) {
         if (pPropertyCount != nullptr)
             *pPropertyCount = 0;
 
-        vkresult = VK_SUCCESS;
-    }
-    else {
+        Result = VK_SUCCESS;
+    } else {
         DispatchKey physKey = GetDispatchKey(physicalDevice);
 
         auto it = instanceMap.find(physKey);
@@ -173,16 +176,18 @@ VkResult EnumerateDeviceExtensionProperties(
             auto &instInfo = it->second;
 
             if (instInfo.enumerateDeviceExtensionProperties)
-                vkresult = instInfo.enumerateDeviceExtensionProperties(physicalDevice, nullptr, pPropertyCount, pProperties);
+                Result = instInfo.enumerateDeviceExtensionProperties(physicalDevice, nullptr,
+                    pPropertyCount, pProperties);
         }
     }
 
     TRACE3D_LOGI("%s(physicalDevice:%p, pLayerName:%p) --> vkresult:%d\n",
-        __FUNCTION__, physicalDevice, pLayerName, vkresult);
-    return vkresult;
+        __FUNCTION__, physicalDevice, pLayerName, Result);
+    return Result;
 }
 
-VkLayerInstanceCreateInfo *GetChainInfo(const VkInstanceCreateInfo *pCreateInfo, VkLayerFunction func) {
+VkLayerInstanceCreateInfo *GetChainInfo(const VkInstanceCreateInfo *pCreateInfo, VkLayerFunction func)
+{
     auto chainInfo = static_cast<const VkLayerInstanceCreateInfo *>(pCreateInfo->pNext);
     while (chainInfo != nullptr) {
         if (chainInfo->sType == VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO && chainInfo->function == func) {
@@ -194,7 +199,8 @@ VkLayerInstanceCreateInfo *GetChainInfo(const VkInstanceCreateInfo *pCreateInfo,
     return nullptr;
 }
 
-VkLayerDeviceCreateInfo *GetChainInfo(const VkDeviceCreateInfo *pCreateInfo, VkLayerFunction func) {
+VkLayerDeviceCreateInfo *GetChainInfo(const VkDeviceCreateInfo *pCreateInfo, VkLayerFunction func)
+{
     auto chainInfo = static_cast<const VkLayerDeviceCreateInfo *>(pCreateInfo->pNext);
     while (chainInfo != nullptr) {
         if (chainInfo->sType == VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO && chainInfo->function == func) {
@@ -209,26 +215,24 @@ VkLayerDeviceCreateInfo *GetChainInfo(const VkDeviceCreateInfo *pCreateInfo, VkL
 VkResult CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
     const VkAllocationCallbacks *pAllocator, VkInstance *pInstance)
 {
-    VkResult result = VK_ERROR_INITIALIZATION_FAILED;
+    VkResult Result = VK_ERROR_INITIALIZATION_FAILED;
     VkLayerInstanceCreateInfo *chainInfo = GetChainInfo(pCreateInfo, VK_LAYER_LINK_INFO);
-
     if (chainInfo == nullptr || chainInfo->u.pLayerInfo == nullptr) {
-        TRACE3D_LOGE("%s:%d() --> vkresult:%d\n", __FUNCTION__, __LINE__, result);
-        return result;
+        TRACE3D_LOGE("%s:%d() --> vkresult:%d\n", __FUNCTION__, __LINE__, Result);
+        return Result;
     }
     auto fpGetInstanceProcAddr = chainInfo->u.pLayerInfo->pfnNextGetInstanceProcAddr;
     auto fpCreateInstance = (PFN_vkCreateInstance)fpGetInstanceProcAddr(nullptr, "vkCreateInstance");
-
     if (!fpCreateInstance) {
-        TRACE3D_LOGE("%s:%d() --> vkresult:%d\n", __FUNCTION__, __LINE__, result);
-        return result;
+        TRACE3D_LOGE("%s:%d() --> vkresult:%d\n", __FUNCTION__, __LINE__, Result);
+        return Result;
     }
 
     chainInfo->u.pLayerInfo = chainInfo->u.pLayerInfo->pNext;
 
-    result = fpCreateInstance(pCreateInfo, pAllocator, pInstance);
-    if (result != VK_SUCCESS) {
-        return result;
+    Result = fpCreateInstance(pCreateInfo, pAllocator, pInstance);
+    if (Result != VK_SUCCESS) {
+        return Result;
     }
     VkInstance instance = *pInstance;
     DispatchKey instanceKey = GetDispatchKey(instance);
@@ -243,8 +247,8 @@ VkResult CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
         fpDestroyInstance } ;
 
     TRACE3D_LOGI("%s:%d() --> instance:%p, instanceKey:%p, vkresult:%d\n",
-        __FUNCTION__, __LINE__, instance, instanceKey, result);
-    return result;
+        __FUNCTION__, __LINE__, instance, instanceKey, Result);
+    return Result;
 }
 
 void DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator)
@@ -266,7 +270,7 @@ void DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocato
 VkResult CreateDevice(VkPhysicalDevice physDev, const VkDeviceCreateInfo *pCreateInfo,
     const VkAllocationCallbacks *pAllocator, VkDevice *pDevice)
 {
-    VkResult result = VK_ERROR_INITIALIZATION_FAILED;
+    VkResult Result = VK_ERROR_INITIALIZATION_FAILED;
     const DispatchKey physKey = GetDispatchKey(physDev);
 
     const InstanceInfo instanceInfo = instanceMap[physKey];
@@ -276,27 +280,26 @@ VkResult CreateDevice(VkPhysicalDevice physDev, const VkDeviceCreateInfo *pCreat
 
     if (linkInfo == nullptr || linkInfo->u.pLayerInfo == nullptr || instance == nullptr) {
         TRACE3D_LOGE("%s:%d(physDev:%p) physKey:%p --> vkresult:%d\n",
-            __FUNCTION__, __LINE__, physDev, physKey, result);
-        return result;
+            __FUNCTION__, __LINE__, physDev, physKey, Result);
+        return Result;
     }
     PFN_vkGetInstanceProcAddr fpGetInstanceProcAddr = linkInfo->u.pLayerInfo->pfnNextGetInstanceProcAddr;
     PFN_vkGetDeviceProcAddr fpGetDeviceProcAddr = linkInfo->u.pLayerInfo->pfnNextGetDeviceProcAddr;
     PFN_vkCreateDevice fpCreateDevice =
         (PFN_vkCreateDevice)fpGetInstanceProcAddr(instance, "vkCreateDevice");
-    
     if (!fpCreateDevice) {
         TRACE3D_LOGE("%s:%d(physDev:%p) physKey:%p, instance:%p --> vkresult:%d\n",
-            __FUNCTION__, __LINE__, physDev, physKey, instance, result);
-        return result;
+            __FUNCTION__, __LINE__, physDev, physKey, instance, Result);
+        return Result;
     }
 
     linkInfo->u.pLayerInfo = linkInfo->u.pLayerInfo->pNext;
 
-    result = fpCreateDevice(physDev, pCreateInfo, pAllocator, pDevice);
-    if (result != VK_SUCCESS) {
+    Result = fpCreateDevice(physDev, pCreateInfo, pAllocator, pDevice);
+    if (Result != VK_SUCCESS) {
         TRACE3D_LOGE("%s:%d(physDev:%p) physKey:%p, instance:%p --> device:%p, vkresult:%d\n",
-            __FUNCTION__, __LINE__, physDev, physKey, instance, *pDevice, result);
-        return result;
+            __FUNCTION__, __LINE__, physDev, physKey, instance, *pDevice, Result);
+        return Result;
     }
     VkDevice device = *pDevice;
     DispatchKey deviceKey = GetDispatchKey(device);
@@ -306,7 +309,7 @@ VkResult CreateDevice(VkPhysicalDevice physDev, const VkDeviceCreateInfo *pCreat
     deviceMap[deviceKey] = DeviceInfo{device, fpGetDeviceProcAddr, fpDestroyDevice};
 
     TRACE3D_LOGI("%s(physDev:%p) physKey:%p, instance:%p --> device:%p, deviceKey:%p, vkresult:%d\n",
-        __FUNCTION__, physDev, physKey, instance, device, deviceKey, result);
+        __FUNCTION__, physDev, physKey, instance, device, deviceKey, Result);
     return VK_SUCCESS;
 }
 
@@ -329,7 +332,6 @@ void DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator)
 } // namespace trace3d
 
 extern "C" {
-
 // Vk Layer Entries
 //
 
@@ -338,12 +340,14 @@ PFN_vkGetDeviceProcAddr trace3dVkGetDeviceProcAddr = nullptr;
 PFN_vkGetInstanceProcAddr trace3dVkGetPhysicalDeviceProcAddr = nullptr;
 
 TRACE3D_LOADER_API
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetInstanceProcAddr(VkInstance instance, const char *pName) {
+VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetInstanceProcAddr(VkInstance instance, const char *pName)
+{
     return trace3dVkGetInstanceProcAddr ? trace3dVkGetInstanceProcAddr(instance, pName) : nullptr;
 }
 
 TRACE3D_LOADER_API
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice device, const char *pName) {
+VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vkGetDeviceProcAddr(VkDevice device, const char *pName)
+{
     return trace3dVkGetDeviceProcAddr ? trace3dVkGetDeviceProcAddr(device, pName) : nullptr;
 }
 
@@ -366,28 +370,22 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderGetInstan
 
     if (strcmp("vkGetInstanceProcAddr", pName) == 0) {
         procAddr = (PFN_vkVoidFunction)VK_LAYER_TRACE3D_CaptureLoaderGetInstanceProcAddr;
-    }
-    else if (strcmp("vkEnumerateInstanceExtensionProperties", pName) == 0) {
+    } else if (strcmp("vkEnumerateInstanceExtensionProperties", pName) == 0) {
         procAddr = reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceExtensionProperties);
-    }
-    else if (strcmp("vkEnumerateInstanceLayerProperties", pName) == 0) {
+    } else if (strcmp("vkEnumerateInstanceLayerProperties", pName) == 0) {
         procAddr = reinterpret_cast<PFN_vkVoidFunction>(EnumerateInstanceLayerProperties);
-    }
-    else if (strcmp("vkCreateInstance", pName) == 0) {
+    } else if (strcmp("vkCreateInstance", pName) == 0) {
         procAddr = reinterpret_cast<PFN_vkVoidFunction>(trace3d::CreateInstance);
-    }
-    else if (strcmp("vkDestroyInstance", pName) == 0) {
+    } else if (strcmp("vkDestroyInstance", pName) == 0) {
         procAddr = reinterpret_cast<PFN_vkVoidFunction>(trace3d::DestroyInstance);
-    }
-    else if (strcmp("vkCreateDevice", pName) == 0) {
+    } else if (strcmp("vkCreateDevice", pName) == 0) {
         procAddr = reinterpret_cast<PFN_vkVoidFunction>(trace3d::CreateDevice);
-    }
-    else if (strcmp("vkEnumerateDeviceExtensionProperties", pName) == 0) {
+    } else if (strcmp("vkEnumerateDeviceExtensionProperties", pName) == 0) {
         procAddr = reinterpret_cast<PFN_vkVoidFunction>(trace3d::EnumerateDeviceExtensionProperties);
-    }
-    else {
+    } else {
         if (instance == VK_NULL_HANDLE) {
-            TRACE3D_LOGE("%s(instance:%p, pName:'%s') ERROR: instance is null --> %p\n", __FUNCTION__, instance, pName, procAddr);
+            TRACE3D_LOGE("%s(instance:%p, pName:'%s') ERROR: instance is null --> %p\n",
+                __FUNCTION__, instance, pName, procAddr);
             return procAddr;
         }
         trace3d::DispatchKey instanceKey = trace3d::GetDispatchKey(instance);
@@ -401,7 +399,8 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderGetInstan
 }
 
 TRACE3D_LOADER_API
-VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderGetDeviceProcAddr(VkDevice device, const char *pName)
+VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderGetDeviceProcAddr(
+    VkDevice device, const char *pName)
 {
     PFN_vkVoidFunction procAddr = nullptr;
 
@@ -412,8 +411,7 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderGetDevice
 
     if (strcmp("vkGetDeviceProcAddr", pName) == 0) {
         procAddr = (PFN_vkVoidFunction)VK_LAYER_TRACE3D_CaptureLoaderGetDeviceProcAddr;
-    }
-    else if (strcmp("vkDestroyDevice", pName) == 0) {
+    } else if (strcmp("vkDestroyDevice", pName) == 0) {
         procAddr = (PFN_vkVoidFunction)trace3d::DestroyDevice;
     } else {
         trace3d::DispatchKey deviceKey = trace3d::GetDispatchKey(device);
@@ -434,8 +432,7 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoader_layerGet
 
     if (strcmp("vk_layerGetPhysicalDeviceProcAddr", pName) == 0) {
         procAddr = (PFN_vkVoidFunction)VK_LAYER_TRACE3D_CaptureLoader_layerGetPhysicalDeviceProcAddr;
-    }
-    else {
+    } else {
         procAddr = VK_LAYER_TRACE3D_CaptureLoaderGetInstanceProcAddr(instance, pName);
     }
     TRACE3D_LOGI("%s(instance:%p, pName:'%s') --> %p\n", __FUNCTION__, instance, pName, procAddr);
@@ -446,7 +443,7 @@ TRACE3D_LOADER_API
 VKAPI_ATTR VkResult VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderNegotiateLoaderLayerInterfaceVersion(
     VkNegotiateLayerInterface *pVersionStruct)
 {
-    VkResult vkresult = VK_ERROR_INITIALIZATION_FAILED;
+    VkResult Result = VK_ERROR_INITIALIZATION_FAILED;
 
     TRACE3D_LOGI("%s(pVerStruct:%p)...\n", __FUNCTION__);
 
@@ -455,16 +452,14 @@ VKAPI_ATTR VkResult VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderNegotiateLoaderLaye
         auto *pfnNegotiate = (PFN_vkNegotiateLoaderLayerInterfaceVersion)dlsym(libHandle,
             "VK_LAYER_TRACE3D_CaptureNegotiateLoaderLayerInterfaceVersion");
         if (pfnNegotiate) {
-            vkresult = pfnNegotiate(pVersionStruct);
-    
-            if (vkresult == VK_SUCCESS) {
+            Result = pfnNegotiate(pVersionStruct);
+            if (Result == VK_SUCCESS) {
                 trace3dVkGetInstanceProcAddr = pVersionStruct->pfnGetInstanceProcAddr;
                 trace3dVkGetDeviceProcAddr = pVersionStruct->pfnGetDeviceProcAddr;
                 trace3dVkGetPhysicalDeviceProcAddr = pVersionStruct->pfnGetPhysicalDeviceProcAddr;
             }
         }
-    }
-    else {
+    } else {
         if (pVersionStruct && pVersionStruct->sType == LAYER_NEGOTIATE_INTERFACE_STRUCT) {
             trace3dVkGetInstanceProcAddr = VK_LAYER_TRACE3D_CaptureLoaderGetInstanceProcAddr;
             trace3dVkGetDeviceProcAddr = VK_LAYER_TRACE3D_CaptureLoaderGetDeviceProcAddr;
@@ -477,51 +472,54 @@ VKAPI_ATTR VkResult VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderNegotiateLoaderLaye
             if (pVersionStruct->loaderLayerInterfaceVersion > CURRENT_LOADER_LAYER_INTERFACE_VERSION) {
                 pVersionStruct->loaderLayerInterfaceVersion = CURRENT_LOADER_LAYER_INTERFACE_VERSION;
             }
-            vkresult = VK_SUCCESS;
+            Result = VK_SUCCESS;
         }
     }
 
-    TRACE3D_LOGI("%s(pVerStruct:%p) ifaceVer:%d, libHandle:%p --> vkresult:%d (pVerStruct:{ sType:%d, ifaceVer:%d, pfnGIPA:%p, pfnGDPA:%p, pfnGPDPA:%p })\n", __FUNCTION__,
-        pVersionStruct, (pVersionStruct ? (int)pVersionStruct->loaderLayerInterfaceVersion : 0), libHandle, vkresult,
+    TRACE3D_LOGI("%s(pVerStruct:%p) ifaceVer:%d, libHandle:%p --> vkresult:%d"
+        "(pVerStruct:{ sType:%d, ifaceVer:%d, pfnGIPA:%p, pfnGDPA:%p, pfnGPDPA:%p })\n",
+        __FUNCTION__,
+        pVersionStruct, (pVersionStruct ? (int)pVersionStruct->loaderLayerInterfaceVersion : 0), libHandle, Result,
         (pVersionStruct ? (int)pVersionStruct->sType : -1),
         (pVersionStruct ? (int)pVersionStruct->loaderLayerInterfaceVersion : 0),
         (pVersionStruct ? pVersionStruct->pfnGetInstanceProcAddr : nullptr),
         (pVersionStruct ? pVersionStruct->pfnGetDeviceProcAddr : nullptr),
         (pVersionStruct ? pVersionStruct->pfnGetPhysicalDeviceProcAddr : nullptr)
     );
-    return vkresult;
+    return Result;
 }
 
-typedef VkResult(VKAPI_PTR *PFN_vkEnumerateInstanceExtensionPropertiesChain)(const VkEnumerateInstanceExtensionPropertiesChain *pChain,
-    const char *pLayerName, uint32_t *pPropertyCount, VkExtensionProperties *pProperties);
+typedef VkResult(VKAPI_PTR *PFN_vkEnumerateInstanceExtensionPropertiesChain)(
+    const VkEnumerateInstanceExtensionPropertiesChain *pChain, const char *pLayerName, uint32_t *pPropertyCount,
+    VkExtensionProperties *pProperties);
 
 TRACE3D_LOADER_API
 VKAPI_ATTR VkResult VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderEnumerateInstanceExtensionProperties(
     const VkEnumerateInstanceExtensionPropertiesChain *pChain, const char *pLayerName, uint32_t *pPropertyCount,
     VkExtensionProperties *pProperties)
 {
-    VkResult vkresult = VK_INCOMPLETE;
+    VkResult Result = VK_INCOMPLETE;
 
     void *libHandle = trace3d::CaptureInit();
     if (libHandle) {
-        PFN_vkEnumerateInstanceExtensionPropertiesChain pfnEnumerate = (PFN_vkEnumerateInstanceExtensionPropertiesChain)dlsym(
-            libHandle, "VK_LAYER_TRACE3D_CaptureEnumerateInstanceExtensionProperties");
+        PFN_vkEnumerateInstanceExtensionPropertiesChain pfnEnumerate =
+            (PFN_vkEnumerateInstanceExtensionPropertiesChain)dlsym(
+                libHandle, "VK_LAYER_TRACE3D_CaptureEnumerateInstanceExtensionProperties");
         if (pfnEnumerate) {
-            vkresult = pfnEnumerate(pChain, pLayerName, pPropertyCount, pProperties);
+            Result = pfnEnumerate(pChain, pLayerName, pPropertyCount, pProperties);
         }
-    }
-    else {
-        vkresult = trace3d::EnumerateInstanceExtensionProperties(pChain, pLayerName, pPropertyCount, pProperties);
+    } else {
+        Result = trace3d::EnumerateInstanceExtensionProperties(pChain, pLayerName, pPropertyCount, pProperties);
     }
 
     TRACE3D_LOGI("%s(pChain:%p, pLayerName:'%s', pPropCount:%p, pProps:%p) --> vkresult:%d (*pPropCount:%u)",
-        __FUNCTION__, pChain, pLayerName, pPropertyCount, pProperties, vkresult,
+        __FUNCTION__, pChain, pLayerName, pPropertyCount, pProperties, Result,
         pPropertyCount ? *pPropertyCount : 0);
-    return vkresult;
+    return Result;
 }
 
 // GLES Layer Entries
-//
+
 typedef void (*__eglMustCastToProperFunctionPointerType)(void);
 
 typedef __eglMustCastToProperFunctionPointerType(*PFNEGLGETNEXTLAYERPROCADDRESSPROC)(
@@ -535,30 +533,32 @@ typedef void* (* DebugLayerInitializeType)(const void *funcTable,
 typedef void* (* DebugLayerGetProcAddrType)(const char *funcName,
     __eglMustCastToProperFunctionPointerType next);
 
-DebugLayerInitializeType trace3dInitialize = nullptr;
-DebugLayerGetProcAddrType trace3dLayerGetProcAddr = nullptr;
+DebugLayerInitializeType g_trace3dInitialize = nullptr;
+DebugLayerGetProcAddrType g_trace3dLayerGetProcAddr = nullptr;
 
 TRACE3D_LOADER_API
 void* DebugLayerInitialize(const void *funcTable, PFNEGLGETNEXTLAYERPROCADDRESSPROCOHOS next)
 {
-    void *ret = nullptr; 
+    void *ret = nullptr;
     void *libHandle = trace3d::CaptureInit();
 
     if (libHandle) {
-        if (!trace3dInitialize)
-            trace3dInitialize = (DebugLayerInitializeType)dlsym(libHandle, "DebugLayerInitialize");
-        if (trace3dInitialize && !trace3dLayerGetProcAddr) {
-            trace3dLayerGetProcAddr = (DebugLayerGetProcAddrType)dlsym(libHandle, "DebugLayerGetProcAddr");
-            if (!trace3dLayerGetProcAddr)
-                trace3dInitialize = nullptr;
-            else {
+        if (!g_trace3dInitialize) {
+            g_trace3dInitialize = (DebugLayerInitializeType)dlsym(libHandle, "DebugLayerInitialize");
+        }
+        if (g_trace3dInitialize && !g_trace3dLayerGetProcAddr) {
+            g_trace3dLayerGetProcAddr = (DebugLayerGetProcAddrType)dlsym(libHandle, "DebugLayerGetProcAddr");
+            if (!g_trace3dLayerGetProcAddr) {
+                g_trace3dInitialize = nullptr;
+            } else {
                 TRACE3D_LOGI("%s:%d init:%p, getProcAddr:%p\n", __FUNCTION__, __LINE__,
-                    trace3dInitialize, trace3dLayerGetProcAddr);
+                    g_trace3dInitialize, g_trace3dLayerGetProcAddr);
             }
         }
 
-        if (trace3dInitialize)
-            ret = trace3dInitialize(funcTable, next);
+        if (g_trace3dInitialize) {
+            ret = g_trace3dInitialize(funcTable, next);
+        }
     }
     TRACE3D_LOGI("%s:%d funcTable:%p next:%p libHandle:%p\n", __FUNCTION__, __LINE__, funcTable, next, libHandle);
     return ret;
@@ -569,8 +569,9 @@ void* DebugLayerGetProcAddr(const char *funcName, __eglMustCastToProperFunctionP
 {
     void *trace3dPtr = (void *)next;
 
-    if (trace3dLayerGetProcAddr)
-        trace3dPtr = trace3dLayerGetProcAddr(funcName, next);
+    if (g_trace3dLayerGetProcAddr) {
+        trace3dPtr = g_trace3dLayerGetProcAddr(funcName, next);
+    }
     return static_cast<void *>(trace3dPtr);
 }
 

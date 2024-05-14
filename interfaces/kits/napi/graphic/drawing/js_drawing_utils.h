@@ -78,6 +78,38 @@ private:
         }                                                                                                              \
     } while (0)
 
+#define GET_DOUBLE_PARAM(argc, value)                                                                                  \
+    do {                                                                                                               \
+        if (napi_get_value_double(env, argv[argc], &value) != napi_ok) {                                               \
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,                                          \
+                std::string("Incorrect ") + __FUNCTION__ + " parameter" + std::to_string(argc) + " type.");            \
+        }                                                                                                              \
+    } while (0)
+
+#define GET_UINT32_PARAM(argc, value)                                                                                  \
+    do {                                                                                                               \
+        if (napi_get_value_uint32(env, argv[argc], &value) != napi_ok) {                                               \
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,                                          \
+                std::string("Incorrect ") + __FUNCTION__ + " parameter" + std::to_string(argc) + " type.");            \
+        }                                                                                                              \
+    } while (0)
+
+#define GET_INT32_CHECK_OVERZERO_PARAM(argc, value)                                                                    \
+    do {                                                                                                               \
+        if (napi_get_value_int32(env, argv[argc], &value) != napi_ok || value < 0) {                                   \
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,                                          \
+                std::string("Incorrect ") + __FUNCTION__ + " parameter" + std::to_string(argc) + " type.");            \
+        }                                                                                                              \
+    } while (0)
+
+#define GET_INT32_PARAM(argc, value)                                                                                   \
+    do {                                                                                                               \
+        if (napi_get_value_int32(env, argv[argc], &value) != napi_ok) {                                                \
+            return NapiThrowError(env, DrawingErrorCode::ERROR_INVALID_PARAM,                                          \
+                std::string("Incorrect ") + __FUNCTION__ + " parameter" + std::to_string(argc) + " type.");            \
+        }                                                                                                              \
+    } while (0)
+
 namespace Drawing {
 constexpr size_t ARGC_ZERO = 0;
 constexpr size_t ARGC_ONE = 1;

@@ -397,7 +397,6 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderGetInstan
             procAddr = it->second.getInstanceProcAddr(instance, pName);
         }
     }
-    //TRACE3D_LOGI("%s(instance:%p, pName:'%s') --> %p\n", __FUNCTION__, instance, pName, procAddr);
     return procAddr;
 }
 
@@ -424,7 +423,6 @@ VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL VK_LAYER_TRACE3D_CaptureLoaderGetDevice
             procAddr = it->second.getDeviceProcAddr(device, pName);
         }
     }
-    //TRACE3D_LOGI("%s(device:%p, pName:'%s') --> %p\n", __FUNCTION__, device, pName, procAddr);
     return procAddr;
 }
 
@@ -573,7 +571,6 @@ void* DebugLayerGetProcAddr(const char *funcName, __eglMustCastToProperFunctionP
 
     if (trace3dLayerGetProcAddr)
         trace3dPtr = trace3dLayerGetProcAddr(funcName, next);
-    //TRACE3D_LOGI("%s:%d funcName:'%s' --> %p\n", __FUNCTION__, __LINE__, funcName, trace3dPtr);
     return (void *)trace3dPtr;
 }
 

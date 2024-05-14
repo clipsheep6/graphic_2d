@@ -17,6 +17,9 @@
 // Desc: This file is a part of the Trace3D Capture Gles/Vk Layer Loader
 //
 
+#ifndef TRACE3D_LOADER_H
+#define TRACE3D_LOADER_H
+
 namespace trace3d {
 
 void* CaptureInit();
@@ -24,3 +27,4 @@ void CaptureCleanup();
 
 } // namespace trace3d
 
+#endif // TRACE3D_LOADER_H

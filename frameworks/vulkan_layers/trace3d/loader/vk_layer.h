@@ -3,6 +3,7 @@
  * Copyright (c) 2015-2023 The Khronos Group Inc.
  * Copyright (c) 2015-2023 Valve Corporation
  *
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +17,9 @@
  * limitations under the License.
  *
  */
-#pragma once
+
+#ifndef TRACE3D_LOADER_VK_LAYER_H
+#define TRACE3D_LOADER_VK_LAYER_H
 
 /* Need to define dispatch table
  * Core struct can then have ptr to dispatch table at the top
@@ -198,3 +201,5 @@ typedef struct VkEnumerateInstanceVersionChain {
 #ifdef __cplusplus
 }
 #endif
+
+#endif // TRACE3D_LOADER_VK_LAYER_H

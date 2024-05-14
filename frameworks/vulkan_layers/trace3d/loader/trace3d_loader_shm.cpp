@@ -64,12 +64,6 @@ void ShmCaptureInit() {
 
         if (foundSize > 0) {
             TRACE3D_LOGI("%s:%d found bundle:'%s', size:%d\n", __FUNCTION__, __LINE__, lib.name, foundSize);
-
-            if (!ShmOpenLibrary(TRACE3D_APP_LIB_URI, lib)) {
-                //if (!ShmOpenLibrary(TRACE3D_APP_LIB_URI, lib)) {
-                //    ShmOpenLibrary(TRACE3D_SYSTEM_LIB_URI, lib);
-                //}
-            }
         }
     }
 }

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef CANVAS_TEST_H
-#define CANVAS_TEST_H
+#ifndef INTERFACE_CANVAS_TEST_H
+#define INTERFACE_CANVAS_TEST_H
 #include <bits/alltypes.h>
 #include <multimedia/player_framework/native_avscreen_capture_base.h>
 #include <native_drawing/drawing_canvas.h>
@@ -394,4 +394,66 @@ public:
 protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
-#endif // CANVAS_TEST_H
+
+
+class CanvasGetTotalMatrix : public TestBase {
+public:
+  CanvasGetTotalMatrix(int type) : TestBase(type) {
+    fileName_ = "CanvasGetTotalMatrix";
+  };
+  ~CanvasGetTotalMatrix() override {};
+
+protected:
+  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+class CanvasRestore : public TestBase {
+public:
+  CanvasRestore(int type) : TestBase(type) {
+    fileName_ = "CanvasRestore";
+  };
+  ~CanvasRestore() override {};
+
+protected:
+  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+class CanvasGetLocalClipBounds : public TestBase {
+public:
+  CanvasGetLocalClipBounds(int type) : TestBase(type) {
+    fileName_ = "CanvasGetLocalClipBounds";
+  };
+  ~CanvasGetLocalClipBounds() override {};
+
+protected:
+  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+class CanvasGetSaveCount : public TestBase {
+public:
+  CanvasGetSaveCount(int type) : TestBase(type) {
+    fileName_ = "CanvasGetSaveCount";
+  };
+  ~CanvasGetSaveCount() override {};
+
+protected:
+  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+class CanvasGetWidth : public TestBase {
+public:
+  CanvasGetWidth(int type) : TestBase(type) {
+    fileName_ = "CanvasGetWidth";
+  };
+  ~CanvasGetWidth() override {};
+
+protected:
+  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+class CanvasGetHeight : public TestBase {
+public:
+  CanvasGetHeight(int type) : TestBase(type) {
+    fileName_ = "CanvasGetHeight";
+  };
+  ~CanvasGetHeight() override {};
+
+protected:
+  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+};
+#endif // INTERFACE_CANVAS_TEST_H

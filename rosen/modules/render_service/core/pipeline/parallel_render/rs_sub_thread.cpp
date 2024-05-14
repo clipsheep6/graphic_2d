@@ -55,6 +55,7 @@ namespace {
 }
 RSSubThread::~RSSubThread()
 {
+
     RS_LOGI("~RSSubThread():%{public}d", threadIndex_);
     PostTask([this]() {
         DestroyShareEglContext();

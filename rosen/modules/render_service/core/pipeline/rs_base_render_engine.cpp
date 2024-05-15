@@ -196,11 +196,6 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
     const sptr<SurfaceBuffer>& buffer, const sptr<SyncFence>& acquireFence, const uint32_t threadIndex,
     GraphicColorGamut colorGamut)
 {
-#ifdef RS_ENABLE_EGLIMAGE
-    if (!RSBaseRenderUtil::IsBufferValid(buffer)) {
-        RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer invalid param!");
-        return nullptr;
-    }
 #if defined(RS_ENABLE_GL)
     if (!RSSystemProperties::IsUseVulkan() && canvas.GetGPUContext() == nullptr) {
         RS_LOGE("RSBaseRenderEngine::CreateEglImageFromBuffer GrContext is null!");
@@ -270,7 +265,6 @@ std::shared_ptr<Drawing::Image> RSBaseRenderEngine::CreateEglImageFromBuffer(RSP
     return image;
 #else
     return nullptr;
-#endif // RS_ENABLE_EGLIMAGE
 }
 
 #ifdef NEW_RENDER_CONTEXT
@@ -651,6 +645,10 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
 {
     RS_OPTIONAL_TRACE_BEGIN("RSBaseRenderEngine::DrawImage(GPU)");
     auto image = std::make_shared<Drawing::Image>();
+    if (!RSBaseRenderUtil::IsBufferValid(params.buffer)) {
+        RS_LOGE("RSHardwareThread::Redraw CreateEglImageFromBuffer invalid param!");
+        return;
+    }
 
 #ifdef RS_ENABLE_VK
     if (RSSystemProperties::IsUseVulkan()) {
@@ -720,6 +718,8 @@ void RSBaseRenderEngine::DrawImage(RSPaintFilterCanvas& canvas, BufferDrawParam&
         RS_LOGE("RSBaseRenderEngine::DrawImage imageShader is nullptr.");
     } else {
         params.paint.SetShaderEffect(imageShader);
+        params.targetColorGamut = colorGamut;
+        params.screenBrightnessNits = screenManager->GetScreenBrightnessNits(screenId);
         ColorSpaceConvertor(imageShader, params);
     }
 #endif // USE_VIDEO_PROCESSING_ENGINE

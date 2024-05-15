@@ -1468,9 +1468,15 @@ void RSMainThread::WaitUntilUnmarshallingTaskFinished()
         return;
     }
     RS_OPTIONAL_TRACE_BEGIN("RSMainThread::WaitUntilUnmarshallingTaskFinished");
-    std::unique_lock<std::mutex> lock(unmarshalMutex_);
-    unmarshalTaskCond_.wait(lock, [this]() { return unmarshalFinishedCount_ > 0; });
-    --unmarshalFinishedCount_;
+    if (RSSystemProperties::GetUnmarshParallelFlag()) {
+        RSUnmarshalThread::Instance().Wait();
+        auto cachedTransactionData = RSUnmarshalThread::Instance().GetCachedTransactionData();
+        MergeToEffectiveTransactionDataMap(cachedTransactionData);
+    } else {
+        std::unique_lock<std::mutex> lock(unmarshalMutex_);
+        unmarshalTaskCond_.wait(lock, [this]() { return unmarshalFinishedCount_ > 0; });
+        --unmarshalFinishedCount_;
+    }
     RS_OPTIONAL_TRACE_END();
 }
 
@@ -2367,7 +2373,9 @@ void RSMainThread::OnVsync(uint64_t timestamp, void* data)
             // set needWaitUnmarshalFinished_ to false, it means mainLoop do not wait unmarshalBarrierTask_
             needWaitUnmarshalFinished_ = false;
         } else {
-            RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
+            if (!RSSystemProperties::GetUnmarshParallelFlag()) {
+                RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
+            }
         }
     }
     mainLoop_();
@@ -2968,7 +2976,11 @@ void RSMainThread::CountMem(std::vector<MemoryGraphic>& mems)
             pids.emplace_back(pid);
         }
     });
-    MemoryManager::CountMemory(pids, GetRenderEngine()->GetRenderContext()->GetDrGPUContext(), mems);
+    RSUniRenderThread::Instance().PostSyncTask([&mems, &pids] {
+        MemoryManager::CountMemory(pids,
+            RSUniRenderThread::Instance().GetRenderEngine()->GetRenderContext()->GetDrGPUContext(), mems);
+    });
+    
 #endif
 }
 
@@ -3038,7 +3050,9 @@ void RSMainThread::ForceRefreshForUni()
     if (isUniRender_) {
         PostTask([=]() {
             MergeToEffectiveTransactionDataMap(cachedTransactionDataMap_);
-            RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
+            if (!RSSystemProperties::GetUnmarshParallelFlag()) {
+                RSUnmarshalThread::Instance().PostTask(unmarshalBarrierTask_);
+            }
             auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();
             RS_PROFILER_PATCH_TIME(now);

@@ -120,8 +120,13 @@ public:
     void SetContentDirty();
     void ResetIsOnlyBasicGeoTransform();
     bool IsOnlyBasicGeoTransform() const;
+    void MergeSubTreeDirtyRegion(RSDirtyRegionManager& dirtyManager, const RectI& clipRect);
     void SubTreeSkipPrepare(RSDirtyRegionManager& dirtymanager, bool isDirty, bool accumGeoDirty,
         const RectI& clipRect);
+    inline bool LastFrameSubTreeSkipped() const
+    {
+        return lastFrameSubTreeSkipped_;
+    }
 
     inline WeakPtr GetParent() const
     {
@@ -468,6 +473,7 @@ public:
     void MarkFilterHasEffectChildren();
 
     // for blur filter cache
+    virtual void CheckBlurFilterCacheNeedForceClearOrSave(bool rotationChanged = false);
     void UpdateLastFilterCacheRegion();
     void UpdateFilterRegionInSkippedSubTree(RSDirtyRegionManager& dirtyManager,
         const RSRenderNode& subTreeRoot, RectI& filterRect, const std::optional<RectI>& clipRect);
@@ -475,9 +481,11 @@ public:
     virtual void UpdateFilterCacheWithBelowDirty(RSDirtyRegionManager& dirtyManager, bool isForeground = false);
     virtual void UpdateFilterCacheWithSelfDirty();
     bool IsBackgroundInAppOrNodeSelfDirty() const;
-    void MarkAndUpdateFilterNodeDirtySlotsAfterPrepare(RSDirtyRegionManager& dirtyManager,
-        bool dirtyBelowContainsFilterNode = false, bool rotationChanged = false);
+    void PostPrepareForBlurFilterNode(RSDirtyRegionManager& dirtyManager);
+    void CheckFilterCacheAndUpdateDirtySlots(
+        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, RSDrawableSlot slot);
     bool IsFilterCacheValid() const;
+    bool IsAIBarFilterCacheValid() const;
     void MarkForceClearFilterCacheWhenWithInvisible();
 
     void CheckGroupableAnimation(const PropertyId& id, bool isAnimAdd);
@@ -666,6 +674,8 @@ public:
     void SetOccludedStatus(bool occluded);
     const RectI GetFilterCachedRegion() const;
     bool IsEffectNodeNeedTakeSnapShot() const;
+    bool IsEffectNodeShouldNotPaint() const;
+    bool HasBlurFilter() const;
     void SetChildrenHasSharedTransition(bool hasSharedTransition);
     virtual bool SkipFrame(uint32_t skipFrameInterval) { return false; }
 
@@ -739,8 +749,9 @@ protected:
     bool clipAbsDrawRectChange_ = false;
 
     std::shared_ptr<DrawableV2::RSFilterDrawable> GetFilterDrawable(bool isForeground) const;
-    virtual void MarkFilterCacheFlagsAfterPrepare(
-        std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable, bool isForeground = false);
+    virtual void MarkFilterCacheFlags(std::shared_ptr<DrawableV2::RSFilterDrawable>& filterDrawable,
+        RSDirtyRegionManager& dirtyManager, bool isForeground = false);
+    bool IsForceClearOrUseFilterCache(bool isForeground);
     std::atomic<bool> isStaticCached_ = false;
     bool lastFrameHasVisibleEffect_ = false;
     RectI filterRegion_;
@@ -783,6 +794,7 @@ private:
     std::atomic<bool> isTunnelHandleChange_ = false;
     // accumulate all children's region rect for dirty merging when any child has been removed
     bool hasRemovedChild_ = false;
+    bool lastFrameSubTreeSkipped_ = false;
     bool hasChildrenOutOfRect_ = false;
     RectI childrenRect_;
     RectI absChildrenRect_;
@@ -979,6 +991,7 @@ private:
 #ifdef RS_PROFILER_ENABLED
     friend class RSProfiler;
 #endif
+    friend class RSRenderNodeGC;
 };
 // backward compatibility
 using RSBaseRenderNode = RSRenderNode;

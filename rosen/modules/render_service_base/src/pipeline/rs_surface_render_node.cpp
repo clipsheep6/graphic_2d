@@ -715,10 +715,16 @@ bool RSSurfaceRenderNode::GetBootAnimation() const
 
 void RSSurfaceRenderNode::SetForceHardwareAndFixRotation(bool flag)
 {
+    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(stagingRenderParams_.get());
+    surfaceParams->SetForceHardwareByUser(flag);
+    AddToPendingSyncList();
+
     isForceHardwareByUser_ = flag;
-    if (isForceHardwareByUser_) {
-        originalDstRect_ = GetDstRect();
-    }
+}
+
+bool RSSurfaceRenderNode::GetForceHardwareByUser() const
+{
+    return isForceHardwareByUser_;
 }
 
 bool RSSurfaceRenderNode::GetForceHardware() const
@@ -728,6 +734,9 @@ bool RSSurfaceRenderNode::GetForceHardware() const
 
 void RSSurfaceRenderNode::SetForceHardware(bool flag)
 {
+    if (isForceHardwareByUser_ && !isForceHardware_ && flag) {
+        originalDstRect_ = dstRect_;
+    }
     isForceHardware_ = isForceHardwareByUser_ && flag;
 }
 
@@ -1918,7 +1927,7 @@ bool RSSurfaceRenderNode::CheckParticipateInOcclusion()
 
 void RSSurfaceRenderNode::CheckAndUpdateOpaqueRegion(const RectI& screeninfo, const ScreenRotation screenRotation)
 {
-    auto absRect = GetDstRect();
+    auto absRect = GetDstRect().IntersectRect(GetOldDirtyInSurface());
     Vector4f tmpCornerRadius;
     Vector4f::Max(GetWindowCornerRadius(), GetGlobalCornerRadius(), tmpCornerRadius);
     Vector4<int> cornerRadius(static_cast<int>(std::ceil(tmpCornerRadius.x_)),
@@ -2062,6 +2071,9 @@ void RSSurfaceRenderNode::UpdateSurfaceCacheContentStatic(
             dirtyGeoNodeNum_++;
         }
     }
+    RS_OPTIONAL_TRACE_NAME_FMT("UpdateSurfaceCacheContentStatic [%s-%lu] contentStatic: %d, dirtyContentNode: %d, "
+        "dirtyGeoNode: %d", GetName().c_str(), GetId(),
+        surfaceCacheContentStatic_, dirtyContentNodeNum_, dirtyGeoNodeNum_);
     // if mainwindow node only basicGeoTransform and no subnode dirty, it is marked as CacheContentStatic_
     surfaceCacheContentStatic_ = surfaceCacheContentStatic_ && dirtyContentNodeNum_ == 0 && dirtyGeoNodeNum_ == 0;
 }

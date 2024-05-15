@@ -88,6 +88,7 @@ public:
 protected:
     std::shared_ptr<RSImage> rsImage_;
 private:
+    bool CreateTexture(Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer);
 #if defined(ROSEN_OHOS) && (defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK))
     void PreProcessPixelMap(Drawing::Canvas& canvas, const std::shared_ptr<Media::PixelMap>& pixelMap);
 #ifdef RS_ENABLE_GL

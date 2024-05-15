@@ -502,9 +502,12 @@ void RSUniRenderThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply, 
     if (!RSSystemProperties::GetReleaseResourceEnabled()) {
         return;
     }
-    this->clearMemDeeply_ = this->clearMemDeeply_ || deeply;
-    this->SetClearMoment(moment);
-    this->exitedPidSet_.emplace(pid);
+    {
+        std::lock_guard<std::mutex> lock(clearMemoryMutex_);
+        this->clearMemDeeply_ = this->clearMemDeeply_ || deeply;
+        this->SetClearMoment(moment);
+        this->exitedPidSet_.emplace(pid);
+    }
     auto task =
         [this, moment, deeply]() {
             auto grContext = GetRenderEngine()->GetRenderContext()->GetDrGPUContext();
@@ -529,9 +532,12 @@ void RSUniRenderThread::ClearMemoryCache(ClearMemoryMoment moment, bool deeply, 
             auto screenManager_ = CreateOrGetScreenManager();
             screenManager_->ClearFrameBufferIfNeed();
             grContext->FlushAndSubmit(true);
-            this->exitedPidSet_.clear();
-            this->clearMemDeeply_ = false;
-            this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);
+            {
+                std::lock_guard<std::mutex> lock(clearMemoryMutex_);
+                this->exitedPidSet_.clear();
+                this->clearMemDeeply_ = false;
+                this->SetClearMoment(ClearMemoryMoment::NO_CLEAR);
+            }
         };
     PostTask(task, CLEAR_GPU_CACHE,
         (this->deviceType_ == DeviceType::PHONE ? TIME_OF_TWENTY_FRAMES : TIME_OF_THE_FRAMES)

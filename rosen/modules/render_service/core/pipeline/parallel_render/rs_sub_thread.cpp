@@ -269,12 +269,10 @@ void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTa
         }
 
         needRequestVsync = true;
-        
-        if (needNotify) {
-            RSSubThreadManager::Instance()->NodeTaskNotify(nodeId);
-        }
     }
-    RenderTasksNeedRequestVsync(needRequestVsync);
+     if (needRequestVsync) {
+        RSMainThread::Instance()->RequestNextVSync();
+    }
 #endif
 }
 

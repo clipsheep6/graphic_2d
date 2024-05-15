@@ -46,6 +46,7 @@
 #include "platform/ohos/backend/rs_vulkan_context.h"
 #endif
 
+
 namespace OHOS::Rosen {
 namespace {
 #ifdef RES_SCHED_ENABLE
@@ -172,38 +173,43 @@ void RSSubThread::DestroyShareEglContext()
 void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTask)
 {
     RS_TRACE_NAME("RSSubThread::RenderCache");
+    
     if (threadTask == nullptr || threadTask->GetTaskSize() == 0) {
         RS_LOGE("RSSubThread::RenderCache threadTask == nullptr %p || threadTask->GetTaskSize() == 0 %d",
             threadTask.get(), int(threadTask->GetTaskSize()));
         return;
     }
+    
     if (grContext_ == nullptr) {
         grContext_ = CreateShareGrContext();
         if (grContext_ == nullptr) {
             return;
         }
     }
+    
     auto visitor = std::make_shared<RSUniRenderVisitor>();
     visitor->SetSubThreadConfig(threadIndex_);
     visitor->SetFocusedNodeId(RSMainThread::Instance()->GetFocusNodeId(),
         RSMainThread::Instance()->GetFocusLeashWindowId());
     auto screenManager = CreateOrGetScreenManager();
     visitor->SetScreenInfo(screenManager->QueryScreenInfo(screenManager->GetDefaultScreenId()));
+
+    RenderTasks(threadTask, visitor);
+}
+
+void RSSubThread::RenderTasks(const std::shared_ptr<RSSuperRenderTask>& threadTask,
+    const std::shared_ptr<RSUniRenderVisitor>& visitor)
+{
 #if defined(RS_ENABLE_GL) || defined(RS_ENABLE_VK)
     bool needRequestVsync = false;
     while (threadTask->GetTaskSize() > 0) {
         auto task = threadTask->GetNextRenderTask();
-        if (!task || (task->GetIdx() == 0)) {
-            continue;
-        }
         auto nodeDrawable = task->GetNode();
-        if (!nodeDrawable) {
-            continue;
-        }
         auto surfaceNodePtr = std::static_pointer_cast<RSSurfaceRenderNode>(nodeDrawable);
-        if (!surfaceNodePtr) {
+        if ((!task || (task->GetIdx() == 0)) || !nodeDrawable || !surfaceNodePtr) {
             continue;
         }
+
         // flag CacheSurfaceProcessed is used for cacheCmdskippedNodes collection in rs_mainThread
         surfaceNodePtr->SetCacheSurfaceProcessedStatus(CacheProcessStatus::DOING);
         if (RSMainThread::Instance()->GetFrameCount() != threadTask->GetFrameCount()) {
@@ -240,14 +246,24 @@ void RSSubThread::RenderCache(const std::shared_ptr<RSSuperRenderTask>& threadTa
         surfaceNodePtr->SetCacheSurfaceNeedUpdated(true);
         needRequestVsync = true;
 
-        if (needNotify) {
-            RSSubThreadManager::Instance()->NodeTaskNotify(nodeDrawable->GetId());
-        }
+        RenderTasksNeedNotify(needNotify, nodeDrawable->GetId());
     }
+    RenderTasksNeedRequestVsync(needRequestVsync);
+#endif
+}
+
+void RSSubThread::RenderTasksNeedNotify(bool needNotify, NodeId nodeId)
+{
+    if (needNotify) {
+        RSSubThreadManager::Instance()->NodeTaskNotify(nodeId);
+    }
+}
+
+void RSSubThread::RenderTasksNeedRequestVsync(bool needRequestVsync)
+{
     if (needRequestVsync) {
         RSMainThread::Instance()->RequestNextVSync();
     }
-#endif
 }
 
 void RSSubThread::DrawableCache(DrawableV2::RSSurfaceRenderNodeDrawable* nodeDrawable)

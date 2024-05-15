@@ -37,6 +37,10 @@ public:
     RSRenderService& operator=(const RSRenderService&) = delete;
 
     bool Init();
+    void EnableMemoryCache();
+    bool InitializeScreenManager();
+    bool InitializeVSyncControllers();
+    bool RegisterWithSystemAbilityManager();
     void Run();
 
     void StartRCDUpdateThread(RenderContext* context) const;

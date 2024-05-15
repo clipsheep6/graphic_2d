@@ -52,6 +52,10 @@ public:
         return Type;
     }
 
+    bool OpincGetNodeSupportFlag() override
+    {
+        return false;
+    }
 
     Drawing::Bitmap GetBitmap();
     Drawing::Bitmap GetBitmap(const uint64_t tid);

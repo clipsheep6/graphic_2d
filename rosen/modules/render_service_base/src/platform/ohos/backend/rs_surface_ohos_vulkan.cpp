@@ -118,6 +118,16 @@ int32_t RSSurfaceOhosVulkan::RequestNativeWindowBuffer(NativeWindowBuffer** nati
 
 bool RSSurfaceOhosVulkan::RequestFramePost(int32_t& width, int32_t& height, bool& useAFBC, bool& isProtected)
 {
+    if (mNativeWindow == nullptr) {
+        mNativeWindow = CreateNativeWindowFromSurface(&producer_);
+        ROSEN_LOGD("RSSurfaceOhosVulkan: create native window");
+    }
+
+    if (!mSkContext) {
+        ROSEN_LOGE("RSSurfaceOhosVulkan: skia context is nullptr");
+        return nullptr;
+    }
+
     NativeWindowBuffer* nativeWindowBuffer = nullptr;
     int fenceFd = -1;
     if (RequestNativeWindowBuffer(&nativeWindowBuffer, width, height,

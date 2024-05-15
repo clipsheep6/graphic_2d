@@ -463,11 +463,93 @@ void RSSurfaceRenderNode::OnTreeStateChanged()
             }
         }
     }
+    OnSubSurfaceChanged();
 
     // sync skip & security info
     SyncSecurityInfoToFirstLevelNode();
     SyncSkipInfoToFirstLevelNode();
     SyncProtectedInfoToFirstLevelNode();
+}
+
+bool RSSurfaceRenderNode::HasSubSurfaceNodes() const
+{
+    return childSubSurfaceNodes_.size() != 0;
+}
+
+void RSSurfaceRenderNode::SetIsSubSurfaceNode(bool isSubSurfaceNode)
+{
+    auto surfaceParams = static_cast<RSSurfaceRenderParams*>(stagingRenderParams_.get());
+    if (surfaceParams) {
+        surfaceParams->SetIsSubSurfaceNode(isSubSurfaceNode);
+        isSubSurfaceNode_ = isSubSurfaceNode;
+    }
+}
+
+bool RSSurfaceRenderNode::IsSubSurfaceNode() const
+{
+    return isSubSurfaceNode_;
+}
+
+const std::map<NodeId, RSSurfaceRenderNode::WeakPtr>& RSSurfaceRenderNode::GetChildSubSurfaceNodes() const
+{
+    return childSubSurfaceNodes_;
+}
+
+void RSSurfaceRenderNode::OnSubSurfaceChanged()
+{
+    if (!IsMainWindowType() || !RSUniRenderJudgement::IsUniRender()) {
+        return;
+    }
+    auto parentNode = GetParent().lock();
+    if (!parentNode) {
+        return;
+    }
+    std::shared_ptr<RSSurfaceRenderNode> parentSurfaceNode = parentNode->ReinterpretCastTo<RSSurfaceRenderNode>();
+    if (!parentSurfaceNode || (parentSurfaceNode && !parentSurfaceNode->IsMainWindowType())) {
+        if (auto instanceRootNode = parentNode->GetInstanceRootNode()) {
+            parentSurfaceNode = instanceRootNode->ReinterpretCastTo<RSSurfaceRenderNode>();
+        }
+    }
+    if (parentSurfaceNode && parentSurfaceNode->IsLeashOrMainWindow()) {
+        parentSurfaceNode->UpdateChildSubSurfaceNodes(ReinterpretCastTo<RSSurfaceRenderNode>(), IsOnTheTree());
+    }
+}
+
+void RSSurfaceRenderNode::UpdateChildSubSurfaceNodes(RSSurfaceRenderNode::SharedPtr node, bool isOnTheTree)
+{
+    if (isOnTheTree) {
+        childSubSurfaceNodes_[node->GetId()] = node;
+    } else {
+        childSubSurfaceNodes_.erase(node->GetId());
+    }
+    if (!IsLeashWindow()) {
+        node->SetIsSubSurfaceNode(isOnTheTree);
+    }
+}
+
+void RSSurfaceRenderNode::GetAllSubSurfaceNodes(
+    std::vector<std::pair<NodeId, RSSurfaceRenderNode::WeakPtr>>& allSubSurfaceNodes)
+{
+    for (auto& [id, node] : childSubSurfaceNodes_) {
+        auto subSubSurfaceNodePtr = node.lock();
+        if (!subSubSurfaceNodePtr) {
+            continue;
+        }
+        if (subSubSurfaceNodePtr->HasSubSurfaceNodes()) {
+            subSubSurfaceNodePtr->GetAllSubSurfaceNodes(allSubSurfaceNodes);
+        }
+        allSubSurfaceNodes.push_back({id, node});
+    }
+}
+
+std::string RSSurfaceRenderNode::SubSurfaceNodesDump() const
+{
+    std::string out;
+    out += ", subSurface";
+    for (auto [id, _] : childSubSurfaceNodes_) {
+        out += "[" + std::to_string(id) + "]";
+    }
+    return out;
 }
 
 void RSSurfaceRenderNode::OnResetParent()
@@ -793,17 +875,10 @@ void RSSurfaceRenderNode::SyncSecurityInfoToFirstLevelNode()
     auto firstLevelNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetFirstLevelNode());
     // firstLevelNode is the nearest app window / leash node
     if (firstLevelNode && GetFirstLevelNodeId() != GetId()) {
-        firstLevelNode->SetDirty();
-        // should always sync securityLayerIds_ to firstLevelNode
         if (isSecurityLayer_ && IsOnTheTree()) {
             firstLevelNode->securityLayerIds_.insert(GetId());
         } else {
             firstLevelNode->securityLayerIds_.erase(GetId());
-        }
-        // only sync isecurityLayer_ while firstLevelNode is parent
-        auto parent = GetParent().lock();
-        if (parent && GetFirstLevelNodeId() == parent->GetId()) {
-            firstLevelNode->isSecurityLayer_ = isSecurityLayer_;
         }
     }
 }
@@ -813,17 +888,10 @@ void RSSurfaceRenderNode::SyncSkipInfoToFirstLevelNode()
     auto firstLevelNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetFirstLevelNode());
     // firstLevelNode is the nearest app window / leash node
     if (firstLevelNode && GetFirstLevelNodeId() != GetId()) {
-        firstLevelNode->SetDirty();
-        // should always sync skipLayerIds_ to firstLevelNode
         if (isSkipLayer_ && IsOnTheTree()) {
             firstLevelNode->skipLayerIds_.insert(GetId());
         } else {
             firstLevelNode->skipLayerIds_.erase(GetId());
-        }
-        // only sync isSkipLayer_ while firstLevelNode is parent
-        auto parent = GetParent().lock();
-        if (parent && GetFirstLevelNodeId() == parent->GetId()) {
-            firstLevelNode->isSkipLayer_ = isSkipLayer_;
         }
     }
 }
@@ -1914,7 +1982,7 @@ bool RSSurfaceRenderNode::CheckParticipateInOcclusion()
             return false;
         }
     }
-    if (IsTransparent() || GetAnimateState() || IsRotating()) {
+    if (IsTransparent() || GetAnimateState() || IsRotating() || IsSubSurfaceNode()) {
         return false;
     }
     return true;
@@ -1932,6 +2000,7 @@ void RSSurfaceRenderNode::CheckAndUpdateOpaqueRegion(const RectI& screeninfo, co
 
     bool ret = opaqueRegionBaseInfo_.screenRect_ == screeninfo &&
         opaqueRegionBaseInfo_.absRect_ == absRect &&
+        opaqueRegionBaseInfo_.oldDirty_ == GetOldDirty() &&
         opaqueRegionBaseInfo_.screenRotation_ == screenRotation &&
         opaqueRegionBaseInfo_.cornerRadius_ == cornerRadius &&
         opaqueRegionBaseInfo_.isTransparent_ == IsTransparent() &&
@@ -1960,6 +2029,7 @@ void RSSurfaceRenderNode::SetOpaqueRegionBaseInfo(const RectI& screeninfo, const
 {
     opaqueRegionBaseInfo_.screenRect_ = screeninfo;
     opaqueRegionBaseInfo_.absRect_ = absRect;
+    opaqueRegionBaseInfo_.oldDirty_ = GetOldDirty();
     opaqueRegionBaseInfo_.screenRotation_ = screenRotation;
     opaqueRegionBaseInfo_.isFocusWindow_ = isFocusWindow;
     opaqueRegionBaseInfo_.cornerRadius_ = cornerRadius;
@@ -2348,8 +2418,8 @@ void RSSurfaceRenderNode::SetIsOnTheTree(bool flag, NodeId instanceRootNodeId, N
     } else if (IsAppWindow()) {
         firstLevelNodeId = GetId();
         auto parentNode = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(GetParent().lock());
-        if (parentNode && parentNode->IsLeashWindow()) {
-            firstLevelNodeId = parentNode->GetId();
+        if (parentNode && parentNode->GetFirstLevelNodeId() != INVALID_NODEID) {
+            firstLevelNodeId = parentNode->GetFirstLevelNodeId ();
         }
     }
     // if node is marked as cacheRoot, update subtree status when update surface
@@ -2512,6 +2582,8 @@ void RSSurfaceRenderNode::UpdateRenderParams()
     surfaceParams->protectedLayerIds_= protectedLayerIds_;
     surfaceParams->name_= name_;
     surfaceParams->positionZ_ = properties.GetPositionZ();
+    surfaceParams->overDrawBufferNodeCornerRadius_ = GetOverDrawBufferNodeCornerRadius();
+    surfaceParams->isGpuOverDrawBufferOptimizeNode_ = isGpuOverDrawBufferOptimizeNode_;
     surfaceParams->SetNeedSync(true);
 
     RSRenderNode::UpdateRenderParams();

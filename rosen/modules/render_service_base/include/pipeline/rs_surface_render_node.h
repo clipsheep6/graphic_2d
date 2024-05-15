@@ -972,6 +972,11 @@ public:
         return RSRenderNode::GetUifirstSupportFlag();
     }
 
+    bool OpincGetNodeSupportFlag() override
+    {
+        return false;
+    }
+
     void UpdateSurfaceCacheContentStaticFlag();
 
     void UpdateSurfaceSubTreeDirtyFlag();
@@ -1059,6 +1064,31 @@ public:
         return bufferRelMatrix_;
     }
 
+    void SetGpuOverDrawBufferOptimizeNode(bool overDrawNode)
+    {
+        isGpuOverDrawBufferOptimizeNode_ = overDrawNode;
+    }
+    bool IsGpuOverDrawBufferOptimizeNode() const
+    {
+        return isGpuOverDrawBufferOptimizeNode_;
+    }
+
+    void SetOverDrawBufferNodeCornerRadius(const Vector4f& radius)
+    {
+        overDrawBufferNodeCornerRadius_ = radius;
+    }
+    const Vector4f& GetOverDrawBufferNodeCornerRadius() const
+    {
+        return overDrawBufferNodeCornerRadius_;
+    }
+    
+    bool HasSubSurfaceNodes() const;
+    void SetIsSubSurfaceNode(bool isSubSurfaceNode);
+    bool IsSubSurfaceNode() const;
+    const std::map<NodeId, RSSurfaceRenderNode::WeakPtr>& GetChildSubSurfaceNodes() const;
+    void GetAllSubSurfaceNodes(std::vector<std::pair<NodeId, RSSurfaceRenderNode::WeakPtr>>& allSubSurfaceNodes);
+    std::string SubSurfaceNodesDump() const;
+
 protected:
     void OnSync() override;
     void OnSkipSync() override;
@@ -1078,6 +1108,8 @@ private:
     {
         return isHardwareForcedDisabledBySrcRect_;
     }
+    void OnSubSurfaceChanged();
+    void UpdateChildSubSurfaceNodes(RSSurfaceRenderNode::SharedPtr node, bool isOnTheTree);
     bool IsYUVBufferFormat() const;
     void InitRenderParams() override;
     void UpdateRenderParams() override;
@@ -1190,6 +1222,7 @@ private:
     {
         RectI screenRect_;
         RectI absRect_;
+        RectI oldDirty_;
         ScreenRotation screenRotation_ = ScreenRotation::INVALID_SCREEN_ROTATION;
         bool isFocusWindow_ = false;
         bool isTransparent_ = false;
@@ -1300,6 +1333,11 @@ private:
     bool hasTransparentSurface_ = false;
 
     bool ancoForceDoDirect_ = false;
+    bool isGpuOverDrawBufferOptimizeNode_ = false;
+    Vector4f overDrawBufferNodeCornerRadius_;
+
+    std::map<NodeId, RSSurfaceRenderNode::WeakPtr> childSubSurfaceNodes_;
+    bool isSubSurfaceNode_ = false;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

@@ -26,6 +26,7 @@
 #include "include/utils/SkCamera.h"
 #include "platform/common/rs_log.h"
 #include "png.h"
+#include "rs_frame_rate_vote.h"
 #include "rs_trace.h"
 #include "transaction/rs_transaction_data.h"
 
@@ -946,6 +947,11 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
             RS_LOGW("RsDebug surfaceHandler(id: %{public}" PRIu64 ") buffer damage is invalid",
                 surfaceHandler.GetNodeId());
         }
+        // Flip damage because the rect is specified relative to the bottom-left of the surface in gl,
+        // but the damages is specified relative to the top-left in rs.
+        // The damages in vk is also transformed to the same as gl now.
+        // [planning]: Unify the damage's coordinate systems of vk and gl.
+        damageAfterMerge.y = surfaceBuffer->buffer->GetHeight() - damageAfterMerge.y - damageAfterMerge.h;
         surfaceBuffer->damageRect = damageAfterMerge;
         if (consumer->IsBufferHold()) {
             surfaceHandler.SetHoldBuffer(surfaceBuffer);
@@ -972,6 +978,8 @@ bool RSBaseRenderUtil::ConsumeAndUpdateBuffer(
         surfaceHandler.ConsumeAndUpdateBuffer(surfaceHandler.GetBufferFromCache(vsyncTimestamp));
     }
     surfaceHandler.ReduceAvailableBuffer();
+    DelayedSingleton<RSFrameRateVote>::GetInstance()->VideoFrameRateVote(consumer->GetUniqueId(),
+        consumer->GetSurfaceSourceType(), surfaceBuffer->timestamp);
     surfaceBuffer = nullptr;
     return true;
 }

@@ -227,6 +227,13 @@ public:
     bool GetHardwareEnabled() const;
     void SetLastFrameHardwareEnabled(bool enabled);
     bool GetLastFrameHardwareEnabled() const;
+    void SetGpuOverDrawBufferOptimizeNode(bool overDrawNode);
+    bool IsGpuOverDrawBufferOptimizeNode() const;
+    void SetOverDrawBufferNodeCornerRadius(const Vector4f& radius);
+    const Vector4f& GetOverDrawBufferNodeCornerRadius() const;
+
+    void SetIsSubSurfaceNode(bool isSubSurfaceNode);
+    bool IsSubSurfaceNode() const;
 
 #ifndef ROSEN_CROSS_PLATFORM
     void SetBuffer(const sptr<SurfaceBuffer>& buffer);
@@ -279,11 +286,14 @@ private:
     bool isSecurityLayer_ = false;
     bool isSkipLayer_ = false;
     bool isProtectedLayer_ = false;
+    bool isSubSurfaceNode_ = false;
     std::set<NodeId> skipLayerIds_= {};
     std::set<NodeId> securityLayerIds_= {};
     std::set<NodeId> protectedLayerIds_= {};
     std::set<int32_t> bufferCacheSet_ = {};
     std::string name_= "";
+    Vector4f overDrawBufferNodeCornerRadius_;
+    bool isGpuOverDrawBufferOptimizeNode_ = false;
 
     friend class RSSurfaceRenderNode;
     friend class RSUniRenderProcessor;

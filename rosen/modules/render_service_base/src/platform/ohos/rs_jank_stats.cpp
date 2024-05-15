@@ -251,7 +251,8 @@ void RSJankStats::UpdateJankFrame(JankFrames& jankFrames, uint32_t dynamicRefres
     const float standardFrameTime = S_TO_MS / dynamicRefreshRate;
     const bool isConsiderRsStartTime =
         jankFrames.isDisplayAnimator_ || jankFrames.isFirstFrame_ || isFirstSetEnd_;
-    const int64_t frameDuration = GetEffectiveFrameTime(isConsiderRsStartTime);
+    const float accumulatedTime = accumulatedBufferCount_ * standardFrameTime;
+    const int64_t frameDuration = std::max<int64_t>(0, GetEffectiveFrameTime(isConsiderRsStartTime) - accumulatedTime);
     const int32_t missedFramesToReport = static_cast<int32_t>(frameDuration / VSYNC_PERIOD);
     jankFrames.totalFrames_++;
     jankFrames.totalFrameTimeSteady_ += frameDuration;
@@ -409,18 +410,17 @@ void RSJankStats::SetAppFirstFrame(pid_t appPid)
     firstFrameAppPids_.push(appPid);
 }
 
-void RSJankStats::SetImplicitAnimationEnd(bool needReport)
+void RSJankStats::SetImplicitAnimationEnd(bool isImplicitAnimationEnd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!needReport) {
+    if (!isImplicitAnimationEnd) {
         return;
     }
-
     for (auto &[animationId, jankFrames] : animateJankFrames_) {
         if (jankFrames.isDisplayAnimator_) {
             continue;
         }
-        animateJankFrames_[animationId].isImplicitAnimationEnd_ = true;
+        jankFrames.isImplicitAnimationEnd_ = true;
     }
 }
 
@@ -433,9 +433,9 @@ void RSJankStats::ReportEventResponse(const JankFrames& jankFrames) const
     int64_t responseLatency = rtEndTime_ - inputTime;
     RS_TRACE_NAME_FMT("RSJankStats::ReportEventResponse %s", GetSceneDescription(info).c_str());
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::GRAPHIC, reportName,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "APP_PID", info.appPid, "VERSION_CODE", info.versionCode,
-        "VERSION_NAME", info.versionName, "BUNDLE_NAME", info.bundleName, "ABILITY_NAME", info.abilityName,
-        "PROCESS_NAME", info.processName, "PAGE_URL", info.pageUrl, "SCENE_ID", info.sceneId,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "SCENE_ID", info.sceneId, "APP_PID", info.appPid,
+        "VERSION_CODE", info.versionCode, "VERSION_NAME", info.versionName, "BUNDLE_NAME", info.bundleName,
+        "ABILITY_NAME", info.abilityName, "PROCESS_NAME", info.processName, "PAGE_URL", info.pageUrl,
         "SOURCE_TYPE", info.sourceType, "NOTE", info.note, "INPUT_TIME", static_cast<uint64_t>(inputTime),
         "ANIMATION_START_TIME", static_cast<uint64_t>(beginVsyncTime), "RENDER_TIME", static_cast<uint64_t>(rtEndTime_),
         "RESPONSE_LATENCY", static_cast<uint64_t>(responseLatency));

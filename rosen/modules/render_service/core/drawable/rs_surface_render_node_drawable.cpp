@@ -21,6 +21,7 @@
 #include "draw/brush.h"
 #include "rs_trace.h"
 
+#include "common/rs_optional_trace.h"
 #include "common/rs_obj_abs_geometry.h"
 #include "impl_interface/region_impl.h"
 #include "memory/rs_tag_tracker.h"
@@ -170,6 +171,9 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
         // remove imagecahce when its bufferQueue gobackground
         renderEngine_->ClearCacheSet(unmappedCache);
     }
+    if (autoCacheEnable_) {
+        nodeCacheType_ = NodeStragyType::CACHE_NONE;
+    }
     bool isuifirstNode = rscanvas->GetIsParallelCanvas();
     if (!isuifirstNode && surfaceParams->GetOccludedByFilterCache()) {
         RS_TRACE_NAME_FMT("RSSurfaceRenderNodeDrawable::OnDraw filterCache occlusion skip [%s] Id:%" PRIu64 "",
@@ -242,6 +246,12 @@ void RSSurfaceRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
     auto parentSurfaceMatrix = RSRenderParams::GetParentSurfaceMatrix();
     RSRenderParams::SetParentSurfaceMatrix(rscanvas->GetTotalMatrix());
 
+    // add a blending disable rect op behind floating window, to enable overdraw buffer feature on special gpu.
+    if (surfaceParams->IsLeashWindow() && RSSystemProperties::GetGpuOverDrawBufferOptimizeEnabled()
+        && surfaceParams->IsGpuOverDrawBufferOptimizeNode()) {
+        EnableGpuOverDrawDrawBufferOptimization(canvas, surfaceParams);
+    }
+
     auto bounds = surfaceParams->GetFrameRect();
 
     // 1. draw background
@@ -293,7 +303,8 @@ void RSSurfaceRenderNodeDrawable::MergeDirtyRegionBelowCurSurface(RSRenderThread
     if (surfaceParams->IsMainWindowType() || surfaceParams->IsLeashWindow()) {
         auto& accumulatedDirtyRegion = uniParam->GetAccumulatedDirtyRegion();
         Occlusion::Region calcRegion;
-        if (surfaceParams->IsMainWindowType() && surfaceParams->IsParentScaling()) {
+        if ((surfaceParams->IsMainWindowType() && surfaceParams->IsParentScaling()) ||
+            surfaceParams->IsSubSurfaceNode()) {
             calcRegion = surfaceParams->GetVisibleRegion();
         } else if (!surfaceParams->GetTransparentRegion().IsEmpty()) {
             calcRegion = surfaceParams->GetTransparentRegion();
@@ -394,7 +405,12 @@ void RSSurfaceRenderNodeDrawable::CaptureSurface(RSSurfaceRenderNode& surfaceNod
             process RSSurfaceRenderNode(id:[%{public}" PRIu64 "] name:[%{public}s]) with security or skip layer.",
             surfaceParams.GetId(), name_.c_str());
         if (RSUniRenderThread::GetCaptureParam().isSingleSurface_) {
-            canvas.Clear(Drawing::Color::COLOR_WHITE);
+            Drawing::Brush rectBrush;
+            rectBrush.SetColor(Drawing::Color::COLOR_WHITE);
+            canvas.AttachBrush(rectBrush);
+            canvas.DrawRect(Drawing::Rect(0, 0, surfaceParams.GetBounds().GetWidth(),
+                surfaceParams.GetBounds().GetHeight()));
+            canvas.DetachBrush();
         }
         return;
     }
@@ -403,7 +419,12 @@ void RSSurfaceRenderNodeDrawable::CaptureSurface(RSSurfaceRenderNode& surfaceNod
         RS_LOGD("RSSurfaceRenderNodeDrawable::CaptureSurface: \
             process RSSurfaceRenderNode(id:[%{public}" PRIu64 "] name:[%{public}s]) with protected layer.",
             surfaceParams.GetId(), name_.c_str());
-        canvas.Clear(Drawing::Color::COLOR_BLACK);
+        Drawing::Brush rectBrush;
+        rectBrush.SetColor(Drawing::Color::COLOR_BLACK);
+        canvas.AttachBrush(rectBrush);
+        canvas.DrawRect(Drawing::Rect(0, 0, surfaceParams.GetBounds().GetWidth(),
+            surfaceParams.GetBounds().GetHeight()));
+        canvas.DetachBrush();
         return;
     }
 
@@ -561,4 +582,24 @@ void RSSurfaceRenderNodeDrawable::DrawUIFirstDfx(RSPaintFilterCanvas& canvas, Mu
     canvas.DetachBrush();
 }
 
+void RSSurfaceRenderNodeDrawable::EnableGpuOverDrawDrawBufferOptimization(Drawing::Canvas& canvas,
+    RSSurfaceRenderParams* surfaceParams)
+{
+    const Vector4f& radius = surfaceParams->GetOverDrawBufferNodeCornerRadius();
+    if (radius.IsZero()) {
+        return;
+    }
+    RS_OPTIONAL_TRACE_NAME_FMT("EnableGpuOverDrawDrawBufferOptimization Id:%" PRIu64 "", surfaceParams->GetId());
+    const Drawing::Rect& bounds = surfaceParams->GetFrameRect();
+    Drawing::Brush brush;
+    // must set src blend mode, so overdraw buffer feature can enabled.
+    brush.SetBlendMode(Drawing::BlendMode::SRC);
+    // cause the rect will be covered by the child background node, so we just add a white rect
+    brush.SetColor(Drawing::Color::COLOR_WHITE);
+    canvas.AttachBrush(brush);
+    Drawing::AutoCanvasRestore arc(canvas, true);
+    canvas.Translate(radius.x_, radius.y_);
+    canvas.DrawRect(Drawing::Rect {0, 0, bounds.GetWidth() - 2 * radius.x_, bounds.GetHeight() - 2 * radius.y_});
+    canvas.DetachBrush();
+}
 } // namespace OHOS::Rosen::DrawableV2

@@ -291,7 +291,7 @@ bool RenderContext::SetUpGpuContext(std::shared_ptr<Drawing::GPUContext> drawing
         mHandler_ = std::make_shared<MemoryHandler>();
         auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
         int minPointer = 100;
-        if (glesVersion < minPointer) { 
+        if (glesVersion < minPointer) {
             LOGE("the ptr of glesVersion is err:%{public}llu", (unsigned long long)glesVersion);
             return false;
         }

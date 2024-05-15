@@ -28,26 +28,7 @@ namespace trace3d {
 
 void LogOutputRaw(LOG_LEVEL level, const char *message)
 {
-#if defined(TRACE3D_LOADER_HOS)
-    int prio = ANDROID_LOG_UNKNOWN;
-    switch (level) {
-        case LOG_LEVEL::DEBUG:
-            prio = ANDROID_LOG_DEBUG;
-            break;
-        case LOG_LEVEL::ERR:
-            prio = ANDROID_LOG_ERROR;
-            break;
-        case LOG_LEVEL::WARN:
-            prio = ANDROID_LOG_WARN;
-            break;
-        case LOG_LEVEL::INFO:
-            prio = ANDROID_LOG_INFO;
-            break;
-        default:
-            break;
-    }
-    __android_log_write(prio, "TRACE3D", message);
-#elif defined(TRACE3D_LOADER_OHOS)
+#if defined(TRACE3D_LOADER_OHOS)
     LogLevel priority = LogLevel::LOG_INFO;
     switch (level) {
         case LOG_LEVEL::DEBUG:

@@ -25,25 +25,17 @@
 #include <map>
 #include <cstdarg>
 
-#if defined(TRACE3D_LOADER_WIN)
-#include <windows.h>
-#else
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#if defined(TRACE3D_LOADER_HOS)
-#include <android/log.h>
-#elif defined(TRACE3D_LOADER_OHOS)
+#if defined(TRACE3D_LOADER_OHOS)
 #include <hilog/log.h>
 #endif
-#endif
 
-#if defined(TRACE3D_LOADER_WIN)
-#define TRACE3D_LOADER_API __declspec(dllexport)
-#elif defined(TRACE3D_LOADER_HOS) || defined(TRACE3D_LOADER_OHOS)
+#if defined(TRACE3D_LOADER_OHOS)
 #define TRACE3D_LOADER_API __attribute__((visibility("default"), used))
 #else
 #error "Unknown platform"

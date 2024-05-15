@@ -239,7 +239,7 @@ public:
     static bool GetDumpImgEnabled();
 
     static int GetVirtualScreenScaleModeDFX();
-
+    static bool GetTextBlobAsPixelMap();
     static inline GpuApiType GetGpuApiType()
     {
         return RSSystemProperties::systemGpuApiType_;

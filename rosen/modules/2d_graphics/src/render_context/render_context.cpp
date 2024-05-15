@@ -290,7 +290,7 @@ bool RenderContext::SetUpGpuContext(std::shared_ptr<Drawing::GPUContext> drawing
     if (RSSystemProperties::GetGpuApiType() == GpuApiType::OPENGL) {
         mHandler_ = std::make_shared<MemoryHandler>();
         auto glesVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-        if (glesVersion < 100 //check PointerException) { 
+        if (glesVersion < 100 /*check PointerException*/) { 
             LOGE("the ptr of glesVersion is err:%{public}llu", (unsigned long long)glesVersion);
             return false;
         }

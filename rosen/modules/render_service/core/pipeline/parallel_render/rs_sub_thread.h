@@ -63,15 +63,9 @@ private:
     void CreateShareEglContext();
     void DestroyShareEglContext();
     std::shared_ptr<Drawing::GPUContext> CreateShareGrContext();
-<<<<<<< HEAD
     bool RenderTasksMid(const std::shared_ptr<RSSuperRenderTask>& threadTask,
         const std::shared_ptr<RSUniRenderVisitor>& visitor,
         std::shared_ptr<RSBaseRenderNode>& nodeDrawable);
-=======
-    void RenderTasksNeedNotify(bool needNotify, NodeId nodeId);
-    void RenderTasksNeedRequestVsync(bool needRequestVsync);
-
->>>>>>> fc5a90e385986cbd9237635ff9817d1b61c476ba
     std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     uint32_t threadIndex_ = UNI_RENDER_THREAD_INDEX;

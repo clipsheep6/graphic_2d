@@ -52,7 +52,7 @@ VkResult EnumerateInstanceLayerProperties(uint32_t* pPropertyCount, VkLayerPrope
             *pPropertyCount = 1;
         }
     } else if ((pPropertyCount != nullptr) && (*pPropertyCount >= 1)) {
-        memcpy(pProperties, &layerProps, sizeof(layerProps));
+        memcpy_s(pProperties, sizeof(VkLayerProperties), &layerProps, sizeof(layerProps));
         *pPropertyCount = 1;
     } else {
         Result = VK_INCOMPLETE;
@@ -95,7 +95,7 @@ VkResult FillPropertyCountAndList(const VkExtensionProperties *src, uint32_t num
 
         // copy as much as there's space for, up to how many there are
         if (src) {
-            memcpy(dstProps, src, sizeof(VkExtensionProperties) * ((numExts < dstSpace) ? numExts : dstSpace));
+            memcpy_s(dstProps, sizeof(VkExtensionProperties), src, sizeof(VkExtensionProperties) * ((numExts < dstSpace) ? numExts : dstSpace));
         }
 
         // if there was enough space, return success, else incomplete

@@ -80,7 +80,10 @@ config("VkLayer_Trace3DCaptureLoader_config") {
 }
 
 config("VkLayer_Trace3DCaptureLoader_public_config") {
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//third_party/bounds_checking_function/include",
+  ]
 }
 
 ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
@@ -100,7 +103,10 @@ ohos_shared_library("VkLayer_Trace3DCaptureLoader") {
     "napi:ace_napi",
   ]
 
-  deps = [ "//third_party/vulkan-headers:vulkan_headers" ]
+  deps = [
+    "//third_party/bounds_checking_function:libsec_static",
+    "//third_party/vulkan-headers:vulkan_headers",
+  ]
 
   output_name = "VkLayer_Trace3DCaptureLoader"
   output_extension = "so"

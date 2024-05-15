@@ -121,6 +121,7 @@
           "base_group": [
             "//third_party/libpng:libpng",
             "//third_party/vulkan-loader:vulkan_loader",
+            "//third_party/bounds_checking_function:libsec_static",
             "//foundation/graphic/graphic_2d/interfaces/kits/napi:napi_packages",
             "//foundation/graphic/graphic_2d/rosen/modules/composer:libcomposer",
             "//foundation/graphic/graphic_2d/rosen/modules/composer/native_vsync:libnative_vsync",

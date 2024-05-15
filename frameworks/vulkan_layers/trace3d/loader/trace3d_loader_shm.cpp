@@ -45,7 +45,7 @@ static bool ShmOpenLibrary(const std::string &libPath, CaptureLib &lib)
 
         void *mem = mmap(nullptr, len, PROT_WRITE, MAP_SHARED, lib.shmFd, 0);
         if (mem) {
-            memcpy(mem, blob.data(), len);
+            memcpy_s(mem, len, blob.data(), len);
             munmap(mem, len);
 
             TRACE3D_LOGI("%s:%d shm_open '%s' fd:%d\n", __FUNCTION__, __LINE__, lib.shmName, lib.shmFd);

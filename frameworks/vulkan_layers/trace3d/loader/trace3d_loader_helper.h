@@ -31,6 +31,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <securec.h>
 #if defined(TRACE3D_LOADER_OHOS)
 #include <hilog/log.h>
 #endif

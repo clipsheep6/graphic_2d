@@ -2186,6 +2186,8 @@ void RSRenderNode::ApplyModifiersPre()
 
 void RSRenderNode::ApplyModifiers()
 {
+    ApplyModifiersPre();
+    
     // Reset and re-apply all modifiers
     RSModifierContext context = { GetMutableRenderProperties() };
 

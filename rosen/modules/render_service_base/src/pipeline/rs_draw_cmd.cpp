@@ -222,7 +222,9 @@ bool RSExtendImageObject::GetDrawingImageFromSurfaceBuffer(Drawing::Canvas& canv
     }
     return true;
 }
+#endif
 
+#if defined(ROSEN_OHOS) && defined(RS_ENABLE_GL)
 bool RSExtendImageObject::CreateTexture(Drawing::Canvas& canvas, SurfaceBuffer* surfaceBuffer)
 {
     // Create texture object

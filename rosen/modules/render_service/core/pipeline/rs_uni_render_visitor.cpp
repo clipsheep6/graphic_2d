@@ -189,7 +189,6 @@ RSUniRenderVisitor::RSUniRenderVisitor()
     isDrawingCacheEnabled_ = RSSystemParameters::GetDrawingCacheEnabled();
 #ifdef DDGR_ENABLE_FEATURE_OPINC
     autoCacheEnable_ = RSSystemProperties::IsDdgrOpincEnable();
-    autoCacheDrawingEnable_ = RSSystemProperties::GetAutoCacheDebugEnabled() && autoCacheEnable_;
 #endif
     RSTagTracker::UpdateReleaseResourceEnabled(RSSystemProperties::GetReleaseResourceEnabled());
     isScreenRotationAnimating_ = RSSystemProperties::GetCacheEnabledForRotation();
@@ -1183,6 +1182,20 @@ bool RSUniRenderVisitor::IsSubTreeOccluded(RSRenderNode& node) const
     return false;
 }
 
+void RSUniRenderVisitor::ResetDisplayDirtyRegion()
+{
+    ResetDisplayDirtyRegionForScreenPowerChange();
+    ResetDisplayDirtyRegionForColorFilterSwitch();
+}
+
+void RSUniRenderVisitor::ResetDisplayDirtyRegionForScreenPowerChange()
+{
+    if (!RSMainThread::Instance()->GetScreenPowerOnChanged()) {
+        return;
+    }
+    curDisplayDirtyManager_->ResetDirtyAsSurfaceSize();
+}
+
 void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node)
 {
     // 0. init display info
@@ -1389,7 +1402,7 @@ void RSUniRenderVisitor::QuickPrepareCanvasRenderNode(RSCanvasRenderNode& node)
 
     // 1. Recursively traverse child nodes if above curSurfaceNode and subnode need draw
     bool isSubTreeNeedPrepare = !curSurfaceNode_ || node.IsSubTreeNeedPrepare(filterInGlobal_) ||
-        ForcePrepareSubTree();
+        ForcePrepareSubTree() || node.OpincForcePrepareSubTree();
     isSubTreeNeedPrepare ? QuickPrepareChildren(node) :
         node.SubTreeSkipPrepare(*dirtyManager, curDirty_, dirtyFlag_, prepareClipRect_);
 
@@ -1590,7 +1603,7 @@ bool RSUniRenderVisitor::BeforeUpdateSurfaceDirtyCalc(RSSurfaceRenderNode& node)
     // [planning] check node isDirty can be optimized.
     needRecalculateOcclusion_ = needRecalculateOcclusion_ || node.IsDirty() ||
         node.CheckIfOcclusionReusable(preMainAndLeashWindowNodesIds_);
-    if (node.IsAppWindow()) {
+    if (autoCacheEnable_ && node.IsAppWindow()) {
         node.OpincSetInAppStateStart(unchangeMarkInApp_);
     }
     return true;
@@ -1656,8 +1669,8 @@ void RSUniRenderVisitor::UpdateSrcRect(RSSurfaceRenderNode& node,
     canvas->ConcatMatrix(absMatrix);
 
     auto dstRect = node.GetDstRect();
-    Drawing::RectI dst = { dstRect.GetLeft(), dstRect.GetTop(), dstRect.GetRight(),
-                           dstRect.GetBottom() };
+    Drawing::RectI dst = { std::round(dstRect.GetLeft()), std::round(dstRect.GetTop()), std::round(dstRect.GetRight()),
+                           std::round(dstRect.GetBottom()) };
     bool hasRotation = false;
     if (node.GetConsumer() != nullptr) {
         auto rotation = RSBaseRenderUtil::GetRotateTransform(node.GetConsumer()->GetTransform());
@@ -1686,10 +1699,10 @@ void RSUniRenderVisitor::UpdateDstRect(RSSurfaceRenderNode& node, const RectI& a
     if (node.IsHardwareEnabledType()) {
         dstRect = dstRect.IntersectRect(clipRect);
     }
-    dstRect.left_ = static_cast<int>(static_cast<float>(dstRect.left_) * screenInfo_.GetRogWidthRatio());
-    dstRect.top_ = static_cast<int>(static_cast<float>(dstRect.top_) * screenInfo_.GetRogHeightRatio());
-    dstRect.width_ = static_cast<int>(static_cast<float>(dstRect.width_) * screenInfo_.GetRogWidthRatio());
-    dstRect.height_ = static_cast<int>(static_cast<float>(dstRect.height_) * screenInfo_.GetRogHeightRatio());
+    dstRect.left_ = static_cast<int>(std::round(dstRect.left_ * screenInfo_.GetRogWidthRatio()));
+    dstRect.top_ = static_cast<int>(std::round(dstRect.top_ * screenInfo_.GetRogHeightRatio()));
+    dstRect.width_ = static_cast<int>(std::round(dstRect.width_ * screenInfo_.GetRogWidthRatio()));
+    dstRect.height_ = static_cast<int>(std::round(dstRect.height_ * screenInfo_.GetRogHeightRatio()));
     // Set the destination rectangle of the node
     node.SetDstRect(dstRect);
 }
@@ -1994,7 +2007,7 @@ void RSUniRenderVisitor::UpdateSurfaceDirtyAndGlobalDirty()
     curDisplayNode_->SetMainAndLeashSurfaceDirty(hasMainAndLeashSurfaceDirty);
     CheckAndUpdateFilterCacheOcclusion(curMainAndLeashSurfaces);
     CheckMergeGlobalFilterForDisplay(accumulatedDirtyRegion);
-    ResetDisplayDirtyRegionForColorFilterSwitch();
+    ResetDisplayDirtyRegion();
     CheckMergeDebugRectforRefreshRate();
     curDisplayNode_->ClearCurrentSurfacePos();
     std::swap(preMainAndLeashWindowNodesIds_, curMainAndLeashWindowNodesIds_);
@@ -2423,7 +2436,8 @@ void RSUniRenderVisitor::UpdateHwcNodeRectInSkippedSubTree(const RSRenderNode& r
             Drawing::Rect bounds = Drawing::Rect(0, 0, properties.GetBoundsWidth(), properties.GetBoundsHeight());
             Drawing::Rect absRect;
             matrix.MapRect(absRect, bounds);
-            RectI rect = {absRect.left_, absRect.top_, absRect.GetWidth(), absRect.GetHeight()};
+            RectI rect = {std::round(absRect.left_), std::round(absRect.top_),
+                std::round(absRect.GetWidth()), std::round(absRect.GetHeight())};
             UpdateDstRect(*hwcNodePtr, rect, prepareClipRect_);
             UpdateSrcRect(*hwcNodePtr, matrix, rect);
             UpdateHwcNodeByTransform(*hwcNodePtr);
@@ -2783,10 +2797,10 @@ void RSUniRenderVisitor::PrepareSurfaceRenderNode(RSSurfaceRenderNode& node)
     auto screenRect = RectI(0, 0, screenInfo_.width, screenInfo_.height);
     Vector4f cornerRadius;
     Vector4f::Max(node.GetWindowCornerRadius(), node.GetGlobalCornerRadius(), cornerRadius);
-    Vector4<int> dstCornerRadius(static_cast<int>(std::ceil(cornerRadius.x_)),
-                                 static_cast<int>(std::ceil(cornerRadius.y_)),
-                                 static_cast<int>(std::ceil(cornerRadius.z_)),
-                                 static_cast<int>(std::ceil(cornerRadius.w_)));
+    Vector4<int> dstCornerRadius(static_cast<int>(std::round(cornerRadius.x_)),
+                                 static_cast<int>(std::round(cornerRadius.y_)),
+                                 static_cast<int>(std::round(cornerRadius.z_)),
+                                 static_cast<int>(std::round(cornerRadius.w_)));
     auto parent = RSBaseRenderNode::ReinterpretCast<RSSurfaceRenderNode>(node.GetParent().lock());
     auto isFocused = node.IsFocusedNode(currentFocusedNodeId_) ||
         (parent && parent->IsLeashWindow() && parent->IsFocusedNode(focusedLeashWindowId_));
@@ -5288,9 +5302,6 @@ void RSUniRenderVisitor::ProcessSurfaceRenderNode(RSSurfaceRenderNode& node)
     if (property.IsSpherizeValid()) {
         DrawSpherize(node);
     } else {
-        if (isSelfDrawingSurface) {
-            RSUniRenderUtil::FloorTransXYInCanvasMatrix(*canvas_);
-        }
         if (isUIFirst_ && node.GetCacheType() == CacheType::ANIMATE_PROPERTY) {
             RSUniRenderUtil::HandleSubThreadNode(node, *canvas_);
             if (node.IsLeashOrMainWindow()) {
@@ -5637,10 +5648,6 @@ void RSUniRenderVisitor::ProcessCanvasRenderNode(RSCanvasRenderNode& node)
     }
     // in case preparation'update is skipped
     canvas_->Save();
-    if (node.GetType() == RSRenderNodeType::CANVAS_DRAWING_NODE) {
-        RSUniRenderUtil::FloorTransXYInCanvasMatrix(*canvas_);
-    }
-
     const auto& property = node.GetRenderProperties();
     if (node.GetSharedTransitionParam()) {
         // draw self and children in sandbox which will not be affected by parent's transition

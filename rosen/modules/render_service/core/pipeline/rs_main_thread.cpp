@@ -375,7 +375,7 @@ void RSMainThread::Init()
     isUniRender_ = RSUniRenderJudgement::IsUniRender();
     SetDeviceType();
     qosPidCal_ = deviceType_ == DeviceType::PC;
-    isFoldScreenDevice_ = system::GetParameter("const.window.foldscreen.type", "") == "true";
+    isFoldScreenDevice_ = RSSystemProperties::IsFoldScreenFlag();
     auto taskDispatchFunc = [](const RSTaskDispatcher::RSTask& task, bool isSyncTask = false) {
         RSMainThread::Instance()->PostTask(task);
     };
@@ -1746,6 +1746,9 @@ void RSMainThread::TraverseAndUpdateNodeTree(std::shared_ptr<RSBaseRenderNode> r
         RSUniRenderUtil::CacheSubThreadNodes(subThreadNodes_, subThreadNodes);
     }
     uniVisitor->SetUniRenderThreadParam(renderThreadParams_);
+    screenPowerOnChanged_ = false;
+    forceUpdateUniRenderFlag_ = false;
+    idleTimerExpiredFlag_ = false;
 }
 
 bool RSMainThread::DoDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode, bool waitForRT)
@@ -3041,6 +3044,16 @@ void RSMainThread::SetDirtyFlag(bool isDirty)
 bool RSMainThread::GetDirtyFlag()
 {
     return isDirty_;
+}
+
+void RSMainThread::SetScreenPowerOnChanged(bool val)
+{
+    screenPowerOnChanged_ = val;
+}
+
+bool RSMainThread::GetScreenPowerOnChanged() const
+{
+    return screenPowerOnChanged_;
 }
 
 void RSMainThread::SetColorPickerForceRequestVsync(bool colorPickerForceRequestVsync)

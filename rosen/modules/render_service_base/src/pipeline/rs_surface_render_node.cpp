@@ -269,6 +269,77 @@ void RSSurfaceRenderNode::PrepareRenderAfterChildren(RSPaintFilterCanvas& canvas
     canvas.RestoreStatus(renderNodeSaveCount_);
 }
 
+void RSSurfaceRenderNode::CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node, 
+    std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool onlyFirstLevel)
+{
+    if (IsScbScreen()) {
+        for (auto& child : *node->GetSortedChildren()) {
+            child->CollectSurface(child, vec, isUniRender, onlyFirstLevel);
+        }
+        return;
+    }
+    if (IsStartingWindow()) {
+        if (isUniRender) {
+            vec.emplace_back(shared_from_this());
+        }
+        return;
+    }
+    if (IsLeashWindow()) {
+        if (isUniRender) {
+            vec.emplace_back(shared_from_this());
+        }
+        if (onlyFirstLevel) {
+            return;
+        }
+        for (auto& child : *node->GetSortedChildren()) {
+            child->CollectSurface(child, vec, isUniRender, onlyFirstLevel);
+        }
+        return;
+    }
+
+#ifndef ROSEN_CROSS_PLATFORM
+    auto& consumer = GetConsumer();
+    if (consumer != nullptr && consumer->GetTunnelHandle() != nullptr) {
+        return;
+    }
+#endif
+
+    CollectSurfaceForSubSurface(node, vec, isUniRender, onlyFirstLevel);
+}
+
+void RSSurfaceRenderNode::CollectSurfaceForSubSurface(const std::shared_ptr<RSBaseRenderNode>& node, 
+    std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool onlyFirstLevel)
+{
+    auto num = find(vec.begin(), vec.end(), shared_from_this());
+    if (num != vec.end()) {
+        return;
+    }
+    if (isUniRender && ShouldPaint()) {
+        vec.emplace_back(shared_from_this());
+    } else {
+#ifndef ROSEN_CROSS_PLATFORM
+        if (GetBuffer() != nullptr && ShouldPaint()) {
+            vec.emplace_back(shared_from_this());
+        }
+#endif
+    }
+
+    if (isSubSurfaceEnabled_) {
+        if (onlyFirstLevel) {
+            return;
+        }
+        for (auto &nodes : node->GetSubSurfaceNodes()) {
+            for (auto &node : nodes.second) {
+                auto surfaceNode = node.lock();
+                if (surfaceNode != nullptr) {
+                    surfaceNode->CollectSurface(surfaceNode, vec, isUniRender, onlyFirstLevel);
+                }
+            }
+        }
+    }
+}
+
+/*
 void RSSurfaceRenderNode::CollectSurface(const std::shared_ptr<RSBaseRenderNode>& node,
     std::vector<RSBaseRenderNode::SharedPtr>& vec, bool isUniRender, bool onlyFirstLevel)
 {
@@ -331,6 +402,7 @@ void RSSurfaceRenderNode::CollectSurface(const std::shared_ptr<RSBaseRenderNode>
         }
     }
 }
+*/
 
 void RSSurfaceRenderNode::CollectSurfaceForUIFirstSwitch(uint32_t& leashWindowCount, uint32_t minNodeNum)
 {

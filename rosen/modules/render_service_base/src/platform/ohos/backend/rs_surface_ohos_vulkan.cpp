@@ -116,8 +116,7 @@ int32_t RSSurfaceOhosVulkan::RequestNativeWindowBuffer(NativeWindowBuffer** nati
     return res;
 }
 
-std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
-    int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC, bool isProtected)
+bool RSSurfaceOhosVulkan::RequestFramePost(int32_t& width, int32_t& height, bool& useAFBC, bool& isProtected)
 {
     if (mNativeWindow == nullptr) {
         mNativeWindow = CreateNativeWindowFromSurface(&producer_);
@@ -133,7 +132,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
     int fenceFd = -1;
     if (RequestNativeWindowBuffer(&nativeWindowBuffer, width, height,
         fenceFd, useAFBC, isProtected) != OHOS::GSERROR_OK) {
-        return nullptr;
+        return false;
     }
 
     mSurfaceList.emplace_back(nativeWindowBuffer);
@@ -148,7 +147,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
             mSurfaceList.pop_back();
             NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
             mSurfaceMap.erase(nativeWindowBuffer);
-            return nullptr;
+            return false;
         }
 
         if (!nativeSurface.drawingSurface) {
@@ -156,7 +155,7 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
             mSurfaceList.pop_back();
             NativeWindowCancelBuffer(mNativeWindow, nativeWindowBuffer);
             mSurfaceMap.erase(nativeWindowBuffer);
-            return nullptr;
+            return false;
         } else {
             ROSEN_LOGD("RSSurfaceOhosVulkan: skSurface create success %{public}zu", mSurfaceMap.size());
         }
@@ -174,17 +173,47 @@ std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
             nativeSurface.drawingSurface->Wait(1, semaphore);
         }
     }
+
+    return true;
+}
+
+std::unique_ptr<RSSurfaceFrame> RSSurfaceOhosVulkan::RequestFrame(
+    int32_t width, int32_t height, uint64_t uiTimestamp, bool useAFBC, bool isProtected)
+{
+    if (mNativeWindow == nullptr) {
+        mNativeWindow = CreateNativeWindowFromSurface(&producer_);
+        ROSEN_LOGD("RSSurfaceOhosVulkan: create native window");
+    }
+    if (isProtected && mNativeWindow) {
+        mNativeWindow->config.usage |= BUFFER_USAGE_PROTECTED;
+        bufferUsage_ |= BUFFER_USAGE_PROTECTED;
+    } else {
+        mNativeWindow->config.usage &= (~BUFFER_USAGE_PROTECTED);
+        bufferUsage_ &= (~BUFFER_USAGE_PROTECTED);
+    }
+
+    if (!mSkContext) {
+        ROSEN_LOGE("RSSurfaceOhosVulkan: skia context is nullptr");
+        return nullptr;
+    }
+
+    if(!RequestFramePost(width, height, useAFBC, isProtected)) {
+        return nullptr;
+    }
+
     int32_t bufferAge;
     if (nativeSurface.lastPresentedCount == -1) {
         bufferAge = 0;
     } else {
         bufferAge = mPresentCount - nativeSurface.lastPresentedCount;
     }
+
     std::unique_ptr<RSSurfaceFrameOhosVulkan> frame =
         std::make_unique<RSSurfaceFrameOhosVulkan>(nativeSurface.drawingSurface, width, height, bufferAge);
     std::unique_ptr<RSSurfaceFrame> ret(std::move(frame));
     return ret;
 }
+
 
 void RSSurfaceOhosVulkan::SetUiTimeStamp(const std::unique_ptr<RSSurfaceFrame>& frame, uint64_t uiTimestamp)
 {

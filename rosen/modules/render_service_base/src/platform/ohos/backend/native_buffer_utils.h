@@ -107,8 +107,17 @@ struct NativeSurfaceInfo {
 bool MakeFromNativeWindowBuffer(std::shared_ptr<Drawing::GPUContext> skContext, NativeWindowBuffer* nativeWindowBuffer,
     NativeSurfaceInfo& nativeSurface, int width, int height, bool isProtected = false);
 
+void CreateDrawingSurface(NativeSurfaceInfo& nativeSurface,  NativeWindowBuffer* nativeWindowBuffer, 
+    int& width, int& height, VkImage& image, bool& isProtected, VkImageUsageFlags& usageFlags,
+    VkNativeBufferFormatPropertiesOHOS& nbFormatProps, VkDeviceMemory& memory);
+
 Drawing::BackendTexture MakeBackendTextureFromNativeBuffer(NativeWindowBuffer* nativeWindowBuffer,
     int width, int height, bool isProtected = false);
 }
+
+void CreateVkImage(bool& isProtected, VkImage& image, VkDeviceMemory& memory,
+    VkNativeBufferPropertiesOHOS& nbProps, VkNativeBufferFormatPropertiesOHOS& nbFormatProps,
+    VkImageUsageFlags& usageFlags, Drawing::TextureInfo& textureInfo);
+
 } // OHOS::Rosen
 #endif

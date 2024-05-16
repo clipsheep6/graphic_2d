@@ -150,11 +150,9 @@ void RSRenderServiceConnection::CleanFrameRateLinkers() noexcept
 
 void RSRenderServiceConnection::CleanAll(bool toDelete) noexcept
 {
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (cleanDone_) {
-            return;
-        }
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (cleanDone_) {
+        return;
     }
     RS_LOGD("RSRenderServiceConnection::CleanAll() start.");
     mainThread_->ScheduleTask(

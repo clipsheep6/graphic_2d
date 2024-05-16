@@ -154,8 +154,7 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
     const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes)
 {
     RS_TRACE_NAME("RSSubThreadManager::SubmitSubThreadTask");
-    bool ifNeedRequestNextVsync = false;
-
+	
     if (node == nullptr) {
         ROSEN_LOGE("RSSubThreadManager::SubmitSubThreadTask display node is null");
         return;
@@ -166,6 +165,29 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
     CancelReleaseTextureTask();
     CancelReleaseResourceTask();
     std::vector<std::unique_ptr<RSRenderTask>> renderTaskList;
+    PrepareRenderTasks(subThreadNodes, renderTaskList);
+
+    std::vector<std::shared_ptr<RSSuperRenderTask>> superRenderTaskList;
+    AssignTasksToSuperRenderTasks(renderTaskList, superRenderTaskList, node);
+
+    for (uint32_t i = 0; i < SUB_THREAD_NUM; i++) {
+        auto subThread = threadList_[i];
+        subThread->PostTask([subThread, superTask = superRenderTaskList[i], i]() mutable {
+            subThread->RenderCache(superTask);
+        });
+    }
+
+    needResetContext_ = true;
+	
+    if (ifNeedRequestNextVsync) {
+        RSMainThread::Instance()->SetIsCachedSurfaceUpdated(true);
+        RSMainThread::Instance()->RequestNextVSync();
+    }
+}
+
+void RSSubThreadManager::PrepareRenderTasks(const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
+                                            std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList)
+{
     auto cacheSkippedNodeMap = RSMainThread::Instance()->GetCacheCmdSkippedNodes();
     for (const auto& child : subThreadNodes) {
         if (!child) {
@@ -198,8 +220,12 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
     if (renderTaskList.size()) {
         ifNeedRequestNextVsync = true;
     }
+}
 
-    std::vector<std::shared_ptr<RSSuperRenderTask>> superRenderTaskList;
+void RSSubThreadManager::AssignTasksToSuperRenderTasks(std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList,
+    std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
+    const std::shared_ptr<RSDisplayRenderNode>& node)
+{
     for (uint32_t i = 0; i < SUB_THREAD_NUM; i++) {
         superRenderTaskList.emplace_back(std::make_shared<RSSuperRenderTask>(node,
             RSMainThread::Instance()->GetFrameCount()));
@@ -236,18 +262,6 @@ void RSSubThreadManager::SubmitSubThreadTask(const std::shared_ptr<RSDisplayRend
             }
         }
         minLoadThreadIndex_ = minLoadThreadIndex;
-    }
-
-    for (uint32_t i = 0; i < SUB_THREAD_NUM; i++) {
-        auto subThread = threadList_[i];
-        subThread->PostTask([subThread, superRenderTaskList, i]() {
-            subThread->RenderCache(superRenderTaskList[i]);
-        });
-    }
-    needResetContext_ = true;
-    if (ifNeedRequestNextVsync) {
-        RSMainThread::Instance()->SetIsCachedSurfaceUpdated(true);
-        RSMainThread::Instance()->RequestNextVSync();
     }
 }
 

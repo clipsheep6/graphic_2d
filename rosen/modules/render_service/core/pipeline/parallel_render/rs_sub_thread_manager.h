@@ -62,6 +62,12 @@ private:
     RSSubThreadManager(const RSSubThreadManager &&) = delete;
     RSSubThreadManager &operator = (const RSSubThreadManager &) = delete;
     RSSubThreadManager &operator = (const RSSubThreadManager &&) = delete;
+	
+	void PrepareRenderTasks(const std::list<std::shared_ptr<RSSurfaceRenderNode>>& subThreadNodes,
+                                        std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList);
+    void AssignTasksToSuperRenderTasks(std::vector<std::unique_ptr<RSRenderTask>>& renderTaskList,
+                            std::vector<std::shared_ptr<RSSuperRenderTask>>& superRenderTaskList,
+                            const std::shared_ptr<RSDisplayRenderNode>& node);
 
     RenderContext* renderContext_ = nullptr;
     uint32_t minLoadThreadIndex_ = 0;
@@ -77,6 +83,7 @@ private:
     bool needCancelReleaseTextureTask_ = false;
 
     bool isRcdServiceRegister_ = false;
+    bool ifNeedRequestNextVsync = false;
 };
 }
 #endif // RENDER_SERVICE_CORE_PIPELINE_PARALLEL_RENDER_RS_SUB_THREAD_MANAGER_H

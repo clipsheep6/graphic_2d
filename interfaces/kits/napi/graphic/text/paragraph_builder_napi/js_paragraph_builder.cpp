@@ -35,6 +35,27 @@ napi_value JsParagraphBuilder::Constructor(napi_env env, napi_callback_info info
     }
     TypographyStyle typographyStyle;
     GetParagraphStyleFromJS(env, argv[0], typographyStyle);
+
+    ROSEN_LOGE("GetParagraphStyleFromJS TypographyStyle textDirection is %{public}d", typographyStyle.textDirection);
+    ROSEN_LOGE("GetParagraphStyleFromJS TypographyStyle textAlign is %{public}d", typographyStyle.textAlign);
+    ROSEN_LOGE("GetParagraphStyleFromJS TypographyStyle wordBreakType is %{public}d", typographyStyle.wordBreakType);
+    ROSEN_LOGE("GetParagraphStyleFromJS TypographyStyle maxLines is %{public}d", typographyStyle.maxLines);
+    ROSEN_LOGE("GetParagraphStyleFromJS TypographyStyle breakStrategy is %{public}d", typographyStyle.breakStrategy);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle Color_Red is %{public}d", typographyStyle.insideTextStyle.color.GetRed());
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle fontWeight is %{public}d", typographyStyle.insideTextStyle.fontWeight);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle baseline is %{public}d", typographyStyle.insideTextStyle.baseline);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle fontSize is %{public}f", typographyStyle.insideTextStyle.fontSize);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle letterSpacing is %{public}f", typographyStyle.insideTextStyle.letterSpacing);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle wordSpacing is %{public}f", typographyStyle.insideTextStyle.wordSpacing);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle heightScale is %{public}f", typographyStyle.insideTextStyle.heightScale);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle halfLeading is %{public}d", typographyStyle.insideTextStyle.halfLeading);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle heightOnly is %{public}d", typographyStyle.insideTextStyle.heightOnly);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle ellipsisModal is %{public}d", typographyStyle.insideTextStyle.ellipsisModal);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle decorationColorColor_Red is %{public}d", typographyStyle.insideTextStyle.decorationColor.GetRed());
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle decorationStyle is %{public}d", typographyStyle.insideTextStyle.decorationStyle);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle decorationThicknessScale is %{public}f", typographyStyle.insideTextStyle.decorationThicknessScale);
+    ROSEN_LOGE("GetParagraphStyleFromJS GetTextStyleFromJS TextStyle decoration is %{public}d", typographyStyle.insideTextStyle.decoration);
+
     JsFontCollection* jsFontCollection = nullptr;
     status = napi_unwrap(env, argv[1], reinterpret_cast<void**>(&jsFontCollection));
 

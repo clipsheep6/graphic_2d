@@ -373,6 +373,10 @@ template<>
 RSB_EXPORT bool RSRenderAnimatableProperty<RRect>::IsNearEqual(
     const std::shared_ptr<RSRenderPropertyBase>& value, float zeroThreshold) const;
 
+template<>
+RSB_EXPORT bool RSRenderAnimatableProperty<std::shared_ptr<RSFilter>>::IsEqual(
+    const std::shared_ptr<RSRenderPropertyBase>& value) const;
+
 #if defined(_WIN32)
 extern template class RSRenderAnimatableProperty<float>;
 extern template class RSRenderAnimatableProperty<Vector4f>;

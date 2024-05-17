@@ -52,6 +52,7 @@
 #endif
 
 namespace OHOS::Rosen {
+class RSUniRenderVisitor;
 #if defined(ACCESSIBILITY_ENABLE)
 class AccessibilityObserver;
 #endif
@@ -338,6 +339,13 @@ private:
     void SetDeviceType();
     void ColorPickerRequestVsyncIfNeed();
     void UniRender(std::shared_ptr<RSBaseRenderNode> rootNode);
+	void ClearMemoryCacheTask(pid_t pid, bool deeply);
+    uint32_t GetTaskDelay();
+    bool CheckAndProcessDirectComposition(std::shared_ptr<RSBaseRenderNode> rootNode,
+		std::shared_ptr<RSUniRenderVisitor> uniVisitor);
+    void RenderNothingToUpdate();
+    void TraverseAndUpdateNodeTree(std::shared_ptr<RSBaseRenderNode> rootNode,
+		std::shared_ptr<RSUniRenderVisitor> uniVisitor);
     bool CheckSurfaceNeedProcess(OcclusionRectISet& occlusionSurfaces, std::shared_ptr<RSSurfaceRenderNode> curSurface);
     RSVisibleLevel CalcSurfaceNodeVisibleRegion(const std::shared_ptr<RSDisplayRenderNode>& displayNode,
         const std::shared_ptr<RSSurfaceRenderNode>& surfaceNode, Occlusion::Region& accumulatedRegion,
@@ -392,6 +400,9 @@ private:
 
     // UIFirst
     bool CheckParallelSubThreadNodesStatus();
+    void ProcessNodeWithStatusDoing(std::shared_ptr<RSSurfaceRenderNode> node);
+    void UpdateCacheCmdSkippedInfo(const std::shared_ptr<RSSurfaceRenderNode>& node, pid_t pid);
+    void UpdateCacheCmdSkippedInfoForAbilityNodes(const std::shared_ptr<RSSurfaceRenderNode>& node);
     void CacheCommands();
     bool CheckSubThreadNodeStatusIsDoing(NodeId appNodeId) const;
 

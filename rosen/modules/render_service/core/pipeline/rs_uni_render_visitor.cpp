@@ -42,7 +42,6 @@
 #include "pipeline/rs_display_render_node.h"
 #include "pipeline/rs_draw_cmd.h"
 #include "pipeline/rs_effect_render_node.h"
-#include "pipeline/rs_main_thread.h"
 #include "pipeline/rs_paint_filter_canvas.h"
 #include "pipeline/rs_processor_factory.h"
 #include "pipeline/rs_proxy_render_node.h"
@@ -1212,6 +1211,10 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
     prepareClipRect_ = screenRect_;
     curAlpha_ = 1.0f;
     node.UpdateRotation();
+    if (!RSMainThread::Instance()->IsRequestedNextVSync()) {
+        RS_OPTIONAL_TRACE_NAME_FMT("do not request next vsync");
+        needRequestNextVsync_ = false;
+    }
     RSUifirstManager::Instance().SetRotationChanged(node.IsRotationChanged());
     if (node.IsSubTreeDirty() || node.IsRotationChanged()) {
         QuickPrepareChildren(node);
@@ -1219,7 +1222,7 @@ void RSUniRenderVisitor::QuickPrepareDisplayRenderNode(RSDisplayRenderNode& node
     PostPrepare(node);
     UpdateHwcNodeEnable();
     UpdateSurfaceDirtyAndGlobalDirty();
-    SurfaceOcclusionCallbackToWMS();
+    UpdateSurfaceOcclusionInfo();
     curDisplayNode_->UpdatePartialRenderParams();
     curDisplayNode_->UpdateScreenRenderParams(screenInfo_, displayHasSecSurface_, displayHasSkipSurface_,
         displayHasProtectedSurface_, hasCaptureWindow_);
@@ -1857,7 +1860,8 @@ void RSUniRenderVisitor::UpdateHwcNodeEnable()
             }
             UpdateHwcNodeEnableByRotateAndAlpha(hwcNodePtr);
             UpdateHwcNodeEnableByHwcNodeBelowSelfInApp(hwcRects, hwcNodePtr);
-            hwcNodePtr->SetGlobalZOrder(hwcNodePtr->IsHardwareForcedDisabled() ? -1.f : globalZOrder_++);
+            hwcNodePtr->SetGlobalZOrder(hwcNodePtr->IsHardwareForcedDisabled() && !hwcNodePtr->GetProtectedLayer()
+                ? -1.f : globalZOrder_++);
         }
     });
     PrevalidateHwcNode();
@@ -2017,10 +2021,10 @@ void RSUniRenderVisitor::UpdateSurfaceDirtyAndGlobalDirty()
 #endif
 }
 
-void RSUniRenderVisitor::SurfaceOcclusionCallbackToWMS()
+void RSUniRenderVisitor::UpdateSurfaceOcclusionInfo()
 {
     if (!needRecalculateOcclusion_) {
-        RS_LOGD("RSUniRenderVisitor::SurfaceOcclusionCallbackToWMS no need to callback");
+        RS_LOGD("RSUniRenderVisitor::UpdateSurfaceOcclusionInfo no need to update");
         return;
     }
     bool visibleChanged = dstCurVisVec_.size() != lastVisVec_.size();
@@ -2034,8 +2038,9 @@ void RSUniRenderVisitor::SurfaceOcclusionCallbackToWMS()
         }
     }
     if (visibleChanged) {
-        RSMainThread::Instance()->SurfaceOcclusionChangeCallback(dstCurVisVec_);
+        visibleChanged_ = visibleChanged;
     }
+    allDstCurVisVec_.insert(allDstCurVisVec_.end(), dstCurVisVec_.begin(), dstCurVisVec_.end());
     lastVisVec_.clear();
     std::swap(lastVisVec_, dstCurVisVec_);
 }
@@ -2189,7 +2194,7 @@ void RSUniRenderVisitor::CheckMergeTransparentFilterForDisplay(
             } else {
                 globalFilter_.insert(*it);
             }
-            filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()));
+            filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()), needRequestNextVsync_);
         }
     }
     CheckFilterCacheFullyCovered(surfaceNode);
@@ -2291,7 +2296,7 @@ void RSUniRenderVisitor::CheckMergeGlobalFilterForDisplay(Occlusion::Region& acc
             globalFilter_.insert(*it);
         }
         filterNode->UpdateFilterCacheWithSelfDirty();
-        filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()));
+        filterNode->PostPrepareForBlurFilterNode(*(curDisplayNode_->GetDirtyManager()), needRequestNextVsync_);
     }
 
     // Recursively traverses until the globalDirty do not change
@@ -2632,7 +2637,7 @@ void RSUniRenderVisitor::CollectFilterInfoAndUpdateDirty(RSRenderNode& node,
         containerFilter_.insert({node.GetId(), globalFilterRect});
     }
     if (curSurfaceNode_ && !isNodeAddedToTransparentCleanFilters) {
-        node.PostPrepareForBlurFilterNode(dirtyManager);
+        node.PostPrepareForBlurFilterNode(dirtyManager, needRequestNextVsync_);
     }
 }
 

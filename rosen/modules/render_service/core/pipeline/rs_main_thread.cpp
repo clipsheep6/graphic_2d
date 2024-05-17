@@ -1704,6 +1704,32 @@ void RSMainThread::RenderNothingToUpdate()
     for (auto& node : hardwareEnabledNodes_) {
         if (!node->IsHardwareForcedDisabled()) {
             node->MarkCurrentFrameHardwareEnabled();
+    if (needTraverseNodeTree) {
+        RSUifirstManager::Instance().ProcessForceUpdateNode();
+        doDirectComposition_ = false;
+        renderThreadParams_->selfDrawingNodes_ = std::move(selfDrawingNodes_);
+        renderThreadParams_->hardwareEnabledTypeNodes_ = std::move(hardwareEnabledNodes_);
+        uniVisitor->SetAnimateState(doWindowAnimate_);
+        uniVisitor->SetDirtyFlag(isDirty_ || isAccessibilityConfigChanged_ || forceUIFirstChanged_);
+        forceUIFirstChanged_ = false;
+        SetFocusLeashWindowId();
+        uniVisitor->SetFocusedNodeId(focusNodeId_, focusLeashWindowId_);
+        if (RSSystemProperties::GetQuickPrepareEnabled()) {
+            //planning:the QuickPrepare will be replaced by Prepare
+            rootNode->QuickPrepare(uniVisitor);
+            uniVisitor->SurfaceOcclusionCallbackToWMS();
+        } else {
+            rootNode->Prepare(uniVisitor);
+        }
+        isAccessibilityConfigChanged_ = false;
+        RSPointLightManager::Instance()->PrepareLight();
+        vsyncControlEnabled_ = (deviceType_ == DeviceType::PC) && RSSystemParameters::GetVSyncControlEnabled();
+        systemAnimatedScenesEnabled_ = RSSystemParameters::GetSystemAnimatedScenesEnabled();
+        if (!RSSystemProperties::GetQuickPrepareEnabled()) {
+            CalcOcclusion();
+        }
+        if (RSSystemProperties::GetGpuApiType() != GpuApiType::DDGR) {
+            WaitUntilUploadTextureTaskFinished(isUniRender_);
         }
     }
     WaitUntilUploadTextureTaskFinishedForGL();

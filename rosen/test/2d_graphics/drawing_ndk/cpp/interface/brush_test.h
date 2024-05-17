@@ -15,17 +15,18 @@
 
 #ifndef INTERFACE_BRUSH_TEST_H
 #define INTERFACE_BRUSH_TEST_H
-#include "../test_base.h"
+#include "test_base.h"
 
 class BrushReset : public TestBase {
 public:
-  BrushReset(int type) : TestBase(type) {
-    fileName_ = "BrushReset";
-  };
-  ~BrushReset() override {};
+    BrushReset(int type) : TestBase(type)
+    {
+        fileName_ = "BrushReset";
+    };
+    ~BrushReset() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 #endif // INTERFACE_BRUSH_TEST_H

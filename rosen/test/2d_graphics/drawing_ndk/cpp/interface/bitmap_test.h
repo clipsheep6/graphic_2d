@@ -18,58 +18,63 @@
 #include <native_drawing/drawing_canvas.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
-#include "../test_base.h"
+
+#include "test_base.h"
 #include "test_common.h"
 
 class ImageBuildFromBitmap : public TestBase {
 public:
-  ImageBuildFromBitmap(int type) : TestBase(type) {
-    fileName_ = "ImageBuildFromBitmap";
-  };
-  ~ImageBuildFromBitmap() override {};
+    ImageBuildFromBitmap(int type) : TestBase(type)
+    {
+        fileName_ = "ImageBuildFromBitmap";
+    };
+    ~ImageBuildFromBitmap() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class BitmapReadPixels : public TestBase {
 public:
-  BitmapReadPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at) : TestBase(type), fCT(ct), fAT(at) {
-    fileName_ = "BitmapReadPixels";
-  };
-  ~BitmapReadPixels() override = default;
+    BitmapReadPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at) : TestBase(type), fCT(ct), fAT(at)
+    {
+        fileName_ = "BitmapReadPixels";
+    };
+    ~BitmapReadPixels() override = default;
 
 protected:
-  OH_Drawing_ColorFormat fCT;
-  OH_Drawing_AlphaFormat fAT;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    OH_Drawing_ColorFormat fCT;
+    OH_Drawing_AlphaFormat fAT;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class BitmapBuild : public TestBase {
 public:
-  BitmapBuild(int type) : TestBase(type) {
-    fileName_ = "BitmapBuild";
-  };
-  ~BitmapBuild() override {};
+    BitmapBuild(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapBuild";
+    };
+    ~BitmapBuild() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class BitmapCreateFromPixels : public TestBase {
 public:
-  BitmapCreateFromPixels(int type) : TestBase(type) {
-    fileName_ = "BitmapCreateFromPixels";
-  };
-  ~BitmapCreateFromPixels() override {};
+    BitmapCreateFromPixels(int type) : TestBase(type)
+    {
+        fileName_ = "BitmapCreateFromPixels";
+    };
+    ~BitmapCreateFromPixels() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 #endif // INTERFACE_BITMAP_TEST_H

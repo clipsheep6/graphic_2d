@@ -15,11 +15,14 @@
 
 #include "typeface_test.h"
 
+#include <bits/alltypes.h>
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_filter.h>
+#include <native_drawing/drawing_font.h>
 #include <native_drawing/drawing_image.h>
 #include <native_drawing/drawing_matrix.h>
+#include <native_drawing/drawing_memory_stream.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_path_effect.h>
 #include <native_drawing/drawing_pen.h>
@@ -27,20 +30,20 @@
 #include <native_drawing/drawing_round_rect.h>
 #include <native_drawing/drawing_sampling_options.h>
 #include <native_drawing/drawing_shader_effect.h>
-#include "test_common.h"
-#include "common/log_common.h"
-#include "typeface_test.h"
-#include <bits/alltypes.h>
-#include <native_drawing/drawing_typeface.h>
-#include <native_drawing/drawing_font.h>
 #include <native_drawing/drawing_text_blob.h>
-#include <native_drawing/drawing_memory_stream.h>
+#include <native_drawing/drawing_typeface.h>
+
+#include "test_common.h"
+#include "typeface_test.h"
+
+#include "common/log_common.h"
 
 const float_t NUM_50 = (50);
 const float_t NUM_100 = (100);
 const float_t NUM_200 = (200);
 
-void TypefaceCreateDefault::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void TypefaceCreateDefault::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     const char* text = "hello";
     size_t len = strlen(text);
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
@@ -48,15 +51,13 @@ void TypefaceCreateDefault::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_FontSetTextSize(font, NUM_50);
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     for (int i = 0; i < testCount_; i++) {
-
         typeface = OH_Drawing_TypefaceCreateDefault();
         OH_Drawing_TypefaceDestroy(typeface);
     }
     typeface = OH_Drawing_TypefaceCreateDefault();
     OH_Drawing_FontSetTypeface(font, typeface);
 
-    OH_Drawing_TextBlob* textblob =
-        OH_Drawing_TextBlobCreateFromText(text, len, font, TEXT_ENCODING_UTF8);
+    OH_Drawing_TextBlob* textblob = OH_Drawing_TextBlobCreateFromText(text, len, font, TEXT_ENCODING_UTF8);
 
     OH_Drawing_CanvasAttachPen(canvas, pen);
 
@@ -67,7 +68,8 @@ void TypefaceCreateDefault::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_TypefaceDestroy(typeface);
 }
 
-void TypefaceCreateFromFile::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void TypefaceCreateFromFile::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     const char* text = "hello";
     size_t len = strlen(text);
     const char path[] = "D:/pic/MyApplication_c_perf_demo/entry/src/main/cpp/hello.cpp";
@@ -78,14 +80,12 @@ void TypefaceCreateFromFile::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_Typeface* typeface;
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();
     for (int i = 0; i < testCount_; i++) {
-
         typeface = OH_Drawing_TypefaceCreateFromFile(path, index);
         OH_Drawing_TypefaceDestroy(typeface);
     }
     typeface = OH_Drawing_TypefaceCreateFromFile(path, index);
     OH_Drawing_FontSetTypeface(font, typeface);
-    OH_Drawing_TextBlob* textblob =
-        OH_Drawing_TextBlobCreateFromText(text, len, font, TEXT_ENCODING_UTF8);
+    OH_Drawing_TextBlob* textblob = OH_Drawing_TextBlobCreateFromText(text, len, font, TEXT_ENCODING_UTF8);
     OH_Drawing_CanvasAttachPen(canvas, pen);
     OH_Drawing_CanvasDrawTextBlob(canvas, textblob, NUM_100, NUM_100);
 
@@ -95,7 +95,8 @@ void TypefaceCreateFromFile::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_TypefaceDestroy(typeface);
 }
 
-void TypefaceCreateFromStream::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void TypefaceCreateFromStream::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     OH_Drawing_Font* font = OH_Drawing_FontCreate();
     OH_Drawing_FontSetTextSize(font, NUM_50);
 

@@ -14,6 +14,7 @@
  */
 
 #include "bitmap_test.h"
+
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_filter.h>
@@ -26,10 +27,13 @@
 #include <native_drawing/drawing_round_rect.h>
 #include <native_drawing/drawing_sampling_options.h>
 #include <native_drawing/drawing_shader_effect.h>
+
 #include "test_common.h"
+
 #include "common/log_common.h"
 
-void ImageBuildFromBitmap::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ImageBuildFromBitmap::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     uint32_t width = rand.nextULessThan(bitmapWidth_);
     uint32_t height = rand.nextULessThan(bitmapHeight_);
@@ -55,14 +59,15 @@ void ImageBuildFromBitmap::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_BitmapDestroy(bm);
 }
 
-void BitmapReadPixels::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void BitmapReadPixels::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     // 性能测试:100000次66ms
     const unsigned int width = 100;  // 100 宽度
     const unsigned int height = 100; // 100 高度
     OH_Drawing_Bitmap* cBitmap = OH_Drawing_BitmapCreate();
-    OH_Drawing_BitmapFormat bitmapFormat{ fCT, fAT };
+    OH_Drawing_BitmapFormat bitmapFormat { fCT, fAT };
     OH_Drawing_BitmapBuild(cBitmap, width, height, &bitmapFormat);
-    OH_Drawing_Image_Info imageInfo{ width, height, fCT, fAT };
+    OH_Drawing_Image_Info imageInfo { width, height, fCT, fAT };
     void* pixels = new uint32_t[width * height];
     bool resFail = false;
     bool resTrue = false;
@@ -74,11 +79,11 @@ void BitmapReadPixels::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     resFail = OH_Drawing_BitmapReadPixels(nullptr, nullptr, nullptr, width * 4, 0, 0); // 4字节数
     // 对于像素数据读取,无参数传入应返回错误(为方便观察,与正确返回对比,额外写的错误返回)
     DRAWING_LOGI("The OH_Drawing_BitmapReadPixels interface has no parameters passed in,the result should return an "
-        "error=%{public}s",
+                 "error=%{public}s",
         resFail ? "true" : "false");
     // 对于像素数据读取,有参数传入应返回正确
     DRAWING_LOGI("The OH_Drawing_BitmapReadPixels interface has a parameter passed in, and the result should be "
-        "returned correctly=%{public}s",
+                 "returned correctly=%{public}s",
         resTrue ? "true" : "false");
     if (resTrue == true) {
         OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, width, height);
@@ -93,13 +98,14 @@ void BitmapReadPixels::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_BitmapDestroy(cBitmap);
 }
 
-void BitmapBuild::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void BitmapBuild::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     int32_t w = 128;
     int32_t h = 128;
     OH_Drawing_Bitmap* bm = OH_Drawing_BitmapCreate();
     void* pixels = OH_Drawing_BitmapGetPixels(bm);
-    OH_Drawing_Image_Info imageInfo{ w, h, COLOR_FORMAT_ARGB_4444, ALPHA_FORMAT_OPAQUE };
-    OH_Drawing_BitmapFormat cFormat{ COLOR_FORMAT_ARGB_4444, ALPHA_FORMAT_OPAQUE };
+    OH_Drawing_Image_Info imageInfo { w, h, COLOR_FORMAT_ARGB_4444, ALPHA_FORMAT_OPAQUE };
+    OH_Drawing_BitmapFormat cFormat { COLOR_FORMAT_ARGB_4444, ALPHA_FORMAT_OPAQUE };
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, w, h);
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_BitmapBuild(bm, w, h, &cFormat);
@@ -112,13 +118,14 @@ void BitmapBuild::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_BitmapDestroy(bm);
 }
 
-void BitmapCreateFromPixels::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void BitmapCreateFromPixels::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     int32_t w = 256;
     int32_t h = 256;
     OH_Drawing_Bitmap* bm = OH_Drawing_BitmapCreate();
     void* pixels = OH_Drawing_BitmapGetPixels(bm);
-    OH_Drawing_Image_Info imageInfo{ w, h, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_PREMUL };
-    OH_Drawing_BitmapFormat cFormat{ COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_PREMUL };
+    OH_Drawing_Image_Info imageInfo { w, h, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_PREMUL };
+    OH_Drawing_BitmapFormat cFormat { COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_PREMUL };
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, w, h);
     OH_Drawing_BitmapBuild(bm, w, h, &cFormat);
     OH_Drawing_Bitmap* cPixels = 0;

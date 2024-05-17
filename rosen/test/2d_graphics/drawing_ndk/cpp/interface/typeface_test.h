@@ -19,13 +19,13 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 
-#include "../test_base.h"
+#include "test_base.h"
 #include "test_common.h"
-
 
 class TypefaceCreateDefault : public TestBase {
 public:
-    TypefaceCreateDefault(int type) : TestBase(type) {
+    TypefaceCreateDefault(int type) : TestBase(type)
+    {
         fileName_ = "TypefaceCreateDefault";
     }
     ~TypefaceCreateDefault() override {};
@@ -38,7 +38,8 @@ protected:
 
 class TypefaceCreateFromFile : public TestBase {
 public:
-    TypefaceCreateFromFile(int type) : TestBase(type) {
+    TypefaceCreateFromFile(int type) : TestBase(type)
+    {
         fileName_ = "TypefaceCreateFromFile";
     }
     ~TypefaceCreateFromFile() override {};
@@ -51,7 +52,8 @@ protected:
 
 class TypefaceCreateFromStream : public TestBase {
 public:
-    TypefaceCreateFromStream(int type) : TestBase(type) {
+    TypefaceCreateFromStream(int type) : TestBase(type)
+    {
         fileName_ = "TypefaceCreateFromStream";
     }
     ~TypefaceCreateFromStream() override {};

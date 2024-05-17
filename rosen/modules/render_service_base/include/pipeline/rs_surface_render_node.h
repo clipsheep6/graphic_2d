@@ -868,6 +868,8 @@ public:
         grContext_ = grContext;
     }
     // UIFirst
+    void UpdateUIFirstFrameGravity();
+
     void SetSubmittedSubThreadIndex(uint32_t index)
     {
         submittedSubThreadIndex_ = index;

@@ -116,6 +116,20 @@ bool RSSurfaceRenderParams::GetHardwareEnabled() const
     return isHardwareEnabled_;
 }
 
+void RSSurfaceRenderParams::SetUIFirstFrameGravity(Gravity gravity)
+{
+    if (uiFirstFrameGravity_ == gravity) {
+        return;
+    }
+    uiFirstFrameGravity_ = gravity;
+    needSync_ = true;
+}
+
+Gravity RSSurfaceRenderParams::GetUIFirstFrameGravity() const
+{
+    return uiFirstFrameGravity_;
+}
+
 void RSSurfaceRenderParams::SetLastFrameHardwareEnabled(bool enabled)
 {
     if (isLastFrameHardwareEnabled_ == enabled) {

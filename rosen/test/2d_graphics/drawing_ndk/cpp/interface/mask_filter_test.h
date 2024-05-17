@@ -19,18 +19,19 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 
-#include "../test_base.h"
+#include "test_base.h"
 #include "test_common.h"
 
 class MaskFilterCreateBlur : public TestBase {
 public:
-  MaskFilterCreateBlur(int type) : TestBase(type) {
-    fileName_ = "mask_filter_createblur";
-  };
-  ~MaskFilterCreateBlur() override {};
+    MaskFilterCreateBlur(int type) : TestBase(type)
+    {
+        fileName_ = "mask_filter_createblur";
+    };
+    ~MaskFilterCreateBlur() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 #endif // MASK_FILTER_TEST_H

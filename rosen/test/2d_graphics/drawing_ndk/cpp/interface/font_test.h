@@ -15,17 +15,18 @@
 
 #ifndef INTERFACE_FONT_TEST_H
 #define INTERFACE_FONT_TEST_H
-#include "../test_base.h"
+#include "test_base.h"
 
 class FontCountText : public TestBase {
 public:
-  FontCountText(int type) : TestBase(type) {
-    fileName_ = "FontCountText";
-  };
-  ~FontCountText() override {};
+    FontCountText(int type) : TestBase(type)
+    {
+        fileName_ = "FontCountText";
+    };
+    ~FontCountText() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 #endif // INTERFACE_FONT_TEST_H

@@ -19,110 +19,118 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 
-#include "../test_base.h"
+#include "test_base.h"
 #include "test_common.h"
 
 class ColorFilterCreateBlendMode : public TestBase {
 public:
-  ColorFilterCreateBlendMode(int type) : TestBase(type) {
-    fileName_ = "ColorFilterCreateBlendMode";
-  };
-  ~ColorFilterCreateBlendMode() override {};
+    ColorFilterCreateBlendMode(int type) : TestBase(type)
+    {
+        fileName_ = "ColorFilterCreateBlendMode";
+    };
+    ~ColorFilterCreateBlendMode() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class ColorFilterCreateCompose : public TestBase {
 public:
-  ColorFilterCreateCompose(int type) : TestBase(type) {
-    fileName_ = "ColorFilterCreateCompose";
-  };
-  ~ColorFilterCreateCompose() override {};
+    ColorFilterCreateCompose(int type) : TestBase(type)
+    {
+        fileName_ = "ColorFilterCreateCompose";
+    };
+    ~ColorFilterCreateCompose() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class ColorFilterCreateMatrix : public TestBase {
 public:
-  ColorFilterCreateMatrix(int type) : TestBase(type) {
-    fileName_ = "ColorFilterCreateMatrix";
-  };
-  ~ColorFilterCreateMatrix() override {};
+    ColorFilterCreateMatrix(int type) : TestBase(type)
+    {
+        fileName_ = "ColorFilterCreateMatrix";
+    };
+    ~ColorFilterCreateMatrix() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class ColorFilterCreateLinearToSrgbGamma : public TestBase {
 public:
-  ColorFilterCreateLinearToSrgbGamma(int type) : TestBase(type) {
-    fileName_ = "ColorFilterCreateLinearToSrgbGamma";
-  };
-  ~ColorFilterCreateLinearToSrgbGamma() override {};
+    ColorFilterCreateLinearToSrgbGamma(int type) : TestBase(type)
+    {
+        fileName_ = "ColorFilterCreateLinearToSrgbGamma";
+    };
+    ~ColorFilterCreateLinearToSrgbGamma() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class ColorFilterCreateSrgbGammaToLinear : public TestBase {
 public:
-  ColorFilterCreateSrgbGammaToLinear(int type) : TestBase(type) {
-    fileName_ = "ColorFilterCreateSrgbGammaToLinear";
-  };
-  ~ColorFilterCreateSrgbGammaToLinear() override {};
+    ColorFilterCreateSrgbGammaToLinear(int type) : TestBase(type)
+    {
+        fileName_ = "ColorFilterCreateSrgbGammaToLinear";
+    };
+    ~ColorFilterCreateSrgbGammaToLinear() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class ColorFilterCreateLuma : public TestBase {
 public:
-  ColorFilterCreateLuma(int type) : TestBase(type) {
-    fileName_ = "ColorFilterCreateLuma";
-  };
-  ~ColorFilterCreateLuma() override {};
+    ColorFilterCreateLuma(int type) : TestBase(type)
+    {
+        fileName_ = "ColorFilterCreateLuma";
+    };
+    ~ColorFilterCreateLuma() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class ColorSpaceCreateSrgb : public TestBase {
 public:
-  ColorSpaceCreateSrgb(int type) : TestBase(type) {
-    fileName_ = "ColorSpaceCreateSrgb";
-  };
-  ~ColorSpaceCreateSrgb() override {};
+    ColorSpaceCreateSrgb(int type) : TestBase(type)
+    {
+        fileName_ = "ColorSpaceCreateSrgb";
+    };
+    ~ColorSpaceCreateSrgb() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class ColorSpaceCreateSrgbLinear : public TestBase {
 public:
-  ColorSpaceCreateSrgbLinear(int type) : TestBase(type) {
-    fileName_ = "ColorSpaceCreateSrgbLinear";
-  };
-  ~ColorSpaceCreateSrgbLinear() override {};
+    ColorSpaceCreateSrgbLinear(int type) : TestBase(type)
+    {
+        fileName_ = "ColorSpaceCreateSrgbLinear";
+    };
+    ~ColorSpaceCreateSrgbLinear() override {};
 
 protected:
-  int rectWidth_ = 0;
-  int rectHeight_ = 0;
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    int rectWidth_ = 0;
+    int rectHeight_ = 0;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 #endif // INTERFACE_COLOR_TEST_H

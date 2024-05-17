@@ -32,7 +32,8 @@
 
 #include "test_common.h"
 
-void ColorFilterCreateBlendMode::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorFilterCreateBlendMode::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;
@@ -53,7 +54,8 @@ void ColorFilterCreateBlendMode::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_RectDestroy(rect);
 }
 
-void ColorFilterCreateCompose::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorFilterCreateCompose::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;
@@ -78,17 +80,17 @@ void ColorFilterCreateCompose::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_ColorFilterDestroy(colorFilter2);
 }
 
-void ColorFilterCreateMatrix::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorFilterCreateMatrix::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;
     float r = rand.nextULessThan(bitmapWidth_);
     float b = rand.nextULessThan(bitmapHeight_);
-    float colorMatrix[20] = {
-        1, 0, 0, 0, 0,  // 1, 0, 0, 0, 0, 颜色矩阵参数
-        0, 1, 0, 0, 0,  // 0, 1, 0, 0, 0, 颜色矩阵参数
-        0, 0, 0.5, 0.5, 0, // 0, 0, 0.5, 0.5, 0, 颜色矩阵参数
-        0, 0, 0.5, 0.5, 0 }; // 0, 0, 0.5, 0.5, 0 颜色矩阵参数
+    float colorMatrix[20] = { 1, 0, 0, 0, 0, // 1, 0, 0, 0, 0, 颜色矩阵参数
+        0, 1, 0, 0, 0,                       // 0, 1, 0, 0, 0, 颜色矩阵参数
+        0, 0, 0.5, 0.5, 0,                   // 0, 0, 0.5, 0.5, 0, 颜色矩阵参数
+        0, 0, 0.5, 0.5, 0 };                 // 0, 0, 0.5, 0.5, 0 颜色矩阵参数
     OH_Drawing_ColorFilter* colorFilter;
 
     for (int i = 0; i < testCount_; i++) {
@@ -104,7 +106,8 @@ void ColorFilterCreateMatrix::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_ColorFilterDestroy(colorFilter);
 }
 
-void ColorFilterCreateLinearToSrgbGamma::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorFilterCreateLinearToSrgbGamma::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;
@@ -125,7 +128,8 @@ void ColorFilterCreateLinearToSrgbGamma::OnTestPerformance(OH_Drawing_Canvas* ca
     OH_Drawing_ColorFilterDestroy(colorFilter);
 }
 
-void ColorFilterCreateSrgbGammaToLinear::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorFilterCreateSrgbGammaToLinear::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;
@@ -146,7 +150,8 @@ void ColorFilterCreateSrgbGammaToLinear::OnTestPerformance(OH_Drawing_Canvas* ca
     OH_Drawing_ColorFilterDestroy(colorFilter);
 }
 
-void ColorFilterCreateLuma::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorFilterCreateLuma::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;
@@ -168,7 +173,8 @@ void ColorFilterCreateLuma::OnTestPerformance(OH_Drawing_Canvas* canvas) {
 }
 
 // 接口使用方法暂未开放
-void ColorSpaceCreateSrgb::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorSpaceCreateSrgb::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;
@@ -185,7 +191,8 @@ void ColorSpaceCreateSrgb::OnTestPerformance(OH_Drawing_Canvas* canvas) {
 }
 
 // 接口使用方法暂未开放
-void ColorSpaceCreateSrgbLinear::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ColorSpaceCreateSrgbLinear::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_) + __LINE__;

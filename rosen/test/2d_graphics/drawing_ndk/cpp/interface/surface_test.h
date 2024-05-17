@@ -19,20 +19,20 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 
-#include "../test_base.h"
+#include "test_base.h"
 #include "test_common.h"
-
 
 class SurfaceCreateFromGpuContext : public TestBase {
 public:
-  SurfaceCreateFromGpuContext(int type, bool budgeted) : TestBase(type), budgeted(budgeted) {
-    fileName_ = "SurfaceCreateFromGpuContext";
-  };
-  ~SurfaceCreateFromGpuContext() override {};
+    SurfaceCreateFromGpuContext(int type, bool budgeted) : TestBase(type), budgeted(budgeted)
+    {
+        fileName_ = "SurfaceCreateFromGpuContext";
+    };
+    ~SurfaceCreateFromGpuContext() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
-  bool budgeted;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    bool budgeted;
 };
 
 #endif // INTERFACE_SURFACE_TEST_H

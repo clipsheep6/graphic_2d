@@ -4,16 +4,20 @@
 // Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
 // please include "napi/native_api.h".
 #include "pen_test.h"
+
 #include <multimedia/image_framework/image_pixel_map_mdk.h>
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_pen.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
 #include "test_common.h"
+
 #include "common/log_common.h"
 
-void PenReset::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void PenReset::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_CanvasDetachPen(canvas);
     OH_Drawing_Pen* pen = OH_Drawing_PenCreate();

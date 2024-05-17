@@ -32,11 +32,11 @@
 
 #include "common/log_common.h"
 
-
-void SamplingOptionsCreate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void SamplingOptionsCreate::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_Bitmap* bitmap = OH_Drawing_BitmapCreate();
-    OH_Drawing_BitmapFormat cFormat{ COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE };
+    OH_Drawing_BitmapFormat cFormat { COLOR_FORMAT_BGRA_8888, ALPHA_FORMAT_OPAQUE };
     OH_Drawing_BitmapBuild(bitmap, 200, 200, &cFormat);
     OH_Drawing_Canvas* bitmapCanvas = OH_Drawing_CanvasCreate();
     OH_Drawing_CanvasBind(bitmapCanvas, bitmap);

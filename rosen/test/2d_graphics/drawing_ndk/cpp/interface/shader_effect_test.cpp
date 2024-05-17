@@ -28,17 +28,18 @@
 #include <native_drawing/drawing_sampling_options.h>
 #include <native_drawing/drawing_shader_effect.h>
 
+#include "shader_effect_test.h"
 #include "test_common.h"
 
 #include "common/log_common.h"
-#include "shader_effect_test.h"
 
 const int NUM_2 = 2;
 const int NUM_20 = 20;
 const int NUM_50 = 50;
 const int NUM_300 = 300;
 
-void ShaderEffectCreateLinearGradient::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ShaderEffectCreateLinearGradient::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     OH_Drawing_Point* startPt = OH_Drawing_PointCreate(NUM_20, NUM_20);
     OH_Drawing_Point* endPt = OH_Drawing_PointCreate(NUM_300, NUM_300);
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(NUM_20, NUM_20, NUM_300, NUM_300); // 创建一个矩形
@@ -50,8 +51,7 @@ void ShaderEffectCreateLinearGradient::OnTestPerformance(OH_Drawing_Canvas* canv
         ShaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, colors, pos, NUM_2, CLAMP);
         OH_Drawing_ShaderEffectDestroy(ShaderEffect);
     }
-    ShaderEffect =
-        OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, colors, pos, NUM_2, CLAMP);
+    ShaderEffect = OH_Drawing_ShaderEffectCreateLinearGradient(startPt, endPt, colors, pos, NUM_2, CLAMP);
     OH_Drawing_BrushSetShaderEffect(brush, ShaderEffect);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawRect(canvas, rect);
@@ -63,7 +63,8 @@ void ShaderEffectCreateLinearGradient::OnTestPerformance(OH_Drawing_Canvas* canv
     OH_Drawing_PointDestroy(endPt);
 }
 
-void ShaderEffectCreateRadialGradient::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ShaderEffectCreateRadialGradient::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     OH_Drawing_Point* centerPt = OH_Drawing_PointCreate(NUM_20, NUM_20);
     float pos[] = { 0.0f, 1.0f };
     uint32_t colors[] = { 0xFFFFFFFF }; // 白色到黑色的渐变
@@ -72,12 +73,10 @@ void ShaderEffectCreateRadialGradient::OnTestPerformance(OH_Drawing_Canvas* canv
     OH_Drawing_ShaderEffect* ShaderEffect;
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     for (int i = 0; i < testCount_; i++) {
-
         ShaderEffect = OH_Drawing_ShaderEffectCreateRadialGradient(centerPt, NUM_20, colors, pos, size, CLAMP);
         OH_Drawing_ShaderEffectDestroy(ShaderEffect);
     }
-    ShaderEffect =
-        OH_Drawing_ShaderEffectCreateRadialGradient(centerPt, NUM_20, colors, pos, size, CLAMP);
+    ShaderEffect = OH_Drawing_ShaderEffectCreateRadialGradient(centerPt, NUM_20, colors, pos, size, CLAMP);
     OH_Drawing_BrushSetShaderEffect(brush, ShaderEffect);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawRect(canvas, rect);
@@ -88,7 +87,8 @@ void ShaderEffectCreateRadialGradient::OnTestPerformance(OH_Drawing_Canvas* canv
     OH_Drawing_PointDestroy(centerPt);
 }
 
-void ShaderEffectCreateImageShader::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void ShaderEffectCreateImageShader::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_SamplingOptions* option = OH_Drawing_SamplingOptionsCreate(FILTER_MODE_NEAREST, MIPMAP_MODE_NONE);
 
@@ -98,13 +98,11 @@ void ShaderEffectCreateImageShader::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(NUM_20, NUM_50, NUM_300, NUM_300);
     for (int i = 0; i < testCount_; i++) {
-
         ShaderEffect = OH_Drawing_ShaderEffectCreateImageShader(image, CLAMP, CLAMP, option, matrix);
         OH_Drawing_ShaderEffectDestroy(ShaderEffect);
     }
 
-    ShaderEffect =
-        OH_Drawing_ShaderEffectCreateImageShader(image, CLAMP, CLAMP, option, matrix);
+    ShaderEffect = OH_Drawing_ShaderEffectCreateImageShader(image, CLAMP, CLAMP, option, matrix);
     OH_Drawing_BrushSetShaderEffect(brush, ShaderEffect);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawRect(canvas, rect);
@@ -117,15 +115,15 @@ void ShaderEffectCreateImageShader::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_SamplingOptionsDestroy(option);
 }
 
-void ShaderEffectCreateSweepGradient::OnTestPerformance(OH_Drawing_Canvas* canvas) {
-
+void ShaderEffectCreateSweepGradient::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     OH_Drawing_Point* centerPt = OH_Drawing_PointCreate(NUM_20, NUM_20);
     int fCount = NUM_50;
     int ArraySize = NUM_50;
     float positions[ArraySize];
 
     positions[0] = 0.0f;
-    positions[1] = 0.1f; // 0.1 位置值 
+    positions[1] = 0.1f; // 0.1 位置值
     OH_Drawing_ShaderEffect* ShaderEffect;
     OH_Drawing_Brush* brush = OH_Drawing_BrushCreate();
     uint32_t colors[] = { 0xFFFFFFFF };
@@ -138,8 +136,7 @@ void ShaderEffectCreateSweepGradient::OnTestPerformance(OH_Drawing_Canvas* canva
         OH_Drawing_ShaderEffectDestroy(ShaderEffect);
     }
 
-    ShaderEffect =
-        OH_Drawing_ShaderEffectCreateSweepGradient(centerPt, colors, positions, fCount, CLAMP);
+    ShaderEffect = OH_Drawing_ShaderEffectCreateSweepGradient(centerPt, colors, positions, fCount, CLAMP);
     OH_Drawing_BrushSetShaderEffect(brush, ShaderEffect);
     OH_Drawing_CanvasAttachBrush(canvas, brush);
     OH_Drawing_CanvasDrawOval(canvas, rect);

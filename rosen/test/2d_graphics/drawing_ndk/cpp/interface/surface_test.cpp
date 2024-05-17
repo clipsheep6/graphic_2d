@@ -32,9 +32,8 @@
 
 #include "common/log_common.h"
 
-
-
-void SurfaceCreateFromGpuContext::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void SurfaceCreateFromGpuContext::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     // 只能用gpu来画，用cpu会闪退
     TestRend rand;
     const int32_t width = 500;  // 500 绘图表面的宽度
@@ -42,7 +41,8 @@ void SurfaceCreateFromGpuContext::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_GpuContextOptions options;
     options.allowPathMaskCaching = false;
     OH_Drawing_GpuContext* gpuContext = OH_Drawing_GpuContextCreateFromGL(options);
-    OH_Drawing_Image_Info imageInfo = { width, height, COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE }; // COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE 绘图表面的颜色和透明度
+    OH_Drawing_Image_Info imageInfo = { width, height, COLOR_FORMAT_RGBA_8888,
+        ALPHA_FORMAT_OPAQUE }; // COLOR_FORMAT_RGBA_8888, ALPHA_FORMAT_OPAQUE 绘图表面的颜色和透明度
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_);
     float r = l + rand.nextULessThan(bitmapWidth_);

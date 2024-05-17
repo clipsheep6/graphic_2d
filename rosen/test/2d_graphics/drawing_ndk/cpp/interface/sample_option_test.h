@@ -19,21 +19,23 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 #include <native_drawing/drawing_sampling_options.h>
-#include "../test_base.h"
+
+#include "test_base.h"
 #include "test_common.h"
 
 class SamplingOptionsCreate : public TestBase {
 public:
-  SamplingOptionsCreate(int type, OH_Drawing_FilterMode filterMode, OH_Drawing_MipmapMode mipmapMode) : TestBase(type), filterMode(filterMode), mipmapMode(mipmapMode)
-  {
-    fileName_ = "SamplingOptionsCreate";
-  };
-  ~SamplingOptionsCreate() override {};
+    SamplingOptionsCreate(int type, OH_Drawing_FilterMode filterMode, OH_Drawing_MipmapMode mipmapMode)
+        : TestBase(type), filterMode(filterMode), mipmapMode(mipmapMode)
+    {
+        fileName_ = "SamplingOptionsCreate";
+    };
+    ~SamplingOptionsCreate() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
-  OH_Drawing_FilterMode filterMode;
-  OH_Drawing_MipmapMode mipmapMode;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    OH_Drawing_FilterMode filterMode;
+    OH_Drawing_MipmapMode mipmapMode;
 };
 
 #endif // INTERFACE_SAMPLE_OPTION_TEST_H

@@ -19,9 +19,8 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 
-#include "../test_base.h"
+#include "test_base.h"
 #include "test_common.h"
-
 
 class ShaderEffectCreateLinearGradient : public TestBase {
 public:
@@ -35,7 +34,6 @@ protected:
     int rectWidth_ = 0;
     int rectHeight_ = 0;
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
-
 };
 class ShaderEffectCreateRadialGradient : public TestBase {
 public:

@@ -448,6 +448,7 @@ void RSDisplayRenderNodeDrawable::OnDraw(Drawing::Canvas& canvas)
             return;
         }
         if (mirroredNode) {
+            exFoldScreen_ = (RSSystemProperties::IsFoldScreenFlag() && mirroredNode->GetScreenId() == 0);
             DrawMirrorScreen(*displayNodeSp, *params, processor);
         } else {
             bool isOpDropped = uniParam->IsOpDropped();
@@ -805,13 +806,13 @@ void RSDisplayRenderNodeDrawable::ScaleMirrorIfNeed(RSDisplayRenderNode& node, s
     auto mirrorHeight = node.GetRenderProperties().GetBoundsHeight();
     auto scaleMode = screenManager->GetScaleMode(node.GetScreenId());
     if (canvasRotation_) {
-        if ((RSSystemProperties::IsFoldScreenFlag() && mirroredNode->GetScreenId() == 0) ||
+        if (exFoldScreen_ ||
             mirroredNode->GetScreenRotation() == ScreenRotation::ROTATION_90 ||
             mirroredNode->GetScreenRotation() == ScreenRotation::ROTATION_270) {
             std::swap(mainWidth, mainHeight);
         }
     } else {
-        if ((RSSystemProperties::IsFoldScreenFlag() && mirroredNode->GetScreenId() == 0)) {
+        if (exFoldScreen_) {
             auto oriRotation = node.GetOriginScreenRotation();
             auto curRotation = node.GetScreenRotation();
             auto rotation = static_cast<ScreenRotation>((static_cast<int>(oriRotation) -
@@ -842,8 +843,7 @@ void RSDisplayRenderNodeDrawable::ScaleMirrorIfNeed(RSDisplayRenderNode& node, s
 void RSDisplayRenderNodeDrawable::RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node)
 {
     auto mirroredNode = node.GetMirrorSource().lock();
-    if ((canvasRotation_ && (RSSystemProperties::IsFoldScreenFlag() && mirroredNode->GetScreenId() == 0)) ||
-        (!canvasRotation_ && !(RSSystemProperties::IsFoldScreenFlag() && mirroredNode->GetScreenId() == 0))) {
+    if ((canvasRotation_ && exFoldScreen_) || (!canvasRotation_ && !exFoldScreen_)) {
         return;
     }
     auto mirroredParams = static_cast<RSDisplayRenderParams*>(mirroredNode->GetRenderParams().get());
@@ -851,25 +851,50 @@ void RSDisplayRenderNodeDrawable::RotateMirrorCanvasIfNeed(RSDisplayRenderNode& 
     auto mainWidth = static_cast<float>(mainScreenInfo.width);
     auto mainHeight = static_cast<float>(mainScreenInfo.height);
     auto rotation = mirroredNode->GetScreenRotation();
-    if (RSSystemProperties::IsFoldScreenFlag() && mirroredNode->GetScreenId() == 0) {
+    if (exFoldScreen_) {
         if (rotation == ScreenRotation::ROTATION_0 || rotation == ScreenRotation::ROTATION_180) {
             std::swap(mainWidth, mainHeight);
         }
         auto oriRotation = node.GetOriginScreenRotation();
         rotation = static_cast<ScreenRotation>((static_cast<int>(oriRotation) -
             static_cast<int>(rotation) + SCREEN_ROTATION_NUM) % SCREEN_ROTATION_NUM);
-    }
-    if (rotation != ScreenRotation::ROTATION_0) {
-        if (rotation == ScreenRotation::ROTATION_90) {
-            curCanvas_->Rotate(90, 0, 0); // 90 is the rotate angle
-            curCanvas_->Translate(0, -mainHeight);
-        } else if (rotation == ScreenRotation::ROTATION_180) {
-            // 180 is the rotate angle, calculate half width and half height requires divide by 2
-            curCanvas_->Rotate(180, mainWidth / 2, mainHeight / 2);
-        } else if (rotation == ScreenRotation::ROTATION_270) {
-            curCanvas_->Rotate(270, 0, 0); // 270 is the rotate angle
-            curCanvas_->Translate(-mainWidth, 0);
+        if (!canvasRotation_ && oriRotation == ScreenRotation::ROTATION_0) {
+            RotateMirrorCanvasOnExFoldScreen(*mirroredParams, rotation, mainWidth, mainHeight);
+            return;
         }
+    }
+    RotateMirrorCanvas(rotation, mainWidth, mainHeight);
+}
+
+void RSDisplayRenderNodeDrawable::RotateMirrorCanvas(ScreenRotation& rotation, float mainWidth, float mainHeight)
+{
+    if (rotation == ScreenRotation::ROTATION_0) {
+        return;
+    } else if (rotation == ScreenRotation::ROTATION_90) {
+        curCanvas_->Rotate(90, 0, 0); // 90 is the rotate angle
+        curCanvas_->Translate(0, -mainHeight);
+    } else if (rotation == ScreenRotation::ROTATION_180) {
+        // 180 is the rotate angle, calculate half width and half height requires divide by 2
+        curCanvas_->Rotate(180, mainWidth / 2, mainHeight / 2);
+    } else if (rotation == ScreenRotation::ROTATION_270) {
+        curCanvas_->Rotate(270, 0, 0); // 270 is the rotate angle
+        curCanvas_->Translate(-mainWidth, 0);
+    }
+}
+
+void RSDisplayRenderNodeDrawable::RotateMirrorCanvasOnExFoldScreen(RSDisplayRenderParams& params,
+    ScreenRotation& rotation, float mainWidth, float mainHeight)
+{
+    curCanvas_->ConcatMatrix(params.GetMatrix());
+    curCanvas_->Rotate(90, 0, 0);
+    if (rotation == ScreenRotation::ROTATION_0) {
+        curCanvas_->Translate(0, -mainWidth);
+    } else if (rotation == ScreenRotation::ROTATION_90) {
+        curCanvas_->Translate(0, -mainHeight);
+    } else if (rotation == ScreenRotation::ROTATION_180) {
+        curCanvas_->Translate(mainHeight - mainWidth, -mainHeight);
+    } else if (rotation == ScreenRotation::ROTATION_270) {
+        curCanvas_->Translate(mainHeight - mainWidth, -mainWidth);
     }
 }
 

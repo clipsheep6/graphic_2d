@@ -63,6 +63,9 @@ private:
     void SetVirtualScreenType(RSDisplayRenderNode& node, const ScreenInfo& screenInfo);
     void ScaleMirrorIfNeed(RSDisplayRenderNode& node, std::shared_ptr<RSProcessor> processor);
     void RotateMirrorCanvasIfNeed(RSDisplayRenderNode& node);
+    void RotateMirrorCanvas(ScreenRotation& rotation, float mainWidth, float mainHeight);
+    void RotateMirrorCanvasOnExFoldScreen(RSDisplayRenderParams& params, ScreenRotation& rotation, float mainWidth,
+        float mainHeight);
     void DrawCurtainScreen(RSDisplayRenderNode& node, RSPaintFilterCanvas& canvas) const;
     void RemoveClearMemoryTask() const;
     void PostClearMemoryTask() const;
@@ -83,6 +86,7 @@ private:
     std::shared_ptr<Drawing::Surface> offscreenSurface_; // temporary holds offscreen surface
     std::shared_ptr<RSPaintFilterCanvas> canvasBackup_; // backup current canvas before offscreen rende
     bool canvasRotation_ = false;
+    bool exFoldScreen_ = false; // Expanded state of folding screen
 };
 } // namespace DrawableV2
 } // namespace OHOS::Rosen

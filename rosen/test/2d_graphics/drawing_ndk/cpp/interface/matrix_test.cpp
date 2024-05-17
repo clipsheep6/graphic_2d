@@ -32,7 +32,8 @@
 
 #include "common/log_common.h"
 
-void MatrixReset::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixReset::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
     float x1 = rand.nextULessThan(bitmapWidth_);
@@ -55,7 +56,8 @@ void MatrixReset::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_PathDestroy(path);
 }
 
-void MatrixConcat::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixConcat::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
     float x1 = rand.nextULessThan(bitmapWidth_);
@@ -86,7 +88,8 @@ void MatrixConcat::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_PathDestroy(path);
 }
 
-void MatrixInvert::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixInvert::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
     float x1 = rand.nextULessThan(bitmapWidth_);
@@ -111,7 +114,8 @@ void MatrixInvert::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_PathDestroy(path);
 }
 
-void MatrixSetPolyToPoly::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixSetPolyToPoly::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     int N = 4;
     TestRend rand;
     OH_Drawing_Path* path = OH_Drawing_PathCreate();
@@ -125,14 +129,8 @@ void MatrixSetPolyToPoly::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     float y4 = rand.nextULessThan(bitmapHeight_);
     OH_Drawing_PathAddRect(path, x1, y1, x2, y2, OH_Drawing_PathDirection::PATH_DIRECTION_CW);
     OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
-    OH_Drawing_Point2D src[] = { {x1, y1},
-                                {x2, y1},
-                                {x1, y2},
-                                {x2, y2} };
-    OH_Drawing_Point2D dst[] = { {x3, y3},
-                                {x3, y4},
-                                {x4, y3},
-                                {x4, y4} };
+    OH_Drawing_Point2D src[] = { { x1, y1 }, { x2, y1 }, { x1, y2 }, { x2, y2 } };
+    OH_Drawing_Point2D dst[] = { { x3, y3 }, { x3, y4 }, { x4, y3 }, { x4, y4 } };
     for (int i = 0; i < testCount_; i++) {
         OH_Drawing_MatrixSetPolyToPoly(matrix, src, dst, N);
     }
@@ -141,7 +139,8 @@ void MatrixSetPolyToPoly::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_MatrixDestroy(matrix);
     OH_Drawing_PathDestroy(path);
 }
-void MatrixPreRotate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixPreRotate::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     // 性能测试:10000次4ms
     OH_Drawing_Matrix* pMatrix = OH_Drawing_MatrixCreate();
     OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
@@ -165,8 +164,7 @@ void MatrixPreRotate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
         OH_Drawing_Rect* rect = OH_Drawing_RectCreate(l, t, r, b);
         OH_Drawing_CanvasDrawRect(canvas, rect);
         OH_Drawing_RectDestroy(rect);
-    }
-    else {
+    } else {
         DRAWING_LOGI("The OH_Drawing_MatrixPreRotate interface returns a value of failed,result=%{public}s",
             result ? "true" : "false");
     }
@@ -175,7 +173,8 @@ void MatrixPreRotate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_MatrixDestroy(matrix);
 }
 
-void MatrixPostScale::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixPostScale::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     // 性能测试:10000次27ms
     OH_Drawing_Matrix* pMatrix = OH_Drawing_MatrixCreate();
     OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
@@ -199,8 +198,7 @@ void MatrixPostScale::OnTestPerformance(OH_Drawing_Canvas* canvas) {
         OH_Drawing_Rect* rect = OH_Drawing_RectCreate(l, t, r, b);
         OH_Drawing_CanvasDrawRect(canvas, rect);
         OH_Drawing_RectDestroy(rect);
-    }
-    else {
+    } else {
         DRAWING_LOGI("The OH_Drawing_MatrixPostScale interface returns a value of failed,result=%{public}s",
             result ? "true" : "false");
     }
@@ -209,7 +207,8 @@ void MatrixPostScale::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_MatrixDestroy(matrix);
 }
 
-void MatrixPostTranslate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixPostTranslate::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     // 性能测试:10000次2ms
     OH_Drawing_Matrix* pMatrix = OH_Drawing_MatrixCreate();
     OH_Drawing_Matrix* matrix = OH_Drawing_MatrixCreate();
@@ -233,8 +232,7 @@ void MatrixPostTranslate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
         OH_Drawing_Rect* rect = OH_Drawing_RectCreate(l, t, r, b);
         OH_Drawing_CanvasDrawRect(canvas, rect);
         OH_Drawing_RectDestroy(rect);
-    }
-    else {
+    } else {
         DRAWING_LOGI("The OH_Drawing_MatrixPostTranslate interface returns a value of failed,result=%{public}s",
             result ? "true" : "false");
     }
@@ -243,7 +241,8 @@ void MatrixPostTranslate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_MatrixDestroy(matrix);
 }
 
-void MatrixIsEqual::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MatrixIsEqual::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_Matrix* matrix1 = OH_Drawing_MatrixCreate();
     OH_Drawing_Matrix* matrix2 = OH_Drawing_MatrixCreate();

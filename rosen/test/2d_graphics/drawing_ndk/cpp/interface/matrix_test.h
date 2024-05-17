@@ -19,95 +19,103 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 
-#include "../test_base.h"
+#include "test_base.h"
 #include "test_common.h"
 
 class MatrixReset : public TestBase {
 public:
-  MatrixReset(int type) : TestBase(type) {
-    fileName_ = "MatrixReset";
-  }
-  ~MatrixReset() override {};
+    MatrixReset(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixReset";
+    }
+    ~MatrixReset() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class MatrixConcat : public TestBase {
 public:
-  MatrixConcat(int type) : TestBase(type) {
-    fileName_ = "MatrixConcat";
-  }
-  ~MatrixConcat() override {};
+    MatrixConcat(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixConcat";
+    }
+    ~MatrixConcat() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class MatrixInvert : public TestBase {
 public:
-  MatrixInvert(int type) : TestBase(type) {
-    fileName_ = "MatrixInvert";
-  }
-  ~MatrixInvert() override {};
+    MatrixInvert(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixInvert";
+    }
+    ~MatrixInvert() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class MatrixSetPolyToPoly : public TestBase {
 public:
-  MatrixSetPolyToPoly(int type) : TestBase(type) {
-    fileName_ = "MatrixSetPolyToPoly";
-  }
-  ~MatrixSetPolyToPoly() override {};
+    MatrixSetPolyToPoly(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixSetPolyToPoly";
+    }
+    ~MatrixSetPolyToPoly() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class MatrixPreRotate : public TestBase {
 public:
-  MatrixPreRotate(int type) : TestBase(type) {
-    fileName_ = "MatrixPreRotate";
-  };
-  ~MatrixPreRotate() override {};
+    MatrixPreRotate(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixPreRotate";
+    };
+    ~MatrixPreRotate() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class MatrixPostScale : public TestBase {
 public:
-  MatrixPostScale(int type) : TestBase(type) {
-    fileName_ = "MatrixPostScale";
-  };
-  ~MatrixPostScale() override {};
+    MatrixPostScale(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixPostScale";
+    };
+    ~MatrixPostScale() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class MatrixPostTranslate : public TestBase {
 public:
-  MatrixPostTranslate(int type) : TestBase(type) {
-    fileName_ = "MatrixPostTranslate";
-  };
-  ~MatrixPostTranslate() override {};
+    MatrixPostTranslate(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixPostTranslate";
+    };
+    ~MatrixPostTranslate() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 class MatrixIsEqual : public TestBase {
 public:
-  MatrixIsEqual(int type) : TestBase(type) {
-    fileName_ = "MatrixIsEqual";
-  };
-  ~MatrixIsEqual() override {};
+    MatrixIsEqual(int type) : TestBase(type)
+    {
+        fileName_ = "MatrixIsEqual";
+    };
+    ~MatrixIsEqual() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
 #endif // INTERFACE_MATRIX_TEST_H

@@ -18,8 +18,10 @@
 #include <native_drawing/drawing_brush.h>
 #include <native_drawing/drawing_color.h>
 #include <native_drawing/drawing_filter.h>
+#include <native_drawing/drawing_font.h>
 #include <native_drawing/drawing_image.h>
 #include <native_drawing/drawing_matrix.h>
+#include <native_drawing/drawing_memory_stream.h>
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_path_effect.h>
 #include <native_drawing/drawing_pen.h>
@@ -27,13 +29,13 @@
 #include <native_drawing/drawing_round_rect.h>
 #include <native_drawing/drawing_sampling_options.h>
 #include <native_drawing/drawing_shader_effect.h>
-#include <native_drawing/drawing_memory_stream.h>
-#include <native_drawing/drawing_font.h>
+
 #include "test_common.h"
 
 #include "common/log_common.h"
 
-void MemoryStreamCreate::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void MemoryStreamCreate::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l = rand.nextULessThan(bitmapWidth_);
     float t = rand.nextULessThan(bitmapHeight_);

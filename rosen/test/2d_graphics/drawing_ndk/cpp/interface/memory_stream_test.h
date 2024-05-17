@@ -19,21 +19,20 @@
 #include <native_drawing/drawing_path.h>
 #include <native_drawing/drawing_rect.h>
 
-#include "../test_base.h"
+#include "test_base.h"
 #include "test_common.h"
-
-
 
 class MemoryStreamCreate : public TestBase {
 public:
-  MemoryStreamCreate(int type, bool copyData) : TestBase(type), copyData(copyData) {
-    fileName_ = "MemoryStreamCreate";
-  };
-  ~MemoryStreamCreate() override {};
+    MemoryStreamCreate(int type, bool copyData) : TestBase(type), copyData(copyData)
+    {
+        fileName_ = "MemoryStreamCreate";
+    };
+    ~MemoryStreamCreate() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
-  bool copyData;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    bool copyData;
 };
 
 #endif // INTERFACE_MEMORY_STEAM_TEST_H

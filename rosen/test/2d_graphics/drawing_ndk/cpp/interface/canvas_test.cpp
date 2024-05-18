@@ -644,7 +644,8 @@ void CanvasClipPath::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_PathDestroy(path);
 }
 
-void CanvasGetTotalMatrix::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void CanvasGetTotalMatrix::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     float l, t, r, b;
     l = rand.nextULessThan(bitmapWidth_);
@@ -668,7 +669,8 @@ void CanvasGetTotalMatrix::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_MatrixDestroy(total);
 }
 
-void CanvasRestore::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void CanvasRestore::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     OH_Drawing_CanvasSave(canvas);
     TestRend rand;
     OH_Drawing_CanvasScale(canvas, 0.1, 0.1); // 0.1, 0.1 缩放比例
@@ -680,9 +682,10 @@ void CanvasRestore::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_RectDestroy(rect);
 }
 
-void CanvasGetLocalClipBounds::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void CanvasGetLocalClipBounds::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
-    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, 700, 700); // 0, 0, 700, 700 创建矩形
+    OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, 700, 700);      // 0, 0, 700, 700 创建矩形
     OH_Drawing_Rect* rect1 = OH_Drawing_RectCreate(100, 100, 300, 300); // 100, 100, 300, 300 剪切矩形
     OH_Drawing_Rect* rect2 = OH_Drawing_RectCreate(400, 400, 700, 700); // 400, 400, 700, 700 剪切矩形
     OH_Drawing_CanvasClipRect(canvas, rect1, OH_Drawing_CanvasClipOp::DIFFERENCE, true);
@@ -696,11 +699,12 @@ void CanvasGetLocalClipBounds::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_RectDestroy(rect2);
 }
 
-void CanvasGetSaveCount::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void CanvasGetSaveCount::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     OH_Drawing_CanvasSave(canvas);
     OH_Drawing_Rect* rect = OH_Drawing_RectCreate(0, 0, 100, 100); // 0, 0, 100, 100 创建矩形
-    OH_Drawing_CanvasScale(canvas, 5, 5); //  5, 5 缩放因子
+    OH_Drawing_CanvasScale(canvas, 5, 5);                          //  5, 5 缩放因子
     OH_Drawing_CanvasSave(canvas);
     OH_Drawing_CanvasScale(canvas, 0.1, 0.1); //  0.1, 0.1 缩放因子
     OH_Drawing_CanvasSave(canvas);
@@ -713,7 +717,8 @@ void CanvasGetSaveCount::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_RectDestroy(rect);
 }
 
-void CanvasGetWidth::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void CanvasGetWidth::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     int32_t canvas_width = 0;
     for (int i = 0; i < testCount_; i++) {
@@ -724,7 +729,8 @@ void CanvasGetWidth::OnTestPerformance(OH_Drawing_Canvas* canvas) {
     OH_Drawing_RectDestroy(rect);
 }
 
-void CanvasGetHeight::OnTestPerformance(OH_Drawing_Canvas* canvas) {
+void CanvasGetHeight::OnTestPerformance(OH_Drawing_Canvas* canvas)
+{
     TestRend rand;
     int32_t canvas_height = 0;
     for (int i = 0; i < testCount_; i++) {

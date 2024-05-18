@@ -219,7 +219,7 @@ public:
     explicit CanvasDrawPoints(int type) : TestBase(type) {};
     ~CanvasDrawPoints() override {};
 
-  protected:
+protected:
     const int n = 10; // 10 可以同时存储的点的数量
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
@@ -395,65 +395,70 @@ protected:
     void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 
-
 class CanvasGetTotalMatrix : public TestBase {
 public:
-  CanvasGetTotalMatrix(int type) : TestBase(type) {
-    fileName_ = "CanvasGetTotalMatrix";
-  };
-  ~CanvasGetTotalMatrix() override {};
+    explicit CanvasGetTotalMatrix(int type) : TestBase(type)
+    {
+        fileName_ = "CanvasGetTotalMatrix";
+    };
+    ~CanvasGetTotalMatrix() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 class CanvasRestore : public TestBase {
 public:
-  CanvasRestore(int type) : TestBase(type) {
-    fileName_ = "CanvasRestore";
-  };
-  ~CanvasRestore() override {};
+    explicit CanvasRestore(int type) : TestBase(type)
+    {
+        fileName_ = "CanvasRestore";
+    };
+    ~CanvasRestore() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 class CanvasGetLocalClipBounds : public TestBase {
 public:
-  CanvasGetLocalClipBounds(int type) : TestBase(type) {
-    fileName_ = "CanvasGetLocalClipBounds";
-  };
-  ~CanvasGetLocalClipBounds() override {};
+    explicit CanvasGetLocalClipBounds(int type) : TestBase(type)
+    {
+        fileName_ = "CanvasGetLocalClipBounds";
+    };
+    ~CanvasGetLocalClipBounds() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 class CanvasGetSaveCount : public TestBase {
 public:
-  CanvasGetSaveCount(int type) : TestBase(type) {
-    fileName_ = "CanvasGetSaveCount";
-  };
-  ~CanvasGetSaveCount() override {};
+    explicit CanvasGetSaveCount(int type) : TestBase(type)
+    {
+        fileName_ = "CanvasGetSaveCount";
+    };
+    ~CanvasGetSaveCount() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 class CanvasGetWidth : public TestBase {
 public:
-  CanvasGetWidth(int type) : TestBase(type) {
-    fileName_ = "CanvasGetWidth";
-  };
-  ~CanvasGetWidth() override {};
+    explicit CanvasGetWidth(int type) : TestBase(type)
+    {
+        fileName_ = "CanvasGetWidth";
+    };
+    ~CanvasGetWidth() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 class CanvasGetHeight : public TestBase {
 public:
-  CanvasGetHeight(int type) : TestBase(type) {
-    fileName_ = "CanvasGetHeight";
-  };
-  ~CanvasGetHeight() override {};
+    explicit CanvasGetHeight(int type) : TestBase(type)
+    {
+        fileName_ = "CanvasGetHeight";
+    };
+    ~CanvasGetHeight() override {};
 
 protected:
-  void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
+    void OnTestPerformance(OH_Drawing_Canvas* canvas) override;
 };
 #endif // INTERFACE_CANVAS_TEST_H

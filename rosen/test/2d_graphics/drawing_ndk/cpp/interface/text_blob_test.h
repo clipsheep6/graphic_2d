@@ -83,7 +83,7 @@ protected:
 
 class TextBlobBuilderAllocRunPos : public TestBase {
 public:
-    TextBlobBuilderAllocRunPos(int type) : TestBase(type) {}
+    explicit TextBlobBuilderAllocRunPos(int type) : TestBase(type) {}
     ~TextBlobBuilderAllocRunPos() override {};
 
 protected:

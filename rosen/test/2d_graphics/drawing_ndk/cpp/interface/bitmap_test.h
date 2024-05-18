@@ -24,7 +24,7 @@
 
 class ImageBuildFromBitmap : public TestBase {
 public:
-    ImageBuildFromBitmap(int type) : TestBase(type)
+    explicit ImageBuildFromBitmap(int type) : TestBase(type)
     {
         fileName_ = "ImageBuildFromBitmap";
     };
@@ -38,7 +38,8 @@ protected:
 
 class BitmapReadPixels : public TestBase {
 public:
-    BitmapReadPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at) : TestBase(type), fCT(ct), fAT(at)
+    explicit BitmapReadPixels(int type, OH_Drawing_ColorFormat ct, OH_Drawing_AlphaFormat at)
+        : TestBase(type), fCT(ct), fAT(at)
     {
         fileName_ = "BitmapReadPixels";
     };
@@ -52,7 +53,7 @@ protected:
 
 class BitmapBuild : public TestBase {
 public:
-    BitmapBuild(int type) : TestBase(type)
+    explicit BitmapBuild(int type) : TestBase(type)
     {
         fileName_ = "BitmapBuild";
     };
@@ -66,7 +67,7 @@ protected:
 
 class BitmapCreateFromPixels : public TestBase {
 public:
-    BitmapCreateFromPixels(int type) : TestBase(type)
+    explicit BitmapCreateFromPixels(int type) : TestBase(type)
     {
         fileName_ = "BitmapCreateFromPixels";
     };

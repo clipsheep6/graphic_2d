@@ -24,7 +24,7 @@
 
 class TypefaceCreateDefault : public TestBase {
 public:
-    TypefaceCreateDefault(int type) : TestBase(type)
+    explicit TypefaceCreateDefault(int type) : TestBase(type)
     {
         fileName_ = "TypefaceCreateDefault";
     }
@@ -38,7 +38,7 @@ protected:
 
 class TypefaceCreateFromFile : public TestBase {
 public:
-    TypefaceCreateFromFile(int type) : TestBase(type)
+    explicit TypefaceCreateFromFile(int type) : TestBase(type)
     {
         fileName_ = "TypefaceCreateFromFile";
     }
@@ -52,7 +52,7 @@ protected:
 
 class TypefaceCreateFromStream : public TestBase {
 public:
-    TypefaceCreateFromStream(int type) : TestBase(type)
+    explicit TypefaceCreateFromStream(int type) : TestBase(type)
     {
         fileName_ = "TypefaceCreateFromStream";
     }

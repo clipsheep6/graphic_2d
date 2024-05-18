@@ -19,7 +19,7 @@
 
 class BrushReset : public TestBase {
 public:
-    BrushReset(int type) : TestBase(type)
+    explicit BrushReset(int type) : TestBase(type)
     {
         fileName_ = "BrushReset";
     };

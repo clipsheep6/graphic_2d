@@ -1090,6 +1090,15 @@ public:
     void GetAllSubSurfaceNodes(std::vector<std::pair<NodeId, RSSurfaceRenderNode::WeakPtr>>& allSubSurfaceNodes);
     std::string SubSurfaceNodesDump() const;
 
+    void SetDoDirectComposition(bool flag)
+    {
+        doDirectComposition_ = flag;
+    }
+
+    bool GetDoDirectComposition() const
+    {
+        return doDirectComposition_;
+    }
 protected:
     void OnSync() override;
     void OnSkipSync() override;
@@ -1337,6 +1346,8 @@ private:
 
     std::map<NodeId, RSSurfaceRenderNode::WeakPtr> childSubSurfaceNodes_;
     bool isSubSurfaceNode_ = false;
+
+    bool doDirectComposition_ = true;
 
     friend class RSUniRenderVisitor;
     friend class RSRenderNode;

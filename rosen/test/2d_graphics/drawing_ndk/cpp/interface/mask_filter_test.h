@@ -24,7 +24,7 @@
 
 class MaskFilterCreateBlur : public TestBase {
 public:
-    MaskFilterCreateBlur(int type) : TestBase(type)
+    explicit MaskFilterCreateBlur(int type) : TestBase(type)
     {
         fileName_ = "mask_filter_createblur";
     };

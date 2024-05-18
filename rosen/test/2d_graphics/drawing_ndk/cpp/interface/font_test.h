@@ -19,7 +19,7 @@
 
 class FontCountText : public TestBase {
 public:
-    FontCountText(int type) : TestBase(type)
+    explicit FontCountText(int type) : TestBase(type)
     {
         fileName_ = "FontCountText";
     };

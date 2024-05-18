@@ -24,7 +24,7 @@
 
 class ColorFilterCreateBlendMode : public TestBase {
 public:
-    ColorFilterCreateBlendMode(int type) : TestBase(type)
+    explicit ColorFilterCreateBlendMode(int type) : TestBase(type)
     {
         fileName_ = "ColorFilterCreateBlendMode";
     };
@@ -38,7 +38,7 @@ protected:
 
 class ColorFilterCreateCompose : public TestBase {
 public:
-    ColorFilterCreateCompose(int type) : TestBase(type)
+    explicit ColorFilterCreateCompose(int type) : TestBase(type)
     {
         fileName_ = "ColorFilterCreateCompose";
     };
@@ -52,7 +52,7 @@ protected:
 
 class ColorFilterCreateMatrix : public TestBase {
 public:
-    ColorFilterCreateMatrix(int type) : TestBase(type)
+    explicit ColorFilterCreateMatrix(int type) : TestBase(type)
     {
         fileName_ = "ColorFilterCreateMatrix";
     };
@@ -66,7 +66,7 @@ protected:
 
 class ColorFilterCreateLinearToSrgbGamma : public TestBase {
 public:
-    ColorFilterCreateLinearToSrgbGamma(int type) : TestBase(type)
+    explicit ColorFilterCreateLinearToSrgbGamma(int type) : TestBase(type)
     {
         fileName_ = "ColorFilterCreateLinearToSrgbGamma";
     };
@@ -80,7 +80,7 @@ protected:
 
 class ColorFilterCreateSrgbGammaToLinear : public TestBase {
 public:
-    ColorFilterCreateSrgbGammaToLinear(int type) : TestBase(type)
+    explicit ColorFilterCreateSrgbGammaToLinear(int type) : TestBase(type)
     {
         fileName_ = "ColorFilterCreateSrgbGammaToLinear";
     };
@@ -94,7 +94,7 @@ protected:
 
 class ColorFilterCreateLuma : public TestBase {
 public:
-    ColorFilterCreateLuma(int type) : TestBase(type)
+    explicit ColorFilterCreateLuma(int type) : TestBase(type)
     {
         fileName_ = "ColorFilterCreateLuma";
     };
@@ -108,7 +108,7 @@ protected:
 
 class ColorSpaceCreateSrgb : public TestBase {
 public:
-    ColorSpaceCreateSrgb(int type) : TestBase(type)
+    explicit ColorSpaceCreateSrgb(int type) : TestBase(type)
     {
         fileName_ = "ColorSpaceCreateSrgb";
     };
@@ -122,7 +122,7 @@ protected:
 
 class ColorSpaceCreateSrgbLinear : public TestBase {
 public:
-    ColorSpaceCreateSrgbLinear(int type) : TestBase(type)
+    explicit ColorSpaceCreateSrgbLinear(int type) : TestBase(type)
     {
         fileName_ = "ColorSpaceCreateSrgbLinear";
     };

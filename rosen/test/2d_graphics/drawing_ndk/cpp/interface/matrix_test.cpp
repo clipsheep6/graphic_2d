@@ -147,8 +147,8 @@ void MatrixPreRotate::OnTestPerformance(OH_Drawing_Canvas* canvas)
     OH_Drawing_MatrixSetMatrix(matrix, 2, -1, 2, 5, -4, 5, 8, -7, 8); // 2, -1, 2, 5, -4, 5, 8, -7, 8矩阵参数
     // 将矩阵设置为矩阵左乘围绕轴心点旋转一定角度的单位矩阵后得到的矩阵
     for (int i = 0; i < testCount_; i++) {
-        OH_Drawing_MatrixSetMatrix(pMatrix, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-        OH_Drawing_MatrixPreRotate(pMatrix, 90, 1, 0); // 90, 1矩阵角度和坐标
+        OH_Drawing_MatrixSetMatrix(pMatrix, 1, 2, 3, 4, 5, 6, 7, 8, 9); // 1, 2, 3, 4, 5, 6, 7, 8, 9 矩阵参数
+        OH_Drawing_MatrixPreRotate(pMatrix, 90, 1, 0);                  // 90, 1矩阵角度和坐标
     };
     // 观察pMatrix转换后与matrix是否一样.来判断OH_Drawing_MatrixPreRotate接口是否调用成功
     bool result = false;
